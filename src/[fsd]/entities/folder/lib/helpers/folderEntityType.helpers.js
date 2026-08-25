@@ -1,5 +1,6 @@
 import {
   isApplicationCard,
+  isCredentialCard,
   isMCPCard,
   isPipelineCard,
   isSkillCard,
@@ -19,5 +20,6 @@ export const getFolderEntityType = cardType => {
   if (isSkillCard(cardType)) return ENTITY_FOLDER_TYPES.skill;
   if (isToolkitCard(cardType)) return ENTITY_FOLDER_TYPES.toolkit;
   if (isMCPCard(cardType)) return ENTITY_FOLDER_TYPES.mcp;
+  if (isCredentialCard(cardType)) return ENTITY_FOLDER_TYPES.configuration;
   return null;
 };

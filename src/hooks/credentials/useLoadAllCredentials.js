@@ -9,7 +9,13 @@ import { useSelectedProjectId } from '../useSelectedProject';
 const CREDENTIAL_SECTIONS = ['credentials', 'storage'];
 
 export const useLoadAllCredentials = props => {
-  const { specifiedProjectId, forceSkip, isTableView, selectedTypeNames = [] } = props ?? {};
+  const {
+    specifiedProjectId,
+    forceSkip,
+    isTableView,
+    selectedTypeNames = [],
+    folderEntityIds = null,
+  } = props ?? {};
 
   const projectId = useSelectedProjectId();
   const { data: credentialTypesData } = useListCredentialTypesQuery(
@@ -52,6 +58,7 @@ export const useLoadAllCredentials = props => {
     section: CREDENTIAL_SECTIONS,
     isTableView,
     selectedTypes,
+    folderEntityIds,
   });
 
   const tagList = useMemo(() => {

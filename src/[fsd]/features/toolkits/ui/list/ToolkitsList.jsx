@@ -3,10 +3,17 @@ import { memo, useCallback, useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
-import { Box } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import { EmptyStatePage } from '@/[fsd]/entities/empty-state-page';
-import { ENTITY_FOLDER_TYPES, FolderSection } from '@/[fsd]/entities/folder';
+import {
+  ENTITY_FOLDER_TYPES,
+  FolderSection,
+  FolderViewHeader,
+  useEntityFolders,
+  useFolderApplications,
+  useFolderView,
+} from '@/[fsd]/entities/folder';
 import { ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useLoadToolkits } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ToolkitTypesPanel, ToolkitsEmptyListPlaceHolder } from '@/[fsd]/features/toolkits/ui/list';
@@ -40,11 +47,30 @@ const ToolkitsList = memo(props => {
   const { query } = useSelector(state => state.search);
   const selectedProjectId = useSelectedProjectId();
   const isMcpVisible = useIsMcpVisible();
+  const isPublicProject = selectedProjectId == PUBLIC_PROJECT_ID;
 
-  const { renderCard } = useCardList(
-    selectedProjectId != PUBLIC_PROJECT_ID ? ViewMode.Owner : ViewMode.Public,
-  );
+  const { renderCard } = useCardList(!isPublicProject ? ViewMode.Owner : ViewMode.Public);
   const isTableView = useIsTableView();
+
+  const folderEntityType = useMemo(() => {
+    if (isMCP) return ENTITY_FOLDER_TYPES.mcp;
+    return ENTITY_FOLDER_TYPES.toolkit;
+  }, [isMCP]);
+
+  const { folders } = useEntityFolders(folderEntityType, { includeCounts: true });
+  const { selectedFolderId, selectedFolder, isFolderViewActive, openFolder, closeFolder } =
+    useFolderView(folders);
+
+  const {
+    idsQueryParam: folderEntityIds,
+    isLoading: isLoadingFolderItems,
+    isEmpty: isFolderEmpty,
+  } = useFolderApplications({
+    folderId: selectedFolderId,
+    projectId: selectedProjectId,
+  });
+
+  const shouldSkipQuery = isFolderViewActive && isLoadingFolderItems;
 
   const {
     onLoadMoreToolkits,
@@ -59,7 +85,13 @@ const ToolkitsList = memo(props => {
     pageSize,
     totalCount,
     setPage,
-  } = useLoadToolkits({ isMCP, isApplication, isTableView });
+  } = useLoadToolkits({
+    isMCP,
+    isApplication,
+    isTableView,
+    forceSkip: shouldSkipQuery,
+    folderEntityIds,
+  });
 
   useMCPListStatusMonitor({ isMCP });
 
@@ -71,38 +103,60 @@ const ToolkitsList = memo(props => {
     );
   }, [dispatch, tagList]);
 
-  const folderEntityType = useMemo(() => {
-    if (isMCP) return ENTITY_FOLDER_TYPES.mcp;
-    return ENTITY_FOLDER_TYPES.toolkit;
-  }, [isMCP]);
+  const folderTagList = useMemo(() => {
+    if (!isFolderViewActive || !data?.length) return [];
+
+    const tagMap = new Map();
+    data.forEach(item => {
+      item.tags?.forEach(tag => {
+        if (!tagMap.has(tag.id)) tagMap.set(tag.id, tag);
+      });
+    });
+
+    return Array.from(tagMap.values());
+  }, [isFolderViewActive, data]);
 
   const rightPanelContent = useMemo(
     () => (
       <Box style={styles.rightInfoPanelContainer}>
-        <FolderSection entityType={folderEntityType} />
+        {!isPublicProject && (
+          <FolderSection
+            entityType={folderEntityType}
+            onFolderSelect={openFolder}
+            selectedFolderId={selectedFolderId}
+          />
+        )}
         <ToolkitTypesPanel
-          tagList={tagList}
+          tagList={isFolderViewActive ? folderTagList : tagList}
           title="Types"
           style={styles.rightInfoPanel}
         />
       </Box>
     ),
-    [tagList, styles, folderEntityType],
+    [
+      tagList,
+      folderTagList,
+      styles,
+      folderEntityType,
+      isPublicProject,
+      openFolder,
+      selectedFolderId,
+      isFolderViewActive,
+    ],
   );
 
-  // Navigate to New Toolkit page for private projects with no toolkits
   useEffect(() => {
-    const isPublic = selectedProjectId == PUBLIC_PROJECT_ID;
     const loading = isToolkitsFirstFetching || isToolkitsFetching;
     const hasError = !!isToolkitsError;
     const hasQuery = !!(query && String(query).trim());
 
     if (
-      !isPublic &&
+      !isPublicProject &&
       !loading &&
       !hasError &&
       !disableEmptyRedirect &&
       !hasQuery &&
+      !isFolderViewActive &&
       totalCount === 0 &&
       selectedTypes?.length === 0
     ) {
@@ -124,6 +178,8 @@ const ToolkitsList = memo(props => {
     disableEmptyRedirect,
     isMCP,
     isApplication,
+    isPublicProject,
+    isFolderViewActive,
   ]);
 
   const uniqueDataList = useMemo(() => {
@@ -188,25 +244,42 @@ const ToolkitsList = memo(props => {
 
   return (
     <CardList
-      key={cardContentType}
+      key={`${cardContentType}-${selectedFolderId || 'all'}`}
       cardList={uniqueDataList}
       total={totalCount}
-      isLoading={isToolkitsFirstFetching}
+      isLoading={isToolkitsFirstFetching || (isFolderViewActive && isLoadingFolderItems)}
       isError={isToolkitsError}
       rightPanelOffset={rightPanelOffset}
+      headerContent={
+        isFolderViewActive && selectedFolder ? (
+          <FolderViewHeader
+            folder={selectedFolder}
+            entitiesCount={totalCount || 0}
+            onClose={closeFolder}
+          />
+        ) : null
+      }
       rightPanelContent={rightPanelContent}
       renderCard={renderCard}
       isLoadingMore={isToolkitsFetching}
       loadMoreFunc={loadMore}
       cardType={cardContentType}
-      customEmptyState={<EmptyStatePage {...getEmptyStateConfig} />}
-      emptyListPlaceHolder={
-        emptyListPlaceHolder || (
-          <ToolkitsEmptyListPlaceHolder
-            query={query}
-            isMCP={isMCP}
-          />
+      customEmptyState={
+        isFolderViewActive && isFolderEmpty ? (
+          <Typography>No items in this folder yet</Typography>
+        ) : (
+          <EmptyStatePage {...getEmptyStateConfig} />
         )
+      }
+      emptyListPlaceHolder={
+        isFolderViewActive
+          ? null
+          : emptyListPlaceHolder || (
+              <ToolkitsEmptyListPlaceHolder
+                query={query}
+                isMCP={isMCP}
+              />
+            )
       }
       setPage={setPage}
       page={page}

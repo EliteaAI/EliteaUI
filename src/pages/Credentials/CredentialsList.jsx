@@ -3,9 +3,16 @@ import { memo, useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
 
-import { Box } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
-import { ENTITY_FOLDER_TYPES, FolderSection } from '@/[fsd]/entities/folder';
+import {
+  ENTITY_FOLDER_TYPES,
+  FolderSection,
+  FolderViewHeader,
+  useEntityFolders,
+  useFolderApplications,
+  useFolderView,
+} from '@/[fsd]/entities/folder';
 import { ContentType, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
 import { buildErrorMessage, uniqueArrayByProp } from '@/common/utils';
 import CardList from '@/components/CardList';
@@ -40,15 +47,28 @@ const CredentialsList = memo(props => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const selectedProjectId = useSelectedProjectId();
+  const isPublicProject = selectedProjectId == PUBLIC_PROJECT_ID;
   const isTableView = useIsTableView();
   const { query } = useSelector(state => state.search);
   const { selectedTypes: urlSelectedTypes, handleClickType } = useCredentialTypes();
-  const { renderCard } = useCardList(
-    selectedProjectId != PUBLIC_PROJECT_ID ? ViewMode.Owner : ViewMode.Public,
-    handleClickType,
-  );
+  const { renderCard } = useCardList(!isPublicProject ? ViewMode.Owner : ViewMode.Public, handleClickType);
   const { toastError } = useToast();
   const styles = credentialsListStyles();
+
+  const { folders } = useEntityFolders(ENTITY_FOLDER_TYPES.configuration, { includeCounts: true });
+  const { selectedFolderId, selectedFolder, isFolderViewActive, openFolder, closeFolder } =
+    useFolderView(folders);
+
+  const {
+    idsQueryParam: folderEntityIds,
+    isLoading: isLoadingFolderItems,
+    isEmpty: isFolderEmpty,
+  } = useFolderApplications({
+    folderId: selectedFolderId,
+    projectId: selectedProjectId,
+  });
+
+  const shouldSkipQuery = isFolderViewActive && isLoadingFolderItems;
 
   const {
     onLoadMore,
@@ -64,22 +84,46 @@ const CredentialsList = memo(props => {
     page,
     pageSize,
     setPage,
-  } = useLoadAllCredentials({ isTableView, selectedTypeNames: urlSelectedTypes });
+  } = useLoadAllCredentials({
+    isTableView,
+    selectedTypeNames: urlSelectedTypes,
+    forceSkip: shouldSkipQuery,
+    folderEntityIds,
+  });
 
   const total = totalCount;
+
+  const folderTagList = useMemo(() => {
+    if (!isFolderViewActive || !data?.length) return [];
+
+    const tagMap = new Map();
+    data.forEach(item => {
+      item.tags?.forEach(tag => {
+        if (!tagMap.has(tag.id)) tagMap.set(tag.id, tag);
+      });
+    });
+
+    return Array.from(tagMap.values());
+  }, [isFolderViewActive, data]);
 
   const rightPanelContent = useMemo(
     () => (
       <Box sx={styles.rightInfoPanelStyle}>
-        <FolderSection entityType={ENTITY_FOLDER_TYPES.configuration} />
+        {!isPublicProject && (
+          <FolderSection
+            entityType={ENTITY_FOLDER_TYPES.configuration}
+            onFolderSelect={openFolder}
+            selectedFolderId={selectedFolderId}
+          />
+        )}
         <CredentialsTypesPanel
-          tagList={tagList}
+          tagList={isFolderViewActive ? folderTagList : tagList}
           title="Types"
           style={{ flex: 1 }}
         />
       </Box>
     ),
-    [tagList, styles],
+    [tagList, folderTagList, styles, isPublicProject, openFolder, selectedFolderId, isFolderViewActive],
   );
 
   useEffect(() => {
@@ -95,16 +139,21 @@ const CredentialsList = memo(props => {
     }
   }, [credentialsError, isMoreCredentialsError, toastError]);
 
-  // Navigate to New Credential page for private projects with no credentials
   useEffect(() => {
-    const isPublic = selectedProjectId == PUBLIC_PROJECT_ID;
     const loading = isCredentialsFirstFetching || isCredentialsFetching;
     const hasError = !!isCredentialsError;
     const hasQuery = !!(query && String(query).trim());
     const hasTypeFilter = urlSelectedTypes.length > 0;
 
-    // Don't redirect if filters are active - user may be filtering for non-existent types
-    if (!isPublic && !loading && !hasError && !hasQuery && !hasTypeFilter && total === 0) {
+    if (
+      !isPublicProject &&
+      !loading &&
+      !hasError &&
+      !hasQuery &&
+      !hasTypeFilter &&
+      !isFolderViewActive &&
+      total === 0
+    ) {
       navigate(RouteDefinitions.CreateCredentialFromMain, { replace: true });
     }
   }, [
@@ -116,6 +165,8 @@ const CredentialsList = memo(props => {
     urlSelectedTypes,
     total,
     navigate,
+    isPublicProject,
+    isFolderViewActive,
   ]);
 
   const uniqueDataList = useMemo(() => {
@@ -134,8 +185,6 @@ const CredentialsList = memo(props => {
       return item.name;
     };
 
-    // Server-side filtering is now handled by the API via the type parameter
-    // No need for client-side filtering - the API returns only matching credentials
     return uniqueArrayByProp(
       (data || []).map(item => ({
         ...item,
@@ -148,18 +197,32 @@ const CredentialsList = memo(props => {
   return (
     <Box sx={styles.wrapper}>
       <CardList
-        key={ContentType.CredentialAll}
+        key={`${ContentType.CredentialAll}-${selectedFolderId || 'all'}`}
         cardList={uniqueDataList}
         total={total}
-        isLoading={isCredentialsFirstFetching}
+        isLoading={isCredentialsFirstFetching || (isFolderViewActive && isLoadingFolderItems)}
         isError={isCredentialsError}
         rightPanelOffset={rightPanelOffset}
+        headerContent={
+          isFolderViewActive && selectedFolder ? (
+            <FolderViewHeader
+              folder={selectedFolder}
+              entitiesCount={total || 0}
+              onClose={closeFolder}
+            />
+          ) : null
+        }
         rightPanelContent={rightPanelContent}
         renderCard={renderCard}
         isLoadingMore={isCredentialsFetching}
         loadMoreFunc={onLoadMore}
         cardType={ContentType.CredentialAll}
-        emptyListPlaceHolder={<EmptyListPlaceHolder query={query} />}
+        customEmptyState={
+          isFolderViewActive && isFolderEmpty ? (
+            <Typography>No items in this folder yet</Typography>
+          ) : undefined
+        }
+        emptyListPlaceHolder={isFolderViewActive ? null : <EmptyListPlaceHolder query={query} />}
         page={page}
         pageSize={pageSize}
         setPage={setPage}

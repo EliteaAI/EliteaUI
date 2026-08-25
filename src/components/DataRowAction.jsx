@@ -110,7 +110,11 @@ const DataRowAction = memo(props => {
   }, []);
 
   const showFolderActions =
-    !isPublicProject && (entity_name === 'applications' || entity_name === 'pipelines');
+    !isPublicProject &&
+    (entity_name === 'applications' ||
+      entity_name === 'pipelines' ||
+      entity_name === 'toolkits' ||
+      entity_name === 'credentials');
 
   const {
     isPinned: pinState,
