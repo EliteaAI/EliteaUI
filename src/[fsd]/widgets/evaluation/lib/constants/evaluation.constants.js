@@ -40,6 +40,13 @@ export const SCALE_TYPE_OPTIONS = [
   { value: EVAL_SCALE_TYPE.binary, label: 'Binary (0/1)' },
 ];
 
+// Tier choice offered per-item in the "Generate with AI" review step (§13.3 follow-up).
+// Platform tier is excluded — it's seeded via the admin console, not authorable here.
+export const DIMENSION_TIER_OPTIONS = [
+  { value: EVAL_TIER.agent_adhoc, label: 'This agent only' },
+  { value: EVAL_TIER.project, label: 'Project library' },
+];
+
 export const POLARITY_OPTIONS = [
   { value: EVAL_POLARITY.higher_better, label: 'Higher is better' },
   { value: EVAL_POLARITY.lower_better, label: 'Lower is better' },
@@ -181,6 +188,7 @@ export const ADD_VALIDATION_MENU = {
   platformCatalog: 'platformCatalog',
   newDimension: 'newDimension',
   newCodeValidation: 'newCodeValidation',
+  generateWithAi: 'generateWithAi',
 };
 
 export const DEFAULT_BINDING_FORM = {

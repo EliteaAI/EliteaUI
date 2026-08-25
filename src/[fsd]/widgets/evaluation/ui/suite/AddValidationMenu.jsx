@@ -14,6 +14,8 @@ const MENU_ITEMS = [
   { divider: true },
   { key: ADD_VALIDATION_MENU.newDimension, label: 'New dimension…' },
   { key: ADD_VALIDATION_MENU.newCodeValidation, label: 'New code validation…' },
+  { divider: true },
+  { key: ADD_VALIDATION_MENU.generateWithAi, label: 'Generate with AI…' },
 ];
 
 const AddValidationMenu = memo(props => {
@@ -37,6 +39,7 @@ const AddValidationMenu = memo(props => {
     key => {
       if (key === ADD_VALIDATION_MENU.newDimension) return !canCreateDimension;
       if (key === ADD_VALIDATION_MENU.newCodeValidation) return !canCreateCodeValidation;
+      if (key === ADD_VALIDATION_MENU.generateWithAi) return !canCreateDimension;
       return false;
     },
     [canCreateDimension, canCreateCodeValidation],
