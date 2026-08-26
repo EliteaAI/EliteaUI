@@ -101,8 +101,7 @@ describe('IndexListItem — interrupted runs', () => {
     renderItem(indexRow(IndexStatuses.interrupted));
 
     expect(attentionIcon()).toBeInTheDocument();
-    // The reported #6389 defect rendered the spinner and the "stopped without
-    // finishing" indicator side by side; only the negative assertion pins it.
+    // Both rendered side by side once; only a negative assertion pins that.
     expect(spinner()).not.toBeInTheDocument();
   });
 
@@ -133,8 +132,6 @@ describe('IndexListItem — live runs are untouched', () => {
   });
 
   it('releases the actions once the backend marks an in_progress run stale', () => {
-    // The stale escape hatch stays: an alive-but-hung run the reclaimer refuses to
-    // touch must remain deletable/reindexable after the timeout.
     renderItem(indexRow(IndexStatuses.progress, { stale: true }));
 
     expect(reindexBtn()).toBeEnabled();
@@ -142,10 +139,7 @@ describe('IndexListItem — live runs are untouched', () => {
   });
 
   it('explains an unresponsive run on the spinner instead of claiming it stopped', () => {
-    // Rows the reclaim cannot or will not touch (hung-but-alive, unresolvable,
-    // pre-sweep window) keep the honest spinner, but its tooltip must say why the
-    // actions unlocked — never the "stopped without finishing" copy, which is
-    // reserved for the persisted interrupted state.
+    // "stopped without finishing" is reserved for the persisted interrupted state.
     renderItem(indexRow(IndexStatuses.progress, { stale: true }));
 
     expect(spinner()).toBeInTheDocument();

@@ -51,8 +51,6 @@ export const BannerTitleMap = {
 
 export const BANNER_SUCCESS_SUFFIX = 'The index is ready to search.';
 
-// The interrupted banner keeps warning severity but replaces the generic "Stopped"
-// copy: the run was killed by the platform, not stopped by a user.
 export const INTERRUPTED_BANNER = {
   label: 'Interrupted',
   message:

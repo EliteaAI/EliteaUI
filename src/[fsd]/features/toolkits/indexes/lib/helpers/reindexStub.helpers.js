@@ -1,30 +1,31 @@
 import { IndexStatuses } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
 
+const isFromRequestIssuedAfter = ({ observedAt, startedTimeStamp, fulfilledTimeStamp }) =>
+  Boolean(observedAt && startedTimeStamp && fulfilledTimeStamp) &&
+  startedTimeStamp > observedAt &&
+  fulfilledTimeStamp >= startedTimeStamp;
+
+const describesNewerRunThan = (serverRow, baselineCreatedOn) => {
+  const createdOn = Number(serverRow.metadata?.created_on);
+  if (!Number.isFinite(createdOn) || !Number.isFinite(baselineCreatedOn)) return null;
+  return createdOn > baselineCreatedOn;
+};
+
 /**
  * Lifecycle decision for the optimistic reindex stub in IndexesContainer.
  *
- * The stub used to expire only on `!serverRow || serverRow.stale`, but the backend
- * reclaim permanently extinguishes `stale` (a reclaimed row is `interrupted`, never
- * `in_progress`), so a session that missed the short stale window kept the stub — and
- * its spinner and action lock — for the life of the view, hiding the Interrupted state
- * from the very user who started the run.
+ * A hard-killed run emits no terminal trace, so the stub needs a server-side signal to
+ * end it. Staleness alone is not that signal: a reclaimed row reports none, and the
+ * poll can miss the window where it does while the tab is unfocused. So a terminal
+ * state ends the stub only once the new run is known to exist — either seen in
+ * progress, or evidenced by a `created_on` newer than the row the user clicked, both
+ * stamped by the backend at every run start.
  *
- * Two independent proofs that the dispatch landed unlock terminal-state expiry:
- * - `serverSawRun`: a post-click snapshot caught the row at `in_progress`;
- * - a row `created_on` newer than the clicked row's (`baselineCreatedOn`) — the SDK and
- *   the platform both stamp a fresh `created_on` at every run start, and both sides of
- *   the comparison are backend clocks, so this settles from a single post-run snapshot.
- *   That matters because the 300s poll pauses in a backgrounded tab: a run that starts,
- *   dies and gets reclaimed while the tab is away is only ever seen as `interrupted`.
+ * Absent that evidence a terminal state is assumed to be the PREVIOUS run's, which
+ * Reindex-from-Interrupted makes the common case, and ending the stub there would
+ * unmount the runner mid-run.
  *
- * Without either proof a terminal state keeps the stub: a pre-run GET still carries the
- * PREVIOUS run's state — very often `interrupted`, since Reindex-from-Interrupted is the
- * primary recovery flow — and expiring on it would unmount the headless runner mid-run.
- *
- * @param {{observedAt: number|undefined, startedTimeStamp: number|undefined,
- *   fulfilledTimeStamp: number|undefined, serverRow: object|undefined,
- *   baselineCreatedOn: number|undefined, serverSawRun: boolean}} snapshot
- * @returns {'expire' | 'arm' | null} what the container should do with the stub
+ * @returns {'expire' | 'arm' | null}
  */
 export const resolveReindexStubAction = ({
   observedAt,
@@ -34,18 +35,12 @@ export const resolveReindexStubAction = ({
   baselineCreatedOn,
   serverSawRun,
 }) => {
-  if (!observedAt || !startedTimeStamp || !fulfilledTimeStamp) return null;
-  if (startedTimeStamp <= observedAt) return null;
-  if (fulfilledTimeStamp < startedTimeStamp) return null;
+  if (!isFromRequestIssuedAfter({ observedAt, startedTimeStamp, fulfilledTimeStamp })) return null;
   if (!serverRow || serverRow.stale) return 'expire';
-  const createdOn = Number(serverRow.metadata?.created_on);
-  const comparable = Number.isFinite(createdOn) && Number.isFinite(baselineCreatedOn);
-  const newRunObserved = comparable && createdOn > baselineCreatedOn;
+
+  const newerRun = describesNewerRunThan(serverRow, baselineCreatedOn);
   if (serverRow.metadata?.state === IndexStatuses.progress) {
-    // An in_progress row with the clicked row's own created_on is the previous run
-    // (reindex over a stale in_progress row) — latching onto it would let that run's
-    // reclaim expire the stub while ours is still starting.
-    return newRunObserved || !comparable ? 'arm' : null;
+    return newerRun === false ? null : 'arm';
   }
-  return serverSawRun || newRunObserved ? 'expire' : null;
+  return serverSawRun || newerRun === true ? 'expire' : null;
 };

@@ -49,10 +49,6 @@ const IndexesContainer = memo(props => {
 
   const { indexes: indexesList, isLoading } = useToolkitIndexes(toolkitId);
 
-  // A hard-killed run never emits the terminal trace onDone needs, so the stub (and
-  // its isReindexing lock) would pin the cards all session. Expiry rules live in
-  // resolveReindexStubAction; the ref latches "the server saw this run", after which
-  // any terminal server state — including the reclaim's `interrupted` — ends the stub.
   const serverSawRunRef = useRef(false);
   useEffect(() => {
     const action = resolveReindexStubAction({
@@ -137,8 +133,6 @@ const IndexesContainer = memo(props => {
     setReindexRunning({
       ...reindexTarget,
       observedAt: Date.now(),
-      // The clicked row's own created_on: any server row created after it proves the
-      // new dispatch landed, even if no snapshot ever caught it in_progress.
       baselineCreatedOn: Number(reindexTarget.metadata?.created_on),
       metadata: { ...reindexTarget.metadata, state: IndexStatuses.progress },
     });

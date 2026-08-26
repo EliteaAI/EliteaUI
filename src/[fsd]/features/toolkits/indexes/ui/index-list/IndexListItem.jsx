@@ -47,10 +47,7 @@ const IndexListItem = memo(props => {
 
   const isSelected = useMemo(() => currentIndex?.id === index.id, [currentIndex, index]);
   const isInProgress = index?.metadata?.state === IndexStatuses.progress;
-  // One definition, two consumers: the condition that unlocks the actions is the same
-  // one that explains why they unlocked. It never claims the run is over — only the
-  // backend reclaim (state === interrupted) does that; this covers the runs the
-  // reclaim cannot or will not touch (hung-but-alive, unresolvable, pre-sweep window).
+  // Unlocks the actions and explains why they unlocked, so the two cannot disagree.
   const isUnresponsiveRun = isInProgress && Boolean(index?.stale);
   const disableStuckActions = isReindexing || (isInProgress && !isUnresponsiveRun);
 
@@ -415,7 +412,7 @@ const indexListItem = () => ({
   stateIcon: ({ palette }) => ({
     color: palette.text.info,
   }),
-  // CircularProgress colours via `color`, not the svg-path fill the warning key targets.
+  // CircularProgress takes `color`, not a path fill.
   stateIconStale: ({ palette }) => ({
     color: palette.background.warning,
   }),

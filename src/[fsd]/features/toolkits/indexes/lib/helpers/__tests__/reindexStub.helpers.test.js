@@ -39,15 +39,11 @@ describe('resolveReindexStubAction', () => {
   });
 
   it('does not latch onto the previous run still showing in_progress', () => {
-    // Reindex over a stale in_progress row: until the new dispatch rewrites
-    // created_on, the row still describes the OLD run.
     expect(resolveReindexStubAction(snapshot({ serverRow: row('in_progress', BASELINE) }))).toBeNull();
   });
 
   it('keeps the stub for a leftover terminal state the server has not replaced yet', () => {
-    // Reindex-from-Interrupted is the primary recovery flow: the first post-click GET
-    // can still carry the PREVIOUS run's `interrupted`, and expiring on it would
-    // unmount the headless runner mid-run.
+    // Ending the stub here would unmount the runner mid-run.
     expect(resolveReindexStubAction(snapshot({ serverRow: row('interrupted', BASELINE) }))).toBeNull();
   });
 
@@ -60,9 +56,7 @@ describe('resolveReindexStubAction', () => {
   });
 
   it('expires on a terminal row created after the clicked one, even unseen in progress', () => {
-    // The backgrounded-tab route: the 300s poll pauses while unfocused, so a run can
-    // start, die and get reclaimed without any snapshot catching it at in_progress.
-    // The fresh created_on the run stamped is the proof the dispatch landed.
+    // An unfocused tab polls nothing, so the run is only ever seen already terminal.
     for (const state of ['interrupted', 'failed', 'completed', 'cancelled']) {
       expect(
         resolveReindexStubAction(snapshot({ serverRow: row(state, BASELINE + 60), serverSawRun: false })),

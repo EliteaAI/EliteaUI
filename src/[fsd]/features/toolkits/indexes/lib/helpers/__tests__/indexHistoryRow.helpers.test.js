@@ -71,8 +71,6 @@ describe('buildIndexHistoryRows', () => {
   });
 
   it('lists a reclaimed interrupted run while its paired placeholder rule still holds', () => {
-    // The reclaim rewrites the trailing in_progress entry in place, so the run appears
-    // exactly once — as Interrupted — never as a second placeholder row.
     const rows = build([
       { state: 'completed', created_on: 190, updated_on: 200 },
       { state: 'interrupted', created_on: 290, updated_on: 300 },

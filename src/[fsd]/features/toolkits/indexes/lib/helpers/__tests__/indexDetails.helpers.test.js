@@ -92,8 +92,6 @@ describe('indexSearchBlockedReason', () => {
   });
 
   it('no longer claims an interrupted run is in progress', () => {
-    // Before the reclaim, an abandoned run stayed in_progress forever and search
-    // was permanently "unavailable while indexing is in progress".
     expect(indexSearchBlockedReason(IndexStatuses.interrupted, allSearchTools)).toMatch(/not ready/);
     expect(indexSearchBlockedReason(IndexStatuses.interrupted, allSearchTools)).not.toMatch(/in progress/);
   });
