@@ -208,6 +208,7 @@ const NotificationTable = memo(props => {
               showTime={false}
               showIcon={false}
               context="table"
+              messageTestId="notification-message-typography"
             />
           </Box>
         );
@@ -216,6 +217,7 @@ const NotificationTable = memo(props => {
         return (
           <Typography
             variant="labelMedium"
+            data-testid="notification-date-text"
             color={row.is_seen ? 'text.primary' : 'text.secondary'}
             sx={styles.dateCell}
           >

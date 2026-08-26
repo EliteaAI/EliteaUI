@@ -37,6 +37,7 @@ const NotificationListItem = memo(props => {
     onNotificationSeenChange,
     onCloseNotificationList,
     context = 'list',
+    messageTestId,
   } = props;
   const theme = useTheme();
   const { event_type } = notification;
@@ -98,6 +99,7 @@ const NotificationListItem = memo(props => {
             notification={notification}
             onCloseNotificationList={onCloseNotificationList}
             textVariant={textVariant}
+            testId={messageTestId}
           />
         </Box>
         {showTime && (
