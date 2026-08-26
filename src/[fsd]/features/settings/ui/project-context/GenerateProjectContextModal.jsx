@@ -51,6 +51,7 @@ const GenerateProjectContextModal = memo(props => {
       approveLabel="Apply"
       approvingLabel="Applying..."
       modalTestId="generate-project-context-modal"
+      titleTestId="generate-project-context-title"
       promptInputTestId="generate-project-context-prompt-input"
       loadingIndicatorTestId="generate-project-context-loading-indicator"
       generateButtonTestId="generate-project-context-submit-button"

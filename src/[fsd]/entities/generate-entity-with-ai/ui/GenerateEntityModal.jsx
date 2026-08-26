@@ -28,6 +28,7 @@ const GenerateEntityModal = memo(props => {
     approveLabel,
     approvingLabel,
     modalTestId,
+    titleTestId,
     closeButtonTestId,
     promptInputTestId,
     errorAlertTestId,
@@ -233,6 +234,7 @@ const GenerateEntityModal = memo(props => {
       dialogSx={styles.dialogContent}
       sx={styles.dialog}
       data-testid={modalTestId}
+      titleTestId={titleTestId}
       closeButtonTestId={closeButtonTestId}
     />
   );

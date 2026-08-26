@@ -266,6 +266,7 @@ const AIEditProjectContextModal = memo(props => {
       dialogSx={styles.dialogContent}
       sx={isDiff ? styles.dialogWide : styles.dialog}
       data-testid="ai-edit-project-context-modal"
+      titleTestId="ai-edit-project-context-title"
       closeButtonTestId="ai-edit-project-context-close-button"
     />
   );
