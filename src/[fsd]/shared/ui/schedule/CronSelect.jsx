@@ -18,6 +18,7 @@ const CronSelect = memo(props => {
     allowEmpty = true,
     placeholder = '',
     multiple = false,
+    'data-testid': dataTestId,
   } = props;
 
   const handleChange = useCallback(
@@ -40,6 +41,7 @@ const CronSelect = memo(props => {
 
   return (
     <Autocomplete
+      data-testid={dataTestId}
       multiple={multiple}
       value={multipleValue}
       options={options}
