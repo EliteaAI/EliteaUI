@@ -88,6 +88,7 @@ const SettingsDrawer = memo(props => {
           {sectionIndex > 0 && <Divider sx={styles.sectionDivider} />}
           <Box
             component="span"
+            data-testid={`settings-section-header-${section.section.toLowerCase()}`}
             sx={styles.sectionHeader}
           >
             {section.section}
