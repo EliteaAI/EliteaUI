@@ -88,6 +88,7 @@ const CronBuilder = memo(props => {
       </Typography>
 
       <CronSelect
+        data-testid="schedule-cron-period-select"
         value={periodOption}
         options={PERIOD_OPTIONS}
         onChange={opt => emit({ period: opt?.value ?? null, monthDays: [], weekDays: [] })}
@@ -104,6 +105,7 @@ const CronBuilder = memo(props => {
             on
           </Typography>
           <CronSelect
+            data-testid="schedule-cron-monthdays-select"
             value={monthDayOptions}
             options={MONTH_DAY_OPTIONS}
             onChange={opts => emit({ monthDays: opts.map(o => o.value) })}
@@ -119,6 +121,7 @@ const CronBuilder = memo(props => {
             and
           </Typography>
           <CronSelect
+            data-testid="schedule-cron-weekdays-select-month"
             value={weekDayOptions}
             options={WEEKDAY_OPTIONS}
             onChange={opts => emit({ weekDays: opts.map(o => o.value) })}
@@ -139,6 +142,7 @@ const CronBuilder = memo(props => {
             on
           </Typography>
           <CronSelect
+            data-testid="schedule-cron-weekdays-select-week"
             value={weekDayOptions}
             options={WEEKDAY_OPTIONS}
             onChange={opts => emit({ weekDays: opts.map(o => o.value) })}
@@ -158,6 +162,7 @@ const CronBuilder = memo(props => {
           at
         </Typography>
         <CronSelect
+          data-testid="schedule-cron-hour-select"
           value={hourOption}
           options={HOUR_OPTIONS}
           onChange={opt => opt && emit({ hours: opt.value })}
@@ -171,6 +176,7 @@ const CronBuilder = memo(props => {
           :
         </Typography>
         <CronSelect
+          data-testid="schedule-cron-minute-select"
           value={minuteOption}
           options={MINUTE_OPTIONS}
           onChange={opt => opt && emit({ minutes: opt.value })}
