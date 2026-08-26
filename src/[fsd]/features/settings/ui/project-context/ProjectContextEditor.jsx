@@ -83,11 +83,13 @@ const ProjectContextEditor = memo(props => {
         value: 'edit',
         icon: theme => <CodeIcon fill={theme.palette.icon.fill.secondary} />,
         tooltip: 'Edit mode',
+        buttonProps: { 'data-testid': 'project-context-mode-edit-button' },
       },
       {
         value: 'preview',
         icon: theme => <OpenEyeIcon fill={theme.palette.icon.fill.secondary} />,
         tooltip: 'Preview mode',
+        buttonProps: { 'data-testid': 'project-context-mode-preview-button' },
       },
     ],
     [],
@@ -245,6 +247,7 @@ const ProjectContextEditor = memo(props => {
         Save
       </Button.BaseBtn>
       <Button.BaseBtn
+        data-testid="project-context-discard-button"
         variant={BUTTON_VARIANTS.secondary}
         disabled={!isDirty || isSaving}
         onClick={isCreate ? handleCancel : handleDiscard}
@@ -294,6 +297,7 @@ const ProjectContextEditor = memo(props => {
                   placement="top"
                 >
                   <Button.BaseBtn
+                    data-testid="project-context-import-button"
                     variant={BUTTON_VARIANTS.tertiary}
                     startIcon={<ImportIcon />}
                     onClick={handleImportClick}
@@ -324,6 +328,7 @@ const ProjectContextEditor = memo(props => {
 
         {mode === 'edit' ? (
           <Box
+            data-testid="project-context-editor-wrapper"
             sx={styles.editorWrapper}
             onFocus={handleEditorFocus}
             onBlur={handleEditorBlur}

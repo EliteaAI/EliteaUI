@@ -11,18 +11,27 @@ const EnableToggleCard = memo(props => {
     disabled = false,
     title = 'Project Context',
     description = 'Project-specific background information that the AI uses to generate more accurate and relevant responses, tailored to your workflows, data, and goals.',
+    testId,
+    titleTestId,
+    descriptionTestId,
+    switchTestId,
   } = props;
   const styles = enableToggleCardStyles();
   return (
-    <Box sx={styles.toggleCard}>
+    <Box
+      data-testid={testId}
+      sx={styles.toggleCard}
+    >
       <Box sx={styles.toggleCardText}>
         <Typography
+          data-testid={titleTestId}
           variant="headingSmall"
           color="text.secondary"
         >
           {title}
         </Typography>
         <Typography
+          data-testid={descriptionTestId}
           variant="bodySmall"
           sx={styles.toggleDescription}
         >
@@ -34,6 +43,9 @@ const EnableToggleCard = memo(props => {
         onChange={onToggle}
         color="primary"
         disabled={disabled}
+        slotProps={
+          switchTestId ? { switch: { slotProps: { input: { 'data-testid': switchTestId } } } } : undefined
+        }
       />
     </Box>
   );

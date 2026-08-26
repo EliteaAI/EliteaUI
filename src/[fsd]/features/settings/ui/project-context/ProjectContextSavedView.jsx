@@ -97,6 +97,7 @@ const ProjectContextSavedView = memo(props => {
               Edit with AI
             </Button.BaseBtn>
             <Button.BaseBtn
+              data-testid="project-context-edit-button"
               variant={BUTTON_VARIANTS.secondary}
               onClick={() => onNavigate('edit')}
               disabled={!enabled}
@@ -143,6 +144,7 @@ const ProjectContextSavedView = memo(props => {
     <Box sx={styles.root}>
       <DrawerPageHeader
         title="Project Context"
+        titleTestId="project-context-page-title"
         showBorder
         extraContent={headerActions}
       />
@@ -157,9 +159,14 @@ const ProjectContextSavedView = memo(props => {
           enabled={enabled}
           onToggle={handleToggle}
           disabled={!canEdit || isSavingToggle}
+          testId="project-context-toggle-card"
+          titleTestId="project-context-toggle-card-title"
+          descriptionTestId="project-context-toggle-card-description"
+          switchTestId="project-context-enable-toggle"
         />
         {!enabled && (
           <Banner.BannerMessage
+            testId="project-context-disabled-banner"
             message="Project Context is turned off. The project background is not applied to AI responses or workflows."
             variant="info"
           />

@@ -45,7 +45,10 @@ const ProjectContextContent = memo(() => {
 
   if (isLoading) {
     return (
-      <Box sx={styles.loader}>
+      <Box
+        data-testid="project-context-loader"
+        sx={styles.loader}
+      >
         <CircularProgress size={32} />
       </Box>
     );

@@ -22,7 +22,7 @@ const ICON_MAPPING = {
 };
 
 const BannerMessage = memo(props => {
-  const { message, variant = VARIANT_MAPPING.WARNING } = props;
+  const { message, variant = VARIANT_MAPPING.WARNING, testId = 'credential-warning-banner' } = props;
   const [expanded, setExpanded] = useState(false);
   const theme = useTheme();
 
@@ -39,7 +39,7 @@ const BannerMessage = memo(props => {
       enterDelay={TIME_SHOW_TOOLTIP_MS}
     >
       <Box
-        data-testid="credential-warning-banner"
+        data-testid={testId}
         aria-label={message}
         sx={styles.container}
         onClick={handleToggle}
