@@ -16,6 +16,7 @@ const CardList = memo(props => {
     cardList,
     rightPanelOffset,
     rightPanelContent,
+    headerContent,
     emptyListPlaceHolder,
     customEmptyState,
     isError,
@@ -70,6 +71,7 @@ const CardList = memo(props => {
           pageSize={rest.pageSize}
           setPage={rest.setPage}
           resetPageOnSort={resetPageOnSort}
+          hasListHeader={Boolean(headerContent)}
           {...rest}
         />
       );
@@ -92,6 +94,7 @@ const CardList = memo(props => {
 
   return (
     <>
+      {headerContent && <Box sx={styles.headerContainer}>{headerContent}</Box>}
       {renderContent()}
       {shouldShowRightPanel && <RightPanel offsetFromTop={rightPanelOffset}>{rightPanelContent}</RightPanel>}
     </>
@@ -99,6 +102,16 @@ const CardList = memo(props => {
 });
 
 const cardListStyles = (isListFullWidth, rightPanelWidth, headerHeight) => ({
+  headerContainer: ({ palette }) => ({
+    position: 'sticky',
+    top: 0,
+    zIndex: 10,
+    width: isListFullWidth
+      ? 'calc(100% + 0.875rem)'
+      : `calc(calc(100% + 0.875rem) - ${rightPanelWidth + 16}px)`,
+    padding: '0.75rem 0 0 1.5rem',
+    backgroundColor: palette.background.default,
+  }),
   customEmptyContainer: {
     width: isListFullWidth ? '100%' : `calc(100% - ${rightPanelWidth + 16}px)`,
     height: `calc(100vh - ${headerHeight})`,

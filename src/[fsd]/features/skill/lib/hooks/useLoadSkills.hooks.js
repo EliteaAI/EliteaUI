@@ -6,7 +6,12 @@ import { useSkillListQuery } from '@/[fsd]/features/skill/api';
 import usePageQuery from '@/hooks/usePageQuery';
 import { useAuthorIdFromUrl } from '@/hooks/useSearchParamValue';
 
-export const useLoadSkills = (sortBy = 'created_at', sortOrder = 'desc', forceSkip = false) => {
+export const useLoadSkills = ({
+  sortBy = 'created_at',
+  sortOrder = 'desc',
+  forceSkip = false,
+  folderEntityIds = null,
+} = {}) => {
   const { page, pageSize, setPage, tagList, selectedTagIds, projectId } = usePageQuery();
   const { query } = useSelector(state => state.search);
   const authorId = useAuthorIdFromUrl();
@@ -28,6 +33,7 @@ export const useLoadSkills = (sortBy = 'created_at', sortOrder = 'desc', forceSk
         author_id: authorId,
         sort_by: sortBy,
         sort_order: sortOrder,
+        ids: folderEntityIds || undefined,
       },
     },
     { skip: !projectId || forceSkip },

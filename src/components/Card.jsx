@@ -3,6 +3,7 @@ import { memo, useCallback, useMemo, useRef, useState } from 'react';
 import { Box, CardContent, Divider, IconButton, Card as MuiCard, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
+import { MoveToFolderButton } from '@/[fsd]/entities/folder/ui';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import { useMcpTokenChange } from '@/[fsd]/features/mcp/lib/hooks';
 import { PinButton } from '@/[fsd]/widgets/pin-toggler/ui';
@@ -12,13 +13,14 @@ import OfflineIcon from '@/assets/offline-icon.svg?react';
 import OnlineIcon from '@/assets/online-icon.svg?react';
 import PublishIcon from '@/assets/publish-version.svg?react';
 import { isApplicationCard, isSkillCard, isToolkitCard } from '@/common/checkCardType';
-import { ContentType, ViewMode } from '@/common/constants';
+import { ContentType, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
 import { getEntityType, getEntityTypeByCardType } from '@/common/utils';
 import AuthorContainer from '@/components/AuthorContainer';
 import CardTagSection from '@/components/CardTagSection';
 import EntityIcon from '@/components/EntityIcon';
 import { IconLinkWithToolTip } from '@/components/Fork/IconLinkWithToolTip.jsx';
 import HighlightQuery from '@/components/HighlightQuery';
+import FolderIcon from '@/components/Icons/FolderIcon';
 import Like from '@/components/Like';
 import useCardNavigate from '@/hooks/useCardNavigate';
 import useCardResize from '@/hooks/useCardResize';
@@ -37,6 +39,7 @@ const Card = memo(props => {
     hideCardBottom = false,
     disableCardClick = false,
     onCardClick,
+    showFolders = true,
   } = props;
 
   const projectId = useSelectedProjectId();
@@ -54,10 +57,13 @@ const Card = memo(props => {
     is_forked: isForked,
     is_pinned: isPinned = false,
     has_published_version: hasPublishedVersion = false,
+    folder_id: folderId,
+    folder_name: folderName,
   } = data;
 
   const viewMode = useDataViewMode(pageViewMode, data);
   const [isCardHovered, setIsCardHovered] = useState(false);
+  const isPublicProject = projectId === PUBLIC_PROJECT_ID;
 
   const cardTitleRef = useRef(null);
   const cardRef = useRef(null);
@@ -167,6 +173,59 @@ const Card = memo(props => {
         onClick={isWholeCardClickable ? handleCardClick : undefined}
       >
         <CardContent sx={styles.cardContent}>
+          {/* Top-right status icons container */}
+          {!disableCardActions && (
+            <Box sx={styles.topRightSection}>
+              {isSupportAssistant && (
+                <IconButton
+                  disableRipple
+                  onClick={handleAssistantClick}
+                  sx={styles.supportAssistantIconContainer}
+                >
+                  <Box
+                    component={EliteaAssistantIcon}
+                    sx={{ width: '1.45rem', height: '1.45rem' }}
+                  />
+                </IconButton>
+              )}
+              {(((status === 'published' || status === 'embedded') && isApplicationCard(type)) ||
+                (hasPublishedVersion && isSkillCard(type))) && (
+                <StyledTooltip
+                  placement="top"
+                  title={status === 'embedded' ? 'Embedded' : 'Published'}
+                >
+                  <Box sx={styles.publishIconContainer}>
+                    <PublishIcon sx={{ fontSize: '1rem' }} />
+                  </Box>
+                </StyledTooltip>
+              )}
+              {pageViewMode !== ViewMode.Owner && (
+                <Box sx={styles.likeContainer}>
+                  <Like
+                    viewMode={pageViewMode}
+                    type={type}
+                    data={data}
+                  />
+                </Box>
+              )}
+              {(type === ContentType.MCPAdmin || type === ContentType.MCPAll) && (
+                <StyledTooltip
+                  placement="top"
+                  title={data.online || hasMcpLoggedIn ? 'Connected' : 'Disconnected'}
+                >
+                  {data.online || hasMcpLoggedIn ? (
+                    <Box sx={styles.mcpIconOnline}>
+                      <OnlineIcon />
+                    </Box>
+                  ) : (
+                    <Box sx={styles.mcpIconOffline}>
+                      <OfflineIcon />
+                    </Box>
+                  )}
+                </StyledTooltip>
+              )}
+            </Box>
+          )}
           <Box
             sx={styles.cardTopSection}
             onClick={isWholeCardClickable || disableCardClick ? undefined : handleCardClick}
@@ -245,12 +304,46 @@ const Card = memo(props => {
                     />
                   </Box>
                 </StyledTooltip>
-                {data?.tags?.length > 0 && (
+                {(isForked || (showFolders && folderId) || data?.tags?.length > 0) && (
                   <Divider
                     orientation="vertical"
                     flexItem
                     sx={styles.sectionDivider}
                   />
+                )}
+                {isForked && (
+                  <>
+                    <IconLinkWithToolTip
+                      meta={meta}
+                      type={getEntityTypeByCardType(type)}
+                    />
+                    {((showFolders && folderId) || data?.tags?.length > 0) && (
+                      <Divider
+                        orientation="vertical"
+                        flexItem
+                        sx={styles.sectionDivider}
+                      />
+                    )}
+                  </>
+                )}
+                {showFolders && folderId && !isPublicProject && (
+                  <>
+                    <StyledTooltip
+                      placement="top"
+                      title={folderName || 'In folder'}
+                    >
+                      <Box sx={styles.folderIndicator}>
+                        <FolderIcon sx={{ fontSize: '0.875rem' }} />
+                      </Box>
+                    </StyledTooltip>
+                    {data?.tags?.length > 0 && (
+                      <Divider
+                        orientation="vertical"
+                        flexItem
+                        sx={styles.sectionDivider}
+                      />
+                    )}
+                  </>
                 )}
                 <CardTagSection
                   tags={processedTags}
@@ -263,17 +356,13 @@ const Card = memo(props => {
               <Box sx={styles.bottomRightSection}>
                 {!disableCardActions && (
                   <>
-                    {isSupportAssistant && (
-                      <IconButton
-                        disableRipple
-                        onClick={handleAssistantClick}
-                        sx={styles.supportAssistantIconContainer}
-                      >
-                        <Box
-                          component={EliteaAssistantIcon}
-                          sx={{ width: '1.45rem', height: '1.45rem' }}
-                        />
-                      </IconButton>
+                    {showFolders && !isPublicProject && (
+                      <MoveToFolderButton
+                        entityId={id}
+                        entityType={type}
+                        currentFolderId={folderId}
+                        isVisible={isCardHovered}
+                      />
                     )}
                     <PinButton
                       entityId={id}
@@ -282,48 +371,6 @@ const Card = memo(props => {
                       alwaysVisible={isCardHovered}
                       onPinChange={handlePinChange}
                     />
-                    {(((status === 'published' || status === 'embedded') && isApplicationCard(type)) ||
-                      (hasPublishedVersion && isSkillCard(type))) && (
-                      <StyledTooltip
-                        placement="top"
-                        title={status === 'embedded' ? 'Embedded' : 'Published'}
-                      >
-                        <Box sx={styles.publishIconContainer}>
-                          <PublishIcon sx={{ fontSize: '1rem' }} />
-                        </Box>
-                      </StyledTooltip>
-                    )}
-                    {pageViewMode !== ViewMode.Owner && (
-                      <Box sx={styles.likeContainer}>
-                        <Like
-                          viewMode={pageViewMode}
-                          type={type}
-                          data={data}
-                        />
-                      </Box>
-                    )}
-                    {isForked && (
-                      <IconLinkWithToolTip
-                        meta={meta}
-                        type={getEntityTypeByCardType(type)}
-                      />
-                    )}
-                    {(type === ContentType.MCPAdmin || type === ContentType.MCPAll) && (
-                      <StyledTooltip
-                        placement="top"
-                        title={data.online || hasMcpLoggedIn ? 'Connected' : 'Disconnected'}
-                      >
-                        {data.online || hasMcpLoggedIn ? (
-                          <Box sx={styles.mcpIconOnline}>
-                            <OnlineIcon />
-                          </Box>
-                        ) : (
-                          <Box sx={styles.mcpIconOffline}>
-                            <OfflineIcon />
-                          </Box>
-                        )}
-                      </StyledTooltip>
-                    )}
                   </>
                 )}
               </Box>
@@ -378,12 +425,21 @@ const cardStyles = (hasCardDetails, showCardBottom, isWholeCardClickable, isClic
     position: 'relative',
     height: '100%',
   },
+  topRightSection: {
+    position: 'absolute',
+    top: '0.75rem',
+    right: '0.75rem',
+    display: 'flex',
+    gap: '0.125rem',
+    alignItems: 'center',
+    zIndex: 1,
+  },
   cardTopSection: {
     maxHeight: hasCardDetails ? '3.75rem' : '4.5rem',
     height: hasCardDetails ? '3.75rem' : '4.5rem',
     cursor: isClickable ? 'pointer' : 'default',
     width: '100%',
-    padding: hasCardDetails ? '1rem 1.25rem 0.75rem' : '1.25rem',
+    padding: hasCardDetails ? '1rem 6rem 0.75rem 1.25rem' : '1.25rem 6rem 1.25rem 1.25rem',
     boxSizing: 'border-box',
     display: 'flex',
     flexDirection: 'row',
@@ -464,6 +520,11 @@ const cardStyles = (hasCardDetails, showCardBottom, isWholeCardClickable, isClic
     height: '0.9375rem',
     alignSelf: 'center',
   },
+  folderIndicator: ({ palette }) => ({
+    display: 'flex',
+    alignItems: 'center',
+    color: palette.icon.fill.default,
+  }),
   publishIconContainer: ({ palette }) => ({
     display: 'flex',
     justifyContent: 'center',

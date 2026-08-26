@@ -3,15 +3,22 @@ import { memo, useCallback, useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
-import { Box } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import { EmptyStatePage } from '@/[fsd]/entities/empty-state-page';
+import {
+  ENTITY_FOLDER_TYPES,
+  FolderViewHeader,
+  useEntityFolders,
+  useFolderApplications,
+  useFolderView,
+} from '@/[fsd]/entities/folder';
 import { CollectionStatus, ContentType, ViewMode } from '@/common/constants';
 import { buildErrorMessage, uniqueArrayByProp } from '@/common/utils';
 import CardList from '@/components/CardList';
 import Categories from '@/components/Categories';
-import TrendingAuthors from '@/components/TrendingAuthors';
 import useCardList from '@/hooks/useCardList';
+import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 import RouteDefinitions from '@/routes';
 import { rightInfoPanelStyle } from '@/styles/RightInfoPanelStyle';
@@ -73,6 +80,24 @@ const PrivateAgentsList = memo(props => {
   const { query } = useSelector(state => state.search);
   const { renderCard } = useCardList(ViewMode.Owner);
   const navigate = useNavigate();
+  const projectId = useSelectedProjectId();
+
+  // Folder view state
+  const { folders } = useEntityFolders(ENTITY_FOLDER_TYPES.agent, { includeCounts: true });
+  const { selectedFolderId, selectedFolder, isFolderViewActive, openFolder, closeFolder } =
+    useFolderView(folders);
+
+  // Fetch folder items (entity IDs) when folder is selected
+  const {
+    idsQueryParam: folderEntityIds,
+    isLoading: isLoadingFolderItems,
+    isEmpty: isFolderEmpty,
+  } = useFolderApplications({
+    folderId: selectedFolderId,
+    projectId,
+  });
+
+  const shouldSkipQuery = isFolderViewActive && isLoadingFolderItems;
 
   const {
     onLoadMoreApplications,
@@ -86,10 +111,36 @@ const PrivateAgentsList = memo(props => {
     page,
     pageSize,
     setPage,
-  } = useLoadApplications(ViewMode.Owner, sortBy, sortOrder, statuses, false, false, true);
+  } = useLoadApplications(
+    ViewMode.Owner,
+    sortBy,
+    sortOrder,
+    statuses,
+    shouldSkipQuery,
+    false,
+    true,
+    folderEntityIds,
+  );
 
   const { total } = data || {};
   const uniqueDataList = useMemo(() => uniqueArrayByProp(data?.rows || [], 'id'), [data?.rows]);
+
+  const folderTagList = useMemo(() => {
+    if (!isFolderViewActive || !uniqueDataList.length) return [];
+
+    const tagMap = new Map();
+
+    uniqueDataList.forEach(item => {
+      item.tags?.forEach(tag => {
+        if (!tagMap.has(tag.id)) tagMap.set(tag.id, tag);
+      });
+    });
+
+    return Array.from(tagMap.values());
+  }, [isFolderViewActive, uniqueDataList]);
+
+  const activeTagList = isFolderViewActive ? folderTagList : tagList;
+
   const loadMore = useCallback(() => {
     const existsMore = total && uniqueDataList.length < total && (page + 1) * pageSize < total;
     if (!existsMore || isApplicationsFetching || isApplicationsFirstFetching) return;
@@ -125,27 +176,39 @@ const PrivateAgentsList = memo(props => {
     <>
       <CardList
         hideStatusColumn
-        key={cardContentType}
+        key={`${cardContentType}-${selectedFolderId || 'all'}`}
         cardList={uniqueDataList}
         total={total}
-        isLoading={isApplicationsFirstFetching}
+        isLoading={isApplicationsFirstFetching || (isFolderViewActive && isLoadingFolderItems)}
         isError={isApplicationsError}
         rightPanelOffset={rightPanelOffset}
         resetPageOnSort={() => setPage(0)}
+        headerContent={
+          isFolderViewActive && selectedFolder ? (
+            <FolderViewHeader
+              folder={selectedFolder}
+              entitiesCount={total || 0}
+              onClose={closeFolder}
+            />
+          ) : null
+        }
         rightPanelContent={
           cardContentType !== ContentType.ApplicationAdmin ? (
             <RightInfoPanel
-              tagList={tagList}
+              showFolders
+              folderEntityType={ENTITY_FOLDER_TYPES.agent}
+              tagList={activeTagList}
               specifiedStatus={statuses[0]}
+              onFolderSelect={openFolder}
+              selectedFolderId={selectedFolderId}
             />
           ) : (
             <div style={rightInfoPanelStyle}>
               <Categories
-                tagList={tagList}
+                tagList={activeTagList}
                 style={{ flex: 1 }}
                 specifiedStatus={statuses[0]}
               />
-              <TrendingAuthors />
             </div>
           )
         }
@@ -153,9 +216,15 @@ const PrivateAgentsList = memo(props => {
         isLoadingMore={isApplicationsFetching}
         loadMoreFunc={loadMore}
         cardType={cardContentType}
-        customEmptyState={<EmptyStatePage {...EmptyStateConfig} />}
+        customEmptyState={
+          isFolderViewActive && isFolderEmpty ? (
+            <Typography>No items in this folder yet</Typography>
+          ) : (
+            <EmptyStatePage {...EmptyStateConfig} />
+          )
+        }
         emptyListPlaceHolder={
-          cardContentType !== ContentType.ApplicationAdmin ? (
+          isFolderViewActive ? null : cardContentType !== ContentType.ApplicationAdmin ? (
             <EmptyListPlaceHolder
               query={query}
               status={statuses[0]}

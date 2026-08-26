@@ -82,7 +82,7 @@ export const configurationsApi = eliteaApi
             query: '',
           },
         }) => {
-          const { sort_by, sort_order, query } = extraParams || {};
+          const { sort_by, sort_order, query, ids } = extraParams || {};
           // Check if we need URLSearchParams for array parameters
           const hasArrayParams = Array.isArray(section) || Array.isArray(type);
 
@@ -103,6 +103,7 @@ export const configurationsApi = eliteaApi
             // Handle type and section using helper function
             appendParam(queryParams, 'type', type);
             appendParam(queryParams, 'section', section);
+            if (ids) queryParams.append('ids', ids);
 
             return {
               url: `/configurations/configurations/${projectId}?${queryParams.toString()}`,
@@ -124,6 +125,9 @@ export const configurationsApi = eliteaApi
             }
             if (section) {
               params.section = section;
+            }
+            if (ids) {
+              params.ids = ids;
             }
             return {
               url: `/configurations/configurations/${projectId}`, // configurations/configurations/{{project_id}}?include_shared=true&shared_offset=0&shared_limit=20

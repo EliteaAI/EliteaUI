@@ -97,6 +97,7 @@ const Apps = memo(() => {
               isApplication={true}
               cardContentType={ContentType.AppAll}
               disableEmptyRedirect={true}
+              showFolders={false}
             />
           </Box>
         ),

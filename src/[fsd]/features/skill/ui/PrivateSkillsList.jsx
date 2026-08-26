@@ -3,7 +3,16 @@ import { memo, useCallback, useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
+import { Typography } from '@mui/material';
+
 import { EmptyStatePage } from '@/[fsd]/entities/empty-state-page';
+import {
+  ENTITY_FOLDER_TYPES,
+  FolderViewHeader,
+  useEntityFolders,
+  useFolderApplications,
+  useFolderView,
+} from '@/[fsd]/entities/folder';
 import { useLoadSkills } from '@/[fsd]/features/skill/lib/hooks';
 import skillsDarkImage from '@/assets/images/Skills_Dark_1.png';
 import skillsLightImage from '@/assets/images/Skills_Light_1.png';
@@ -12,6 +21,7 @@ import { buildErrorMessage, uniqueArrayByProp } from '@/common/utils';
 import CardList from '@/components/CardList';
 import RightInfoPanel from '@/components/RightInfoPanel';
 import useCardList from '@/hooks/useCardList';
+import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 import RouteDefinitions from '@/routes';
 
@@ -28,6 +38,22 @@ const PrivateSkillsList = memo(props => {
   const { query } = useSelector(state => state.search);
   const { renderCard } = useCardList(ViewMode.Owner);
   const navigate = useNavigate();
+  const projectId = useSelectedProjectId();
+
+  const { folders } = useEntityFolders(ENTITY_FOLDER_TYPES.skill, { includeCounts: true });
+  const { selectedFolderId, selectedFolder, isFolderViewActive, openFolder, closeFolder } =
+    useFolderView(folders);
+
+  const {
+    idsQueryParam: folderEntityIds,
+    isLoading: isLoadingFolderItems,
+    isEmpty: isFolderEmpty,
+  } = useFolderApplications({
+    folderId: selectedFolderId,
+    projectId,
+  });
+
+  const shouldSkipQuery = isFolderViewActive && isLoadingFolderItems;
 
   const {
     onLoadMoreSkills,
@@ -41,10 +67,26 @@ const PrivateSkillsList = memo(props => {
     page,
     pageSize,
     setPage,
-  } = useLoadSkills(sortBy, sortOrder, false);
+  } = useLoadSkills({ sortBy, sortOrder, forceSkip: shouldSkipQuery, folderEntityIds });
 
   const { total } = data || {};
   const uniqueDataList = useMemo(() => uniqueArrayByProp(data?.rows || [], 'id'), [data?.rows]);
+
+  const folderTagList = useMemo(() => {
+    if (!isFolderViewActive || !uniqueDataList.length) return [];
+
+    const tagMap = new Map();
+
+    uniqueDataList.forEach(item => {
+      item.tags?.forEach(tag => {
+        if (!tagMap.has(tag.id)) tagMap.set(tag.id, tag);
+      });
+    });
+
+    return Array.from(tagMap.values());
+  }, [isFolderViewActive, uniqueDataList]);
+
+  const activeTagList = isFolderViewActive ? folderTagList : tagList;
 
   const loadMore = useCallback(() => {
     const existsMore = total && uniqueDataList.length < total && (page + 1) * pageSize < total;
@@ -82,25 +124,43 @@ const PrivateSkillsList = memo(props => {
   return (
     <CardList
       hideStatusColumn
-      key={cardContentType}
+      key={`${cardContentType}-${selectedFolderId || 'all'}`}
       cardList={uniqueDataList}
       total={total}
-      isLoading={isSkillsFirstFetching}
+      isLoading={isSkillsFirstFetching || (isFolderViewActive && isLoadingFolderItems)}
       isError={isSkillsError}
       rightPanelOffset={rightPanelOffset}
       resetPageOnSort={() => setPage(0)}
+      headerContent={
+        isFolderViewActive && selectedFolder ? (
+          <FolderViewHeader
+            folder={selectedFolder}
+            entitiesCount={total || 0}
+            onClose={closeFolder}
+          />
+        ) : null
+      }
       rightPanelContent={
         <RightInfoPanel
-          tagList={tagList}
-          entityType="skill"
+          showFolders
+          folderEntityType={ENTITY_FOLDER_TYPES.skill}
+          tagList={activeTagList}
+          onFolderSelect={openFolder}
+          selectedFolderId={selectedFolderId}
         />
       }
       renderCard={renderCard}
       isLoadingMore={isSkillsFetching}
       loadMoreFunc={loadMore}
       cardType={cardContentType}
-      customEmptyState={<EmptyStatePage {...EmptyStateConfig} />}
-      emptyListPlaceHolder={<PrivateSkillsListEmptyState query={query} />}
+      customEmptyState={
+        isFolderViewActive && isFolderEmpty ? (
+          <Typography>No items in this folder yet</Typography>
+        ) : (
+          <EmptyStatePage {...EmptyStateConfig} />
+        )
+      }
+      emptyListPlaceHolder={isFolderViewActive ? null : <PrivateSkillsListEmptyState query={query} />}
     />
   );
 });

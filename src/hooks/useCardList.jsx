@@ -6,7 +6,9 @@ import EntityCard from '@/components/Card';
  * Custom hook that provides a memoized card renderer function for EntityCard component.
  * Used by list pages (Applications, Pipelines, Credentials, etc.) to render cards consistently.
  */
-const useCardList = (viewMode, customTagClickHandler = null) => {
+const useCardList = (viewMode, customTagClickHandler = null, options = {}) => {
+  const { showFolders = true } = options;
+
   const renderCard = useCallback(
     (cardData, cardType, index) => {
       // When metaOnly is true, return metadata for DataTable to extract viewMode
@@ -23,10 +25,11 @@ const useCardList = (viewMode, customTagClickHandler = null) => {
           type={cardType}
           index={index}
           customTagClickHandler={customTagClickHandler}
+          showFolders={showFolders}
         />
       );
     },
-    [viewMode, customTagClickHandler],
+    [viewMode, customTagClickHandler, showFolders],
   );
 
   return {
