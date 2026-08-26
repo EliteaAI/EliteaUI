@@ -645,15 +645,22 @@ const formContentColumn = hasSidePanel => ({
 
 /** @type {MuiSx} */
 const toolkitFormStyles = (isDetailsActionBar, hasSidePanel) => ({
-  root: isDetailsActionBar
-    ? { display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, overflow: 'hidden' }
-    : {},
+  root: ({ palette }) =>
+    isDetailsActionBar
+      ? {
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
+          minHeight: 0,
+          overflow: 'hidden',
+          background: palette.background.toolkitDetailLeftPanel,
+        }
+      : {},
   actionBar: ({ palette }) =>
     isDetailsActionBar
       ? {
           flexShrink: 0,
           height: PANEL_HEADER_HEIGHT,
-          background: palette.background.section,
           borderBottom: `0.0625rem solid ${palette.border.table}`,
         }
       : { marginBottom: '0.75rem' },
