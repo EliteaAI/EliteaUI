@@ -7,7 +7,7 @@ import { parseMessage, resolveHref } from '@/[fsd]/entities/notifications/lib/he
 import LegacyNotificationMessage from './LegacyNotificationMessage.jsx';
 
 const NotificationListItemMessage = memo(props => {
-  const { notification, onCloseNotificationList, textVariant = 'bodySmall', testId } = props;
+  const { notification, onCloseNotificationList, textVariant = 'bodySmall', testId, linkTestId } = props;
   const textColor = notification.is_seen ? 'text.primary' : 'text.secondary';
   const message = notification.meta?.message;
   const segments = useMemo(() => parseMessage(message), [message]);
@@ -27,6 +27,7 @@ const NotificationListItemMessage = memo(props => {
               key={index}
               variant={textVariant}
               sx={styles.link}
+              data-testid={linkTestId}
               href={resolvedHref}
               target="_blank"
               rel="noopener noreferrer"

@@ -209,6 +209,7 @@ const NotificationTable = memo(props => {
               showIcon={false}
               context="table"
               messageTestId="notification-message-typography"
+              linkTestId="notification-message-link"
             />
           </Box>
         );
