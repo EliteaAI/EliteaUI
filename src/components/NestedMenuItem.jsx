@@ -13,6 +13,9 @@ const NestedMenuItem = React.forwardRef((props, ref) => {
     tabIndex: tabIndexProp,
     ContainerProps: ContainerPropsProp = {},
     MenuItemComponent = MenuItem,
+    anchorOrigin: anchorOriginProp,
+    transformOrigin: transformOriginProp,
+    subMenuProps,
     ...MenuItemProps
   } = props;
 
@@ -134,19 +137,14 @@ const NestedMenuItem = React.forwardRef((props, ref) => {
       <Menu
         style={{ pointerEvents: 'none' }}
         anchorEl={menuItemRef.current}
-        anchorOrigin={{
-          vertical: 'top',
-          horizontal: 'right',
-        }}
-        transformOrigin={{
-          vertical: 'top',
-          horizontal: 'left',
-        }}
+        anchorOrigin={anchorOriginProp || { vertical: 'top', horizontal: 'right' }}
+        transformOrigin={transformOriginProp || { vertical: 'top', horizontal: 'left' }}
         open={open}
         autoFocus={false}
         disableAutoFocus
         disableEnforceFocus
         onClose={closeSubMenu}
+        {...subMenuProps}
       >
         <div
           ref={menuContainerRef}

@@ -361,8 +361,8 @@ const darkPalette = {
       default: gray50,
       hover: white20,
       active: {
-        default: darkBlue,
-        hover: blue40,
+        default: 'rgba(245, 81, 249, 0.3)',
+        hover: 'rgba(245, 81, 249, 0.2)',
       },
       disabled: white10,
     },
@@ -410,6 +410,14 @@ const darkPalette = {
       error: red8,
       warning: orange8,
       info: blueFill8,
+    },
+    folder: {
+      default: white2,
+      active: 'rgba(245, 81, 249, 0.1)',
+      borderGradient:
+        'linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.0014) 100%)',
+      borderHover: 'rgba(245, 81, 249, 0.3)',
+      borderActive: 'rgba(245, 81, 249, 0.3)',
     },
   },
   border: {

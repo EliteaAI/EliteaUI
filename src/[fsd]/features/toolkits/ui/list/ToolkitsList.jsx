@@ -1,12 +1,19 @@
-import { memo, useCallback, useEffect, useMemo } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
-import { Box } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
-import { AuthorInformation } from '@/[fsd]/entities/author/ui';
 import { EmptyStatePage } from '@/[fsd]/entities/empty-state-page';
+import {
+  ENTITY_FOLDER_TYPES,
+  FolderSection,
+  FolderViewHeader,
+  useEntityFolders,
+  useFolderApplications,
+  useFolderView,
+} from '@/[fsd]/entities/folder';
 import { ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useLoadToolkits } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ToolkitTypesPanel, ToolkitsEmptyListPlaceHolder } from '@/[fsd]/features/toolkits/ui/list';
@@ -15,12 +22,10 @@ import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
 import { ContentType, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
 import { buildErrorMessage, uniqueArrayByProp } from '@/common/utils';
 import CardList from '@/components/CardList';
-import TeamMates from '@/components/TeamMates';
 import useMCPListStatusMonitor from '@/hooks/toolkit/useMCPListStatusMonitor';
 import useTypes from '@/hooks/toolkit/useTypes';
 import useCardList from '@/hooks/useCardList';
 import useIsTableView from '@/hooks/useIsTableView';
-import useQueryTrendingAuthor from '@/hooks/useQueryTrendingAuthor';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 import RouteDefinitions from '@/routes';
@@ -34,19 +39,46 @@ const ToolkitsList = memo(props => {
     emptyListPlaceHolder,
     isMCP = false,
     isApplication = false,
+    showFolders = true,
   } = props;
   const navigate = useNavigate();
-  const styles = toolkitsListStyles();
   const { selectedTypes } = useTypes();
   const dispatch = useDispatch();
   const { query } = useSelector(state => state.search);
   const selectedProjectId = useSelectedProjectId();
   const isMcpVisible = useIsMcpVisible();
+  const isPublicProject = selectedProjectId == PUBLIC_PROJECT_ID;
 
-  const { renderCard } = useCardList(
-    selectedProjectId != PUBLIC_PROJECT_ID ? ViewMode.Owner : ViewMode.Public,
-  );
+  const { renderCard } = useCardList(!isPublicProject ? ViewMode.Owner : ViewMode.Public, null, {
+    showFolders,
+  });
   const isTableView = useIsTableView();
+
+  const folderEntityType = useMemo(() => {
+    if (isMCP) return ENTITY_FOLDER_TYPES.mcp;
+    return ENTITY_FOLDER_TYPES.toolkit;
+  }, [isMCP]);
+
+  const { folders } = useEntityFolders(folderEntityType, { includeCounts: true, skip: !showFolders });
+  const { selectedFolderId, selectedFolder, isFolderViewActive, openFolder, closeFolder } = useFolderView(
+    showFolders ? folders : [],
+  );
+
+  const {
+    idsQueryParam: folderEntityIds,
+    isLoading: isLoadingFolderItems,
+    isEmpty: isFolderEmpty,
+  } = useFolderApplications({
+    folderId: showFolders ? selectedFolderId : null,
+    projectId: selectedProjectId,
+  });
+
+  const shouldSkipQuery = showFolders && isFolderViewActive && isLoadingFolderItems;
+
+  const [isFoldersExpanded, setIsFoldersExpanded] = useState(false);
+  const handleExpandChange = useCallback(expanded => {
+    setIsFoldersExpanded(expanded);
+  }, []);
 
   const {
     onLoadMoreToolkits,
@@ -60,9 +92,14 @@ const ToolkitsList = memo(props => {
     page,
     pageSize,
     totalCount,
-    indexesTotal,
     setPage,
-  } = useLoadToolkits({ isMCP, isApplication, isTableView });
+  } = useLoadToolkits({
+    isMCP,
+    isApplication,
+    isTableView,
+    forceSkip: shouldSkipQuery,
+    folderEntityIds: showFolders ? folderEntityIds : undefined,
+  });
 
   useMCPListStatusMonitor({ isMCP });
 
@@ -74,54 +111,63 @@ const ToolkitsList = memo(props => {
     );
   }, [dispatch, tagList]);
 
-  const projectId = useSelectedProjectId();
-  const { isLoadingAuthor, authorId } = useQueryTrendingAuthor(projectId);
-  const { personal_project_id: privateProjectId } = useSelector(state => state.user);
+  const folderTagList = useMemo(() => {
+    if (!isFolderViewActive || !data?.length) return [];
+
+    const tagMap = new Map();
+    data.forEach(item => {
+      item.tags?.forEach(tag => {
+        if (!tagMap.has(tag.id)) tagMap.set(tag.id, tag);
+      });
+    });
+
+    return Array.from(tagMap.values());
+  }, [isFolderViewActive, data]);
 
   const rightPanelContent = useMemo(
     () => (
-      <Box style={styles.rightInfoPanelContainer}>
-        <ToolkitTypesPanel
-          tagList={tagList}
-          title="Types"
-          style={styles.rightInfoPanel}
-        />
-        {selectedProjectId == privateProjectId || authorId ? (
-          <AuthorInformation
-            isLoading={isLoadingAuthor}
-            indexesTotal={!isMCP && !isApplication ? indexesTotal : null}
+      <Box sx={toolkitsRightPanelStyles(isFoldersExpanded).container}>
+        {showFolders && !isPublicProject && (
+          <FolderSection
+            entityType={folderEntityType}
+            onFolderSelect={openFolder}
+            selectedFolderId={selectedFolderId}
+            onExpandChange={handleExpandChange}
           />
-        ) : (
-          <TeamMates entityType="toolkit" />
         )}
+        <ToolkitTypesPanel
+          tagList={isFolderViewActive ? folderTagList : tagList}
+          title="Types"
+          style={isFoldersExpanded ? { overflowY: 'visible' } : { flex: 1, minHeight: 0 }}
+        />
       </Box>
     ),
     [
       tagList,
-      styles,
-      selectedProjectId,
-      privateProjectId,
-      authorId,
-      isLoadingAuthor,
-      indexesTotal,
-      isMCP,
-      isApplication,
+      folderTagList,
+      folderEntityType,
+      isPublicProject,
+      showFolders,
+      openFolder,
+      selectedFolderId,
+      isFolderViewActive,
+      isFoldersExpanded,
+      handleExpandChange,
     ],
   );
 
-  // Navigate to New Toolkit page for private projects with no toolkits
   useEffect(() => {
-    const isPublic = selectedProjectId == PUBLIC_PROJECT_ID;
     const loading = isToolkitsFirstFetching || isToolkitsFetching;
     const hasError = !!isToolkitsError;
     const hasQuery = !!(query && String(query).trim());
 
     if (
-      !isPublic &&
+      !isPublicProject &&
       !loading &&
       !hasError &&
       !disableEmptyRedirect &&
       !hasQuery &&
+      !isFolderViewActive &&
       totalCount === 0 &&
       selectedTypes?.length === 0
     ) {
@@ -143,6 +189,8 @@ const ToolkitsList = memo(props => {
     disableEmptyRedirect,
     isMCP,
     isApplication,
+    isPublicProject,
+    isFolderViewActive,
   ]);
 
   const uniqueDataList = useMemo(() => {
@@ -207,40 +255,64 @@ const ToolkitsList = memo(props => {
 
   return (
     <CardList
-      key={cardContentType}
+      key={`${cardContentType}-${selectedFolderId || 'all'}`}
       cardList={uniqueDataList}
       total={totalCount}
-      isLoading={isToolkitsFirstFetching}
+      isLoading={isToolkitsFirstFetching || (isFolderViewActive && isLoadingFolderItems)}
       isError={isToolkitsError}
       rightPanelOffset={rightPanelOffset}
+      headerContent={
+        isFolderViewActive && selectedFolder ? (
+          <FolderViewHeader
+            folder={selectedFolder}
+            entitiesCount={totalCount || 0}
+            onClose={closeFolder}
+          />
+        ) : null
+      }
       rightPanelContent={rightPanelContent}
       renderCard={renderCard}
       isLoadingMore={isToolkitsFetching}
       loadMoreFunc={loadMore}
       cardType={cardContentType}
-      customEmptyState={<EmptyStatePage {...getEmptyStateConfig} />}
-      emptyListPlaceHolder={
-        emptyListPlaceHolder || (
-          <ToolkitsEmptyListPlaceHolder
-            query={query}
-            isMCP={isMCP}
-          />
+      customEmptyState={
+        isFolderViewActive && isFolderEmpty ? (
+          <Typography>No items in this folder yet</Typography>
+        ) : (
+          <EmptyStatePage {...getEmptyStateConfig} />
         )
+      }
+      emptyListPlaceHolder={
+        isFolderViewActive
+          ? null
+          : emptyListPlaceHolder || (
+              <ToolkitsEmptyListPlaceHolder
+                query={query}
+                isMCP={isMCP}
+              />
+            )
       }
       setPage={setPage}
       page={page}
       pageSize={pageSize}
+      showFolders={showFolders}
     />
   );
 });
 
 /** @type {MuiSx} */
-const toolkitsListStyles = () => ({
-  rightInfoPanel: { flex: 1 },
-  rightInfoPanelContainer: {
+const toolkitsRightPanelStyles = isFoldersExpanded => ({
+  container: {
     height: '100dvh',
     display: 'flex',
     flexDirection: 'column',
+    ...(isFoldersExpanded && {
+      overflowY: 'auto',
+      overflowX: 'hidden',
+      '::-webkit-scrollbar': {
+        display: 'none',
+      },
+    }),
   },
 });
 

@@ -26,6 +26,7 @@ export const useLoadToolkits = ({
   author_id,
   statuses,
   tags,
+  folderEntityIds = null,
 } = {}) => {
   const selectedProjectId = useSelectedProjectId();
   const projectId = useMemo(
@@ -128,6 +129,7 @@ export const useLoadToolkits = ({
     author_id,
     statuses,
     tags,
+    folderEntityIds,
   });
 
   const projectWideTagList = useMemo(() => {
@@ -176,6 +178,7 @@ export const useLoadToolkits = ({
     author_id,
     statuses,
     tags,
+    folderEntityIds,
   });
 
   const tagList = useMemo(() => {
@@ -231,6 +234,7 @@ const useLoadToolkitData = ({
   author_id,
   statuses,
   tags,
+  folderEntityIds = null,
 } = {}) => {
   const { sort_by, sort_order } = useSortQueryParamsFromUrl({
     defaultSortOrder: 'desc',
@@ -238,16 +242,17 @@ const useLoadToolkitData = ({
   });
   const params = useMemo(
     () => ({
-      specifiedQuery, // Add search query parameter
+      specifiedQuery,
       sort_by,
       sort_order,
-      mcp: isMCP ? true : undefined, // Only add mcp param if isMCP is true
-      application: isApplication ? true : undefined, // Only add application param if isApplication is true
-      toolkit_type: toolkit_type || selectedTypes || undefined, // Filter by toolkit type if provided
+      mcp: isMCP ? true : undefined,
+      application: isApplication ? true : undefined,
+      toolkit_type: toolkit_type || selectedTypes || undefined,
       search_artifact,
       author_id,
       statuses,
       tags,
+      ids: folderEntityIds || undefined,
     }),
     [
       specifiedQuery,
@@ -261,6 +266,7 @@ const useLoadToolkitData = ({
       author_id,
       statuses,
       tags,
+      folderEntityIds,
     ],
   );
   const { query, page, pageSize, setPage, projectId, extraParams } = usePageQuery(specifiedProjectId, params);
@@ -286,16 +292,17 @@ const useLoadToolkitData = ({
       page_size: pageSize,
       isTableView,
       params: {
-        query: extraParams.specifiedQuery || query, // Add search query parameter
+        query: extraParams.specifiedQuery || query,
         sort_by: extraParams.sort_by,
         sort_order: extraParams.sort_order,
-        mcp: extraParams.mcp, // Only add mcp param if isMCP is true
-        application: extraParams.application, // Only add application param if isApplication is true
-        toolkit_type: extraParams.toolkit_type, // Filter by toolkit type if provided
+        mcp: extraParams.mcp,
+        application: extraParams.application,
+        toolkit_type: extraParams.toolkit_type,
         author_id: extraParams.author_id,
         statuses: extraParams.statuses,
         tags: extraParams.tags,
         search_artifact: extraParams.search_artifact,
+        ids: extraParams.ids,
       },
     },
     {

@@ -1,60 +1,62 @@
-import { memo, useMemo } from 'react';
-
-import { useSelector } from 'react-redux';
+import { memo, useCallback, useState } from 'react';
 
 import Box from '@mui/material/Box';
 
-import { AuthorInformation } from '@/[fsd]/entities/author/ui';
+import { FolderSection } from '@/[fsd]/entities/folder';
 import Categories from '@/components/Categories';
-import TeamMates from '@/components/TeamMates';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-
-import useQueryTrendingAuthor from '../hooks/useQueryTrendingAuthor';
 
 const RightInfoPanel = memo(props => {
-  const { tagList, specifiedStatus, title = 'Tags', entityType = 'application' } = props;
+  const {
+    tagList,
+    specifiedStatus,
+    title = 'Tags',
+    folderEntityType,
+    showFolders = false,
+    onFolderSelect,
+    selectedFolderId,
+  } = props;
 
-  const styles = stylesRightInfoPanel();
-  const projectId = useSelectedProjectId();
-  const { isLoadingAuthor, authorId } = useQueryTrendingAuthor(projectId);
-  const { personal_project_id: privateProjectId } = useSelector(state => state.user);
-  const selectedProjectId = useSelectedProjectId();
-  const hasAuthorDetails = useSelector(state => !!state.trendingAuthor.authorDetails?.name);
+  const [isFoldersExpanded, setIsFoldersExpanded] = useState(false);
 
-  const shouldShowAuthorInfo = useMemo(() => {
-    if (authorId) return true;
+  const handleExpandChange = useCallback(expanded => {
+    setIsFoldersExpanded(expanded);
+  }, []);
 
-    if (selectedProjectId != null && privateProjectId != null) {
-      return selectedProjectId === privateProjectId;
-    }
-
-    return true;
-  }, [authorId, selectedProjectId, privateProjectId]);
-
-  const isAuthorInfoLoading = isLoadingAuthor || (shouldShowAuthorInfo && !hasAuthorDetails);
+  const styles = stylesRightInfoPanel(isFoldersExpanded);
 
   return (
-    <Box style={styles.mainContainer}>
+    <Box sx={styles.mainContainer}>
+      {showFolders && folderEntityType && (
+        <FolderSection
+          entityType={folderEntityType}
+          onFolderSelect={onFolderSelect}
+          selectedFolderId={selectedFolderId}
+          onExpandChange={handleExpandChange}
+        />
+      )}
       <Categories
         tagList={tagList}
         title={title}
-        style={{ flex: 1 }}
+        style={isFoldersExpanded ? { overflowY: 'visible' } : { flex: 1, minHeight: 0 }}
         specifiedStatus={specifiedStatus}
       />
-      {shouldShowAuthorInfo ? (
-        <AuthorInformation isLoading={isAuthorInfoLoading} />
-      ) : (
-        <TeamMates entityType={entityType} />
-      )}
     </Box>
   );
 });
 
-const stylesRightInfoPanel = () => ({
+/** @type {MuiSx} */
+const stylesRightInfoPanel = isFoldersExpanded => ({
   mainContainer: {
-    height: `calc(100vh)`,
+    height: '100dvh',
     display: 'flex',
     flexDirection: 'column',
+    ...(isFoldersExpanded && {
+      overflowY: 'auto',
+      overflowX: 'hidden',
+      '::-webkit-scrollbar': {
+        display: 'none',
+      },
+    }),
   },
 });
 

@@ -408,6 +408,13 @@ const lightPalette = {
       warning: orange8,
       info: blueFill8,
     },
+    folder: {
+      default: 'rgba(255, 255, 255, 0.6)',
+      active: 'rgba(99, 144, 254, 0.1)',
+      borderHover: blue03,
+      borderActive: blue03,
+      shadow: '0 0.125rem 0.25rem rgba(0, 0, 0, 0.12)',
+    },
   },
   border: {
     lines: light30,

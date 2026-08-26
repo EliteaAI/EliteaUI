@@ -134,10 +134,10 @@ The `pages/settings/` directory is the largest offender — nearly every setting
 
 #### `pages/` → `entities/` internals (0) ✓
 
-| File                         | Import                                                 |
-| ---------------------------- | ------------------------------------------------------ |
+| File                             | Import                                                                   |
+| -------------------------------- | ------------------------------------------------------------------------ |
 | ~~`pages/skills/EditSkill.jsx`~~ | ~~`from '@/[fsd]/entities/skill-tab-bar/ui/SkillTabBar'`~~ ✓ (Session 2) |
-| ~~`pages/skills/EditSkill.jsx`~~ | ~~`from '@/[fsd]/entities/version/lib/constants'`~~ ✓ (Session 6) |
+| ~~`pages/skills/EditSkill.jsx`~~ | ~~`from '@/[fsd]/entities/version/lib/constants'`~~ ✓ (Session 6)        |
 
 #### `widgets/` → `features/` internals (2)
 
@@ -734,22 +734,32 @@ imports to use main slice barrel.
 
 ### 2026-08-19 — Session 6
 
-**Scope:** Section 1.3 — External Barrel Bypasses: three subcategories (3 violations in pages/entities + 2 in widgets/features + 7 of 22 in features/entities = 10 total).
+**Scope:** Section 1.3 — External Barrel Bypasses: three subcategories (3 violations in pages/entities + 2 in
+widgets/features + 7 of 22 in features/entities = 10 total).
 
-**Fix strategy:** Rewrite import paths to use barrel files instead of internal segment paths. All target barrels already correctly export required symbols — no new barrels or file moves needed. Pure path updates only.
+**Fix strategy:** Rewrite import paths to use barrel files instead of internal segment paths. All target
+barrels already correctly export required symbols — no new barrels or file moves needed. Pure path updates
+only.
 
 #### Fix #1–#3: `pages/skills/EditSkill.jsx` + `widgets/sidebar-root/ui/ProjectAvatar.jsx` + `widgets/data-table/ui/DataTable.jsx`
 
 **pages/skills/EditSkill.jsx:**
-- **Updated** line 9: `LATEST_VERSION_NAME` import from `@/[fsd]/entities/version/lib/constants` → `@/[fsd]/entities/version`
+
+- **Updated** line 9: `LATEST_VERSION_NAME` import from `@/[fsd]/entities/version/lib/constants` →
+  `@/[fsd]/entities/version`
 - **Verified** `entities/version/index.js` already exports `LATEST_VERSION_NAME` ✓
 
 **widgets/sidebar-root/ui/ProjectAvatar.jsx:**
-- **Updated** line 5: `useProjectInfoQuery` import from `@/[fsd]/features/settings/api/projectInfoApi` → `@/[fsd]/features/settings`
-- **Verified** `features/settings/index.js` → `api/index.js` → `projectInfoApi` chain exports `useProjectInfoQuery` ✓
+
+- **Updated** line 5: `useProjectInfoQuery` import from `@/[fsd]/features/settings/api/projectInfoApi` →
+  `@/[fsd]/features/settings`
+- **Verified** `features/settings/index.js` → `api/index.js` → `projectInfoApi` chain exports
+  `useProjectInfoQuery` ✓
 
 **widgets/data-table/ui/DataTable.jsx:**
-- **Updated** line 15: `McpAuthHelpers` import from `@/[fsd]/features/mcp/lib/helpers` → `@/[fsd]/features/mcp`
+
+- **Updated** line 15: `McpAuthHelpers` import from `@/[fsd]/features/mcp/lib/helpers` →
+  `@/[fsd]/features/mcp`
 - **Verified** `features/mcp/index.js` re-exports `lib/helpers` as `export * as McpAuthHelpers` ✓
 
 #### Fix #4–#10: `features/skill/ui/*` (7 files)
@@ -761,10 +771,12 @@ All using `LATEST_VERSION_NAME` from `entities/version/lib/constants`. Single-li
 3. **CreateSkillTabBar.jsx** (line 8): `entities/version/lib/constants` → `entities/version`
 4. **SkillControls.jsx** (line 9): `entities/version/lib/constants` → `entities/version`
 5. **SkillVersionSelector.jsx** (line 8): `entities/version/lib/constants` → `entities/version`
-6. **generate-skill-modal/GenerateSkillModal.jsx** (line 6): `entities/version/lib/constants` → `entities/version`
+6. **generate-skill-modal/GenerateSkillModal.jsx** (line 6): `entities/version/lib/constants` →
+   `entities/version`
 7. **import/SkillImportModal.jsx** (line 8): `entities/version/lib/constants` → `entities/version`
 
 **Counters updated:**
+
 - Section 1.3: `51` violations → `41` violations (−10)
 - `pages/` → `entities/` internals: `2` → `0` ✓ (both rows now struck)
 - `widgets/` → `features/` internals: `2` → `0` ✓ (both rows now struck)

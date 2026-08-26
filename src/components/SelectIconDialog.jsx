@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Box, IconButton, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import ListInfiniteMoreLoader from '@/ComponentsLib/ListInfiniteMoreLoader';
 import StyledTooltip from '@/ComponentsLib/Tooltip';
@@ -13,6 +13,8 @@ import {
   useUploadSkillIconMutation,
 } from '@/[fsd]/features/skill/api';
 import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks/useEnvironmentSettingByKey.hooks';
+import { Button } from '@/[fsd]/shared/ui';
+import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import BaseModal from '@/[fsd]/shared/ui/modal/BaseModal';
 import {
   useDeleteApplicationIconMutation,
@@ -298,27 +300,24 @@ export default function SelectIconDialog({
 
   const styles = selectIconDialogStyles();
 
-  const headerActions = (
+  const headerActions = isUploading ? (
+    <Box sx={styles.circleProgressWrapper}>
+      <StyledCircleProgress size={16} />
+    </Box>
+  ) : (
     <StyledTooltip
       title="Upload a bmp, ico, gif, jpeg, jpg, png, tiff or webp image (less than 500KB)"
       placement="top"
     >
-      <IconButton
+      <Button.BaseBtn
         data-testid="agent-icon-picker-upload-button"
-        variant="elitea"
-        color="tertiary"
-        onClick={isUploading ? undefined : onImport}
+        variant={BUTTON_VARIANTS.iconLabel}
+        onClick={onImport}
         disabled={isUploading}
+        startIcon={<ImportIcon />}
       >
-        {isUploading ? (
-          <StyledCircleProgress size={16} />
-        ) : (
-          <Box
-            component={ImportIcon}
-            sx={styles.importIcon}
-          />
-        )}
-      </IconButton>
+        Import
+      </Button.BaseBtn>
     </StyledTooltip>
   );
 
@@ -441,6 +440,11 @@ const selectIconDialogStyles = () => ({
     maxWidth: '90vw',
     height: '32rem',
     maxHeight: 'calc(100vh - 10rem)',
+  },
+  circleProgressWrapper: {
+    display: 'flex',
+    alignItems: 'center',
+    marginRight: '1.5rem',
   },
   contentWrapper: {
     display: 'flex',

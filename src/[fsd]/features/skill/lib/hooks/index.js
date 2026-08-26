@@ -1,3 +1,4 @@
+export { useCompareSkillVersions } from './useCompareSkillVersions.hooks';
 export { default as useSaveSkill } from './useSaveSkill.hooks';
 export { default as useSaveSkillVersion } from './useSaveSkillVersion.hooks';
 export { useLoadSkills } from './useLoadSkills.hooks';

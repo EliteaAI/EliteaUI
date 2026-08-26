@@ -56,6 +56,8 @@ const DataTable = memo(props => {
     resetPageOnSort,
     setPage: externalSetPage,
     hideStatusColumn,
+    hasListHeader = false,
+    showFolders = true,
   } = props;
 
   const { windowWidth } = useGetWindowWidth();
@@ -77,8 +79,6 @@ const DataTable = memo(props => {
   const [order, setOrder] = useState(sortOrder);
   const [orderBy, setOrderBy] = useState(sortBy);
 
-  const [pinnedRows, setPinnedRows] = useState([]);
-  const [unpinnedRows, setUnpinnedRows] = useState([]);
   const [hoveredRowId, setHoveredRowId] = useState(null);
   const [tablePage, setTablePage] = useState(externalPage || 0);
 
@@ -88,7 +88,7 @@ const DataTable = memo(props => {
   const isPipelines = useMemo(() => isPipelineCard(cardType), [cardType]);
   const isAppAll = useMemo(() => isAppAllCard(cardType), [cardType]);
 
-  const styles = useMemo(() => dataTableStyles(isFullWidth), [isFullWidth]);
+  const styles = useMemo(() => dataTableStyles(isFullWidth, hasListHeader), [isFullWidth, hasListHeader]);
 
   const internalRowsPerPage = useMemo(() => {
     const size = parseInt(pageSizeFromUrl || pageSize || PAGE_SIZE);
@@ -337,20 +337,15 @@ const DataTable = memo(props => {
     [columns, cardType, viewMode],
   );
 
-  const onPinChange = useCallback((id, newState) => {
-    const updateList = (prevState, addState) =>
-      addState ? [...prevState, id] : prevState.filter(rowId => rowId !== id);
-
-    setPinnedRows(prev => updateList(prev, newState));
-    setUnpinnedRows(prev => updateList(prev, !newState));
-  }, []);
-
   const nameCellProps = useMemo(
-    () => ({ cardType, viewMode, onPinChange }),
-    [cardType, viewMode, onPinChange],
+    () => ({ cardType, viewMode, showFolders }),
+    [cardType, viewMode, showFolders],
   );
 
-  const actionsProps = useMemo(() => ({ cardType, viewMode }), [cardType, viewMode]);
+  const actionsProps = useMemo(
+    () => ({ cardType, viewMode, showFolders }),
+    [cardType, viewMode, showFolders],
+  );
 
   useEffect(() => {
     if (typeof externalPage === 'number' && tablePage !== externalPage) {
@@ -391,7 +386,7 @@ const DataTable = memo(props => {
   const visibleRows = useMemo(() => {
     const itemsWithTypeLabel = data.map(row => ({
       ...row,
-      is_pinned: pinnedRows.includes(row.id) || (row.is_pinned && !unpinnedRows.includes(row.id)),
+      is_pinned: row.is_pinned,
       online:
         row.type === 'mcp' ? McpAuthHelpers.getAccessToken(row?.settings?.url || '') !== null : row.online,
       typeLabel:
@@ -408,18 +403,7 @@ const DataTable = memo(props => {
     return !isToolkits && !isMCPs && !isCredentials
       ? sortedItems.slice(tablePage * rowsPerPage, tablePage * rowsPerPage + rowsPerPage)
       : sortedItems;
-  }, [
-    data,
-    order,
-    orderBy,
-    isToolkits,
-    isMCPs,
-    isCredentials,
-    tablePage,
-    rowsPerPage,
-    pinnedRows,
-    unpinnedRows,
-  ]);
+  }, [data, order, orderBy, isToolkits, isMCPs, isCredentials, tablePage, rowsPerPage]);
 
   useEffect(() => {
     if (pageSizeFromUrl && pageSize != pageSizeFromUrl) {
@@ -497,13 +481,15 @@ DataTable.displayName = 'DataTable';
 export default DataTable;
 
 const TABLE_MIN_WIDTH = '42.5rem';
+const FOLDER_HEADER_HEIGHT = '3.5rem';
 
 /** @type {MuiSx} */
-const dataTableStyles = isFullWidth => ({
+const dataTableStyles = (isFullWidth, hasListHeader) => ({
   container: {
     flexGrow: 1,
     width: isFullWidth ? CARD_LIST_WIDTH_FULL : CARD_LIST_WIDTH,
     overflowY: 'hidden',
+    ...(hasListHeader && { maxHeight: `calc(100% - ${FOLDER_HEADER_HEIGHT})`, marginTop: '0.25rem' }),
   },
   tableScrollWrapper: {
     display: 'flex',

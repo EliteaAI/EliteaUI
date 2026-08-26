@@ -1,9 +1,10 @@
-import { memo, useMemo, useRef } from 'react';
+import { memo, useMemo, useRef, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 
 import { Box } from '@mui/material';
 
+import { CompareVersionsModal } from '@/[fsd]/entities/compare-versions';
 import {
   LATEST_VERSION_NAME,
   VersionDelete,
@@ -11,6 +12,7 @@ import {
   useSetDefaultVersion,
   useUnpublishVersionMenu,
 } from '@/[fsd]/entities/version';
+import { useCompareAgentVersions } from '@/[fsd]/features/agent/lib/hooks';
 import { PinEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
 import { Controls } from '@/[fsd]/shared/ui';
@@ -19,10 +21,12 @@ import { PERMISSIONS, ViewMode } from '@/common/constants';
 import { useCopyLinkMenu } from '@/components/CopyLinkToEntityButton.jsx';
 import { useForkEntityMenu } from '@/components/Fork/ForkEntityButton';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
+import DifferenceIcon from '@/components/Icons/DifferenceIcon';
 import PinIcon from '@/components/Icons/PinIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import { useIsFromPipelineDetail } from '@/hooks/useIsFromSpecificPageHooks';
 import { useProjectEntityLink } from '@/hooks/useProjectEntityLink';
+import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useViewMode from '@/hooks/useViewMode';
 import { useDeleteApplicationMenu } from '@/pages/Applications/Components/Applications/DeleteApplicationButton';
 import { useExportApplicationMenu } from '@/pages/Applications/Components/Applications/ExportApplicationButton';
@@ -36,8 +40,19 @@ const ApplicationControls = memo(props => {
   const formik = useFormikContext();
   const viewMode = useViewMode();
   const versionDeleteRef = useRef(null);
+  const projectId = useSelectedProjectId();
+  const [compareVersionsOpen, setCompareVersionsOpen] = useState(false);
 
   const { values: { id } = {} } = formik;
+
+  const {
+    loadVersions: loadAgentVersions,
+    savingLeftKeys,
+    savingRightKeys,
+    onSaveLeft,
+    onSaveRight,
+    resetSavingState,
+  } = useCompareAgentVersions({ projectId, applicationId: id });
 
   const versionDetails = formik?.values?.version_details;
   const { projectEntityLink } = useProjectEntityLink({
@@ -149,6 +164,18 @@ const ApplicationControls = memo(props => {
           ]),
       { ...exportApplicationMenuItem, disabled: !checkPermission(PERMISSIONS.applications.export) },
       shareVersionMenuItem,
+      ...(!isFromPipeline &&
+      (formik?.values?.versions?.length ?? 0) >= 2 &&
+      (isPrivate || checkPermission(PERMISSIONS.applications.update))
+        ? [
+            {
+              key: 'compare-versions',
+              label: 'Compare versions',
+              icon: <DifferenceIcon sx={{ fontSize: '1rem' }} />,
+              onClick: () => setCompareVersionsOpen(true),
+            },
+          ]
+        : []),
       ...(forkEntityMenuItem ? [forkEntityMenuItem] : []),
       ...(publishApplicationMenuItem && !isFromPipeline ? [publishApplicationMenuItem] : []),
       ...(unpublishVersionMenuItem && !isFromPipeline ? [unpublishVersionMenuItem] : []),
@@ -208,6 +235,8 @@ const ApplicationControls = memo(props => {
     isFromPipeline,
     canDeleteVersion,
     canDeleteApplication,
+    formik?.values?.versions,
+    isPrivate,
   ]);
 
   return (
@@ -248,6 +277,21 @@ const ApplicationControls = memo(props => {
       {publishDialog}
       {unpublishDialog}
       {setDefaultVersionDialog}
+      {compareVersionsOpen && (
+        <CompareVersionsModal
+          open={compareVersionsOpen}
+          onClose={() => setCompareVersionsOpen(false)}
+          entityType={isFromPipeline ? 'pipeline' : 'agent'}
+          leftVersionId={formik?.values?.version_details?.id}
+          versions={formik?.values?.versions ?? []}
+          onLoadVersions={loadAgentVersions}
+          savingLeftKeys={savingLeftKeys}
+          savingRightKeys={savingRightKeys}
+          onSaveLeft={onSaveLeft}
+          onSaveRight={onSaveRight}
+          resetSavingState={resetSavingState}
+        />
+      )}
     </Box>
   );
 });

@@ -21,6 +21,7 @@ import { PERMISSIONS, SkillsTabs } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils.jsx';
 import { useCopyLinkMenu } from '@/components/CopyLinkToEntityButton.jsx';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
+import DifferenceIcon from '@/components/Icons/DifferenceIcon';
 import ExportIcon from '@/components/Icons/ExportIcon';
 import ForkIcon from '@/components/Icons/ForkIcon';
 import PinIcon from '@/components/Icons/PinIcon';
@@ -44,8 +45,16 @@ const sectionLabelSx = ({ palette }) => ({
  * Controls.ControlsDropdown and reuses the entity-agnostic agent hooks.
  */
 const SkillControls = memo(props => {
-  const { skillId, skillName, initialPinned, currentVersionId, onChangeVersion, onSetDefault, onSuccess } =
-    props;
+  const {
+    skillId,
+    skillName,
+    initialPinned,
+    currentVersionId,
+    onChangeVersion,
+    onSetDefault,
+    onSuccess,
+    onOpenCompare,
+  } = props;
 
   const navigate = useNavigate();
   const projectId = useSelectedProjectId();
@@ -53,6 +62,7 @@ const SkillControls = memo(props => {
   const { checkPermission } = useCheckPermission();
   const { toastError, toastSuccess } = useToast();
   const { values } = useFormikContext();
+  const versions = useMemo(() => values?.versions ?? [], [values?.versions]);
 
   const { publishSkillMenuItem, publishDialog } = usePublishSkillMenu(onSuccess);
   const { unpublishSkillMenuItem, unpublishDialog } = useUnpublishSkillMenu(onSuccess);
@@ -178,6 +188,13 @@ const SkillControls = memo(props => {
           onClick: onExport,
         },
         shareVersionMenuItem,
+        versions.length >= 2 &&
+          (isPrivate || checkPermission(PERMISSIONS.skills.update)) && {
+            key: 'compare-versions',
+            label: 'Compare versions',
+            icon: <DifferenceIcon sx={{ fontSize: '1rem' }} />,
+            onClick: onOpenCompare,
+          },
         {
           key: 'fork',
           label: 'Fork',
@@ -239,6 +256,10 @@ const SkillControls = memo(props => {
       onDeleteSkill,
       canDeleteVersion,
       canDeleteSkill,
+      versions,
+      isPrivate,
+      checkPermission,
+      onOpenCompare,
     ],
   );
 

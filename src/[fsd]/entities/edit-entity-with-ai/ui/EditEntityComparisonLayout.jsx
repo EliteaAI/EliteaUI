@@ -9,10 +9,20 @@ const EditEntityComparisonLayout = memo(props => {
     <Box sx={styles.container}>
       <Box sx={styles.headerRow}>
         <Box sx={styles.headerCell}>
-          <Typography sx={styles.headerText}>{currentLabel}</Typography>
+          <Typography
+            component={Box}
+            sx={styles.headerText}
+          >
+            {currentLabel}
+          </Typography>
         </Box>
         <Box sx={styles.headerCell}>
-          <Typography sx={styles.headerText}>{suggestedLabel}</Typography>
+          <Typography
+            component={Box}
+            sx={styles.headerText}
+          >
+            {suggestedLabel}
+          </Typography>
         </Box>
       </Box>
       <Box sx={styles.scrollable}>

@@ -1,3 +1,4 @@
+import { RtkCacheHelpers } from '@/[fsd]/shared/lib/helpers';
 import { PUBLIC_PROJECT_ID } from '@/common/constants.js';
 
 import { eliteaApi } from './eliteaApi.js';
@@ -11,19 +12,6 @@ const PIN_DETAIL_CACHE_BY_ENTITY_TYPE = {
   configuration: { endpoint: 'getConfigurationDetail', idKey: 'configId' },
   skill: { endpoint: 'skillDetails', idKey: 'skillId' },
 };
-
-const CACHE_KEY_REGEX = /^([a-zA-Z]+)(\{.+\})$/;
-
-function parseCacheKey(cacheKey) {
-  const match = cacheKey.match(CACHE_KEY_REGEX);
-  if (!match) return null;
-  try {
-    const args = JSON.parse(match[2]);
-    return { endpointName: match[1], args };
-  } catch {
-    return null;
-  }
-}
 
 function applyPinToList(list, entityId, shouldPin) {
   const itemIndex = list.findIndex(item => item.id === entityId);
@@ -39,7 +27,7 @@ function applyPinToList(list, entityId, shouldPin) {
   }
 }
 
-function patchListCachesForPin(state, entityId, shouldPin, dispatch) {
+const patchListCachesForPin = (state, entityId, shouldPin, dispatch) => {
   const patchResults = [];
   Object.entries(state.eliteaApi.queries).forEach(([cacheKey, cacheEntry]) => {
     if (!cacheEntry?.data?.rows && !cacheEntry?.data?.items) return;
@@ -48,7 +36,7 @@ function patchListCachesForPin(state, entityId, shouldPin, dispatch) {
       data.rows?.some(row => row.id === entityId) || data.items?.some(item => item.id === entityId);
     if (!hasEntity) return;
 
-    const parsed = parseCacheKey(cacheKey);
+    const parsed = RtkCacheHelpers.parseCacheKey(cacheKey);
     if (!parsed) return;
 
     try {
@@ -64,7 +52,7 @@ function patchListCachesForPin(state, entityId, shouldPin, dispatch) {
     }
   });
   return patchResults;
-}
+};
 
 function patchDetailCachesForPin(state, projectId, entityType, entityId, shouldPin, dispatch) {
   const detailConfig = PIN_DETAIL_CACHE_BY_ENTITY_TYPE[entityType] ?? null;

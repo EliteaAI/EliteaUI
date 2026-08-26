@@ -19,6 +19,7 @@ export const useLoadCredentials = ({
   section,
   isTableView,
   selectedTypes,
+  folderEntityIds = null,
 } = {}) => {
   const theme = useTheme();
   const { query, page, pageSize, setPage, projectId } = usePageQuery(specifiedProjectId);
@@ -59,9 +60,10 @@ export const useLoadCredentials = ({
       // Pass selectedTypes as type parameter for server-side filtering
       type: selectedTypes?.length > 0 ? selectedTypes : undefined,
       params: {
-        query, // Add search query parameter
+        query,
         sort_by,
         sort_order,
+        ids: folderEntityIds || undefined,
       },
       includeShared: true,
       sharedOffset: 0,

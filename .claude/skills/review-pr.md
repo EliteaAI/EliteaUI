@@ -156,15 +156,15 @@ After submitting the review, set the appropriate label on the PR using `mcp__git
 `method: "update"` and the PR number as `issue_number`. Replace any existing review-status labels with the
 correct one based on the review outcome:
 
-| Review event      | Set label        | Remove labels                                          |
-|-------------------|------------------|--------------------------------------------------------|
-| `APPROVE`         | `ready to merge` | `review in progress`, `need review`, `need updates`    |
-| `REQUEST_CHANGES` | `need updates`   | `review in progress`, `need review`, `ready to merge`  |
-| `COMMENT`         | `need review`    | `review in progress`, `ready to merge`                 |
+| Review event      | Set label        | Remove labels                                         |
+| ----------------- | ---------------- | ----------------------------------------------------- |
+| `APPROVE`         | `ready to merge` | `review in progress`, `need review`, `need updates`   |
+| `REQUEST_CHANGES` | `need updates`   | `review in progress`, `need review`, `ready to merge` |
+| `COMMENT`         | `need review`    | `review in progress`, `ready to merge`                |
 
 To do this, read the PR's current labels, remove any review-status labels from the list above, add the new
-one, and pass the full resulting label array. Preserve all other labels (e.g., `do not merge till
-confirmation`) that are not in the review-status set.
+one, and pass the full resulting label array. Preserve all other labels (e.g.,
+`do not merge till confirmation`) that are not in the review-status set.
 
 ### 7. Report to the user
 
