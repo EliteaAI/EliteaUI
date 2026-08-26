@@ -166,7 +166,17 @@ const GenerateDimensionsDialog = memo(props => {
       );
       setStep(STEPS.review);
     }
-  }, [checkedIndexes, drafts, createDimension, addBinding, projectId, applicationId, suiteId, reset, onClose]);
+  }, [
+    checkedIndexes,
+    drafts,
+    createDimension,
+    addBinding,
+    projectId,
+    applicationId,
+    suiteId,
+    reset,
+    onClose,
+  ]);
 
   const styles = generateDimensionsDialogStyles();
 
@@ -271,9 +281,7 @@ const GenerateDimensionsDialog = memo(props => {
       }
       onConfirm={step === STEPS.review ? handleSave : handleGenerate}
       confirmButtonText={step === STEPS.review ? 'Add selected' : 'Generate'}
-      confirming={
-        isBusy || (step === STEPS.review && !checkedIndexes.size)
-      }
+      confirming={isBusy || (step === STEPS.review && !checkedIndexes.size)}
       data-testid="generate-dimensions-dialog"
     />
   );

@@ -25,7 +25,9 @@ const CreateAgentForm = memo(props => {
   const formik = useFormikContext();
   const theme = useTheme();
   const projectId = useSelectedProjectId();
-  const { data: tagList = {} } = useTagListQuery({ projectId }, { skip: !projectId });
+  const [tagFieldOpened, setTagFieldOpened] = useState(false);
+  const handleTagFieldOpen = useCallback(() => setTagFieldOpened(true), []);
+  const { data: tagList = {} } = useTagListQuery({ projectId }, { skip: !projectId || !tagFieldOpened });
   const { isLoading } = useCreateApplication(formik);
   const [name, setName] = useState(formik.values?.name || '');
   const { variables = [] } = formik.values?.version_details || {};
@@ -180,22 +182,24 @@ const CreateAgentForm = memo(props => {
                   )}
                 </Box>
 
-                <TagEditor
-                  id="tags"
-                  // Sub-element testids threaded through AutoCompleteDropDown
-                  // — same values as ApplicationEditForm.jsx's Tags field
-                  // (the pipeline DETAIL page's General section), since this
-                  // create-form Tags value must be located the same way on
-                  // both surfaces (ELITEA-2021). Agent branch stays
-                  // undefined — no case exercises Agent Tags yet (canon #511).
-                  inputTestId={entityType === 'pipeline' ? 'pipeline-tags-input' : undefined}
-                  chipTestId={entityType === 'pipeline' ? 'pipeline-tags-chip' : undefined}
-                  label="Tags"
-                  tagList={tagList || []}
-                  stateTags={formik.values?.version_details?.tags || []}
-                  disabled={isLoading}
-                  onChangeTags={onChangeTags}
-                />
+                <Box onFocus={handleTagFieldOpen}>
+                  <TagEditor
+                    id="tags"
+                    // Sub-element testids threaded through AutoCompleteDropDown
+                    // — same values as ApplicationEditForm.jsx's Tags field
+                    // (the pipeline DETAIL page's General section), since this
+                    // create-form Tags value must be located the same way on
+                    // both surfaces (ELITEA-2021). Agent branch stays
+                    // undefined — no case exercises Agent Tags yet (canon #511).
+                    inputTestId={entityType === 'pipeline' ? 'pipeline-tags-input' : undefined}
+                    chipTestId={entityType === 'pipeline' ? 'pipeline-tags-chip' : undefined}
+                    label="Tags"
+                    tagList={tagList || []}
+                    stateTags={formik.values?.version_details?.tags || []}
+                    disabled={isLoading}
+                    onChangeTags={onChangeTags}
+                  />
+                </Box>
               </Box>
             ),
           },
