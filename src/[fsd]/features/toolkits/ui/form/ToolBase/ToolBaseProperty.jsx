@@ -203,6 +203,19 @@ const ToolBaseProperty = memo(props => {
     return null;
   }
 
+  if (uiComponent === 'secret_headers') {
+    return (
+      <ToolkitForm.SecretHeadersInput
+        value={settings[k]}
+        editField={editField}
+        fieldPath={buildEditFieldPath(k)}
+        specifiedProjectId={specifiedProjectId}
+        disabled={disableConfigFields || disabled}
+        description={description}
+      />
+    );
+  }
+
   // OpenAPI spec field with schema loader, preview, and actions table
   if (uiComponent === 'openapi_spec') {
     return (
