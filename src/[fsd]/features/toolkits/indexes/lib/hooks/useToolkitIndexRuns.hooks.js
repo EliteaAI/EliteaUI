@@ -15,6 +15,7 @@ const TERMINAL_STATES = new Set([
   IndexStatuses.scheduledReindex,
   IndexStatuses.fail,
   IndexStatuses.cancelled,
+  IndexStatuses.interrupted,
 ]);
 
 const toIsoString = unixSeconds =>

@@ -6,7 +6,7 @@ import {
 } from '@/[fsd]/shared/lib/constants/budgetError.constants';
 
 import { BannerMessageMap, BannerSeverity, IndexStatuses } from '../constants/indexDetails.constants';
-import { bannerVariant, isAbandonedRun } from './indexDetails.helpers';
+import { bannerVariant } from './indexDetails.helpers';
 
 const GENERIC_FAILURE = BannerMessageMap[BannerSeverity.error];
 const NO_STATS = { isReindex: false };
@@ -164,27 +164,5 @@ describe('bannerVariant — success copy', () => {
     const banner = bannerVariant(false, IndexStatuses.success, { latestEntry: null });
 
     expect(banner.message).toBe(BannerMessageMap[BannerSeverity.success]);
-  });
-});
-
-describe('isAbandonedRun', () => {
-  const run = (state, extra = {}) => ({ metadata: { state }, ...extra });
-
-  it('flags a run the backend marked stale while it still claims to be running', () => {
-    expect(isAbandonedRun(run(IndexStatuses.progress, { stale: true }))).toBe(true);
-  });
-
-  it('leaves a live in-progress run alone', () => {
-    expect(isAbandonedRun(run(IndexStatuses.progress))).toBe(false);
-  });
-
-  it('ignores stale rows that already reached a terminal state', () => {
-    expect(isAbandonedRun(run(IndexStatuses.success, { stale: true }))).toBe(false);
-    expect(isAbandonedRun(run(IndexStatuses.fail, { stale: true }))).toBe(false);
-  });
-
-  it('tolerates a missing index or metadata', () => {
-    expect(isAbandonedRun(undefined)).toBe(false);
-    expect(isAbandonedRun({})).toBe(false);
   });
 });

@@ -1,9 +1,10 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
 import { useDeleteIndexItemMutation, useGetIndexScheduleQuery } from '@/[fsd]/features/toolkits/indexes/api';
 import { IndexStatuses } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
+import { resolveReindexStubAction } from '@/[fsd]/features/toolkits/indexes/lib/helpers/reindexStub.helpers';
 import {
   useIndexNavigation,
   useIndexesListPolling,
@@ -49,17 +50,21 @@ const IndexesContainer = memo(props => {
   const { indexes: indexesList, isLoading } = useToolkitIndexes(toolkitId);
 
   // A hard-killed run never emits the terminal trace onDone needs, so the stub (and
-  // its isReindexing lock) would pin the cards all session. Expire it only on a
-  // completed snapshot from a request issued after the last observed activity
-  // (in-flight fetches carry pre-run data) that shows the row stale or gone — "not
-  // in_progress" is no evidence, since a post-click GET isn't ordered against the
-  // socket-side pre-create.
+  // its isReindexing lock) would pin the cards all session. Expiry rules live in
+  // resolveReindexStubAction; the ref latches "the server saw this run", after which
+  // any terminal server state — including the reclaim's `interrupted` — ends the stub.
+  const serverSawRunRef = useRef(false);
   useEffect(() => {
-    if (!reindexRunning?.observedAt || !startedTimeStamp || !fulfilledTimeStamp) return;
-    if (startedTimeStamp <= reindexRunning.observedAt) return;
-    if (fulfilledTimeStamp < startedTimeStamp) return;
-    const serverRow = indexesList?.find(item => item.id === reindexRunning.id);
-    if (!serverRow || serverRow.stale) setReindexRunning(null);
+    const action = resolveReindexStubAction({
+      observedAt: reindexRunning?.observedAt,
+      startedTimeStamp,
+      fulfilledTimeStamp,
+      serverRow: indexesList?.find(item => item.id === reindexRunning?.id),
+      baselineCreatedOn: reindexRunning?.baselineCreatedOn,
+      serverSawRun: serverSawRunRef.current,
+    });
+    if (action === 'arm') serverSawRunRef.current = true;
+    else if (action === 'expire') setReindexRunning(null);
   }, [reindexRunning, startedTimeStamp, fulfilledTimeStamp, indexesList]);
 
   const [deleteIndex, { isLoading: isIndexDeleting }] = useDeleteIndexItemMutation();
@@ -128,9 +133,13 @@ const IndexesContainer = memo(props => {
 
   const confirmReindex = useCallback(() => {
     if (!reindexTarget) return;
+    serverSawRunRef.current = false;
     setReindexRunning({
       ...reindexTarget,
       observedAt: Date.now(),
+      // The clicked row's own created_on: any server row created after it proves the
+      // new dispatch landed, even if no snapshot ever caught it in_progress.
+      baselineCreatedOn: Number(reindexTarget.metadata?.created_on),
       metadata: { ...reindexTarget.metadata, state: IndexStatuses.progress },
     });
     setReindexConfirmOpen(false);

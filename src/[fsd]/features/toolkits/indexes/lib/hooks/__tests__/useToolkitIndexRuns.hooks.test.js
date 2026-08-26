@@ -77,6 +77,15 @@ describe('buildIndexRunLookup', () => {
     expect(lookup.size).toBe(0);
   });
 
+  it('joins a reclaimed interrupted run so the Event column can name its outcome', () => {
+    // The reported #6389 label bug: an abandoned run stuck at in_progress never joined,
+    // so its row fell through to the "Index data" tool-name fallback.
+    const lookup = buildIndexRunLookup([indexOf('docs', [entry('interrupted', { conversation_id: 7 })])]);
+
+    expect(lookup.get(7)).toHaveLength(1);
+    expect(lookup.get(7)[0].indexName).toBe('docs');
+  });
+
   it('scopes the first-run heuristic to each index', () => {
     const lookup = buildIndexRunLookup([
       indexOf('docs', [entry('completed', { conversation_id: 1, updated_on: 900 })]),

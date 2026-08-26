@@ -32,6 +32,7 @@ export const IndexStatuses = {
   partlyOk: 'partly_indexed',
   scheduledReindex: 'scheduled_reindex',
   runTest: 'run_test',
+  interrupted: 'interrupted',
 };
 
 export const BannerSeverity = {
@@ -49,6 +50,15 @@ export const BannerTitleMap = {
 };
 
 export const BANNER_SUCCESS_SUFFIX = 'The index is ready to search.';
+
+// The interrupted banner keeps warning severity but replaces the generic "Stopped"
+// copy: the run was killed by the platform, not stopped by a user.
+export const INTERRUPTED_BANNER = {
+  label: 'Interrupted',
+  message:
+    'Indexing stopped without finishing — the process was interrupted before it could report a result. ' +
+    'Click Reindex to try again, or see History for details.',
+};
 
 export const BannerMessageMap = {
   [BannerSeverity.success]: `Indexing completed successfully. ${BANNER_SUCCESS_SUFFIX}`,
@@ -75,6 +85,7 @@ export const IndexHistoryItemsLabels = {
   [IndexStatuses.partlyOk]: 'Partially Indexed',
   [IndexStatuses.scheduledReindex]: 'Reindexed by schedule',
   [IndexStatuses.runTest]: 'Run test',
+  [IndexStatuses.interrupted]: 'Interrupted',
 };
 
 export const RUN_TEST_OPERATION_TYPES = new Set(INDEX_SEARCH_TOOL_LABELS.keys());

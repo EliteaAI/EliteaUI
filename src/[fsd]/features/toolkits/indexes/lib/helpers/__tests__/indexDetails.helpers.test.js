@@ -1,13 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  BannerMessageMap,
   BannerSeverity,
   INDEX_DATA_DISABLED_REASON,
   INDEX_SEARCH_TOOL_OPTIONS,
+  INTERRUPTED_BANNER,
   IndexStatuses,
 } from '../../constants/indexDetails.constants';
 import {
   bannerOutlivesRun,
+  bannerVariant,
   hasLiveRun,
   indexBuildBlockedReason,
   indexScheduleBlockedReason,
@@ -16,6 +19,25 @@ import {
 } from '../indexDetails.helpers';
 
 const runState = over => ({ isIndexing: true, canStopIndexing: false, isStale: false, ...over });
+
+describe('bannerVariant — interrupted runs', () => {
+  const NO_STATS = { isReindex: false };
+
+  it('reports an interrupted run with retry guidance, not the "Indexing…" copy', () => {
+    const banner = bannerVariant(false, IndexStatuses.interrupted, NO_STATS);
+
+    expect(banner.severity).toBe(BannerSeverity.warning);
+    expect(banner.label).toBe(INTERRUPTED_BANNER.label);
+    expect(banner.message).toBe(INTERRUPTED_BANNER.message);
+  });
+
+  it('does not reuse the user-initiated Stop copy', () => {
+    const banner = bannerVariant(false, IndexStatuses.interrupted, NO_STATS);
+
+    expect(banner.message).not.toBe(BannerMessageMap[BannerSeverity.warning]);
+    expect(banner.label).not.toBe('Stopped');
+  });
+});
 
 describe('hasLiveRun', () => {
   it('holds while indexing and nothing says the run died', () => {
@@ -67,6 +89,13 @@ describe('indexSearchBlockedReason', () => {
     expect(indexSearchBlockedReason(IndexStatuses.cancelled, allSearchTools)).toMatch(/not ready/);
     expect(indexSearchBlockedReason(IndexStatuses.created, allSearchTools)).toMatch(/not ready/);
     expect(indexSearchBlockedReason(undefined, allSearchTools)).toMatch(/not ready/);
+  });
+
+  it('no longer claims an interrupted run is in progress', () => {
+    // Before the reclaim, an abandoned run stayed in_progress forever and search
+    // was permanently "unavailable while indexing is in progress".
+    expect(indexSearchBlockedReason(IndexStatuses.interrupted, allSearchTools)).toMatch(/not ready/);
+    expect(indexSearchBlockedReason(IndexStatuses.interrupted, allSearchTools)).not.toMatch(/in progress/);
   });
 
   it('blocks a searchable index whose toolkit exposes no search tool', () => {
@@ -128,6 +157,9 @@ describe('indexScheduleBlockedReason', () => {
   it('still reports the reasons that outrank the armed-schedule escape hatch', () => {
     expect(
       indexScheduleBlockedReason(scheduleState({ scheduleEnabled: true, state: IndexStatuses.fail })),
+    ).toMatch(/stopped\/error state/);
+    expect(
+      indexScheduleBlockedReason(scheduleState({ scheduleEnabled: true, state: IndexStatuses.interrupted })),
     ).toMatch(/stopped\/error state/);
     expect(
       indexScheduleBlockedReason(scheduleState({ scheduleEnabled: true, hasSchedulePermission: false })),

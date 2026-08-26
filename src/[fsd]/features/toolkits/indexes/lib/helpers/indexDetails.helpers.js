@@ -6,6 +6,7 @@ import {
   BannerTitleMap,
   INDEX_DATA_DISABLED_REASON,
   INDEX_SEARCH_TOOL_OPTIONS,
+  INTERRUPTED_BANNER,
   IndexStatuses,
   IndexesToolsEnum,
   RUNNABLE_INDEX_STATUSES,
@@ -61,6 +62,12 @@ export const bannerVariant = (isIndexing, state, reindexStats, error) => {
       severity: BannerSeverity.warning,
       label: BannerTitleMap[BannerSeverity.warning],
       message: BannerMessageMap[BannerSeverity.warning],
+    };
+  if (state === IndexStatuses.interrupted)
+    return {
+      severity: BannerSeverity.warning,
+      label: INTERRUPTED_BANNER.label,
+      message: INTERRUPTED_BANNER.message,
     };
   if (RUNNABLE_INDEX_STATUSES.includes(state)) {
     // Only the run's own breakdown knows what it indexed and in what units.
@@ -131,7 +138,11 @@ export const indexScheduleBlockedReason = ({
   scheduleEnabled,
   buildBlockedReason,
 }) => {
-  if (state === IndexStatuses.cancelled || state === IndexStatuses.fail)
+  if (
+    state === IndexStatuses.cancelled ||
+    state === IndexStatuses.fail ||
+    state === IndexStatuses.interrupted
+  )
     return 'Scheduling is unavailable while the index is in a stopped/error state';
   if (!hasSchedulePermission)
     return `Insufficient permissions to perform this action on ${projectName} project`;
@@ -141,15 +152,6 @@ export const indexScheduleBlockedReason = ({
     return 'Index state is not valid';
   return null;
 };
-
-/**
- * A run the backend has marked stale while it still claims to be in progress: the process died
- * without ever reporting a terminal state, so nothing else will ever update it.
- * @param {object} index - Index row as returned by the indexes list
- * @returns {boolean}
- */
-export const isAbandonedRun = index =>
-  Boolean(index?.stale) && index?.metadata?.state === IndexStatuses.progress;
 
 /**
  * A run that may still be executing: it is stoppable, or the backend has not marked it stale.

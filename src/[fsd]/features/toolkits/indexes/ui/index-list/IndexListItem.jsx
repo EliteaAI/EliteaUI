@@ -10,7 +10,6 @@ import {
   IndexStatuses,
   RUNNABLE_INDEX_STATUSES,
 } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
-import { isAbandonedRun } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexDetails.helpers';
 import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
@@ -48,9 +47,12 @@ const IndexListItem = memo(props => {
 
   const isSelected = useMemo(() => currentIndex?.id === index.id, [currentIndex, index]);
   const isInProgress = index?.metadata?.state === IndexStatuses.progress;
-  // Only the backend's stale flag proves an in_progress run dead, and the lock must
-  // be a visible disabled state — a swallowed click reads as "delete broken".
-  const disableStuckActions = isReindexing || (isInProgress && !index?.stale);
+  // One definition, two consumers: the condition that unlocks the actions is the same
+  // one that explains why they unlocked. It never claims the run is over — only the
+  // backend reclaim (state === interrupted) does that; this covers the runs the
+  // reclaim cannot or will not touch (hung-but-alive, unresolvable, pre-sweep window).
+  const isUnresponsiveRun = isInProgress && Boolean(index?.stale);
+  const disableStuckActions = isReindexing || (isInProgress && !isUnresponsiveRun);
 
   const documents = useMemo(() => {
     if (!index.metadata) return { tooltip: '-', count: '–', skipped: '-' };
@@ -118,7 +120,7 @@ const IndexListItem = memo(props => {
       sx={[
         styles.wrapper,
         ...(isSelected ? [styles.selectedWrapper] : []),
-        ...(index.stale && index.metadata.state === IndexStatuses.progress ? [styles.errorWrapper] : []),
+        ...(index.metadata.state === IndexStatuses.interrupted ? [styles.errorWrapper] : []),
       ]}
       className={isSelected && true ? 'selected' : ''}
       onClick={handleCardClick}
@@ -233,12 +235,22 @@ const IndexListItem = memo(props => {
           )}
           {index.metadata.state !== IndexStatuses.success && (
             <Box style={styles.stateIconContainer}>
-              {index.metadata.state === IndexStatuses.progress && (
-                <CircularProgress
-                  sx={styles.stateIcon}
-                  size={14}
-                  thickness={5}
-                />
+              {isInProgress && (
+                <Tooltip
+                  title={
+                    isUnresponsiveRun
+                      ? 'No progress reported in a while — still checking whether this run is alive. Reindex is available.'
+                      : ''
+                  }
+                >
+                  <Box sx={styles.stateIconContainer}>
+                    <CircularProgress
+                      sx={[styles.stateIcon, ...(isUnresponsiveRun ? [styles.stateIconStale] : [])]}
+                      size={14}
+                      thickness={5}
+                    />
+                  </Box>
+                </Tooltip>
               )}
               {index.metadata.state === IndexStatuses.fail && (
                 <InfoTooltip
@@ -264,7 +276,7 @@ const IndexListItem = memo(props => {
                   />
                 </Box>
               )}
-              {isAbandonedRun(index) && (
+              {index.metadata.state === IndexStatuses.interrupted && (
                 <Tooltip title="This run stopped without finishing. Reindex to try again.">
                   <Box sx={[styles.stateIcon, styles.error, styles.stateIconContainer]}>
                     <AttentionIcon
@@ -402,6 +414,10 @@ const indexListItem = () => ({
   },
   stateIcon: ({ palette }) => ({
     color: palette.text.info,
+  }),
+  // CircularProgress colours via `color`, not the svg-path fill the warning key targets.
+  stateIconStale: ({ palette }) => ({
+    color: palette.background.warning,
   }),
   error: {
     fill: '#D71616',
