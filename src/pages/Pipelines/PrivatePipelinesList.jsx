@@ -130,6 +130,11 @@ const PrivatePipelinesList = memo(props => {
     onLoadMoreApplications,
   ]);
 
+  // Reset pagination when folder selection changes
+  useEffect(() => {
+    setPage(0);
+  }, [selectedFolderId, setPage]);
+
   const { toastError } = useToast();
   useEffect(() => {
     if (isMoreApplicationsError) {
@@ -150,7 +155,7 @@ const PrivatePipelinesList = memo(props => {
   return (
     <>
       <CardList
-        key={`${cardContentType}-${selectedFolderId || 'all'}`}
+        key={cardContentType}
         cardList={uniqueDataList}
         total={total}
         isLoading={isApplicationsFirstFetching || (isFolderViewActive && isLoadingFolderItems)}

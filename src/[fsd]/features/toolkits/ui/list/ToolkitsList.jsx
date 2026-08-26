@@ -221,6 +221,11 @@ const ToolkitsList = memo(props => {
     onLoadMoreToolkits,
   ]);
 
+  // Reset pagination when folder selection changes
+  useEffect(() => {
+    setPage(0);
+  }, [selectedFolderId, setPage]);
+
   const { toastError } = useToast();
   useEffect(() => {
     if (isMoreToolkitsError) {
@@ -255,7 +260,7 @@ const ToolkitsList = memo(props => {
 
   return (
     <CardList
-      key={`${cardContentType}-${selectedFolderId || 'all'}`}
+      key={cardContentType}
       cardList={uniqueDataList}
       total={totalCount}
       isLoading={isToolkitsFirstFetching || (isFolderViewActive && isLoadingFolderItems)}
