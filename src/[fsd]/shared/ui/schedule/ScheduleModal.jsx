@@ -74,6 +74,7 @@ const ScheduleModal = memo(props => {
 
   return (
     <Modal.BaseModal
+      data-testid="pipeline-schedule-settings-modal"
       open={open}
       onClose={(_, reason) => reason !== 'backdropClick' && onClose()}
       title={modalTitle}
@@ -82,6 +83,7 @@ const ScheduleModal = memo(props => {
         <Box sx={styles.contentWrapper}>
           <Box sx={styles.tabRow}>
             <Tab.TabGroupButton
+              data-testid="pipeline-schedule-mode-tabs"
               arrayBtn={viewButtons}
               value={cronType}
               onChange={(_, newValue) => setCronType(newValue)}
@@ -100,6 +102,7 @@ const ScheduleModal = memo(props => {
           ) : (
             <Box sx={styles.cronWrapper}>
               <FormInput
+                data-testid="pipeline-schedule-cron-input"
                 value={cronExpression}
                 onChange={event => setCronExpression(event.target.value)}
                 placeholder="* * * * *"
@@ -124,6 +127,7 @@ const ScheduleModal = memo(props => {
 
           <Box sx={styles.previewBox}>
             <Typography
+              data-testid="pipeline-schedule-summary-text"
               variant="headingSmall"
               sx={styles.previewSummary}
             >
@@ -159,6 +163,7 @@ const ScheduleModal = memo(props => {
       actions={
         <Box sx={styles.actionsWrapper}>
           <Button.BaseBtn
+            data-testid="pipeline-schedule-modal-cancel-button"
             sx={styles.actionBtn}
             variant={BUTTON_VARIANTS.elitea}
             color={BUTTON_COLORS.secondary}
@@ -167,6 +172,7 @@ const ScheduleModal = memo(props => {
             Cancel
           </Button.BaseBtn>
           <Button.BaseBtn
+            data-testid="pipeline-schedule-modal-save-button"
             sx={styles.actionBtn}
             variant={BUTTON_VARIANTS.elitea}
             color={BUTTON_COLORS.primary}
