@@ -8,10 +8,10 @@ import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import FolderIcon from '@/components/Icons/FolderIcon';
 
-const styles = folderViewHeaderStyles();
-
 const FolderViewHeader = memo(props => {
   const { folder, entitiesCount = 0, onClose } = props;
+
+  const styles = folderViewHeaderStyles();
 
   if (!folder) return null;
 

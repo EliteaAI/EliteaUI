@@ -15,10 +15,10 @@ import FolderItem from './FolderItem';
 
 const VISIBLE_FOLDER_COUNT = 6;
 
-const styles = folderSectionStyles();
-
 const FolderSection = memo(props => {
   const { entityType, title = 'Folders', onFolderSelect, selectedFolderId, onExpandChange } = props;
+
+  const styles = folderSectionStyles();
 
   const { folders, isLoading, isError } = useEntityFolders(entityType, { includeCounts: true });
   const { togglePin } = usePinFolder(entityType);

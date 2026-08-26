@@ -6,12 +6,12 @@ import DeleteIcon from '@/components/Icons/DeleteIcon';
 import EditPenIcon from '@/components/Icons/EditPenIcon';
 import PinIcon from '@/components/Icons/PinIcon';
 
-const styles = folderActionsMenuStyles();
-
 const FolderActionsMenu = memo(props => {
   const { anchorEl, folder, onClose, onPin, onEdit, onDelete } = props;
   const theme = useTheme();
   const isPinned = !!folder?.meta?.is_pinned;
+
+  const styles = folderActionsMenuStyles();
 
   return (
     <Menu

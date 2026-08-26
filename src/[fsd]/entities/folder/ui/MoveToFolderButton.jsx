@@ -11,10 +11,10 @@ import { useFolderMenuActions } from '../lib/hooks';
 import CreateFolderDialog from './CreateFolderDialog';
 import FolderMenuContent from './FolderMenuContent';
 
-const styles = moveToFolderButtonStyles();
-
 const MoveToFolderButton = memo(props => {
   const { entityId, entityType, currentFolderId, isVisible = false } = props;
+
+  const styles = moveToFolderButtonStyles();
 
   const [anchorEl, setAnchorEl] = useState(null);
   const isMenuOpen = Boolean(anchorEl);

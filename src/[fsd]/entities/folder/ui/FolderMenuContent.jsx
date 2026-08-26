@@ -8,10 +8,10 @@ import CheckIcon from '@/components/Icons/CheckIcon';
 import FolderIcon from '@/components/Icons/FolderIcon';
 import PlusIcon from '@/components/Icons/PlusIcon';
 
-const styles = folderMenuContentStyles();
-
 const FolderMenuContent = memo(props => {
   const { folders, currentFolderId, onCreateClick, onFolderClick, onRemoveClick, minWidth } = props;
+
+  const styles = folderMenuContentStyles();
 
   return (
     <>
