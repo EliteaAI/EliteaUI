@@ -1,11 +1,10 @@
 import { memo, useCallback } from 'react';
 
-import { Box, Tooltip, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import { EditEntityComparisonLayout, TextDiffHighlight } from '@/[fsd]/entities/edit-entity-with-ai';
+import { CopyIconButton } from '@/[fsd]/shared/ui/button';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
-import CopyIcon from '@/components/Icons/CopyIcon';
-import useToast from '@/hooks/useToast';
 
 import CompareVersionHeader from '../CompareVersionHeader';
 
@@ -25,22 +24,12 @@ const CompareInstructionsStep = memo(props => {
     savingRightKeys,
   } = props;
 
-  const { toastSuccess } = useToast();
-
   const leftValue = leftEdits.instructions ?? leftData.instructions ?? '';
   const rightValue = rightEdits.instructions ?? rightData.instructions ?? '';
   const noDiff = leftValue === rightValue;
 
   const handleLeftChange = useCallback(val => onLeftEdit('instructions', val), [onLeftEdit]);
   const handleRightChange = useCallback(val => onRightEdit('instructions', val), [onRightEdit]);
-
-  const handleCopyLeft = useCallback(() => {
-    navigator.clipboard.writeText(leftValue).then(() => toastSuccess('Copied to clipboard.'));
-  }, [leftValue, toastSuccess]);
-
-  const handleCopyRight = useCallback(() => {
-    navigator.clipboard.writeText(rightValue).then(() => toastSuccess('Copied to clipboard.'));
-  }, [rightValue, toastSuccess]);
 
   return (
     <EditEntityComparisonLayout
@@ -50,17 +39,10 @@ const CompareInstructionsStep = memo(props => {
         <Box sx={compareInstructionsStepStyles.fieldSection}>
           <Box sx={compareInstructionsStepStyles.fieldHeader}>
             <Typography sx={compareInstructionsStepStyles.fieldLabel}>Instructions</Typography>
-            <Tooltip
-              title={`Copy Instructions from version ${leftVersion?.name}`}
-              placement="top"
-            >
-              <BaseBtn
-                variant={BUTTON_VARIANTS.secondary}
-                size="small"
-                startIcon={<CopyIcon />}
-                onClick={handleCopyLeft}
-              />
-            </Tooltip>
+            <CopyIconButton
+              value={leftValue}
+              tooltip={`Copy Instructions from version ${leftVersion?.name}`}
+            />
           </Box>
           {noDiff && (
             <Typography sx={compareInstructionsStepStyles.noDiffNote}>
@@ -91,16 +73,10 @@ const CompareInstructionsStep = memo(props => {
         <Box sx={compareInstructionsStepStyles.fieldSection}>
           <Box sx={compareInstructionsStepStyles.fieldHeader}>
             <Typography sx={compareInstructionsStepStyles.fieldLabel}>Instructions</Typography>
-            <Tooltip
-              title={`Copy Instructions from version ${rightVersion?.name}`}
-              placement="top"
-            >
-              <BaseBtn
-                variant={BUTTON_VARIANTS.secondary}
-                startIcon={<CopyIcon />}
-                onClick={handleCopyRight}
-              />
-            </Tooltip>
+            <CopyIconButton
+              value={rightValue}
+              tooltip={`Copy Instructions from version ${rightVersion?.name}`}
+            />
           </Box>
           {noDiff && (
             <Typography sx={compareInstructionsStepStyles.noDiffNote}>

@@ -1,11 +1,10 @@
 import { memo, useCallback, useMemo } from 'react';
 
-import { Box, Tooltip, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import { EditEntityComparisonLayout, TextDiffHighlight } from '@/[fsd]/entities/edit-entity-with-ai';
+import { CopyIconButton } from '@/[fsd]/shared/ui/button';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
-import CopyIcon from '@/components/Icons/CopyIcon';
-import useToast from '@/hooks/useToast';
 
 import CompareVersionHeader from '../CompareVersionHeader';
 
@@ -24,8 +23,6 @@ const CompareUserInteractionStep = memo(props => {
     savingLeftKeys,
     savingRightKeys,
   } = props;
-
-  const { toastSuccess } = useToast();
 
   const leftWelcome = leftEdits.welcome_message ?? leftData.welcome_message ?? '';
   const rightWelcome = rightEdits.welcome_message ?? rightData.welcome_message ?? '';
@@ -68,28 +65,6 @@ const CompareUserInteractionStep = memo(props => {
     [rightStarters, onRightEdit],
   );
 
-  const handleCopyWelcomeLeft = useCallback(() => {
-    navigator.clipboard.writeText(leftWelcome).then(() => toastSuccess('Copied to clipboard.'));
-  }, [leftWelcome, toastSuccess]);
-
-  const handleCopyWelcomeRight = useCallback(() => {
-    navigator.clipboard.writeText(rightWelcome).then(() => toastSuccess('Copied to clipboard.'));
-  }, [rightWelcome, toastSuccess]);
-
-  const handleCopyStarterLeft = useCallback(
-    (index, val) => () => {
-      navigator.clipboard.writeText(val).then(() => toastSuccess('Copied to clipboard.'));
-    },
-    [toastSuccess],
-  );
-
-  const handleCopyStarterRight = useCallback(
-    (index, val) => () => {
-      navigator.clipboard.writeText(val).then(() => toastSuccess('Copied to clipboard.'));
-    },
-    [toastSuccess],
-  );
-
   const leftWelcomeDirty = leftEdits.welcome_message !== undefined;
   const rightWelcomeDirty = rightEdits.welcome_message !== undefined;
   const leftStartersDirty = leftEdits.conversation_starters !== undefined;
@@ -104,16 +79,10 @@ const CompareUserInteractionStep = memo(props => {
           <Box sx={compareUserInteractionStepStyles.fieldSection}>
             <Box sx={compareUserInteractionStepStyles.fieldHeader}>
               <Typography sx={compareUserInteractionStepStyles.fieldLabel}>Welcome Message</Typography>
-              <Tooltip
-                title={`Copy Welcome Message from version ${leftVersion?.name}`}
-                placement="top"
-              >
-                <BaseBtn
-                  variant={BUTTON_VARIANTS.secondary}
-                  startIcon={<CopyIcon />}
-                  onClick={handleCopyWelcomeLeft}
-                />
-              </Tooltip>
+              <CopyIconButton
+                value={leftWelcome}
+                tooltip={`Copy Welcome Message from version ${leftVersion?.name}`}
+              />
             </Box>
             {welcomeNoDiff && (
               <Typography sx={compareUserInteractionStepStyles.noDiffNote}>
@@ -169,16 +138,11 @@ const CompareUserInteractionStep = memo(props => {
                           onChange={val => handleLeftStarterChange(i, val)}
                         />
                       </Box>
-                      <Tooltip
-                        title={`Copy Chat Starter ${i + 1} from version ${leftVersion?.name}`}
-                        placement="top"
-                      >
-                        <BaseBtn
-                          variant={BUTTON_VARIANTS.secondary}
-                          startIcon={<CopyIcon sx={{ fontSize: '1rem' }} />}
-                          onClick={handleCopyStarterLeft(i, lVal ?? '')}
-                        />
-                      </Tooltip>
+                      <CopyIconButton
+                        value={lVal ?? ''}
+                        tooltip={`Copy Chat Starter ${i + 1} from version ${leftVersion?.name}`}
+                        iconSx={{ fontSize: '1rem' }}
+                      />
                     </Box>
                   );
                 })}
@@ -201,16 +165,10 @@ const CompareUserInteractionStep = memo(props => {
           <Box sx={compareUserInteractionStepStyles.fieldSection}>
             <Box sx={compareUserInteractionStepStyles.fieldHeader}>
               <Typography sx={compareUserInteractionStepStyles.fieldLabel}>Welcome Message</Typography>
-              <Tooltip
-                title={`Copy Welcome Message from version ${rightVersion?.name}`}
-                placement="top"
-              >
-                <BaseBtn
-                  variant={BUTTON_VARIANTS.secondary}
-                  startIcon={<CopyIcon />}
-                  onClick={handleCopyWelcomeRight}
-                />
-              </Tooltip>
+              <CopyIconButton
+                value={rightWelcome}
+                tooltip={`Copy Welcome Message from version ${rightVersion?.name}`}
+              />
             </Box>
             {welcomeNoDiff && (
               <Typography sx={compareUserInteractionStepStyles.noDiffNote}>
@@ -266,16 +224,11 @@ const CompareUserInteractionStep = memo(props => {
                           onChange={val => handleRightStarterChange(i, val)}
                         />
                       </Box>
-                      <Tooltip
-                        title={`Copy Chat Starter ${i + 1} from version ${rightVersion?.name}`}
-                        placement="top"
-                      >
-                        <BaseBtn
-                          variant={BUTTON_VARIANTS.secondary}
-                          startIcon={<CopyIcon sx={{ fontSize: '1rem' }} />}
-                          onClick={handleCopyStarterRight(i, rVal ?? '')}
-                        />
-                      </Tooltip>
+                      <CopyIconButton
+                        value={rVal ?? ''}
+                        tooltip={`Copy Chat Starter ${i + 1} from version ${rightVersion?.name}`}
+                        iconSx={{ fontSize: '1rem' }}
+                      />
                     </Box>
                   );
                 })}
