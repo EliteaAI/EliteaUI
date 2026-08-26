@@ -6,9 +6,11 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import { Box, CircularProgress } from '@mui/material';
 
+import { CompareVersionsModal } from '@/[fsd]/entities/compare-versions';
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version';
 import { SetDefaultVersionDialog } from '@/[fsd]/entities/version/ui';
 import { useSetSkillDefaultVersionMutation, useSkillDetailsQuery } from '@/[fsd]/features/skill/api';
+import { useCompareSkillVersions } from '@/[fsd]/features/skill/lib/hooks';
 import { SkillValidateSchema } from '@/[fsd]/features/skill/lib/validation';
 import SkillControls from '@/[fsd]/features/skill/ui/SkillControls';
 import SkillInformation from '@/[fsd]/features/skill/ui/SkillInformation';
@@ -61,6 +63,7 @@ const EditSkill = memo(() => {
 
   const [dirty, setDirty] = useState(false);
   const [isFullScreenChat, setIsFullScreenChat] = useState(false);
+  const [compareVersionsOpen, setCompareVersionsOpen] = useState(false);
 
   const [setDefaultVersion, { isLoading: isSettingDefault, reset: resetDefaultMutation }] =
     useSetSkillDefaultVersionMutation();
@@ -69,6 +72,15 @@ const EditSkill = memo(() => {
   const [pendingDefaultVersionId, setPendingDefaultVersionId] = useState(null);
 
   const lgGridColumns = useMemo(() => (isFullScreenChat ? 12 : 6), [isFullScreenChat]);
+
+  const {
+    loadVersions: loadSkillVersions,
+    savingLeftKeys,
+    savingRightKeys,
+    onSaveLeft,
+    onSaveRight,
+    resetSavingState,
+  } = useCompareSkillVersions({ projectId, skillId });
 
   const { data, isFetching, isError, error } = useSkillDetailsQuery(
     { projectId, skillId, versionId: version },
@@ -216,6 +228,7 @@ const EditSkill = memo(() => {
                   onChangeVersion={handleChangeVersion}
                   onSetDefault={() => handleOpenDefaultDialog(currentVersionId)}
                   onSuccess={handleSuccess}
+                  onOpenCompare={() => setCompareVersionsOpen(true)}
                 />
               ),
               content: isFetching ? (
@@ -277,6 +290,21 @@ const EditSkill = memo(() => {
         entityType="skill"
         confirmButtonTestId="skill-set-default-version-confirm-button"
       />
+      {compareVersionsOpen && (
+        <CompareVersionsModal
+          open={compareVersionsOpen}
+          onClose={() => setCompareVersionsOpen(false)}
+          entityType="skill"
+          leftVersionId={currentVersionId}
+          versions={data?.versions ?? []}
+          onLoadVersions={loadSkillVersions}
+          savingLeftKeys={savingLeftKeys}
+          savingRightKeys={savingRightKeys}
+          onSaveLeft={onSaveLeft}
+          onSaveRight={onSaveRight}
+          resetSavingState={resetSavingState}
+        />
+      )}
     </>
   );
 });
