@@ -10,9 +10,8 @@ const DEFAULT_TAB = 'all';
 /**
  * Sub-page navigation from a toolkit or MCP detail page.
  *
- * Test has a route per entity type, so it stays in the namespace it was opened from and can carry the
- * current tab through. Run History has only the toolkit route and MCPs reach it via `?isMCP`; an MCP
- * tab is not necessarily a valid toolkit tab, so that one keeps falling back to the default.
+ * Test and Run History each have a route per entity type, so they stay in the namespace they were
+ * opened from and carry the current tab through.
  *
  * `canTest` is false wherever a Test page would have nowhere to return to: the Apps and user-public
  * detail pages share this form but live in other route namespaces, and the create routes match the
@@ -30,12 +29,15 @@ export const useToolkitDetailNavigation = ({ toolkitId, isMCP }) => {
   const canTest = Boolean((toolkitDetailMatch || mcpDetailMatch) && !toolkitCreateMatch && !mcpCreateMatch);
 
   const goToRunHistory = useCallback(() => {
-    const target = NavigationHelpers.buildRoute(RouteDefinitions.ToolkitRunHistory, {
-      tab: DEFAULT_TAB,
-      toolkitId,
-    });
-    navigate(`${target}?isMCP=${!!isMCP}`);
-  }, [isMCP, navigate, toolkitId]);
+    const route = isMCP ? RouteDefinitions.MCPRunHistory : RouteDefinitions.ToolkitRunHistory;
+    navigate(
+      NavigationHelpers.buildRoute(route, {
+        tab: tab ?? DEFAULT_TAB,
+        toolkitId,
+        mcpId: toolkitId,
+      }),
+    );
+  }, [isMCP, navigate, tab, toolkitId]);
 
   const goToTest = useCallback(() => {
     const route = isMCP ? RouteDefinitions.MCPTest : RouteDefinitions.ToolkitTest;

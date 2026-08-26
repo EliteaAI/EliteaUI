@@ -262,6 +262,7 @@ const ProtectedRoutes = memo(() => {
       { path: RouteDefinitions.CreateMCPType, element: <CreateToolkit isMCP={true} /> },
       { path: RouteDefinitions.MCPsWithTab, element: <Toolkits isMCP={true} /> },
       { path: RouteDefinitions.MCPDetail, element: <EditToolkit isMCP={true} /> },
+      { path: RouteDefinitions.MCPRunHistory, element: <ToolkitRunHistory /> },
       { path: RouteDefinitions.MCPTest, element: <ToolkitTest /> },
 
       /* apps */
