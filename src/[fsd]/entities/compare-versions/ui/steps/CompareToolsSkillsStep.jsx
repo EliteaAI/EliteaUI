@@ -32,14 +32,14 @@ const CompareToolsSkillsStep = memo(props => {
               No differences in this section.
             </Typography>
           )}
-          {matchedRows.map((row, i) =>
+          {matchedRows.map(row =>
             row.left ? (
               <Box
-                key={i}
+                key={row.key}
                 sx={
-                  row.right
-                    ? compareToolsSkillsStepStyles.cardWrapper
-                    : compareToolsSkillsStepStyles.uniqueCard
+                  !row.right
+                    ? compareToolsSkillsStepStyles.uniqueCard
+                    : compareToolsSkillsStepStyles.cardWrapper
                 }
               >
                 <ToolItemCard
@@ -49,7 +49,7 @@ const CompareToolsSkillsStep = memo(props => {
               </Box>
             ) : (
               <Box
-                key={i}
+                key={row.key}
                 sx={compareToolsSkillsStepStyles.emptySlot}
               />
             ),
@@ -68,14 +68,14 @@ const CompareToolsSkillsStep = memo(props => {
               No differences in this section.
             </Typography>
           )}
-          {matchedRows.map((row, i) =>
+          {matchedRows.map(row =>
             row.right ? (
               <Box
-                key={i}
+                key={row.key}
                 sx={
-                  row.left
-                    ? compareToolsSkillsStepStyles.cardWrapper
-                    : compareToolsSkillsStepStyles.uniqueCard
+                  !row.left
+                    ? compareToolsSkillsStepStyles.uniqueCard
+                    : compareToolsSkillsStepStyles.cardWrapper
                 }
               >
                 <ToolItemCard
@@ -85,7 +85,7 @@ const CompareToolsSkillsStep = memo(props => {
               </Box>
             ) : (
               <Box
-                key={i}
+                key={row.key}
                 sx={compareToolsSkillsStepStyles.emptySlot}
               />
             ),

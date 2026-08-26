@@ -1,3 +1,5 @@
+import { buildVersionOption } from '@/[fsd]/entities/version';
+
 const resolveToolEntityType = tool => {
   if (tool.type !== 'application') return tool.entity_type ?? 'toolkit';
   if (tool.agent_type === 'pipeline') return 'pipeline';
@@ -10,7 +12,6 @@ const resolveToolId = tool => {
 };
 
 export const extractAgentCompareData = versionDetail => {
-  // getApplicationVersionDetail returns a flat response — fields are at the top level
   const vd = versionDetail ?? {};
   return {
     instructions: vd.instructions ?? '',
@@ -24,7 +25,6 @@ export const extractAgentCompareData = versionDetail => {
 };
 
 export const extractSkillCompareData = versionDetail => ({
-  // skillDetails returns a response with version_details nested
   instructions: versionDetail?.version_details?.instructions ?? '',
 });
 
@@ -32,6 +32,7 @@ export const matchDependencies = (leftTools, rightTools) => {
   const key = d => `${d.entityType}:${d.id}`;
   const allKeys = [...new Set([...leftTools.map(key), ...rightTools.map(key)])];
   return allKeys.map(k => ({
+    key: k,
     left: leftTools.find(d => key(d) === k) ?? null,
     right: rightTools.find(d => key(d) === k) ?? null,
   }));
@@ -51,4 +52,10 @@ export const formatVersionMeta = version => {
   }
   if (version.author?.name) parts.push(`by ${version.author.name}`);
   return parts.length ? parts.join(' · ') : null;
+};
+
+export const buildCompareVersionOption = version => {
+  const base = buildVersionOption({ enableVersionListAvatar: true })(version);
+  const description = formatVersionMeta(version);
+  return { ...base, description: description ?? '' };
 };

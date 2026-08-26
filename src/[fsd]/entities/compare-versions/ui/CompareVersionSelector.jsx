@@ -2,20 +2,9 @@ import { memo, useMemo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { buildVersionOption } from '@/[fsd]/entities/version';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
-import { TIME_FORMAT } from '@/common/constants';
-import { timeFormatter } from '@/common/utils';
 
-import { formatVersionMeta } from '../lib/helpers/compareVersions.helpers';
-
-const buildCompareVersionOption = version => {
-  const base = buildVersionOption({ enableVersionListAvatar: true })(version);
-  const meta = [];
-  if (version.created_at) meta.push(timeFormatter(version.created_at, TIME_FORMAT.DDMMYYYY));
-  if (version.author?.name) meta.push(`by ${version.author.name}`);
-  return { ...base, description: meta.join(' · ') };
-};
+import { buildCompareVersionOption, formatVersionMeta } from '../lib/helpers/compareVersions.helpers';
 
 const CompareVersionSelector = memo(props => {
   const { leftVersion, rightVersionId, availableVersions, onRightVersionChange } = props;
