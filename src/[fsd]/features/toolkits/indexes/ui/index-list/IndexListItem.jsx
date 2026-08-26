@@ -9,6 +9,7 @@ import { normalizeIndexingReport } from '@/[fsd]/entities/indexing-report';
 import {
   IndexStatuses,
   RUNNABLE_INDEX_STATUSES,
+  UNRESPONSIVE_RUN_TOOLTIP,
 } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
 import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
 import { Button } from '@/[fsd]/shared/ui';
@@ -233,13 +234,7 @@ const IndexListItem = memo(props => {
           {index.metadata.state !== IndexStatuses.success && (
             <Box style={styles.stateIconContainer}>
               {isInProgress && (
-                <Tooltip
-                  title={
-                    isUnresponsiveRun
-                      ? 'No progress reported in a while — still checking whether this run is alive. Reindex is available.'
-                      : ''
-                  }
-                >
+                <Tooltip title={isUnresponsiveRun ? UNRESPONSIVE_RUN_TOOLTIP : ''}>
                   <Box sx={styles.stateIconContainer}>
                     <CircularProgress
                       sx={[styles.stateIcon, ...(isUnresponsiveRun ? [styles.stateIconStale] : [])]}

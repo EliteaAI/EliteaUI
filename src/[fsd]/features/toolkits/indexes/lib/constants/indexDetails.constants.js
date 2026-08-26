@@ -33,6 +33,9 @@ export const IndexStatuses = {
   scheduledReindex: 'scheduled_reindex',
   runTest: 'run_test',
   interrupted: 'interrupted',
+  // Client-side only: the run still claims to be in progress but the backend has not
+  // heard from it. Never persisted — the reclaim decides if it is really over.
+  unresponsive: 'unresponsive',
 };
 
 export const BannerSeverity = {
@@ -57,6 +60,15 @@ export const INTERRUPTED_BANNER = {
     'Indexing stopped without finishing — the process was interrupted before it could report a result. ' +
     'Click Reindex to try again, or see History for details.',
 };
+
+export const UNRESPONSIVE_BANNER = {
+  label: 'No recent progress',
+  message:
+    'This run has not reported progress in a while. It may still be working, or it may have stopped — ' +
+    'the platform is still checking. You can reindex now, or wait for it to resolve itself.',
+};
+
+export const UNRESPONSIVE_RUN_TOOLTIP = `${UNRESPONSIVE_BANNER.label} — this run may still be working; the platform is still checking. Reindex is available.`;
 
 export const BannerMessageMap = {
   [BannerSeverity.success]: `Indexing completed successfully. ${BANNER_SUCCESS_SUFFIX}`,

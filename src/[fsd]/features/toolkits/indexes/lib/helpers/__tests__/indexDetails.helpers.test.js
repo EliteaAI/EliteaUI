@@ -39,6 +39,22 @@ describe('bannerVariant — interrupted runs', () => {
   });
 });
 
+describe('bannerVariant — unresponsive runs', () => {
+  it('replaces the in-progress copy for a run the backend has not heard from', () => {
+    const banner = bannerVariant(false, IndexStatuses.unresponsive, { isReindex: false });
+
+    expect(banner.severity).toBe(BannerSeverity.warning);
+    expect(banner.message).not.toMatch(/you'll be notified/i);
+  });
+
+  it('does not claim the run is over, which only the reclaim decides', () => {
+    const banner = bannerVariant(false, IndexStatuses.unresponsive, { isReindex: false });
+
+    expect(banner.label).not.toBe(INTERRUPTED_BANNER.label);
+    expect(banner.message).not.toMatch(/stopped without finishing/i);
+  });
+});
+
 describe('hasLiveRun', () => {
   it('holds while indexing and nothing says the run died', () => {
     expect(hasLiveRun(runState())).toBe(true);

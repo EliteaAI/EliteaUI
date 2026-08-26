@@ -10,6 +10,7 @@ import {
   IndexStatuses,
   IndexesToolsEnum,
   RUNNABLE_INDEX_STATUSES,
+  UNRESPONSIVE_BANNER,
 } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
 import { BUDGET_ERROR_VARIANTS } from '@/[fsd]/shared/lib/constants/budgetError.constants';
 
@@ -68,6 +69,12 @@ export const bannerVariant = (isIndexing, state, reindexStats, error) => {
       severity: BannerSeverity.warning,
       label: INTERRUPTED_BANNER.label,
       message: INTERRUPTED_BANNER.message,
+    };
+  if (state === IndexStatuses.unresponsive)
+    return {
+      severity: BannerSeverity.warning,
+      label: UNRESPONSIVE_BANNER.label,
+      message: UNRESPONSIVE_BANNER.message,
     };
   if (RUNNABLE_INDEX_STATUSES.includes(state)) {
     // Only the run's own breakdown knows what it indexed and in what units.

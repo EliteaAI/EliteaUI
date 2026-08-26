@@ -198,9 +198,14 @@ const RunIndexPanel = memo(props => {
     canStopIndexing,
     isStale: effectiveStale,
   });
-  const deleteDisabled = isDeleting || isAwaitingTaskStart || runIsLive;
+  // A stuck run keeps its task_id, so runIsLive stays true however long it has been
+  // silent. Stop still uses it — stopping a dead task is harmless — but recovery
+  // cannot.
+  const isUnresponsiveRun = effectiveIsIndexing && Boolean(effectiveStale);
+  const recoveryBlocked = runIsLive && !isUnresponsiveRun;
+  const deleteDisabled = isDeleting || isAwaitingTaskStart || recoveryBlocked;
   const buildBlockedReason = indexBuildBlockedReason(selectedIndexTools);
-  const reindexDisabled = Boolean(buildBlockedReason) || isRunning || isAwaitingTaskStart || runIsLive;
+  const reindexDisabled = Boolean(buildBlockedReason) || isRunning || isAwaitingTaskStart || recoveryBlocked;
 
   const schedulingTooltipMessage = useMemo(
     () =>
@@ -400,8 +405,14 @@ const RunIndexPanel = memo(props => {
   }, [index?.metadata]);
   const runInFlight = effectiveIsIndexing || isAwaitingTaskStart;
   const banner = useMemo(
-    () => bannerVariant(runInFlight, effectiveState, reindexStats, index?.metadata?.error),
-    [runInFlight, effectiveState, reindexStats, index?.metadata?.error],
+    () =>
+      bannerVariant(
+        runInFlight && !isUnresponsiveRun,
+        isUnresponsiveRun ? IndexStatuses.unresponsive : effectiveState,
+        reindexStats,
+        index?.metadata?.error,
+      ),
+    [runInFlight, isUnresponsiveRun, effectiveState, reindexStats, index?.metadata?.error],
   );
 
   const onAddSchedule = useCallback(() => {
@@ -471,12 +482,13 @@ const RunIndexPanel = memo(props => {
     selectedIndexTools,
   );
 
-  const historyDisabled = !index?.metadata?.history?.length || effectiveIsIndexing;
-  const historyTooltip = effectiveIsIndexing
-    ? 'Unavailable while indexing is in progress'
-    : historyDisabled
-      ? 'No history available'
-      : 'View index history';
+  const historyDisabled = !index?.metadata?.history?.length || (effectiveIsIndexing && !isUnresponsiveRun);
+  const historyTooltip =
+    effectiveIsIndexing && !isUnresponsiveRun
+      ? 'Unavailable while indexing is in progress'
+      : historyDisabled
+        ? 'No history available'
+        : 'View index history';
 
   const isConfigurationTab = activeTab === IndexDetailsTabs.configuration;
   const isActivityTab = activeTab === IndexDetailsTabs.activity;

@@ -3,7 +3,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { ThemeProvider, createTheme } from '@mui/material';
 
-import { IndexStatuses } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
+import {
+  IndexStatuses,
+  UNRESPONSIVE_RUN_TOOLTIP,
+} from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
 import '@testing-library/jest-dom/vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 
@@ -144,15 +147,13 @@ describe('IndexListItem — live runs are untouched', () => {
 
     expect(spinner()).toBeInTheDocument();
     expect(attentionIcon()).not.toBeInTheDocument();
-    expect(document.querySelector('[data-tooltip^="No progress reported in a while"]')).toBeInTheDocument();
+    expect(document.querySelector(`[data-tooltip="${UNRESPONSIVE_RUN_TOOLTIP}"]`)).toBeInTheDocument();
   });
 
   it('keeps the plain spinner silent while the run is fresh', () => {
     renderItem(indexRow(IndexStatuses.progress));
 
-    expect(
-      document.querySelector('[data-tooltip^="No progress reported in a while"]'),
-    ).not.toBeInTheDocument();
+    expect(document.querySelector(`[data-tooltip="${UNRESPONSIVE_RUN_TOOLTIP}"]`)).not.toBeInTheDocument();
   });
 
   it('locks both actions while a reindex request is in flight', () => {
