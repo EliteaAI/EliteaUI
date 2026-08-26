@@ -52,6 +52,7 @@ const RouteDefinitions = {
   CreateMCP: '/mcps/create',
   CreateMCPType: '/mcps/create/:mcpType',
   MCPDetail: '/mcps/:tab/:mcpId',
+  MCPRunHistory: '/mcps/:tab/:mcpId/history',
   MCPTest: '/mcps/:tab/:mcpId/test',
 
   UserPublic: '/user-public',

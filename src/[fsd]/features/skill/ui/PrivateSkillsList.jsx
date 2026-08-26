@@ -102,6 +102,11 @@ const PrivateSkillsList = memo(props => {
     onLoadMoreSkills,
   ]);
 
+  // Reset pagination when folder selection changes
+  useEffect(() => {
+    setPage(0);
+  }, [selectedFolderId, setPage]);
+
   const { toastError } = useToast();
   useEffect(() => {
     if (isMoreSkillsError) {
@@ -124,7 +129,7 @@ const PrivateSkillsList = memo(props => {
   return (
     <CardList
       hideStatusColumn
-      key={`${cardContentType}-${selectedFolderId || 'all'}`}
+      key={cardContentType}
       cardList={uniqueDataList}
       total={total}
       isLoading={isSkillsFirstFetching || (isFolderViewActive && isLoadingFolderItems)}

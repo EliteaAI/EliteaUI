@@ -47,6 +47,10 @@ export const BREADCRUMB_REGISTRY = {
     fallbackLabel: 'Edit MCP',
     testId: 'toolkit-detail-title',
   },
+  [RouteDefinitions.MCPRunHistory]: {
+    parent: RouteDefinitions.MCPDetail,
+    label: 'Run History',
+  },
   [RouteDefinitions.MCPTest]: {
     parent: RouteDefinitions.MCPDetail,
     label: 'Test MCP',

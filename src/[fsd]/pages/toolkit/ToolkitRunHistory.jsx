@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useMemo } from 'react';
 
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import { Box } from '@mui/material';
 
@@ -23,28 +23,31 @@ import RouteDefinitions from '@/routes';
 const { ParticipantEntityTypes } = ParticipantEntityConstants;
 
 const ToolkitRunHistory = memo(() => {
-  const { tab, toolkitId } = useParams();
+  const { tab, toolkitId, mcpId } = useParams();
   const [searchParams] = useSearchParams();
-  const isMCP = searchParams.get('isMCP') === 'true';
+  const entityId = mcpId ?? toolkitId;
+  const isMCP = !!mcpId;
+  const isLegacyMcpLink = !mcpId && searchParams.get('isMCP') === 'true';
   const navigate = useNavigate();
   const projectId = useSelectedProjectId();
   const { toastError } = useToast();
   const styles = getStyles();
 
-  const goToToolkitsList = useCallback(() => {
-    navigate(NavigationHelpers.buildRoute(RouteDefinitions.ToolkitsWithTab, { tab: tab ?? 'all' }));
-  }, [navigate, tab]);
+  const goToList = useCallback(() => {
+    const listRoute = isMCP ? RouteDefinitions.MCPsWithTab : RouteDefinitions.ToolkitsWithTab;
+    navigate(NavigationHelpers.buildRoute(listRoute, { tab: tab ?? 'all' }));
+  }, [isMCP, navigate, tab]);
 
   const { isError, error } = useToolkitsDetailsQuery(
-    { projectId, toolkitId },
-    { skip: !projectId || !toolkitId },
+    { projectId, toolkitId: entityId },
+    { skip: !projectId || !entityId },
   );
 
   // Scheduler-started runs create no conversation, so nothing else surfaces them.
   const { indexRunRows, indexRunLookup, isIndexRunsLoading } = useToolkitIndexRuns({
     projectId,
-    toolkitId,
-    skip: isMCP,
+    toolkitId: entityId,
+    skip: isMCP || isLegacyMcpLink,
   });
 
   const decorateRow = useMemo(
@@ -59,8 +62,24 @@ const ToolkitRunHistory = memo(() => {
   }, [error, isError, shouldShowNotFoundPage, toastError]);
 
   useEffect(() => {
-    if (shouldShowNotFoundPage) goToToolkitsList();
-  }, [shouldShowNotFoundPage, goToToolkitsList]);
+    if (shouldShowNotFoundPage) goToList();
+  }, [shouldShowNotFoundPage, goToList]);
+
+  if (isLegacyMcpLink) {
+    const target = NavigationHelpers.buildRoute(RouteDefinitions.MCPRunHistory, {
+      tab: tab ?? 'all',
+      mcpId: toolkitId,
+    });
+    const preserved = new URLSearchParams(searchParams);
+    preserved.delete('isMCP');
+    const search = preserved.toString();
+    return (
+      <Navigate
+        replace
+        to={{ pathname: target, search: search ? `?${search}` : '' }}
+      />
+    );
+  }
 
   if (shouldShowNotFoundPage) return null;
 
@@ -72,7 +91,7 @@ const ToolkitRunHistory = memo(() => {
       />
       <Box sx={styles.content}>
         <RunHistoryContainer
-          entityId={toolkitId}
+          entityId={entityId}
           source={isMCP ? ParticipantEntityTypes.MCP : ParticipantEntityTypes.Toolkit}
           versions={null}
           ChatMessageListComponent={ChatMessageList}

@@ -92,12 +92,26 @@ describe('resolveBreadcrumbTrail', () => {
     expect(mcpTest.map(crumb => crumb.to)).toEqual(['/mcps/all', '/mcps/all/5', '/mcps/all/5/test']);
     expect(toolkitTest[toolkitTest.length - 1].key).toBe('/toolkits/:tab/:toolkitId/test');
   });
+
+  it('keeps the run history page under the detail page of its own entity type', () => {
+    const toolkitHistory = resolveBreadcrumbTrail('/toolkits/my-liked/42/history');
+    const mcpHistory = resolveBreadcrumbTrail('/mcps/my-liked/5/history');
+
+    expect(mcpHistory.map(crumb => crumb.to)).toEqual([
+      '/mcps/my-liked',
+      '/mcps/my-liked/5',
+      '/mcps/my-liked/5/history',
+    ]);
+    expect(mcpHistory[mcpHistory.length - 1].key).toBe('/mcps/:tab/:mcpId/history');
+    expect(toolkitHistory[toolkitHistory.length - 1].key).toBe('/toolkits/:tab/:toolkitId/history');
+  });
 });
 
 describe('getBreadcrumbEntityId', () => {
   it('returns the id only when a crumb needs an entity name', () => {
     expect(getBreadcrumbEntityId(resolveBreadcrumbTrail('/toolkits/all/42/history'))).toBe('42');
     expect(getBreadcrumbEntityId(resolveBreadcrumbTrail('/mcps/all/5'))).toBe('5');
+    expect(getBreadcrumbEntityId(resolveBreadcrumbTrail('/mcps/all/5/history'))).toBe('5');
     expect(getBreadcrumbEntityId(resolveBreadcrumbTrail('/toolkits/all'))).toBeUndefined();
     expect(getBreadcrumbEntityId([])).toBeUndefined();
   });
@@ -131,6 +145,12 @@ describe('applyBreadcrumbLabels', () => {
       'my index',
       'History',
     ]);
+  });
+
+  it('labels the MCP run history trail from its own root', () => {
+    const trail = resolveBreadcrumbTrail('/mcps/all/5/history');
+
+    expect(labelsOf(applyBreadcrumbLabels(trail, 'Figma'))).toEqual(['MCPs', 'Figma', 'Run History']);
   });
 
   it('labels the create-index crumb as New Index', () => {

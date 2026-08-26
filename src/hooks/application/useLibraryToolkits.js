@@ -147,6 +147,7 @@ export const useLibraryToolkits = (
   formik,
   isMCP,
   query = '',
+  forceSkip = false,
 ) => {
   const projectId = useSelectedProjectId();
   const theme = useTheme();
@@ -202,7 +203,7 @@ export const useLibraryToolkits = (
       },
     },
     {
-      skip: !projectId,
+      skip: !projectId || forceSkip,
     },
   );
 

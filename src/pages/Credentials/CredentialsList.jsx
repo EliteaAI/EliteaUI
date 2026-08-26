@@ -141,6 +141,11 @@ const CredentialsList = memo(props => {
     ],
   );
 
+  // Reset pagination when folder selection changes
+  useEffect(() => {
+    setPage(0);
+  }, [selectedFolderId, setPage]);
+
   useEffect(() => {
     onRefetch();
     if (pathname === DEFAULT_CREDENTIALS_PATHNAME) {
@@ -212,7 +217,7 @@ const CredentialsList = memo(props => {
   return (
     <Box sx={styles.wrapper}>
       <CardList
-        key={`${ContentType.CredentialAll}-${selectedFolderId || 'all'}`}
+        key={ContentType.CredentialAll}
         cardList={uniqueDataList}
         total={total}
         isLoading={isCredentialsFirstFetching || (isFolderViewActive && isLoadingFolderItems)}

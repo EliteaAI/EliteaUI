@@ -106,6 +106,16 @@ const ToolMenu = memo(props => {
   const [agentAnchor, setAgentAnchor] = useState(null);
   const [pipelineAnchor, setPipelineAnchor] = useState(null);
 
+  const toolkitOpened = useRef(false);
+  const mcpOpened = useRef(false);
+  const agentOpened = useRef(false);
+  const pipelineOpened = useRef(false);
+
+  if (toolkitAnchor) toolkitOpened.current = true;
+  if (mcpAnchor) mcpOpened.current = true;
+  if (agentAnchor) agentOpened.current = true;
+  if (pipelineAnchor) pipelineOpened.current = true;
+
   // Search states for each dropdown
   const [toolkitSearch, setToolkitSearch] = useState('');
   const debouncedToolkitSearch = useDebounceValue(toolkitSearch, 200);
@@ -172,6 +182,7 @@ const ToolMenu = memo(props => {
     formik,
     false,
     debouncedToolkitSearch,
+    !toolkitOpened.current,
   );
 
   const {
@@ -185,6 +196,7 @@ const ToolMenu = memo(props => {
     formik,
     true,
     debouncedMCPSearch,
+    !mcpOpened.current,
   );
 
   // Function to handle adding newly created toolkit
@@ -370,7 +382,7 @@ const ToolMenu = memo(props => {
       },
     },
     {
-      skip: !projectId,
+      skip: !projectId || !agentOpened.current,
     },
   );
 
@@ -398,7 +410,7 @@ const ToolMenu = memo(props => {
       },
     },
     {
-      skip: !projectId,
+      skip: !projectId || !pipelineOpened.current,
     },
   );
 
