@@ -92,7 +92,12 @@ const NotificationTable = memo(props => {
   const endRow = Math.min((page + 1) * pageSize, rowCount);
 
   const pageSizeSelectOptions = useMemo(
-    () => NOTIFICATION_TABLE_CONFIG.PAGE_SIZE_OPTIONS.map(n => ({ value: n, label: String(n) })),
+    () =>
+      NOTIFICATION_TABLE_CONFIG.PAGE_SIZE_OPTIONS.map(n => ({
+        value: n,
+        label: String(n),
+        testId: `notifications-page-size-option-${n}`,
+      })),
     [],
   );
 
@@ -244,6 +249,8 @@ const NotificationTable = memo(props => {
       >
         <GridTableHeader
           columns={NOTIFICATION_COLUMNS}
+          columnTestIdPrefix="notifications"
+          selectAllCheckboxTestId="notifications-select-all-checkbox"
           gridTemplateColumns={GRID_TEMPLATE_COLUMNS}
           onSelectAll={handleSelectAll}
           isAllSelected={isAllSelected}
@@ -284,6 +291,9 @@ const NotificationTable = memo(props => {
             pageSizeSelectOptions={pageSizeSelectOptions}
             pageSize={pageSize}
             nextButtonTestId="notifications-pagination-next-button"
+            prevButtonTestId="notifications-pagination-prev-button"
+            pageInfoTestId="notifications-pagination-page-info"
+            pageSizeSelectTestId="notifications-pagination-page-size-select"
             handlePrevPage={handlePrevPage}
             handleNextPage={handleNextPage}
             handlePageSizeChange={handlePageSizeChange}

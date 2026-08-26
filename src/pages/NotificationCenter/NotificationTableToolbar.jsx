@@ -31,6 +31,7 @@ const NotificationTableToolbar = memo(props => {
     >
       <Box sx={styles.leftSection}>
         <Typography
+          data-testid="notifications-center-header"
           variant="headingSmall"
           color="text.secondary"
         >
@@ -40,6 +41,7 @@ const NotificationTableToolbar = memo(props => {
       <Box sx={styles.rightSection}>
         <Box sx={styles.searchWrapper}>
           <SimpleSearchBar
+            data-testid="notifications-search-input"
             searchQuery={search}
             onSearchChange={onSearchChange}
             placeholder="Search"
@@ -61,6 +63,7 @@ const NotificationTableToolbar = memo(props => {
           </Box>
         </Tooltip>
         <DeleteEntityButton
+          testId="notifications-delete-selected-button"
           name="selected notifications"
           entity_name="notification"
           onDelete={onDeleteSelected}
