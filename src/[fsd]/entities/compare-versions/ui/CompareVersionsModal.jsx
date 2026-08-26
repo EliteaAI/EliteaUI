@@ -7,8 +7,6 @@ import { Modal } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 
 import { AGENT_COMPARE_STEPS, SKILL_COMPARE_STEPS } from '../lib/constants/compareVersions.constants';
-import { extractAgentCompareData, extractSkillCompareData } from '../lib/helpers/compareVersions.helpers';
-import { useCompareVersionsSave } from '../lib/hooks/useCompareVersionsSave.hooks';
 import CompareVersionSelector from './CompareVersionSelector';
 import CompareVersionsStepIndicator from './CompareVersionsStepIndicator';
 import { CompareInstructionsStep, CompareToolsSkillsStep, CompareUserInteractionStep } from './steps';
@@ -20,14 +18,24 @@ const PHASES = {
 };
 
 const CompareVersionsModal = memo(props => {
-  const { open, onClose, entityType, entityId, projectId, leftVersionId, versions = [] } = props;
+  const {
+    open,
+    onClose,
+    entityType,
+    leftVersionId,
+    versions = [],
+    onLoadVersions,
+    savingLeftKeys,
+    savingRightKeys,
+    onSaveLeft,
+    onSaveRight,
+    resetSavingState,
+  } = props;
 
   const [phase, setPhase] = useState(PHASES.SELECTION);
   const [rightVersionId, setRightVersionId] = useState(null);
   const [leftData, setLeftData] = useState(null);
   const [rightData, setRightData] = useState(null);
-  const [leftVersionDetails, setLeftVersionDetails] = useState(null);
-  const [rightVersionDetails, setRightVersionDetails] = useState(null);
   const [leftVersionMeta, setLeftVersionMeta] = useState(null);
   const [rightVersionMeta, setRightVersionMeta] = useState(null);
   const [leftEdits, setLeftEdits] = useState({});
@@ -39,17 +47,6 @@ const CompareVersionsModal = memo(props => {
   const isAgent = entityType === 'agent';
   const steps = isAgent ? AGENT_COMPARE_STEPS : SKILL_COMPARE_STEPS;
   const isLastStep = activeStepIndex === steps.length - 1;
-
-  const {
-    fetchAgentVersion,
-    fetchSkillVersion,
-    savingLeftKeys,
-    savingRightKeys,
-    setSavingLeftKeys,
-    setSavingRightKeys,
-    resetSavingState,
-    saveVersion,
-  } = useCompareVersionsSave({ isAgent, projectId, entityId });
 
   const leftVersion = useMemo(
     () => leftVersionMeta ?? versions.find(v => v.id === leftVersionId),
@@ -77,8 +74,6 @@ const CompareVersionsModal = memo(props => {
       setRightVersionId(null);
       setLeftData(null);
       setRightData(null);
-      setLeftVersionDetails(null);
-      setRightVersionDetails(null);
       setLeftVersionMeta(null);
       setRightVersionMeta(null);
       setLeftEdits({});
@@ -86,7 +81,7 @@ const CompareVersionsModal = memo(props => {
       setActiveStepIndex(0);
       setLoadError(null);
       setDiscardTarget(null);
-      resetSavingState();
+      resetSavingState?.();
     }
   }, [open, resetSavingState]);
 
@@ -96,38 +91,11 @@ const CompareVersionsModal = memo(props => {
     setLoadError(null);
 
     try {
-      let leftDetail, rightDetail;
-
-      if (isAgent) {
-        const [leftRes, rightRes] = await Promise.all([
-          fetchAgentVersion({ projectId, applicationId: entityId, versionId: leftVersionId }).unwrap(),
-          fetchAgentVersion({ projectId, applicationId: entityId, versionId: rightVersionId }).unwrap(),
-        ]);
-        leftDetail = leftRes;
-        rightDetail = rightRes;
-        setLeftData(extractAgentCompareData(leftDetail));
-        setRightData(extractAgentCompareData(rightDetail));
-      } else {
-        const [leftRes, rightRes] = await Promise.all([
-          fetchSkillVersion({ projectId, skillId: entityId, versionId: leftVersionId }).unwrap(),
-          fetchSkillVersion({ projectId, skillId: entityId, versionId: rightVersionId }).unwrap(),
-        ]);
-        leftDetail = leftRes;
-        rightDetail = rightRes;
-        setLeftData(extractSkillCompareData(leftDetail));
-        setRightData(extractSkillCompareData(rightDetail));
-      }
-
-      setLeftVersionDetails(leftDetail);
-      setRightVersionDetails(rightDetail);
-
-      const pickVersionMeta = d => {
-        const vd = isAgent ? d : (d.version_details ?? d);
-        return { id: vd.id, name: vd.name, created_at: vd.created_at, author: vd.author };
-      };
-      setLeftVersionMeta(pickVersionMeta(leftDetail));
-      setRightVersionMeta(pickVersionMeta(rightDetail));
-
+      const result = await onLoadVersions(leftVersionId, rightVersionId);
+      setLeftData(result.leftData);
+      setRightData(result.rightData);
+      setLeftVersionMeta(result.leftVersionMeta);
+      setRightVersionMeta(result.rightVersionMeta);
       setLeftEdits({});
       setRightEdits({});
       setPhase(PHASES.WIZARD);
@@ -135,7 +103,7 @@ const CompareVersionsModal = memo(props => {
       setLoadError('Failed to load version details. Please try again.');
       setPhase(PHASES.SELECTION);
     }
-  }, [rightVersionId, isAgent, fetchAgentVersion, fetchSkillVersion, projectId, entityId, leftVersionId]);
+  }, [rightVersionId, leftVersionId, onLoadVersions]);
 
   const isDirty = Object.keys(leftEdits).length > 0 || Object.keys(rightEdits).length > 0;
 
@@ -162,52 +130,32 @@ const CompareVersionsModal = memo(props => {
     }
   }, [discardTarget, onClose]);
 
-  const handleSaveLeft = useCallback(
+  const handleSaveLeftField = useCallback(
     fieldPayload =>
-      saveVersion({
+      onSaveLeft?.({
         fieldPayload,
         data: leftData,
         edits: leftEdits,
-        versionDetails: leftVersionDetails,
         versionId: leftVersionId,
         versionName: leftVersion?.name,
-        setSavingKeys: setSavingLeftKeys,
         setEdits: setLeftEdits,
         setData: setLeftData,
       }),
-    [
-      leftData,
-      leftEdits,
-      leftVersionDetails,
-      leftVersionId,
-      leftVersion?.name,
-      saveVersion,
-      setSavingLeftKeys,
-    ],
+    [leftData, leftEdits, leftVersionId, leftVersion?.name, onSaveLeft],
   );
 
-  const handleSaveRight = useCallback(
+  const handleSaveRightField = useCallback(
     fieldPayload =>
-      saveVersion({
+      onSaveRight?.({
         fieldPayload,
         data: rightData,
         edits: rightEdits,
-        versionDetails: rightVersionDetails,
         versionId: rightVersionId,
         versionName: rightVersion?.name,
-        setSavingKeys: setSavingRightKeys,
         setEdits: setRightEdits,
         setData: setRightData,
       }),
-    [
-      rightData,
-      rightEdits,
-      rightVersionDetails,
-      rightVersionId,
-      rightVersion?.name,
-      saveVersion,
-      setSavingRightKeys,
-    ],
+    [rightData, rightEdits, rightVersionId, rightVersion?.name, onSaveRight],
   );
 
   const handlePrevious = useCallback(() => setActiveStepIndex(prev => Math.max(0, prev - 1)), []);
@@ -242,10 +190,10 @@ const CompareVersionsModal = memo(props => {
       rightEdits,
       onLeftEdit,
       onRightEdit,
-      onSaveLeft: handleSaveLeft,
-      onSaveRight: handleSaveRight,
-      savingLeftKeys,
-      savingRightKeys,
+      onSaveLeft: handleSaveLeftField,
+      onSaveRight: handleSaveRightField,
+      savingLeftKeys: savingLeftKeys ?? {},
+      savingRightKeys: savingRightKeys ?? {},
     };
 
     switch (stepKey) {

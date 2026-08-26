@@ -6,9 +6,10 @@ import { useNavigate } from 'react-router-dom';
 
 import { Box } from '@mui/material';
 
+import { CompareVersionsModal } from '@/[fsd]/entities/compare-versions';
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version';
-import { CompareVersionsModal } from '@/[fsd]/features/compare-versions';
 import {
+  useCompareSkillVersions,
   useForkSkill,
   usePublishSkillMenu,
   useSkillExport,
@@ -70,6 +71,15 @@ const SkillControls = memo(props => {
   const { doFork: doForkSkill, isForking } = useForkSkill();
   const openWizard = useSelector(state => state.importWizard.openWizard);
   const [deleteSkill] = useDeleteSkillMutation();
+
+  const {
+    loadVersions: loadSkillVersions,
+    savingLeftKeys,
+    savingRightKeys,
+    onSaveLeft,
+    onSaveRight,
+    resetSavingState,
+  } = useCompareSkillVersions({ projectId, skillId });
 
   const {
     isPinned,
@@ -269,10 +279,14 @@ const SkillControls = memo(props => {
           open={compareVersionsOpen}
           onClose={() => setCompareVersionsOpen(false)}
           entityType="skill"
-          entityId={skillId}
-          projectId={projectId}
           leftVersionId={currentVersionId}
           versions={versions}
+          onLoadVersions={loadSkillVersions}
+          savingLeftKeys={savingLeftKeys}
+          savingRightKeys={savingRightKeys}
+          onSaveLeft={onSaveLeft}
+          onSaveRight={onSaveRight}
+          resetSavingState={resetSavingState}
         />
       )}
     </Box>

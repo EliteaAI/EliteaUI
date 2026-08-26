@@ -4,6 +4,7 @@ import { useFormikContext } from 'formik';
 
 import { Box } from '@mui/material';
 
+import { CompareVersionsModal } from '@/[fsd]/entities/compare-versions';
 import {
   LATEST_VERSION_NAME,
   VersionDelete,
@@ -11,7 +12,7 @@ import {
   useSetDefaultVersion,
   useUnpublishVersionMenu,
 } from '@/[fsd]/entities/version';
-import { CompareVersionsModal } from '@/[fsd]/features/compare-versions';
+import { useCompareAgentVersions } from '@/[fsd]/features/agent/lib/hooks';
 import { PinEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
 import { Controls } from '@/[fsd]/shared/ui';
@@ -43,6 +44,15 @@ const ApplicationControls = memo(props => {
   const [compareVersionsOpen, setCompareVersionsOpen] = useState(false);
 
   const { values: { id } = {} } = formik;
+
+  const {
+    loadVersions: loadAgentVersions,
+    savingLeftKeys,
+    savingRightKeys,
+    onSaveLeft,
+    onSaveRight,
+    resetSavingState,
+  } = useCompareAgentVersions({ projectId, applicationId: id });
 
   const versionDetails = formik?.values?.version_details;
   const { projectEntityLink } = useProjectEntityLink({
@@ -272,10 +282,14 @@ const ApplicationControls = memo(props => {
           open={compareVersionsOpen}
           onClose={() => setCompareVersionsOpen(false)}
           entityType={isFromPipeline ? 'pipeline' : 'agent'}
-          entityId={formik?.values?.id}
-          projectId={projectId}
           leftVersionId={formik?.values?.version_details?.id}
           versions={formik?.values?.versions ?? []}
+          onLoadVersions={loadAgentVersions}
+          savingLeftKeys={savingLeftKeys}
+          savingRightKeys={savingRightKeys}
+          onSaveLeft={onSaveLeft}
+          onSaveRight={onSaveRight}
+          resetSavingState={resetSavingState}
         />
       )}
     </Box>
