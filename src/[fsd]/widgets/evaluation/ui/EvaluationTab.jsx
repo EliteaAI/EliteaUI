@@ -65,6 +65,7 @@ const EvaluationTab = memo(props => {
           <LibraryView
             isFetching={isFetching}
             isError={isError}
+            applicationId={applicationId}
           />
         )}
         {view === EVAL_TAB_VIEW.datasets && (

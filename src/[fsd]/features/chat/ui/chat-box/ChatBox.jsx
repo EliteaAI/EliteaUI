@@ -15,7 +15,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { Box } from '@mui/system';
 
-import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
+import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version';
 import * as ChatHelpers from '@/[fsd]/features/chat/lib/helpers/chat.helpers';
 import { buildEntityParticipant } from '@/[fsd]/features/chat/lib/helpers/entityParticipant.helpers.js';
 import {
@@ -1519,6 +1519,7 @@ const ChatBox = forwardRef((props, boxRef) => {
         thread_id: threadId,
         participants: activeConversation?.participants || [],
         question: theQuestion,
+        tokenLimitContinuation: true,
       });
 
       // Update UI to show it's continuing and clear the confirmation state

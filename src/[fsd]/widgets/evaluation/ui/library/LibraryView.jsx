@@ -22,7 +22,7 @@ import EvaluationSection from './EvaluationSection';
 const isPlatformTier = item => item?.tier === EVAL_TIER.platform;
 
 const LibraryView = memo(props => {
-  const { isFetching: isAppFetching, isError: isAppError } = props;
+  const { isFetching: isAppFetching, isError: isAppError, applicationId = null } = props;
 
   const projectId = useSelectedProjectId();
   const { checkPermission } = useCheckPermission();
@@ -36,7 +36,7 @@ const LibraryView = memo(props => {
     data: dimensions = [],
     isLoading: isDimensionsLoading,
     isError: isDimensionsError,
-  } = useEvalDimensionsQuery({ projectId }, { skip: !projectId });
+  } = useEvalDimensionsQuery({ projectId, agentId: applicationId }, { skip: !projectId });
 
   const {
     data: codeValidations = [],
@@ -170,6 +170,7 @@ const LibraryView = memo(props => {
       <DimensionEditorDialog
         open={dimensionDialog.open}
         projectId={projectId}
+        applicationId={applicationId}
         dimension={dimensionDialog.item}
         onClose={closeDimensionEditor}
       />

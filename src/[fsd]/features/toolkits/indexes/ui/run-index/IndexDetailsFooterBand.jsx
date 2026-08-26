@@ -1,6 +1,6 @@
 import { memo } from 'react';
 
-import { Box } from '@mui/material';
+import { Box, Tooltip } from '@mui/material';
 
 import { ToolkitLayoutConstants } from '@/[fsd]/features/toolkits/lib/constants';
 import { Button } from '@/[fsd]/shared/ui';
@@ -15,6 +15,7 @@ const IndexDetailsFooterBand = memo(props => {
     canStopIndexing = true,
     onStop,
     reindexDisabled = false,
+    reindexTooltip,
     onReindex,
   } = props;
   const styles = indexDetailsFooterBandStyles();
@@ -34,15 +35,25 @@ const IndexDetailsFooterBand = memo(props => {
           {stopLabel}
         </Button.BaseBtn>
       ) : (
-        <Button.BaseBtn
-          data-testid="index-details-footer-action"
-          variant={Button.BUTTON_VARIANTS.elitea}
-          disabled={reindexDisabled}
-          onClick={onReindex}
-          startIcon={<IndexingIcon />}
+        <Tooltip
+          title={reindexTooltip ?? ''}
+          placement="top"
         >
-          Reindex
-        </Button.BaseBtn>
+          <Box
+            component="span"
+            sx={styles.tooltipAnchor}
+          >
+            <Button.BaseBtn
+              data-testid="index-details-footer-action"
+              variant={Button.BUTTON_VARIANTS.elitea}
+              disabled={reindexDisabled}
+              onClick={onReindex}
+              startIcon={<IndexingIcon />}
+            >
+              Reindex
+            </Button.BaseBtn>
+          </Box>
+        </Tooltip>
       )}
     </Box>
   );
@@ -63,6 +74,9 @@ const indexDetailsFooterBandStyles = () => ({
     background: palette.background.section,
     borderTop: `0.0625rem solid ${palette.border.table}`,
   }),
+  tooltipAnchor: {
+    display: 'inline-flex',
+  },
 });
 
 export default IndexDetailsFooterBand;

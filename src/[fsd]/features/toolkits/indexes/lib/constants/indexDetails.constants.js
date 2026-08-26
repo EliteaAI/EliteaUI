@@ -11,11 +11,17 @@ export const IndexesToolsEnum = {
   removeIndex: 'remove_index',
 };
 
+export const INDEX_DATA_DISABLED_REASON = 'Enable the “Index data” tool to activate indexing';
+
 export const INDEX_SEARCH_TOOL_OPTIONS = [
   { label: 'Search Index', value: IndexesToolsEnum.searchIndexData },
   { label: 'Stepback Search Index', value: IndexesToolsEnum.stepbackSearchIndex },
   { label: 'Stepback Summary Index', value: IndexesToolsEnum.stepbackSummaryIndex },
 ];
+
+export const INDEX_SEARCH_TOOL_LABELS = new Map(
+  INDEX_SEARCH_TOOL_OPTIONS.map(({ value, label }) => [value, label]),
+);
 
 export const IndexStatuses = {
   progress: 'in_progress',
@@ -71,10 +77,6 @@ export const IndexHistoryItemsLabels = {
   [IndexStatuses.runTest]: 'Run test',
 };
 
-export const RUN_TEST_OPERATION_TYPES = new Set([
-  'search_index',
-  'stepback_search_index',
-  'stepback_summary_index',
-]);
+export const RUN_TEST_OPERATION_TYPES = new Set(INDEX_SEARCH_TOOL_LABELS.keys());
 
 export const IndexCronDefault = '0 0 * * 6';

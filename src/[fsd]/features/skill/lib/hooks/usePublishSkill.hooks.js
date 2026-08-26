@@ -4,7 +4,7 @@ import { useFormikContext } from 'formik';
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 
-import { PUBLISH_STEPS } from '@/[fsd]/entities/version/ui/PublishWizardModal';
+import { PUBLISH_STEPS } from '@/[fsd]/entities/version';
 import {
   useGetSkillCategoriesQuery,
   usePublishSkillMutation,

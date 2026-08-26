@@ -6,6 +6,7 @@ import {
   initialCompletedTsOf,
   resolveIndexEventLabel,
 } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexEvent.helpers';
+import { resolveIndexRunDuration } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexHistoryRow.helpers';
 import { useIndexRunLiveRefresh } from '@/[fsd]/features/toolkits/indexes/lib/hooks/useIndexRunLiveRefresh.hooks';
 
 const TERMINAL_STATES = new Set([
@@ -16,23 +17,12 @@ const TERMINAL_STATES = new Set([
   IndexStatuses.cancelled,
 ]);
 
-// Conversation rows carry a naive isoformat() timestamp, which JS reads as local time.
-// A trailing Z here would make the merged list sort the two kinds of row against
-// different clocks and pick the wrong one as latest in any non-UTC browser.
-const toNaiveIsoString = unixSeconds =>
-  Number.isFinite(unixSeconds) ? new Date(unixSeconds * 1000).toISOString().replace('Z', '') : null;
+const toIsoString = unixSeconds =>
+  Number.isFinite(unixSeconds) ? new Date(unixSeconds * 1000).toISOString() : null;
 
 const toRunRow = (entry, indexName, eventLabel) => {
-  const createdAt = toNaiveIsoString(entry.updated_on);
+  const createdAt = toIsoString(entry.updated_on);
   if (!createdAt) return null;
-
-  const startedOn = Number(entry.created_on);
-  const finishedOn = Number(entry.updated_on);
-  // Raw epoch floats; the conversation rows beside these arrive already rounded.
-  const duration =
-    Number.isFinite(startedOn) && finishedOn > startedOn
-      ? Math.round((finishedOn - startedOn) * 100) / 100
-      : null;
 
   return {
     id: `index-run:${indexName}:${entry.updated_on}`,
@@ -40,11 +30,12 @@ const toRunRow = (entry, indexName, eventLabel) => {
     name: `${eventLabel} — ${indexName}`,
     event_label: eventLabel,
     event_tooltip: `${eventLabel} — ${indexName}`,
-    duration,
+    duration: resolveIndexRunDuration(entry),
     version_id: null,
     index_name: indexName,
     operation_type: null,
     hasConversation: false,
+    canShare: true,
     entry,
   };
 };

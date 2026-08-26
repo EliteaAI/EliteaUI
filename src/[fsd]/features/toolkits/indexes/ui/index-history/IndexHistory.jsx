@@ -1,27 +1,53 @@
 import { memo, useCallback, useEffect, useMemo } from 'react';
 
 import { useDispatch, useSelector } from 'react-redux';
+import { useSearchParams } from 'react-router-dom';
 
-import { Box, Typography } from '@mui/material';
+import { Box } from '@mui/material';
 
-import { formatRunTimestamp } from '@/[fsd]/entities/run-history/lib/helpers';
-import { useRunHistorySorting } from '@/[fsd]/entities/run-history/lib/hooks';
-import { RunHistorySortableHeader } from '@/[fsd]/entities/run-history/ui';
-import { IndexHistoryItemsLabels } from '@/[fsd]/features/toolkits/indexes/lib/constants';
 import {
-  initialCompletedTsOf,
-  resolveIndexEventLabel,
-} from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexEvent.helpers';
+  RunHistoryListItem,
+  RunHistorySortableHeader,
+  compareRunDuration,
+  resolveRunHistoryColumns,
+  useRunHistorySorting,
+} from '@/[fsd]/entities/run-history';
+import { initialCompletedTsOf } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexEvent.helpers';
+import {
+  buildIndexHistoryRows,
+  indexHistoryRowId,
+} from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexHistoryRow.helpers';
 import { actions, selectHistoryItem } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
+import { SearchParams } from '@/common/constants';
+import useGetWindowWidth from '@/hooks/useGetWindowWidth';
+import useToast from '@/hooks/useToast';
 
 const SORT_TYPES = {
-  EVENT: 'event',
   DATE: 'date',
+  EVENT: 'event',
+  DURATION: 'duration',
+};
+
+const GRID_TEMPLATE_COLUMNS = resolveRunHistoryColumns(true, true);
+
+const TABLE_HEADER_ITEMS = [
+  { label: 'Date', type: SORT_TYPES.DATE },
+  { label: 'Event', type: SORT_TYPES.EVENT },
+  { label: 'Duration', type: SORT_TYPES.DURATION },
+];
+
+const SORT_FUNCTIONS = {
+  [SORT_TYPES.DATE]: (a, b) => a.created_at - b.created_at,
+  [SORT_TYPES.EVENT]: (a, b) => a.event_label.localeCompare(b.event_label),
+  [SORT_TYPES.DURATION]: compareRunDuration,
 };
 
 const IndexHistory = memo(props => {
   const { history } = props;
   const dispatch = useDispatch();
+  const { windowWidth } = useGetWindowWidth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { toastInfo } = useToast();
 
   const styles = indexHistoryStyles();
 
@@ -30,8 +56,38 @@ const IndexHistory = memo(props => {
 
   const initialCompletedTs = useMemo(() => initialCompletedTsOf(history), [history]);
 
+  const historyRows = useMemo(
+    () => buildIndexHistoryRows(history, initialCompletedTs),
+    [history, initialCompletedTs],
+  );
+
   useEffect(() => {
-    dispatch(actions.selectHistoryItem(history[history.length - 1]));
+    const sharedRunId = searchParams.get(SearchParams.HistoryRunId);
+    const sharedRow = historyRows.find(row => row.id === sharedRunId);
+    const newestRow = historyRows.reduce(
+      (newest, row) => (newest && newest.created_at >= row.created_at ? newest : row),
+      null,
+    );
+
+    if (sharedRunId && !sharedRow) {
+      toastInfo(
+        newestRow
+          ? 'That run is not in this list. Showing the most recent run instead.'
+          : 'That run is no longer available.',
+      );
+    }
+
+    dispatch(actions.selectHistoryItem(sharedRow?.entry ?? newestRow?.entry ?? null));
+
+    if (sharedRunId) {
+      setSearchParams(
+        params => {
+          params.delete(SearchParams.HistoryRunId);
+          return params;
+        },
+        { replace: true },
+      );
+    }
 
     return () => {
       dispatch(actions.selectHistoryItem(null));
@@ -39,75 +95,39 @@ const IndexHistory = memo(props => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const resolveLabel = useCallback(
-    item => resolveIndexEventLabel(item, initialCompletedTs),
-    [initialCompletedTs],
+  const sortedRows = useMemo(() => getSortedData(historyRows, SORT_FUNCTIONS), [historyRows, getSortedData]);
+
+  const selectedRowId = useMemo(
+    () => (selectedHistoryItem ? indexHistoryRowId(selectedHistoryItem) : null),
+    [selectedHistoryItem],
   );
 
-  const sortFunctions = useMemo(
-    () => ({
-      [SORT_TYPES.EVENT]: (a, b) => resolveLabel(a).localeCompare(resolveLabel(b)),
-      [SORT_TYPES.DATE]: (a, b) => a.updated_on - b.updated_on,
-    }),
-    [resolveLabel],
-  );
-
-  const sortedHistory = useMemo(
-    () =>
-      getSortedData(history, sortFunctions).filter(
-        item => Boolean(IndexHistoryItemsLabels[item.state]) && Number.isFinite(item.updated_on),
-      ),
-    [history, getSortedData, sortFunctions],
-  );
-
-  const tableHeaderItems = useMemo(
-    () => [
-      { label: 'Event', type: SORT_TYPES.EVENT },
-      { label: 'Date', type: SORT_TYPES.DATE },
-    ],
-    [],
-  );
-
-  const handleSelectHistoryItem = useCallback(
-    item => {
-      dispatch(actions.selectHistoryItem(item));
+  const handleSelectRow = useCallback(
+    rowId => {
+      dispatch(actions.selectHistoryItem(historyRows.find(row => row.id === rowId)?.entry ?? null));
     },
-    [dispatch],
+    [dispatch, historyRows],
   );
 
   return (
     <Box sx={styles.wrapper}>
       <RunHistorySortableHeader
-        headerItems={tableHeaderItems}
+        headerItems={TABLE_HEADER_ITEMS}
         sortConfig={sortConfig}
         onSort={handleSortItems}
-        gridTemplateColumns="1fr 1fr"
+        gridTemplateColumns={GRID_TEMPLATE_COLUMNS}
       />
       <Box sx={styles.scrollableContent}>
-        {sortedHistory.map(historyItem => (
-          <Box
-            key={`${historyItem.updated_on}_${historyItem.conversation_id}`}
-            sx={[
-              styles.historyItem,
-              historyItem.updated_on === selectedHistoryItem?.updated_on &&
-                historyItem.conversation_id === selectedHistoryItem?.conversation_id &&
-                styles.selected,
-            ]}
-            onClick={() => handleSelectHistoryItem(historyItem)}
-          >
-            <Typography
-              variant="bodyMedium"
-              color="text.secondary"
-            >
-              {resolveLabel(historyItem)}
-            </Typography>
-            <Typography
-              variant="bodyMedium"
-              color="text.secondary"
-            >
-              {formatRunTimestamp(historyItem.updated_on)}
-            </Typography>
-          </Box>
+        {sortedRows.map(row => (
+          <RunHistoryListItem
+            key={row.id}
+            item={row}
+            versions={null}
+            hasEvent
+            selectedItem={selectedRowId}
+            onItemSelect={handleSelectRow}
+            tooltipTrigger={windowWidth}
+          />
         ))}
       </Box>
     </Box>
@@ -124,90 +144,15 @@ const indexHistoryStyles = () => ({
     justifyContent: 'stretch',
     alignItems: 'flex-start',
     width: '100%',
-    maxHeight: 'calc(100vh - 14.25rem)',
+    height: '100%',
     position: 'relative',
+    overflow: 'hidden',
   },
   scrollableContent: {
     flex: 1,
     width: '100%',
     overflowY: 'auto',
   },
-  historyItem: ({ palette }) => ({
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    alignItems: 'center',
-    padding: '.5rem 1rem',
-    width: '100%',
-    color: palette.text.secondary,
-    position: 'relative',
-    borderRadius: '0.5rem',
-
-    span: {
-      padding: '0rem 1rem',
-      textOverflow: 'ellipsis',
-      whiteSpace: 'nowrap',
-      overflow: 'hidden',
-
-      '&:first-of-type': {
-        padding: 0,
-      },
-    },
-
-    svg: {
-      display: 'none',
-      position: 'absolute',
-      right: '1rem',
-      top: '50%',
-      transform: 'translateY(-50%)',
-    },
-
-    '&:after': {
-      content: '""',
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      width: '100%',
-      height: '0.0625rem',
-      backgroundColor: palette.divider,
-    },
-
-    '&:nth-of-type(2)': {
-      '&:after': { display: 'none' },
-    },
-
-    '&:hover': {
-      cursor: 'pointer',
-      backgroundColor: palette.background.userInputBackground,
-
-      '&:after': {
-        display: 'none',
-      },
-
-      svg: {
-        display: 'block',
-      },
-    },
-
-    '&:hover + &:after': {
-      display: 'none',
-    },
-  }),
-  selected: ({ palette }) => ({
-    background: palette.split.pressed,
-
-    '&:after': {
-      display: 'none',
-    },
-
-    '&:hover': {
-      cursor: 'pointer',
-      background: palette.split.pressed,
-    },
-
-    '+ *:after': {
-      display: 'none',
-    },
-  }),
 });
 
 export default IndexHistory;

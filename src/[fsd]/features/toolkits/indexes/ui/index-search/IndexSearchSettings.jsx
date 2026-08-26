@@ -35,6 +35,7 @@ const IndexSearchSettings = memo(props => {
               value={selectedTool ?? ''}
               onValueChange={onChangeTool}
               options={searchToolOptions}
+              disabled={isRunning}
               showBorder
             />
           </Box>

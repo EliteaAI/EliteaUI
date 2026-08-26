@@ -350,6 +350,7 @@ const ConfigurationTab = memo(props => {
           onClose={handleCloseHistory}
           ChatMessageListComponent={ChatMessageList}
           prettifyConversation={ToolkitsHelpers.prettifyToolkitConversation}
+          shareOpensHistoryTab
         />
       )}
       {!showHistory && (

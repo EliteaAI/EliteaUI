@@ -304,7 +304,14 @@ const Token = memo(props => {
           markedToken.items.map(item => ({ ...item, type: 'list_item' })),
           markedToken.startPos ?? 0,
         );
-        return <Box component={markedToken.ordered ? 'ol' : 'ul'}>{mapToTokens(stampedItems)}</Box>;
+        return (
+          <Box
+            component={markedToken.ordered ? 'ol' : 'ul'}
+            start={markedToken.ordered ? markedToken.start : undefined}
+          >
+            {mapToTokens(stampedItems)}
+          </Box>
+        );
       }
       return fallback;
     }

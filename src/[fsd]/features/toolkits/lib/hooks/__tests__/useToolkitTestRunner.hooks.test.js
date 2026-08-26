@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
 
 const handleClearChat = vi.fn();
+const handleClearActiveConversation = vi.fn();
 const getModalProps = vi.fn(() => ({ open: false }));
 let toolSchema = null;
 
@@ -34,6 +35,7 @@ vi.mock('../useToolkitChat.hooks', () => ({
     chatHistory: [{ id: 'welcome_message_id' }],
     handleRunTool: vi.fn(),
     handleClearChat,
+    handleClearActiveConversation,
     isRunning: false,
     retryLastRun: vi.fn(),
     modelList: [],
@@ -167,6 +169,14 @@ describe('useToolkitTestRunner tool changes', () => {
     expect(result.current.selectedTool).toBe('search_issues');
     expect(result.current.toolInputVariables.title).toBe('');
     expect(handleClearChat).toHaveBeenCalled();
+  });
+
+  it('drops the conversation so the next run is stamped with the tool that was actually picked', () => {
+    const { result } = renderRunner();
+    selectTool(result, 'search_index');
+    selectTool(result, 'stepback_search_index');
+
+    expect(handleClearActiveConversation).toHaveBeenCalledTimes(2);
   });
 
   it('treats a cleared selection as no tool', () => {

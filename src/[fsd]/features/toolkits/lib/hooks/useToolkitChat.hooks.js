@@ -13,7 +13,7 @@ import {
 } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexChat.helpers';
 import { useIndexHistory } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
 import { ToolkitChatModesEnum } from '@/[fsd]/features/toolkits/lib/constants';
-import { ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
+import { ToolkitChatHelpers, ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import {
   createToolkitConversationWithParticipant,
   findToolkitParticipant,
@@ -46,6 +46,7 @@ export const useToolkitChat = props => {
     runTool,
     isValidForm,
     toolInputVariables,
+    toolSchema,
     index,
     indexConfigOverride,
     traceNewIndex,
@@ -93,9 +94,11 @@ export const useToolkitChat = props => {
   const [chatHistory, setChatHistory] = useState([generateWelcomeMessage(runTool, isTestToolsMode)]);
   const [isFullScreenChat, toggleFullScreenChat] = useState(false);
   const [activeConversation, setActiveConversation] = useState(null);
+  const conversationGenerationRef = useRef(0);
 
   // Action state
   const [isRunning, setIsRunning] = useState(false);
+  const runGenerationRef = useRef(0);
   const [activeTaskId, setActiveTaskId] = useState(index?.metadata?.task_id ?? null);
   const seededIndexIdRef = useRef(index?.id ?? null);
   const [isWaitingForTaskStart, setIsWaitingForTaskStart] = useState(false);
@@ -298,6 +301,9 @@ export const useToolkitChat = props => {
 
   const createToolkitConversation = useCallback(
     async ({ indexName, configuration, tool }) => {
+      const requestGeneration = conversationGenerationRef.current;
+      const runGeneration = runGenerationRef.current;
+
       try {
         const conversation = await createToolkitConversationWithParticipant({
           createConversation,
@@ -314,14 +320,19 @@ export const useToolkitChat = props => {
           },
         });
 
-        if (conversation) {
+        const isCurrentGeneration = conversationGenerationRef.current === requestGeneration;
+
+        if (conversation && isCurrentGeneration) {
           setActiveConversation(conversation);
         }
 
         return conversation;
       } catch {
-        setIsRunning(false);
-        setIsWaitingForTaskStart(false);
+        if (runGenerationRef.current === runGeneration) {
+          setIsRunning(false);
+          setIsWaitingForTaskStart(false);
+        }
+
         return null;
       }
     },
@@ -330,6 +341,8 @@ export const useToolkitChat = props => {
 
   const executeRunTool = useCallback(
     async ({ relevantInputVariables, indexing, tool }) => {
+      const runGeneration = runGenerationRef.current;
+
       try {
         let currentConversation = activeConversation;
 
@@ -361,10 +374,16 @@ export const useToolkitChat = props => {
           participants: currentConversation?.participants || [],
         });
 
-        const toolParams =
+        const rawToolParams =
           typeof relevantInputVariables === 'object' && !Array.isArray(relevantInputVariables)
             ? relevantInputVariables
             : {};
+
+        // Strip optional params left empty by the user so they're omitted from the call
+        // rather than sent as null/'' — matching how an agent invokes the same tool (#6263).
+        const toolParams = toolSchema
+          ? ToolkitChatHelpers.sanitizeToolParams(toolSchema, rawToolParams)
+          : rawToolParams;
 
         const specificToolkitPayload = {
           ...commonPayload,
@@ -376,6 +395,8 @@ export const useToolkitChat = props => {
 
         socketEmit(specificToolkitPayload);
       } catch (error) {
+        if (runGenerationRef.current !== runGeneration) return;
+
         setIsRunning(false);
         setIsWaitingForTaskStart(false);
 
@@ -406,6 +427,7 @@ export const useToolkitChat = props => {
       selectedModel,
       llmSettings,
       socketEmit,
+      toolSchema,
       setProgressingIndexHistoryRecovered,
       createToolkitConversation,
       traceNewIndex,
@@ -432,6 +454,7 @@ export const useToolkitChat = props => {
         };
 
       if (canProceed) {
+        runGenerationRef.current += 1;
         setIsRunning(true);
         runningToolRef.current = tool;
 
@@ -534,6 +557,7 @@ export const useToolkitChat = props => {
   }, [runTool, setProgressingIndexHistoryRecovered, isTestToolsMode]);
 
   const handleClearActiveConversation = useCallback(() => {
+    conversationGenerationRef.current += 1;
     setActiveConversation(null);
     setProgressingIndexHistoryRecovered(false);
   }, [setProgressingIndexHistoryRecovered]);

@@ -78,6 +78,7 @@ const ToolkitRunHistory = memo(() => {
           ChatMessageListComponent={ChatMessageList}
           prettifyConversation={ToolkitsHelpers.prettifyToolkitConversation}
           additionalRows={indexRunRows}
+          additionalRowsLoading={isIndexRunsLoading}
           decorateRow={isMCP ? null : decorateRow}
           DetailComponent={IndexRunDetail}
         />
