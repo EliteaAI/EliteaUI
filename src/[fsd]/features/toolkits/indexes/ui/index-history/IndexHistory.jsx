@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { useDispatch, useSelector } from 'react-redux';
 import { useSearchParams } from 'react-router-dom';
@@ -61,15 +61,28 @@ const IndexHistory = memo(props => {
     [history, initialCompletedTs],
   );
 
+  const newestRow = useMemo(
+    () =>
+      historyRows.reduce(
+        (newest, row) => (newest && newest.created_at >= row.created_at ? newest : row),
+        null,
+      ),
+    [historyRows],
+  );
+
+  const readerPickedRun = useRef(false);
+  const autoSelectedRunId = useRef(null);
+
   useEffect(() => {
     const sharedRunId = searchParams.get(SearchParams.HistoryRunId);
-    const sharedRow = historyRows.find(row => row.id === sharedRunId);
-    const newestRow = historyRows.reduce(
-      (newest, row) => (newest && newest.created_at >= row.created_at ? newest : row),
-      null,
-    );
+    if (!sharedRunId) return;
 
-    if (sharedRunId && !sharedRow) {
+    const sharedRow = historyRows.find(row => row.id === sharedRunId);
+
+    if (sharedRow) {
+      readerPickedRun.current = true;
+      dispatch(actions.selectHistoryItem(sharedRow.entry));
+    } else {
       toastInfo(
         newestRow
           ? 'That run is not in this list. Showing the most recent run instead.'
@@ -77,23 +90,30 @@ const IndexHistory = memo(props => {
       );
     }
 
-    dispatch(actions.selectHistoryItem(sharedRow?.entry ?? newestRow?.entry ?? null));
-
-    if (sharedRunId) {
-      setSearchParams(
-        params => {
-          params.delete(SearchParams.HistoryRunId);
-          return params;
-        },
-        { replace: true },
-      );
-    }
-
-    return () => {
-      dispatch(actions.selectHistoryItem(null));
-    };
+    setSearchParams(
+      params => {
+        params.delete(SearchParams.HistoryRunId);
+        return params;
+      },
+      { replace: true },
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    const newestRunId = newestRow?.id ?? null;
+    if (readerPickedRun.current || autoSelectedRunId.current === newestRunId) return;
+
+    autoSelectedRunId.current = newestRunId;
+    dispatch(actions.selectHistoryItem(newestRow?.entry ?? null));
+  }, [dispatch, newestRow]);
+
+  useEffect(
+    () => () => {
+      dispatch(actions.selectHistoryItem(null));
+    },
+    [dispatch],
+  );
 
   const sortedRows = useMemo(() => getSortedData(historyRows, SORT_FUNCTIONS), [historyRows, getSortedData]);
 
@@ -104,7 +124,11 @@ const IndexHistory = memo(props => {
 
   const handleSelectRow = useCallback(
     rowId => {
-      dispatch(actions.selectHistoryItem(historyRows.find(row => row.id === rowId)?.entry ?? null));
+      const pickedRow = historyRows.find(row => row.id === rowId);
+      if (!pickedRow) return;
+
+      readerPickedRun.current = true;
+      dispatch(actions.selectHistoryItem(pickedRow.entry));
     },
     [dispatch, historyRows],
   );
