@@ -171,7 +171,10 @@ const ProjectContextSavedView = memo(props => {
             variant="info"
           />
         )}
-        <Box sx={styles.contentArea}>
+        <Box
+          data-testid="project-context-saved-content"
+          sx={styles.contentArea}
+        >
           <Markdown renderHtml={false}>{content}</Markdown>
         </Box>
       </Box>
