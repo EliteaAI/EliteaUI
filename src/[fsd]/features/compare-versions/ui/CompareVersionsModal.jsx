@@ -2,18 +2,13 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Alert, Box, CircularProgress, Typography } from '@mui/material';
 
-import { useLazySkillDetailsQuery, useSkillUpdateMutation } from '@/[fsd]/features/skill/api';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { Modal } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
-import {
-  useLazyGetApplicationVersionDetailQuery,
-  useUpdateApplicationVersionMutation,
-} from '@/api/applications';
-import useToast from '@/hooks/useToast';
 
 import { AGENT_COMPARE_STEPS, SKILL_COMPARE_STEPS } from '../lib/constants/compareVersions.constants';
 import { extractAgentCompareData, extractSkillCompareData } from '../lib/helpers/compareVersions.helpers';
+import { useCompareVersionsSave } from '../lib/hooks/useCompareVersionsSave.hooks';
 import CompareVersionSelector from './CompareVersionSelector';
 import CompareVersionsStepIndicator from './CompareVersionsStepIndicator';
 import { CompareInstructionsStep, CompareToolsSkillsStep, CompareUserInteractionStep } from './steps';
@@ -27,32 +22,34 @@ const PHASES = {
 const CompareVersionsModal = memo(props => {
   const { open, onClose, entityType, entityId, projectId, leftVersionId, versions = [] } = props;
 
-  const { toastSuccess, toastError } = useToast();
-
   const [phase, setPhase] = useState(PHASES.SELECTION);
   const [rightVersionId, setRightVersionId] = useState(null);
   const [leftData, setLeftData] = useState(null);
-  const [leftVersionDetails, setLeftVersionDetails] = useState(null);
   const [rightData, setRightData] = useState(null);
+  const [leftVersionDetails, setLeftVersionDetails] = useState(null);
+  const [rightVersionDetails, setRightVersionDetails] = useState(null);
   const [leftVersionMeta, setLeftVersionMeta] = useState(null);
   const [rightVersionMeta, setRightVersionMeta] = useState(null);
-  const [rightVersionDetails, setRightVersionDetails] = useState(null);
   const [leftEdits, setLeftEdits] = useState({});
   const [rightEdits, setRightEdits] = useState({});
   const [activeStepIndex, setActiveStepIndex] = useState(0);
   const [loadError, setLoadError] = useState(null);
-  const [savingLeftKeys, setSavingLeftKeys] = useState({});
-  const [savingRightKeys, setSavingRightKeys] = useState({});
   const [discardTarget, setDiscardTarget] = useState(null);
-
-  const [fetchAgentVersion] = useLazyGetApplicationVersionDetailQuery();
-  const [fetchSkillVersion] = useLazySkillDetailsQuery();
-  const [updateAgentVersion] = useUpdateApplicationVersionMutation();
-  const [updateSkillVersion] = useSkillUpdateMutation();
 
   const isAgent = entityType === 'agent';
   const steps = isAgent ? AGENT_COMPARE_STEPS : SKILL_COMPARE_STEPS;
   const isLastStep = activeStepIndex === steps.length - 1;
+
+  const {
+    fetchAgentVersion,
+    fetchSkillVersion,
+    savingLeftKeys,
+    savingRightKeys,
+    setSavingLeftKeys,
+    setSavingRightKeys,
+    resetSavingState,
+    saveVersion,
+  } = useCompareVersionsSave({ isAgent, projectId, entityId });
 
   const leftVersion = useMemo(
     () => leftVersionMeta ?? versions.find(v => v.id === leftVersionId),
@@ -80,6 +77,8 @@ const CompareVersionsModal = memo(props => {
       setRightVersionId(null);
       setLeftData(null);
       setRightData(null);
+      setLeftVersionDetails(null);
+      setRightVersionDetails(null);
       setLeftVersionMeta(null);
       setRightVersionMeta(null);
       setLeftEdits({});
@@ -87,10 +86,9 @@ const CompareVersionsModal = memo(props => {
       setActiveStepIndex(0);
       setLoadError(null);
       setDiscardTarget(null);
-      setSavingLeftKeys({});
-      setSavingRightKeys({});
+      resetSavingState();
     }
-  }, [open]);
+  }, [open, resetSavingState]);
 
   const handleCompare = useCallback(async () => {
     if (!rightVersionId) return;
@@ -109,8 +107,6 @@ const CompareVersionsModal = memo(props => {
         rightDetail = rightRes;
         setLeftData(extractAgentCompareData(leftDetail));
         setRightData(extractAgentCompareData(rightDetail));
-        setLeftVersionDetails(leftDetail);
-        setRightVersionDetails(rightDetail);
       } else {
         const [leftRes, rightRes] = await Promise.all([
           fetchSkillVersion({ projectId, skillId: entityId, versionId: leftVersionId }).unwrap(),
@@ -120,9 +116,10 @@ const CompareVersionsModal = memo(props => {
         rightDetail = rightRes;
         setLeftData(extractSkillCompareData(leftDetail));
         setRightData(extractSkillCompareData(rightDetail));
-        setLeftVersionDetails(leftDetail);
-        setRightVersionDetails(rightDetail);
       }
+
+      setLeftVersionDetails(leftDetail);
+      setRightVersionDetails(rightDetail);
 
       const pickVersionMeta = d => {
         const vd = isAgent ? d : (d.version_details ?? d);
@@ -156,6 +153,8 @@ const CompareVersionsModal = memo(props => {
     if (target === 'close') {
       onClose();
     } else if (target === 'changeVersions') {
+      setLeftEdits({});
+      setRightEdits({});
       setActiveStepIndex(0);
       setPhase(PHASES.SELECTION);
       setLeftVersionMeta(null);
@@ -164,137 +163,50 @@ const CompareVersionsModal = memo(props => {
   }, [discardTarget, onClose]);
 
   const handleSaveLeft = useCallback(
-    async fieldPayload => {
-      const keys = Object.keys(fieldPayload);
-      setSavingLeftKeys(prev => {
-        const next = { ...prev };
-        keys.forEach(k => {
-          next[k] = true;
-        });
-        return next;
-      });
-      try {
-        const mergedData = { ...leftData, ...leftEdits, ...fieldPayload };
-
-        if (isAgent) {
-          await updateAgentVersion({
-            ...leftVersionDetails,
-            projectId,
-            applicationId: entityId,
-            versionId: leftVersionId,
-            instructions: mergedData.instructions,
-            welcome_message: mergedData.welcome_message,
-            conversation_starters: mergedData.conversation_starters,
-          }).unwrap();
-        } else {
-          await updateSkillVersion({
-            ...leftVersionDetails,
-            projectId,
-            skillId: entityId,
-            versionId: leftVersionId,
-            instructions: mergedData.instructions,
-          }).unwrap();
-        }
-
-        setLeftEdits(prev => {
-          const next = { ...prev };
-          Object.keys(fieldPayload).forEach(k => delete next[k]);
-          return next;
-        });
-        setLeftData(prev => ({ ...prev, ...fieldPayload }));
-        toastSuccess(`Version "${leftVersion?.name}" has been updated.`);
-      } catch {
-        toastError('Failed to save. Please try again.');
-      } finally {
-        setSavingLeftKeys(prev => {
-          const next = { ...prev };
-          keys.forEach(k => {
-            delete next[k];
-          });
-          return next;
-        });
-      }
-    },
+    fieldPayload =>
+      saveVersion({
+        fieldPayload,
+        data: leftData,
+        edits: leftEdits,
+        versionDetails: leftVersionDetails,
+        versionId: leftVersionId,
+        versionName: leftVersion?.name,
+        setSavingKeys: setSavingLeftKeys,
+        setEdits: setLeftEdits,
+        setData: setLeftData,
+      }),
     [
       leftData,
       leftEdits,
-      isAgent,
-      updateAgentVersion,
-      updateSkillVersion,
-      projectId,
-      entityId,
+      leftVersionDetails,
       leftVersionId,
       leftVersion?.name,
-      toastSuccess,
-      toastError,
-      leftVersionDetails,
+      saveVersion,
+      setSavingLeftKeys,
     ],
   );
 
   const handleSaveRight = useCallback(
-    async fieldPayload => {
-      const keys = Object.keys(fieldPayload);
-      setSavingRightKeys(prev => {
-        const next = { ...prev };
-        keys.forEach(k => {
-          next[k] = true;
-        });
-        return next;
-      });
-      try {
-        const mergedData = { ...rightData, ...rightEdits, ...fieldPayload };
-        if (isAgent) {
-          await updateAgentVersion({
-            ...rightVersionDetails,
-            projectId,
-            applicationId: entityId,
-            versionId: rightVersionId,
-            instructions: mergedData.instructions,
-            welcome_message: mergedData.welcome_message,
-            conversation_starters: mergedData.conversation_starters,
-          }).unwrap();
-        } else {
-          await updateSkillVersion({
-            ...rightVersionDetails,
-            projectId,
-            skillId: entityId,
-            versionId: rightVersionId,
-            instructions: mergedData.instructions,
-          }).unwrap();
-        }
-
-        setRightEdits(prev => {
-          const next = { ...prev };
-          Object.keys(fieldPayload).forEach(k => delete next[k]);
-          return next;
-        });
-        setRightData(prev => ({ ...prev, ...fieldPayload }));
-        toastSuccess(`Version "${rightVersion?.name}" has been updated.`);
-      } catch {
-        toastError('Failed to save. Please try again.');
-      } finally {
-        setSavingRightKeys(prev => {
-          const next = { ...prev };
-          keys.forEach(k => {
-            delete next[k];
-          });
-          return next;
-        });
-      }
-    },
+    fieldPayload =>
+      saveVersion({
+        fieldPayload,
+        data: rightData,
+        edits: rightEdits,
+        versionDetails: rightVersionDetails,
+        versionId: rightVersionId,
+        versionName: rightVersion?.name,
+        setSavingKeys: setSavingRightKeys,
+        setEdits: setRightEdits,
+        setData: setRightData,
+      }),
     [
       rightData,
       rightEdits,
-      isAgent,
-      updateAgentVersion,
-      updateSkillVersion,
-      projectId,
-      entityId,
+      rightVersionDetails,
       rightVersionId,
       rightVersion?.name,
-      rightVersionDetails,
-      toastSuccess,
-      toastError,
+      saveVersion,
+      setSavingRightKeys,
     ],
   );
 
@@ -334,7 +246,6 @@ const CompareVersionsModal = memo(props => {
       onSaveRight: handleSaveRight,
       savingLeftKeys,
       savingRightKeys,
-      toastSuccess,
     };
 
     switch (stepKey) {
@@ -352,7 +263,7 @@ const CompareVersionsModal = memo(props => {
   const renderContent = () => {
     if (phase === PHASES.LOADING) {
       return (
-        <Box sx={styles.loadingContainer}>
+        <Box sx={compareVersionsModalStyles.loadingContainer}>
           <CircularProgress size={24} />
           <Typography
             color="text.secondary"
@@ -366,19 +277,19 @@ const CompareVersionsModal = memo(props => {
 
     if (phase === PHASES.WIZARD) {
       return (
-        <Box sx={styles.wizardContainer}>
+        <Box sx={compareVersionsModalStyles.wizardContainer}>
           <CompareVersionsStepIndicator
             steps={steps}
             activeStepIndex={activeStepIndex}
             onStepChange={setActiveStepIndex}
           />
-          <Box sx={styles.stepContent}>{renderStep()}</Box>
+          <Box sx={compareVersionsModalStyles.stepContent}>{renderStep()}</Box>
         </Box>
       );
     }
 
     return (
-      <Box sx={styles.selectionContainer}>
+      <Box sx={compareVersionsModalStyles.selectionContainer}>
         <CompareVersionSelector
           leftVersion={leftVersion}
           rightVersionId={rightVersionId}
@@ -388,7 +299,7 @@ const CompareVersionsModal = memo(props => {
         {loadError && (
           <Alert
             severity="error"
-            sx={styles.errorAlert}
+            sx={compareVersionsModalStyles.errorAlert}
           >
             {loadError}
           </Alert>
@@ -427,9 +338,9 @@ const CompareVersionsModal = memo(props => {
     if (phase !== PHASES.WIZARD) return null;
 
     return (
-      <Box sx={styles.wizardFooter}>
+      <Box sx={compareVersionsModalStyles.wizardFooter}>
         <Box sx={{ flex: 1 }} />
-        <Box sx={styles.wizardFooterRight}>
+        <Box sx={compareVersionsModalStyles.wizardFooterRight}>
           <BaseBtn
             variant={BUTTON_VARIANTS.secondary}
             size="small"
@@ -478,8 +389,12 @@ const CompareVersionsModal = memo(props => {
         content={renderContent()}
         actions={renderActions()}
         footer={renderWizardFooter()}
-        dialogSx={styles.dialogContent}
-        sx={phase === PHASES.WIZARD ? styles.dialogWizard : styles.dialog}
+        dialogSx={compareVersionsModalStyles.dialogContent}
+        sx={
+          phase === PHASES.WIZARD
+            ? compareVersionsModalStyles.dialogWizard
+            : compareVersionsModalStyles.dialog
+        }
       />
       <Modal.BaseModal
         open={discardTarget !== null}
@@ -500,7 +415,7 @@ const CompareVersionsModal = memo(props => {
 CompareVersionsModal.displayName = 'CompareVersionsModal';
 
 /** @type {MuiSx} */
-const styles = {
+const compareVersionsModalStyles = {
   dialog: () => ({
     width: '45rem !important',
     maxWidth: '90vw !important',

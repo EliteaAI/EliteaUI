@@ -5,13 +5,9 @@ import { Box, Tooltip, Typography } from '@mui/material';
 import { EditEntityComparisonLayout, TextDiffHighlight } from '@/[fsd]/entities/edit-entity-with-ai';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import CopyIcon from '@/components/Icons/CopyIcon';
+import useToast from '@/hooks/useToast';
 
 import CompareVersionHeader from '../CompareVersionHeader';
-
-const useCopyField = (value, toastSuccess) =>
-  useCallback(() => {
-    navigator.clipboard.writeText(value).then(() => toastSuccess('Copied to clipboard.'));
-  }, [value, toastSuccess]);
 
 const CompareInstructionsStep = memo(props => {
   const {
@@ -27,8 +23,9 @@ const CompareInstructionsStep = memo(props => {
     onSaveRight,
     savingLeftKeys,
     savingRightKeys,
-    toastSuccess,
   } = props;
+
+  const { toastSuccess } = useToast();
 
   const leftValue = leftEdits.instructions ?? leftData.instructions ?? '';
   const rightValue = rightEdits.instructions ?? rightData.instructions ?? '';
@@ -37,17 +34,22 @@ const CompareInstructionsStep = memo(props => {
   const handleLeftChange = useCallback(val => onLeftEdit('instructions', val), [onLeftEdit]);
   const handleRightChange = useCallback(val => onRightEdit('instructions', val), [onRightEdit]);
 
-  const handleCopyLeft = useCopyField(leftValue, toastSuccess);
-  const handleCopyRight = useCopyField(rightValue, toastSuccess);
+  const handleCopyLeft = useCallback(() => {
+    navigator.clipboard.writeText(leftValue).then(() => toastSuccess('Copied to clipboard.'));
+  }, [leftValue, toastSuccess]);
+
+  const handleCopyRight = useCallback(() => {
+    navigator.clipboard.writeText(rightValue).then(() => toastSuccess('Copied to clipboard.'));
+  }, [rightValue, toastSuccess]);
 
   return (
     <EditEntityComparisonLayout
       currentLabel={<CompareVersionHeader version={leftVersion} />}
       suggestedLabel={<CompareVersionHeader version={rightVersion} />}
       currentContent={
-        <Box sx={styles.fieldSection}>
-          <Box sx={styles.fieldHeader}>
-            <Typography sx={styles.fieldLabel}>Instructions</Typography>
+        <Box sx={compareInstructionsStepStyles.fieldSection}>
+          <Box sx={compareInstructionsStepStyles.fieldHeader}>
+            <Typography sx={compareInstructionsStepStyles.fieldLabel}>Instructions</Typography>
             <Tooltip
               title={`Copy Instructions from version ${leftVersion?.name}`}
               placement="top"
@@ -60,8 +62,12 @@ const CompareInstructionsStep = memo(props => {
               />
             </Tooltip>
           </Box>
-          {noDiff && <Typography sx={styles.noDiffNote}>No differences in this section.</Typography>}
-          <Box sx={styles.editableCard}>
+          {noDiff && (
+            <Typography sx={compareInstructionsStepStyles.noDiffNote}>
+              No differences in this section.
+            </Typography>
+          )}
+          <Box sx={compareInstructionsStepStyles.editableCard}>
             <TextDiffHighlight
               original={rightValue}
               modified={leftValue}
@@ -75,16 +81,16 @@ const CompareInstructionsStep = memo(props => {
             size="small"
             disabled={leftEdits.instructions === undefined || savingLeftKeys.instructions}
             onClick={() => onSaveLeft({ instructions: leftValue })}
-            sx={styles.saveBtn}
+            sx={compareInstructionsStepStyles.saveBtn}
           >
             {savingLeftKeys.instructions ? 'Saving...' : `Save ${leftVersion?.name}`}
           </BaseBtn>
         </Box>
       }
       suggestedContent={
-        <Box sx={styles.fieldSection}>
-          <Box sx={styles.fieldHeader}>
-            <Typography sx={styles.fieldLabel}>Instructions</Typography>
+        <Box sx={compareInstructionsStepStyles.fieldSection}>
+          <Box sx={compareInstructionsStepStyles.fieldHeader}>
+            <Typography sx={compareInstructionsStepStyles.fieldLabel}>Instructions</Typography>
             <Tooltip
               title={`Copy Instructions from version ${rightVersion?.name}`}
               placement="top"
@@ -96,8 +102,12 @@ const CompareInstructionsStep = memo(props => {
               />
             </Tooltip>
           </Box>
-          {noDiff && <Typography sx={styles.noDiffNote}>No differences in this section.</Typography>}
-          <Box sx={styles.editableCard}>
+          {noDiff && (
+            <Typography sx={compareInstructionsStepStyles.noDiffNote}>
+              No differences in this section.
+            </Typography>
+          )}
+          <Box sx={compareInstructionsStepStyles.editableCard}>
             <TextDiffHighlight
               original={leftValue}
               modified={rightValue}
@@ -111,7 +121,7 @@ const CompareInstructionsStep = memo(props => {
             size="small"
             disabled={rightEdits.instructions === undefined || savingRightKeys.instructions}
             onClick={() => onSaveRight({ instructions: rightValue })}
-            sx={styles.saveBtn}
+            sx={compareInstructionsStepStyles.saveBtn}
           >
             {savingRightKeys.instructions ? 'Saving...' : `Save ${rightVersion?.name}`}
           </BaseBtn>
@@ -124,7 +134,7 @@ const CompareInstructionsStep = memo(props => {
 CompareInstructionsStep.displayName = 'CompareInstructionsStep';
 
 /** @type {MuiSx} */
-const styles = {
+const compareInstructionsStepStyles = {
   fieldSection: {
     display: 'flex',
     flexDirection: 'column',

@@ -8,16 +8,20 @@ const CompareVersionsStepIndicator = memo(props => {
   const activeStep = steps[activeStepIndex];
 
   return (
-    <Box sx={styles.container}>
-      <Typography sx={styles.title}>{`${activeStepIndex + 1}. ${activeStep?.label}`}</Typography>
-      <Box sx={styles.progressBar}>
+    <Box sx={compareVersionsStepIndicatorStyles.container}>
+      <Typography
+        sx={compareVersionsStepIndicatorStyles.title}
+      >{`${activeStepIndex + 1}. ${activeStep?.label}`}</Typography>
+      <Box sx={compareVersionsStepIndicatorStyles.progressBar}>
         {steps.map((step, index) => (
           <Box
             key={step.key}
             onClick={() => onStepChange(index)}
             sx={[
-              index <= activeStepIndex ? styles.segmentActive : styles.segmentInactive,
-              styles.segmentClickable,
+              index <= activeStepIndex
+                ? compareVersionsStepIndicatorStyles.segmentActive
+                : compareVersionsStepIndicatorStyles.segmentInactive,
+              compareVersionsStepIndicatorStyles.segmentClickable,
             ]}
           />
         ))}
@@ -29,7 +33,7 @@ const CompareVersionsStepIndicator = memo(props => {
 CompareVersionsStepIndicator.displayName = 'CompareVersionsStepIndicator';
 
 /** @type {MuiSx} */
-const styles = {
+const compareVersionsStepIndicatorStyles = {
   container: ({ palette }) => ({
     display: 'flex',
     flexDirection: 'column',

@@ -12,13 +12,7 @@ const CompareToolsSkillsStep = memo(props => {
   const { leftVersion, rightVersion, leftData, rightData } = props;
 
   const matchedRows = useMemo(
-    () =>
-      matchDependencies(
-        leftData.tools ?? [],
-        leftData.skills ?? [],
-        rightData.tools ?? [],
-        rightData.skills ?? [],
-      ),
+    () => matchDependencies(leftData.tools ?? [], rightData.tools ?? []),
     [leftData, rightData],
   );
 
@@ -32,13 +26,21 @@ const CompareToolsSkillsStep = memo(props => {
       currentLabel={<CompareVersionHeader version={leftVersion} />}
       suggestedLabel={<CompareVersionHeader version={rightVersion} />}
       currentContent={
-        <Box sx={styles.column}>
-          {noDiff && <Typography sx={styles.noDiffNote}>No differences in this section.</Typography>}
+        <Box sx={compareToolsSkillsStepStyles.column}>
+          {noDiff && (
+            <Typography sx={compareToolsSkillsStepStyles.noDiffNote}>
+              No differences in this section.
+            </Typography>
+          )}
           {matchedRows.map((row, i) =>
             row.left ? (
               <Box
                 key={i}
-                sx={row.right ? styles.cardWrapper : styles.uniqueCard}
+                sx={
+                  row.right
+                    ? compareToolsSkillsStepStyles.cardWrapper
+                    : compareToolsSkillsStepStyles.uniqueCard
+                }
               >
                 <ToolItemCard
                   item={row.left}
@@ -48,23 +50,33 @@ const CompareToolsSkillsStep = memo(props => {
             ) : (
               <Box
                 key={i}
-                sx={styles.emptySlot}
+                sx={compareToolsSkillsStepStyles.emptySlot}
               />
             ),
           )}
           {matchedRows.length === 0 && (
-            <Typography sx={styles.emptyText}>No tools, agents, pipelines or skills attached</Typography>
+            <Typography sx={compareToolsSkillsStepStyles.emptyText}>
+              No tools, agents, pipelines or skills attached
+            </Typography>
           )}
         </Box>
       }
       suggestedContent={
-        <Box sx={styles.column}>
-          {noDiff && <Typography sx={styles.noDiffNote}>No differences in this section.</Typography>}
+        <Box sx={compareToolsSkillsStepStyles.column}>
+          {noDiff && (
+            <Typography sx={compareToolsSkillsStepStyles.noDiffNote}>
+              No differences in this section.
+            </Typography>
+          )}
           {matchedRows.map((row, i) =>
             row.right ? (
               <Box
                 key={i}
-                sx={row.left ? styles.cardWrapper : styles.uniqueCard}
+                sx={
+                  row.left
+                    ? compareToolsSkillsStepStyles.cardWrapper
+                    : compareToolsSkillsStepStyles.uniqueCard
+                }
               >
                 <ToolItemCard
                   item={row.right}
@@ -74,12 +86,14 @@ const CompareToolsSkillsStep = memo(props => {
             ) : (
               <Box
                 key={i}
-                sx={styles.emptySlot}
+                sx={compareToolsSkillsStepStyles.emptySlot}
               />
             ),
           )}
           {matchedRows.length === 0 && (
-            <Typography sx={styles.emptyText}>No tools, agents, pipelines or skills attached</Typography>
+            <Typography sx={compareToolsSkillsStepStyles.emptyText}>
+              No tools, agents, pipelines or skills attached
+            </Typography>
           )}
         </Box>
       }
@@ -90,7 +104,7 @@ const CompareToolsSkillsStep = memo(props => {
 CompareToolsSkillsStep.displayName = 'CompareToolsSkillsStep';
 
 /** @type {MuiSx} */
-const styles = {
+const compareToolsSkillsStepStyles = {
   column: {
     display: 'flex',
     flexDirection: 'column',

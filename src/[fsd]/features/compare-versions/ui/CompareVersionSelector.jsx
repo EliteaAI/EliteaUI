@@ -7,28 +7,14 @@ import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import { TIME_FORMAT } from '@/common/constants';
 import { timeFormatter } from '@/common/utils';
 
+import { formatVersionMeta } from '../lib/helpers/compareVersions.helpers';
+
 const buildCompareVersionOption = version => {
   const base = buildVersionOption({ enableVersionListAvatar: true })(version);
   const meta = [];
   if (version.created_at) meta.push(timeFormatter(version.created_at, TIME_FORMAT.DDMMYYYY));
   if (version.author?.name) meta.push(`by ${version.author.name}`);
   return { ...base, description: meta.join(' · ') };
-};
-
-const formatVersionMeta = version => {
-  if (!version) return null;
-  const parts = [];
-  if (version.created_at) {
-    const d = new Date(version.created_at);
-    const month = d.toLocaleString('en-US', { month: 'short' });
-    const day = String(d.getDate()).padStart(2, '0');
-    const year = d.getFullYear();
-    const hours = String(d.getHours()).padStart(2, '0');
-    const minutes = String(d.getMinutes()).padStart(2, '0');
-    parts.push(`${month} ${day}, ${year}, ${hours}:${minutes}`);
-  }
-  if (version.author?.name) parts.push(`by ${version.author.name}`);
-  return parts.length ? parts.join(' · ') : null;
 };
 
 const CompareVersionSelector = memo(props => {
@@ -44,17 +30,17 @@ const CompareVersionSelector = memo(props => {
   const leftMeta = useMemo(() => formatVersionMeta(leftVersion), [leftVersion]);
 
   return (
-    <Box sx={styles.container}>
-      <Box sx={styles.row}>
-        <Typography sx={styles.label}>Base version</Typography>
-        <Box sx={styles.readOnlyVersion}>
-          <Typography sx={styles.versionName}>{leftVersion?.name}</Typography>
-          {leftMeta && <Typography sx={styles.versionMeta}>{leftMeta}</Typography>}
+    <Box sx={compareVersionSelectorStyles.container}>
+      <Box sx={compareVersionSelectorStyles.row}>
+        <Typography sx={compareVersionSelectorStyles.label}>Base version</Typography>
+        <Box sx={compareVersionSelectorStyles.readOnlyVersion}>
+          <Typography sx={compareVersionSelectorStyles.versionName}>{leftVersion?.name}</Typography>
+          {leftMeta && <Typography sx={compareVersionSelectorStyles.versionMeta}>{leftMeta}</Typography>}
         </Box>
       </Box>
 
-      <Box sx={styles.row}>
-        <Typography sx={styles.label}>Compare with</Typography>
+      <Box sx={compareVersionSelectorStyles.row}>
+        <Typography sx={compareVersionSelectorStyles.label}>Compare with</Typography>
         <SingleSelect
           value={rightVersionId ?? ''}
           options={versionOptions}
@@ -65,7 +51,7 @@ const CompareVersionSelector = memo(props => {
           iconPosition="left"
           showBorder
           placeholder="Select version to compare"
-          inputSX={styles.selectInput}
+          inputSX={compareVersionSelectorStyles.selectInput}
         />
       </Box>
     </Box>
@@ -75,7 +61,7 @@ const CompareVersionSelector = memo(props => {
 CompareVersionSelector.displayName = 'CompareVersionSelector';
 
 /** @type {MuiSx} */
-const styles = {
+const compareVersionSelectorStyles = {
   container: {
     display: 'flex',
     flexDirection: 'column',

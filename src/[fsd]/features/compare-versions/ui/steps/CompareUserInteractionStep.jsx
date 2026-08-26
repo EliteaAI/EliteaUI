@@ -5,6 +5,7 @@ import { Box, Tooltip, Typography } from '@mui/material';
 import { EditEntityComparisonLayout, TextDiffHighlight } from '@/[fsd]/entities/edit-entity-with-ai';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import CopyIcon from '@/components/Icons/CopyIcon';
+import useToast from '@/hooks/useToast';
 
 import CompareVersionHeader from '../CompareVersionHeader';
 
@@ -22,8 +23,9 @@ const CompareUserInteractionStep = memo(props => {
     onSaveRight,
     savingLeftKeys,
     savingRightKeys,
-    toastSuccess,
   } = props;
+
+  const { toastSuccess } = useToast();
 
   const leftWelcome = leftEdits.welcome_message ?? leftData.welcome_message ?? '';
   const rightWelcome = rightEdits.welcome_message ?? rightData.welcome_message ?? '';
@@ -98,10 +100,10 @@ const CompareUserInteractionStep = memo(props => {
       currentLabel={<CompareVersionHeader version={leftVersion} />}
       suggestedLabel={<CompareVersionHeader version={rightVersion} />}
       currentContent={
-        <Box sx={styles.fieldsColumn}>
-          <Box sx={styles.fieldSection}>
-            <Box sx={styles.fieldHeader}>
-              <Typography sx={styles.fieldLabel}>Welcome Message</Typography>
+        <Box sx={compareUserInteractionStepStyles.fieldsColumn}>
+          <Box sx={compareUserInteractionStepStyles.fieldSection}>
+            <Box sx={compareUserInteractionStepStyles.fieldHeader}>
+              <Typography sx={compareUserInteractionStepStyles.fieldLabel}>Welcome Message</Typography>
               <Tooltip
                 title={`Copy Welcome Message from version ${leftVersion?.name}`}
                 placement="top"
@@ -113,8 +115,12 @@ const CompareUserInteractionStep = memo(props => {
                 />
               </Tooltip>
             </Box>
-            {welcomeNoDiff && <Typography sx={styles.noDiffNote}>No differences in this section.</Typography>}
-            <Box sx={styles.editableCard}>
+            {welcomeNoDiff && (
+              <Typography sx={compareUserInteractionStepStyles.noDiffNote}>
+                No differences in this section.
+              </Typography>
+            )}
+            <Box sx={compareUserInteractionStepStyles.editableCard}>
               <TextDiffHighlight
                 original={rightWelcome}
                 modified={leftWelcome}
@@ -128,21 +134,23 @@ const CompareUserInteractionStep = memo(props => {
               size="small"
               disabled={!leftWelcomeDirty || savingLeftKeys.welcome_message}
               onClick={() => onSaveLeft({ welcome_message: leftWelcome })}
-              sx={styles.saveBtn}
+              sx={compareUserInteractionStepStyles.saveBtn}
             >
               {savingLeftKeys.welcome_message ? 'Saving...' : `Save ${leftVersion?.name}`}
             </BaseBtn>
           </Box>
 
           {maxStarters > 0 && (
-            <Box sx={styles.fieldSectionGrow}>
-              <Box sx={styles.fieldHeader}>
-                <Typography sx={styles.sectionLabel}>Chat Starters</Typography>
+            <Box sx={compareUserInteractionStepStyles.fieldSectionGrow}>
+              <Box sx={compareUserInteractionStepStyles.fieldHeader}>
+                <Typography sx={compareUserInteractionStepStyles.sectionLabel}>Chat Starters</Typography>
               </Box>
               {startersNoDiff && (
-                <Typography sx={styles.noDiffNote}>No differences in this section.</Typography>
+                <Typography sx={compareUserInteractionStepStyles.noDiffNote}>
+                  No differences in this section.
+                </Typography>
               )}
-              <Box sx={styles.startersList}>
+              <Box sx={compareUserInteractionStepStyles.startersList}>
                 {Array.from({ length: maxStarters }, (_, i) => {
                   const lVal = leftStarters[i] ?? null;
                   const rVal = rightStarters[i] ?? null;
@@ -150,9 +158,9 @@ const CompareUserInteractionStep = memo(props => {
                   return (
                     <Box
                       key={i}
-                      sx={styles.starterRow}
+                      sx={compareUserInteractionStepStyles.starterRow}
                     >
-                      <Box sx={styles.editableCard}>
+                      <Box sx={compareUserInteractionStepStyles.editableCard}>
                         <TextDiffHighlight
                           original={rVal ?? ''}
                           modified={lVal ?? ''}
@@ -180,7 +188,7 @@ const CompareUserInteractionStep = memo(props => {
                 size="small"
                 disabled={!leftStartersDirty || savingLeftKeys.conversation_starters}
                 onClick={() => onSaveLeft({ conversation_starters: leftStarters })}
-                sx={styles.saveBtn}
+                sx={compareUserInteractionStepStyles.saveBtn}
               >
                 {savingLeftKeys.conversation_starters ? 'Saving...' : `Save starters — ${leftVersion?.name}`}
               </BaseBtn>
@@ -189,10 +197,10 @@ const CompareUserInteractionStep = memo(props => {
         </Box>
       }
       suggestedContent={
-        <Box sx={styles.fieldsColumn}>
-          <Box sx={styles.fieldSection}>
-            <Box sx={styles.fieldHeader}>
-              <Typography sx={styles.fieldLabel}>Welcome Message</Typography>
+        <Box sx={compareUserInteractionStepStyles.fieldsColumn}>
+          <Box sx={compareUserInteractionStepStyles.fieldSection}>
+            <Box sx={compareUserInteractionStepStyles.fieldHeader}>
+              <Typography sx={compareUserInteractionStepStyles.fieldLabel}>Welcome Message</Typography>
               <Tooltip
                 title={`Copy Welcome Message from version ${rightVersion?.name}`}
                 placement="top"
@@ -204,8 +212,12 @@ const CompareUserInteractionStep = memo(props => {
                 />
               </Tooltip>
             </Box>
-            {welcomeNoDiff && <Typography sx={styles.noDiffNote}>No differences in this section.</Typography>}
-            <Box sx={styles.editableCard}>
+            {welcomeNoDiff && (
+              <Typography sx={compareUserInteractionStepStyles.noDiffNote}>
+                No differences in this section.
+              </Typography>
+            )}
+            <Box sx={compareUserInteractionStepStyles.editableCard}>
               <TextDiffHighlight
                 original={leftWelcome}
                 modified={rightWelcome}
@@ -219,21 +231,23 @@ const CompareUserInteractionStep = memo(props => {
               size="small"
               disabled={!rightWelcomeDirty || savingRightKeys.welcome_message}
               onClick={() => onSaveRight({ welcome_message: rightWelcome })}
-              sx={styles.saveBtn}
+              sx={compareUserInteractionStepStyles.saveBtn}
             >
               {savingRightKeys.welcome_message ? 'Saving...' : `Save ${rightVersion?.name}`}
             </BaseBtn>
           </Box>
 
           {maxStarters > 0 && (
-            <Box sx={styles.fieldSectionGrow}>
-              <Box sx={styles.fieldHeader}>
-                <Typography sx={styles.sectionLabel}>Chat Starters</Typography>
+            <Box sx={compareUserInteractionStepStyles.fieldSectionGrow}>
+              <Box sx={compareUserInteractionStepStyles.fieldHeader}>
+                <Typography sx={compareUserInteractionStepStyles.sectionLabel}>Chat Starters</Typography>
               </Box>
               {startersNoDiff && (
-                <Typography sx={styles.noDiffNote}>No differences in this section.</Typography>
+                <Typography sx={compareUserInteractionStepStyles.noDiffNote}>
+                  No differences in this section.
+                </Typography>
               )}
-              <Box sx={styles.startersList}>
+              <Box sx={compareUserInteractionStepStyles.startersList}>
                 {Array.from({ length: maxStarters }, (_, i) => {
                   const lVal = leftStarters[i] ?? null;
                   const rVal = rightStarters[i] ?? null;
@@ -241,9 +255,9 @@ const CompareUserInteractionStep = memo(props => {
                   return (
                     <Box
                       key={i}
-                      sx={styles.starterRow}
+                      sx={compareUserInteractionStepStyles.starterRow}
                     >
-                      <Box sx={styles.editableCard}>
+                      <Box sx={compareUserInteractionStepStyles.editableCard}>
                         <TextDiffHighlight
                           original={lVal ?? ''}
                           modified={rVal ?? ''}
@@ -271,7 +285,7 @@ const CompareUserInteractionStep = memo(props => {
                 size="small"
                 disabled={!rightStartersDirty || savingRightKeys.conversation_starters}
                 onClick={() => onSaveRight({ conversation_starters: rightStarters })}
-                sx={styles.saveBtn}
+                sx={compareUserInteractionStepStyles.saveBtn}
               >
                 {savingRightKeys.conversation_starters
                   ? 'Saving...'
@@ -288,7 +302,7 @@ const CompareUserInteractionStep = memo(props => {
 CompareUserInteractionStep.displayName = 'CompareUserInteractionStep';
 
 /** @type {MuiSx} */
-const styles = {
+const compareUserInteractionStepStyles = {
   fieldsColumn: {
     display: 'flex',
     flexDirection: 'column',
