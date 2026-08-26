@@ -30,6 +30,7 @@ const DeleteEntityButton = memo(props => {
     shouldRequestInputName = true,
     type = 'button',
     testId,
+    buttonTestId,
   } = props;
 
   const theme = useTheme();
@@ -96,6 +97,7 @@ const DeleteEntityButton = memo(props => {
               data-testid={testId}
             >
               <IconButton
+                data-testid={buttonTestId}
                 variant="elitea"
                 color={buttonColor}
                 aria-label="delete entity"

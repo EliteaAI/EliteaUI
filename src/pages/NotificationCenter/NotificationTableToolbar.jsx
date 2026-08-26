@@ -63,7 +63,7 @@ const NotificationTableToolbar = memo(props => {
           </Box>
         </Tooltip>
         <DeleteEntityButton
-          testId="notifications-delete-selected-button"
+          buttonTestId="notifications-delete-selected-button"
           name="selected notifications"
           entity_name="notification"
           onDelete={onDeleteSelected}
