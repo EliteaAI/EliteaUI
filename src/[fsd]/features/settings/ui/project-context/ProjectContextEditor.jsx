@@ -345,7 +345,10 @@ const ProjectContextEditor = memo(props => {
             />
           </Box>
         ) : (
-          <Box sx={styles.preview}>
+          <Box
+            data-testid="project-context-preview"
+            sx={styles.preview}
+          >
             <Markdown renderHtml={false}>{content}</Markdown>
           </Box>
         )}
