@@ -49,28 +49,35 @@ const CONVERSATION_ROWS = [
 
 beforeEach(() => {
   vi.clearAllMocks();
+  receivedRowSets.length = 0;
   queryResult.data = { rows: CONVERSATION_ROWS, total: CONVERSATION_ROWS.length };
   queryResult.isUninitialized = false;
   queryResult.isLoading = false;
   queryResult.isFetching = false;
 });
 
+const receivedRowSets = [];
+
 vi.mock('@/[fsd]/entities/run-history/ui', () => ({
-  RunHistoryList: props => (
-    <Box
-      data-testid="selection"
-      data-value={String(props.selectedHistoryItem)}
-      data-type={typeof props.selectedHistoryItem}
-    >
-      {props.conversations.map(row => (
-        <button
-          key={row.id}
-          data-testid={`select-${row.id}`}
-          onClick={() => props.handleHistoryItemSelect(row.id)}
-        />
-      ))}
-    </Box>
-  ),
+  RunHistoryList: props => {
+    receivedRowSets.push(props.conversations);
+
+    return (
+      <Box
+        data-testid="selection"
+        data-value={String(props.selectedHistoryItem)}
+        data-type={typeof props.selectedHistoryItem}
+      >
+        {props.conversations.map(row => (
+          <button
+            key={row.id}
+            data-testid={`select-${row.id}`}
+            onClick={() => props.handleHistoryItemSelect(row.id)}
+          />
+        ))}
+      </Box>
+    );
+  },
   RunHistoryChat: () => null,
 }));
 
@@ -291,5 +298,62 @@ describe('RunHistoryContainer shared-link restore', () => {
     renderContainer('?history_run_id=404');
 
     expect(screen.getByTestId('selection')).toHaveAttribute('data-value', '1234');
+  });
+});
+
+describe('RunHistoryContainer initial selection', () => {
+  const NEWER_INDEX_RUN_ROW = { ...INDEX_RUN_ROW, id: 'index-run:docs:1', created_at: '2026-08-20T10:00:00' };
+
+  it('waits for the index runs before picking the newest run', () => {
+    const { rerender } = renderContainer('', { additionalRows: [], additionalRowsLoading: true });
+
+    expect(screen.getByTestId('selection')).toHaveAttribute('data-value', 'null');
+
+    rerender(containerTree('', { additionalRows: [NEWER_INDEX_RUN_ROW], additionalRowsLoading: false }));
+
+    expect(screen.getByTestId('selection')).toHaveAttribute('data-value', NEWER_INDEX_RUN_ROW.id);
+  });
+
+  it('waits for the conversations before picking the newest run', () => {
+    queryResult.data = undefined;
+    queryResult.isUninitialized = true;
+
+    const { rerender } = renderContainer('', { additionalRows: [INDEX_RUN_ROW] });
+
+    expect(screen.getByTestId('selection')).toHaveAttribute('data-value', 'null');
+
+    queryResult.data = { rows: CONVERSATION_ROWS, total: CONVERSATION_ROWS.length };
+    queryResult.isUninitialized = false;
+    rerender(containerTree('', { additionalRows: [INDEX_RUN_ROW] }));
+
+    expect(screen.getByTestId('selection')).toHaveAttribute('data-value', '1234');
+  });
+
+  it('orders the rows newest first even when there are no index runs', () => {
+    queryResult.data = { rows: [...CONVERSATION_ROWS].reverse(), total: CONVERSATION_ROWS.length };
+
+    renderContainer('');
+
+    expect(screen.getByTestId('selection')).toHaveAttribute('data-value', '1234');
+  });
+
+  it('hands the list the same rows when nothing about them changed', () => {
+    const { rerender } = renderContainer('');
+
+    const rowsBeforeRerender = receivedRowSets[receivedRowSets.length - 1];
+    rerender(containerTree(''));
+
+    expect(receivedRowSets[receivedRowSets.length - 1]).toBe(rowsBeforeRerender);
+  });
+
+  it('leaves a run the reader picked alone when later rows arrive', () => {
+    const { rerender } = renderContainer('', { additionalRows: [], additionalRowsLoading: true });
+
+    rerender(containerTree('', { additionalRows: [], additionalRowsLoading: false }));
+    fireEvent.click(screen.getByTestId('select-5678'));
+
+    rerender(containerTree('', { additionalRows: [NEWER_INDEX_RUN_ROW], additionalRowsLoading: false }));
+
+    expect(screen.getByTestId('selection')).toHaveAttribute('data-value', '5678');
   });
 });

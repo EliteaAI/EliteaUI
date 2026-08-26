@@ -77,17 +77,19 @@ const RUN_TEST = {
 
 const LocationProbe = () => <Box data-testid="search">{useLocation().search}</Box>;
 
+const historyTree = (history, search) => (
+  <Provider store={store}>
+    <MemoryRouter initialEntries={[`/index/history${search}`]}>
+      <ThemeProvider theme={theme}>
+        <IndexHistory history={history} />
+        <LocationProbe />
+      </ThemeProvider>
+    </MemoryRouter>
+  </Provider>
+);
+
 const renderHistory = (history = [CREATED, INDEXED, GHOST, RUN_TEST], search = '') =>
-  render(
-    <Provider store={store}>
-      <MemoryRouter initialEntries={[`/index/history${search}`]}>
-        <ThemeProvider theme={theme}>
-          <IndexHistory history={history} />
-          <LocationProbe />
-        </ThemeProvider>
-      </MemoryRouter>
-    </Provider>,
-  );
+  render(historyTree(history, search));
 
 const selectedEntry = () => store.getState().indexes.selectedHistoryItem;
 
@@ -191,6 +193,56 @@ describe('IndexHistory', () => {
 
     expect(selectedEntry()).toEqual(INDEXED);
     expect(historyRows()[1]).toHaveAttribute('data-selected', 'true');
+  });
+
+  it('moves to a newer run that arrives after the list first rendered', () => {
+    const LATER_RUN = { state: 'completed', created_on: 500, updated_on: 520, conversation_id: 16 };
+
+    const { rerender } = renderHistory([CREATED, INDEXED, GHOST]);
+
+    expect(selectedEntry()).toEqual(INDEXED);
+
+    rerender(historyTree([CREATED, INDEXED, GHOST, LATER_RUN], ''));
+
+    expect(selectedEntry()).toEqual(LATER_RUN);
+  });
+
+  it('leaves a run the reader picked alone when a newer run arrives', () => {
+    const LATER_RUN = { state: 'completed', created_on: 500, updated_on: 520, conversation_id: 16 };
+
+    const { rerender } = renderHistory([CREATED, INDEXED, GHOST]);
+
+    fireEvent.click(historyRows()[1]);
+    expect(selectedEntry()).toEqual(CREATED);
+
+    rerender(historyTree([CREATED, INDEXED, GHOST, LATER_RUN], ''));
+
+    expect(selectedEntry()).toEqual(CREATED);
+  });
+
+  it('keeps the shared run when a newer run arrives', () => {
+    const LATER_RUN = { state: 'completed', created_on: 500, updated_on: 520, conversation_id: 16 };
+    const search = `?history_run_id=${INDEXED.updated_on}_${INDEXED.conversation_id}`;
+
+    const { rerender } = renderHistory([CREATED, INDEXED, GHOST], search);
+
+    expect(selectedEntry()).toEqual(INDEXED);
+
+    rerender(historyTree([CREATED, INDEXED, GHOST, LATER_RUN], search));
+
+    expect(selectedEntry()).toEqual(INDEXED);
+  });
+
+  it('does not re-select when a refresh leaves the newest run unchanged', () => {
+    const { rerender } = renderHistory([CREATED, INDEXED, GHOST]);
+
+    expect(selectedEntry()).toBe(INDEXED);
+
+    const refetched = { ...INDEXED };
+    rerender(historyTree([CREATED, refetched, GHOST], ''));
+
+    expect(selectedEntry()).toBe(INDEXED);
+    expect(selectedEntry()).not.toBe(refetched);
   });
 
   it('sorts by duration when that column is chosen', () => {

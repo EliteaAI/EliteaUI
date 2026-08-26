@@ -142,7 +142,10 @@ const IndexHistoryPage = memo(() => {
         ) : (
           <Box sx={styles.body}>
             <Box sx={styles.historyColumn}>
-              <IndexHistory history={history} />
+              <IndexHistory
+                key={indexName}
+                history={history}
+              />
             </Box>
             <Box sx={styles.chatColumn}>
               {detailRow ? (

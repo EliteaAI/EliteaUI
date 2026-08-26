@@ -275,20 +275,22 @@ const ToolSection = memo(props => {
   // Normal rendering for editable fields
   return (
     <>
-      <Box sx={styles.header}>
+      <Box sx={[styles.header, sectionOptions.length <= 1 && styles.compactHeader]}>
         <Typography
           component="div"
           variant="bodySmall"
         >
           {capitalizeFirstChar(sectionKey)}
         </Typography>
-        <Checkbox.RadioButtonGroup
-          value={selectedOption}
-          items={sectionOptions}
-          onChange={onChangeOption}
-          wrapRow
-          testId={`toolkit-field-${sectionKey}-radio`}
-        />
+        {sectionOptions.length > 1 && (
+          <Checkbox.RadioButtonGroup
+            value={selectedOption}
+            items={sectionOptions}
+            onChange={onChangeOption}
+            wrapRow
+            testId={`toolkit-field-${sectionKey}-radio`}
+          />
+        )}
       </Box>
       {sectionProps.map(([k, v]) => {
         const isBooleanField = v?.type === 'boolean' || v?.anyOf?.some(item => item.type === 'boolean');
@@ -338,6 +340,10 @@ const sectionStyles = () => ({
     paddingTop: '0.5rem',
     paddingLeft: '0.75rem',
     minHeight: '4rem',
+  },
+  compactHeader: {
+    minHeight: 'auto',
+    paddingBottom: 0,
   },
 });
 

@@ -16,6 +16,8 @@ import useToast from '@/hooks/useToast';
 
 const { ParticipantEntityTypes } = ParticipantEntityConstants;
 
+const NO_ADDITIONAL_ROWS = [];
+
 const RunHistoryContainer = memo(props => {
   const {
     entityId,
@@ -25,7 +27,7 @@ const RunHistoryContainer = memo(props => {
     onClose,
     ChatMessageListComponent,
     prettifyConversation,
-    additionalRows = [],
+    additionalRows = NO_ADDITIONAL_ROWS,
     additionalRowsLoading = false,
     decorateRow = null,
     DetailComponent = null,
@@ -50,7 +52,6 @@ const RunHistoryContainer = memo(props => {
   // Not part of server-side pagination, so they are merged into every page.
   const historyRows = useMemo(() => {
     const conversationRows = decorateRow ? allConversations.map(decorateRow) : allConversations;
-    if (!additionalRows.length) return conversationRows;
     return [...conversationRows, ...additionalRows].sort(byNewestRunFirst);
   }, [allConversations, additionalRows, decorateRow]);
 
@@ -60,6 +61,9 @@ const RunHistoryContainer = memo(props => {
   );
 
   const conversationsSettled = mergedData === data;
+
+  const runsStillArriving =
+    isUninitialized || isLoading || isFetching || additionalRowsLoading || !conversationsSettled;
 
   const resolveSharedRun = useCallback(
     (sharedRow, historyRunId) => {
@@ -86,15 +90,15 @@ const RunHistoryContainer = memo(props => {
     if (!historyRunId) handledSharedRunId.current = null;
 
     if (!historyRunId || handledSharedRunId.current === historyRunId) {
-      if (!selectedHistoryItem && historyRows.length) setSelectedHistoryItem(historyRows[0].id);
+      if (!selectedHistoryItem && !runsStillArriving && historyRows.length) {
+        setSelectedHistoryItem(historyRows[0].id);
+      }
       return;
     }
 
     const sharedRow = historyRows.find(historyRow => String(historyRow.id) === historyRunId);
-    const stillArriving =
-      isUninitialized || isLoading || isFetching || additionalRowsLoading || !conversationsSettled;
 
-    if (!sharedRow && stillArriving) return;
+    if (!sharedRow && runsStillArriving) return;
 
     const { selection, unavailableMessage } = resolveSharedRun(sharedRow, historyRunId);
 
@@ -114,11 +118,7 @@ const RunHistoryContainer = memo(props => {
     searchParams,
     setSearchParams,
     selectedHistoryItem,
-    isUninitialized,
-    isLoading,
-    isFetching,
-    additionalRowsLoading,
-    conversationsSettled,
+    runsStillArriving,
     resolveSharedRun,
     toastInfo,
   ]);
