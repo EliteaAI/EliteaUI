@@ -186,6 +186,81 @@ export const getNextCronRunInTimezone = (expression, scheduleTimezone) => {
   return new Date(nextInTz.getTime() - offsetMs);
 };
 
+/**
+ * Convert a cron expression from one timezone to another.
+ * Only works for simple crons with fixed hour/minute (e.g., "0 16 * * *").
+ * Returns the converted cron expression.
+ */
+export const convertCronTimezone = (expression, fromTimezone, toTimezone) => {
+  if (!expression || !fromTimezone || !toTimezone || fromTimezone === toTimezone) {
+    return expression;
+  }
+
+  try {
+    const parts = expression.trim().split(/\s+/);
+    if (parts.length !== 5) return expression;
+
+    const [minute, hour, day, month, weekday] = parts;
+
+    // Only convert simple fixed hour/minute crons
+    if (hour === '*' || hour.includes('/') || hour.includes(',') || hour.includes('-')) {
+      return expression;
+    }
+    if (minute === '*' || minute.includes('/') || minute.includes(',') || minute.includes('-')) {
+      return expression;
+    }
+
+    const hourNum = parseInt(hour, 10);
+    const minuteNum = parseInt(minute, 10);
+
+    // Create a date in the source timezone
+    const now = new Date();
+    const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}T${String(hourNum).padStart(2, '0')}:${String(minuteNum).padStart(2, '0')}:00`;
+
+    // Get the time in source timezone and convert to target timezone
+    const sourceDate = new Date(new Date(dateStr).toLocaleString('en-US', { timeZone: fromTimezone }));
+    const targetDate = new Date(new Date(dateStr).toLocaleString('en-US', { timeZone: toTimezone }));
+
+    // Calculate the offset in minutes
+    const offsetMinutes = (targetDate.getTime() - sourceDate.getTime()) / (1000 * 60);
+
+    // Apply offset to the original time
+    let newMinutes = minuteNum + offsetMinutes;
+    let newHours = hourNum;
+
+    // Handle minute overflow/underflow
+    while (newMinutes >= 60) {
+      newMinutes -= 60;
+      newHours += 1;
+    }
+    while (newMinutes < 0) {
+      newMinutes += 60;
+      newHours -= 1;
+    }
+
+    // Handle hour overflow/underflow (wrap around 24 hours)
+    newHours = ((newHours % 24) + 24) % 24;
+
+    return `${newMinutes} ${newHours} ${day} ${month} ${weekday}`;
+  } catch {
+    return expression;
+  }
+};
+
+/**
+ * Get a human-readable summary of a cron expression converted to the browser's timezone.
+ */
+export const getCronSummaryInBrowserTimezone = (expression, scheduleTimezone) => {
+  const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const convertedCron = convertCronTimezone(expression, scheduleTimezone, browserTz);
+
+  try {
+    return cronstrue.toString(convertedCron, { use24HourTimeFormat: true });
+  } catch {
+    return expression;
+  }
+};
+
 export const getNextCronRun = (expression, fromDate = new Date()) => {
   if (!expression || typeof expression !== 'string') return null;
   const parts = expression.trim().split(/\s+/);

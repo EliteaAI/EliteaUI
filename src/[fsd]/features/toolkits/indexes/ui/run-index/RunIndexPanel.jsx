@@ -1,6 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import cronstrue from 'cronstrue';
 import { useFormikContext } from 'formik';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
@@ -247,22 +246,19 @@ const RunIndexPanel = memo(props => {
   const scheduleSummary = useMemo(() => {
     if (!scheduleData.cron) return null;
     const cron = scheduleData.cron || IndexCronDefault;
-    try {
-      return cronstrue.toString(cron, { use24HourTimeFormat: true });
-    } catch {
-      return cron;
-    }
-  }, [scheduleData.cron]);
+    // Convert cron time to browser timezone for display
+    return ScheduleHelpers.getCronSummaryInBrowserTimezone(cron, scheduleData.timezone);
+  }, [scheduleData.cron, scheduleData.timezone]);
 
   const scheduleTimezoneHint = useMemo(() => {
     const scheduleTz = scheduleData.timezone;
-
     if (!scheduleTz) return null;
 
     try {
       const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
       if (scheduleTz === browserTz) return null;
-      return `Scheduled: ${scheduleTz}\nShown: ${browserTz}`;
+      // Only show the browser timezone (where it's shown), not the original scheduled timezone
+      return `Shown: ${browserTz}`;
     } catch {
       return null;
     }
