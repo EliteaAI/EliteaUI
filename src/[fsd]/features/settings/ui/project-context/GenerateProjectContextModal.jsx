@@ -50,6 +50,12 @@ const GenerateProjectContextModal = memo(props => {
       onApprove={handleApprove}
       approveLabel="Apply"
       approvingLabel="Applying..."
+      modalTestId="generate-project-context-modal"
+      promptInputTestId="generate-project-context-prompt-input"
+      loadingIndicatorTestId="generate-project-context-loading-indicator"
+      generateButtonTestId="generate-project-context-submit-button"
+      cancelButtonTestId="generate-project-context-cancel-button"
+      approveButtonTestId="generate-project-context-approve-button"
     />
   );
 });

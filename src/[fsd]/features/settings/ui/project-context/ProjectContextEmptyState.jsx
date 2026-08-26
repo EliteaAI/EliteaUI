@@ -41,6 +41,7 @@ const ProjectContextEmptyState = memo(props => {
               Create
             </Button.BaseBtn>
             <Button.BaseBtn
+              data-testid="project-context-build-with-ai-button"
               variant={BUTTON_VARIANTS.special}
               startIcon={<SparkleIcon />}
               onClick={() => onNavigate('create', { openAi: true })}

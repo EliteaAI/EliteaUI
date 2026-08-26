@@ -42,7 +42,12 @@ const GenerateProjectContextReviewForm = memo(props => {
           maxRows={16}
           value={projectBackground}
           onChange={handleChange}
-          slotProps={{ htmlInput: { maxLength: MAX_CHARS } }}
+          slotProps={{
+            htmlInput: {
+              maxLength: MAX_CHARS,
+              'data-testid': 'generate-project-context-review-background-input',
+            },
+          }}
           helperText={
             charError
               ? `Content exceeds ${MAX_CHARS} characters.`

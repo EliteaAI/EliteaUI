@@ -11,6 +11,7 @@ const GenerateProjectContextButton = memo(props => {
   return (
     <GenerateEntityButton
       permission={PERMISSIONS.projectContext.edit}
+      buttonTestId="generate-project-context-open-button"
       label="Build with AI"
       renderModal={({ open, onClose }) => (
         <GenerateProjectContextModal
