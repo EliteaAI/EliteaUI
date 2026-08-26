@@ -29,6 +29,7 @@ import {
   indexBuildBlockedReason,
   indexScheduleBlockedReason,
   indexSearchBlockedReason,
+  isRecoveryBlocked,
 } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexDetails.helpers';
 import { useIndexesListPolling } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
 import { selectToolkitScheduler } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
@@ -204,7 +205,7 @@ const RunIndexPanel = memo(props => {
   // collection out from under a worker that may still be writing to it is worse than
   // waiting for the reclaim.
   const isUnresponsiveRun = effectiveIsIndexing && Boolean(effectiveStale);
-  const recoveryBlocked = runIsLive && !(isUnresponsiveRun && !canStopIndexing);
+  const recoveryBlocked = isRecoveryBlocked({ runIsLive, isUnresponsiveRun });
   const deleteDisabled = isDeleting || isAwaitingTaskStart || recoveryBlocked;
   const buildBlockedReason = indexBuildBlockedReason(selectedIndexTools);
   const reindexDisabled = Boolean(buildBlockedReason) || isRunning || isAwaitingTaskStart || recoveryBlocked;

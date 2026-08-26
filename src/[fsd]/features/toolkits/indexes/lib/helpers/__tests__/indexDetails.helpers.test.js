@@ -16,6 +16,7 @@ import {
   indexScheduleBlockedReason,
   indexSearchBlockedReason,
   indexSearchToolOptions,
+  isRecoveryBlocked,
 } from '../indexDetails.helpers';
 
 const runState = over => ({ isIndexing: true, canStopIndexing: false, isStale: false, ...over });
@@ -70,6 +71,22 @@ describe('hasLiveRun', () => {
 
   it('clears when no run is in flight', () => {
     expect(hasLiveRun(runState({ isIndexing: false }))).toBe(false);
+  });
+});
+
+describe('isRecoveryBlocked', () => {
+  it('opens recovery for the reported run: silent, but still holding a task id', () => {
+    // hasLiveRun stays true for it — a stuck row keeps its task_id on purpose — so
+    // gating on that alone leaves the ticket's own run unrecoverable here.
+    expect(isRecoveryBlocked({ runIsLive: true, isUnresponsiveRun: true })).toBe(false);
+  });
+
+  it('keeps recovery shut while a run is genuinely reporting progress', () => {
+    expect(isRecoveryBlocked({ runIsLive: true, isUnresponsiveRun: false })).toBe(true);
+  });
+
+  it('leaves recovery open when no run is in flight at all', () => {
+    expect(isRecoveryBlocked({ runIsLive: false, isUnresponsiveRun: false })).toBe(false);
   });
 });
 

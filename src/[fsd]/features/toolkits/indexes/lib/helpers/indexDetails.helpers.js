@@ -169,6 +169,20 @@ export const hasLiveRun = ({ isIndexing, canStopIndexing, isStale }) =>
   Boolean(isIndexing) && (Boolean(canStopIndexing) || !isStale);
 
 /**
+ * Whether Reindex and Delete must stay shut.
+ *
+ * `hasLiveRun` keeps holding for a stuck run, because a stoppable run counts as live
+ * and the row keeps its task id on purpose — so recovery cannot be gated on it alone,
+ * or the reported run is unrecoverable from this panel. Once the backend reports no
+ * progress for a full disconnect timeout, recovery opens; the same rule the index card
+ * already applies, so the two surfaces cannot tell the user different things.
+ * @param {{runIsLive: boolean, isUnresponsiveRun: boolean}} runState
+ * @returns {boolean}
+ */
+export const isRecoveryBlocked = ({ runIsLive, isUnresponsiveRun }) =>
+  Boolean(runIsLive) && !isUnresponsiveRun;
+
+/**
  * Whether a status banner should stay on screen once its run's transcript is gone, i.e. on a fresh
  * visit. `error` and `warning` do, so a failed or stopped run keeps its retry guidance and its
  * budget-block copy instead of looking untouched. `success` does not — the idle design shows a
