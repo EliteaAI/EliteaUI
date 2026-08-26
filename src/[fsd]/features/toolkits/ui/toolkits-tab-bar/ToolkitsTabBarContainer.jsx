@@ -26,6 +26,8 @@ const ToolkitsTabBarContainer = memo(props => {
     hasNotSavedCredentials,
     toolSchema,
     hasValidationErrors = false,
+    editToolDetail,
+    publicToolkitData,
   } = props;
 
   const saveNewVersionButtonRef = useRef();
@@ -43,11 +45,21 @@ const ToolkitsTabBarContainer = memo(props => {
   const [reasonFor, setReasonFor] = useState();
   const [alertSaving, setAlertSaving] = useState();
 
+  const hasEditToolDetailChanges = useMemo(() => {
+    if (!editToolDetail || !publicToolkitData) return false;
+    return JSON.stringify(editToolDetail) !== JSON.stringify(publicToolkitData);
+  }, [editToolDetail, publicToolkitData]);
+
+  const isCompositelyDirty = useMemo(
+    () => isFormDirtyExcluding || hasEditToolDetailChanges,
+    [isFormDirtyExcluding, hasEditToolDetailChanges],
+  );
+
   const shouldAlertSaving = useMemo(() => {
     const isEmbeddingModelDirty = values.settings.embedding_model !== initialValues.settings.embedding_model;
 
-    return isFormDirtyExcluding && isEmbeddingModelDirty && isIndexesAvailable;
-  }, [values, initialValues, isFormDirtyExcluding, isIndexesAvailable]);
+    return isCompositelyDirty && isEmbeddingModelDirty && isIndexesAvailable;
+  }, [values, initialValues, isCompositelyDirty, isIndexesAvailable]);
 
   const [onSave, { isError: isSaveError, isSuccess: isSaveSuccess, error: saveError, isLoading: isSaving }] =
     useToolkitEditMutation();
@@ -102,10 +114,10 @@ const ToolkitsTabBarContainer = memo(props => {
   const shouldDisableSave = useMemo(
     () =>
       isSaving ||
-      !isFormDirtyExcluding ||
+      !isCompositelyDirty ||
       reasonFor === ValidateToolEventReason.saveNewVersion ||
       hasValidationErrors,
-    [isSaving, isFormDirtyExcluding, reasonFor, hasValidationErrors],
+    [isSaving, isCompositelyDirty, reasonFor, hasValidationErrors],
   );
 
   const onResetValidateEvent = useCallback(async () => {
@@ -157,7 +169,7 @@ const ToolkitsTabBarContainer = memo(props => {
         </MuiButton>
         <Button.DiscardButton
           dataTestId="toolkit-detail-discard-button"
-          disabled={isSaving || !isFormDirtyExcluding}
+          disabled={isSaving || !isCompositelyDirty}
           onDiscard={discardApplicationChanges}
         />
       </TabBarItems>

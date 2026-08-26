@@ -227,6 +227,8 @@ const EditToolkit = memo(props => {
             hasNotSavedCredentials={false}
             toolSchema={toolSchema}
             hasValidationErrors={hasValidationErrors}
+            editToolDetail={editToolDetail}
+            publicToolkitData={publicToolkitData}
           />
         ),
         rightToolbar: isFetchingPublic ? null : (

@@ -4,7 +4,15 @@ import ToolkitsTabBarContainer from '@/[fsd]/features/toolkits/ui/toolkits-tab-b
 import ToolkitsTabBarPlaceholder from '@/[fsd]/features/toolkits/ui/toolkits-tab-bar/ToolkitsTabBarPlaceholder';
 
 const ToolkitsTabBar = memo(props => {
-  const { onDiscard, onClearEditTool, toolSchema, hasValidationErrors, showPlaceholder = false } = props;
+  const {
+    onDiscard,
+    onClearEditTool,
+    toolSchema,
+    hasValidationErrors,
+    showPlaceholder = false,
+    editToolDetail,
+    publicToolkitData,
+  } = props;
 
   return showPlaceholder ? (
     <ToolkitsTabBarPlaceholder onDiscard={onDiscard} />
@@ -15,6 +23,8 @@ const ToolkitsTabBar = memo(props => {
       hasNotSavedCredentials={false}
       toolSchema={toolSchema}
       hasValidationErrors={hasValidationErrors}
+      editToolDetail={editToolDetail}
+      publicToolkitData={publicToolkitData}
     />
   );
 });
