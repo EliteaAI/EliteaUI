@@ -20,6 +20,14 @@ describe('buildIndexHistoryDetailRow', () => {
     expect(build({ state: 'in_progress', updated_on: 400 })).toBeNull();
   });
 
+  it('cards an interrupted run even though it has a conversation', () => {
+    // It was killed before it could report anything, so the transcript holds no
+    // assistant turn and the stored error is the only account of what happened.
+    const entry = { state: 'interrupted', updated_on: 400, conversation_id: 9, error: 'boom' };
+
+    expect(build(entry)).toEqual({ name: 'Interrupted — docs', entry });
+  });
+
   it('keeps the creation event on a card, blank transcript being worse', () => {
     expect(build({ state: 'created', updated_on: 100 })?.name).toBe('Created — docs');
   });
