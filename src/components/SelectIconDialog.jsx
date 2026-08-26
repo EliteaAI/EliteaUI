@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Box, IconButton, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import ListInfiniteMoreLoader from '@/ComponentsLib/ListInfiniteMoreLoader';
 import StyledTooltip from '@/ComponentsLib/Tooltip';
@@ -49,7 +49,7 @@ export default function SelectIconDialog({
 
   const { data: applicationDefaultIcons = [] } = useGetApplicationDefaultIconsQuery(
     { projectId },
-    { skip: !projectId },
+    { skip: !projectId || !open },
   );
 
   const {
@@ -57,13 +57,13 @@ export default function SelectIconDialog({
     isFetching: isFetchingApplicationIcons,
   } = useGetApplicationIconsQuery(
     { projectId, page },
-    { skip: !projectId || (entityType !== 'application' && entityType !== 'pipeline') },
+    { skip: !projectId || !open || (entityType !== 'application' && entityType !== 'pipeline') },
   );
 
   const {
     data: { rows: skillIcons, total: totalSkillIcons } = { rows: [], total: 0 },
     isFetching: isFetchingSkillIcons,
-  } = useGetSkillIconsQuery({ projectId, page }, { skip: !projectId || entityType !== 'skill' });
+  } = useGetSkillIconsQuery({ projectId, page }, { skip: !projectId || !open || entityType !== 'skill' });
 
   const [uploadApplicationIcon] = useUploadApplicationIconMutation();
   const [replaceApplicationIcon] = useReplaceApplicationIconMutation();
@@ -297,6 +297,10 @@ export default function SelectIconDialog({
   useEffect(() => {
     setIsUploading(false);
   }, []);
+
+  useEffect(() => {
+    if (open) setPage(0);
+  }, [open]);
 
   const styles = selectIconDialogStyles();
 
