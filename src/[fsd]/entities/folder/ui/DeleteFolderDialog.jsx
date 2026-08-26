@@ -14,7 +14,8 @@ const DeleteFolderDialog = memo(props => {
   const { deleteFolder, isLoading } = useDeleteFolder();
   const { toastSuccess, toastError } = useToast();
 
-  const entityLabel = FOLDER_ENTITY_LABELS[entityType]?.toLowerCase() + 's' || 'entities';
+  const entityLabelBase = FOLDER_ENTITY_LABELS[entityType];
+  const entityLabel = entityLabelBase ? entityLabelBase.toLowerCase() + 's' : 'entities';
 
   const handleConfirm = useCallback(async () => {
     if (!folder) return;

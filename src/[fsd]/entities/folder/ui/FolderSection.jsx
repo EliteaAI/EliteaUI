@@ -15,6 +15,8 @@ import FolderItem from './FolderItem';
 
 const VISIBLE_FOLDER_COUNT = 6;
 
+const styles = folderSectionStyles();
+
 const FolderSection = memo(props => {
   const { entityType, title = 'Folders', onFolderSelect, selectedFolderId, onExpandChange } = props;
 
@@ -26,8 +28,6 @@ const FolderSection = memo(props => {
   const [menuAnchorEl, setMenuAnchorEl] = useState(null);
   const [menuFolder, setMenuFolder] = useState(null);
   const [isExpanded, setIsExpanded] = useState(false);
-
-  const styles = folderSectionStyles();
 
   const hasMoreFolders = folders.length > VISIBLE_FOLDER_COUNT;
   const visibleFolders = useMemo(() => {

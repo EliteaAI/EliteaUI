@@ -6,12 +6,12 @@ import { useSkillListQuery } from '@/[fsd]/features/skill/api';
 import usePageQuery from '@/hooks/usePageQuery';
 import { useAuthorIdFromUrl } from '@/hooks/useSearchParamValue';
 
-export const useLoadSkills = (
+export const useLoadSkills = ({
   sortBy = 'created_at',
   sortOrder = 'desc',
   forceSkip = false,
   folderEntityIds = null,
-) => {
+} = {}) => {
   const { page, pageSize, setPage, tagList, selectedTagIds, projectId } = usePageQuery();
   const { query } = useSelector(state => state.search);
   const authorId = useAuthorIdFromUrl();

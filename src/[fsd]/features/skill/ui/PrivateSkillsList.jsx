@@ -67,7 +67,7 @@ const PrivateSkillsList = memo(props => {
     page,
     pageSize,
     setPage,
-  } = useLoadSkills(sortBy, sortOrder, shouldSkipQuery, folderEntityIds);
+  } = useLoadSkills({ sortBy, sortOrder, forceSkip: shouldSkipQuery, folderEntityIds });
 
   const { total } = data || {};
   const uniqueDataList = useMemo(() => uniqueArrayByProp(data?.rows || [], 'id'), [data?.rows]);
