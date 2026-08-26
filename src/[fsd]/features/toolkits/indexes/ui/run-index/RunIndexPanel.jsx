@@ -199,10 +199,12 @@ const RunIndexPanel = memo(props => {
     isStale: effectiveStale,
   });
   // A stuck run keeps its task_id, so runIsLive stays true however long it has been
-  // silent. Stop still uses it — stopping a dead task is harmless — but recovery
-  // cannot.
+  // silent, and the panel would offer no way out. Recovery opens up once the backend
+  // reports no progress — but not while Stop is still on offer, since deleting a
+  // collection out from under a worker that may still be writing to it is worse than
+  // waiting for the reclaim.
   const isUnresponsiveRun = effectiveIsIndexing && Boolean(effectiveStale);
-  const recoveryBlocked = runIsLive && !isUnresponsiveRun;
+  const recoveryBlocked = runIsLive && !(isUnresponsiveRun && !canStopIndexing);
   const deleteDisabled = isDeleting || isAwaitingTaskStart || recoveryBlocked;
   const buildBlockedReason = indexBuildBlockedReason(selectedIndexTools);
   const reindexDisabled = Boolean(buildBlockedReason) || isRunning || isAwaitingTaskStart || recoveryBlocked;

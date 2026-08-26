@@ -64,11 +64,11 @@ export const INTERRUPTED_BANNER = {
 export const UNRESPONSIVE_BANNER = {
   label: 'No recent progress',
   message:
-    'This run has not reported progress in a while. It may still be working, or it may have stopped — ' +
-    'the platform is still checking. You can reindex now, or wait for it to resolve itself.',
+    'This run has not reported progress in a while. It may still be working, or it may have stopped. ' +
+    'Click Reindex to start a fresh run.',
 };
 
-export const UNRESPONSIVE_RUN_TOOLTIP = `${UNRESPONSIVE_BANNER.label} — this run may still be working; the platform is still checking. Reindex is available.`;
+export const UNRESPONSIVE_RUN_TOOLTIP = `${UNRESPONSIVE_BANNER.label} — this run may still be working, or may have stopped. Reindex to start a fresh run.`;
 
 export const BannerMessageMap = {
   [BannerSeverity.success]: `Indexing completed successfully. ${BANNER_SUCCESS_SUFFIX}`,
