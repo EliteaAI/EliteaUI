@@ -8,6 +8,7 @@ export {
   ToolBaseProperty,
   EmptyMcpTools,
   ArrayFieldInput,
+  SecretHeadersInput,
 } from './ToolBase';
 export { default as ToolCustom } from './ToolCustom';
 export { default as ToolFormContainer } from './ToolFormContainer';
