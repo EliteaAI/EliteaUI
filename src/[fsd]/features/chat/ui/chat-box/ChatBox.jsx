@@ -1540,10 +1540,11 @@ const ChatBox = forwardRef((props, boxRef) => {
         ),
       );
 
+      dismissNextInputSuggestion();
       setStreamingInfo(question_id);
       emitContinue(payload);
     },
-    [chat_history, activeConversation, projectId, setChatHistory, setStreamingInfo, emitContinue],
+    [chat_history, activeConversation, projectId, setChatHistory, setStreamingInfo, emitContinue, dismissNextInputSuggestion],
   );
 
   // A separately dispatched worker child is resumed only once, so decisions
