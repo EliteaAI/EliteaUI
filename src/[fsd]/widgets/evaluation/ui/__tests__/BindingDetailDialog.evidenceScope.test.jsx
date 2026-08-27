@@ -13,17 +13,9 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import BindingDetailDialog from '../suite/BindingDetailDialog';
 
 const updateBinding = vi.fn(() => ({ unwrap: () => Promise.resolve({}) }));
-const updateCodeValidation = vi.fn(() => ({ unwrap: () => Promise.resolve({}) }));
 
 vi.mock('../../api', () => ({
   useUpdateEvalBindingMutation: () => [updateBinding, { isLoading: false }],
-  useUpdateEvalCodeValidationMutation: () => [updateCodeValidation, { isLoading: false }],
-}));
-
-vi.mock('@/[fsd]/shared/lib/helpers', () => ({
-  CodeMirrorLinterHelpers: {
-    getExtensionsByLang: () => Promise.resolve({ extensionWithLinter: [] }),
-  },
 }));
 
 // Modal/Field/SingleSelect pull in CodeMirror + portal machinery that jsdom can't run;
@@ -63,7 +55,6 @@ vi.mock('@/[fsd]/shared/ui/select', () => ({
 const DIMENSION_BINDING = {
   id: 1,
   dimension_id: 5,
-  code_validation_id: null,
   engine: 'ai',
   evidence_scope: { structure: false, input: true, output: true },
   weight: 1,
@@ -80,7 +71,6 @@ const renderDialog = (binding = DIMENSION_BINDING) =>
       suiteId={11}
       binding={binding}
       dimensions={[{ id: 5, name: 'Correctness' }]}
-      codeValidations={[]}
     />,
   );
 
@@ -144,11 +134,10 @@ describe('BindingDetailDialog — evidence scope (input-only / instructions-only
     expect(body.evidence_scope).toEqual({ structure: true, input: true, output: true });
   });
 
-  it('does not require the code-validation path when editing a dimension binding', async () => {
+  it('submits a plain binding update when editing a dimension binding', async () => {
     renderDialog();
     fireEvent.click(evidenceCheckbox('output'));
     fireEvent.click(screen.getByTestId('binding-editor-apply'));
     await vi.waitFor(() => expect(updateBinding).toHaveBeenCalledTimes(1));
-    expect(updateCodeValidation).not.toHaveBeenCalled();
   });
 });

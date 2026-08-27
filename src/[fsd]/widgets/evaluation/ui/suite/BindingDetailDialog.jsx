@@ -2,12 +2,11 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Box, FormControlLabel, Radio, RadioGroup, Typography } from '@mui/material';
 
-import { CodeMirrorLinterHelpers } from '@/[fsd]/shared/lib/helpers';
-import { Button, Checkbox, Field, Input, Modal, Tooltip } from '@/[fsd]/shared/ui';
+import { Button, Checkbox, Input, Modal, Tooltip } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 
-import { useUpdateEvalBindingMutation, useUpdateEvalCodeValidationMutation } from '../../api';
+import { useUpdateEvalBindingMutation } from '../../api';
 import {
   BINDING_ENGINE_OPTIONS,
   DEFAULT_EVIDENCE_SCOPE,
@@ -27,35 +26,22 @@ const toFormState = binding => ({
 });
 
 const BindingDetailDialog = memo(props => {
-  const { open, onClose, projectId, suiteId, binding, dimensions = [], codeValidations = [] } = props;
+  const { open, onClose, projectId, suiteId, binding, dimensions = [] } = props;
 
   const [form, setForm] = useState(() => toFormState(binding));
-  const [code, setCode] = useState('');
-  const [codeExtensions, setCodeExtensions] = useState([]);
   const [errorMessage, setErrorMessage] = useState('');
 
-  const [updateBinding, { isLoading: isSavingBinding }] = useUpdateEvalBindingMutation();
-  const [updateCodeValidation, { isLoading: isSavingCode }] = useUpdateEvalCodeValidationMutation();
-
-  const isSaving = isSavingBinding || isSavingCode;
+  const [updateBinding, { isLoading: isSaving }] = useUpdateEvalBindingMutation();
 
   const kind = getBindingKind(binding);
   const isDimension = kind === EVAL_BINDING_KIND.dimension;
   const isPlatform = kind === EVAL_BINDING_KIND.platform;
-  const isCodeValidation = kind === EVAL_BINDING_KIND.codeValidation;
-  const label = useMemo(
-    () => getBindingLabel(binding, { dimensions, codeValidations }),
-    [binding, dimensions, codeValidations],
-  );
-  const codeValidationDef = useMemo(
-    () => codeValidations.find(c => c.id === binding?.code_validation_id) ?? null,
-    [codeValidations, binding],
-  );
+  const label = useMemo(() => getBindingLabel(binding, { dimensions }), [binding, dimensions]);
   const dimensionDef = useMemo(
     () => (isDimension ? (dimensions.find(d => d.id === binding?.dimension_id) ?? null) : null),
     [isDimension, dimensions, binding],
   );
-  const rubricDescription = dimensionDef?.description || codeValidationDef?.description || '';
+  const rubricDescription = dimensionDef?.description || '';
 
   // A dimension declares which engines it may be scored on (§16). Offering an engine the
   // definition disallows lets the author save a binding the backend then rejects — or worse, one
@@ -68,22 +54,11 @@ const BindingDetailDialog = memo(props => {
   }, [dimensionDef]);
 
   useEffect(() => {
-    let active = true;
-    CodeMirrorLinterHelpers.getExtensionsByLang('python').then(({ extensionWithLinter }) => {
-      if (active) setCodeExtensions(extensionWithLinter);
-    });
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  useEffect(() => {
     if (open) {
       setForm(toFormState(binding));
-      setCode(codeValidationDef?.code ?? '');
       setErrorMessage('');
     }
-  }, [open, binding, codeValidationDef]);
+  }, [open, binding]);
 
   const setField = useCallback((key, value) => {
     setForm(prev => ({ ...prev, [key]: value }));
@@ -100,17 +75,13 @@ const BindingDetailDialog = memo(props => {
     if (!Object.values(form.evidence_scope).some(Boolean)) {
       return 'Evidence scope must have at least one option selected.';
     }
-    if (isCodeValidation) {
-      if (!code.trim()) return 'Validation code is required.';
-      return '';
-    }
     const weight = Number(form.weight);
     if (Number.isNaN(weight) || weight < 0) return 'Weight must be a non-negative number.';
     const hasTarget = form.target !== '' && form.target !== null;
     const hasOperator = !!form.target_operator;
     if (hasTarget !== hasOperator) return 'Provide both a target and an operator, or neither.';
     return '';
-  }, [form, isCodeValidation, code]);
+  }, [form]);
 
   const handleApply = useCallback(async () => {
     if (validationError) {
@@ -129,40 +100,12 @@ const BindingDetailDialog = memo(props => {
     if (isDimension) body.engine = form.engine;
 
     try {
-      if (isCodeValidation && codeValidationDef && code !== codeValidationDef.code) {
-        await updateCodeValidation({
-          projectId,
-          codeValidationId: codeValidationDef.id,
-          body: {
-            name: codeValidationDef.name,
-            description: codeValidationDef.description ?? null,
-            code,
-            return_contract: codeValidationDef.return_contract,
-            scale_min: codeValidationDef.scale_min ?? null,
-            scale_max: codeValidationDef.scale_max ?? null,
-            polarity: codeValidationDef.polarity,
-          },
-        }).unwrap();
-      }
       await updateBinding({ projectId, suiteId, bindingId: binding.id, body }).unwrap();
       onClose();
     } catch (error) {
       setErrorMessage(parseEvalError(error, 'Failed to update binding.'));
     }
-  }, [
-    validationError,
-    form,
-    isDimension,
-    isCodeValidation,
-    codeValidationDef,
-    code,
-    updateCodeValidation,
-    updateBinding,
-    projectId,
-    suiteId,
-    binding,
-    onClose,
-  ]);
+  }, [validationError, form, isDimension, updateBinding, projectId, suiteId, binding, onClose]);
 
   const styles = bindingDetailDialogStyles();
 
@@ -208,29 +151,6 @@ const BindingDetailDialog = memo(props => {
         )}
       </Box>
 
-      {isCodeValidation && (
-        <Box sx={styles.field}>
-          <Typography variant="labelMedium">Validation code (Python)</Typography>
-          <Box sx={styles.editorWrapper}>
-            <Field.CodeMirrorEditor
-              value={code}
-              extensions={codeExtensions}
-              notifyChange={setCode}
-              autoHeight
-              minHeight="12rem"
-              maxHeight="24rem"
-              contentTestId="binding-code-input"
-            />
-          </Box>
-          <Typography
-            variant="bodySmall"
-            color="text.secondary"
-          >
-            Editing this code updates the shared code validation for every scorecard that uses it.
-          </Typography>
-        </Box>
-      )}
-
       <Box sx={styles.field}>
         <Typography variant="labelMedium">Evidence scope</Typography>
         <Box sx={styles.evidenceRow}>
@@ -250,41 +170,37 @@ const BindingDetailDialog = memo(props => {
         </Box>
       </Box>
 
-      {!isCodeValidation && (
-        <>
-          <Input.InputBase
-            data-testid="binding-weight-input"
-            fullWidth
-            type="number"
-            variant="standard"
-            label="Weight"
-            value={form.weight}
-            onChange={event => setField('weight', event.target.value)}
-          />
+      <Input.InputBase
+        data-testid="binding-weight-input"
+        fullWidth
+        type="number"
+        variant="standard"
+        label="Weight"
+        value={form.weight}
+        onChange={event => setField('weight', event.target.value)}
+      />
 
-          <Box sx={styles.row}>
-            <SingleSelect
-              label="Target operator"
-              showBorder
-              displayEmpty
-              value={form.target_operator}
-              options={TARGET_OPERATOR_OPTIONS}
-              onValueChange={value => setField('target_operator', value)}
-              onClear={() => setField('target_operator', '')}
-              data-testid="binding-target-operator-select"
-            />
-            <Input.InputBase
-              data-testid="binding-target-input"
-              fullWidth
-              type="number"
-              variant="standard"
-              label="Target"
-              value={form.target}
-              onChange={event => setField('target', event.target.value)}
-            />
-          </Box>
-        </>
-      )}
+      <Box sx={styles.row}>
+        <SingleSelect
+          label="Target operator"
+          showBorder
+          displayEmpty
+          value={form.target_operator}
+          options={TARGET_OPERATOR_OPTIONS}
+          onValueChange={value => setField('target_operator', value)}
+          onClear={() => setField('target_operator', '')}
+          data-testid="binding-target-operator-select"
+        />
+        <Input.InputBase
+          data-testid="binding-target-input"
+          fullWidth
+          type="number"
+          variant="standard"
+          label="Target"
+          value={form.target}
+          onChange={event => setField('target', event.target.value)}
+        />
+      </Box>
 
       {errorMessage && (
         <Typography
@@ -351,11 +267,6 @@ const bindingDetailDialogStyles = () => ({
     alignItems: 'center',
     gap: '0.375rem',
   },
-  editorWrapper: ({ palette }) => ({
-    border: `0.0625rem solid ${palette.border.lines}`,
-    borderRadius: '0.25rem',
-    overflow: 'hidden',
-  }),
   evidenceRow: {
     display: 'flex',
     gap: '1.5rem',

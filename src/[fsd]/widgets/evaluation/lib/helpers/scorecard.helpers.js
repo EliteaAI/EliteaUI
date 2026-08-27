@@ -9,14 +9,12 @@ import { getBindingKind } from './binding.helpers';
 
 /**
  * Stable key identifying which validation a binding or result row targets.
- * Exactly one of dimension_id / code_validation_id / platform_key is set (§13.1),
- * so the same key can be derived from a snapshot binding or a result row and used
- * to join them.
+ * Exactly one of dimension_id / platform_key is set (§13.1), so the same key can be
+ * derived from a snapshot binding or a result row and used to join them.
  */
 export const getTargetKey = entity => {
   if (!entity) return null;
   if (entity.dimension_id != null) return `dim:${entity.dimension_id}`;
-  if (entity.code_validation_id != null) return `code:${entity.code_validation_id}`;
   if (entity.platform_key != null) return `platform:${entity.platform_key}`;
   return null;
 };
@@ -102,7 +100,6 @@ export const formatPercent = value => {
 export const resolveBindingMeta = (binding, snapshot = {}) => {
   const kind = getBindingKind(binding);
   const dimensions = snapshot.dimensions ?? {};
-  const codeValidations = snapshot.code_validations ?? {};
 
   let name = 'Validation';
   let scaleType = null;
@@ -117,14 +114,6 @@ export const resolveBindingMeta = (binding, snapshot = {}) => {
     scaleMin = dim?.scale_min ?? null;
     scaleMax = dim?.scale_max ?? null;
     polarity = dim?.polarity ?? null;
-  } else if (kind === EVAL_BINDING_KIND.codeValidation) {
-    const cv =
-      codeValidations[binding.code_validation_id] ?? codeValidations[String(binding.code_validation_id)];
-    name = cv?.name || `Code validation #${binding.code_validation_id}`;
-    scaleType = cv?.scale_type ?? EVAL_SCALE_TYPE.binary;
-    scaleMin = cv?.scale_min ?? 0;
-    scaleMax = cv?.scale_max ?? 1;
-    polarity = cv?.polarity ?? EVAL_POLARITY.higher_better;
   } else if (kind === EVAL_BINDING_KIND.platform) {
     name = binding.platform_key || 'Platform validation';
     scaleType = EVAL_SCALE_TYPE.binary;
@@ -137,7 +126,6 @@ export const resolveBindingMeta = (binding, snapshot = {}) => {
     kind,
     key: getTargetKey(binding),
     dimension_id: binding.dimension_id ?? null,
-    code_validation_id: binding.code_validation_id ?? null,
     platform_key: binding.platform_key ?? null,
     name,
     engine: binding.engine,

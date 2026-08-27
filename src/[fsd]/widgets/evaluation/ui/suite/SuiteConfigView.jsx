@@ -23,7 +23,6 @@ import {
   useBootstrapEvalSuiteMutation,
   useCreateEvalSuiteMutation,
   useDeleteEvalBindingMutation,
-  useEvalCodeValidationsQuery,
   useEvalDatasetsQuery,
   useEvalDimensionsQuery,
   useEvalRunsQuery,
@@ -41,11 +40,10 @@ import {
   EVAL_PERMISSIONS,
   EVAL_RUN_TRIGGER,
   EVAL_TIER,
-  NEW_ITEM_EVIDENCE_SCOPE,
 } from '../../lib/constants';
 import { getBindingLabel, parseEvalError } from '../../lib/helpers';
 import { useStickySuiteSelection } from '../../lib/hooks';
-import { CodeValidationEditorDialog, DimensionEditorDialog } from '../library';
+import { DimensionEditorDialog } from '../library';
 import { LastRunSummary, ResultsScorecardDialog, RunHistoryList, RunProgressDialog } from '../results';
 import AddValidationMenu from './AddValidationMenu';
 import BindingDetailDialog from './BindingDetailDialog';
@@ -90,7 +88,6 @@ const SuiteConfigView = memo(props => {
   const canCreateSuite = checkPermission(EVAL_PERMISSIONS.suiteCreate);
   const canUpdateSuite = checkPermission(EVAL_PERMISSIONS.suiteUpdate);
   const canCreateDimension = checkPermission(EVAL_PERMISSIONS.dimensionCreate);
-  const canCreateCodeValidation = checkPermission(EVAL_PERMISSIONS.codeValidationCreate);
   const canRun = checkPermission(EVAL_PERMISSIONS.runCreate);
 
   const [selectedSuiteId, setSelectedSuiteId] = useStickySuiteSelection(projectId, applicationId);
@@ -101,7 +98,6 @@ const SuiteConfigView = memo(props => {
   const [pickerDialog, setPickerDialog] = useState({ open: false, kind: null });
   const [dimensionDialog, setDimensionDialog] = useState(false);
   const [generateDialog, setGenerateDialog] = useState(false);
-  const [codeValidationDialog, setCodeValidationDialog] = useState(false);
   const [removeTarget, setRemoveTarget] = useState(null);
   const [runDialog, setRunDialog] = useState({ open: false, runId: null });
   const [scorecardDialog, setScorecardDialog] = useState({ open: false, runId: null });
@@ -123,11 +119,6 @@ const SuiteConfigView = memo(props => {
   const { data: platformCatalog = [] } = usePlatformDimensionCatalogQuery(
     { projectId },
     { skip: !projectId || pickerDialog.kind !== 'platform' },
-  );
-
-  const { data: codeValidations = [], isError: isCodeValidationsError } = useEvalCodeValidationsQuery(
-    { projectId },
-    { skip: !projectId },
   );
 
   const { data: datasets = [] } = useEvalDatasetsQuery(
@@ -220,11 +211,6 @@ const SuiteConfigView = memo(props => {
     () => new Set(bindings.filter(b => b.dimension_id != null).map(b => b.dimension_id)),
     [bindings],
   );
-  const boundCodeValidationIds = useMemo(
-    () => new Set(bindings.filter(b => b.code_validation_id != null).map(b => b.code_validation_id)),
-    [bindings],
-  );
-
   const lastRun = runs.length ? runs[0] : null;
 
   const datasetDirty = (suiteDetail?.dataset_id ?? NONE_DATASET) !== datasetDraft;
@@ -337,30 +323,16 @@ const SuiteConfigView = memo(props => {
     },
     [materializePlatformDimension, projectId, attachBinding, toastError],
   );
-  const handleAttachCodeValidation = useCallback(
-    item => {
-      setPickerDialog({ open: false, kind: null });
-      attachBinding({ code_validation_id: item.id });
-    },
-    [attachBinding],
-  );
-
   const handleAddMenuSelect = useCallback(key => {
     switch (key) {
       case ADD_VALIDATION_MENU.dimensionLibrary:
         setPickerDialog({ open: true, kind: 'dimension' });
-        break;
-      case ADD_VALIDATION_MENU.codeValidationLibrary:
-        setPickerDialog({ open: true, kind: 'code_validation' });
         break;
       case ADD_VALIDATION_MENU.platformCatalog:
         setPickerDialog({ open: true, kind: 'platform' });
         break;
       case ADD_VALIDATION_MENU.newDimension:
         setDimensionDialog(true);
-        break;
-      case ADD_VALIDATION_MENU.newCodeValidation:
-        setCodeValidationDialog(true);
         break;
       case ADD_VALIDATION_MENU.generateWithAi:
         setGenerateDialog(true);
@@ -444,7 +416,6 @@ const SuiteConfigView = memo(props => {
   const handleClosePickerDialog = useCallback(() => setPickerDialog({ open: false, kind: null }), []);
   const handleCloseDimensionDialog = useCallback(() => setDimensionDialog(false), []);
   const handleCloseGenerateDialog = useCallback(() => setGenerateDialog(false), []);
-  const handleCloseCodeValidationDialog = useCallback(() => setCodeValidationDialog(false), []);
   const handleCloseRemoveTarget = useCallback(() => setRemoveTarget(null), []);
 
   const handleEditDataset = useCallback(() => {
@@ -463,27 +434,17 @@ const SuiteConfigView = memo(props => {
     if (pickerDialog.kind === 'dimension') {
       return dimensions.filter(d => d.tier !== EVAL_TIER.platform && !boundDimensionIds.has(d.id));
     }
-    if (pickerDialog.kind === 'code_validation') {
-      return codeValidations.filter(c => !boundCodeValidationIds.has(c.id));
-    }
     if (pickerDialog.kind === 'platform') {
       // The catalog is already limited to active entries; an entry this suite has bound
       // already has a local id, which is what the bindings reference.
       return platformCatalog.filter(d => !boundDimensionIds.has(d.local_dimension_id));
     }
     return [];
-  }, [
-    pickerDialog.kind,
-    dimensions,
-    platformCatalog,
-    codeValidations,
-    boundDimensionIds,
-    boundCodeValidationIds,
-  ]);
+  }, [pickerDialog.kind, dimensions, platformCatalog, boundDimensionIds]);
 
   const styles = suiteConfigViewStyles();
 
-  const isError = isAppError || isSuitesError || isDimensionsError || isCodeValidationsError;
+  const isError = isAppError || isSuitesError || isDimensionsError;
   const isLoading = isAppFetching || isSuitesLoading;
 
   if (isError) {
@@ -618,7 +579,6 @@ const SuiteConfigView = memo(props => {
                 <BindingList
                   bindings={bindings}
                   dimensions={dimensions}
-                  codeValidations={codeValidations}
                   canEdit={canUpdateSuite}
                   onEdit={handleEditBinding}
                   onRemove={handleRequestRemove}
@@ -632,7 +592,6 @@ const SuiteConfigView = memo(props => {
               {canUpdateSuite && (
                 <AddValidationMenu
                   canCreateDimension={canCreateDimension}
-                  canCreateCodeValidation={canCreateCodeValidation}
                   onSelect={handleAddMenuSelect}
                 />
               )}
@@ -729,28 +688,15 @@ const SuiteConfigView = memo(props => {
         suiteId={selectedSuiteId}
         binding={bindingDialog.binding}
         dimensions={dimensions}
-        codeValidations={codeValidations}
         onClose={handleCloseBindingDialog}
       />
 
       <LibraryPickerDialog
         open={pickerDialog.open}
-        title={
-          pickerDialog.kind === 'code_validation'
-            ? 'Add code validation'
-            : pickerDialog.kind === 'platform'
-              ? 'Add platform validation'
-              : 'Add dimension'
-        }
+        title={pickerDialog.kind === 'platform' ? 'Add platform validation' : 'Add dimension'}
         items={pickerItems}
         attaching={isAttaching}
-        onAttach={
-          pickerDialog.kind === 'code_validation'
-            ? handleAttachCodeValidation
-            : pickerDialog.kind === 'platform'
-              ? handleAttachPlatformDimension
-              : handleAttachDimension
-        }
+        onAttach={pickerDialog.kind === 'platform' ? handleAttachPlatformDimension : handleAttachDimension}
         onClose={handleClosePickerDialog}
       />
 
@@ -774,23 +720,9 @@ const SuiteConfigView = memo(props => {
         onClose={handleCloseGenerateDialog}
       />
 
-      <CodeValidationEditorDialog
-        open={codeValidationDialog}
-        projectId={projectId}
-        codeValidation={null}
-        onSaved={(result, evidenceScope) =>
-          result?.id != null &&
-          attachBinding({
-            code_validation_id: result.id,
-            evidence_scope: evidenceScope ?? NEW_ITEM_EVIDENCE_SCOPE,
-          })
-        }
-        onClose={handleCloseCodeValidationDialog}
-      />
-
       <Modal.DeleteEntityModal
         open={!!removeTarget}
-        name={removeTarget ? getBindingLabel(removeTarget, { dimensions, codeValidations }) : ''}
+        name={removeTarget ? getBindingLabel(removeTarget, { dimensions }) : ''}
         onClose={handleCloseRemoveTarget}
         onConfirm={handleConfirmRemove}
         alarm
