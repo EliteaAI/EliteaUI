@@ -29,6 +29,8 @@ import {
   getInterruptIdentity,
   getPendingHitlMessage,
   hasRootHitlTurnEnded,
+  isPipelineHitlHistoryInterrupt,
+  isPipelineHitlNodeInterrupt,
   scheduleRootHitlDecision,
 } from '@/[fsd]/features/chat/lib/helpers/hitl.helpers.js';
 import { shouldQueueRootAuthorizationWithHitl } from '@/[fsd]/features/chat/lib/helpers/mcpAuthorization.helpers.js';
@@ -1629,6 +1631,11 @@ const ChatBox = forwardRef((props, boxRef) => {
       const childThreadId = getHitlResumeThreadId(decidedEntry);
       const isFanoutChild = Boolean(childThreadId);
       const isSupervisedChild = decidedEntry?.resume_strategy === 'supervised_child';
+      const usesDurablePipelineHistory =
+        interrupts.length === 1 &&
+        !isFanoutChild &&
+        !isSupervisedChild &&
+        isPipelineHitlHistoryInterrupt(decidedEntry);
       const resumeGroup = rootBatch ? rootBatchEntries : getHitlResumeGroup(interrupts, decidedEntry);
 
       // Detect a (Track 1) parallel aggregate by the PRESENCE of the
@@ -1645,6 +1652,7 @@ const ChatBox = forwardRef((props, boxRef) => {
         action !== 'answer' &&
         !isFanoutChild &&
         !isSupervisedChild &&
+        !usesDurablePipelineHistory &&
         ((Array.isArray(lastMessage.hitlInterrupts) && lastMessage.hitlInterrupts.length > 0) ||
           guardrailType === 'mcp_auth' ||
           rootBatch?.some(decision => decision.guardrailType === 'mcp_auth')) &&
@@ -1845,7 +1853,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       const { question_id, threadId, participant_id } = lastMessage;
       const participant = ChatHelpers.getParticipantById(activeConversation, participant_id);
       const editMessage =
-        action === 'edit'
+        action === 'edit' && !isPipelineHitlNodeInterrupt(decidedEntry)
           ? ChatHelpers.createHitlEditUserMessage({
               question: value ?? '',
               userId,
@@ -1878,6 +1886,15 @@ const ChatBox = forwardRef((props, boxRef) => {
         } else if (action === 'answer') {
           payload.hitl_value = value ?? {};
         }
+        if (usesDurablePipelineHistory) {
+          payload.hitl_decisions = [
+            {
+              interrupt_id: getInterruptIdentity(decidedEntry),
+              action,
+              value: value ?? '',
+            },
+          ];
+        }
       }
 
       setChatHistory(prevMessages => {
@@ -1888,6 +1905,22 @@ const ChatBox = forwardRef((props, boxRef) => {
 
         const nextMessages = [...prevMessages];
         const assistantMessage = nextMessages[assistantIndex];
+        if (usesDurablePipelineHistory) {
+          nextMessages.splice(assistantIndex, 1, {
+            ...assistantMessage,
+            content: assistantMessage.content || decidedEntry?.message || '',
+            isLoading: false,
+            isStreaming: false,
+            isRegenerating: false,
+            isSending: false,
+            requiresConfirmation: undefined,
+            exception: undefined,
+            hitlInterrupt: undefined,
+            hitlInterrupts: undefined,
+            resumingAgentPaths: undefined,
+          });
+          return nextMessages;
+        }
         // Preserve the streaming view across the resume instead of wiping it.
         // On the in-process parallel HITL path LangGraph re-runs ONLY the branches
         // that are still paused; the sub-agents that already returned a real result
@@ -1960,7 +1993,7 @@ const ChatBox = forwardRef((props, boxRef) => {
         return nextMessages;
       });
 
-      setStreamingInfo(question_id);
+      if (!usesDurablePipelineHistory) setStreamingInfo(question_id);
       emitContinue(payload);
     },
     [

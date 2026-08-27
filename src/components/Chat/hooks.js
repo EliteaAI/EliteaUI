@@ -582,7 +582,11 @@ export const useChatSocket = ({
                 content: question,
                 message_items,
                 created_at: new Date(convertTime(created_at)).getTime(),
-                user_id: author_participant_id,
+                // Match the persisted-history converter: ownership checks use
+                // the platform user id, not the conversation participant id.
+                // They differ in normal chats, which hid Regenerate until a
+                // reload rebuilt this message from the API payload.
+                user_id: theUser?.entity_meta?.id ?? author_participant_id,
                 participant_id: sent_to_id,
                 sentTo,
               },
@@ -1271,6 +1275,11 @@ export const useChatSocket = ({
               available_actions: response_metadata?.available_actions,
               routes: response_metadata?.routes,
               edit_state_key: response_metadata?.edit_state_key,
+              interaction_type:
+                response_metadata?.hitl_interrupt?.interaction_type || response_metadata?.interaction_type,
+              history_contract_version:
+                response_metadata?.hitl_interrupt?.history_contract_version ||
+                response_metadata?.history_contract_version,
               guardrail_type: response_metadata?.hitl_interrupt?.guardrail_type,
               tool_name: response_metadata?.hitl_interrupt?.tool_name,
               toolkit_name: response_metadata?.hitl_interrupt?.toolkit_name,

@@ -1,5 +1,6 @@
 import { ChatHelpers } from '@/[fsd]/features/chat/lib/helpers';
 import { normalizeExecutionHierarchy } from '@/[fsd]/features/chat/lib/helpers/executionHierarchy.helpers.js';
+import { filterActivePipelineHitlPromptItems } from '@/[fsd]/features/chat/lib/helpers/hitl.helpers.js';
 import { buildMcpAuthorizationToolAction } from '@/[fsd]/features/chat/lib/helpers/mcpAuthorization.helpers.js';
 import {
   hasUnresolvedSkillAction,
@@ -374,12 +375,16 @@ export const convertToAIAnswer = (message_group, message_groups, participants, t
   const hitlInterrupt = rawHitlInterrupt
     ? ChatHelpers.buildHitlInterruptFromRaw(rawHitlInterrupt)
     : hitlInterrupts?.[0];
+  const displayMessageItems = filterActivePipelineHitlPromptItems(message_items, [
+    hitlInterrupt,
+    ...(hitlInterrupts || []),
+  ]);
 
   const displayTime = updated_at || created_at;
   return {
     id: uuid,
     role: ROLES.Assistant,
-    message_items: [...message_items].sort((a, b) => a.id - b.id),
+    message_items: [...displayMessageItems].sort((a, b) => a.id - b.id),
     content: is_streaming ? '...' : content,
     created_at: new Date(convertTime(displayTime)).getTime(),
     participant_id: author_participant_id,

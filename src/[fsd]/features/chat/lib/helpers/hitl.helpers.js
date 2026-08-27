@@ -2,6 +2,34 @@ import { normalizeExecutionHierarchy } from './executionHierarchy.helpers';
 
 const nonEmpty = value => (typeof value === 'string' && value.trim() ? value : '');
 
+export const isPipelineHitlNodeInterrupt = interrupt =>
+  interrupt?.interaction_type === 'pipeline_hitl_node' &&
+  Number(interrupt?.history_contract_version || 0) >= 1 &&
+  Boolean(nonEmpty(interrupt?.interrupt_id));
+
+export const isPipelineHitlHistoryInterrupt = interrupt => {
+  const isNestedExecution =
+    Boolean(nonEmpty(interrupt?.parent_agent_name)) ||
+    Boolean(nonEmpty(interrupt?.parent_agent_call_id)) ||
+    Boolean(nonEmpty(interrupt?.child_thread_id)) ||
+    (Array.isArray(interrupt?.parent_agent_path) && interrupt.parent_agent_path.length > 0) ||
+    interrupt?.resume_strategy === 'aggregate_child' ||
+    interrupt?.resume_strategy === 'supervised_child';
+
+  return isPipelineHitlNodeInterrupt(interrupt) && !isNestedExecution;
+};
+
+export const filterActivePipelineHitlPromptItems = (messageItems = [], interrupts = []) => {
+  const activeInterruptIds = new Set(
+    interrupts.filter(isPipelineHitlHistoryInterrupt).map(interrupt => interrupt.interrupt_id),
+  );
+  if (!activeInterruptIds.size) return messageItems;
+
+  return messageItems.filter(
+    item => item.meta?.kind !== 'pipeline_hitl_prompt' || !activeInterruptIds.has(item.meta?.interrupt_id),
+  );
+};
+
 export const getInterruptIdentity = interrupt => {
   const interruptId = nonEmpty(interrupt?.interrupt_id);
   if (interruptId) return interruptId;
@@ -30,6 +58,8 @@ export const normalizeHitlInterrupt = (raw = {}, overlay = {}) => {
     available_actions: raw.available_actions || overlay.available_actions || ['approve', 'reject'],
     routes: raw.routes || overlay.routes || {},
     edit_state_key: raw.edit_state_key || overlay.edit_state_key || '',
+    interaction_type: raw.interaction_type || overlay.interaction_type || '',
+    history_contract_version: Number(raw.history_contract_version || overlay.history_contract_version || 0),
     guardrail_type: raw.guardrail_type || overlay.guardrail_type || '',
     tool_name: raw.tool_name || overlay.tool_name || '',
     toolkit_name: raw.toolkit_name || overlay.toolkit_name || '',

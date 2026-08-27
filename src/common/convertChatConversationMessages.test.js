@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildTraceListParams, traceRowToStep } from './convertChatConversationMessages';
+import { buildTraceListParams, convertToAIAnswer, traceRowToStep } from './convertChatConversationMessages';
 
 describe('normalized trace rows', () => {
   it('restores canonical hierarchy for a lazy thinking pin', () => {
@@ -52,5 +52,58 @@ describe('normalized trace rows', () => {
       parent_agent_call_id: 'leaf-1',
       _traceMessageGroupId: 7,
     });
+  });
+});
+
+describe('pipeline HITL history conversion', () => {
+  const promptItem = {
+    id: 11,
+    item_type: 'text_message',
+    item_details: { content: 'Review this joke' },
+    meta: { kind: 'pipeline_hitl_prompt', interrupt_id: 'hitl-1' },
+  };
+  const answerItem = {
+    id: 12,
+    item_type: 'text_message',
+    item_details: { content: 'Earlier assistant output' },
+    meta: {},
+  };
+  const baseGroup = {
+    id: 2,
+    uuid: 'assistant-1',
+    author_participant_id: 20,
+    reply_to_id: 1,
+    content: '',
+    message_items: [promptItem, answerItem],
+    created_at: '2026-08-27 10:00:00',
+    updated_at: '2026-08-27 10:00:00',
+    is_streaming: false,
+    meta: {},
+  };
+  const question = { id: 1, uuid: 'user-1' };
+
+  it('hides the persisted prompt only while its matching interrupt card is active', () => {
+    const active = convertToAIAnswer(
+      {
+        ...baseGroup,
+        meta: {
+          hitl_interrupt: {
+            interaction_type: 'pipeline_hitl_node',
+            history_contract_version: 1,
+            interrupt_id: 'hitl-1',
+            message: 'Review this joke',
+          },
+        },
+      },
+      [question, baseGroup],
+      [],
+    );
+
+    expect(active.message_items).toEqual([answerItem]);
+    expect(active.hitlInterrupt?.interrupt_id).toBe('hitl-1');
+
+    const resolved = convertToAIAnswer(baseGroup, [question, baseGroup], []);
+    expect(resolved.message_items).toEqual([promptItem, answerItem]);
+    expect(resolved.hitlInterrupt).toBeUndefined();
   });
 });
