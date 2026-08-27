@@ -26,11 +26,34 @@ const getContentMargin = (showMode, card) => {
   return isLeftMode(showMode) ? '0 0 0 0.75rem !important' : '0 0';
 };
 
-const cardSurface = palette => ({
-  borderRadius: '0.75rem',
-  border: `0.0625rem solid ${palette.border.cardsOutlines}`,
-  backgroundColor: palette.background.userInputBackground,
-});
+const cardSurface = palette => {
+  const isDark = palette.mode === 'dark';
+
+  return {
+    borderRadius: '0.75rem',
+    backgroundColor: palette.background.aiProviderAccordion.default,
+    ...(isDark
+      ? {
+          border: '0.0625rem solid transparent',
+          position: 'relative',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            inset: 0,
+            borderRadius: 'inherit',
+            padding: '0.0625rem',
+            background: palette.border.toolCardGradient,
+            WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+            WebkitMaskComposite: 'xor',
+            maskComposite: 'exclude',
+            pointerEvents: 'none',
+          },
+        }
+      : {
+          border: `0.0625rem solid ${palette.border.toolCardGradient}`,
+        }),
+  };
+};
 
 /** @type {MuiSx} */
 const styledAccordionSummaryStyles = (showMode, card) => ({
