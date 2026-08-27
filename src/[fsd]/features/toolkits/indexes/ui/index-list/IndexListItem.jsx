@@ -27,6 +27,10 @@ import DeleteIcon from '@/components/Icons/DeleteIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
+// Shared by the failed InfoTooltip and the abandoned attention icon; predates the
+// theme tokens the rest of the card uses.
+const ERROR_ICON_FILL = '#D71616';
+
 const IndexListItem = memo(props => {
   const {
     index,
@@ -404,13 +408,13 @@ const indexListItem = () => ({
     color: palette.text.info,
   }),
   error: {
-    fill: '#D71616',
+    fill: ERROR_ICON_FILL,
   },
   // Targets the icon's paths like `warning` does: AttentionIcon sets fill as an svg
   // presentation attribute, which beats a fill inherited from the wrapping Box.
   abandonedIcon: {
     path: {
-      fill: '#D71616',
+      fill: ERROR_ICON_FILL,
     },
   },
   warning: {
