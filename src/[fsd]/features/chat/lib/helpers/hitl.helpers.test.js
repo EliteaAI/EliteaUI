@@ -2,11 +2,14 @@ import { describe, expect, it } from 'vitest';
 
 import {
   completeRootHitlDecision,
+  filterActivePipelineHitlPromptItems,
   getHitlResumeGroup,
   getHitlResumeThreadId,
   getInterruptIdentity,
   getPendingHitlMessage,
   hasRootHitlTurnEnded,
+  isPipelineHitlHistoryInterrupt,
+  isPipelineHitlNodeInterrupt,
   mergeHitlInterrupts,
   normalizeHitlInterrupt,
   reconcileRootHitlInterrupts,
@@ -15,6 +18,59 @@ import {
 } from './hitl.helpers';
 
 describe('HITL helpers', () => {
+  it('recognizes only versioned pipeline-node history interrupts', () => {
+    const interrupt = normalizeHitlInterrupt({
+      interaction_type: 'pipeline_hitl_node',
+      history_contract_version: 1,
+      interrupt_id: 'pipeline-hitl-1',
+    });
+
+    expect(isPipelineHitlHistoryInterrupt(interrupt)).toBe(true);
+    expect(isPipelineHitlHistoryInterrupt({ ...interrupt, interrupt_id: '' })).toBe(false);
+    expect(isPipelineHitlHistoryInterrupt({ ...interrupt, interaction_type: 'sensitive_tool' })).toBe(false);
+  });
+
+  it('keeps nested pipeline HITL interrupts on their parent execution', () => {
+    const interrupt = normalizeHitlInterrupt({
+      interaction_type: 'pipeline_hitl_node',
+      history_contract_version: 1,
+      interrupt_id: 'pipeline-hitl-1',
+    });
+
+    const nested = { ...interrupt, parent_agent_name: 'Coordinator' };
+    expect(isPipelineHitlNodeInterrupt(nested)).toBe(true);
+    expect(isPipelineHitlHistoryInterrupt(nested)).toBe(false);
+    expect(isPipelineHitlHistoryInterrupt({ ...interrupt, parent_agent_call_id: 'call-1' })).toBe(false);
+    expect(
+      isPipelineHitlHistoryInterrupt({
+        ...interrupt,
+        parent_agent_path: [{ name: 'Coordinator', call_id: 'call-1' }],
+      }),
+    ).toBe(false);
+    expect(isPipelineHitlHistoryInterrupt({ ...interrupt, child_thread_id: 'child-1' })).toBe(false);
+    expect(isPipelineHitlHistoryInterrupt({ ...interrupt, resume_strategy: 'aggregate_child' })).toBe(false);
+    expect(isPipelineHitlHistoryInterrupt({ ...interrupt, resume_strategy: 'supervised_child' })).toBe(false);
+  });
+
+  it('hides only the prompt item owned by an active pipeline HITL occurrence', () => {
+    const active = {
+      interaction_type: 'pipeline_hitl_node',
+      history_contract_version: 1,
+      interrupt_id: 'pipeline-hitl-1',
+    };
+    const activePrompt = {
+      id: 1,
+      meta: { kind: 'pipeline_hitl_prompt', interrupt_id: 'pipeline-hitl-1' },
+    };
+    const olderPrompt = {
+      id: 2,
+      meta: { kind: 'pipeline_hitl_prompt', interrupt_id: 'pipeline-hitl-0' },
+    };
+
+    expect(filterActivePipelineHitlPromptItems([activePrompt, olderPrompt], [active])).toEqual([olderPrompt]);
+    expect(filterActivePipelineHitlPromptItems([activePrompt], [])).toEqual([activePrompt]);
+  });
+
   it('preserves two interrupts from one child by interrupt id', () => {
     const first = normalizeHitlInterrupt(
       { interrupt_id: 'i1', tool_call_id: 't1' },
