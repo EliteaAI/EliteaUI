@@ -19,7 +19,6 @@ import { TourTargetConstants } from '@/[fsd]/shared/lib/constants';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import ViewRunHistoryButton from '@/[fsd]/shared/ui/button/ViewRunHistoryButton.jsx';
 import { FormViewToggle } from '@/[fsd]/shared/ui/tab-group-button';
-import { useGetConfigurationsListQuery } from '@/api/configurations.js';
 import { useToolkitAvailableToolsQuery, useValidateToolkitQuery } from '@/api/toolkits.js';
 import TestIcon from '@/assets/test.svg?react';
 import { ToolkitViewOptions } from '@/common/constants';
@@ -175,24 +174,11 @@ export const ToolkitForm = memo(props => {
     return toolTypedComponent;
   }, [effectiveToolSchema, searchParams, view, toolType]);
 
-  // Add logic to determine if we should show disabled configuration fields
-  // Fetch configurations list using new API
-  const { data: configurationsList = { items: [], total: 0 }, refetch } = useGetConfigurationsListQuery(
-    { projectId: selectedProjectId, section: 'credentials' },
-    { skip: !selectedProjectId },
-  );
-  const integrations = configurationsList.items;
-
-  // Determine the toolkit type suffix for configuration detection
-  const toolkitTypeSuffix = useMemo(() => {
-    // Otherwise use the toolkit type
-    return toolType;
-  }, [toolType]);
-
-  // Check if this toolkit type is supported by configuration integration
+  // Derive supportsConfiguration from schema instead of fetching all credentials
   const supportsConfiguration = useMemo(() => {
-    return integrations.some(integration => integration === 'integration_' + toolkitTypeSuffix);
-  }, [integrations, toolkitTypeSuffix]);
+    const properties = effectiveToolSchema?.properties || {};
+    return Object.values(properties).some(prop => prop?.type === 'configuration');
+  }, [effectiveToolSchema]);
 
   // Check if this is an old toolkit that should show disabled configuration fields
   const shouldShowDisabledConfigFields = useMemo(() => {
@@ -348,15 +334,8 @@ export const ToolkitForm = memo(props => {
           private: config?.project_id == personal_project_id,
         });
       }
-
-      try {
-        await refetch();
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.warn('Failed to refetch configurations:', error);
-      }
     },
-    [editField, editToolDetail?.settings, personal_project_id, refetch],
+    [editField, editToolDetail?.settings, personal_project_id],
   );
   // Use tool type directly for configuration type
   const configurationType = useMemo(() => {

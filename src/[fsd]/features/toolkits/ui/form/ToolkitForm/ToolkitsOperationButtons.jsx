@@ -16,7 +16,6 @@ import { useToolkitEditMutation } from '@/api/toolkits.js';
 import eventEmitter from '@/common/eventEmitter';
 import { buildErrorMessage } from '@/common/utils.jsx';
 import { StyledDialog, StyledDialogActions, StyledDialogContentText } from '@/components/StyledDialog';
-import useConfigurations from '@/hooks/useConfigurations.js';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast.jsx';
 
@@ -114,8 +113,6 @@ const ToolkitsOperationButtons = memo(
       resetForm();
     }, [onValidateFailure, resetForm]);
 
-    const { refetchProjectIntegrations, refetchPrivateIntegrations } = useConfigurations();
-
     /**
      * Creates Toolkit without configurable properties
      *
@@ -156,10 +153,7 @@ const ToolkitsOperationButtons = memo(
 
         if (hasNotSavedToolConfiguration) {
           const success = await onCreateConfiguration();
-          if (success) {
-            refetchProjectIntegrations();
-            refetchPrivateIntegrations();
-          } else {
+          if (!success) {
             onValidateFailure();
           }
           return;
@@ -167,15 +161,7 @@ const ToolkitsOperationButtons = memo(
 
         eventEmitter.emit(ToolEvents.SaveEvent, validateReasonRef.current);
       },
-      [
-        hasErrors,
-        hasNotSavedToolConfiguration,
-        onValidateFailure,
-        onCreateConfiguration,
-        setShowValidation,
-        refetchProjectIntegrations,
-        refetchPrivateIntegrations,
-      ],
+      [hasErrors, hasNotSavedToolConfiguration, onValidateFailure, onCreateConfiguration, setShowValidation],
     );
 
     /**
