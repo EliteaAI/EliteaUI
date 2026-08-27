@@ -10,21 +10,30 @@ const ScheduleInfoDisplay = memo(props => {
 
   const styles = scheduleInfoDisplayStyles();
 
+  const timezoneLabel = useMemo(() => {
+    if (!timezone) return null;
+    try {
+      const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (timezone === browserTz) return timezone;
+      return `${browserTz} (local)`;
+    } catch {
+      return timezone;
+    }
+  }, [timezone]);
+
   const formattedLastRun = useMemo(() => {
     if (!lastRun) return null;
     return new Intl.DateTimeFormat(undefined, {
-      timeZone: timezone || undefined,
       dateStyle: 'short',
       timeStyle: 'short',
     }).format(new Date(lastRun));
-  }, [lastRun, timezone]);
+  }, [lastRun]);
 
   const formattedNextRun = useMemo(() => {
     if (!cron) return null;
-    const nextRun = ScheduleHelpers.getNextCronRun(cron);
+    const nextRun = ScheduleHelpers.getNextCronRunInTimezone(cron, timezone);
     if (!nextRun) return '-';
     return new Intl.DateTimeFormat(undefined, {
-      timeZone: timezone || undefined,
       dateStyle: 'short',
       timeStyle: 'short',
     }).format(nextRun);
@@ -40,10 +49,10 @@ const ScheduleInfoDisplay = memo(props => {
           copyMessage="The cron expression has been copied to the clipboard."
         />
       )}
-      {timezone && (
+      {timezoneLabel && (
         <Box sx={styles.row}>
           <Typography variant="bodyMedium">Timezone:</Typography>
-          <Typography variant="bodyMedium">{timezone}</Typography>
+          <Typography variant="bodyMedium">{timezoneLabel}</Typography>
         </Box>
       )}
       {formattedLastRun && (
