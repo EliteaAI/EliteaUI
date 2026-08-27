@@ -1,8 +1,9 @@
-import { memo, useCallback, useMemo } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
 import { LATEST_VERSION_NAME, buildVersionOption } from '@/[fsd]/entities/version';
+import { VersionSelectOption } from '@/[fsd]/entities/version/ui';
 import { DiscardSkillButton, SaveSkillButton, SaveSkillVersionButton } from '@/[fsd]/features/skill';
 import { Select } from '@/[fsd]/shared/ui';
 import PublishIcon from '@/assets/publish-version.svg?react';
@@ -18,26 +19,36 @@ const SkillTabBar = memo(props => {
     handleSetDefaultVersion = null,
   } = props;
 
+  const [searchQuery, setSearchQuery] = useState('');
+
   const styles = skillTabBarStyles();
 
-  // Id of the default version, to mark its option/value with the bolt (PinIcon).
-  // Mirror the agent (ApplicationVersionSelect) + backend get_default_version():
-  // when no explicit default is set, `base` is the implicit default.
+  // When no explicit default is set, `base` is the implicit default.
   const effectiveDefaultId = useMemo(() => {
     if (defaultVersionId) return defaultVersionId;
     return versions.find(v => v.name === LATEST_VERSION_NAME)?.id;
   }, [versions, defaultVersionId]);
 
+  // Sort: newest first by created_at; base always last.
+  // Default version stays in its chronological position — not pinned to top.
   const versionOptions = useMemo(() => {
     const sorted = [...versions].sort((a, b) => {
-      if (a.id === effectiveDefaultId) return -1;
-      if (b.id === effectiveDefaultId) return 1;
       if (a.name === LATEST_VERSION_NAME) return 1;
       if (b.name === LATEST_VERSION_NAME) return -1;
       return new Date(b.created_at) - new Date(a.created_at);
     });
     return sorted.map(buildVersionOption({ defaultVersionID: effectiveDefaultId, handleSetDefaultVersion }));
   }, [versions, effectiveDefaultId, handleSetDefaultVersion]);
+
+  // Multi-field search: filter by pre-computed searchText (version name + creator, lowercase).
+  const filteredOptions = useMemo(() => {
+    if (!searchQuery) return versionOptions;
+    const q = searchQuery.toLowerCase();
+
+    return versionOptions.filter(opt => opt.searchText?.includes(q));
+  }, [versionOptions, searchQuery]);
+
+  const handleSearch = useCallback(q => setSearchQuery(q), []);
 
   const selectedVersionId = useMemo(
     () => currentVersionId ?? versions[0]?.id ?? '',
@@ -65,17 +76,35 @@ const SkillTabBar = memo(props => {
 
       return (
         <Box sx={styles.selectValueContainer}>
-          {option?.value === effectiveDefaultId && <PinIcon sx={{ fontSize: '1rem' }} />}
+          {option?.value === effectiveDefaultId && <PinIcon sx={styles.iconSm} />}
           {isPublished && (
             <Box sx={styles.publishedIcon}>
-              <PublishIcon sx={{ fontSize: '1rem' }} />
+              <PublishIcon sx={styles.iconSm} />
             </Box>
           )}
           <Typography variant="labelMedium">{option?.label}</Typography>
         </Box>
       );
     },
-    [publishedVersionIds, effectiveDefaultId, styles.selectValueContainer, styles.publishedIcon],
+    [
+      publishedVersionIds,
+      styles.selectValueContainer,
+      styles.iconSm,
+      styles.publishedIcon,
+      effectiveDefaultId,
+    ],
+  );
+
+  const customRenderOption = useCallback(
+    option => (
+      <VersionSelectOption
+        name={option.label}
+        meta={option.versionMeta}
+        avatar={option.versionAvatar}
+        icon={option.icon}
+      />
+    ),
+    [],
   );
 
   return (
@@ -86,10 +115,11 @@ const SkillTabBar = memo(props => {
           data-testid="skill-version-select"
           separateLabel
           label="VERSION:"
-          options={versionOptions}
+          options={filteredOptions}
           value={selectedVersionId}
           onChange={handleVersionChange}
           customRenderValue={renderVersionValue}
+          customRenderOption={customRenderOption}
           showOptionIcon
           iconPosition="right"
           inputSX={styles.inputSx}
@@ -97,6 +127,12 @@ const SkillTabBar = memo(props => {
           maxDisplayValueLength="12.5rem"
           menuItemIconSX={styles.menuItemIconSx}
           customMenuProps={{ sx: styles.customMenuPropsSx }}
+          emptyPlaceholder="No versions found."
+          withSearch
+          searchPlaceholder="Search by version or author"
+          searchFilterMode="remote"
+          searchString={searchQuery}
+          onSearch={handleSearch}
         />
       </Box>
       <Box sx={styles.rightBlock}>
@@ -164,10 +200,13 @@ const skillTabBarStyles = () => ({
   },
   customMenuPropsSx: {
     '& .MuiPaper-root': {
-      width: '15rem',
-      maxWidth: '15rem',
-      minWidth: '15rem',
+      width: '20rem',
+      maxWidth: '20rem',
+      minWidth: '20rem',
     },
+  },
+  iconSm: {
+    fontSize: '1rem',
   },
 });
 

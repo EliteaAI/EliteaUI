@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
@@ -6,6 +6,7 @@ import { Box, Tooltip, Typography } from '@mui/material';
 
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
 import { buildVersionOption } from '@/[fsd]/entities/version/lib/helpers';
+import { VersionSelectOption } from '@/[fsd]/entities/version/ui';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import PublishIcon from '@/assets/publish-version.svg?react';
 import { PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
@@ -39,6 +40,8 @@ const VersionSelect = memo(props => {
   const viewMode = useViewModeFromUrl();
   const selectedProjectId = useSelectedProjectId();
 
+  const [searchQuery, setSearchQuery] = useState('');
+
   const styles = versionSelectStyles();
 
   const projectId = useMemo(
@@ -46,7 +49,6 @@ const VersionSelect = memo(props => {
     [selectedProjectId, viewMode],
   );
 
-  // Determine entity and version IDs based on entity type
   const { entityIdFromParams, versionFromParams } = useMemo(
     () => ({
       entityIdFromParams: urlParams.agentId || urlParams.applicationId,
@@ -74,18 +76,13 @@ const VersionSelect = memo(props => {
     }
   }, [useFormikVersions, formikVersionData, versionFromParams, actualVersions, currentVersionName]);
 
+  // Sort: newest first by created_at; base always last.
+  // Default version stays in its chronological position — not pinned to top.
   const versionSelectOptions = useMemo(() => {
-    // Sort versions: defaultVersionID at top, then by date (newest first), LATEST_VERSION_NAME at bottom
     const sortedVersions = [...actualVersions].sort((a, b) => {
-      // Always put defaultVersionID at the top
-      if (a.id === defaultVersionID) return -1;
-      if (b.id === defaultVersionID) return 1;
-
-      // Always put LATEST_VERSION_NAME at the bottom
       if (a.name === LATEST_VERSION_NAME) return 1;
       if (b.name === LATEST_VERSION_NAME) return -1;
 
-      // Sort other versions by creation date (newest first)
       return new Date(b.created_at) - new Date(a.created_at);
     });
 
@@ -94,9 +91,18 @@ const VersionSelect = memo(props => {
     );
   }, [actualVersions, enableVersionListAvatar, defaultVersionID, handleSetDefaultVersion]);
 
+  // Multi-field search: filter by pre-computed searchText (version name + creator, lowercase).
+  const filteredOptions = useMemo(() => {
+    if (!searchQuery) return versionSelectOptions;
+    const q = searchQuery.toLowerCase();
+
+    return versionSelectOptions.filter(opt => opt.searchText?.includes(q));
+  }, [versionSelectOptions, searchQuery]);
+
+  const handleSearch = useCallback(q => setSearchQuery(q), []);
+
   const onSelectVersion = useCallback(
     newVersion => {
-      // Find the selected version object
       const selectedVersionObj = actualVersions.find(item => item.id === newVersion);
 
       const newPath = replaceVersionInPath(
@@ -147,7 +153,6 @@ const VersionSelect = memo(props => {
     ],
   );
 
-  // Handle version detail loading
   useEffect(() => {
     if (getVersionDetailQuery && versionFromParams) {
       const versionId = actualVersions.find(item => item.id == versionFromParams)?.id;
@@ -159,8 +164,20 @@ const VersionSelect = memo(props => {
     }
   }, [getVersionDetailQuery, projectId, actualEntityId, versionFromParams, actualVersions]);
 
+  const customRenderOption = useCallback(
+    option => (
+      <VersionSelectOption
+        name={option.label}
+        meta={option.versionMeta}
+        avatar={option.versionAvatar}
+        icon={option.icon}
+      />
+    ),
+    [],
+  );
+
   return (
-    <Box sx={styles.verseionSelectWrapper}>
+    <Box sx={styles.versionSelectWrapper}>
       {!!errorVersionName && (
         <Tooltip
           title={`Toolkit(s) configuration issue in ${errorVersionName}`}
@@ -181,30 +198,24 @@ const VersionSelect = memo(props => {
           disabled={disabled}
           onValueChange={onSelectVersion}
           customRenderValue={option => {
-            const isPublished = actualVersions.find(v => v.id === option.value)?.status === 'published';
+            const isPublished = actualVersions.find(v => v.id === option?.value)?.status === 'published';
 
             return (
               <Box sx={styles.selectValueContainer}>
-                {option.value === defaultVersionID && <PinIcon />}
+                {option?.value === defaultVersionID && <PinIcon />}
                 {isPublished && (
-                  <Box
-                    sx={({ palette }) => ({
-                      display: 'flex',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      svg: { path: { fill: palette.icon.fill.success } },
-                    })}
-                  >
-                    <PublishIcon sx={{ fontSize: '1rem' }} />
+                  <Box sx={styles.publishedIconBox}>
+                    <PublishIcon sx={styles.iconSm} />
                   </Box>
                 )}
-                <Typography sx={{ fontSize: '.875rem' }}>{option.label}</Typography>
+                <Typography sx={styles.selectValueLabel}>{option?.label}</Typography>
               </Box>
             );
           }}
+          customRenderOption={customRenderOption}
           value={currentVersion}
-          options={versionSelectOptions}
-          optionsWithAvatar={enableVersionListAvatar}
+          options={filteredOptions}
+          optionsWithAvatar={false}
           inputSX={styles.inputSx}
           maxDisplayValueLength="12.5rem"
           menuItemIconSX={styles.menuItemIconSx}
@@ -212,6 +223,12 @@ const VersionSelect = memo(props => {
             sx: styles.customMenuPropsSx,
           }}
           labelSX={styles.label}
+          emptyPlaceholder="No versions found."
+          withSearch
+          searchPlaceholder="Search by version or author"
+          searchFilterMode="remote"
+          searchString={searchQuery}
+          onSearch={handleSearch}
         />
       </Box>
     </Box>
@@ -222,7 +239,7 @@ VersionSelect.displayName = 'VersionSelect';
 
 /** @type {MuiSx} */
 const versionSelectStyles = () => ({
-  verseionSelectWrapper: {
+  versionSelectWrapper: {
     display: 'flex',
     alignItems: 'center',
     boxSizing: 'border-box',
@@ -268,13 +285,13 @@ const versionSelectStyles = () => ({
   },
   customMenuPropsSx: {
     '& .MuiPaper-root': {
-      width: '15rem',
-      maxWidth: '15rem',
-      minWidth: '15rem',
+      width: '20rem',
+      maxWidth: '20rem',
+      minWidth: '20rem',
 
       li: {
         '> div': {
-          maxWidth: '90%',
+          maxWidth: '100%',
         },
       },
     },
@@ -288,6 +305,18 @@ const versionSelectStyles = () => ({
       fill: palette.icon.fill.attention,
     },
   }),
+  publishedIconBox: ({ palette }) => ({
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    svg: { path: { fill: palette.icon.fill.success } },
+  }),
+  iconSm: {
+    fontSize: '1rem',
+  },
+  selectValueLabel: {
+    fontSize: '.875rem',
+  },
 });
 
 export default VersionSelect;
