@@ -11,6 +11,20 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 import DimensionEditorDialog from '../library/DimensionEditorDialog';
 
+// Stub browser globals BEFORE any vi.mock factory or ESM import can touch
+// slices/settings.js (localStorage) at module scope.
+vi.hoisted(() => {
+  if (typeof globalThis.localStorage === 'undefined') {
+    const store = new Map();
+    globalThis.localStorage = {
+      getItem: k => (store.has(k) ? store.get(k) : null),
+      setItem: (k, v) => store.set(k, String(v)),
+      removeItem: k => store.delete(k),
+      clear: () => store.clear(),
+    };
+  }
+});
+
 const createDimension = vi.fn(() => ({ unwrap: () => Promise.resolve({ id: 99 }) }));
 const updateDimension = vi.fn(() => ({ unwrap: () => Promise.resolve({ id: 5 }) }));
 
@@ -142,5 +156,33 @@ describe('DimensionEditorDialog — evidence scope on creation', () => {
     await vi.waitFor(() => expect(updateDimension).toHaveBeenCalledTimes(1));
 
     expect(onSaved).toHaveBeenCalledWith({ id: 5 });
+  });
+
+  it('editing an existing agent_adhoc dimension passes agentId through to updateEvalDimension', async () => {
+    render(
+      <DimensionEditorDialog
+        open
+        onClose={vi.fn()}
+        projectId={2}
+        applicationId={42}
+        dimension={{
+          id: 5,
+          name: 'Correctness',
+          tier: 'agent_adhoc',
+          agent_id: 42,
+          allowed_engines: ['ai'],
+          scale_type: 'continuous',
+        }}
+        onSaved={vi.fn()}
+      />,
+    );
+
+    pickPolarity();
+    fireEvent.click(screen.getByTestId('dimension-editor-save'));
+    await vi.waitFor(() => expect(updateDimension).toHaveBeenCalledTimes(1));
+
+    expect(updateDimension).toHaveBeenCalledWith(
+      expect.objectContaining({ projectId: 2, dimensionId: 5, agentId: 42 }),
+    );
   });
 });

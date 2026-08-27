@@ -46,17 +46,19 @@ export const evaluationApi = eliteaApi
         invalidatesTags: [TAG_EVAL_DIMENSION],
       }),
       updateEvalDimension: build.mutation({
-        query: ({ projectId, dimensionId, body }) => ({
+        query: ({ projectId, dimensionId, agentId, body }) => ({
           url: `/elitea_core/eval_dimension/prompt_lib/${projectId}/${dimensionId}`,
           method: 'PUT',
+          params: agentId != null ? { agent_id: agentId } : undefined,
           body,
         }),
         invalidatesTags: [TAG_EVAL_DIMENSION],
       }),
       deleteEvalDimension: build.mutation({
-        query: ({ projectId, dimensionId }) => ({
+        query: ({ projectId, dimensionId, agentId }) => ({
           url: `/elitea_core/eval_dimension/prompt_lib/${projectId}/${dimensionId}`,
           method: 'DELETE',
+          params: agentId != null ? { agent_id: agentId } : undefined,
         }),
         invalidatesTags: [TAG_EVAL_DIMENSION],
       }),

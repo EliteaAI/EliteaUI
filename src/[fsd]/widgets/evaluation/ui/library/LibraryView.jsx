@@ -56,13 +56,13 @@ const LibraryView = memo(props => {
     if (!deleteTarget) return;
     const { item } = deleteTarget;
     try {
-      await deleteDimension({ projectId, dimensionId: item.id }).unwrap();
+      await deleteDimension({ projectId, dimensionId: item.id, agentId: applicationId }).unwrap();
       toastSuccess('Deleted successfully.');
       setDeleteTarget(null);
     } catch (error) {
       toastError(parseEvalError(error, 'Failed to delete.'));
     }
-  }, [deleteTarget, deleteDimension, projectId, toastSuccess, toastError]);
+  }, [deleteTarget, deleteDimension, projectId, applicationId, toastSuccess, toastError]);
 
   const styles = libraryViewStyles();
 

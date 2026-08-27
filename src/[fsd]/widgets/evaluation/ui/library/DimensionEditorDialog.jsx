@@ -165,7 +165,12 @@ const DimensionEditorDialog = memo(props => {
     try {
       let result;
       if (isEdit) {
-        result = await updateDimension({ projectId, dimensionId: dimension.id, body }).unwrap();
+        result = await updateDimension({
+          projectId,
+          dimensionId: dimension.id,
+          agentId: applicationId,
+          body,
+        }).unwrap();
         onSaved?.(result);
       } else {
         result = await createDimension({ projectId, body }).unwrap();
