@@ -4,6 +4,7 @@ import { Box, Typography } from '@mui/material';
 
 import { useDeleteIndexItemMutation, useGetIndexScheduleQuery } from '@/[fsd]/features/toolkits/indexes/api';
 import { IndexStatuses } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
+import { shouldExpireReindexStub } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexDetails.helpers';
 import {
   useIndexNavigation,
   useIndexesListPolling,
@@ -14,6 +15,11 @@ import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { Modal } from '@/[fsd]/shared/ui';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
+
+// The worker's first metadata write normally lands within seconds of the dispatch;
+// two minutes absorbs queue delay without letting a genuinely dead stub outlive the
+// session.
+const REINDEX_STUB_STALE_GRACE_MS = 120_000;
 
 const IndexesContainer = memo(props => {
   const { toolkitId, canIndex = true } = props;
@@ -59,7 +65,15 @@ const IndexesContainer = memo(props => {
     if (startedTimeStamp <= reindexRunning.observedAt) return;
     if (fulfilledTimeStamp < startedTimeStamp) return;
     const serverRow = indexesList?.find(item => item.id === reindexRunning.id);
-    if (!serverRow || serverRow.stale) setReindexRunning(null);
+    if (
+      shouldExpireReindexStub({
+        serverRow,
+        stubCreatedAt: reindexRunning.stubCreatedAt,
+        now: Date.now(),
+        graceMs: REINDEX_STUB_STALE_GRACE_MS,
+      })
+    )
+      setReindexRunning(null);
   }, [reindexRunning, startedTimeStamp, fulfilledTimeStamp, indexesList]);
 
   const [deleteIndex, { isLoading: isIndexDeleting }] = useDeleteIndexItemMutation();
@@ -131,6 +145,7 @@ const IndexesContainer = memo(props => {
     setReindexRunning({
       ...reindexTarget,
       observedAt: Date.now(),
+      stubCreatedAt: Date.now(),
       metadata: { ...reindexTarget.metadata, state: IndexStatuses.progress },
     });
     setReindexConfirmOpen(false);

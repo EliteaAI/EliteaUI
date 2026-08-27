@@ -118,7 +118,7 @@ const IndexListItem = memo(props => {
       sx={[
         styles.wrapper,
         ...(isSelected ? [styles.selectedWrapper] : []),
-        ...(index.stale && index.metadata.state === IndexStatuses.progress ? [styles.errorWrapper] : []),
+        ...(isAbandonedRun(index) ? [styles.errorWrapper] : []),
       ]}
       className={isSelected && true ? 'selected' : ''}
       onClick={handleCardClick}
@@ -233,7 +233,7 @@ const IndexListItem = memo(props => {
           )}
           {index.metadata.state !== IndexStatuses.success && (
             <Box style={styles.stateIconContainer}>
-              {index.metadata.state === IndexStatuses.progress && (
+              {index.metadata.state === IndexStatuses.progress && !isAbandonedRun(index) && (
                 <CircularProgress
                   sx={styles.stateIcon}
                   size={14}
@@ -266,7 +266,7 @@ const IndexListItem = memo(props => {
               )}
               {isAbandonedRun(index) && (
                 <Tooltip title="This run stopped without finishing. Reindex to try again.">
-                  <Box sx={[styles.stateIcon, styles.error, styles.stateIconContainer]}>
+                  <Box sx={[styles.stateIcon, styles.abandonedIcon, styles.stateIconContainer]}>
                     <AttentionIcon
                       width={16}
                       height={16}
@@ -405,6 +405,13 @@ const indexListItem = () => ({
   }),
   error: {
     fill: '#D71616',
+  },
+  // Targets the icon's paths like `warning` does: AttentionIcon sets fill as an svg
+  // presentation attribute, which beats a fill inherited from the wrapping Box.
+  abandonedIcon: {
+    path: {
+      fill: '#D71616',
+    },
   },
   warning: {
     path: ({ palette }) => ({

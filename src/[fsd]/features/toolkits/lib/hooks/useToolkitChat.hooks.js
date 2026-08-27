@@ -134,7 +134,10 @@ export const useToolkitChat = props => {
 
       setChatHistory(prettifiedMessages);
       setProgressingIndexHistoryRecovered(true);
-      setIsRunning(true);
+      // A stale row's run stopped reporting long ago; latching the send gate for it
+      // would make the recovery Reindex a silent no-op. The transcript is still worth
+      // recovering — it shows what the dead run did.
+      if (!index?.stale) setIsRunning(true);
     }
   }, [
     shouldRecoverHistory,
@@ -142,6 +145,7 @@ export const useToolkitChat = props => {
     traceSteps,
     needGenerateProgressingIndexHistory,
     setProgressingIndexHistoryRecovered,
+    index?.stale,
   ]);
 
   const onSetLLMSettings = useCallback(

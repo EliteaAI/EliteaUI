@@ -13,6 +13,7 @@ import {
   indexScheduleBlockedReason,
   indexSearchBlockedReason,
   indexSearchToolOptions,
+  shouldExpireReindexStub,
 } from '../indexDetails.helpers';
 
 const runState = over => ({ isIndexing: true, canStopIndexing: false, isStale: false, ...over });
@@ -26,12 +27,40 @@ describe('hasLiveRun', () => {
     expect(hasLiveRun(runState({ isStale: true }))).toBe(false);
   });
 
-  it('holds for a stale run this panel can still stop', () => {
-    expect(hasLiveRun(runState({ isStale: true, canStopIndexing: true }))).toBe(true);
+  it('clears for a stale run the panel still believes it can stop', () => {
+    // A run that died without a terminal write keeps its task_id forever, so
+    // stoppability is true for every dead row and must not veto the stale verdict.
+    expect(hasLiveRun(runState({ isStale: true, canStopIndexing: true }))).toBe(false);
   });
 
   it('clears when no run is in flight', () => {
     expect(hasLiveRun(runState({ isIndexing: false }))).toBe(false);
+  });
+});
+
+describe('shouldExpireReindexStub', () => {
+  const expiry = over => ({
+    serverRow: { stale: false },
+    stubCreatedAt: 1_000,
+    now: 2_000,
+    graceMs: 5_000,
+    ...over,
+  });
+
+  it('expires immediately when the row is gone', () => {
+    expect(shouldExpireReindexStub(expiry({ serverRow: undefined }))).toBe(true);
+  });
+
+  it('keeps a stale row inside the grace window', () => {
+    expect(shouldExpireReindexStub(expiry({ serverRow: { stale: true } }))).toBe(false);
+  });
+
+  it('expires a stale row once the grace window has passed', () => {
+    expect(shouldExpireReindexStub(expiry({ serverRow: { stale: true }, now: 7_000 }))).toBe(true);
+  });
+
+  it('never expires on a non-stale row', () => {
+    expect(shouldExpireReindexStub(expiry({ now: 999_000 }))).toBe(false);
   });
 });
 
@@ -60,6 +89,12 @@ describe('indexSearchBlockedReason', () => {
     expect(indexSearchBlockedReason(IndexStatuses.progress, allSearchTools)).toMatch(
       /indexing is in progress/,
     );
+  });
+
+  it('stops blaming a run that is no longer in progress in any actionable sense', () => {
+    // An abandoned run proves nothing about what its interrupted writes left
+    // searchable, so the block stands — only the wording stops lying.
+    expect(indexSearchBlockedReason(IndexStatuses.progress, allSearchTools, true)).toMatch(/not ready/);
   });
 
   it('blocks states that never produced searchable data', () => {
