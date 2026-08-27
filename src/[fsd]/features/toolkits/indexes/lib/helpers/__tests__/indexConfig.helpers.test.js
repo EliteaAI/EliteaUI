@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   isIndexConfigDirty,
+  isIndexConfigValid,
   normalizeIndexConfig,
 } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexConfig.helpers';
 
@@ -92,5 +93,37 @@ describe('isIndexConfigDirty', () => {
 
   it('distinguishes a false value from a missing key with no default', () => {
     expect(isIndexConfigDirty(SCHEMA, { include: false }, {})).toBe(true);
+  });
+
+  it('reports clean while the baseline has not been seeded yet', () => {
+    // The schema loads asynchronously, so the panel renders with an empty form before the stored
+    // configuration reaches it. Reporting dirty there would let Save persist a blank config.
+    expect(isIndexConfigDirty(null, {}, null)).toBe(false);
+    expect(isIndexConfigDirty(SCHEMA, {}, null)).toBe(false);
+    expect(isIndexConfigDirty(SCHEMA, {}, undefined)).toBe(false);
+  });
+
+  it('still reports dirty against a genuinely empty saved configuration', () => {
+    expect(isIndexConfigDirty(SCHEMA, { index_name: 'docs' }, {})).toBe(true);
+  });
+});
+
+describe('isIndexConfigValid', () => {
+  const REQUIRED_SCHEMA = {
+    required: ['index_name', 'chunk_size'],
+    properties: { index_name: {}, chunk_size: {} },
+  };
+
+  it('ignores index_name, which the form hides and the server stamps', () => {
+    // Requiring it would disable both actions with no field to fill in.
+    expect(isIndexConfigValid(REQUIRED_SCHEMA, { chunk_size: 500 })).toBe(true);
+  });
+
+  it('still enforces the required fields the form does expose', () => {
+    expect(isIndexConfigValid(REQUIRED_SCHEMA, { index_name: 'docs' })).toBe(false);
+  });
+
+  it('treats a missing schema as nothing to validate', () => {
+    expect(isIndexConfigValid(null, {})).toBe(true);
   });
 });

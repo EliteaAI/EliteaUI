@@ -24,6 +24,7 @@ import {
 import { getMockToolkitIndexConversation } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexChat.helpers';
 import {
   isIndexConfigDirty,
+  isIndexConfigValid,
   saveConfigurationError,
 } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexConfig.helpers';
 import {
@@ -37,7 +38,7 @@ import {
 import { useIndexesListPolling } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
 import { selectToolkitScheduler } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
 import { IndexActivityPanel, IndexScheduleModal, RunIndexBanner } from '@/[fsd]/features/toolkits/indexes/ui';
-import { ToolkitChatHelpers, ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
+import { ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useGetCurrentToolkitSchemas, useToolkitChat } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { NavigationHelpers, ScheduleHelpers } from '@/[fsd]/shared/lib/helpers';
@@ -373,19 +374,29 @@ const RunIndexPanel = memo(props => {
   // The baseline is what the server last confirmed, and it is the only thing the form is compared
   // against. Seeding local state from `prev` instead would make the two indistinguishable, so a
   // save could never hand the form a clean slate.
+  //
+  // Re-seeding whenever the server's configuration changes keeps the old merge's self-healing:
+  // the create-index placeholder carries no configuration at all, and the real one arrives on a
+  // later poll. Unsaved edits still win, so a background refetch never discards them.
+  const seededFromRef = useRef(null);
+
   useEffect(() => {
-    if (!configSchema?.properties || !index?.metadata || savedConfig) return;
+    if (!configSchema?.properties || !index?.metadata) return;
+    if (seededFromRef.current === configuredValues) return;
+    if (isIndexConfigDirty(configSchema, configInputVariables, savedConfig)) return;
+
+    seededFromRef.current = configuredValues;
     setSavedConfig(configuredValues);
     setConfigInputVariables(configuredValues);
-  }, [configSchema, configuredValues, index?.metadata, savedConfig]);
+  }, [configSchema, configuredValues, index?.metadata, savedConfig, configInputVariables]);
 
   const isConfigDirty = useMemo(
-    () => isIndexConfigDirty(configSchema, configInputVariables, savedConfig ?? configuredValues),
-    [configSchema, configInputVariables, savedConfig, configuredValues],
+    () => isIndexConfigDirty(configSchema, configInputVariables, savedConfig),
+    [configSchema, configInputVariables, savedConfig],
   );
 
   const configIsValid = useMemo(
-    () => !configSchema || ToolkitChatHelpers.validateToolkitForm(configSchema, configInputVariables),
+    () => isIndexConfigValid(configSchema, configInputVariables),
     [configSchema, configInputVariables],
   );
   const configInvalidReason = configIsValid ? undefined : 'Fill in all required configuration fields';
