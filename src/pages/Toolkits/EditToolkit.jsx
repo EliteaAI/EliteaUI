@@ -51,6 +51,7 @@ const EditToolkit = memo(props => {
   const { resolvedMode } = useEliteATheme();
   const hasBreadcrumbTrail = useHasBreadcrumbTrail();
   const iframeRef = useRef(null);
+  const onClearDiscardErrorsRef = useRef();
   const [iframeKey, setIframeKey] = useState(0);
   const [showIframeFallback, setShowIframeFallback] = useState(false);
   const [showRedirectModal, setShowRedirectModal] = useState(false);
@@ -76,6 +77,7 @@ const EditToolkit = memo(props => {
     setUpdateConfigKey(prev => prev + 1);
     setDirty(false);
     setHasValidationErrors(false);
+    onClearDiscardErrorsRef.current?.();
   }, [publicToolkitData]);
 
   const handleValidationStateChange = useCallback(({ hasErrors }) => {
@@ -254,6 +256,7 @@ const EditToolkit = memo(props => {
             isMCP={isMCP}
             toolkitId={realId}
             onValidationStateChange={handleValidationStateChange}
+            onClearDiscardErrorsRef={onClearDiscardErrorsRef}
             indexingBlocker={indexingBlocker}
             shouldHideIndexes={shouldHideIndexesTab}
           />
@@ -275,6 +278,7 @@ const EditToolkit = memo(props => {
       realId,
       isPublicError,
       isSidePanelUndecided,
+      onClearDiscardErrorsRef,
       indexingBlocker,
       shouldHideIndexesTab,
       hasValidationErrors,
