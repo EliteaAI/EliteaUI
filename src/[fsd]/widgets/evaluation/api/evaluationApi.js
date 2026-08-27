@@ -3,7 +3,6 @@ import { eliteaApi } from '@/api';
 import { EVAL_DATASET_CASE_PAGE_SIZE, EVAL_RESULT_MAX_LIMIT } from '../lib/constants/evaluation.constants';
 
 const TAG_EVAL_DIMENSION = 'EVAL_DIMENSION';
-const TAG_EVAL_CODE_VALIDATION = 'EVAL_CODE_VALIDATION';
 const TAG_EVAL_SUITE = 'EVAL_SUITE';
 const TAG_EVAL_BINDING = 'EVAL_BINDING';
 const TAG_EVAL_DATASET = 'EVAL_DATASET';
@@ -16,7 +15,6 @@ export const evaluationApi = eliteaApi
   .enhanceEndpoints({
     addTagTypes: [
       TAG_EVAL_DIMENSION,
-      TAG_EVAL_CODE_VALIDATION,
       TAG_EVAL_SUITE,
       TAG_EVAL_BINDING,
       TAG_EVAL_DATASET,
@@ -48,17 +46,19 @@ export const evaluationApi = eliteaApi
         invalidatesTags: [TAG_EVAL_DIMENSION],
       }),
       updateEvalDimension: build.mutation({
-        query: ({ projectId, dimensionId, body }) => ({
+        query: ({ projectId, dimensionId, agentId, body }) => ({
           url: `/elitea_core/eval_dimension/prompt_lib/${projectId}/${dimensionId}`,
           method: 'PUT',
+          params: agentId != null ? { agent_id: agentId } : undefined,
           body,
         }),
         invalidatesTags: [TAG_EVAL_DIMENSION],
       }),
       deleteEvalDimension: build.mutation({
-        query: ({ projectId, dimensionId }) => ({
+        query: ({ projectId, dimensionId, agentId }) => ({
           url: `/elitea_core/eval_dimension/prompt_lib/${projectId}/${dimensionId}`,
           method: 'DELETE',
+          params: agentId != null ? { agent_id: agentId } : undefined,
         }),
         invalidatesTags: [TAG_EVAL_DIMENSION],
       }),
@@ -79,37 +79,6 @@ export const evaluationApi = eliteaApi
         }),
         invalidatesTags: [TAG_EVAL_DIMENSION],
       }),
-      evalCodeValidations: build.query({
-        query: ({ projectId }) => ({
-          url: `/elitea_core/eval_code_validations/prompt_lib/${projectId}`,
-          method: 'GET',
-        }),
-        providesTags: [TAG_EVAL_CODE_VALIDATION],
-      }),
-      createEvalCodeValidation: build.mutation({
-        query: ({ projectId, body }) => ({
-          url: `/elitea_core/eval_code_validations/prompt_lib/${projectId}`,
-          method: 'POST',
-          body,
-        }),
-        invalidatesTags: [TAG_EVAL_CODE_VALIDATION],
-      }),
-      updateEvalCodeValidation: build.mutation({
-        query: ({ projectId, codeValidationId, body }) => ({
-          url: `/elitea_core/eval_code_validation/prompt_lib/${projectId}/${codeValidationId}`,
-          method: 'PUT',
-          body,
-        }),
-        invalidatesTags: [TAG_EVAL_CODE_VALIDATION],
-      }),
-      deleteEvalCodeValidation: build.mutation({
-        query: ({ projectId, codeValidationId }) => ({
-          url: `/elitea_core/eval_code_validation/prompt_lib/${projectId}/${codeValidationId}`,
-          method: 'DELETE',
-        }),
-        invalidatesTags: [TAG_EVAL_CODE_VALIDATION],
-      }),
-
       // Draft-only: proposes dimensions + binding suggestions from an agent's current
       // instructions. Nothing is persisted here — accepted items are created via the
       // regular createEvalDimension/addEvalBinding calls.
@@ -431,10 +400,6 @@ export const {
   useDeleteEvalDimensionMutation,
   usePlatformDimensionCatalogQuery,
   useMaterializePlatformDimensionMutation,
-  useEvalCodeValidationsQuery,
-  useCreateEvalCodeValidationMutation,
-  useUpdateEvalCodeValidationMutation,
-  useDeleteEvalCodeValidationMutation,
   useGenerateEvalDimensionsMutation,
   useEvalSuitesQuery,
   useBootstrapEvalSuiteMutation,

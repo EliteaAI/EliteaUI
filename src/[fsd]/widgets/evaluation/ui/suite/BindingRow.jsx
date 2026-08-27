@@ -12,15 +12,7 @@ import { getBindingEngineLabel, getBindingLabel, isPlatformBinding } from '../..
 import { EvaluationRowBadge, evaluationRowStyles } from '../common';
 
 const BindingRow = memo(props => {
-  const {
-    binding,
-    dimensions = [],
-    codeValidations = [],
-    canEdit = false,
-    canReorder = false,
-    onEdit,
-    onRemove,
-  } = props;
+  const { binding, dimensions = [], canEdit = false, canReorder = false, onEdit, onRemove } = props;
 
   const handleEdit = useCallback(() => onEdit?.(binding), [onEdit, binding]);
   const handleRemove = useCallback(() => onRemove?.(binding), [onRemove, binding]);
@@ -35,7 +27,7 @@ const BindingRow = memo(props => {
 
   const styles = bindingRowStyles({ transform, transition, isDragging });
 
-  const label = getBindingLabel(binding, { dimensions, codeValidations });
+  const label = getBindingLabel(binding, { dimensions });
 
   const badges = [getBindingEngineLabel(binding)];
   if (binding.weight != null) badges.push(`w${binding.weight}`);

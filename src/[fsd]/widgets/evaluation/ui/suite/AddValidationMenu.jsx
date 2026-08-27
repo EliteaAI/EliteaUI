@@ -9,17 +9,15 @@ import { ADD_VALIDATION_MENU } from '../../lib/constants';
 
 const MENU_ITEMS = [
   { key: ADD_VALIDATION_MENU.dimensionLibrary, label: 'Dimension (from library)' },
-  { key: ADD_VALIDATION_MENU.codeValidationLibrary, label: 'Code validation (from library)' },
   { key: ADD_VALIDATION_MENU.platformCatalog, label: 'Platform validation (catalog)' },
   { divider: true },
   { key: ADD_VALIDATION_MENU.newDimension, label: 'New dimension…' },
-  { key: ADD_VALIDATION_MENU.newCodeValidation, label: 'New code validation…' },
   { divider: true },
   { key: ADD_VALIDATION_MENU.generateWithAi, label: 'Generate with AI…' },
 ];
 
 const AddValidationMenu = memo(props => {
-  const { disabled = false, canCreateDimension = false, canCreateCodeValidation = false, onSelect } = props;
+  const { disabled = false, canCreateDimension = false, onSelect } = props;
 
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
@@ -38,11 +36,10 @@ const AddValidationMenu = memo(props => {
   const isItemDisabled = useCallback(
     key => {
       if (key === ADD_VALIDATION_MENU.newDimension) return !canCreateDimension;
-      if (key === ADD_VALIDATION_MENU.newCodeValidation) return !canCreateCodeValidation;
       if (key === ADD_VALIDATION_MENU.generateWithAi) return !canCreateDimension;
       return false;
     },
-    [canCreateDimension, canCreateCodeValidation],
+    [canCreateDimension],
   );
 
   return (

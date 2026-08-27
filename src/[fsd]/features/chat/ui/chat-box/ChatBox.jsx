@@ -2756,7 +2756,7 @@ const ChatBox = forwardRef((props, boxRef) => {
         <ChatMessageList
           sx={messageListSX}
           chat_history={chat_history}
-          suggestions={nextInputSuggestions}
+          suggestions={hasBlockingHitlInterrupt ? [] : nextInputSuggestions}
           onSelectSuggestion={handleSuggestionSelect}
           isLoading={isStreaming}
           isStreaming={isStreaming}
