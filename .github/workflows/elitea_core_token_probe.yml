@@ -1,0 +1,48 @@
+# Temporary. Proves the GitHub App behind APP_ID can mint a token for elitea_core and use it
+# to dispatch, before build_and_release.yml is made to depend on that. Delete once proven.
+# See EliteaAI/elitea_issues#6362.
+
+name: elitea_core token probe
+
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mint token for elitea_core
+        id: core-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          owner: EliteaAI
+          repositories: elitea_core
+          permission-contents: write
+
+      - name: The installation reaches elitea_core with write access
+        env:
+          GH_TOKEN: ${{ steps.core-token.outputs.token }}
+        run: |
+          set -euo pipefail
+          gh api /installation/repositories --jq '.repositories[].full_name'
+          gh api /repos/EliteaAI/elitea_core --jq '.permissions'
+
+      # An event_type nothing subscribes to. GitHub answers 204 and starts no workflow run,
+      # so this proves the credential without touching elitea_core.
+      - name: The token can dispatch
+        env:
+          CORE_TOKEN: ${{ steps.core-token.outputs.token }}
+        run: |
+          set -euo pipefail
+          code=$(curl -sS -o /dev/null -w '%{http_code}' -X POST \
+            -H "Authorization: Bearer ${CORE_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            -d '{"event_type":"probe-noop-do-not-subscribe"}' \
+            https://api.github.com/repos/EliteaAI/elitea_core/dispatches)
+          echo "dispatch HTTP $code"
+          [ "$code" = "204" ]
