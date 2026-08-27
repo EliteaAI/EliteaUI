@@ -192,9 +192,9 @@ const RunIndexPanel = memo(props => {
   );
   const effectiveStale = localMetaOverride?.state && !serverSupersedes ? false : index?.stale;
   const isAwaitingTaskStart = isWaitingForTaskStart && !serverSupersedes;
+  const runLooksAbandoned = effectiveIsIndexing && Boolean(effectiveStale);
   const runIsLive = hasLiveRun({
     isIndexing: effectiveIsIndexing,
-    canStopIndexing,
     isStale: effectiveStale,
   });
   const deleteDisabled = isDeleting || isAwaitingTaskStart || runIsLive;
@@ -396,8 +396,8 @@ const RunIndexPanel = memo(props => {
   }, [index?.metadata]);
   const runInFlight = effectiveIsIndexing || isAwaitingTaskStart;
   const banner = useMemo(
-    () => bannerVariant(runInFlight, effectiveState, reindexStats, index?.metadata?.error),
-    [runInFlight, effectiveState, reindexStats, index?.metadata?.error],
+    () => bannerVariant(runInFlight, effectiveState, reindexStats, index?.metadata?.error, effectiveStale),
+    [runInFlight, effectiveState, reindexStats, index?.metadata?.error, effectiveStale],
   );
 
   const onAddSchedule = useCallback(() => {
@@ -465,10 +465,12 @@ const RunIndexPanel = memo(props => {
   const searchBlockedReason = indexSearchBlockedReason(
     effectiveIsIndexing ? IndexStatuses.progress : effectiveState,
     selectedIndexTools,
+    runLooksAbandoned,
   );
 
-  const historyDisabled = !index?.metadata?.history?.length || effectiveIsIndexing;
-  const historyTooltip = effectiveIsIndexing
+  const runBlocksHistory = effectiveIsIndexing && !runLooksAbandoned;
+  const historyDisabled = !index?.metadata?.history?.length || runBlocksHistory;
+  const historyTooltip = runBlocksHistory
     ? 'Unavailable while indexing is in progress'
     : historyDisabled
       ? 'No history available'
@@ -553,7 +555,7 @@ const RunIndexPanel = memo(props => {
                 configSchema={configSchema}
                 configInputVariables={configInputVariables}
                 onChangeInputVariables={setConfigInputVariables}
-                disabled={isRunning || effectiveIsIndexing}
+                disabled={isRunning || runIsLive}
               />
             )}
             {isActivityTab && (

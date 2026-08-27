@@ -5,7 +5,12 @@ import {
   BUDGET_ERROR_VARIANTS,
 } from '@/[fsd]/shared/lib/constants/budgetError.constants';
 
-import { BannerMessageMap, BannerSeverity, IndexStatuses } from '../constants/indexDetails.constants';
+import {
+  BannerMessageMap,
+  BannerSeverity,
+  INDEX_ABANDONED_BANNER_MESSAGE,
+  IndexStatuses,
+} from '../constants/indexDetails.constants';
 import { bannerVariant, isAbandonedRun } from './indexDetails.helpers';
 
 const GENERIC_FAILURE = BannerMessageMap[BannerSeverity.error];
@@ -99,6 +104,34 @@ describe('bannerVariant — everything else is unchanged', () => {
 
   it('still reports a cancelled index as stopped', () => {
     expect(bannerVariant(false, IndexStatuses.cancelled, NO_STATS).severity).toBe(BannerSeverity.warning);
+  });
+});
+
+describe('bannerVariant — abandoned run', () => {
+  it('reports a stale in_progress run as stopped, not indexing', () => {
+    const banner = bannerVariant(false, IndexStatuses.progress, NO_STATS, undefined, true);
+
+    expect(banner.severity).toBe(BannerSeverity.warning);
+    expect(banner.label).toBe('Stopped');
+    expect(banner.message).toBe(INDEX_ABANDONED_BANNER_MESSAGE);
+  });
+
+  it('wins over the in-flight signal, which a stale row still reads as', () => {
+    expect(bannerVariant(true, IndexStatuses.progress, NO_STATS, undefined, true).severity).toBe(
+      BannerSeverity.warning,
+    );
+  });
+
+  it('never applies to a terminal state, whatever the stale flag says', () => {
+    expect(bannerVariant(false, IndexStatuses.fail, NO_STATS, undefined, true).severity).toBe(
+      BannerSeverity.error,
+    );
+  });
+
+  it('leaves a fresh in_progress run reported as indexing', () => {
+    expect(bannerVariant(false, IndexStatuses.progress, NO_STATS, undefined, false).severity).toBe(
+      BannerSeverity.info,
+    );
   });
 });
 

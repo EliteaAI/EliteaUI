@@ -27,6 +27,10 @@ import DeleteIcon from '@/components/Icons/DeleteIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
+// Shared by the failed InfoTooltip and the abandoned attention icon; predates the
+// theme tokens the rest of the card uses.
+const ERROR_ICON_FILL = '#D71616';
+
 const IndexListItem = memo(props => {
   const {
     index,
@@ -118,7 +122,7 @@ const IndexListItem = memo(props => {
       sx={[
         styles.wrapper,
         ...(isSelected ? [styles.selectedWrapper] : []),
-        ...(index.stale && index.metadata.state === IndexStatuses.progress ? [styles.errorWrapper] : []),
+        ...(isAbandonedRun(index) ? [styles.errorWrapper] : []),
       ]}
       className={isSelected && true ? 'selected' : ''}
       onClick={handleCardClick}
@@ -233,7 +237,7 @@ const IndexListItem = memo(props => {
           )}
           {index.metadata.state !== IndexStatuses.success && (
             <Box style={styles.stateIconContainer}>
-              {index.metadata.state === IndexStatuses.progress && (
+              {index.metadata.state === IndexStatuses.progress && !isAbandonedRun(index) && (
                 <CircularProgress
                   sx={styles.stateIcon}
                   size={14}
@@ -266,7 +270,7 @@ const IndexListItem = memo(props => {
               )}
               {isAbandonedRun(index) && (
                 <Tooltip title="This run stopped without finishing. Reindex to try again.">
-                  <Box sx={[styles.stateIcon, styles.error, styles.stateIconContainer]}>
+                  <Box sx={[styles.stateIcon, styles.abandonedIcon, styles.stateIconContainer]}>
                     <AttentionIcon
                       width={16}
                       height={16}
@@ -404,7 +408,14 @@ const indexListItem = () => ({
     color: palette.text.info,
   }),
   error: {
-    fill: '#D71616',
+    fill: ERROR_ICON_FILL,
+  },
+  // Targets the icon's paths like `warning` does: AttentionIcon sets fill as an svg
+  // presentation attribute, which beats a fill inherited from the wrapping Box.
+  abandonedIcon: {
+    path: {
+      fill: ERROR_ICON_FILL,
+    },
   },
   warning: {
     path: ({ palette }) => ({

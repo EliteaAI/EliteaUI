@@ -28,6 +28,7 @@ describe('buildIndexRunLookup', () => {
         entry: entry('completed', { conversation_id: 876, report }),
         indexName: 'docs',
         initialCompletedTs: 200,
+        abandoned: false,
       },
     ]);
   });
@@ -65,16 +66,58 @@ describe('buildIndexRunLookup', () => {
     expect(lookup.get(9).map(run => run.indexName)).toEqual(['code', 'docs']);
   });
 
-  it('skips runs without a conversation and non-terminal runs', () => {
+  it('skips runs without a conversation and non-terminal, non-abandoned runs', () => {
     const lookup = buildIndexRunLookup([
-      indexOf('docs', [
-        entry('completed'),
-        entry('in_progress', { conversation_id: 5 }),
-        entry('created', { conversation_id: 6 }),
-      ]),
+      {
+        metadata: {
+          collection: 'docs',
+          conversation_id: 5,
+          history: [
+            entry('completed'),
+            entry('in_progress', { conversation_id: 5 }),
+            entry('created', { conversation_id: 6 }),
+          ],
+        },
+      },
     ]);
 
     expect(lookup.size).toBe(0);
+  });
+
+  it('admits an in_progress entry orphaned from the row as abandoned', () => {
+    // A retry replaced the row's conversation, so the old entry can never terminate;
+    // without admission its conversation reverts to the generic tool label.
+    const lookup = buildIndexRunLookup([
+      {
+        metadata: {
+          collection: 'docs',
+          conversation_id: 9,
+          history: [
+            entry('in_progress', { conversation_id: 5, updated_on: 100 }),
+            entry('completed', { conversation_id: 9, updated_on: 200 }),
+          ],
+        },
+      },
+    ]);
+
+    expect(lookup.get(5)[0].abandoned).toBe(true);
+    expect(lookup.get(9)[0].abandoned).toBe(false);
+  });
+
+  it("admits a stale row's own current run as abandoned", () => {
+    const lookup = buildIndexRunLookup([
+      {
+        stale: true,
+        metadata: {
+          collection: 'docs',
+          state: 'in_progress',
+          conversation_id: 5,
+          history: [entry('in_progress', { conversation_id: 5 })],
+        },
+      },
+    ]);
+
+    expect(lookup.get(5)[0].abandoned).toBe(true);
   });
 
   it('scopes the first-run heuristic to each index', () => {

@@ -4,6 +4,7 @@ import {
   BannerMessageMap,
   BannerSeverity,
   BannerTitleMap,
+  INDEX_ABANDONED_BANNER_MESSAGE,
   INDEX_DATA_DISABLED_REASON,
   INDEX_SEARCH_TOOL_OPTIONS,
   IndexStatuses,
@@ -35,7 +36,15 @@ export const formatDate = ts => {
   }
 };
 
-export const bannerVariant = (isIndexing, state, reindexStats, error) => {
+export const bannerVariant = (isIndexing, state, reindexStats, error, isStale = false) => {
+  // Before the isIndexing branch: a stale row still reads as "in flight" to every
+  // other signal, and an eternal "Indexing…" spinner is the bug this variant fixes.
+  if (state === IndexStatuses.progress && isStale)
+    return {
+      severity: BannerSeverity.warning,
+      label: BannerTitleMap[BannerSeverity.warning],
+      message: INDEX_ABANDONED_BANNER_MESSAGE,
+    };
   if (isIndexing)
     return {
       severity: BannerSeverity.info,
@@ -89,10 +98,14 @@ export const indexSearchToolOptions = selectedTools =>
  * differently.
  * @param {string} state - `metadata.state` of the index row
  * @param {string[]} selectedTools - the toolkit's `settings.selected_tools`
+ * @param {boolean} [isAbandoned] - the row is in progress but the backend marked it stale
  * @returns {string | null} the reason, or null when the index can be searched
  */
-export const indexSearchBlockedReason = (state, selectedTools) => {
-  if (state === IndexStatuses.progress) return 'Unavailable while indexing is in progress';
+export const indexSearchBlockedReason = (state, selectedTools, isAbandoned = false) => {
+  // An abandoned run is not "in progress" in any sense the user can act on, but it
+  // also proves nothing about what its interrupted writes left searchable — so the
+  // block stands and only the wording changes, via the not-ready fall-through.
+  if (state === IndexStatuses.progress && !isAbandoned) return 'Unavailable while indexing is in progress';
   if (!RUNNABLE_INDEX_STATUSES.includes(state)) return 'Index is not ready to search yet';
   if (!indexSearchToolOptions(selectedTools).length) return 'No search tools are enabled for this toolkit';
   return null;
@@ -152,12 +165,26 @@ export const isAbandonedRun = index =>
   Boolean(index?.stale) && index?.metadata?.state === IndexStatuses.progress;
 
 /**
- * A run that may still be executing: it is stoppable, or the backend has not marked it stale.
- * @param {{isIndexing: boolean, canStopIndexing: boolean, isStale: boolean}} runState
+ * A run that may still be executing. Stoppability is deliberately not consulted: a run
+ * that died without a terminal write keeps its `task_id` forever, so "the panel could
+ * send a Stop" is true for every dead row and cannot veto the backend's stale verdict.
+ * @param {{isIndexing: boolean, isStale: boolean}} runState
  * @returns {boolean}
  */
-export const hasLiveRun = ({ isIndexing, canStopIndexing, isStale }) =>
-  Boolean(isIndexing) && (Boolean(canStopIndexing) || !isStale);
+export const hasLiveRun = ({ isIndexing, isStale }) => Boolean(isIndexing) && !isStale;
+
+/**
+ * Whether the optimistic reindex stub should be dropped for what the server returned.
+ * A missing row means the index was deleted — the stub has nothing to stand in for.
+ * A stale row is trusted only after a grace period: the first fetches after the click
+ * still return the old dead row, and expiring on it would unmount the dispatch runner
+ * mid-flight, leaving the new run untracked.
+ * @param {{serverRow: object | undefined, stubCreatedAt: number | undefined, now: number,
+ *   graceMs: number}} expiryState
+ * @returns {boolean}
+ */
+export const shouldExpireReindexStub = ({ serverRow, stubCreatedAt, now, graceMs }) =>
+  !serverRow || (Boolean(serverRow.stale) && now - (stubCreatedAt ?? 0) > graceMs);
 
 /**
  * Whether a status banner should stay on screen once its run's transcript is gone, i.e. on a fresh

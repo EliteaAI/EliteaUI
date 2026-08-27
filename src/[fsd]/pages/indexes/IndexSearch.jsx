@@ -7,7 +7,10 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Box, CircularProgress, Typography } from '@mui/material';
 
 import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
-import { indexSearchBlockedReason } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexDetails.helpers';
+import {
+  indexSearchBlockedReason,
+  isAbandonedRun,
+} from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexDetails.helpers';
 import { useIndexesListPolling } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
 import { selectIndexesList } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
 import { IndexSearchPanel } from '@/[fsd]/features/toolkits/indexes/ui';
@@ -87,6 +90,7 @@ const IndexSearch = memo(() => {
   const blockedReason = indexSearchBlockedReason(
     indexOutlivingRefetches?.metadata?.state,
     selectedIndexTools,
+    isAbandonedRun(indexOutlivingRefetches),
   );
 
   return (
