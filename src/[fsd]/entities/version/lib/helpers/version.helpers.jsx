@@ -1,104 +1,44 @@
-import { Box } from '@mui/material';
+import VersionIconBlock from '@/[fsd]/entities/version/ui/VersionIconBlock';
 
-import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
-import { VersionAuthorAvatar } from '@/[fsd]/entities/version/ui';
-import PublishIcon from '@/assets/publish-version.svg?react';
-import { TIME_FORMAT } from '@/common/constants';
-import { timeFormatter } from '@/common/utils';
-import PinIcon from '@/components/Icons/PinIcon';
+export const formatVersionMeta = version => {
+  if (!version) return null;
+  const parts = [];
+  if (version.created_at) {
+    const d = new Date(version.created_at);
+    const month = d.toLocaleString('en-US', { month: 'short' });
+    const day = String(d.getDate()).padStart(2, '0');
+    const year = d.getFullYear();
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    parts.push(`${month} ${day}, ${year}, ${hours}:${minutes}`);
+  }
+  const authorName = version.author_name ?? version.author_email ?? 'Author unavailable';
+  parts.push(`by ${authorName}`);
+  return parts.length ? parts.join(' · ') : null;
+};
 
 export const buildVersionOption =
   ({ enableVersionListAvatar, defaultVersionID, handleSetDefaultVersion }) =>
-  ({ name, id, created_at, author = {}, status }) => {
-    const displayName = author.name;
+  ({ name, id, created_at, author = {}, author_name, author_email, status }) => {
     const avatar = author.avatar;
-
-    const disableSetAsADefault = () => {
-      if (defaultVersionID === id) return true;
-      if (!defaultVersionID && name === LATEST_VERSION_NAME) return true;
-      if (status === 'published') return true;
-
-      return false;
-    };
-
-    const IconBlock = () => {
-      if (enableVersionListAvatar)
-        return (
-          <VersionAuthorAvatar
-            name={displayName}
-            avatar={avatar}
-          />
-        );
-
-      if (status === 'published')
-        return (
-          <Box
-            sx={({ palette }) => ({
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-
-              svg: { path: { fill: `${palette.icon.fill.success} !important` } },
-            })}
-          >
-            <PublishIcon sx={{ fontSize: '1rem' }} />
-          </Box>
-        );
-      if (defaultVersionID === id) return <PinIcon data-testid="version-option-pin-icon" />;
-
-      if (handleSetDefaultVersion && !disableSetAsADefault())
-        return (
-          <Box
-            id="show-on-hover"
-            data-testid={`version-option-set-default-${name}`}
-            sx={({ palette }) => ({
-              display: 'none',
-              borderRadius: '50%',
-              justifyContent: 'center',
-              alignItems: 'center',
-              cursor: 'pointer',
-              position: 'relative',
-              marginLeft: '0.25rem',
-
-              svg: { path: { fill: `${palette.icon.fill.secondary} !important` } },
-
-              '&:hover': {
-                '&::before': {
-                  content: '""',
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  transform: 'translate(-50%, -50%)',
-                  width: '1.75rem',
-                  height: '1.75rem',
-                  backgroundColor: palette.action.hover,
-                  borderRadius: '50%',
-                },
-              },
-            })}
-            onClick={e => {
-              e.stopPropagation();
-              handleSetDefaultVersion(id);
-            }}
-          >
-            <PinIcon sx={{ fontSize: '1rem' }} />
-          </Box>
-        );
-
-      return null;
-    };
+    const meta = formatVersionMeta({ created_at, author_name, author_email });
 
     return {
       label: name,
       value: id,
-      date: timeFormatter(created_at, TIME_FORMAT.DDMMYYYY),
-      icon: <IconBlock />,
-      // Name-keyed testid for version-selector options (ELITEA-1738 testid
-      // rework): SingleSelectMenuItem's default `select-option-{value}` is
-      // keyed to the option's numeric id, which callers don't know ahead of
-      // time for a version they just created. Every buildVersionOption
-      // consumer (skill/agent/pipeline version selects) gets this uniformly —
-      // additive via SingleSelectMenuItem's `option.testId ?? default` fallback.
+      date: meta,
+      versionMeta: meta,
+      versionAvatar: enableVersionListAvatar ? avatar : undefined,
+      icon: (
+        <VersionIconBlock
+          status={status}
+          id={id}
+          name={name}
+          defaultVersionID={defaultVersionID}
+          handleSetDefaultVersion={handleSetDefaultVersion}
+        />
+      ),
+      searchText: `${name} ${author_name ?? ''} ${author_email ?? ''}`.toLowerCase(),
       testId: `version-option-${name}`,
     };
   };
