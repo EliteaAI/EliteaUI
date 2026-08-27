@@ -144,19 +144,24 @@ const SettingsPreview = memo(props => {
   }, [selectedIDE, tokenName]);
 
   return (
-    <Box sx={styles.root}>
+    <Box
+      sx={styles.root}
+      data-testid="token-settings-preview-panel"
+    >
       <Box sx={styles.header}>
         <Box sx={styles.headerLeft}>
           <IconButton
             variant="elitea"
             color="tertiary"
             onClick={onClose}
+            data-testid="token-settings-preview-close-button"
           >
             <CloseIcon sx={styles.closeIcon} />
           </IconButton>
           <Typography
             variant="headingSmall"
             color="text.secondary"
+            data-testid="token-settings-preview-title"
           >
             {canvasTitle}
           </Typography>
@@ -171,12 +176,14 @@ const SettingsPreview = memo(props => {
               onValueChange={handleIDEChange}
               options={options}
               inputSX={styles.selectInput}
+              data-testid="token-settings-preview-ide-select"
             />
           </Box>
           <IconButton
             variant="elitea"
             color="secondary"
             onClick={handleCopy}
+            data-testid="token-settings-preview-copy-button"
           >
             <CopyIcon sx={styles.icon} />
           </IconButton>
@@ -185,6 +192,7 @@ const SettingsPreview = memo(props => {
             variant="elitea"
             color="secondary"
             onClick={handleDownload}
+            data-testid="token-settings-preview-download-button"
           >
             <DownloadIcon sx={styles.icon} />
           </IconButton>
@@ -201,6 +209,7 @@ const SettingsPreview = memo(props => {
           autoHeight
           maxHeight="none"
           variant="caption"
+          contentTestId="token-settings-preview-content"
         />
       </Box>
     </Box>
