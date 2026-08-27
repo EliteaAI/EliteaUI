@@ -142,6 +142,10 @@ const ChatMessageList = memo(props => {
   }, [messageIdToView, chat_history, dispatch]);
 
   useEffect(() => {
+    if (!isStreaming) setBottomSpacer(0);
+  }, [isStreaming]);
+
+  useEffect(() => {
     const scrollEl = listRef.current?.getScrollElement();
     if (!askingQuestionId || !questionItemRef.current || !scrollEl) {
       setBottomSpacer(0);
@@ -338,7 +342,7 @@ const chatMessageListStyles = bottomSpacer => ({
     flexDirection: 'column',
     alignItems: 'flex-end',
     gap: '0.5rem',
-    padding: '0.5rem 0.75rem',
+    padding: '0.75rem',
   },
 });
 
