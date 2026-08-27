@@ -3,7 +3,6 @@ import { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import {
-  CollectionStatus,
   ContentType,
   PUBLIC_PROJECT_ID,
   SearchParams,
@@ -14,7 +13,6 @@ import AdminIcon from '@/components/Icons/AdminIcon';
 import Champion from '@/components/Icons/Champion';
 import Fire from '@/components/Icons/Fire';
 import HeartIcon from '@/components/Icons/HeartIcon';
-import { StatusDot } from '@/components/StatusDot';
 
 import Latest from './Latest';
 import MyLiked from './MyLiked';
@@ -64,7 +62,6 @@ const usePublicApplicationTabs = (
           <PrivateAgentsList
             sortBy={sortBy}
             sortOrder={sortOrder}
-            statuses={[CollectionStatus.All]}
             cardContentType={ContentType.ApplicationAdmin}
           />
         ),
@@ -85,16 +82,7 @@ const usePublicApplicationTabs = (
   );
 };
 
-const usePrivateApplicationTabs = (
-  applicationsTotal,
-  draftTotal,
-  publishedTotal,
-  moderationTotal,
-  approvalTotal,
-  rejectedTotal,
-) => {
-  const styles = useStyles();
-
+const usePrivateApplicationTabs = applicationsTotal => {
   const [searchParams] = useSearchParams();
 
   const sortBy = useMemo(() => searchParams.get(SearchParams.SortBy) || SortFields.CreatedAt, [searchParams]);
@@ -112,113 +100,12 @@ const usePrivateApplicationTabs = (
           <PrivateAgentsList
             sortBy={sortBy}
             sortOrder={sortOrder}
-            statuses={[CollectionStatus.All]}
             cardContentType={ContentType.ApplicationAll}
           />
         ),
       },
-      {
-        label: 'Drafts',
-        icon: (
-          <StatusDot
-            sx={styles.statusDot}
-            status={CollectionStatus.Draft}
-          />
-        ),
-        content: (
-          <PrivateAgentsList
-            sortBy={sortBy}
-            sortOrder={sortOrder}
-            statuses={[CollectionStatus.Draft]}
-            cardContentType={ContentType.ApplicationDraft}
-          />
-        ),
-        count: draftTotal,
-      },
-      {
-        label: 'Published',
-        icon: (
-          <StatusDot
-            sx={styles.statusDot}
-            status={CollectionStatus.Published}
-          />
-        ),
-        content: (
-          <PrivateAgentsList
-            sortBy={sortBy}
-            sortOrder={sortOrder}
-            statuses={[CollectionStatus.Published]}
-            cardContentType={ContentType.ApplicationPublished}
-          />
-        ),
-        count: publishedTotal,
-      },
-      {
-        label: 'Moderation',
-        icon: (
-          <StatusDot
-            sx={styles.statusDot}
-            status={CollectionStatus.OnModeration}
-          />
-        ),
-        content: (
-          <PrivateAgentsList
-            sortBy={sortBy}
-            sortOrder={sortOrder}
-            statuses={[CollectionStatus.OnModeration]}
-            cardContentType={ContentType.ApplicationModeration}
-          />
-        ),
-        count: moderationTotal,
-      },
-      {
-        label: 'Approval',
-        icon: (
-          <StatusDot
-            sx={styles.statusDot}
-            status={CollectionStatus.UserApproval}
-          />
-        ),
-        content: (
-          <PrivateAgentsList
-            sortBy={sortBy}
-            sortOrder={sortOrder}
-            statuses={[CollectionStatus.UserApproval]}
-            cardContentType={ContentType.ApplicationApproval}
-          />
-        ),
-        count: approvalTotal,
-      },
-      {
-        label: 'Rejected',
-        icon: (
-          <StatusDot
-            sx={styles.statusDot}
-            status={CollectionStatus.Rejected}
-          />
-        ),
-        content: (
-          <PrivateAgentsList
-            sortBy={sortBy}
-            sortOrder={sortOrder}
-            statuses={[CollectionStatus.Rejected]}
-            cardContentType={ContentType.ApplicationRejected}
-          />
-        ),
-        count: rejectedTotal,
-      },
     ],
-    [
-      applicationsTotal,
-      sortBy,
-      sortOrder,
-      styles.statusDot,
-      draftTotal,
-      publishedTotal,
-      moderationTotal,
-      approvalTotal,
-      rejectedTotal,
-    ],
+    [applicationsTotal, sortBy, sortOrder],
   );
 };
 
@@ -228,11 +115,6 @@ export const useApplicationTabs = (
   myLikedTotal,
   trendingTotal,
   applicationsTotal,
-  draftTotal,
-  publishedTotal,
-  moderationTotal,
-  approvalTotal,
-  rejectedTotal,
   trendRange,
   hasAdminPermission,
 ) => {
@@ -245,20 +127,7 @@ export const useApplicationTabs = (
     hasAdminPermission,
   );
 
-  const privateTabs = usePrivateApplicationTabs(
-    applicationsTotal,
-    draftTotal,
-    publishedTotal,
-    moderationTotal,
-    approvalTotal,
-    rejectedTotal,
-  );
+  const privateTabs = usePrivateApplicationTabs(applicationsTotal);
 
   return projectId == PUBLIC_PROJECT_ID ? publicTabs : privateTabs;
 };
-
-const useStyles = () => ({
-  statusDot: {
-    marginRight: '0.5rem',
-  },
-});

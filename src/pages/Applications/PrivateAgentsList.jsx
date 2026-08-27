@@ -26,40 +26,10 @@ import { rightInfoPanelStyle } from '@/styles/RightInfoPanelStyle';
 import RightInfoPanel from '../../components/RightInfoPanel';
 import { useLoadApplications } from '../../hooks/useLoadApplications';
 
-const AdminEmptyListPlaceHolder = ({ query }) => {
-  if (!query) {
-    return (
-      <Box>
-        No agents yet. <br />
-        Create yours now!
-      </Box>
-    );
-  } else {
-    return (
-      <Box>
-        Nothing found. <br />
-        Create yours now!
-      </Box>
-    );
-  }
-};
+const EmptyListPlaceHolder = memo(props => {
+  const { query } = props;
 
-const EmptyListPlaceHolder = ({ query, status }) => {
-  if (!query) {
-    if (status === CollectionStatus.UserApproval) {
-      return <Box>{`You have no approval agents.`}</Box>;
-    } else if (status === CollectionStatus.Draft) {
-      return <Box>{`You have no draft agents.`}</Box>;
-    } else if (status === CollectionStatus.OnModeration) {
-      return <Box>{`You have no agents on moderation.`}</Box>;
-    } else if (status === CollectionStatus.Rejected) {
-      return <Box>{`You have no rejected agents.`}</Box>;
-    } else if (status === CollectionStatus.Published) {
-      return <Box>{`You have no published agents.`}</Box>;
-    } else {
-      return <Box>{`You have no agents.`}</Box>;
-    }
-  } else {
+  if (query) {
     return (
       <Box data-testid="agents-list-empty-state-message">
         Nothing found. <br />
@@ -67,27 +37,23 @@ const EmptyListPlaceHolder = ({ query, status }) => {
       </Box>
     );
   }
-};
+
+  return <Box>You have no agents.</Box>;
+});
+
+EmptyListPlaceHolder.displayName = 'EmptyListPlaceHolder';
 
 const PrivateAgentsList = memo(props => {
-  const {
-    rightPanelOffset,
-    sortBy,
-    sortOrder,
-    statuses,
-    cardContentType = ContentType.ApplicationAll,
-  } = props;
+  const { rightPanelOffset, sortBy, sortOrder, cardContentType = ContentType.ApplicationAll } = props;
   const { query } = useSelector(state => state.search);
   const { renderCard } = useCardList(ViewMode.Owner);
   const navigate = useNavigate();
   const projectId = useSelectedProjectId();
 
-  // Folder view state
   const { folders } = useEntityFolders(ENTITY_FOLDER_TYPES.agent, { includeCounts: true });
   const { selectedFolderId, selectedFolder, isFolderViewActive, openFolder, closeFolder } =
     useFolderView(folders);
 
-  // Fetch folder items (entity IDs) when folder is selected
   const {
     idsQueryParam: folderEntityIds,
     isLoading: isLoadingFolderItems,
@@ -115,7 +81,7 @@ const PrivateAgentsList = memo(props => {
     ViewMode.Owner,
     sortBy,
     sortOrder,
-    statuses,
+    [CollectionStatus.All],
     shouldSkipQuery,
     false,
     true,
@@ -155,7 +121,6 @@ const PrivateAgentsList = memo(props => {
     onLoadMoreApplications,
   ]);
 
-  // Reset pagination when folder selection changes
   useEffect(() => {
     setPage(0);
   }, [selectedFolderId, setPage]);
@@ -203,7 +168,7 @@ const PrivateAgentsList = memo(props => {
               showFolders
               folderEntityType={ENTITY_FOLDER_TYPES.agent}
               tagList={activeTagList}
-              specifiedStatus={statuses[0]}
+              specifiedStatus={CollectionStatus.All}
               onFolderSelect={openFolder}
               selectedFolderId={selectedFolderId}
             />
@@ -212,7 +177,7 @@ const PrivateAgentsList = memo(props => {
               <Categories
                 tagList={activeTagList}
                 style={{ flex: 1 }}
-                specifiedStatus={statuses[0]}
+                specifiedStatus={CollectionStatus.All}
               />
             </div>
           )
@@ -228,16 +193,7 @@ const PrivateAgentsList = memo(props => {
             <EmptyStatePage {...EmptyStateConfig} />
           )
         }
-        emptyListPlaceHolder={
-          isFolderViewActive ? null : cardContentType !== ContentType.ApplicationAdmin ? (
-            <EmptyListPlaceHolder
-              query={query}
-              status={statuses[0]}
-            />
-          ) : (
-            <AdminEmptyListPlaceHolder />
-          )
-        }
+        emptyListPlaceHolder={isFolderViewActive ? null : <EmptyListPlaceHolder query={query} />}
       />
     </>
   );
