@@ -59,6 +59,7 @@ export const ToolkitForm = memo(props => {
     onSyntaxError,
     validationTrigger,
     revertCredentialsRef,
+    onClearDiscardErrorsRef,
     hasSidePanel = false,
     handleShowHistory,
     handleShowTest,
@@ -398,6 +399,12 @@ export const ToolkitForm = memo(props => {
     });
   }, [initialValues?.settings, editToolDetail?.settings, editField]);
 
+  const onClearDiscardErrors = useCallback(() => {
+    setShowValidation(false);
+    setToolErrors({});
+    setServerToolErrors({});
+  }, []);
+
   // Expose onRevertCredentials to parent via ref (for ToolkitEditor)
   useEffect(() => {
     if (revertCredentialsRef) {
@@ -405,6 +412,10 @@ export const ToolkitForm = memo(props => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onRevertCredentials]);
+
+  useEffect(() => {
+    if (onClearDiscardErrorsRef) onClearDiscardErrorsRef.current = onClearDiscardErrors;
+  }, [onClearDiscardErrors, onClearDiscardErrorsRef]);
 
   useEffect(() => {
     if (
