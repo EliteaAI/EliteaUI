@@ -1,6 +1,7 @@
 import { memo, useCallback, useMemo } from 'react';
 
 import * as ChatHelpers from '@/[fsd]/features/chat/lib/helpers/chat.helpers';
+import { filterActivePipelineHitlPromptItems } from '@/[fsd]/features/chat/lib/helpers/hitl.helpers.js';
 import { isParticipantStillActive } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { ApplicationAnswer, UserMessage } from '@/[fsd]/features/chat/ui/chat-box';
 import { ROLES, ToolActionStatus, WELCOME_MESSAGE_ID } from '@/common/constants';
@@ -49,6 +50,14 @@ const ChatMessageWrapper = memo(props => {
   const hasPendingAuth = useMemo(
     () => message.toolActions?.some(action => action.status === ToolActionStatus.actionRequired),
     [message.toolActions],
+  );
+  const displayMessageItems = useMemo(
+    () =>
+      filterActivePipelineHitlPromptItems(message.message_items, [
+        message.hitlInterrupt,
+        ...(message.hitlInterrupts || []),
+      ]),
+    [message.hitlInterrupt, message.hitlInterrupts, message.message_items],
   );
 
   const messageParticipant = useMemo(
@@ -130,7 +139,7 @@ const ChatMessageWrapper = memo(props => {
       verticalMode
       ref={ref => (listRefs.current[index] = ref)}
       answer={message.content}
-      message_items={message.message_items}
+      message_items={displayMessageItems}
       created_at={message.created_at}
       participant={messageParticipant}
       onClickReplyTo={onReplyTo}
