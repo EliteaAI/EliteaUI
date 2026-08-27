@@ -10,7 +10,7 @@ import IndexDetailsFooterBand from '../IndexDetailsFooterBand';
 
 vi.mock('@/[fsd]/shared/ui', () => ({
   Button: {
-    BUTTON_VARIANTS: { alarm: 'alarm', elitea: 'elitea' },
+    BUTTON_VARIANTS: { alarm: 'alarm', elitea: 'elitea', secondary: 'secondary' },
     // eslint-disable-next-line no-unused-vars
     BaseBtn: ({ children, startIcon, variant, ...rest }) => <button {...rest}>{children}</button>,
   },
@@ -29,22 +29,24 @@ const renderFooter = (props = {}) =>
     </ThemeProvider>,
   );
 
-const action = () => screen.getByTestId('index-details-footer-action');
+const reindex = () => screen.getByTestId('index-details-footer-reindex');
+const save = () => screen.getByTestId('index-details-footer-save');
+const stop = () => screen.getByTestId('index-details-footer-stop');
 
 describe('IndexDetailsFooterBand', () => {
   it('offers Reindex when nothing is running', () => {
     const onReindex = vi.fn();
     renderFooter({ isRunActive: false, onReindex });
 
-    expect(action()).toHaveTextContent('Reindex');
-    fireEvent.click(action());
+    expect(reindex()).toHaveTextContent('Reindex');
+    fireEvent.click(reindex());
     expect(onReindex).toHaveBeenCalledTimes(1);
   });
 
   it('disables Reindex while a run is being set up', () => {
     renderFooter({ isRunActive: false, reindexDisabled: true });
 
-    expect(action()).toBeDisabled();
+    expect(reindex()).toBeDisabled();
   });
 
   it('explains a Reindex the toolkit can no longer run and swallows the click', async () => {
@@ -56,11 +58,11 @@ describe('IndexDetailsFooterBand', () => {
       onReindex,
     });
 
-    expect(action()).toBeDisabled();
-    fireEvent.click(action());
+    expect(reindex()).toBeDisabled();
+    fireEvent.click(reindex());
     expect(onReindex).not.toHaveBeenCalled();
 
-    fireEvent.mouseOver(action().parentElement);
+    fireEvent.mouseOver(reindex().parentElement);
     expect(await screen.findByRole('tooltip')).toHaveTextContent(
       'Enable the “Index data” tool to activate indexing',
     );
@@ -70,15 +72,15 @@ describe('IndexDetailsFooterBand', () => {
     const onStop = vi.fn();
     renderFooter({ isRunActive: true, canStopIndexing: true, onStop });
 
-    expect(action()).toHaveTextContent('Stop');
-    fireEvent.click(action());
+    expect(stop()).toHaveTextContent('Stop');
+    fireEvent.click(stop());
     expect(onStop).toHaveBeenCalledTimes(1);
   });
 
   it('keeps Stop unusable until the task id arrives, then while stopping', () => {
     const { rerender } = renderFooter({ isRunActive: true, canStopIndexing: false });
-    expect(action()).toHaveTextContent('Starting...');
-    expect(action()).toBeDisabled();
+    expect(stop()).toHaveTextContent('Starting...');
+    expect(stop()).toBeDisabled();
 
     rerender(
       <ThemeProvider theme={theme}>
@@ -89,7 +91,57 @@ describe('IndexDetailsFooterBand', () => {
         />
       </ThemeProvider>,
     );
-    expect(action()).toHaveTextContent('Stopping...');
-    expect(action()).toBeDisabled();
+    expect(stop()).toHaveTextContent('Stopping...');
+    expect(stop()).toBeDisabled();
+  });
+
+  it('hides Save until the configuration is edited', () => {
+    renderFooter({ isRunActive: false, isDirty: false });
+
+    expect(screen.queryByTestId('index-details-footer-save')).not.toBeInTheDocument();
+  });
+
+  it('offers Save alongside Save & Reindex once the configuration is edited', () => {
+    const onSave = vi.fn();
+    renderFooter({ isRunActive: false, isDirty: true, onSave });
+
+    expect(save()).toHaveTextContent('Save');
+    expect(reindex()).toHaveTextContent('Save & Reindex');
+
+    fireEvent.click(save());
+    expect(onSave).toHaveBeenCalledTimes(1);
+  });
+
+  it('offers neither Save nor Save & Reindex while a run is active', () => {
+    renderFooter({ isRunActive: true, isDirty: true });
+
+    expect(screen.queryByTestId('index-details-footer-save')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('index-details-footer-reindex')).not.toBeInTheDocument();
+  });
+
+  it('explains an invalid configuration and swallows the Save click', async () => {
+    const onSave = vi.fn();
+    renderFooter({
+      isRunActive: false,
+      isDirty: true,
+      saveDisabled: true,
+      saveTooltip: 'Fill in all required fields',
+      onSave,
+    });
+
+    expect(save()).toBeDisabled();
+    fireEvent.click(save());
+    expect(onSave).not.toHaveBeenCalled();
+
+    fireEvent.mouseOver(save().parentElement);
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('Fill in all required fields');
+  });
+
+  it('locks both actions while the save is in flight', () => {
+    renderFooter({ isRunActive: false, isDirty: true, isSaving: true });
+
+    expect(save()).toHaveTextContent('Saving...');
+    expect(save()).toBeDisabled();
+    expect(reindex()).toBeDisabled();
   });
 });

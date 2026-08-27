@@ -101,6 +101,7 @@ export const BLOCK_NAV_PATTERNS = [
   RouteDefinitions.CreatePipeline,
   RouteDefinitions.CreateToolkitType,
   RouteDefinitions.ToolkitDetail,
+  RouteDefinitions.ToolkitIndex,
   RouteDefinitions.CreateMCP,
   RouteDefinitions.CreateMCPType,
   RouteDefinitions.MCPDetail,

@@ -11,6 +11,7 @@ import { McpAuthModal, useMcpAuthModal } from '@/[fsd]/features/mcp';
 import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
 import {
   useDeleteIndexItemMutation,
+  useSaveIndexConfigurationMutation,
   useUpdateIndexScheduleMutation,
 } from '@/[fsd]/features/toolkits/indexes/api';
 import {
@@ -22,6 +23,10 @@ import {
 } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
 import { getMockToolkitIndexConversation } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexChat.helpers';
 import {
+  isIndexConfigDirty,
+  saveConfigurationError,
+} from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexConfig.helpers';
+import {
   bannerOutlivesRun,
   bannerVariant,
   hasLiveRun,
@@ -32,7 +37,7 @@ import {
 import { useIndexesListPolling } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
 import { selectToolkitScheduler } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
 import { IndexActivityPanel, IndexScheduleModal, RunIndexBanner } from '@/[fsd]/features/toolkits/indexes/ui';
-import { ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
+import { ToolkitChatHelpers, ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useGetCurrentToolkitSchemas, useToolkitChat } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { NavigationHelpers, ScheduleHelpers } from '@/[fsd]/shared/lib/helpers';
@@ -43,6 +48,7 @@ import { useDeleteIndexScheduleMutation } from '@/api';
 import { PERMISSIONS, ROLES, WELCOME_MESSAGE_ID } from '@/common/constants';
 import { convertToolkitSchema } from '@/common/toolkitSchemaUtils';
 import { useGetSelectedToolSchema } from '@/hooks/toolkit/useGetSelectedToolSchema';
+import useNavBlocker from '@/hooks/useNavBlocker';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast.jsx';
 import RouteDefinitions from '@/routes';
@@ -77,6 +83,7 @@ const RunIndexPanel = memo(props => {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [reindexConfirmOpen, setReindexConfirmOpen] = useState(false);
   const [configInputVariables, setConfigInputVariables] = useState({});
+  const [savedConfig, setSavedConfig] = useState(null);
   const [localMetaOverride, setLocalMetaOverride] = useState(null);
   const overrideObservedAtRef = useRef(null);
   const [deleteScheduleOpen, setDeleteScheduleOpen] = useState(false);
@@ -85,6 +92,7 @@ const RunIndexPanel = memo(props => {
   const currentProjectName = useSelector(state => state.settings.project.name);
   const toolkitScheduler = useSelector(selectToolkitScheduler);
   const [updateIndexSchedule] = useUpdateIndexScheduleMutation();
+  const [saveIndexConfiguration, { isLoading: isSavingConfig }] = useSaveIndexConfigurationMutation();
   const [deleteIndexSchedule] = useDeleteIndexScheduleMutation();
 
   const scheduleData = useMemo(() => {
@@ -298,15 +306,6 @@ const RunIndexPanel = memo(props => {
 
   const openConfigurationTab = useCallback(() => setActiveTab(IndexDetailsTabs.configuration), []);
 
-  const handleReindex = useCallback(() => setReindexConfirmOpen(true), []);
-  const confirmReindex = useCallback(() => {
-    setReindexConfirmOpen(false);
-    handleClearActiveConversation();
-    handleClearChat();
-    handleIndexData();
-  }, [handleClearActiveConversation, handleClearChat, handleIndexData]);
-  const cancelReindexConfirm = useCallback(() => setReindexConfirmOpen(false), []);
-
   const openDelete = useCallback(() => setDeleteOpen(true), []);
   const closeDelete = useCallback(() => setDeleteOpen(false), []);
   const confirmDelete = useCallback(async () => {
@@ -371,10 +370,93 @@ const RunIndexPanel = memo(props => {
     [index?.metadata?.index_configuration],
   );
 
+  // The baseline is what the server last confirmed, and it is the only thing the form is compared
+  // against. Seeding local state from `prev` instead would make the two indistinguishable, so a
+  // save could never hand the form a clean slate.
   useEffect(() => {
-    if (!configSchema?.properties) return;
-    setConfigInputVariables(prev => ({ ...configuredValues, ...prev }));
-  }, [configSchema, configuredValues]);
+    if (!configSchema?.properties || !index?.metadata || savedConfig) return;
+    setSavedConfig(configuredValues);
+    setConfigInputVariables(configuredValues);
+  }, [configSchema, configuredValues, index?.metadata, savedConfig]);
+
+  const isConfigDirty = useMemo(
+    () => isIndexConfigDirty(configSchema, configInputVariables, savedConfig ?? configuredValues),
+    [configSchema, configInputVariables, savedConfig, configuredValues],
+  );
+
+  const configIsValid = useMemo(
+    () => !configSchema || ToolkitChatHelpers.validateToolkitForm(configSchema, configInputVariables),
+    [configSchema, configInputVariables],
+  );
+  const configInvalidReason = configIsValid ? undefined : 'Fill in all required configuration fields';
+  // A clean form is reindexed from the stored configuration, so its validity is not the user's
+  // problem until they edit it.
+  const reindexBlockedReason = buildBlockedReason ?? (isConfigDirty ? configInvalidReason : undefined);
+
+  const blockOptions = useMemo(() => ({ blockCondition: isConfigDirty }), [isConfigDirty]);
+  const { setBlockNav } = useNavBlocker(blockOptions);
+
+  // The flag lives in the store, and the modal only consults it, so leaving the page dirty would
+  // otherwise arm the warning for whoever mounts on a blockable route next.
+  useEffect(() => () => setBlockNav(false), [setBlockNav]);
+
+  const saveConfiguration = useCallback(async () => {
+    const { configuration } = await saveIndexConfiguration({
+      projectId,
+      toolkitId,
+      indexName: index?.metadata?.collection ?? indexName,
+      configuration: configInputVariables,
+    }).unwrap();
+
+    // Rebased from the response rather than from local state: the server restores index_name and
+    // may normalize values, and a baseline that disagreed would leave the form dirty forever.
+    setSavedConfig(configuration);
+    setConfigInputVariables(configuration);
+  }, [
+    saveIndexConfiguration,
+    projectId,
+    toolkitId,
+    index?.metadata?.collection,
+    indexName,
+    configInputVariables,
+  ]);
+
+  const handleSaveConfiguration = useCallback(async () => {
+    try {
+      await saveConfiguration();
+      toastSuccess('Configuration saved. Changes will apply during the next reindex.');
+    } catch (error) {
+      toastError(saveConfigurationError(error));
+    }
+  }, [saveConfiguration, toastSuccess, toastError]);
+
+  const handleReindex = useCallback(() => setReindexConfirmOpen(true), []);
+  const confirmReindex = useCallback(async () => {
+    setReindexConfirmOpen(false);
+
+    // start_index_task dispatches the worker before it persists, so it cannot abort a run on a
+    // failed save. Saving here first is what keeps a rejected configuration from starting one.
+    if (isConfigDirty) {
+      try {
+        await saveConfiguration();
+      } catch (error) {
+        toastError(saveConfigurationError(error));
+        return;
+      }
+    }
+
+    handleClearActiveConversation();
+    handleClearChat();
+    handleIndexData();
+  }, [
+    isConfigDirty,
+    saveConfiguration,
+    toastError,
+    handleClearActiveConversation,
+    handleClearChat,
+    handleIndexData,
+  ]);
+  const cancelReindexConfirm = useCallback(() => setReindexConfirmOpen(false), []);
 
   const reindexStats = useMemo(() => {
     const md = index?.metadata;
@@ -574,9 +656,14 @@ const RunIndexPanel = memo(props => {
             isStoppingIndexing={isStoppingIndexing}
             canStopIndexing={canStopIndexing}
             onStop={onCancelIndexing}
-            reindexDisabled={reindexDisabled}
-            reindexTooltip={buildBlockedReason ?? undefined}
+            reindexDisabled={reindexDisabled || (isConfigDirty && !configIsValid)}
+            reindexTooltip={reindexBlockedReason}
             onReindex={handleReindex}
+            isDirty={isConfigDirty}
+            isSaving={isSavingConfig}
+            saveDisabled={!configIsValid}
+            saveTooltip={configInvalidReason}
+            onSave={handleSaveConfiguration}
           />
         </Box>
       </Box>
