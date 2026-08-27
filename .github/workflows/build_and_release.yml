@@ -71,7 +71,10 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Commit and push changes
+          # Commit and push changes. This push uses the GitHub App token, and App-token pushes
+          # do start workflow runs, so [skip ci] is the only thing preventing an endless build
+          # loop here -- and, since this workflow now dispatches to elitea_core, an endless
+          # version bump there too. Do not remove it.
           git add package.json
           git commit -m "build: [EL-1000] Increment version to $new_version [skip ci]" || echo "No changes to commit"
           git push
@@ -101,6 +104,57 @@ jobs:
           makeLatest: true
           allowUpdates: true
           tag: ${{ github.event.inputs.tag || env.DEFAULT_TAG }}
+
+      # Scoped to elitea_core alone and minted here rather than reusing the app-token step
+      # above, whose token is what pushes the package.json bump to protected main.
+      - name: Mint token for elitea_core
+        id: core-token
+        if: github.ref == 'refs/heads/main'
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          owner: EliteaAI
+          repositories: elitea_core
+          permission-contents: write
+
+      # The UI ships inside elitea_core, so a UI-only release must advance the version Admin
+      # Configuration displays. elitea_core's own versioneer subscribes to this event.
+      #
+      # The `if:` deliberately carries no status function. GitHub ANDs an implicit success()
+      # into it, and that is the only thing stopping a failed or cancelled build from bumping
+      # elitea_core. Writing always() or !cancelled() here removes that gate.
+      #
+      # curl rather than gh: the push-triggered runner is self-hosted and carries no
+      # guarantee of gh or jq.
+      - name: Notify elitea_core of new UI release
+        if: github.ref == 'refs/heads/main'
+        env:
+          CORE_TOKEN: ${{ steps.core-token.outputs.token }}
+          UI_VERSION: ${{ steps.bump_version.outputs.new_version || 'unchanged' }}
+          RELEASE_TAG: ${{ github.event.inputs.tag || env.DEFAULT_TAG }}
+        run: |
+          set -euo pipefail
+          payload="$RUNNER_TEMP/elitea_core_dispatch.json"
+          cat > "$payload" <<EOF
+          {
+            "event_type": "elitea-ui-released",
+            "client_payload": {
+              "ui_version": "${UI_VERSION}",
+              "ui_sha": "${GITHUB_SHA}",
+              "ui_release_tag": "${RELEASE_TAG}",
+              "target_branch": "main",
+              "source_run_url": "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+            }
+          }
+          EOF
+          curl -sS -X POST \
+            -H "Authorization: Bearer ${CORE_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            -d @"$payload" \
+            --fail-with-body \
+            https://api.github.com/repos/EliteaAI/elitea_core/dispatches
 
       - name: Show version bump annotation
         if: steps.bump_version.outputs.new_version != ''
