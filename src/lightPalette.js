@@ -1,7 +1,6 @@
-import { white } from './darkPalette';
-
 // const white14 = 'rgba(255, 255, 255, 0.14)';
 // const veryLightBlue = '#C7EBFF';
+const white = '#FFFFFF';
 const blueFill08 = 'rgba(41, 184, 245, 0.08)';
 const skyBlue20 = ' rgba(80, 161, 255, 0.2)';
 const skyBlue40 = ' rgba(80, 161, 255, 0.4)';
@@ -47,11 +46,12 @@ const darkMagenta30 = 'rgba(245, 81, 249, 0.3)';
 const darkMagenta20 = 'rgba(245, 81, 249, 0.2)';
 const darkMagenta10 = 'rgba(245, 81, 249, 0.1)';
 const gradient = 'linear-gradient(270deg, #EBF1F8 0%, #FFF9FF 100%)';
-const white01 = 'rgba(250, 250, 250, 1)';
+const white01 = '#fafafa';
 const light10 = '#777A83';
 const light20 = 'rgba(173, 175, 183, 1)';
 const light30 = 'rgba(203, 206, 214, 1)';
 const light40 = 'rgba(225, 229, 233, 1)';
+const light53 = '#F4F5F5';
 const lightStepBorder = '#bdbdbd';
 const dark20 = 'rgba(61, 68, 86, 0.2)';
 const dark10 = 'rgba(61, 68, 86, 0.1)';
@@ -402,6 +402,8 @@ const lightPalette = {
     emptyState: {
       default: grey003,
     },
+    toolkitDetailLeftPanel: light53,
+    toolkitDetailRightPanel: light53,
     indexResult: {
       success: green8,
       error: red8,

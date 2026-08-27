@@ -32,12 +32,13 @@ RunIndexResultsPanel.displayName = 'RunIndexResultsPanel';
 
 /** @type {MuiSx} */
 const runIndexResultsPanelStyles = () => ({
-  chatBody: {
+  chatBody: ({ palette }) => ({
     flex: 1,
     minHeight: 0,
     borderRadius: '0 !important',
     border: 'none !important',
-  },
+    background: palette.background.eliteaDefault,
+  }),
 });
 
 export default RunIndexResultsPanel;

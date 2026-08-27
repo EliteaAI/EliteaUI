@@ -123,7 +123,6 @@ const runIndexGeneralSectionStyles = () => ({
   lastIndexContainer: {
     flex: 1,
     borderRadius: '0.5rem',
-    border: ({ palette }) => `0.0625rem solid ${palette.border.reindexInfoContainer}`,
     padding: '0.5rem',
   },
 });
