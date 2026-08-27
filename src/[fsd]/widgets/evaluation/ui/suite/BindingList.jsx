@@ -23,7 +23,6 @@ import BindingRow from './BindingRow';
 
 const GROUP_ORDER = [
   { kind: EVAL_BINDING_KIND.dimension, title: 'Dimensions' },
-  { kind: EVAL_BINDING_KIND.codeValidation, title: 'Code validations' },
   { kind: EVAL_BINDING_KIND.platform, title: 'Platform validations' },
 ];
 
@@ -31,7 +30,6 @@ const BindingList = memo(props => {
   const {
     bindings = [],
     dimensions = [],
-    codeValidations = [],
     canEdit = false,
     onEdit,
     onRemove,
@@ -81,7 +79,7 @@ const BindingList = memo(props => {
         color="text.secondary"
         data-testid="evaluation-bindings-empty"
       >
-        No validations added yet. Use “+ Add” to attach dimensions or code validations.
+        No validations added yet. Use “+ Add” to attach a dimension or a platform validation.
       </Typography>
     );
   }
@@ -100,7 +98,6 @@ const BindingList = memo(props => {
             key={binding.id}
             binding={binding}
             dimensions={dimensions}
-            codeValidations={codeValidations}
             canEdit={canEdit}
             canReorder={canReorder}
             onEdit={onEdit}

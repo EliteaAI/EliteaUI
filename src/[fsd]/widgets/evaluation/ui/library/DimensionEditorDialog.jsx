@@ -2,7 +2,8 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Box, FormControlLabel, Typography } from '@mui/material';
 
-import { Button, Checkbox, Input, Modal } from '@/[fsd]/shared/ui';
+import { CodeMirrorLinterHelpers } from '@/[fsd]/shared/lib/helpers';
+import { Button, Checkbox, Field, Input, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 
@@ -11,14 +12,18 @@ import {
   DEFAULT_DIMENSION_FORM,
   DIMENSION_ENGINE_OPTIONS,
   DIMENSION_TIER_OPTIONS,
+  EVAL_ENGINE,
   EVAL_TIER,
   EVIDENCE_SCOPE_OPTIONS,
   NEW_ITEM_EVIDENCE_SCOPE,
   POLARITY_OPTIONS,
+  RETURN_CONTRACT_OPTIONS,
   SCALE_TYPE_OPTIONS,
   TARGET_OPERATOR_OPTIONS,
 } from '../../lib/constants';
 import { parseEvalError } from '../../lib/helpers';
+
+const isCodeOnly = engines => engines?.length === 1 && engines[0] === EVAL_ENGINE.code;
 
 const toFormState = dimension => {
   if (!dimension) {
@@ -43,6 +48,8 @@ const toFormState = dimension => {
     default_target: dimension.default_target ?? '',
     default_target_operator: dimension.default_target_operator ?? '',
     evidence_scope: { ...NEW_ITEM_EVIDENCE_SCOPE },
+    code: dimension.code ?? '',
+    return_contract: dimension.return_contract ?? DEFAULT_DIMENSION_FORM.return_contract,
   };
 };
 
@@ -53,11 +60,23 @@ const DimensionEditorDialog = memo(props => {
 
   const [form, setForm] = useState(() => toFormState(dimension));
   const [errorMessage, setErrorMessage] = useState('');
+  const [codeExtensions, setCodeExtensions] = useState([]);
 
   const [createDimension, { isLoading: isCreating }] = useCreateEvalDimensionMutation();
   const [updateDimension, { isLoading: isUpdating }] = useUpdateEvalDimensionMutation();
 
   const isSaving = isCreating || isUpdating;
+  const isCode = isCodeOnly(form.allowed_engines);
+
+  useEffect(() => {
+    let active = true;
+    CodeMirrorLinterHelpers.getExtensionsByLang('python').then(({ extensionWithLinter }) => {
+      if (active) setCodeExtensions(extensionWithLinter);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (open) {
@@ -70,10 +89,18 @@ const DimensionEditorDialog = memo(props => {
     setForm(prev => ({ ...prev, [key]: value }));
   }, []);
 
+  // Code is mutually exclusive with ai/human (backend: allowed_engines == ['code'] cannot also
+  // contain ai/human, §2.1). Picking Code replaces the set; picking ai/human while Code is
+  // selected replaces it too, rather than adding to it.
   const toggleEngine = useCallback(engine => {
     setForm(prev => {
-      const has = prev.allowed_engines.includes(engine);
-      const next = has ? prev.allowed_engines.filter(e => e !== engine) : [...prev.allowed_engines, engine];
+      if (engine === EVAL_ENGINE.code) {
+        const next = isCodeOnly(prev.allowed_engines) ? [] : [EVAL_ENGINE.code];
+        return { ...prev, allowed_engines: next };
+      }
+      const base = isCodeOnly(prev.allowed_engines) ? [] : prev.allowed_engines;
+      const has = base.includes(engine);
+      const next = has ? base.filter(e => e !== engine) : [...base, engine];
       return { ...prev, allowed_engines: next };
     });
   }, []);
@@ -88,6 +115,7 @@ const DimensionEditorDialog = memo(props => {
   const validationError = useMemo(() => {
     if (!form.name.trim()) return 'Name is required.';
     if (!form.allowed_engines.length) return 'Select at least one engine.';
+    if (isCode && !form.code.trim()) return 'Validation code is required.';
     if (!form.polarity) return 'Pick a polarity — inverse metrics must be "Lower is better".';
     if (!isEdit && !Object.values(form.evidence_scope).some(Boolean)) {
       return 'Evidence scope must have at least one option selected.';
@@ -103,7 +131,7 @@ const DimensionEditorDialog = memo(props => {
     const hasOperator = !!form.default_target_operator;
     if (hasTarget !== hasOperator) return 'Provide both a default target and an operator, or neither.';
     return '';
-  }, [form, isEdit, applicationId]);
+  }, [form, isCode, isEdit, applicationId]);
 
   const handleSave = useCallback(async () => {
     if (validationError) {
@@ -124,6 +152,8 @@ const DimensionEditorDialog = memo(props => {
       default_weight: Number(form.default_weight),
       default_target: hasTarget ? Number(form.default_target) : null,
       default_target_operator: hasTarget ? form.default_target_operator : null,
+      code: isCode ? form.code : null,
+      return_contract: isCode ? form.return_contract : null,
       ...(!isEdit
         ? {
             tier: form.tier,
@@ -148,6 +178,7 @@ const DimensionEditorDialog = memo(props => {
   }, [
     validationError,
     form,
+    isCode,
     isEdit,
     updateDimension,
     projectId,
@@ -175,9 +206,9 @@ const DimensionEditorDialog = memo(props => {
         data-testid="dimension-rubric-input"
         fullWidth
         multiline
-        minRows={4}
+        minRows={isCode ? 2 : 4}
         variant="standard"
-        label="Rubric / description (used as the AI grading prompt)"
+        label={isCode ? 'Description' : 'Rubric / description (used as the AI grading prompt)'}
         value={form.description}
         onChange={event => setField('description', event.target.value)}
       />
@@ -220,6 +251,41 @@ const DimensionEditorDialog = memo(props => {
           ))}
         </Box>
       </Box>
+
+      {isCode && (
+        <Box sx={styles.field}>
+          <Typography variant="labelMedium">Validation code (Python)</Typography>
+          <Box sx={styles.editorWrapper}>
+            <Field.CodeMirrorEditor
+              value={form.code}
+              extensions={codeExtensions}
+              notifyChange={value => setField('code', value)}
+              autoHeight
+              minHeight="12rem"
+              maxHeight="24rem"
+              contentTestId="dimension-code-input"
+            />
+          </Box>
+          <Typography
+            variant="bodySmall"
+            color="text.secondary"
+          >
+            The code is checked by a safety pre-screen before it is stored. Dangerous imports, builtins, and
+            dunder access are rejected.
+          </Typography>
+        </Box>
+      )}
+
+      {isCode && (
+        <SingleSelect
+          label="Return contract"
+          showBorder
+          value={form.return_contract}
+          options={RETURN_CONTRACT_OPTIONS}
+          onValueChange={value => setField('return_contract', value)}
+          data-testid="dimension-return-contract-select"
+        />
+      )}
 
       {!isEdit && (
         <Box sx={styles.field}>
@@ -377,6 +443,11 @@ const dimensionEditorDialogStyles = () => ({
     display: 'flex',
     gap: '1.5rem',
   },
+  editorWrapper: ({ palette }) => ({
+    border: `0.0625rem solid ${palette.border.lines}`,
+    borderRadius: '0.25rem',
+    overflow: 'hidden',
+  }),
   evidenceRow: {
     display: 'flex',
     gap: '1.5rem',

@@ -26,12 +26,13 @@ export const EVAL_RETURN_CONTRACT = {
   number: 'number',
 };
 
-// Engines an author may toggle in the Library dimension editor. Code-engine
-// criteria are authored through the separate code-validation editor, so only
-// AI and Human are offered here (§16.2).
+// Engines an author may toggle in the Library dimension editor. AI and Human may be
+// combined on one dimension; Code is mutually exclusive with both (backend:
+// allowed_engines == ['code'] cannot also contain ai/human, §2.1/§16.2).
 export const DIMENSION_ENGINE_OPTIONS = [
   { value: EVAL_ENGINE.ai, label: 'AI' },
   { value: EVAL_ENGINE.human, label: 'Human' },
+  { value: EVAL_ENGINE.code, label: 'Code' },
 ];
 
 export const SCALE_TYPE_OPTIONS = [
@@ -71,10 +72,6 @@ export const EVAL_PERMISSIONS = {
   dimensionCreate: 'models.applications.evaluation.dimension.create',
   dimensionUpdate: 'models.applications.evaluation.dimension.update',
   dimensionDelete: 'models.applications.evaluation.dimension.delete',
-  codeValidationRead: 'models.applications.evaluation.code_validation.read',
-  codeValidationCreate: 'models.applications.evaluation.code_validation.create',
-  codeValidationUpdate: 'models.applications.evaluation.code_validation.update',
-  codeValidationDelete: 'models.applications.evaluation.code_validation.delete',
   suiteRead: 'models.applications.evaluation.suite.read',
   suiteCreate: 'models.applications.evaluation.suite.create',
   suiteUpdate: 'models.applications.evaluation.suite.update',
@@ -119,7 +116,7 @@ export const EVAL_RESULT_STATUS = {
 };
 
 // Sub-navigation views on the agent Evaluation tab (§13). Suite config is the
-// default; Library preserves the U2 dimension / code-validation editors.
+// default; Library preserves the U2 dimension editor.
 export const EVAL_TAB_VIEW = {
   suite: 'suite',
   library: 'library',
@@ -142,18 +139,18 @@ export const PROMOTE_CONVERSATION_SOURCE_OPTIONS = [
 ];
 
 // Binding "kind" derived from which reference column is populated (§13.1). One
-// of dimension_id / code_validation_id / platform_key is always set.
+// of dimension_id / platform_key is always set.
 export const EVAL_BINDING_KIND = {
   dimension: 'dimension',
-  codeValidation: 'code_validation',
   platform: 'platform',
 };
 
-// Engine choices offered when editing a single binding (§13.2). Platform
-// bindings pin engine to code and are not editable here.
+// Engine choices offered when editing a single binding (§13.2). Platform bindings and
+// Code-engine dimension bindings pin engine to code and are not editable here.
 export const BINDING_ENGINE_OPTIONS = [
   { value: EVAL_ENGINE.ai, label: 'AI' },
   { value: EVAL_ENGINE.human, label: 'Human' },
+  { value: EVAL_ENGINE.code, label: 'Code' },
 ];
 
 // Evidence-scope toggles for a binding (§13.2). Keys match the backend
@@ -184,10 +181,8 @@ export const NEW_ITEM_EVIDENCE_SCOPE = {
 // Items in the "+ Add" menu on the Suite config screen (§13.3).
 export const ADD_VALIDATION_MENU = {
   dimensionLibrary: 'dimensionLibrary',
-  codeValidationLibrary: 'codeValidationLibrary',
   platformCatalog: 'platformCatalog',
   newDimension: 'newDimension',
-  newCodeValidation: 'newCodeValidation',
   generateWithAi: 'generateWithAi',
 };
 
@@ -212,18 +207,10 @@ export const DEFAULT_DIMENSION_FORM = {
   default_weight: 1,
   default_target: '',
   default_target_operator: '',
-};
-
-export const DEFAULT_CODE_VALIDATION_FORM = {
-  name: '',
-  description: '',
+  // Code-engine authoring only (§2.1): a script + its return shape, required together and only
+  // when allowed_engines is exactly ['code'].
   code: '',
   return_contract: EVAL_RETURN_CONTRACT.bool,
-  scale_min: '',
-  scale_max: '',
-  // Left unset on purpose (same reason as DEFAULT_DIMENSION_FORM): a "lower is better" check
-  // (latency, error count) scores inverted if the author never states the direction.
-  polarity: '',
 };
 
 // Dataset case provenance (§17). Set by the backend; the UI only displays it.
