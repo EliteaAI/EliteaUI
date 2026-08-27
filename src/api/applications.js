@@ -465,6 +465,27 @@ export const apiSlice = eliteaApi
           };
         },
         invalidatesTags: [],
+        onQueryStarted: async ({ projectId, applicationId }, { dispatch, getState, queryFulfilled }) => {
+          try {
+            const { data: newVersion } = await queryFulfilled;
+            if (!newVersion?.id) return;
+
+            const { name: author_name, email: author_email } = getState().user;
+
+            dispatch(
+              eliteaApi.util.updateQueryData('applicationDetails', { projectId, applicationId }, draft => {
+                if (!Array.isArray(draft.versions)) return;
+                draft.versions.push({
+                  ...newVersion,
+                  author_name: author_name ?? null,
+                  author_email: author_email ?? null,
+                });
+              }),
+            );
+          } catch {
+            // queryFulfilled rejected — no cache update needed
+          }
+        },
       }),
       updateApplicationVersion: build.mutation({
         query: ({ projectId, applicationId, versionId, ...body }) => {
