@@ -430,6 +430,7 @@ const lightPalette = {
     notificationItem: light40,
     cardsOutlines: light40,
     cardsOutlinesGradient: 'linear-gradient(0deg, rgba(208, 213, 218, 0.6) 0%, #D0D5DA 100%)',
+    toolCardGradient: light40,
     conversationItemDivider: dark10,
     highlightUserMessage: skyBlue40,
     error: red40,

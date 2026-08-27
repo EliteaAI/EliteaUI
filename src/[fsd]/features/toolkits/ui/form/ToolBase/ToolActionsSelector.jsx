@@ -202,9 +202,6 @@ export const ToolActionsSelector = memo(props => {
         <BasicAccordion
           card
           showMode={AccordionConstants.AccordionShowMode.LeftMode}
-          accordionSX={{
-            background: `${theme.palette.background.tabPanel} !important`,
-          }}
           expanded={isExpanded}
           onChange={toggleExpanded}
           items={[

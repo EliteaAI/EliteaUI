@@ -131,7 +131,7 @@ const configurationTabStyles = hasSidePanel => ({
     borderRight: hasSidePanel ? ({ palette }) => `0.0625rem solid ${palette.border.table}` : 'none',
     position: 'relative',
     ' & .MuiAccordion-root': {
-      background: ({ palette }) => `${palette.background.section} !important`,
+      background: 'transparent',
     },
   },
   rightPanel: {
