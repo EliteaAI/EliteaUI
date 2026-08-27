@@ -14,18 +14,13 @@ export const useApplicationsData = (projectId, trendRange, hasAdminPermission) =
   const { tagList } = useSelector(state => state.tags);
   const { selectedTagIds } = useTags(tagList);
 
-  const baseParams = {
+  const publicParams = {
     query,
     tags: selectedTagIds,
     agents_type: 'classic',
-  };
-
-  const publicParams = {
-    ...baseParams,
     statuses: CollectionStatus.Published,
   };
 
-  // Public project queries
   const { data: latestData } = useTotalPublicApplicationsQuery(
     { params: publicParams },
     { skip: !projectId || projectId != PUBLIC_PROJECT_ID },
@@ -41,7 +36,6 @@ export const useApplicationsData = (projectId, trendRange, hasAdminPermission) =
     { skip: !projectId || projectId != PUBLIC_PROJECT_ID },
   );
 
-  // Private project queries
   const { data: applicationsData } = useTotalApplicationsQuery(
     {
       projectId,
@@ -56,80 +50,10 @@ export const useApplicationsData = (projectId, trendRange, hasAdminPermission) =
     },
   );
 
-  const { data: draftApplicationsData } = useTotalApplicationsQuery(
-    {
-      projectId,
-      params: {
-        ...baseParams,
-        statuses: CollectionStatus.Draft,
-      },
-    },
-    {
-      skip: !projectId || projectId == PUBLIC_PROJECT_ID,
-    },
-  );
-
-  const { data: publishedApplicationsData } = useTotalApplicationsQuery(
-    {
-      projectId,
-      params: {
-        ...baseParams,
-        statuses: CollectionStatus.Published,
-      },
-    },
-    {
-      skip: !projectId || projectId == PUBLIC_PROJECT_ID,
-    },
-  );
-
-  const { data: moderationApplicationsData } = useTotalApplicationsQuery(
-    {
-      projectId,
-      params: {
-        ...baseParams,
-        statuses: CollectionStatus.OnModeration,
-      },
-    },
-    {
-      skip: !projectId || projectId == PUBLIC_PROJECT_ID,
-    },
-  );
-
-  const { data: approvalApplicationsData } = useTotalApplicationsQuery(
-    {
-      projectId,
-      params: {
-        ...baseParams,
-        statuses: CollectionStatus.UserApproval,
-      },
-    },
-    {
-      skip: !projectId || projectId == PUBLIC_PROJECT_ID,
-    },
-  );
-
-  const { data: rejectedApplicationsData } = useTotalApplicationsQuery(
-    {
-      projectId,
-      params: {
-        ...baseParams,
-        statuses: CollectionStatus.Rejected,
-      },
-    },
-    {
-      skip: !projectId || projectId == PUBLIC_PROJECT_ID,
-    },
-  );
-
   return {
     latestTotal: latestData?.total,
     myLikedTotal: myLikedData?.total,
     trendingTotal: trendingData?.total,
     applicationsTotal: applicationsData?.total,
-    draftTotal: draftApplicationsData?.total,
-    publishedTotal: publishedApplicationsData?.total,
-    moderationTotal: moderationApplicationsData?.total,
-    approvalTotal: approvalApplicationsData?.total,
-    rejectedTotal: rejectedApplicationsData?.total,
   };
 };

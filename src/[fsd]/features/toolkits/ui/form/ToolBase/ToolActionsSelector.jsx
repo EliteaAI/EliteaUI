@@ -2,7 +2,7 @@ import { memo, useCallback, useMemo, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { Box, Tooltip, Typography, useTheme } from '@mui/material';
+import { Box, Tooltip, Typography } from '@mui/material';
 
 import {
   McpAuthModal,
@@ -44,7 +44,6 @@ export const ToolActionsSelector = memo(props => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const styles = useMemo(toolActionsSelectorStyles, []);
-  const theme = useTheme();
   const { shouldUseAccordionView } = useToolkitView();
 
   // Unified hook for fetching MCP tools (works for both remote and pre-built MCPs)

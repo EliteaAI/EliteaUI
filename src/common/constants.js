@@ -502,7 +502,7 @@ export const AppsTabs = ['applications', 'catalog'];
 
 export const CredentialsTabs = ['all'];
 
-export const PrivateApplicationTabs = ['all', 'drafts', 'published', 'moderation', 'approval', 'rejected'];
+export const PrivateApplicationTabs = ['all'];
 
 export const UserProfileTabs = ['profile', 'credentials', 'secrets'];
 export const UserPublicTabs = ['all', 'agents', 'pipelines', 'toolkits', 'MCPs'];
