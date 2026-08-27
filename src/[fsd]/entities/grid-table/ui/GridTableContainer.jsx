@@ -9,6 +9,7 @@ const GridTableContainer = memo(props => {
     isLoading = false,
     isEmpty = false,
     emptyMessage = 'No data',
+    emptyMessageTestId,
     loadingMessage = 'Loading...',
     sx = {},
     toolbarSx = {},
@@ -39,6 +40,7 @@ const GridTableContainer = memo(props => {
             <Typography
               variant="bodyMedium"
               color="text.secondary"
+              data-testid={emptyMessageTestId}
             >
               {emptyMessage}
             </Typography>

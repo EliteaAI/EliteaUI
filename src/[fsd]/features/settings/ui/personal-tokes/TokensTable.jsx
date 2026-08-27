@@ -157,6 +157,7 @@ const TokensTable = memo(props => {
         isLoading={false}
         isEmpty={paginatedTokens.length === 0}
         emptyMessage="No tokens"
+        emptyMessageTestId="personal-tokens-table-empty-message"
       >
         <GridTableHeader
           columns={visibleColumns}
