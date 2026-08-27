@@ -25,17 +25,11 @@ const Applications = memo(() => {
   const isCreating = useMatch({ path: RouteDefinitions.CreateApplication });
   const { trendRange } = useTrendRange();
 
-  const {
-    latestTotal,
-    myLikedTotal,
-    trendingTotal,
-    applicationsTotal,
-    draftTotal,
-    publishedTotal,
-    moderationTotal,
-    approvalTotal,
-    rejectedTotal,
-  } = useApplicationsData(projectId, trendRange, hasAdminPermission);
+  const { latestTotal, myLikedTotal, trendingTotal, applicationsTotal } = useApplicationsData(
+    projectId,
+    trendRange,
+    hasAdminPermission,
+  );
 
   const tabs = useApplicationTabs(
     projectId,
@@ -43,11 +37,6 @@ const Applications = memo(() => {
     myLikedTotal,
     trendingTotal,
     applicationsTotal,
-    draftTotal,
-    publishedTotal,
-    moderationTotal,
-    approvalTotal,
-    rejectedTotal,
     trendRange,
     hasAdminPermission,
   );

@@ -23,6 +23,7 @@ const ConfigurationTab = memo(props => {
     updateKey,
     isMCP,
     onValidationStateChange,
+    onClearDiscardErrorsRef,
     indexingBlocker,
     shouldHideIndexes = true,
   } = props;
@@ -87,6 +88,7 @@ const ConfigurationTab = memo(props => {
             isMCP={isMCP}
             onSyntaxError={() => {}}
             onValidationStateChange={onValidationStateChange}
+            onClearDiscardErrorsRef={onClearDiscardErrorsRef}
             hasSidePanel={hasSidePanel}
             handleShowHistory={goToRunHistory}
             handleShowTest={goToTest}

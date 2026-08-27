@@ -46,6 +46,21 @@ describe('buildRunHistoryRowDecorator — joined rows', () => {
     expect(decorated.index_name).toBe('original');
     expect(decorated.name).toBe('row name');
   });
+
+  it('names an abandoned run by its outcome, not its still-in_progress state', () => {
+    const decorated = decorate({ id: 7 }, [[7, [run('in_progress', 200, { abandoned: true })]]]);
+
+    expect(decorated.event_label).toBe('Stopped without finishing');
+    expect(decorated.event_tooltip).toBe('Stopped without finishing — docs');
+  });
+
+  it('lets a retry that finished own the label over the abandoned attempt', () => {
+    const decorated = decorate({ id: 7 }, [
+      [7, [run('in_progress', 200, { abandoned: true }), run('completed', 300)]],
+    ]);
+
+    expect(decorated.event_label).toBe('Reindexed (2 runs)');
+  });
 });
 
 describe('buildRunHistoryRowDecorator — rows with no index run', () => {

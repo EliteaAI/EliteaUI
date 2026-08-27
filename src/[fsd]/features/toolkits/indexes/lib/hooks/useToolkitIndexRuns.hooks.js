@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 
 import { useGetIndexesListQuery } from '@/[fsd]/features/toolkits/indexes/api';
 import { IndexStatuses } from '@/[fsd]/features/toolkits/indexes/lib/constants';
+import { isAbandonedRun } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexDetails.helpers';
 import {
   initialCompletedTsOf,
   resolveIndexEventLabel,
@@ -49,11 +50,21 @@ export const buildIndexRunLookup = indexesData => {
     const indexName = metadata?.collection;
     if (!indexName || !Array.isArray(metadata.history)) return;
 
+    // An in_progress entry that will never terminate: superseded by a later run (a
+    // retry replaced its conversation on the row), or the row itself went stale. A
+    // live run's current entry stays out, exactly as before.
+    const rowAbandoned = isAbandonedRun(index);
+    const isAbandonedEntry = entry =>
+      entry.state === IndexStatuses.progress &&
+      (entry.conversation_id !== metadata.conversation_id || rowAbandoned);
+
     const initialCompletedTs = initialCompletedTsOf(metadata.history);
     metadata.history
-      .filter(entry => entry?.conversation_id && TERMINAL_STATES.has(entry.state))
+      .filter(
+        entry => entry?.conversation_id && (TERMINAL_STATES.has(entry.state) || isAbandonedEntry(entry)),
+      )
       .forEach(entry => {
-        const run = { entry, indexName, initialCompletedTs };
+        const run = { entry, indexName, initialCompletedTs, abandoned: isAbandonedEntry(entry) };
         const existing = lookup.get(entry.conversation_id);
         if (existing) existing.push(run);
         else lookup.set(entry.conversation_id, [run]);

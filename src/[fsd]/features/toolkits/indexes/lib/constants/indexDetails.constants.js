@@ -60,6 +60,14 @@ export const BannerMessageMap = {
     "Indexing may take a few minutes depending on size. You can navigate to other sections; indexing will continue in the background and you'll be notified when it's done.",
 };
 
+// `stale` is a no-progress-for-the-timeout heuristic (default 2h), not a terminal
+// state from the worker — the copy has to hedge that the run may still be alive.
+export const INDEX_ABANDONED_BANNER_MESSAGE =
+  'This run has not reported progress for a long time and looks interrupted. ' +
+  'If it is still running it may yet finish; otherwise click Reindex to restart it.';
+
+export const INDEX_ABANDONED_EVENT_LABEL = 'Stopped without finishing';
+
 // Statuses that allow the index to be searched and run tools against
 export const RUNNABLE_INDEX_STATUSES = [
   IndexStatuses.success,

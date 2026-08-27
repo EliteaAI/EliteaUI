@@ -5,7 +5,12 @@ import useSocket from '@/hooks/useSocket';
 
 // Ephemeral, per-sid hint: only ever shown if it matches the conversation's
 // latest message, so a newer send or a reconnect naturally invalidates it.
-export const useNextInputSuggestion = ({ chatHistoryRef, chatHistory, conversationUuid, getInputContent }) => {
+export const useNextInputSuggestion = ({
+  chatHistoryRef,
+  chatHistory,
+  conversationUuid,
+  getInputContent,
+}) => {
   const [suggestions, setSuggestions] = useState([]);
   const suggestionSourceIdRef = useRef(null);
 

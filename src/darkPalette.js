@@ -434,7 +434,8 @@ const darkPalette = {
     notificationItem: gray60,
     cardsOutlines: gray40,
     cardsOutlinesGradient: 'linear-gradient(0deg, #262B34 0%, #313A48 100%)',
-    toolCardGradient: 'linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.0014) 100%)',
+    toolCardGradient:
+      'linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.0014) 100%)',
     conversationItemDivider: white10,
     highlightUserMessage: magenta40,
     error: red40,
