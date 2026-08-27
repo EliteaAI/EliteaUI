@@ -6,12 +6,16 @@ import { VersionAuthorAvatar } from '@/[fsd]/entities/version/ui';
 import { TypographyWithConditionalTooltip } from '@/[fsd]/shared/ui/tooltip';
 
 const VersionSelectOption = memo(props => {
-  const { name, meta, avatar, icon } = props;
+  const { name, meta, avatar, icon, isSelected = false } = props;
 
   const styles = versionSelectOptionStyles();
 
   return (
-    <Box sx={styles.root}>
+    <Box
+      role="option"
+      aria-selected={isSelected}
+      sx={styles.root}
+    >
       <Box sx={styles.leftSection}>
         <Box sx={styles.row}>
           <TypographyWithConditionalTooltip

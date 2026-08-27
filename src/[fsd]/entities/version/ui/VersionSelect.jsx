@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo } from 'react';
 
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
@@ -6,6 +6,7 @@ import { Box, Tooltip, Typography } from '@mui/material';
 
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
 import { buildVersionOption } from '@/[fsd]/entities/version/lib/helpers';
+import { useVersionSelectSearch } from '@/[fsd]/entities/version/lib/hooks';
 import { VersionSelectOption } from '@/[fsd]/entities/version/ui';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import PublishIcon from '@/assets/publish-version.svg?react';
@@ -39,8 +40,6 @@ const VersionSelect = memo(props => {
   const entityName = useNameFromUrl();
   const viewMode = useViewModeFromUrl();
   const selectedProjectId = useSelectedProjectId();
-
-  const [searchQuery, setSearchQuery] = useState('');
 
   const styles = versionSelectStyles();
 
@@ -91,15 +90,7 @@ const VersionSelect = memo(props => {
     );
   }, [actualVersions, enableVersionListAvatar, defaultVersionID, handleSetDefaultVersion]);
 
-  // Multi-field search: filter by pre-computed searchText (version name + creator, lowercase).
-  const filteredOptions = useMemo(() => {
-    if (!searchQuery) return versionSelectOptions;
-    const q = searchQuery.toLowerCase();
-
-    return versionSelectOptions.filter(opt => opt.searchText?.includes(q));
-  }, [versionSelectOptions, searchQuery]);
-
-  const handleSearch = useCallback(q => setSearchQuery(q), []);
+  const { searchQuery, filteredOptions, handleSearch } = useVersionSelectSearch(versionSelectOptions);
 
   const onSelectVersion = useCallback(
     newVersion => {
@@ -165,12 +156,13 @@ const VersionSelect = memo(props => {
   }, [getVersionDetailQuery, projectId, actualEntityId, versionFromParams, actualVersions]);
 
   const customRenderOption = useCallback(
-    option => (
+    (option, isSelected) => (
       <VersionSelectOption
         name={option.label}
         meta={option.versionMeta}
         avatar={option.versionAvatar}
         icon={option.icon}
+        isSelected={isSelected}
       />
     ),
     [],

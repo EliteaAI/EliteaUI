@@ -1,8 +1,9 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
 import { LATEST_VERSION_NAME, buildVersionOption } from '@/[fsd]/entities/version';
+import { useVersionSelectSearch } from '@/[fsd]/entities/version/lib/hooks';
 import { VersionSelectOption } from '@/[fsd]/entities/version/ui';
 import { DiscardSkillButton, SaveSkillButton, SaveSkillVersionButton } from '@/[fsd]/features/skill';
 import { Select } from '@/[fsd]/shared/ui';
@@ -18,8 +19,6 @@ const SkillTabBar = memo(props => {
     onSuccess,
     handleSetDefaultVersion = null,
   } = props;
-
-  const [searchQuery, setSearchQuery] = useState('');
 
   const styles = skillTabBarStyles();
 
@@ -40,15 +39,7 @@ const SkillTabBar = memo(props => {
     return sorted.map(buildVersionOption({ defaultVersionID: effectiveDefaultId, handleSetDefaultVersion }));
   }, [versions, effectiveDefaultId, handleSetDefaultVersion]);
 
-  // Multi-field search: filter by pre-computed searchText (version name + creator, lowercase).
-  const filteredOptions = useMemo(() => {
-    if (!searchQuery) return versionOptions;
-    const q = searchQuery.toLowerCase();
-
-    return versionOptions.filter(opt => opt.searchText?.includes(q));
-  }, [versionOptions, searchQuery]);
-
-  const handleSearch = useCallback(q => setSearchQuery(q), []);
+  const { searchQuery, filteredOptions, handleSearch } = useVersionSelectSearch(versionOptions);
 
   const selectedVersionId = useMemo(
     () => currentVersionId ?? versions[0]?.id ?? '',
@@ -96,12 +87,13 @@ const SkillTabBar = memo(props => {
   );
 
   const customRenderOption = useCallback(
-    option => (
+    (option, isSelected) => (
       <VersionSelectOption
         name={option.label}
         meta={option.versionMeta}
         avatar={option.versionAvatar}
         icon={option.icon}
+        isSelected={isSelected}
       />
     ),
     [],
