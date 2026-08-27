@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { format } from 'date-fns';
 import { useSelector } from 'react-redux';
@@ -18,7 +18,12 @@ import {
   GridTablePagination,
   GridTableRow,
 } from '@/[fsd]/entities/grid-table/ui';
-import { useDeleteArtifactMutation, useDeleteArtifactsMutation } from '@/api/artifacts';
+import { RenameArtifactDialog } from '@/[fsd]/features/artifacts';
+import {
+  useDeleteArtifactMutation,
+  useDeleteArtifactsMutation,
+  useRenameArtifactMutation,
+} from '@/api/artifacts';
 import { buildErrorMessage, downloadFileFromArtifact } from '@/common/utils';
 import FolderIcon from '@/components/Icons/FolderIcon';
 import useGetWindowWidth from '@/hooks/useGetWindowWidth';
@@ -65,7 +70,7 @@ const ARTIFACT_COLUMNS = [
   { field: 'actions', label: 'Actions', width: '7rem', sortable: false },
 ];
 
-export default function ArtifactTable(props) {
+const ArtifactTable = memo(props => {
   const {
     bucket,
     projectId,
@@ -82,7 +87,6 @@ export default function ArtifactTable(props) {
   const [searchQuery, setSearchQuery] = useState('');
   const [deletingFileName, setDeletingFileName] = useState(null);
 
-  // Breadcrumb segments for current path
   const breadcrumbs = useMemo(() => parsePrefixToBreadcrumbs(currentPrefix || ''), [currentPrefix]);
 
   const { zipDownloadProgress, startZipDownload, cancelZipDownload } = useZipDownload();
@@ -113,6 +117,18 @@ export default function ArtifactTable(props) {
       error: deleteArtifactsError,
     },
   ] = useDeleteArtifactsMutation();
+
+  const [
+    renameArtifact,
+    {
+      isLoading: isRenameArtifactLoading,
+      isError: isRenameArtifactError,
+      isSuccess: isRenameArtifactSuccess,
+      error: renameArtifactError,
+    },
+  ] = useRenameArtifactMutation();
+
+  const [renameDialogArtifact, setRenameDialogArtifact] = useState(null);
 
   const skipQuery =
     !projectId ||
@@ -149,7 +165,6 @@ export default function ArtifactTable(props) {
       canPreview: canPreviewFile(file.filename) && isFileSizePreviewableFlexible({ size: '-' }),
     }));
 
-    // Transform API response (flat contents list) to table rows
     const contents = data?.contents ?? [];
     const itemsAtCurrentLevel = getItemsAtCurrentLevel(contents, currentPrefix || '');
 
@@ -287,7 +302,6 @@ export default function ArtifactTable(props) {
 
   const bucketContents = useMemo(() => data?.contents ?? [], [data?.contents]);
 
-  // Handle folder navigation
   const handleFolderClick = useCallback(
     row => {
       if (row.type === ARTIFACT_TYPES.FOLDER && onPrefixChange) {
@@ -299,7 +313,6 @@ export default function ArtifactTable(props) {
     [onPrefixChange, clearSelection, handlePageChange],
   );
 
-  // Handle breadcrumb navigation
   const handleBreadcrumbClick = useCallback(
     path => {
       if (onPrefixChange) {
@@ -311,7 +324,6 @@ export default function ArtifactTable(props) {
     [onPrefixChange, clearSelection, handlePageChange],
   );
 
-  // Handle row click - navigate into folder or preview file
   const handleRowClick = useCallback(
     row => {
       if (row.type === ARTIFACT_TYPES.FOLDER) {
@@ -323,7 +335,6 @@ export default function ArtifactTable(props) {
 
   const onDownload = useCallback(
     row => {
-      // Use the full key path from the row to avoid prefix/name drift
       const filename = row.key;
       downloadFileFromArtifact({
         projectId,
@@ -358,7 +369,6 @@ export default function ArtifactTable(props) {
           });
         }
       } else {
-        // For files, use the key which already has the correct full path
         setDeletingFileName(row.name || row.key);
         deleteArtifact({
           projectId,
@@ -383,6 +393,32 @@ export default function ArtifactTable(props) {
     deleteArtifacts({ projectId, bucket, fname: filenames });
   }, [bucket, deleteArtifacts, projectId, rowSelectionModel, sortedRows, bucketContents, toastError]);
 
+  const onRenameArtifact = useCallback(row => {
+    setRenameDialogArtifact(row);
+  }, []);
+
+  const handleRenameDialogClose = useCallback(() => {
+    setRenameDialogArtifact(null);
+  }, []);
+
+  const handleRenameConfirm = useCallback(
+    newName => {
+      if (!renameDialogArtifact) return;
+
+      const filePrefix = renameDialogArtifact.key.substring(0, renameDialogArtifact.key.lastIndexOf('/') + 1);
+      const oldKey = renameDialogArtifact.key;
+      const newKey = filePrefix + newName;
+
+      renameArtifact({
+        projectId,
+        bucket,
+        oldName: oldKey,
+        newName: newKey,
+      });
+    },
+    [renameDialogArtifact, projectId, bucket, renameArtifact],
+  );
+
   const onDownloadFiles = useCallback(() => {
     if (rowSelectionModel.length === 0) {
       toastError('Please select files to download');
@@ -393,7 +429,6 @@ export default function ArtifactTable(props) {
 
     if (selectedFiles.length === 1 && selectedFiles[0].type !== ARTIFACT_TYPES.FOLDER) {
       const row = selectedFiles[0];
-      // Use the full key path from the row to avoid prefix/name drift
       const filename = row.key;
       downloadFileFromArtifact({
         projectId,
@@ -404,8 +439,6 @@ export default function ArtifactTable(props) {
         },
       });
     } else {
-      // Download folder(s) or multiple files as ZIP using custom hook
-      // Use the key property which already has the correct full path with trailing / for folders
       const filenames = selectedFiles.map(row => row.key);
       startZipDownload({ projectId, bucket, filenames, bucketContents, currentPrefix });
     }
@@ -436,9 +469,17 @@ export default function ArtifactTable(props) {
   }, [isDeleteArtifactsSuccess, isDeleteArtifactSuccess, deletingFileName, toastSuccess]);
 
   useEffect(() => {
+    if (isRenameArtifactSuccess) {
+      toastSuccess('File has been successfully renamed.');
+      setRenameDialogArtifact(null);
+    }
+  }, [isRenameArtifactSuccess, toastSuccess]);
+
+  useEffect(() => {
     const errors = [
       { isError: isDeleteArtifactsError, error: deleteArtifactsError },
       { isError: isDeleteArtifactError, error: deleteArtifactError },
+      { isError: isRenameArtifactError, error: renameArtifactError },
       { isError, error },
     ];
 
@@ -452,6 +493,8 @@ export default function ArtifactTable(props) {
     deleteArtifactsError,
     isDeleteArtifactError,
     deleteArtifactError,
+    isRenameArtifactError,
+    renameArtifactError,
     isError,
     error,
     toastError,
@@ -544,6 +587,7 @@ export default function ArtifactTable(props) {
                       onPreview={onPreview}
                       onDownload={onDownload}
                       onDelete={onDeleteArtifact}
+                      onRename={onRenameArtifact}
                     />
                   }
                   isLoading={row.uploading}
@@ -586,9 +630,19 @@ export default function ArtifactTable(props) {
         bucket={bucket}
         onCancel={cancelZipDownload}
       />
+
+      <RenameArtifactDialog
+        open={!!renameDialogArtifact}
+        artifact={renameDialogArtifact}
+        onClose={handleRenameDialogClose}
+        onConfirm={handleRenameConfirm}
+        isLoading={isRenameArtifactLoading}
+      />
     </>
   );
-}
+});
+
+ArtifactTable.displayName = 'ArtifactTable';
 
 /** @type {MuiSx} */
 const artifactTableStyles = () => ({
@@ -613,3 +667,5 @@ const artifactTableStyles = () => ({
     cursor: 'pointer',
   },
 });
+
+export default ArtifactTable;
