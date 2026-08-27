@@ -731,6 +731,7 @@ const ChatBox = forwardRef((props, boxRef) => {
     dismiss: dismissNextInputSuggestion,
   } = useNextInputSuggestion({
     chatHistoryRef,
+    chatHistory: chat_history,
     conversationUuid: activeConversation?.uuid,
     getInputContent: () => chatInput.current?.getInputContent(),
   });
