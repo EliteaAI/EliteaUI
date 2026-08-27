@@ -148,6 +148,7 @@ const SecretsContent = memo(() => {
             placeholder: 'Search',
             search,
             onChangeSearch: setSearch,
+            testId: 'secrets-search-input',
           },
           addButton: {
             onAdd: addSecretRow,

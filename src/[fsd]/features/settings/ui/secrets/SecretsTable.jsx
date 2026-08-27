@@ -587,6 +587,9 @@ const SecretsTable = memo(props => {
           <GridTablePagination
             {...pagination}
             pageInfoTestId="secrets-pagination-info"
+            prevButtonTestId="secrets-pagination-prev-button"
+            nextButtonTestId="secrets-pagination-next-button"
+            pageSizeSelectTestId="secrets-pagination-page-size-select"
           />
         )}
       </GridTableContainer>
