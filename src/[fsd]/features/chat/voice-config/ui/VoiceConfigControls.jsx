@@ -72,6 +72,7 @@ const VoiceConfigControls = memo(props => {
           showBorder
           showEmptyPlaceholder
           emptyPlaceholder={<em>Default</em>}
+          data-testid="voice-personalization-voice-select"
         />
       )}
       <Box sx={styles.slidersContainer}>
@@ -93,6 +94,11 @@ const VoiceConfigControls = memo(props => {
             valueLabelFormat={v => `${v}×`}
             size="small"
             sx={styles.speedSlider}
+            data-testid="voice-personalization-speed-slider"
+            slotProps={{
+              input: { 'data-testid': 'voice-personalization-speed-slider-input' },
+              thumb: { 'data-testid': 'voice-personalization-speed-slider-thumb' },
+            }}
           />
         </Box>
         <Box sx={styles.sliderRow}>
@@ -113,6 +119,11 @@ const VoiceConfigControls = memo(props => {
             valueLabelFormat={v => `${Math.round(v * 100)}%`}
             size="small"
             sx={styles.volumeSlider}
+            data-testid="voice-personalization-volume-slider"
+            slotProps={{
+              input: { 'data-testid': 'voice-personalization-volume-slider-input' },
+              thumb: { 'data-testid': 'voice-personalization-volume-slider-thumb' },
+            }}
           />
         </Box>
       </Box>

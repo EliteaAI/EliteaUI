@@ -42,6 +42,8 @@ const SoundNotificationControls = memo(props => {
         <Switch.BaseSwitch
           checked={config.enabled}
           onChange={handleToggle}
+          data-testid="sound-notifications-toggle"
+          inputProps={{ 'data-testid': 'sound-notifications-toggle-input' }}
         />
       </Box>
       {config.enabled && (
@@ -64,6 +66,11 @@ const SoundNotificationControls = memo(props => {
             size="small"
             aria-label="Notification volume"
             sx={styles.slider}
+            data-testid="sound-notifications-volume-slider"
+            slotProps={{
+              input: { 'data-testid': 'sound-notifications-volume-slider-input' },
+              thumb: { 'data-testid': 'sound-notifications-volume-slider-thumb' },
+            }}
           />
         </Box>
       )}
@@ -73,6 +80,7 @@ const SoundNotificationControls = memo(props => {
             variant="elitea"
             color="secondary"
             onClick={playCompletionSound}
+            data-testid="sound-notifications-preview-button"
           >
             Preview Sound
           </Button.BaseBtn>
