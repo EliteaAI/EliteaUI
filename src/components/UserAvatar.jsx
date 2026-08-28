@@ -21,6 +21,7 @@ export default function UserAvatar({ name, avatar, shiftPixels = 0, size = 20, o
         src={avatar}
         alt={name}
         data-testid={testId}
+        imgProps={testId ? { 'data-testid': `${testId}-image` } : undefined}
       />
     );
   }
