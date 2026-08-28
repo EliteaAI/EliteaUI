@@ -108,6 +108,20 @@ jobs:
         run: |
           echo "::notice title=Version Bump::Incrementing version from ${{ steps.bump_version.outputs.old_version }} to ${{ steps.bump_version.outputs.new_version }}"
 
+      - name: Notify elitea_core of UI version
+        if: steps.bump_version.outputs.new_version != ''
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "/repos/EliteaAI/elitea_core/dispatches" \
+            -f "event_type=ui-version-updated" \
+            -f "client_payload[ui_version]=${{ steps.bump_version.outputs.new_version }}" \
+            || echo "::warning::Failed to notify elitea_core of UI version bump"
+
   # deploy:
   #   needs: build_and_release
   #   runs-on: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.runner || fromJSON('["self-hosted", "Linux"]') }}
