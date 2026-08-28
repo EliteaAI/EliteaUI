@@ -39,11 +39,19 @@ const SoundNotificationControls = memo(props => {
           </Typography>
           <Typography variant="bodySmall">Play sound when tasks complete</Typography>
         </Box>
+        {/*
+          `data-testid` lands on the MUI SwitchBase span; the hidden checkbox needs
+          `slotProps.input` (MUI v7 ignores `inputProps` on Switch), and `BaseSwitch`
+          consumes its own `slotProps` and spreads `slotProps.switch` onto the MUI
+          Switch -- hence the one extra level.
+        */}
         <Switch.BaseSwitch
           checked={config.enabled}
           onChange={handleToggle}
           data-testid="sound-notifications-toggle"
-          inputProps={{ 'data-testid': 'sound-notifications-toggle-input' }}
+          slotProps={{
+            switch: { slotProps: { input: { 'data-testid': 'sound-notifications-toggle-input' } } },
+          }}
         />
       </Box>
       {config.enabled && (
