@@ -142,6 +142,7 @@ const buildApplicationObject = props => {
         tools: allTools,
         internal_tools: frontmatter.internal_tools || [],
         variables: frontmatter.variables || [],
+        tags: (frontmatter.tags || []).map(tag => (typeof tag === 'string' ? { name: tag } : tag)),
         pipeline_settings: pipelineSettings,
         conversation_starters: frontmatter.conversation_starters || [],
         welcome_message: frontmatter.welcome_message || '',
