@@ -118,15 +118,7 @@ const ArtifactTable = memo(props => {
     },
   ] = useDeleteArtifactsMutation();
 
-  const [
-    renameArtifact,
-    {
-      isLoading: isRenameArtifactLoading,
-      isError: isRenameArtifactError,
-      isSuccess: isRenameArtifactSuccess,
-      error: renameArtifactError,
-    },
-  ] = useRenameArtifactMutation();
+  const [renameArtifact, { isLoading: isRenameArtifactLoading }] = useRenameArtifactMutation();
 
   const [renameDialogArtifact, setRenameDialogArtifact] = useState(null);
 
@@ -414,9 +406,17 @@ const ArtifactTable = memo(props => {
         bucket,
         oldName: oldKey,
         newName: newKey,
-      });
+      })
+        .unwrap()
+        .then(() => {
+          toastSuccess('File has been successfully renamed.');
+          setRenameDialogArtifact(null);
+        })
+        .catch(err => {
+          toastError(buildErrorMessage(err) || 'Failed to rename file.');
+        });
     },
-    [renameDialogArtifact, projectId, bucket, renameArtifact],
+    [renameDialogArtifact, projectId, bucket, renameArtifact, toastSuccess, toastError],
   );
 
   const onDownloadFiles = useCallback(() => {
@@ -469,17 +469,9 @@ const ArtifactTable = memo(props => {
   }, [isDeleteArtifactsSuccess, isDeleteArtifactSuccess, deletingFileName, toastSuccess]);
 
   useEffect(() => {
-    if (isRenameArtifactSuccess) {
-      toastSuccess('File has been successfully renamed.');
-      setRenameDialogArtifact(null);
-    }
-  }, [isRenameArtifactSuccess, toastSuccess]);
-
-  useEffect(() => {
     const errors = [
       { isError: isDeleteArtifactsError, error: deleteArtifactsError },
       { isError: isDeleteArtifactError, error: deleteArtifactError },
-      { isError: isRenameArtifactError, error: renameArtifactError },
       { isError, error },
     ];
 
@@ -493,8 +485,6 @@ const ArtifactTable = memo(props => {
     deleteArtifactsError,
     isDeleteArtifactError,
     deleteArtifactError,
-    isRenameArtifactError,
-    renameArtifactError,
     isError,
     error,
     toastError,

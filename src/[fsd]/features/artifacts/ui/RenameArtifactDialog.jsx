@@ -53,8 +53,8 @@ const RenameArtifactDialog = memo(props => {
       setError('New name must be different from current name');
       return;
     }
-    if (trimmedBaseName.includes('/') || trimmedBaseName.includes('.')) {
-      setError('File name cannot contain slashes or dots');
+    if (trimmedBaseName.includes('/')) {
+      setError('File name cannot contain slashes');
       return;
     }
     onConfirm(fullNewName);
