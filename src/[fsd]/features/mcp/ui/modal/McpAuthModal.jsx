@@ -59,7 +59,7 @@ const McpAuthModal = memo(props => {
   const client_secret = providedSettings?.mcp_client_secret || formClientSecret;
   const scopes = providedSettings?.scopes || formScopes;
 
-  // Flags to indicate if credentials are provided by backend (don't show inputs)
+  // Flags to indicate if credentials are provided by backend (don't show inputs).
   const hasBackendClientId = Boolean(providedSettings?.mcp_client_id);
   const hasBackendClientSecret = Boolean(
     providedSettings?.mcp_client_secret || providedSettings?.has_mcp_client_secret,
@@ -399,17 +399,19 @@ const McpAuthModal = memo(props => {
           component={'div'}
           sx={styles.description}
         >
-          {`This MCP server requires OAuth authorization to access its tools. ${
-            serverMetadata.requiresClientSecret
-              ? 'This server requires a pre-registered OAuth application. Please provide your client credentials.'
-              : authFlow === 'oidc'
-                ? 'Using OIDC flow.'
-                : authFlow === 'dcr'
-                  ? 'Supports automatic client registration.'
-                  : authFlow === 'pkce'
-                    ? 'Using PKCE flow for enhanced security.'
-                    : ''
-          }`}
+          {providedSettings?.has_pat
+            ? 'The pre-configured access token for this MCP server appears to be expired or invalid. Please update the token in the toolkit settings, or complete OAuth authorization below to use a different authentication method.'
+            : `This MCP server requires OAuth authorization to access its tools. ${
+                serverMetadata.requiresClientSecret
+                  ? 'This server requires a pre-registered OAuth application. Please provide your client credentials.'
+                  : authFlow === 'oidc'
+                    ? 'Using OIDC flow.'
+                    : authFlow === 'dcr'
+                      ? 'Supports automatic client registration.'
+                      : authFlow === 'pkce'
+                        ? 'Using PKCE flow for enhanced security.'
+                        : ''
+              }`}
         </Typography>
         <Typography
           variant="headingSmall"
