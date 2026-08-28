@@ -235,7 +235,12 @@ const AnalyticsTools = memo(props => {
           rowsPerPageOptions={[10, 20, 50]}
           sx={styles.pagination}
           slotProps={{
-            select: { 'data-testid': 'analytics-tools-pagination-rows-select' },
+            select: {
+              'data-testid': 'analytics-tools-pagination-rows-select',
+              MenuProps: {
+                slotProps: { list: { 'data-testid': 'analytics-tools-pagination-rows-menu' } },
+              },
+            },
             displayedRows: { 'data-testid': 'analytics-tools-pagination-range' },
           }}
         />
