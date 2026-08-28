@@ -16,7 +16,10 @@ const ModelUsageTable = memo(props => {
   const maxCalls = models[0]?.calls || 1;
 
   return (
-    <Box sx={styles.chartCard}>
+    <Box
+      sx={styles.chartCard}
+      data-testid="analytics-overview-model-usage-table"
+    >
       <Typography
         variant="labelMedium"
         sx={styles.chartTitle}
@@ -57,6 +60,7 @@ const ModelUsageTable = memo(props => {
           return (
             <Box
               key={index}
+              data-testid="analytics-overview-model-usage-row"
               sx={styles.tableRow}
             >
               <Typography

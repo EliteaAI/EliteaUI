@@ -40,6 +40,8 @@ const AnalyticsOverview = memo(props => {
         data-testid="analytics-overview-kpi-row"
       >
         <KPICard
+          testId="analytics-overview-kpi-card"
+          valueTestId="analytics-overview-kpi-value"
           label="TEAM"
           value={AnalyticCommonHelpers.fmtNum(kpis.unique_users)}
           valueSuffix={`of ${AnalyticCommonHelpers.fmtNum(kpis.total_project_users)}`}
@@ -47,6 +49,8 @@ const AnalyticsOverview = memo(props => {
           tooltip={tt.TEAM}
         />
         <KPICard
+          testId="analytics-overview-kpi-card"
+          valueTestId="analytics-overview-kpi-value"
           label="AI ACTIVE"
           value={AnalyticCommonHelpers.fmtNum(kpis.ai_active_users)}
           badge={kpis.adoption_rate > 0 ? `↑${kpis.adoption_rate}%` : undefined}
@@ -54,36 +58,48 @@ const AnalyticsOverview = memo(props => {
           tooltip={tt.AI_ACTIVE}
         />
         <KPICard
+          testId="analytics-overview-kpi-card"
+          valueTestId="analytics-overview-kpi-value"
           label="LLM CALLS"
           value={AnalyticCommonHelpers.fmtNum(kpis.llm_calls)}
           subtitle="event_type = llm"
           tooltip={tt.LLM_CALLS}
         />
         <KPICard
+          testId="analytics-overview-kpi-card"
+          valueTestId="analytics-overview-kpi-value"
           label="TOOL RUNS"
           value={AnalyticCommonHelpers.fmtNum(kpis.tool_runs)}
           subtitle="event_type = tool"
           tooltip={tt.TOOL_RUNS}
         />
         <KPICard
+          testId="analytics-overview-kpi-card"
+          valueTestId="analytics-overview-kpi-value"
           label="CHAT MSG"
           value={AnalyticCommonHelpers.fmtNum(kpis.chat_msgs)}
           subtitle="user messages sent"
           tooltip={tt.CHAT_MSG}
         />
         <KPICard
+          testId="analytics-overview-kpi-card"
+          valueTestId="analytics-overview-kpi-value"
           label="AGENT & PIPELINE RUNS"
           value={AnalyticCommonHelpers.fmtNum(kpis.agent_runs)}
           subtitle="agents and pipelines interactions"
           tooltip={tt.AGENT_PIPELINE_RUNS}
         />
         <KPICard
+          testId="analytics-overview-kpi-card"
+          valueTestId="analytics-overview-kpi-value"
           label="TOKENS"
           value={AnalyticCommonHelpers.fmtNum(kpis.total_tokens)}
           subtitle="total LLM tokens consumed"
           tooltip={tt.TOKENS}
         />
         <KPICard
+          testId="analytics-overview-kpi-card"
+          valueTestId="analytics-overview-kpi-value"
           label="COST"
           value={AnalyticCommonHelpers.fmtCost(kpis.total_llm_cost)}
           subtitle="estimated USD cost"
@@ -106,7 +122,10 @@ const AnalyticsOverview = memo(props => {
               }}
             />
           </Box>
-          <Box sx={styles.chartWrapper}>
+          <Box
+            sx={styles.chartWrapper}
+            data-testid="analytics-overview-daily-chart-container"
+          >
             <ResponsiveContainer
               width="100%"
               height="100%"
@@ -209,10 +228,14 @@ const AnalyticsOverview = memo(props => {
           </Box>
 
           {top_ai_users.length > 0 ? (
-            <Box sx={styles.tableWrapper}>
+            <Box
+              sx={styles.tableWrapper}
+              data-testid="analytics-overview-leaderboard"
+            >
               {top_ai_users.map((u, i) => (
                 <Box
                   key={i}
+                  data-testid="analytics-overview-leaderboard-row"
                   sx={[
                     styles.leaderboardRow,
                     onUserClick && {

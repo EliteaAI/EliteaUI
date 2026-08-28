@@ -42,7 +42,14 @@ const DEFAULT_PRESETS = [
   { label: 'Last 90d', value: 90, buttonProps: { 'data-testid': 'analytics-date-preset-90' } },
 ];
 
-const PRESETS_WITH_CUSTOM = [...DEFAULT_PRESETS, { label: 'Custom', value: CUSTOM_PRESET_VALUE }];
+const PRESETS_WITH_CUSTOM = [
+  ...DEFAULT_PRESETS,
+  {
+    label: 'Custom',
+    value: CUSTOM_PRESET_VALUE,
+    buttonProps: { 'data-testid': 'analytics-date-preset-custom' },
+  },
+];
 
 // {label, testid} pairs for the Analytics tabs (ELITEA-2310) — kept as a
 // module-level template so the testid inventory stays greppable, per
@@ -216,15 +223,17 @@ const AnalyticsContainer = memo(() => {
 
   // Per-field slotProps (From/To need distinct testids on their <input>,
   // so they can no longer share one slotProps object — ELITEA-2310).
-  const getDateFieldSlotProps = testid => ({
+  const getDateFieldSlotProps = (testid, openButtonTestid, popperTestid) => ({
     textField: {
       size: 'small',
       sx: styles.dateInput,
       variant: 'standard',
       inputProps: { 'data-testid': testid },
     },
+    openPickerButton: { 'data-testid': openButtonTestid },
     actionBar: { actions: ['clear', 'accept'] },
     popper: {
+      'data-testid': popperTestid,
       sx: styles.datePickerPopper,
       modifiers: [{ name: 'offset', options: { offset: [0, 8] } }],
     },
@@ -308,7 +317,11 @@ const AnalyticsContainer = memo(() => {
               onOpen={() => setFromOpen(true)}
               onClose={() => setFromOpen(false)}
               {...datePickerCommonProps}
-              slotProps={getDateFieldSlotProps('analytics-date-from-input')}
+              slotProps={getDateFieldSlotProps(
+                'analytics-date-from-input',
+                'analytics-date-from-open-button',
+                'analytics-date-from-popper',
+              )}
             />
           </Box>
           <Box sx={[styles.datePickerField, toOpen && styles.datePickerFieldActive]}>
@@ -321,7 +334,11 @@ const AnalyticsContainer = memo(() => {
               onOpen={() => setToOpen(true)}
               onClose={() => setToOpen(false)}
               {...datePickerCommonProps}
-              slotProps={getDateFieldSlotProps('analytics-date-to-input')}
+              slotProps={getDateFieldSlotProps(
+                'analytics-date-to-input',
+                'analytics-date-to-open-button',
+                'analytics-date-to-popper',
+              )}
             />
           </Box>
         </Box>

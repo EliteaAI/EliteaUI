@@ -148,12 +148,14 @@ const AnalyticsTools = memo(props => {
             <Typography
               variant="labelMedium"
               sx={styles.chartTitle}
+              data-testid="analytics-tools-details-title"
             >
               Tool Details
             </Typography>
             <Typography
               variant="bodySmall"
               sx={styles.chartSubtitle}
+              data-testid="analytics-tools-count"
             >
               {total} tools
             </Typography>
@@ -166,7 +168,10 @@ const AnalyticsTools = memo(props => {
           />
         </Box>
         <Box sx={styles.tableWrapper}>
-          <Box sx={styles.tableHeader}>
+          <Box
+            sx={styles.tableHeader}
+            data-testid="analytics-tools-table-header"
+          >
             <Typography sx={[styles.tableCell, { flex: 3 }]}>Tool</Typography>
             <Typography sx={[styles.tableCell, { flex: 1 }]}>Calls</Typography>
             <Typography sx={[styles.tableCell, { flex: 1 }]}>Users</Typography>
@@ -174,7 +179,10 @@ const AnalyticsTools = memo(props => {
             <Typography sx={[styles.tableCell, { flex: 1 }]}>Errors</Typography>
           </Box>
           {isFetching && (
-            <Box sx={styles.loadingState}>
+            <Box
+              sx={styles.loadingState}
+              data-testid="analytics-tools-loading-indicator"
+            >
               <CircularProgress size={24} />
             </Box>
           )}
@@ -182,6 +190,7 @@ const AnalyticsTools = memo(props => {
             rows.map((t, i) => (
               <Box
                 key={i}
+                data-testid="analytics-tools-row"
                 sx={styles.clickableRow}
                 onClick={() => handleToolClick(t.tool_name)}
               >
