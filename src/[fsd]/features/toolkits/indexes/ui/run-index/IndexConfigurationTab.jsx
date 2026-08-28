@@ -2,6 +2,7 @@ import { memo } from 'react';
 
 import { Box, CircularProgress, Typography } from '@mui/material';
 
+import { IMMUTABLE_INDEX_CONFIG_FIELDS } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexConfig.helpers';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
 import { ScrollableContainer } from '@/[fsd]/shared/ui';
 
@@ -10,7 +11,7 @@ const IndexConfigurationTab = memo(props => {
   const styles = indexConfigurationTabStyles();
 
   const isSchemaLoading = configFields.length === 0;
-  const editableFields = configFields.filter(key => key !== 'index_name');
+  const editableFields = configFields.filter(key => !IMMUTABLE_INDEX_CONFIG_FIELDS.includes(key));
   const hasNothingToConfigure = !isSchemaLoading && editableFields.length === 0;
 
   return (
