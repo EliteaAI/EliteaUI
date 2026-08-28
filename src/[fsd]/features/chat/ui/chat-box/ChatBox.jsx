@@ -2132,6 +2132,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       // Chat passes clearInputAfterSubmit={false}, so clearing is the caller's job
       // here just as it is in onPredictStream.
       chatInput.current?.reset();
+      onClearAttachments?.();
       try {
         await injectMessage({
           projectId,
@@ -2148,7 +2149,7 @@ const ChatBox = forwardRef((props, boxRef) => {
         return onPredictStreamRef.current?.(text);
       }
     },
-    [activeConversation?.uuid, injectMessage, projectId, resetSlash, stopTTS],
+    [activeConversation?.uuid, injectMessage, onClearAttachments, projectId, resetSlash, stopTTS],
   );
 
   const {
