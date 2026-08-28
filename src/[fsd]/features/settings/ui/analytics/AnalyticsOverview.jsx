@@ -171,7 +171,7 @@ const AnalyticsOverview = memo(props => {
                     tickLine={{ stroke: axisStroke }}
                   />
                 )}
-                <RechartsTooltip content={<ChartTooltip />} />
+                <RechartsTooltip content={<ChartTooltip testId="analytics-overview-daily-chart-tooltip" />} />
                 <Legend
                   wrapperStyle={{ fontSize: '0.6875rem' }}
                   iconType="circle"

@@ -150,7 +150,7 @@ const AnalyticsAgents = memo(props => {
                   axisLine={{ stroke: axisStroke }}
                   tickLine={{ stroke: axisStroke }}
                 />
-                <RechartsTooltip content={<ChartTooltip />} />
+                <RechartsTooltip content={<ChartTooltip testId="analytics-agents-chart-tooltip" />} />
                 <Bar
                   dataKey="runs"
                   name="Runs"
