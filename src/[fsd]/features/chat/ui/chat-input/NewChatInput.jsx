@@ -179,7 +179,7 @@ const NewChatInput = forwardRef((props, ref) => {
       event.preventDefault();
       event.stopPropagation();
 
-      if (disableAttachments) {
+      if (disableAttachments || isLoading || isStreaming) {
         toastError('Attachments are not allowed.');
         return;
       }
@@ -187,13 +187,13 @@ const NewChatInput = forwardRef((props, ref) => {
         attachmentButtonRef.current.onDrop(event);
       }
     },
-    [disableAttachments, toastError],
+    [disableAttachments, isLoading, isStreaming, toastError],
   );
 
   const handleFilePaste = useCallback(
     files => {
       // Use the AttachmentButton's file processing logic for pasted files
-      if (disableAttachments) {
+      if (disableAttachments || isLoading || isStreaming) {
         toastError('Attachments are not allowed.');
         return;
       }
@@ -213,7 +213,7 @@ const NewChatInput = forwardRef((props, ref) => {
         attachmentButtonRef.current.onDrop(mockEvent);
       }
     },
-    [disableAttachments, onAttachFiles, toastError],
+    [disableAttachments, isLoading, isStreaming, onAttachFiles, toastError],
   );
 
   return (
