@@ -700,7 +700,7 @@ const RunIndexPanel = memo(props => {
         name={indexName}
         shouldRequestInputName={false}
         open={reindexConfirmOpen}
-        confirmButtonText="Reindex"
+        confirmButtonText={isConfigDirty ? 'Save & Reindex' : 'Reindex'}
         cancelButtonText="Cancel"
         onClose={cancelReindexConfirm}
         onConfirm={confirmReindex}
