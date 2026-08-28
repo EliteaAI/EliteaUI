@@ -46,16 +46,21 @@ const AnalyticsHealth = memo(props => {
           <Typography
             variant="labelMedium"
             sx={styles.chartTitle}
+            data-testid="analytics-health-chart-title"
           >
             Requests vs Errors
           </Typography>
           <Typography
             variant="bodySmall"
             sx={styles.chartSubtitle}
+            data-testid="analytics-health-chart-subtitle"
           >
             Total requests trend with error overlay
           </Typography>
-          <Box sx={styles.chartWrapper}>
+          <Box
+            sx={styles.chartWrapper}
+            data-testid="analytics-health-chart-container"
+          >
             <ResponsiveContainer
               width="100%"
               height={240}
@@ -81,7 +86,7 @@ const AnalyticsHealth = memo(props => {
                   axisLine={{ stroke: axisStroke }}
                   tickLine={{ stroke: axisStroke }}
                 />
-                <RechartsTooltip content={<ChartTooltip />} />
+                <RechartsTooltip content={<ChartTooltip testId="analytics-health-chart-tooltip" />} />
                 <Area
                   yAxisId="events"
                   type="monotone"
@@ -111,11 +116,15 @@ const AnalyticsHealth = memo(props => {
         <Typography
           variant="labelMedium"
           sx={styles.chartTitle}
+          data-testid="analytics-health-table-title"
         >
           Health by Event Type
         </Typography>
         <Box sx={styles.tableWrapper}>
-          <Box sx={styles.tableHeader}>
+          <Box
+            sx={styles.tableHeader}
+            data-testid="analytics-health-table-header"
+          >
             <Typography sx={[styles.tableCell, { flex: 2 }]}>Event Type</Typography>
             <Typography sx={[styles.tableCell, { flex: 1 }]}>Total</Typography>
             <Typography sx={[styles.tableCell, { flex: 1 }]}>Errors</Typography>
@@ -126,6 +135,7 @@ const AnalyticsHealth = memo(props => {
             <Box
               key={i}
               sx={styles.tableRow}
+              data-testid="analytics-health-row"
             >
               <Box
                 sx={[
@@ -143,7 +153,12 @@ const AnalyticsHealth = memo(props => {
                     flexShrink: 0,
                   }}
                 />
-                <Typography variant="bodySmall">{h.event_type}</Typography>
+                <Typography
+                  variant="bodySmall"
+                  data-testid="analytics-health-row-event-type"
+                >
+                  {h.event_type}
+                </Typography>
               </Box>
               <Typography sx={[styles.tableCellValue, { flex: 1 }]}>
                 {AnalyticCommonHelpers.fmtNum(h.total)}

@@ -82,6 +82,7 @@ const AnalyticsTools = memo(props => {
           <Typography
             variant="labelMedium"
             sx={styles.chartTitle}
+            data-testid="analytics-tools-chart-title"
           >
             Most Popular Tools
           </Typography>
@@ -169,6 +170,7 @@ const AnalyticsTools = memo(props => {
             onChangeSearch={handleSearchChange}
             placeholder="Search by tool name"
             sx={styles.userSearch}
+            testId="analytics-tools-search-input"
           />
         </Box>
         <Box sx={styles.tableWrapper}>
@@ -216,6 +218,7 @@ const AnalyticsTools = memo(props => {
                     styles.tableCellValue,
                     { flex: 1, color: t.errors > 0 ? palette.status.rejected : undefined },
                   ]}
+                  data-testid="analytics-tools-row-errors"
                 >
                   {t.errors}
                 </Typography>
@@ -231,6 +234,10 @@ const AnalyticsTools = memo(props => {
           onRowsPerPageChange={handleRowsPerPageChange}
           rowsPerPageOptions={[10, 20, 50]}
           sx={styles.pagination}
+          slotProps={{
+            select: { 'data-testid': 'analytics-tools-pagination-rows-select' },
+            displayedRows: { 'data-testid': 'analytics-tools-pagination-range' },
+          }}
         />
       </Box>
     </Box>

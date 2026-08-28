@@ -13,10 +13,12 @@ const AnalyticsGuide = memo(() => {
         <Box
           key={si}
           sx={styles.chartCard}
+          data-testid="analytics-guide-section"
         >
           <Typography
             variant="labelMedium"
             sx={styles.guideSection}
+            data-testid="analytics-guide-section-title"
           >
             {section.title}
           </Typography>
@@ -24,16 +26,19 @@ const AnalyticsGuide = memo(() => {
             <Box
               key={mi}
               sx={styles.guideItem}
+              data-testid="analytics-guide-metric"
             >
               <Typography
                 variant="bodyMedium"
                 sx={styles.guideName}
+                data-testid="analytics-guide-metric-name"
               >
                 {m.name}
               </Typography>
               <Typography
                 variant="bodySmall"
                 sx={styles.guideDescription}
+                data-testid="analytics-guide-metric-description"
               >
                 {m.description}
               </Typography>
@@ -48,6 +53,7 @@ const AnalyticsGuide = memo(() => {
                   <Typography
                     variant="bodySmall"
                     sx={styles.guideCalcValue}
+                    data-testid="analytics-guide-metric-calculation-value"
                   >
                     {m.calculation}
                   </Typography>
@@ -64,6 +70,7 @@ const AnalyticsGuide = memo(() => {
                   <Typography
                     variant="bodySmall"
                     sx={styles.guideCalcValue}
+                    data-testid="analytics-guide-metric-source-value"
                   >
                     {m.source}
                   </Typography>
