@@ -125,11 +125,36 @@ const AnalyticsHealth = memo(props => {
             sx={styles.tableHeader}
             data-testid="analytics-health-table-header"
           >
-            <Typography sx={[styles.tableCell, { flex: 2 }]}>Event Type</Typography>
-            <Typography sx={[styles.tableCell, { flex: 1 }]}>Total</Typography>
-            <Typography sx={[styles.tableCell, { flex: 1 }]}>Errors</Typography>
-            <Typography sx={[styles.tableCell, { flex: 1 }]}>Error Rate</Typography>
-            <Typography sx={[styles.tableCell, { flex: 1 }]}>Avg Latency</Typography>
+            <Typography
+              sx={[styles.tableCell, { flex: 2 }]}
+              data-testid="analytics-health-table-header-cell"
+            >
+              Event Type
+            </Typography>
+            <Typography
+              sx={[styles.tableCell, { flex: 1 }]}
+              data-testid="analytics-health-table-header-cell"
+            >
+              Total
+            </Typography>
+            <Typography
+              sx={[styles.tableCell, { flex: 1 }]}
+              data-testid="analytics-health-table-header-cell"
+            >
+              Errors
+            </Typography>
+            <Typography
+              sx={[styles.tableCell, { flex: 1 }]}
+              data-testid="analytics-health-table-header-cell"
+            >
+              Error Rate
+            </Typography>
+            <Typography
+              sx={[styles.tableCell, { flex: 1 }]}
+              data-testid="analytics-health-table-header-cell"
+            >
+              Avg Latency
+            </Typography>
           </Box>
           {health.map((h, i) => (
             <Box
