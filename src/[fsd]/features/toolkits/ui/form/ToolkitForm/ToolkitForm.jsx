@@ -656,23 +656,22 @@ const formContentColumn = hasSidePanel => ({
 
 /** @type {MuiSx} */
 const toolkitFormStyles = (isDetailsActionBar, hasSidePanel) => ({
-  root: ({ palette }) =>
-    isDetailsActionBar
-      ? {
-          display: 'flex',
-          flexDirection: 'column',
-          height: '100%',
-          minHeight: 0,
-          overflow: 'hidden',
-          background: palette.background.toolkitDetailLeftPanel,
-        }
-      : {},
+  root: isDetailsActionBar
+    ? {
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        minHeight: 0,
+        overflow: 'hidden',
+      }
+    : {},
   actionBar: ({ palette }) =>
     isDetailsActionBar
       ? {
           flexShrink: 0,
           height: PANEL_HEADER_HEIGHT,
           borderBottom: `0.0625rem solid ${palette.border.table}`,
+          background: palette.background.toolkitDetailLeftPanel,
         }
       : { marginBottom: '0.75rem' },
   actionBarRow: {
@@ -690,16 +689,18 @@ const toolkitFormStyles = (isDetailsActionBar, hasSidePanel) => ({
         }
       : {}),
   },
-  content: isDetailsActionBar
-    ? {
-        flex: 1,
-        minHeight: 0,
-        overflowY: 'auto',
-        width: '100%',
-        padding: `1rem ${PANEL_GUTTER}`,
-        ...formContentColumn(hasSidePanel),
-      }
-    : {},
+  content: ({ palette }) =>
+    isDetailsActionBar
+      ? {
+          flex: 1,
+          minHeight: 0,
+          overflowY: 'auto',
+          width: '100%',
+          padding: `1rem ${PANEL_GUTTER}`,
+          background: palette.background.tabPanel,
+          ...formContentColumn(hasSidePanel),
+        }
+      : {},
   toolkitIdentity: {
     display: 'flex',
     alignItems: 'center',

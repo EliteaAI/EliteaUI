@@ -1062,6 +1062,7 @@ const applicationThinkViewStyles = () => ({
   },
   accordion: ({ palette }) => ({
     borderBottom: `0.0625rem solid ${palette.border.table}`,
+    background: 'transparent',
     '&.Mui-expanded': {
       margin: '0rem 0',
     },

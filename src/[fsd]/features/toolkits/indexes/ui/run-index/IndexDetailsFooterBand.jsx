@@ -83,7 +83,7 @@ const indexDetailsFooterBandStyles = () => ({
     width: '100%',
     height: PANEL_FOOTER_HEIGHT,
     padding: '0.5rem 1rem',
-    background: palette.background.section,
+    background: palette.background.toolkitDetailRightPanel,
     borderTop: `0.0625rem solid ${palette.border.table}`,
   }),
 });
