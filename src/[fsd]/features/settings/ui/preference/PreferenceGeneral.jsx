@@ -17,11 +17,16 @@ const PreferenceGeneral = memo(() => {
       showMode={AccordionConstants.AccordionShowMode.LeftMode}
       defaultExpanded
       accordionSX={styles.accordion}
+      data-testid="preferences-general-section"
       items={[
         {
           title: 'General',
+          testId: 'preferences-general-section-header',
           content: (
-            <Box sx={styles.accordionContent}>
+            <Box
+              sx={styles.accordionContent}
+              data-testid="preferences-general-content"
+            >
               <Box sx={styles.section}>
                 <Label.InfoLabelWithTooltip
                   label="Theme"

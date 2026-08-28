@@ -25,7 +25,10 @@ const SoundNotificationControls = memo(props => {
   );
 
   return (
-    <Box sx={styles.content}>
+    <Box
+      sx={styles.content}
+      data-testid="sound-notifications-content"
+    >
       <Box sx={styles.toggleSection}>
         <Box sx={styles.toggleContent}>
           <Typography

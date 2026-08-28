@@ -13,9 +13,11 @@ const SoundNotificationSection = memo(() => {
     <BasicAccordion
       showMode={AccordionConstants.AccordionShowMode.LeftMode}
       accordionSX={styles.accordion}
+      data-testid="sound-notifications-section"
       items={[
         {
           title: 'Sound Notifications',
+          testId: 'sound-notifications-section-header',
           content: (
             <SoundNotificationControls
               config={config}

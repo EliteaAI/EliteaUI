@@ -54,6 +54,7 @@ const MemoryContextManagement = memo(props => {
       items={[
         {
           title: 'Context Management',
+          testId: 'context-management-section-header',
           content: (
             <Box sx={styles.accordionContent}>
               {/* Enable Context Management */}

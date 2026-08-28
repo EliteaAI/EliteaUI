@@ -41,6 +41,7 @@ const VoicePersonalizationSection = memo(() => {
       items={[
         {
           title: 'Voice Personalization',
+          testId: 'voice-personalization-section-header',
           content: (
             <VoiceConfigControls
               config={config}

@@ -6,7 +6,7 @@ import { handleCopy } from '@/common/utils';
 import useToast from '@/hooks/useToast';
 
 const FieldWithCopy = memo(props => {
-  const { label = '', value = '' } = props;
+  const { label = '', value = '', testId } = props;
 
   const { toastInfo } = useToast();
   const styles = useMemo(() => fieldWithCopyStyles(), []);
@@ -34,6 +34,7 @@ const FieldWithCopy = memo(props => {
             color="text.secondary"
             onClick={onCopy}
             sx={styles.value}
+            data-testid={testId}
           >
             {value}
           </Typography>

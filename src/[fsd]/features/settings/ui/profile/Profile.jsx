@@ -44,11 +44,13 @@ const Profile = memo(() => {
               avatar={avatar}
               name={name}
               size={64}
+              testId="settings-profile-avatar"
             />
             <Typography
               variant="labelMedium"
               color="text.secondary"
               fontWeight={600}
+              data-testid="settings-profile-display-name"
             >
               {name}
             </Typography>
@@ -58,10 +60,12 @@ const Profile = memo(() => {
             <FieldWithCopy
               label="Full name:"
               value={name || ''}
+              testId="settings-profile-fullname-value"
             />
             <FieldWithCopy
               label="Email:"
               value={email || ''}
+              testId="settings-profile-email-value"
             />
             <FieldWithCopy
               label="User ID:"

@@ -51,6 +51,7 @@ const AIPersonalityPersonalization = memo(props => {
       showMode={AccordionConstants.AccordionShowMode.LeftMode}
       defaultExpanded
       accordionSX={styles.accordion}
+      data-testid="ai-personality-persona-section"
       items={[
         {
           title: 'Persona Management',
@@ -63,6 +64,7 @@ const AIPersonalityPersonalization = memo(props => {
                   sx={styles.label}
                 />
                 <SingleSelect
+                  data-testid="ai-personality-persona-select"
                   showBorder
                   value={values.persona}
                   emptyPlaceholder=""
@@ -104,6 +106,7 @@ const AIPersonalityPersonalization = memo(props => {
                       PERSONA_INSTRUCTIONS_PLACEHOLDERS[values.persona] ??
                       'No custom instructions for this persona yet. Type here to add some.'
                     }
+                    inputProps={{ 'data-testid': 'ai-personality-user-instructions-textarea' }}
                     hasActionsToolBar
                     showExpandAction={false}
                     fieldName="User Instructions"
