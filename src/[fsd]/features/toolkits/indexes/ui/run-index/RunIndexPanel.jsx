@@ -752,12 +752,13 @@ const runIndexPanelStyles = () => ({
   accordionDetails: {
     padding: '1rem 0.75rem 0.75rem',
   },
-  leftBody: {
+  leftBody: ({ palette }) => ({
     flex: 1,
     minHeight: 0,
     overflowY: 'auto',
     padding: '0.5rem 1.5rem 1rem 1.5rem',
-  },
+    background: palette.background.tabPanel,
+  }),
   stats: {
     paddingLeft: '0.75rem',
   },
@@ -768,13 +769,14 @@ const runIndexPanelStyles = () => ({
     minWidth: 0,
     minHeight: 0,
   },
-  tabBody: {
+  tabBody: ({ palette }) => ({
     flex: 1,
     display: 'flex',
     flexDirection: 'column',
     minWidth: 0,
     minHeight: 0,
-  },
+    background: palette.background.tabPanel,
+  }),
 });
 
 export default RunIndexPanel;

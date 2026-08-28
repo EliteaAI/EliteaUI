@@ -117,7 +117,7 @@ const indexesPanelStyles = () => ({
     flexShrink: 0,
     height: PANEL_HEADER_HEIGHT,
     padding: `0 ${PANEL_GUTTER}`,
-    background: palette.background.section,
+    background: palette.background.toolkitDetailRightPanel,
     borderBottom: `0.0625rem solid ${palette.border.table}`,
   }),
   title: {
@@ -125,14 +125,15 @@ const indexesPanelStyles = () => ({
     alignItems: 'center',
     gap: '0.25rem',
   },
-  body: {
+  body: ({ palette }) => ({
     display: 'flex',
     flexDirection: 'column',
     gap: '1rem',
     flex: 1,
     overflow: 'auto',
     padding: PANEL_GUTTER,
-  },
+    background: palette.background.tabPanel,
+  }),
   banner: {
     padding: 0,
     width: '100%',

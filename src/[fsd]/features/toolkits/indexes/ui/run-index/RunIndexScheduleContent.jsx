@@ -4,6 +4,7 @@ import { Box, Tooltip, Typography } from '@mui/material';
 
 import { Button, Switch } from '@/[fsd]/shared/ui';
 import InfoIcon from '@/assets/info.svg?react';
+import PlusIcon from '@/assets/plus-icon.svg?react';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import EditIcon from '@/components/Icons/EditIcon';
 
@@ -27,7 +28,7 @@ const RunIndexScheduleContent = memo(props => {
     return (
       <Box sx={styles.placeholderBlock}>
         <Typography
-          variant="bodyMedium"
+          variant="labelMedium"
           color="text.button.disabled"
         >
           Schedule is not configured yet.
@@ -45,8 +46,9 @@ const RunIndexScheduleContent = memo(props => {
               color="secondary"
               onClick={onAddSchedule}
               disabled={Boolean(disabledReason)}
+              startIcon={<PlusIcon />}
             >
-              + Schedule
+              Schedule
             </Button.BaseBtn>
           </Box>
         </Tooltip>

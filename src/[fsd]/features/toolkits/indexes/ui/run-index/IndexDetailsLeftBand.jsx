@@ -63,7 +63,7 @@ const indexDetailsLeftBandStyles = () => ({
     flexShrink: 0,
     height: PANEL_HEADER_HEIGHT,
     padding: `0 ${PANEL_GUTTER}`,
-    background: palette.background.section,
+    background: palette.background.toolkitDetailLeftPanel,
     borderBottom: `0.0625rem solid ${palette.border.table}`,
   }),
   identity: {

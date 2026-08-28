@@ -26,6 +26,7 @@ const gray20 = '#686C76';
 const gray30 = '#3B3E46';
 const gray40 = '#262b34';
 const gray50 = '#181F2A';
+const gray53 = '#151C25';
 const gray55 = '#101721';
 const gray58 = 'rgba(12, 17, 25, 1)';
 const gray60 = '#0E131D';
@@ -404,7 +405,8 @@ const darkPalette = {
     emptyState: {
       default: white3,
     },
-    toolkitDetailLeftPanel: 'rgba(21, 28, 37, 1)',
+    toolkitDetailLeftPanel: gray53,
+    toolkitDetailRightPanel: gray53,
     indexResult: {
       success: green8,
       error: red8,
