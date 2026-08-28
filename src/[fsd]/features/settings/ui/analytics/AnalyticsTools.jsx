@@ -88,10 +88,14 @@ const AnalyticsTools = memo(props => {
           <Typography
             variant="bodySmall"
             sx={styles.chartSubtitle}
+            data-testid="analytics-tools-chart-subtitle"
           >
             Top {toolChartData.length} by usage
           </Typography>
-          <Box sx={styles.chartWrapper}>
+          <Box
+            sx={styles.chartWrapper}
+            data-testid="analytics-tools-chart-container"
+          >
             <ResponsiveContainer
               width="100%"
               height={200}
