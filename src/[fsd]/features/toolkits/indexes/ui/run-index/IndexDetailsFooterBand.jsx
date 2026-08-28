@@ -1,10 +1,12 @@
 import { memo } from 'react';
 
-import { Box, Tooltip } from '@mui/material';
+import { Box } from '@mui/material';
 
 import { ToolkitLayoutConstants } from '@/[fsd]/features/toolkits/lib/constants';
 import { Button } from '@/[fsd]/shared/ui';
 import IndexingIcon from '@/assets/indexing.svg?react';
+
+import IndexDetailsFooterAction from './IndexDetailsFooterAction';
 
 const { PANEL_FOOTER_HEIGHT } = ToolkitLayoutConstants;
 
@@ -17,6 +19,11 @@ const IndexDetailsFooterBand = memo(props => {
     reindexDisabled = false,
     reindexTooltip,
     onReindex,
+    isDirty = false,
+    isSaving = false,
+    saveDisabled = false,
+    saveTooltip,
+    onSave,
   } = props;
   const styles = indexDetailsFooterBandStyles();
 
@@ -26,34 +33,38 @@ const IndexDetailsFooterBand = memo(props => {
   return (
     <Box sx={styles.root}>
       {isRunActive ? (
-        <Button.BaseBtn
-          data-testid="index-details-footer-action"
+        <IndexDetailsFooterAction
+          data-testid="index-details-footer-stop"
           variant={Button.BUTTON_VARIANTS.alarm}
           disabled={!runIsStoppable}
           onClick={onStop}
         >
           {stopLabel}
-        </Button.BaseBtn>
+        </IndexDetailsFooterAction>
       ) : (
-        <Tooltip
-          title={reindexTooltip ?? ''}
-          placement="top"
-        >
-          <Box
-            component="span"
-            sx={styles.tooltipAnchor}
-          >
-            <Button.BaseBtn
-              data-testid="index-details-footer-action"
-              variant={Button.BUTTON_VARIANTS.elitea}
-              disabled={reindexDisabled}
-              onClick={onReindex}
-              startIcon={<IndexingIcon />}
+        <>
+          {isDirty && (
+            <IndexDetailsFooterAction
+              data-testid="index-details-footer-save"
+              variant={Button.BUTTON_VARIANTS.secondary}
+              tooltip={saveTooltip}
+              disabled={saveDisabled || isSaving}
+              onClick={onSave}
             >
-              Reindex
-            </Button.BaseBtn>
-          </Box>
-        </Tooltip>
+              {isSaving ? 'Saving...' : 'Save'}
+            </IndexDetailsFooterAction>
+          )}
+          <IndexDetailsFooterAction
+            data-testid="index-details-footer-reindex"
+            variant={Button.BUTTON_VARIANTS.elitea}
+            tooltip={reindexTooltip}
+            disabled={reindexDisabled || isSaving}
+            onClick={onReindex}
+            startIcon={<IndexingIcon />}
+          >
+            {isDirty ? 'Save & Reindex' : 'Reindex'}
+          </IndexDetailsFooterAction>
+        </>
       )}
     </Box>
   );
@@ -67,6 +78,7 @@ const indexDetailsFooterBandStyles = () => ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: '0.75rem',
     flexShrink: 0,
     width: '100%',
     height: PANEL_FOOTER_HEIGHT,
@@ -74,9 +86,6 @@ const indexDetailsFooterBandStyles = () => ({
     background: palette.background.section,
     borderTop: `0.0625rem solid ${palette.border.table}`,
   }),
-  tooltipAnchor: {
-    display: 'inline-flex',
-  },
 });
 
 export default IndexDetailsFooterBand;

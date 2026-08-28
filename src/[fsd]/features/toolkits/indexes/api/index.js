@@ -4,6 +4,7 @@ export {
   useLazyGetIndexesListQuery,
   useDeleteIndexItemMutation,
   useStopIndexingItemMutation,
+  useSaveIndexConfigurationMutation,
   useUpdateIndexScheduleMutation,
   useGetIndexScheduleQuery,
   useLazyGetIndexScheduleQuery,

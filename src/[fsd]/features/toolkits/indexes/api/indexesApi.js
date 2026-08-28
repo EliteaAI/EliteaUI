@@ -37,6 +37,14 @@ const indexesApi = eliteaApi
         }),
         invalidatesTags: [INDEXES_LIST],
       }),
+      saveIndexConfiguration: build.mutation({
+        query: ({ projectId, toolkitId, indexName, configuration }) => ({
+          url: `elitea_core/index_config/prompt_lib/${projectId}/${toolkitId}/${indexName}`,
+          method: 'PUT',
+          body: { configuration },
+        }),
+        invalidatesTags: [INDEXES_LIST],
+      }),
       deleteIndexSchedule: build.mutation({
         query: ({ projectId, toolkitId, indexName, userId }) => ({
           url: `elitea_core/index_schedule/prompt_lib/${projectId}/${toolkitId}/${indexName}${userId != null ? `?user_id=${userId}` : ''}`,
@@ -77,6 +85,7 @@ export const {
   useLazyGetIndexesListQuery,
   useDeleteIndexItemMutation,
   useStopIndexingItemMutation,
+  useSaveIndexConfigurationMutation,
   useDeleteIndexScheduleMutation,
   useUpdateIndexScheduleMutation,
   useGetIndexScheduleQuery,
