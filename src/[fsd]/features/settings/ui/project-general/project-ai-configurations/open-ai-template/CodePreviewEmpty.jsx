@@ -6,7 +6,10 @@ const CodePreviewEmpty = memo(() => {
   const styles = getStyles();
 
   return (
-    <Box sx={styles.emptyStateContainer}>
+    <Box
+      sx={styles.emptyStateContainer}
+      data-testid="ai-configuration-code-preview-empty"
+    >
       <Box>
         <Typography
           variant="bodyMedium"
