@@ -80,6 +80,7 @@ const ConfigurationCard = memo(props => {
             )}
           </Box>
           <Typography
+            data-testid="ai-provider-configuration-card-status"
             component={Box}
             variant="bodySmall"
             color="text.default"
