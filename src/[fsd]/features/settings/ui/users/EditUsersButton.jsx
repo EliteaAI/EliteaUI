@@ -20,6 +20,8 @@ const EditUsersButton = memo(props => {
     testId,
     dialogTestId,
     dialogTitleTestId,
+    descriptionTestId,
+    closeButtonTestId,
     roleSelectTestId,
     saveButtonTestId,
   } = props;
@@ -106,6 +108,8 @@ const EditUsersButton = memo(props => {
         originalRoles={isBatchEdit ? [] : user?.roles || []}
         dialogTestId={dialogTestId}
         titleTestId={dialogTitleTestId}
+        descriptionTestId={descriptionTestId}
+        closeButtonTestId={closeButtonTestId}
         roleSelectTestId={roleSelectTestId}
         saveButtonTestId={saveButtonTestId}
       />

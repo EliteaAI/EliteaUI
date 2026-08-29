@@ -238,7 +238,8 @@ const SingleSelect = memo(props => {
                   {foundOption.label}
                 </Typography>
               }
-              deleteIcon={<RemoveIcon />}
+              data-testid={`select-value-chip-${selectedValue}`}
+              deleteIcon={<RemoveIcon data-testid={`select-value-chip-${selectedValue}-remove`} />}
               onDelete={!disabled ? event => handleDeleteChip(selectedValue, event) : undefined}
               onMouseDown={event => event.stopPropagation()}
               sx={styles.chip}

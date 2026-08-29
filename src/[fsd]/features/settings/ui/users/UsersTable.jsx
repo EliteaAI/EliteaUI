@@ -154,7 +154,11 @@ const UsersTable = memo(props => {
               rolesOptions={rolesOptions}
               testId="user-row-edit-button"
               dialogTestId="users-row-edit-roles-dialog"
+              dialogTitleTestId="users-row-edit-roles-title"
+              descriptionTestId="users-row-edit-roles-description"
+              closeButtonTestId="users-row-edit-roles-close-button"
               roleSelectTestId="users-row-edit-roles-select"
+              saveButtonTestId="users-row-edit-roles-save-button"
             />
           )}
           {checkPermission(PERMISSIONS.users.delete) && (

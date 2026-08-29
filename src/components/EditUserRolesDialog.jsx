@@ -16,6 +16,8 @@ const EditUserRolesDialog = memo(props => {
     originalRoles = [],
     dialogTestId,
     titleTestId,
+    descriptionTestId,
+    closeButtonTestId,
     roleSelectTestId,
     saveButtonTestId,
   } = props;
@@ -60,11 +62,13 @@ const EditUserRolesDialog = memo(props => {
       onKeyDown={handleKeyDown}
       data-testid={dialogTestId}
       titleTestId={titleTestId}
+      closeButtonTestId={closeButtonTestId}
       content={
         <Box sx={styles.contentWrapper}>
           <Typography
             variant="bodyMedium"
             color="text.secondary"
+            data-testid={descriptionTestId}
           >
             Select the roles to define user permissions for this project.
           </Typography>
