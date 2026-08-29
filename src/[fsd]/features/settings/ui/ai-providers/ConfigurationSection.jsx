@@ -179,11 +179,13 @@ const ConfigurationSection = memo(props => {
               return (
                 <Box
                   key={groupLabel}
+                  data-testid="ai-providers-configuration-group"
                   sx={styles.groupContainer({ showBorder: idx < GROUP_ORDER.length - 1 })}
                 >
                   <Typography
                     variant="subtitle"
                     color="text.primary"
+                    data-testid="ai-providers-configuration-group-name"
                   >
                     {groupLabel}
                   </Typography>
