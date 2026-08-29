@@ -50,6 +50,7 @@ const ProjectGeneralContent = memo(() => {
           items={[
             {
               title: 'AI Configurations',
+              testId: 'ai-configuration-accordion-summary',
               content: (
                 <Box>
                   <ProjectAIConfigurations />

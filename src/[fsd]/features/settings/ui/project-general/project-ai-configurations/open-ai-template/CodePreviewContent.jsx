@@ -18,7 +18,10 @@ const CodePreviewContent = memo(props => {
   }, [editorLanguage]);
 
   return (
-    <Box sx={styles.codeEditorContainer}>
+    <Box
+      sx={styles.codeEditorContainer}
+      data-testid="ai-configuration-code-preview-editor"
+    >
       <Field.CodeMirrorEditor
         key={`code-preview-${editorLanguage}-${modelName || 'default'}`}
         value={codeExample}

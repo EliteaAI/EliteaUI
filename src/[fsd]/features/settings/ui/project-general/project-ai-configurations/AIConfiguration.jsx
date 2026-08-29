@@ -157,12 +157,14 @@ const AIConfiguration = memo(() => {
         <Box sx={styles.fieldsGrid}>
           <FieldWithCopy
             label="OpenAI-BaseURL:"
+            testId="ai-configuration-openai-base-url-value"
             value={userApiUrl ? `${userApiUrl.replace('/api/v2', '')}/llm/v1` : 'Not configured'}
           />
         </Box>
         <Box sx={styles.fieldsGrid}>
           <FieldWithCopy
             label="Server URL:"
+            testId="ai-configuration-server-url-value"
             value={userApiUrl || 'Not configured'}
           />
         </Box>
@@ -170,6 +172,7 @@ const AIConfiguration = memo(() => {
           <Box sx={styles.fieldsGrid}>
             <FieldWithCopy
               label="OpenAI-Project:"
+              testId="ai-configuration-openai-project-value"
               value={model.project_id}
             />
           </Box>
@@ -177,6 +180,7 @@ const AIConfiguration = memo(() => {
         <Box sx={styles.fieldsGrid}>
           <FieldWithCopy
             label="Project ID:"
+            testId="ai-configuration-project-id-value"
             value={projectId || 'Not configured'}
           />
         </Box>

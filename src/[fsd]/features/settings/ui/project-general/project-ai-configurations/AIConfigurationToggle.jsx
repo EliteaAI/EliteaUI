@@ -21,6 +21,7 @@ const AIConfigurationToggle = memo(props => {
   const themeArrayBtn = [
     {
       value: ProjectGeneralConstants.AIConfigurationTabs.Basic,
+      buttonProps: { 'data-testid': 'ai-configuration-tab-basic-button' },
       icon: (
         <Box sx={styles.container}>
           <Typography variant="labelSmall">{ProjectGeneralConstants.AIConfigurationTabs.Basic}</Typography>
@@ -29,6 +30,7 @@ const AIConfigurationToggle = memo(props => {
     },
     {
       value: ProjectGeneralConstants.AIConfigurationTabs.OpenAITemplate,
+      buttonProps: { 'data-testid': 'ai-configuration-tab-openai-template-button' },
       icon: (
         <Box sx={styles.container}>
           <Typography variant="labelSmall">
