@@ -153,6 +153,8 @@ const UsersTable = memo(props => {
               refetch={refetch}
               rolesOptions={rolesOptions}
               testId="user-row-edit-button"
+              dialogTestId="users-row-edit-roles-dialog"
+              roleSelectTestId="users-row-edit-roles-select"
             />
           )}
           {checkPermission(PERMISSIONS.users.delete) && (

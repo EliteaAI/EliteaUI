@@ -86,6 +86,11 @@ const InviteUserDialog = memo(props => {
     onConfirm,
     confirmButtonText = 'Invite',
     rolesOptions,
+    dialogTestId,
+    titleTestId,
+    descriptionTestId,
+    emailsLabelTestId,
+    closeButtonTestId,
     emailsInputTestId,
     roleSelectTestId,
     confirmButtonTestId,
@@ -173,11 +178,15 @@ const InviteUserDialog = memo(props => {
       title={title}
       onClose={onClose}
       onKeyDown={handleKeyDown}
+      data-testid={dialogTestId}
+      titleTestId={titleTestId}
+      closeButtonTestId={closeButtonTestId}
       content={
         <Box sx={styles.contentWrapper}>
           <Typography
             variant="bodyMedium"
             color="text.secondary"
+            data-testid={descriptionTestId}
           >
             Enter user emails(separated by comma) and select roles to define permissions for this project.
           </Typography>
@@ -201,6 +210,7 @@ const InviteUserDialog = memo(props => {
                 onKeyDown={handleKeyDown}
                 value={emails.join(',')}
                 label="Emails"
+                InputLabelProps={{ 'data-testid': emailsLabelTestId }}
                 enableAutoBlur={false}
                 onBlur={handleBlur}
                 inputProps={{ 'data-testid': emailsInputTestId }}
