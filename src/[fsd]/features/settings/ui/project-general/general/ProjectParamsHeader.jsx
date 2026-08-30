@@ -54,6 +54,7 @@ const ProjectParamsHeader = memo(() => {
           />
           {canEdit && (
             <IconButton
+              data-testid="project-general-edit-icon-button"
               sx={styles.editButton}
               onClick={handleOpenDialog}
             >
