@@ -6,7 +6,7 @@ import { PERMISSIONS } from '@/common/constants';
 import AIEditProjectContextModal from './AIEditProjectContextModal';
 
 const AIEditProjectContextButton = memo(props => {
-  const { currentContent, onApplySave, disabled, defaultOpen = false } = props;
+  const { currentContent, currentActivationDescription, onApplySave, disabled, defaultOpen = false } = props;
 
   return (
     <EditEntityButton
@@ -19,6 +19,7 @@ const AIEditProjectContextButton = memo(props => {
           open={open}
           onClose={onClose}
           currentContent={currentContent}
+          currentActivationDescription={currentActivationDescription}
           onApplySave={onApplySave}
         />
       )}
