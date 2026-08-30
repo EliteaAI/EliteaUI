@@ -8,6 +8,8 @@ import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import CopyIcon from '@/components/Icons/CopyIcon';
 import useToast from '@/hooks/useToast';
 
+import { getStringMaxLength } from './stringField.helpers';
+
 const CommonStringField = memo(props => {
   const { toastInfo } = useToast();
 
@@ -25,13 +27,15 @@ const CommonStringField = memo(props => {
 
   const styles = commonStringFieldStyles();
 
+  const maxLength = useMemo(() => getStringMaxLength(property), [property]);
+
   const isMultiline = useMemo(
     () =>
       property?.multiline === true ||
       (lines !== undefined && parseInt(lines) > 1) ||
-      property?.maxLength > 100 ||
+      maxLength > 100 ||
       description?.toLowerCase().includes('description'),
-    [lines, property, description],
+    [lines, property, maxLength, description],
   );
 
   const handleSelectChange = useCallback(
@@ -192,7 +196,7 @@ const CommonStringField = memo(props => {
         value={fieldValue || ''}
         onChange={event => handleInputChange(fieldKey, event)}
         inputProps={{
-          maxLength: property?.maxLength,
+          maxLength,
           'data-testid': inputTestId,
         }}
         disabled={disabled}
