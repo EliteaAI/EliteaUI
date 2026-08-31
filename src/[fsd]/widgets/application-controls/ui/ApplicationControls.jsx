@@ -186,25 +186,13 @@ const ApplicationControls = memo(props => {
       ...(forkEntityMenuItem ? [forkEntityMenuItem] : []),
       ...(publishApplicationMenuItem && !isFromPipeline ? [publishApplicationMenuItem] : []),
       ...(unpublishVersionMenuItem && !isFromPipeline ? [unpublishVersionMenuItem] : []),
-      ...(canDeleteVersion
-        ? [
-            {
-              key: 'delete-version',
-              icon: <DeleteIcon sx={{ fontSize: '1rem' }} />,
-              label: 'Delete',
-              disabled: disableDelete,
-              addSeparator: false,
-              onClick: () => versionDeleteRef.current?.triggerDelete(),
-            },
-          ]
-        : []),
       ...(!isFromPipeline
         ? [
             {
               key: 'evaluate',
               label: 'Evaluate (beta)',
               icon: <EvaluateIcon sx={{ fontSize: '1rem' }} />,
-              addSeparator: true,
+              addSeparator: false,
               onClick: () => {
                 const path = NavigationHelpers.buildRoute(RouteDefinitions.ApplicationsEvaluate, {
                   tab: tab ?? 'all',
@@ -212,6 +200,18 @@ const ApplicationControls = memo(props => {
                 });
                 navigate({ pathname: path, search: location.search });
               },
+            },
+          ]
+        : []),
+      ...(canDeleteVersion
+        ? [
+            {
+              key: 'delete-version',
+              icon: <DeleteIcon sx={{ fontSize: '1rem' }} />,
+              label: 'Delete',
+              disabled: disableDelete,
+              addSeparator: true,
+              onClick: () => versionDeleteRef.current?.triggerDelete(),
             },
           ]
         : []),

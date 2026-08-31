@@ -6,12 +6,12 @@ import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { EvaluateIcon } from '@/[fsd]/shared/ui/icon';
 
-import SuitCard from './SuitCard';
+import SuiteCard from './SuiteCard';
 
-const SuitsPanel = memo(props => {
-  const { suites = [], isLoading, datasetNamesById = {}, onNewSuit, onDeleteSuit, onSelectSuit } = props;
+const SuitesPanel = memo(props => {
+  const { suites = [], isLoading, datasetNamesById = {}, onNewSuite, onDeleteSuite, onSelectSuite } = props;
 
-  const styles = suitsPanelStyles();
+  const styles = suitesPanelStyles();
 
   return (
     <Box sx={styles.root}>
@@ -20,16 +20,16 @@ const SuitsPanel = memo(props => {
           variant="bodyMedium"
           sx={styles.headerLabel}
         >
-          Suits
+          Suites
         </Typography>
         {suites.length > 0 && (
           <Button.BaseBtn
             variant={BUTTON_VARIANTS.contained}
             color={BUTTON_COLORS.primary}
-            onClick={onNewSuit}
-            sx={styles.newSuitButton}
+            onClick={onNewSuite}
+            sx={styles.newSuiteButton}
           >
-            New Suit
+            New Suite
           </Button.BaseBtn>
         )}
       </Box>
@@ -45,7 +45,7 @@ const SuitsPanel = memo(props => {
               variant="headingSmall"
               sx={styles.emptyTitle}
             >
-              No suits created yet.
+              No suites created yet.
             </Typography>
             <Typography
               variant="bodyMedium"
@@ -56,21 +56,21 @@ const SuitsPanel = memo(props => {
             <Button.BaseBtn
               variant={BUTTON_VARIANTS.contained}
               color={BUTTON_COLORS.primary}
-              onClick={onNewSuit}
+              onClick={onNewSuite}
               sx={styles.emptyButton}
             >
-              New Suit
+              New Suite
             </Button.BaseBtn>
           </Box>
         ) : (
           <Box sx={styles.list}>
             {suites.map(suite => (
-              <SuitCard
+              <SuiteCard
                 key={suite.id}
                 suite={suite}
                 datasetName={datasetNamesById[suite.dataset_id]}
-                onDelete={onDeleteSuit}
-                onClick={() => onSelectSuit?.(suite)}
+                onDelete={onDeleteSuite}
+                onClick={() => onSelectSuite?.(suite)}
               />
             ))}
           </Box>
@@ -80,12 +80,12 @@ const SuitsPanel = memo(props => {
   );
 });
 
-SuitsPanel.displayName = 'SuitsPanel';
+SuitesPanel.displayName = 'SuitesPanel';
 
-export default SuitsPanel;
+export default SuitesPanel;
 
 /** @type {MuiSx} */
-const suitsPanelStyles = () => ({
+const suitesPanelStyles = () => ({
   root: {
     display: 'flex',
     flexDirection: 'column',
@@ -108,7 +108,7 @@ const suitsPanelStyles = () => ({
     color: palette.text.secondary,
     fontWeight: 600,
   }),
-  newSuitButton: {
+  newSuiteButton: {
     height: '1.75rem',
     fontSize: '0.8125rem',
   },

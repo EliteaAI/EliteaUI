@@ -8,7 +8,7 @@ import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { Modal } from '@/[fsd]/shared/ui';
 import {
   ResultsPanel,
-  SuitsPanel,
+  SuitesPanel,
   parseEvalError,
   useDeleteEvalSuiteMutation,
   useEvalDatasetsQuery,
@@ -36,11 +36,11 @@ const AgentEvaluatePage = memo(() => {
 
   const datasetNamesById = useMemo(() => Object.fromEntries(datasets.map(d => [d.id, d.name])), [datasets]);
 
-  const handleNewSuit = useCallback(() => {
-    // TODO: wire up new suit creation
+  const handleNewSuite = useCallback(() => {
+    // TODO: wire up new suite creation
   }, []);
 
-  const handleDeleteSuit = useCallback(suite => {
+  const handleDeleteSuite = useCallback(suite => {
     setSuiteToDelete(suite);
   }, []);
 
@@ -59,8 +59,8 @@ const AgentEvaluatePage = memo(() => {
     setSuiteToDelete(null);
   }, [deleteEvalSuite, projectId, suiteToDelete, toastError, toastSuccess]);
 
-  const handleSelectSuit = useCallback(() => {
-    // TODO: wire up suit selection / navigation
+  const handleSelectSuite = useCallback(() => {
+    // TODO: wire up suite selection / navigation
   }, []);
 
   const handleOpenHistory = useCallback(() => {
@@ -73,13 +73,13 @@ const AgentEvaluatePage = memo(() => {
     <Box sx={styles.wrapper}>
       <Box sx={styles.header} />
       <Box sx={styles.body}>
-        <SuitsPanel
+        <SuitesPanel
           suites={suites}
           isLoading={isSuitesLoading}
           datasetNamesById={datasetNamesById}
-          onNewSuit={handleNewSuit}
-          onDeleteSuit={handleDeleteSuit}
-          onSelectSuit={handleSelectSuit}
+          onNewSuite={handleNewSuite}
+          onDeleteSuite={handleDeleteSuite}
+          onSelectSuite={handleSelectSuite}
         />
         <Box sx={styles.divider} />
         <ResultsPanel onOpenHistory={handleOpenHistory} />

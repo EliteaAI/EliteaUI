@@ -6,7 +6,7 @@ import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 
-const SuitCard = memo(props => {
+const SuiteCard = memo(props => {
   const { suite, datasetName, onDelete } = props;
 
   const handleDelete = useCallback(
@@ -17,7 +17,7 @@ const SuitCard = memo(props => {
     [onDelete, suite],
   );
 
-  const styles = suitCardStyles();
+  const styles = suiteCardStyles();
 
   return (
     <Box sx={styles.root}>
@@ -54,12 +54,12 @@ const SuitCard = memo(props => {
   );
 });
 
-SuitCard.displayName = 'SuitCard';
+SuiteCard.displayName = 'SuiteCard';
 
-export default SuitCard;
+export default SuiteCard;
 
 /** @type {MuiSx} */
-const suitCardStyles = () => ({
+const suiteCardStyles = () => ({
   root: ({ palette }) => ({
     display: 'flex',
     flexDirection: 'column',
