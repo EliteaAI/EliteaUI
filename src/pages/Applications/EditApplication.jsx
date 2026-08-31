@@ -7,7 +7,6 @@ import { ApplicationTabBar } from '@/[fsd]/entities/application-tab-bar/ui';
 import { useIsVersionNotFound } from '@/[fsd]/entities/version/lib/hooks';
 import { InstructionsInputRefProvider } from '@/[fsd]/shared/lib/context';
 import { ApplicationControls } from '@/[fsd]/widgets/application-controls';
-import { EvaluationTab } from '@/[fsd]/widgets/evaluation/ui';
 import { ViewMode } from '@/common/constants';
 import { buildErrorMessage, isNotFoundError } from '@/common/utils';
 import StyledTabs from '@/components/StyledTabs';
@@ -100,23 +99,10 @@ const EditApplication = memo(() => {
           />
         ),
       },
-      {
-        label: 'Evaluation',
-        tabProps: { 'data-testid': 'evaluation-tab' },
-        content: (
-          <EvaluationTab
-            isFetching={isFetching}
-            isError={isError}
-            applicationId={applicationId}
-            applicationVersionId={initialValues?.version_details?.id}
-          />
-        ),
-      },
     ],
     [
       initialValues?.name,
       initialValues?.version_details?.tools?.length,
-      initialValues?.version_details?.id,
       isFetching,
       isError,
       applicationId,
