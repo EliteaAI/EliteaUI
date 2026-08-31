@@ -18,6 +18,7 @@ import {
   useUpdateEvalSuiteMutation,
 } from '@/[fsd]/widgets/evaluation';
 import { useListModelsQuery } from '@/api/configurations';
+import useNavBlocker from '@/hooks/useNavBlocker';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 
@@ -47,8 +48,17 @@ const AgentEvaluatePage = memo(() => {
   const [suiteToDelete, setSuiteToDelete] = useState(null);
   const [editingSuiteId, setEditingSuiteId] = useState(null);
   const [isCreatingNew, setIsCreatingNew] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
 
   const isDetailView = isCreatingNew || editingSuiteId !== null;
+
+  const blockOptions = useMemo(
+    () => ({
+      blockCondition: isDetailView && isDirty,
+    }),
+    [isDetailView, isDirty],
+  );
+  useNavBlocker(blockOptions);
 
   const { data: suiteDetail } = useEvalSuiteQuery(
     { projectId, suiteId: editingSuiteId },
@@ -70,6 +80,10 @@ const AgentEvaluatePage = memo(() => {
   const handleBack = useCallback(() => {
     setEditingSuiteId(null);
     setIsCreatingNew(false);
+  }, []);
+
+  const handleDirtyChange = useCallback(dirty => {
+    setIsDirty(dirty);
   }, []);
 
   const handleSave = useCallback(
@@ -132,9 +146,10 @@ const AgentEvaluatePage = memo(() => {
 
   const handleConfirmDelete = useCallback(async () => {
     if (!suiteToDelete) return;
+    const suiteName = suiteToDelete.name;
     try {
       await deleteEvalSuite({ projectId, suiteId: suiteToDelete.id }).unwrap();
-      toastSuccess('Suite deleted.');
+      toastSuccess(`The ${suiteName} suite has been successfully deleted.`);
       if (editingSuiteId === suiteToDelete.id) {
         setEditingSuiteId(null);
       }
@@ -164,6 +179,7 @@ const AgentEvaluatePage = memo(() => {
             onSave={handleSave}
             onDelete={handleDeleteSuite}
             onEvaluate={handleEvaluate}
+            onDirtyChange={handleDirtyChange}
           />
         ) : (
           <SuitesPanel

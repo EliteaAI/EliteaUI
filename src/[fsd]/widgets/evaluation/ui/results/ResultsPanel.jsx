@@ -1,6 +1,6 @@
 import { memo } from 'react';
 
-import { Box, SvgIcon, Typography } from '@mui/material';
+import { Box, SvgIcon, Tooltip, Typography } from '@mui/material';
 
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
@@ -22,13 +22,20 @@ const ResultsPanel = memo(props => {
           Results
         </Typography>
         <Box sx={styles.historyButtonWrapper}>
-          <Button.BaseBtn
-            variant={BUTTON_VARIANTS.tertiary}
-            size="small"
-            onClick={onOpenHistory}
-            sx={styles.historyButton}
-            startIcon={<ClockIcon style={{ fontSize: '1rem' }} />}
-          />
+          <Tooltip
+            title="View run history"
+            placement="top"
+          >
+            <Box component="span">
+              <Button.BaseBtn
+                variant={BUTTON_VARIANTS.tertiary}
+                size="small"
+                onClick={onOpenHistory}
+                sx={styles.historyButton}
+                startIcon={<ClockIcon style={{ fontSize: '1rem' }} />}
+              />
+            </Box>
+          </Tooltip>
         </Box>
       </Box>
       <Box sx={styles.content}>

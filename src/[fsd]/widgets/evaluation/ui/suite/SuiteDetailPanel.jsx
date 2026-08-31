@@ -2,8 +2,8 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Box, Tooltip, Typography } from '@mui/material';
 
-import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
-import { Button, Input } from '@/[fsd]/shared/ui';
+import { AccordionConstants, ModalConstants } from '@/[fsd]/shared/lib/constants';
+import { Button, Input, Modal } from '@/[fsd]/shared/ui';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { LLMModelSelector } from '@/[fsd]/widgets/llm-model-selector';
@@ -29,11 +29,14 @@ const SuiteDetailPanel = memo(props => {
     onDiscard,
     onDelete,
     onEvaluate,
+    onDirtyChange,
   } = props;
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [judgeModel, setJudgeModel] = useState(null);
+  const [showDiscardModal, setShowDiscardModal] = useState(false);
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
 
   useEffect(() => {
     if (isNew) {
@@ -99,18 +102,19 @@ const SuiteDetailPanel = memo(props => {
     onSave?.({ name: name.trim(), description, judge_model: judgeModel });
   }, [onSave, name, description, judgeModel]);
 
-  const handleDiscard = useCallback(() => {
+  const handleDiscardClick = useCallback(() => {
+    setShowDiscardModal(true);
+  }, []);
+
+  const handleDiscardConfirm = useCallback(() => {
     if (suite) {
       setName(suite.name ?? '');
       setDescription(suite.description ?? '');
       setJudgeModel(suite.judge_model ?? null);
     }
+    setShowDiscardModal(false);
     onDiscard?.();
   }, [onDiscard, suite]);
-
-  const handleDelete = useCallback(() => {
-    onDelete?.(suite);
-  }, [onDelete, suite]);
 
   const isDirty = useMemo(() => {
     if (isNew) return !!name.trim();
@@ -121,6 +125,27 @@ const SuiteDetailPanel = memo(props => {
       JSON.stringify(judgeModel) !== JSON.stringify(suite.judge_model ?? null)
     );
   }, [isNew, suite, name, description, judgeModel]);
+
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
+
+  const handleBackClick = useCallback(() => {
+    if (isDirty) {
+      setShowLeaveModal(true);
+    } else {
+      onBack?.();
+    }
+  }, [isDirty, onBack]);
+
+  const handleLeaveConfirm = useCallback(() => {
+    setShowLeaveModal(false);
+    onBack?.();
+  }, [onBack]);
+
+  const handleDelete = useCallback(() => {
+    onDelete?.(suite);
+  }, [onDelete, suite]);
 
   const isSaveDisabled = !name.trim() || isSaving || !isDirty;
   const isEvaluateDisabled = isNew || !suite?.id;
@@ -134,7 +159,7 @@ const SuiteDetailPanel = memo(props => {
         <Box sx={styles.headerLeft}>
           <Button.BaseBtn
             variant={BUTTON_VARIANTS.tertiary}
-            onClick={onBack}
+            onClick={handleBackClick}
             sx={styles.backButton}
             startIcon={<ArrowBackIcon />}
           />
@@ -161,7 +186,7 @@ const SuiteDetailPanel = memo(props => {
                 variant={BUTTON_VARIANTS.elitea}
                 color={BUTTON_COLORS.secondary}
                 disabled={!isDirty}
-                onClick={handleDiscard}
+                onClick={handleDiscardClick}
                 sx={styles.headerButton}
               >
                 Discard
@@ -215,7 +240,12 @@ const SuiteDetailPanel = memo(props => {
                         placement="top"
                         arrow
                       >
-                        <InfoIcon sx={styles.infoIcon} />
+                        <Box
+                          component="span"
+                          sx={styles.infoIconWrapper}
+                        >
+                          <InfoIcon sx={styles.infoIcon} />
+                        </Box>
                       </Tooltip>
                     }
                     models={judgeModelOptions}
@@ -241,6 +271,33 @@ const SuiteDetailPanel = memo(props => {
           Evaluate
         </Button.BaseBtn>
       </Box>
+      <Modal.BaseModal
+        open={showDiscardModal}
+        variant={ModalConstants.MODAL_VARIANT.simple}
+        titleIcon={ModalConstants.MODAL_ICON_TYPE.warning}
+        title="Warning"
+        content="Are you sure you want to discard changes?"
+        onClose={() => setShowDiscardModal(false)}
+        onConfirm={handleDiscardConfirm}
+        cancelButtonText="Cancel"
+        confirmButtonText="Discard"
+        alarm
+      />
+      <Modal.BaseModal
+        open={showLeaveModal}
+        variant={ModalConstants.MODAL_VARIANT.simple}
+        titleIcon={ModalConstants.MODAL_ICON_TYPE.warning}
+        title="Warning"
+        content={
+          <Typography variant="bodyMedium">
+            There are unsaved changes. Are you sure you want to leave?
+          </Typography>
+        }
+        onClose={() => setShowLeaveModal(false)}
+        onConfirm={handleLeaveConfirm}
+        cancelButtonText="Cancel"
+        confirmButtonText="Leave"
+      />
     </Box>
   );
 });
@@ -324,10 +381,14 @@ const suiteDetailPanelStyles = () => ({
     flexDirection: 'column',
     gap: '1rem',
   },
+  infoIconWrapper: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    cursor: 'pointer',
+  },
   infoIcon: ({ palette }) => ({
     fontSize: '1rem',
     color: palette.icon.fill.default,
-    cursor: 'pointer',
   }),
   footer: ({ palette }) => ({
     display: 'flex',

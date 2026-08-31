@@ -145,6 +145,11 @@ const LLMModelSelector = memo(props => {
           models={models}
           selectedModel={selectedModel}
           onSelectModel={onSelectModel}
+          menuProps={{
+            anchorOrigin: { vertical: 'bottom', horizontal: 'left' },
+            transformOrigin: { vertical: 'top', horizontal: 'left' },
+            paperSx: { maxHeight: '18rem', marginTop: '0.25rem' },
+          }}
         />
 
         {onSetLLMSettings && (
