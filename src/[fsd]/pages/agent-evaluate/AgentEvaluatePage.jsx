@@ -4,16 +4,20 @@ import { useParams } from 'react-router-dom';
 
 import { Box } from '@mui/material';
 
-import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { Modal } from '@/[fsd]/shared/ui';
 import {
   ResultsPanel,
+  SuiteDetailPanel,
   SuitesPanel,
   parseEvalError,
+  useCreateEvalSuiteMutation,
   useDeleteEvalSuiteMutation,
   useEvalDatasetsQuery,
+  useEvalSuiteQuery,
   useEvalSuitesQuery,
+  useUpdateEvalSuiteMutation,
 } from '@/[fsd]/widgets/evaluation';
+import { useListModelsQuery } from '@/api/configurations';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 
@@ -31,13 +35,91 @@ const AgentEvaluatePage = memo(() => {
     { skip },
   );
   const { data: datasets = [] } = useEvalDatasetsQuery({ projectId, agentId: applicationId }, { skip });
+  const { data: modelsData = { items: [] } } = useListModelsQuery(
+    { projectId, include_shared: true, section: 'llm' },
+    { skip: !projectId },
+  );
+
   const [deleteEvalSuite] = useDeleteEvalSuiteMutation();
+  const [createEvalSuite, { isLoading: isCreating }] = useCreateEvalSuiteMutation();
+  const [updateEvalSuite, { isLoading: isUpdating }] = useUpdateEvalSuiteMutation();
+
   const [suiteToDelete, setSuiteToDelete] = useState(null);
+  const [editingSuiteId, setEditingSuiteId] = useState(null);
+  const [isCreatingNew, setIsCreatingNew] = useState(false);
+
+  const isDetailView = isCreatingNew || editingSuiteId !== null;
+
+  const { data: suiteDetail } = useEvalSuiteQuery(
+    { projectId, suiteId: editingSuiteId },
+    { skip: !projectId || editingSuiteId == null },
+  );
 
   const datasetNamesById = useMemo(() => Object.fromEntries(datasets.map(d => [d.id, d.name])), [datasets]);
 
   const handleNewSuite = useCallback(() => {
-    // TODO: wire up new suite creation
+    setIsCreatingNew(true);
+    setEditingSuiteId(null);
+  }, []);
+
+  const handleSelectSuite = useCallback(suite => {
+    setEditingSuiteId(suite.id);
+    setIsCreatingNew(false);
+  }, []);
+
+  const handleBack = useCallback(() => {
+    setEditingSuiteId(null);
+    setIsCreatingNew(false);
+  }, []);
+
+  const handleSave = useCallback(
+    async formData => {
+      try {
+        if (isCreatingNew) {
+          await createEvalSuite({
+            projectId,
+            body: {
+              application_id: applicationId,
+              name: formData.name,
+              description: formData.description,
+              judge_model: formData.judge_model,
+            },
+          }).unwrap();
+          toastSuccess('Suite created.');
+          setIsCreatingNew(false);
+          setEditingSuiteId(null);
+        } else if (editingSuiteId != null) {
+          await updateEvalSuite({
+            projectId,
+            suiteId: editingSuiteId,
+            body: {
+              name: formData.name,
+              description: formData.description,
+              judge_model: formData.judge_model,
+            },
+          }).unwrap();
+          toastSuccess('Suite saved.');
+        }
+      } catch (error) {
+        toastError(
+          parseEvalError(error, isCreatingNew ? 'Failed to create suite.' : 'Failed to save suite.'),
+        );
+      }
+    },
+    [
+      isCreatingNew,
+      editingSuiteId,
+      createEvalSuite,
+      updateEvalSuite,
+      projectId,
+      applicationId,
+      toastSuccess,
+      toastError,
+    ],
+  );
+
+  const handleEvaluate = useCallback(() => {
+    // TODO: wire up evaluation run
   }, []);
 
   const handleDeleteSuite = useCallback(suite => {
@@ -53,15 +135,14 @@ const AgentEvaluatePage = memo(() => {
     try {
       await deleteEvalSuite({ projectId, suiteId: suiteToDelete.id }).unwrap();
       toastSuccess('Suite deleted.');
+      if (editingSuiteId === suiteToDelete.id) {
+        setEditingSuiteId(null);
+      }
     } catch (error) {
       toastError(parseEvalError(error, 'Failed to delete suite.'));
     }
     setSuiteToDelete(null);
-  }, [deleteEvalSuite, projectId, suiteToDelete, toastError, toastSuccess]);
-
-  const handleSelectSuite = useCallback(() => {
-    // TODO: wire up suite selection / navigation
-  }, []);
+  }, [deleteEvalSuite, projectId, suiteToDelete, editingSuiteId, toastError, toastSuccess]);
 
   const handleOpenHistory = useCallback(() => {
     // TODO: wire up results history
@@ -73,14 +154,27 @@ const AgentEvaluatePage = memo(() => {
     <Box sx={styles.wrapper}>
       <Box sx={styles.header} />
       <Box sx={styles.body}>
-        <SuitesPanel
-          suites={suites}
-          isLoading={isSuitesLoading}
-          datasetNamesById={datasetNamesById}
-          onNewSuite={handleNewSuite}
-          onDeleteSuite={handleDeleteSuite}
-          onSelectSuite={handleSelectSuite}
-        />
+        {isDetailView ? (
+          <SuiteDetailPanel
+            suite={suiteDetail}
+            isNew={isCreatingNew}
+            modelsData={modelsData}
+            isSaving={isCreating || isUpdating}
+            onBack={handleBack}
+            onSave={handleSave}
+            onDelete={handleDeleteSuite}
+            onEvaluate={handleEvaluate}
+          />
+        ) : (
+          <SuitesPanel
+            suites={suites}
+            isLoading={isSuitesLoading}
+            datasetNamesById={datasetNamesById}
+            onNewSuite={handleNewSuite}
+            onDeleteSuite={handleDeleteSuite}
+            onSelectSuite={handleSelectSuite}
+          />
+        )}
         <Box sx={styles.divider} />
         <ResultsPanel onOpenHistory={handleOpenHistory} />
       </Box>
@@ -88,11 +182,10 @@ const AgentEvaluatePage = memo(() => {
         open={!!suiteToDelete}
         onClose={handleCloseDelete}
         onConfirm={handleConfirmDelete}
-        title="Delete suite?"
-        titleIcon={ModalConstants.MODAL_ICON_TYPE.warning}
-        textContent="Are you sure you want to delete the suite "
+        title="Delete confirmation"
+        textContent="Are you sure to delete the "
         name={suiteToDelete?.name}
-        inlineExtraContent="?"
+        shouldRequestInputName
         confirmButtonText="Delete"
       />
     </Box>
