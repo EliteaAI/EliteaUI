@@ -134,6 +134,25 @@ export const socialApi = eliteaApi
         },
         invalidatesTags: [{ type: TAG_TYPE_USER, id: 'DETAILS' }],
       }),
+      // #6285: module toggles (default_*_enabled) are scoped per project, unlike authorDetails.
+      authorModuleSettings: build.query({
+        query: projectId => ({
+          url: apiSlicePath + '/module_settings/' + projectId,
+        }),
+        providesTags: (result, error, projectId) => [
+          { type: TAG_TYPE_USER, id: `MODULE_SETTINGS_${projectId}` },
+        ],
+      }),
+      updateAuthorModuleSettings: build.mutation({
+        query: ({ projectId, ...body }) => ({
+          url: apiSlicePath + '/module_settings/' + projectId,
+          method: 'PUT',
+          body,
+        }),
+        invalidatesTags: (result, error, { projectId }) => [
+          { type: TAG_TYPE_USER, id: `MODULE_SETTINGS_${projectId}` },
+        ],
+      }),
       feedback: build.mutation({
         query: body => {
           return {
@@ -190,6 +209,9 @@ export const {
   useAuthorDetailsQuery,
   useLazyAuthorDetailsQuery,
   useAuthorDescriptionMutation,
+  useAuthorModuleSettingsQuery,
+  useLazyAuthorModuleSettingsQuery,
+  useUpdateAuthorModuleSettingsMutation,
   useFeedbackMutation,
   useTogglePinItemMutation,
 } = socialApi;
