@@ -1,6 +1,7 @@
 import { memo, useMemo, useRef, useState } from 'react';
 
 import { useFormikContext } from 'formik';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { Box } from '@mui/material';
 
@@ -14,6 +15,7 @@ import {
 } from '@/[fsd]/entities/version';
 import { useCompareAgentVersions } from '@/[fsd]/features/agent/lib/hooks';
 import { PinEntityConstants } from '@/[fsd]/shared/lib/constants';
+import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
 import { Controls } from '@/[fsd]/shared/ui';
 import { usePin, usePinMenu } from '@/[fsd]/widgets/pin-toggler/lib/hooks';
@@ -22,6 +24,7 @@ import { useCopyLinkMenu } from '@/components/CopyLinkToEntityButton.jsx';
 import { useForkEntityMenu } from '@/components/Fork/ForkEntityButton';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import DifferenceIcon from '@/components/Icons/DifferenceIcon';
+import EvaluateIcon from '@/components/Icons/EvaluateIcon';
 import PinIcon from '@/components/Icons/PinIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import { useIsFromPipelineDetail } from '@/hooks/useIsFromSpecificPageHooks';
@@ -31,6 +34,7 @@ import useViewMode from '@/hooks/useViewMode';
 import { useDeleteApplicationMenu } from '@/pages/Applications/Components/Applications/DeleteApplicationButton';
 import { useExportApplicationMenu } from '@/pages/Applications/Components/Applications/ExportApplicationButton';
 import { AuthorsButton } from '@/pages/Common';
+import RouteDefinitions from '@/routes';
 
 const ApplicationControls = memo(props => {
   const { setBlockNav, onSuccess } = props;
@@ -39,6 +43,9 @@ const ApplicationControls = memo(props => {
   const isFromPipeline = useIsFromPipelineDetail();
   const formik = useFormikContext();
   const viewMode = useViewMode();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { tab, agentId } = useParams();
   const versionDeleteRef = useRef(null);
   const projectId = useSelectedProjectId();
   const [compareVersionsOpen, setCompareVersionsOpen] = useState(false);
@@ -186,8 +193,25 @@ const ApplicationControls = memo(props => {
               icon: <DeleteIcon sx={{ fontSize: '1rem' }} />,
               label: 'Delete',
               disabled: disableDelete,
-              addSeparator: true,
+              addSeparator: false,
               onClick: () => versionDeleteRef.current?.triggerDelete(),
+            },
+          ]
+        : []),
+      ...(!isFromPipeline
+        ? [
+            {
+              key: 'evaluate',
+              label: 'Evaluate (beta)',
+              icon: <EvaluateIcon sx={{ fontSize: '1rem' }} />,
+              addSeparator: true,
+              onClick: () => {
+                const path = NavigationHelpers.buildRoute(RouteDefinitions.ApplicationsEvaluate, {
+                  tab: tab ?? 'all',
+                  agentId,
+                });
+                navigate({ pathname: path, search: location.search });
+              },
             },
           ]
         : []),
@@ -237,6 +261,10 @@ const ApplicationControls = memo(props => {
     canDeleteApplication,
     formik?.values?.versions,
     isPrivate,
+    navigate,
+    location.search,
+    tab,
+    agentId,
   ]);
 
   return (

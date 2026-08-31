@@ -60,6 +60,9 @@ const EliteaCatalog = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/eli
 const Applications = ChunkHelpers.lazyWithRetry(() => import('@/pages/Applications/Applications'));
 const CreateApplication = ChunkHelpers.lazyWithRetry(() => import('@/pages/Applications/CreateApplication'));
 const EditApplication = ChunkHelpers.lazyWithRetry(() => import('@/pages/Applications/EditApplication.jsx'));
+const AgentEvaluatePage = ChunkHelpers.lazyWithRetry(
+  () => import('@/[fsd]/pages/agent-evaluate/AgentEvaluatePage'),
+);
 const Skills = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/skills/Skills'));
 const CreateSkill = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/skills/CreateSkill'));
 const EditSkill = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/skills/EditSkill'));
@@ -202,6 +205,7 @@ const ProtectedRoutes = memo(() => {
       { path: RouteDefinitions.CreateApplication, element: <CreateApplication /> },
       { path: RouteDefinitions.ApplicationsWithTab, element: <Applications /> },
       { path: RouteDefinitions.ApplicationsDetail, element: <EditApplication /> },
+      { path: RouteDefinitions.ApplicationsEvaluate, element: <AgentEvaluatePage /> },
 
       /* skills — hidden for public projects */
       { path: RouteDefinitions.Skills, element: <SkillsGuard>{getIndexElement(SkillsTabs[0])}</SkillsGuard> },

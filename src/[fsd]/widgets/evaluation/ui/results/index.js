@@ -5,4 +5,5 @@ export { default as ResultsScorecardDialog } from './ResultsScorecardDialog';
 export { default as RunHistoryList } from './RunHistoryList';
 export { default as RunHistoryRow } from './RunHistoryRow';
 export { default as RunProgressDialog } from './RunProgressDialog';
+export { default as ResultsPanel } from './ResultsPanel';
 export { default as ScorecardOverview } from './ScorecardOverview';

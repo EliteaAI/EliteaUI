@@ -10,6 +10,7 @@ const RouteDefinitions = {
   ApplicationsWithTab: '/agents/:tab',
   CreateApplication: '/agents/create',
   ApplicationsDetail: '/agents/:tab/:agentId',
+  ApplicationsEvaluate: '/agents/:tab/:agentId/evaluate',
 
   Skills: '/skills',
   SkillsWithTab: '/skills/:tab',

@@ -4,4 +4,6 @@ export { default as BindingList } from './BindingList';
 export { default as BindingRow } from './BindingRow';
 export { default as GenerateDimensionsDialog } from './GenerateDimensionsDialog';
 export { default as LibraryPickerDialog } from './LibraryPickerDialog';
+export { default as SuitCard } from './SuitCard';
 export { default as SuiteConfigView } from './SuiteConfigView';
+export { default as SuitsPanel } from './SuitsPanel';
