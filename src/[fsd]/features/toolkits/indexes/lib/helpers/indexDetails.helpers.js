@@ -6,9 +6,14 @@ import {
   BannerTitleMap,
   INDEX_ABANDONED_BANNER_MESSAGE,
   INDEX_DATA_DISABLED_REASON,
+  INDEX_RETAINED_DATA_MESSAGE,
   INDEX_SEARCH_TOOL_OPTIONS,
   IndexStatuses,
   IndexesToolsEnum,
+  REINDEX_FAILED_BANNER_MESSAGE,
+  REINDEX_FAILED_BANNER_TITLE,
+  REINDEX_IN_PROGRESS_BANNER_MESSAGE,
+  REINDEX_IN_PROGRESS_BANNER_TITLE,
   RUNNABLE_INDEX_STATUSES,
 } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
 import { BUDGET_ERROR_VARIANTS } from '@/[fsd]/shared/lib/constants/budgetError.constants';
@@ -36,40 +41,61 @@ export const formatDate = ts => {
   }
 };
 
-export const bannerVariant = (isIndexing, state, reindexStats, error, isStale = false) => {
+export const bannerVariant = (isIndexing, state, reindexStats, error, isStale = false, retention = {}) => {
+  const { hasRetainedData = false, lastSuccessfulRun = null } = retention;
   // Before the isIndexing branch: a stale row still reads as "in flight" to every
   // other signal, and an eternal "Indexing…" spinner is the bug this variant fixes.
   if (state === IndexStatuses.progress && isStale)
     return {
       severity: BannerSeverity.warning,
       label: BannerTitleMap[BannerSeverity.warning],
-      message: INDEX_ABANDONED_BANNER_MESSAGE,
+      // An interrupted run's writes were never visible, so a live chunk count means
+      // the previous generation is still being served — say so under the warning.
+      message: hasRetainedData
+        ? `${INDEX_ABANDONED_BANNER_MESSAGE} ${INDEX_RETAINED_DATA_MESSAGE}`
+        : INDEX_ABANDONED_BANNER_MESSAGE,
     };
-  if (isIndexing)
+  if (isIndexing || state === IndexStatuses.progress) {
+    if (hasRetainedData)
+      return {
+        severity: BannerSeverity.info,
+        label: REINDEX_IN_PROGRESS_BANNER_TITLE,
+        message: REINDEX_IN_PROGRESS_BANNER_MESSAGE,
+      };
     return {
       severity: BannerSeverity.info,
       label: BannerTitleMap[BannerSeverity.info],
       message: BannerMessageMap[BannerSeverity.info],
     };
-  if (state === IndexStatuses.progress)
-    return {
-      severity: BannerSeverity.info,
-      label: BannerTitleMap[BannerSeverity.info],
-      message: BannerMessageMap[BannerSeverity.info],
-    };
-  if (state === IndexStatuses.fail)
+  }
+  if (state === IndexStatuses.fail) {
+    // A budget block is not a source-connection problem, and Reindex cannot succeed
+    // until the budget resets — the default copy would send the user the wrong way
+    const budgetMessage = budgetErrorMessage(error);
+    if (hasRetainedData) {
+      const cause = budgetMessage
+        ? `${budgetMessage} ${INDEX_RETAINED_DATA_MESSAGE}`
+        : REINDEX_FAILED_BANNER_MESSAGE;
+      const lastIndexedOn = lastSuccessfulRun?.updated_on;
+      return {
+        severity: BannerSeverity.error,
+        label: REINDEX_FAILED_BANNER_TITLE,
+        message: lastIndexedOn ? `${cause} Last successful indexing: ${formatDate(lastIndexedOn)}.` : cause,
+      };
+    }
     return {
       severity: BannerSeverity.error,
       label: BannerTitleMap[BannerSeverity.error],
-      // A budget block is not a source-connection problem, and Reindex cannot succeed
-      // until the budget resets — the default copy would send the user the wrong way
-      message: budgetErrorMessage(error) || BannerMessageMap[BannerSeverity.error],
+      message: budgetMessage || BannerMessageMap[BannerSeverity.error],
     };
+  }
   if (state === IndexStatuses.cancelled)
     return {
       severity: BannerSeverity.warning,
       label: BannerTitleMap[BannerSeverity.warning],
-      message: BannerMessageMap[BannerSeverity.warning],
+      message: hasRetainedData
+        ? `${BannerMessageMap[BannerSeverity.warning]} ${INDEX_RETAINED_DATA_MESSAGE}`
+        : BannerMessageMap[BannerSeverity.warning],
     };
   if (RUNNABLE_INDEX_STATUSES.includes(state)) {
     // Only the run's own breakdown knows what it indexed and in what units.
@@ -93,18 +119,45 @@ export const indexSearchToolOptions = selectedTools =>
   INDEX_SEARCH_TOOL_OPTIONS.filter(option => (selectedTools || []).includes(option.value));
 
 /**
+ * The single retention predicate: `indexed_chunks` is the live pending-excluded count the backend
+ * recomputes when a run fails, so it is the only field that proves searchable rows exist. It must
+ * never be replaced by `last_successful_run` — that is a remembered history entry which stays
+ * non-null over an EMPTY index (zero-chunk completed first run, whole-index delete), and gating on
+ * it would claim retained data that does not exist.
+ * @param {object} metadata - `metadata` of the index row
+ * @returns {boolean}
+ */
+export const hasRetainedIndexData = metadata => Number(metadata?.indexed_chunks) > 0;
+
+/**
  * Preserves the rule the embedded search enforced by only ever mounting itself for a success banner,
  * and doubles as the tooltip for every disabled search affordance so they never explain themselves
  * differently.
  * @param {string} state - `metadata.state` of the index row
  * @param {string[]} selectedTools - the toolkit's `settings.selected_tools`
  * @param {boolean} [isAbandoned] - the row is in progress but the backend marked it stale
+ * @param {boolean} [hasRetainedData] - {@link hasRetainedIndexData} of the index row
  * @returns {string | null} the reason, or null when the index can be searched
  */
-export const indexSearchBlockedReason = (state, selectedTools, isAbandoned = false) => {
-  // An abandoned run is not "in progress" in any sense the user can act on, but it
-  // also proves nothing about what its interrupted writes left searchable — so the
-  // block stands and only the wording changes, via the not-ready fall-through.
+export const indexSearchBlockedReason = (
+  state,
+  selectedTools,
+  isAbandoned = false,
+  hasRetainedData = false,
+) => {
+  // A reindex never touches the previous generation until it succeeds, so a run in
+  // flight — or one that failed or was stopped — over retained data leaves that data
+  // searchable.
+  const servesRetainedData =
+    hasRetainedData &&
+    (state === IndexStatuses.progress || state === IndexStatuses.fail || state === IndexStatuses.cancelled);
+  if (servesRetainedData) {
+    if (!indexSearchToolOptions(selectedTools).length) return 'No search tools are enabled for this toolkit';
+    return null;
+  }
+  // An abandoned run's writes were invisible like any pending run's, so the previous
+  // generation is exactly intact — but without a live chunk count nothing is proven
+  // searchable, so only the wording changes, via the not-ready fall-through.
   if (state === IndexStatuses.progress && !isAbandoned) return 'Unavailable while indexing is in progress';
   if (!RUNNABLE_INDEX_STATUSES.includes(state)) return 'Index is not ready to search yet';
   if (!indexSearchToolOptions(selectedTools).length) return 'No search tools are enabled for this toolkit';
@@ -134,7 +187,7 @@ export const indexBuildBlockedReason = selectedTools => {
  * that keeps resetting the index. Every reason therefore has to sit behind the `scheduleEnabled` escape
  * hatch, which gates arming only.
  * @param {{state: string, hasSchedulePermission: boolean, projectName: string, scheduleEnabled: boolean,
- *   buildBlockedReason: string | null}} scheduleState
+ *   buildBlockedReason: string | null, hasRetainedData?: boolean}} scheduleState
  * @returns {string | null} the reason, or null when scheduling can be changed
  */
 export const indexScheduleBlockedReason = ({
@@ -143,14 +196,18 @@ export const indexScheduleBlockedReason = ({
   projectName,
   scheduleEnabled,
   buildBlockedReason,
+  hasRetainedData = false,
 }) => {
-  if (state === IndexStatuses.cancelled || state === IndexStatuses.fail)
+  // A failed reindex over retained data leaves a healthy searchable index behind it,
+  // so a scheduled retry has something valid to rebuild from.
+  const failedOverRetainedData = state === IndexStatuses.fail && hasRetainedData;
+  if (state === IndexStatuses.cancelled || (state === IndexStatuses.fail && !failedOverRetainedData))
     return 'Scheduling is unavailable while the index is in a stopped/error state';
   if (!hasSchedulePermission)
     return `Insufficient permissions to perform this action on ${projectName} project`;
   if (scheduleEnabled) return null;
   if (buildBlockedReason) return buildBlockedReason;
-  if (!RUNNABLE_INDEX_STATUSES.includes(state) && state !== IndexStatuses.progress)
+  if (!RUNNABLE_INDEX_STATUSES.includes(state) && state !== IndexStatuses.progress && !failedOverRetainedData)
     return 'Index state is not valid';
   return null;
 };

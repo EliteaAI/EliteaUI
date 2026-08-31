@@ -51,3 +51,47 @@ describe('resolveIndexEventLabel', () => {
     expect(resolveIndexEventLabel(entry('something_new', 400), 200)).toBe('something_new');
   });
 });
+
+describe('resolveIndexEventLabel — recorded initiator/reindex fields', () => {
+  const recorded = (state, fields) => ({ state, updated_on: 400, ...fields });
+
+  it('trusts a recorded reindex flag over the timestamp heuristic', () => {
+    expect(resolveIndexEventLabel({ state: 'completed', updated_on: 200, reindex: true }, 200)).toBe(
+      'Reindexed',
+    );
+    expect(resolveIndexEventLabel({ state: 'completed', updated_on: 300, reindex: false }, 200)).toBe(
+      'Indexed',
+    );
+  });
+
+  it('names a failed manual reindex', () => {
+    expect(resolveIndexEventLabel(recorded('failed', { reindex: true }), 200)).toBe('Reindex failed');
+    expect(resolveIndexEventLabel(recorded('failed', { reindex: true, initiator: 'user' }), 200)).toBe(
+      'Reindex failed',
+    );
+    expect(resolveIndexEventLabel(recorded('failed', { reindex: true, initiator: 'llm' }), 200)).toBe(
+      'Reindex failed',
+    );
+  });
+
+  it('names a failed scheduled reindex', () => {
+    expect(resolveIndexEventLabel(recorded('failed', { initiator: 'schedule' }), 200)).toBe(
+      'Scheduled reindex failed',
+    );
+    expect(resolveIndexEventLabel(recorded('failed', { initiator: 'schedule', reindex: true }), 200)).toBe(
+      'Scheduled reindex failed',
+    );
+  });
+
+  it('keeps the plain label for a first-run failure', () => {
+    expect(resolveIndexEventLabel(recorded('failed', { reindex: false, initiator: 'user' }), 200)).toBe(
+      'Failed',
+    );
+  });
+
+  it('keeps the plain labels for entries written before the fields existed', () => {
+    expect(resolveIndexEventLabel(entry('failed', 400), 200)).toBe('Failed');
+    expect(resolveIndexEventLabel(entry('completed', 200), 200)).toBe('Indexed');
+    expect(resolveIndexEventLabel(entry('completed', 300), 200)).toBe('Reindexed');
+  });
+});

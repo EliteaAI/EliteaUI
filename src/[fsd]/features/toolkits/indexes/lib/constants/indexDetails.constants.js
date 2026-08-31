@@ -60,6 +60,19 @@ export const BannerMessageMap = {
     "Indexing may take a few minutes depending on size. You can navigate to other sections; indexing will continue in the background and you'll be notified when it's done.",
 };
 
+export const REINDEX_IN_PROGRESS_BANNER_TITLE = 'Reindexing in progress';
+
+export const REINDEX_IN_PROGRESS_BANNER_MESSAGE =
+  'The existing indexed data remains available for search while a new version is being created.';
+
+export const REINDEX_FAILED_BANNER_TITLE = 'Reindex failed';
+
+export const INDEX_RETAINED_DATA_MESSAGE = 'Previously indexed data remains available for search.';
+
+export const REINDEX_FAILED_BANNER_MESSAGE =
+  `The new indexing attempt could not be completed. ${INDEX_RETAINED_DATA_MESSAGE} ` +
+  'Check History for error details and try again after resolving the issue.';
+
 // `stale` is a no-progress-for-the-timeout heuristic (default 2h), not a terminal
 // state from the worker — the copy has to hedge that the run may still be alive.
 export const INDEX_ABANDONED_BANNER_MESSAGE =
@@ -83,6 +96,12 @@ export const IndexHistoryItemsLabels = {
   [IndexStatuses.partlyOk]: 'Partially Indexed',
   [IndexStatuses.scheduledReindex]: 'Reindexed by schedule',
   [IndexStatuses.runTest]: 'Run test',
+};
+
+export const IndexRunInitiators = {
+  user: 'user',
+  llm: 'llm',
+  schedule: 'schedule',
 };
 
 export const RUN_TEST_OPERATION_TYPES = new Set(INDEX_SEARCH_TOOL_LABELS.keys());

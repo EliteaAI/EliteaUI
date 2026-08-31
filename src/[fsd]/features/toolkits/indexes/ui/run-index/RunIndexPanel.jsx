@@ -31,6 +31,7 @@ import {
   bannerOutlivesRun,
   bannerVariant,
   hasLiveRun,
+  hasRetainedIndexData,
   indexBuildBlockedReason,
   indexScheduleBlockedReason,
   indexSearchBlockedReason,
@@ -209,6 +210,7 @@ const RunIndexPanel = memo(props => {
   const deleteDisabled = isDeleting || isAwaitingTaskStart || runIsLive;
   const buildBlockedReason = indexBuildBlockedReason(selectedIndexTools);
   const reindexDisabled = Boolean(buildBlockedReason) || isRunning || isAwaitingTaskStart || runIsLive;
+  const retainsIndexedData = hasRetainedIndexData(index?.metadata);
 
   const schedulingTooltipMessage = useMemo(
     () =>
@@ -219,8 +221,16 @@ const RunIndexPanel = memo(props => {
         projectName: currentProjectName,
         scheduleEnabled: scheduleData.enabled,
         buildBlockedReason,
+        hasRetainedData: retainsIndexedData,
       }),
-    [buildBlockedReason, effectiveState, userPermissions, scheduleData.enabled, currentProjectName],
+    [
+      buildBlockedReason,
+      effectiveState,
+      userPermissions,
+      scheduleData.enabled,
+      currentProjectName,
+      retainsIndexedData,
+    ],
   );
 
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
@@ -489,8 +499,20 @@ const RunIndexPanel = memo(props => {
   }, [index?.metadata]);
   const runInFlight = effectiveIsIndexing || isAwaitingTaskStart;
   const banner = useMemo(
-    () => bannerVariant(runInFlight, effectiveState, reindexStats, index?.metadata?.error, effectiveStale),
-    [runInFlight, effectiveState, reindexStats, index?.metadata?.error, effectiveStale],
+    () =>
+      bannerVariant(runInFlight, effectiveState, reindexStats, index?.metadata?.error, effectiveStale, {
+        hasRetainedData: retainsIndexedData,
+        lastSuccessfulRun: index?.last_successful_run,
+      }),
+    [
+      runInFlight,
+      effectiveState,
+      reindexStats,
+      index?.metadata?.error,
+      effectiveStale,
+      retainsIndexedData,
+      index?.last_successful_run,
+    ],
   );
 
   const onAddSchedule = useCallback(() => {
@@ -559,6 +581,7 @@ const RunIndexPanel = memo(props => {
     effectiveIsIndexing ? IndexStatuses.progress : effectiveState,
     selectedIndexTools,
     runLooksAbandoned,
+    retainsIndexedData,
   );
 
   const runBlocksHistory = effectiveIsIndexing && !runLooksAbandoned;
