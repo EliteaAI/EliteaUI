@@ -6,4 +6,5 @@ export { default as GenerateDimensionsDialog } from './GenerateDimensionsDialog'
 export { default as LibraryPickerDialog } from './LibraryPickerDialog';
 export { default as SuiteCard } from './SuiteCard';
 export { default as SuiteConfigView } from './SuiteConfigView';
+export { default as SuiteDetailPanel } from './SuiteDetailPanel';
 export { default as SuitesPanel } from './SuitesPanel';

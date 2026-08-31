@@ -7,7 +7,7 @@ import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 
 const SuiteCard = memo(props => {
-  const { suite, datasetName, onDelete } = props;
+  const { suite, datasetName, onDelete, onClick } = props;
 
   const handleDelete = useCallback(
     e => {
@@ -20,7 +20,10 @@ const SuiteCard = memo(props => {
   const styles = suiteCardStyles();
 
   return (
-    <Box sx={styles.root}>
+    <Box
+      sx={styles.root}
+      onClick={onClick}
+    >
       <Box sx={styles.header}>
         <Typography
           variant="bodyMedium"

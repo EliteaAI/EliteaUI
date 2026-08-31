@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 
 import { Box, CircularProgress, Typography } from '@mui/material';
 
@@ -11,6 +11,14 @@ import SuiteCard from './SuiteCard';
 const SuitesPanel = memo(props => {
   const { suites = [], isLoading, datasetNamesById = {}, onNewSuite, onDeleteSuite, onSelectSuite } = props;
 
+  const sortedSuites = useMemo(() => {
+    return [...suites].sort((a, b) => {
+      const dateA = new Date(a.updated_at || a.created_at || 0);
+      const dateB = new Date(b.updated_at || b.created_at || 0);
+      return dateB - dateA;
+    });
+  }, [suites]);
+
   const styles = suitesPanelStyles();
 
   return (
@@ -22,7 +30,7 @@ const SuitesPanel = memo(props => {
         >
           Suites
         </Typography>
-        {suites.length > 0 && (
+        {sortedSuites.length > 0 && (
           <Button.BaseBtn
             variant={BUTTON_VARIANTS.contained}
             color={BUTTON_COLORS.primary}
@@ -38,7 +46,7 @@ const SuitesPanel = memo(props => {
           <Box sx={styles.centered}>
             <CircularProgress size={24} />
           </Box>
-        ) : suites.length === 0 ? (
+        ) : sortedSuites.length === 0 ? (
           <Box sx={styles.centered}>
             <EvaluateIcon sx={styles.emptyIcon} />
             <Typography
@@ -64,7 +72,7 @@ const SuitesPanel = memo(props => {
           </Box>
         ) : (
           <Box sx={styles.list}>
-            {suites.map(suite => (
+            {sortedSuites.map(suite => (
               <SuiteCard
                 key={suite.id}
                 suite={suite}

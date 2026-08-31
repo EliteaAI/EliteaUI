@@ -33,6 +33,8 @@ const LLMModelSelector = memo(props => {
     onResetToDefaults,
     dataTourTargetId,
     variant = 'default',
+    label = 'Model',
+    labelAdornment,
   } = props;
 
   const theme = useTheme();
@@ -93,13 +95,16 @@ const LLMModelSelector = memo(props => {
             sx={styles.fieldSelector}
             onClick={disabled ? undefined : handleModelMenuClick}
           >
-            <Typography
-              variant="labelSmall"
-              color="text.primary"
-              sx={styles.fieldLabel}
-            >
-              Model
-            </Typography>
+            <Box sx={styles.fieldLabelRow}>
+              <Typography
+                variant="labelSmall"
+                color="text.primary"
+                sx={styles.fieldLabel}
+              >
+                {label}
+              </Typography>
+              {labelAdornment}
+            </Box>
             <Box sx={styles.fieldValueRow}>
               <Typography
                 data-testid="model-selector-name"
@@ -140,6 +145,11 @@ const LLMModelSelector = memo(props => {
           models={models}
           selectedModel={selectedModel}
           onSelectModel={onSelectModel}
+          menuProps={{
+            anchorOrigin: { vertical: 'bottom', horizontal: 'left' },
+            transformOrigin: { vertical: 'top', horizontal: 'left' },
+            paperSx: { maxHeight: '18rem', marginTop: '0.25rem' },
+          }}
         />
 
         {onSetLLMSettings && (
@@ -299,6 +309,11 @@ const llmModelSelectorStyles = () => ({
     borderBottom: ({ palette }) => `0.0625rem solid ${palette.border.lines}`,
     paddingLeft: '.75rem',
     paddingRight: '.75rem',
+  },
+  fieldLabelRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.25rem',
   },
   fieldLabel: {
     lineHeight: 1,
