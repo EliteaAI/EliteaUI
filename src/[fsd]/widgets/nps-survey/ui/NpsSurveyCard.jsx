@@ -58,6 +58,8 @@ const NpsSurveyCard = memo(props => {
       : selectedAnswer != null;
   const showNext = needsManualAdvance && !isLastQuestion;
 
+  const styles = npsSurveyCardStyles();
+
   const renderQuestionBody = () => {
     switch (displayedType) {
       case QUESTION_TYPE.radio:
@@ -174,21 +176,21 @@ const NpsSurveyCard = memo(props => {
 NpsSurveyCard.displayName = 'NpsSurveyCard';
 
 /** @type {MuiSx} */
-const styles = {
-  card: {
+const npsSurveyCardStyles = () => ({
+  card: ({ palette }) => ({
     position: 'relative',
     paddingTop: '1rem',
     paddingBottom: '1.5rem',
     paddingLeft: '1.5rem',
     paddingRight: '1.5rem',
     borderRadius: '1rem',
-    background: 'linear-gradient(to top, #f7d9ff, #d5e3fe)',
-    border: '1px solid #93b2ff',
+    background: palette.background.npsCard,
+    border: `0.0625rem solid ${palette.border.npsCard}`,
     width: '27.375rem',
     display: 'flex',
     flexDirection: 'column',
     gap: '1.25rem',
-  },
+  }),
   questionContent: {
     display: 'flex',
     flexDirection: 'column',
@@ -197,15 +199,15 @@ const styles = {
     justifyContent: 'center',
     width: '100%',
   },
-  title: {
+  title: ({ palette }) => ({
     fontFamily: '"Montserrat", sans-serif',
     fontWeight: 600,
     fontSize: '0.875rem',
     lineHeight: '1.5rem',
-    color: '#0E131D',
+    color: palette.text.darker,
     textAlign: 'center',
     width: '100%',
-  },
+  }),
   scoresSection: {
     display: 'flex',
     flexDirection: 'column',
@@ -222,13 +224,13 @@ const styles = {
     justifyContent: 'space-between',
     width: '100%',
   },
-  label: {
+  label: ({ palette }) => ({
     fontFamily: '"Montserrat", sans-serif',
     fontWeight: 500,
     fontSize: '0.625rem',
     lineHeight: '1rem',
-    color: '#777A83',
-  },
+    color: palette.text.light,
+  }),
   actionsRow: {
     display: 'flex',
     justifyContent: 'flex-end',
@@ -236,31 +238,31 @@ const styles = {
     alignItems: 'center',
     width: '100%',
   },
-  notNowBtn: {
-    background: 'rgba(61, 68, 86, 0.1)',
-    color: '#0E131D',
+  notNowBtn: ({ palette }) => ({
+    background: palette.background.button.npsCard.secondary.default,
+    color: palette.text.darker,
     '&:hover': {
-      background: 'rgba(61, 68, 86, 0.15)',
+      background: palette.background.button.npsCard.secondary.hover,
     },
     '&:active': {
-      background: 'rgba(61, 68, 86, 0.2)',
+      background: palette.background.button.npsCard.secondary.pressed,
       border: 'none',
     },
-  },
-  submitBtn: {
-    background: 'rgba(196, 40, 221, 1)',
-    color: '#FFFFFF',
+  }),
+  submitBtn: ({ palette }) => ({
+    background: palette.background.button.npsCard.primary.default,
+    color: palette.text.white,
     '&:hover': {
-      background: 'rgba(196, 40, 221, 0.85)',
+      background: palette.background.button.npsCard.primary.hover,
     },
     '&:active': {
-      background: 'rgba(196, 40, 221, 0.7)',
+      background: palette.background.button.npsCard.primary.pressed,
     },
     '&:disabled': {
-      background: 'rgba(196, 40, 221, 0.4)',
-      color: '#FFFFFF',
+      background: palette.background.button.npsCard.primary.disabled,
+      color: palette.text.white,
     },
-  },
-};
+  }),
+});
 
 export default NpsSurveyCard;

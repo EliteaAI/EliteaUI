@@ -72,14 +72,14 @@ const projectAvatarStyles = (size, backgroundColor) => ({
     borderRadius: '50%',
     objectFit: 'cover',
   },
-  letter: {
-    color: '#FFFFFF',
+  letter: ({ palette }) => ({
+    color: palette.text.white,
     fontFamily: 'Montserrat, sans-serif',
     fontSize: `calc(${size} * 0.375)`,
     fontWeight: 500,
     lineHeight: 1,
     userSelect: 'none',
-  },
+  }),
 });
 
 export default ProjectAvatar;
