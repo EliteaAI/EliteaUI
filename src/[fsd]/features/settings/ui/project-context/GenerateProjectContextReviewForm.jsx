@@ -6,6 +6,8 @@ import {
   PROJECT_CONTEXT_ACTIVATION_DESCRIPTION_MAX_LEN,
   PROJECT_CONTEXT_MAX_LEN,
 } from '@/[fsd]/features/settings/lib/constants/projectContext.constants';
+import { Input } from '@/[fsd]/shared/ui';
+import { INPUT_VARIANTS } from '@/[fsd]/shared/ui/input';
 
 const GenerateProjectContextReviewForm = memo(props => {
   const { draft, onChange, onValidationChange } = props;
@@ -18,7 +20,6 @@ const GenerateProjectContextReviewForm = memo(props => {
     const activationExceeded = activationDescription.length > PROJECT_CONTEXT_ACTIVATION_DESCRIPTION_MAX_LEN;
     return {
       charError: exceeded,
-      activationCharError: activationExceeded,
       isValid:
         projectBackground.trim().length > 0 &&
         activationDescription.trim().length > 0 &&
@@ -51,14 +52,13 @@ const GenerateProjectContextReviewForm = memo(props => {
     <Box sx={styles.container}>
       <Box sx={styles.field}>
         <Typography sx={styles.label}>When should this context be used?</Typography>
-        <TextField
+        <Input.InputBase
+          variant={INPUT_VARIANTS.outlined}
           fullWidth
           size="small"
           value={activationDescription}
           onChange={handleActivationDescriptionChange}
-          slotProps={{
-            htmlInput: { maxLength: PROJECT_CONTEXT_ACTIVATION_DESCRIPTION_MAX_LEN },
-          }}
+          inputProps={{ maxLength: PROJECT_CONTEXT_ACTIVATION_DESCRIPTION_MAX_LEN }}
           helperText={`${activationDescription.length}/${PROJECT_CONTEXT_ACTIVATION_DESCRIPTION_MAX_LEN}`}
           error={!activationDescription.trim()}
           sx={styles.textField}

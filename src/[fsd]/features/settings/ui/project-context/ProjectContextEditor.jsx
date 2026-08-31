@@ -1,14 +1,15 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Box, TextField, Tooltip, Typography } from '@mui/material';
+import { Box, Tooltip, Typography } from '@mui/material';
 
 import {
   PROJECT_CONTEXT_ACTIVATION_DESCRIPTION_MAX_LEN,
   PROJECT_CONTEXT_MAX_LEN,
 } from '@/[fsd]/features/settings/lib/constants/projectContext.constants';
 import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
-import { Banner, Button, Field } from '@/[fsd]/shared/ui';
+import { Banner, Button, Field, Input } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import { INPUT_VARIANTS } from '@/[fsd]/shared/ui/input';
 import Markdown from '@/[fsd]/shared/ui/markdown';
 import TabGroupButton from '@/[fsd]/shared/ui/tab-group-button/TabGroupButton';
 import { useUpdateProjectContextMutation } from '@/api/projectContext';
@@ -128,7 +129,7 @@ const ProjectContextEditor = memo(props => {
       await updateProjectContext({
         projectId,
         content: suggested.project_background,
-        activation_description: suggested.activation_description,
+        activation_description: suggested.activation_description?.trim(),
         enabled,
       }).unwrap();
       toastSuccess('Project Context saved');
@@ -297,7 +298,8 @@ const ProjectContextEditor = memo(props => {
         )}
         <Box sx={styles.activationDescriptionField}>
           <Typography variant="headingSmall">When should this context be used?</Typography>
-          <TextField
+          <Input.InputBase
+            variant={INPUT_VARIANTS.outlined}
             fullWidth
             size="small"
             value={activationDescription}
@@ -310,11 +312,9 @@ const ProjectContextEditor = memo(props => {
                 ? 'Describe which requests should load this Project Context.'
                 : `${activationDescription.length}/${PROJECT_CONTEXT_ACTIVATION_DESCRIPTION_MAX_LEN}`
             }
-            slotProps={{
-              htmlInput: {
-                maxLength: PROJECT_CONTEXT_ACTIVATION_DESCRIPTION_MAX_LEN,
-                'data-testid': 'project-context-activation-description',
-              },
+            inputProps={{
+              maxLength: PROJECT_CONTEXT_ACTIVATION_DESCRIPTION_MAX_LEN,
+              'data-testid': 'project-context-activation-description',
             }}
           />
         </Box>

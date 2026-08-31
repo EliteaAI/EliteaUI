@@ -8,8 +8,9 @@ import {
   PROJECT_CONTEXT_ACTIVATION_DESCRIPTION_MAX_LEN,
   PROJECT_CONTEXT_MAX_LEN,
 } from '@/[fsd]/features/settings/lib/constants/projectContext.constants';
-import { Modal, Text } from '@/[fsd]/shared/ui';
+import { Input, Modal, Text } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import { INPUT_VARIANTS } from '@/[fsd]/shared/ui/input';
 import { buildErrorMessage } from '@/common/utils.jsx';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast.jsx';
@@ -177,7 +178,8 @@ const AIEditProjectContextModal = memo(props => {
                 sx={styles.characterCounter}
               />
               <Typography sx={styles.fieldLabel}>Activation description</Typography>
-              <TextField
+              <Input.InputBase
+                variant={INPUT_VARIANTS.outlined}
                 fullWidth
                 size="small"
                 value={suggested.activation_description}
@@ -187,9 +189,7 @@ const AIEditProjectContextModal = memo(props => {
                     activation_description: event.target.value,
                   }))
                 }
-                slotProps={{
-                  htmlInput: { maxLength: PROJECT_CONTEXT_ACTIVATION_DESCRIPTION_MAX_LEN },
-                }}
+                inputProps={{ maxLength: PROJECT_CONTEXT_ACTIVATION_DESCRIPTION_MAX_LEN }}
                 helperText={`${suggested.activation_description.length}/${PROJECT_CONTEXT_ACTIVATION_DESCRIPTION_MAX_LEN}`}
                 error={!suggested.activation_description.trim()}
               />
