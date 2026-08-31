@@ -27,7 +27,7 @@ const ResultsPanel = memo(props => {
             size="small"
             onClick={onOpenHistory}
             sx={styles.historyButton}
-            startIcon={<ClockIcon style={{ fontSize: 16 }} />}
+            startIcon={<ClockIcon style={{ fontSize: '1rem' }} />}
           />
         </Box>
       </Box>

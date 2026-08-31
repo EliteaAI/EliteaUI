@@ -4,7 +4,7 @@ import { Box, CircularProgress, Typography } from '@mui/material';
 
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
-import EvaluateIcon from '@/components/Icons/EvaluateIcon';
+import { EvaluateIcon } from '@/[fsd]/shared/ui/icon';
 
 import SuitCard from './SuitCard';
 
