@@ -4,9 +4,13 @@ import { Alert, Box, CircularProgress, TextField, Typography } from '@mui/materi
 
 import { EditEntityComparisonLayout, TextDiffHighlight } from '@/[fsd]/entities/edit-entity-with-ai';
 import { useGenerateProjectContextDraftMutation } from '@/[fsd]/features/settings/api/generateProjectContextDraftApi';
-import { PROJECT_CONTEXT_MAX_LEN } from '@/[fsd]/features/settings/lib/constants/projectContext.constants';
-import { Modal, Text } from '@/[fsd]/shared/ui';
+import {
+  PROJECT_CONTEXT_ACTIVATION_DESCRIPTION_MAX_LEN,
+  PROJECT_CONTEXT_MAX_LEN,
+} from '@/[fsd]/features/settings/lib/constants/projectContext.constants';
+import { Input, Modal, Text } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import { INPUT_VARIANTS } from '@/[fsd]/shared/ui/input';
 import { buildErrorMessage } from '@/common/utils.jsx';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast.jsx';
@@ -18,7 +22,7 @@ const STEPS = {
 };
 
 const AIEditProjectContextModal = memo(props => {
-  const { open, onClose, currentContent, onApplySave } = props;
+  const { open, onClose, currentContent, currentActivationDescription, onApplySave } = props;
 
   const projectId = useSelectedProjectId();
   const { toastError } = useToast();
@@ -28,11 +32,15 @@ const AIEditProjectContextModal = memo(props => {
 
   const [step, setStep] = useState(STEPS.INPUT);
   const [description, setDescription] = useState('');
-  const [suggested, setSuggested] = useState('');
+  const [suggested, setSuggested] = useState({
+    activation_description: '',
+    project_background: '',
+  });
   const [isApplying, setIsApplying] = useState(false);
   const generatePromiseRef = useRef(null);
 
   const current = currentContent || '';
+  const currentActivation = currentActivationDescription || '';
 
   const resetState = useCallback(() => {
     if (generatePromiseRef.current) {
@@ -41,7 +49,7 @@ const AIEditProjectContextModal = memo(props => {
     }
     setStep(STEPS.INPUT);
     setDescription('');
-    setSuggested('');
+    setSuggested({ activation_description: '', project_background: '' });
     setIsApplying(false);
     resetGenerate();
   }, [resetGenerate]);
@@ -62,27 +70,31 @@ const AIEditProjectContextModal = memo(props => {
         projectId,
         user_description: description,
         current_project_background: current,
+        current_activation_description: currentActivation,
       });
       generatePromiseRef.current = promise;
       const result = await promise.unwrap();
 
       generatePromiseRef.current = null;
-      setSuggested(result.project_background || '');
+      setSuggested({
+        activation_description: result.activation_description || '',
+        project_background: result.project_background || '',
+      });
       setStep(STEPS.DIFF);
     } catch {
       generatePromiseRef.current = null;
       setStep(STEPS.INPUT);
     }
-  }, [description, generateDraft, projectId, current, resetGenerate]);
+  }, [description, generateDraft, projectId, current, currentActivation, resetGenerate]);
 
   const handleRefine = useCallback(() => {
     setStep(STEPS.INPUT);
-    setSuggested('');
+    setSuggested({ activation_description: '', project_background: '' });
     resetGenerate();
   }, [resetGenerate]);
 
   const handleApplySave = useCallback(async () => {
-    if (!suggested.trim()) return;
+    if (!suggested.project_background.trim() || !suggested.activation_description.trim()) return;
     setIsApplying(true);
     try {
       await onApplySave(suggested);
@@ -132,12 +144,18 @@ const AIEditProjectContextModal = memo(props => {
                 {current ? (
                   <TextDiffHighlight
                     original={current}
-                    modified={suggested}
+                    modified={suggested.project_background}
                     mode="original"
                   />
                 ) : (
                   <Typography sx={styles.emptyText}>No content</Typography>
                 )}
+              </Box>
+              <Typography sx={styles.fieldLabel}>Activation description</Typography>
+              <Box sx={styles.activationDescriptionCard}>
+                <Typography variant="bodySmall">
+                  {currentActivation || 'No activation description'}
+                </Typography>
               </Box>
             </Box>
           }
@@ -146,18 +164,34 @@ const AIEditProjectContextModal = memo(props => {
               <Box sx={styles.editableCard}>
                 <TextDiffHighlight
                   original={current}
-                  modified={suggested}
+                  modified={suggested.project_background}
                   mode="modified"
                   editable
-                  onChange={setSuggested}
+                  onChange={value => setSuggested(previous => ({ ...previous, project_background: value }))}
                   maxLength={PROJECT_CONTEXT_MAX_LEN}
                 />
               </Box>
               <Text.CharacterCounter
-                value={suggested}
+                value={suggested.project_background}
                 maxLength={PROJECT_CONTEXT_MAX_LEN}
                 hideMaxLimitMessage
                 sx={styles.characterCounter}
+              />
+              <Typography sx={styles.fieldLabel}>Activation description</Typography>
+              <Input.InputBase
+                variant={INPUT_VARIANTS.outlined}
+                fullWidth
+                size="small"
+                value={suggested.activation_description}
+                onChange={event =>
+                  setSuggested(previous => ({
+                    ...previous,
+                    activation_description: event.target.value,
+                  }))
+                }
+                inputProps={{ maxLength: PROJECT_CONTEXT_ACTIVATION_DESCRIPTION_MAX_LEN }}
+                helperText={`${suggested.activation_description.length}/${PROJECT_CONTEXT_ACTIVATION_DESCRIPTION_MAX_LEN}`}
+                error={!suggested.activation_description.trim()}
               />
             </Box>
           }
@@ -245,7 +279,9 @@ const AIEditProjectContextModal = memo(props => {
           variant={BUTTON_VARIANTS.elitea}
           size="small"
           onClick={handleApplySave}
-          disabled={isApplying || !suggested.trim()}
+          disabled={
+            isApplying || !suggested.project_background.trim() || !suggested.activation_description.trim()
+          }
           sx={styles.primaryAction}
           data-testid="ai-edit-project-context-apply-button"
         >
@@ -344,6 +380,17 @@ const getStyles = () => ({
   characterCounter: {
     alignSelf: 'flex-end',
   },
+  fieldLabel: {
+    fontSize: '0.75rem',
+    fontWeight: 500,
+    color: 'text.primary',
+  },
+  activationDescriptionCard: ({ palette }) => ({
+    padding: '0.75rem 1rem',
+    borderRadius: '0.5rem',
+    backgroundColor: palette.background.userInputBackground,
+    border: `0.0625rem solid ${palette.border.lines}`,
+  }),
   emptyText: {
     fontSize: '0.75rem',
     color: 'text.primary',

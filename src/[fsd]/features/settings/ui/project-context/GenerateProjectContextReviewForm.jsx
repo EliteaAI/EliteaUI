@@ -2,20 +2,31 @@ import { memo, useCallback, useEffect, useMemo } from 'react';
 
 import { Box, TextField, Typography } from '@mui/material';
 
-const MAX_CHARS = 2500;
+import {
+  PROJECT_CONTEXT_ACTIVATION_DESCRIPTION_MAX_LEN,
+  PROJECT_CONTEXT_MAX_LEN,
+} from '@/[fsd]/features/settings/lib/constants/projectContext.constants';
+import { Input } from '@/[fsd]/shared/ui';
+import { INPUT_VARIANTS } from '@/[fsd]/shared/ui/input';
 
 const GenerateProjectContextReviewForm = memo(props => {
   const { draft, onChange, onValidationChange } = props;
 
   const projectBackground = draft.project_background || '';
+  const activationDescription = draft.activation_description || '';
 
   const { charError, isValid } = useMemo(() => {
-    const exceeded = projectBackground.length > MAX_CHARS;
+    const exceeded = projectBackground.length > PROJECT_CONTEXT_MAX_LEN;
+    const activationExceeded = activationDescription.length > PROJECT_CONTEXT_ACTIVATION_DESCRIPTION_MAX_LEN;
     return {
       charError: exceeded,
-      isValid: projectBackground.trim().length > 0 && !exceeded,
+      isValid:
+        projectBackground.trim().length > 0 &&
+        activationDescription.trim().length > 0 &&
+        !exceeded &&
+        !activationExceeded,
     };
-  }, [projectBackground]);
+  }, [activationDescription, projectBackground]);
 
   useEffect(() => {
     onValidationChange?.(isValid);
@@ -28,10 +39,31 @@ const GenerateProjectContextReviewForm = memo(props => {
     [draft, onChange],
   );
 
+  const handleActivationDescriptionChange = useCallback(
+    e => {
+      onChange({ ...draft, activation_description: e.target.value });
+    },
+    [draft, onChange],
+  );
+
   const styles = reviewFormStyles();
 
   return (
     <Box sx={styles.container}>
+      <Box sx={styles.field}>
+        <Typography sx={styles.label}>When should this context be used?</Typography>
+        <Input.InputBase
+          variant={INPUT_VARIANTS.outlined}
+          fullWidth
+          size="small"
+          value={activationDescription}
+          onChange={handleActivationDescriptionChange}
+          inputProps={{ maxLength: PROJECT_CONTEXT_ACTIVATION_DESCRIPTION_MAX_LEN }}
+          helperText={`${activationDescription.length}/${PROJECT_CONTEXT_ACTIVATION_DESCRIPTION_MAX_LEN}`}
+          error={!activationDescription.trim()}
+          sx={styles.textField}
+        />
+      </Box>
       <Box sx={styles.field}>
         <Typography sx={styles.label}>Project Background</Typography>
         <TextField
@@ -42,11 +74,11 @@ const GenerateProjectContextReviewForm = memo(props => {
           maxRows={16}
           value={projectBackground}
           onChange={handleChange}
-          slotProps={{ htmlInput: { maxLength: MAX_CHARS } }}
+          slotProps={{ htmlInput: { maxLength: PROJECT_CONTEXT_MAX_LEN } }}
           helperText={
             charError
-              ? `Content exceeds ${MAX_CHARS} characters.`
-              : `${projectBackground.length}/${MAX_CHARS}`
+              ? `Content exceeds ${PROJECT_CONTEXT_MAX_LEN} characters.`
+              : `${projectBackground.length}/${PROJECT_CONTEXT_MAX_LEN}`
           }
           error={charError}
           sx={styles.textField}
