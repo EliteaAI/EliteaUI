@@ -1,42 +1,73 @@
 import { memo } from 'react';
 
-import { useTheme } from '@mui/material';
+import { Box } from '@mui/material';
 
 import OfflineIcon from '@/assets/offline-icon.svg?react';
 import OnlineIcon from '@/assets/online-icon.svg?react';
 
-const ONLINE_STYLE = { marginLeft: '.5rem', width: '1rem', height: '1rem' };
-const OFFLINE_STYLE = { marginLeft: '.5rem', width: '.875rem', height: '.875rem' };
-
 const ParticipantConnectionIcons = memo(props => {
   const { mcpOnline, showMcp, spLoggedIn, showSp, openApiLoggedIn, showOpenApi } = props;
 
-  const { palette } = useTheme();
+  const styles = participantConnectionIconsStyles();
 
   return (
     <>
       {showMcp &&
         (mcpOnline ? (
-          <OnlineIcon style={{ ...ONLINE_STYLE, color: palette.icon.fill.default }} />
+          <Box
+            component={OnlineIcon}
+            sx={styles.onlineIcon}
+          />
         ) : (
-          <OfflineIcon style={{ ...OFFLINE_STYLE, color: palette.icon.fill.attention }} />
+          <Box
+            component={OfflineIcon}
+            sx={styles.offlineIcon}
+          />
         ))}
       {showSp &&
         (spLoggedIn ? (
-          <OnlineIcon style={{ ...ONLINE_STYLE, color: palette.icon.fill.default }} />
+          <Box
+            component={OnlineIcon}
+            sx={styles.onlineIcon}
+          />
         ) : (
-          <OfflineIcon style={{ ...OFFLINE_STYLE, color: palette.icon.fill.attention }} />
+          <Box
+            component={OfflineIcon}
+            sx={styles.offlineIcon}
+          />
         ))}
       {showOpenApi &&
         (openApiLoggedIn ? (
-          <OnlineIcon style={{ ...ONLINE_STYLE, color: palette.icon.fill.default }} />
+          <Box
+            component={OnlineIcon}
+            sx={styles.onlineIcon}
+          />
         ) : (
-          <OfflineIcon style={{ ...OFFLINE_STYLE, color: palette.icon.fill.attention }} />
+          <Box
+            component={OfflineIcon}
+            sx={styles.offlineIcon}
+          />
         ))}
     </>
   );
 });
 
 ParticipantConnectionIcons.displayName = 'ParticipantConnectionIcons';
+
+/** @type {MuiSx} */
+const participantConnectionIconsStyles = () => ({
+  onlineIcon: ({ palette }) => ({
+    marginLeft: '.5rem',
+    width: '1rem',
+    height: '1rem',
+    color: palette.icon.fill.default,
+  }),
+  offlineIcon: ({ palette }) => ({
+    marginLeft: '.5rem',
+    width: '.875rem',
+    height: '.875rem',
+    color: palette.icon.fill.attention,
+  }),
+});
 
 export default ParticipantConnectionIcons;

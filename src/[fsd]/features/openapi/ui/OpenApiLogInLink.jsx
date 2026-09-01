@@ -88,7 +88,7 @@ const OpenApiLogInLink = memo(props => {
 OpenApiLogInLink.displayName = 'OpenApiLogInLink';
 
 /** @type {MuiSx} */
-const styles = {
+const openApiLogInLinkStyles = () => ({
   linkText: {
     textDecoration: 'underline',
     cursor: 'pointer',
@@ -102,6 +102,8 @@ const styles = {
       color: 'primary.dark',
     },
   },
-};
+});
+
+const styles = openApiLogInLinkStyles();
 
 export default OpenApiLogInLink;

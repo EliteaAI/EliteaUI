@@ -106,7 +106,7 @@ const ParticipantItem = memo(props => {
       isAttachement={isAttachement}
       versionName={versionName}
       nameTextRef={nameTextRef}
-      styles={participantNormalCardStyles({ collapsed, isActive, maxWidth })}
+      styles={participantNormalCardStyles({ collapsed, isActive, maxWidth, isBeingEdited })}
     />
   ) : (
     <ParticipantAttentionCard

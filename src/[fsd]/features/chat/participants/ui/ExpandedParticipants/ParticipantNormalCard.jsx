@@ -145,7 +145,7 @@ const ParticipantNormalCard = memo(props => {
 ParticipantNormalCard.displayName = 'ParticipantNormalCard';
 
 /** @type {MuiSx} */
-export const participantNormalCardStyles = ({ collapsed, isActive, maxWidth }) => ({
+export const participantNormalCardStyles = ({ collapsed, isActive, maxWidth, isBeingEdited }) => ({
   normalItemWrapper: {
     display: 'flex',
     flexDirection: 'column',
@@ -208,7 +208,7 @@ export const participantNormalCardStyles = ({ collapsed, isActive, maxWidth }) =
   },
   versionLabel: {
     flexShrink: 0,
-    maxWidth: isBeingEdited => (isBeingEdited ? 'none' : '50%'),
+    maxWidth: isBeingEdited ? 'none' : '50%',
     whiteSpace: 'nowrap',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
