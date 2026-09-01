@@ -1,4 +1,5 @@
 import { ChatHelpers } from '@/[fsd]/features/chat/lib/helpers';
+import { normalizeContinuationError } from '@/[fsd]/features/chat/lib/helpers/continuationError.helpers.js';
 import { normalizeExecutionHierarchy } from '@/[fsd]/features/chat/lib/helpers/executionHierarchy.helpers.js';
 import { filterActivePipelineHitlPromptItems } from '@/[fsd]/features/chat/lib/helpers/hitl.helpers.js';
 import { buildMcpAuthorizationToolAction } from '@/[fsd]/features/chat/lib/helpers/mcpAuthorization.helpers.js';
@@ -201,6 +202,7 @@ export const convertToAIAnswer = (message_group, message_groups, participants, t
     is_error = false,
     error,
     budget_error_code: budgetErrorCode,
+    continuation_error: rawContinuationError,
     created_entities: createdEntities,
     context: { included: contextIncluded } = {},
   } = meta || {};
@@ -394,6 +396,7 @@ export const convertToAIAnswer = (message_group, message_groups, participants, t
     isLoading: is_streaming,
     exception: is_error ? error || content || message_items[0]?.item_details?.content : undefined,
     budgetErrorCode,
+    continuationError: normalizeContinuationError(rawContinuationError),
     created_entities: createdEntities,
     references,
     likes,

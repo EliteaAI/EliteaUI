@@ -107,3 +107,38 @@ describe('pipeline HITL history conversion', () => {
     expect(resolved.hitlInterrupt).toBeUndefined();
   });
 });
+
+describe('continuation error history conversion', () => {
+  it('restores the structured error after a conversation reload', () => {
+    const question = { id: 1, uuid: 'user-1' };
+    const continuationError = {
+      code: 'output_continuation_exhausted',
+      user_message: 'The model response is incomplete.',
+      partial_output: '# Partial response',
+      attempts: 4,
+    };
+    const answer = convertToAIAnswer(
+      {
+        id: 2,
+        uuid: 'assistant-1',
+        author_participant_id: 20,
+        reply_to_id: 1,
+        content: 'The model response is incomplete.',
+        message_items: [],
+        created_at: '2026-09-01 10:00:00',
+        updated_at: '2026-09-01 10:00:00',
+        is_streaming: false,
+        meta: {
+          is_error: true,
+          error: 'technical trace',
+          continuation_error: continuationError,
+        },
+      },
+      [question],
+      [],
+    );
+
+    expect(answer.continuationError).toEqual(continuationError);
+    expect(answer.exception).toBe('technical trace');
+  });
+});

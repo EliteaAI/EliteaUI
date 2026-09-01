@@ -14,6 +14,7 @@ import {
   useBudgetWarning,
   useReadAloud,
 } from '@/[fsd]/features/chat';
+import { normalizeContinuationError } from '@/[fsd]/features/chat/lib/helpers/continuationError.helpers.js';
 import NewChatInput from '@/[fsd]/features/chat/ui/chat-input/NewChatInput';
 import { LLMSettingsConstants } from '@/[fsd]/shared/lib/constants';
 import { useListModelsQuery } from '@/api/configurations.js';
@@ -263,6 +264,7 @@ const SkillTestPanel = memo(props => {
           // The runtime reports execution failures here. Without this case the stream
           // never terminates and the message spins forever, for any error class.
           const budgetErrorCode = response_metadata?.budget_error_code;
+          const continuationError = normalizeContinuationError(response_metadata?.continuation_error);
           const headline =
             response_metadata?.human_readable ||
             convertContent(message.content) ||
@@ -272,6 +274,7 @@ const SkillTestPanel = memo(props => {
             content: budgetErrorCode ? '' : headline,
             exception: convertContent(message.content) || headline,
             budgetErrorCode,
+            continuationError,
           });
           break;
         }

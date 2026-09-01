@@ -4,6 +4,7 @@ import { v4 as uuidv4, v4 } from 'uuid';
 
 import { useTrackEvent } from '@/GA';
 import { ChatHelpers } from '@/[fsd]/features/chat/lib/helpers';
+import { normalizeContinuationError } from '@/[fsd]/features/chat/lib/helpers/continuationError.helpers.js';
 import {
   agentPathsEqual,
   getSubAgentInstanceKey,
@@ -1415,6 +1416,7 @@ export const useChatSocket = ({
           // entire orchestrator run as failed. Keep the message streaming so the
           // running siblings retain their live view (mirrors the HITL re-arm).
           const exMeta = response_metadata?.metadata || {};
+          const continuationError = normalizeContinuationError(response_metadata?.continuation_error);
           const exHierarchy = normalizeExecutionHierarchy(exMeta, response_metadata);
           const exChildName = exHierarchy.parent_agent_name || '';
           const exChildKey =
@@ -1430,12 +1432,17 @@ export const useChatSocket = ({
             msg.isStreaming = true;
             msg.subAgentErrors = {
               ...(msg.subAgentErrors || {}),
-              [exChildKey]: { name: exChildName, exception: message.content },
+              [exChildKey]: {
+                name: exChildName,
+                exception: message.content,
+                continuationError,
+              },
             };
           } else {
             msg.isLoading = false;
             msg.isStreaming = false;
             msg.exception = message.content;
+            msg.continuationError = continuationError;
             // Without this the live view shows the raw trace: the scope only reached the
             // message on reload, via the persisted meta
             msg.budgetErrorCode = response_metadata?.budget_error_code;

@@ -14,7 +14,7 @@ import {
   Typography,
 } from '@mui/material';
 
-import { BudgetErrorMessage } from '@/[fsd]/features/chat';
+import { BudgetErrorMessage, ContinuationError } from '@/[fsd]/features/chat';
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import ProcessConnector from '@/[fsd]/features/pipelines/flow-editor/ui/state/ProcessConnector';
 import ProcessStepIcon from '@/[fsd]/features/pipelines/flow-editor/ui/state/ProcessStepIcon';
@@ -292,7 +292,13 @@ const RunStateDialog = memo(props => {
               </Stepper>
               {data.status === FlowEditorConstants.PipelineStatus.Error && !!data.error && (
                 <Box sx={styles.runError}>
-                  {data.budgetErrorCode ? (
+                  {data.continuationError ? (
+                    <ContinuationError
+                      compact
+                      error={data.continuationError}
+                      trace={data.errorTrace}
+                    />
+                  ) : data.budgetErrorCode ? (
                     <BudgetErrorMessage code={data.budgetErrorCode} />
                   ) : (
                     <Typography
