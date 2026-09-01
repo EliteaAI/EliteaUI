@@ -2,14 +2,39 @@ import { memo, useCallback, useMemo, useRef } from 'react';
 
 import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 
+import { ToolBaseHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { SecretManagementInput } from '@/[fsd]/shared/ui/secret-field';
 import FormInput from '@/components/FormInput.jsx';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 
+const getNameErrorText = name => {
+  if (!name) return 'Header name is required';
+  if (!ToolBaseHelpers.HEADER_NAME_PATTERN.test(name)) {
+    return "Header name must contain only valid HTTP header characters (letters, digits, and !#$%&'*+-.^_`|~)";
+  }
+  return '';
+};
+
+const getValueErrorText = value => {
+  if (typeof value === 'string' && /\r|\n/.test(value)) {
+    return 'Header value cannot contain line breaks';
+  }
+  return 'Header value is required';
+};
+
 const SecretHeadersInput = memo(props => {
-  const { value, editField, fieldPath, specifiedProjectId, disabled = false, description } = props;
+  const {
+    value,
+    editField,
+    fieldPath,
+    specifiedProjectId,
+    disabled = false,
+    description,
+    required = false,
+    hasError = false,
+  } = props;
 
   const headers = useMemo(
     () => (value && typeof value === 'object' && !Array.isArray(value) ? value : {}),
@@ -100,6 +125,7 @@ const SecretHeadersInput = memo(props => {
           color="text.secondary"
         >
           {description}
+          {required && <Typography component="span">{' *'}</Typography>}
         </Typography>
       )}
       {entries.length === 0 && (
@@ -110,47 +136,56 @@ const SecretHeadersInput = memo(props => {
           No additional headers configured.
         </Typography>
       )}
-      {keyedEntries.map(([name, headerValue, rowKey], index) => (
-        <Box
-          key={rowKey}
-          sx={styles.row}
-        >
-          <FormInput
-            required
-            label="Header Name"
-            value={name}
-            onChange={event => handleNameChange(index, event.target.value)}
-            disabled={disabled}
-            inputProps={{ 'data-testid': `openapi-secret-header-name-${index}` }}
-          />
-          <SecretManagementInput
-            sx={styles.value}
-            authType={name}
-            authTypes={[{ label: 'Header Value', value: name }]}
-            editField={(_, nextValue) => handleValueChange(name, nextValue)}
-            fieldPath={fieldPath}
-            inputValue={headerValue}
-            required
-            disabled={disabled}
-            specifiedProjectId={specifiedProjectId}
-            testId={`openapi-secret-header-value-${index}`}
-          />
-          {!disabled && (
-            <Tooltip
-              title="Remove header"
-              placement="top"
-            >
-              <IconButton
-                size="small"
-                onClick={() => handleRemove(name)}
-                data-testid={`openapi-secret-header-remove-${index}`}
+      {keyedEntries.map(([name, headerValue, rowKey], index) => {
+        const nameInvalid = hasError && ToolBaseHelpers.isHeaderNameInvalid(name);
+        const valueInvalid = hasError && ToolBaseHelpers.isHeaderValueInvalid(headerValue);
+
+        return (
+          <Box
+            key={rowKey}
+            sx={styles.row}
+          >
+            <FormInput
+              required
+              label="Header Name"
+              value={name}
+              onChange={event => handleNameChange(index, event.target.value)}
+              disabled={disabled}
+              error={nameInvalid}
+              helperText={nameInvalid ? getNameErrorText(name) : undefined}
+              inputProps={{ 'data-testid': `openapi-secret-header-name-${index}` }}
+            />
+            <SecretManagementInput
+              sx={styles.value}
+              authType={name}
+              authTypes={[{ label: 'Header Value', value: name }]}
+              editField={(_, nextValue) => handleValueChange(name, nextValue)}
+              fieldPath={fieldPath}
+              inputValue={headerValue}
+              required
+              disabled={disabled}
+              error={valueInvalid}
+              helperText={valueInvalid ? getValueErrorText(headerValue) : undefined}
+              specifiedProjectId={specifiedProjectId}
+              testId={`openapi-secret-header-value-${index}`}
+            />
+            {!disabled && (
+              <Tooltip
+                title="Remove header"
+                placement="top"
               >
-                <DeleteIcon />
-              </IconButton>
-            </Tooltip>
-          )}
-        </Box>
-      ))}
+                <IconButton
+                  size="small"
+                  onClick={() => handleRemove(name)}
+                  data-testid={`openapi-secret-header-remove-${index}`}
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </Tooltip>
+            )}
+          </Box>
+        );
+      })}
       {!disabled && (
         <Box sx={styles.addRow}>
           <Button.BaseBtn
