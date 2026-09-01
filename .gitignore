@@ -13,3 +13,6 @@ dist
 storybook-static
 .DS_Store
 local_features
+
+# Claude Code local config (may contain tokens)
+.claude/switch.json
