@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom';
 
 import { Box } from '@mui/material';
 
-import { Modal } from '@/[fsd]/shared/ui';
+import { BreadcrumbsOrTitle, Modal } from '@/[fsd]/shared/ui';
 import {
   ResultsPanel,
   SuiteDetailPanel,
@@ -167,7 +167,9 @@ const AgentEvaluatePage = memo(() => {
 
   return (
     <Box sx={styles.wrapper}>
-      <Box sx={styles.header} />
+      <Box sx={styles.header}>
+        <BreadcrumbsOrTitle title="Evaluation" />
+      </Box>
       <Box sx={styles.body}>
         {isDetailView ? (
           <SuiteDetailPanel

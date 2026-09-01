@@ -63,6 +63,10 @@ export const BREADCRUMB_REGISTRY = {
     fallbackLabel: 'Edit Agent',
     testId: 'agent-detail-title',
   },
+  [RouteDefinitions.ApplicationsEvaluate]: {
+    parent: RouteDefinitions.ApplicationsDetail,
+    label: 'Evaluation',
+  },
 
   [RouteDefinitions.SkillsWithTab]: { label: PathSessionMap[RouteDefinitions.Skills] },
   [RouteDefinitions.CreateSkill]: { parent: RouteDefinitions.SkillsWithTab, label: 'New Skill' },
