@@ -29,6 +29,7 @@ import {
   ChatAttachment,
   ChatContinue,
   ChatHitlActions,
+  ContinuationError,
   ErrorTrace,
   GeneratedEntityChip,
 } from '@/[fsd]/features/chat/ui';
@@ -89,6 +90,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
     references = [],
     exception,
     budgetErrorCode,
+    continuationError,
     subAgentErrors = null,
     isLoading = false,
     isStreaming,
@@ -807,7 +809,13 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
                   )}
                 </Box>
               )}
-              {!!exception && (
+              {continuationError ? (
+                <ContinuationError
+                  error={continuationError}
+                  trace={exception}
+                  messageId={messageId}
+                />
+              ) : exception ? (
                 <ErrorTrace
                   headline={realAnswer}
                   trace={exception}
@@ -815,7 +823,7 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
                   onCopy={onCopy}
                   budgetErrorCode={budgetErrorCode}
                 />
-              )}
+              ) : null}
               {authorizationBuckets.coordinator.map(renderAuthorizationCard)}
               {authorizationBuckets.subAgents.map(bucket => (
                 <SubAgentAccordion

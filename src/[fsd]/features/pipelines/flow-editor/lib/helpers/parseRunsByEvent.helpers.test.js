@@ -89,6 +89,31 @@ describe('agent exception on a pipeline run', () => {
     expect(status.current.data.budgetErrorCode).toBe('member_budget_exceeded');
   });
 
+  it('carries the structured continuation error into the run dialog', () => {
+    const status = buildStatus();
+    const continuationError = {
+      code: 'output_continuation_exhausted',
+      user_message: 'The model response is incomplete.',
+      partial_output: '# Partial response',
+      attempts: 4,
+    };
+
+    parse(
+      {
+        type: SocketMessageType.AgentException,
+        content: 'OutputContinuationExhausted on user input',
+        response_metadata: {
+          human_readable: continuationError.user_message,
+          continuation_error: continuationError,
+        },
+      },
+      status,
+    );
+
+    expect(status.current.data.continuationError).toEqual(continuationError);
+    expect(status.current.data.errorTrace).toBe('OutputContinuationExhausted on user input');
+  });
+
   it('leaves the scope unset for an ordinary failure', () => {
     const status = buildStatus();
 

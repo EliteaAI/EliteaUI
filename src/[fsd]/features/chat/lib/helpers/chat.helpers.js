@@ -57,6 +57,25 @@ export const canDeleteThisAIMessage = (chat_history, message, userId) => {
   return foundQuestion?.user_id === userId;
 };
 
+export const prepareMessageForRegeneration = (message, createdAt = Date.now()) => ({
+  ...message,
+  content: '',
+  message_items: [],
+  references: [],
+  exception: undefined,
+  continuationError: undefined,
+  toolActions: [],
+  isRegenerating: true,
+  created_at: createdAt,
+});
+
+export const applyMessageRegenerationError = (message, error) => ({
+  ...message,
+  exception: error,
+  continuationError: undefined,
+  isRegenerating: false,
+});
+
 // Use explicit original_name (lazy-loading wrapper) when present.
 // Otherwise, extract the agent/pipeline name from checkpoint_ns
 // (format: "{AgentName}:{uuid}") for tools called within a named node.

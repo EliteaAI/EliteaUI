@@ -1256,22 +1256,9 @@ const ChatBox = forwardRef((props, boxRef) => {
     async (uuid, messageParticipant, updatedItems, newAttachmentItems) => {
       stopTTS();
       chatInput.current?.pauseSpeakingMode?.();
-      let prevMessage = {};
       setChatHistory(prevMessages => {
-        prevMessage = prevMessages.find(message => message.id === uuid);
         return prevMessages.map(message =>
-          message.id !== uuid
-            ? message
-            : {
-                ...message,
-                content: '',
-                message_items: [],
-                references: [],
-                exception: undefined,
-                toolActions: [],
-                isRegenerating: true,
-                created_at: new Date().getTime(),
-              },
+          message.id !== uuid ? message : ChatHelpers.prepareMessageForRegeneration(message),
         );
       });
       chatInput.current?.reset();
@@ -1314,9 +1301,12 @@ const ChatBox = forwardRef((props, boxRef) => {
         id: uuid,
       });
       if (regenerateError) {
-        toastError(buildErrorMessage(regenerateError) || 'Regeneration Failed. Please try again.');
+        const errorMessage = buildErrorMessage(regenerateError) || 'Regeneration Failed. Please try again.';
+        toastError(errorMessage);
         setChatHistory(prevMessages => {
-          return prevMessages.map(message => (message.id !== uuid ? message : { ...prevMessage }));
+          return prevMessages.map(message =>
+            message.id !== uuid ? message : ChatHelpers.applyMessageRegenerationError(message, errorMessage),
+          );
         });
       }
     },

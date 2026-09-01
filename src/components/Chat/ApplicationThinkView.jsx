@@ -22,7 +22,7 @@ import {
   resolveSubAgentLiveness,
   selectRichestAgentPath,
 } from '@/[fsd]/features/chat/lib/helpers/subAgentGrouping.helpers.js';
-import { ErrorTrace } from '@/[fsd]/features/chat/ui/error-trace';
+import { ContinuationError, ErrorTrace } from '@/[fsd]/features/chat/ui/error-trace';
 import { SubAgentAccordion } from '@/[fsd]/features/chat/ui/sub-agent-section';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { StyledAccordion, StyledAccordionDetails, StyledAccordionSummary } from '@/[fsd]/shared/ui/accordion';
@@ -101,15 +101,23 @@ const SubAgentThinkBlock = memo(props => {
       ) : (
         isLiveCurrent && currentActionBox
       )}
-      {childError && (
-        <ErrorTrace
-          compact
-          headline={childError.headline || childError.exception}
-          trace={childError.exception}
-          messageId={messageId}
-          onCopy={onCopy}
-        />
-      )}
+      {childError &&
+        (childError.continuationError ? (
+          <ContinuationError
+            compact
+            error={childError.continuationError}
+            trace={childError.exception}
+            messageId={messageId}
+          />
+        ) : (
+          <ErrorTrace
+            compact
+            headline={childError.headline || childError.exception}
+            trace={childError.exception}
+            messageId={messageId}
+            onCopy={onCopy}
+          />
+        ))}
     </SubAgentAccordion>
   );
 });
