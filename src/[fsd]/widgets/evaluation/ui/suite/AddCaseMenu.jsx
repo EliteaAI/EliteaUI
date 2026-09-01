@@ -1,4 +1,4 @@
-import { memo, useCallback, useRef, useState } from 'react';
+import { memo, useCallback, useState } from 'react';
 
 import { Menu, MenuItem, Typography } from '@mui/material';
 
@@ -20,10 +20,8 @@ const AddCaseMenu = memo(props => {
   const { onCreateManually, onImportFile, onFromChatsRuns, disabled = false } = props;
 
   const [anchorEl, setAnchorEl] = useState(null);
-  const buttonRef = useRef(null);
 
   const handleOpenMenu = useCallback(event => {
-    buttonRef.current = event.currentTarget;
     setAnchorEl(event.currentTarget);
   }, []);
 
@@ -56,7 +54,6 @@ const AddCaseMenu = memo(props => {
   return (
     <>
       <Button.BaseBtn
-        ref={buttonRef}
         color={BUTTON_COLORS.secondary}
         startIcon={<PlusIcon />}
         onClick={handleOpenMenu}
