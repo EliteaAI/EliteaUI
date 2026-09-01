@@ -67,10 +67,6 @@ export const BREADCRUMB_REGISTRY = {
     parent: RouteDefinitions.ApplicationsDetail,
     label: 'Evaluation',
   },
-  [RouteDefinitions.ApplicationsEvaluateNewSuite]: {
-    parent: RouteDefinitions.ApplicationsDetail,
-    label: 'Evaluation',
-  },
   [RouteDefinitions.ApplicationsEvaluateSuite]: {
     parent: RouteDefinitions.ApplicationsDetail,
     label: 'Evaluation',

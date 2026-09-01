@@ -104,7 +104,7 @@ const AgentEvaluatePage = memo(() => {
     async formData => {
       try {
         if (isCreatingNew) {
-          const created = await createEvalSuite({
+          await createEvalSuite({
             projectId,
             body: {
               application_id: applicationId,
@@ -113,11 +113,9 @@ const AgentEvaluatePage = memo(() => {
               judge_model: formData.judge_model,
             },
           }).unwrap();
-          toastSuccess('Suite created.');
-          if (created?.id != null) {
-            setBlockNav(false);
-            navigate(`${baseEvaluatePath}/${created.id}`, { replace: true });
-          }
+          setBlockNav(false);
+          toastSuccess(`The "${formData.name}" suite has been successfully created.`);
+          navigate(baseEvaluatePath, { replace: true });
         } else if (editingSuiteId != null) {
           await updateEvalSuite({
             projectId,
@@ -129,11 +127,11 @@ const AgentEvaluatePage = memo(() => {
             },
           }).unwrap();
           setBlockNav(false);
-          toastSuccess('Suite saved.');
+          toastSuccess(`The "${formData.name}" suite has been successfully saved.`);
         }
       } catch (error) {
         toastError(
-          parseEvalError(error, isCreatingNew ? 'Failed to create suite.' : 'Failed to save suite.'),
+          parseEvalError(error, isCreatingNew ? 'Failed to create the suite.' : 'Failed to save the suite.'),
         );
       }
     },
@@ -170,13 +168,13 @@ const AgentEvaluatePage = memo(() => {
     const deletedId = suiteToDelete.id;
     try {
       await deleteEvalSuite({ projectId, suiteId: deletedId }).unwrap();
-      toastSuccess(`The ${suiteName} suite has been successfully deleted.`);
+      toastSuccess(`The "${suiteName}" suite has been successfully deleted.`);
       if (editingSuiteId === deletedId) {
         setBlockNav(false);
         navigate(baseEvaluatePath, { replace: true });
       }
     } catch (error) {
-      toastError(parseEvalError(error, 'Failed to delete suite.'));
+      toastError(parseEvalError(error, 'Failed to delete the suite.'));
     }
     setSuiteToDelete(null);
   }, [
