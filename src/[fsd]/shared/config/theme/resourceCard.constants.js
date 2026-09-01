@@ -1,0 +1,58 @@
+export const RESOURCE_CARD_EFFECTS = {
+  iconDirection: '45.36deg',
+  iconStartPosition: '16.25%',
+  iconEndPosition: '87.07%',
+};
+
+export const RESOURCE_CARD_COLORS = {
+  blue: {
+    iconStart: '#0094ff4d',
+    iconEnd: '#0094ff17',
+    icon: '#0094FF',
+    iconBorderStart: '#0094ff00',
+    iconBorderEnd: '#0094ff66',
+    divider: '#0094ff26',
+    borderStart: '#0094ff33',
+    borderEnd: '#0094ff00',
+  },
+  orange: {
+    iconStart: '#f5ad494d',
+    iconEnd: '#f5ad4917',
+    icon: '#F5AD49',
+    iconBorderStart: '#f5ad4900',
+    iconBorderEnd: '#f5ad4966',
+    divider: '#f5ad4926',
+    borderStart: '#f5ad4933',
+    borderEnd: '#f5ad4900',
+  },
+  purple: {
+    iconStart: '#a473ff4d',
+    iconEnd: '#a473ff17',
+    icon: '#A473FF',
+    iconBorderStart: '#a473ff00',
+    iconBorderEnd: '#a473ff66',
+    divider: '#a473ff26',
+    borderStart: '#a473ff33',
+    borderEnd: '#a473ff00',
+  },
+  green: {
+    iconStart: '#4bba884d',
+    iconEnd: '#4bba8817',
+    icon: '#4BBA88',
+    iconBorderStart: '#4bba8800',
+    iconBorderEnd: '#4bba8866',
+    divider: '#4bba8826',
+    borderStart: '#4bba8833',
+    borderEnd: '#4bba8800',
+  },
+  pink: {
+    iconStart: '#ff73b04d',
+    iconEnd: '#ff73b017',
+    icon: '#FF73B0',
+    iconBorderStart: '#ff73b000',
+    iconBorderEnd: '#ff73b066',
+    divider: '#ff73b026',
+    borderStart: '#ff73b033',
+    borderEnd: '#ff73b000',
+  },
+};

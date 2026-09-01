@@ -185,7 +185,7 @@ const npsSurveyCardStyles = () => ({
     paddingRight: '1.5rem',
     borderRadius: '1rem',
     background: palette.background.npsCard,
-    border: `0.0625rem solid ${palette.border.npsCard}`,
+    border: `0.0625rem solid ${palette.border.accent}`,
     width: '27.375rem',
     display: 'flex',
     flexDirection: 'column',
@@ -204,7 +204,7 @@ const npsSurveyCardStyles = () => ({
     fontWeight: 600,
     fontSize: '0.875rem',
     lineHeight: '1.5rem',
-    color: palette.text.darker,
+    color: palette.text.inverse,
     textAlign: 'center',
     width: '100%',
   }),
@@ -229,7 +229,7 @@ const npsSurveyCardStyles = () => ({
     fontWeight: 500,
     fontSize: '0.625rem',
     lineHeight: '1rem',
-    color: palette.text.light,
+    color: palette.text.muted,
   }),
   actionsRow: {
     display: 'flex',
@@ -239,28 +239,28 @@ const npsSurveyCardStyles = () => ({
     width: '100%',
   },
   notNowBtn: ({ palette }) => ({
-    background: palette.background.button.npsCard.secondary.default,
-    color: palette.text.darker,
+    background: palette.background.button.outline.default,
+    color: palette.text.inverse,
     '&:hover': {
-      background: palette.background.button.npsCard.secondary.hover,
+      background: palette.background.button.outline.hover,
     },
     '&:active': {
-      background: palette.background.button.npsCard.secondary.pressed,
+      background: palette.background.button.outline.pressed,
       border: 'none',
     },
   }),
   submitBtn: ({ palette }) => ({
-    background: palette.background.button.npsCard.primary.default,
-    color: palette.text.white,
+    background: palette.background.button.accent.default,
+    color: palette.text.onAccent,
     '&:hover': {
-      background: palette.background.button.npsCard.primary.hover,
+      background: palette.background.button.accent.hover,
     },
     '&:active': {
-      background: palette.background.button.npsCard.primary.pressed,
+      background: palette.background.button.accent.pressed,
     },
     '&:disabled': {
-      background: palette.background.button.npsCard.primary.disabled,
-      color: palette.text.white,
+      background: palette.background.button.accent.disabled,
+      color: palette.text.onAccent,
     },
   }),
 });

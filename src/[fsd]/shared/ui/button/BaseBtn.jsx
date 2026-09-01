@@ -145,8 +145,7 @@ export const eliteaButtonColors = theme => ({
       colorIcon: theme.palette.secondary.main,
     },
     hover: {
-      color:
-        theme.palette.mode === 'dark' ? theme.palette.primary.hover : theme.palette.text.button.auxiliary,
+      color: theme.palette.text.button.auxiliary,
       colorIcon: theme.palette.text.secondary,
     },
     active: {

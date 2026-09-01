@@ -1,4 +1,4 @@
-import { typographyVariants } from '@/[fsd]/shared/config/theme';
+import { THEME_COLORS, darkPalette, lightPalette, typographyVariants } from '@/[fsd]/shared/config/theme';
 import { MuiButtonStyles } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { eliteaCheckboxVariants, eliteaUnifiedRadioVariants } from '@/[fsd]/shared/ui/checkbox/BaseCheckbox';
 import { eliteaInputVariants, eliteaTextFieldVariants } from '@/[fsd]/shared/ui/input/textFieldVariants';
@@ -11,8 +11,6 @@ import { eliteaDataGridStyle } from '@/components/DataGrid.jsx';
 import { eliteaTreeItemStyle } from '@/components/TreeItem.jsx';
 
 import { eliteaIconButtonStyle } from './components/IconButton';
-import darkPalette, { darkBlue, white } from './darkPalette';
-import lightPalette from './lightPalette';
 import { eliteaMenuItemVariants, eliteaMenuListVariants } from './theme/menuListVariants';
 
 const getDesignTokens = mode => ({
@@ -205,22 +203,22 @@ const getDesignTokens = mode => ({
         filledSuccess: {
           backgroundColor: 'green',
           background: 'green',
-          color: white,
+          color: THEME_COLORS.white,
         },
         filledError: {
           backgroundColor: 'red',
           background: 'red',
-          color: white,
+          color: THEME_COLORS.white,
         },
         filledInfo: {
-          backgroundColor: darkBlue,
-          background: darkBlue,
-          color: white,
+          backgroundColor: THEME_COLORS.darkBlue,
+          background: THEME_COLORS.darkBlue,
+          color: THEME_COLORS.white,
         },
         filledWarning: {
           backgroundColor: 'orange',
           background: 'orange',
-          color: white,
+          color: THEME_COLORS.white,
         },
       },
     },

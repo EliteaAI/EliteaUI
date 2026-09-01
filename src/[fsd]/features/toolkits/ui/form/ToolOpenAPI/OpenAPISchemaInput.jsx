@@ -242,7 +242,7 @@ const getStyles = isDragOver => ({
     borderRadius: '0.5rem',
     overflow: 'hidden',
     border: ({ palette }) => `0.0625rem solid ${palette.border.lines}`,
-    backgroundColor: ({ palette }) => (isDragOver ? palette.text.contextHighLight : 'transparent'),
+    backgroundColor: ({ palette }) => (isDragOver ? palette.background.dragHighlight : 'transparent'),
     '&:hover': {
       '& [aria-label="full-scrn-btn"]': { display: 'block' },
     },
