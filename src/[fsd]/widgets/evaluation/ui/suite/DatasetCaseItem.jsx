@@ -121,7 +121,6 @@ const datasetCaseItemStyles = () => ({
     overflow: 'hidden',
   },
   text: ({ palette }) => ({
-    fontFamily: 'Montserrat, sans-serif',
     fontSize: '0.75rem',
     fontWeight: 400,
     lineHeight: '1.25rem',

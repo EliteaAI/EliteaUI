@@ -297,7 +297,6 @@ const attachedDatasetCardStyles = () => ({
     padding: '0.5rem 1rem',
   },
   noCasesText: ({ palette }) => ({
-    fontFamily: 'Montserrat, sans-serif',
     fontSize: '0.875rem',
     fontWeight: 400,
     lineHeight: '1.5rem',
