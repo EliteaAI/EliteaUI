@@ -5,9 +5,16 @@ import { Box, Menu, MenuItem, Typography } from '@mui/material';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import PlusIcon from '@/components/Icons/PlusIcon';
+import useCheckPermission from '@/hooks/useCheckPermission';
+
+import { EVAL_PERMISSIONS } from '../../lib/constants';
 
 const DimensionSection = memo(props => {
   const { dimensions = [], attachedDimensions = [], onAttachDimension, onCreateDimension } = props;
+
+  const { checkPermission } = useCheckPermission();
+  const canUpdateSuite = checkPermission(EVAL_PERMISSIONS.suiteUpdate);
+  const canCreateDimension = checkPermission(EVAL_PERMISSIONS.dimensionCreate);
 
   const [menuAnchor, setMenuAnchor] = useState(null);
 
@@ -48,14 +55,16 @@ const DimensionSection = memo(props => {
         </Typography>
       )}
 
-      <Button.BaseBtn
-        color={BUTTON_COLORS.secondary}
-        startIcon={<PlusIcon />}
-        onClick={handleOpenMenu}
-        sx={styles.addButton}
-      >
-        Dimension
-      </Button.BaseBtn>
+      {canUpdateSuite && (
+        <Button.BaseBtn
+          color={BUTTON_COLORS.secondary}
+          startIcon={<PlusIcon />}
+          onClick={handleOpenMenu}
+          sx={styles.addButton}
+        >
+          Dimension
+        </Button.BaseBtn>
+      )}
 
       <Menu
         anchorEl={menuAnchor}
@@ -67,13 +76,15 @@ const DimensionSection = memo(props => {
           paper: { sx: styles.menuPaper },
         }}
       >
-        <MenuItem
-          onClick={handleCreateDimension}
-          sx={styles.createMenuItem}
-        >
-          <PlusIcon sx={styles.menuPlusIcon} />
-          <Typography sx={styles.createMenuText}>Create Dimension</Typography>
-        </MenuItem>
+        {canCreateDimension && (
+          <MenuItem
+            onClick={handleCreateDimension}
+            sx={styles.createMenuItem}
+          >
+            <PlusIcon sx={styles.menuPlusIcon} />
+            <Typography sx={styles.createMenuText}>Create Dimension</Typography>
+          </MenuItem>
+        )}
         {availableDimensions.map(dimension => (
           <MenuItem
             key={dimension.id}

@@ -4,76 +4,112 @@ import { Box, Menu, MenuItem, Typography } from '@mui/material';
 
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import ShareIcon from '@/assets/share-icon.svg?react';
 import PlusIcon from '@/components/Icons/PlusIcon';
+import useCheckPermission from '@/hooks/useCheckPermission';
+
+import { EVAL_PERMISSIONS } from '../../lib/constants';
+import AttachedDatasetCard from './AttachedDatasetCard';
 
 const DatasetSection = memo(props => {
-  const { datasets = [], attachedDatasets = [], onAttachDataset, onCreateDataset } = props;
+  const {
+    datasets = [],
+    attachedDataset = null,
+    onAttachDataset,
+    onRemoveDataset,
+    onCreateDataset,
+    onOpenDataset,
+    onAddCase,
+    onEditCase,
+    onDeleteCase,
+  } = props;
 
-  const [menuAnchor, setMenuAnchor] = useState(null);
+  const { checkPermission } = useCheckPermission();
+  const canUpdateSuite = checkPermission(EVAL_PERMISSIONS.suiteUpdate);
+  const canCreateDataset = checkPermission(EVAL_PERMISSIONS.datasetCreate);
 
-  const handleOpenMenu = useCallback(event => {
-    setMenuAnchor(event.currentTarget);
+  const [selectorAnchor, setSelectorAnchor] = useState(null);
+
+  const handleOpenSelector = useCallback(event => {
+    setSelectorAnchor(event.currentTarget);
   }, []);
 
-  const handleCloseMenu = useCallback(() => {
-    setMenuAnchor(null);
+  const handleCloseSelector = useCallback(() => {
+    setSelectorAnchor(null);
   }, []);
 
   const handleCreateDataset = useCallback(() => {
-    handleCloseMenu();
+    handleCloseSelector();
     onCreateDataset?.();
-  }, [handleCloseMenu, onCreateDataset]);
+  }, [handleCloseSelector, onCreateDataset]);
 
   const handleSelectDataset = useCallback(
     dataset => {
-      handleCloseMenu();
+      handleCloseSelector();
       onAttachDataset?.(dataset);
     },
-    [handleCloseMenu, onAttachDataset],
+    [handleCloseSelector, onAttachDataset],
   );
 
-  const availableDatasets = datasets.filter(d => !attachedDatasets.some(ad => ad.id === d.id));
-  const hasAttachedDatasets = attachedDatasets.length > 0;
+  const availableDatasets = attachedDataset ? datasets.filter(d => d.id !== attachedDataset.id) : datasets;
+  const hasAttachedDataset = !!attachedDataset;
 
   const styles = datasetSectionStyles();
 
   return (
     <Box sx={styles.root}>
-      {!hasAttachedDatasets && (
-        <Typography
-          variant="bodySmall"
-          sx={styles.emptyText}
-        >
-          Choose dataset or create a new one to ...
-        </Typography>
+      {hasAttachedDataset ? (
+        <AttachedDatasetCard
+          dataset={attachedDataset}
+          availableDatasets={availableDatasets}
+          onChangeDataset={onAttachDataset}
+          onRemoveDataset={onRemoveDataset}
+          onCreateDataset={onCreateDataset}
+          onOpenDataset={onOpenDataset}
+          onAddCase={onAddCase}
+          onEditCase={onEditCase}
+          onDeleteCase={onDeleteCase}
+        />
+      ) : (
+        canUpdateSuite && (
+          <>
+            <Typography
+              variant="bodySmall"
+              sx={styles.emptyText}
+            >
+              Choose dataset or create a new one to ...
+            </Typography>
+            <Button.BaseBtn
+              color={BUTTON_COLORS.secondary}
+              startIcon={<PlusIcon />}
+              onClick={handleOpenSelector}
+              sx={styles.addButton}
+            >
+              Dataset
+            </Button.BaseBtn>
+          </>
+        )
       )}
 
-      <Button.BaseBtn
-        color={BUTTON_COLORS.secondary}
-        startIcon={<PlusIcon />}
-        onClick={handleOpenMenu}
-        sx={styles.addButton}
-      >
-        Dataset
-      </Button.BaseBtn>
-
       <Menu
-        anchorEl={menuAnchor}
-        open={Boolean(menuAnchor)}
-        onClose={handleCloseMenu}
+        anchorEl={selectorAnchor}
+        open={Boolean(selectorAnchor)}
+        onClose={handleCloseSelector}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         transformOrigin={{ vertical: 'bottom', horizontal: 'left' }}
         slotProps={{
-          paper: { sx: styles.menuPaper },
+          paper: { sx: styles.selectorMenuPaper },
         }}
       >
-        <MenuItem
-          onClick={handleCreateDataset}
-          sx={styles.createMenuItem}
-        >
-          <PlusIcon sx={styles.menuPlusIcon} />
-          <Typography sx={styles.createMenuText}>Create Dataset</Typography>
-        </MenuItem>
+        {canCreateDataset && (
+          <MenuItem
+            onClick={handleCreateDataset}
+            sx={styles.createMenuItem}
+          >
+            <PlusIcon sx={styles.menuPlusIcon} />
+            <Typography sx={styles.createMenuText}>Create Dataset</Typography>
+          </MenuItem>
+        )}
         {availableDatasets.map(dataset => (
           <MenuItem
             key={dataset.id}
@@ -82,10 +118,22 @@ const DatasetSection = memo(props => {
           >
             <Box sx={styles.datasetInfo}>
               <Typography sx={styles.datasetName}>{dataset.name}</Typography>
-              <Typography sx={styles.datasetMeta}>
-                {dataset.case_count ?? 0} cases
-                {dataset.description ? ` | ${dataset.description}` : ''}
-              </Typography>
+              <Box sx={styles.datasetMetaRow}>
+                <Typography sx={styles.datasetMeta}>{dataset.case_count ?? 0} cases</Typography>
+                {dataset.is_shared && (
+                  <>
+                    <Typography sx={styles.datasetMeta}>|</Typography>
+                    <ShareIcon style={styles.shareIcon} />
+                    <Typography sx={styles.datasetMeta}>Shared</Typography>
+                  </>
+                )}
+                {dataset.description && (
+                  <>
+                    <Typography sx={styles.datasetMeta}>|</Typography>
+                    <Typography sx={styles.datasetMetaDescription}>{dataset.description}</Typography>
+                  </>
+                )}
+              </Box>
             </Box>
           </MenuItem>
         ))}
@@ -131,7 +179,7 @@ const datasetSectionStyles = () => ({
       backgroundColor: palette.background.tabButton.default,
     },
   }),
-  menuPaper: ({ palette }) => ({
+  selectorMenuPaper: ({ palette }) => ({
     width: '21.75rem',
     maxHeight: '20rem',
     marginLeft: '0.25rem',
@@ -207,13 +255,28 @@ const datasetSectionStyles = () => ({
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
   }),
+  datasetMetaRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.25rem',
+  },
   datasetMeta: ({ palette }) => ({
+    fontSize: '0.75rem',
+    color: palette.text.primary,
+    flexShrink: 0,
+  }),
+  datasetMetaDescription: ({ palette }) => ({
     fontSize: '0.75rem',
     color: palette.text.primary,
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
   }),
+  shareIcon: {
+    width: '0.75rem',
+    height: '0.75rem',
+    flexShrink: 0,
+  },
 });
 
 export default DatasetSection;

@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Box, Tooltip, Typography } from '@mui/material';
+import { Box, CircularProgress, Skeleton, Tooltip, Typography } from '@mui/material';
 
 import { AccordionConstants, ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { Button, Input, Modal } from '@/[fsd]/shared/ui';
@@ -12,7 +12,9 @@ import ArrowBackIcon from '@/components/Icons/ArrowBackIcon';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import InfoIcon from '@/components/Icons/InfoIcon';
 import SendIcon from '@/components/Icons/SendIcon';
+import useCheckPermission from '@/hooks/useCheckPermission';
 
+import { EVAL_PERMISSIONS } from '../../lib/constants';
 import DatasetSection from './DatasetSection';
 import DatasetSectionHeader from './DatasetSectionHeader';
 import DimensionSection from './DimensionSection';
@@ -28,8 +30,10 @@ const SuiteDetailPanel = memo(props => {
   const {
     suite,
     isNew,
+    isLoading,
     modelsData = { items: [] },
     datasets = [],
+    attachedDataset = null,
     dimensions = [],
     isSaving,
     onBack,
@@ -40,9 +44,20 @@ const SuiteDetailPanel = memo(props => {
     onDirtyChange,
     onManageDatasets,
     onCreateDataset,
+    onAttachDataset,
+    onRemoveDataset,
+    onOpenDataset,
+    onAddCase,
+    onEditCase,
+    onDeleteCase,
     onManageDimensions,
     onCreateDimension,
   } = props;
+
+  const { checkPermission } = useCheckPermission();
+  const canUpdateSuite = checkPermission(EVAL_PERMISSIONS.suiteUpdate);
+  const canDeleteSuite = checkPermission(EVAL_PERMISSIONS.suiteDelete);
+  const canRun = checkPermission(EVAL_PERMISSIONS.runCreate);
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -145,11 +160,36 @@ const SuiteDetailPanel = memo(props => {
     onDelete?.(suite);
   }, [onDelete, suite]);
 
-  const isSaveDisabled = !name.trim() || isSaving || !isDirty;
-  const isEvaluateDisabled = isNew || !suite?.id;
+  const isSaveDisabled = !name.trim() || isSaving || !isDirty || !canUpdateSuite;
+  const isEvaluateDisabled = isNew || !suite?.id || !canRun;
   const title = isNew ? 'New Suite' : (suite?.name ?? 'Suite');
 
   const styles = suiteDetailPanelStyles();
+
+  if (isLoading) {
+    return (
+      <Box sx={styles.root}>
+        <Box sx={styles.header}>
+          <Box sx={styles.headerLeft}>
+            <Button.BaseBtn
+              variant={BUTTON_VARIANTS.tertiary}
+              onClick={onBack}
+              sx={styles.backButton}
+              startIcon={<ArrowBackIcon />}
+            />
+            <Skeleton
+              variant="text"
+              width={120}
+              sx={styles.headerTitleSkeleton}
+            />
+          </Box>
+        </Box>
+        <Box sx={styles.loadingContainer}>
+          <CircularProgress size={32} />
+        </Box>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={styles.root}>
@@ -189,13 +229,17 @@ const SuiteDetailPanel = memo(props => {
               >
                 Discard
               </Button.BaseBtn>
-              <Box sx={styles.headerDivider} />
-              <Button.BaseBtn
-                variant={BUTTON_VARIANTS.tertiary}
-                onClick={handleDelete}
-                sx={styles.deleteButton}
-                startIcon={<DeleteIcon sx={styles.deleteIcon} />}
-              />
+              {canDeleteSuite && (
+                <>
+                  <Box sx={styles.headerDivider} />
+                  <Button.BaseBtn
+                    variant={BUTTON_VARIANTS.tertiary}
+                    onClick={handleDelete}
+                    sx={styles.deleteButton}
+                    startIcon={<DeleteIcon sx={styles.deleteIcon} />}
+                  />
+                </>
+              )}
             </>
           )}
         </Box>
@@ -218,6 +262,7 @@ const SuiteDetailPanel = memo(props => {
                     value={name}
                     onChange={handleNameChange}
                     required
+                    disabled={!canUpdateSuite}
                     inputProps={{ maxLength: MAX_NAME_LENGTH }}
                   />
                   <Input.InputBase
@@ -229,6 +274,7 @@ const SuiteDetailPanel = memo(props => {
                     onChange={handleDescriptionChange}
                     multiline
                     maxRows={6}
+                    disabled={!canUpdateSuite}
                     inputProps={{ maxLength: MAX_DESCRIPTION_LENGTH }}
                   />
                   <LLMModelSelector
@@ -252,6 +298,7 @@ const SuiteDetailPanel = memo(props => {
                     selectedModel={selectedJudgeModel}
                     onSelectModel={handleSelectJudgeModel}
                     showSettingsEntry={false}
+                    disabled={!canUpdateSuite}
                   />
                 </Box>
               ),
@@ -262,8 +309,14 @@ const SuiteDetailPanel = memo(props => {
               content: (
                 <DatasetSection
                   datasets={datasets}
-                  attachedDatasets={EMPTY_ARRAY}
+                  attachedDataset={attachedDataset}
                   onCreateDataset={onCreateDataset}
+                  onAttachDataset={onAttachDataset}
+                  onRemoveDataset={onRemoveDataset}
+                  onOpenDataset={onOpenDataset}
+                  onAddCase={onAddCase}
+                  onEditCase={onEditCase}
+                  onDeleteCase={onDeleteCase}
                 />
               ),
             },
@@ -320,6 +373,12 @@ const suiteDetailPanelStyles = () => ({
     minWidth: 0,
     overflow: 'hidden',
   },
+  loadingContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
+  },
   accordion: {
     display: 'flex',
     flexDirection: 'column',
@@ -362,6 +421,10 @@ const suiteDetailPanelStyles = () => ({
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
   }),
+  headerTitleSkeleton: {
+    fontSize: '0.875rem',
+    lineHeight: '1.5rem',
+  },
   headerRight: {
     display: 'flex',
     alignItems: 'center',

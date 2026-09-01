@@ -1,7 +1,7 @@
 export { default as CaseEditorDialog } from './CaseEditorDialog';
 export { default as CaseVariablesEditor } from './CaseVariablesEditor';
 export { default as DatasetDetailView } from './DatasetDetailView';
-export { default as DatasetFormDialog } from './DatasetFormDialog';
+export { default as DatasetModal } from './DatasetModal';
 export { default as DatasetImportDialog } from './DatasetImportDialog';
 export { default as DatasetList } from './DatasetList';
 export { default as DatasetListRow } from './DatasetListRow';

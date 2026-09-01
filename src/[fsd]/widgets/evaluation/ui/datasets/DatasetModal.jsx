@@ -18,7 +18,7 @@ const toFormState = dataset => {
   };
 };
 
-const DatasetFormDialog = memo(props => {
+const DatasetModal = memo(props => {
   const { open, onClose, projectId, applicationId, dataset, onSaved } = props;
 
   const isEdit = !!dataset?.id;
@@ -78,7 +78,7 @@ const DatasetFormDialog = memo(props => {
     }
   }, [form, isEdit, updateDataset, projectId, applicationId, dataset, createDataset, onSaved, onClose]);
 
-  const styles = datasetFormDialogStyles();
+  const styles = datasetModalStyles();
 
   const content = (
     <Box sx={styles.content}>
@@ -87,7 +87,8 @@ const DatasetFormDialog = memo(props => {
         autoFocus
         fullWidth
         variant="standard"
-        label="Name"
+        label="Dataset Name"
+        required
         value={form.name}
         onChange={event => setField('name', event.target.value)}
         inputProps={{ maxLength: 256 }}
@@ -95,24 +96,25 @@ const DatasetFormDialog = memo(props => {
       <Input.InputBase
         data-testid="dataset-description-input"
         fullWidth
-        multiline
-        minRows={3}
         variant="standard"
-        label="Description (optional)"
+        label="Description"
         value={form.description}
         onChange={event => setField('description', event.target.value)}
       />
-      <FormControlLabel
-        control={
-          <Checkbox
-            checked={form.isShared}
-            disabled={isSharedIn}
-            onChange={event => setField('isShared', event.target.checked)}
-            data-testid="dataset-shared-checkbox"
-          />
-        }
-        label="Project shared — selectable from any agent's suite config"
-      />
+      <Box sx={styles.checkboxSection}>
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={form.isShared}
+              disabled={isSharedIn}
+              onChange={event => setField('isShared', event.target.checked)}
+              data-testid="dataset-shared-checkbox"
+            />
+          }
+          label="Allow this dataset to be used by all agents in this project."
+          sx={styles.checkboxLabel}
+        />
+      </Box>
       {errorMessage && (
         <Typography
           data-testid="dataset-form-error"
@@ -149,7 +151,7 @@ const DatasetFormDialog = memo(props => {
   return (
     <Modal.BaseModal
       open={open}
-      title={isEdit ? 'Rename dataset' : 'New dataset'}
+      title={isEdit ? 'Edit Dataset' : 'Create Dataset'}
       onClose={onClose}
       content={content}
       actions={actions}
@@ -158,15 +160,26 @@ const DatasetFormDialog = memo(props => {
   );
 });
 
-DatasetFormDialog.displayName = 'DatasetFormDialog';
+DatasetModal.displayName = 'DatasetModal';
 
 /** @type {MuiSx} */
-const datasetFormDialogStyles = () => ({
+const datasetModalStyles = () => ({
   content: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '1rem',
+    gap: '1.5rem',
     minWidth: '28rem',
+  },
+  checkboxSection: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.25rem',
+  },
+  checkboxLabel: {
+    marginLeft: '-0.25rem',
+    '& .MuiFormControlLabel-label': {
+      fontSize: '0.875rem',
+    },
   },
   error: ({ palette }) => ({
     color: palette.error.main,
@@ -174,4 +187,4 @@ const datasetFormDialogStyles = () => ({
   }),
 });
 
-export default DatasetFormDialog;
+export default DatasetModal;
