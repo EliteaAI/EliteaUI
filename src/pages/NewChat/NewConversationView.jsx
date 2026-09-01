@@ -30,6 +30,7 @@ import {
 } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
 import { useConversationEditMutation, useUpdateParticipantLlmSettingsMutation } from '@/api';
 import { useListModelsQuery } from '@/api/configurations.js';
+import { useAuthorModuleSettingsQuery } from '@/api/social';
 import WelcomeImage from '@/assets/chat-welcome.png';
 import {
   ChatParticipantType,
@@ -99,9 +100,26 @@ const NewConversationView = forwardRef(
     const [selectedParticipant, setSelectedParticipant] = useState(activeParticipant || null);
     const [selectedParticipantDetails, setSelectedParticipantDetails] = useState(activeParticipant || null);
     const [prevConversation, setPrevConversation] = useState(activeConversation);
-    const [internalTools, setInternalTools] = useState(() => {
-      return InternalToolsConstants.getEnabledInternalToolNames(user?.personalization ?? {});
+    // #6285: module toggles are scoped per project, not sourced from the global user redux state.
+    const { data: moduleSettingsData } = useAuthorModuleSettingsQuery(selectedProjectId, {
+      skip: !selectedProjectId,
     });
+    const [internalTools, setInternalTools] = useState(() => {
+      return InternalToolsConstants.getEnabledInternalToolNames(moduleSettingsData ?? {});
+    });
+    // #6285: moduleSettingsData loads async (unlike the old redux-backed personalization), so
+    // apply it once it arrives instead of only at the lazy useState init above. Reset the guard
+    // on project switch so the new project's defaults aren't blocked by the previous one's.
+    const moduleSettingsAppliedRef = useRef(false);
+    useEffect(() => {
+      moduleSettingsAppliedRef.current = false;
+    }, [selectedProjectId]);
+    useEffect(() => {
+      if (moduleSettingsData && !moduleSettingsAppliedRef.current) {
+        moduleSettingsAppliedRef.current = true;
+        setInternalTools(InternalToolsConstants.getEnabledInternalToolNames(moduleSettingsData));
+      }
+    }, [moduleSettingsData]);
     const [showRecommendationList, setShowRecommendationList] = useState(false);
     const { data: modelsData = { items: [], total: 0 } } = useListModelsQuery(
       { projectId: selectedProjectId, include_shared: true },
