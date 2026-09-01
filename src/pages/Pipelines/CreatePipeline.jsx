@@ -7,6 +7,7 @@ import { Grid } from '@mui/material';
 
 import CreateAgentForm from '@/[fsd]/features/agent/ui/agent-details/configurations/form/CreateAgentForm';
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
+import { Breadcrumbs } from '@/[fsd]/shared/ui';
 import StyledTabs from '@/components/StyledTabs';
 import getValidateSchema from '@/pages/Applications/Components/Applications/ApplicationCreationValidateSchema';
 import CreateApplicationTabBar from '@/pages/Applications/Components/Applications/CreateApplicationTabBar';
@@ -43,9 +44,9 @@ const CreatePipeline = memo(() => {
       <StyledTabs
         fullWidth
         tabSX={{ paddingX: '24px' }}
+        leftPart={<Breadcrumbs />}
         tabs={[
           {
-            label: 'New Pipeline',
             tabBarItems: <CreateApplicationTabBar />,
             rightToolbar: <div />,
             content: (

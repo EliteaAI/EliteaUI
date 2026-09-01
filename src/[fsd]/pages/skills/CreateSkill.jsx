@@ -7,6 +7,7 @@ import { Grid } from '@mui/material';
 import { SkillValidateSchema } from '@/[fsd]/features/skill/lib/validation';
 import CreateSkillTabBar from '@/[fsd]/features/skill/ui/CreateSkillTabBar';
 import CreateSkillForm from '@/[fsd]/features/skill/ui/skill-details/form/CreateSkillForm';
+import { Breadcrumbs } from '@/[fsd]/shared/ui';
 import StyledTabs from '@/components/StyledTabs';
 import { StyledGridContainer } from '@/pages/Common/Components';
 
@@ -35,9 +36,9 @@ const CreateSkill = memo(() => {
       <StyledTabs
         fullWidth
         tabSX={styles.tab}
+        leftPart={<Breadcrumbs />}
         tabs={[
           {
-            label: 'New Skill',
             tabBarItems: <CreateSkillTabBar />,
             rightToolbar: <div />,
             content: (

@@ -56,7 +56,7 @@ export const getBreadcrumbEntityId = trail => {
 
   const { params } = entityCrumb;
 
-  return params.mcpId || params.appId || params.toolkitId;
+  return params.mcpId || params.appId || params.toolkitId || params.agentId || params.skillId;
 };
 
 /**
