@@ -6,12 +6,14 @@ import { Box } from '@mui/material';
 
 import { BreadcrumbsOrTitle, Modal } from '@/[fsd]/shared/ui';
 import {
+  CreateCaseModal,
   DatasetModal,
   ResultsPanel,
   SuiteDetailPanel,
   SuitesPanel,
   parseEvalError,
   useCreateEvalSuiteMutation,
+  useDeleteEvalDatasetCaseMutation,
   useDeleteEvalSuiteMutation,
   useEvalDatasetQuery,
   useEvalDatasetsQuery,
@@ -59,10 +61,14 @@ const AgentEvaluatePage = memo(() => {
   const [deleteEvalSuite] = useDeleteEvalSuiteMutation();
   const [createEvalSuite, { isLoading: isCreating }] = useCreateEvalSuiteMutation();
   const [updateEvalSuite, { isLoading: isUpdating }] = useUpdateEvalSuiteMutation();
+  const [deleteEvalDatasetCase] = useDeleteEvalDatasetCaseMutation();
 
   const [suiteToDelete, setSuiteToDelete] = useState(null);
   const [isDirty, setIsDirty] = useState(false);
   const [showDatasetDialog, setShowDatasetDialog] = useState(false);
+  const [showCaseModal, setShowCaseModal] = useState(false);
+  const [caseToEdit, setCaseToEdit] = useState(null);
+  const [caseToDelete, setCaseToDelete] = useState(null);
 
   const blockOptions = useMemo(
     () => ({
@@ -269,16 +275,42 @@ const AgentEvaluatePage = memo(() => {
   }, [editingSuiteId, projectId, updateEvalSuite, toastSuccess, toastError]);
 
   const handleAddCase = useCallback(() => {
-    // TODO: open add case dialog
+    setCaseToEdit(null);
+    setShowCaseModal(true);
   }, []);
 
-  const handleEditCase = useCallback(() => {
-    // TODO: open edit case dialog
+  const handleEditCase = useCallback(datasetCase => {
+    setCaseToEdit(datasetCase);
+    setShowCaseModal(true);
   }, []);
 
-  const handleDeleteCase = useCallback(() => {
-    // TODO: open delete case confirmation
+  const handleCloseCaseModal = useCallback(() => {
+    setShowCaseModal(false);
+    setCaseToEdit(null);
   }, []);
+
+  const handleDeleteCase = useCallback(datasetCase => {
+    setCaseToDelete(datasetCase);
+  }, []);
+
+  const handleCloseDeleteCase = useCallback(() => {
+    setCaseToDelete(null);
+  }, []);
+
+  const handleConfirmDeleteCase = useCallback(async () => {
+    if (!caseToDelete || !attachedDatasetId) return;
+    try {
+      await deleteEvalDatasetCase({
+        projectId,
+        datasetId: attachedDatasetId,
+        caseId: caseToDelete.id,
+      }).unwrap();
+      toastSuccess('Case has been successfully deleted.');
+    } catch (error) {
+      toastError(parseEvalError(error, 'Failed to delete the case.'));
+    }
+    setCaseToDelete(null);
+  }, [caseToDelete, attachedDatasetId, deleteEvalDatasetCase, projectId, toastSuccess, toastError]);
 
   const handleOpenDataset = useCallback(
     dataset => {
@@ -290,6 +322,14 @@ const AgentEvaluatePage = memo(() => {
     },
     [navigate, tab, agentId],
   );
+
+  const handleImportCases = useCallback(() => {
+    // TODO: open import cases dialog
+  }, []);
+
+  const handlePromoteCases = useCallback(() => {
+    // TODO: open promote from chats & runs dialog
+  }, []);
 
   const handleManageDimensions = useCallback(() => {
     // TODO: navigate to dimensions management
@@ -330,6 +370,8 @@ const AgentEvaluatePage = memo(() => {
             onAddCase={handleAddCase}
             onEditCase={handleEditCase}
             onDeleteCase={handleDeleteCase}
+            onImportCases={handleImportCases}
+            onPromoteCases={handlePromoteCases}
             onManageDimensions={handleManageDimensions}
             onCreateDimension={handleCreateDimension}
           />
@@ -363,6 +405,25 @@ const AgentEvaluatePage = memo(() => {
         applicationId={applicationId}
         dataset={null}
         onSaved={handleDatasetSaved}
+      />
+      {attachedDatasetId && (
+        <CreateCaseModal
+          open={showCaseModal}
+          onClose={handleCloseCaseModal}
+          projectId={projectId}
+          datasetId={attachedDatasetId}
+          datasetCase={caseToEdit}
+        />
+      )}
+      <Modal.DeleteEntityModal
+        open={!!caseToDelete}
+        onClose={handleCloseDeleteCase}
+        onConfirm={handleConfirmDeleteCase}
+        title="Delete confirmation"
+        textContent="Are you sure to delete the "
+        name={`Case ${caseToDelete?.id ?? ''}`}
+        shouldRequestInputName
+        confirmButtonText="Delete"
       />
     </Box>
   );

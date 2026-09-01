@@ -22,6 +22,8 @@ const DatasetSection = memo(props => {
     onAddCase,
     onEditCase,
     onDeleteCase,
+    onImportCases,
+    onPromoteCases,
   } = props;
 
   const { checkPermission } = useCheckPermission();
@@ -69,6 +71,8 @@ const DatasetSection = memo(props => {
           onAddCase={onAddCase}
           onEditCase={onEditCase}
           onDeleteCase={onDeleteCase}
+          onImportCases={onImportCases}
+          onPromoteCases={onPromoteCases}
         />
       ) : (
         canUpdateSuite && (
@@ -186,7 +190,6 @@ const datasetSectionStyles = () => ({
     backgroundColor: palette.background.secondary,
     border: `0.0625rem solid ${palette.border.lines}`,
     borderRadius: '0.5rem',
-    boxShadow: palette.boxShadow.default,
     '>ul': {
       padding: '.25rem 0',
     },
