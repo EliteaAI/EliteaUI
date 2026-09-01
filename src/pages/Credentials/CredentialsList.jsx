@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -43,6 +43,7 @@ const EmptyListPlaceHolder = ({ query }) => {
 
 const CredentialsList = memo(props => {
   const { rightPanelOffset } = props;
+  const firstRender = useRef(true);
 
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -166,6 +167,7 @@ const CredentialsList = memo(props => {
     const hasTypeFilter = urlSelectedTypes.length > 0;
 
     if (
+      firstRender.current &&
       !isPublicProject &&
       !loading &&
       !hasError &&
@@ -175,6 +177,10 @@ const CredentialsList = memo(props => {
       total === 0
     ) {
       navigate(RouteDefinitions.CreateCredentialFromMain, { replace: true });
+    } else {
+      if (firstRender.current && total > 0) {
+        firstRender.current = false;
+      }
     }
   }, [
     selectedProjectId,
