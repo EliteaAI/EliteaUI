@@ -108,8 +108,12 @@ const NewConversationView = forwardRef(
       return InternalToolsConstants.getEnabledInternalToolNames(moduleSettingsData ?? {});
     });
     // #6285: moduleSettingsData loads async (unlike the old redux-backed personalization), so
-    // apply it once it arrives instead of only at the lazy useState init above.
+    // apply it once it arrives instead of only at the lazy useState init above. Reset the guard
+    // on project switch so the new project's defaults aren't blocked by the previous one's.
     const moduleSettingsAppliedRef = useRef(false);
+    useEffect(() => {
+      moduleSettingsAppliedRef.current = false;
+    }, [selectedProjectId]);
     useEffect(() => {
       if (moduleSettingsData && !moduleSettingsAppliedRef.current) {
         moduleSettingsAppliedRef.current = true;

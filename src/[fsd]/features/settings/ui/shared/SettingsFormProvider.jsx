@@ -44,22 +44,30 @@ const SettingsFormProvider = memo(props => {
 
   const handleSubmit = useCallback(
     async (values, { setSubmitting, resetForm }) => {
-      try {
-        const payload = ProfileHelpers.deserializeProfileFormData(values);
-        const moduleSettingsPayload = ProfileHelpers.deserializeModuleSettingsFormData(values);
-        await Promise.all([
-          updateAuthor(payload).unwrap(),
-          selectedProjectId
-            ? updateModuleSettings({ projectId: selectedProjectId, ...moduleSettingsPayload }).unwrap()
-            : Promise.resolve(),
-        ]);
+      const payload = ProfileHelpers.deserializeProfileFormData(values);
+      const moduleSettingsPayload = ProfileHelpers.deserializeModuleSettingsFormData(values);
+
+      const [profileResult, moduleSettingsResult] = await Promise.allSettled([
+        updateAuthor(payload).unwrap(),
+        selectedProjectId
+          ? updateModuleSettings({ projectId: selectedProjectId, ...moduleSettingsPayload }).unwrap()
+          : Promise.resolve(),
+      ]);
+
+      // #6285: the two settings groups save independently, so report which one failed
+      // instead of a generic message when only one of them errors out.
+      const failedParts = [
+        profileResult.status === 'rejected' && 'profile settings',
+        moduleSettingsResult.status === 'rejected' && 'module settings',
+      ].filter(Boolean);
+
+      if (failedParts.length) {
+        toastError(`Failed to save ${failedParts.join(' and ')}`);
+      } else {
         resetForm({ values });
         toastSuccess('Settings saved successfully');
-      } catch {
-        toastError('Failed to save settings');
-      } finally {
-        setSubmitting(false);
       }
+      setSubmitting(false);
     },
     [updateAuthor, updateModuleSettings, selectedProjectId, toastSuccess, toastError],
   );
