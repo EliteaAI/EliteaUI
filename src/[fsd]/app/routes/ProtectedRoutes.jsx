@@ -206,6 +206,8 @@ const ProtectedRoutes = memo(() => {
       { path: RouteDefinitions.ApplicationsWithTab, element: <Applications /> },
       { path: RouteDefinitions.ApplicationsDetail, element: <EditApplication /> },
       { path: RouteDefinitions.ApplicationsEvaluate, element: <AgentEvaluatePage /> },
+      { path: RouteDefinitions.ApplicationsEvaluateNewSuite, element: <AgentEvaluatePage /> },
+      { path: RouteDefinitions.ApplicationsEvaluateSuite, element: <AgentEvaluatePage /> },
 
       /* skills — hidden for public projects */
       { path: RouteDefinitions.Skills, element: <SkillsGuard>{getIndexElement(SkillsTabs[0])}</SkillsGuard> },

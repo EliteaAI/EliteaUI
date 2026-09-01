@@ -1,6 +1,6 @@
 import { memo, useCallback, useMemo, useState } from 'react';
 
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import { Box } from '@mui/material';
 
@@ -13,6 +13,7 @@ import {
   useCreateEvalSuiteMutation,
   useDeleteEvalSuiteMutation,
   useEvalDatasetsQuery,
+  useEvalDimensionsQuery,
   useEvalSuiteQuery,
   useEvalSuitesQuery,
   useUpdateEvalSuiteMutation,
@@ -21,12 +22,23 @@ import { useListModelsQuery } from '@/api/configurations';
 import useNavBlocker from '@/hooks/useNavBlocker';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
+import RouteDefinitions from '@/routes';
 
 const AgentEvaluatePage = memo(() => {
-  const { agentId } = useParams();
+  const { agentId, tab, suiteId: suiteIdParam } = useParams();
+  const navigate = useNavigate();
   const projectId = useSelectedProjectId();
 
   const applicationId = useMemo(() => (agentId ? parseInt(agentId, 10) : null), [agentId]);
+
+  const isCreatingNew = suiteIdParam === 'new';
+  const editingSuiteId = useMemo(() => {
+    if (!suiteIdParam || suiteIdParam === 'new') return null;
+    const parsed = parseInt(suiteIdParam, 10);
+    return Number.isNaN(parsed) ? null : parsed;
+  }, [suiteIdParam]);
+
+  const isDetailView = isCreatingNew || editingSuiteId !== null;
 
   const { toastError, toastSuccess } = useToast();
 
@@ -36,6 +48,7 @@ const AgentEvaluatePage = memo(() => {
     { skip },
   );
   const { data: datasets = [] } = useEvalDatasetsQuery({ projectId, agentId: applicationId }, { skip });
+  const { data: dimensions = [] } = useEvalDimensionsQuery({ projectId, agentId: applicationId }, { skip });
   const { data: modelsData = { items: [] } } = useListModelsQuery(
     { projectId, include_shared: true, section: 'llm' },
     { skip: !projectId },
@@ -46,11 +59,7 @@ const AgentEvaluatePage = memo(() => {
   const [updateEvalSuite, { isLoading: isUpdating }] = useUpdateEvalSuiteMutation();
 
   const [suiteToDelete, setSuiteToDelete] = useState(null);
-  const [editingSuiteId, setEditingSuiteId] = useState(null);
-  const [isCreatingNew, setIsCreatingNew] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
-
-  const isDetailView = isCreatingNew || editingSuiteId !== null;
 
   const blockOptions = useMemo(
     () => ({
@@ -67,20 +76,25 @@ const AgentEvaluatePage = memo(() => {
 
   const datasetNamesById = useMemo(() => Object.fromEntries(datasets.map(d => [d.id, d.name])), [datasets]);
 
-  const handleNewSuite = useCallback(() => {
-    setIsCreatingNew(true);
-    setEditingSuiteId(null);
-  }, []);
+  const baseEvaluatePath = RouteDefinitions.ApplicationsEvaluate.replace(':tab', tab).replace(
+    ':agentId',
+    agentId,
+  );
 
-  const handleSelectSuite = useCallback(suite => {
-    setEditingSuiteId(suite.id);
-    setIsCreatingNew(false);
-  }, []);
+  const handleNewSuite = useCallback(() => {
+    navigate(`${baseEvaluatePath}/new`);
+  }, [navigate, baseEvaluatePath]);
+
+  const handleSelectSuite = useCallback(
+    suite => {
+      navigate(`${baseEvaluatePath}/${suite.id}`);
+    },
+    [navigate, baseEvaluatePath],
+  );
 
   const handleBack = useCallback(() => {
-    setEditingSuiteId(null);
-    setIsCreatingNew(false);
-  }, []);
+    navigate(baseEvaluatePath);
+  }, [navigate, baseEvaluatePath]);
 
   const handleDirtyChange = useCallback(dirty => {
     setIsDirty(dirty);
@@ -90,7 +104,7 @@ const AgentEvaluatePage = memo(() => {
     async formData => {
       try {
         if (isCreatingNew) {
-          await createEvalSuite({
+          const created = await createEvalSuite({
             projectId,
             body: {
               application_id: applicationId,
@@ -100,8 +114,7 @@ const AgentEvaluatePage = memo(() => {
             },
           }).unwrap();
           toastSuccess('Suite created.');
-          setIsCreatingNew(false);
-          setEditingSuiteId(null);
+          navigate(`${baseEvaluatePath}/${created.id}`, { replace: true });
         } else if (editingSuiteId != null) {
           await updateEvalSuite({
             projectId,
@@ -127,6 +140,8 @@ const AgentEvaluatePage = memo(() => {
       updateEvalSuite,
       projectId,
       applicationId,
+      baseEvaluatePath,
+      navigate,
       toastSuccess,
       toastError,
     ],
@@ -147,20 +162,46 @@ const AgentEvaluatePage = memo(() => {
   const handleConfirmDelete = useCallback(async () => {
     if (!suiteToDelete) return;
     const suiteName = suiteToDelete.name;
+    const deletedId = suiteToDelete.id;
     try {
-      await deleteEvalSuite({ projectId, suiteId: suiteToDelete.id }).unwrap();
+      await deleteEvalSuite({ projectId, suiteId: deletedId }).unwrap();
       toastSuccess(`The ${suiteName} suite has been successfully deleted.`);
-      if (editingSuiteId === suiteToDelete.id) {
-        setEditingSuiteId(null);
+      if (editingSuiteId === deletedId) {
+        navigate(baseEvaluatePath, { replace: true });
       }
     } catch (error) {
       toastError(parseEvalError(error, 'Failed to delete suite.'));
     }
     setSuiteToDelete(null);
-  }, [deleteEvalSuite, projectId, suiteToDelete, editingSuiteId, toastError, toastSuccess]);
+  }, [
+    deleteEvalSuite,
+    projectId,
+    suiteToDelete,
+    editingSuiteId,
+    baseEvaluatePath,
+    navigate,
+    toastError,
+    toastSuccess,
+  ]);
 
   const handleOpenHistory = useCallback(() => {
     // TODO: wire up results history
+  }, []);
+
+  const handleManageDatasets = useCallback(() => {
+    // TODO: navigate to datasets management
+  }, []);
+
+  const handleCreateDataset = useCallback(() => {
+    // TODO: open create dataset dialog
+  }, []);
+
+  const handleManageDimensions = useCallback(() => {
+    // TODO: navigate to dimensions management
+  }, []);
+
+  const handleCreateDimension = useCallback(() => {
+    // TODO: open create dimension dialog
   }, []);
 
   const styles = agentEvaluatePageStyles();
@@ -176,12 +217,18 @@ const AgentEvaluatePage = memo(() => {
             suite={suiteDetail}
             isNew={isCreatingNew}
             modelsData={modelsData}
+            datasets={datasets}
+            dimensions={dimensions}
             isSaving={isCreating || isUpdating}
             onBack={handleBack}
             onSave={handleSave}
             onDelete={handleDeleteSuite}
             onEvaluate={handleEvaluate}
             onDirtyChange={handleDirtyChange}
+            onManageDatasets={handleManageDatasets}
+            onCreateDataset={handleCreateDataset}
+            onManageDimensions={handleManageDimensions}
+            onCreateDimension={handleCreateDimension}
           />
         ) : (
           <SuitesPanel
@@ -211,8 +258,6 @@ const AgentEvaluatePage = memo(() => {
 });
 
 AgentEvaluatePage.displayName = 'AgentEvaluatePage';
-
-export default AgentEvaluatePage;
 
 /** @type {MuiSx} */
 const agentEvaluatePageStyles = () => ({
@@ -244,3 +289,5 @@ const agentEvaluatePageStyles = () => ({
     flexShrink: 0,
   }),
 });
+
+export default AgentEvaluatePage;

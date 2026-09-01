@@ -13,6 +13,11 @@ import DeleteIcon from '@/components/Icons/DeleteIcon';
 import InfoIcon from '@/components/Icons/InfoIcon';
 import SendIcon from '@/components/Icons/SendIcon';
 
+import DatasetSection from './DatasetSection';
+import DatasetSectionHeader from './DatasetSectionHeader';
+import DimensionSection from './DimensionSection';
+import DimensionSectionHeader from './DimensionSectionHeader';
+
 const AUTO_JUDGE_MODEL_ID = '__auto__';
 
 const JUDGE_MODEL_TOOLTIP =
@@ -23,6 +28,8 @@ const SuiteDetailPanel = memo(props => {
     suite,
     isNew,
     modelsData = { items: [] },
+    datasets = [],
+    dimensions = [],
     isSaving,
     onBack,
     onSave,
@@ -30,13 +37,16 @@ const SuiteDetailPanel = memo(props => {
     onDelete,
     onEvaluate,
     onDirtyChange,
+    onManageDatasets,
+    onCreateDataset,
+    onManageDimensions,
+    onCreateDimension,
   } = props;
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [judgeModel, setJudgeModel] = useState(null);
   const [showDiscardModal, setShowDiscardModal] = useState(false);
-  const [showLeaveModal, setShowLeaveModal] = useState(false);
 
   useEffect(() => {
     if (isNew) {
@@ -130,26 +140,13 @@ const SuiteDetailPanel = memo(props => {
     onDirtyChange?.(isDirty);
   }, [isDirty, onDirtyChange]);
 
-  const handleBackClick = useCallback(() => {
-    if (isDirty) {
-      setShowLeaveModal(true);
-    } else {
-      onBack?.();
-    }
-  }, [isDirty, onBack]);
-
-  const handleLeaveConfirm = useCallback(() => {
-    setShowLeaveModal(false);
-    onBack?.();
-  }, [onBack]);
-
   const handleDelete = useCallback(() => {
     onDelete?.(suite);
   }, [onDelete, suite]);
 
   const isSaveDisabled = !name.trim() || isSaving || !isDirty;
   const isEvaluateDisabled = isNew || !suite?.id;
-  const title = isNew ? 'New suite' : (suite?.name ?? '');
+  const title = isNew ? 'New Suite' : (suite?.name ?? 'Suite');
 
   const styles = suiteDetailPanelStyles();
 
@@ -159,7 +156,7 @@ const SuiteDetailPanel = memo(props => {
         <Box sx={styles.headerLeft}>
           <Button.BaseBtn
             variant={BUTTON_VARIANTS.tertiary}
-            onClick={handleBackClick}
+            onClick={onBack}
             sx={styles.backButton}
             startIcon={<ArrowBackIcon />}
           />
@@ -205,6 +202,8 @@ const SuiteDetailPanel = memo(props => {
       <Box sx={styles.content}>
         <BasicAccordion
           showMode={AccordionConstants.AccordionShowMode.LeftMode}
+          style={styles.accordion}
+          summarySX={styles.accordionSummary}
           items={[
             {
               title: 'General',
@@ -256,6 +255,28 @@ const SuiteDetailPanel = memo(props => {
                 </Box>
               ),
             },
+            {
+              title: 'Dataset',
+              headerContent: <DatasetSectionHeader onManageDatasets={onManageDatasets} />,
+              content: (
+                <DatasetSection
+                  datasets={datasets}
+                  attachedDatasets={[]}
+                  onCreateDataset={onCreateDataset}
+                />
+              ),
+            },
+            {
+              title: 'Dimensions',
+              headerContent: <DimensionSectionHeader onManageDimensions={onManageDimensions} />,
+              content: (
+                <DimensionSection
+                  dimensions={dimensions}
+                  attachedDimensions={[]}
+                  onCreateDimension={onCreateDimension}
+                />
+              ),
+            },
           ]}
         />
       </Box>
@@ -283,21 +304,6 @@ const SuiteDetailPanel = memo(props => {
         confirmButtonText="Discard"
         alarm
       />
-      <Modal.BaseModal
-        open={showLeaveModal}
-        variant={ModalConstants.MODAL_VARIANT.simple}
-        titleIcon={ModalConstants.MODAL_ICON_TYPE.warning}
-        title="Warning"
-        content={
-          <Typography variant="bodyMedium">
-            There are unsaved changes. Are you sure you want to leave?
-          </Typography>
-        }
-        onClose={() => setShowLeaveModal(false)}
-        onConfirm={handleLeaveConfirm}
-        cancelButtonText="Cancel"
-        confirmButtonText="Leave"
-      />
     </Box>
   );
 });
@@ -312,6 +318,18 @@ const suiteDetailPanelStyles = () => ({
     flex: 1,
     minWidth: 0,
     overflow: 'hidden',
+  },
+  accordion: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1.5rem',
+  },
+  accordionSummary: {
+    '& .MuiAccordionSummary-content': {
+      display: 'flex',
+      alignItems: 'center',
+      width: '100%',
+    },
   },
   header: ({ palette }) => ({
     display: 'flex',
@@ -330,11 +348,6 @@ const suiteDetailPanelStyles = () => ({
     gap: '0.5rem',
     minWidth: 0,
   },
-  headerRight: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-  },
   backButton: ({ palette }) => ({
     padding: '0.25rem',
     '&:hover svg path': {
@@ -348,6 +361,11 @@ const suiteDetailPanelStyles = () => ({
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
   }),
+  headerRight: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+  },
   headerButton: {
     height: '1.75rem',
     fontSize: '0.8125rem',
