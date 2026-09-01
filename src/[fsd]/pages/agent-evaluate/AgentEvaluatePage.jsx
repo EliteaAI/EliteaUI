@@ -67,7 +67,7 @@ const AgentEvaluatePage = memo(() => {
     }),
     [isDetailView, isDirty],
   );
-  useNavBlocker(blockOptions);
+  const { setBlockNav } = useNavBlocker(blockOptions);
 
   const { data: suiteDetail } = useEvalSuiteQuery(
     { projectId, suiteId: editingSuiteId },
@@ -114,7 +114,10 @@ const AgentEvaluatePage = memo(() => {
             },
           }).unwrap();
           toastSuccess('Suite created.');
-          navigate(`${baseEvaluatePath}/${created.id}`, { replace: true });
+          if (created?.id != null) {
+            setBlockNav(false);
+            navigate(`${baseEvaluatePath}/${created.id}`, { replace: true });
+          }
         } else if (editingSuiteId != null) {
           await updateEvalSuite({
             projectId,
@@ -125,6 +128,7 @@ const AgentEvaluatePage = memo(() => {
               judge_model: formData.judge_model,
             },
           }).unwrap();
+          setBlockNav(false);
           toastSuccess('Suite saved.');
         }
       } catch (error) {
@@ -142,6 +146,7 @@ const AgentEvaluatePage = memo(() => {
       applicationId,
       baseEvaluatePath,
       navigate,
+      setBlockNav,
       toastSuccess,
       toastError,
     ],
@@ -167,6 +172,7 @@ const AgentEvaluatePage = memo(() => {
       await deleteEvalSuite({ projectId, suiteId: deletedId }).unwrap();
       toastSuccess(`The ${suiteName} suite has been successfully deleted.`);
       if (editingSuiteId === deletedId) {
+        setBlockNav(false);
         navigate(baseEvaluatePath, { replace: true });
       }
     } catch (error) {
@@ -180,6 +186,7 @@ const AgentEvaluatePage = memo(() => {
     editingSuiteId,
     baseEvaluatePath,
     navigate,
+    setBlockNav,
     toastError,
     toastSuccess,
   ]);

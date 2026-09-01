@@ -3,7 +3,7 @@ import { memo, useCallback, useState } from 'react';
 import { Box, Menu, MenuItem, Typography } from '@mui/material';
 
 import { Button } from '@/[fsd]/shared/ui';
-import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import { BUTTON_COLORS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import PlusIcon from '@/components/Icons/PlusIcon';
 
 const DatasetSection = memo(props => {
@@ -49,7 +49,6 @@ const DatasetSection = memo(props => {
       )}
 
       <Button.BaseBtn
-        variant={BUTTON_VARIANTS.outlined}
         color={BUTTON_COLORS.secondary}
         startIcon={<PlusIcon />}
         onClick={handleOpenMenu}
@@ -139,7 +138,7 @@ const datasetSectionStyles = () => ({
     backgroundColor: palette.background.secondary,
     border: `0.0625rem solid ${palette.border.lines}`,
     borderRadius: '0.5rem',
-    boxShadow: palette.shadows?.menu,
+    boxShadow: palette.boxShadow.default,
     '>ul': {
       padding: '.25rem 0',
     },
@@ -160,7 +159,7 @@ const datasetSectionStyles = () => ({
     ':after': {
       content: "''",
       position: 'absolute',
-      height: '1px',
+      height: '0.0625rem',
       width: '100%',
       backgroundColor: palette.border.lines,
       bottom: '-.25rem',

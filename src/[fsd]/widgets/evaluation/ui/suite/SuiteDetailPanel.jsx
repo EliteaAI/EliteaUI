@@ -18,6 +18,7 @@ import DatasetSectionHeader from './DatasetSectionHeader';
 import DimensionSection from './DimensionSection';
 import DimensionSectionHeader from './DimensionSectionHeader';
 
+const EMPTY_ARRAY = [];
 const AUTO_JUDGE_MODEL_ID = '__auto__';
 
 const JUDGE_MODEL_TOOLTIP =
@@ -261,7 +262,7 @@ const SuiteDetailPanel = memo(props => {
               content: (
                 <DatasetSection
                   datasets={datasets}
-                  attachedDatasets={[]}
+                  attachedDatasets={EMPTY_ARRAY}
                   onCreateDataset={onCreateDataset}
                 />
               ),
@@ -272,7 +273,7 @@ const SuiteDetailPanel = memo(props => {
               content: (
                 <DimensionSection
                   dimensions={dimensions}
-                  attachedDimensions={[]}
+                  attachedDimensions={EMPTY_ARRAY}
                   onCreateDimension={onCreateDimension}
                 />
               ),
