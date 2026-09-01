@@ -11,9 +11,9 @@ import { useDeleteEvalDatasetMutation, useEvalDatasetsQuery } from '../../api';
 import { EVAL_PERMISSIONS, NEW_DATASET_MENU } from '../../lib/constants';
 import { isDatasetSharedIn, parseEvalError } from '../../lib/helpers';
 import DatasetDetailView from './DatasetDetailView';
-import DatasetFormDialog from './DatasetFormDialog';
 import DatasetImportDialog from './DatasetImportDialog';
 import DatasetList from './DatasetList';
+import DatasetModal from './DatasetModal';
 import PromoteConversationsDialog from './PromoteConversationsDialog';
 
 const DatasetsView = memo(props => {
@@ -162,7 +162,7 @@ const DatasetsView = memo(props => {
         />
       )}
 
-      <DatasetFormDialog
+      <DatasetModal
         open={formDialog.open}
         projectId={projectId}
         applicationId={applicationId}

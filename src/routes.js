@@ -12,6 +12,7 @@ const RouteDefinitions = {
   ApplicationsDetail: '/agents/:tab/:agentId',
   ApplicationsEvaluate: '/agents/:tab/:agentId/evaluate',
   ApplicationsEvaluateSuite: '/agents/:tab/:agentId/evaluate/:suiteId',
+  ApplicationsEvaluateDatasets: '/agents/:tab/:agentId/evaluate/datasets',
 
   Skills: '/skills',
   SkillsWithTab: '/skills/:tab',

@@ -6,12 +6,14 @@ import { Box } from '@mui/material';
 
 import { BreadcrumbsOrTitle, Modal } from '@/[fsd]/shared/ui';
 import {
+  DatasetModal,
   ResultsPanel,
   SuiteDetailPanel,
   SuitesPanel,
   parseEvalError,
   useCreateEvalSuiteMutation,
   useDeleteEvalSuiteMutation,
+  useEvalDatasetQuery,
   useEvalDatasetsQuery,
   useEvalDimensionsQuery,
   useEvalSuiteQuery,
@@ -60,6 +62,7 @@ const AgentEvaluatePage = memo(() => {
 
   const [suiteToDelete, setSuiteToDelete] = useState(null);
   const [isDirty, setIsDirty] = useState(false);
+  const [showDatasetDialog, setShowDatasetDialog] = useState(false);
 
   const blockOptions = useMemo(
     () => ({
@@ -69,10 +72,18 @@ const AgentEvaluatePage = memo(() => {
   );
   const { setBlockNav } = useNavBlocker(blockOptions);
 
-  const { data: suiteDetail } = useEvalSuiteQuery(
+  const { data: suiteDetail, isLoading: isSuiteLoading } = useEvalSuiteQuery(
     { projectId, suiteId: editingSuiteId },
     { skip: !projectId || editingSuiteId == null },
   );
+
+  const activeSuiteDetail = isCreatingNew ? null : suiteDetail;
+  const attachedDatasetId = activeSuiteDetail?.dataset_id ?? null;
+  const { data: fetchedDatasetDetails } = useEvalDatasetQuery(
+    { projectId, datasetId: attachedDatasetId },
+    { skip: !projectId || attachedDatasetId == null },
+  );
+  const attachedDatasetDetails = attachedDatasetId != null ? fetchedDatasetDetails : null;
 
   const datasetNamesById = useMemo(() => Object.fromEntries(datasets.map(d => [d.id, d.name])), [datasets]);
 
@@ -194,12 +205,91 @@ const AgentEvaluatePage = memo(() => {
   }, []);
 
   const handleManageDatasets = useCallback(() => {
-    // TODO: navigate to datasets management
-  }, []);
+    const datasetsPath = RouteDefinitions.ApplicationsEvaluateDatasets.replace(':tab', tab).replace(
+      ':agentId',
+      agentId,
+    );
+    navigate(datasetsPath);
+  }, [navigate, tab, agentId]);
 
   const handleCreateDataset = useCallback(() => {
-    // TODO: open create dataset dialog
+    setShowDatasetDialog(true);
   }, []);
+
+  const handleCloseDatasetDialog = useCallback(() => {
+    setShowDatasetDialog(false);
+  }, []);
+
+  const handleDatasetSaved = useCallback(
+    async dataset => {
+      if (!editingSuiteId || !dataset?.id) return;
+      try {
+        await updateEvalSuite({
+          projectId,
+          suiteId: editingSuiteId,
+          body: { dataset_id: dataset.id },
+        }).unwrap();
+        toastSuccess(`Dataset "${dataset.name}" has been created and attached to the suite.`);
+      } catch (error) {
+        toastError(parseEvalError(error, 'Dataset created but failed to attach to suite.'));
+      }
+    },
+    [editingSuiteId, projectId, updateEvalSuite, toastSuccess, toastError],
+  );
+
+  const handleAttachDataset = useCallback(
+    async dataset => {
+      if (!editingSuiteId) return;
+      try {
+        await updateEvalSuite({
+          projectId,
+          suiteId: editingSuiteId,
+          body: { dataset_id: dataset.id },
+        }).unwrap();
+        toastSuccess(`Dataset "${dataset.name}" has been attached to the suite.`);
+      } catch (error) {
+        toastError(parseEvalError(error, 'Failed to attach dataset to the suite.'));
+      }
+    },
+    [editingSuiteId, projectId, updateEvalSuite, toastSuccess, toastError],
+  );
+
+  const handleRemoveDataset = useCallback(async () => {
+    if (!editingSuiteId) return;
+    try {
+      await updateEvalSuite({
+        projectId,
+        suiteId: editingSuiteId,
+        body: { dataset_id: null },
+      }).unwrap();
+      toastSuccess('Dataset has been removed from the suite.');
+    } catch (error) {
+      toastError(parseEvalError(error, 'Failed to remove dataset from the suite.'));
+    }
+  }, [editingSuiteId, projectId, updateEvalSuite, toastSuccess, toastError]);
+
+  const handleAddCase = useCallback(() => {
+    // TODO: open add case dialog
+  }, []);
+
+  const handleEditCase = useCallback(() => {
+    // TODO: open edit case dialog
+  }, []);
+
+  const handleDeleteCase = useCallback(() => {
+    // TODO: open delete case confirmation
+  }, []);
+
+  const handleOpenDataset = useCallback(
+    dataset => {
+      const datasetsPath = RouteDefinitions.ApplicationsEvaluateDatasets.replace(':tab', tab).replace(
+        ':agentId',
+        agentId,
+      );
+      navigate(`${datasetsPath}?datasetId=${dataset.id}`);
+    },
+    [navigate, tab, agentId],
+  );
 
   const handleManageDimensions = useCallback(() => {
     // TODO: navigate to dimensions management
@@ -221,8 +311,10 @@ const AgentEvaluatePage = memo(() => {
           <SuiteDetailPanel
             suite={suiteDetail}
             isNew={isCreatingNew}
+            isLoading={!isCreatingNew && isSuiteLoading}
             modelsData={modelsData}
             datasets={datasets}
+            attachedDataset={attachedDatasetDetails}
             dimensions={dimensions}
             isSaving={isCreating || isUpdating}
             onBack={handleBack}
@@ -232,6 +324,12 @@ const AgentEvaluatePage = memo(() => {
             onDirtyChange={handleDirtyChange}
             onManageDatasets={handleManageDatasets}
             onCreateDataset={handleCreateDataset}
+            onAttachDataset={handleAttachDataset}
+            onRemoveDataset={handleRemoveDataset}
+            onOpenDataset={handleOpenDataset}
+            onAddCase={handleAddCase}
+            onEditCase={handleEditCase}
+            onDeleteCase={handleDeleteCase}
             onManageDimensions={handleManageDimensions}
             onCreateDimension={handleCreateDimension}
           />
@@ -257,6 +355,14 @@ const AgentEvaluatePage = memo(() => {
         name={suiteToDelete?.name}
         shouldRequestInputName
         confirmButtonText="Delete"
+      />
+      <DatasetModal
+        open={showDatasetDialog}
+        onClose={handleCloseDatasetDialog}
+        projectId={projectId}
+        applicationId={applicationId}
+        dataset={null}
+        onSaved={handleDatasetSaved}
       />
     </Box>
   );

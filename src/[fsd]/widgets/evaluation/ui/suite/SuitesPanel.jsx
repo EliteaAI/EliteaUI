@@ -5,11 +5,17 @@ import { Box, CircularProgress, Typography } from '@mui/material';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { EvaluateIcon } from '@/[fsd]/shared/ui/icon';
+import useCheckPermission from '@/hooks/useCheckPermission';
 
+import { EVAL_PERMISSIONS } from '../../lib/constants';
 import SuiteCard from './SuiteCard';
 
 const SuitesPanel = memo(props => {
   const { suites = [], isLoading, datasetNamesById = {}, onNewSuite, onDeleteSuite, onSelectSuite } = props;
+
+  const { checkPermission } = useCheckPermission();
+  const canCreateSuite = checkPermission(EVAL_PERMISSIONS.suiteCreate);
+  const canDeleteSuite = checkPermission(EVAL_PERMISSIONS.suiteDelete);
 
   const sortedSuites = useMemo(() => {
     return [...suites].sort((a, b) => {
@@ -30,7 +36,7 @@ const SuitesPanel = memo(props => {
         >
           Suites
         </Typography>
-        {sortedSuites.length > 0 && (
+        {sortedSuites.length > 0 && canCreateSuite && (
           <Button.BaseBtn
             variant={BUTTON_VARIANTS.contained}
             color={BUTTON_COLORS.primary}
@@ -61,14 +67,16 @@ const SuitesPanel = memo(props => {
             >
               Create your first evaluation suite to assess your agent&apos;s performance.
             </Typography>
-            <Button.BaseBtn
-              variant={BUTTON_VARIANTS.contained}
-              color={BUTTON_COLORS.primary}
-              onClick={onNewSuite}
-              sx={styles.emptyButton}
-            >
-              New Suite
-            </Button.BaseBtn>
+            {canCreateSuite && (
+              <Button.BaseBtn
+                variant={BUTTON_VARIANTS.contained}
+                color={BUTTON_COLORS.primary}
+                onClick={onNewSuite}
+                sx={styles.emptyButton}
+              >
+                New Suite
+              </Button.BaseBtn>
+            )}
           </Box>
         ) : (
           <Box sx={styles.list}>
@@ -77,6 +85,7 @@ const SuitesPanel = memo(props => {
                 key={suite.id}
                 suite={suite}
                 datasetName={datasetNamesById[suite.dataset_id]}
+                canDelete={canDeleteSuite}
                 onDelete={onDeleteSuite}
                 onClick={() => onSelectSuite?.(suite)}
               />
