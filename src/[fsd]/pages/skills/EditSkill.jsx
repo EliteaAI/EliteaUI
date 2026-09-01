@@ -17,6 +17,7 @@ import SkillInformation from '@/[fsd]/features/skill/ui/SkillInformation';
 import { AIEditSkillButton } from '@/[fsd]/features/skill/ui/ai-edit-skill-modal';
 import CreateSkillForm from '@/[fsd]/features/skill/ui/skill-details/form/CreateSkillForm';
 import SkillTestPanel from '@/[fsd]/features/skill/ui/skill-test-panel/SkillTestPanel';
+import { BreadcrumbsOrTitle } from '@/[fsd]/shared/ui';
 import { SkillTabBar } from '@/[fsd]/widgets/skill-tab-bar';
 import { eliteaApi } from '@/api/eliteaApi';
 import { SkillsTabs, ViewMode } from '@/common/constants';
@@ -203,9 +204,9 @@ const EditSkill = memo(() => {
           panelStyle={styles.tabPanel}
           tabsSX={styles.tabContainer}
           leftTabbarSectionSX={styles.leftTabbarSection}
+          leftPart={<BreadcrumbsOrTitle title={data?.name || 'Edit Skill'} />}
           tabs={[
             {
-              label: data?.name || 'Skill',
               tabBarItems: isFetching ? null : (
                 <SkillTabBar
                   versions={data?.versions || []}

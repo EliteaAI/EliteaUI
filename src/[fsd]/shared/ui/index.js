@@ -17,7 +17,7 @@ export * as Label from './label';
 export * as Controls from './controls';
 export * as Select from './select';
 export { default as ScrollableContainer } from './scrollable-container';
-export { default as Breadcrumbs } from './breadcrumbs';
+export { default as Breadcrumbs, BreadcrumbsOrTitle } from './breadcrumbs';
 export * as Icon from './icon';
 export { default as Markdown } from './markdown';
 export { default as SoonLabel } from './soon-label';

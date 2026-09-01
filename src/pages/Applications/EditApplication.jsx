@@ -6,6 +6,7 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import { ApplicationTabBar } from '@/[fsd]/entities/application-tab-bar/ui';
 import { useIsVersionNotFound } from '@/[fsd]/entities/version/lib/hooks';
 import { InstructionsInputRefProvider } from '@/[fsd]/shared/lib/context';
+import { BreadcrumbsOrTitle } from '@/[fsd]/shared/ui';
 import { ApplicationControls } from '@/[fsd]/widgets/application-controls';
 import { ViewMode } from '@/common/constants';
 import { buildErrorMessage, isNotFoundError } from '@/common/utils';
@@ -29,7 +30,6 @@ const EditApplication = memo(() => {
   const { version } = useParams();
   const [searchParams] = useSearchParams();
   const isFromCreation = searchParams.get('isFromCreation') === 'true';
-
   const [dirty, setDirty] = useState(false);
   const [unsavedLLMSettings, setUnsavedLLMSettings] = useState();
 
@@ -74,7 +74,6 @@ const EditApplication = memo(() => {
   const tabs = useMemo(
     () => [
       {
-        label: initialValues?.name || 'Agent',
         tabBarItems: !isFetching ? (
           <ApplicationTabBar
             onSuccess={handleSuccess}
@@ -101,7 +100,6 @@ const EditApplication = memo(() => {
       },
     ],
     [
-      initialValues?.name,
       initialValues?.version_details?.tools?.length,
       isFetching,
       isError,
@@ -128,11 +126,11 @@ const EditApplication = memo(() => {
         <Form style={styles.form}>
           <StyledTabs
             fullWidth
-            forceShowLabel
             panelStyle={styles.tabPanel}
             containerStyle={styles.tabContainer}
             leftTabbarSectionSX={styles.leftTabbarSection}
             tabs={tabs}
+            leftPart={<BreadcrumbsOrTitle title={initialValues?.name || 'Edit Agent'} />}
           />
         </Form>
       </Formik>

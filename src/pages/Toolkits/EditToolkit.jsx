@@ -3,7 +3,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Form, Formik } from 'formik';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
-import { Box, Typography } from '@mui/material';
+import { Box } from '@mui/material';
 
 import { SHARED_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { useGetIndexesListQuery } from '@/[fsd]/features/toolkits/indexes/api';
@@ -14,12 +14,11 @@ import { shouldFetchIndexes } from '@/[fsd]/features/toolkits/indexes/lib/helper
 import { LegacyOpenApiMigration, ToolkitFormHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ToolkitsControls, ToolkitsTabBar } from '@/[fsd]/features/toolkits/ui';
-import { useEliteATheme, useHasBreadcrumbTrail } from '@/[fsd]/shared/lib/hooks';
-import Breadcrumbs from '@/[fsd]/shared/ui/breadcrumbs';
+import { useEliteATheme } from '@/[fsd]/shared/lib/hooks';
+import { BreadcrumbsOrTitle } from '@/[fsd]/shared/ui';
 import { useToolkitsDetailsQuery } from '@/api/toolkits.js';
 import { SearchParams } from '@/common/constants.js';
 import { buildErrorMessage, isNotFoundError } from '@/common/utils.jsx';
-import BackButton from '@/components/BackButton';
 import ConfirmRedirectModal from '@/components/ConfirmRedirectModal';
 import GearIcon from '@/components/Icons/GearIcon.jsx';
 import StyledTabs from '@/components/StyledTabs.jsx';
@@ -49,7 +48,6 @@ const EditToolkit = memo(props => {
   const [updateConfigKey, setUpdateConfigKey] = useState(1);
   const [hasValidationErrors, setHasValidationErrors] = useState(false);
   const { resolvedMode } = useEliteATheme();
-  const hasBreadcrumbTrail = useHasBreadcrumbTrail();
   const iframeRef = useRef(null);
   const onClearDiscardErrorsRef = useRef();
   const [iframeKey, setIframeKey] = useState(0);
@@ -393,22 +391,10 @@ const EditToolkit = memo(props => {
           panelStyle={styles.panelStyle}
           containerStyle={styles.containerStyle}
           leftPart={
-            <Box sx={styles.leftPart}>
-              {hasBreadcrumbTrail ? (
-                <Breadcrumbs />
-              ) : (
-                <>
-                  <BackButton />
-                  <Typography
-                    variant="headingSmall"
-                    color="text.secondary"
-                    data-testid="toolkit-detail-title"
-                  >
-                    {publicToolkitData?.name || 'Edit Toolkit'}
-                  </Typography>
-                </>
-              )}
-            </Box>
+            <BreadcrumbsOrTitle
+              title={publicToolkitData?.name || 'Edit Toolkit'}
+              testId="toolkit-detail-title"
+            />
           }
           tabsSX={styles.tabsSX}
           tabs={tabs}
@@ -446,11 +432,6 @@ const editToolkitStyles = isMCP => ({
     '& .MuiTab-root.Mui-selected': {
       display: isMCP ? 'none' : undefined,
     },
-  },
-  leftPart: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.75rem',
   },
   tabsSX: {
     display: 'none',
