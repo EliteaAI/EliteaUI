@@ -4,6 +4,7 @@ import { Box, Checkbox, FormControlLabel, Typography } from '@mui/material';
 
 import { Button, Input, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 
 import { useCreateEvalDatasetMutation, useUpdateEvalDatasetMutation } from '../../api';
 import { DEFAULT_DATASET_FORM } from '../../lib/constants';
@@ -111,7 +112,17 @@ const DatasetModal = memo(props => {
               data-testid="dataset-shared-checkbox"
             />
           }
-          label="Allow this dataset to be used by all agents in this project."
+          label={
+            <Box sx={styles.checkboxLabelContent}>
+              <Typography
+                component="span"
+                sx={styles.checkboxLabelText}
+              >
+                Available across the project
+              </Typography>
+              <InfoTooltip infoTooltip="Allow this dataset to be used by all agents in this project." />
+            </Box>
+          }
           sx={styles.checkboxLabel}
         />
       </Box>
@@ -177,9 +188,14 @@ const datasetModalStyles = () => ({
   },
   checkboxLabel: {
     marginLeft: '-0.25rem',
-    '& .MuiFormControlLabel-label': {
-      fontSize: '0.875rem',
-    },
+  },
+  checkboxLabelContent: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.25rem',
+  },
+  checkboxLabelText: {
+    fontSize: '0.875rem',
   },
   error: ({ palette }) => ({
     color: palette.error.main,

@@ -77,7 +77,8 @@ const AgentEvaluatePage = memo(() => {
     { skip: !projectId || editingSuiteId == null },
   );
 
-  const attachedDatasetId = suiteDetail?.dataset_id ?? null;
+  const activeSuiteDetail = isCreatingNew ? null : suiteDetail;
+  const attachedDatasetId = activeSuiteDetail?.dataset_id ?? null;
   const { data: fetchedDatasetDetails } = useEvalDatasetQuery(
     { projectId, datasetId: attachedDatasetId },
     { skip: !projectId || attachedDatasetId == null },
