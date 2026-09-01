@@ -1,97 +1,97 @@
-// const white14 = 'rgba(255, 255, 255, 0.14)';
+// const white14 = '#ffffff24';
 // const veryLightBlue = '#C7EBFF';
 const white = '#FFFFFF';
-const blueFill08 = 'rgba(41, 184, 245, 0.08)';
-const skyBlue20 = ' rgba(80, 161, 255, 0.2)';
-const skyBlue40 = ' rgba(80, 161, 255, 0.4)';
-const grey003 = 'rgba(65, 71, 87, 0.03)';
-const grey007 = 'rgba(65, 71, 87, 0.07)';
+const blueFill08 = '#29b8f514';
+const skyBlue20 = ' #50a1ff33';
+const skyBlue40 = ' #50a1ff66';
+const grey003 = '#41475708';
+const grey007 = '#41475712';
 const light00 = '#5B5E69';
 const gray60 = '#0E131D';
-const darkMagenta16 = 'rgba(245, 81, 249, 0.16)';
-const darkMagenta24 = 'rgba(245, 81, 249, 0.24)';
+const darkMagenta16 = '#f551f929';
+const darkMagenta24 = '#f551f93d';
 const grey500 = '#ABB3B9';
 const dangerRed = '#D71616';
 const hoverRed = '#E74444';
 const pressedRed = '#C51111';
-const red8 = 'rgba(215, 22, 22, 0.08)';
-const red15 = 'rgba(215, 22, 22, 0.15)';
-const red40 = 'rgba(215, 22, 22, 0.4)';
-const red = 'rgba(215, 22, 22, 1)';
+const red8 = '#d7161614';
+const red15 = '#d7161626';
+const red40 = '#d7161666';
+const red = '#d71616';
 const orange = '#F2994A';
-const orange8 = 'rgba(233, 121, 18, 0.08)';
-const orange40 = 'rgba(233, 121, 18, 0.4)';
+const orange8 = '#e9791214';
+const orange40 = '#e9791266';
 
 const warning = '#E97912';
 const warningStatusText = '#D37015';
-const warning8 = 'rgba(233, 121, 18, 0.08)';
-const warning40 = 'rgba(233, 121, 18, 0.4)';
+const warning8 = '#e9791214';
+const warning40 = '#e9791266';
 
 const warningOrange = '#ED6C02';
 const warningYellow = '#FFC124';
-const orangeFill5 = 'rgba(233, 121, 18, 0.05)';
-const orangeOutline40 = 'rgba(233, 121, 18, 0.4)';
-const green40 = 'rgba(43, 212, 141, 0.40)';
-const green20 = 'rgba(43, 212, 141, 0.20)';
-const green8 = 'rgba(43, 212, 141, 0.08)';
+const orangeFill5 = '#e979120d';
+const orangeOutline40 = '#e9791266';
+const green40 = '#2bd48d66';
+const green20 = '#2bd48d33';
+const green8 = '#2bd48d14';
 const green = '#2AB37A';
 const greenDefaultBtn = '#108D22';
 const greenHoverBtn = '#15A42A';
-const magenta = 'rgba(244, 124, 255, 1)';
-const magenta24 = 'rgba(244, 124, 255, 0.24)';
-const magentaDefault = 'rgba(196, 40, 221, 1)';
-const magentaHover = 'rgba(244, 124, 255, 1)';
+const magenta = '#f47cff';
+const magenta24 = '#f47cff3d';
+const magentaDefault = '#c428dd';
+const magentaHover = '#f47cff';
 const magentaDisabled = '#CB93D4';
-const darkMagenta30 = 'rgba(245, 81, 249, 0.3)';
-const darkMagenta20 = 'rgba(245, 81, 249, 0.2)';
-const darkMagenta10 = 'rgba(245, 81, 249, 0.1)';
+const darkMagenta30 = '#f551f94d';
+const darkMagenta20 = '#f551f933';
+const darkMagenta10 = '#f551f91a';
 const gradient = 'linear-gradient(270deg, #EBF1F8 0%, #FFF9FF 100%)';
 const white01 = '#fafafa';
 const light10 = '#777A83';
-const light20 = 'rgba(173, 175, 183, 1)';
-const light30 = 'rgba(203, 206, 214, 1)';
-const light40 = 'rgba(225, 229, 233, 1)';
+const light20 = '#adafb7';
+const light30 = '#cbced6';
+const light40 = '#e1e5e9';
 const light53 = '#F4F5F5';
 const lightStepBorder = '#bdbdbd';
-const dark20 = 'rgba(61, 68, 86, 0.2)';
-const dark10 = 'rgba(61, 68, 86, 0.1)';
-const dark5 = 'rgba(61, 68, 86, 0.05)';
-const dark6 = 'rgba(61, 68, 86, 0.06)'; // conversation hover light
-const dark8 = 'rgba(61, 68, 86, 0.08)';
+const dark20 = '#3d445633';
+const dark10 = '#3d44561a';
+const dark5 = '#3d44560d';
+const dark6 = '#3d44560f'; // conversation hover light
+const dark8 = '#3d445614';
 
-// const dark8 = 'rgba(61, 68, 86, 0.08)'; // general hover fallback
-const blue8 = 'rgba(106, 232, 250, 0.08)';
-const blueFill8 = 'rgba(41, 184, 245, 0.08)';
-const blue12 = 'rgba(99, 144, 254, 0.12)'; // conversation selected light
+// const dark8 = '#3d445614'; // general hover fallback
+const blue8 = '#6ae8fa14';
+const blueFill8 = '#29b8f514';
+const blue12 = '#6390fe1f'; // conversation selected light
 const gray30 = '#3B3E46';
-const white15 = 'rgba(255, 255, 255, 0.15)';
-const lightGrey = 'rgba(217, 217, 217, 1)';
-export const blue01 = 'rgba(248, 252, 255, 1)';
-const blue02 = 'rgba(110, 177, 255, 1)';
-const blue03 = 'rgba(99, 144, 254, 1)';
-
+const white15 = '#ffffff26';
+const lightGrey = '#d9d9d9';
+export const blue01 = '#f8fcff';
+const blue02 = '#6eb1ff';
+const blue03 = '#6390fe';
+const blue04 = '#93b2ff';
 const blue = '#29B8F5';
-
 const darkBlue = '#006DD1';
-const darkBlueLowOpacity = 'rgba(0, 109, 209, 0.4)';
-const darkBlue70 = 'rgba(0, 109, 209, 0.7)';
+const darkBlueLowOpacity = '#006dd166';
+const darkBlue70 = '#006dd1b3';
 const completedBlue = '#036ED033';
 const hoverBlue = '#2783D8';
 const almostWhite = '#FAFAFA';
-const magenta08 = 'rgba(196, 40, 221, 0.08)';
-const semiTransparentBlack = 'rgba(255, 255, 255, 0.5)';
+const magenta08 = '#c428dd14';
+const dark15 = '#3d445626';
+const semiTransparentBlack = '#ffffff80';
 
-const purpleLight = 'rgba(245, 81, 249, 1)';
-const purpleDark = 'rgba(254, 180, 255, 1)';
-const purpleShadow = 'rgba(241, 43, 255, 0.2)';
+const purpleLight = '#f551f9';
+const purpleDark = '#feb4ff';
+const purpleShadow = '#f12bff33';
 const lightPurpleBgr = '#F0EDF7';
 const lightOrangeBgr = '#FFF1E4';
 const lightPurple = '#A48EE3';
 const lightOrange = '#FFB380';
 const yellow = '#FEBD17';
-const greenOutline40 = 'rgba(42, 179, 122, 0.4)';
+const greenOutline40 = '#2ab37a66';
 
-const lightPalette = {
+const oldLightPalette = {
   mode: 'light',
   primary: {
     main: magentaDefault,
@@ -139,63 +139,63 @@ const lightPalette = {
     warning40,
     warning8,
     codeMirrorEditor: almostWhite,
+    dark10,
+    dark15,
+    dark20,
     card: {
       default: white,
       hover: white,
-      gradientDark: 'linear-gradient(180deg, #FFFFFF 0%, rgba(255, 255, 255, 0) 100%)',
-      hoverBorderGradient: 'linear-gradient(0deg, #F7AEFF 0%, #F37DFF 100%)',
-      hoverShadow: '0px -3px 0.9375rem 0px rgba(225, 56, 255, 0.3)',
+      gradientDark: 'linear-gradient(180deg, #FFFFFF 0%, #ffffff00 100%)',
+      hoverBorderGradient: 'linear-gradient(0deg, #f7aeff 0%, #F37DFF 100%)',
+      hoverShadow: '0px -3px 0.9375rem 0px #e138ff4d',
     },
     interactiveTourPrompt: {
       backdrop: 'rgba(59, 62, 70, 0.5)',
       card: 'linear-gradient(180deg, #EFF8FF 0%, #BAD1FF 100%)',
       borderGradient: 'linear-gradient(186.77deg, #5194FF 5.31%, #A6DAFF 94.69%)',
-      dividerGradient:
-        'linear-gradient(90deg, rgba(246, 142, 255, 0) 0%, #8DACFF 49.7%, rgba(246, 142, 255, 0) 100%)',
-      counter: 'rgba(92, 130, 191, 1)',
+      dividerGradient: 'linear-gradient(90deg, #f68eff00 0%, #8DACFF 49.7%, #f68eff00 100%)',
+      counter: '#5c82bf',
     },
     resourceCard: {
       blue: {
-        card: 'linear-gradient(0deg, rgba(214, 235, 255, 0.4) 0%, #D6EBFF 100%)',
-        icon: 'linear-gradient(45.36deg, rgba(0, 148, 255, 0.3) 16.25%, rgba(0, 148, 255, 0.09) 87.07%)',
+        card: 'linear-gradient(0deg, #d6ebff66 0%, #D6EBFF 100%)',
+        icon: 'linear-gradient(45.36deg, #0094ff4d 16.25%, #0094ff17 87.07%)',
         iconColor: '#0094FF',
-        iconBorderGradient: 'linear-gradient(180deg, rgba(0, 148, 255, 0) 0%, rgba(0, 148, 255, 0.4) 100%)',
-        divider: 'rgba(0, 148, 255, 0.15)',
-        borderGradient: 'linear-gradient(180deg, rgba(0, 148, 255, 0.2) 0%, rgba(0, 148, 255, 0) 100%)',
+        iconBorderGradient: 'linear-gradient(180deg, #0094ff00 0%, #0094ff66 100%)',
+        divider: '#0094ff26',
+        borderGradient: 'linear-gradient(180deg, #0094ff33 0%, #0094ff00 100%)',
       },
       orange: {
-        card: 'linear-gradient(180deg, rgba(255, 207, 141, 0.3) 0%, rgba(255, 207, 141, 0.12) 100%)',
-        icon: 'linear-gradient(45.36deg, rgba(245, 173, 73, 0.3) 16.25%, rgba(245, 173, 73, 0.09) 87.07%)',
+        card: 'linear-gradient(180deg, #ffcf8d4d 0%, #ffcf8d1f 100%)',
+        icon: 'linear-gradient(45.36deg, #f5ad494d 16.25%, #f5ad4917 87.07%)',
         iconColor: '#F5AD49',
-        iconBorderGradient: 'linear-gradient(180deg, rgba(245, 173, 73, 0) 0%, rgba(245, 173, 73, 0.4) 100%)',
-        divider: 'rgba(245, 173, 73, 0.15)',
-        borderGradient: 'linear-gradient(180deg, rgba(245, 173, 73, 0.2) 0%, rgba(245, 173, 73, 0) 100%)',
+        iconBorderGradient: 'linear-gradient(180deg, #f5ad4900 0%, #f5ad4966 100%)',
+        divider: '#f5ad4926',
+        borderGradient: 'linear-gradient(180deg, #f5ad4933 0%, #f5ad4900 100%)',
       },
       purple: {
-        card: 'linear-gradient(180deg, #F0E7FF 0%, rgba(240, 231, 255, 0.4) 100%)',
-        icon: 'linear-gradient(45.36deg, rgba(164, 115, 255, 0.3) 16.25%, rgba(164, 115, 255, 0.09) 87.07%)',
+        card: 'linear-gradient(180deg, #F0E7FF 0%, #f0e7ff66 100%)',
+        icon: 'linear-gradient(45.36deg, #a473ff4d 16.25%, #a473ff17 87.07%)',
         iconColor: '#A473FF',
-        iconBorderGradient:
-          'linear-gradient(180deg, rgba(164, 115, 255, 0) 0%, rgba(164, 115, 255, 0.4) 100%)',
-        divider: 'rgba(164, 115, 255, 0.15)',
-        borderGradient: 'linear-gradient(180deg, rgba(164, 115, 255, 0.2) 0%, rgba(164, 115, 255, 0) 100%)',
+        iconBorderGradient: 'linear-gradient(180deg, #a473ff00 0%, #a473ff66 100%)',
+        divider: '#a473ff26',
+        borderGradient: 'linear-gradient(180deg, #a473ff33 0%, #a473ff00 100%)',
       },
       green: {
-        card: 'linear-gradient(0deg, rgba(211, 251, 219, 0.4) 0%, #D3FBDB 100%)',
-        icon: 'linear-gradient(45.36deg, rgba(75, 186, 136, 0.3) 16.25%, rgba(75, 186, 136, 0.09) 87.07%)',
+        card: 'linear-gradient(0deg, #d3fbdb66 0%, #d3fbdb 100%)',
+        icon: 'linear-gradient(45.36deg, #4bba884d 16.25%, #4bba8817 87.07%)',
         iconColor: '#4BBA88',
-        iconBorderGradient: 'linear-gradient(180deg, rgba(75, 186, 136, 0) 0%, rgba(75, 186, 136, 0.4) 100%)',
-        divider: 'rgba(75, 186, 136, 0.15)',
-        borderGradient: 'linear-gradient(180deg, rgba(75, 186, 136, 0.2) 0%, rgba(75, 186, 136, 0) 100%)',
+        iconBorderGradient: 'linear-gradient(180deg, #4bba8800 0%, #4bba8866 100%)',
+        divider: '#4bba8826',
+        borderGradient: 'linear-gradient(180deg, #4bba8833 0%, #4bba8800 100%)',
       },
       pink: {
-        card: 'linear-gradient(180deg, #FFE8F1 0%, rgba(255, 232, 241, 0.4) 100%)',
-        icon: 'linear-gradient(45.36deg, rgba(255, 115, 176, 0.3) 16.25%, rgba(255, 115, 176, 0.09) 87.07%)',
+        card: 'linear-gradient(180deg, #FFE8F1 0%, #ffe8f166 100%)',
+        icon: 'linear-gradient(45.36deg, #ff73b04d 16.25%, #ff73b017 87.07%)',
         iconColor: '#FF73B0',
-        iconBorderGradient:
-          'linear-gradient(180deg, rgba(255, 115, 176, 0) 0%, rgba(255, 115, 176, 0.4) 100%)',
-        divider: 'rgba(255, 115, 176, 0.15)',
-        borderGradient: 'linear-gradient(180deg, rgba(255, 115, 176, 0.2) 0%, rgba(255, 115, 176, 0) 100%)',
+        iconBorderGradient: 'linear-gradient(180deg, #ff73b000 0%, #ff73b066 100%)',
+        divider: '#ff73b026',
+        borderGradient: 'linear-gradient(180deg, #ff73b033 0%, #ff73b000 100%)',
       },
     },
     categoriesButton: {
@@ -221,10 +221,8 @@ const lightPalette = {
       default: dark10,
       trophy: '#48433F',
       checkedBox: light10,
-      entityGradient:
-        'linear-gradient(45.36deg, rgba(119, 122, 124, 0.3) 16.25%, rgba(226, 226, 226, 0.3) 87.07%)',
-      entityBorderGradient:
-        'linear-gradient(225deg, rgba(59, 66, 70, 0.1) 12.64%, rgba(59, 66, 70, 0.35) 87.88%)',
+      entityGradient: 'linear-gradient(45.36deg, #777a7c4d 16.25%, #e2e2e24d 87.07%)',
+      entityBorderGradient: 'linear-gradient(225deg, #3b42461a 12.64%, #3b424659 87.88%)',
     },
     select: {
       hover: dark10,
@@ -324,15 +322,15 @@ const lightPalette = {
     },
     aiAnswerBkg: white,
     aiParticipantIcon: skyBlue20,
-    aiAnswerActions: 'linear-gradient(270deg, #FFFFFF 82.5%, rgba(255, 255, 255, 0) 100%)',
-    userMessageActions: 'linear-gradient(270deg, #EFF3FA 85.36%, rgba(236, 241, 249, 0) 100%)',
+    aiAnswerActions: 'linear-gradient(270deg, #FFFFFF 82.5%, #ffffff00 100%)',
+    userMessageActions: 'linear-gradient(270deg, #EFF3FA 85.36%, #ecf1f900 100%)',
     conversationStarters: {
       default: skyBlue20,
       hover: skyBlue40,
     },
     conversationEditor: light40,
-    conversationTopCover: 'linear-gradient(360deg, rgba(255, 255, 255, 0) 0%, #FFFFFF 100%)',
-    conversationBottomCover: 'linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, #FFFFFF 100%)',
+    conversationTopCover: 'linear-gradient(360deg, #ffffff00 0%, #FFFFFF 100%)',
+    conversationBottomCover: 'linear-gradient(180deg, #ffffff00 0%, #FFFFFF 100%)',
     avatar: lightGrey,
     categoryHeader: blue01,
     tag: {
@@ -366,7 +364,7 @@ const lightPalette = {
     },
     showContextDialog: gradient,
     sideBar: 'linear-gradient(180deg, #E4F0FF 0%, #FDEAFF 100%);',
-    imageAttachment: `linear-gradient(0deg, #FFFFFF 0%, rgba(255, 255, 255, 0) 100%)`,
+    imageAttachment: `linear-gradient(0deg, #FFFFFF 0%, #ffffff00 100%)`,
     agentModal: {
       border: 'linear-gradient(224.66deg, #8BC9FF 0%, #FDA3FF 99.46%)',
       background: 'linear-gradient(224.97deg, #DEEDFF 0%, #F9DFFE 100%)',
@@ -383,17 +381,16 @@ const lightPalette = {
       loginSuccess: green8,
       logout: orange8,
     },
-    onboarding:
-      'linear-gradient(247.51deg, rgba(161, 197, 255, 0.6) 0.02%, rgba(161, 197, 255, 0.12) 50.21%, rgba(161, 214, 255, 0.6) 99.64%)',
+    onboarding: 'linear-gradient(247.51deg, #a1c5ff99 0.02%, #a1c5ff1f 50.21%, #a1d6ff99 99.64%)',
     welcome: {
-      outside: 'linear-gradient(42.04deg, rgba(97, 237, 233, 0.4) 8.85%, rgba(251, 66, 255, 0.4) 89.62%)',
-      inner: 'linear-gradient(63.16deg, rgba(41, 169, 165, 0.14) 16.12%, rgba(231, 47, 235, 0.14) 85.3%)',
+      outside: 'linear-gradient(42.04deg, #61ede966 8.85%, #fb42ff66 89.62%)',
+      inner: 'linear-gradient(63.16deg, #29a9a524 16.12%, #e72feb24 85.3%)',
     },
     banner: {
-      default: 'linear-gradient(30deg, rgba(255, 214, 193, 1) 8.85%, rgba(229, 215, 255, 1) 89.62%)',
-      border: 'linear-gradient(42.04deg, rgba(246, 172, 102, 1) 8.85%, rgba(215, 128, 255, 1) 89.62%)',
+      default: 'linear-gradient(30deg, #ffd6c1 8.85%, #e5d7ff 89.62%)',
+      border: 'linear-gradient(42.04deg, #f6ac66 8.85%, #d780ff 89.62%)',
     },
-    settingsPage: 'linear-gradient(270deg, #EBF1F8 0%, #FFF9FF 100%)',
+    settingsPage: gradient,
     chatContinueBackground: dark10,
     aiProviderAccordion: {
       default: grey003,
@@ -411,11 +408,11 @@ const lightPalette = {
       info: blueFill8,
     },
     folder: {
-      default: 'rgba(255, 255, 255, 0.6)',
-      active: 'rgba(99, 144, 254, 0.1)',
+      default: '#ffffff99',
+      active: '#6390fe1a',
       borderHover: blue03,
       borderActive: blue03,
-      shadow: '0 0.125rem 0.25rem rgba(0, 0, 0, 0.12)',
+      shadow: '0 0.125rem 0.25rem #0000001f',
     },
   },
   border: {
@@ -431,8 +428,9 @@ const lightPalette = {
     userMessageEditor: magentaDefault,
     notificationItem: light40,
     cardsOutlines: light40,
-    cardsOutlinesGradient: 'linear-gradient(0deg, rgba(208, 213, 218, 0.6) 0%, #D0D5DA 100%)',
+    cardsOutlinesGradient: 'linear-gradient(0deg, #d0d5da99 0%, #D0D5DA 100%)',
     toolCardGradient: light40,
+    blue04,
     conversationItemDivider: dark10,
     highlightUserMessage: skyBlue40,
     error: red40,
@@ -444,7 +442,7 @@ const lightPalette = {
       logout: orange40,
     },
     chatContinue: darkMagenta30,
-    aiProviderAccordion: 'linear-gradient(0deg, rgba(65, 71, 87, 0) 0%, rgba(65, 71, 87, 0.08) 100%)',
+    aiProviderAccordion: 'linear-gradient(0deg, #41475700 0%, #41475714 100%)',
     reindexInfoContainer: yellow,
     indexResult: {
       success: greenOutline40,
@@ -454,17 +452,18 @@ const lightPalette = {
     },
   },
   boxShadow: {
-    default: `0px 2px 10px 0px rgba(100, 119, 136, 0.2)`,
-    tagEditorPaper: '0px 2px 10px 0px rgba(100, 119, 136, 0.2)',
-    tag: '0px 2px 4px 0px rgba(0, 0, 0, 0.06)',
+    default: `0px 2px 10px 0px #64778833`,
+    tagEditorPaper: '0px 2px 10px 0px #64778833',
+    tag: '0px 2px 4px 0px #0000000f',
     onboarding: `0rem 3.975rem 4.2625rem -3.8125rem ${skyBlue20}`,
-    aiAnswer: '0px 2px 7px 0px rgba(0, 0, 0, 0.12)',
+    aiAnswer: '0px 2px 7px 0px #0000001f',
   },
   text: {
     default: light10,
     primary: light10,
     secondary: gray60,
     tooltip: white,
+
     groupedTitle: {
       default: light10,
     },
@@ -547,7 +546,7 @@ const lightPalette = {
       magicAssistant: magenta,
       error: dangerRed,
       delete: white,
-      stateButton: '#777A83',
+      stateButton: light10,
       stateButtonHover: light00,
       button: white,
     },
@@ -573,10 +572,8 @@ const lightPalette = {
   },
   radio: { default: light10, hover: { off: gray60 }, active: gray60, disabled: light20 },
   aiAssistant: {
-    iconBackground:
-      'linear-gradient(222.04deg, rgba(104, 177, 255, 0.38) 10.38%, rgba(253, 161, 255, 0.38) 91.15%)',
-    iconBorder:
-      'linear-gradient(222.04deg, rgba(41, 155, 255, 0.128) 10.38%, rgba(251, 55, 255, 0.64) 91.15%)',
+    iconBackground: 'linear-gradient(222.04deg, #68b1ff61 10.38%, #fda1ff61 91.15%)',
+    iconBorder: 'linear-gradient(222.04deg, #299bff21 10.38%, #fb37ffa3 91.15%)',
     iconGradientStart: '#F534FF',
     iconGradientEnd: '#5CA0FE',
   },
@@ -633,8 +630,8 @@ const lightPalette = {
     thumbHover: light10,
   },
   diff: {
-    removed: 'rgba(215, 22, 22, 0.3)',
-    added: 'rgba(42, 179, 122, 0.3)',
+    removed: '#d716164d',
+    added: '#2ab37a4d',
   },
   capability: {
     vision: {
@@ -656,6 +653,62 @@ const lightPalette = {
       default: light00,
       hover: gray60,
     },
+  },
+};
+
+// Color variables for customizable themes
+const lightColorScheme = {
+  // NPS Card accents
+  accentLight: '#f7d9ff',
+  accentMid: '#d5e3fe',
+  accentDark: '#93b2ff',
+
+  // Button states
+  accentDefault: '#c428dd',
+  accentHover: '#c428ddd9',
+  accentPressed: '#c428ddb3',
+  accentDisabled: '#c428dd66',
+  outlineDefault: '#3d44561a',
+  outlineHover: '#3d445626',
+  outlinePressed: '#3d445633',
+
+  // Text
+  textWhite: '#FFFFFF',
+  textLight: '#777A83',
+  textDarker: '#0E131D',
+};
+
+const lightPalette = {
+  ...oldLightPalette,
+  background: {
+    ...oldLightPalette.background,
+    npsCard: `linear-gradient(to top, ${lightColorScheme.accentLight}, ${lightColorScheme.accentMid})`,
+    button: {
+      ...oldLightPalette.background.button,
+      npsCard: {
+        primary: {
+          default: lightColorScheme.accentDefault,
+          hover: lightColorScheme.accentHover,
+          pressed: lightColorScheme.accentPressed,
+          disabled: lightColorScheme.accentDisabled,
+        },
+        secondary: {
+          default: lightColorScheme.outlineDefault,
+          hover: lightColorScheme.outlineHover,
+          pressed: lightColorScheme.outlinePressed,
+        },
+      },
+    },
+  },
+  border: {
+    ...oldLightPalette.border,
+    npsCard: lightColorScheme.accentDark,
+  },
+  text: {
+    ...oldLightPalette.text,
+    white: lightColorScheme.textWhite,
+    light: lightColorScheme.textLight,
+    darker: lightColorScheme.textDarker,
   },
 };
 
