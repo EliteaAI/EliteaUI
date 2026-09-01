@@ -291,7 +291,7 @@ const RunStateDialog = memo(props => {
                 />
               </Stepper>
               {data.status === FlowEditorConstants.PipelineStatus.Error && !!data.error && (
-                <Box sx={styles.runError}>
+                <Box sx={[styles.runError, data.continuationError && styles.continuationRunError]}>
                   {data.continuationError ? (
                     <ContinuationError
                       compact
@@ -503,6 +503,9 @@ const runStateDialogStyles = (editorWidth, editorHeight) => ({
     padding: '0 1.5rem 0.75rem 1.5rem',
     maxHeight: '7rem',
     overflow: 'auto',
+  },
+  continuationRunError: {
+    maxHeight: 'none',
   },
   runErrorText: ({ palette }) => ({
     color: palette.status.rejected,

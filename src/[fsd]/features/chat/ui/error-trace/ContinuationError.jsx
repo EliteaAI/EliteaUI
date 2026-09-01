@@ -96,6 +96,7 @@ const ContinuationError = memo(props => {
 
 ContinuationError.displayName = 'ContinuationError';
 
+/** @type {MuiSx} */
 const continuationErrorStyles = compact => ({
   title: {
     fontWeight: 600,
