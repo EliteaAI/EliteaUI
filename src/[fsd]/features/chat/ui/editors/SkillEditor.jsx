@@ -25,7 +25,7 @@ const buildInitialValues = data => ({
 });
 
 const SkillEditor = memo(props => {
-  const { skill, onCloseSkillEditor, isVisible } = props;
+  const { skill, onCloseSkillEditor, isVisible, onDirtyStateChange, disableNavBlocking = false } = props;
   const projectId = useSelectedProjectId();
   const skillId = skill?.entity_meta?.id;
   const versionId = skill?.entity_settings?.version_id;
@@ -43,6 +43,8 @@ const SkillEditor = memo(props => {
       isVisible={isVisible}
       isDirty={isDirty}
       setIsDirty={setIsDirty}
+      onDirtyStateChange={onDirtyStateChange}
+      disableNavBlocking={disableNavBlocking}
       onClose={onCloseSkillEditor}
       title={skill?.name || skill?.meta?.name || 'Skill'}
       initialValues={initialValues}

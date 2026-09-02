@@ -36,7 +36,15 @@ const getToolkitNameFromType = (label, isMCP) => {
     }
   }
 };
-const ToolkitEditor = ({ toolkit, onCloseToolkitEditor, onToolkitCreated, onToolkitUpdated, isVisible }) => {
+const ToolkitEditor = ({
+  toolkit,
+  onCloseToolkitEditor,
+  onToolkitCreated,
+  onToolkitUpdated,
+  isVisible,
+  onDirtyStateChange,
+  disableNavBlocking = false,
+}) => {
   const trackEvent = useTrackEvent();
 
   const [isDirty, setIsDirty] = useState(false);
@@ -242,6 +250,8 @@ const ToolkitEditor = ({ toolkit, onCloseToolkitEditor, onToolkitCreated, onTool
       isVisible={isVisible}
       isDirty={isDirty}
       setIsDirty={setIsDirty}
+      onDirtyStateChange={onDirtyStateChange}
+      disableNavBlocking={disableNavBlocking}
       onClose={onCloseToolkitEditor}
       title={toolkitName}
       onDiscard={handleDiscard}
