@@ -3,7 +3,7 @@ import { memo, useCallback, useRef, useState } from 'react';
 import { Box, Menu, MenuItem, Typography } from '@mui/material';
 
 import { Button } from '@/[fsd]/shared/ui';
-import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import LoopToolIcon from '@/assets/loop_tool.svg?react';
 import ShareIcon from '@/assets/share-icon.svg?react';
 import CloseIcon from '@/components/Icons/CloseIcon';
@@ -12,6 +12,7 @@ import PlusIcon from '@/components/Icons/PlusIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
 
 import { EVAL_PERMISSIONS } from '../../lib/constants';
+import AddCaseMenu from './AddCaseMenu';
 import DatasetCasesList from './DatasetCasesList';
 
 const AttachedDatasetCard = memo(props => {
@@ -25,6 +26,8 @@ const AttachedDatasetCard = memo(props => {
     onAddCase,
     onEditCase,
     onDeleteCase,
+    onImportCases,
+    onPromoteCases,
   } = props;
 
   const { checkPermission } = useCheckPermission();
@@ -117,14 +120,11 @@ const AttachedDatasetCard = memo(props => {
           <>
             <Typography sx={styles.noCasesText}>No cases added yet.</Typography>
             {canUpdateDataset && (
-              <Button.BaseBtn
-                color={BUTTON_COLORS.secondary}
-                startIcon={<PlusIcon />}
-                onClick={onAddCase}
-                sx={styles.addCaseButton}
-              >
-                Case
-              </Button.BaseBtn>
+              <AddCaseMenu
+                onCreateManually={onAddCase}
+                onImportFile={onImportCases}
+                onFromChatsRuns={onPromoteCases}
+              />
             )}
           </>
         ) : (
@@ -134,6 +134,8 @@ const AttachedDatasetCard = memo(props => {
             onAddCase={onAddCase}
             onEditCase={onEditCase}
             onDeleteCase={onDeleteCase}
+            onImportCases={onImportCases}
+            onPromoteCases={onPromoteCases}
           />
         )}
       </Box>
@@ -304,27 +306,6 @@ const attachedDatasetCardStyles = () => ({
     marginTop: '0.5rem',
     marginBottom: '0.5rem',
   }),
-  addCaseButton: ({ palette }) => ({
-    alignSelf: 'flex-start',
-    padding: '0.375rem 0.75rem',
-    borderRadius: '1.25rem',
-    borderColor: palette.border.lines,
-    color: palette.text.secondary,
-    fontSize: '0.75rem',
-    lineHeight: '1rem',
-    fontWeight: 500,
-    '& .MuiButton-startIcon svg': {
-      width: '0.75rem',
-      height: '0.75rem',
-    },
-    '& svg path': {
-      fill: palette.text.secondary,
-    },
-    '&:hover': {
-      borderColor: palette.border.lines,
-      backgroundColor: palette.background.tabButton.default,
-    },
-  }),
   overflowButton: ({ palette }) => ({
     minWidth: 'unset',
     padding: '0.25rem',
@@ -341,7 +322,6 @@ const attachedDatasetCardStyles = () => ({
     backgroundColor: palette.background.secondary,
     border: `0.0625rem solid ${palette.border.lines}`,
     borderRadius: '0.5rem',
-    boxShadow: palette.boxShadow.default,
     '>ul': {
       padding: '0.25rem 0',
     },
@@ -382,7 +362,6 @@ const attachedDatasetCardStyles = () => ({
     backgroundColor: palette.background.secondary,
     border: `0.0625rem solid ${palette.border.lines}`,
     borderRadius: '0.5rem',
-    boxShadow: palette.boxShadow.default,
     '>ul': {
       padding: '.25rem 0',
     },

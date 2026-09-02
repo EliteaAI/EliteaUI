@@ -2,17 +2,23 @@ import { memo, useCallback, useState } from 'react';
 
 import { Box, Collapse, Typography } from '@mui/material';
 
-import { Button } from '@/[fsd]/shared/ui';
-import { BUTTON_COLORS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import ArrowDownIcon from '@/components/Icons/ArrowDownIcon';
-import PlusIcon from '@/components/Icons/PlusIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
 
 import { EVAL_PERMISSIONS } from '../../lib/constants';
+import AddCaseMenu from './AddCaseMenu';
 import DatasetCaseItem from './DatasetCaseItem';
 
 const DatasetCasesList = memo(props => {
-  const { cases = [], caseCount = 0, onAddCase, onEditCase, onDeleteCase } = props;
+  const {
+    cases = [],
+    caseCount = 0,
+    onAddCase,
+    onEditCase,
+    onDeleteCase,
+    onImportCases,
+    onPromoteCases,
+  } = props;
 
   const { checkPermission } = useCheckPermission();
   const canUpdateDataset = checkPermission(EVAL_PERMISSIONS.datasetUpdate);
@@ -47,14 +53,13 @@ const DatasetCasesList = memo(props => {
           ))}
         </Box>
         {canUpdateDataset && (
-          <Button.BaseBtn
-            color={BUTTON_COLORS.secondary}
-            startIcon={<PlusIcon />}
-            onClick={onAddCase}
-            sx={styles.addButton}
-          >
-            Case
-          </Button.BaseBtn>
+          <Box sx={styles.addButtonWrapper}>
+            <AddCaseMenu
+              onCreateManually={onAddCase}
+              onImportFile={onImportCases}
+              onFromChatsRuns={onPromoteCases}
+            />
+          </Box>
         )}
       </Collapse>
     </Box>
@@ -98,29 +103,9 @@ const datasetCasesListStyles = () => ({
     marginTop: '0.5rem',
     borderTop: `0.0625rem solid ${palette.border.lines}`,
   }),
-  addButton: ({ palette }) => ({
-    alignSelf: 'flex-start',
-    padding: '0.375rem 0.75rem',
-    borderRadius: '1.25rem',
-    borderColor: palette.border.lines,
-    color: palette.text.secondary,
-    fontSize: '0.75rem',
-    lineHeight: '1rem',
-    fontWeight: 500,
+  addButtonWrapper: {
     marginTop: '1rem',
-
-    '& .MuiButton-startIcon svg': {
-      width: '0.75rem',
-      height: '0.75rem',
-    },
-    '& svg path': {
-      fill: palette.text.secondary,
-    },
-    '&:hover': {
-      borderColor: palette.border.lines,
-      backgroundColor: palette.background.tabButton.default,
-    },
-  }),
+  },
 });
 
 export default DatasetCasesList;

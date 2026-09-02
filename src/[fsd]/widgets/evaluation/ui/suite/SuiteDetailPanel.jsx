@@ -50,6 +50,8 @@ const SuiteDetailPanel = memo(props => {
     onAddCase,
     onEditCase,
     onDeleteCase,
+    onImportCases,
+    onPromoteCases,
     onManageDimensions,
     onCreateDimension,
   } = props;
@@ -317,6 +319,8 @@ const SuiteDetailPanel = memo(props => {
                   onAddCase={onAddCase}
                   onEditCase={onEditCase}
                   onDeleteCase={onDeleteCase}
+                  onImportCases={onImportCases}
+                  onPromoteCases={onPromoteCases}
                 />
               ),
             },

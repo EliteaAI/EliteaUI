@@ -146,7 +146,6 @@ const dimensionSectionStyles = () => ({
     backgroundColor: palette.background.secondary,
     border: `0.0625rem solid ${palette.border.lines}`,
     borderRadius: '0.5rem',
-    boxShadow: palette.boxShadow.default,
     '>ul': {
       padding: '.25rem 0',
     },
