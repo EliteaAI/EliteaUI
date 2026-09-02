@@ -82,17 +82,22 @@ const AddCaseFromChatsModal = memo(props => {
   const handleAdd = useCallback(async () => {
     if (selectedIds.length === 0) return;
     setErrorMessage('');
-    try {
-      for (const conversationId of selectedIds) {
-        await promote({
+
+    const results = await Promise.allSettled(
+      selectedIds.map(conversationId =>
+        promote({
           projectId,
           datasetId,
           body: { conversation_id: conversationId, include_expected: true },
-        }).unwrap();
-      }
+        }).unwrap(),
+      ),
+    );
+
+    const failures = results.filter(r => r.status === 'rejected');
+    if (failures.length > 0) {
+      setErrorMessage(parseEvalError(failures[0].reason, 'Failed to add cases from conversation.'));
+    } else {
       onClose();
-    } catch (error) {
-      setErrorMessage(parseEvalError(error, 'Failed to add cases from conversation.'));
     }
   }, [selectedIds, promote, projectId, datasetId, onClose]);
 
@@ -235,6 +240,7 @@ const AddCaseFromChatsModal = memo(props => {
       onClose={onClose}
       content={content}
       footer={footer}
+      sx={styles.dialogPaper}
       dialogSx={styles.dialog}
       data-testid="add-case-from-chats-modal"
     />
@@ -245,8 +251,11 @@ AddCaseFromChatsModal.displayName = 'AddCaseFromChatsModal';
 
 /** @type {MuiSx} */
 const addCaseFromChatsModalStyles = () => ({
+  dialogPaper: {
+    width: '37.5rem',
+  },
   dialog: {
-    minHeight: '30.5rem',
+    minHeight: '32rem',
     display: 'flex',
     flexDirection: 'column',
   },

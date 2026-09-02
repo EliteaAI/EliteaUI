@@ -50,9 +50,10 @@ const AttachedDatasetCard = memo(props => {
   }, []);
 
   const handleOpenSelector = useCallback(() => {
-    const anchor = overflowAnchorRef.current;
     handleCloseOverflow();
-    setSelectorAnchor(anchor);
+    requestAnimationFrame(() => {
+      setSelectorAnchor(overflowAnchorRef.current);
+    });
   }, [handleCloseOverflow]);
 
   const handleCloseSelector = useCallback(() => {

@@ -249,7 +249,7 @@ const CreateCaseModal = memo(props => {
           data-testid="create-case-input"
           fullWidth
           multiline
-          minRows={4}
+          minRows={5}
           variant="outlined"
           placeholder=""
           value={form.input}
@@ -385,7 +385,7 @@ const CreateCaseModal = memo(props => {
             data-testid="create-case-expected-output"
             fullWidth
             multiline
-            minRows={4}
+            minRows={5}
             variant="outlined"
             placeholder=""
             value={form.expected_output}
@@ -440,6 +440,7 @@ const CreateCaseModal = memo(props => {
         onClose={onClose}
         content={content}
         actions={actions}
+        sx={styles.dialogPaper}
         dialogSx={styles.dialogContent}
         data-testid="create-case-modal"
       />
@@ -466,6 +467,9 @@ CreateCaseModal.displayName = 'CreateCaseModal';
 
 /** @type {MuiSx} */
 const createCaseModalStyles = () => ({
+  dialogPaper: {
+    width: '50rem',
+  },
   dialogContent: {
     minHeight: '32rem',
   },
@@ -473,8 +477,6 @@ const createCaseModalStyles = () => ({
     display: 'flex',
     flexDirection: 'column',
     gap: '1.5rem',
-    minWidth: '32rem',
-    maxWidth: '40rem',
   },
   fieldSection: {
     display: 'flex',
@@ -483,8 +485,8 @@ const createCaseModalStyles = () => ({
   },
   textareaField: {
     '& .MuiOutlinedInput-input.MuiInputBase-inputMultiline': {
-      maxHeight: '11.125rem',
-      minHeight: '5.5rem',
+      maxHeight: '7.5rem',
+      overflowY: 'auto',
     },
   },
   labelRow: {

@@ -21,6 +21,7 @@ const ImportCaseModal = memo(props => {
   const { open, onClose, projectId, datasetId } = props;
 
   const [file, setFile] = useState(null);
+  const [isReading, setIsReading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [report, setReport] = useState(null);
   const fileInputRef = useRef(null);
@@ -30,6 +31,7 @@ const ImportCaseModal = memo(props => {
   useEffect(() => {
     if (open) {
       setFile(null);
+      setIsReading(false);
       setErrorMessage('');
       setReport(null);
       if (fileInputRef.current) {
@@ -60,6 +62,7 @@ const ImportCaseModal = memo(props => {
 
   const handleImport = useCallback(async () => {
     if (!file) return;
+    setIsReading(true);
     setErrorMessage('');
 
     const reader = new FileReader();
@@ -73,6 +76,7 @@ const ImportCaseModal = memo(props => {
         }
       } catch {
         setErrorMessage('Invalid JSON file. Please check the file content and try again.');
+        setIsReading(false);
         return;
       }
 
@@ -83,9 +87,7 @@ const ImportCaseModal = memo(props => {
           body: { format, content },
         }).unwrap();
 
-        if (result.rejected && result.rejected > 0 && (!result.accepted || result.accepted === 0)) {
-          setReport(result);
-        } else if (result.rejected && result.rejected > 0) {
+        if (result.rejected > 0) {
           setReport(result);
         } else {
           onClose();
@@ -93,10 +95,12 @@ const ImportCaseModal = memo(props => {
       } catch (error) {
         setErrorMessage(parseEvalError(error, 'Failed to import cases.'));
       }
+      setIsReading(false);
     };
 
     reader.onerror = () => {
       setErrorMessage('Failed to read file. Please try again.');
+      setIsReading(false);
     };
 
     reader.readAsText(file);
@@ -197,7 +201,7 @@ const ImportCaseModal = memo(props => {
       <Button.BaseBtn
         variant={BUTTON_VARIANTS.elitea}
         color={BUTTON_COLORS.primary}
-        disabled={isImporting || !file}
+        disabled={isImporting || isReading || !file}
         onClick={handleImport}
         data-testid="import-case-submit"
       >
@@ -208,7 +212,8 @@ const ImportCaseModal = memo(props => {
 
   return (
     <>
-      <input
+      <Box
+        component="input"
         ref={fileInputRef}
         type="file"
         accept={ACCEPTED_EXTENSIONS}
