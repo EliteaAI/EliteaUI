@@ -535,7 +535,7 @@ const getStyles = (limitReached, isEditorFocused) => ({
   },
   textField: ({ palette }) => ({
     '& .MuiInputBase-root': {
-      padding: '0.5rem 0rem',
+      padding: '0.5rem 0',
     },
     '& .MuiOutlinedInput-root': {
       backgroundColor: palette.background.userInputBackground,
