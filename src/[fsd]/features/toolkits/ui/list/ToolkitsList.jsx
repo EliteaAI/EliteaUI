@@ -61,9 +61,8 @@ const ToolkitsList = memo(props => {
   }, [isMCP]);
 
   const { folders } = useEntityFolders(folderEntityType, { includeCounts: true, skip: !showFolders });
-  const { selectedFolderId, selectedFolder, isFolderViewActive, openFolder, closeFolder } = useFolderView(
-    showFolders ? folders : [],
-  );
+  const { selectedFolderId, selectedFolder, isFolderViewActive, openFolder, closeFolder, onFolderDelete } =
+    useFolderView(showFolders ? folders : []);
 
   const {
     idsQueryParam: folderEntityIds,
@@ -134,6 +133,7 @@ const ToolkitsList = memo(props => {
             onFolderSelect={openFolder}
             selectedFolderId={selectedFolderId}
             onExpandChange={handleExpandChange}
+            onFolderDelete={onFolderDelete}
           />
         )}
         <ToolkitTypesPanel
@@ -154,6 +154,7 @@ const ToolkitsList = memo(props => {
       isFolderViewActive,
       isFoldersExpanded,
       handleExpandChange,
+      onFolderDelete,
     ],
   );
 

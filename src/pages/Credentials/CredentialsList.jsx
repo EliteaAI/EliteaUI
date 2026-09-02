@@ -57,7 +57,7 @@ const CredentialsList = memo(props => {
   const styles = credentialsListStyles();
 
   const { folders } = useEntityFolders(ENTITY_FOLDER_TYPES.configuration, { includeCounts: true });
-  const { selectedFolderId, selectedFolder, isFolderViewActive, openFolder, closeFolder } =
+  const { selectedFolderId, selectedFolder, isFolderViewActive, openFolder, closeFolder, onFolderDelete } =
     useFolderView(folders);
 
   const {
@@ -121,6 +121,7 @@ const CredentialsList = memo(props => {
             onFolderSelect={openFolder}
             selectedFolderId={selectedFolderId}
             onExpandChange={handleExpandChange}
+            onFolderDelete={onFolderDelete}
           />
         )}
         <CredentialsTypesPanel
@@ -139,6 +140,7 @@ const CredentialsList = memo(props => {
       isFolderViewActive,
       isFoldersExpanded,
       handleExpandChange,
+      onFolderDelete,
     ],
   );
 

@@ -14,6 +14,7 @@ const RightInfoPanel = memo(props => {
     showFolders = false,
     onFolderSelect,
     selectedFolderId,
+    onFolderDelete,
   } = props;
 
   const [isFoldersExpanded, setIsFoldersExpanded] = useState(false);
@@ -32,6 +33,7 @@ const RightInfoPanel = memo(props => {
           onFolderSelect={onFolderSelect}
           selectedFolderId={selectedFolderId}
           onExpandChange={handleExpandChange}
+          onFolderDelete={onFolderDelete}
         />
       )}
       <Categories
