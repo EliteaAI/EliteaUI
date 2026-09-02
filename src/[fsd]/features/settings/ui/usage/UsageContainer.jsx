@@ -72,10 +72,11 @@ const UsageContainer = memo(() => {
   const membersPagination = usePagination({ totalRows: membersTotal, defaultPageSize: 10 });
   const { page: membersPage, pageSize: membersPageSize, handlePageChange } = membersPagination;
 
-  // A narrowed search usually has fewer pages than the one being viewed
+  // A narrowed search, or a switch to a project with fewer pages, can leave the current
+  // page past the new total -- usePagination then refuses to move and the table renders empty
   useEffect(() => {
     handlePageChange(0);
-  }, [debouncedMemberSearch, handlePageChange]);
+  }, [debouncedMemberSearch, projectId, handlePageChange]);
 
   const membersQueryArgs = useMemo(
     () => ({
@@ -111,6 +112,27 @@ const UsageContainer = memo(() => {
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState(false);
 
+  // The backend caps a single call at EXPORT_MEMBERS_LIMIT rows, so a project with more
+  // spenders than that needs several calls, accumulated until the reported total is covered
+  const fetchAllMemberRows = useCallback(async () => {
+    let offset = 0;
+    let total = Infinity;
+    const rows = [];
+    let warningPct;
+
+    while (rows.length < total) {
+      const page = await fetchAllMembers({ projectId, limit: EXPORT_MEMBERS_LIMIT, offset }).unwrap();
+      rows.push(...(page.rows || []));
+      total = page.total ?? rows.length;
+      warningPct = page.warning_pct ?? warningPct;
+      offset += EXPORT_MEMBERS_LIMIT;
+
+      if (!page.rows?.length) break;
+    }
+
+    return { rows, warning_pct: warningPct };
+  }, [fetchAllMembers, projectId]);
+
   const handleExport = useCallback(async () => {
     setExporting(true);
     setExportError(false);
@@ -124,9 +146,7 @@ const UsageContainer = memo(() => {
 
       // Fetched in full here, so neither the displayed page nor an active search
       // can narrow what ends up in the file
-      const exported = showsMembers
-        ? await fetchAllMembers({ projectId, limit: EXPORT_MEMBERS_LIMIT, offset: 0 }).unwrap()
-        : null;
+      const exported = showsMembers ? await fetchAllMemberRows() : null;
 
       await exportToExcel(
         UsageExportHelpers.usageExportFileName(args),
@@ -150,8 +170,7 @@ const UsageContainer = memo(() => {
     memberRows,
     membersWarningPct,
     showsMembers,
-    projectId,
-    fetchAllMembers,
+    fetchAllMemberRows,
   ]);
 
   const handleCloseExportError = useCallback(() => setExportError(false), []);
