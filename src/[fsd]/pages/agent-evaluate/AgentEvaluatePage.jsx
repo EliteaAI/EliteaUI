@@ -6,8 +6,10 @@ import { Box } from '@mui/material';
 
 import { BreadcrumbsOrTitle, Modal } from '@/[fsd]/shared/ui';
 import {
+  AddCaseFromChatsModal,
   CreateCaseModal,
   DatasetModal,
+  ImportCaseModal,
   ResultsPanel,
   SuiteDetailPanel,
   SuitesPanel,
@@ -67,6 +69,8 @@ const AgentEvaluatePage = memo(() => {
   const [isDirty, setIsDirty] = useState(false);
   const [showDatasetDialog, setShowDatasetDialog] = useState(false);
   const [showCaseModal, setShowCaseModal] = useState(false);
+  const [showChatsModal, setShowChatsModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
   const [caseToEdit, setCaseToEdit] = useState(null);
   const [caseToDelete, setCaseToDelete] = useState(null);
 
@@ -324,11 +328,19 @@ const AgentEvaluatePage = memo(() => {
   );
 
   const handleImportCases = useCallback(() => {
-    // TODO: open import cases dialog
+    setShowImportModal(true);
+  }, []);
+
+  const handleCloseImportModal = useCallback(() => {
+    setShowImportModal(false);
   }, []);
 
   const handlePromoteCases = useCallback(() => {
-    // TODO: open promote from chats & runs dialog
+    setShowChatsModal(true);
+  }, []);
+
+  const handleCloseChatsModal = useCallback(() => {
+    setShowChatsModal(false);
   }, []);
 
   const handleManageDimensions = useCallback(() => {
@@ -407,13 +419,28 @@ const AgentEvaluatePage = memo(() => {
         onSaved={handleDatasetSaved}
       />
       {attachedDatasetId && (
-        <CreateCaseModal
-          open={showCaseModal}
-          onClose={handleCloseCaseModal}
-          projectId={projectId}
-          datasetId={attachedDatasetId}
-          datasetCase={caseToEdit}
-        />
+        <>
+          <CreateCaseModal
+            open={showCaseModal}
+            onClose={handleCloseCaseModal}
+            projectId={projectId}
+            datasetId={attachedDatasetId}
+            datasetCase={caseToEdit}
+          />
+          <AddCaseFromChatsModal
+            open={showChatsModal}
+            onClose={handleCloseChatsModal}
+            projectId={projectId}
+            datasetId={attachedDatasetId}
+            applicationId={applicationId}
+          />
+          <ImportCaseModal
+            open={showImportModal}
+            onClose={handleCloseImportModal}
+            projectId={projectId}
+            datasetId={attachedDatasetId}
+          />
+        </>
       )}
       <Modal.DeleteEntityModal
         open={!!caseToDelete}
@@ -421,7 +448,7 @@ const AgentEvaluatePage = memo(() => {
         onConfirm={handleConfirmDeleteCase}
         title="Delete confirmation"
         textContent="Are you sure to delete the "
-        name={caseToDelete?.input?.slice(0, 50) || `Case ${caseToDelete?.id ?? ''}`}
+        name={caseToDelete?.input?.split('\n')[0].trim().slice(0, 50) || `Case ${caseToDelete?.id ?? ''}`}
         confirmButtonText="Delete"
       />
     </Box>

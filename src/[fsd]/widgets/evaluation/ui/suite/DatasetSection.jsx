@@ -1,6 +1,6 @@
 import { memo, useCallback, useState } from 'react';
 
-import { Box, Menu, MenuItem, Typography } from '@mui/material';
+import { Box, Menu, MenuItem, Tooltip, Typography } from '@mui/material';
 
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS } from '@/[fsd]/shared/ui/button/BaseBtn';
@@ -121,16 +121,25 @@ const DatasetSection = memo(props => {
             sx={styles.datasetMenuItem}
           >
             <Box sx={styles.datasetInfo}>
-              <Typography sx={styles.datasetName}>{dataset.name}</Typography>
+              <Box sx={styles.datasetNameRow}>
+                <Typography sx={styles.datasetName}>{dataset.name}</Typography>
+                {dataset.is_shared && (
+                  <Tooltip
+                    title="Shared across the project"
+                    enterDelay={2000}
+                    placement="top"
+                  >
+                    <Box
+                      component="span"
+                      sx={styles.shareIconWrapper}
+                    >
+                      <ShareIcon style={styles.shareIcon} />
+                    </Box>
+                  </Tooltip>
+                )}
+              </Box>
               <Box sx={styles.datasetMetaRow}>
                 <Typography sx={styles.datasetMeta}>{dataset.case_count ?? 0} cases</Typography>
-                {dataset.is_shared && (
-                  <>
-                    <Typography sx={styles.datasetMeta}>|</Typography>
-                    <ShareIcon style={styles.shareIcon} />
-                    <Typography sx={styles.datasetMeta}>Shared</Typography>
-                  </>
-                )}
                 {dataset.description && (
                   <>
                     <Typography sx={styles.datasetMeta}>|</Typography>
@@ -250,6 +259,12 @@ const datasetSectionStyles = () => ({
     minHeight: '2.625rem',
     overflow: 'hidden',
   },
+  datasetNameRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.375rem',
+    minWidth: 0,
+  },
   datasetName: ({ palette }) => ({
     fontSize: '0.875rem',
     fontWeight: 500,
@@ -257,6 +272,17 @@ const datasetSectionStyles = () => ({
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
+  }),
+  shareIconWrapper: ({ palette }) => ({
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+    width: '1.25rem',
+    height: '1.25rem',
+    borderRadius: '50%',
+    border: `0.0625rem solid ${palette.border.lines}`,
+    cursor: 'default',
   }),
   datasetMetaRow: {
     display: 'flex',
@@ -276,9 +302,8 @@ const datasetSectionStyles = () => ({
     whiteSpace: 'nowrap',
   }),
   shareIcon: {
-    width: '0.75rem',
-    height: '0.75rem',
-    flexShrink: 0,
+    width: '0.625rem',
+    height: '0.625rem',
   },
 });
 

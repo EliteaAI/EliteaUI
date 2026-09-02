@@ -1,6 +1,6 @@
 import { memo, useCallback, useRef, useState } from 'react';
 
-import { Box, Menu, MenuItem, Typography } from '@mui/material';
+import { Box, Menu, MenuItem, Tooltip, Typography } from '@mui/material';
 
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
@@ -98,10 +98,15 @@ const AttachedDatasetCard = memo(props => {
             {dataset.name}
           </Typography>
           {dataset.is_shared && (
-            <Box sx={styles.sharedBadge}>
-              <ShareIcon style={styles.shareIcon} />
-              <Typography sx={styles.sharedText}>Shared</Typography>
-            </Box>
+            <Tooltip
+              title="Shared across the project"
+              enterDelay={2000}
+              placement="top"
+            >
+              <Box sx={styles.sharedBadge}>
+                <ShareIcon style={styles.shareIcon} />
+              </Box>
+            </Tooltip>
           )}
         </Box>
         {canUpdateSuite && (
@@ -199,16 +204,25 @@ const AttachedDatasetCard = memo(props => {
             sx={styles.datasetMenuItem}
           >
             <Box sx={styles.datasetInfo}>
-              <Typography sx={styles.datasetName}>{ds.name}</Typography>
+              <Box sx={styles.datasetNameRow}>
+                <Typography sx={styles.datasetName}>{ds.name}</Typography>
+                {ds.is_shared && (
+                  <Tooltip
+                    title="Shared across the project"
+                    enterDelay={2000}
+                    placement="top"
+                  >
+                    <Box
+                      component="span"
+                      sx={styles.shareIconWrapper}
+                    >
+                      <ShareIcon style={styles.shareIconSmall} />
+                    </Box>
+                  </Tooltip>
+                )}
+              </Box>
               <Box sx={styles.datasetMetaRow}>
                 <Typography sx={styles.datasetMeta}>{ds.case_count ?? 0} cases</Typography>
-                {ds.is_shared && (
-                  <>
-                    <Typography sx={styles.datasetMeta}>|</Typography>
-                    <ShareIcon style={styles.shareIcon} />
-                    <Typography sx={styles.datasetMeta}>Shared</Typography>
-                  </>
-                )}
                 {ds.description && (
                   <>
                     <Typography sx={styles.datasetMeta}>|</Typography>
@@ -277,21 +291,21 @@ const attachedDatasetCardStyles = () => ({
       textDecoration: 'underline',
     },
   }),
-  sharedBadge: {
-    display: 'flex',
+  sharedBadge: ({ palette }) => ({
+    display: 'inline-flex',
     alignItems: 'center',
-    gap: '0.25rem',
+    justifyContent: 'center',
     flexShrink: 0,
-  },
-  shareIcon: {
-    width: '0.75rem',
-    height: '0.75rem',
-    flexShrink: 0,
-  },
-  sharedText: ({ palette }) => ({
-    fontSize: '0.75rem',
-    color: palette.text.primary,
+    width: '1.25rem',
+    height: '1.25rem',
+    borderRadius: '50%',
+    border: `0.0625rem solid ${palette.border.lines}`,
+    cursor: 'default',
   }),
+  shareIcon: {
+    width: '0.625rem',
+    height: '0.625rem',
+  },
   content: {
     display: 'flex',
     flexDirection: 'column',
@@ -422,6 +436,12 @@ const attachedDatasetCardStyles = () => ({
     minHeight: '2.625rem',
     overflow: 'hidden',
   },
+  datasetNameRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.375rem',
+    minWidth: 0,
+  },
   datasetName: ({ palette }) => ({
     fontSize: '0.875rem',
     fontWeight: 500,
@@ -430,6 +450,21 @@ const attachedDatasetCardStyles = () => ({
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
   }),
+  shareIconWrapper: ({ palette }) => ({
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+    width: '1.25rem',
+    height: '1.25rem',
+    borderRadius: '50%',
+    border: `0.0625rem solid ${palette.border.lines}`,
+    cursor: 'default',
+  }),
+  shareIconSmall: {
+    width: '0.625rem',
+    height: '0.625rem',
+  },
   datasetMetaRow: {
     display: 'flex',
     alignItems: 'center',
