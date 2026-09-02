@@ -18,13 +18,21 @@ export const usageApi = eliteaApi
         keepUnusedDataFor: CACHE_LIFETIME,
       }),
       usageMembers: build.query({
-        query: ({ projectId }) => ({
+        query: ({ projectId, limit = 10, offset = 0, search, sortBy = 'spend', sortOrder = 'desc' }) => ({
           url: `/elitea_core/user_budgets/prompt_lib/${projectId}`,
           method: 'GET',
+          params: {
+            limit,
+            offset,
+            sort_by: sortBy,
+            sort_order: sortOrder,
+            ...(search ? { search } : {}),
+          },
         }),
+        providesTags: [TAG_TYPE_USAGE],
         keepUnusedDataFor: CACHE_LIFETIME,
       }),
     }),
   });
 
-export const { useProjectUsageQuery, useUsageMembersQuery } = usageApi;
+export const { useProjectUsageQuery, useUsageMembersQuery, useLazyUsageMembersQuery } = usageApi;
