@@ -233,7 +233,7 @@ export const evaluationApi = eliteaApi
           method: 'POST',
           body,
         }),
-        invalidatesTags: [TAG_EVAL_DATASET, TAG_EVAL_DATASET_CASE],
+        invalidatesTags: (result, error) => (error ? [] : [TAG_EVAL_DATASET, TAG_EVAL_DATASET_CASE]),
       }),
       updateEvalDatasetCase: build.mutation({
         query: ({ projectId, datasetId, caseId, body }) => ({
@@ -241,14 +241,14 @@ export const evaluationApi = eliteaApi
           method: 'PUT',
           body,
         }),
-        invalidatesTags: [TAG_EVAL_DATASET, TAG_EVAL_DATASET_CASE],
+        invalidatesTags: (result, error) => (error ? [] : [TAG_EVAL_DATASET, TAG_EVAL_DATASET_CASE]),
       }),
       deleteEvalDatasetCase: build.mutation({
         query: ({ projectId, datasetId, caseId }) => ({
           url: `/elitea_core/eval_dataset_case/prompt_lib/${projectId}/${datasetId}/${caseId}`,
           method: 'DELETE',
         }),
-        invalidatesTags: [TAG_EVAL_DATASET, TAG_EVAL_DATASET_CASE],
+        invalidatesTags: (result, error) => (error ? [] : [TAG_EVAL_DATASET, TAG_EVAL_DATASET_CASE]),
       }),
       importEvalDataset: build.mutation({
         query: ({ projectId, datasetId, body }) => ({
