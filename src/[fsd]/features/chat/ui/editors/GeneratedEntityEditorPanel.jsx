@@ -79,7 +79,10 @@ const GeneratedEntityEditorPanel = memo(props => {
       <Box sx={styles.editorsContainer}>
         {tabs.map((tab, idx) => {
           const isActive = activeIndex === idx;
-          const handleClose = () => onCloseTab?.(tab.entity_id);
+          const handleClose = () => {
+            handleTabDirtyStateChange(tab.entity_id, false);
+            onCloseTab?.(tab.entity_id);
+          };
           const onDirtyChange = isDirty => handleTabDirtyStateChange(tab.entity_id, isDirty);
           return (
             <Box
