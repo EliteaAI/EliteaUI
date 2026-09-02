@@ -68,15 +68,11 @@ const UsageContainer = memo(() => {
   const [memberSearch, setMemberSearch] = useState('');
   const debouncedMemberSearch = useDebounceValue(memberSearch, SEARCH_DEBOUNCE_MS);
 
+  // Adjusted during render (not in an effect) when a fresh total arrives, so usePagination
+  // never computes a page's totalPages/labels off a stale total for even one paint
   const [membersTotal, setMembersTotal] = useState(0);
   const membersPagination = usePagination({ totalRows: membersTotal, defaultPageSize: 10 });
-  const { page: membersPage, pageSize: membersPageSize, handlePageChange } = membersPagination;
-
-  // A narrowed search, or a switch to a project with fewer pages, can leave the current
-  // page past the new total -- usePagination then refuses to move and the table renders empty
-  useEffect(() => {
-    handlePageChange(0);
-  }, [debouncedMemberSearch, projectId, handlePageChange]);
+  const { page: membersPage, pageSize: membersPageSize, resetPagination } = membersPagination;
 
   const membersQueryArgs = useMemo(
     () => ({
@@ -95,15 +91,22 @@ const UsageContainer = memo(() => {
     refetch: refetchMembers,
   } = useUsageMembersQuery(membersQueryArgs, { skip: !projectId || !showsMembers });
 
+  if (membersData?.total !== undefined && membersData.total !== membersTotal) {
+    setMembersTotal(membersData.total);
+  }
+
+  // A narrowed search, or a switch to a project, can leave the current page past the new
+  // total -- reset directly rather than through handlePageChange, whose totalPages guard
+  // would otherwise drop the very first reset while membersTotal is still 0
+  useEffect(() => {
+    resetPagination();
+  }, [debouncedMemberSearch, projectId, resetPagination]);
+
   const [fetchAllMembers] = useLazyUsageMembersQuery();
 
   const canSeeAmounts = Boolean(data?.can_see_amounts);
   const memberRows = useMemo(() => membersData?.rows || [], [membersData]);
   const membersWarningPct = membersData?.warning_pct;
-
-  useEffect(() => {
-    if (membersData?.total !== undefined) setMembersTotal(membersData.total);
-  }, [membersData?.total]);
 
   const handleMemberSearchClear = useCallback(() => setMemberSearch(''), []);
 
