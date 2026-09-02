@@ -17,10 +17,6 @@ const ProjectContextEditor = memo(props => {
   const [isDirty, setIsDirty] = useState(false);
   const saveRef = useRef(null);
 
-  const handleNavigate = useCallback(() => {
-    onCloseProjectContextEditor?.();
-  }, [onCloseProjectContextEditor]);
-
   const handleSave = useCallback(() => {
     saveRef.current?.();
   }, []);
@@ -51,7 +47,6 @@ const ProjectContextEditor = memo(props => {
         serverData={serverData}
         projectId={projectId}
         canEdit
-        onNavigate={handleNavigate}
         inlineMode
         onDirtyChange={setIsDirty}
         saveRef={saveRef}
