@@ -118,6 +118,23 @@ const matchesVisibleWhen = (visibleWhen, settings) => {
 
 const hasValue = value => value !== null && value !== undefined && value !== '';
 
+export const HEADER_NAME_PATTERN = /^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/;
+
+export const isHeaderNameInvalid = name => {
+  if (!name) return true;
+  return !HEADER_NAME_PATTERN.test(name);
+};
+
+export const isHeaderValueInvalid = value =>
+  !hasValue(value) || (typeof value === 'string' && /\r|\n/.test(value));
+
+export const validateSecretHeaders = headers => {
+  if (!headers || typeof headers !== 'object' || Array.isArray(headers)) return false;
+  return Object.entries(headers).some(
+    ([name, value]) => isHeaderNameInvalid(name) || isHeaderValueInvalid(value),
+  );
+};
+
 export const isPropertyVisible = ({
   propertyKey,
   property,
@@ -157,6 +174,9 @@ export const validateRequiredFields = (
       const propSchema = schema?.properties[prop];
       if (propSchema?.type === 'boolean' || !propSchema) {
         errors[prop] = false;
+      } else if (propSchema?.ui_component === 'secret_headers') {
+        const hasHeaders = Object.keys(settings[prop] || {}).length > 0;
+        errors[prop] = !hasHeaders || validateSecretHeaders(settings[prop]);
       } else {
         errors[prop] = !settings[prop];
       }
