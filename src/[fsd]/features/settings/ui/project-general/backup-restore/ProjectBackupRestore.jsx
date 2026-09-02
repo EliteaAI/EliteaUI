@@ -24,9 +24,10 @@ const ProjectBackupRestore = memo(() => {
         variant="bodySmall"
         color="text.secondary"
       >
-        Download a copy of this project&apos;s data as a SQL file, or restore it from a previously downloaded
-        backup. Credentials, tokens and other secrets are never included, so they are neither exported nor
-        restored.
+        Download a copy of this project&apos;s data as a backup file, or restore it from a previously
+        downloaded backup. The backup covers agents, pipelines, toolkits, MCP servers and skills, and only
+        those entities are restored. Credentials, tokens and other secrets are never included, so they are
+        neither exported nor restored.
       </Typography>
 
       <Box sx={componentStyles.actions}>
