@@ -36,8 +36,9 @@ const useDeleteEntity = (_, setBlockNav) => {
   const { toastSuccess, toastError } = useToast(toastProps);
 
   const onDelete = useCallback(async () => {
-    await deleteApplication({ projectId, applicationId });
-  }, [deleteApplication, projectId, applicationId]);
+    const entityType = !isFromPipeline ? 'agent' : 'pipeline';
+    await deleteApplication({ projectId, applicationId, entityType });
+  }, [deleteApplication, projectId, applicationId, isFromPipeline]);
 
   useEffect(() => {
     if (isError) {
