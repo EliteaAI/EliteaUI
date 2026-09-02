@@ -6,10 +6,13 @@ import { useIsMidturnInjectionAvailable } from '@/[fsd]/features/chat';
 import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
 import DefaultModulesSettings from '@/[fsd]/features/settings/ui/project-general/DefaultModulesSettings';
 import MidturnInjection from '@/[fsd]/features/settings/ui/project-general/MidturnInjection';
+import { ProjectBackupRestore } from '@/[fsd]/features/settings/ui/project-general/backup-restore';
 import { ProjectParamsHeader } from '@/[fsd]/features/settings/ui/project-general/general';
 import { ProjectAIConfigurations } from '@/[fsd]/features/settings/ui/project-general/project-ai-configurations';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
+import { PERMISSIONS } from '@/common/constants';
+import useCheckPermission from '@/hooks/useCheckPermission';
 
 import SettingsFormProvider from '../shared/SettingsFormProvider';
 
@@ -17,6 +20,10 @@ const ProjectGeneralContent = memo(() => {
   const styles = componentStyles();
 
   const isMidturnInjectionAvailable = useIsMidturnInjectionAvailable();
+
+  const { checkPermission } = useCheckPermission();
+  const isBackupRestoreAvailable =
+    checkPermission(PERMISSIONS.projectBackup.download) || checkPermission(PERMISSIONS.projectBackup.restore);
 
   return (
     <Box sx={styles.root}>
@@ -92,6 +99,23 @@ const ProjectGeneralContent = memo(() => {
             ]}
           />
         )}
+        {isBackupRestoreAvailable && (
+          <BasicAccordion
+            data-testid="project-backup-restore-section"
+            showMode={AccordionConstants.AccordionShowMode.LeftMode}
+            accordionSX={styles.accordionStyles}
+            items={[
+              {
+                title: 'Backup & Restore',
+                content: (
+                  <Box sx={styles.containerStyles}>
+                    <ProjectBackupRestore />
+                  </Box>
+                ),
+              },
+            ]}
+          />
+        )}
       </Box>
     </Box>
   );
@@ -110,6 +134,10 @@ const componentStyles = () => ({
   },
   accordionStyles: {
     padding: '0 !important',
+  },
+  containerStyles: {
+    display: 'flex',
+    flexDirection: 'column',
   },
   loader: {
     display: 'flex',
