@@ -98,7 +98,6 @@ const GeneratedEntityChip = memo(props => {
         {isBeingEdited ? (
           <Typography
             variant="bodyMedium"
-            color="primary.main"
             sx={styles.editingLabel}
           >
             Editing...
@@ -179,10 +178,11 @@ const generatedEntityChipStyles = () => ({
     textOverflow: 'ellipsis',
     lineHeight: 'normal',
   },
-  editingLabel: {
+  editingLabel: ({ palette }) => ({
     flexShrink: 0,
     whiteSpace: 'nowrap',
-  },
+    color: palette.primary.main,
+  }),
   iconWrapper: {
     width: '1rem',
     height: '1rem',

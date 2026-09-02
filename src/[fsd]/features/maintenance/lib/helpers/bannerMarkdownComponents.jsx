@@ -14,7 +14,7 @@ const bannerMarkdownComponents = {
       target="_blank"
       rel="noopener noreferrer"
       variant="bodyMedium"
-      sx={{ color: 'primary.main', textDecorationColor: 'currentcolor' }}
+      sx={({ palette }) => ({ color: palette.primary.main, textDecorationColor: 'currentcolor' })}
       {...props}
     />
   ),

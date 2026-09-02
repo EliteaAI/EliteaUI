@@ -95,10 +95,10 @@ export const eliteaTextFieldColorStyle = theme => ({
     },
     active: {
       label: {
-        color: theme.palette.primary.pressed,
+        color: theme.palette.text.button.showMore,
       },
       border: {
-        color: theme.palette.primary.pressed,
+        color: theme.palette.text.button.showMore,
       },
     },
     disabled: {

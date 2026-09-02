@@ -85,12 +85,12 @@ const styles = {
     width: '1rem',
     height: '1rem',
   },
-  loginText: {
-    color: 'primary.main',
+  loginText: ({ palette }) => ({
+    color: palette.primary.main,
     '&:hover': {
       color: 'primary.dark',
     },
-  },
+  }),
 };
 
 export default SharepointDelegatedLoginButton;
