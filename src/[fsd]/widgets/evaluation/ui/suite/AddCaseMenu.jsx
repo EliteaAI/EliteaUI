@@ -1,13 +1,12 @@
 import { memo, useCallback, useState } from 'react';
 
-import { Menu, MenuItem, Typography } from '@mui/material';
+import { Box, Menu, MenuItem, Typography } from '@mui/material';
 
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS } from '@/[fsd]/shared/ui/button/BaseBtn';
-// TODO: Uncomment when we ready to implement
-// import ImportIcon from '@/assets/import-icon.svg?react';
-// import ChatIcon from '@/components/Icons/ChatIcon';
+import ChatIcon from '@/components/Icons/ChatIcon';
 import EditPenIcon from '@/components/Icons/EditPenIcon';
+import FileCodeIcon from '@/components/Icons/FileCodeIcon';
 import PlusIcon from '@/components/Icons/PlusIcon';
 
 const ADD_CASE_MENU = {
@@ -73,23 +72,27 @@ const AddCaseMenu = memo(props => {
           paper: { sx: styles.menuPaper },
         }}
       >
-        {/* TODO: Uncomment when be ready for implementation */}
-        {/* <MenuItem
+        <MenuItem
           onClick={() => handleMenuItemClick(ADD_CASE_MENU.fromChatsRuns)}
           sx={styles.menuItem}
           data-testid="add-case-from-chats-runs"
         >
           <ChatIcon sx={styles.menuIcon} />
           <Typography sx={styles.menuText}>From chats & runs</Typography>
-        </MenuItem> */}
-        {/* <MenuItem
+        </MenuItem>
+        <MenuItem
           onClick={() => handleMenuItemClick(ADD_CASE_MENU.importFile)}
           sx={styles.menuItem}
           data-testid="add-case-import-file"
         >
-          <ImportIcon sx={styles.menuIcon} />
+          <Box
+            component="span"
+            sx={styles.fileIcon}
+          >
+            <FileCodeIcon />
+          </Box>
           <Typography sx={styles.menuText}>Import file</Typography>
-        </MenuItem> */}
+        </MenuItem>
         <MenuItem
           onClick={() => handleMenuItemClick(ADD_CASE_MENU.createManually)}
           sx={styles.menuItem}
@@ -154,6 +157,17 @@ const addCaseMenuStyles = () => ({
   menuIcon: ({ palette }) => ({
     fontSize: '1rem',
     flexShrink: 0,
+    '& path': {
+      fill: palette.icon.fill.default,
+    },
+  }),
+  fileIcon: ({ palette }) => ({
+    display: 'inline-flex',
+    flexShrink: 0,
+    '& svg': {
+      width: '1rem',
+      height: '1rem',
+    },
     '& path': {
       fill: palette.icon.fill.default,
     },

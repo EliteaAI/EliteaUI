@@ -14,8 +14,10 @@ const DimensionSectionHeader = memo(props => {
 
   return (
     <Link
-      component="button"
+      component="span"
       variant="bodySmall"
+      role="button"
+      tabIndex={0}
       onClick={handleClick}
       sx={styles.manageLink}
     >
