@@ -94,6 +94,18 @@ const RestoreProjectDialog = memo(props => {
 
   const summary = result?.result;
 
+  // A backup taken before a migration carries columns this project no longer
+  // has; the backend drops them and lists them per table
+  const droppedColumns = Object.entries(summary?.dropped_columns ?? {}).flatMap(([table, columns]) =>
+    columns.map(column => `${table}.${column}`),
+  );
+
+  // The reverse drift: this project requires a column the backup has no value
+  // for, so the backend restored it empty
+  const filledColumns = Object.entries(summary?.filled_columns ?? {}).flatMap(([table, columns]) =>
+    columns.map(column => `${table}.${column}`),
+  );
+
   const renderContent = () => (
     <Box sx={componentStyles.root}>
       <Typography
@@ -257,6 +269,25 @@ const RestoreProjectDialog = memo(props => {
             {summary.truncated_tables?.length ? ` · truncated ${summary.truncated_tables.length}` : ''}
             {summary.skipped_tables?.length ? ` · skipped ${summary.skipped_tables.join(', ')}` : ''}
           </Typography>
+          {droppedColumns.length > 0 && (
+            <Typography
+              variant="bodySmall2"
+              color="inherit"
+              sx={componentStyles.summaryBody}
+            >
+              Columns missing in this project were dropped: {droppedColumns.join(', ')}
+              {summary.dropped_values ? ` (${summary.dropped_values} values not restored)` : ''}
+            </Typography>
+          )}
+          {filledColumns.length > 0 && (
+            <Typography
+              variant="bodySmall2"
+              color="inherit"
+              sx={componentStyles.summaryBody}
+            >
+              Columns this project requires were restored empty: {filledColumns.join(', ')}
+            </Typography>
+          )}
         </Alert>
       )}
     </Box>
