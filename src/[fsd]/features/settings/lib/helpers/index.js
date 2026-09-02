@@ -3,6 +3,7 @@ export * as CodeExamplesHelpers from './codeExamples.helpers.js';
 export * as ConfigurationHelpers from './configuration.helpers.js';
 export * as DateFormatterHelpers from './dateFormatter.helpers.js';
 export * as EnvironmentFieldHelpers from './environmentField.helpers.js';
+export * as ProjectBackupHelpers from './projectBackup.helpers.js';
 export * as ProfileHelpers from './profile.helpers.js';
 export * as UsageHelpers from './usage.helpers.js';
 export * as UsageExportHelpers from './usageExport.helpers.js';
