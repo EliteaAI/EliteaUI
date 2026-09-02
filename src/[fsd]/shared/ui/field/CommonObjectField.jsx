@@ -28,7 +28,7 @@ const CommonObjectField = memo(props => {
       } catch (error) {
         // eslint-disable-next-line no-console
         console.warn('Invalid JSON, using empty object:', error);
-        parsedValue = {};
+        return;
       }
       onChangeInputVariables({
         ...toolInputVariables,
