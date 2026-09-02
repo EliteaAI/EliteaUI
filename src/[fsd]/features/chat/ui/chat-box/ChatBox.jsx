@@ -839,6 +839,8 @@ const ChatBox = forwardRef((props, boxRef) => {
 
   const handleStopStreaming = useCallback(() => {
     stopRequestedRef.current = true;
+    pendingInjectionsRef.current = new Map();
+    setPendingInjections([]);
     stopStreamingRef.current?.();
     onStopRun?.();
   }, [onStopRun]);
