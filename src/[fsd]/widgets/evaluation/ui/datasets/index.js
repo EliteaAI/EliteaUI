@@ -1,10 +1,6 @@
-export { default as CaseEditorDialog } from './CaseEditorDialog';
-export { default as CaseVariablesEditor } from './CaseVariablesEditor';
-export { default as DatasetDetailView } from './DatasetDetailView';
-export { default as DatasetModal } from './DatasetModal';
-export { default as DatasetImportDialog } from './DatasetImportDialog';
+// New redesign components
+export { default as CasesPanel } from './CasesPanel';
+export { default as DatasetItem } from './DatasetItem';
 export { default as DatasetList } from './DatasetList';
-export { default as DatasetListRow } from './DatasetListRow';
-export { default as DatasetsView } from './DatasetsView';
-export { default as NewDatasetMenu } from './NewDatasetMenu';
-export { default as PromoteConversationsDialog } from './PromoteConversationsDialog';
+export { default as DatasetModal } from './DatasetModal';
+export { default as DatasetsPanel } from './DatasetsPanel';

@@ -50,6 +50,14 @@ const GridTableRow = memo(props => {
     onSelect?.(rowId);
   }, [onSelect, rowId]);
 
+  const handleMouseEnter = useCallback(() => {
+    onMouseEnter?.(row);
+  }, [onMouseEnter, row]);
+
+  const handleMouseLeave = useCallback(() => {
+    onMouseLeave?.(row);
+  }, [onMouseLeave, row]);
+
   // Separate name column from data columns
   const dataColumns = columns.filter(col => col.field !== nameField && col.field !== 'actions');
 
@@ -57,8 +65,8 @@ const GridTableRow = memo(props => {
     <Box
       data-testid={dataTestId}
       sx={styles.row}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
       {showCheckbox && (
         <Box sx={[styles.checkboxCell, checkboxCellSx]}>

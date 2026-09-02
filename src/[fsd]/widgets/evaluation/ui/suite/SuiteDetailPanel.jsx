@@ -15,10 +15,10 @@ import SendIcon from '@/components/Icons/SendIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
 
 import { EVAL_PERMISSIONS } from '../../lib/constants';
-import DatasetSection from './DatasetSection';
-import DatasetSectionHeader from './DatasetSectionHeader';
-import DimensionSection from './DimensionSection';
-import DimensionSectionHeader from './DimensionSectionHeader';
+import DatasetSection from './dataset/DatasetSection';
+import DatasetSectionHeader from './dataset/DatasetSectionHeader';
+import DimensionSection from './dimension/DimensionSection';
+import DimensionSectionHeader from './dimension/DimensionSectionHeader';
 
 const EMPTY_ARRAY = [];
 const AUTO_JUDGE_MODEL_ID = '__auto__';

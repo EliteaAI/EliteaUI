@@ -1,66 +1,68 @@
-import { memo } from 'react';
+import { memo, useMemo, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import DatasetListRow from './DatasetListRow';
-import NewDatasetMenu from './NewDatasetMenu';
+import DatasetItem from './DatasetItem';
 
 const DatasetList = memo(props => {
-  const {
-    datasets = [],
-    applicationId = null,
-    canCreate = false,
-    canEdit = false,
-    canDelete = false,
-    onOpen,
-    onRename,
-    onDelete,
-    onNewSelect,
-  } = props;
+  const { datasets = [], selectedDatasetId, applicationId = null, onSelect, onRename, onDelete } = props;
+
+  const [hoveredDatasetId, setHoveredDatasetId] = useState(null);
+
+  const sortedDatasets = useMemo(() => {
+    return [...datasets].sort((a, b) => {
+      const dateA = new Date(a.updated_at || a.created_at || 0);
+      const dateB = new Date(b.updated_at || b.created_at || 0);
+      return dateB - dateA;
+    });
+  }, [datasets]);
 
   const styles = datasetListStyles();
 
-  return (
-    <Box
-      sx={styles.root}
-      data-testid="evaluation-datasets-view"
-    >
-      <Box sx={styles.header}>
-        <Box sx={styles.heading}>
-          <Typography variant="headingSmall">Datasets</Typography>
+  if (datasets.length === 0) {
+    return (
+      <Box sx={styles.root}>
+        <Box sx={styles.emptyState}>
+          <Typography
+            variant="bodyMedium"
+            sx={styles.emptyTitle}
+          >
+            No datasets created yet.
+          </Typography>
           <Typography
             variant="bodySmall"
-            color="text.secondary"
+            sx={styles.emptyText}
           >
-            Reusable sets of test cases for evaluation runs.
+            Create a dataset to start adding evaluation cases.
           </Typography>
         </Box>
-        {canCreate && <NewDatasetMenu onSelect={onNewSelect} />}
       </Box>
+    );
+  }
 
-      {datasets.length === 0 ? (
-        <Typography
-          variant="bodySmall"
-          color="text.secondary"
-        >
-          No datasets yet.
-        </Typography>
-      ) : (
-        <Box sx={styles.list}>
-          {datasets.map(dataset => (
-            <DatasetListRow
-              key={dataset.id}
-              dataset={dataset}
-              applicationId={applicationId}
-              canEdit={canEdit}
-              canDelete={canDelete}
-              onOpen={onOpen}
-              onRename={onRename}
-              onDelete={onDelete}
-            />
-          ))}
-        </Box>
-      )}
+  return (
+    <Box sx={styles.root}>
+      {sortedDatasets.map((dataset, index) => {
+        const nextDataset = sortedDatasets[index + 1];
+
+        return (
+          <DatasetItem
+            key={dataset.id}
+            dataset={dataset}
+            selectedDatasetId={selectedDatasetId}
+            hoveredDatasetId={hoveredDatasetId}
+            applicationId={applicationId}
+            isNextSelected={nextDataset?.id === selectedDatasetId}
+            isNextHovered={nextDataset?.id === hoveredDatasetId}
+            isLast={index === sortedDatasets.length - 1}
+            onSelect={onSelect}
+            onRename={onRename}
+            onDelete={onDelete}
+            onMouseEnter={() => setHoveredDatasetId(dataset.id)}
+            onMouseLeave={() => setHoveredDatasetId(null)}
+          />
+        );
+      })}
     </Box>
   );
 });
@@ -72,27 +74,26 @@ const datasetListStyles = () => ({
   root: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '1rem',
-    height: '100%',
+    flex: 1,
     overflowY: 'auto',
-    padding: '1.5rem',
+    padding: '1rem',
+    gap: '0.125rem',
   },
-  header: {
-    display: 'flex',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    gap: '1rem',
-  },
-  heading: {
+  emptyState: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.25rem',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
+    textAlign: 'center',
   },
-  list: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.5rem',
-  },
+  emptyTitle: ({ palette }) => ({
+    color: palette.text.secondary,
+    marginBottom: '0.25rem',
+  }),
+  emptyText: ({ palette }) => ({
+    color: palette.text.primary,
+  }),
 });
 
 export default DatasetList;
