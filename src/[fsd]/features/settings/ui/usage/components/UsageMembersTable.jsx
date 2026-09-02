@@ -1,8 +1,10 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo } from 'react';
 
-import { Box, Typography } from '@mui/material';
+import { Box, Skeleton, Typography } from '@mui/material';
 
+import { GridTablePagination } from '@/[fsd]/entities/grid-table';
 import { UsageHelpers } from '@/[fsd]/features/settings/lib/helpers';
+import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
 import { SimpleSearchBar } from '@/[fsd]/shared/ui/input';
 
 const SEVERITY_COLOR = {
@@ -10,21 +12,27 @@ const SEVERITY_COLOR = {
   warning: 'warning',
 };
 
+const SKELETON_ROWS = 3;
+
 const UsageMembersTable = memo(props => {
-  const { rows = [], warningPct } = props;
+  const {
+    rows = [],
+    systemRow,
+    warningPct,
+    search = '',
+    onSearchChange,
+    onSearchClear,
+    pagination,
+    isFetching = false,
+    isError = false,
+    onRetry,
+  } = props;
 
   const styles = usageMembersTableStyles();
 
-  const [search, setSearch] = useState('');
-
-  const handleSearchClear = useCallback(() => setSearch(''), []);
-
-  const sorted = useMemo(
-    () => [...UsageHelpers.filterMembers(rows, search)].sort((a, b) => (b.spend || 0) - (a.spend || 0)),
-    [rows, search],
-  );
-
-  if (!rows.length) return null;
+  // Only the very first load has nothing to show; later fetches keep the old page visible
+  const showsSkeleton = isFetching && !rows.length;
+  const showsEmpty = !isFetching && !isError && !rows.length;
 
   return (
     <Box sx={styles.card}>
@@ -45,24 +53,42 @@ const UsageMembersTable = memo(props => {
         </Box>
         <SimpleSearchBar
           searchQuery={search}
-          onSearchChange={setSearch}
-          onSearchClear={handleSearchClear}
+          onSearchChange={onSearchChange}
+          onSearchClear={onSearchClear}
           placeholder="Search by name or email"
           autoFocus={false}
           sx={styles.search}
         />
       </Box>
 
-      {!sorted.length && (
+      {isError && (
+        <Box sx={styles.errorRow}>
+          <Typography
+            variant="bodySmall"
+            sx={styles.errorText}
+          >
+            Unable to load the member breakdown.
+          </Typography>
+          <BaseBtn
+            variant={BUTTON_VARIANTS.text}
+            onClick={onRetry}
+            data-testid="usage-members-retry"
+          >
+            Retry
+          </BaseBtn>
+        </Box>
+      )}
+
+      {showsEmpty && (
         <Typography
           variant="bodySmall"
           sx={styles.empty}
         >
-          No members found.
+          {search ? 'No members match this search.' : 'No member usage recorded for this period.'}
         </Typography>
       )}
 
-      {!!sorted.length && (
+      {(showsSkeleton || !!rows.length) && (
         <>
           <Box sx={styles.tableHeader}>
             <Typography sx={[styles.cell, { flex: 3 }]}>Member</Typography>
@@ -71,7 +97,20 @@ const UsageMembersTable = memo(props => {
             <Typography sx={[styles.cell, styles.right, { flex: 1 }]}>Used</Typography>
           </Box>
 
-          {sorted.map(row => {
+          {showsSkeleton &&
+            Array.from({ length: SKELETON_ROWS }, (_, index) => (
+              <Box
+                key={`skeleton-${index}`}
+                sx={styles.row}
+              >
+                <Skeleton
+                  variant="text"
+                  width="100%"
+                />
+              </Box>
+            ))}
+
+          {rows.map(row => {
             const severity = UsageHelpers.usageSeverity(row.percent_used, warningPct);
             const color = SEVERITY_COLOR[severity];
 
@@ -107,6 +146,23 @@ const UsageMembersTable = memo(props => {
           })}
         </>
       )}
+
+      {/* Pinned outside paging so the member rows always add up to the project total */}
+      {!!systemRow && (
+        <Box sx={[styles.row, styles.systemRow]}>
+          <Box sx={{ flex: 3, minWidth: 0 }}>
+            <Typography sx={[styles.value, styles.muted]}>{systemRow.name}</Typography>
+            <Typography sx={styles.emailText}>Not attributable to a member</Typography>
+          </Box>
+          <Typography sx={[styles.value, styles.right, styles.muted, { flex: 1.2 }]}>
+            {UsageHelpers.formatMoney(systemRow.spend, systemRow.currency)}
+          </Typography>
+          <Typography sx={[styles.value, styles.right, styles.muted, { flex: 1.2 }]}>—</Typography>
+          <Typography sx={[styles.value, styles.right, styles.muted, { flex: 1 }]}>—</Typography>
+        </Box>
+      )}
+
+      {!!pagination && <GridTablePagination {...pagination} />}
     </Box>
   );
 });
@@ -153,6 +209,15 @@ const usageMembersTableStyles = () => ({
     color: palette.text.metrics || palette.text.disabled,
     marginTop: '0.5rem',
   }),
+  errorRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    marginTop: '0.5rem',
+  },
+  errorText: ({ palette }) => ({
+    color: palette.error.main,
+  }),
   tableHeader: ({ palette }) => ({
     display: 'flex',
     alignItems: 'center',
@@ -168,6 +233,9 @@ const usageMembersTableStyles = () => ({
     borderBottom: `1px solid ${palette.border.lines}`,
     '&:last-of-type': { borderBottom: 'none' },
   }),
+  systemRow: {
+    fontStyle: 'italic',
+  },
   cell: ({ palette }) => ({
     fontSize: '0.6875rem',
     fontWeight: 600,
