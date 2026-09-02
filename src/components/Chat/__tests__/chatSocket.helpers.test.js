@@ -6,7 +6,7 @@ import {
   findChatSocketMessageIndex,
   isLocalAssistantPlaceholder,
   mergeChatSocketMessage,
-} from './chatSocket.helpers';
+} from '../chatSocket.helpers';
 
 describe('chat socket message identity', () => {
   it('updates the resumed assistant by message id after a HITL decision shifts the history', () => {

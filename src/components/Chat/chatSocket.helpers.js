@@ -25,6 +25,8 @@ export const isLocalAssistantPlaceholder = message =>
 
 export const mergeChatSocketMessage = (history, message, { messageId = message?.id, questionId } = {}) => {
   const messageIndex = findChatSocketMessageIndex(history, messageId, questionId);
+  // Preserve the original reference when no message matches so React state
+  // updaters can short-circuit via referential equality.
   if (messageIndex === -1) return history;
 
   const nextHistory = [...history];
