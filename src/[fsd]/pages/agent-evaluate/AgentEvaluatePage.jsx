@@ -421,8 +421,7 @@ const AgentEvaluatePage = memo(() => {
         onConfirm={handleConfirmDeleteCase}
         title="Delete confirmation"
         textContent="Are you sure to delete the "
-        name={`Case ${caseToDelete?.id ?? ''}`}
-        shouldRequestInputName
+        name={caseToDelete?.input?.slice(0, 50) || `Case ${caseToDelete?.id ?? ''}`}
         confirmButtonText="Delete"
       />
     </Box>

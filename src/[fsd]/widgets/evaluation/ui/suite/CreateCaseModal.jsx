@@ -22,7 +22,11 @@ const EXPECTED_OUTPUT_TOOLTIP =
   "An optional reference response or expected outcome used to assess the agent's generated response.";
 
 const variablesToRows = variables =>
-  Object.entries(variables || {}).map(([key, value]) => ({ key, value: String(value ?? '') }));
+  Object.entries(variables || {}).map(([key, value]) => ({
+    id: crypto.randomUUID(),
+    key,
+    value: String(value ?? ''),
+  }));
 
 const rowsToVariables = rows =>
   rows.reduce((acc, { key, value }) => {
@@ -66,6 +70,11 @@ const CreateCaseModal = memo(props => {
     }
   }, [open, datasetCase]);
 
+  useEffect(() => {
+    if (errorMessage) setErrorMessage('');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form]);
+
   const setField = useCallback((key, value) => {
     setForm(prev => ({ ...prev, [key]: value }));
   }, []);
@@ -83,7 +92,7 @@ const CreateCaseModal = memo(props => {
   );
 
   const handleAddVariable = useCallback(() => {
-    setVariableRows([...form.variableRows, { key: '', value: '' }]);
+    setVariableRows([...form.variableRows, { id: crypto.randomUUID(), key: '', value: '' }]);
   }, [form.variableRows, setVariableRows]);
 
   const handleRemoveVariable = useCallback(
@@ -162,8 +171,8 @@ const CreateCaseModal = memo(props => {
     toastSuccess,
   ]);
 
-  const handleOpenExpanded = useCallback((fieldName, value) => {
-    setExpandedField({ fieldName, value });
+  const handleOpenExpanded = useCallback((fieldName, value, rowIndex, rowKey) => {
+    setExpandedField({ fieldName, value, rowIndex, rowKey });
   }, []);
 
   const handleCloseExpanded = useCallback(() => {
@@ -179,9 +188,8 @@ const CreateCaseModal = memo(props => {
         setField('input', newValue);
       } else if (fieldName === 'Expected Output') {
         setField('expected_output', newValue);
-      } else if (fieldName.startsWith('Variable: ')) {
-        const index = parseInt(fieldName.split('Index: ')[1], 10);
-        handleVariableField(index, 'value', newValue);
+      } else if (fieldName === 'Variable') {
+        handleVariableField(expandedField.rowIndex, 'value', newValue);
       }
     },
     [expandedField, setField, handleVariableField],
@@ -208,9 +216,8 @@ const CreateCaseModal = memo(props => {
     const { fieldName } = expandedField;
     if (fieldName === 'Input') return form.input;
     if (fieldName === 'Expected Output') return form.expected_output;
-    if (fieldName.startsWith('Variable:')) {
-      const index = parseInt(fieldName.split('Index: ')[1], 10);
-      return form.variableRows[index]?.value ?? '';
+    if (fieldName === 'Variable') {
+      return form.variableRows[expandedField.rowIndex]?.value ?? '';
     }
     return expandedField.value;
   }, [expandedField, form.input, form.expected_output, form.variableRows]);
@@ -272,7 +279,7 @@ const CreateCaseModal = memo(props => {
             ) : (
               form.variableRows.map((row, index) => (
                 <Box
-                  key={index}
+                  key={row.id}
                   sx={styles.variableRow}
                 >
                   <Box sx={styles.keyFieldWrapper}>
@@ -308,9 +315,7 @@ const CreateCaseModal = memo(props => {
                     >
                       <Button.BaseBtn
                         variant={BUTTON_VARIANTS.tertiary}
-                        onClick={() =>
-                          handleOpenExpanded(`Variable: ${row.key || 'Value'}; Index: ${index}`, row.value)
-                        }
+                        onClick={() => handleOpenExpanded('Variable', row.value, index, row.key)}
                         sx={styles.valueExpandButton}
                       >
                         <FullscreenOutlinedIcon style={styles.expandIcon} />
@@ -441,7 +446,11 @@ const CreateCaseModal = memo(props => {
       {expandedField && (
         <StyledInputModal
           open={!!expandedField}
-          title={expandedField.fieldName}
+          title={
+            expandedField.fieldName === 'Variable'
+              ? `Variable: ${expandedField.rowKey || 'Value'}`
+              : expandedField.fieldName
+          }
           value={getExpandedFieldValue()}
           hasOnChangeCallback
           onChange={handleExpandedChange}
