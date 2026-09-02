@@ -89,10 +89,10 @@ OpenApiLogInLink.displayName = 'OpenApiLogInLink';
 
 /** @type {MuiSx} */
 const openApiLogInLinkStyles = () => ({
-  linkText: {
+  linkText: ({ palette }) => ({
     textDecoration: 'underline',
     cursor: 'pointer',
-    color: 'primary.main',
+    color: palette.primary.main,
     border: 'none',
     background: 'none',
     padding: 0,
@@ -101,7 +101,7 @@ const openApiLogInLinkStyles = () => ({
     '&:hover': {
       color: 'primary.dark',
     },
-  },
+  }),
 });
 
 const styles = openApiLogInLinkStyles();

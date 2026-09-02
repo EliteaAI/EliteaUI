@@ -39,7 +39,7 @@ const greenDefaultBtn = '#108D22';
 const greenHoverBtn = '#15A42A';
 const magenta = '#f47cff';
 const magenta24 = '#f47cff3d';
-const magentaDefault = '#c428dd';
+const primaryDefault = '#c428dd';
 const magentaHover = '#f47cff';
 const magentaDisabled = '#CB93D4';
 const darkMagenta30 = '#f551f94d';
@@ -93,10 +93,6 @@ const greenOutline40 = '#2ab37a66';
 
 const oldLightPalette = {
   mode: 'light',
-  primary: {
-    main: magentaDefault,
-    pressed: magentaDefault,
-  },
   secondary: {
     main: light10,
   },
@@ -236,7 +232,7 @@ const oldLightPalette = {
       normal: dark10,
       danger: dangerRed,
       primary: {
-        default: magentaDefault,
+        default: primaryDefault,
         hover: magentaHover,
         pressed: magentaHover,
         disabled: light20,
@@ -294,7 +290,7 @@ const oldLightPalette = {
     },
     switch: {
       default: {
-        on: { thumb: magentaDefault, track: darkMagenta30 },
+        on: { thumb: primaryDefault, track: darkMagenta30 },
         off: { thumb: light10, track: dark20 },
       },
       disabled: {
@@ -303,12 +299,12 @@ const oldLightPalette = {
       },
     },
     tabs: {
-      default: magentaDefault,
+      default: primaryDefault,
     },
     tab: {
       default: light10,
       hover: magentaHover,
-      active: magentaDefault,
+      active: primaryDefault,
       disabled: light20,
     },
     tooltip: {
@@ -425,7 +421,7 @@ const oldLightPalette = {
     tips: blue02,
     attention: orangeOutline40,
     table: light40,
-    userMessageEditor: magentaDefault,
+    userMessageEditor: primaryDefault,
     notificationItem: light40,
     cardsOutlines: light40,
     cardsOutlinesGradient: 'linear-gradient(0deg, #d0d5da99 0%, #D0D5DA 100%)',
@@ -472,8 +468,7 @@ const oldLightPalette = {
       primary: blue01,
       secondary: blue01,
       disabled: light20,
-      showMore: magentaDefault,
-      auxiliary: magentaHover,
+      showMore: primaryDefault,
     },
     tabButton: { default: light10, hover: gray60, active: gray60, disabled: light20 },
     input: {
@@ -541,7 +536,7 @@ const oldLightPalette = {
       successModal: greenHoverBtn,
       is_default: green20,
       success: green,
-      active: magentaDefault,
+      active: primaryDefault,
       inactive: blue,
       magicAssistant: magenta,
       error: dangerRed,
@@ -680,6 +675,11 @@ const lightColorScheme = {
 
 const lightPalette = {
   ...oldLightPalette,
+
+  primary: {
+    main: primaryDefault,
+  },
+
   background: {
     ...oldLightPalette.background,
     npsCard: `linear-gradient(to top, ${lightColorScheme.accentLight}, ${lightColorScheme.accentMid})`,
@@ -706,6 +706,12 @@ const lightPalette = {
   },
   text: {
     ...oldLightPalette.text,
+
+    button: {
+      ...oldLightPalette.text.button,
+      auxiliary: magentaHover,
+    },
+
     white: lightColorScheme.textWhite,
     light: lightColorScheme.textLight,
     darker: lightColorScheme.textDarker,

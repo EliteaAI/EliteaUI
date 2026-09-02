@@ -132,10 +132,10 @@ ParticipantWarning.displayName = 'ParticipantWarning';
 
 /** @type {MuiSx} */
 const participantWarningStyles = () => ({
-  misconfigurationError: {
+  misconfigurationError: ({ palette }) => ({
     textDecoration: 'underline',
     cursor: 'pointer',
-    color: 'primary.main',
+    color: palette.primary.main,
     border: 'none',
     background: 'none',
     padding: 0,
@@ -145,7 +145,7 @@ const participantWarningStyles = () => ({
     '&:hover': {
       color: 'primary.dark',
     },
-  },
+  }),
 });
 
 export default ParticipantWarning;

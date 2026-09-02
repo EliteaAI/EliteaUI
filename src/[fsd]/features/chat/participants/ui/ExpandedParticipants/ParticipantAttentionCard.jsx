@@ -99,7 +99,6 @@ const ParticipantAttentionCard = memo(props => {
             {isBeingEdited && (
               <Typography
                 variant="bodyMedium"
-                color="primary.main"
                 sx={styles.attentionEditingText}
               >
                 {participant.entity_meta?.project_id != PUBLIC_PROJECT_ID ? 'Editing...' : 'Viewing...'}
@@ -200,13 +199,14 @@ export const participantAttentionCardStyles = ({ isActive, maxWidth }) => ({
     overflow: 'hidden',
     textOverflow: 'ellipsis',
   },
-  attentionEditingText: {
+  attentionEditingText: ({ palette }) => ({
     maxWidth: '50%',
     whiteSpace: 'nowrap',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpaceCollapse: 'preserve',
-  },
+    color: palette.primary.main,
+  }),
   attentionMessageRow: {
     display: 'flex',
     flexDirection: 'row',
