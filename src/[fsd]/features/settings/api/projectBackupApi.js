@@ -10,10 +10,8 @@ const projectBackupApi = eliteaApi.injectEndpoints({
         url: `${apiSlicePath}/project_backup/prompt_lib/${projectId}`,
         params: excludeTables ? { exclude_tables: excludeTables } : undefined,
         responseHandler: async response => {
-          if (!response.ok) {
-            // Errors are JSON, not a dump
-            return await response.json();
-          }
+          // fetchBaseQuery rejects non-ok responses on its own via .unwrap(), surfacing
+          // the JSON error body as err.data — only the success path needs handling here.
           const contentDisposition = response.headers.get('content-disposition') || '';
           const filename = getFilenameFromContentDisposition(contentDisposition, 'project-backup.sql');
           const blob = await response.blob();

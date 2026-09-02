@@ -18,14 +18,8 @@ const ProjectBackupRestore = memo(() => {
   const handleOpenRestore = useCallback(() => setIsRestoreOpen(true), []);
   const handleCloseRestore = useCallback(() => setIsRestoreOpen(false), []);
 
-  const styles = componentStyles();
-
-  if (!canDownload && !canRestore) {
-    return null;
-  }
-
   return (
-    <Box sx={styles.root}>
+    <Box sx={componentStyles.root}>
       <Typography
         variant="bodySmall"
         color="text.secondary"
@@ -35,7 +29,7 @@ const ProjectBackupRestore = memo(() => {
         restored.
       </Typography>
 
-      <Box sx={styles.actions}>
+      <Box sx={componentStyles.actions}>
         {canDownload && (
           <BaseBtn
             variant={BUTTON_VARIANTS.secondary}
@@ -77,7 +71,7 @@ const ProjectBackupRestore = memo(() => {
 ProjectBackupRestore.displayName = 'ProjectBackupRestore';
 
 /** @type {MuiSx} */
-const componentStyles = () => ({
+const componentStyles = {
   root: {
     display: 'flex',
     flexDirection: 'column',
@@ -89,6 +83,6 @@ const componentStyles = () => ({
     gap: '0.75rem',
     flexWrap: 'wrap',
   },
-});
+};
 
 export default ProjectBackupRestore;

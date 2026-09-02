@@ -59,6 +59,7 @@ const RestoreProjectDialog = memo(props => {
     setResult(null);
     setArtifact(null);
     setAllowMismatch(false);
+    setDryRun(true);
     setFile(event.target.files?.[0] ?? null);
   }, []);
 
@@ -92,10 +93,9 @@ const RestoreProjectDialog = memo(props => {
   const handleAllowMismatchChange = useCallback(event => setAllowMismatch(event.target.checked), []);
 
   const summary = result?.result;
-  const styles = componentStyles();
 
   const renderContent = () => (
-    <Box sx={styles.root}>
+    <Box sx={componentStyles.root}>
       <Typography
         variant="bodySmall"
         color="text.secondary"
@@ -115,13 +115,13 @@ const RestoreProjectDialog = memo(props => {
       {!!error && (
         <Alert
           severity="error"
-          sx={styles.alert('error')}
+          sx={componentStyles.alert('error')}
         >
           {error}
         </Alert>
       )}
 
-      <Box sx={styles.filePicker}>
+      <Box sx={componentStyles.filePicker}>
         <BaseBtn
           variant={BUTTON_VARIANTS.secondary}
           size="small"
@@ -135,7 +135,7 @@ const RestoreProjectDialog = memo(props => {
         <Typography
           variant="bodySmall2"
           color="text.secondary"
-          sx={styles.fileName}
+          sx={componentStyles.fileName}
         >
           {file ? `${file.name} (${formatSize(file.size)})` : 'No file selected'}
         </Typography>
@@ -144,7 +144,7 @@ const RestoreProjectDialog = memo(props => {
           ref={inputRef}
           type="file"
           accept=".enc,.sql,text/plain,application/sql,application/octet-stream"
-          sx={styles.hiddenInput}
+          sx={componentStyles.hiddenInput}
           onChange={handleFileChange}
         />
       </Box>
@@ -153,7 +153,7 @@ const RestoreProjectDialog = memo(props => {
         <>
           <Alert
             severity="warning"
-            sx={styles.alert('warning')}
+            sx={componentStyles.alert('warning')}
           >
             This backup was taken from project {artifact.project_id}, not{' '}
             {projectName ? `"${projectName}"` : 'this project'} (project {projectId}). Restoring it here puts
@@ -180,7 +180,7 @@ const RestoreProjectDialog = memo(props => {
         </>
       )}
 
-      <Box sx={styles.options}>
+      <Box sx={componentStyles.options}>
         <FormControlLabel
           control={
             <Checkbox.BaseCheckbox
@@ -222,12 +222,12 @@ const RestoreProjectDialog = memo(props => {
       {truncate && (
         <Alert
           severity="warning"
-          sx={styles.alert('warning')}
+          sx={componentStyles.alert('warning')}
         >
           Existing rows in the affected tables are deleted before the backup is applied, and{' '}
           <Box
             component="code"
-            sx={styles.inlineCode}
+            sx={componentStyles.inlineCode}
           >
             CASCADE
           </Box>{' '}
@@ -238,7 +238,7 @@ const RestoreProjectDialog = memo(props => {
       {!!summary && (
         <Alert
           severity={result?.ok ? 'success' : 'warning'}
-          sx={styles.alert(result?.ok ? 'success' : 'warning')}
+          sx={componentStyles.alert(result?.ok ? 'success' : 'warning')}
         >
           <Typography
             variant="labelMedium"
@@ -250,7 +250,7 @@ const RestoreProjectDialog = memo(props => {
           <Typography
             variant="bodySmall2"
             color="inherit"
-            sx={styles.summaryBody}
+            sx={componentStyles.summaryBody}
           >
             {summary.statements} statements, {summary.total_rows} rows into{' '}
             {summary.applied_tables?.length ?? 0} tables
@@ -271,7 +271,7 @@ const RestoreProjectDialog = memo(props => {
         disabled={isLoading}
         data-testid="project-restore-cancel"
       >
-        Cancel
+        {result && !dryRun ? 'Close' : 'Cancel'}
       </BaseBtn>
       <BaseBtn
         variant={BUTTON_VARIANTS.elitea}
@@ -301,7 +301,7 @@ const RestoreProjectDialog = memo(props => {
 RestoreProjectDialog.displayName = 'RestoreProjectDialog';
 
 /** @type {MuiSx} */
-const componentStyles = () => ({
+const componentStyles = {
   root: {
     display: 'flex',
     flexDirection: 'column',
@@ -349,6 +349,6 @@ const componentStyles = () => ({
         color: palette.text.indexResult[severity] || palette.text.indexResult.info,
       },
     }),
-});
+};
 
 export default RestoreProjectDialog;

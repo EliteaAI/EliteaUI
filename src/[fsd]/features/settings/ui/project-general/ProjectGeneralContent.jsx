@@ -135,6 +135,10 @@ const componentStyles = () => ({
   accordionStyles: {
     padding: '0 !important',
   },
+  containerStyles: {
+    display: 'flex',
+    flexDirection: 'column',
+  },
   loader: {
     display: 'flex',
     alignItems: 'center',
