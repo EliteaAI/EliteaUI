@@ -1,4 +1,4 @@
-import React, { Suspense, memo, useCallback } from 'react';
+import React, { Suspense, memo, useCallback, useRef } from 'react';
 
 import { Box } from '@mui/material';
 
@@ -22,11 +22,24 @@ const GeneratedEntityEditorPanel = memo(props => {
     onTabChange,
     onCloseTab,
     onAttachmentToolChange,
-    onAgentDirtyStateChange,
     onConversationStartersChange,
-    // PipelineEditor callbacks
-    onPipelineDirtyStateChange,
+    handleEditorDirtyStateChange,
   } = props;
+
+  // Track dirty state per tab entity_id — persists across tab switches
+  const dirtyTabsRef = useRef(new Map());
+
+  const handleTabDirtyStateChange = useCallback(
+    (entityId, isDirty) => {
+      if (isDirty) {
+        dirtyTabsRef.current.set(entityId, true);
+      } else {
+        dirtyTabsRef.current.delete(entityId);
+      }
+      handleEditorDirtyStateChange?.(dirtyTabsRef.current.size > 0);
+    },
+    [handleEditorDirtyStateChange],
+  );
 
   const handleTabChange = useCallback(
     (_event, newIndex) => {
@@ -66,7 +79,11 @@ const GeneratedEntityEditorPanel = memo(props => {
       <Box sx={styles.editorsContainer}>
         {tabs.map((tab, idx) => {
           const isActive = activeIndex === idx;
-          const handleClose = () => onCloseTab?.(tab.entity_id);
+          const handleClose = () => {
+            handleTabDirtyStateChange(tab.entity_id, false);
+            onCloseTab?.(tab.entity_id);
+          };
+          const onDirtyChange = isDirty => handleTabDirtyStateChange(tab.entity_id, isDirty);
           return (
             <Box
               key={tab.entity_id ?? idx}
@@ -80,8 +97,9 @@ const GeneratedEntityEditorPanel = memo(props => {
                     isCreateMode={false}
                     onCloseAgentEditor={handleClose}
                     onAttachmentToolChange={onAttachmentToolChange}
-                    onAgentDirtyStateChange={onAgentDirtyStateChange}
+                    onAgentDirtyStateChange={onDirtyChange}
                     onConversationStartersChange={onConversationStartersChange}
+                    disableNavBlocking
                   />
                 </Suspense>
               )}
@@ -92,9 +110,10 @@ const GeneratedEntityEditorPanel = memo(props => {
                     isVisible={isActive}
                     isCreateMode={false}
                     onClosePipelineEditor={handleClose}
-                    onPipelineDirtyStateChange={onPipelineDirtyStateChange}
+                    onPipelineDirtyStateChange={onDirtyChange}
                     onConversationStartersChange={onConversationStartersChange}
                     onAttachmentToolChange={onAttachmentToolChange}
+                    disableNavBlocking
                   />
                 </Suspense>
               )}
@@ -104,6 +123,8 @@ const GeneratedEntityEditorPanel = memo(props => {
                     skill={tab.participant}
                     isVisible={isActive}
                     onCloseSkillEditor={handleClose}
+                    onDirtyStateChange={onDirtyChange}
+                    disableNavBlocking
                   />
                 </Suspense>
               )}
@@ -113,6 +134,8 @@ const GeneratedEntityEditorPanel = memo(props => {
                     toolkit={tab.participant}
                     isVisible={isActive}
                     onCloseToolkitEditor={handleClose}
+                    onDirtyStateChange={onDirtyChange}
+                    disableNavBlocking
                   />
                 </Suspense>
               )}
@@ -121,6 +144,8 @@ const GeneratedEntityEditorPanel = memo(props => {
                   <ProjectContextEditor
                     isVisible={isActive}
                     onCloseProjectContextEditor={handleClose}
+                    onDirtyStateChange={onDirtyChange}
+                    disableNavBlocking
                   />
                 </Suspense>
               )}

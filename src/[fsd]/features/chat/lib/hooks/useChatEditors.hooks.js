@@ -1,4 +1,6 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+
+import { useDispatch } from 'react-redux';
 
 import useAgentCreation from '@/hooks/chat/useAgentCreation';
 import { useAgentEditorUrlSync } from '@/hooks/chat/useAgentEditorUrlSync';
@@ -7,6 +9,7 @@ import useEditPipeline from '@/hooks/chat/useEditPipeline';
 import useEditToolkit from '@/hooks/chat/useEditToolkit';
 import usePipelineCreation from '@/hooks/chat/usePipelineCreation';
 import useToolkitCreation from '@/hooks/chat/useToolkitCreation';
+import { actions as settingsActions } from '@/slices/settings';
 
 import { buildEntityParticipant } from '../helpers';
 import { useAttachmentToolChange } from './useAttachmentToolChange.hooks';
@@ -73,6 +76,7 @@ export const useChatEditors = ({
     useEditProjectContext();
 
   // Dirty-state and version-change alert state
+  const dispatch = useDispatch();
   const [editorIsDirty, setEditorIsDirty] = useState(false);
   const [showVersionChangeAlert, setShowVersionChangeAlert] = useState(false);
   const [pendingVersionChangeCallback, setPendingVersionChangeCallback] = useState(null);
@@ -80,6 +84,10 @@ export const useChatEditors = ({
   const handleEditorDirtyStateChange = useCallback(isDirty => {
     setEditorIsDirty(isDirty);
   }, []);
+
+  useEffect(() => {
+    dispatch(settingsActions.setBlockNav(editorIsDirty));
+  }, [editorIsDirty, dispatch]);
 
   const handleShowVersionChangeAlert = useCallback(onConfirmCallback => {
     setPendingVersionChangeCallback(() => onConfirmCallback);

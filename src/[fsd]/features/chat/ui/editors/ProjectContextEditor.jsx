@@ -8,7 +8,7 @@ import { useProjectContextQuery } from '@/api/projectContext';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const ProjectContextEditor = memo(props => {
-  const { onCloseProjectContextEditor, isVisible } = props;
+  const { onCloseProjectContextEditor, isVisible, onDirtyStateChange, disableNavBlocking = false } = props;
   const projectId = useSelectedProjectId();
   const { data: serverData } = useProjectContextQuery(projectId, {
     skip: !projectId,
@@ -38,6 +38,8 @@ const ProjectContextEditor = memo(props => {
       isDirty={isDirty}
       setIsDirty={setIsDirty}
       onClose={onCloseProjectContextEditor}
+      onDirtyStateChange={onDirtyStateChange}
+      disableNavBlocking={disableNavBlocking}
       title="Project Context"
       initialValues={{}}
       saveButton={saveButton}

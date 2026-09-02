@@ -121,6 +121,7 @@ const AgentEditor = memo(
     onConversationStartersChange,
     // Callback to save per-conversation LLM override for published public agents
     onConversationLlmOverride,
+    disableNavBlocking = false,
   }) => {
     const trackEvent = useTrackEvent();
 
@@ -328,6 +329,7 @@ const AgentEditor = memo(
           validationSchema={getValidateSchema}
           error={error}
           onDirtyStateChange={onAgentDirtyStateChange}
+          disableNavBlocking={disableNavBlocking}
           saveButton={
             isCreateMode ? (
               <CreateApplicationSaveButton

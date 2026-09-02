@@ -130,6 +130,7 @@ const PipelineEditor = forwardRef(
       activeParticipantId,
       onAttachmentToolChange,
       onConversationStartersChange,
+      disableNavBlocking = false,
     },
     ref,
   ) => {
@@ -474,6 +475,7 @@ const PipelineEditor = forwardRef(
           validationSchema={getValidateSchema}
           error={error}
           onDirtyStateChange={onPipelineDirtyStateChange}
+          disableNavBlocking={disableNavBlocking}
           closeButtonTestId="pipeline-canvas-close-button"
           formContent={
             !isCreateMode ? (
