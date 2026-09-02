@@ -9,7 +9,7 @@ import { FOLDER_ENTITY_LABELS } from '../lib/constants';
 import { useDeleteFolder } from '../lib/hooks';
 
 const DeleteFolderDialog = memo(props => {
-  const { open, onClose, folder, entityType } = props;
+  const { open, onClose, folder, entityType, onDelete } = props;
 
   const { deleteFolder, isLoading } = useDeleteFolder();
   const { toastSuccess, toastError } = useToast();
@@ -22,11 +22,11 @@ const DeleteFolderDialog = memo(props => {
     try {
       await deleteFolder({ folderId: folder.id, entityType });
       toastSuccess('Folder deleted successfully');
-      onClose?.();
+      onDelete?.(folder);
     } catch {
       toastError('Failed to delete folder');
     }
-  }, [folder, entityType, deleteFolder, toastSuccess, toastError, onClose]);
+  }, [folder, entityType, deleteFolder, toastSuccess, toastError, onDelete]);
 
   const extraContent = (
     <Alert

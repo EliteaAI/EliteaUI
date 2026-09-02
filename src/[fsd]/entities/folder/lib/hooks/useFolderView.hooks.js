@@ -50,11 +50,22 @@ export const useFolderView = (folders = []) => {
     [selectedFolderId, setSearchParams, closeFolder],
   );
 
+  const onFolderDelete = useCallback(
+    folder => {
+      if (folder.id === selectedFolderId) {
+        closeFolder();
+        return;
+      }
+    },
+    [selectedFolderId, closeFolder],
+  );
+
   return {
     selectedFolderId,
     selectedFolder,
     isFolderViewActive,
     openFolder,
     closeFolder,
+    onFolderDelete,
   };
 };
