@@ -134,7 +134,7 @@ const ProjectContextEditor = memo(props => {
       }).unwrap();
       toastSuccess('Project Context saved');
       setBlockNav(false);
-      onNavigate('saved');
+      onNavigate?.('saved');
     },
     [serverData, updateProjectContext, projectId, toastSuccess, setBlockNav, onNavigate],
   );
@@ -183,7 +183,7 @@ const ProjectContextEditor = memo(props => {
       toastSuccess('Project Context saved');
       setIsDirty(false);
       setBlockNav(false);
-      onNavigate('saved');
+      onNavigate?.('saved');
     } catch {
       toastError('Failed to save Project Context');
     }
@@ -221,18 +221,18 @@ const ProjectContextEditor = memo(props => {
   const handleCancel = useCallback(() => {
     setIsDirty(false);
     setBlockNav(false);
-    onNavigate('empty');
+    onNavigate?.('empty');
   }, [setBlockNav, onNavigate]);
 
   const handleDiscard = useCallback(() => {
     setIsDirty(false);
     setBlockNav(false);
-    onNavigate('saved');
+    onNavigate?.('saved');
   }, [setBlockNav, onNavigate]);
 
   const handleBack = useCallback(() => {
     const hasServerContent = Boolean(serverData?.content?.trim());
-    onNavigate(hasServerContent ? 'saved' : 'empty');
+    onNavigate?.(hasServerContent ? 'saved' : 'empty');
   }, [serverData, onNavigate]);
 
   const breadcrumbTitle = (
@@ -316,6 +316,7 @@ const ProjectContextEditor = memo(props => {
               maxLength: PROJECT_CONTEXT_ACTIVATION_DESCRIPTION_MAX_LEN,
               'data-testid': 'project-context-activation-description',
             }}
+            sx={styles.textField}
           />
         </Box>
         <Box sx={styles.editorHeader}>
@@ -532,4 +533,37 @@ const getStyles = (limitReached, isEditorFocused) => ({
     alignItems: 'center',
     gap: '0.75rem',
   },
+  textField: ({ palette }) => ({
+    '& .MuiInputBase-root': {
+      padding: '0.5rem 0rem',
+    },
+    '& .MuiOutlinedInput-root': {
+      backgroundColor: palette.background.userInputBackground,
+      borderRadius: '0.5rem',
+      fontSize: '0.875rem',
+      color: palette.text.secondary,
+      '& .MuiOutlinedInput-notchedOutline': {
+        borderColor: palette.border.lines,
+      },
+      '&:hover .MuiOutlinedInput-notchedOutline': {
+        borderColor: palette.border.lines,
+      },
+      '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+        borderColor: palette.primary.main,
+        borderWidth: '0.0625rem',
+      },
+    },
+    '& .MuiFormHelperText-root': {
+      fontSize: '0.625rem',
+      margin: '0.125rem 0 0',
+      color: palette.text.primary,
+      visibility: 'visible',
+      lineHeight: '1rem',
+      textAlign: 'right',
+    },
+    '& .MuiFormHelperText-root.Mui-error': {
+      visibility: 'visible',
+      color: palette.error.main,
+    },
+  }),
 });
