@@ -62,7 +62,7 @@ const DimensionCard = memo(props => {
         <Tooltip
           title={dimensionName}
           placement="top"
-          disableHoverListener={dimensionName.length < 30}
+          disableHoverListener={(dimensionName || '').length < 30}
         >
           <Typography
             variant="bodyMedium"

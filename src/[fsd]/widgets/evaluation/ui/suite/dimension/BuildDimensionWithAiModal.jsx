@@ -19,6 +19,7 @@ import DimensionForm from './DimensionForm';
 const STEPS = {
   INPUT: 'input',
   LOADING: 'loading',
+  SELECT: 'select',
   REVIEW: 'review',
 };
 
@@ -27,6 +28,7 @@ const BuildDimensionWithAiModal = memo(props => {
 
   const [step, setStep] = useState(STEPS.INPUT);
   const [prompt, setPrompt] = useState('');
+  const [generatedDimensions, setGeneratedDimensions] = useState([]);
   const [form, setForm] = useState(getDefaultDimensionFormState);
   const [errorMessage, setErrorMessage] = useState('');
   const [generateError, setGenerateError] = useState(null);
@@ -39,6 +41,7 @@ const BuildDimensionWithAiModal = memo(props => {
     if (open) {
       setStep(STEPS.INPUT);
       setPrompt('');
+      setGeneratedDimensions([]);
       setForm(getDefaultDimensionFormState());
       setErrorMessage('');
       setGenerateError(null);
@@ -75,9 +78,15 @@ const BuildDimensionWithAiModal = memo(props => {
       const result = await promise.unwrap();
       generatePromiseRef.current = null;
 
-      const generated = Array.isArray(result) ? result[0] : result;
-      setForm(mapGeneratedDimensionToForm(generated));
-      setStep(STEPS.REVIEW);
+      const dims = result?.dimensions ?? (Array.isArray(result) ? result : [result]);
+      setGeneratedDimensions(dims);
+
+      if (dims.length === 1) {
+        setForm(mapGeneratedDimensionToForm(dims[0]));
+        setStep(STEPS.REVIEW);
+      } else {
+        setStep(STEPS.SELECT);
+      }
     } catch (err) {
       generatePromiseRef.current = null;
       setGenerateError(err);
@@ -95,9 +104,19 @@ const BuildDimensionWithAiModal = memo(props => {
     [handleGenerate, step],
   );
 
-  const handleBack = useCallback(() => {
+  const handleBackToPrompt = useCallback(() => {
     setStep(STEPS.INPUT);
     setGenerateError(null);
+  }, []);
+
+  const handleBackToSelect = useCallback(() => {
+    setStep(STEPS.SELECT);
+    setErrorMessage('');
+  }, []);
+
+  const handleSelectDimension = useCallback(dimension => {
+    setForm(mapGeneratedDimensionToForm(dimension));
+    setStep(STEPS.REVIEW);
   }, []);
 
   const validationError = getDimensionFormValidationError(form);
@@ -165,8 +184,47 @@ const BuildDimensionWithAiModal = memo(props => {
         color="text.secondary"
         sx={styles.loadingText}
       >
-        Generating dimension draft...
+        Generating dimension drafts...
       </Typography>
+    </Box>
+  );
+
+  const renderSelectContent = () => (
+    <Box
+      sx={styles.selectContainer}
+      data-testid="build-dimension-select-list"
+    >
+      <Typography
+        variant="bodyMedium"
+        sx={styles.selectHint}
+      >
+        Select a dimension to review and customize:
+      </Typography>
+      <Box sx={styles.selectList}>
+        {generatedDimensions.map((dim, index) => (
+          <Box
+            key={dim.name || index}
+            sx={styles.selectCard}
+            onClick={() => handleSelectDimension(dim)}
+            data-testid={`build-dimension-select-${index}`}
+          >
+            <Typography
+              variant="bodyMedium"
+              sx={styles.selectCardName}
+            >
+              {dim.name}
+            </Typography>
+            {dim.description && (
+              <Typography
+                variant="bodySmall"
+                sx={styles.selectCardDescription}
+              >
+                {dim.description}
+              </Typography>
+            )}
+          </Box>
+        ))}
+      </Box>
     </Box>
   );
 
@@ -180,6 +238,7 @@ const BuildDimensionWithAiModal = memo(props => {
 
   const renderContent = () => {
     if (step === STEPS.LOADING) return renderLoadingContent();
+    if (step === STEPS.SELECT) return renderSelectContent();
     if (step === STEPS.REVIEW) return renderReviewContent();
     return renderInputContent();
   };
@@ -193,11 +252,11 @@ const BuildDimensionWithAiModal = memo(props => {
           <Button.BaseBtn
             variant={BUTTON_VARIANTS.elitea}
             color={BUTTON_COLORS.secondary}
-            onClick={handleBack}
+            onClick={generatedDimensions.length > 1 ? handleBackToSelect : handleBackToPrompt}
             disabled={isCreating}
             data-testid="build-dimension-back-button"
           >
-            Back to prompt
+            {generatedDimensions.length > 1 ? 'Back to list' : 'Back to prompt'}
           </Button.BaseBtn>
           <Button.BaseBtn
             variant={BUTTON_VARIANTS.elitea}
@@ -208,6 +267,22 @@ const BuildDimensionWithAiModal = memo(props => {
           >
             {isCreating ? 'Creating...' : 'Create Dimension'}
           </Button.BaseBtn>
+        </>
+      );
+    }
+
+    if (step === STEPS.SELECT) {
+      return (
+        <>
+          <Button.BaseBtn
+            variant={BUTTON_VARIANTS.elitea}
+            color={BUTTON_COLORS.secondary}
+            onClick={handleBackToPrompt}
+            data-testid="build-dimension-back-button"
+          >
+            Back to prompt
+          </Button.BaseBtn>
+          <Box sx={styles.actionSpacer} />
         </>
       );
     }
@@ -236,6 +311,8 @@ const BuildDimensionWithAiModal = memo(props => {
     );
   };
 
+  const isWideStep = step === STEPS.REVIEW || step === STEPS.SELECT;
+
   return (
     <Modal.BaseModal
       open={open}
@@ -244,7 +321,7 @@ const BuildDimensionWithAiModal = memo(props => {
       content={renderContent()}
       actions={renderActions()}
       variant={step === STEPS.REVIEW ? ModalConstants.MODAL_VARIANT.complex : undefined}
-      sx={styles.dialogPaper}
+      sx={isWideStep ? styles.dialogPaperWide : styles.dialogPaper}
       dialogSx={step === STEPS.REVIEW ? styles.dialogReview : styles.dialogInput}
       data-testid="build-dimension-with-ai-modal"
     />
@@ -258,6 +335,12 @@ const buildDimensionWithAiModalStyles = () => ({
   dialogPaper: {
     '& .MuiDialog-paper': {
       width: '45rem !important',
+      maxWidth: '80% !important',
+    },
+  },
+  dialogPaperWide: {
+    '& .MuiDialog-paper': {
+      width: '50rem !important',
       maxWidth: '80% !important',
     },
   },
@@ -293,6 +376,50 @@ const buildDimensionWithAiModalStyles = () => ({
   loadingText: {
     fontSize: '0.875rem',
   },
+  selectContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+    minHeight: '16rem',
+  },
+  selectHint: ({ palette }) => ({
+    color: palette.text.primary,
+    fontSize: '0.875rem',
+  }),
+  selectList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.75rem',
+    overflowY: 'auto',
+  },
+  selectCard: ({ palette }) => ({
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.375rem',
+    padding: '1rem',
+    borderRadius: '0.75rem',
+    border: `0.0625rem solid ${palette.border.cardsOutlines}`,
+    backgroundColor: palette.background.aiProviderAccordion.default,
+    cursor: 'pointer',
+    '&:hover': {
+      backgroundColor: palette.background.aiProviderAccordion.hover,
+      borderColor: palette.border.lines,
+    },
+  }),
+  selectCardName: ({ palette }) => ({
+    color: palette.text.secondary,
+    fontWeight: 600,
+  }),
+  selectCardDescription: ({ palette }) => ({
+    color: palette.text.primary,
+    fontSize: '0.8125rem',
+    lineHeight: '1.25rem',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    display: '-webkit-box',
+    WebkitLineClamp: 3,
+    WebkitBoxOrient: 'vertical',
+  }),
   actionSpacer: {
     flex: 1,
   },

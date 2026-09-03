@@ -363,8 +363,12 @@ const AgentEvaluatePage = memo(() => {
   }, []);
 
   const handleManageDimensions = useCallback(() => {
-    // TODO: navigate to dimensions management
-  }, []);
+    const dimensionsPath = RouteDefinitions.ApplicationsEvaluateDimensions.replace(':tab', tab).replace(
+      ':agentId',
+      agentId,
+    );
+    navigate(dimensionsPath);
+  }, [navigate, tab, agentId]);
 
   const handleSelectDimensionFromLibrary = useCallback(() => {
     setShowDimensionLibrary(true);
@@ -585,7 +589,6 @@ const AgentEvaluatePage = memo(() => {
         textContent="Are you sure to remove "
         name={dimensionToRemove?.name}
         inlineExtraContent=" from this suite?"
-        shouldRequestInputName
         confirmButtonText="Remove"
       />
       {editingSuiteId && (
