@@ -201,9 +201,6 @@ export const toolkitsApi = eliteaApi
           { type: 'EntityFolder', id: 'LIST_toolkit' },
           { type: 'EntityFolder', id: 'LIST_mcp' },
         ],
-          TAG_TYPE_TOOLKIT_DETAILS,
-          { type: 'EntityFolder', id: 'LIST_toolkit' },
-        ],
         onQueryStarted: async (args, { dispatch, getState, queryFulfilled }) => {
           const {
             eliteaApi: { queries },
