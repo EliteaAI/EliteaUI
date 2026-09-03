@@ -47,7 +47,7 @@ const SuiteDetailPanel = memo(props => {
     onOpenDataset,
     onAddCase,
     onEditCase,
-    onDeleteCase,
+    onRemoveCase,
     onImportCases,
     onPromoteCases,
     onManageDimensions,
@@ -321,7 +321,7 @@ const SuiteDetailPanel = memo(props => {
                   onOpenDataset={onOpenDataset}
                   onAddCase={onAddCase}
                   onEditCase={onEditCase}
-                  onDeleteCase={onDeleteCase}
+                  onRemoveCase={onRemoveCase}
                   onImportCases={onImportCases}
                   onPromoteCases={onPromoteCases}
                 />

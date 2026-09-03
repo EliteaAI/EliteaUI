@@ -7,8 +7,10 @@ import { Box } from '@mui/material';
 import { BreadcrumbsOrTitle, Modal } from '@/[fsd]/shared/ui';
 import {
   AddCaseFromChatsModal,
+  BuildDimensionWithAiModal,
   CreateCaseModal,
   DatasetModal,
+  DimensionModal,
   ImportCaseModal,
   ResultsPanel,
   SelectDimensionFromLibraryModal,
@@ -18,7 +20,6 @@ import {
   useAddEvalBindingMutation,
   useCreateEvalSuiteMutation,
   useDeleteEvalBindingMutation,
-  useDeleteEvalDatasetCaseMutation,
   useDeleteEvalSuiteMutation,
   useEvalDatasetQuery,
   useEvalDatasetsQuery,
@@ -66,7 +67,6 @@ const AgentEvaluatePage = memo(() => {
   const [deleteEvalSuite] = useDeleteEvalSuiteMutation();
   const [createEvalSuite, { isLoading: isCreating }] = useCreateEvalSuiteMutation();
   const [updateEvalSuite, { isLoading: isUpdating }] = useUpdateEvalSuiteMutation();
-  const [deleteEvalDatasetCase] = useDeleteEvalDatasetCaseMutation();
   const [addEvalBinding] = useAddEvalBindingMutation();
   const [deleteEvalBinding] = useDeleteEvalBindingMutation();
 
@@ -77,9 +77,11 @@ const AgentEvaluatePage = memo(() => {
   const [showChatsModal, setShowChatsModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [showDimensionLibrary, setShowDimensionLibrary] = useState(false);
+  const [showCreateDimensionModal, setShowCreateDimensionModal] = useState(false);
+  const [showBuildDimensionWithAi, setShowBuildDimensionWithAi] = useState(false);
   const [dimensionToRemove, setDimensionToRemove] = useState(null);
+  const [dimensionToEdit, setDimensionToEdit] = useState(null);
   const [caseToEdit, setCaseToEdit] = useState(null);
-  const [caseToDelete, setCaseToDelete] = useState(null);
 
   const blockOptions = useMemo(
     () => ({
@@ -322,28 +324,16 @@ const AgentEvaluatePage = memo(() => {
     setCaseToEdit(null);
   }, []);
 
-  const handleDeleteCase = useCallback(datasetCase => {
-    setCaseToDelete(datasetCase);
-  }, []);
-
-  const handleCloseDeleteCase = useCallback(() => {
-    setCaseToDelete(null);
-  }, []);
-
-  const handleConfirmDeleteCase = useCallback(async () => {
-    if (!caseToDelete || !attachedDatasetId) return;
-    try {
-      await deleteEvalDatasetCase({
-        projectId,
-        datasetId: attachedDatasetId,
-        caseId: caseToDelete.id,
-      }).unwrap();
-      toastSuccess('Case has been successfully deleted.');
-    } catch (error) {
-      toastError(parseEvalError(error, 'Failed to delete the case.'));
-    }
-    setCaseToDelete(null);
-  }, [caseToDelete, attachedDatasetId, deleteEvalDatasetCase, projectId, toastSuccess, toastError]);
+  // TODO: Replace with unbind endpoint when BE is ready
+  // Currently this is a placeholder - cases cannot be removed from suite yet
+  const handleRemoveCase = useCallback(
+    datasetCase => {
+      // eslint-disable-next-line no-console
+      console.warn('Remove case from suite not implemented yet. Case:', datasetCase?.id);
+      toastError('Remove case from suite is not available yet. Please use Manage Datasets to delete cases.');
+    },
+    [toastError],
+  );
 
   const handleOpenDataset = useCallback(
     dataset => {
@@ -392,7 +382,10 @@ const AgentEvaluatePage = memo(() => {
           addEvalBinding({
             projectId,
             suiteId: editingSuiteId,
-            body: { dimension_id: dimension.id },
+            body: {
+              dimension_id: dimension.id,
+              engine: dimension.allowed_engines?.[0] ?? 'ai',
+            },
           }).unwrap(),
         ),
       );
@@ -408,16 +401,59 @@ const AgentEvaluatePage = memo(() => {
   );
 
   const handleCreateDimensionManually = useCallback(() => {
-    // TODO: open create dimension dialog
+    setShowCreateDimensionModal(true);
   }, []);
+
+  const handleCloseCreateDimensionModal = useCallback(() => {
+    setShowCreateDimensionModal(false);
+  }, []);
+
+  const handleDimensionCreated = useCallback(
+    async (dimension, evidenceScope, engine) => {
+      if (!editingSuiteId || !dimension?.id) return;
+      try {
+        await addEvalBinding({
+          projectId,
+          suiteId: editingSuiteId,
+          body: {
+            dimension_id: dimension.id,
+            evidence_scope: evidenceScope,
+            engine,
+          },
+        }).unwrap();
+        toastSuccess(`Dimension "${dimension.name}" has been created and added to the suite.`);
+      } catch (error) {
+        toastError(parseEvalError(error, 'Dimension created but failed to attach to suite.'));
+      }
+    },
+    [editingSuiteId, addEvalBinding, projectId, toastSuccess, toastError],
+  );
 
   const handleBuildDimensionWithAi = useCallback(() => {
-    // TODO: open AI dimension builder
+    setShowBuildDimensionWithAi(true);
   }, []);
 
-  const handleEditDimension = useCallback(() => {
-    // TODO: open edit dimension dialog
+  const handleCloseBuildDimensionWithAi = useCallback(() => {
+    setShowBuildDimensionWithAi(false);
   }, []);
+
+  const handleEditDimension = useCallback(
+    binding => {
+      const dim = dimensions.find(d => d.id === binding.dimension_id);
+      if (dim) {
+        setDimensionToEdit(dim);
+      }
+    },
+    [dimensions],
+  );
+
+  const handleCloseEditDimension = useCallback(() => {
+    setDimensionToEdit(null);
+  }, []);
+
+  const handleDimensionUpdated = useCallback(() => {
+    toastSuccess('Dimension has been updated successfully.');
+  }, [toastSuccess]);
 
   const handleRemoveDimension = useCallback(
     binding => {
@@ -475,7 +511,7 @@ const AgentEvaluatePage = memo(() => {
             onOpenDataset={handleOpenDataset}
             onAddCase={handleAddCase}
             onEditCase={handleEditCase}
-            onDeleteCase={handleDeleteCase}
+            onRemoveCase={handleRemoveCase}
             onImportCases={handleImportCases}
             onPromoteCases={handlePromoteCases}
             onManageDimensions={handleManageDimensions}
@@ -542,33 +578,42 @@ const AgentEvaluatePage = memo(() => {
         </>
       )}
       <Modal.DeleteEntityModal
-        open={!!caseToDelete}
-        onClose={handleCloseDeleteCase}
-        onConfirm={handleConfirmDeleteCase}
-        title="Delete confirmation"
-        textContent="Are you sure to delete the "
-        name={caseToDelete?.input?.split('\n')[0].trim().slice(0, 50) || `Case ${caseToDelete?.id ?? ''}`}
-        confirmButtonText="Delete"
-      />
-      <Modal.DeleteEntityModal
         open={!!dimensionToRemove}
         onClose={handleCloseRemoveDimension}
         onConfirm={handleConfirmRemoveDimension}
-        title="Delete confirmation"
-        textContent="Are you sure to delete the "
+        title="Remove confirmation"
+        textContent="Are you sure to remove "
         name={dimensionToRemove?.name}
+        inlineExtraContent=" from this suite?"
         shouldRequestInputName
-        confirmButtonText="Delete"
+        confirmButtonText="Remove"
       />
       {editingSuiteId && (
-        <SelectDimensionFromLibraryModal
-          open={showDimensionLibrary}
-          onClose={handleCloseDimensionLibrary}
-          projectId={projectId}
-          applicationId={applicationId}
-          attachedDimensionIds={attachedDimensionIds}
-          onAdd={handleAddDimensionsFromLibrary}
-        />
+        <>
+          <SelectDimensionFromLibraryModal
+            open={showDimensionLibrary}
+            onClose={handleCloseDimensionLibrary}
+            projectId={projectId}
+            applicationId={applicationId}
+            attachedDimensionIds={attachedDimensionIds}
+            onAdd={handleAddDimensionsFromLibrary}
+          />
+          <DimensionModal
+            open={showCreateDimensionModal || !!dimensionToEdit}
+            onClose={dimensionToEdit ? handleCloseEditDimension : handleCloseCreateDimensionModal}
+            projectId={projectId}
+            applicationId={applicationId}
+            dimension={dimensionToEdit}
+            onSaved={dimensionToEdit ? handleDimensionUpdated : handleDimensionCreated}
+          />
+          <BuildDimensionWithAiModal
+            open={showBuildDimensionWithAi}
+            onClose={handleCloseBuildDimensionWithAi}
+            projectId={projectId}
+            applicationId={applicationId}
+            onSaved={handleDimensionCreated}
+          />
+        </>
       )}
     </Box>
   );

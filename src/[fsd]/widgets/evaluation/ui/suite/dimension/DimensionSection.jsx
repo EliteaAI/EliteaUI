@@ -4,7 +4,7 @@ import { Box, Typography } from '@mui/material';
 
 import useCheckPermission from '@/hooks/useCheckPermission';
 
-import { EVAL_PERMISSIONS } from '../../../lib/constants';
+import { EVAL_PERMISSIONS, EVAL_TIER } from '../../../lib/constants';
 import AddDimensionMenu from './AddDimensionMenu';
 import DimensionCard from './DimensionCard';
 
@@ -20,6 +20,7 @@ const DimensionSection = memo(props => {
 
   const { checkPermission } = useCheckPermission();
   const canUpdateSuite = checkPermission(EVAL_PERMISSIONS.suiteUpdate);
+  const canUpdateDimension = checkPermission(EVAL_PERMISSIONS.dimensionUpdate);
 
   const hasAttachedDimensions = attachedDimensions.length > 0;
 
@@ -29,20 +30,26 @@ const DimensionSection = memo(props => {
     <Box sx={styles.root}>
       {hasAttachedDimensions ? (
         <Box sx={styles.cardList}>
-          {attachedDimensions.map(item => (
-            <DimensionCard
-              key={item.binding.id}
-              binding={item.binding}
-              dimensionName={item.name}
-              tier={item.tier}
-              defaultTarget={item.defaultTarget}
-              defaultTargetOperator={item.defaultTargetOperator}
-              defaultWeight={item.defaultWeight}
-              canEdit={canUpdateSuite}
-              onEdit={onEditDimension}
-              onRemove={onRemoveDimension}
-            />
-          ))}
+          {attachedDimensions.map(item => {
+            // Only agent-level dimensions can be edited from Suite view
+            // Shared dimensions (project/platform) must be edited from Manage Dimensions
+            const isAgentTier = item.tier === EVAL_TIER.agent_adhoc;
+            return (
+              <DimensionCard
+                key={item.binding.id}
+                binding={item.binding}
+                dimensionName={item.name}
+                tier={item.tier}
+                defaultTarget={item.defaultTarget}
+                defaultTargetOperator={item.defaultTargetOperator}
+                defaultWeight={item.defaultWeight}
+                canEdit={canUpdateDimension && isAgentTier}
+                canRemove={canUpdateSuite}
+                onEdit={onEditDimension}
+                onRemove={onRemoveDimension}
+              />
+            );
+          })}
         </Box>
       ) : (
         <Typography

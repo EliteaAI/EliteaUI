@@ -5,16 +5,15 @@ import { Box, Typography } from '@mui/material';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
-import EditIcon from '@/components/Icons/EditIcon';
-import useCheckPermission from '@/hooks/useCheckPermission';
+import EditPenIcon from '@/components/Icons/EditPenIcon';
 
-import { EVAL_PERMISSIONS } from '../../../lib/constants';
-
+/**
+ * Case item displayed in Suite view.
+ * - Edit: only for non-shared datasets (shared cases must be edited from Manage Datasets)
+ * - Remove: only for non-shared datasets (TODO: will call unbind endpoint when BE is ready)
+ */
 const DatasetCaseItem = memo(props => {
-  const { caseItem, onEdit, onDelete } = props;
-
-  const { checkPermission } = useCheckPermission();
-  const canUpdateDataset = checkPermission(EVAL_PERMISSIONS.datasetUpdate);
+  const { caseItem, canEdit = false, canRemove = false, onEdit, onRemove } = props;
 
   const handleEdit = useCallback(
     event => {
@@ -24,13 +23,15 @@ const DatasetCaseItem = memo(props => {
     [onEdit, caseItem],
   );
 
-  const handleDelete = useCallback(
+  const handleRemove = useCallback(
     event => {
       event.stopPropagation();
-      onDelete?.(caseItem);
+      onRemove?.(caseItem);
     },
-    [onDelete, caseItem],
+    [onRemove, caseItem],
   );
+
+  const showActions = canEdit || canRemove;
 
   const styles = datasetCaseItemStyles();
 
@@ -59,25 +60,31 @@ const DatasetCaseItem = memo(props => {
           {caseItem.expected_output}
         </Typography>
       </Box>
-      {canUpdateDataset && (
+      {showActions && (
         <Box
           className="case-actions"
           sx={styles.actions}
         >
-          <Button.BaseBtn
-            variant={BUTTON_VARIANTS.tertiary}
-            onClick={handleEdit}
-            sx={styles.actionButton}
-          >
-            <EditIcon />
-          </Button.BaseBtn>
-          <Button.BaseBtn
-            variant={BUTTON_VARIANTS.tertiary}
-            onClick={handleDelete}
-            sx={styles.actionButton}
-          >
-            <DeleteIcon />
-          </Button.BaseBtn>
+          {canEdit && (
+            <Button.BaseBtn
+              variant={BUTTON_VARIANTS.tertiary}
+              onClick={handleEdit}
+              sx={styles.actionButton}
+              data-testid={`case-edit-${caseItem.id}`}
+            >
+              <EditPenIcon sx={styles.actionIcon} />
+            </Button.BaseBtn>
+          )}
+          {canRemove && (
+            <Button.BaseBtn
+              variant={BUTTON_VARIANTS.tertiary}
+              onClick={handleRemove}
+              sx={styles.actionButton}
+              data-testid={`case-remove-${caseItem.id}`}
+            >
+              <DeleteIcon sx={styles.actionIcon} />
+            </Button.BaseBtn>
+          )}
         </Box>
       )}
     </Box>
@@ -94,10 +101,6 @@ const datasetCaseItemStyles = () => ({
     position: 'relative',
     padding: '0.5rem 0',
     borderBottom: `0.0625rem solid ${palette.border.lines}`,
-
-    ':hover': {
-      cursor: 'pointer',
-    },
 
     '& .case-actions': {
       opacity: 0,
@@ -119,6 +122,7 @@ const datasetCaseItemStyles = () => ({
     width: '100%',
     minWidth: 0,
     overflow: 'hidden',
+    transition: 'padding-right 0.15s ease',
   },
   text: ({ palette }) => ({
     fontSize: '0.75rem',
@@ -149,15 +153,15 @@ const datasetCaseItemStyles = () => ({
   actionButton: ({ palette }) => ({
     minWidth: 'unset',
     padding: '0.25rem',
-    '& svg': {
-      width: '1rem',
-      height: '1rem',
-    },
-    '& svg path': {
-      fill: palette.icon.fill.default,
-    },
     '&:hover': {
       backgroundColor: palette.action.hover,
+    },
+  }),
+  actionIcon: ({ palette }) => ({
+    width: '1rem',
+    height: '1rem',
+    '& path': {
+      fill: palette.icon.fill.default,
     },
   }),
 });

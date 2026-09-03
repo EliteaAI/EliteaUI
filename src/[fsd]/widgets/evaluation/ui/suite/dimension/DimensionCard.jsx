@@ -20,6 +20,7 @@ const DimensionCard = memo(props => {
     defaultTargetOperator = null,
     defaultWeight = null,
     canEdit = false,
+    canRemove = false,
     onEdit,
     onRemove,
   } = props;
@@ -101,27 +102,31 @@ const DimensionCard = memo(props => {
           )}
         </Box>
       </Box>
-      {canEdit && (
+      {(canEdit || canRemove) && (
         <Box
           className="dimension-card-actions"
           sx={styles.actions}
         >
-          <Button.BaseBtn
-            variant={BUTTON_VARIANTS.tertiary}
-            onClick={handleEdit}
-            sx={styles.actionButton}
-            data-testid={`dimension-card-edit-${binding.id}`}
-          >
-            <EditPenIcon sx={styles.actionIcon} />
-          </Button.BaseBtn>
-          <Button.BaseBtn
-            variant={BUTTON_VARIANTS.tertiary}
-            onClick={handleRemove}
-            sx={styles.actionButton}
-            data-testid={`dimension-card-remove-${binding.id}`}
-          >
-            <DeleteIcon sx={styles.actionIcon} />
-          </Button.BaseBtn>
+          {canEdit && (
+            <Button.BaseBtn
+              variant={BUTTON_VARIANTS.tertiary}
+              onClick={handleEdit}
+              sx={styles.actionButton}
+              data-testid={`dimension-card-edit-${binding.id}`}
+            >
+              <EditPenIcon sx={styles.actionIcon} />
+            </Button.BaseBtn>
+          )}
+          {canRemove && (
+            <Button.BaseBtn
+              variant={BUTTON_VARIANTS.tertiary}
+              onClick={handleRemove}
+              sx={styles.actionButton}
+              data-testid={`dimension-card-remove-${binding.id}`}
+            >
+              <DeleteIcon sx={styles.actionIcon} />
+            </Button.BaseBtn>
+          )}
         </Box>
       )}
     </Box>

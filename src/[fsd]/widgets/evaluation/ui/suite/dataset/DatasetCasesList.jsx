@@ -13,15 +13,21 @@ const DatasetCasesList = memo(props => {
   const {
     cases = [],
     caseCount = 0,
+    isSharedDataset = false,
     onAddCase,
     onEditCase,
-    onDeleteCase,
+    onRemoveCase,
     onImportCases,
     onPromoteCases,
   } = props;
 
   const { checkPermission } = useCheckPermission();
+  const canUpdateSuite = checkPermission(EVAL_PERMISSIONS.suiteUpdate);
   const canUpdateDataset = checkPermission(EVAL_PERMISSIONS.datasetUpdate);
+
+  // Cases from shared datasets can only be modified from Manage Datasets page
+  const canEditCases = canUpdateDataset && !isSharedDataset;
+  const canRemoveCases = canUpdateSuite;
 
   const [expanded, setExpanded] = useState(false);
 
@@ -47,8 +53,10 @@ const DatasetCasesList = memo(props => {
             <DatasetCaseItem
               key={caseItem.id}
               caseItem={caseItem}
+              canEdit={canEditCases}
+              canRemove={canRemoveCases}
               onEdit={onEditCase}
-              onDelete={onDeleteCase}
+              onRemove={onRemoveCase}
             />
           ))}
         </Box>
