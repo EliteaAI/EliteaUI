@@ -673,7 +673,7 @@ const ChatBox = forwardRef((props, boxRef) => {
     async ({ entity_type, entity_id }, messageId) => {
       try {
         if (entity_type === 'agent' || entity_type === 'pipeline') {
-          await deleteApplication({ projectId, applicationId: entity_id }).unwrap();
+          await deleteApplication({ projectId, applicationId: entity_id, entityType: entity_type }).unwrap();
         } else if (entity_type === 'skill') {
           await deleteSkill({ projectId, skillId: entity_id }).unwrap();
         } else if (entity_type === 'project_context') {
