@@ -12,7 +12,7 @@ import DeleteIcon from '@/components/Icons/DeleteIcon';
 const getNameErrorText = name => {
   if (!name) return 'Header name is required';
   if (!ToolBaseHelpers.HEADER_NAME_PATTERN.test(name)) {
-    return "Header name must contain only valid HTTP header characters (letters, digits, and !#$%&'*+-.^_`|~)";
+    return 'Invalid HTTP header name';
   }
   return '';
 };
@@ -178,6 +178,7 @@ const SecretHeadersInput = memo(props => {
                   size="small"
                   onClick={() => handleRemove(name)}
                   data-testid={`openapi-secret-header-remove-${index}`}
+                  sx={styles.removeButton}
                 >
                   <DeleteIcon />
                 </IconButton>
@@ -214,11 +215,14 @@ const secretHeadersInputStyles = () => ({
   row: {
     display: 'grid',
     gridTemplateColumns: 'minmax(10rem, 1fr) minmax(14rem, 1.5fr) auto',
-    alignItems: 'end',
+    alignItems: 'start',
     gap: '0.75rem',
   },
   value: {
     minWidth: 0,
+  },
+  removeButton: {
+    marginTop: '1.5rem',
   },
   addRow: {
     display: 'flex',
