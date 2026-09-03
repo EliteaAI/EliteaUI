@@ -45,7 +45,6 @@ export const darkBlue = '#006DD1';
 const darkBlueLowOpacity = '#006dd166';
 const completedBlue = '#036ED033';
 const hoverBlue = '#2783D8';
-const darkBlue40 = '#29B8F566';
 const grey500 = '#ABB3B9';
 const dangerRed = '#D71616';
 const hoverRed = '#E74444';
@@ -181,7 +180,7 @@ const oldDarkPalette = {
     categoriesButton: {
       selected: {
         active: darkBlue,
-        hover: darkBlue40,
+        hover: blue40,
       },
     },
     dataGrid: {
@@ -295,7 +294,6 @@ const oldDarkPalette = {
       default: gray00,
       code: dark20,
     },
-    tips: blue5,
     attention: orangeFill5,
     text: {
       highlight: orange,
@@ -697,6 +695,10 @@ const darkPalette = {
         },
       },
     },
+    tips: {
+      main: blue5,
+      secondary: blue8,
+    },
   },
   border: {
     ...oldDarkPalette.border,
@@ -716,8 +718,9 @@ const darkPalette = {
   },
   alert: {
     info: {
-      main: darkBlue,
-      secondary: darkBlue40,
+      icon: darkBlue,
+      border: blue40,
+      background: blue8,
     },
   },
   icon: {

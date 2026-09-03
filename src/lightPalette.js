@@ -95,7 +95,6 @@ const oldLightPalette = {
   mode: 'light',
 
   background: {
-    info: blue8,
     default: blue01,
     eliteaDefault: gradient,
     secondary: white,
@@ -296,7 +295,6 @@ const oldLightPalette = {
       default: gray30,
       code: white15,
     },
-    tips: blueFill08,
     attention: orangeFill5,
     text: {
       highlight: orange,
@@ -701,6 +699,10 @@ const lightPalette = {
         },
       },
     },
+    tips: {
+      main: blueFill08,
+      secondary: blue8,
+    },
   },
   border: {
     ...oldLightPalette.border,
@@ -720,8 +722,9 @@ const lightPalette = {
   },
   alert: {
     info: {
-      main: blue03,
-      secondary: blue02,
+      icon: blue03,
+      border: blue02,
+      background: blue8,
     },
   },
   icon: {

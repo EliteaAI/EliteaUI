@@ -129,7 +129,7 @@ export const StyledTipsContainer = styled(Box)(({ theme }) => ({
   borderColor: `${theme.palette.border.tips}`,
   borderRadius: '8px',
   marginTop: '16px',
-  backgroundColor: `${theme.palette.background.tips}`,
+  backgroundColor: `${theme.palette.background.tips.main}`,
   width: '452px',
   gap: '12px',
 }));
