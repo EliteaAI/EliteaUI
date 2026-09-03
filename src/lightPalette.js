@@ -94,15 +94,6 @@ const greenOutline40 = '#2ab37a66';
 const oldLightPalette = {
   mode: 'light',
 
-  step: {
-    default: { border: lightStepBorder, icon: dark10 },
-    active: darkBlueLowOpacity,
-    completed: {
-      border: darkBlue,
-      background: completedBlue,
-      icon: darkBlue,
-    },
-  },
   background: {
     info: blue8,
     default: blue01,
@@ -668,14 +659,29 @@ const lightColorScheme = {
 
 const lightPalette = {
   ...oldLightPalette,
-
   primary: {
     main: primaryDefault,
   },
   secondary: {
     main: light10,
   },
-
+  step: {
+    default: {
+      background: 'transparent',
+      border: lightStepBorder,
+      icon: dark10,
+    },
+    active: {
+      background: 'transparent',
+      border: darkBlueLowOpacity,
+      icon: darkBlueLowOpacity,
+    },
+    completed: {
+      background: completedBlue,
+      border: darkBlue,
+      icon: darkBlue,
+    },
+  },
   background: {
     ...oldLightPalette.background,
     npsCard: `linear-gradient(to top, ${lightColorScheme.accentLight}, ${lightColorScheme.accentMid})`,
@@ -712,14 +718,12 @@ const lightPalette = {
     light: lightColorScheme.textLight,
     darker: lightColorScheme.textDarker,
   },
-
   alert: {
     info: {
       main: blue03,
       secondary: blue02,
     },
   },
-
   icon: {
     ...oldLightPalette.icon,
 
