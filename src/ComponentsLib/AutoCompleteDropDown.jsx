@@ -438,8 +438,8 @@ export default function AutoCompleteDropDown({
               </Typography>
             )}
             {state.selected && (
-              <MenuItemIcon>
-                <CheckedIcon sx={styles.checkIconSx} />
+              <MenuItemIcon sx={styles.checkIconSx}>
+                <CheckedIcon />
               </MenuItemIcon>
             )}
           </Box>
@@ -508,7 +508,9 @@ const autoCompleteDropDownStyled = slotPropsProp => ({
     };
   },
   checkIconSx: ({ palette }) => ({
-    fontSize: '1rem',
-    fill: slotPropsProp.Li?.CheckIcon?.fill ?? palette.icon.fill.secondary,
+    '& svg': {
+      fontSize: '1rem',
+      fill: slotPropsProp.Li?.CheckIcon?.fill ?? palette.icon.fill.secondary,
+    },
   }),
 });

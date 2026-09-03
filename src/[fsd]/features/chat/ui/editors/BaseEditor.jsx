@@ -107,8 +107,10 @@ const BaseEditor = ({
   const handleDiscard = useCallback(() => {
     onDiscard?.();
     setIsDirty?.(false);
-    setBlockNav(false);
-  }, [onDiscard, setIsDirty, setBlockNav]);
+    if (!disableNavBlocking) {
+      setBlockNav(false);
+    }
+  }, [onDiscard, setIsDirty, disableNavBlocking, setBlockNav]);
 
   const styles = baseEditorStyles(isVisible, isSmallWindow, theme);
 
