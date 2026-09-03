@@ -5,7 +5,7 @@ import { Box, Tooltip } from '@mui/material';
 import ShareIcon from '@/assets/share-icon.svg?react';
 
 const SharedDatasetBadge = memo(props => {
-  const { showTooltip = true, tooltipDelay = 500 } = props;
+  const { showTooltip = true, tooltipTitle = 'Shared across the project', tooltipDelay = 500 } = props;
 
   const styles = sharedDatasetBadgeStyles();
 
@@ -21,7 +21,7 @@ const SharedDatasetBadge = memo(props => {
 
   return (
     <Tooltip
-      title="Shared across the project"
+      title={tooltipTitle}
       placement="top"
       enterDelay={tooltipDelay}
     >
@@ -42,13 +42,13 @@ const sharedDatasetBadgeStyles = () => ({
     height: '1.25rem',
     flexShrink: 0,
     borderRadius: '50%',
-    border: `0.0625rem solid ${palette.border.lines}`,
+    border: `0.0625rem solid ${palette.background.tabButton.default}`,
     '& svg': {
       width: '0.625rem',
       height: '0.625rem',
     },
     '& svg path': {
-      fill: palette.text.secondary,
+      fill: palette.text.primary,
     },
   }),
 });

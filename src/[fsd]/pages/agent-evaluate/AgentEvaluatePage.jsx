@@ -11,10 +11,13 @@ import {
   DatasetModal,
   ImportCaseModal,
   ResultsPanel,
+  SelectDimensionFromLibraryModal,
   SuiteDetailPanel,
   SuitesPanel,
   parseEvalError,
+  useAddEvalBindingMutation,
   useCreateEvalSuiteMutation,
+  useDeleteEvalBindingMutation,
   useDeleteEvalDatasetCaseMutation,
   useDeleteEvalSuiteMutation,
   useEvalDatasetQuery,
@@ -64,6 +67,8 @@ const AgentEvaluatePage = memo(() => {
   const [createEvalSuite, { isLoading: isCreating }] = useCreateEvalSuiteMutation();
   const [updateEvalSuite, { isLoading: isUpdating }] = useUpdateEvalSuiteMutation();
   const [deleteEvalDatasetCase] = useDeleteEvalDatasetCaseMutation();
+  const [addEvalBinding] = useAddEvalBindingMutation();
+  const [deleteEvalBinding] = useDeleteEvalBindingMutation();
 
   const [suiteToDelete, setSuiteToDelete] = useState(null);
   const [isDirty, setIsDirty] = useState(false);
@@ -71,6 +76,8 @@ const AgentEvaluatePage = memo(() => {
   const [showCaseModal, setShowCaseModal] = useState(false);
   const [showChatsModal, setShowChatsModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [showDimensionLibrary, setShowDimensionLibrary] = useState(false);
+  const [dimensionToRemove, setDimensionToRemove] = useState(null);
   const [caseToEdit, setCaseToEdit] = useState(null);
   const [caseToDelete, setCaseToDelete] = useState(null);
 
@@ -94,6 +101,28 @@ const AgentEvaluatePage = memo(() => {
     { skip: !projectId || attachedDatasetId == null },
   );
   const attachedDatasetDetails = attachedDatasetId != null ? fetchedDatasetDetails : null;
+
+  const attachedDimensionIds = useMemo(
+    () => (activeSuiteDetail?.bindings ?? []).filter(b => b.dimension_id != null).map(b => b.dimension_id),
+    [activeSuiteDetail?.bindings],
+  );
+
+  const attachedDimensions = useMemo(() => {
+    const bindings = (activeSuiteDetail?.bindings ?? []).filter(b => b.dimension_id != null);
+    if (bindings.length === 0) return [];
+    const dimMap = new Map(dimensions.map(d => [d.id, d]));
+    return bindings.map(binding => {
+      const dim = dimMap.get(binding.dimension_id);
+      return {
+        binding,
+        name: dim?.name || `Dimension #${binding.dimension_id}`,
+        tier: dim?.tier ?? null,
+        defaultTarget: dim?.default_target ?? null,
+        defaultTargetOperator: dim?.default_target_operator ?? null,
+        defaultWeight: dim?.default_weight ?? null,
+      };
+    });
+  }, [activeSuiteDetail?.bindings, dimensions]);
 
   const datasetNamesById = useMemo(() => Object.fromEntries(datasets.map(d => [d.id, d.name])), [datasets]);
 
@@ -347,9 +376,75 @@ const AgentEvaluatePage = memo(() => {
     // TODO: navigate to dimensions management
   }, []);
 
-  const handleCreateDimension = useCallback(() => {
+  const handleSelectDimensionFromLibrary = useCallback(() => {
+    setShowDimensionLibrary(true);
+  }, []);
+
+  const handleCloseDimensionLibrary = useCallback(() => {
+    setShowDimensionLibrary(false);
+  }, []);
+
+  const handleAddDimensionsFromLibrary = useCallback(
+    async selected => {
+      if (!editingSuiteId || selected.length === 0) return;
+      const results = await Promise.allSettled(
+        selected.map(dimension =>
+          addEvalBinding({
+            projectId,
+            suiteId: editingSuiteId,
+            body: { dimension_id: dimension.id },
+          }).unwrap(),
+        ),
+      );
+      const successCount = results.filter(r => r.status === 'fulfilled').length;
+      const failCount = results.filter(r => r.status === 'rejected').length;
+      if (failCount === 0) {
+        toastSuccess(`${successCount} dimension${successCount === 1 ? '' : 's'} added to the suite.`);
+      } else {
+        toastError(`${successCount} added, ${failCount} failed to attach.`);
+      }
+    },
+    [editingSuiteId, addEvalBinding, projectId, toastSuccess, toastError],
+  );
+
+  const handleCreateDimensionManually = useCallback(() => {
     // TODO: open create dimension dialog
   }, []);
+
+  const handleBuildDimensionWithAi = useCallback(() => {
+    // TODO: open AI dimension builder
+  }, []);
+
+  const handleEditDimension = useCallback(() => {
+    // TODO: open edit dimension dialog
+  }, []);
+
+  const handleRemoveDimension = useCallback(
+    binding => {
+      const dim = attachedDimensions.find(d => d.binding.id === binding.id);
+      setDimensionToRemove({ binding, name: dim?.name || `Dimension #${binding.dimension_id}` });
+    },
+    [attachedDimensions],
+  );
+
+  const handleCloseRemoveDimension = useCallback(() => {
+    setDimensionToRemove(null);
+  }, []);
+
+  const handleConfirmRemoveDimension = useCallback(async () => {
+    if (!editingSuiteId || !dimensionToRemove?.binding?.id) return;
+    try {
+      await deleteEvalBinding({
+        projectId,
+        suiteId: editingSuiteId,
+        bindingId: dimensionToRemove.binding.id,
+      }).unwrap();
+      toastSuccess('Dimension has been removed from the suite.');
+    } catch (error) {
+      toastError(parseEvalError(error, 'Failed to remove dimension from the suite.'));
+    }
+    setDimensionToRemove(null);
+  }, [editingSuiteId, dimensionToRemove, deleteEvalBinding, projectId, toastSuccess, toastError]);
 
   const styles = agentEvaluatePageStyles();
 
@@ -367,7 +462,6 @@ const AgentEvaluatePage = memo(() => {
             modelsData={modelsData}
             datasets={datasets}
             attachedDataset={attachedDatasetDetails}
-            dimensions={dimensions}
             isSaving={isCreating || isUpdating}
             onBack={handleBack}
             onSave={handleSave}
@@ -385,7 +479,12 @@ const AgentEvaluatePage = memo(() => {
             onImportCases={handleImportCases}
             onPromoteCases={handlePromoteCases}
             onManageDimensions={handleManageDimensions}
-            onCreateDimension={handleCreateDimension}
+            onSelectDimensionFromLibrary={handleSelectDimensionFromLibrary}
+            onCreateDimensionManually={handleCreateDimensionManually}
+            onBuildDimensionWithAi={handleBuildDimensionWithAi}
+            onEditDimension={handleEditDimension}
+            onRemoveDimension={handleRemoveDimension}
+            attachedDimensions={attachedDimensions}
           />
         ) : (
           <SuitesPanel
@@ -451,6 +550,26 @@ const AgentEvaluatePage = memo(() => {
         name={caseToDelete?.input?.split('\n')[0].trim().slice(0, 50) || `Case ${caseToDelete?.id ?? ''}`}
         confirmButtonText="Delete"
       />
+      <Modal.DeleteEntityModal
+        open={!!dimensionToRemove}
+        onClose={handleCloseRemoveDimension}
+        onConfirm={handleConfirmRemoveDimension}
+        title="Delete confirmation"
+        textContent="Are you sure to delete the "
+        name={dimensionToRemove?.name}
+        shouldRequestInputName
+        confirmButtonText="Delete"
+      />
+      {editingSuiteId && (
+        <SelectDimensionFromLibraryModal
+          open={showDimensionLibrary}
+          onClose={handleCloseDimensionLibrary}
+          projectId={projectId}
+          applicationId={applicationId}
+          attachedDimensionIds={attachedDimensionIds}
+          onAdd={handleAddDimensionsFromLibrary}
+        />
+      )}
     </Box>
   );
 });
