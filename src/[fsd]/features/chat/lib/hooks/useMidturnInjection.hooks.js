@@ -30,6 +30,5 @@ export const useIsMidturnInjectionEnabled = () => {
   const projectId = useSelectedProjectId();
   const isAvailable = useIsMidturnInjectionAvailable();
   const { data: moduleSettings } = useAuthorModuleSettingsQuery(projectId, { skip: !projectId });
-  const optedIn = Boolean(moduleSettings?.midturn_injection_enabled);
-  return useMemo(() => optedIn && isAvailable, [optedIn, isAvailable]);
+  return Boolean(moduleSettings?.midturn_injection_enabled) && isAvailable;
 };

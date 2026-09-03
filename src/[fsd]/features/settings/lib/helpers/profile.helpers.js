@@ -27,9 +27,9 @@ const MODULE_TOGGLE_KEYS = [
 ];
 
 // #6303: mid-turn input rides the same project-scoped store as the module toggles.
-const PROJECT_SCOPED_KEYS = [...MODULE_TOGGLE_KEYS, 'midturn_injection_enabled'];
+const MODULE_SETTINGS_KEYS = [...MODULE_TOGGLE_KEYS, 'midturn_injection_enabled'];
 
-const MODULE_TOGGLE_DEFAULTS = PROJECT_SCOPED_KEYS.reduce((acc, key) => ({ ...acc, [key]: false }), {});
+const MODULE_TOGGLE_DEFAULTS = MODULE_SETTINGS_KEYS.reduce((acc, key) => ({ ...acc, [key]: false }), {});
 
 export const PROFILE_INITIAL_VALUES = {
   persona: DEFAULT_PERSONA,
@@ -51,7 +51,7 @@ export const PROFILE_INITIAL_VALUES = {
 // #6285/#6303: module toggles and mid-turn input live in the project-scoped module_settings
 // store now, not authorData.personalization.
 const serializeModuleToggles = moduleSettingsData =>
-  PROJECT_SCOPED_KEYS.reduce((acc, key) => ({ ...acc, [key]: moduleSettingsData?.[key] ?? false }), {});
+  MODULE_SETTINGS_KEYS.reduce((acc, key) => ({ ...acc, [key]: moduleSettingsData?.[key] ?? false }), {});
 
 export const serializeProfileFormData = (authorData, moduleSettingsData, defaultModel, selectedProjectId) => {
   const moduleToggles = serializeModuleToggles(moduleSettingsData);
@@ -121,7 +121,7 @@ export const deserializeProfileFormData = formValues => ({
 
 // #6285/#6303: module toggles and mid-turn input are saved separately, scoped to the current project.
 export const deserializeModuleSettingsFormData = formValues =>
-  PROJECT_SCOPED_KEYS.reduce((acc, key) => ({ ...acc, [key]: formValues[key] }), {});
+  MODULE_SETTINGS_KEYS.reduce((acc, key) => ({ ...acc, [key]: formValues[key] }), {});
 
 export const createContextStrategyFormData = formikValues => ({
   enabled: formikValues.context_enabled,
