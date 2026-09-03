@@ -96,15 +96,6 @@ const lightBlue = '#d7f1ff';
 const oldDarkPalette = {
   mode: 'dark',
 
-  step: {
-    default: { border: whiteStepBorder, icon: white10 },
-    active: darkBlueLowOpacity,
-    completed: {
-      border: darkBlueLowOpacity,
-      background: completedBlue,
-      icon: darkBlue,
-    },
-  },
   background: {
     info: blue8,
     default: gray60,
@@ -664,14 +655,29 @@ const darkColorScheme = {
 
 const darkPalette = {
   ...oldDarkPalette,
-
   primary: {
     main: primaryDefault,
   },
   secondary: {
     main: gray10,
   },
-
+  step: {
+    default: {
+      background: 'transparent',
+      border: whiteStepBorder,
+      icon: white10,
+    },
+    active: {
+      background: 'transparent',
+      border: darkBlueLowOpacity,
+      icon: darkBlueLowOpacity,
+    },
+    completed: {
+      background: completedBlue,
+      border: darkBlueLowOpacity,
+      icon: darkBlue,
+    },
+  },
   background: {
     ...oldDarkPalette.background,
     npsCard: `linear-gradient(to top, ${darkColorScheme.accentLight}, ${darkColorScheme.accentMid})`,
@@ -708,14 +714,12 @@ const darkPalette = {
     light: darkColorScheme.textLight,
     darker: darkColorScheme.textDarker,
   },
-
   alert: {
     info: {
       main: darkBlue,
       secondary: darkBlue40,
     },
   },
-
   icon: {
     ...oldDarkPalette.icon,
 
