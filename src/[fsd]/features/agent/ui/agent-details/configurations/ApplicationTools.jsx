@@ -221,7 +221,7 @@ const styles = {
     marginTop: '0.75rem',
   },
   showMoreButton: ({ palette }) => ({
-    color: palette.primary.pressed,
+    color: palette.border.userMessageEditor,
     fontSize: '0.75rem',
     fontWeight: 400,
     padding: '0.375rem 0',

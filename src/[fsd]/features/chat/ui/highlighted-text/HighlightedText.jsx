@@ -25,7 +25,7 @@ const HighlightedText = memo(props => {
       <Box
         key={`highlight-${start}`}
         component="span"
-        sx={{ color: 'primary.main', borderRadius: '.25rem' }}
+        sx={({ palette }) => ({ color: palette.primary.main, borderRadius: '.25rem' })}
       >
         {text.slice(start, end)}
       </Box>,

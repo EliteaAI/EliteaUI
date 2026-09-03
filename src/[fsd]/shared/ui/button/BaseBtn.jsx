@@ -57,7 +57,7 @@ export const eliteaButtonColors = theme => ({
     },
     active: {
       background: theme.palette.mode === 'dark' ? 'rgba(106, 232, 250, 0.1)' : 'rgba(245, 81, 249, 0.1)',
-      color: theme.palette.mode === 'dark' ? theme.palette.primary.pressed : theme.palette.text.secondary,
+      color: theme.palette.split.text.pressed,
     },
     disabled: {
       background: theme.palette.background.button.default,
@@ -141,12 +141,11 @@ export const eliteaButtonColors = theme => ({
   [BUTTON_VARIANTS.auxiliary]: {
     default: {
       background: 'transparent',
-      color: theme.palette.mode === 'dark' ? theme.palette.primary.pressed : theme.palette.primary.main,
+      color: theme.palette.text.button.showMore,
       colorIcon: theme.palette.secondary.main,
     },
     hover: {
-      color:
-        theme.palette.mode === 'dark' ? theme.palette.primary.hover : theme.palette.text.button.auxiliary,
+      color: theme.palette.text.button.auxiliary,
       colorIcon: theme.palette.text.secondary,
     },
     active: {

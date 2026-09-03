@@ -112,7 +112,6 @@ const ParticipantNormalCard = memo(props => {
             </Typography>
             <Typography
               variant="bodyMedium"
-              color={isBeingEdited ? 'primary.main' : 'text.primary'}
               sx={styles.versionLabel}
             >
               {isBeingEdited
@@ -206,14 +205,15 @@ export const participantNormalCardStyles = ({ collapsed, isActive, maxWidth, isB
     width: '0.75rem',
     height: '0.75rem',
   },
-  versionLabel: {
+  versionLabel: ({ palette }) => ({
     flexShrink: 0,
     maxWidth: isBeingEdited ? 'none' : '50%',
     whiteSpace: 'nowrap',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpaceCollapse: 'preserve',
-  },
+    color: isBeingEdited ? palette.primary.main : palette.text.primary,
+  }),
   infoMessageRow: {
     display: 'flex',
     flexDirection: 'row',

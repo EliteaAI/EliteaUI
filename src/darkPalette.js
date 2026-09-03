@@ -95,11 +95,6 @@ const lightBlue = '#d7f1ff';
 
 const oldDarkPalette = {
   mode: 'dark',
-  primary: {
-    main: primaryDefault,
-    hover: primaryHover,
-    pressed: primaryPressed,
-  },
   secondary: {
     main: gray10,
   },
@@ -676,6 +671,11 @@ const darkColorScheme = {
 
 const darkPalette = {
   ...oldDarkPalette,
+
+  primary: {
+    main: primaryDefault,
+  },
+
   background: {
     ...oldDarkPalette.background,
     npsCard: `linear-gradient(to top, ${darkColorScheme.accentLight}, ${darkColorScheme.accentMid})`,
@@ -702,6 +702,12 @@ const darkPalette = {
   },
   text: {
     ...oldDarkPalette.text,
+
+    button: {
+      ...oldDarkPalette.text.button,
+      auxiliary: primaryHover,
+    },
+
     white: darkColorScheme.textWhite,
     light: darkColorScheme.textLight,
     darker: darkColorScheme.textDarker,

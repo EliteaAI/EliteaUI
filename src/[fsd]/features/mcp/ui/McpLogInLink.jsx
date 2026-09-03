@@ -35,10 +35,10 @@ const McpLogInLink = memo(props => {
 
 /** @type {MuiSx} */
 const getStyles = () => ({
-  loginText: {
+  loginText: ({ palette }) => ({
     textDecoration: 'underline',
     cursor: 'pointer',
-    color: 'primary.main',
+    color: palette.primary.main,
     border: 'none',
     background: 'none',
     padding: 0,
@@ -47,7 +47,7 @@ const getStyles = () => ({
     '&:hover': {
       color: 'primary.dark',
     },
-  },
+  }),
 });
 
 McpLogInLink.displayName = 'McpLogInLink';

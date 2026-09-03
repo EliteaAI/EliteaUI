@@ -560,19 +560,20 @@ const ApplicationAnswer = React.forwardRef((props, ref) => {
   );
 
   // Swarm child message styles
-  const swarmChildStyles = isSwarmChild
-    ? {
-        marginLeft: '3rem',
-        // Account for margin in width calculation to prevent overflow
-        width: 'calc(100% - 48px)',
-        maxWidth: 'calc(100% - 48px)',
-        borderLeft: '3px solid',
-        borderColor: 'primary.main',
-        paddingLeft: 2,
-        backgroundColor: 'action.hover',
-        borderRadius: '0 8px 8px 0',
-      }
-    : {};
+  const swarmChildStyles = ({ palette }) =>
+    isSwarmChild
+      ? {
+          marginLeft: '3rem',
+          // Account for margin in width calculation to prevent overflow
+          width: 'calc(100% - 48px)',
+          maxWidth: 'calc(100% - 48px)',
+          borderLeft: '3px solid',
+          borderColor: palette.primary.main,
+          paddingLeft: 2,
+          backgroundColor: 'action.hover',
+          borderRadius: '0 8px 8px 0',
+        }
+      : {};
 
   return (
     <>

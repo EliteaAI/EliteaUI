@@ -9,7 +9,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
-import DimensionEditorDialog from '../library/DimensionEditorDialog';
+import DimensionEditorDialog from '../_legacy/library/DimensionEditorDialog';
 
 // Stub browser globals BEFORE any vi.mock factory or ESM import can touch
 // slices/settings.js (localStorage) at module scope.

@@ -61,6 +61,11 @@ export const useApplicationChatSwitchVersion = ({
   }, [updateParticipantWithNewVersionId]);
 
   useEffect(() => {
+    // Guard against #6523: skip while version details are still loading (id not yet available),
+    // so a settings-update is never fired with version_id undefined.
+    if (!applicationVersionDetails?.id) {
+      return;
+    }
     if (prevVersionId) {
       if (prevVersionId !== applicationVersionDetails?.id) {
         updateParticipantWithNewVersionIdRef.current();

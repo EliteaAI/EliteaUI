@@ -50,7 +50,7 @@ const circularProgressStyles = () => ({
     position: 'absolute',
     fontSize: '0.625rem',
     fontWeight: 600,
-    color: 'primary.main',
+    color: palette.primary.main,
     lineHeight: 1,
     backgroundColor: palette.background.aiAnswerBkg,
     borderRadius: '50%',

@@ -132,7 +132,7 @@ const aiPromptInputStyles = () => ({
     alignItems: 'center',
     gap: spacing(2),
     '&:focus-within': {
-      borderColor: palette.primary.pressed,
+      borderColor: palette.border.userMessageEditor,
     },
   }),
   iconContainer: ({ palette, spacing }) => ({
