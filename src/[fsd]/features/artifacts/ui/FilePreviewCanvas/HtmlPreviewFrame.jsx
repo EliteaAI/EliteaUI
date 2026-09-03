@@ -8,6 +8,55 @@ import { Modal } from '@/[fsd]/shared/ui';
 
 const purifyInstance = createDOMPurify(window);
 
+// Prevent premature </script> tag closure when handler code is embedded in a <script> block.
+// The browser HTML parser is not JS-aware: seeing </script> inside a script body ends the block.
+const escapeScriptClose = str => str.replace(/<\/script/gi, '<\\/script');
+
+const INLINE_EVENT_ATTRS = new Set([
+  'onclick',
+  'ondblclick',
+  'onmousedown',
+  'onmouseup',
+  'onmouseover',
+  'onmouseout',
+  'onmousemove',
+  'onmouseenter',
+  'onmouseleave',
+  'onkeydown',
+  'onkeyup',
+  'onkeypress',
+  'onchange',
+  'oninput',
+  'onfocus',
+  'onblur',
+  'onselect',
+  'onsubmit',
+  'onreset',
+  'onscroll',
+  'onwheel',
+  'ondrag',
+  'ondragstart',
+  'ondragend',
+  'ondragover',
+  'ondragenter',
+  'ondragleave',
+  'ondrop',
+  'onpointerdown',
+  'onpointerup',
+  'onpointermove',
+  'onpointerover',
+  'onpointerout',
+  'ontouchstart',
+  'ontouchend',
+  'ontouchmove',
+  'oncontextmenu',
+  'oncopy',
+  'oncut',
+  'onpaste',
+  'onload',
+  'onerror',
+]);
+
 const buildPreviewCsp = nonce =>
   [
     "default-src 'none'",
@@ -42,7 +91,67 @@ const buildFallbackStyles = ({ textColor, backgroundColor, themeMode }) =>
     }
   </style>`;
 
+// DOMPurify parses input via innerHTML which applies the HTML tokenizer — not the raw-text
+// model the HTML5 spec requires for <script> bodies. Sequences like `<letter`, `</`, and
+// `<!--` inside a script body confuse the tokenizer and silently drop the whole block.
+// Fix: extract inline script bodies to a side-table before sanitization, replace them with
+// safe placeholders, sanitize the structure, then restore bodies afterward.
+// DOMPurify does not sanitize script body text content anyway (only element attributes),
+// so this bypasses nothing — the security boundary remains the nonce-based CSP and sandbox.
+const SCRIPT_BODY_RE = /(<script(?:\s[^>]*)?>)([\s\S]*?)(<\/script>)/gi;
+
+const HTML_COMMENT_RE = /<!--[\s\S]*?-->/g;
+
+const extractScriptBodies = html => {
+  // Mask HTML comments first so a literal `<script>` inside a comment does not
+  // fool SCRIPT_BODY_RE into starting an extraction in the wrong place.
+  const commentSlots = [];
+  const masked = html.replace(HTML_COMMENT_RE, m => {
+    const idx = commentSlots.length;
+    commentSlots.push(m);
+    return `<!--__ELITEA_COMMENT_${idx}__-->`;
+  });
+
+  const bodies = [];
+  const maskedStripped = masked.replace(SCRIPT_BODY_RE, (_, open, body, close) => {
+    const idx = bodies.length;
+    // Restore any comment placeholders that landed inside this script body.
+    bodies.push(body.replace(/<!--__ELITEA_COMMENT_(\d+)__-->/g, (_not_used, i) => commentSlots[Number(i)]));
+    return `${open}/* __ELITEA_SCRIPT_BODY_${idx}__ */${close}`;
+  });
+
+  // Restore comment placeholders remaining outside script bodies.
+  const stripped = maskedStripped.replace(
+    /<!--__ELITEA_COMMENT_(\d+)__-->/g,
+    (_, i) => commentSlots[Number(i)],
+  );
+
+  return { stripped, bodies };
+};
+
+const restoreScriptBodies = (html, bodies) =>
+  html.replace(/\/\* __ELITEA_SCRIPT_BODY_(\d+)__ \*\//g, (_, idx) => bodies[Number(idx)] ?? '');
+
 const sanitizeForPreview = (rawHtml, nonce, hostOrigin, fallbackStyles) => {
+  const { stripped, bodies } = extractScriptBodies(rawHtml);
+
+  const capturedHandlers = [];
+  const nodePids = new WeakMap();
+  let pidCounter = 0;
+
+  purifyInstance.addHook('uponSanitizeAttribute', (node, data) => {
+    if (!INLINE_EVENT_ATTRS.has(data.attrName)) return;
+    if (!nodePids.has(node)) {
+      nodePids.set(node, `ep${pidCounter++}`);
+    }
+    capturedHandlers.push({
+      pid: nodePids.get(node),
+      eventName: data.attrName.slice(2),
+      code: data.attrValue,
+    });
+    data.keepAttr = false;
+  });
+
   purifyInstance.addHook('afterSanitizeAttributes', node => {
     if (node.tagName === 'A' || node.tagName === 'AREA') {
       const href = node.getAttribute('href');
@@ -56,31 +165,94 @@ const sanitizeForPreview = (rawHtml, nonce, hostOrigin, fallbackStyles) => {
     if (node.tagName === 'SCRIPT' && !node.hasAttribute('src')) {
       node.setAttribute('nonce', nonce);
     }
+    if (nodePids.has(node)) {
+      node.setAttribute('data-elitea-pid', nodePids.get(node));
+    }
   });
 
-  const clean = purifyInstance.sanitize(rawHtml, {
-    WHOLE_DOCUMENT: true,
-    FORCE_BODY: false,
-    FORBID_ATTR: ['target'],
-    ADD_TAGS: ['script'],
-    ADD_ATTR: ['nonce'],
-  });
+  let cleanStripped;
+  let blockedExternalScripts = 0;
+  let blockedEmbeds = 0;
 
-  purifyInstance.removeHook('afterSanitizeAttributes');
+  try {
+    cleanStripped = purifyInstance.sanitize(stripped, {
+      WHOLE_DOCUMENT: true,
+      FORCE_BODY: false,
+      FORBID_ATTR: ['target'],
+      ADD_TAGS: ['script'],
+      ADD_ATTR: ['nonce', 'data-elitea-pid'],
+    });
 
-  if (!clean) return null;
+    blockedExternalScripts = purifyInstance.removed.filter(
+      entry => entry.element?.tagName === 'SCRIPT' && entry.element?.hasAttribute('src'),
+    ).length;
 
-  const injection = `<meta http-equiv="Content-Security-Policy" content="${buildPreviewCsp(nonce)}">${fallbackStyles}${buildLinkInterceptScript(nonce, hostOrigin)}`;
+    blockedEmbeds = purifyInstance.removed.filter(entry =>
+      ['IFRAME', 'OBJECT', 'EMBED'].includes(entry.element?.tagName),
+    ).length;
+  } finally {
+    purifyInstance.removeHook('uponSanitizeAttribute');
+    purifyInstance.removeHook('afterSanitizeAttributes');
+  }
 
+  if (!cleanStripped) return null;
+
+  // Restore original script bodies. escapeScriptClose is applied so restored content
+  // cannot prematurely close the <script> tag in the final HTML string.
+  // If DOMPurify removed a <script> element entirely (e.g. external src), its placeholder
+  // is also gone from cleanStripped, so restoreScriptBodies finds nothing to replace — correct.
+  const clean = restoreScriptBodies(
+    cleanStripped,
+    bodies.map(b => escapeScriptClose(b)),
+  );
+
+  let handlerScript = '';
+  if (capturedHandlers.length > 0) {
+    const wirings = capturedHandlers
+      .map(
+        ({ pid, eventName, code }) =>
+          `(function(){` +
+          `var el=document.querySelector('[data-elitea-pid="${pid}"]');` +
+          `if(el)el.addEventListener('${eventName}',function(event){${escapeScriptClose(code)}}.bind(el));` +
+          `})();`,
+      )
+      .join('\n');
+    handlerScript =
+      `<script nonce="${nonce}">` +
+      `document.addEventListener('DOMContentLoaded',function(){\n${wirings}\n});` +
+      `</script>`;
+  }
+
+  const warnings = [];
+  if (blockedExternalScripts > 0) {
+    warnings.push(
+      `${blockedExternalScripts} external script${blockedExternalScripts > 1 ? 's' : ''} blocked — ` +
+        `external <script src="..."> tags are not supported in preview.`,
+    );
+  }
+  if (blockedEmbeds > 0) {
+    warnings.push(
+      `${blockedEmbeds} embedded element${blockedEmbeds > 1 ? 's' : ''} removed — ` +
+        `<iframe>, <object>, and <embed> are not supported in preview.`,
+    );
+  }
+
+  const injection =
+    `<meta http-equiv="Content-Security-Policy" content="${buildPreviewCsp(nonce)}">` +
+    fallbackStyles +
+    buildLinkInterceptScript(nonce, hostOrigin) +
+    handlerScript;
+
+  let finalHtml;
   if (/<head([^>]*)>/i.test(clean)) {
-    return clean.replace(/<head([^>]*)>/i, `<head$1>${injection}`);
+    finalHtml = clean.replace(/<head([^>]*)>/i, `<head$1>${injection}`);
+  } else if (/<html([^>]*)>/i.test(clean)) {
+    finalHtml = clean.replace(/<html([^>]*)>/i, `<html$1><head>${injection}</head>`);
+  } else {
+    finalHtml = `<head>${injection}</head>${clean}`;
   }
 
-  if (/<html([^>]*)>/i.test(clean)) {
-    return clean.replace(/<html([^>]*)>/i, `<html$1><head>${injection}</head>`);
-  }
-
-  return `<head>${injection}</head>${clean}`;
+  return { html: finalHtml, warnings };
 };
 
 const HtmlPreviewFrame = memo(props => {
@@ -88,6 +260,7 @@ const HtmlPreviewFrame = memo(props => {
   const iframeRef = useRef(null);
   const [clickedUrl, setClickedUrl] = useState(null);
   const theme = useTheme();
+  const styles = htmlPreviewFrameStyles();
 
   const nonce = useMemo(() => window.crypto.randomUUID().replace(/-/g, ''), []);
   const hostOrigin = useMemo(() => window.location.origin, []);
@@ -105,9 +278,9 @@ const HtmlPreviewFrame = memo(props => {
     if (!htmlContent || !htmlContent.trim()) return { empty: true };
 
     try {
-      const html = sanitizeForPreview(htmlContent, nonce, hostOrigin, fallbackStyles);
-      if (!html) return { error: true };
-      return { html };
+      const result = sanitizeForPreview(htmlContent, nonce, hostOrigin, fallbackStyles);
+      if (!result?.html) return { error: true };
+      return result;
     } catch {
       return { error: true };
     }
@@ -167,6 +340,19 @@ const HtmlPreviewFrame = memo(props => {
 
   return (
     <Box sx={styles.wrapper}>
+      {sanitizeResult.warnings?.length > 0 && (
+        <Box sx={styles.warningBanner}>
+          {sanitizeResult.warnings.map((msg, i) => (
+            <Typography
+              key={i}
+              variant="bodySmall"
+              sx={styles.warningText}
+            >
+              {msg}
+            </Typography>
+          ))}
+        </Box>
+      )}
       <iframe
         ref={iframeRef}
         srcDoc={sanitizeResult.html}
@@ -204,7 +390,8 @@ const HtmlPreviewFrame = memo(props => {
 
 HtmlPreviewFrame.displayName = 'HtmlPreviewFrame';
 
-const styles = {
+/** @type {MuiSx} */
+const htmlPreviewFrameStyles = () => ({
   wrapper: ({ palette }) => ({
     flex: 1,
     minHeight: 0,
@@ -241,6 +428,18 @@ const styles = {
     display: 'block',
     fontFamily: 'monospace',
   }),
-};
+  warningBanner: ({ palette }) => ({
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.25rem',
+    padding: '0.5rem 1rem',
+    backgroundColor: palette.warning.background ?? palette.background.secondary,
+    borderBottom: `0.0625rem solid ${palette.warning.main}`,
+    flexShrink: 0,
+  }),
+  warningText: ({ palette }) => ({
+    color: palette.warning.dark ?? palette.text.secondary,
+  }),
+});
 
 export default HtmlPreviewFrame;
