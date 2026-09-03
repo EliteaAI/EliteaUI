@@ -633,8 +633,8 @@ const servicePromptsSectionStyles = () => ({
     minHeight: 0,
     height: '100%',
     position: 'relative',
-    '& .cm-editor': { backgroundColor: palette.background.default },
-    '& .cm-scroller': { backgroundColor: palette.background.default },
+    '& .cm-editor': { backgroundColor: palette.background.secondary },
+    '& .cm-scroller': { backgroundColor: palette.background.secondary },
     '& .cm-gutters': {
       backgroundColor: palette.background.tabPanel,
       borderRight: 'none',

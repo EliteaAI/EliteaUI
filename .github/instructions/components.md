@@ -113,7 +113,7 @@ import { useMyFeature } from '@/[fsd]/features/my-feature/lib/hooks';
 const componentStyles = isEnabled => ({
   container: ({ palette, spacing }) => ({
     padding: spacing(2), // Use spacing function (2 * 8 = 16px = 1rem)
-    backgroundColor: isEnabled ? palette.background.paper : palette.background.default,
+    backgroundColor: isEnabled ? palette.background.paper : palette.background.secondary,
     opacity: isEnabled ? 1 : 0.5,
     borderRadius: '0.5rem', // Use rem units (8px)
     border: `0.0625rem solid ${palette.border.lines}`, // 1px in rem

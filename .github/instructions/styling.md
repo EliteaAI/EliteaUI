@@ -123,7 +123,7 @@ const StyledComponent = styled(Box)(({ theme }) => ({
 // ✅ Standard color usage patterns
 const ColorExamples = styled(Box)(({ theme }) => ({
   // Primary content
-  backgroundColor: theme.palette.background.default,
+  backgroundColor: theme.palette.background.secondary,
   color: theme.palette.text.primary,
 
   // Cards and panels

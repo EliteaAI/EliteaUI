@@ -124,7 +124,7 @@ const styles = {
     height: '100vh',
     padding: '1.5rem',
     textAlign: 'center',
-    bgcolor: 'background.default',
+    bgcolor: 'background.secondary',
   },
   statusText: {
     marginTop: '1rem',

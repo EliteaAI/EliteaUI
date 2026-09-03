@@ -655,7 +655,7 @@ const bucketAccessTableStyle = () => ({
     paddingTop: '4rem',
     gap: '1rem',
     borderRadius: '0.5rem',
-    backgroundColor: palette.background.emptyState?.default || palette.background.default,
+    backgroundColor: palette.background.section,
   }),
   emptyStateIcon: ({ palette }) => ({
     width: '2.5rem',

@@ -284,7 +284,7 @@ const sharedConversationPageStyles = () => ({
     justifyContent: 'center',
     minHeight: '100vh',
     padding: '2rem',
-    bgcolor: 'background.default',
+    bgcolor: 'background.secondary',
     textAlign: 'center',
   },
   subtitleText: {
@@ -307,7 +307,7 @@ const sharedConversationPageStyles = () => ({
     display: 'flex',
     flexDirection: 'column',
     minHeight: '100vh',
-    bgcolor: 'background.default',
+    bgcolor: 'background.secondary',
   },
   header: ({ palette }) => ({
     display: 'flex',

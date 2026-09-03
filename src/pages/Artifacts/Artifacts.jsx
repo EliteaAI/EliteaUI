@@ -809,7 +809,6 @@ const artifactsStyles = (collapsedBuckets, leftPanelWidth) => ({
   bucketSidebarBox: ({ palette }) => ({
     width: collapsedBuckets ? '3.75rem' : `${leftPanelWidth}px`,
     height: '100%',
-    backgroundColor: palette.background.default,
     borderRight: `0.0625rem solid ${palette.border.lines}`,
     transition: 'width 0.2s ease-in-out',
     overflow: 'auto',

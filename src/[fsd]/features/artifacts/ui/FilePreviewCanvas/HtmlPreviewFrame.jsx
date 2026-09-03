@@ -268,10 +268,10 @@ const HtmlPreviewFrame = memo(props => {
     () =>
       buildFallbackStyles({
         textColor: theme.palette.text.primary,
-        backgroundColor: theme.palette.background.default,
+        backgroundColor: theme.palette.background.secondary,
         themeMode: theme.palette.mode,
       }),
-    [theme.palette.text.primary, theme.palette.background.default, theme.palette.mode],
+    [theme.palette.text.primary, theme.palette.background.secondary, theme.palette.mode],
   );
 
   const sanitizeResult = useMemo(() => {
