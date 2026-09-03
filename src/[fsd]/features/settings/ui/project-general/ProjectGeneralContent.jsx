@@ -106,7 +106,7 @@ const ProjectGeneralContent = memo(() => {
             accordionSX={styles.accordionStyles}
             items={[
               {
-                title: 'Backup & Restore',
+                title: 'Back Up & Restore',
                 content: (
                   <Box sx={styles.containerStyles}>
                     <ProjectBackupRestore />
