@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Box } from '@mui/material';
 
@@ -14,6 +14,7 @@ const CreateFolderDialog = memo(props => {
   const isEditMode = !!folder;
   const [folderName, setFolderName] = useState('');
   const [error, setError] = useState('');
+  const inputRef = useRef(null);
   const { createFolder, isLoading: isCreating } = useCreateFolder();
   const { updateFolder, isLoading: isUpdating } = useUpdateFolder();
   const { toastSuccess, toastError } = useToast();
@@ -27,6 +28,12 @@ const CreateFolderDialog = memo(props => {
       setError('');
     }
   }, [open, folder]);
+
+  useEffect(() => {
+    if (!open) return;
+    const timer = setTimeout(() => inputRef.current?.focus(), 50);
+    return () => clearTimeout(timer);
+  }, [open]);
 
   const handleNameChange = useCallback(
     e => {
@@ -96,7 +103,7 @@ const CreateFolderDialog = memo(props => {
   const renderContent = (
     <Box>
       <Input.InputBase
-        autoFocus
+        inputRef={inputRef}
         variant={INPUT_VARIANTS.standard}
         label="Folder Name"
         placeholder="Enter folder name"
