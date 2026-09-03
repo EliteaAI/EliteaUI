@@ -1,8 +1,9 @@
 import { useMemo } from 'react';
 
-import { CredentialNameHelpers } from '@/[fsd]/features/credentials/lib/helpers';
+import { CredentialNameHelpers, CredentialVisibilityHelpers } from '@/[fsd]/features/credentials/lib/helpers';
 import { useListCredentialTypesQuery } from '@/api/configurations';
 import { useLoadCredentials } from '@/hooks/credentials/useLoadCredentials';
+import useGetCurrentConfigurationAsSchemas from '@/hooks/useGetCurrentConfigurationAsSchemas';
 
 import { useSelectedProjectId } from '../useSelectedProject';
 
@@ -61,8 +62,19 @@ export const useLoadAllCredentials = props => {
     folderEntityIds,
   });
 
+  const { configurationsAsSchema } = useGetCurrentConfigurationAsSchemas();
+  const allowedTypes = useMemo(
+    () => CredentialVisibilityHelpers.getAllowedCredentialTypes(configurationsAsSchema),
+    [configurationsAsSchema],
+  );
+
+  const visibleData = useMemo(
+    () => CredentialVisibilityHelpers.filterCredentialsByAllowedTypes(data, allowedTypes),
+    [data, allowedTypes],
+  );
+
   const tagList = useMemo(() => {
-    return [...(credentialTypesData?.rows || [])]
+    const tags = [...(credentialTypesData?.rows || [])]
       .map((type, index) => {
         return {
           id: type + (index + 1),
@@ -73,12 +85,13 @@ export const useLoadAllCredentials = props => {
         };
       })
       .sort((a, b) => a.name.localeCompare(b.name));
-  }, [credentialTypesData]);
+    return CredentialVisibilityHelpers.filterCredentialTagsByAllowedTypes(tags, allowedTypes);
+  }, [credentialTypesData, allowedTypes]);
 
   return {
     tagList,
     onLoadMore: onLoadMoreCredentials,
-    data,
+    data: visibleData,
     isCredentialsError,
     isCredentialsFetching,
     isCredentialsLoading,

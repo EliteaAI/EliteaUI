@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 
 import { useGetAvailableConfigurationsTypeQuery as getAvailableConfigurationsType } from '@/api/configurations.js';
+import { useSelectedProject } from '@/hooks/useSelectedProject';
 
 /**
  * Custom hook to fetch configurations from multiple sections
@@ -9,10 +10,15 @@ import { useGetAvailableConfigurationsTypeQuery as getAvailableConfigurationsTyp
  * @returns {Object} Combined result with data, isLoading, and error states
  */
 export const useGetMultiSectionConfigurations = (sections = []) => {
+  // Not useSelectedProjectId: that yields '' for a user with no personal project, which
+  // would strand the picker empty. Undefined here means no project is resolvable at all,
+  // and an unscoped catalogue beats none — the reducer prunes it once a scoped one arrives.
+  const projectId = useSelectedProject()?.id;
+
   // Make separate API calls for each section
   const sectionQueries = sections?.map(section =>
     getAvailableConfigurationsType(
-      { section },
+      { section, project_id: projectId },
       {
         // Skip query if section is empty or invalid
         skip: !section || typeof section !== 'string',
