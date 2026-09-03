@@ -183,6 +183,7 @@ const ChatBox = forwardRef((props, boxRef) => {
 
     // Override for entity-created routing (e.g. generated-entities tab panel)
     onEntityCreated: onEntityCreatedProp,
+    onEntityDeleted: onEntityDeletedProp,
   } = props;
 
   const styles = chatBoxStyles();
@@ -681,6 +682,7 @@ const ChatBox = forwardRef((props, boxRef) => {
         } else if (entity_type === 'toolkit') {
           await deleteToolkit({ projectId, toolkitId: entity_id }).unwrap();
         }
+        onEntityDeletedProp?.({ entity_type, entity_id });
       } catch (err) {
         toastError(buildErrorMessage(err) || 'Failed to delete entity');
         return;
@@ -710,6 +712,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       updateMessageMeta,
       setChatHistory,
       toastError,
+      onEntityDeletedProp,
     ],
   );
 

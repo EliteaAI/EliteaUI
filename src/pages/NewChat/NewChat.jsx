@@ -560,6 +560,7 @@ const NewChat = props => {
     activeGeneratedTabIndex,
     setActiveGeneratedTabIndex,
     isEditingGeneratedEntities,
+    onGeneratedEntityDeleted,
     onGeneratedEntityCreated,
     handleCloseGeneratedTab,
     isEditorOpen,
@@ -1339,6 +1340,7 @@ const NewChat = props => {
                 uploadProgress={uploadProgress}
                 newConversationQuestion={newConversationQuestion}
                 onEntityCreated={onGeneratedEntityCreated}
+                onEntityDeleted={onGeneratedEntityDeleted}
                 {...baseSettings}
               />
               {isPlayback && (

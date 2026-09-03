@@ -118,6 +118,19 @@ export const useChatEditors = ({
     });
   }, []);
 
+  const onGeneratedEntityDeleted = useCallback(({ entity_type, entity_id }) => {
+    setGeneratedEditorTabs(prev => {
+      const next = prev.filter(t => t.entity_id !== entity_id || t.entity_type !== entity_type);
+      if (next.length === 0) {
+        setIsEditingGeneratedEntities(false);
+        setActiveGeneratedTabIndex(0);
+      } else {
+        setActiveGeneratedTabIndex(i => Math.min(i, next.length - 1));
+      }
+      return next;
+    });
+  }, []);
+
   const onGeneratedEntityCreated = useCallback(
     ({ entity_type, entity_id, version_id, entity_name, is_mcp }, setAsActive) => {
       const participant = buildEntityParticipant({ entity_id, entity_name, version_id, is_mcp, projectId });
@@ -387,6 +400,7 @@ export const useChatEditors = ({
     activeGeneratedTabIndex,
     setActiveGeneratedTabIndex,
     isEditingGeneratedEntities,
+    onGeneratedEntityDeleted,
     onGeneratedEntityCreated,
     handleCloseGeneratedTab,
     handleCloseGeneratedEntitiesPanel,
