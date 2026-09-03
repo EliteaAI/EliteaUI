@@ -262,13 +262,15 @@ export const apiSlice = eliteaApi
         invalidatesTags: [TAG_TYPE_APPLICATIONS],
       }),
       deleteApplication: build.mutation({
-        query: ({ projectId, applicationId }) => {
-          return {
-            url: apiSlicePath + '/application/prompt_lib/' + projectId + '/' + applicationId,
-            method: 'DELETE',
-          };
-        },
-        invalidatesTags: [TAG_TYPE_TOTAL_APPLICATIONS, TAG_TYPE_APPLICATIONS],
+        query: ({ projectId, applicationId }) => ({
+          url: apiSlicePath + '/application/prompt_lib/' + projectId + '/' + applicationId,
+          method: 'DELETE',
+        }),
+        invalidatesTags: (result, error, { entityType } = {}) => [
+          TAG_TYPE_TOTAL_APPLICATIONS,
+          TAG_TYPE_APPLICATIONS,
+          ...(entityType ? [{ type: 'EntityFolder', id: `LIST_${entityType}` }] : []),
+        ],
         onQueryStarted: async (args, { dispatch, getState, queryFulfilled }) => {
           const state = getState();
           const patchResults = [

@@ -153,10 +153,9 @@ const DataRowAction = memo(props => {
   const [deleteCredential] = useDeleteConfigurationMutation();
 
   const doDeleteApplication = useCallback(async () => {
-    const { error } = await deleteApplication({ projectId, applicationId: data?.id });
+    const entityType = entity_name === 'pipelines' ? 'pipeline' : 'agent';
+    const { error } = await deleteApplication({ projectId, applicationId: data?.id, entityType });
     if (!error) {
-      const entityType =
-        entity_name === 'pipelines' ? 'pipeline' : entity_name === 'applications' ? 'application' : 'agent';
       const entityName = data?.name || entityType;
       toastSuccess(`The ${entityName} ${entityType} has been successfully deleted.`);
     }
