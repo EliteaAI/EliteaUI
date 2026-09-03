@@ -51,8 +51,15 @@ const applicationsSlice = createSlice({
       (state, { payload }) => {
         // Merge configurations from different sections instead of overwriting
         if (payload && Array.isArray(payload)) {
-          // Create a map to avoid duplicates by type
-          const existingConfigs = new Map(state.configurationsAsSchema.map(config => [config.type, config]));
+          // Rebuilt rather than merged into: the payload is project-scoped, so keeping
+          // prior entries would let a type survive a switch to a project that omits it
+          const refreshedSections = new Set(payload.map(config => config?.section).filter(Boolean));
+
+          const existingConfigs = new Map(
+            state.configurationsAsSchema
+              .filter(config => !refreshedSections.has(config?.section))
+              .map(config => [config.type, config]),
+          );
 
           // Add new configurations, updating existing ones if they have the same type
           payload.forEach(config => {
