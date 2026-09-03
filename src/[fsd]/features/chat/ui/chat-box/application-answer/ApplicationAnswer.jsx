@@ -1,4 +1,4 @@
-import { forwardRef, memo, useCallback } from 'react';
+import { forwardRef, memo, useCallback, useMemo } from 'react';
 
 import { Box, List, ListItem, ListItemText } from '@mui/material';
 
@@ -132,7 +132,10 @@ const ApplicationAnswer = memo(
     const isApplicationParticipant = participant?.entity_name === ChatParticipantType.Applications;
     const hasToolActionsOrException = nonSwarmChildActions.length || swarmChildActions.length || exception;
 
-    const styles = applicationAnswerStyles(verticalMode, minHeight, hasToolActionsOrException, isSwarmChild);
+    const styles = useMemo(
+      () => applicationAnswerStyles(verticalMode, minHeight, hasToolActionsOrException, isSwarmChild),
+      [verticalMode, minHeight, hasToolActionsOrException, isSwarmChild],
+    );
 
     const renderAuthorizationCard = useCallback(
       authRequiredAction => (

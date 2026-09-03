@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 
 import { Box } from '@mui/material';
 
@@ -14,9 +14,12 @@ const AnswerAttachments = memo(props => {
     onOpenArtifactPreview,
   } = props;
 
-  if (!imageAttachments.length && !normalAttachments.length) return null;
+  const styles = useMemo(
+    () => answerAttachmentsStyles(hasNonAttachmentItems, imageAttachments.length),
+    [hasNonAttachmentItems, imageAttachments.length],
+  );
 
-  const styles = answerAttachmentsStyles(hasNonAttachmentItems, imageAttachments.length);
+  if (!imageAttachments.length && !normalAttachments.length) return null;
 
   return (
     <Box sx={styles.container}>

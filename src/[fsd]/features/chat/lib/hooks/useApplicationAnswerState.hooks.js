@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { buildAttachmentSummary } from '@/[fsd]/entities/attachment/lib';
 import { toSpeakableText, translateSpokenPos } from '@/[fsd]/features/chat/lib/helpers';
+import { itemToSpeakableText } from '@/[fsd]/features/chat/lib/helpers/applicationAnswer.helpers.js';
 import {
   getActionOwnerPath,
   normalizeExecutionHierarchy,
@@ -17,16 +18,6 @@ import {
 } from '@/common/constants.js';
 import { convertJsonToString, isImageFile } from '@/common/utils';
 import useCopyDownloadHandlers from '@/hooks/chat/useCopyEventHandlers';
-
-export const itemToSpeakableText = item => {
-  if (item.item_type === 'canvas_message') {
-    return item.item_details.latest_version?.canvas_content || '';
-  }
-  if (item.item_type === 'attachment_message') {
-    return '';
-  }
-  return item.item_details.content;
-};
 
 export const useApplicationAnswerState = props => {
   const {

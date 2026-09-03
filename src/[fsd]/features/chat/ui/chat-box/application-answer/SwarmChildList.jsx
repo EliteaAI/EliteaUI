@@ -6,11 +6,9 @@ import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
 import Markdown from '@/[fsd]/shared/ui/markdown';
 import { getToolIcon } from '@/common/toolkitUtils';
 
-const styles = swarmChildListStyles();
-
 const SwarmChildList = memo(props => {
   const { actions } = props;
-
+  const styles = swarmChildListStyles();
   if (!actions.length) return null;
 
   return (
@@ -31,7 +29,12 @@ const SwarmChildList = memo(props => {
                 title: (
                   <Box sx={styles.titleBox}>
                     <SwarmIcon sx={styles.icon} />
-                    <span>{agentName}</span>
+                    <Box
+                      component="span"
+                      sx={styles.agentName}
+                    >
+                      {agentName}
+                    </Box>
                   </Box>
                 ),
                 content: <Markdown>{action.content || action.toolOutputs || ''}</Markdown>,
@@ -73,15 +76,15 @@ const swarmChildListStyles = () => ({
     },
     '& .MuiAccordionSummary-content': { margin: '0.5rem 0' },
   }),
-  titleBox: ({ palette }) => ({
+  titleBox: {
     display: 'flex',
     alignItems: 'center',
     gap: '0.5rem',
-    '& span': {
-      fontWeight: 600,
-      color: palette.text.secondary,
-      fontSize: '0.875rem',
-    },
+  },
+  agentName: ({ palette }) => ({
+    fontWeight: 600,
+    color: palette.text.secondary,
+    fontSize: '0.875rem',
   }),
   icon: ({ palette }) => ({
     width: '1rem',
