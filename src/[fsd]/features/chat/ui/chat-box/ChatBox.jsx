@@ -225,7 +225,7 @@ const ChatBox = forwardRef((props, boxRef) => {
   const [updateChatLlmSettings, { isLoading: modelSettingsAreSaving }] =
     useUpdateParticipantLlmSettingsMutation();
 
-  const { name, id: userId, avatar, personalization: userPersonalization } = useSelector(state => state.user);
+  const { name, id: userId, avatar } = useSelector(state => state.user);
 
   const { chat_history, pendingHitlMessage } = useMemo(() => {
     const history = activeConversation?.chat_history || [];
@@ -2681,7 +2681,7 @@ const ChatBox = forwardRef((props, boxRef) => {
 
   const displayConversationStarters = !isProcessingSymbols && conversationStarters?.length > 0;
 
-  const isMidturnInjectionEnabled = useIsMidturnInjectionEnabled(userPersonalization);
+  const isMidturnInjectionEnabled = useIsMidturnInjectionEnabled();
 
   // Scoped to the in-flight turn, not global: the indexer sets isInjectable on
   // the specific streaming message, so multi-participant conversations with more

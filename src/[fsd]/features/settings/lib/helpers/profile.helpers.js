@@ -26,7 +26,10 @@ const MODULE_TOGGLE_KEYS = [
   ...Object.values(INTERNAL_TOOL_AGENT_PERSONALIZATION_FIELD_MAP),
 ];
 
-const MODULE_TOGGLE_DEFAULTS = MODULE_TOGGLE_KEYS.reduce((acc, key) => ({ ...acc, [key]: false }), {});
+// #6303: mid-turn input rides the same project-scoped store as the module toggles.
+const MODULE_SETTINGS_KEYS = [...MODULE_TOGGLE_KEYS, 'midturn_injection_enabled'];
+
+const MODULE_TOGGLE_DEFAULTS = MODULE_SETTINGS_KEYS.reduce((acc, key) => ({ ...acc, [key]: false }), {});
 
 export const PROFILE_INITIAL_VALUES = {
   persona: DEFAULT_PERSONA,
@@ -45,9 +48,10 @@ export const PROFILE_INITIAL_VALUES = {
   },
 };
 
-// #6285: module toggles now live in the project-scoped module_settings store, not authorData.personalization.
+// #6285/#6303: module toggles and mid-turn input live in the project-scoped module_settings
+// store now, not authorData.personalization.
 const serializeModuleToggles = moduleSettingsData =>
-  MODULE_TOGGLE_KEYS.reduce((acc, key) => ({ ...acc, [key]: moduleSettingsData?.[key] ?? false }), {});
+  MODULE_SETTINGS_KEYS.reduce((acc, key) => ({ ...acc, [key]: moduleSettingsData?.[key] ?? false }), {});
 
 export const serializeProfileFormData = (authorData, moduleSettingsData, defaultModel, selectedProjectId) => {
   const moduleToggles = serializeModuleToggles(moduleSettingsData);
@@ -79,7 +83,6 @@ export const serializeProfileFormData = (authorData, moduleSettingsData, default
       ...(p.personality_instructions || {}),
     },
     ...moduleToggles,
-    midturn_injection_enabled: p.midturn_injection_enabled ?? false,
     context_enabled: cm.enabled ?? DEFAULT_CONTEXT_STRATEGY.ENABLED,
     max_context_tokens: cm.max_context_tokens ?? DEFAULT_CONTEXT_STRATEGY.MAX_CONTEXT_TOKENS,
     preserve_recent_messages:
@@ -100,7 +103,6 @@ export const deserializeProfileFormData = formValues => ({
     persona: formValues.persona,
     // #5392: send the full per-persona map; default_instructions is server-owned now.
     personality_instructions: formValues.personality_instructions,
-    midturn_injection_enabled: formValues.midturn_injection_enabled,
   },
   default_context_management: {
     enabled: formValues.context_enabled,
@@ -117,9 +119,9 @@ export const deserializeProfileFormData = formValues => ({
   },
 });
 
-// #6285: module toggles are saved separately, scoped to the current project.
+// #6285/#6303: module toggles and mid-turn input are saved separately, scoped to the current project.
 export const deserializeModuleSettingsFormData = formValues =>
-  MODULE_TOGGLE_KEYS.reduce((acc, key) => ({ ...acc, [key]: formValues[key] }), {});
+  MODULE_SETTINGS_KEYS.reduce((acc, key) => ({ ...acc, [key]: formValues[key] }), {});
 
 export const createContextStrategyFormData = formikValues => ({
   enabled: formikValues.context_enabled,

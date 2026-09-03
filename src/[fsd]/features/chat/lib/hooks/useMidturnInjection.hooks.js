@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 
 import { useGetPlatformSettingsQuery } from '@/api/platformSettings';
+import { useAuthorModuleSettingsQuery } from '@/api/social';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 /**
@@ -22,13 +23,12 @@ export const useIsMidturnInjectionAvailable = () => {
 
 /**
  * Both gate tiers: the platform must offer the feature here AND the user must have
- * opted in. The endpoint enforces tier 1 independently, so this is UX only.
- * Chat-only; Settings gates the opt-in card with the tier-1 hook above.
- * @param {{midturn_injection_enabled?: boolean}} [userPersonalization]
+ * opted in for the current project (#6303: opt-in is project-scoped, not global).
  * @returns {boolean}
  */
-export const useIsMidturnInjectionEnabled = userPersonalization => {
+export const useIsMidturnInjectionEnabled = () => {
+  const projectId = useSelectedProjectId();
   const isAvailable = useIsMidturnInjectionAvailable();
-  const optedIn = Boolean(userPersonalization?.midturn_injection_enabled);
-  return useMemo(() => optedIn && isAvailable, [optedIn, isAvailable]);
+  const { data: moduleSettings } = useAuthorModuleSettingsQuery(projectId, { skip: !projectId });
+  return Boolean(moduleSettings?.midturn_injection_enabled) && isAvailable;
 };
