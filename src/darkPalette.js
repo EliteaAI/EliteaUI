@@ -95,13 +95,7 @@ const lightBlue = '#d7f1ff';
 
 const oldDarkPalette = {
   mode: 'dark',
-  secondary: {
-    main: gray10,
-  },
-  info: {
-    main: darkBlue,
-    secondary: darkBlue40,
-  },
+
   step: {
     default: { border: whiteStepBorder, icon: white10 },
     active: darkBlueLowOpacity,
@@ -525,7 +519,6 @@ const oldDarkPalette = {
       send: gray60,
       trophy: '#FFD3A0',
       tips: skyBlue,
-      info: skyBlue,
       successModal: greenHoverBtn,
       disabled: gray20,
       attention: orange,
@@ -675,6 +668,9 @@ const darkPalette = {
   primary: {
     main: primaryDefault,
   },
+  secondary: {
+    main: gray10,
+  },
 
   background: {
     ...oldDarkPalette.background,
@@ -711,6 +707,22 @@ const darkPalette = {
     white: darkColorScheme.textWhite,
     light: darkColorScheme.textLight,
     darker: darkColorScheme.textDarker,
+  },
+
+  alert: {
+    info: {
+      main: darkBlue,
+      secondary: darkBlue40,
+    },
+  },
+
+  icon: {
+    ...oldDarkPalette.icon,
+
+    fill: {
+      ...oldDarkPalette.icon.fill,
+      info: darkBlue,
+    },
   },
 };
 

@@ -61,7 +61,7 @@ DeleteFolderDialog.displayName = 'DeleteFolderDialog';
 const styles = {
   alert: ({ palette }) => ({
     borderRadius: '0.5rem',
-    border: `0.0625rem solid ${palette.info.secondary}`,
+    border: `0.0625rem solid ${palette.alert.info.secondary}`,
     backgroundColor: palette.background.info,
     padding: '0.75rem 1rem',
     gap: '0.75rem',
@@ -75,7 +75,7 @@ const styles = {
       '& .MuiSvgIcon-root': {
         width: '0.875rem',
         height: '0.875rem',
-        color: palette.info.main,
+        color: palette.alert.info.main,
       },
     },
     '& .MuiAlert-message': {

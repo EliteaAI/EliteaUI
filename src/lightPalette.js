@@ -93,13 +93,7 @@ const greenOutline40 = '#2ab37a66';
 
 const oldLightPalette = {
   mode: 'light',
-  secondary: {
-    main: light10,
-  },
-  info: {
-    main: blue03,
-    secondary: blue02,
-  },
+
   step: {
     default: { border: lightStepBorder, icon: dark10 },
     active: darkBlueLowOpacity,
@@ -532,7 +526,6 @@ const oldLightPalette = {
       disabled: light20,
       attention: orange,
       warning,
-      info: blue,
       successModal: greenHoverBtn,
       is_default: green20,
       success: green,
@@ -679,6 +672,9 @@ const lightPalette = {
   primary: {
     main: primaryDefault,
   },
+  secondary: {
+    main: light10,
+  },
 
   background: {
     ...oldLightPalette.background,
@@ -715,6 +711,22 @@ const lightPalette = {
     white: lightColorScheme.textWhite,
     light: lightColorScheme.textLight,
     darker: lightColorScheme.textDarker,
+  },
+
+  alert: {
+    info: {
+      main: blue03,
+      secondary: blue02,
+    },
+  },
+
+  icon: {
+    ...oldLightPalette.icon,
+
+    fill: {
+      ...oldLightPalette.icon.fill,
+      info: blue03,
+    },
   },
 };
 

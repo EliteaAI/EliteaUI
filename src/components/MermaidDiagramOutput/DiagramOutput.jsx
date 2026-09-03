@@ -695,7 +695,7 @@ const mermaidDiagramOutputStyles = (theme, isValidCode, errorMessage, widthsValu
     lineHeight: 1.2,
   },
   infoIcon: {
-    fill: theme.palette.info.main,
+    fill: theme.palette.icon.fill.info,
   },
   infoTooltip: {
     display: 'inline-flex',
