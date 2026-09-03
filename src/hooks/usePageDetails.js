@@ -23,6 +23,9 @@ export const usePageDetails = () => {
   const isApplicationEvaluatePage = useMatch({ path: RouteDefinitions.ApplicationsEvaluate });
   const isApplicationEvaluateSuitePage = useMatch({ path: RouteDefinitions.ApplicationsEvaluateSuite });
   const isApplicationEvaluateDatasetsPage = useMatch({ path: RouteDefinitions.ApplicationsEvaluateDatasets });
+  const isApplicationEvaluateDimensionsPage = useMatch({
+    path: RouteDefinitions.ApplicationsEvaluateDimensions,
+  });
 
   const isPipelineDetailPage = useMatch({ path: RouteDefinitions.PipelineDetail });
   const isUserPublicPipelineDetailPage = useMatch({ path: RouteDefinitions.UserPublicPipelineDetail });
@@ -73,7 +76,8 @@ export const usePageDetails = () => {
     isApplicationsWithTab ||
     isApplicationEvaluatePage ||
     isApplicationEvaluateSuitePage ||
-    isApplicationEvaluateDatasetsPage;
+    isApplicationEvaluateDatasetsPage ||
+    isApplicationEvaluateDimensionsPage;
 
   const isPipelinePage =
     isPipelineDetailPage ||

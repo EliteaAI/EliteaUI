@@ -75,6 +75,10 @@ export const BREADCRUMB_REGISTRY = {
     parent: RouteDefinitions.ApplicationsEvaluate,
     label: 'Manage Datasets',
   },
+  [RouteDefinitions.ApplicationsEvaluateDimensions]: {
+    parent: RouteDefinitions.ApplicationsEvaluate,
+    label: 'Manage Dimensions',
+  },
 
   [RouteDefinitions.SkillsWithTab]: { label: PathSessionMap[RouteDefinitions.Skills] },
   [RouteDefinitions.CreateSkill]: { parent: RouteDefinitions.SkillsWithTab, label: 'New Skill' },

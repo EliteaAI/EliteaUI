@@ -27,6 +27,7 @@ const COLUMNS = [
 ];
 
 const GRID_TEMPLATE_COLUMNS = '3rem 1fr 1fr 7rem 7rem 5rem';
+const GRID_TEMPLATE_COLUMN_NO_CHECKBOXES = '4fr 4fr 2fr 2fr';
 const NAME_FIELD = 'input';
 
 const getSourceLabel = source => {
@@ -248,8 +249,8 @@ const CasesPanel = memo(props => {
           onSelectAll={handleSelectAll}
           isAllSelected={isAllSelected}
           isIndeterminate={isIndeterminate}
-          gridTemplateColumns={GRID_TEMPLATE_COLUMNS}
-          showCheckbox
+          gridTemplateColumns={canEdit ? GRID_TEMPLATE_COLUMNS : GRID_TEMPLATE_COLUMN_NO_CHECKBOXES}
+          showCheckbox={canEdit}
         />
         <GridTableBody>
           {sortedCases.map(caseItem => (
@@ -263,8 +264,8 @@ const CasesPanel = memo(props => {
               onSelect={handleSelectRow}
               onMouseEnter={handleRowMouseEnter}
               onMouseLeave={handleRowMouseLeave}
-              gridTemplateColumns={GRID_TEMPLATE_COLUMNS}
-              showCheckbox
+              gridTemplateColumns={canEdit ? GRID_TEMPLATE_COLUMNS : GRID_TEMPLATE_COLUMN_NO_CHECKBOXES}
+              showCheckbox={canEdit}
               NameCellComponent={CaseInputNameCell}
               renderCell={renderCell}
               ActionsComponent={CaseRowActions}

@@ -66,6 +66,9 @@ const AgentEvaluatePage = ChunkHelpers.lazyWithRetry(
 const AgentEvaluateDatasetsPage = ChunkHelpers.lazyWithRetry(
   () => import('@/[fsd]/pages/agent-evaluate/AgentEvaluateDatasetsPage'),
 );
+const AgentEvaluateDimensionsPage = ChunkHelpers.lazyWithRetry(
+  () => import('@/[fsd]/pages/agent-evaluate/AgentEvaluateDimensionsPage'),
+);
 const Skills = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/skills/Skills'));
 const CreateSkill = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/skills/CreateSkill'));
 const EditSkill = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/skills/EditSkill'));
@@ -211,6 +214,7 @@ const ProtectedRoutes = memo(() => {
       { path: RouteDefinitions.ApplicationsEvaluate, element: <AgentEvaluatePage /> },
       { path: RouteDefinitions.ApplicationsEvaluateSuite, element: <AgentEvaluatePage /> },
       { path: RouteDefinitions.ApplicationsEvaluateDatasets, element: <AgentEvaluateDatasetsPage /> },
+      { path: RouteDefinitions.ApplicationsEvaluateDimensions, element: <AgentEvaluateDimensionsPage /> },
 
       /* skills — hidden for public projects */
       { path: RouteDefinitions.Skills, element: <SkillsGuard>{getIndexElement(SkillsTabs[0])}</SkillsGuard> },

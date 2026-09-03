@@ -13,6 +13,7 @@ const RouteDefinitions = {
   ApplicationsEvaluate: '/agents/:tab/:agentId/evaluate',
   ApplicationsEvaluateSuite: '/agents/:tab/:agentId/evaluate/:suiteId',
   ApplicationsEvaluateDatasets: '/agents/:tab/:agentId/evaluate/datasets',
+  ApplicationsEvaluateDimensions: '/agents/:tab/:agentId/evaluate/dimensions',
 
   Skills: '/skills',
   SkillsWithTab: '/skills/:tab',

@@ -66,6 +66,59 @@ export const TARGET_OPERATOR_OPTIONS = [
   { value: '==', label: '= (equals)' },
 ];
 
+// Simplified success criteria for new dimension modal (subset of TARGET_OPERATOR_OPTIONS)
+export const SUCCESS_CRITERIA_OPTIONS = [
+  { value: '>=', label: 'At least (>=)' },
+  { value: '<=', label: 'At most (<=)' },
+  { value: '==', label: 'Exactly (=)' },
+];
+
+// UI presets for scale type that auto-fill min/max values. Maps to EVAL_SCALE_TYPE.
+export const SCALE_TYPE_PRESET = {
+  score: 'score',
+  rating: 'rating',
+  passFail: 'pass_fail',
+  custom: 'custom',
+};
+
+export const SCALE_TYPE_PRESET_OPTIONS = [
+  { value: SCALE_TYPE_PRESET.score, label: 'Score (1-100)' },
+  { value: SCALE_TYPE_PRESET.rating, label: 'Rating (1-5)' },
+  { value: SCALE_TYPE_PRESET.passFail, label: 'Pass/Fail' },
+  { value: SCALE_TYPE_PRESET.custom, label: 'Custom' },
+];
+
+export const SCALE_TYPE_PRESET_CONFIG = {
+  [SCALE_TYPE_PRESET.score]: { scaleType: EVAL_SCALE_TYPE.continuous, min: 1, max: 100 },
+  [SCALE_TYPE_PRESET.rating]: { scaleType: EVAL_SCALE_TYPE.ordinal, min: 1, max: 5 },
+  [SCALE_TYPE_PRESET.passFail]: { scaleType: EVAL_SCALE_TYPE.binary, min: 0, max: 1 },
+  [SCALE_TYPE_PRESET.custom]: { scaleType: EVAL_SCALE_TYPE.continuous, min: null, max: null },
+};
+
+// Importance levels for dimension weighting
+export const IMPORTANCE = {
+  low: 'low',
+  medium: 'medium',
+  high: 'high',
+  critical: 'critical',
+  custom: 'custom',
+};
+
+export const IMPORTANCE_OPTIONS = [
+  { value: IMPORTANCE.low, label: 'Low' },
+  { value: IMPORTANCE.medium, label: 'Medium' },
+  { value: IMPORTANCE.high, label: 'High' },
+  { value: IMPORTANCE.critical, label: 'Critical' },
+  { value: IMPORTANCE.custom, label: 'Custom' },
+];
+
+export const IMPORTANCE_WEIGHT_MAP = {
+  [IMPORTANCE.low]: 1,
+  [IMPORTANCE.medium]: 2,
+  [IMPORTANCE.high]: 3,
+  [IMPORTANCE.critical]: 4,
+};
+
 // RBAC permission strings (must match backend check_api decorators, §19.6).
 export const EVAL_PERMISSIONS = {
   dimensionRead: 'models.applications.evaluation.dimension.read',

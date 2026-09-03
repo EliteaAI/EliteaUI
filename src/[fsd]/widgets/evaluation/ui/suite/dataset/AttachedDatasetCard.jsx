@@ -25,7 +25,7 @@ const AttachedDatasetCard = memo(props => {
     onOpenDataset,
     onAddCase,
     onEditCase,
-    onDeleteCase,
+    onRemoveCase,
     onImportCases,
     onPromoteCases,
   } = props;
@@ -137,9 +137,10 @@ const AttachedDatasetCard = memo(props => {
           <DatasetCasesList
             cases={cases}
             caseCount={caseCount}
+            isSharedDataset={dataset.is_shared}
             onAddCase={onAddCase}
             onEditCase={onEditCase}
-            onDeleteCase={onDeleteCase}
+            onRemoveCase={onRemoveCase}
             onImportCases={onImportCases}
             onPromoteCases={onPromoteCases}
           />

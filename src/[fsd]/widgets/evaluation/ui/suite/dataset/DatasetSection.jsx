@@ -21,7 +21,7 @@ const DatasetSection = memo(props => {
     onOpenDataset,
     onAddCase,
     onEditCase,
-    onDeleteCase,
+    onRemoveCase,
     onImportCases,
     onPromoteCases,
   } = props;
@@ -70,7 +70,7 @@ const DatasetSection = memo(props => {
           onOpenDataset={onOpenDataset}
           onAddCase={onAddCase}
           onEditCase={onEditCase}
-          onDeleteCase={onDeleteCase}
+          onRemoveCase={onRemoveCase}
           onImportCases={onImportCases}
           onPromoteCases={onPromoteCases}
         />

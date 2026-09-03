@@ -20,7 +20,6 @@ import DatasetSectionHeader from './dataset/DatasetSectionHeader';
 import DimensionSection from './dimension/DimensionSection';
 import DimensionSectionHeader from './dimension/DimensionSectionHeader';
 
-const EMPTY_ARRAY = [];
 const AUTO_JUDGE_MODEL_ID = '__auto__';
 
 const JUDGE_MODEL_TOOLTIP =
@@ -34,7 +33,6 @@ const SuiteDetailPanel = memo(props => {
     modelsData = { items: [] },
     datasets = [],
     attachedDataset = null,
-    dimensions = [],
     isSaving,
     onBack,
     onSave,
@@ -49,11 +47,16 @@ const SuiteDetailPanel = memo(props => {
     onOpenDataset,
     onAddCase,
     onEditCase,
-    onDeleteCase,
+    onRemoveCase,
     onImportCases,
     onPromoteCases,
     onManageDimensions,
-    onCreateDimension,
+    onSelectDimensionFromLibrary,
+    onCreateDimensionManually,
+    onBuildDimensionWithAi,
+    onEditDimension,
+    onRemoveDimension,
+    attachedDimensions = [],
   } = props;
 
   const { checkPermission } = useCheckPermission();
@@ -318,7 +321,7 @@ const SuiteDetailPanel = memo(props => {
                   onOpenDataset={onOpenDataset}
                   onAddCase={onAddCase}
                   onEditCase={onEditCase}
-                  onDeleteCase={onDeleteCase}
+                  onRemoveCase={onRemoveCase}
                   onImportCases={onImportCases}
                   onPromoteCases={onPromoteCases}
                 />
@@ -329,9 +332,12 @@ const SuiteDetailPanel = memo(props => {
               headerContent: <DimensionSectionHeader onManageDimensions={onManageDimensions} />,
               content: (
                 <DimensionSection
-                  dimensions={dimensions}
-                  attachedDimensions={EMPTY_ARRAY}
-                  onCreateDimension={onCreateDimension}
+                  attachedDimensions={attachedDimensions}
+                  onSelectFromLibrary={onSelectDimensionFromLibrary}
+                  onCreateManually={onCreateDimensionManually}
+                  onBuildWithAi={onBuildDimensionWithAi}
+                  onEditDimension={onEditDimension}
+                  onRemoveDimension={onRemoveDimension}
                 />
               ),
             },

@@ -351,6 +351,7 @@ const AgentEvaluateDatasetsPage = memo(() => {
         name=""
         confirmButtonText="Delete"
         confirming={isDeletingCase}
+        inlineExtraContent=" "
       />
     </Box>
   );
