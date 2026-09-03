@@ -112,7 +112,7 @@ const RestoreProjectDialog = memo(props => {
         variant="bodySmall"
         color="text.secondary"
       >
-        Restore a redacted backup into{' '}
+        Restore data from the backup file into{' '}
         <Typography
           component="span"
           variant="labelSmall"
@@ -120,8 +120,8 @@ const RestoreProjectDialog = memo(props => {
         >
           {projectName}
         </Typography>
-        {'. Credentials and tokens are not part of a redacted backup, so they are not restored either. A '}
-        {'backup taken from another project can be applied here once you confirm the mismatch.'}
+        {'. Credentials and tokens will not be restored. Backup data from another project can be applied '}
+        {'here only after you solve the conflicts and confirm the differences.'}
       </Typography>
 
       {!!error && (
@@ -142,14 +142,14 @@ const RestoreProjectDialog = memo(props => {
           disabled={isLoading}
           data-testid="project-restore-choose-file"
         >
-          Choose backup file
+          Choose a backup file
         </BaseBtn>
         <Typography
           variant="bodySmall2"
           color="text.secondary"
           sx={componentStyles.fileName}
         >
-          {file ? `${file.name} (${formatSize(file.size)})` : 'No file selected'}
+          {file ? `${file.name} (${formatSize(file.size)})` : 'No files selected'}
         </Typography>
         <Box
           component="input"
@@ -167,9 +167,9 @@ const RestoreProjectDialog = memo(props => {
             severity="warning"
             sx={componentStyles.alert('warning')}
           >
-            This backup was taken from project {artifact.project_id}, not{' '}
-            {projectName ? `"${projectName}"` : 'this project'} (project {projectId}). Restoring it here puts
-            that data into a different project than it came from.
+            This data was backed up from project {artifact.project_id}. If you restore it to{' '}
+            {projectName ? `"${projectName}"` : 'this project'} (project {projectId}), you will put foreign
+            data into the project.
           </Alert>
           <FormControlLabel
             control={
@@ -185,7 +185,7 @@ const RestoreProjectDialog = memo(props => {
                 variant="bodyMedium"
                 color="text.secondary"
               >
-                Restore into this project anyway
+                Restore here anyway
               </Typography>
             }
           />
@@ -207,7 +207,7 @@ const RestoreProjectDialog = memo(props => {
               variant="bodyMedium"
               color="text.secondary"
             >
-              Preview only (nothing is saved)
+              Preview only (no data is restored yet)
             </Typography>
           }
         />
@@ -225,7 +225,7 @@ const RestoreProjectDialog = memo(props => {
               variant="bodyMedium"
               color="text.secondary"
             >
-              Replace existing data instead of merging
+              Replace existing data - do not merge
             </Typography>
           }
         />
@@ -236,14 +236,8 @@ const RestoreProjectDialog = memo(props => {
           severity="warning"
           sx={componentStyles.alert('warning')}
         >
-          Existing rows in the affected tables are deleted before the backup is applied, and{' '}
-          <Box
-            component="code"
-            sx={componentStyles.inlineCode}
-          >
-            CASCADE
-          </Box>{' '}
-          removes rows referencing them. Without this option rows are merged and existing ones are kept.
+          If checked, the existing rows in the affected tables will be deleted before applying the backup. If
+          unchecked, the existing rows will be preserved and new rows will be merged with them.
         </Alert>
       )}
 
@@ -319,7 +313,7 @@ const RestoreProjectDialog = memo(props => {
   return (
     <Modal.BaseModal
       open={open}
-      title="Restore Project"
+      title="Restore Project Data"
       onClose={handleClose}
       content={renderContent()}
       actions={renderActions()}
@@ -350,10 +344,6 @@ const componentStyles = {
   },
   hiddenInput: {
     display: 'none',
-  },
-  inlineCode: {
-    fontFamily: 'monospace',
-    fontWeight: 600,
   },
   options: {
     display: 'flex',
