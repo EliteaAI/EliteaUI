@@ -96,7 +96,6 @@ const oldDarkPalette = {
   mode: 'dark',
 
   background: {
-    eliteaDefault: gray60,
     secondary: gray50,
     tabPanel: gray55,
     pageSection: gray60,
@@ -104,7 +103,6 @@ const oldDarkPalette = {
     modal: {
       simple: gray50,
     },
-    chatBkg: gray55,
     dragging: blue10,
     userInputBackground: white5,
     userInputBorderLight: greenLight,
@@ -118,7 +116,6 @@ const oldDarkPalette = {
     warning,
     warning40,
     warning8,
-    codeMirrorEditor: gray55,
     card: {
       default: gray50,
       hover: gray58,
@@ -673,6 +670,11 @@ const darkPalette = {
   },
   background: {
     ...oldDarkPalette.background,
+    default: {
+      primary: gray60,
+      secondary: gray50,
+      tertiary: gray55,
+    },
     npsCard: `linear-gradient(to top, ${darkColorScheme.accentLight}, ${darkColorScheme.accentMid})`,
     button: {
       ...oldDarkPalette.background.button,

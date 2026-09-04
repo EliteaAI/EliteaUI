@@ -147,7 +147,7 @@ const getDesignTokens = mode => ({
           background: theme.palette.background.avatar,
         }),
         outlined: ({ theme }) => ({
-          background: theme.palette.background.eliteaDefault,
+          background: theme.palette.background.default.primary,
           color: theme.palette.text.secondary,
         }),
       },
@@ -155,7 +155,7 @@ const getDesignTokens = mode => ({
     MuiPaper: {
       styleOverrides: {
         root: ({ theme }) => ({
-          background: theme.palette.background.eliteaDefault,
+          background: theme.palette.background.default.primary,
         }),
       },
     },
@@ -249,7 +249,7 @@ const getDesignTokens = mode => ({
     MuiAppBar: {
       styleOverrides: {
         root: ({ theme }) => ({
-          background: theme.palette.background.eliteaDefault, // Your color here
+          background: theme.palette.background.default.primary, // Your color here
         }),
       },
     },

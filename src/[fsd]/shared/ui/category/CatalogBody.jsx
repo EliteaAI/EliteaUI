@@ -87,7 +87,7 @@ const catalogBodyStyles = () => ({
     width: '100%',
     height: '100%',
     boxSizing: 'border-box',
-    background: palette.background.eliteaDefault,
+    background: palette.background.default.primary,
   }),
   leftColumn: {
     flex: 1,
