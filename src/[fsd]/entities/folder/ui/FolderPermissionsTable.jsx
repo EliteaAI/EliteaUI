@@ -3,10 +3,11 @@ import { memo, useCallback, useMemo, useState } from 'react';
 import { Box, Skeleton, Tooltip, Typography } from '@mui/material';
 
 import { FOLDER_PERMISSION_LABELS, FOLDER_PERMISSION_OPTIONS } from '@/[fsd]/entities/folder/lib/constants';
-import { useResponsiveColumns } from '@/[fsd]/entities/grid-table/lib';
+import { useResponsiveColumns, useRowSelection, useTableSort } from '@/[fsd]/entities/grid-table/lib';
 import { GridTableBody, GridTableHeader, GridTableRow } from '@/[fsd]/entities/grid-table/ui';
 import { Button, Text } from '@/[fsd]/shared/ui';
 import { AddButton } from '@/[fsd]/shared/ui/button';
+import { SimpleSearchBar } from '@/[fsd]/shared/ui/input';
 import { useGetFolderAccessQuery, useRemoveFolderAccessMutation, useSetFolderAccessMutation } from '@/api';
 import NoPermissionsIcon from '@/assets/file-lock.svg?react';
 import PlusIcon from '@/assets/plus-icon.svg?react';
@@ -19,11 +20,13 @@ import AddFolderPermissionDialog from './AddFolderPermissionDialog';
 import EditFolderPermissionDialog from './EditFolderPermissionDialog';
 
 const FOLDER_PERMISSION_COLUMNS = [
-  { field: 'name', label: 'Name', width: '1fr', sortable: false },
-  { field: 'email', label: 'Email', width: '1.2fr', sortable: false, hideBelow: 600 },
+  { field: 'name', label: 'Name', width: '1fr', sortable: true },
+  { field: 'email', label: 'Email', width: '1.2fr', sortable: true, hideBelow: 600 },
   { field: 'access', label: 'Permissions', width: '10rem', sortable: false },
   { field: 'actions', label: '', width: '3.5rem', sortable: false },
 ];
+
+const MAX_BULK_ACCESS_ENTRIES = 200;
 
 const FolderPermissionsTable = memo(props => {
   const { folderId } = props;
@@ -32,8 +35,9 @@ const FolderPermissionsTable = memo(props => {
   const { windowWidth } = useGetWindowWidth();
   const { toastError, toastSuccess } = useToast();
   const [hoveredRowId, setHoveredRowId] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState(null);
+  const [editingUsers, setEditingUsers] = useState([]);
 
   const { data, isLoading, isError, refetch } = useGetFolderAccessQuery(
     { projectId, folderId },
@@ -58,11 +62,54 @@ const FolderPermissionsTable = memo(props => {
 
   const existingUserIds = useMemo(() => rows.map(row => row.userId), [rows]);
   const total = data?.total ?? rows.length;
+
+  const filteredRows = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+    if (!normalizedQuery) return rows;
+
+    return rows.filter(
+      row =>
+        row.name?.toLowerCase().includes(normalizedQuery) ||
+        row.email?.toLowerCase().includes(normalizedQuery),
+    );
+  }, [rows, searchQuery]);
+
+  const { sortConfig, handleSort, sortData } = useTableSort({
+    defaultField: 'name',
+    defaultDirection: 'asc',
+  });
+  const sortedRows = useMemo(() => sortData(filteredRows), [filteredRows, sortData]);
+
+  const {
+    selectedIds,
+    isAllSelected,
+    isIndeterminate,
+    handleSelectAll,
+    handleSelectRow,
+    clearSelection,
+    getSelectedRows,
+  } = useRowSelection({ rows: sortedRows, idField: 'id' });
+
   const { visibleColumns, gridTemplateColumns, dataColumns } = useResponsiveColumns({
     columns: FOLDER_PERMISSION_COLUMNS,
     containerWidth: windowWidth,
-    showCheckbox: false,
+    showCheckbox: true,
   });
+
+  const selectedCount = selectedIds.length;
+  const exceedsBulkLimit = selectedCount > MAX_BULK_ACCESS_ENTRIES;
+  const bulkEditDisabled = selectedCount === 0 || exceedsBulkLimit || isMutating;
+  const bulkEditTooltip = exceedsBulkLimit
+    ? `Select no more than ${MAX_BULK_ACCESS_ENTRIES} users`
+    : 'Edit selected';
+
+  const handleSearchChange = useCallback(
+    value => {
+      setSearchQuery(value);
+      clearSelection();
+    },
+    [clearSelection],
+  );
 
   const renderCell = useCallback((column, value, row) => {
     const displayValue = column.field === 'access' ? row.accessLabel : value;
@@ -88,7 +135,7 @@ const FolderPermissionsTable = memo(props => {
             <Button.BaseBtn
               variant="icon"
               sx={styles.actionButton}
-              onClick={() => setEditingUser(row)}
+              onClick={() => setEditingUsers([row])}
               disabled={isMutating}
             >
               <EditIcon sx={styles.actionIcon} />
@@ -99,6 +146,12 @@ const FolderPermissionsTable = memo(props => {
     ),
     [isMutating, styles.actionsContainer, styles.actionButton, styles.actionIcon],
   );
+
+  const handleBulkEditClick = useCallback(() => {
+    const selectedRows = getSelectedRows();
+    if (selectedRows.length === 0 || selectedRows.length > MAX_BULK_ACCESS_ENTRIES) return;
+    setEditingUsers(selectedRows);
+  }, [getSelectedRows]);
 
   const handleAddConfirm = useCallback(
     async ({ users, permission }) => {
@@ -124,41 +177,47 @@ const FolderPermissionsTable = memo(props => {
 
   const handleEditConfirm = useCallback(
     async ({ permission }) => {
-      if (!editingUser || isMutating) return;
+      if (editingUsers.length === 0 || isMutating) return;
 
       const isRemoval = permission === FOLDER_PERMISSION_OPTIONS.READ_WRITE;
+      const userIds = editingUsers.map(user => user.userId);
+      const userCount = editingUsers.length;
+      const userLabel = userCount === 1 ? editingUsers[0].name : `${userCount} users`;
+      const exceptionLabel = userCount === 1 ? 'exception' : 'exceptions';
 
       try {
         if (isRemoval) {
           await removeFolderAccess({
             projectId,
             folderId,
-            userIds: [editingUser.userId],
+            userIds,
           }).unwrap();
         } else {
           await setFolderAccess({
             projectId,
             folderId,
-            entries: [{ user_id: editingUser.userId, access_level: permission }],
+            entries: userIds.map(userId => ({ user_id: userId, access_level: permission })),
           }).unwrap();
         }
 
         toastSuccess(
           isRemoval
-            ? `Removed folder permission exception for ${editingUser.name}`
-            : `Updated folder permission exception for ${editingUser.name}`,
+            ? `Removed folder permission ${exceptionLabel} for ${userLabel}`
+            : `Updated folder permission ${exceptionLabel} for ${userLabel}`,
         );
-        setEditingUser(null);
+        setEditingUsers([]);
+        clearSelection();
       } catch {
         toastError(
           isRemoval
-            ? `Failed to remove folder permission exception for ${editingUser.name}`
-            : `Failed to update folder permission exception for ${editingUser.name}`,
+            ? `Failed to remove folder permission ${exceptionLabel} for ${userLabel}`
+            : `Failed to update folder permission ${exceptionLabel} for ${userLabel}`,
         );
       }
     },
     [
-      editingUser,
+      clearSelection,
+      editingUsers,
       folderId,
       isMutating,
       projectId,
@@ -239,21 +298,28 @@ const FolderPermissionsTable = memo(props => {
         <Box sx={styles.stickyHeader}>
           <GridTableHeader
             columns={visibleColumns}
+            sortConfig={sortConfig}
+            onSort={handleSort}
             gridTemplateColumns={gridTemplateColumns}
-            showCheckbox={false}
+            showCheckbox={true}
+            onSelectAll={handleSelectAll}
+            isAllSelected={isAllSelected}
+            isIndeterminate={isIndeterminate}
           />
         </Box>
         <GridTableBody sx={styles.tableBodySx}>
-          {rows.map(row => (
+          {sortedRows.map(row => (
             <GridTableRow
               key={row.id}
               row={row}
+              isSelected={selectedIds.includes(row.id)}
               isHovered={hoveredRowId === row.id}
               onMouseEnter={() => setHoveredRowId(row.id)}
               onMouseLeave={() => setHoveredRowId(null)}
               gridTemplateColumns={gridTemplateColumns}
               columns={dataColumns}
-              showCheckbox={false}
+              showCheckbox={true}
+              onSelect={handleSelectRow}
               renderCell={renderCell}
               actions={renderActions(row)}
               dataCellSx={styles.dataCell}
@@ -282,10 +348,37 @@ const FolderPermissionsTable = memo(props => {
           Exceptions – {total}
         </Typography>
         {rows.length > 0 && (
-          <AddButton
-            tooltip="Add exception"
-            onAdd={() => setAddDialogOpen(true)}
-          />
+          <Box sx={styles.actionsRow}>
+            <Box sx={styles.searchWrapper}>
+              <SimpleSearchBar
+                searchQuery={searchQuery}
+                onSearchChange={handleSearchChange}
+                placeholder="Search"
+                autoFocus={false}
+              />
+            </Box>
+            <AddButton
+              tooltip="Add exception"
+              onAdd={() => {
+                if (!isMutating) setAddDialogOpen(true);
+              }}
+            />
+            <Tooltip
+              title={bulkEditTooltip}
+              placement="top"
+            >
+              <Box component="span">
+                <Button.BaseBtn
+                  variant="icon"
+                  sx={styles.bulkEditButton}
+                  onClick={handleBulkEditClick}
+                  disabled={bulkEditDisabled}
+                >
+                  <EditIcon sx={styles.actionIcon} />
+                </Button.BaseBtn>
+              </Box>
+            </Tooltip>
+          </Box>
         )}
       </Box>
 
@@ -301,10 +394,10 @@ const FolderPermissionsTable = memo(props => {
       />
 
       <EditFolderPermissionDialog
-        open={!!editingUser}
-        onClose={() => setEditingUser(null)}
+        open={editingUsers.length > 0}
+        onClose={() => setEditingUsers([])}
         onConfirm={handleEditConfirm}
-        user={editingUser}
+        users={editingUsers}
         loading={isMutating}
       />
     </Box>
@@ -334,6 +427,15 @@ const folderPermissionsTableStyles = () => ({
   }),
   sectionTitle: {
     fontWeight: 600,
+  },
+  actionsRow: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: '0.6rem',
+  },
+  searchWrapper: {
+    minWidth: '12.5rem',
   },
   tableWrapper: ({ palette }) => ({
     flex: 1,
@@ -377,6 +479,14 @@ const folderPermissionsTableStyles = () => ({
     height: '1rem',
   },
   actionButton: ({ palette }) => ({
+    '&:hover': {
+      backgroundColor: palette.background.button.secondary.hover,
+    },
+    '&.Mui-disabled': {
+      opacity: 0.5,
+    },
+  }),
+  bulkEditButton: ({ palette }) => ({
     '&:hover': {
       backgroundColor: palette.background.button.secondary.hover,
     },
