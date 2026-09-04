@@ -5,12 +5,16 @@ import { Box, Skeleton, Tooltip, Typography } from '@mui/material';
 import { useResponsiveColumns } from '@/[fsd]/entities/grid-table/lib';
 import { GridTableBody, GridTableHeader, GridTableRow } from '@/[fsd]/entities/grid-table/ui';
 import { Button, Text } from '@/[fsd]/shared/ui';
-import { useGetFolderAccessQuery } from '@/api';
+import { AddButton } from '@/[fsd]/shared/ui/button';
+import { useGetFolderAccessQuery, useSetFolderAccessMutation } from '@/api';
 import NoPermissionsIcon from '@/assets/file-lock.svg?react';
 import PlusIcon from '@/assets/plus-icon.svg?react';
 import EditIcon from '@/components/Icons/EditIcon';
 import useGetWindowWidth from '@/hooks/useGetWindowWidth';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
+import useToast from '@/hooks/useToast';
+
+import AddFolderPermissionDialog from './AddFolderPermissionDialog';
 
 const FOLDER_PERMISSION_COLUMNS = [
   { field: 'name', label: 'Name', width: '1fr', sortable: false },
@@ -29,17 +33,21 @@ const FolderPermissionsTable = memo(props => {
   const styles = folderPermissionsTableStyles();
   const projectId = useSelectedProjectId();
   const { windowWidth } = useGetWindowWidth();
+  const { toastError, toastSuccess } = useToast();
   const [hoveredRowId, setHoveredRowId] = useState(null);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
 
   const { data, isLoading, isError, refetch } = useGetFolderAccessQuery(
     { projectId, folderId },
     { skip: !projectId || !folderId },
   );
+  const [setFolderAccess, { isLoading: isSaving }] = useSetFolderAccessMutation();
 
   const rows = useMemo(
     () =>
       (data?.overrides || []).map(override => ({
         id: override.id,
+        userId: override.user_id,
         name: override.user_name || `User ${override.user_id}`,
         email: override.user_email || '-',
         accessValue: override.access_level,
@@ -48,6 +56,7 @@ const FolderPermissionsTable = memo(props => {
     [data?.overrides],
   );
 
+  const existingUserIds = useMemo(() => rows.map(row => row.userId), [rows]);
   const total = data?.total ?? rows.length;
   const { visibleColumns, gridTemplateColumns, dataColumns } = useResponsiveColumns({
     columns: FOLDER_PERMISSION_COLUMNS,
@@ -90,6 +99,28 @@ const FolderPermissionsTable = memo(props => {
     [styles.actionsContainer, styles.actionButton, styles.actionIcon],
   );
 
+  const handleAddConfirm = useCallback(
+    async ({ users, permission }) => {
+      if (isSaving) return;
+
+      try {
+        await setFolderAccess({
+          projectId,
+          folderId,
+          entries: users.map(user => ({
+            user_id: user.id,
+            access_level: permission,
+          })),
+        }).unwrap();
+        setAddDialogOpen(false);
+        toastSuccess(`Added exceptions for ${users.length} user${users.length === 1 ? '' : 's'}`);
+      } catch {
+        toastError('Failed to add permission exceptions');
+      }
+    },
+    [folderId, isSaving, projectId, setFolderAccess, toastError, toastSuccess],
+  );
+
   const renderEmptyState = () => (
     <Box sx={styles.emptyStateWrapper}>
       <Box sx={styles.emptyStateContainer}>
@@ -113,6 +144,7 @@ const FolderPermissionsTable = memo(props => {
         </Typography>
         <Button.BaseBtn
           variant="special"
+          onClick={() => setAddDialogOpen(true)}
           startIcon={<PlusIcon />}
         >
           Add Exceptions
@@ -201,9 +233,24 @@ const FolderPermissionsTable = memo(props => {
         >
           Exceptions – {total}
         </Typography>
+        {rows.length > 0 && (
+          <AddButton
+            tooltip="Add exception"
+            onAdd={() => setAddDialogOpen(true)}
+          />
+        )}
       </Box>
 
       {renderContent()}
+
+      <AddFolderPermissionDialog
+        open={addDialogOpen}
+        onClose={() => setAddDialogOpen(false)}
+        onConfirm={handleAddConfirm}
+        projectId={projectId}
+        existingUserIds={existingUserIds}
+        loading={isSaving}
+      />
     </Box>
   );
 });

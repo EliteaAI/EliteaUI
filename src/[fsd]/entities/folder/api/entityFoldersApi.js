@@ -189,6 +189,16 @@ export const entityFoldersApi = eliteaApi
         }),
         providesTags: (_result, _error, { folderId }) => [{ type: TAG_TYPE_FOLDER_ACCESS, id: folderId }],
       }),
+      setFolderAccess: build.mutation({
+        query: ({ projectId, folderId, entries }) => ({
+          url: `/social/folder_access/prompt_lib/${projectId}/${folderId}`,
+          method: 'PUT',
+          body: { entries },
+        }),
+        invalidatesTags: (_result, _error, { folderId }) => [
+          { type: TAG_TYPE_FOLDER_ACCESS, id: folderId },
+        ],
+      }),
     }),
   });
 
@@ -204,4 +214,5 @@ export const {
   useGetFolderItemsQuery,
   useLazyGetFolderItemsQuery,
   useGetFolderAccessQuery,
+  useSetFolderAccessMutation,
 } = entityFoldersApi;
