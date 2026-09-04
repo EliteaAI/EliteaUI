@@ -1,6 +1,10 @@
 import { eliteaApi } from '@/api';
 
-import { EVAL_DATASET_CASE_PAGE_SIZE, EVAL_RESULT_MAX_LIMIT } from '../lib/constants/evaluation.constants';
+import {
+  EVAL_DATASET_CASE_PAGE_SIZE,
+  EVAL_RESULT_MAX_LIMIT,
+  EVAL_TIER,
+} from '../lib/constants/evaluation.constants';
 
 const TAG_EVAL_DIMENSION = 'EVAL_DIMENSION';
 const TAG_EVAL_SUITE = 'EVAL_SUITE';
@@ -70,7 +74,7 @@ export const evaluationApi = eliteaApi
           method: 'GET',
         }),
         transformResponse: response =>
-          (Array.isArray(response) ? response : []).map(d => ({ ...d, tier: 'platform' })),
+          (Array.isArray(response) ? response : []).map(d => ({ ...d, tier: EVAL_TIER.platform })),
         providesTags: [TAG_EVAL_DIMENSION],
       }),
       materializePlatformDimension: build.mutation({
@@ -246,27 +250,11 @@ export const evaluationApi = eliteaApi
         invalidatesTags: (result, error) => (error ? [] : [TAG_EVAL_DATASET, TAG_EVAL_DATASET_CASE]),
       }),
       deleteEvalDatasetCase: build.mutation({
-        query: ({ projectId, datasetId, caseId, agentId }) => ({
+        query: ({ projectId, datasetId, caseId }) => ({
           url: `/elitea_core/eval_dataset_case/prompt_lib/${projectId}/${datasetId}/${caseId}`,
           method: 'DELETE',
-          params: agentId != null ? { agent_id: agentId } : undefined,
         }),
         invalidatesTags: (result, error) => (error ? [] : [TAG_EVAL_DATASET, TAG_EVAL_DATASET_CASE]),
-      }),
-
-      // ---- Dataset cases with suite context ----
-      evalDatasetCases: build.query({
-        query: ({ projectId, datasetId, suiteId, limit = EVAL_DATASET_CASE_PAGE_SIZE, offset = 0 }) => {
-          const params = new URLSearchParams();
-          if (suiteId != null) params.set('suite_id', String(suiteId));
-          params.set('limit', String(limit));
-          params.set('offset', String(offset));
-          return {
-            url: `/elitea_core/eval_dataset_cases/prompt_lib/${projectId}/${datasetId}?${params.toString()}`,
-            method: 'GET',
-          };
-        },
-        providesTags: [TAG_EVAL_DATASET_CASE],
       }),
 
       // ---- Suite case exclusions (for borrowed datasets) ----
@@ -455,7 +443,6 @@ export const {
   useAddEvalDatasetCaseMutation,
   useUpdateEvalDatasetCaseMutation,
   useDeleteEvalDatasetCaseMutation,
-  useEvalDatasetCasesQuery,
   useEvalSuiteCaseExclusionsQuery,
   useUpdateEvalSuiteCaseExclusionsMutation,
   useImportEvalDatasetMutation,

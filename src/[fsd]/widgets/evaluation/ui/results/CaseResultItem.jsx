@@ -1,8 +1,10 @@
 import { memo, useCallback, useState } from 'react';
 
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { Box, Collapse, IconButton, SvgIcon, Tooltip, Typography } from '@mui/material';
+import { Box, Collapse, SvgIcon, Tooltip, Typography } from '@mui/material';
 
+import { Button } from '@/[fsd]/shared/ui';
+import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import ViewFileIcon from '@/assets/icons/ViewFileIcon.svg?react';
 
 import { formatScore } from '../../lib/helpers';
@@ -76,17 +78,22 @@ const CaseResultItem = memo(props => {
         title="View details"
         placement="top"
       >
-        <IconButton
-          size="small"
-          onClick={handleViewDetails}
-          sx={styles.viewButton}
-        >
-          <SvgIcon
-            component={ViewFileIcon}
-            inheritViewBox
-            sx={styles.viewIcon}
+        <Box component="span">
+          <Button.BaseBtn
+            variant={BUTTON_VARIANTS.tertiary}
+            aria-label="View details"
+            onClick={handleViewDetails}
+            sx={styles.viewButton}
+            data-testid={`case-view-details-${card.id}`}
+            startIcon={
+              <SvgIcon
+                component={ViewFileIcon}
+                inheritViewBox
+                sx={styles.viewIcon}
+              />
+            }
           />
-        </IconButton>
+        </Box>
       </Tooltip>
     </Box>
   );
@@ -152,10 +159,14 @@ const caseResultItemStyles = () => ({
     fontWeight: 500,
   }),
   viewButton: ({ palette }) => ({
+    minWidth: 'unset',
     padding: '0.5rem',
     marginTop: '0.375rem',
+    '& .MuiButton-startIcon': {
+      margin: 0,
+    },
     '&:hover': {
-      backgroundColor: palette.background.tabButton?.active ?? palette.action.selected,
+      backgroundColor: palette.background.tabButton.active,
     },
   }),
   viewIcon: ({ palette }) => ({

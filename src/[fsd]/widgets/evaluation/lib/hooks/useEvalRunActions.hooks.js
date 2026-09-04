@@ -84,6 +84,17 @@ export const useEvalRunActions = ({
     setShowClearConfirm(false);
   }, [editingSuiteId]);
 
+  // A reload drops `activeRunId`, so re-adopt a run that is still in flight from the
+  // history list — otherwise the panel falls back to the empty-results state while the
+  // run keeps going on the backend.
+  useEffect(() => {
+    if (activeRunId != null) return;
+    const inFlightRun = runs.find(run => isRunActive(run.status));
+    if (inFlightRun?.id != null) {
+      setActiveRunId(inFlightRun.id);
+    }
+  }, [runs, activeRunId]);
+
   const handleEvaluate = useCallback(async () => {
     if (!editingSuiteId) return;
 

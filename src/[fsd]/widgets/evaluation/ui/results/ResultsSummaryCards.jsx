@@ -1,15 +1,17 @@
 import { memo, useMemo } from 'react';
 
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, alpha } from '@mui/material';
 
 import { formatScore } from '../../lib/helpers';
 
+// Labels are uppercased by CSS and truncate with an ellipsis when the card is too
+// narrow, so the full text is kept here rather than clipped by hand.
 const CARD_CONFIG = {
-  totalScore: { label: 'TOTAL SCORE', isHighlighted: true },
-  cases: { label: 'CASES' },
-  metAllTargets: { label: 'MET ALL TA...' },
-  missed: { label: 'MISSED' },
-  errors: { label: 'ERRORS' },
+  totalScore: { label: 'Total score', isHighlighted: true },
+  cases: { label: 'Cases' },
+  metAllTargets: { label: 'Met all targets' },
+  missed: { label: 'Missed' },
+  errors: { label: 'Errors' },
 };
 
 const ResultsSummaryCards = memo(props => {
@@ -91,8 +93,8 @@ const resultsSummaryCardsStyles = () => ({
     backgroundColor: palette.background.tabButton.default,
     boxSizing: 'border-box',
   }),
-  cardHighlighted: () => ({
-    backgroundColor: 'rgba(41, 184, 245, 0.15)',
+  cardHighlighted: ({ palette }) => ({
+    backgroundColor: alpha(palette.primary.main, 0.15),
   }),
   cardLabel: ({ palette }) => ({
     fontSize: '0.75rem',
@@ -118,7 +120,7 @@ const resultsSummaryCardsStyles = () => ({
     color: palette.text.secondary,
   }),
   pendingNote: ({ palette }) => ({
-    width: '100%',
+    gridColumn: '1 / -1',
     marginTop: '0.25rem',
     color: palette.text.default,
     fontStyle: 'italic',

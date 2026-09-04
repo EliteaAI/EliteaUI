@@ -28,21 +28,13 @@ export const useEvalDatasetActions = ({ projectId, editingSuiteId, agentId, tab 
   const excludedCaseIds = useMemo(() => exclusionsData?.case_ids ?? [], [exclusionsData?.case_ids]);
 
   const [showDatasetDialog, setShowDatasetDialog] = useState(false);
-  const [showCaseModal, setShowCaseModal] = useState(false);
-  const [showChatsModal, setShowChatsModal] = useState(false);
-  const [showImportModal, setShowImportModal] = useState(false);
   const [showExcludeCaseConfirm, setShowExcludeCaseConfirm] = useState(false);
-  const [caseToEdit, setCaseToEdit] = useState(null);
   const [caseToExclude, setCaseToExclude] = useState(null);
   const [pendingDatasetId, setPendingDatasetId] = useState(null);
 
   useEffect(() => {
     setShowDatasetDialog(false);
-    setShowCaseModal(false);
-    setShowChatsModal(false);
-    setShowImportModal(false);
     setShowExcludeCaseConfirm(false);
-    setCaseToEdit(null);
     setCaseToExclude(null);
     setPendingDatasetId(null);
   }, [editingSuiteId]);
@@ -133,21 +125,6 @@ export const useEvalDatasetActions = ({ projectId, editingSuiteId, agentId, tab 
     [navigate, tab, agentId],
   );
 
-  const handleAddCase = useCallback(() => {
-    setCaseToEdit(null);
-    setShowCaseModal(true);
-  }, []);
-
-  const handleEditCase = useCallback(datasetCase => {
-    setCaseToEdit(datasetCase);
-    setShowCaseModal(true);
-  }, []);
-
-  const handleCloseCaseModal = useCallback(() => {
-    setShowCaseModal(false);
-    setCaseToEdit(null);
-  }, []);
-
   // ---- Case exclusion (from suite) ----
 
   const handleExcludeCase = useCallback(datasetCase => {
@@ -199,22 +176,6 @@ export const useEvalDatasetActions = ({ projectId, editingSuiteId, agentId, tab 
     [editingSuiteId, excludedCaseIds, updateExclusions, projectId, toastSuccess, toastError],
   );
 
-  const handleImportCases = useCallback(() => {
-    setShowImportModal(true);
-  }, []);
-
-  const handleCloseImportModal = useCallback(() => {
-    setShowImportModal(false);
-  }, []);
-
-  const handlePromoteCases = useCallback(() => {
-    setShowChatsModal(true);
-  }, []);
-
-  const handleCloseChatsModal = useCallback(() => {
-    setShowChatsModal(false);
-  }, []);
-
   const flushPendingDataset = useCallback(
     async suiteId => {
       if (pendingDatasetId == null) return;
@@ -234,11 +195,7 @@ export const useEvalDatasetActions = ({ projectId, editingSuiteId, agentId, tab 
 
   return {
     showDatasetDialog,
-    showCaseModal,
-    showChatsModal,
-    showImportModal,
     showExcludeCaseConfirm,
-    caseToEdit,
     caseToExclude,
     excludedCaseIds,
     pendingDatasetId,
@@ -249,17 +206,10 @@ export const useEvalDatasetActions = ({ projectId, editingSuiteId, agentId, tab 
     handleAttachDataset,
     handleRemoveDataset,
     handleOpenDataset,
-    handleAddCase,
-    handleEditCase,
-    handleCloseCaseModal,
     handleExcludeCase,
     handleCloseExcludeCaseConfirm,
     handleConfirmExcludeCase,
     handleIncludeCase,
-    handleImportCases,
-    handleCloseImportModal,
-    handlePromoteCases,
-    handleCloseChatsModal,
     flushPendingDataset,
   };
 };

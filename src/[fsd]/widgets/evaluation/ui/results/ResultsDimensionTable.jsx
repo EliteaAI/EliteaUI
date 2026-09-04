@@ -2,6 +2,7 @@ import { memo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
+import { EVAL_ENGINE } from '../../lib/constants';
 import { formatScore, getBindingEngineLabel } from '../../lib/helpers';
 
 const COLUMNS = [
@@ -58,7 +59,7 @@ const ResultsDimensionTable = memo(props => {
       <Box sx={styles.body}>
         {bindings.map(binding => {
           const engineLabel = getBindingEngineLabel(binding);
-          const isPending = binding.engine === 'human' && binding.scored === 0;
+          const isPending = binding.engine === EVAL_ENGINE.human && binding.scored === 0;
 
           return (
             <Box

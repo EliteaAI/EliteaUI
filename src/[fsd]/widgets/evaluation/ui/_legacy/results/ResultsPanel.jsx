@@ -152,7 +152,7 @@ const ResultsPanel = memo(props => {
                   size="small"
                   onClick={onOpenHistory}
                   sx={styles.historyButton}
-                  startIcon={<ClockIcon style={{ fontSize: '1rem' }} />}
+                  startIcon={<ClockIcon sx={styles.actionIcon} />}
                 />
               </Box>
             </Tooltip>
@@ -229,8 +229,6 @@ const ResultsPanel = memo(props => {
 });
 
 ResultsPanel.displayName = 'ResultsPanel';
-
-export default ResultsPanel;
 
 /** @type {MuiSx} */
 const resultsPanelStyles = () => ({
@@ -323,3 +321,5 @@ const resultsPanelStyles = () => ({
     maxWidth: '20.5rem',
   }),
 });
+
+export default ResultsPanel;

@@ -1,4 +1,4 @@
-import { memo, useMemo, useRef } from 'react';
+import { memo, useEffect, useMemo, useRef } from 'react';
 
 import { useParams } from 'react-router-dom';
 
@@ -6,30 +6,25 @@ import { Box } from '@mui/material';
 
 import { BreadcrumbsOrTitle, Modal } from '@/[fsd]/shared/ui';
 import {
-  AddCaseFromChatsModal,
   BuildDimensionWithAiModal,
-  CreateCaseModal,
   DatasetModal,
   DimensionModal,
-  ImportCaseModal,
   ResultsPanel,
   SelectDimensionFromLibraryModal,
   SuiteDetailPanel,
   SuitesPanel,
+  buildDimensionLookupMap,
+  useEvalDatasetActions,
   useEvalDatasetQuery,
   useEvalDatasetsQuery,
+  useEvalDimensionActions,
   useEvalDimensionsQuery,
+  useEvalRunActions,
+  useEvalSuiteActions,
   useEvalSuiteQuery,
   useEvalSuitesQuery,
   usePlatformDimensionCatalogQuery,
 } from '@/[fsd]/widgets/evaluation';
-import { buildDimensionLookupMap } from '@/[fsd]/widgets/evaluation/lib/helpers';
-import {
-  useEvalDatasetActions,
-  useEvalDimensionActions,
-  useEvalRunActions,
-  useEvalSuiteActions,
-} from '@/[fsd]/widgets/evaluation/lib/hooks';
 import { useListModelsQuery } from '@/api/configurations';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
@@ -140,7 +135,7 @@ const AgentEvaluatePage = memo(() => {
 
   const attachedDimensions = useMemo(() => {
     if (isCreatingNew) {
-      const dimMap = new Map(dimensions.map(d => [d.id, d]));
+      const dimMap = buildDimensionLookupMap(dimensions);
       return dimensionActions.pendingDimensions.map(pending => {
         const dim = dimMap.get(pending.id);
         return {
@@ -165,11 +160,18 @@ const AgentEvaluatePage = memo(() => {
     attachedDimensionsCount: attachedDimensions.length,
   });
 
-  // Wire up afterCreate to flush pending state
-  afterCreateRef.current = async createdSuiteId => {
-    await datasetActions.flushPendingDataset(createdSuiteId);
-    await dimensionActions.flushPendingDimensions(createdSuiteId);
-  };
+  // Wire up afterCreate to flush pending state. Assigned from an effect rather than
+  // during render so the render pass stays side-effect free; the ref is only read
+  // from the async save handler, which always runs after the commit.
+  const { flushPendingDataset } = datasetActions;
+  const { flushPendingDimensions } = dimensionActions;
+
+  useEffect(() => {
+    afterCreateRef.current = async createdSuiteId => {
+      await flushPendingDataset(createdSuiteId);
+      await flushPendingDimensions(createdSuiteId);
+    };
+  }, [flushPendingDataset, flushPendingDimensions]);
 
   const datasetNamesById = useMemo(() => Object.fromEntries(datasets.map(d => [d.id, d.name])), [datasets]);
 
@@ -232,32 +234,6 @@ const AgentEvaluatePage = memo(() => {
         dataset={null}
         onSaved={datasetActions.handleDatasetSaved}
       />
-
-      {/* Case modals (require attached dataset — real or pending) */}
-      {effectiveDatasetId && (
-        <>
-          <CreateCaseModal
-            open={datasetActions.showCaseModal}
-            onClose={datasetActions.handleCloseCaseModal}
-            projectId={projectId}
-            datasetId={effectiveDatasetId}
-            datasetCase={datasetActions.caseToEdit}
-          />
-          <AddCaseFromChatsModal
-            open={datasetActions.showChatsModal}
-            onClose={datasetActions.handleCloseChatsModal}
-            projectId={projectId}
-            datasetId={effectiveDatasetId}
-            applicationId={applicationId}
-          />
-          <ImportCaseModal
-            open={datasetActions.showImportModal}
-            onClose={datasetActions.handleCloseImportModal}
-            projectId={projectId}
-            datasetId={effectiveDatasetId}
-          />
-        </>
-      )}
 
       {/* Dimension remove confirmation */}
       <Modal.DeleteEntityModal

@@ -2,7 +2,7 @@ import { memo, useMemo, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { sortDatasetsByDate } from '../../lib/helpers/dataset.helpers';
+import { sortDatasetsByDate } from '../../lib/helpers';
 import DatasetItem from './DatasetItem';
 
 const DatasetList = memo(props => {

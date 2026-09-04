@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useCallback } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
@@ -61,6 +61,10 @@ const getErrorMessage = cell => {
 const DimensionResultCard = memo(props => {
   const { cell, onEvaluate } = props;
 
+  const handleEvaluate = useCallback(() => {
+    onEvaluate?.(cell);
+  }, [onEvaluate, cell]);
+
   const { binding, nativeScore, met } = cell;
   const engineLabel = getBindingEngineLabel(binding);
   const isHuman = binding.engine === EVAL_ENGINE.human;
@@ -100,7 +104,7 @@ const DimensionResultCard = memo(props => {
               variant={BUTTON_VARIANTS.text}
               color={BUTTON_COLORS.primary}
               size="small"
-              onClick={() => onEvaluate(cell)}
+              onClick={handleEvaluate}
               sx={styles.evaluateButton}
             >
               Evaluate
@@ -191,7 +195,7 @@ const dimensionResultCardStyles = () => ({
     border: `0.0625rem solid transparent`,
   }),
   rootError: ({ palette }) => ({
-    borderColor: palette.error.main,
+    borderColor: palette.border.indexResult.error,
   }),
   header: {
     display: 'flex',
@@ -218,11 +222,11 @@ const dimensionResultCardStyles = () => ({
     color: palette.text.secondary,
   }),
   errorLabel: ({ palette }) => ({
-    color: palette.error.main,
+    color: palette.text.indexResult.error,
     fontWeight: 500,
   }),
   pendingLabel: ({ palette }) => ({
-    color: palette.warning?.main ?? palette.text.default,
+    color: palette.text.indexResult.warning,
   }),
   evaluateButton: ({ palette }) => ({
     padding: '0.125rem 0.5rem',
@@ -235,7 +239,7 @@ const dimensionResultCardStyles = () => ({
     lineHeight: 1.5,
   }),
   errorMessage: ({ palette }) => ({
-    color: palette.error.main,
+    color: palette.text.indexResult.error,
     fontFamily: 'monospace',
     fontSize: '0.75rem',
     whiteSpace: 'pre-wrap',
@@ -271,24 +275,24 @@ const dimensionResultCardStyles = () => ({
     justifyContent: 'center',
     padding: '0.125rem 0.5rem',
     borderRadius: '1rem',
-    backgroundColor: palette.background.tabButton?.default ?? palette.action.hover,
+    backgroundColor: palette.background.tabButton.default,
   }),
   status_met: ({ palette }) => ({
-    backgroundColor: 'rgba(76, 175, 80, 0.15)',
+    backgroundColor: palette.background.indexResult.success,
     '& .MuiTypography-root': {
-      color: palette.success?.main ?? '#4caf50',
+      color: palette.text.indexResult.success,
     },
   }),
   status_missed: ({ palette }) => ({
-    backgroundColor: 'rgba(244, 67, 54, 0.15)',
+    backgroundColor: palette.background.indexResult.error,
     '& .MuiTypography-root': {
-      color: palette.error.main,
+      color: palette.text.indexResult.error,
     },
   }),
   status_pending: ({ palette }) => ({
-    backgroundColor: 'rgba(255, 152, 0, 0.15)',
+    backgroundColor: palette.background.indexResult.warning,
     '& .MuiTypography-root': {
-      color: palette.warning?.main ?? '#ff9800',
+      color: palette.text.indexResult.warning,
     },
   }),
   statusText: {
