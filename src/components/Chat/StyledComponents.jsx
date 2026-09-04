@@ -39,7 +39,7 @@ export const ChatBodyContainer = styled(Box)(
 
   border-radius: 16px;
   border: 1px solid ${theme.palette.border.lines};
-  background: ${theme.palette.background.eliteaDefault};
+  background: ${theme.palette.background.default.primary};
   box-sizing: border-box;
   overflow: hidden;
 `,

@@ -100,13 +100,13 @@ RootComponent.displayName = 'RootComponent';
 /** @type {MuiSx} */
 const globalStyles = theme => ({
   body: {
-    background: theme.palette.background.eliteaDefault,
+    background: theme.palette.background.default.primary,
   },
   html: {
-    background: theme.palette.background.eliteaDefault,
+    background: theme.palette.background.default.primary,
   },
   '#root': {
-    background: theme.palette.background.eliteaDefault,
+    background: theme.palette.background.default.primary,
   },
   '.elitea-assistant-container': {
     left: '1.25rem',

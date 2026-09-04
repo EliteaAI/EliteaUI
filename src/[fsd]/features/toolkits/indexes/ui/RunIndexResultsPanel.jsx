@@ -37,7 +37,7 @@ const runIndexResultsPanelStyles = () => ({
     minHeight: 0,
     borderRadius: '0 !important',
     border: 'none !important',
-    background: palette.background.eliteaDefault,
+    background: palette.background.default.primary,
   }),
 });
 

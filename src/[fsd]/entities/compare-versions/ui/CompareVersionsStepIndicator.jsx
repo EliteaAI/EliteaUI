@@ -42,7 +42,7 @@ const compareVersionsStepIndicatorStyles = {
     padding: '0.75rem 1.5rem 1rem',
     width: '100%',
     boxSizing: 'border-box',
-    background: palette.background.eliteaDefault,
+    background: palette.background.default.primary,
     borderBottom: `0.0625rem solid ${palette.border.lines}`,
   }),
   title: {

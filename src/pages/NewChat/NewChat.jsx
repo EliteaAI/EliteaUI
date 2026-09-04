@@ -1515,7 +1515,7 @@ const chatStyles = ({
       boxSizing: 'border-box',
       height: '100vh',
       marginLeft: 0,
-      background: theme.palette.background.chatBkg,
+      background: theme.palette.background.tabPanel,
       width: '100%',
     },
     wrapper: {

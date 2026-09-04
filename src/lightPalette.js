@@ -76,7 +76,6 @@ const darkBlueLowOpacity = '#006dd166';
 const darkBlue70 = '#006dd1b3';
 const completedBlue = '#036ED033';
 const hoverBlue = '#2783D8';
-const almostWhite = '#FAFAFA';
 const magenta08 = '#c428dd14';
 const dark15 = '#3d445626';
 const semiTransparentBlack = '#ffffff80';
@@ -95,7 +94,6 @@ const oldLightPalette = {
   mode: 'light',
 
   background: {
-    eliteaDefault: gradient,
     secondary: white,
     tabPanel: white01,
     pageSection: white01,
@@ -103,7 +101,6 @@ const oldLightPalette = {
     modal: {
       simple: white,
     },
-    chatBkg: almostWhite,
     dragging: blue12,
     userInputBorderLight: purpleLight,
     userInputBorderDark: purpleDark,
@@ -117,7 +114,6 @@ const oldLightPalette = {
     warning,
     warning40,
     warning8,
-    codeMirrorEditor: almostWhite,
     dark10,
     dark15,
     dark20,
@@ -678,6 +674,11 @@ const lightPalette = {
   },
   background: {
     ...oldLightPalette.background,
+    default: {
+      primary: gradient,
+      secondary: white,
+      tertiary: white01,
+    },
     npsCard: `linear-gradient(to top, ${lightColorScheme.accentLight}, ${lightColorScheme.accentMid})`,
     button: {
       ...oldLightPalette.background.button,
