@@ -2,14 +2,10 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
+import { FOLDER_ADD_EXCEPTION_OPTIONS } from '@/[fsd]/entities/folder/lib/constants';
 import { Autocomplete, Button, Modal } from '@/[fsd]/shared/ui';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import { useUserListQuery } from '@/api/admin';
-
-const PERMISSION_OPTIONS = [
-  { value: 'read_only', label: 'Read-only' },
-  { value: 'no_access', label: 'No access' },
-];
 
 const AddFolderPermissionDialog = memo(props => {
   const { open, onClose, onConfirm, projectId, existingUserIds = [], loading = false } = props;
@@ -80,7 +76,7 @@ const AddFolderPermissionDialog = memo(props => {
           <SingleSelect
             value={permission}
             onValueChange={setPermission}
-            options={PERMISSION_OPTIONS}
+            options={FOLDER_ADD_EXCEPTION_OPTIONS}
             label="Permissions"
             showBorder
             labelSX={styles.labelSx}

@@ -2,11 +2,12 @@ import { memo, useCallback, useMemo, useState } from 'react';
 
 import { Box, Skeleton, Tooltip, Typography } from '@mui/material';
 
+import { FOLDER_PERMISSION_LABELS, FOLDER_PERMISSION_OPTIONS } from '@/[fsd]/entities/folder/lib/constants';
 import { useResponsiveColumns } from '@/[fsd]/entities/grid-table/lib';
 import { GridTableBody, GridTableHeader, GridTableRow } from '@/[fsd]/entities/grid-table/ui';
 import { Button, Text } from '@/[fsd]/shared/ui';
 import { AddButton } from '@/[fsd]/shared/ui/button';
-import { useGetFolderAccessQuery, useSetFolderAccessMutation } from '@/api';
+import { useGetFolderAccessQuery, useRemoveFolderAccessMutation, useSetFolderAccessMutation } from '@/api';
 import NoPermissionsIcon from '@/assets/file-lock.svg?react';
 import PlusIcon from '@/assets/plus-icon.svg?react';
 import EditIcon from '@/components/Icons/EditIcon';
@@ -15,6 +16,7 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 
 import AddFolderPermissionDialog from './AddFolderPermissionDialog';
+import EditFolderPermissionDialog from './EditFolderPermissionDialog';
 
 const FOLDER_PERMISSION_COLUMNS = [
   { field: 'name', label: 'Name', width: '1fr', sortable: false },
@@ -22,11 +24,6 @@ const FOLDER_PERMISSION_COLUMNS = [
   { field: 'access', label: 'Permissions', width: '10rem', sortable: false },
   { field: 'actions', label: '', width: '3.5rem', sortable: false },
 ];
-
-const ACCESS_LABELS = {
-  read_only: 'Read-only',
-  no_access: 'No access',
-};
 
 const FolderPermissionsTable = memo(props => {
   const { folderId } = props;
@@ -36,12 +33,15 @@ const FolderPermissionsTable = memo(props => {
   const { toastError, toastSuccess } = useToast();
   const [hoveredRowId, setHoveredRowId] = useState(null);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
 
   const { data, isLoading, isError, refetch } = useGetFolderAccessQuery(
     { projectId, folderId },
     { skip: !projectId || !folderId },
   );
   const [setFolderAccess, { isLoading: isSaving }] = useSetFolderAccessMutation();
+  const [removeFolderAccess, { isLoading: isRemoving }] = useRemoveFolderAccessMutation();
+  const isMutating = isSaving || isRemoving;
 
   const rows = useMemo(
     () =>
@@ -51,7 +51,7 @@ const FolderPermissionsTable = memo(props => {
         name: override.user_name || `User ${override.user_id}`,
         email: override.user_email || '-',
         accessValue: override.access_level,
-        accessLabel: ACCESS_LABELS[override.access_level] || override.access_level,
+        accessLabel: FOLDER_PERMISSION_LABELS[override.access_level] || override.access_level,
       })),
     [data?.overrides],
   );
@@ -78,7 +78,7 @@ const FolderPermissionsTable = memo(props => {
   }, []);
 
   const renderActions = useCallback(
-    () => (
+    row => (
       <Box sx={styles.actionsContainer}>
         <Tooltip
           title="Edit exception"
@@ -88,7 +88,8 @@ const FolderPermissionsTable = memo(props => {
             <Button.BaseBtn
               variant="icon"
               sx={styles.actionButton}
-              disabled
+              onClick={() => setEditingUser(row)}
+              disabled={isMutating}
             >
               <EditIcon sx={styles.actionIcon} />
             </Button.BaseBtn>
@@ -96,12 +97,12 @@ const FolderPermissionsTable = memo(props => {
         </Tooltip>
       </Box>
     ),
-    [styles.actionsContainer, styles.actionButton, styles.actionIcon],
+    [isMutating, styles.actionsContainer, styles.actionButton, styles.actionIcon],
   );
 
   const handleAddConfirm = useCallback(
     async ({ users, permission }) => {
-      if (isSaving) return;
+      if (isMutating) return;
 
       try {
         await setFolderAccess({
@@ -118,7 +119,54 @@ const FolderPermissionsTable = memo(props => {
         toastError('Failed to add permission exceptions');
       }
     },
-    [folderId, isSaving, projectId, setFolderAccess, toastError, toastSuccess],
+    [folderId, isMutating, projectId, setFolderAccess, toastError, toastSuccess],
+  );
+
+  const handleEditConfirm = useCallback(
+    async ({ permission }) => {
+      if (!editingUser || isMutating) return;
+
+      const isRemoval = permission === FOLDER_PERMISSION_OPTIONS.READ_WRITE;
+
+      try {
+        if (isRemoval) {
+          await removeFolderAccess({
+            projectId,
+            folderId,
+            userIds: [editingUser.userId],
+          }).unwrap();
+        } else {
+          await setFolderAccess({
+            projectId,
+            folderId,
+            entries: [{ user_id: editingUser.userId, access_level: permission }],
+          }).unwrap();
+        }
+
+        toastSuccess(
+          isRemoval
+            ? `Removed folder permission exception for ${editingUser.name}`
+            : `Updated folder permission exception for ${editingUser.name}`,
+        );
+        setEditingUser(null);
+      } catch {
+        toastError(
+          isRemoval
+            ? `Failed to remove folder permission exception for ${editingUser.name}`
+            : `Failed to update folder permission exception for ${editingUser.name}`,
+        );
+      }
+    },
+    [
+      editingUser,
+      folderId,
+      isMutating,
+      projectId,
+      removeFolderAccess,
+      setFolderAccess,
+      toastError,
+      toastSuccess,
+    ],
   );
 
   const renderEmptyState = () => (
@@ -207,7 +255,7 @@ const FolderPermissionsTable = memo(props => {
               columns={dataColumns}
               showCheckbox={false}
               renderCell={renderCell}
-              actions={renderActions()}
+              actions={renderActions(row)}
               dataCellSx={styles.dataCell}
             />
           ))}
@@ -249,7 +297,15 @@ const FolderPermissionsTable = memo(props => {
         onConfirm={handleAddConfirm}
         projectId={projectId}
         existingUserIds={existingUserIds}
-        loading={isSaving}
+        loading={isMutating}
+      />
+
+      <EditFolderPermissionDialog
+        open={!!editingUser}
+        onClose={() => setEditingUser(null)}
+        onConfirm={handleEditConfirm}
+        user={editingUser}
+        loading={isMutating}
       />
     </Box>
   );
