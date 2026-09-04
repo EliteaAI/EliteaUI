@@ -4,6 +4,8 @@ export const FOLDER_PERMISSION_OPTIONS = {
   NO_ACCESS: 'no_access',
 };
 
+export const MAX_FOLDER_PERMISSION_ENTRIES = 200;
+
 export const FOLDER_PERMISSION_LABELS = {
   [FOLDER_PERMISSION_OPTIONS.READ_WRITE]: 'Read/write (default)',
   [FOLDER_PERMISSION_OPTIONS.READ_ONLY]: 'Read-only',

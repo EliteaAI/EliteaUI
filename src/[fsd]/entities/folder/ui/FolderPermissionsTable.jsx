@@ -1,8 +1,12 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Box, Skeleton, Tooltip, Typography } from '@mui/material';
 
-import { FOLDER_PERMISSION_LABELS, FOLDER_PERMISSION_OPTIONS } from '@/[fsd]/entities/folder/lib/constants';
+import {
+  FOLDER_PERMISSION_LABELS,
+  FOLDER_PERMISSION_OPTIONS,
+  MAX_FOLDER_PERMISSION_ENTRIES,
+} from '@/[fsd]/entities/folder/lib/constants';
 import { useResponsiveColumns, useRowSelection, useTableSort } from '@/[fsd]/entities/grid-table/lib';
 import { GridTableBody, GridTableHeader, GridTableRow } from '@/[fsd]/entities/grid-table/ui';
 import { Button, Text } from '@/[fsd]/shared/ui';
@@ -25,8 +29,6 @@ const FOLDER_PERMISSION_COLUMNS = [
   { field: 'access', label: 'Permissions', width: '10rem', sortable: false },
   { field: 'actions', label: '', width: '3.5rem', sortable: false },
 ];
-
-const MAX_BULK_ACCESS_ENTRIES = 200;
 
 const FolderPermissionsTable = memo(props => {
   const { folderId } = props;
@@ -88,7 +90,17 @@ const FolderPermissionsTable = memo(props => {
     handleSelectRow,
     clearSelection,
     getSelectedRows,
+    selectRows,
   } = useRowSelection({ rows: sortedRows, idField: 'id' });
+
+  const rowIds = useMemo(() => new Set(rows.map(row => row.id)), [rows]);
+
+  useEffect(() => {
+    const validSelectedIds = selectedIds.filter(id => rowIds.has(id));
+    if (validSelectedIds.length !== selectedIds.length) {
+      selectRows(validSelectedIds);
+    }
+  }, [rowIds, selectRows, selectedIds]);
 
   const { visibleColumns, gridTemplateColumns, dataColumns } = useResponsiveColumns({
     columns: FOLDER_PERMISSION_COLUMNS,
@@ -97,10 +109,10 @@ const FolderPermissionsTable = memo(props => {
   });
 
   const selectedCount = selectedIds.length;
-  const exceedsBulkLimit = selectedCount > MAX_BULK_ACCESS_ENTRIES;
+  const exceedsBulkLimit = selectedCount > MAX_FOLDER_PERMISSION_ENTRIES;
   const bulkEditDisabled = selectedCount === 0 || exceedsBulkLimit || isMutating;
   const bulkEditTooltip = exceedsBulkLimit
-    ? `Select no more than ${MAX_BULK_ACCESS_ENTRIES} users`
+    ? `Select no more than ${MAX_FOLDER_PERMISSION_ENTRIES} users`
     : 'Edit selected';
 
   const handleSearchChange = useCallback(
@@ -149,13 +161,13 @@ const FolderPermissionsTable = memo(props => {
 
   const handleBulkEditClick = useCallback(() => {
     const selectedRows = getSelectedRows();
-    if (selectedRows.length === 0 || selectedRows.length > MAX_BULK_ACCESS_ENTRIES) return;
+    if (selectedRows.length === 0 || selectedRows.length > MAX_FOLDER_PERMISSION_ENTRIES) return;
     setEditingUsers(selectedRows);
   }, [getSelectedRows]);
 
   const handleAddConfirm = useCallback(
     async ({ users, permission }) => {
-      if (isMutating) return;
+      if (isMutating || users.length > MAX_FOLDER_PERMISSION_ENTRIES) return;
 
       try {
         await setFolderAccess({
@@ -292,6 +304,17 @@ const FolderPermissionsTable = memo(props => {
     </Box>
   );
 
+  const renderNoResultsState = () => (
+    <Box sx={styles.noResultsState}>
+      <Typography
+        variant="headingSmall"
+        color="text.secondary"
+      >
+        No results
+      </Typography>
+    </Box>
+  );
+
   const renderTable = () => (
     <Box sx={styles.tableWrapper}>
       <Box sx={styles.tableScrollContainer}>
@@ -334,6 +357,7 @@ const FolderPermissionsTable = memo(props => {
     if (isLoading) return renderLoadingState();
     if (isError) return renderErrorState();
     if (rows.length === 0) return renderEmptyState();
+    if (searchQuery.trim() && sortedRows.length === 0) return renderNoResultsState();
     return renderTable();
   };
 
@@ -514,6 +538,16 @@ const folderPermissionsTableStyles = () => ({
     alignItems: 'center',
     justifyContent: 'center',
     gap: '1rem',
+    margin: '0 1.5rem 1.5rem',
+    borderRadius: '0.5rem',
+    backgroundColor: palette.background.section,
+  }),
+  noResultsState: ({ palette }) => ({
+    flex: 1,
+    minHeight: '12.5rem',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
     margin: '0 1.5rem 1.5rem',
     borderRadius: '0.5rem',
     backgroundColor: palette.background.section,

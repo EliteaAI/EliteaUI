@@ -2,38 +2,62 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { FOLDER_ADD_EXCEPTION_OPTIONS } from '@/[fsd]/entities/folder/lib/constants';
+import {
+  FOLDER_ADD_EXCEPTION_OPTIONS,
+  MAX_FOLDER_PERMISSION_ENTRIES,
+} from '@/[fsd]/entities/folder/lib/constants';
 import { Autocomplete, Button, Modal } from '@/[fsd]/shared/ui';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import { useUserListQuery } from '@/api/admin';
+
+const USERS_PAGE_SIZE = 100;
 
 const AddFolderPermissionDialog = memo(props => {
   const { open, onClose, onConfirm, projectId, existingUserIds = [], loading = false } = props;
 
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [permission, setPermission] = useState('');
+  const [page, setPage] = useState(0);
 
-  const { data: usersData, isLoading: isLoadingUsers } = useUserListQuery(
-    { projectId, page: 0, pageSize: 100 },
-    { skip: !projectId || !open },
-  );
+  const {
+    data: usersData,
+    isLoading: isLoadingUsers,
+    isFetching: isFetchingUsers,
+  } = useUserListQuery({ projectId, page, pageSize: USERS_PAGE_SIZE }, { skip: !projectId || !open });
+
+  const users = useMemo(() => usersData?.rows || [], [usersData?.rows]);
+  const totalUsers = usersData?.total || 0;
 
   const availableUsers = useMemo(
     () =>
-      (usersData?.rows || [])
+      users
         .filter(user => !existingUserIds.includes(user.id))
         .map(user => ({ ...user, name: user.name || user.email || '' })),
-    [usersData?.rows, existingUserIds],
+    [existingUserIds, users],
   );
 
-  const canSubmit = selectedUsers.length > 0 && !!permission && !loading;
+  const exceedsSelectionLimit = selectedUsers.length > MAX_FOLDER_PERMISSION_ENTRIES;
+  const canSubmit = selectedUsers.length > 0 && !exceedsSelectionLimit && !!permission && !loading;
 
   useEffect(() => {
+    setPage(0);
     if (!open) {
       setSelectedUsers([]);
       setPermission('');
     }
-  }, [open]);
+  }, [open, projectId]);
+
+  const handleUsersScroll = useCallback(
+    event => {
+      const listbox = event.currentTarget;
+      const bottomReached = listbox.scrollHeight - listbox.scrollTop <= listbox.clientHeight + 40;
+
+      if (bottomReached && !isFetchingUsers && users.length < totalUsers) {
+        setPage(currentPage => currentPage + 1);
+      }
+    },
+    [isFetchingUsers, totalUsers, users.length],
+  );
 
   const handleConfirm = useCallback(() => {
     if (!canSubmit) return;
@@ -72,7 +96,16 @@ const AddFolderPermissionDialog = memo(props => {
             label="Users"
             showSearchIcon={false}
             sx={styles.userSelect}
+            slotProps={{ listBox: { onScroll: handleUsersScroll } }}
           />
+          {exceedsSelectionLimit && (
+            <Typography
+              variant="bodySmall"
+              color="error"
+            >
+              Select no more than {MAX_FOLDER_PERMISSION_ENTRIES} users.
+            </Typography>
+          )}
           <SingleSelect
             value={permission}
             onValueChange={setPermission}
