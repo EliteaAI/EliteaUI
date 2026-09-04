@@ -681,7 +681,7 @@ const mermaidDiagramOutputStyles = (theme, isValidCode, errorMessage, widthsValu
     alignItems: 'center',
     boxSizing: 'border-box',
     overflow: 'scroll',
-    backgroundColor: palette.background.secondary,
+    backgroundColor: palette.background.default.secondary,
   }),
   errorMessageBox: {
     width: '100%',

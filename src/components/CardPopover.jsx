@@ -19,7 +19,7 @@ const StyledPopoverContainer = styled(Popover)(({ theme }) => ({
   },
   '& ul': {
     padding: '8px 0px',
-    background: theme.palette.background.secondary,
+    background: theme.palette.background.default.secondary,
   },
 }));
 

@@ -252,7 +252,7 @@ const importCaseModalStyles = () => ({
     padding: '2rem',
     borderRadius: '0.5rem',
     border: `0.0625rem dashed ${palette.border.lines}`,
-    backgroundColor: palette.background.secondary,
+    backgroundColor: palette.background.default.secondary,
   }),
   fileIcon: ({ palette }) => ({
     display: 'inline-flex',

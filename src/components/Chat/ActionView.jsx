@@ -640,7 +640,7 @@ const actionViewStyles = () => ({
   thinkingContainer: ({ palette }) => ({
     borderRadius: '0.5rem',
     border: `1px solid ${palette.border.lines}`,
-    backgroundColor: palette.background.secondary,
+    backgroundColor: palette.background.default.secondary,
     overflow: 'hidden',
   }),
   thinkingHeader: ({ palette }) => ({
@@ -649,7 +649,7 @@ const actionViewStyles = () => ({
     justifyContent: 'space-between',
     padding: '0.5rem 0.75rem',
     cursor: 'pointer',
-    backgroundColor: palette.background.secondary,
+    backgroundColor: palette.background.default.secondary,
     '&:hover': {
       backgroundColor: palette.background.participant.hover,
     },

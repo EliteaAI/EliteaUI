@@ -284,10 +284,10 @@ const AIAssistantModal = memo(props => {
 
   const contentBackgroundSx = showSplitView
     ? ({ palette }) => ({
-        background: `linear-gradient(90deg, ${palette.background.secondary} 0%, ${palette.background.card.hover} 100%)`,
+        background: `linear-gradient(90deg, ${palette.background.card.default} 0%, ${palette.background.card.hover} 100%)`,
       })
     : ({ palette }) => ({
-        background: `linear-gradient(90deg, ${palette.background.tabPanel} 0%, ${palette.background.secondary} 100%)`,
+        background: `linear-gradient(90deg, ${palette.background.tabPanel} 0%, ${palette.background.default.secondary} 100%)`,
       });
 
   return (
@@ -490,20 +490,20 @@ const aiAssistantModalStyles = () => ({
   },
   currentEditorWrapper: ({ palette, spacing }) => ({
     height: '100%',
-    backgroundColor: palette.background.secondary,
+    backgroundColor: palette.background.default.secondary,
     position: 'relative',
     '& .cm-editor': {
-      backgroundColor: palette.background.secondary,
+      backgroundColor: palette.background.default.secondary,
     },
     '& .cm-scroller': {
-      backgroundColor: palette.background.secondary,
+      backgroundColor: palette.background.default.secondary,
     },
     '& .cm-content': {
       paddingTop: spacing(1),
       paddingBottom: spacing(2),
     },
     '& .cm-gutters': {
-      backgroundColor: palette.background.secondary,
+      backgroundColor: palette.background.default.secondary,
       borderRight: `.0313rem solid ${palette.border.lines}`,
     },
     '& .cm-lineNumbers .cm-gutterElement': {

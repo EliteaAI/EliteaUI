@@ -99,7 +99,7 @@ const selectMenuItemStyles = () => ({
     position: 'sticky',
     top: 0,
     zIndex: 2,
-    backgroundColor: palette.background.secondary,
+    backgroundColor: palette.background.default.secondary,
   }),
   searchBarInput: ({ palette }) => ({
     borderRadius: 0,

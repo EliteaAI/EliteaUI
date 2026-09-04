@@ -69,7 +69,7 @@ export default function VariableDialog({
         sx={{
           width: '100%',
           overflow: 'auto',
-          background: `${theme.palette.background.secondary} !important`,
+          background: `${theme.palette.background.default.secondary} !important`,
           borderTop: `1px solid ${theme.palette.border.lines}`,
           borderBottom: `1px solid ${theme.palette.border.lines}`,
           maxHeight: 'calc(100vh - 280px)',

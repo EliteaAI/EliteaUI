@@ -107,7 +107,7 @@ const getStyles = styleTokens => ({
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 2400,
-    background: palette.background.secondary,
+    background: palette.background.default.secondary,
     borderRadius: '1rem',
   }),
   bannerContainer: {

@@ -555,7 +555,7 @@ const FlowEditor = forwardRef((props, ref) => {
         >
           <Background
             color={theme.palette.border.lines}
-            bgColor={theme.palette.background.secondary}
+            bgColor={theme.palette.background.default.secondary}
             size={1.5}
             offset={[0, 2]}
             gap={20}

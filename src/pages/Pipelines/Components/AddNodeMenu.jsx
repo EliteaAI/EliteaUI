@@ -178,7 +178,7 @@ const componentStyles = () => ({
     padding: '0.5rem',
     borderRadius: '0.75rem',
     border: `0.0625rem solid ${palette.border.lines}`,
-    background: palette.background.secondary,
+    background: palette.background.default.secondary,
     boxShadow: '0 1rem 2rem rgba(3, 12, 28, 0.35)',
     overflow: 'hidden',
   }),

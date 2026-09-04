@@ -115,7 +115,7 @@ const styles = {
     borderRadius: '.5rem',
     border: ({ palette }) => `.0625rem solid ${palette.border.lines}`,
     boxShadow: ({ palette }) => palette.boxShadow.default,
-    backgroundColor: ({ palette }) => palette.background.secondary,
+    backgroundColor: ({ palette }) => palette.background.default.secondary,
     padding: '.5rem 0',
   },
   formControlLabel: {

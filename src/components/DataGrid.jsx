@@ -65,7 +65,7 @@ export const eliteaDataGridStyle = theme => ({
     transform: 'rotate(0deg)',
   },
   ['& .MuiDataGrid-row--editing .MuiDataGrid-cell']: {
-    backgroundColor: theme.palette.background.secondary,
+    backgroundColor: theme.palette.background.default.secondary,
   },
   ['& .MuiDataGrid-row:hover']: {
     backgroundColor: 'transparent',

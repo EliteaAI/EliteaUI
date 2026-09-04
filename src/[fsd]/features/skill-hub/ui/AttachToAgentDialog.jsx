@@ -448,7 +448,7 @@ const attachToAgentDialogStyles = () => ({
     padding: '1.5rem !important',
     borderTop: `.0625rem solid ${palette.border.lines}`,
     borderBottom: `.0625rem solid ${palette.border.lines}`,
-    background: palette.background.secondary,
+    background: palette.background.default.secondary,
   }),
   subtitle: ({ palette }) => ({
     color: palette.text.default,

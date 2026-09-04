@@ -49,10 +49,10 @@ const Listbox = styled('ul')(
     border-radius: 0.5rem;
     overflow: auto;
     outline: 0px;
-    background: ${theme.palette.background.secondary};
+    background: ${theme.palette.background.default.secondary};
     border: 1px solid ${theme.palette.border.lines};
     color: ${theme.typography.headingMedium.color};
-    box-shadow: 0px 4px 30px ${theme.palette.background.secondary};
+    box-shadow: 0px 4px 30px ${theme.palette.boxShadow.listbox};
     z-index: 1;
     `,
 );

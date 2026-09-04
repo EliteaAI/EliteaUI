@@ -559,7 +559,7 @@ const analyticsContainerStyles = () => ({
   datePickerPopper: ({ palette }) => ({
     // Dropdown container
     '& .MuiPaper-root': {
-      backgroundColor: palette.background.secondary,
+      backgroundColor: palette.background.default.secondary,
       border: `.0625rem solid ${palette.border.lines}`,
       borderRadius: '1rem',
       color: palette.text.secondary,

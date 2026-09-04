@@ -120,7 +120,7 @@ const ToolModal = props => {
       slotProps={{
         paper: {
           sx: {
-            backgroundColor: theme.palette.background.secondary,
+            backgroundColor: theme.palette.background.default.secondary,
             border: `1px solid ${theme.palette.border.lines}`,
             borderRadius: '16px',
             boxShadow: theme.palette.boxShadow.default,
@@ -178,7 +178,7 @@ const ToolModal = props => {
           height: 'calc(80vh - 80px)',
           minHeight: '500px',
           maxHeight: 'calc(90vh - 80px)',
-          backgroundColor: theme.palette.background.secondary,
+          backgroundColor: theme.palette.background.default.secondary,
           overflow: 'hidden',
           display: 'flex',
           flexDirection: 'column',

@@ -129,7 +129,7 @@ const flowEditorStyles = () => ({
   historyMenu: ({ palette }) => ({
     borderRadius: '.5rem',
     border: `.0625rem solid ${palette.border.lines}`,
-    background: palette.background.secondary,
+    background: palette.background.default.secondary,
     marginTop: '0.5rem',
     minWidth: '13.75rem',
   }),

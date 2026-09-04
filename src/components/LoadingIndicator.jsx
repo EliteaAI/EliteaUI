@@ -30,7 +30,7 @@ const LoadingIndicatorContainer = styled('div')(({ theme }) => ({
   width: '31.25rem',
   height: '5.75rem',
   padding: '0',
-  background: `${theme.palette.background.secondary}`,
+  background: `${theme.palette.background.default.secondary}`,
   position: 'absolute',
   top: '50%',
   left: '50%',

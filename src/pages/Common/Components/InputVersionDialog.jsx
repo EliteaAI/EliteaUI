@@ -100,7 +100,7 @@ const StyledDialogContent = styled(DialogContent)(
   border-top: 1px solid ${theme.palette.border.lines};
   border-left: 1px solid ${theme.palette.border.lines};
   border-right: 1px solid ${theme.palette.border.lines};
-  background: ${theme.palette.background.secondary};
+  background: ${theme.palette.background.default.secondary};
   padding: 1rem 1.5rem 0px;
   overflow-x: hidden;
 `,
@@ -114,7 +114,7 @@ const StyledDialogActions = styled(DialogActions)(
   border-bottom: 1px solid ${theme.palette.border.lines};
   border-left: 1px solid ${theme.palette.border.lines};
   border-right: 1px solid ${theme.palette.border.lines};
-  background: ${theme.palette.background.secondary};
+  background: ${theme.palette.background.default.secondary};
   padding: 0px 1rem 1rem;
   justify-content: flex-end;
 `,

@@ -310,10 +310,10 @@ const getStyles = isDragOver => ({
     height: '100%',
     position: 'relative',
     '& .cm-editor': {
-      backgroundColor: palette.background.secondary,
+      backgroundColor: palette.background.default.secondary,
     },
     '& .cm-scroller': {
-      backgroundColor: palette.background.secondary,
+      backgroundColor: palette.background.default.secondary,
     },
     '& .cm-gutters': {
       backgroundColor: palette.background.tabPanel,

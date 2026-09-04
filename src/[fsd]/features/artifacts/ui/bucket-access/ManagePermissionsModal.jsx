@@ -51,7 +51,7 @@ const managePermissionsModalStyles = () => ({
     maxHeight: '80dvh',
     overflowY: 'auto',
     padding: '0 !important',
-    backgroundColor: palette.background.secondary,
+    backgroundColor: palette.background.default.secondary,
   }),
   content: ({ palette }) => ({
     display: 'flex',
@@ -59,6 +59,6 @@ const managePermissionsModalStyles = () => ({
     height: '100%',
     minHeight: 0,
     overflow: 'hidden',
-    backgroundColor: palette.background.secondary,
+    backgroundColor: palette.background.default.secondary,
   }),
 });

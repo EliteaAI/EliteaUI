@@ -268,10 +268,10 @@ const HtmlPreviewFrame = memo(props => {
     () =>
       buildFallbackStyles({
         textColor: theme.palette.text.primary,
-        backgroundColor: theme.palette.background.secondary,
+        backgroundColor: theme.palette.background.default.secondary,
         themeMode: theme.palette.mode,
       }),
-    [theme.palette.text.primary, theme.palette.background.secondary, theme.palette.mode],
+    [theme.palette.text.primary, theme.palette.background.default.secondary, theme.palette.mode],
   );
 
   const sanitizeResult = useMemo(() => {
@@ -398,7 +398,7 @@ const htmlPreviewFrameStyles = () => ({
     overflow: 'hidden',
     display: 'flex',
     flexDirection: 'column',
-    backgroundColor: palette.background.secondary,
+    backgroundColor: palette.background.default.secondary,
     height: '100%',
   }),
   fallbackWrapper: {
@@ -433,7 +433,7 @@ const htmlPreviewFrameStyles = () => ({
     flexDirection: 'column',
     gap: '0.25rem',
     padding: '0.5rem 1rem',
-    backgroundColor: palette.warning.background ?? palette.background.secondary,
+    backgroundColor: palette.warning.background ?? palette.background.default.secondary,
     borderBottom: `0.0625rem solid ${palette.warning.main}`,
     flexShrink: 0,
   }),

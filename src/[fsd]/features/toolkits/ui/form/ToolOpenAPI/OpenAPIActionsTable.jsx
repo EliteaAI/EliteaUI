@@ -212,7 +212,7 @@ OpenAPIActionsTable.displayName = 'OpenAPIActionsTable';
 /** @type {MuiSx} */
 const openAPIActionsTableStyles = () => ({
   tableContainer: ({ palette }) => ({
-    backgroundColor: palette.background.secondary,
+    backgroundColor: palette.background.default.secondary,
     boxShadow: 'none',
     border: `0.0625rem solid ${palette.border.table}`,
     borderRadius: '0.25rem',
@@ -220,7 +220,7 @@ const openAPIActionsTableStyles = () => ({
   headCell: ({ palette }) => ({
     padding: '0.375rem 0.25rem !important',
     borderBottom: `0.0625rem solid ${palette.border.table}`,
-    backgroundColor: palette.background.secondary,
+    backgroundColor: palette.background.default.secondary,
   }),
   sortLabel: {
     flexDirection: 'row-reverse',

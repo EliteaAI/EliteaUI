@@ -592,7 +592,7 @@ const styles = {
     overflowY: 'auto',
     borderRadius: '0.5rem',
     border: `0.0625rem solid ${palette.border.lines}`,
-    background: palette.background.secondary,
+    background: palette.background.default.secondary,
   }),
   menuItem: isSelected => ({
     justifyContent: 'space-between',

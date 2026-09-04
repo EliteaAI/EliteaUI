@@ -547,7 +547,7 @@ const styles = {
       borderRadius: DROPDOWN_CONSTANTS.BORDER_RADIUS.MENU,
       marginTop: preferLeft ? 0 : DROPDOWN_CONSTANTS.SPACING.MENU_TOP_MARGIN,
       border: `1px solid ${palette.border.lines}`,
-      background: palette.background.secondary,
+      background: palette.background.default.secondary,
       boxShadow: palette.boxShadow.default,
       width: DROPDOWN_CONSTANTS.DIMENSIONS.MENU_WIDTH,
       maxHeight: DROPDOWN_CONSTANTS.DIMENSIONS.MENU_MAX_HEIGHT,

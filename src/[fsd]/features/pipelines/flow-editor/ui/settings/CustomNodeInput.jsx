@@ -296,7 +296,7 @@ const CustomNodeInput = memo(props => {
             width: '80vw',
             height: 'calc(100vh - 13.75rem)',
             borderTop: `.0625rem solid ${theme.palette.border.lines}`,
-            backgroundColor: theme.palette.background.secondary,
+            backgroundColor: theme.palette.background.default.secondary,
             overflowY: 'hidden',
           }}
         >

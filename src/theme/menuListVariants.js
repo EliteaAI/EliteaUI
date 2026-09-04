@@ -15,7 +15,7 @@ export const eliteaMenuListVariants = [
     props: {},
     style: ({ theme }) => ({
       padding: theme.spacing(1, 0),
-      backgroundColor: theme.palette.background.secondary,
+      backgroundColor: theme.palette.background.default.secondary,
       borderRadius: theme.spacing(1),
       border: `1px solid ${theme.palette.border.lines}`,
       boxShadow: theme.palette.boxShadow.default,
@@ -32,7 +32,7 @@ export const eliteaMenuListVariants = [
     props: { variant: 'dense' },
     style: ({ theme }) => ({
       padding: theme.spacing(0.5, 0),
-      backgroundColor: theme.palette.background.secondary,
+      backgroundColor: theme.palette.background.default.secondary,
       borderRadius: theme.spacing(1),
       border: `1px solid ${theme.palette.border.lines}`,
       boxShadow: theme.palette.boxShadow.default,
@@ -54,7 +54,7 @@ export const eliteaMenuListVariants = [
     props: { variant: 'icon' },
     style: ({ theme }) => ({
       padding: theme.spacing(1, 0),
-      backgroundColor: theme.palette.background.secondary,
+      backgroundColor: theme.palette.background.default.secondary,
       borderRadius: theme.spacing(1),
       border: `1px solid ${theme.palette.border.lines}`,
       boxShadow: theme.palette.boxShadow.default,
@@ -79,7 +79,7 @@ export const eliteaMenuListVariants = [
     props: { variant: 'compact' },
     style: ({ theme }) => ({
       padding: 0,
-      backgroundColor: theme.palette.background.secondary,
+      backgroundColor: theme.palette.background.default.secondary,
       borderRadius: theme.spacing(0.5),
       border: `1px solid ${theme.palette.border.lines}`,
       boxShadow: theme.palette.boxShadow.default,
@@ -101,7 +101,7 @@ export const eliteaMenuListVariants = [
     props: { variant: 'elevated' },
     style: ({ theme }) => ({
       padding: theme.spacing(1, 0),
-      backgroundColor: theme.palette.background.secondary,
+      backgroundColor: theme.palette.background.default.secondary,
       borderRadius: theme.spacing(1),
       border: `1px solid ${theme.palette.border.lines}`,
       boxShadow: theme.palette.boxShadow.elevated || '0 8px 24px rgba(0,0,0,0.12)',
@@ -118,7 +118,7 @@ export const eliteaMenuListVariants = [
     props: { variant: 'context' },
     style: ({ theme }) => ({
       padding: theme.spacing(0.5, 0),
-      backgroundColor: theme.palette.background.secondary,
+      backgroundColor: theme.palette.background.default.secondary,
       borderRadius: theme.spacing(0.5),
       border: `1px solid ${theme.palette.border.lines}`,
       boxShadow: theme.palette.boxShadow.default,
@@ -141,7 +141,7 @@ export const eliteaMenuListVariants = [
     props: { variant: 'navigation' },
     style: ({ theme }) => ({
       padding: theme.spacing(1, 0),
-      backgroundColor: theme.palette.background.secondary,
+      backgroundColor: theme.palette.background.default.secondary,
       borderRadius: theme.spacing(1),
       border: `1px solid ${theme.palette.border.lines}`,
       boxShadow: theme.palette.boxShadow.default,
@@ -175,7 +175,7 @@ export const eliteaMenuListVariants = [
     props: { variant: 'user' },
     style: ({ theme }) => ({
       padding: theme.spacing(1, 0),
-      backgroundColor: theme.palette.background.secondary,
+      backgroundColor: theme.palette.background.default.secondary,
       borderRadius: theme.spacing(1),
       border: `1px solid ${theme.palette.border.lines}`,
       boxShadow: theme.palette.boxShadow.default,

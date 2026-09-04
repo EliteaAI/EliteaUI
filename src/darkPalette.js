@@ -96,7 +96,6 @@ const oldDarkPalette = {
   mode: 'dark',
 
   background: {
-    secondary: gray50,
     tabPanel: gray55,
     pageSection: gray60,
     section: white3,
@@ -425,6 +424,7 @@ const oldDarkPalette = {
     tagEditorPaper: '0px 8px 12px 0px #0000004d',
     tag: 'none',
     onboarding: `0rem 3.975rem 4.2625rem -3.8125rem ${skyBlue20}`,
+    listbox: `0px 4px 30px ${gray50};`,
   },
   text: {
     default: gray10,
@@ -699,6 +699,7 @@ const darkPalette = {
   },
   border: {
     ...oldDarkPalette.border,
+    edit: gray50,
     npsCard: darkColorScheme.accentDark,
   },
   text: {

@@ -64,7 +64,7 @@ const previewDocumentStyles = () => ({
           },
 
           '&:hover': {
-            backgroundColor: `${palette.background.secondary} !important`,
+            backgroundColor: `${palette.background.default.secondary} !important`,
           },
         },
       },
@@ -77,15 +77,15 @@ const previewDocumentStyles = () => ({
     overflow: 'hidden',
     display: 'flex',
     flexDirection: 'column',
-    backgroundColor: palette.background.secondary,
+    backgroundColor: palette.background.default.secondary,
 
     '& .docx-editor': {
       height: '100%',
-      backgroundColor: palette.background.secondary,
+      backgroundColor: palette.background.default.secondary,
     },
 
     '& .docx-editor > div': {
-      backgroundColor: palette.background.secondary,
+      backgroundColor: palette.background.default.secondary,
     },
 
     // // Toolbar styling — compact & themed
@@ -168,7 +168,7 @@ const previewDocumentStyles = () => ({
 
       '& [role="gridcell"][aria-selected="true"]': {
         backgroundColor: `${palette.background.button.primary.pressed} !important`,
-        borderColor: `${palette.background.secondary} !important`,
+        borderColor: `${palette.background.default.secondary} !important`,
       },
     },
 
@@ -189,7 +189,7 @@ const previewDocumentStyles = () => ({
         background: `${palette.background.tabPanel} !important`,
 
         '&:hover': {
-          background: `${palette.background.secondary} !important`,
+          background: `${palette.background.default.secondary} !important`,
         },
       },
     },
@@ -263,7 +263,7 @@ const previewDocumentStyles = () => ({
     },
 
     '.docx-hyperlink-dialog': {
-      backgroundColor: `${palette.background.secondary} !important`,
+      backgroundColor: `${palette.background.default.secondary} !important`,
 
       '.docx-hyperlink-dialog-header': {
         borderBottom: `1px solid ${palette.border.lines} !important`,

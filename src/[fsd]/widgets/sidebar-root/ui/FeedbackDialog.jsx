@@ -176,7 +176,7 @@ const feedbackDialogStyles = thanks => ({
   },
   heartIcon: ({ palette }) => ({
     fontSize: 'large',
-    fill: palette.background.secondary,
+    fill: palette.icon.fill.delete,
     filter: 'drop-shadow(0 0 1.4375rem #7CE4DE) drop-shadow(0 0.0625rem 0.5rem rgba(124, 228, 222, 0.70))',
   }),
   feedbackBox: {

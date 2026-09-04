@@ -209,10 +209,10 @@ const styles = {
     overflow: 'auto',
     boxShadow: palette.boxShadow?.default,
     border: `1px solid ${palette.border?.lines}`,
-    backgroundColor: palette.background.secondary,
+    backgroundColor: palette.background.default.secondary,
     // Add higher specificity if needed
     '& .MuiList-root': {
-      backgroundColor: palette.background.secondary,
+      backgroundColor: palette.background.default.secondary,
     },
   }),
   showMoreButton: {

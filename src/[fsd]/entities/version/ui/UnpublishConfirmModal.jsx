@@ -151,7 +151,7 @@ const styles = {
     padding: '1.5rem !important',
     borderTop: `.0625rem solid ${palette.border.lines}`,
     borderBottom: `.0625rem solid ${palette.border.lines}`,
-    background: `${palette.background.secondary} !important`,
+    background: `${palette.background.default.secondary} !important`,
   }),
   dialogActions: ({ palette }) => ({
     display: 'flex',

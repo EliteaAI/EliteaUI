@@ -407,7 +407,7 @@ const createEntityButtonStyles = sideBarCollapsed => ({
     zIndex: 1300,
   },
   dropdown: ({ palette }) => ({
-    background: palette.background.secondary,
+    background: palette.background.default.secondary,
     borderRadius: '0.5rem',
     border: `0.0625rem solid ${palette.border.lines}`,
     padding: '0.5rem 0',

@@ -1623,7 +1623,7 @@ const chatStyles = ({
       height: '100%',
       borderRadius: '1rem',
       border: `1px solid ${theme.palette.border.lines}`,
-      background: theme.palette.background.secondary,
+      background: theme.palette.background.default.secondary,
     },
   };
 };
