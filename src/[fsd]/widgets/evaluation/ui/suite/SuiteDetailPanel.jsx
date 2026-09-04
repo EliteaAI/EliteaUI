@@ -33,31 +33,24 @@ const SuiteDetailPanel = memo(props => {
     modelsData = { items: [] },
     datasets = [],
     attachedDataset = null,
-    isSaving,
-    onBack,
-    onSave,
-    onDiscard,
-    onDelete,
-    onEvaluate,
-    onDirtyChange,
-    onManageDatasets,
-    onCreateDataset,
-    onAttachDataset,
-    onRemoveDataset,
-    onOpenDataset,
-    onAddCase,
-    onEditCase,
-    onRemoveCase,
-    onImportCases,
-    onPromoteCases,
-    onManageDimensions,
-    onSelectDimensionFromLibrary,
-    onCreateDimensionManually,
-    onBuildDimensionWithAi,
-    onEditDimension,
-    onRemoveDimension,
     attachedDimensions = [],
+    onDiscard,
+    suiteActions = {},
+    datasetActions = {},
+    dimensionActions = {},
+    runActions = {},
   } = props;
+
+  const {
+    isSaving,
+    handleBack: onBack,
+    handleSave: onSave,
+    handleDeleteSuite: onDelete,
+    handleDirtyChange: onDirtyChange,
+  } = suiteActions;
+  const { isEvaluating, handleEvaluate: onEvaluate } = runActions;
+  const { handleManageDatasets: onManageDatasets } = datasetActions;
+  const { handleManageDimensions: onManageDimensions } = dimensionActions;
 
   const { checkPermission } = useCheckPermission();
   const canUpdateSuite = checkPermission(EVAL_PERMISSIONS.suiteUpdate);
@@ -166,7 +159,13 @@ const SuiteDetailPanel = memo(props => {
   }, [onDelete, suite]);
 
   const isSaveDisabled = !name.trim() || isSaving || !isDirty || !canUpdateSuite;
-  const isEvaluateDisabled = isNew || !suite?.id || !canRun;
+
+  const caseCount = attachedDataset?.case_count ?? attachedDataset?.cases?.length ?? 0;
+  const hasDatasetWithCases = attachedDataset != null && caseCount > 0;
+  const hasDimensions = attachedDimensions.length > 0;
+  const isEvaluateDisabled =
+    isNew || !suite?.id || !canRun || isEvaluating || !hasDatasetWithCases || !hasDimensions;
+
   const title = isNew ? 'New Suite' : (suite?.name ?? 'Suite');
 
   const styles = suiteDetailPanelStyles();
@@ -315,15 +314,7 @@ const SuiteDetailPanel = memo(props => {
                 <DatasetSection
                   datasets={datasets}
                   attachedDataset={attachedDataset}
-                  onCreateDataset={onCreateDataset}
-                  onAttachDataset={onAttachDataset}
-                  onRemoveDataset={onRemoveDataset}
-                  onOpenDataset={onOpenDataset}
-                  onAddCase={onAddCase}
-                  onEditCase={onEditCase}
-                  onRemoveCase={onRemoveCase}
-                  onImportCases={onImportCases}
-                  onPromoteCases={onPromoteCases}
+                  datasetActions={datasetActions}
                 />
               ),
             },
@@ -333,11 +324,7 @@ const SuiteDetailPanel = memo(props => {
               content: (
                 <DimensionSection
                   attachedDimensions={attachedDimensions}
-                  onSelectFromLibrary={onSelectDimensionFromLibrary}
-                  onCreateManually={onCreateDimensionManually}
-                  onBuildWithAi={onBuildDimensionWithAi}
-                  onEditDimension={onEditDimension}
-                  onRemoveDimension={onRemoveDimension}
+                  dimensionActions={dimensionActions}
                 />
               ),
             },

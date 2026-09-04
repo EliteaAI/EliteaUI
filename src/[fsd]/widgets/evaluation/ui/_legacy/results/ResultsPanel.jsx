@@ -7,8 +7,22 @@ import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import ClockIcon from '@/assets/clock_icon.svg?react';
 import MonitoringIcon from '@/assets/monitoring.svg?react';
 
+import EvaluationProgress from '../../suite/EvaluationProgress';
+
 const ResultsPanel = memo(props => {
-  const { onOpenHistory } = props;
+  const { runActions = {} } = props;
+
+  const {
+    activeRun,
+    runActive,
+    cancelRequested,
+    handleCancelRun: onCancelRun,
+    handleOpenHistory: onOpenHistory,
+  } = runActions;
+
+  const done = activeRun?.progress?.done ?? 0;
+  const total = activeRun?.progress?.total ?? 0;
+  const percent = total ? Math.min(100, Math.round((done / total) * 100)) : 0;
 
   const styles = resultsPanelStyles();
 
@@ -39,25 +53,35 @@ const ResultsPanel = memo(props => {
         </Box>
       </Box>
       <Box sx={styles.content}>
-        <Box sx={styles.centered}>
-          <SvgIcon
-            component={MonitoringIcon}
-            inheritViewBox
-            sx={styles.emptyIcon}
+        {runActive ? (
+          <EvaluationProgress
+            done={done}
+            total={total}
+            percent={percent}
+            cancelRequested={cancelRequested}
+            onCancel={onCancelRun}
           />
-          <Typography
-            variant="headingSmall"
-            sx={styles.emptyTitle}
-          >
-            No results yet.
-          </Typography>
-          <Typography
-            variant="bodyMedium"
-            sx={styles.emptyDescription}
-          >
-            Results will be available after running an evaluation suite.
-          </Typography>
-        </Box>
+        ) : (
+          <Box sx={styles.centered}>
+            <SvgIcon
+              component={MonitoringIcon}
+              inheritViewBox
+              sx={styles.emptyIcon}
+            />
+            <Typography
+              variant="headingSmall"
+              sx={styles.emptyTitle}
+            >
+              No results yet.
+            </Typography>
+            <Typography
+              variant="bodyMedium"
+              sx={styles.emptyDescription}
+            >
+              Results will be available after running an evaluation suite.
+            </Typography>
+          </Box>
+        )}
       </Box>
     </Box>
   );

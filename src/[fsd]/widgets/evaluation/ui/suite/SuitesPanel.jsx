@@ -11,7 +11,13 @@ import { EVAL_PERMISSIONS } from '../../lib/constants';
 import SuiteCard from './SuiteCard';
 
 const SuitesPanel = memo(props => {
-  const { suites = [], isLoading, datasetNamesById = {}, onNewSuite, onDeleteSuite, onSelectSuite } = props;
+  const { suites = [], isLoading, datasetNamesById = {}, suiteActions = {} } = props;
+
+  const {
+    handleNewSuite: onNewSuite,
+    handleDeleteSuite: onDeleteSuite,
+    handleSelectSuite: onSelectSuite,
+  } = suiteActions;
 
   const { checkPermission } = useCheckPermission();
   const canCreateSuite = checkPermission(EVAL_PERMISSIONS.suiteCreate);
