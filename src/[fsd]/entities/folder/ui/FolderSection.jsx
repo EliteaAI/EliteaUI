@@ -215,6 +215,7 @@ const FolderSection = memo(props => {
       <FolderManagePermissionsModal
         open={!!managePermissionsFolder}
         onClose={handleClosePermission}
+        folderId={managePermissionsFolder?.id}
       />
     </Box>
   );

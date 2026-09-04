@@ -8,7 +8,7 @@ import FolderDefaultPermissionsBanner from './FolderDefaultPermissionsBanner';
 import FolderPermissionsTable from './FolderPermissionsTable';
 
 const FolderManagePermissionsModal = memo(props => {
-  const { open, onClose } = props;
+  const { open, onClose, folderId } = props;
 
   const styles = folderManagePermissionsModalStyles();
 
@@ -23,7 +23,7 @@ const FolderManagePermissionsModal = memo(props => {
       content={
         <Box sx={styles.content}>
           <FolderDefaultPermissionsBanner />
-          <FolderPermissionsTable />
+          <FolderPermissionsTable folderId={folderId} />
         </Box>
       }
     />

@@ -3,6 +3,7 @@ import { eliteaApi } from '@/api/eliteaApi';
 
 const apiSlicePath = '/social/folders';
 const TAG_TYPE_FOLDER = 'EntityFolder';
+const TAG_TYPE_FOLDER_ACCESS = 'FolderAccess';
 
 /**
  * Optimistically updates folder_id/folder_name on an entity across all cached list queries.
@@ -35,7 +36,7 @@ const clearDeletedFolderFromCaches = (state, folderId, dispatch) =>
 
 export const entityFoldersApi = eliteaApi
   .enhanceEndpoints({
-    addTagTypes: [TAG_TYPE_FOLDER],
+    addTagTypes: [TAG_TYPE_FOLDER, TAG_TYPE_FOLDER_ACCESS],
   })
   .injectEndpoints({
     endpoints: build => ({
@@ -182,6 +183,12 @@ export const entityFoldersApi = eliteaApi
         },
         providesTags: (_result, _error, { folderId }) => [{ type: TAG_TYPE_FOLDER, id: `ITEMS_${folderId}` }],
       }),
+      getFolderAccess: build.query({
+        query: ({ projectId, folderId }) => ({
+          url: `/social/folder_access/prompt_lib/${projectId}/${folderId}`,
+        }),
+        providesTags: (_result, _error, { folderId }) => [{ type: TAG_TYPE_FOLDER_ACCESS, id: folderId }],
+      }),
     }),
   });
 
@@ -196,4 +203,5 @@ export const {
   usePinFolderMutation,
   useGetFolderItemsQuery,
   useLazyGetFolderItemsQuery,
+  useGetFolderAccessQuery,
 } = entityFoldersApi;
