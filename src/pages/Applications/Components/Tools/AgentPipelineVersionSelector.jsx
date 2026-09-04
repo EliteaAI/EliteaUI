@@ -434,7 +434,7 @@ const agentPipelineVersionSelectorStyles = () => ({
     '& .MuiPaper-root': {
       borderRadius: '0.5rem',
       border: `0.0625rem solid ${palette.border.lines}`,
-      background: palette.background.secondary,
+      background: palette.background.default.secondary,
       boxShadow: '0 0.5rem 0.75rem rgba(0, 0, 0, 0.3)',
       minWidth: '15rem',
       maxWidth: '17.5rem',

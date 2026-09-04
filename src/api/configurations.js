@@ -346,6 +346,7 @@ export const configurationsApi = eliteaApi
             TAG_SHARED_CONFIGURATIONS,
             TAG_MODELS,
             { type: TAG_CONFIGURATION_DETAILS, id: configId },
+            { type: 'EntityFolder', id: 'LIST_configuration' },
           ];
         },
         onQueryStarted: async (args, { dispatch, getState, queryFulfilled }) => {

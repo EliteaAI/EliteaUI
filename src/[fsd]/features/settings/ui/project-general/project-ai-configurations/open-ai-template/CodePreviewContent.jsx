@@ -54,7 +54,7 @@ const getStyles = () => ({
       height: '0.25rem',
     },
     '&::-webkit-scrollbar-track': {
-      background: palette.background.default,
+      background: palette.background.default.secondary,
     },
     '&::-webkit-scrollbar-thumb': {
       background: palette.border.lines,
@@ -68,28 +68,28 @@ const getStyles = () => ({
       height: 'auto !important',
       minHeight: '100%',
       maxHeight: 'none !important',
-      backgroundColor: `${palette.background.default} !important`,
+      backgroundColor: `${palette.background.default.secondary} !important`,
     },
     '& .cm-scroller': {
       overflow: 'visible !important',
       maxHeight: 'none !important',
-      backgroundColor: `${palette.background.default} !important`,
+      backgroundColor: `${palette.background.default.secondary} !important`,
     },
     '& .cm-content': {
       minHeight: 'auto',
       padding: '0.75rem',
-      backgroundColor: `${palette.background.default} !important`,
+      backgroundColor: `${palette.background.default.secondary} !important`,
     },
     '& .cm-focused': {
       outline: 'none',
-      backgroundColor: `${palette.background.default} !important`,
+      backgroundColor: `${palette.background.default.secondary} !important`,
     },
     // Override any CodeMirror theme background
     '& .cm-editor.cm-editor.cm-editor': {
-      backgroundColor: `${palette.background.default} !important`,
+      backgroundColor: `${palette.background.default.secondary} !important`,
     },
     '& .cm-theme-dark, & .cm-theme-light': {
-      backgroundColor: `${palette.background.default} !important`,
+      backgroundColor: `${palette.background.default.secondary} !important`,
     },
   }),
 });

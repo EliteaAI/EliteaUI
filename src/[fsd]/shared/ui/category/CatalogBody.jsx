@@ -87,7 +87,7 @@ const catalogBodyStyles = () => ({
     width: '100%',
     height: '100%',
     boxSizing: 'border-box',
-    background: palette.background.eliteaDefault,
+    background: palette.background.default.primary,
   }),
   leftColumn: {
     flex: 1,
@@ -114,7 +114,7 @@ const catalogBodyStyles = () => ({
   loadingSkeleton: ({ palette }) => ({
     width: '12.75rem',
     height: '2.5rem',
-    backgroundColor: palette.background.secondary,
+    backgroundColor: palette.background.default.secondary,
     borderRadius: '0.5rem',
     flexShrink: 0,
     flexGrow: 0,

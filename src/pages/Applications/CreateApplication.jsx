@@ -5,6 +5,7 @@ import { Form, Formik } from 'formik';
 import { Grid } from '@mui/material';
 
 import CreateAgentForm from '@/[fsd]/features/agent/ui/agent-details/configurations/form/CreateAgentForm';
+import { Breadcrumbs } from '@/[fsd]/shared/ui';
 import StyledTabs from '@/components/StyledTabs';
 import { StyledGridContainer } from '@/pages/Common/Components';
 
@@ -25,9 +26,9 @@ const CreateApplication = memo(() => {
       <StyledTabs
         fullWidth
         tabSX={{ paddingX: '24px' }}
+        leftPart={<Breadcrumbs />}
         tabs={[
           {
-            label: 'New Agent',
             tabBarItems: <CreateApplicationTabBar />,
             rightToolbar: <div />,
             content: (

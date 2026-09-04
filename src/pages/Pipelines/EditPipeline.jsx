@@ -7,6 +7,7 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import { ApplicationTabBar } from '@/[fsd]/entities/application-tab-bar/ui';
 import { useIsVersionNotFound } from '@/[fsd]/entities/version/lib/hooks';
 import { InstructionsInputRefProvider } from '@/[fsd]/shared/lib/context';
+import { BreadcrumbsOrTitle } from '@/[fsd]/shared/ui';
 import { ApplicationControls } from '@/[fsd]/widgets/application-controls';
 import { ViewMode } from '@/common/constants';
 import { buildErrorMessage, isNotFoundError } from '@/common/utils';
@@ -81,7 +82,6 @@ const EditPipeline = memo(() => {
   const tabs = useMemo(
     () => [
       {
-        label: initialValues?.name || 'Pipeline',
         tabBarItems: !isFetching ? (
           <ApplicationTabBar
             onSuccess={handleSuccess}
@@ -104,7 +104,6 @@ const EditPipeline = memo(() => {
       },
     ],
     [
-      initialValues?.name,
       initialValues?.version_details?.tools?.length,
       isFetching,
       isError,
@@ -131,10 +130,10 @@ const EditPipeline = memo(() => {
         <Form style={styles.form}>
           <StyledTabs
             fullWidth
-            forceShowLabel
             panelStyle={styles.tabPanel}
             containerStyle={styles.tabContainer}
             leftTabbarSectionSX={styles.leftTabbarSection}
+            leftPart={<BreadcrumbsOrTitle title={initialValues?.name || 'Edit Pipeline'} />}
             tabs={tabs}
           />
         </Form>

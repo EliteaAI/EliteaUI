@@ -1,5 +1,7 @@
 import { memo } from 'react';
 
+import { useLocation } from 'react-router-dom';
+
 import { Box, Typography } from '@mui/material';
 
 import { useBreadcrumbTrail } from '@/[fsd]/shared/lib/hooks';
@@ -8,6 +10,7 @@ import BreadcrumbItem from './BreadcrumbItem';
 
 const Breadcrumbs = memo(() => {
   const trail = useBreadcrumbTrail();
+  const { search } = useLocation();
   const styles = breadcrumbsStyles();
 
   if (!trail.length) return null;
@@ -40,7 +43,7 @@ const Breadcrumbs = memo(() => {
             )}
             <BreadcrumbItem
               label={crumb.label}
-              to={crumb.to}
+              to={crumb.isCurrent ? crumb.to : { pathname: crumb.to, search }}
               isCurrent={crumb.isCurrent}
               testId={crumb.entry.testId}
             />

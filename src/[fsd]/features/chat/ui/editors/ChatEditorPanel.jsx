@@ -196,11 +196,10 @@ const ChatEditorPanel = memo(props => {
             onAgentCreated={onAgentCreated}
             onAgentSaved={handleAgentSaved}
             onAttachmentToolChange={handleAttachmentToolChange}
-            onAgentDirtyStateChange={handleEditorDirtyStateChange}
+            handleEditorDirtyStateChange={handleEditorDirtyStateChange}
             onConversationStartersChange={handleEditorConversationStartersChange}
             onPipelineCreated={onPipelineCreated}
             onPipelineSaved={onChangeParticipantSettings}
-            onPipelineDirtyStateChange={handleEditorDirtyStateChange}
           />
         </Suspense>
       )}

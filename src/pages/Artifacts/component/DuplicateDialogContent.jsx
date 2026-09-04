@@ -170,7 +170,7 @@ const duplicateDialogContentStyles = () => ({
     fontSize: '0.75rem',
     fontWeight: 400,
     cursor: 'pointer',
-    color: palette.primary.pressed,
+    color: palette.text.button.showMore,
     textDecoration: 'none',
     '&:hover': {
       backgroundColor: 'transparent',

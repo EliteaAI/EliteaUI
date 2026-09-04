@@ -51,7 +51,7 @@ const PrivateAgentsList = memo(props => {
   const projectId = useSelectedProjectId();
 
   const { folders } = useEntityFolders(ENTITY_FOLDER_TYPES.agent, { includeCounts: true });
-  const { selectedFolderId, selectedFolder, isFolderViewActive, openFolder, closeFolder } =
+  const { selectedFolderId, selectedFolder, isFolderViewActive, openFolder, closeFolder, onFolderDelete } =
     useFolderView(folders);
 
   const {
@@ -171,6 +171,7 @@ const PrivateAgentsList = memo(props => {
               specifiedStatus={CollectionStatus.All}
               onFolderSelect={openFolder}
               selectedFolderId={selectedFolderId}
+              onFolderDelete={onFolderDelete}
             />
           ) : (
             <div style={rightInfoPanelStyle}>

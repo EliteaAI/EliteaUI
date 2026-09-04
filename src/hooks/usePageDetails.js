@@ -20,6 +20,13 @@ export const usePageDetails = () => {
     path: `${RouteDefinitions.UserPublicApplicationDetail}/:versionId`,
   });
 
+  const isApplicationEvaluatePage = useMatch({ path: RouteDefinitions.ApplicationsEvaluate });
+  const isApplicationEvaluateSuitePage = useMatch({ path: RouteDefinitions.ApplicationsEvaluateSuite });
+  const isApplicationEvaluateDatasetsPage = useMatch({ path: RouteDefinitions.ApplicationsEvaluateDatasets });
+  const isApplicationEvaluateDimensionsPage = useMatch({
+    path: RouteDefinitions.ApplicationsEvaluateDimensions,
+  });
+
   const isPipelineDetailPage = useMatch({ path: RouteDefinitions.PipelineDetail });
   const isUserPublicPipelineDetailPage = useMatch({ path: RouteDefinitions.UserPublicPipelineDetail });
   const isPipelinesWithTab = useMatch({ path: RouteDefinitions.PipelinesWithTab });
@@ -66,7 +73,11 @@ export const usePageDetails = () => {
     isUserPublicApplicationDetailPage ||
     isApplicationVersionDetailPage ||
     isUserPublicApplicationVersionDetailPage ||
-    isApplicationsWithTab;
+    isApplicationsWithTab ||
+    isApplicationEvaluatePage ||
+    isApplicationEvaluateSuitePage ||
+    isApplicationEvaluateDatasetsPage ||
+    isApplicationEvaluateDimensionsPage;
 
   const isPipelinePage =
     isPipelineDetailPage ||

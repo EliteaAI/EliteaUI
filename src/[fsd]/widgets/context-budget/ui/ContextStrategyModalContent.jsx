@@ -283,7 +283,7 @@ const componentStyles = () => ({
   }),
   dialogContent: ({ palette }) => ({
     width: '100%',
-    backgroundColor: palette.background.secondary,
+    backgroundColor: palette.background.default.secondary,
     borderTop: `.0625rem solid ${palette.border.lines}`,
     borderBottom: `.0625rem solid ${palette.border.lines}`,
     overflowY: 'auto',
@@ -319,7 +319,7 @@ const componentStyles = () => ({
     width: '100%',
     position: 'sticky',
     bottom: 0,
-    backgroundColor: palette.background.default,
+    backgroundColor: palette.background.default.secondary,
     zIndex: 1,
   }),
 });

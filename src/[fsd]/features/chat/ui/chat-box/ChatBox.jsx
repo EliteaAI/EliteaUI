@@ -183,6 +183,7 @@ const ChatBox = forwardRef((props, boxRef) => {
 
     // Override for entity-created routing (e.g. generated-entities tab panel)
     onEntityCreated: onEntityCreatedProp,
+    onEntityDeleted: onEntityDeletedProp,
   } = props;
 
   const styles = chatBoxStyles();
@@ -224,7 +225,7 @@ const ChatBox = forwardRef((props, boxRef) => {
   const [updateChatLlmSettings, { isLoading: modelSettingsAreSaving }] =
     useUpdateParticipantLlmSettingsMutation();
 
-  const { name, id: userId, avatar, personalization: userPersonalization } = useSelector(state => state.user);
+  const { name, id: userId, avatar } = useSelector(state => state.user);
 
   const { chat_history, pendingHitlMessage } = useMemo(() => {
     const history = activeConversation?.chat_history || [];
@@ -673,7 +674,7 @@ const ChatBox = forwardRef((props, boxRef) => {
     async ({ entity_type, entity_id }, messageId) => {
       try {
         if (entity_type === 'agent' || entity_type === 'pipeline') {
-          await deleteApplication({ projectId, applicationId: entity_id }).unwrap();
+          await deleteApplication({ projectId, applicationId: entity_id, entityType: entity_type }).unwrap();
         } else if (entity_type === 'skill') {
           await deleteSkill({ projectId, skillId: entity_id }).unwrap();
         } else if (entity_type === 'project_context') {
@@ -681,6 +682,7 @@ const ChatBox = forwardRef((props, boxRef) => {
         } else if (entity_type === 'toolkit') {
           await deleteToolkit({ projectId, toolkitId: entity_id }).unwrap();
         }
+        onEntityDeletedProp?.({ entity_type, entity_id });
       } catch (err) {
         toastError(buildErrorMessage(err) || 'Failed to delete entity');
         return;
@@ -710,6 +712,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       updateMessageMeta,
       setChatHistory,
       toastError,
+      onEntityDeletedProp,
     ],
   );
 
@@ -839,6 +842,8 @@ const ChatBox = forwardRef((props, boxRef) => {
 
   const handleStopStreaming = useCallback(() => {
     stopRequestedRef.current = true;
+    pendingInjectionsRef.current = new Map();
+    setPendingInjections([]);
     stopStreamingRef.current?.();
     onStopRun?.();
   }, [onStopRun]);
@@ -1256,22 +1261,9 @@ const ChatBox = forwardRef((props, boxRef) => {
     async (uuid, messageParticipant, updatedItems, newAttachmentItems) => {
       stopTTS();
       chatInput.current?.pauseSpeakingMode?.();
-      let prevMessage = {};
       setChatHistory(prevMessages => {
-        prevMessage = prevMessages.find(message => message.id === uuid);
         return prevMessages.map(message =>
-          message.id !== uuid
-            ? message
-            : {
-                ...message,
-                content: '',
-                message_items: [],
-                references: [],
-                exception: undefined,
-                toolActions: [],
-                isRegenerating: true,
-                created_at: new Date().getTime(),
-              },
+          message.id !== uuid ? message : ChatHelpers.prepareMessageForRegeneration(message),
         );
       });
       chatInput.current?.reset();
@@ -1314,9 +1306,12 @@ const ChatBox = forwardRef((props, boxRef) => {
         id: uuid,
       });
       if (regenerateError) {
-        toastError(buildErrorMessage(regenerateError) || 'Regeneration Failed. Please try again.');
+        const errorMessage = buildErrorMessage(regenerateError) || 'Regeneration Failed. Please try again.';
+        toastError(errorMessage);
         setChatHistory(prevMessages => {
-          return prevMessages.map(message => (message.id !== uuid ? message : { ...prevMessage }));
+          return prevMessages.map(message =>
+            message.id !== uuid ? message : ChatHelpers.applyMessageRegenerationError(message, errorMessage),
+          );
         });
       }
     },
@@ -2686,7 +2681,7 @@ const ChatBox = forwardRef((props, boxRef) => {
 
   const displayConversationStarters = !isProcessingSymbols && conversationStarters?.length > 0;
 
-  const isMidturnInjectionEnabled = useIsMidturnInjectionEnabled(userPersonalization);
+  const isMidturnInjectionEnabled = useIsMidturnInjectionEnabled();
 
   // Scoped to the in-flight turn, not global: the indexer sets isInjectable on
   // the specific streaming message, so multi-participant conversations with more

@@ -32,12 +32,12 @@ const McpLogInButton = memo(props => {
 
 /** @type {MuiSx} */
 const getStyles = () => ({
-  loginText: {
-    color: 'primary.main',
+  loginText: ({ palette }) => ({
+    color: palette.primary.main,
     '&:hover': {
       color: 'primary.dark',
     },
-  },
+  }),
 });
 
 McpLogInButton.displayName = 'McpLogInButton';

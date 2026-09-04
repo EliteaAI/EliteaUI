@@ -560,6 +560,7 @@ const NewChat = props => {
     activeGeneratedTabIndex,
     setActiveGeneratedTabIndex,
     isEditingGeneratedEntities,
+    onGeneratedEntityDeleted,
     onGeneratedEntityCreated,
     handleCloseGeneratedTab,
     isEditorOpen,
@@ -1339,6 +1340,7 @@ const NewChat = props => {
                 uploadProgress={uploadProgress}
                 newConversationQuestion={newConversationQuestion}
                 onEntityCreated={onGeneratedEntityCreated}
+                onEntityDeleted={onGeneratedEntityDeleted}
                 {...baseSettings}
               />
               {isPlayback && (
@@ -1513,7 +1515,7 @@ const chatStyles = ({
       boxSizing: 'border-box',
       height: '100vh',
       marginLeft: 0,
-      background: theme.palette.background.chatBkg,
+      background: theme.palette.background.tabPanel,
       width: '100%',
     },
     wrapper: {
@@ -1621,7 +1623,7 @@ const chatStyles = ({
       height: '100%',
       borderRadius: '1rem',
       border: `1px solid ${theme.palette.border.lines}`,
-      background: theme.palette.background.default,
+      background: theme.palette.background.default.secondary,
     },
   };
 };

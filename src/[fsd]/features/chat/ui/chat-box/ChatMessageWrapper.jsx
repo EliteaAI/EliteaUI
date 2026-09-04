@@ -176,6 +176,7 @@ const ChatMessageWrapper = memo(props => {
       references={message.references}
       exception={message.exception}
       budgetErrorCode={message.budgetErrorCode}
+      continuationError={message.continuationError}
       subAgentErrors={message.subAgentErrors}
       toolActions={message.toolActions || []}
       tools={messageParticipant?.meta?.tools || toolsFromConversation}

@@ -1,0 +1,375 @@
+import { memo, useCallback, useRef, useState } from 'react';
+
+import UploadFileOutlined from '@mui/icons-material/UploadFileOutlined';
+import { Alert, Box, FormControlLabel, Typography } from '@mui/material';
+
+import { useRestoreProjectBackupMutation } from '@/[fsd]/features/settings/api';
+import { ProjectBackupHelpers } from '@/[fsd]/features/settings/lib/helpers';
+import { Checkbox, Modal } from '@/[fsd]/shared/ui';
+import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+
+const { formatSize } = ProjectBackupHelpers;
+
+const RestoreProjectDialog = memo(props => {
+  const { open, onClose, projectId, projectName } = props;
+
+  const inputRef = useRef(null);
+
+  const [file, setFile] = useState(null);
+  const [artifact, setArtifact] = useState(null);
+  const [truncate, setTruncate] = useState(false);
+  const [dryRun, setDryRun] = useState(true);
+  const [allowMismatch, setAllowMismatch] = useState(false);
+  const [error, setError] = useState('');
+  const [result, setResult] = useState(null);
+
+  const [restoreProject, { isLoading }] = useRestoreProjectBackupMutation();
+
+  // The backend recognizes the uploaded file and reports what it found in
+  // "artifact"; the dialog only reacts to that answer.
+  // projectId can arrive as a string from the store, so compare numerically
+  const isMismatch =
+    typeof artifact?.project_id === 'number' &&
+    projectId != null &&
+    artifact.project_id !== Number(projectId);
+
+  const reset = useCallback(() => {
+    setFile(null);
+    setArtifact(null);
+    setTruncate(false);
+    setDryRun(true);
+    setAllowMismatch(false);
+    setError('');
+    setResult(null);
+    if (inputRef.current) inputRef.current.value = '';
+  }, []);
+
+  const handleClose = useCallback(() => {
+    if (isLoading) return;
+    reset();
+    onClose?.();
+  }, [isLoading, reset, onClose]);
+
+  const handlePick = useCallback(() => {
+    inputRef.current?.click();
+  }, []);
+
+  const handleFileChange = useCallback(event => {
+    setError('');
+    setResult(null);
+    setArtifact(null);
+    setAllowMismatch(false);
+    setDryRun(true);
+    setFile(event.target.files?.[0] ?? null);
+  }, []);
+
+  const handleSubmit = useCallback(async () => {
+    setError('');
+    setResult(null);
+
+    try {
+      const response = await restoreProject({
+        projectId,
+        file,
+        truncate,
+        dryRun,
+        allowProjectMismatch: isMismatch && allowMismatch,
+      }).unwrap();
+      setResult(response);
+      if (response?.artifact) setArtifact(response.artifact);
+    } catch (err) {
+      const message = err?.data?.error ?? err?.error ?? 'Restore failed.';
+      const detail = err?.data?.detail;
+      setError(detail ? `${message}: ${detail}` : message);
+      // A project mismatch comes back as 409 with the artifact the backend read,
+      // so the confirmation checkbox below can be offered
+      if (err?.data?.artifact) setArtifact(err.data.artifact);
+      if (err?.data?.result) setResult(err.data);
+    }
+  }, [restoreProject, projectId, file, truncate, dryRun, isMismatch, allowMismatch]);
+
+  const handleTruncateChange = useCallback(event => setTruncate(event.target.checked), []);
+  const handleDryRunChange = useCallback(event => setDryRun(event.target.checked), []);
+  const handleAllowMismatchChange = useCallback(event => setAllowMismatch(event.target.checked), []);
+
+  const summary = result?.result;
+
+  // A backup taken before a migration carries columns this project no longer
+  // has; the backend drops them and lists them per table
+  const droppedColumns = Object.entries(summary?.dropped_columns ?? {}).flatMap(([table, columns]) =>
+    columns.map(column => `${table}.${column}`),
+  );
+
+  // The reverse drift: this project requires a column the backup has no value
+  // for, so the backend restored it empty
+  const filledColumns = Object.entries(summary?.filled_columns ?? {}).flatMap(([table, columns]) =>
+    columns.map(column => `${table}.${column}`),
+  );
+
+  const renderContent = () => (
+    <Box sx={componentStyles.root}>
+      <Typography
+        variant="bodySmall"
+        color="text.secondary"
+      >
+        Restore data from the backup file into{' '}
+        <Typography
+          component="span"
+          variant="labelSmall"
+          color="inherit"
+        >
+          {projectName}
+        </Typography>
+        {'. Credentials and tokens will not be restored. Backup data from another project can be applied '}
+        {'here only after you solve the conflicts and confirm the differences.'}
+      </Typography>
+
+      {!!error && (
+        <Alert
+          severity="error"
+          sx={componentStyles.alert('error')}
+        >
+          {error}
+        </Alert>
+      )}
+
+      <Box sx={componentStyles.filePicker}>
+        <BaseBtn
+          variant={BUTTON_VARIANTS.secondary}
+          size="small"
+          startIcon={<UploadFileOutlined />}
+          onClick={handlePick}
+          disabled={isLoading}
+          data-testid="project-restore-choose-file"
+        >
+          Choose a backup file
+        </BaseBtn>
+        <Typography
+          variant="bodySmall2"
+          color="text.secondary"
+          sx={componentStyles.fileName}
+        >
+          {file ? `${file.name} (${formatSize(file.size)})` : 'No files selected'}
+        </Typography>
+        <Box
+          component="input"
+          ref={inputRef}
+          type="file"
+          accept=".enc,.sql,text/plain,application/sql,application/octet-stream"
+          sx={componentStyles.hiddenInput}
+          onChange={handleFileChange}
+        />
+      </Box>
+
+      {isMismatch && (
+        <>
+          <Alert
+            severity="warning"
+            sx={componentStyles.alert('warning')}
+          >
+            This data was backed up from project {artifact.project_id}. If you restore it to{' '}
+            {projectName ? `"${projectName}"` : 'this project'} (project {projectId}), you will put foreign
+            data into the project.
+          </Alert>
+          <FormControlLabel
+            control={
+              <Checkbox.BaseCheckbox
+                checked={allowMismatch}
+                onChange={handleAllowMismatchChange}
+                disabled={isLoading}
+                data-testid="project-restore-allow-mismatch"
+              />
+            }
+            label={
+              <Typography
+                variant="bodyMedium"
+                color="text.secondary"
+              >
+                Restore here anyway
+              </Typography>
+            }
+          />
+        </>
+      )}
+
+      <Box sx={componentStyles.options}>
+        <FormControlLabel
+          control={
+            <Checkbox.BaseCheckbox
+              checked={dryRun}
+              onChange={handleDryRunChange}
+              disabled={isLoading}
+              data-testid="project-restore-dry-run"
+            />
+          }
+          label={
+            <Typography
+              variant="bodyMedium"
+              color="text.secondary"
+            >
+              Preview only (no data is restored yet)
+            </Typography>
+          }
+        />
+        <FormControlLabel
+          control={
+            <Checkbox.BaseCheckbox
+              checked={truncate}
+              onChange={handleTruncateChange}
+              disabled={isLoading}
+              data-testid="project-restore-truncate"
+            />
+          }
+          label={
+            <Typography
+              variant="bodyMedium"
+              color="text.secondary"
+            >
+              Replace existing data - do not merge
+            </Typography>
+          }
+        />
+      </Box>
+
+      {truncate && (
+        <Alert
+          severity="warning"
+          sx={componentStyles.alert('warning')}
+        >
+          If checked, the existing rows in the affected tables will be deleted before applying the backup. If
+          unchecked, the existing rows will be preserved and new rows will be merged with them.
+        </Alert>
+      )}
+
+      {!!summary && (
+        <Alert
+          severity={result?.ok ? 'success' : 'warning'}
+          sx={componentStyles.alert(result?.ok ? 'success' : 'warning')}
+        >
+          <Typography
+            variant="labelMedium"
+            color="inherit"
+          >
+            {summary.dry_run ? 'Dry run finished' : 'Restore applied'}
+            {summary.mode ? ` (${summary.mode})` : ''}
+          </Typography>
+          <Typography
+            variant="bodySmall2"
+            color="inherit"
+            sx={componentStyles.summaryBody}
+          >
+            {summary.statements} statements, {summary.total_rows} rows into{' '}
+            {summary.applied_tables?.length ?? 0} tables
+            {summary.truncated_tables?.length ? ` · truncated ${summary.truncated_tables.length}` : ''}
+            {summary.skipped_tables?.length ? ` · skipped ${summary.skipped_tables.join(', ')}` : ''}
+          </Typography>
+          {droppedColumns.length > 0 && (
+            <Typography
+              variant="bodySmall2"
+              color="inherit"
+              sx={componentStyles.summaryBody}
+            >
+              Columns missing in this project were dropped: {droppedColumns.join(', ')}
+              {summary.dropped_values ? ` (${summary.dropped_values} values not restored)` : ''}
+            </Typography>
+          )}
+          {filledColumns.length > 0 && (
+            <Typography
+              variant="bodySmall2"
+              color="inherit"
+              sx={componentStyles.summaryBody}
+            >
+              Columns this project requires were restored empty: {filledColumns.join(', ')}
+            </Typography>
+          )}
+        </Alert>
+      )}
+    </Box>
+  );
+
+  const renderActions = () => (
+    <>
+      <BaseBtn
+        variant={BUTTON_VARIANTS.secondary}
+        size="small"
+        onClick={handleClose}
+        disabled={isLoading}
+        data-testid="project-restore-cancel"
+      >
+        {result && !dryRun ? 'Close' : 'Cancel'}
+      </BaseBtn>
+      <BaseBtn
+        variant={BUTTON_VARIANTS.elitea}
+        size="small"
+        onClick={handleSubmit}
+        disabled={isLoading || !file || (isMismatch && !allowMismatch)}
+        data-testid="project-restore-submit"
+      >
+        {isLoading ? 'Restoring...' : dryRun ? 'Preview' : 'Restore'}
+      </BaseBtn>
+    </>
+  );
+
+  return (
+    <Modal.BaseModal
+      open={open}
+      title="Restore Project Data"
+      onClose={handleClose}
+      content={renderContent()}
+      actions={renderActions()}
+      data-testid="project-restore-modal"
+      closeButtonTestId="project-restore-close-button"
+    />
+  );
+});
+
+RestoreProjectDialog.displayName = 'RestoreProjectDialog';
+
+/** @type {MuiSx} */
+const componentStyles = {
+  root: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.75rem',
+  },
+  filePicker: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.75rem',
+  },
+  fileName: {
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  hiddenInput: {
+    display: 'none',
+  },
+  options: {
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  summaryBody: {
+    marginTop: '0.25rem',
+  },
+  // MuiAlert only carries theme overrides for the "filled" variant (and those use raw,
+  // non-palette colors), so the default "standard" Alerts we render here fall back to
+  // MUI's stock palette and clash with the app background. Re-theme them with the same
+  // background/border/icon/text tokens the toolkits "index result" banners already use.
+  alert:
+    severity =>
+    ({ palette }) => ({
+      borderRadius: '0.5rem',
+      border: `0.0625rem solid ${palette.border.indexResult[severity] || palette.border.indexResult.info}`,
+      backgroundColor: palette.background.indexResult[severity] || palette.background.indexResult.info,
+      '& .MuiAlert-icon': {
+        color: palette.icon.indexResult[severity] || palette.icon.indexResult.info,
+      },
+      '& .MuiAlert-message': {
+        width: '100%',
+        color: palette.text.indexResult[severity] || palette.text.indexResult.info,
+      },
+    }),
+};
+
+export default RestoreProjectDialog;

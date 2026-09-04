@@ -232,7 +232,7 @@ const modalStyles = ({ isSimple, isFullscreen, hideSections, hasActions }) => ({
     ...(isSimple || hideSections
       ? { background: 'transparent' }
       : {
-          background: palette.background.secondary,
+          background: palette.background.default.secondary,
           borderTop: `.0625rem solid ${palette.border.lines}`,
           ...(hasActions && { borderBottom: `.0625rem solid ${palette.border.lines}` }),
         }),

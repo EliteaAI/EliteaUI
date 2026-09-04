@@ -16,7 +16,15 @@ import BudgetErrorMessage from './BudgetErrorMessage';
 // verbatim from ApplicationAnswer's inline block so both call sites stay
 // pixel-identical; `compact` tightens spacing for the narrower accordion column.
 const ErrorTrace = memo(props => {
-  const { headline, trace: rawTrace, messageId, onCopy, compact = false, budgetErrorCode } = props;
+  const {
+    headline,
+    trace: rawTrace,
+    messageId,
+    onCopy,
+    compact = false,
+    budgetErrorCode,
+    afterHeadline,
+  } = props;
   // trace/headline are expected to be strings, but defend against callers
   // passing a raw object/array (would crash React error #31 at render time)
   const trace = typeof rawTrace === 'string' || !rawTrace ? rawTrace : JSON.stringify(rawTrace);
@@ -49,6 +57,8 @@ const ErrorTrace = memo(props => {
   return (
     <>
       {budgetMessage || <Box sx={styles.errorWrapper}>{headline || 'Unknown error'}</Box>}
+
+      {afterHeadline}
 
       {trace && trace !== headline && (
         <Box sx={styles.errorStackTrace}>

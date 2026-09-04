@@ -220,7 +220,7 @@ const getStyles = () => ({
     p: 2,
     borderRadius: '0.5rem',
     border: `.0625rem solid ${palette.border.tips}`,
-    background: palette.background.info,
+    background: palette.background.tips.secondary,
     maxHeight: '9.375rem',
     overflowY: 'auto',
   }),

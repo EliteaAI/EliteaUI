@@ -212,6 +212,8 @@ const ToolBaseProperty = memo(props => {
         specifiedProjectId={specifiedProjectId}
         disabled={disableConfigFields || disabled}
         description={description}
+        required={required}
+        hasError={!!toolErrors[k]}
       />
     );
   }

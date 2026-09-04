@@ -21,7 +21,7 @@ const GenerateProjectContextModal = memo(props => {
 
   const handleApprove = useCallback(
     async draftData => {
-      onApply(draftData.project_background || '');
+      onApply(draftData);
     },
     [onApply],
   );

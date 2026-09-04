@@ -2,7 +2,7 @@ export * as ChatButton from './chat-button';
 export * as ChatModal from './chat-modal';
 export * as ChatAttachment from './chat-attachment';
 export { ChatContinue } from './chat-continue';
-export { ErrorTrace, BudgetErrorMessage } from './error-trace';
+export { ErrorTrace, BudgetErrorMessage, ContinuationError } from './error-trace';
 export { BudgetWarningBanner } from './budget-warning';
 export { AskUserAnswerSummary, ChatHitlActions } from './chat-hitl-actions';
 export { SubAgentAccordion } from './sub-agent-section';

@@ -263,7 +263,7 @@ const InputBase = memo(props => {
               sx: styles.inputSlot,
               readOnly: editswitcher,
               onDoubleClick: () => {},
-              disableUnderline,
+              ...(variant !== INPUT_VARIANTS.outlined && disableUnderline != null && { disableUnderline }),
             },
             htmlInput: inputProps,
             formHelperText: {

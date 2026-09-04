@@ -69,7 +69,7 @@ const MaxTokensSection = memo(props => {
           {
             label: 'Default',
             value: 'auto',
-            info: 'System automatically sets the best token limit for this model.',
+            info: 'No custom Elitea limit. The provider and model apply their native output limit.',
           },
           { label: 'Custom', value: 'custom', info: 'Manually set a specific token limit for responses.' },
         ]}

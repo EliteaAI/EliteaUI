@@ -12,8 +12,8 @@ import useCheckPermission from '@/hooks/useCheckPermission';
 import EnableToggleCard from '../project-context/EnableToggleCard';
 
 // Tier 2 of the feature gate. Tier 1 (platform admin) decides which projects see this
-// card at all; the stored preference is per-user, so it follows the user across every
-// project the platform has enabled — same shape as Agent & Pipeline Builder.
+// card at all; the stored preference is per-project (#6303) — saved to module_settings
+// alongside the other module toggles, not to the global author profile.
 const MidturnInjection = memo(() => {
   const { checkPermission } = useCheckPermission();
   const canViewProjectContext = checkPermission(PERMISSIONS.projectContext.view);

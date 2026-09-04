@@ -65,7 +65,7 @@ const PrivatePipelinesList = memo(props => {
 
   // Folder view state
   const { folders } = useEntityFolders(ENTITY_FOLDER_TYPES.pipeline, { includeCounts: true });
-  const { selectedFolderId, selectedFolder, isFolderViewActive, openFolder, closeFolder } =
+  const { selectedFolderId, selectedFolder, isFolderViewActive, openFolder, closeFolder, onFolderDelete } =
     useFolderView(folders);
 
   // Fetch folder items (entity IDs) when folder is selected
@@ -180,6 +180,7 @@ const PrivatePipelinesList = memo(props => {
               specifiedStatus={statuses[0]}
               onFolderSelect={openFolder}
               selectedFolderId={selectedFolderId}
+              onFolderDelete={onFolderDelete}
             />
           ) : (
             <div style={rightInfoPanelStyle}>

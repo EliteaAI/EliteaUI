@@ -219,7 +219,12 @@ const skillsApi = eliteaApi
         },
         invalidatesTags: (result, error, arg) => {
           if (error) return [];
-          return [TAG_TYPE_SKILLS, TAG_TYPE_TOTAL_SKILLS, { type: TAG_TYPE_SKILL_DETAILS, id: arg?.skillId }];
+          return [
+            TAG_TYPE_SKILLS,
+            TAG_TYPE_TOTAL_SKILLS,
+            { type: TAG_TYPE_SKILL_DETAILS, id: arg?.skillId },
+            { type: 'EntityFolder', id: 'LIST_skill' },
+          ];
         },
         onQueryStarted: async (args, { dispatch, getState, queryFulfilled }) => {
           // Only optimistically remove from list when deleting the whole skill.

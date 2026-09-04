@@ -196,7 +196,7 @@ const UserMessage = React.forwardRef((props, ref) => {
               keep influencing the model with no visible trace at all. */}
           {injectedItems.map(item => (
             <Box
-              key={item.uuid}
+              key={item.id}
               sx={styles.injectedChunk}
               data-testid="injected-message-chunk"
             >

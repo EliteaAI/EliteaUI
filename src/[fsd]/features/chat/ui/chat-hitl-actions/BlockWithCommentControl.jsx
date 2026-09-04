@@ -139,7 +139,7 @@ const getStyles = () => ({
     '& .MuiInputBase-root': {
       padding: '0.5rem 0.625rem',
       borderRadius: '0.375rem',
-      backgroundColor: palette.background.default,
+      backgroundColor: palette.background.default.secondary,
       border: `0.0625rem solid ${palette.border?.lines || palette.divider}`,
       fontSize: '0.8125rem',
       color: palette.text.primary,

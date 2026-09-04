@@ -553,7 +553,7 @@ const bucketAccessTableStyle = () => ({
     justifyContent: 'space-between',
     padding: '1rem 1.5rem',
     minHeight: '4.5rem',
-    backgroundColor: palette.background.secondary,
+    backgroundColor: palette.background.default.secondary,
   }),
   sectionTitle: {
     fontWeight: 600,
@@ -580,7 +580,7 @@ const bucketAccessTableStyle = () => ({
     maxWidth: '100%',
     overflow: 'hidden',
     padding: '0 1.5rem 1.5rem',
-    backgroundColor: palette.background.secondary,
+    backgroundColor: palette.background.default.secondary,
   }),
   tableScrollContainer: ({ palette }) => ({
     flex: 1,
@@ -588,7 +588,7 @@ const bucketAccessTableStyle = () => ({
     flexDirection: 'column',
     overflow: 'auto',
     minHeight: 0,
-    backgroundColor: palette.background.secondary,
+    backgroundColor: palette.background.default.secondary,
     borderRadius: '0.5rem',
   }),
   tableBodySx: {
@@ -600,7 +600,7 @@ const bucketAccessTableStyle = () => ({
     position: 'sticky',
     top: 0,
     zIndex: 1,
-    backgroundColor: palette.background.secondary,
+    backgroundColor: palette.background.default.secondary,
   }),
   actionsContainer: {
     display: 'flex',
@@ -643,7 +643,7 @@ const bucketAccessTableStyle = () => ({
     display: 'flex',
     flexDirection: 'column',
     padding: '0 1.5rem 1.5rem',
-    backgroundColor: palette.background.secondary,
+    backgroundColor: palette.background.default.secondary,
     minHeight: '25rem',
   }),
   emptyStateContainer: ({ palette }) => ({
@@ -655,7 +655,7 @@ const bucketAccessTableStyle = () => ({
     paddingTop: '4rem',
     gap: '1rem',
     borderRadius: '0.5rem',
-    backgroundColor: palette.background.emptyState?.default || palette.background.default,
+    backgroundColor: palette.background.section,
   }),
   emptyStateIcon: ({ palette }) => ({
     width: '2.5rem',

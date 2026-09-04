@@ -43,6 +43,24 @@ export const groupBindings = (bindings = []) => {
   return groups;
 };
 
+const WEIGHT_LABEL = {
+  1: 'Low',
+  2: 'Medium',
+  3: 'High',
+  4: 'Critical',
+};
+
+export const getWeightLabel = weight => {
+  if (weight == null) return null;
+  return WEIGHT_LABEL[weight] || `w${weight}`;
+};
+
+export const getTargetLabel = (target, targetOperator) => {
+  if (target == null || !targetOperator) return null;
+  const op = targetOperator === '>=' ? '≥' : targetOperator;
+  return `${op}${target}`;
+};
+
 /** Human-readable engine label for a binding badge. */
 export const getEngineLabel = engine => {
   if (engine === EVAL_ENGINE.ai) return 'AI';

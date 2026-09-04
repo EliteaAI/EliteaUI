@@ -438,8 +438,8 @@ export default function AutoCompleteDropDown({
               </Typography>
             )}
             {state.selected && (
-              <MenuItemIcon>
-                <CheckedIcon sx={styles.checkIconSx} />
+              <MenuItemIcon sx={styles.checkIconSx}>
+                <CheckedIcon />
               </MenuItemIcon>
             )}
           </Box>
@@ -471,7 +471,7 @@ const autoCompleteDropDownStyled = slotPropsProp => ({
     slotPropsProp.Chip?.sx,
   ].filter(Boolean),
   paperDefaultSx: ({ palette }) => ({
-    background: palette.background.secondary,
+    background: palette.background.default.secondary,
     border: `0.0625rem solid ${palette.border.lines}`,
     boxShadow: palette.boxShadow.default,
     borderRadius: '0.5rem',
@@ -508,7 +508,9 @@ const autoCompleteDropDownStyled = slotPropsProp => ({
     };
   },
   checkIconSx: ({ palette }) => ({
-    fontSize: '1rem',
-    fill: slotPropsProp.Li?.CheckIcon?.fill ?? palette.icon.fill.secondary,
+    '& svg': {
+      fontSize: '1rem',
+      fill: slotPropsProp.Li?.CheckIcon?.fill ?? palette.icon.fill.secondary,
+    },
   }),
 });

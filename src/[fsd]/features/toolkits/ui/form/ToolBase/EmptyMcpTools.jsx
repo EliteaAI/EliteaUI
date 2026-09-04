@@ -38,7 +38,7 @@ const getStyles = theme => ({
     padding: '0.75rem 1rem',
     border: `0.0625rem solid ${palette.border.tips}`,
     borderRadius: '0.5rem',
-    background: palette.background.tips,
+    background: palette.background.tips.main,
   }),
   info: {
     width: 14,

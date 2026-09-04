@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 
 import YAML from 'js-yaml';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { useParams } from 'react-router-dom';
 
 import { deepClone } from '@mui/x-data-grid/internals';
@@ -25,6 +25,7 @@ import {
   useUpdateApplicationVersionMutation,
 } from '@/api/applications.js';
 import { useListModelsQuery } from '@/api/configurations';
+import { useAuthorModuleSettingsQuery } from '@/api/social';
 import { PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants.js';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useViewMode from '@/hooks/useViewMode';
@@ -33,10 +34,13 @@ import { actions as editorActions } from '@/slices/pipelineEditor';
 
 export const useCreateApplicationInitialValues = forPipeline => {
   const selectedProjectId = useSelectedProjectId();
-  const user = useSelector(state => state.user);
+  // #6285: module toggles are scoped per project, not sourced from the global user redux state.
+  const { data: moduleSettingsData } = useAuthorModuleSettingsQuery(selectedProjectId, {
+    skip: !selectedProjectId,
+  });
   const defaultAgentInternalTools = useMemo(
-    () => InternalToolsConstants.getEnabledAgentInternalToolNames(user?.personalization ?? {}),
-    [user?.personalization],
+    () => InternalToolsConstants.getEnabledAgentInternalToolNames(moduleSettingsData ?? {}),
+    [moduleSettingsData],
   );
   const { data: modelsData = { items: [], total: 0 } } = useListModelsQuery(
     {

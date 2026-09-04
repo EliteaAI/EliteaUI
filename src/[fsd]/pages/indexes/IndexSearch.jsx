@@ -8,6 +8,7 @@ import { Box, CircularProgress, Typography } from '@mui/material';
 
 import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
 import {
+  hasRetainedIndexData,
   indexSearchBlockedReason,
   isAbandonedRun,
 } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexDetails.helpers';
@@ -91,6 +92,7 @@ const IndexSearch = memo(() => {
     indexOutlivingRefetches?.metadata?.state,
     selectedIndexTools,
     isAbandonedRun(indexOutlivingRefetches),
+    hasRetainedIndexData(indexOutlivingRefetches?.metadata),
   );
 
   return (

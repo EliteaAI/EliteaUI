@@ -10,6 +10,10 @@ const RouteDefinitions = {
   ApplicationsWithTab: '/agents/:tab',
   CreateApplication: '/agents/create',
   ApplicationsDetail: '/agents/:tab/:agentId',
+  ApplicationsEvaluate: '/agents/:tab/:agentId/evaluate',
+  ApplicationsEvaluateSuite: '/agents/:tab/:agentId/evaluate/:suiteId',
+  ApplicationsEvaluateDatasets: '/agents/:tab/:agentId/evaluate/datasets',
+  ApplicationsEvaluateDimensions: '/agents/:tab/:agentId/evaluate/dimensions',
 
   Skills: '/skills',
   SkillsWithTab: '/skills/:tab',
@@ -90,6 +94,7 @@ export const BLOCK_NAV_PATTERNS = [
   RouteDefinitions.CreateApplication,
   RouteDefinitions.ApplicationsDetail,
   `${RouteDefinitions.ApplicationsDetail}/:versionId`,
+  RouteDefinitions.ApplicationsEvaluateSuite,
   RouteDefinitions.CreateSkill,
   RouteDefinitions.SkillsDetail,
   `${RouteDefinitions.SkillsDetail}/:versionId`,

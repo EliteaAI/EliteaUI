@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { isPropertyVisible } from '../toolBase.helpers';
+import { isPropertyVisible, validateRequiredFields } from '../toolBase.helpers';
 
 const visible = overrides =>
   isPropertyVisible({
@@ -58,5 +58,38 @@ describe('isPropertyVisible', () => {
   it('keeps only required fields in required-only mode', () => {
     expect(visible({ showOnlyRequiredFields: true })).toBe(false);
     expect(visible({ showOnlyRequiredFields: true, required: true })).toBe(true);
+  });
+});
+
+describe('validateRequiredFields secret headers', () => {
+  const optionalHeadersSchema = {
+    properties: {
+      headers: { type: 'object', ui_component: 'secret_headers' },
+    },
+  };
+
+  it.each([{}, { headers: {} }])('allows omitted or empty optional headers', settings => {
+    expect(validateRequiredFields(optionalHeadersSchema, settings)).toEqual({ headers: false });
+  });
+
+  it('allows valid populated optional headers', () => {
+    expect(
+      validateRequiredFields(optionalHeadersSchema, { headers: { 'X-Api-Key': '{{secret.api_key}}' } }),
+    ).toEqual({ headers: false });
+  });
+
+  it.each([
+    [{ 'bad header': '{{secret.api_key}}' }],
+    [{ 'line1\r\nInjected-Header': '{{secret.api_key}}' }],
+    [{ 'X-Api-Key': '' }],
+    [{ 'X-Api-Key': 'secret\r\nInjected-Header: value' }],
+  ])('rejects an invalid row in an optional headers collection', headers => {
+    expect(validateRequiredFields(optionalHeadersSchema, { headers })).toEqual({ headers: true });
+  });
+
+  it('still requires a headers collection when the schema marks it required', () => {
+    const requiredHeadersSchema = { ...optionalHeadersSchema, required: ['headers'] };
+
+    expect(validateRequiredFields(requiredHeadersSchema, { headers: {} })).toEqual({ headers: true });
   });
 });

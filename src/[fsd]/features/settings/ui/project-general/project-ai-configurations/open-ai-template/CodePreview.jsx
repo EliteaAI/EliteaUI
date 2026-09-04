@@ -45,7 +45,6 @@ const CodePreview = memo(props => {
         selectedModel={selectedModel}
         onChangeModel={onChangeModel}
       />
-
       <Box sx={styles.contentContainer}>
         {!hasModelSelected ? (
           <CodePreviewEmpty />

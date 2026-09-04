@@ -389,6 +389,7 @@ const styles = {
   },
   defaultStep: ({ palette }) => ({
     border: `1px solid ${palette.step.default.border}`,
+    backgroundColor: palette.step.default.background,
     '& .MuiStepLabel-iconContainer': {
       backgroundColor: palette.step.default.icon,
       color: palette.secondary.main,
@@ -398,9 +399,10 @@ const styles = {
     },
   }),
   activeStep: ({ palette }) => ({
-    border: `1px solid ${palette.step.active}`,
+    border: `1px solid ${palette.step.active.border}`,
+    backgroundColor: palette.step.active.background,
     '& .MuiStepLabel-iconContainer': {
-      backgroundColor: palette.step.active,
+      backgroundColor: palette.step.active.icon,
       color: palette.text.tag.selected,
     },
     '& .MuiStepLabel-label.Mui-active': {
@@ -423,7 +425,7 @@ const styles = {
     overflowY: 'auto',
     boxSizing: 'border-box',
     padding: '0.875rem 1.5rem !important',
-    background: `${palette.background.secondary} !important`,
+    background: `${palette.background.default.secondary} !important`,
     flex: 1,
     minHeight: 0,
   }),

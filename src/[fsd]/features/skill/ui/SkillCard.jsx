@@ -180,7 +180,7 @@ const skillCardStyles = () => ({
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
-    backgroundColor: palette.background.secondary,
+    backgroundColor: palette.background.default.secondary,
   }),
   skillIcon: {
     width: '1.25rem',

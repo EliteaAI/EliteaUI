@@ -123,7 +123,7 @@ const componentStyles = () => ({
     paddingTop: '1.5rem',
     boxSizing: 'border-box',
     overflow: 'hidden',
-    backgroundColor: palette.background.chatBkg,
+    backgroundColor: palette.background.tabPanel,
   }),
   title: {
     marginBottom: '1rem',
@@ -248,7 +248,7 @@ const componentStyles = () => ({
   itemsContainer: ({ palette }) => ({
     width: '100%',
     borderTop: `0.0625rem solid ${palette.border.table}`,
-    background: palette.background.eliteaDefault,
+    background: palette.background.default.primary,
     padding: '1rem 1.5rem 1rem 1.5rem',
     overflowY: 'auto',
     overflowX: 'hidden',

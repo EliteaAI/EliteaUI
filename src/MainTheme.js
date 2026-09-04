@@ -72,7 +72,7 @@ const getDesignTokens = mode => ({
     MuiDialog: {
       styleOverrides: {
         paper: ({ theme }) => ({
-          background: theme.palette.background.secondary,
+          background: theme.palette.background.default.secondary,
           borderRadius: '1rem',
           border: '0.0625rem solid',
           borderColor: theme.palette.border.lines,
@@ -147,7 +147,7 @@ const getDesignTokens = mode => ({
           background: theme.palette.background.avatar,
         }),
         outlined: ({ theme }) => ({
-          background: theme.palette.background.eliteaDefault,
+          background: theme.palette.background.default.primary,
           color: theme.palette.text.secondary,
         }),
       },
@@ -155,7 +155,7 @@ const getDesignTokens = mode => ({
     MuiPaper: {
       styleOverrides: {
         root: ({ theme }) => ({
-          background: theme.palette.background.eliteaDefault,
+          background: theme.palette.background.default.primary,
         }),
       },
     },
@@ -170,7 +170,7 @@ const getDesignTokens = mode => ({
     MuiMenu: {
       styleOverrides: {
         paper: ({ theme }) => ({
-          background: theme.palette.background.secondary,
+          background: theme.palette.background.default.secondary,
           borderRadius: '0.5rem',
           border: `0.0625rem solid ${theme.palette.border.lines}`,
         }),
@@ -236,7 +236,7 @@ const getDesignTokens = mode => ({
     MuiDrawer: {
       styleOverrides: {
         paper: ({ theme }) => ({
-          background: theme.palette.background.secondary, // Your color here
+          background: theme.palette.background.default.secondary, // Your color here
         }),
         paperAnchorLeft: ({ theme }) => ({
           borderRight: `0.0625rem solid ${theme.palette.border.lines}`,
@@ -249,7 +249,7 @@ const getDesignTokens = mode => ({
     MuiAppBar: {
       styleOverrides: {
         root: ({ theme }) => ({
-          background: theme.palette.background.eliteaDefault, // Your color here
+          background: theme.palette.background.default.primary, // Your color here
         }),
       },
     },
@@ -281,7 +281,7 @@ const getDesignTokens = mode => ({
     MuiAutocomplete: {
       styleOverrides: {
         paper: ({ theme }) => ({
-          backgroundColor: theme.palette.background.secondary,
+          backgroundColor: theme.palette.background.default.secondary,
           border: `0.0625rem solid ${theme.palette.border.lines}`,
           borderRadius: '0.5rem',
           boxShadow: theme.palette.boxShadow.tagEditorPaper,

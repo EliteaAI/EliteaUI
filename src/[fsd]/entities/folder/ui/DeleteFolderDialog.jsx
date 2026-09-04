@@ -9,7 +9,7 @@ import { FOLDER_ENTITY_LABELS } from '../lib/constants';
 import { useDeleteFolder } from '../lib/hooks';
 
 const DeleteFolderDialog = memo(props => {
-  const { open, onClose, folder, entityType } = props;
+  const { open, onClose, folder, entityType, onDelete } = props;
 
   const { deleteFolder, isLoading } = useDeleteFolder();
   const { toastSuccess, toastError } = useToast();
@@ -22,11 +22,11 @@ const DeleteFolderDialog = memo(props => {
     try {
       await deleteFolder({ folderId: folder.id, entityType });
       toastSuccess('Folder deleted successfully');
-      onClose?.();
+      onDelete?.(folder);
     } catch {
       toastError('Failed to delete folder');
     }
-  }, [folder, entityType, deleteFolder, toastSuccess, toastError, onClose]);
+  }, [folder, entityType, deleteFolder, toastSuccess, toastError, onDelete]);
 
   const extraContent = (
     <Alert
@@ -61,8 +61,8 @@ DeleteFolderDialog.displayName = 'DeleteFolderDialog';
 const styles = {
   alert: ({ palette }) => ({
     borderRadius: '0.5rem',
-    border: `0.0625rem solid ${palette.info.secondary}`,
-    backgroundColor: palette.background.info,
+    border: `0.0625rem solid ${palette.alert.info.border}`,
+    backgroundColor: palette.alert.info.background,
     padding: '0.75rem 1rem',
     gap: '0.75rem',
     alignItems: 'flex-start',
@@ -75,7 +75,7 @@ const styles = {
       '& .MuiSvgIcon-root': {
         width: '0.875rem',
         height: '0.875rem',
-        color: palette.info.main,
+        color: palette.alert.info.icon,
       },
     },
     '& .MuiAlert-message': {

@@ -58,7 +58,7 @@ const CronSelect = memo(props => {
       slotProps={{
         paper: {
           sx: ({ palette }) => ({
-            background: palette.background.secondary,
+            background: palette.background.default.secondary,
             border: `0.0625rem solid ${palette.border.lines}`,
             boxShadow: palette.boxShadow.default,
             borderRadius: '0.5rem',

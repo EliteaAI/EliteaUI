@@ -681,7 +681,7 @@ const mermaidDiagramOutputStyles = (theme, isValidCode, errorMessage, widthsValu
     alignItems: 'center',
     boxSizing: 'border-box',
     overflow: 'scroll',
-    backgroundColor: palette.background.default,
+    backgroundColor: palette.background.default.secondary,
   }),
   errorMessageBox: {
     width: '100%',
@@ -695,7 +695,7 @@ const mermaidDiagramOutputStyles = (theme, isValidCode, errorMessage, widthsValu
     lineHeight: 1.2,
   },
   infoIcon: {
-    fill: theme.palette.info.main,
+    fill: theme.palette.icon.fill.info,
   },
   infoTooltip: {
     display: 'inline-flex',

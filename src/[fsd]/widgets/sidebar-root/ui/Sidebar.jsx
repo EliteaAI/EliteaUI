@@ -80,7 +80,7 @@ const sideBarStyles = sideBarCollapsed => ({
     justifyContent: 'center',
     alignItems: 'center',
     cursor: 'pointer',
-    background: palette.background.secondary,
+    background: palette.background.default.secondary,
     zIndex: 2101, // Above drawer (1200) but below modals
     pointerEvents: 'auto',
   }),

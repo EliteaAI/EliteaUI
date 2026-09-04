@@ -100,7 +100,7 @@ const styles = {
   cover: {
     width: '100%',
     height: '100%',
-    backgroundColor: 'background.default',
+    backgroundColor: 'background.secondary',
     borderRadius: 'calc(1.5rem - 1px)',
     boxSizing: 'border-box',
     display: 'flex',

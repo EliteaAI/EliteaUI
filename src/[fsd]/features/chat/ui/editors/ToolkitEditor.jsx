@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
@@ -36,7 +36,17 @@ const getToolkitNameFromType = (label, isMCP) => {
     }
   }
 };
-const ToolkitEditor = ({ toolkit, onCloseToolkitEditor, onToolkitCreated, onToolkitUpdated, isVisible }) => {
+const ToolkitEditor = memo(props => {
+  const {
+    toolkit,
+    onCloseToolkitEditor,
+    onToolkitCreated,
+    onToolkitUpdated,
+    isVisible,
+    onDirtyStateChange,
+    disableNavBlocking = false,
+  } = props;
+
   const trackEvent = useTrackEvent();
 
   const [isDirty, setIsDirty] = useState(false);
@@ -242,6 +252,8 @@ const ToolkitEditor = ({ toolkit, onCloseToolkitEditor, onToolkitCreated, onTool
       isVisible={isVisible}
       isDirty={isDirty}
       setIsDirty={setIsDirty}
+      onDirtyStateChange={onDirtyStateChange}
+      disableNavBlocking={disableNavBlocking}
       onClose={onCloseToolkitEditor}
       title={toolkitName}
       onDiscard={handleDiscard}
@@ -349,7 +361,9 @@ const ToolkitEditor = ({ toolkit, onCloseToolkitEditor, onToolkitCreated, onTool
       />
     </BaseEditor>
   );
-};
+});
+
+ToolkitEditor.displayName = 'ToolkitEditor';
 
 /** @type {MuiSx} */
 const toolkitEditorStyles = () => ({

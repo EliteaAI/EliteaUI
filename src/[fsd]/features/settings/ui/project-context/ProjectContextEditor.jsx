@@ -2,10 +2,14 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Box, Tooltip, Typography } from '@mui/material';
 
-import { PROJECT_CONTEXT_MAX_LEN } from '@/[fsd]/features/settings/lib/constants/projectContext.constants';
+import {
+  PROJECT_CONTEXT_ACTIVATION_DESCRIPTION_MAX_LEN,
+  PROJECT_CONTEXT_MAX_LEN,
+} from '@/[fsd]/features/settings/lib/constants/projectContext.constants';
 import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
-import { Banner, Button, Field } from '@/[fsd]/shared/ui';
+import { Banner, Button, Field, Input } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import { INPUT_VARIANTS } from '@/[fsd]/shared/ui/input';
 import Markdown from '@/[fsd]/shared/ui/markdown';
 import TabGroupButton from '@/[fsd]/shared/ui/tab-group-button/TabGroupButton';
 import { useUpdateProjectContextMutation } from '@/api/projectContext';
@@ -35,6 +39,7 @@ const ProjectContextEditor = memo(props => {
     inlineMode,
     onDirtyChange,
     saveRef,
+    discardRef,
   } = props;
   const { toastSuccess, toastError, toastInfo } = useToast();
   const fileInputRef = useRef(null);
@@ -43,6 +48,9 @@ const ProjectContextEditor = memo(props => {
   const [updateProjectContext, { isLoading: isSaving }] = useUpdateProjectContextMutation();
 
   const [content, setContent] = useState(serverData?.content ?? '');
+  const [activationDescription, setActivationDescription] = useState(
+    serverData?.activation_description ?? '',
+  );
   const [mode, setMode] = useState('edit');
   const [isEditorFocused, setIsEditorFocused] = useState(false);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
@@ -52,8 +60,9 @@ const ProjectContextEditor = memo(props => {
   useEffect(() => {
     if (!isDirty && serverData?.content !== undefined) {
       setContent(serverData.content ?? '');
+      setActivationDescription(serverData.activation_description ?? '');
     }
-  }, [serverData?.content, isDirty]);
+  }, [serverData?.content, serverData?.activation_description, isDirty]);
 
   const blockOptions = useMemo(
     () => ({
@@ -72,6 +81,7 @@ const ProjectContextEditor = memo(props => {
   }, [openAiModal]);
 
   const limitReached = content.length >= MAX_CHARS;
+  const activationDescriptionRequired = Boolean(content.trim()) && !activationDescription.trim();
 
   const markdownExtensions = useMemo(() => [markdown()], []);
 
@@ -100,12 +110,18 @@ const ProjectContextEditor = memo(props => {
     setIsDirty(true);
   }, []);
 
+  const handleActivationDescriptionChange = useCallback(event => {
+    setActivationDescription(event.target.value);
+    setIsDirty(true);
+  }, []);
+
   const handleModeChange = useCallback((_e, newMode) => {
     setMode(newMode);
   }, []);
 
-  const handleAIGenerated = useCallback(generatedContent => {
-    setContent(generatedContent);
+  const handleAIGenerated = useCallback(draft => {
+    setContent(draft.project_background || '');
+    setActivationDescription(draft.activation_description || '');
     setIsAiModalOpen(false);
     setIsDirty(true);
   }, []);
@@ -113,10 +129,15 @@ const ProjectContextEditor = memo(props => {
   const handleAIEditApplySave = useCallback(
     async suggested => {
       const enabled = serverData?.enabled ?? true;
-      await updateProjectContext({ projectId, content: suggested, enabled }).unwrap();
+      await updateProjectContext({
+        projectId,
+        content: suggested.project_background,
+        activation_description: suggested.activation_description?.trim(),
+        enabled,
+      }).unwrap();
       toastSuccess('Project Context saved');
       setBlockNav(false);
-      onNavigate('saved');
+      onNavigate?.('saved');
     },
     [serverData, updateProjectContext, projectId, toastSuccess, setBlockNav, onNavigate],
   );
@@ -156,11 +177,16 @@ const ProjectContextEditor = memo(props => {
     if (!canEdit) return;
     const enabled = serverData?.enabled ?? true;
     try {
-      await updateProjectContext({ projectId, content, enabled }).unwrap();
+      await updateProjectContext({
+        projectId,
+        content,
+        activation_description: activationDescription.trim(),
+        enabled,
+      }).unwrap();
       toastSuccess('Project Context saved');
       setIsDirty(false);
       setBlockNav(false);
-      onNavigate('saved');
+      onNavigate?.('saved');
     } catch {
       toastError('Failed to save Project Context');
     }
@@ -169,6 +195,7 @@ const ProjectContextEditor = memo(props => {
     updateProjectContext,
     projectId,
     content,
+    activationDescription,
     serverData,
     toastSuccess,
     toastError,
@@ -197,19 +224,27 @@ const ProjectContextEditor = memo(props => {
   const handleCancel = useCallback(() => {
     setIsDirty(false);
     setBlockNav(false);
-    onNavigate('empty');
+    onNavigate?.('empty');
   }, [setBlockNav, onNavigate]);
 
   const handleDiscard = useCallback(() => {
+    setContent(serverData?.content ?? '');
+    setActivationDescription(serverData?.activation_description ?? '');
     setIsDirty(false);
     setBlockNav(false);
-    onNavigate('saved');
-  }, [setBlockNav, onNavigate]);
+    onNavigate?.('saved');
+  }, [serverData, setBlockNav, onNavigate]);
 
   const handleBack = useCallback(() => {
     const hasServerContent = Boolean(serverData?.content?.trim());
-    onNavigate(hasServerContent ? 'saved' : 'empty');
+    onNavigate?.(hasServerContent ? 'saved' : 'empty');
   }, [serverData, onNavigate]);
+
+  useEffect(() => {
+    if (discardRef) {
+      discardRef.current = handleDiscard;
+    }
+  }, [handleDiscard, discardRef]);
 
   const breadcrumbTitle = (
     <Box sx={styles.breadcrumb}>
@@ -241,7 +276,7 @@ const ProjectContextEditor = memo(props => {
       <Button.BaseBtn
         data-testid="project-context-save-button"
         variant={BUTTON_VARIANTS.contained}
-        disabled={!isDirty || isSaving}
+        disabled={!isDirty || isSaving || activationDescriptionRequired}
         onClick={handleSave}
       >
         Save
@@ -273,6 +308,29 @@ const ProjectContextEditor = memo(props => {
             variant="info"
           />
         )}
+        <Box sx={styles.activationDescriptionField}>
+          <Typography variant="headingSmall">When should this context be used?</Typography>
+          <Input.InputBase
+            variant={INPUT_VARIANTS.outlined}
+            fullWidth
+            size="small"
+            value={activationDescription}
+            onChange={handleActivationDescriptionChange}
+            disabled={!canEdit}
+            error={activationDescriptionRequired}
+            placeholder="For example: Use when the user asks to generate, rewrite, or evaluate jokes."
+            helperText={
+              activationDescriptionRequired
+                ? 'Describe which requests should load this Project Context.'
+                : `${activationDescription.length}/${PROJECT_CONTEXT_ACTIVATION_DESCRIPTION_MAX_LEN}`
+            }
+            inputProps={{
+              maxLength: PROJECT_CONTEXT_ACTIVATION_DESCRIPTION_MAX_LEN,
+              'data-testid': 'project-context-activation-description',
+            }}
+            sx={styles.textField}
+          />
+        </Box>
         <Box sx={styles.editorHeader}>
           <TabGroupButton
             value={mode}
@@ -286,6 +344,7 @@ const ProjectContextEditor = memo(props => {
                 {content.trim() ? (
                   <AIEditProjectContextButton
                     currentContent={content}
+                    currentActivationDescription={activationDescription}
                     onApplySave={handleAIEditApplySave}
                     defaultOpen={openAiEditModal}
                   />
@@ -418,6 +477,11 @@ const getStyles = (limitReached, isEditorFocused) => ({
     gap: '0.5rem',
     flexShrink: 0,
   },
+  activationDescriptionField: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.5rem',
+  },
   editorWrapper: ({ palette }) => ({
     flex: 1,
     minHeight: '12rem',
@@ -437,7 +501,7 @@ const getStyles = (limitReached, isEditorFocused) => ({
     '& .cm-editor': {
       flex: 1,
       minHeight: 0,
-      backgroundColor: palette.background.codeMirrorEditor,
+      backgroundColor: palette.background.tabPanel,
     },
     '&:focus-within': {
       borderColor: palette.primary.main,
@@ -486,4 +550,37 @@ const getStyles = (limitReached, isEditorFocused) => ({
     alignItems: 'center',
     gap: '0.75rem',
   },
+  textField: ({ palette }) => ({
+    '& .MuiInputBase-root': {
+      padding: '0.5rem 0',
+    },
+    '& .MuiOutlinedInput-root': {
+      backgroundColor: palette.background.userInputBackground,
+      borderRadius: '0.5rem',
+      fontSize: '0.875rem',
+      color: palette.text.secondary,
+      '& .MuiOutlinedInput-notchedOutline': {
+        borderColor: palette.border.lines,
+      },
+      '&:hover .MuiOutlinedInput-notchedOutline': {
+        borderColor: palette.border.lines,
+      },
+      '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+        borderColor: palette.primary.main,
+        borderWidth: '0.0625rem',
+      },
+    },
+    '& .MuiFormHelperText-root': {
+      fontSize: '0.625rem',
+      margin: '0.125rem 0 0',
+      color: palette.text.primary,
+      visibility: 'visible',
+      lineHeight: '1rem',
+      textAlign: 'right',
+    },
+    '& .MuiFormHelperText-root.Mui-error': {
+      visibility: 'visible',
+      color: palette.error.main,
+    },
+  }),
 });

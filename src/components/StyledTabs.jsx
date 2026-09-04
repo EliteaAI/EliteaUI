@@ -311,7 +311,7 @@ export const StyledTabBar = styled(Box)(({ theme }) => ({
   borderBottomWidth: '0.0625rem',
   borderBottomColor: theme.palette.border.sidebarDivider,
   width: '100%',
-  background: theme.palette.background.eliteaDefault,
+  background: theme.palette.background.default.primary,
 }));
 
 /** @type {MuiSx} */
@@ -346,7 +346,7 @@ const styledPureTabsStyles = (componentHeight, shouldShowLabel, tabSX, isCreateP
     borderBottomWidth: '0.0625rem',
     borderBottomColor: palette.border.sidebarDivider,
     width: '100%',
-    background: palette.background.eliteaDefault,
+    background: palette.background.default.primary,
   }),
   tabBar: ({ palette }) => ({
     display: 'flex',

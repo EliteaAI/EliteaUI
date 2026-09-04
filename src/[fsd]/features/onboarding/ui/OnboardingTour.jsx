@@ -141,7 +141,7 @@ const styles = {
     fontSize: '1rem',
   },
   tourDialogPaper: {
-    backgroundColor: 'background.default',
+    backgroundColor: 'background.secondary',
   },
   tourDialogHeader: {
     display: 'flex',
@@ -156,7 +156,7 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'background.default',
+    backgroundColor: 'background.secondary',
   },
   tourContentWrapper: {
     display: 'flex',

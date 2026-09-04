@@ -60,6 +60,7 @@ const BaseEditor = ({
   formContent,
   isPublic,
   contentSX,
+  disableNavBlocking = false,
   titleTestId,
   subtitleTestId,
   closeButtonTestId,
@@ -67,6 +68,7 @@ const BaseEditor = ({
   discardButtonTestId,
   discardModalTestId,
   discardConfirmButtonTestId,
+  isFormikContext = true,
 }) => {
   const theme = useTheme();
   const { isSmallWindow } = useIsSmallWindow();
@@ -75,7 +77,10 @@ const BaseEditor = ({
   const [showWarning, setShowWarning] = useState(false);
 
   // Use the editor navigation blocking hook
-  const { setBlockNav } = useEditorNavBlocking(isVisible, isDirty);
+  const { setBlockNav } = useEditorNavBlocking(
+    disableNavBlocking ? false : isVisible,
+    disableNavBlocking ? false : isDirty,
+  );
 
   const handleCancel = useCallback(() => {
     if (isDirty && !isPublic) {
@@ -112,8 +117,10 @@ const BaseEditor = ({
   const handleDiscard = useCallback(() => {
     onDiscard?.();
     setIsDirty?.(false);
-    setBlockNav(false);
-  }, [onDiscard, setIsDirty, setBlockNav]);
+    if (!disableNavBlocking) {
+      setBlockNav(false);
+    }
+  }, [onDiscard, setIsDirty, disableNavBlocking, setBlockNav]);
 
   const styles = baseEditorStyles(isVisible, isSmallWindow, theme);
 
@@ -125,7 +132,10 @@ const BaseEditor = ({
         validationSchema={validationSchema}
       >
         <Form style={styles.form}>
-          <DirtyDetector setDirty={handleIsDirtyChange} />
+          <DirtyDetector
+            setDirty={handleIsDirtyChange}
+            isFormikContext={isFormikContext}
+          />
           <EditorHeader
             title={title}
             subtitle={subtitle}
@@ -133,6 +143,7 @@ const BaseEditor = ({
             onDiscard={handleDiscard}
             saveButton={saveButton}
             isPublic={isPublic}
+            isDirty={isDirty}
             titleTestId={titleTestId}
             subtitleTestId={subtitleTestId}
             closeButtonTestId={closeButtonTestId}

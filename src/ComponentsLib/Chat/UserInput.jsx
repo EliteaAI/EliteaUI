@@ -572,7 +572,9 @@ const userInputStyles = (isFocused, isDragOver, isRecording) => {
   const getInputBackground = palette => {
     if (!isFocused && !isRecording) return palette.background.card.default;
 
-    return palette.mode === 'light' ? palette.background.secondary : palette.background.onboardingBody;
+    return palette.mode === 'light'
+      ? palette.background.default.secondary
+      : palette.background.onboardingBody;
   };
 
   const getInputBorder = palette => {

@@ -11,7 +11,7 @@ import BriefcaseIcon from '@/components/Icons/BriefcaseIcon.jsx';
 import CapabilityChip from './CapabilityChip';
 
 const LLMModelsMenu = memo(props => {
-  const { anchorEl, onClose, models = [], selectedModel, onSelectModel } = props;
+  const { anchorEl, onClose, models = [], selectedModel, onSelectModel, menuProps = {} } = props;
 
   const open = Boolean(anchorEl);
 
@@ -20,25 +20,23 @@ const LLMModelsMenu = memo(props => {
     onClose();
   };
 
+  const anchorOrigin = menuProps.anchorOrigin ?? { vertical: 'top', horizontal: 'right' };
+  const transformOrigin = menuProps.transformOrigin ?? { vertical: 'bottom', horizontal: 'right' };
+  const paperSx = menuProps.paperSx ?? {};
+
   return (
     <Menu
       anchorEl={anchorEl}
       open={open}
       onClose={onClose}
-      anchorOrigin={{
-        vertical: 'top',
-        horizontal: 'right',
-      }}
-      transformOrigin={{
-        vertical: 'bottom',
-        horizontal: 'right',
-      }}
+      anchorOrigin={anchorOrigin}
+      transformOrigin={transformOrigin}
       slotProps={{
         list: {
           'aria-labelledby': 'model-selector-button',
         },
         paper: {
-          sx: styles.menuPaper,
+          sx: [styles.menuPaper, paperSx],
         },
       }}
     >

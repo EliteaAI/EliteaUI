@@ -122,7 +122,7 @@ const moveToFolderButtonStyles = () => ({
   menuPaper: ({ palette }) => ({
     minWidth: '12rem',
     maxWidth: '18rem',
-    backgroundColor: palette.background.secondary,
+    backgroundColor: palette.background.default.secondary,
     border: `0.0625rem solid ${palette.border.lines}`,
   }),
   menuList: {

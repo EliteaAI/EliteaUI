@@ -16,7 +16,14 @@ import FolderItem from './FolderItem';
 const VISIBLE_FOLDER_COUNT = 6;
 
 const FolderSection = memo(props => {
-  const { entityType, title = 'Folders', onFolderSelect, selectedFolderId, onExpandChange } = props;
+  const {
+    entityType,
+    title = 'Folders',
+    onFolderSelect,
+    selectedFolderId,
+    onExpandChange,
+    onFolderDelete,
+  } = props;
 
   const styles = folderSectionStyles();
 
@@ -92,6 +99,14 @@ const FolderSection = memo(props => {
   const handleCloseDeleteDialog = useCallback(() => {
     setDeleteFolder(null);
   }, []);
+
+  const onDeleteFolder = useCallback(
+    folder => {
+      handleCloseDeleteDialog();
+      onFolderDelete?.(folder);
+    },
+    [handleCloseDeleteDialog, onFolderDelete],
+  );
 
   return (
     <Box sx={styles.container}>
@@ -180,6 +195,7 @@ const FolderSection = memo(props => {
       <DeleteFolderDialog
         open={!!deleteFolder}
         onClose={handleCloseDeleteDialog}
+        onDelete={onDeleteFolder}
         folder={deleteFolder}
         entityType={entityType}
       />

@@ -286,7 +286,7 @@ const settingsPageStyles = () => ({
     width: SettingsLayoutConstants.SETTINGS_LAYOUT.DRAWER_WIDTH,
     flexShrink: 0,
     height: '100%',
-    backgroundColor: palette.background.secondary,
+    backgroundColor: palette.background.default.secondary,
     borderRight: `0.0625rem solid ${palette.border.table}`,
     boxSizing: 'border-box',
   }),

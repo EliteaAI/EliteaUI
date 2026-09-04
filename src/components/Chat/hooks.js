@@ -4,6 +4,7 @@ import { v4 as uuidv4, v4 } from 'uuid';
 
 import { useTrackEvent } from '@/GA';
 import { ChatHelpers } from '@/[fsd]/features/chat/lib/helpers';
+import { normalizeContinuationError } from '@/[fsd]/features/chat/lib/helpers/continuationError.helpers.js';
 import {
   agentPathsEqual,
   getSubAgentInstanceKey,
@@ -46,6 +47,12 @@ import { useIsFrom } from '@/hooks/useIsFromSpecificPageHooks';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useSocket, { useManualSocket } from '@/hooks/useSocket';
 import RouteDefinitions from '@/routes';
+
+import {
+  findChatSocketMessageIndex,
+  isLocalAssistantPlaceholder,
+  mergeChatSocketMessage,
+} from './chatSocket.helpers';
 
 export { useCtrlEnterKeyEventsHandler };
 
@@ -205,69 +212,70 @@ export const useStopStreaming = ({
   };
 };
 
+const updateChatHistoryState = (setChatHistoryRef, chatHistoryRef, updater) => {
+  setChatHistoryRef.current?.(prevState => {
+    const nextState = updater(prevState);
+    // Socket frames are ordered, but React may batch their state updates. Keep
+    // the socket-side ref on the same canonical array immediately so the next
+    // frame never resolves against an older message order.
+    chatHistoryRef.current = nextState;
+    return nextState;
+  });
+};
+
 const addMessageToChatHistory = ({
-  msgIndex,
   msg,
+  chatHistoryRef,
   setChatHistoryRef,
   participantsRef,
   question_id,
   participant_id,
   activeParticipantRef,
 }) => {
-  msgIndex === -1
-    ? setChatHistoryRef.current?.(prevState => {
-        // Guard against duplicate insertion: when multiple socket events race with a stale
-        // chatHistoryRef (e.g. StartTask + AgentLlmChunk arriving before React re-renders after
-        // a POST-API-triggered message), both see msgIndex=-1 and would splice the same message
-        // twice. If the message already exists in the latest prevState, update it instead.
-        const existingIdx = prevState.findIndex(item => item.id === msg.id);
-        if (existingIdx !== -1) {
-          const newState = [...prevState];
-          newState[existingIdx] = { ...newState[existingIdx], ...msg };
-          return newState;
-        }
-        if (question_id) {
-          const questionIndex = prevState.findIndex(
-            item => item.role === ROLES.User && item.id === question_id,
-          );
-          if (questionIndex !== -1) {
-            const newState = [...prevState];
-            const theParticipant = participantsRef.current?.find(
-              participant => participant.id === participant_id,
-            );
-            msg.participant = { ...(theParticipant || { entity_meta: {}, meta: {} }) };
-            newState.splice(questionIndex + 1, 0, msg);
-            return newState;
-          } else {
-            return prevState;
-          }
-        } else {
-          return [...prevState, { ...msg, participant: { ...activeParticipantRef.current } }];
-        }
-      })
-    : setChatHistoryRef.current?.(prevState => {
-        const newState = [...prevState]; // Create new array first
-        const existingMessage = newState[msgIndex];
-        if (!existingMessage.participant) {
-          const theParticipant = participantsRef.current?.find(
-            participant => participant.id === participant_id,
-          );
-          msg.participant = { ...(theParticipant || { entity_meta: {}, meta: {} }) };
-        }
-        // Preserve SwarmChild toolActions from current state that may have been added
-        // by socket events not yet reflected in chatHistoryRef (stale ref issue)
-        const existingSwarmChildren = (existingMessage?.toolActions || []).filter(
-          a => a.type === TOOL_ACTION_TYPES.SwarmChild,
+  updateChatHistoryState(setChatHistoryRef, chatHistoryRef, prevState => {
+    // Resolve again against the state being updated. A durable pipeline HITL
+    // resume inserts a user decision and a new assistant turn back-to-back;
+    // any array index obtained from chatHistoryRef before those insertions is
+    // stale and can overwrite the decision or the pre-HITL assistant segment.
+    const existingIdx = findChatSocketMessageIndex(prevState, msg.id, question_id);
+    if (existingIdx !== -1) {
+      const existingMessage = prevState[existingIdx];
+      if (!msg.participant) {
+        const theParticipant = participantsRef.current?.find(
+          participant => participant.id === participant_id,
         );
-        if (existingSwarmChildren.length > 0) {
-          const nonSwarmChildren = (msg.toolActions || []).filter(
-            a => a.type !== TOOL_ACTION_TYPES.SwarmChild,
-          );
-          msg.toolActions = [...nonSwarmChildren, ...existingSwarmChildren];
-        }
-        newState[msgIndex] = { ...existingMessage, ...msg };
-        return newState;
+        msg.participant = {
+          ...(existingMessage.participant || theParticipant || { entity_meta: {}, meta: {} }),
+        };
+      }
+      // Preserve SwarmChild toolActions from current state that may have been added
+      // by socket events not yet reflected in chatHistoryRef (stale ref issue)
+      const existingSwarmChildren = (existingMessage?.toolActions || []).filter(
+        a => a.type === TOOL_ACTION_TYPES.SwarmChild,
+      );
+      if (existingSwarmChildren.length > 0) {
+        const nonSwarmChildren = (msg.toolActions || []).filter(a => a.type !== TOOL_ACTION_TYPES.SwarmChild);
+        msg.toolActions = [...nonSwarmChildren, ...existingSwarmChildren];
+      }
+      return mergeChatSocketMessage(prevState, msg, {
+        messageId: msg.id,
+        questionId: question_id,
       });
+    }
+
+    if (question_id) {
+      const questionIndex = prevState.findIndex(item => item.role === ROLES.User && item.id === question_id);
+      if (questionIndex === -1) return prevState;
+
+      const newState = [...prevState];
+      const theParticipant = participantsRef.current?.find(participant => participant.id === participant_id);
+      msg.participant = { ...(theParticipant || { entity_meta: {}, meta: {} }) };
+      newState.splice(questionIndex + 1, 0, msg);
+      return newState;
+    }
+
+    return [...prevState, { ...msg, participant: { ...activeParticipantRef.current } }];
+  });
 };
 
 export const useSocketEvents = () => {
@@ -382,14 +390,11 @@ export const useChatSocket = ({
   }, [isMonoChatting]);
 
   const getMessage = useCallback((messageId, question_id) => {
-    const msgIdx =
-      chatHistoryRef.current?.findIndex(
-        i => i.id === messageId || (question_id && i.question_id === question_id),
-      ) ?? -1;
+    const msgIdx = findChatSocketMessageIndex(chatHistoryRef.current, messageId, question_id);
     let msg;
     if (msgIdx < 0) {
       const lastMsg = chatHistoryRef.current?.at(-1);
-      if (isMonoChattingRef.current && lastMsg?.internal_id) {
+      if (isMonoChattingRef.current && isLocalAssistantPlaceholder(lastMsg)) {
         lastMsg.id = messageId;
         lastMsg.role = ROLES.Assistant;
         lastMsg.content = '';
@@ -490,8 +495,8 @@ export const useChatSocket = ({
             }
           }
           addMessageToChatHistory({
-            msgIndex,
             msg,
+            chatHistoryRef,
             setChatHistoryRef,
             participantsRef,
             question_id,
@@ -564,7 +569,7 @@ export const useChatSocket = ({
           // Do NOT mutate `msg` here: for an injection it resolves to the streaming
           // ASSISTANT message (matched on message_id), and stamping role/content
           // onto it would turn the in-flight answer into a user bubble.
-          setChatHistoryRef.current?.(prev => {
+          updateChatHistoryState(setChatHistoryRef, chatHistoryRef, prev => {
             const existingIdx = prev.findIndex(m => m.id === userMessageId);
             if (existingIdx >= 0) {
               const next = [...prev];
@@ -574,7 +579,6 @@ export const useChatSocket = ({
             return [
               ...prev,
               {
-                ...msg,
                 id: userMessageId,
                 role: ROLES.User,
                 name: theUser?.meta.user_name || '',
@@ -648,8 +652,8 @@ export const useChatSocket = ({
               });
             }
             addMessageToChatHistory({
-              msgIndex,
               msg,
+              chatHistoryRef,
               setChatHistoryRef,
               participantsRef,
               question_id,
@@ -661,9 +665,10 @@ export const useChatSocket = ({
 
           // For existing messages, use state update with proper new object references
           // so React detects the change and re-renders
-          setChatHistoryRef.current?.(prevState => {
+          updateChatHistoryState(setChatHistoryRef, chatHistoryRef, prevState => {
+            const currentMessageIndex = findChatSocketMessageIndex(prevState, message_id, question_id);
             const nextState = prevState.map((item, idx) => {
-              if (idx !== msgIndex) return item;
+              if (idx !== currentMessageIndex) return item;
               const existingToolActions = item.toolActions || [];
               const existingAction = existingToolActions.find(ta => ta.id === toolRunId);
 
@@ -720,7 +725,6 @@ export const useChatSocket = ({
             // ref here as well so a following authorization/interrupt event
             // cannot rebuild the message from stale toolActions and temporarily
             // drop a parallel child from the live thinking tree.
-            chatHistoryRef.current = nextState;
             return nextState;
           });
           return;
@@ -1415,6 +1419,7 @@ export const useChatSocket = ({
           // entire orchestrator run as failed. Keep the message streaming so the
           // running siblings retain their live view (mirrors the HITL re-arm).
           const exMeta = response_metadata?.metadata || {};
+          const continuationError = normalizeContinuationError(response_metadata?.continuation_error);
           const exHierarchy = normalizeExecutionHierarchy(exMeta, response_metadata);
           const exChildName = exHierarchy.parent_agent_name || '';
           const exChildKey =
@@ -1430,12 +1435,17 @@ export const useChatSocket = ({
             msg.isStreaming = true;
             msg.subAgentErrors = {
               ...(msg.subAgentErrors || {}),
-              [exChildKey]: { name: exChildName, exception: message.content },
+              [exChildKey]: {
+                name: exChildName,
+                exception: message.content,
+                continuationError,
+              },
             };
           } else {
             msg.isLoading = false;
             msg.isStreaming = false;
             msg.exception = message.content;
+            msg.continuationError = continuationError;
             // Without this the live view shows the raw trace: the scope only reached the
             // message on reload, via the persisted meta
             msg.budgetErrorCode = response_metadata?.budget_error_code;
@@ -1491,8 +1501,8 @@ export const useChatSocket = ({
             msg.role = ROLES.Assistant;
             msg.question_id = question_id; // Set question_id for duplicate detection
             addMessageToChatHistory({
-              msgIndex,
               msg,
+              chatHistoryRef,
               setChatHistoryRef,
               participantsRef,
               question_id,
@@ -1564,7 +1574,7 @@ export const useChatSocket = ({
             }
           }
           // Also trigger a React state update so the UI re-renders
-          setChatHistoryRef.current?.(prevHistory => [...prevHistory]);
+          updateChatHistoryState(setChatHistoryRef, chatHistoryRef, prevHistory => [...prevHistory]);
           return;
         }
         case SocketMessageType.AgentOnFunctionToolNode:
@@ -1621,8 +1631,8 @@ export const useChatSocket = ({
             content: '',
           });
           addMessageToChatHistory({
-            msgIndex,
             msg,
+            chatHistoryRef,
             setChatHistoryRef,
             participantsRef,
             question_id,
@@ -1670,12 +1680,12 @@ export const useChatSocket = ({
       }
 
       // This runs on EVERY socket message, even if msg hasn't changed
-      msgIndex > -1 &&
-        setChatHistoryRef.current?.(prevState => {
-          const newState = [...prevState];
-          newState[msgIndex] = { ...msg }; // Create new object reference for React to detect change
-          return newState;
-        });
+      updateChatHistoryState(setChatHistoryRef, chatHistoryRef, prevState =>
+        mergeChatSocketMessage(prevState, msg, {
+          messageId: message_id,
+          questionId: question_id,
+        }),
+      );
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [getMessage, handleError],
@@ -1697,7 +1707,7 @@ export const useChatSocket = ({
           // errors) rather than a string; stringify so ErrorTrace never renders a raw object
           const exceptionText = convertJsonToString(message.content);
           // Handle all socket validation errors by displaying in chat with red border
-          setChatHistoryRef.current?.(prevState => {
+          updateChatHistoryState(setChatHistoryRef, chatHistoryRef, prevState => {
             return [
               ...prevState.map(item => {
                 if (item.question_id === message_id) {

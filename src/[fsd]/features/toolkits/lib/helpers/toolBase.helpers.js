@@ -118,6 +118,23 @@ const matchesVisibleWhen = (visibleWhen, settings) => {
 
 const hasValue = value => value !== null && value !== undefined && value !== '';
 
+export const HEADER_NAME_PATTERN = /^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/;
+
+export const isHeaderNameInvalid = name => {
+  if (!name) return true;
+  return !HEADER_NAME_PATTERN.test(name);
+};
+
+export const isHeaderValueInvalid = value =>
+  !hasValue(value) || (typeof value === 'string' && /\r|\n/.test(value));
+
+export const validateSecretHeaders = headers => {
+  if (!headers || typeof headers !== 'object' || Array.isArray(headers)) return false;
+  return Object.entries(headers).some(
+    ([name, value]) => isHeaderNameInvalid(name) || isHeaderValueInvalid(value),
+  );
+};
+
 export const isPropertyVisible = ({
   propertyKey,
   property,
@@ -151,12 +168,29 @@ export const validateRequiredFields = (
 ) => {
   const errors = {};
 
+  // The headers collection is optional, but every row inside a populated collection is not.
+  // Validate it independently from schema.required so invalid names/values never reach the API
+  // (whose Pydantic error representation may include the rejected input object).
+  Object.entries(schema?.properties || {}).forEach(([prop, propSchema]) => {
+    if (propSchema?.ui_component !== 'secret_headers') return;
+
+    const headers = settings?.[prop];
+    const hasHeaders = Boolean(
+      headers && typeof headers === 'object' && !Array.isArray(headers) && Object.keys(headers).length > 0,
+    );
+    const isRequired = schema?.required?.includes(prop);
+    errors[prop] = (isRequired && !hasHeaders) || (hasHeaders && validateSecretHeaders(headers));
+  });
+
   schema?.required
     ?.filter(prop => (enableEditEliteaTitle || prop !== 'elitea_title') && !sectionProps.includes(prop))
     .forEach(prop => {
       const propSchema = schema?.properties[prop];
       if (propSchema?.type === 'boolean' || !propSchema) {
         errors[prop] = false;
+      } else if (propSchema?.ui_component === 'secret_headers') {
+        // Secret headers are handled above because populated optional collections need validation too.
+        return;
       } else {
         errors[prop] = !settings[prop];
       }

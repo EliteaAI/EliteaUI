@@ -166,6 +166,8 @@ Rules:
 - Return an object of named style keys
 - Use `({ palette }) =>` for theme-dependent styles
 - Use `rem` units everywhere (use `0.0625rem` for 1px)
+- **NEVER hardcode colors** — always use palette colors from the theme (e.g., `palette.text.primary`, not
+  `rgba(104, 108, 118, 1)` or `#686C76`)
 - Merge external `sx` with array syntax: `sx={[styles.root, sx]}`
 - Style functions can accept parameters for conditional styles
 
@@ -174,7 +176,7 @@ Rules:
 const cardStyles = (isActive, isCompact) => ({
   root: ({ palette }) => ({
     padding: isCompact ? '0.5rem' : '1rem',
-    backgroundColor: isActive ? palette.background.tabButton.active : palette.background.default,
+    backgroundColor: isActive ? palette.background.tabButton.active : palette.background.default.secondary,
   }),
 });
 ```

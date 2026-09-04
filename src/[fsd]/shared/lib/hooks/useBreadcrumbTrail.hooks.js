@@ -1,30 +1,50 @@
 import { useMemo } from 'react';
 
-import { useLocation, useSearchParams } from 'react-router-dom';
+import { useLocation, useParams, useSearchParams } from 'react-router-dom';
 
+import { useSkillDetailsQuery } from '@/[fsd]/features/skill/api';
 import { BreadcrumbHelpers } from '@/[fsd]/shared/lib/helpers';
+import { useApplicationDetailsQuery } from '@/api/applications';
 import { useToolkitsDetailsQuery } from '@/api/toolkits.js';
 import { SearchParams } from '@/common/constants.js';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 /**
  * Fully resolved breadcrumb trail for the current route, empty when the route declares no crumbs.
- * The entity name reuses the details cache the toolkit pages already fill, so no extra request is issued.
+ * Entity name queries reuse the same cache keys as the detail pages so no extra request is issued.
  */
 export const useBreadcrumbTrail = () => {
   const { pathname } = useLocation();
   const [searchParams] = useSearchParams();
   const projectId = useSelectedProjectId();
+  const params = useParams();
 
   const trail = useMemo(() => BreadcrumbHelpers.resolveBreadcrumbTrail(pathname), [pathname]);
   const entityId = useMemo(() => BreadcrumbHelpers.getBreadcrumbEntityId(trail), [trail]);
 
-  const { data } = useToolkitsDetailsQuery(
+  const isToolkit = !!params.toolkitId || !!params.mcpId;
+  const isSkill = !!params.skillId;
+  const isAgent = !isToolkit && !isSkill && (!!params.agentId || !!params.appId);
+
+  const { data: toolkitDetails } = useToolkitsDetailsQuery(
     { projectId, toolkitId: entityId },
-    { skip: !projectId || !entityId },
+    { skip: !isToolkit || !projectId || !entityId },
+  );
+  const { data: applicationDetails } = useApplicationDetailsQuery(
+    { projectId, applicationId: entityId },
+    { skip: !isAgent || !projectId || !entityId },
+  );
+  const { data: skillDetails } = useSkillDetailsQuery(
+    { projectId, skillId: entityId },
+    { skip: !isSkill || !projectId || !entityId },
   );
 
-  const entityName = data?.name || searchParams.get(SearchParams.Name) || '';
+  const entityName =
+    toolkitDetails?.name ||
+    applicationDetails?.name ||
+    skillDetails?.name ||
+    searchParams.get(SearchParams.Name) ||
+    '';
 
   return useMemo(() => BreadcrumbHelpers.applyBreadcrumbLabels(trail, entityName), [trail, entityName]);
 };

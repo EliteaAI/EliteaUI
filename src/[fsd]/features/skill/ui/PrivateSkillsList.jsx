@@ -41,7 +41,7 @@ const PrivateSkillsList = memo(props => {
   const projectId = useSelectedProjectId();
 
   const { folders } = useEntityFolders(ENTITY_FOLDER_TYPES.skill, { includeCounts: true });
-  const { selectedFolderId, selectedFolder, isFolderViewActive, openFolder, closeFolder } =
+  const { selectedFolderId, selectedFolder, isFolderViewActive, openFolder, closeFolder, onFolderDelete } =
     useFolderView(folders);
 
   const {
@@ -152,6 +152,7 @@ const PrivateSkillsList = memo(props => {
           tagList={activeTagList}
           onFolderSelect={openFolder}
           selectedFolderId={selectedFolderId}
+          onFolderDelete={onFolderDelete}
         />
       }
       renderCard={renderCard}

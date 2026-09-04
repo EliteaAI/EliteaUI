@@ -21,7 +21,7 @@ const LoadingIndicatorLayer = styled('div')(({ theme }) => ({
     left: '0',
     width: '100%',
     height: '100%',
-    background: `${theme.palette.background.eliteaDefault}`,
+    background: `${theme.palette.background.default.primary}`,
     opacity: '0.8',
   },
 }));
@@ -30,7 +30,7 @@ const LoadingIndicatorContainer = styled('div')(({ theme }) => ({
   width: '31.25rem',
   height: '5.75rem',
   padding: '0',
-  background: `${theme.palette.background.secondary}`,
+  background: `${theme.palette.background.default.secondary}`,
   position: 'absolute',
   top: '50%',
   left: '50%',

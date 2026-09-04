@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 
+import { normalizeContinuationError } from '@/[fsd]/features/chat/lib/helpers/continuationError.helpers.js';
 import {
   IndexStatuses,
   IndexesToolsEnum,
@@ -304,6 +305,7 @@ export const generateChatMessageBasedOnResponse = ({ message, chatHistory, onFin
         msg.isLoading = false;
         msg.isStreaming = false;
         msg.exception = message.content;
+        msg.continuationError = normalizeContinuationError(response_metadata?.continuation_error);
         // Without the scope the headline stays "🔄 Testing tool...", which reads as still
         // running, and the block goes unexplained until the page is reloaded
         msg.budgetErrorCode = response_metadata?.budget_error_code;

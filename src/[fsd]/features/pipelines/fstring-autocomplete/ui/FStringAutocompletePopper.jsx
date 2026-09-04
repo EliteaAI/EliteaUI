@@ -50,7 +50,7 @@ const fStringAutocompletePopperStyles = () => ({
     marginTop: '0.5rem',
     border: `0.0625rem solid ${palette.border.lines}`,
     borderRadius: '0.5rem',
-    background: palette.background.secondary,
+    background: palette.background.default.secondary,
     maxHeight: '14rem',
     minWidth: '12rem',
     overflowY: 'auto',

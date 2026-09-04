@@ -5,7 +5,12 @@ import { Form, Formik } from 'formik';
 import { ProfileHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { useQueryAuthor } from '@/[fsd]/features/settings/lib/hooks';
 import { useDefaultModel } from '@/[fsd]/shared/lib/hooks';
-import { useAuthorDescriptionMutation, useAuthorDetailsQuery } from '@/api/social';
+import {
+  useAuthorDescriptionMutation,
+  useAuthorDetailsQuery,
+  useAuthorModuleSettingsQuery,
+  useUpdateAuthorModuleSettingsMutation,
+} from '@/api/social';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 
@@ -17,29 +22,54 @@ const SettingsFormProvider = memo(props => {
   const { toastError, toastSuccess } = useToast();
 
   const { data: authorData } = useAuthorDetailsQuery();
+  // #6285: module toggles (Default Modules tab) are scoped per project, unlike authorData.
+  const { data: moduleSettingsData } = useAuthorModuleSettingsQuery(selectedProjectId, {
+    skip: !selectedProjectId,
+  });
   const [updateAuthor] = useAuthorDescriptionMutation();
+  const [updateModuleSettings] = useUpdateAuthorModuleSettingsMutation();
 
   const { modelList, defaultModel } = useDefaultModel();
 
   const initialValues = useMemo(
-    () => ProfileHelpers.serializeProfileFormData(authorData, defaultModel, selectedProjectId),
-    [authorData, defaultModel, selectedProjectId],
+    () =>
+      ProfileHelpers.serializeProfileFormData(
+        authorData,
+        moduleSettingsData,
+        defaultModel,
+        selectedProjectId,
+      ),
+    [authorData, moduleSettingsData, defaultModel, selectedProjectId],
   );
 
   const handleSubmit = useCallback(
     async (values, { setSubmitting, resetForm }) => {
-      try {
-        const payload = ProfileHelpers.deserializeProfileFormData(values);
-        await updateAuthor(payload).unwrap();
+      const payload = ProfileHelpers.deserializeProfileFormData(values);
+      const moduleSettingsPayload = ProfileHelpers.deserializeModuleSettingsFormData(values);
+
+      const [profileResult, moduleSettingsResult] = await Promise.allSettled([
+        updateAuthor(payload).unwrap(),
+        selectedProjectId
+          ? updateModuleSettings({ projectId: selectedProjectId, ...moduleSettingsPayload }).unwrap()
+          : Promise.resolve(),
+      ]);
+
+      // #6285: the two settings groups save independently, so report which one failed
+      // instead of a generic message when only one of them errors out.
+      const failedParts = [
+        profileResult.status === 'rejected' && 'profile settings',
+        moduleSettingsResult.status === 'rejected' && 'module settings',
+      ].filter(Boolean);
+
+      if (failedParts.length) {
+        toastError(`Failed to save ${failedParts.join(' and ')}`);
+      } else {
         resetForm({ values });
         toastSuccess('Settings saved successfully');
-      } catch {
-        toastError('Failed to save settings');
-      } finally {
-        setSubmitting(false);
       }
+      setSubmitting(false);
     },
-    [updateAuthor, toastSuccess, toastError],
+    [updateAuthor, updateModuleSettings, selectedProjectId, toastSuccess, toastError],
   );
 
   return (

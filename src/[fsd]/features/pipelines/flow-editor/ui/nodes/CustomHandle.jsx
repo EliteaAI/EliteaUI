@@ -153,7 +153,7 @@ const customHandleStyles = ({
   // Adjust handle size based on expansion state
   const handleSize = isExpanded === false ? '.75rem' : '1.5rem';
   const handlePadding = isExpanded === false ? '0rem' : '.25rem .75rem';
-  const backgroundColor = isExpanded ? theme.palette.background.chatBkg : theme.palette.border.flowNode;
+  const backgroundColor = isExpanded ? theme.palette.background.tabPanel : theme.palette.border.flowNode;
 
   return {
     handle:
@@ -205,7 +205,7 @@ const customHandleStyles = ({
       width: '1rem',
       height: '1rem',
       borderRadius: '50%',
-      backgroundColor: theme.palette.background.chatBkg,
+      backgroundColor: theme.palette.background.tabPanel,
       border: `${borderStyle} ${borderColor}`,
       display: 'flex',
       alignItems: 'center',

@@ -842,7 +842,7 @@ const singleSelectStyles = (
     color: palette.text.secondary,
     lineHeight: 1.4,
     borderBottom: `1px solid ${palette.border.lines}`,
-    backgroundColor: palette.background.secondary,
+    backgroundColor: palette.background.default.secondary,
     '.MuiMenuItem-root + &': {
       borderTop: `1px solid ${palette.border.lines}`,
     },

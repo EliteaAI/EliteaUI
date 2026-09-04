@@ -187,7 +187,7 @@ const styles = {
     fontSize: '1rem',
   },
   fullScreenPaper: ({ palette }) => ({
-    background: palette.background.secondary,
+    background: palette.background.default.secondary,
   }),
   fullScreenTitle: {
     display: 'flex',

@@ -10,7 +10,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
-import BindingDetailDialog from '../suite/BindingDetailDialog';
+import BindingDetailDialog from '../_legacy/suite/BindingDetailDialog';
 
 const updateBinding = vi.fn(() => ({ unwrap: () => Promise.resolve({}) }));
 

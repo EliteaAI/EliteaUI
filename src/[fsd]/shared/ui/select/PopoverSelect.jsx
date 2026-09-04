@@ -135,7 +135,7 @@ const getStyles = ({ popoverWidth, maxHeight }) => ({
     marginTop: '-1.75rem',
     borderRadius: '0.5rem',
     border: `0.0625rem solid ${palette.border.lines}`,
-    backgroundColor: palette.background.secondary,
+    backgroundColor: palette.background.default.secondary,
     boxShadow: '0 0.5rem 1.5rem rgba(0, 0, 0, 0.24)',
     width: popoverWidth,
     maxHeight,

@@ -61,7 +61,7 @@ const styles = {
   cover: {
     width: '100%',
     height: '100%',
-    backgroundColor: 'background.default',
+    backgroundColor: 'background.secondary',
     borderRadius: 'calc(2.75rem - 1px)',
     boxSizing: 'border-box',
     display: 'flex',

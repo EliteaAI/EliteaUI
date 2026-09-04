@@ -1,3 +1,4 @@
+import { normalizeContinuationError } from '@/[fsd]/features/chat/lib/helpers/continuationError.helpers.js';
 import {
   CONDITION_NODE_ID_SUFFIX,
   DECISION_NODE_ID_SUFFIX,
@@ -355,6 +356,7 @@ export const parseRunEvent = (
       break;
     case SocketMessageType.AgentException:
       if (isRunningPipeline) {
+        const continuationError = normalizeContinuationError(event.response_metadata?.continuation_error);
         // One run failed
         setIsRunningPipeline(false);
         runPipelineStatus.current.data.status = PipelineStatus.Error;
@@ -362,6 +364,8 @@ export const parseRunEvent = (
         // prefer the user-facing text the runtime sends alongside it
         runPipelineStatus.current.data.error =
           event.response_metadata?.human_readable || convertJsonToString(event.content ?? '');
+        runPipelineStatus.current.data.errorTrace = convertJsonToString(event.content ?? '');
+        runPipelineStatus.current.data.continuationError = continuationError;
         runPipelineStatus.current.data.budgetErrorCode = event.response_metadata?.budget_error_code;
         if (runPipelineStatus.current.data.timeline[runPipelineStatus.current.data.timeline.length - 1]) {
           runPipelineStatus.current.data.timeline[runPipelineStatus.current.data.timeline.length - 1].status =

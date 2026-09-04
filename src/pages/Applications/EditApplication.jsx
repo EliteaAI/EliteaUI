@@ -6,8 +6,8 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import { ApplicationTabBar } from '@/[fsd]/entities/application-tab-bar/ui';
 import { useIsVersionNotFound } from '@/[fsd]/entities/version/lib/hooks';
 import { InstructionsInputRefProvider } from '@/[fsd]/shared/lib/context';
+import { BreadcrumbsOrTitle } from '@/[fsd]/shared/ui';
 import { ApplicationControls } from '@/[fsd]/widgets/application-controls';
-import { EvaluationTab } from '@/[fsd]/widgets/evaluation/ui';
 import { ViewMode } from '@/common/constants';
 import { buildErrorMessage, isNotFoundError } from '@/common/utils';
 import StyledTabs from '@/components/StyledTabs';
@@ -30,7 +30,6 @@ const EditApplication = memo(() => {
   const { version } = useParams();
   const [searchParams] = useSearchParams();
   const isFromCreation = searchParams.get('isFromCreation') === 'true';
-
   const [dirty, setDirty] = useState(false);
   const [unsavedLLMSettings, setUnsavedLLMSettings] = useState();
 
@@ -75,7 +74,6 @@ const EditApplication = memo(() => {
   const tabs = useMemo(
     () => [
       {
-        label: initialValues?.name || 'Agent',
         tabBarItems: !isFetching ? (
           <ApplicationTabBar
             onSuccess={handleSuccess}
@@ -100,23 +98,9 @@ const EditApplication = memo(() => {
           />
         ),
       },
-      {
-        label: 'Evaluation',
-        tabProps: { 'data-testid': 'evaluation-tab' },
-        content: (
-          <EvaluationTab
-            isFetching={isFetching}
-            isError={isError}
-            applicationId={applicationId}
-            applicationVersionId={initialValues?.version_details?.id}
-          />
-        ),
-      },
     ],
     [
-      initialValues?.name,
       initialValues?.version_details?.tools?.length,
-      initialValues?.version_details?.id,
       isFetching,
       isError,
       applicationId,
@@ -142,11 +126,11 @@ const EditApplication = memo(() => {
         <Form style={styles.form}>
           <StyledTabs
             fullWidth
-            forceShowLabel
             panelStyle={styles.tabPanel}
             containerStyle={styles.tabContainer}
             leftTabbarSectionSX={styles.leftTabbarSection}
             tabs={tabs}
+            leftPart={<BreadcrumbsOrTitle title={initialValues?.name || 'Edit Agent'} />}
           />
         </Form>
       </Formik>

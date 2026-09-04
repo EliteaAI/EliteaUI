@@ -194,7 +194,13 @@ export const toolkitsApi = eliteaApi
             method: 'DELETE',
           };
         },
-        invalidatesTags: [TAG_TYPE_TOTAL_TOOLKITS, TAG_TYPE_TOOLKITS, TAG_TYPE_TOOLKIT_DETAILS],
+        invalidatesTags: [
+          TAG_TYPE_TOTAL_TOOLKITS,
+          TAG_TYPE_TOOLKITS,
+          TAG_TYPE_TOOLKIT_DETAILS,
+          { type: 'EntityFolder', id: 'LIST_toolkit' },
+          { type: 'EntityFolder', id: 'LIST_mcp' },
+        ],
         onQueryStarted: async (args, { dispatch, getState, queryFulfilled }) => {
           const {
             eliteaApi: { queries },

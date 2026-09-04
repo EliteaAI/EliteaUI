@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
@@ -42,6 +42,7 @@ const ToolkitsList = memo(props => {
     showFolders = true,
   } = props;
   const navigate = useNavigate();
+  const firstRender = useRef(true);
   const { selectedTypes } = useTypes();
   const dispatch = useDispatch();
   const { query } = useSelector(state => state.search);
@@ -60,9 +61,8 @@ const ToolkitsList = memo(props => {
   }, [isMCP]);
 
   const { folders } = useEntityFolders(folderEntityType, { includeCounts: true, skip: !showFolders });
-  const { selectedFolderId, selectedFolder, isFolderViewActive, openFolder, closeFolder } = useFolderView(
-    showFolders ? folders : [],
-  );
+  const { selectedFolderId, selectedFolder, isFolderViewActive, openFolder, closeFolder, onFolderDelete } =
+    useFolderView(showFolders ? folders : []);
 
   const {
     idsQueryParam: folderEntityIds,
@@ -133,6 +133,7 @@ const ToolkitsList = memo(props => {
             onFolderSelect={openFolder}
             selectedFolderId={selectedFolderId}
             onExpandChange={handleExpandChange}
+            onFolderDelete={onFolderDelete}
           />
         )}
         <ToolkitTypesPanel
@@ -153,6 +154,7 @@ const ToolkitsList = memo(props => {
       isFolderViewActive,
       isFoldersExpanded,
       handleExpandChange,
+      onFolderDelete,
     ],
   );
 
@@ -162,6 +164,7 @@ const ToolkitsList = memo(props => {
     const hasQuery = !!(query && String(query).trim());
 
     if (
+      firstRender.current &&
       !isPublicProject &&
       !loading &&
       !hasError &&
@@ -175,6 +178,10 @@ const ToolkitsList = memo(props => {
         navigate(RouteDefinitions.CreateApp, { replace: true });
       } else {
         navigate(!isMCP ? RouteDefinitions.CreateToolkit : RouteDefinitions.CreateMCP, { replace: true });
+      }
+    } else {
+      if (firstRender.current && totalCount > 0) {
+        firstRender.current = false;
       }
     }
   }, [

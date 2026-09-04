@@ -37,6 +37,7 @@ const EditorHeader = ({
   onDiscard,
   saveButton,
   isPublic,
+  isDirty,
   titleTestId,
   subtitleTestId,
   closeButtonTestId,
@@ -93,7 +94,7 @@ const EditorHeader = ({
         <TabBarItems>
           {!isPublic && (
             <Button.DiscardButton
-              disabled={!isFormDirty && !isYamlCodeDirty}
+              disabled={!isFormDirty && !isYamlCodeDirty && !isDirty}
               onDiscard={discardApplicationChanges}
               size="small"
               sx={styles.discardButton}

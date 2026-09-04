@@ -1,14 +1,28 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  BUDGET_ERROR_CODES,
+  BUDGET_ERROR_VARIANTS,
+} from '@/[fsd]/shared/lib/constants/budgetError.constants';
+
+import {
+  BannerMessageMap,
   BannerSeverity,
+  INDEX_ABANDONED_BANNER_MESSAGE,
   INDEX_DATA_DISABLED_REASON,
+  INDEX_RETAINED_DATA_MESSAGE,
   INDEX_SEARCH_TOOL_OPTIONS,
   IndexStatuses,
+  REINDEX_FAILED_BANNER_MESSAGE,
+  REINDEX_FAILED_BANNER_TITLE,
+  REINDEX_IN_PROGRESS_BANNER_MESSAGE,
+  REINDEX_IN_PROGRESS_BANNER_TITLE,
 } from '../../constants/indexDetails.constants';
 import {
   bannerOutlivesRun,
+  bannerVariant,
   hasLiveRun,
+  hasRetainedIndexData,
   indexBuildBlockedReason,
   indexScheduleBlockedReason,
   indexSearchBlockedReason,
@@ -92,8 +106,8 @@ describe('indexSearchBlockedReason', () => {
   });
 
   it('stops blaming a run that is no longer in progress in any actionable sense', () => {
-    // An abandoned run proves nothing about what its interrupted writes left
-    // searchable, so the block stands — only the wording stops lying.
+    // Without a live chunk count an abandoned run has nothing proven searchable,
+    // so the block stands — only the wording stops lying.
     expect(indexSearchBlockedReason(IndexStatuses.progress, allSearchTools, true)).toMatch(/not ready/);
   });
 
@@ -108,6 +122,55 @@ describe('indexSearchBlockedReason', () => {
     expect(indexSearchBlockedReason(IndexStatuses.success, ['index_data'])).toMatch(
       /No search tools are enabled/,
     );
+  });
+});
+
+describe('indexSearchBlockedReason — retained data', () => {
+  it('keeps the previous generation searchable while a reindex runs', () => {
+    expect(indexSearchBlockedReason(IndexStatuses.progress, allSearchTools, false, true)).toBeNull();
+  });
+
+  it('keeps the previous generation searchable after a failed reindex', () => {
+    expect(indexSearchBlockedReason(IndexStatuses.fail, allSearchTools, false, true)).toBeNull();
+  });
+
+  it('keeps an abandoned reindex over retained data searchable', () => {
+    expect(indexSearchBlockedReason(IndexStatuses.progress, allSearchTools, true, true)).toBeNull();
+  });
+
+  it('keeps the previous generation searchable after a stopped reindex', () => {
+    // Stop deletes only the pending run's rows — the retained generation is intact.
+    expect(indexSearchBlockedReason(IndexStatuses.cancelled, allSearchTools, false, true)).toBeNull();
+  });
+
+  it('still requires a search tool to be enabled', () => {
+    expect(indexSearchBlockedReason(IndexStatuses.fail, ['index_data'], false, true)).toMatch(
+      /No search tools are enabled/,
+    );
+  });
+
+  it('never unlocks states retained data says nothing about', () => {
+    expect(indexSearchBlockedReason(IndexStatuses.created, allSearchTools, false, true)).toMatch(/not ready/);
+    expect(indexSearchBlockedReason(undefined, allSearchTools, false, true)).toMatch(/not ready/);
+  });
+});
+
+describe('hasRetainedIndexData', () => {
+  it('holds only on a positive live chunk count', () => {
+    expect(hasRetainedIndexData({ indexed_chunks: 42 })).toBe(true);
+    expect(hasRetainedIndexData({ indexed_chunks: 0 })).toBe(false);
+  });
+
+  it('claims nothing for rows that never reported a count', () => {
+    expect(hasRetainedIndexData({})).toBe(false);
+    expect(hasRetainedIndexData(undefined)).toBe(false);
+    expect(hasRetainedIndexData({ indexed_chunks: 'not-a-number' })).toBe(false);
+  });
+
+  it('ignores a remembered successful run over an emptied index', () => {
+    // A zero-chunk completed first run or a whole-index delete keeps
+    // last_successful_run non-null — the count is the only proof of data.
+    expect(hasRetainedIndexData({ indexed_chunks: 0, last_successful_run: { updated_on: 100 } })).toBe(false);
   });
 });
 
@@ -167,6 +230,117 @@ describe('indexScheduleBlockedReason', () => {
     expect(
       indexScheduleBlockedReason(scheduleState({ scheduleEnabled: true, hasSchedulePermission: false })),
     ).toMatch(/Insufficient permissions/);
+  });
+
+  it('allows scheduling a failed reindex whose previous data is still there to rebuild from', () => {
+    expect(
+      indexScheduleBlockedReason(scheduleState({ state: IndexStatuses.fail, hasRetainedData: true })),
+    ).toBeNull();
+  });
+
+  it('keeps a failure without retained data blocked', () => {
+    expect(
+      indexScheduleBlockedReason(scheduleState({ state: IndexStatuses.fail, hasRetainedData: false })),
+    ).toMatch(/stopped\/error state/);
+  });
+
+  it('keeps a stopped index blocked whatever data it retains', () => {
+    expect(
+      indexScheduleBlockedReason(scheduleState({ state: IndexStatuses.cancelled, hasRetainedData: true })),
+    ).toMatch(/stopped\/error state/);
+  });
+});
+
+describe('bannerVariant — retained data', () => {
+  const NO_STATS = { isReindex: false };
+  const retention = over => ({ hasRetainedData: true, lastSuccessfulRun: null, ...over });
+
+  it('tells the user the existing data stays searchable while a reindex runs', () => {
+    const banner = bannerVariant(true, IndexStatuses.progress, NO_STATS, undefined, false, retention());
+
+    expect(banner.severity).toBe(BannerSeverity.info);
+    expect(banner.label).toBe(REINDEX_IN_PROGRESS_BANNER_TITLE);
+    expect(banner.message).toBe(REINDEX_IN_PROGRESS_BANNER_MESSAGE);
+  });
+
+  it('applies to a server-reported run the panel is not driving', () => {
+    const banner = bannerVariant(false, IndexStatuses.progress, NO_STATS, undefined, false, retention());
+
+    expect(banner.label).toBe(REINDEX_IN_PROGRESS_BANNER_TITLE);
+  });
+
+  it('tells the user the previous data survived a failed reindex', () => {
+    const banner = bannerVariant(false, IndexStatuses.fail, NO_STATS, 'boom', false, retention());
+
+    expect(banner.severity).toBe(BannerSeverity.error);
+    expect(banner.label).toBe(REINDEX_FAILED_BANNER_TITLE);
+    expect(banner.message).toBe(REINDEX_FAILED_BANNER_MESSAGE);
+  });
+
+  it('names the last successful run when the backend reports one', () => {
+    const banner = bannerVariant(
+      false,
+      IndexStatuses.fail,
+      NO_STATS,
+      'boom',
+      false,
+      retention({
+        lastSuccessfulRun: { updated_on: 1_756_360_800, state: 'completed', indexed: 12 },
+      }),
+    );
+
+    expect(banner.message).toContain(REINDEX_FAILED_BANNER_MESSAGE);
+    expect(banner.message).toMatch(/Last successful indexing: \d{2}\.\d{2}\.\d{4}/);
+  });
+
+  it('makes no retention claim without a live chunk count', () => {
+    const failed = bannerVariant(false, IndexStatuses.fail, NO_STATS, 'boom', false, {
+      hasRetainedData: false,
+      lastSuccessfulRun: { updated_on: 100 },
+    });
+
+    expect(failed.label).not.toBe(REINDEX_FAILED_BANNER_TITLE);
+    expect(failed.message).not.toMatch(/remains available/);
+
+    const indexing = bannerVariant(true, IndexStatuses.progress, NO_STATS);
+    expect(indexing.message).not.toMatch(/remains available/);
+  });
+
+  it('keeps the stale-run warning ahead of the reindexing copy while stating the data survived', () => {
+    const banner = bannerVariant(false, IndexStatuses.progress, NO_STATS, undefined, true, retention());
+
+    expect(banner.severity).toBe(BannerSeverity.warning);
+    expect(banner.message).toContain(INDEX_ABANDONED_BANNER_MESSAGE);
+    expect(banner.message).toContain(INDEX_RETAINED_DATA_MESSAGE);
+  });
+
+  it('makes no retention claim for a stale run without a live chunk count', () => {
+    const banner = bannerVariant(false, IndexStatuses.progress, NO_STATS, undefined, true);
+
+    expect(banner.message).toBe(INDEX_ABANDONED_BANNER_MESSAGE);
+  });
+
+  it('tells the user the previous data survived a stopped reindex', () => {
+    const banner = bannerVariant(false, IndexStatuses.cancelled, NO_STATS, undefined, false, retention());
+
+    expect(banner.severity).toBe(BannerSeverity.warning);
+    expect(banner.message).toContain(BannerMessageMap[BannerSeverity.warning]);
+    expect(banner.message).toContain(INDEX_RETAINED_DATA_MESSAGE);
+  });
+
+  it('makes no retention claim for a stopped run without a live chunk count', () => {
+    const banner = bannerVariant(false, IndexStatuses.cancelled, NO_STATS);
+
+    expect(banner.message).toBe(BannerMessageMap[BannerSeverity.warning]);
+  });
+
+  it('keeps a budget block visible while still stating the data survived', () => {
+    const budgetError = `The budget has been reached. code: ${BUDGET_ERROR_CODES.PROJECT}`;
+    const banner = bannerVariant(false, IndexStatuses.fail, NO_STATS, budgetError, false, retention());
+
+    expect(banner.label).toBe(REINDEX_FAILED_BANNER_TITLE);
+    expect(banner.message).toContain(BUDGET_ERROR_VARIANTS[BUDGET_ERROR_CODES.PROJECT].message);
+    expect(banner.message).toMatch(/Previously indexed data remains available for search\./);
   });
 });
 

@@ -55,4 +55,46 @@ export const BREADCRUMB_REGISTRY = {
     parent: RouteDefinitions.MCPDetail,
     label: 'Test MCP',
   },
+  [RouteDefinitions.ApplicationsWithTab]: { label: PathSessionMap[RouteDefinitions.Applications] },
+  [RouteDefinitions.CreateApplication]: { parent: RouteDefinitions.ApplicationsWithTab, label: 'New Agent' },
+  [RouteDefinitions.ApplicationsDetail]: {
+    parent: RouteDefinitions.ApplicationsWithTab,
+    entityName: true,
+    fallbackLabel: 'Edit Agent',
+    testId: 'agent-detail-title',
+  },
+  [RouteDefinitions.ApplicationsEvaluate]: {
+    parent: RouteDefinitions.ApplicationsDetail,
+    label: 'Evaluation',
+  },
+  [RouteDefinitions.ApplicationsEvaluateSuite]: {
+    parent: RouteDefinitions.ApplicationsDetail,
+    label: 'Evaluation',
+  },
+  [RouteDefinitions.ApplicationsEvaluateDatasets]: {
+    parent: RouteDefinitions.ApplicationsEvaluate,
+    label: 'Manage Datasets',
+  },
+  [RouteDefinitions.ApplicationsEvaluateDimensions]: {
+    parent: RouteDefinitions.ApplicationsEvaluate,
+    label: 'Manage Dimensions',
+  },
+
+  [RouteDefinitions.SkillsWithTab]: { label: PathSessionMap[RouteDefinitions.Skills] },
+  [RouteDefinitions.CreateSkill]: { parent: RouteDefinitions.SkillsWithTab, label: 'New Skill' },
+  [RouteDefinitions.SkillsDetail]: {
+    parent: RouteDefinitions.SkillsWithTab,
+    entityName: true,
+    fallbackLabel: 'Edit Skill',
+    testId: 'skill-detail-title',
+  },
+
+  [RouteDefinitions.PipelinesWithTab]: { label: PathSessionMap[RouteDefinitions.Pipelines] },
+  [RouteDefinitions.CreatePipeline]: { parent: RouteDefinitions.PipelinesWithTab, label: 'New Pipeline' },
+  [RouteDefinitions.PipelineDetail]: {
+    parent: RouteDefinitions.PipelinesWithTab,
+    entityName: true,
+    fallbackLabel: 'Edit Pipeline',
+    testId: 'pipeline-detail-title',
+  },
 };

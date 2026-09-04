@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 import { useSearchParams } from 'react-router-dom';
@@ -6,13 +6,15 @@ import { useSearchParams } from 'react-router-dom';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import { Alert, Box, CircularProgress, Snackbar, Tooltip, Typography } from '@mui/material';
 
+import { usePagination } from '@/[fsd]/entities/grid-table';
 import { UsageExportHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { InfoBanner, infoBannerTextSx } from '@/[fsd]/features/settings/ui/analytics';
 import { DrawerPage } from '@/[fsd]/features/settings/ui/drawer-page';
 import { exportToExcel } from '@/[fsd]/shared/lib/utils';
 import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
 import { BaseTab, BaseTabs } from '@/[fsd]/shared/ui/tabs';
-import { useProjectUsageQuery, useUsageMembersQuery } from '@/api';
+import { useLazyUsageMembersQuery, useProjectUsageQuery, useUsageMembersQuery } from '@/api';
+import useDebounceValue from '@/hooks/useDebounceValue';
 import { useSelectedProject, useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import UsageDailyChart from './components/UsageDailyChart';
@@ -28,6 +30,14 @@ const PRIVATE_PROJECT_INFO =
 
 const SHARED_MODELS_INFO =
   'Only requests to platform-managed shared models count toward this budget. Usage of models configured with your own provider credentials is billed by that provider and is not included here.';
+
+const DEGRADED_MEMBERS_INFO =
+  'Recorded spend could not be read, so this list shows current members only. Members who have left the project and their spend are missing.';
+
+const SEARCH_DEBOUNCE_MS = 400;
+
+// One page cannot cover a large project, so the export asks for the whole list separately
+const EXPORT_MEMBERS_LIMIT = 1000;
 
 const UsageContainer = memo(() => {
   const projectId = useSelectedProjectId();
@@ -53,21 +63,78 @@ const UsageContainer = memo(() => {
     { skip: !projectId, refetchOnMountOrArgChange: true },
   );
 
-  const { data: membersData, isFetching: isMembersFetching } = useUsageMembersQuery(
-    { projectId },
-    { skip: !projectId || isPersonalProject },
+  const showsMembers = !isPersonalProject && activeScope === SCOPE_PROJECT;
+
+  const [memberSearch, setMemberSearch] = useState('');
+  const debouncedMemberSearch = useDebounceValue(memberSearch, SEARCH_DEBOUNCE_MS);
+
+  // Adjusted during render (not in an effect) when a fresh total arrives, so usePagination
+  // never computes a page's totalPages/labels off a stale total for even one paint
+  const [membersTotal, setMembersTotal] = useState(0);
+  const membersPagination = usePagination({ totalRows: membersTotal, defaultPageSize: 10 });
+  const { page: membersPage, pageSize: membersPageSize, resetPagination } = membersPagination;
+
+  const membersQueryArgs = useMemo(
+    () => ({
+      projectId,
+      limit: membersPageSize,
+      offset: membersPage * membersPageSize,
+      search: debouncedMemberSearch.trim() || undefined,
+    }),
+    [projectId, membersPage, membersPageSize, debouncedMemberSearch],
   );
+
+  const {
+    data: membersData,
+    isFetching: isMembersFetching,
+    isError: isMembersError,
+    refetch: refetchMembers,
+  } = useUsageMembersQuery(membersQueryArgs, { skip: !projectId || !showsMembers });
+
+  if (membersData?.total !== undefined && membersData.total !== membersTotal) {
+    setMembersTotal(membersData.total);
+  }
+
+  // A narrowed search, or a switch to a project, can leave the current page past the new
+  // total -- reset directly rather than through handlePageChange, whose totalPages guard
+  // would otherwise drop the very first reset while membersTotal is still 0
+  useEffect(() => {
+    resetPagination();
+  }, [debouncedMemberSearch, projectId, resetPagination]);
+
+  const [fetchAllMembers] = useLazyUsageMembersQuery();
 
   const canSeeAmounts = Boolean(data?.can_see_amounts);
   const memberRows = useMemo(() => membersData?.rows || [], [membersData]);
   const membersWarningPct = membersData?.warning_pct;
 
-  const showsMembers = !isPersonalProject && activeScope === SCOPE_PROJECT;
+  const handleMemberSearchClear = useCallback(() => setMemberSearch(''), []);
 
   const project = useSelectedProject();
 
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState(false);
+
+  // The backend caps a single call at EXPORT_MEMBERS_LIMIT rows, so a project with more
+  // spenders than that needs several calls, accumulated until the reported total is covered
+  const fetchAllMemberRows = useCallback(async () => {
+    let offset = 0;
+    let total = Infinity;
+    const rows = [];
+    let warningPct;
+
+    while (rows.length < total) {
+      const page = await fetchAllMembers({ projectId, limit: EXPORT_MEMBERS_LIMIT, offset }).unwrap();
+      rows.push(...(page.rows || []));
+      total = page.total ?? rows.length;
+      warningPct = page.warning_pct ?? warningPct;
+      offset += EXPORT_MEMBERS_LIMIT;
+
+      if (!page.rows?.length) break;
+    }
+
+    return { rows, warning_pct: warningPct };
+  }, [fetchAllMembers, projectId]);
 
   const handleExport = useCallback(async () => {
     setExporting(true);
@@ -80,15 +147,17 @@ const UsageContainer = memo(() => {
         isPersonalProject,
       };
 
+      // Fetched in full here, so neither the displayed page nor an active search
+      // can narrow what ends up in the file
+      const exported = showsMembers ? await fetchAllMemberRows() : null;
+
       await exportToExcel(
         UsageExportHelpers.usageExportFileName(args),
-        // Member rows come straight from the query, so an active search or the table's
-        // own paging cannot narrow what gets exported
         UsageExportHelpers.buildUsageSheets({
           ...args,
           data,
-          memberRows,
-          membersWarningPct,
+          memberRows: exported?.rows || memberRows,
+          membersWarningPct: exported?.warning_pct ?? membersWarningPct,
         }),
       );
     } catch {
@@ -96,13 +165,20 @@ const UsageContainer = memo(() => {
     } finally {
       setExporting(false);
     }
-  }, [project, activeScope, isPersonalProject, data, memberRows, membersWarningPct]);
+  }, [
+    project,
+    activeScope,
+    isPersonalProject,
+    data,
+    memberRows,
+    membersWarningPct,
+    showsMembers,
+    fetchAllMemberRows,
+  ]);
 
   const handleCloseExportError = useCallback(() => setExportError(false), []);
 
-  // Exporting while members are still loading would produce an empty Members sheet and
-  // look like it worked, so the action waits for them too
-  const exportDisabled = exporting || isLoading || !data || (showsMembers && isMembersFetching);
+  const exportDisabled = exporting || isLoading || !data;
 
   return (
     <DrawerPage>
@@ -211,11 +287,22 @@ const UsageContainer = memo(() => {
               currency={data.currency}
             />
 
-            {showsMembers && memberRows.length > 0 && (
-              <UsageMembersTable
-                rows={memberRows}
-                warningPct={membersData?.warning_pct}
-              />
+            {showsMembers && (
+              <>
+                {membersData?.degraded && <Alert severity="warning">{DEGRADED_MEMBERS_INFO}</Alert>}
+                <UsageMembersTable
+                  rows={memberRows}
+                  systemRow={membersData?.system_row}
+                  warningPct={membersWarningPct}
+                  search={memberSearch}
+                  onSearchChange={setMemberSearch}
+                  onSearchClear={handleMemberSearchClear}
+                  pagination={membersPagination}
+                  isFetching={isMembersFetching}
+                  isError={isMembersError}
+                  onRetry={refetchMembers}
+                />
+              </>
             )}
           </>
         )}

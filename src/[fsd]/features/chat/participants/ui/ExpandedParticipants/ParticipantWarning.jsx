@@ -3,6 +3,7 @@ import { memo } from 'react';
 import { Typography } from '@mui/material';
 
 import { McpLogInLink } from '@/[fsd]/features/mcp';
+import { OpenApiLogInLink } from '@/[fsd]/features/openapi';
 import { SharepointLogInLink } from '@/[fsd]/features/sharepoint';
 import { ChatParticipantType } from '@/common/constants';
 
@@ -25,6 +26,8 @@ const ParticipantWarning = memo(props => {
     originalDetails,
     entityMeta,
     spConfig,
+    openApiConfig,
+    openApiOAuthLoggedOut,
   } = props;
 
   const styles = participantWarningStyles();
@@ -109,6 +112,19 @@ const ParticipantWarning = memo(props => {
     );
   }
 
+  if (openApiOAuthLoggedOut) {
+    return (
+      <>
+        {'OpenAPI requires authorization. '}
+        <OpenApiLogInLink
+          projectId={entityMeta?.project_id}
+          openApiConfig={openApiConfig}
+          toolkitId={entityMeta?.id}
+        />
+      </>
+    );
+  }
+
   return '';
 });
 
@@ -116,10 +132,10 @@ ParticipantWarning.displayName = 'ParticipantWarning';
 
 /** @type {MuiSx} */
 const participantWarningStyles = () => ({
-  misconfigurationError: {
+  misconfigurationError: ({ palette }) => ({
     textDecoration: 'underline',
     cursor: 'pointer',
-    color: 'primary.main',
+    color: palette.primary.main,
     border: 'none',
     background: 'none',
     padding: 0,
@@ -129,7 +145,7 @@ const participantWarningStyles = () => ({
     '&:hover': {
       color: 'primary.dark',
     },
-  },
+  }),
 });
 
 export default ParticipantWarning;

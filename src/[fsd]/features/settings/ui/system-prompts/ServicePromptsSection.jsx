@@ -556,7 +556,7 @@ const servicePromptsSectionStyles = () => ({
   }),
   card: ({ palette, breakpoints }) => ({
     border: `0.0625rem solid ${palette.border.table}`,
-    backgroundColor: palette.background.secondary,
+    backgroundColor: palette.background.default.secondary,
     borderRadius: '0.75rem',
     flex: '0 0 calc((100% - 1.5rem) / 3)',
     maxWidth: 'calc((100% - 1.5rem) / 3)',
@@ -633,8 +633,8 @@ const servicePromptsSectionStyles = () => ({
     minHeight: 0,
     height: '100%',
     position: 'relative',
-    '& .cm-editor': { backgroundColor: palette.background.default },
-    '& .cm-scroller': { backgroundColor: palette.background.default },
+    '& .cm-editor': { backgroundColor: palette.background.default.secondary },
+    '& .cm-scroller': { backgroundColor: palette.background.default.secondary },
     '& .cm-gutters': {
       backgroundColor: palette.background.tabPanel,
       borderRight: 'none',
