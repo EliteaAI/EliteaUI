@@ -1,39 +1,21 @@
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 
 import { Box, Collapse, Typography } from '@mui/material';
 
 import ArrowDownIcon from '@/components/Icons/ArrowDownIcon';
-import useCheckPermission from '@/hooks/useCheckPermission';
 
-import { EVAL_PERMISSIONS } from '../../../lib/constants';
-import AddCaseMenu from '../case-modals/AddCaseMenu';
 import DatasetCaseItem from './DatasetCaseItem';
 
 const DatasetCasesList = memo(props => {
-  const {
-    cases = [],
-    caseCount = 0,
-    isSharedDataset = false,
-    onAddCase,
-    onEditCase,
-    onRemoveCase,
-    onImportCases,
-    onPromoteCases,
-  } = props;
-
-  const { checkPermission } = useCheckPermission();
-  const canUpdateSuite = checkPermission(EVAL_PERMISSIONS.suiteUpdate);
-  const canUpdateDataset = checkPermission(EVAL_PERMISSIONS.datasetUpdate);
-
-  // Cases from shared datasets can only be modified from Manage Datasets page
-  const canEditCases = canUpdateDataset && !isSharedDataset;
-  const canRemoveCases = canUpdateSuite;
+  const { cases = [], caseCount = 0, excludedCaseIds = [], onIncludeCase, onExcludeCase } = props;
 
   const [expanded, setExpanded] = useState(false);
 
   const handleToggle = useCallback(() => {
     setExpanded(prev => !prev);
   }, []);
+
+  const excludedSet = useMemo(() => new Set(excludedCaseIds), [excludedCaseIds]);
 
   const displayCount = caseCount || cases.length;
   const styles = datasetCasesListStyles();
@@ -53,22 +35,12 @@ const DatasetCasesList = memo(props => {
             <DatasetCaseItem
               key={caseItem.id}
               caseItem={caseItem}
-              canEdit={canEditCases}
-              canRemove={canRemoveCases}
-              onEdit={onEditCase}
-              onRemove={onRemoveCase}
+              isExcluded={excludedSet.has(caseItem.id)}
+              onInclude={onIncludeCase}
+              onExclude={onExcludeCase}
             />
           ))}
         </Box>
-        {canUpdateDataset && (
-          <Box sx={styles.addButtonWrapper}>
-            <AddCaseMenu
-              onCreateManually={onAddCase}
-              onImportFile={onImportCases}
-              onFromChatsRuns={onPromoteCases}
-            />
-          </Box>
-        )}
       </Collapse>
     </Box>
   );
@@ -111,9 +83,6 @@ const datasetCasesListStyles = () => ({
     marginTop: '0.5rem',
     borderTop: `0.0625rem solid ${palette.border.lines}`,
   }),
-  addButtonWrapper: {
-    marginTop: '1rem',
-  },
 });
 
 export default DatasetCasesList;

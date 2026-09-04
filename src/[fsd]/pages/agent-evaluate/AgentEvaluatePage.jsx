@@ -21,7 +21,9 @@ import {
   useEvalDimensionsQuery,
   useEvalSuiteQuery,
   useEvalSuitesQuery,
+  usePlatformDimensionCatalogQuery,
 } from '@/[fsd]/widgets/evaluation';
+import { buildDimensionLookupMap } from '@/[fsd]/widgets/evaluation/lib/helpers';
 import {
   useEvalDatasetActions,
   useEvalDimensionActions,
@@ -51,7 +53,15 @@ const AgentEvaluatePage = memo(() => {
     { skip },
   );
   const { data: datasets = [] } = useEvalDatasetsQuery({ projectId, agentId: applicationId }, { skip });
-  const { data: dimensions = [] } = useEvalDimensionsQuery({ projectId, agentId: applicationId }, { skip });
+  const { data: agentProjectDimensions = [] } = useEvalDimensionsQuery(
+    { projectId, agentId: applicationId, includePlatform: false },
+    { skip },
+  );
+  const { data: platformDimensions = [] } = usePlatformDimensionCatalogQuery({ projectId }, { skip });
+  const dimensions = useMemo(
+    () => [...agentProjectDimensions, ...platformDimensions],
+    [agentProjectDimensions, platformDimensions],
+  );
   const { data: modelsData = { items: [] } } = useListModelsQuery(
     { projectId, include_shared: true, section: 'llm' },
     { skip: !projectId },
@@ -69,7 +79,7 @@ const AgentEvaluatePage = memo(() => {
   const apiAttachedDimensions = useMemo(() => {
     const bindings = (activeSuiteDetail?.bindings ?? []).filter(b => b.dimension_id != null);
     if (bindings.length === 0) return [];
-    const dimMap = new Map(dimensions.map(d => [d.id, d]));
+    const dimMap = buildDimensionLookupMap(dimensions);
     return bindings.map(binding => {
       const dim = dimMap.get(binding.dimension_id);
       return {
@@ -171,30 +181,34 @@ const AgentEvaluatePage = memo(() => {
         <BreadcrumbsOrTitle title="Evaluation" />
       </Box>
       <Box sx={styles.body}>
-        {suiteActions.isDetailView ? (
-          <SuiteDetailPanel
-            suite={suiteDetail}
-            isNew={isCreatingNew}
-            isLoading={!isCreatingNew && isSuiteLoading}
-            modelsData={modelsData}
-            datasets={datasets}
-            attachedDataset={attachedDatasetDetails}
-            attachedDimensions={attachedDimensions}
-            suiteActions={suiteActions}
-            datasetActions={datasetActions}
-            dimensionActions={dimensionActions}
-            runActions={runActions}
-          />
-        ) : (
-          <SuitesPanel
-            suites={suites}
-            isLoading={isSuitesLoading}
-            datasetNamesById={datasetNamesById}
-            suiteActions={suiteActions}
-          />
-        )}
+        <Box sx={styles.leftPanel}>
+          {suiteActions.isDetailView ? (
+            <SuiteDetailPanel
+              suite={suiteDetail}
+              isNew={isCreatingNew}
+              isLoading={!isCreatingNew && isSuiteLoading}
+              modelsData={modelsData}
+              datasets={datasets}
+              attachedDataset={attachedDatasetDetails}
+              attachedDimensions={attachedDimensions}
+              suiteActions={suiteActions}
+              datasetActions={datasetActions}
+              dimensionActions={dimensionActions}
+              runActions={runActions}
+            />
+          ) : (
+            <SuitesPanel
+              suites={suites}
+              isLoading={isSuitesLoading}
+              datasetNamesById={datasetNamesById}
+              suiteActions={suiteActions}
+            />
+          )}
+        </Box>
         <Box sx={styles.divider} />
-        <ResultsPanel runActions={runActions} />
+        <Box sx={styles.rightPanel}>
+          <ResultsPanel runActions={runActions} />
+        </Box>
       </Box>
 
       {/* Suite delete confirmation */}
@@ -257,6 +271,19 @@ const AgentEvaluatePage = memo(() => {
         confirmButtonText="Remove"
       />
 
+      {/* Case exclude confirmation */}
+      <Modal.DeleteEntityModal
+        open={datasetActions.showExcludeCaseConfirm}
+        onClose={datasetActions.handleCloseExcludeCaseConfirm}
+        onConfirm={datasetActions.handleConfirmExcludeCase}
+        title="Exclude confirmation"
+        textContent="Are you sure to exclude case "
+        name={`#${datasetActions.caseToExclude?.id ?? ''}`}
+        inlineExtraContent=" from this suite? The case will remain in the dataset."
+        confirmButtonText="Exclude"
+        alarm
+      />
+
       {/* Dimension modals (saved suite OR new suite) */}
       {(editingSuiteId || isCreatingNew) && (
         <>
@@ -293,6 +320,17 @@ const AgentEvaluatePage = memo(() => {
           />
         </>
       )}
+
+      {/* Clear results confirmation */}
+      <Modal.DeleteEntityModal
+        open={runActions.showClearConfirm}
+        onClose={runActions.handleCloseClearConfirm}
+        onConfirm={runActions.handleConfirmClearResults}
+        title="Clear confirmation"
+        textContent="Are you sure you want to clear the evaluation results? This action cannot be undone."
+        confirmButtonText="Clear"
+        inlineExtraContent=" "
+      />
     </Box>
   );
 });
@@ -321,6 +359,20 @@ const agentEvaluatePageStyles = () => ({
     display: 'flex',
     flex: 1,
     minHeight: 0,
+    overflow: 'hidden',
+  },
+  leftPanel: {
+    display: 'flex',
+    flexDirection: 'column',
+    width: '35%',
+    minWidth: 0,
+    overflow: 'hidden',
+  },
+  rightPanel: {
+    display: 'flex',
+    flexDirection: 'column',
+    width: '65%',
+    minWidth: 0,
     overflow: 'hidden',
   },
   divider: ({ palette }) => ({

@@ -15,6 +15,13 @@ export const withoutExpectedCount = (cases = []) =>
 /** Human-readable label for a case's source_type badge; falls back to the raw value. */
 export const caseSourceLabel = sourceType => EVAL_CASE_SOURCE_LABEL[sourceType] || sourceType || '';
 
+export const sortDatasetsByDate = (datasets = []) =>
+  [...datasets].sort((a, b) => {
+    const dateA = new Date(a.updated_at || a.created_at || 0);
+    const dateB = new Date(b.updated_at || b.created_at || 0);
+    return dateB - dateA;
+  });
+
 /** Truncates long case text for table cells, appending an ellipsis when clipped. */
 export const excerpt = (text, max = 80) => {
   const value = text == null ? '' : String(text);

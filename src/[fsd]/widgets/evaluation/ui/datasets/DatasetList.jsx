@@ -2,6 +2,7 @@ import { memo, useMemo, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
+import { sortDatasetsByDate } from '../../lib/helpers/dataset.helpers';
 import DatasetItem from './DatasetItem';
 
 const DatasetList = memo(props => {
@@ -9,13 +10,7 @@ const DatasetList = memo(props => {
 
   const [hoveredDatasetId, setHoveredDatasetId] = useState(null);
 
-  const sortedDatasets = useMemo(() => {
-    return [...datasets].sort((a, b) => {
-      const dateA = new Date(a.updated_at || a.created_at || 0);
-      const dateB = new Date(b.updated_at || b.created_at || 0);
-      return dateB - dateA;
-    });
-  }, [datasets]);
+  const sortedDatasets = useMemo(() => sortDatasetsByDate(datasets), [datasets]);
 
   const styles = datasetListStyles();
 

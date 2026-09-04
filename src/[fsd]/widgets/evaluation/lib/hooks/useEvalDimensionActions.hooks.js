@@ -5,7 +5,12 @@ import { useNavigate } from 'react-router-dom';
 import useToast from '@/hooks/useToast';
 import RouteDefinitions from '@/routes';
 
-import { useAddEvalBindingMutation, useDeleteEvalBindingMutation } from '../../api';
+import {
+  useAddEvalBindingMutation,
+  useDeleteEvalBindingMutation,
+  useMaterializePlatformDimensionMutation,
+} from '../../api';
+import { EVAL_TIER } from '../constants';
 import { parseEvalError } from '../helpers';
 
 export const useEvalDimensionActions = ({
@@ -21,6 +26,7 @@ export const useEvalDimensionActions = ({
 
   const [addEvalBinding] = useAddEvalBindingMutation();
   const [deleteEvalBinding] = useDeleteEvalBindingMutation();
+  const [materializePlatformDimension] = useMaterializePlatformDimensionMutation();
 
   const [showDimensionLibrary, setShowDimensionLibrary] = useState(false);
   const [showCreateDimensionModal, setShowCreateDimensionModal] = useState(false);
@@ -54,6 +60,19 @@ export const useEvalDimensionActions = ({
     setShowDimensionLibrary(false);
   }, []);
 
+  const resolveDimensionId = useCallback(
+    async dimension => {
+      if (dimension.tier !== EVAL_TIER.platform) return dimension.id;
+      if (dimension.local_dimension_id) return dimension.local_dimension_id;
+      const materialized = await materializePlatformDimension({
+        projectId,
+        uuid: dimension.uuid,
+      }).unwrap();
+      return materialized.id;
+    },
+    [materializePlatformDimension, projectId],
+  );
+
   const handleAddDimensionsFromLibrary = useCallback(
     async selected => {
       if (selected.length === 0) return;
@@ -62,7 +81,13 @@ export const useEvalDimensionActions = ({
           const existingIds = new Set(prev.map(p => p.id));
           const newItems = selected
             .filter(d => !existingIds.has(d.id))
-            .map(d => ({ id: d.id, engine: d.allowed_engines?.[0] ?? 'ai' }));
+            .map(d => ({
+              id: d.id,
+              engine: d.allowed_engines?.[0] ?? 'ai',
+              tier: d.tier,
+              uuid: d.uuid,
+              local_dimension_id: d.local_dimension_id,
+            }));
           return [...prev, ...newItems];
         });
         setShowDimensionLibrary(false);
@@ -70,16 +95,17 @@ export const useEvalDimensionActions = ({
         return;
       }
       const results = await Promise.allSettled(
-        selected.map(dimension =>
-          addEvalBinding({
+        selected.map(async dimension => {
+          const dimensionId = await resolveDimensionId(dimension);
+          return addEvalBinding({
             projectId,
             suiteId: editingSuiteId,
             body: {
-              dimension_id: dimension.id,
+              dimension_id: dimensionId,
               engine: dimension.allowed_engines?.[0] ?? 'ai',
             },
-          }).unwrap(),
-        ),
+          }).unwrap();
+        }),
       );
       const successCount = results.filter(r => r.status === 'fulfilled').length;
       const failCount = results.filter(r => r.status === 'rejected').length;
@@ -89,7 +115,7 @@ export const useEvalDimensionActions = ({
         toastError(`${successCount} added, ${failCount} failed to attach.`);
       }
     },
-    [editingSuiteId, addEvalBinding, projectId, toastSuccess, toastError],
+    [editingSuiteId, addEvalBinding, resolveDimensionId, projectId, toastSuccess, toastError],
   );
 
   const handleCreateDimensionManually = useCallback(() => {
@@ -136,7 +162,9 @@ export const useEvalDimensionActions = ({
 
   const handleEditDimension = useCallback(
     binding => {
-      const dim = dimensions.find(d => d.id === binding.dimension_id);
+      const dim = dimensions.find(
+        d => d.id === binding.dimension_id || d.local_dimension_id === binding.dimension_id,
+      );
       if (dim) {
         setDimensionToEdit(dim);
       }
@@ -189,17 +217,18 @@ export const useEvalDimensionActions = ({
     async suiteId => {
       if (pendingDimensions.length === 0) return;
       const results = await Promise.allSettled(
-        pendingDimensions.map(dim =>
-          addEvalBinding({
+        pendingDimensions.map(async dim => {
+          const dimensionId = dim.tier === EVAL_TIER.platform ? await resolveDimensionId(dim) : dim.id;
+          return addEvalBinding({
             projectId,
             suiteId,
             body: {
-              dimension_id: dim.id,
+              dimension_id: dimensionId,
               engine: dim.engine ?? 'ai',
               ...(dim.evidenceScope ? { evidence_scope: dim.evidenceScope } : {}),
             },
-          }).unwrap(),
-        ),
+          }).unwrap();
+        }),
       );
       const failCount = results.filter(r => r.status === 'rejected').length;
       if (failCount > 0) {
@@ -207,7 +236,7 @@ export const useEvalDimensionActions = ({
       }
       setPendingDimensions([]);
     },
-    [pendingDimensions, addEvalBinding, projectId, toastError],
+    [pendingDimensions, addEvalBinding, resolveDimensionId, projectId, toastError],
   );
 
   return {

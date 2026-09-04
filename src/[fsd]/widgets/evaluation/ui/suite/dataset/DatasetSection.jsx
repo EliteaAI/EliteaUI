@@ -15,15 +15,13 @@ const DatasetSection = memo(props => {
   const { datasets = [], attachedDataset = null, datasetActions = {} } = props;
 
   const {
+    excludedCaseIds = [],
     handleAttachDataset: onAttachDataset,
     handleRemoveDataset: onRemoveDataset,
     handleCreateDataset: onCreateDataset,
     handleOpenDataset: onOpenDataset,
-    handleAddCase: onAddCase,
-    handleEditCase: onEditCase,
-    handleRemoveCase: onRemoveCase,
-    handleImportCases: onImportCases,
-    handlePromoteCases: onPromoteCases,
+    handleIncludeCase: onIncludeCase,
+    handleExcludeCase: onExcludeCase,
   } = datasetActions;
 
   const { checkPermission } = useCheckPermission();
@@ -64,15 +62,13 @@ const DatasetSection = memo(props => {
         <AttachedDatasetCard
           dataset={attachedDataset}
           availableDatasets={availableDatasets}
+          excludedCaseIds={excludedCaseIds}
           onChangeDataset={onAttachDataset}
           onRemoveDataset={onRemoveDataset}
           onCreateDataset={onCreateDataset}
           onOpenDataset={onOpenDataset}
-          onAddCase={onAddCase}
-          onEditCase={onEditCase}
-          onRemoveCase={onRemoveCase}
-          onImportCases={onImportCases}
-          onPromoteCases={onPromoteCases}
+          onIncludeCase={onIncludeCase}
+          onExcludeCase={onExcludeCase}
         />
       ) : (
         canUpdateSuite && (

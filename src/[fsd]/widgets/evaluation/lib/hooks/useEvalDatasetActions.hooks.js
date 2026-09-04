@@ -1,11 +1,15 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useNavigate } from 'react-router-dom';
 
 import useToast from '@/hooks/useToast';
 import RouteDefinitions from '@/routes';
 
-import { useUpdateEvalSuiteMutation } from '../../api';
+import {
+  useEvalSuiteCaseExclusionsQuery,
+  useUpdateEvalSuiteCaseExclusionsMutation,
+  useUpdateEvalSuiteMutation,
+} from '../../api';
 import { parseEvalError } from '../helpers';
 
 export const useEvalDatasetActions = ({ projectId, editingSuiteId, agentId, tab }) => {
@@ -13,12 +17,23 @@ export const useEvalDatasetActions = ({ projectId, editingSuiteId, agentId, tab 
   const { toastError, toastSuccess } = useToast();
 
   const [updateEvalSuite] = useUpdateEvalSuiteMutation();
+  const [updateExclusions] = useUpdateEvalSuiteCaseExclusionsMutation();
+
+  // Get current exclusions for the suite
+  const { data: exclusionsData } = useEvalSuiteCaseExclusionsQuery(
+    { projectId, suiteId: editingSuiteId },
+    { skip: !projectId || !editingSuiteId },
+  );
+
+  const excludedCaseIds = useMemo(() => exclusionsData?.case_ids ?? [], [exclusionsData?.case_ids]);
 
   const [showDatasetDialog, setShowDatasetDialog] = useState(false);
   const [showCaseModal, setShowCaseModal] = useState(false);
   const [showChatsModal, setShowChatsModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [showExcludeCaseConfirm, setShowExcludeCaseConfirm] = useState(false);
   const [caseToEdit, setCaseToEdit] = useState(null);
+  const [caseToExclude, setCaseToExclude] = useState(null);
   const [pendingDatasetId, setPendingDatasetId] = useState(null);
 
   useEffect(() => {
@@ -26,7 +41,9 @@ export const useEvalDatasetActions = ({ projectId, editingSuiteId, agentId, tab 
     setShowCaseModal(false);
     setShowChatsModal(false);
     setShowImportModal(false);
+    setShowExcludeCaseConfirm(false);
     setCaseToEdit(null);
+    setCaseToExclude(null);
     setPendingDatasetId(null);
   }, [editingSuiteId]);
 
@@ -131,13 +148,55 @@ export const useEvalDatasetActions = ({ projectId, editingSuiteId, agentId, tab 
     setCaseToEdit(null);
   }, []);
 
-  const handleRemoveCase = useCallback(
-    datasetCase => {
-      // eslint-disable-next-line no-console
-      console.warn('Remove case from suite not implemented yet. Case:', datasetCase?.id);
-      toastError('Remove case from suite is not available yet. Please use Manage Datasets to delete cases.');
+  // ---- Case exclusion (from suite) ----
+
+  const handleExcludeCase = useCallback(datasetCase => {
+    if (!datasetCase?.id) return;
+    setCaseToExclude(datasetCase);
+    setShowExcludeCaseConfirm(true);
+  }, []);
+
+  const handleCloseExcludeCaseConfirm = useCallback(() => {
+    setShowExcludeCaseConfirm(false);
+    setCaseToExclude(null);
+  }, []);
+
+  const handleConfirmExcludeCase = useCallback(async () => {
+    if (!caseToExclude?.id || !editingSuiteId) return;
+
+    try {
+      const newExclusions = [...new Set([...excludedCaseIds, caseToExclude.id])];
+      await updateExclusions({
+        projectId,
+        suiteId: editingSuiteId,
+        caseIds: newExclusions,
+      }).unwrap();
+      toastSuccess('Case has been excluded from this suite.');
+    } catch (error) {
+      toastError(parseEvalError(error, 'Failed to exclude case from suite.'));
+    } finally {
+      setShowExcludeCaseConfirm(false);
+      setCaseToExclude(null);
+    }
+  }, [caseToExclude, editingSuiteId, excludedCaseIds, updateExclusions, projectId, toastSuccess, toastError]);
+
+  const handleIncludeCase = useCallback(
+    async datasetCase => {
+      if (!datasetCase?.id || !editingSuiteId) return;
+
+      try {
+        const newExclusions = excludedCaseIds.filter(id => id !== datasetCase.id);
+        await updateExclusions({
+          projectId,
+          suiteId: editingSuiteId,
+          caseIds: newExclusions,
+        }).unwrap();
+        toastSuccess('Case has been included in this suite.');
+      } catch (error) {
+        toastError(parseEvalError(error, 'Failed to include case in suite.'));
+      }
     },
-    [toastError],
+    [editingSuiteId, excludedCaseIds, updateExclusions, projectId, toastSuccess, toastError],
   );
 
   const handleImportCases = useCallback(() => {
@@ -178,7 +237,10 @@ export const useEvalDatasetActions = ({ projectId, editingSuiteId, agentId, tab 
     showCaseModal,
     showChatsModal,
     showImportModal,
+    showExcludeCaseConfirm,
     caseToEdit,
+    caseToExclude,
+    excludedCaseIds,
     pendingDatasetId,
     handleManageDatasets,
     handleCreateDataset,
@@ -190,7 +252,10 @@ export const useEvalDatasetActions = ({ projectId, editingSuiteId, agentId, tab 
     handleAddCase,
     handleEditCase,
     handleCloseCaseModal,
-    handleRemoveCase,
+    handleExcludeCase,
+    handleCloseExcludeCaseConfirm,
+    handleConfirmExcludeCase,
+    handleIncludeCase,
     handleImportCases,
     handleCloseImportModal,
     handlePromoteCases,

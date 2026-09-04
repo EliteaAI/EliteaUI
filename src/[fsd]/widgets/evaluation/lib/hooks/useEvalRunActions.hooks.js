@@ -1,9 +1,15 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useLazyApplicationDetailsQuery } from '@/api/applications';
 import useToast from '@/hooks/useToast';
 
-import { useCancelEvalRunMutation, useEvalRunQuery, useStartEvalRunMutation } from '../../api';
+import {
+  useCancelEvalRunMutation,
+  useDeleteEvalRunMutation,
+  useEvalRunQuery,
+  useEvalRunsQuery,
+  useStartEvalRunMutation,
+} from '../../api';
 import { EVAL_RUN_FALLBACK_POLL_MS, EVAL_RUN_TRIGGER } from '../constants';
 import { isRunActive, isRunTerminal, parseEvalError } from '../helpers';
 import { useEvalRunLiveProgress } from './useEvalRunLiveProgress.hooks';
@@ -16,45 +22,67 @@ export const useEvalRunActions = ({
   attachedDatasetDetails,
   attachedDimensionsCount,
 }) => {
-  const { toastError } = useToast();
+  const { toastError, toastSuccess } = useToast();
 
   const [fetchApplicationDetails] = useLazyApplicationDetailsQuery();
   const [startEvalRun, { isLoading: isStartingRun }] = useStartEvalRunMutation();
   const [cancelEvalRun] = useCancelEvalRunMutation();
+  const [deleteEvalRun] = useDeleteEvalRunMutation();
 
   const [activeRunId, setActiveRunId] = useState(null);
   const [cancelRequested, setCancelRequested] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
   const terminalNotifiedRef = useRef(null);
   const [runPollingInterval, setRunPollingInterval] = useState(0);
 
-  const shouldFetchRun = !!activeRunId && projectId != null;
-  const { data: activeRun, isError: isRunError } = useEvalRunQuery(
-    { projectId, runId: activeRunId },
-    { skip: !shouldFetchRun, pollingInterval: runPollingInterval },
+  // Fetch runs history from API (persists across page refresh)
+  const skipRunsQuery = !projectId || !applicationId || editingSuiteId == null;
+  const { data: runs = [], refetch: refetchRuns } = useEvalRunsQuery(
+    { projectId, applicationId, suiteId: editingSuiteId },
+    { skip: skipRunsQuery },
   );
 
-  const runSettled = isRunTerminal(activeRun?.status) || isRunError;
-  const runActive = isRunActive(activeRun?.status);
+  // Last run from API (most recent completed run)
+  const lastRun = useMemo(() => (runs.length ? runs[0] : null), [runs]);
+
+  // Fetch active run details (for in-progress runs)
+  const shouldFetchActiveRun = !!activeRunId && projectId != null;
+  const { data: activeRunData, isError: isRunError } = useEvalRunQuery(
+    { projectId, runId: activeRunId },
+    { skip: !shouldFetchActiveRun, pollingInterval: runPollingInterval },
+  );
+
+  const runSettled = isRunTerminal(activeRunData?.status) || isRunError;
+  const runActive = isRunActive(activeRunData?.status);
 
   const { isLive } = useEvalRunLiveProgress({
     projectId,
     runId: activeRunId,
-    enabled: shouldFetchRun && !runSettled,
+    enabled: shouldFetchActiveRun && !runSettled,
   });
 
   useEffect(() => {
-    setRunPollingInterval(shouldFetchRun && !runSettled && !isLive ? EVAL_RUN_FALLBACK_POLL_MS : 0);
-  }, [shouldFetchRun, runSettled, isLive]);
+    setRunPollingInterval(shouldFetchActiveRun && !runSettled && !isLive ? EVAL_RUN_FALLBACK_POLL_MS : 0);
+  }, [shouldFetchActiveRun, runSettled, isLive]);
 
+  // Refetch runs list when active run reaches terminal state
   useEffect(() => {
-    if (isRunTerminal(activeRun?.status) && terminalNotifiedRef.current !== activeRunId) {
+    if (isRunTerminal(activeRunData?.status) && terminalNotifiedRef.current !== activeRunId) {
       terminalNotifiedRef.current = activeRunId;
+      refetchRuns();
     }
-  }, [activeRun?.status, activeRunId]);
+  }, [activeRunData?.status, activeRunId, refetchRuns]);
 
   useEffect(() => {
     setCancelRequested(false);
   }, [activeRunId]);
+
+  // Reset active run when suite changes
+  useEffect(() => {
+    setActiveRunId(null);
+    setCancelRequested(false);
+    setShowClearConfirm(false);
+  }, [editingSuiteId]);
 
   const handleEvaluate = useCallback(async () => {
     if (!editingSuiteId) return;
@@ -123,13 +151,59 @@ export const useEvalRunActions = ({
     // TODO: wire up results history
   }, []);
 
+  // Determine which run to use for clear (active run or last run from history)
+  const runToClear = activeRunId ? activeRunData : lastRun;
+
+  const handleClearResults = useCallback(() => {
+    if (!runToClear?.id) return;
+    setShowClearConfirm(true);
+  }, [runToClear?.id]);
+
+  const handleCloseClearConfirm = useCallback(() => {
+    setShowClearConfirm(false);
+  }, []);
+
+  const handleConfirmClearResults = useCallback(async () => {
+    const runId = runToClear?.id;
+    if (!runId) {
+      setShowClearConfirm(false);
+      return;
+    }
+    try {
+      await deleteEvalRun({ projectId, runId }).unwrap();
+      if (activeRunId === runId) {
+        setActiveRunId(null);
+      }
+      toastSuccess('Results cleared successfully.');
+      refetchRuns();
+    } catch (error) {
+      toastError(parseEvalError(error, 'Failed to clear results.'));
+    }
+    setShowClearConfirm(false);
+  }, [deleteEvalRun, projectId, runToClear?.id, activeRunId, toastError, toastSuccess, refetchRuns]);
+
+  const handleExportResults = useCallback(() => {
+    // TODO: wire up export to Excel
+  }, []);
+
+  // Determine the "display run" — active run if in progress, otherwise last run from history
+  const displayRun = runActive ? activeRunData : lastRun;
+
   return {
-    activeRun,
+    activeRun: activeRunData,
+    displayRun,
+    lastRun,
+    runs,
     runActive,
     isEvaluating: isStartingRun || runActive,
     cancelRequested,
+    showClearConfirm,
     handleEvaluate,
     handleCancelRun,
     handleOpenHistory,
+    handleClearResults,
+    handleCloseClearConfirm,
+    handleConfirmClearResults,
+    handleExportResults,
   };
 };

@@ -9,6 +9,17 @@ import {
   SCALE_TYPE_PRESET_CONFIG,
 } from '../constants';
 
+export const buildDimensionLookupMap = (dimensions = []) => {
+  const map = new Map();
+  dimensions.forEach(d => {
+    map.set(d.id, d);
+    if (d.local_dimension_id != null && !map.has(d.local_dimension_id)) {
+      map.set(d.local_dimension_id, d);
+    }
+  });
+  return map;
+};
+
 export const getDefaultDimensionFormState = () => ({
   name: '',
   isShared: false,

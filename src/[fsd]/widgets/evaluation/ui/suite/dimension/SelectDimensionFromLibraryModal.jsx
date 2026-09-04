@@ -6,7 +6,7 @@ import { Button, Input, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { BaseTab, BaseTabs } from '@/[fsd]/shared/ui/tabs';
 
-import { useEvalDimensionsQuery } from '../../../api';
+import { useEvalDimensionsQuery, usePlatformDimensionCatalogQuery } from '../../../api';
 import { EVAL_TIER } from '../../../lib/constants';
 import DimensionItem from './DimensionItem';
 
@@ -23,10 +23,15 @@ const SelectDimensionFromLibraryModal = memo(props => {
   const [search, setSearch] = useState('');
   const [selectedIds, setSelectedIds] = useState([]);
 
-  const { data: dimensions = [], isFetching } = useEvalDimensionsQuery(
-    { projectId, agentId: applicationId },
+  const { data: agentProjectDimensions = [], isFetching: isFetchingDimensions } = useEvalDimensionsQuery(
+    { projectId, agentId: applicationId, includePlatform: false },
     { skip: !open || !projectId },
   );
+  const { data: platformDimensions = [], isFetching: isFetchingPlatform } = usePlatformDimensionCatalogQuery(
+    { projectId },
+    { skip: !open || !projectId },
+  );
+  const isFetching = isFetchingDimensions || isFetchingPlatform;
 
   useEffect(() => {
     if (open) {
@@ -39,7 +44,8 @@ const SelectDimensionFromLibraryModal = memo(props => {
   const attachedSet = useMemo(() => new Set(attachedDimensionIds), [attachedDimensionIds]);
 
   const availableDimensions = useMemo(() => {
-    const filtered = dimensions.filter(d => d.tier === activeTab && !attachedSet.has(d.id));
+    const source = activeTab === EVAL_TIER.platform ? platformDimensions : agentProjectDimensions;
+    const filtered = source.filter(d => d.tier === activeTab && !attachedSet.has(d.id));
 
     const term = search.trim().toLowerCase();
     if (!term) return filtered;
@@ -49,7 +55,7 @@ const SelectDimensionFromLibraryModal = memo(props => {
       const desc = (d.description || '').toLowerCase();
       return name.includes(term) || desc.includes(term);
     });
-  }, [dimensions, attachedSet, search, activeTab]);
+  }, [agentProjectDimensions, platformDimensions, attachedSet, search, activeTab]);
 
   const handleTabChange = useCallback((_, newValue) => {
     setActiveTab(newValue);
@@ -70,10 +76,11 @@ const SelectDimensionFromLibraryModal = memo(props => {
 
   const handleAdd = useCallback(() => {
     if (selectedIds.length === 0) return;
-    const selected = dimensions.filter(d => selectedIds.includes(d.id));
+    const source = activeTab === EVAL_TIER.platform ? platformDimensions : agentProjectDimensions;
+    const selected = source.filter(d => selectedIds.includes(d.id));
     onAdd?.(selected);
     onClose();
-  }, [selectedIds, dimensions, onAdd, onClose]);
+  }, [selectedIds, activeTab, agentProjectDimensions, platformDimensions, onAdd, onClose]);
 
   const selectedCount = selectedIds.length;
 
