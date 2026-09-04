@@ -11,13 +11,17 @@ import AgentCategorySection from '@/[fsd]/features/agent-hub/ui/AgentCategorySec
 import AgentModal from '@/[fsd]/features/agent-hub/ui/AgentModal';
 import { ELITEA_CATALOG_TOUR_ID, ELITEA_CATALOG_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { AgentHubContext, useInteractiveTour } from '@/[fsd]/shared/lib/context';
+import { DEFAULT_NEW_ITEM_DAYS, isNewItem } from '@/[fsd]/shared/lib/helpers';
 import { useGroupedCategories } from '@/[fsd]/shared/lib/hooks';
 import { Category } from '@/[fsd]/shared/ui';
+import { useGetPlatformSettingsQuery } from '@/api/platformSettings';
 import useDebounceValue from '@/hooks/useDebounceValue';
 
 const AgentsTab = memo(props => {
-  const { query = '' } = props;
+  const { query = '', onTotalCountChange } = props;
   const debouncedQuery = useDebounceValue(query, 300);
+  const { data: platformSettings } = useGetPlatformSettingsQuery();
+  const newItemDays = platformSettings?.catalog_new_item_days ?? DEFAULT_NEW_ITEM_DAYS;
   const [selectedTagNames, setSelectedTagNames] = useState([]);
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -69,10 +73,15 @@ const AgentsTab = memo(props => {
   });
 
   const allCategories = useMemo(() => AgentHubHelpers.buildAllCategories(categoryNames), [categoryNames]);
-  const applicationMenuItems = useMemo(
-    () => AgentHubHelpers.buildApplicationMenuItems(applicationsByTag, selectedTagNames),
-    [applicationsByTag, selectedTagNames],
-  );
+  const applicationMenuItems = useMemo(() => {
+    const base = AgentHubHelpers.buildApplicationMenuItems(applicationsByTag, selectedTagNames);
+    return base.map(item => {
+      if (isNewItem(item.value?.created_at, newItemDays)) {
+        return { ...item, category: [...item.category, AgentHubConstants.NEW_CATEGORY] };
+      }
+      return item;
+    });
+  }, [applicationsByTag, selectedTagNames, newItemDays]);
 
   const handleApplicationSelect = useCallback(app => {
     setSelectedApplication(app);
@@ -107,11 +116,25 @@ const AgentsTab = memo(props => {
     { isSearchDisabled: true, isSortDisabled: true },
   );
 
+  const visibleUniqueCount = useMemo(() => {
+    const source =
+      selectedTagNames.length > 0
+        ? selectedTagNames.flatMap(tag => applicationsByTag[tag] || [])
+        : Object.values(applicationsByTag).flat();
+    return new Set(source.map(item => item.id)).size;
+  }, [applicationsByTag, selectedTagNames]);
+
+  useEffect(() => {
+    onTotalCountChange?.(visibleUniqueCount);
+  }, [visibleUniqueCount, onTotalCountChange]);
+
   const handleTagSelect = useCallback(
     category => {
-      setSelectedTagNames(prev =>
-        prev.includes(category) ? prev.filter(name => name !== category) : [...prev, category],
-      );
+      if (category !== AgentHubConstants.NEW_CATEGORY) {
+        setSelectedTagNames(prev =>
+          prev.includes(category) ? prev.filter(name => name !== category) : [...prev, category],
+        );
+      }
       onSelectCategory(category);
     },
     [onSelectCategory],
@@ -140,14 +163,17 @@ const AgentsTab = memo(props => {
           key={category}
           category={category}
           items={items}
-          totalCount={totalCountsByTag[category] || 0}
+          totalCount={
+            category === AgentHubConstants.NEW_CATEGORY ? items.length : totalCountsByTag[category] || 0
+          }
           isLoadingMore={loadingTags.has(category)}
           onSelectItem={handleApplicationSelect}
           onLoadMore={handleLoadMore}
+          newItemDays={newItemDays}
         />
       );
     },
-    [handleApplicationSelect, handleLoadMore, loadingTags, totalCountsByTag],
+    [handleApplicationSelect, handleLoadMore, loadingTags, totalCountsByTag, newItemDays],
   );
 
   const renderNoResults = useCallback(

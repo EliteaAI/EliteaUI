@@ -1,9 +1,10 @@
 import { memo, useCallback, useMemo } from 'react';
 
-import { Box, Card, Typography } from '@mui/material';
+import { Box, Card, Chip, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { ELITEA_CATALOG_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
+import { isNewItem } from '@/[fsd]/shared/lib/helpers';
 import { ChatParticipantType, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
 import AuthorContainer from '@/components/AuthorContainer';
 import EntityIcon from '@/components/EntityIcon';
@@ -12,7 +13,7 @@ import { getCardGradientStyles } from '@/utils/cardStyles';
 import AgentHubLike from './AgentHubLike';
 
 const AgentCard = memo(props => {
-  const { application, onSelectItem } = props;
+  const { application, onSelectItem, newItemDays } = props;
 
   const styles = agentCardStyles();
 
@@ -73,11 +74,20 @@ const AgentCard = memo(props => {
             />
           </Box>
         </StyledTooltip>
-        <AgentHubLike
-          viewMode={ViewMode.Public}
-          data={application}
-          testId={`catalog-agent-like-button-${application.id}`}
-        />
+        <Box sx={styles.actionContainer}>
+          {isNewItem(application.created_at, newItemDays) && (
+            <Chip
+              label="New"
+              size="small"
+              sx={styles.newBadge}
+            />
+          )}
+          <AgentHubLike
+            viewMode={ViewMode.Public}
+            data={application}
+            testId={`catalog-agent-like-button-${application.id}`}
+          />
+        </Box>
       </Box>
     </Card>
   );
@@ -89,6 +99,7 @@ AgentCard.displayName = 'AgentCard';
 const agentCardStyles = () => ({
   card: ({ palette }) => ({
     ...getCardGradientStyles(palette),
+    position: 'relative',
     height: '7rem',
     maxHeight: '7rem',
     display: 'flex',
@@ -99,6 +110,18 @@ const agentCardStyles = () => ({
     paddingBottom: 0,
     cursor: 'pointer',
     boxShadow: 'none',
+  }),
+  newBadge: ({ palette }) => ({
+    height: '1.125rem',
+    fontSize: '0.625rem',
+    fontWeight: 700,
+    backgroundColor: palette.success.main,
+    color: palette.success.contrastText,
+    pointerEvents: 'none',
+    zIndex: 1,
+    '& .MuiChip-label': {
+      padding: '0 0.375rem',
+    },
   }),
   header: {
     display: 'flex',
@@ -128,6 +151,11 @@ const agentCardStyles = () => ({
   },
   authors: {
     minWidth: '1.25rem',
+  },
+  actionContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
   },
 });
 

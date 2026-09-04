@@ -11,6 +11,7 @@ export const buildAllCategories = categoryNames => {
   return [
     AgentHubConstants.TRENDING_CATEGORY,
     AgentHubConstants.MY_LIKED_CATEGORY,
+    AgentHubConstants.NEW_CATEGORY,
     ...names,
     AgentHubConstants.OTHER_CATEGORY,
   ];
