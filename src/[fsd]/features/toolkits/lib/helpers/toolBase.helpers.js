@@ -168,6 +168,20 @@ export const validateRequiredFields = (
 ) => {
   const errors = {};
 
+  // The headers collection is optional, but every row inside a populated collection is not.
+  // Validate it independently from schema.required so invalid names/values never reach the API
+  // (whose Pydantic error representation may include the rejected input object).
+  Object.entries(schema?.properties || {}).forEach(([prop, propSchema]) => {
+    if (propSchema?.ui_component !== 'secret_headers') return;
+
+    const headers = settings?.[prop];
+    const hasHeaders = Boolean(
+      headers && typeof headers === 'object' && !Array.isArray(headers) && Object.keys(headers).length > 0,
+    );
+    const isRequired = schema?.required?.includes(prop);
+    errors[prop] = (isRequired && !hasHeaders) || (hasHeaders && validateSecretHeaders(headers));
+  });
+
   schema?.required
     ?.filter(prop => (enableEditEliteaTitle || prop !== 'elitea_title') && !sectionProps.includes(prop))
     .forEach(prop => {
@@ -175,8 +189,8 @@ export const validateRequiredFields = (
       if (propSchema?.type === 'boolean' || !propSchema) {
         errors[prop] = false;
       } else if (propSchema?.ui_component === 'secret_headers') {
-        const hasHeaders = Object.keys(settings[prop] || {}).length > 0;
-        errors[prop] = !hasHeaders || validateSecretHeaders(settings[prop]);
+        // Secret headers are handled above because populated optional collections need validation too.
+        return;
       } else {
         errors[prop] = !settings[prop];
       }
