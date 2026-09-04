@@ -224,7 +224,6 @@ const FolderSection = memo(props => {
 
 FolderSection.displayName = 'FolderSection';
 
-/** @type {MuiSx} */
 const folderSectionStyles = () => ({
   container: {
     marginBottom: '1.5rem',
