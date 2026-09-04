@@ -59,6 +59,7 @@ const BaseEditor = ({
   subtitleTestId,
   closeButtonTestId,
   publicLabelTestId,
+  isFormikContext = true,
 }) => {
   const theme = useTheme();
   const { isSmallWindow } = useIsSmallWindow();
@@ -122,7 +123,10 @@ const BaseEditor = ({
         validationSchema={validationSchema}
       >
         <Form style={styles.form}>
-          <DirtyDetector setDirty={handleIsDirtyChange} />
+          <DirtyDetector
+            setDirty={handleIsDirtyChange}
+            isFormikContext={isFormikContext}
+          />
           <EditorHeader
             title={title}
             subtitle={subtitle}
@@ -130,6 +134,7 @@ const BaseEditor = ({
             onDiscard={handleDiscard}
             saveButton={saveButton}
             isPublic={isPublic}
+            isDirty={isDirty}
             titleTestId={titleTestId}
             subtitleTestId={subtitleTestId}
             closeButtonTestId={closeButtonTestId}
