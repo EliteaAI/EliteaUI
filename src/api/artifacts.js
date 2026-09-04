@@ -132,6 +132,17 @@ export const artifactsApi = eliteaApi
         },
         invalidatesTags: [TAG_ARTIFACTS, TAG_BUCKETS], // Also invalidate buckets when files are deleted
       }),
+      renameArtifact: build.mutation({
+        query: ({ projectId, bucket, oldName, newName }) => ({
+          url: `/artifacts/artifact/default/${projectId}/${encodeURI(bucket)}`,
+          method: 'PUT',
+          params: {
+            old_name: encodeURIComponent(oldName),
+            new_name: encodeURIComponent(newName),
+          },
+        }),
+        invalidatesTags: [TAG_ARTIFACTS],
+      }),
       deleteArtifacts: build.mutation({
         queryFn: async ({ projectId, bucket, fname }, _queryApi, _extraOptions, baseQuery) => {
           const base = `/artifacts/artifacts/default/${projectId}/${encodeURI(bucket)}`;
@@ -204,6 +215,7 @@ export const {
   useUpdateBucketPinMutation,
   useDeleteBucketMutation,
   useCreateArtifactMutation,
+  useRenameArtifactMutation,
   useDeleteArtifactMutation,
   useDeleteArtifactsMutation,
 } = artifactsApi;

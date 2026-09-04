@@ -8,16 +8,13 @@ import { PERMISSIONS } from '@/common/constants';
 import DotMenu from '@/components/DotMenu';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import DownloadIcon from '@/components/Icons/DownloadIcon';
+import EditPenIcon from '@/components/Icons/EditPenIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
 
 import { ARTIFACT_TYPES } from './constants';
 
-/**
- * Action buttons for artifact table rows
- * Shows preview button (if applicable) and a dots menu with download, move to, and delete options
- */
 const ArtifactRowActions = memo(props => {
-  const { row, onPreview, onDownload, onDelete } = props;
+  const { row, onPreview, onDownload, onDelete, onRename } = props;
 
   const { checkPermission } = useCheckPermission();
   const { isPrivate } = useProjectType();
@@ -38,8 +35,15 @@ const ArtifactRowActions = memo(props => {
     onDelete(row);
   }, [onDelete, row]);
 
+  const handleRename = useCallback(() => {
+    onRename?.(row);
+  }, [onRename, row]);
+
+  const styles = artifactRowActionsStyles();
+
   const menuItems = useMemo(() => {
     const isFile = row.type === ARTIFACT_TYPES.FILE;
+    const canEdit = isPrivate || checkPermission(PERMISSIONS.artifacts.edit);
     const canDelete = isPrivate || checkPermission(PERMISSIONS.artifacts.delete);
     const items = [];
 
@@ -50,6 +54,15 @@ const ArtifactRowActions = memo(props => {
         icon: <DownloadIcon sx={styles.menuIcon} />,
         onClick: handleDownload,
       });
+
+      if (canEdit) {
+        items.push({
+          key: 'artifacts-file-rename',
+          label: 'Rename',
+          icon: <EditPenIcon sx={styles.menuIcon} />,
+          onClick: handleRename,
+        });
+      }
 
       if (canDelete) {
         items.push({
@@ -66,7 +79,16 @@ const ArtifactRowActions = memo(props => {
     }
 
     return items;
-  }, [handleDownload, handleDelete, row.name, row.type, isPrivate, checkPermission]);
+  }, [
+    handleDownload,
+    handleRename,
+    handleDelete,
+    row.name,
+    row.type,
+    isPrivate,
+    checkPermission,
+    styles.menuIcon,
+  ]);
 
   return (
     <Box sx={styles.actionsContainer}>
@@ -112,19 +134,19 @@ const ArtifactRowActions = memo(props => {
 ArtifactRowActions.displayName = 'ArtifactRowActions';
 
 /** @type {MuiSx} */
-const styles = {
+const artifactRowActionsStyles = () => ({
   actionsContainer: {
     display: 'flex',
     alignItems: 'center',
     gap: '0.25rem',
   },
-  actionButton: {
+  actionButton: ({ palette }) => ({
     padding: '0.375rem',
     minWidth: 0,
     '&:hover': {
-      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+      backgroundColor: palette.action.hover,
     },
-  },
+  }),
   actionIcon: ({ palette }) => ({
     fontSize: '1rem',
     color: palette.text.primary,
@@ -141,8 +163,8 @@ const styles = {
   }),
   listItemIcon: {
     minWidth: '1rem !important',
-    marginRight: '.75rem',
+    marginRight: '0.75rem',
   },
-};
+});
 
 export default ArtifactRowActions;
