@@ -210,6 +210,27 @@ const PipelineEditor = forwardRef(
       );
       dispatch(editorActions.resetPipelineEditor());
     }, [isCreateMode, pipeline?.entity_meta?.id, dispatch]);
+
+    // Clear Redux pipeline state on unmount so stale YAML cannot corrupt a
+    // subsequent Agent save (useSaveVersion reads state.pipeline.initState to
+    // decide whether the active entity is a pipeline — resetPipeline is not
+    // enough because it only copies initState back; initThePipeline with empty
+    // values is the only action that also clears initState itself).
+    useEffect(() => {
+      return () => {
+        dispatch(
+          actions.initThePipeline({
+            nodes: [],
+            edges: [],
+            yamlJsonObject: {
+              state: FlowEditorConstants.DefaultState,
+            },
+            yamlCode: '',
+          }),
+        );
+        dispatch(editorActions.resetPipelineEditor());
+      };
+    }, [dispatch]);
     const projectId = useSelectedProjectId();
     const pipelineId = getPipelineId(pipeline);
     const versionId = pipeline?.entity_settings?.version_id;
