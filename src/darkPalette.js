@@ -96,8 +96,6 @@ const oldDarkPalette = {
   mode: 'dark',
 
   background: {
-    info: blue8,
-    default: gray60,
     eliteaDefault: gray60,
     secondary: gray50,
     tabPanel: gray55,
@@ -373,9 +371,6 @@ const oldDarkPalette = {
     aiProviderAccordion: {
       default: white2,
       hover: white5,
-    },
-    emptyState: {
-      default: white3,
     },
     toolkitDetailLeftPanel: gray53,
     toolkitDetailRightPanel: gray53,

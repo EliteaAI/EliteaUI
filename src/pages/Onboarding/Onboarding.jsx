@@ -216,7 +216,7 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'auto',
-    background: palette.background.default,
+    background: palette.background.secondary,
     position: 'relative',
   }),
   backButton: {

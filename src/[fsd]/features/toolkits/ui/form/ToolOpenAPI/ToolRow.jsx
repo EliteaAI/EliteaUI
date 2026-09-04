@@ -121,7 +121,7 @@ const toolRowStyles = () => ({
     isExpanded =>
     ({ palette }) => ({
       cursor: 'pointer',
-      backgroundColor: isExpanded ? palette.background.secondaryBg : palette.background.default,
+      backgroundColor: isExpanded ? palette.background.secondaryBg : palette.background.secondary,
       '&:hover': {
         backgroundColor: palette.background.secondaryBg,
       },
@@ -138,14 +138,14 @@ const toolRowStyles = () => ({
     padding: '0.375rem 0.5rem',
     borderBottom: `0.0625rem solid ${palette.border.table}`,
     color: palette.text.secondary,
-    backgroundColor: palette.background.default,
+    backgroundColor: palette.background.secondary,
   }),
   methodCell: ({ palette }) => ({
     padding: '0.375rem 0.5rem',
     width: '5rem',
     borderBottom: `0.0625rem solid ${palette.border.table}`,
     color: palette.text.secondary,
-    backgroundColor: palette.background.default,
+    backgroundColor: palette.background.secondary,
   }),
   text: {
     overflow: 'hidden',

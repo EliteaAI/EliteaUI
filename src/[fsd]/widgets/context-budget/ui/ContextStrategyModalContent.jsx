@@ -318,7 +318,7 @@ const componentStyles = () => ({
     width: '100%',
     position: 'sticky',
     bottom: 0,
-    backgroundColor: palette.background.default,
+    backgroundColor: palette.background.secondary,
     zIndex: 1,
   }),
 });

@@ -258,19 +258,19 @@ const datasetItemStyles = () => ({
     display: 'block',
   },
   tooltipName: ({ palette }) => ({
-    color: palette.background.default,
+    color: palette.background.secondary,
     fontWeight: 700,
     fontSize: '0.75rem',
     lineHeight: '1rem',
   }),
   tooltipSharedText: ({ palette }) => ({
-    color: palette.background.default,
+    color: palette.background.secondary,
     fontWeight: 400,
     fontSize: '0.75rem',
     lineHeight: '1rem',
   }),
   tooltipDescription: ({ palette }) => ({
-    color: palette.background.default,
+    color: palette.background.secondary,
     fontWeight: 400,
     fontSize: '0.75rem',
     lineHeight: '1rem',

@@ -271,7 +271,7 @@ const toolActionsSelectorStyles = () => ({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: palette.secondary.main,
-    color: palette.background.default,
+    color: palette.background.secondary,
   }),
   stack: {
     marginTop: '0.5rem',

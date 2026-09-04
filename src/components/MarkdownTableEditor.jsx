@@ -823,13 +823,13 @@ const componentStyles = theme => ({
       {
         width: '100%',
         justifyContent: 'center',
-        background: theme.palette.background.default,
+        background: theme.palette.background.secondary,
       },
     '& .MuiDataGrid-cellCheckbox': {
       position: 'sticky',
       left: 0,
       zIndex: 1,
-      background: theme.palette.background.default,
+      background: theme.palette.background.secondary,
     },
     '& .MuiDataGrid-columnHeaderCheckbox': {
       position: 'sticky',

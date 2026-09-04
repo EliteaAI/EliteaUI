@@ -182,10 +182,10 @@ const styles = {
     height: '100%',
     position: 'relative',
     '& .cm-editor': {
-      backgroundColor: palette.background.default,
+      backgroundColor: palette.background.secondary,
     },
     '& .cm-scroller': {
-      backgroundColor: palette.background.default,
+      backgroundColor: palette.background.secondary,
     },
     '& .cm-gutters': {
       backgroundColor: palette.background.tabPanel,

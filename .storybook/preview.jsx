@@ -101,7 +101,7 @@ const preview = {
                 <div
                   style={{
                     padding: '16px',
-                    background: theme.palette.background.default,
+                    background: theme.palette.background.secondary,
                     minHeight: '100vh',
                   }}
                 >

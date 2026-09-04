@@ -95,7 +95,6 @@ const oldLightPalette = {
   mode: 'light',
 
   background: {
-    default: blue01,
     eliteaDefault: gradient,
     secondary: white,
     tabPanel: white01,
@@ -374,9 +373,6 @@ const oldLightPalette = {
     aiProviderAccordion: {
       default: grey003,
       hover: grey007,
-    },
-    emptyState: {
-      default: grey003,
     },
     toolkitDetailLeftPanel: light53,
     toolkitDetailRightPanel: light53,

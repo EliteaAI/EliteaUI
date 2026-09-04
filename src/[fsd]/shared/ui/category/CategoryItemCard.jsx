@@ -54,7 +54,7 @@ const getStyles = () => ({
     flexGrow: 0,
     boxShadow: 'none',
     '&:hover': {
-      backgroundColor: palette.mode === 'dark' ? palette.background.tabPanel : palette.background.default,
+      backgroundColor: palette.mode === 'dark' ? palette.background.tabPanel : palette.background.secondary,
       boxShadow: palette.boxShadow.default,
       border: `0.0625rem solid ${palette.border.lines}`,
       transform: 'none',
