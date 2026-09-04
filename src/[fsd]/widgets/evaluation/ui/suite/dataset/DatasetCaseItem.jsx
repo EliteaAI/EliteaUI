@@ -1,39 +1,32 @@
 import { memo, useCallback } from 'react';
 
-import { Box, Typography } from '@mui/material';
+import { Box, Tooltip, Typography } from '@mui/material';
 
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
-import DeleteIcon from '@/components/Icons/DeleteIcon';
-import EditPenIcon from '@/components/Icons/EditPenIcon';
+import CloseEyeIcon from '@/components/Icons/CloseEyeIcon';
+import OpenEyeIcon from '@/components/Icons/OpenEyeIcon';
 
-/**
- * Case item displayed in Suite view.
- * - Edit: only for non-shared datasets (shared cases must be edited from Manage Datasets)
- * - Remove: only for non-shared datasets (TODO: will call unbind endpoint when BE is ready)
- */
 const DatasetCaseItem = memo(props => {
-  const { caseItem, canEdit = false, canRemove = false, onEdit, onRemove } = props;
+  const { caseItem, isExcluded = false, onInclude, onExclude } = props;
 
-  const handleEdit = useCallback(
+  const handleInclude = useCallback(
     event => {
       event.stopPropagation();
-      onEdit?.(caseItem);
+      onInclude?.(caseItem);
     },
-    [onEdit, caseItem],
+    [onInclude, caseItem],
   );
 
-  const handleRemove = useCallback(
+  const handleExclude = useCallback(
     event => {
       event.stopPropagation();
-      onRemove?.(caseItem);
+      onExclude?.(caseItem);
     },
-    [onRemove, caseItem],
+    [onExclude, caseItem],
   );
 
-  const showActions = canEdit || canRemove;
-
-  const styles = datasetCaseItemStyles();
+  const styles = datasetCaseItemStyles(isExcluded);
 
   return (
     <Box sx={styles.root}>
@@ -59,34 +52,51 @@ const DatasetCaseItem = memo(props => {
           </Box>{' '}
           {caseItem.expected_output}
         </Typography>
+        {isExcluded && (
+          <Box sx={styles.excludedBadge}>
+            <CloseEyeIcon sx={styles.excludedIcon} />
+            <Typography sx={styles.excludedText}>Excluded</Typography>
+          </Box>
+        )}
       </Box>
-      {showActions && (
-        <Box
-          className="case-actions"
-          sx={styles.actions}
-        >
-          {canEdit && (
-            <Button.BaseBtn
-              variant={BUTTON_VARIANTS.tertiary}
-              onClick={handleEdit}
-              sx={styles.actionButton}
-              data-testid={`case-edit-${caseItem.id}`}
-            >
-              <EditPenIcon sx={styles.actionIcon} />
-            </Button.BaseBtn>
-          )}
-          {canRemove && (
-            <Button.BaseBtn
-              variant={BUTTON_VARIANTS.tertiary}
-              onClick={handleRemove}
-              sx={styles.actionButton}
-              data-testid={`case-remove-${caseItem.id}`}
-            >
-              <DeleteIcon sx={styles.actionIcon} />
-            </Button.BaseBtn>
-          )}
-        </Box>
-      )}
+      <Box
+        className="case-actions"
+        sx={styles.actions}
+      >
+        {isExcluded ? (
+          <Tooltip
+            title="Include in suite"
+            placement="top"
+          >
+            <Box component="span">
+              <Button.BaseBtn
+                variant={BUTTON_VARIANTS.tertiary}
+                onClick={handleInclude}
+                sx={styles.actionButton}
+                data-testid={`case-include-${caseItem.id}`}
+              >
+                <OpenEyeIcon sx={styles.actionIcon} />
+              </Button.BaseBtn>
+            </Box>
+          </Tooltip>
+        ) : (
+          <Tooltip
+            title="Exclude from suite"
+            placement="top"
+          >
+            <Box component="span">
+              <Button.BaseBtn
+                variant={BUTTON_VARIANTS.tertiary}
+                onClick={handleExclude}
+                sx={styles.actionButton}
+                data-testid={`case-exclude-${caseItem.id}`}
+              >
+                <CloseEyeIcon sx={styles.actionIcon} />
+              </Button.BaseBtn>
+            </Box>
+          </Tooltip>
+        )}
+      </Box>
     </Box>
   );
 });
@@ -94,12 +104,14 @@ const DatasetCaseItem = memo(props => {
 DatasetCaseItem.displayName = 'DatasetCaseItem';
 
 /** @type {MuiSx} */
-const datasetCaseItemStyles = () => ({
+const datasetCaseItemStyles = isExcluded => ({
   root: ({ palette }) => ({
     display: 'flex',
     alignItems: 'center',
     position: 'relative',
-    padding: '0.5rem 0',
+    padding: '0.5rem 0.75rem',
+    marginLeft: '-0.75rem',
+    marginRight: '-0.75rem',
     borderBottom: `0.0625rem solid ${palette.border.lines}`,
 
     '& .case-actions': {
@@ -112,7 +124,7 @@ const datasetCaseItemStyles = () => ({
     },
 
     '&:hover .case-content': {
-      paddingRight: '4.75rem',
+      paddingRight: '2.5rem',
     },
   }),
   content: {
@@ -129,30 +141,49 @@ const datasetCaseItemStyles = () => ({
     fontWeight: 400,
     lineHeight: '1.25rem',
     color: palette.text.primary,
+    opacity: isExcluded ? 0.5 : 1,
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
 
     ':last-of-type': {
-      marginBottom: '0.25rem',
+      marginBottom: isExcluded ? 0 : '0.25rem',
     },
   }),
   label: ({ palette }) => ({
     fontWeight: 500,
     color: palette.text.secondary,
   }),
+  excludedBadge: ({ palette }) => ({
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.25rem',
+    marginTop: '0.125rem',
+    color: palette.text.disabled,
+  }),
+  excludedIcon: {
+    width: '0.625rem',
+    height: '0.625rem',
+  },
+  excludedText: {
+    fontSize: '0.5625rem',
+    fontWeight: 600,
+    textTransform: 'uppercase',
+    letterSpacing: '0.05rem',
+  },
   actions: {
     display: 'flex',
     alignItems: 'center',
     gap: '0.25rem',
     position: 'absolute',
-    right: 0,
+    right: '0.75rem',
     top: '50%',
     transform: 'translateY(-50%)',
   },
   actionButton: ({ palette }) => ({
     minWidth: 'unset',
     padding: '0.25rem',
+    backgroundColor: palette.background.secondary,
     '&:hover': {
       backgroundColor: palette.action.hover,
     },

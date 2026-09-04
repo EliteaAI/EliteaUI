@@ -13,6 +13,7 @@ import {
   DatasetsPanel,
   ImportCaseModal,
   parseEvalError,
+  sortDatasetsByDate,
   useDeleteEvalDatasetCaseMutation,
   useDeleteEvalDatasetMutation,
   useEvalDatasetQuery,
@@ -69,14 +70,18 @@ const AgentEvaluateDatasetsPage = memo(() => {
     [datasets, selectedDatasetId],
   );
 
+  const sortedDatasets = useMemo(() => sortDatasetsByDate(datasets), [datasets]);
+
   useEffect(() => {
-    if (!selectedDatasetId && datasets.length > 0) {
-      const firstDataset = initialDatasetId ? datasets.find(d => d.id === initialDatasetId) : datasets[0];
+    if (!selectedDatasetId && sortedDatasets.length > 0) {
+      const firstDataset = initialDatasetId
+        ? sortedDatasets.find(d => d.id === initialDatasetId)
+        : sortedDatasets[0];
       if (firstDataset) {
         setSelectedDatasetId(firstDataset.id);
       }
     }
-  }, [datasets, selectedDatasetId, initialDatasetId]);
+  }, [sortedDatasets, selectedDatasetId, initialDatasetId]);
 
   useEffect(() => {
     if (selectedDatasetId) {
@@ -128,14 +133,22 @@ const AgentEvaluateDatasetsPage = memo(() => {
       await deleteDataset({ projectId, datasetId: datasetToDelete.id }).unwrap();
       toastSuccess(`Dataset "${datasetToDelete.name}" has been deleted.`);
       if (selectedDatasetId === datasetToDelete.id) {
-        const remaining = datasets.filter(d => d.id !== datasetToDelete.id);
+        const remaining = sortedDatasets.filter(d => d.id !== datasetToDelete.id);
         setSelectedDatasetId(remaining.length > 0 ? remaining[0].id : null);
       }
     } catch (error) {
       toastError(parseEvalError(error, 'Failed to delete dataset.'));
     }
     setDatasetToDelete(null);
-  }, [datasetToDelete, deleteDataset, projectId, selectedDatasetId, datasets, toastSuccess, toastError]);
+  }, [
+    datasetToDelete,
+    deleteDataset,
+    projectId,
+    selectedDatasetId,
+    sortedDatasets,
+    toastSuccess,
+    toastError,
+  ]);
 
   const handleAddCase = useCallback(() => {
     setCaseToEdit(null);
