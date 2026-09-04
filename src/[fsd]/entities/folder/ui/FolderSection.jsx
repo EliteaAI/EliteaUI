@@ -12,6 +12,7 @@ import CreateFolderDialog from './CreateFolderDialog';
 import DeleteFolderDialog from './DeleteFolderDialog';
 import FolderActionsMenu from './FolderActionsMenu';
 import FolderItem from './FolderItem';
+import FolderManagePermissionsModal from './FolderManagePermissionsModal';
 
 const VISIBLE_FOLDER_COUNT = 6;
 
@@ -35,8 +36,7 @@ const FolderSection = memo(props => {
   const [menuAnchorEl, setMenuAnchorEl] = useState(null);
   const [menuFolder, setMenuFolder] = useState(null);
   const [isExpanded, setIsExpanded] = useState(false);
-  // TODO: Manage permission
-  // const [manageAccessModalOpen, setManageAccessModalOpen] = useState(false);
+  const [managePermissionsFolder, setManagePermissionsFolder] = useState(null);
 
   const hasMoreFolders = folders.length > VISIBLE_FOLDER_COUNT;
   const visibleFolders = useMemo(() => {
@@ -103,12 +103,13 @@ const FolderSection = memo(props => {
   }, []);
 
   const handlePermission = useCallback(() => {
-    // Implement permission handling logic here
-  }, [handleMenuClose]);
+    setManagePermissionsFolder(menuFolder);
+    handleMenuClose();
+  }, [menuFolder, handleMenuClose]);
 
   const handleClosePermission = useCallback(() => {
-    // Implement permission handling logic here
-  }, [handleMenuClose]);
+    setManagePermissionsFolder(null);
+  }, []);
 
   const onDeleteFolder = useCallback(
     folder => {
@@ -211,14 +212,10 @@ const FolderSection = memo(props => {
         entityType={entityType}
       />
 
-      {/* TODO: specific permission handling */}
-      {/* Copied instance from Artifacts.jsx - ManagePermissionsModal component */}
-      {/* <ManagePermissionsDialog
-        open={manageAccessModalOpen}
+      <FolderManagePermissionsModal
+        open={!!managePermissionsFolder}
         onClose={handleClosePermission}
-        bucket={manageAccessBucket?.name}
-        projectId={queryParams.projectId}
-      /> */}
+      />
     </Box>
   );
 });
