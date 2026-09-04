@@ -8,14 +8,15 @@ import FolderDefaultPermissionsBanner from './FolderDefaultPermissionsBanner';
 import FolderPermissionsTable from './FolderPermissionsTable';
 
 const FolderManagePermissionsModal = memo(props => {
-  const { open, onClose, folderId } = props;
+  const { open, onClose, folderId, folderName } = props;
 
   const styles = folderManagePermissionsModalStyles();
+  const title = folderName ? `Manage Permissions: ${folderName}` : 'Manage Permissions';
 
   return (
     <Modal.BaseModal
       open={open}
-      title="Manage Permissions"
+      title={title}
       onClose={onClose}
       sx={styles.dialogPaper}
       dialogSx={styles.dialogContent}

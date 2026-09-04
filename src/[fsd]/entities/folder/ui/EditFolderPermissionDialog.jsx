@@ -7,18 +7,20 @@ import { Button, Modal } from '@/[fsd]/shared/ui';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 
 const EditFolderPermissionDialog = memo(props => {
-  const { open, onClose, onConfirm, user, loading = false } = props;
+  const { open, onClose, onConfirm, users = [], loading = false } = props;
 
   const [permission, setPermission] = useState('');
-  const canSubmit = !!permission && permission !== user?.accessValue && !loading;
+  const isBulkEdit = users.length > 1;
+  const user = users[0];
+  const canSubmit = !!permission && !loading && (isBulkEdit || permission !== user?.accessValue);
 
   useEffect(() => {
-    if (open && user) {
-      setPermission(user.accessValue || '');
+    if (open && users.length > 0) {
+      setPermission(isBulkEdit ? '' : user?.accessValue || '');
     } else if (!open) {
       setPermission('');
     }
-  }, [open, user]);
+  }, [isBulkEdit, open, user?.accessValue, users.length]);
 
   const handleClose = useCallback(() => {
     if (!loading) onClose();
@@ -41,7 +43,7 @@ const EditFolderPermissionDialog = memo(props => {
   return (
     <Modal.BaseModal
       open={open}
-      title="Edit exception"
+      title={isBulkEdit ? 'Edit exceptions' : 'Edit exception'}
       onClose={handleClose}
       onKeyDown={handleKeyDown}
       content={
@@ -51,7 +53,9 @@ const EditFolderPermissionDialog = memo(props => {
             color="text.secondary"
             sx={styles.description}
           >
-            Select new folder permissions for {user?.name || user?.email || 'this user'}.
+            {isBulkEdit
+              ? `Select new folder permissions for ${users.length} users.`
+              : `Select new folder permissions for ${user?.name || user?.email || 'this user'}.`}
           </Typography>
           <SingleSelect
             value={permission}
