@@ -7,7 +7,15 @@ import { INITIAL_CARD_DISPLAY_COUNT } from '@/common/constants';
 import SkillCard from './SkillCard';
 
 const SkillCategorySection = memo(props => {
-  const { category, items, totalCount = 0, isLoadingMore = false, onSelectItem, onLoadMore } = props;
+  const {
+    category,
+    items,
+    totalCount = 0,
+    isLoadingMore = false,
+    onSelectItem,
+    onLoadMore,
+    newItemDays,
+  } = props;
 
   const theme = useTheme();
   const styles = skillCategorySectionStyles();
@@ -59,6 +67,14 @@ const SkillCategorySection = memo(props => {
         >
           {category}
         </Typography>
+        {totalCount > 0 && (
+          <Typography
+            variant="headingMedium"
+            sx={styles.countLabel}
+          >
+            {`(${totalCount})`}
+          </Typography>
+        )}
       </Box>
 
       <Box sx={styles.grid}>
@@ -71,6 +87,7 @@ const SkillCategorySection = memo(props => {
                 key={category + skill.id}
                 skill={skill}
                 onSelectItem={onSelectItem}
+                newItemDays={newItemDays}
               />
             );
           })}
@@ -88,13 +105,24 @@ const SkillCategorySection = memo(props => {
 
       {shouldShowButton && (
         <Box sx={styles.showMoreContainer}>
-          <Typography
-            variant="labelMedium"
-            onClick={isExpanded ? handleShowLess : handleShowMore}
-            sx={styles.showMoreButton}
-          >
-            {isExpanded ? 'Show less' : 'Show more'}
-          </Typography>
+          {isExpanded && (
+            <Typography
+              variant="labelMedium"
+              onClick={handleShowLess}
+              sx={styles.showMoreButton}
+            >
+              Show less
+            </Typography>
+          )}
+          {displayCount < totalCount && (
+            <Typography
+              variant="labelMedium"
+              onClick={handleShowMore}
+              sx={styles.showMoreButton}
+            >
+              Show more
+            </Typography>
+          )}
         </Box>
       )}
     </Box>
@@ -119,6 +147,9 @@ const skillCategorySectionStyles = () => ({
     gap: '0.5rem',
   },
   categoryTitle: ({ palette }) => ({
+    color: palette.text.secondary,
+  }),
+  countLabel: ({ palette }) => ({
     color: palette.text.secondary,
   }),
   grid: ({ breakpoints }) => ({

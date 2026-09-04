@@ -11,6 +11,7 @@ export const buildAllCategories = categoryNames => {
   return [
     SkillHubConstants.TRENDING_CATEGORY,
     SkillHubConstants.MY_LIKED_CATEGORY,
+    SkillHubConstants.NEW_CATEGORY,
     ...names,
     SkillHubConstants.OTHER_CATEGORY,
   ];

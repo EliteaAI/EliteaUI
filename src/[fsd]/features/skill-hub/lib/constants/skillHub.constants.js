@@ -2,6 +2,7 @@ import { ALL_TIME_DATE, CollectionStatus, PUBLIC_PROJECT_ID } from '@/common/con
 
 export const TRENDING_CATEGORY = 'Trending';
 export const MY_LIKED_CATEGORY = 'My Liked';
+export const NEW_CATEGORY = 'New';
 export const OTHER_CATEGORY = 'Other';
 export const TagsQueryParams = {
   projectId: PUBLIC_PROJECT_ID,
