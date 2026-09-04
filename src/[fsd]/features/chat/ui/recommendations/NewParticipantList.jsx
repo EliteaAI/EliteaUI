@@ -71,7 +71,7 @@ export default function NewParticipantList({
         flexDirection={'column'}
         gap={'12px'}
         sx={{
-          background: theme.palette.background.secondary,
+          background: theme.palette.background.default.secondary,
           height: 'auto',
           overflowY: 'auto',
         }}

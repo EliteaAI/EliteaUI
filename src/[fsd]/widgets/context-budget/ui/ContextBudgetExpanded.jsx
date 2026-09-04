@@ -74,7 +74,7 @@ const contextBudgetExpandedStyles = isSmallWindow => ({
     flexDirection: 'column',
     padding: '0.5rem 0',
     width: isSmallWindow ? '15.625rem' : '100%',
-    background: palette.background.secondary,
+    background: palette.background.default.secondary,
     border: `0.0625rem solid ${palette.border.lines}`,
     borderRadius: '0.5rem',
   }),

@@ -335,7 +335,7 @@ const attachedDatasetCardStyles = () => ({
   }),
   overflowMenuPaper: ({ palette }) => ({
     minWidth: '10rem',
-    backgroundColor: palette.background.secondary,
+    backgroundColor: palette.background.default.secondary,
     border: `0.0625rem solid ${palette.border.lines}`,
     borderRadius: '0.5rem',
     '>ul': {
@@ -347,7 +347,7 @@ const attachedDatasetCardStyles = () => ({
     alignItems: 'center',
     gap: '0.75rem',
     padding: '0.5rem 1rem',
-    backgroundColor: palette.background.secondary,
+    backgroundColor: palette.background.default.secondary,
     '&:hover': {
       backgroundColor: palette.background.tabButton.default,
     },
@@ -375,7 +375,7 @@ const attachedDatasetCardStyles = () => ({
     width: '21.75rem',
     maxHeight: '20rem',
     marginLeft: '0.25rem',
-    backgroundColor: palette.background.secondary,
+    backgroundColor: palette.background.default.secondary,
     border: `0.0625rem solid ${palette.border.lines}`,
     borderRadius: '0.5rem',
     '>ul': {

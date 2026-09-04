@@ -36,7 +36,7 @@ CategoryItemCard.displayName = 'CategoryItemCard';
 const getStyles = () => ({
   itemCard: ({ palette }) => ({
     cursor: 'pointer',
-    backgroundColor: palette.background.secondary,
+    backgroundColor: palette.background.default.secondary,
     border: `0.0625rem solid ${palette.border.cardsOutlines}`,
     backgroundImage: 'none',
     borderRadius: '0.5rem',
@@ -54,7 +54,8 @@ const getStyles = () => ({
     flexGrow: 0,
     boxShadow: 'none',
     '&:hover': {
-      backgroundColor: palette.mode === 'dark' ? palette.background.tabPanel : palette.background.secondary,
+      backgroundColor:
+        palette.mode === 'dark' ? palette.background.tabPanel : palette.background.default.secondary,
       boxShadow: palette.boxShadow.default,
       border: `0.0625rem solid ${palette.border.lines}`,
       transform: 'none',

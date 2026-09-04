@@ -190,7 +190,7 @@ const collapsedParticipantsDropdownStyles = () => ({
   paper: ({ palette }) => ({
     borderRadius: DROPDOWN_CONSTANTS.BORDER_RADIUS.MENU,
     border: `.0625rem solid ${palette.border.lines}`,
-    background: palette.background.secondary,
+    background: palette.background.default.secondary,
     boxShadow: '0rem .5rem .75rem 0rem rgba(0, 0, 0, 0.3)',
     width: '16.9375rem',
     maxHeight: DROPDOWN_CONSTANTS.DIMENSIONS.MENU_MAX_HEIGHT,

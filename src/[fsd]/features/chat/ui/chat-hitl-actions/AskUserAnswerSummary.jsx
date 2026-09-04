@@ -81,7 +81,7 @@ const askUserAnswerSummaryStyles = () => ({
     padding: '1rem 1.25rem',
     marginBottom: '1rem',
     borderRadius: '0.75rem',
-    background: palette.background.secondary,
+    background: palette.background.default.secondary,
     border: `0.0625rem solid ${palette.border.cardsOutlines}`,
   }),
   item: {

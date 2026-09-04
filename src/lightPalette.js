@@ -94,7 +94,6 @@ const oldLightPalette = {
   mode: 'light',
 
   background: {
-    secondary: white,
     tabPanel: white01,
     pageSection: white01,
     section: grey003,
@@ -428,13 +427,13 @@ const oldLightPalette = {
     tag: '0px 2px 4px 0px #0000000f',
     onboarding: `0rem 3.975rem 4.2625rem -3.8125rem ${skyBlue20}`,
     aiAnswer: '0px 2px 7px 0px #0000001f',
+    listbox: `0px 4px 30px ${white};`,
   },
   text: {
     default: light10,
     primary: light10,
     secondary: gray60,
     tooltip: white,
-
     groupedTitle: {
       default: light10,
     },
@@ -703,6 +702,7 @@ const lightPalette = {
   },
   border: {
     ...oldLightPalette.border,
+    edit: white,
     npsCard: lightColorScheme.accentDark,
   },
   text: {

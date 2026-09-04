@@ -176,7 +176,7 @@ Rules:
 const cardStyles = (isActive, isCompact) => ({
   root: ({ palette }) => ({
     padding: isCompact ? '0.5rem' : '1rem',
-    backgroundColor: isActive ? palette.background.tabButton.active : palette.background.secondary,
+    backgroundColor: isActive ? palette.background.tabButton.active : palette.background.default.secondary,
   }),
 });
 ```

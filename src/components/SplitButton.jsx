@@ -153,7 +153,7 @@ export default function SplitButton({ defaultValue = '', options = [], onClick, 
                 <Paper
                   sx={{
                     color: 'secondary',
-                    background: theme.palette.background.secondary,
+                    background: theme.palette.background.default.secondary,
                     zIndex: theme.zIndex.modal + 100,
                   }}
                 >

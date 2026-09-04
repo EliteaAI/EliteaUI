@@ -111,7 +111,7 @@ export const StyledList = styled(List)(({ theme }) => ({
   marginTop: '4px',
   maxHeight: '530px',
   overflow: 'auto',
-  backgroundColor: theme.palette.background.secondary,
+  backgroundColor: theme.palette.background.default.secondary,
   borderRadius: '4px',
   border: `1px solid ${theme.palette.border.lines}`,
   padding: `0 16px ${LIST_TOP_PADDING} 16px`,
@@ -119,7 +119,7 @@ export const StyledList = styled(List)(({ theme }) => ({
 
 export const StyledListSubheader = styled(ListSubheader)(({ theme }) => ({
   ...typographyVariants.bodyMedium,
-  backgroundColor: theme.palette.background.secondary,
+  backgroundColor: theme.palette.background.default.secondary,
   padding: '14px 0 6px 0',
   display: 'flex',
   alignItems: 'center',

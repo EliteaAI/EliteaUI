@@ -53,7 +53,7 @@ const getStyles = () => ({
     boxSizing: 'border-box',
     marginBottom: '1rem',
     marginTop: '1rem',
-    background: palette.background.secondary,
+    background: palette.background.default.secondary,
   }),
   icon: {
     width: '1rem',

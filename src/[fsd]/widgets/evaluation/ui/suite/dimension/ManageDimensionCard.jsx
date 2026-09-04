@@ -228,7 +228,7 @@ const manageDimensionCardStyles = () => ({
   },
   menuPaper: ({ palette }) => ({
     minWidth: '7.1875rem',
-    backgroundColor: palette.background.secondary,
+    backgroundColor: palette.background.default.secondary,
     border: `0.0625rem solid ${palette.border.lines}`,
     borderRadius: '0.5rem',
     '& .MuiList-root': {

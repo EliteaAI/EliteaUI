@@ -220,7 +220,7 @@ const skillHubModalStyles = () => ({
     boxSizing: 'border-box',
     borderRadius: '1rem',
     padding: '1.5rem 2rem 1.5rem 2rem',
-    backgroundColor: palette.background.secondary,
+    backgroundColor: palette.background.default.secondary,
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',

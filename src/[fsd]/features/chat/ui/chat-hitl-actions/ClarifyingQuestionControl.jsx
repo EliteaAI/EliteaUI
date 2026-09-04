@@ -239,7 +239,7 @@ const clarifyingQuestionControlStyles = () => ({
     gap: '0.75rem',
     padding: '1rem 1.25rem 1.25rem',
     borderRadius: '0.75rem',
-    background: palette.background.secondary,
+    background: palette.background.default.secondary,
     border: `0.0625rem solid ${palette.border.cardsOutlines}`,
   }),
   header: {
@@ -328,7 +328,7 @@ const clarifyingQuestionControlStyles = () => ({
     '& .MuiInputBase-root': {
       padding: '0.625rem 0.875rem',
       borderRadius: '0.5rem',
-      backgroundColor: palette.background.secondary,
+      backgroundColor: palette.background.default.secondary,
       border: `0.0625rem solid ${palette.border?.lines || palette.divider}`,
       fontSize: '0.8125rem',
       color: palette.text.primary,

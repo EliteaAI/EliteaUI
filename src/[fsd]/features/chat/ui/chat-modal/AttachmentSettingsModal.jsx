@@ -337,7 +337,7 @@ const styles = {
   dialogContent: {
     width: '100%',
     overflow: 'auto',
-    background: ({ palette }) => `${palette.background.secondary} !important`,
+    background: ({ palette }) => `${palette.background.default.secondary} !important`,
     borderTop: ({ palette }) => `.0625rem solid ${palette.border.lines}`,
     borderBottom: ({ palette }) => `.0625rem solid ${palette.border.lines}`,
     maxHeight: 'calc(100vh - 23.75rem)',

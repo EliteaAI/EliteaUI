@@ -11,7 +11,7 @@ const EmptyListHintBox = styled(Box, {
   width: isFullWidth ? '100%' : `calc(100% - ${RIGHT_PANEL_WIDTH + 16}px)`,
   height: `calc(100vh - ${headerHeight})`,
   borderRadius: '8px',
-  backgroundColor: theme.palette.background.secondary,
+  backgroundColor: theme.palette.background.default.secondary,
 }));
 
 export default function EmptyListBox({

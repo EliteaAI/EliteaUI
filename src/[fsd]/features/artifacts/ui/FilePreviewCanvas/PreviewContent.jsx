@@ -354,7 +354,7 @@ const previewContentStyles = () => ({
     minHeight: 0,
     overflow: 'auto',
     padding: '.75rem 1rem',
-    backgroundColor: palette.background.secondary,
+    backgroundColor: palette.background.default.secondary,
     overflowY: 'auto',
     overflowX: 'hidden',
     WebkitOverflowScrolling: 'touch',
@@ -467,7 +467,7 @@ const previewContentStyles = () => ({
     minHeight: 0,
     overflow: 'auto',
     padding: '.75rem 1rem',
-    backgroundColor: palette.background.secondary,
+    backgroundColor: palette.background.default.secondary,
     overflowY: 'auto',
     overflowX: 'auto',
     WebkitOverflowScrolling: 'touch',
@@ -516,7 +516,7 @@ const previewContentStyles = () => ({
 
   dataTableRow: ({ palette }) => ({
     '&:nth-of-type(odd)': {
-      backgroundColor: palette.background.secondary,
+      backgroundColor: palette.background.default.secondary,
     },
 
     '&:nth-of-type(even)': {
@@ -558,7 +558,7 @@ const previewContentStyles = () => ({
     minHeight: 0,
     overflow: 'auto',
     padding: '.75rem 1rem',
-    backgroundColor: palette.background.secondary,
+    backgroundColor: palette.background.default.secondary,
     overflowY: 'auto',
     overflowX: 'auto',
     WebkitOverflowScrolling: 'touch',
@@ -612,7 +612,7 @@ const previewContentStyles = () => ({
     justifyContent: 'center',
     alignItems: 'center',
     padding: '.75rem 1rem',
-    backgroundColor: palette.background.secondary,
+    backgroundColor: palette.background.default.secondary,
     overflowY: 'auto',
     overflowX: 'auto',
     WebkitOverflowScrolling: 'touch',
@@ -668,7 +668,7 @@ const previewContentStyles = () => ({
     overflow: 'auto',
     display: 'flex',
     flexDirection: 'column',
-    backgroundColor: palette.background.secondary,
+    backgroundColor: palette.background.default.secondary,
     overflowY: 'auto',
     overflowX: 'auto',
     WebkitOverflowScrolling: 'touch',

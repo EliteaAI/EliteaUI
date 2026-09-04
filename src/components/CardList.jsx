@@ -110,7 +110,7 @@ const cardListStyles = (isListFullWidth, rightPanelWidth, headerHeight) => ({
       ? 'calc(100% + 0.875rem)'
       : `calc(calc(100% + 0.875rem) - ${rightPanelWidth + 16}px)`,
     padding: '0.75rem 0 0 1.5rem',
-    backgroundColor: palette.background.secondary,
+    backgroundColor: palette.background.default.secondary,
   }),
   customEmptyContainer: {
     width: isListFullWidth ? '100%' : `calc(100% - ${rightPanelWidth + 16}px)`,

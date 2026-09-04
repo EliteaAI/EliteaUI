@@ -496,7 +496,7 @@ const MyComponent = () => {
 // ✅ Access theme in sx styles via function
 <Box
   sx={({ palette }) => ({
-    backgroundColor: palette.background.secondary,
+    backgroundColor: palette.background.default.secondary,
     border: `1px solid ${palette.border.lines}`,
   })}
 >

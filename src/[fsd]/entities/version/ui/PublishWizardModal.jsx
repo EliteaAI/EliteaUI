@@ -423,7 +423,7 @@ const styles = {
     overflowY: 'auto',
     boxSizing: 'border-box',
     padding: '0.875rem 1.5rem !important',
-    background: `${palette.background.secondary} !important`,
+    background: `${palette.background.default.secondary} !important`,
     flex: 1,
     minHeight: 0,
   }),

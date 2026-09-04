@@ -144,7 +144,7 @@ const addCaseMenuStyles = () => ({
   }),
   menuPaper: ({ palette }) => ({
     minWidth: '12rem',
-    backgroundColor: palette.background.secondary,
+    backgroundColor: palette.background.default.secondary,
     border: `0.0625rem solid ${palette.border.lines}`,
     borderRadius: '0.5rem',
     marginTop: '0.25rem',
@@ -159,7 +159,7 @@ const addCaseMenuStyles = () => ({
     alignItems: 'center',
     gap: '0.75rem',
     padding: '0.5rem 1rem',
-    backgroundColor: palette.background.secondary,
+    backgroundColor: palette.background.default.secondary,
     '&:hover': {
       backgroundColor: palette.background.tabButton.default,
     },

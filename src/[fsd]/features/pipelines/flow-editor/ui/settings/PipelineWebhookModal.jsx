@@ -457,7 +457,7 @@ const pipelineWebhookModalStyles = () => ({
     justifyContent: 'space-between',
   },
   codeBlock: ({ palette }) => ({
-    backgroundColor: palette.background.secondary,
+    backgroundColor: palette.background.default.secondary,
     border: `1px solid ${palette.border.lines}`,
     borderRadius: '0.5rem',
     padding: '0.75rem',

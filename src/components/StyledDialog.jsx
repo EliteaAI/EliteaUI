@@ -9,7 +9,7 @@ export const StyledDialogBase = styled(Dialog)(
   & .MuiDialog-paper {
     border-radius: 0.5rem;
     border: 1px solid ${theme.palette.border.lines};
-    background: ${theme.palette.background.secondary};
+    background: ${theme.palette.background.default.secondary};
   }
 `,
 );

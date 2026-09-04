@@ -181,7 +181,7 @@ const gridTableRowStyles = (isSelected, isHovered, gridTemplateColumns, showChec
     width: '100%',
     height: '0.5rem',
     borderRadius: '0.25rem',
-    backgroundColor: palette.background.secondary,
+    backgroundColor: palette.background.default.secondary,
     '& .MuiLinearProgress-bar': {
       borderRadius: '0.25rem',
     },

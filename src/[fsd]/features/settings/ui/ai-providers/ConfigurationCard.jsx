@@ -162,7 +162,7 @@ const getStyles = () => ({
     cursor: 'pointer',
     '&:hover': {
       border: `0.0625rem solid ${palette.border.lines}`,
-      backgroundColor: palette.background.secondary,
+      backgroundColor: palette.background.default.secondary,
       boxShadow: palette.boxShadow.default,
     },
   }),

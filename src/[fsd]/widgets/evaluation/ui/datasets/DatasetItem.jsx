@@ -258,26 +258,26 @@ const datasetItemStyles = () => ({
     display: 'block',
   },
   tooltipName: ({ palette }) => ({
-    color: palette.background.secondary,
+    color: palette.text.tooltip,
     fontWeight: 700,
     fontSize: '0.75rem',
     lineHeight: '1rem',
   }),
   tooltipSharedText: ({ palette }) => ({
-    color: palette.background.secondary,
+    color: palette.text.tooltip,
     fontWeight: 400,
     fontSize: '0.75rem',
     lineHeight: '1rem',
   }),
   tooltipDescription: ({ palette }) => ({
-    color: palette.background.secondary,
+    color: palette.text.tooltip,
     fontWeight: 400,
     fontSize: '0.75rem',
     lineHeight: '1rem',
   }),
   menuPaper: ({ palette }) => ({
     minWidth: '7.1875rem',
-    backgroundColor: palette.background.secondary,
+    backgroundColor: palette.background.default.secondary,
     border: `0.0625rem solid ${palette.border.lines}`,
     borderRadius: '0.5rem',
     '& .MuiList-root': {

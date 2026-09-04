@@ -196,7 +196,7 @@ const datasetSectionStyles = () => ({
     width: '21.75rem',
     maxHeight: '20rem',
     marginLeft: '0.25rem',
-    backgroundColor: palette.background.secondary,
+    backgroundColor: palette.background.default.secondary,
     border: `0.0625rem solid ${palette.border.lines}`,
     borderRadius: '0.5rem',
     '>ul': {
