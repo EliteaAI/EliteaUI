@@ -39,6 +39,7 @@ const ProjectContextEditor = memo(props => {
     inlineMode,
     onDirtyChange,
     saveRef,
+    discardRef,
   } = props;
   const { toastSuccess, toastError, toastInfo } = useToast();
   const fileInputRef = useRef(null);
@@ -225,15 +226,23 @@ const ProjectContextEditor = memo(props => {
   }, [setBlockNav, onNavigate]);
 
   const handleDiscard = useCallback(() => {
+    setContent(serverData?.content ?? '');
+    setActivationDescription(serverData?.activation_description ?? '');
     setIsDirty(false);
     setBlockNav(false);
     onNavigate?.('saved');
-  }, [setBlockNav, onNavigate]);
+  }, [serverData, setBlockNav, onNavigate]);
 
   const handleBack = useCallback(() => {
     const hasServerContent = Boolean(serverData?.content?.trim());
     onNavigate?.(hasServerContent ? 'saved' : 'empty');
   }, [serverData, onNavigate]);
+
+  useEffect(() => {
+    if (discardRef) {
+      discardRef.current = handleDiscard;
+    }
+  }, [handleDiscard, discardRef]);
 
   const breadcrumbTitle = (
     <Box sx={styles.breadcrumb}>

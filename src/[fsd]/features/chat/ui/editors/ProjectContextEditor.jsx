@@ -1,4 +1,4 @@
-import { memo, useCallback, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 
 import BaseEditor from '@/[fsd]/features/chat/ui/editors/BaseEditor';
 import ProjectContextEditorFeature from '@/[fsd]/features/settings/ui/project-context/ProjectContextEditor';
@@ -16,10 +16,19 @@ const ProjectContextEditor = memo(props => {
   });
   const [isDirty, setIsDirty] = useState(false);
   const saveRef = useRef(null);
+  const discardRef = useRef(null);
 
   const handleSave = useCallback(() => {
     saveRef.current?.();
   }, []);
+
+  const handleDiscard = useCallback(() => {
+    discardRef.current?.();
+  }, []);
+
+  useEffect(() => {
+    onDirtyStateChange?.(isDirty);
+  }, [isDirty, onDirtyStateChange]);
 
   const saveButton = (
     <Button.BaseBtn
@@ -38,8 +47,9 @@ const ProjectContextEditor = memo(props => {
       isDirty={isDirty}
       setIsDirty={setIsDirty}
       onClose={onCloseProjectContextEditor}
-      onDirtyStateChange={onDirtyStateChange}
+      onDiscard={handleDiscard}
       disableNavBlocking={disableNavBlocking}
+      isFormikContext={false}
       title="Project Context"
       initialValues={{}}
       saveButton={saveButton}
@@ -52,6 +62,7 @@ const ProjectContextEditor = memo(props => {
         inlineMode
         onDirtyChange={setIsDirty}
         saveRef={saveRef}
+        discardRef={discardRef}
       />
     </BaseEditor>
   );
