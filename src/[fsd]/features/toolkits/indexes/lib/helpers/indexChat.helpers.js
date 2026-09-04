@@ -5,6 +5,7 @@ import {
   IndexStatuses,
   IndexesToolsEnum,
 } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
+import { formatJsonBlock } from '@/[fsd]/shared/lib/utils';
 import { notifyTaskComplete, notifyTaskError } from '@/[fsd]/shared/lib/utils/soundNotification.utils';
 import {
   ChatParticipantType,
@@ -237,9 +238,11 @@ export const generateChatMessageBasedOnResponse = ({ message, chatHistory, onFin
       {
         const msg = updatedHistory[responseMsgIndex];
         // Check content_type to determine if we should wrap in JSON code block
-        const contentType = response_metadata?.content_type;
-        const shouldWrapInBlock = contentType === 'json';
-        msg.content = convertJsonToString(message.content || response_metadata.message, shouldWrapInBlock);
+        const rawContent = message.content || response_metadata.message;
+        msg.content =
+          response_metadata?.content_type === 'json'
+            ? formatJsonBlock(rawContent)
+            : convertJsonToString(rawContent);
         msg.isLoading = false;
 
         if (response_metadata?.finish_reason) {

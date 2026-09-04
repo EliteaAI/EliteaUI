@@ -1,6 +1,7 @@
 import { memo } from 'react';
 
 import { AskUserAnswerSummary } from '@/[fsd]/features/chat/ui';
+import { formatJsonBlock } from '@/[fsd]/shared/lib/utils';
 import Markdown from '@/[fsd]/shared/ui/markdown';
 import { convertJsonToString, isNullOrUndefined } from '@/common/utils';
 import Canvas from '@/components/Canvas';
@@ -74,7 +75,7 @@ const AnswerMessageItems = memo(props => {
                   isStreaming={isStreaming || isRegenerating}
                   spokenRange={itemSpokenRange}
                 >
-                  {convertJsonToString(item.item_details.content) || ''}
+                  {formatJsonBlock(item.item_details.content) || ''}
                 </Markdown>
               );
             }

@@ -75,6 +75,7 @@
     "excellentexport": "^3.9.9",
     "formik": "^2.4.6",
     "js-yaml": "^4.1.0",
+    "jsonc-parser": "^3.3.1",
     "jszip": "^3.10.1",
     "markdownlint": "^0.37.4",
     "marked": "^15.0.8",

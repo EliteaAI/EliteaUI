@@ -9,6 +9,7 @@ import {
 } from '@/[fsd]/features/chat/lib/helpers/executionHierarchy.helpers.js';
 import { groupToolkitAuthorizationActions } from '@/[fsd]/features/chat/lib/helpers/mcpAuthorization.helpers.js';
 import { computeBreadcrumbs } from '@/[fsd]/features/chat/lib/helpers/subAgentGrouping.helpers.js';
+import { formatJsonBlock } from '@/[fsd]/shared/lib/utils';
 import {
   CANVAS_ADMIN_USER,
   CANVAS_SYSTEM_USER,
@@ -16,7 +17,7 @@ import {
   TOOL_ACTION_TYPES,
   ToolActionStatus,
 } from '@/common/constants.js';
-import { convertJsonToString, isImageFile } from '@/common/utils';
+import { isImageFile } from '@/common/utils';
 import useCopyDownloadHandlers from '@/hooks/chat/useCopyEventHandlers';
 
 export const useApplicationAnswerState = props => {
@@ -117,7 +118,25 @@ export const useApplicationAnswerState = props => {
     return parts.join('\n');
   }, [answer, message_items]);
 
-  const realAnswer = useMemo(() => convertJsonToString(rawAnswer || '', true), [rawAnswer]);
+  // Fenced PER ITEM, matching messageItemOffsets below: fencing the joined string
+  // instead would be a no-op (a multi-item join starts with neither { nor [) while
+  // the offsets measured fenced parts, so every spoken highlight after a JSON item
+  // landed on the wrong span.
+  const realAnswer = useMemo(() => {
+    // Never while streaming: the answer grows by a chunk at a time, so formatting
+    // each intermediate value is quadratic (measured 21s of main thread at 1MB),
+    // and a partial payload that momentarily parses would fence then unfence.
+    if (isStreaming || isRegenerating) return rawAnswer || '';
+    if (answer) return formatJsonBlock(answer);
+    if (!message_items) return '';
+    const attachmentItems = message_items.filter(item => item.item_type === 'attachment_message');
+    const parts = message_items
+      .filter(item => item.item_type !== 'attachment_message')
+      .map(item => formatJsonBlock(itemToSpeakableText(item) ?? ''));
+    const summary = buildAttachmentSummary(attachmentItems);
+    if (summary) parts.push(summary);
+    return parts.join('\n');
+  }, [answer, message_items, rawAnswer, isStreaming, isRegenerating]);
   const hasSpeakableText = useMemo(() => !!toSpeakableText(realAnswer).text, [realAnswer]);
 
   const activeSpokenRange = useMemo(() => {
@@ -134,7 +153,7 @@ export const useApplicationAnswerState = props => {
     const offsets = {};
     let pos = 0;
     message_items.forEach((item, idx) => {
-      const str = String(itemToSpeakableText(item) ?? '');
+      const str = String(formatJsonBlock(itemToSpeakableText(item) ?? ''));
       if (item.item_type === 'text_message') {
         offsets[item.uuid] = pos;
       }
@@ -167,7 +186,9 @@ export const useApplicationAnswerState = props => {
       ) {
         const lastActionContent = action?.content?.trim() || '';
         const lastActionOutput = action?.toolOutputs?.trim() || '';
-        const trimmedRealAnswer = realAnswer.trim();
+        // Against the RAW answer: realAnswer is fenced, so it can never equal or be
+        // contained by the tool action's own content, and the duplicate would stay.
+        const trimmedRealAnswer = (rawAnswer || '').trim();
         if (
           lastActionContent === trimmedRealAnswer ||
           lastActionOutput === trimmedRealAnswer ||
@@ -179,7 +200,7 @@ export const useApplicationAnswerState = props => {
       }
       return action;
     });
-  }, [toolActions, realAnswer, isStreaming, isRegenerating]);
+  }, [toolActions, rawAnswer, realAnswer, isStreaming, isRegenerating]);
 
   const isProcessing = isLoading || isRegenerating || isStreaming;
 
