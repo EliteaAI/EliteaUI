@@ -199,6 +199,16 @@ export const entityFoldersApi = eliteaApi
           { type: TAG_TYPE_FOLDER_ACCESS, id: folderId },
         ],
       }),
+      removeFolderAccess: build.mutation({
+        query: ({ projectId, folderId, userIds }) => ({
+          url: `/social/folder_access/prompt_lib/${projectId}/${folderId}`,
+          method: 'DELETE',
+          body: { user_ids: userIds },
+        }),
+        invalidatesTags: (_result, _error, { folderId }) => [
+          { type: TAG_TYPE_FOLDER_ACCESS, id: folderId },
+        ],
+      }),
     }),
   });
 
@@ -215,4 +225,5 @@ export const {
   useLazyGetFolderItemsQuery,
   useGetFolderAccessQuery,
   useSetFolderAccessMutation,
+  useRemoveFolderAccessMutation,
 } = entityFoldersApi;
