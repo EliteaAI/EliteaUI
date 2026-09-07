@@ -70,20 +70,18 @@ const ProjectSwitcher = memo(() => {
     window.location.replace(`${window.location.origin}${destination}${location.search}${location.hash}`);
   }, [targetProject, numericProjectId, projectId, location, dispatch]);
 
-  const styles = projectSwitcherStyles();
-
   if (!numericProjectId) return <Page404 />;
 
   if (!failure) {
     return (
-      <Box sx={styles.root}>
+      <Box sx={projectSwitcherStyles.root}>
         <StyledCircleProgress />
       </Box>
     );
   }
 
   return (
-    <Box sx={styles.root}>
+    <Box sx={projectSwitcherStyles.root}>
       <Typography
         variant="bodyMedium"
         color="text.secondary"
@@ -112,8 +110,10 @@ const ProjectSwitcher = memo(() => {
 
 ProjectSwitcher.displayName = 'ProjectSwitcher';
 
+// A constant rather than the usual factory: nothing here varies with props or state, so there is
+// no reason to allocate a new sx object on every render.
 /** @type {MuiSx} */
-const projectSwitcherStyles = () => ({
+const projectSwitcherStyles = {
   root: {
     display: 'flex',
     flexDirection: 'column',
@@ -123,6 +123,6 @@ const projectSwitcherStyles = () => ({
     width: '100%',
     height: '37.5rem',
   },
-});
+};
 
 export default ProjectSwitcher;

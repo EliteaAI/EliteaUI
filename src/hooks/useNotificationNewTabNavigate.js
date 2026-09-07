@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import { resolveHref } from '@/[fsd]/entities/notifications/lib/helpers';
+import { resolveHref } from '@/[fsd]/entities/notifications/lib/helpers/notification.helpers';
 import { NotificationType, SearchParams } from '@/common/constants';
 import RouteDefinitions, { getBasename } from '@/routes';
 
