@@ -20,3 +20,5 @@ export * from './useSoundNotification.hooks';
 export * from './useEliteATheme.hooks';
 export * from './useBreadcrumbTrail.hooks';
 export * from './useCatalogCount.hooks';
+export * from './useRestoredConversation.hooks';
+export * from './useRunHistoryNavigation.hooks';

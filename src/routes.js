@@ -10,6 +10,7 @@ const RouteDefinitions = {
   ApplicationsWithTab: '/agents/:tab',
   CreateApplication: '/agents/create',
   ApplicationsDetail: '/agents/:tab/:agentId',
+  ApplicationsRunHistory: '/agents/:tab/:agentId/history',
   ApplicationsEvaluate: '/agents/:tab/:agentId/evaluate',
   ApplicationsEvaluateSuite: '/agents/:tab/:agentId/evaluate/:suiteId',
   ApplicationsEvaluateDatasets: '/agents/:tab/:agentId/evaluate/datasets',
@@ -24,6 +25,7 @@ const RouteDefinitions = {
   PipelinesWithTab: '/pipelines/:tab',
   CreatePipeline: '/pipelines/create',
   PipelineDetail: '/pipelines/:tab/:agentId',
+  PipelineRunHistory: '/pipelines/:tab/:agentId/history',
 
   Credentials: '/credentials',
   CredentialsWithTab: '/credentials/:tab',

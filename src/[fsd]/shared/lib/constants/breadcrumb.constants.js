@@ -63,6 +63,10 @@ export const BREADCRUMB_REGISTRY = {
     fallbackLabel: 'Edit Agent',
     testId: 'agent-detail-title',
   },
+  [RouteDefinitions.ApplicationsRunHistory]: {
+    parent: RouteDefinitions.ApplicationsDetail,
+    label: 'Run History',
+  },
   [RouteDefinitions.ApplicationsEvaluate]: {
     parent: RouteDefinitions.ApplicationsDetail,
     label: 'Evaluation',
@@ -96,5 +100,9 @@ export const BREADCRUMB_REGISTRY = {
     entityName: true,
     fallbackLabel: 'Edit Pipeline',
     testId: 'pipeline-detail-title',
+  },
+  [RouteDefinitions.PipelineRunHistory]: {
+    parent: RouteDefinitions.PipelineDetail,
+    label: 'Run History',
   },
 };
