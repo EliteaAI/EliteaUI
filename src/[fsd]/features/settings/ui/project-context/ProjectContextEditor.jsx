@@ -43,7 +43,8 @@ const ProjectContextEditor = memo(props => {
   } = props;
   const { toastSuccess, toastError, toastInfo } = useToast();
   const fileInputRef = useRef(null);
-  const [isDirty, setIsDirty] = useState(false);
+  const [isContentDirty, setIsContentDirty] = useState(false);
+  const [isActivationDescriptionDirty, setIsActivationDescriptionDirty] = useState(false);
 
   const [updateProjectContext, { isLoading: isSaving }] = useUpdateProjectContextMutation();
 
@@ -58,17 +59,19 @@ const ProjectContextEditor = memo(props => {
   const isFirstRender = useRef(true);
 
   useEffect(() => {
-    if (!isDirty && serverData?.content !== undefined) {
+    if (!isContentDirty && serverData?.content !== undefined) {
       setContent(serverData.content ?? '');
+    }
+    if (!isActivationDescriptionDirty && serverData?.activation_description !== undefined) {
       setActivationDescription(serverData.activation_description ?? '');
     }
-  }, [serverData?.content, serverData?.activation_description, isDirty]);
+  }, [serverData?.content, serverData?.activation_description, isContentDirty, isActivationDescriptionDirty]);
 
   const blockOptions = useMemo(
     () => ({
-      blockCondition: isDirty,
+      blockCondition: isContentDirty || isActivationDescriptionDirty,
     }),
-    [isDirty],
+    [isContentDirty, isActivationDescriptionDirty],
   );
 
   const { setBlockNav } = useNavBlocker(blockOptions);
@@ -103,15 +106,21 @@ const ProjectContextEditor = memo(props => {
     [],
   );
 
-  const handleContentChange = useCallback(val => {
-    setContent(val);
-    setIsDirty(true);
-  }, []);
+  const handleContentChange = useCallback(
+    val => {
+      setContent(val);
+      setIsContentDirty(val !== (serverData?.content ?? ''));
+    },
+    [serverData?.content],
+  );
 
-  const handleActivationDescriptionChange = useCallback(event => {
-    setActivationDescription(event.target.value);
-    setIsDirty(true);
-  }, []);
+  const handleActivationDescriptionChange = useCallback(
+    event => {
+      setActivationDescription(event.target.value);
+      setIsActivationDescriptionDirty(event.target.value !== (serverData?.activation_description ?? ''));
+    },
+    [serverData?.activation_description],
+  );
 
   const handleModeChange = useCallback((_e, newMode) => {
     setMode(newMode);
@@ -121,23 +130,30 @@ const ProjectContextEditor = memo(props => {
     setContent(draft.project_background || '');
     setActivationDescription(draft.activation_description || '');
     setIsAiModalOpen(false);
-    setIsDirty(true);
+    setIsContentDirty(true);
+    setIsActivationDescriptionDirty(true);
   }, []);
 
   const handleAIEditApplySave = useCallback(
     async suggested => {
       const enabled = serverData?.enabled ?? true;
-      await updateProjectContext({
-        projectId,
-        content: suggested.project_background,
-        activation_description: suggested.activation_description?.trim(),
-        enabled,
-      }).unwrap();
-      toastSuccess('Project Context saved');
-      setBlockNav(false);
-      onNavigate?.('saved');
+      try {
+        await updateProjectContext({
+          projectId,
+          content: suggested.project_background,
+          activation_description: suggested.activation_description?.trim(),
+          enabled,
+        }).unwrap();
+        toastSuccess('Project Context saved');
+        setBlockNav(false);
+        onNavigate?.('saved');
+        setIsActivationDescriptionDirty(false);
+        setIsContentDirty(false);
+      } catch {
+        toastError('Failed to save Project Context');
+      }
     },
-    [serverData, updateProjectContext, projectId, toastSuccess, setBlockNav, onNavigate],
+    [serverData, updateProjectContext, projectId, toastSuccess, toastError, setBlockNav, onNavigate],
   );
 
   const handleImportClick = useCallback(() => {
@@ -158,12 +174,12 @@ const ProjectContextEditor = memo(props => {
           return;
         }
         setContent(text);
-        setIsDirty(true);
+        setIsContentDirty(text !== (serverData?.content ?? ''));
       };
       reader.readAsText(file);
       e.target.value = '';
     },
-    [canEdit, toastError],
+    [canEdit, serverData?.content, toastError],
   );
 
   const handleEditorFocus = useCallback(() => setIsEditorFocused(true), []);
@@ -182,7 +198,8 @@ const ProjectContextEditor = memo(props => {
         enabled,
       }).unwrap();
       toastSuccess('Project Context saved');
-      setIsDirty(false);
+      setIsContentDirty(false);
+      setIsActivationDescriptionDirty(false);
       setBlockNav(false);
       onNavigate?.('saved');
     } catch {
@@ -202,8 +219,8 @@ const ProjectContextEditor = memo(props => {
   ]);
 
   useEffect(() => {
-    onDirtyChange?.(isDirty);
-  }, [isDirty, onDirtyChange]);
+    onDirtyChange?.(isContentDirty || isActivationDescriptionDirty);
+  }, [isContentDirty, isActivationDescriptionDirty, onDirtyChange]);
 
   useEffect(() => {
     if (saveRef) {
@@ -220,7 +237,8 @@ const ProjectContextEditor = memo(props => {
   }, [content, toastInfo, toastError]);
 
   const handleCancel = useCallback(() => {
-    setIsDirty(false);
+    setIsContentDirty(false);
+    setIsActivationDescriptionDirty(false);
     setBlockNav(false);
     onNavigate?.('empty');
   }, [setBlockNav, onNavigate]);
@@ -228,7 +246,8 @@ const ProjectContextEditor = memo(props => {
   const handleDiscard = useCallback(() => {
     setContent(serverData?.content ?? '');
     setActivationDescription(serverData?.activation_description ?? '');
-    setIsDirty(false);
+    setIsContentDirty(false);
+    setIsActivationDescriptionDirty(false);
     setBlockNav(false);
     onNavigate?.('saved');
   }, [serverData, setBlockNav, onNavigate]);
@@ -274,14 +293,16 @@ const ProjectContextEditor = memo(props => {
       <Button.BaseBtn
         data-testid="project-context-save-button"
         variant={BUTTON_VARIANTS.contained}
-        disabled={!isDirty || isSaving || activationDescriptionRequired}
+        disabled={
+          (!isContentDirty && !isActivationDescriptionDirty) || isSaving || activationDescriptionRequired
+        }
         onClick={handleSave}
       >
         Save
       </Button.BaseBtn>
       <Button.BaseBtn
         variant={BUTTON_VARIANTS.secondary}
-        disabled={!isDirty || isSaving}
+        disabled={(!isContentDirty && !isActivationDescriptionDirty) || isSaving}
         onClick={isCreate ? handleCancel : handleDiscard}
       >
         {isCreate ? 'Cancel' : 'Discard'}
