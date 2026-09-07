@@ -11,7 +11,7 @@ import { useIsFrom } from '@/hooks/useIsFromSpecificPageHooks';
 import useIsPipelineYamlCodeDirty from '@/pages/Pipelines/useIsPipelineYamlCodeDirty';
 import RouteDefinitions from '@/routes';
 
-export default function SaveApplicationButton({ onSuccess }) {
+export default function SaveApplicationButton({ onSuccess, isAgent }) {
   const isYamlCodeDirty = useIsPipelineYamlCodeDirty();
   const { values } = useFormikContext();
   const isFromChat = useIsFrom(RouteDefinitions.Chat);
@@ -19,7 +19,7 @@ export default function SaveApplicationButton({ onSuccess }) {
 
   const isFormDirtyExcluding = useFormDirtyExcluding();
 
-  const { onSave, isSaving } = useSaveVersion();
+  const { onSave, isSaving } = useSaveVersion({ isAgent });
 
   // Enhanced save function with callback support
   const handleSave = useCallback(async () => {
