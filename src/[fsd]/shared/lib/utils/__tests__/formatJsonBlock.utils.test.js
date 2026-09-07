@@ -46,6 +46,34 @@ describe('formatJsonBlock', () => {
     expect(formatJsonBlock('{"id": 99999999999999999}')).toContain('99999999999999999');
   });
 
+  it('still fences a result the SDK truncated', () => {
+    // #594 appends its marker as the last ELEMENT of the array, so the payload
+    // still starts [ and ends ] and the guard holds. Moving the marker outside
+    // the collection would silently stop truncated results being fenced, which
+    // is only visible in a live run -- hence pinning the shape here.
+    const bounded = JSON.stringify([
+      { number: 596, title: 'Fix: bound MCP HTTP response bodies' },
+      '...[truncated: 1 more items]',
+      {
+        _elitea_truncated: {
+          truncated: true,
+          original_characters_at_least: 6003,
+          limit: 3000,
+          tool_name: 'get_issues',
+          note: 'This is a PARTIAL result - do not treat it as complete.',
+        },
+      },
+    ]);
+
+    const result = formatJsonBlock(bounded);
+
+    expect(result.startsWith('```json\n')).toBe(true);
+    expect(result).toContain('_elitea_truncated');
+    expect(result).toContain('...[truncated: 1 more items]');
+    const body = result.replace(/^```json\n/, '').replace(/\n```$/, '');
+    expect(JSON.parse(body)).toHaveLength(3);
+  });
+
   it('never double fences', () => {
     const fenced = '```json\n[]\n```';
 
