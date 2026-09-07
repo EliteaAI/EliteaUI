@@ -12,28 +12,24 @@ import PlusIcon from '@/components/Icons/PlusIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
 
 import { EVAL_PERMISSIONS } from '../../../lib/constants';
-import AddCaseMenu from '../case-modals/AddCaseMenu';
 import DatasetCasesList from './DatasetCasesList';
 
 const AttachedDatasetCard = memo(props => {
   const {
     dataset,
     availableDatasets = [],
+    excludedCaseIds = [],
     onChangeDataset,
     onRemoveDataset,
     onCreateDataset,
     onOpenDataset,
-    onAddCase,
-    onEditCase,
-    onRemoveCase,
-    onImportCases,
-    onPromoteCases,
+    onIncludeCase,
+    onExcludeCase,
   } = props;
 
   const { checkPermission } = useCheckPermission();
   const canUpdateSuite = checkPermission(EVAL_PERMISSIONS.suiteUpdate);
   const canCreateDataset = checkPermission(EVAL_PERMISSIONS.datasetCreate);
-  const canUpdateDataset = checkPermission(EVAL_PERMISSIONS.datasetUpdate);
 
   const [overflowAnchor, setOverflowAnchor] = useState(null);
   const [selectorAnchor, setSelectorAnchor] = useState(null);
@@ -123,26 +119,14 @@ const AttachedDatasetCard = memo(props => {
 
       <Box sx={styles.content}>
         {caseCount === 0 ? (
-          <>
-            <Typography sx={styles.noCasesText}>No cases added yet.</Typography>
-            {canUpdateDataset && (
-              <AddCaseMenu
-                onCreateManually={onAddCase}
-                onImportFile={onImportCases}
-                onFromChatsRuns={onPromoteCases}
-              />
-            )}
-          </>
+          <Typography sx={styles.noCasesText}>No cases added yet.</Typography>
         ) : (
           <DatasetCasesList
             cases={cases}
             caseCount={caseCount}
-            isSharedDataset={dataset.is_shared}
-            onAddCase={onAddCase}
-            onEditCase={onEditCase}
-            onRemoveCase={onRemoveCase}
-            onImportCases={onImportCases}
-            onPromoteCases={onPromoteCases}
+            excludedCaseIds={excludedCaseIds}
+            onIncludeCase={onIncludeCase}
+            onExcludeCase={onExcludeCase}
           />
         )}
       </Box>

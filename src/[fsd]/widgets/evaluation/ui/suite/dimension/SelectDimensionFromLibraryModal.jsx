@@ -6,7 +6,7 @@ import { Button, Input, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { BaseTab, BaseTabs } from '@/[fsd]/shared/ui/tabs';
 
-import { useEvalDimensionsQuery } from '../../../api';
+import { useEvalDimensionsQuery, usePlatformDimensionCatalogQuery } from '../../../api';
 import { EVAL_TIER } from '../../../lib/constants';
 import DimensionItem from './DimensionItem';
 
@@ -17,16 +17,21 @@ const DIMENSION_TABS = {
 };
 
 const SelectDimensionFromLibraryModal = memo(props => {
-  const { open, onClose, projectId, applicationId = null, attachedDimensionIds = [], onAdd } = props;
+  const { open, onClose, projectId, applicationId = null, attachedDimensionRefs = [], onAdd } = props;
 
   const [activeTab, setActiveTab] = useState(DIMENSION_TABS.agent);
   const [search, setSearch] = useState('');
   const [selectedIds, setSelectedIds] = useState([]);
 
-  const { data: dimensions = [], isFetching } = useEvalDimensionsQuery(
-    { projectId, agentId: applicationId },
+  const { data: agentProjectDimensions = [], isFetching: isFetchingDimensions } = useEvalDimensionsQuery(
+    { projectId, agentId: applicationId, includePlatform: false },
     { skip: !open || !projectId },
   );
+  const { data: platformDimensions = [], isFetching: isFetchingPlatform } = usePlatformDimensionCatalogQuery(
+    { projectId },
+    { skip: !open || !projectId },
+  );
+  const isFetching = isFetchingDimensions || isFetchingPlatform;
 
   useEffect(() => {
     if (open) {
@@ -36,10 +41,41 @@ const SelectDimensionFromLibraryModal = memo(props => {
     }
   }, [open]);
 
-  const attachedSet = useMemo(() => new Set(attachedDimensionIds), [attachedDimensionIds]);
+  const { nonPlatformIds, platformCatalogIds, platformMaterializedIds } = useMemo(() => {
+    const nonPlatform = new Set();
+    const catalogIds = new Set();
+    const materializedIds = new Set();
+    attachedDimensionRefs.forEach(ref => {
+      if (ref.tier === EVAL_TIER.platform) {
+        if (ref.catalogId != null) {
+          catalogIds.add(ref.catalogId);
+        }
+        if (ref.materializedId != null) {
+          materializedIds.add(ref.materializedId);
+        }
+      } else if (ref.id != null) {
+        nonPlatform.add(ref.id);
+      }
+    });
+    return {
+      nonPlatformIds: nonPlatform,
+      platformCatalogIds: catalogIds,
+      platformMaterializedIds: materializedIds,
+    };
+  }, [attachedDimensionRefs]);
 
   const availableDimensions = useMemo(() => {
-    const filtered = dimensions.filter(d => d.tier === activeTab && !attachedSet.has(d.id));
+    const source = activeTab === EVAL_TIER.platform ? platformDimensions : agentProjectDimensions;
+    const filtered = source.filter(d => {
+      if (d.tier !== activeTab) return false;
+      if (d.tier === EVAL_TIER.platform) {
+        if (platformCatalogIds.has(d.id)) return false;
+        if (d.local_dimension_id != null && platformMaterializedIds.has(d.local_dimension_id)) return false;
+      } else {
+        if (nonPlatformIds.has(d.id)) return false;
+      }
+      return true;
+    });
 
     const term = search.trim().toLowerCase();
     if (!term) return filtered;
@@ -49,7 +85,15 @@ const SelectDimensionFromLibraryModal = memo(props => {
       const desc = (d.description || '').toLowerCase();
       return name.includes(term) || desc.includes(term);
     });
-  }, [dimensions, attachedSet, search, activeTab]);
+  }, [
+    agentProjectDimensions,
+    platformDimensions,
+    nonPlatformIds,
+    platformCatalogIds,
+    platformMaterializedIds,
+    search,
+    activeTab,
+  ]);
 
   const handleTabChange = useCallback((_, newValue) => {
     setActiveTab(newValue);
@@ -70,10 +114,11 @@ const SelectDimensionFromLibraryModal = memo(props => {
 
   const handleAdd = useCallback(() => {
     if (selectedIds.length === 0) return;
-    const selected = dimensions.filter(d => selectedIds.includes(d.id));
+    const source = activeTab === EVAL_TIER.platform ? platformDimensions : agentProjectDimensions;
+    const selected = source.filter(d => selectedIds.includes(d.id));
     onAdd?.(selected);
     onClose();
-  }, [selectedIds, dimensions, onAdd, onClose]);
+  }, [selectedIds, activeTab, agentProjectDimensions, platformDimensions, onAdd, onClose]);
 
   const selectedCount = selectedIds.length;
 

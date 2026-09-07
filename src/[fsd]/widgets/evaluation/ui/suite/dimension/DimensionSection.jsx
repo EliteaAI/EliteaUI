@@ -9,14 +9,15 @@ import AddDimensionMenu from './AddDimensionMenu';
 import DimensionCard from './DimensionCard';
 
 const DimensionSection = memo(props => {
+  const { attachedDimensions = [], dimensionActions = {} } = props;
+
   const {
-    attachedDimensions = [],
-    onSelectFromLibrary,
-    onCreateManually,
-    onBuildWithAi,
-    onEditDimension,
-    onRemoveDimension,
-  } = props;
+    handleSelectDimensionFromLibrary: onSelectFromLibrary,
+    handleCreateDimensionManually: onCreateManually,
+    handleBuildDimensionWithAi: onBuildWithAi,
+    handleEditDimension: onEditDimension,
+    handleRemoveDimension: onRemoveDimension,
+  } = dimensionActions;
 
   const { checkPermission } = useCheckPermission();
   const canUpdateSuite = checkPermission(EVAL_PERMISSIONS.suiteUpdate);

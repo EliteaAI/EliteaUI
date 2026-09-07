@@ -1,6 +1,10 @@
 import { eliteaApi } from '@/api';
 
-import { EVAL_DATASET_CASE_PAGE_SIZE, EVAL_RESULT_MAX_LIMIT } from '../lib/constants/evaluation.constants';
+import {
+  EVAL_DATASET_CASE_PAGE_SIZE,
+  EVAL_RESULT_MAX_LIMIT,
+  EVAL_TIER,
+} from '../lib/constants/evaluation.constants';
 
 const TAG_EVAL_DIMENSION = 'EVAL_DIMENSION';
 const TAG_EVAL_SUITE = 'EVAL_SUITE';
@@ -69,6 +73,8 @@ export const evaluationApi = eliteaApi
           url: `/elitea_core/eval_platform_catalog/prompt_lib/${projectId}`,
           method: 'GET',
         }),
+        transformResponse: response =>
+          (Array.isArray(response) ? response : []).map(d => ({ ...d, tier: EVAL_TIER.platform })),
         providesTags: [TAG_EVAL_DIMENSION],
       }),
       materializePlatformDimension: build.mutation({
@@ -250,6 +256,23 @@ export const evaluationApi = eliteaApi
         }),
         invalidatesTags: (result, error) => (error ? [] : [TAG_EVAL_DATASET, TAG_EVAL_DATASET_CASE]),
       }),
+
+      // ---- Suite case exclusions (for borrowed datasets) ----
+      evalSuiteCaseExclusions: build.query({
+        query: ({ projectId, suiteId }) => ({
+          url: `/elitea_core/eval_suite_case_exclusions/prompt_lib/${projectId}/${suiteId}`,
+          method: 'GET',
+        }),
+        providesTags: [TAG_EVAL_DATASET_CASE],
+      }),
+      updateEvalSuiteCaseExclusions: build.mutation({
+        query: ({ projectId, suiteId, caseIds }) => ({
+          url: `/elitea_core/eval_suite_case_exclusions/prompt_lib/${projectId}/${suiteId}`,
+          method: 'PUT',
+          body: { case_ids: caseIds },
+        }),
+        invalidatesTags: [TAG_EVAL_DATASET_CASE],
+      }),
       importEvalDataset: build.mutation({
         query: ({ projectId, datasetId, body }) => ({
           url: `/elitea_core/eval_dataset_import/prompt_lib/${projectId}/${datasetId}`,
@@ -420,6 +443,8 @@ export const {
   useAddEvalDatasetCaseMutation,
   useUpdateEvalDatasetCaseMutation,
   useDeleteEvalDatasetCaseMutation,
+  useEvalSuiteCaseExclusionsQuery,
+  useUpdateEvalSuiteCaseExclusionsMutation,
   useImportEvalDatasetMutation,
   usePromoteEvalDatasetMutation,
   useEvalConversationsQuery,

@@ -13,6 +13,7 @@ import {
   parseEvalError,
   useDeleteEvalDimensionMutation,
   useEvalDimensionsQuery,
+  usePlatformDimensionCatalogQuery,
 } from '@/[fsd]/widgets/evaluation';
 import { EVAL_PERMISSIONS, EVAL_TIER } from '@/[fsd]/widgets/evaluation/lib/constants';
 import PlusIcon from '@/components/Icons/PlusIcon';
@@ -43,10 +44,17 @@ const AgentEvaluateDimensionsPage = memo(() => {
   const skip = !projectId || !applicationId;
 
   const {
-    data: dimensions = [],
-    isLoading,
-    isError,
-  } = useEvalDimensionsQuery({ projectId, agentId: applicationId }, { skip });
+    data: agentProjectDimensions = [],
+    isLoading: isLoadingDimensions,
+    isError: isDimensionsError,
+  } = useEvalDimensionsQuery({ projectId, agentId: applicationId, includePlatform: false }, { skip });
+  const {
+    data: platformDimensions = [],
+    isLoading: isLoadingPlatform,
+    isError: isPlatformError,
+  } = usePlatformDimensionCatalogQuery({ projectId }, { skip });
+  const isLoading = isLoadingDimensions || isLoadingPlatform;
+  const isError = isDimensionsError || isPlatformError;
 
   const [deleteDimension, { isLoading: isDeleting }] = useDeleteEvalDimensionMutation();
 
@@ -55,11 +63,12 @@ const AgentEvaluateDimensionsPage = memo(() => {
   const canDelete = checkPermission(EVAL_PERMISSIONS.dimensionDelete);
 
   const filteredDimensions = useMemo(() => {
-    const byTab = dimensions.filter(d => d.tier === activeTab);
+    const source = activeTab === EVAL_TIER.platform ? platformDimensions : agentProjectDimensions;
+    const byTab = source.filter(d => d.tier === activeTab);
     const term = search.trim().toLowerCase();
     if (!term) return byTab;
     return byTab.filter(d => (d.name || '').toLowerCase().includes(term));
-  }, [dimensions, activeTab, search]);
+  }, [agentProjectDimensions, platformDimensions, activeTab, search]);
 
   const handleTabChange = useCallback((_, newValue) => {
     setActiveTab(newValue);
