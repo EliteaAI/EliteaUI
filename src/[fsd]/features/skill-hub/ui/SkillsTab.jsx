@@ -12,7 +12,7 @@ import SkillCategorySection from '@/[fsd]/features/skill-hub/ui/SkillCategorySec
 import SkillHubModal from '@/[fsd]/features/skill-hub/ui/SkillHubModal';
 import { SkillHubContext, useInteractiveTour } from '@/[fsd]/shared/lib/context';
 import { DEFAULT_NEW_ITEM_DAYS, isNewItem } from '@/[fsd]/shared/lib/helpers';
-import { useGroupedCategories } from '@/[fsd]/shared/lib/hooks';
+import { useCatalogCount, useGroupedCategories } from '@/[fsd]/shared/lib/hooks';
 import { Category } from '@/[fsd]/shared/ui';
 import { useGetPlatformSettingsQuery } from '@/api/platformSettings';
 import useDebounceValue from '@/hooks/useDebounceValue';
@@ -115,13 +115,7 @@ const SkillsTab = memo(props => {
     { isSearchDisabled: true, isSortDisabled: true },
   );
 
-  const visibleUniqueCount = useMemo(() => {
-    const source =
-      selectedTagNames.length > 0
-        ? selectedTagNames.flatMap(tag => skillsByTag[tag] || [])
-        : Object.values(skillsByTag).flat();
-    return new Set(source.map(item => item.id)).size;
-  }, [skillsByTag, selectedTagNames]);
+  const visibleUniqueCount = useCatalogCount(skillsByTag, selectedTagNames);
 
   useEffect(() => {
     onTotalCountChange?.(visibleUniqueCount);
@@ -207,11 +201,10 @@ const SkillsTab = memo(props => {
           isLoadingMore={loadingTags.has(category)}
           onSelectItem={handleSkillSelect}
           onLoadMore={handleLoadMore}
-          newItemDays={newItemDays}
         />
       );
     },
-    [handleSkillSelect, handleLoadMore, loadingTags, totalCountsByTag, newItemDays],
+    [handleSkillSelect, handleLoadMore, loadingTags, totalCountsByTag],
   );
 
   const renderNoResults = useCallback(

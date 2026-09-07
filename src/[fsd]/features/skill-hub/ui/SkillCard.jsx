@@ -4,7 +4,7 @@ import { Box, Card, Chip, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { ELITEA_CATALOG_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
-import { isNewItem } from '@/[fsd]/shared/lib/helpers';
+import { catalogCardActionContainerStyles, catalogCardNewBadgeStyles } from '@/[fsd]/shared/lib/helpers';
 import { ChatParticipantType, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
 import AuthorContainer from '@/components/AuthorContainer';
 import EntityIcon from '@/components/EntityIcon';
@@ -13,7 +13,7 @@ import { getCardGradientStyles } from '@/utils/cardStyles';
 import SkillHubLike from './SkillHubLike';
 
 const SkillCard = memo(props => {
-  const { skill, onSelectItem, newItemDays } = props;
+  const { skill, onSelectItem, isNew } = props;
 
   const styles = skillCardStyles();
 
@@ -74,7 +74,7 @@ const SkillCard = memo(props => {
           </Box>
         </StyledTooltip>
         <Box sx={styles.actionContainer}>
-          {isNewItem(skill.created_at, newItemDays) && (
+          {isNew && (
             <Chip
               label="New"
               size="small"
@@ -109,18 +109,7 @@ const skillCardStyles = () => ({
     cursor: 'pointer',
     boxShadow: 'none',
   }),
-  newBadge: ({ palette }) => ({
-    height: '1.125rem',
-    fontSize: '0.625rem',
-    fontWeight: 700,
-    backgroundColor: palette.success.main,
-    color: palette.success.contrastText,
-    pointerEvents: 'none',
-    zIndex: 1,
-    '& .MuiChip-label': {
-      padding: '0 0.375rem',
-    },
-  }),
+  newBadge: catalogCardNewBadgeStyles,
   header: {
     display: 'flex',
     flexDirection: 'row',
@@ -150,11 +139,7 @@ const skillCardStyles = () => ({
   authors: {
     minWidth: '1.25rem',
   },
-  actionContainer: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-  },
+  actionContainer: catalogCardActionContainerStyles,
 });
 
 export default SkillCard;

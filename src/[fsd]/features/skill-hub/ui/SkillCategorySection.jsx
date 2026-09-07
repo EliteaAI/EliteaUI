@@ -2,20 +2,13 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Box, Skeleton, Typography, useMediaQuery, useTheme } from '@mui/material';
 
+import { SkillHubConstants } from '@/[fsd]/features/skill-hub/lib/constants';
 import { INITIAL_CARD_DISPLAY_COUNT } from '@/common/constants';
 
 import SkillCard from './SkillCard';
 
 const SkillCategorySection = memo(props => {
-  const {
-    category,
-    items,
-    totalCount = 0,
-    isLoadingMore = false,
-    onSelectItem,
-    onLoadMore,
-    newItemDays,
-  } = props;
+  const { category, items, totalCount = 0, isLoadingMore = false, onSelectItem, onLoadMore } = props;
 
   const theme = useTheme();
   const styles = skillCategorySectionStyles();
@@ -87,7 +80,7 @@ const SkillCategorySection = memo(props => {
                 key={category + skill.id}
                 skill={skill}
                 onSelectItem={onSelectItem}
-                newItemDays={newItemDays}
+                isNew={item.category?.includes(SkillHubConstants.NEW_CATEGORY)}
               />
             );
           })}

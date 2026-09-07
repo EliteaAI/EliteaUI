@@ -12,7 +12,7 @@ import AgentModal from '@/[fsd]/features/agent-hub/ui/AgentModal';
 import { ELITEA_CATALOG_TOUR_ID, ELITEA_CATALOG_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { AgentHubContext, useInteractiveTour } from '@/[fsd]/shared/lib/context';
 import { DEFAULT_NEW_ITEM_DAYS, isNewItem } from '@/[fsd]/shared/lib/helpers';
-import { useGroupedCategories } from '@/[fsd]/shared/lib/hooks';
+import { useCatalogCount, useGroupedCategories } from '@/[fsd]/shared/lib/hooks';
 import { Category } from '@/[fsd]/shared/ui';
 import { useGetPlatformSettingsQuery } from '@/api/platformSettings';
 import useDebounceValue from '@/hooks/useDebounceValue';
@@ -116,13 +116,7 @@ const AgentsTab = memo(props => {
     { isSearchDisabled: true, isSortDisabled: true },
   );
 
-  const visibleUniqueCount = useMemo(() => {
-    const source =
-      selectedTagNames.length > 0
-        ? selectedTagNames.flatMap(tag => applicationsByTag[tag] || [])
-        : Object.values(applicationsByTag).flat();
-    return new Set(source.map(item => item.id)).size;
-  }, [applicationsByTag, selectedTagNames]);
+  const visibleUniqueCount = useCatalogCount(applicationsByTag, selectedTagNames);
 
   useEffect(() => {
     onTotalCountChange?.(visibleUniqueCount);
@@ -169,11 +163,10 @@ const AgentsTab = memo(props => {
           isLoadingMore={loadingTags.has(category)}
           onSelectItem={handleApplicationSelect}
           onLoadMore={handleLoadMore}
-          newItemDays={newItemDays}
         />
       );
     },
-    [handleApplicationSelect, handleLoadMore, loadingTags, totalCountsByTag, newItemDays],
+    [handleApplicationSelect, handleLoadMore, loadingTags, totalCountsByTag],
   );
 
   const renderNoResults = useCallback(

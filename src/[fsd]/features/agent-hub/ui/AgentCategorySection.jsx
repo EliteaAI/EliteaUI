@@ -2,20 +2,13 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Box, Skeleton, Typography, useMediaQuery, useTheme } from '@mui/material';
 
+import { AgentHubConstants } from '@/[fsd]/features/agent-hub/lib/constants';
 import { INITIAL_CARD_DISPLAY_COUNT } from '@/common/constants';
 
 import AgentCard from './AgentCard';
 
 const AgentCategorySection = memo(props => {
-  const {
-    category,
-    items,
-    totalCount = 0,
-    isLoadingMore = false,
-    onSelectItem,
-    onLoadMore,
-    newItemDays,
-  } = props;
+  const { category, items, totalCount = 0, isLoadingMore = false, onSelectItem, onLoadMore } = props;
 
   const theme = useTheme();
   const styles = agentCategorySectionStyles();
@@ -90,7 +83,7 @@ const AgentCategorySection = memo(props => {
                 key={category + application.id}
                 application={application}
                 onSelectItem={onSelectItem}
-                newItemDays={newItemDays}
+                isNew={item.category?.includes(AgentHubConstants.NEW_CATEGORY)}
               />
             );
           })}
