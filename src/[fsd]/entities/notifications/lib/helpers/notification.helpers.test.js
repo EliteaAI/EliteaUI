@@ -38,6 +38,32 @@ describe('resolveHref for budget notifications', () => {
   });
 });
 
+describe('resolveHref for index notifications', () => {
+  // `indexes` is not a toolkits list tab, so a link built with it only reaches the index page
+  // through a back-compat redirect and leaves the breadcrumb parent pointing at a dead list.
+  it('addresses the index by its own route under a real toolkits tab', () => {
+    expect(resolveHref(NotificationType.IndexDataChanged, { toolkit_id: 870, index_name: 'docs' }, 591)).toBe(
+      `${BASE}/591/toolkits/all/870/index/docs`,
+    );
+  });
+
+  it('falls back to the toolkit page when the run carries no index name', () => {
+    expect(resolveHref(NotificationType.IndexDataChanged, { toolkit_id: 870 }, 591)).toBe(
+      `${BASE}/591/toolkits/all/870`,
+    );
+  });
+
+  it('encodes an index name that would otherwise open another route', () => {
+    expect(
+      resolveHref(NotificationType.IndexDataChanged, { toolkit_id: 870, index_name: 'a b/history' }, 591),
+    ).toBe(`${BASE}/591/toolkits/all/870/index/a%20b%2Fhistory`);
+  });
+
+  it('leaves the segment unlinked when the run names no toolkit', () => {
+    expect(resolveHref(NotificationType.IndexDataChanged, { index_name: 'docs' }, 591)).toBeNull();
+  });
+});
+
 describe('sanitizePrivateProjectName', () => {
   it('replaces project_user_<id> with Private', () => {
     expect(sanitizePrivateProjectName('project_user_9 has reached its budget.')).toBe(

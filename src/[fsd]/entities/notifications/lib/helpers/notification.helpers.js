@@ -1,5 +1,8 @@
-import { NotificationType, SearchParams } from '@/common/constants';
+import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
+import { NotificationType, SearchParams, ToolkitsTabs } from '@/common/constants';
 import RouteDefinitions, { getBasename } from '@/routes';
+
+const DEFAULT_TOOLKITS_TAB = ToolkitsTabs[0];
 
 /**
  * Resolves the navigation href for an empty-href link segment ([text]()) based on
@@ -24,12 +27,24 @@ export const resolveHref = (eventType, meta, projectId) => {
       return messageId ? `${url}&${SearchParams.MessageId}=${messageId}` : url;
     }
 
+    // The index page is addressed by its own route, not by the toolkit page plus an `index_name`
+    // query: that query only survives through a back-compat redirect, and the `:tab` it travels
+    // with is a toolkits LIST tab, so anything but a real one leaves the breadcrumb parent dead.
     case NotificationType.IndexDataChanged: {
       const toolkitId = meta?.toolkit_id;
       const indexName = meta?.index_name;
       if (!toolkitId) return null;
-      const route = `${base}/${projectId}${RouteDefinitions.ToolkitDetail.replace(':tab', 'indexes').replace(':toolkitId', toolkitId)}`;
-      return indexName ? `${route}?${SearchParams.IndexName}=${encodeURIComponent(indexName)}` : route;
+      const path = indexName
+        ? NavigationHelpers.buildRoute(RouteDefinitions.ToolkitIndex, {
+            tab: DEFAULT_TOOLKITS_TAB,
+            toolkitId,
+            indexName,
+          })
+        : NavigationHelpers.buildRoute(RouteDefinitions.ToolkitDetail, {
+            tab: DEFAULT_TOOLKITS_TAB,
+            toolkitId,
+          });
+      return `${base}/${projectId}${path}`;
     }
 
     case NotificationType.BucketExpirationWarning: {

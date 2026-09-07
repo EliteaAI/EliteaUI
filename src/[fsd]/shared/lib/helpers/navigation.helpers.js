@@ -45,3 +45,23 @@ export const buildRoute = (pattern, params = {}) =>
  */
 export const buildAbsoluteAppUrl = (projectId, path) =>
   `${window.location.origin}${getBasename()}/${projectId}${path}`;
+
+/**
+ * Remove the leading `/{projectId}` switcher segment from a path, preserving the router basename.
+ * The id is matched as a whole leading segment: a substring replace would also strike an id that
+ * recurs later in the path, and would mangle a longer id that merely starts with it.
+ * @param {string} pathname - Path as loaded, with or without the basename
+ * @param {string | number} projectId - Project segment to remove
+ * @returns {string} Path without the project segment, basename-prefixed
+ */
+export const stripProjectSegment = (pathname, projectId) => {
+  const basename = getBasename();
+  const withoutBasename =
+    basename && pathname.startsWith(basename) ? pathname.slice(basename.length) : pathname;
+  const segment = `/${projectId}`;
+  const rest =
+    withoutBasename === segment || withoutBasename.startsWith(`${segment}/`)
+      ? withoutBasename.slice(segment.length)
+      : withoutBasename;
+  return `${basename}${rest || '/'}`;
+};
