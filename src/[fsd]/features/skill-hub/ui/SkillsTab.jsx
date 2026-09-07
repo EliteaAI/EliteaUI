@@ -11,13 +11,17 @@ import { useCatalogAutoRefresh, useSkillHubData } from '@/[fsd]/features/skill-h
 import SkillCategorySection from '@/[fsd]/features/skill-hub/ui/SkillCategorySection';
 import SkillHubModal from '@/[fsd]/features/skill-hub/ui/SkillHubModal';
 import { SkillHubContext, useInteractiveTour } from '@/[fsd]/shared/lib/context';
-import { useGroupedCategories } from '@/[fsd]/shared/lib/hooks';
+import { DEFAULT_NEW_ITEM_DAYS, isNewItem } from '@/[fsd]/shared/lib/helpers';
+import { useCatalogCount, useGroupedCategories } from '@/[fsd]/shared/lib/hooks';
 import { Category } from '@/[fsd]/shared/ui';
+import { useGetPlatformSettingsQuery } from '@/api/platformSettings';
 import useDebounceValue from '@/hooks/useDebounceValue';
 
 const SkillsTab = memo(props => {
-  const { query = '' } = props;
+  const { query = '', onTotalCountChange } = props;
   const debouncedQuery = useDebounceValue(query, 300);
+  const { data: platformSettings } = useGetPlatformSettingsQuery();
+  const newItemDays = platformSettings?.catalog_new_item_days ?? DEFAULT_NEW_ITEM_DAYS;
   const [selectedTagNames, setSelectedTagNames] = useState([]);
   const [selectedSkill, setSelectedSkill] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -68,10 +72,15 @@ const SkillsTab = memo(props => {
   });
 
   const allCategories = useMemo(() => SkillHubHelpers.buildAllCategories(categoryNames), [categoryNames]);
-  const skillMenuItems = useMemo(
-    () => SkillHubHelpers.buildSkillMenuItems(skillsByTag, selectedTagNames),
-    [skillsByTag, selectedTagNames],
-  );
+  const skillMenuItems = useMemo(() => {
+    const base = SkillHubHelpers.buildSkillMenuItems(skillsByTag, selectedTagNames);
+    return base.map(item => {
+      if (isNewItem(item.value?.created_at, newItemDays)) {
+        return { ...item, category: [...item.category, SkillHubConstants.NEW_CATEGORY] };
+      }
+      return item;
+    });
+  }, [skillsByTag, selectedTagNames, newItemDays]);
 
   const handleSkillSelect = useCallback(skill => {
     setSelectedSkill(skill);
@@ -105,6 +114,12 @@ const SkillsTab = memo(props => {
     null,
     { isSearchDisabled: true, isSortDisabled: true },
   );
+
+  const visibleUniqueCount = useCatalogCount(skillsByTag, selectedTagNames);
+
+  useEffect(() => {
+    onTotalCountChange?.(visibleUniqueCount);
+  }, [visibleUniqueCount, onTotalCountChange]);
 
   const firstVisibleSkill = useMemo(() => {
     for (const category of allCategories) {
@@ -148,9 +163,11 @@ const SkillsTab = memo(props => {
 
   const handleTagSelect = useCallback(
     category => {
-      setSelectedTagNames(prev =>
-        prev.includes(category) ? prev.filter(name => name !== category) : [...prev, category],
-      );
+      if (category !== SkillHubConstants.NEW_CATEGORY) {
+        setSelectedTagNames(prev =>
+          prev.includes(category) ? prev.filter(name => name !== category) : [...prev, category],
+        );
+      }
       onSelectCategory(category);
     },
     [onSelectCategory],
@@ -178,7 +195,9 @@ const SkillsTab = memo(props => {
           key={category}
           category={category}
           items={items}
-          totalCount={totalCountsByTag[category] || 0}
+          totalCount={
+            category === SkillHubConstants.NEW_CATEGORY ? items.length : totalCountsByTag[category] || 0
+          }
           isLoadingMore={loadingTags.has(category)}
           onSelectItem={handleSkillSelect}
           onLoadMore={handleLoadMore}

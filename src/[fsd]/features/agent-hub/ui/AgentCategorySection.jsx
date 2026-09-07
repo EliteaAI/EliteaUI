@@ -2,6 +2,7 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Box, Skeleton, Typography, useMediaQuery, useTheme } from '@mui/material';
 
+import { AgentHubConstants } from '@/[fsd]/features/agent-hub/lib/constants';
 import { INITIAL_CARD_DISPLAY_COUNT } from '@/common/constants';
 
 import AgentCard from './AgentCard';
@@ -62,6 +63,14 @@ const AgentCategorySection = memo(props => {
         >
           {category}
         </Typography>
+        {totalCount > 0 && (
+          <Typography
+            variant="headingMedium"
+            sx={styles.countLabel}
+          >
+            {`(${totalCount})`}
+          </Typography>
+        )}
       </Box>
 
       <Box sx={styles.grid}>
@@ -74,6 +83,7 @@ const AgentCategorySection = memo(props => {
                 key={category + application.id}
                 application={application}
                 onSelectItem={onSelectItem}
+                isNew={item.categories?.includes(AgentHubConstants.NEW_CATEGORY)}
               />
             );
           })}
@@ -91,13 +101,24 @@ const AgentCategorySection = memo(props => {
 
       {shouldShowButton && (
         <Box sx={styles.showMoreContainer}>
-          <Typography
-            variant="labelMedium"
-            onClick={isExpanded ? handleShowLess : handleShowMore}
-            sx={styles.showMoreButton}
-          >
-            {isExpanded ? 'Show less' : 'Show more'}
-          </Typography>
+          {isExpanded && (
+            <Typography
+              variant="labelMedium"
+              onClick={handleShowLess}
+              sx={styles.showMoreButton}
+            >
+              Show less
+            </Typography>
+          )}
+          {displayCount < totalCount && (
+            <Typography
+              variant="labelMedium"
+              onClick={handleShowMore}
+              sx={styles.showMoreButton}
+            >
+              Show more
+            </Typography>
+          )}
         </Box>
       )}
     </Box>
@@ -124,6 +145,9 @@ const agentCategorySectionStyles = () => ({
   categoryTitle: ({ palette }) => ({
     color: palette.text.secondary,
   }),
+  countLabel: ({ palette }) => ({
+    color: palette.text.secondary,
+  }),
   grid: ({ breakpoints }) => ({
     display: 'grid',
     width: '100%',
@@ -148,11 +172,10 @@ const agentCategorySectionStyles = () => ({
   },
   showMoreContainer: {
     display: 'flex',
-    width: '100%',
     justifyContent: 'flex-end',
     alignItems: 'center',
     height: '1.5rem',
-    gap: '.5rem',
+    gap: '1rem',
   },
   showMoreButton: ({ palette }) => ({
     cursor: 'pointer',

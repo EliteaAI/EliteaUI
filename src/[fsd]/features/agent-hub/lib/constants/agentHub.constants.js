@@ -3,6 +3,7 @@ import { ALL_TIME_DATE, CollectionStatus, PUBLIC_PROJECT_ID } from '@/common/con
 // Constants
 export const TRENDING_CATEGORY = 'Trending';
 export const MY_LIKED_CATEGORY = 'My Liked';
+export const NEW_CATEGORY = 'New';
 export const OTHER_CATEGORY = 'Other';
 export const PAGE_SIZE = 20;
 export const AUTO_REFRESH_THROTTLE_MS = 30 * 1000;

@@ -1,9 +1,10 @@
 import { memo, useCallback, useMemo } from 'react';
 
-import { Box, Card, Typography } from '@mui/material';
+import { Box, Card, Chip, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { ELITEA_CATALOG_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
+import { catalogCardActionContainerStyles, catalogCardNewBadgeStyles } from '@/[fsd]/shared/lib/helpers';
 import { ChatParticipantType, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
 import AuthorContainer from '@/components/AuthorContainer';
 import EntityIcon from '@/components/EntityIcon';
@@ -12,7 +13,7 @@ import { getCardGradientStyles } from '@/utils/cardStyles';
 import SkillHubLike from './SkillHubLike';
 
 const SkillCard = memo(props => {
-  const { skill, onSelectItem } = props;
+  const { skill, onSelectItem, isNew } = props;
 
   const styles = skillCardStyles();
 
@@ -73,10 +74,19 @@ const SkillCard = memo(props => {
             />
           </Box>
         </StyledTooltip>
-        <SkillHubLike
-          viewMode={ViewMode.Public}
-          data={skill}
-        />
+        <Box sx={styles.actionContainer}>
+          {isNew && (
+            <Chip
+              label="New"
+              size="small"
+              sx={styles.newBadge}
+            />
+          )}
+          <SkillHubLike
+            viewMode={ViewMode.Public}
+            data={skill}
+          />
+        </Box>
       </Box>
     </Card>
   );
@@ -88,6 +98,7 @@ SkillCard.displayName = 'SkillCard';
 const skillCardStyles = () => ({
   card: ({ palette }) => ({
     ...getCardGradientStyles(palette),
+    position: 'relative',
     height: '7rem',
     maxHeight: '7rem',
     display: 'flex',
@@ -99,6 +110,7 @@ const skillCardStyles = () => ({
     cursor: 'pointer',
     boxShadow: 'none',
   }),
+  newBadge: catalogCardNewBadgeStyles,
   header: {
     display: 'flex',
     flexDirection: 'row',
@@ -128,6 +140,7 @@ const skillCardStyles = () => ({
   authors: {
     minWidth: '1.25rem',
   },
+  actionContainer: catalogCardActionContainerStyles,
 });
 
 export default SkillCard;
