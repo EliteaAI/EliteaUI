@@ -82,11 +82,8 @@ export const useEvalDimensionActions = ({
           const newItems = selected
             .filter(d => !existingIds.has(d.id))
             .map(d => ({
-              id: d.id,
+              ...d,
               engine: d.allowed_engines?.[0] ?? 'ai',
-              tier: d.tier,
-              uuid: d.uuid,
-              local_dimension_id: d.local_dimension_id,
             }));
           return [...prev, ...newItems];
         });

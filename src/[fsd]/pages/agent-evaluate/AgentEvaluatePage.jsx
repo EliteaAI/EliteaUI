@@ -9,11 +9,12 @@ import {
   BuildDimensionWithAiModal,
   DatasetModal,
   DimensionModal,
+  EVAL_TIER,
   ResultsPanel,
   SelectDimensionFromLibraryModal,
   SuiteDetailPanel,
   SuitesPanel,
-  buildDimensionLookupMap,
+  findDimensionByBindingId,
   useEvalDatasetActions,
   useEvalDatasetQuery,
   useEvalDatasetsQuery,
@@ -74,13 +75,13 @@ const AgentEvaluatePage = memo(() => {
   const apiAttachedDimensions = useMemo(() => {
     const bindings = (activeSuiteDetail?.bindings ?? []).filter(b => b.dimension_id != null);
     if (bindings.length === 0) return [];
-    const dimMap = buildDimensionLookupMap(dimensions);
     return bindings.map(binding => {
-      const dim = dimMap.get(binding.dimension_id);
+      const dim = findDimensionByBindingId(dimensions, binding.dimension_id);
       return {
         binding,
         name: dim?.name || `Dimension #${binding.dimension_id}`,
         tier: dim?.tier ?? null,
+        localDimensionId: dim?.local_dimension_id ?? null,
         defaultTarget: dim?.default_target ?? null,
         defaultTargetOperator: dim?.default_target_operator ?? null,
         defaultWeight: dim?.default_weight ?? null,
@@ -126,30 +127,39 @@ const AgentEvaluatePage = memo(() => {
   );
   const attachedDatasetDetails = effectiveDatasetId != null ? fetchedDatasetDetails : null;
 
-  const attachedDimensionIds = useMemo(() => {
-    if (isCreatingNew) {
-      return dimensionActions.pendingDimensions.map(p => p.id);
-    }
-    return (activeSuiteDetail?.bindings ?? []).filter(b => b.dimension_id != null).map(b => b.dimension_id);
-  }, [isCreatingNew, dimensionActions.pendingDimensions, activeSuiteDetail?.bindings]);
-
   const attachedDimensions = useMemo(() => {
     if (isCreatingNew) {
-      const dimMap = buildDimensionLookupMap(dimensions);
-      return dimensionActions.pendingDimensions.map(pending => {
-        const dim = dimMap.get(pending.id);
-        return {
-          binding: { id: `pending-${pending.id}`, dimension_id: pending.id, engine: pending.engine },
-          name: dim?.name || `Dimension #${pending.id}`,
-          tier: dim?.tier ?? null,
-          defaultTarget: dim?.default_target ?? null,
-          defaultTargetOperator: dim?.default_target_operator ?? null,
-          defaultWeight: dim?.default_weight ?? null,
-        };
-      });
+      return dimensionActions.pendingDimensions.map(pending => ({
+        binding: { id: `pending-${pending.id}`, dimension_id: pending.id, engine: pending.engine },
+        name: pending.name || `Dimension #${pending.id}`,
+        tier: pending.tier ?? null,
+        localDimensionId: pending.local_dimension_id ?? null,
+        defaultTarget: pending.default_target ?? null,
+        defaultTargetOperator: pending.default_target_operator ?? null,
+        defaultWeight: pending.default_weight ?? null,
+      }));
     }
     return apiAttachedDimensions;
-  }, [isCreatingNew, dimensionActions.pendingDimensions, dimensions, apiAttachedDimensions]);
+  }, [isCreatingNew, dimensionActions.pendingDimensions, apiAttachedDimensions]);
+
+  const attachedDimensionRefs = useMemo(
+    () =>
+      attachedDimensions.map(d => {
+        const isPending = String(d.binding.id).startsWith('pending-');
+        if (d.tier === EVAL_TIER.platform) {
+          return {
+            catalogId: isPending ? d.binding.dimension_id : null,
+            materializedId: isPending ? (d.localDimensionId ?? null) : d.binding.dimension_id,
+            tier: d.tier,
+          };
+        }
+        return {
+          id: d.binding.dimension_id,
+          tier: d.tier,
+        };
+      }),
+    [attachedDimensions],
+  );
 
   const runActions = useEvalRunActions({
     projectId,
@@ -268,7 +278,7 @@ const AgentEvaluatePage = memo(() => {
             onClose={dimensionActions.handleCloseDimensionLibrary}
             projectId={projectId}
             applicationId={applicationId}
-            attachedDimensionIds={attachedDimensionIds}
+            attachedDimensionRefs={attachedDimensionRefs}
             onAdd={dimensionActions.handleAddDimensionsFromLibrary}
           />
           <DimensionModal

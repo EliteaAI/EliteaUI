@@ -23,6 +23,18 @@ export const buildDimensionLookupMap = (dimensions = []) => {
   return map;
 };
 
+export const findDimensionByBindingId = (dimensions, dimensionId) => {
+  if (dimensionId == null) return null;
+  // Priority 1: exact id match for non-platform dimensions (project/agent_adhoc)
+  const nonPlatformMatch = dimensions.find(d => d.id === dimensionId && d.tier !== EVAL_TIER.platform);
+  if (nonPlatformMatch) return nonPlatformMatch;
+  // Priority 2: local_dimension_id match for platform dimensions (materialized)
+  const platformByLocalId = dimensions.find(d => d.local_dimension_id === dimensionId);
+  if (platformByLocalId) return platformByLocalId;
+  // Priority 3: fallback to any id match
+  return dimensions.find(d => d.id === dimensionId) || null;
+};
+
 export const getDefaultDimensionFormState = () => ({
   name: '',
   isShared: false,

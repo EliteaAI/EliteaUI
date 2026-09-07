@@ -17,7 +17,7 @@ const DIMENSION_TABS = {
 };
 
 const SelectDimensionFromLibraryModal = memo(props => {
-  const { open, onClose, projectId, applicationId = null, attachedDimensionIds = [], onAdd } = props;
+  const { open, onClose, projectId, applicationId = null, attachedDimensionRefs = [], onAdd } = props;
 
   const [activeTab, setActiveTab] = useState(DIMENSION_TABS.agent);
   const [search, setSearch] = useState('');
@@ -41,11 +41,41 @@ const SelectDimensionFromLibraryModal = memo(props => {
     }
   }, [open]);
 
-  const attachedSet = useMemo(() => new Set(attachedDimensionIds), [attachedDimensionIds]);
+  const { nonPlatformIds, platformCatalogIds, platformMaterializedIds } = useMemo(() => {
+    const nonPlatform = new Set();
+    const catalogIds = new Set();
+    const materializedIds = new Set();
+    attachedDimensionRefs.forEach(ref => {
+      if (ref.tier === EVAL_TIER.platform) {
+        if (ref.catalogId != null) {
+          catalogIds.add(ref.catalogId);
+        }
+        if (ref.materializedId != null) {
+          materializedIds.add(ref.materializedId);
+        }
+      } else if (ref.id != null) {
+        nonPlatform.add(ref.id);
+      }
+    });
+    return {
+      nonPlatformIds: nonPlatform,
+      platformCatalogIds: catalogIds,
+      platformMaterializedIds: materializedIds,
+    };
+  }, [attachedDimensionRefs]);
 
   const availableDimensions = useMemo(() => {
     const source = activeTab === EVAL_TIER.platform ? platformDimensions : agentProjectDimensions;
-    const filtered = source.filter(d => d.tier === activeTab && !attachedSet.has(d.id));
+    const filtered = source.filter(d => {
+      if (d.tier !== activeTab) return false;
+      if (d.tier === EVAL_TIER.platform) {
+        if (platformCatalogIds.has(d.id)) return false;
+        if (d.local_dimension_id != null && platformMaterializedIds.has(d.local_dimension_id)) return false;
+      } else {
+        if (nonPlatformIds.has(d.id)) return false;
+      }
+      return true;
+    });
 
     const term = search.trim().toLowerCase();
     if (!term) return filtered;
@@ -55,7 +85,15 @@ const SelectDimensionFromLibraryModal = memo(props => {
       const desc = (d.description || '').toLowerCase();
       return name.includes(term) || desc.includes(term);
     });
-  }, [agentProjectDimensions, platformDimensions, attachedSet, search, activeTab]);
+  }, [
+    agentProjectDimensions,
+    platformDimensions,
+    nonPlatformIds,
+    platformCatalogIds,
+    platformMaterializedIds,
+    search,
+    activeTab,
+  ]);
 
   const handleTabChange = useCallback((_, newValue) => {
     setActiveTab(newValue);
