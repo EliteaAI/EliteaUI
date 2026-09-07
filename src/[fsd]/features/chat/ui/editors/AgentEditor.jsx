@@ -337,7 +337,10 @@ const AgentEditor = memo(
                 onSuccess={handleAgentCreated}
               />
             ) : (
-              <SaveApplicationButton onSuccess={handleSaveSuccess} />
+              <SaveApplicationButton
+                onSuccess={handleSaveSuccess}
+                isAgent
+              />
             )
           }
           isPublic={!canEditIt}
