@@ -195,9 +195,7 @@ export const entityFoldersApi = eliteaApi
           method: 'PUT',
           body: { entries },
         }),
-        invalidatesTags: (_result, _error, { folderId }) => [
-          { type: TAG_TYPE_FOLDER_ACCESS, id: folderId },
-        ],
+        invalidatesTags: (_result, _error, { folderId }) => [{ type: TAG_TYPE_FOLDER_ACCESS, id: folderId }],
       }),
       removeFolderAccess: build.mutation({
         query: ({ projectId, folderId, userIds }) => ({
@@ -205,9 +203,7 @@ export const entityFoldersApi = eliteaApi
           method: 'DELETE',
           body: { user_ids: userIds },
         }),
-        invalidatesTags: (_result, _error, { folderId }) => [
-          { type: TAG_TYPE_FOLDER_ACCESS, id: folderId },
-        ],
+        invalidatesTags: (_result, _error, { folderId }) => [{ type: TAG_TYPE_FOLDER_ACCESS, id: folderId }],
       }),
     }),
   });
