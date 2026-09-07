@@ -4,7 +4,7 @@ import { Box, Divider } from '@mui/material';
 
 import CategoryRail from './CategoryRail';
 
-const FEATURED_COUNT = 2;
+const FEATURED_COUNT = 3; // Trending, My Liked, New
 
 const CatalogBody = memo(props => {
   const {

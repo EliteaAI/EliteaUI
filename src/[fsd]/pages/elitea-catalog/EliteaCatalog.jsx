@@ -25,6 +25,8 @@ const EliteaCatalog = memo(() => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [agentQuery, setAgentQuery] = useState('');
   const [skillQuery, setSkillQuery] = useState('');
+  const [totalAgents, setTotalAgents] = useState(0);
+  const [totalSkills, setTotalSkills] = useState(0);
   const theme = useTheme();
 
   const activeTab = useMemo(() => {
@@ -92,13 +94,13 @@ const EliteaCatalog = memo(() => {
           <BaseTab
             data-testid="catalog-agents-tab"
             value={CATALOG_TABS.agents}
-            label="Agents"
+            label={totalAgents > 0 ? `Agents (${totalAgents})` : 'Agents'}
             icon={<ApplicationsIcon />}
           />
           <BaseTab
             data-testid="catalog-skills-tab"
             value={CATALOG_TABS.skills}
-            label="Skills"
+            label={totalSkills > 0 ? `Skills (${totalSkills})` : 'Skills'}
             icon={<SkillsIcon />}
           />
         </BaseTabs>
@@ -107,7 +109,17 @@ const EliteaCatalog = memo(() => {
       <Divider sx={styles.divider} />
 
       <Box sx={styles.body}>
-        {isSkillsTab ? <SkillsTab query={skillQuery} /> : <AgentsTab query={agentQuery} />}
+        {isSkillsTab ? (
+          <SkillsTab
+            query={skillQuery}
+            onTotalCountChange={setTotalSkills}
+          />
+        ) : (
+          <AgentsTab
+            query={agentQuery}
+            onTotalCountChange={setTotalAgents}
+          />
+        )}
       </Box>
     </Box>
   );
