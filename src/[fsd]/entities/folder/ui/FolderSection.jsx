@@ -3,15 +3,19 @@ import { memo, useCallback, useMemo, useState } from 'react';
 import { Box, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
+import { useProjectType } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import { PERMISSIONS } from '@/common/constants';
 import PlusIcon from '@/components/Icons/PlusIcon';
+import useCheckPermission from '@/hooks/useCheckPermission';
 
 import { useEntityFolders, usePinFolder } from '../lib/hooks';
 import CreateFolderDialog from './CreateFolderDialog';
 import DeleteFolderDialog from './DeleteFolderDialog';
 import FolderActionsMenu from './FolderActionsMenu';
 import FolderItem from './FolderItem';
+import FolderManagePermissionsModal from './FolderManagePermissionsModal';
 
 const VISIBLE_FOLDER_COUNT = 6;
 
@@ -25,6 +29,10 @@ const FolderSection = memo(props => {
     onFolderDelete,
   } = props;
 
+  const { isTeam } = useProjectType();
+  const { checkPermission } = useCheckPermission();
+  const canManagePermissions = isTeam && checkPermission(PERMISSIONS.chat.folders.managePermissions);
+
   const styles = folderSectionStyles();
 
   const { folders, isLoading, isError } = useEntityFolders(entityType, { includeCounts: true });
@@ -35,6 +43,7 @@ const FolderSection = memo(props => {
   const [menuAnchorEl, setMenuAnchorEl] = useState(null);
   const [menuFolder, setMenuFolder] = useState(null);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [managePermissionsFolder, setManagePermissionsFolder] = useState(null);
 
   const hasMoreFolders = folders.length > VISIBLE_FOLDER_COUNT;
   const visibleFolders = useMemo(() => {
@@ -98,6 +107,15 @@ const FolderSection = memo(props => {
 
   const handleCloseDeleteDialog = useCallback(() => {
     setDeleteFolder(null);
+  }, []);
+
+  const handlePermission = useCallback(() => {
+    setManagePermissionsFolder(menuFolder);
+    handleMenuClose();
+  }, [menuFolder, handleMenuClose]);
+
+  const handleClosePermission = useCallback(() => {
+    setManagePermissionsFolder(null);
   }, []);
 
   const onDeleteFolder = useCallback(
@@ -177,6 +195,8 @@ const FolderSection = memo(props => {
         onPin={handlePin}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onPermission={handlePermission}
+        canManagePermissions={canManagePermissions}
       />
 
       <CreateFolderDialog
@@ -199,13 +219,19 @@ const FolderSection = memo(props => {
         folder={deleteFolder}
         entityType={entityType}
       />
+
+      <FolderManagePermissionsModal
+        open={!!managePermissionsFolder}
+        onClose={handleClosePermission}
+        folderId={managePermissionsFolder?.id}
+        folderName={managePermissionsFolder?.name}
+      />
     </Box>
   );
 });
 
 FolderSection.displayName = 'FolderSection';
 
-/** @type {MuiSx} */
 const folderSectionStyles = () => ({
   container: {
     marginBottom: '1.5rem',

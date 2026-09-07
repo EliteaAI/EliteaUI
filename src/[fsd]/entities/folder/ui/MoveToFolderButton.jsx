@@ -7,12 +7,14 @@ import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import MoveTo from '@/components/Icons/MoveTo';
 
-import { useFolderMenuActions } from '../lib/hooks';
+import { useFolderAccess, useFolderMenuActions } from '../lib/hooks';
 import CreateFolderDialog from './CreateFolderDialog';
 import FolderMenuContent from './FolderMenuContent';
 
 const MoveToFolderButton = memo(props => {
-  const { entityId, entityType, currentFolderId, isVisible = false } = props;
+  const { entityId, entityType, currentFolderId, isVisible = false, userPermission } = props;
+
+  const { canWrite } = useFolderAccess(userPermission);
 
   const styles = moveToFolderButtonStyles();
 
@@ -58,7 +60,7 @@ const MoveToFolderButton = memo(props => {
           <Button.BaseBtn
             variant={BUTTON_VARIANTS.icon}
             onClick={handleButtonClick}
-            disabled={isLoading}
+            disabled={isLoading || !canWrite}
             sx={buttonStyles.button}
             data-testid={`move-to-folder-btn-${entityId}`}
           >
