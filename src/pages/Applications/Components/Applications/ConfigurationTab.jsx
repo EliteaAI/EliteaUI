@@ -4,13 +4,10 @@ import { useFormikContext } from 'formik';
 
 import { Box, CircularProgress, Typography } from '@mui/material';
 
-import RunHistoryContainer from '@/[fsd]/entities/run-history/ui/RunHistoryContainer';
 import { useApplicationChat } from '@/[fsd]/features/agent/lib/hooks';
-import { ChatBox, ChatButton, ChatMessageList } from '@/[fsd]/features/chat/ui';
+import { ChatBox, ChatButton } from '@/[fsd]/features/chat/ui';
 import { AGENT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
-import { ToolkitsHelpers } from '@/[fsd]/features/toolkits';
-import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
-import { useShowRunHistoryFromUrl } from '@/[fsd]/shared/lib/hooks';
+import { useRestoredConversation, useRunHistoryNavigation } from '@/[fsd]/shared/lib/hooks';
 import { ViewRunHistoryButton } from '@/[fsd]/shared/ui/button';
 import { ContextBudgetUI } from '@/[fsd]/widgets/context-budget';
 import { WELCOME_MESSAGE_ID } from '@/common/constants';
@@ -26,10 +23,9 @@ import {
   RightGridItem,
   StyledGridContainer,
 } from '@/pages/Common/Components/StyledComponents';
+import RouteDefinitions from '@/routes';
 
 import ApplicationConfigurationForm from './ApplicationConfigurationForm';
-
-const { ParticipantEntityTypes } = ParticipantEntityConstants;
 
 const ConfigurationRightContent = memo(props => {
   const {
@@ -218,15 +214,18 @@ ConfigurationRightContent.displayName = 'ConfigurationRightContent';
 const ConfigurationTab = memo(props => {
   const { isFetching, applicationId, setDirty, unsavedLLMSettings, setUnsavedLLMSettings, isError } = props;
 
-  const [restoredConversationID, setRestoredConversationID] = useState(null);
-  const [showHistory, setShowHistory] = useState(false);
   const [isFullScreenChat, setIsFullScreenChat] = useState(false);
-  useShowRunHistoryFromUrl({ setShowHistory });
+  const { goToRunHistory } = useRunHistoryNavigation({
+    entityId: applicationId,
+    historyRoute: RouteDefinitions.ApplicationsRunHistory,
+  });
+  const { restoredConversationID, onRestoreConversationComplete: handleRestoreConversationComplete } =
+    useRestoredConversation();
 
   const viewMode = useViewMode();
   const projectId = useSelectedProjectId();
   const {
-    values: { version_details = {}, id, name, versions } = {},
+    values: { version_details = {}, id, name } = {},
     initialValues,
     setFieldValue,
   } = useFormikContext();
@@ -290,23 +289,6 @@ const ConfigurationTab = memo(props => {
     [setFieldValue, version_details?.llm_settings, initialValues],
   );
 
-  const handleShowHistory = useCallback(() => {
-    setShowHistory(true);
-  }, []);
-
-  const handleRestoreConversation = useCallback(selectedId => {
-    setRestoredConversationID(selectedId);
-    setShowHistory(false);
-  }, []);
-
-  const handleCloseHistory = useCallback(() => {
-    setShowHistory(false);
-  }, []);
-
-  const handleRestoreConversationComplete = useCallback(() => {
-    setRestoredConversationID(null);
-  }, []);
-
   const styles = useMemo(() => configurationTabStyles(isFullScreenChat), [isFullScreenChat]);
 
   if (isError) {
@@ -331,60 +313,46 @@ const ConfigurationTab = memo(props => {
   ) : (
     <>
       <DirtyDetector setDirty={setDirty} />
-      {showHistory && (
-        <RunHistoryContainer
-          entityId={applicationId}
-          versions={versions ?? []}
-          source={ParticipantEntityTypes.Agent}
-          handleRestoreConversation={handleRestoreConversation}
-          onClose={handleCloseHistory}
-          ChatMessageListComponent={ChatMessageList}
-          prettifyConversation={ToolkitsHelpers.prettifyToolkitConversation}
-          shareOpensHistoryTab
-        />
-      )}
-      {!showHistory && (
-        <StyledGridContainer
-          sx={styles.gridContainer}
-          columnSpacing="32px"
-          container
+      <StyledGridContainer
+        sx={styles.gridContainer}
+        columnSpacing="32px"
+        container
+      >
+        <LeftGridItem
+          size={{ xs: 12, lg: lgGridColumns }}
+          sx={styles.leftGridItem}
+          hidden={isFullScreenChat}
+          data-tour={AGENT_TOUR_TARGET_IDS.workspace}
         >
-          <LeftGridItem
-            size={{ xs: 12, lg: lgGridColumns }}
-            sx={styles.leftGridItem}
-            hidden={isFullScreenChat}
-            data-tour={AGENT_TOUR_TARGET_IDS.workspace}
-          >
-            <ContentContainer height="100%">
-              <ApplicationConfigurationForm
-                applicationId={applicationId}
-                viewMode={viewMode}
-              />
-            </ContentContainer>
-          </LeftGridItem>
-          <RightGridItem
-            size={{ xs: 12, lg: lgGridColumns }}
-            sx={styles.rightGridItem}
-          >
-            <ConfigurationRightContent
-              settings={settings}
-              applicationId={id || applicationId}
-              applicationName={name}
-              applicationVersionDetails={version_details}
-              projectId={projectId}
-              isFullScreenChat={isFullScreenChat}
-              setIsFullScreenChat={setIsFullScreenChat}
-              onUpdateAgentSettings={handleUpdateAgentSettings}
-              onSetLLMSettings={handleSetLLMSettings}
-              unsavedLLMSettings={unsavedLLMSettings}
-              setUnsavedLLMSettings={setUnsavedLLMSettings}
-              restoredConversationID={restoredConversationID}
-              onRestoreConversationComplete={handleRestoreConversationComplete}
-              onShowHistory={applicationId ? handleShowHistory : undefined}
+          <ContentContainer height="100%">
+            <ApplicationConfigurationForm
+              applicationId={applicationId}
+              viewMode={viewMode}
             />
-          </RightGridItem>
-        </StyledGridContainer>
-      )}
+          </ContentContainer>
+        </LeftGridItem>
+        <RightGridItem
+          size={{ xs: 12, lg: lgGridColumns }}
+          sx={styles.rightGridItem}
+        >
+          <ConfigurationRightContent
+            settings={settings}
+            applicationId={id || applicationId}
+            applicationName={name}
+            applicationVersionDetails={version_details}
+            projectId={projectId}
+            isFullScreenChat={isFullScreenChat}
+            setIsFullScreenChat={setIsFullScreenChat}
+            onUpdateAgentSettings={handleUpdateAgentSettings}
+            onSetLLMSettings={handleSetLLMSettings}
+            unsavedLLMSettings={unsavedLLMSettings}
+            setUnsavedLLMSettings={setUnsavedLLMSettings}
+            restoredConversationID={restoredConversationID}
+            onRestoreConversationComplete={handleRestoreConversationComplete}
+            onShowHistory={applicationId ? goToRunHistory : undefined}
+          />
+        </RightGridItem>
+      </StyledGridContainer>
     </>
   );
 });

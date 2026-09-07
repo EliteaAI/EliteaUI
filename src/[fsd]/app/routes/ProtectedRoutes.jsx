@@ -91,6 +91,10 @@ const ProjectSwitcher = ChunkHelpers.lazyWithRetry(() => import('@/pages/Project
 const CreateToolkit = ChunkHelpers.lazyWithRetry(() => import('@/pages/Toolkits/CreateToolkit'));
 const EditToolkit = ChunkHelpers.lazyWithRetry(() => import('@/pages/Toolkits/EditToolkit'));
 const Toolkits = ChunkHelpers.lazyWithRetry(() => import('@/pages/Toolkits/Toolkits'));
+const AgentRunHistory = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/agent/AgentRunHistory'));
+const PipelineRunHistory = ChunkHelpers.lazyWithRetry(
+  () => import('@/[fsd]/pages/pipeline/PipelineRunHistory'),
+);
 const ToolkitRunHistory = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/toolkit/ToolkitRunHistory'));
 const ToolkitTest = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/toolkit/ToolkitTest'));
 const CreateIndex = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/indexes/CreateIndex'));
@@ -211,6 +215,7 @@ const ProtectedRoutes = memo(() => {
       { path: RouteDefinitions.CreateApplication, element: <CreateApplication /> },
       { path: RouteDefinitions.ApplicationsWithTab, element: <Applications /> },
       { path: RouteDefinitions.ApplicationsDetail, element: <EditApplication /> },
+      { path: RouteDefinitions.ApplicationsRunHistory, element: <AgentRunHistory /> },
       { path: RouteDefinitions.ApplicationsEvaluate, element: <AgentEvaluatePage /> },
       { path: RouteDefinitions.ApplicationsEvaluateSuite, element: <AgentEvaluatePage /> },
       { path: RouteDefinitions.ApplicationsEvaluateDatasets, element: <AgentEvaluateDatasetsPage /> },
@@ -248,6 +253,8 @@ const ProtectedRoutes = memo(() => {
       { path: RouteDefinitions.CreatePipeline, element: <CreatePipeline /> },
       { path: RouteDefinitions.PipelinesWithTab, element: <Pipelines /> },
       { path: RouteDefinitions.PipelineDetail, element: <EditPipeline /> },
+
+      { path: RouteDefinitions.PipelineRunHistory, element: <PipelineRunHistory /> },
 
       /* credentials */
       { path: RouteDefinitions.Credentials, element: getIndexElement(CredentialsTabs[0]) },

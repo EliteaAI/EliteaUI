@@ -5,25 +5,22 @@ import Split from 'react-split';
 
 import { Box, CircularProgress, Typography } from '@mui/material';
 
-import RunHistoryContainer from '@/[fsd]/entities/run-history/ui/RunHistoryContainer';
-import { ChatMessageList } from '@/[fsd]/features/chat';
 import { PIPELINE_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { usePipelineAttachmentYamlSync, usePipelineChat } from '@/[fsd]/features/pipelines/lib/hooks';
-import { ToolkitsHelpers } from '@/[fsd]/features/toolkits';
-import { LLMSettingsConstants, ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
-import { useShowRunHistoryFromUrl } from '@/[fsd]/shared/lib/hooks';
+import { LLMSettingsConstants } from '@/[fsd]/shared/lib/constants';
+import { useRestoredConversation, useRunHistoryNavigation } from '@/[fsd]/shared/lib/hooks';
 import { isReasoningFamilyFromStored } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
 import DirtyDetector from '@/components/Formik/DirtyDetector';
 import useAgentMCPToolsStatusMonitor from '@/hooks/application/useAgentMCPToolsStatusMonitor';
 import useUploadAttachments from '@/hooks/chat/useUploadAttachments';
 import useIsSmallWindow from '@/hooks/useIsSmallWindow';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
+import RouteDefinitions from '@/routes';
 
 import ChatPanel from './ChatPanel';
 import EditorPanel from './EditorPanel';
 import GeneralFormPanel from './GeneralFormPanel';
 
-const { ParticipantEntityTypes } = ParticipantEntityConstants;
 const { DEFAULT_MAX_TOKENS, DEFAULT_REASONING_EFFORT, DEFAULT_TEMPERATURE } = LLMSettingsConstants;
 
 const ConfigurationTab = memo(props => {
@@ -36,12 +33,14 @@ const ConfigurationTab = memo(props => {
     unsavedLLMSettings,
     setUnsavedLLMSettings,
   } = props;
-  const [restoredConversationID, setRestoredConversationID] = useState(null);
   const [isGeneralPaneCollapsed, setIsGeneralPaneCollapsed] = useState(false);
   const [isChatPaneCollapsed, setIsChatPaneCollapsed] = useState(false);
-  const [showHistory, setShowHistory] = useState(false);
   const [sizes, setSizes] = useState([98, 2]);
-  useShowRunHistoryFromUrl({ setShowHistory });
+  const { goToRunHistory } = useRunHistoryNavigation({
+    entityId: applicationId,
+    historyRoute: RouteDefinitions.PipelineRunHistory,
+  });
+  const { restoredConversationID, onRestoreConversationComplete } = useRestoredConversation();
 
   const chatPanelRef = useRef();
   const editorPanelRef = useRef();
@@ -57,11 +56,6 @@ const ConfigurationTab = memo(props => {
       editorPanelRef.current?.fitView?.();
     }, 0);
   });
-
-  const onRestoreConversationComplete = useCallback(() => {
-    setRestoredConversationID(null);
-    setShowHistory(false);
-  }, []);
 
   const handleRcvAgentEvent = useCallback(event => {
     editorPanelRef.current?.onRcvAgentEvent(event);
@@ -295,18 +289,6 @@ const ConfigurationTab = memo(props => {
 
   const handleDragEnd = useCallback(newSizes => setSizes(newSizes), []);
 
-  const handleShowHistory = useCallback(() => {
-    setShowHistory(true);
-  }, []);
-
-  const handleRestoreConversation = useCallback(id => {
-    setRestoredConversationID(id);
-  }, []);
-
-  const handleCloseHistory = useCallback(() => {
-    setShowHistory(false);
-  }, []);
-
   const gutterStyle = useCallback(() => styles.gutterStyle, [styles.gutterStyle]);
 
   useEffect(() => {
@@ -341,57 +323,43 @@ const ConfigurationTab = memo(props => {
   ) : (
     <>
       <DirtyDetector setDirty={setDirty} />
-      {showHistory && (
-        <RunHistoryContainer
-          entityId={applicationId}
-          versions={formValues?.versions ?? []}
-          source={ParticipantEntityTypes.Pipeline}
-          handleRestoreConversation={handleRestoreConversation}
-          onClose={handleCloseHistory}
-          ChatMessageListComponent={ChatMessageList}
-          prettifyConversation={ToolkitsHelpers.prettifyToolkitConversation}
-          shareOpensHistoryTab
+      <Box
+        sx={styles.mainContainer}
+        data-tour={PIPELINE_TOUR_TARGET_IDS.workspace}
+      >
+        <GeneralFormPanel
+          applicationId={applicationId}
+          onCollapsed={handleCollapsedGeneralPane}
         />
-      )}
-      {!showHistory && (
-        <Box
-          sx={styles.mainContainer}
-          data-tour={PIPELINE_TOUR_TARGET_IDS.workspace}
+        <Split
+          direction={isSmallWindow ? 'vertical' : 'horizontal'}
+          style={styles.splitContainer}
+          sizes={sizes}
+          minSize={28}
+          expandToMin={false}
+          gutterSize={isChatPaneCollapsed ? 0 : 10}
+          gutterAlign="center"
+          snapOffset={30}
+          dragInterval={1}
+          onDragEnd={handleDragEnd}
+          gutterStyle={gutterStyle}
         >
-          <GeneralFormPanel
-            applicationId={applicationId}
-            onCollapsed={handleCollapsedGeneralPane}
+          <EditorPanel
+            setYamlDirty={setYamlDirty}
+            ref={editorPanelRef}
+            stopRun={handleStopRunClick}
+            sx={styles.editorPanel}
           />
-          <Split
-            direction={isSmallWindow ? 'vertical' : 'horizontal'}
-            style={styles.splitContainer}
-            sizes={sizes}
-            minSize={28}
-            expandToMin={false}
-            gutterSize={isChatPaneCollapsed ? 0 : 10}
-            gutterAlign="center"
-            snapOffset={30}
-            dragInterval={1}
-            onDragEnd={handleDragEnd}
-            gutterStyle={gutterStyle}
-          >
-            <EditorPanel
-              setYamlDirty={setYamlDirty}
-              ref={editorPanelRef}
-              stopRun={handleStopRunClick}
-              sx={styles.editorPanel}
-            />
-            <ChatPanel
-              ref={chatPanelRef}
-              settings={settings}
-              onCollapsed={handleCollapsedChatPane}
-              setActiveConversation={setActiveConversation}
-              editorPanelRef={editorPanelRef}
-              onShowHistory={applicationId ? handleShowHistory : undefined}
-            />
-          </Split>
-        </Box>
-      )}
+          <ChatPanel
+            ref={chatPanelRef}
+            settings={settings}
+            onCollapsed={handleCollapsedChatPane}
+            setActiveConversation={setActiveConversation}
+            editorPanelRef={editorPanelRef}
+            onShowHistory={applicationId ? goToRunHistory : undefined}
+          />
+        </Split>
+      </Box>
     </>
   );
 });
