@@ -70,11 +70,17 @@ export const useEvalDatasetActions = ({ projectId, editingSuiteId, agentId, tab 
           body: { dataset_id: dataset.id },
         }).unwrap();
         toastSuccess(`Dataset "${dataset.name}" has been created and attached to the suite.`);
+        // Redirect to manage datasets page with the created dataset selected
+        const datasetsPath = RouteDefinitions.ApplicationsEvaluateDatasets.replace(':tab', tab).replace(
+          ':agentId',
+          agentId,
+        );
+        navigate(`${datasetsPath}?datasetId=${dataset.id}`);
       } catch (error) {
         toastError(parseEvalError(error, 'Dataset created but failed to attach to suite.'));
       }
     },
-    [editingSuiteId, projectId, updateEvalSuite, toastSuccess, toastError],
+    [editingSuiteId, projectId, updateEvalSuite, toastSuccess, toastError, navigate, tab, agentId],
   );
 
   const handleAttachDataset = useCallback(
