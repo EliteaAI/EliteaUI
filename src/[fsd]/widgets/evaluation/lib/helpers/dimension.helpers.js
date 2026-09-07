@@ -13,6 +13,9 @@ export const buildDimensionLookupMap = (dimensions = []) => {
   const map = new Map();
   dimensions.forEach(d => {
     map.set(d.id, d);
+    // Alias by local_dimension_id so platform-materialised dimensions are
+    // found by either their catalog id or their project-local id.
+    // Only set if the local id isn't already claimed by a canonical entry.
     if (d.local_dimension_id != null && !map.has(d.local_dimension_id)) {
       map.set(d.local_dimension_id, d);
     }

@@ -34,7 +34,7 @@ const CaseResultItem = memo(props => {
       sx={styles.wrapper}
       data-testid={`case-result-item-${card.id}`}
     >
-      <Box sx={[styles.container, expanded && styles.containerExpanded]}>
+      <Box sx={styles.container}>
         <Box
           sx={styles.header}
           onClick={handleToggle}
@@ -117,9 +117,6 @@ const caseResultItemStyles = () => ({
     border: `0.0625rem solid ${palette.background.dataGrid.main}`,
     backgroundColor: palette.background.folder.default,
     overflow: 'hidden',
-  }),
-  containerExpanded: ({ palette }) => ({
-    backgroundColor: palette.background.folder.default,
   }),
   header: {
     display: 'flex',

@@ -44,7 +44,7 @@ const ResultsDimensionTable = memo(props => {
         {COLUMNS.map((col, index) => (
           <Box
             key={col.key}
-            sx={styles.headerCell(index === 0)}
+            sx={[styles.headerCell, index === 0 && styles.headerCellFirst]}
           >
             <Typography
               variant="labelMedium"
@@ -141,16 +141,16 @@ const resultsDimensionTableStyles = () => ({
     border: `0.0625rem solid ${palette.border.lines}`,
     borderRadius: '0.5rem',
   }),
-  headerCell: isFirst => ({
+  headerCell: {
     display: 'flex',
     alignItems: 'center',
     padding: '0.25rem 0.75rem',
     height: '100%',
-    ...(isFirst && {
-      borderTopLeftRadius: '0.5rem',
-      borderBottomLeftRadius: '0.5rem',
-    }),
-  }),
+  },
+  headerCellFirst: {
+    borderTopLeftRadius: '0.5rem',
+    borderBottomLeftRadius: '0.5rem',
+  },
   headerText: ({ palette }) => ({
     color: palette.text.secondary,
     fontWeight: 500,

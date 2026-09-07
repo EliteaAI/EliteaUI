@@ -162,8 +162,13 @@ export const useEvalRunActions = ({
     // TODO: wire up results history
   }, []);
 
-  // Determine which run to use for clear (active run or last run from history)
-  const runToClear = activeRunId ? activeRunData : lastRun;
+  const handleExportResults = useCallback(() => {
+    // TODO: wire up export to Excel
+  }, []);
+
+  // Determine the "display run" — active run if in progress, otherwise last run from history
+  const displayRun = runActive ? activeRunData : lastRun;
+  const runToClear = displayRun;
 
   const handleClearResults = useCallback(() => {
     if (!runToClear?.id) return;
@@ -192,13 +197,6 @@ export const useEvalRunActions = ({
     }
     setShowClearConfirm(false);
   }, [deleteEvalRun, projectId, runToClear?.id, activeRunId, toastError, toastSuccess, refetchRuns]);
-
-  const handleExportResults = useCallback(() => {
-    // TODO: wire up export to Excel
-  }, []);
-
-  // Determine the "display run" — active run if in progress, otherwise last run from history
-  const displayRun = runActive ? activeRunData : lastRun;
 
   return {
     activeRun: activeRunData,
