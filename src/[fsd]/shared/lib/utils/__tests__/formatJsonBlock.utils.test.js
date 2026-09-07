@@ -35,6 +35,17 @@ describe('formatJsonBlock', () => {
     expect(formatJsonBlock(ISSUES)).toBe('```json\n' + JSON.stringify(ISSUES, null, 2) + '\n```');
   });
 
+  it('cannot restore a large integer that was rounded before it arrived', () => {
+    // Pins the limit of the object branch rather than implying it holds the
+    // precision guarantee: the caller's parse already destroyed the digits, so
+    // there is nothing left here to preserve. Passing the raw text is what works.
+    const alreadyRounded = JSON.parse('{"id": 99999999999999999}');
+
+    expect(alreadyRounded.id).toBe(100000000000000000);
+    expect(formatJsonBlock(alreadyRounded)).toContain('100000000000000000');
+    expect(formatJsonBlock('{"id": 99999999999999999}')).toContain('99999999999999999');
+  });
+
   it('never double fences', () => {
     const fenced = '```json\n[]\n```';
 

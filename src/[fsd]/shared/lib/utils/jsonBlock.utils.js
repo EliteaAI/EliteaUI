@@ -49,6 +49,11 @@ export const formatJsonBlock = content => {
   if (content === null || content === undefined) {
     return '';
   }
+  // An already-parsed value reaches us from the index chat socket, whose frame was
+  // JSON.parse'd before this ran. Any literal past 2^53 was rounded to a Number
+  // there and its digits no longer exist, so serializing cannot restore them and
+  // stringify is as faithful as this branch can be. Fidelity is only achievable on
+  // the string path below, which is why callers should pass the raw text.
   if (typeof content !== 'string') {
     try {
       return jsonBlock(JSON.stringify(content, null, 2));
