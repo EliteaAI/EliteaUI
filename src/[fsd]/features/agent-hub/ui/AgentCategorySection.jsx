@@ -83,7 +83,7 @@ const AgentCategorySection = memo(props => {
                 key={category + application.id}
                 application={application}
                 onSelectItem={onSelectItem}
-                isNew={item.category?.includes(AgentHubConstants.NEW_CATEGORY)}
+                isNew={item.categories?.includes(AgentHubConstants.NEW_CATEGORY)}
               />
             );
           })}

@@ -80,7 +80,7 @@ const SkillCategorySection = memo(props => {
                 key={category + skill.id}
                 skill={skill}
                 onSelectItem={onSelectItem}
-                isNew={item.category?.includes(SkillHubConstants.NEW_CATEGORY)}
+                isNew={item.categories?.includes(SkillHubConstants.NEW_CATEGORY)}
               />
             );
           })}
