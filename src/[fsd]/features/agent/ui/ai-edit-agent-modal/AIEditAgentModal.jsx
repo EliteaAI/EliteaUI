@@ -86,7 +86,7 @@ const AIEditAgentModal = memo(props => {
 
   onCreateNewVersionRef.current = onCreateNewVersion;
 
-  const { onSave: saveVersion } = useSaveVersion();
+  const { onSave: saveVersion } = useSaveVersion({ isAgent: true });
   saveVersionRef.current = saveVersion;
 
   useEffect(() => {

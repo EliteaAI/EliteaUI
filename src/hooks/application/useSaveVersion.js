@@ -26,7 +26,7 @@ import { actions as appActions } from '@/slices/applications';
 import useChangeNameInUrlSearchParams from '../useChangeNameInUrlSearchParams';
 import useSaveChangedTools from './useSaveChangedTools';
 
-const useSaveVersion = () => {
+const useSaveVersion = ({ isAgent = false } = {}) => {
   const dispatch = useDispatch();
   const handleChangeName = useChangeNameInUrlSearchParams();
   const projectId = useSelectedProjectId();
@@ -51,7 +51,8 @@ const useSaveVersion = () => {
   const {
     values: { version_details = { tools: [] }, name, description, owner_id, webhook_secret },
   } = useFormikContext();
-  const { isFromPipeline, yamlCode } = useSavePipeline();
+  const { isFromPipeline: checkedFromPipelineViaPath, yamlCode } = useSavePipeline();
+  const isFromPipeline = !isAgent && checkedFromPipelineViaPath;
   const { id: currentUserId } = useSelector(state => state.user);
 
   const onSave = useCallback(async () => {
