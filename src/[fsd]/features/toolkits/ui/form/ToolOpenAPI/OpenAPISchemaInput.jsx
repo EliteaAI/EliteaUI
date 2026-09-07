@@ -316,12 +316,12 @@ const getStyles = isDragOver => ({
       backgroundColor: palette.background.default.secondary,
     },
     '& .cm-gutters': {
-      backgroundColor: palette.background.tabPanel,
+      backgroundColor: palette.background.default.tertiary,
       borderRight: 'none',
     },
   }),
   accordionSX: {
-    background: ({ palette }) => `${palette.background.tabPanel} !important`,
+    background: ({ palette }) => `${palette.background.default.tertiary} !important`,
   },
   accordionSummarySX: {
     '& .MuiAccordionSummary-content': { alignItems: 'center', paddingRight: 0 },

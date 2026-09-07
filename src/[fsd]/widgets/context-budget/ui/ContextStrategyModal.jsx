@@ -143,8 +143,8 @@ const componentStyles = () => ({
       width: '37.5rem', // 600px
       maxWidth: '95vw',
       minWidth: '37.5rem',
-      background: ({ palette }) => `${palette.background.tabPanel} !important`,
-      backgroundColor: ({ palette }) => `${palette.background.tabPanel} !important`,
+      background: ({ palette }) => `${palette.background.default.tertiary} !important`,
+      backgroundColor: ({ palette }) => `${palette.background.default.tertiary} !important`,
     },
   },
 });

@@ -305,13 +305,13 @@ const CodeMirrorEditor = forwardRef((props, ref) => {
           ? vscodeDarkInit({
               settings: {
                 background: theme.palette.background.default.primary,
-                gutterBackground: theme.palette.background.tabPanel,
+                gutterBackground: theme.palette.background.default.tertiary,
               },
             })
           : vscodeLightInit({
               settings: {
                 background: theme.palette.background.default.primary,
-                gutterBackground: theme.palette.background.tabPanel,
+                gutterBackground: theme.palette.background.default.tertiary,
               },
             })
       }

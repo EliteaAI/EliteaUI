@@ -137,7 +137,7 @@ const bucketStorageSelectorStyles = () => ({
     borderBottom: '1px solid',
     borderColor: 'divider',
     cursor: 'pointer',
-    backgroundColor: palette.background.tabPanel,
+    backgroundColor: palette.background.default.tertiary,
     transition: 'background-color 0.2s ease',
     '&:hover': {
       backgroundColor: palette.action.hover,

@@ -188,7 +188,7 @@ const styles = {
       backgroundColor: palette.background.default.secondary,
     },
     '& .cm-gutters': {
-      backgroundColor: palette.background.tabPanel,
+      backgroundColor: palette.background.default.tertiary,
       borderRight: 'none',
     },
   }),

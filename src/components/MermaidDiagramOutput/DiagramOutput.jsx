@@ -153,7 +153,7 @@ const MermaidDiagramOutput = memo(props => {
     const canvas = document.createElement('div');
     canvas.id = 'saveImageCanvas';
     // Apply styles to the div
-    canvas.style.backgroundColor = theme.palette.background.tabPanel;
+    canvas.style.backgroundColor = theme.palette.background.default.tertiary;
     canvas.style.width = 'auto';
     canvas.style.padding = '20px';
     canvas.style.height = 'auto';
@@ -165,7 +165,7 @@ const MermaidDiagramOutput = memo(props => {
     const { svg } = await m.render('save_diagram_graph_id', code, canvas);
     canvas.innerHTML = svg;
     return { canvas, imageId: '#saveImageCanvas' };
-  }, [code, theme.palette.background.tabPanel]);
+  }, [code, theme.palette.background.default.tertiary]);
 
   const menuItems = useMemo(() => {
     return [

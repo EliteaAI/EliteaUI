@@ -27,7 +27,7 @@ const evaluationRowBadgeStyles = () => ({
     padding: '0.0625rem 0.5rem',
     borderRadius: '0.75rem',
     color: palette.text.secondary,
-    backgroundColor: palette.background.tabPanel,
+    backgroundColor: palette.background.default.tertiary,
     border: `0.0625rem solid ${palette.border.lines}`,
   }),
 });

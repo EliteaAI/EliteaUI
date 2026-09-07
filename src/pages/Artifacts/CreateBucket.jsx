@@ -333,7 +333,7 @@ const createBucketStyles = () => ({
     alignItems: 'center',
     overflow: 'hidden',
     height: 'calc(100vh - 4.875rem)',
-    backgroundColor: palette.background.tabPanel,
+    backgroundColor: palette.background.default.tertiary,
   }),
   contentWrapper: {
     marginTop: '1.5rem',

@@ -132,7 +132,7 @@ const indexesPanelStyles = () => ({
     flex: 1,
     overflow: 'auto',
     padding: PANEL_GUTTER,
-    background: palette.background.tabPanel,
+    background: palette.background.default.tertiary,
   }),
   banner: {
     padding: 0,

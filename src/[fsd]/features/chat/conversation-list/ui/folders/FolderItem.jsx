@@ -361,7 +361,7 @@ const folderItemStyles = isFolderSaveEnabled => ({
       },
     },
     sx: ({ palette }) => ({
-      background: `${palette.background.tabPanel} !important`,
+      background: `${palette.background.default.tertiary} !important`,
     }),
   },
   editorContainer: ({ palette }) => ({

@@ -303,7 +303,7 @@ const hitlNodeStyles = () => ({
     marginBottom: '1rem',
   },
   accordion: ({ palette }) => ({
-    background: palette.background.tabPanel,
+    background: palette.background.default.tertiary,
   }),
   accordionSummary: ({ palette }) => ({
     background: palette.background.userInputBackground,

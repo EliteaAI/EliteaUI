@@ -63,7 +63,7 @@ const folderManagePermissionsModalStyles = () => ({
   dialogPaper: ({ palette }) => ({
     width: '56.25rem',
     maxWidth: '90vw',
-    backgroundColor: palette.background.tabPanel,
+    backgroundColor: palette.background.default.tertiary,
     '& .MuiDialogTitle-root': {
       borderBottom: `0.0625rem solid ${palette.border.lines}`,
     },

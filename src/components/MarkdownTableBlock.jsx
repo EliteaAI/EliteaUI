@@ -164,7 +164,7 @@ export default function MarkdownTableBlock({
                 overflowWrap: 'break-word',
                 borderRight: `1px solid ${theme.palette.border.lines}`,
                 [`&.${tableCellClasses.head}`]: {
-                  backgroundColor: theme.palette.background.tabPanel,
+                  backgroundColor: theme.palette.background.default.tertiary,
                   borderTop: `1px solid ${theme.palette.border.lines}`,
                   whiteSpace: 'nowrap',
                 },

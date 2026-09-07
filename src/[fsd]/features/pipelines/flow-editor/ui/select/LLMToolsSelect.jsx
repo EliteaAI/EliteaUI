@@ -84,7 +84,7 @@ LLMToolsSelect.displayName = 'LLMToolsSelect';
 
 /** @type {MuiSx} */
 const getStyles = () => ({
-  accordion: ({ palette }) => ({ background: `${palette.background.tabPanel} !important` }),
+  accordion: ({ palette }) => ({ background: `${palette.background.default.tertiary} !important` }),
   accordionSummary: ({ palette }) => ({
     background: palette.background.userInputBackground,
     borderRadius: '.5rem',

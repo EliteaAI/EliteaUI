@@ -55,7 +55,7 @@ const processStepIconStyles = (active, isError) => ({
     borderRadius: '50%',
     boxSizing: 'border-box',
     backgroundColor: !isError ? palette.status.published : palette.status.rejected,
-    border: `0.1875rem solid ${palette.background.tabPanel}`,
+    border: `0.1875rem solid ${palette.border.input}`,
     zIndex: 1,
     '&:hover': {
       width: '1.4375rem',

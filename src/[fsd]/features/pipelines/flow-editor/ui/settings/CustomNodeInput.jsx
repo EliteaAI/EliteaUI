@@ -204,7 +204,7 @@ const CustomNodeInput = memo(props => {
         slotProps={{
           paper: {
             sx: {
-              background: theme.palette.background.tabPanel,
+              background: theme.palette.background.default.tertiary,
               borderRadius: '1rem',
               border: `.0625rem solid ${theme.palette.border.lines}`,
               boxShadow: theme.palette.boxShadow.default,

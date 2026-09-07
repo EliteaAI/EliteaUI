@@ -54,8 +54,8 @@ export default function VariableDialog({
         '& .MuiDialog-paper': {
           width: '60% !important', // or any custom width
           maxWidth: '60% !important', // or any custom width
-          background: `${theme.palette.background.tabPanel} !important`,
-          backgroundColor: `${theme.palette.background.tabPanel} !important`,
+          background: `${theme.palette.background.default.tertiary} !important`,
+          backgroundColor: `${theme.palette.background.default.tertiary} !important`,
         },
       }}
     >

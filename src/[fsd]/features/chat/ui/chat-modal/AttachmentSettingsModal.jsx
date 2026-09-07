@@ -330,8 +330,8 @@ const styles = {
     '& .MuiDialog-paper': {
       width: '37.5rem !important', // or any custom width
       maxWidth: '60% !important', // or any custom width
-      background: ({ palette }) => `${palette.background.tabPanel} !important`,
-      backgroundColor: ({ palette }) => `${palette.background.tabPanel} !important`,
+      background: ({ palette }) => `${palette.background.default.tertiary} !important`,
+      backgroundColor: ({ palette }) => `${palette.background.default.tertiary} !important`,
     },
   },
   dialogContent: {

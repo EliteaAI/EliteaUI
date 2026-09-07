@@ -64,7 +64,7 @@ const nodeCardStyles = (isExpanded, isPerforming, isRunningPipeline, selected, t
     border: `${isPerforming ? '.125rem dashed' : '.0625rem solid'} ${
       isPerforming || (!isRunningPipeline && selected) ? palette.primary.main : palette.border.flowNode
     }`,
-    background: palette.background.tabPanel,
+    background: palette.background.default.tertiary,
   }),
   header: ({ palette }) => ({
     height: '2.75rem',

@@ -144,7 +144,7 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'space-between',
     height: '3.75rem',
-    backgroundColor: `${palette.background.tabPanel}`,
+    backgroundColor: `${palette.background.default.tertiary}`,
   }),
   dialogContent: ({ palette }) => ({
     width: '100%',
@@ -158,7 +158,7 @@ const styles = {
     gap: '0.25rem',
     padding: '1rem 1.5rem !important',
     width: '100%',
-    backgroundColor: `${palette.background.tabPanel}`,
+    backgroundColor: `${palette.background.default.tertiary}`,
   }),
 };
 

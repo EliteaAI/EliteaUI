@@ -99,7 +99,7 @@ const stylesAuthorInformation = () => ({
     borderRadius: '0.5rem',
     marginBottom: '1rem',
     width: '19.5rem',
-    background: palette.background.tabPanel,
+    background: palette.background.default.tertiary,
   }),
   contentsContainer: {
     display: 'flex',

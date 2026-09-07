@@ -164,7 +164,7 @@ ApplicationAdvanceSettings.displayName = 'ApplicationAdvanceSettings';
 /** @type {MuiSx} */
 const applicationAdvanceSettingsStyles = () => ({
   accordion: ({ palette }) => ({
-    background: `${palette.background.tabPanel} !important`,
+    background: `${palette.background.default.tertiary} !important`,
   }),
   fieldContainer: {
     display: 'flex',

@@ -197,7 +197,7 @@ const manageLinksDialogStyles = () => ({
     padding: '0.625rem 0.75rem',
     borderRadius: '0.5rem',
     border: `.0625rem solid ${palette.border.lines}`,
-    background: palette.background.tabPanel,
+    background: palette.background.default.tertiary,
   }),
   linkMeta: {
     display: 'flex',

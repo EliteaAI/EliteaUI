@@ -179,7 +179,7 @@ const modalStyles = ({ isSimple, isFullscreen, hideSections, hasActions }) => ({
     maxWidth: isFullscreen ? '80vw' : '60%',
     borderRadius: '1rem',
     border: `1px solid ${palette.border.lines}`,
-    background: isSimple ? palette.background.modal.simple : palette.background.tabPanel,
+    background: isSimple ? palette.background.modal.simple : palette.background.default.tertiary,
     ...(isFullscreen && {
       height: 'calc(100vh - 10rem)',
     }),

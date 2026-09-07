@@ -195,7 +195,7 @@ ViewImageAttachmentModal.displayName = 'ViewImageAttachmentModal';
 /** @type {MuiSx} */
 const styles = {
   dialogPaper: ({ palette }) => ({
-    background: palette.background.tabPanel,
+    background: palette.background.default.tertiary,
     borderRadius: '1rem',
     border: `1px solid ${palette.border.lines}`,
     boxShadow: palette.boxShadow.default,
@@ -230,7 +230,7 @@ const styles = {
     fontSize: '1.031rem',
   },
   dialogContent: ({ palette }) => ({
-    background: palette.background.tabPanel,
+    background: palette.background.default.tertiary,
     borderBottom: `1px solid ${palette.border.table}`,
     borderTop: `1px solid ${palette.border.table}`,
     width: '100%',

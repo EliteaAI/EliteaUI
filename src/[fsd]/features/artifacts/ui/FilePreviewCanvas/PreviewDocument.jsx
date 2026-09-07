@@ -51,13 +51,13 @@ PreviewDocument.displayName = 'PreviewDocument';
 const previewDocumentStyles = () => ({
   customDropDown: ({ palette }) => ({
     'div[role="listbox"]': {
-      backgroundColor: `${palette.background.tabPanel} !important`,
+      backgroundColor: `${palette.background.default.tertiary} !important`,
 
       div: {
         color: `${palette.text.secondary} !important`,
 
         '>div': {
-          backgroundColor: `${palette.background.tabPanel} !important`,
+          backgroundColor: `${palette.background.default.tertiary} !important`,
 
           span: {
             color: `${palette.text.secondary} !important`,
@@ -96,7 +96,7 @@ const previewDocumentStyles = () => ({
       position: 'sticky',
       top: 0,
       zIndex: 50,
-      backgroundColor: `${palette.background.tabPanel} !important`,
+      backgroundColor: `${palette.background.default.tertiary} !important`,
       borderBottom: `0.0625rem solid ${palette.border.lines}`,
       boxShadow: 'none !important',
       flexWrap: 'wrap',
@@ -107,13 +107,13 @@ const previewDocumentStyles = () => ({
       padding: '0.125rem 0.5rem',
 
       '>div': {
-        background: `${palette.background.tabPanel} !important`,
+        background: `${palette.background.default.tertiary} !important`,
 
         '>div': {
-          background: `${palette.background.tabPanel} !important`,
+          background: `${palette.background.default.tertiary} !important`,
 
           '>div': {
-            background: `${palette.background.tabPanel} !important`,
+            background: `${palette.background.default.tertiary} !important`,
           },
         },
 
@@ -140,7 +140,7 @@ const previewDocumentStyles = () => ({
         height: '.1875rem',
       },
       '&::-webkit-scrollbar-track': {
-        background: palette.background.tabPanel,
+        background: palette.background.default.tertiary,
       },
       '&::-webkit-scrollbar-thumb': {
         background: palette.border.lines,
@@ -150,13 +150,13 @@ const previewDocumentStyles = () => ({
 
     // Table insert popover (grid picker submenu)
     '& div:has(> div > [role="grid"][aria-label="Table size selector"])': {
-      background: `${palette.background.tabPanel} !important`,
+      background: `${palette.background.default.tertiary} !important`,
       border: `1px solid ${palette.border.lines} !important`,
 
       '>div': {
         '>div': {
           '>div': {
-            background: `${palette.background.tabPanel} !important`,
+            background: `${palette.background.default.tertiary} !important`,
             border: `1px solid ${palette.border.lines} !important`,
           },
         },
@@ -186,7 +186,7 @@ const previewDocumentStyles = () => ({
       color: `${palette.text.secondary} !important`,
 
       '&:not([role="gridcell"]):not([aria-pressed="true"])': {
-        background: `${palette.background.tabPanel} !important`,
+        background: `${palette.background.default.tertiary} !important`,
 
         '&:hover': {
           background: `${palette.background.default.secondary} !important`,
@@ -234,7 +234,7 @@ const previewDocumentStyles = () => ({
     },
 
     '.docx-color-picker-dropdown': {
-      backgroundColor: `${palette.background.tabPanel} !important`,
+      backgroundColor: `${palette.background.default.tertiary} !important`,
       border: `1px solid ${palette.border.lines} !important`,
 
       '>div': {
@@ -246,7 +246,7 @@ const previewDocumentStyles = () => ({
 
     '.docx-color-picker': {
       borderRadius: '0.25rem',
-      backgroundColor: `${palette.background.tabPanel} !important`,
+      backgroundColor: `${palette.background.default.tertiary} !important`,
 
       button: {
         '&:not([role="gridcell"])': {
@@ -305,8 +305,8 @@ const previewDocumentStyles = () => ({
       },
 
       input: {
-        background: palette.background.tabPanel,
-        border: `1px solid ${palette.background.tabPanel} !important`,
+        background: palette.background.default.tertiary,
+        border: `1px solid ${palette.border.input} !important`,
 
         color: `${palette.text.secondary} !important`,
       },
@@ -330,7 +330,7 @@ const previewDocumentStyles = () => ({
     },
 
     '.docx-vertical-ruler, .paged-editor, .paged-editor__pages': {
-      background: `${palette.background.tabPanel} !important`,
+      background: `${palette.background.default.tertiary} !important`,
     },
 
     '.layout-page': {
