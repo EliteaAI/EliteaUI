@@ -8,7 +8,16 @@ import EditPenIcon from '@/components/Icons/EditPenIcon';
 import PinIcon from '@/components/Icons/PinIcon';
 
 const FolderActionsMenu = memo(props => {
-  const { anchorEl, folder, onClose, onPin, onEdit, onDelete, onPermission } = props;
+  const {
+    anchorEl,
+    folder,
+    onClose,
+    onPin,
+    onEdit,
+    onDelete,
+    onPermission,
+    canManagePermissions = false,
+  } = props;
   const theme = useTheme();
   const isPinned = !!folder?.meta?.is_pinned;
 
@@ -51,18 +60,20 @@ const FolderActionsMenu = memo(props => {
           Rename
         </Typography>
       </MenuItem>
-      <MenuItem onClick={onPermission}>
-        <Box sx={styles.menuIcon}>
-          <GroupsIcon fill={theme.palette.icon.fill.default} />
-        </Box>
+      {canManagePermissions && (
+        <MenuItem onClick={onPermission}>
+          <Box sx={styles.menuIcon}>
+            <GroupsIcon fill={theme.palette.icon.fill.default} />
+          </Box>
 
-        <Typography
-          variant="labelMedium"
-          color="text.secondary"
-        >
-          Manage permissions
-        </Typography>
-      </MenuItem>
+          <Typography
+            variant="labelMedium"
+            color="text.secondary"
+          >
+            Manage permissions
+          </Typography>
+        </MenuItem>
+      )}
       <MenuItem
         data-testid="folder-menu-delete"
         onClick={onDelete}

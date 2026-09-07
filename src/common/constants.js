@@ -544,6 +544,7 @@ export const PERMISSIONS = {
       create: 'models.chat.folders.create',
       update: 'models.chat.folders.update',
       delete: 'models.chat.folders.delete',
+      managePermissions: 'social.folders.permissions.manage',
     },
   },
   applications: {

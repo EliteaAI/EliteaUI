@@ -3,9 +3,12 @@ import { memo, useCallback, useMemo, useState } from 'react';
 import { Box, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
+import { useProjectType } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import { PERMISSIONS } from '@/common/constants';
 import PlusIcon from '@/components/Icons/PlusIcon';
+import useCheckPermission from '@/hooks/useCheckPermission';
 
 import { useEntityFolders, usePinFolder } from '../lib/hooks';
 import CreateFolderDialog from './CreateFolderDialog';
@@ -25,6 +28,10 @@ const FolderSection = memo(props => {
     onExpandChange,
     onFolderDelete,
   } = props;
+
+  const { isTeam } = useProjectType();
+  const { checkPermission } = useCheckPermission();
+  const canManagePermissions = isTeam && checkPermission(PERMISSIONS.chat.folders.managePermissions);
 
   const styles = folderSectionStyles();
 
@@ -189,6 +196,7 @@ const FolderSection = memo(props => {
         onEdit={handleEdit}
         onDelete={handleDelete}
         onPermission={handlePermission}
+        canManagePermissions={canManagePermissions}
       />
 
       <CreateFolderDialog
