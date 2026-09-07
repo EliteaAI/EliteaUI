@@ -131,7 +131,7 @@ const messageGroupChecklistStyles = () => ({
     border: `.0625rem solid ${palette.border.lines}`,
     borderRadius: '0.5rem',
     padding: '0.25rem 0',
-    background: palette.background.tabPanel,
+    background: palette.background.default.tertiary,
   }),
   checklistFeedback: {
     padding: '0.75rem 1rem',

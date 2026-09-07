@@ -90,7 +90,7 @@ const ApplicationEditForm = memo(props => {
     <BasicAccordion
       style={style}
       showMode={AccordionConstants.AccordionShowMode.LeftMode}
-      accordionSX={{ background: `${theme.palette.background.tabPanel} !important` }}
+      accordionSX={{ background: `${theme.palette.background.default.tertiary} !important` }}
       items={[
         {
           title: 'General',

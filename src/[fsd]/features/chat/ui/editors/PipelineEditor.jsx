@@ -609,7 +609,7 @@ const getStyles = () => ({
   tabBar: theme => ({
     boxSizing: 'border-box',
     padding: '0 1.5rem',
-    background: `${theme.palette.background.tabPanel} !important`,
+    background: `${theme.palette.background.default.tertiary} !important`,
   }),
   tabsContainer: {
     display: 'flex',

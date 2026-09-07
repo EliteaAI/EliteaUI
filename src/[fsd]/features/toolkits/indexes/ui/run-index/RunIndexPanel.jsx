@@ -780,7 +780,7 @@ const runIndexPanelStyles = () => ({
     minHeight: 0,
     overflowY: 'auto',
     padding: '0.5rem 1.5rem 1rem 1.5rem',
-    background: palette.background.tabPanel,
+    background: palette.background.default.tertiary,
   }),
   stats: {
     paddingLeft: '0.75rem',
@@ -798,7 +798,7 @@ const runIndexPanelStyles = () => ({
     flexDirection: 'column',
     minWidth: 0,
     minHeight: 0,
-    background: palette.background.tabPanel,
+    background: palette.background.default.tertiary,
   }),
 });
 

@@ -511,7 +511,7 @@ const MyComponent = () => {
 const styles = () => ({
   container: ({ palette }) => ({
     '& .gutter': {
-      backgroundColor: palette.background.tabPanel,
+      backgroundColor: palette.background.default.tertiary,
       border: `1px solid ${palette.border.lines}`,
       '&:hover': {
         backgroundColor: palette.primary.main,

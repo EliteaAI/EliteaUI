@@ -94,7 +94,6 @@ const oldLightPalette = {
   mode: 'light',
 
   background: {
-    tabPanel: white01,
     pageSection: white01,
     section: grey003,
     modal: {
@@ -704,6 +703,7 @@ const lightPalette = {
     ...oldLightPalette.border,
     edit: white,
     npsCard: lightColorScheme.accentDark,
+    input: white01,
   },
   text: {
     ...oldLightPalette.text,

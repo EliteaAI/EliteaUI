@@ -288,7 +288,7 @@ const styles = {
   detailsContainer: ({ palette }) => ({
     position: 'relative',
     border: `1px solid ${palette.border.lines}`,
-    backgroundColor: `${palette.background.tabPanel}`,
+    backgroundColor: `${palette.background.default.tertiary}`,
     borderRadius: '0.5rem',
     padding: '0.75rem',
     cursor: 'text',

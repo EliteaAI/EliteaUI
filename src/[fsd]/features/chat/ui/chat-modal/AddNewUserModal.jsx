@@ -163,8 +163,8 @@ const addNewUserModalStyles = () => ({
     '& .MuiDialog-paper': {
       width: '30.625rem !important',
       maxWidth: '60% !important',
-      background: `${palette.background.tabPanel} !important`,
-      backgroundColor: `${palette.background.tabPanel} !important`,
+      background: `${palette.background.default.tertiary} !important`,
+      backgroundColor: `${palette.background.default.tertiary} !important`,
     },
   }),
 });

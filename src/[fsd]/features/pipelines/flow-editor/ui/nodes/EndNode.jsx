@@ -52,7 +52,7 @@ const endNodeStyles = (data, isRunningPipeline, selected) => ({
     border: `${data?.isPerforming ? '2px dashed' : '1px solid'} ${
       data?.isPerforming || (!isRunningPipeline && selected) ? palette.primary.main : palette.border.flowNode
     }`,
-    background: palette.background.tabPanel,
+    background: palette.background.default.tertiary,
   }),
   handle: {
     width: '0.75rem',

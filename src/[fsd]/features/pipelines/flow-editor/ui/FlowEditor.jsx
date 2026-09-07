@@ -674,7 +674,7 @@ const flowEditorStyles = () => ({
     padding: spacing(0.75, 1.5),
     borderRadius: spacing(1),
     border: `.0625rem solid ${palette.border.lines}`,
-    background: `${palette.background.tabPanel} !important`,
+    background: `${palette.background.default.tertiary} !important`,
     color: palette.text.secondary,
     gap: spacing(0.75),
     fontSize: typography.body2.fontSize,

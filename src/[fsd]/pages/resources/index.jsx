@@ -191,7 +191,7 @@ const resourcesPageStyles = () => ({
     display: 'flex',
     flexDirection: 'column',
     overflow: 'hidden',
-    backgroundColor: palette.background.tabPanel,
+    backgroundColor: palette.background.default.tertiary,
   }),
   content: ({ spacing }) => ({
     flex: 1,

@@ -96,7 +96,7 @@ const contextStatsStyles = () => ({
     alignItems: 'flex-start',
     justifyContent: 'center',
     padding: '0.375rem 0.75rem',
-    backgroundColor: palette.background.tabPanel,
+    backgroundColor: palette.background.default.tertiary,
     border: `0.0625rem solid ${palette.border.lines}`,
     borderRadius: '0.5rem',
     minWidth: '8rem',

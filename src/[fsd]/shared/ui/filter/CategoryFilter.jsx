@@ -108,7 +108,7 @@ const componentStyles = () => ({
     paddingTop: '1.5rem',
     boxSizing: 'border-box',
     overflow: 'hidden',
-    backgroundColor: palette.background.tabPanel,
+    backgroundColor: palette.background.default.tertiary,
   }),
   title: {
     marginBottom: '1rem',

@@ -190,7 +190,7 @@ const baseEditorStyles = (isVisible, isSmallWindow, theme) => ({
     width: '100%',
     justifyContent: 'flex-start',
     minWidth: isSmallWindow ? '100%' : '240px',
-    background: theme.palette.background.tabPanel,
+    background: theme.palette.background.default.tertiary,
     border: `1px solid ${theme.palette.border.lines}`,
     borderRadius: '16px',
     overflow: 'hidden',

@@ -130,7 +130,7 @@ InputMapping.displayName = 'InputMapping';
 /** @type {MuiSx} */
 const styles = {
   accordion: ({ palette }) => ({
-    background: `${palette.background.tabPanel} !important`,
+    background: `${palette.background.default.tertiary} !important`,
   }),
   summary: ({ palette }) => ({
     background: palette.background.userInputBackground,

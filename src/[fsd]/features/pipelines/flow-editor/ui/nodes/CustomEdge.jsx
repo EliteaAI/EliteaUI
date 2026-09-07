@@ -69,7 +69,7 @@ const CustomEdge = memo(props => {
             sx={{
               position: 'absolute',
               transform: `translate(-50%, -50%) translate(${fallbackLabelX}px,${fallbackLabelY}px)`,
-              background: theme.palette.background.tabPanel,
+              background: theme.palette.background.default.tertiary,
               padding: '8px 16px',
               borderRadius: '0.5rem',
               border: `1px solid ${!selected ? theme.palette.border.flowNode : theme.palette.primary.main}`,

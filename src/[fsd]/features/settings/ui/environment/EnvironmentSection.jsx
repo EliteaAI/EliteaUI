@@ -237,7 +237,7 @@ const environmentSectionStyles = () => ({
     alignItems: 'center',
     padding: '1.75rem',
     gap: '1.5rem',
-    backgroundColor: palette.background.tabPanel,
+    backgroundColor: palette.background.default.tertiary,
     height: '100%',
   }),
 });

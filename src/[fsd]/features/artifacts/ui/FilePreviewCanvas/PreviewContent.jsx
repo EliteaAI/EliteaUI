@@ -368,7 +368,7 @@ const previewContentStyles = () => ({
     },
 
     '&::-webkit-scrollbar-track': {
-      background: palette.background.tabPanel,
+      background: palette.background.default.tertiary,
     },
 
     '&::-webkit-scrollbar-thumb': {
@@ -388,7 +388,7 @@ const previewContentStyles = () => ({
     },
 
     '& pre': {
-      backgroundColor: palette.background.tabPanel,
+      backgroundColor: palette.background.default.tertiary,
       border: `.0625rem solid ${palette.border.lines}`,
       borderRadius: '.25rem',
       padding: '.5rem',
@@ -398,7 +398,7 @@ const previewContentStyles = () => ({
     },
 
     '& code': {
-      backgroundColor: palette.background.tabPanel,
+      backgroundColor: palette.background.default.tertiary,
       padding: '.0625rem .1875rem',
       borderRadius: '.125rem',
       fontSize: '.6875rem',
@@ -424,7 +424,7 @@ const previewContentStyles = () => ({
     },
 
     '& th': {
-      backgroundColor: palette.background.tabPanel,
+      backgroundColor: palette.background.default.tertiary,
       fontWeight: 'bold',
       color: palette.text.primary,
     },
@@ -482,7 +482,7 @@ const previewContentStyles = () => ({
     },
 
     '&::-webkit-scrollbar-track': {
-      background: palette.background.tabPanel,
+      background: palette.background.default.tertiary,
     },
 
     '&::-webkit-scrollbar-thumb': {
@@ -504,7 +504,7 @@ const previewContentStyles = () => ({
   }),
 
   dataTableCellHeader: ({ palette }) => ({
-    backgroundColor: palette.background.tabPanel,
+    backgroundColor: palette.background.default.tertiary,
     color: palette.text.primary,
     fontWeight: 600,
     fontSize: '.75rem',
@@ -520,7 +520,7 @@ const previewContentStyles = () => ({
     },
 
     '&:nth-of-type(even)': {
-      backgroundColor: palette.background.tabPanel,
+      backgroundColor: palette.background.default.tertiary,
     },
 
     '&:hover': {
@@ -567,7 +567,7 @@ const previewContentStyles = () => ({
       height: '.25rem',
     },
     '&::-webkit-scrollbar-track': {
-      background: palette.background.tabPanel,
+      background: palette.background.default.tertiary,
     },
     '&::-webkit-scrollbar-thumb': {
       background: palette.border.lines,
@@ -623,7 +623,7 @@ const previewContentStyles = () => ({
     },
 
     '&::-webkit-scrollbar-track': {
-      background: palette.background.tabPanel,
+      background: palette.background.default.tertiary,
     },
 
     '&::-webkit-scrollbar-thumb': {
@@ -679,7 +679,7 @@ const previewContentStyles = () => ({
     },
 
     '&::-webkit-scrollbar-track': {
-      background: palette.background.tabPanel,
+      background: palette.background.default.tertiary,
     },
 
     '&::-webkit-scrollbar-thumb': {

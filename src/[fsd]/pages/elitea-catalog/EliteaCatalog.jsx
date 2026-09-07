@@ -134,7 +134,7 @@ const eliteaCatalogStyles = () => ({
     flexDirection: 'column',
     height: '100%',
     boxSizing: 'border-box',
-    backgroundColor: palette.background.tabPanel,
+    backgroundColor: palette.background.default.tertiary,
   }),
   header: ({ palette }) => ({
     display: 'flex',

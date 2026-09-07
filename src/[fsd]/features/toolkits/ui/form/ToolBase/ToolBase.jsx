@@ -438,7 +438,7 @@ const ToolBase = memo(props => {
             <Box sx={{ display: 'flex', flexDirection: 'column', marginTop: '0.5rem' }}>
               <BasicAccordion
                 showMode={AccordionConstants.AccordionShowMode.LeftMode}
-                accordionSX={{ background: `${theme.palette.background.tabPanel} !important` }}
+                accordionSX={{ background: `${theme.palette.background.default.tertiary} !important` }}
                 expanded={isAdvancedExpanded}
                 onChange={toggleAdvanced}
                 items={[
@@ -653,7 +653,7 @@ const ToolBase = memo(props => {
         <BasicAccordion
           card
           showMode={AccordionConstants.AccordionShowMode.LeftMode}
-          accordionSX={{ background: `${theme.palette.background.tabPanel} !important` }}
+          accordionSX={{ background: `${theme.palette.background.default.tertiary} !important` }}
           items={[
             {
               title: 'Configuration',

@@ -121,9 +121,11 @@ const toolRowStyles = () => ({
     isExpanded =>
     ({ palette }) => ({
       cursor: 'pointer',
-      backgroundColor: isExpanded ? palette.background.tabPanel : palette.background.default.secondary,
+      backgroundColor: isExpanded
+        ? palette.background.default.tertiary
+        : palette.background.default.secondary,
       '&:hover': {
-        backgroundColor: palette.background.tabPanel,
+        backgroundColor: palette.background.default.tertiary,
       },
     }),
   expandButton: ({ palette }) => ({
@@ -162,7 +164,7 @@ const toolRowStyles = () => ({
   }),
   detailsContent: ({ palette }) => ({
     padding: '0.5rem 0.5rem 0.75rem 2.5rem',
-    backgroundColor: palette.background.tabPanel,
+    backgroundColor: palette.background.default.tertiary,
     borderBottom: `0.0625rem solid ${palette.border.table}`,
   }),
   detailItem: {

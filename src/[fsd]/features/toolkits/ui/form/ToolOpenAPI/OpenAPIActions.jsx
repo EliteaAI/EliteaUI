@@ -27,7 +27,7 @@ const OpenAPIActions = memo(props => {
       <BasicAccordion
         showMode={AccordionConstants.AccordionShowMode.LeftMode}
         accordionSX={{
-          background: `${theme.palette.background.tabPanel} !important`,
+          background: `${theme.palette.background.default.tertiary} !important`,
         }}
         summarySX={{
           '& .MuiAccordionSummary-content': { alignItems: 'center', paddingRight: 0 },

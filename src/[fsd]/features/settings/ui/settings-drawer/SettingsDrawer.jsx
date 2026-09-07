@@ -145,7 +145,7 @@ const getStyles = () => ({
     minWidth: SettingsLayoutConstants.SETTINGS_LAYOUT.DRAWER_WIDTH,
     maxWidth: SettingsLayoutConstants.SETTINGS_LAYOUT.DRAWER_WIDTH,
     borderRight: `0.0625rem solid ${palette.border.table}`,
-    backgroundColor: palette.background.tabPanel,
+    backgroundColor: palette.background.default.tertiary,
     display: 'flex',
     flexDirection: 'column',
     height: '100%',

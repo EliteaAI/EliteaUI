@@ -96,7 +96,6 @@ const oldDarkPalette = {
   mode: 'dark',
 
   background: {
-    tabPanel: gray55,
     pageSection: gray60,
     section: white3,
     modal: {
@@ -701,6 +700,7 @@ const darkPalette = {
     ...oldDarkPalette.border,
     edit: gray50,
     npsCard: darkColorScheme.accentDark,
+    input: gray55,
   },
   text: {
     ...oldDarkPalette.text,

@@ -676,7 +676,7 @@ const toolkitFormStyles = (isDetailsActionBar, hasSidePanel) => ({
           overflowY: 'auto',
           width: '100%',
           padding: `1rem ${PANEL_GUTTER}`,
-          background: palette.background.tabPanel,
+          background: palette.background.default.tertiary,
           ...formContentColumn(hasSidePanel),
         }
       : {},

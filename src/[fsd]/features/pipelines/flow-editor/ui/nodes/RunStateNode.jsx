@@ -141,7 +141,7 @@ const runNodeStyles = (status, selected) => {
       padding: '.375rem .75rem',
       borderRadius: '.5rem',
       border: `.0625rem solid ${selected ? palette.background.button.primary.disabled : palette.border.lines}`,
-      background: selected ? palette.background.dataGrid.main : palette.background.tabPanel,
+      background: selected ? palette.background.dataGrid.main : palette.background.default.tertiary,
       height: '2.25rem',
       display: 'flex',
       alignItems: 'center',

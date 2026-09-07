@@ -135,7 +135,7 @@ const resourceVersionInfoStyles = () => ({
     height: '3.75rem',
     minHeight: '3.75rem',
     borderBottom: `0.0625rem solid ${palette.border.lines}`,
-    backgroundColor: palette.background.tabPanel,
+    backgroundColor: palette.background.default.tertiary,
   }),
   headerRight: {
     display: 'flex',

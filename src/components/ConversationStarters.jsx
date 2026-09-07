@@ -182,7 +182,7 @@ const ConversationStarters = memo(props => {
 /** @type {MuiSx} */
 const conversationStartersStyles = isEmpty => ({
   accordionSX: ({ palette }) => ({
-    background: `${palette.background.tabPanel} !important`,
+    background: `${palette.background.default.tertiary} !important`,
   }),
   starterRow: {
     display: 'flex',

@@ -68,7 +68,7 @@ ApplicationVariables.displayName = 'ApplicationVariables';
 /** @type {MuiSx} */
 const applicationVariablesStyles = () => ({
   accordion: ({ palette }) => ({
-    background: `${palette.background.tabPanel} !important`,
+    background: `${palette.background.default.tertiary} !important`,
   }),
 });
 
