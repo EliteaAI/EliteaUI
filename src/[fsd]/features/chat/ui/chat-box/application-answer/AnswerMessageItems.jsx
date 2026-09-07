@@ -1,6 +1,7 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 
 import { AskUserAnswerSummary } from '@/[fsd]/features/chat/ui';
+import { formatJsonBlock } from '@/[fsd]/shared/lib/utils';
 import Markdown from '@/[fsd]/shared/ui/markdown';
 import { convertJsonToString, isNullOrUndefined } from '@/common/utils';
 import Canvas from '@/components/Canvas';
@@ -21,6 +22,19 @@ const AnswerMessageItems = memo(props => {
     toolActions,
     realAnswer,
   } = props;
+
+  // Formatting is O(size of the item) and this component re-renders on every
+  // streamed chunk and on every spoken-word highlight, so doing it inline in the
+  // JSX re-walks each payload hundreds of times per answer.
+  const formattedItemContent = useMemo(() => {
+    const formatted = {};
+    nonAttachmentItems?.forEach(item => {
+      if (item.item_type === 'text_message') {
+        formatted[item.uuid] = formatJsonBlock(item.item_details.content) || '';
+      }
+    });
+    return formatted;
+  }, [nonAttachmentItems]);
 
   return (
     <>
@@ -74,7 +88,7 @@ const AnswerMessageItems = memo(props => {
                   isStreaming={isStreaming || isRegenerating}
                   spokenRange={itemSpokenRange}
                 >
-                  {convertJsonToString(item.item_details.content) || ''}
+                  {formattedItemContent[item.uuid]}
                 </Markdown>
               );
             }
