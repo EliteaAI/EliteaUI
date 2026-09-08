@@ -5,7 +5,12 @@ import { useParams } from 'react-router-dom';
 import { Box, Typography } from '@mui/material';
 
 import { BreadcrumbsOrTitle, Modal } from '@/[fsd]/shared/ui';
-import { EvaluationRunsTable, RunResultsView, useEvalRunHistory } from '@/[fsd]/widgets/evaluation';
+import {
+  EvaluationDocsButton,
+  EvaluationRunsTable,
+  RunResultsView,
+  useEvalRunHistory,
+} from '@/[fsd]/widgets/evaluation';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const AgentEvaluateHistoryPage = memo(() => {
@@ -28,6 +33,7 @@ const AgentEvaluateHistoryPage = memo(() => {
     handleSelectRun,
     handleShareRun,
     handleExportRun,
+    exportingRunId,
     runToDelete,
     isDeleting,
     handleRequestDelete,
@@ -41,6 +47,7 @@ const AgentEvaluateHistoryPage = memo(() => {
     <Box sx={styles.wrapper}>
       <Box sx={styles.header}>
         <BreadcrumbsOrTitle title="Results History" />
+        <EvaluationDocsButton />
       </Box>
 
       {isRunsError ? (
@@ -63,6 +70,7 @@ const AgentEvaluateHistoryPage = memo(() => {
               selectedRunId={selectedRunId}
               isLoading={isRunsLoading}
               canDelete={canDelete}
+              exportingRunId={exportingRunId}
               sortConfig={sortConfig}
               onSort={handleSort}
               onSelect={handleSelectRun}
@@ -127,6 +135,7 @@ const agentEvaluateHistoryPageStyles = () => ({
     boxSizing: 'border-box',
     display: 'flex',
     alignItems: 'center',
+    justifyContent: 'space-between',
     padding: '0 1.5rem',
   }),
   body: {

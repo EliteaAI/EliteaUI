@@ -9,6 +9,7 @@ import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn
 import { BaseTab, BaseTabs } from '@/[fsd]/shared/ui/tabs';
 import {
   DimensionModal,
+  EvaluationDocsButton,
   ManageDimensionCard,
   parseEvalError,
   useDeleteEvalDimensionMutation,
@@ -141,6 +142,7 @@ const AgentEvaluateDimensionsPage = memo(() => {
       <Box sx={styles.wrapper}>
         <Box sx={styles.header}>
           <BreadcrumbsOrTitle title="Manage Dimensions" />
+          <EvaluationDocsButton />
         </Box>
         <Box sx={styles.body}>
           <Box sx={styles.centered}>
@@ -160,6 +162,7 @@ const AgentEvaluateDimensionsPage = memo(() => {
     <Box sx={styles.wrapper}>
       <Box sx={styles.header}>
         <BreadcrumbsOrTitle title="Manage Dimensions" />
+        <EvaluationDocsButton />
       </Box>
       <Box sx={styles.body}>
         <Box sx={styles.content}>
@@ -285,6 +288,7 @@ const agentEvaluateDimensionsPageStyles = () => ({
     boxSizing: 'border-box',
     display: 'flex',
     alignItems: 'center',
+    justifyContent: 'space-between',
     padding: '0 1.5rem',
   }),
   body: {

@@ -21,13 +21,13 @@ import {
   SCALE_TYPE_PRESET,
   SCALE_TYPE_PRESET_OPTIONS,
   SUCCESS_CRITERIA_OPTIONS,
-} from '../../../lib/constants';
+} from '../../lib/constants';
 import {
   buildDimensionApiBody,
   getDefaultDimensionFormState,
   getDimensionFormValidationError,
   mapDimensionToFormState,
-} from '../../../lib/helpers';
+} from '../../lib/helpers';
 
 export {
   buildDimensionApiBody,

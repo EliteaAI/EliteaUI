@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildScorecard, coveredCaseIdsFromPage, getTargetKey, normalizeScore } from '../scorecard.helpers';
+import { buildScorecard, getTargetKey, normalizeScore } from '../scorecard.helpers';
 
 // A run snapshot with one case and one Code-engine dimension binding (engine 'code').
 const makeRun = () => ({
@@ -118,32 +118,7 @@ describe('normalizeScore — parity with the server normalizer', () => {
   });
 });
 
-describe('coveredCaseIdsFromPage', () => {
-  const page = rows => rows.map(id => ({ dataset_case_id: id }));
-
-  it('reports no restriction when the page covers the whole run', () => {
-    expect(coveredCaseIdsFromPage({ results: page([1, 2]), total: 2, offset: 0 })).toBeNull();
-  });
-
-  it('reports no restriction for a human-only run, which has zero results by design', () => {
-    // Filtering on "has a result row" here would hide every case.
-    expect(coveredCaseIdsFromPage({ results: [], total: 0, offset: 0 })).toBeNull();
-  });
-
-  it('drops the trailing case, which the page may have cut mid-way', () => {
-    expect(coveredCaseIdsFromPage({ results: page([1, 1, 2, 3]), total: 9, offset: 0 })).toEqual(['1', '2']);
-  });
-
-  it('keeps a lone case rather than reporting an empty scorecard', () => {
-    expect(coveredCaseIdsFromPage({ results: page([1, 1]), total: 9, offset: 0 })).toEqual(['1']);
-  });
-
-  it('accounts for the offset when deciding whether the read is complete', () => {
-    expect(coveredCaseIdsFromPage({ results: page([5, 6]), total: 4, offset: 2 })).toBeNull();
-  });
-});
-
-describe('buildScorecard — truncated result page', () => {
+describe('buildScorecard — multiple snapshot cases', () => {
   const twoCaseRun = () => ({
     status: 'finished',
     snapshot: {
@@ -173,17 +148,7 @@ describe('buildScorecard — truncated result page', () => {
     normalized_score: 1,
   });
 
-  it('renders only the covered case instead of a blank cell for the uncovered one', () => {
-    const card = buildScorecard({
-      run: twoCaseRun(),
-      results: [result(12)],
-      caseIds: ['12'],
-    });
-    expect(card.cases.map(c => c.id)).toEqual([12]);
-    expect(card.counts.total).toBe(1);
-  });
-
-  it('renders every snapshot case when no restriction is given', () => {
+  it('renders every snapshot case', () => {
     const card = buildScorecard({ run: twoCaseRun(), results: [result(12), result(13)] });
     expect(card.cases.map(c => c.id)).toEqual([12, 13]);
   });

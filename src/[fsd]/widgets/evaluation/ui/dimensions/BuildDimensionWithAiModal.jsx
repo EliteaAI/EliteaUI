@@ -6,14 +6,14 @@ import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { Button, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 
-import { useCreateEvalDimensionMutation, useGenerateEvalDimensionsMutation } from '../../../api';
+import { useCreateEvalDimensionMutation, useGenerateEvalDimensionsMutation } from '../../api';
 import {
   buildDimensionApiBody,
   getDefaultDimensionFormState,
   getDimensionFormValidationError,
   mapGeneratedDimensionToForm,
   parseEvalError,
-} from '../../../lib/helpers';
+} from '../../lib/helpers';
 import DimensionForm from './DimensionForm';
 
 const STEPS = {

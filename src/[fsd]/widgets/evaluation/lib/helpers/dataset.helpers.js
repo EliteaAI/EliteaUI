@@ -8,10 +8,6 @@ import { EVAL_CASE_SOURCE_LABEL } from '../constants';
 export const isDatasetSharedIn = (dataset, applicationId = null) =>
   applicationId != null && dataset?.agent_id != null && dataset.agent_id !== applicationId;
 
-/** Counts dataset cases that have no expected_output, for the "N without expected" banner (§17.2). */
-export const withoutExpectedCount = (cases = []) =>
-  cases.filter(c => c.expected_output == null || c.expected_output === '').length;
-
 /** Human-readable label for a case's source_type badge; falls back to the raw value. */
 export const caseSourceLabel = sourceType => EVAL_CASE_SOURCE_LABEL[sourceType] || sourceType || '';
 
@@ -25,10 +21,12 @@ export const sortDatasetsByDate = (datasets = []) =>
 
 /**
  * Renders a case field for display: strings pass through, objects are pretty-printed,
- * and empty values become an em dash so the column never renders blank.
+ * and empty values become an em dash so the column never renders blank. `emptyText` overrides
+ * that placeholder for callers whose output is read outside the UI — the Excel export spells the
+ * absence out rather than relying on a dash.
  */
-export const formatCaseContent = value => {
-  if (value == null || value === '') return '—';
+export const formatCaseContent = (value, emptyText = '—') => {
+  if (value == null || value === '') return emptyText;
   if (typeof value === 'string') return value;
   try {
     return JSON.stringify(value, null, 2);
@@ -62,17 +60,4 @@ export const buildCaseContentColumns = (caseItem, { evidenceScope = null } = {})
     columns.push({ key: 'instructions', label: 'Agent Instructions', content: caseItem.structure });
   }
   return columns;
-};
-
-/** Truncates long case text for table cells, appending an ellipsis when clipped. */
-export const excerpt = (text, max = 80) => {
-  const value = text == null ? '' : String(text);
-  return value.length > max ? `${value.slice(0, max)}…` : value;
-};
-
-/** Formats a variables object as a compact "key=value, …" preview for the case table. */
-export const variablesPreview = (variables = {}) => {
-  const entries = Object.entries(variables || {});
-  if (entries.length === 0) return '';
-  return entries.map(([key, value]) => `${key}=${value}`).join(', ');
 };

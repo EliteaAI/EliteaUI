@@ -47,15 +47,6 @@ export const formatScoreDelta = delta => {
   return `${delta > 0 ? '+' : ''}${delta}`;
 };
 
-// Percent complete from the backend progress feed ({ done, total }). Falls back
-// to 0 when nothing has been reported yet so the bar renders determinate.
-export const runProgressPercent = progress => {
-  const done = progress?.done ?? 0;
-  const total = progress?.total ?? 0;
-  if (!total) return 0;
-  return Math.min(100, Math.round((done / total) * 100));
-};
-
 // Shown when a run's suite can no longer be named — it was never saved under a name, or it has
 // since been deleted. The list endpoint returns only `suite_id`, so the name is resolved against
 // the snapshot the run froze at start (authoritative, survives a later rename) and falls back to

@@ -22,6 +22,7 @@ const EvaluationRunsTable = memo(props => {
     selectedRunId = null,
     isLoading = false,
     canDelete = false,
+    exportingRunId = null,
     sortConfig,
     onSort,
     onSelect,
@@ -68,6 +69,7 @@ const EvaluationRunsTable = memo(props => {
               suiteName={resolveRunSuiteName(run, suiteNamesById)}
               isSelected={run.id === selectedRunId}
               canDelete={canDelete}
+              exportingRunId={exportingRunId}
               gridTemplateColumns={GRID_TEMPLATE_COLUMNS}
               onSelect={onSelect}
               onShare={onShare}

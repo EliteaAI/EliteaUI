@@ -4,7 +4,7 @@ import { Box, Typography } from '@mui/material';
 
 import CheckIcon from '@/components/Icons/CheckIcon';
 
-import { getEngineLabel, getTargetLabel, getWeightLabel } from '../../../lib/helpers';
+import { getEngineLabel, getTargetLabel, getWeightLabel } from '../../lib/helpers';
 
 const DimensionItem = memo(props => {
   const { dimension, isSelected, onClick } = props;

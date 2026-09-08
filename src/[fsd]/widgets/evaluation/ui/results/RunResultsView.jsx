@@ -232,14 +232,23 @@ const RunResultsView = memo(props => {
       sx={[styles.root, sx]}
       data-testid="evaluation-run-results"
     >
-      <ResultsSummaryCards
-        totalScore={summaryData.totalScore}
-        cases={summaryData.cases}
-        metAllTargets={summaryData.metAllTargets}
-        missed={summaryData.missed}
-        errors={summaryData.errors}
-        pendingHuman={summaryData.pendingHuman}
-      />
+      <Box sx={styles.summarySection}>
+        <Typography
+          variant="labelMedium"
+          sx={styles.runLabel}
+          data-testid="evaluation-run-label"
+        >
+          Run #{run.id}
+        </Typography>
+        <ResultsSummaryCards
+          totalScore={summaryData.totalScore}
+          cases={summaryData.cases}
+          metAllTargets={summaryData.metAllTargets}
+          missed={summaryData.missed}
+          errors={summaryData.errors}
+          pendingHuman={summaryData.pendingHuman}
+        />
+      </Box>
       <ResultsDimensionTable bindings={scorecard.bindings ?? []} />
       <CaseResultsList
         cases={scorecard.cases}
@@ -275,6 +284,15 @@ const runResultsViewStyles = () => ({
     flexDirection: 'column',
     gap: '1rem',
   },
+  summarySection: {
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  runLabel: ({ palette }) => ({
+    padding: '0.55rem 1.5rem 0',
+    color: palette.text.secondary,
+    fontWeight: 600,
+  }),
   centered: {
     display: 'flex',
     flexDirection: 'column',

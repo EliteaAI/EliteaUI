@@ -17,6 +17,7 @@ import {
 import { EVAL_RUN_FALLBACK_POLL_MS, EVAL_RUN_TRIGGER } from '../constants';
 import { isRunActive, isRunTerminal, parseEvalError } from '../helpers';
 import { useEvalRunLiveProgress } from './useEvalRunLiveProgress.hooks';
+import { useEvaluationExport } from './useEvaluationExport.hooks';
 
 export const useEvalRunActions = ({
   projectId,
@@ -177,13 +178,13 @@ export const useEvalRunActions = ({
     navigate({ pathname: historyPath, search: persistentSearch });
   }, [navigate, tab, agentId, persistentSearch]);
 
-  const handleExportResults = useCallback(() => {
-    // TODO: wire up export to Excel
-  }, []);
-
   // Determine the "display run" — active run if in progress, otherwise last run from history
   const displayRun = runActive ? activeRunData : lastRun;
   const runToClear = displayRun;
+
+  const { exportRun, isExporting } = useEvaluationExport({ projectId, applicationId });
+
+  const handleExportResults = useCallback(() => exportRun(displayRun), [exportRun, displayRun]);
 
   const handleClearResults = useCallback(() => {
     if (!runToClear?.id) return;
@@ -230,5 +231,6 @@ export const useEvalRunActions = ({
     handleCloseClearConfirm,
     handleConfirmClearResults,
     handleExportResults,
+    isExporting,
   };
 };
