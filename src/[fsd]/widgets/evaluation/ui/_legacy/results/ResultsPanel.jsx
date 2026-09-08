@@ -1,39 +1,19 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo } from 'react';
 
-import { Box, CircularProgress, SvgIcon, Tooltip, Typography } from '@mui/material';
+import { Box, SvgIcon, Tooltip, Typography } from '@mui/material';
 
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import ClockIcon from '@/assets/clock_icon.svg?react';
 import DownloadIcon from '@/assets/download.svg?react';
-import MonitoringIcon from '@/assets/monitoring.svg?react';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
-import useCheckPermission from '@/hooks/useCheckPermission';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
-import {
-  useEvalDimensionsQuery,
-  useEvalRunResultsQuery,
-  usePlatformDimensionCatalogQuery,
-} from '../../../api';
-import { EVAL_PERMISSIONS } from '../../../lib/constants';
-import { buildScorecard, isRunTerminal } from '../../../lib/helpers';
-import CaseDetailsModal from '../../results/CaseDetailsModal';
-import CaseResultsList from '../../results/CaseResultsList';
-import HumanEvaluationModal from '../../results/HumanEvaluationModal';
-import ResultsDimensionTable from '../../results/ResultsDimensionTable';
-import ResultsSummaryCards from '../../results/ResultsSummaryCards';
+import { isRunTerminal } from '../../../lib/helpers';
+import RunResultsView from '../../results/RunResultsView';
 import EvaluationProgress from '../../suite/EvaluationProgress';
 
-// A fresh `[]` default would be a new reference on every render while a query is skipped or
-// errored, which would defeat the memo below and rebuild the whole scorecard each time.
-const EMPTY_DIMENSIONS = [];
-
 const ResultsPanel = memo(props => {
-  const { runActions = {} } = props;
-  const projectId = useSelectedProjectId();
-  const { checkPermission } = useCheckPermission();
-  const canEvaluate = checkPermission(EVAL_PERMISSIONS.humanScoreCreate);
+  const { runActions = {}, hasSuite = false } = props;
 
   const {
     applicationId,
@@ -47,10 +27,6 @@ const ResultsPanel = memo(props => {
     handleExportResults: onExportResults,
   } = runActions;
 
-  // The target outlives `open` so the dialog's content does not blank while it animates out.
-  const [humanEvaluationOpen, setHumanEvaluationOpen] = useState(false);
-  const [humanEvaluationTarget, setHumanEvaluationTarget] = useState(null);
-
   // Progress from active run (for in-progress state)
   const done = activeRun?.progress?.done ?? 0;
   const total = activeRun?.progress?.total ?? 0;
@@ -58,79 +34,6 @@ const ResultsPanel = memo(props => {
 
   // Results from displayRun (active run if in progress, otherwise last run from history)
   const hasResults = isRunTerminal(displayRun?.status);
-
-  // Fetch detailed results for dimension table
-  const runId = hasResults ? displayRun?.id : null;
-  const { data: resultsData, isLoading: resultsLoading } = useEvalRunResultsQuery(
-    { projectId, runId },
-    { skip: !projectId || !runId },
-  );
-
-  // The run snapshot is the point-in-time record, but it does not key every binding's dimension —
-  // these fill the gaps so a rating or pass/fail scale still reaches the score control.
-  const { data: agentProjectDimensions = EMPTY_DIMENSIONS } = useEvalDimensionsQuery(
-    { projectId, agentId: applicationId, includePlatform: false },
-    { skip: !projectId || !runId },
-  );
-  const { data: platformDimensions = EMPTY_DIMENSIONS } = usePlatformDimensionCatalogQuery(
-    { projectId },
-    { skip: !projectId || !runId },
-  );
-  const dimensions = useMemo(
-    () => [...agentProjectDimensions, ...platformDimensions],
-    [agentProjectDimensions, platformDimensions],
-  );
-
-  const scorecard = useMemo(
-    () =>
-      resultsData
-        ? buildScorecard({
-            run: resultsData.run,
-            results: resultsData.results,
-            humanScores: resultsData.human_scores,
-            headlineScore: resultsData.headline_score,
-            dimensions,
-          })
-        : null,
-    [resultsData, dimensions],
-  );
-
-  // Totals stay on the server's aggregate; the pending count comes from the scorecard so it clears
-  // as soon as the last human score is saved, without waiting for the re-aggregated run.
-  const summaryData = useMemo(() => {
-    if (!hasResults || !displayRun) return null;
-    const progress = displayRun.progress ?? {};
-    return {
-      totalScore: displayRun.headline_score ?? null,
-      cases: progress.total ?? 0,
-      metAllTargets: progress.met_all ?? 0,
-      missed: progress.missed ?? 0,
-      errors: progress.errors ?? 0,
-      pendingHuman: scorecard?.pendingHuman ?? progress.pending_human ?? 0,
-    };
-  }, [hasResults, displayRun, scorecard]);
-
-  // Case details modal state
-  const [caseDetailsOpen, setCaseDetailsOpen] = useState(false);
-  const [selectedCaseData, setSelectedCaseData] = useState(null);
-
-  const handleViewCaseDetails = useCallback(card => {
-    setSelectedCaseData(card);
-    setCaseDetailsOpen(true);
-  }, []);
-
-  const handleCloseCaseDetails = useCallback(() => {
-    setCaseDetailsOpen(false);
-  }, []);
-
-  const handleEvaluateDimension = useCallback((cell, card) => {
-    setHumanEvaluationTarget({ cell, card });
-    setHumanEvaluationOpen(true);
-  }, []);
-
-  const handleCloseHumanEvaluation = useCallback(() => {
-    setHumanEvaluationOpen(false);
-  }, []);
 
   const styles = resultsPanelStyles();
 
@@ -184,7 +87,7 @@ const ResultsPanel = memo(props => {
           )}
           <Box sx={styles.historyButtonWrapper}>
             <Tooltip
-              title="View run history"
+              title="Results History"
               placement="top"
             >
               <Box component="span">
@@ -194,6 +97,7 @@ const ResultsPanel = memo(props => {
                   onClick={onOpenHistory}
                   sx={styles.historyButton}
                   startIcon={<ClockIcon sx={styles.actionIcon} />}
+                  data-testid="open-results-history-button"
                 />
               </Box>
             </Tooltip>
@@ -210,71 +114,14 @@ const ResultsPanel = memo(props => {
             cancelRequested={cancelRequested}
             onCancel={onCancelRun}
           />
-        ) : hasResults && resultsLoading ? (
-          <Box sx={styles.centered}>
-            <CircularProgress size={32} />
-            <Typography
-              variant="bodyMedium"
-              sx={styles.emptyDescription}
-            >
-              Loading results...
-            </Typography>
-          </Box>
-        ) : hasResults && summaryData && scorecard ? (
-          <>
-            <ResultsSummaryCards
-              totalScore={summaryData.totalScore}
-              cases={summaryData.cases}
-              metAllTargets={summaryData.metAllTargets}
-              missed={summaryData.missed}
-              errors={summaryData.errors}
-              pendingHuman={summaryData.pendingHuman}
-            />
-            <ResultsDimensionTable bindings={scorecard.bindings ?? []} />
-            <CaseResultsList
-              cases={scorecard.cases}
-              canEvaluate={canEvaluate}
-              onViewDetails={handleViewCaseDetails}
-              onEvaluate={handleEvaluateDimension}
-            />
-          </>
         ) : (
-          <Box sx={styles.centered}>
-            <SvgIcon
-              component={MonitoringIcon}
-              inheritViewBox
-              sx={styles.emptyIcon}
-            />
-            <Typography
-              variant="headingSmall"
-              sx={styles.emptyTitle}
-            >
-              No results yet.
-            </Typography>
-            <Typography
-              variant="bodyMedium"
-              sx={styles.emptyDescription}
-            >
-              Results will be available after running an evaluation suite.
-            </Typography>
-          </Box>
+          <RunResultsView
+            run={hasResults ? displayRun : null}
+            applicationId={applicationId}
+            hasSuite={hasSuite}
+          />
         )}
       </Box>
-
-      <CaseDetailsModal
-        open={caseDetailsOpen}
-        caseData={selectedCaseData}
-        onClose={handleCloseCaseDetails}
-      />
-
-      <HumanEvaluationModal
-        open={humanEvaluationOpen}
-        projectId={projectId}
-        runId={runId}
-        cell={humanEvaluationTarget?.cell}
-        caseData={humanEvaluationTarget?.card}
-        onClose={handleCloseHumanEvaluation}
-      />
     </Box>
   );
 });
@@ -349,28 +196,6 @@ const resultsPanelStyles = () => ({
     overflow: 'auto',
     gap: '1rem',
   },
-  centered: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '0.5rem',
-    padding: '2rem',
-  },
-  emptyIcon: ({ palette }) => ({
-    fontSize: '2rem',
-    marginBottom: '0.5rem',
-    '& path': {
-      fill: palette.icon.fill.disabled,
-    },
-  }),
-  emptyTitle: ({ palette }) => ({
-    color: palette.text.secondary,
-  }),
-  emptyDescription: ({ palette }) => ({
-    color: palette.text.default,
-    textAlign: 'center',
-    maxWidth: '20.5rem',
-  }),
 });
 
 export default ResultsPanel;

@@ -26,6 +26,7 @@ export const usePageDetails = () => {
   const isApplicationEvaluateDimensionsPage = useMatch({
     path: RouteDefinitions.ApplicationsEvaluateDimensions,
   });
+  const isApplicationEvaluateHistoryPage = useMatch({ path: RouteDefinitions.ApplicationsEvaluateHistory });
 
   const isPipelineDetailPage = useMatch({ path: RouteDefinitions.PipelineDetail });
   const isUserPublicPipelineDetailPage = useMatch({ path: RouteDefinitions.UserPublicPipelineDetail });
@@ -77,7 +78,8 @@ export const usePageDetails = () => {
     isApplicationEvaluatePage ||
     isApplicationEvaluateSuitePage ||
     isApplicationEvaluateDatasetsPage ||
-    isApplicationEvaluateDimensionsPage;
+    isApplicationEvaluateDimensionsPage ||
+    isApplicationEvaluateHistoryPage;
 
   const isPipelinePage =
     isPipelineDetailPage ||

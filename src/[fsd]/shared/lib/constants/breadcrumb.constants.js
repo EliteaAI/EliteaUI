@@ -69,11 +69,11 @@ export const BREADCRUMB_REGISTRY = {
   },
   [RouteDefinitions.ApplicationsEvaluate]: {
     parent: RouteDefinitions.ApplicationsDetail,
-    label: 'Evaluation',
+    label: 'Evaluation (Beta)',
   },
   [RouteDefinitions.ApplicationsEvaluateSuite]: {
     parent: RouteDefinitions.ApplicationsDetail,
-    label: 'Evaluation',
+    label: 'Evaluation (Beta)',
   },
   [RouteDefinitions.ApplicationsEvaluateDatasets]: {
     parent: RouteDefinitions.ApplicationsEvaluate,
@@ -82,6 +82,10 @@ export const BREADCRUMB_REGISTRY = {
   [RouteDefinitions.ApplicationsEvaluateDimensions]: {
     parent: RouteDefinitions.ApplicationsEvaluate,
     label: 'Manage Dimensions',
+  },
+  [RouteDefinitions.ApplicationsEvaluateHistory]: {
+    parent: RouteDefinitions.ApplicationsEvaluate,
+    label: 'Results History',
   },
 
   [RouteDefinitions.SkillsWithTab]: { label: PathSessionMap[RouteDefinitions.Skills] },
