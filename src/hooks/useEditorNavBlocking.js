@@ -23,7 +23,7 @@ export default function useEditorNavBlocking(isVisible, isDirty, disabled = fals
     }
 
     return () => {
-      if (!disabled) setBlockNav(false);
+      setBlockNav(false);
     };
   }, [isVisible, isDirty, disabled, setBlockNav]);
 
