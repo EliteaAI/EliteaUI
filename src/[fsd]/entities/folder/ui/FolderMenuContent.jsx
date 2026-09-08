@@ -8,31 +8,47 @@ import CheckIcon from '@/components/Icons/CheckIcon';
 import FolderIcon from '@/components/Icons/FolderIcon';
 import PlusIcon from '@/components/Icons/PlusIcon';
 
+import { isFolderWritable } from '../lib/helpers';
+
 const FolderMenuContent = memo(props => {
-  const { folders, currentFolderId, onCreateClick, onFolderClick, onRemoveClick, minWidth } = props;
+  const {
+    folders,
+    currentFolderId,
+    onCreateClick,
+    onFolderClick,
+    onRemoveClick,
+    canWrite,
+    canCreate = canWrite,
+    minWidth,
+  } = props;
+  const writableFolders = folders.filter(
+    folder => folder.id === currentFolderId || (canWrite && isFolderWritable(folder)),
+  );
 
   const styles = folderMenuContentStyles();
 
   return (
     <>
       <Box sx={[styles.fixedTopSection, minWidth && { minWidth }]}>
-        <MenuItem
-          onClick={onCreateClick}
-          sx={styles.menuItem}
-        >
-          <ListItemIcon sx={styles.menuItemIcon}>
-            <PlusIcon sx={{ fontSize: '1rem' }} />
-          </ListItemIcon>
-          <ListItemText>
-            <Typography variant="labelMedium">Create Folder</Typography>
-          </ListItemText>
-        </MenuItem>
+        {canCreate && (
+          <MenuItem
+            onClick={onCreateClick}
+            sx={styles.menuItem}
+          >
+            <ListItemIcon sx={styles.menuItemIcon}>
+              <PlusIcon sx={{ fontSize: '1rem' }} />
+            </ListItemIcon>
+            <ListItemText>
+              <Typography variant="labelMedium">Create Folder</Typography>
+            </ListItemText>
+          </MenuItem>
+        )}
         <Divider sx={styles.divider} />
       </Box>
 
       <Box sx={styles.scrollableSection}>
-        {folders.length > 0 ? (
-          folders.map(folder => {
+        {writableFolders.length > 0 ? (
+          writableFolders.map(folder => {
             const isCurrentFolder = folder.id === currentFolderId;
             const isPinned = !!folder.meta?.is_pinned;
             return (
@@ -74,7 +90,7 @@ const FolderMenuContent = memo(props => {
         )}
       </Box>
 
-      {currentFolderId && (
+      {currentFolderId && canWrite && (
         <Box sx={styles.fixedBottomSection}>
           <Divider sx={styles.divider} />
           <MenuItem

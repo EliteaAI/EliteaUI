@@ -5,16 +5,21 @@ import { MenuItem } from '@mui/material';
 import MoveTo from '@/components/Icons/MoveTo';
 import NestedMenuItem from '@/components/NestedMenuItem';
 
-import { useFolderMenuActions } from '../lib/hooks';
+import { useFolderAccess, useFolderMenuActions } from '../lib/hooks';
 import CreateFolderDialog from './CreateFolderDialog';
 import FolderMenuContent from './FolderMenuContent';
 
 const MoveToFolderSubmenu = memo(props => {
-  const { entityId, entityType, currentFolderId, parentMenuOpen, onAction, menuItemSx } = props;
+  const { entityId, entityType, currentFolderId, parentMenuOpen, onAction, menuItemSx, userPermission } =
+    props;
+
+  const { canWrite: canWriteEntity } = useFolderAccess(userPermission);
 
   const {
     folderEntityType,
     folders,
+    canWrite: canWriteFolder,
+    canCreateFolder,
     isLoading,
     createDialogOpen,
     handleFolderClick,
@@ -33,7 +38,7 @@ const MoveToFolderSubmenu = memo(props => {
         label="Move to folder"
         parentMenuOpen={parentMenuOpen}
         MenuItemComponent={MenuItem}
-        disabled={isLoading}
+        disabled={isLoading || !canWriteEntity}
         sx={menuItemSx}
         anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
@@ -45,6 +50,8 @@ const MoveToFolderSubmenu = memo(props => {
           onCreateClick={handleCreateFolderClick}
           onFolderClick={handleFolderClick}
           onRemoveClick={handleRemoveFromFolder}
+          canWrite={canWriteEntity && canWriteFolder}
+          canCreate={canWriteEntity && canCreateFolder}
           minWidth="13.75rem"
         />
       </NestedMenuItem>

@@ -22,7 +22,7 @@ export const useCreateFolder = () => {
   const createFolder = useCallback(
     async ({ name, entityType, meta }) => {
       if (!projectId) return null;
-      const result = await mutation({ projectId, name, entityType, meta });
+      const result = await mutation({ projectId, name, entityType, meta }).unwrap();
       return result.data;
     },
     [projectId, mutation],
@@ -38,7 +38,7 @@ export const useUpdateFolder = () => {
   const updateFolder = useCallback(
     async ({ folderId, name, meta, entityType }) => {
       if (!projectId) return null;
-      const result = await mutation({ projectId, folderId, name, meta, entityType });
+      const result = await mutation({ projectId, folderId, name, meta, entityType }).unwrap();
       return result.data;
     },
     [projectId, mutation],
@@ -54,7 +54,7 @@ export const useDeleteFolder = () => {
   const deleteFolder = useCallback(
     async ({ folderId, entityType }) => {
       if (!projectId) return null;
-      const result = await mutation({ projectId, folderId, entityType });
+      const result = await mutation({ projectId, folderId, entityType }).unwrap();
       return result.data;
     },
     [projectId, mutation],
@@ -77,7 +77,7 @@ export const useMoveEntityToFolder = () => {
         entityType,
         entityId,
         previousFolderId,
-      });
+      }).unwrap();
       return result.data;
     },
     [projectId, mutation],
@@ -93,7 +93,7 @@ export const useRemoveEntityFromFolder = () => {
   const removeEntityFromFolder = useCallback(
     async ({ entityType, entityId, previousFolderId }) => {
       if (!projectId) return null;
-      const result = await mutation({ projectId, entityType, entityId, previousFolderId });
+      const result = await mutation({ projectId, entityType, entityId, previousFolderId }).unwrap();
       return result.data;
     },
     [projectId, mutation],
@@ -114,7 +114,7 @@ export const usePinFolder = entityType => {
         folderId: folder.id,
         isPinned: !isPinned,
         entityType,
-      });
+      }).unwrap();
     },
     [projectId, pinFolder, entityType],
   );

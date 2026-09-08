@@ -14,7 +14,7 @@ import FolderMenuContent from './FolderMenuContent';
 const MoveToFolderButton = memo(props => {
   const { entityId, entityType, currentFolderId, isVisible = false, userPermission } = props;
 
-  const { canWrite } = useFolderAccess(userPermission);
+  const { canWrite: canWriteEntity } = useFolderAccess(userPermission);
 
   const styles = moveToFolderButtonStyles();
 
@@ -35,6 +35,8 @@ const MoveToFolderButton = memo(props => {
   const {
     folderEntityType,
     folders,
+    canWrite: canWriteFolder,
+    canCreateFolder,
     isLoading,
     createDialogOpen,
     handleFolderClick,
@@ -60,7 +62,7 @@ const MoveToFolderButton = memo(props => {
           <Button.BaseBtn
             variant={BUTTON_VARIANTS.icon}
             onClick={handleButtonClick}
-            disabled={isLoading || !canWrite}
+            disabled={isLoading || !canWriteEntity}
             sx={buttonStyles.button}
             data-testid={`move-to-folder-btn-${entityId}`}
           >
@@ -87,6 +89,8 @@ const MoveToFolderButton = memo(props => {
           onCreateClick={handleCreateFolderClick}
           onFolderClick={handleFolderClick}
           onRemoveClick={handleRemoveFromFolder}
+          canWrite={canWriteEntity && canWriteFolder}
+          canCreate={canWriteEntity && canCreateFolder}
         />
       </Menu>
 
