@@ -100,6 +100,19 @@ const pipelineSlice = createSlice({
     clearStateValidationErrors: state => {
       state.stateValidationErrors = {};
     },
+    // Restore a saved per-tab snapshot without touching initState so dirty detection
+    // (yamlCode vs initState.yamlCode) still reflects unsaved edits correctly.
+    restorePipelineSnapshot: (state, action) => {
+      const { nodes, edges, yamlJsonObject, yamlCode, layout_version, initState } = action.payload;
+      state.nodes = [...nodes];
+      state.edges = [...edges];
+      state.yamlJsonObject = structuredClone(yamlJsonObject || {});
+      state.yamlCode = yamlCode;
+      state.layout_version = layout_version;
+      state.resetFlag = true;
+      state.stateValidationErrors = {};
+      state.initState = structuredClone(initState);
+    },
   },
 });
 

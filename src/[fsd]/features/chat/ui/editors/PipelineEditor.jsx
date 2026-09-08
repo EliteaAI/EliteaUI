@@ -11,7 +11,7 @@ import {
 
 import { useFormikContext } from 'formik';
 import YAML from 'js-yaml';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
 import { Box, Tab, Tabs } from '@mui/material';
 
@@ -142,6 +142,16 @@ const PipelineEditor = forwardRef(
     // Prevents re-initialization when versionDetails refetches due to toolkit
     // association changes (only tools[] updated, instructions unchanged on backend).
     const lastInitializedInstructionsRef = useRef(null);
+    // Per-instance snapshot of pipeline Redux state — saved when this tab is hidden,
+    // restored when it becomes active, so edits are not lost during tab switches.
+    const savedPipelineStateRef = useRef(null);
+    // Per-instance baseline initState — updated only by THIS tab's versionDetails effect
+    // so it is never contaminated by another tab writing to the shared Redux slice.
+    const ownInitStateRef = useRef(null);
+    const pipelineReduxState = useSelector(state => state.pipeline);
+    // pipelineEditor holds the live ReactFlow nodes/edges (updated on every drag/add).
+    // state.pipeline.nodes/edges are only set on initThePipeline and are stale.
+    const pipelineEditorState = useSelector(state => state.pipelineEditor);
     const { checkPermission } = useCheckPermission();
     const hasEditPermission = useMemo(() => {
       return checkPermission(PERMISSIONS.applications.update);
@@ -190,12 +200,25 @@ const PipelineEditor = forwardRef(
     // Track both form and YAML dirty states
     const totalDirty = useMemo(() => isDirty || isYamlDirty, [isDirty, isYamlDirty]);
 
+    // Keep parent (GeneratedEntityEditorPanel) in sync with the composite dirty state.
+    // BaseEditor only calls onDirtyStateChange via DirtyDetector (Formik), which misses
+    // changes from isYamlDirty and from restoring snapshots on tab switches.
+    useEffect(() => {
+      if (isVisible) {
+        onPipelineDirtyStateChange?.(totalDirty);
+      }
+    }, [isVisible, totalDirty, onPipelineDirtyStateChange]);
+
     // Reset state when switching pipelines or modes
     useEffect(() => {
       setActiveTab(0);
       setIsDirty(false);
       setIsYamlDirty(false);
       lastInitializedInstructionsRef.current = null;
+      // Discard any snapshot from the previous pipeline — it belongs to a different
+      // entity and must not be restored when this editor re-opens for the new pipeline.
+      savedPipelineStateRef.current = null;
+      ownInitStateRef.current = null;
 
       // Clear Redux pipeline state to prevent stale data
       dispatch(
@@ -210,6 +233,50 @@ const PipelineEditor = forwardRef(
       );
       dispatch(editorActions.resetPipelineEditor());
     }, [isCreateMode, pipeline?.entity_meta?.id, dispatch]);
+
+    // Save Redux pipeline state when this tab becomes hidden; restore it when it
+    // becomes active. This keeps each tab's unsaved edits intact across tab switches
+    // without requiring per-entity Redux slices.
+    useEffect(() => {
+      if (isVisible) {
+        if (savedPipelineStateRef.current !== null) {
+          dispatch(actions.restorePipelineSnapshot(savedPipelineStateRef.current));
+          dispatch(editorActions.resetPipelineEditor());
+          const restoredIsDirty = savedPipelineStateRef.current.isDirty;
+          setIsDirty(restoredIsDirty);
+          // Keep the ref populated until after all same-render effects have run so
+          // the versionDetails effect (declared later) can see it and skip overwriting.
+          // Cleared via microtask once the current flush is done.
+          Promise.resolve().then(() => {
+            savedPipelineStateRef.current = null;
+          });
+        }
+      } else {
+        // Use pipelineEditor nodes/edges — they are the live ReactFlow state updated
+        // on every node add/move. state.pipeline.nodes/edges are only set on init and
+        // are stale (miss any nodes added after the last initThePipeline call).
+        const liveNodes = pipelineEditorState.nodes?.length
+          ? pipelineEditorState.nodes
+          : pipelineReduxState.nodes;
+        const liveEdges = pipelineEditorState.edges?.length
+          ? pipelineEditorState.edges
+          : pipelineReduxState.edges;
+        savedPipelineStateRef.current = structuredClone({
+          nodes: liveNodes,
+          edges: liveEdges,
+          yamlJsonObject: pipelineReduxState.yamlJsonObject,
+          yamlCode: pipelineReduxState.yamlCode,
+          layout_version: pipelineReduxState.layout_version,
+          // Use the per-instance baseline — never sourced from the shared Redux slice
+          // which may already hold another tab's initState at snapshot time.
+          initState: ownInitStateRef.current,
+          isDirty,
+        });
+      }
+      // pipelineReduxState, pipelineEditorState, and isDirty are intentionally excluded
+      // — we only want to snapshot on visibility change, not on every state update.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isVisible, dispatch]);
 
     // Clear Redux pipeline state on unmount so stale YAML cannot corrupt a
     // subsequent Agent save (useSaveVersion reads state.pipeline.initState to
@@ -372,6 +439,12 @@ const PipelineEditor = forwardRef(
         return;
       }
 
+      // A snapshot restore just ran in the visibility effect (same render flush).
+      // Skip overwriting the restored Redux state; the ref is cleared by microtask.
+      if (savedPipelineStateRef.current !== null) {
+        return;
+      }
+
       const currentVersionId = versionDetails.version_details?.id || versionDetails.id;
 
       // Prevent initialization with stale RTK Query cached data - reject if version IDs don't match
@@ -424,6 +497,10 @@ const PipelineEditor = forwardRef(
         yamlCode: instructions,
         layout_version,
       };
+
+      // Keep our own baseline in sync so the snapshot always uses THIS pipeline's
+      // server version as initState, not whatever another tab last wrote to Redux.
+      ownInitStateRef.current = structuredClone(initialPipeline);
 
       dispatch(actions.initThePipeline(initialPipeline));
       dispatch(editorActions.resetPipelineEditor());
