@@ -797,7 +797,7 @@ const artifactsStyles = (collapsedBuckets, leftPanelWidth) => ({
     alignItems: 'flex-start',
     overflow: 'hidden',
     height: 'calc(100dvh)', // Just account for the top border (1px) + top offset (17px)
-    backgroundColor: palette.background.tabPanel,
+    backgroundColor: palette.background.default.tertiary,
     gap: '0.75rem',
   }),
   mainContentContainer: {

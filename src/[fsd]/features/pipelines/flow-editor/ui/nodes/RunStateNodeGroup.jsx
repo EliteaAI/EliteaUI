@@ -107,7 +107,7 @@ const flowEditorStyles = () => ({
   historyWrapper: ({ palette }) => ({
     borderRadius: '.5rem',
     border: `.0625rem solid ${palette.border.lines}`,
-    background: palette.background.tabPanel,
+    background: palette.background.default.tertiary,
     height: '2.25rem',
     width: '2.25rem',
     display: 'flex',

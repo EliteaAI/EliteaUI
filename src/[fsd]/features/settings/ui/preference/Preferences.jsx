@@ -46,7 +46,7 @@ const preferencesStyles = () => ({
     borderBottom: `0.0625rem solid ${palette.border.table}`,
   }),
   content: ({ palette }) => ({
-    backgroundColor: palette.background.tabPanel,
+    backgroundColor: palette.background.default.tertiary,
     flex: 1,
     minHeight: 0,
     overflowY: 'auto',

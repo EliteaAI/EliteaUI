@@ -1,4 +1,4 @@
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 
 import { Box, Slider, Tooltip, Typography } from '@mui/material';
 
@@ -9,12 +9,13 @@ const DiscreteSlider = memo(props => {
     label,
     value,
     onChange,
-    levels,
+    levels = {},
     tooltipFormatter,
     labelTooltip,
     disabled = false,
     min = 1,
     max,
+    marks: providedMarks,
     showLabels = false,
     testId,
     markTestIdPrefix,
@@ -22,10 +23,13 @@ const DiscreteSlider = memo(props => {
     ...sliderProps
   } = props;
 
-  const marks = Array.from({ length: max - min + 1 }, (_, i) => ({
-    value: min + i,
-    label: String(min + i),
-  }));
+  // A wide range would render one mark per unit, so callers may hand in a sparser ruler instead.
+  const marks = useMemo(
+    () =>
+      providedMarks ??
+      Array.from({ length: max - min + 1 }, (_, i) => ({ value: min + i, label: String(min + i) })),
+    [providedMarks, min, max],
+  );
 
   const handleMarkClick = useCallback(
     markValue => () => {
@@ -41,12 +45,14 @@ const DiscreteSlider = memo(props => {
       data-testid={testId}
       sx={styles.container}
     >
-      <Label.InfoLabelWithTooltip
-        label={label}
-        tooltip={labelTooltip || (tooltipFormatter ? tooltipFormatter(value, disabled) : '')}
-        variant="subtitle"
-        sx={disabled ? styles.labelDisabled : styles.label}
-      />
+      {label && (
+        <Label.InfoLabelWithTooltip
+          label={label}
+          tooltip={labelTooltip || (tooltipFormatter ? tooltipFormatter(value, disabled) : '')}
+          variant="subtitle"
+          sx={disabled ? styles.labelDisabled : styles.label}
+        />
+      )}
 
       <Box sx={styles.sliderContainer}>
         <Box sx={styles.labelsRow}>

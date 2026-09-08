@@ -94,6 +94,6 @@ const notificationCenterStyles = () => ({
     px: spacing(2),
     overflow: 'scroll',
     height: '100vh',
-    backgroundColor: palette.background.tabPanel,
+    backgroundColor: palette.background.default.tertiary,
   }),
 });

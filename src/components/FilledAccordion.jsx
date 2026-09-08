@@ -55,7 +55,7 @@ FilledAccordion.displayName = 'FilledAccordion';
 /** @type {MuiSx} */
 const filledAccordionStyles = () => ({
   accordion: theme => ({
-    background: `${theme.palette.background.tabPanel} !important`,
+    background: `${theme.palette.background.default.tertiary} !important`,
   }),
   contentBox: {
     display: 'flex',

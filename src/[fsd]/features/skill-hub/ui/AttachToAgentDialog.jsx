@@ -421,7 +421,7 @@ const attachToAgentDialogStyles = () => ({
       width: '37.5rem',
       maxWidth: '37.5rem',
       borderRadius: '1rem',
-      backgroundColor: palette.background.tabPanel,
+      backgroundColor: palette.background.default.tertiary,
       backgroundImage: 'none',
       border: `.0625rem solid ${palette.border.lines}`,
       boxShadow: '0 0 1.475rem 0 rgba(255, 255, 255, 0.05)',
@@ -433,7 +433,7 @@ const attachToAgentDialogStyles = () => ({
     justifyContent: 'space-between',
     height: '3.75rem',
     padding: '0 1.5rem',
-    backgroundColor: palette.background.tabPanel,
+    backgroundColor: palette.background.default.tertiary,
   }),
   closeButton: ({ palette }) => ({
     padding: 0,
@@ -545,7 +545,7 @@ const attachToAgentDialogStyles = () => ({
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '1rem 1.5rem',
-    backgroundColor: palette.background.tabPanel,
+    backgroundColor: palette.background.default.tertiary,
   }),
   actionGroup: {
     display: 'flex',

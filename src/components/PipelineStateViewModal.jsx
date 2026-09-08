@@ -31,7 +31,7 @@ export default function PipelineStateViewModal({
       slotProps={{
         paper: {
           sx: {
-            background: theme.palette.background.tabPanel,
+            background: theme.palette.background.default.tertiary,
             borderRadius: '16px',
             border: `1px solid ${theme.palette.border.lines}`,
             boxShadow: theme.palette.boxShadow.default,

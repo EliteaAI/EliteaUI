@@ -233,7 +233,7 @@ const createPersonalTokenStyles = () => ({
     padding: '1rem 1.5rem',
     minHeight: '4rem',
     borderBottom: ({ palette }) => `0.0625rem solid ${palette.border.lines}`,
-    backgroundColor: ({ palette }) => palette.background.tabPanel,
+    backgroundColor: ({ palette }) => palette.background.default.tertiary,
   },
   headerLeft: {
     display: 'flex',

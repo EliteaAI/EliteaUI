@@ -154,7 +154,7 @@ const McpLogoutModal = memo(props => {
 /** @type {MuiSx} */
 const getModalStyles = () => ({
   dialogPaper: ({ palette, spacing }) => ({
-    background: palette.background.tabPanel,
+    background: palette.background.default.tertiary,
     borderRadius: spacing(2),
     border: `0.0625rem solid ${palette.border.lines}`,
     boxShadow: palette.boxShadow.default,
@@ -183,12 +183,12 @@ const getModalStyles = () => ({
   dialogContent: ({ palette, spacing }) => ({
     padding: spacing(3),
     paddingTop: `${spacing(3)} !important`,
-    backgroundColor: palette.background.tabPanel,
+    backgroundColor: palette.background.default.tertiary,
     borderBottom: `0.0625rem solid ${palette.border.lines}`,
   }),
   dialogActions: ({ palette, spacing }) => ({
     padding: spacing(2, 3),
-    backgroundColor: palette.background.tabPanel,
+    backgroundColor: palette.background.default.tertiary,
     justifyContent: 'flex-end',
     gap: spacing(1),
   }),

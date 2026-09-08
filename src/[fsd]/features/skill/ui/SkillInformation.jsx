@@ -65,7 +65,7 @@ const SkillInformation = memo(props => {
   return (
     <BasicAccordion
       data-testid="skill-information-section"
-      accordionSX={({ palette }) => ({ background: `${palette.background.tabPanel} !important` })}
+      accordionSX={({ palette }) => ({ background: `${palette.background.default.tertiary} !important` })}
       showMode={AccordionConstants.AccordionShowMode.LeftMode}
       items={items}
     />

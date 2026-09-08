@@ -204,7 +204,7 @@ ApplicationInformation.displayName = 'ApplicationInformation';
 /** @type {MuiSx} */
 const applicationInformationStyles = () => ({
   accordion: ({ palette }) => ({
-    background: `${palette.background.tabPanel} !important`,
+    background: `${palette.background.default.tertiary} !important`,
   }),
   contentContainer: {
     display: 'flex',

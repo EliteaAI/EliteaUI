@@ -111,7 +111,7 @@ const getStyles = () => ({
     padding: '0.5rem',
     gap: '0.5rem',
     boxShadow: ({ palette }) => `inset 0.0625rem 0 0 0 ${palette.border.lines}`,
-    background: ({ palette }) => palette.background.tabPanel,
+    background: ({ palette }) => palette.background.default.tertiary,
   },
   button: {
     '&.Mui-disabled path': {

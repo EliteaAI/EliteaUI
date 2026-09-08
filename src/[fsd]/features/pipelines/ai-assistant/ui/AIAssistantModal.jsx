@@ -287,7 +287,7 @@ const AIAssistantModal = memo(props => {
         background: `linear-gradient(90deg, ${palette.background.card.default} 0%, ${palette.background.card.hover} 100%)`,
       })
     : ({ palette }) => ({
-        background: `linear-gradient(90deg, ${palette.background.tabPanel} 0%, ${palette.background.default.secondary} 100%)`,
+        background: `linear-gradient(90deg, ${palette.background.default.tertiary} 0%, ${palette.background.default.secondary} 100%)`,
       });
 
   return (

@@ -3,5 +3,6 @@ export * from './evaluationExport.helpers';
 export * from './binding.helpers';
 export * from './dataset.helpers';
 export * from './dimension.helpers';
+export * from './humanScore.helpers';
 export * from './run.helpers';
 export * from './scorecard.helpers';

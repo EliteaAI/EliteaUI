@@ -96,16 +96,7 @@ const Card = memo(props => {
     [supportAssistantConfig, id, projectId, type],
   );
 
-  // For pre-built MCPs, navigate to MCP detail page instead of toolkit page
-  // This ensures unified experience for all MCP types
-  const navigationType = useMemo(() => {
-    if (isPrebuildMcp && (type === ContentType.ToolkitAll || type === ContentType.ToolkitAdmin)) {
-      return ContentType.MCPAll;
-    }
-    return type;
-  }, [isPrebuildMcp, type]);
-
-  const doNavigate = useCardNavigate({ viewMode, id, type: navigationType, name });
+  const doNavigate = useCardNavigate({ viewMode, id, type, name });
 
   const handleMouseEnter = useCallback(() => {
     setIsCardHovered(true);

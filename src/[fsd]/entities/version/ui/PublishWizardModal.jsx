@@ -346,7 +346,7 @@ const styles = {
     height: '3.75rem',
     padding: '1rem 1.5rem',
     borderBottom: `1px solid ${palette.border.lines}`,
-    backgroundColor: `${palette.background.tabPanel}`,
+    backgroundColor: `${palette.background.default.tertiary}`,
   }),
   stepperContainer: {
     padding: '1rem 1.5rem',
@@ -436,7 +436,7 @@ const styles = {
     padding: '1rem 1.5rem !important',
     gap: '.75rem',
     borderTop: `1px solid ${palette.border.lines}`,
-    backgroundColor: `${palette.background.tabPanel}`,
+    backgroundColor: `${palette.background.default.tertiary}`,
   }),
   publishingState: {
     display: 'flex',

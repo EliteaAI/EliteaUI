@@ -1,13 +1,24 @@
 import { memo } from 'react';
 
-import { Menu, MenuItem, Typography, useTheme } from '@mui/material';
+import { Box, Menu, MenuItem, Typography, useTheme } from '@mui/material';
 
+import GroupsIcon from '@/assets/groups-icon.svg?react';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import EditPenIcon from '@/components/Icons/EditPenIcon';
 import PinIcon from '@/components/Icons/PinIcon';
 
 const FolderActionsMenu = memo(props => {
-  const { anchorEl, folder, onClose, onPin, onEdit, onDelete } = props;
+  const {
+    anchorEl,
+    folder,
+    onClose,
+    onPin,
+    onEdit,
+    onDelete,
+    onPermission,
+    canManagePermissions = false,
+    canWrite = false,
+  } = props;
   const theme = useTheme();
   const isPinned = !!folder?.meta?.is_pinned;
 
@@ -20,58 +31,77 @@ const FolderActionsMenu = memo(props => {
       onClose={onClose}
       sx={styles.menu}
     >
-      <MenuItem
-        data-testid="folder-menu-pin"
-        onClick={onPin}
-      >
-        <PinIcon
-          sx={styles.menuIcon}
-          fill={theme.palette.icon.fill.default}
-        />
-        <Typography
-          variant="labelMedium"
-          color="text.secondary"
+      {canWrite && (
+        <>
+          <MenuItem
+            data-testid="folder-menu-pin"
+            onClick={onPin}
+          >
+            <PinIcon
+              sx={styles.menuIcon}
+              fill={theme.palette.icon.fill.default}
+            />
+            <Typography
+              variant="labelMedium"
+              color="text.secondary"
+            >
+              {isPinned ? 'Unpin' : 'Pin on top'}
+            </Typography>
+          </MenuItem>
+          <MenuItem
+            data-testid="folder-menu-edit"
+            onClick={onEdit}
+          >
+            <EditPenIcon
+              sx={styles.menuIcon}
+              fill={theme.palette.icon.fill.default}
+            />
+            <Typography
+              variant="labelMedium"
+              color="text.secondary"
+            >
+              Rename
+            </Typography>
+          </MenuItem>
+        </>
+      )}
+      {canManagePermissions && (
+        <MenuItem onClick={onPermission}>
+          <Box sx={styles.menuIcon}>
+            <GroupsIcon fill={theme.palette.icon.fill.default} />
+          </Box>
+
+          <Typography
+            variant="labelMedium"
+            color="text.secondary"
+          >
+            Manage permissions
+          </Typography>
+        </MenuItem>
+      )}
+      {canWrite && (
+        <MenuItem
+          data-testid="folder-menu-delete"
+          onClick={onDelete}
         >
-          {isPinned ? 'Unpin' : 'Pin on top'}
-        </Typography>
-      </MenuItem>
-      <MenuItem
-        data-testid="folder-menu-edit"
-        onClick={onEdit}
-      >
-        <EditPenIcon
-          sx={styles.menuIcon}
-          fill={theme.palette.icon.fill.default}
-        />
-        <Typography
-          variant="labelMedium"
-          color="text.secondary"
-        >
-          Rename
-        </Typography>
-      </MenuItem>
-      <MenuItem
-        data-testid="folder-menu-delete"
-        onClick={onDelete}
-      >
-        <DeleteIcon
-          sx={styles.menuIcon}
-          fill={theme.palette.icon.fill.default}
-        />
-        <Typography
-          variant="labelMedium"
-          color="text.secondary"
-        >
-          Delete
-        </Typography>
-      </MenuItem>
+          <DeleteIcon
+            sx={styles.menuIcon}
+            fill={theme.palette.icon.fill.default}
+          />
+          <Typography
+            variant="labelMedium"
+            color="text.secondary"
+          >
+            Delete
+          </Typography>
+        </MenuItem>
+      )}
     </Menu>
   );
 });
 
 FolderActionsMenu.displayName = 'FolderActionsMenu';
 
-/** @type {MuiSx} */
 const folderActionsMenuStyles = () => ({
   menu: {
     '& .MuiList-root': {

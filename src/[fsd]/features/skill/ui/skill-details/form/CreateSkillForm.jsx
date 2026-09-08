@@ -147,7 +147,7 @@ const CreateSkillForm = memo(props => {
     <Box sx={[styles.rootContainer, sx]}>
       <BasicAccordion
         style={accordionStyle}
-        accordionSX={{ background: `${theme.palette.background.tabPanel} !important` }}
+        accordionSX={{ background: `${theme.palette.background.default.tertiary} !important` }}
         showMode={AccordionConstants.AccordionShowMode.LeftMode}
         items={[
           {
@@ -273,7 +273,7 @@ const CreateSkillForm = memo(props => {
 
       <BasicAccordion
         style={accordionStyle}
-        accordionSX={{ background: `${theme.palette.background.tabPanel} !important` }}
+        accordionSX={{ background: `${theme.palette.background.default.tertiary} !important` }}
         showMode={AccordionConstants.AccordionShowMode.LeftMode}
         items={[
           {

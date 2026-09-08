@@ -190,7 +190,7 @@ ApplicationTools.displayName = 'ApplicationTools';
 
 const styles = {
   accordionStyles: {
-    background: theme => `${theme.palette.background.tabPanel} !important`,
+    background: theme => `${theme.palette.background.default.tertiary} !important`,
   },
   containerStyles: {
     display: 'flex',

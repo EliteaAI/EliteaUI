@@ -522,7 +522,7 @@ const getStyles = (limitReached, isEditorFocused) => ({
     '& .cm-editor': {
       flex: 1,
       minHeight: 0,
-      backgroundColor: palette.background.tabPanel,
+      backgroundColor: palette.background.default.tertiary,
     },
     '&:focus-within': {
       borderColor: palette.primary.main,

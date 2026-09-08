@@ -1,4 +1,5 @@
 export * from './useEntityFolders.hooks';
+export * from './useFolderAccess.hooks';
 export * from './useFolderEntities.hooks';
 export * from './useFolderMenuActions.hooks';
 export * from './useFolderMutation.hooks';

@@ -46,7 +46,7 @@ const WelcomeMessage = memo(props => {
   return (
     <BasicAccordion
       style={style}
-      accordionSX={{ background: `${theme.palette.background.tabPanel} !important` }}
+      accordionSX={{ background: `${theme.palette.background.default.tertiary} !important` }}
       showMode={AccordionConstants.AccordionShowMode.LeftMode}
       items={[
         {

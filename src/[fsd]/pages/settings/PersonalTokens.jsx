@@ -178,7 +178,7 @@ const PersonalTokens = memo(() => {
       pointerEvents: showSettingsPreview ? 'auto' : 'none',
       width: showSettingsPreview ? (isSmallWindow ? '100%' : '0.625rem') : '0',
       height: showSettingsPreview ? (isSmallWindow ? '0.625rem' : '100%') : '0',
-      backgroundColor: showSettingsPreview ? theme.palette.background.tabPanel : 'transparent',
+      backgroundColor: showSettingsPreview ? theme.palette.background.default.tertiary : 'transparent',
       border: showSettingsPreview ? `0.0625rem solid ${theme.palette.border.lines}` : 'none',
       ...(showSettingsPreview && {
         '&:hover': {

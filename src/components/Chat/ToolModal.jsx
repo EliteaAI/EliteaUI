@@ -139,7 +139,7 @@ const ToolModal = props => {
           justifyContent: 'space-between',
           gap: 3,
           padding: '16px 32px',
-          backgroundColor: theme.palette.background.tabPanel,
+          backgroundColor: theme.palette.background.default.tertiary,
           borderBottom: `1px solid ${theme.palette.border.lines}`,
           borderRadius: '16px 16px 0 0',
         }}
@@ -242,7 +242,7 @@ const ToolModal = props => {
                 alignItems: 'center',
                 gap: 1,
                 padding: '12px 24px',
-                backgroundColor: theme.palette.background.tabPanel,
+                backgroundColor: theme.palette.background.default.tertiary,
                 borderBottom: `1px solid ${theme.palette.border.lines}`,
                 minHeight: '52px',
               }}
@@ -316,7 +316,7 @@ const ToolModal = props => {
                 alignItems: 'center',
                 gap: 1,
                 padding: '12px 24px',
-                backgroundColor: theme.palette.background.tabPanel,
+                backgroundColor: theme.palette.background.default.tertiary,
                 borderBottom: `1px solid ${theme.palette.border.lines}`,
                 minHeight: '52px',
               }}

@@ -24,12 +24,6 @@ const MODULE_ORDER = [
   'lazy_tools_mode',
 ];
 
-const MODULE_TITLE_OVERRIDES = {
-  image_generation: 'Image Creation',
-  internal_mcp: 'Agent & Pipeline Builder',
-  lazy_tools_mode: 'Smart Tools Selection',
-};
-
 const DefaultModulesSettings = memo(() => {
   const { checkPermission } = useCheckPermission();
   const canViewProjectContext = checkPermission(PERMISSIONS.projectContext.view);
@@ -90,8 +84,6 @@ const DefaultModulesSettings = memo(() => {
         const agentField = InternalToolsConstants.INTERNAL_TOOL_AGENT_PERSONALIZATION_FIELD_MAP[tool.name];
         if (!conversationField) return null;
 
-        const description = tool.infoTooltip?.text || '';
-
         return (
           <Box
             key={tool.name}
@@ -102,13 +94,25 @@ const DefaultModulesSettings = memo(() => {
                 variant="headingSmall"
                 color="text.secondary"
               >
-                {MODULE_TITLE_OVERRIDES[tool.name] || tool.title}
+                {tool.title}
               </Typography>
               <Typography
                 variant="bodySmall"
                 sx={styles.moduleDescription}
               >
-                {description}
+                {tool.infoTooltip?.text}
+                {tool.infoTooltip?.linkText && (
+                  <Box
+                    component="a"
+                    href={tool.infoTooltip.linkUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    sx={styles.descriptionLink}
+                  >
+                    {tool.infoTooltip.linkText}
+                  </Box>
+                )}
+                {tool.infoTooltip?.suffix}
               </Typography>
             </Box>
             <Box sx={styles.toggleCell}>
@@ -190,6 +194,9 @@ const componentStyles = () => ({
   moduleDescription: ({ palette }) => ({
     color: palette.text.primary,
   }),
+  descriptionLink: {
+    textDecoration: 'underline',
+  },
   toggleCell: {
     display: 'flex',
     justifyContent: 'center',

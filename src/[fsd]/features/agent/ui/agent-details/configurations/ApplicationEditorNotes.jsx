@@ -82,7 +82,7 @@ ApplicationEditorNotes.displayName = 'ApplicationEditorNotes';
 /** @type {MuiSx} */
 const applicationEditorNotesStyles = () => ({
   accordion: ({ palette }) => ({
-    background: `${palette.background.tabPanel} !important`,
+    background: `${palette.background.default.tertiary} !important`,
   }),
   fieldContainer: {
     display: 'flex',

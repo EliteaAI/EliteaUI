@@ -55,7 +55,7 @@ const getStyles = () => ({
     boxShadow: 'none',
     '&:hover': {
       backgroundColor:
-        palette.mode === 'dark' ? palette.background.tabPanel : palette.background.default.secondary,
+        palette.mode === 'dark' ? palette.background.default.tertiary : palette.background.default.secondary,
       boxShadow: palette.boxShadow.default,
       border: `0.0625rem solid ${palette.border.lines}`,
       transform: 'none',

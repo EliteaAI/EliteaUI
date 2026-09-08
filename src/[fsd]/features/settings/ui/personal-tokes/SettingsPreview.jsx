@@ -235,7 +235,7 @@ const stylesSettingsPreview = () => ({
     justifyContent: 'space-between',
     gap: '0.5rem',
     padding: '0.5rem 0.75rem',
-    backgroundColor: palette.background.tabPanel,
+    backgroundColor: palette.background.default.tertiary,
     borderBottom: `0.0625rem solid ${palette.border.lines}`,
     minHeight: '3.75rem',
     flexShrink: 0,

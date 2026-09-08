@@ -503,7 +503,7 @@ const analyticsContainerStyles = () => ({
     gap: '0.75rem',
     padding: '1rem 1.5rem',
     borderTop: `1px solid ${palette.border.table}`,
-    background: palette.background.tabPanel,
+    background: palette.background.default.tertiary,
   }),
   datePickerRow: { display: 'flex', gap: '0.5rem', alignItems: 'center' },
   datePickerField: ({ palette }) => ({
@@ -699,7 +699,7 @@ const analyticsContainerStyles = () => ({
 
     // Action buttons footer
     '& .MuiDialogActions-root': {
-      backgroundColor: palette.background.tabPanel,
+      backgroundColor: palette.background.default.tertiary,
       borderRadius: '0 0 1rem 1rem',
       padding: '1rem',
       gap: '.5rem',
@@ -740,7 +740,7 @@ const analyticsContainerStyles = () => ({
   tabsContainer: ({ palette }) => ({
     padding: '0 1.5rem',
     borderBottom: `1px solid ${palette.border.table}`,
-    background: palette.background.tabPanel,
+    background: palette.background.default.tertiary,
   }),
   contentArea: { flex: 1, overflow: 'auto', padding: '1.5rem', position: 'relative' },
   loadingState: {

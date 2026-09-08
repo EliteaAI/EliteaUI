@@ -354,7 +354,7 @@ const shareConversationDialogStyles = () => ({
     padding: '0.375rem 0.75rem',
     borderRadius: '0.5rem',
     border: `.0625rem solid ${palette.border.lines}`,
-    background: palette.background.tabPanel,
+    background: palette.background.default.tertiary,
   }),
   createdLinkText: {
     flex: 1,

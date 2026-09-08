@@ -408,6 +408,6 @@ const styledPureTabsStyles = (componentHeight, shouldShowLabel, tabSX, isCreateP
     height: 'calc(100% - 3.75rem)',
     boxSizing: 'border-box',
     overflowY: 'scroll',
-    backgroundColor: palette.background.tabPanel,
+    backgroundColor: palette.background.default.tertiary,
   }),
 });

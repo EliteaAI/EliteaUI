@@ -174,7 +174,7 @@ const styledInputModalBaseStyles = () => ({
     width: '80vw',
     height: 'calc(100vh - 13.75rem)',
     borderTop: `0.0625rem solid ${palette.border.lines}`,
-    backgroundColor: palette.background.tabPanel,
+    backgroundColor: palette.background.default.tertiary,
     overflow: 'hidden',
     display: 'flex',
     flexDirection: 'column',

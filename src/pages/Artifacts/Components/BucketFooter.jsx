@@ -62,7 +62,7 @@ const bucketFooterStyles = () => ({
     padding: '0.75rem 1.5rem',
     borderTop: '1px solid',
     borderColor: 'divider',
-    backgroundColor: ({ palette }) => palette.background.tabPanel,
+    backgroundColor: ({ palette }) => palette.background.default.tertiary,
     marginTop: 'auto',
   },
   statItem: {

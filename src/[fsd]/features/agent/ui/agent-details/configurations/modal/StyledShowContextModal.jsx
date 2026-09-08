@@ -135,7 +135,7 @@ StyledShowContextModal.displayName = 'StyledShowContextModal';
 /** @type {MuiSx} */
 const modalStyles = () => ({
   dialogPaper: ({ palette }) => ({
-    background: palette.background.tabPanel,
+    background: palette.background.default.tertiary,
     borderRadius: '1rem',
     border: `1px solid ${palette.border.lines}`,
     boxShadow: palette.boxShadow.default,

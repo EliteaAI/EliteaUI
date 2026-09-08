@@ -6,6 +6,7 @@ import {
   EVAL_SCALE_TYPE,
 } from '../constants';
 import { getBindingKind } from './binding.helpers';
+import { findDimensionByBindingId } from './dimension.helpers';
 
 /**
  * Stable key identifying which validation a binding or result row targets.
@@ -85,35 +86,36 @@ export const formatScore = (value, digits = 2) => {
   return Number.isInteger(num) ? String(num) : num.toFixed(digits).replace(/\.?0+$/, '');
 };
 
-/** Formats a 0..1 normalized value as a rounded percentage, or '—'. */
-export const formatPercent = value => {
-  if (value == null) return '—';
-  const num = Number(value);
-  if (Number.isNaN(num)) return '—';
-  return `${Math.round(num * 100)}%`;
-};
-
 /**
  * Resolves the display + scoring metadata for a snapshot binding by looking up
  * its referenced dimension / code-validation in the run snapshot maps.
+ *
+ * `dimensions` are the live records, consulted only for fields the snapshot does not carry. A
+ * binding the snapshot map misses — it is keyed by dimension id, which a platform dimension does
+ * not share with its materialised copy — would otherwise lose its scale and silently render as a
+ * generic 0..100 score instead of the configured rating or pass/fail control.
  */
-export const resolveBindingMeta = (binding, snapshot = {}) => {
+export const resolveBindingMeta = (binding, snapshot = {}, dimensions = []) => {
   const kind = getBindingKind(binding);
-  const dimensions = snapshot.dimensions ?? {};
+  const snapshotDimensions = snapshot.dimensions ?? {};
 
   let name = 'Validation';
   let scaleType = null;
   let scaleMin = null;
   let scaleMax = null;
   let polarity = null;
+  // `description` doubles as the rubric text: AI scoring instructions, or Human reviewer guidance.
+  let guidance = null;
 
   if (kind === EVAL_BINDING_KIND.dimension) {
-    const dim = dimensions[binding.dimension_id] ?? dimensions[String(binding.dimension_id)];
-    name = dim?.name || `Dimension #${binding.dimension_id}`;
-    scaleType = dim?.scale_type ?? null;
-    scaleMin = dim?.scale_min ?? null;
-    scaleMax = dim?.scale_max ?? null;
-    polarity = dim?.polarity ?? null;
+    const dim = snapshotDimensions[binding.dimension_id] ?? snapshotDimensions[String(binding.dimension_id)];
+    const live = findDimensionByBindingId(dimensions, binding.dimension_id);
+    name = dim?.name || live?.name || `Dimension #${binding.dimension_id}`;
+    scaleType = dim?.scale_type ?? live?.scale_type ?? null;
+    scaleMin = dim?.scale_min ?? live?.scale_min ?? null;
+    scaleMax = dim?.scale_max ?? live?.scale_max ?? null;
+    polarity = dim?.polarity ?? live?.polarity ?? null;
+    guidance = dim?.description || live?.description || null;
   } else if (kind === EVAL_BINDING_KIND.platform) {
     name = binding.platform_key || 'Platform validation';
     scaleType = EVAL_SCALE_TYPE.binary;
@@ -136,32 +138,10 @@ export const resolveBindingMeta = (binding, snapshot = {}) => {
     scaleMin,
     scaleMax,
     polarity,
+    guidance,
+    evidenceScope: binding.evidence_scope ?? null,
     orderIndex: binding.order_index ?? 0,
   };
-};
-
-/**
- * Case ids fully covered by one page of results, or `null` when the page covers the whole run.
- *
- * The backend orders results by (dataset_case_id, id), so a page is a contiguous case range whose
- * last case may be cut mid-way. That trailing case is dropped, since a partially-scored case is
- * what makes truncation look like missing scores rather than missing data.
- *
- * A human-only run legitimately has zero results, so a full page is reported as unrestricted rather
- * than as "no cases covered".
- */
-export const coveredCaseIdsFromPage = ({ results = [], total = 0, offset = 0 } = {}) => {
-  if (offset + results.length >= total) return null;
-
-  const ordered = [];
-  const seen = new Set();
-  for (const row of results) {
-    const id = String(row.dataset_case_id);
-    if (seen.has(id)) continue;
-    seen.add(id);
-    ordered.push(id);
-  }
-  return ordered.length > 1 ? ordered.slice(0, -1) : ordered;
 };
 
 /**
@@ -169,26 +149,20 @@ export const coveredCaseIdsFromPage = ({ results = [], total = 0, offset = 0 } =
  * ({ run, results, human_scores }). Produces per-binding aggregates, per-case
  * drill-down cells, run-level counts and a headline with a provisional flag while
  * any human validation is still unscored (§15). Pure — safe to unit test.
- *
- * `caseIds`, when given, restricts the card to those snapshot cases. The caller passes it when the
- * result page it holds does not cover the whole run; without it the uncovered cases would render as
- * unscored cells that are indistinguishable from genuine gaps.
  */
 export const buildScorecard = ({
   run,
   results = [],
   humanScores = [],
   headlineScore,
-  caseIds = null,
+  dimensions = [],
 } = {}) => {
   const snapshot = run?.snapshot ?? {};
-  const allCases = [...(snapshot.cases ?? [])].sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
-  const allowedCaseIds = caseIds ? new Set(caseIds.map(String)) : null;
-  const cases = allowedCaseIds ? allCases.filter(item => allowedCaseIds.has(String(item.id))) : allCases;
+  const cases = [...(snapshot.cases ?? [])].sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
   const bindingsRaw = [...(snapshot.bindings ?? [])].sort(
     (a, b) => (a.order_index ?? 0) - (b.order_index ?? 0),
   );
-  const bindings = bindingsRaw.map(b => resolveBindingMeta(b, snapshot));
+  const bindings = bindingsRaw.map(b => resolveBindingMeta(b, snapshot, dimensions));
 
   // Index result rows by caseId + target key.
   const resultIndex = new Map();
@@ -276,12 +250,14 @@ export const buildScorecard = ({
         normalizedScore: normalized,
         met,
         pending,
+        humanNote: human?.note ?? null,
         verdict: result?.verdict ?? null,
         evidence: result?.evidence ?? null,
       };
     });
 
     const caseScore = weightTotal ? weightedSum / weightTotal : null;
+    const pendingCount = cells.filter(c => c.pending).length;
 
     return {
       id: caseItem.id,
@@ -290,7 +266,7 @@ export const buildScorecard = ({
       caseScore,
       missedAny,
       hasError,
-      pendingCount: cells.filter(c => c.pending).length,
+      pendingCount,
     };
   });
 
@@ -312,11 +288,14 @@ export const buildScorecard = ({
 
   const headline = headlineScore != null ? headlineScore : (run?.headline_score ?? recomputedHeadline);
 
+  // A case still awaiting a manual score is neither "met all" nor "missed".
   const counts = {
     total: caseCards.length,
-    metAll: caseCards.filter(c => !c.missedAny && !c.hasError && c.caseScore != null).length,
+    metAll: caseCards.filter(c => !c.missedAny && !c.hasError && c.pendingCount === 0 && c.caseScore != null)
+      .length,
     missedAny: caseCards.filter(c => c.missedAny).length,
     errors: caseCards.filter(c => c.hasError).length,
+    pending: caseCards.filter(c => c.pendingCount > 0).length,
   };
 
   return {
@@ -328,41 +307,4 @@ export const buildScorecard = ({
     pendingHuman,
     provisional: pendingHuman > 0,
   };
-};
-
-/**
- * Markdown explanation of the weighted-score formula (§15) for the
- * headline tooltip. Reuses only numbers already computed by buildScorecard()
- * (case.caseScore, cell.binding.weight/normalizedScore) — no new math.
- */
-export const buildWeightedScoreExplanation = scorecard => {
-  const { headline, cases = [] } = scorecard;
-  const scoredCases = cases.filter(c => c.caseScore != null);
-
-  const caseLine = scoredCases.map(c => formatScore(c.caseScore)).join(', ');
-
-  const runFormula =
-    scoredCases.length > 0
-      ? `Run score = mean(${caseLine}) = ${headline != null ? formatScore(headline) : '—'}`
-      : `Run score = — (no scored cases yet)`;
-
-  const exampleCase = scoredCases[0];
-  let caseFormula = '';
-  if (exampleCase) {
-    const scoredCells = exampleCase.cells.filter(c => c.normalizedScore != null);
-    const weightedTerms = scoredCells.map(c => `${c.binding.weight ?? 1}×${formatScore(c.normalizedScore)}`);
-    const weights = scoredCells.map(c => c.binding.weight ?? 1);
-    caseFormula = `Per case: Case score = (${weightedTerms.join(' + ')}) / (${weights.join(' + ')}) = ${formatScore(
-      exampleCase.caseScore,
-    )}`;
-  }
-
-  return [
-    'Weighted score formula:',
-    caseFormula,
-    `Per run: ${runFormula}`,
-    'Skipped or unscored items (no score, or weight 0) are excluded from both sums.',
-  ]
-    .filter(Boolean)
-    .join('\n\n');
 };

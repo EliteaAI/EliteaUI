@@ -107,7 +107,7 @@ const environmentFieldRowStyles = () => ({
   textField: {
     '& input:-webkit-autofill, & input:-webkit-autofill:hover, & input:-webkit-autofill:focus, & input:-webkit-autofill:active':
       ({ palette }) => ({
-        WebkitBoxShadow: `0 0 0 62.5rem ${palette.background.tabPanel} inset`,
+        WebkitBoxShadow: `0 0 0 62.5rem ${palette.background.default.tertiary} inset`,
         WebkitTextFillColor: `${palette.text.secondary}`,
         caretColor: palette.text.secondary,
         transition: 'background-color 5000s ease-in-out 0s',

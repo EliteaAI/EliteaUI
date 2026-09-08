@@ -426,7 +426,8 @@ const editToolkitStyles = isMCP => ({
   panelStyle: {
     paddingLeft: '0rem !important',
     paddingRight: '0rem !important',
-    backgroundColor: ({ palette }) => palette.background.pageSection,
+    backgroundColor: ({ palette }) =>
+      palette.mode === 'dark' ? palette.background.default.primary : palette.background.default.tertiary,
   },
   containerStyle: {
     '& .MuiTab-root.Mui-selected': {

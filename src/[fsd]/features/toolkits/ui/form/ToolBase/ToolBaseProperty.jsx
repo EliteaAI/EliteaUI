@@ -715,7 +715,7 @@ const toolBasePropertyStyles = theme => ({
     marginTop: '0.5rem',
   },
   accordionSX: {
-    background: `${theme.palette.background.tabPanel} !important`,
+    background: `${theme.palette.background.default.tertiary} !important`,
   },
   accordionSummarySX: {
     '& .MuiAccordionSummary-content': { alignItems: 'center', paddingRight: 0 },

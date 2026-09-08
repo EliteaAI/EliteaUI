@@ -12,19 +12,17 @@ import { EVAL_PERMISSIONS } from '../../../lib/constants';
 import AttachedDatasetCard from './AttachedDatasetCard';
 
 const DatasetSection = memo(props => {
+  const { datasets = [], attachedDataset = null, datasetActions = {} } = props;
+
   const {
-    datasets = [],
-    attachedDataset = null,
-    onAttachDataset,
-    onRemoveDataset,
-    onCreateDataset,
-    onOpenDataset,
-    onAddCase,
-    onEditCase,
-    onRemoveCase,
-    onImportCases,
-    onPromoteCases,
-  } = props;
+    excludedCaseIds = [],
+    handleAttachDataset: onAttachDataset,
+    handleRemoveDataset: onRemoveDataset,
+    handleCreateDataset: onCreateDataset,
+    handleOpenDataset: onOpenDataset,
+    handleIncludeCase: onIncludeCase,
+    handleExcludeCase: onExcludeCase,
+  } = datasetActions;
 
   const { checkPermission } = useCheckPermission();
   const canUpdateSuite = checkPermission(EVAL_PERMISSIONS.suiteUpdate);
@@ -64,15 +62,13 @@ const DatasetSection = memo(props => {
         <AttachedDatasetCard
           dataset={attachedDataset}
           availableDatasets={availableDatasets}
+          excludedCaseIds={excludedCaseIds}
           onChangeDataset={onAttachDataset}
           onRemoveDataset={onRemoveDataset}
           onCreateDataset={onCreateDataset}
           onOpenDataset={onOpenDataset}
-          onAddCase={onAddCase}
-          onEditCase={onEditCase}
-          onRemoveCase={onRemoveCase}
-          onImportCases={onImportCases}
-          onPromoteCases={onPromoteCases}
+          onIncludeCase={onIncludeCase}
+          onExcludeCase={onExcludeCase}
         />
       ) : (
         canUpdateSuite && (

@@ -405,7 +405,7 @@ const runStateDialogStyles = (editorWidth, editorHeight) => ({
     width: '100%',
     maxHeight: '100%',
     borderRadius: '0.5rem',
-    background: palette.background.tabPanel,
+    background: palette.background.default.tertiary,
   }),
   header: ({ palette }) => ({
     height: '2.75rem',
@@ -530,7 +530,7 @@ const runStateDialogStyles = (editorWidth, editorHeight) => ({
     width: '100%',
   },
   accordionSx: ({ palette }) => ({
-    background: `${palette.background.tabPanel} !important`,
+    background: `${palette.background.default.tertiary} !important`,
     width: '100%',
   }),
   accordionSummarySx: {

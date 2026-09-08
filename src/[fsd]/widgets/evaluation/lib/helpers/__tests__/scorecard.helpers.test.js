@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildScorecard, coveredCaseIdsFromPage, getTargetKey, normalizeScore } from '../scorecard.helpers';
+import { buildScorecard, getTargetKey, normalizeScore } from '../scorecard.helpers';
 
 // A run snapshot with one case and one Code-engine dimension binding (engine 'code').
 const makeRun = () => ({
@@ -118,32 +118,7 @@ describe('normalizeScore — parity with the server normalizer', () => {
   });
 });
 
-describe('coveredCaseIdsFromPage', () => {
-  const page = rows => rows.map(id => ({ dataset_case_id: id }));
-
-  it('reports no restriction when the page covers the whole run', () => {
-    expect(coveredCaseIdsFromPage({ results: page([1, 2]), total: 2, offset: 0 })).toBeNull();
-  });
-
-  it('reports no restriction for a human-only run, which has zero results by design', () => {
-    // Filtering on "has a result row" here would hide every case.
-    expect(coveredCaseIdsFromPage({ results: [], total: 0, offset: 0 })).toBeNull();
-  });
-
-  it('drops the trailing case, which the page may have cut mid-way', () => {
-    expect(coveredCaseIdsFromPage({ results: page([1, 1, 2, 3]), total: 9, offset: 0 })).toEqual(['1', '2']);
-  });
-
-  it('keeps a lone case rather than reporting an empty scorecard', () => {
-    expect(coveredCaseIdsFromPage({ results: page([1, 1]), total: 9, offset: 0 })).toEqual(['1']);
-  });
-
-  it('accounts for the offset when deciding whether the read is complete', () => {
-    expect(coveredCaseIdsFromPage({ results: page([5, 6]), total: 4, offset: 2 })).toBeNull();
-  });
-});
-
-describe('buildScorecard — truncated result page', () => {
+describe('buildScorecard — multiple snapshot cases', () => {
   const twoCaseRun = () => ({
     status: 'finished',
     snapshot: {
@@ -173,18 +148,145 @@ describe('buildScorecard — truncated result page', () => {
     normalized_score: 1,
   });
 
-  it('renders only the covered case instead of a blank cell for the uncovered one', () => {
-    const card = buildScorecard({
-      run: twoCaseRun(),
-      results: [result(12)],
-      caseIds: ['12'],
-    });
-    expect(card.cases.map(c => c.id)).toEqual([12]);
-    expect(card.counts.total).toBe(1);
-  });
-
-  it('renders every snapshot case when no restriction is given', () => {
+  it('renders every snapshot case', () => {
     const card = buildScorecard({ run: twoCaseRun(), results: [result(12), result(13)] });
     expect(card.cases.map(c => c.id)).toEqual([12, 13]);
+  });
+});
+
+// A Human dimension carries no automated result: the cell stays pending until a reviewer appends a
+// score, and the case must not be reported as having met every target in the meantime (§15).
+describe('buildScorecard — human dimensions awaiting a manual score', () => {
+  const humanRun = () => ({
+    status: 'finished',
+    snapshot: {
+      cases: [{ id: 12, order_index: 0, input: 'q', output: 'a' }],
+      bindings: [
+        {
+          dimension_id: 9,
+          engine: 'human',
+          weight: 1,
+          order_index: 0,
+          target: 80,
+          target_operator: '>=',
+          evidence_scope: { structure: true, input: true, output: true },
+        },
+      ],
+      dimensions: {
+        9: {
+          name: 'Helpfulness',
+          description: 'Score how well the answer resolves the request.',
+          scale_type: 'continuous',
+          scale_min: 1,
+          scale_max: 100,
+          polarity: 'higher_better',
+        },
+      },
+    },
+  });
+
+  it('exposes the authored guidance and evidence scope the review modal renders', () => {
+    const binding = buildScorecard({ run: humanRun() }).bindings[0];
+    expect(binding.guidance).toBe('Score how well the answer resolves the request.');
+    expect(binding.evidenceScope).toEqual({ structure: true, input: true, output: true });
+  });
+
+  it('marks the cell pending and keeps the case out of the met-all count', () => {
+    const card = buildScorecard({ run: humanRun() });
+    expect(card.cases[0].cells[0].pending).toBe(true);
+    expect(card.cases[0].pendingCount).toBe(1);
+    expect(card.pendingHuman).toBe(1);
+    expect(card.provisional).toBe(true);
+    expect(card.counts.metAll).toBe(0);
+    expect(card.counts.missedAny).toBe(0);
+    expect(card.counts.pending).toBe(1);
+  });
+
+  it('settles the cell once a reviewer saves a score, applying the binding target', () => {
+    const card = buildScorecard({
+      run: humanRun(),
+      humanScores: [
+        {
+          dataset_case_id: 12,
+          dimension_id: 9,
+          native_score: 90,
+          normalized_score: 90,
+          note: 'Answered fully.',
+          is_latest: true,
+        },
+      ],
+    });
+    const cell = card.cases[0].cells[0];
+    expect(cell.pending).toBe(false);
+    expect(cell.nativeScore).toBe(90);
+    expect(cell.met).toBe(true);
+    expect(cell.humanNote).toBe('Answered fully.');
+    expect(card.pendingHuman).toBe(0);
+    expect(card.counts.metAll).toBe(1);
+    expect(card.counts.pending).toBe(0);
+  });
+
+  it('counts a saved score below the target as missed rather than pending', () => {
+    const card = buildScorecard({
+      run: humanRun(),
+      humanScores: [
+        { dataset_case_id: 12, dimension_id: 9, native_score: 40, normalized_score: 40, is_latest: true },
+      ],
+    });
+    expect(card.cases[0].cells[0].met).toBe(false);
+    expect(card.cases[0].cells[0].humanNote).toBeNull();
+    expect(card.counts.missedAny).toBe(1);
+    expect(card.counts.metAll).toBe(0);
+  });
+});
+
+// The human score control is shaped from the binding's scale, so a snapshot that does not key a
+// binding's dimension must not silently degrade a rating or pass/fail dimension into a 0..100 score.
+describe('buildScorecard — scale resolution when the snapshot misses a dimension', () => {
+  const runWithoutSnapshotDimension = () => ({
+    status: 'finished',
+    snapshot: {
+      cases: [{ id: 3, order_index: 0 }],
+      bindings: [{ dimension_id: 77, engine: 'human', weight: 1, order_index: 0 }],
+      dimensions: {},
+    },
+  });
+
+  const liveDimension = {
+    id: 501,
+    local_dimension_id: 77,
+    tier: 'platform',
+    name: 'Tone',
+    description: 'Rate the tone from 1 to 5.',
+    scale_type: 'ordinal',
+    scale_min: 1,
+    scale_max: 5,
+    polarity: 'higher_better',
+  };
+
+  it('falls back to the live dimension record', () => {
+    const binding = buildScorecard({
+      run: runWithoutSnapshotDimension(),
+      dimensions: [liveDimension],
+    }).bindings[0];
+    expect(binding.name).toBe('Tone');
+    expect(binding.scaleType).toBe('ordinal');
+    expect(binding.scaleMin).toBe(1);
+    expect(binding.scaleMax).toBe(5);
+    expect(binding.guidance).toBe('Rate the tone from 1 to 5.');
+  });
+
+  it('keeps the snapshot authoritative when it does carry the dimension', () => {
+    const run = runWithoutSnapshotDimension();
+    run.snapshot.dimensions = { 77: { name: 'Tone at run time', scale_type: 'binary' } };
+    const binding = buildScorecard({ run, dimensions: [liveDimension] }).bindings[0];
+    expect(binding.name).toBe('Tone at run time');
+    expect(binding.scaleType).toBe('binary');
+  });
+
+  it('still reports an unresolvable binding rather than throwing', () => {
+    const binding = buildScorecard({ run: runWithoutSnapshotDimension() }).bindings[0];
+    expect(binding.name).toBe('Dimension #77');
+    expect(binding.scaleType).toBeNull();
   });
 });

@@ -1,6 +1,6 @@
-// New redesign components
+export * from './common';
 export * from './datasets';
+export * from './dimensions';
+export * from './results';
+export * from './results-history';
 export * from './suite';
-
-// Re-export legacy components for backward compatibility (will be removed after redesign)
-export * from './_legacy';

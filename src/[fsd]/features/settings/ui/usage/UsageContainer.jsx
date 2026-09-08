@@ -347,7 +347,7 @@ const usageContainerStyles = () => ({
   tabsContainer: ({ palette }) => ({
     padding: '0 1.5rem',
     borderBottom: `1px solid ${palette.border.table}`,
-    background: palette.background.tabPanel,
+    background: palette.background.default.tertiary,
   }),
   contentArea: {
     flex: 1,

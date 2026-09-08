@@ -63,13 +63,17 @@ export const BREADCRUMB_REGISTRY = {
     fallbackLabel: 'Edit Agent',
     testId: 'agent-detail-title',
   },
+  [RouteDefinitions.ApplicationsRunHistory]: {
+    parent: RouteDefinitions.ApplicationsDetail,
+    label: 'Run History',
+  },
   [RouteDefinitions.ApplicationsEvaluate]: {
     parent: RouteDefinitions.ApplicationsDetail,
-    label: 'Evaluation',
+    label: 'Evaluation (Beta)',
   },
   [RouteDefinitions.ApplicationsEvaluateSuite]: {
     parent: RouteDefinitions.ApplicationsDetail,
-    label: 'Evaluation',
+    label: 'Evaluation (Beta)',
   },
   [RouteDefinitions.ApplicationsEvaluateDatasets]: {
     parent: RouteDefinitions.ApplicationsEvaluate,
@@ -78,6 +82,10 @@ export const BREADCRUMB_REGISTRY = {
   [RouteDefinitions.ApplicationsEvaluateDimensions]: {
     parent: RouteDefinitions.ApplicationsEvaluate,
     label: 'Manage Dimensions',
+  },
+  [RouteDefinitions.ApplicationsEvaluateHistory]: {
+    parent: RouteDefinitions.ApplicationsEvaluate,
+    label: 'Results History',
   },
 
   [RouteDefinitions.SkillsWithTab]: { label: PathSessionMap[RouteDefinitions.Skills] },
@@ -96,5 +104,9 @@ export const BREADCRUMB_REGISTRY = {
     entityName: true,
     fallbackLabel: 'Edit Pipeline',
     testId: 'pipeline-detail-title',
+  },
+  [RouteDefinitions.PipelineRunHistory]: {
+    parent: RouteDefinitions.PipelineDetail,
+    label: 'Run History',
   },
 };
