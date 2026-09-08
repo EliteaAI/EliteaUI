@@ -10,6 +10,7 @@ import {
   DatasetModal,
   DimensionModal,
   EVAL_TIER,
+  EvaluationDocsButton,
   ResultsPanel,
   SelectDimensionFromLibraryModal,
   SuiteDetailPanel,
@@ -193,6 +194,7 @@ const AgentEvaluatePage = memo(() => {
     <Box sx={styles.wrapper}>
       <Box sx={styles.header}>
         <BreadcrumbsOrTitle title="Evaluation (Beta)" />
+        <EvaluationDocsButton />
       </Box>
       <Box sx={styles.body}>
         <Box sx={styles.leftPanel}>
@@ -345,6 +347,7 @@ const agentEvaluatePageStyles = () => ({
     boxSizing: 'border-box',
     display: 'flex',
     alignItems: 'center',
+    justifyContent: 'space-between',
     padding: '0 1.5rem',
   }),
   body: {

@@ -141,12 +141,16 @@ const ResultsScorecardDialog = memo(props => {
 
   const handleExport = useCallback(async () => {
     try {
-      const sheets = buildEvaluationResultsSheets(scorecard, { runId });
-      await exportToExcel(evaluationExportFileName({ runId }), sheets);
+      const run = data?.run ?? null;
+      const sheets = buildEvaluationResultsSheets(scorecard, {
+        run,
+        meta: { suiteName: run?.snapshot?.suite?.name },
+      });
+      await exportToExcel(evaluationExportFileName({ suiteName: run?.snapshot?.suite?.name, run }), sheets);
     } catch (error) {
       toastError(parseEvalError(error, 'Failed to export results.'));
     }
-  }, [scorecard, runId, toastError]);
+  }, [scorecard, data?.run, toastError]);
 
   const requestDelete = useCallback(() => setConfirmingDelete(true), []);
   const cancelDelete = useCallback(() => setConfirmingDelete(false), []);

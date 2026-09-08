@@ -119,6 +119,10 @@ export const IMPORTANCE_WEIGHT_MAP = {
   [IMPORTANCE.critical]: 4,
 };
 
+// Opened by the info button in every Evaluation page header. TODO(#6549): swap for the
+// Evaluation user-guide URL once it is published — the docs root is the stand-in until then.
+export const EVALUATION_DOCS_URL = 'https://docs.elitea.ai/';
+
 // RBAC permission strings (must match backend check_api decorators, §19.6).
 export const EVAL_PERMISSIONS = {
   dimensionRead: 'models.applications.evaluation.dimension.read',

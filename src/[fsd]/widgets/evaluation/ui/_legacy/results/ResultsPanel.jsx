@@ -1,6 +1,6 @@
 import { memo } from 'react';
 
-import { Box, SvgIcon, Tooltip, Typography } from '@mui/material';
+import { Box, CircularProgress, SvgIcon, Tooltip, Typography } from '@mui/material';
 
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
@@ -25,6 +25,7 @@ const ResultsPanel = memo(props => {
     handleOpenHistory: onOpenHistory,
     handleClearResults: onClearResults,
     handleExportResults: onExportResults,
+    isExporting = false,
   } = runActions;
 
   // Progress from active run (for in-progress state)
@@ -58,13 +59,22 @@ const ResultsPanel = memo(props => {
                     variant={BUTTON_VARIANTS.tertiary}
                     size="small"
                     onClick={onExportResults}
+                    disabled={isExporting}
                     sx={styles.actionButton}
+                    data-testid="export-results-button"
                     startIcon={
-                      <SvgIcon
-                        component={DownloadIcon}
-                        inheritViewBox
-                        sx={styles.actionIcon}
-                      />
+                      isExporting ? (
+                        <CircularProgress
+                          size={16}
+                          sx={styles.actionIcon}
+                        />
+                      ) : (
+                        <SvgIcon
+                          component={DownloadIcon}
+                          inheritViewBox
+                          sx={styles.actionIcon}
+                        />
+                      )
                     }
                   />
                 </Box>

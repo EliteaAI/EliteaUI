@@ -1,4 +1,5 @@
 // New redesign components
+export * from './common';
 export * from './datasets';
 export * from './results';
 export * from './results-history';

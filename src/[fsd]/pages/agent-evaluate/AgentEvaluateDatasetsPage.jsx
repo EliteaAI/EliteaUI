@@ -11,6 +11,7 @@ import {
   CreateCaseModal,
   DatasetModal,
   DatasetsPanel,
+  EvaluationDocsButton,
   ImportCaseModal,
   parseEvalError,
   sortDatasetsByDate,
@@ -250,6 +251,7 @@ const AgentEvaluateDatasetsPage = memo(() => {
       <Box sx={styles.wrapper}>
         <Box sx={styles.header}>
           <BreadcrumbsOrTitle title="Manage Datasets" />
+          <EvaluationDocsButton />
         </Box>
         <Box sx={styles.body}>
           <Box sx={styles.errorState}>
@@ -269,6 +271,7 @@ const AgentEvaluateDatasetsPage = memo(() => {
     <Box sx={styles.wrapper}>
       <Box sx={styles.header}>
         <BreadcrumbsOrTitle title="Manage Datasets" />
+        <EvaluationDocsButton />
       </Box>
       <Box sx={styles.body}>
         <DatasetsPanel
@@ -388,6 +391,7 @@ const agentEvaluateDatasetsPageStyles = () => ({
     boxSizing: 'border-box',
     display: 'flex',
     alignItems: 'center',
+    justifyContent: 'space-between',
     padding: '0 1.5rem',
   }),
   body: {

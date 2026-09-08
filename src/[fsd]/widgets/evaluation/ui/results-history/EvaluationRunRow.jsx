@@ -13,6 +13,7 @@ const EvaluationRunRow = memo(props => {
     suiteName,
     isSelected = false,
     canDelete = false,
+    exportingRunId = null,
     gridTemplateColumns,
     onSelect,
     onShare,
@@ -79,6 +80,7 @@ const EvaluationRunRow = memo(props => {
           <RunHistoryActionsMenu
             run={run}
             canDelete={canDelete}
+            exportingRunId={exportingRunId}
             onShare={onShare}
             onExport={onExport}
             onDelete={onDelete}

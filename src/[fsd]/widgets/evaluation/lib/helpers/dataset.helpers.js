@@ -25,10 +25,12 @@ export const sortDatasetsByDate = (datasets = []) =>
 
 /**
  * Renders a case field for display: strings pass through, objects are pretty-printed,
- * and empty values become an em dash so the column never renders blank.
+ * and empty values become an em dash so the column never renders blank. `emptyText` overrides
+ * that placeholder for callers whose output is read outside the UI — the Excel export spells the
+ * absence out rather than relying on a dash.
  */
-export const formatCaseContent = value => {
-  if (value == null || value === '') return '—';
+export const formatCaseContent = (value, emptyText = '—') => {
+  if (value == null || value === '') return emptyText;
   if (typeof value === 'string') return value;
   try {
     return JSON.stringify(value, null, 2);

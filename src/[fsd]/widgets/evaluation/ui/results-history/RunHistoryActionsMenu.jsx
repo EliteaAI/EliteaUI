@@ -1,7 +1,7 @@
 import { memo, useCallback, useState } from 'react';
 
 import { MoreVert as MoreVertIcon } from '@mui/icons-material';
-import { Box, Menu, MenuItem, SvgIcon, Typography } from '@mui/material';
+import { Box, CircularProgress, Menu, MenuItem, SvgIcon, Typography } from '@mui/material';
 
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
@@ -19,7 +19,12 @@ const ANCHOR_ORIGIN = { vertical: 'bottom', horizontal: 'right' };
 const TRANSFORM_ORIGIN = { vertical: 'top', horizontal: 'right' };
 
 const RunHistoryActionsMenu = memo(props => {
-  const { run, canDelete = false, onShare, onExport, onDelete } = props;
+  const { run, canDelete = false, exportingRunId = null, onShare, onExport, onDelete } = props;
+
+  // Any export in flight disables the action everywhere, so a second one cannot be started — but
+  // only the row being exported shows the spinner.
+  const isExportingThisRun = exportingRunId != null && exportingRunId === run?.id;
+  const isExportDisabled = exportingRunId != null;
 
   const [anchorEl, setAnchorEl] = useState(null);
 
@@ -90,14 +95,22 @@ const RunHistoryActionsMenu = memo(props => {
         </MenuItem>
         <MenuItem
           onClick={event => handleMenuItemClick(event, RUN_ACTION.export)}
+          disabled={isExportDisabled}
           sx={styles.menuItem}
           data-testid="run-history-export"
         >
-          <SvgIcon
-            component={DownloadIcon}
-            inheritViewBox
-            sx={styles.menuIcon}
-          />
+          {isExportingThisRun ? (
+            <CircularProgress
+              size={16}
+              sx={styles.menuIcon}
+            />
+          ) : (
+            <SvgIcon
+              component={DownloadIcon}
+              inheritViewBox
+              sx={styles.menuIcon}
+            />
+          )}
           <Typography sx={styles.menuText}>Export to Excel</Typography>
         </MenuItem>
         {canDelete && (

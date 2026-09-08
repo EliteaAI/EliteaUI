@@ -16,6 +16,7 @@ import {
   resolveRunSuiteName,
   sinkUnscoredRuns,
 } from '../helpers';
+import { useEvaluationExport } from './useEvaluationExport.hooks';
 
 // The run whose results are shown travels in the URL, so a copied link reopens the same run (§6).
 export const RUN_SEARCH_PARAM = 'run';
@@ -33,7 +34,7 @@ const SORT_FIELD = {
  */
 export const useEvalRunHistory = ({ projectId, applicationId }) => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { toastError, toastInfo, toastSuccess } = useToast();
+  const { toastError, toastSuccess } = useToast();
   const { checkPermission } = useCheckPermission();
 
   const canDelete = checkPermission(EVAL_PERMISSIONS.runDelete);
@@ -141,10 +142,11 @@ export const useEvalRunHistory = ({ projectId, applicationId }) => {
     [toastError, toastSuccess],
   );
 
-  const handleExportRun = useCallback(() => {
-    // Export to Excel is out of scope for #6541 — the action is listed here, the writer lands later.
-    toastInfo('Export to Excel is coming soon.');
-  }, [toastInfo]);
+  const { exportRun, exportingRunId } = useEvaluationExport({
+    projectId,
+    applicationId,
+    suiteNamesById,
+  });
 
   const handleRequestDelete = useCallback(run => {
     setRunToDelete(run);
@@ -187,7 +189,8 @@ export const useEvalRunHistory = ({ projectId, applicationId }) => {
     handleSort,
     handleSelectRun,
     handleShareRun,
-    handleExportRun,
+    handleExportRun: exportRun,
+    exportingRunId,
     runToDelete,
     isDeleting,
     handleRequestDelete,
