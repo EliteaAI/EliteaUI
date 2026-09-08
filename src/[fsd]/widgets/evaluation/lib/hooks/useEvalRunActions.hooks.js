@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { useLocation, useNavigate } from 'react-router-dom';
+
+import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useLazyApplicationDetailsQuery } from '@/api/applications';
 import useToast from '@/hooks/useToast';
+import RouteDefinitions from '@/routes';
 
 import {
   useCancelEvalRunMutation,
@@ -18,10 +22,15 @@ export const useEvalRunActions = ({
   projectId,
   editingSuiteId,
   applicationId,
+  agentId,
+  tab,
   attachedDatasetId,
   attachedDatasetDetails,
   attachedDimensionsCount,
 }) => {
+  const navigate = useNavigate();
+  const { search } = useLocation();
+  const persistentSearch = NavigationHelpers.pickPersistentSearch(search);
   const { toastError, toastSuccess } = useToast();
 
   const [fetchApplicationDetails] = useLazyApplicationDetailsQuery();
@@ -158,9 +167,15 @@ export const useEvalRunActions = ({
     }
   }, [cancelEvalRun, projectId, activeRunId]);
 
+  // Results History is its own screen (#6541), not a dialog — it needs a breadcrumb of its own and
+  // a URL that can be shared down to the individual run.
   const handleOpenHistory = useCallback(() => {
-    // TODO: wire up results history
-  }, []);
+    const historyPath = RouteDefinitions.ApplicationsEvaluateHistory.replace(':tab', tab).replace(
+      ':agentId',
+      agentId,
+    );
+    navigate({ pathname: historyPath, search: persistentSearch });
+  }, [navigate, tab, agentId, persistentSearch]);
 
   const handleExportResults = useCallback(() => {
     // TODO: wire up export to Excel

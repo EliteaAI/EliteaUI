@@ -165,6 +165,8 @@ const AgentEvaluatePage = memo(() => {
     projectId,
     editingSuiteId,
     applicationId,
+    agentId,
+    tab,
     attachedDatasetId: effectiveDatasetId,
     attachedDatasetDetails,
     attachedDimensionsCount: attachedDimensions.length,
@@ -190,7 +192,7 @@ const AgentEvaluatePage = memo(() => {
   return (
     <Box sx={styles.wrapper}>
       <Box sx={styles.header}>
-        <BreadcrumbsOrTitle title="Evaluation" />
+        <BreadcrumbsOrTitle title="Evaluation (Beta)" />
       </Box>
       <Box sx={styles.body}>
         <Box sx={styles.leftPanel}>
@@ -219,7 +221,10 @@ const AgentEvaluatePage = memo(() => {
         </Box>
         <Box sx={styles.divider} />
         <Box sx={styles.rightPanel}>
-          <ResultsPanel runActions={runActions} />
+          <ResultsPanel
+            runActions={runActions}
+            hasSuite={editingSuiteId != null || isCreatingNew}
+          />
         </Box>
       </Box>
 

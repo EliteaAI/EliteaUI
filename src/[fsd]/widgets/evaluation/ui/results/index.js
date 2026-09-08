@@ -8,3 +8,4 @@ export { default as HumanEvaluationModal } from './HumanEvaluationModal';
 export { default as HumanScoreControl } from './HumanScoreControl';
 export { default as ResultsDimensionTable } from './ResultsDimensionTable';
 export { default as ResultsSummaryCards } from './ResultsSummaryCards';
+export { default as RunResultsView } from './RunResultsView';
