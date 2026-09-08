@@ -68,10 +68,7 @@ const BaseEditor = ({
   const [showWarning, setShowWarning] = useState(false);
 
   // Use the editor navigation blocking hook
-  const { setBlockNav } = useEditorNavBlocking(
-    disableNavBlocking ? false : isVisible,
-    disableNavBlocking ? false : isDirty,
-  );
+  const { setBlockNav } = useEditorNavBlocking(isVisible, isDirty, disableNavBlocking);
 
   const handleCancel = useCallback(() => {
     if (isDirty && !isPublic) {
