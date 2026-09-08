@@ -2,6 +2,7 @@ export const FOLDER_PERMISSION_OPTIONS = {
   READ_WRITE: 'read_write',
   READ_ONLY: 'read_only',
   NO_ACCESS: 'no_access',
+  FULL: 'full',
 };
 
 export const MAX_FOLDER_PERMISSION_ENTRIES = 200;

@@ -54,8 +54,8 @@ export const useDeleteFolder = () => {
   const deleteFolder = useCallback(
     async ({ folderId, entityType }) => {
       if (!projectId) return null;
-      const result = await mutation({ projectId, folderId, entityType }).unwrap();
-      return result.data;
+      await mutation({ projectId, folderId, entityType }).unwrap();
+      return null;
     },
     [projectId, mutation],
   );

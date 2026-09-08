@@ -33,9 +33,9 @@ const FolderSection = memo(props => {
 
   const { isTeam } = useProjectType();
   const { checkPermission } = useCheckPermission();
-  const canCreateFolder = checkPermission(PERMISSIONS.chat.folders.create);
-  const canManagePermissions = isTeam && checkPermission(PERMISSIONS.chat.folders.managePermissions);
-  const hasFolderWritePermission = checkPermission(PERMISSIONS.chat.folders.update);
+  const canCreateFolder = checkPermission(PERMISSIONS.entityFolders.create);
+  const canManagePermissions = isTeam && checkPermission(PERMISSIONS.entityFolders.managePermissions);
+  const hasFolderWritePermission = checkPermission(PERMISSIONS.entityFolders.update);
   const canWriteFolder = useCallback(
     folder => hasFolderWritePermission && isFolderWritable(folder),
     [hasFolderWritePermission],
@@ -90,7 +90,6 @@ const FolderSection = memo(props => {
 
   const handleMenuClose = useCallback(() => {
     setMenuAnchorEl(null);
-    setMenuFolder(null);
   }, []);
 
   const handlePin = useCallback(async () => {
@@ -101,6 +100,8 @@ const FolderSection = memo(props => {
       await togglePin(folder);
     } catch {
       toastError('Failed to update folder');
+    } finally {
+      setMenuFolder(null);
     }
   }, [menuFolder, togglePin, handleMenuClose, toastError]);
 
@@ -111,6 +112,7 @@ const FolderSection = memo(props => {
 
   const handleCloseEditDialog = useCallback(() => {
     setEditFolder(null);
+    setMenuFolder(null);
   }, []);
 
   const handleDelete = useCallback(() => {
@@ -120,6 +122,7 @@ const FolderSection = memo(props => {
 
   const handleCloseDeleteDialog = useCallback(() => {
     setDeleteFolder(null);
+    setMenuFolder(null);
   }, []);
 
   const handlePermission = useCallback(() => {
@@ -129,6 +132,7 @@ const FolderSection = memo(props => {
 
   const handleClosePermission = useCallback(() => {
     setManagePermissionsFolder(null);
+    setMenuFolder(null);
   }, []);
 
   const onDeleteFolder = useCallback(
