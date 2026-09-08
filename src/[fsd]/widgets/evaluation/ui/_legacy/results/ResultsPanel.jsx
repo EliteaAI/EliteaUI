@@ -95,18 +95,19 @@ const ResultsPanel = memo(props => {
     [resultsData, dimensions],
   );
 
-  // Totals stay on the server's aggregate; the pending count comes from the scorecard so it clears
-  // as soon as the last human score is saved, without waiting for the re-aggregated run.
+  // The server's `progress` only ever carries {done, total} — met/missed/errors/pending-human
+  // counts are not aggregated server-side, so these read off the client-computed scorecard.
   const summaryData = useMemo(() => {
     if (!hasResults || !displayRun) return null;
     const progress = displayRun.progress ?? {};
+    const counts = scorecard?.counts ?? {};
     return {
       totalScore: displayRun.headline_score ?? null,
-      cases: progress.total ?? 0,
-      metAllTargets: progress.met_all ?? 0,
-      missed: progress.missed ?? 0,
-      errors: progress.errors ?? 0,
-      pendingHuman: scorecard?.pendingHuman ?? progress.pending_human ?? 0,
+      cases: counts.total ?? progress.total ?? 0,
+      metAllTargets: counts.metAll ?? 0,
+      missed: counts.missedAny ?? 0,
+      errors: counts.errors ?? 0,
+      pendingHuman: scorecard?.pendingHuman ?? 0,
     };
   }, [hasResults, displayRun, scorecard]);
 
