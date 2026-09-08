@@ -289,7 +289,7 @@ const runResultsViewStyles = () => ({
     flexDirection: 'column',
   },
   runLabel: ({ palette }) => ({
-    padding: '0 1.5rem 0',
+    padding: '0.55rem 1.5rem 0',
     color: palette.text.secondary,
     fontWeight: 600,
   }),
