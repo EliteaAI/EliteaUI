@@ -16,6 +16,7 @@ export * as Category from './category';
 export * as Label from './label';
 export * as Controls from './controls';
 export * as Select from './select';
+export * as Slider from './slider';
 export { default as ScrollableContainer } from './scrollable-container';
 export { default as Breadcrumbs, BreadcrumbsOrTitle } from './breadcrumbs';
 export * as Icon from './icon';

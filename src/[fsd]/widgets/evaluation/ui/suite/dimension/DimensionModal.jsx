@@ -14,12 +14,12 @@ import DimensionForm, {
 } from './DimensionForm';
 
 const DimensionModal = memo(props => {
-  const { open, onClose, projectId, applicationId = null, dimension = null, onSaved } = props;
+  const { open, onClose, projectId, applicationId = null, dimension = null, binding = null, onSaved } = props;
 
   const isEditMode = dimension != null;
 
   const [form, setForm] = useState(() =>
-    isEditMode ? mapDimensionToForm(dimension) : getDefaultFormState(),
+    isEditMode ? mapDimensionToForm(dimension, binding) : getDefaultFormState(),
   );
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -30,10 +30,10 @@ const DimensionModal = memo(props => {
 
   useEffect(() => {
     if (open) {
-      setForm(isEditMode ? mapDimensionToForm(dimension) : getDefaultFormState());
+      setForm(isEditMode ? mapDimensionToForm(dimension, binding) : getDefaultFormState());
       setErrorMessage('');
     }
-  }, [open, isEditMode, dimension]);
+  }, [open, isEditMode, dimension, binding]);
 
   const validationError = getValidationError(form);
 
@@ -54,10 +54,11 @@ const DimensionModal = memo(props => {
           agentId: applicationId,
           body,
         }).unwrap();
-        onSaved?.(result);
+        // Awaited so the suite binding is refreshed before the modal closes onto the card.
+        await onSaved?.(result, form.evaluationTarget, form.evaluator);
       } else {
         const result = await createDimension({ projectId, body }).unwrap();
-        onSaved?.(result, form.evaluationTarget, form.evaluator);
+        await onSaved?.(result, form.evaluationTarget, form.evaluator);
       }
       onClose();
     } catch (error) {

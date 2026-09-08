@@ -6,6 +6,7 @@ import {
   EVAL_SCALE_TYPE,
 } from '../constants';
 import { getBindingKind } from './binding.helpers';
+import { findDimensionByBindingId } from './dimension.helpers';
 
 /**
  * Stable key identifying which validation a binding or result row targets.
@@ -96,24 +97,33 @@ export const formatPercent = value => {
 /**
  * Resolves the display + scoring metadata for a snapshot binding by looking up
  * its referenced dimension / code-validation in the run snapshot maps.
+ *
+ * `dimensions` are the live records, consulted only for fields the snapshot does not carry. A
+ * binding the snapshot map misses — it is keyed by dimension id, which a platform dimension does
+ * not share with its materialised copy — would otherwise lose its scale and silently render as a
+ * generic 0..100 score instead of the configured rating or pass/fail control.
  */
-export const resolveBindingMeta = (binding, snapshot = {}) => {
+export const resolveBindingMeta = (binding, snapshot = {}, dimensions = []) => {
   const kind = getBindingKind(binding);
-  const dimensions = snapshot.dimensions ?? {};
+  const snapshotDimensions = snapshot.dimensions ?? {};
 
   let name = 'Validation';
   let scaleType = null;
   let scaleMin = null;
   let scaleMax = null;
   let polarity = null;
+  // `description` doubles as the rubric text: AI scoring instructions, or Human reviewer guidance.
+  let guidance = null;
 
   if (kind === EVAL_BINDING_KIND.dimension) {
-    const dim = dimensions[binding.dimension_id] ?? dimensions[String(binding.dimension_id)];
-    name = dim?.name || `Dimension #${binding.dimension_id}`;
-    scaleType = dim?.scale_type ?? null;
-    scaleMin = dim?.scale_min ?? null;
-    scaleMax = dim?.scale_max ?? null;
-    polarity = dim?.polarity ?? null;
+    const dim = snapshotDimensions[binding.dimension_id] ?? snapshotDimensions[String(binding.dimension_id)];
+    const live = findDimensionByBindingId(dimensions, binding.dimension_id);
+    name = dim?.name || live?.name || `Dimension #${binding.dimension_id}`;
+    scaleType = dim?.scale_type ?? live?.scale_type ?? null;
+    scaleMin = dim?.scale_min ?? live?.scale_min ?? null;
+    scaleMax = dim?.scale_max ?? live?.scale_max ?? null;
+    polarity = dim?.polarity ?? live?.polarity ?? null;
+    guidance = dim?.description || live?.description || null;
   } else if (kind === EVAL_BINDING_KIND.platform) {
     name = binding.platform_key || 'Platform validation';
     scaleType = EVAL_SCALE_TYPE.binary;
@@ -136,6 +146,8 @@ export const resolveBindingMeta = (binding, snapshot = {}) => {
     scaleMin,
     scaleMax,
     polarity,
+    guidance,
+    evidenceScope: binding.evidence_scope ?? null,
     orderIndex: binding.order_index ?? 0,
   };
 };
@@ -180,6 +192,7 @@ export const buildScorecard = ({
   humanScores = [],
   headlineScore,
   caseIds = null,
+  dimensions = [],
 } = {}) => {
   const snapshot = run?.snapshot ?? {};
   const allCases = [...(snapshot.cases ?? [])].sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
@@ -188,7 +201,7 @@ export const buildScorecard = ({
   const bindingsRaw = [...(snapshot.bindings ?? [])].sort(
     (a, b) => (a.order_index ?? 0) - (b.order_index ?? 0),
   );
-  const bindings = bindingsRaw.map(b => resolveBindingMeta(b, snapshot));
+  const bindings = bindingsRaw.map(b => resolveBindingMeta(b, snapshot, dimensions));
 
   // Index result rows by caseId + target key.
   const resultIndex = new Map();
@@ -276,12 +289,14 @@ export const buildScorecard = ({
         normalizedScore: normalized,
         met,
         pending,
+        humanNote: human?.note ?? null,
         verdict: result?.verdict ?? null,
         evidence: result?.evidence ?? null,
       };
     });
 
     const caseScore = weightTotal ? weightedSum / weightTotal : null;
+    const pendingCount = cells.filter(c => c.pending).length;
 
     return {
       id: caseItem.id,
@@ -290,7 +305,7 @@ export const buildScorecard = ({
       caseScore,
       missedAny,
       hasError,
-      pendingCount: cells.filter(c => c.pending).length,
+      pendingCount,
     };
   });
 
@@ -312,11 +327,14 @@ export const buildScorecard = ({
 
   const headline = headlineScore != null ? headlineScore : (run?.headline_score ?? recomputedHeadline);
 
+  // A case still awaiting a manual score is neither "met all" nor "missed".
   const counts = {
     total: caseCards.length,
-    metAll: caseCards.filter(c => !c.missedAny && !c.hasError && c.caseScore != null).length,
+    metAll: caseCards.filter(c => !c.missedAny && !c.hasError && c.pendingCount === 0 && c.caseScore != null)
+      .length,
     missedAny: caseCards.filter(c => c.missedAny).length,
     errors: caseCards.filter(c => c.hasError).length,
+    pending: caseCards.filter(c => c.pendingCount > 0).length,
   };
 
   return {

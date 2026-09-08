@@ -37,6 +37,33 @@ export const formatCaseContent = value => {
   }
 };
 
+export const NO_EXPECTED_OUTPUT = 'No expected output provided.';
+
+/**
+ * The read-only evidence columns for one evaluated case, shared by the case details and human
+ * evaluation modals. `evidenceScope` is the binding's, and drops Agent Instructions when the author
+ * left it out of the evaluation targets; a snapshot that stored no scope shows whatever was captured.
+ */
+export const buildCaseContentColumns = (caseItem, { evidenceScope = null } = {}) => {
+  const columns = [
+    { key: 'input', label: 'Input', content: caseItem?.input },
+    { key: 'actualOutput', label: 'Actual Output', content: caseItem?.output },
+    {
+      key: 'expectedOutput',
+      label: 'Expected Output',
+      content: caseItem?.expected_output,
+      emptyText: NO_EXPECTED_OUTPUT,
+    },
+  ];
+
+  const structureInScope = evidenceScope == null || evidenceScope.structure !== false;
+  const hasStructure = caseItem?.structure != null && caseItem.structure !== '';
+  if (structureInScope && hasStructure) {
+    columns.push({ key: 'instructions', label: 'Agent Instructions', content: caseItem.structure });
+  }
+  return columns;
+};
+
 /** Truncates long case text for table cells, appending an ellipsis when clipped. */
 export const excerpt = (text, max = 80) => {
   const value = text == null ? '' : String(text);

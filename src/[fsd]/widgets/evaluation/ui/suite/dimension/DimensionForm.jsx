@@ -133,6 +133,7 @@ const DimensionForm = memo(props => {
         const next = { ...prev, evaluator: newEvaluator };
         if (newEvaluator === EVAL_ENGINE.code) {
           next.scaleTypePreset = SCALE_TYPE_PRESET.passFail;
+          next.hasKnownScale = true;
         }
         return next;
       });
@@ -189,18 +190,20 @@ const DimensionForm = memo(props => {
     [setField],
   );
 
+  // Editing any scale field is a deliberate choice, so the form stops treating the scale as unknown
+  // and the save starts sending it again (see `hasKnownScale` in dimension.helpers).
   const handleCustomMinChange = useCallback(
     event => {
-      setField('customMin', event.target.value);
+      setForm(prev => ({ ...prev, customMin: event.target.value, hasKnownScale: true }));
     },
-    [setField],
+    [setForm],
   );
 
   const handleCustomMaxChange = useCallback(
     event => {
-      setField('customMax', event.target.value);
+      setForm(prev => ({ ...prev, customMax: event.target.value, hasKnownScale: true }));
     },
-    [setField],
+    [setForm],
   );
 
   const handleCustomImportanceChange = useCallback(
@@ -225,6 +228,7 @@ const DimensionForm = memo(props => {
       setForm(prev => ({
         ...prev,
         scaleTypePreset: value,
+        hasKnownScale: true,
         customMin: value === SCALE_TYPE_PRESET.custom ? '' : prev.customMin,
         customMax: value === SCALE_TYPE_PRESET.custom ? '' : prev.customMax,
       }));
