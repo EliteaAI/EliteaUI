@@ -5,6 +5,7 @@ import { Box } from '@mui/material';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { Modal } from '@/[fsd]/shared/ui';
 
+import { buildCaseContentColumns } from '../../lib/helpers';
 import CaseContentColumn from './CaseContentColumn';
 import CaseContentPreviewModal from './CaseContentPreviewModal';
 
@@ -26,17 +27,7 @@ const CaseDetailsModal = memo(props => {
   const caseItem = caseData?.case;
   const caseId = caseData?.id;
 
-  const columns = useMemo(() => {
-    const base = [
-      { key: 'input', label: 'Input', content: caseItem?.input },
-      { key: 'actualOutput', label: 'Actual Output', content: caseItem?.output },
-      { key: 'expectedOutput', label: 'Expected Output', content: caseItem?.expected_output },
-    ];
-    if (caseItem?.structure != null && caseItem.structure !== '') {
-      base.push({ key: 'instructions', label: 'Instructions', content: caseItem.structure });
-    }
-    return base;
-  }, [caseItem]);
+  const columns = useMemo(() => buildCaseContentColumns(caseItem), [caseItem]);
 
   const styles = caseDetailsModalStyles(columns.length);
 
@@ -82,13 +73,17 @@ const caseDetailsModalStyles = columnCount => ({
     maxWidth: '95vw',
     height: '80vh',
   },
-  dialogContent: ({ palette }) => ({
-    padding: 0,
-    borderTop: `0.0625rem solid ${palette.border.lines}`,
+  // BaseModal pads its content with `!important` and caps its height against the viewport. The
+  // table is the whole modal here, so both are undone and the paper's height is what it fills.
+  dialogContent: {
+    padding: '0 !important',
+    maxHeight: 'none',
+    flex: 1,
+    minHeight: 0,
     overflow: 'hidden',
     display: 'flex',
     flexDirection: 'column',
-  }),
+  },
   columnsContainer: {
     display: 'flex',
     flex: 1,

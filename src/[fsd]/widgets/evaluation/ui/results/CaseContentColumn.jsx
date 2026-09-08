@@ -9,16 +9,17 @@ import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { formatCaseContent } from '../../lib/helpers';
 
 const CaseContentColumn = memo(props => {
-  const { column, onFullScreen } = props;
+  const { column, onFullScreen, sx = {} } = props;
 
   const handleFullScreen = useCallback(() => {
     onFullScreen?.(column);
   }, [onFullScreen, column]);
 
+  const isEmpty = column.content == null || column.content === '';
   const styles = caseContentColumnStyles();
 
   return (
-    <Box sx={styles.column}>
+    <Box sx={[styles.column, sx]}>
       <Box sx={styles.columnHeader}>
         <Typography
           variant="labelSmall"
@@ -37,10 +38,10 @@ const CaseContentColumn = memo(props => {
       <Box sx={styles.columnContent}>
         <Typography
           variant="bodySmall"
-          sx={styles.contentText}
+          sx={[styles.contentText, isEmpty && column.emptyText && styles.emptyText]}
           component="pre"
         >
-          {formatCaseContent(column.content)}
+          {isEmpty && column.emptyText ? column.emptyText : formatCaseContent(column.content)}
         </Typography>
       </Box>
     </Box>
@@ -65,9 +66,8 @@ const caseContentColumnStyles = () => ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: '0.75rem 1rem',
+    padding: '0.75rem 1.5rem',
     borderBottom: `0.0625rem solid ${palette.border.lines}`,
-    backgroundColor: palette.background.userInputBackground,
   }),
   columnLabel: ({ palette }) => ({
     color: palette.text.default,
@@ -91,9 +91,13 @@ const caseContentColumnStyles = () => ({
   }),
   columnContent: {
     flex: 1,
-    padding: '1rem',
+    padding: '0.75rem 1.5rem',
     overflow: 'auto',
   },
+  emptyText: ({ palette }) => ({
+    color: palette.text.default,
+    fontStyle: 'italic',
+  }),
   contentText: ({ palette }) => ({
     color: palette.text.secondary,
     whiteSpace: 'pre-wrap',

@@ -291,6 +291,7 @@ const AgentEvaluatePage = memo(() => {
             projectId={projectId}
             applicationId={applicationId}
             dimension={dimensionActions.dimensionToEdit}
+            binding={dimensionActions.bindingToEdit}
             onSaved={
               dimensionActions.dimensionToEdit
                 ? dimensionActions.handleDimensionUpdated

@@ -5,7 +5,7 @@ import { Box, Typography } from '@mui/material';
 import CaseResultItem from './CaseResultItem';
 
 const CaseResultsList = memo(props => {
-  const { cases = [], onViewDetails, onEvaluate } = props;
+  const { cases = [], canEvaluate = false, onViewDetails, onEvaluate } = props;
 
   const styles = caseResultsListStyles();
 
@@ -29,6 +29,7 @@ const CaseResultsList = memo(props => {
           <CaseResultItem
             key={card.id}
             card={card}
+            canEvaluate={canEvaluate}
             onViewDetails={onViewDetails}
             onEvaluate={onEvaluate}
           />

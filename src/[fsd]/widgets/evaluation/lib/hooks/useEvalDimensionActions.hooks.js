@@ -10,9 +10,10 @@ import {
   useAddEvalBindingMutation,
   useDeleteEvalBindingMutation,
   useMaterializePlatformDimensionMutation,
+  useUpdateEvalBindingMutation,
 } from '../../api';
 import { EVAL_TIER } from '../constants';
-import { parseEvalError } from '../helpers';
+import { findDimensionByBindingId, parseEvalError } from '../helpers';
 
 export const useEvalDimensionActions = ({
   projectId,
@@ -28,6 +29,7 @@ export const useEvalDimensionActions = ({
   const { toastError, toastSuccess } = useToast();
 
   const [addEvalBinding] = useAddEvalBindingMutation();
+  const [updateEvalBinding] = useUpdateEvalBindingMutation();
   const [deleteEvalBinding] = useDeleteEvalBindingMutation();
   const [materializePlatformDimension] = useMaterializePlatformDimensionMutation();
 
@@ -36,6 +38,7 @@ export const useEvalDimensionActions = ({
   const [showBuildDimensionWithAi, setShowBuildDimensionWithAi] = useState(false);
   const [dimensionToRemove, setDimensionToRemove] = useState(null);
   const [dimensionToEdit, setDimensionToEdit] = useState(null);
+  const [bindingToEdit, setBindingToEdit] = useState(null);
   const [pendingDimensions, setPendingDimensions] = useState([]);
 
   useEffect(() => {
@@ -44,6 +47,7 @@ export const useEvalDimensionActions = ({
     setShowBuildDimensionWithAi(false);
     setDimensionToRemove(null);
     setDimensionToEdit(null);
+    setBindingToEdit(null);
     setPendingDimensions([]);
   }, [editingSuiteId]);
 
@@ -162,11 +166,12 @@ export const useEvalDimensionActions = ({
 
   const handleEditDimension = useCallback(
     binding => {
-      const dim = dimensions.find(
-        d => d.id === binding.dimension_id || d.local_dimension_id === binding.dimension_id,
-      );
+      // A platform catalog id and a project dimension id come from different id spaces, so a plain
+      // id match can load the wrong record into the editor.
+      const dim = findDimensionByBindingId(dimensions, binding.dimension_id);
       if (dim) {
         setDimensionToEdit(dim);
+        setBindingToEdit(binding);
       }
     },
     [dimensions],
@@ -174,11 +179,49 @@ export const useEvalDimensionActions = ({
 
   const handleCloseEditDimension = useCallback(() => {
     setDimensionToEdit(null);
+    setBindingToEdit(null);
   }, []);
 
-  const handleDimensionUpdated = useCallback(() => {
-    toastSuccess('Dimension has been updated successfully.');
-  }, [toastSuccess]);
+  // Editing the dimension leaves the binding holding the scope, engine and any per-suite target it
+  // was attached with, so the attached card keeps showing stale values until the binding follows.
+  const handleDimensionUpdated = useCallback(
+    async (dimension, evidenceScope, engine) => {
+      const dimensionId = bindingToEdit?.dimension_id ?? dimension?.id;
+      if (!editingSuiteId) {
+        setPendingDimensions(prev =>
+          prev.map(p => (p.id === dimensionId ? { ...p, ...dimension, engine, evidenceScope } : p)),
+        );
+        toastSuccess('Dimension has been updated successfully.');
+        return;
+      }
+
+      if (bindingToEdit?.id) {
+        try {
+          await updateEvalBinding({
+            projectId,
+            suiteId: editingSuiteId,
+            bindingId: bindingToEdit.id,
+            body: {
+              engine,
+              evidence_scope: evidenceScope,
+              // A null column means the binding inherits the dimension default, which already
+              // refreshed — only a per-binding override needs to be carried forward.
+              ...(bindingToEdit.target != null ? { target: dimension?.default_target ?? null } : {}),
+              ...(bindingToEdit.target_operator != null
+                ? { target_operator: dimension?.default_target_operator ?? null }
+                : {}),
+              ...(bindingToEdit.weight != null ? { weight: dimension?.default_weight ?? null } : {}),
+            },
+          }).unwrap();
+        } catch (error) {
+          toastError(parseEvalError(error, 'Dimension updated but the suite binding was not refreshed.'));
+          return;
+        }
+      }
+      toastSuccess('Dimension has been updated successfully.');
+    },
+    [editingSuiteId, bindingToEdit, updateEvalBinding, projectId, toastSuccess, toastError],
+  );
 
   const handleRemoveDimension = useCallback(
     binding => {
@@ -245,6 +288,7 @@ export const useEvalDimensionActions = ({
     showBuildDimensionWithAi,
     dimensionToRemove,
     dimensionToEdit,
+    bindingToEdit,
     pendingDimensions,
     handleManageDimensions,
     handleSelectDimensionFromLibrary,

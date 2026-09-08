@@ -15,7 +15,7 @@ const CARD_CONFIG = {
 };
 
 const ResultsSummaryCards = memo(props => {
-  const { totalScore, cases, metAllTargets, missed, errors, hasPendingHuman = false } = props;
+  const { totalScore, cases, metAllTargets, missed, errors, pendingHuman = 0 } = props;
 
   const cards = useMemo(
     () => [
@@ -61,12 +61,14 @@ const ResultsSummaryCards = memo(props => {
           </Box>
         );
       })}
-      {hasPendingHuman && (
+      {pendingHuman > 0 && (
         <Typography
           variant="bodySmall"
           sx={styles.pendingNote}
+          data-testid="evaluation-summary-pending-human"
         >
-          * Some human dimensions are pending scores
+          Awaiting human evaluation — {pendingHuman} {pendingHuman === 1 ? 'result' : 'results'} still need a
+          score. Totals update as each one is saved.
         </Typography>
       )}
     </Box>

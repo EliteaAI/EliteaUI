@@ -199,6 +199,7 @@ export const useEvalRunActions = ({
   }, [deleteEvalRun, projectId, runToClear?.id, activeRunId, toastError, toastSuccess, refetchRuns]);
 
   return {
+    applicationId,
     activeRun: activeRunData,
     displayRun,
     lastRun,

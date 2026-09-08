@@ -6,12 +6,13 @@ import { Box, Collapse, SvgIcon, Tooltip, Typography } from '@mui/material';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import ViewFileIcon from '@/assets/icons/ViewFileIcon.svg?react';
+import OpenEyeIcon from '@/components/Icons/OpenEyeIcon';
 
 import { formatScore } from '../../lib/helpers';
 import DimensionResultCard from './DimensionResultCard';
 
 const CaseResultItem = memo(props => {
-  const { card, onViewDetails, onEvaluate } = props;
+  const { card, canEvaluate = false, onViewDetails, onEvaluate } = props;
 
   const [expanded, setExpanded] = useState(false);
 
@@ -27,6 +28,14 @@ const CaseResultItem = memo(props => {
     [card, onViewDetails],
   );
 
+  const handleEvaluate = useCallback(
+    cell => {
+      onEvaluate?.(cell, card);
+    },
+    [onEvaluate, card],
+  );
+
+  const pendingCount = card.pendingCount ?? 0;
   const styles = caseResultItemStyles();
 
   return (
@@ -49,6 +58,20 @@ const CaseResultItem = memo(props => {
             >
               Case #{card.id}
             </Typography>
+            {pendingCount > 0 && (
+              <Box
+                sx={styles.pendingBadge}
+                data-testid={`case-pending-badge-${card.id}`}
+              >
+                <OpenEyeIcon sx={styles.pendingBadgeIcon} />
+                <Typography
+                  variant="labelMedium"
+                  sx={styles.pendingBadgeText}
+                >
+                  Evaluation required: {pendingCount}
+                </Typography>
+              </Box>
+            )}
           </Box>
           <Typography
             variant="bodyMedium"
@@ -67,7 +90,8 @@ const CaseResultItem = memo(props => {
               <DimensionResultCard
                 key={cell.binding.key}
                 cell={cell}
-                onEvaluate={onEvaluate}
+                canEvaluate={canEvaluate}
+                onEvaluate={handleEvaluate}
               />
             ))}
           </Box>
@@ -150,6 +174,27 @@ const caseResultItemStyles = () => ({
   caseLabel: ({ palette }) => ({
     color: palette.text.secondary,
     fontWeight: 500,
+    flexShrink: 0,
+  }),
+  pendingBadge: ({ palette }) => ({
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.25rem',
+    padding: '0 0.5rem',
+    borderRadius: '1rem',
+    border: `0.0625rem solid ${palette.border.chatContinue}`,
+  }),
+  pendingBadgeIcon: ({ palette }) => ({
+    fontSize: '1rem',
+    color: palette.text.button.showMore,
+    '& path': {
+      fill: palette.text.button.showMore,
+    },
+  }),
+  pendingBadgeText: ({ palette }) => ({
+    color: palette.text.button.showMore,
+    fontWeight: 500,
+    whiteSpace: 'nowrap',
   }),
   caseScore: ({ palette }) => ({
     color: palette.text.secondary,

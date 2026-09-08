@@ -4,5 +4,7 @@ export { default as CaseDetailsModal } from './CaseDetailsModal';
 export { default as CaseResultItem } from './CaseResultItem';
 export { default as CaseResultsList } from './CaseResultsList';
 export { default as DimensionResultCard } from './DimensionResultCard';
+export { default as HumanEvaluationModal } from './HumanEvaluationModal';
+export { default as HumanScoreControl } from './HumanScoreControl';
 export { default as ResultsDimensionTable } from './ResultsDimensionTable';
 export { default as ResultsSummaryCards } from './ResultsSummaryCards';

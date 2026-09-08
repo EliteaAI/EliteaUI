@@ -1,6 +1,7 @@
 import {
   EVAL_ENGINE,
   EVAL_POLARITY,
+  EVAL_SCALE_TYPE,
   EVAL_TIER,
   IMPORTANCE,
   IMPORTANCE_WEIGHT_MAP,
@@ -44,6 +45,11 @@ export const getDefaultDimensionFormState = () => ({
   validationCode: '',
   evaluationTarget: { ...NEW_ITEM_EVIDENCE_SCOPE },
   scaleTypePreset: SCALE_TYPE_PRESET.score,
+  // Set when the loaded record carried a scale the presets cannot express, so saving preserves it
+  // instead of flattening an ordinal scale into a continuous one.
+  customScaleType: null,
+  // A record that carried no scale at all must not be saved back with the default preset's scale.
+  hasKnownScale: true,
   customMin: '',
   customMax: '',
   polarity: EVAL_POLARITY.higher_better,
@@ -53,7 +59,50 @@ export const getDefaultDimensionFormState = () => ({
   customImportanceValue: '',
 });
 
-export const mapDimensionToFormState = dimension => {
+const toScaleBound = value => {
+  if (value == null || value === '') return null;
+  const num = Number(value);
+  return Number.isFinite(num) ? num : null;
+};
+
+/**
+ * Picks the scale preset for a stored dimension. `scale_type` is authoritative — the bounds only
+ * choose between presets that share a type — because classifying on the bounds alone sent every
+ * scale it did not recognise (an ordinal that is not exactly 1..5, or a record whose bounds were
+ * not loaded) to the default Score preset, which then overwrote the real scale on save.
+ */
+const resolveScalePresetFields = dimension => {
+  const scaleType = dimension.scale_type ?? null;
+  const min = toScaleBound(dimension.scale_min);
+  const max = toScaleBound(dimension.scale_max);
+
+  // The Pass/Fail preset supplies its own bounds, so it is the one type that needs nothing else.
+  if (scaleType === EVAL_SCALE_TYPE.binary) {
+    return { scaleTypePreset: SCALE_TYPE_PRESET.passFail };
+  }
+
+  // Nothing dependable to classify from. Flagging the scale unknown keeps the save from writing the
+  // default preset over the stored one, and a Custom preset with empty bounds would fail validation
+  // and leave the dimension un-saveable.
+  if (min == null || max == null) return { hasKnownScale: false };
+
+  const asCustom = () => ({
+    scaleTypePreset: SCALE_TYPE_PRESET.custom,
+    customScaleType: scaleType,
+    customMin: String(min),
+    customMax: String(max),
+  });
+
+  if (scaleType === EVAL_SCALE_TYPE.ordinal) {
+    return min === 1 && max === 5 ? { scaleTypePreset: SCALE_TYPE_PRESET.rating } : asCustom();
+  }
+  if ((min === 0 || min === 1) && max === 100) return { scaleTypePreset: SCALE_TYPE_PRESET.score };
+  return asCustom();
+};
+
+// The evaluation target lives on the binding, not the dimension, so editing an attached dimension
+// has to be handed the binding to show the scope the suite actually runs with.
+export const mapDimensionToFormState = (dimension, binding = null) => {
   if (!dimension) return getDefaultDimensionFormState();
 
   const form = getDefaultDimensionFormState();
@@ -73,19 +122,7 @@ export const mapDimensionToFormState = dimension => {
     form.validationCode = dimension.code || '';
   }
 
-  if (dimension.scale_type === 'binary') {
-    form.scaleTypePreset = SCALE_TYPE_PRESET.passFail;
-  } else if (dimension.scale_min === 1 && dimension.scale_max === 5) {
-    form.scaleTypePreset = SCALE_TYPE_PRESET.rating;
-  } else if (dimension.scale_min === 1 && dimension.scale_max === 100) {
-    form.scaleTypePreset = SCALE_TYPE_PRESET.score;
-  } else if (dimension.scale_min === 0 && dimension.scale_max === 100) {
-    form.scaleTypePreset = SCALE_TYPE_PRESET.score;
-  } else if (dimension.scale_min != null && dimension.scale_max != null) {
-    form.scaleTypePreset = SCALE_TYPE_PRESET.custom;
-    form.customMin = String(dimension.scale_min);
-    form.customMax = String(dimension.scale_max);
-  }
+  Object.assign(form, resolveScalePresetFields(dimension));
 
   if (dimension.polarity) {
     form.polarity = dimension.polarity;
@@ -109,7 +146,9 @@ export const mapDimensionToFormState = dimension => {
     }
   }
 
-  form.evaluationTarget = { ...NEW_ITEM_EVIDENCE_SCOPE };
+  form.evaluationTarget = binding?.evidence_scope
+    ? { ...NEW_ITEM_EVIDENCE_SCOPE, ...binding.evidence_scope }
+    : { ...NEW_ITEM_EVIDENCE_SCOPE };
 
   return form;
 };
@@ -130,15 +169,19 @@ export const buildDimensionApiBody = (form, applicationId) => {
 
   const hasTarget = !isPassFail && form.targetValue !== '';
 
+  // A custom scale keeps the type it was stored with — the preset only models its bounds, so
+  // reusing the preset's type would turn an ordinal scale into a continuous one.
+  const scaleType = isCustomScale ? (form.customScaleType ?? presetConfig.scaleType) : presetConfig.scaleType;
+
   return {
     name: form.name.trim(),
     description: isAI ? form.evaluationInstructions.trim() : form.evaluationGuidance?.trim() || null,
     tier: form.isShared ? EVAL_TIER.project : EVAL_TIER.agent_adhoc,
     agent_id: form.isShared ? null : applicationId,
     allowed_engines: [form.evaluator],
-    scale_type: presetConfig.scaleType,
-    scale_min: scaleMin,
-    scale_max: scaleMax,
+    ...(form.hasKnownScale === false
+      ? {}
+      : { scale_type: scaleType, scale_min: scaleMin, scale_max: scaleMax }),
     polarity: isPassFail ? EVAL_POLARITY.higher_better : form.polarity,
     default_weight: weight,
     default_target: hasTarget ? Number(form.targetValue) : null,

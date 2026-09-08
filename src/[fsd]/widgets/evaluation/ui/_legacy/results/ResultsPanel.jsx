@@ -8,21 +8,35 @@ import ClockIcon from '@/assets/clock_icon.svg?react';
 import DownloadIcon from '@/assets/download.svg?react';
 import MonitoringIcon from '@/assets/monitoring.svg?react';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
+import useCheckPermission from '@/hooks/useCheckPermission';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
-import { useEvalRunResultsQuery } from '../../../api';
+import {
+  useEvalDimensionsQuery,
+  useEvalRunResultsQuery,
+  usePlatformDimensionCatalogQuery,
+} from '../../../api';
+import { EVAL_PERMISSIONS } from '../../../lib/constants';
 import { buildScorecard, isRunTerminal } from '../../../lib/helpers';
 import CaseDetailsModal from '../../results/CaseDetailsModal';
 import CaseResultsList from '../../results/CaseResultsList';
+import HumanEvaluationModal from '../../results/HumanEvaluationModal';
 import ResultsDimensionTable from '../../results/ResultsDimensionTable';
 import ResultsSummaryCards from '../../results/ResultsSummaryCards';
 import EvaluationProgress from '../../suite/EvaluationProgress';
 
+// A fresh `[]` default would be a new reference on every render while a query is skipped or
+// errored, which would defeat the memo below and rebuild the whole scorecard each time.
+const EMPTY_DIMENSIONS = [];
+
 const ResultsPanel = memo(props => {
   const { runActions = {} } = props;
   const projectId = useSelectedProjectId();
+  const { checkPermission } = useCheckPermission();
+  const canEvaluate = checkPermission(EVAL_PERMISSIONS.humanScoreCreate);
 
   const {
+    applicationId,
     activeRun,
     displayRun,
     runActive,
@@ -32,6 +46,10 @@ const ResultsPanel = memo(props => {
     handleClearResults: onClearResults,
     handleExportResults: onExportResults,
   } = runActions;
+
+  // The target outlives `open` so the dialog's content does not blank while it animates out.
+  const [humanEvaluationOpen, setHumanEvaluationOpen] = useState(false);
+  const [humanEvaluationTarget, setHumanEvaluationTarget] = useState(null);
 
   // Progress from active run (for in-progress state)
   const done = activeRun?.progress?.done ?? 0;
@@ -48,6 +66,21 @@ const ResultsPanel = memo(props => {
     { skip: !projectId || !runId },
   );
 
+  // The run snapshot is the point-in-time record, but it does not key every binding's dimension —
+  // these fill the gaps so a rating or pass/fail scale still reaches the score control.
+  const { data: agentProjectDimensions = EMPTY_DIMENSIONS } = useEvalDimensionsQuery(
+    { projectId, agentId: applicationId, includePlatform: false },
+    { skip: !projectId || !runId },
+  );
+  const { data: platformDimensions = EMPTY_DIMENSIONS } = usePlatformDimensionCatalogQuery(
+    { projectId },
+    { skip: !projectId || !runId },
+  );
+  const dimensions = useMemo(
+    () => [...agentProjectDimensions, ...platformDimensions],
+    [agentProjectDimensions, platformDimensions],
+  );
+
   const scorecard = useMemo(
     () =>
       resultsData
@@ -56,11 +89,14 @@ const ResultsPanel = memo(props => {
             results: resultsData.results,
             humanScores: resultsData.human_scores,
             headlineScore: resultsData.headline_score,
+            dimensions,
           })
         : null,
-    [resultsData],
+    [resultsData, dimensions],
   );
 
+  // Totals stay on the server's aggregate; the pending count comes from the scorecard so it clears
+  // as soon as the last human score is saved, without waiting for the re-aggregated run.
   const summaryData = useMemo(() => {
     if (!hasResults || !displayRun) return null;
     const progress = displayRun.progress ?? {};
@@ -70,9 +106,9 @@ const ResultsPanel = memo(props => {
       metAllTargets: progress.met_all ?? 0,
       missed: progress.missed ?? 0,
       errors: progress.errors ?? 0,
-      hasPendingHuman: (progress.pending_human ?? 0) > 0,
+      pendingHuman: scorecard?.pendingHuman ?? progress.pending_human ?? 0,
     };
-  }, [hasResults, displayRun]);
+  }, [hasResults, displayRun, scorecard]);
 
   // Case details modal state
   const [caseDetailsOpen, setCaseDetailsOpen] = useState(false);
@@ -87,8 +123,13 @@ const ResultsPanel = memo(props => {
     setCaseDetailsOpen(false);
   }, []);
 
-  const handleEvaluateDimension = useCallback(() => {
-    // TODO: wire up human evaluation workflow
+  const handleEvaluateDimension = useCallback((cell, card) => {
+    setHumanEvaluationTarget({ cell, card });
+    setHumanEvaluationOpen(true);
+  }, []);
+
+  const handleCloseHumanEvaluation = useCallback(() => {
+    setHumanEvaluationOpen(false);
   }, []);
 
   const styles = resultsPanelStyles();
@@ -187,11 +228,12 @@ const ResultsPanel = memo(props => {
               metAllTargets={summaryData.metAllTargets}
               missed={summaryData.missed}
               errors={summaryData.errors}
-              hasPendingHuman={summaryData.hasPendingHuman}
+              pendingHuman={summaryData.pendingHuman}
             />
             <ResultsDimensionTable bindings={scorecard.bindings ?? []} />
             <CaseResultsList
               cases={scorecard.cases}
+              canEvaluate={canEvaluate}
               onViewDetails={handleViewCaseDetails}
               onEvaluate={handleEvaluateDimension}
             />
@@ -223,6 +265,15 @@ const ResultsPanel = memo(props => {
         open={caseDetailsOpen}
         caseData={selectedCaseData}
         onClose={handleCloseCaseDetails}
+      />
+
+      <HumanEvaluationModal
+        open={humanEvaluationOpen}
+        projectId={projectId}
+        runId={runId}
+        cell={humanEvaluationTarget?.cell}
+        caseData={humanEvaluationTarget?.card}
+        onClose={handleCloseHumanEvaluation}
       />
     </Box>
   );
