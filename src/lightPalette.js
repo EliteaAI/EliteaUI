@@ -94,11 +94,7 @@ const oldLightPalette = {
   mode: 'light',
 
   background: {
-    pageSection: white01,
     section: grey003,
-    modal: {
-      simple: white,
-    },
     dragging: blue12,
     userInputBorderLight: purpleLight,
     userInputBorderDark: purpleDark,

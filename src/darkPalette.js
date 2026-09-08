@@ -96,11 +96,7 @@ const oldDarkPalette = {
   mode: 'dark',
 
   background: {
-    pageSection: gray60,
     section: white3,
-    modal: {
-      simple: gray50,
-    },
     dragging: blue10,
     userInputBackground: white5,
     userInputBorderLight: greenLight,
