@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 
 import { useLocation, useNavigate } from 'react-router-dom';
 
+import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import useNavBlocker from '@/hooks/useNavBlocker';
 import useToast from '@/hooks/useToast';
 import RouteDefinitions from '@/routes';
@@ -43,20 +44,22 @@ export const useEvalSuiteActions = ({
     agentId,
   );
 
+  const persistentSearch = NavigationHelpers.pickPersistentSearch(search);
+
   const handleNewSuite = useCallback(() => {
-    navigate({ pathname: `${baseEvaluatePath}/new`, search });
-  }, [navigate, baseEvaluatePath, search]);
+    navigate({ pathname: `${baseEvaluatePath}/new`, search: persistentSearch });
+  }, [navigate, baseEvaluatePath, persistentSearch]);
 
   const handleSelectSuite = useCallback(
     suite => {
-      navigate({ pathname: `${baseEvaluatePath}/${suite.id}`, search });
+      navigate({ pathname: `${baseEvaluatePath}/${suite.id}`, search: persistentSearch });
     },
-    [navigate, baseEvaluatePath, search],
+    [navigate, baseEvaluatePath, persistentSearch],
   );
 
   const handleBack = useCallback(() => {
-    navigate({ pathname: baseEvaluatePath, search });
-  }, [navigate, baseEvaluatePath, search]);
+    navigate({ pathname: baseEvaluatePath, search: persistentSearch });
+  }, [navigate, baseEvaluatePath, persistentSearch]);
 
   const handleDirtyChange = useCallback(dirty => {
     setIsDirty(dirty);
@@ -80,7 +83,10 @@ export const useEvalSuiteActions = ({
           }
           setBlockNav(false);
           toastSuccess(`The "${formData.name}" suite has been successfully created.`);
-          navigate({ pathname: `${baseEvaluatePath}/${created.id}`, search }, { replace: true });
+          navigate(
+            { pathname: `${baseEvaluatePath}/${created.id}`, search: persistentSearch },
+            { replace: true },
+          );
         } else if (editingSuiteId != null) {
           await updateEvalSuite({
             projectId,
@@ -109,7 +115,7 @@ export const useEvalSuiteActions = ({
       applicationId,
       baseEvaluatePath,
       navigate,
-      search,
+      persistentSearch,
       setBlockNav,
       toastSuccess,
       toastError,
@@ -134,7 +140,7 @@ export const useEvalSuiteActions = ({
       toastSuccess(`The "${suiteName}" suite has been successfully deleted.`);
       if (editingSuiteId === deletedId) {
         setBlockNav(false);
-        navigate({ pathname: baseEvaluatePath, search }, { replace: true });
+        navigate({ pathname: baseEvaluatePath, search: persistentSearch }, { replace: true });
       }
     } catch (error) {
       toastError(parseEvalError(error, 'Failed to delete the suite.'));
@@ -147,7 +153,7 @@ export const useEvalSuiteActions = ({
     editingSuiteId,
     baseEvaluatePath,
     navigate,
-    search,
+    persistentSearch,
     setBlockNav,
     toastError,
     toastSuccess,

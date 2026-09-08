@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { useLocation, useNavigate } from 'react-router-dom';
 
+import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import useToast from '@/hooks/useToast';
 import RouteDefinitions from '@/routes';
 
@@ -23,6 +24,7 @@ export const useEvalDimensionActions = ({
 }) => {
   const navigate = useNavigate();
   const { search } = useLocation();
+  const persistentSearch = NavigationHelpers.pickPersistentSearch(search);
   const { toastError, toastSuccess } = useToast();
 
   const [addEvalBinding] = useAddEvalBindingMutation();
@@ -50,8 +52,8 @@ export const useEvalDimensionActions = ({
       ':agentId',
       agentId,
     );
-    navigate({ pathname: dimensionsPath, search });
-  }, [navigate, tab, agentId, search]);
+    navigate({ pathname: dimensionsPath, search: persistentSearch });
+  }, [navigate, tab, agentId, persistentSearch]);
 
   const handleSelectDimensionFromLibrary = useCallback(() => {
     setShowDimensionLibrary(true);
