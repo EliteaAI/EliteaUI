@@ -109,7 +109,7 @@ const pipelineSlice = createSlice({
       state.yamlJsonObject = structuredClone(yamlJsonObject || {});
       state.yamlCode = yamlCode;
       state.layout_version = layout_version;
-      state.resetFlag = true;
+      state.resetFlag = false;
       state.stateValidationErrors = {};
       state.initState = structuredClone(initState);
     },

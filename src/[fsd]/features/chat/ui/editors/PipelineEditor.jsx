@@ -11,7 +11,7 @@ import {
 
 import { useFormikContext } from 'formik';
 import YAML from 'js-yaml';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch, useStore } from 'react-redux';
 
 import { Box, Tab, Tabs } from '@mui/material';
 
@@ -137,6 +137,7 @@ const PipelineEditor = forwardRef(
     const trackEvent = useTrackEvent();
 
     const dispatch = useDispatch();
+    const store = useStore();
     const editorPanelRef = useRef();
     // Tracks the last instructions string used to initialize Redux pipeline state.
     // Prevents re-initialization when versionDetails refetches due to toolkit
@@ -148,10 +149,16 @@ const PipelineEditor = forwardRef(
     // Per-instance baseline initState — updated only by THIS tab's versionDetails effect
     // so it is never contaminated by another tab writing to the shared Redux slice.
     const ownInitStateRef = useRef(null);
-    const pipelineReduxState = useSelector(state => state.pipeline);
-    // pipelineEditor holds the live ReactFlow nodes/edges (updated on every drag/add).
-    // state.pipeline.nodes/edges are only set on initThePipeline and are stale.
-    const pipelineEditorState = useSelector(state => state.pipelineEditor);
+    // Shadow of Redux pipeline + editor state, updated only while this tab is visible.
+    // Frozen on hide so that other tabs' Redux writes (e.g. their initThePipeline calls)
+    // cannot contaminate the snapshot saved at that moment.
+    const latestPipelineStateRef = useRef({
+      yamlCode: '',
+      yamlJsonObject: {},
+      layout_version: '',
+      nodes: [],
+      edges: [],
+    });
     const { checkPermission } = useCheckPermission();
     const hasEditPermission = useMemo(() => {
       return checkPermission(PERMISSIONS.applications.update);
@@ -159,6 +166,31 @@ const PipelineEditor = forwardRef(
     // State for dirty tracking
     const [isDirty, setIsDirty] = useState(false);
     const [isYamlDirty, setIsYamlDirty] = useState(false);
+    const isDirtyRef = useRef(false);
+    useEffect(() => {
+      isDirtyRef.current = isDirty;
+    }, [isDirty]);
+
+    // While this tab is visible, mirror the Redux state we care about into a ref.
+    // The subscription unsubscribes when isVisible becomes false (cleanup runs before
+    // the next effect), so the ref is frozen at this tab's last-known values before
+    // another tab's initThePipeline can overwrite the shared Redux slice.
+    useEffect(() => {
+      if (!isVisible) return;
+      const syncRef = () => {
+        const { pipeline: p, pipelineEditor: pe } = store.getState();
+        latestPipelineStateRef.current = {
+          yamlCode: p.yamlCode,
+          yamlJsonObject: p.yamlJsonObject,
+          layout_version: p.layout_version,
+          nodes: pe.nodes,
+          edges: pe.edges,
+        };
+      };
+      syncRef();
+      const unsubscribe = store.subscribe(syncRef);
+      return unsubscribe;
+    }, [isVisible, store]);
     // Always start with Configuration tab (0) - reset when pipeline or mode changes
     const [activeTab, setActiveTab] = useState(0);
     const isPublic = pipeline?.entity_meta?.project_id === PUBLIC_PROJECT_ID;
@@ -240,42 +272,33 @@ const PipelineEditor = forwardRef(
     useEffect(() => {
       if (isVisible) {
         if (savedPipelineStateRef.current !== null) {
-          dispatch(actions.restorePipelineSnapshot(savedPipelineStateRef.current));
+          const snapshot = savedPipelineStateRef.current;
+          savedPipelineStateRef.current = null;
+          dispatch(actions.restorePipelineSnapshot(snapshot));
           dispatch(editorActions.resetPipelineEditor());
-          const restoredIsDirty = savedPipelineStateRef.current.isDirty;
-          setIsDirty(restoredIsDirty);
-          // Keep the ref populated until after all same-render effects have run so
-          // the versionDetails effect (declared later) can see it and skip overwriting.
-          // Cleared via microtask once the current flush is done.
-          Promise.resolve().then(() => {
-            savedPipelineStateRef.current = null;
-          });
+          setIsDirty(snapshot.isDirty);
         }
       } else {
-        // Use pipelineEditor nodes/edges — they are the live ReactFlow state updated
-        // on every node add/move. state.pipeline.nodes/edges are only set on init and
-        // are stale (miss any nodes added after the last initThePipeline call).
-        const liveNodes = pipelineEditorState.nodes?.length
-          ? pipelineEditorState.nodes
-          : pipelineReduxState.nodes;
-        const liveEdges = pipelineEditorState.edges?.length
-          ? pipelineEditorState.edges
-          : pipelineReduxState.edges;
-        savedPipelineStateRef.current = structuredClone({
-          nodes: liveNodes,
-          edges: liveEdges,
-          yamlJsonObject: pipelineReduxState.yamlJsonObject,
-          yamlCode: pipelineReduxState.yamlCode,
-          layout_version: pipelineReduxState.layout_version,
+        // latestPipelineStateRef is frozen at this tab's last-known values:
+        // the subscription (above) unsubscribes on visibility change cleanup,
+        // so any other tab's initThePipeline call that runs in the same batch
+        // cannot overwrite the values we capture here.
+        const { yamlCode, yamlJsonObject, layout_version, nodes, edges } = latestPipelineStateRef.current;
+        // Shallow-copy nodes/edges — ReactFlow node data may contain non-serializable
+        // values (functions, DOM refs); structuredClone would throw on those.
+        // Only deep-clone plain serializable objects: yamlJsonObject and initState.
+        savedPipelineStateRef.current = {
+          nodes: [...nodes],
+          edges: [...edges],
+          yamlJsonObject: structuredClone(yamlJsonObject),
+          yamlCode,
+          layout_version,
           // Use the per-instance baseline — never sourced from the shared Redux slice
           // which may already hold another tab's initState at snapshot time.
-          initState: ownInitStateRef.current,
-          isDirty,
-        });
+          initState: structuredClone(ownInitStateRef.current),
+          isDirty: isDirtyRef.current,
+        };
       }
-      // pipelineReduxState, pipelineEditorState, and isDirty are intentionally excluded
-      // — we only want to snapshot on visibility change, not on every state update.
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isVisible, dispatch]);
 
     // Clear Redux pipeline state on unmount so stale YAML cannot corrupt a
@@ -436,12 +459,6 @@ const PipelineEditor = forwardRef(
     // Triggers on initial load and after save when RTK Query cache updates
     useEffect(() => {
       if (isCreateMode || !versionDetails) {
-        return;
-      }
-
-      // A snapshot restore just ran in the visibility effect (same render flush).
-      // Skip overwriting the restored Redux state; the ref is cleared by microtask.
-      if (savedPipelineStateRef.current !== null) {
         return;
       }
 
