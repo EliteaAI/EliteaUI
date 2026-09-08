@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import useNavBlocker from '@/hooks/useNavBlocker';
 import useToast from '@/hooks/useToast';
@@ -23,6 +23,7 @@ export const useEvalSuiteActions = ({
   afterCreateRef,
 }) => {
   const navigate = useNavigate();
+  const { search } = useLocation();
   const { toastError, toastSuccess } = useToast();
 
   const isDetailView = isCreatingNew || editingSuiteId !== null;
@@ -43,19 +44,19 @@ export const useEvalSuiteActions = ({
   );
 
   const handleNewSuite = useCallback(() => {
-    navigate(`${baseEvaluatePath}/new`);
-  }, [navigate, baseEvaluatePath]);
+    navigate({ pathname: `${baseEvaluatePath}/new`, search });
+  }, [navigate, baseEvaluatePath, search]);
 
   const handleSelectSuite = useCallback(
     suite => {
-      navigate(`${baseEvaluatePath}/${suite.id}`);
+      navigate({ pathname: `${baseEvaluatePath}/${suite.id}`, search });
     },
-    [navigate, baseEvaluatePath],
+    [navigate, baseEvaluatePath, search],
   );
 
   const handleBack = useCallback(() => {
-    navigate(baseEvaluatePath);
-  }, [navigate, baseEvaluatePath]);
+    navigate({ pathname: baseEvaluatePath, search });
+  }, [navigate, baseEvaluatePath, search]);
 
   const handleDirtyChange = useCallback(dirty => {
     setIsDirty(dirty);
@@ -79,7 +80,7 @@ export const useEvalSuiteActions = ({
           }
           setBlockNav(false);
           toastSuccess(`The "${formData.name}" suite has been successfully created.`);
-          navigate(`${baseEvaluatePath}/${created.id}`, { replace: true });
+          navigate({ pathname: `${baseEvaluatePath}/${created.id}`, search }, { replace: true });
         } else if (editingSuiteId != null) {
           await updateEvalSuite({
             projectId,
@@ -108,6 +109,7 @@ export const useEvalSuiteActions = ({
       applicationId,
       baseEvaluatePath,
       navigate,
+      search,
       setBlockNav,
       toastSuccess,
       toastError,
@@ -132,7 +134,7 @@ export const useEvalSuiteActions = ({
       toastSuccess(`The "${suiteName}" suite has been successfully deleted.`);
       if (editingSuiteId === deletedId) {
         setBlockNav(false);
-        navigate(baseEvaluatePath, { replace: true });
+        navigate({ pathname: baseEvaluatePath, search }, { replace: true });
       }
     } catch (error) {
       toastError(parseEvalError(error, 'Failed to delete the suite.'));
@@ -145,6 +147,7 @@ export const useEvalSuiteActions = ({
     editingSuiteId,
     baseEvaluatePath,
     navigate,
+    search,
     setBlockNav,
     toastError,
     toastSuccess,
