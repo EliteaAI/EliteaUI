@@ -9,7 +9,9 @@ import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { PERMISSIONS } from '@/common/constants';
 import PlusIcon from '@/components/Icons/PlusIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
+import useToast from '@/hooks/useToast';
 
+import { isFolderWritable } from '../lib/helpers';
 import { useEntityFolders, usePinFolder } from '../lib/hooks';
 import CreateFolderDialog from './CreateFolderDialog';
 import DeleteFolderDialog from './DeleteFolderDialog';
@@ -31,12 +33,19 @@ const FolderSection = memo(props => {
 
   const { isTeam } = useProjectType();
   const { checkPermission } = useCheckPermission();
+  const canCreateFolder = checkPermission(PERMISSIONS.chat.folders.create);
   const canManagePermissions = isTeam && checkPermission(PERMISSIONS.chat.folders.managePermissions);
+  const hasFolderWritePermission = checkPermission(PERMISSIONS.chat.folders.update);
+  const canWriteFolder = useCallback(
+    folder => hasFolderWritePermission && isFolderWritable(folder),
+    [hasFolderWritePermission],
+  );
 
   const styles = folderSectionStyles();
 
   const { folders, isLoading, isError } = useEntityFolders(entityType, { includeCounts: true });
   const { togglePin } = usePinFolder(entityType);
+  const { toastError } = useToast();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editFolder, setEditFolder] = useState(null);
   const [deleteFolder, setDeleteFolder] = useState(null);
@@ -84,12 +93,16 @@ const FolderSection = memo(props => {
     setMenuFolder(null);
   }, []);
 
-  const handlePin = useCallback(() => {
-    if (menuFolder) {
-      togglePin(menuFolder);
-    }
+  const handlePin = useCallback(async () => {
+    const folder = menuFolder;
     handleMenuClose();
-  }, [menuFolder, togglePin, handleMenuClose]);
+    if (!folder) return;
+    try {
+      await togglePin(folder);
+    } catch {
+      toastError('Failed to update folder');
+    }
+  }, [menuFolder, togglePin, handleMenuClose, toastError]);
 
   const handleEdit = useCallback(() => {
     setEditFolder(menuFolder);
@@ -136,17 +149,19 @@ const FolderSection = memo(props => {
         >
           {title}
         </Typography>
-        <StyledTooltip
-          title="Create folder"
-          placement="top"
-        >
-          <Button.BaseBtn
-            variant={BUTTON_VARIANTS.tertiary}
-            startIcon={<PlusIcon />}
-            onClick={handleOpenCreateDialog}
-            data-testid="folders-panel-create-btn"
-          />
-        </StyledTooltip>
+        {canCreateFolder && (
+          <StyledTooltip
+            title="Create folder"
+            placement="top"
+          >
+            <Button.BaseBtn
+              variant={BUTTON_VARIANTS.tertiary}
+              startIcon={<PlusIcon />}
+              onClick={handleOpenCreateDialog}
+              data-testid="folders-panel-create-btn"
+            />
+          </StyledTooltip>
+        )}
       </Box>
 
       <Box sx={styles.folderList}>
@@ -170,6 +185,7 @@ const FolderSection = memo(props => {
                 isSelected={selectedFolderId === folder.id}
                 onClick={handleFolderClick}
                 onMenuClick={handleMenuOpen}
+                showActionsMenu={canWriteFolder(folder) || canManagePermissions}
               />
             ))}
           </Box>
@@ -197,6 +213,7 @@ const FolderSection = memo(props => {
         onDelete={handleDelete}
         onPermission={handlePermission}
         canManagePermissions={canManagePermissions}
+        canWrite={canWriteFolder(menuFolder)}
       />
 
       <CreateFolderDialog

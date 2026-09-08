@@ -9,7 +9,7 @@ import PinIconFilled from '@/assets/pin-filled-icon.svg?react';
 import FolderIcon from '@/components/Icons/FolderIcon';
 
 const FolderItem = memo(props => {
-  const { folder, isSelected, onClick, onMenuClick } = props;
+  const { folder, isSelected, onClick, onMenuClick, showActionsMenu = true } = props;
 
   const isPinned = !!folder.meta?.is_pinned;
   const styles = folderItemStyles(isSelected);
@@ -55,13 +55,15 @@ const FolderItem = memo(props => {
           />
         )}
       </Box>
-      <Button.BaseBtn
-        variant={BUTTON_VARIANTS.tertiary}
-        className="folder-more-btn"
-        startIcon={<MoreVertIcon />}
-        onClick={handleMenuClick}
-        sx={styles.moreButton}
-      />
+      {showActionsMenu && (
+        <Button.BaseBtn
+          variant={BUTTON_VARIANTS.tertiary}
+          className="folder-more-btn"
+          startIcon={<MoreVertIcon />}
+          onClick={handleMenuClick}
+          sx={styles.moreButton}
+        />
+      )}
     </Box>
   );
 });

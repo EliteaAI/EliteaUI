@@ -17,6 +17,7 @@ const FolderActionsMenu = memo(props => {
     onDelete,
     onPermission,
     canManagePermissions = false,
+    canWrite = false,
   } = props;
   const theme = useTheme();
   const isPinned = !!folder?.meta?.is_pinned;
@@ -30,36 +31,40 @@ const FolderActionsMenu = memo(props => {
       onClose={onClose}
       sx={styles.menu}
     >
-      <MenuItem
-        data-testid="folder-menu-pin"
-        onClick={onPin}
-      >
-        <PinIcon
-          sx={styles.menuIcon}
-          fill={theme.palette.icon.fill.default}
-        />
-        <Typography
-          variant="labelMedium"
-          color="text.secondary"
-        >
-          {isPinned ? 'Unpin' : 'Pin on top'}
-        </Typography>
-      </MenuItem>
-      <MenuItem
-        data-testid="folder-menu-edit"
-        onClick={onEdit}
-      >
-        <EditPenIcon
-          sx={styles.menuIcon}
-          fill={theme.palette.icon.fill.default}
-        />
-        <Typography
-          variant="labelMedium"
-          color="text.secondary"
-        >
-          Rename
-        </Typography>
-      </MenuItem>
+      {canWrite && (
+        <>
+          <MenuItem
+            data-testid="folder-menu-pin"
+            onClick={onPin}
+          >
+            <PinIcon
+              sx={styles.menuIcon}
+              fill={theme.palette.icon.fill.default}
+            />
+            <Typography
+              variant="labelMedium"
+              color="text.secondary"
+            >
+              {isPinned ? 'Unpin' : 'Pin on top'}
+            </Typography>
+          </MenuItem>
+          <MenuItem
+            data-testid="folder-menu-edit"
+            onClick={onEdit}
+          >
+            <EditPenIcon
+              sx={styles.menuIcon}
+              fill={theme.palette.icon.fill.default}
+            />
+            <Typography
+              variant="labelMedium"
+              color="text.secondary"
+            >
+              Rename
+            </Typography>
+          </MenuItem>
+        </>
+      )}
       {canManagePermissions && (
         <MenuItem onClick={onPermission}>
           <Box sx={styles.menuIcon}>
@@ -74,21 +79,23 @@ const FolderActionsMenu = memo(props => {
           </Typography>
         </MenuItem>
       )}
-      <MenuItem
-        data-testid="folder-menu-delete"
-        onClick={onDelete}
-      >
-        <DeleteIcon
-          sx={styles.menuIcon}
-          fill={theme.palette.icon.fill.default}
-        />
-        <Typography
-          variant="labelMedium"
-          color="text.secondary"
+      {canWrite && (
+        <MenuItem
+          data-testid="folder-menu-delete"
+          onClick={onDelete}
         >
-          Delete
-        </Typography>
-      </MenuItem>
+          <DeleteIcon
+            sx={styles.menuIcon}
+            fill={theme.palette.icon.fill.default}
+          />
+          <Typography
+            variant="labelMedium"
+            color="text.secondary"
+          >
+            Delete
+          </Typography>
+        </MenuItem>
+      )}
     </Menu>
   );
 });
