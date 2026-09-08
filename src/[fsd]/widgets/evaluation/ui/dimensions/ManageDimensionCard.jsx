@@ -8,7 +8,7 @@ import DeleteIcon from '@/components/Icons/DeleteIcon';
 import DotsMenuIcon from '@/components/Icons/DotsMenuIcon';
 import EditIcon from '@/components/Icons/EditIcon';
 
-import { getEngineLabel, getTargetLabel, getWeightLabel } from '../../../lib/helpers';
+import { getEngineLabel, getTargetLabel, getWeightLabel } from '../../lib/helpers';
 
 const ManageDimensionCard = memo(props => {
   const { dimension, canEdit = false, canDelete = false, onEdit, onDelete } = props;

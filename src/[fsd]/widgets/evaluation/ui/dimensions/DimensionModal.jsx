@@ -4,8 +4,8 @@ import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { Button, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 
-import { useCreateEvalDimensionMutation, useUpdateEvalDimensionMutation } from '../../../api';
-import { parseEvalError } from '../../../lib/helpers';
+import { useCreateEvalDimensionMutation, useUpdateEvalDimensionMutation } from '../../api';
+import { parseEvalError } from '../../lib/helpers';
 import DimensionForm, {
   buildDimensionApiBody,
   getDefaultFormState,

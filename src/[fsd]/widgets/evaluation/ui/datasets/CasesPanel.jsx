@@ -15,9 +15,9 @@ import useCheckPermission from '@/hooks/useCheckPermission';
 
 import { EVAL_CASE_SOURCE, EVAL_CASE_SOURCE_LABEL, EVAL_PERMISSIONS } from '../../lib/constants';
 import { isDatasetSharedIn } from '../../lib/helpers';
-import AddCaseMenu from '../suite/case-modals/AddCaseMenu';
 import CaseInputNameCell from './CaseInputNameCell';
 import CaseRowActions from './CaseRowActions';
+import AddCaseMenu from './case-modals/AddCaseMenu';
 
 const COLUMNS = [
   { field: 'input', label: 'Input', sortable: true },

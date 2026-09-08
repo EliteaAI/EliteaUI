@@ -26,36 +26,9 @@ export const EVAL_RETURN_CONTRACT = {
   number: 'number',
 };
 
-// Engines an author may toggle in the Library dimension editor. AI and Human may be
-// combined on one dimension; Code is mutually exclusive with both (backend:
-// allowed_engines == ['code'] cannot also contain ai/human, §2.1/§16.2).
-export const DIMENSION_ENGINE_OPTIONS = [
-  { value: EVAL_ENGINE.ai, label: 'AI' },
-  { value: EVAL_ENGINE.human, label: 'Human' },
-  { value: EVAL_ENGINE.code, label: 'Code' },
-];
-
-export const SCALE_TYPE_OPTIONS = [
-  { value: EVAL_SCALE_TYPE.continuous, label: 'Continuous (e.g. 0–100)' },
-  { value: EVAL_SCALE_TYPE.ordinal, label: 'Ordinal (e.g. 1–5)' },
-  { value: EVAL_SCALE_TYPE.binary, label: 'Binary (0/1)' },
-];
-
-// Tier choice offered per-item in the "Generate with AI" review step (§13.3 follow-up).
-// Platform tier is excluded — it's seeded via the admin console, not authorable here.
-export const DIMENSION_TIER_OPTIONS = [
-  { value: EVAL_TIER.agent_adhoc, label: 'This agent only' },
-  { value: EVAL_TIER.project, label: 'Project library' },
-];
-
 export const POLARITY_OPTIONS = [
   { value: EVAL_POLARITY.higher_better, label: 'Higher is better' },
   { value: EVAL_POLARITY.lower_better, label: 'Lower is better' },
-];
-
-export const RETURN_CONTRACT_OPTIONS = [
-  { value: EVAL_RETURN_CONTRACT.bool, label: 'Boolean (pass / fail)' },
-  { value: EVAL_RETURN_CONTRACT.number, label: 'Number (score)' },
 ];
 
 export const TARGET_OPERATOR_OPTIONS = [
@@ -172,14 +145,6 @@ export const EVAL_RESULT_STATUS = {
   skipped: 'skipped',
 };
 
-// Sub-navigation views on the agent Evaluation tab (§13). Suite config is the
-// default; Library preserves the U2 dimension editor.
-export const EVAL_TAB_VIEW = {
-  suite: 'suite',
-  library: 'library',
-  datasets: 'datasets',
-};
-
 // Conversation stores the promote picker can browse. Both live in the single
 // `Conversation` table and are told apart by its `source` column: chat sessions
 // are 'elitea', while run history is written as 'agent' (agent runs) or
@@ -190,25 +155,12 @@ export const PROMOTE_CONVERSATION_SOURCE = {
   runHistory: 'agent,pipeline',
 };
 
-export const PROMOTE_CONVERSATION_SOURCE_OPTIONS = [
-  { value: PROMOTE_CONVERSATION_SOURCE.chat, label: 'Chat' },
-  { value: PROMOTE_CONVERSATION_SOURCE.runHistory, label: 'Run history' },
-];
-
 // Binding "kind" derived from which reference column is populated (§13.1). One
 // of dimension_id / platform_key is always set.
 export const EVAL_BINDING_KIND = {
   dimension: 'dimension',
   platform: 'platform',
 };
-
-// Engine choices offered when editing a single binding (§13.2). Platform bindings and
-// Code-engine dimension bindings pin engine to code and are not editable here.
-export const BINDING_ENGINE_OPTIONS = [
-  { value: EVAL_ENGINE.ai, label: 'AI' },
-  { value: EVAL_ENGINE.human, label: 'Human' },
-  { value: EVAL_ENGINE.code, label: 'Code' },
-];
 
 // Evidence-scope toggles for a binding (§13.2). Keys match the backend
 // evidence_scope JSON shape { structure, input, output }. When `output` is in
@@ -235,41 +187,6 @@ export const NEW_ITEM_EVIDENCE_SCOPE = {
   output: true,
 };
 
-// Items in the "+ Add" menu on the Suite config screen (§13.3).
-export const ADD_VALIDATION_MENU = {
-  dimensionLibrary: 'dimensionLibrary',
-  platformCatalog: 'platformCatalog',
-  newDimension: 'newDimension',
-  generateWithAi: 'generateWithAi',
-};
-
-export const DEFAULT_BINDING_FORM = {
-  engine: EVAL_ENGINE.ai,
-  evidence_scope: DEFAULT_EVIDENCE_SCOPE,
-  weight: 1,
-  target: '',
-  target_operator: '',
-};
-
-export const DEFAULT_DIMENSION_FORM = {
-  name: '',
-  description: '',
-  allowed_engines: [EVAL_ENGINE.ai],
-  scale_type: EVAL_SCALE_TYPE.continuous,
-  scale_min: 0,
-  scale_max: 100,
-  // Left unset on purpose: polarity is applied last in normalization, so an inverse metric
-  // (toxicity, latency) silently scores a good answer 0 if the author never states it.
-  polarity: '',
-  default_weight: 1,
-  default_target: '',
-  default_target_operator: '',
-  // Code-engine authoring only (§2.1): a script + its return shape, required together and only
-  // when allowed_engines is exactly ['code'].
-  code: '',
-  return_contract: EVAL_RETURN_CONTRACT.bool,
-};
-
 // Dataset case provenance (§17). Set by the backend; the UI only displays it.
 export const EVAL_CASE_SOURCE = {
   manual: 'manual',
@@ -283,39 +200,10 @@ export const EVAL_CASE_SOURCE_LABEL = {
   [EVAL_CASE_SOURCE.conversation]: 'Conversation',
 };
 
-// Formats accepted by the dataset import endpoint (§17.3).
-export const IMPORT_FORMAT_OPTIONS = [
-  { value: 'csv', label: 'CSV' },
-  { value: 'json', label: 'JSON' },
-];
-
-// Items in the "+ New dataset" menu on the Datasets screen (§17.1).
-export const NEW_DATASET_MENU = {
-  blank: 'blank',
-  import: 'import',
-  fromConversations: 'fromConversations',
-};
-
 export const DEFAULT_DATASET_FORM = {
   name: '',
   description: '',
   isShared: false,
-};
-
-export const DEFAULT_CASE_FORM = {
-  input: '',
-  variables: {},
-  expected_output: '',
-};
-
-export const DEFAULT_IMPORT_FORM = {
-  format: 'csv',
-  content: '',
-};
-
-export const DEFAULT_PROMOTE_FORM = {
-  conversation_id: null,
-  include_expected: true,
 };
 
 // Socket events carrying live run progress. Backend: SioEvents in

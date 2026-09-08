@@ -8,9 +8,9 @@ import ClockIcon from '@/assets/clock_icon.svg?react';
 import DownloadIcon from '@/assets/download.svg?react';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 
-import { isRunTerminal } from '../../../lib/helpers';
-import RunResultsView from '../../results/RunResultsView';
-import EvaluationProgress from '../../suite/EvaluationProgress';
+import { isRunTerminal } from '../../lib/helpers';
+import EvaluationProgress from '../suite/EvaluationProgress';
+import RunResultsView from './RunResultsView';
 
 const ResultsPanel = memo(props => {
   const { runActions = {}, hasSuite = false } = props;

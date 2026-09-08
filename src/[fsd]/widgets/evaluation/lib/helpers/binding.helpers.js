@@ -11,38 +11,6 @@ export const getBindingKind = binding => {
   return null;
 };
 
-/** Platform bindings are catalog-defined: engine is locked to code, no delete/edit of source. */
-export const isPlatformBinding = binding => getBindingKind(binding) === EVAL_BINDING_KIND.platform;
-
-/**
- * Resolves a display label for a binding by looking up its referenced dimension.
- * Falls back to the stored platform_key or a generic label.
- */
-export const getBindingLabel = (binding, { dimensions = [] } = {}) => {
-  const kind = getBindingKind(binding);
-  if (kind === EVAL_BINDING_KIND.dimension) {
-    const found = dimensions.find(d => d.id === binding.dimension_id);
-    return found?.name || `Dimension #${binding.dimension_id}`;
-  }
-  if (kind === EVAL_BINDING_KIND.platform) {
-    return binding.platform_key || 'Platform validation';
-  }
-  return 'Validation';
-};
-
-/** Splits an ordered binding list into the two grouped sections shown in §13.1. */
-export const groupBindings = (bindings = []) => {
-  const groups = {
-    [EVAL_BINDING_KIND.dimension]: [],
-    [EVAL_BINDING_KIND.platform]: [],
-  };
-  for (const binding of bindings) {
-    const kind = getBindingKind(binding);
-    if (kind) groups[kind].push(binding);
-  }
-  return groups;
-};
-
 const WEIGHT_LABEL = {
   1: 'Low',
   2: 'Medium',

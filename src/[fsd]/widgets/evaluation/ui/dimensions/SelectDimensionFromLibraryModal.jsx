@@ -6,8 +6,8 @@ import { Button, Input, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { BaseTab, BaseTabs } from '@/[fsd]/shared/ui/tabs';
 
-import { useEvalDimensionsQuery, usePlatformDimensionCatalogQuery } from '../../../api';
-import { EVAL_TIER } from '../../../lib/constants';
+import { useEvalDimensionsQuery, usePlatformDimensionCatalogQuery } from '../../api';
+import { EVAL_TIER } from '../../lib/constants';
 import DimensionItem from './DimensionItem';
 
 const DIMENSION_TABS = {
