@@ -1,3 +1,4 @@
+import { SearchParams } from '@/common/constants';
 import RouteDefinitions, { getBasename } from '@/routes';
 
 /**
@@ -64,4 +65,22 @@ export const stripProjectSegment = (pathname, projectId) => {
       ? withoutBasename.slice(segment.length)
       : withoutBasename;
   return `${basename}${rest || '/'}`;
+};
+
+const PERSISTENT_SEARCH_PARAMS = [SearchParams.ViewMode, SearchParams.Name];
+
+/**
+ * Extract only the search params that should survive navigation between sub-routes
+ * (viewMode, name). Page-local params (datasetId, etc.) are intentionally dropped.
+ * @param {string} search - The current location.search string
+ * @returns {string} A search string containing only persistent params
+ */
+export const pickPersistentSearch = search => {
+  const source = new URLSearchParams(search);
+  const result = new URLSearchParams();
+  for (const key of PERSISTENT_SEARCH_PARAMS) {
+    const value = source.get(key);
+    if (value !== null) result.set(key, value);
+  }
+  return result.toString();
 };

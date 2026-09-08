@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
+import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import useToast from '@/hooks/useToast';
 import RouteDefinitions from '@/routes';
 
@@ -14,6 +15,8 @@ import { parseEvalError } from '../helpers';
 
 export const useEvalDatasetActions = ({ projectId, editingSuiteId, agentId, tab }) => {
   const navigate = useNavigate();
+  const { search } = useLocation();
+  const persistentSearch = NavigationHelpers.pickPersistentSearch(search);
   const { toastError, toastSuccess } = useToast();
 
   const [updateEvalSuite] = useUpdateEvalSuiteMutation();
@@ -44,8 +47,8 @@ export const useEvalDatasetActions = ({ projectId, editingSuiteId, agentId, tab 
       ':agentId',
       agentId,
     );
-    navigate(datasetsPath);
-  }, [navigate, tab, agentId]);
+    navigate({ pathname: datasetsPath, search: persistentSearch });
+  }, [navigate, tab, agentId, persistentSearch]);
 
   const handleCreateDataset = useCallback(() => {
     setShowDatasetDialog(true);
@@ -75,12 +78,24 @@ export const useEvalDatasetActions = ({ projectId, editingSuiteId, agentId, tab 
           ':agentId',
           agentId,
         );
-        navigate(`${datasetsPath}?datasetId=${dataset.id}`);
+        const newParams = new URLSearchParams(persistentSearch);
+        newParams.set('datasetId', dataset.id);
+        navigate({ pathname: datasetsPath, search: newParams.toString() });
       } catch (error) {
         toastError(parseEvalError(error, 'Dataset created but failed to attach to suite.'));
       }
     },
-    [editingSuiteId, projectId, updateEvalSuite, toastSuccess, toastError, navigate, tab, agentId],
+    [
+      editingSuiteId,
+      projectId,
+      updateEvalSuite,
+      toastSuccess,
+      toastError,
+      navigate,
+      tab,
+      agentId,
+      persistentSearch,
+    ],
   );
 
   const handleAttachDataset = useCallback(
@@ -126,9 +141,11 @@ export const useEvalDatasetActions = ({ projectId, editingSuiteId, agentId, tab 
         ':agentId',
         agentId,
       );
-      navigate(`${datasetsPath}?datasetId=${dataset.id}`);
+      const newParams = new URLSearchParams(persistentSearch);
+      newParams.set('datasetId', dataset.id);
+      navigate({ pathname: datasetsPath, search: newParams.toString() });
     },
-    [navigate, tab, agentId],
+    [navigate, tab, agentId, persistentSearch],
   );
 
   // ---- Case exclusion (from suite) ----
