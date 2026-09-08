@@ -65,6 +65,10 @@ const TOOLTIPS = {
   customImportance: 'Custom importance weight value.',
 };
 
+// A record whose stored scale could not be classified (see `hasKnownScale` in dimension.helpers)
+// shows no preset at all, rather than the default one implying a scale it does not have.
+const SCALE_NOT_SET_PLACEHOLDER = <Typography variant="labelMedium">Not set</Typography>;
+
 const CODE_SAFETY_NOTICE =
   'The code is checked by a safety pre-screen before it is stored. Dangerous imports, builtins, and dunder access are rejected.';
 
@@ -79,6 +83,7 @@ const DimensionForm = memo(props => {
   const isCode = form.evaluator === EVAL_ENGINE.code;
   const isPassFail = form.scaleTypePreset === SCALE_TYPE_PRESET.passFail;
   const isCustomScale = form.scaleTypePreset === SCALE_TYPE_PRESET.custom;
+  const hasUnsetScale = form.hasKnownScale === false;
   const isCustomImportance = form.importance === IMPORTANCE.custom;
 
   useEffect(() => {
@@ -443,7 +448,9 @@ const DimensionForm = memo(props => {
           </Box>
           <SingleSelect
             showBorder
-            value={form.scaleTypePreset}
+            value={hasUnsetScale ? '' : form.scaleTypePreset}
+            displayEmpty={hasUnsetScale}
+            emptyPlaceholder={SCALE_NOT_SET_PLACEHOLDER}
             options={scaleTypeOptions}
             onValueChange={handleScaleTypeChange}
             data-testid="dimension-scale-type-select"

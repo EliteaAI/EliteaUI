@@ -22,6 +22,9 @@ import CaseContentPreviewModal from './CaseContentPreviewModal';
 import HumanScoreControl from './HumanScoreControl';
 
 const COMMENT_MAX_LENGTH = 2000;
+// Shared by the inline field and the expanded editor, so the cap cannot be walked around by
+// composing the comment full screen.
+const COMMENT_INPUT_PROPS = { maxLength: COMMENT_MAX_LENGTH };
 // Keeps the label raised so the empty-state placeholder stays visible under it.
 const SHRUNK_LABEL = { shrink: true };
 const COMMENT_FIELD_LABEL = 'Comment (optional)';
@@ -181,7 +184,7 @@ const HumanEvaluationModal = memo(props => {
                   showCopyAction={false}
                   showFullScreenAction={false}
                   showExpandAction={false}
-                  inputProps={{ maxLength: COMMENT_MAX_LENGTH }}
+                  inputProps={COMMENT_INPUT_PROPS}
                   data-testid="human-evaluation-comment"
                 />
                 <Box
@@ -243,6 +246,8 @@ const HumanEvaluationModal = memo(props => {
           title={COMMENT_FIELD_LABEL}
           value={comment}
           hasOnChangeCallback
+          inputProps={COMMENT_INPUT_PROPS}
+          showCharacterCounter
           onChange={handleExpandedCommentChange}
           onClose={handleCloseCommentExpanded}
           specifiedLanguage="text"

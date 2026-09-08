@@ -25,6 +25,10 @@ import ResultsDimensionTable from '../../results/ResultsDimensionTable';
 import ResultsSummaryCards from '../../results/ResultsSummaryCards';
 import EvaluationProgress from '../../suite/EvaluationProgress';
 
+// A fresh `[]` default would be a new reference on every render while a query is skipped or
+// errored, which would defeat the memo below and rebuild the whole scorecard each time.
+const EMPTY_DIMENSIONS = [];
+
 const ResultsPanel = memo(props => {
   const { runActions = {} } = props;
   const projectId = useSelectedProjectId();
@@ -64,11 +68,11 @@ const ResultsPanel = memo(props => {
 
   // The run snapshot is the point-in-time record, but it does not key every binding's dimension —
   // these fill the gaps so a rating or pass/fail scale still reaches the score control.
-  const { data: agentProjectDimensions = [] } = useEvalDimensionsQuery(
+  const { data: agentProjectDimensions = EMPTY_DIMENSIONS } = useEvalDimensionsQuery(
     { projectId, agentId: applicationId, includePlatform: false },
     { skip: !projectId || !runId },
   );
-  const { data: platformDimensions = [] } = usePlatformDimensionCatalogQuery(
+  const { data: platformDimensions = EMPTY_DIMENSIONS } = usePlatformDimensionCatalogQuery(
     { projectId },
     { skip: !projectId || !runId },
   );

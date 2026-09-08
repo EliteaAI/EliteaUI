@@ -45,11 +45,14 @@ const HumanScoreControl = memo(props => {
     [onChange],
   );
 
-  // Typing stays unclamped so a half-entered number is not rewritten under the caret.
+  // Typing stays unclamped so a half-entered number is not rewritten under the caret. Blur settles
+  // it: a rating is whole-numbered, so rounding here keeps Save from sitting disabled over a value
+  // the field still shows as accepted.
   const handleNumberBlur = useCallback(() => {
     if (value == null) return;
     const clamped = clampHumanScore(value, scale);
-    if (clamped !== value) onChange?.(clamped);
+    const settled = clamped != null && scale.kind === HUMAN_SCALE_KIND.rating ? Math.round(clamped) : clamped;
+    if (settled !== value) onChange?.(settled);
   }, [value, scale, onChange]);
 
   const styles = humanScoreControlStyles();
