@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 
 import { Box, CircularProgress, SvgIcon, Tooltip, Typography } from '@mui/material';
 
@@ -8,7 +8,7 @@ import ClockIcon from '@/assets/clock_icon.svg?react';
 import DownloadIcon from '@/assets/download.svg?react';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 
-import { isRunTerminal } from '../../lib/helpers';
+import { isRunTerminal, resolveRunVersionName } from '../../lib/helpers';
 import EvaluationProgress from '../suite/EvaluationProgress';
 import RunResultsView from './RunResultsView';
 
@@ -21,6 +21,7 @@ const ResultsPanel = memo(props => {
     displayRun,
     runActive,
     cancelRequested,
+    versions: applicationVersions = [],
     handleCancelRun: onCancelRun,
     handleOpenHistory: onOpenHistory,
     handleClearResults: onClearResults,
@@ -36,17 +37,32 @@ const ResultsPanel = memo(props => {
   // Results from displayRun (active run if in progress, otherwise last run from history)
   const hasResults = isRunTerminal(displayRun?.status);
 
+  const evaluatedVersionName = useMemo(
+    () => resolveRunVersionName(displayRun, applicationVersions),
+    [displayRun, applicationVersions],
+  );
+
   const styles = resultsPanelStyles();
 
   return (
     <Box sx={styles.root}>
       <Box sx={styles.header}>
-        <Typography
-          variant="bodyMedium"
-          sx={styles.headerLabel}
-        >
-          Results
-        </Typography>
+        <Box sx={styles.headerTitleGroup}>
+          <Typography
+            variant="bodyMedium"
+            sx={styles.headerLabel}
+          >
+            Results
+          </Typography>
+          {hasResults && evaluatedVersionName && (
+            <Typography
+              variant="bodySmall"
+              sx={styles.headerVersion}
+            >
+              Version: {evaluatedVersionName}
+            </Typography>
+          )}
+        </Box>
         <Box sx={styles.headerActions}>
           {hasResults && (
             <>
@@ -158,9 +174,18 @@ const resultsPanelStyles = () => ({
     backgroundColor: palette.background.folder.default,
     borderBottom: `0.0625rem solid ${palette.border.table}`,
   }),
+  headerTitleGroup: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    minWidth: 0,
+  },
   headerLabel: ({ palette }) => ({
     color: palette.text.secondary,
     fontWeight: 600,
+  }),
+  headerVersion: ({ palette }) => ({
+    color: palette.text.default,
   }),
   headerActions: {
     display: 'flex',

@@ -22,6 +22,7 @@ const AgentEvaluateHistoryPage = memo(() => {
   const {
     runs,
     suiteNamesById,
+    versions,
     isRunsLoading,
     isRunsError,
     selectedRunId,
@@ -67,6 +68,7 @@ const AgentEvaluateHistoryPage = memo(() => {
             <EvaluationRunsTable
               runs={runs}
               suiteNamesById={suiteNamesById}
+              versions={versions}
               selectedRunId={selectedRunId}
               isLoading={isRunsLoading}
               canDelete={canDelete}

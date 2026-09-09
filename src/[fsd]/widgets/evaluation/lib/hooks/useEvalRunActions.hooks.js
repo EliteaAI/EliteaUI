@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
-import { useLazyApplicationDetailsQuery } from '@/api/applications';
+import { useApplicationDetailsQuery } from '@/api/applications';
 import useToast from '@/hooks/useToast';
 import RouteDefinitions from '@/routes';
 
@@ -34,16 +34,41 @@ export const useEvalRunActions = ({
   const persistentSearch = NavigationHelpers.pickPersistentSearch(search);
   const { toastError, toastSuccess } = useToast();
 
-  const [fetchApplicationDetails] = useLazyApplicationDetailsQuery();
+  const { data: applicationDetails, isLoading: isLoadingVersions } = useApplicationDetailsQuery(
+    { projectId, applicationId },
+    { skip: !projectId || !applicationId },
+  );
   const [startEvalRun, { isLoading: isStartingRun }] = useStartEvalRunMutation();
   const [cancelEvalRun] = useCancelEvalRunMutation();
   const [deleteEvalRun] = useDeleteEvalRunMutation();
 
+  // The agent's resolved default version (`meta.default_version_id` or the `base` version) —
+  // used to preselect the version dropdown and as the run's version unless the user picks another.
+  const versions = useMemo(() => applicationDetails?.versions ?? [], [applicationDetails]);
+  const defaultVersionId = applicationDetails?.version_details?.id ?? null;
+
   const [activeRunId, setActiveRunId] = useState(null);
   const [cancelRequested, setCancelRequested] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  // Only the user's explicit pick is stored; the effective selection is derived below so the
+  // default can never be raced by a second effect writing the same piece of state.
+  const [versionOverride, setVersionOverride] = useState(null);
   const terminalNotifiedRef = useRef(null);
   const [runPollingInterval, setRunPollingInterval] = useState(0);
+
+  // Falls back to the agent's default version until the user picks another, so the dropdown is
+  // populated as soon as the details land without an effect having to write it.
+  const selectedVersionId = versionOverride ?? defaultVersionId;
+
+  // Drop the pick when switching agents so a version belonging to a previously viewed agent is
+  // never carried over.
+  useEffect(() => {
+    setVersionOverride(null);
+  }, [applicationId]);
+
+  const handleVersionChange = useCallback(versionId => {
+    setVersionOverride(versionId);
+  }, []);
 
   // Fetch runs history from API (persists across page refresh)
   const skipRunsQuery = !projectId || !applicationId || editingSuiteId == null;
@@ -52,8 +77,13 @@ export const useEvalRunActions = ({
     { skip: skipRunsQuery },
   );
 
-  // Last run from API (most recent completed run)
-  const lastRun = useMemo(() => (runs.length ? runs[0] : null), [runs]);
+  // Last run from API (most recent completed run) — scoped to whichever version is
+  // currently selected, so switching versions shows that version's own run history.
+  const lastRun = useMemo(() => {
+    const matching =
+      selectedVersionId == null ? runs : runs.filter(run => run.application_version_id === selectedVersionId);
+    return matching.length ? matching[0] : null;
+  }, [runs, selectedVersionId]);
 
   // Fetch active run details (for in-progress runs)
   const shouldFetchActiveRun = !!activeRunId && projectId != null;
@@ -63,6 +93,8 @@ export const useEvalRunActions = ({
   );
 
   const runSettled = isRunTerminal(activeRunData?.status) || isRunError;
+  // Only one run can be in flight per suite, and the version selector is disabled for as long as
+  // it is, so the run on screen is always the selected version's — no version scoping needed here.
   const runActive = isRunActive(activeRunData?.status);
 
   const { isLive } = useEvalRunLiveProgress({
@@ -102,6 +134,11 @@ export const useEvalRunActions = ({
     const inFlightRun = runs.find(run => isRunActive(run.status));
     if (inFlightRun?.id != null) {
       setActiveRunId(inFlightRun.id);
+      // Point the selector at the version being evaluated, otherwise a reload would show the
+      // agent's default version next to another version's progress.
+      if (inFlightRun.application_version_id != null) {
+        setVersionOverride(inFlightRun.application_version_id);
+      }
     }
   }, [runs, activeRunId]);
 
@@ -121,15 +158,9 @@ export const useEvalRunActions = ({
       toastError('Please add at least one dimension before running the evaluation.');
       return;
     }
-
-    let applicationVersionId = null;
-    if (projectId && applicationId) {
-      try {
-        const appDetails = await fetchApplicationDetails({ projectId, applicationId }).unwrap();
-        applicationVersionId = appDetails?.version_details?.id ?? null;
-      } catch {
-        // If fetch fails, proceed with null and let backend handle it
-      }
+    if (!selectedVersionId) {
+      toastError('Please select an agent version to evaluate.');
+      return;
     }
 
     try {
@@ -139,7 +170,7 @@ export const useEvalRunActions = ({
           suite_id: editingSuiteId,
           trigger_type: EVAL_RUN_TRIGGER.offline_batch,
           dataset_id: attachedDatasetId,
-          application_version_id: applicationVersionId,
+          application_version_id: selectedVersionId,
         },
       }).unwrap();
       setActiveRunId(started?.id ?? null);
@@ -148,11 +179,10 @@ export const useEvalRunActions = ({
     }
   }, [
     editingSuiteId,
-    applicationId,
     attachedDatasetId,
     attachedDatasetDetails,
     attachedDimensionsCount,
-    fetchApplicationDetails,
+    selectedVersionId,
     startEvalRun,
     projectId,
     toastError,
@@ -224,6 +254,10 @@ export const useEvalRunActions = ({
     isEvaluating: isStartingRun || runActive,
     cancelRequested,
     showClearConfirm,
+    versions,
+    isLoadingVersions,
+    selectedVersionId,
+    handleVersionChange,
     handleEvaluate,
     handleCancelRun,
     handleOpenHistory,

@@ -14,6 +14,7 @@ import {
   fetchEvaluationRunExportData,
   resolveExportDatasets,
   resolveRunSuiteName,
+  resolveRunVersionName,
 } from '../helpers';
 
 const EXPORT_ERROR_MESSAGE = 'Evaluation results could not be exported. Please try again.';
@@ -22,18 +23,6 @@ const EXPORT_ERROR_MESSAGE = 'Evaluation results could not be exported. Please t
 const EMPTY_SUITE_NAMES = {};
 // What a run that named no judge model was scored with — the backend picks one per project.
 const AUTO_JUDGE_MODEL = 'Auto';
-
-/**
- * The version the run actually evaluated. A run that recorded none — `handleEvaluate` stores null
- * when the agent read fails — or one whose version has since been deleted reports nothing rather
- * than falling back to the agent's current version, which would stamp a historical export with
- * today's configuration (§2).
- */
-const resolveAgentVersion = (application, run) => {
-  const versionId = run?.application_version_id ?? null;
-  if (versionId == null) return null;
-  return application?.versions?.find(version => version.id === versionId)?.name ?? null;
-};
 
 /**
  * Excel export of one evaluation run (#6549), shared by the Results header and the Results History
@@ -99,7 +88,7 @@ export const useEvaluationExport = ({
           run: runDetail,
           meta: {
             agentName,
-            agentVersion: resolveAgentVersion(application, runDetail),
+            agentVersion: resolveRunVersionName(runDetail, application?.versions),
             suiteName,
             judgeModel: runDetail?.snapshot?.suite?.judge_model?.model_name || AUTO_JUDGE_MODEL,
             datasetNames,

@@ -4,21 +4,23 @@ import { Box, CircularProgress, Typography } from '@mui/material';
 
 import { GridTableHeader } from '@/[fsd]/entities/grid-table/ui';
 
-import { resolveRunSuiteName } from '../../lib/helpers';
+import { resolveRunSuiteName, resolveRunVersionName } from '../../lib/helpers';
 import EvaluationRunRow from './EvaluationRunRow';
 
 const COLUMNS = [
   { field: 'date', label: 'Date', sortable: true },
   { field: 'suite', label: 'Suite', sortable: true },
+  { field: 'version', label: 'Version', sortable: true },
   { field: 'score', label: 'Score', sortable: true },
 ];
 
-const GRID_TEMPLATE_COLUMNS = '1.15fr 1fr 1fr';
+const GRID_TEMPLATE_COLUMNS = '1.15fr 1fr 0.8fr 1fr';
 
 const EvaluationRunsTable = memo(props => {
   const {
     runs = [],
     suiteNamesById = {},
+    versions = [],
     selectedRunId = null,
     isLoading = false,
     canDelete = false,
@@ -67,6 +69,7 @@ const EvaluationRunsTable = memo(props => {
               key={run.id}
               run={run}
               suiteName={resolveRunSuiteName(run, suiteNamesById)}
+              versionName={resolveRunVersionName(run, versions)}
               isSelected={run.id === selectedRunId}
               canDelete={canDelete}
               exportingRunId={exportingRunId}
