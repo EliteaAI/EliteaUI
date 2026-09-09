@@ -5,116 +5,195 @@ import {
 import { DumpYamlHelpers } from '@/[fsd]/shared/lib/helpers';
 import { createSlice, current } from '@reduxjs/toolkit';
 
-const pipelineSlice = createSlice({
-  name: 'pipeline',
-  initialState: {
-    initState: {
-      nodes: [],
-      edges: [],
-      yamlJsonObject: {},
-      yamlCode: '',
-      layout_version: '',
-    },
+// Fallback key used by non-Canvas pages (CreatePipeline, ConfigurationTab) that
+// never call setActivePipelineKey. Only one pipeline is active at a time there,
+// so sharing a single slot is safe.
+export const DEFAULT_PIPELINE_KEY = '__default__';
+
+export const initialPipelineState = {
+  initState: {
     nodes: [],
     edges: [],
     yamlJsonObject: {},
     yamlCode: '',
-    resetFlag: false,
-    orientation: localStorage.getItem(OrientationKey) || ORIENTATION.vertical,
     layout_version: '',
-    stateValidationErrors: {}, // Store validation errors by variable name
+  },
+  nodes: [],
+  edges: [],
+  yamlJsonObject: {},
+  yamlCode: '',
+  resetFlag: false,
+  layout_version: '',
+  stateValidationErrors: {},
+};
+
+const resolveKey = state => state.activePipelineKey ?? DEFAULT_PIPELINE_KEY;
+
+const pipelineSlice = createSlice({
+  name: 'pipeline',
+  initialState: {
+    // Per-pipeline isolated state, keyed by "${projectId}_${pipelineId}" or DEFAULT_PIPELINE_KEY
+    byKey: {},
+    // Which key is currently active (Canvas sets this per-tab; non-Canvas pages use DEFAULT_PIPELINE_KEY)
+    activePipelineKey: null,
+    // Shared orientation setting (not per-pipeline)
+    orientation: localStorage.getItem(OrientationKey) || ORIENTATION.vertical,
   },
   reducers: {
+    setActivePipelineKey: (state, action) => {
+      state.activePipelineKey = action.payload;
+    },
+
+    clearPipelineKey: (state, action) => {
+      delete state.byKey[action.payload];
+      if (state.activePipelineKey === action.payload) {
+        state.activePipelineKey = null;
+      }
+    },
+
     initThePipeline: (state, action) => {
       const { nodes, edges, yamlJsonObject, yamlCode, layout_version } = action.payload;
-      state.nodes = [...nodes];
-      state.edges = [...edges];
-      state.yamlJsonObject = structuredClone(yamlJsonObject || {});
-      state.yamlCode = yamlCode;
-      state.resetFlag = true;
-      state.layout_version = layout_version;
-      state.stateValidationErrors = {}; // Clear validation errors on init
-      state.initState = {
+      const key = resolveKey(state);
+      state.byKey[key] = {
+        ...(state.byKey[key] || initialPipelineState),
         nodes: [...nodes],
         edges: [...edges],
         yamlJsonObject: structuredClone(yamlJsonObject || {}),
         yamlCode,
+        resetFlag: true,
         layout_version,
+        stateValidationErrors: {},
+        initState: {
+          nodes: [...nodes],
+          edges: [...edges],
+          yamlJsonObject: structuredClone(yamlJsonObject || {}),
+          yamlCode,
+          layout_version,
+        },
       };
     },
+
     resetPipeline: state => {
-      const { nodes, edges, yamlJsonObject, yamlCode, layout_version } = state.initState;
-      state.nodes = [...nodes];
-      state.edges = [...edges];
-      state.yamlJsonObject = structuredClone(yamlJsonObject ? current(yamlJsonObject) : {});
-      state.yamlCode = yamlCode;
-      state.resetFlag = true;
-      state.layout_version = layout_version;
-      state.stateValidationErrors = {}; // Clear validation errors on reset
+      const key = resolveKey(state);
+      if (!state.byKey[key]) return;
+      const { nodes, edges, yamlJsonObject, yamlCode, layout_version } = state.byKey[key].initState;
+      state.byKey[key] = {
+        ...state.byKey[key],
+        nodes: [...nodes],
+        edges: [...edges],
+        yamlJsonObject: structuredClone(yamlJsonObject ? current(yamlJsonObject) : {}),
+        yamlCode,
+        resetFlag: true,
+        layout_version,
+        stateValidationErrors: {},
+      };
     },
+
     clearResetFlag: state => {
-      state.resetFlag = false;
+      const key = resolveKey(state);
+      if (state.byKey[key]) {
+        state.byKey[key].resetFlag = false;
+      }
     },
+
     setYamlCode: (state, action) => {
-      state.yamlCode = action.payload;
+      const key = resolveKey(state);
+      if (state.byKey[key]) {
+        state.byKey[key].yamlCode = action.payload;
+      }
     },
+
     setYamlJsonObject: (state, action) => {
-      state.yamlJsonObject = { ...(action.payload?.yamlJsonObject || {}) };
+      const key = resolveKey(state);
+      if (state.byKey[key]) {
+        state.byKey[key].yamlJsonObject = { ...(action.payload?.yamlJsonObject || {}) };
+      }
     },
+
     setOrientation: (state, action) => {
       state.orientation = action.payload;
       localStorage.setItem(OrientationKey, action.payload);
     },
-    // Update only the initState to mark content as saved without triggering reset
+
     updateInitState: (state, action) => {
+      const key = resolveKey(state);
+      if (!state.byKey[key]) return;
       const { yamlCode } = action.payload;
-      // Update both current yamlCode and initState to match saved version
-      state.yamlCode = yamlCode;
-      state.initState = {
-        ...state.initState,
+      state.byKey[key].yamlCode = yamlCode;
+      state.byKey[key].initState = {
+        ...state.byKey[key].initState,
         yamlCode,
       };
     },
+
     setLayoutVersion: (state, action) => {
-      state.layout_version = action.payload;
+      const key = resolveKey(state);
+      if (state.byKey[key]) {
+        state.byKey[key].layout_version = action.payload;
+      }
     },
+
     syncInitYamlJsonObject: (state, action) => {
+      const key = resolveKey(state);
+      if (!state.byKey[key]) return;
       const newYamlJsonObject = structuredClone(action.payload?.yamlJsonObject || {});
       let newYamlCode = '';
       try {
         newYamlCode = DumpYamlHelpers.dumpYaml(newYamlJsonObject);
       } catch {
-        newYamlCode = state.yamlCode; // Fallback to current yamlCode if dumping fails
+        newYamlCode = state.byKey[key].yamlCode;
       }
-      state.initState.yamlJsonObject = newYamlJsonObject;
-      state.initState.yamlCode = newYamlCode; // Keep initState yamlCode in sync with current yamlCode
+      state.byKey[key].initState.yamlJsonObject = newYamlJsonObject;
+      state.byKey[key].initState.yamlCode = newYamlCode;
     },
+
     setStateValidationError: (state, action) => {
+      const key = resolveKey(state);
+      if (!state.byKey[key]) return;
       const { variableName, error } = action.payload;
       if (error) {
-        state.stateValidationErrors[variableName] = error;
+        state.byKey[key].stateValidationErrors[variableName] = error;
       } else {
-        delete state.stateValidationErrors[variableName];
+        delete state.byKey[key].stateValidationErrors[variableName];
       }
     },
+
     clearStateValidationErrors: state => {
-      state.stateValidationErrors = {};
+      const key = resolveKey(state);
+      if (state.byKey[key]) {
+        state.byKey[key].stateValidationErrors = {};
+      }
     },
-    // Restore a saved per-tab snapshot without touching initState so dirty detection
-    // (yamlCode vs initState.yamlCode) still reflects unsaved edits correctly.
+
     restorePipelineSnapshot: (state, action) => {
+      const key = resolveKey(state);
       const { nodes, edges, yamlJsonObject, yamlCode, layout_version, initState } = action.payload;
-      state.nodes = [...nodes];
-      state.edges = [...edges];
-      state.yamlJsonObject = structuredClone(yamlJsonObject || {});
-      state.yamlCode = yamlCode;
-      state.layout_version = layout_version;
-      state.resetFlag = false;
-      state.stateValidationErrors = {};
-      state.initState = structuredClone(initState);
+      // Fall back to the existing initState when the snapshot's initState is null
+      // (tab was hidden before versionDetails loaded and ownInitStateRef was never set).
+      const resolvedInitState = initState ?? state.byKey[key]?.initState ?? initialPipelineState.initState;
+      state.byKey[key] = {
+        nodes: [...nodes],
+        edges: [...edges],
+        yamlJsonObject: structuredClone(yamlJsonObject || {}),
+        yamlCode,
+        layout_version,
+        // resetFlag=true causes only this tab's FlowEditor to re-sync because
+        // each tab reads its own key via selectActivePipeline.
+        resetFlag: true,
+        stateValidationErrors: {},
+        initState: structuredClone(resolvedInitState),
+      };
     },
   },
 });
+
+// Selector: returns the active pipeline's state (or initialPipelineState if none active).
+// Canvas pages set activePipelineKey per-tab; non-Canvas pages fall back to DEFAULT_PIPELINE_KEY.
+export const selectActivePipeline = state => {
+  const { byKey, activePipelineKey } = state.pipeline;
+  const key = activePipelineKey ?? DEFAULT_PIPELINE_KEY;
+  return byKey[key] || initialPipelineState;
+};
 
 export const { name, actions } = pipelineSlice;
 export default pipelineSlice.reducer;

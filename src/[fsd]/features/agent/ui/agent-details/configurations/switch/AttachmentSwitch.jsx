@@ -9,7 +9,7 @@ import { InternalToolsConstants } from '@/[fsd]/shared/lib/constants';
 import { Switch, Text } from '@/[fsd]/shared/ui';
 import { PERMISSIONS } from '@/common/constants';
 import useCheckPermission from '@/hooks/useCheckPermission';
-import { actions as pipelineActions } from '@/slices/pipeline';
+import { actions as pipelineActions, selectActivePipeline } from '@/slices/pipeline';
 
 const ATTACHMENTS_INTERNAL_TOOL = 'attachments';
 
@@ -23,7 +23,7 @@ const AttachmentSwitch = memo(props => {
   const { checkPermission } = useCheckPermission();
   const { values, setFieldValue } = useFormikContext();
   const dispatch = useDispatch();
-  const { yamlCode, yamlJsonObject } = useSelector(state => state.pipeline);
+  const { yamlCode, yamlJsonObject } = useSelector(selectActivePipeline);
   const isPipeline = Boolean(yamlCode);
 
   // Get attachments tool info from constants

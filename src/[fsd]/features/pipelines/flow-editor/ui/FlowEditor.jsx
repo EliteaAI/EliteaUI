@@ -36,7 +36,7 @@ import ClipboardIcon from '@/assets/clipboard-icon.svg?react';
 import CollapseIcon from '@/assets/collapse-second-icon.svg?react';
 import ExpandIcon from '@/assets/expand-third-icon.svg?react';
 import PolylineOutlinedIcon from '@/assets/polyline-outline-icon.svg?react';
-import { actions } from '@/slices/pipeline';
+import { actions, selectActivePipeline } from '@/slices/pipeline';
 import {
   Background,
   ControlButton,
@@ -98,7 +98,8 @@ const FlowEditor = forwardRef((props, ref) => {
     nodes: initialNodes,
     edges: initialEdges,
     layout_version,
-  } = useSelector(state => state.pipeline);
+    resetFlag,
+  } = useSelector(selectActivePipeline);
   const yamlJsonObjectRef = useRef(yamlJsonObject);
   const { nodes: cachedNodes, edges: cachedEdges } = useSelector(state => state.pipelineEditor);
   const theme = useTheme();
@@ -110,7 +111,6 @@ const FlowEditor = forwardRef((props, ref) => {
 
   const [editorWidth, setEditorWidth] = useState(622);
   const [editorHeight, setEditorHeight] = useState(677);
-  const { resetFlag } = useSelector(state => state.pipeline);
   const dispatch = useDispatch();
 
   useEffect(() => {

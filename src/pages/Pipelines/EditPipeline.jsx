@@ -42,6 +42,7 @@ const EditPipeline = memo(() => {
 
   const handleDiscard = useCallback(() => {
     setDirty(false);
+    setIsYamlDirty(false);
     dispatch(actions.resetPipeline());
     dispatch(editorActions.resetPipelineEditor());
     setUnsavedLLMSettings(undefined);

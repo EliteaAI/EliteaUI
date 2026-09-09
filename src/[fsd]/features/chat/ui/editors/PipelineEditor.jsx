@@ -109,8 +109,11 @@ PipelineEditorContent.displayName = 'PipelineEditorContent';
 // Must live inside BaseEditor's children so it has access to Formik context.
 // memo() prevents re-renders from parent state changes; the component still re-renders
 // when its own Formik/Redux subscriptions change, which is exactly when sync is needed.
-const PipelineAttachmentYamlSync = memo(() => {
-  usePipelineAttachmentYamlSync();
+// isVisible and pipelineKey are forwarded so the hook writes only to this tab's own
+// Redux key and skips dispatches when the tab is hidden, preventing cross-tab contamination.
+const PipelineAttachmentYamlSync = memo(props => {
+  const { isVisible, pipelineKey } = props;
+  usePipelineAttachmentYamlSync(isVisible, pipelineKey);
   return null;
 });
 
@@ -149,6 +152,9 @@ const PipelineEditor = forwardRef(
     // Per-instance baseline initState — updated only by THIS tab's versionDetails effect
     // so it is never contaminated by another tab writing to the shared Redux slice.
     const ownInitStateRef = useRef(null);
+    // Tracks whether this tab has ever been visible. Prevents saving an empty snapshot
+    // when a tab is hidden before it ever became active (Canvas mounts all editors at once).
+    const wasEverVisibleRef = useRef(false);
     // Shadow of Redux pipeline + editor state, updated only while this tab is visible.
     // Frozen on hide so that other tabs' Redux writes (e.g. their initThePipeline calls)
     // cannot contaminate the snapshot saved at that moment.
@@ -159,6 +165,23 @@ const PipelineEditor = forwardRef(
       nodes: [],
       edges: [],
     });
+
+    // Declared early so that all effects that reference pipelineKeyRef can see it.
+    const selectedProjectId = useSelectedProjectId();
+    const projectId = pipeline?.entity_meta?.project_id ?? selectedProjectId;
+    const pipelineId = getPipelineId(pipeline);
+    const versionId = pipeline?.entity_settings?.version_id;
+    // Unique Redux key for this pipeline instance — isolates state from other open tabs.
+    const pipelineKey = useMemo(
+      () => (pipelineId ? `${pipeline?.entity_meta?.project_id || projectId}_${pipelineId}` : null),
+      [pipeline?.entity_meta?.project_id, projectId, pipelineId],
+    );
+    // Keep a stable ref so effects can always read the latest key synchronously.
+    const pipelineKeyRef = useRef(pipelineKey);
+    useEffect(() => {
+      pipelineKeyRef.current = pipelineKey;
+    }, [pipelineKey]);
+
     const { checkPermission } = useCheckPermission();
     const hasEditPermission = useMemo(() => {
       return checkPermission(PERMISSIONS.applications.update);
@@ -170,21 +193,51 @@ const PipelineEditor = forwardRef(
     useEffect(() => {
       isDirtyRef.current = isDirty;
     }, [isDirty]);
+    // Keep a ref so callbacks can synchronously read current visibility.
+    const isVisibleRef = useRef(isVisible);
+    useEffect(() => {
+      isVisibleRef.current = isVisible;
+    }, [isVisible]);
+    // Guard passed to BaseEditor's setIsDirty so Formik's DirtyDetector cannot clear dirty
+    // state when the tab is hidden. When isVisible=false, the RTK Query skip causes
+    // versionDetails to become undefined → initialValues changes → Formik enableReinitialize
+    // resets the form → DirtyDetector fires setIsDirty(false), wiping isDirty even though
+    // the tab has unsaved changes. We suppress the false-only write while hidden.
+    const setIsDirtyGuarded = useCallback(value => {
+      if (value === false && !isVisibleRef.current) return;
+      setIsDirty(value);
+    }, []);
+    // Guard passed to EditorPanel's setYamlDirty. useIsPipelineYamlCodeDirty reads from
+    // selectActivePipeline, which reflects the currently active tab's key — not this tab's.
+    // When this tab is hidden and another tab becomes active, the hook returns false and
+    // EditorPanel would call setIsYamlDirty(false), clearing the YAML dirty flag for this
+    // hidden tab. Suppressing false-only writes while hidden prevents this.
+    const setIsYamlDirtyGuarded = useCallback(value => {
+      if (value === false && !isVisibleRef.current) return;
+      setIsYamlDirty(value);
+    }, []);
 
     // While this tab is visible, mirror the Redux state we care about into a ref.
+    // Reads from the per-key pipeline slot (keyed by pipelineKeyRef) so another tab's
+    // initThePipeline call, which writes to a different key, never contaminates this ref.
     // The subscription unsubscribes when isVisible becomes false (cleanup runs before
-    // the next effect), so the ref is frozen at this tab's last-known values before
-    // another tab's initThePipeline can overwrite the shared Redux slice.
+    // the next effect), so the ref is frozen at this tab's last-known values.
     useEffect(() => {
       if (!isVisible) return;
       const syncRef = () => {
-        const { pipeline: p, pipelineEditor: pe } = store.getState();
+        const state = store.getState();
+        const key = pipelineKeyRef.current;
+        const p = (key && state.pipeline.byKey[key]) || {};
+        const pe = state.pipelineEditor;
         latestPipelineStateRef.current = {
-          yamlCode: p.yamlCode,
-          yamlJsonObject: p.yamlJsonObject,
-          layout_version: p.layout_version,
-          nodes: pe.nodes,
-          edges: pe.edges,
+          yamlCode: p.yamlCode ?? '',
+          yamlJsonObject: p.yamlJsonObject ?? {},
+          layout_version: p.layout_version ?? '',
+          // Use pipelineEditor nodes when non-empty (Flow tab was opened, positions captured).
+          // Fall back to byKey[key].nodes so the snapshot is never empty when the Flow tab
+          // was never opened but versionDetails already populated the pipeline slice.
+          nodes: pe.nodes.length > 0 ? pe.nodes : (p.nodes ?? []),
+          edges: pe.edges.length > 0 ? pe.edges : (p.edges ?? []),
         };
       };
       syncRef();
@@ -241,89 +294,91 @@ const PipelineEditor = forwardRef(
       }
     }, [isVisible, totalDirty, onPipelineDirtyStateChange]);
 
-    // Reset state when switching pipelines or modes
+    // Reset local state when pipeline identity or mode changes.
+    // Does NOT touch Redux here — Redux writes are gated through the visibility effect,
+    // which always sets activePipelineKey first and is the single owner of that sequence.
+    // This avoids the Canvas race where all PipelineEditors mount at the same time and
+    // the last-mounted inactive one steals activePipelineKey from the visible one.
     useEffect(() => {
       setActiveTab(0);
       setIsDirty(false);
       setIsYamlDirty(false);
       lastInitializedInstructionsRef.current = null;
-      // Discard any snapshot from the previous pipeline — it belongs to a different
-      // entity and must not be restored when this editor re-opens for the new pipeline.
       savedPipelineStateRef.current = null;
       ownInitStateRef.current = null;
-
-      // Clear Redux pipeline state to prevent stale data
-      dispatch(
-        actions.initThePipeline({
-          nodes: [],
-          edges: [],
-          yamlJsonObject: {
-            state: FlowEditorConstants.DefaultState,
-          },
-          yamlCode: '',
-        }),
-      );
-      dispatch(editorActions.resetPipelineEditor());
-    }, [isCreateMode, pipeline?.entity_meta?.id, dispatch]);
+      wasEverVisibleRef.current = false;
+    }, [isCreateMode, pipeline?.entity_meta?.id]);
 
     // Save Redux pipeline state when this tab becomes hidden; restore it when it
-    // becomes active. This keeps each tab's unsaved edits intact across tab switches
-    // without requiring per-entity Redux slices.
+    // becomes active. This keeps each tab's unsaved edits intact across tab switches.
+    // On visibility gain, set activePipelineKey first so all subsequent Redux writes
+    // (restorePipelineSnapshot, initThePipeline) are scoped to this tab's key.
+    // pipelineKey is included as a dependency so this re-fires when the Canvas slot
+    // switches to a different pipeline entity while remaining visible (e.g. the user
+    // opens a different pipeline in the same tab). In that case isVisible stays true
+    // but pipelineKey changes, and we must re-claim the new key and re-initialize.
     useEffect(() => {
       if (isVisible) {
+        wasEverVisibleRef.current = true;
+        // Claim the Redux active key for this tab — must happen before any dispatch
+        // below so that initThePipeline / restorePipelineSnapshot write to this key.
+        const key = pipelineKeyRef.current;
+        if (key) dispatch(actions.setActivePipelineKey(key));
+
         if (savedPipelineStateRef.current !== null) {
           const snapshot = savedPipelineStateRef.current;
           savedPipelineStateRef.current = null;
+          // restorePipelineSnapshot now sets resetFlag=true, which is safe because
+          // each tab's FlowEditor reads only selectActivePipeline (keyed state).
           dispatch(actions.restorePipelineSnapshot(snapshot));
           dispatch(editorActions.resetPipelineEditor());
           setIsDirty(snapshot.isDirty);
+        } else {
+          // No saved snapshot — first time this tab becomes visible (or the pipeline
+          // identity changed while visible, in which case wasEverVisibleRef was just
+          // reset by the identity-change effect and savedPipelineStateRef is null).
+          // Initialize an empty slot so activePipelineKey is claimed before
+          // versionDetails fires its own initThePipeline call.
+          dispatch(
+            actions.initThePipeline({
+              nodes: [],
+              edges: [],
+              yamlJsonObject: { state: FlowEditorConstants.DefaultState },
+              yamlCode: '',
+            }),
+          );
+          dispatch(editorActions.resetPipelineEditor());
         }
-      } else {
-        // latestPipelineStateRef is frozen at this tab's last-known values:
-        // the subscription (above) unsubscribes on visibility change cleanup,
-        // so any other tab's initThePipeline call that runs in the same batch
-        // cannot overwrite the values we capture here.
+      } else if (wasEverVisibleRef.current) {
+        // Only save a snapshot when this tab has actually been visible before.
+        // Skipping this when wasEverVisibleRef is false avoids storing an empty
+        // snapshot on initial mount (Canvas renders all editors at once, so inactive
+        // tabs see isVisible=false before they have ever loaded any data).
         const { yamlCode, yamlJsonObject, layout_version, nodes, edges } = latestPipelineStateRef.current;
         // Shallow-copy nodes/edges — ReactFlow node data may contain non-serializable
         // values (functions, DOM refs); structuredClone would throw on those.
-        // Only deep-clone plain serializable objects: yamlJsonObject and initState.
         savedPipelineStateRef.current = {
           nodes: [...nodes],
           edges: [...edges],
           yamlJsonObject: structuredClone(yamlJsonObject),
           yamlCode,
           layout_version,
-          // Use the per-instance baseline — never sourced from the shared Redux slice
-          // which may already hold another tab's initState at snapshot time.
           initState: structuredClone(ownInitStateRef.current),
           isDirty: isDirtyRef.current,
         };
       }
-    }, [isVisible, dispatch]);
+    }, [isVisible, pipelineKey, dispatch]);
 
-    // Clear Redux pipeline state on unmount so stale YAML cannot corrupt a
-    // subsequent Agent save (useSaveVersion reads state.pipeline.initState to
-    // decide whether the active entity is a pipeline — resetPipeline is not
-    // enough because it only copies initState back; initThePipeline with empty
-    // values is the only action that also clears initState itself).
+    // On unmount: clear this pipeline's isolated key from the byKey map.
+    // If this was the active key, the active selector returns initialPipelineState
+    // so useSaveVersion treats the entity as a non-pipeline (empty initState).
     useEffect(() => {
       return () => {
-        dispatch(
-          actions.initThePipeline({
-            nodes: [],
-            edges: [],
-            yamlJsonObject: {
-              state: FlowEditorConstants.DefaultState,
-            },
-            yamlCode: '',
-          }),
-        );
+        const key = pipelineKeyRef.current;
+        if (key) dispatch(actions.clearPipelineKey(key));
         dispatch(editorActions.resetPipelineEditor());
       };
     }, [dispatch]);
-    const projectId = useSelectedProjectId();
-    const pipelineId = getPipelineId(pipeline);
-    const versionId = pipeline?.entity_settings?.version_id;
     // Get standard initial values for create mode (pipelines use the same structure as applications)
     const { initialValues: createInitialValues } = useCreateApplicationInitialValues(true); // true for pipeline
 
@@ -581,7 +636,7 @@ const PipelineEditor = forwardRef(
         <BaseEditor
           isVisible={isVisible}
           isDirty={totalDirty}
-          setIsDirty={setIsDirty}
+          setIsDirty={setIsDirtyGuarded}
           onClose={onClose}
           title={editorTitle}
           subtitle={editorSubtitle}
@@ -589,7 +644,6 @@ const PipelineEditor = forwardRef(
           initialValues={initialValues}
           validationSchema={getValidateSchema}
           error={error}
-          onDirtyStateChange={onPipelineDirtyStateChange}
           disableNavBlocking={disableNavBlocking}
           closeButtonTestId="pipeline-canvas-close-button"
           formContent={
@@ -638,7 +692,10 @@ const PipelineEditor = forwardRef(
             projectId={pipeline?.entity_meta?.project_id || projectId}
             isCreateMode={isCreateMode}
           />
-          <PipelineAttachmentYamlSync />
+          <PipelineAttachmentYamlSync
+            isVisible={isVisible}
+            pipelineKey={pipelineKey}
+          />
 
           {isCreateMode && (
             <CreateAgentForm
@@ -668,7 +725,7 @@ const PipelineEditor = forwardRef(
             <ContentContainer sx={styles.flowEditorContainer}>
               <EditorPanel
                 ref={editorPanelRef}
-                setYamlDirty={setIsYamlDirty}
+                setYamlDirty={setIsYamlDirtyGuarded}
                 disabled={viewMode === ViewMode.Public}
                 stopRun={onStopRun}
               />

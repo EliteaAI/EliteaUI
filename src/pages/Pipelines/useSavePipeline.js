@@ -5,12 +5,13 @@ import { ORIENTATION } from '@/[fsd]/features/pipelines/flow-editor/lib/constant
 import { LayoutHelpers, ParsePipelineHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { useIsFrom, useIsFromPipelineDetail } from '@/hooks/useIsFromSpecificPageHooks';
 import RouteDefinitions from '@/routes';
+import { selectActivePipeline } from '@/slices/pipeline';
 
 export default function useSavePipeline() {
   const isFromPipelineDetail = useIsFromPipelineDetail();
   const isFromChat = useIsFrom(RouteDefinitions.Chat);
   const { nodes, edges } = useSelector(state => state.pipelineEditor);
-  const { yamlCode, yamlJsonObject, initState } = useSelector(state => state.pipeline);
+  const { yamlCode, yamlJsonObject, initState } = useSelector(selectActivePipeline);
 
   const hasPipelineData =
     initState.yamlJsonObject?.nodes?.length > 0 ||
