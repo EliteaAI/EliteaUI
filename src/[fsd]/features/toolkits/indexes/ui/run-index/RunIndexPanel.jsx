@@ -239,13 +239,14 @@ const RunIndexPanel = memo(props => {
   const handleChangeIndexSchedule = useCallback(
     async (data, enabling) => {
       const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
       try {
         await updateIndexSchedule({
+          ...data,
           projectId,
           toolkitId,
           indexName,
           timezone,
-          ...data,
         }).unwrap();
         if (enabling) {
           toastSuccess(`Schedule has been successfully ${data.enabled ? 'enabled' : 'disabled'}.`);
