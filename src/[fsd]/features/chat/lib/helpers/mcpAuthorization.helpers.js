@@ -312,3 +312,6 @@ export const groupToolkitAuthorizationActions = (actions, contextActions = []) =
     hasSubAgents: order.length > 0,
   };
 };
+
+export const hasPendingAuthRequiredAction = message =>
+  Boolean(message?.toolActions?.some(action => action.status === ToolActionStatus.actionRequired));
