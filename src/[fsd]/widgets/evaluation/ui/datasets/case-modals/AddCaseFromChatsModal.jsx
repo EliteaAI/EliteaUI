@@ -8,10 +8,11 @@ import { Button, Input, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { BaseTab, BaseTabs } from '@/[fsd]/shared/ui/tabs';
 import CheckIcon from '@/components/Icons/CheckIcon';
+import useToast from '@/hooks/useToast';
 
 import { useEvalConversationsQuery, usePromoteEvalDatasetMutation } from '../../../api';
 import { PROMOTE_CONVERSATION_SOURCE } from '../../../lib/constants';
-import { parseEvalError } from '../../../lib/helpers';
+import { casesAddedMessage, countAddedCases, extractAddedCaseId, parseEvalError } from '../../../lib/helpers';
 
 const getRowDate = row => row.updated_at || row.created_at;
 
@@ -39,6 +40,8 @@ const AddCaseFromChatsModal = memo(props => {
     { projectId, search, source, applicationId: isRunHistory ? applicationId : null },
     { skip: !open || !projectId },
   );
+
+  const { toastSuccess } = useToast();
 
   const [promote, { isLoading: isPromoting }] = usePromoteEvalDatasetMutation();
 
@@ -93,13 +96,23 @@ const AddCaseFromChatsModal = memo(props => {
       ),
     );
 
+    const promoted = results.filter(r => r.status === 'fulfilled');
     const failures = results.filter(r => r.status === 'rejected');
+
+    // The count comes from what the server stored rather than from how many calls resolved,
+    // so a partial failure still reports the real number and keeps its existing inline error.
+    const addedCount = promoted.reduce((total, result) => total + countAddedCases(result.value), 0);
+    if (addedCount > 0) {
+      const caseId = addedCount === 1 ? extractAddedCaseId(promoted[0].value) : null;
+      toastSuccess(casesAddedMessage(addedCount, caseId));
+    }
+
     if (failures.length > 0) {
       setErrorMessage(parseEvalError(failures[0].reason, 'Failed to add cases from conversation.'));
     } else {
       onClose();
     }
-  }, [selectedIds, promote, projectId, datasetId, onClose]);
+  }, [selectedIds, promote, projectId, datasetId, onClose, toastSuccess]);
 
   const selectedCount = selectedIds.length;
 

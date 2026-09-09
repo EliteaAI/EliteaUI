@@ -5,9 +5,10 @@ import { Box, Typography } from '@mui/material';
 import { Button, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import FileCodeIcon from '@/components/Icons/FileCodeIcon';
+import useToast from '@/hooks/useToast';
 
 import { useImportEvalDatasetMutation } from '../../../api';
-import { parseEvalError } from '../../../lib/helpers';
+import { casesAddedMessage, extractAddedCaseIds, parseEvalError } from '../../../lib/helpers';
 
 const ACCEPTED_EXTENSIONS = '.csv,.json';
 
@@ -25,6 +26,8 @@ const ImportCaseModal = memo(props => {
   const [errorMessage, setErrorMessage] = useState('');
   const [report, setReport] = useState(null);
   const fileInputRef = useRef(null);
+
+  const { toastSuccess } = useToast();
 
   const [importDataset, { isLoading: isImporting }] = useImportEvalDatasetMutation();
 
@@ -87,6 +90,14 @@ const ImportCaseModal = memo(props => {
           body: { format, content },
         }).unwrap();
 
+        // Only the rows the server accepted are announced, so an import that stored nothing
+        // stays silent and a partially rejected one still reports its real count.
+        const accepted = result.accepted ?? 0;
+        if (accepted > 0) {
+          const acceptedIds = extractAddedCaseIds(result);
+          toastSuccess(casesAddedMessage(accepted, accepted === 1 ? (acceptedIds[0] ?? null) : null));
+        }
+
         if (result.rejected > 0) {
           setReport(result);
         } else {
@@ -104,7 +115,7 @@ const ImportCaseModal = memo(props => {
     };
 
     reader.readAsText(file);
-  }, [file, importDataset, projectId, datasetId, onClose]);
+  }, [file, importDataset, projectId, datasetId, onClose, toastSuccess]);
 
   const styles = importCaseModalStyles();
 
