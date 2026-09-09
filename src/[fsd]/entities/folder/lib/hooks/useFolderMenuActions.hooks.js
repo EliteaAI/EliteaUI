@@ -22,8 +22,8 @@ export const useFolderMenuActions = ({ entityId, entityType, currentFolderId, on
     [folders, currentFolderId],
   );
   const { checkPermission } = useCheckPermission();
-  const canWrite = checkPermission(PERMISSIONS.chat.folders.update) && isFolderWritable(currentFolder);
-  const canCreateFolder = checkPermission(PERMISSIONS.chat.folders.create);
+  const canWrite = checkPermission(PERMISSIONS.entityFolders.update) && isFolderWritable(currentFolder);
+  const canCreateFolder = checkPermission(PERMISSIONS.entityFolders.create);
   const { moveEntityToFolder, isLoading: isMoving } = useMoveEntityToFolder();
   const { removeEntityFromFolder, isLoading: isRemoving } = useRemoveEntityFromFolder();
   const { toastSuccess, toastError } = useToast();

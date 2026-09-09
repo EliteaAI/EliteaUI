@@ -10,12 +10,13 @@ import useSaveVersion from '@/hooks/application/useSaveVersion';
 import { useIsFrom } from '@/hooks/useIsFromSpecificPageHooks';
 import useIsPipelineYamlCodeDirty from '@/pages/Pipelines/useIsPipelineYamlCodeDirty';
 import RouteDefinitions from '@/routes';
+import { selectActivePipeline } from '@/slices/pipeline';
 
 export default function SaveApplicationButton({ onSuccess, isAgent }) {
   const isYamlCodeDirty = useIsPipelineYamlCodeDirty();
   const { values } = useFormikContext();
   const isFromChat = useIsFrom(RouteDefinitions.Chat);
-  const { stateValidationErrors } = useSelector(state => state.pipeline);
+  const { stateValidationErrors } = useSelector(selectActivePipeline);
 
   const isFormDirtyExcluding = useFormDirtyExcluding();
 

@@ -12,7 +12,12 @@ export const formatVersionMeta = version => {
     const minutes = String(d.getMinutes()).padStart(2, '0');
     parts.push(`${month} ${day}, ${year}, ${hours}:${minutes}`);
   }
-  const authorName = version.author_name ?? version.author_email ?? 'Author unavailable';
+  const authorName =
+    version.author_name ??
+    version.author.name ??
+    version.author_email ??
+    version.author.email ??
+    'Author unavailable';
   parts.push(`by ${authorName}`);
   return parts.length ? parts.join(' · ') : null;
 };

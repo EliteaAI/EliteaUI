@@ -34,7 +34,7 @@ import useIsSmallWindow from '@/hooks/useIsSmallWindow';
 import useToast from '@/hooks/useToast.jsx';
 import { ContentContainer } from '@/pages/Common/index.js';
 import RouteDefinitions from '@/routes.js';
-import { actions } from '@/slices/pipeline.js';
+import { actions, selectActivePipeline } from '@/slices/pipeline.js';
 import { useTheme } from '@emotion/react';
 
 import useIsPipelineYamlCodeDirty from '../useIsPipelineYamlCodeDirty.js';
@@ -56,7 +56,7 @@ const areYamlObjectsEqual = (obj1, obj2) => {
   return JSON.stringify(obj1) === JSON.stringify(obj2);
 };
 
-const EditorPanel = forwardRef(({ setYamlDirty, stopRun, display, sx, disabled }, ref) => {
+const EditorPanel = forwardRef(({ setYamlDirty, stopRun, display, sx, disabled, isVisible = true }, ref) => {
   const dispatch = useDispatch();
   const { toastInfo } = useToast();
   const { isSmallWindow } = useIsSmallWindow();
@@ -70,7 +70,7 @@ const EditorPanel = forwardRef(({ setYamlDirty, stopRun, display, sx, disabled }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isYamlCodeDirty]);
 
-  const { yamlJsonObject, yamlCode } = useSelector(state => state.pipeline);
+  const { yamlJsonObject, yamlCode } = useSelector(selectActivePipeline);
   const setYamlCode = useCallback(
     code => {
       dispatch(actions.setYamlCode(code));
@@ -272,6 +272,7 @@ const EditorPanel = forwardRef(({ setYamlDirty, stopRun, display, sx, disabled }
                 setYamlJsonObject={setYamlJsonObject}
                 noBorder={isFromChat}
                 disabled={disabled}
+                isVisible={isVisible}
               />
             </Suspense>
           </ErrorBoundary>

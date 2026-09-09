@@ -8,7 +8,7 @@ import { DumpYamlHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/help
 import { useGetToolkitNameFromSchema } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
 import { ToolTypes } from '@/pages/Applications/Components/Tools/consts';
 import RouteDefinitions from '@/routes';
-import { actions } from '@/slices/pipeline.js';
+import { actions, selectActivePipeline } from '@/slices/pipeline.js';
 
 import { useIsFrom, useIsFromPipelineDetail } from '../useIsFromSpecificPageHooks';
 
@@ -75,7 +75,7 @@ const applyToolRemovalToNodes = (nodes, tool, toolkitName) => {
 const usePipelineToolsChanges = () => {
   const isFromPipelineDetail = useIsFromPipelineDetail();
   const isFromChat = useIsFrom(RouteDefinitions.Chat);
-  const { yamlJsonObject, yamlCode } = useSelector(state => state.pipeline);
+  const { yamlJsonObject, yamlCode } = useSelector(selectActivePipeline);
   const dispatch = useDispatch();
   const { getToolkitNameFromSchema } = useGetToolkitNameFromSchema();
 

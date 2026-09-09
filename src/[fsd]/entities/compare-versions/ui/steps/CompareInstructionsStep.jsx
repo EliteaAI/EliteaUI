@@ -22,6 +22,7 @@ const CompareInstructionsStep = memo(props => {
     onSaveRight,
     savingLeftKeys,
     savingRightKeys,
+    instructionsRequired = false,
   } = props;
 
   const leftValue = leftEdits.instructions ?? leftData.instructions ?? '';
@@ -61,7 +62,11 @@ const CompareInstructionsStep = memo(props => {
           <BaseBtn
             variant={BUTTON_VARIANTS.elitea}
             size="small"
-            disabled={leftEdits.instructions === undefined || savingLeftKeys.instructions}
+            disabled={
+              leftEdits.instructions === undefined ||
+              (instructionsRequired && !leftValue?.trim()) ||
+              savingLeftKeys.instructions
+            }
             onClick={() => onSaveLeft({ instructions: leftValue })}
             sx={compareInstructionsStepStyles.saveBtn}
           >
@@ -95,7 +100,11 @@ const CompareInstructionsStep = memo(props => {
           <BaseBtn
             variant={BUTTON_VARIANTS.elitea}
             size="small"
-            disabled={rightEdits.instructions === undefined || savingRightKeys.instructions}
+            disabled={
+              rightEdits.instructions === undefined ||
+              (instructionsRequired && !rightValue?.trim()) ||
+              savingRightKeys.instructions
+            }
             onClick={() => onSaveRight({ instructions: rightValue })}
             sx={compareInstructionsStepStyles.saveBtn}
           >

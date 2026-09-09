@@ -6,6 +6,7 @@ import { useSelector } from 'react-redux';
 import { DumpYamlHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { useIsFrom, useIsFromPipelineDetail } from '@/hooks/useIsFromSpecificPageHooks';
 import RouteDefinitions from '@/routes';
+import { selectActivePipeline } from '@/slices/pipeline';
 
 export default function useIsPipelineYamlCodeDirty() {
   const isFromPipelineDetail = useIsFromPipelineDetail();
@@ -13,7 +14,7 @@ export default function useIsPipelineYamlCodeDirty() {
   const {
     yamlCode,
     initState: { yamlCode: initYamlCode },
-  } = useSelector(state => state.pipeline);
+  } = useSelector(selectActivePipeline);
   const reDumpedYamlCode = useMemo(() => {
     let parsedYamlJson = undefined;
     try {

@@ -6,6 +6,7 @@ import { useParams, useSearchParams } from 'react-router-dom';
 
 import { ApplicationTabBar } from '@/[fsd]/entities/application-tab-bar/ui';
 import { useIsVersionNotFound } from '@/[fsd]/entities/version/lib/hooks';
+import { DEFAULT_PIPELINE_KEY } from '@/[fsd]/features/pipelines/lib/constants';
 import { InstructionsInputRefProvider } from '@/[fsd]/shared/lib/context';
 import { BreadcrumbsOrTitle } from '@/[fsd]/shared/ui';
 import { ApplicationControls } from '@/[fsd]/widgets/application-controls';
@@ -38,10 +39,18 @@ const EditPipeline = memo(() => {
   const [dirty, setDirty] = useState(false);
   const [isYamlDirty, setIsYamlDirty] = useState(false);
   const [unsavedLLMSettings, setUnsavedLLMSettings] = useState();
+
+  // Safety net: keep activePipelineKey pointing at DEFAULT_PIPELINE_KEY for the lifetime
+  // of this page. The primary claim happens inside useApplicationInitialValues before
+  // initThePipeline, but this guards against any later re-assignment (e.g. from stale refs).
+  useEffect(() => {
+    dispatch(actions.setActivePipelineKey(DEFAULT_PIPELINE_KEY));
+  }, [dispatch]);
   const styles = useMemo(() => editPipelineStyles(), []);
 
   const handleDiscard = useCallback(() => {
     setDirty(false);
+    setIsYamlDirty(false);
     dispatch(actions.resetPipeline());
     dispatch(editorActions.resetPipelineEditor());
     setUnsavedLLMSettings(undefined);

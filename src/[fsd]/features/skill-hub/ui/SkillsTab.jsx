@@ -21,7 +21,7 @@ const SkillsTab = memo(props => {
   const { query = '', onTotalCountChange } = props;
   const debouncedQuery = useDebounceValue(query, 300);
   const { data: platformSettings } = useGetPlatformSettingsQuery();
-  const newItemDays = platformSettings?.catalog_new_item_days ?? DEFAULT_NEW_ITEM_DAYS;
+  const newItemDays = platformSettings?.skill_catalog_new_item_days ?? DEFAULT_NEW_ITEM_DAYS;
   const [selectedTagNames, setSelectedTagNames] = useState([]);
   const [selectedSkill, setSelectedSkill] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
