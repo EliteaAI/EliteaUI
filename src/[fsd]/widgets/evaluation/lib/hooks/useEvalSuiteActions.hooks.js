@@ -12,7 +12,7 @@ import {
   useDeleteEvalSuiteMutation,
   useUpdateEvalSuiteMutation,
 } from '../../api';
-import { parseEvalError } from '../helpers';
+import { parseEvalError, suiteCreatedMessage, suiteDeletedMessage } from '../helpers';
 
 export const useEvalSuiteActions = ({
   projectId,
@@ -82,7 +82,7 @@ export const useEvalSuiteActions = ({
             await afterCreateRef.current(created.id);
           }
           setBlockNav(false);
-          toastSuccess(`The "${formData.name}" suite has been successfully created.`);
+          toastSuccess(suiteCreatedMessage(formData.name));
           navigate(
             { pathname: `${baseEvaluatePath}/${created.id}`, search: persistentSearch },
             { replace: true },
@@ -137,7 +137,7 @@ export const useEvalSuiteActions = ({
     const deletedId = suiteToDelete.id;
     try {
       await deleteEvalSuite({ projectId, suiteId: deletedId }).unwrap();
-      toastSuccess(`The "${suiteName}" suite has been successfully deleted.`);
+      toastSuccess(suiteDeletedMessage(suiteName));
       if (editingSuiteId === deletedId) {
         setBlockNav(false);
         navigate({ pathname: baseEvaluatePath, search: persistentSearch }, { replace: true });

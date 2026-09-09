@@ -13,7 +13,12 @@ import {
   useUpdateEvalBindingMutation,
 } from '../../api';
 import { EVAL_TIER } from '../constants';
-import { findDimensionByBindingId, parseEvalError } from '../helpers';
+import {
+  dimensionRemovedMessage,
+  dimensionsAddedMessage,
+  findDimensionByBindingId,
+  parseEvalError,
+} from '../helpers';
 
 export const useEvalDimensionActions = ({
   projectId,
@@ -95,7 +100,7 @@ export const useEvalDimensionActions = ({
           return [...prev, ...newItems];
         });
         setShowDimensionLibrary(false);
-        toastSuccess(`${selected.length} dimension${selected.length === 1 ? '' : 's'} added to the suite.`);
+        toastSuccess(dimensionsAddedMessage(selected.length, selected[0]?.name));
         return;
       }
       const results = await Promise.allSettled(
@@ -114,7 +119,10 @@ export const useEvalDimensionActions = ({
       const successCount = results.filter(r => r.status === 'fulfilled').length;
       const failCount = results.filter(r => r.status === 'rejected').length;
       if (failCount === 0) {
-        toastSuccess(`${successCount} dimension${successCount === 1 ? '' : 's'} added to the suite.`);
+        // Only a lone successful attachment can be named, so the index of the first
+        // fulfilled result maps back to the dimension the user picked.
+        const addedIndex = results.findIndex(r => r.status === 'fulfilled');
+        toastSuccess(dimensionsAddedMessage(successCount, selected[addedIndex]?.name));
       } else {
         toastError(`${successCount} added, ${failCount} failed to attach.`);
       }
@@ -249,7 +257,7 @@ export const useEvalDimensionActions = ({
         suiteId: editingSuiteId,
         bindingId: dimensionToRemove.binding.id,
       }).unwrap();
-      toastSuccess('Dimension has been removed from the suite.');
+      toastSuccess(dimensionRemovedMessage(dimensionToRemove.name));
     } catch (error) {
       toastError(parseEvalError(error, 'Failed to remove dimension from the suite.'));
     }
