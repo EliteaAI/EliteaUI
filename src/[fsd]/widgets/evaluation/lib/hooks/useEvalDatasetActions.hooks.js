@@ -11,7 +11,7 @@ import {
   useUpdateEvalSuiteCaseExclusionsMutation,
   useUpdateEvalSuiteMutation,
 } from '../../api';
-import { parseEvalError } from '../helpers';
+import { caseExcludedMessage, caseIncludedMessage, parseEvalError } from '../helpers';
 
 export const useEvalDatasetActions = ({ projectId, editingSuiteId, agentId, tab }) => {
   const navigate = useNavigate();
@@ -171,7 +171,7 @@ export const useEvalDatasetActions = ({ projectId, editingSuiteId, agentId, tab 
         suiteId: editingSuiteId,
         caseIds: newExclusions,
       }).unwrap();
-      toastSuccess('Case has been excluded from this suite.');
+      toastSuccess(caseExcludedMessage(caseToExclude.id));
     } catch (error) {
       toastError(parseEvalError(error, 'Failed to exclude case from suite.'));
     } finally {
@@ -191,7 +191,7 @@ export const useEvalDatasetActions = ({ projectId, editingSuiteId, agentId, tab 
           suiteId: editingSuiteId,
           caseIds: newExclusions,
         }).unwrap();
-        toastSuccess('Case has been included in this suite.');
+        toastSuccess(caseIncludedMessage(datasetCase.id));
       } catch (error) {
         toastError(parseEvalError(error, 'Failed to include case in suite.'));
       }

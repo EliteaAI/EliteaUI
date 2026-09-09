@@ -581,7 +581,7 @@ const userInputStyles = (isFocused, isDragOver, isRecording) => {
     if (isRecording) return palette.primary.main;
     if (!isFocused) return 'transparent';
 
-    return `linear-gradient(0deg, ${palette.background.userInputBorderDark} 0%, ${palette.background.userInputBorderLight} 100%)`;
+    return `linear-gradient(0deg, ${palette.border.chatInput.base} 0%, ${palette.border.chatInput.glow} 100%)`;
   };
 
   return {
@@ -592,9 +592,7 @@ const userInputStyles = (isFocused, isDragOver, isRecording) => {
       background: getInputBorder(palette),
 
       ...((isFocused || isRecording) && {
-        boxShadow: isRecording
-          ? `0 0 0.75rem 0 ${palette.primary.main}40`
-          : `0 -0.3125rem 1.25rem 0 ${palette.background.userInputBorderShadow}`,
+        boxShadow: isRecording ? palette.boxShadow.chatInput.recording : palette.boxShadow.chatInput.default,
       }),
     }),
     container: ({ palette }) => ({

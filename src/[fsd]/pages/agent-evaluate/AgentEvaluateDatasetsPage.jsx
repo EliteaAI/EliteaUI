@@ -13,6 +13,9 @@ import {
   DatasetsPanel,
   EvaluationDocsButton,
   ImportCaseModal,
+  caseDeletedMessage,
+  datasetCreatedMessage,
+  datasetDeletedMessage,
   parseEvalError,
   sortDatasetsByDate,
   useDeleteEvalDatasetCaseMutation,
@@ -115,9 +118,10 @@ const AgentEvaluateDatasetsPage = memo(() => {
     dataset => {
       if (dataset?.id && !datasetToEdit) {
         setSelectedDatasetId(dataset.id);
+        toastSuccess(datasetCreatedMessage(dataset.name));
       }
     },
-    [datasetToEdit],
+    [datasetToEdit, toastSuccess],
   );
 
   const handleDeleteDataset = useCallback(dataset => {
@@ -132,7 +136,7 @@ const AgentEvaluateDatasetsPage = memo(() => {
     if (!datasetToDelete) return;
     try {
       await deleteDataset({ projectId, datasetId: datasetToDelete.id }).unwrap();
-      toastSuccess(`Dataset "${datasetToDelete.name}" has been deleted.`);
+      toastSuccess(datasetDeletedMessage(datasetToDelete.name));
       if (selectedDatasetId === datasetToDelete.id) {
         const remaining = sortedDatasets.filter(d => d.id !== datasetToDelete.id);
         setSelectedDatasetId(remaining.length > 0 ? remaining[0].id : null);
@@ -182,7 +186,7 @@ const AgentEvaluateDatasetsPage = memo(() => {
         datasetId: selectedDatasetId,
         caseId: caseToDelete.id,
       }).unwrap();
-      toastSuccess('Case has been deleted.');
+      toastSuccess(caseDeletedMessage(caseToDelete.id));
     } catch (error) {
       toastError(parseEvalError(error, 'Failed to delete case.'));
     }
