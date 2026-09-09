@@ -142,7 +142,7 @@ const usageSummaryStyles = () => ({
     padding: '1rem',
     borderRadius: '0.5rem',
     border: 'none',
-    backgroundColor: palette.background.userInputBackground,
+    backgroundColor: palette.background.surface.interactive.default,
   }),
   meterHeader: {
     display: 'flex',
@@ -159,7 +159,7 @@ const usageSummaryStyles = () => ({
     height: '1.25rem',
     fontSize: '0.6875rem',
     color: palette.text.metrics || palette.text.disabled,
-    backgroundColor: palette.background.userInputBackground || 'transparent',
+    backgroundColor: palette.background.surface.interactive.default || 'transparent',
   }),
   hint: ({ palette }) => ({
     color: palette.text.metrics || palette.text.disabled,

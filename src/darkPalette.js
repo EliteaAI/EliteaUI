@@ -96,10 +96,7 @@ const oldDarkPalette = {
   mode: 'dark',
 
   background: {
-    section: white3,
     dragging: blue10,
-    userInputBackground: white5,
-    userInputBackgroundActive: white10,
     warningBkg: red15,
     wrongBkg: red40,
     errorBkg: red8,
@@ -666,6 +663,13 @@ const darkPalette = {
       primary: gray60,
       secondary: gray50,
       tertiary: gray55,
+    },
+    surface: {
+      container: white3,
+      interactive: {
+        default: white5,
+        active: white10,
+      },
     },
     npsCard: `linear-gradient(to top, ${darkColorScheme.accentLight}, ${darkColorScheme.accentMid})`,
     button: {

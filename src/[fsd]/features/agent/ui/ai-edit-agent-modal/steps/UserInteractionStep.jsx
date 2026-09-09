@@ -303,7 +303,7 @@ const styles = {
   readOnlyCard: ({ palette }) => ({
     padding: '0.5rem 1rem',
     borderRadius: '0.5rem',
-    backgroundColor: palette.background.userInputBackground,
+    backgroundColor: palette.background.surface.interactive.default,
     border: `0.0625rem solid ${palette.border.lines}`,
     minHeight: '2.5rem',
     maxHeight: '5.5rem',
@@ -320,7 +320,7 @@ const styles = {
   editableCard: ({ palette }) => ({
     padding: '0.5rem 1rem',
     borderRadius: '0.5rem',
-    backgroundColor: palette.background.userInputBackground,
+    backgroundColor: palette.background.surface.interactive.default,
     border: `0.0625rem solid ${palette.border.lines}`,
     minHeight: '2.5rem',
     maxHeight: '5.5rem',
@@ -332,7 +332,7 @@ const styles = {
   editableStarterCard: ({ palette }) => ({
     padding: '0.5rem 1rem',
     borderRadius: '0.5rem',
-    backgroundColor: palette.background.userInputBackground,
+    backgroundColor: palette.background.surface.interactive.default,
     border: `0.0625rem solid ${palette.border.lines}`,
     minHeight: '2.5rem',
     maxHeight: '5.5rem',

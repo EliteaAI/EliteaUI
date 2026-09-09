@@ -132,7 +132,7 @@ const stateVariableDefaultValueStyles = multiline => ({
       height: multiline ? 'auto' : spacing(4),
       padding: spacing(0.5, 4, 0.5, 1.25), // Always reserve space for button
       borderRadius: spacing(1),
-      background: palette.background.userInputBackground,
+      background: palette.background.surface.interactive.default,
       fontSize: '.875rem',
       fontWeight: 400,
       color: palette.text.secondary,

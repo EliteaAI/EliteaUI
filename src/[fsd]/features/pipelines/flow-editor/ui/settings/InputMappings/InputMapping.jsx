@@ -133,7 +133,7 @@ const styles = {
     background: `${palette.background.default.tertiary} !important`,
   }),
   summary: ({ palette }) => ({
-    background: palette.background.userInputBackground,
+    background: palette.background.surface.interactive.default,
     borderRadius: '.5rem',
     minHeight: '2rem !important',
   }),

@@ -114,7 +114,7 @@ const styles = {
     },
     '&:hover': {
       opacity: 1,
-      backgroundColor: palette.background.userInputBackgroundActive,
+      backgroundColor: palette.background.surface.interactive.active,
     },
   }),
   attentionIconBox: ({ palette }) => ({

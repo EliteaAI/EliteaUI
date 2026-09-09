@@ -484,7 +484,7 @@ const analyticsUserDetailedStyles = () => ({
   chartCard: ({ palette }) => ({
     padding: '1rem',
     borderRadius: '0.5rem',
-    backgroundColor: palette.background.userInputBackground,
+    backgroundColor: palette.background.surface.interactive.default,
     display: 'flex',
     flexDirection: 'column',
     minWidth: 0,

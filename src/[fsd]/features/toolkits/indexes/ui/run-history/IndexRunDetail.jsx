@@ -137,7 +137,7 @@ const indexRunDetailStyles = () => ({
     overflowX: 'auto',
     whiteSpace: 'pre',
     color: palette.text.secondary,
-    backgroundColor: palette.background.userInputBackground,
+    backgroundColor: palette.background.surface.interactive.default,
     borderRadius: '0.5rem',
   }),
 });

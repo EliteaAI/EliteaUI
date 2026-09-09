@@ -75,7 +75,7 @@ vi.mock('@/[fsd]/entities/run-history/ui', () => ({
 
 const theme = createTheme({
   palette: {
-    background: { userInputBackground: '#eee' },
+    background: { surface: { interactive: { default: '#eee' } } },
     split: { pressed: '#ddd' },
     border: { lines: '#ccc' },
     icon: { fill: { error: '#f00', warning: '#fa0', info: '#00f', successModal: '#0f0' } },

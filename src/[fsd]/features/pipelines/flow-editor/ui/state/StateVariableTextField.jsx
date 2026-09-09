@@ -48,7 +48,7 @@ const stateVariableTextFieldStyles = (hasError, width) => ({
       height: spacing(4),
       padding: spacing(0.5, 1.25),
       borderRadius: spacing(1),
-      background: palette.background.userInputBackground,
+      background: palette.background.surface.interactive.default,
       fontSize: '.875rem',
       color: palette.text.secondary,
     },

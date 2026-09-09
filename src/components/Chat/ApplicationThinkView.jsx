@@ -1093,7 +1093,7 @@ const applicationThinkViewStyles = () => ({
     alignItem: 'center',
     padding: '0rem 0.5rem !important',
     '&:hover': {
-      backgroundColor: palette.background.userInputBackgroundActive,
+      backgroundColor: palette.background.surface.interactive.active,
       color: palette.icon.fill.secondary,
       '& .MuiAccordionSummary-content': {
         '& span': {

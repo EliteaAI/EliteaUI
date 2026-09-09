@@ -102,7 +102,7 @@ const usageDailyChartStyles = () => ({
     padding: '1rem',
     borderRadius: '0.5rem',
     border: 'none',
-    backgroundColor: palette.background.userInputBackground,
+    backgroundColor: palette.background.surface.interactive.default,
     flex: 1,
     minWidth: 0,
   }),

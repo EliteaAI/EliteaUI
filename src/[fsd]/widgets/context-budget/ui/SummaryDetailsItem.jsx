@@ -142,7 +142,7 @@ const summaryDetailsItemStyles = () => ({
     gap: spacing(1.5),
     padding: spacing(1.5, 2),
     paddingLeft: '1.2rem',
-    backgroundColor: palette.background.userInputBackground,
+    backgroundColor: palette.background.surface.interactive.default,
     borderRadius: BORDER_RADIUS.MD,
     alignSelf: 'stretch',
   }),

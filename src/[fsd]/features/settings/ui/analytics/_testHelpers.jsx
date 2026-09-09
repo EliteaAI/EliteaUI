@@ -44,7 +44,7 @@ export const analyticsTestTheme = createTheme({
     text: { accent: '#000', metrics: '#666', button: { primary: '#fff' } },
     status: { rejected: '#f00', published: '#0f0', pending: '#ff0', draft: '#1976d2' },
     background: {
-      userInputBackground: '#fff',
+      surface: { interactive: { default: '#fff' } },
       card: '#fafafa',
       conversation: { hover: '#fafafa' },
     },

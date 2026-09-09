@@ -222,7 +222,7 @@ const PreviewHeader = memo(props => {
           <Box
             sx={{
               button: ({ palette }) => ({
-                background: palette.background.userInputBackgroundActive,
+                background: palette.background.surface.interactive.active,
 
                 ':hover': {
                   background: palette.background.button.secondary.hover,
@@ -309,7 +309,7 @@ const previewHeaderStyles = isChatPage => ({
   canvasHeader: ({ palette }) => ({
     display: 'flex',
     flexDirection: 'column',
-    backgroundColor: palette.background.userInputBackground,
+    backgroundColor: palette.background.surface.interactive.default,
     borderBottom: `1px solid ${palette.border.lines}`,
   }),
 

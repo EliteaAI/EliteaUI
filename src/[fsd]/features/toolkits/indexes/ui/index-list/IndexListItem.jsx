@@ -298,7 +298,7 @@ const indexListItem = () => ({
     width: '100%',
     minHeight: '4rem',
     borderRadius: '.5rem',
-    background: `${palette.background.userInputBackground}`,
+    background: `${palette.background.surface.interactive.default}`,
     padding: '.5rem 1rem',
     border: `.0625rem solid ${palette.border.table}`,
     position: 'relative',

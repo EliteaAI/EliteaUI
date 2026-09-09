@@ -117,7 +117,7 @@ const indexSearchPanelStyles = () => ({
     justifyContent: 'center',
     flexShrink: 0,
     height: PANEL_HEADER_HEIGHT,
-    background: palette.background.section,
+    background: palette.background.surface.container,
     borderBottom: `0.0625rem solid ${palette.border.table}`,
   }),
   columnBody: {

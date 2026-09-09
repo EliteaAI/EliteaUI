@@ -176,7 +176,7 @@ const memoryContextManagementStyles = () => ({
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '0.75rem 1rem',
-    backgroundColor: palette.background.userInputBackground,
+    backgroundColor: palette.background.surface.interactive.default,
     borderRadius: '0.75rem',
   }),
   toggleContent: {

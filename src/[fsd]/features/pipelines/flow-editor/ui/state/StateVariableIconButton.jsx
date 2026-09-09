@@ -35,21 +35,21 @@ const iconButtonStyles = isActive => ({
     borderRadius: '0.5rem',
     height: '2rem',
     width: '2rem',
-    backgroundColor: `${palette.background.userInputBackground} !important`,
+    backgroundColor: `${palette.background.surface.interactive.default} !important`,
     border: isActive
       ? `0.0625rem solid ${palette.border.userMessageEditor} !important`
       : '0.0625rem solid transparent !important',
     '&:hover:not(:disabled)': {
       borderColor: `${isActive ? palette.border.userMessageEditor : palette.border.lines} !important`,
-      backgroundColor: `${palette.background.userInputBackground} !important`,
+      backgroundColor: `${palette.background.surface.interactive.default} !important`,
     },
     '&:focus, &:focus-visible': {
       borderColor: `${palette.border.userMessageEditor} !important`,
       outline: 'none',
-      backgroundColor: `${palette.background.userInputBackground} !important`,
+      backgroundColor: `${palette.background.surface.interactive.default} !important`,
     },
     '&.Mui-focusVisible': {
-      backgroundColor: `${palette.background.userInputBackground} !important`,
+      backgroundColor: `${palette.background.surface.interactive.default} !important`,
     },
     '& .MuiTouchRipple-root': {
       display: 'none',

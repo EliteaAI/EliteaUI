@@ -11,7 +11,7 @@ const ControlsDropdown = memo(props => {
     <HeaderContainer
       sx={{
         button: ({ palette }) => ({
-          background: palette.background.userInputBackgroundActive,
+          background: palette.background.surface.interactive.active,
 
           ':hover': {
             background: palette.background.button.secondary.hover,

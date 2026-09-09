@@ -177,7 +177,7 @@ const usageMembersTableStyles = () => ({
     padding: '1rem',
     borderRadius: '0.5rem',
     border: 'none',
-    backgroundColor: palette.background.userInputBackground,
+    backgroundColor: palette.background.surface.interactive.default,
   }),
   title: ({ palette }) => ({
     color: palette.text.secondary,

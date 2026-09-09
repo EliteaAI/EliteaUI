@@ -54,7 +54,7 @@ export const ChatInputContainer = styled(Box)(
   align-items: flex-start;
   border-radius: 0rem 0rem 0.375rem 0.375rem;
   border-top: 1px solid ${theme.palette.border.lines};
-  background: ${theme.palette.background.userInputBackground};
+  background: ${theme.palette.background.surface.interactive.default};
 `,
 );
 

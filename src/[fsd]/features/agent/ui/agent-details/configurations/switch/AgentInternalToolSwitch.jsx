@@ -121,7 +121,7 @@ AgentInternalToolSwitch.displayName = 'AgentInternalToolSwitch';
 /** @type {MuiSx} */
 const agentInternalToolSwitchStyles = () => ({
   container: ({ palette }) => ({
-    backgroundColor: palette.background.userInputBackground,
+    backgroundColor: palette.background.surface.interactive.default,
     borderRadius: '0.5rem',
     height: '2.5rem',
     padding: '0.75rem',

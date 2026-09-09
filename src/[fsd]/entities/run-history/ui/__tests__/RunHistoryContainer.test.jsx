@@ -100,7 +100,7 @@ afterEach(() => cleanup());
 
 const theme = createTheme({
   palette: {
-    background: { userInputBackground: '#eee' },
+    background: { surface: { interactive: { default: '#eee' } } },
     split: { pressed: '#ddd' },
     border: { lines: '#ccc' },
   },

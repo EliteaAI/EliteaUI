@@ -12,7 +12,7 @@ export const eliteaTreeItemStyle = (theme, isActive) => ({
     color: theme.palette.text.secondary,
   },
   '& .MuiTreeItem-content:hover': {
-    background: theme.palette.background.userInputBackground,
+    background: theme.palette.background.surface.interactive.default,
   },
   '& .MuiTreeItem-content': {
     '&.Mui-selected': {
@@ -23,7 +23,7 @@ export const eliteaTreeItemStyle = (theme, isActive) => ({
     background: 'transparent',
   },
   '& .Mui-selected:hover': {
-    background: theme.palette.background.userInputBackground,
+    background: theme.palette.background.surface.interactive.default,
   },
   '& .Mui-selected': {
     backgroundColor: 'transparent !important',
@@ -34,7 +34,7 @@ export const eliteaTreeItemStyle = (theme, isActive) => ({
     },
   },
   '& .MuiTreeItem:hover': {
-    background: theme.palette.background.userInputBackground,
+    background: theme.palette.background.surface.interactive.default,
   },
   '& .MuiTreeItem-checkbox': {
     '& svg': {
