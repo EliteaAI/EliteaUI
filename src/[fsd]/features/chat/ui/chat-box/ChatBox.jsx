@@ -33,7 +33,10 @@ import {
   isPipelineHitlNodeInterrupt,
   scheduleRootHitlDecision,
 } from '@/[fsd]/features/chat/lib/helpers/hitl.helpers.js';
-import { shouldQueueRootAuthorizationWithHitl } from '@/[fsd]/features/chat/lib/helpers/mcpAuthorization.helpers.js';
+import {
+  hasPendingAuthRequiredAction,
+  shouldQueueRootAuthorizationWithHitl,
+} from '@/[fsd]/features/chat/lib/helpers/mcpAuthorization.helpers.js';
 import * as NewConversationHelpers from '@/[fsd]/features/chat/lib/helpers/newConversation.helpers';
 import {
   useBudgetWarning,
@@ -255,6 +258,11 @@ const ChatBox = forwardRef((props, boxRef) => {
   }, [pendingHitlMessage]);
 
   const hasBlockingHitlInterrupt = hasPendingHitlInterrupt && !isPendingClarifyingQuestion;
+
+  const hasPendingAuthRequired = useMemo(
+    () => hasPendingAuthRequiredAction(chat_history[chat_history.length - 1]),
+    [chat_history],
+  );
 
   // Chat states
   const [selectedUsers, setSelectedUsers] = useState([]);
@@ -2753,6 +2761,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       isUpdatingInternalToolsConfig ||
       activeConversation?.isSending ||
       hasBlockingHitlInterrupt ||
+      hasPendingAuthRequired ||
       (isStreamingNow && !isInjectable) ||
       isActiveParticipantBroken,
     [
@@ -2763,6 +2772,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       isUpdatingInternalToolsConfig,
       activeConversation?.isSending,
       hasBlockingHitlInterrupt,
+      hasPendingAuthRequired,
       isStreamingNow,
       isInjectable,
       isActiveParticipantBroken,
