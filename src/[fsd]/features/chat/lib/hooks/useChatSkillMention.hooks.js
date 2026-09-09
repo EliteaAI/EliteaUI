@@ -33,10 +33,17 @@ export const useChatSkillMention = ({
   const mentionAnchorRef = useRef(null);
 
   const isAgent = activeParticipant?.entity_name === ChatParticipantType.Applications;
+  const participantEntityId = activeParticipant?.entity_meta?.id;
+  // Details are resolved asynchronously, so right after a participant switch they can still
+  // describe the previously active agent. Falling back to their version id then mixes one
+  // agent's version with another agent's project id and the request 404s.
+  const detailsBelongToParticipant =
+    !!participantEntityId && String(activeParticipantDetails?.id) === String(participantEntityId);
   // The participant's entity_settings.version_id is not always populated (e.g. the agent
   // editor's test chat), so fall back to the resolved details' version_details.id.
   const appVersionId =
-    activeParticipant?.entity_settings?.version_id || activeParticipantDetails?.version_details?.id;
+    activeParticipant?.entity_settings?.version_id ||
+    (detailsBelongToParticipant ? activeParticipantDetails?.version_details?.id : undefined);
   const participantProjectId = activeParticipant?.entity_meta?.project_id || projectId;
 
   const { currentData: applicationSkills } = useGetApplicationSkillsQuery(
