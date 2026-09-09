@@ -186,23 +186,6 @@ const ApplicationControls = memo(props => {
       ...(forkEntityMenuItem ? [forkEntityMenuItem] : []),
       ...(publishApplicationMenuItem && !isFromPipeline ? [publishApplicationMenuItem] : []),
       ...(unpublishVersionMenuItem && !isFromPipeline ? [unpublishVersionMenuItem] : []),
-      ...(!isFromPipeline
-        ? [
-            {
-              key: 'evaluate',
-              label: 'Evaluate (Beta)',
-              icon: <EvaluateIcon sx={{ fontSize: '1rem' }} />,
-              addSeparator: false,
-              onClick: () => {
-                const path = NavigationHelpers.buildRoute(RouteDefinitions.ApplicationsEvaluate, {
-                  tab: tab ?? 'all',
-                  agentId,
-                });
-                navigate({ pathname: path, search: location.search });
-              },
-            },
-          ]
-        : []),
       ...(canDeleteVersion
         ? [
             {
@@ -233,6 +216,23 @@ const ApplicationControls = memo(props => {
           },
         },
       },
+      ...(!isFromPipeline
+        ? [
+            {
+              key: 'evaluate',
+              label: 'Evaluate (Beta)',
+              icon: <EvaluateIcon sx={{ fontSize: '1rem' }} />,
+              addSeparator: false,
+              onClick: () => {
+                const path = NavigationHelpers.buildRoute(RouteDefinitions.ApplicationsEvaluate, {
+                  tab: tab ?? 'all',
+                  agentId,
+                });
+                navigate({ pathname: path, search: location.search });
+              },
+            },
+          ]
+        : []),
       shareAgentMenuItem,
       pinMenuItem,
       ...(canDeleteApplication

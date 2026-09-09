@@ -699,6 +699,14 @@ const SingleSelect = memo(props => {
       >
         {label}
       </Typography>
+      {infoIconDescription && (
+        <Box onClick={e => e.stopPropagation()}>
+          <InfoTooltip
+            infoTooltip={{ title: infoIconDescription }}
+            sx={styles.infoTooltip}
+          />
+        </Box>
+      )}
       <Box onClick={e => e.stopPropagation()}>
         {renderSelectComponent(styles.selectwithLabel, styles.selectIconWithLabel)}
       </Box>
