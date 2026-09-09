@@ -6,6 +6,7 @@ import { AccordionConstants, ModalConstants } from '@/[fsd]/shared/lib/constants
 import { Button, Input, Modal } from '@/[fsd]/shared/ui';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import SingleSelect from '@/[fsd]/shared/ui/select/SingleSelect';
 import { LLMModelSelector } from '@/[fsd]/widgets/llm-model-selector';
 import { MAX_DESCRIPTION_LENGTH, MAX_NAME_LENGTH } from '@/common/constants';
 import ArrowBackIcon from '@/components/Icons/ArrowBackIcon';
@@ -24,6 +25,9 @@ const AUTO_JUDGE_MODEL_ID = '__auto__';
 
 const JUDGE_MODEL_TOOLTIP =
   "The judge model evaluates the agent's input, output or instructions against the selected dimensions and datasets. All evaluation runs for this suit use this model.";
+
+const VERSION_TOOLTIP =
+  'The agent version to evaluate. Results are scoped to the selected version, which is locked while a run is in progress.';
 
 const SuiteDetailPanel = memo(props => {
   const {
@@ -48,7 +52,14 @@ const SuiteDetailPanel = memo(props => {
     handleDeleteSuite: onDelete,
     handleDirtyChange: onDirtyChange,
   } = suiteActions;
-  const { isEvaluating, handleEvaluate: onEvaluate } = runActions;
+  const {
+    isEvaluating,
+    handleEvaluate: onEvaluate,
+    versions: applicationVersions = [],
+    isLoadingVersions,
+    selectedVersionId,
+    handleVersionChange: onVersionChange,
+  } = runActions;
   const { handleManageDatasets: onManageDatasets } = datasetActions;
   const { handleManageDimensions: onManageDimensions } = dimensionActions;
 
@@ -84,6 +95,11 @@ const SuiteDetailPanel = memo(props => {
   const handleDescriptionChange = useCallback(event => {
     setDescription(event.target.value);
   }, []);
+
+  const versionOptions = useMemo(
+    () => applicationVersions.map(version => ({ value: version.id, label: version.name })),
+    [applicationVersions],
+  );
 
   const autoJudgeModelLabel = modelsData.low_tier_default_model_name
     ? `Auto (${modelsData.low_tier_default_model_name})`
@@ -164,7 +180,13 @@ const SuiteDetailPanel = memo(props => {
   const hasDatasetWithCases = attachedDataset != null && caseCount > 0;
   const hasDimensions = attachedDimensions.length > 0;
   const isEvaluateDisabled =
-    isNew || !suite?.id || !canRun || isEvaluating || !hasDatasetWithCases || !hasDimensions;
+    isNew ||
+    !suite?.id ||
+    !canRun ||
+    isEvaluating ||
+    !hasDatasetWithCases ||
+    !hasDimensions ||
+    !selectedVersionId;
 
   const title = isNew ? 'New Suite' : (suite?.name ?? 'Suite');
 
@@ -303,6 +325,21 @@ const SuiteDetailPanel = memo(props => {
                     onSelectModel={handleSelectJudgeModel}
                     showSettingsEntry={false}
                     disabled={!canUpdateSuite}
+                  />
+                  <SingleSelect
+                    label="Version"
+                    separateLabel
+                    infoIconDescription={VERSION_TOOLTIP}
+                    value={selectedVersionId}
+                    options={versionOptions}
+                    onValueChange={onVersionChange}
+                    // A run is scoped to one version, so the selection is frozen for as long as one
+                    // is in flight — that also keeps the progress and Cancel UI on screen.
+                    disabled={!canRun || isLoadingVersions || isEvaluating}
+                    displayEmpty
+                    emptyPlaceholder={
+                      isLoadingVersions ? 'Loading versions…' : 'Select a version to evaluate'
+                    }
                   />
                 </Box>
               ),

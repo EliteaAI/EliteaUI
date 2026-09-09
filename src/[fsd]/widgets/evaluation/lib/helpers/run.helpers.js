@@ -89,3 +89,16 @@ export const sinkUnscoredRuns = (runs = []) => [
   ...runs.filter(isRunScored),
   ...runs.filter(run => !isRunScored(run)),
 ];
+
+/**
+ * The version a run actually evaluated, resolved against the agent's current version list. A run
+ * that recorded none, or one whose version has since been deleted, reports nothing rather than
+ * falling back to the agent's current version — that would attribute a historical result to
+ * today's configuration (§2). Shared by the Results header, the history list and the Excel export
+ * so all three name the same run identically.
+ */
+export const resolveRunVersionName = (run, versions = []) => {
+  const versionId = run?.application_version_id ?? null;
+  if (versionId == null) return null;
+  return versions.find(version => version.id === versionId)?.name ?? null;
+};

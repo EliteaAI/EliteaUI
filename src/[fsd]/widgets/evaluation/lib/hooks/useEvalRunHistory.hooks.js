@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 
 import { useTableSort } from '@/[fsd]/entities/grid-table/lib';
 import { compareRunTimestamp } from '@/[fsd]/entities/run-history/lib/helpers';
+import { useApplicationDetailsQuery } from '@/api/applications';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import useToast from '@/hooks/useToast';
 
@@ -14,6 +15,7 @@ import {
   compareRunScore,
   parseEvalError,
   resolveRunSuiteName,
+  resolveRunVersionName,
   sinkUnscoredRuns,
 } from '../helpers';
 import { useEvaluationExport } from './useEvaluationExport.hooks';
@@ -24,6 +26,7 @@ export const RUN_SEARCH_PARAM = 'run';
 const SORT_FIELD = {
   date: 'date',
   suite: 'suite',
+  version: 'version',
   score: 'score',
 };
 
@@ -47,6 +50,10 @@ export const useEvalRunHistory = ({ projectId, applicationId }) => {
     isError: isRunsError,
   } = useEvalRunsQuery({ projectId, applicationId }, { skip });
   const { data: suites = [] } = useEvalSuitesQuery({ projectId, applicationId }, { skip });
+  // The run records only `application_version_id`; the names live on the agent.
+  const { data: applicationDetails } = useApplicationDetailsQuery({ projectId, applicationId }, { skip });
+
+  const versions = useMemo(() => applicationDetails?.versions ?? [], [applicationDetails]);
 
   const [deleteEvalRun, { isLoading: isDeleting }] = useDeleteEvalRunMutation();
   const [runToDelete, setRunToDelete] = useState(null);
@@ -72,9 +79,14 @@ export const useEvalRunHistory = ({ projectId, applicationId }) => {
         compareRunTimestamp(rowA.started_at || rowA.created_at, rowB.started_at || rowB.created_at),
       [SORT_FIELD.suite]: (_a, _b, rowA, rowB) =>
         resolveRunSuiteName(rowA, suiteNamesById).localeCompare(resolveRunSuiteName(rowB, suiteNamesById)),
+      // A run whose version was never recorded or has since been deleted compares as an empty name.
+      [SORT_FIELD.version]: (_a, _b, rowA, rowB) =>
+        (resolveRunVersionName(rowA, versions) ?? '').localeCompare(
+          resolveRunVersionName(rowB, versions) ?? '',
+        ),
       [SORT_FIELD.score]: (_a, _b, rowA, rowB) => compareRunScore(rowA, rowB),
     }),
-    [suiteNamesById],
+    [suiteNamesById, versions],
   );
 
   const { sortConfig, handleSort, sortData } = useTableSort({
@@ -179,6 +191,7 @@ export const useEvalRunHistory = ({ projectId, applicationId }) => {
   return {
     runs: sortedRuns,
     suiteNamesById,
+    versions,
     isRunsLoading,
     isRunsError,
     selectedRunId,
