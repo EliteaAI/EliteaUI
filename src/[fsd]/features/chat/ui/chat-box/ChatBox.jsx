@@ -256,6 +256,13 @@ const ChatBox = forwardRef((props, boxRef) => {
 
   const hasBlockingHitlInterrupt = hasPendingHitlInterrupt && !isPendingClarifyingQuestion;
 
+  const hasPendingAuthRequired = useMemo(() => {
+    const lastMessage = chat_history[chat_history.length - 1];
+    return Boolean(
+      lastMessage?.toolActions?.some(action => action.status === ToolActionStatus.actionRequired),
+    );
+  }, [chat_history]);
+
   // Chat states
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [hasStarterBeenSent, setHasStarterBeenSent] = useState(false);
@@ -2753,6 +2760,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       isUpdatingInternalToolsConfig ||
       activeConversation?.isSending ||
       hasBlockingHitlInterrupt ||
+      hasPendingAuthRequired ||
       (isStreamingNow && !isInjectable) ||
       isActiveParticipantBroken,
     [
@@ -2763,6 +2771,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       isUpdatingInternalToolsConfig,
       activeConversation?.isSending,
       hasBlockingHitlInterrupt,
+      hasPendingAuthRequired,
       isStreamingNow,
       isInjectable,
       isActiveParticipantBroken,
