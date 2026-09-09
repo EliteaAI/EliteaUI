@@ -2,7 +2,7 @@ import { memo, useCallback, useMemo } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { Box, Typography } from '@mui/material';
+import { Box, Link, Typography } from '@mui/material';
 
 import { useAvailableInternalTools } from '@/[fsd]/features/toolkits/lib/hooks';
 import { InternalToolsConstants } from '@/[fsd]/shared/lib/constants';
@@ -102,15 +102,14 @@ const DefaultModulesSettings = memo(() => {
               >
                 {tool.infoTooltip?.text}
                 {tool.infoTooltip?.linkText && (
-                  <Box
-                    component="a"
+                  <Link
                     href={tool.infoTooltip.linkUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     sx={styles.descriptionLink}
                   >
                     {tool.infoTooltip.linkText}
-                  </Box>
+                  </Link>
                 )}
                 {tool.infoTooltip?.suffix}
               </Typography>
@@ -195,7 +194,13 @@ const componentStyles = () => ({
     color: palette.text.primary,
   }),
   descriptionLink: {
+    color: 'inherit',
     textDecoration: 'underline',
+
+    '&:hover': {
+      cursor: 'pointer',
+      textDecoration: 'underline',
+    },
   },
   toggleCell: {
     display: 'flex',
