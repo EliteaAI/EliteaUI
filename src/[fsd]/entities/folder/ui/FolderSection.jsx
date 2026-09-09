@@ -189,7 +189,7 @@ const FolderSection = memo(props => {
                 isSelected={selectedFolderId === folder.id}
                 onClick={handleFolderClick}
                 onMenuClick={handleMenuOpen}
-                showActionsMenu={canWriteFolder(folder) || canManagePermissions}
+                showActionsMenu={canWriteFolder(folder)}
               />
             ))}
           </Box>
