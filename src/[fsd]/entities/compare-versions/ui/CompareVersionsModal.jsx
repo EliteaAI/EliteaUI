@@ -198,7 +198,12 @@ const CompareVersionsModal = memo(props => {
 
     switch (stepKey) {
       case 'instructions':
-        return <CompareInstructionsStep {...stepProps} />;
+        return (
+          <CompareInstructionsStep
+            {...stepProps}
+            instructionsRequired={entityType === 'skill'}
+          />
+        );
       case 'user-interaction':
         return <CompareUserInteractionStep {...stepProps} />;
       case 'tools-skills':
