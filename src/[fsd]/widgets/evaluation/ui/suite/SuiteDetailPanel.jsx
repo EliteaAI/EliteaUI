@@ -339,7 +339,10 @@ const SuiteDetailPanel = memo(props => {
                     value={selectedVersionId}
                     options={versionOptions}
                     onValueChange={handleVersionChange}
-                    disabled={!canRun || isLoadingVersions}
+                    // Switching versions mid-run would desync `runActive` (scoped to
+                    // selectedVersionId) from the actually-running version, hiding
+                    // the progress/cancel UI while the run keeps going underneath.
+                    disabled={!canRun || isLoadingVersions || isEvaluating}
                     showEmptyPlaceholder
                     emptyPlaceholder={
                       isLoadingVersions ? 'Loading versions…' : 'Select a version to evaluate'
