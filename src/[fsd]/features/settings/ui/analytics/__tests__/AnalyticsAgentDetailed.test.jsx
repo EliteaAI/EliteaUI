@@ -57,8 +57,13 @@ const MOCK = {
     input_tokens: 12345,
     output_tokens: 6789,
     total_tokens: 19134,
+    cache_read_tokens: 2222,
+    cache_creation_tokens: 1111,
     llm_cost: 0.4321,
-    avg_cost_per_call: 0.001,
+    input_cost: 0.1234,
+    output_cost: 0.3087,
+    cache_read_cost: 0.0022,
+    cache_creation_cost: 0.0011,
   },
   users: [],
   tools: [],
@@ -73,7 +78,7 @@ describe('AnalyticsAgentDetailed', () => {
 
   afterEach(() => cleanup());
 
-  it('renders the 5 new token/cost KPI cards', () => {
+  it('renders the token and cost KPI cards', () => {
     render(
       <AnalyticsAgentDetailed
         projectId={1}
@@ -83,14 +88,19 @@ describe('AnalyticsAgentDetailed', () => {
       />,
       { wrapper: Wrapper },
     );
-    expect(screen.getByTestId('kpi-Total Tokens')).toBeTruthy();
-    expect(screen.getByTestId('kpi-Input Tokens')).toBeTruthy();
-    expect(screen.getByTestId('kpi-Output Tokens')).toBeTruthy();
-    expect(screen.getByTestId('kpi-Total Cost')).toBeTruthy();
-    expect(screen.getByTestId('kpi-Avg Cost / Call')).toBeTruthy();
+    expect(screen.getByTestId('kpi-TOTAL TOKENS')).toBeTruthy();
+    expect(screen.getByTestId('kpi-INPUT TOKENS')).toBeTruthy();
+    expect(screen.getByTestId('kpi-OUTPUT TOKENS')).toBeTruthy();
+    expect(screen.getByTestId('kpi-CACHE READ TOKENS')).toBeTruthy();
+    expect(screen.getByTestId('kpi-CACHE WRITE TOKENS')).toBeTruthy();
+    expect(screen.getByTestId('kpi-TOTAL COST')).toBeTruthy();
+    expect(screen.getByTestId('kpi-INPUT TOKEN COST')).toBeTruthy();
+    expect(screen.getByTestId('kpi-OUTPUT TOKEN COST')).toBeTruthy();
+    expect(screen.getByTestId('kpi-CACHE READ COST')).toBeTruthy();
+    expect(screen.getByTestId('kpi-CACHE WRITE COST')).toBeTruthy();
   });
 
-  it('labels the two cost KPIs as estimated', () => {
+  it('labels every cost KPI as estimated', () => {
     render(
       <AnalyticsAgentDetailed
         projectId={1}
@@ -100,8 +110,11 @@ describe('AnalyticsAgentDetailed', () => {
       />,
       { wrapper: Wrapper },
     );
-    expect(screen.getByTestId('kpi-Total Cost-subtitle').textContent).toMatch(/estimated/i);
-    expect(screen.getByTestId('kpi-Avg Cost / Call-subtitle').textContent).toMatch(/estimated/i);
+    expect(screen.getByTestId('kpi-TOTAL COST-subtitle').textContent).toMatch(/estimated/i);
+    expect(screen.getByTestId('kpi-INPUT TOKEN COST-subtitle').textContent).toMatch(/estimated/i);
+    expect(screen.getByTestId('kpi-OUTPUT TOKEN COST-subtitle').textContent).toMatch(/estimated/i);
+    expect(screen.getByTestId('kpi-CACHE READ COST-subtitle').textContent).toMatch(/estimated/i);
+    expect(screen.getByTestId('kpi-CACHE WRITE COST-subtitle').textContent).toMatch(/estimated/i);
   });
 
   it('renders formatted token and cost values from kpis', () => {
@@ -117,7 +130,12 @@ describe('AnalyticsAgentDetailed', () => {
     expect(screen.getByText('19134')).toBeTruthy(); // total_tokens
     expect(screen.getByText('12345')).toBeTruthy(); // input_tokens
     expect(screen.getByText('6789')).toBeTruthy(); // output_tokens
+    expect(screen.getByText('2222')).toBeTruthy(); // cache_read_tokens
+    expect(screen.getByText('1111')).toBeTruthy(); // cache_creation_tokens
     expect(screen.getByText('$0.4321')).toBeTruthy(); // llm_cost
-    expect(screen.getByText('$0.0010')).toBeTruthy(); // avg_cost_per_call
+    expect(screen.getByText('$0.1234')).toBeTruthy(); // input_cost
+    expect(screen.getByText('$0.3087')).toBeTruthy(); // output_cost
+    expect(screen.getByText('$0.0022')).toBeTruthy(); // cache_read_cost
+    expect(screen.getByText('$0.0011')).toBeTruthy(); // cache_creation_cost
   });
 });
