@@ -12,6 +12,7 @@ import DoubleLeftIcon from '@/components/Icons/DoubleLeftIcon';
 import DoubleRightIcon from '@/components/Icons/DoubleRightIcon';
 import useIsSmallWindow from '@/hooks/useIsSmallWindow';
 import { ContentContainer } from '@/pages/Common/index.js';
+import { selectActivePipeline } from '@/slices/pipeline.js';
 import { useTheme } from '@emotion/react';
 
 /**
@@ -83,7 +84,7 @@ const ChatPanel = forwardRef((props, ref) => {
   const {
     yamlCode,
     initState: { yamlCode: initialYamlCode },
-  } = useSelector(state => state.pipeline);
+  } = useSelector(selectActivePipeline);
   const isPipelineDirty = useMemo(() => yamlCode !== initialYamlCode, [initialYamlCode, yamlCode]);
 
   // Generate styles based on current state

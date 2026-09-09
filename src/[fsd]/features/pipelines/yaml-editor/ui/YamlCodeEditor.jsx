@@ -6,6 +6,7 @@ import { Box, styled } from '@mui/material';
 
 import { useLanguageLinter } from '@/[fsd]/shared/lib/hooks';
 import { Field } from '@/[fsd]/shared/ui';
+import { selectActivePipeline } from '@/slices/pipeline';
 
 const StyledCodeMirrorEditor = styled(Field.CodeMirrorEditor)({
   '& .error_yaml_code': {
@@ -24,7 +25,7 @@ const YamlCodeEditor = memo(props => {
   const {
     resetFlag,
     initState: { yamlCode },
-  } = useSelector(state => state.pipeline);
+  } = useSelector(selectActivePipeline);
 
   useEffect(() => {
     if (resetFlag) {

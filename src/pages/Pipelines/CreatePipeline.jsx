@@ -7,6 +7,7 @@ import { Grid } from '@mui/material';
 
 import CreateAgentForm from '@/[fsd]/features/agent/ui/agent-details/configurations/form/CreateAgentForm';
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
+import { DEFAULT_PIPELINE_KEY } from '@/[fsd]/features/pipelines/lib/constants';
 import { Breadcrumbs } from '@/[fsd]/shared/ui';
 import StyledTabs from '@/components/StyledTabs';
 import getValidateSchema from '@/pages/Applications/Components/Applications/ApplicationCreationValidateSchema';
@@ -20,6 +21,7 @@ const CreatePipeline = memo(() => {
   const dispatch = useDispatch();
 
   useEffect(() => {
+    dispatch(actions.setActivePipelineKey(DEFAULT_PIPELINE_KEY));
     dispatch(
       actions.initThePipeline({
         nodes: [],

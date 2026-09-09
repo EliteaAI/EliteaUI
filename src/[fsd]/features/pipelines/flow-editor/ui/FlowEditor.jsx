@@ -36,7 +36,7 @@ import ClipboardIcon from '@/assets/clipboard-icon.svg?react';
 import CollapseIcon from '@/assets/collapse-second-icon.svg?react';
 import ExpandIcon from '@/assets/expand-third-icon.svg?react';
 import PolylineOutlinedIcon from '@/assets/polyline-outline-icon.svg?react';
-import { actions } from '@/slices/pipeline';
+import { actions, selectActivePipeline } from '@/slices/pipeline';
 import {
   Background,
   ControlButton,
@@ -83,7 +83,7 @@ const nodeTypes = {
 };
 
 const FlowEditor = forwardRef((props, ref) => {
-  const { setYamlJsonObject, stopRun, sx, disabled, ...leftProps } = props;
+  const { setYamlJsonObject, stopRun, sx, disabled, isVisible = true, ...leftProps } = props;
   const styles = flowEditorStyles();
 
   const trackEvent = useTrackEvent();
@@ -98,7 +98,8 @@ const FlowEditor = forwardRef((props, ref) => {
     nodes: initialNodes,
     edges: initialEdges,
     layout_version,
-  } = useSelector(state => state.pipeline);
+    resetFlag,
+  } = useSelector(selectActivePipeline);
   const yamlJsonObjectRef = useRef(yamlJsonObject);
   const { nodes: cachedNodes, edges: cachedEdges } = useSelector(state => state.pipelineEditor);
   const theme = useTheme();
@@ -110,7 +111,6 @@ const FlowEditor = forwardRef((props, ref) => {
 
   const [editorWidth, setEditorWidth] = useState(622);
   const [editorHeight, setEditorHeight] = useState(677);
-  const { resetFlag } = useSelector(state => state.pipeline);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -174,26 +174,29 @@ const FlowEditor = forwardRef((props, ref) => {
   }, []);
 
   useEffect(() => {
-    if (resetFlag) {
-      setFlowNodes(initialNodes);
-      setFlowEdges(initialEdges);
-      onResetRunParseStatus();
-      dispatch(actions.clearResetFlag());
+    // Only process resets when this tab is visible. When hidden, selectActivePipeline returns
+    // the active tab's data (global key), so resetFlag/initialNodes/initialEdges belong to a
+    // different pipeline. Processing them here would corrupt state.pipelineEditor for that tab.
+    if (!isVisible || !resetFlag) return;
 
-      // Force sync nodes to Redux after reset to ensure measured heights are available for save
-      // Without this, pipelineEditor.nodes stays empty because flowNodes === initialNodes
-      setTimeout(() => {
-        setNodes(initialNodes);
-        setEdges(initialEdges);
+    setFlowNodes(initialNodes);
+    setFlowEdges(initialEdges);
+    onResetRunParseStatus();
+    dispatch(actions.clearResetFlag());
 
-        // Fit view after sync completes
-        if (initialNodes.length > 2) {
-          fitView();
-        }
-      }, 150);
-    }
+    // Force sync nodes to Redux after reset to ensure measured heights are available for save
+    // Without this, pipelineEditor.nodes stays empty because flowNodes === initialNodes
+    setTimeout(() => {
+      setNodes(initialNodes);
+      setEdges(initialEdges);
+
+      // Fit view after sync completes
+      if (initialNodes.length > 2) {
+        fitView();
+      }
+    }, 150);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resetFlag, initialNodes, initialEdges]);
+  }, [isVisible, resetFlag, initialNodes, initialEdges]);
 
   useCtrlASelectAll({
     display: sx?.display,

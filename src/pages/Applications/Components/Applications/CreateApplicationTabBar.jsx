@@ -14,6 +14,7 @@ import useNavBlocker from '@/hooks/useNavBlocker';
 import useToast from '@/hooks/useToast.jsx';
 import { TabBarItems } from '@/pages/Common/Components';
 import useIsPipelineYamlCodeDirty from '@/pages/Pipelines/useIsPipelineYamlCodeDirty';
+import { selectActivePipeline } from '@/slices/pipeline';
 
 const CreateApplicationTabBar = memo(({ isEditingTool }) => {
   const formik = useFormikContext();
@@ -22,7 +23,7 @@ const CreateApplicationTabBar = memo(({ isEditingTool }) => {
   const navigate = useNavigate();
   const { isLoading, create, error, isError } = useCreateApplication(formik);
 
-  const stateValidationErrors = useSelector(state => state.pipeline?.stateValidationErrors);
+  const { stateValidationErrors } = useSelector(selectActivePipeline);
 
   const hasStateErrors = useMemo(() => {
     return stateValidationErrors && Object.keys(stateValidationErrors).length > 0;

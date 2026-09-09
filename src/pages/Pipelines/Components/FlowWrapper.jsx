@@ -5,23 +5,26 @@ import { PipelineEditorMode } from '@/common/constants.js';
 import useIsSmallWindow from '@/hooks/useIsSmallWindow';
 import { ReactFlowProvider } from '@xyflow/react';
 
-const FlowWrapper = forwardRef(({ stopRun, mode, setYamlJsonObject, noBorder = false, disabled }, ref) => {
-  const { isSmallWindow } = useIsSmallWindow();
+const FlowWrapper = forwardRef(
+  ({ stopRun, mode, setYamlJsonObject, noBorder = false, disabled, isVisible = true }, ref) => {
+    const { isSmallWindow } = useIsSmallWindow();
 
-  const styles = flowWrapperStyles();
+    const styles = flowWrapperStyles();
 
-  return (
-    <ReactFlowProvider>
-      <FlowEditor
-        ref={ref}
-        setYamlJsonObject={setYamlJsonObject}
-        sx={styles.flowEditor(isSmallWindow, noBorder, mode)}
-        stopRun={stopRun}
-        disabled={disabled}
-      />
-    </ReactFlowProvider>
-  );
-});
+    return (
+      <ReactFlowProvider>
+        <FlowEditor
+          ref={ref}
+          setYamlJsonObject={setYamlJsonObject}
+          sx={styles.flowEditor(isSmallWindow, noBorder, mode)}
+          stopRun={stopRun}
+          disabled={disabled}
+          isVisible={isVisible}
+        />
+      </ReactFlowProvider>
+    );
+  },
+);
 
 FlowWrapper.displayName = 'FlowWrapper';
 
