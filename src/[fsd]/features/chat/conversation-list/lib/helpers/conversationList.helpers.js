@@ -1,3 +1,4 @@
+import { CONVERSATION_NAME_MAX_LENGTH } from '@/[fsd]/features/chat/conversation-list/lib/constants';
 import { stableSort } from '@/common/utils';
 
 export const redistributeConversationsIntoGroups = (prevGroups, newFlatConversations) => {
@@ -30,9 +31,14 @@ export const redistributeConversationsIntoGroups = (prevGroups, newFlatConversat
 export const generateDuplicateName = originalName => {
   const baseNameMatch = originalName.match(/^(.+?)\s*\((\d+)\)$/);
 
-  if (baseNameMatch) return `${baseNameMatch[1]} (${parseInt(baseNameMatch[2], 10) + 1})`;
+  const baseName = baseNameMatch ? baseNameMatch[1] : originalName;
+  const suffix = ` (${baseNameMatch ? parseInt(baseNameMatch[2], 10) + 1 : 1})`;
 
-  return `${originalName} (1)`;
+  const availableLength = CONVERSATION_NAME_MAX_LENGTH - suffix.length;
+  const truncatedBaseName =
+    baseName.length > availableLength ? baseName.slice(0, availableLength).trimEnd() : baseName;
+
+  return `${truncatedBaseName}${suffix}`;
 };
 
 export const sortConversations = conversations =>

@@ -7,3 +7,5 @@ export const DATE_GROUP_DISPLAY_NAMES = {
 export const DATE_GROUP_ORDER = ['today', 'this_week', 'older'];
 
 export const DEFAULT_EXPANDED_GROUP = 'today';
+
+export const CONVERSATION_NAME_MAX_LENGTH = 50;
