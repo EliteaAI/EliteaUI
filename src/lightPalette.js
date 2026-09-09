@@ -96,11 +96,8 @@ const oldLightPalette = {
   background: {
     section: grey003,
     dragging: blue12,
-    userInputBorderLight: purpleLight,
-    userInputBorderDark: purpleDark,
     userInputBackground: dark5,
     userInputBackgroundActive: dark10,
-    userInputBorderShadow: purpleShadow,
     warningBkg: red15,
     wrongBkg: red40,
     errorBkg: red8,
@@ -422,7 +419,7 @@ const oldLightPalette = {
     tag: '0px 2px 4px 0px #0000000f',
     onboarding: `0rem 3.975rem 4.2625rem -3.8125rem ${skyBlue20}`,
     aiAnswer: '0px 2px 7px 0px #0000001f',
-    listbox: `0px 4px 30px ${white};`,
+    listbox: `0px 4px 30px ${white}`,
   },
   text: {
     default: light10,
@@ -700,6 +697,17 @@ const lightPalette = {
     edit: white,
     npsCard: lightColorScheme.accentDark,
     input: white01,
+    chatInput: {
+      base: purpleDark,
+      glow: purpleLight,
+    },
+  },
+  boxShadow: {
+    ...oldLightPalette.boxShadow,
+    chatInput: {
+      default: `0 -0.3125rem 1.25rem 0 ${purpleShadow}`,
+      recording: `0 0 0.75rem 0 ${primaryDefault}40`,
+    },
   },
   text: {
     ...oldLightPalette.text,
