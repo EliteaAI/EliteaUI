@@ -64,7 +64,7 @@ const CompareInstructionsStep = memo(props => {
             size="small"
             disabled={
               leftEdits.instructions === undefined ||
-              (instructionsRequired && !leftValue.trim()) ||
+              (instructionsRequired && !leftValue?.trim()) ||
               savingLeftKeys.instructions
             }
             onClick={() => onSaveLeft({ instructions: leftValue })}
@@ -102,7 +102,7 @@ const CompareInstructionsStep = memo(props => {
             size="small"
             disabled={
               rightEdits.instructions === undefined ||
-              (instructionsRequired && !rightValue.trim()) ||
+              (instructionsRequired && !rightValue?.trim()) ||
               savingRightKeys.instructions
             }
             onClick={() => onSaveRight({ instructions: rightValue })}
