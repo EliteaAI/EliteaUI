@@ -1,12 +1,11 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ThemeProvider, createTheme } from '@mui/material';
-
 import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 import AnalyticsOverview from '../AnalyticsOverview';
+import { AnalyticsTestWrapper as Wrapper } from '../_testHelpers';
 
 vi.mock('recharts', () => ({
   ResponsiveContainer: ({ children }) => <div>{children}</div>,
@@ -60,17 +59,6 @@ vi.mock('@/[fsd]/features/settings/lib/helpers', () => ({
 vi.mock('@/[fsd]/features/interactive-tours', () => ({
   ANALYTICS_TOUR_TARGET_IDS: { kpiCards: 'analytics-kpi-cards' },
 }));
-
-const theme = createTheme({
-  palette: {
-    status: { draft: '#1976d2', published: '#388e3c' },
-    border: { table: '#e0e0e0' },
-    background: { userInputBackground: '#f5f5f5', conversation: { hover: '#fafafa' } },
-    text: { metrics: '#9e9e9e', button: { primary: '#ffffff' } },
-  },
-});
-
-const Wrapper = ({ children }) => <ThemeProvider theme={theme}>{children}</ThemeProvider>;
 
 const MOCK_DATA = {
   kpis: {

@@ -8,8 +8,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { configureStore } from '@reduxjs/toolkit';
 
-import { evaluationApi } from '../evaluationApi';
-
 // evaluationApi.js only needs eliteaApi from the '@/api' barrel; the barrel itself re-exports
 // dozens of unrelated slices (import-wizard, settings, ...) that touch browser globals at
 // module scope and aren't relevant here, so mock it down to just eliteaApi.
@@ -17,6 +15,17 @@ vi.mock('@/api', async () => {
   const { eliteaApi } = await vi.importActual('@/api/eliteaApi');
   return { eliteaApi };
 });
+
+// fetchBaseQuery builds a Request before it calls fetch, and the Node Request implementation
+// used under vitest rejects the relative VITE_SERVER_URL the app ships with. Seed the runtime
+// config getEnvVar reads first — before the api module is imported — so the base query gets the
+// same /api/v2 prefix behind an absolute origin, independent of any local .env.
+globalThis.elitea_ui_config = {
+  ...globalThis.elitea_ui_config,
+  vite_server_url: 'http://localhost/api/v2/',
+};
+
+const { evaluationApi } = await import('../evaluationApi');
 
 const buildStore = () =>
   configureStore({
