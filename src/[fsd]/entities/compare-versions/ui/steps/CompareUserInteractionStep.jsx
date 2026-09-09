@@ -69,8 +69,6 @@ const CompareUserInteractionStep = memo(props => {
   const rightWelcomeDirty = rightEdits.welcome_message !== undefined;
   const leftStartersDirty = leftEdits.conversation_starters !== undefined;
   const rightStartersDirty = rightEdits.conversation_starters !== undefined;
-  const leftStartersHasEmpty = leftStarters.some(s => !s?.trim());
-  const rightStartersHasEmpty = rightStarters.some(s => !s?.trim());
 
   return (
     <EditEntityComparisonLayout
@@ -152,8 +150,8 @@ const CompareUserInteractionStep = memo(props => {
               <BaseBtn
                 variant={BUTTON_VARIANTS.elitea}
                 size="small"
-                disabled={!leftStartersDirty || leftStartersHasEmpty || savingLeftKeys.conversation_starters}
-                onClick={() => onSaveLeft({ conversation_starters: leftStarters })}
+                disabled={!leftStartersDirty || savingLeftKeys.conversation_starters}
+                onClick={() => onSaveLeft({ conversation_starters: leftStarters.filter(s => s?.trim()) })}
                 sx={compareUserInteractionStepStyles.saveBtn}
               >
                 {savingLeftKeys.conversation_starters ? 'Saving...' : `Save starters — ${leftVersion?.name}`}
@@ -238,10 +236,8 @@ const CompareUserInteractionStep = memo(props => {
               <BaseBtn
                 variant={BUTTON_VARIANTS.elitea}
                 size="small"
-                disabled={
-                  !rightStartersDirty || rightStartersHasEmpty || savingRightKeys.conversation_starters
-                }
-                onClick={() => onSaveRight({ conversation_starters: rightStarters })}
+                disabled={!rightStartersDirty || savingRightKeys.conversation_starters}
+                onClick={() => onSaveRight({ conversation_starters: rightStarters.filter(s => s?.trim()) })}
                 sx={compareUserInteractionStepStyles.saveBtn}
               >
                 {savingRightKeys.conversation_starters
