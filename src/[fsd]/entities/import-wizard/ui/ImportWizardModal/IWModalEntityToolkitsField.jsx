@@ -136,7 +136,7 @@ const iWModalEntityToolkitsFieldStyles = () => ({
     background: palette.background.dataGrid.main,
     padding: '.3125rem .5rem',
     height: '1.5rem',
-    border: `0.0625rem solid ${palette.background.userInputBackgroundActive}`,
+    border: `0.0625rem solid ${palette.border.sidebarDivider}`,
 
     svg: {
       width: '.875rem',

@@ -99,9 +99,6 @@ const oldDarkPalette = {
     section: white3,
     dragging: blue10,
     userInputBackground: white5,
-    userInputBorderLight: greenLight,
-    userInputBorderDark: greenDark,
-    userInputBorderShadow: greenShadow,
     userInputBackgroundActive: white10,
     warningBkg: red15,
     wrongBkg: red40,
@@ -419,7 +416,7 @@ const oldDarkPalette = {
     tagEditorPaper: '0px 8px 12px 0px #0000004d',
     tag: 'none',
     onboarding: `0rem 3.975rem 4.2625rem -3.8125rem ${skyBlue20}`,
-    listbox: `0px 4px 30px ${gray50};`,
+    listbox: `0px 4px 30px ${gray50}`,
   },
   text: {
     default: gray10,
@@ -697,6 +694,17 @@ const darkPalette = {
     edit: gray50,
     npsCard: darkColorScheme.accentDark,
     input: gray55,
+    chatInput: {
+      base: greenDark,
+      glow: greenLight,
+    },
+  },
+  boxShadow: {
+    ...oldDarkPalette.boxShadow,
+    chatInput: {
+      default: `0 -0.3125rem 1.25rem 0 ${greenShadow}`,
+      recording: `0 0 0.75rem 0 ${primaryDefault}40`,
+    },
   },
   text: {
     ...oldDarkPalette.text,
