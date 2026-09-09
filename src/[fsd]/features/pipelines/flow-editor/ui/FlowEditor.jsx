@@ -83,7 +83,7 @@ const nodeTypes = {
 };
 
 const FlowEditor = forwardRef((props, ref) => {
-  const { setYamlJsonObject, stopRun, sx, disabled, ...leftProps } = props;
+  const { setYamlJsonObject, stopRun, sx, disabled, isVisible = true, ...leftProps } = props;
   const styles = flowEditorStyles();
 
   const trackEvent = useTrackEvent();
@@ -174,26 +174,29 @@ const FlowEditor = forwardRef((props, ref) => {
   }, []);
 
   useEffect(() => {
-    if (resetFlag) {
-      setFlowNodes(initialNodes);
-      setFlowEdges(initialEdges);
-      onResetRunParseStatus();
-      dispatch(actions.clearResetFlag());
+    // Only process resets when this tab is visible. When hidden, selectActivePipeline returns
+    // the active tab's data (global key), so resetFlag/initialNodes/initialEdges belong to a
+    // different pipeline. Processing them here would corrupt state.pipelineEditor for that tab.
+    if (!isVisible || !resetFlag) return;
 
-      // Force sync nodes to Redux after reset to ensure measured heights are available for save
-      // Without this, pipelineEditor.nodes stays empty because flowNodes === initialNodes
-      setTimeout(() => {
-        setNodes(initialNodes);
-        setEdges(initialEdges);
+    setFlowNodes(initialNodes);
+    setFlowEdges(initialEdges);
+    onResetRunParseStatus();
+    dispatch(actions.clearResetFlag());
 
-        // Fit view after sync completes
-        if (initialNodes.length > 2) {
-          fitView();
-        }
-      }, 150);
-    }
+    // Force sync nodes to Redux after reset to ensure measured heights are available for save
+    // Without this, pipelineEditor.nodes stays empty because flowNodes === initialNodes
+    setTimeout(() => {
+      setNodes(initialNodes);
+      setEdges(initialEdges);
+
+      // Fit view after sync completes
+      if (initialNodes.length > 2) {
+        fitView();
+      }
+    }, 150);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resetFlag, initialNodes, initialEdges]);
+  }, [isVisible, resetFlag, initialNodes, initialEdges]);
 
   useCtrlASelectAll({
     display: sx?.display,

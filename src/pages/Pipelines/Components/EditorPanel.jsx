@@ -56,7 +56,7 @@ const areYamlObjectsEqual = (obj1, obj2) => {
   return JSON.stringify(obj1) === JSON.stringify(obj2);
 };
 
-const EditorPanel = forwardRef(({ setYamlDirty, stopRun, display, sx, disabled }, ref) => {
+const EditorPanel = forwardRef(({ setYamlDirty, stopRun, display, sx, disabled, isVisible = true }, ref) => {
   const dispatch = useDispatch();
   const { toastInfo } = useToast();
   const { isSmallWindow } = useIsSmallWindow();
@@ -272,6 +272,7 @@ const EditorPanel = forwardRef(({ setYamlDirty, stopRun, display, sx, disabled }
                 setYamlJsonObject={setYamlJsonObject}
                 noBorder={isFromChat}
                 disabled={disabled}
+                isVisible={isVisible}
               />
             </Suspense>
           </ErrorBoundary>

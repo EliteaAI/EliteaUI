@@ -17,6 +17,7 @@ import {
   LayoutHelpers,
   ParsePipelineHelpers,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
+import { DEFAULT_PIPELINE_KEY } from '@/[fsd]/features/pipelines/lib/constants';
 import { InternalToolsConstants } from '@/[fsd]/shared/lib/constants';
 import { cleanLLMSettings, generateLLMSettings } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
 import {
@@ -263,6 +264,10 @@ const useApplicationInitialValues = forPipeline => {
 
   useEffect(() => {
     if (forPipeline && Object.keys(applicationData).length && initialPipeline) {
+      // Claim the default key before writing pipeline data so selectActivePipeline
+      // always reads from the correct slot even when navigating from a Canvas tab
+      // that left activePipelineKey pointing at a per-tab key.
+      dispatch(actions.setActivePipelineKey(DEFAULT_PIPELINE_KEY));
       dispatch(
         actions.initThePipeline({
           ...initialPipeline,

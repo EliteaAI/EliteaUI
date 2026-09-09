@@ -728,6 +728,7 @@ const PipelineEditor = forwardRef(
                 setYamlDirty={setIsYamlDirtyGuarded}
                 disabled={viewMode === ViewMode.Public}
                 stopRun={onStopRun}
+                isVisible={isVisible}
               />
             </ContentContainer>
           )}

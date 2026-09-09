@@ -2,13 +2,11 @@ import {
   ORIENTATION,
   OrientationKey,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/constants/flowEditor.constants';
+import { DEFAULT_PIPELINE_KEY } from '@/[fsd]/features/pipelines/lib/constants';
 import { DumpYamlHelpers } from '@/[fsd]/shared/lib/helpers';
 import { createSlice, current } from '@reduxjs/toolkit';
 
-// Fallback key used by non-Canvas pages (CreatePipeline, ConfigurationTab) that
-// never call setActivePipelineKey. Only one pipeline is active at a time there,
-// so sharing a single slot is safe.
-export const DEFAULT_PIPELINE_KEY = '__default__';
+export { DEFAULT_PIPELINE_KEY };
 
 export const initialPipelineState = {
   initState: {

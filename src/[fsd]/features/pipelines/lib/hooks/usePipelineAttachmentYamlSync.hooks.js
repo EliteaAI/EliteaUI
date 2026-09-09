@@ -9,9 +9,12 @@ import {
   STATE_INPUT_ATTACHMENTS,
   StateVariableTypes,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/constants/flowEditor.constants';
-import { DEFAULT_PIPELINE_KEY, actions as pipelineActions } from '@/slices/pipeline';
+import { DEFAULT_PIPELINE_KEY } from '@/[fsd]/features/pipelines/lib/constants';
+import { actions as pipelineActions } from '@/slices/pipeline';
 
 const ATTACHMENTS_TOOL_NAME = 'attachments';
+
+const EMPTY_PIPELINE_STATE = { yamlCode: '', yamlJsonObject: {} };
 
 /**
  * Watches the pipeline's internal_tools list and keeps the `input_attachments`
@@ -35,7 +38,7 @@ export const usePipelineAttachmentYamlSync = (isVisible = true, pipelineKey = nu
 
   // Read directly from the specific key so this tab never sees another tab's active data.
   const { yamlCode, yamlJsonObject } = useSelector(
-    state => state.pipeline.byKey[resolvedKey] ?? { yamlCode: '', yamlJsonObject: {} },
+    state => state.pipeline.byKey[resolvedKey] ?? EMPTY_PIPELINE_STATE,
   );
 
   const hasAttachments =
