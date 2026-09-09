@@ -123,7 +123,7 @@ const generateSkillReviewFormStyles = () => ({
   },
   textField: ({ palette }) => ({
     '& .MuiOutlinedInput-root': {
-      backgroundColor: palette.background.userInputBackground,
+      backgroundColor: palette.background.surface.interactive.default,
       borderRadius: '0.5rem',
       fontSize: '0.875rem',
       color: palette.text.secondary,

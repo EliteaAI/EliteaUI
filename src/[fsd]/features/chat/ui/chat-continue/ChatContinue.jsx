@@ -234,7 +234,7 @@ const getStyles = () => ({
     padding: '0.625rem 0.75rem',
     gap: '0.5rem',
     borderRadius: '0.625rem',
-    background: palette.background.userInputBackgroundActive,
+    background: palette.background.surface.interactive.active,
     border: `0.0625rem solid ${palette.warning.main}`,
     alignItems: 'flex-start',
   }),

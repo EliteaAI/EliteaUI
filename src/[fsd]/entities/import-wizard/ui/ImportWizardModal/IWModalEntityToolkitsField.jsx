@@ -105,7 +105,7 @@ const iWModalEntityToolkitsFieldStyles = () => ({
     justifyContent: 'flex-start',
     height: '2rem',
     borderRadius: '.9375rem',
-    background: palette.background.userInputBackgroundActive,
+    background: palette.background.surface.interactive.active,
     padding: '.25rem',
   }),
   toolkitName: ({ palette }) => ({

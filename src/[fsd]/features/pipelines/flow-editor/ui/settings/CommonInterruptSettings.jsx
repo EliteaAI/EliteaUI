@@ -17,7 +17,7 @@ const StyledFormControlLabel = styled(FormControlLabel)(({ theme }) => ({
   padding: '.25rem .5rem',
   justifyContent: 'flex-start',
   gap: '.5rem',
-  background: theme.palette.background.userInputBackground,
+  background: theme.palette.background.surface.interactive.default,
 }));
 
 // interruptAfterTestId / structuredOutputTestId (ELITEA-2004/2010): this

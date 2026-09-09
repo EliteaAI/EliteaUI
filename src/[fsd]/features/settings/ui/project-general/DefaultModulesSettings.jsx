@@ -183,7 +183,7 @@ const componentStyles = () => ({
     gap: '1rem',
     padding: '1rem 1.5rem',
     borderRadius: '0.75rem',
-    backgroundColor: palette.background.userInputBackground,
+    backgroundColor: palette.background.surface.interactive.default,
   }),
   moduleCell: {
     display: 'flex',

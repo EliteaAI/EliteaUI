@@ -83,7 +83,7 @@ const VariablesMappingItem = memo(props => {
       <Typography
         borderRadius=".25rem"
         border={`.0625rem solid ${theme.palette.border.flowNode}`}
-        sx={{ background: theme.palette.background.userInputBackground }}
+        sx={{ background: theme.palette.background.surface.interactive.default }}
         padding=".25rem .625rem"
         height="1.5rem"
         width="auto"

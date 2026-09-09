@@ -163,7 +163,7 @@ const skillCardStyles = () => ({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: '1rem',
-    backgroundColor: palette.background.userInputBackground,
+    backgroundColor: palette.background.surface.interactive.default,
     '&:hover': {
       backgroundColor: palette.background.toolCard.hover,
       '#DeleteButton': { display: 'flex' },

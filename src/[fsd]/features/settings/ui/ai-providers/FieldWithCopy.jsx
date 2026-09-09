@@ -65,7 +65,7 @@ const fieldWithCopyStyles = () => ({
     borderRadius: '0.9375rem',
     '&:hover': {
       cursor: 'pointer',
-      backgroundColor: palette.background.userInputBackgroundActive,
+      backgroundColor: palette.background.surface.interactive.active,
     },
   }),
 });

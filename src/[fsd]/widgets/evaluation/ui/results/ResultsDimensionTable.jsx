@@ -137,7 +137,7 @@ const resultsDimensionTableStyles = () => ({
     gridTemplateColumns: GRID_TEMPLATE,
     alignItems: 'center',
     height: '2.25rem',
-    backgroundColor: palette.background.userInputBackground,
+    backgroundColor: palette.background.surface.interactive.default,
     border: `0.0625rem solid ${palette.border.lines}`,
     borderRadius: '0.5rem',
   }),

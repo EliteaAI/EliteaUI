@@ -113,7 +113,7 @@ const iWModalEntityCardWrapperStyles = isExpanded => ({
     flexDirection: 'column',
     padding: '0.5rem 1rem',
     width: '100%',
-    background: palette.background.userInputBackground,
+    background: palette.background.surface.interactive.default,
     borderRadius: '.5rem',
     overflow: 'hidden',
   }),

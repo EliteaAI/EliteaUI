@@ -641,7 +641,8 @@ ToolCard.displayName = 'ToolCard';
 const toolCardStyles = (showActions, isDuplicate, showVariables, hasVariables) => ({
   cardContainer: ({ palette }) => ({
     borderRadius: '0.5rem',
-    backgroundColor: showActions || showVariables ? palette.background.userInputBackground : 'transparent',
+    backgroundColor:
+      showActions || showVariables ? palette.background.surface.interactive.default : 'transparent',
     border: `0.0625rem solid ${palette.border.table}`,
     '&:hover': {
       border:
@@ -665,7 +666,8 @@ const toolCardStyles = (showActions, isDuplicate, showVariables, hasVariables) =
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: '1rem',
-    backgroundColor: showActions || showVariables ? 'transparent' : palette.background.userInputBackground,
+    backgroundColor:
+      showActions || showVariables ? 'transparent' : palette.background.surface.interactive.default,
     '&:hover': {
       backgroundColor: showActions || showVariables ? 'transparent' : palette.background.toolCard.hover,
       '#DeleteButton': {

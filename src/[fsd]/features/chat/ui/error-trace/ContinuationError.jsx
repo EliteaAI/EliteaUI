@@ -109,7 +109,7 @@ const continuationErrorStyles = compact => ({
     marginBottom: '.5rem',
   },
   accordionRoot: ({ palette }) => ({
-    backgroundColor: palette.background.userInputBackground,
+    backgroundColor: palette.background.surface.interactive.default,
     borderRadius: '.5rem',
   }),
   accordionSummary: {

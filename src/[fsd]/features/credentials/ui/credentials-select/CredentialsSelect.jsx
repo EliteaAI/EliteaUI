@@ -575,7 +575,7 @@ const styles = {
       height: '1.625rem',
       transform: 'translate(-21%, -18%)',
       borderRadius: '50%',
-      backgroundColor: palette.background.userInputBackgroundActive,
+      backgroundColor: palette.background.surface.interactive.active,
     },
   }),
   selectedValueTypography: selectedOption => ({

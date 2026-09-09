@@ -129,7 +129,7 @@ const modelUsageTableStyles = () => ({
   chartCard: ({ palette }) => ({
     padding: '1rem',
     borderRadius: '0.5rem',
-    backgroundColor: palette.background.userInputBackground,
+    backgroundColor: palette.background.surface.interactive.default,
     border: `1px solid ${palette.border.table}`,
     display: 'flex',
     flexDirection: 'column',

@@ -269,7 +269,7 @@ const stateVariableItemStyles = (isDefault, nameFieldWidth, enabled, shouldExpan
     borderRadius: spacing(1),
     display: 'flex',
     alignItems: 'center',
-    background: palette.background.userInputBackground,
+    background: palette.background.surface.interactive.default,
     cursor: !isDefault ? 'text' : 'default',
     opacity: isDefault && !enabled ? 0.5 : 1,
     border: '.0625rem solid transparent',

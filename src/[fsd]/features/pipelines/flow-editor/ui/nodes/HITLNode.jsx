@@ -306,7 +306,7 @@ const hitlNodeStyles = () => ({
     background: palette.background.default.tertiary,
   }),
   accordionSummary: ({ palette }) => ({
-    background: palette.background.userInputBackground,
+    background: palette.background.surface.interactive.default,
     borderRadius: '0.5rem',
     minHeight: '2rem',
     marginBottom: '0.75rem',

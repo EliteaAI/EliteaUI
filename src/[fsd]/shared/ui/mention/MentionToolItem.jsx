@@ -48,9 +48,9 @@ const mentionToolItemStyles = ({ isHighlighted } = {}) => ({
     borderRadius: '0.5rem',
     cursor: 'pointer',
     background: isHighlighted
-      ? palette.background.userInputBackgroundActive
-      : palette.background.userInputBackground,
-    '&:hover': { background: palette.background.userInputBackgroundActive },
+      ? palette.background.surface.interactive.active
+      : palette.background.surface.interactive.default,
+    '&:hover': { background: palette.background.surface.interactive.active },
   }),
   labelRow: {
     display: 'flex',

@@ -37,7 +37,7 @@ const styles = {
         ? palette.background.warningBkg
         : isSelected
           ? palette.split.pressed
-          : palette.background.userInputBackground,
+          : palette.background.surface.interactive.default,
       border: warning ? `1px solid ${palette.warning.main}` : undefined,
       '& .MuiChip-icon': {
         color: !disabled ? palette.text.secondary : palette.text.disabled,

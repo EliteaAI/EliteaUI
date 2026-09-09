@@ -364,7 +364,7 @@ const generateAgentReviewFormStyles = () => ({
     flex: 1,
   },
   removeBtn: ({ palette }) => ({
-    backgroundColor: palette.background.userInputBackgroundActive,
+    backgroundColor: palette.background.surface.interactive.active,
     borderRadius: '1rem',
     padding: '0.375rem',
     marginTop: '0.25rem',

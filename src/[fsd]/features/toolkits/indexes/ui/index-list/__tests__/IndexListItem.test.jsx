@@ -54,7 +54,7 @@ afterEach(() => cleanup());
 const theme = createTheme({
   palette: {
     background: {
-      userInputBackground: '#111',
+      surface: { interactive: { default: '#111' } },
       wrongBkg: '#511',
       errorBkg: '#311',
       warning: '#a60',

@@ -218,7 +218,7 @@ const scheduleModalStyles = () => ({
   previewBox: {
     padding: '1rem',
     borderRadius: '0.5rem',
-    background: ({ palette }) => palette.background.userInputBackground,
+    background: ({ palette }) => palette.background.surface.interactive.default,
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',

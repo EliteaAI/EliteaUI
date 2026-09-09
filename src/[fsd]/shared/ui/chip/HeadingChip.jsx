@@ -84,7 +84,7 @@ const headingChipStyles = variant => ({
     return {
       ...base,
       padding: '0.25rem 0.625rem',
-      background: palette.background.userInputBackgroundActive,
+      background: palette.background.surface.interactive.active,
       border: `0.0625rem solid ${palette.border.lines}`,
       borderRadius: '0.25rem',
     };

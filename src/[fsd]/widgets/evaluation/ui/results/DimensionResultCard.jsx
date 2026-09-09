@@ -187,7 +187,7 @@ const dimensionResultCardStyles = () => ({
     gap: '0.5rem',
     padding: '0.5rem 1rem',
     borderRadius: '0.5rem',
-    backgroundColor: palette.background.userInputBackground,
+    backgroundColor: palette.background.surface.interactive.default,
     border: `0.0625rem solid transparent`,
   }),
   rootError: ({ palette }) => ({

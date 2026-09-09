@@ -204,7 +204,7 @@ const getStyles = () => ({
       maxWidth: 'calc(100% - 1.5rem)',
       height: '2rem',
       background: isActive
-        ? palette.background.userInputBackgroundActive
+        ? palette.background.surface.interactive.active
         : palette.background.conversation.normal,
       borderRadius: '0.375rem',
       cursor: 'pointer',
