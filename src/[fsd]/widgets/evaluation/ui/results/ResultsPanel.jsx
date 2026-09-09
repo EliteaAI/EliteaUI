@@ -8,7 +8,7 @@ import ClockIcon from '@/assets/clock_icon.svg?react';
 import DownloadIcon from '@/assets/download.svg?react';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 
-import { isRunTerminal } from '../../lib/helpers';
+import { isRunTerminal, resolveRunVersionName } from '../../lib/helpers';
 import EvaluationProgress from '../suite/EvaluationProgress';
 import RunResultsView from './RunResultsView';
 
@@ -37,11 +37,10 @@ const ResultsPanel = memo(props => {
   // Results from displayRun (active run if in progress, otherwise last run from history)
   const hasResults = isRunTerminal(displayRun?.status);
 
-  const evaluatedVersionName = useMemo(() => {
-    const versionId = displayRun?.application_version_id;
-    if (versionId == null) return null;
-    return applicationVersions.find(version => version.id === versionId)?.name ?? null;
-  }, [displayRun?.application_version_id, applicationVersions]);
+  const evaluatedVersionName = useMemo(
+    () => resolveRunVersionName(displayRun, applicationVersions),
+    [displayRun, applicationVersions],
+  );
 
   const styles = resultsPanelStyles();
 

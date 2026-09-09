@@ -26,7 +26,8 @@ const AUTO_JUDGE_MODEL_ID = '__auto__';
 const JUDGE_MODEL_TOOLTIP =
   "The judge model evaluates the agent's input, output or instructions against the selected dimensions and datasets. All evaluation runs for this suit use this model.";
 
-const VERSION_TOOLTIP = 'The agent version to evaluate. Results are scoped to the selected version.';
+const VERSION_TOOLTIP =
+  'The agent version to evaluate. Results are scoped to the selected version, which is locked while a run is in progress.';
 
 const SuiteDetailPanel = memo(props => {
   const {
@@ -98,13 +99,6 @@ const SuiteDetailPanel = memo(props => {
   const versionOptions = useMemo(
     () => applicationVersions.map(version => ({ value: version.id, label: version.name })),
     [applicationVersions],
-  );
-
-  const handleVersionChange = useCallback(
-    versionId => {
-      onVersionChange?.(versionId);
-    },
-    [onVersionChange],
   );
 
   const autoJudgeModelLabel = modelsData.low_tier_default_model_name
@@ -338,12 +332,11 @@ const SuiteDetailPanel = memo(props => {
                     infoIconDescription={VERSION_TOOLTIP}
                     value={selectedVersionId}
                     options={versionOptions}
-                    onValueChange={handleVersionChange}
-                    // Switching versions mid-run would desync `runActive` (scoped to
-                    // selectedVersionId) from the actually-running version, hiding
-                    // the progress/cancel UI while the run keeps going underneath.
+                    onValueChange={onVersionChange}
+                    // A run is scoped to one version, so the selection is frozen for as long as one
+                    // is in flight — that also keeps the progress and Cancel UI on screen.
                     disabled={!canRun || isLoadingVersions || isEvaluating}
-                    showEmptyPlaceholder
+                    displayEmpty
                     emptyPlaceholder={
                       isLoadingVersions ? 'Loading versions…' : 'Select a version to evaluate'
                     }

@@ -50,33 +50,24 @@ export const useEvalRunActions = ({
   const [activeRunId, setActiveRunId] = useState(null);
   const [cancelRequested, setCancelRequested] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
-  const [selectedVersionId, setSelectedVersionId] = useState(null);
+  // Only the user's explicit pick is stored; the effective selection is derived below so the
+  // default can never be raced by a second effect writing the same piece of state.
+  const [versionOverride, setVersionOverride] = useState(null);
   const terminalNotifiedRef = useRef(null);
   const [runPollingInterval, setRunPollingInterval] = useState(0);
 
-  // Preselect the default version once it becomes known, without overriding a manual choice.
-  useEffect(() => {
-    if (selectedVersionId == null && defaultVersionId != null) {
-      setSelectedVersionId(defaultVersionId);
-    }
-  }, [defaultVersionId, selectedVersionId]);
+  // Falls back to the agent's default version until the user picks another, so the dropdown is
+  // populated as soon as the details land without an effect having to write it.
+  const selectedVersionId = versionOverride ?? defaultVersionId;
 
-  // Reset the selection when switching agents/applications so a stale version from a
-  // previously viewed agent is never carried over. Guarded against the initial mount so
-  // it doesn't clobber a preselection made in the same commit when `applicationDetails`
-  // is already cached (e.g. fetched moments earlier by the agent details page) — without
-  // the guard, this effect and the preselect effect above both fire on mount, and since
-  // this one is declared later it would always win, leaving the version stuck unselected.
-  const prevApplicationIdRef = useRef(applicationId);
+  // Drop the pick when switching agents so a version belonging to a previously viewed agent is
+  // never carried over.
   useEffect(() => {
-    if (prevApplicationIdRef.current !== applicationId) {
-      prevApplicationIdRef.current = applicationId;
-      setSelectedVersionId(null);
-    }
+    setVersionOverride(null);
   }, [applicationId]);
 
   const handleVersionChange = useCallback(versionId => {
-    setSelectedVersionId(versionId);
+    setVersionOverride(versionId);
   }, []);
 
   // Fetch runs history from API (persists across page refresh)
@@ -102,13 +93,9 @@ export const useEvalRunActions = ({
   );
 
   const runSettled = isRunTerminal(activeRunData?.status) || isRunError;
-  // Raw "is a run in flight for this suite" — kept version-agnostic since only one run
-  // can be active per suite, and starting another must stay blocked regardless of which
-  // version is selected in the dropdown.
-  const isRunInProgress = isRunActive(activeRunData?.status);
-  // Version-scoped view for the progress UI — a run in flight for a version other than
-  // the one selected should not show as "active" under the selected version's results.
-  const runActive = isRunInProgress && activeRunData?.application_version_id === selectedVersionId;
+  // Only one run can be in flight per suite, and the version selector is disabled for as long as
+  // it is, so the run on screen is always the selected version's — no version scoping needed here.
+  const runActive = isRunActive(activeRunData?.status);
 
   const { isLive } = useEvalRunLiveProgress({
     projectId,
@@ -147,6 +134,11 @@ export const useEvalRunActions = ({
     const inFlightRun = runs.find(run => isRunActive(run.status));
     if (inFlightRun?.id != null) {
       setActiveRunId(inFlightRun.id);
+      // Point the selector at the version being evaluated, otherwise a reload would show the
+      // agent's default version next to another version's progress.
+      if (inFlightRun.application_version_id != null) {
+        setVersionOverride(inFlightRun.application_version_id);
+      }
     }
   }, [runs, activeRunId]);
 
@@ -259,11 +251,10 @@ export const useEvalRunActions = ({
     lastRun,
     runs,
     runActive,
-    isEvaluating: isStartingRun || isRunInProgress,
+    isEvaluating: isStartingRun || runActive,
     cancelRequested,
     showClearConfirm,
     versions,
-    defaultVersionId,
     isLoadingVersions,
     selectedVersionId,
     handleVersionChange,

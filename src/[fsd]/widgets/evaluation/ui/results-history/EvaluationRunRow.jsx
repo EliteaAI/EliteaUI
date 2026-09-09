@@ -7,10 +7,14 @@ import { formatRunTimestamp } from '@/[fsd]/entities/run-history/lib/helpers';
 import { formatScoreDelta, getRunScoreLabel } from '../../lib/helpers';
 import RunHistoryActionsMenu from './RunHistoryActionsMenu';
 
+// A run that recorded no version, or whose version has since been deleted, has nothing to name.
+const UNKNOWN_VERSION_LABEL = '—';
+
 const EvaluationRunRow = memo(props => {
   const {
     run,
     suiteName,
+    versionName = null,
     isSelected = false,
     canDelete = false,
     exportingRunId = null,
@@ -53,6 +57,21 @@ const EvaluationRunRow = memo(props => {
             sx={styles.text}
           >
             {suiteName}
+          </Typography>
+        </Tooltip>
+      </Box>
+
+      <Box sx={styles.cell}>
+        <Tooltip
+          title={versionName ?? ''}
+          placement="top"
+        >
+          <Typography
+            variant="bodySmall"
+            sx={styles.text}
+            data-testid={`evaluation-run-version-${run.id}`}
+          >
+            {versionName ?? UNKNOWN_VERSION_LABEL}
           </Typography>
         </Tooltip>
       </Box>
