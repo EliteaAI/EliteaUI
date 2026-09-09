@@ -62,7 +62,7 @@ const enableToggleCardStyles = () => ({
     justifyContent: 'space-between',
     padding: '1rem 1.5rem',
     borderRadius: '0.75rem',
-    backgroundColor: palette.background.userInputBackground,
+    backgroundColor: palette.background.surface.interactive.default,
     gap: '1rem',
   }),
   toggleCardText: {

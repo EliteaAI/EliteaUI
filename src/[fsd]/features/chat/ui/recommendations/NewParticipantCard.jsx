@@ -151,10 +151,10 @@ const styles = {
     cursor: alreadyExists ? 'default' : 'pointer',
     border: alreadyExists ? `1px solid ${theme.palette.border.userMessageEditor}` : 'none',
     background: isActive
-      ? theme.palette.background.userInputBackgroundActive
-      : theme.palette.background.userInputBackground,
+      ? theme.palette.background.surface.interactive.active
+      : theme.palette.background.surface.interactive.default,
     '&:hover': {
-      background: theme.palette.background.userInputBackgroundActive,
+      background: theme.palette.background.surface.interactive.active,
     },
     [theme.breakpoints.down('prompt_list_sm')]: {
       width: '100%',

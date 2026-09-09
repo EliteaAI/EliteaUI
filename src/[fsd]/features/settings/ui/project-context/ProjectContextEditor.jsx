@@ -543,7 +543,7 @@ const getStyles = (limitReached, isEditorFocused) => ({
     padding: '0.75rem',
     borderRadius: '0.375rem',
     border: `0.0625rem solid ${palette.border.table}`,
-    backgroundColor: palette.background.userInputBackground,
+    backgroundColor: palette.background.surface.interactive.default,
     overflow: 'auto',
     fontSize: '0.875rem',
   }),
@@ -576,7 +576,7 @@ const getStyles = (limitReached, isEditorFocused) => ({
       padding: '0.5rem 0',
     },
     '& .MuiOutlinedInput-root': {
-      backgroundColor: palette.background.userInputBackground,
+      backgroundColor: palette.background.surface.interactive.default,
       borderRadius: '0.5rem',
       fontSize: '0.875rem',
       color: palette.text.secondary,

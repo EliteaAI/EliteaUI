@@ -100,7 +100,7 @@ const subAgentAccordionStyles = {
     minHeight: '1.5rem !important',
     padding: '0rem 0.5rem !important',
     '&:hover': {
-      backgroundColor: palette.background.userInputBackgroundActive,
+      backgroundColor: palette.background.surface.interactive.active,
     },
     '& .MuiAccordionSummary-content': {
       margin: '0 0 0 0.5rem !important',

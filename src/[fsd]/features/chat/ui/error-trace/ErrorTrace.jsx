@@ -168,7 +168,7 @@ const errorTraceStyles = (isExpanded, compact) => ({
     },
 
     '&:hover': {
-      backgroundColor: palette.background.userInputBackgroundActive,
+      backgroundColor: palette.background.surface.interactive.active,
       span: {
         color: palette.text.secondary,
       },
@@ -185,7 +185,7 @@ const errorTraceStyles = (isExpanded, compact) => ({
     // Whole-message view keeps its generous bottom padding; the accordion
     // (compact) tightens it so the trace doesn't dwarf the child's column.
     padding: compact ? '.5rem 1rem 1rem 1rem' : '.5rem 1rem 2.875rem 1rem',
-    backgroundColor: palette.background.userInputBackground,
+    backgroundColor: palette.background.surface.interactive.default,
     ...(compact && { maxHeight: '18rem', overflow: 'auto' }),
   }),
   errorTraceContent: {

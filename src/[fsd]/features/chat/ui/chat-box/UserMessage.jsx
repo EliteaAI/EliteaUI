@@ -453,7 +453,7 @@ const styles = {
     flexDirection: 'column',
     borderRadius: '0.5rem',
     border: `0.0625rem solid ${palette.border.userMessageEditor}`,
-    background: palette.background.userInputBackground,
+    background: palette.background.surface.interactive.default,
   }),
   editInputField: ({ palette }) => ({
     color: palette.text.secondary,

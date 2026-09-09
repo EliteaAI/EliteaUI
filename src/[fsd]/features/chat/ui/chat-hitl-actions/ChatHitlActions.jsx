@@ -204,7 +204,7 @@ const getStyles = () => ({
     padding: '0.875rem 1rem 0.9375rem',
     gap: '0.75rem',
     borderRadius: '0.625rem',
-    background: palette.background.userInputBackgroundActive,
+    background: palette.background.surface.interactive.active,
     alignItems: 'flex-start',
   }),
   clarifyingContainer: {
@@ -221,7 +221,7 @@ const getStyles = () => ({
     padding: '0.625rem 0.75rem',
     gap: '0.375rem',
     borderRadius: '0.625rem',
-    background: palette.background.userInputBackgroundActive,
+    background: palette.background.surface.interactive.active,
     border: `0.0625rem solid ${palette.warning.main}`,
     alignItems: 'flex-start',
   }),

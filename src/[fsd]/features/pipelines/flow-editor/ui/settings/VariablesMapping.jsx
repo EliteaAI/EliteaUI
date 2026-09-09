@@ -16,7 +16,7 @@ const VariablesMapping = memo(props => {
       showMode={AccordionConstants.AccordionShowMode.LeftMode}
       accordionSX={{ background: `${theme.palette.background.default.tertiary} !important` }}
       summarySX={{
-        background: theme.palette.background.userInputBackground,
+        background: theme.palette.background.surface.interactive.default,
         borderRadius: '.5rem',
         minHeight: '2rem !important',
       }}

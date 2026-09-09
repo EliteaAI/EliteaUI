@@ -54,9 +54,9 @@ const toolItemStyles = {
       borderRadius: '0.5rem',
       cursor: 'pointer',
       background: isActive
-        ? palette.background.userInputBackgroundActive
-        : palette.background.userInputBackground,
-      '&:hover': { background: palette.background.userInputBackgroundActive },
+        ? palette.background.surface.interactive.active
+        : palette.background.surface.interactive.default,
+      '&:hover': { background: palette.background.surface.interactive.active },
     }),
   label: {
     overflow: 'hidden',

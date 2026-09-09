@@ -443,7 +443,7 @@ const skillCreateFormStyles = () => ({
     padding: '0.75rem',
     borderRadius: '0.375rem',
     border: `0.0625rem solid ${palette.border.table}`,
-    backgroundColor: palette.background.userInputBackground,
+    backgroundColor: palette.background.surface.interactive.default,
     overflow: 'auto',
     fontSize: '0.875rem',
   }),

@@ -257,7 +257,7 @@ const styles = {
   chartCard: ({ palette }) => ({
     padding: '1rem',
     borderRadius: '0.5rem',
-    backgroundColor: palette.background.userInputBackground,
+    backgroundColor: palette.background.surface.interactive.default,
     display: 'flex',
     flexDirection: 'column',
     minWidth: 0,
@@ -302,7 +302,7 @@ const styles = {
   userSearch: {
     width: '15rem',
     height: '2.25rem',
-    backgroundColor: ({ palette }) => palette.background.userInputBackground,
+    backgroundColor: ({ palette }) => palette.background.surface.interactive.default,
     borderRadius: '1.6875rem',
     gap: '.5rem',
     borderBottom: '0rem',

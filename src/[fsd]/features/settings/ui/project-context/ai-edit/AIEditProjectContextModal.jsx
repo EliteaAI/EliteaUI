@@ -360,7 +360,7 @@ const getStyles = () => ({
   readOnlyCard: ({ palette }) => ({
     padding: '0.5rem 1rem',
     borderRadius: '0.5rem',
-    backgroundColor: palette.background.userInputBackground,
+    backgroundColor: palette.background.surface.interactive.default,
     border: `0.0625rem solid ${palette.border.lines}`,
     flex: 1,
     minHeight: 0,
@@ -369,7 +369,7 @@ const getStyles = () => ({
   editableCard: ({ palette }) => ({
     padding: '0.5rem 1rem',
     borderRadius: '0.5rem',
-    backgroundColor: palette.background.userInputBackground,
+    backgroundColor: palette.background.surface.interactive.default,
     border: `0.0625rem solid ${palette.border.lines}`,
     flex: 1,
     minHeight: 0,
@@ -389,7 +389,7 @@ const getStyles = () => ({
   activationDescriptionCard: ({ palette }) => ({
     padding: '0.75rem 1rem',
     borderRadius: '0.5rem',
-    backgroundColor: palette.background.userInputBackground,
+    backgroundColor: palette.background.surface.interactive.default,
     border: `0.0625rem solid ${palette.border.lines}`,
   }),
   emptyText: {

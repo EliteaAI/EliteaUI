@@ -171,7 +171,7 @@ const eliteaCatalogStyles = () => ({
     width: '100%',
     '& .MuiOutlinedInput-root': {
       ...typography.bodyMedium,
-      backgroundColor: palette.background.userInputBackground,
+      backgroundColor: palette.background.surface.interactive.default,
       border: `0.0625rem solid ${palette.border.lines}`,
       borderRadius: '1.75rem',
       height: '2.25rem',
@@ -181,7 +181,7 @@ const eliteaCatalogStyles = () => ({
       },
       '&.Mui-focused': {
         border: `0.0625rem solid ${palette.border.flowNode}`,
-        backgroundColor: palette.background.userInputBackgroundActive,
+        backgroundColor: palette.background.surface.interactive.active,
       },
       '& fieldset': {
         border: 'none',

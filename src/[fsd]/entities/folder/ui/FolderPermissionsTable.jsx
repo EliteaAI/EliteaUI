@@ -540,7 +540,7 @@ const folderPermissionsTableStyles = () => ({
     gap: '1rem',
     margin: '0 1.5rem 1.5rem',
     borderRadius: '0.5rem',
-    backgroundColor: palette.background.section,
+    backgroundColor: palette.background.surface.container,
   }),
   noResultsState: ({ palette }) => ({
     flex: 1,
@@ -550,7 +550,7 @@ const folderPermissionsTableStyles = () => ({
     justifyContent: 'center',
     margin: '0 1.5rem 1.5rem',
     borderRadius: '0.5rem',
-    backgroundColor: palette.background.section,
+    backgroundColor: palette.background.surface.container,
   }),
   emptyStateWrapper: ({ palette }) => ({
     flex: 1,
@@ -569,7 +569,7 @@ const folderPermissionsTableStyles = () => ({
     paddingTop: '4rem',
     gap: '1rem',
     borderRadius: '0.5rem',
-    backgroundColor: palette.background.section,
+    backgroundColor: palette.background.surface.container,
   }),
   emptyStateIcon: ({ palette }) => ({
     width: '2.5rem',

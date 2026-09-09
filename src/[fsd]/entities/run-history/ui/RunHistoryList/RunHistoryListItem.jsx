@@ -158,7 +158,7 @@ const runHistoryListItemStyles = (noVersions, hasEvent) => ({
 
     '&:hover': {
       cursor: 'pointer',
-      backgroundColor: palette.background.userInputBackground,
+      backgroundColor: palette.background.surface.interactive.default,
 
       '&:after': {
         display: 'none',

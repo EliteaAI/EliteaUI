@@ -134,7 +134,7 @@ const gridTableRowStyles = (isSelected, isHovered, gridTemplateColumns, showChec
     flexShrink: 0,
     ...(rowHeight ? { height: rowHeight, minHeight: rowHeight } : { minHeight: '2.5rem' }),
     borderBottom: `0.0625rem solid ${palette.border.table}`,
-    backgroundColor: isSelected || isHovered ? palette.background.userInputBackground : 'transparent',
+    backgroundColor: isSelected || isHovered ? palette.background.surface.interactive.default : 'transparent',
     transition: 'background-color 0.2s ease',
     '&:first-of-type': {
       borderTopLeftRadius: '0.5rem',

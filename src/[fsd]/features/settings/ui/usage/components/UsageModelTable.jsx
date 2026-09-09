@@ -124,7 +124,7 @@ const usageModelTableStyles = () => ({
     padding: '1rem',
     borderRadius: '0.5rem',
     border: 'none',
-    backgroundColor: palette.background.userInputBackground,
+    backgroundColor: palette.background.surface.interactive.default,
     // Height follows content; stretching leaves a large dead area when empty
     flex: '0 0 auto',
   }),

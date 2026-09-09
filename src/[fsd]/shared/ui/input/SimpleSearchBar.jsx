@@ -71,7 +71,7 @@ const simpleSearchBarStyles = () => ({
     display: 'flex',
     alignItems: 'center',
     gap: '0.5rem',
-    backgroundColor: palette.background.userInputBackground,
+    backgroundColor: palette.background.surface.interactive.default,
     borderRadius: '1.6875rem',
     border: `0.0625rem solid ${palette.border.lines}`,
     padding: '0.375rem 0.75rem',
@@ -79,7 +79,7 @@ const simpleSearchBarStyles = () => ({
     transition: 'all 0.2s ease-in-out',
     '&:focus-within': {
       borderColor: palette.border.flowNode,
-      backgroundColor: palette.background.userInputBackgroundActive,
+      backgroundColor: palette.background.surface.interactive.active,
     },
   }),
   input: ({ palette }) => ({

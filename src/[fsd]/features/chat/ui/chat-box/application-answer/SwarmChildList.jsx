@@ -68,7 +68,7 @@ const swarmChildListStyles = () => ({
   summary: ({ palette }) => ({
     minHeight: '2.5rem !important',
     padding: '0 0.75rem',
-    backgroundColor: palette.background.userInputBackground,
+    backgroundColor: palette.background.surface.interactive.default,
     borderRadius: '0.5rem',
     '&.Mui-expanded': {
       minHeight: '2.5rem !important',

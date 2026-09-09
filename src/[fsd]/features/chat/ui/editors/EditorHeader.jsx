@@ -129,7 +129,7 @@ const styles = {
     padding: '0.5rem 1rem',
     borderBottom: `0.0625rem solid ${palette.border.lines}`,
     borderRadius: '1rem',
-    background: palette.background.userInputBackground,
+    background: palette.background.surface.interactive.default,
     minHeight: '2.625rem',
     flexShrink: 0,
   }),

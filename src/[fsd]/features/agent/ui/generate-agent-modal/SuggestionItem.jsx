@@ -86,7 +86,7 @@ const styles = {
     minWidth: 0,
     padding: '0.5rem 1rem',
     borderRadius: '0.75rem',
-    backgroundColor: palette.background.userInputBackground,
+    backgroundColor: palette.background.surface.interactive.default,
     border: `0.0625rem solid ${palette.border.lines}`,
   }),
   cardContent: {

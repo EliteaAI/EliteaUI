@@ -56,7 +56,7 @@ const pendingInjectionItemStyles = () => ({
     display: 'flex',
     flexDirection: 'column',
     gap: '0.5rem',
-    backgroundColor: ({ palette }) => palette.background.section,
+    backgroundColor: ({ palette }) => palette.background.surface.container,
     borderRadius: '0.5rem',
     padding: '0.75rem 1rem',
     minWidth: 0,

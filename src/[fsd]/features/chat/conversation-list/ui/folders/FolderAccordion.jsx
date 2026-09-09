@@ -183,13 +183,13 @@ const folderAccordionStyles = (
     height: '3.0625rem',
     boxSizing: 'border-box',
     background: isActive
-      ? palette.background.userInputBackground
+      ? palette.background.surface.interactive.default
       : shouldBeSelected
         ? palette.background.conversation.selected
         : 'transparent',
     borderRadius: isActive ? '0.375rem' : 0,
     ':hover': {
-      background: palette.background.userInputBackground,
+      background: palette.background.surface.interactive.default,
       borderRadius: 0,
     },
     '&:hover #Menu': {

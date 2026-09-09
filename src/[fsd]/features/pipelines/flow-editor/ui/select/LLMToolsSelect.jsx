@@ -86,7 +86,7 @@ LLMToolsSelect.displayName = 'LLMToolsSelect';
 const getStyles = () => ({
   accordion: ({ palette }) => ({ background: `${palette.background.default.tertiary} !important` }),
   accordionSummary: ({ palette }) => ({
-    background: palette.background.userInputBackground,
+    background: palette.background.surface.interactive.default,
     borderRadius: '.5rem',
     minHeight: '2rem !important',
   }),
