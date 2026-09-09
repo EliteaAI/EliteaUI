@@ -1,7 +1,19 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useFetchParticipantDetails } from '@/[fsd]/features/chat/participants/lib/hooks';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
+
+// Identifies the participant a details request was started for, so a response that lands
+// after the user switched participants can be discarded instead of overwriting the state.
+const getParticipantKey = participant =>
+  participant
+    ? [
+        participant.entity_name,
+        participant.entity_meta?.id,
+        participant.entity_meta?.project_id,
+        participant.entity_settings?.version_id,
+      ].join('::')
+    : null;
 
 export const useActiveParticipantDetails = props => {
   const { activeParticipant, skip } = props;
@@ -12,10 +24,14 @@ export const useActiveParticipantDetails = props => {
 
   const [activeParticipantDetails, setActiveParticipantDetails] = useState({});
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+  const requestedParticipantKeyRef = useRef(null);
 
   const fetchDetails = useCallback(
     async ({ forceRefetch = false } = {}) => {
       if (!activeParticipant) return;
+
+      const requestedKey = getParticipantKey(activeParticipant);
+      requestedParticipantKeyRef.current = requestedKey;
 
       setIsLoadingDetails(true);
       try {
@@ -44,6 +60,12 @@ export const useActiveParticipantDetails = props => {
           }
         }
 
+        // A newer request for another participant has started meanwhile — drop this response
+        // so the state always describes the currently active participant.
+        if (requestedParticipantKeyRef.current !== requestedKey) {
+          return;
+        }
+
         setActiveParticipantDetails({
           ...details,
           version_details: versionDetails || details.version_details || {},
@@ -69,6 +91,8 @@ export const useActiveParticipantDetails = props => {
 
   useEffect(() => {
     if (!activeParticipant) {
+      // Invalidate any in-flight request so its response cannot repopulate the cleared state.
+      requestedParticipantKeyRef.current = null;
       setActiveParticipantDetails({});
     }
   }, [activeParticipant]);
