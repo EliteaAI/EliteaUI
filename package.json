@@ -1,7 +1,7 @@
 {
   "name": "elitea_ui",
   "private": true,
-  "version": "0.4.2212",
+  "version": "0.4.2214",
   "type": "module",
   "homepage": "./elitea_ui/",
   "scripts": {
@@ -15,10 +15,12 @@
     "format": "prettier --write \"**/**/*.{js,jsx,md}\"",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "test": "cd tests && npm run test",
-    "test:dev": "cd tests && npm run test:dev",
-    "test:install": "cd tests && npm install",
-    "test:debug": "cd tests && npm run debug",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "cd tests && npm run test",
+    "test:e2e:dev": "cd tests && npm run test:dev",
+    "test:e2e:install": "cd tests && npm install",
+    "test:e2e:debug": "cd tests && npm run debug",
     "commit": "git-cz --no-verify"
   },
   "lint-staged": {
@@ -140,6 +142,7 @@
     "eslint-plugin-storybook": "~10.5.0",
     "globals": "^16.0.0",
     "husky": "^9.1.7",
+    "jsdom": "^29.1.1",
     "playwright": "^1.56.1",
     "prettier": "^3.6.2",
     "storybook": "~10.5.0",

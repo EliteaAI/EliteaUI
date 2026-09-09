@@ -1,13 +1,12 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ThemeProvider, createTheme } from '@mui/material';
-
 import { useAnalyticsCostsQuery } from '@/api';
 import '@testing-library/jest-dom/vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 
 import AnalyticsCosts from '../AnalyticsCosts';
+import { AnalyticsTestWrapper as Wrapper } from '../_testHelpers';
 
 vi.mock('@/api', () => ({
   useAnalyticsCostsQuery: vi.fn(),
@@ -30,14 +29,6 @@ vi.mock('recharts', () => ({
   Tooltip: () => null,
 }));
 
-vi.mock('@/[fsd]/features/settings/lib/constants', () => ({
-  AnalyticsCommonConstants: {
-    CHART_COLORS: ['#4285F4', '#34A853', '#FBBC04', '#EA4335', '#9C27B0'],
-    TOP_LIST_SIZE: 10,
-    MODEL_CHART_SIZE: 15,
-  },
-}));
-
 vi.mock('@/[fsd]/features/settings/lib/helpers', () => ({
   AnalyticCommonHelpers: {
     fmtCost: v => `$${v ?? 0}`,
@@ -48,6 +39,8 @@ vi.mock('@/[fsd]/features/settings/lib/helpers', () => ({
 
 vi.mock('@/[fsd]/features/settings/ui/analytics', () => ({
   ChartTooltip: () => null,
+  InfoBanner: ({ children }) => <div data-testid="info-banner">{children}</div>,
+  infoBannerTextSx: {},
   KPICard: ({ label, value, subtitle }) => (
     <div data-testid={`kpi-${label}`}>
       <span>{value}</span>
@@ -56,16 +49,16 @@ vi.mock('@/[fsd]/features/settings/ui/analytics', () => ({
   ),
 }));
 
-const theme = createTheme();
-const Wrapper = ({ children }) => <ThemeProvider theme={theme}>{children}</ThemeProvider>;
-
 const MOCK_DATA = {
   kpis: {
     total_cost: 42.56,
+    total_input_cost: 20.0,
+    total_output_cost: 22.0,
+    total_cache_read_cost: 0.5,
+    total_cache_creation_cost: 0.06,
     total_tokens: 1250000,
     total_input_tokens: 800000,
     total_output_tokens: 450000,
-    avg_cost_per_call: 0.0085,
   },
   by_model: [
     {
@@ -145,13 +138,13 @@ describe('AnalyticsCosts', () => {
       { wrapper: Wrapper },
     );
     expect(screen.getByTestId('kpi-TOTAL COST')).toBeTruthy();
-    expect(screen.getByTestId('kpi-TOTAL TOKENS')).toBeTruthy();
-    expect(screen.getByTestId('kpi-INPUT TOKENS')).toBeTruthy();
-    expect(screen.getByTestId('kpi-OUTPUT TOKENS')).toBeTruthy();
-    expect(screen.getByTestId('kpi-AVG COST / CALL')).toBeTruthy();
+    expect(screen.getByTestId('kpi-INPUT TOKEN COST')).toBeTruthy();
+    expect(screen.getByTestId('kpi-OUTPUT TOKEN COST')).toBeTruthy();
+    expect(screen.getByTestId('kpi-CACHE READ COST')).toBeTruthy();
+    expect(screen.getByTestId('kpi-CACHE WRITE COST')).toBeTruthy();
   });
 
-  it('renders the model breakdown bar chart with a human-readable series name', () => {
+  it('renders the model breakdown as a table of display names and shares', () => {
     useAnalyticsCostsQuery.mockReturnValue({ data: MOCK_DATA, isFetching: false, isError: false });
     render(
       <AnalyticsCosts
@@ -162,11 +155,12 @@ describe('AnalyticsCosts', () => {
       { wrapper: Wrapper },
     );
     expect(screen.getByText('Cost by Model')).toBeTruthy();
-    // Bar for the model chart uses dataKey="cost" and must carry a readable name
-    // so the tooltip doesn't leak the raw field name.
-    const bar = screen.getByTestId('bar-cost');
-    expect(bar).toBeTruthy();
-    expect(bar).toHaveAttribute('data-name', 'Cost');
+    // display_name wins over the raw model_name so the table stays readable
+    expect(screen.getByText('GPT-4o')).toBeTruthy();
+    expect(screen.getByText('Claude 3.5 Sonnet')).toBeTruthy();
+    // 25.00 and 17.56 of a 42.56 total
+    expect(screen.getByText('58.7%')).toBeTruthy();
+    expect(screen.getByText('41.3%')).toBeTruthy();
   });
 
   it('renders the daily cost trend bar chart with a human-readable series name', () => {
@@ -185,8 +179,8 @@ describe('AnalyticsCosts', () => {
     expect(bar).toHaveAttribute('data-name', 'Total Cost');
   });
 
-  it('does not render the charts when their series are empty', () => {
-    const noChartData = { ...MOCK_DATA, by_model: [], daily: [] };
+  it('does not render the daily chart when its series is empty', () => {
+    const noChartData = { ...MOCK_DATA, daily: [] };
     useAnalyticsCostsQuery.mockReturnValue({ data: noChartData, isFetching: false, isError: false });
     render(
       <AnalyticsCosts
@@ -196,8 +190,8 @@ describe('AnalyticsCosts', () => {
       />,
       { wrapper: Wrapper },
     );
-    expect(screen.queryByTestId('bar-cost')).toBeNull();
     expect(screen.queryByTestId('bar-total_cost')).toBeNull();
+    expect(screen.getByText('No data')).toBeTruthy();
   });
 
   it('renders cost by agent list with entity names', () => {
@@ -226,14 +220,17 @@ describe('AnalyticsCosts', () => {
     expect(screen.getByText('alice@example.com')).toBeTruthy();
   });
 
-  it('renders No data when lists are empty', () => {
+  it('renders a per-section empty state when every list is empty', () => {
     const emptyData = {
       kpis: {
         total_cost: 0,
+        total_input_cost: 0,
+        total_output_cost: 0,
+        total_cache_read_cost: 0,
+        total_cache_creation_cost: 0,
         total_tokens: 0,
         total_input_tokens: 0,
         total_output_tokens: 0,
-        avg_cost_per_call: 0,
       },
       by_model: [],
       by_agent: [],
@@ -249,9 +246,13 @@ describe('AnalyticsCosts', () => {
       />,
       { wrapper: Wrapper },
     );
-    // All four sections (model chart, daily chart, by-agent list, by-user list)
-    // fall back to "No data" when their series are empty.
-    expect(screen.getAllByText('No data')).toHaveLength(4);
+    // Each of the four sections carries its own empty state.
+    expect(screen.getByText('No data')).toBeTruthy(); // daily chart
+    expect(screen.getByText('No user cost data is available for the selected date range.')).toBeTruthy();
+    expect(screen.getByText('No model cost data is available for the selected date range.')).toBeTruthy();
+    expect(
+      screen.getByText('No agent & pipeline cost data is available for the selected date range.'),
+    ).toBeTruthy();
   });
 
   it('returns null when data is undefined and not fetching', () => {
@@ -280,7 +281,7 @@ describe('AnalyticsCosts', () => {
     expect(screen.getByText(/estimated from a local model-price table/i)).toBeTruthy();
   });
 
-  it('labels Total Cost and Avg Cost / Call KPIs as estimated', () => {
+  it('labels every cost KPI as estimated', () => {
     useAnalyticsCostsQuery.mockReturnValue({ data: MOCK_DATA, isFetching: false, isError: false });
     render(
       <AnalyticsCosts
@@ -291,10 +292,13 @@ describe('AnalyticsCosts', () => {
       { wrapper: Wrapper },
     );
     expect(screen.getByTestId('kpi-TOTAL COST-subtitle').textContent).toMatch(/estimated/i);
-    expect(screen.getByTestId('kpi-AVG COST / CALL-subtitle').textContent).toMatch(/estimated/i);
+    expect(screen.getByTestId('kpi-INPUT TOKEN COST-subtitle').textContent).toMatch(/estimated/i);
+    expect(screen.getByTestId('kpi-OUTPUT TOKEN COST-subtitle').textContent).toMatch(/estimated/i);
+    expect(screen.getByTestId('kpi-CACHE READ COST-subtitle').textContent).toMatch(/estimated/i);
+    expect(screen.getByTestId('kpi-CACHE WRITE COST-subtitle').textContent).toMatch(/estimated/i);
   });
 
-  it('renders per-agent calls · avg cost caption', () => {
+  it('renders the per-agent cost breakdown row', () => {
     useAnalyticsCostsQuery.mockReturnValue({ data: MOCK_DATA, isFetching: false, isError: false });
     render(
       <AnalyticsCosts
@@ -304,26 +308,18 @@ describe('AnalyticsCosts', () => {
       />,
       { wrapper: Wrapper },
     );
-    // Caption format: "42 calls · $0.25 avg" (fmtCost is mocked to return $0.25)
-    expect(screen.getByText(/42 calls/)).toBeTruthy();
-    expect(screen.getByText(/\$0\.25 avg/)).toBeTruthy();
+    expect(screen.getByText('Cost by Agent & Pipeline')).toBeTruthy();
+    expect(screen.getByText('Code Review Bot')).toBeTruthy();
+    // The single agent and the single user each account for their whole section's cost
+    expect(screen.getAllByText('100.0%')).toHaveLength(2);
   });
 
-  it('omits the per-agent caption when calls == 0', () => {
-    const dataNoCalls = {
+  it('renders an em dash for share when the agent cost total is zero', () => {
+    const dataNoCost = {
       ...MOCK_DATA,
-      by_agent: [
-        {
-          entity_id: 1,
-          entity_name: 'Zero Calls Agent',
-          total_cost: 0,
-          total_tokens: 0,
-          calls: 0,
-          avg_cost: 0,
-        },
-      ],
+      by_agent: [{ entity_id: 1, entity_name: 'Zero Cost Agent', total_cost: 0, total_tokens: 0 }],
     };
-    useAnalyticsCostsQuery.mockReturnValue({ data: dataNoCalls, isFetching: false, isError: false });
+    useAnalyticsCostsQuery.mockReturnValue({ data: dataNoCost, isFetching: false, isError: false });
     render(
       <AnalyticsCosts
         projectId={1}
@@ -332,6 +328,7 @@ describe('AnalyticsCosts', () => {
       />,
       { wrapper: Wrapper },
     );
-    expect(screen.queryByText(/calls · /)).toBeNull();
+    expect(screen.getByText('Zero Cost Agent')).toBeTruthy();
+    expect(screen.getByText('—')).toBeTruthy();
   });
 });

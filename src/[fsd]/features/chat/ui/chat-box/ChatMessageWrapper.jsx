@@ -2,9 +2,10 @@ import { memo, useCallback, useMemo } from 'react';
 
 import * as ChatHelpers from '@/[fsd]/features/chat/lib/helpers/chat.helpers';
 import { filterActivePipelineHitlPromptItems } from '@/[fsd]/features/chat/lib/helpers/hitl.helpers.js';
+import { hasPendingAuthRequiredAction } from '@/[fsd]/features/chat/lib/helpers/mcpAuthorization.helpers.js';
 import { isParticipantStillActive } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { ApplicationAnswer, UserMessage } from '@/[fsd]/features/chat/ui/chat-box';
-import { ROLES, ToolActionStatus, WELCOME_MESSAGE_ID } from '@/common/constants';
+import { ROLES, WELCOME_MESSAGE_ID } from '@/common/constants';
 
 const ChatMessageWrapper = memo(props => {
   const {
@@ -47,10 +48,7 @@ const ChatMessageWrapper = memo(props => {
   } = props;
 
   const isLastMessage = chat_history.length - 1 === index;
-  const hasPendingAuth = useMemo(
-    () => message.toolActions?.some(action => action.status === ToolActionStatus.actionRequired),
-    [message.toolActions],
-  );
+  const hasPendingAuth = useMemo(() => hasPendingAuthRequiredAction(message), [message]);
   const displayMessageItems = useMemo(
     () =>
       filterActivePipelineHitlPromptItems(message.message_items, [
