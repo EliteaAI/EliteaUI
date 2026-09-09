@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from 'react';
 
 import { extractAgentCompareData } from '@/[fsd]/entities/compare-versions';
+import { useLazyGetApplicationSkillsQuery } from '@/[fsd]/features/skill/api';
 import {
   useLazyGetApplicationVersionDetailQuery,
   useUpdateApplicationVersionMutation,
@@ -12,6 +13,7 @@ export const useCompareAgentVersions = ({ projectId, applicationId }) => {
 
   const [fetchAgentVersion] = useLazyGetApplicationVersionDetailQuery();
   const [updateAgentVersion] = useUpdateApplicationVersionMutation();
+  const [fetchApplicationSkills] = useLazyGetApplicationSkillsQuery();
 
   const versionDetailsRef = useRef({ left: null, right: null });
 
@@ -25,20 +27,22 @@ export const useCompareAgentVersions = ({ projectId, applicationId }) => {
 
   const loadVersions = useCallback(
     async (leftId, rightId) => {
-      const [leftDetail, rightDetail] = await Promise.all([
+      const [leftDetail, rightDetail, leftSkillsResult, rightSkillsResult] = await Promise.all([
         fetchAgentVersion({ projectId, applicationId, versionId: leftId }).unwrap(),
         fetchAgentVersion({ projectId, applicationId, versionId: rightId }).unwrap(),
+        fetchApplicationSkills({ projectId, appVersionId: leftId }).unwrap(),
+        fetchApplicationSkills({ projectId, appVersionId: rightId }).unwrap(),
       ]);
       versionDetailsRef.current = { left: leftDetail, right: rightDetail };
       const pickMeta = d => ({ id: d.id, name: d.name, created_at: d.created_at, author: d.author });
       return {
-        leftData: extractAgentCompareData(leftDetail),
-        rightData: extractAgentCompareData(rightDetail),
+        leftData: extractAgentCompareData({ ...leftDetail, skills: leftSkillsResult?.skills ?? [] }),
+        rightData: extractAgentCompareData({ ...rightDetail, skills: rightSkillsResult?.skills ?? [] }),
         leftVersionMeta: pickMeta(leftDetail),
         rightVersionMeta: pickMeta(rightDetail),
       };
     },
-    [fetchAgentVersion, projectId, applicationId],
+    [fetchAgentVersion, fetchApplicationSkills, projectId, applicationId],
   );
 
   const saveVersion = useCallback(
