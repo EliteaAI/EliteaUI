@@ -1,4 +1,4 @@
-import { memo, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useMemo, useRef, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
@@ -15,6 +15,7 @@ import {
 } from '@/[fsd]/entities/version';
 import { useCompareAgentVersions } from '@/[fsd]/features/agent/lib/hooks';
 import { PinEntityConstants } from '@/[fsd]/shared/lib/constants';
+import { useInstructionsInputRefContext } from '@/[fsd]/shared/lib/context';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
 import { Controls } from '@/[fsd]/shared/ui';
@@ -38,6 +39,7 @@ import RouteDefinitions from '@/routes';
 
 const ApplicationControls = memo(props => {
   const { setBlockNav, onSuccess } = props;
+  const instructionsInputRef = useInstructionsInputRefContext();
   const { checkPermission } = useCheckPermission();
   const { isPrivate } = useProjectType();
   const isFromPipeline = useIsFromPipelineDetail();
@@ -59,7 +61,16 @@ const ApplicationControls = memo(props => {
     onSaveLeft,
     onSaveRight,
     resetSavingState,
+    flushLeftSaves,
   } = useCompareAgentVersions({ projectId, applicationId: id });
+
+  const handleCompareVersionsClose = useCallback(() => {
+    const savedFields = flushLeftSaves();
+    if (savedFields?.instructions !== undefined) {
+      instructionsInputRef.current?.restoreValue(savedFields.instructions);
+    }
+    setCompareVersionsOpen(false);
+  }, [flushLeftSaves, instructionsInputRef]);
 
   const versionDetails = formik?.values?.version_details;
   const { projectEntityLink } = useProjectEntityLink({
@@ -308,7 +319,7 @@ const ApplicationControls = memo(props => {
       {compareVersionsOpen && (
         <CompareVersionsModal
           open={compareVersionsOpen}
-          onClose={() => setCompareVersionsOpen(false)}
+          onClose={handleCompareVersionsClose}
           entityType={isFromPipeline ? 'pipeline' : 'agent'}
           leftVersionId={formik?.values?.version_details?.id}
           versions={formik?.values?.versions ?? []}
