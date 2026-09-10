@@ -4,9 +4,9 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { Box } from '@mui/material';
 
-import { ApplicationCatalog } from '@/[fsd]/features/apps/ui/catalog';
+import { ApplicationCatalog } from '@/[fsd]/features/apps';
 import { APPLICATIONS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
-import ToolkitsList from '@/[fsd]/features/toolkits/ui/list/ToolkitsList';
+import { ToolkitsList } from '@/[fsd]/features/toolkits';
 import { useToolkitsListQuery } from '@/api/toolkits';
 import AppCatalogIcon from '@/assets/app-catalog-icon.svg?react';
 import ApplicationsIcon from '@/assets/applications-icon.svg?react';

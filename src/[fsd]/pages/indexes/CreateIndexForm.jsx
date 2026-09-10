@@ -5,14 +5,12 @@ import { useNavigate } from 'react-router-dom';
 
 import { Box, CircularProgress } from '@mui/material';
 
-import { useMcpAuthModal } from '@/[fsd]/features/mcp/lib/hooks';
+import { useMcpAuthModal } from '@/[fsd]/features/mcp';
 import { McpAuthModal } from '@/[fsd]/features/mcp/ui';
+import { ToolkitChatHelpers, ToolkitChatModesEnum, useToolkitChat } from '@/[fsd]/features/toolkits';
 import { IndexesToolsEnum } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
 import { adjustIndexDataSchema } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexChat.helpers';
 import { useIndexNameValidation } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
-import { ToolkitChatModesEnum } from '@/[fsd]/features/toolkits/lib/constants';
-import { ToolkitChatHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
-import { useToolkitChat } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import { Button } from '@/[fsd]/shared/ui';
