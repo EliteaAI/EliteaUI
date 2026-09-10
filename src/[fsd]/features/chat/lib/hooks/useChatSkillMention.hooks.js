@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { areDetailsOfParticipant } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { useGetApplicationSkillsQuery } from '@/[fsd]/features/skill';
 import { MentionConstants } from '@/[fsd]/shared/lib/constants';
 import { parseMentionRanges } from '@/[fsd]/shared/lib/utils/instructionsMention.utils';
@@ -33,17 +34,14 @@ export const useChatSkillMention = ({
   const mentionAnchorRef = useRef(null);
 
   const isAgent = activeParticipant?.entity_name === ChatParticipantType.Applications;
-  const participantEntityId = activeParticipant?.entity_meta?.id;
-  // Details are resolved asynchronously, so right after a participant switch they can still
-  // describe the previously active agent. Falling back to their version id then mixes one
-  // agent's version with another agent's project id and the request 404s.
-  const detailsBelongToParticipant =
-    !!participantEntityId && String(activeParticipantDetails?.id) === String(participantEntityId);
   // The participant's entity_settings.version_id is not always populated (e.g. the agent
-  // editor's test chat), so fall back to the resolved details' version_details.id.
+  // editor's test chat), so fall back to the resolved details' version_details.id — but only
+  // while those details describe this participant, never the one selected before it.
   const appVersionId =
     activeParticipant?.entity_settings?.version_id ||
-    (detailsBelongToParticipant ? activeParticipantDetails?.version_details?.id : undefined);
+    (areDetailsOfParticipant(activeParticipantDetails, activeParticipant)
+      ? activeParticipantDetails?.version_details?.id
+      : undefined);
   const participantProjectId = activeParticipant?.entity_meta?.project_id || projectId;
 
   const { currentData: applicationSkills } = useGetApplicationSkillsQuery(

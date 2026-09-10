@@ -48,6 +48,7 @@ import {
   useReadAloud,
   useSlashMention,
 } from '@/[fsd]/features/chat/lib/hooks';
+import { areDetailsOfParticipant } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { useFetchParticipantDetails } from '@/[fsd]/features/chat/participants/lib/hooks';
 import { BudgetWarningBanner, SlashSuggestionList, VoiceMiniPlayer } from '@/[fsd]/features/chat/ui';
 import { ChatMessageList } from '@/[fsd]/features/chat/ui/chat-box';
@@ -2460,6 +2461,10 @@ const ChatBox = forwardRef((props, boxRef) => {
         version.name,
       );
 
+      // The fetch resolves to an empty object when the request fails. Persisting that would write
+      // an undefined version_id plus an llm_settings override the backend rejects, so stop here.
+      if (!versionDetails?.id) return;
+
       onChangeParticipantSettings(
         {
           ...(activeParticipant || {}),
@@ -2722,35 +2727,41 @@ const ChatBox = forwardRef((props, boxRef) => {
     ],
   );
 
+  // Details resolve asynchronously, so right after a participant switch they can still list the
+  // versions of the previously active agent. Reading them then makes the current agent's version
+  // look deleted and auto-selects a version that belongs to another agent.
+  const activeParticipantVersions = useMemo(() => {
+    if (areDetailsOfParticipant(activeParticipantDetails, activeParticipant)) {
+      return activeParticipantDetails.versions;
+    }
+    if (areDetailsOfParticipant(originalParticipant, activeParticipant)) {
+      return originalParticipant.versions;
+    }
+    return undefined;
+  }, [activeParticipant, activeParticipantDetails, originalParticipant]);
+
   const isActiveParticipantBroken = useMemo(() => {
     if (!activeParticipant) return false;
     if (activeParticipant.entity_meta?.project_id != PUBLIC_PROJECT_ID) return false;
-    const versions = activeParticipantDetails?.versions;
-    if (!versions) return false;
-    return !versions.some(v => v.id === activeParticipant.entity_settings?.version_id);
-  }, [activeParticipant, activeParticipantDetails?.versions]);
+    if (!activeParticipantVersions) return false;
+    return !activeParticipantVersions.some(v => v.id === activeParticipant.entity_settings?.version_id);
+  }, [activeParticipant, activeParticipantVersions]);
 
   const isActiveParticipantVersionMissing = useMemo(() => {
     if (!activeParticipant) return false;
-    const versions = activeParticipantDetails?.versions || originalParticipant?.versions;
-    if (!versions?.length) return false;
+    if (!activeParticipantVersions?.length) return false;
     const versionId = activeParticipant.entity_settings?.version_id;
     if (!versionId) return false;
-    return !versions.some(v => v.id === versionId);
-  }, [activeParticipant, activeParticipantDetails?.versions, originalParticipant?.versions]);
+    return !activeParticipantVersions.some(v => v.id === versionId);
+  }, [activeParticipant, activeParticipantVersions]);
 
   useEffect(() => {
     if (!isActiveParticipantVersionMissing) return;
-    const versions = activeParticipantDetails?.versions || originalParticipant?.versions;
-    if (!versions?.length) return;
-    const baseVersion = versions.find(v => v.name === LATEST_VERSION_NAME) || versions[0];
+    if (!activeParticipantVersions?.length) return;
+    const baseVersion =
+      activeParticipantVersions.find(v => v.name === LATEST_VERSION_NAME) || activeParticipantVersions[0];
     onSelectVersion(baseVersion);
-  }, [
-    isActiveParticipantVersionMissing,
-    activeParticipantDetails?.versions,
-    originalParticipant?.versions,
-    onSelectVersion,
-  ]);
+  }, [isActiveParticipantVersionMissing, activeParticipantVersions, onSelectVersion]);
 
   const isInputDisabled = useMemo(
     () =>
