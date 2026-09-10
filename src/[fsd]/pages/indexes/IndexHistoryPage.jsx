@@ -7,7 +7,7 @@ import { Box, CircularProgress, Typography } from '@mui/material';
 
 import { RunHistoryApi } from '@/[fsd]/entities/run-history/api';
 import { parseRunTimestamp } from '@/[fsd]/entities/run-history/lib/helpers';
-import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
+import { DrawerPageHeader } from '@/[fsd]/features/settings';
 import { useGetIndexesListQuery } from '@/[fsd]/features/toolkits/indexes/api';
 import { IndexStatuses, RUN_TEST_OPERATION_TYPES } from '@/[fsd]/features/toolkits/indexes/lib/constants';
 import { initialCompletedTsOf } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexEvent.helpers';

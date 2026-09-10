@@ -5,7 +5,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import { Box, CircularProgress } from '@mui/material';
 
-import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
+import { DrawerPageHeader } from '@/[fsd]/features/settings';
 import { useGetIndexesListQuery } from '@/[fsd]/features/toolkits/indexes/api';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import Breadcrumbs from '@/[fsd]/shared/ui/breadcrumbs';
