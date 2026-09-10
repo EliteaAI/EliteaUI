@@ -2,7 +2,7 @@ import { memo } from 'react';
 
 import { Box, Link, Skeleton, Typography } from '@mui/material';
 
-import { RESOURCES_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/resourcesTourTargets.constants';
+import { RESOURCES_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { LinkHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useGetResourcesConfigQuery, useGetSystemInfoQuery } from '@/api/resources';
 import FileIcon from '@/assets/file.svg?react';
