@@ -1,14 +1,18 @@
 import { useCallback, useRef, useState } from 'react';
 
+import { useDispatch } from 'react-redux';
+
 import { extractAgentCompareData } from '@/[fsd]/entities/compare-versions';
 import { useLazyGetApplicationSkillsQuery } from '@/[fsd]/features/skill/api';
 import {
   useLazyGetApplicationVersionDetailQuery,
   useUpdateApplicationVersionMutation,
 } from '@/api/applications';
+import { eliteaApi } from '@/api/eliteaApi';
 import useToast from '@/hooks/useToast';
 
 export const useCompareAgentVersions = ({ projectId, applicationId }) => {
+  const dispatch = useDispatch();
   const { toastSuccess, toastError } = useToast();
 
   const [fetchAgentVersion] = useLazyGetApplicationVersionDetailQuery();
@@ -16,6 +20,8 @@ export const useCompareAgentVersions = ({ projectId, applicationId }) => {
   const [fetchApplicationSkills] = useLazyGetApplicationSkillsQuery();
 
   const versionDetailsRef = useRef({ left: null, right: null });
+  const savedLeftFieldsRef = useRef({});
+  const leftVersionIdRef = useRef(null);
 
   const [savingLeftKeys, setSavingLeftKeys] = useState({});
   const [savingRightKeys, setSavingRightKeys] = useState({});
@@ -27,6 +33,8 @@ export const useCompareAgentVersions = ({ projectId, applicationId }) => {
 
   const loadVersions = useCallback(
     async (leftId, rightId) => {
+      savedLeftFieldsRef.current = {};
+      leftVersionIdRef.current = leftId;
       const [leftDetail, rightDetail, leftSkillsResult, rightSkillsResult] = await Promise.all([
         fetchAgentVersion({ projectId, applicationId, versionId: leftId }).unwrap(),
         fetchAgentVersion({ projectId, applicationId, versionId: rightId }).unwrap(),
@@ -77,6 +85,9 @@ export const useCompareAgentVersions = ({ projectId, applicationId }) => {
         });
         setData(prev => ({ ...prev, ...fieldPayload }));
         toastSuccess(`Version "${versionName}" has been updated.`);
+        if (versionId === versionDetailsRef.current.left?.id) {
+          savedLeftFieldsRef.current = { ...savedLeftFieldsRef.current, ...fieldPayload };
+        }
       } catch {
         toastError('Failed to save. Please try again.');
       } finally {
@@ -89,6 +100,20 @@ export const useCompareAgentVersions = ({ projectId, applicationId }) => {
     },
     [updateAgentVersion, projectId, applicationId, toastSuccess, toastError],
   );
+
+  const flushLeftSaves = useCallback(() => {
+    const fields = savedLeftFieldsRef.current;
+    savedLeftFieldsRef.current = {};
+    if (Object.keys(fields).length === 0) return null;
+    dispatch(
+      eliteaApi.util.updateQueryData('applicationDetails', { projectId, applicationId }, draft => {
+        Object.entries(fields).forEach(([key, value]) => {
+          draft.version_details[key] = value;
+        });
+      }),
+    );
+    return fields;
+  }, [dispatch, projectId, applicationId]);
 
   const onSaveLeft = useCallback(
     args => saveVersion({ ...args, setSavingKeys: setSavingLeftKeys }),
@@ -107,5 +132,6 @@ export const useCompareAgentVersions = ({ projectId, applicationId }) => {
     onSaveLeft,
     onSaveRight,
     resetSavingState,
+    flushLeftSaves,
   };
 };
