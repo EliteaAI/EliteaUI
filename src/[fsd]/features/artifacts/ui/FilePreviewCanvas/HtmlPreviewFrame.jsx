@@ -98,7 +98,11 @@ const buildFallbackStyles = ({ textColor, backgroundColor, themeMode }) =>
 // safe placeholders, sanitize the structure, then restore bodies afterward.
 // DOMPurify does not sanitize script body text content anyway (only element attributes),
 // so this bypasses nothing — the security boundary remains the nonce-based CSP and sandbox.
-const SCRIPT_BODY_RE = /(<script(?:\s[^>]*)?>)([\s\S]*?)(<\/script>)/gi;
+// Both tag patterns follow the HTML tokenizer rather than a naive `<script ...>` shape.
+// After the tag name the tokenizer accepts whitespace or `/` followed by attributes, and
+// that holds for end tags too, so `</script >`, `</script/>` and `</script\t\n bar>` all
+// close the block and all must be matched here.
+const SCRIPT_BODY_RE = /(<script(?:[\s/][^>]*)?>)([\s\S]*?)(<\/script(?:[\s/][^>]*)?>)/gi;
 
 const HTML_COMMENT_RE = /<!--[\s\S]*?-->/g;
 

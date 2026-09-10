@@ -17,12 +17,23 @@ const getRedirectUri = () => {
 
 // Detect Microsoft Entra (Azure AD) authorization endpoints across public and sovereign clouds.
 // Covers login.microsoftonline.com/.us/.de, login.microsoft.com, and login.windows.net.
+// The check runs against the parsed hostname, never a substring of the whole URL, so a
+// lookalike such as `login.microsoft.com.attacker.test` or `attacker.test/?login.windows.net`
+// cannot pass it.
+const ENTRA_HOST_PATTERN = /^login\.microsoftonline\.[a-z]{2,}$/;
+
+const ENTRA_HOSTS = ['login.microsoft.com', 'login.windows.net'];
+
 const isMicrosoftEntraEndpoint = authorizationEndpoint => {
-  const endpoint = (authorizationEndpoint || '').toLowerCase();
+  let hostname;
+  try {
+    hostname = new URL(authorizationEndpoint || '').hostname.toLowerCase();
+  } catch {
+    return false;
+  }
   return (
-    endpoint.includes('login.microsoftonline.') ||
-    endpoint.includes('login.microsoft.com') ||
-    endpoint.includes('login.windows.net')
+    ENTRA_HOST_PATTERN.test(hostname) ||
+    ENTRA_HOSTS.some(host => hostname === host || hostname.endsWith(`.${host}`))
   );
 };
 

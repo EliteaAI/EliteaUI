@@ -1,5 +1,22 @@
 import { ChatParticipantType, DEFAULT_PARTICIPANT_NAME } from '@/common/constants';
 
+/**
+ * True when resolved participant details describe the given participant.
+ *
+ * Details are fetched asynchronously, so right after a participant switch they can still describe
+ * the previously active participant. Combining one participant's fields with another's details
+ * produces requests the backend rejects — a version id of one agent sent for another agent's id.
+ * Every consumer that mixes participant fields with details fields must gate on this.
+ *
+ * Both sides carry the same entity id: fetchOriginalDetails returns the application payload whose
+ * `id` is the entity id, which is what `entity_meta.id` holds.
+ */
+export const areDetailsOfParticipant = (details, participant) => {
+  const entityId = participant?.entity_meta?.id;
+  if (!entityId || details?.id === undefined || details?.id === null) return false;
+  return String(details.id) === String(entityId);
+};
+
 export const getChatParticipantUniqueId = participant => {
   if (participant) {
     const entity_name =

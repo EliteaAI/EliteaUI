@@ -2,7 +2,7 @@ import { memo, useRef } from 'react';
 
 import { Alert, Box, CircularProgress } from '@mui/material';
 
-import { useAppDetail } from '@/[fsd]/features/apps/lib/hooks';
+import { useAppDetail } from '@/[fsd]/features/apps';
 import { buildErrorMessage } from '@/common/utils.jsx';
 import EditToolkit from '@/pages/Toolkits/EditToolkit';
 
