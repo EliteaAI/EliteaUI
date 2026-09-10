@@ -123,14 +123,14 @@ const evaluationRunRowStyles = (isSelected, gridTemplateColumns, delta) => ({
     flexShrink: 0,
     cursor: 'pointer',
     borderBottom: `0.0625rem solid ${palette.border.table}`,
-    backgroundColor: isSelected ? palette.background.dragging : 'transparent',
+    backgroundColor: isSelected ? palette.background.surface.interactive.dragging : 'transparent',
     borderRadius: isSelected ? '0.5rem' : 0,
     transition: 'background-color 0.2s ease',
     '& .run-row-actions': {
       opacity: isSelected ? 1 : 0,
     },
     '&:hover': {
-      backgroundColor: palette.background.dragging,
+      backgroundColor: palette.background.surface.interactive.dragging,
     },
     '&:hover .run-row-actions': {
       opacity: 1,
