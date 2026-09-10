@@ -43,6 +43,7 @@ const DimensionSection = memo(props => {
                 tier={item.tier}
                 defaultTarget={item.defaultTarget}
                 defaultTargetOperator={item.defaultTargetOperator}
+                defaultScaleType={item.defaultScaleType}
                 defaultWeight={item.defaultWeight}
                 canEdit={canUpdateDimension && isAgentTier}
                 canRemove={canUpdateSuite}
