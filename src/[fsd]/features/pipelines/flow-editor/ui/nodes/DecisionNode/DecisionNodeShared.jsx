@@ -55,6 +55,8 @@ export const DecisionOutputs = memo(props => {
 
 DecisionOutputs.displayName = 'DecisionOutputs';
 
+export default DecisionOutputs;
+
 /** @type {MuiSx} */
 export const commonComponentStyles = () => ({
   renderValueBox: {

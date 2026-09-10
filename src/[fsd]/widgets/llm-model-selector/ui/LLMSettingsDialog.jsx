@@ -4,7 +4,7 @@ import { shallowEqual } from '@/[fsd]/shared/lib/utils';
 import { Button, Modal } from '@/[fsd]/shared/ui';
 import { VALIDATION_RULE, validateMaxTokens } from '@/[fsd]/widgets/llm-model-selector/lib';
 
-import { LLMSettings } from './LLMSettings';
+import LLMSettings from './LLMSettings';
 
 const LLMSettingsDialog = memo(props => {
   const {
@@ -98,4 +98,4 @@ const LLMSettingsDialog = memo(props => {
 
 LLMSettingsDialog.displayName = 'LLMSettingsDialog';
 
-export { LLMSettingsDialog };
+export default LLMSettingsDialog;

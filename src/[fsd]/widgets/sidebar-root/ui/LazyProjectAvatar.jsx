@@ -4,7 +4,8 @@ import { Box } from '@mui/material';
 
 import ProjectAvatar from './ProjectAvatar';
 
-const LazyProjectAvatar = memo(({ projectName, projectId, size = '2rem' }) => {
+const LazyProjectAvatar = memo(props => {
+  const { projectName, projectId, size = '2rem' } = props;
   const ref = useRef(null);
   const [isVisible, setIsVisible] = useState(false);
 

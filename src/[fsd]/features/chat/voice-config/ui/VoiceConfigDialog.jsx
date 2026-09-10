@@ -4,7 +4,7 @@ import { Button, Modal } from '@/[fsd]/shared/ui';
 import SocketContext from '@/contexts/SocketContext';
 
 import { useVoiceConfig } from '../lib/hooks/useVoiceConfig.hooks';
-import { VoiceConfigControls } from './VoiceConfigControls';
+import VoiceConfigControls from './VoiceConfigControls';
 
 const VoiceConfigDialog = memo(props => {
   const { config, voices, open, onApply, onCancel, ttsModel, hasModelTTS, isPlaying } = props;

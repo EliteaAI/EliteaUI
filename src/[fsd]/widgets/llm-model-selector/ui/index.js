@@ -1,3 +1,3 @@
 export { default as LLMModelSelector } from './LLMModelSelector';
-export { LLMSettingsDialog } from './LLMSettingsDialog';
-export { LLMSettings } from './LLMSettings';
+export { default as LLMSettingsDialog } from './LLMSettingsDialog';
+export { default as LLMSettings } from './LLMSettings';
