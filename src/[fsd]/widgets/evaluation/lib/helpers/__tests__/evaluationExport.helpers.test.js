@@ -156,7 +156,7 @@ describe('buildEvaluationResultsSheets — dimension sheets', () => {
 
     expect(metaValue(sheet, 'Dimension')).toBe('Accuracy');
     expect(metaValue(sheet, 'Evaluation run ID')).toBe(42);
-    expect(metaValue(sheet, 'Scale')).toBe('Ordinal (1–5)');
+    expect(metaValue(sheet, 'Scale')).toBe('Rating (1-5)');
     expect(metaValue(sheet, 'Importance')).toBe('High');
     expect(metaValue(sheet, 'Evaluation targets')).toBe('Output, Input');
     expect(metaValue(sheet, 'Met target')).toBe(1);
