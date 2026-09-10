@@ -4,7 +4,7 @@ import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { useSoundNotification } from '@/[fsd]/shared/lib/hooks';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 
-import { SoundNotificationControls } from './SoundNotificationControls';
+import SoundNotificationControls from './SoundNotificationControls';
 
 const SoundNotificationSection = memo(() => {
   const { config, setConfig, playCompletionSound } = useSoundNotification();
@@ -33,7 +33,7 @@ const SoundNotificationSection = memo(() => {
 
 SoundNotificationSection.displayName = 'SoundNotificationSection';
 
-export { SoundNotificationSection };
+export default SoundNotificationSection;
 
 /** @type {MuiSx} */
 const styles = {

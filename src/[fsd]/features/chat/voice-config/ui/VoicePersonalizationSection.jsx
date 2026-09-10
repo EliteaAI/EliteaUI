@@ -7,7 +7,7 @@ import SocketContext from '@/contexts/SocketContext';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import { useVoiceConfig } from '../lib/hooks/useVoiceConfig.hooks';
-import { VoiceConfigControls } from './VoiceConfigControls';
+import VoiceConfigControls from './VoiceConfigControls';
 
 const VoicePersonalizationSection = memo(() => {
   const { config, setConfig, browserVoices } = useVoiceConfig({ persist: true });

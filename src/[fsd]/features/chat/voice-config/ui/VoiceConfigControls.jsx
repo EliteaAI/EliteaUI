@@ -146,7 +146,7 @@ const VoiceConfigControls = memo(props => {
 
 VoiceConfigControls.displayName = 'VoiceConfigControls';
 
-export { VoiceConfigControls };
+export default VoiceConfigControls;
 
 /** @type {MuiSx} */
 const voiceConfigControlsStyles = () => ({

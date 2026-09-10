@@ -5,5 +5,6 @@ export * from './dataset.helpers';
 export * from './dimension.helpers';
 export * from './humanScore.helpers';
 export * from './run.helpers';
+export * from './scaleLabel.helpers';
 export * from './scorecard.helpers';
 export * from './evaluationMessage.helpers';

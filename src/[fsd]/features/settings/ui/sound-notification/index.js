@@ -1,2 +1,2 @@
-export { SoundNotificationSection } from './SoundNotificationSection';
-export { SoundNotificationControls } from './SoundNotificationControls';
+export { default as SoundNotificationSection } from './SoundNotificationSection';
+export { default as SoundNotificationControls } from './SoundNotificationControls';

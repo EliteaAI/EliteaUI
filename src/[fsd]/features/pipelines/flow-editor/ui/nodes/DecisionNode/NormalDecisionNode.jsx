@@ -12,7 +12,7 @@ import {
 import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
 import { useEdges } from '@xyflow/react';
 
-import { DecisionOutputs, commonComponentStyles } from './DecisionNodeShared';
+import DecisionOutputs, { commonComponentStyles } from './DecisionNodeShared';
 
 const NormalDecisionNode = memo(props => {
   const { id, data, selected } = props;

@@ -100,7 +100,7 @@ const SoundNotificationControls = memo(props => {
 
 SoundNotificationControls.displayName = 'SoundNotificationControls';
 
-export { SoundNotificationControls };
+export default SoundNotificationControls;
 
 /** @type {MuiSx} */
 const soundNotificationControlsStyles = () => ({

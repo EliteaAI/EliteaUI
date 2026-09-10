@@ -6,6 +6,7 @@ import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom';
 
 import IndexRoute from '@/[fsd]/app/routes/IndexRoute';
 import IntegrationGuard from '@/[fsd]/app/routes/IntegrationGuard';
+import LegacyCatalogRedirect from '@/[fsd]/app/routes/LegacyCatalogRedirect';
 import ProtectedRoute from '@/[fsd]/app/routes/ProtectedRoute';
 import SkillsGuard from '@/[fsd]/app/routes/SkillsGuard';
 import { ChunkHelpers } from '@/[fsd]/shared/lib/helpers';
@@ -115,21 +116,6 @@ const AIPersonality = ChunkHelpers.lazyWithRetry(
 const Memory = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/features/settings/ui/memory/Memory'));
 
 let userInfoTimer = undefined;
-
-// Reads location at render time so the memoized route table does not need to
-// be re-created on every navigation just for this redirect.
-const LegacyCatalogRedirect = memo(() => {
-  const location = useLocation();
-  return (
-    <Navigate
-      to={RouteDefinitions.EliteaCatalog + location.search}
-      state={location.state}
-      replace
-    />
-  );
-});
-
-LegacyCatalogRedirect.displayName = 'LegacyCatalogRedirect';
 
 const ProtectedRoutes = memo(() => {
   const location = useLocation();
