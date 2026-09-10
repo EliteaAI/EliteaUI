@@ -1,4 +1,4 @@
-import { EVAL_BINDING_KIND, EVAL_ENGINE } from '../constants';
+import { EVAL_BINDING_KIND, EVAL_ENGINE, EVAL_SCALE_TYPE } from '../constants';
 
 /**
  * Derives a binding's kind from which reference column is populated. Exactly one
@@ -23,10 +23,11 @@ export const getWeightLabel = weight => {
   return WEIGHT_LABEL[weight] || `w${weight}`;
 };
 
-export const getTargetLabel = (target, targetOperator) => {
+export const getTargetLabel = (target, targetOperator, scaleType) => {
   if (target == null || !targetOperator) return null;
-  if (targetOperator === '==' && target === 1) return '= pass';
-  if (targetOperator === '==' && target === 0) return '= fail';
+  const isBinary = scaleType === EVAL_SCALE_TYPE.binary;
+  if (isBinary && targetOperator === '==' && target === 1) return '= pass';
+  if (isBinary && targetOperator === '==' && target === 0) return '= fail';
   const op = targetOperator === '>=' ? '≥' : targetOperator;
   return `${op}${target}`;
 };

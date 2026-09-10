@@ -70,6 +70,16 @@ const TOOLTIPS = {
 // shows no preset at all, rather than the default one implying a scale it does not have.
 const SCALE_NOT_SET_PLACEHOLDER = <Typography variant="labelMedium">Not set</Typography>;
 
+// A target from the scale being left behind can be meaningless (or invalid) on the new one — e.g.
+// a `>= 80` target surviving a switch to pass/fail. Drop it unless it already fits the new scale.
+const normalizeTargetForScaleTransition = (prev, nextScaleTypePreset) => {
+  const isValidPassFailTarget = prev.successCriteria === '==' && ['0', '1'].includes(prev.targetValue);
+  if (nextScaleTypePreset === SCALE_TYPE_PRESET.passFail) {
+    return isValidPassFailTarget ? {} : { targetValue: '' };
+  }
+  return prev.scaleTypePreset === SCALE_TYPE_PRESET.passFail ? { targetValue: '' } : {};
+};
+
 const CODE_SAFETY_NOTICE =
   'The code is checked by a safety pre-screen before it is stored. Dangerous imports, builtins, and dunder access are rejected.';
 
@@ -140,6 +150,7 @@ const DimensionForm = memo(props => {
         if (newEvaluator === EVAL_ENGINE.code) {
           next.scaleTypePreset = SCALE_TYPE_PRESET.passFail;
           next.hasKnownScale = true;
+          Object.assign(next, normalizeTargetForScaleTransition(prev, SCALE_TYPE_PRESET.passFail));
         }
         return next;
       });
@@ -248,6 +259,7 @@ const DimensionForm = memo(props => {
         hasKnownScale: true,
         customMin: value === SCALE_TYPE_PRESET.custom ? '' : prev.customMin,
         customMax: value === SCALE_TYPE_PRESET.custom ? '' : prev.customMax,
+        ...normalizeTargetForScaleTransition(prev, value),
       }));
     },
     [setForm],
