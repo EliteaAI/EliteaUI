@@ -10,6 +10,7 @@ const pendingRefreshes = new Set();
 let lastRefreshCheckTime = 0;
 const refreshQueue = [];
 let isProcessingRefreshQueue = false;
+let tokenSyncChannel = null;
 
 const safeParse = value => {
   try {
@@ -36,6 +37,39 @@ const saveToStorage = (key, data) => {
   } catch {
     // Ignore storage errors (quota exceeded, etc.)
   }
+};
+
+const normalizeList = value => {
+  const values = Array.isArray(value) ? value : typeof value === 'string' ? value.split(/\s+/) : [];
+  return [...new Set(values.map(item => String(item).trim()).filter(Boolean))].sort();
+};
+
+const canonicalizeAuthorizationServer = url => {
+  try {
+    const parsed = new URL(url);
+    const pathname = parsed.pathname.replace(/\/+$/, '');
+    return `${parsed.protocol.toLowerCase()}//${parsed.host.toLowerCase()}${pathname}`;
+  } catch {
+    return String(url || '')
+      .trim()
+      .replace(/\/+$/, '');
+  }
+};
+
+const getServerOrigin = url => {
+  try {
+    return new URL(url).origin.toLowerCase();
+  } catch {
+    return '';
+  }
+};
+
+const getAuthFamilyId = (serverUrl, authorizationServer) => {
+  const serverOrigin = getServerOrigin(serverUrl);
+  const canonicalAuthorizationServer = canonicalizeAuthorizationServer(authorizationServer);
+  return serverOrigin && canonicalAuthorizationServer
+    ? `${serverOrigin}|${canonicalAuthorizationServer}`
+    : null;
 };
 
 /**
@@ -124,6 +158,32 @@ const loadFromStorage = key => {
   return safeParse(window.sessionStorage.getItem(key));
 };
 
+const saveAuthFamilies = families => saveToStorage(McpAuthConstants.MCP_AUTH_FAMILY_STORAGE_KEY, families);
+const loadAuthFamilies = () => loadFromStorage(McpAuthConstants.MCP_AUTH_FAMILY_STORAGE_KEY);
+
+const getFamilyStorageKey = ({ serverUrl, tokenStorageKey } = {}) => {
+  if (tokenStorageKey && isPrebuildMcpType(tokenStorageKey)) return tokenStorageKey;
+  return getStorageKey({ serverUrl: tokenStorageKey || serverUrl });
+};
+
+const postTokenSync = message => {
+  try {
+    tokenSyncChannel?.postMessage(message);
+  } catch {
+    // Cross-tab synchronization is best-effort when BroadcastChannel is unavailable.
+  }
+};
+
+const notifyTokenUpsert = (key, tokenInfo) => {
+  postTokenSync({ type: 'token_upsert', key, tokenInfo });
+  dispatchTokenChangeEvent(key, 'login');
+};
+
+const notifyTokenRemoval = key => {
+  postTokenSync({ type: 'token_remove', key });
+  dispatchTokenChangeEvent(key, 'logout');
+};
+
 export const getLogoutMarkerStorageKey = key =>
   key ? `${McpAuthConstants.MCP_LOGOUT_SYNC_STORAGE_KEY}:${key}` : null;
 
@@ -203,6 +263,94 @@ export const canonicalizeServerUrl = url => {
   }
 };
 
+const registerAuthFamily = ({ serverUrl, tokenStorageKey, authorizationServers, resourceScopes } = {}) => {
+  const authorizationServer = authorizationServers?.[0];
+  const key = getFamilyStorageKey({ serverUrl, tokenStorageKey });
+  const familyId = getAuthFamilyId(serverUrl, authorizationServer);
+  if (!key || !familyId || isCredentialScopedKey(key)) return null;
+
+  const families = loadAuthFamilies();
+  const existing = families[key] || {};
+  const registration = {
+    ...existing,
+    family_id: familyId,
+    authorization_server: canonicalizeAuthorizationServer(authorizationServer),
+    server_url: canonicalizeServerUrl(serverUrl),
+    resource_scopes: normalizeList(resourceScopes),
+  };
+  families[key] = registration;
+  saveAuthFamilies(families);
+  postTokenSync({ type: 'family_upsert', key, registration });
+  return registration;
+};
+
+const scopesAllowReuse = (sourceScopes, targetScopes) => {
+  const required = normalizeList(targetScopes);
+  if (required.length === 0) return true;
+  const granted = new Set(normalizeList(sourceScopes));
+  return required.every(scope => granted.has(scope));
+};
+
+/**
+ * Reuse an active token for another MCP endpoint in the same auth family.
+ * Families require both the advertised authorization server and MCP origin to
+ * match. Endpoint keys remain distinct because the SDK resolves tokens by URL.
+ */
+export const reuseAuthFamilyToken = ({
+  serverUrl,
+  tokenStorageKey,
+  authorizationServers,
+  resourceScopes,
+  rejectCurrentToken = true,
+} = {}) => {
+  const registration = registerAuthFamily({
+    serverUrl,
+    tokenStorageKey,
+    authorizationServers,
+    resourceScopes,
+  });
+  if (!registration) return false;
+
+  const key = getFamilyStorageKey({ serverUrl, tokenStorageKey });
+  const tokens = loadTokens();
+  const families = loadAuthFamilies();
+  const rejectedToken = tokens[key];
+
+  // A 401 for a previously reused family token must fall back to OAuth instead
+  // of copying the same rejected token back and retrying forever.
+  if (rejectCurrentToken && rejectedToken?.auth_family_id === registration.family_id) {
+    registration.rejected_issued_at = Number(rejectedToken.issued_at) || Date.now();
+    families[key] = registration;
+    delete tokens[key];
+    saveTokens(tokens);
+    saveAuthFamilies(families);
+    notifyTokenRemoval(key);
+  }
+
+  const lastLogout = loadLogoutMarker(key);
+  const candidate = Object.entries(tokens).find(([candidateKey, tokenInfo]) => {
+    if (candidateKey === key || !tokenInfo?.access_token || isExpired(tokenInfo)) return false;
+    if (tokenInfo.access_token === McpAuthConstants.MCP_CONNECTION_VERIFIED) return false;
+    if (tokenInfo.auth_family_id !== registration.family_id) return false;
+    const issuedAt = Number(tokenInfo.issued_at) || 0;
+    if (issuedAt <= lastLogout || issuedAt <= Number(registration.rejected_issued_at || 0)) return false;
+    return scopesAllowReuse(tokenInfo.resource_scopes, registration.resource_scopes);
+  });
+  if (!candidate) return false;
+
+  const [, sourceToken] = candidate;
+  const sharedToken = { ...sourceToken };
+  delete sharedToken.session_id;
+  tokens[key] = {
+    ...sharedToken,
+    resource_server_url: registration.server_url,
+    resource_scopes: registration.resource_scopes,
+  };
+  saveTokens(tokens);
+  notifyTokenUpsert(key, tokens[key]);
+  return true;
+};
+
 const isExpired = tokenInfo => !!tokenInfo?.expires_at && Date.now() > Number(tokenInfo.expires_at);
 
 const needsProactiveRefresh = tokenInfo => {
@@ -277,6 +425,7 @@ export const setSessionId = (serverUrl, sessionId, toolkitType) => {
   if (tokens[key]) {
     tokens[key].session_id = sessionId;
     saveTokens(tokens);
+    notifyTokenUpsert(key, tokens[key]);
   }
 };
 
@@ -303,6 +452,16 @@ export const setAccessToken = (
   // Helper to get value with fallback to existing
   const getOrExisting = field => oauthMeta[field] || existingToken[field];
 
+  const authorizationServer = getOrExisting('authorization_server');
+  const familyRegistration = authorizationServer
+    ? registerAuthFamily({
+        serverUrl,
+        tokenStorageKey: key,
+        authorizationServers: [authorizationServer],
+        resourceScopes: getOrExisting('resource_scopes'),
+      })
+    : null;
+
   tokens[key] = {
     // Core token data
     access_token: accessToken,
@@ -328,12 +487,36 @@ export const setAccessToken = (
     issuer: getOrExisting('issuer'),
     grant_types_supported: getOrExisting('grant_types_supported'),
     code_challenge_methods_supported: getOrExisting('code_challenge_methods_supported'),
+    authorization_server: authorizationServer,
+    resource_server_url: getOrExisting('resource_server_url') || canonicalizeServerUrl(serverUrl),
+    resource_scopes: normalizeList(getOrExisting('resource_scopes')),
+    ...(familyRegistration?.family_id && { auth_family_id: familyRegistration.family_id }),
   };
+
+  if (familyRegistration?.family_id) {
+    const families = loadAuthFamilies();
+    Object.entries(families).forEach(([familyKey, registration]) => {
+      if (familyKey === key || registration?.family_id !== familyRegistration.family_id) return;
+      if (!scopesAllowReuse(tokens[key].resource_scopes, registration.resource_scopes)) return;
+      const sharedToken = { ...tokens[key] };
+      delete sharedToken.session_id;
+      tokens[familyKey] = {
+        ...sharedToken,
+        resource_server_url: registration.server_url,
+        resource_scopes: registration.resource_scopes,
+      };
+    });
+  }
 
   saveTokens(tokens);
 
-  // Notify components that token has changed
-  dispatchTokenChangeEvent(key, 'login');
+  Object.entries(tokens)
+    .filter(
+      ([tokenKey, tokenInfo]) =>
+        tokenKey === key ||
+        (familyRegistration?.family_id && tokenInfo?.auth_family_id === familyRegistration.family_id),
+    )
+    .forEach(([tokenKey, tokenInfo]) => notifyTokenUpsert(tokenKey, tokenInfo));
 
   // Remove from ignored servers when a new token is provided.
   // For prebuilt MCPs the token is stored under toolkitType (e.g. 'mcp_github')
@@ -361,14 +544,19 @@ export const logout = (serverUrl, toolkitType) => {
   const tokens = loadTokens();
   const key = getStorageKey({ serverUrl, toolkitType });
   if (!key) return;
-  if (tokens[key]) {
-    delete tokens[key];
-    saveTokens(tokens);
-  }
-  publishLogout(key);
-  // Notify components in this tab. Other tabs observe the durable logout
-  // marker through the browser storage event.
-  dispatchTokenChangeEvent(key, 'logout');
+  const familyId = tokens[key]?.auth_family_id;
+  const keysToRemove = familyId
+    ? Object.entries(tokens)
+        .filter(([, tokenInfo]) => tokenInfo?.auth_family_id === familyId)
+        .map(([tokenKey]) => tokenKey)
+    : [key];
+
+  keysToRemove.forEach(tokenKey => {
+    delete tokens[tokenKey];
+    publishLogout(tokenKey);
+    notifyTokenRemoval(tokenKey);
+  });
+  saveTokens(tokens);
 };
 
 // =============================================================================
@@ -591,6 +779,81 @@ export const clearIgnoredServers = () => {
 };
 
 /**
+ * Synchronize session-scoped MCP auth state between live same-origin tabs.
+ * Tokens remain in sessionStorage and travel only through BroadcastChannel
+ * while an authenticated tab is open.
+ */
+export const startTokenSync = () => {
+  if (tokenSyncChannel || typeof window === 'undefined') return () => {};
+  const BroadcastChannelImpl = window.BroadcastChannel || globalThis.BroadcastChannel;
+  if (!BroadcastChannelImpl) return () => {};
+
+  try {
+    tokenSyncChannel = new BroadcastChannelImpl(McpAuthConstants.MCP_TOKEN_SYNC_CHANNEL);
+  } catch {
+    return () => {};
+  }
+
+  tokenSyncChannel.onmessage = event => {
+    const message = event?.data || {};
+    if (message.type === 'request_state') {
+      postTokenSync({ type: 'state', tokens: loadTokens(), families: loadAuthFamilies() });
+      return;
+    }
+
+    if (message.type === 'state') {
+      const tokens = loadTokens();
+      Object.entries(message.tokens || {}).forEach(([key, tokenInfo]) => {
+        const incomingIssuedAt = Number(tokenInfo?.issued_at) || 0;
+        const currentIssuedAt = Number(tokens[key]?.issued_at) || 0;
+        if (incomingIssuedAt > currentIssuedAt && incomingIssuedAt > loadLogoutMarker(key)) {
+          tokens[key] = tokenInfo;
+          dispatchTokenChangeEvent(key, 'login');
+        }
+      });
+      saveTokens(tokens);
+      saveAuthFamilies({ ...loadAuthFamilies(), ...(message.families || {}) });
+      return;
+    }
+
+    if (message.type === 'token_upsert' && message.key && message.tokenInfo) {
+      const tokens = loadTokens();
+      const incomingIssuedAt = Number(message.tokenInfo.issued_at) || 0;
+      const currentIssuedAt = Number(tokens[message.key]?.issued_at) || 0;
+      if (incomingIssuedAt >= currentIssuedAt && incomingIssuedAt > loadLogoutMarker(message.key)) {
+        tokens[message.key] = message.tokenInfo;
+        saveTokens(tokens);
+        dispatchTokenChangeEvent(message.key, 'login');
+      }
+      return;
+    }
+
+    if (message.type === 'token_remove' && message.key) {
+      const tokens = loadTokens();
+      if (tokens[message.key]) {
+        delete tokens[message.key];
+        saveTokens(tokens);
+      }
+      dispatchTokenChangeEvent(message.key, 'logout');
+      return;
+    }
+
+    if (message.type === 'family_upsert' && message.key && message.registration) {
+      const families = loadAuthFamilies();
+      families[message.key] = message.registration;
+      saveAuthFamilies(families);
+    }
+  };
+
+  postTokenSync({ type: 'request_state' });
+
+  return () => {
+    tokenSyncChannel?.close();
+    tokenSyncChannel = null;
+  };
+};
+
+/**
  * Start a background scheduler that proactively refreshes OAuth tokens before they expire.
  *
  * The scheduler runs independently of user activity — tokens are refreshed when they
@@ -655,8 +918,7 @@ export const setConnectionVerified = (serverUrl, toolkitType) => {
 
   saveTokens(tokens);
 
-  // Notify components that connection status has changed
-  dispatchTokenChangeEvent(key, 'login');
+  notifyTokenUpsert(key, tokens[key]);
 
   // Remove from ignored servers
   const ignoredServers = loadIgnoredServers();

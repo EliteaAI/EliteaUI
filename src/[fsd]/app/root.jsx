@@ -25,6 +25,9 @@ import { McpAuthHelpers } from '@/[fsd]/features/mcp';
 import { logVersion } from '@/utils.js';
 
 logVersion();
+// Keep OAuth tokens session-scoped, while sharing live token changes with
+// other same-origin tabs through BroadcastChannel.
+McpAuthHelpers.startTokenSync();
 McpAuthHelpers.startTokenRefreshScheduler();
 
 const RootComponent = memo(() => {

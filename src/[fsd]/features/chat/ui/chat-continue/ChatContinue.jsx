@@ -1,4 +1,4 @@
-import { memo, useCallback, useId, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 
 import { Box, Collapse, Typography } from '@mui/material';
 
@@ -6,7 +6,12 @@ import {
   buildToolkitAuthorizationMessage,
   getToolkitAuthorizationContext,
 } from '@/[fsd]/features/chat/lib/helpers/mcpAuthorization.helpers';
-import { McpAuthModal, extractMcpAuthMetadata } from '@/[fsd]/features/mcp';
+import {
+  McpAuthHelpers,
+  McpAuthModal,
+  extractMcpAuthMetadata,
+  useMcpTokenChange,
+} from '@/[fsd]/features/mcp';
 import BaseBtn from '@/[fsd]/shared/ui/button/BaseBtn';
 import CheckedIcon from '@/assets/checked-icon.svg?react';
 import ArrowForwardIcon from '@/assets/icons/arrow-forward.svg?react';
@@ -29,6 +34,7 @@ const ChatContinue = memo(props => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const detailsId = useId();
+  const automaticResumeRef = useRef({ actionId: null, resumed: false });
 
   const mcpAuthMetadata = useMemo(
     () => (authRequiredAction ? extractMcpAuthMetadata(authRequiredAction) : null),
@@ -42,6 +48,42 @@ const ChatContinue = memo(props => {
     () => buildToolkitAuthorizationMessage(authorizationContext, message),
     [authorizationContext, message],
   );
+  const tokenStorageKey =
+    authRequiredAction?.toolOutputs?.server_url || authRequiredAction?.toolMeta?.server_url || '';
+  const { isLoggedIn: hasTargetToken } = useMcpTokenChange({ serverUrl: tokenStorageKey });
+
+  useEffect(() => {
+    if (!authRequiredAction || disabled || showAuthModal || !mcpAuthMetadata) return;
+    const actionId = authRequiredAction.authorizationRequestId || authRequiredAction.id;
+    const isFirstCheck = automaticResumeRef.current.actionId !== actionId;
+    if (isFirstCheck) automaticResumeRef.current = { actionId, resumed: false };
+    if (automaticResumeRef.current.resumed) return;
+
+    const serverUrl = authRequiredAction.toolMeta?.server_url || tokenStorageKey;
+    const reused = McpAuthHelpers.reuseAuthFamilyToken({
+      serverUrl,
+      tokenStorageKey,
+      authorizationServers: mcpAuthMetadata.authServers,
+      resourceScopes: mcpAuthMetadata.resourceScopes,
+      // On the first check an existing endpoint token was part of the failed
+      // request and must be marked rejected. A later token-change event means
+      // another family member has just supplied a fresh token for this endpoint.
+      rejectCurrentToken: isFirstCheck,
+    });
+
+    if (reused || (!isFirstCheck && hasTargetToken)) {
+      automaticResumeRef.current.resumed = true;
+      onAuthSuccess?.();
+    }
+  }, [
+    authRequiredAction,
+    disabled,
+    showAuthModal,
+    mcpAuthMetadata,
+    tokenStorageKey,
+    hasTargetToken,
+    onAuthSuccess,
+  ]);
   const detailRows = useMemo(() => {
     if (!authorizationContext) return [];
     const { serverUrl, resourceMetadataUrl, authorizationServers, scopes } = authorizationContext;
