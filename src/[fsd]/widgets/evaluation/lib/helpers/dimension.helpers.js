@@ -153,7 +153,11 @@ export const buildDimensionApiBody = (form, applicationId) => {
     ? Number(form.customImportanceValue)
     : IMPORTANCE_WEIGHT_MAP[form.importance];
 
-  const hasTarget = form.targetValue !== '';
+  // Pass/fail only has room for "must pass"/"must fail" (0/1 with equality) — a leftover numeric
+  // target from a prior scale (e.g. `>= 80`) is not a valid pass/fail target and must not be sent.
+  const hasTarget = isPassFail
+    ? form.successCriteria === '==' && (form.targetValue === '0' || form.targetValue === '1')
+    : form.targetValue !== '';
 
   // A custom scale keeps the type it was stored with — the preset only models its bounds, so
   // reusing the preset's type would turn an ordinal scale into a continuous one.

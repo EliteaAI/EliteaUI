@@ -17,7 +17,11 @@ const ManageDimensionCard = memo(props => {
   const isMenuOpen = Boolean(menuAnchor);
 
   const engines = dimension.allowed_engines ?? [];
-  const targetLabel = getTargetLabel(dimension.default_target, dimension.default_target_operator);
+  const targetLabel = getTargetLabel(
+    dimension.default_target,
+    dimension.default_target_operator,
+    dimension.scale_type,
+  );
   const weightLabel = getWeightLabel(dimension.default_weight);
   const description = dimension.description || '';
 

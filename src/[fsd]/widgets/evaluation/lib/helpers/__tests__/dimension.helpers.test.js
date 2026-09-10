@@ -135,4 +135,18 @@ describe('pass/fail dimension targets', () => {
     expect(form.targetValue).toBe('1');
     expect(form.successCriteria).toBe('==');
   });
+
+  // A rating/custom-scale target (e.g. `>= 80`) left behind after the reviewer switches the scale
+  // to pass/fail is not a valid pass/fail target and must never reach the API as one.
+  it('drops a stale non-binary target when the scale is pass/fail', () => {
+    const form = { ...passFailForm(), targetValue: '80', successCriteria: '>=' };
+    const body = buildDimensionApiBody(form, 7);
+    expect(body).toMatchObject({ default_target: null, default_target_operator: null });
+  });
+
+  it('drops a stale target of 0/1 with a non-equality operator when the scale is pass/fail', () => {
+    const form = { ...passFailForm(), targetValue: '1', successCriteria: '>=' };
+    const body = buildDimensionApiBody(form, 7);
+    expect(body).toMatchObject({ default_target: null, default_target_operator: null });
+  });
 });

@@ -214,7 +214,7 @@ const buildSummarySheet = (scorecard, run, meta) => {
       evaluator: getBindingEngineLabel(binding),
       scale: formatScaleLabel(binding),
       average: hasAverage ? round2(binding.avgNative) : EMPTY,
-      target: getTargetLabel(binding.target, binding.operator) ?? EMPTY,
+      target: getTargetLabel(binding.target, binding.operator, binding.scaleType) ?? EMPTY,
       met: binding.targetedCount ? `${binding.metCount}/${binding.targetedCount}` : EMPTY,
       importance: formatImportance(binding.weight),
       status,
@@ -302,7 +302,7 @@ const buildDimensionSheet = (scorecard, binding, sheetName, run) => {
       ? entries.map(({ card, cell }) => ({
           caseId: card.id,
           score: cell ? cellScore(cell) : EMPTY,
-          target: getTargetLabel(binding.target, binding.operator) ?? EMPTY,
+          target: getTargetLabel(binding.target, binding.operator, binding.scaleType) ?? EMPTY,
           result: cellResult(cell),
           evaluator: getBindingEngineLabel(binding),
           explanation: cellExplanation(cell),
@@ -414,7 +414,8 @@ const buildCaseSheet = (card, { datasetName, structureInScope, run }, sheetName)
               evaluator: getBindingEngineLabel(cell.binding),
               scale: formatScaleLabel(cell.binding),
               score: cellScore(cell),
-              target: getTargetLabel(cell.binding.target, cell.binding.operator) ?? EMPTY,
+              target:
+                getTargetLabel(cell.binding.target, cell.binding.operator, cell.binding.scaleType) ?? EMPTY,
               result: cellResult(cell),
               importance: formatImportance(cell.binding.weight),
               explanation: cellExplanation(cell),
