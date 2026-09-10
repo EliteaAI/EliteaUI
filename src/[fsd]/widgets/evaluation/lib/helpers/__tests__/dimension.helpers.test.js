@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   buildDimensionApiBody,
+  getDefaultDimensionFormState,
   getDimensionFormValidationError,
   mapDimensionToFormState,
 } from '../dimension.helpers';
@@ -84,5 +85,54 @@ describe('dimension scale round-trip', () => {
       scale_min: 0,
       scale_max: 1,
     });
+  });
+});
+
+// A pass/fail (binary) dimension previously could never carry a target: DimensionForm hid the
+// target controls whenever the scale was pass/fail, and buildDimensionApiBody discarded whatever
+// was in the form. Code validations are forced onto this scale, so this silently blocked "this
+// check must always pass" targets even though the backend and scoring logic already support them.
+describe('pass/fail dimension targets', () => {
+  const passFailForm = () => ({
+    ...getDefaultDimensionFormState(),
+    name: 'Safety check',
+    evaluator: 'code',
+    validationCode: 'return True',
+    scaleTypePreset: 'pass_fail',
+  });
+
+  it('sends no target when the reviewer leaves it unset', () => {
+    const body = buildDimensionApiBody(passFailForm(), 7);
+    expect(body).toMatchObject({ default_target: null, default_target_operator: null });
+  });
+
+  it('sends a "must pass" target as target 1 with the equality operator', () => {
+    const form = { ...passFailForm(), targetValue: '1', successCriteria: '==' };
+    const body = buildDimensionApiBody(form, 7);
+    expect(body).toMatchObject({ default_target: 1, default_target_operator: '==' });
+  });
+
+  it('sends a "must fail" target as target 0 with the equality operator', () => {
+    const form = { ...passFailForm(), targetValue: '0', successCriteria: '==' };
+    const body = buildDimensionApiBody(form, 7);
+    expect(body).toMatchObject({ default_target: 0, default_target_operator: '==' });
+  });
+
+  it('still allows saving a pass/fail dimension with no target selected', () => {
+    expect(getDimensionFormValidationError(passFailForm())).toBe('');
+  });
+
+  it('loads a stored pass/fail target back into the form', () => {
+    const form = mapDimensionToFormState({
+      ...base,
+      allowed_engines: ['code'],
+      scale_type: 'binary',
+      scale_min: 0,
+      scale_max: 1,
+      default_target: 1,
+      default_target_operator: '==',
+    });
+    expect(form.targetValue).toBe('1');
+    expect(form.successCriteria).toBe('==');
   });
 });
