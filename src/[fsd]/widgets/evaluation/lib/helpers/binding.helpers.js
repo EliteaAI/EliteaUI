@@ -25,6 +25,8 @@ export const getWeightLabel = weight => {
 
 export const getTargetLabel = (target, targetOperator) => {
   if (target == null || !targetOperator) return null;
+  if (targetOperator === '==' && target === 1) return '= pass';
+  if (targetOperator === '==' && target === 0) return '= fail';
   const op = targetOperator === '>=' ? '≥' : targetOperator;
   return `${op}${target}`;
 };

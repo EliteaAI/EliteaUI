@@ -17,6 +17,8 @@ const GRID_TEMPLATE = '1fr 0.5fr 5rem 5rem 5rem';
 
 const formatTarget = binding => {
   if (binding.target == null || binding.target === '' || !binding.operator) return '—';
+  if (binding.operator === '==' && binding.target === 1) return '= pass';
+  if (binding.operator === '==' && binding.target === 0) return '= fail';
   const op = binding.operator === '>=' ? '≥' : binding.operator;
   return `${op}${binding.target}`;
 };

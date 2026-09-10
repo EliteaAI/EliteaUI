@@ -46,6 +46,15 @@ export const SUCCESS_CRITERIA_OPTIONS = [
   { value: '==', label: 'Exactly (=)' },
 ];
 
+// Simplified target selector for pass/fail (binary) dimensions — a numeric target/operator
+// pair doesn't read naturally on a 0/1 scale, so this maps to targetValue '1'/'0' with the
+// '==' operator instead of exposing the generic Success Criteria + Target Value inputs.
+export const PASS_FAIL_TARGET_OPTIONS = [
+  { value: 'none', label: 'No target' },
+  { value: 'pass', label: 'Must pass' },
+  { value: 'fail', label: 'Must fail' },
+];
+
 // UI presets for scale type that auto-fill min/max values. Maps to EVAL_SCALE_TYPE.
 export const SCALE_TYPE_PRESET = {
   score: 'score',

@@ -17,6 +17,7 @@ import {
   EVIDENCE_SCOPE_OPTIONS,
   IMPORTANCE,
   IMPORTANCE_OPTIONS,
+  PASS_FAIL_TARGET_OPTIONS,
   POLARITY_OPTIONS,
   SCALE_TYPE_PRESET,
   SCALE_TYPE_PRESET_OPTIONS,
@@ -188,6 +189,17 @@ const DimensionForm = memo(props => {
     [setField],
   );
 
+  const handlePassFailTargetChange = useCallback(
+    value => {
+      setForm(prev => ({
+        ...prev,
+        targetValue: value === 'pass' ? '1' : value === 'fail' ? '0' : '',
+        successCriteria: value === 'none' ? prev.successCriteria : '==',
+      }));
+    },
+    [setForm],
+  );
+
   const handleImportanceChange = useCallback(
     value => {
       setField('importance', value);
@@ -240,6 +252,12 @@ const DimensionForm = memo(props => {
     },
     [setForm],
   );
+
+  const passFailTargetValue = useMemo(() => {
+    if (form.targetValue === '1' && form.successCriteria === '==') return 'pass';
+    if (form.targetValue === '0' && form.successCriteria === '==') return 'fail';
+    return 'none';
+  }, [form.targetValue, form.successCriteria]);
 
   const scaleTypeOptions = useMemo(() => {
     if (isCode) {
@@ -562,6 +580,22 @@ const DimensionForm = memo(props => {
               </Box>
             </Box>
           </>
+        )}
+
+        {isPassFail && (
+          <Box sx={styles.verticalField}>
+            <Box sx={styles.fieldLabelRow}>
+              <Typography sx={styles.fieldLabel}>Target</Typography>
+              <InfoTooltip infoTooltip={TOOLTIPS.targetValue} />
+            </Box>
+            <SingleSelect
+              showBorder
+              value={passFailTargetValue}
+              options={PASS_FAIL_TARGET_OPTIONS}
+              onValueChange={handlePassFailTargetChange}
+              data-testid="dimension-pass-fail-target-select"
+            />
+          </Box>
         )}
 
         <Box sx={styles.verticalField}>

@@ -153,7 +153,7 @@ export const buildDimensionApiBody = (form, applicationId) => {
     ? Number(form.customImportanceValue)
     : IMPORTANCE_WEIGHT_MAP[form.importance];
 
-  const hasTarget = !isPassFail && form.targetValue !== '';
+  const hasTarget = form.targetValue !== '';
 
   // A custom scale keeps the type it was stored with — the preset only models its bounds, so
   // reusing the preset's type would turn an ordinal scale into a continuous one.
