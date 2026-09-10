@@ -6,7 +6,6 @@ import {
   EVAL_ENGINE,
   EVAL_RESULT_MAX_LIMIT,
   EVAL_RESULT_STATUS,
-  EVAL_SCALE_TYPE,
   EVIDENCE_SCOPE_OPTIONS,
   IMPORTANCE_WEIGHT_MAP,
 } from '../constants';
@@ -14,6 +13,7 @@ import { getBindingEngineLabel, getTargetLabel } from './binding.helpers';
 import { caseSourceLabel, formatCaseContent } from './dataset.helpers';
 import { HUMAN_SCALE_KIND, formatHumanOutcome, resolveHumanScale } from './humanScore.helpers';
 import { formatRunStatus } from './run.helpers';
+import { getScaleTypeLabel } from './scaleLabel.helpers';
 
 // One empty representation across every table, so a blank cell always reads the same way.
 const EMPTY = '—';
@@ -83,15 +83,12 @@ const cellScore = cell => {
   return round2(cell.nativeScore);
 };
 
-/** Readable rendering of a binding's configured scale, e.g. "Ordinal (1–5)". */
-export const formatScaleLabel = binding => {
-  const scaleType = binding?.scaleType;
-  if (!scaleType) return EMPTY;
-  const label = `${scaleType.charAt(0).toUpperCase()}${scaleType.slice(1)}`;
-  if (scaleType === EVAL_SCALE_TYPE.binary) return `${label} (pass / fail)`;
-  const { min, max } = resolveHumanScale(binding);
-  return `${label} (${min}–${max})`;
-};
+/**
+ * Readable rendering of a binding's configured scale, e.g. "Rating (1-5)". Named exactly as the
+ * Dimension modal and the Results table name it, so an exported sheet never reintroduces the stored
+ * `ordinal` / `continuous` / `binary` wording.
+ */
+export const formatScaleLabel = binding => getScaleTypeLabel(binding, { withBounds: true }) ?? EMPTY;
 
 /** Importance as the Library names it, falling back to the raw weight for a custom one. */
 export const formatImportance = weight => {
