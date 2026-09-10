@@ -1,86 +1,17 @@
-import { memo, useCallback } from 'react';
+import { memo } from 'react';
 
 import { Link, Typography } from '@mui/material';
 
 import {
   endingText,
-  formatName,
   leadingText,
   middleText,
   parseInformation,
 } from '@/[fsd]/entities/notifications/lib/helpers/notificationLegacy.helpers.js';
-import { NotificationType, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
-import useNotificationNavigate from '@/hooks/useNotificationNavigate';
-import useNotificationNewTabNavigate from '@/hooks/useNotificationNewTabNavigate.js';
+import { NotificationType } from '@/common/constants';
 import { getBasename } from '@/routes';
 
-const MyNewTabLink = memo(props => {
-  const { linkInfo, needTrim, event_type } = props;
-  const { linkText, project_id, id, indexName } = linkInfo;
-
-  const href = useNotificationNewTabNavigate({
-    project_id,
-    id,
-    event_type,
-    indexName,
-  });
-
-  return (
-    <Link
-      variant="labelMedium"
-      sx={{ textDecoration: 'underline', cursor: 'pointer' }}
-      target={'_blank'}
-      href={href}
-    >
-      {needTrim ? formatName(linkText) : linkText}
-    </Link>
-  );
-});
-
-MyNewTabLink.displayName = 'MyNewTabLink';
-
-const MyCurrentTabLink = memo(props => {
-  const { linkInfo, needTrim, onCloseNotificationList, event_type } = props;
-  const { linkText, project_id, id, version_id, version_name, indexName } = linkInfo;
-  const viewMode = project_id == PUBLIC_PROJECT_ID ? ViewMode.Public : ViewMode.Owner;
-
-  const doNavigate = useNotificationNavigate({
-    viewMode,
-    id,
-    event_type,
-    name: linkText,
-    version_id,
-    version_name,
-    indexName,
-  });
-  const onClick = useCallback(() => {
-    doNavigate();
-    if (onCloseNotificationList) {
-      onCloseNotificationList();
-    }
-  }, [doNavigate, onCloseNotificationList]);
-
-  return (
-    <Link
-      variant="labelMedium"
-      component={'span'}
-      sx={{ textDecoration: 'underline', cursor: 'pointer' }}
-      onClick={onClick}
-    >
-      {needTrim ? formatName(linkText) : linkText}
-    </Link>
-  );
-});
-
-MyCurrentTabLink.displayName = 'MyCurrentTabLink';
-
-const MyLink = memo(props => {
-  const { linkInfo } = props;
-
-  return linkInfo?.isNewTab ? <MyNewTabLink {...props} /> : <MyCurrentTabLink {...props} />;
-});
-
-MyLink.displayName = 'MyLink';
+import MyLink from './MyLink';
 
 const LegacyNotificationMessage = memo(props => {
   const { notification, onCloseNotificationList, textVariant, textColor } = props;

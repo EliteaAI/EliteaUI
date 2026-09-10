@@ -172,4 +172,4 @@ const styles = {
   },
 };
 
-export { LLMSettings };
+export default LLMSettings;

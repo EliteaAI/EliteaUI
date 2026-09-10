@@ -10,7 +10,7 @@ import SettingIcon from '@/components/Icons/SettingIcon';
 
 import { normalizeLlmSettings } from '../lib/helpers';
 import LLMModelsMenu from './LLMModelsMenu';
-import { LLMSettingsDialog } from './LLMSettingsDialog';
+import LLMSettingsDialog from './LLMSettingsDialog';
 
 /**
  * Reusable LLM Model Selector component with model dropdown and optional settings button
