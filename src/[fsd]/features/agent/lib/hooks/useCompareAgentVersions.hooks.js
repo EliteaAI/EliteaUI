@@ -107,6 +107,7 @@ export const useCompareAgentVersions = ({ projectId, applicationId }) => {
     if (Object.keys(fields).length === 0) return null;
     dispatch(
       eliteaApi.util.updateQueryData('applicationDetails', { projectId, applicationId }, draft => {
+        draft.version_details = draft.version_details ?? {};
         Object.entries(fields).forEach(([key, value]) => {
           draft.version_details[key] = value;
         });
