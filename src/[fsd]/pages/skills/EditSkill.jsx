@@ -9,14 +9,17 @@ import { Box, CircularProgress } from '@mui/material';
 import { CompareVersionsModal } from '@/[fsd]/entities/compare-versions';
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version';
 import { SetDefaultVersionDialog } from '@/[fsd]/entities/version/ui';
-import { useSetSkillDefaultVersionMutation, useSkillDetailsQuery } from '@/[fsd]/features/skill/api';
-import { useCompareSkillVersions } from '@/[fsd]/features/skill/lib/hooks';
-import { SkillValidateSchema } from '@/[fsd]/features/skill/lib/validation';
-import SkillControls from '@/[fsd]/features/skill/ui/SkillControls';
-import SkillInformation from '@/[fsd]/features/skill/ui/SkillInformation';
-import { AIEditSkillButton } from '@/[fsd]/features/skill/ui/ai-edit-skill-modal';
-import CreateSkillForm from '@/[fsd]/features/skill/ui/skill-details/form/CreateSkillForm';
-import SkillTestPanel from '@/[fsd]/features/skill/ui/skill-test-panel/SkillTestPanel';
+import {
+  AIEditSkillButton,
+  CreateSkillForm,
+  SkillControls,
+  SkillInformation,
+  SkillTestPanel,
+  SkillValidateSchema,
+  useCompareSkillVersions,
+  useSetSkillDefaultVersionMutation,
+  useSkillDetailsQuery,
+} from '@/[fsd]/features/skill';
 import { BreadcrumbsOrTitle } from '@/[fsd]/shared/ui';
 import { SkillTabBar } from '@/[fsd]/widgets/skill-tab-bar';
 import { eliteaApi } from '@/api/eliteaApi';

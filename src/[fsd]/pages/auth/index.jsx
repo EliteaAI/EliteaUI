@@ -4,8 +4,7 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { Box, CircularProgress, Typography } from '@mui/material';
 
-import { AuthConstants } from '@/[fsd]/features/auth/lib/constants';
-import { AuthHelpers } from '@/[fsd]/features/auth/lib/helpers';
+import { AuthConstants, AuthHelpers } from '@/[fsd]/features/auth';
 
 /**
  * Authentication Callback Page
