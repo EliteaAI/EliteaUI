@@ -18,6 +18,7 @@ const DimensionCard = memo(props => {
     tier = null,
     defaultTarget = null,
     defaultTargetOperator = null,
+    defaultScaleType = null,
     defaultWeight = null,
     canEdit = false,
     canRemove = false,
@@ -48,6 +49,7 @@ const DimensionCard = memo(props => {
   const targetLabel = getTargetLabel(
     binding.target ?? defaultTarget,
     binding.target_operator || defaultTargetOperator,
+    defaultScaleType,
   );
   const weightLabel = getWeightLabel(binding.weight ?? defaultWeight);
 
