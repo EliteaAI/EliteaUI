@@ -195,7 +195,7 @@ export const useMcpAuthModal = (options = {}) => {
       formClientSecret: client_secret,
       formScopes: scopes,
       projectId,
-      toolkitId,
+      toolkitId: toolkitId || mcpAuthMetadata?.toolkitId,
       // Pass toolkitType for pre-built MCPs so tokens are stored under toolkitType key
       toolkitType: isPrebuildMcp ? toolkitType : undefined,
       onClose: handleCloseModal,
