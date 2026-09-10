@@ -2,8 +2,7 @@ import { memo, useCallback, useEffect, useMemo } from 'react';
 
 import { useLocation, useMatch, useNavigate, useParams } from 'react-router-dom';
 
-import PrivateSkillsList from '@/[fsd]/features/skill/ui/PrivateSkillsList';
-import { SkillImportButton } from '@/[fsd]/features/skill/ui/import';
+import { PrivateSkillsList, SkillImportButton } from '@/[fsd]/features/skill';
 import { ContentType, SkillsTabs } from '@/common/constants';
 import StickyTabs from '@/components/StickyTabs';
 import ViewToggle from '@/components/ViewToggle';

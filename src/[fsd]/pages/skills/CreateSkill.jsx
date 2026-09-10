@@ -4,9 +4,7 @@ import { Form, Formik } from 'formik';
 
 import { Grid } from '@mui/material';
 
-import { SkillValidateSchema } from '@/[fsd]/features/skill/lib/validation';
-import CreateSkillTabBar from '@/[fsd]/features/skill/ui/CreateSkillTabBar';
-import CreateSkillForm from '@/[fsd]/features/skill/ui/skill-details/form/CreateSkillForm';
+import { CreateSkillForm, CreateSkillTabBar, SkillValidateSchema } from '@/[fsd]/features/skill';
 import { Breadcrumbs } from '@/[fsd]/shared/ui';
 import StyledTabs from '@/components/StyledTabs';
 import { StyledGridContainer } from '@/pages/Common/Components';
