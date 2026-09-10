@@ -54,7 +54,7 @@ ArtifactTableContainer.displayName = 'ArtifactTableContainer';
 /** @type {MuiSx} */
 const artifactTableContainerStyles = isDragOver => ({
   root: ({ palette }) => ({
-    backgroundColor: isDragOver ? palette.background.dragging : undefined,
+    backgroundColor: isDragOver ? palette.background.surface.interactive.dragging : undefined,
     transition: 'background-color 0.2s ease',
   }),
 });

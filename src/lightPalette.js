@@ -94,7 +94,6 @@ const oldLightPalette = {
   mode: 'light',
 
   background: {
-    dragging: blue12,
     warningBkg: red15,
     wrongBkg: red40,
     errorBkg: red8,
@@ -672,6 +671,7 @@ const lightPalette = {
       interactive: {
         default: dark5,
         active: dark10,
+        dragging: blue12,
       },
     },
     npsCard: `linear-gradient(to top, ${lightColorScheme.accentLight}, ${lightColorScheme.accentMid})`,
