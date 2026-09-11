@@ -17,7 +17,6 @@ const dark20 = '#3d445633';
 const white20 = '#ffffff33';
 const white50 = '#ffffff80';
 const whiteStepBorder = '#757575';
-const blue15 = '#6AE8FA1A'; // conversation selected dark
 const veryLightBlue = '#C7EBFF';
 const skyBlue = '#29B8F5';
 const gray00 = '#CAD0D8';
@@ -311,7 +310,7 @@ const oldDarkPalette = {
     conversation: {
       normal: 'transparent',
       hover: white6, // defined conversation hover color
-      selected: blue15, // defined conversation selected color
+      selected: blue10, // defined conversation selected color
     },
     highlightUserMessage: magenta20,
     tagEditor: {
