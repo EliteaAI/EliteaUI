@@ -658,6 +658,14 @@ export const getAllTokens = () => {
       access_token: expired ? null : value.access_token,
       session_id: expired ? null : value.session_id || null,
       ...(value.refresh_token && { refresh_token: value.refresh_token }),
+      // Runtime needs this non-secret provenance to validate that a token may
+      // be reused for a sibling MCP endpoint before showing an auth guard.
+      // The SDK recomputes the family from both URLs and checks resource scopes;
+      // the label alone is never trusted.
+      ...(value.auth_family_id && { auth_family_id: value.auth_family_id }),
+      ...(value.authorization_server && { authorization_server: value.authorization_server }),
+      ...(value.resource_server_url && { resource_server_url: value.resource_server_url }),
+      ...(value.resource_scopes && { resource_scopes: normalizeList(value.resource_scopes) }),
     };
   });
 
