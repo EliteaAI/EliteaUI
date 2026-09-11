@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { forwardRef, memo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
@@ -11,7 +11,8 @@ import { StyledTipsContainer } from '@/pages/Common/Components/InputVersionDialo
 import ParticipantActions from '../ParticipantActions/ParticipantActions';
 import ParticipantWarning from './ParticipantWarning';
 
-const ParticipantAttentionCard = memo(props => {
+const ParticipantAttentionCard = memo(
+  forwardRef((props, ref) => {
   const {
     participant,
     collapsed,
@@ -36,6 +37,7 @@ const ParticipantAttentionCard = memo(props => {
     type,
     handleEditClick,
     styles,
+    ...restProps
   } = props;
 
   const {
@@ -72,10 +74,12 @@ const ParticipantAttentionCard = memo(props => {
 
   return (
     <StyledTipsContainer
+      ref={ref}
       onClick={isActive || isVersionUnavailable ? onClickHandler : undefined}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       sx={styles.attentionWrapper}
+      {...restProps}
     >
       <Box sx={styles.attentionHeader}>
         <EntityIcon
@@ -157,7 +161,8 @@ const ParticipantAttentionCard = memo(props => {
       {containerInfoRow}
     </StyledTipsContainer>
   );
-});
+  }),
+);
 
 ParticipantAttentionCard.displayName = 'ParticipantAttentionCard';
 
