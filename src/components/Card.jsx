@@ -1,5 +1,7 @@
 import { memo, useCallback, useMemo, useRef, useState } from 'react';
 
+import { useMatch } from 'react-router-dom';
+
 import { Box, CardContent, Divider, IconButton, Card as MuiCard, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
@@ -26,6 +28,7 @@ import useCardNavigate from '@/hooks/useCardNavigate';
 import useCardResize from '@/hooks/useCardResize';
 import useDataViewMode from '@/hooks/useDataViewMode';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
+import RouteDefinitions from '@/routes';
 
 const Card = memo(props => {
   const {
@@ -149,6 +152,12 @@ const Card = memo(props => {
   const isWholeCardClickable = hasCardDetails && Boolean(onCardClick) && !disableCardClick;
   const isClickable = !disableCardClick;
   const styles = cardStyles(hasCardDetails, showCardBottom, isWholeCardClickable, isClickable);
+
+  const isOnApplicationsPage = Boolean(useMatch({ path: RouteDefinitions.Applications, end: true }));
+  const isOnApplicationsWithTabPage = Boolean(
+    useMatch({ path: RouteDefinitions.ApplicationsWithTab, end: true }),
+  );
+  const showForkedFromLink = isForked && (isOnApplicationsPage || isOnApplicationsWithTabPage);
 
   return (
     <Box
@@ -295,19 +304,21 @@ const Card = memo(props => {
                     />
                   </Box>
                 </StyledTooltip>
-                {(isForked || (showFolders && folderId) || data?.tags?.length > 0) && (
+                {(showForkedFromLink || (showFolders && folderId) || data?.tags?.length > 0) && (
                   <Divider
                     orientation="vertical"
                     flexItem
                     sx={styles.sectionDivider}
                   />
                 )}
-                {isForked && (
+                {showForkedFromLink && (
                   <>
                     <IconLinkWithToolTip
                       meta={meta}
                       type={getEntityTypeByCardType(type)}
+                      disabled
                     />
+
                     {((showFolders && folderId) || data?.tags?.length > 0) && (
                       <Divider
                         orientation="vertical"
@@ -324,7 +335,7 @@ const Card = memo(props => {
                       title={folderName || 'In folder'}
                     >
                       <Box sx={styles.folderIndicator}>
-                        <FolderIcon sx={{ fontSize: '0.875rem' }} />
+                        <FolderIcon sx={{ fontSize: '1rem' }} />
                       </Box>
                     </StyledTooltip>
                     {data?.tags?.length > 0 && (

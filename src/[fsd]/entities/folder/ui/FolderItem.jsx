@@ -35,7 +35,7 @@ const FolderItem = memo(props => {
       <FolderIcon sx={styles.icon} />
       <Box sx={styles.nameGroup}>
         <Typography
-          variant="labelSmall"
+          variant="labelMedium"
           sx={styles.name}
         >
           {folder.name}
@@ -136,13 +136,13 @@ const folderItemStyles = isSelected => ({
         backgroundColor: folder.active,
         outline: `0.0625rem solid ${folder.borderActive}`,
         outlineOffset: '-0.0625rem',
-        filter: `drop-shadow(${folder.shadow})`,
+        boxShadow: folder.shadow,
       };
     }
     return {
       ...base,
       backgroundColor: folder.default,
-      filter: `drop-shadow(${folder.shadow})`,
+      boxShadow: folder.shadow,
       '&:hover': {
         outline: `0.0625rem solid ${folder.borderHover}`,
         outlineOffset: '-0.0625rem',

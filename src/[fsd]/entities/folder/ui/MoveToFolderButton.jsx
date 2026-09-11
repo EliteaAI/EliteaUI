@@ -66,7 +66,7 @@ const MoveToFolderButton = memo(props => {
             sx={buttonStyles.button}
             data-testid={`move-to-folder-btn-${entityId}`}
           >
-            <MoveTo sx={{ fontSize: '1rem' }} />
+            <MoveTo />
           </Button.BaseBtn>
         </Box>
       </StyledTooltip>
@@ -115,10 +115,16 @@ const moveToFolderButtonVisibilityStyles = isVisible => ({
     padding: 0,
     opacity: isVisible ? 1 : 0,
     transition: 'opacity 0.2s ease-in-out',
-    color: palette.icon.fill.default,
     backgroundColor: 'transparent',
+    '& svg': {
+      fontSize: '1rem',
+      fill: palette.icon.fill.default,
+    },
     '&:hover': {
       backgroundColor: palette.background.button.secondary.default,
+      '& svg': {
+        fill: palette.icon.fill.secondary,
+      },
     },
   }),
 });
