@@ -3,7 +3,7 @@ import { memo } from 'react';
 import { Box, Typography } from '@mui/material';
 
 import { EVAL_ENGINE, EVAL_SCALE_TYPE } from '../../lib/constants';
-import { formatScore, getBindingEngineLabel } from '../../lib/helpers';
+import { formatScore, getBindingEngineLabel, getScaleTypeLabel } from '../../lib/helpers';
 
 const COLUMNS = [
   { key: 'dimension', label: 'Dimension' },
@@ -91,7 +91,7 @@ const ResultsDimensionTable = memo(props => {
                   variant="bodySmall"
                   sx={styles.cellText}
                 >
-                  {binding.scaleType || '—'}
+                  {getScaleTypeLabel(binding) || '—'}
                 </Typography>
               </Box>
               <Box sx={styles.cell}>

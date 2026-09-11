@@ -25,8 +25,11 @@ import {
 } from '../../lib/constants';
 import {
   buildDimensionApiBody,
+  getCustomScaleBoundsError,
   getDefaultDimensionFormState,
   getDimensionFormValidationError,
+  getScaleBounds,
+  getTargetValueError,
   mapDimensionToFormState,
 } from '../../lib/helpers';
 
@@ -280,6 +283,21 @@ const DimensionForm = memo(props => {
     return SCALE_TYPE_PRESET_OPTIONS;
   }, [isCode]);
 
+  // Inline field errors, unlike the modal's bottom message, are shown while the author types: Save
+  // is disabled on a validation error, so a range mismatch would otherwise have no explanation. An
+  // untouched field stays quiet — the empty-value case is the bottom message's job.
+  const scaleBounds = useMemo(() => getScaleBounds(form), [form]);
+
+  const targetValueError = useMemo(() => {
+    if (form.targetValue === '') return '';
+    return getTargetValueError(form);
+  }, [form]);
+
+  const customScaleError = useMemo(() => {
+    if (form.customMin === '' || form.customMax === '') return '';
+    return getCustomScaleBoundsError(form);
+  }, [form]);
+
   const styles = dimensionFormStyles();
 
   return (
@@ -508,6 +526,7 @@ const DimensionForm = memo(props => {
                   variant="standard"
                   value={form.customMin}
                   onChange={handleCustomMinChange}
+                  error={!!customScaleError}
                 />
               </Box>
             </Box>
@@ -530,6 +549,9 @@ const DimensionForm = memo(props => {
                   variant="standard"
                   value={form.customMax}
                   onChange={handleCustomMaxChange}
+                  error={!!customScaleError}
+                  helperText={customScaleError}
+                  helperTextTestId="dimension-custom-scale-error"
                 />
               </Box>
             </Box>
@@ -587,6 +609,10 @@ const DimensionForm = memo(props => {
                     variant="standard"
                     value={form.targetValue}
                     onChange={handleTargetValueChange}
+                    error={!!targetValueError}
+                    helperText={targetValueError}
+                    helperTextTestId="dimension-target-value-error"
+                    inputProps={scaleBounds ? { min: scaleBounds.min, max: scaleBounds.max } : undefined}
                   />
                 </Box>
               </Box>
@@ -854,6 +880,7 @@ const dimensionFormStyles = () => ({
     marginLeft: '0.75rem',
   },
   twoColumnInput: {
+    position: 'relative',
     '& .MuiInputBase-root': {
       height: '2.25rem',
     },
@@ -864,6 +891,18 @@ const dimensionFormStyles = () => ({
     '& .MuiTextField-root': {
       marginTop: 0,
       paddingTop: 0,
+    },
+    // A validation message occupies the gap the row already leaves below it rather than adding to
+    // the row's height, so the fields under it stay put as the message appears and clears.
+    '& .MuiFormHelperText-root': {
+      position: 'absolute',
+      top: '100%',
+      left: 0,
+      right: 0,
+      margin: 0,
+      fontSize: '0.6875rem',
+      lineHeight: '1rem',
+      pointerEvents: 'none',
     },
   },
   twoColumnSelect: {

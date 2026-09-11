@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { isSkippedContainerParticipant } from './participants.helpers';
+import { areDetailsOfParticipant, isSkippedContainerParticipant } from './participants.helpers';
 
 // --- isSkippedContainerParticipant — #5778 depth-aware container gate -------- //
 //
@@ -70,5 +70,44 @@ describe('isSkippedContainerParticipant — #5778 depth-aware gate', () => {
   it('falls back to the blunt ban when only one tier field is present', () => {
     expect(isSkippedContainerParticipant(makeParticipant({ agent_subtree_tiers: 2 }))).toBe(true);
     expect(isSkippedContainerParticipant(makeParticipant({ max_agent_nesting_tiers: 3 }))).toBe(true);
+  });
+});
+
+// --- areDetailsOfParticipant — guards against mixing two participants -------- //
+//
+// Participant details are fetched asynchronously, so right after a switch they can
+// still describe the participant selected before. Consumers that combine participant
+// fields with details fields (version lists, version ids) must gate on this, otherwise
+// they send one agent's version id under another agent's id and the backend rejects it.
+
+const makeDetailsParticipant = entityId => ({
+  entity_name: application,
+  entity_meta: { id: entityId, project_id: 406 },
+  entity_settings: {},
+});
+
+describe('areDetailsOfParticipant', () => {
+  it('accepts details carrying the same entity id', () => {
+    expect(areDetailsOfParticipant({ id: 562 }, makeDetailsParticipant(562))).toBe(true);
+  });
+
+  it('accepts a string/number id mix, since ids arrive in both shapes', () => {
+    expect(areDetailsOfParticipant({ id: '562' }, makeDetailsParticipant(562))).toBe(true);
+    expect(areDetailsOfParticipant({ id: 562 }, makeDetailsParticipant('562'))).toBe(true);
+  });
+
+  it('rejects details of another agent', () => {
+    expect(areDetailsOfParticipant({ id: 601 }, makeDetailsParticipant(562))).toBe(false);
+  });
+
+  it('rejects details that are still empty', () => {
+    expect(areDetailsOfParticipant({}, makeDetailsParticipant(562))).toBe(false);
+    expect(areDetailsOfParticipant(null, makeDetailsParticipant(562))).toBe(false);
+    expect(areDetailsOfParticipant(undefined, makeDetailsParticipant(562))).toBe(false);
+  });
+
+  it('rejects a missing participant or one without an entity id', () => {
+    expect(areDetailsOfParticipant({ id: 562 }, null)).toBe(false);
+    expect(areDetailsOfParticipant({ id: 562 }, { entity_meta: {} })).toBe(false);
   });
 });

@@ -4,6 +4,8 @@ import {
   buildDimensionApiBody,
   getDefaultDimensionFormState,
   getDimensionFormValidationError,
+  getScaleBounds,
+  getTargetValueError,
   mapDimensionToFormState,
 } from '../dimension.helpers';
 
@@ -148,5 +150,103 @@ describe('pass/fail dimension targets', () => {
     const form = { ...passFailForm(), targetValue: '1', successCriteria: '>=' };
     const body = buildDimensionApiBody(form, 7);
     expect(body).toMatchObject({ default_target: null, default_target_operator: null });
+  });
+});
+
+// A target the scale cannot reach makes a dimension that can never pass, so the range the author
+// picked has to constrain the target they type.
+describe('target value range', () => {
+  const formWith = overrides => ({
+    ...getDefaultDimensionFormState(),
+    name: 'Dim',
+    evaluator: 'human',
+    ...overrides,
+  });
+
+  it('accepts a target inside the Score range', () => {
+    expect(getTargetValueError(formWith({ scaleTypePreset: 'score', targetValue: '80' }))).toBe('');
+  });
+
+  it('rejects a target above the Score range', () => {
+    expect(getTargetValueError(formWith({ scaleTypePreset: 'score', targetValue: '120' }))).toBe(
+      'Target value must be between 1 and 100.',
+    );
+  });
+
+  it('rejects a Score target of 20 once the scale is a 1-5 rating', () => {
+    expect(getTargetValueError(formWith({ scaleTypePreset: 'rating', targetValue: '20' }))).toBe(
+      'Target value must be between 1 and 5.',
+    );
+  });
+
+  it('accepts a target inside the Rating range', () => {
+    expect(getTargetValueError(formWith({ scaleTypePreset: 'rating', targetValue: '4' }))).toBe('');
+  });
+
+  it('rejects a target below a custom minimum', () => {
+    const form = formWith({
+      scaleTypePreset: 'custom',
+      customMin: '10',
+      customMax: '20',
+      targetValue: '2',
+    });
+    expect(getTargetValueError(form)).toBe('Target value must be between 10 and 20.');
+  });
+
+  it('rejects a target above a custom maximum', () => {
+    const form = formWith({
+      scaleTypePreset: 'custom',
+      customMin: '10',
+      customMax: '20',
+      targetValue: '23',
+    });
+    expect(getTargetValueError(form)).toBe('Target value must be between 10 and 20.');
+  });
+
+  it('accepts a target on a custom bound', () => {
+    const form = formWith({
+      scaleTypePreset: 'custom',
+      customMin: '10',
+      customMax: '20',
+      targetValue: '20',
+    });
+    expect(getTargetValueError(form)).toBe('');
+  });
+
+  it('has no target to check on a Pass/Fail scale', () => {
+    expect(getTargetValueError(formWith({ scaleTypePreset: 'pass_fail', targetValue: '' }))).toBe('');
+  });
+
+  // The bounds themselves are the error to report; checking a target against an inverted or
+  // half-typed range would blame the wrong field.
+  it('skips the range check while the custom bounds are invalid', () => {
+    const form = formWith({
+      scaleTypePreset: 'custom',
+      customMin: '20',
+      customMax: '5',
+      targetValue: '10',
+    });
+    expect(getScaleBounds(form)).toBeNull();
+    expect(getTargetValueError(form)).toBe('');
+    expect(getDimensionFormValidationError(form)).toBe('Scale minimum must be less than maximum.');
+  });
+
+  // An edited record whose stored scale could not be classified has no range to judge a target by,
+  // and must stay saveable.
+  it('skips the range check when the scale is unknown', () => {
+    const form = mapDimensionToFormState({
+      name: 'Dim',
+      allowed_engines: ['human'],
+      default_target: 400,
+      default_target_operator: '>=',
+    });
+    expect(form.hasKnownScale).toBe(false);
+    expect(getScaleBounds(form)).toBeNull();
+    expect(getTargetValueError(form)).toBe('');
+  });
+
+  it('blocks the save on an out-of-range target', () => {
+    const form = formWith({ scaleTypePreset: 'rating', targetValue: '20' });
+    expect(getDimensionFormValidationError(form)).toBe('Target value must be between 1 and 5.');
   });
 });
