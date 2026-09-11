@@ -166,11 +166,61 @@ export const buildDimensionApiBody = (form, applicationId) => {
   };
 };
 
+/**
+ * The bounds a Custom scale is being configured with, or an error naming what is wrong with them.
+ * Both the form's Min/Max fields and the target-value check read it, so a target is only ever
+ * compared against a range that is itself valid.
+ */
+export const getCustomScaleBoundsError = form => {
+  if (form.scaleTypePreset !== SCALE_TYPE_PRESET.custom) return '';
+  const min = Number(form.customMin);
+  const max = Number(form.customMax);
+  if (form.customMin === '' || Number.isNaN(min)) return 'Custom scale minimum is required.';
+  if (form.customMax === '' || Number.isNaN(max)) return 'Custom scale maximum is required.';
+  if (min >= max) return 'Scale minimum must be less than maximum.';
+  return '';
+};
+
+/**
+ * The range the selected scale accepts a target in, or null when there is no dependable range to
+ * check against — a record whose stored scale could not be classified, or a Custom preset whose own
+ * bounds are still missing or inverted. A null range skips the target range check rather than
+ * rejecting a target on a range the author never set.
+ */
+export const getScaleBounds = form => {
+  if (form.hasKnownScale === false) return null;
+
+  if (form.scaleTypePreset === SCALE_TYPE_PRESET.custom) {
+    if (getCustomScaleBoundsError(form)) return null;
+    return { min: Number(form.customMin), max: Number(form.customMax) };
+  }
+
+  const presetConfig = SCALE_TYPE_PRESET_CONFIG[form.scaleTypePreset];
+  if (presetConfig?.min == null || presetConfig?.max == null) return null;
+  return { min: presetConfig.min, max: presetConfig.max };
+};
+
+/**
+ * A target outside the scale can never be met, so it is rejected here instead of being stored as a
+ * dimension that always fails: 20 on a 1-5 rating, or 2 on a custom scale that starts at 10.
+ */
+export const getTargetValueError = form => {
+  if (form.scaleTypePreset === SCALE_TYPE_PRESET.passFail) return '';
+
+  const target = Number(form.targetValue);
+  if (form.targetValue === '' || Number.isNaN(target)) return 'Target value is required.';
+
+  const bounds = getScaleBounds(form);
+  if (!bounds) return '';
+  if (target < bounds.min || target > bounds.max) {
+    return `Target value must be between ${bounds.min} and ${bounds.max}.`;
+  }
+  return '';
+};
+
 export const getDimensionFormValidationError = form => {
   const isAI = form.evaluator === EVAL_ENGINE.ai;
   const isCode = form.evaluator === EVAL_ENGINE.code;
-  const isPassFail = form.scaleTypePreset === SCALE_TYPE_PRESET.passFail;
-  const isCustomScale = form.scaleTypePreset === SCALE_TYPE_PRESET.custom;
   const isCustomImportance = form.importance === IMPORTANCE.custom;
 
   if (!form.name.trim()) return 'Name is required.';
@@ -180,18 +230,13 @@ export const getDimensionFormValidationError = form => {
   if (!Object.values(form.evaluationTarget).some(Boolean)) {
     return 'At least one evaluation target must be selected.';
   }
-  if (isCustomScale) {
-    const min = Number(form.customMin);
-    const max = Number(form.customMax);
-    if (form.customMin === '' || Number.isNaN(min)) return 'Custom scale minimum is required.';
-    if (form.customMax === '' || Number.isNaN(max)) return 'Custom scale maximum is required.';
-    if (min >= max) return 'Scale minimum must be less than maximum.';
-  }
-  if (!isPassFail) {
-    if (form.targetValue === '' || Number.isNaN(Number(form.targetValue))) {
-      return 'Target value is required.';
-    }
-  }
+
+  const customScaleError = getCustomScaleBoundsError(form);
+  if (customScaleError) return customScaleError;
+
+  const targetValueError = getTargetValueError(form);
+  if (targetValueError) return targetValueError;
+
   if (isCustomImportance) {
     if (form.customImportanceValue === '' || Number.isNaN(Number(form.customImportanceValue))) {
       return 'Custom importance value is required.';
