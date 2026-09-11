@@ -175,6 +175,20 @@ describe('MCP OAuth family reuse', () => {
     expect(McpAuthHelpers.getSessionId(STAFFING_URL)).toBeNull();
   });
 
+  it('forwards safe family provenance with runtime tokens', () => {
+    loginToHeroes();
+
+    expect(McpAuthHelpers.getAllTokens()[HEROES_URL]).toEqual({
+      access_token: 'family-token',
+      session_id: 'heroes-session',
+      refresh_token: 'family-refresh-token',
+      auth_family_id: `https://mcp.example.com|${AUTHORIZATION_SERVER}`,
+      authorization_server: AUTHORIZATION_SERVER,
+      resource_server_url: HEROES_URL,
+      resource_scopes: ['openid', 'profile'],
+    });
+  });
+
   it('preserves prebuilt toolkit keys when registering an auth family', () => {
     const toolkitType = 'mcp_Example Family';
     McpAuthHelpers.setAccessToken(
