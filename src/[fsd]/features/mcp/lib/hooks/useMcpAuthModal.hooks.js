@@ -130,7 +130,14 @@ export const useMcpAuthModal = (options = {}) => {
       // (e.g. Aha.io: MCP endpoint "…/api/v1/mcp" vs auth server "https://epam10.aha.io").
       const configUuid = metadata?.configurationUuid;
       const oauthEndpoint = metadata?.authServers?.[0];
-      const tokenStorageKey = configUuid && oauthEndpoint ? `${configUuid}:${oauthEndpoint}` : serverUrl;
+      // Preconfigured MCP status is keyed by toolkit type, including for
+      // toolkits saved before auth-family reuse existed. Store a reused token
+      // under that same key so an old toolkit becomes connected immediately.
+      const tokenStorageKey = isPrebuildMcp
+        ? toolkitType
+        : configUuid && oauthEndpoint
+          ? `${configUuid}:${oauthEndpoint}`
+          : serverUrl;
 
       if (
         McpAuthHelpers.reuseAuthFamilyToken({
@@ -152,7 +159,7 @@ export const useMcpAuthModal = (options = {}) => {
       setShowModal(true);
       return false;
     },
-    [onSuccess],
+    [isPrebuildMcp, toolkitType, onSuccess],
   );
 
   /**
