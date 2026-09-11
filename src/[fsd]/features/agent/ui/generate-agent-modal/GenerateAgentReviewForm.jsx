@@ -316,6 +316,7 @@ const GenerateAgentReviewForm = memo(props => {
 
 GenerateAgentReviewForm.displayName = 'GenerateAgentReviewForm';
 
+/** @type {MuiSx} */
 const generateAgentReviewFormStyles = () => ({
   container: {
     display: 'flex',

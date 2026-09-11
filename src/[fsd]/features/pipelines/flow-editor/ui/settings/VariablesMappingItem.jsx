@@ -101,7 +101,7 @@ const VariablesMappingItem = memo(props => {
         alignItems="flex-end"
         height="2.8125rem"
       >
-        <Box width="7.25rem">
+        <Box sx={{ width: '7.25rem' }}>
           <SingleSelect
             sx={{ marginBottom: '0rem' }}
             label="Type"
@@ -114,7 +114,7 @@ const VariablesMappingItem = memo(props => {
           />
         </Box>
         {showSource && (
-          <Box width="7.25rem">
+          <Box sx={{ width: '7.25rem' }}>
             <SingleSelect
               sx={{ marginBottom: '0rem' }}
               label="Source"
@@ -127,7 +127,7 @@ const VariablesMappingItem = memo(props => {
             />
           </Box>
         )}
-        <Box flex={1}>
+        <Box sx={{ flex: 1 }}>
           {showInput && (
             <Input.StyledInputEnhancer
               autoComplete="off"

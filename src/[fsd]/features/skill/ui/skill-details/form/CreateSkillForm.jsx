@@ -344,6 +344,7 @@ const CreateSkillForm = memo(props => {
   );
 });
 
+/** @type {MuiSx} */
 const skillCreateFormStyles = () => ({
   rootContainer: {
     width: '100%',

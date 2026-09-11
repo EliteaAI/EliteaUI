@@ -640,6 +640,7 @@ const FlowEditor = forwardRef((props, ref) => {
 
 FlowEditor.displayName = 'FlowEditor';
 
+/** @type {MuiSx} */
 const flowEditorStyles = () => ({
   container: {
     height: '100%',

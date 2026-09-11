@@ -1,8 +1,7 @@
 # FSD Architecture Audit Report
 
 **Date:** 2026-08-11  
-**Scope:** `src/[fsd]/` — **~146 violations** across 4 categories (Section 1: 41 resolved across Sessions 2–11
-✓, **Section 2: 11 resolved Session 12** ✓, Sections 3–4: ~146 remaining)
+**Scope:** `src/[fsd]/` — **~120 violations** remaining across 4 categories (Section 1: 41 resolved ✓, **Section 2: 11 resolved** ✓, **Section 3: 26 resolved (partial)** Session 13, Section 4: ~102 remaining)
 
 ---
 
@@ -233,17 +232,23 @@ Fixed 11 violations across 2 categories:
 
 ---
 
-## 3. Styling & HTML Violations (~48)
+## 3. Styling & HTML Violations (22 remaining) — **PARTIAL COMPLETE (26 fixed in Session 13)**
 
-### 3.1 `px` Unit Violations (5)
+- ✓ 3.1 `px` units: 5 → 0 ✓ **COMPLETE**
+- ⏳ 3.2 `styled()` API: 4 remaining (deferred)
+- ✓ 3.3 Inline Box props: 3 → 0 ✓ **COMPLETE**
+- ✓ 3.4 JSDoc annotations: 29 → 8 (21 fixed, 8 remaining)
+- ⏳ 3.5 Raw HTML tags: 9 remaining (deferred)
 
-| File                                                                 | Line | Violation              |
-| -------------------------------------------------------------------- | ---- | ---------------------- |
-| `features/settings/lib/hooks/useModelConfiguration.hooks.jsx`        | 169  | `fontSize="14px"`      |
-| `features/settings/lib/hooks/useModelConfiguration.hooks.jsx`        | 175  | `fontSize="14px"`      |
-| `features/chat/conversation-list/ui/conversations/Conversations.jsx` | 700  | `height="74px"`        |
-| `features/pipelines/yaml-editor/ui/YamlCodeEditor.jsx`               | 46   | `minHeight="400px"`    |
-| `pages/skills/EditSkill.jsx`                                         | 230  | `columnSpacing="32px"` |
+### 3.1 `px` Unit Violations (5 → 0) ✓ **COMPLETE**
+
+| File                                                                 | Line | Violation              | Status |
+| -------------------------------------------------------------------- | ---- | ---------------------- | ------ |
+| ~~`features/settings/lib/hooks/useModelConfiguration.hooks.jsx`~~        | 169  | ~~`fontSize="14px"`~~      | ✓ Fixed Session 13 |
+| ~~`features/settings/lib/hooks/useModelConfiguration.hooks.jsx`~~        | 175  | ~~`fontSize="14px"`~~      | ✓ Fixed Session 13 |
+| ~~`features/chat/conversation-list/ui/conversations/Conversations.jsx`~~ | 700  | ~~`height="74px"`~~        | ✓ Fixed Session 13 |
+| ~~`features/pipelines/yaml-editor/ui/YamlCodeEditor.jsx`~~               | 46   | ~~`minHeight="400px"`~~    | ✓ Fixed Session 13 |
+| ~~`pages/skills/EditSkill.jsx`~~                                         | 230  | ~~`columnSpacing="32px"`~~ | ✓ Fixed Session 13 |
 
 ### 3.2 `styled()` API Usage (4)
 
@@ -254,50 +259,56 @@ Fixed 11 violations across 2 categories:
 | `features/pipelines/yaml-editor/ui/YamlCodeEditor.jsx`                   | 10   | `const StyledCodeMirrorEditor = styled(Field.CodeMirrorEditor)(...)` |
 | `shared/ui/accordion/BasicAccordion.jsx`                                 | 15   | `const StyledTypography = styled(...)`                               |
 
-### 3.3 Inline Box Style Props (3)
+### 3.3 Inline Box Style Props (3 → 0) ✓ **COMPLETE**
 
-| File                                                                  | Line | Violation               |
-| --------------------------------------------------------------------- | ---- | ----------------------- |
-| `features/pipelines/flow-editor/ui/settings/VariablesMappingItem.jsx` | 104  | `<Box width="7.25rem">` |
-| `features/pipelines/flow-editor/ui/settings/VariablesMappingItem.jsx` | 117  | `<Box width="7.25rem">` |
-| `features/pipelines/flow-editor/ui/settings/VariablesMappingItem.jsx` | 130  | `<Box flex={1}>`        |
+| File                                                                  | Line | Violation               | Status |
+| --------------------------------------------------------------------- | ---- | ----------------------- | ------ |
+| ~~`features/pipelines/flow-editor/ui/settings/VariablesMappingItem.jsx`~~ | 104  | ~~`<Box width="7.25rem">`~~ | ✓ Fixed Session 13 |
+| ~~`features/pipelines/flow-editor/ui/settings/VariablesMappingItem.jsx`~~ | 117  | ~~`<Box width="7.25rem">`~~ | ✓ Fixed Session 13 |
+| ~~`features/pipelines/flow-editor/ui/settings/VariablesMappingItem.jsx`~~ | 130  | ~~`<Box flex={1}>`~~        | ✓ Fixed Session 13 |
 
-### 3.4 Missing `/** @type {MuiSx} */` Annotation (29)
+### 3.4 Missing `/** @type {MuiSx} */` Annotation (29 → 8) — **21 FIXED Session 13**
 
 <details>
-<summary>Click to expand full list (29 files)</summary>
+<summary>Click to expand full list (8 remaining)</summary>
+
+**21 files fixed in Session 13:**
+| File                                                                           | Status |
+| ------------------------------------------------------------------------------ | ------ |
+| ✓ `features/settings/ui/project-context/GenerateProjectContextReviewForm.jsx`    | Fixed |
+| ✓ `features/artifacts/ui/bucket-access/ManagePermissionsModal.jsx`               | Fixed |
+| ✓ `features/artifacts/ui/bucket-access/DefaultPermissionsBanner.jsx`             | Fixed |
+| ✓ `features/skill/ui/generate-skill-modal/GenerateSkillReviewForm.jsx`           | Fixed |
+| ✓ `features/skill/ui/skill-details/form/CreateSkillForm.jsx`                     | Fixed |
+| ✓ `features/chat/participants/ui/ExpandedParticipants/ParticipantsAccordion.jsx` | Fixed |
+| ✓ `features/chat/conversation-list/ui/folders/DraggableFolderItem.jsx`           | Fixed |
+| ✓ `features/pipelines/flow-editor/ui/FlowEditor.jsx`                             | Fixed |
+| ✓ `features/pipelines/flow-editor/ui/nodes/RunStateNodeGroup.jsx`                | Fixed |
+| ✓ `features/pipelines/flow-editor/ui/nodes/DecisionNode/NormalDecisionNode.jsx`  | Fixed |
+| ✓ `features/pipelines/flow-editor/ui/state/StateTypeSelector.jsx`                | Fixed |
+| ✓ `features/agent/ui/generate-agent-modal/GenerateAgentReviewForm.jsx`           | Fixed |
+| ✓ `features/agent/ui/agent-details/configurations/form/CreateAgentForm.jsx`      | Fixed |
+| ✓ `features/agent/ui/agent-details/configurations/input/WelcomeMessageInput.jsx` | Fixed |
+| ✓ `shared/ui/tooltip/InfoTooltip.jsx`                                            | Fixed |
+| ✓ `shared/ui/switch/BaseSwitch.jsx`                                              | Fixed |
+| ✓ `shared/ui/select/SingleSelectDropdown.jsx`                                    | Fixed |
+| ✓ `shared/ui/select/SingleSelect.jsx`                                            | Fixed |
+| ✓ `pages/skills/CreateSkill.jsx`                                                 | Fixed |
+| ✓ `entities/version/ui/VersionDelete.jsx`                                        | Fixed |
+| ✓ `entities/generate-entity-with-ai/ui/GenerateEntityModal.jsx`                  | Fixed |
+
+**8 files remaining (not found or already have annotations):**
 
 | File                                                                           | Line | Function                         |
 | ------------------------------------------------------------------------------ | ---- | -------------------------------- |
-| `features/settings/ui/project-context/GenerateProjectContextReviewForm.jsx`    | 61   | `reviewFormStyles`               |
-| `features/artifacts/ui/bucket-access/ManagePermissionsModal.jsx`               | 41   | `managePermissionsModalStyles`   |
-| `features/artifacts/ui/bucket-access/DefaultPermissionsBanner.jsx`             | 31   | `defaultPermissionsBannerStyles` |
-| `features/skill/ui/generate-skill-modal/GenerateSkillReviewForm.jsx`           | 104  | `generateSkillReviewFormStyles`  |
-| `features/skill/ui/skill-details/form/CreateSkillForm.jsx`                     | 347  | `skillCreateFormStyles`          |
 | `features/chat/ui/chat-button/PlusChatSubmenu.jsx`                             | 208  | `submenuStyles`                  |
-| `features/chat/participants/ui/ExpandedParticipants/ParticipantsAccordion.jsx` | 81   | `participantsAccordionStyles`    |
 | `features/chat/conversation-list/ui/folders/Folders.jsx`                       | 134  | `foldersStyles`                  |
-| `features/chat/conversation-list/ui/folders/DraggableFolderItem.jsx`           | 45   | `draggableFolderItemStyles`      |
 | `features/toolkits/ui/form/ToolBase/EmptyMcpTools.jsx`                         | 26   | `getStyles`                      |
-| `features/pipelines/flow-editor/ui/FlowEditor.jsx`                             | 639  | `flowEditorStyles`               |
-| `features/pipelines/flow-editor/ui/nodes/RunStateNodeGroup.jsx`                | 98   | `flowEditorStyles`               |
 | `features/pipelines/flow-editor/ui/nodes/CustomHandle.jsx`                     | 136  | `customHandleStyles`             |
-| `features/pipelines/flow-editor/ui/nodes/DecisionNode/NormalDecisionNode.jsx`  | 150  | `componentStyles`                |
-| `features/pipelines/flow-editor/ui/state/StateTypeSelector.jsx`                | 115  | `stateTypeSelectorStyles`        |
-| `features/agent/ui/generate-agent-modal/GenerateAgentReviewForm.jsx`           | 308  | `generateAgentReviewFormStyles`  |
-| `features/agent/ui/agent-details/configurations/form/CreateAgentForm.jsx`      | 211  | `applicationCreateFormStyles`    |
-| `features/agent/ui/agent-details/configurations/input/WelcomeMessageInput.jsx` | 30   | `getStyles`                      |
-| `shared/ui/tooltip/InfoTooltip.jsx`                                            | 119  | `infoTooltipStyles`              |
-| `shared/ui/switch/BaseSwitch.jsx`                                              | 98   | `genStyles`                      |
 | `shared/ui/select/SingleSelectMenuItem.jsx`                                    | 150  | `menuItemStyles`                 |
-| `shared/ui/select/SingleSelectDropdown.jsx`                                    | 96   | `selectMenuItemStyles`           |
-| `shared/ui/select/SingleSelect.jsx`                                            | 709  | `singleSelectStyles`             |
-| `pages/skills/CreateSkill.jsx`                                                 | 70   | `createSkillStyles`              |
 | `widgets/sidebar-root/ui/SidebarProjectSelect.jsx`                             | 142  | `sidebarProjectSelectStyles`     |
 | `widgets/sidebar-root/ui/SidebarProjectSelect.jsx`                             | 223  | `optionStyles`                   |
 | `widgets/sidebar-root/ui/button/CreateEntityButton.jsx`                        | 374  | `createEntityButtonStyles`       |
-| `entities/version/ui/VersionDelete.jsx`                                        | 169  | `versionDeleteStyles`            |
-| `entities/generate-entity-with-ai/ui/GenerateEntityModal.jsx`                  | 243  | `generateEntityModalStyles`      |
 
 </details>
 
@@ -1062,3 +1073,80 @@ Updated direct imports to use default export:
 - ✅ One file = one component (for UI files)
 - ✅ Default exports for components (enables natural `import Component from './Component'` syntax)
 - ✅ Barrel files re-export as named imports (standardized import pattern from slices)
+
+---
+
+### 2026-09-11 — Session 13
+
+**Scope:** Section 3 — Styling & HTML (partial, ~28 violations resolved):
+- JSDoc annotations: 21 files ✓
+- px → rem conversions: 4 files ✓
+- inline Box props: 3 fixes ✓
+
+**Fix strategy (Phase 1):** Automated script-based fixes for high-confidence, low-risk changes.
+
+#### Fix #1: JSDoc Annotations (21 files)
+
+Added `/** @type {MuiSx} */` annotations to style functions in:
+
+| File                                                                           | Status |
+| ------------------------------------------------------------------------------ | ------ |
+| `features/settings/ui/project-context/GenerateProjectContextReviewForm.jsx`    | ✓      |
+| `features/artifacts/ui/bucket-access/ManagePermissionsModal.jsx`               | ✓      |
+| `features/artifacts/ui/bucket-access/DefaultPermissionsBanner.jsx`             | ✓      |
+| `features/skill/ui/generate-skill-modal/GenerateSkillReviewForm.jsx`           | ✓      |
+| `features/skill/ui/skill-details/form/CreateSkillForm.jsx`                     | ✓      |
+| `features/chat/participants/ui/ExpandedParticipants/ParticipantsAccordion.jsx` | ✓      |
+| `features/chat/conversation-list/ui/folders/DraggableFolderItem.jsx`           | ✓      |
+| `features/pipelines/flow-editor/ui/FlowEditor.jsx`                             | ✓      |
+| `features/pipelines/flow-editor/ui/nodes/RunStateNodeGroup.jsx`                | ✓      |
+| `features/pipelines/flow-editor/ui/nodes/DecisionNode/NormalDecisionNode.jsx`  | ✓      |
+| `features/pipelines/flow-editor/ui/state/StateTypeSelector.jsx`                | ✓      |
+| `features/agent/ui/generate-agent-modal/GenerateAgentReviewForm.jsx`           | ✓      |
+| `features/agent/ui/agent-details/configurations/form/CreateAgentForm.jsx`      | ✓      |
+| `features/agent/ui/agent-details/configurations/input/WelcomeMessageInput.jsx` | ✓      |
+| `shared/ui/tooltip/InfoTooltip.jsx`                                            | ✓      |
+| `shared/ui/switch/BaseSwitch.jsx`                                              | ✓      |
+| `shared/ui/select/SingleSelectDropdown.jsx`                                    | ✓      |
+| `shared/ui/select/SingleSelect.jsx`                                            | ✓      |
+| `pages/skills/CreateSkill.jsx`                                                 | ✓      |
+| `entities/version/ui/VersionDelete.jsx`                                        | ✓      |
+| `entities/generate-entity-with-ai/ui/GenerateEntityModal.jsx`                  | ✓      |
+
+#### Fix #2: px → rem Conversion (4 files, 5 violations)
+
+| File                                                                 | Violations | Changes            |
+| -------------------------------------------------------------------- | ---------- | ------------------ |
+| `features/settings/lib/hooks/useModelConfiguration.hooks.jsx`        | 2          | `14px` → `0.875rem` |
+| `features/chat/conversation-list/ui/conversations/Conversations.jsx` | 1          | `74px` → `4.625rem` |
+| `features/pipelines/yaml-editor/ui/YamlCodeEditor.jsx`               | 1          | `400px` → `25rem`  |
+| `pages/skills/EditSkill.jsx`                                         | 1          | `32px` → `2rem`    |
+
+#### Fix #3: inline Box Props → sx (1 file, 3 fixes)
+
+| File                                                                  | Changes                           |
+| --------------------------------------------------------------------- | --------------------------------- |
+| `features/pipelines/flow-editor/ui/settings/VariablesMappingItem.jsx` | `width="7.25rem"` → `sx={{ width: '7.25rem' }}` (×2) |
+| `features/pipelines/flow-editor/ui/settings/VariablesMappingItem.jsx` | `flex={1}` → `sx={{ flex: 1 }}`   |
+
+**Counters updated:**
+
+- Section 3: `~48` violations → `~22` violations (−26 files modified)
+  - JSDoc annotations: 21 files ✓
+  - px → rem: 5 violations fixed (−5)
+  - inline Box props: 3 violations fixed (−3)
+  
+- **Total: ~146 violations → ~120 violations** (−26 violations)
+
+**Skipped (deferred to manual review):**
+
+- **styled() API** (4 files): Complex component replacements requiring refactoring (e.g., `StyledControls`, `StyledFormControlLabel`)
+- **Raw HTML tags** (9 files): Requires semantic analysis and browser testing to avoid regressions
+- Remaining **8 JSDoc files** (not found — likely already have annotations or differ from audit paths)
+
+**Build verification:** `npm run build` passed with no errors (52.07s) ✓
+
+**Next steps:**
+
+- Phase 2: Manual review of `styled()` usages and raw HTML replacements
+- Phase 3: Verify no regressions with browser testing

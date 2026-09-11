@@ -229,6 +229,7 @@ const CreateAgentForm = memo(props => {
   );
 });
 
+/** @type {MuiSx} */
 const applicationCreateFormStyles = () => ({
   rootContainer: {
     margin: '0.75rem auto 0',

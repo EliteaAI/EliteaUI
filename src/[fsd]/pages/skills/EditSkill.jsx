@@ -244,7 +244,7 @@ const EditSkill = memo(() => {
                   <DirtyDetector setDirty={setDirty} />
                   <StyledGridContainer
                     sx={styles.gridContainer}
-                    columnSpacing="32px"
+                    columnSpacing="2rem"
                     container
                   >
                     <LeftGridItem
