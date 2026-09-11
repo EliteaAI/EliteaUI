@@ -166,6 +166,7 @@ const VersionDelete = memo(
 
 VersionDelete.displayName = 'VersionDelete';
 
+/** @type {MuiSx} */
 const versionDeleteStyles = () => ({
   container: {
     display: 'flex',

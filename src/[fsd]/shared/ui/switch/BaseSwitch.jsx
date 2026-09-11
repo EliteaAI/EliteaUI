@@ -95,6 +95,7 @@ const BaseSwitch = memo(
 
 BaseSwitch.displayName = 'BaseSwitch';
 
+/** @type {MuiSx} */
 const genStyles = ({ width }) => ({
   container: {
     height: '2.75rem',

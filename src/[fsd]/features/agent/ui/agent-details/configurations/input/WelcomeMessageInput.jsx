@@ -27,6 +27,7 @@ const WelcomeMessageInput = memo(props => {
   );
 });
 
+/** @type {MuiSx} */
 const getStyles = () => ({
   container: {
     marginTop: '1rem',

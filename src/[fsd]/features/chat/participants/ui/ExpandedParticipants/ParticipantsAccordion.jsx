@@ -78,6 +78,7 @@ const ParticipantsAccordion = memo(props => {
 
 ParticipantsAccordion.displayName = 'ParticipantsAccordion';
 
+/** @type {MuiSx} */
 const participantsAccordionStyles = () => ({
   root: { width: '100%', marginBottom: '.5rem' },
   header: {

@@ -66,6 +66,7 @@ const CreateSkill = memo(() => {
 
 CreateSkill.displayName = 'CreateSkill';
 
+/** @type {MuiSx} */
 const createSkillStyles = () => ({
   tab: { paddingX: '1.5rem' },
   formContainer: {

@@ -96,6 +96,7 @@ const RunStateNodeGroup = memo(props => {
 
 RunStateNodeGroup.displayName = 'RunStateNodeGroup';
 
+/** @type {MuiSx} */
 const flowEditorStyles = () => ({
   wrapper: {
     display: 'flex',

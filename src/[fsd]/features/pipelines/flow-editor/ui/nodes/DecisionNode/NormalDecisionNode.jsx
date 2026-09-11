@@ -152,6 +152,7 @@ const NormalDecisionNode = memo(props => {
 
 NormalDecisionNode.displayName = 'NormalDecisionNode';
 
+/** @type {MuiSx} */
 const componentStyles = () => ({
   ...commonComponentStyles(),
   nodesHandle: {

@@ -93,6 +93,7 @@ const SingleSelectDropdown = memo(props => {
   );
 });
 
+/** @type {MuiSx} */
 const selectMenuItemStyles = () => ({
   searchBarHeader: ({ palette }) => ({
     padding: 0,

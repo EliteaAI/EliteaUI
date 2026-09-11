@@ -42,6 +42,7 @@ const DraggableFolderItem = memo(props => {
 
 DraggableFolderItem.displayName = 'DraggableFolderItem';
 
+/** @type {MuiSx} */
 const draggableFolderItemStyles = ({ isDragging, isDragDisabled, folder, transform }) => ({
   container: {
     position: 'relative',

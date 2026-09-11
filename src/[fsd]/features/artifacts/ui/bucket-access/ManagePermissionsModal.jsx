@@ -38,6 +38,7 @@ ManagePermissionsModal.displayName = 'ManagePermissionsModal';
 
 export default ManagePermissionsModal;
 
+/** @type {MuiSx} */
 const managePermissionsModalStyles = () => ({
   dialogPaper: ({ palette }) => ({
     width: '56.25rem',

@@ -124,6 +124,7 @@ const InfoTooltip = memo(props => {
 
 InfoTooltip.displayName = 'InfoTooltip';
 
+/** @type {MuiSx} */
 const infoTooltipStyles = () => ({
   iconContainer: {
     display: 'flex',

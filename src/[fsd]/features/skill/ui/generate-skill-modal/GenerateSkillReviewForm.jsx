@@ -104,6 +104,7 @@ const GenerateSkillReviewForm = memo(props => {
 
 GenerateSkillReviewForm.displayName = 'GenerateSkillReviewForm';
 
+/** @type {MuiSx} */
 const generateSkillReviewFormStyles = () => ({
   container: {
     display: 'flex',
