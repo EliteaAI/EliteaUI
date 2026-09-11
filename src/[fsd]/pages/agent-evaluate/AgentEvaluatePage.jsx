@@ -86,6 +86,7 @@ const AgentEvaluatePage = memo(() => {
         localDimensionId: dim?.local_dimension_id ?? null,
         defaultTarget: dim?.default_target ?? null,
         defaultTargetOperator: dim?.default_target_operator ?? null,
+        defaultScaleType: dim?.scale_type ?? null,
         defaultWeight: dim?.default_weight ?? null,
       };
     });
@@ -138,6 +139,7 @@ const AgentEvaluatePage = memo(() => {
         localDimensionId: pending.local_dimension_id ?? null,
         defaultTarget: pending.default_target ?? null,
         defaultTargetOperator: pending.default_target_operator ?? null,
+        defaultScaleType: pending.scale_type ?? null,
         defaultWeight: pending.default_weight ?? null,
       }));
     }

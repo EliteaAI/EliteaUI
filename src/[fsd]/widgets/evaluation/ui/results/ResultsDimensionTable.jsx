@@ -2,7 +2,7 @@ import { memo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { EVAL_ENGINE } from '../../lib/constants';
+import { EVAL_ENGINE, EVAL_SCALE_TYPE } from '../../lib/constants';
 import { formatScore, getBindingEngineLabel, getScaleTypeLabel } from '../../lib/helpers';
 
 const COLUMNS = [
@@ -17,6 +17,9 @@ const GRID_TEMPLATE = '1fr 0.5fr 5rem 5rem 5rem';
 
 const formatTarget = binding => {
   if (binding.target == null || binding.target === '' || !binding.operator) return '—';
+  const isBinary = binding.scaleType === EVAL_SCALE_TYPE.binary;
+  if (isBinary && binding.operator === '==' && binding.target === 1) return '= pass';
+  if (isBinary && binding.operator === '==' && binding.target === 0) return '= fail';
   const op = binding.operator === '>=' ? '≥' : binding.operator;
   return `${op}${binding.target}`;
 };
