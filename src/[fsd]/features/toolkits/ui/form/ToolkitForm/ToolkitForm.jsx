@@ -606,6 +606,7 @@ export const ToolkitForm = memo(props => {
           hideNameDescriptionInput={hideNameDescriptionInput}
           hideNameInput={hideNameInput}
           disabledConfigFieldsForOldToolkits={shouldShowDisabledConfigFields}
+          autoLoadMcpTools={!isEditing}
           shouldInitRequiredFields={false}
           isMCP={isMCP}
           needToCheckSection={false}

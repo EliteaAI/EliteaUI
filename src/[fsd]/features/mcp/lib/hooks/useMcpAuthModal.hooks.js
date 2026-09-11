@@ -120,22 +120,40 @@ export const useMcpAuthModal = (options = {}) => {
    * Handler for when MCP auth is required.
    * Pass this to useMcpAuthCheck or useToolkitChat's onMcpAuthRequired callback.
    */
-  const handleMcpAuthRequired = useCallback(message => {
-    const metadata = extractMcpAuthMetadata(message);
-    setMcpAuthMetadata(metadata);
-    const serverUrl = message?.response_metadata?.server_url || '';
-    setRuntimeServerUrl(serverUrl);
-    // Only credential-scoped flows (SharePoint/OpenAPI with configUuid) need a storage
-    // key different from server_url. For all regular remote MCPs the backend matches
-    // tokens by server_url — even when the OAuth authorization server host differs
-    // (e.g. Aha.io: MCP endpoint "…/api/v1/mcp" vs auth server "https://epam10.aha.io").
-    const configUuid = metadata?.configurationUuid;
-    const oauthEndpoint = metadata?.authServers?.[0];
-    if (configUuid && oauthEndpoint) {
-      setRuntimeTokenStorageKey(`${configUuid}:${oauthEndpoint}`);
-    }
-    setShowModal(true);
-  }, []);
+  const handleMcpAuthRequired = useCallback(
+    message => {
+      const metadata = extractMcpAuthMetadata(message);
+      const serverUrl = message?.response_metadata?.server_url || '';
+      // Only credential-scoped flows (SharePoint/OpenAPI with configUuid) need a storage
+      // key different from server_url. For all regular remote MCPs the backend matches
+      // tokens by server_url — even when the OAuth authorization server host differs
+      // (e.g. Aha.io: MCP endpoint "…/api/v1/mcp" vs auth server "https://epam10.aha.io").
+      const configUuid = metadata?.configurationUuid;
+      const oauthEndpoint = metadata?.authServers?.[0];
+      const tokenStorageKey = configUuid && oauthEndpoint ? `${configUuid}:${oauthEndpoint}` : serverUrl;
+
+      if (
+        McpAuthHelpers.reuseAuthFamilyToken({
+          serverUrl,
+          tokenStorageKey,
+          authorizationServers: metadata?.authServers,
+          resourceScopes: metadata?.resourceScopes,
+        })
+      ) {
+        onSuccess?.();
+        return true;
+      }
+
+      setMcpAuthMetadata(metadata);
+      setRuntimeServerUrl(serverUrl);
+      // Reset this for every challenge. Otherwise a credential-scoped login
+      // followed by a regular remote MCP login could retain the old key.
+      setRuntimeTokenStorageKey(tokenStorageKey);
+      setShowModal(true);
+      return false;
+    },
+    [onSuccess],
+  );
 
   /**
    * Handler for when the modal closes (either success or cancel).
