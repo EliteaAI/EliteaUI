@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 
@@ -49,6 +49,7 @@ const McpAuthStatus = memo((props = {}) => {
   );
   const { isLoggedIn: hasLoggedInToMcp } = useMcpTokenChange(tokenOptions);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const automaticallyCheckedToolkitRef = useRef(null);
 
   const {
     showModal,
@@ -78,6 +79,39 @@ const McpAuthStatus = memo((props = {}) => {
     onMcpAuthRequired: handleMcpAuthRequired,
     onSuccess: handleConnectionSuccess,
   });
+
+  const { patInvalid } = useInternalMcpPatStatus({ projectId, toolkitType });
+
+  useEffect(() => {
+    const toolkitKey = id ? `${projectId}:${id}:${toolkitType}` : null;
+    const shouldCheckExistingToolkit =
+      toolkitKey &&
+      !authConfig &&
+      isPrebuildMcp &&
+      !hasLoggedInToMcp &&
+      !isRunning &&
+      !patInvalid &&
+      automaticallyCheckedToolkitRef.current !== toolkitKey;
+
+    if (!shouldCheckExistingToolkit) return;
+
+    // Old saved MCPs already have tools, so the creation-time discovery path
+    // never runs for them. Start the same login flow when the editor opens: a
+    // compatible family token is adopted silently, while a true first login
+    // opens the existing OAuth dialog just like new-toolkit creation.
+    automaticallyCheckedToolkitRef.current = toolkitKey;
+    runAuthCheck('list_tools');
+  }, [
+    id,
+    projectId,
+    toolkitType,
+    authConfig,
+    isPrebuildMcp,
+    hasLoggedInToMcp,
+    isRunning,
+    patInvalid,
+    runAuthCheck,
+  ]);
 
   const styles = getStyles(hasLoggedInToMcp);
 
@@ -111,8 +145,6 @@ const McpAuthStatus = memo((props = {}) => {
   const onCloseLogout = useCallback(() => {
     setShowLogoutModal(false);
   }, []);
-
-  const { patInvalid } = useInternalMcpPatStatus({ projectId, toolkitType });
 
   // For pre-built MCPs, we don't require URL to show the auth status.
   // authConfig implies an external flow (e.g. SharePoint) that is always capable of login.
