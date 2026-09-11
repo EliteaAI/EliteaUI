@@ -238,15 +238,15 @@ const RunIndexPanel = memo(props => {
 
   const handleChangeIndexSchedule = useCallback(
     async (data, enabling) => {
-      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
       try {
         await updateIndexSchedule({
           ...data,
           projectId,
           toolkitId,
           indexName,
-          timezone,
+          // Keep the timezone the cron is expressed in. Only the modal converts the cron, and it passes
+          // its own timezone along; enabling or disabling must not reinterpret the stored times.
+          timezone: data.timezone || ScheduleHelpers.getBrowserTimezone(),
         }).unwrap();
         if (enabling) {
           toastSuccess(`Schedule has been successfully ${data.enabled ? 'enabled' : 'disabled'}.`);
@@ -302,7 +302,14 @@ const RunIndexPanel = memo(props => {
   const handleApplyScheduleModal = useCallback(
     (cron, credentials) => {
       handleChangeIndexSchedule(
-        { ...scheduleData, cron, credentials, enabled: scheduleModalIsEdit ? scheduleData.enabled : true },
+        {
+          ...scheduleData,
+          cron,
+          credentials,
+          enabled: scheduleModalIsEdit ? scheduleData.enabled : true,
+          // The modal edits the cron in the viewer's timezone, so the schedule now belongs to it.
+          timezone: ScheduleHelpers.getBrowserTimezone(),
+        },
         false,
       );
     },
@@ -743,6 +750,7 @@ const RunIndexPanel = memo(props => {
         onClose={() => setScheduleModalOpen(false)}
         onSubmit={handleApplyScheduleModal}
         cron={scheduleData.cron ?? IndexCronDefault}
+        timezone={scheduleData.timezone}
         credentials={scheduleData.credentials}
         credentialsData={credentialsData}
         isEdit={scheduleModalIsEdit}

@@ -3,7 +3,7 @@ import { memo } from 'react';
 import { Schedule } from '@/[fsd]/shared/ui';
 
 const PipelineScheduleModal = memo(props => {
-  const { open, onClose, onSubmit, cron, isLoading, isEdit = false } = props;
+  const { open, onClose, onSubmit, cron, timezone, isLoading, isEdit = false } = props;
 
   return (
     <Schedule.ScheduleModal
@@ -11,6 +11,7 @@ const PipelineScheduleModal = memo(props => {
       onClose={onClose}
       onSubmit={onSubmit}
       cron={cron}
+      timezone={timezone}
       isLoading={isLoading}
       isEdit={isEdit}
       title={isEdit ? 'Edit Schedule' : 'Schedule Settings'}
