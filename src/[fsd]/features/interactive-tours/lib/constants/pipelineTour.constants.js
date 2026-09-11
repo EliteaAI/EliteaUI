@@ -50,7 +50,7 @@ Pipeline settings — including General info, Toolkits, Variables, State, and Ad
 Four categories of nodes are available:
 
 - **Interaction** — LLM, Agent: generate AI responses or delegate to a specialized agent
-- **Execution** — Toolkit, MCP, Code, Custom: run external integrations, MCP tools, or custom scripts
+- **Execution** — Toolkit, MCP, Code: run external integrations, MCP tools, or custom scripts
 - **Control Flow** — Router, Decision: branch or loop execution based on conditions
 - **Utility** — State Modifier, Printer: read/write pipeline state or output values for debugging`,
   },
