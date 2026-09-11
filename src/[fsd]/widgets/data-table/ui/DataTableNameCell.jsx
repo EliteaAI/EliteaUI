@@ -8,8 +8,6 @@ import { useEliteaAssistantRef, useGetSupportAssistantConfigQuery } from '@/[fsd
 import EliteaAssistantIcon from '@/assets/icons/elitea-assistant-icon.svg?react';
 import PublishIcon from '@/assets/publish-version.svg?react';
 import { isApplicationCard } from '@/common/checkCardType';
-import { getEntityTypeByCardType } from '@/common/utils';
-import { IconLinkWithToolTip } from '@/components/Fork/IconLinkWithToolTip.jsx';
 import HighlightQuery from '@/components/HighlightQuery';
 import FolderIcon from '@/components/Icons/FolderIcon';
 import useCardNavigate from '@/hooks/useCardNavigate';
@@ -19,7 +17,7 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 const DataTableNameCell = memo(props => {
   const styles = dataTableNameCellStyles();
   const { row, cardType, viewMode, showFolders = true } = props;
-  const { id, status, is_forked: isForked, meta, folder_id: folderId } = row;
+  const { id, status, folder_id: folderId } = row;
   const projectId = useSelectedProjectId();
   const { isPublic: isPublicProject } = useProjectType();
   const { data: supportAssistantConfig } = useGetSupportAssistantConfigQuery({ enabled: false });
@@ -118,12 +116,6 @@ const DataTableNameCell = memo(props => {
             sx={{ width: '1.45rem', height: '1.45rem' }}
           />
         </IconButton>
-      )}
-      {isForked && (
-        <IconLinkWithToolTip
-          meta={meta}
-          type={getEntityTypeByCardType(cardType)}
-        />
       )}
       {showFolders && folderId && !isPublicProject && (
         <StyledTooltip

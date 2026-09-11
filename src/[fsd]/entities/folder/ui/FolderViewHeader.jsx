@@ -1,11 +1,11 @@
 import { memo } from 'react';
 
-import CloseIcon from '@mui/icons-material/Close';
 import { Box, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import CloseIcon from '@/assets/close-icon.svg?react';
 import FolderIcon from '@/components/Icons/FolderIcon';
 
 const FolderViewHeader = memo(props => {
@@ -42,7 +42,10 @@ const FolderViewHeader = memo(props => {
           sx={styles.closeButton}
           data-testid="folder-view-close-btn"
         >
-          <CloseIcon sx={styles.closeIcon} />
+          <Box
+            component={CloseIcon}
+            sx={styles.closeIcon}
+          />
         </Button.BaseBtn>
       </StyledTooltip>
     </Box>
@@ -57,18 +60,18 @@ const folderViewHeaderStyles = () => ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingBottom: '0.75rem',
+    padding: '0 1rem 0.75rem',
     borderBottom: `0.0625rem solid ${palette.border.lines}`,
   }),
   folderInfo: {
     display: 'flex',
     alignItems: 'center',
-    gap: '0.5rem',
+    gap: '0.25rem',
     minWidth: 0,
     overflow: 'hidden',
   },
   folderIcon: ({ palette }) => ({
-    fontSize: '1.25rem',
+    fontSize: '1rem',
     color: palette.icon.fill.default,
     flexShrink: 0,
   }),
@@ -77,21 +80,23 @@ const folderViewHeaderStyles = () => ({
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
+    marginLeft: '0.5rem',
   }),
   count: ({ palette }) => ({
     color: palette.text.primary,
     flexShrink: 0,
   }),
   closeButton: ({ palette }) => ({
-    padding: '0.25rem',
     color: palette.icon.fill.default,
     backgroundColor: 'transparent',
     '&:hover': {
+      color: palette.icon.fill.secondary,
       backgroundColor: palette.background.button.secondary.default,
     },
   }),
   closeIcon: {
-    fontSize: '1.25rem',
+    width: '0.75rem !important',
+    height: '0.75rem !important',
   },
 });
 

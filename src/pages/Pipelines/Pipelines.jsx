@@ -242,7 +242,7 @@ const Pipelines = memo(() => {
       title="Pipelines"
       titleTestId="pipelines-page-header"
       containerStyle={{ padding: '0 1.5rem 0 0' }}
-      tabBarStyle={{ padding: '0 0.5rem 0 1.5rem' }}
+      tabBarStyle={{ padding: '0 0 0 1.5rem' }}
       middleTabComponent={
         <>
           {tab === 'trending' && <DateRangeSelect />}

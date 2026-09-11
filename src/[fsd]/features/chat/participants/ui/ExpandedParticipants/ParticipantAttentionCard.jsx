@@ -13,154 +13,154 @@ import ParticipantWarning from './ParticipantWarning';
 
 const ParticipantAttentionCard = memo(
   forwardRef((props, ref) => {
-  const {
-    participant,
-    collapsed,
-    isActive,
-    isBeingEdited,
-    isSkippedContainer,
-    isPipelineParticipant,
-    displayName,
-    entityIcon,
-    status,
-    originalDetails,
-    entity_meta,
-    onClickHandler,
-    onMouseEnter,
-    onMouseLeave,
-    onEdit,
-    onDelete,
-    disabledEdit,
-    showEditButton,
-    isHovering,
-    isToolkitParticipant,
-    type,
-    handleEditClick,
-    styles,
-    ...restProps
-  } = props;
+    const {
+      participant,
+      collapsed,
+      isActive,
+      isBeingEdited,
+      isSkippedContainer,
+      isPipelineParticipant,
+      displayName,
+      entityIcon,
+      status,
+      originalDetails,
+      entity_meta,
+      onClickHandler,
+      onMouseEnter,
+      onMouseLeave,
+      onEdit,
+      onDelete,
+      disabledEdit,
+      showEditButton,
+      isHovering,
+      isToolkitParticipant,
+      type,
+      handleEditClick,
+      styles,
+      ...restProps
+    } = props;
 
-  const {
-    isPublishedAgentGone,
-    isVersionUnavailable,
-    hasMisconfigurationErrors,
-    shouldDisableThisItem,
-    mcpIsDisconnected,
-    someToolsAreUnavailable,
-    blockedToolkitNames,
-    remoteMcpLoggedOut,
-    spOAuthLoggedOut,
-    hasRemoteMcpLoggedIn,
-    spConfig,
-    openApiConfig,
-    openApiOAuthLoggedOut,
-  } = status;
+    const {
+      isPublishedAgentGone,
+      isVersionUnavailable,
+      hasMisconfigurationErrors,
+      shouldDisableThisItem,
+      mcpIsDisconnected,
+      someToolsAreUnavailable,
+      blockedToolkitNames,
+      remoteMcpLoggedOut,
+      spOAuthLoggedOut,
+      hasRemoteMcpLoggedIn,
+      spConfig,
+      openApiConfig,
+      openApiOAuthLoggedOut,
+    } = status;
 
-  const containerInfoRow =
-    !collapsed && isSkippedContainer ? (
-      <Box sx={styles.infoMessageRow}>
-        <Box sx={styles.infoIcon}>
-          <InfoIcon />
+    const containerInfoRow =
+      !collapsed && isSkippedContainer ? (
+        <Box sx={styles.infoMessageRow}>
+          <Box sx={styles.infoIcon}>
+            <InfoIcon />
+          </Box>
+          <Typography
+            variant="bodySmall"
+            color="text.secondary"
+            sx={styles.attentionMessage}
+          >
+            <ParticipantWarning isSkippedContainer />
+          </Typography>
         </Box>
-        <Typography
-          variant="bodySmall"
-          color="text.secondary"
-          sx={styles.attentionMessage}
-        >
-          <ParticipantWarning isSkippedContainer />
-        </Typography>
-      </Box>
-    ) : null;
+      ) : null;
 
-  return (
-    <StyledTipsContainer
-      ref={ref}
-      onClick={isActive || isVersionUnavailable ? onClickHandler : undefined}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
-      sx={styles.attentionWrapper}
-      {...restProps}
-    >
-      <Box sx={styles.attentionHeader}>
-        <EntityIcon
-          icon={entityIcon}
-          entityType={isPipelineParticipant ? 'pipeline' : participant.entity_name}
-          editable={false}
-          sx={{ width: '1.5rem', height: '1.5rem', minWidth: '1.5rem' }}
-          imageStyle={{ width: '1.5rem', height: '1.5rem' }}
-          specifiedFontSize="0.875rem"
-          isActive={isActive}
-        />
-        {!collapsed && (
-          <Box sx={styles.attentionNameBox}>
-            <Typography
-              variant="bodyMedium"
-              color="text.secondary"
-              sx={styles.attentionDisplayName}
-            >
-              {displayName}
-            </Typography>
-            {isBeingEdited && (
+    return (
+      <StyledTipsContainer
+        ref={ref}
+        onClick={isActive || isVersionUnavailable ? onClickHandler : undefined}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
+        sx={styles.attentionWrapper}
+        {...restProps}
+      >
+        <Box sx={styles.attentionHeader}>
+          <EntityIcon
+            icon={entityIcon}
+            entityType={isPipelineParticipant ? 'pipeline' : participant.entity_name}
+            editable={false}
+            sx={{ width: '1.5rem', height: '1.5rem', minWidth: '1.5rem' }}
+            imageStyle={{ width: '1.5rem', height: '1.5rem' }}
+            specifiedFontSize="0.875rem"
+            isActive={isActive}
+          />
+          {!collapsed && (
+            <Box sx={styles.attentionNameBox}>
               <Typography
                 variant="bodyMedium"
-                sx={styles.attentionEditingText}
+                color="text.secondary"
+                sx={styles.attentionDisplayName}
               >
-                {participant.entity_meta?.project_id != PUBLIC_PROJECT_ID ? 'Editing...' : 'Viewing...'}
+                {displayName}
               </Typography>
-            )}
-          </Box>
-        )}
-        {!collapsed && !isBeingEdited && (
-          <ParticipantActions
-            participant={participant}
-            onEdit={onEdit}
-            onDelete={onDelete}
-            disabledEdit={disabledEdit || isPublishedAgentGone || isVersionUnavailable}
-            disabledDeleteButton={disabledEdit}
-            showButtons={isHovering}
-            showEditButton={showEditButton}
-            hasRemoteMcpLoggedIn={hasRemoteMcpLoggedIn}
-            serverUrl={originalDetails?.settings?.url}
-          />
-        )}
-      </Box>
-      <Box
-        sx={styles.attentionMessageRow}
-        data-testid="chat-participant-warning-icon"
-      >
-        <Box sx={styles.attentionIcon}>
-          <AttentionIcon />
+              {isBeingEdited && (
+                <Typography
+                  variant="bodyMedium"
+                  sx={styles.attentionEditingText}
+                >
+                  {participant.entity_meta?.project_id != PUBLIC_PROJECT_ID ? 'Editing...' : 'Viewing...'}
+                </Typography>
+              )}
+            </Box>
+          )}
+          {!collapsed && !isBeingEdited && (
+            <ParticipantActions
+              participant={participant}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              disabledEdit={disabledEdit || isPublishedAgentGone || isVersionUnavailable}
+              disabledDeleteButton={disabledEdit}
+              showButtons={isHovering}
+              showEditButton={showEditButton}
+              hasRemoteMcpLoggedIn={hasRemoteMcpLoggedIn}
+              serverUrl={originalDetails?.settings?.url}
+            />
+          )}
         </Box>
-        <Typography
-          variant="bodySmall"
-          color="text.attention"
-          sx={styles.attentionMessage}
+        <Box
+          sx={styles.attentionMessageRow}
+          data-testid="chat-participant-warning-icon"
         >
-          <ParticipantWarning
-            isPublishedAgentGone={isPublishedAgentGone}
-            isVersionUnavailable={isVersionUnavailable}
-            hasMisconfigurationErrors={hasMisconfigurationErrors}
-            shouldDisableThisItem={shouldDisableThisItem}
-            mcpIsDisconnected={mcpIsDisconnected}
-            someToolsAreUnavailable={someToolsAreUnavailable}
-            blockedToolkitNames={blockedToolkitNames}
-            remoteMcpLoggedOut={remoteMcpLoggedOut}
-            spOAuthLoggedOut={spOAuthLoggedOut}
-            participant={participant}
-            handleEditClick={handleEditClick}
-            isToolkitParticipant={isToolkitParticipant}
-            type={type}
-            originalDetails={originalDetails}
-            entityMeta={entity_meta}
-            spConfig={spConfig}
-            openApiConfig={openApiConfig}
-            openApiOAuthLoggedOut={openApiOAuthLoggedOut}
-          />
-        </Typography>
-      </Box>
-      {containerInfoRow}
-    </StyledTipsContainer>
-  );
+          <Box sx={styles.attentionIcon}>
+            <AttentionIcon />
+          </Box>
+          <Typography
+            variant="bodySmall"
+            color="text.attention"
+            sx={styles.attentionMessage}
+          >
+            <ParticipantWarning
+              isPublishedAgentGone={isPublishedAgentGone}
+              isVersionUnavailable={isVersionUnavailable}
+              hasMisconfigurationErrors={hasMisconfigurationErrors}
+              shouldDisableThisItem={shouldDisableThisItem}
+              mcpIsDisconnected={mcpIsDisconnected}
+              someToolsAreUnavailable={someToolsAreUnavailable}
+              blockedToolkitNames={blockedToolkitNames}
+              remoteMcpLoggedOut={remoteMcpLoggedOut}
+              spOAuthLoggedOut={spOAuthLoggedOut}
+              participant={participant}
+              handleEditClick={handleEditClick}
+              isToolkitParticipant={isToolkitParticipant}
+              type={type}
+              originalDetails={originalDetails}
+              entityMeta={entity_meta}
+              spConfig={spConfig}
+              openApiConfig={openApiConfig}
+              openApiOAuthLoggedOut={openApiOAuthLoggedOut}
+            />
+          </Typography>
+        </Box>
+        {containerInfoRow}
+      </StyledTipsContainer>
+    );
   }),
 );
 

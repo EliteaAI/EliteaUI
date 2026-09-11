@@ -13,138 +13,138 @@ import ParticipantWarning from './ParticipantWarning';
 
 const ParticipantNormalCard = memo(
   forwardRef((props, ref) => {
-  const {
-    participant,
-    collapsed,
-    isActive,
-    isAttachement,
-    isBeingEdited,
-    isSkippedContainer,
-    isPipelineParticipant,
-    displayName,
-    versionName,
-    entityIcon,
-    nameTextRef,
-    status,
-    originalDetails,
-    onClickHandler,
-    onMouseEnter,
-    onMouseLeave,
-    onEdit,
-    onDelete,
-    disabledEdit,
-    showEditButton,
-    isHovering,
-    styles,
-    ...restProps
-  } = props;
+    const {
+      participant,
+      collapsed,
+      isActive,
+      isAttachement,
+      isBeingEdited,
+      isSkippedContainer,
+      isPipelineParticipant,
+      displayName,
+      versionName,
+      entityIcon,
+      nameTextRef,
+      status,
+      originalDetails,
+      onClickHandler,
+      onMouseEnter,
+      onMouseLeave,
+      onEdit,
+      onDelete,
+      disabledEdit,
+      showEditButton,
+      isHovering,
+      styles,
+      ...restProps
+    } = props;
 
-  const { hasRemoteMcpLoggedIn, spConfig, spOAuthLoggedIn, openApiConfig, openAPIOAuthLoggedIn } = status;
+    const { hasRemoteMcpLoggedIn, spConfig, spOAuthLoggedIn, openApiConfig, openAPIOAuthLoggedIn } = status;
 
-  const containerInfoRow =
-    !collapsed && isSkippedContainer ? (
-      <Box sx={styles.infoMessageRow}>
-        <Box sx={styles.infoIcon}>
-          <InfoIcon />
-        </Box>
-        <Typography
-          variant="bodySmall"
-          color="text.secondary"
-          sx={styles.attentionMessage}
-        >
-          <ParticipantWarning isSkippedContainer />
-        </Typography>
-      </Box>
-    ) : null;
-
-  return (
-    <Box
-      ref={ref}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
-      sx={styles.normalItemWrapper}
-      {...restProps}
-    >
-      <Box
-        onClick={onClickHandler}
-        sx={styles.contentWrapper}
-        data-testid={`chat-participant-row-${participant.id ?? participant.entity_meta?.id}`}
-      >
-        <EntityIcon
-          icon={entityIcon}
-          entityType={
-            isPipelineParticipant
-              ? 'pipeline'
-              : participant.entity_name !== ChatParticipantType.Toolkits
-                ? participant.entity_name
-                : participant.meta?.mcp
-                  ? 'mcp'
-                  : participant.entity_name
-          }
-          editable={false}
-          sx={{ width: '1.5rem', height: '1.5rem', minWidth: '1.5rem' }}
-          imageStyle={{ width: '1.5rem', height: '1.5rem' }}
-          specifiedFontSize="0.875rem"
-          isActive={isActive}
-        />
-        {!collapsed && (
-          <Box sx={styles.nameWrapper}>
-            <Typography
-              variant="bodyMedium"
-              color="text.secondary"
-              ref={nameTextRef}
-              sx={styles.nameContent}
-            >
-              {displayName}
-              {isAttachement && (
-                <IconButton
-                  variant="elitea"
-                  color="tertiary"
-                  size="small"
-                  disabled
-                  sx={styles.attachmentButton}
-                >
-                  <AttachIcon style={styles.attachIcon} />
-                </IconButton>
-              )}
-              <ParticipantConnectionIcons
-                showMcp={!!originalDetails?.meta?.mcp}
-                mcpOnline={originalDetails?.online}
-                showSp={!!spConfig}
-                spLoggedIn={spOAuthLoggedIn}
-                showOpenApi={!!openApiConfig}
-                openApiLoggedIn={openAPIOAuthLoggedIn}
-              />
-            </Typography>
-            <Typography
-              variant="bodyMedium"
-              sx={styles.versionLabel}
-            >
-              {isBeingEdited
-                ? participant.entity_meta?.project_id != PUBLIC_PROJECT_ID
-                  ? 'Editing...'
-                  : 'Viewing...'
-                : versionName}
-            </Typography>
+    const containerInfoRow =
+      !collapsed && isSkippedContainer ? (
+        <Box sx={styles.infoMessageRow}>
+          <Box sx={styles.infoIcon}>
+            <InfoIcon />
           </Box>
-        )}
-        {!collapsed && !isBeingEdited && (
-          <ParticipantActions
-            participant={participant}
-            onEdit={onEdit}
-            onDelete={onDelete}
-            disabledEdit={disabledEdit}
-            disabledDeleteButton={disabledEdit}
-            showButtons={isHovering}
-            showEditButton={showEditButton}
-            hasRemoteMcpLoggedIn={hasRemoteMcpLoggedIn}
-            serverUrl={originalDetails?.settings?.url}
+          <Typography
+            variant="bodySmall"
+            color="text.secondary"
+            sx={styles.attentionMessage}
+          >
+            <ParticipantWarning isSkippedContainer />
+          </Typography>
+        </Box>
+      ) : null;
+
+    return (
+      <Box
+        ref={ref}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
+        sx={styles.normalItemWrapper}
+        {...restProps}
+      >
+        <Box
+          onClick={onClickHandler}
+          sx={styles.contentWrapper}
+          data-testid={`chat-participant-row-${participant.id ?? participant.entity_meta?.id}`}
+        >
+          <EntityIcon
+            icon={entityIcon}
+            entityType={
+              isPipelineParticipant
+                ? 'pipeline'
+                : participant.entity_name !== ChatParticipantType.Toolkits
+                  ? participant.entity_name
+                  : participant.meta?.mcp
+                    ? 'mcp'
+                    : participant.entity_name
+            }
+            editable={false}
+            sx={{ width: '1.5rem', height: '1.5rem', minWidth: '1.5rem' }}
+            imageStyle={{ width: '1.5rem', height: '1.5rem' }}
+            specifiedFontSize="0.875rem"
+            isActive={isActive}
           />
-        )}
+          {!collapsed && (
+            <Box sx={styles.nameWrapper}>
+              <Typography
+                variant="bodyMedium"
+                color="text.secondary"
+                ref={nameTextRef}
+                sx={styles.nameContent}
+              >
+                {displayName}
+                {isAttachement && (
+                  <IconButton
+                    variant="elitea"
+                    color="tertiary"
+                    size="small"
+                    disabled
+                    sx={styles.attachmentButton}
+                  >
+                    <AttachIcon style={styles.attachIcon} />
+                  </IconButton>
+                )}
+                <ParticipantConnectionIcons
+                  showMcp={!!originalDetails?.meta?.mcp}
+                  mcpOnline={originalDetails?.online}
+                  showSp={!!spConfig}
+                  spLoggedIn={spOAuthLoggedIn}
+                  showOpenApi={!!openApiConfig}
+                  openApiLoggedIn={openAPIOAuthLoggedIn}
+                />
+              </Typography>
+              <Typography
+                variant="bodyMedium"
+                sx={styles.versionLabel}
+              >
+                {isBeingEdited
+                  ? participant.entity_meta?.project_id != PUBLIC_PROJECT_ID
+                    ? 'Editing...'
+                    : 'Viewing...'
+                  : versionName}
+              </Typography>
+            </Box>
+          )}
+          {!collapsed && !isBeingEdited && (
+            <ParticipantActions
+              participant={participant}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              disabledEdit={disabledEdit}
+              disabledDeleteButton={disabledEdit}
+              showButtons={isHovering}
+              showEditButton={showEditButton}
+              hasRemoteMcpLoggedIn={hasRemoteMcpLoggedIn}
+              serverUrl={originalDetails?.settings?.url}
+            />
+          )}
+        </Box>
+        {containerInfoRow}
       </Box>
-      {containerInfoRow}
-    </Box>
-  );
+    );
   }),
 );
 

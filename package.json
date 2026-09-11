@@ -21,7 +21,7 @@
     "test:e2e:dev": "cd tests && npm run test:dev",
     "test:e2e:install": "cd tests && npm install",
     "test:e2e:debug": "cd tests && npm run debug",
-    "commit": "git-cz --no-verify"
+    "commit": "eslint . --fix && prettier --write \"**/**/*.{js,jsx,md}\" && git-cz --no-verify"
   },
   "lint-staged": {
     "*.{js,jsx}": [
