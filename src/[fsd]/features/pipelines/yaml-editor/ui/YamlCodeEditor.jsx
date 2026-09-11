@@ -44,7 +44,7 @@ const YamlCodeEditor = memo(props => {
         value={code}
         extensions={extensions}
         height="100%"
-        minHeight="400px"
+        minHeight="25rem"
         notifyChange={onChangeCode}
         ref={editorRef}
         readOnly={disabled}

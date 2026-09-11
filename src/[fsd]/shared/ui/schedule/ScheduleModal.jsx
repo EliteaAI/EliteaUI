@@ -2,11 +2,18 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { getNextCronRun, validateCronExpression } from '@/[fsd]/shared/lib/helpers/schedule.helpers';
+import {
+  canConvertCronTimezone,
+  convertCronTimezone,
+  getBrowserTimezone,
+  getNextCronRun,
+  validateCronExpression,
+} from '@/[fsd]/shared/lib/helpers/schedule.helpers';
 import { Button, Modal, Tab } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import ErrorIcon from '@/assets/error-icon.svg?react';
+import InfoIcon from '@/assets/info.svg?react';
 import FormInput from '@/components/FormInput';
 
 import CronBuilder from './CronBuilder';
@@ -24,6 +31,7 @@ const ScheduleModal = memo(props => {
     onClose,
     onSubmit,
     cron,
+    timezone,
     isLoading = false,
     isEdit = false,
     title,
@@ -36,15 +44,32 @@ const ScheduleModal = memo(props => {
   const [cronExpression, setCronExpression] = useState(DEFAULT_CRON);
   const [cronType, setCronType] = useState('builder');
 
+  // The schedule is stored in the timezone of whoever configured it, but everything in this modal -
+  // the builder, the cron expression and the next run - is shown and edited in the viewer's own
+  // timezone. Saving sends the edited expression back paired with the viewer's timezone.
+  const browserTimezone = useMemo(() => getBrowserTimezone(), []);
+
+  const isForeignTimezone = Boolean(timezone && browserTimezone && timezone !== browserTimezone);
+
   useEffect(() => {
     if (open) {
-      setCronExpression(cron || DEFAULT_CRON);
+      setCronExpression(convertCronTimezone(cron || DEFAULT_CRON, timezone, browserTimezone));
     }
 
     return () => {
       setCronType('builder');
     };
-  }, [open, cron]);
+  }, [open, cron, timezone, browserTimezone]);
+
+  const timezoneNotice = useMemo(() => {
+    if (!isForeignTimezone) return null;
+
+    if (!canConvertCronTimezone(cron || DEFAULT_CRON, timezone, browserTimezone)) {
+      return `This schedule was configured in ${timezone} and its expression cannot be converted automatically, so the times below are shown as configured. Saving will reinterpret them in your timezone (${browserTimezone}).`;
+    }
+
+    return `This schedule was configured in ${timezone}. The times below are converted to your timezone (${browserTimezone}) and will be saved in it.`;
+  }, [isForeignTimezone, cron, timezone, browserTimezone]);
 
   const cronState = useMemo(() => validateCronExpression(cronExpression), [cronExpression]);
 
@@ -144,6 +169,22 @@ const ScheduleModal = memo(props => {
               <Typography variant="labelSmall">{cronState.isValid ? nextRunComputed : '-'}</Typography>
             </Box>
           </Box>
+
+          {timezoneNotice && (
+            <Box sx={styles.noticeContainer}>
+              <Box
+                component={InfoIcon}
+                sx={styles.noticeIcon}
+              />
+              <Typography
+                data-testid="schedule-timezone-notice"
+                variant="labelSmall"
+                sx={styles.noticeText}
+              >
+                {timezoneNotice}
+              </Typography>
+            </Box>
+          )}
 
           {!cronState.isValid && (
             <Box sx={styles.errorContainer}>
@@ -255,6 +296,27 @@ const scheduleModalStyles = () => ({
     color: palette.secondary.main,
     fontSize: '0.75rem',
     textAlign: 'center',
+  }),
+  noticeContainer: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    width: '100%',
+    borderRadius: '0.5rem',
+    padding: '0.5rem 0.75rem',
+    gap: '0.5rem',
+    border: ({ palette }) => `0.0625rem solid ${palette.border.tips}`,
+    background: ({ palette }) => palette.background.tips.main,
+  },
+  noticeIcon: ({ palette }) => ({
+    width: '1rem',
+    height: '1rem',
+    flexShrink: 0,
+    color: palette.icon.fill.tips,
+    fill: palette.icon.fill.tips,
+  }),
+  noticeText: ({ palette }) => ({
+    flex: 1,
+    color: palette.text.tips,
   }),
   errorContainer: {
     display: 'flex',

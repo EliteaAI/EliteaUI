@@ -1,3 +1,4 @@
+import { MCP_SESSION_STORAGE_KEYS } from '@/[fsd]/features/mcp/lib/constants/mcAuth.constants';
 import { PermissionStorageKey, PublicPermissionStorageKey } from '@/common/constants.js';
 import { actions as settingsActions } from '@/slices/settings';
 import { createSlice } from '@reduxjs/toolkit';
@@ -24,6 +25,9 @@ const userSlice = createSlice({
     logout: state => {
       sessionStorage.removeItem(PermissionStorageKey);
       sessionStorage.removeItem(PublicPermissionStorageKey);
+      // Clear MCP OAuth tokens and DCR secrets synchronously before the browser
+      // follows the forward-auth logout redirect.
+      MCP_SESSION_STORAGE_KEYS.forEach(key => sessionStorage.removeItem(key));
       Object.assign(state, initialState());
     },
   },

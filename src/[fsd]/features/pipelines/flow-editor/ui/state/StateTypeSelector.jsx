@@ -114,6 +114,7 @@ const StateTypeSelector = memo(props => {
 
 StateTypeSelector.displayName = 'StateTypeSelector';
 
+/** @type {MuiSx} */
 const stateTypeSelectorStyles = () => ({
   buttonIcon: {
     fontSize: '1.25rem',

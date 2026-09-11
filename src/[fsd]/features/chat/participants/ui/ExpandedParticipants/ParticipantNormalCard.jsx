@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { forwardRef, memo } from 'react';
 
 import { Box, IconButton, Typography } from '@mui/material';
 
@@ -12,7 +12,8 @@ import ParticipantActions from '../ParticipantActions/ParticipantActions';
 import ParticipantConnectionIcons from './ParticipantConnectionIcons';
 import ParticipantWarning from './ParticipantWarning';
 
-const ParticipantNormalCard = memo(props => {
+const ParticipantNormalCard = memo(
+  forwardRef((props, ref) => {
   const {
     participant,
     collapsed,
@@ -36,6 +37,7 @@ const ParticipantNormalCard = memo(props => {
     showEditButton,
     isHovering,
     styles,
+    ...restProps
   } = props;
 
   const { hasRemoteMcpLoggedIn, spConfig, spOAuthLoggedIn, openApiConfig, openAPIOAuthLoggedIn } = status;
@@ -57,11 +59,15 @@ const ParticipantNormalCard = memo(props => {
     ) : null;
 
   return (
-    <Box sx={styles.normalItemWrapper}>
+    <Box
+      ref={ref}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+      sx={styles.normalItemWrapper}
+      {...restProps}
+    >
       <Box
         onClick={onClickHandler}
-        onMouseEnter={onMouseEnter}
-        onMouseLeave={onMouseLeave}
         sx={styles.contentWrapper}
         data-testid={`chat-participant-row-${getChatParticipantUniqueId(participant)}`}
       >
@@ -142,7 +148,8 @@ const ParticipantNormalCard = memo(props => {
       {containerInfoRow}
     </Box>
   );
-});
+  }),
+);
 
 ParticipantNormalCard.displayName = 'ParticipantNormalCard';
 

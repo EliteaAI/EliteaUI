@@ -242,6 +242,7 @@ const GenerateEntityModal = memo(props => {
 
 GenerateEntityModal.displayName = 'GenerateEntityModal';
 
+/** @type {MuiSx} */
 const generateEntityModalStyles = () => ({
   dialog: () => ({
     '& .MuiDialog-paper': {

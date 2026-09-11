@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { v4 as uuidv4 } from 'uuid';
 
+import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import { SocketMessageType, sioEvents } from '@/common/constants';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { useManualSocket } from '@/hooks/useSocket';
@@ -129,7 +130,7 @@ export const useMcpAuthCheck = ({ toolkitId, values, onMcpAuthRequired, onSucces
         message_id: messageId,
         project_id: projectId,
         toolkit_config: toolkitConfig,
-        mcp_tokens: values?.mcp_tokens || {},
+        mcp_tokens: McpAuthHelpers.getAllTokens(),
       });
     } catch (error) {
       cleanupSession();

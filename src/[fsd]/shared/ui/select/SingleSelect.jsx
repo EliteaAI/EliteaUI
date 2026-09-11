@@ -719,6 +719,7 @@ const SingleSelect = memo(props => {
 
 SingleSelect.displayName = 'SingleSelect';
 
+/** @type {MuiSx} */
 const singleSelectStyles = (
   theme,
   {

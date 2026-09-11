@@ -748,9 +748,7 @@ const Conversations = memo(props => {
               key={index}
               animation="wave"
               variant="rectangular"
-              width="100%"
-              height="74px"
-              sx={{ marginTop: '0.5rem' }}
+              sx={{ marginTop: '0.5rem', height: '4.625rem', width: '100%' }}
             />
           ))
         ) : (

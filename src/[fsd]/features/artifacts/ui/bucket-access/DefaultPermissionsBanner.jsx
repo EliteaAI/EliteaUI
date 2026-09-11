@@ -28,6 +28,7 @@ DefaultPermissionsBanner.displayName = 'DefaultPermissionsBanner';
 
 export default DefaultPermissionsBanner;
 
+/** @type {MuiSx} */
 const defaultPermissionsBannerStyles = () => ({
   container: ({ palette }) => ({
     padding: '1rem 1.5rem 2rem',

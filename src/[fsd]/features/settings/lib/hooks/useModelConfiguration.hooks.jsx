@@ -166,13 +166,13 @@ export const useModelOptions = ({
           config.project_id !== PUBLIC_PROJECT_ID ? (
             <BriefcaseIcon
               key="person-icon"
-              fontSize="14px"
+              fontSize="0.875rem"
             />
           ) : (
             <ShareIcon
               status={CollectionStatus.Published}
               key="briefcase-icon"
-              fontSize="14px"
+              fontSize="0.875rem"
             />
           ),
       })) || []

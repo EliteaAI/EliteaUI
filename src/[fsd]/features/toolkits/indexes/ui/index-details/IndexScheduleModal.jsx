@@ -12,6 +12,7 @@ const IndexScheduleModal = memo(props => {
     onClose,
     onSubmit,
     cron,
+    timezone,
     credentials,
     credentialsData,
     toolkitSchemaFetching,
@@ -58,6 +59,7 @@ const IndexScheduleModal = memo(props => {
       onClose={onClose}
       onSubmit={handleSubmit}
       cron={cron}
+      timezone={timezone}
       isLoading={toolkitSchemaFetching}
       isEdit={isEdit}
       closeOnSubmit={false}

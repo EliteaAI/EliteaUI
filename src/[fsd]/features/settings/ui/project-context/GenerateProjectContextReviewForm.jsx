@@ -95,6 +95,7 @@ const GenerateProjectContextReviewForm = memo(props => {
 
 GenerateProjectContextReviewForm.displayName = 'GenerateProjectContextReviewForm';
 
+/** @type {MuiSx} */
 const reviewFormStyles = () => ({
   container: {
     display: 'flex',

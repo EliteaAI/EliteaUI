@@ -46,6 +46,7 @@ const ToolBase = memo(props => {
     hideNameInput = false,
     editFieldRootPath = 'settings',
     disabledConfigFieldsForOldToolkits = false,
+    autoLoadMcpTools = false,
     checkboxAsteriskRequired = true,
     priorityFieldsOrder = [],
     fieldNeedToRenderAtBottom = [],
@@ -609,6 +610,7 @@ const ToolBase = memo(props => {
         onChange={value => editField('settings.selected_tools', value)}
         isRemoteMcp={schema.title === 'mcp'}
         isPreconfiguredMcp={isPreconfiguredMcp}
+        autoLoadTools={autoLoadMcpTools}
         toolkitType={editToolDetail?.type}
         onToolsFetched={handleToolsFetched}
         selectedToolsError={selectedToolsError}
