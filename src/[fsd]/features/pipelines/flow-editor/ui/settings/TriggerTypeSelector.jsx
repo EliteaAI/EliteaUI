@@ -161,6 +161,9 @@ const TriggerTypeSelector = memo(props => {
 
   const currentCron = useMemo(() => triggerData?.cron || '0 0 * * 6', [triggerData?.cron]);
 
+  // Timezone the schedule was configured in; the modal converts the cron into the viewer's own.
+  const currentScheduleTimezone = useMemo(() => triggerData?.timezone, [triggerData?.timezone]);
+
   const currentWebhookType = useMemo(
     () => triggerData?.webhook_type || WEBHOOK_TYPES.github,
     [triggerData?.webhook_type],
@@ -367,6 +370,7 @@ const TriggerTypeSelector = memo(props => {
         onClose={() => setIsScheduleModalOpen(false)}
         onSubmit={handleScheduleSubmit}
         cron={currentCron}
+        timezone={currentScheduleTimezone}
         isLoading={isUpdating}
       />
 

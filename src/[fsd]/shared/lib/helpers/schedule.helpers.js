@@ -1,6 +1,7 @@
 import cronstrue from 'cronstrue';
 
 const DAILY_FLOOR_MSG = 'Frequency cannot be more than once per day';
+const MINUTES_PER_DAY = 24 * 60;
 
 const validateMinimumFrequency = (minute, hour) => {
   const invalid = {
@@ -186,73 +187,131 @@ export const getNextCronRunInTimezone = (expression, scheduleTimezone) => {
   return new Date(nextInTz.getTime() - offsetMs);
 };
 
+const FIXED_NUMBER_PATTERN = /^\d{1,2}$/;
+const NUMBER_LIST_PATTERN = /^\d{1,2}(,\d{1,2})*$/;
+
 /**
- * Convert a cron expression from one timezone to another.
- * Only works for simple crons with fixed hour/minute (e.g., "0 16 * * *").
- * Returns the converted cron expression.
+ * Resolve the browser's IANA timezone, or null when the environment does not expose one.
  */
-export const convertCronTimezone = (expression, fromTimezone, toTimezone) => {
-  if (!expression || !fromTimezone || !toTimezone || fromTimezone === toTimezone) {
-    return expression;
+export const getBrowserTimezone = () => {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || null;
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * Minutes a timezone is offset from UTC at the given instant (positive east of UTC).
+ */
+const getTimezoneOffsetMinutes = (date, timeZone) => {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    hour12: false,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  }).formatToParts(date);
+
+  const read = type => Number(parts.find(part => part.type === type)?.value);
+
+  const asUtc = Date.UTC(
+    read('year'),
+    read('month') - 1,
+    read('day'),
+    read('hour') % 24,
+    read('minute'),
+    read('second'),
+  );
+
+  return Math.round((asUtc - date.getTime()) / 60000);
+};
+
+const shiftWeekdayField = (weekday, dayShift) => {
+  if (weekday === '*') return weekday;
+  if (!NUMBER_LIST_PATTERN.test(weekday)) return null;
+
+  return weekday
+    .split(',')
+    .map(value => {
+      // Cron accepts both 0 and 7 for Sunday, so normalise to 0 before shifting.
+      const normalised = parseInt(value, 10) % 7;
+      return (((normalised + dayShift) % 7) + 7) % 7;
+    })
+    .join(',');
+};
+
+/**
+ * Shift a cron expression between timezones.
+ *
+ * Conversion needs a single fixed hour and minute: wildcards, steps, ranges and lists in those fields
+ * describe recurring windows that a flat offset cannot express. When the shift crosses midnight the run
+ * also moves to the neighbouring day, which a weekday-pinned schedule can follow but a day-of-month one
+ * cannot (shifting "31" or "1" depends on the month).
+ *
+ * @returns {{ cron: string, isConvertible: boolean }} the shifted expression, or the original one
+ * alongside `isConvertible: false` when it cannot be expressed in the target timezone.
+ */
+const shiftCronToTimezone = (expression, fromTimezone, toTimezone) => {
+  const unchanged = { cron: expression, isConvertible: true };
+
+  if (!expression || !fromTimezone || !toTimezone || fromTimezone === toTimezone) return unchanged;
+
+  const parts = String(expression).trim().split(/\s+/);
+  if (parts.length !== 5) return { cron: expression, isConvertible: false };
+
+  const [minute, hour, day, month, weekday] = parts;
+  if (!FIXED_NUMBER_PATTERN.test(minute) || !FIXED_NUMBER_PATTERN.test(hour)) {
+    return { cron: expression, isConvertible: false };
   }
 
   try {
-    const parts = expression.trim().split(/\s+/);
-    if (parts.length !== 5) return expression;
-
-    const [minute, hour, day, month, weekday] = parts;
-
-    // Only convert simple fixed hour/minute crons
-    if (hour === '*' || hour.includes('/') || hour.includes(',') || hour.includes('-')) {
-      return expression;
-    }
-    if (minute === '*' || minute.includes('/') || minute.includes(',') || minute.includes('-')) {
-      return expression;
-    }
-
-    const hourNum = parseInt(hour, 10);
-    const minuteNum = parseInt(minute, 10);
-
-    // Create a date in the source timezone
     const now = new Date();
-    const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}T${String(hourNum).padStart(2, '0')}:${String(minuteNum).padStart(2, '0')}:00`;
+    const offsetMinutes =
+      getTimezoneOffsetMinutes(now, toTimezone) - getTimezoneOffsetMinutes(now, fromTimezone);
 
-    // Get the time in source timezone and convert to target timezone
-    const sourceDate = new Date(new Date(dateStr).toLocaleString('en-US', { timeZone: fromTimezone }));
-    const targetDate = new Date(new Date(dateStr).toLocaleString('en-US', { timeZone: toTimezone }));
+    const totalMinutes = parseInt(hour, 10) * 60 + parseInt(minute, 10) + offsetMinutes;
+    const dayShift = Math.floor(totalMinutes / MINUTES_PER_DAY);
+    const minutesInDay = ((totalMinutes % MINUTES_PER_DAY) + MINUTES_PER_DAY) % MINUTES_PER_DAY;
 
-    // Calculate the offset in minutes
-    const offsetMinutes = (targetDate.getTime() - sourceDate.getTime()) / (1000 * 60);
+    const shiftedTime = `${minutesInDay % 60} ${Math.floor(minutesInDay / 60)}`;
 
-    // Apply offset to the original time
-    let newMinutes = minuteNum + offsetMinutes;
-    let newHours = hourNum;
-
-    // Handle minute overflow/underflow
-    while (newMinutes >= 60) {
-      newMinutes -= 60;
-      newHours += 1;
-    }
-    while (newMinutes < 0) {
-      newMinutes += 60;
-      newHours -= 1;
+    if (dayShift === 0) {
+      return { cron: `${shiftedTime} ${day} ${month} ${weekday}`, isConvertible: true };
     }
 
-    // Handle hour overflow/underflow (wrap around 24 hours)
-    newHours = ((newHours % 24) + 24) % 24;
+    if (day !== '*') return { cron: expression, isConvertible: false };
 
-    return `${newMinutes} ${newHours} ${day} ${month} ${weekday}`;
+    const shiftedWeekday = shiftWeekdayField(weekday, dayShift);
+    if (shiftedWeekday === null) return { cron: expression, isConvertible: false };
+
+    return { cron: `${shiftedTime} ${day} ${month} ${shiftedWeekday}`, isConvertible: true };
   } catch {
-    return expression;
+    return { cron: expression, isConvertible: false };
   }
 };
+
+/**
+ * Convert a cron expression from one timezone to another, returning it unchanged when the expression
+ * cannot be shifted. Pair with `canConvertCronTimezone` to tell the two outcomes apart.
+ */
+export const convertCronTimezone = (expression, fromTimezone, toTimezone) =>
+  shiftCronToTimezone(expression, fromTimezone, toTimezone).cron;
+
+/**
+ * Whether a cron expression can be expressed in the target timezone without losing meaning.
+ */
+export const canConvertCronTimezone = (expression, fromTimezone, toTimezone) =>
+  shiftCronToTimezone(expression, fromTimezone, toTimezone).isConvertible;
 
 /**
  * Get a human-readable summary of a cron expression converted to the browser's timezone.
  */
 export const getCronSummaryInBrowserTimezone = (expression, scheduleTimezone) => {
-  const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const convertedCron = convertCronTimezone(expression, scheduleTimezone, browserTz);
+  const convertedCron = convertCronTimezone(expression, scheduleTimezone, getBrowserTimezone());
 
   try {
     return cronstrue.toString(convertedCron, { use24HourTimeFormat: true });
