@@ -58,6 +58,8 @@ const storeTokens = tokens => {
   window.sessionStorage.setItem(McpAuthConstants.MC_TOKENS_STORAGE_KEY, JSON.stringify(tokens));
 };
 
+const loadStored = key => JSON.parse(window.sessionStorage.getItem(key) || '{}');
+
 const storeToken = ({ accessToken = 'stale-token', issuedAt = 100 } = {}) => {
   storeTokens({
     [TOKEN_KEY]: {
@@ -217,6 +219,49 @@ describe('MCP OAuth family reuse', () => {
     ).toBe(false);
   });
 
+  it('does not persist a challenged family member until a token is actually reused', () => {
+    loginToHeroes();
+
+    expect(
+      McpAuthHelpers.reuseAuthFamilyToken({
+        serverUrl: STAFFING_URL,
+        authorizationServers: [AUTHORIZATION_SERVER],
+        resourceScopes: ['staffing.write'],
+      }),
+    ).toBe(false);
+
+    expect(loadStored(McpAuthConstants.MCP_AUTH_FAMILY_STORAGE_KEY)).not.toHaveProperty(STAFFING_URL);
+    expect(McpAuthHelpers.getAccessToken(STAFFING_URL)).toBeNull();
+
+    loginToHeroes();
+    expect(McpAuthHelpers.getAccessToken(STAFFING_URL)).toBeNull();
+  });
+
+  it('does not widen an explicitly scoped token to a target with unknown scopes', () => {
+    loginToHeroes();
+
+    expect(
+      McpAuthHelpers.reuseAuthFamilyToken({
+        serverUrl: STAFFING_URL,
+        authorizationServers: [AUTHORIZATION_SERVER],
+      }),
+    ).toBe(false);
+  });
+
+  it('reuses an unscoped token when neither same-origin family member advertises scopes', () => {
+    McpAuthHelpers.setAccessToken(HEROES_URL, 'family-token', 3600, null, null, null, {
+      authorization_server: AUTHORIZATION_SERVER,
+      resource_server_url: HEROES_URL,
+    });
+
+    expect(
+      McpAuthHelpers.reuseAuthFamilyToken({
+        serverUrl: STAFFING_URL,
+        authorizationServers: [AUTHORIZATION_SERVER],
+      }),
+    ).toBe(true);
+  });
+
   it('falls back to OAuth after a family token is rejected by an endpoint', () => {
     loginToHeroes();
     const target = {
@@ -244,7 +289,62 @@ describe('MCP OAuth family reuse', () => {
     expect(McpAuthHelpers.getAccessToken(STAFFING_URL)).toBeNull();
   });
 
-  it('keeps tokens in session storage while accepting live cross-tab updates', () => {
+  it('scopes synchronization to the Elitea user and strips connection session IDs', () => {
+    const postedMessages = [];
+    let channel;
+    class FakeBroadcastChannel {
+      constructor(name) {
+        this.name = name;
+        this.onmessage = null;
+        channel = this;
+      }
+
+      postMessage(message) {
+        postedMessages.push(message);
+      }
+
+      close() {}
+    }
+    window.BroadcastChannel = FakeBroadcastChannel;
+    const stopSync = McpAuthHelpers.startTokenSync('user-a');
+
+    loginToHeroes();
+
+    expect(window.sessionStorage.getItem(McpAuthConstants.MC_TOKENS_STORAGE_KEY)).not.toBeNull();
+    expect(window.localStorage.getItem(McpAuthConstants.MC_TOKENS_STORAGE_KEY)).toBeNull();
+    expect(channel.name).toBe(`${McpAuthConstants.MCP_TOKEN_SYNC_CHANNEL}:user-a`);
+    expect(postedMessages[0]).toEqual({ type: 'request_state', userId: 'user-a' });
+    const tokenUpsert = postedMessages.find(message => message.type === 'token_upsert');
+    expect(tokenUpsert.tokenInfo).not.toHaveProperty('session_id');
+
+    channel.onmessage({
+      data: {
+        type: 'token_upsert',
+        userId: 'user-b',
+        key: STAFFING_URL,
+        tokenInfo: { access_token: 'other-user-token', issued_at: Date.now() + 2 },
+      },
+    });
+    expect(McpAuthHelpers.getAccessToken(STAFFING_URL)).toBeNull();
+
+    channel.onmessage({
+      data: {
+        type: 'token_upsert',
+        userId: 'user-a',
+        key: STAFFING_URL,
+        tokenInfo: { access_token: 'tab-token', issued_at: Date.now() + 1, session_id: 'other-tab' },
+      },
+    });
+    expect(McpAuthHelpers.getAccessToken(STAFFING_URL)).toBe('tab-token');
+    expect(McpAuthHelpers.getSessionId(STAFFING_URL)).toBeNull();
+
+    channel.onmessage({ data: { type: 'token_remove', userId: 'user-a', key: STAFFING_URL } });
+    expect(McpAuthHelpers.getAccessToken(STAFFING_URL)).toBeNull();
+    stopSync();
+    delete window.BroadcastChannel;
+  });
+
+  it('persists a received state before dispatching synchronous login events', () => {
     const postedMessages = [];
     let channel;
     class FakeBroadcastChannel {
@@ -260,26 +360,69 @@ describe('MCP OAuth family reuse', () => {
       close() {}
     }
     window.BroadcastChannel = FakeBroadcastChannel;
-    const stopSync = McpAuthHelpers.startTokenSync();
-
-    loginToHeroes();
-
-    expect(window.sessionStorage.getItem(McpAuthConstants.MC_TOKENS_STORAGE_KEY)).not.toBeNull();
-    expect(window.localStorage.getItem(McpAuthConstants.MC_TOKENS_STORAGE_KEY)).toBeNull();
-    expect(postedMessages[0]).toEqual({ type: 'request_state' });
-    expect(postedMessages.some(message => message.type === 'token_upsert')).toBe(true);
+    const stopSync = McpAuthHelpers.startTokenSync('user-a');
+    let tokenDuringEvent = null;
+    vi.spyOn(window, 'dispatchEvent').mockImplementation(() => {
+      tokenDuringEvent = McpAuthHelpers.getAccessToken(STAFFING_URL);
+      return true;
+    });
 
     channel.onmessage({
       data: {
-        type: 'token_upsert',
-        key: STAFFING_URL,
-        tokenInfo: { access_token: 'tab-token', issued_at: Date.now() + 1 },
+        type: 'state',
+        userId: 'user-a',
+        tokens: {
+          [STAFFING_URL]: {
+            access_token: 'state-token',
+            issued_at: Date.now() + 1,
+            session_id: 'source-tab-session',
+          },
+        },
       },
     });
-    expect(McpAuthHelpers.getAccessToken(STAFFING_URL)).toBe('tab-token');
 
-    channel.onmessage({ data: { type: 'token_remove', key: STAFFING_URL } });
-    expect(McpAuthHelpers.getAccessToken(STAFFING_URL)).toBeNull();
+    expect(tokenDuringEvent).toBe('state-token');
+    expect(McpAuthHelpers.getSessionId(STAFFING_URL)).toBeNull();
+
+    channel.onmessage({ data: { type: 'request_state', userId: 'user-a' } });
+    const stateMessage = postedMessages.find(message => message.type === 'state');
+    expect(stateMessage.tokens[STAFFING_URL]).not.toHaveProperty('session_id');
+    stopSync();
+    delete window.BroadcastChannel;
+  });
+
+  it('clears unowned or differently owned MCP credentials before synchronizing', () => {
+    class FakeBroadcastChannel {
+      postMessage() {}
+      close() {}
+    }
+    window.BroadcastChannel = FakeBroadcastChannel;
+    storeToken({ accessToken: 'previous-user-token', issuedAt: Date.now() });
+    window.sessionStorage.setItem(McpAuthConstants.MCP_CREDENTIALS_STORAGE_KEY, '{"secret":"value"}');
+    window.sessionStorage.setItem(McpAuthConstants.MCP_AUTH_FAMILY_STORAGE_KEY, '{"family":"value"}');
+
+    const stopSync = McpAuthHelpers.startTokenSync('user-b');
+
+    expect(McpAuthHelpers.getAllTokens()).toEqual({});
+    expect(window.sessionStorage.getItem(McpAuthConstants.MCP_CREDENTIALS_STORAGE_KEY)).toBeNull();
+    expect(window.sessionStorage.getItem(McpAuthConstants.MCP_AUTH_FAMILY_STORAGE_KEY)).toBeNull();
+    expect(window.sessionStorage.getItem(McpAuthConstants.MCP_TOKEN_OWNER_STORAGE_KEY)).toBe('user-b');
+    stopSync();
+    delete window.BroadcastChannel;
+  });
+
+  it('retains session-scoped tokens when the stored owner is the same user', () => {
+    class FakeBroadcastChannel {
+      postMessage() {}
+      close() {}
+    }
+    window.BroadcastChannel = FakeBroadcastChannel;
+    storeToken({ accessToken: 'same-user-token', issuedAt: Date.now() });
+    window.sessionStorage.setItem(McpAuthConstants.MCP_TOKEN_OWNER_STORAGE_KEY, 'user-a');
+
+    const stopSync = McpAuthHelpers.startTokenSync('user-a');
+
+    expect(McpAuthHelpers.getAccessToken(TOKEN_KEY)).toBe('same-user-token');
     stopSync();
     delete window.BroadcastChannel;
   });

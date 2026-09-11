@@ -1,9 +1,9 @@
 // sort-imports-ignore
-import React, { memo, useEffect, useState } from 'react';
+import React, { memo, useEffect, useRef, useState } from 'react';
 
 import { enGB } from 'date-fns/locale/en-GB';
 import ReactDOM from 'react-dom/client';
-import { Provider, useDispatch } from 'react-redux';
+import { Provider, useDispatch, useSelector } from 'react-redux';
 import io from 'socket.io-client';
 
 import { CssBaseline, GlobalStyles, ThemeProvider } from '@mui/material';
@@ -25,16 +25,34 @@ import { McpAuthHelpers } from '@/[fsd]/features/mcp';
 import { logVersion } from '@/utils.js';
 
 logVersion();
-// Keep OAuth tokens session-scoped, while sharing live token changes with
-// other same-origin tabs through BroadcastChannel.
-McpAuthHelpers.startTokenSync();
-McpAuthHelpers.startTokenRefreshScheduler();
 
 const RootComponent = memo(() => {
   const { globalTheme } = useEliteATheme();
+  const userId = useSelector(state => state.user.id);
+  const activeMcpUserIdRef = useRef(null);
 
   const [socket, setSocket] = useState(null);
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    const normalizedUserId = userId == null ? null : String(userId);
+    if (activeMcpUserIdRef.current && activeMcpUserIdRef.current !== normalizedUserId) {
+      // Elitea logout/account changes must remove the prior user's MCP tokens,
+      // DCR secrets, and family mappings before another account can initialize.
+      McpAuthHelpers.clearSessionAuthState();
+    }
+    activeMcpUserIdRef.current = normalizedUserId;
+    if (!normalizedUserId) return;
+
+    // Cross-tab state is scoped to the authenticated Elitea user. This keeps
+    // sessionStorage semantics while allowing that user's live tabs to sync.
+    const stopTokenSync = McpAuthHelpers.startTokenSync(normalizedUserId);
+    const stopTokenRefresh = McpAuthHelpers.startTokenRefreshScheduler();
+    return () => {
+      stopTokenSync();
+      stopTokenRefresh();
+    };
+  }, [userId]);
 
   useEffect(() => {
     if (!VITE_SOCKET_SERVER) return;

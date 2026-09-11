@@ -143,7 +143,7 @@ const ApplicationAnswer = memo(
           key={authRequiredAction.authorizationRequestId || authRequiredAction.id}
           disabled={!onContinueMcpExecution}
           onContinue={() => onContinueWithoutAuth(authRequiredAction)}
-          onAuthSuccess={() => onAuthSuccess(authRequiredAction)}
+          onAuthSuccess={onAuthSuccess}
           authRequiredAction={authRequiredAction}
           continueLabel="Skip"
         />

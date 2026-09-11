@@ -11,6 +11,7 @@ let lastRefreshCheckTime = 0;
 const refreshQueue = [];
 let isProcessingRefreshQueue = false;
 let tokenSyncChannel = null;
+let tokenSyncUserId = null;
 
 const safeParse = value => {
   try {
@@ -38,6 +39,18 @@ const saveToStorage = (key, data) => {
     // Ignore storage errors (quota exceeded, etc.)
   }
 };
+
+const stripSessionId = tokenInfo => {
+  if (!tokenInfo || typeof tokenInfo !== 'object') return tokenInfo;
+  const shareableTokenInfo = { ...tokenInfo };
+  delete shareableTokenInfo.session_id;
+  return shareableTokenInfo;
+};
+
+const stripSessionIds = tokens =>
+  Object.fromEntries(
+    Object.entries(tokens || {}).map(([key, tokenInfo]) => [key, stripSessionId(tokenInfo)]),
+  );
 
 const normalizeList = value => {
   const values = Array.isArray(value) ? value : typeof value === 'string' ? value.split(/\s+/) : [];
@@ -168,14 +181,16 @@ const getFamilyStorageKey = ({ serverUrl, tokenStorageKey } = {}) => {
 
 const postTokenSync = message => {
   try {
-    tokenSyncChannel?.postMessage(message);
+    tokenSyncChannel?.postMessage({ ...message, userId: tokenSyncUserId });
   } catch {
     // Cross-tab synchronization is best-effort when BroadcastChannel is unavailable.
   }
 };
 
 const notifyTokenUpsert = (key, tokenInfo) => {
-  postTokenSync({ type: 'token_upsert', key, tokenInfo });
+  // MCP session IDs belong to one transport connection. Sharing them would
+  // make two tabs address the same stateful MCP session.
+  postTokenSync({ type: 'token_upsert', key, tokenInfo: stripSessionId(tokenInfo) });
   dispatchTokenChangeEvent(key, 'login');
 };
 
@@ -263,31 +278,45 @@ export const canonicalizeServerUrl = url => {
   }
 };
 
-const registerAuthFamily = ({ serverUrl, tokenStorageKey, authorizationServers, resourceScopes } = {}) => {
+const buildAuthFamilyRegistration = ({
+  serverUrl,
+  tokenStorageKey,
+  authorizationServers,
+  resourceScopes,
+} = {}) => {
   const authorizationServer = authorizationServers?.[0];
   const key = getFamilyStorageKey({ serverUrl, tokenStorageKey });
   const familyId = getAuthFamilyId(serverUrl, authorizationServer);
   if (!key || !familyId || isCredentialScopedKey(key)) return null;
 
-  const families = loadAuthFamilies();
-  const existing = families[key] || {};
-  const registration = {
-    ...existing,
-    family_id: familyId,
-    authorization_server: canonicalizeAuthorizationServer(authorizationServer),
-    server_url: canonicalizeServerUrl(serverUrl),
-    resource_scopes: normalizeList(resourceScopes),
+  return {
+    key,
+    registration: {
+      family_id: familyId,
+      authorization_server: canonicalizeAuthorizationServer(authorizationServer),
+      server_url: canonicalizeServerUrl(serverUrl),
+      resource_scopes: normalizeList(resourceScopes),
+    },
   };
-  families[key] = registration;
+};
+
+const saveAuthFamilyRegistration = ({ key, registration }) => {
+  const families = loadAuthFamilies();
+  const savedRegistration = { ...families[key], ...registration };
+  families[key] = savedRegistration;
   saveAuthFamilies(families);
-  postTokenSync({ type: 'family_upsert', key, registration });
-  return registration;
+  postTokenSync({ type: 'family_upsert', key, registration: savedRegistration });
+  return savedRegistration;
 };
 
 const scopesAllowReuse = (sourceScopes, targetScopes) => {
   const required = normalizeList(targetScopes);
-  if (required.length === 0) return true;
-  const granted = new Set(normalizeList(sourceScopes));
+  const grantedScopes = normalizeList(sourceScopes);
+  // Some same-origin MCP gateways advertise no resource scopes at all. Treat
+  // that as compatible only with another unscoped family token; an explicitly
+  // scoped token must never be widened to an endpoint with unknown scopes.
+  if (required.length === 0) return grantedScopes.length === 0;
+  const granted = new Set(grantedScopes);
   return required.every(scope => granted.has(scope));
 };
 
@@ -303,15 +332,16 @@ export const reuseAuthFamilyToken = ({
   resourceScopes,
   rejectCurrentToken = true,
 } = {}) => {
-  const registration = registerAuthFamily({
+  const familyCandidate = buildAuthFamilyRegistration({
     serverUrl,
     tokenStorageKey,
     authorizationServers,
     resourceScopes,
   });
-  if (!registration) return false;
+  if (!familyCandidate) return false;
 
-  const key = getFamilyStorageKey({ serverUrl, tokenStorageKey });
+  const { key } = familyCandidate;
+  let { registration } = familyCandidate;
   const tokens = loadTokens();
   const families = loadAuthFamilies();
   const rejectedToken = tokens[key];
@@ -339,8 +369,10 @@ export const reuseAuthFamilyToken = ({
   if (!candidate) return false;
 
   const [, sourceToken] = candidate;
-  const sharedToken = { ...sourceToken };
-  delete sharedToken.session_id;
+  // A challenge alone is not enough to persist a family member. Save it only
+  // after a compatible token exists and this endpoint is actually reused.
+  registration = saveAuthFamilyRegistration({ key, registration });
+  const sharedToken = stripSessionId(sourceToken);
   tokens[key] = {
     ...sharedToken,
     resource_server_url: registration.server_url,
@@ -453,14 +485,17 @@ export const setAccessToken = (
   const getOrExisting = field => oauthMeta[field] || existingToken[field];
 
   const authorizationServer = getOrExisting('authorization_server');
-  const familyRegistration = authorizationServer
-    ? registerAuthFamily({
+  const familyCandidate = authorizationServer
+    ? buildAuthFamilyRegistration({
         serverUrl,
         tokenStorageKey: key,
         authorizationServers: [authorizationServer],
         resourceScopes: getOrExisting('resource_scopes'),
       })
     : null;
+  // setAccessToken is reached only after a successful OAuth exchange or
+  // refresh, so this is the first safe point to persist family membership.
+  const familyRegistration = familyCandidate ? saveAuthFamilyRegistration(familyCandidate) : null;
 
   tokens[key] = {
     // Core token data
@@ -493,30 +528,8 @@ export const setAccessToken = (
     ...(familyRegistration?.family_id && { auth_family_id: familyRegistration.family_id }),
   };
 
-  if (familyRegistration?.family_id) {
-    const families = loadAuthFamilies();
-    Object.entries(families).forEach(([familyKey, registration]) => {
-      if (familyKey === key || registration?.family_id !== familyRegistration.family_id) return;
-      if (!scopesAllowReuse(tokens[key].resource_scopes, registration.resource_scopes)) return;
-      const sharedToken = { ...tokens[key] };
-      delete sharedToken.session_id;
-      tokens[familyKey] = {
-        ...sharedToken,
-        resource_server_url: registration.server_url,
-        resource_scopes: registration.resource_scopes,
-      };
-    });
-  }
-
   saveTokens(tokens);
-
-  Object.entries(tokens)
-    .filter(
-      ([tokenKey, tokenInfo]) =>
-        tokenKey === key ||
-        (familyRegistration?.family_id && tokenInfo?.auth_family_id === familyRegistration.family_id),
-    )
-    .forEach(([tokenKey, tokenInfo]) => notifyTokenUpsert(tokenKey, tokenInfo));
+  notifyTokenUpsert(key, tokens[key]);
 
   // Remove from ignored servers when a new token is provided.
   // For prebuilt MCPs the token is stored under toolkitType (e.g. 'mcp_github')
@@ -779,40 +792,87 @@ export const clearIgnoredServers = () => {
 };
 
 /**
+ * Remove MCP credentials owned by the current Elitea login from this tab.
+ * The owner marker lets a reloaded tab retain its own session while ensuring
+ * that a different Elitea user never inherits the previous user's tokens.
+ */
+export const clearSessionAuthState = () => {
+  if (!isStorageAvailable()) return;
+  McpAuthConstants.MCP_SESSION_STORAGE_KEYS.forEach(key => window.sessionStorage.removeItem(key));
+  pendingRefreshes.clear();
+  refreshQueue.splice(0, refreshQueue.length);
+  lastRefreshCheckTime = 0;
+};
+
+/**
  * Synchronize session-scoped MCP auth state between live same-origin tabs.
  * Tokens remain in sessionStorage and travel only through BroadcastChannel
- * while an authenticated tab is open.
+ * while tabs belonging to the same authenticated Elitea user are open.
  */
-export const startTokenSync = () => {
-  if (tokenSyncChannel || typeof window === 'undefined') return () => {};
+export const startTokenSync = userId => {
+  const syncUserId = String(userId ?? '').trim();
+  if (!syncUserId || typeof window === 'undefined') return () => {};
+
+  const storedOwner = window.sessionStorage.getItem(McpAuthConstants.MCP_TOKEN_OWNER_STORAGE_KEY);
+  const hasUnownedAuthState = [
+    McpAuthConstants.MC_TOKENS_STORAGE_KEY,
+    McpAuthConstants.MCP_CREDENTIALS_STORAGE_KEY,
+    McpAuthConstants.MCP_IGNORED_SERVERS_STORAGE_KEY,
+    McpAuthConstants.MCP_AUTH_FAMILY_STORAGE_KEY,
+  ].some(key => window.sessionStorage.getItem(key));
+  if (storedOwner !== syncUserId && (storedOwner || hasUnownedAuthState)) {
+    clearSessionAuthState();
+  }
+  window.sessionStorage.setItem(McpAuthConstants.MCP_TOKEN_OWNER_STORAGE_KEY, syncUserId);
+
   const BroadcastChannelImpl = window.BroadcastChannel || globalThis.BroadcastChannel;
   if (!BroadcastChannelImpl) return () => {};
+  if (tokenSyncChannel && tokenSyncUserId === syncUserId) return () => {};
+  tokenSyncChannel?.close();
+  tokenSyncChannel = null;
+  tokenSyncUserId = syncUserId;
 
   try {
-    tokenSyncChannel = new BroadcastChannelImpl(McpAuthConstants.MCP_TOKEN_SYNC_CHANNEL);
+    tokenSyncChannel = new BroadcastChannelImpl(
+      `${McpAuthConstants.MCP_TOKEN_SYNC_CHANNEL}:${encodeURIComponent(syncUserId)}`,
+    );
   } catch {
+    tokenSyncUserId = null;
     return () => {};
   }
 
+  const channel = tokenSyncChannel;
+
   tokenSyncChannel.onmessage = event => {
     const message = event?.data || {};
+    if (message.userId !== tokenSyncUserId) return;
+
     if (message.type === 'request_state') {
-      postTokenSync({ type: 'state', tokens: loadTokens(), families: loadAuthFamilies() });
+      postTokenSync({
+        type: 'state',
+        tokens: stripSessionIds(loadTokens()),
+        families: loadAuthFamilies(),
+      });
       return;
     }
 
     if (message.type === 'state') {
       const tokens = loadTokens();
+      const changedKeys = [];
       Object.entries(message.tokens || {}).forEach(([key, tokenInfo]) => {
+        const shareableTokenInfo = stripSessionId(tokenInfo);
         const incomingIssuedAt = Number(tokenInfo?.issued_at) || 0;
         const currentIssuedAt = Number(tokens[key]?.issued_at) || 0;
         if (incomingIssuedAt > currentIssuedAt && incomingIssuedAt > loadLogoutMarker(key)) {
-          tokens[key] = tokenInfo;
-          dispatchTokenChangeEvent(key, 'login');
+          tokens[key] = shareableTokenInfo;
+          changedKeys.push(key);
         }
       });
+      // Persist before notifying React listeners; event dispatch is synchronous
+      // and listeners immediately read the token from sessionStorage.
       saveTokens(tokens);
       saveAuthFamilies({ ...loadAuthFamilies(), ...(message.families || {}) });
+      changedKeys.forEach(key => dispatchTokenChangeEvent(key, 'login'));
       return;
     }
 
@@ -821,7 +881,7 @@ export const startTokenSync = () => {
       const incomingIssuedAt = Number(message.tokenInfo.issued_at) || 0;
       const currentIssuedAt = Number(tokens[message.key]?.issued_at) || 0;
       if (incomingIssuedAt >= currentIssuedAt && incomingIssuedAt > loadLogoutMarker(message.key)) {
-        tokens[message.key] = message.tokenInfo;
+        tokens[message.key] = stripSessionId(message.tokenInfo);
         saveTokens(tokens);
         dispatchTokenChangeEvent(message.key, 'login');
       }
@@ -848,8 +908,10 @@ export const startTokenSync = () => {
   postTokenSync({ type: 'request_state' });
 
   return () => {
-    tokenSyncChannel?.close();
+    if (tokenSyncChannel !== channel) return;
+    channel.close();
     tokenSyncChannel = null;
+    tokenSyncUserId = null;
   };
 };
 

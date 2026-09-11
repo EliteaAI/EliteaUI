@@ -34,7 +34,7 @@ const ChatContinue = memo(props => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const detailsId = useId();
-  const automaticResumeRef = useRef({ actionId: null, resumed: false });
+  const automaticResumeRef = useRef({ actionId: null, attempted: false, resumed: false });
 
   const mcpAuthMetadata = useMemo(
     () => (authRequiredAction ? extractMcpAuthMetadata(authRequiredAction) : null),
@@ -48,18 +48,30 @@ const ChatContinue = memo(props => {
     () => buildToolkitAuthorizationMessage(authorizationContext, message),
     [authorizationContext, message],
   );
-  const tokenStorageKey =
+  const serverUrl =
     authRequiredAction?.toolOutputs?.server_url || authRequiredAction?.toolMeta?.server_url || '';
-  const { isLoggedIn: hasTargetToken } = useMcpTokenChange({ serverUrl: tokenStorageKey });
+  const tokenStorageKey = serverUrl;
+  const { isLoggedIn: hasTargetToken } = useMcpTokenChange({ serverUrl });
 
   useEffect(() => {
     if (!authRequiredAction || disabled || showAuthModal || !mcpAuthMetadata) return;
     const actionId = authRequiredAction.authorizationRequestId || authRequiredAction.id;
     const isFirstCheck = automaticResumeRef.current.actionId !== actionId;
-    if (isFirstCheck) automaticResumeRef.current = { actionId, resumed: false };
+    if (isFirstCheck) {
+      automaticResumeRef.current = { actionId, attempted: false, resumed: false };
+    }
     if (automaticResumeRef.current.resumed) return;
 
-    const serverUrl = authRequiredAction.toolMeta?.server_url || tokenStorageKey;
+    // A later token event means this endpoint was authenticated by another
+    // same-user tab. Resume without repeating the family lookup.
+    if (!isFirstCheck && hasTargetToken) {
+      automaticResumeRef.current.resumed = true;
+      onAuthSuccess?.(authRequiredAction);
+      return;
+    }
+    if (automaticResumeRef.current.attempted) return;
+    automaticResumeRef.current.attempted = true;
+
     const reused = McpAuthHelpers.reuseAuthFamilyToken({
       serverUrl,
       tokenStorageKey,
@@ -71,24 +83,30 @@ const ChatContinue = memo(props => {
       rejectCurrentToken: isFirstCheck,
     });
 
-    if (reused || (!isFirstCheck && hasTargetToken)) {
+    if (reused) {
       automaticResumeRef.current.resumed = true;
-      onAuthSuccess?.();
+      onAuthSuccess?.(authRequiredAction);
     }
   }, [
     authRequiredAction,
     disabled,
     showAuthModal,
     mcpAuthMetadata,
+    serverUrl,
     tokenStorageKey,
     hasTargetToken,
     onAuthSuccess,
   ]);
   const detailRows = useMemo(() => {
     if (!authorizationContext) return [];
-    const { serverUrl, resourceMetadataUrl, authorizationServers, scopes } = authorizationContext;
+    const {
+      serverUrl: contextServerUrl,
+      resourceMetadataUrl,
+      authorizationServers,
+      scopes,
+    } = authorizationContext;
     return [
-      ['Toolkit server', serverUrl],
+      ['Toolkit server', contextServerUrl],
       ['Resource metadata', resourceMetadataUrl],
       ['Authorization server', authorizationServers.join(', ')],
       ['Scopes', scopes.join(', ')],
@@ -106,10 +124,10 @@ const ChatContinue = memo(props => {
         toastSuccess('Successful authentication!');
         // After successful auth, call onAuthSuccess (not onContinue)
         // onContinue adds server to ignore list, onAuthSuccess does not
-        onAuthSuccess?.();
+        onAuthSuccess?.(authRequiredAction);
       }
     },
-    [toastSuccess, onAuthSuccess],
+    [toastSuccess, onAuthSuccess, authRequiredAction],
   );
 
   const handleCancelModal = useCallback(() => {
