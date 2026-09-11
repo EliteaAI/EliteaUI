@@ -34,6 +34,9 @@ export const DeprecatedTips = {
     linkText: ViewMigrationGuideText,
     linkUrl: 'https://docs.elitea.ai/migration/v2.0.1/loop-node-migration',
   },
+  [FlowEditorConstants.PipelineNodeTypes.Custom]: {
+    text: 'This node is deprecated and hidden from the node picker. Existing Custom nodes will keep working — please select a specific node type (Toolkit, MCP, LLM, Code, etc.) instead.',
+  },
 };
 
 export const DeprecatedNodes = [
@@ -43,6 +46,7 @@ export const DeprecatedNodes = [
   FlowEditorConstants.PipelineNodeTypes.Loop,
   FlowEditorConstants.PipelineNodeTypes.LoopFromTool,
   FlowEditorConstants.PipelineNodeTypes.Tool,
+  FlowEditorConstants.PipelineNodeTypes.Custom,
 ];
 
 export const DeprecatedOrInvisibleNode = [
