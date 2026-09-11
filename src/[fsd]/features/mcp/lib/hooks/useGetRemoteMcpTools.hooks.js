@@ -18,7 +18,6 @@ export const useGetRemoteMcpTools = ({ values, toolkitType, onToolsFetched }) =>
   const socket = useContext(SocketContext);
 
   const onToolsFetchedRef = useRef(onToolsFetched);
-  const pendingRetryRef = useRef(false);
   const executeFetchRef = useRef(null);
   const retryTimerRef = useRef(null);
 
@@ -40,7 +39,11 @@ export const useGetRemoteMcpTools = ({ values, toolkitType, onToolsFetched }) =>
   }, [onToolsFetched]);
 
   const onAuthSuccess = useCallback(() => {
-    pendingRetryRef.current = true;
+    if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+    retryTimerRef.current = setTimeout(() => {
+      executeFetchRef.current?.();
+      retryTimerRef.current = null;
+    }, 500);
   }, []);
 
   // Create values object with toolkitType for useMcpAuthModal
@@ -53,7 +56,7 @@ export const useGetRemoteMcpTools = ({ values, toolkitType, onToolsFetched }) =>
     [values, effectiveToolkitType],
   );
 
-  const { handleMcpAuthRequired, getModalProps, showModal } = useMcpAuthModal({
+  const { handleMcpAuthRequired, getModalProps } = useMcpAuthModal({
     onSuccess: onAuthSuccess,
     values: valuesWithType,
   });
@@ -171,17 +174,6 @@ export const useGetRemoteMcpTools = ({ values, toolkitType, onToolsFetched }) =>
   useEffect(() => {
     executeFetchRef.current = executeFetch;
   });
-
-  useEffect(() => {
-    if (!showModal && pendingRetryRef.current) {
-      pendingRetryRef.current = false;
-      if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
-      retryTimerRef.current = setTimeout(() => {
-        executeFetchRef.current?.();
-        retryTimerRef.current = null;
-      }, 500);
-    }
-  }, [showModal]);
 
   useEffect(() => {
     return () => {

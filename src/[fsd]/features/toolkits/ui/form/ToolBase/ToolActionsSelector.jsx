@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 
@@ -31,6 +31,7 @@ export const ToolActionsSelector = memo(props => {
     disabled,
     isRemoteMcp,
     isPreconfiguredMcp,
+    autoLoadTools = false,
     toolkitType,
     onToolsFetched,
     selectedToolsError,
@@ -42,6 +43,7 @@ export const ToolActionsSelector = memo(props => {
   const selectedTools = useMemo(() => selected_tools ?? [], [selected_tools]);
 
   const [searchTerm, setSearchTerm] = useState('');
+  const automaticallyLoadedToolkitRef = useRef(null);
 
   const styles = useMemo(toolActionsSelectorStyles, []);
   const { shouldUseAccordionView } = useToolkitView();
@@ -64,6 +66,32 @@ export const ToolActionsSelector = memo(props => {
   const canGetRemoteMcpTools = isRemoteMcp && values?.settings?.url;
   const canGetPreconfiguredMcpTools = isPreconfiguredMcp && toolkitType;
   const canGetTools = (canGetRemoteMcpTools || canGetPreconfiguredMcpTools) && !patInvalid;
+
+  useEffect(() => {
+    const shouldLoad =
+      autoLoadTools &&
+      isPreconfiguredMcp &&
+      !disabled &&
+      canGetTools &&
+      availableTools.length === 0 &&
+      automaticallyLoadedToolkitRef.current !== toolkitType;
+
+    if (!shouldLoad) return;
+
+    // Selecting a static MCP during creation starts discovery immediately.
+    // The first family member may open OAuth; later members reuse the family
+    // token and finish discovery without requiring a Load Tools click.
+    automaticallyLoadedToolkitRef.current = toolkitType;
+    fetchTools();
+  }, [
+    autoLoadTools,
+    isPreconfiguredMcp,
+    disabled,
+    canGetTools,
+    availableTools.length,
+    toolkitType,
+    fetchTools,
+  ]);
 
   const onClickGetTools = useCallback(
     event => {

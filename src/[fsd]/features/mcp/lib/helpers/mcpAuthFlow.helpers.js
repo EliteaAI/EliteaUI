@@ -66,6 +66,9 @@ const buildOAuthMetadata = (tokenInfo, clientId, clientSecret, projectId, toolki
   issuer: tokenInfo.issuer,
   grant_types_supported: tokenInfo.grant_types_supported,
   code_challenge_methods_supported: tokenInfo.code_challenge_methods_supported,
+  authorization_server: tokenInfo.authorization_server,
+  resource_server_url: tokenInfo.resource_server_url,
+  resource_scopes: tokenInfo.resource_scopes,
 });
 
 // Trigger proactive (fire-and-forget) token refresh for near-expiry tokens
@@ -544,6 +547,9 @@ export const startMcpAuthFlow = async options => {
           grant_types_supported: providedOauthMetadata.grant_types_supported,
           code_challenge_methods_supported: providedOauthMetadata.code_challenge_methods_supported,
         }),
+        authorization_server: resourceMetadata?.authorization_servers?.[0],
+        resource_server_url: serverUrl,
+        resource_scopes: normalizedScope,
       },
       toolkitType, // Pass toolkitType for pre-built MCPs
     );
