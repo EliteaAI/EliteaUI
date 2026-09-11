@@ -6,13 +6,25 @@ import { useTrackEvent } from '@/GA';
 import { FilePreviewCanvasConstants } from '@/[fsd]/features/artifacts/lib/constants';
 import { ArtifactParserHelpers } from '@/[fsd]/features/artifacts/lib/helpers';
 import { useArtifactContentFetch } from '@/[fsd]/features/artifacts/lib/hooks';
-import { PreviewContent, PreviewHeader, PreviewUnavailable } from '@/[fsd]/features/artifacts/ui';
+import {
+  PreviewContent,
+  PreviewHeader,
+  PreviewUnavailable,
+  RenameArtifactDialog,
+} from '@/[fsd]/features/artifacts/ui';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
 import { CodeMirrorLinterHelpers } from '@/[fsd]/shared/lib/helpers';
+import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
 import { Modal } from '@/[fsd]/shared/ui';
-import { useCreateArtifactMutation, useDeleteArtifactMutation } from '@/api/artifacts';
+import {
+  useCreateArtifactMutation,
+  useDeleteArtifactMutation,
+  useRenameArtifactMutation,
+} from '@/api/artifacts';
+import { PERMISSIONS } from '@/common/constants';
 import { downloadFileFromArtifact } from '@/common/utils';
 import AlertDialog from '@/components/AlertDialog';
+import useCheckPermission from '@/hooks/useCheckPermission';
 import { useIsFrom } from '@/hooks/useIsFromSpecificPageHooks';
 import useIsSmallWindow from '@/hooks/useIsSmallWindow';
 import useToast from '@/hooks/useToast';
@@ -42,8 +54,14 @@ const FilePreviewCanvas = memo(props => {
   const styles = filePreviewCanvasStyles(isChatPage, isSmallWindow, isVisible);
 
   const { toastInfo, toastError } = useToast();
+  const { checkPermission } = useCheckPermission();
+  const { isPrivate } = useProjectType();
+  const canEditArtifact = isPrivate || checkPermission(PERMISSIONS.artifacts.edit);
   const [deleteArtifact] = useDeleteArtifactMutation();
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+
+  const [renameArtifact, { isLoading: isRenaming }] = useRenameArtifactMutation();
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false);
 
   const [createArtifact] = useCreateArtifactMutation();
 
@@ -448,6 +466,38 @@ const FilePreviewCanvas = memo(props => {
     setDeleteModalOpen(false);
   }, []);
 
+  const handleRename = useCallback(() => {
+    setRenameDialogOpen(true);
+  }, []);
+
+  const handleRenameClose = useCallback(() => {
+    setRenameDialogOpen(false);
+  }, []);
+
+  const handleRenameConfirm = useCallback(
+    newName => {
+      if (!hasRequiredParams) return;
+
+      const filePrefix = filePath.substring(0, filePath.lastIndexOf('/') + 1);
+      const newKey = filePrefix + newName;
+
+      renameArtifact({ projectId, bucket, oldName: filePath, newName: newKey })
+        .unwrap()
+        .then(() => {
+          toastInfo('File has been successfully renamed.');
+          setRenameDialogOpen(false);
+          onClose?.();
+        })
+        .catch(error => {
+          toastError(
+            'Failed to rename file: ' +
+              (error?.data?.error || error?.data?.message || error?.message || 'Unknown error'),
+          );
+        });
+    },
+    [hasRequiredParams, filePath, renameArtifact, projectId, bucket, toastInfo, toastError, onClose],
+  );
+
   const handleClose = useCallback(() => {
     if (hasChanges) setShowUnsavedChangesAlert(true);
     else onClose?.();
@@ -488,6 +538,7 @@ const FilePreviewCanvas = memo(props => {
         onClose={handleClose}
         onDownload={handleDownload}
         onDelete={handleDelete}
+        onRename={!isChatPage && canEditArtifact ? handleRename : undefined}
         onDiscard={handleDiscard}
         contentToDisplay={contentToDisplay}
         isChatPage={isChatPage}
@@ -544,6 +595,13 @@ const FilePreviewCanvas = memo(props => {
         onClose={handleUnsavedChangesCancel}
         onCancel={handleUnsavedChangesCancel}
         onConfirm={handleUnsavedChangesConfirm}
+      />
+      <RenameArtifactDialog
+        open={renameDialogOpen}
+        artifact={file}
+        onClose={handleRenameClose}
+        onConfirm={handleRenameConfirm}
+        isLoading={isRenaming}
       />
     </Box>
   );

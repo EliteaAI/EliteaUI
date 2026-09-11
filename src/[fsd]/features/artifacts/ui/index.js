@@ -15,3 +15,6 @@ export {
   ManagePermissionsModal,
 } from './bucket-access';
 export { default as MdxPreview } from './FilePreviewCanvas/MdxPreview';
+
+// Rename
+export { default as RenameArtifactDialog } from './RenameArtifactDialog';

@@ -13,6 +13,7 @@ import CloseIcon from '@/components/Icons/CloseIcon';
 import CopyIcon from '@/components/Icons/CopyIcon';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import DownloadIcon from '@/components/Icons/DownloadIcon';
+import EditPenIcon from '@/components/Icons/EditPenIcon';
 import useToast from '@/hooks/useToast';
 
 const { AvailableLanguagesEnum } = FilePreviewCanvasConstants;
@@ -42,6 +43,7 @@ const PreviewHeader = memo(props => {
     onClose,
     onDownload,
     onDelete,
+    onRename,
     onDiscard,
     contentToDisplay,
     isChatPage = false,
@@ -57,6 +59,10 @@ const PreviewHeader = memo(props => {
   const handleDelete = useCallback(() => {
     onDelete?.();
   }, [onDelete]);
+
+  const handleRename = useCallback(() => {
+    onRename?.();
+  }, [onRename]);
 
   const handleLanguageSelect = useCallback(
     value => {
@@ -148,6 +154,14 @@ const PreviewHeader = memo(props => {
           show: true,
         },
         {
+          key: 'artifacts-preview-rename',
+          label: 'Rename',
+          icon: <EditPenIcon sx={styles.iconAction} />,
+          onClick: handleRename,
+          disabled: false,
+          show: !isChatPage && !!onRename,
+        },
+        {
           key: 'artifacts-preview-delete',
           label: 'Delete',
           icon: <DeleteIcon sx={styles.iconAction} />,
@@ -162,8 +176,10 @@ const PreviewHeader = memo(props => {
       isImageFileType,
       handleCopyContent,
       handleDownload,
+      handleRename,
       isChatPage,
       handleDelete,
+      onRename,
       styles.iconAction,
     ],
   );
