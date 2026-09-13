@@ -9,7 +9,8 @@ import { buildForkedEntityHref } from '@/common/utils.jsx';
 import ForkIcon from '@/components/Icons/ForkIcon.jsx';
 import { useTheme } from '@emotion/react';
 
-export const IconLinkWithToolTip = ({ meta, type }) => {
+export const IconLinkWithToolTip = props => {
+  const { meta, type, disabled } = props;
   const theme = useTheme();
   const href = buildForkedEntityHref(type, meta);
   const { sourceName, loadSourceName } = useForkedFromSourceName(type, meta, useLazySkillDetailsQuery);
@@ -32,13 +33,12 @@ export const IconLinkWithToolTip = ({ meta, type }) => {
             borderRadius: '16px',
             textDecoration: 'underline',
             cursor: 'pointer',
-            '&:hover': {
-              background: theme.palette.background.button.secondary.default,
-            },
           }}
           variant="bodyMedium"
           color={theme.palette.text.secondary}
-          href={href}
+          href={disabled ? undefined : href}
+          aria-disabled={disabled}
+          onClick={disabled ? event => event.preventDefault() : undefined}
         >
           <ForkIcon
             sx={{ fontSize: '16px' }}

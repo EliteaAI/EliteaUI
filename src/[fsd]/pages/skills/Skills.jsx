@@ -63,7 +63,7 @@ const Skills = memo(() => {
       showTitleAndSwitchBySelect
       title="Skills"
       containerStyle={{ padding: '0 1.5rem 0 0' }}
-      tabBarStyle={{ padding: '0 0.5rem 0 1.5rem' }}
+      tabBarStyle={{ padding: '0 0 0 1.5rem' }}
       middleTabComponent={
         <>
           <SkillImportButton />
