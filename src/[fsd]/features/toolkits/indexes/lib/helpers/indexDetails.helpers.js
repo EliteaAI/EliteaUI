@@ -15,6 +15,7 @@ import {
   REINDEX_IN_PROGRESS_BANNER_MESSAGE,
   REINDEX_IN_PROGRESS_BANNER_TITLE,
   RUNNABLE_INDEX_STATUSES,
+  TERMINAL_INDEX_STATUSES,
 } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
 import { BUDGET_ERROR_VARIANTS } from '@/[fsd]/shared/lib/constants/budgetError.constants';
 
@@ -128,6 +129,17 @@ export const indexSearchToolOptions = selectedTools =>
  * @returns {boolean}
  */
 export const hasRetainedIndexData = metadata => Number(metadata?.indexed_chunks) > 0;
+
+const isTerminalIndexState = state => TERMINAL_INDEX_STATUSES.includes(state);
+
+export const shouldDropIndexStateOverride = (overrideState, serverState, rowReadAfterOverride) => {
+  if (!overrideState || !serverState) return false;
+  if (overrideState === serverState) return true;
+
+  return (
+    Boolean(rowReadAfterOverride) && isTerminalIndexState(overrideState) && isTerminalIndexState(serverState)
+  );
+};
 
 /**
  * Preserves the rule the embedded search enforced by only ever mounting itself for a success banner,
