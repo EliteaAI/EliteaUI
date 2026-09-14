@@ -175,6 +175,20 @@ describe('MCP OAuth family reuse', () => {
     expect(McpAuthHelpers.getSessionId(STAFFING_URL)).toBeNull();
   });
 
+  it('forwards safe family provenance with runtime tokens', () => {
+    loginToHeroes();
+
+    expect(McpAuthHelpers.getAllTokens()[HEROES_URL]).toEqual({
+      access_token: 'family-token',
+      session_id: 'heroes-session',
+      refresh_token: 'family-refresh-token',
+      auth_family_id: `https://mcp.example.com|${AUTHORIZATION_SERVER}`,
+      authorization_server: AUTHORIZATION_SERVER,
+      resource_server_url: HEROES_URL,
+      resource_scopes: ['openid', 'profile'],
+    });
+  });
+
   it('preserves prebuilt toolkit keys when registering an auth family', () => {
     const toolkitType = 'mcp_Example Family';
     McpAuthHelpers.setAccessToken(
@@ -194,6 +208,34 @@ describe('MCP OAuth family reuse', () => {
 
     expect(McpAuthHelpers.getAccessToken(HEROES_URL, toolkitType)).toBe('family-token');
     expect(McpAuthHelpers.loadTokens()).not.toHaveProperty('mcp_example family');
+  });
+
+  it('reuses a family token under an existing prebuilt toolkit key', () => {
+    const sourceToolkitType = 'mcp_Epam Heroes';
+    const targetToolkitType = 'mcp_Epam Staffing';
+    McpAuthHelpers.setAccessToken(
+      HEROES_URL,
+      'family-token',
+      3600,
+      null,
+      null,
+      null,
+      {
+        authorization_server: AUTHORIZATION_SERVER,
+        resource_server_url: HEROES_URL,
+      },
+      sourceToolkitType,
+    );
+
+    expect(
+      McpAuthHelpers.reuseAuthFamilyToken({
+        serverUrl: STAFFING_URL,
+        tokenStorageKey: targetToolkitType,
+        authorizationServers: [AUTHORIZATION_SERVER],
+      }),
+    ).toBe(true);
+    expect(McpAuthHelpers.getAccessToken(null, targetToolkitType)).toBe('family-token');
+    expect(McpAuthHelpers.loadTokens()).not.toHaveProperty(STAFFING_URL);
   });
 
   it('does not share a bearer token with another MCP origin', () => {
