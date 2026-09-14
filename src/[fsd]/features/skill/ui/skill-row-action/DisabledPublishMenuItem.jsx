@@ -1,6 +1,6 @@
 import { memo } from 'react';
 
-import { MenuItem, Tooltip, Typography } from '@mui/material';
+import { Box, MenuItem, Tooltip, Typography } from '@mui/material';
 
 import PublishIcon from '@/assets/publish-icon.svg?react';
 
@@ -17,7 +17,7 @@ const DisabledPublishMenuItem = memo(() => {
       placement="left"
       arrow
     >
-      <span>
+      <Box component="span">
         <MenuItem
           disabled
           sx={styles.menuItem}
@@ -25,7 +25,7 @@ const DisabledPublishMenuItem = memo(() => {
           <PublishIcon />
           <Typography variant="labelMedium">Publish</Typography>
         </MenuItem>
-      </span>
+      </Box>
     </Tooltip>
   );
 });

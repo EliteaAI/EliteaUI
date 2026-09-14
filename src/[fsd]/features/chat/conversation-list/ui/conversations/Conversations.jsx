@@ -605,7 +605,7 @@ const Conversations = memo(props => {
                   title="Create folder"
                   placement="top"
                 >
-                  <span>
+                  <Box component="span">
                     <Button
                       data-testid="chat-create-folder-button"
                       disabled={!checkPermission(PERMISSIONS.chat.folders.create)}
@@ -635,7 +635,7 @@ const Conversations = memo(props => {
                         }
                       />
                     </Button>
-                  </span>
+                  </Box>
                 </Tooltip>
                 <ConversationSearchButton
                   collapsed={collapsed}

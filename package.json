@@ -1,7 +1,7 @@
 {
   "name": "elitea_ui",
   "private": true,
-  "version": "0.4.2234",
+  "version": "0.4.2237",
   "type": "module",
   "homepage": "./elitea_ui/",
   "scripts": {
@@ -21,7 +21,7 @@
     "test:e2e:dev": "cd tests && npm run test:dev",
     "test:e2e:install": "cd tests && npm install",
     "test:e2e:debug": "cd tests && npm run debug",
-    "commit": "git-cz --no-verify"
+    "commit": "npx lint-staged && git-cz --no-verify"
   },
   "lint-staged": {
     "*.{js,jsx}": [
