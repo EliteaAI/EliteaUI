@@ -267,3 +267,84 @@ export const shouldExpireReindexStub = ({ serverRow, stubCreatedAt, now, graceMs
  */
 export const bannerOutlivesRun = severity =>
   severity === BannerSeverity.error || severity === BannerSeverity.warning;
+
+/**
+ * The counts line for one row of the index list.
+ *
+ * While a run is in flight the persisted `indexed`/`total` still describe the
+ * PREVIOUS run — the platform preserves them across a reindex so the index stays
+ * readable while the new one works — and rendering them beside a live spinner
+ * reads as this run's progress. `run_chunks` is the running count the SDK writes
+ * on every heartbeat, so an in-flight row reports that instead. Never a ratio:
+ * the run's own total is not known until it finishes.
+ *
+ * Units elsewhere are docs/docs: `indexed` = documents landed in the vector
+ * store, `total` = documents fetched from the source. Mixing chunks and docs in
+ * one ratio made it meaningless when a chunker yields many chunks per document.
+ * @param {object} metadata - `index.metadata` from the index list GET
+ * @param {boolean} isInProgress - whether the row's state is `in_progress`
+ * @returns {{tooltip: string, count: string}}
+ */
+export const indexListCounts = (metadata, isInProgress) => {
+  if (!metadata) return { tooltip: '-', count: '–' };
+
+  const runChunks = Number(metadata.run_chunks);
+  const hasRunChunks =
+    metadata.run_chunks !== null && metadata.run_chunks !== undefined && Number.isFinite(runChunks);
+  if (isInProgress && hasRunChunks) {
+    return {
+      tooltip: 'chunks written by the current run',
+      count: `${runChunks} chunks so far`,
+    };
+  }
+
+  // Reindex detection: the SDK records a history entry per state transition, so
+  // more than one completed entry means this collection has been indexed before.
+  const completedRuns = Array.isArray(metadata.history)
+    ? metadata.history.filter(entry => RUNNABLE_INDEX_STATUSES.includes(entry?.state)).length
+    : 0;
+  const total = metadata.total ?? metadata.indexed ?? '–';
+  const indexedDocs = metadata.indexed ?? '–';
+  return {
+    tooltip: completedRuns > 1 ? 'reindexed / total' : 'indexed / total',
+    count: `${indexedDocs} / ${total}`,
+  };
+};
+
+/**
+ * Overlay the optimistic "a reindex just started" stub onto the fetched list.
+ *
+ * The stub exists because the list GET is slow to reflect a click. It asserts a
+ * NEW run, which by definition has written no chunks yet, so `run_chunks` is
+ * forced to 0 — the backend seeds the same 0 at dispatch. The caller builds the
+ * stub by spreading the clicked row's metadata, so without this the finished
+ * run's count rides along and is rendered as the new run's progress.
+ * @param {Array} indexesList - rows from the index list GET
+ * @param {object|null} reindexRunning - the optimistic row, or null when none
+ * @returns {Array}
+ */
+export const applyReindexStub = (indexesList, reindexRunning) => {
+  if (!reindexRunning) return indexesList;
+
+  return indexesList.map(item =>
+    item.id === reindexRunning.id
+      ? {
+          ...item,
+          // An observed start proves not-stale; the expiry effect owns the other
+          // direction — while the stub lives, the run counts as alive.
+          stale: false,
+          metadata: {
+            ...item.metadata,
+            state: reindexRunning.metadata?.state ?? item.metadata?.state,
+            // Unconditionally 0, NOT `?? 0`: the stub is built by spreading the
+            // clicked row's metadata, so it arrives carrying the FINISHED run's
+            // chunk count. A nullish fallback never fires and that number gets
+            // rendered as the new run's progress.
+            run_chunks: 0,
+            task_id: reindexRunning.metadata?.task_id ?? item.metadata?.task_id,
+            conversation_id: reindexRunning.metadata?.conversation_id ?? item.metadata?.conversation_id,
+          },
+        }
+      : item,
+  );
+};

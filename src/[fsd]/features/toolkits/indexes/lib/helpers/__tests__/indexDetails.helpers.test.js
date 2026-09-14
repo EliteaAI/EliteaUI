@@ -19,11 +19,13 @@ import {
   REINDEX_IN_PROGRESS_BANNER_TITLE,
 } from '../../constants/indexDetails.constants';
 import {
+  applyReindexStub,
   bannerOutlivesRun,
   bannerVariant,
   hasLiveRun,
   hasRetainedIndexData,
   indexBuildBlockedReason,
+  indexListCounts,
   indexScheduleBlockedReason,
   indexSearchBlockedReason,
   indexSearchToolOptions,
@@ -359,5 +361,93 @@ describe('bannerOutlivesRun', () => {
 
   it('lets a never-indexed row go quiet rather than claim a run is under way', () => {
     expect(bannerOutlivesRun(BannerSeverity.info)).toBe(false);
+  });
+});
+
+describe('indexListCounts', () => {
+  const inProgress = true;
+
+  it('reports the running chunk count while a run is in flight', () => {
+    expect(indexListCounts({ indexed: 191, total: 200, run_chunks: 42 }, inProgress)).toEqual({
+      tooltip: 'chunks written by the current run',
+      count: '42 chunks so far',
+    });
+  });
+
+  it('never renders a ratio mid-run: the run’s own total is unknown', () => {
+    const { count } = indexListCounts({ indexed: 191, total: 200, run_chunks: 42 }, inProgress);
+
+    expect(count).not.toContain('/');
+  });
+
+  it('treats zero as a real count, not a missing one', () => {
+    expect(indexListCounts({ indexed: 191, run_chunks: 0 }, inProgress).count).toBe('0 chunks so far');
+  });
+
+  it('falls back to the docs ratio when run_chunks is absent or null', () => {
+    expect(indexListCounts({ indexed: 191, total: 200 }, inProgress).count).toBe('191 / 200');
+    expect(indexListCounts({ indexed: 191, total: 200, run_chunks: null }, inProgress).count).toBe(
+      '191 / 200',
+    );
+  });
+
+  it('ignores run_chunks once the run is no longer in progress', () => {
+    expect(indexListCounts({ indexed: 200, total: 200, run_chunks: 42 }, false).count).toBe('200 / 200');
+  });
+
+  it('names the ratio reindexed once the collection has more than one completed run', () => {
+    const history = [{ state: 'completed' }, { state: 'completed' }];
+
+    expect(indexListCounts({ indexed: 1, total: 1, history }, false).tooltip).toBe('reindexed / total');
+    expect(indexListCounts({ indexed: 1, total: 1, history: [] }, false).tooltip).toBe('indexed / total');
+  });
+
+  it('survives a row with no metadata', () => {
+    expect(indexListCounts(undefined, false)).toEqual({ tooltip: '-', count: '–' });
+  });
+});
+
+describe('applyReindexStub', () => {
+  const finishedRow = {
+    id: 'row-1',
+    stale: true,
+    metadata: { state: 'failed', run_chunks: 1520, indexed: 180, total: 305, task_id: 'old' },
+  };
+  // Mirrors what confirmReindex actually builds: the clicked row's metadata
+  // spread wholesale, so the finished run's run_chunks IS present on the stub.
+  const started = {
+    id: 'row-1',
+    metadata: { ...finishedRow.metadata, state: 'in_progress', task_id: 'new' },
+  };
+
+  it('clears the finished run’s chunk count when a new run starts', () => {
+    const [row] = applyReindexStub([finishedRow], started);
+
+    // 1520 belonged to the run that just ended; rendering it as this run's
+    // progress is the exact lie the mid-run display exists to remove.
+    expect(row.metadata.run_chunks).toBe(0);
+    expect(row.metadata.state).toBe('in_progress');
+    expect(row.stale).toBe(false);
+  });
+
+  it('keeps the previous run’s measurements readable', () => {
+    const [row] = applyReindexStub([finishedRow], started);
+
+    expect(row.metadata.indexed).toBe(180);
+    expect(row.metadata.total).toBe(305);
+  });
+
+  it('leaves the list untouched when no reindex is running', () => {
+    const list = [finishedRow];
+
+    expect(applyReindexStub(list, null)).toBe(list);
+  });
+
+  it('only stubs the row that started', () => {
+    const other = { id: 'row-2', metadata: { state: 'completed', run_chunks: 7 } };
+
+    const [, untouched] = applyReindexStub([finishedRow, other], started);
+
+    expect(untouched.metadata.run_chunks).toBe(7);
   });
 });
