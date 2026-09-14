@@ -9,20 +9,6 @@ import {
   StyledAccordionSummary,
   StyledExpandMoreIcon,
 } from '@/[fsd]/shared/ui/accordion';
-import { filterProps } from '@/common/utils';
-import styled from '@emotion/styled';
-
-const StyledTypography = styled(
-  Typography,
-  filterProps('uppercase'),
-)(({ uppercase }) => ({
-  fontSize: '0.75rem',
-  textTransform: uppercase ? 'uppercase' : 'unset',
-  lineHeight: '1rem',
-  fontStyle: 'normal',
-  fontWeight: 500,
-  letterSpacing: '0.045rem',
-}));
 
 const BasicAccordion = memo(props => {
   const {
@@ -41,7 +27,7 @@ const BasicAccordion = memo(props => {
     'data-testid': dataTestId,
   } = props;
 
-  const styles = basicAccordionStyles();
+  const styles = basicAccordionStyles(uppercase);
 
   return (
     <Box
@@ -69,12 +55,7 @@ const BasicAccordion = memo(props => {
               sx={summarySX}
               data-testid={testId}
             >
-              <StyledTypography
-                sx={titleSX}
-                uppercase={uppercase}
-              >
-                {title}
-              </StyledTypography>
+              <Typography sx={[styles.title, titleSX]}>{title}</Typography>
               {headerContent && <Box sx={styles.headerContent}>{headerContent}</Box>}
             </StyledAccordionSummary>
             <StyledAccordionDetails
@@ -102,9 +83,17 @@ const BasicAccordion = memo(props => {
 BasicAccordion.displayName = 'BasicAccordion';
 
 /** @type {MuiSx} */
-const basicAccordionStyles = () => ({
+const basicAccordionStyles = uppercase => ({
   accordionWrapper: {
     position: 'relative',
+  },
+  title: {
+    fontSize: '0.75rem',
+    textTransform: uppercase ? 'uppercase' : 'unset',
+    lineHeight: '1rem',
+    fontStyle: 'normal',
+    fontWeight: 500,
+    letterSpacing: '0.045rem',
   },
   headerContent: {
     display: 'flex',

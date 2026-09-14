@@ -117,7 +117,7 @@ const CustomNodeInput = memo(props => {
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => setIsHovering(false)}
       >
-        {error && <div style={{ color: 'red' }}>{error}</div>}
+        {error && <Typography sx={{ color: theme.palette.error.main }}>{error}</Typography>}
         {isHovering && (
           <Box
             position="absolute"
@@ -300,7 +300,7 @@ const CustomNodeInput = memo(props => {
             overflowY: 'hidden',
           }}
         >
-          {error && <div style={{ color: 'red' }}>{error}</div>}
+          {error && <Typography sx={{ color: theme.palette.error.main }}>{error}</Typography>}
           <Field.CodeMirrorEditor
             className="nopan nodrag nowheel"
             value={jsonString}
