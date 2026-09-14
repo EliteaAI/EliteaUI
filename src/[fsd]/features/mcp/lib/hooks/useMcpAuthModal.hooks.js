@@ -86,7 +86,7 @@ export const extractConfigAuthMetadata = authMetadata => {
           code_challenge_methods_supported: oauthServer.code_challenge_methods_supported,
         }
       : null,
-    providedSettings: resourceMetadata?.provided_settings || {},
+    providedSettings: authMetadata?.provided_settings || resourceMetadata?.provided_settings || {},
     resourceScopes: resourceMetadata?.scopes_supported,
   };
 };
