@@ -16,6 +16,7 @@ import {
 } from '@/[fsd]/entities/grid-table/ui';
 import { SECRETS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import {
+  useSecretExternalAccess,
   useSecretRowActions,
   useSecretRowUpdate,
   useSecretVisibility,
@@ -23,6 +24,7 @@ import {
 import {
   EditSecretInputGridTable,
   SecretActionsMenu,
+  SecretExternalAccessCell,
   SecretValueCell,
 } from '@/[fsd]/features/settings/ui/secrets';
 import { Modal, Text } from '@/[fsd]/shared/ui';
@@ -55,6 +57,14 @@ const SECRETS_COLUMNS = [
   { field: 'secretValue', label: 'Value', width: '2fr', sortable: false, hideBelow: 600 },
   { field: 'actions', label: 'Actions', width: '8.25rem', sortable: false },
 ];
+
+const EXTERNAL_ACCESS_COLUMN = {
+  field: 'allow_external_access',
+  label: 'Share with other projects',
+  width: '11rem',
+  sortable: false,
+  hideBelow: 900,
+};
 
 const SecretsTable = memo(props => {
   const {
@@ -91,6 +101,14 @@ const SecretsTable = memo(props => {
 
   // Get sidebar collapsed state from Redux
   const sideBarCollapsed = useSelector(state => state.settings.sideBarCollapsed);
+  const personalProjectId = useSelector(state => state.user?.personal_project_id);
+
+  // Sharing is only honoured for secrets of the caller's own personal project, so the column
+  // would be a no-op switch anywhere else.
+  const isPersonalProject = useMemo(
+    () => Boolean(personalProjectId) && String(personalProjectId) === String(projectId),
+    [personalProjectId, projectId],
+  );
 
   // Automatically set new rows to edit mode
   useEffect(() => {
@@ -129,8 +147,20 @@ const SecretsTable = memo(props => {
     return () => clearTimeout(timeoutId);
   }, [sideBarCollapsed]);
 
+  const columns = useMemo(() => {
+    if (!isPersonalProject) {
+      return SECRETS_COLUMNS;
+    }
+    const actionsIndex = SECRETS_COLUMNS.findIndex(column => column.field === 'actions');
+    return [
+      ...SECRETS_COLUMNS.slice(0, actionsIndex),
+      EXTERNAL_ACCESS_COLUMN,
+      ...SECRETS_COLUMNS.slice(actionsIndex),
+    ];
+  }, [isPersonalProject]);
+
   const { visibleColumns, gridTemplateColumns, dataColumns } = useResponsiveColumns({
-    columns: SECRETS_COLUMNS,
+    columns,
     containerWidth: windowWidth,
     showCheckbox: false,
   });
@@ -186,6 +216,14 @@ const SecretsTable = memo(props => {
     rows,
     setRows,
     refetch,
+  });
+
+  const { handleToggleExternalAccess, isExternalAccessPending } = useSecretExternalAccess({
+    projectId,
+    editSecret,
+    setRows,
+    refetch,
+    toastError,
   });
 
   const {
@@ -429,6 +467,19 @@ const SecretsTable = memo(props => {
         );
       }
 
+      if (column.field === 'allow_external_access') {
+        return (
+          <SecretExternalAccessCell
+            row={row}
+            checked={Boolean(value)}
+            isPending={isExternalAccessPending(row.id)}
+            // Toggling an existing row saves immediately, which would discard unsaved input
+            disabled={!checkPermission(PERMISSIONS.secrets.edit) || (isEditing && !row.isNew)}
+            onToggle={handleToggleExternalAccess}
+          />
+        );
+      }
+
       return value || '-';
     },
     [
@@ -440,6 +491,9 @@ const SecretsTable = memo(props => {
       projectId,
       toastInfo,
       handleValidationChange,
+      isExternalAccessPending,
+      handleToggleExternalAccess,
+      checkPermission,
     ],
   );
 

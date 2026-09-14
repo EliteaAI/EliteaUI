@@ -52,6 +52,7 @@ const SecretsContent = memo(() => {
         name: secret.name,
         secretValue: secret.secret_name,
         is_default: secret.is_default || false,
+        allow_external_access: secret.allow_external_access || false,
       })) || [],
     [secrets],
   );

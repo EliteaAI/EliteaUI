@@ -2,6 +2,7 @@ export { useSessionStorageDateFilter } from './useSessionStorageDateFilter.hooks
 export { useSessionStorageFilter } from './useSessionStorageFilter.hooks.js';
 export { useSecretVisibility } from './useSecretVisibility.hooks.js';
 export { useSecretRowActions } from './useSecretRowActions.hooks.js';
+export { useSecretExternalAccess } from './useSecretExternalAccess.hooks.js';
 export { useSecretRowUpdate } from './useSecretRowUpdate.hooks.js';
 export { useCodePreview } from './useCodePreview.hooks.js';
 export { useConfigurationNavigation } from './useConfigurationNavigation.hooks.js';
