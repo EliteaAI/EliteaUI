@@ -235,7 +235,12 @@ const PipelineWebhookModal = memo(props => {
               >
                 Secret Value{' '}
                 {isPendingRegenerate && (
-                  <span style={{ color: 'orange', fontSize: '0.7rem' }}>(new - click Apply to save)</span>
+                  <Typography
+                    component="span"
+                    sx={styles.pendingText}
+                  >
+                    (new - click Apply to save)
+                  </Typography>
                 )}
               </Typography>
               <Box sx={styles.urlContainer}>

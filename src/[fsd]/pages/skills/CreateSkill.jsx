@@ -2,7 +2,7 @@ import { memo, useMemo } from 'react';
 
 import { Form, Formik } from 'formik';
 
-import { Grid } from '@mui/material';
+import { Box, Grid } from '@mui/material';
 
 import { CreateSkillForm, CreateSkillTabBar, SkillValidateSchema } from '@/[fsd]/features/skill';
 import { Breadcrumbs } from '@/[fsd]/shared/ui';
@@ -38,7 +38,7 @@ const CreateSkill = memo(() => {
         tabs={[
           {
             tabBarItems: <CreateSkillTabBar />,
-            rightToolbar: <div />,
+            rightToolbar: <Box />,
             content: (
               <Form style={{ height: '100%' }}>
                 <StyledGridContainer

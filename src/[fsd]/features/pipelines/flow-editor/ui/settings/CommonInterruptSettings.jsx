@@ -6,19 +6,6 @@ import { PipelineNodeTypes } from '@/[fsd]/features/pipelines/flow-editor/lib/co
 import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
 import { Switch } from '@/[fsd]/shared/ui';
-import styled from '@emotion/styled';
-
-const StyledFormControlLabel = styled(FormControlLabel)(({ theme }) => ({
-  width: '13.375rem',
-  height: '2rem',
-  borderRadius: '.5rem',
-  marginLeft: '0rem',
-  marginRight: '0rem',
-  padding: '.25rem .5rem',
-  justifyContent: 'flex-start',
-  gap: '.5rem',
-  background: theme.palette.background.surface.interactive.default,
-}));
 
 // interruptAfterTestId / structuredOutputTestId (ELITEA-2004/2010): this
 // component is shared across every node type (LLM, Toolkit, MCP, Agent,
@@ -115,6 +102,8 @@ const CommonInterruptSettings = memo(props => {
     [id, realInterruptAfter, setFlowEdges, setYamlJsonObject, yamlJsonObject],
   );
 
+  const styles = commonInterruptSettingsStyles();
+
   return (
     <Box
       display="flex"
@@ -123,7 +112,8 @@ const CommonInterruptSettings = memo(props => {
       width="100%"
       flexDirection="row"
     >
-      <StyledFormControlLabel
+      <FormControlLabel
+        sx={styles.formControlLabel}
         control={
           <Switch.BaseSwitch
             disabled={yamlJsonObject.entry_point === id || disabled}
@@ -159,7 +149,8 @@ const CommonInterruptSettings = memo(props => {
         }
         labelPlacement="end"
       />
-      <StyledFormControlLabel
+      <FormControlLabel
+        sx={styles.formControlLabel}
         control={
           <Switch.BaseSwitch
             disabled={yamlNode?.transition === PipelineNodeTypes.End || disabled}
@@ -183,7 +174,8 @@ const CommonInterruptSettings = memo(props => {
         labelPlacement="end"
       />
       {showStructuredOutput && (
-        <StyledFormControlLabel
+        <FormControlLabel
+          sx={styles.formControlLabel}
           control={
             <Switch.BaseSwitch
               disabled={disabled}
@@ -208,5 +200,20 @@ const CommonInterruptSettings = memo(props => {
 });
 
 CommonInterruptSettings.displayName = 'CommonInterruptSettings';
+
+/** @type {MuiSx} */
+const commonInterruptSettingsStyles = () => ({
+  formControlLabel: ({ palette }) => ({
+    width: '13.375rem',
+    height: '2rem',
+    borderRadius: '0.5rem',
+    marginLeft: '0rem',
+    marginRight: '0rem',
+    padding: '0.25rem 0.5rem',
+    justifyContent: 'flex-start',
+    gap: '0.5rem',
+    background: palette.background.surface.interactive.default,
+  }),
+});
 
 export default CommonInterruptSettings;

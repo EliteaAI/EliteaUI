@@ -2,18 +2,11 @@ import React, { memo, useEffect, useRef } from 'react';
 
 import { useSelector } from 'react-redux';
 
-import { Box, styled } from '@mui/material';
+import { Box } from '@mui/material';
 
 import { useLanguageLinter } from '@/[fsd]/shared/lib/hooks';
 import { Field } from '@/[fsd]/shared/ui';
 import { selectActivePipeline } from '@/slices/pipeline';
-
-const StyledCodeMirrorEditor = styled(Field.CodeMirrorEditor)({
-  '& .error_yaml_code': {
-    backgroundColor: 'rgba(215, 22, 22, 0.20)',
-    background: 'rgba(215, 22, 22, 0.20)',
-  },
-});
 
 const YamlCodeEditor = memo(props => {
   const { code, onChangeCode, disabled } = props;
@@ -34,12 +27,14 @@ const YamlCodeEditor = memo(props => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resetFlag]);
 
+  const styles = yamlCodeEditorStyles();
+
   return (
     <Box
       sx={styles.container}
       data-testid="pipeline-yaml-editor"
     >
-      <StyledCodeMirrorEditor
+      <Field.CodeMirrorEditor
         className="nopan nodrag nowheel"
         value={code}
         extensions={extensions}
@@ -55,15 +50,20 @@ const YamlCodeEditor = memo(props => {
 
 YamlCodeEditor.displayName = 'YamlCodeEditor';
 
-const styles = {
-  container: {
+/** @type {MuiSx} */
+const yamlCodeEditorStyles = () => ({
+  container: ({ palette }) => ({
     width: '100%',
     maxWidth: '100%',
     height: '100%',
     display: 'flex',
     flexDirection: 'column',
     overflow: 'auto',
-  },
-};
+    '& .error_yaml_code': {
+      backgroundColor: palette.background.errorBkg,
+      background: palette.background.errorBkg,
+    },
+  }),
+});
 
 export default YamlCodeEditor;

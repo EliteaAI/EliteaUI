@@ -3,7 +3,6 @@ import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useRef, 
 import { useDispatch, useSelector } from 'react-redux';
 
 import { Box, Tooltip, useTheme } from '@mui/material';
-import { styled } from '@mui/material/styles';
 import { deepClone } from '@mui/x-data-grid/internals';
 
 import { useTrackEvent } from '@/GA';
@@ -563,50 +562,52 @@ const FlowEditor = forwardRef((props, ref) => {
             offset={[0, 2]}
             gap={20}
           />
-          <StyledControls>
-            <Tooltip
-              title="Toggle cards size"
-              placement="right"
-            >
-              <Box
-                component="span"
-                sx={{
-                  display: 'inline-flex',
-                  borderBottom: `1px solid ${theme.palette.divider}`,
-                }}
+          <Box sx={styles.flowControls}>
+            <Controls>
+              <Tooltip
+                title="Toggle cards size"
+                placement="right"
               >
-                <ControlButton onClick={onExpandAll}>
-                  {expandAll ? (
-                    <CollapseIcon
+                <Box
+                  component="span"
+                  sx={{
+                    display: 'inline-flex',
+                    borderBottom: `1px solid ${theme.palette.divider}`,
+                  }}
+                >
+                  <ControlButton onClick={onExpandAll}>
+                    {expandAll ? (
+                      <CollapseIcon
+                        sx={styles.icon}
+                        fill={theme.palette.icon.fill.secondary}
+                      />
+                    ) : (
+                      <ExpandIcon
+                        sx={styles.icon}
+                        fill={theme.palette.icon.fill.secondary}
+                      />
+                    )}
+                  </ControlButton>
+                </Box>
+              </Tooltip>
+              <Tooltip
+                title="Auto-arrange"
+                placement="right"
+              >
+                <Box
+                  component="span"
+                  sx={{ display: 'inline-flex' }}
+                >
+                  <ControlButton onClick={onReLayout}>
+                    <PolylineOutlinedIcon
                       sx={styles.icon}
                       fill={theme.palette.icon.fill.secondary}
                     />
-                  ) : (
-                    <ExpandIcon
-                      sx={styles.icon}
-                      fill={theme.palette.icon.fill.secondary}
-                    />
-                  )}
-                </ControlButton>
-              </Box>
-            </Tooltip>
-            <Tooltip
-              title="Auto-arrange"
-              placement="right"
-            >
-              <Box
-                component="span"
-                sx={{ display: 'inline-flex' }}
-              >
-                <ControlButton onClick={onReLayout}>
-                  <PolylineOutlinedIcon
-                    sx={styles.icon}
-                    fill={theme.palette.icon.fill.secondary}
-                  />
-                </ControlButton>
-              </Box>
-            </Tooltip>
-          </StyledControls>
+                  </ControlButton>
+                </Box>
+              </Tooltip>
+            </Controls>
+          </Box>
         </ReactFlow>
       </FlowEditorProvider>
       <FlowEditorState.StateDrawer
@@ -688,35 +689,31 @@ const flowEditorStyles = () => ({
       border: `.0625rem solid ${palette.border.flowNode}`,
     },
   }),
+  flowControls: ({ palette }) => ({
+    '& .react-flow__controls': {
+      border: `1px solid ${palette.border.lines}`,
+      borderRadius: '0.25rem',
+    },
+    '& .react-flow__controls-button svg': {
+      color: `${palette.border.hover} !important`,
+    },
+    '& .react-flow__controls-button': {
+      backgroundColor: palette.background.paper,
+      borderBottom: `1px solid ${palette.divider}`,
+      '&:hover': {
+        backgroundColor: palette.border.table,
+        '& svg': {
+          color: `${palette.icon.fill.secondary} !important`,
+        },
+      },
+    },
+    '& .react-flow__controls-button:first-of-type': {
+      borderRadius: '0.25rem 0.25rem 0 0',
+    },
+    '& .react-flow__controls-button:last-child': {
+      borderRadius: '0 0 0.25rem 0.25rem',
+    },
+  }),
 });
 
 export default memo(FlowEditor);
-
-const StyledControls = styled(Controls)(({ theme }) => ({
-  border: `1px solid ${theme.palette.border.lines}`,
-  borderRadius: '0.25rem',
-
-  '& .react-flow__controls-button svg': {
-    color: `${theme.palette.border.hover} !important`,
-  },
-
-  '& .react-flow__controls-button': {
-    backgroundColor: theme.palette.background.paper,
-    borderBottom: `1px solid ${theme.palette.divider}`,
-    '&:hover': {
-      backgroundColor: theme.palette.border.table,
-
-      '& svg': {
-        color: `${theme.palette.icon.fill.secondary} !important`,
-      },
-    },
-  },
-
-  '& .react-flow__controls-button:first-of-type': {
-    borderRadius: '0.25rem 0.25rem 0 0',
-  },
-
-  '& .react-flow__controls-button:last-child': {
-    borderRadius: '0 0 0.25rem 0.25rem',
-  },
-}));
