@@ -35,6 +35,7 @@ import {
   indexBuildBlockedReason,
   indexScheduleBlockedReason,
   indexSearchBlockedReason,
+  shouldDropIndexStateOverride,
 } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexDetails.helpers';
 import { useIndexesListPolling } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
 import { selectToolkitScheduler } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
@@ -188,18 +189,18 @@ const RunIndexPanel = memo(props => {
     skip: !projectId || !toolkitId,
     forcePoll: effectiveState === IndexStatuses.progress,
   });
+  const rowReadAfterOverride = Boolean(
+    startedTimeStamp &&
+    fulfilledTimeStamp >= startedTimeStamp &&
+    overrideObservedAtRef.current &&
+    startedTimeStamp >= overrideObservedAtRef.current,
+  );
   // The row-level stale flag is untouched by the metadata-only overrides, so an
   // observed transition suppresses it — but a hard-killed run never emits the
   // terminal trace that would end the suppression, so a completed snapshot from a
   // request issued after the observation supersedes it (in-flight fetches carry
   // pre-run data).
-  const serverSupersedes = Boolean(
-    startedTimeStamp &&
-    fulfilledTimeStamp &&
-    overrideObservedAtRef.current &&
-    startedTimeStamp > overrideObservedAtRef.current &&
-    fulfilledTimeStamp >= startedTimeStamp,
-  );
+  const serverSupersedes = rowReadAfterOverride && startedTimeStamp > overrideObservedAtRef.current;
   const effectiveStale = localMetaOverride?.state && !serverSupersedes ? false : index?.stale;
   const isAwaitingTaskStart = isWaitingForTaskStart && !serverSupersedes;
   const runLooksAbandoned = effectiveIsIndexing && Boolean(effectiveStale);
@@ -317,9 +318,9 @@ const RunIndexPanel = memo(props => {
   );
 
   useEffect(() => {
-    if (!localMetaOverride) return;
-    if (index?.metadata?.state === localMetaOverride.state) setLocalMetaOverride(null);
-  }, [index?.metadata?.state, localMetaOverride]);
+    if (shouldDropIndexStateOverride(localMetaOverride?.state, index?.metadata?.state, rowReadAfterOverride))
+      setLocalMetaOverride(null);
+  }, [index?.metadata?.state, localMetaOverride, rowReadAfterOverride]);
 
   const handleChangeTab = useCallback((_event, value) => setActiveTab(value), []);
 

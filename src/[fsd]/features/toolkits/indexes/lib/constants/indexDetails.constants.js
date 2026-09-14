@@ -88,6 +88,14 @@ export const RUNNABLE_INDEX_STATUSES = [
   IndexStatuses.scheduledReindex,
 ];
 
+export const TERMINAL_INDEX_STATUSES = [
+  IndexStatuses.success,
+  IndexStatuses.fail,
+  IndexStatuses.cancelled,
+  IndexStatuses.partlyOk,
+  IndexStatuses.scheduledReindex,
+];
+
 export const IndexHistoryItemsLabels = {
   [IndexStatuses.success]: 'Indexed',
   [IndexStatuses.created]: 'Created',
