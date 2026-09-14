@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 
+import { formatIndexingReportText, normalizeIndexingReport } from '@/[fsd]/entities/indexing-report';
 import { normalizeContinuationError } from '@/[fsd]/features/chat/lib/helpers/continuationError.helpers.js';
 import {
   IndexStatuses,
@@ -106,6 +107,45 @@ export const generateMockMessageTemplate = (content, participantId) => ({
   created_at: new Date().getTime(),
   participant_id: participantId,
 });
+
+const SUMMARY_BODY_SEPARATOR = '\n\n\n';
+
+const renderToolExecutionSummary = toolActions =>
+  (toolActions ?? [])
+    .slice()
+    .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+    .map(action => {
+      const status = [ToolActionStatus.cancelled, ToolActionStatus.error].includes(action.status)
+        ? '❌'
+        : '✅';
+      const execTime = action.execution_time_seconds ? ` (${action.execution_time_seconds.toFixed(3)}s)` : '';
+
+      return `${status} \`${action.name}\`${execTime}`;
+    })
+    .join('  \n');
+
+const withToolExecutionSummary = msg => {
+  const summary = renderToolExecutionSummary(msg.toolActions);
+
+  return summary ? `${summary}${SUMMARY_BODY_SEPARATOR}${msg.content}` : msg.content;
+};
+
+const renderToolBody = (rawContent, contentType) =>
+  contentType === 'json' ? formatJsonBlock(rawContent) : convertJsonToString(rawContent);
+
+const asIndexingReport = parsed => (parsed?.report ? normalizeIndexingReport(parsed) : null);
+
+const renderFailedRunBody = rawContent => {
+  const body = convertJsonToString(rawContent);
+
+  try {
+    const report = asIndexingReport(JSON.parse(body));
+
+    return report ? formatIndexingReportText(report) : body;
+  } catch {
+    return body;
+  }
+};
 
 // Find a message by id, or append a fresh loading placeholder so streaming events that arrive
 // after a route hop (CreateIndex → RunIndex) still land in the UI. Without this, events whose
@@ -221,7 +261,7 @@ export const generateChatMessageBasedOnResponse = ({ message, chatHistory, onFin
         }
 
         if (response_metadata?.finish_reason === 'error') {
-          msg.content = convertJsonToString(message?.content ?? '');
+          msg.content = renderFailedRunBody(message?.content ?? '');
         }
       }
 
@@ -237,41 +277,17 @@ export const generateChatMessageBasedOnResponse = ({ message, chatHistory, onFin
 
       {
         const msg = updatedHistory[responseMsgIndex];
-        // Check content_type to determine if we should wrap in JSON code block
-        const rawContent = message.content || response_metadata.message;
-        msg.content =
-          response_metadata?.content_type === 'json'
-            ? formatJsonBlock(rawContent)
-            : convertJsonToString(rawContent);
+        msg.content = renderToolBody(
+          message.content || response_metadata.message,
+          response_metadata?.content_type,
+        );
         msg.isLoading = false;
 
         if (response_metadata?.finish_reason) {
           msg.isStreaming = false;
           onFinish(IndexStatuses.success);
           notifyTaskComplete();
-
-          // Enrich final message with execution time and status
-          // NOTE: This formatting is specific to toolkit testing page only
-          const toolExecutionSummary =
-            msg.toolActions
-              ?.sort((a, b) => new Date(a.created_at) - new Date(b.created_at)) // Sort by creation time
-              ?.map(action => {
-                const status = [ToolActionStatus.cancelled, ToolActionStatus.error].includes(action.status)
-                  ? '❌'
-                  : '✅';
-                const execTime = action.execution_time_seconds
-                  ? ` (${action.execution_time_seconds.toFixed(3)}s)`
-                  : '';
-
-                return `${status} \`${action.name}\`${execTime}`;
-              })
-              .join('  \n') || '';
-
-          if (toolExecutionSummary) {
-            // Just prepend the summary - convertJsonToString already handled JSON wrapping if needed
-            // Add extra newline to ensure content starts on a new line
-            msg.content = `${toolExecutionSummary}\n\n\n${msg.content}`;
-          }
+          msg.content = withToolExecutionSummary(msg);
         }
       }
       return updatedHistory;
