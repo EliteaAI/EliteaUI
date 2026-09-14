@@ -30,9 +30,9 @@ import {
 import {
   bannerOutlivesRun,
   bannerVariant,
-  hasLiveRun,
   hasRetainedIndexData,
   indexBuildBlockedReason,
+  indexRunControls,
   indexScheduleBlockedReason,
   indexSearchBlockedReason,
   shouldDropIndexStateOverride,
@@ -203,14 +203,14 @@ const RunIndexPanel = memo(props => {
   const serverSupersedes = rowReadAfterOverride && startedTimeStamp > overrideObservedAtRef.current;
   const effectiveStale = localMetaOverride?.state && !serverSupersedes ? false : index?.stale;
   const isAwaitingTaskStart = isWaitingForTaskStart && !serverSupersedes;
-  const runLooksAbandoned = effectiveIsIndexing && Boolean(effectiveStale);
   // Display uses `stale`; anything that can end a run uses `reclaimable`, which stays
   // on the disconnect rule. Otherwise a run merely slow to promote offers Delete.
   const effectiveReclaimable =
     localMetaOverride?.state && !serverSupersedes ? false : (index?.reclaimable ?? index?.stale);
-  const runIsLive = hasLiveRun({
+  const { runLooksAbandoned, runIsLive } = indexRunControls({
     isIndexing: effectiveIsIndexing,
-    isStale: effectiveReclaimable,
+    stale: effectiveStale,
+    reclaimable: effectiveReclaimable,
   });
   const deleteDisabled = isDeleting || isAwaitingTaskStart || runIsLive;
   const buildBlockedReason = indexBuildBlockedReason(selectedIndexTools);
@@ -513,15 +513,24 @@ const RunIndexPanel = memo(props => {
   const runInFlight = effectiveIsIndexing || isAwaitingTaskStart;
   const banner = useMemo(
     () =>
-      bannerVariant(runInFlight, effectiveState, reindexStats, index?.metadata?.error, effectiveStale, {
-        hasRetainedData: retainsIndexedData,
-        lastSuccessfulRun: index?.last_successful_run,
-      }),
+      bannerVariant(
+        runInFlight,
+        effectiveState,
+        reindexStats,
+        index?.metadata?.error,
+        effectiveStale,
+        {
+          hasRetainedData: retainsIndexedData,
+          lastSuccessfulRun: index?.last_successful_run,
+        },
+        effectiveReclaimable,
+      ),
     [
       runInFlight,
       effectiveState,
       reindexStats,
       index?.metadata?.error,
+      effectiveReclaimable,
       effectiveStale,
       retainsIndexedData,
       index?.last_successful_run,

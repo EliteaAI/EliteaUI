@@ -75,6 +75,13 @@ export const REINDEX_FAILED_BANNER_MESSAGE =
 
 // `stale` is a no-progress-for-the-timeout heuristic (default 2h), not a terminal
 // state from the worker — the copy has to hedge that the run may still be alive.
+// Shown while the run looks interrupted but the platform still considers it live, so
+// Reindex is refused server-side and the panel offers Stop instead. Telling the user to
+// click Reindex here points at a button that is not in the DOM.
+export const INDEX_UNRESPONSIVE_BANNER_MESSAGE =
+  'This run has not reported progress for a while. It may still be finishing; ' +
+  'if it is not, use Stop to end it before starting a new run.';
+
 export const INDEX_ABANDONED_BANNER_MESSAGE =
   'This run has not reported progress for a long time and looks interrupted. ' +
   'If it is still running it may yet finish; otherwise click Reindex to restart it.';

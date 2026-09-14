@@ -109,7 +109,7 @@ describe('bannerVariant — everything else is unchanged', () => {
 
 describe('bannerVariant — abandoned run', () => {
   it('reports a stale in_progress run as stopped, not indexing', () => {
-    const banner = bannerVariant(false, IndexStatuses.progress, NO_STATS, undefined, true);
+    const banner = bannerVariant(false, IndexStatuses.progress, NO_STATS, undefined, true, {}, true);
 
     expect(banner.severity).toBe(BannerSeverity.warning);
     expect(banner.label).toBe('Stopped');

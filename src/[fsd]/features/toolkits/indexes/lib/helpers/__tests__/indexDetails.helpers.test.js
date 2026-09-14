@@ -12,6 +12,7 @@ import {
   INDEX_DATA_DISABLED_REASON,
   INDEX_RETAINED_DATA_MESSAGE,
   INDEX_SEARCH_TOOL_OPTIONS,
+  INDEX_UNRESPONSIVE_BANNER_MESSAGE,
   IndexStatuses,
   REINDEX_FAILED_BANNER_MESSAGE,
   REINDEX_FAILED_BANNER_TITLE,
@@ -26,6 +27,7 @@ import {
   hasRetainedIndexData,
   indexBuildBlockedReason,
   indexListCounts,
+  indexRunControls,
   indexScheduleBlockedReason,
   indexSearchBlockedReason,
   indexSearchToolOptions,
@@ -309,7 +311,9 @@ describe('bannerVariant — retained data', () => {
   });
 
   it('keeps the stale-run warning ahead of the reindexing copy while stating the data survived', () => {
-    const banner = bannerVariant(false, IndexStatuses.progress, NO_STATS, undefined, true, retention());
+    // `true` for isReclaimable: this is the abandoned case, where Reindex is the
+    // remedy the panel actually offers.
+    const banner = bannerVariant(false, IndexStatuses.progress, NO_STATS, undefined, true, retention(), true);
 
     expect(banner.severity).toBe(BannerSeverity.warning);
     expect(banner.message).toContain(INDEX_ABANDONED_BANNER_MESSAGE);
@@ -317,7 +321,7 @@ describe('bannerVariant — retained data', () => {
   });
 
   it('makes no retention claim for a stale run without a live chunk count', () => {
-    const banner = bannerVariant(false, IndexStatuses.progress, NO_STATS, undefined, true);
+    const banner = bannerVariant(false, IndexStatuses.progress, NO_STATS, undefined, true, {}, true);
 
     expect(banner.message).toBe(INDEX_ABANDONED_BANNER_MESSAGE);
   });
@@ -490,5 +494,105 @@ describe('applyReindexStub — run_chunks handover', () => {
     const [row] = applyReindexStub([serverRow], started);
 
     expect(row.metadata.run_chunks).toBe(0);
+  });
+});
+
+describe('bannerVariant — the remedy must match the control the panel renders', () => {
+  const NO_STATS = { isReindex: false };
+  const retention = over => ({ hasRetainedData: true, lastSuccessfulRun: null, ...over });
+
+  it('names Stop while the run is unresponsive but not yet reclaimable', () => {
+    // In this window runIsLive is still true, so the footer renders Stop and the
+    // Reindex button is not in the DOM at all — and the server would refuse a
+    // Reindex on the same disconnect rule.
+    const banner = bannerVariant(false, IndexStatuses.progress, NO_STATS, undefined, true, {}, false);
+
+    expect(banner.message).toBe(INDEX_UNRESPONSIVE_BANNER_MESSAGE);
+    expect(banner.message).not.toContain('Reindex');
+  });
+
+  it('names Reindex once the run is reclaimable', () => {
+    const banner = bannerVariant(false, IndexStatuses.progress, NO_STATS, undefined, true, {}, true);
+
+    expect(banner.message).toBe(INDEX_ABANDONED_BANNER_MESSAGE);
+    expect(banner.message).toContain('Reindex');
+  });
+
+  it('still appends the retention claim in the unresponsive window', () => {
+    const banner = bannerVariant(
+      false,
+      IndexStatuses.progress,
+      NO_STATS,
+      undefined,
+      true,
+      retention(),
+      false,
+    );
+
+    expect(banner.message).toContain(INDEX_UNRESPONSIVE_BANNER_MESSAGE);
+    expect(banner.message).toContain(INDEX_RETAINED_DATA_MESSAGE);
+  });
+});
+
+describe('shouldExpireReindexStub — the runner outlives the display flag', () => {
+  const base = { stubCreatedAt: 0, now: 10_000, graceMs: 1_000 };
+
+  it('keeps the runner mounted for a run that is only display-stale', () => {
+    // A large corpus trips the 300s display horizon mid-promote; unmounting there
+    // loses the live transcript and the completion toast on a healthy run.
+    expect(shouldExpireReindexStub({ ...base, serverRow: { stale: true, reclaimable: false } })).toBe(false);
+  });
+
+  it('expires once the run is genuinely reclaimable', () => {
+    expect(shouldExpireReindexStub({ ...base, serverRow: { stale: true, reclaimable: true } })).toBe(true);
+  });
+
+  it('falls back to stale when the backend sends no control flag', () => {
+    expect(shouldExpireReindexStub({ ...base, serverRow: { stale: true } })).toBe(true);
+  });
+
+  it('still expires when the row is gone', () => {
+    expect(shouldExpireReindexStub({ ...base, serverRow: undefined })).toBe(true);
+  });
+});
+
+describe('indexRunControls — display and control must not share a flag', () => {
+  it('a run that is only display-stale still counts as live', () => {
+    // The window a long promote sits in. Treating it as not-live offers Delete,
+    // and Delete drops the whole collection.
+    const { runLooksAbandoned, runIsLive } = indexRunControls({
+      isIndexing: true,
+      stale: true,
+      reclaimable: false,
+    });
+
+    expect(runLooksAbandoned).toBe(true);
+    expect(runIsLive).toBe(true);
+  });
+
+  it('a reclaimable run is no longer live', () => {
+    const { runLooksAbandoned, runIsLive } = indexRunControls({
+      isIndexing: true,
+      stale: true,
+      reclaimable: true,
+    });
+
+    expect(runLooksAbandoned).toBe(true);
+    expect(runIsLive).toBe(false);
+  });
+
+  it('a healthy run is live and looks it', () => {
+    expect(indexRunControls({ isIndexing: true, stale: false, reclaimable: false })).toEqual({
+      runLooksAbandoned: false,
+      runIsLive: true,
+    });
+  });
+
+  it('falls back to stale when the backend sends no control flag', () => {
+    expect(indexRunControls({ isIndexing: true, stale: true, reclaimable: undefined }).runIsLive).toBe(false);
+  });
+
+  it('a row that is not indexing is never live', () => {
+    expect(indexRunControls({ isIndexing: false, stale: false, reclaimable: false }).runIsLive).toBe(false);
   });
 });

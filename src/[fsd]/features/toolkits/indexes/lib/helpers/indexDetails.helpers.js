@@ -8,6 +8,7 @@ import {
   INDEX_DATA_DISABLED_REASON,
   INDEX_RETAINED_DATA_MESSAGE,
   INDEX_SEARCH_TOOL_OPTIONS,
+  INDEX_UNRESPONSIVE_BANNER_MESSAGE,
   IndexStatuses,
   IndexesToolsEnum,
   REINDEX_FAILED_BANNER_MESSAGE,
@@ -42,7 +43,15 @@ export const formatDate = ts => {
   }
 };
 
-export const bannerVariant = (isIndexing, state, reindexStats, error, isStale = false, retention = {}) => {
+export const bannerVariant = (
+  isIndexing,
+  state,
+  reindexStats,
+  error,
+  isStale = false,
+  retention = {},
+  isReclaimable = false,
+) => {
   const { hasRetainedData = false, lastSuccessfulRun = null } = retention;
   // Before the isIndexing branch: a stale row still reads as "in flight" to every
   // other signal, and an eternal "Indexing…" spinner is the bug this variant fixes.
@@ -52,9 +61,15 @@ export const bannerVariant = (isIndexing, state, reindexStats, error, isStale = 
       label: BannerTitleMap[BannerSeverity.warning],
       // An interrupted run's writes were never visible, so a live chunk count means
       // the previous generation is still being served — say so under the warning.
-      message: hasRetainedData
-        ? `${INDEX_ABANDONED_BANNER_MESSAGE} ${INDEX_RETAINED_DATA_MESSAGE}`
-        : INDEX_ABANDONED_BANNER_MESSAGE,
+      // Which remedy to name depends on the CONTROL flag, not this display one: until
+      // the run is reclaimable the panel renders Stop and the server would refuse a
+      // Reindex on the same rule, so naming Reindex points at a button that is absent.
+      message: [
+        isReclaimable ? INDEX_ABANDONED_BANNER_MESSAGE : INDEX_UNRESPONSIVE_BANNER_MESSAGE,
+        hasRetainedData ? INDEX_RETAINED_DATA_MESSAGE : null,
+      ]
+        .filter(Boolean)
+        .join(' '),
     };
   if (isIndexing || state === IndexStatuses.progress) {
     if (hasRetainedData)
@@ -243,6 +258,22 @@ export const isAbandonedRun = index =>
 export const hasLiveRun = ({ isIndexing, isStale }) => Boolean(isIndexing) && !isStale;
 
 /**
+ * Split the two questions a run's row answers, so a component cannot accidentally
+ * answer one with the other's flag.
+ *
+ * `runLooksAbandoned` is DISPLAY — banner severity and copy; being wrong costs a
+ * misleading card. `runIsLive` is CONTROL — it gates Delete (which drops the whole
+ * collection), Reindex and Stop; being wrong destroys a live run. They ran off the
+ * same flag until the display horizon was shortened to minutes.
+ * @param {{isIndexing: boolean, stale: boolean, reclaimable: boolean|undefined}} runState
+ * @returns {{runLooksAbandoned: boolean, runIsLive: boolean}}
+ */
+export const indexRunControls = ({ isIndexing, stale, reclaimable }) => ({
+  runLooksAbandoned: Boolean(isIndexing) && Boolean(stale),
+  runIsLive: hasLiveRun({ isIndexing, isStale: reclaimable ?? stale }),
+});
+
+/**
  * Whether the optimistic reindex stub should be dropped for what the server returned.
  * A missing row means the index was deleted — the stub has nothing to stand in for.
  * A stale row is trusted only after a grace period: the first fetches after the click
@@ -253,7 +284,7 @@ export const hasLiveRun = ({ isIndexing, isStale }) => Boolean(isIndexing) && !i
  * @returns {boolean}
  */
 export const shouldExpireReindexStub = ({ serverRow, stubCreatedAt, now, graceMs }) =>
-  !serverRow || (Boolean(serverRow.stale) && now - (stubCreatedAt ?? 0) > graceMs);
+  !serverRow || (Boolean(serverRow.reclaimable ?? serverRow.stale) && now - (stubCreatedAt ?? 0) > graceMs);
 
 /**
  * Whether a status banner should stay on screen once its run's transcript is gone, i.e. on a fresh
@@ -330,9 +361,13 @@ export const applyReindexStub = (indexesList, reindexRunning) => {
     item.id === reindexRunning.id
       ? {
           ...item,
-          // An observed start proves not-stale; the expiry effect owns the other
-          // direction — while the stub lives, the run counts as alive.
-          stale: false,
+          // Two lifetimes, deliberately. The runner stays mounted until the run is
+          // RECLAIMABLE (above), so a healthy long run keeps its transcript. But the
+          // display flag is only forced while the server still shows the row from
+          // BEFORE the click; once its own row is in flight, the server's flag is the
+          // honest one, so a genuinely dead run still reads as stopped within minutes
+          // instead of claiming to index for the full disconnect timeout.
+          stale: item.metadata?.state === IndexStatuses.progress ? Boolean(item.stale) : false,
           metadata: {
             ...item.metadata,
             state: reindexRunning.metadata?.state ?? item.metadata?.state,
