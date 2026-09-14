@@ -52,9 +52,12 @@ const IndexListItem = memo(props => {
 
   const isSelected = useMemo(() => currentIndex?.id === index.id, [currentIndex, index]);
   const isInProgress = index?.metadata?.state === IndexStatuses.progress;
-  // Only the backend's stale flag proves an in_progress run dead, and the lock must
-  // be a visible disabled state — a swallowed click reads as "delete broken".
-  const disableStuckActions = isReindexing || (isInProgress && !index?.stale);
+  // `reclaimable`, not `stale`: Delete drops the whole collection, and `stale` is a
+  // five-minute display heuristic that also goes true while a healthy run is mid-promote.
+  // Falls back to `stale` so an older backend keeps today's behaviour, and to `undefined`
+  // (falsy -> disabled) when neither is present.
+  const reclaimable = index?.reclaimable ?? index?.stale;
+  const disableStuckActions = isReindexing || (isInProgress && !reclaimable);
 
   const documents = useMemo(() => {
     if (!index.metadata) return { tooltip: '-', count: '–', skipped: '-' };

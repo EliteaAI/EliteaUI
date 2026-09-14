@@ -168,3 +168,43 @@ describe('IndexListItem — mid-run progress', () => {
     expect(screen.queryByText('42 chunks so far')).not.toBeInTheDocument();
   });
 });
+
+describe('IndexListItem — destructive actions key on reclaimable, not stale', () => {
+  const inFlight = (over = {}) => ({
+    id: 'row-1',
+    metadata: {
+      collection: 'docs-index',
+      state: IndexStatuses.progress,
+      created_on: 1_700_000_000,
+      history: [],
+    },
+    ...over,
+  });
+
+  it('keeps Delete locked on a run that is merely display-stale', () => {
+    // A run mid-promote is display-stale within minutes; Delete drops the whole
+    // collection, so it must wait for the disconnect rule.
+    renderItem(inFlight({ stale: true, reclaimable: false }));
+
+    expect(deleteBtn()).toBeDisabled();
+    expect(reindexBtn()).toBeDisabled();
+  });
+
+  it('unlocks Delete once the run is genuinely reclaimable', () => {
+    renderItem(inFlight({ stale: true, reclaimable: true }));
+
+    expect(deleteBtn()).not.toBeDisabled();
+  });
+
+  it('keeps Delete locked on a healthy run', () => {
+    renderItem(inFlight({ stale: false, reclaimable: false }));
+
+    expect(deleteBtn()).toBeDisabled();
+  });
+
+  it('falls back to stale when the backend sends no reclaimable flag', () => {
+    renderItem(inFlight({ stale: true }));
+
+    expect(deleteBtn()).not.toBeDisabled();
+  });
+});

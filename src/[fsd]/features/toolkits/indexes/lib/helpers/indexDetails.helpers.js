@@ -336,11 +336,15 @@ export const applyReindexStub = (indexesList, reindexRunning) => {
           metadata: {
             ...item.metadata,
             state: reindexRunning.metadata?.state ?? item.metadata?.state,
-            // Unconditionally 0, NOT `?? 0`: the stub is built by spreading the
-            // clicked row's metadata, so it arrives carrying the FINISHED run's
-            // chunk count. A nullish fallback never fires and that number gets
-            // rendered as the new run's progress.
-            run_chunks: 0,
+            // Zero until the server's own row shows a run in flight, then yield to
+            // it. The stub is built by spreading the clicked row's metadata, so it
+            // arrives carrying the FINISHED run's count — pinning 0 unconditionally
+            // fixed that but then clobbered every poll for the whole run, freezing
+            // the card at "0 chunks so far" for the one user who clicked Reindex.
+            // Narrow residual: if the server row still shows a PREVIOUS run as
+            // in_progress (only possible when that run was abandoned mid-flight),
+            // its count flashes once before the next poll corrects it.
+            run_chunks: item.metadata?.state === IndexStatuses.progress ? (item.metadata.run_chunks ?? 0) : 0,
             task_id: reindexRunning.metadata?.task_id ?? item.metadata?.task_id,
             conversation_id: reindexRunning.metadata?.conversation_id ?? item.metadata?.conversation_id,
           },

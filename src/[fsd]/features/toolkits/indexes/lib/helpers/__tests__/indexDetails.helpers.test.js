@@ -451,3 +451,44 @@ describe('applyReindexStub', () => {
     expect(untouched.metadata.run_chunks).toBe(7);
   });
 });
+
+describe('applyReindexStub — run_chunks handover', () => {
+  const finished = {
+    id: 'row-1',
+    stale: true,
+    metadata: { state: 'failed', run_chunks: 1520, indexed: 180, total: 305 },
+  };
+  // Mirrors confirmReindex: the clicked row's metadata is spread wholesale.
+  const started = {
+    id: 'row-1',
+    metadata: { ...finished.metadata, state: 'in_progress' },
+  };
+
+  it('zeroes the finished run’s count while the server still shows the old row', () => {
+    const [row] = applyReindexStub([finished], started);
+
+    expect(row.metadata.run_chunks).toBe(0);
+  });
+
+  it('yields to the server once its row shows the new run in flight', () => {
+    // Without this the stub clobbers every poll and the card freezes at
+    // "0 chunks so far" for the whole run — for the one user who clicked Reindex.
+    const serverRow = {
+      id: 'row-1',
+      stale: false,
+      metadata: { state: 'in_progress', run_chunks: 3100, indexed: 180, total: 305 },
+    };
+
+    const [row] = applyReindexStub([serverRow], started);
+
+    expect(row.metadata.run_chunks).toBe(3100);
+  });
+
+  it('treats a server row in flight with no count yet as zero', () => {
+    const serverRow = { id: 'row-1', metadata: { state: 'in_progress' } };
+
+    const [row] = applyReindexStub([serverRow], started);
+
+    expect(row.metadata.run_chunks).toBe(0);
+  });
+});

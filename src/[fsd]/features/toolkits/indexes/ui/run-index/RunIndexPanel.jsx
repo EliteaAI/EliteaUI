@@ -204,9 +204,13 @@ const RunIndexPanel = memo(props => {
   const effectiveStale = localMetaOverride?.state && !serverSupersedes ? false : index?.stale;
   const isAwaitingTaskStart = isWaitingForTaskStart && !serverSupersedes;
   const runLooksAbandoned = effectiveIsIndexing && Boolean(effectiveStale);
+  // Display uses `stale`; anything that can end a run uses `reclaimable`, which stays
+  // on the disconnect rule. Otherwise a run merely slow to promote offers Delete.
+  const effectiveReclaimable =
+    localMetaOverride?.state && !serverSupersedes ? false : (index?.reclaimable ?? index?.stale);
   const runIsLive = hasLiveRun({
     isIndexing: effectiveIsIndexing,
-    isStale: effectiveStale,
+    isStale: effectiveReclaimable,
   });
   const deleteDisabled = isDeleting || isAwaitingTaskStart || runIsLive;
   const buildBlockedReason = indexBuildBlockedReason(selectedIndexTools);
