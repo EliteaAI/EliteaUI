@@ -251,12 +251,6 @@ export const isAbandonedRun = index =>
   Boolean(index?.stale) && index?.metadata?.state === IndexStatuses.progress;
 
 /**
- * The control-flag counterpart of {@link isAbandonedRun}, for surfaces that retire a run
- * rather than decorate it. See {@link indexRunControls} for the split.
- * @param {object} index - Index row as returned by the indexes list
- * @returns {boolean}
- */
-/**
  * The control flag, with the fallback every reader needs while an older backend is
  * still sending `stale` alone. One definition on purpose: this is the flag that
  * authorizes Delete, Reindex, Stop and supersede, so a missed copy arms a destructive
@@ -266,6 +260,12 @@ export const isAbandonedRun = index =>
  */
 export const hasReclaimableFlag = row => Boolean(row?.reclaimable ?? row?.stale);
 
+/**
+ * The control-flag counterpart of {@link isAbandonedRun}, for surfaces that retire a run
+ * rather than decorate it. See {@link indexRunControls} for the split.
+ * @param {object} index - Index row as returned by the indexes list
+ * @returns {boolean}
+ */
 export const isReclaimableRun = index =>
   hasReclaimableFlag(index) && index?.metadata?.state === IndexStatuses.progress;
 

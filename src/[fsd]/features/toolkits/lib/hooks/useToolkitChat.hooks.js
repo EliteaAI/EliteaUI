@@ -128,8 +128,9 @@ export const useToolkitChat = props => {
     conversationId: index?.metadata?.conversation_id,
   });
 
-  // Hoisted so the effect depends on the boolean rather than on `index`, whose identity
-  // changes on every poll and would re-run the recovery each time.
+  // Hoisted so the effect can depend on the decision rather than on the two fields it is
+  // made from, which also stops a `stale` flip re-running recovery while the control
+  // flag is already set.
   const runIsReclaimable = hasReclaimableFlag(index);
 
   useEffect(() => {

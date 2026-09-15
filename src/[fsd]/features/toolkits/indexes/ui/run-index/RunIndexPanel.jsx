@@ -180,8 +180,8 @@ const RunIndexPanel = memo(props => {
   }, [toolkitSchema]);
 
   const effectiveState = localMetaOverride?.state ?? index?.metadata?.state;
-  // Named to match the indexRunControls key so the call below stays shorthand, which is
-  // what the wiring guard checks.
+  // The panel's own notion of "running", which is the row's state OR an active chat run;
+  // `chatIsIndexing` keeps the hook's narrower flag distinguishable from it.
   const isIndexing = chatIsIndexing || effectiveState === IndexStatuses.progress;
   // Runs observed here aren't in the slice until a fetch happens — arm the poll from
   // local belief. (Second subscription on this route is deliberate; see the hook.)
