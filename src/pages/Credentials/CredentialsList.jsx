@@ -247,7 +247,7 @@ const CredentialsList = memo(props => {
         cardType={ContentType.CredentialAll}
         customEmptyState={
           isFolderViewActive && isFolderEmpty ? (
-            <Typography>No items in this folder yet</Typography>
+            <Typography data-testid="folder-empty-state">No items in this folder yet</Typography>
           ) : undefined
         }
         emptyListPlaceHolder={isFolderViewActive ? null : <EmptyListPlaceHolder query={query} />}

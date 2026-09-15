@@ -22,12 +22,14 @@ const FolderViewHeader = memo(props => {
         <Typography
           variant="headingSmall"
           sx={styles.folderName}
+          data-testid="folder-view-header-name"
         >
           {folder.name}
         </Typography>
         <Typography
           variant="bodyMedium"
           sx={styles.count}
+          data-testid="folder-view-header-count"
         >
           ({entitiesCount})
         </Typography>

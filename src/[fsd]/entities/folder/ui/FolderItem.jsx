@@ -44,6 +44,7 @@ const FolderItem = memo(props => {
           <Typography
             variant="labelSmall"
             sx={styles.count}
+            data-testid={`folder-item-count-${folder.id}`}
           >
             ({folder.entities_count})
           </Typography>
@@ -62,6 +63,7 @@ const FolderItem = memo(props => {
           startIcon={<MoreVertIcon />}
           onClick={handleMenuClick}
           sx={styles.moreButton}
+          data-testid={`folder-item-menu-btn-${folder.id}`}
         />
       )}
     </Box>

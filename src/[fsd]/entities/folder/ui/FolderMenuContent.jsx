@@ -60,6 +60,7 @@ const FolderMenuContent = memo(props => {
                 key={folder.id}
                 onClick={e => onFolderClick(e, folder)}
                 sx={[styles.menuItem, isCurrentFolder && styles.activeMenuItem]}
+                data-testid={`move-to-folder-menu-folder-${folder.id}`}
               >
                 <ListItemIcon sx={styles.menuItemIcon}>
                   <FolderIcon sx={{ fontSize: '1rem' }} />
@@ -105,6 +106,7 @@ const FolderMenuContent = memo(props => {
           <MenuItem
             onClick={onRemoveClick}
             sx={styles.wideMenuItem}
+            data-testid="move-to-folder-menu-remove-item"
           >
             <ListItemIcon sx={styles.menuItemIcon}>
               <UngroupIcon sx={{ fontSize: '1rem' }} />

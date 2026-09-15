@@ -189,7 +189,7 @@ const PrivateAgentsList = memo(props => {
         cardType={cardContentType}
         customEmptyState={
           isFolderViewActive && isFolderEmpty ? (
-            <Typography>No items in this folder yet</Typography>
+            <Typography data-testid="folder-empty-state">No items in this folder yet</Typography>
           ) : (
             <EmptyStatePage {...EmptyStateConfig} />
           )
