@@ -274,7 +274,7 @@ const applicationCatalogCardStyles = () => {
         height: '1rem',
       },
       '& svg path': {
-        fill: palette.icon.fill.white,
+        fill: palette.icon.white,
       },
     }),
     pendingStatus: ({ palette }) => ({
@@ -288,7 +288,7 @@ const applicationCatalogCardStyles = () => {
       alignItems: 'center',
       gap: '0.25rem',
       textDecoration: 'none',
-      color: palette.text.default,
+      color: palette.text.primary,
       transition: 'color 0.2s',
       '&:hover': {
         color: palette.text.secondary,

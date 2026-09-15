@@ -221,7 +221,7 @@ const applicationInformationStyles = () => ({
   },
   showLink: ({ palette }) => ({
     cursor: 'pointer',
-    color: palette.text.button.showMore,
+    color: palette.text.showMore,
   }),
   scheduleInfo: {
     display: 'flex',

@@ -3,6 +3,8 @@ import { useCallback, useEffect, useMemo } from 'react';
 import { useFormikContext } from 'formik';
 import { useNavigate, useParams } from 'react-router-dom';
 
+import { useTheme } from '@mui/material';
+
 import { ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useToolkitDeleteMutation } from '@/api/toolkits';
 import { buildErrorMessage } from '@/common/utils';
@@ -11,7 +13,6 @@ import DeleteIcon from '@/components/Icons/DeleteIcon';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 import RouteDefinitions from '@/routes';
-import { useTheme } from '@emotion/react';
 
 const useDeleteToolkit = (setBlockNav, isMCP) => {
   const projectId = useSelectedProjectId();
@@ -74,7 +75,7 @@ export const useDeleteToolkitMenu = (setBlockNav, disabled, isMCP) => {
       icon: (
         <DeleteIcon
           sx={{ fontSize: '16px' }}
-          fill={isLoading ? theme.palette.icon.fill.disabled : theme.palette.icon.fill.default}
+          fill={isLoading ? theme.palette.icon.disabled : theme.palette.icon.default}
         />
       ),
       confirmText: `Are you sure you want to delete ${name}?`,
@@ -83,7 +84,7 @@ export const useDeleteToolkitMenu = (setBlockNav, disabled, isMCP) => {
       entityName: name,
       onConfirm: onDelete,
     }),
-    [disabled, isLoading, name, onDelete, theme.palette.icon.fill.disabled, theme.palette.icon.fill.default],
+    [disabled, isLoading, name, onDelete, theme.palette.icon.disabled, theme.palette.icon.default],
   );
 
   return {

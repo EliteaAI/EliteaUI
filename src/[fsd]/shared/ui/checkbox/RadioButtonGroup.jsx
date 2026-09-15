@@ -108,7 +108,7 @@ const radioButtonGroupStyles = (theme, wrapRow, columnGap) => ({
     mt: '0.4375rem',
   }),
   infoIcon: {
-    fill: theme.palette.icon.main,
+    fill: theme.palette.icon.default,
   },
 });
 

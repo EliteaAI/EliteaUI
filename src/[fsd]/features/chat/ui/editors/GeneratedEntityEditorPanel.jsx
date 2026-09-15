@@ -181,7 +181,7 @@ const generatedEntityEditorPanelStyles = () => ({
     minWidth: 0,
     minHeight: '2rem !important',
     '& .MuiTabs-indicator': ({ palette }) => ({
-      backgroundColor: palette.background.tabs.default,
+      backgroundColor: palette.primary.main,
       borderRadius: '2rem 2rem 0 0',
     }),
   },

@@ -164,7 +164,7 @@ const getStyles = ({ popoverWidth, maxHeight }) => ({
     justifyContent: 'space-between',
     padding: '0.5rem 1rem',
     '&:hover': {
-      backgroundColor: palette.background.select?.hover || palette.action.hover,
+      backgroundColor: palette.components.select?.hover || palette.action.hover,
     },
   }),
   menuItemLabel: {

@@ -61,7 +61,7 @@ const UserSearchSelect = memo(props => {
           <SearchIcon
             width={16}
             height={16}
-            fill={theme.palette.icon.fill.default}
+            fill={theme.palette.icon.default}
           />
         ),
       }}

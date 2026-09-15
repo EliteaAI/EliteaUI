@@ -387,7 +387,7 @@ const tokensSettingsStyles = (showSettingsPreview, isSmallWindow) => ({
       borderLeft: `0.0625rem solid ${palette.border.lines} !important`,
       backgroundRepeat: 'no-repeat',
       backgroundPosition: '50%',
-      backgroundColor: showSettingsPreview ? `${palette.border.lines} !important` : 'transparent',
+      backgroundColor: showSettingsPreview ? `${palette.border.default} !important` : 'transparent',
       border: 'none !important',
       borderRadius: '0.125rem',
       transition: 'all 0.2s ease-in-out',

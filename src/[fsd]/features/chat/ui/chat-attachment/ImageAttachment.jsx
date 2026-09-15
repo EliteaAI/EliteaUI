@@ -145,7 +145,7 @@ const ImageAttachment = memo(props => {
           >
             <ImportIcon
               sx={styles.icon}
-              fill={theme.palette.icon.fill.secondary}
+              fill={theme.palette.icon.secondary}
             />
           </IconButton>
           <IconButton
@@ -157,7 +157,7 @@ const ImageAttachment = memo(props => {
           >
             <DeleteIcon
               sx={styles.icon}
-              fill={theme.palette.icon.fill.secondary}
+              fill={theme.palette.icon.secondary}
             />
           </IconButton>
         </Box>
@@ -205,7 +205,7 @@ const imageAttachmentStyles = () => ({
     borderRadius: '0.5rem',
     overflow: 'hidden',
     position: 'relative',
-    background: palette.background.button.default,
+    background: palette.background.surface.interactive.active,
     '& .attachActionButtons': {
       visibility: 'hidden',
       position: 'absolute',
@@ -218,7 +218,7 @@ const imageAttachmentStyles = () => ({
       justifyContent: 'center',
       padding: '0.5rem',
       gap: '0.75rem',
-      background: palette.background.imageAttachment,
+      background: palette.components.imageAttachment.background,
     },
     '&:hover .attachActionButtons': {
       visibility: 'visible',

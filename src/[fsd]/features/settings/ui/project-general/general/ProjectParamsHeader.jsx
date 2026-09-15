@@ -120,9 +120,9 @@ const projectParamsHeaderStyles = () => ({
     width: '1.5rem',
     height: '1.5rem',
     backgroundColor: palette.background.default.secondary,
-    border: `.125rem solid ${palette.border.edit}`,
+    border: `.125rem solid ${palette.border.lines}`,
     '&:hover': {
-      backgroundColor: palette.background.dataGrid.main,
+      backgroundColor: palette.background.default.secondary,
     },
   }),
   editIcon: {
@@ -153,7 +153,7 @@ const projectParamsHeaderStyles = () => ({
   metaIconSvg: ({ palette }) => ({
     width: '0.875rem',
     height: '0.875rem',
-    color: palette.icon.fill.primary,
+    color: palette.icon.primary,
   }),
   metaValue: ({ palette }) => ({
     fontFamily: 'Montserrat, sans-serif',

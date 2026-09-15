@@ -47,7 +47,7 @@ const pinMenuIconStyles = {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    color: palette.icon.fill.default,
+    color: palette.icon.default,
   }),
   icon: {
     fontSize: '1rem',

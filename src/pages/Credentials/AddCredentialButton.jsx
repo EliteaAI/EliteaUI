@@ -2,12 +2,11 @@ import React, { useCallback, useMemo } from 'react';
 
 import { useLocation, useNavigate } from 'react-router-dom';
 
-import { Box, ClickAwayListener, IconButton } from '@mui/material';
+import { Box, ClickAwayListener, IconButton, useTheme } from '@mui/material';
 
 import { CredentialsTabs, ViewMode } from '@/common/constants';
 import PlusIcon from '@/components/Icons/PlusIcon';
 import RouteDefinitions from '@/routes';
-import { useTheme } from '@emotion/react';
 
 const AddCredentialButton = () => {
   const navigate = useNavigate();
@@ -52,7 +51,7 @@ const AddCredentialButton = () => {
           color="primary"
           onClick={onClickAdd}
         >
-          <PlusIcon fill={theme.palette.icon.fill.send} />
+          <PlusIcon fill={theme.palette.icon.send} />
         </IconButton>
       </Box>
     </ClickAwayListener>

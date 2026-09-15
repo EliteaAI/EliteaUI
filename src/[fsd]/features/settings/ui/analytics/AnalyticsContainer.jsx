@@ -467,7 +467,7 @@ const analyticsContainerStyles = () => ({
     borderRadius: '.75rem',
 
     span: {
-      color: palette.background.tooltip.default,
+      color: palette.text.secondary,
       fontWeight: 500,
       lineHeight: '1rem',
     },
@@ -475,7 +475,7 @@ const analyticsContainerStyles = () => ({
     svg: {
       fontSize: '.825rem',
 
-      path: { fill: palette.background.button.primary.disabled },
+      path: { fill: palette.action.disabledBackground },
     },
   }),
   filterBar: ({ palette }) => ({
@@ -485,7 +485,7 @@ const analyticsContainerStyles = () => ({
     flexWrap: 'wrap',
     gap: '0.75rem',
     padding: '1rem 1.5rem',
-    borderTop: `1px solid ${palette.border.table}`,
+    borderTop: `1px solid ${palette.border.default}`,
     background: palette.background.default.tertiary,
   }),
   datePickerRow: { display: 'flex', gap: '0.5rem', alignItems: 'center' },
@@ -502,7 +502,7 @@ const analyticsContainerStyles = () => ({
     borderBottomColor: palette.primary.main,
   }),
   datePickerLabel: ({ palette }) => ({
-    color: palette.text.default,
+    color: palette.text.primary,
     fontFamily: 'Montserrat',
     fontSize: '.75rem',
     fontWeight: 500,
@@ -551,7 +551,7 @@ const analyticsContainerStyles = () => ({
           height: '1rem',
           fontSize: '1rem',
 
-          '& path': { fill: palette.background.tooltip.default },
+          '& path': { fill: palette.icon.default },
         },
       },
     }),
@@ -577,37 +577,37 @@ const analyticsContainerStyles = () => ({
       fontWeight: 500,
     },
     '& .MuiPickersCalendarHeader-switchViewButton': {
-      color: palette.text.default,
-      '& svg': { fill: palette.text.default },
+      color: palette.text.primary,
+      '& svg': { fill: palette.icon.default },
 
       '&:hover': {
         color: palette.text.secondary,
-        '& svg': { fill: palette.text.secondary },
+        '& svg': { fill: palette.icon.secondary },
       },
     },
 
     // Arrow navigation buttons — tertiary style
     '& .MuiPickersArrowSwitcher-button': {
-      color: palette.text.default,
+      color: palette.text.primary,
       background: 'transparent',
       borderRadius: '50%',
       width: '1.625rem',
       height: '1.625rem',
       padding: 0,
-      '& svg': { fill: palette.text.default },
+      '& svg': { fill: palette.icon.default },
       '&:hover': {
-        background: palette.background.button.tertiary.hover,
+        background: palette.background.interactiveItem.hover,
         color: palette.text.secondary,
-        '& svg': { fill: palette.text.secondary },
+        '& svg': { fill: palette.icon.secondary },
       },
       '&:active': {
-        background: palette.background.button.tertiary.pressed,
+        background: palette.background.surface.interactive.selected,
       },
     },
 
     // Weekday labels (M T W T F S S)
     '& .MuiDayCalendar-weekDayLabel': {
-      color: palette.text.default,
+      color: palette.text.primary,
       fontSize: '.875rem',
     },
 
@@ -617,14 +617,14 @@ const analyticsContainerStyles = () => ({
       fontSize: '.875rem',
       borderRadius: '50%',
       '&:hover': {
-        backgroundColor: palette.background.button.tertiary.hover,
+        backgroundColor: palette.background.interactiveItem.hover,
       },
       '&.Mui-selected': {
-        backgroundColor: palette.split.default,
+        backgroundColor: palette.background.default.secondary,
         color: palette.text.secondary,
         borderRadius: '50%',
         '&:hover': {
-          backgroundColor: palette.split.default,
+          backgroundColor: palette.background.default.secondary,
         },
       },
       '&.MuiPickersDay-today': {
@@ -638,13 +638,13 @@ const analyticsContainerStyles = () => ({
       color: palette.text.secondary,
       fontSize: '.875rem',
       '&:hover': {
-        backgroundColor: palette.background.button.tertiary.hover,
+        backgroundColor: palette.background.interactiveItem.hover,
       },
       '&.Mui-selected': {
-        backgroundColor: palette.split.default,
+        backgroundColor: palette.background.default.secondary,
         color: palette.text.secondary,
         '&:hover': {
-          backgroundColor: palette.split.default,
+          backgroundColor: palette.background.default.secondary,
         },
       },
     },
@@ -656,7 +656,7 @@ const analyticsContainerStyles = () => ({
       '& .MuiList-root': {
         '&::-webkit-scrollbar': { width: '.25rem' },
         '&::-webkit-scrollbar-thumb': {
-          backgroundColor: palette.border.lines,
+          backgroundColor: palette.background.default.secondary,
           borderRadius: '.125rem',
         },
       },
@@ -664,18 +664,18 @@ const analyticsContainerStyles = () => ({
 
     // Time numbers — keep gray
     '& .MuiMultiSectionDigitalClockSection-item': {
-      color: palette.text.default,
+      color: palette.text.primary,
       fontSize: '.875rem',
       borderRadius: '1.75rem',
       '&:hover': {
-        backgroundColor: palette.background.button.tertiary.hover,
+        backgroundColor: palette.background.interactiveItem.hover,
       },
       '&.Mui-selected': {
-        backgroundColor: palette.split.default,
+        backgroundColor: palette.background.default.secondary,
         color: palette.text.secondary,
         borderRadius: '1.75rem',
         '&:hover': {
-          backgroundColor: palette.split.default,
+          backgroundColor: palette.background.default.secondary,
         },
       },
     },
@@ -689,7 +689,7 @@ const analyticsContainerStyles = () => ({
 
       // Clear button — secondary style
       '& .MuiButton-root': {
-        backgroundColor: palette.background.button.secondary.default,
+        backgroundColor: palette.background.surface.interactive.active,
         color: palette.text.secondary,
         fontFamily: 'Montserrat',
         fontSize: '.75rem',
@@ -699,22 +699,22 @@ const analyticsContainerStyles = () => ({
         textTransform: 'none',
         padding: '.5rem 1.5rem',
         '&:hover': {
-          backgroundColor: palette.background.button.secondary.hover,
+          backgroundColor: palette.background.surface.interactive.selected,
         },
         '&:active': {
-          backgroundColor: palette.background.button.secondary.pressed,
+          backgroundColor: palette.background.surface.interactive.selected,
         },
       },
 
       // Apply button — primary style
       '& .MuiButton-root:last-child': {
-        backgroundColor: palette.background.button.primary.default,
-        color: palette.text.button.primary,
+        backgroundColor: palette.primary.main,
+        color: palette.primary.contrastText,
         '&:hover': {
-          backgroundColor: palette.background.button.primary.hover,
+          backgroundColor: palette.primary.light,
         },
         '&:active': {
-          backgroundColor: palette.background.button.primary.pressed,
+          backgroundColor: palette.primary.dark,
         },
       },
     },
@@ -722,7 +722,7 @@ const analyticsContainerStyles = () => ({
   tabSection: { display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' },
   tabsContainer: ({ palette }) => ({
     padding: '0 1.5rem',
-    borderBottom: `1px solid ${palette.border.table}`,
+    borderBottom: `1px solid ${palette.border.default}`,
     background: palette.background.default.tertiary,
   }),
   contentArea: { flex: 1, overflow: 'auto', padding: '1.5rem', position: 'relative' },

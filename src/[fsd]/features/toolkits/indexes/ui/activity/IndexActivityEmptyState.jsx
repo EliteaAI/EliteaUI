@@ -67,7 +67,7 @@ const indexActivityEmptyStateStyles = () => ({
     width: '100%',
     gap: '1.5rem',
     textAlign: 'center',
-    color: ({ palette }) => palette.icon.fill.disabled,
+    color: ({ palette }) => palette.icon.disabled,
   },
   textContainer: {
     display: 'flex',

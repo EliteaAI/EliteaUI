@@ -2,14 +2,13 @@ import { useCallback, useMemo } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { IconButton } from '@mui/material';
+import { IconButton, useTheme } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
 import ExportIcon from '@/components/Icons/ExportIcon';
 import useToast from '@/hooks/useToast';
 import { useExport } from '@/pages/Common/Components/useExport';
-import { useTheme } from '@emotion/react';
 
 const useExportToolkit = () => {
   const { values: { id, name, owner_id } = {} } = useFormikContext();
@@ -42,7 +41,7 @@ export const useExportToolkitMenu = ({ disabled = false } = {}) => {
         <>
           <ExportIcon
             sx={{ fontSize: '1rem' }}
-            fill={theme.palette.icon.fill.default}
+            fill={theme.palette.icon.default}
           />
           {isExporting && <StyledCircleProgress size={16} />}
         </>
@@ -50,7 +49,7 @@ export const useExportToolkitMenu = ({ disabled = false } = {}) => {
       disabled,
       onClick: onExport,
     }),
-    [disabled, isExporting, onExport, theme.palette.icon.fill.default],
+    [disabled, isExporting, onExport, theme.palette.icon.default],
   );
 
   return {
@@ -77,7 +76,7 @@ export default function ExportToolkitButton({ disabled = false }) {
       >
         <ExportIcon
           sx={{ fontSize: '1rem' }}
-          fill={theme.palette.icon.fill.secondary}
+          fill={theme.palette.icon.secondary}
         />
         {isExporting && <StyledCircleProgress size={16} />}
       </IconButton>

@@ -1,10 +1,9 @@
 import React, { useCallback } from 'react';
 
-import { IconButton } from '@mui/material';
+import { IconButton, useTheme } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import SearchIcon from '@/components/Icons/SearchIcon';
-import { useTheme } from '@emotion/react';
 
 const BucketSearch = ({ collapsed = false, onExpand, onSearchActivate }) => {
   const theme = useTheme();
@@ -45,7 +44,7 @@ const BucketSearch = ({ collapsed = false, onExpand, onSearchActivate }) => {
             width: '16px',
             height: '16px',
           }}
-          fill={theme.palette.icon.fill.secondary}
+          fill={theme.palette.icon.secondary}
         />
       </IconButton>
     </Tooltip>

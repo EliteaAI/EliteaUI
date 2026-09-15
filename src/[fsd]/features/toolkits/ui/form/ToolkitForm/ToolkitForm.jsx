@@ -650,8 +650,8 @@ const toolkitFormStyles = (isDetailsActionBar, hasSidePanel) => ({
       ? {
           flexShrink: 0,
           height: PANEL_HEADER_HEIGHT,
-          borderBottom: `0.0625rem solid ${palette.border.table}`,
-          background: palette.background.toolkitDetailLeftPanel,
+          borderBottom: `0.0625rem solid ${palette.border.default}`,
+          background: palette.components.indexDetail.background.left,
         }
       : { marginBottom: '0.75rem' },
   actionBarRow: {

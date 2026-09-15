@@ -2,14 +2,13 @@ import { useCallback, useMemo } from 'react';
 
 import { useSelector } from 'react-redux';
 
-import { IconButton } from '@mui/material';
+import { IconButton, useTheme } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { PERMISSIONS } from '@/common/constants';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
 import ForkIcon from '@/components/Icons/ForkIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
-import { useTheme } from '@emotion/react';
 
 import { useForkEntity } from './useForkEntity';
 
@@ -66,7 +65,7 @@ export const useForkEntityMenu = ({
               <>
                 <ForkIcon
                   sx={{ fontSize: '16px' }}
-                  fill={theme.palette.icon.fill.default}
+                  fill={theme.palette.icon.default}
                 />
                 {isLoading && <StyledCircleProgress size={20} />}
               </>
@@ -79,7 +78,7 @@ export const useForkEntityMenu = ({
       entity_name,
       checkPermission,
       validatePermission,
-      theme.palette.icon.fill.default,
+      theme.palette.icon.default,
       isLoading,
       disabled,
       onClick,
@@ -130,7 +129,7 @@ export default function ForkEntityButton({
         >
           <ForkIcon
             sx={{ fontSize: '16px' }}
-            fill={fill_color || theme.palette.icon.fill.secondary}
+            fill={fill_color || theme.palette.icon.secondary}
           />
           {isLoading && <StyledCircleProgress size={20} />}
         </IconButton>

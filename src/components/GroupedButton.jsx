@@ -1,9 +1,8 @@
-import { Button } from '@mui/material';
+import { Button, useTheme } from '@mui/material';
 import ButtonGroup from '@mui/material/ButtonGroup';
 
 import { PIPELINE_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { typographyVariants } from '@/[fsd]/shared/config/theme';
-import { useTheme } from '@emotion/react';
 import styled from '@emotion/styled';
 
 const StyledButton = styled(Button)(({ theme }) => ({
@@ -15,7 +14,7 @@ const StyledButton = styled(Button)(({ theme }) => ({
   alignItems: 'center',
   gap: '0.5rem',
   borderRadius: '0.5rem',
-  background: theme.palette.background.tabButton.default,
+  background: theme.palette.components.tabGroupButton.background.default,
   color: theme.palette.text.primary,
   '&.Mui-selected': {
     color: theme.palette.text.secondary,
@@ -23,7 +22,7 @@ const StyledButton = styled(Button)(({ theme }) => ({
       color: theme.palette.text.primary,
     },
     '&:not(:hover)': {
-      background: theme.palette.background.tabButton.active,
+      background: theme.palette.components.tabGroupButton.background.active,
     },
   },
   border: 'none',
@@ -46,7 +45,7 @@ const GroupedButton = ({ value, onChange, buttonItems, readOnly, disabled, sx })
           key={index}
           sx={{
             '&:hover': {
-              backgroundColor: theme.palette.background.button.default,
+              backgroundColor: theme.palette.components.button.background.default,
               color: theme.palette.text.secondary,
             },
           }}

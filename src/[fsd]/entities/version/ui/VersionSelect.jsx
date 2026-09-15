@@ -261,7 +261,7 @@ const versionSelectStyles = () => ({
       fontSize: '1rem',
 
       path: {
-        fill: palette.icon.fill.inactive,
+        fill: palette.icon.inactive,
       },
     },
   }),
@@ -273,7 +273,7 @@ const versionSelectStyles = () => ({
   menuItemIconSx: {
     width: '1rem',
     height: '1rem',
-    svg: { fontSize: '1rem', path: { fill: ({ palette }) => palette.icon.fill.inactive } },
+    svg: { fontSize: '1rem', path: { fill: ({ palette }) => palette.icon.inactive } },
   },
   customMenuPropsSx: {
     '& .MuiPaper-root': {
@@ -294,14 +294,14 @@ const versionSelectStyles = () => ({
     marginRight: '0.5rem',
     '& svg': {
       fontSize: '1rem',
-      fill: palette.icon.fill.attention,
+      fill: palette.icon.attention,
     },
   }),
   publishedIconBox: ({ palette }) => ({
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    svg: { path: { fill: palette.icon.fill.success } },
+    svg: { path: { fill: palette.icon.success } },
   }),
   iconSm: {
     fontSize: '1rem',

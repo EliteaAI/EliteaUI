@@ -76,13 +76,13 @@ const styles = {
     margin: 0,
     width: '100%',
   },
-  label: {
+  label: ({ palette }) => ({
     fontFamily: '"Montserrat", sans-serif',
     fontWeight: 500,
     fontSize: '0.875rem',
     lineHeight: '1.5rem',
-    color: '#0E131D',
-  },
+    color: palette.text.alwaysDark,
+  }),
 };
 
 export default RadioQuestion;

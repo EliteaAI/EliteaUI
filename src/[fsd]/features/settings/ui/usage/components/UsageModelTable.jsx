@@ -192,7 +192,7 @@ const usageModelTableStyles = () => ({
     flex: 1,
     height: '0.375rem',
     borderRadius: '0.25rem',
-    backgroundColor: palette.border.lines,
+    backgroundColor: palette.background.default.secondary,
     position: 'relative',
   }),
   shareFill: (share, color) => ({

@@ -607,7 +607,7 @@ const artifactTableStyles = () => ({
   },
   folderIcon: ({ palette }) => ({
     fontSize: '1.125rem',
-    color: palette.icon.fill.secondary,
+    color: palette.icon.secondary,
   }),
   folderRow: {
     cursor: 'pointer',

@@ -161,7 +161,7 @@ const ValidationResult = memo(props => {
           icon={
             <ErrorIcon
               size={14}
-              fill={theme.palette.status.rejected}
+              fill={theme.palette.icon.error}
             />
           }
           onClick={() => scrollToSection(SECTION_IDS.critical)}
@@ -174,7 +174,7 @@ const ValidationResult = memo(props => {
             <AttentionIcon
               width={14}
               height={14}
-              fill={theme.palette.status.onModeration}
+              fill={theme.palette.icon.attention}
             />
           }
           onClick={() => scrollToSection(SECTION_IDS.warnings)}
@@ -187,7 +187,7 @@ const ValidationResult = memo(props => {
             <InfoIcon
               width={14}
               height={14}
-              fill={theme.palette.icon.fill.tips}
+              fill={theme.palette.icon.tips}
             />
           }
           onClick={() => scrollToSection(SECTION_IDS.suggestions)}

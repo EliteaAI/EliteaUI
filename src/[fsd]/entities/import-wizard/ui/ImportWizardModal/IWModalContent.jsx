@@ -173,8 +173,8 @@ const iwModalContentStyles = () => ({
     gap: '0.75rem',
     marginTop: 'auto',
     padding: '.75rem 1rem',
-    background: palette.background.warning8,
-    border: `0.0625rem solid ${palette.background.warning40}`,
+    background: palette.background.warning,
+    border: `0.0625rem solid ${palette.border.attention}`,
     borderRadius: '0.5rem',
 
     svg: {
@@ -182,7 +182,7 @@ const iwModalContentStyles = () => ({
       minHeight: '1rem',
 
       path: {
-        fill: palette.background.warning,
+        fill: palette.icon.warning,
       },
     },
   }),
@@ -191,7 +191,7 @@ const iwModalContentStyles = () => ({
     fontWeight: 400,
     fontSize: '.75rem',
     lineHeight: '1rem',
-    color: theme.palette.mode === 'light' ? theme.palette.icon.fill.attention : theme.palette.text.mcp.logout,
+    color: theme.palette.mode === 'light' ? theme.palette.icon.attention : theme.palette.text.secondary,
   }),
 });
 

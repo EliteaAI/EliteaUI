@@ -1,4 +1,4 @@
-import { useTheme } from '@emotion/react';
+import { useTheme } from '@mui/material';
 
 const BrowserIcon = props => {
   const theme = useTheme();
@@ -8,7 +8,7 @@ const BrowserIcon = props => {
       height="16"
       viewBox="0 0 16 16"
       xmlns="http://www.w3.org/2000/svg"
-      fill={theme.palette.icon.fill.primary}
+      fill={theme.palette.icon.primary}
       {...props}
     >
       <path d="M3.35577 4.72727C3.65315 4.72727 3.89423 4.48306 3.89423 4.18182C3.89423 3.88057 3.65315 3.63636 3.35577 3.63636C3.05839 3.63636 2.81731 3.88057 2.81731 4.18182C2.81731 4.48306 3.05839 4.72727 3.35577 4.72727Z" />

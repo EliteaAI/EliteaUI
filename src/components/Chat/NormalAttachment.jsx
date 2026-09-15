@@ -151,7 +151,7 @@ const NormalAttachment = ({
           width="1rem"
           height="1rem"
         >
-          <AttachedFileIcon color={theme.palette.icon.fill.default} />
+          <AttachedFileIcon color={theme.palette.icon.default} />
         </Box>
 
         <Box sx={styles.contentContainer}>
@@ -187,7 +187,7 @@ const NormalAttachment = ({
               >
                 <OpenEyeIcon
                   sx={styles.icon}
-                  fill={theme.palette.icon.fill.default}
+                  fill={theme.palette.icon.default}
                 />
               </IconButton>
             </Tooltip>
@@ -201,7 +201,7 @@ const NormalAttachment = ({
           >
             <ImportIcon
               sx={styles.icon}
-              fill={theme.palette.icon.fill.default}
+              fill={theme.palette.icon.default}
             />
           </IconButton>
           <IconButton
@@ -213,7 +213,7 @@ const NormalAttachment = ({
           >
             <DeleteIcon
               sx={styles.icon}
-              fill={theme.palette.icon.fill.default}
+              fill={theme.palette.icon.default}
             />
           </IconButton>
         </Box>
@@ -260,7 +260,7 @@ const normalAttachmentStyles = () => ({
     gap: '.75rem',
     padding: '.375rem .75rem',
     alignItems: 'center',
-    background: palette.background.button.default,
+    background: palette.background.interactiveItem.hover,
   }),
   contentContainer: {
     flex: 1,

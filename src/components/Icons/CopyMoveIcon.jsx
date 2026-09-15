@@ -1,4 +1,4 @@
-import { useTheme } from '@emotion/react';
+import { useTheme } from '@mui/material';
 
 export default function CopyMoveIcon(props) {
   const theme = useTheme();
@@ -8,7 +8,7 @@ export default function CopyMoveIcon(props) {
       width="16"
       height="16"
       viewBox="0 0 16 16"
-      fill={theme.palette.icon.fill.primary}
+      fill={theme.palette.icon.primary}
       {...props}
     >
       <path d="M3.33333 1.58333C3.33333 1.26117 3.5945 1 3.91667 1L14.4167 1C14.7388 1 15 1.26117 15 1.58333V12.0833C15 12.4055 14.7388 12.6667 14.4167 12.6667C14.0945 12.6667 13.8333 12.4055 13.8333 12.0833V2.16667L3.91667 2.16667C3.5945 2.16667 3.33333 1.9055 3.33333 1.58333Z" />

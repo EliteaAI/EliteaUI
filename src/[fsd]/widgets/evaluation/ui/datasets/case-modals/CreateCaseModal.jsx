@@ -553,7 +553,7 @@ const createCaseModalStyles = () => ({
     fontSize: '0.875rem',
     fontWeight: 400,
     lineHeight: '1.5rem',
-    color: palette.text.button.disabled,
+    color: palette.text.disabled,
   }),
   variableRow: {
     display: 'flex',
@@ -593,7 +593,7 @@ const createCaseModalStyles = () => ({
   deleteIcon: ({ palette }) => ({
     fontSize: '1rem',
     '& path': {
-      fill: palette.icon.fill.default,
+      fill: palette.icon.default,
     },
   }),
   addVariableButton: ({ palette }) => ({
@@ -610,11 +610,11 @@ const createCaseModalStyles = () => ({
       height: '0.75rem',
     },
     '& svg path': {
-      fill: palette.text.secondary,
+      fill: palette.icon.secondary,
     },
     '&:hover': {
       borderColor: palette.border.lines,
-      backgroundColor: palette.background.tabButton.default,
+      backgroundColor: palette.background.surface.interactive.default,
     },
   }),
   expectedOutputSection: {

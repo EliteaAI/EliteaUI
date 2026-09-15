@@ -44,7 +44,7 @@ const CaseRowActions = memo(props => {
           data-testid={`case-edit-${caseItem.id}`}
         >
           <EditIcon
-            fill={palette.icon.fill.default}
+            fill={palette.icon.default}
             sx={styles.editIcon}
           />
         </Button.BaseBtn>
@@ -89,7 +89,7 @@ const caseRowActionsStyles = () => ({
   icon: ({ palette }) => ({
     fontSize: '1rem',
     '& path': {
-      fill: palette.icon.fill.default,
+      fill: palette.icon.default,
     },
   }),
 });

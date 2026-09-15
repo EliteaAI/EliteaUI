@@ -473,7 +473,7 @@ const selectIconDialogStyles = () => ({
     height: '2.25rem',
     borderRadius: '50%',
     overflow: 'hidden',
-    background: palette.background.icon?.default,
+    background: palette.components.entityIcon.background?.default,
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
@@ -485,6 +485,6 @@ const selectIconDialogStyles = () => ({
     objectFit: 'cover',
   },
   importIcon: ({ palette }) => ({
-    fill: palette.icon.fill.default,
+    fill: palette.icon.default,
   }),
 });

@@ -2,10 +2,9 @@ import { useCallback } from 'react';
 
 import FullscreenExitOutlinedIcon from '@mui/icons-material/FullscreenExitOutlined';
 import FullscreenOutlinedIcon from '@mui/icons-material/FullscreenOutlined';
-import { IconButton } from '@mui/material';
+import { IconButton, useTheme } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
-import { useTheme } from '@emotion/react';
 
 export default function FullScreenToggle({ isFullScreenChat, setIsFullScreenChat }) {
   const theme = useTheme();
@@ -29,7 +28,7 @@ export default function FullScreenToggle({ isFullScreenChat, setIsFullScreenChat
       >
         <FullscreenExitOutlinedIcon
           sx={{ fontSize: 16 }}
-          fill={theme.palette.icon.fill.secondary}
+          fill={theme.palette.icon.secondary}
         />
       </IconButton>
     </Tooltip>
@@ -46,7 +45,7 @@ export default function FullScreenToggle({ isFullScreenChat, setIsFullScreenChat
       >
         <FullscreenOutlinedIcon
           sx={{ fontSize: 16 }}
-          fill={theme.palette.icon.fill.secondary}
+          fill={theme.palette.icon.secondary}
         />
       </IconButton>
     </Tooltip>

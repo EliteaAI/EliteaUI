@@ -2,7 +2,7 @@ import { useCallback, useMemo } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { IconButton } from '@mui/material';
+import { IconButton, useTheme } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
@@ -10,7 +10,6 @@ import ExportIcon from '@/components/Icons/ExportIcon.jsx';
 import { useIsFromPipelineDetail } from '@/hooks/useIsFromSpecificPageHooks';
 import useToast from '@/hooks/useToast';
 import { ExportFormat, useExport } from '@/pages/Common/Components/useExport';
-import { useTheme } from '@emotion/react';
 
 const useExportApplication = () => {
   const isFromPipeline = useIsFromPipelineDetail();
@@ -87,7 +86,7 @@ export default function ExportApplicationButton() {
       >
         <ExportIcon
           sx={{ fontSize: '1rem' }}
-          fill={theme.palette.icon.fill.secondary}
+          fill={theme.palette.icon.secondary}
         />
         {isExporting && <StyledCircleProgress size={16} />}
       </IconButton>

@@ -2,7 +2,7 @@ import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRe
 
 import { useSelector } from 'react-redux';
 
-import { Box, IconButton } from '@mui/material';
+import { Box, IconButton, useTheme } from '@mui/material';
 
 import { ChatBox, ChatButton } from '@/[fsd]/features/chat/ui';
 import { ViewRunHistoryButton } from '@/[fsd]/shared/ui/button';
@@ -13,7 +13,6 @@ import DoubleRightIcon from '@/components/Icons/DoubleRightIcon';
 import useIsSmallWindow from '@/hooks/useIsSmallWindow';
 import { ContentContainer } from '@/pages/Common/index.js';
 import { selectActivePipeline } from '@/slices/pipeline.js';
-import { useTheme } from '@emotion/react';
 
 /**
  * Creates styles object based on component state
@@ -134,12 +133,12 @@ const ChatPanel = forwardRef((props, ref) => {
           >
             {collapsed ? (
               <DoubleLeftIcon
-                fill={theme.palette.icon.fill.default}
+                fill={theme.palette.icon.default}
                 width={16}
               />
             ) : (
               <DoubleRightIcon
-                fill={theme.palette.icon.fill.default}
+                fill={theme.palette.icon.default}
                 width={16}
               />
             )}

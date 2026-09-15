@@ -1,6 +1,4 @@
-import { SvgIcon } from '@mui/material';
-
-import { useTheme } from '@emotion/react';
+import { SvgIcon, useTheme } from '@mui/material';
 
 export default function MoveTo(props) {
   const theme = useTheme();
@@ -12,7 +10,7 @@ export default function MoveTo(props) {
         height="16"
         viewBox="0 0 16 16"
         xmlns="http://www.w3.org/2000/svg"
-        fill={props.fill || theme.palette.icon.fill.default}
+        fill={props.fill || theme.palette.icon.default}
         {...props}
       >
         <path

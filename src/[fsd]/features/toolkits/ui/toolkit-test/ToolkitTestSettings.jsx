@@ -143,17 +143,17 @@ const toolkitTestSettingsStyles = () => ({
     alignItems: 'center',
     justifyContent: 'center',
     padding: '0.5rem 1rem',
-    background: palette.background.surface.container,
-    borderTop: `0.0625rem solid ${palette.border.table}`,
+    background: palette.background.panel,
+    borderTop: `0.0625rem solid ${palette.border.default}`,
     flexShrink: 0,
     width: '100%',
     height: '3.25rem',
   }),
   icon: {
     fontSize: '1rem',
-    '& path': { fill: ({ palette }) => palette.primary.main },
+    '& path': { fill: ({ palette }) => palette.icon.accent },
     '.Mui-disabled & path': {
-      fill: ({ palette }) => palette.icon.fill.disabled,
+      fill: ({ palette }) => palette.icon.disabled,
     },
   },
 });

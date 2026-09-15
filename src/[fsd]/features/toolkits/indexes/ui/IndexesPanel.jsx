@@ -117,8 +117,8 @@ const indexesPanelStyles = () => ({
     flexShrink: 0,
     height: PANEL_HEADER_HEIGHT,
     padding: `0 ${PANEL_GUTTER}`,
-    background: palette.background.toolkitDetailRightPanel,
-    borderBottom: `0.0625rem solid ${palette.border.table}`,
+    background: palette.components.indexDetail.background.right,
+    borderBottom: `0.0625rem solid ${palette.border.default}`,
   }),
   title: {
     display: 'flex',

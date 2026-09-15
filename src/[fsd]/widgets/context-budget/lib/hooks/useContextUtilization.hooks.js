@@ -14,7 +14,7 @@ export const useContextUtilization = utilization => {
     const percentage = Math.round(utilization * 100);
     const isHigh = utilization >= CONTEXT_BUDGET.HIGH_UTILIZATION_THRESHOLD;
 
-    const color = isHigh ? theme.palette.warning.yellow : theme.palette.success.main;
+    const color = isHigh ? theme.palette.warning.high : theme.palette.success.main;
 
     return {
       percentage,

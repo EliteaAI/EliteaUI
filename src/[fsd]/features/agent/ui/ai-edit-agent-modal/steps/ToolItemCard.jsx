@@ -106,7 +106,7 @@ const ToolItemCard = memo(props => {
         >
           <OpenNewIcon
             sx={styles.openLinkIcon}
-            fill={!isDisabled ? theme.palette.icon.fill.default : theme.palette.icon.fill.disabled}
+            fill={!isDisabled ? theme.palette.icon.default : theme.palette.icon.disabled}
           />
         </IconButton>
       </Tooltip>

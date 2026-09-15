@@ -433,8 +433,8 @@ const suiteDetailPanelStyles = () => ({
     height: '3.3125rem',
     minHeight: '3.3125rem',
     boxSizing: 'border-box',
-    backgroundColor: palette.background.folder.default,
-    borderBottom: `0.0625rem solid ${palette.border.table}`,
+    backgroundColor: palette.background.panel,
+    borderBottom: `0.0625rem solid ${palette.border.default}`,
   }),
   headerLeft: {
     display: 'flex',
@@ -445,7 +445,7 @@ const suiteDetailPanelStyles = () => ({
   backButton: ({ palette }) => ({
     padding: '0.25rem',
     '&:hover svg path': {
-      fill: palette.icon.fill.secondary,
+      fill: palette.icon.secondary,
     },
   }),
   headerTitle: ({ palette }) => ({
@@ -478,7 +478,7 @@ const suiteDetailPanelStyles = () => ({
   deleteButton: ({ palette }) => ({
     padding: '0.25rem',
     '&:hover svg path': {
-      fill: palette.icon.fill.secondary,
+      fill: palette.icon.secondary,
     },
   }),
   deleteIcon: {
@@ -504,35 +504,35 @@ const suiteDetailPanelStyles = () => ({
   },
   infoIcon: ({ palette }) => ({
     fontSize: '1rem',
-    color: palette.icon.fill.default,
+    color: palette.icon.default,
   }),
   footer: ({ palette }) => ({
     display: 'flex',
     justifyContent: 'center',
     padding: '0.75rem 1.5rem',
-    borderTop: `0.0625rem solid ${palette.border.table}`,
-    backgroundColor: palette.background.toolkitDetailLeftPanel,
+    borderTop: `0.0625rem solid ${palette.border.default}`,
+    backgroundColor: palette.components.detailPanel.background,
   }),
   evaluateButton: ({ palette }) => ({
     padding: '0.375rem 1rem 0.375rem 0.75rem',
     gap: '0.5rem',
     borderRadius: '1.5rem',
-    backgroundColor: palette.split.default,
+    backgroundColor: palette.background.interactiveItem.rowHover,
     color: palette.primary.main,
     fontSize: '0.75rem',
     fontWeight: 500,
     lineHeight: '1rem',
     '& svg path': {
-      fill: palette.primary.main,
+      fill: palette.icon.accent,
     },
     '&:hover': {
-      backgroundColor: palette.split.hover,
+      backgroundColor: palette.background.interactiveItem.hover,
     },
     '&.Mui-disabled': {
-      backgroundColor: palette.background.button.default,
+      backgroundColor: palette.background.surface.interactive.active,
       color: palette.text.disabled,
       '& svg path': {
-        fill: palette.text.disabled,
+        fill: palette.icon.disabled,
       },
     },
   }),

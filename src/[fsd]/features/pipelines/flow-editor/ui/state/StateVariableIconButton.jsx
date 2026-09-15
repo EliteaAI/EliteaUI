@@ -37,14 +37,14 @@ const iconButtonStyles = isActive => ({
     width: '2rem',
     backgroundColor: `${palette.background.surface.interactive.default} !important`,
     border: isActive
-      ? `0.0625rem solid ${palette.border.userMessageEditor} !important`
+      ? `0.0625rem solid ${palette.primary.main} !important`
       : '0.0625rem solid transparent !important',
     '&:hover:not(:disabled)': {
-      borderColor: `${isActive ? palette.border.userMessageEditor : palette.border.lines} !important`,
+      borderColor: `${isActive ? palette.primary.main : palette.border.lines} !important`,
       backgroundColor: `${palette.background.surface.interactive.default} !important`,
     },
     '&:focus, &:focus-visible': {
-      borderColor: `${palette.border.userMessageEditor} !important`,
+      borderColor: `${palette.primary.main} !important`,
       outline: 'none',
       backgroundColor: `${palette.background.surface.interactive.default} !important`,
     },
@@ -57,7 +57,7 @@ const iconButtonStyles = isActive => ({
     '&:disabled': {
       border: '0.0625rem solid transparent !important',
       '& svg': {
-        color: palette.icon.fill.disabled,
+        color: palette.icon.disabled,
       },
     },
   }),

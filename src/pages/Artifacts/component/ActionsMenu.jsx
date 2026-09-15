@@ -107,7 +107,7 @@ const ActionsMenu = memo(
                 sx={styles.menuItemDeleteEntityButton}
                 buttonColor="tertiary"
                 buttonClassName="action"
-                iconColor={theme.palette.icon.fill.default}
+                iconColor={theme.palette.icon.default}
                 shouldRequestInputName={false}
                 iconOnly={true}
               />
@@ -124,15 +124,15 @@ const ActionsMenu = memo(
 
 const actionsMenuStyles = () => ({
   menuItemOpenEyeIcon: ({ palette }) => ({
-    color: palette.icon.fill.default,
+    color: palette.icon.default,
     fontSize: '1rem',
   }),
   menuItemInfoIcon: ({ palette }) => ({
-    color: palette.icon.fill.secondary,
+    color: palette.icon.secondary,
     fontSize: '1rem',
   }),
   menuItemFileDownloadOutlined: ({ palette }) => ({
-    color: palette.icon.fill.default,
+    color: palette.icon.default,
     fontSize: '1rem',
   }),
   menuItemDeleteEntityButton: {

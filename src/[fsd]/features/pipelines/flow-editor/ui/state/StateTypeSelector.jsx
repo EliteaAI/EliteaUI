@@ -132,12 +132,12 @@ const stateTypeSelectorStyles = () => ({
       padding: spacing(1, 1.5),
       justifyContent: 'space-between',
       ...(isSelected && {
-        backgroundColor: palette.background.select.selected.default,
+        backgroundColor: palette.background.selectedItem.default,
         '&.Mui-selected': {
-          backgroundColor: palette.background.select.selected.default,
+          backgroundColor: palette.background.selectedItem.default,
         },
         '&.Mui-selected:hover': {
-          backgroundColor: palette.background.select.selected.hover,
+          backgroundColor: palette.background.selectedItem.hover,
         },
       }),
     }),

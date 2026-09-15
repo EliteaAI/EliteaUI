@@ -1,4 +1,4 @@
-import { useTheme } from '@emotion/react';
+import { useTheme } from '@mui/material';
 
 export default function AttentionIcon(props) {
   const theme = useTheme();
@@ -8,7 +8,7 @@ export default function AttentionIcon(props) {
       width="18"
       height="18"
       viewBox="0 0 18 18"
-      fill={theme.palette.icon.fill.primary}
+      fill={theme.palette.icon.primary}
       {...props}
     >
       <g clipPath="url(#clip0_3993_55058)">

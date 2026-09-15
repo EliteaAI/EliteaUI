@@ -25,7 +25,7 @@ const ClearChatButton = memo(props => {
         >
           <ClearIcon
             sx={styles.icon}
-            fill={theme.palette.icon.fill.secondary}
+            fill={theme.palette.icon.secondary}
           />
         </IconButton>
       </Box>

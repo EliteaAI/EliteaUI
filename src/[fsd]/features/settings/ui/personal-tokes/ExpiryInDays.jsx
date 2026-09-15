@@ -24,7 +24,7 @@ const ExpiryInDays = memo(props => {
         <SuccessIcon
           width={16}
           height={16}
-          fill={theme.palette.status.published}
+          fill={theme.palette.icon.success}
         />
         <Text.EllipsisTypography
           sx={styles.text}
@@ -47,7 +47,7 @@ const ExpiryInDays = memo(props => {
         <AttentionIcon
           width={16}
           height={16}
-          fill={theme.palette.status.onModeration}
+          fill={theme.palette.icon.attention}
         />
         <Text.EllipsisTypography
           sx={styles.text}
@@ -70,7 +70,7 @@ const ExpiryInDays = memo(props => {
         <SuccessIcon
           width={16}
           height={16}
-          fill={theme.palette.status.published}
+          fill={theme.palette.icon.success}
         />
         <Text.EllipsisTypography
           sx={styles.textNever}
@@ -92,7 +92,7 @@ const ExpiryInDays = memo(props => {
       <RemoveIcon
         width={16}
         height={16}
-        fill={theme.palette.icon.fill.disabled}
+        fill={theme.palette.icon.disabled}
       />
       <Typography
         sx={styles.textNever}

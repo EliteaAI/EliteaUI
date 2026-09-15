@@ -566,18 +566,18 @@ UserInput.displayName = 'UserInput';
 /** @type {MuiSx} */
 const userInputStyles = (isFocused, isDragOver, isRecording) => {
   const getInputBackground = palette => {
-    if (!isFocused && !isRecording) return palette.background.card.default;
+    if (!isFocused && !isRecording) return palette.background.default.secondary;
 
     return palette.mode === 'light'
       ? palette.background.default.secondary
-      : palette.background.onboardingBody;
+      : palette.background.default.secondary;
   };
 
   const getInputBorder = palette => {
     if (isRecording) return palette.primary.main;
     if (!isFocused) return 'transparent';
 
-    return `linear-gradient(0deg, ${palette.border.chatInput.base} 0%, ${palette.border.chatInput.glow} 100%)`;
+    return `linear-gradient(0deg, ${palette.components.userInput.border.base} 0%, ${palette.components.userInput.border.glow} 100%)`;
   };
 
   return {
@@ -588,7 +588,9 @@ const userInputStyles = (isFocused, isDragOver, isRecording) => {
       background: getInputBorder(palette),
 
       ...((isFocused || isRecording) && {
-        boxShadow: isRecording ? palette.boxShadow.chatInput.recording : palette.boxShadow.chatInput.default,
+        boxShadow: isRecording
+          ? palette.components.userInput.shadow.recording
+          : palette.components.userInput.shadow.default,
       }),
     }),
     container: ({ palette }) => ({
@@ -675,7 +677,7 @@ const userInputStyles = (isFocused, isDragOver, isRecording) => {
       paddingLeft: '0.625rem',
       height: '1.75rem',
       borderRadius: '0.875rem',
-      border: `0.0625rem solid ${palette.border.chatContinue}`,
+      border: `0.0625rem solid ${palette.primary.main}`,
       flexShrink: 0,
       color: palette.primary.main,
     }),

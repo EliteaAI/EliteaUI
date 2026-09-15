@@ -38,7 +38,7 @@ const runStatusStyles = status => ({
           ? palette.status.rejected
           : status === FlowEditorConstants.PipelineStatus.Stopped
             ? palette.status.onModeration
-            : palette.icon.fill.inactive;
+            : palette.icon.inactive;
 
     return {
       height: '1.5rem',
@@ -59,7 +59,7 @@ const runStatusStyles = status => ({
           ? palette.status.rejected
           : status === FlowEditorConstants.PipelineStatus.Stopped
             ? palette.status.onModeration
-            : palette.icon.fill.inactive;
+            : palette.icon.inactive;
 
     return { color };
   },

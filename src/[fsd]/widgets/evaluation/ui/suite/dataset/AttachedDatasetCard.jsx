@@ -233,7 +233,7 @@ const attachedDatasetCardStyles = () => ({
     flexDirection: 'column',
     paddingBottom: '0.5rem',
     gap: '0.5rem',
-    backgroundColor: palette.background.folder.default,
+    backgroundColor: palette.background.panel,
     borderRadius: '0.75rem',
   }),
   header: ({ palette }) => ({
@@ -243,7 +243,7 @@ const attachedDatasetCardStyles = () => ({
     padding: '0.5rem 1rem',
     gap: '0.5rem',
     borderRadius: '0.75rem',
-    backgroundColor: palette.background.folder.default,
+    backgroundColor: palette.background.panel,
     position: 'relative',
     '&::before': {
       content: '""',
@@ -251,7 +251,7 @@ const attachedDatasetCardStyles = () => ({
       inset: 0,
       borderRadius: 'inherit',
       padding: '0.0625rem',
-      background: palette.background.folder.borderGradient,
+      background: palette.border.lines,
       WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
       WebkitMaskComposite: 'xor',
       maskComposite: 'exclude',
@@ -333,7 +333,7 @@ const attachedDatasetCardStyles = () => ({
     padding: '0.5rem 1rem',
     backgroundColor: palette.background.default.secondary,
     '&:hover': {
-      backgroundColor: palette.background.tabButton.default,
+      backgroundColor: palette.background.surface.interactive.default,
     },
   }),
   overflowMenuIcon: {
@@ -346,7 +346,7 @@ const attachedDatasetCardStyles = () => ({
     height: '1rem',
     flexShrink: 0,
     '& path': {
-      fill: palette.icon.fill.default,
+      fill: palette.icon.default,
     },
   }),
   overflowMenuText: ({ palette }) => ({
@@ -377,7 +377,7 @@ const attachedDatasetCardStyles = () => ({
     marginBottom: '.25rem',
     color: palette.text.secondary,
     svg: {
-      path: { fill: palette.text.secondary },
+      path: { fill: palette.icon.secondary },
     },
     ':after': {
       content: "''",
@@ -411,7 +411,7 @@ const attachedDatasetCardStyles = () => ({
       borderBottom: 'none',
     },
     '&:hover': {
-      backgroundColor: palette.background.tabButton.default,
+      backgroundColor: palette.background.surface.interactive.default,
     },
   }),
   datasetInfo: {

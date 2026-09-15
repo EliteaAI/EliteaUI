@@ -95,7 +95,7 @@ export const SendButton = styled(IconButton)(
   border-radius: 1.75rem;
   background: ${theme.palette.primary.main};
   &.Mui-disabled {
-    background-color: ${theme.palette.background.button.primary.disabled};
+    background-color: ${theme.palette.text.disabled};
   }
   &:hover {
     background: ${theme.palette.primary.main}
@@ -192,7 +192,7 @@ align-items: flex-start;
 gap: 0.5rem;
 padding-left: 32px;
 padding-bottom: 2px;
-background: ${theme.palette.background.aiAnswerActions};
+background: ${theme.palette.components.userMessage.actionsGradient};
 `,
 );
 

@@ -17,7 +17,11 @@ const ManageDimensionCard = memo(props => {
   const isMenuOpen = Boolean(menuAnchor);
 
   const engines = dimension.allowed_engines ?? [];
-  const targetLabel = getTargetLabel(dimension.default_target, dimension.default_target_operator);
+  const targetLabel = getTargetLabel(
+    dimension.default_target,
+    dimension.default_target_operator,
+    dimension.scale_type,
+  );
   const weightLabel = getWeightLabel(dimension.default_weight);
   const description = dimension.description || '';
 
@@ -165,10 +169,10 @@ const manageDimensionCardStyles = () => ({
     gap: '0.5rem',
     padding: '1rem',
     borderRadius: '0.75rem',
-    border: `0.0625rem solid ${palette.border.cardsOutlines}`,
-    backgroundColor: palette.background.aiProviderAccordion.default,
+    border: `0.0625rem solid ${palette.border.default}`,
+    backgroundColor: palette.background.default.secondary,
     '&:hover': {
-      backgroundColor: palette.background.aiProviderAccordion.hover,
+      backgroundColor: palette.background.interactiveItem.hover,
       borderColor: palette.border.lines,
     },
   }),
@@ -206,7 +210,7 @@ const manageDimensionCardStyles = () => ({
     borderRadius: '1.0625rem',
     color: palette.text.primary,
     backgroundColor: 'transparent',
-    border: `0.0625rem solid ${palette.background.tabButton.default}`,
+    border: `0.0625rem solid ${palette.border.lines}`,
     fontSize: '0.75rem',
     lineHeight: '1rem',
     whiteSpace: 'nowrap',
@@ -241,7 +245,7 @@ const manageDimensionCardStyles = () => ({
     color: palette.text.secondary,
     gap: '0.5rem',
     '&:hover': {
-      backgroundColor: palette.background.participant.default,
+      backgroundColor: palette.background.surface.interactive.default,
     },
   }),
   menuItemIcon: ({ palette }) => ({
@@ -252,7 +256,7 @@ const manageDimensionCardStyles = () => ({
       height: '1rem',
     },
     '& svg path': {
-      fill: palette.icon.fill.default,
+      fill: palette.icon.default,
     },
   }),
 });

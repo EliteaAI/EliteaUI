@@ -432,7 +432,7 @@ const analyticsAgentDetailedStyles = () => ({
   tableHeader: ({ palette }) => ({
     display: 'flex',
     padding: '0.5rem 0.75rem',
-    borderBottom: `1px solid ${palette.border.table}`,
+    borderBottom: `1px solid ${palette.border.default}`,
     gap: '0.5rem',
   }),
   tableCell: ({ palette }) => ({
@@ -444,9 +444,9 @@ const analyticsAgentDetailedStyles = () => ({
   tableRow: ({ palette }) => ({
     display: 'flex',
     padding: '0.5rem 0.75rem',
-    borderBottom: `1px solid ${palette.border.table}`,
+    borderBottom: `1px solid ${palette.border.default}`,
     gap: '0.5rem',
-    '&:hover': { backgroundColor: palette.background.conversation?.hover || 'rgba(255,255,255,0.02)' },
+    '&:hover': { backgroundColor: palette.background.interactiveItem.rowHover || 'rgba(255,255,255,0.02)' },
   }),
   tableCellValue: ({ palette }) => ({
     fontSize: '0.8125rem',

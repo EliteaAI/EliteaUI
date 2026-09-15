@@ -130,7 +130,7 @@ const configurationTabStyles = hasSidePanel => ({
     display: 'flex',
     flexDirection: 'column',
     gap: '1rem',
-    borderRight: hasSidePanel ? ({ palette }) => `0.0625rem solid ${palette.border.table}` : 'none',
+    borderRight: hasSidePanel ? ({ palette }) => `0.0625rem solid ${palette.border.default}` : 'none',
     position: 'relative',
     ' & .MuiAccordion-root': {
       background: 'transparent',

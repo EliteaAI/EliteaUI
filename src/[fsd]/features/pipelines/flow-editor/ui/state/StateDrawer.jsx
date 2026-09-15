@@ -102,7 +102,7 @@ const StateDrawer = memo(props => {
         <Box sx={styles.header}>
           <Box sx={styles.headerContent}>
             <Box sx={styles.headerIcon}>
-              <ClipboardIcon fill={theme.palette.icon.fill.secondary} />
+              <ClipboardIcon fill={theme.palette.icon.secondary} />
             </Box>
             <Typography
               variant="labelSmall"
@@ -119,7 +119,7 @@ const StateDrawer = memo(props => {
             data-testid="pipeline-state-drawer-close-button"
           >
             <CloseIcon
-              fill={theme.palette.icon.fill.default}
+              fill={theme.palette.icon.default}
               sx={styles.closeIcon}
             />
           </IconButton>
@@ -152,7 +152,7 @@ const stateDrawerStyles = (width, isResizing, isHovering) => ({
     height: '100%',
     display: 'flex',
     flexDirection: 'column',
-    borderLeft: `.0625rem solid ${isResizing ? palette.border.userMessageEditor : isHovering ? palette.border.flowNode : palette.border.lines}`,
+    borderLeft: `.0625rem solid ${isResizing ? palette.primary.main : isHovering ? palette.components.flowEditor.node.border : palette.border.lines}`,
     background: palette.background.default.secondary,
     zIndex: 10,
     transition: isResizing ? 'none' : 'border-color 0.2s ease',

@@ -338,7 +338,7 @@ const usageContainerStyles = () => ({
     gap: '0.75rem',
     padding: '0 1.5rem',
     boxSizing: 'border-box',
-    borderBottom: `0.0625rem solid ${palette.border.table}`,
+    borderBottom: `0.0625rem solid ${palette.border.default}`,
   }),
   // Keeps the export action at the far edge, away from the page title
   exportButtonWrapper: {
@@ -346,7 +346,7 @@ const usageContainerStyles = () => ({
   },
   tabsContainer: ({ palette }) => ({
     padding: '0 1.5rem',
-    borderBottom: `1px solid ${palette.border.table}`,
+    borderBottom: `1px solid ${palette.border.default}`,
     background: palette.background.default.tertiary,
   }),
   contentArea: {

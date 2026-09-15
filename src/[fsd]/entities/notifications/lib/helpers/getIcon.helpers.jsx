@@ -19,22 +19,22 @@ export const getIcon = (type, theme, notification) => {
     case NotificationType.ChatUserMentioned:
     case NotificationType.PrivateProjectCreated:
     case NotificationType.ModerationApproved:
-      return <SuccessIcon fill={theme.palette.status.published} />;
+      return <SuccessIcon fill={theme.palette.icon.success} />;
 
     case NotificationType.IndexDataChanged:
       return notification?.meta?.error && notification.meta.error.trim() ? (
         <ErrorIcon
-          fill={theme.palette.status.rejected}
+          fill={theme.palette.icon.error}
           size={16}
         />
       ) : (
-        <SuccessIcon fill={theme.palette.status.published} />
+        <SuccessIcon fill={theme.palette.icon.success} />
       );
 
     case NotificationType.PromptHasAddedToSomeProject:
     case NotificationType.NewPromptVersionOfSomeProjectWasCreated:
     case NotificationType.UserWasAddedToSomeProjectAsTeammate:
-      return <SuccessIcon fill={theme.palette.icon.fill.tips} />;
+      return <SuccessIcon fill={theme.palette.icon.tips} />;
 
     case NotificationType.PromptModeratorReject:
     case NotificationType.ModeratorUnpublish:
@@ -44,13 +44,13 @@ export const getIcon = (type, theme, notification) => {
     case NotificationType.PromptOfSomeProjectWasRejected:
     case NotificationType.NewPromptVersionOfSomeProjectWasRejected:
     case NotificationType.ModerationRejected:
-      return <RemoveIcon fill={theme.palette.status.rejected} />;
+      return <RemoveIcon fill={theme.palette.icon.error} />;
 
     case NotificationType.TokenIsExpired:
     case NotificationType.SpendingLimitIsExpired:
       return (
         <ErrorIcon
-          fill={theme.palette.status.rejected}
+          fill={theme.palette.icon.error}
           size={16}
         />
       );
@@ -63,7 +63,7 @@ export const getIcon = (type, theme, notification) => {
     case NotificationType.MemberBudgetThresholdReached:
       return (
         <AttentionIcon
-          fill={theme.palette.status.onModeration}
+          fill={theme.palette.icon.attention}
           size={16}
         />
       );
@@ -72,7 +72,7 @@ export const getIcon = (type, theme, notification) => {
     case NotificationType.MemberBudgetLimitReached:
       return (
         <ErrorIcon
-          fill={theme.palette.status.rejected}
+          fill={theme.palette.icon.error}
           size={16}
         />
       );
@@ -80,7 +80,7 @@ export const getIcon = (type, theme, notification) => {
     case NotificationType.Rates:
       return (
         <HeartIcon
-          fill={theme.palette.icon.fill.tips}
+          fill={theme.palette.icon.tips}
           size={16}
         />
       );
@@ -88,7 +88,7 @@ export const getIcon = (type, theme, notification) => {
     case NotificationType.Comments:
       return (
         <CommentIcon
-          fill={theme.palette.icon.fill.tips}
+          fill={theme.palette.icon.tips}
           size={16}
         />
       );
@@ -96,7 +96,7 @@ export const getIcon = (type, theme, notification) => {
     case NotificationType.RewardNewLevel:
       return (
         <MedalIcon
-          fill={theme.palette.status.published}
+          fill={theme.palette.icon.success}
           size={16}
         />
       );
@@ -104,7 +104,7 @@ export const getIcon = (type, theme, notification) => {
     case NotificationType.RewardBadgeToPrompt:
       return (
         <TrophyOutlinedIcon
-          fill={theme.palette.status.published}
+          fill={theme.palette.icon.success}
           size={16}
         />
       );

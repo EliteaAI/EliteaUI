@@ -52,12 +52,12 @@ const CreateSkillForm = memo(props => {
     () => [
       {
         value: 'edit',
-        icon: t => <CodeIcon fill={t.palette.icon.fill.secondary} />,
+        icon: t => <CodeIcon fill={t.palette.icon.secondary} />,
         tooltip: 'Edit mode',
       },
       {
         value: 'preview',
-        icon: t => <OpenEyeIcon fill={t.palette.icon.fill.secondary} />,
+        icon: t => <OpenEyeIcon fill={t.palette.icon.secondary} />,
         tooltip: 'Preview mode',
       },
     ],
@@ -404,13 +404,13 @@ const skillCreateFormStyles = () => ({
     display: 'flex',
     height: '24rem',
     borderRadius: '0.375rem',
-    border: `0.0625rem solid ${palette.border.table}`,
+    border: `0.0625rem solid ${palette.border.default}`,
     overflow: 'hidden',
     '&:focus-within': { borderColor: palette.primary.main },
     '& .cm-theme': { width: '100%' },
     '& .cm-gutters': {
       backgroundColor: 'transparent',
-      borderRight: `0.0625rem solid ${palette.border.table}`,
+      borderRight: `0.0625rem solid ${palette.border.default}`,
     },
   }),
   errorBorder: ({ palette }) => ({
@@ -435,7 +435,7 @@ const skillCreateFormStyles = () => ({
     marginBottom: '1rem',
     padding: '0.75rem',
     borderRadius: '0.375rem',
-    border: `0.0625rem solid ${palette.border.table}`,
+    border: `0.0625rem solid ${palette.border.default}`,
     backgroundColor: palette.background.surface.interactive.default,
     overflow: 'auto',
     fontSize: '0.875rem',

@@ -99,7 +99,7 @@ const deleteUserButtonStyles = disabled => ({
   iconButton: {
     marginLeft: 0,
     '& svg': {
-      fill: ({ palette }) => (!disabled ? palette.icon.fill.default : palette.icon.fill.disabled),
+      fill: ({ palette }) => (!disabled ? palette.icon.default : palette.icon.disabled),
     },
   },
   deleteIcon: {

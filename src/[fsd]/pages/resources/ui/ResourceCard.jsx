@@ -42,7 +42,7 @@ ResourceCard.displayName = 'ResourceCard';
 /** @type {MuiSx} */
 const resourceCardStyles = colorScheme => ({
   card: ({ palette }) => {
-    const scheme = palette.background.resourceCard?.[colorScheme];
+    const scheme = palette.components.resourceCard.background?.[colorScheme];
     return {
       ...getCardGradientStyles(palette, { enableHover: false }),
       borderRadius: '1rem',
@@ -75,7 +75,7 @@ const resourceCardStyles = colorScheme => ({
     flex: 1,
   },
   iconWrapper: ({ palette }) => {
-    const scheme = palette.background.resourceCard?.[colorScheme];
+    const scheme = palette.components.resourceCard.background?.[colorScheme];
     if (!scheme) return {};
     return {
       background: scheme.icon,
@@ -84,9 +84,9 @@ const resourceCardStyles = colorScheme => ({
     };
   },
   divider: ({ palette }) => {
-    const scheme = palette.background.resourceCard?.[colorScheme];
+    const scheme = palette.components.resourceCard.background?.[colorScheme];
     return {
-      borderColor: scheme?.divider ?? palette.border.cardsOutlines,
+      borderColor: scheme?.divider ?? palette.border.default,
     };
   },
   body: ({ spacing }) => ({

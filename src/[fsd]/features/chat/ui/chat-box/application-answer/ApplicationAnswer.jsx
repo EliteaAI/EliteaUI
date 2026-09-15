@@ -389,7 +389,7 @@ const applicationAnswerStyles = (verticalMode, minHeight, hasToolActionsOrExcept
     width: '1.5rem',
     height: '1.5rem',
     minWidth: '1.5rem',
-    background: palette.background.aiParticipantIcon,
+    background: palette.components.aiParticipantIcon.background,
   }),
   participantName: {
     whiteSpace: 'nowrap',
@@ -421,7 +421,7 @@ const applicationAnswerStyles = (verticalMode, minHeight, hasToolActionsOrExcept
   answerBlock:
     isSpeaking =>
     ({ palette }) => ({
-      background: palette.background.aiAnswerBkg,
+      background: palette.components.aiAnswer.background,
       width: '100%',
       borderRadius: '0.5rem',
       padding: '0.75rem 1rem 0.75rem 1rem',

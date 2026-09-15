@@ -73,7 +73,7 @@ const projectAvatarStyles = (size, backgroundColor) => ({
     objectFit: 'cover',
   },
   letter: ({ palette }) => ({
-    color: palette.text.white,
+    color: palette.text.alwaysWhite,
     fontFamily: 'Montserrat, sans-serif',
     fontSize: `calc(${size} * 0.375)`,
     fontWeight: 500,

@@ -57,132 +57,134 @@ export const eliteaButtonColors = theme => ({
     },
     active: {
       background: theme.palette.mode === 'dark' ? 'rgba(106, 232, 250, 0.1)' : 'rgba(245, 81, 249, 0.1)',
-      color: theme.palette.split.text.pressed,
+      color: theme.palette.components.button.text.showMore,
     },
     disabled: {
-      background: theme.palette.background.button.default,
-      color: theme.palette.text.default,
+      background: theme.palette.components.button.background.default,
+      color: theme.palette.text.primary,
     },
   },
   [BUTTON_VARIANTS.contained]: {
     default: {
-      background: theme.palette.background.button.primary.default,
-      color: theme.palette.text.button.primary,
+      background: theme.palette.components.button.background.primary.default,
+      color: theme.palette.components.button.text.primary,
     },
-    hover: { background: theme.palette.background.button.primary.hover },
-    active: { background: theme.palette.background.button.primary.pressed },
+    hover: { background: theme.palette.components.button.background.primary.hover },
+    active: { background: theme.palette.components.button.background.primary.pressed },
     disabled: {
-      background: theme.palette.background.button.primary.disabled,
-      color: theme.palette.text.button.primary,
+      background: theme.palette.components.button.background.primary.disabled,
+      color: theme.palette.components.button.text.primary,
     },
   },
   [BUTTON_VARIANTS.secondary]: {
     default: {
-      background: theme.palette.background.button.secondary.default,
+      background: theme.palette.components.button.background.secondary.default,
       color: theme.palette.text.secondary,
       border: '0.0625rem solid transparent',
     },
-    hover: { background: theme.palette.background.button.secondary.hover },
+    hover: { background: theme.palette.components.button.background.secondary.hover },
     active: {
-      background: theme.palette.background.button.secondary.pressed,
-      color: theme.palette.mode === 'dark' ? theme.palette.text.default : theme.palette.text.secondary,
+      background: theme.palette.components.button.background.secondary.pressed,
+      color: theme.palette.mode === 'dark' ? theme.palette.text.primary : theme.palette.text.secondary,
       border: `0.0625rem solid ${theme.palette.border.lines}`,
     },
     disabled: {},
   },
   [BUTTON_VARIANTS.iconCounter]: {
     default: {
-      background: theme.palette.background.button.secondary.default,
+      background: theme.palette.components.button.background.secondary.default,
       color: theme.palette.text.secondary,
     },
     hover: {
-      background: theme.palette.background.button.secondary.hover,
+      background: theme.palette.components.button.background.secondary.hover,
     },
     active: {
       background:
         theme.palette.mode === 'dark'
-          ? theme.palette.background.button.secondary.default
-          : theme.palette.background.button.secondary.pressed,
+          ? theme.palette.components.button.background.secondary.default
+          : theme.palette.components.button.background.secondary.pressed,
     },
     disabled: {
-      background: theme.palette.background.button.default,
-      color: theme.palette.text.button.disabled,
+      background: theme.palette.components.button.background.default,
+      color: theme.palette.components.button.text.disabled,
     },
   },
   [BUTTON_VARIANTS.iconLabel]: {
     default: {
-      background: theme.palette.background.button.iconLabelButton.default,
+      background: theme.palette.components.button.background.iconLabelButton.default,
       color: theme.palette.text.secondary,
     },
     hover: {
-      background: theme.palette.background.button.tertiary.hover,
+      background: theme.palette.components.button.background.tertiary.hover,
     },
     active: {
-      background: theme.palette.background.button.tertiary.pressed,
+      background: theme.palette.components.button.background.tertiary.pressed,
       color: theme.palette.text.primary,
     },
     disabled: {
-      background: theme.palette.background.button.default,
-      color: theme.palette.text.button.disabled,
+      background: theme.palette.components.button.background.default,
+      color: theme.palette.components.button.text.disabled,
     },
   },
   [BUTTON_VARIANTS.tertiary]: {
-    default: { background: 'transparent', color: theme.palette.text.default },
+    default: { background: 'transparent', color: theme.palette.text.primary },
     hover: {
-      background: theme.palette.background.button.tertiary.hover,
+      background: theme.palette.components.button.background.tertiary.hover,
       color: theme.palette.text.secondary,
     },
     active: {
       color: theme.palette.text.primary,
-      background: theme.palette.background.button.tertiary.pressed,
+      background: theme.palette.components.button.background.tertiary.pressed,
     },
-    disabled: { color: theme.palette.text.button.disabled, background: 'transparent' },
+    disabled: { color: theme.palette.components.button.text.disabled, background: 'transparent' },
   },
   [BUTTON_VARIANTS.auxiliary]: {
     default: {
       background: 'transparent',
-      color: theme.palette.text.button.showMore,
+      color: theme.palette.components.button.text.showMore,
       colorIcon: theme.palette.secondary.main,
     },
     hover: {
-      color: theme.palette.text.button.auxiliary,
+      color: theme.palette.components.button.text.auxiliary,
       colorIcon: theme.palette.text.secondary,
     },
     active: {
       color:
-        theme.palette.mode === 'dark' ? theme.palette.text.button.disabled : theme.palette.secondary.main,
+        theme.palette.mode === 'dark'
+          ? theme.palette.components.button.text.disabled
+          : theme.palette.secondary.main,
       colorIcon: theme.palette.secondary.main,
     },
     disabled: {
       background: 'transparent',
-      color: theme.palette.text.button.disabled,
-      colorIcon: theme.palette.text.button.disabled,
+      color: theme.palette.components.button.text.disabled,
+      colorIcon: theme.palette.components.button.text.disabled,
     },
   },
   [BUTTON_VARIANTS.alarm]: {
-    default: { background: theme.palette.background.button.alarm.default, color: 'white' },
-    hover: { background: theme.palette.background.button.alarm.hover, color: 'white' },
-    active: { background: theme.palette.background.button.alarm.pressed, color: 'white' },
+    default: { background: theme.palette.components.button.background.alarm.default, color: 'white' },
+    hover: { background: theme.palette.components.button.background.alarm.hover, color: 'white' },
+    active: { background: theme.palette.components.button.background.alarm.pressed, color: 'white' },
     disabled: {
-      background: theme.palette.background.button.alarm.disabled,
+      background: theme.palette.components.button.background.alarm.disabled,
       color: 'white',
     },
   },
   [BUTTON_VARIANTS.neutral]: {
-    default: { background: theme.palette.background.button.neutral.default, color: 'white' },
-    hover: { background: theme.palette.background.button.neutral.hover, color: 'white' },
-    active: { background: theme.palette.background.button.neutral.pressed, color: 'white' },
+    default: { background: theme.palette.components.button.background.neutral.default, color: 'white' },
+    hover: { background: theme.palette.components.button.background.neutral.hover, color: 'white' },
+    active: { background: theme.palette.components.button.background.neutral.pressed, color: 'white' },
     disabled: {
-      background: theme.palette.background.button.neutral.disabled,
+      background: theme.palette.components.button.background.neutral.disabled,
       color: 'white',
     },
   },
   [BUTTON_VARIANTS.positive]: {
-    default: { background: theme.palette.background.button.positive.default, color: 'white' },
-    hover: { background: theme.palette.background.button.positive.hover, color: 'white' },
-    active: { background: theme.palette.background.button.positive.pressed, color: 'white' },
+    default: { background: theme.palette.components.button.background.positive.default, color: 'white' },
+    hover: { background: theme.palette.components.button.background.positive.hover, color: 'white' },
+    active: { background: theme.palette.components.button.background.positive.pressed, color: 'white' },
     disabled: {
-      background: theme.palette.background.button.positive.disabled,
+      background: theme.palette.components.button.background.positive.disabled,
       color: 'white',
     },
   },
@@ -303,8 +305,8 @@ export const eliteaButtonVariants = [
         border: eliteaButtonColors(theme)[BUTTON_VARIANTS.secondary].active.border,
       },
       '&:disabled': {
-        backgroundColor: theme.palette.background.button.default,
-        color: theme.palette.text.button.disabled,
+        backgroundColor: theme.palette.components.button.background.default,
+        color: theme.palette.components.button.text.disabled,
       },
     }),
   },
@@ -419,17 +421,17 @@ export const eliteaButtonVariants = [
             }
           : { padding: '0.375rem 1rem' }),
 
-        '--btn-icon-fill': theme.palette.icon.fill.default,
+        '--btn-icon-fill': theme.palette.icon.default,
         '& .MuiButton-startIcon path': { fill: 'var(--btn-icon-fill)' },
 
         '&:hover': {
-          '--btn-icon-fill': theme.palette.icon.fill.secondary,
+          '--btn-icon-fill': theme.palette.icon.secondary,
           background: eliteaButtonColors(theme)[BUTTON_VARIANTS.tertiary].hover.background,
           color: eliteaButtonColors(theme)[BUTTON_VARIANTS.tertiary].hover.color,
         },
 
         '&:focus-visible': {
-          '--btn-icon-fill': theme.palette.icon.fill.secondary,
+          '--btn-icon-fill': theme.palette.icon.secondary,
           background: eliteaButtonColors(theme)[BUTTON_VARIANTS.tertiary].hover.background,
           color: eliteaButtonColors(theme)[BUTTON_VARIANTS.tertiary].hover.color,
         },
@@ -440,7 +442,7 @@ export const eliteaButtonVariants = [
         },
 
         '&:disabled': {
-          '--btn-icon-fill': theme.palette.icon.fill.disabled,
+          '--btn-icon-fill': theme.palette.icon.disabled,
           color: eliteaButtonColors(theme)[BUTTON_VARIANTS.tertiary].disabled.color,
           background: eliteaButtonColors(theme)[BUTTON_VARIANTS.tertiary].disabled.background,
         },
@@ -495,7 +497,7 @@ export const eliteaButtonVariants = [
       borderRadius: '1rem',
       gap: 0,
       '& .MuiButton-startIcon': {
-        color: theme.palette.icon.fill.button,
+        color: theme.palette.components.button.icon.default,
       },
 
       '&:hover': {
@@ -525,46 +527,46 @@ export const eliteaButtonVariants = [
 
       ...(color === BUTTON_COLORS.primary && {
         height: '1.75rem',
-        color: theme.palette.text.button.primary,
-        background: theme.palette.background.button.primary.default,
+        color: theme.palette.components.button.text.primary,
+        background: theme.palette.components.button.background.primary.default,
 
         '&:hover': {
-          background: theme.palette.background.button.primary.hover,
+          background: theme.palette.components.button.background.primary.hover,
         },
         '&:focus-visible': {
-          background: theme.palette.background.button.primary.hover,
+          background: theme.palette.components.button.background.primary.hover,
         },
         '&:active': {
-          background: theme.palette.background.button.primary.pressed,
+          background: theme.palette.components.button.background.primary.pressed,
         },
         '&:disabled': {
-          color: theme.palette.text.button.primary,
-          background: theme.palette.background.button.primary.disabled,
+          color: theme.palette.components.button.text.primary,
+          background: theme.palette.components.button.background.primary.disabled,
         },
       }),
 
       ...(color === BUTTON_COLORS.secondary && {
         color: theme.palette.text.secondary,
-        background: theme.palette.background.button.secondary.default,
+        background: theme.palette.components.button.background.secondary.default,
         '&:hover': {
-          background: theme.palette.background.button.secondary.hover,
+          background: theme.palette.components.button.background.secondary.hover,
         },
         '&:focus-visible': {
-          background: theme.palette.background.button.secondary.hover,
+          background: theme.palette.components.button.background.secondary.hover,
         },
         '&:active': {
           color: theme.palette.text.primary,
-          background: theme.palette.background.button.secondary.pressed,
+          background: theme.palette.components.button.background.secondary.pressed,
           border: `0.0625rem solid ${theme.palette.border.lines}`,
         },
         '&:disabled': {
-          color: theme.palette.text.button.disabled,
-          background: theme.palette.background.button.default,
+          color: theme.palette.components.button.text.disabled,
+          background: theme.palette.components.button.background.default,
         },
       }),
 
       ...(color === BUTTON_COLORS.tertiary && {
-        color: theme.palette.text.default,
+        color: theme.palette.text.primary,
         background: 'transparent',
         minWidth: '1.75rem !important',
         height: '1.75rem',
@@ -573,44 +575,44 @@ export const eliteaButtonVariants = [
         gap: '0.625rem',
 
         '&:hover': {
-          background: theme.palette.background.button.tertiary.hover,
+          background: theme.palette.components.button.background.tertiary.hover,
           color: theme.palette.text.secondary,
         },
         '&:focus-visible': {
-          background: theme.palette.background.button.tertiary.hover,
+          background: theme.palette.components.button.background.tertiary.hover,
           color: theme.palette.text.secondary,
         },
         '&:active': {
           color: theme.palette.text.primary,
-          background: theme.palette.background.button.tertiary.pressed,
+          background: theme.palette.components.button.background.tertiary.pressed,
         },
 
         '&:disabled': {
-          color: theme.palette.text.button.disabled,
+          color: theme.palette.components.button.text.disabled,
           background: 'transparent',
         },
       }),
 
       ...(color === BUTTON_COLORS.alarm && {
         color: 'white',
-        background: theme.palette.background.button.alarm.default,
+        background: theme.palette.components.button.background.alarm.default,
         height: '1.75rem',
         borderRadius: '1rem',
         gap: '0.625rem',
         '&:hover': {
-          background: theme.palette.background.button.alarm.hover,
+          background: theme.palette.components.button.background.alarm.hover,
         },
         '&:focus-visible': {
-          background: theme.palette.background.button.alarm.hover,
+          background: theme.palette.components.button.background.alarm.hover,
         },
         '&:active': {
           color: theme.palette.text.primary,
-          background: theme.palette.background.button.alarm.pressed,
+          background: theme.palette.components.button.background.alarm.pressed,
           border: `0.0625rem solid ${theme.palette.border.lines}`,
         },
         '&:disabled': {
-          color: theme.palette.text.button.primary,
-          background: theme.palette.background.button.alarm.disabled,
+          color: theme.palette.components.button.text.primary,
+          background: theme.palette.components.button.background.alarm.disabled,
         },
       }),
     }),
@@ -620,25 +622,25 @@ export const eliteaButtonVariants = [
     style: ({ theme }) => ({
       ...baseVariantStyle(theme),
       backgroundColor: 'transparent',
-      color: theme.palette.text.default,
+      color: theme.palette.text.primary,
       borderRadius: '1rem',
       minWidth: '1.75rem !important',
       padding: '0.375rem',
       gap: '0.625rem',
       '&:hover': {
-        backgroundColor: theme.palette.background.button.secondary.default,
+        backgroundColor: theme.palette.components.button.background.secondary.default,
       },
       '&:focus-visible': {
-        backgroundColor: theme.palette.background.button.secondary.default,
+        backgroundColor: theme.palette.components.button.background.secondary.default,
       },
       '&:active': {
-        backgroundColor: theme.palette.background.button.secondary.pressed,
+        backgroundColor: theme.palette.components.button.background.secondary.pressed,
         color: theme.palette.text.primary,
         border: `0.0625rem solid ${theme.palette.border.lines}`,
       },
       '&:disabled': {
         backgroundColor: 'transparent',
-        color: theme.palette.text.button.disabled,
+        color: theme.palette.components.button.text.disabled,
       },
     }),
   },
@@ -653,7 +655,7 @@ export const eliteaButtonVariants = [
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: theme.palette.background.button.secondary.default,
+      backgroundColor: theme.palette.components.button.background.secondary.default,
       color: theme.palette.text.primary,
 
       '& .MuiButton-startIcon': {
@@ -670,17 +672,17 @@ export const eliteaButtonVariants = [
       },
 
       '&:hover': {
-        backgroundColor: theme.palette.background.button.secondary.hover,
+        backgroundColor: theme.palette.components.button.background.secondary.hover,
       },
       '&:focus-visible': {
-        backgroundColor: theme.palette.background.button.secondary.hover,
+        backgroundColor: theme.palette.components.button.background.secondary.hover,
       },
       '&:active': {
-        backgroundColor: theme.palette.background.button.secondary.pressed,
+        backgroundColor: theme.palette.components.button.background.secondary.pressed,
       },
       '&:disabled': {
-        backgroundColor: theme.palette.background.button.default,
-        color: theme.palette.text.button.disabled,
+        backgroundColor: theme.palette.components.button.background.default,
+        color: theme.palette.components.button.text.disabled,
       },
     }),
   },
@@ -725,8 +727,8 @@ export const eliteaButtonVariants = [
           theme.palette.mode === 'dark' ? 'rgba(41, 184, 245, 0.1)' : 'rgba(196, 40, 221, 0.1)',
       },
       '&:disabled': {
-        backgroundColor: theme.palette.background.button.default,
-        color: theme.palette.text.button.disabled,
+        backgroundColor: theme.palette.components.button.background.default,
+        color: theme.palette.components.button.text.disabled,
       },
     }),
   },
@@ -739,7 +741,7 @@ export const eliteaButtonVariants = [
       borderRadius: '1rem',
       gap: 0,
       '& .MuiButton-startIcon': {
-        color: theme.palette.icon.fill.button,
+        color: theme.palette.components.button.icon.default,
       },
 
       '&:hover': {
@@ -769,7 +771,7 @@ export const eliteaButtonVariants = [
       borderRadius: '1rem',
       gap: 0,
       '& .MuiButton-startIcon': {
-        color: theme.palette.icon.fill.button,
+        color: theme.palette.components.button.icon.default,
       },
 
       '&:hover': {

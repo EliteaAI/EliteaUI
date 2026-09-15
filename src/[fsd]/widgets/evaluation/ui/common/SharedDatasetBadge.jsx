@@ -42,13 +42,13 @@ const sharedDatasetBadgeStyles = () => ({
     height: '1.25rem',
     flexShrink: 0,
     borderRadius: '50%',
-    border: `0.0625rem solid ${palette.background.tabButton.default}`,
+    border: `0.0625rem solid ${palette.border.lines}`,
     '& svg': {
       width: '0.625rem',
       height: '0.625rem',
     },
     '& svg path': {
-      fill: palette.text.primary,
+      fill: palette.icon.default,
     },
   }),
 });

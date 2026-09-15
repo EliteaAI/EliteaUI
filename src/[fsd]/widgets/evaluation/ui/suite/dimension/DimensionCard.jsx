@@ -18,6 +18,7 @@ const DimensionCard = memo(props => {
     tier = null,
     defaultTarget = null,
     defaultTargetOperator = null,
+    defaultScaleType = null,
     defaultWeight = null,
     canEdit = false,
     canRemove = false,
@@ -48,6 +49,7 @@ const DimensionCard = memo(props => {
   const targetLabel = getTargetLabel(
     binding.target ?? defaultTarget,
     binding.target_operator || defaultTargetOperator,
+    defaultScaleType,
   );
   const weightLabel = getWeightLabel(binding.weight ?? defaultWeight);
 
@@ -144,11 +146,11 @@ const dimensionCardStyles = () => ({
     height: '2.625rem',
     padding: '0.5rem 1rem',
     borderRadius: '0.75rem',
-    border: `0.0625rem solid ${palette.border.cardsOutlines}`,
-    backgroundColor: palette.background.aiProviderAccordion.default,
+    border: `0.0625rem solid ${palette.border.default}`,
+    backgroundColor: palette.background.default.secondary,
     gap: '0.625rem',
     '&:hover': {
-      backgroundColor: palette.background.aiProviderAccordion.hover,
+      backgroundColor: palette.background.interactiveItem.hover,
       borderColor: palette.border.lines,
     },
     '&:hover .dimension-card-actions': {
@@ -184,7 +186,7 @@ const dimensionCardStyles = () => ({
     borderRadius: '1.0625rem',
     color: palette.text.primary,
     backgroundColor: 'transparent',
-    border: `0.0625rem solid ${palette.background.tabButton.default}`,
+    border: `0.0625rem solid ${palette.border.lines}`,
     fontSize: '0.75rem',
     lineHeight: '1rem',
     whiteSpace: 'nowrap',
@@ -203,15 +205,15 @@ const dimensionCardStyles = () => ({
     width: '1.75rem',
     height: '1.75rem',
     borderRadius: '1rem',
-    color: palette.icon.fill.default,
+    color: palette.icon.default,
     '&:hover': {
-      backgroundColor: palette.background.tabButton.default,
+      backgroundColor: palette.background.surface.interactive.default,
     },
   }),
   actionIcon: ({ palette }) => ({
     fontSize: '1rem',
     '& path': {
-      fill: palette.icon.fill.default,
+      fill: palette.icon.default,
     },
   }),
 });

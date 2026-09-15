@@ -304,7 +304,7 @@ const agentModalStyles = () => ({
       maxWidth: '37.5rem',
       height: '41.875rem',
       borderRadius: '1rem',
-      background: palette.background.agentModal.border,
+      background: palette.components.agentModal.border,
       boxSizing: 'border-box',
       border: 'none !important',
       padding: '0.0625rem',
@@ -315,7 +315,7 @@ const agentModalStyles = () => ({
     },
     '& .MuiDialogContent-root': ({ palette }) => ({
       borderRadius: '1rem',
-      background: palette.background.agentModal.border,
+      background: palette.components.agentModal.border,
       margin: 0,
       width: '100%',
       border: 'none !important',
@@ -325,7 +325,7 @@ const agentModalStyles = () => ({
   mainPanel: ({ palette }) => ({
     width: '100%',
     height: '100%',
-    background: palette.background.agentModal.background,
+    background: palette.components.agentModal.background,
     borderRadius: 'calc(1rem - 1px)',
     boxSizing: 'border-box',
     display: 'flex',
@@ -393,10 +393,10 @@ const agentModalStyles = () => ({
   },
   showContext: ({ palette }) => ({
     cursor: 'pointer',
-    color: palette.background.button.primary.hover,
+    color: palette.text.primary,
     textAlign: 'center',
     '&:hover': {
-      color: palette.text.button.showMore,
+      color: palette.text.showMore,
     },
   }),
   sectionsContainer: isSmallHeight => ({

@@ -52,7 +52,7 @@ const EditorHeader = ({
           data-testid={closeButtonTestId}
         >
           <CloseIcon
-            fill={theme.palette.icon.fill.default}
+            fill={theme.palette.icon.default}
             sx={styles.closeIcon}
           />
         </IconButton>

@@ -10,8 +10,8 @@ export const BANNER_ICON_MAP = {
 
 export const getBannerStyleMap = palette => ({
   warning: {
-    iconColor: palette.warning.yellow,
-    accentColor: palette.background.warning,
-    backgroundColor: palette.background.banner.default,
+    iconColor: palette.icon.warningHigh,
+    accentColor: palette.icon.warning,
+    backgroundColor: palette.components.banner.default,
   },
 });

@@ -206,7 +206,7 @@ const getStyles = active => ({
     overflow: 'auto',
     minHeight: 0,
     padding: '0.75rem',
-    borderTop: `0.0625rem solid ${palette.border.table}`,
+    borderTop: `0.0625rem solid ${palette.border.default}`,
     fontSize: '0.875rem',
     color: active ? palette.text.secondary : palette.text.primary,
     '& *': {

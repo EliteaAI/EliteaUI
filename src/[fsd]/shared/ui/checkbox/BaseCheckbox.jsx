@@ -73,31 +73,31 @@ export const eliteaCheckboxColors = theme => {
   return {
     checkbox: {
       [CHECKBOX_STATES.default]: {
-        off: theme.palette.checkbox.default,
-        on: theme.palette.checkbox.active,
-        indeterminate: theme.palette.checkbox.active,
-        mark: theme.palette.checkbox.mark,
+        off: theme.palette.components.checkbox.default,
+        on: theme.palette.components.checkbox.active,
+        indeterminate: theme.palette.components.checkbox.active,
+        mark: theme.palette.components.checkbox.mark,
       },
       [CHECKBOX_STATES.hover]: {
-        off: theme.palette.checkbox.hover.off,
-        on: theme.palette.checkbox.hover.on,
-        indeterminate: theme.palette.checkbox.hover.on,
-        mark: theme.palette.checkbox.mark,
+        off: theme.palette.components.checkbox.hover.off,
+        on: theme.palette.components.checkbox.hover.on,
+        indeterminate: theme.palette.components.checkbox.hover.on,
+        mark: theme.palette.components.checkbox.mark,
       },
       [CHECKBOX_STATES.disabled]: {
-        color: theme.palette.checkbox.disabled,
-        mark: theme.palette.checkbox.mark,
+        color: theme.palette.components.checkbox.disabled,
+        mark: theme.palette.components.checkbox.mark,
       },
     },
     radio: {
       [CHECKBOX_STATES.default]: {
-        off: theme.palette.radio.default,
-        on: theme.palette.radio.active,
+        off: theme.palette.components.checkbox.radio.default,
+        on: theme.palette.components.checkbox.radio.active,
       },
       [CHECKBOX_STATES.hover]: {
-        off: theme.palette.radio.hover.off,
+        off: theme.palette.components.checkbox.radio.hover.off,
       },
-      [CHECKBOX_STATES.disabled]: theme.palette.radio.disabled,
+      [CHECKBOX_STATES.disabled]: theme.palette.components.checkbox.radio.disabled,
     },
   };
 };

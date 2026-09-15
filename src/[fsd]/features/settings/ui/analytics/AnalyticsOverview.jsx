@@ -218,7 +218,7 @@ const AnalyticsOverview = memo(props => {
                     onUserClick && {
                       cursor: 'pointer',
                       '&:hover': ({ palette: muiPalette }) => ({
-                        backgroundColor: muiPalette.background.conversation?.hover,
+                        backgroundColor: muiPalette.background.interactiveItem.rowHover,
                       }),
                     },
                   ]}
@@ -326,7 +326,7 @@ const analyticsOverviewStyles = () => ({
     alignItems: 'center',
     gap: '0.75rem',
     padding: '0.5rem',
-    borderBottom: `1px solid ${palette.border.table}`,
+    borderBottom: `1px solid ${palette.border.default}`,
     '&:last-child': { borderBottom: 'none' },
   }),
   leaderboardRank: ({ palette }) => ({
@@ -348,7 +348,7 @@ const analyticsOverviewStyles = () => ({
   leaderboardInitial: ({ palette }) => ({
     fontSize: '0.75rem',
     fontWeight: 700,
-    color: palette.text.button.primary,
+    color: palette.primary.contrastText,
     lineHeight: 1,
   }),
   leaderboardEmail: ({ palette }) => ({

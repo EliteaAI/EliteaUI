@@ -1,4 +1,4 @@
-import { useTheme } from '@emotion/react';
+import { useTheme } from '@mui/material';
 
 export default function EllipseIcon(props) {
   const theme = useTheme();
@@ -8,7 +8,7 @@ export default function EllipseIcon(props) {
       width="4"
       height="4"
       viewBox="0 0 4 4"
-      fill={theme.palette.icon.fill.primary}
+      fill={theme.palette.icon.primary}
       {...props}
     >
       <circle

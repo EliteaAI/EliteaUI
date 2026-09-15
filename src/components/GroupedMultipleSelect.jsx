@@ -11,6 +11,7 @@ import {
   ListItemText,
   MenuItem,
   Typography,
+  useTheme,
 } from '@mui/material';
 import { styled as muiStyled } from '@mui/material/styles';
 
@@ -18,7 +19,6 @@ import { typographyVariants } from '@/[fsd]/shared/config/theme';
 import CheckedIcon from '@/assets/checked-icon.svg?react';
 import { GROUP_SELECT_VALUE_SEPARATOR } from '@/common/constants';
 import { debounce, filterProps } from '@/common/utils';
-import { useTheme } from '@emotion/react';
 import styled from '@emotion/styled';
 
 import { StyledCircleProgress } from './Chat/StyledComponents';
@@ -354,7 +354,7 @@ export default function GroupedMultipleSelect({
                       width: '100%',
                       overflowX: 'scroll',
                       background: value.find(item => item.value == option.value && item.type === option.type)
-                        ? theme.palette.background.participant.active
+                        ? theme.palette.background.interactiveItem.active
                         : undefined,
                     }}
                     key={option.type + option.value}

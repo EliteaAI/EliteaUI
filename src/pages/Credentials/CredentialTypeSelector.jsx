@@ -2,11 +2,12 @@ import { memo, useCallback, useMemo } from 'react';
 
 import { useFormikContext } from 'formik';
 
+import { useTheme } from '@mui/material';
+
 import { Category } from '@/[fsd]/shared/ui';
 import getToolInitialValueBySchema from '@/common/getToolInitialValueBySchema.js';
 import { getToolIconByType } from '@/common/toolkitUtils';
 import { useCredentialSearch } from '@/hooks/credentials/useCredentialSearch';
-import { useTheme } from '@emotion/react';
 
 const CredentialTypeSelector = memo(
   ({ onSelectTool, configurationsData, isFetching, typeSelectorTitle, searchPlaceholder, showCategory }) => {

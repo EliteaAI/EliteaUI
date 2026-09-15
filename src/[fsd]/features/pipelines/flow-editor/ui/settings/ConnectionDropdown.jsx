@@ -58,7 +58,7 @@ const ConnectionDropdown = memo(props => {
             FlowEditorConstants.PipelineNodeDisplayNames?.[nodeType] ||
             capitalizeFirstChar(nodeType.split('_').join(' ')),
           type: nodeType,
-          icon: NodeHelpers.getNodeIconByType(nodeType, theme, theme.palette.icon.fill.secondary),
+          icon: NodeHelpers.getNodeIconByType(nodeType, theme, theme.palette.icon.secondary),
         };
       })
       .sort((a, b) => a.label.toLowerCase().localeCompare(b.label.toLowerCase()));
@@ -92,7 +92,7 @@ const ConnectionDropdown = memo(props => {
   );
 
   const getNodeTypeIcon = nodeType => {
-    return NodeHelpers.getNodeIconByType(nodeType, theme, theme.palette.icon.fill.default);
+    return NodeHelpers.getNodeIconByType(nodeType, theme, theme.palette.icon.default);
   };
 
   if (!open || (!anchorPosition && !anchorEl)) {
@@ -209,7 +209,7 @@ const ConnectionDropdown = memo(props => {
             sx={targetNodes?.length ? styles.addNewNodeItem : styles.addNewNodeItemWithoutBorder}
           >
             <ListItemIcon sx={styles.listItemIcon}>
-              <PlusIcon fill={theme.palette.icon.fill.default} />
+              <PlusIcon fill={theme.palette.icon.default} />
             </ListItemIcon>
             <ListItemText
               primary={
@@ -311,7 +311,7 @@ const connectionDropdownStyles = () => ({
   gridListItemIcon: ({ palette }) => ({
     minWidth: '1.5rem !important',
     maxWidth: '1.5rem',
-    color: palette.icon.fill.secondary,
+    color: palette.icon.secondary,
     '& svg': {
       width: '1rem',
       height: '1rem',
@@ -323,7 +323,7 @@ const connectionDropdownStyles = () => ({
     borderRadius: '0.625rem',
     gap: '0.5rem',
     '&:hover': {
-      backgroundColor: palette.background.conversation.hover,
+      backgroundColor: palette.background.interactiveItem.rowHover,
     },
   }),
   gridListItemTextPrimary: {

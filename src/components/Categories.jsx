@@ -3,7 +3,7 @@ import * as React from 'react';
 import { useSelector } from 'react-redux';
 import { useParams, useSearchParams } from 'react-router-dom';
 
-import { IconButton, Skeleton, Typography } from '@mui/material';
+import { IconButton, Skeleton, Typography, useTheme } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { useLazyTagListQuery } from '@/api/tags.js';
@@ -15,7 +15,6 @@ import { useAuthorIdFromUrl } from '@/hooks/useSearchParamValue';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useTags from '@/hooks/useTags';
 import RouteDefinitions from '@/routes';
-import { useTheme } from '@emotion/react';
 import styled from '@emotion/styled';
 
 import StyledChip from './DataDisplay/StyledChip';
@@ -302,7 +301,7 @@ const Categories = ({
               >
                 <ClearIcon
                   sx={{ fontSize: '16px' }}
-                  fill={theme.palette.icon.fill.secondary}
+                  fill={theme.palette.icon.secondary}
                 />
               </IconButton>
             </Tooltip>

@@ -1,7 +1,7 @@
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
-import { Box, CircularProgress, IconButton, Typography } from '@mui/material';
+import { Box, CircularProgress, IconButton, Typography, useTheme } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { MermaidHelpers } from '@/[fsd]/shared/lib/helpers';
@@ -9,7 +9,6 @@ import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import FullscreenIcon from '@/assets/full-screen-icon.svg?react';
 import MinusIcon from '@/assets/minus-icon.svg?react';
 import { HEIGHTS, ICON_SIZES, WIDTHS } from '@/common/designTokens';
-import { useTheme } from '@emotion/react';
 
 import DotMenu from '../DotMenu';
 import DownloadIcon from '../Icons/DownloadIcon';
@@ -428,7 +427,7 @@ const MermaidDiagramOutput = memo(props => {
       /* Fix text color for mermaid error text using theme colors */
       .mermaid-error svg text,
       .mermaid-error text {
-        fill: ${theme.palette.text.primary} !important;
+        fill: ${theme.palette.icon.default} !important;
         color: ${theme.palette.text.primary} !important;
       }
     `;
@@ -441,7 +440,7 @@ const MermaidDiagramOutput = memo(props => {
         styleToRemove.remove();
       }
     };
-  }, [theme.palette.text.primary]);
+  }, [theme.palette.icon.default, theme.palette.text.primary]);
 
   return (
     <Box sx={styles.container}>
@@ -608,27 +607,27 @@ const mermaidDiagramOutputStyles = (theme, isValidCode, errorMessage, widthsValu
     height: '1.75rem',
     paddingLeft: '0.75rem',
     paddingRight: '0.75rem',
-    color: palette.split.text.default,
-    background: palette.split.default,
+    color: palette.components.accentButton.text.primary,
+    background: palette.components.accentButton.background.default,
     borderRadius: '1.5rem',
     whiteSpace: 'nowrap',
     '&:hover': {
-      background: palette.split.hover,
+      background: palette.components.accentButton.background.hover,
     },
     '&:active': {
-      color: palette.split.text.pressed,
-      backgroundColor: palette.split.pressed,
+      color: palette.components.accentButton.text.pressed,
+      backgroundColor: palette.components.accentButton.background.pressed,
     },
     '&:disabled': {
-      color: palette.split.text.disabled,
-      backgroundColor: palette.split.disabled,
+      color: palette.components.accentButton.text.disabled,
+      backgroundColor: palette.components.accentButton.background.disabled,
     },
   }),
   quickFixIconWrapper: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    color: ({ palette }) => palette.text.createButton,
+    color: ({ palette }) => palette.text.accent,
   },
   quickFixText: ({ typography }) => ({
     color: 'inherit',
@@ -638,7 +637,7 @@ const mermaidDiagramOutputStyles = (theme, isValidCode, errorMessage, widthsValu
   downloadIcon: {
     fontSize: '1rem',
     marginTop: '-0.0625rem',
-    fill: isValidCode ? theme.palette.icon.fill.default : theme.palette.icon.fill.disabled,
+    fill: isValidCode ? theme.palette.icon.default : theme.palette.icon.disabled,
   },
   zoomControls: ({ palette }) => ({
     display: 'flex',
@@ -663,11 +662,11 @@ const mermaidDiagramOutputStyles = (theme, isValidCode, errorMessage, widthsValu
   },
   zoomIcon: {
     fontSize: '1rem',
-    fill: theme.palette.icon.fill.default,
+    fill: theme.palette.icon.default,
   },
   fullscreenIcon: {
     fontSize: '1rem',
-    fill: theme.palette.icon.fill.secondary,
+    fill: theme.palette.icon.secondary,
   },
   diagramContainer: ({ palette }) => ({
     height: '100%',
@@ -695,7 +694,7 @@ const mermaidDiagramOutputStyles = (theme, isValidCode, errorMessage, widthsValu
     lineHeight: 1.2,
   },
   infoIcon: {
-    fill: theme.palette.icon.fill.info,
+    fill: theme.palette.icon.info,
   },
   infoTooltip: {
     display: 'inline-flex',

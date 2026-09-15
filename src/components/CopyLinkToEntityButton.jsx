@@ -1,13 +1,12 @@
 import { useCallback, useMemo, useState } from 'react';
 
-import { Box, IconButton } from '@mui/material';
+import { Box, IconButton, useTheme } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip.jsx';
 import CopyLinkIcon from '@/assets/copy-link-icon.svg?react';
 import CheckIcon from '@/components/Icons/CheckIcon.jsx';
 import { useProjectEntityLink } from '@/hooks/useProjectEntityLink.js';
 import useToast from '@/hooks/useToast.jsx';
-import { useTheme } from '@emotion/react';
 
 const COPIED_EVENT_DURATION = 2500; // Reset after 2.5 seconds
 
@@ -46,7 +45,7 @@ export const useCopyLinkMenu = ({ link, label = 'Copy link', key } = {}) => {
       icon: copied ? (
         <CheckIcon
           sx={{ fontSize: '1rem' }}
-          fill={theme.palette.icon.fill.default}
+          fill={theme.palette.icon.default}
         />
       ) : (
         <Box
@@ -63,16 +62,16 @@ export const useCopyLinkMenu = ({ link, label = 'Copy link', key } = {}) => {
             sx={{
               width: '1rem',
               height: '1rem',
-              color: theme.palette.icon.fill.default,
+              color: theme.palette.icon.default,
             }}
-            fill={theme.palette.icon.fill.default}
+            fill={theme.palette.icon.default}
           />
         </Box>
       ),
       disabled: false,
       onClick: handleCopy,
     }),
-    [copied, handleCopy, theme.palette.icon.fill.default, key, label],
+    [copied, handleCopy, theme.palette.icon.default, key, label],
   );
 
   return {
@@ -98,7 +97,7 @@ export const CopyLinkToEntityButton = ({ link }) => {
         {copied ? (
           <CheckIcon
             sx={{ fontSize: '1rem' }}
-            fill={theme.palette.icon.fill.secondary}
+            fill={theme.palette.icon.secondary}
           />
         ) : (
           <Box
@@ -107,7 +106,7 @@ export const CopyLinkToEntityButton = ({ link }) => {
               width: '1rem',
               height: '1rem',
             }}
-            fill={theme.palette.icon.fill.secondary}
+            fill={theme.palette.icon.secondary}
           />
         )}
       </IconButton>

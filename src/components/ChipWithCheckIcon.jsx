@@ -32,15 +32,19 @@ const styles = {
       display: 'flex',
       flexDirection: 'row',
       alignItems: 'center',
-      color: !disabled ? palette.text.secondary : palette.text.disabled,
+      color: !disabled
+        ? palette.components.chipWithCheckIcon.text.primary
+        : palette.components.chipWithCheckIcon.text.disabled,
       background: warning
-        ? palette.background.warningBkg
+        ? palette.components.chipWithCheckIcon.background.warning
         : isSelected
-          ? palette.split.pressed
-          : palette.background.surface.interactive.default,
-      border: warning ? `1px solid ${palette.warning.main}` : undefined,
+          ? palette.components.chipWithCheckIcon.background.selected
+          : palette.components.chipWithCheckIcon.background.default,
+      border: warning ? `0.0625rem solid ${palette.components.chipWithCheckIcon.border.warning}` : undefined,
       '& .MuiChip-icon': {
-        color: !disabled ? palette.text.secondary : palette.text.disabled,
+        color: !disabled
+          ? palette.components.chipWithCheckIcon.text.primary
+          : palette.components.chipWithCheckIcon.text.disabled,
       },
     }),
 };

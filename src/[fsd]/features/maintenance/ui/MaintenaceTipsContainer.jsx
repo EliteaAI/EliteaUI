@@ -23,7 +23,7 @@ const getStyles = () => ({
     flexDirection: 'column',
     borderRadius: '1.5rem',
     padding: '0.0625rem',
-    background: palette.background.banner.border,
+    background: palette.border.lines,
   }),
   tipsContainerBackground: ({ palette }) => ({
     width: '100%',
@@ -31,7 +31,7 @@ const getStyles = () => ({
     display: 'flex',
     flexDirection: 'column',
     borderRadius: '1.5rem',
-    background: palette.background.onboardingBody,
+    background: palette.background.default.secondary,
   }),
   tipsContainer: ({ palette }) => ({
     width: '100%',
@@ -41,7 +41,7 @@ const getStyles = () => ({
     alignItems: 'center',
     borderRadius: '1.5rem',
     padding: '1.25rem',
-    background: palette.background.welcome.inner,
+    background: palette.background.default.secondary,
   }),
 });
 

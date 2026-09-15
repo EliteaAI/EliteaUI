@@ -98,7 +98,7 @@ const ModelMenu = ({
         boxSizing: 'border-box',
         background: 'transparent',
         '&:hover': {
-          color: `${theme.palette.background.button.drawerMenu.hover} !important`,
+          color: `${theme.palette.text.primary} !important`,
           background: 'transparent',
         },
       }}
@@ -133,17 +133,15 @@ const ModelMenu = ({
                   wordWrap: 'break-word',
                   textAlign: 'left',
                   '&:hover': {
-                    color: theme.palette.text.createButton,
+                    color: theme.palette.text.accent,
                   },
                 }}
-                color={disabled ? theme.palette.text.button.disabled : 'text.secondary'}
+                color={disabled ? theme.palette.text.disabled : 'text.secondary'}
               >
                 {selectedModel?.model_name}
               </Typography>
             ) : (
-              <ModelIcon
-                fill={disabled ? theme.palette.icon.fill.disabled : theme.palette.icon.fill.secondary}
-              />
+              <ModelIcon fill={disabled ? theme.palette.icon.disabled : theme.palette.icon.secondary} />
             )}
           </Box>
         </StyledTooltip>

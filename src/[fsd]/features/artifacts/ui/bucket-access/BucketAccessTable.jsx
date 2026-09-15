@@ -615,12 +615,12 @@ const bucketAccessTableStyle = () => ({
   },
   actionButton: ({ palette }) => ({
     '&:hover': {
-      backgroundColor: palette.background.button.secondary.hover,
+      backgroundColor: palette.background.surface.interactive.selected,
     },
   }),
   bulkEditButton: ({ palette }) => ({
     '&:hover': {
-      backgroundColor: palette.background.button.secondary.hover,
+      backgroundColor: palette.background.surface.interactive.selected,
     },
     '&.Mui-disabled': {
       opacity: 0.5,
@@ -655,12 +655,12 @@ const bucketAccessTableStyle = () => ({
     paddingTop: '4rem',
     gap: '1rem',
     borderRadius: '0.5rem',
-    backgroundColor: palette.background.surface.container,
+    backgroundColor: palette.background.panel,
   }),
   emptyStateIcon: ({ palette }) => ({
     width: '2.5rem',
     height: '2.5rem',
-    color: palette.icon.fill.default,
+    color: palette.icon.default,
     opacity: 0.6,
   }),
   emptyStateTitle: {

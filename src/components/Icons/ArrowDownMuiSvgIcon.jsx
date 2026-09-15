@@ -1,6 +1,4 @@
-import { SvgIcon } from '@mui/material';
-
-import { useTheme } from '@emotion/react';
+import { SvgIcon, useTheme } from '@mui/material';
 
 export default function ArrowDownMuiSvgIcon(props) {
   const theme = useTheme();
@@ -15,7 +13,7 @@ export default function ArrowDownMuiSvgIcon(props) {
         width="16"
         height="16"
         viewBox="0 0 16 16"
-        fill={theme.palette.icon.fill.primary}
+        fill={theme.palette.icon.primary}
         {...props}
       >
         <path

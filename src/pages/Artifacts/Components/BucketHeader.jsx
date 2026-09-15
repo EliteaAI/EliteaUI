@@ -1,12 +1,11 @@
 import { memo, useCallback } from 'react';
 
-import { Box, Button, IconButton, Typography } from '@mui/material';
+import { Box, Button, IconButton, Typography, useTheme } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import DoubleLeftIcon from '@/components/Icons/DoubleLeftIcon';
 import DoubleRightIcon from '@/components/Icons/DoubleRightIcon';
 import NewFolder from '@/components/Icons/NewFolder';
-import { useTheme } from '@emotion/react';
 
 import BucketSearch from './BucketSearch';
 
@@ -60,7 +59,7 @@ const BucketHeader = memo(props => {
                   >
                     <NewFolder
                       sx={styles.newFolderIcon}
-                      fill={theme.palette.icon.fill.secondary}
+                      fill={theme.palette.icon.secondary}
                     />
                   </Button>
                 </Box>
@@ -84,12 +83,12 @@ const BucketHeader = memo(props => {
         >
           {!collapsed ? (
             <DoubleLeftIcon
-              fill={theme.palette.icon.fill.default}
+              fill={theme.palette.icon.default}
               width={16}
             />
           ) : (
             <DoubleRightIcon
-              fill={theme.palette.icon.fill.default}
+              fill={theme.palette.icon.default}
               width={16}
             />
           )}

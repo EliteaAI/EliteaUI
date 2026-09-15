@@ -81,7 +81,7 @@ const getStyles = () => ({
     marginTop: showCategory ? 0 : '1rem',
   }),
   categoryTitle: ({ palette }) => ({
-    color: palette.text.groupedTitle.default,
+    color: palette.components.categorySection.text.title,
   }),
   subGroupTitle: ({ palette }) => ({
     display: 'block',
@@ -92,7 +92,7 @@ const getStyles = () => ({
   categoryDivider: ({ palette }) => ({
     width: '100%',
     height: '0.0625rem',
-    backgroundColor: palette.border.table,
+    backgroundColor: palette.background.default.secondary,
     marginBottom: '0.625rem',
     marginTop: '0.3125rem',
   }),

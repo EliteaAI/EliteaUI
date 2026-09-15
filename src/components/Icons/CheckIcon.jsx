@@ -1,10 +1,8 @@
-import { SvgIcon } from '@mui/material';
-
-import { useTheme } from '@emotion/react';
+import { SvgIcon, useTheme } from '@mui/material';
 
 export default function CheckIcon({ fill, ...props }) {
   const theme = useTheme();
-  const fillColor = fill ?? theme.palette.icon.fill.default;
+  const fillColor = fill ?? theme.palette.icon.default;
 
   return (
     <SvgIcon

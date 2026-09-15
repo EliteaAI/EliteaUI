@@ -240,7 +240,7 @@ const clarifyingQuestionControlStyles = () => ({
     padding: '1rem 1.25rem 1.25rem',
     borderRadius: '0.75rem',
     background: palette.background.default.secondary,
-    border: `0.0625rem solid ${palette.border.cardsOutlines}`,
+    border: `0.0625rem solid ${palette.border.default}`,
   }),
   header: {
     display: 'flex',
@@ -294,7 +294,7 @@ const clarifyingQuestionControlStyles = () => ({
     cursor: 'pointer',
     transition: 'background-color 0.15s ease',
     '&:hover': {
-      backgroundColor: palette.background.tabButton.hover,
+      backgroundColor: palette.background.interactiveItem.hover,
     },
   }),
   control: {
@@ -335,7 +335,7 @@ const clarifyingQuestionControlStyles = () => ({
       transition: 'border-color 0.15s ease',
     },
     '& .MuiInputBase-root:hover': {
-      borderColor: palette.text.secondary,
+      borderColor: palette.border.hover,
     },
     '& .MuiInputBase-root.Mui-focused': {
       borderColor: palette.primary.main,

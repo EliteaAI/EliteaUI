@@ -168,7 +168,7 @@ const folderAccordionStyles = (
     borderBottom:
       isActive || isHovering || expanded || isNextFolderHovered || shouldBeSelected
         ? 'none'
-        : `0.0625rem solid ${palette.border.conversationItemDivider}`,
+        : `0.0625rem solid ${palette.components.conversation.border.itemDivider}`,
     borderLeft: isActive
       ? `0.1875rem solid ${is_private ? palette.primary.main : palette.status.published}`
       : 0,
@@ -184,7 +184,7 @@ const folderAccordionStyles = (
     background: isActive
       ? palette.background.surface.interactive.default
       : shouldBeSelected
-        ? palette.background.conversation.selected
+        ? palette.components.conversation.background.selected
         : 'transparent',
     borderRadius: isActive ? '0.375rem' : 0,
     ':hover': {
@@ -198,7 +198,7 @@ const folderAccordionStyles = (
   expandIcon: ({ palette }) => ({
     width: '0.875rem',
     height: '0.875rem',
-    color: palette.icon.fill.secondary,
+    color: palette.icon.secondary,
   }),
   summary: {
     overflow: 'hidden',
@@ -217,7 +217,7 @@ const folderAccordionStyles = (
   folderIcon: ({ palette }) => ({
     width: '1rem',
     height: '1rem',
-    color: palette.icon.fill.secondary,
+    color: palette.icon.secondary,
   }),
   titleText: ({ palette, typography }) => ({
     minWidth: 0,

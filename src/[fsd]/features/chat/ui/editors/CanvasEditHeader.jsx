@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import { Box, IconButton, Typography } from '@mui/material';
+import { Box, IconButton, Typography, useTheme } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { CodeMirrorEditorHelpers } from '@/[fsd]/shared/lib/helpers';
@@ -14,7 +14,6 @@ import CopyIcon from '@/components/Icons/CopyIcon';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import RegenerateIcon from '@/components/Icons/RegenerateIcon';
 import ImportTableButton from '@/components/ImportTableButton';
-import { useTheme } from '@emotion/react';
 
 const CanvasEditHeader = ({
   title = 'Edit response',
@@ -86,7 +85,7 @@ const CanvasEditHeader = ({
           onClick={onClose}
         >
           <CloseIcon
-            fill={theme.palette.icon.fill.default}
+            fill={theme.palette.icon.default}
             sx={{ fontSize: '18px', cursor: 'pointer' }}
           />
         </IconButton>
@@ -158,7 +157,7 @@ const CanvasEditHeader = ({
             >
               <CopyIcon
                 sx={{ fontSize: '16px' }}
-                fill={disabledAll ? theme.palette.text.button.disabled : undefined}
+                fill={disabledAll ? theme.palette.icon.disabled : undefined}
               />
             </IconButton>
           </span>
@@ -233,7 +232,7 @@ const CanvasEditHeader = ({
               >
                 <DeleteIcon
                   sx={{ fontSize: '16px' }}
-                  fill={disableDeleteTableRowsCols ? theme.palette.text.button.disabled : undefined}
+                  fill={disableDeleteTableRowsCols ? theme.palette.icon.disabled : undefined}
                 />
               </IconButton>
             </span>
@@ -274,7 +273,7 @@ const CanvasEditHeader = ({
               >
                 <AddRowIcon
                   sx={{ fontSize: '16px' }}
-                  fill={theme.palette.icon.fill.default}
+                  fill={theme.palette.icon.default}
                 />
               </IconButton>
             </span>
