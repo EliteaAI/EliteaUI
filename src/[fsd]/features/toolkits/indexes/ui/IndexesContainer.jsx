@@ -6,6 +6,7 @@ import { useDeleteIndexItemMutation, useGetIndexScheduleQuery } from '@/[fsd]/fe
 import { IndexStatuses } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
 import {
   applyReindexStub,
+  buildReindexStub,
   shouldExpireReindexStub,
 } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexDetails.helpers';
 import {
@@ -129,15 +130,7 @@ const IndexesContainer = memo(props => {
 
   const confirmReindex = useCallback(() => {
     if (!reindexTarget) return;
-    setReindexRunning({
-      ...reindexTarget,
-      observedAt: Date.now(),
-      stubCreatedAt: Date.now(),
-      // Stashed before traceReindex can overwrite metadata.task_id: it is how the
-      // stub tells the row it replaced apart from the run it started.
-      previousTaskId: reindexTarget.metadata?.task_id ?? null,
-      metadata: { ...reindexTarget.metadata, state: IndexStatuses.progress },
-    });
+    setReindexRunning(buildReindexStub(reindexTarget));
     setReindexConfirmOpen(false);
     setReindexTarget(null);
   }, [reindexTarget]);

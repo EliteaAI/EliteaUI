@@ -201,24 +201,28 @@ const RunIndexPanel = memo(props => {
   // request issued after the observation supersedes it (in-flight fetches carry
   // pre-run data).
   const serverSupersedes = rowReadAfterOverride && startedTimeStamp > overrideObservedAtRef.current;
-  // Display uses `stale`; anything that can end a run uses `reclaimable`, which
-  // stays on the disconnect rule. The helper reads the row so the two cannot be
-  // swapped at this call site.
+  // Every flag the panel gates on comes from one pure derivation, so there is no
+  // local wiring here to get wrong and the values are table-tested directly.
+  const buildBlockedReason = indexBuildBlockedReason(selectedIndexTools);
   const {
     stale: effectiveStale,
     reclaimable: effectiveReclaimable,
     runLooksAbandoned,
     runIsLive,
+    isAwaitingTaskStart,
+    deleteDisabled,
+    reindexDisabled,
   } = indexRunControls({
     isIndexing: effectiveIsIndexing,
     index,
     overrideSupersedesRun: Boolean(localMetaOverride?.state && !serverSupersedes),
+    isDeleting,
+    isRunning,
+    isWaitingForTaskStart,
+    serverSupersedes,
+    buildBlocked: Boolean(buildBlockedReason),
   });
-  const isAwaitingTaskStart = isWaitingForTaskStart && !serverSupersedes;
 
-  const deleteDisabled = isDeleting || isAwaitingTaskStart || runIsLive;
-  const buildBlockedReason = indexBuildBlockedReason(selectedIndexTools);
-  const reindexDisabled = Boolean(buildBlockedReason) || isRunning || isAwaitingTaskStart || runIsLive;
   const retainsIndexedData = hasRetainedIndexData(index?.metadata);
 
   const schedulingTooltipMessage = useMemo(

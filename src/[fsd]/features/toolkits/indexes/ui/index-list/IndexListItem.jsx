@@ -8,6 +8,7 @@ import Tooltip from '@/ComponentsLib/Tooltip';
 import { normalizeIndexingReport } from '@/[fsd]/entities/indexing-report';
 import { IndexStatuses } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
 import {
+  abandonedRunTooltip,
   indexListCounts,
   isAbandonedRun,
 } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexDetails.helpers';
@@ -259,7 +260,7 @@ const IndexListItem = memo(props => {
                 </Box>
               )}
               {isAbandonedRun(index) && (
-                <Tooltip title="This run stopped without finishing. Reindex to try again.">
+                <Tooltip title={abandonedRunTooltip(index)}>
                   <Box sx={[styles.stateIcon, styles.abandonedIcon, styles.stateIconContainer]}>
                     <AttentionIcon
                       width={16}

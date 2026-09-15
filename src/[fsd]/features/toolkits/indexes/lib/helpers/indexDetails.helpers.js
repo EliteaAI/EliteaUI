@@ -265,22 +265,43 @@ export const hasLiveRun = ({ isIndexing, isStale }) => Boolean(isIndexing) && !i
  * misleading card. `runIsLive` is CONTROL — it gates Delete (which drops the whole
  * collection), Reindex and Stop; being wrong destroys a live run. They ran off the
  * same flag until the display horizon was shortened to minutes.
- * @param {{isIndexing: boolean, index: object, overrideSupersedesRun: boolean}} runState
+ * Returns the derived flags AND the disabled states they gate, so the panel has no
+ * derivation of its own left to get wrong — the swap that re-enabled Delete on a
+ * healthy long-promote run is not expressible at the call site, and the values are
+ * table-testable without mounting Formik, sockets and RTK.
+ * @param {object} runState
  * @returns {{stale: boolean, reclaimable: boolean, runLooksAbandoned: boolean,
- *   runIsLive: boolean}}
+ *   runIsLive: boolean, isAwaitingTaskStart: boolean, deleteDisabled: boolean,
+ *   reindexDisabled: boolean}}
  */
-export const indexRunControls = ({ isIndexing, index, overrideSupersedesRun = false }) => {
+export const indexRunControls = ({
+  isIndexing,
+  index,
+  overrideSupersedesRun = false,
+  isDeleting = false,
+  isRunning = false,
+  isWaitingForTaskStart = false,
+  serverSupersedes = false,
+  buildBlocked = false,
+}) => {
   // The row is read here rather than taken as two booleans, so a caller cannot hand
   // the display flag to the control question by swapping two same-shaped arguments —
   // which is exactly the edit that re-enables Delete on a healthy long-promote run.
   const stale = overrideSupersedesRun ? false : Boolean(index?.stale);
   const reclaimable = overrideSupersedesRun ? false : Boolean(index?.reclaimable ?? index?.stale);
+  const runIsLive = hasLiveRun({ isIndexing, isStale: reclaimable });
+  const isAwaitingTaskStart = Boolean(isWaitingForTaskStart) && !serverSupersedes;
 
   return {
     stale,
     reclaimable,
     runLooksAbandoned: Boolean(isIndexing) && stale,
-    runIsLive: hasLiveRun({ isIndexing, isStale: reclaimable }),
+    runIsLive,
+    isAwaitingTaskStart,
+    // The dispatch window counts as live: a run whose task has been requested but
+    // not yet started has nothing to stop and must not be deletable either.
+    deleteDisabled: Boolean(isDeleting) || isAwaitingTaskStart || runIsLive,
+    reindexDisabled: Boolean(buildBlocked) || Boolean(isRunning) || isAwaitingTaskStart || runIsLive,
   };
 };
 
@@ -352,6 +373,42 @@ export const indexListCounts = (metadata, isInProgress) => {
     count: `${indexedDocs} / ${total}`,
   };
 };
+
+/**
+ * Tooltip for the abandoned-run icon on a list row.
+ *
+ * The icon itself keys on `stale` — chrome — but the remedy it names has to key on
+ * `reclaimable`, the flag the row's buttons are gated on. Otherwise a run that is
+ * merely slow to promote shows "Reindex to try again" beside a disabled Reindex
+ * button, while the detail panel for the same run correctly says to use Stop.
+ * @param {object} index - the index list row
+ * @returns {string}
+ */
+export const abandonedRunTooltip = index =>
+  (index?.reclaimable ?? index?.stale)
+    ? 'This run stopped without finishing. Reindex to try again.'
+    : 'This run has not reported progress for a while. Use Stop to end it before starting a new run.';
+
+/**
+ * Build the optimistic stub for a row the user just clicked Reindex on.
+ *
+ * Lives here, not inline in the container, so it can be round-tripped through
+ * {@link applyReindexStub}: the stash below is the only thing that tells the row
+ * being replaced apart from the run it starts, and its sole writer had no test —
+ * deleting it turned the just-started run's card red with "This run stopped without
+ * finishing" while every suite stayed green.
+ * @param {object} reindexTarget - the row as it was when Reindex was clicked
+ * @param {number} now - epoch ms
+ * @returns {object}
+ */
+export const buildReindexStub = (reindexTarget, now = Date.now()) => ({
+  ...reindexTarget,
+  observedAt: now,
+  stubCreatedAt: now,
+  // Stashed before traceReindex can overwrite metadata.task_id.
+  previousTaskId: reindexTarget?.metadata?.task_id ?? null,
+  metadata: { ...reindexTarget?.metadata, state: IndexStatuses.progress },
+});
 
 /**
  * Overlay the optimistic "a reindex just started" stub onto the fetched list.

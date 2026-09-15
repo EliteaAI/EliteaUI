@@ -20,9 +20,11 @@ import {
   REINDEX_IN_PROGRESS_BANNER_TITLE,
 } from '../../constants/indexDetails.constants';
 import {
+  abandonedRunTooltip,
   applyReindexStub,
   bannerOutlivesRun,
   bannerVariant,
+  buildReindexStub,
   hasLiveRun,
   hasRetainedIndexData,
   indexBuildBlockedReason,
@@ -684,5 +686,174 @@ describe('applyReindexStub — reindexing an abandoned run', () => {
     };
 
     expect(applyReindexStub([deadNewRun], started)[0].stale).toBe(true);
+  });
+});
+
+describe('indexRunControls — the gates the panel used to derive itself', () => {
+  // Replaces a test that parsed RunIndexPanel.jsx. That guard asserted spelling:
+  // it passed when `effectiveReclaimable` was reassigned from `effectiveStale`
+  // (a verbatim revert), passed when the override was wired to the wrong value,
+  // and failed on a prettier reflow. Values, not names.
+  const derive = over =>
+    indexRunControls({
+      isIndexing: true,
+      index: { stale: false, reclaimable: false },
+      ...over,
+    });
+
+  it('locks both controls while the run is live', () => {
+    const { deleteDisabled, reindexDisabled } = derive();
+
+    expect(deleteDisabled).toBe(true);
+    expect(reindexDisabled).toBe(true);
+  });
+
+  it('keeps them locked on a merely display-stale run', () => {
+    // The long-promote window. Unlocking Delete here drops the whole collection.
+    const { deleteDisabled, reindexDisabled } = derive({
+      index: { stale: true, reclaimable: false },
+    });
+
+    expect(deleteDisabled).toBe(true);
+    expect(reindexDisabled).toBe(true);
+  });
+
+  it('releases them once the run is reclaimable', () => {
+    const { deleteDisabled, reindexDisabled } = derive({
+      index: { stale: true, reclaimable: true },
+    });
+
+    expect(deleteDisabled).toBe(false);
+    expect(reindexDisabled).toBe(false);
+  });
+
+  it('keeps Delete locked through the dispatch window', () => {
+    // A run whose task is requested but not started has nothing to stop, and must
+    // not be deletable either.
+    const { deleteDisabled, isAwaitingTaskStart } = derive({
+      isIndexing: false,
+      isWaitingForTaskStart: true,
+    });
+
+    expect(isAwaitingTaskStart).toBe(true);
+    expect(deleteDisabled).toBe(true);
+  });
+
+  it('ends the dispatch window when the server supersedes the override', () => {
+    const { isAwaitingTaskStart } = derive({
+      isIndexing: false,
+      isWaitingForTaskStart: true,
+      serverSupersedes: true,
+    });
+
+    expect(isAwaitingTaskStart).toBe(false);
+  });
+
+  it('blocks only Reindex when the toolkit cannot build', () => {
+    const { deleteDisabled, reindexDisabled } = derive({
+      isIndexing: false,
+      index: { stale: true, reclaimable: true },
+      buildBlocked: true,
+    });
+
+    expect(reindexDisabled).toBe(true);
+    expect(deleteDisabled).toBe(false);
+  });
+
+  it('blocks Delete while a delete is already in flight', () => {
+    const { deleteDisabled } = derive({
+      isIndexing: false,
+      index: { stale: true, reclaimable: true },
+      isDeleting: true,
+    });
+
+    expect(deleteDisabled).toBe(true);
+  });
+
+  it('an active override suppresses both flags and keeps the run live', () => {
+    const { stale, reclaimable, runIsLive } = derive({
+      index: { stale: true, reclaimable: true },
+      overrideSupersedesRun: true,
+    });
+
+    expect([stale, reclaimable, runIsLive]).toEqual([false, false, true]);
+  });
+});
+
+describe('buildReindexStub round-trips through applyReindexStub', () => {
+  // The builder's only caller had no test anywhere in the repo, so deleting the
+  // previousTaskId stash reinstated the "new run rendered as stopped" bug with the
+  // whole suite green. Round-tripping pins both halves together.
+  const abandoned = {
+    id: 'row-1',
+    stale: true,
+    reclaimable: true,
+    metadata: { state: 'in_progress', run_chunks: 1520, task_id: 'dead-run' },
+  };
+
+  it('produces a stub that keeps the new run out of the stopped state', () => {
+    const [row] = applyReindexStub([abandoned], buildReindexStub(abandoned));
+
+    expect(row.stale).toBe(false);
+    expect(row.metadata.run_chunks).toBe(0);
+    expect(row.metadata.state).toBe('in_progress');
+  });
+
+  it('carries the clicked row’s task_id as the pre-click marker', () => {
+    expect(buildReindexStub(abandoned).previousTaskId).toBe('dead-run');
+  });
+
+  it('marks a row that never had a task_id with null rather than undefined', () => {
+    // undefined would still match via ?? null, but null is what the comparison is
+    // written against and what a missing stash must not silently imitate.
+    const fresh = { id: 'row-2', metadata: { state: 'completed' } };
+
+    expect(buildReindexStub(fresh).previousTaskId).toBeNull();
+  });
+
+  it('still hands over once the server returns the new run', () => {
+    const newRun = {
+      id: 'row-1',
+      stale: false,
+      metadata: { state: 'in_progress', run_chunks: 900, task_id: 'live-run' },
+    };
+
+    const [row] = applyReindexStub([newRun], buildReindexStub(abandoned));
+
+    expect(row.metadata.run_chunks).toBe(900);
+  });
+
+  it('a row whose task_id was wiped mid-run is still treated as pre-click', () => {
+    // useToolkitChat documents a refetch that can null task_id mid-run; without the
+    // `?? null` on the item side that row stops matching and the bug returns.
+    const wiped = { ...abandoned, metadata: { ...abandoned.metadata, task_id: undefined } };
+    const fromNullRow = buildReindexStub({ id: 'row-1', metadata: { state: 'in_progress' } });
+
+    const [row] = applyReindexStub([wiped], fromNullRow);
+
+    expect(row.stale).toBe(false);
+    expect(row.metadata.run_chunks).toBe(0);
+  });
+});
+
+describe('abandonedRunTooltip — the card must not name a disabled button', () => {
+  it('says use Stop while the run is only display-stale', () => {
+    // The long-promote window: the row's Reindex button is disabled here, so
+    // "Reindex to try again" points at something the user cannot click — and the
+    // detail panel for the same run says the opposite.
+    const tip = abandonedRunTooltip({ stale: true, reclaimable: false });
+
+    expect(tip).toContain('Stop');
+    expect(tip).not.toContain('Reindex');
+  });
+
+  it('says Reindex once the run is reclaimable', () => {
+    const tip = abandonedRunTooltip({ stale: true, reclaimable: true });
+
+    expect(tip).toContain('Reindex');
+  });
+
+  it('falls back to stale when the backend sends no control flag', () => {
+    expect(abandonedRunTooltip({ stale: true })).toContain('Reindex');
   });
 });
