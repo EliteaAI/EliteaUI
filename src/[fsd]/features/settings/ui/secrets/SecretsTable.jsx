@@ -61,7 +61,8 @@ const SECRETS_COLUMNS = [
 const EXTERNAL_ACCESS_COLUMN = {
   field: 'allow_external_access',
   label: 'Share with other projects',
-  width: '11rem',
+  // Fits the full header label at labelMedium in Montserrat (11.25rem text + 1.5rem cell padding)
+  width: '13rem',
   sortable: false,
   hideBelow: 900,
 };
