@@ -15,9 +15,9 @@ import { describe, expect, it } from 'vitest';
  * serverSupersedes`), neutralising one (`buildBlockedReason: null`) or swapping two
  * all break it, because each stops being shorthand.
  *
- * What it deliberately does NOT assert: how many arguments anything takes, what any
- * identifier is called, or anything about the banner call. Renaming a panel local is
- * a real signal to update this list, not a false alarm.
+ * What it deliberately does NOT assert: how many arguments anything takes or what any
+ * identifier is called. Renaming a panel local is a real signal to update this list,
+ * not a false alarm.
  */
 const REQUIRED_SHORTHAND = [
   // Widest blast radius of the eight: mis-wire this and runIsLive goes false, which
@@ -54,6 +54,22 @@ describe('RunIndexPanel — every gate input reaches the helper unaltered', () =
   const shorthandKeys = properties.filter(p => p.shorthand).map(p => p.key.name);
 
   it.each(REQUIRED_SHORTHAND)('passes %s straight through', key => {
+    expect(shorthandKeys).toContain(key);
+  });
+});
+
+// The banner used to take these as positionals 5 and 7 of 7, with an object between
+// them — two same-typed flags in interchangeable slots, where transposing them is
+// invisible at the call site and changes the banner from the warning naming Stop to
+// the plain "Indexing…" the eternal-spinner fix exists to remove. The helper's own
+// tests cannot see it: they pass their own arguments. Naming the parameters removed
+// the slots; requiring shorthand here removes the swap.
+describe('RunIndexPanel — the banner cannot be handed the wrong liveness flag', () => {
+  const [call] = findCall('bannerVariant');
+  const properties = call?.arguments?.[0]?.properties ?? [];
+  const shorthandKeys = properties.filter(p => p.shorthand).map(p => p.key.name);
+
+  it.each(['isStale', 'isReclaimable'])('passes %s straight through', key => {
     expect(shorthandKeys).toContain(key);
   });
 });

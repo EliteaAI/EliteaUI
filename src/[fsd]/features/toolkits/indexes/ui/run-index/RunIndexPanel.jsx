@@ -209,8 +209,8 @@ const RunIndexPanel = memo(props => {
   // local wiring here to get wrong and the values are table-tested directly.
   const buildBlockedReason = indexBuildBlockedReason(selectedIndexTools);
   const {
-    stale: effectiveStale,
-    reclaimable: effectiveReclaimable,
+    stale: isStale,
+    reclaimable: isReclaimable,
     runLooksAbandoned,
     runIsLive,
     isAwaitingTaskStart,
@@ -525,25 +525,25 @@ const RunIndexPanel = memo(props => {
   const runInFlight = isIndexing || isAwaitingTaskStart;
   const banner = useMemo(
     () =>
-      bannerVariant(
-        runInFlight,
-        effectiveState,
+      bannerVariant({
+        isIndexing: runInFlight,
+        state: effectiveState,
         reindexStats,
-        index?.metadata?.error,
-        effectiveStale,
-        {
+        error: index?.metadata?.error,
+        isStale,
+        retention: {
           hasRetainedData: retainsIndexedData,
           lastSuccessfulRun: index?.last_successful_run,
         },
-        effectiveReclaimable,
-      ),
+        isReclaimable,
+      }),
     [
       runInFlight,
       effectiveState,
       reindexStats,
       index?.metadata?.error,
-      effectiveReclaimable,
-      effectiveStale,
+      isReclaimable,
+      isStale,
       retainsIndexedData,
       index?.last_successful_run,
     ],

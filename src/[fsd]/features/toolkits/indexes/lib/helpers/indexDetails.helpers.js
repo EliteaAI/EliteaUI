@@ -43,7 +43,7 @@ export const formatDate = ts => {
   }
 };
 
-export const bannerVariant = (
+export const bannerVariant = ({
   isIndexing,
   state,
   reindexStats,
@@ -51,7 +51,7 @@ export const bannerVariant = (
   isStale = false,
   retention = {},
   isReclaimable = false,
-) => {
+}) => {
   const { hasRetainedData = false, lastSuccessfulRun = null } = retention;
   // Before the isIndexing branch: a stale row still reads as "in flight" to every
   // other signal, and an eternal "Indexing…" spinner is the bug this variant fixes.

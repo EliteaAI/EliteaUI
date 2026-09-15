@@ -33,6 +33,8 @@ import {
   indexScheduleBlockedReason,
   indexSearchBlockedReason,
   indexSearchToolOptions,
+  isAbandonedRun,
+  isReclaimableRun,
   shouldExpireReindexStub,
 } from '../indexDetails.helpers';
 
@@ -262,7 +264,14 @@ describe('bannerVariant — retained data', () => {
   const retention = over => ({ hasRetainedData: true, lastSuccessfulRun: null, ...over });
 
   it('tells the user the existing data stays searchable while a reindex runs', () => {
-    const banner = bannerVariant(true, IndexStatuses.progress, NO_STATS, undefined, false, retention());
+    const banner = bannerVariant({
+      isIndexing: true,
+      state: IndexStatuses.progress,
+      reindexStats: NO_STATS,
+      error: undefined,
+      isStale: false,
+      retention: retention(),
+    });
 
     expect(banner.severity).toBe(BannerSeverity.info);
     expect(banner.label).toBe(REINDEX_IN_PROGRESS_BANNER_TITLE);
@@ -270,13 +279,27 @@ describe('bannerVariant — retained data', () => {
   });
 
   it('applies to a server-reported run the panel is not driving', () => {
-    const banner = bannerVariant(false, IndexStatuses.progress, NO_STATS, undefined, false, retention());
+    const banner = bannerVariant({
+      isIndexing: false,
+      state: IndexStatuses.progress,
+      reindexStats: NO_STATS,
+      error: undefined,
+      isStale: false,
+      retention: retention(),
+    });
 
     expect(banner.label).toBe(REINDEX_IN_PROGRESS_BANNER_TITLE);
   });
 
   it('tells the user the previous data survived a failed reindex', () => {
-    const banner = bannerVariant(false, IndexStatuses.fail, NO_STATS, 'boom', false, retention());
+    const banner = bannerVariant({
+      isIndexing: false,
+      state: IndexStatuses.fail,
+      reindexStats: NO_STATS,
+      error: 'boom',
+      isStale: false,
+      retention: retention(),
+    });
 
     expect(banner.severity).toBe(BannerSeverity.error);
     expect(banner.label).toBe(REINDEX_FAILED_BANNER_TITLE);
@@ -284,38 +307,57 @@ describe('bannerVariant — retained data', () => {
   });
 
   it('names the last successful run when the backend reports one', () => {
-    const banner = bannerVariant(
-      false,
-      IndexStatuses.fail,
-      NO_STATS,
-      'boom',
-      false,
-      retention({
+    const banner = bannerVariant({
+      isIndexing: false,
+      state: IndexStatuses.fail,
+      reindexStats: NO_STATS,
+      error: 'boom',
+      isStale: false,
+      retention: retention({
         lastSuccessfulRun: { updated_on: 1_756_360_800, state: 'completed', indexed: 12 },
       }),
-    );
+    });
 
     expect(banner.message).toContain(REINDEX_FAILED_BANNER_MESSAGE);
     expect(banner.message).toMatch(/Last successful indexing: \d{2}\.\d{2}\.\d{4}/);
   });
 
   it('makes no retention claim without a live chunk count', () => {
-    const failed = bannerVariant(false, IndexStatuses.fail, NO_STATS, 'boom', false, {
-      hasRetainedData: false,
-      lastSuccessfulRun: { updated_on: 100 },
+    const failed = bannerVariant({
+      isIndexing: false,
+      state: IndexStatuses.fail,
+      reindexStats: NO_STATS,
+      error: 'boom',
+      isStale: false,
+      retention: {
+        hasRetainedData: false,
+        lastSuccessfulRun: { updated_on: 100 },
+      },
     });
 
     expect(failed.label).not.toBe(REINDEX_FAILED_BANNER_TITLE);
     expect(failed.message).not.toMatch(/remains available/);
 
-    const indexing = bannerVariant(true, IndexStatuses.progress, NO_STATS);
+    const indexing = bannerVariant({
+      isIndexing: true,
+      state: IndexStatuses.progress,
+      reindexStats: NO_STATS,
+    });
     expect(indexing.message).not.toMatch(/remains available/);
   });
 
   it('keeps the stale-run warning ahead of the reindexing copy while stating the data survived', () => {
     // `true` for isReclaimable: this is the abandoned case, where Reindex is the
     // remedy the panel actually offers.
-    const banner = bannerVariant(false, IndexStatuses.progress, NO_STATS, undefined, true, retention(), true);
+    const banner = bannerVariant({
+      isIndexing: false,
+      state: IndexStatuses.progress,
+      reindexStats: NO_STATS,
+      error: undefined,
+      isStale: true,
+      retention: retention(),
+      isReclaimable: true,
+    });
 
     expect(banner.severity).toBe(BannerSeverity.warning);
     expect(banner.message).toContain(INDEX_ABANDONED_BANNER_MESSAGE);
@@ -323,13 +365,28 @@ describe('bannerVariant — retained data', () => {
   });
 
   it('makes no retention claim for a stale run without a live chunk count', () => {
-    const banner = bannerVariant(false, IndexStatuses.progress, NO_STATS, undefined, true, {}, true);
+    const banner = bannerVariant({
+      isIndexing: false,
+      state: IndexStatuses.progress,
+      reindexStats: NO_STATS,
+      error: undefined,
+      isStale: true,
+      retention: {},
+      isReclaimable: true,
+    });
 
     expect(banner.message).toBe(INDEX_ABANDONED_BANNER_MESSAGE);
   });
 
   it('tells the user the previous data survived a stopped reindex', () => {
-    const banner = bannerVariant(false, IndexStatuses.cancelled, NO_STATS, undefined, false, retention());
+    const banner = bannerVariant({
+      isIndexing: false,
+      state: IndexStatuses.cancelled,
+      reindexStats: NO_STATS,
+      error: undefined,
+      isStale: false,
+      retention: retention(),
+    });
 
     expect(banner.severity).toBe(BannerSeverity.warning);
     expect(banner.message).toContain(BannerMessageMap[BannerSeverity.warning]);
@@ -337,14 +394,25 @@ describe('bannerVariant — retained data', () => {
   });
 
   it('makes no retention claim for a stopped run without a live chunk count', () => {
-    const banner = bannerVariant(false, IndexStatuses.cancelled, NO_STATS);
+    const banner = bannerVariant({
+      isIndexing: false,
+      state: IndexStatuses.cancelled,
+      reindexStats: NO_STATS,
+    });
 
     expect(banner.message).toBe(BannerMessageMap[BannerSeverity.warning]);
   });
 
   it('keeps a budget block visible while still stating the data survived', () => {
     const budgetError = `The budget has been reached. code: ${BUDGET_ERROR_CODES.PROJECT}`;
-    const banner = bannerVariant(false, IndexStatuses.fail, NO_STATS, budgetError, false, retention());
+    const banner = bannerVariant({
+      isIndexing: false,
+      state: IndexStatuses.fail,
+      reindexStats: NO_STATS,
+      error: budgetError,
+      isStale: false,
+      retention: retention(),
+    });
 
     expect(banner.label).toBe(REINDEX_FAILED_BANNER_TITLE);
     expect(banner.message).toContain(BUDGET_ERROR_VARIANTS[BUDGET_ERROR_CODES.PROJECT].message);
@@ -485,6 +553,23 @@ describe('applyReindexStub', () => {
     expect(row.stale).toBe(true);
     expect(row.reclaimable).toBe(true);
   });
+
+  it('does not invent a control flag for a backend that sends none', () => {
+    // Phrased through `?? stale` on purpose, and not simplifiable to
+    // `toBeUndefined()`: what matters is not that the key is absent but that every
+    // consumer still falls back to `stale`. Coercing the pass-through to
+    // `Boolean(item.reclaimable)` — the tidy-the-asymmetry edit this line invites —
+    // turns the absence into a hard `false` and silently strips that fallback.
+    const legacy = {
+      ...finishedRow,
+      stale: true,
+      metadata: { ...finishedRow.metadata, state: 'in_progress', task_id: 'new' },
+    };
+
+    const [row] = applyReindexStub([legacy], started);
+
+    expect(row.reclaimable ?? row.stale).toBe(true);
+  });
 });
 
 describe('applyReindexStub — run_chunks handover', () => {
@@ -544,7 +629,15 @@ describe('bannerVariant — the remedy must match the control the panel renders'
     // In this window runIsLive is still true, so the footer renders Stop and the
     // Reindex button is not in the DOM at all — and the server would refuse a
     // Reindex on the same disconnect rule.
-    const banner = bannerVariant(false, IndexStatuses.progress, NO_STATS, undefined, true, {}, false);
+    const banner = bannerVariant({
+      isIndexing: false,
+      state: IndexStatuses.progress,
+      reindexStats: NO_STATS,
+      error: undefined,
+      isStale: true,
+      retention: {},
+      isReclaimable: false,
+    });
 
     expect(banner.message).toBe(INDEX_UNRESPONSIVE_BANNER_MESSAGE);
     expect(banner.message).not.toContain('Reindex');
@@ -552,28 +645,42 @@ describe('bannerVariant — the remedy must match the control the panel renders'
 
   it('defaults to the conservative copy when the caller omits the flag', () => {
     // Defaulting the other way would name a button that is not on screen.
-    const banner = bannerVariant(false, IndexStatuses.progress, NO_STATS, undefined, true);
+    const banner = bannerVariant({
+      isIndexing: false,
+      state: IndexStatuses.progress,
+      reindexStats: NO_STATS,
+      error: undefined,
+      isStale: true,
+    });
 
     expect(banner.message).toBe(INDEX_UNRESPONSIVE_BANNER_MESSAGE);
   });
 
   it('names Reindex once the run is reclaimable', () => {
-    const banner = bannerVariant(false, IndexStatuses.progress, NO_STATS, undefined, true, {}, true);
+    const banner = bannerVariant({
+      isIndexing: false,
+      state: IndexStatuses.progress,
+      reindexStats: NO_STATS,
+      error: undefined,
+      isStale: true,
+      retention: {},
+      isReclaimable: true,
+    });
 
     expect(banner.message).toBe(INDEX_ABANDONED_BANNER_MESSAGE);
     expect(banner.message).toContain('Reindex');
   });
 
   it('still appends the retention claim in the unresponsive window', () => {
-    const banner = bannerVariant(
-      false,
-      IndexStatuses.progress,
-      NO_STATS,
-      undefined,
-      true,
-      retention(),
-      false,
-    );
+    const banner = bannerVariant({
+      isIndexing: false,
+      state: IndexStatuses.progress,
+      reindexStats: NO_STATS,
+      error: undefined,
+      isStale: true,
+      retention: retention(),
+      isReclaimable: false,
+    });
 
     expect(banner.message).toContain(INDEX_UNRESPONSIVE_BANNER_MESSAGE);
     expect(banner.message).toContain(INDEX_RETAINED_DATA_MESSAGE);
@@ -991,5 +1098,308 @@ describe('buildReindexStub — the optimistic flip itself', () => {
 
     expect(row.metadata.indexed).toBe(180);
     expect(row.metadata.total).toBe(305);
+  });
+});
+
+const GENERIC_FAILURE = BannerMessageMap[BannerSeverity.error];
+const NO_STATS = { isReindex: false };
+
+// The shape the backend persists into index metadata when a budget blocks indexing
+const budgetError = code =>
+  `The budget for shared models has been reached. Requests are unavailable until the budget resets or an administrator raises the limit. code: ${code}`;
+
+describe('bannerVariant — budget blocks', () => {
+  it('replaces the failure copy when the error is a budget block', () => {
+    const banner = bannerVariant({
+      isIndexing: false,
+      state: IndexStatuses.fail,
+      reindexStats: NO_STATS,
+      error: budgetError(BUDGET_ERROR_CODES.PROJECT),
+    });
+
+    expect(banner.message).toBe(BUDGET_ERROR_VARIANTS[BUDGET_ERROR_CODES.PROJECT].message);
+    expect(banner.message).not.toBe(GENERIC_FAILURE);
+  });
+
+  it('uses the member wording when the member budget was the one reached', () => {
+    const banner = bannerVariant({
+      isIndexing: false,
+      state: IndexStatuses.fail,
+      reindexStats: NO_STATS,
+      error: budgetError(BUDGET_ERROR_CODES.MEMBER),
+    });
+
+    expect(banner.message).toBe(BUDGET_ERROR_VARIANTS[BUDGET_ERROR_CODES.MEMBER].message);
+  });
+
+  it('never tells the user to check the source connection for a budget block', () => {
+    // The reported defect: that advice sends them to investigate the wrong thing, and
+    // Reindex cannot succeed until the budget resets
+    const banner = bannerVariant({
+      isIndexing: false,
+      state: IndexStatuses.fail,
+      reindexStats: NO_STATS,
+      error: budgetError(BUDGET_ERROR_CODES.PROJECT),
+    });
+
+    expect(banner.message).not.toMatch(/source connection/i);
+    expect(banner.message).not.toMatch(/Reindex/i);
+  });
+
+  it('keeps the error severity and title', () => {
+    // Only the message body changes, so the colour and heading logic is untouched
+    const banner = bannerVariant({
+      isIndexing: false,
+      state: IndexStatuses.fail,
+      reindexStats: NO_STATS,
+      error: budgetError(BUDGET_ERROR_CODES.PROJECT),
+    });
+
+    expect(banner.severity).toBe(BannerSeverity.error);
+    expect(banner.label).toBe('Index processing error');
+  });
+});
+
+describe('bannerVariant — everything else is unchanged', () => {
+  it('keeps the generic copy for a non-budget failure', () => {
+    const banner = bannerVariant({
+      isIndexing: false,
+      state: IndexStatuses.fail,
+      reindexStats: NO_STATS,
+      error: 'Connection refused by the source',
+    });
+
+    expect(banner.message).toBe(GENERIC_FAILURE);
+  });
+
+  it.each([
+    ['no error', undefined],
+    ['null', null],
+    ['empty string', ''],
+    // Older failed indexes predate the backend fix and store the raw payload; the banner
+    // must not crash on a non-string either
+    ['an object', { message: 'boom' }],
+  ])('keeps the generic copy when the error is %s', (_label, error) => {
+    const banner = bannerVariant({
+      isIndexing: false,
+      state: IndexStatuses.fail,
+      reindexStats: NO_STATS,
+      error,
+    });
+
+    expect(banner.message).toBe(GENERIC_FAILURE);
+  });
+
+  it('ignores a budget error when the index did not fail', () => {
+    const inProgress = bannerVariant({
+      isIndexing: false,
+      state: IndexStatuses.progress,
+      reindexStats: NO_STATS,
+      error: budgetError(BUDGET_ERROR_CODES.PROJECT),
+    });
+
+    expect(inProgress.severity).toBe(BannerSeverity.info);
+  });
+
+  it('still reports an in-flight index as in progress', () => {
+    expect(
+      bannerVariant({ isIndexing: true, state: IndexStatuses.fail, reindexStats: NO_STATS }).severity,
+    ).toBe(BannerSeverity.info);
+  });
+
+  it('still reports a cancelled index as stopped', () => {
+    expect(
+      bannerVariant({ isIndexing: false, state: IndexStatuses.cancelled, reindexStats: NO_STATS }).severity,
+    ).toBe(BannerSeverity.warning);
+  });
+});
+
+describe('bannerVariant — abandoned run', () => {
+  it('reports a stale in_progress run as stopped, not indexing', () => {
+    const banner = bannerVariant({
+      isIndexing: false,
+      state: IndexStatuses.progress,
+      reindexStats: NO_STATS,
+      error: undefined,
+      isStale: true,
+      retention: {},
+      isReclaimable: true,
+    });
+
+    expect(banner.severity).toBe(BannerSeverity.warning);
+    expect(banner.label).toBe('Stopped');
+    expect(banner.message).toBe(INDEX_ABANDONED_BANNER_MESSAGE);
+  });
+
+  it('wins over the in-flight signal, which a stale row still reads as', () => {
+    expect(
+      bannerVariant({
+        isIndexing: true,
+        state: IndexStatuses.progress,
+        reindexStats: NO_STATS,
+        error: undefined,
+        isStale: true,
+      }).severity,
+    ).toBe(BannerSeverity.warning);
+  });
+
+  it('never applies to a terminal state, whatever the stale flag says', () => {
+    expect(
+      bannerVariant({
+        isIndexing: false,
+        state: IndexStatuses.fail,
+        reindexStats: NO_STATS,
+        error: undefined,
+        isStale: true,
+      }).severity,
+    ).toBe(BannerSeverity.error);
+  });
+
+  it('leaves a fresh in_progress run reported as indexing', () => {
+    expect(
+      bannerVariant({
+        isIndexing: false,
+        state: IndexStatuses.progress,
+        reindexStats: NO_STATS,
+        error: undefined,
+        isStale: false,
+      }).severity,
+    ).toBe(BannerSeverity.info);
+  });
+});
+
+const runEntry = totals => ({
+  state: IndexStatuses.success,
+  report: {
+    status: 'ok',
+    item_labels: { singular: 'page', plural: 'pages' },
+    dependent_labels: { singular: 'attachment', plural: 'attachments' },
+    totals: {
+      indexed: 0,
+      skipped: 0,
+      not_indexed: 0,
+      failed: 0,
+      unchanged: 0,
+      dependent_not_indexed: 0,
+      total: 0,
+      ...totals,
+    },
+    categories: [
+      { kind: 'indexed', count: totals.indexed ?? 0, groups: [] },
+      { kind: 'skipped', count: totals.skipped ?? 0, groups: [] },
+      { kind: 'not_indexed', count: totals.not_indexed ?? 0, groups: [] },
+      { kind: 'failed', count: totals.failed ?? 0, groups: [] },
+    ],
+    errors: [],
+    errors_total: 0,
+  },
+});
+
+describe('bannerVariant — success copy', () => {
+  it('describes the run in the source\u2019s own units', () => {
+    const banner = bannerVariant({
+      isIndexing: false,
+      state: IndexStatuses.success,
+      reindexStats: {
+        latestEntry: runEntry({ indexed: 179, skipped: 12, total: 191 }),
+      },
+    });
+
+    expect(banner.severity).toBe(BannerSeverity.success);
+    expect(banner.message).toContain('179 pages indexed, 12 pages skipped');
+    expect(banner.message).not.toContain('unsupported format');
+  });
+
+  it('says a run that changed nothing is up to date', () => {
+    const banner = bannerVariant({
+      isIndexing: false,
+      state: IndexStatuses.success,
+      reindexStats: {
+        latestEntry: runEntry({ indexed: 0, unchanged: 196, total: 196 }),
+      },
+    });
+
+    expect(banner.message).toContain('Up to date \u2014 196 pages unchanged');
+    expect(banner.message).not.toContain('0 pages');
+  });
+
+  it('applies to scheduled and partial runs, not just completed ones', () => {
+    for (const state of [IndexStatuses.scheduledReindex, IndexStatuses.partlyOk]) {
+      const banner = bannerVariant({
+        isIndexing: false,
+        state,
+        reindexStats: {
+          latestEntry: runEntry({ indexed: 5, total: 5 }),
+        },
+      });
+
+      expect(banner.severity).toBe(BannerSeverity.success);
+      expect(banner.message).toContain('5 pages indexed');
+    }
+  });
+
+  it('falls back to the generic copy when a run carries no report', () => {
+    const banner = bannerVariant({
+      isIndexing: false,
+      state: IndexStatuses.success,
+      reindexStats: { latestEntry: null },
+    });
+
+    expect(banner.message).toBe(BannerMessageMap[BannerSeverity.success]);
+  });
+});
+
+describe('isAbandonedRun', () => {
+  const run = (state, extra = {}) => ({ metadata: { state }, ...extra });
+
+  it('flags a run the backend marked stale while it still claims to be running', () => {
+    expect(isAbandonedRun(run(IndexStatuses.progress, { stale: true }))).toBe(true);
+  });
+
+  it('leaves a live in-progress run alone', () => {
+    expect(isAbandonedRun(run(IndexStatuses.progress))).toBe(false);
+  });
+
+  it('ignores stale rows that already reached a terminal state', () => {
+    expect(isAbandonedRun(run(IndexStatuses.success, { stale: true }))).toBe(false);
+    expect(isAbandonedRun(run(IndexStatuses.fail, { stale: true }))).toBe(false);
+  });
+
+  it('tolerates a missing index or metadata', () => {
+    expect(isAbandonedRun(undefined)).toBe(false);
+    expect(isAbandonedRun({})).toBe(false);
+  });
+});
+
+// Deliberately the same four cases as its display twin, side by side: the two differ by
+// one token, which is the easiest shape for a silent swap to survive review.
+describe('isReclaimableRun', () => {
+  const run = (state, extra = {}) => ({ metadata: { state }, ...extra });
+
+  it('flags a run the backend will let another run reclaim', () => {
+    expect(isReclaimableRun(run(IndexStatuses.progress, { stale: true, reclaimable: true }))).toBe(true);
+  });
+
+  it('leaves a run that is only display-stale alone', () => {
+    // `stale` fires five heartbeat intervals in, which a healthy run crosses mid-promote.
+    expect(isReclaimableRun(run(IndexStatuses.progress, { stale: true, reclaimable: false }))).toBe(false);
+  });
+
+  it('falls back to stale when the backend sends no control flag', () => {
+    expect(isReclaimableRun(run(IndexStatuses.progress, { stale: true }))).toBe(true);
+    expect(isReclaimableRun(run(IndexStatuses.progress))).toBe(false);
+  });
+
+  it('ignores reclaimable rows that already reached a terminal state', () => {
+    // The flag is heartbeat age, which the backend keeps asserting after a row has
+    // terminated; without the state conjunct a finished run gains a phantom abandoned
+    // entry in Run History.
+    expect(isReclaimableRun(run(IndexStatuses.success, { reclaimable: true }))).toBe(false);
+    expect(isReclaimableRun(run(IndexStatuses.fail, { reclaimable: true }))).toBe(false);
+  });
+
+  it('tolerates a missing index or metadata', () => {
+    expect(isReclaimableRun(undefined)).toBe(false);
+    expect(isReclaimableRun({})).toBe(false);
   });
 });
