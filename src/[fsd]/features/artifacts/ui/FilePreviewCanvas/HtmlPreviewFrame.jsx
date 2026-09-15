@@ -259,10 +259,17 @@ const sanitizeForPreview = (rawHtml, nonce, hostOrigin, fallbackStyles) => {
   return { html: finalHtml, warnings };
 };
 
+// How long to wait for the iframe onLoad before declaring the preview unresponsive.
+// An infinite-loop script blocks the JS engine so onLoad never fires.
+const LOAD_TIMEOUT_MS = 5000;
+
 const HtmlPreviewFrame = memo(props => {
   const { htmlContent } = props;
   const iframeRef = useRef(null);
   const [clickedUrl, setClickedUrl] = useState(null);
+  const [isUnresponsive, setIsUnresponsive] = useState(false);
+  const [iframeGeneration, setIframeGeneration] = useState(0);
+  const loadTimeoutRef = useRef(null);
   const theme = useTheme();
   const styles = htmlPreviewFrameStyles();
 
@@ -290,6 +297,19 @@ const HtmlPreviewFrame = memo(props => {
     }
   }, [htmlContent, nonce, hostOrigin, fallbackStyles]);
 
+  // On file switch: force a fresh iframe DOM node, reset state, and start a load timeout.
+  // An infinite-loop script blocks the iframe's JS engine so onLoad never fires —
+  // the timeout is the only signal we get that the preview is hung.
+  useEffect(() => {
+    setIframeGeneration(gen => gen + 1);
+    setIsUnresponsive(false);
+    clearTimeout(loadTimeoutRef.current);
+    loadTimeoutRef.current = setTimeout(() => {
+      setIsUnresponsive(true);
+    }, LOAD_TIMEOUT_MS);
+    return () => clearTimeout(loadTimeoutRef.current);
+  }, [htmlContent]);
+
   useEffect(() => {
     const handleMessage = e => {
       if (e.origin !== hostOrigin && e.origin !== 'null') return;
@@ -301,6 +321,11 @@ const HtmlPreviewFrame = memo(props => {
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
   }, [hostOrigin]);
+
+  // Iframe loaded successfully — cancel the unresponsive timeout.
+  const handleIframeLoad = useCallback(() => {
+    clearTimeout(loadTimeoutRef.current);
+  }, []);
 
   const handleCloseDialog = useCallback(() => setClickedUrl(null), []);
 
@@ -357,14 +382,33 @@ const HtmlPreviewFrame = memo(props => {
           ))}
         </Box>
       )}
-      <iframe
-        ref={iframeRef}
-        srcDoc={sanitizeResult.html}
-        sandbox="allow-scripts"
-        title="HTML Preview"
-        referrerPolicy="no-referrer"
-        style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
-      />
+      {isUnresponsive ? (
+        <Box sx={styles.fallbackWrapper}>
+          <Typography
+            variant="bodyMedium"
+            sx={styles.fallbackTitle}
+          >
+            Preview became unresponsive
+          </Typography>
+          <Typography
+            variant="bodySmall"
+            sx={styles.fallbackDescription}
+          >
+            This file likely contains an infinite loop or long-running script. Open another file to continue.
+          </Typography>
+        </Box>
+      ) : (
+        <iframe
+          key={iframeGeneration}
+          ref={iframeRef}
+          srcDoc={sanitizeResult.html}
+          sandbox="allow-scripts"
+          title="HTML Preview"
+          referrerPolicy="no-referrer"
+          onLoad={handleIframeLoad}
+          style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
+        />
+      )}
       <Modal.BaseModal
         open={!!clickedUrl}
         onClose={handleCloseDialog}
