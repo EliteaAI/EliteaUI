@@ -111,9 +111,8 @@ const AttachedDatasetCard = memo(props => {
             variant={BUTTON_VARIANTS.tertiary}
             onClick={handleOpenOverflow}
             sx={styles.overflowButton}
-          >
-            <DotsMenuIcon />
-          </Button.BaseBtn>
+            startIcon={<DotsMenuIcon />}
+          />
         )}
       </Box>
 
@@ -233,7 +232,8 @@ const attachedDatasetCardStyles = () => ({
     flexDirection: 'column',
     paddingBottom: '0.5rem',
     gap: '0.5rem',
-    backgroundColor: palette.background.folder.default,
+    backgroundColor: palette.background.accordion.default,
+    border: `0.0625rem solid ${palette.border.folderCard}`,
     borderRadius: '0.75rem',
   }),
   header: ({ palette }) => ({
@@ -243,7 +243,7 @@ const attachedDatasetCardStyles = () => ({
     padding: '0.5rem 1rem',
     gap: '0.5rem',
     borderRadius: '0.75rem',
-    backgroundColor: palette.background.folder.default,
+    backgroundColor: palette.background.folder.secondary,
     position: 'relative',
     '&::before': {
       content: '""',
@@ -296,7 +296,7 @@ const attachedDatasetCardStyles = () => ({
     display: 'flex',
     flexDirection: 'column',
     gap: '0.5rem',
-    padding: '0.5rem 1rem',
+    padding: '0.5rem 2rem',
   },
   noCasesText: ({ palette }) => ({
     fontSize: '0.875rem',

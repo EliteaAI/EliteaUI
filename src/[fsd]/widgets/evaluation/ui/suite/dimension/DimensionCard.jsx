@@ -209,6 +209,9 @@ const dimensionCardStyles = () => ({
     '&:hover': {
       backgroundColor: palette.background.tabButton.default,
     },
+    '&:hover svg path': {
+      fill: palette.icon.fill.secondary,
+    },
   }),
   actionIcon: ({ palette }) => ({
     fontSize: '1rem',

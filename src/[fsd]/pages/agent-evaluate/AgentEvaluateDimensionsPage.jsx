@@ -291,12 +291,13 @@ const agentEvaluateDimensionsPageStyles = () => ({
     justifyContent: 'space-between',
     padding: '0 1.5rem',
   }),
-  body: {
+  body: ({ palette }) => ({
     display: 'flex',
     flex: 1,
     minHeight: 0,
     overflow: 'hidden',
-  },
+    backgroundColor: palette.background.default.tertiary,
+  }),
   content: {
     display: 'flex',
     flexDirection: 'column',

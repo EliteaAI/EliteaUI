@@ -375,7 +375,7 @@ const agentEvaluatePageStyles = () => ({
   },
   divider: ({ palette }) => ({
     width: '0.0625rem',
-    backgroundColor: palette.border.lines,
+    backgroundColor: palette.border.table,
     flexShrink: 0,
   }),
 });
