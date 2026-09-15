@@ -61,9 +61,6 @@ export const bannerVariant = ({
       label: BannerTitleMap[BannerSeverity.warning],
       // An interrupted run's writes were never visible, so a live chunk count means
       // the previous generation is still being served — say so under the warning.
-      // Which remedy to name depends on the CONTROL flag, not this display one: until
-      // the run is reclaimable the panel renders Stop and the server would refuse a
-      // Reindex on the same rule, so naming Reindex points at a button that is absent.
       message: [
         isReclaimable ? INDEX_ABANDONED_BANNER_MESSAGE : INDEX_UNRESPONSIVE_BANNER_MESSAGE,
         hasRetainedData ? INDEX_RETAINED_DATA_MESSAGE : null,
@@ -297,8 +294,6 @@ export const indexRunControls = ({
 }) => {
   const overrideSupersedesRun = Boolean(localMetaOverride?.state && !serverSupersedes);
   const buildBlocked = Boolean(buildBlockedReason);
-  // The row is read here rather than taken as two booleans, so a caller cannot hand the
-  // display flag to the control question by swapping two same-shaped arguments.
   const stale = overrideSupersedesRun ? false : Boolean(index?.stale);
   const reclaimable = overrideSupersedesRun ? false : Boolean(index?.reclaimable ?? index?.stale);
   const runIsLive = hasLiveRun({ isIndexing, isStale: reclaimable });
@@ -343,16 +338,19 @@ export const shouldExpireReindexStub = ({ serverRow, stubCreatedAt, now, graceMs
 export const bannerOutlivesRun = severity =>
   severity === BannerSeverity.error || severity === BannerSeverity.warning;
 
+// The SDK records a history entry per state transition, so a second completed entry
+// means this collection has been built before.
+const countCompletedRuns = history =>
+  Array.isArray(history) ? history.filter(entry => RUNNABLE_INDEX_STATUSES.includes(entry?.state)).length : 0;
+
 /**
  * The counts line for one row of the index list.
  *
- * While a run is in flight the persisted `indexed`/`total` still describe the
- * PREVIOUS run — the platform preserves them across a reindex so the index stays
- * readable while the new one works — and rendering them beside a live spinner
- * reads as this run's progress. `run_chunks` is the running count the SDK writes on
- * every heartbeat, so an in-flight row reports that instead. Never a ratio: the run's
- * own total is not known until it finishes, and `indexed`/`total` count documents
- * while `run_chunks` counts chunks.
+ * In flight, `indexed`/`total` still describe the PREVIOUS run — the platform preserves
+ * them across a reindex so the index stays readable — so rendering them beside a live
+ * spinner reads as this run's progress. `run_chunks` is reported instead, never as a
+ * ratio: the run's own total is unknown until it finishes, and the two count different
+ * things (documents vs chunks).
  * @param {object} metadata - `index.metadata` from the index list GET
  * @param {boolean} isInProgress - whether the row's state is `in_progress`
  * @returns {{tooltip: string, count: string}}
@@ -370,15 +368,11 @@ export const indexListCounts = (metadata, isInProgress) => {
     };
   }
 
-  // Reindex detection: the SDK records a history entry per state transition, so
-  // more than one completed entry means this collection has been indexed before.
-  const completedRuns = Array.isArray(metadata.history)
-    ? metadata.history.filter(entry => RUNNABLE_INDEX_STATUSES.includes(entry?.state)).length
-    : 0;
+  const hasBeenIndexedBefore = countCompletedRuns(metadata.history) > 1;
   const total = metadata.total ?? metadata.indexed ?? '–';
   const indexedDocs = metadata.indexed ?? '–';
   return {
-    tooltip: completedRuns > 1 ? 'reindexed / total' : 'indexed / total',
+    tooltip: hasBeenIndexedBefore ? 'reindexed / total' : 'indexed / total',
     count: `${indexedDocs} / ${total}`,
   };
 };
