@@ -90,7 +90,7 @@ EvaluationRunsTable.displayName = 'EvaluationRunsTable';
 
 /** @type {MuiSx} */
 const evaluationRunsTableStyles = () => ({
-  root: {
+  root: ({ palette }) => ({
     display: 'flex',
     flexDirection: 'column',
     flex: 1,
@@ -98,7 +98,8 @@ const evaluationRunsTableStyles = () => ({
     gap: '0.75rem',
     padding: '1.5rem',
     overflow: 'hidden',
-  },
+    background: palette.background.default.tertiary,
+  }),
   body: {
     display: 'flex',
     flexDirection: 'column',

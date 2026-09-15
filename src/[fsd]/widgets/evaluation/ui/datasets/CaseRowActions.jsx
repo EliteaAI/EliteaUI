@@ -27,7 +27,7 @@ const CaseRowActions = memo(props => {
     [caseItem, onDelete],
   );
 
-  const styles = caseRowActionsStyles();
+  const styles = caseRowActionsStyles(palette);
 
   if (!canEdit) return null;
 
@@ -69,29 +69,32 @@ const CaseRowActions = memo(props => {
 CaseRowActions.displayName = 'CaseRowActions';
 
 /** @type {MuiSx} */
-const caseRowActionsStyles = () => ({
+const caseRowActionsStyles = palette => ({
   actions: {
     display: 'flex',
     alignItems: 'center',
     gap: '0.25rem',
   },
-  actionButton: ({ palette }) => ({
+  actionButton: {
     padding: '0.25rem',
     minWidth: 'auto',
     '&:hover': {
       backgroundColor: palette.action.hover,
     },
-  }),
+    '&:hover svg path': {
+      fill: palette.icon.fill.secondary,
+    },
+  },
   editIcon: {
     width: '1rem',
     height: '1rem',
   },
-  icon: ({ palette }) => ({
+  icon: {
     fontSize: '1rem',
     '& path': {
       fill: palette.icon.fill.default,
     },
-  }),
+  },
 });
 
 export default CaseRowActions;
