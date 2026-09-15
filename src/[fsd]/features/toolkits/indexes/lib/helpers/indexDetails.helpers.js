@@ -249,6 +249,16 @@ export const isAbandonedRun = index =>
   Boolean(index?.stale) && index?.metadata?.state === IndexStatuses.progress;
 
 /**
+ * The control-flag counterpart of {@link isAbandonedRun}, for surfaces that retire a run
+ * rather than decorate it. `stale` is a five-minute display horizon that also fires on a
+ * healthy run while it is mid-promote, which is too weak to declare a run finished.
+ * @param {object} index - Index row as returned by the indexes list
+ * @returns {boolean}
+ */
+export const isReclaimableRun = index =>
+  Boolean(index?.reclaimable ?? index?.stale) && index?.metadata?.state === IndexStatuses.progress;
+
+/**
  * A run that may still be executing. Stoppability is deliberately not consulted: a run
  * that died without a terminal write keeps its `task_id` forever, so "the panel could
  * send a Stop" is true for every dead row and cannot veto the backend's stale verdict.
