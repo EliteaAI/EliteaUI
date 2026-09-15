@@ -4,7 +4,11 @@ import { Box, Typography } from '@mui/material';
 
 import { useDeleteIndexItemMutation, useGetIndexScheduleQuery } from '@/[fsd]/features/toolkits/indexes/api';
 import { IndexStatuses } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
-import { shouldExpireReindexStub } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexDetails.helpers';
+import {
+  applyReindexStub,
+  buildReindexStub,
+  shouldExpireReindexStub,
+} from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexDetails.helpers';
 import {
   useIndexNavigation,
   useIndexesListPolling,
@@ -78,26 +82,10 @@ const IndexesContainer = memo(props => {
 
   const [deleteIndex, { isLoading: isIndexDeleting }] = useDeleteIndexItemMutation();
 
-  const indexesWithStub = useMemo(() => {
-    if (!reindexRunning) return indexesList;
-
-    return indexesList.map(item =>
-      item.id === reindexRunning.id
-        ? {
-            ...item,
-            // An observed start proves not-stale; the expiry effect above owns the
-            // other direction — while the stub lives, the run counts as alive.
-            stale: false,
-            metadata: {
-              ...item.metadata,
-              state: reindexRunning.metadata?.state ?? item.metadata?.state,
-              task_id: reindexRunning.metadata?.task_id ?? item.metadata?.task_id,
-              conversation_id: reindexRunning.metadata?.conversation_id ?? item.metadata?.conversation_id,
-            },
-          }
-        : item,
-    );
-  }, [indexesList, reindexRunning]);
+  const indexesWithStub = useMemo(
+    () => applyReindexStub(indexesList, reindexRunning),
+    [indexesList, reindexRunning],
+  );
 
   const traceReindex = useCallback(
     (id, metadata) => {
@@ -142,12 +130,7 @@ const IndexesContainer = memo(props => {
 
   const confirmReindex = useCallback(() => {
     if (!reindexTarget) return;
-    setReindexRunning({
-      ...reindexTarget,
-      observedAt: Date.now(),
-      stubCreatedAt: Date.now(),
-      metadata: { ...reindexTarget.metadata, state: IndexStatuses.progress },
-    });
+    setReindexRunning(buildReindexStub(reindexTarget));
     setReindexConfirmOpen(false);
     setReindexTarget(null);
   }, [reindexTarget]);
