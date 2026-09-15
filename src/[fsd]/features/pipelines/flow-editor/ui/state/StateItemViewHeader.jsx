@@ -12,7 +12,7 @@ const StateItemViewHeader = memo(props => {
     <Box sx={styles.container}>
       <Typography
         variant="labelMedium"
-        color="text.default"
+        color="text.primary"
       >
         {title}
       </Typography>

@@ -46,7 +46,7 @@ const ParticipantsAccordion = memo(props => {
         <Box sx={styles.headerWrapper}>
           <Typography
             variant="labelSmall"
-            color="text.default"
+            color="text.primary"
             sx={styles.title}
           >
             {title}

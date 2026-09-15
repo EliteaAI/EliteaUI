@@ -88,7 +88,7 @@ const ExpandedViewerModal = memo(props => {
       <Box sx={styles.labelBox}>
         <Typography
           variant="bodyMedium"
-          color="text.default"
+          color="text.primary"
         >
           Content type:
         </Typography>

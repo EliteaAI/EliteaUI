@@ -158,7 +158,7 @@ const voiceConfigControlsStyles = () => ({
     minWidth: 0,
   },
   sliderLabel: {
-    color: 'text.default',
+    color: 'text.primary',
   },
   speedSlider: {
     '& .MuiSlider-markLabel': {

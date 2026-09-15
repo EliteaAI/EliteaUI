@@ -142,7 +142,7 @@ const CommonInterruptSettings = memo(props => {
         label={
           <Typography
             variant="labelSmall"
-            color={yamlJsonObject.entry_point === id ? 'text.default' : 'text.secondary'}
+            color={yamlJsonObject.entry_point === id ? 'text.primary' : 'text.secondary'}
           >
             Interrupt before
           </Typography>
@@ -166,7 +166,7 @@ const CommonInterruptSettings = memo(props => {
         label={
           <Typography
             variant="labelSmall"
-            color={yamlNode?.transition === PipelineNodeTypes.End ? 'text.default' : 'text.secondary'}
+            color={yamlNode?.transition === PipelineNodeTypes.End ? 'text.primary' : 'text.secondary'}
           >
             Interrupt after
           </Typography>

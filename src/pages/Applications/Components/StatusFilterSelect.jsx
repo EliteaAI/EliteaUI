@@ -24,7 +24,7 @@ const StatusFilterSelect = memo(({ projectId, selectedTab, tabs, onChangeTab }) 
         <Typography
           component={'div'}
           variant="bodyMedium"
-          color={'text.default'}
+          color={'text.primary'}
         >
           {projectId != PUBLIC_PROJECT_ID ? 'Statuses:' : 'Filter by:'}
         </Typography>

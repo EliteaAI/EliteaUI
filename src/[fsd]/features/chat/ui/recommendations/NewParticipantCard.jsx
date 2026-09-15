@@ -84,7 +84,7 @@ const NewParticipantCard = memo(props => {
           </Typography>
           <Typography
             variant="bodySmall"
-            color="text.default"
+            color="text.primary"
             sx={styles.typeText}
             component={'span'}
           >

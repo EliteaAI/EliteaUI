@@ -160,7 +160,7 @@ const bucketStorageSelectorStyles = () => ({
   }),
   chevron: {
     fontSize: '1.25rem',
-    color: 'text.default',
+    color: 'text.primary',
   },
   menuPaper: ({ palette }) => ({
     boxShadow: palette.boxShadow.default,

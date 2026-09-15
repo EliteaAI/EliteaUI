@@ -280,7 +280,7 @@ const ConditionNode = memo(props => {
         <Box sx={styles.conditionalOutputsContainer}>
           <Typography
             variant="bodySmall"
-            color="text.default"
+            color="text.primary"
           >
             Conditional outputs
           </Typography>

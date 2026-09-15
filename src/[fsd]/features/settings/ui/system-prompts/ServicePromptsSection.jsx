@@ -387,7 +387,7 @@ const ServicePromptsSection = memo(() => {
                     </Typography>
                     <Typography
                       variant="bodySmall"
-                      color="text.default"
+                      color="text.primary"
                       sx={styles.cardPreview}
                     >
                       {preview}
