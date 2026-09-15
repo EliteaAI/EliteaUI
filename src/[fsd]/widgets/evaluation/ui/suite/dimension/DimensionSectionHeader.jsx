@@ -9,13 +9,12 @@ const DimensionSectionHeader = memo(props => {
     event.stopPropagation();
     onManageDimensions?.();
   };
-
   const styles = dimensionSectionHeaderStyles();
 
   return (
     <Link
       component="span"
-      variant="bodySmall"
+      variant="labelSmall"
       role="button"
       tabIndex={0}
       onClick={handleClick}
@@ -30,8 +29,9 @@ DimensionSectionHeader.displayName = 'DimensionSectionHeader';
 
 /** @type {MuiSx} */
 const dimensionSectionHeaderStyles = () => ({
-  manageLink: ({ palette }) => ({
+  manageLink: ({ palette, typography }) => ({
     color: palette.text.primary,
+    fontFamily: typography.fontFamily,
     textDecoration: 'underline',
     textDecorationStyle: 'solid',
     cursor: 'pointer',

@@ -173,7 +173,7 @@ const caseResultItemStyles = () => ({
   }),
   caseLabel: ({ palette }) => ({
     color: palette.text.secondary,
-    fontWeight: 500,
+    fontWeight: 600,
     flexShrink: 0,
   }),
   pendingBadge: ({ palette }) => ({

@@ -7,6 +7,7 @@ import { Box } from '@mui/material';
 import { GridRowModes } from '@mui/x-data-grid';
 
 import { SECRETS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
+import { SecretRowsHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { DrawerPageHeader } from '@/[fsd]/features/settings/ui/drawer-page';
 import { SecretsTable } from '@/[fsd]/features/settings/ui/secrets';
 import { useSecretsListQuery } from '@/api/secrets.js';
@@ -52,6 +53,7 @@ const SecretsContent = memo(() => {
         name: secret.name,
         secretValue: secret.secret_name,
         is_default: secret.is_default || false,
+        allow_external_access: secret.allow_external_access || false,
       })) || [],
     [secrets],
   );
@@ -64,13 +66,20 @@ const SecretsContent = memo(() => {
     [search, secretsList],
   );
 
+  const wasFetchingRef = useRef(isFetching);
+
   useEffect(() => {
-    if (!isFetching) {
-      setSecretRows(oldRows => {
-        const pendingNewRows = oldRows.filter(row => row.isNew);
-        return [...pendingNewRows, ...filteredSecrets];
-      });
+    if (isFetching) {
+      wasFetchingRef.current = true;
+      return;
     }
+
+    // Only a finished fetch starts the rows over (the table remounts then anyway). A search or a cache
+    // patch, like the sharing toggle, must keep revealed and half-typed values in the other rows.
+    const keepLocalState = !wasFetchingRef.current;
+    wasFetchingRef.current = false;
+
+    setSecretRows(oldRows => SecretRowsHelpers.mergeSecretRows(oldRows, filteredSecrets, { keepLocalState }));
   }, [isFetching, filteredSecrets]);
 
   // If navigated with ?createSecret=1, trigger creation of a new secret row

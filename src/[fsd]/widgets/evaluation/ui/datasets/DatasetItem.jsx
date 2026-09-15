@@ -3,7 +3,7 @@ import { memo, useCallback, useMemo, useState } from 'react';
 import { Box, Menu, MenuItem, Tooltip, Typography } from '@mui/material';
 
 import { Button } from '@/[fsd]/shared/ui';
-import { BUTTON_COLORS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import DotsMenuIcon from '@/components/Icons/DotsMenuIcon';
 import EditIcon from '@/components/Icons/EditIcon';
@@ -132,13 +132,12 @@ const DatasetItem = memo(props => {
           </Box>
           {showMenuButton && (
             <Button.BaseBtn
-              color={BUTTON_COLORS.tertiary}
+              variant={BUTTON_VARIANTS.tertiary}
               onClick={handleOpenMenu}
+              startIcon={<DotsMenuIcon />}
               sx={styles.menuButton}
               data-testid={`dataset-menu-${dataset.id}`}
-            >
-              <DotsMenuIcon />
-            </Button.BaseBtn>
+            />
           )}
         </Box>
       </Tooltip>
@@ -210,7 +209,7 @@ const datasetItemStyles = () => ({
         left: 0,
         height: '0.0625rem',
         width: '100%',
-        backgroundColor: showSeparator ? palette.border.lines : 'transparent',
+        backgroundColor: showSeparator ? palette.border.table : 'transparent',
       },
     }),
   content: {

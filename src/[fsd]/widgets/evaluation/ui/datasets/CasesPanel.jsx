@@ -323,6 +323,9 @@ const casesPanelStyles = () => ({
     '&:hover': {
       backgroundColor: palette.action.hover,
     },
+    '&:hover svg path': {
+      fill: palette.icon.fill.secondary,
+    },
     '&.Mui-disabled': {
       backgroundColor: palette.background.tabButton.default,
       '& svg path': {

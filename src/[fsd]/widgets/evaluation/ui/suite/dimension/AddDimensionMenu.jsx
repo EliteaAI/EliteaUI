@@ -3,7 +3,7 @@ import { memo, useCallback, useState } from 'react';
 import { Box, Menu, MenuItem, Typography } from '@mui/material';
 
 import { Button } from '@/[fsd]/shared/ui';
-import { BUTTON_COLORS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import SparkleIcon from '@/assets/ai-sparkle-icon.svg?react';
 import BookIcon from '@/assets/book.svg?react';
 import EditPenIcon from '@/components/Icons/EditPenIcon';
@@ -69,7 +69,7 @@ const AddDimensionMenu = memo(props => {
   return (
     <>
       <Button.BaseBtn
-        color={BUTTON_COLORS.secondary}
+        variant={BUTTON_VARIANTS.iconLabel}
         startIcon={<PlusIcon />}
         onClick={handleOpenMenu}
         disabled={disabled}
@@ -149,10 +149,6 @@ const addDimensionMenuStyles = () => ({
     },
     '& svg path': {
       fill: palette.text.secondary,
-    },
-    '&:hover': {
-      borderColor: palette.border.lines,
-      backgroundColor: palette.background.tabButton.default,
     },
   }),
   menuPaper: ({ palette }) => ({

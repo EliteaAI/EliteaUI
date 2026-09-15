@@ -150,7 +150,8 @@ const Card = memo(props => {
   const showCardBottom = !hideCardBottom;
   const isWholeCardClickable = hasCardDetails && Boolean(onCardClick) && !disableCardClick;
   const isClickable = !disableCardClick;
-  const styles = cardStyles(hasCardDetails, showCardBottom, isWholeCardClickable, isClickable);
+  const hasIndexes = isToolkitCard(type) && typeof data.indexes_count === 'number';
+  const styles = cardStyles(hasCardDetails, showCardBottom, isWholeCardClickable, isClickable, hasIndexes);
 
   const isOnApplicationsPage = useIsFrom(RouteDefinitions.Applications);
   const showForkedFromLink = isForked && isOnApplicationsPage;
@@ -169,59 +170,6 @@ const Card = memo(props => {
         onClick={isWholeCardClickable ? handleCardClick : undefined}
       >
         <CardContent sx={styles.cardContent}>
-          {/* Top-right status icons container */}
-          {!disableCardActions && (
-            <Box sx={styles.topRightSection}>
-              {isSupportAssistant && (
-                <IconButton
-                  disableRipple
-                  onClick={handleAssistantClick}
-                  sx={styles.supportAssistantIconContainer}
-                >
-                  <Box
-                    component={EliteaAssistantIcon}
-                    sx={{ width: '1.45rem', height: '1.45rem' }}
-                  />
-                </IconButton>
-              )}
-              {(((status === 'published' || status === 'embedded') && isApplicationCard(type)) ||
-                (hasPublishedVersion && isSkillCard(type))) && (
-                <StyledTooltip
-                  placement="top"
-                  title={status === 'embedded' ? 'Embedded' : 'Published'}
-                >
-                  <Box sx={styles.publishIconContainer}>
-                    <PublishIcon sx={{ fontSize: '1rem' }} />
-                  </Box>
-                </StyledTooltip>
-              )}
-              {pageViewMode !== ViewMode.Owner && (
-                <Box sx={styles.likeContainer}>
-                  <Like
-                    viewMode={pageViewMode}
-                    type={type}
-                    data={data}
-                  />
-                </Box>
-              )}
-              {(type === ContentType.MCPAdmin || type === ContentType.MCPAll) && (
-                <StyledTooltip
-                  placement="top"
-                  title={data.online || hasMcpLoggedIn ? 'Connected' : 'Disconnected'}
-                >
-                  {data.online || hasMcpLoggedIn ? (
-                    <Box sx={styles.mcpIconOnline}>
-                      <OnlineIcon />
-                    </Box>
-                  ) : (
-                    <Box sx={styles.mcpIconOffline}>
-                      <OfflineIcon />
-                    </Box>
-                  )}
-                </StyledTooltip>
-              )}
-            </Box>
-          )}
           <Box
             sx={styles.cardTopSection}
             onClick={isWholeCardClickable || disableCardClick ? undefined : handleCardClick}
@@ -271,7 +219,7 @@ const Card = memo(props => {
                     variant="headingSmall"
                   />
                 </Typography>
-                {isToolkitCard(type) && typeof data.indexes_count === 'number' && (
+                {hasIndexes && (
                   <Typography
                     variant="bodySmall"
                     sx={styles.indexesCount}
@@ -283,6 +231,61 @@ const Card = memo(props => {
                 )}
               </Box>
             </StyledTooltip>
+            {!disableCardActions && (
+              <Box
+                sx={styles.topRightSection}
+                onClick={event => event.stopPropagation()}
+              >
+                {isSupportAssistant && (
+                  <IconButton
+                    disableRipple
+                    onClick={handleAssistantClick}
+                    sx={styles.supportAssistantIconContainer}
+                  >
+                    <Box
+                      component={EliteaAssistantIcon}
+                      sx={{ width: '1.45rem', height: '1.45rem' }}
+                    />
+                  </IconButton>
+                )}
+                {(((status === 'published' || status === 'embedded') && isApplicationCard(type)) ||
+                  (hasPublishedVersion && isSkillCard(type))) && (
+                  <StyledTooltip
+                    placement="top"
+                    title={status === 'embedded' ? 'Embedded' : 'Published'}
+                  >
+                    <Box sx={styles.publishIconContainer}>
+                      <PublishIcon sx={{ fontSize: '1rem' }} />
+                    </Box>
+                  </StyledTooltip>
+                )}
+                {pageViewMode !== ViewMode.Owner && (
+                  <Box sx={styles.likeContainer}>
+                    <Like
+                      viewMode={pageViewMode}
+                      type={type}
+                      data={data}
+                    />
+                  </Box>
+                )}
+                {(type === ContentType.MCPAdmin || type === ContentType.MCPAll) && (
+                  <StyledTooltip
+                    placement="top"
+                    title={data.online || hasMcpLoggedIn ? 'Connected' : 'Disconnected'}
+                  >
+                    {data.online || hasMcpLoggedIn ? (
+                      <Box sx={styles.mcpIconOnline}>
+                        <OnlineIcon />
+                      </Box>
+                    ) : (
+                      <Box sx={styles.mcpIconOffline}>
+                        <OfflineIcon />
+                      </Box>
+                    )}
+                  </StyledTooltip>
+                )}
+              </Box>
+            )}
           </Box>
           {hasCardDetails && <Box sx={styles.cardDetailsSection}>{cardDetails}</Box>}
           {showCardBottom && (
@@ -396,7 +399,7 @@ const lineClamp = lines => ({
 });
 
 /** @type {MuiSx} */
-const cardStyles = (hasCardDetails, showCardBottom, isWholeCardClickable, isClickable) => ({
+const cardStyles = (hasCardDetails, showCardBottom, isWholeCardClickable, isClickable, hasIndexes) => ({
   wrapper: {
     width: '100%',
     ...(hasCardDetails ? { height: '100%' } : {}),
@@ -425,20 +428,17 @@ const cardStyles = (hasCardDetails, showCardBottom, isWholeCardClickable, isClic
     height: '100%',
   },
   topRightSection: {
-    position: 'absolute',
-    top: '0.75rem',
-    right: '0.75rem',
     display: 'flex',
     gap: '0.125rem',
     alignItems: 'center',
-    zIndex: 1,
+    flexShrink: 0,
   },
   cardTopSection: {
     maxHeight: hasCardDetails ? '3.75rem' : '4.5rem',
     height: hasCardDetails ? '3.75rem' : '4.5rem',
     cursor: isClickable ? 'pointer' : 'default',
     width: '100%',
-    padding: hasCardDetails ? '1rem 6rem 0.75rem 1.25rem' : '1.25rem 6rem 1.25rem 1.25rem',
+    padding: hasCardDetails ? '1rem 0.75rem 0.75rem 1.25rem' : '1.25rem 0.75rem 1.25rem 1.25rem',
     boxSizing: 'border-box',
     display: 'flex',
     flexDirection: 'row',
@@ -449,12 +449,13 @@ const cardStyles = (hasCardDetails, showCardBottom, isWholeCardClickable, isClic
   cardTitleWrapper: {
     display: 'flex',
     flexDirection: 'column',
+    flex: 1,
     minWidth: 0,
     overflow: 'hidden',
   },
   cardTitle: {
-    maxHeight: '3rem',
-    ...lineClamp(2),
+    maxHeight: hasIndexes ? '1.5rem' : '3rem',
+    ...lineClamp(hasIndexes ? 1 : 2),
   },
   titleTooltip: {
     fontWeight: 700,

@@ -20,6 +20,7 @@ export const useSecretRowUpdate = ({ projectId, addSecret, editSecret, setRows, 
             projectId,
             name: newRow.name,
             value: newRow.secretValue,
+            allow_external_access: Boolean(newRow.allow_external_access),
           })
         : await editSecret({
             projectId,
