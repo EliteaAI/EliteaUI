@@ -77,7 +77,7 @@ const DatasetSection = memo(props => {
               variant="bodySmall"
               sx={styles.emptyText}
             >
-              Choose dataset or create a new one to ...
+              No dataset added yet.
             </Typography>
             <Button.BaseBtn
               color={BUTTON_COLORS.secondary}

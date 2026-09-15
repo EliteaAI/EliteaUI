@@ -270,9 +270,11 @@ export const eliteaButtonVariants = [
       color: eliteaButtonColors(theme)[BUTTON_VARIANTS.contained].default.color,
       '&:hover': {
         backgroundColor: eliteaButtonColors(theme)[BUTTON_VARIANTS.contained].hover.background,
+        boxShadow: 'none',
       },
       '&:focus-visible': {
         backgroundColor: eliteaButtonColors(theme)[BUTTON_VARIANTS.contained].hover.background,
+        boxShadow: 'none',
       },
       '&:active': {
         backgroundColor: eliteaButtonColors(theme)[BUTTON_VARIANTS.contained].active.background,
@@ -530,9 +532,11 @@ export const eliteaButtonVariants = [
 
         '&:hover': {
           background: theme.palette.background.button.primary.hover,
+          boxShadow: 'none',
         },
         '&:focus-visible': {
           background: theme.palette.background.button.primary.hover,
+          boxShadow: 'none',
         },
         '&:active': {
           background: theme.palette.background.button.primary.pressed,
