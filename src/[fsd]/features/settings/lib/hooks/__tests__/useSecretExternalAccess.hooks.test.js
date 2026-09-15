@@ -9,6 +9,17 @@ vi.mock('@/common/utils.jsx', () => ({
   buildErrorMessage: () => 'boom',
 }));
 
+const { dispatch } = vi.hoisted(() => ({ dispatch: vi.fn() }));
+
+vi.mock('react-redux', () => ({ useDispatch: () => dispatch }));
+
+// Kept as a plain descriptor so a test can run the recipe against its own draft.
+vi.mock('@/api/eliteaApi', () => ({
+  eliteaApi: {
+    util: { updateQueryData: (endpoint, arg, recipe) => ({ endpoint, arg, recipe }) },
+  },
+}));
+
 const setup = ({ editSecret, rows = [] }) => {
   const state = { rows };
   const setRows = vi.fn(updater => {
@@ -68,6 +79,33 @@ describe('useSecretExternalAccess', () => {
     });
   });
 
+  it('patches the list cache, which the rows are rebuilt from', async () => {
+    const editSecret = vi.fn().mockResolvedValue({ data: {} });
+    const { result, state } = setup({
+      editSecret,
+      rows: [{ id: 'existing-TOKEN', name: 'TOKEN', allow_external_access: false }],
+    });
+
+    await act(async () => {
+      await result.current.handleToggleExternalAccess(state.rows[0], true);
+    });
+
+    const [patch] = dispatch.mock.calls.at(-1);
+    expect(patch.endpoint).toBe('secretsList');
+    expect(patch.arg).toBe(1);
+
+    const draft = [
+      { name: 'OTHER', allow_external_access: false },
+      { name: 'TOKEN', allow_external_access: false },
+    ];
+    patch.recipe(draft);
+
+    expect(draft).toEqual([
+      { name: 'OTHER', allow_external_access: false },
+      { name: 'TOKEN', allow_external_access: true },
+    ]);
+  });
+
   it('rolls the row back and reports the failure', async () => {
     const editSecret = vi.fn().mockResolvedValue({ error: { status: 500 } });
     const { result, state, toastError } = setup({
@@ -81,6 +119,7 @@ describe('useSecretExternalAccess', () => {
 
     expect(state.rows[0].allow_external_access).toBe(false);
     expect(toastError).toHaveBeenCalledWith('boom');
+    expect(dispatch).not.toHaveBeenCalled();
   });
 
   it('reports a denied toggle without leaking the generic error text', async () => {
