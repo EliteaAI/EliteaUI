@@ -618,6 +618,10 @@ const RunIndexPanel = memo(props => {
     retainsIndexedData,
   );
 
+  // The display flag on purpose: greying History protects the user from a half-written
+  // run, and once a run stops reporting they want to inspect it. Keying this on the
+  // control flag would hold History shut for the whole disconnect timeout on exactly
+  // the dead run a user is trying to read.
   const runBlocksHistory = isIndexing && !runLooksAbandoned;
   const historyDisabled = !index?.metadata?.history?.length || runBlocksHistory;
   const historyTooltip = runBlocksHistory

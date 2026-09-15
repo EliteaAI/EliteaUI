@@ -460,6 +460,31 @@ describe('applyReindexStub', () => {
 
     expect(untouched.metadata.run_chunks).toBe(7);
   });
+
+  it('resets both liveness flags, never one of them', () => {
+    // reclaimable implies stale on every server-sent row, so resetting one alone mints
+    // an in_progress row that is not stale yet still reclaimable — and the control-flag
+    // readers, which are the ones gating Delete, read the half that was not reset.
+    const reclaimedRow = { ...finishedRow, reclaimable: true, metadata: { ...finishedRow.metadata } };
+
+    const [row] = applyReindexStub([reclaimedRow], started);
+
+    expect(row.stale).toBe(false);
+    expect(row.reclaimable ?? row.stale).toBe(false);
+  });
+
+  it('yields both flags to the server once the new run has its own row', () => {
+    const serverRow = {
+      ...finishedRow,
+      reclaimable: true,
+      metadata: { ...finishedRow.metadata, state: 'in_progress', task_id: 'new' },
+    };
+
+    const [row] = applyReindexStub([serverRow], started);
+
+    expect(row.stale).toBe(true);
+    expect(row.reclaimable).toBe(true);
+  });
 });
 
 describe('applyReindexStub — run_chunks handover', () => {

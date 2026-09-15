@@ -467,6 +467,10 @@ export const applyReindexStub = (indexesList, reindexRunning) => {
       // from a stale row — and that flag would be handed straight to the run just
       // started, rendering it "stopped without finishing".
       stale: isPreClickRow ? false : Boolean(item.stale),
+      // Both flags or neither: reclaimable implies stale on every server-sent row, so
+      // resetting one alone mints a tuple the backend cannot produce, and every
+      // `reclaimable ?? stale` consumer reads the flag that was not reset.
+      reclaimable: isPreClickRow ? false : item.reclaimable,
       metadata: {
         ...item.metadata,
         state: reindexRunning.metadata?.state ?? item.metadata?.state,
