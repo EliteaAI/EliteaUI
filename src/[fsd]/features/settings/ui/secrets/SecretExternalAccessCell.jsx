@@ -10,9 +10,10 @@ const TOOLTIP_ALLOWED =
   'Turn it off to keep the secret private to this project.';
 const TOOLTIP_BLOCKED = 'Platform-managed secrets cannot be shared.';
 const TOOLTIP_READ_ONLY = 'You do not have permission to change secret sharing.';
+const TOOLTIP_EDITING = 'Save or cancel your changes to update sharing.';
 
 const SecretExternalAccessCell = memo(props => {
-  const { row, checked = false, disabled = false, isPending = false, onToggle } = props;
+  const { row, checked = false, canEdit = true, isRowEditing = false, isPending = false, onToggle } = props;
 
   const styles = secretExternalAccessCellStyles();
 
@@ -23,7 +24,13 @@ const SecretExternalAccessCell = memo(props => {
     [onToggle, row],
   );
 
-  const tooltip = row.is_default ? TOOLTIP_BLOCKED : disabled ? TOOLTIP_READ_ONLY : TOOLTIP_ALLOWED;
+  const tooltip = row.is_default
+    ? TOOLTIP_BLOCKED
+    : !canEdit
+      ? TOOLTIP_READ_ONLY
+      : isRowEditing
+        ? TOOLTIP_EDITING
+        : TOOLTIP_ALLOWED;
 
   return (
     <Box sx={styles.container}>
@@ -38,7 +45,7 @@ const SecretExternalAccessCell = memo(props => {
           <Switch.BaseSwitch
             data-testid="secret-row-external-access-toggle"
             checked={checked}
-            disabled={disabled || isPending || row.is_default}
+            disabled={!canEdit || isRowEditing || isPending || row.is_default}
             onChange={handleChange}
           />
         </Box>

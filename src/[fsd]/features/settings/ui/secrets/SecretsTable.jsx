@@ -223,7 +223,6 @@ const SecretsTable = memo(props => {
     projectId,
     editSecret,
     setRows,
-    refetch,
     toastError,
   });
 
@@ -474,8 +473,9 @@ const SecretsTable = memo(props => {
             row={row}
             checked={Boolean(value)}
             isPending={isExternalAccessPending(row.id)}
+            canEdit={checkPermission(PERMISSIONS.secrets.edit)}
             // Toggling an existing row saves immediately, which would discard unsaved input
-            disabled={!checkPermission(PERMISSIONS.secrets.edit) || (isEditing && !row.isNew)}
+            isRowEditing={isEditing && !row.isNew}
             onToggle={handleToggleExternalAccess}
           />
         );

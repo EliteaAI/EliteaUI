@@ -14,14 +14,13 @@ const setup = ({ editSecret, rows = [] }) => {
   const setRows = vi.fn(updater => {
     state.rows = updater(state.rows);
   });
-  const refetch = vi.fn();
   const toastError = vi.fn();
 
   const { result } = renderHook(() =>
-    useSecretExternalAccess({ projectId: 1, editSecret, setRows, refetch, toastError }),
+    useSecretExternalAccess({ projectId: 1, editSecret, setRows, toastError }),
   );
 
-  return { result, state, refetch, toastError };
+  return { result, state, toastError };
 };
 
 describe('useSecretExternalAccess', () => {
@@ -30,7 +29,7 @@ describe('useSecretExternalAccess', () => {
 
   it('sends the flag without the value so the secret is never pulled into the browser', async () => {
     const editSecret = vi.fn().mockResolvedValue({ data: {} });
-    const { result, state, refetch } = setup({
+    const { result, state } = setup({
       editSecret,
       rows: [{ id: 'existing-TOKEN', name: 'TOKEN', allow_external_access: false }],
     });
@@ -45,12 +44,33 @@ describe('useSecretExternalAccess', () => {
       allow_external_access: true,
     });
     expect(state.rows[0].allow_external_access).toBe(true);
-    expect(refetch).toHaveBeenCalled();
+  });
+
+  it('touches only the toggled row, so unsaved input elsewhere survives', async () => {
+    const editSecret = vi.fn().mockResolvedValue({ data: {} });
+    const { result, state } = setup({
+      editSecret,
+      rows: [
+        { id: 'existing-A', name: 'A', allow_external_access: false },
+        { id: 'existing-B', name: 'B', allow_external_access: false, value: 'typed-but-unsaved' },
+      ],
+    });
+
+    await act(async () => {
+      await result.current.handleToggleExternalAccess(state.rows[0], true);
+    });
+
+    expect(state.rows[1]).toEqual({
+      id: 'existing-B',
+      name: 'B',
+      allow_external_access: false,
+      value: 'typed-but-unsaved',
+    });
   });
 
   it('rolls the row back and reports the failure', async () => {
     const editSecret = vi.fn().mockResolvedValue({ error: { status: 500 } });
-    const { result, state, refetch, toastError } = setup({
+    const { result, state, toastError } = setup({
       editSecret,
       rows: [{ id: 'existing-TOKEN', name: 'TOKEN', allow_external_access: false }],
     });
@@ -61,7 +81,6 @@ describe('useSecretExternalAccess', () => {
 
     expect(state.rows[0].allow_external_access).toBe(false);
     expect(toastError).toHaveBeenCalledWith('boom');
-    expect(refetch).not.toHaveBeenCalled();
   });
 
   it('reports a denied toggle without leaking the generic error text', async () => {
@@ -80,7 +99,7 @@ describe('useSecretExternalAccess', () => {
 
   it('keeps an uncreated row local so the flag rides along on the create request', async () => {
     const editSecret = vi.fn();
-    const { result, state, refetch } = setup({
+    const { result, state } = setup({
       editSecret,
       rows: [{ id: 'new-1', name: '', isNew: true }],
     });
@@ -90,7 +109,6 @@ describe('useSecretExternalAccess', () => {
     });
 
     expect(editSecret).not.toHaveBeenCalled();
-    expect(refetch).not.toHaveBeenCalled();
     expect(state.rows[0].allow_external_access).toBe(true);
   });
 

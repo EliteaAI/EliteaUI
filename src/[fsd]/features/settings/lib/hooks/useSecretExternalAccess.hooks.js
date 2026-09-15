@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 
 import { buildErrorMessage } from '@/common/utils.jsx';
 
-export const useSecretExternalAccess = ({ projectId, editSecret, setRows, refetch, toastError }) => {
+export const useSecretExternalAccess = ({ projectId, editSecret, setRows, toastError }) => {
   const [pendingRowIds, setPendingRowIds] = useState({});
 
   const isExternalAccessPending = useCallback(rowId => Boolean(pendingRowIds[rowId]), [pendingRowIds]);
@@ -41,15 +41,15 @@ export const useSecretExternalAccess = ({ projectId, editSecret, setRows, refetc
         return next;
       });
 
+      // No refetch on success: the flag is the only field that changed and the row already
+      // carries it. Refetching puts the table back into isFetching, which remounts it and
+      // replaces the rows, discarding whatever another row is mid-edit.
       if (error) {
         setRowFlag(row.id, !nextValue);
         toastError(error.status === 403 ? 'The access is not allowed' : buildErrorMessage(error));
-        return;
       }
-
-      refetch();
     },
-    [projectId, editSecret, setRowFlag, refetch, toastError],
+    [projectId, editSecret, setRowFlag, toastError],
   );
 
   return { handleToggleExternalAccess, isExternalAccessPending };
