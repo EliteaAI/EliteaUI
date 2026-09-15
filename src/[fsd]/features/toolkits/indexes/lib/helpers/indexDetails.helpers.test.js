@@ -11,7 +11,7 @@ import {
   INDEX_ABANDONED_BANNER_MESSAGE,
   IndexStatuses,
 } from '../constants/indexDetails.constants';
-import { bannerVariant, isAbandonedRun } from './indexDetails.helpers';
+import { bannerVariant, isAbandonedRun, isReclaimableRun } from './indexDetails.helpers';
 
 const GENERIC_FAILURE = BannerMessageMap[BannerSeverity.error];
 const NO_STATS = { isReindex: false };
@@ -219,5 +219,38 @@ describe('isAbandonedRun', () => {
   it('tolerates a missing index or metadata', () => {
     expect(isAbandonedRun(undefined)).toBe(false);
     expect(isAbandonedRun({})).toBe(false);
+  });
+});
+
+// Deliberately the same four cases as its display twin, side by side: the two differ by
+// one token, which is the easiest shape for a silent swap to survive review.
+describe('isReclaimableRun', () => {
+  const run = (state, extra = {}) => ({ metadata: { state }, ...extra });
+
+  it('flags a run the backend will let another run reclaim', () => {
+    expect(isReclaimableRun(run(IndexStatuses.progress, { stale: true, reclaimable: true }))).toBe(true);
+  });
+
+  it('leaves a run that is only display-stale alone', () => {
+    // `stale` fires five heartbeat intervals in, which a healthy run crosses mid-promote.
+    expect(isReclaimableRun(run(IndexStatuses.progress, { stale: true, reclaimable: false }))).toBe(false);
+  });
+
+  it('falls back to stale when the backend sends no control flag', () => {
+    expect(isReclaimableRun(run(IndexStatuses.progress, { stale: true }))).toBe(true);
+    expect(isReclaimableRun(run(IndexStatuses.progress))).toBe(false);
+  });
+
+  it('ignores reclaimable rows that already reached a terminal state', () => {
+    // The flag is heartbeat age, which the backend keeps asserting after a row has
+    // terminated; without the state conjunct a finished run gains a phantom abandoned
+    // entry in Run History.
+    expect(isReclaimableRun(run(IndexStatuses.success, { reclaimable: true }))).toBe(false);
+    expect(isReclaimableRun(run(IndexStatuses.fail, { reclaimable: true }))).toBe(false);
+  });
+
+  it('tolerates a missing index or metadata', () => {
+    expect(isReclaimableRun(undefined)).toBe(false);
+    expect(isReclaimableRun({})).toBe(false);
   });
 });
