@@ -417,10 +417,14 @@ describe('applyReindexStub', () => {
     stale: true,
     metadata: { state: 'failed', run_chunks: 1520, indexed: 180, total: 305, task_id: 'old' },
   };
+  // confirmReindex stashes the clicked row's task_id; without it the stub cannot
+  // tell the row it replaced from the run it started.
+  const clicked = { previousTaskId: 'old' };
   // Mirrors what confirmReindex actually builds: the clicked row's metadata
   // spread wholesale, so the finished run's run_chunks IS present on the stub.
   const started = {
     id: 'row-1',
+    ...clicked,
     metadata: { ...finishedRow.metadata, state: 'in_progress', task_id: 'new' },
   };
 
@@ -460,11 +464,19 @@ describe('applyReindexStub — run_chunks handover', () => {
   const finished = {
     id: 'row-1',
     stale: true,
-    metadata: { state: 'failed', run_chunks: 1520, indexed: 180, total: 305 },
+    metadata: {
+      state: 'failed',
+      run_chunks: 1520,
+      indexed: 180,
+      total: 305,
+      task_id: 'dead-run',
+    },
   };
-  // Mirrors confirmReindex: the clicked row's metadata is spread wholesale.
+  // Mirrors confirmReindex exactly: the clicked row's metadata spread wholesale,
+  // plus the stashed pre-click task_id.
   const started = {
     id: 'row-1',
+    previousTaskId: 'dead-run',
     metadata: { ...finished.metadata, state: 'in_progress' },
   };
 
@@ -480,7 +492,7 @@ describe('applyReindexStub — run_chunks handover', () => {
     const serverRow = {
       id: 'row-1',
       stale: false,
-      metadata: { state: 'in_progress', run_chunks: 3100, indexed: 180, total: 305 },
+      metadata: { state: 'in_progress', run_chunks: 3100, indexed: 180, total: 305, task_id: 'live-run' },
     };
 
     const [row] = applyReindexStub([serverRow], started);
@@ -489,7 +501,7 @@ describe('applyReindexStub — run_chunks handover', () => {
   });
 
   it('treats a server row in flight with no count yet as zero', () => {
-    const serverRow = { id: 'row-1', metadata: { state: 'in_progress' } };
+    const serverRow = { id: 'row-1', metadata: { state: 'in_progress', task_id: 'live-run' } };
 
     const [row] = applyReindexStub([serverRow], started);
 
@@ -509,6 +521,13 @@ describe('bannerVariant — the remedy must match the control the panel renders'
 
     expect(banner.message).toBe(INDEX_UNRESPONSIVE_BANNER_MESSAGE);
     expect(banner.message).not.toContain('Reindex');
+  });
+
+  it('defaults to the conservative copy when the caller omits the flag', () => {
+    // Defaulting the other way would name a button that is not on screen.
+    const banner = bannerVariant(false, IndexStatuses.progress, NO_STATS, undefined, true);
+
+    expect(banner.message).toBe(INDEX_UNRESPONSIVE_BANNER_MESSAGE);
   });
 
   it('names Reindex once the run is reclaimable', () => {
@@ -557,13 +576,14 @@ describe('shouldExpireReindexStub — the runner outlives the display flag', () 
 });
 
 describe('indexRunControls — display and control must not share a flag', () => {
+  const row = over => ({ stale: false, reclaimable: false, ...over });
+
   it('a run that is only display-stale still counts as live', () => {
     // The window a long promote sits in. Treating it as not-live offers Delete,
     // and Delete drops the whole collection.
     const { runLooksAbandoned, runIsLive } = indexRunControls({
       isIndexing: true,
-      stale: true,
-      reclaimable: false,
+      index: row({ stale: true, reclaimable: false }),
     });
 
     expect(runLooksAbandoned).toBe(true);
@@ -573,8 +593,7 @@ describe('indexRunControls — display and control must not share a flag', () =>
   it('a reclaimable run is no longer live', () => {
     const { runLooksAbandoned, runIsLive } = indexRunControls({
       isIndexing: true,
-      stale: true,
-      reclaimable: true,
+      index: row({ stale: true, reclaimable: true }),
     });
 
     expect(runLooksAbandoned).toBe(true);
@@ -582,17 +601,88 @@ describe('indexRunControls — display and control must not share a flag', () =>
   });
 
   it('a healthy run is live and looks it', () => {
-    expect(indexRunControls({ isIndexing: true, stale: false, reclaimable: false })).toEqual({
-      runLooksAbandoned: false,
-      runIsLive: true,
-    });
+    const { runLooksAbandoned, runIsLive } = indexRunControls({ isIndexing: true, index: row() });
+
+    expect(runLooksAbandoned).toBe(false);
+    expect(runIsLive).toBe(true);
   });
 
   it('falls back to stale when the backend sends no control flag', () => {
-    expect(indexRunControls({ isIndexing: true, stale: true, reclaimable: undefined }).runIsLive).toBe(false);
+    const { runIsLive } = indexRunControls({
+      isIndexing: true,
+      index: { stale: true },
+    });
+
+    expect(runIsLive).toBe(false);
   });
 
   it('a row that is not indexing is never live', () => {
-    expect(indexRunControls({ isIndexing: false, stale: false, reclaimable: false }).runIsLive).toBe(false);
+    expect(indexRunControls({ isIndexing: false, index: row() }).runIsLive).toBe(false);
+  });
+
+  it('an active local override suppresses both flags', () => {
+    // A just-observed start proves the row the server is still serving is stale data.
+    const { stale, reclaimable, runIsLive } = indexRunControls({
+      isIndexing: true,
+      index: row({ stale: true, reclaimable: true }),
+      overrideSupersedesRun: true,
+    });
+
+    expect(stale).toBe(false);
+    expect(reclaimable).toBe(false);
+    expect(runIsLive).toBe(true);
+  });
+});
+
+describe('applyReindexStub — reindexing an abandoned run', () => {
+  // The only reachable in-progress Reindex click: the card offers it once the row is
+  // reclaimable, and the backend guarantees reclaimable implies stale. So the row the
+  // stub stands in for is in_progress AND stale — and handing that flag to the run
+  // just started renders it "stopped without finishing" in red.
+  const abandoned = {
+    id: 'row-1',
+    stale: true,
+    reclaimable: true,
+    metadata: { state: 'in_progress', run_chunks: 1520, task_id: 'dead-run' },
+  };
+  const started = {
+    id: 'row-1',
+    previousTaskId: 'dead-run',
+    metadata: { ...abandoned.metadata, state: 'in_progress', task_id: 'dead-run' },
+  };
+
+  it('does not brand the new run as stopped', () => {
+    const [row] = applyReindexStub([abandoned], started);
+
+    expect(row.stale).toBe(false);
+  });
+
+  it('does not show the dead run’s chunk count as the new run’s progress', () => {
+    const [row] = applyReindexStub([abandoned], started);
+
+    expect(row.metadata.run_chunks).toBe(0);
+  });
+
+  it('hands over once the server returns the new run’s own row', () => {
+    const newRun = {
+      id: 'row-1',
+      stale: false,
+      metadata: { state: 'in_progress', run_chunks: 400, task_id: 'live-run' },
+    };
+
+    const [row] = applyReindexStub([newRun], started);
+
+    expect(row.stale).toBe(false);
+    expect(row.metadata.run_chunks).toBe(400);
+  });
+
+  it('trusts the server once the new run itself goes stale', () => {
+    const deadNewRun = {
+      id: 'row-1',
+      stale: true,
+      metadata: { state: 'in_progress', run_chunks: 400, task_id: 'live-run' },
+    };
+
+    expect(applyReindexStub([deadNewRun], started)[0].stale).toBe(true);
   });
 });

@@ -265,13 +265,24 @@ export const hasLiveRun = ({ isIndexing, isStale }) => Boolean(isIndexing) && !i
  * misleading card. `runIsLive` is CONTROL — it gates Delete (which drops the whole
  * collection), Reindex and Stop; being wrong destroys a live run. They ran off the
  * same flag until the display horizon was shortened to minutes.
- * @param {{isIndexing: boolean, stale: boolean, reclaimable: boolean|undefined}} runState
- * @returns {{runLooksAbandoned: boolean, runIsLive: boolean}}
+ * @param {{isIndexing: boolean, index: object, overrideSupersedesRun: boolean}} runState
+ * @returns {{stale: boolean, reclaimable: boolean, runLooksAbandoned: boolean,
+ *   runIsLive: boolean}}
  */
-export const indexRunControls = ({ isIndexing, stale, reclaimable }) => ({
-  runLooksAbandoned: Boolean(isIndexing) && Boolean(stale),
-  runIsLive: hasLiveRun({ isIndexing, isStale: reclaimable ?? stale }),
-});
+export const indexRunControls = ({ isIndexing, index, overrideSupersedesRun = false }) => {
+  // The row is read here rather than taken as two booleans, so a caller cannot hand
+  // the display flag to the control question by swapping two same-shaped arguments —
+  // which is exactly the edit that re-enables Delete on a healthy long-promote run.
+  const stale = overrideSupersedesRun ? false : Boolean(index?.stale);
+  const reclaimable = overrideSupersedesRun ? false : Boolean(index?.reclaimable ?? index?.stale);
+
+  return {
+    stale,
+    reclaimable,
+    runLooksAbandoned: Boolean(isIndexing) && stale,
+    runIsLive: hasLiveRun({ isIndexing, isStale: reclaimable }),
+  };
+};
 
 /**
  * Whether the optimistic reindex stub should be dropped for what the server returned.
@@ -357,33 +368,40 @@ export const indexListCounts = (metadata, isInProgress) => {
 export const applyReindexStub = (indexesList, reindexRunning) => {
   if (!reindexRunning) return indexesList;
 
-  return indexesList.map(item =>
-    item.id === reindexRunning.id
-      ? {
-          ...item,
-          // Two lifetimes, deliberately. The runner stays mounted until the run is
-          // RECLAIMABLE (above), so a healthy long run keeps its transcript. But the
-          // display flag is only forced while the server still shows the row from
-          // BEFORE the click; once its own row is in flight, the server's flag is the
-          // honest one, so a genuinely dead run still reads as stopped within minutes
-          // instead of claiming to index for the full disconnect timeout.
-          stale: item.metadata?.state === IndexStatuses.progress ? Boolean(item.stale) : false,
-          metadata: {
-            ...item.metadata,
-            state: reindexRunning.metadata?.state ?? item.metadata?.state,
-            // Zero until the server's own row shows a run in flight, then yield to
-            // it. The stub is built by spreading the clicked row's metadata, so it
-            // arrives carrying the FINISHED run's count — pinning 0 unconditionally
-            // fixed that but then clobbered every poll for the whole run, freezing
-            // the card at "0 chunks so far" for the one user who clicked Reindex.
-            // Narrow residual: if the server row still shows a PREVIOUS run as
-            // in_progress (only possible when that run was abandoned mid-flight),
-            // its count flashes once before the next poll corrects it.
-            run_chunks: item.metadata?.state === IndexStatuses.progress ? (item.metadata.run_chunks ?? 0) : 0,
-            task_id: reindexRunning.metadata?.task_id ?? item.metadata?.task_id,
-            conversation_id: reindexRunning.metadata?.conversation_id ?? item.metadata?.conversation_id,
-          },
-        }
-      : item,
-  );
+  return indexesList.map(item => {
+    if (item.id !== reindexRunning.id) return item;
+
+    // The task_id the row carried when Reindex was clicked, stashed by
+    // confirmReindex because traceReindex overwrites reindexRunning.metadata.task_id
+    // as soon as the dispatch lands. It is how the stub tells the row it is standing
+    // in for apart from the run it started.
+    const isPreClickRow = (item.metadata?.task_id ?? null) === (reindexRunning.previousTaskId ?? null);
+
+    return {
+      ...item,
+      // Two lifetimes, deliberately. The runner stays mounted until the run is
+      // RECLAIMABLE, so a healthy long run keeps its transcript. The display flag is
+      // forced only while this is still the pre-click row; once the server returns
+      // the new run's own row its flag is the honest one, so a genuinely dead run
+      // reads as stopped within minutes instead of claiming to index for the full
+      // disconnect timeout.
+      //
+      // Keying on `state === in_progress` instead looked equivalent and was not:
+      // Reindex is only offered on an in-progress row once it is reclaimable, and
+      // reclaimable implies stale, so the ONLY reachable in-progress click starts
+      // from a stale row — and that flag would be handed straight to the run just
+      // started, rendering it "stopped without finishing".
+      stale: isPreClickRow ? false : Boolean(item.stale),
+      metadata: {
+        ...item.metadata,
+        state: reindexRunning.metadata?.state ?? item.metadata?.state,
+        // Zero while this is still the pre-click row, or the finished/abandoned run's
+        // count reads as the new run's progress; then yield to the server, or the
+        // stub clobbers every poll and freezes the card at "0 chunks so far".
+        run_chunks: isPreClickRow ? 0 : (item.metadata?.run_chunks ?? 0),
+        task_id: reindexRunning.metadata?.task_id ?? item.metadata?.task_id,
+        conversation_id: reindexRunning.metadata?.conversation_id ?? item.metadata?.conversation_id,
+      },
+    };
+  });
 };

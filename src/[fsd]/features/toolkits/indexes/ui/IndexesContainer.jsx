@@ -133,6 +133,9 @@ const IndexesContainer = memo(props => {
       ...reindexTarget,
       observedAt: Date.now(),
       stubCreatedAt: Date.now(),
+      // Stashed before traceReindex can overwrite metadata.task_id: it is how the
+      // stub tells the row it replaced apart from the run it started.
+      previousTaskId: reindexTarget.metadata?.task_id ?? null,
       metadata: { ...reindexTarget.metadata, state: IndexStatuses.progress },
     });
     setReindexConfirmOpen(false);

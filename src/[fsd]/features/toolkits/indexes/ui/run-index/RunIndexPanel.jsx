@@ -201,17 +201,21 @@ const RunIndexPanel = memo(props => {
   // request issued after the observation supersedes it (in-flight fetches carry
   // pre-run data).
   const serverSupersedes = rowReadAfterOverride && startedTimeStamp > overrideObservedAtRef.current;
-  const effectiveStale = localMetaOverride?.state && !serverSupersedes ? false : index?.stale;
-  const isAwaitingTaskStart = isWaitingForTaskStart && !serverSupersedes;
-  // Display uses `stale`; anything that can end a run uses `reclaimable`, which stays
-  // on the disconnect rule. Otherwise a run merely slow to promote offers Delete.
-  const effectiveReclaimable =
-    localMetaOverride?.state && !serverSupersedes ? false : (index?.reclaimable ?? index?.stale);
-  const { runLooksAbandoned, runIsLive } = indexRunControls({
-    isIndexing: effectiveIsIndexing,
+  // Display uses `stale`; anything that can end a run uses `reclaimable`, which
+  // stays on the disconnect rule. The helper reads the row so the two cannot be
+  // swapped at this call site.
+  const {
     stale: effectiveStale,
     reclaimable: effectiveReclaimable,
+    runLooksAbandoned,
+    runIsLive,
+  } = indexRunControls({
+    isIndexing: effectiveIsIndexing,
+    index,
+    overrideSupersedesRun: Boolean(localMetaOverride?.state && !serverSupersedes),
   });
+  const isAwaitingTaskStart = isWaitingForTaskStart && !serverSupersedes;
+
   const deleteDisabled = isDeleting || isAwaitingTaskStart || runIsLive;
   const buildBlockedReason = indexBuildBlockedReason(selectedIndexTools);
   const reindexDisabled = Boolean(buildBlockedReason) || isRunning || isAwaitingTaskStart || runIsLive;
