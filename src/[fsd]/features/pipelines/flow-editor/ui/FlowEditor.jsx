@@ -579,12 +579,12 @@ const FlowEditor = forwardRef((props, ref) => {
                     {expandAll ? (
                       <CollapseIcon
                         sx={styles.icon}
-                        fill={theme.palette.icon.fill.secondary}
+                        fill={theme.palette.icon.secondary}
                       />
                     ) : (
                       <ExpandIcon
                         sx={styles.icon}
-                        fill={theme.palette.icon.fill.secondary}
+                        fill={theme.palette.icon.secondary}
                       />
                     )}
                   </ControlButton>
@@ -601,7 +601,7 @@ const FlowEditor = forwardRef((props, ref) => {
                   <ControlButton onClick={onReLayout}>
                     <PolylineOutlinedIcon
                       sx={styles.icon}
-                      fill={theme.palette.icon.fill.secondary}
+                      fill={theme.palette.icon.secondary}
                     />
                   </ControlButton>
                 </Box>
@@ -703,7 +703,7 @@ const flowEditorStyles = () => ({
       '&:hover': {
         backgroundColor: palette.border.table,
         '& svg': {
-          color: `${palette.icon.fill.secondary} !important`,
+          color: `${palette.icon.secondary} !important`,
         },
       },
     },

@@ -1094,14 +1094,14 @@ const applicationThinkViewStyles = () => ({
     padding: '0rem 0.5rem !important',
     '&:hover': {
       backgroundColor: palette.background.surface.interactive.active,
-      color: palette.icon.fill.secondary,
+      color: palette.icon.secondary,
       '& .MuiAccordionSummary-content': {
         '& span': {
           color: palette.text.secondary,
         },
       },
       '& .MuiAccordionSummary-expandIconWrapper': {
-        color: palette.icon.fill.secondary,
+        color: palette.icon.secondary,
       },
     },
     '& .MuiAccordionSummary-expandIconWrapper.Mui-expanded': {
@@ -1111,7 +1111,7 @@ const applicationThinkViewStyles = () => ({
       marginLeft: '0.5rem !important',
     },
     '& .MuiAccordionSummary-expandIconWrapper': {
-      color: palette.icon.fill.default,
+      color: palette.icon.default,
     },
     '& .MuiTypography-root': {
       fontFamily: `${typography.fontFamily} !important`,

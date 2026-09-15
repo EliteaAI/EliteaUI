@@ -14,7 +14,7 @@ const InfoIcon = memo(props => {
       sx={[
         ({ palette }) => ({
           '& path': {
-            fill: `${fill || palette.icon.fill.primary}`,
+            fill: `${fill || palette.icon.primary}`,
           },
         }),
         sx,

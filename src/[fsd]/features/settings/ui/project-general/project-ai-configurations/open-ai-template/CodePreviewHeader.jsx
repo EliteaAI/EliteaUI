@@ -103,7 +103,7 @@ const getStyles = () => ({
 
   closeIcon: ({ palette }) => ({
     fontSize: '1rem',
-    fill: palette.icon.fill.default,
+    fill: palette.icon.default,
   }),
 });
 

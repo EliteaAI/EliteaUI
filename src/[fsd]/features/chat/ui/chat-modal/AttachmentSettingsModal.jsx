@@ -60,7 +60,7 @@ const AttachmentSettingsModal = memo(props => {
             height: '1rem',
             flexShrink: 0,
           }}
-          fill={theme.palette.icon.fill.secondary}
+          fill={theme.palette.icon.secondary}
         />
       ),
       style: {
@@ -81,7 +81,7 @@ const AttachmentSettingsModal = memo(props => {
     const existingToolkits = toolkitItems.filter(item => existingToolkitIds.includes(item.value));
     const nonExistingToolkits = toolkitItems.filter(item => !existingToolkitIds.includes(item.value));
     return [createNewOption, ...existingToolkits, ...nonExistingToolkits];
-  }, [data, theme.palette.border.lines, theme.palette.icon.fill.secondary, existingToolkitIds]);
+  }, [data, theme.palette.border.lines, theme.palette.icon.secondary, existingToolkitIds]);
 
   const loadMoreToolkits = useCallback(() => {
     if (totalCount <= data?.length) return;

@@ -311,8 +311,8 @@ const scheduleModalStyles = () => ({
     width: '1rem',
     height: '1rem',
     flexShrink: 0,
-    color: palette.icon.fill.tips,
-    fill: palette.icon.fill.tips,
+    color: palette.icon.tips,
+    fill: palette.icon.tips,
   }),
   noticeText: ({ palette }) => ({
     flex: 1,

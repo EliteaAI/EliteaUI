@@ -222,7 +222,7 @@ const getStyles = hasLoggedInToMcp => ({
     display: 'flex',
     alignItems: 'center',
     gap: '0.5rem',
-    color: hasLoggedInToMcp ? palette.icon.fill.success : palette.icon.fill.attention,
+    color: hasLoggedInToMcp ? palette.icon.success : palette.icon.attention,
   }),
   loginStatusText: ({ palette }) => ({
     color: hasLoggedInToMcp ? palette.text.mcp.loginSuccess : palette.text.mcp.logout,

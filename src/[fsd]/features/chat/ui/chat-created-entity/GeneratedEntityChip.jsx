@@ -189,7 +189,7 @@ const generatedEntityChipStyles = () => ({
     display: 'flex',
     alignItems: 'center',
     flexShrink: 0,
-    color: ({ palette }) => palette.icon.fill.default,
+    color: ({ palette }) => palette.icon.default,
   },
   entityIcon: {
     width: '1rem',

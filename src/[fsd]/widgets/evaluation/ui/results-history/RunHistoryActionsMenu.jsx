@@ -149,7 +149,7 @@ const runHistoryActionsMenuStyles = () => ({
   }),
   triggerIcon: ({ palette }) => ({
     fontSize: '1.125rem',
-    color: palette.icon.fill.default,
+    color: palette.icon.default,
   }),
   menuPaper: ({ palette }) => ({
     minWidth: '11rem',
@@ -176,7 +176,7 @@ const runHistoryActionsMenuStyles = () => ({
     fontSize: '1rem',
     flexShrink: 0,
     '& path': {
-      fill: palette.icon.fill.default,
+      fill: palette.icon.default,
     },
   }),
   deleteIconWrapper: ({ palette }) => ({
@@ -187,7 +187,7 @@ const runHistoryActionsMenuStyles = () => ({
       height: '1rem',
     },
     '& path': {
-      fill: palette.icon.fill.default,
+      fill: palette.icon.default,
     },
   }),
   menuText: ({ palette }) => ({

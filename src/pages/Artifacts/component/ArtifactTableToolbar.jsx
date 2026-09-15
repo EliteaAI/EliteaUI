@@ -54,8 +54,8 @@ const ArtifactTableToolbar = memo(props => {
   );
 
   const hasSelection = rowSelectionModel.length > 0;
-  const disabledIconColor = theme.palette.icon.fill.disabled;
-  const defaultIconColor = theme.palette.icon.fill.default;
+  const disabledIconColor = theme.palette.icon.disabled;
+  const defaultIconColor = theme.palette.icon.default;
 
   return (
     <Box sx={styles.toolbarContainer}>

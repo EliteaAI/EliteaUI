@@ -94,7 +94,7 @@ const SkillCard = memo(props => {
               >
                 <OpenInNewIcon
                   sx={styles.actionIcon}
-                  fill={!isOpenDisabled ? theme.palette.icon.fill.default : theme.palette.icon.fill.disabled}
+                  fill={!isOpenDisabled ? theme.palette.icon.default : theme.palette.icon.disabled}
                 />
               </IconButton>
             </Tooltip>
@@ -114,7 +114,7 @@ const SkillCard = memo(props => {
               >
                 <DeleteIcon
                   sx={styles.actionIcon}
-                  fill={!disabled ? theme.palette.icon.fill.default : theme.palette.icon.fill.disabled}
+                  fill={!disabled ? theme.palette.icon.default : theme.palette.icon.disabled}
                 />
                 {isLoading && <StyledCircleProgress size={20} />}
               </IconButton>

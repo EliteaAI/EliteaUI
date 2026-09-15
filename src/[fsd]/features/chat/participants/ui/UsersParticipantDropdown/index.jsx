@@ -182,7 +182,7 @@ const usersParticipantDropdownStyles = isTriggerVisible => ({
     },
 
     '& .MuiSvgIcon-root path': {
-      fill: `${palette.icon.fill.default} !important`,
+      fill: `${palette.icon.default} !important`,
     },
     marginLeft: '0rem',
   }),

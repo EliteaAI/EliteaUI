@@ -261,7 +261,7 @@ const UnifiedDropdown = memo(
                         >
                           <PlusIcon
                             style={styles.plusIcon}
-                            fill={theme.palette.icon.fill.secondary}
+                            fill={theme.palette.icon.secondary}
                           />
                           <Box sx={styles.createNewLabelContainer}>
                             <Typography

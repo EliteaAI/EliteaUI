@@ -438,7 +438,7 @@ const attachToAgentDialogStyles = () => ({
   closeButton: ({ palette }) => ({
     padding: 0,
     margin: 0,
-    color: palette.icon.fill.default,
+    color: palette.icon.default,
     '&:hover': { backgroundColor: 'transparent' },
   }),
   dialogContent: ({ palette }) => ({
@@ -506,7 +506,7 @@ const attachToAgentDialogStyles = () => ({
       height: '1.125rem',
       marginLeft: 0,
       marginRight: '0.5rem',
-      '& path': { fill: palette.icon.fill.default },
+      '& path': { fill: palette.icon.default },
       '&:hover path': { fill: palette.text.secondary },
     },
   }),
@@ -534,7 +534,7 @@ const attachToAgentDialogStyles = () => ({
   }),
   checkIcon: ({ palette }) => ({
     fontSize: '1rem',
-    color: palette.icon.fill.default,
+    color: palette.icon.default,
   }),
   alreadyAddedLabel: ({ palette }) => ({
     color: palette.text.disabled,

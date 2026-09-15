@@ -92,7 +92,7 @@ const ExpiryInDays = memo(props => {
       <RemoveIcon
         width={16}
         height={16}
-        fill={theme.palette.icon.fill.disabled}
+        fill={theme.palette.icon.disabled}
       />
       <Typography
         sx={styles.textNever}

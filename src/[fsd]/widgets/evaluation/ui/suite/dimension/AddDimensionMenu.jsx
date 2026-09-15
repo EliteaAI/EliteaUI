@@ -177,7 +177,7 @@ const addDimensionMenuStyles = () => ({
     fontSize: '1rem',
     flexShrink: 0,
     '& path': {
-      fill: palette.icon.fill.default,
+      fill: palette.icon.default,
     },
   }),
   svgIcon: ({ palette }) => ({
@@ -188,7 +188,7 @@ const addDimensionMenuStyles = () => ({
       height: '1rem',
     },
     '& path': {
-      fill: palette.icon.fill.default,
+      fill: palette.icon.default,
     },
   }),
   menuText: ({ palette }) => ({

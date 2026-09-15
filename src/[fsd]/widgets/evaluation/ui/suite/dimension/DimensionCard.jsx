@@ -205,18 +205,18 @@ const dimensionCardStyles = () => ({
     width: '1.75rem',
     height: '1.75rem',
     borderRadius: '1rem',
-    color: palette.icon.fill.default,
+    color: palette.icon.default,
     '&:hover': {
       backgroundColor: palette.background.tabButton.default,
     },
     '&:hover svg path': {
-      fill: palette.icon.fill.secondary,
+      fill: palette.icon.secondary,
     },
   }),
   actionIcon: ({ palette }) => ({
     fontSize: '1rem',
     '& path': {
-      fill: palette.icon.fill.default,
+      fill: palette.icon.default,
     },
   }),
 });

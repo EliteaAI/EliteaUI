@@ -232,7 +232,7 @@ const fileTreeItemStyles = ({ isActive, isHovering, depth, theme, nextItemHovere
     folderIcon: {
       width: '1rem',
       height: '1rem',
-      color: theme.palette.icon.fill.secondary,
+      color: theme.palette.icon.secondary,
       flexShrink: 0,
     },
 

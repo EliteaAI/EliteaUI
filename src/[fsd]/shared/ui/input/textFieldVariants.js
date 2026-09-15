@@ -63,10 +63,10 @@ export const eliteaTextFieldColorStyle = theme => ({
     },
     error: {
       underline: {
-        color: theme.palette.icon.fill.error,
+        color: theme.palette.icon.error,
       },
       helperText: {
-        color: theme.palette.icon.fill.error,
+        color: theme.palette.icon.error,
       },
     },
   },
@@ -117,10 +117,10 @@ export const eliteaTextFieldColorStyle = theme => ({
     },
     error: {
       border: {
-        color: theme.palette.icon.fill.error,
+        color: theme.palette.icon.error,
       },
       helperText: {
-        color: theme.palette.icon.fill.error,
+        color: theme.palette.icon.error,
       },
     },
   },

@@ -66,7 +66,7 @@ export default function PipelineStateViewModal({
             data-testid={closeButtonTestId}
           >
             <CloseIcon
-              fill={theme.palette.icon.fill.default}
+              fill={theme.palette.icon.default}
               sx={{ fontSize: '16px', cursor: 'pointer' }}
             />
           </IconButton>

@@ -166,7 +166,7 @@ const modalStyles = () => ({
   closeIcon: ({ palette }) => ({
     fontSize: '1rem',
     cursor: 'pointer',
-    fill: palette.icon.fill.default,
+    fill: palette.icon.default,
   }),
 
   dialogContent: ({ palette }) => ({

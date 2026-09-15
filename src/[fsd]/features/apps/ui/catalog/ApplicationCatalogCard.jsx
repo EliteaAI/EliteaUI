@@ -274,7 +274,7 @@ const applicationCatalogCardStyles = () => {
         height: '1rem',
       },
       '& svg path': {
-        fill: palette.icon.fill.white,
+        fill: palette.icon.white,
       },
     }),
     pendingStatus: ({ palette }) => ({

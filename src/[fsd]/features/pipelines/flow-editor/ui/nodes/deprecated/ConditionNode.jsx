@@ -354,9 +354,9 @@ const conditionNodeStyles = () => ({
     border: `0.0625rem solid ${borderColor} !important`,
     '& .MuiChip-deleteIcon': {
       margin: '0rem',
-      color: ({ palette }) => palette.icon.fill.secondary,
+      color: ({ palette }) => palette.icon.secondary,
       '&:hover': {
-        color: ({ palette }) => palette.icon.fill.secondary,
+        color: ({ palette }) => palette.icon.secondary,
       },
     },
   }),

@@ -593,7 +593,7 @@ const createCaseModalStyles = () => ({
   deleteIcon: ({ palette }) => ({
     fontSize: '1rem',
     '& path': {
-      fill: palette.icon.fill.default,
+      fill: palette.icon.default,
     },
   }),
   addVariableButton: ({ palette }) => ({

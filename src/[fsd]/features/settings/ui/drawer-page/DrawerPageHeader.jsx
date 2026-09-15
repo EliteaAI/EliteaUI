@@ -130,7 +130,7 @@ const getStyles = () => ({
   iconButton: ({ palette }) => ({
     margin: '0',
     '&:hover svg path': {
-      fill: palette.icon.fill.secondary,
+      fill: palette.icon.secondary,
     },
   }),
   searchInput: {
@@ -143,7 +143,7 @@ const getStyles = () => ({
     height: '1.75rem',
     padding: '.5rem',
     '& svg': {
-      fill: palette.icon.fill.send,
+      fill: palette.icon.send,
     },
   }),
   plusIcon: {

@@ -755,7 +755,7 @@ const componentStyles = theme => ({
     marginRight: '8px',
     transition: 'opacity 200ms cubic-bezier(0.4, 0, 0.2, 1), transform 200ms cubic-bezier(0.4, 0, 0.2, 1)',
     '& svg path': {
-      fill: theme.palette.icon.fill.default,
+      fill: theme.palette.icon.default,
     },
   },
   columnHeaderSortButtonActive: {

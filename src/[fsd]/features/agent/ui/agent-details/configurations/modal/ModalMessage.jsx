@@ -100,12 +100,12 @@ const modalMessageStyles = () => ({
     alignItems: 'center',
     borderRadius: '0.75rem',
     background: palette.background.aiParticipantIcon,
-    color: palette.icon.fill.inactive,
+    color: palette.icon.inactive,
   }),
 
   userIcon: ({ palette }) => ({
     fontSize: '1rem',
-    fill: palette.icon.fill.inactive,
+    fill: palette.icon.inactive,
   }),
 
   eliteaIcon: {

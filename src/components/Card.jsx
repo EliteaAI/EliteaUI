@@ -500,7 +500,7 @@ const cardStyles = (hasCardDetails, showCardBottom, isWholeCardClickable, isClic
   mcpIconOnline: ({ palette }) => ({
     display: 'flex',
     alignItems: 'center',
-    color: palette.icon.fill.default,
+    color: palette.icon.default,
     '& svg': {
       width: '1rem',
       height: '1rem',
@@ -509,7 +509,7 @@ const cardStyles = (hasCardDetails, showCardBottom, isWholeCardClickable, isClic
   mcpIconOffline: ({ palette }) => ({
     display: 'flex',
     alignItems: 'center',
-    color: palette.icon.fill.attention,
+    color: palette.icon.attention,
     '& svg': {
       width: '1rem',
       height: '1rem',
@@ -522,26 +522,26 @@ const cardStyles = (hasCardDetails, showCardBottom, isWholeCardClickable, isClic
   folderIndicator: ({ palette }) => ({
     display: 'flex',
     alignItems: 'center',
-    color: palette.icon.fill.default,
+    color: palette.icon.default,
   }),
   publishIconContainer: ({ palette }) => ({
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: '0.25rem',
-    svg: { path: { fill: `${palette.icon.fill.success} !important` } },
+    svg: { path: { fill: `${palette.icon.success} !important` } },
   }),
   supportAssistantIconContainer: ({ palette }) => ({
     width: '1.75rem',
     height: '1.75rem',
     minWidth: '1.75rem',
     padding: 0,
-    color: palette.icon.fill.default,
+    color: palette.icon.default,
 
     '&:hover': {
       backgroundColor: palette.background.button.secondary.default,
     },
-    svg: { path: { fill: `${palette.icon.fill.default} !important` } },
+    svg: { path: { fill: `${palette.icon.default} !important` } },
   }),
   indexesCount: {
     display: 'inline-flex',

@@ -348,7 +348,7 @@ const styledInputBaseStyles = (
       fontSize: '1rem',
     },
     unfoldIcon: ({ palette }) => ({
-      color: palette.icon.fill.default,
+      color: palette.icon.default,
     }),
     inputSlot: ({ spacing }) => ({
       paddingRight: spacing(1.5),

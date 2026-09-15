@@ -169,7 +169,7 @@ const caseResultItemStyles = () => ({
   },
   chevron: ({ palette }) => ({
     fontSize: '1.25rem',
-    color: palette.icon.fill.default,
+    color: palette.icon.default,
   }),
   caseLabel: ({ palette }) => ({
     color: palette.text.secondary,
@@ -213,7 +213,7 @@ const caseResultItemStyles = () => ({
   }),
   viewIcon: ({ palette }) => ({
     fontSize: '1rem',
-    color: palette.icon.fill.default,
+    color: palette.icon.default,
   }),
   content: {
     display: 'flex',

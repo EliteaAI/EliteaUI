@@ -50,7 +50,7 @@ export const StyledSearchIcon = props => {
       }}
       {...props}
     >
-      <SearchIcon fill={disabled ? theme.palette.icon.fill.disabled : theme.palette.icon.fill.default} />
+      <SearchIcon fill={disabled ? theme.palette.icon.disabled : theme.palette.icon.default} />
     </StyledIconWrapper>
   );
 };
@@ -58,7 +58,7 @@ export const StyledSearchIcon = props => {
 const MySendIcon = styled(SendIcon)(({ theme }) => ({
   fontSize: '16px',
   marginRight: '0px',
-  fill: theme.palette.icon.fill.default,
+  fill: theme.palette.icon.default,
   '&:hover': {
     fill: theme.palette.primary.main,
   },

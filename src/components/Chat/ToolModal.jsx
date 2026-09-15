@@ -165,7 +165,7 @@ const ToolModal = props => {
           <CloseIcon
             sx={{
               fontSize: 16,
-              fill: theme.palette.icon.fill.default,
+              fill: theme.palette.icon.default,
             }}
           />
         </IconButton>

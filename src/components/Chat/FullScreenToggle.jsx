@@ -29,7 +29,7 @@ export default function FullScreenToggle({ isFullScreenChat, setIsFullScreenChat
       >
         <FullscreenExitOutlinedIcon
           sx={{ fontSize: 16 }}
-          fill={theme.palette.icon.fill.secondary}
+          fill={theme.palette.icon.secondary}
         />
       </IconButton>
     </Tooltip>
@@ -46,7 +46,7 @@ export default function FullScreenToggle({ isFullScreenChat, setIsFullScreenChat
       >
         <FullscreenOutlinedIcon
           sx={{ fontSize: 16 }}
-          fill={theme.palette.icon.fill.secondary}
+          fill={theme.palette.icon.secondary}
         />
       </IconButton>
     </Tooltip>

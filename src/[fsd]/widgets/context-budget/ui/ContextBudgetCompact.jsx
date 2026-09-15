@@ -143,7 +143,7 @@ const contextBudgetCompactStyles = () => ({
     display: 'flex',
     alignItems: 'center',
     gap: '0.5rem',
-    color: palette.icon.fill.disabled,
+    color: palette.icon.disabled,
   }),
   icon: {
     width: '1rem',

@@ -255,7 +255,7 @@ const manageDimensionCardStyles = () => ({
       height: '1rem',
     },
     '& svg path': {
-      fill: palette.icon.fill.default,
+      fill: palette.icon.default,
     },
   }),
 });

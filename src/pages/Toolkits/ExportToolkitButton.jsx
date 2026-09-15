@@ -42,7 +42,7 @@ export const useExportToolkitMenu = ({ disabled = false } = {}) => {
         <>
           <ExportIcon
             sx={{ fontSize: '1rem' }}
-            fill={theme.palette.icon.fill.default}
+            fill={theme.palette.icon.default}
           />
           {isExporting && <StyledCircleProgress size={16} />}
         </>
@@ -50,7 +50,7 @@ export const useExportToolkitMenu = ({ disabled = false } = {}) => {
       disabled,
       onClick: onExport,
     }),
-    [disabled, isExporting, onExport, theme.palette.icon.fill.default],
+    [disabled, isExporting, onExport, theme.palette.icon.default],
   );
 
   return {
@@ -77,7 +77,7 @@ export default function ExportToolkitButton({ disabled = false }) {
       >
         <ExportIcon
           sx={{ fontSize: '1rem' }}
-          fill={theme.palette.icon.fill.secondary}
+          fill={theme.palette.icon.secondary}
         />
         {isExporting && <StyledCircleProgress size={16} />}
       </IconButton>

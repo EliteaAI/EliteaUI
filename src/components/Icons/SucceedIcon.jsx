@@ -8,7 +8,7 @@ export default function SucceedIcon(props) {
       width="18"
       height="18"
       viewBox="0 0 18 18"
-      fill={theme.palette.icon.fill.primary}
+      fill={theme.palette.icon.primary}
       {...props}
     >
       <path

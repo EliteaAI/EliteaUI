@@ -435,7 +435,7 @@ const nodeCardHeaderStyles = () => ({
   },
   expandButton: ({ palette }) => ({
     marginLeft: 0,
-    color: palette.icon.fill.secondary,
+    color: palette.icon.secondary,
   }),
   // Style objects for SVG icons (use style prop, not sx)
   collapseIconStyle: {
@@ -454,7 +454,7 @@ const nodeCardHeaderStyles = () => ({
     alignItems: 'center',
     width: '1rem',
     height: '1rem',
-    color: palette.icon.fill.default,
+    color: palette.icon.default,
   }),
   dotMenuItemText: ({ palette }) => ({
     color: palette.text.secondary,

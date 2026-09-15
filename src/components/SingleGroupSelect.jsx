@@ -31,7 +31,7 @@ const StyledFormControl = styled(FormControl)(({ theme }) => ({
     borderBottomColor: theme.palette.border.lines,
   },
   '& .MuiInputBase-root.MuiInput-root:hover:before': {
-    borderBottomColor: theme.palette.icon.fill.default,
+    borderBottomColor: theme.palette.icon.default,
   },
   '& .MuiOutlinedInput-root': {
     '& fieldset': {

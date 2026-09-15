@@ -123,7 +123,7 @@ const bucketInfoTooltipStyles = () => ({
     height: '1.75rem',
   },
   icon: ({ palette }) => ({
-    color: palette.icon.fill.default,
+    color: palette.icon.default,
     fontSize: '1rem',
   }),
 });

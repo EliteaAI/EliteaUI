@@ -210,7 +210,7 @@ const resultsPanelStyles = () => ({
   actionButton: ({ palette }) => ({
     padding: '0.25rem',
     '&:hover svg path': {
-      fill: palette.icon.fill.secondary,
+      fill: palette.icon.secondary,
     },
   }),
   actionIcon: {

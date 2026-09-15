@@ -432,11 +432,11 @@ const dataRowActionStyles = hasMenuItems => ({
     marginLeft: 0,
     '& svg': {
       fontSize: '1rem',
-      fill: !hasMenuItems ? palette.icon.fill.disabled : palette.icon.fill.default,
+      fill: !hasMenuItems ? palette.icon.disabled : palette.icon.default,
     },
     '&:hover': {
       '& svg': {
-        fill: palette.icon.fill.secondary,
+        fill: palette.icon.secondary,
       },
     },
   }),

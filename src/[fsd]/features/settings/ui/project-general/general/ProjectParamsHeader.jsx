@@ -153,7 +153,7 @@ const projectParamsHeaderStyles = () => ({
   metaIconSvg: ({ palette }) => ({
     width: '0.875rem',
     height: '0.875rem',
-    color: palette.icon.fill.primary,
+    color: palette.icon.primary,
   }),
   metaValue: ({ palette }) => ({
     fontFamily: 'Montserrat, sans-serif',

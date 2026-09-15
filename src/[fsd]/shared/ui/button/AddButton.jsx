@@ -36,7 +36,7 @@ const getStyles = () => ({
     height: '1.75rem',
     padding: '.5rem',
     '& svg': {
-      fill: palette.icon.fill.send,
+      fill: palette.icon.send,
     },
   }),
   icon: {

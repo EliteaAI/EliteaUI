@@ -82,7 +82,7 @@ const evaluationProgressStyles = () => ({
     fontSize: '2rem',
     marginBottom: '0.5rem',
     '& path': {
-      fill: palette.icon.fill.default,
+      fill: palette.icon.default,
     },
   }),
   title: ({ palette }) => ({
@@ -115,13 +115,13 @@ const evaluationProgressStyles = () => ({
     padding: '0.25rem',
     minWidth: 0,
     '&:hover svg path': {
-      fill: palette.icon.fill.secondary,
+      fill: palette.icon.secondary,
     },
   }),
   closeIcon: ({ palette }) => ({
     fontSize: '1rem',
     '& path': {
-      fill: palette.icon.fill.default,
+      fill: palette.icon.default,
     },
   }),
 });

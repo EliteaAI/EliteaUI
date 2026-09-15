@@ -819,10 +819,10 @@ const dimensionFormStyles = () => ({
   safetyNoticeIcon: ({ palette }) => ({
     width: '0.875rem',
     height: '0.875rem',
-    color: palette.icon.fill.info,
+    color: palette.icon.info,
     flexShrink: 0,
     path: {
-      fill: palette.icon.fill.info,
+      fill: palette.icon.info,
     },
   }),
   safetyNoticeText: ({ palette }) => ({

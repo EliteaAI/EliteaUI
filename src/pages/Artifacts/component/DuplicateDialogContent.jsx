@@ -151,7 +151,7 @@ const duplicateDialogContentStyles = () => ({
     width: '1rem',
     height: '1rem',
     flexShrink: 0,
-    color: palette.icon.fill.default,
+    color: palette.icon.default,
   }),
   filenameBase: {
     minWidth: 0,

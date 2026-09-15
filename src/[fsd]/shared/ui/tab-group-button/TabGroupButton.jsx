@@ -13,7 +13,7 @@ const TAB_GROUP_BUTTON = {
 const exampleArrayBtn = [
   {
     value: 'elitea',
-    icon: theme => <MoonIcon fill={theme.palette.icon.fill.secondary} />,
+    icon: theme => <MoonIcon fill={theme.palette.icon.secondary} />,
     label: 'EliteA',
     tooltip: 'EliteA',
   },

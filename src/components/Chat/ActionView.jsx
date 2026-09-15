@@ -609,9 +609,9 @@ const actionViewStyles = () => ({
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
-    color: palette.icon.fill.default,
+    color: palette.icon.default,
     '& svg': {
-      fill: `${palette.icon.fill.default} !important`,
+      fill: `${palette.icon.default} !important`,
     },
   }),
   modelIconStyle: {

@@ -72,14 +72,14 @@ export const versionIconBlockStyles = () => ({
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    svg: { path: { fill: `${palette.icon.fill.success} !important` } },
+    svg: { path: { fill: `${palette.icon.success} !important` } },
   }),
   pinIconBox: ({ palette }) => ({
     display: 'flex',
     alignItems: 'center',
     width: '1rem',
     height: '1rem',
-    svg: { path: { fill: `${palette.icon.fill.secondary} !important` } },
+    svg: { path: { fill: `${palette.icon.secondary} !important` } },
   }),
   setDefaultBox: ({ palette }) => ({
     display: 'none',
@@ -89,7 +89,7 @@ export const versionIconBlockStyles = () => ({
     cursor: 'pointer',
     position: 'relative',
     marginLeft: '0.25rem',
-    svg: { path: { fill: `${palette.icon.fill.secondary} !important` } },
+    svg: { path: { fill: `${palette.icon.secondary} !important` } },
     '&:hover': {
       '&::before': {
         content: '""',

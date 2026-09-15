@@ -97,7 +97,7 @@ const styles = {
     '&:hover': {
       backgroundColor: palette.background.button.tertiary.hover,
       '& svg path': {
-        fill: palette.icon.fill.secondary,
+        fill: palette.icon.secondary,
       },
     },
     '&:active': {

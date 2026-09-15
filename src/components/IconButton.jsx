@@ -53,7 +53,7 @@ export const eliteaIconButtonStyle = (theme, color) => ({
       background: theme.palette.background.button.default,
       backgroundColor: `${theme.palette.background.button.default} !important`,
       '& .MuiSvgIcon-root path': {
-        fill: theme.palette.icon.fill.disabled,
+        fill: theme.palette.icon.disabled,
       },
     },
   },
@@ -66,13 +66,13 @@ export const eliteaIconButtonStyle = (theme, color) => ({
         borderRadius: '16px',
         padding: '6px',
         '& .MuiSvgIcon-root path': {
-          fill: theme.palette.icon.fill.default,
+          fill: theme.palette.icon.default,
         },
         '&:hover': {
           background: theme.palette.background.button.secondary.default,
           color: theme.palette.text.secondary,
           '& .MuiSvgIcon-root path': {
-            fill: theme.palette.icon.fill.secondary,
+            fill: theme.palette.icon.secondary,
           },
         },
         '&:active': {
@@ -83,7 +83,7 @@ export const eliteaIconButtonStyle = (theme, color) => ({
         '&:disabled': {
           color: theme.palette.text.button.disabled,
           '& .MuiSvgIcon-root path': {
-            fill: theme.palette.icon.fill.disabled,
+            fill: theme.palette.icon.disabled,
           },
           background: 'transparent',
         },

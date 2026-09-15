@@ -39,7 +39,7 @@ const FolderActionsMenu = memo(props => {
           >
             <PinIcon
               sx={styles.menuIcon}
-              fill={theme.palette.icon.fill.default}
+              fill={theme.palette.icon.default}
             />
             <Typography
               variant="labelMedium"
@@ -54,7 +54,7 @@ const FolderActionsMenu = memo(props => {
           >
             <EditPenIcon
               sx={styles.menuIcon}
-              fill={theme.palette.icon.fill.default}
+              fill={theme.palette.icon.default}
             />
             <Typography
               variant="labelMedium"
@@ -68,7 +68,7 @@ const FolderActionsMenu = memo(props => {
       {canManagePermissions && (
         <MenuItem onClick={onPermission}>
           <Box sx={styles.menuIcon}>
-            <GroupsIcon fill={theme.palette.icon.fill.default} />
+            <GroupsIcon fill={theme.palette.icon.default} />
           </Box>
 
           <Typography
@@ -86,7 +86,7 @@ const FolderActionsMenu = memo(props => {
         >
           <DeleteIcon
             sx={styles.menuIcon}
-            fill={theme.palette.icon.fill.default}
+            fill={theme.palette.icon.default}
           />
           <Typography
             variant="labelMedium"

@@ -79,7 +79,7 @@ const budgetWarningBannerStyles = () => ({
   }),
   icon: ({ palette }) => ({
     fontSize: '1rem',
-    color: palette.icon.fill.warning,
+    color: palette.icon.warning,
     flexShrink: 0,
   }),
   // Wraps rather than truncating on a narrow viewport, so the percentage stays readable

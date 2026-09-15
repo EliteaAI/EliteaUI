@@ -394,9 +394,7 @@ const sideBarBodyStyles = (sideBarCollapsed, socketStatus) => ({
     height: '0.5rem',
     borderRadius: '50%',
     backgroundColor:
-      socketStatus === SocketConstants.SocketStatus.Connected
-        ? palette.icon.fill.success
-        : palette.icon.fill.error,
+      socketStatus === SocketConstants.SocketStatus.Connected ? palette.icon.success : palette.icon.error,
     position: 'absolute',
     top: '0rem',
     right: '0rem',

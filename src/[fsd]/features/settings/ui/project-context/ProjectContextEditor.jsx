@@ -94,12 +94,12 @@ const ProjectContextEditor = memo(props => {
     () => [
       {
         value: 'edit',
-        icon: theme => <CodeIcon fill={theme.palette.icon.fill.secondary} />,
+        icon: theme => <CodeIcon fill={theme.palette.icon.secondary} />,
         tooltip: 'Edit mode',
       },
       {
         value: 'preview',
-        icon: theme => <OpenEyeIcon fill={theme.palette.icon.fill.secondary} />,
+        icon: theme => <OpenEyeIcon fill={theme.palette.icon.secondary} />,
         tooltip: 'Preview mode',
       },
     ],

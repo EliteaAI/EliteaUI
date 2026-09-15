@@ -574,7 +574,7 @@ const folderPermissionsTableStyles = () => ({
   emptyStateIcon: ({ palette }) => ({
     width: '2.5rem',
     height: '2.5rem',
-    color: palette.icon.fill.default,
+    color: palette.icon.default,
     opacity: 0.6,
   }),
   emptyStateTitle: {

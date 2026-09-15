@@ -42,7 +42,7 @@ const DropdownFooter = memo(props => {
         >
           <Box
             sx={styles.contentRow}
-            color={theme.palette.icon.fill.inactive}
+            color={theme.palette.icon.inactive}
           >
             <UsersIcon
               sx={styles.usersIcon}

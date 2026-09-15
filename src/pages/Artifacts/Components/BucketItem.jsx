@@ -166,7 +166,7 @@ export const BucketItem = forwardRef((props, ref) => {
         icon: (
           <EditIcon
             sx={{ fontSize: '1rem' }}
-            fill={theme.palette.icon.fill.default}
+            fill={theme.palette.icon.default}
           />
         ),
         disabled: !canUpdate,
@@ -195,7 +195,7 @@ export const BucketItem = forwardRef((props, ref) => {
       },
       {
         label: 'Manage permissions',
-        icon: <GroupsIcon color={theme.palette.icon.fill.default} />,
+        icon: <GroupsIcon color={theme.palette.icon.default} />,
         onClick: handleManageAccessClick,
         display: isPersonalProject ? 'none' : undefined,
       },
@@ -205,7 +205,7 @@ export const BucketItem = forwardRef((props, ref) => {
         icon: (
           <DeleteIcon
             sx={{ fontSize: '1rem' }}
-            fill={theme.palette.icon.fill.default}
+            fill={theme.palette.icon.default}
           />
         ),
         alertTitle: 'Delete bucket?',
@@ -219,7 +219,7 @@ export const BucketItem = forwardRef((props, ref) => {
       },
     ].filter(item => item && item.display !== 'none');
   }, [
-    theme.palette.icon.fill.default,
+    theme.palette.icon.default,
     styles.menuIcon,
     checkPermission,
     handleDeleteBucket,
@@ -370,7 +370,7 @@ const bucketItemStyles = ({ isActive, isHovering, isNextItemHighlighted, showMen
       width: '1rem',
       height: '1rem',
       minWidth: '1rem',
-      color: theme.palette.icon.fill.secondary,
+      color: theme.palette.icon.secondary,
     },
 
     bucketName: {
@@ -402,7 +402,7 @@ const bucketItemStyles = ({ isActive, isHovering, isNextItemHighlighted, showMen
         },
       },
     },
-    menuIcon: { fontSize: '1rem', color: theme.palette.icon.fill.default },
+    menuIcon: { fontSize: '1rem', color: theme.palette.icon.default },
     pinIcon: {
       minWidth: '1.75rem',
       width: '1.75rem',

@@ -523,7 +523,7 @@ const ToolCard = memo(props => {
                 >
                   <OpenInNewIcon
                     sx={styles.actionIcon}
-                    fill={!disabled ? theme.palette.icon.fill.default : theme.palette.icon.fill.disabled}
+                    fill={!disabled ? theme.palette.icon.default : theme.palette.icon.disabled}
                   />
                 </IconButton>
               </Tooltip>
@@ -543,7 +543,7 @@ const ToolCard = memo(props => {
                 >
                   <DeleteIcon
                     sx={styles.actionIcon}
-                    fill={!disabled ? theme.palette.icon.fill.default : theme.palette.icon.fill.disabled}
+                    fill={!disabled ? theme.palette.icon.default : theme.palette.icon.disabled}
                   />
                   {isLoading && <StyledCircleProgress size={20} />}
                 </IconButton>
@@ -751,7 +751,7 @@ const toolCardStyles = (showActions, isDuplicate, showVariables, hasVariables) =
       display: 'flex',
       alignItems: 'center',
       marginLeft: '0.25rem',
-      color: online ? palette.icon.fill.default : palette.icon.fill.attention,
+      color: online ? palette.icon.default : palette.icon.attention,
     }),
   statusIcon: {
     width: '1rem',
@@ -793,7 +793,7 @@ const toolCardStyles = (showActions, isDuplicate, showVariables, hasVariables) =
     width: '1rem',
     height: '1rem',
     marginTop: '0.125rem',
-    fill: palette.icon.fill.attention,
+    fill: palette.icon.attention,
   }),
 });
 

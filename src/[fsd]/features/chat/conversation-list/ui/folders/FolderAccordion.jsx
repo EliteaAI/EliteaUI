@@ -198,7 +198,7 @@ const folderAccordionStyles = (
   expandIcon: ({ palette }) => ({
     width: '0.875rem',
     height: '0.875rem',
-    color: palette.icon.fill.secondary,
+    color: palette.icon.secondary,
   }),
   summary: {
     overflow: 'hidden',
@@ -217,7 +217,7 @@ const folderAccordionStyles = (
   folderIcon: ({ palette }) => ({
     width: '1rem',
     height: '1rem',
-    color: palette.icon.fill.secondary,
+    color: palette.icon.secondary,
   }),
   titleText: ({ palette, typography }) => ({
     minWidth: 0,

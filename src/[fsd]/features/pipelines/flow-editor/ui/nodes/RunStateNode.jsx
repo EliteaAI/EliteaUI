@@ -132,7 +132,7 @@ const runNodeStyles = (status, selected) => {
       case FlowEditorConstants.PipelineStatus.Stopped:
         return palette.status.onModeration;
       default:
-        return palette.icon.fill.inactive;
+        return palette.icon.inactive;
     }
   };
 

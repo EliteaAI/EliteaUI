@@ -106,7 +106,7 @@ const subAgentAccordionStyles = {
       margin: '0 0 0 0.5rem !important',
     },
     '& .MuiAccordionSummary-expandIconWrapper': {
-      color: palette.icon.fill.default,
+      color: palette.icon.default,
     },
     '& .MuiAccordionSummary-expandIconWrapper.Mui-expanded': {
       transform: 'rotate(90deg)',

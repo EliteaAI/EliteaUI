@@ -638,7 +638,7 @@ const mermaidDiagramOutputStyles = (theme, isValidCode, errorMessage, widthsValu
   downloadIcon: {
     fontSize: '1rem',
     marginTop: '-0.0625rem',
-    fill: isValidCode ? theme.palette.icon.fill.default : theme.palette.icon.fill.disabled,
+    fill: isValidCode ? theme.palette.icon.default : theme.palette.icon.disabled,
   },
   zoomControls: ({ palette }) => ({
     display: 'flex',
@@ -663,11 +663,11 @@ const mermaidDiagramOutputStyles = (theme, isValidCode, errorMessage, widthsValu
   },
   zoomIcon: {
     fontSize: '1rem',
-    fill: theme.palette.icon.fill.default,
+    fill: theme.palette.icon.default,
   },
   fullscreenIcon: {
     fontSize: '1rem',
-    fill: theme.palette.icon.fill.secondary,
+    fill: theme.palette.icon.secondary,
   },
   diagramContainer: ({ palette }) => ({
     height: '100%',
@@ -695,7 +695,7 @@ const mermaidDiagramOutputStyles = (theme, isValidCode, errorMessage, widthsValu
     lineHeight: 1.2,
   },
   infoIcon: {
-    fill: theme.palette.icon.fill.info,
+    fill: theme.palette.icon.info,
   },
   infoTooltip: {
     display: 'inline-flex',

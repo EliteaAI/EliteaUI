@@ -87,7 +87,7 @@ export default function ExportApplicationButton() {
       >
         <ExportIcon
           sx={{ fontSize: '1rem' }}
-          fill={theme.palette.icon.fill.secondary}
+          fill={theme.palette.icon.secondary}
         />
         {isExporting && <StyledCircleProgress size={16} />}
       </IconButton>

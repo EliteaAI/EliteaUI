@@ -129,7 +129,7 @@ const tokenActionsCellStyles = () => ({
     padding: 0,
   },
   icon: ({ palette }) => ({
-    color: palette.icon.fill.default,
+    color: palette.icon.default,
     fontSize: '0.875rem',
   }),
 });

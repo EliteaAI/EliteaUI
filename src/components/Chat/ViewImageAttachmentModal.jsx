@@ -124,7 +124,7 @@ const ViewImageAttachmentModal = memo(props => {
             >
               <DownloadIcon
                 sx={styles.icon}
-                fill={theme.palette.icon.fill.secondary}
+                fill={theme.palette.icon.secondary}
               />
             </BaseBtn>
             <BaseBtn
@@ -136,7 +136,7 @@ const ViewImageAttachmentModal = memo(props => {
             >
               <DeleteIcon
                 sx={styles.icon}
-                fill={theme.palette.icon.fill.secondary}
+                fill={theme.palette.icon.secondary}
               />
             </BaseBtn>
             <BaseBtn
@@ -146,7 +146,7 @@ const ViewImageAttachmentModal = memo(props => {
               sx={styles.closeButton}
             >
               <CloseIcon
-                fill={theme.palette.icon.fill.default}
+                fill={theme.palette.icon.default}
                 sx={styles.closeIcon}
               />
             </BaseBtn>

@@ -143,7 +143,7 @@ const styles = {
     },
   }),
   listItemIcon: ({ palette }) => ({
-    color: palette.icon.fill.default,
+    color: palette.icon.default,
   }),
   checkIconWrapper: {
     display: 'flex',

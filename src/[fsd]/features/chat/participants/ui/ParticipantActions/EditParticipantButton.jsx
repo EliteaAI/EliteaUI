@@ -54,7 +54,7 @@ const EditParticipantButton = memo(props => {
         ) : (
           <SettingIcon
             sx={{ fontSize: '1rem' }}
-            fill={disabled ? theme.palette.icon.fill.disabled : undefined}
+            fill={disabled ? theme.palette.icon.disabled : undefined}
           />
         )}
       </IconButton>

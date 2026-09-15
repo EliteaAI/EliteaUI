@@ -116,7 +116,7 @@ const getStyles = isLoggedIn => ({
     display: 'flex',
     alignItems: 'center',
     gap: '0.5rem',
-    color: isLoggedIn ? palette.icon.fill.success : palette.icon.fill.attention,
+    color: isLoggedIn ? palette.icon.success : palette.icon.attention,
   }),
   loginStatusText: ({ palette }) => ({
     color: isLoggedIn ? palette.text.mcp.loginSuccess : palette.text.mcp.logout,

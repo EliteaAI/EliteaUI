@@ -45,7 +45,7 @@ const UserIconItem = memo(props => {
         >
           <CloseIcon
             sx={styles.deleteIcon}
-            fill={theme.palette.icon.fill.delete}
+            fill={theme.palette.icon.delete}
           />
         </IconButton>
       </Box>

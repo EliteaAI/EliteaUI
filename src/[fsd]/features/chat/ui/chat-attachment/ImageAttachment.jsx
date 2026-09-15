@@ -145,7 +145,7 @@ const ImageAttachment = memo(props => {
           >
             <ImportIcon
               sx={styles.icon}
-              fill={theme.palette.icon.fill.secondary}
+              fill={theme.palette.icon.secondary}
             />
           </IconButton>
           <IconButton
@@ -157,7 +157,7 @@ const ImageAttachment = memo(props => {
           >
             <DeleteIcon
               sx={styles.icon}
-              fill={theme.palette.icon.fill.secondary}
+              fill={theme.palette.icon.secondary}
             />
           </IconButton>
         </Box>

@@ -154,7 +154,7 @@ const suitesPanelStyles = () => ({
     fontSize: '2rem',
     marginBottom: '0.5rem',
     '& path': {
-      fill: palette.icon.fill.disabled,
+      fill: palette.icon.disabled,
     },
   }),
   emptyTitle: ({ palette }) => ({

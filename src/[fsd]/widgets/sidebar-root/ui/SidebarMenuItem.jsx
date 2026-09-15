@@ -100,7 +100,7 @@ const sidebarMenuItemStyles = (selected, showLabel, isPersonalSpace) => ({
       background: palette.background.button.drawerMenu.hover,
     },
     '& path': {
-      fill: selected ? palette.icon.fill.secondary : palette.text.metrics,
+      fill: selected ? palette.icon.secondary : palette.text.metrics,
     },
     '& span': {
       color: selected ? palette.text.secondary : palette.text.metrics,

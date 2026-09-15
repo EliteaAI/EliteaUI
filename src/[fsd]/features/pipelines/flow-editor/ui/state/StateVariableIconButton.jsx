@@ -57,7 +57,7 @@ const iconButtonStyles = isActive => ({
     '&:disabled': {
       border: '0.0625rem solid transparent !important',
       '& svg': {
-        color: palette.icon.fill.disabled,
+        color: palette.icon.disabled,
       },
     },
   }),

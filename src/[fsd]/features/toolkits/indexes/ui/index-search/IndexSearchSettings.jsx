@@ -119,7 +119,7 @@ const indexSearchSettingsStyles = () => ({
     fontSize: '1rem',
     '& path': { fill: ({ palette }) => palette.primary.main },
     '.Mui-disabled & path': {
-      fill: ({ palette }) => palette.icon.fill.disabled,
+      fill: ({ palette }) => palette.icon.disabled,
     },
   },
 });

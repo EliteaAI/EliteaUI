@@ -104,7 +104,7 @@ const PlusChatSubmenu = memo(props => {
           >
             <PlusIcon
               style={styles.plusIcon}
-              fill={theme.palette.icon.fill.secondary}
+              fill={theme.palette.icon.secondary}
             />
             <Typography
               variant="bodyMedium"

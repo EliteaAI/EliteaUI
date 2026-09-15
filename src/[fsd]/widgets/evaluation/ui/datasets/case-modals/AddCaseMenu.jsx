@@ -164,7 +164,7 @@ const addCaseMenuStyles = () => ({
     fontSize: '1rem',
     flexShrink: 0,
     '& path': {
-      fill: palette.icon.fill.default,
+      fill: palette.icon.default,
     },
   }),
   fileIcon: ({ palette }) => ({
@@ -175,7 +175,7 @@ const addCaseMenuStyles = () => ({
       height: '1rem',
     },
     '& path': {
-      fill: palette.icon.fill.default,
+      fill: palette.icon.default,
     },
   }),
   menuText: ({ palette }) => ({

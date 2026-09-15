@@ -65,7 +65,7 @@ export default BannerMessage;
 
 const variantBannerMessagePalette = ({ palette }) => ({
   [VARIANT_MAPPING.WARNING]: {
-    iconColor: palette.icon.fill.attention,
+    iconColor: palette.icon.attention,
     background: palette.background.attention,
     border: palette.border.attention,
     text: palette.text.attention,
@@ -77,7 +77,7 @@ const variantBannerMessagePalette = ({ palette }) => ({
     text: palette.text.warningText,
   },
   [VARIANT_MAPPING.INFO]: {
-    iconColor: palette.icon.fill.tips,
+    iconColor: palette.icon.tips,
     border: palette.border.tips,
     text: palette.text.tips,
     background: palette.background.tips.main,

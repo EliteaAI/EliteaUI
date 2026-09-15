@@ -457,7 +457,7 @@ const ConversationItem = memo(props => {
         {conversationType === 'private_with_users' && (
           <UsersIcon
             fontSize=".875rem"
-            fill={theme.palette.icon.fill.default}
+            fill={theme.palette.icon.default}
           />
         )}
         {conversationType === 'public' && (
@@ -555,16 +555,14 @@ const ConversationItem = memo(props => {
             onClick={isSaveEnabled ? (isNew ? onCreate : onSave) : null}
             sx={styles.checkedIconWrapper}
           >
-            <CheckedIcon
-              fill={isSaveEnabled ? theme.palette.icon.fill.default : theme.palette.icon.fill.disabled}
-            />
+            <CheckedIcon fill={isSaveEnabled ? theme.palette.icon.default : theme.palette.icon.disabled} />
           </Box>
         </Tooltip>
         <Box
           onClick={isNew ? onCancelCreate : onCloseEdit}
           sx={styles.cancelIconWrapper}
         >
-          <CancelIcon fill={theme.palette.icon.fill.default} />
+          <CancelIcon fill={theme.palette.icon.default} />
         </Box>
       </Box>
     </ClickAwayListener>

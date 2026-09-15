@@ -46,7 +46,7 @@ export const useCopyLinkMenu = ({ link, label = 'Copy link', key } = {}) => {
       icon: copied ? (
         <CheckIcon
           sx={{ fontSize: '1rem' }}
-          fill={theme.palette.icon.fill.default}
+          fill={theme.palette.icon.default}
         />
       ) : (
         <Box
@@ -63,16 +63,16 @@ export const useCopyLinkMenu = ({ link, label = 'Copy link', key } = {}) => {
             sx={{
               width: '1rem',
               height: '1rem',
-              color: theme.palette.icon.fill.default,
+              color: theme.palette.icon.default,
             }}
-            fill={theme.palette.icon.fill.default}
+            fill={theme.palette.icon.default}
           />
         </Box>
       ),
       disabled: false,
       onClick: handleCopy,
     }),
-    [copied, handleCopy, theme.palette.icon.fill.default, key, label],
+    [copied, handleCopy, theme.palette.icon.default, key, label],
   );
 
   return {
@@ -98,7 +98,7 @@ export const CopyLinkToEntityButton = ({ link }) => {
         {copied ? (
           <CheckIcon
             sx={{ fontSize: '1rem' }}
-            fill={theme.palette.icon.fill.secondary}
+            fill={theme.palette.icon.secondary}
           />
         ) : (
           <Box
@@ -107,7 +107,7 @@ export const CopyLinkToEntityButton = ({ link }) => {
               width: '1rem',
               height: '1rem',
             }}
-            fill={theme.palette.icon.fill.secondary}
+            fill={theme.palette.icon.secondary}
           />
         )}
       </IconButton>

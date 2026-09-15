@@ -278,7 +278,7 @@ const componentStyles = () => ({
   closeIcon: ({ palette }) => ({
     width: '1rem',
     height: '1rem',
-    fill: palette.icon.fill.default,
+    fill: palette.icon.default,
   }),
   dialogContent: ({ palette }) => ({
     width: '100%',

@@ -356,15 +356,15 @@ const NewChatInput = forwardRef((props, ref) => {
         input: {
           placeholder: isRecording || isSpeakingMode ? 'Speak your message' : placeholder,
           color: theme.palette.text.secondary,
-          iconColor: theme.palette.icon.fill.default,
+          iconColor: theme.palette.icon.default,
         },
         sendButton: {
-          iconColor: theme.palette.icon.fill.send,
+          iconColor: theme.palette.icon.send,
           disabledBackground: theme.palette.background.button.primary.disabled,
           background: theme.palette.primary.main,
         },
         stopButton: {
-          iconColor: theme.palette.icon.fill.attention,
+          iconColor: theme.palette.icon.attention,
         },
         mentionUser: {
           users,

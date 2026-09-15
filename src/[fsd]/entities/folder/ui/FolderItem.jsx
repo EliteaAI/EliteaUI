@@ -156,7 +156,7 @@ const folderItemStyles = isSelected => ({
     width: '1rem',
     height: '1rem',
     fontSize: '1rem',
-    color: palette.icon.fill.default,
+    color: palette.icon.default,
     flexShrink: 0,
   }),
   nameGroup: {
@@ -201,7 +201,7 @@ const folderItemStyles = isSelected => ({
   },
   moreIcon: ({ palette }) => ({
     fontSize: '1.25rem',
-    color: palette.icon.fill.default,
+    color: palette.icon.default,
   }),
 });
 

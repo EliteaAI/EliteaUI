@@ -81,7 +81,7 @@ const FolderMenuContent = memo(props => {
                 {isCurrentFolder && (
                   <CheckIcon
                     sx={styles.checkIcon}
-                    fill={palette.icon.fill.secondary}
+                    fill={palette.icon.secondary}
                   />
                 )}
               </MenuItem>
@@ -129,7 +129,7 @@ const folderMenuContentStyles = () => {
     gap: '0.5rem',
     color: palette.text.secondary,
     '& .MuiListItemIcon-root': {
-      color: palette.icon.fill.default,
+      color: palette.icon.default,
     },
   });
 

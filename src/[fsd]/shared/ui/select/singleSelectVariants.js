@@ -50,10 +50,10 @@ export const eliteaSingleSelectColorStyle = theme => ({
     },
     error: {
       underline: {
-        color: theme.palette.icon.fill.error,
+        color: theme.palette.icon.error,
       },
       helperText: {
-        color: theme.palette.icon.fill.error,
+        color: theme.palette.icon.error,
       },
     },
   },

@@ -391,7 +391,7 @@ const AIAssistantModal = memo(props => {
                         sx={styles.iconButton}
                       >
                         <CloseIcon
-                          fill={theme.palette.icon.fill.default}
+                          fill={theme.palette.icon.default}
                           sx={{ fontSize: '1rem' }}
                         />
                       </IconButton>

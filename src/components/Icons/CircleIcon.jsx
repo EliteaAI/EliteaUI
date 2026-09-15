@@ -16,7 +16,7 @@ export default function CircleIcon(props) {
         cx="8"
         cy="8"
         r="8"
-        fill={props.fill || theme.palette.icon.fill.default}
+        fill={props.fill || theme.palette.icon.default}
       />
     </svg>
   );

@@ -94,7 +94,7 @@ const suiteCardStyles = () => ({
   deleteButton: ({ palette }) => ({
     opacity: 0,
     padding: '0.25rem',
-    color: palette.icon.fill.default,
+    color: palette.icon.default,
     transition: 'opacity 0.15s',
   }),
   description: ({ palette }) => ({

@@ -226,7 +226,7 @@ VoiceButton.displayName = 'VoiceButton';
 /** @type {MuiSx} */
 const getStyles = (isRecording, disabled) => {
   const micButtonColor = palette =>
-    disabled ? palette.icon.fill.disabled : isRecording ? palette.primary.main : palette.text.secondary;
+    disabled ? palette.icon.disabled : isRecording ? palette.primary.main : palette.text.secondary;
   return {
     wrapper: {
       display: 'flex',

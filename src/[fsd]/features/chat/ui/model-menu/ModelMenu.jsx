@@ -141,9 +141,7 @@ const ModelMenu = ({
                 {selectedModel?.model_name}
               </Typography>
             ) : (
-              <ModelIcon
-                fill={disabled ? theme.palette.icon.fill.disabled : theme.palette.icon.fill.secondary}
-              />
+              <ModelIcon fill={disabled ? theme.palette.icon.disabled : theme.palette.icon.secondary} />
             )}
           </Box>
         </StyledTooltip>

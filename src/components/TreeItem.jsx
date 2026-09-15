@@ -29,7 +29,7 @@ export const eliteaTreeItemStyle = (theme, isActive) => ({
     backgroundColor: 'transparent !important',
     '& .MuiTreeItem-checkbox': {
       '& svg': {
-        fill: theme.palette.icon.fill.secondary,
+        fill: theme.palette.icon.secondary,
       },
     },
   },
@@ -38,7 +38,7 @@ export const eliteaTreeItemStyle = (theme, isActive) => ({
   },
   '& .MuiTreeItem-checkbox': {
     '& svg': {
-      fill: theme.palette.icon.fill.secondary,
+      fill: theme.palette.icon.secondary,
     },
   },
   '& .Mui-focused': {

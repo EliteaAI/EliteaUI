@@ -56,7 +56,7 @@ export const eliteaDataGridStyle = theme => ({
       'opacity 200ms cubic-bezier(0.4, 0, 0.2, 1) 0ms, transform 200ms cubic-bezier(0.4, 0, 0.2, 1) 0ms',
   },
   ['& .MuiDataGrid-columnHeader--sortable[aria-sort="none"] .MuiSvgIcon-root path']: {
-    fill: theme.palette.icon.fill.default,
+    fill: theme.palette.icon.default,
   },
   ['& .MuiDataGrid-columnHeader--sortable[aria-sort="ascending"] .MuiSvgIcon-root']: {
     transform: 'rotate(180deg)',

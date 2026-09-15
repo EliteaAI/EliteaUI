@@ -421,17 +421,17 @@ export const eliteaButtonVariants = [
             }
           : { padding: '0.375rem 1rem' }),
 
-        '--btn-icon-fill': theme.palette.icon.fill.default,
+        '--btn-icon-fill': theme.palette.icon.default,
         '& .MuiButton-startIcon path': { fill: 'var(--btn-icon-fill)' },
 
         '&:hover': {
-          '--btn-icon-fill': theme.palette.icon.fill.secondary,
+          '--btn-icon-fill': theme.palette.icon.secondary,
           background: eliteaButtonColors(theme)[BUTTON_VARIANTS.tertiary].hover.background,
           color: eliteaButtonColors(theme)[BUTTON_VARIANTS.tertiary].hover.color,
         },
 
         '&:focus-visible': {
-          '--btn-icon-fill': theme.palette.icon.fill.secondary,
+          '--btn-icon-fill': theme.palette.icon.secondary,
           background: eliteaButtonColors(theme)[BUTTON_VARIANTS.tertiary].hover.background,
           color: eliteaButtonColors(theme)[BUTTON_VARIANTS.tertiary].hover.color,
         },
@@ -442,7 +442,7 @@ export const eliteaButtonVariants = [
         },
 
         '&:disabled': {
-          '--btn-icon-fill': theme.palette.icon.fill.disabled,
+          '--btn-icon-fill': theme.palette.icon.disabled,
           color: eliteaButtonColors(theme)[BUTTON_VARIANTS.tertiary].disabled.color,
           background: eliteaButtonColors(theme)[BUTTON_VARIANTS.tertiary].disabled.background,
         },
@@ -497,7 +497,7 @@ export const eliteaButtonVariants = [
       borderRadius: '1rem',
       gap: 0,
       '& .MuiButton-startIcon': {
-        color: theme.palette.icon.fill.button,
+        color: theme.palette.icon.button,
       },
 
       '&:hover': {
@@ -743,7 +743,7 @@ export const eliteaButtonVariants = [
       borderRadius: '1rem',
       gap: 0,
       '& .MuiButton-startIcon': {
-        color: theme.palette.icon.fill.button,
+        color: theme.palette.icon.button,
       },
 
       '&:hover': {
@@ -773,7 +773,7 @@ export const eliteaButtonVariants = [
       borderRadius: '1rem',
       gap: 0,
       '& .MuiButton-startIcon': {
-        color: theme.palette.icon.fill.button,
+        color: theme.palette.icon.button,
       },
 
       '&:hover': {

@@ -221,9 +221,9 @@ const getStyles = () => ({
       display: 'flex',
       alignItems: 'center',
       minWidth: '1rem',
-      color: isActive ? palette.text.secondary : palette.icon.fill.stateButtonHover,
+      color: isActive ? palette.text.secondary : palette.icon.stateButtonHover,
       '& svg': {
-        fill: isActive ? palette.text.secondary : palette.icon.fill.stateButtonHover,
+        fill: isActive ? palette.text.secondary : palette.icon.stateButtonHover,
         width: '1rem',
         height: '1rem',
       },

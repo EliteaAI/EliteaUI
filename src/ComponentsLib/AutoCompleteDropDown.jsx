@@ -510,7 +510,7 @@ const autoCompleteDropDownStyled = slotPropsProp => ({
   checkIconSx: ({ palette }) => ({
     '& svg': {
       fontSize: '1rem',
-      fill: slotPropsProp.Li?.CheckIcon?.fill ?? palette.icon.fill.secondary,
+      fill: slotPropsProp.Li?.CheckIcon?.fill ?? palette.icon.secondary,
     },
   }),
 });

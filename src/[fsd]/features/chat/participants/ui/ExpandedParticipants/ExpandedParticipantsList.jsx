@@ -196,11 +196,11 @@ const expandedPerticapantsListStyles = () => ({
     '&:hover': {
       backgroundColor: 'rgba(255, 255, 255, 0.1)',
 
-      '& > *': { color: palette.icon.fill.secondary },
-      '& svg': { fill: palette.icon.fill.secondary },
+      '& > *': { color: palette.icon.secondary },
+      '& svg': { fill: palette.icon.secondary },
 
       '& .MuiSvgIcon-root path': {
-        fill: `${palette.icon.fill.secondary} !important`,
+        fill: `${palette.icon.secondary} !important`,
       },
     },
   }),

@@ -68,7 +68,7 @@ const budgetErrorMessageStyles = () => ({
   }),
   icon: ({ palette }) => ({
     fontSize: '1rem',
-    color: palette.icon.fill.error,
+    color: palette.icon.error,
     flexShrink: 0,
     marginTop: '0.1rem',
   }),

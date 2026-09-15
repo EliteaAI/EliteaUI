@@ -237,7 +237,7 @@ export const participantNormalCardStyles = ({ collapsed, isActive, maxWidth, isB
     height: '1rem',
     marginTop: '.0625rem',
     '& svg, & path': {
-      fill: palette.icon.fill.secondary,
+      fill: palette.icon.secondary,
     },
   }),
   attentionMessage: {

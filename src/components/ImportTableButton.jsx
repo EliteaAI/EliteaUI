@@ -83,7 +83,7 @@ export default function ImportTableButton({ onImported, disabled }) {
           <ImportIcon
             style={{
               fontSize: '1rem',
-              color: !disabled ? theme.palette.icon.fill.default : theme.palette.text.button.disabled,
+              color: !disabled ? theme.palette.icon.default : theme.palette.text.button.disabled,
             }}
           />
         </IconButton>

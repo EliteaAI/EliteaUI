@@ -187,7 +187,7 @@ const ValidationResult = memo(props => {
             <InfoIcon
               width={14}
               height={14}
-              fill={theme.palette.icon.fill.tips}
+              fill={theme.palette.icon.tips}
             />
           }
           onClick={() => scrollToSection(SECTION_IDS.suggestions)}

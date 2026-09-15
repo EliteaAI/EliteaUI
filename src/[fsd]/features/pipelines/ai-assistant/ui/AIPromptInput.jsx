@@ -208,7 +208,7 @@ const aiPromptInputStyles = () => ({
   }),
   sendIcon: ({ palette }) => ({
     fontSize: '1rem',
-    fill: palette.icon.fill.send,
+    fill: palette.icon.send,
   }),
   stopIcon: {
     fontSize: '1rem',

@@ -450,7 +450,7 @@ const suiteDetailPanelStyles = () => ({
   backButton: ({ palette }) => ({
     padding: '0.25rem',
     '&:hover svg path': {
-      fill: palette.icon.fill.secondary,
+      fill: palette.icon.secondary,
     },
   }),
   headerTitle: ({ palette }) => ({
@@ -483,7 +483,7 @@ const suiteDetailPanelStyles = () => ({
   deleteButton: ({ palette }) => ({
     padding: '0.25rem',
     '&:hover svg path': {
-      fill: palette.icon.fill.secondary,
+      fill: palette.icon.secondary,
     },
   }),
   deleteIcon: {
@@ -511,7 +511,7 @@ const suiteDetailPanelStyles = () => ({
   },
   infoIcon: ({ palette }) => ({
     fontSize: '1rem',
-    color: palette.icon.fill.default,
+    color: palette.icon.default,
   }),
   footer: ({ palette }) => ({
     display: 'flex',

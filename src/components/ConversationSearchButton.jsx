@@ -45,7 +45,7 @@ const ConversationSearchButton = ({ collapsed = false, onExpand, onSearchActivat
             width: '16px',
             height: '16px',
           }}
-          fill={theme.palette.icon.fill.secondary}
+          fill={theme.palette.icon.secondary}
         />
       </IconButton>
     </Tooltip>

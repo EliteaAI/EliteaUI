@@ -134,12 +134,12 @@ const ChatPanel = forwardRef((props, ref) => {
           >
             {collapsed ? (
               <DoubleLeftIcon
-                fill={theme.palette.icon.fill.default}
+                fill={theme.palette.icon.default}
                 width={16}
               />
             ) : (
               <DoubleRightIcon
-                fill={theme.palette.icon.fill.default}
+                fill={theme.palette.icon.default}
                 width={16}
               />
             )}

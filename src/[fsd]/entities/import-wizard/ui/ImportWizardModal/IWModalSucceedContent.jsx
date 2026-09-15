@@ -171,14 +171,14 @@ const iWModaSucceedlContentStyles = () => ({
       marginTop: '0.25rem',
 
       path: {
-        fill: palette.icon.fill.success,
+        fill: palette.icon.success,
       },
     },
   }),
   skippedItems: ({ palette }) => ({
     svg: {
       path: {
-        fill: palette.icon.fill.attention,
+        fill: palette.icon.attention,
       },
     },
   }),

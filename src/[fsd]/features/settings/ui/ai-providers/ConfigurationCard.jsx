@@ -217,7 +217,7 @@ const getStyles = () => ({
     justifyContent: 'center',
     borderRadius: '1.25rem',
     padding: '0.125rem 0.5rem',
-    backgroundColor: ({ palette }) => palette.icon.fill.is_default,
+    backgroundColor: ({ palette }) => palette.icon.is_default,
   },
   disabledIconWrapper: {
     marginLeft: 'auto',
@@ -228,7 +228,7 @@ const getStyles = () => ({
   disabledIcon: ({ palette }) => ({
     width: '1rem',
     height: '1rem',
-    color: palette.icon.fill.disabled,
+    color: palette.icon.disabled,
   }),
 });
 

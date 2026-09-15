@@ -87,7 +87,7 @@ const caseContentColumnStyles = () => ({
   }),
   fullScreenIcon: ({ palette }) => ({
     fontSize: '1rem',
-    color: palette.icon.fill.default,
+    color: palette.icon.default,
   }),
   columnContent: {
     flex: 1,

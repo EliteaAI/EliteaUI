@@ -103,7 +103,7 @@ const RunStateDialog = memo(props => {
                     sx={styles.iconButton}
                     onClick={onStop}
                   >
-                    <Box sx={({ palette }) => ({ color: palette.icon.fill.secondary })}>
+                    <Box sx={({ palette }) => ({ color: palette.icon.secondary })}>
                       <StopIcon
                         width="16"
                         height="16"
@@ -128,7 +128,7 @@ const RunStateDialog = memo(props => {
                   onClick={onClose}
                   data-testid="pipeline-run-details-close-button"
                 >
-                  <Box sx={({ palette }) => ({ color: palette.icon.fill.secondary })}>
+                  <Box sx={({ palette }) => ({ color: palette.icon.secondary })}>
                     <CollapseIcon
                       width="16"
                       height="16"
@@ -460,10 +460,10 @@ const runStateDialogStyles = (editorWidth, editorHeight) => ({
     height: '0.875rem',
   },
   progressColor: ({ palette }) => ({
-    color: palette.icon.fill.inactive,
+    color: palette.icon.inactive,
   }),
   statusTextInactive: ({ palette }) => ({
-    color: palette.icon.fill.inactive,
+    color: palette.icon.inactive,
   }),
   errorIcon: ({ palette }) => ({
     width: '1rem',

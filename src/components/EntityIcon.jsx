@@ -22,9 +22,9 @@ import SelectIconDialog from './SelectIconDialog';
 
 const getIconFill = (theme, isActive, forMessage, specifiedFill) => {
   if (specifiedFill) return specifiedFill;
-  if (isActive) return theme.palette.icon.fill.active;
-  if (forMessage) return theme.palette.icon.fill.inactive;
-  return theme.palette.icon.fill.default;
+  if (isActive) return theme.palette.icon.active;
+  if (forMessage) return theme.palette.icon.inactive;
+  return theme.palette.icon.default;
 };
 
 const getIconSizeNumeric = (specifiedFontSize, showBigIcon) => {

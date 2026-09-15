@@ -86,7 +86,7 @@ const CanvasEditHeader = ({
           onClick={onClose}
         >
           <CloseIcon
-            fill={theme.palette.icon.fill.default}
+            fill={theme.palette.icon.default}
             sx={{ fontSize: '18px', cursor: 'pointer' }}
           />
         </IconButton>
@@ -274,7 +274,7 @@ const CanvasEditHeader = ({
               >
                 <AddRowIcon
                   sx={{ fontSize: '16px' }}
-                  fill={theme.palette.icon.fill.default}
+                  fill={theme.palette.icon.default}
                 />
               </IconButton>
             </span>

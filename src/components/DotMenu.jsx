@@ -539,7 +539,7 @@ DotMenu.displayName = 'DotMenu';
 const dotMenuStyles = () => ({
   iconButton: ({ palette }) => ({
     marginLeft: 0,
-    'svg, &:hover svg': { fill: palette.icon.fill.secondary },
+    'svg, &:hover svg': { fill: palette.icon.secondary },
   }),
 });
 

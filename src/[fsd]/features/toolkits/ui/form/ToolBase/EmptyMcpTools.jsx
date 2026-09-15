@@ -43,7 +43,7 @@ const getStyles = theme => ({
   info: {
     width: 14,
     height: 14,
-    fill: theme.palette.icon.fill.tips,
+    fill: theme.palette.icon.tips,
   },
   text: ({ palette }) => ({
     color: palette.text.tips,

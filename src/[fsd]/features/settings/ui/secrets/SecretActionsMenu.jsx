@@ -39,7 +39,7 @@ const SecretActionsMenu = memo(props => {
       >
         <EditPenIcon
           sx={{ fontSize: '1rem', marginRight: '0.75rem' }}
-          fill={theme.palette.icon.fill.default}
+          fill={theme.palette.icon.default}
         />
         <Typography
           variant="labelMedium"
@@ -56,7 +56,7 @@ const SecretActionsMenu = memo(props => {
         >
           <LockSimple
             sx={{ fontSize: '1rem', marginRight: '0.75rem' }}
-            fill={theme.palette.icon.fill.default}
+            fill={theme.palette.icon.default}
           />
           <Typography
             variant="labelMedium"
@@ -73,7 +73,7 @@ const SecretActionsMenu = memo(props => {
       >
         <DeleteIcon
           sx={{ fontSize: '1rem', marginRight: '0.75rem' }}
-          fill={theme.palette.icon.fill.default}
+          fill={theme.palette.icon.default}
         />
         <Typography
           variant="labelMedium"

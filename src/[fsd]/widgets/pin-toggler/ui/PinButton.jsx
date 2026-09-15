@@ -125,14 +125,14 @@ const pinButtonStyles = (isVisible, variant) => ({
       ? {
           backgroundColor: palette.background.button.secondary.default,
           '&:hover': {
-            color: palette.icon.fill.secondary,
+            color: palette.icon.secondary,
             backgroundColor: palette.background.button.secondary.hover,
           },
         }
       : {
-          color: palette.icon.fill.default,
+          color: palette.icon.default,
           '&:hover': {
-            color: palette.icon.fill.secondary,
+            color: palette.icon.secondary,
             backgroundColor: palette.background.button.secondary.default,
           },
         }),

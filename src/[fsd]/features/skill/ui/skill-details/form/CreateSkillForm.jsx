@@ -52,12 +52,12 @@ const CreateSkillForm = memo(props => {
     () => [
       {
         value: 'edit',
-        icon: t => <CodeIcon fill={t.palette.icon.fill.secondary} />,
+        icon: t => <CodeIcon fill={t.palette.icon.secondary} />,
         tooltip: 'Edit mode',
       },
       {
         value: 'preview',
-        icon: t => <OpenEyeIcon fill={t.palette.icon.fill.secondary} />,
+        icon: t => <OpenEyeIcon fill={t.palette.icon.secondary} />,
         tooltip: 'Preview mode',
       },
     ],

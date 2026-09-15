@@ -123,7 +123,7 @@ const styles = {
     flexShrink: 0,
     width: '1rem',
     height: '1rem',
-    color: palette.icon.fill.attention,
+    color: palette.icon.attention,
     '& svg': {
       width: '0.875rem',
       height: '0.875rem',
