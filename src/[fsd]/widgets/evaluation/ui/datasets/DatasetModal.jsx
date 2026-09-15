@@ -1,8 +1,8 @@
 import { memo, useCallback, useEffect, useState } from 'react';
 
-import { Box, Checkbox, FormControlLabel, Typography } from '@mui/material';
+import { Box, FormControlLabel, Typography } from '@mui/material';
 
-import { Button, Input, Modal } from '@/[fsd]/shared/ui';
+import { Button, Checkbox, Input, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 
@@ -105,7 +105,7 @@ const DatasetModal = memo(props => {
       <Box sx={styles.checkboxSection}>
         <FormControlLabel
           control={
-            <Checkbox
+            <Checkbox.BaseCheckbox
               checked={form.isShared}
               disabled={isSharedIn}
               onChange={event => setField('isShared', event.target.checked)}

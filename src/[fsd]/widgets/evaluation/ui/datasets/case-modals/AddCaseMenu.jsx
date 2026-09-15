@@ -137,10 +137,6 @@ const addCaseMenuStyles = () => ({
     '& svg path': {
       fill: palette.text.secondary,
     },
-    '&:hover': {
-      borderColor: palette.border.lines,
-      backgroundColor: palette.background.tabButton.default,
-    },
   }),
   menuPaper: ({ palette }) => ({
     minWidth: '12rem',
