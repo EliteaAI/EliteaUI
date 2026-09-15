@@ -20,6 +20,12 @@ import { describe, expect, it } from 'vitest';
  * a real signal to update this list, not a false alarm.
  */
 const REQUIRED_SHORTHAND = [
+  // Widest blast radius of the eight: mis-wire this and runIsLive goes false, which
+  // arms Delete while the panel still renders the spinner and "Indexing…" from the
+  // same local. It is in this list only because the panel's local was renamed to
+  // match the key — a value assertion here would be the spelling check that made the
+  // previous guard fire on honest renames.
+  'isIndexing',
   'index',
   'localMetaOverride',
   'serverSupersedes',

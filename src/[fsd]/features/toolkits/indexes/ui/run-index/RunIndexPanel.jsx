@@ -124,7 +124,7 @@ const RunIndexPanel = memo(props => {
 
   const {
     chatHistory,
-    isIndexing,
+    isIndexing: chatIsIndexing,
     isRunning,
     isStoppingIndexing,
     isWaitingForTaskStart,
@@ -180,7 +180,11 @@ const RunIndexPanel = memo(props => {
   }, [toolkitSchema]);
 
   const effectiveState = localMetaOverride?.state ?? index?.metadata?.state;
-  const effectiveIsIndexing = isIndexing || effectiveState === IndexStatuses.progress;
+  // Named `isIndexing` so the indexRunControls call below is shorthand like every
+  // other input: this is the one with the widest blast radius — mis-wiring it makes
+  // runIsLive false and arms Delete on a live run — and it was the only key the
+  // shorthand guard could not cover while the local had a different name.
+  const isIndexing = chatIsIndexing || effectiveState === IndexStatuses.progress;
   // Runs observed here aren't in the slice until a fetch happens — arm the poll from
   // local belief. (Second subscription on this route is deliberate; see the hook.)
   const { startedTimeStamp, fulfilledTimeStamp } = useIndexesListPolling({
@@ -213,7 +217,7 @@ const RunIndexPanel = memo(props => {
     deleteDisabled,
     reindexDisabled,
   } = indexRunControls({
-    isIndexing: effectiveIsIndexing,
+    isIndexing,
     index,
     localMetaOverride,
     serverSupersedes,
@@ -518,7 +522,7 @@ const RunIndexPanel = memo(props => {
       latestEntry,
     };
   }, [index?.metadata]);
-  const runInFlight = effectiveIsIndexing || isAwaitingTaskStart;
+  const runInFlight = isIndexing || isAwaitingTaskStart;
   const banner = useMemo(
     () =>
       bannerVariant(
@@ -608,13 +612,13 @@ const RunIndexPanel = memo(props => {
   const questionItemRef = useRef();
 
   const searchBlockedReason = indexSearchBlockedReason(
-    effectiveIsIndexing ? IndexStatuses.progress : effectiveState,
+    isIndexing ? IndexStatuses.progress : effectiveState,
     selectedIndexTools,
     runLooksAbandoned,
     retainsIndexedData,
   );
 
-  const runBlocksHistory = effectiveIsIndexing && !runLooksAbandoned;
+  const runBlocksHistory = isIndexing && !runLooksAbandoned;
   const historyDisabled = !index?.metadata?.history?.length || runBlocksHistory;
   const historyTooltip = runBlocksHistory
     ? 'Unavailable while indexing is in progress'
