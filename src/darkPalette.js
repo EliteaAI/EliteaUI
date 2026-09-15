@@ -474,7 +474,7 @@ const darkPalette = {
       divider: white10,
       menuItem: { default: 'transparent', hover: white5, selected: white10 },
     },
-    imageAttachment: { background: `linear-gradient(0deg, #262B34 0%, #3b3e4600 100%)` },
+    imageAttachment: { background: `linear-gradient(0deg, #262B34 0%, #262b3400 100%)` },
     contextDialog: { background: gray50 },
     agentModal: {
       border: 'linear-gradient(224.97deg, #256B6D 0%, #7E2988 100%)',

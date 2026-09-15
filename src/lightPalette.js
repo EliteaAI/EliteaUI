@@ -427,7 +427,7 @@ const lightPalette = {
       actionsGradient: 'linear-gradient(270deg, #FFFFFF 82.5%, #ffffff00 100%)',
     },
     userMessage: {
-      actionsGradient: 'linear-gradient(270deg, #EFF3FA 85.36%, #ecf1f900 100%)',
+      actionsGradient: 'linear-gradient(270deg, #FFFFFF 85.36%, #ffffff00 100%)',
       highlightBackground: skyBlue20,
       highlightBorder: skyBlue40,
     },
