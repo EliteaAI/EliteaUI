@@ -82,7 +82,7 @@ const ConfigurationCard = memo(props => {
           <Typography
             component={Box}
             variant="bodySmall"
-            color="text.default"
+            color="text.primary"
             sx={styles.statusText}
           >
             {statusText}

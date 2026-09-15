@@ -243,7 +243,7 @@ const CustomNodeInput = memo(props => {
                 <Typography
                   component={'div'}
                   variant="bodyMedium"
-                  color={'text.default'}
+                  color={'text.primary'}
                 >
                   Content type:
                 </Typography>

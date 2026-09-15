@@ -316,7 +316,7 @@ const UnifiedDropdown = memo(
                                 <Box sx={styles.labelContainer}>
                                   <Typography
                                     variant="bodyMedium"
-                                    color="text.default"
+                                    color="text.primary"
                                     sx={styles.ellipsisText}
                                   >
                                     {item.label}

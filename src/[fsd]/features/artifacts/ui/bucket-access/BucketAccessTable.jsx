@@ -428,7 +428,7 @@ const BucketAccessTable = memo(props => {
         </Typography>
         <Typography
           variant="bodyMedium"
-          color="text.default"
+          color="text.primary"
           sx={styles.emptyStateSubtitle}
         >
           All users have read/write permissions by default.

@@ -141,7 +141,7 @@ export default function SingleGroupSelect({
                 maxWidth: extraSelectedContent ? 'calc(100% - 16px)' : '100%',
                 whiteSpaceCollapse: 'preserve',
               }}
-              color={'text.default'}
+              color={'text.primary'}
               variant="bodySmall"
             >
               {foundOption?.config_name}
@@ -209,7 +209,7 @@ export default function SingleGroupSelect({
                     )}
                     <Typography
                       sx={{ marginLeft: '16px' }}
-                      color={'text.default'}
+                      color={'text.primary'}
                       variant="bodySmall"
                     >
                       {groupName}

@@ -82,7 +82,7 @@ const GeneratedTokenDialog = memo(props => {
           <Typography
             data-testid="generated-token-dialog-token-name"
             variant="bodySmall"
-            color="text.default"
+            color="text.primary"
           >
             {name}
           </Typography>
@@ -91,7 +91,7 @@ const GeneratedTokenDialog = memo(props => {
               data-testid="generated-token-dialog-token-value"
               sx={styles.tokenText}
               variant="bodyMedium"
-              color="text.default"
+              color="text.primary"
             >
               {token}
             </Typography>

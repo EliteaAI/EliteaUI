@@ -256,7 +256,7 @@ const FolderPermissionsTable = memo(props => {
         </Typography>
         <Typography
           variant="bodyMedium"
-          color="text.default"
+          color="text.primary"
           sx={styles.emptyStateSubtitle}
         >
           Users retain the permissions granted by their project roles.
