@@ -1,6 +1,8 @@
 import { memo, useMemo } from 'react';
 
-import { Box, Typography, alpha } from '@mui/material';
+import { Box, Typography } from '@mui/material';
+
+import { Banner } from '@/[fsd]/shared/ui';
 
 import { formatScore } from '../../lib/helpers';
 
@@ -62,14 +64,15 @@ const ResultsSummaryCards = memo(props => {
         );
       })}
       {pendingHuman > 0 && (
-        <Typography
-          variant="bodySmall"
+        <Box
           sx={styles.pendingNote}
           data-testid="evaluation-summary-pending-human"
         >
-          Awaiting human evaluation — {pendingHuman} {pendingHuman === 1 ? 'result' : 'results'} still need a
-          score. Totals update as each one is saved.
-        </Typography>
+          <Banner.BannerMessage
+            message={`Awaiting human evaluation — ${pendingHuman} ${pendingHuman === 1 ? 'result' : 'results'} still need a score. Totals update as each one is saved.`}
+            variant="info"
+          />
+        </Box>
       )}
     </Box>
   );
@@ -83,7 +86,7 @@ const resultsSummaryCardsStyles = () => ({
     display: 'grid',
     gridTemplateColumns: 'repeat(5, 1fr)',
     gap: '0.75rem',
-    padding: '0.875rem 1.5rem',
+    padding: '1.5rem 1.5rem 0',
   },
   card: ({ palette }) => ({
     display: 'flex',
@@ -96,7 +99,7 @@ const resultsSummaryCardsStyles = () => ({
     boxSizing: 'border-box',
   }),
   cardHighlighted: ({ palette }) => ({
-    backgroundColor: alpha(palette.primary.main, 0.15),
+    backgroundColor: palette.background.card.highlighted,
   }),
   cardLabel: ({ palette }) => ({
     fontSize: '0.75rem',
@@ -110,7 +113,7 @@ const resultsSummaryCardsStyles = () => ({
     whiteSpace: 'nowrap',
   }),
   cardLabelHighlighted: ({ palette }) => ({
-    color: palette.primary.main,
+    color: palette.text.link,
   }),
   cardValue: ({ palette }) => ({
     fontSize: '1rem',
@@ -121,12 +124,9 @@ const resultsSummaryCardsStyles = () => ({
   cardValueHighlighted: ({ palette }) => ({
     color: palette.text.secondary,
   }),
-  pendingNote: ({ palette }) => ({
+  pendingNote: {
     gridColumn: '1 / -1',
-    marginTop: '0.25rem',
-    color: palette.text.default,
-    fontStyle: 'italic',
-  }),
+  },
 });
 
 export default ResultsSummaryCards;

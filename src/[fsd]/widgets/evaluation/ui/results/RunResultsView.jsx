@@ -25,7 +25,14 @@ const EMPTY_DIMENSIONS = [];
  * Evaluation page and any historical run picked on Results History (§8).
  */
 const RunResultsView = memo(props => {
-  const { run, applicationId, isLoading: isRunLoading = false, hasSuite = true, sx = {} } = props;
+  const {
+    run,
+    applicationId,
+    isLoading: isRunLoading = false,
+    hasSuite = true,
+    sx = {},
+    isHistoryView = false,
+  } = props;
 
   const projectId = useSelectedProjectId();
   const { checkPermission } = useCheckPermission();
@@ -233,13 +240,17 @@ const RunResultsView = memo(props => {
       data-testid="evaluation-run-results"
     >
       <Box sx={styles.summarySection}>
-        <Typography
-          variant="labelMedium"
-          sx={styles.runLabel}
-          data-testid="evaluation-run-label"
-        >
-          Run #{run.id}
-        </Typography>
+        {isHistoryView && (
+          <Box sx={styles.runLabelHeader}>
+            <Typography
+              variant="labelMedium"
+              sx={styles.runLabel}
+              data-testid="evaluation-run-label"
+            >
+              Run #{run.id}
+            </Typography>
+          </Box>
+        )}
         <ResultsSummaryCards
           totalScore={summaryData.totalScore}
           cases={summaryData.cases}
@@ -288,8 +299,12 @@ const runResultsViewStyles = () => ({
     display: 'flex',
     flexDirection: 'column',
   },
+  runLabelHeader: ({ palette }) => ({
+    padding: '0.875rem 1.5rem',
+    background: palette.background.default.secondary,
+    borderBottom: `0.0625rem solid ${palette.border.table}`,
+  }),
   runLabel: ({ palette }) => ({
-    padding: '0.55rem 1.5rem 0',
     color: palette.text.secondary,
     fontWeight: 600,
   }),

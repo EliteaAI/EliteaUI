@@ -55,6 +55,7 @@ const light53 = '#F4F5F5';
 const lightStepBorder = '#bdbdbd';
 const dark20 = '#3d445633';
 const dark10 = '#3d44561a';
+const dark2 = '#3d445605';
 const dark5 = '#3d44560d';
 const dark6 = '#3d44560f'; // conversation hover light
 const dark8 = '#3d445614';
@@ -62,6 +63,7 @@ const dark8 = '#3d445614';
 // const dark8 = '#3d445614'; // general hover fallback
 const blue8 = '#6ae8fa14';
 const blueFill8 = '#29b8f514';
+const blue15 = '#29b8f526';
 const blue12 = '#6390fe1f'; // conversation selected light
 const gray30 = '#3B3E46';
 const white15 = '#ffffff26';
@@ -110,6 +112,7 @@ const oldLightPalette = {
       gradientDark: 'linear-gradient(180deg, #FFFFFF 0%, #ffffff00 100%)',
       hoverBorderGradient: 'linear-gradient(0deg, #f7aeff 0%, #F37DFF 100%)',
       hoverShadow: '0px -3px 0.9375rem 0px #e138ff4d',
+      highlighted: blue15,
     },
     interactiveTourPrompt: {
       backdrop: 'rgba(59, 62, 70, 0.5)',
@@ -367,6 +370,7 @@ const oldLightPalette = {
     },
     folder: {
       default: '#ffffff99',
+      secondary: dark5,
       active: '#6390fe1a',
       borderHover: blue03,
       borderActive: blue03,
@@ -695,12 +699,17 @@ const lightPalette = {
       main: blueFill08,
       secondary: blue8,
     },
+    accordion: {
+      default: dark2,
+    },
   },
   border: {
     ...oldLightPalette.border,
     edit: white,
     npsCard: lightColorScheme.accentDark,
     input: white01,
+    folder: grey007,
+    folderCard: grey007,
     chatInput: {
       base: purpleDark,
       glow: purpleLight,

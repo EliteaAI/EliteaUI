@@ -57,6 +57,7 @@ const evaluationDocsButtonStyles = () => ({
     background: 'transparent',
     '&:hover': {
       backgroundColor: palette.background.button.drawerMenu.hover,
+      color: palette.icon.fill.secondary,
     },
     '&:active': {
       backgroundColor: palette.background.button.drawerMenu.selected,

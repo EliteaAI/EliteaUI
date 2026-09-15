@@ -30,8 +30,9 @@ DatasetSectionHeader.displayName = 'DatasetSectionHeader';
 
 /** @type {MuiSx} */
 const datasetSectionHeaderStyles = () => ({
-  manageLink: ({ palette }) => ({
+  manageLink: ({ palette, typography }) => ({
     color: palette.text.primary,
+    fontFamily: typography.fontFamily,
     textDecoration: 'underline',
     textDecorationStyle: 'solid',
     cursor: 'pointer',
