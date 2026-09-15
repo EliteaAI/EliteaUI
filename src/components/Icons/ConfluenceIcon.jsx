@@ -1,4 +1,4 @@
-import { useTheme } from '@emotion/react';
+import { useTheme } from '@mui/material';
 
 const ConfluenceIcon = props => {
   const theme = useTheme();
@@ -8,7 +8,7 @@ const ConfluenceIcon = props => {
       height="16"
       viewBox="0 0 16 16"
       xmlns="http://www.w3.org/2000/svg"
-      fill={theme.palette.icon.fill.primary}
+      fill={theme.palette.icon.primary}
       {...props}
     >
       <path

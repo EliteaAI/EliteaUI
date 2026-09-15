@@ -171,7 +171,7 @@ const styles = {
   getArrowLeftColor:
     disableBackward =>
     ({ palette }) => ({
-      color: disableBackward ? palette.background.button.primary.disabled : 'currentcolor',
+      color: disableBackward ? palette.text.disabled : 'currentcolor',
     }),
   contentBox: {
     flex: 1,
@@ -199,7 +199,6 @@ const styles = {
   getArrowRightColor:
     (disableForward, isMockingThinking) =>
     ({ palette }) => ({
-      color:
-        disableForward || isMockingThinking ? palette.background.button.primary.disabled : 'currentcolor',
+      color: disableForward || isMockingThinking ? palette.action.disabledBackground : 'currentcolor',
     }),
 };

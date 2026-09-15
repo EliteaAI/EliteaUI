@@ -20,7 +20,7 @@ StyledExpandMoreIcon.displayName = 'StyledExpandMoreIcon';
 /** @type {MuiSx} */
 const styledExpandMoreIconStyles = () => ({
   icon: ({ palette }) => ({
-    color: palette.icon.fill.default,
+    color: palette.icon.default,
   }),
 });
 

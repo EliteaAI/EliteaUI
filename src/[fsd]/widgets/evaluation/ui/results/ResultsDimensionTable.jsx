@@ -167,7 +167,7 @@ const resultsDimensionTableStyles = () => ({
     gridTemplateColumns: GRID_TEMPLATE,
     alignItems: 'center',
     minHeight: '3.5rem',
-    borderBottom: `0.0625rem solid ${palette.background.dataGrid.main}`,
+    borderBottom: `0.0625rem solid ${palette.border.lines}`,
   }),
   cell: {
     display: 'flex',
@@ -186,11 +186,11 @@ const resultsDimensionTableStyles = () => ({
     justifyContent: 'center',
     padding: '0.125rem 0.5rem',
     borderRadius: '1rem',
-    border: `0.0625rem solid ${palette.background.dataGrid.main}`,
+    border: `0.0625rem solid ${palette.border.lines}`,
     backgroundColor: 'transparent',
   }),
   engineText: ({ palette }) => ({
-    color: palette.text.default,
+    color: palette.text.primary,
     fontSize: '0.75rem',
     lineHeight: '1rem',
   }),

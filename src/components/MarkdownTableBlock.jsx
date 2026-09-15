@@ -10,6 +10,7 @@ import {
   TableRow,
   ThemeProvider,
   tableCellClasses,
+  useTheme,
 } from '@mui/material';
 import Table from '@mui/material/Table';
 
@@ -20,7 +21,6 @@ import useCopyDownloadHandlers from '@/hooks/chat/useCopyEventHandlers';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import useDownloadTable, { downloadTableOptions } from '@/hooks/useDownloadTable';
 import useToast from '@/hooks/useToast';
-import { useTheme } from '@emotion/react';
 
 import EditingPlaceholder from './Chat/EditingPlaceholder';
 import { useCheckIsBlockEditing } from './CodeBlock';
@@ -124,9 +124,7 @@ export default function MarkdownTableBlock({
               >
                 <EditIcon
                   sx={{ fontSize: 16 }}
-                  fill={
-                    !shouldDisableEdit ? theme.palette.icon.fill.default : theme.palette.icon.fill.disabled
-                  }
+                  fill={!shouldDisableEdit ? theme.palette.icon.default : theme.palette.icon.disabled}
                 />
               </IconButton>
             </span>
@@ -149,7 +147,7 @@ export default function MarkdownTableBlock({
             }}
             onClick={onClickCopy}
           >
-            <ContentCopyIcon sx={{ fontSize: '16px', color: theme.palette.icon.fill.default }} />
+            <ContentCopyIcon sx={{ fontSize: '16px', color: theme.palette.icon.default }} />
           </IconButton>
         </Tooltip>
       </Box>

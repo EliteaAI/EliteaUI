@@ -5,7 +5,7 @@ import { filterProps } from '@/common/utils.jsx';
 
 export const eliteaTreeItemStyle = (theme, isActive) => ({
   '& > .MuiTreeItem-content:first-of-type': {
-    background: isActive ? `${theme.palette.background.select.hover} !important` : 'transparent',
+    background: isActive ? `${theme.palette.background.interactiveItem.hover} !important` : 'transparent',
   },
   '& .MuiTreeItem-label': {
     ...theme.typography.bodyMedium,
@@ -16,7 +16,7 @@ export const eliteaTreeItemStyle = (theme, isActive) => ({
   },
   '& .MuiTreeItem-content': {
     '&.Mui-selected': {
-      backgroundColor: `${theme.palette.background.select.selected.default} !important`,
+      backgroundColor: `${theme.palette.background.selectedItem.default} !important`,
     },
   },
   '& .Mui-selected > .MuiTreeItem-label:hover': {
@@ -29,7 +29,7 @@ export const eliteaTreeItemStyle = (theme, isActive) => ({
     backgroundColor: 'transparent !important',
     '& .MuiTreeItem-checkbox': {
       '& svg': {
-        fill: theme.palette.icon.fill.secondary,
+        fill: theme.palette.icon.secondary,
       },
     },
   },
@@ -38,11 +38,11 @@ export const eliteaTreeItemStyle = (theme, isActive) => ({
   },
   '& .MuiTreeItem-checkbox': {
     '& svg': {
-      fill: theme.palette.icon.fill.secondary,
+      fill: theme.palette.icon.secondary,
     },
   },
   '& .Mui-focused': {
-    background: 'transparent', //`${theme.palette.background.select.hover} !important`
+    background: 'transparent', //`${theme.palette.background.interactiveItem.hover} !important`
   },
   // '& li .MuiTreeItem-content': {
   //   paddingLeft: '48px !important',

@@ -55,14 +55,17 @@ const theme = createTheme({
   palette: {
     background: {
       surface: { interactive: { default: '#111' } },
-      wrongBkg: '#511',
-      errorBkg: '#311',
+      wrong: '#511',
+      error: '#311',
       warning: '#a60',
-      button: { primary: { disabled: '#666' } },
     },
-    border: { table: '#222', lines: '#333' },
-    split: { pressed: '#444', hover: '#555' },
+    border: { lines: '#333' },
     text: { info: '#7af' },
+    components: {
+      split: { background: { pressed: '#444', hover: '#555' } },
+      button: { background: { primary: { disabled: '#666' } } },
+      table: { border: '#222' },
+    },
   },
 });
 

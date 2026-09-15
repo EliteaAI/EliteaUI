@@ -1,13 +1,12 @@
 import React from 'react';
 
-import { Box, Link } from '@mui/material';
+import { Box, Link, useTheme } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip.jsx';
 import { useForkedFromSourceName } from '@/[fsd]/entities/fork/lib';
 import { useLazySkillDetailsQuery } from '@/[fsd]/features/skill';
 import { buildForkedEntityHref } from '@/common/utils.jsx';
 import ForkIcon from '@/components/Icons/ForkIcon.jsx';
-import { useTheme } from '@emotion/react';
 
 export const IconLinkWithToolTip = props => {
   const { meta, type, disabled } = props;
@@ -42,7 +41,7 @@ export const IconLinkWithToolTip = props => {
         >
           <ForkIcon
             sx={{ fontSize: '16px' }}
-            fill={theme.palette.icon.fill.default || theme.palette.icon.fill.secondary}
+            fill={theme.palette.icon.default || theme.palette.icon.secondary}
           />
         </Link>
       </StyledTooltip>

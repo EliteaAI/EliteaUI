@@ -32,7 +32,7 @@ const countBadgeStyles = () => ({
     flexShrink: 0,
     padding: '0.25rem 0.5rem',
     borderRadius: '1.0625rem',
-    border: `0.0625rem solid ${palette.border.cardsOutlines}`,
+    border: `0.0625rem solid ${palette.border.default}`,
   }),
 });
 

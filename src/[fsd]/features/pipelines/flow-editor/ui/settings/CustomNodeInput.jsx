@@ -142,7 +142,7 @@ const CustomNodeInput = memo(props => {
                 >
                   <CopyIcon
                     sx={{ fontSize: '1rem' }}
-                    fill={!jsonString ? theme.palette.icon.fill.disabled : undefined}
+                    fill={!jsonString ? theme.palette.icon.disabled : undefined}
                   />
                 </IconButton>
               </Box>
@@ -173,12 +173,12 @@ const CustomNodeInput = memo(props => {
                 {minHeight === MAX_HEIGHT ? (
                   <CollapseIcon
                     sx={{ fontSize: '1rem' }}
-                    fill={theme.palette.icon.fill.secondary}
+                    fill={theme.palette.icon.secondary}
                   />
                 ) : (
                   <ExpandIcon
                     sx={{ fontSize: '1rem' }}
-                    fill={theme.palette.icon.fill.secondary}
+                    fill={theme.palette.icon.secondary}
                   />
                 )}
               </IconButton>
@@ -282,7 +282,7 @@ const CustomNodeInput = memo(props => {
                   onClick={onExitFullScreen}
                 >
                   <CloseIcon
-                    fill={theme.palette.icon.fill.default}
+                    fill={theme.palette.icon.default}
                     sx={{ fontSize: '1rem', cursor: 'pointer' }}
                   />
                 </IconButton>

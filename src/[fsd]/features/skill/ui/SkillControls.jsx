@@ -34,7 +34,7 @@ import RouteDefinitions from '@/routes';
 import { useDeleteSkillMutation } from '../api';
 
 const sectionLabelSx = ({ palette }) => ({
-  color: palette.text.default,
+  color: palette.text.primary,
   fontSize: '.75rem',
   lineHeight: '1rem',
 });

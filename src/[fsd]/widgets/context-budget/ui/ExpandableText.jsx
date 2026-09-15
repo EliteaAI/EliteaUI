@@ -90,9 +90,9 @@ const expandableTextStyles = (maxLines, expanded) => ({
     cursor: 'pointer',
     textDecoration: 'underline',
     fontFamily: typography.fontFamily,
-    color: palette.background.button.primary.hover,
+    color: palette.text.primary,
     '&:hover': {
-      color: palette.text.button.showMore,
+      color: palette.text.showMore,
     },
   }),
 });

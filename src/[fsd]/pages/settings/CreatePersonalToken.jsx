@@ -247,7 +247,7 @@ const createPersonalTokenStyles = () => ({
   },
   backIcon: {
     fontSize: '1rem',
-    fill: ({ palette }) => palette.icon.fill.default,
+    fill: ({ palette }) => palette.icon.default,
   },
   loadingIndicator: {
     ml: '0.5rem',

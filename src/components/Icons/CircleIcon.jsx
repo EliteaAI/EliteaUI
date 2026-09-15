@@ -1,4 +1,4 @@
-import { useTheme } from '@emotion/react';
+import { useTheme } from '@mui/material';
 
 export default function CircleIcon(props) {
   const theme = useTheme();
@@ -16,7 +16,7 @@ export default function CircleIcon(props) {
         cx="8"
         cy="8"
         r="8"
-        fill={props.fill || theme.palette.icon.fill.default}
+        fill={props.fill || theme.palette.icon.default}
       />
     </svg>
   );

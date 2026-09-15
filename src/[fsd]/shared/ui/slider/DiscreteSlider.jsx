@@ -197,7 +197,7 @@ const styles = {
     },
     '& .MuiSlider-rail': {
       height: '0.25rem',
-      backgroundColor: palette.border.lines,
+      backgroundColor: palette.components.slider.track,
       opacity: 1,
     },
     '& .MuiSlider-track': {
@@ -218,7 +218,7 @@ const styles = {
       transform: 'translate(-50%, -50%)',
       top: '50%',
       '&.MuiSlider-markActive': {
-        backgroundColor: palette.text.primary,
+        backgroundColor: palette.components.slider.track,
       },
     },
   }),

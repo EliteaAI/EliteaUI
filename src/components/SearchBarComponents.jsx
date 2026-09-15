@@ -1,10 +1,9 @@
 import { useCallback, useMemo, useState } from 'react';
 
-import { Box, CircularProgress, InputBase, List, ListItem, ListSubheader } from '@mui/material';
+import { Box, CircularProgress, InputBase, List, ListItem, ListSubheader, useTheme } from '@mui/material';
 
 import { typographyVariants } from '@/[fsd]/shared/config/theme';
 import { SUGGESTION_PAGE_SIZE } from '@/common/constants';
-import { useTheme } from '@emotion/react';
 
 import CancelIcon from './Icons/CancelIcon';
 import RemoveIcon from './Icons/RemoveIcon';
@@ -16,9 +15,9 @@ export const SearchPanel = styled('div')(({ theme }) => ({
   gap: '6px',
   flexWrap: 'nowrap',
   borderRadius: 27,
-  backgroundColor: theme.palette.background.button.default,
+  backgroundColor: theme.palette.background.interactiveItem.hover,
   '&:hover': {
-    backgroundColor: theme.palette.background.button.hover,
+    backgroundColor: theme.palette.background.interactiveItem.hover,
   },
   boxSizing: 'border-box',
   padding: '8px 12px',
@@ -50,7 +49,7 @@ export const StyledSearchIcon = props => {
       }}
       {...props}
     >
-      <SearchIcon fill={disabled ? theme.palette.icon.fill.disabled : theme.palette.icon.fill.default} />
+      <SearchIcon fill={disabled ? theme.palette.icon.disabled : theme.palette.icon.default} />
     </StyledIconWrapper>
   );
 };
@@ -58,9 +57,9 @@ export const StyledSearchIcon = props => {
 const MySendIcon = styled(SendIcon)(({ theme }) => ({
   fontSize: '16px',
   marginRight: '0px',
-  fill: theme.palette.icon.fill.default,
+  fill: theme.palette.icon.default,
   '&:hover': {
-    fill: theme.palette.primary.main,
+    fill: theme.palette.icon.accent,
   },
 }));
 
@@ -102,7 +101,7 @@ export const StyledInputBase = styled(InputBase)(({ theme }) => ({
     fontSize: '14px',
     lineHeight: '24px',
     fontWeight: 400,
-    color: theme.palette.text.default,
+    color: theme.palette.text.primary,
   },
 }));
 
@@ -130,10 +129,10 @@ export const StyledListItem = styled(ListItem)(({ theme }) => ({
   padding: '6px 16px',
   cursor: 'pointer',
   '&:hover': {
-    backgroundColor: theme.palette.background.select?.hover || theme.palette.background.button.hover,
+    backgroundColor: theme.palette.background.interactiveItem.hover,
   },
   '&.Mui-disabled': {
-    color: theme.palette.text.button.disabled,
+    color: theme.palette.text.disabled,
     opacity: '1',
   },
 }));

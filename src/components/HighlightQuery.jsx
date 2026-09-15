@@ -7,7 +7,7 @@ import styled from '@emotion/styled';
 
 const HighlightText = styled('span')(
   ({ theme }) => `
-background: ${theme.palette.background.text.highlight};
+background: ${theme.palette.components.highlightQuery.background};
 mix-blend-mode: ${theme.palette.mode === 'dark' ? 'lighten' : 'darken'};
 color: ${theme.palette.text.secondary};
 `,

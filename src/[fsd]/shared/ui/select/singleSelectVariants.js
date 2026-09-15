@@ -9,13 +9,13 @@ export const eliteaSingleSelectColorStyle = theme => ({
         color: theme.palette.text.primary,
       },
       placeholder: {
-        color: theme.palette.text.default,
+        color: theme.palette.text.primary,
       },
       input: {
         color: theme.palette.text.secondary,
       },
       selectValue: {
-        color: theme.palette.text.select.selected.primary,
+        color: theme.palette.components.select.text.selected.primary,
       },
       underline: {
         color: theme.palette.border.lines,
@@ -39,10 +39,10 @@ export const eliteaSingleSelectColorStyle = theme => ({
     },
     disabled: {
       label: {
-        color: theme.palette.text.button.disabled,
+        color: theme.palette.text.disabled,
       },
       input: {
-        color: theme.palette.text.default,
+        color: theme.palette.text.primary,
       },
       underline: {
         color: theme.palette.border.lines,
@@ -50,10 +50,10 @@ export const eliteaSingleSelectColorStyle = theme => ({
     },
     error: {
       underline: {
-        color: theme.palette.icon.fill.error,
+        color: theme.palette.icon.error,
       },
       helperText: {
-        color: theme.palette.icon.fill.error,
+        color: theme.palette.icon.error,
       },
     },
   },

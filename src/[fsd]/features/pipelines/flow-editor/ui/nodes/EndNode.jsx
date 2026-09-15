@@ -50,7 +50,9 @@ const endNodeStyles = (data, isRunningPipeline, selected) => ({
     padding: '0.5rem 1rem 0.5rem 0.75rem',
     borderRadius: '0.5rem',
     border: `${data?.isPerforming ? '2px dashed' : '1px solid'} ${
-      data?.isPerforming || (!isRunningPipeline && selected) ? palette.primary.main : palette.border.flowNode
+      data?.isPerforming || (!isRunningPipeline && selected)
+        ? palette.primary.main
+        : palette.components.flowEditor.node.border
     }`,
     background: palette.background.default.tertiary,
   }),
@@ -66,7 +68,7 @@ const endNodeStyles = (data, isRunningPipeline, selected) => ({
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    border: `1px solid ${palette.border.flowNode}`,
+    border: `1px solid ${palette.components.flowEditor.node.border}`,
     color: palette.text.secondary,
     marginRight: '0.5rem',
   }),

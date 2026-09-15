@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import { IconButton } from '@mui/material';
+import { IconButton, useTheme } from '@mui/material';
 
 import DoubleLeftIcon from '@/components/Icons/DoubleLeftIcon';
 import DoubleRightIcon from '@/components/Icons/DoubleRightIcon';
@@ -8,7 +8,6 @@ import useIsSmallWindow from '@/hooks/useIsSmallWindow';
 import useViewMode from '@/hooks/useViewMode';
 import PipelineConfigurationForm from '@/pages/Applications/Components/Applications/PipelineConfigurationForm.jsx';
 import { ContentContainer } from '@/pages/Common/index.js';
-import { useTheme } from '@emotion/react';
 
 const GeneralFormPanel = ({ applicationId, onCollapsed }) => {
   const theme = useTheme();
@@ -62,12 +61,12 @@ const GeneralFormPanel = ({ applicationId, onCollapsed }) => {
           >
             {!collapsed ? (
               <DoubleLeftIcon
-                fill={theme.palette.icon.fill.default}
+                fill={theme.palette.icon.default}
                 width={16}
               />
             ) : (
               <DoubleRightIcon
-                fill={theme.palette.icon.fill.default}
+                fill={theme.palette.icon.default}
                 width={16}
               />
             )}

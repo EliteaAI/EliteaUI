@@ -117,12 +117,12 @@ const flowEditorStyles = () => ({
 
     '&:hover': {
       cursor: 'pointer',
-      border: `.0625rem solid ${palette.background.button.primary.disabled}`,
-      background: palette.background.dataGrid.main,
+      border: `.0625rem solid ${palette.action.disabledBackground}`,
+      background: palette.background.default.secondary,
 
       svg: {
         path: {
-          fill: palette.text.secondary,
+          fill: palette.icon.secondary,
         },
       },
     },

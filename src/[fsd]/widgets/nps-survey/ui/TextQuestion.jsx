@@ -46,19 +46,19 @@ const styles = {
         border: '1px solid rgba(99, 144, 254, 1) !important',
       },
     },
-    '& .MuiInputBase-input': {
+    '& .MuiInputBase-input': ({ palette }) => ({
       fontFamily: '"Montserrat", sans-serif',
       fontWeight: 500,
       fontSize: '0.875rem',
       lineHeight: '1.5rem',
-      color: '#0E131D',
+      color: palette.text.alwaysDark,
       maxHeight: '5rem !important',
 
       '&::placeholder': {
-        color: '#777A83',
+        color: palette.components.npsSurvey.text.placeholder,
         opacity: 1,
       },
-    },
+    }),
   },
 };
 

@@ -148,11 +148,11 @@ const addDimensionMenuStyles = () => ({
       height: '0.75rem',
     },
     '& svg path': {
-      fill: palette.text.secondary,
+      fill: palette.icon.secondary,
     },
     '&:hover': {
       borderColor: palette.border.lines,
-      backgroundColor: palette.background.tabButton.default,
+      backgroundColor: palette.background.surface.interactive.default,
     },
   }),
   menuPaper: ({ palette }) => ({
@@ -174,14 +174,14 @@ const addDimensionMenuStyles = () => ({
     padding: '0.5rem 1rem',
     backgroundColor: palette.background.default.secondary,
     '&:hover': {
-      backgroundColor: palette.background.tabButton.default,
+      backgroundColor: palette.background.surface.interactive.default,
     },
   }),
   menuIcon: ({ palette }) => ({
     fontSize: '1rem',
     flexShrink: 0,
     '& path': {
-      fill: palette.icon.fill.default,
+      fill: palette.icon.default,
     },
   }),
   svgIcon: ({ palette }) => ({
@@ -192,7 +192,7 @@ const addDimensionMenuStyles = () => ({
       height: '1rem',
     },
     '& path': {
-      fill: palette.icon.fill.default,
+      fill: palette.icon.default,
     },
   }),
   menuText: ({ palette }) => ({

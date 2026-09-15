@@ -663,7 +663,7 @@ const getStyles = () => ({
     minWidth: 0,
     '&:hover': {
       '& svg': {
-        fill: ({ palette }) => palette.icon.fill.secondary,
+        fill: ({ palette }) => palette.icon.secondary,
       },
     },
   },

@@ -72,7 +72,7 @@ const folderViewHeaderStyles = () => ({
   },
   folderIcon: ({ palette }) => ({
     fontSize: '1rem',
-    color: palette.icon.fill.default,
+    color: palette.icon.default,
     flexShrink: 0,
   }),
   folderName: ({ palette }) => ({
@@ -87,11 +87,11 @@ const folderViewHeaderStyles = () => ({
     flexShrink: 0,
   }),
   closeButton: ({ palette }) => ({
-    color: palette.icon.fill.default,
+    color: palette.icon.default,
     backgroundColor: 'transparent',
     '&:hover': {
-      color: palette.icon.fill.secondary,
-      backgroundColor: palette.background.button.secondary.default,
+      color: palette.icon.secondary,
+      backgroundColor: palette.background.surface.interactive.active,
     },
   }),
   closeIcon: {

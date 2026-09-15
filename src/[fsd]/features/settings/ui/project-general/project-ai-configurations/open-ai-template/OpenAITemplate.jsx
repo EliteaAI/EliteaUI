@@ -152,7 +152,7 @@ const getStyles = () => ({
   },
   actionIcon: ({ palette }) => ({
     fontSize: '0.875rem',
-    fill: palette.icon.fill.default,
+    fill: palette.icon.default,
   }),
 });
 

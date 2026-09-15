@@ -155,7 +155,7 @@ const ApplicationControls = memo(props => {
         key: 'version',
         label: (
           <Box
-            sx={({ palette }) => ({ color: palette.text.default, fontSize: '.75rem', lineHeight: '1rem' })}
+            sx={({ palette }) => ({ color: palette.text.primary, fontSize: '.75rem', lineHeight: '1rem' })}
           >
             VERSION
           </Box>
@@ -213,7 +213,7 @@ const ApplicationControls = memo(props => {
         key: isFromPipeline ? 'pipeline' : 'agent',
         label: (
           <Box
-            sx={({ palette }) => ({ color: palette.text.default, fontSize: '.75rem', lineHeight: '1rem' })}
+            sx={({ palette }) => ({ color: palette.text.primary, fontSize: '.75rem', lineHeight: '1rem' })}
           >
             {isFromPipeline ? 'PIPELINE' : 'AGENT'}
           </Box>

@@ -122,7 +122,7 @@ const evaluationRunRowStyles = (isSelected, gridTemplateColumns, delta) => ({
     minHeight: '2.5rem',
     flexShrink: 0,
     cursor: 'pointer',
-    borderBottom: `0.0625rem solid ${palette.border.table}`,
+    borderBottom: `0.0625rem solid ${palette.border.default}`,
     backgroundColor: isSelected ? palette.background.surface.interactive.dragging : 'transparent',
     borderRadius: isSelected ? '0.5rem' : 0,
     transition: 'background-color 0.2s ease',
@@ -183,8 +183,8 @@ const evaluationRunRowStyles = (isSelected, gridTemplateColumns, delta) => ({
       whiteSpace: 'nowrap',
       color: variant ? palette.icon.indexResult[variant] : palette.text.secondary,
       backgroundColor: variant
-        ? palette.background.indexResult[variant]
-        : palette.background.tabButton.default,
+        ? palette.alert[variant]?.background
+        : palette.background.surface.interactive.default,
     };
   },
   actions: {

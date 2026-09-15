@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Box, debounce } from '@mui/material';
+import { Box, debounce, useTheme } from '@mui/material';
 
 import { AGENT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
@@ -8,7 +8,6 @@ import { useFieldFocus } from '@/[fsd]/shared/lib/hooks';
 import { Input, Text } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { MAX_WELCOME_MESSAGE_LENGTH, PROMPT_PAYLOAD_KEY } from '@/common/constants';
-import { useTheme } from '@emotion/react';
 
 const WelcomeMessage = memo(props => {
   const { welcome_message, onChangeWelcomeMessage, style, disabled } = props;

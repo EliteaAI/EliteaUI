@@ -92,14 +92,14 @@ const styles = {
     gap: spacing(1.5),
     padding: spacing(2),
     borderRadius: '0.5rem',
-    backgroundColor: palette.background.warning8,
-    border: `0.0625rem solid ${palette.background.warning40}`,
+    backgroundColor: palette.background.warning,
+    border: `0.0625rem solid ${palette.border.attention}`,
   }),
   warningIcon: ({ palette }) => ({
     flexShrink: 0,
     width: '1rem',
     height: '1rem',
-    fill: palette.background.warning,
+    fill: palette.icon.warning,
   }),
   warningText: ({ palette }) => ({
     flex: 1,

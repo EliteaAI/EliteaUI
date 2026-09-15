@@ -170,7 +170,7 @@ const newBucketItemStyles = () => ({
     color: palette.text.secondary,
     padding: '0.125rem 0',
     '&::placeholder': {
-      color: palette.text.button.disabled,
+      color: palette.text.disabled,
       opacity: 1,
     },
   }),
@@ -184,7 +184,7 @@ const newBucketItemStyles = () => ({
     padding: '0.25rem',
     color: palette.success.main,
     '&.Mui-disabled': {
-      color: palette.text.button.disabled,
+      color: palette.text.disabled,
     },
   }),
   cancelButton: {

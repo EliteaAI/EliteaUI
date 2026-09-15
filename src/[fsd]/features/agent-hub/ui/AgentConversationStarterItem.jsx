@@ -66,14 +66,14 @@ const starterItemStyles = () => ({
   starterItem: ({ palette }) => ({
     padding: '0.75rem 1rem',
     borderRadius: '1rem',
-    backgroundColor: palette.background.conversationStarters.default,
+    backgroundColor: palette.components.conversation.background.starter.strong,
     cursor: 'pointer',
     transition: 'background-color 0.2s ease',
     minHeight: '2.5rem',
     display: 'flex',
     alignItems: 'center',
     '&:hover': {
-      backgroundColor: palette.background.conversationStarters.hover,
+      backgroundColor: palette.components.conversation.background.starter.subtle,
     },
   }),
   starterText: ({ palette }) => ({

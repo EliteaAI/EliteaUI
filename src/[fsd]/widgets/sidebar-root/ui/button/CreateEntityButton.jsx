@@ -355,7 +355,7 @@ const CreateEntityButton = memo(props => {
                   {item.label}
                   {currentDropdownItem?.label === item.label && (
                     <CheckIcon
-                      fill={theme.palette.text.secondary}
+                      fill={theme.palette.icon.secondary}
                       sx={styles.checkIcon}
                     />
                   )}
@@ -424,14 +424,14 @@ const createEntityButtonStyles = sideBarCollapsed => ({
       justifyContent: 'space-between',
       padding: spacing(1, 2),
       cursor: isDisabled ? 'not-allowed' : 'pointer',
-      color: isDisabled ? palette.text.default : palette.text.secondary,
+      color: isDisabled ? palette.text.primary : palette.text.secondary,
       fontSize: '0.875rem',
       '&:hover': !isDisabled && {
         backgroundColor: palette.action.hover,
       },
       ...(isSelected &&
         !isDisabled && {
-          backgroundColor: palette.split.pressed,
+          backgroundColor: palette.background.selectedItem.default,
         }),
     }),
   checkIcon: {

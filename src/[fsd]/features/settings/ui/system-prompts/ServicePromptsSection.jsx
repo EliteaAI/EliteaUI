@@ -545,7 +545,7 @@ const servicePromptsSectionStyles = () => ({
     '& svg': {
       width: '1rem',
       height: '1rem',
-      fill: palette.icon?.fill?.send || palette.text.primary,
+      fill: palette.icon?.fill?.send || palette.icon.default,
     },
   }),
   cards: ({ spacing }) => ({
@@ -555,7 +555,7 @@ const servicePromptsSectionStyles = () => ({
     gap: spacing(1.5),
   }),
   card: ({ palette, breakpoints }) => ({
-    border: `0.0625rem solid ${palette.border.table}`,
+    border: `0.0625rem solid ${palette.border.default}`,
     backgroundColor: palette.background.default.secondary,
     borderRadius: '0.75rem',
     flex: '0 0 calc((100% - 1.5rem) / 3)',
@@ -648,7 +648,7 @@ const servicePromptsSectionStyles = () => ({
   }),
   editButton: ({ palette }) => ({
     '& svg': {
-      fill: palette.icon?.fill?.send || palette.text.primary,
+      fill: palette.icon?.fill?.send || palette.icon.default,
     },
   }),
   editIcon: {

@@ -1,6 +1,6 @@
 import { memo, useCallback, useMemo } from 'react';
 
-import { Box, Tooltip, Typography } from '@mui/material';
+import { Box, Tooltip, Typography, useTheme } from '@mui/material';
 
 import { ARTIFACT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/artifactTourTargets.constants';
 import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
@@ -11,7 +11,6 @@ import { PERMISSIONS } from '@/common/constants';
 import DeleteEntityButton from '@/components/DeleteEntityButton';
 import DownloadIcon from '@/components/Icons/DownloadIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
-import { useTheme } from '@emotion/react';
 
 import BreadcrumbNavigation from './BreadcrumbNavigation';
 import BucketInfoTooltip from './BucketInfoTooltip';
@@ -54,8 +53,8 @@ const ArtifactTableToolbar = memo(props => {
   );
 
   const hasSelection = rowSelectionModel.length > 0;
-  const disabledIconColor = theme.palette.icon.fill.disabled;
-  const defaultIconColor = theme.palette.icon.fill.default;
+  const disabledIconColor = theme.palette.icon.disabled;
+  const defaultIconColor = theme.palette.icon.default;
 
   return (
     <Box sx={styles.toolbarContainer}>
@@ -216,7 +215,7 @@ const artifactTableToolbarStyles = () => ({
   },
   actionButton: ({ palette }) => ({
     '&:hover': {
-      backgroundColor: palette.background.button.secondary.hover,
+      backgroundColor: palette.background.surface.interactive.selected,
     },
   }),
   actionIcon: {

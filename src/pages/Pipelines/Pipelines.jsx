@@ -3,7 +3,7 @@ import { memo, useCallback, useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { useLocation, useMatch, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, useTheme } from '@mui/material';
 
 import { ToolbarImportButton } from '@/[fsd]/entities/import-wizard/ui';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
@@ -34,7 +34,6 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useTags from '@/hooks/useTags';
 import { useHasAdminPermissionOfThisEntity } from '@/hooks/users/usePermissions';
 import RouteDefinitions, { PathSessionMap } from '@/routes';
-import { useTheme } from '@emotion/react';
 
 import Latest from './Latest';
 import MyLiked from './MyLiked';

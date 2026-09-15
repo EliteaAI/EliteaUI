@@ -37,7 +37,7 @@ const getStyles = () => ({
   itemCard: ({ palette }) => ({
     cursor: 'pointer',
     backgroundColor: palette.background.default.secondary,
-    border: `0.0625rem solid ${palette.border.cardsOutlines}`,
+    border: `0.0625rem solid ${palette.border.default}`,
     backgroundImage: 'none',
     borderRadius: '0.5rem',
     padding: '0.5rem 1.25rem',

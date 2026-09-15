@@ -100,7 +100,7 @@ const catalogBodyStyles = () => ({
     padding: '1.5rem',
   },
   railDivider: ({ palette }) => ({
-    borderColor: palette.border.table,
+    borderColor: palette.border.default,
   }),
   railWrapper: {
     padding: '1.5rem',

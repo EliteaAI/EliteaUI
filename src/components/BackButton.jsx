@@ -132,7 +132,7 @@ const backButtonStyles = () => ({
   iconButton: ({ palette }) => ({
     margin: '0',
     '&:hover svg path': {
-      fill: palette.icon.fill.secondary,
+      fill: palette.icon.secondary,
     },
   }),
 });

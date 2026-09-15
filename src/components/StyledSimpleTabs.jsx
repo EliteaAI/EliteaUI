@@ -2,10 +2,9 @@ import * as React from 'react';
 
 import PropTypes from 'prop-types';
 
-import { Box, Tab, Tabs } from '@mui/material';
+import { Box, Tab, Tabs, useTheme } from '@mui/material';
 
 import { AccessibilityAriaHelpers } from '@/[fsd]/shared/lib/helpers';
-import { useTheme } from '@emotion/react';
 
 import { CustomTabPanel, StyledTabBar } from './StyledTabs';
 
@@ -54,7 +53,7 @@ export default function StyledSimpleTabs({
           boxSizing: 'border-box',
           padding: '0 1.5rem',
           paddingBottom: '12px',
-          borderBottom: `1px solid ${theme.palette.border.table}`,
+          borderBottom: `1px solid ${theme.palette.border.default}`,
           ...tabSX,
         }}
       >

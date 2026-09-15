@@ -69,12 +69,12 @@ const suiteCardStyles = () => ({
     gap: '0.5rem',
     padding: '0.5rem 1rem',
     borderRadius: '0.75rem',
-    border: `0.0625rem solid ${palette.border.table}`,
-    backgroundColor: palette.background.folder.default,
+    border: `0.0625rem solid ${palette.border.default}`,
+    backgroundColor: palette.background.panel,
     cursor: 'pointer',
     transition: 'background-color 0.15s, border-color 0.15s',
     '&:hover': {
-      backgroundColor: palette.background.tabButton.default,
+      backgroundColor: palette.background.surface.interactive.default,
       borderColor: palette.border.lines,
     },
     '&:hover .MuiButton-root': {
@@ -94,17 +94,17 @@ const suiteCardStyles = () => ({
   deleteButton: ({ palette }) => ({
     opacity: 0,
     padding: '0.25rem',
-    color: palette.icon.fill.default,
+    color: palette.icon.default,
     transition: 'opacity 0.15s',
   }),
   description: ({ palette }) => ({
-    color: palette.text.default,
+    color: palette.text.primary,
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
     minHeight: '1.25rem',
   }),
   dataset: ({ palette }) => ({
-    color: palette.text.default,
+    color: palette.text.primary,
   }),
 });

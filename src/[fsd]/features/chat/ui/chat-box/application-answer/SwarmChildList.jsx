@@ -61,7 +61,7 @@ const swarmChildListStyles = () => ({
   accordion: ({ palette }) => ({
     backgroundColor: palette.background.default.secondary,
     borderRadius: '0.5rem !important',
-    border: `0.0625rem solid ${palette.border.table}`,
+    border: `0.0625rem solid ${palette.border.default}`,
     '&:before': { display: 'none' },
     '&.Mui-expanded': { margin: 0 },
   }),

@@ -12,11 +12,11 @@ import {
   Paper,
   Popper,
   Typography,
+  useTheme,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 
 import CheckedIcon from '@/assets/checked-icon.svg?react';
-import { useTheme } from '@emotion/react';
 
 import ArrowDownIcon from './Icons/ArrowDownIcon';
 
@@ -51,22 +51,22 @@ export default function SplitButton({ defaultValue = '', options = [], onClick, 
         padding: '8px 20px 8px 20px',
 
         '&:hover': {
-          backgroundColor: theme.palette.background.select.hover,
+          backgroundColor: theme.palette.background.interactiveItem.hover,
         },
 
         '&.Mui-selected': {
-          backgroundColor: theme.palette.background.select.selected.default,
+          backgroundColor: theme.palette.background.selectedItem.default,
         },
 
         '&.Mui-selected:hover': {
-          backgroundColor: theme.palette.background.select.selected.hover,
+          backgroundColor: theme.palette.background.selectedItem.hover,
         },
       },
     }),
     [
-      theme.palette.background.select.hover,
-      theme.palette.background.select.selected.default,
-      theme.palette.background.select.selected.hover,
+      theme.palette.background.interactiveItem.hover,
+      theme.palette.background.selectedItem.default,
+      theme.palette.background.selectedItem.hover,
     ],
   );
 
@@ -97,10 +97,10 @@ export default function SplitButton({ defaultValue = '', options = [], onClick, 
           <ButtonGroup
             sx={{
               '.MuiButtonGroup-grouped': {
-                borderRightColor: `${theme.palette.border.category.selected} !important`,
+                borderRightColor: `${theme.palette.components.split.border.categorySelected} !important`,
               },
               '.MuiButtonGroup-grouped.MuiButtonGroup-firstButton': {
-                borderRightColor: `${theme.palette.border.category.selected} !important`,
+                borderRightColor: `${theme.palette.components.split.border.categorySelected} !important`,
               },
               borderRadius: '14px',
               height: '28px',
@@ -169,7 +169,7 @@ export default function SplitButton({ defaultValue = '', options = [], onClick, 
                           justifyContent: 'space-between',
                           background:
                             selectedOption.value === value
-                              ? theme.palette.background.participant.active
+                              ? theme.palette.background.interactiveItem.active
                               : undefined,
                         }}
                         onClick={onClickOption({ label, value })}

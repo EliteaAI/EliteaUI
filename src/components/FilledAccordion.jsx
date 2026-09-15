@@ -1,6 +1,6 @@
 import { memo } from 'react';
 
-import { Box } from '@mui/material';
+import { Box, useTheme } from '@mui/material';
 
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import {
@@ -9,7 +9,6 @@ import {
   StyledAccordionSummary,
   StyledExpandMoreIcon,
 } from '@/[fsd]/shared/ui/accordion';
-import { useTheme } from '@emotion/react';
 
 const FilledAccordion = memo(props => {
   const {
@@ -72,7 +71,7 @@ const filledAccordionStyles = () => ({
     alignSelf: 'stretch',
     borderRadius: '0.5rem',
     border: `0.0625rem solid ${theme.palette.border.lines}`,
-    background: theme.palette.background.button.default,
+    background: theme.palette.background.interactiveItem.hover,
   }),
   expandIcon: {
     width: '1rem',

@@ -319,7 +319,7 @@ const sideBarBodyStyles = (sideBarCollapsed, socketStatus) => ({
     display: 'flex',
     flexDirection: 'column',
     width: `${sideBarCollapsed ? COLLAPSED_SIDE_BAR_WIDTH : SIDE_BAR_WIDTH}px`,
-    background: palette.background.sideBar,
+    background: palette.components.sidebar.background,
     overflow: 'hidden',
   }),
   stickyTop: {
@@ -358,10 +358,10 @@ const sideBarBodyStyles = (sideBarCollapsed, socketStatus) => ({
     fontSize: '1.75rem',
   },
   divider: ({ palette }) => ({
-    borderColor: palette.border.sidebarDivider,
+    borderColor: palette.border.lines,
   }),
   catalogDivider: ({ palette }) => ({
-    borderColor: palette.border.sidebarDivider,
+    borderColor: palette.border.lines,
     marginInline: '-1rem',
   }),
   createSection: {
@@ -380,7 +380,7 @@ const sideBarBodyStyles = (sideBarCollapsed, socketStatus) => ({
     boxSizing: 'border-box',
   },
   sectionDivider: ({ palette }) => ({
-    borderColor: palette.border.sidebarDivider,
+    borderColor: palette.border.lines,
     marginInline: '1rem',
   }),
   bottomSection: {
@@ -394,9 +394,7 @@ const sideBarBodyStyles = (sideBarCollapsed, socketStatus) => ({
     height: '0.5rem',
     borderRadius: '50%',
     backgroundColor:
-      socketStatus === SocketConstants.SocketStatus.Connected
-        ? palette.icon.fill.success
-        : palette.icon.fill.error,
+      socketStatus === SocketConstants.SocketStatus.Connected ? palette.icon.success : palette.icon.error,
     position: 'absolute',
     top: '0rem',
     right: '0rem',
@@ -414,7 +412,7 @@ const sideBarBodyStyles = (sideBarCollapsed, socketStatus) => ({
       top: 0,
       width: '100%',
       height: '0.0625rem',
-      backgroundColor: palette.border.sidebarDivider,
+      backgroundColor: palette.border.lines,
     },
   }),
   footerBlock: ({ palette }) => ({
@@ -431,7 +429,7 @@ const sideBarBodyStyles = (sideBarCollapsed, socketStatus) => ({
       top: 0,
       width: '100%',
       height: '0.0625rem',
-      backgroundColor: palette.border.sidebarDivider,
+      backgroundColor: palette.border.lines,
     },
   }),
   assistantBlock: ({ palette }) => ({
@@ -440,7 +438,7 @@ const sideBarBodyStyles = (sideBarCollapsed, socketStatus) => ({
     justifyContent: 'center',
     alignItems: 'center',
     minWidth: 0,
-    borderRight: sideBarCollapsed ? 'none' : `1px solid ${palette.border.sidebarDivider}`,
+    borderRight: sideBarCollapsed ? 'none' : `1px solid ${palette.border.lines}`,
 
     span: {
       fontSize: '.75rem',
@@ -450,8 +448,7 @@ const sideBarBodyStyles = (sideBarCollapsed, socketStatus) => ({
     },
 
     ':hover': {
-      background:
-        palette.background.button.assistantButton?.hover ?? palette.background.button.drawerMenu.hover,
+      background: palette.components.sidebar.menuItem.hover,
       cursor: 'pointer',
     },
   }),

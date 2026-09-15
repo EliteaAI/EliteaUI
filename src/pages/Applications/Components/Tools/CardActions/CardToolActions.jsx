@@ -57,7 +57,7 @@ const CardToolActions = ({ toolOptions = [], selectedTools = [], showActions = f
                 borderRadius: '32px',
                 overflow: 'hidden',
                 '&:hover': {
-                  background: theme.palette.background.button.secondary.default, //theme.palette.background.categoriesButton.selected.hover
+                  background: theme.palette.background.surface.interactive.active, //theme.palette.components.categoriesButton.background.selected.hover
                 },
                 '&:hover .copyButton': {
                   display: 'flex',

@@ -25,23 +25,23 @@ export const applicationActionButtonStyles = {
     },
   },
   createActionButton: ({ palette }) => ({
-    color: palette.split.text.default,
-    background: palette.split.default,
+    color: palette.components.accentButton.text.primary,
+    background: palette.components.accentButton.background.default,
     '& .MuiButton-startIcon svg, & .MuiButton-startIcon path': {
-      fill: palette.text.createButton,
+      fill: palette.icon.accent,
     },
     '&:hover': {
-      background: palette.split.hover,
+      background: palette.components.accentButton.background.hover,
     },
     '&:active': {
-      color: palette.split.text.pressed,
-      backgroundColor: palette.split.pressed,
+      color: palette.components.accentButton.text.pressed,
+      backgroundColor: palette.components.accentButton.background.pressed,
     },
     '&.Mui-disabled': {
-      color: palette.split.text.disabled,
-      backgroundColor: palette.split.disabled,
+      color: palette.components.accentButton.text.disabled,
+      backgroundColor: palette.components.accentButton.background.disabled,
       '& .MuiButton-startIcon svg, & .MuiButton-startIcon path': {
-        fill: palette.text.disabled,
+        fill: palette.icon.disabled,
       },
     },
   }),

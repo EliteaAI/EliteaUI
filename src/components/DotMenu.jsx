@@ -1,6 +1,6 @@
 import { memo, useCallback, useMemo, useState } from 'react';
 
-import { Box, Divider, IconButton, ListItemIcon, Menu, MenuItem } from '@mui/material';
+import { Box, Divider, IconButton, ListItemIcon, Menu, MenuItem, useTheme } from '@mui/material';
 import ListItemText from '@mui/material/ListItemText';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
@@ -9,7 +9,6 @@ import { useDeleteConfirmationDisabled } from '@/[fsd]/shared/lib/hooks';
 import { Modal } from '@/[fsd]/shared/ui';
 import CheckedIcon from '@/assets/checked-icon.svg?react';
 import DotsMenuIcon from '@/components/Icons/DotsMenuIcon';
-import { useTheme } from '@emotion/react';
 
 const BasicMenuItem = ({
   icon,
@@ -59,7 +58,7 @@ const BasicMenuItem = ({
         disabled={disabled}
         sx={{
           marginTop: addSeparator ? '-4px' : undefined,
-          background: isSelected ? theme.palette.background.participant.active : undefined,
+          background: isSelected ? theme.palette.background.interactiveItem.active : undefined,
           ...(menuItemSX || {}),
         }}
         {...menuItemProps}
@@ -539,7 +538,7 @@ DotMenu.displayName = 'DotMenu';
 const dotMenuStyles = () => ({
   iconButton: ({ palette }) => ({
     marginLeft: 0,
-    'svg, &:hover svg': { fill: palette.icon.fill.secondary },
+    'svg, &:hover svg': { fill: palette.icon.secondary },
   }),
 });
 

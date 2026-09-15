@@ -98,7 +98,7 @@ export const useUnpublishSkillMenu = onSuccess => {
                   alignItems: 'center',
                   width: '1rem',
                   height: '1rem',
-                  color: ({ palette }) => palette.icon.fill.default,
+                  color: ({ palette }) => palette.icon.default,
                 }}
               >
                 <UnpublishIcon sx={{ fontSize: '1rem' }} />

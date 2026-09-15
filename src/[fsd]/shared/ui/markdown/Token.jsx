@@ -360,7 +360,7 @@ const getStyles = ({ palette }) => ({
     marginBottom: '0.8em',
     whiteSpace: 'pre-wrap',
   },
-  mark: { background: 'transparent', color: palette.text.highlighted, fontWeight: 500 },
+  mark: { background: 'transparent', color: palette.text.secondary, fontWeight: 500 },
   inline: { display: 'inline' },
   htmlContainer: {
     '& h1': {

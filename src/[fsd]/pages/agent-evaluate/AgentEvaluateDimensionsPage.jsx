@@ -284,7 +284,7 @@ const agentEvaluateDimensionsPageStyles = () => ({
     height: '3.8rem',
     minHeight: '3.8rem',
     width: '100%',
-    borderBottom: `0.0625rem solid ${palette.border.table}`,
+    borderBottom: `0.0625rem solid ${palette.border.default}`,
     boxSizing: 'border-box',
     display: 'flex',
     alignItems: 'center',
@@ -339,7 +339,7 @@ const agentEvaluateDimensionsPageStyles = () => ({
     padding: '0.375rem',
     borderRadius: '50%',
     svg: {
-      fill: palette.text.button.primary,
+      fill: palette.icon.onPrimary,
     },
   }),
   grid: {

@@ -70,7 +70,7 @@ const headingChipStyles = variant => ({
         ...base,
         padding: '0.25rem 1rem',
         background: suggestionChip.background.default,
-        color: suggestionChip.text.default,
+        color: suggestionChip.text.primary,
         border: `0.0625rem solid ${suggestionChip.border}`,
         borderRadius: '1.8125rem',
         cursor: 'pointer',

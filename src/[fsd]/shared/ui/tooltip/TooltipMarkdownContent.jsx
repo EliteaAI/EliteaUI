@@ -71,7 +71,7 @@ const tooltipMarkdownContentStyles = () => ({
     '& code': {
       fontFamily: 'monospace',
       fontSize: '0.85em',
-      backgroundColor: palette.background.tooltip.code,
+      backgroundColor: palette.components.tooltip.background.code,
       borderRadius: '.1875rem',
       padding: '.0625rem .25rem',
       overflowWrap: 'anywhere',
@@ -80,7 +80,7 @@ const tooltipMarkdownContentStyles = () => ({
     '& pre': {
       margin: 0,
       padding: '.25rem .5rem',
-      backgroundColor: palette.background.tooltip.code,
+      backgroundColor: palette.components.tooltip.background.code,
       borderRadius: '.1875rem',
       whiteSpace: 'pre-wrap',
       overflowWrap: 'anywhere',

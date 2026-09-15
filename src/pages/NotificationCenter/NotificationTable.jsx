@@ -3,7 +3,7 @@ import { memo, useCallback, useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { useSelector } from 'react-redux';
 
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, useTheme } from '@mui/material';
 
 import { useRowSelection } from '@/[fsd]/entities/grid-table/lib';
 import {
@@ -19,7 +19,6 @@ import { useNotificationBulkDeleteMutation, useNotificationBulkMarkSeenMutation 
 import { SortOrderOptions } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import useToast from '@/hooks/useToast';
-import { useTheme } from '@emotion/react';
 
 import NotificationTableToolbar from './NotificationTableToolbar';
 

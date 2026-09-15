@@ -73,7 +73,7 @@ const EliteaCatalog = memo(() => {
 
         <Box sx={styles.searchContainer}>
           <Box sx={styles.searchIconContainer}>
-            <SearchIcon fill={theme.palette.text.secondary} />
+            <SearchIcon fill={theme.palette.icon.secondary} />
           </Box>
           <TextField
             placeholder={SEARCH_PLACEHOLDERS[activeTab]}
@@ -180,7 +180,7 @@ const eliteaCatalogStyles = () => ({
         borderColor: palette.border.hover,
       },
       '&.Mui-focused': {
-        border: `0.0625rem solid ${palette.border.flowNode}`,
+        border: `0.0625rem solid ${palette.border.inputHover}`,
         backgroundColor: palette.background.surface.interactive.active,
       },
       '& fieldset': {
@@ -208,7 +208,7 @@ const eliteaCatalogStyles = () => ({
     minHeight: '2rem',
   },
   divider: ({ palette }) => ({
-    borderColor: palette.border.table,
+    borderColor: palette.border.default,
   }),
   body: {
     flex: 1,

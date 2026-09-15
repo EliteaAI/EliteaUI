@@ -459,12 +459,12 @@ const styles = {
   },
   removeBtn: ({ palette }) => ({
     padding: '0.5rem',
-    color: palette.text.default,
+    color: palette.text.primary,
     '&:hover': {
-      backgroundColor: palette.background.button.tertiary.hover,
+      backgroundColor: palette.background.interactiveItem.hover,
     },
     '&:active': {
-      backgroundColor: palette.background.button.tertiary.pressed,
+      backgroundColor: palette.background.surface.interactive.selected,
     },
   }),
   removeIcon: {

@@ -78,7 +78,7 @@ const simpleSearchBarStyles = () => ({
     height: '2.25rem',
     transition: 'all 0.2s ease-in-out',
     '&:focus-within': {
-      borderColor: palette.border.flowNode,
+      borderColor: palette.border.inputHover,
       backgroundColor: palette.background.surface.interactive.active,
     },
   }),
@@ -90,7 +90,7 @@ const simpleSearchBarStyles = () => ({
       padding: 0,
       color: palette.text.secondary,
       '&::placeholder': {
-        color: palette.text.input.placeholderSecondary,
+        color: palette.text.disabled,
         opacity: 1,
       },
     },

@@ -1,4 +1,4 @@
-import { useTheme } from '@emotion/react';
+import { useTheme } from '@mui/material';
 
 export default function ArrowDownIcon(props) {
   const theme = useTheme();
@@ -8,7 +8,7 @@ export default function ArrowDownIcon(props) {
       width="16"
       height="16"
       viewBox="0 0 16 16"
-      fill={theme.palette.icon.fill.primary}
+      fill={theme.palette.icon.primary}
       {...props}
     >
       <path

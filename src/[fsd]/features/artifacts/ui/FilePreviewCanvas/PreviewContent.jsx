@@ -201,7 +201,7 @@ const PreviewContent = memo(
                       <Typography
                         variant="bodySmall"
                         sx={({ palette }) => ({
-                          color: palette.text.tertiary,
+                          color: palette.text.disabled,
                         })}
                       >
                         The {dataFileType?.toUpperCase()} file appears to be empty or has no valid data rows.
@@ -322,7 +322,7 @@ const previewContentStyles = () => ({
 
   circularProgress: ({ palette }) => ({ color: palette.primary.main }),
 
-  loadingMessage: ({ palette }) => ({ color: palette.text.tertiary }),
+  loadingMessage: ({ palette }) => ({ color: palette.text.disabled }),
 
   errorWrapper: {
     display: 'flex',
@@ -372,12 +372,12 @@ const previewContentStyles = () => ({
     },
 
     '&::-webkit-scrollbar-thumb': {
-      background: palette.border.lines,
+      background: palette.components.codePreview.background,
       borderRadius: '.125rem',
     },
 
     '&::-webkit-scrollbar-thumb:hover': {
-      background: palette.text.tertiary,
+      background: palette.scrollbar.thumbHover,
     },
 
     '& p': {
@@ -448,7 +448,7 @@ const previewContentStyles = () => ({
       borderLeft: `.1875rem solid ${palette.primary.main}`,
       marginLeft: 0,
       paddingLeft: '0.8em',
-      color: palette.text.tertiary,
+      color: palette.text.disabled,
       fontStyle: 'italic',
     },
 
@@ -486,12 +486,12 @@ const previewContentStyles = () => ({
     },
 
     '&::-webkit-scrollbar-thumb': {
-      background: palette.border.lines,
+      background: palette.components.codePreview.background,
       borderRadius: '.125rem',
     },
 
     '&::-webkit-scrollbar-thumb:hover': {
-      background: palette.text.tertiary,
+      background: palette.scrollbar.thumbHover,
     },
   }),
 
@@ -570,11 +570,11 @@ const previewContentStyles = () => ({
       background: palette.background.default.tertiary,
     },
     '&::-webkit-scrollbar-thumb': {
-      background: palette.border.lines,
+      background: palette.components.codePreview.background,
       borderRadius: '.125rem',
     },
     '&::-webkit-scrollbar-thumb:hover': {
-      background: palette.text.tertiary,
+      background: palette.scrollbar.thumbHover,
     },
   }),
 
@@ -601,7 +601,7 @@ const previewContentStyles = () => ({
   }),
 
   noDiagramDescription: ({ palette }) => ({
-    color: palette.text.tertiary,
+    color: palette.text.disabled,
   }),
 
   imageWrapper: ({ palette }) => ({
@@ -627,12 +627,12 @@ const previewContentStyles = () => ({
     },
 
     '&::-webkit-scrollbar-thumb': {
-      background: palette.border.lines,
+      background: palette.components.codePreview.background,
       borderRadius: '.125rem',
     },
 
     '&::-webkit-scrollbar-thumb:hover': {
-      background: palette.text.tertiary,
+      background: palette.scrollbar.thumbHover,
     },
   }),
 
@@ -659,7 +659,7 @@ const previewContentStyles = () => ({
   }),
 
   noImageDescription: ({ palette }) => ({
-    color: palette.text.tertiary,
+    color: palette.text.disabled,
   }),
 
   codeEditorWrapper: ({ palette }) => ({
@@ -683,12 +683,12 @@ const previewContentStyles = () => ({
     },
 
     '&::-webkit-scrollbar-thumb': {
-      background: palette.border.lines,
+      background: palette.components.codePreview.background,
       borderRadius: '.125rem',
     },
 
     '&::-webkit-scrollbar-thumb:hover': {
-      background: palette.text.tertiary,
+      background: palette.scrollbar.thumbHover,
     },
 
     '& .cm-editor': {

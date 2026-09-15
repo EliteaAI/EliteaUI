@@ -87,7 +87,7 @@ const contextBudgetExpandedStyles = isSmallWindow => ({
   },
   statLabel: ({ palette }) => ({
     flex: 1,
-    color: palette.text.default,
+    color: palette.text.primary,
   }),
   statValue: ({ palette }) => ({
     color: palette.text.secondary,

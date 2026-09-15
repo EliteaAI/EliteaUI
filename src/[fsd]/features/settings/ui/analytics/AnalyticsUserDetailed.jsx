@@ -527,7 +527,7 @@ const analyticsUserDetailedStyles = () => ({
     alignItems: 'center',
     gap: '0.5rem',
     padding: '0.375rem 0',
-    borderBottom: `1px solid ${palette.border.table}`,
+    borderBottom: `1px solid ${palette.border.default}`,
     minWidth: 0,
     '&:last-child': { borderBottom: 'none' },
   }),

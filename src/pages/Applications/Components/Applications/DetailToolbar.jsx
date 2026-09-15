@@ -1,6 +1,7 @@
+import { useTheme } from '@mui/material';
+
 import DotMenu from '@/components/DotMenu';
 import HeaderContainer from '@/components/HeaderContainer';
-import { useTheme } from '@emotion/react';
 
 export default function DetailToolbar({ rightContent, toolbarItems = [], toolbarMenuItems = [] }) {
   const theme = useTheme();

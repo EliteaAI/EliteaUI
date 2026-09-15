@@ -39,7 +39,7 @@ const participantAvatarStyles = () => ({
     width: '1.5rem',
     height: '1.5rem',
     minWidth: '1.5rem',
-    background: palette.background.aiParticipantIcon,
+    background: palette.components.aiParticipantIcon.background,
   }),
   iconImg: {
     minWidth: '1.5rem',

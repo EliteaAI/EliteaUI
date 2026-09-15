@@ -164,21 +164,21 @@ const skillTabBarStyles = () => ({
     justifyContent: 'flex-start',
     svg: {
       fontSize: '1rem',
-      path: { fill: palette.icon.fill.inactive },
+      path: { fill: palette.icon.inactive },
     },
   }),
   publishedIcon: ({ palette }) => ({
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    svg: { path: { fill: `${palette.icon.fill.success} !important` } },
+    svg: { path: { fill: `${palette.icon.success} !important` } },
   }),
   label: ({ palette }) => ({
     display: 'flex',
     fontWeight: 500,
     fontSize: '.75rem',
     lineHeight: '1rem',
-    color: palette.text.default,
+    color: palette.text.primary,
   }),
   inputSx: {
     '& .MuiSelect-select': {
@@ -188,7 +188,7 @@ const skillTabBarStyles = () => ({
   menuItemIconSx: {
     width: '1rem',
     height: '1rem',
-    svg: { fontSize: '1rem', path: { fill: ({ palette }) => palette.icon.fill.inactive } },
+    svg: { fontSize: '1rem', path: { fill: ({ palette }) => palette.icon.inactive } },
   },
   customMenuPropsSx: {
     '& .MuiPaper-root': {

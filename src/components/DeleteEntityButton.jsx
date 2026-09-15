@@ -1,6 +1,6 @@
 import { memo, useCallback, useState } from 'react';
 
-import { Box, IconButton, Typography } from '@mui/material';
+import { Box, IconButton, Typography, useTheme } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { useDeleteConfirmationDisabled } from '@/[fsd]/shared/lib/hooks';
@@ -8,7 +8,6 @@ import { Modal } from '@/[fsd]/shared/ui';
 import { PERMISSIONS } from '@/common/constants';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
 import useCheckPermission from '@/hooks/useCheckPermission';
-import { useTheme } from '@emotion/react';
 
 import DeleteIcon from './Icons/DeleteIcon';
 
@@ -108,9 +107,7 @@ const DeleteEntityButton = memo(props => {
                   sx={{ fontSize: '16px' }}
                   fill={
                     iconColor ||
-                    (isLoading || disabled
-                      ? theme.palette.icon.fill.disabled
-                      : theme.palette.icon.fill.secondary)
+                    (isLoading || disabled ? theme.palette.icon.disabled : theme.palette.icon.secondary)
                   }
                 />
                 {isLoading && <StyledCircleProgress size={16} />}

@@ -346,7 +346,7 @@ const agentEvaluatePageStyles = () => ({
     height: '3.8rem',
     minHeight: '3.8rem',
     width: '100%',
-    borderBottom: `0.0625rem solid ${palette.border.table}`,
+    borderBottom: `0.0625rem solid ${palette.border.default}`,
     boxSizing: 'border-box',
     display: 'flex',
     alignItems: 'center',

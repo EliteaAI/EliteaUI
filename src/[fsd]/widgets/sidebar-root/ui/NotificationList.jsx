@@ -190,7 +190,7 @@ const notificationListStyles = () => ({
     borderRadius: '0.5rem',
   },
   container: ({ palette }) => ({
-    background: palette.background.notificationList,
+    background: palette.components.notificationList.background,
     borderRadius: '0.5rem',
     width: '20rem',
     display: 'flex',
@@ -204,14 +204,14 @@ const notificationListStyles = () => ({
     height: '3rem',
     boxSizing: 'border-box',
     justifyContent: 'space-between',
-    borderBottom: `0.0625rem solid ${palette.border.notificationItem}`,
+    borderBottom: `0.0625rem solid ${palette.components.notificationItem.border}`,
   }),
   listContainer: {
     flex: 'none',
   },
   skeletonItem: ({ palette }) => ({
     '&:not(:last-of-type)': {
-      borderBottom: `0.0625rem solid ${palette.border.notificationItem}`,
+      borderBottom: `0.0625rem solid ${palette.components.notificationItem.border}`,
     },
   }),
   emptyState: ({ palette }) => ({
@@ -223,11 +223,11 @@ const notificationListStyles = () => ({
     width: '100%',
     gap: '1rem',
     boxSizing: 'border-box',
-    borderBottom: `0.0625rem solid ${palette.border.notificationItem}`,
+    borderBottom: `0.0625rem solid ${palette.components.notificationItem.border}`,
   }),
   markAllButton: ({ palette }) => ({
     height: '3rem',
-    borderTop: `0.0625rem solid ${palette.border.notificationItem}`,
+    borderTop: `0.0625rem solid ${palette.components.notificationItem.border}`,
     borderRadius: 0,
     '&:disabled': {
       '& > span': {
@@ -235,24 +235,24 @@ const notificationListStyles = () => ({
       },
     },
     '&:hover': {
-      backgroundColor: palette.background.tabButton.default,
+      backgroundColor: palette.background.surface.interactive.default,
       borderRadius: 0,
     },
   }),
   markAllButtonText: ({ palette }) => ({
-    color: palette.text.button.showMore,
+    color: palette.text.showMore,
   }),
   viewAllButton: ({ palette }) => ({
     height: '3rem',
-    borderTop: `0.0625rem solid ${palette.border.notificationItem}`,
+    borderTop: `0.0625rem solid ${palette.components.notificationItem.border}`,
     borderRadius: 0,
     '&:hover': {
-      backgroundColor: palette.background.tabButton.default,
+      backgroundColor: palette.background.surface.interactive.default,
       borderRadius: 0,
     },
   }),
   viewAllButtonText: ({ palette }) => ({
-    color: palette.text.button.showMore,
+    color: palette.text.showMore,
   }),
 });
 

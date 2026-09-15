@@ -41,16 +41,17 @@ export const installGlobalStubs = () => {
 
 export const analyticsTestTheme = createTheme({
   palette: {
-    text: { accent: '#000', metrics: '#666', button: { primary: '#fff' } },
+    text: { accent: '#000', metrics: '#666' },
     status: { rejected: '#f00', published: '#0f0', pending: '#ff0', draft: '#1976d2' },
     background: {
       surface: { interactive: { default: '#fff' } },
       card: '#fafafa',
-      conversation: { hover: '#fafafa' },
+      interactiveItem: { hover: '#f5f5f5', active: '#ececec', rowHover: '#f0f0f0' },
+      selectedItem: { default: '#e8e8e8', hover: '#dcdcdc' },
     },
-    border: { table: '#eee', divider: '#ddd' },
+    border: { lines: '#ddd' },
     action: { hover: '#eee' },
-    // The shared icon components read palette.icon.fill.<variant> inside their sx
+    // The shared icon components read palette.icon.<variant> inside their sx
     // functions, so every variant an analytics screen can render needs a value here.
     icon: {
       main: '#888',
@@ -70,6 +71,11 @@ export const analyticsTestTheme = createTheme({
         delete: '#666',
         button: '#888',
       },
+    },
+    components: {
+      button: { text: { primary: '#fff' } },
+      conversation: { background: { hover: '#fafafa' } },
+      table: { border: '#eee' },
     },
   },
 });

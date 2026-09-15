@@ -173,11 +173,11 @@ const skillRowActionStyles = () => ({
     marginLeft: 0,
     '& svg': {
       fontSize: '1rem',
-      fill: palette.icon.fill.default,
+      fill: palette.icon.default,
     },
     '&:hover': {
       '& svg': {
-        fill: palette.icon.fill.secondary,
+        fill: palette.icon.secondary,
       },
     },
   }),

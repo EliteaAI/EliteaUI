@@ -14,9 +14,11 @@ const StyledChip = styled(
   borderRadius: '10px',
   border: 'none',
   background: isSelected
-    ? theme.palette.background.tagChip.active.default
-    : theme.palette.background.tagChip.default,
-  color: isSelected ? theme.palette.text.tagChip.active : theme.palette.text.tagChip.default,
+    ? theme.palette.components.styledChip.background.active.default
+    : theme.palette.components.styledChip.background.default,
+  color: isSelected
+    ? theme.palette.components.styledChip.text.active
+    : theme.palette.components.styledChip.text.primary,
   boxShadow: theme.palette.mode === 'light' && !isSelected ? '0px 2px 4px rgba(0, 0, 0, 0.12)' : 'none',
   fontFamily: 'Montserrat',
   padding: '8px 16px',
@@ -27,8 +29,8 @@ const StyledChip = styled(
 
   '&:hover': {
     background: isSelected
-      ? theme.palette.background.tagChip.active.hover
-      : theme.palette.background.tagChip.hover,
+      ? theme.palette.components.styledChip.background.active.hover
+      : theme.palette.components.styledChip.background.hover,
   },
 }));
 

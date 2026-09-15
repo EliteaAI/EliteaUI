@@ -70,7 +70,7 @@ const caseContentColumnStyles = () => ({
     borderBottom: `0.0625rem solid ${palette.border.lines}`,
   }),
   columnLabel: ({ palette }) => ({
-    color: palette.text.default,
+    color: palette.text.primary,
     textTransform: 'uppercase',
     letterSpacing: '0.06em',
     fontWeight: 500,
@@ -82,12 +82,12 @@ const caseContentColumnStyles = () => ({
       margin: 0,
     },
     '&:hover': {
-      backgroundColor: palette.background.tabButton.active,
+      backgroundColor: palette.background.surface.interactive.selected,
     },
   }),
   fullScreenIcon: ({ palette }) => ({
     fontSize: '1rem',
-    color: palette.icon.fill.default,
+    color: palette.icon.default,
   }),
   columnContent: {
     flex: 1,
@@ -95,7 +95,7 @@ const caseContentColumnStyles = () => ({
     overflow: 'auto',
   },
   emptyText: ({ palette }) => ({
-    color: palette.text.default,
+    color: palette.text.primary,
     fontStyle: 'italic',
   }),
   contentText: ({ palette }) => ({

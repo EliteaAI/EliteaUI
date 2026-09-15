@@ -1,4 +1,4 @@
-import { useTheme } from '@emotion/react';
+import { useTheme } from '@mui/material';
 
 export default function CheckBoxSemiIcon(props) {
   const theme = useTheme();
@@ -8,8 +8,8 @@ export default function CheckBoxSemiIcon(props) {
       width="16"
       height="16"
       viewBox="0 0 16 16"
-      stroke={theme.palette.icon.fill.default}
-      fill={theme.palette.icon.fill.default}
+      stroke={theme.palette.icon.default}
+      fill={theme.palette.icon.default}
       {...props}
     >
       <rect

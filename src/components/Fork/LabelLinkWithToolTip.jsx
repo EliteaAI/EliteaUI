@@ -1,10 +1,9 @@
 import React, { useCallback } from 'react';
 
-import { Box, Link, Typography } from '@mui/material';
+import { Box, Link, Typography, useTheme } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip.jsx';
 import { useProjectEntityLink } from '@/hooks/useProjectEntityLink';
-import { useTheme } from '@emotion/react';
 
 export const LabelLinkWithToolTip = ({ label, value, tooltip, href, disabled }) => {
   const theme = useTheme();

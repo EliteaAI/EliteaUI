@@ -52,7 +52,7 @@ const indexesEmptyStateStyles = () => ({
     gap: '1.5rem',
     paddingTop: '1rem',
     textAlign: 'center',
-    color: ({ palette }) => palette.icon.fill.disabled,
+    color: ({ palette }) => palette.icon.disabled,
   },
   textContainer: {
     display: 'flex',

@@ -38,12 +38,12 @@ const getStyles = theme => ({
     padding: '0.75rem 1rem',
     border: `0.0625rem solid ${palette.border.tips}`,
     borderRadius: '0.5rem',
-    background: palette.background.tips.main,
+    background: palette.alert.info.background,
   }),
   info: {
     width: 14,
     height: 14,
-    fill: theme.palette.icon.fill.tips,
+    fill: theme.palette.icon.tips,
   },
   text: ({ palette }) => ({
     color: palette.text.tips,

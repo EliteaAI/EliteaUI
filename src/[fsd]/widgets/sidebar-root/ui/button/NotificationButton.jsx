@@ -95,13 +95,13 @@ const styles = {
     justifyContent: 'center',
     cursor: 'pointer',
     '&:hover': {
-      backgroundColor: palette.background.button.tertiary.hover,
+      backgroundColor: palette.background.interactiveItem.hover,
       '& svg path': {
-        fill: palette.icon.fill.secondary,
+        fill: palette.icon.secondary,
       },
     },
     '&:active': {
-      backgroundColor: palette.background.button.tertiary.pressed,
+      backgroundColor: palette.background.surface.interactive.selected,
     },
   }),
 };

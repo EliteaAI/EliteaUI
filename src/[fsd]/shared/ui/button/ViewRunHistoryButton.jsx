@@ -42,7 +42,7 @@ const ViewRunHistoryButton = memo(props => {
           >
             <ClockIcon
               style={{ fontSize: 16 }}
-              fill={theme.palette.icon.fill.secondary}
+              fill={theme.palette.icon.secondary}
             />
           </IconButton>
         </Box>

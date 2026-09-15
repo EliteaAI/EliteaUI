@@ -78,7 +78,7 @@ const styles = {
       display: 'flex',
       alignItems: 'center',
       marginLeft: '0.25rem',
-      color: online ? palette.icon.fill.default : palette.icon.fill.attention,
+      color: online ? palette.icon.default : palette.icon.attention,
       gap: '0.5rem',
     }),
   statusIcon: {

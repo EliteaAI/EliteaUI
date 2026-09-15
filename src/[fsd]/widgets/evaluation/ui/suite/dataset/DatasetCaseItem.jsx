@@ -192,7 +192,7 @@ const datasetCaseItemStyles = isExcluded => ({
     width: '1rem',
     height: '1rem',
     '& path': {
-      fill: palette.icon.fill.default,
+      fill: palette.icon.default,
     },
   }),
 });

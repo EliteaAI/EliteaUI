@@ -54,11 +54,11 @@ const getStyles = () => ({
       background: palette.background.default.secondary,
     },
     '&::-webkit-scrollbar-thumb': {
-      background: palette.border.lines,
+      background: palette.components.codePreview.background,
       borderRadius: '0.125rem',
     },
     '&::-webkit-scrollbar-thumb:hover': {
-      background: palette.text.tertiary,
+      background: palette.scrollbar.thumbHover,
     },
     // Force CodeMirror to use consistent background
     '& .cm-editor': {

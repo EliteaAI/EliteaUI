@@ -72,7 +72,7 @@ const Participants = memo(props => {
               data-expanded={collapsed ? 'false' : 'true'}
             >
               <ExpandCollapseButton
-                fill={theme.palette.icon.fill.default}
+                fill={theme.palette.icon.default}
                 width={16}
               />
             </IconButton>

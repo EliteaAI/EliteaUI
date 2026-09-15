@@ -53,7 +53,7 @@ const indexSearchEmptyStateStyles = () => ({
   },
   icon: ({ palette }) => ({
     display: 'flex',
-    color: palette.icon.fill.disabled,
+    color: palette.icon.disabled,
     opacity: 0.5,
     '> svg': {
       width: '2rem',

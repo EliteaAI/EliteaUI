@@ -143,7 +143,7 @@ const previewDocumentStyles = () => ({
         background: palette.background.default.tertiary,
       },
       '&::-webkit-scrollbar-thumb': {
-        background: palette.border.lines,
+        background: palette.components.codePreview.background,
         borderRadius: '.125rem',
       },
     },
@@ -167,8 +167,8 @@ const previewDocumentStyles = () => ({
       },
 
       '& [role="gridcell"][aria-selected="true"]': {
-        backgroundColor: `${palette.background.button.primary.pressed} !important`,
-        borderColor: `${palette.background.default.secondary} !important`,
+        backgroundColor: `${palette.primary.dark} !important`,
+        borderColor: `${palette.border.default} !important`,
       },
     },
 
@@ -217,7 +217,7 @@ const previewDocumentStyles = () => ({
     },
 
     ['& .sticky button[aria-pressed="true"]']: {
-      background: `${palette.background.button.primary.pressed} !important`,
+      background: `${palette.primary.dark} !important`,
     },
 
     '& .sticky button[aria-label="Font size"]': {
@@ -278,7 +278,7 @@ const previewDocumentStyles = () => ({
         height: '1.75rem !important',
         color: `${palette.text.secondary} !important`,
         borderRadius: '1.75rem !important',
-        background: `${palette.background.button.secondary.default} !important`,
+        background: `${palette.background.surface.interactive.active} !important`,
         border: `none !important`,
         padding: '0.375rem 1rem !important',
         minWidth: 'auto',
@@ -289,9 +289,9 @@ const previewDocumentStyles = () => ({
 
       '.docx-hyperlink-dialog-submit': {
         height: '1.75rem !important',
-        color: `${palette.text.button.primary} !important`,
+        color: `${palette.primary.contrastText} !important`,
         borderRadius: '1.75rem !important',
-        background: `${palette.background.button.primary.default} !important`,
+        background: `${palette.primary.main} !important`,
         padding: '0.375rem 1rem !important',
         minWidth: 'auto',
         display: 'flex',
@@ -299,14 +299,14 @@ const previewDocumentStyles = () => ({
         justifyContent: 'center',
 
         '&:disabled': {
-          background: `${palette.background.button.primary.disabled} !important`,
-          color: `${palette.text.button.primary} !important`,
+          background: `${palette.action.disabledBackground} !important`,
+          color: `${palette.primary.contrastText} !important`,
         },
       },
 
       input: {
         background: palette.background.default.tertiary,
-        border: `1px solid ${palette.border.input} !important`,
+        border: `1px solid ${palette.border.lines} !important`,
 
         color: `${palette.text.secondary} !important`,
       },
@@ -336,7 +336,7 @@ const previewDocumentStyles = () => ({
     '.layout-page': {
       backgroundColor:
         palette.mode === 'dark'
-          ? `${palette.text.input.disabled} !important`
+          ? `${palette.text.disabled} !important`
           : `${palette.background.paper} !important`,
     },
   }),

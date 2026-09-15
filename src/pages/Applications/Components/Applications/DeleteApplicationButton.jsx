@@ -3,6 +3,8 @@ import { useCallback, useEffect, useMemo } from 'react';
 import { useFormikContext } from 'formik';
 import { useNavigate, useParams } from 'react-router-dom';
 
+import { useTheme } from '@mui/material';
+
 import { useDeleteApplicationMutation } from '@/api/applications';
 import { buildErrorMessage } from '@/common/utils';
 import DeleteEntityButton from '@/components/DeleteEntityButton';
@@ -10,7 +12,6 @@ import DeleteIcon from '@/components/Icons/DeleteIcon';
 import { useIsFromPipelineDetail } from '@/hooks/useIsFromSpecificPageHooks';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
-import { useTheme } from '@emotion/react';
 
 const useDeleteApplication = setBlockNav => {
   const isFromPipeline = useIsFromPipelineDetail();
@@ -66,7 +67,7 @@ export const useDeleteApplicationMenu = (setBlockNav, disabled) => {
       icon: (
         <DeleteIcon
           sx={{ fontSize: '16px' }}
-          fill={isLoading ? theme.palette.icon.fill.disabled : theme.palette.icon.fill.default}
+          fill={isLoading ? theme.palette.icon.disabled : theme.palette.icon.default}
         />
       ),
       confirmText: `Are you sure you want to delete ${name}?`,
@@ -75,7 +76,7 @@ export const useDeleteApplicationMenu = (setBlockNav, disabled) => {
       entityName: name,
       onConfirm: onDelete,
     }),
-    [disabled, isLoading, name, onDelete, theme.palette.icon.fill.disabled, theme.palette.icon.fill.default],
+    [disabled, isLoading, name, onDelete, theme.palette.icon.disabled, theme.palette.icon.default],
   );
 
   return {

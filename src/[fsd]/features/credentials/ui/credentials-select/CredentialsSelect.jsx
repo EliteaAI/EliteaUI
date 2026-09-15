@@ -556,7 +556,7 @@ CredentialsSelect.displayName = 'CredentialsSelect';
 const styles = {
   container: { marginTop: '0.5rem' },
   refreshIcon: ({ palette }) => ({
-    color: palette.text.default,
+    color: palette.text.primary,
     padding: 0,
     position: 'relative',
     backgroundColor: 'transparent',

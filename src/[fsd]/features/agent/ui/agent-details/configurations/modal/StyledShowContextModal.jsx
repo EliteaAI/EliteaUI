@@ -166,7 +166,7 @@ const modalStyles = () => ({
   closeIcon: ({ palette }) => ({
     fontSize: '1rem',
     cursor: 'pointer',
-    fill: palette.icon.fill.default,
+    fill: palette.icon.default,
   }),
 
   dialogContent: ({ palette }) => ({
@@ -175,7 +175,7 @@ const modalStyles = () => ({
     maxWidth: '90vw',
     height: 'calc(100vh - 13.75rem)',
     borderTop: `1px solid ${palette.border.lines}`,
-    background: palette.background.showContextDialog,
+    background: palette.background.default.secondary,
     overflowY: 'scroll',
     display: 'flex',
     flexDirection: 'column',
