@@ -215,12 +215,12 @@ const RunIndexPanel = memo(props => {
   } = indexRunControls({
     isIndexing: effectiveIsIndexing,
     index,
-    overrideSupersedesRun: Boolean(localMetaOverride?.state && !serverSupersedes),
+    localMetaOverride,
+    serverSupersedes,
+    buildBlockedReason,
     isDeleting,
     isRunning,
     isWaitingForTaskStart,
-    serverSupersedes,
-    buildBlocked: Boolean(buildBlockedReason),
   });
 
   const retainsIndexedData = hasRetainedIndexData(index?.metadata);

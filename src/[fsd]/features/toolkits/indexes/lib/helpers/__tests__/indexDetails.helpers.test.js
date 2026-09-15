@@ -627,7 +627,7 @@ describe('indexRunControls — display and control must not share a flag', () =>
     const { stale, reclaimable, runIsLive } = indexRunControls({
       isIndexing: true,
       index: row({ stale: true, reclaimable: true }),
-      overrideSupersedesRun: true,
+      localMetaOverride: { state: 'completed' },
     });
 
     expect(stale).toBe(false);
@@ -694,10 +694,15 @@ describe('indexRunControls — the gates the panel used to derive itself', () =>
   // it passed when `effectiveReclaimable` was reassigned from `effectiveStale`
   // (a verbatim revert), passed when the override was wired to the wrong value,
   // and failed on a prettier reflow. Values, not names.
+  // Gates passed explicitly as permissive so each case exercises one axis; the
+  // conservative defaults get their own cases below.
   const derive = over =>
     indexRunControls({
       isIndexing: true,
       index: { stale: false, reclaimable: false },
+      isDeleting: false,
+      isRunning: false,
+      isWaitingForTaskStart: false,
       ...over,
     });
 
@@ -753,7 +758,7 @@ describe('indexRunControls — the gates the panel used to derive itself', () =>
     const { deleteDisabled, reindexDisabled } = derive({
       isIndexing: false,
       index: { stale: true, reclaimable: true },
-      buildBlocked: true,
+      buildBlockedReason: 'the toolkit has no index_data tool',
     });
 
     expect(reindexDisabled).toBe(true);
@@ -773,7 +778,7 @@ describe('indexRunControls — the gates the panel used to derive itself', () =>
   it('an active override suppresses both flags and keeps the run live', () => {
     const { stale, reclaimable, runIsLive } = derive({
       index: { stale: true, reclaimable: true },
-      overrideSupersedesRun: true,
+      localMetaOverride: { state: 'completed' },
     });
 
     expect([stale, reclaimable, runIsLive]).toEqual([false, false, true]);
@@ -855,5 +860,111 @@ describe('abandonedRunTooltip — the card must not name a disabled button', () 
 
   it('falls back to stale when the backend sends no control flag', () => {
     expect(abandonedRunTooltip({ stale: true })).toContain('Reindex');
+  });
+});
+
+describe('indexRunControls — the arguments the panel used to compute itself', () => {
+  // These two were derived at the call site, which no test reached: wiring the
+  // override to the wrong value, or hard-coding buildBlocked, survived the suite.
+  const abandoned = { stale: true, reclaimable: true };
+  const gates = { isDeleting: false, isRunning: false, isWaitingForTaskStart: false };
+
+  it.each([
+    ['an override with the server not ahead', { state: 'completed' }, false, false],
+    ['an override the server has superseded', { state: 'completed' }, true, true],
+    ['no override at all', null, false, true],
+    ['no override, server ahead', null, true, true],
+  ])('%s', (_label, localMetaOverride, serverSupersedes, expectedStale) => {
+    const { stale } = indexRunControls({
+      isIndexing: true,
+      index: abandoned,
+      localMetaOverride,
+      serverSupersedes,
+      ...gates,
+    });
+
+    expect(stale).toBe(expectedStale);
+  });
+
+  it('blocks Reindex from the reason string, not a pre-computed boolean', () => {
+    const { reindexDisabled } = indexRunControls({
+      isIndexing: false,
+      index: { stale: true, reclaimable: true },
+      buildBlockedReason: 'no index_data tool selected',
+      ...gates,
+    });
+
+    expect(reindexDisabled).toBe(true);
+  });
+
+  it('treats an empty reason as not blocked', () => {
+    const { reindexDisabled } = indexRunControls({
+      isIndexing: false,
+      index: { stale: true, reclaimable: true },
+      buildBlockedReason: '',
+      ...gates,
+    });
+
+    expect(reindexDisabled).toBe(false);
+  });
+});
+
+describe('indexRunControls — a lost key must fail toward disabled', () => {
+  // Every gate defaults to the permissive value in the obvious design, so a key
+  // dropped in a refactor silently enables a destructive affordance. These pin the
+  // opposite: omission leaves the button stuck, which is visible and safe.
+  const reclaimableRow = { isIndexing: false, index: { stale: true, reclaimable: true } };
+
+  it('omitting isDeleting leaves Delete disabled', () => {
+    expect(
+      indexRunControls({ ...reclaimableRow, isRunning: false, isWaitingForTaskStart: false }).deleteDisabled,
+    ).toBe(true);
+  });
+
+  it('omitting isWaitingForTaskStart leaves both disabled', () => {
+    const { deleteDisabled, reindexDisabled } = indexRunControls({
+      ...reclaimableRow,
+      isDeleting: false,
+      isRunning: false,
+    });
+
+    expect([deleteDisabled, reindexDisabled]).toEqual([true, true]);
+  });
+
+  it('omitting isRunning leaves Reindex disabled', () => {
+    expect(
+      indexRunControls({ ...reclaimableRow, isDeleting: false, isWaitingForTaskStart: false })
+        .reindexDisabled,
+    ).toBe(true);
+  });
+});
+
+describe('buildReindexStub — the optimistic flip itself', () => {
+  // Every other round-trip fixture is already in_progress, so the forced state
+  // arrives via the spread either way and dropping it survives. The common case is
+  // Reindex on a COMPLETED index, where losing it leaves the card showing
+  // `indexed / total` with no spinner for the whole list-GET latency window.
+  const completed = {
+    id: 'row-1',
+    stale: false,
+    metadata: { state: 'completed', indexed: 180, total: 305, task_id: 'finished-run' },
+  };
+
+  it('flips a completed row to in_progress', () => {
+    expect(buildReindexStub(completed).metadata.state).toBe('in_progress');
+  });
+
+  it('shows the new run at zero rather than the completed ratio', () => {
+    const [row] = applyReindexStub([completed], buildReindexStub(completed));
+
+    expect(row.metadata.state).toBe('in_progress');
+    expect(row.metadata.run_chunks).toBe(0);
+  });
+
+  it('keeps the previous measurements readable underneath', () => {
+    const [row] = applyReindexStub([completed], buildReindexStub(completed));
+
+    expect(row.metadata.indexed).toBe(180);
+    expect(row.metadata.total).toBe(305);
   });
 });

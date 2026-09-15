@@ -277,13 +277,21 @@ export const hasLiveRun = ({ isIndexing, isStale }) => Boolean(isIndexing) && !i
 export const indexRunControls = ({
   isIndexing,
   index,
-  overrideSupersedesRun = false,
-  isDeleting = false,
-  isRunning = false,
-  isWaitingForTaskStart = false,
+  localMetaOverride = null,
   serverSupersedes = false,
-  buildBlocked = false,
+  buildBlockedReason = null,
+  // Conservative defaults on purpose. Every one of these gates a destructive or
+  // irreversible affordance, and `false` is the PERMISSIVE value — so a key lost in
+  // a refactor would silently degrade toward enabling Delete or Reindex. Defaulting
+  // to the disabled side makes an omission visible as a stuck button instead.
+  isDeleting = true,
+  isRunning = true,
+  isWaitingForTaskStart = true,
 }) => {
+  // Derived here rather than at the call site: the two arguments the panel used to
+  // compute itself are exactly where every surviving mutant lived.
+  const overrideSupersedesRun = Boolean(localMetaOverride?.state && !serverSupersedes);
+  const buildBlocked = Boolean(buildBlockedReason);
   // The row is read here rather than taken as two booleans, so a caller cannot hand
   // the display flag to the control question by swapping two same-shaped arguments —
   // which is exactly the edit that re-enables Delete on a healthy long-promote run.
