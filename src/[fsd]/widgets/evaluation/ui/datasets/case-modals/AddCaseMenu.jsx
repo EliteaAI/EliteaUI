@@ -3,7 +3,7 @@ import { memo, useCallback, useState } from 'react';
 import { Box, Menu, MenuItem, Typography } from '@mui/material';
 
 import { Button } from '@/[fsd]/shared/ui';
-import { BUTTON_COLORS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import ChatIcon from '@/components/Icons/ChatIcon';
 import EditPenIcon from '@/components/Icons/EditPenIcon';
 import FileCodeIcon from '@/components/Icons/FileCodeIcon';
@@ -63,7 +63,7 @@ const AddCaseMenu = memo(props => {
   return (
     <>
       <Button.BaseBtn
-        color={BUTTON_COLORS.secondary}
+        variant={BUTTON_VARIANTS.iconLabel}
         startIcon={<PlusIcon />}
         onClick={handleOpenMenu}
         disabled={disabled}

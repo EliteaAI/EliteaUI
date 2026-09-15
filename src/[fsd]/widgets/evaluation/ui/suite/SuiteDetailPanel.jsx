@@ -273,6 +273,7 @@ const SuiteDetailPanel = memo(props => {
       <Box sx={styles.content}>
         <BasicAccordion
           showMode={AccordionConstants.AccordionShowMode.LeftMode}
+          accordionDetailsSX={styles.accordionDetails}
           style={styles.accordion}
           summarySX={styles.accordionSummary}
           items={[
@@ -328,7 +329,7 @@ const SuiteDetailPanel = memo(props => {
                   />
                   <SingleSelect
                     label="Version"
-                    separateLabel
+                    showBorder
                     infoIconDescription={VERSION_TOOLTIP}
                     value={selectedVersionId}
                     options={versionOptions}
@@ -418,13 +419,17 @@ const suiteDetailPanelStyles = () => ({
     flexDirection: 'column',
     gap: '1.5rem',
   },
-  accordionSummary: {
+  accordionDetails: ({ palette }) => ({
+    background: palette.background.default.tertiary,
+  }),
+  accordionSummary: ({ palette }) => ({
+    background: palette.background.default.tertiary,
     '& .MuiAccordionSummary-content': {
       display: 'flex',
       alignItems: 'center',
       width: '100%',
     },
-  },
+  }),
   header: ({ palette }) => ({
     display: 'flex',
     alignItems: 'center',
@@ -433,7 +438,7 @@ const suiteDetailPanelStyles = () => ({
     height: '3.3125rem',
     minHeight: '3.3125rem',
     boxSizing: 'border-box',
-    backgroundColor: palette.background.folder.default,
+    background: palette.background.default.secondary,
     borderBottom: `0.0625rem solid ${palette.border.table}`,
   }),
   headerLeft: {
@@ -484,19 +489,21 @@ const suiteDetailPanelStyles = () => ({
   deleteIcon: {
     fontSize: '1rem',
   },
-  content: {
+  content: ({ palette }) => ({
     display: 'flex',
     flexDirection: 'column',
     flex: 1,
     minHeight: 0,
     overflow: 'auto',
     padding: '1rem 1.5rem',
-  },
-  formSection: {
+    background: palette.background.default.tertiary,
+  }),
+  formSection: ({ palette }) => ({
     display: 'flex',
     flexDirection: 'column',
-    gap: '1rem',
-  },
+    gap: '0.5rem',
+    background: palette.background.default.tertiary,
+  }),
   infoIconWrapper: {
     display: 'inline-flex',
     alignItems: 'center',
@@ -511,7 +518,7 @@ const suiteDetailPanelStyles = () => ({
     justifyContent: 'center',
     padding: '0.75rem 1.5rem',
     borderTop: `0.0625rem solid ${palette.border.table}`,
-    backgroundColor: palette.background.toolkitDetailLeftPanel,
+    background: palette.background.default.secondary,
   }),
   evaluateButton: ({ palette }) => ({
     padding: '0.375rem 1rem 0.375rem 0.75rem',

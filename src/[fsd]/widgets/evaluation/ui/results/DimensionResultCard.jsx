@@ -88,7 +88,7 @@ const DimensionResultCard = memo(props => {
 
           {!isError && isPending && canAct && (
             <Button.BaseBtn
-              variant={BUTTON_VARIANTS.text}
+              variant={BUTTON_VARIANTS.auxiliary}
               color={BUTTON_COLORS.primary}
               size="small"
               onClick={handleEvaluate}
@@ -194,7 +194,7 @@ const dimensionResultCardStyles = () => ({
     borderColor: palette.border.indexResult.error,
   }),
   rootPending: ({ palette }) => ({
-    backgroundColor: palette.background.conversation.selected,
+    backgroundColor: palette.background.participant.active,
   }),
   header: {
     display: 'flex',
@@ -247,12 +247,11 @@ const dimensionResultCardStyles = () => ({
   pendingLabel: ({ palette }) => ({
     color: palette.text.indexResult.warning,
   }),
-  evaluateButton: ({ palette }) => ({
+  evaluateButton: {
     padding: '0 0.25rem',
     minWidth: 'auto',
-    color: palette.primary.main,
     fontWeight: 500,
-  }),
+  },
   editButton: ({ palette }) => ({
     minWidth: 'unset',
     padding: '0.25rem',

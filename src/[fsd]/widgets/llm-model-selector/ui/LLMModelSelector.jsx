@@ -309,6 +309,9 @@ const llmModelSelectorStyles = () => ({
     borderBottom: ({ palette }) => `0.0625rem solid ${palette.border.lines}`,
     paddingLeft: '.75rem',
     paddingRight: '.75rem',
+    '&:hover': {
+      borderBottom: ({ palette }) => `0.0625rem solid ${palette.border.hover}`,
+    },
   },
   fieldLabelRow: {
     display: 'flex',

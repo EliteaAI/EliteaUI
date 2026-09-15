@@ -3,7 +3,7 @@ import { memo, useCallback, useState } from 'react';
 import { Box, Menu, MenuItem, Tooltip, Typography } from '@mui/material';
 
 import { Button } from '@/[fsd]/shared/ui';
-import { BUTTON_COLORS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import DotsMenuIcon from '@/components/Icons/DotsMenuIcon';
 import EditIcon from '@/components/Icons/EditIcon';
@@ -101,13 +101,12 @@ const ManageDimensionCard = memo(props => {
           </Box>
           {showMenu && (
             <Button.BaseBtn
-              color={BUTTON_COLORS.tertiary}
+              variant={BUTTON_VARIANTS.tertiary}
               onClick={handleOpenMenu}
+              startIcon={<DotsMenuIcon />}
               sx={styles.menuButton}
               data-testid={`manage-dimension-menu-${dimension.id}`}
-            >
-              <DotsMenuIcon />
-            </Button.BaseBtn>
+            />
           )}
         </Box>
         {description && (

@@ -54,13 +54,24 @@ const ResultsPanel = memo(props => {
           >
             Results
           </Typography>
-          {hasResults && evaluatedVersionName && (
-            <Typography
-              variant="bodySmall"
-              sx={styles.headerVersion}
-            >
-              Version: {evaluatedVersionName}
-            </Typography>
+          {hasResults && (
+            <>
+              <Typography
+                variant="bodyMedium"
+                sx={styles.runLabel}
+                data-testid="evaluation-run-label"
+              >
+                – Run #{displayRun?.id}
+              </Typography>
+              {evaluatedVersionName && (
+                <Typography
+                  variant="bodySmall"
+                  sx={styles.headerVersion}
+                >
+                  (Version: {evaluatedVersionName})
+                </Typography>
+              )}
+            </>
           )}
         </Box>
         <Box sx={styles.headerActions}>
@@ -171,7 +182,7 @@ const resultsPanelStyles = () => ({
     height: '3.3125rem',
     minHeight: '3.3125rem',
     boxSizing: 'border-box',
-    backgroundColor: palette.background.folder.default,
+    background: palette.background.default.secondary,
     borderBottom: `0.0625rem solid ${palette.border.table}`,
   }),
   headerTitleGroup: {
@@ -181,6 +192,10 @@ const resultsPanelStyles = () => ({
     minWidth: 0,
   },
   headerLabel: ({ palette }) => ({
+    color: palette.text.secondary,
+    fontWeight: 600,
+  }),
+  runLabel: ({ palette }) => ({
     color: palette.text.secondary,
     fontWeight: 600,
   }),

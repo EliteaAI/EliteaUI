@@ -18,7 +18,6 @@ const white20 = '#ffffff33';
 const white50 = '#ffffff80';
 const whiteStepBorder = '#757575';
 const veryLightBlue = '#C7EBFF';
-const skyBlue = '#29B8F5';
 const gray00 = '#CAD0D8';
 const gray10 = '#A9B7C1';
 const gray20 = '#686C76';
@@ -37,6 +36,7 @@ const blue16 = '#6ae8fa29';
 const blue20 = '#6ae8fa33';
 const blue24 = '#6ae8fa3d';
 const blue30 = '#6ae8fa4d';
+const blue15 = '#29b8f526';
 const blue40 = '#29b8f566';
 const blue70 = '#29b8f5b3';
 const skyBlue20 = '#29b8f533';
@@ -112,6 +112,7 @@ const oldDarkPalette = {
       gradientDark: 'linear-gradient(0deg, #121820 0%, #1D232C 100%)',
       hoverBorderGradient: 'linear-gradient(0deg, #53b0bf66 0%, #53B0BF 100%)',
       hoverShadow: '0px -3px 0.9375rem 0px #78e6ff4d',
+      highlighted: blue15,
     },
     interactiveTourPrompt: {
       backdrop: '#3b3e4680',
@@ -369,6 +370,7 @@ const oldDarkPalette = {
     },
     folder: {
       default: white2,
+      secondary: white2,
       active: '#f551f91a',
       borderGradient: 'linear-gradient(180deg, #ffffff12 0%, #ffffff00 100%)',
       borderHover: '#f551f94d',
@@ -458,13 +460,13 @@ const oldDarkPalette = {
     participant: {
       default: gray20,
     },
-    info: skyBlue,
+    info: blue,
     tips: veryLightBlue,
     attention: lightOrange,
     metrics: gray00,
     contextHighLight: '#3d3d3d',
     warningText: lightRed,
-    deleteAlertEntityName: skyBlue,
+    deleteAlertEntityName: blue,
     deleteAlertText: white,
     createButton: primaryDefault,
     deprecated: white,
@@ -490,7 +492,7 @@ const oldDarkPalette = {
       secondary: white,
       send: gray60,
       trophy: '#FFD3A0',
-      tips: skyBlue,
+      tips: blue,
       successModal: greenHoverBtn,
       disabled: gray20,
       attention: orange,
@@ -545,7 +547,7 @@ const oldDarkPalette = {
     },
   },
   status: {
-    draft: skyBlue,
+    draft: blue,
     onModeration: warningStatus,
     warningText: warningStatusTextLight,
     published: green,
@@ -687,12 +689,17 @@ const darkPalette = {
       main: blue5,
       secondary: blue8,
     },
+    accordion: {
+      default: white2,
+    },
   },
   border: {
     ...oldDarkPalette.border,
     edit: gray50,
     npsCard: darkColorScheme.accentDark,
     input: gray55,
+    folder: white5,
+    folderCard: 'transparent',
     chatInput: {
       base: greenDark,
       glow: greenLight,

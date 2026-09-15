@@ -94,6 +94,7 @@ const AgentEvaluateHistoryPage = memo(() => {
               </Box>
             ) : (
               <RunResultsView
+                isHistoryView
                 run={selectedRun}
                 applicationId={applicationId}
                 isLoading={isRunsLoading || isSelectedRunLoading}
@@ -159,11 +160,11 @@ const agentEvaluateHistoryPageStyles = () => ({
     width: '55%',
     minWidth: 0,
     overflowY: 'auto',
-    padding: '1.5rem 0',
+    padding: '0 0 1.5rem',
   },
   divider: ({ palette }) => ({
     width: '0.0625rem',
-    backgroundColor: palette.border.lines,
+    backgroundColor: palette.border.table,
     flexShrink: 0,
   }),
   stateContainer: {
