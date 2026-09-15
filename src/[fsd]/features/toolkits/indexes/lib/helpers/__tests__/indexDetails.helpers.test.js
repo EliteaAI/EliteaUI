@@ -531,8 +531,7 @@ describe('applyReindexStub', () => {
 
   it('resets both liveness flags, never one of them', () => {
     // reclaimable implies stale on every server-sent row, so resetting one alone mints
-    // an in_progress row that is not stale yet still reclaimable — and the control-flag
-    // readers, which are the ones gating Delete, read the half that was not reset.
+    // a tuple the backend cannot produce, and Delete's gate reads the half left set.
     const reclaimedRow = { ...finishedRow, reclaimable: true, metadata: { ...finishedRow.metadata } };
 
     const [row] = applyReindexStub([reclaimedRow], started);
@@ -555,11 +554,8 @@ describe('applyReindexStub', () => {
   });
 
   it('does not invent a control flag for a backend that sends none', () => {
-    // Phrased through `?? stale` on purpose, and not simplifiable to
-    // `toBeUndefined()`: what matters is not that the key is absent but that every
-    // consumer still falls back to `stale`. Coercing the pass-through to
-    // `Boolean(item.reclaimable)` — the tidy-the-asymmetry edit this line invites —
-    // turns the absence into a hard `false` and silently strips that fallback.
+    // Asserted through `?? stale`: what matters is that consumers still fall back,
+    // not that the key is absent.
     const legacy = {
       ...finishedRow,
       stale: true,
@@ -612,12 +608,16 @@ describe('applyReindexStub — run_chunks handover', () => {
     expect(row.metadata.run_chunks).toBe(3100);
   });
 
-  it('treats a server row in flight with no count yet as zero', () => {
+  it('does not invent a count for a backend that sends none', () => {
+    // Coercing the absence to 0 would make indexListCounts render "0 chunks so far"
+    // for the whole run on an older SDK — and only for the user who clicked Reindex,
+    // since everyone else's row still reaches the docs-ratio fallback.
     const serverRow = { id: 'row-1', metadata: { state: 'in_progress', task_id: 'live-run' } };
 
     const [row] = applyReindexStub([serverRow], started);
 
-    expect(row.metadata.run_chunks).toBe(0);
+    expect(row.metadata.run_chunks).toBeUndefined();
+    expect(indexListCounts(row.metadata, true).count).toBe(indexListCounts(serverRow.metadata, true).count);
   });
 });
 
@@ -1371,8 +1371,7 @@ describe('isAbandonedRun', () => {
   });
 });
 
-// Deliberately the same four cases as its display twin, side by side: the two differ by
-// one token, which is the easiest shape for a silent swap to survive review.
+// The same four cases as its display twin, side by side: the two differ by one token.
 describe('isReclaimableRun', () => {
   const run = (state, extra = {}) => ({ metadata: { state }, ...extra });
 
@@ -1381,7 +1380,7 @@ describe('isReclaimableRun', () => {
   });
 
   it('leaves a run that is only display-stale alone', () => {
-    // `stale` fires five heartbeat intervals in, which a healthy run crosses mid-promote.
+    // A healthy run crosses the five-interval display horizon while mid-promote.
     expect(isReclaimableRun(run(IndexStatuses.progress, { stale: true, reclaimable: false }))).toBe(false);
   });
 
@@ -1392,8 +1391,7 @@ describe('isReclaimableRun', () => {
 
   it('ignores reclaimable rows that already reached a terminal state', () => {
     // The flag is heartbeat age, which the backend keeps asserting after a row has
-    // terminated; without the state conjunct a finished run gains a phantom abandoned
-    // entry in Run History.
+    // terminated.
     expect(isReclaimableRun(run(IndexStatuses.success, { reclaimable: true }))).toBe(false);
     expect(isReclaimableRun(run(IndexStatuses.fail, { reclaimable: true }))).toBe(false);
   });

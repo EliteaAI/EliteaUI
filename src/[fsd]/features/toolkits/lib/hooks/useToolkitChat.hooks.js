@@ -11,6 +11,7 @@ import {
   generateMockMessageTemplate,
   generateWelcomeMessage,
 } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexChat.helpers';
+import { hasReclaimableFlag } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexDetails.helpers';
 import { useIndexHistory } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
 import { ToolkitChatModesEnum } from '@/[fsd]/features/toolkits/lib/constants';
 import { ToolkitChatHelpers, ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
@@ -127,6 +128,10 @@ export const useToolkitChat = props => {
     conversationId: index?.metadata?.conversation_id,
   });
 
+  // Hoisted so the effect depends on the boolean rather than on `index`, whose identity
+  // changes on every poll and would re-run the recovery each time.
+  const runIsReclaimable = hasReclaimableFlag(index);
+
   useEffect(() => {
     if (needGenerateProgressingIndexHistory) {
       const currentConversationMessages = convertConversationToChatHistory(conversationDetails, traceSteps);
@@ -137,7 +142,7 @@ export const useToolkitChat = props => {
       // `reclaimable`, not `stale`: latching on a dead run makes the recovery Reindex a
       // silent no-op, while not latching on a healthy mid-promote run costs the live
       // transcript until the next poll. Falls back to `stale` for an older backend.
-      if (!(index?.reclaimable ?? index?.stale)) setIsRunning(true);
+      if (!runIsReclaimable) setIsRunning(true);
     }
   }, [
     shouldRecoverHistory,
@@ -145,8 +150,7 @@ export const useToolkitChat = props => {
     traceSteps,
     needGenerateProgressingIndexHistory,
     setProgressingIndexHistoryRecovered,
-    index?.reclaimable,
-    index?.stale,
+    runIsReclaimable,
   ]);
 
   const onSetLLMSettings = useCallback(

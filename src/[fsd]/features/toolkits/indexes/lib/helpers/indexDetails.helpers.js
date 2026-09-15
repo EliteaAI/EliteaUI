@@ -5,10 +5,15 @@ import {
   BannerSeverity,
   BannerTitleMap,
   INDEX_ABANDONED_BANNER_MESSAGE,
+  INDEX_ABANDONED_TOOLTIP,
   INDEX_DATA_DISABLED_REASON,
+  INDEX_DOCS_RATIO_TOOLTIP,
+  INDEX_REINDEXED_RATIO_TOOLTIP,
   INDEX_RETAINED_DATA_MESSAGE,
+  INDEX_RUN_CHUNKS_TOOLTIP,
   INDEX_SEARCH_TOOL_OPTIONS,
   INDEX_UNRESPONSIVE_BANNER_MESSAGE,
+  INDEX_UNRESPONSIVE_TOOLTIP,
   IndexStatuses,
   IndexesToolsEnum,
   REINDEX_FAILED_BANNER_MESSAGE,
@@ -251,8 +256,18 @@ export const isAbandonedRun = index =>
  * @param {object} index - Index row as returned by the indexes list
  * @returns {boolean}
  */
+/**
+ * The control flag, with the fallback every reader needs while an older backend is
+ * still sending `stale` alone. One definition on purpose: this is the flag that
+ * authorizes Delete, Reindex, Stop and supersede, so a missed copy arms a destructive
+ * control on a live run. When the fallback is retired it goes from here only.
+ * @param {object} row - an index list row, or a stub standing in for one
+ * @returns {boolean}
+ */
+export const hasReclaimableFlag = row => Boolean(row?.reclaimable ?? row?.stale);
+
 export const isReclaimableRun = index =>
-  Boolean(index?.reclaimable ?? index?.stale) && index?.metadata?.state === IndexStatuses.progress;
+  hasReclaimableFlag(index) && index?.metadata?.state === IndexStatuses.progress;
 
 /**
  * A run that may still be executing. Stoppability is deliberately not consulted: a run
@@ -295,7 +310,7 @@ export const indexRunControls = ({
   const overrideSupersedesRun = Boolean(localMetaOverride?.state && !serverSupersedes);
   const buildBlocked = Boolean(buildBlockedReason);
   const stale = overrideSupersedesRun ? false : Boolean(index?.stale);
-  const reclaimable = overrideSupersedesRun ? false : Boolean(index?.reclaimable ?? index?.stale);
+  const reclaimable = overrideSupersedesRun ? false : hasReclaimableFlag(index);
   const runIsLive = hasLiveRun({ isIndexing, isStale: reclaimable });
   const isAwaitingTaskStart = Boolean(isWaitingForTaskStart) && !serverSupersedes;
 
@@ -323,7 +338,7 @@ export const indexRunControls = ({
  * @returns {boolean}
  */
 export const shouldExpireReindexStub = ({ serverRow, stubCreatedAt, now, graceMs }) =>
-  !serverRow || (Boolean(serverRow.reclaimable ?? serverRow.stale) && now - (stubCreatedAt ?? 0) > graceMs);
+  !serverRow || (hasReclaimableFlag(serverRow) && now - (stubCreatedAt ?? 0) > graceMs);
 
 /**
  * Whether a status banner should stay on screen once its run's transcript is gone, i.e. on a fresh
@@ -363,7 +378,7 @@ export const indexListCounts = (metadata, isInProgress) => {
     metadata.run_chunks !== null && metadata.run_chunks !== undefined && Number.isFinite(runChunks);
   if (isInProgress && hasRunChunks) {
     return {
-      tooltip: 'chunks written by the current run',
+      tooltip: INDEX_RUN_CHUNKS_TOOLTIP,
       count: `${runChunks} chunks so far`,
     };
   }
@@ -372,7 +387,7 @@ export const indexListCounts = (metadata, isInProgress) => {
   const total = metadata.total ?? metadata.indexed ?? '–';
   const indexedDocs = metadata.indexed ?? '–';
   return {
-    tooltip: hasBeenIndexedBefore ? 'reindexed / total' : 'indexed / total',
+    tooltip: hasBeenIndexedBefore ? INDEX_REINDEXED_RATIO_TOOLTIP : INDEX_DOCS_RATIO_TOOLTIP,
     count: `${indexedDocs} / ${total}`,
   };
 };
@@ -387,9 +402,7 @@ export const indexListCounts = (metadata, isInProgress) => {
  * @returns {string}
  */
 export const abandonedRunTooltip = index =>
-  (index?.reclaimable ?? index?.stale)
-    ? 'This run stopped without finishing. Reindex to try again.'
-    : 'This run has not reported progress for a while. Use Stop to end it before starting a new run.';
+  hasReclaimableFlag(index) ? INDEX_ABANDONED_TOOLTIP : INDEX_UNRESPONSIVE_TOOLTIP;
 
 /**
  * Build the optimistic stub for a row the user just clicked Reindex on.
@@ -445,8 +458,9 @@ export const applyReindexStub = (indexesList, reindexRunning) => {
         ...item.metadata,
         state: reindexRunning.metadata?.state ?? item.metadata?.state,
         // Zero while this is the pre-click row, or the finished run's count reads as the
-        // new run's progress; then yield, or the stub freezes the card at zero.
-        run_chunks: isPreClickRow ? 0 : (item.metadata?.run_chunks ?? 0),
+        // new run's progress; then yield verbatim. Coercing an absent count to 0 would
+        // hide indexListCounts' docs-ratio fallback from the one user who clicked.
+        run_chunks: isPreClickRow ? 0 : item.metadata?.run_chunks,
         task_id: reindexRunning.metadata?.task_id ?? item.metadata?.task_id,
         conversation_id: reindexRunning.metadata?.conversation_id ?? item.metadata?.conversation_id,
       },

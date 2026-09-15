@@ -85,6 +85,18 @@ export const INDEX_ABANDONED_BANNER_MESSAGE =
   'This run has not reported progress for a long time and looks interrupted. ' +
   'If it is still running it may yet finish; otherwise click Reindex to restart it.';
 
+// The card's one-line counterparts of the two banners above. Kept beside them so the
+// compact row and the panel cannot drift into naming different remedies for one state.
+export const INDEX_ABANDONED_TOOLTIP = 'This run stopped without finishing. Reindex to try again.';
+export const INDEX_UNRESPONSIVE_TOOLTIP =
+  'This run has not reported progress for a while. Use Stop to end it before starting a new run.';
+
+// The counts line under an index name: the live chunk count while a run is in flight,
+// and the persisted document ratio otherwise.
+export const INDEX_RUN_CHUNKS_TOOLTIP = 'chunks written by the current run';
+export const INDEX_DOCS_RATIO_TOOLTIP = 'indexed / total';
+export const INDEX_REINDEXED_RATIO_TOOLTIP = 'reindexed / total';
+
 export const INDEX_ABANDONED_EVENT_LABEL = 'Stopped without finishing';
 
 // Statuses that allow the index to be searched and run tools against

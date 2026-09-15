@@ -8,16 +8,11 @@ import { describe, expect, it } from 'vitest';
  * test cannot reach: every input must be passed as ES6 **shorthand**, so the local
  * named `x` is what feeds the key `x`.
  *
- * This replaces an earlier guard that asserted call counts, argument arity, an
- * identifier's spelling and two raw regexes. That one passed on a verbatim revert
- * and failed on a prettier reflow — it pinned shape, not meaning. Shorthand
- * integrity is immune to formatting, and mis-wiring a key (`localMetaOverride:
- * serverSupersedes`), neutralising one (`buildBlockedReason: null`) or swapping two
- * all break it, because each stops being shorthand.
- *
- * What it deliberately does NOT assert: how many arguments anything takes or what any
- * identifier is called. Renaming a panel local is a real signal to update this list,
- * not a false alarm.
+ * Mis-wiring a key (`localMetaOverride: serverSupersedes`), neutralising one
+ * (`buildBlockedReason: null`) or swapping two all break it, because each stops being
+ * shorthand — while formatting changes do not. Nothing here asserts arity or an
+ * identifier's spelling, so renaming a panel local is a real signal to update this
+ * list rather than a false alarm.
  */
 const REQUIRED_SHORTHAND = [
   // Widest blast radius of the eight: mis-wire this and runIsLive goes false, which
@@ -39,12 +34,14 @@ const SOURCE = readFileSync(fileURLToPath(new URL('../RunIndexPanel.jsx', import
 
 const findCall = calleeName => {
   const found = [];
-  (function walk(node) {
+  const walk = node => {
     if (!node || typeof node !== 'object') return;
     if (Array.isArray(node)) return node.forEach(walk);
     if (node.type === 'CallExpression' && node.callee?.name === calleeName) found.push(node);
     Object.values(node).forEach(walk);
-  })(parse(SOURCE, { ecmaVersion: 2022, sourceType: 'module', ecmaFeatures: { jsx: true } }));
+  };
+
+  walk(parse(SOURCE, { ecmaVersion: 2022, sourceType: 'module', ecmaFeatures: { jsx: true } }));
   return found;
 };
 
@@ -58,12 +55,10 @@ describe('RunIndexPanel — every gate input reaches the helper unaltered', () =
   });
 });
 
-// The banner used to take these as positionals 5 and 7 of 7, with an object between
-// them — two same-typed flags in interchangeable slots, where transposing them is
-// invisible at the call site and changes the banner from the warning naming Stop to
-// the plain "Indexing…" the eternal-spinner fix exists to remove. The helper's own
-// tests cannot see it: they pass their own arguments. Naming the parameters removed
-// the slots; requiring shorthand here removes the swap.
+// Two same-typed flags the helper's own tests cannot police, because they pass their
+// own arguments: transposing them at the call site swaps the warning naming Stop for
+// the plain "Indexing…" banner. Naming the parameters removed the slots; shorthand
+// here removes the swap.
 describe('RunIndexPanel — the banner cannot be handed the wrong liveness flag', () => {
   const [call] = findCall('bannerVariant');
   const properties = call?.arguments?.[0]?.properties ?? [];

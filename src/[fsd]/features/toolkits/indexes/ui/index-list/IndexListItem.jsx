@@ -9,6 +9,7 @@ import { normalizeIndexingReport } from '@/[fsd]/entities/indexing-report';
 import { IndexStatuses } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
 import {
   abandonedRunTooltip,
+  hasReclaimableFlag,
   indexListCounts,
   isAbandonedRun,
 } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexDetails.helpers';
@@ -55,7 +56,7 @@ const IndexListItem = memo(props => {
   const isInProgress = index?.metadata?.state === IndexStatuses.progress;
   // `reclaimable`, not `stale` — Delete drops the whole collection; see indexRunControls.
   // Falls back to `stale` for an older backend.
-  const reclaimable = index?.reclaimable ?? index?.stale;
+  const reclaimable = hasReclaimableFlag(index);
   const disableStuckActions = isReindexing || (isInProgress && !reclaimable);
 
   const documents = useMemo(() => {
