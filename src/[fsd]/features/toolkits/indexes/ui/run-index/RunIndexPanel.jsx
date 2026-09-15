@@ -180,10 +180,8 @@ const RunIndexPanel = memo(props => {
   }, [toolkitSchema]);
 
   const effectiveState = localMetaOverride?.state ?? index?.metadata?.state;
-  // Named `isIndexing` so the indexRunControls call below is shorthand like every
-  // other input: this is the one with the widest blast radius — mis-wiring it makes
-  // runIsLive false and arms Delete on a live run — and it was the only key the
-  // shorthand guard could not cover while the local had a different name.
+  // Named to match the indexRunControls key so the call below stays shorthand, which is
+  // what the wiring guard checks.
   const isIndexing = chatIsIndexing || effectiveState === IndexStatuses.progress;
   // Runs observed here aren't in the slice until a fetch happens — arm the poll from
   // local belief. (Second subscription on this route is deliberate; see the hook.)
@@ -205,8 +203,6 @@ const RunIndexPanel = memo(props => {
   // request issued after the observation supersedes it (in-flight fetches carry
   // pre-run data).
   const serverSupersedes = rowReadAfterOverride && startedTimeStamp > overrideObservedAtRef.current;
-  // Every flag the panel gates on comes from one pure derivation, so there is no
-  // local wiring here to get wrong and the values are table-tested directly.
   const buildBlockedReason = indexBuildBlockedReason(selectedIndexTools);
   const {
     stale: isStale,
@@ -618,10 +614,8 @@ const RunIndexPanel = memo(props => {
     retainsIndexedData,
   );
 
-  // The display flag on purpose: greying History protects the user from a half-written
-  // run, and once a run stops reporting they want to inspect it. Keying this on the
-  // control flag would hold History shut for the whole disconnect timeout on exactly
-  // the dead run a user is trying to read.
+  // The display flag on purpose: keying this on the control flag would hold History shut
+  // for the whole disconnect timeout on exactly the dead run a user is trying to read.
   const runBlocksHistory = isIndexing && !runLooksAbandoned;
   const historyDisabled = !index?.metadata?.history?.length || runBlocksHistory;
   const historyTooltip = runBlocksHistory

@@ -50,10 +50,8 @@ export const buildIndexRunLookup = indexesData => {
     const indexName = metadata?.collection;
     if (!indexName || !Array.isArray(metadata.history)) return;
 
-    // An in_progress entry that will never terminate: superseded by a later run (a
-    // retry replaced its conversation on the row), or the row became reclaimable. A
-    // live run's current entry stays out, exactly as before — including a healthy run
-    // that is merely display-stale, which Run History would otherwise list as finished.
+    // An in_progress entry that will never terminate: superseded by a later run, or the
+    // row became reclaimable. A healthy run that is merely display-stale stays out.
     const rowAbandoned = isReclaimableRun(index);
     const isAbandonedEntry = entry =>
       entry.state === IndexStatuses.progress &&

@@ -250,8 +250,7 @@ export const isAbandonedRun = index =>
 
 /**
  * The control-flag counterpart of {@link isAbandonedRun}, for surfaces that retire a run
- * rather than decorate it. `stale` is a five-minute display horizon that also fires on a
- * healthy run while it is mid-promote, which is too weak to declare a run finished.
+ * rather than decorate it. See {@link indexRunControls} for the split.
  * @param {object} index - Index row as returned by the indexes list
  * @returns {boolean}
  */
@@ -268,17 +267,16 @@ export const isReclaimableRun = index =>
 export const hasLiveRun = ({ isIndexing, isStale }) => Boolean(isIndexing) && !isStale;
 
 /**
- * Split the two questions a run's row answers, so a component cannot accidentally
- * answer one with the other's flag.
+ * Split the two questions a run's row answers, so a component cannot answer one with
+ * the other's flag.
  *
- * `runLooksAbandoned` is DISPLAY — banner severity and copy; being wrong costs a
- * misleading card. `runIsLive` is CONTROL — it gates Delete (which drops the whole
- * collection), Reindex and Stop; being wrong destroys a live run. They ran off the
- * same flag until the display horizon was shortened to minutes.
- * Returns the derived flags AND the disabled states they gate, so the panel has no
- * derivation of its own left to get wrong — the swap that re-enabled Delete on a
- * healthy long-promote run is not expressible at the call site, and the values are
- * table-testable without mounting Formik, sockets and RTK.
+ * `stale` is DISPLAY — banner severity and copy; being wrong costs a misleading card.
+ * `reclaimable` is CONTROL — it gates Delete, which drops the whole collection, plus
+ * Reindex and Stop; being wrong destroys a live run. The two disagree for as long as
+ * the disconnect timeout exceeds the display horizon, which is the normal case.
+ *
+ * Returns the disabled states as well as the flags, so the panel keeps no derivation
+ * of its own.
  * @param {object} runState
  * @returns {{stale: boolean, reclaimable: boolean, runLooksAbandoned: boolean,
  *   runIsLive: boolean, isAwaitingTaskStart: boolean, deleteDisabled: boolean,
@@ -290,21 +288,17 @@ export const indexRunControls = ({
   localMetaOverride = null,
   serverSupersedes = false,
   buildBlockedReason = null,
-  // Conservative defaults on purpose. Every one of these gates a destructive or
-  // irreversible affordance, and `false` is the PERMISSIVE value — so a key lost in
-  // a refactor would silently degrade toward enabling Delete or Reindex. Defaulting
-  // to the disabled side makes an omission visible as a stuck button instead.
+  // `false` is the permissive value for all three, so a key lost in a refactor would
+  // degrade toward enabling Delete. Defaulting to disabled makes an omission show up
+  // as a stuck button instead.
   isDeleting = true,
   isRunning = true,
   isWaitingForTaskStart = true,
 }) => {
-  // Derived here rather than at the call site: the two arguments the panel used to
-  // compute itself are exactly where every surviving mutant lived.
   const overrideSupersedesRun = Boolean(localMetaOverride?.state && !serverSupersedes);
   const buildBlocked = Boolean(buildBlockedReason);
-  // The row is read here rather than taken as two booleans, so a caller cannot hand
-  // the display flag to the control question by swapping two same-shaped arguments —
-  // which is exactly the edit that re-enables Delete on a healthy long-promote run.
+  // The row is read here rather than taken as two booleans, so a caller cannot hand the
+  // display flag to the control question by swapping two same-shaped arguments.
   const stale = overrideSupersedesRun ? false : Boolean(index?.stale);
   const reclaimable = overrideSupersedesRun ? false : Boolean(index?.reclaimable ?? index?.stale);
   const runIsLive = hasLiveRun({ isIndexing, isStale: reclaimable });
@@ -355,13 +349,10 @@ export const bannerOutlivesRun = severity =>
  * While a run is in flight the persisted `indexed`/`total` still describe the
  * PREVIOUS run — the platform preserves them across a reindex so the index stays
  * readable while the new one works — and rendering them beside a live spinner
- * reads as this run's progress. `run_chunks` is the running count the SDK writes
- * on every heartbeat, so an in-flight row reports that instead. Never a ratio:
- * the run's own total is not known until it finishes.
- *
- * Units elsewhere are docs/docs: `indexed` = documents landed in the vector
- * store, `total` = documents fetched from the source. Mixing chunks and docs in
- * one ratio made it meaningless when a chunker yields many chunks per document.
+ * reads as this run's progress. `run_chunks` is the running count the SDK writes on
+ * every heartbeat, so an in-flight row reports that instead. Never a ratio: the run's
+ * own total is not known until it finishes, and `indexed`/`total` count documents
+ * while `run_chunks` counts chunks.
  * @param {object} metadata - `index.metadata` from the index list GET
  * @param {boolean} isInProgress - whether the row's state is `in_progress`
  * @returns {{tooltip: string, count: string}}
@@ -395,10 +386,9 @@ export const indexListCounts = (metadata, isInProgress) => {
 /**
  * Tooltip for the abandoned-run icon on a list row.
  *
- * The icon itself keys on `stale` — chrome — but the remedy it names has to key on
- * `reclaimable`, the flag the row's buttons are gated on. Otherwise a run that is
- * merely slow to promote shows "Reindex to try again" beside a disabled Reindex
- * button, while the detail panel for the same run correctly says to use Stop.
+ * The icon keys on `stale`, but the remedy it names keys on `reclaimable`, the flag the
+ * row's buttons are gated on — otherwise a run that is merely slow to promote offers
+ * "Reindex to try again" beside a disabled Reindex button.
  * @param {object} index - the index list row
  * @returns {string}
  */
@@ -410,11 +400,8 @@ export const abandonedRunTooltip = index =>
 /**
  * Build the optimistic stub for a row the user just clicked Reindex on.
  *
- * Lives here, not inline in the container, so it can be round-tripped through
- * {@link applyReindexStub}: the stash below is the only thing that tells the row
- * being replaced apart from the run it starts, and its sole writer had no test —
- * deleting it turned the just-started run's card red with "This run stopped without
- * finishing" while every suite stayed green.
+ * Paired with {@link applyReindexStub}: the stash below is the only thing that tells
+ * the row being replaced apart from the run it starts.
  * @param {object} reindexTarget - the row as it was when Reindex was clicked
  * @param {number} now - epoch ms
  * @returns {object}
@@ -446,37 +433,25 @@ export const applyReindexStub = (indexesList, reindexRunning) => {
   return indexesList.map(item => {
     if (item.id !== reindexRunning.id) return item;
 
-    // The task_id the row carried when Reindex was clicked, stashed by
-    // confirmReindex because traceReindex overwrites reindexRunning.metadata.task_id
-    // as soon as the dispatch lands. It is how the stub tells the row it is standing
-    // in for apart from the run it started.
+    // Stashed because traceReindex overwrites reindexRunning.metadata.task_id as soon
+    // as the dispatch lands.
     const isPreClickRow = (item.metadata?.task_id ?? null) === (reindexRunning.previousTaskId ?? null);
 
     return {
       ...item,
-      // Two lifetimes, deliberately. The runner stays mounted until the run is
-      // RECLAIMABLE, so a healthy long run keeps its transcript. The display flag is
-      // forced only while this is still the pre-click row; once the server returns
-      // the new run's own row its flag is the honest one, so a genuinely dead run
-      // reads as stopped within minutes instead of claiming to index for the full
-      // disconnect timeout.
-      //
-      // Keying on `state === in_progress` instead looked equivalent and was not:
-      // Reindex is only offered on an in-progress row once it is reclaimable, and
-      // reclaimable implies stale, so the ONLY reachable in-progress click starts
-      // from a stale row — and that flag would be handed straight to the run just
-      // started, rendering it "stopped without finishing".
+      // Forced only while this is still the pre-click row; once the server returns the
+      // new run's own row its flag is the honest one. Keyed on the task_id rather than
+      // on `state === in_progress`, because every reachable in-progress click starts
+      // from a stale row and that flag would ride onto the run just started.
       stale: isPreClickRow ? false : Boolean(item.stale),
-      // Both flags or neither: reclaimable implies stale on every server-sent row, so
-      // resetting one alone mints a tuple the backend cannot produce, and every
-      // `reclaimable ?? stale` consumer reads the flag that was not reset.
+      // Both or neither: reclaimable implies stale on every server-sent row, so resetting
+      // one alone mints a tuple the backend cannot produce.
       reclaimable: isPreClickRow ? false : item.reclaimable,
       metadata: {
         ...item.metadata,
         state: reindexRunning.metadata?.state ?? item.metadata?.state,
-        // Zero while this is still the pre-click row, or the finished/abandoned run's
-        // count reads as the new run's progress; then yield to the server, or the
-        // stub clobbers every poll and freezes the card at "0 chunks so far".
+        // Zero while this is the pre-click row, or the finished run's count reads as the
+        // new run's progress; then yield, or the stub freezes the card at zero.
         run_chunks: isPreClickRow ? 0 : (item.metadata?.run_chunks ?? 0),
         task_id: reindexRunning.metadata?.task_id ?? item.metadata?.task_id,
         conversation_id: reindexRunning.metadata?.conversation_id ?? item.metadata?.conversation_id,

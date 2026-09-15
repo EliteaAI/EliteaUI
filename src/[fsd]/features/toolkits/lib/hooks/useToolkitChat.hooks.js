@@ -134,12 +134,9 @@ export const useToolkitChat = props => {
 
       setChatHistory(prettifiedMessages);
       setProgressingIndexHistoryRecovered(true);
-      // `reclaimable`, not `stale`: a run whose row stopped reporting long ago should
-      // not latch the send gate, or the recovery Reindex is a silent no-op. But
-      // `stale` is now a five-minute display heuristic that also fires while a
-      // healthy run is mid-promote, and skipping the latch there costs the live
-      // transcript until the next poll. `reclaimable` is the flag that actually means
-      // the run is dead; it falls back to `stale` for an older backend.
+      // `reclaimable`, not `stale`: latching on a dead run makes the recovery Reindex a
+      // silent no-op, while not latching on a healthy mid-promote run costs the live
+      // transcript until the next poll. Falls back to `stale` for an older backend.
       if (!(index?.reclaimable ?? index?.stale)) setIsRunning(true);
     }
   }, [

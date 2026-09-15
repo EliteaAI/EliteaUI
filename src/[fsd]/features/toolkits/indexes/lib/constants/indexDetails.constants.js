@@ -73,17 +73,14 @@ export const REINDEX_FAILED_BANNER_MESSAGE =
   `The new indexing attempt could not be completed. ${INDEX_RETAINED_DATA_MESSAGE} ` +
   'Check History for error details and try again after resolving the issue.';
 
-// Shown while the run looks interrupted but the platform still considers it live, so
-// Reindex is refused server-side and the panel offers Stop instead. Telling the user to
-// click Reindex here points at a button that is not in the DOM.
+// Shown while the run looks interrupted but the platform still considers it live, so the
+// panel offers Stop and the server would refuse a Reindex.
 export const INDEX_UNRESPONSIVE_BANNER_MESSAGE =
   'This run has not reported progress for a while. It may still be finishing; ' +
   'if it is not, use Stop to end it before starting a new run.';
 
-// `stale` is a no-progress heuristic — five heartbeat intervals, not the disconnect
-// timeout it once was — and never a terminal state from the worker, so the copy has to
-// hedge that the run may still be alive. Which remedy to name depends on `reclaimable`;
-// see bannerVariant.
+// `stale` is a no-progress heuristic, never a terminal state from the worker, so the copy
+// hedges that the run may still be alive. The remedy named depends on `reclaimable`.
 export const INDEX_ABANDONED_BANNER_MESSAGE =
   'This run has not reported progress for a long time and looks interrupted. ' +
   'If it is still running it may yet finish; otherwise click Reindex to restart it.';
