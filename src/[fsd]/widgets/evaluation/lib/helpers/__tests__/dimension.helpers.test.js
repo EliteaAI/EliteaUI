@@ -99,6 +99,7 @@ describe('target value range', () => {
     evaluator: 'human',
     ...overrides,
   });
+  const passFailForm = () => formWith({ scaleTypePreset: 'pass_fail' });
 
   it('accepts a target inside the Score range', () => {
     expect(getTargetValueError(formWith({ scaleTypePreset: 'score', targetValue: '80' }))).toBe('');
