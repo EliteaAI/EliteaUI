@@ -202,7 +202,7 @@ const usersParticipantDropdownStyles = isTriggerVisible => ({
     padding: `${SPACING.SM} ${SPACING.XL}`,
     height: DROPDOWN_CONSTANTS.DIMENSIONS.ITEM_HEIGHT,
     gap: DROPDOWN_CONSTANTS.SPACING.ITEM_ICON_TEXT_GAP,
-    color: palette.border.lines,
+    color: palette.text.disabled,
     textTransform: 'uppercase',
   }),
   titleContent: {
@@ -223,7 +223,7 @@ const usersParticipantDropdownStyles = isTriggerVisible => ({
     lineHeight: '1rem',
     letterSpacing: '6%',
     textTransform: 'uppercase',
-    color: palette.border.hover,
+    color: palette.text.primary,
   }),
   footerDivider: { borderTop: '.0625rem solid', borderColor: 'divider', margin: '.5rem 0rem' },
 });

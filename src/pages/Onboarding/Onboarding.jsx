@@ -304,7 +304,7 @@ const styles = {
   fileNameLinearProgress: ({ palette }) => ({
     height: '0.375rem',
     borderRadius: '0.1875rem',
-    backgroundColor: palette.border.lines,
+    backgroundColor: palette.background.surface.interactive.default,
     '& .MuiLinearProgress-bar': {
       borderRadius: '0.1875rem',
     },

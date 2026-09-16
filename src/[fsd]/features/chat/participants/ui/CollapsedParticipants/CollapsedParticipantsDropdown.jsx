@@ -208,7 +208,7 @@ const collapsedParticipantsDropdownStyles = () => ({
     padding: `${SPACING.SM} ${SPACING.XL}`,
     height: DROPDOWN_CONSTANTS.DIMENSIONS.ITEM_HEIGHT,
     gap: DROPDOWN_CONSTANTS.SPACING.ITEM_ICON_TEXT_GAP,
-    color: palette.border.lines,
+    color: palette.text.disabled,
     textTransform: 'uppercase',
   }),
   titleContent: {
@@ -229,7 +229,7 @@ const collapsedParticipantsDropdownStyles = () => ({
     lineHeight: '1rem',
     letterSpacing: '6%',
     textTransform: 'uppercase',
-    color: palette.border.hover,
+    color: palette.text.primary,
   }),
   popper: ({ zIndex }) => ({
     zIndex: zIndex?.modal ? zIndex.modal + 10 : 2200,

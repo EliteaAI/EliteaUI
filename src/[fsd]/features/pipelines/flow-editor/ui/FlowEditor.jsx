@@ -695,13 +695,13 @@ const flowEditorStyles = () => ({
       borderRadius: '0.25rem',
     },
     '& .react-flow__controls-button svg': {
-      color: `${palette.border.hover} !important`,
+      color: `${palette.icon.default} !important`,
     },
     '& .react-flow__controls-button': {
       backgroundColor: palette.background.paper,
       borderBottom: `1px solid ${palette.divider}`,
       '&:hover': {
-        backgroundColor: palette.border.default,
+        backgroundColor: palette.background.interactiveItem.hover,
         '& svg': {
           color: `${palette.icon.secondary} !important`,
         },
