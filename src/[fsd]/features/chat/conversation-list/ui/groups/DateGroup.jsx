@@ -71,7 +71,7 @@ const DateGroup = memo(props => {
         <IconButton
           size="small"
           sx={{
-            color: theme.palette.text.primary,
+            color: theme.palette.icon.default,
             padding: '.125rem',
             minWidth: 'auto',
             transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',

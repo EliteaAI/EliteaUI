@@ -221,7 +221,7 @@ const getStyles = () => ({
       display: 'flex',
       alignItems: 'center',
       minWidth: '1rem',
-      color: isActive ? palette.text.secondary : palette.icon.default,
+      color: isActive ? palette.icon.secondary : palette.icon.default,
       '& svg': {
         fill: isActive ? palette.icon.secondary : palette.icon.default,
         width: '1rem',
