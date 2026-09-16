@@ -1054,6 +1054,8 @@ export const NotificationType = {
   ChatUserMentioned: 'chat_user_mentioned',
   PrivateProjectCreated: 'private_project_created',
   IndexDataChanged: 'index_data_changed',
+  IndexScheduleExpiring: 'index_schedule_expiring',
+  IndexScheduleExpired: 'index_schedule_expired',
   BucketExpirationWarning: 'bucket_expiration_warning',
   AgentUnpublished: 'agent_unpublished',
   PersonalAccessTokenExpiring: 'personal_access_token_expiring',

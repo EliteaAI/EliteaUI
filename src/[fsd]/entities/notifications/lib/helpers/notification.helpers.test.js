@@ -62,6 +62,26 @@ describe('resolveHref for index notifications', () => {
   it('leaves the segment unlinked when the run names no toolkit', () => {
     expect(resolveHref(NotificationType.IndexDataChanged, { index_name: 'docs' }, 591)).toBeNull();
   });
+
+  // Both expiry notices ask their owner to go and renew a schedule. An unrouted event type
+  // renders the "Manage index schedule" link as plain text, so the notice would ask for an
+  // action it does not offer — and being one toggle from renewal is the point of disabling
+  // rather than deleting.
+  const expiryTypes = [NotificationType.IndexScheduleExpiring, NotificationType.IndexScheduleExpired];
+
+  it('sends both schedule expiry notices to the schedule they are about', () => {
+    for (const type of expiryTypes) {
+      expect(resolveHref(type, { toolkit_id: 870, index_name: 'docs' }, 591)).toBe(
+        `${BASE}/591/toolkits/all/870/index/docs`,
+      );
+    }
+  });
+
+  it('still reaches the toolkit when an expiry notice carries no index name', () => {
+    for (const type of expiryTypes) {
+      expect(resolveHref(type, { toolkit_id: 870 }, 591)).toBe(`${BASE}/591/toolkits/all/870`);
+    }
+  });
 });
 
 describe('sanitizePrivateProjectName', () => {

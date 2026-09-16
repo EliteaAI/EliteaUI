@@ -30,7 +30,12 @@ export const resolveHref = (eventType, meta, projectId) => {
     // The index page is addressed by its own route, not by the toolkit page plus an `index_name`
     // query: that query only survives through a back-compat redirect, and the `:tab` it travels
     // with is a toolkits LIST tab, so anything but a real one leaves the breadcrumb parent dead.
-    case NotificationType.IndexDataChanged: {
+    // The expiry pair lands here too: the schedule an owner has to renew lives on that same
+    // index page, and an unrouted type renders its "Manage index schedule" link as plain text,
+    // which leaves the notice telling them to act with nothing to act on.
+    case NotificationType.IndexDataChanged:
+    case NotificationType.IndexScheduleExpiring:
+    case NotificationType.IndexScheduleExpired: {
       const toolkitId = meta?.toolkit_id;
       const indexName = meta?.index_name;
       if (!toolkitId) return null;
