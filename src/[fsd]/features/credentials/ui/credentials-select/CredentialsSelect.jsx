@@ -129,6 +129,16 @@ const CredentialsSelect = memo(
       resetStatuses,
     });
 
+    const isClearingAllowed = section !== 'vectorstorage';
+
+    const commitConfiguration = useCallback(
+      (configuration, ...rest) => {
+        if (configuration === null && !isClearingAllowed) return;
+        onSelectConfiguration?.(configuration, ...rest);
+      },
+      [isClearingAllowed, onSelectConfiguration],
+    );
+
     const mismatchedPrivateCredential = useMemo(() => {
       if (
         !value?.private ||
@@ -346,13 +356,11 @@ const CredentialsSelect = memo(
       if (!hasFetchedData || hasAutoSelectedRef.current || !credentialToAutoSelect) return;
 
       hasAutoSelectedRef.current = true;
-      onSelectConfiguration?.(
+      commitConfiguration(
         { private: credentialToAutoSelect.private, elitea_title: credentialToAutoSelect.elitea_title },
         { isAutoSelect: true },
       );
-    }, [hasFetchedData, credentialToAutoSelect, onSelectConfiguration, hasAutoSelectedRef]);
-
-    const isClearingAllowed = section !== 'vectorstorage';
+    }, [hasFetchedData, credentialToAutoSelect, commitConfiguration, hasAutoSelectedRef]);
 
     const onSelectItem = useCallback(
       option => {
@@ -360,7 +368,7 @@ const CredentialsSelect = memo(
           selectedOption?.elitea_title === option.elitea_title && selectedOption?.private === option.private;
 
         if (isAlreadySelected) {
-          if (isClearingAllowed) onSelectConfiguration(null);
+          commitConfiguration(null);
           return;
         }
 
@@ -369,11 +377,10 @@ const CredentialsSelect = memo(
           [GA_EVENT_PARAMS.TOOLKIT_TYPE]: type || 'unknown',
           [GA_EVENT_PARAMS.ENTITY]: contextExecutionEntity,
         });
-        onSelectConfiguration({ private: option.private, elitea_title: option.elitea_title });
+        commitConfiguration({ private: option.private, elitea_title: option.elitea_title });
       },
       [
-        isClearingAllowed,
-        onSelectConfiguration,
+        commitConfiguration,
         selectedOption?.elitea_title,
         selectedOption?.private,
         type,
@@ -382,7 +389,7 @@ const CredentialsSelect = memo(
       ],
     );
 
-    const handleClear = useCallback(() => onSelectConfiguration?.(null), [onSelectConfiguration]);
+    const handleClear = useCallback(() => commitConfiguration(null), [commitConfiguration]);
 
     const createSelectHandler = useCallback(
       (sec, option) => {
@@ -535,7 +542,7 @@ const CredentialsSelect = memo(
           label={label}
           shrinkLabel
           infoIconDescription={description}
-          required={required || !isClearingAllowed}
+          required={required}
           error={error || showMismatchFooter}
           helperText={showMismatchFooter ? '' : helperText}
           disabled={disabled || isLockedToOnlyConfiguration}
@@ -546,7 +553,7 @@ const CredentialsSelect = memo(
           options={[]}
           value={selectStringValue}
           onValueChange={handleSelectValueChange}
-          onClear={isClearingAllowed ? handleClear : undefined}
+          onClear={handleClear}
           customRenderValue={customRenderSelectValue}
           displayEmpty
           showEmptyPlaceholder={false}

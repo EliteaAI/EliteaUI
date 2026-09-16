@@ -310,26 +310,13 @@ describe('CredentialsSelect', () => {
       expect(within(renderedValue()).getByText(PGVECTOR_TITLE)).toBeInTheDocument();
     });
 
-    it('marks the field required even when the toolkit schema does not', () => {
+    it('refuses the clear no matter which menu path asks for it', () => {
       renderSelect({ value: { elitea_title: PGVECTOR_TITLE, private: false } });
 
-      expect(singleSelectProps.required).toBe(true);
-    });
+      singleSelectProps.onClear();
+      singleSelectProps.onValueChange(optionValueFor(PGVECTOR_TITLE));
 
-    it('leaves the credentials section to the schema for the required marker', () => {
-      renderSelect({
-        section: 'credentials',
-        value: { elitea_title: GITHUB_TITLE, private: false },
-        configurations: CREDENTIAL_CONFIGURATIONS,
-      });
-
-      expect(singleSelectProps.required).toBeFalsy();
-    });
-
-    it('withholds the clear handler so the menu item cannot empty the field either', () => {
-      renderSelect({ value: { elitea_title: PGVECTOR_TITLE, private: false } });
-
-      expect(singleSelectProps.onClear).toBeUndefined();
+      expect(onSelectConfiguration).not.toHaveBeenCalled();
     });
 
     it('still switches to a different vector storage', async () => {
@@ -343,6 +330,18 @@ describe('CredentialsSelect', () => {
         elitea_title: CHROMA_TITLE,
       });
       await waitFor(() => expect(singleSelectProps.value).toBe(optionValueFor(CHROMA_TITLE)));
+    });
+
+    it('still clears the credentials section when the menu routes a reselect as a value change', () => {
+      renderSelect({
+        section: 'credentials',
+        value: { elitea_title: GITHUB_TITLE, private: false },
+        configurations: CREDENTIAL_CONFIGURATIONS,
+      });
+
+      singleSelectProps.onValueChange(optionValueFor(GITHUB_TITLE));
+
+      expect(onSelectConfiguration).toHaveBeenCalledWith(null);
     });
 
     it('leaves the credentials section free to clear its selection', () => {
