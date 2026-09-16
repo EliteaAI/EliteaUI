@@ -1,4 +1,5 @@
 import { typographyVariants } from '@/[fsd]/shared/config/theme';
+import { mergePalette } from '@/[fsd]/shared/lib/helpers/theme.helpers';
 import { MuiButtonStyles } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { eliteaCheckboxVariants, eliteaUnifiedRadioVariants } from '@/[fsd]/shared/ui/checkbox/BaseCheckbox';
 import { eliteaInputVariants, eliteaTextFieldVariants } from '@/[fsd]/shared/ui/input/textFieldVariants';
@@ -15,7 +16,13 @@ import darkPalette from './darkPalette';
 import lightPalette from './lightPalette';
 import { eliteaMenuItemVariants, eliteaMenuListVariants } from './theme/menuListVariants';
 
-const getDesignTokens = mode => ({
+const getPalette = (mode, customPalette) => {
+  const basePalette = mode === 'dark' ? darkPalette : lightPalette;
+
+  return customPalette ? mergePalette(basePalette, customPalette) : basePalette;
+};
+
+const getDesignTokens = (mode, customPalette = null) => ({
   breakpoints: {
     values: {
       prompt_list_xs: 0,
@@ -41,7 +48,7 @@ const getDesignTokens = mode => ({
     fontFeatureSettings: '"clig" 0, "liga" 0',
     ...typographyVariants,
   },
-  palette: mode === 'dark' ? darkPalette : lightPalette,
+  palette: getPalette(mode, customPalette),
   components: {
     MuiButton: MuiButtonStyles,
     MuiToggleButton: {

@@ -5,6 +5,8 @@ import { useSelector } from 'react-redux';
 import { createTheme } from '@mui/material/styles';
 
 import getDesignTokens from '@/MainTheme';
+import { useCustomTheme } from '@/[fsd]/shared/lib/hooks/useCustomTheme.hooks';
+import { ThemeModeOptions } from '@/common/constants';
 import lightPalette from '@/lightPalette';
 
 const getSystemPreference = () =>
@@ -12,6 +14,7 @@ const getSystemPreference = () =>
 
 export const useEliteATheme = () => {
   const mode = useSelector(state => state.settings.mode);
+  const { isCustomTheme, customPalette } = useCustomTheme();
 
   const [systemPreference, setSystemPreference] = useState(getSystemPreference);
 
@@ -24,33 +27,42 @@ export const useEliteATheme = () => {
     return () => mediaQuery.removeEventListener('change', handler);
   }, []);
 
-  const resolvedMode = mode === 'system' ? systemPreference : mode;
+  const resolvedMode = useMemo(() => {
+    if (mode === ThemeModeOptions.System) return systemPreference;
+    // Custom palette defines its own base mode; fall back to dark while loading or on error
+    if (isCustomTheme) return customPalette?.mode === ThemeModeOptions.Light ? 'light' : 'dark';
+
+    return mode;
+  }, [mode, systemPreference, isCustomTheme, customPalette]);
+
   const isDarkMode = resolvedMode === 'dark';
 
   const globalTheme = useMemo(() => {
-    return createTheme(getDesignTokens(resolvedMode));
-  }, [resolvedMode]);
+    return createTheme(getDesignTokens(resolvedMode, customPalette));
+  }, [resolvedMode, customPalette]);
 
   const localGridTheme = useMemo(() => {
-    return createTheme(
-      globalTheme,
-      !isDarkMode
-        ? {
-            palette: {
-              mode: 'light',
-              background: {
-                default: lightPalette.background.default.secondary,
-              },
-            },
-          }
-        : {},
-    );
+    if (isDarkMode) return createTheme(globalTheme, {});
+
+    // DataGrid reads `background.default` as a colour string, but our palettes nest it as
+    // { primary, secondary }. Read the value back off the resolved theme so a light custom palette gets its
+    // own colour here instead of the hardcoded Elitea one.
+    return createTheme(globalTheme, {
+      palette: {
+        mode: 'light',
+        background: {
+          default:
+            globalTheme.palette.background?.default?.secondary ?? lightPalette.background.default.secondary,
+        },
+      },
+    });
   }, [globalTheme, isDarkMode]);
 
   return {
     globalTheme,
     localGridTheme,
     isDarkMode,
+    isCustomTheme,
     resolvedMode,
   };
 };

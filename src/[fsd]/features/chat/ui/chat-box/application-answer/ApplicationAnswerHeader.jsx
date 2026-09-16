@@ -4,10 +4,10 @@ import SmartToyIcon from '@mui/icons-material/SmartToy';
 import { Box, Chip, ListItemAvatar, Typography } from '@mui/material';
 
 import { useParticipantEntityIcon, useParticipantName } from '@/[fsd]/features/chat/participants/lib/hooks';
+import { BrandLogo } from '@/[fsd]/shared/ui';
 import { ChatParticipantType, WELCOME_MESSAGE_ID } from '@/common/constants.js';
 import CreatedTimeInfo from '@/components/Chat/CreatedTimeInfo';
 import EntityIcon from '@/components/EntityIcon';
-import EliteAIcon from '@/components/Icons/EliteAIcon';
 
 const ApplicationAnswerHeader = memo(
   forwardRef((props, ref) => {
@@ -104,7 +104,7 @@ const ApplicationAnswerHeader = memo(
 
     return (
       <ListItemAvatar sx={styles.listItemAvatar}>
-        <EliteAIcon sx={styles.eliteaIcon} />
+        <BrandLogo sx={styles.eliteaIcon} />
       </ListItemAvatar>
     );
   }),

@@ -8,6 +8,7 @@ import { Box, Divider, IconButton, Tooltip, Typography } from '@mui/material';
 import { SIDEBAR_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
 import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks/useEnvironmentSettingByKey.hooks';
+import { BrandLogo } from '@/[fsd]/shared/ui';
 import { SidebarConstants, SocketConstants } from '@/[fsd]/widgets/sidebar-root/lib/constants';
 import { useSocketIcon } from '@/[fsd]/widgets/sidebar-root/lib/hooks';
 import { Buttons, SidebarMenuItem, SidebarProjectSelect } from '@/[fsd]/widgets/sidebar-root/ui';
@@ -29,7 +30,6 @@ import {
 } from '@/common/constants';
 import ApplicationsIcon from '@/components/Icons/ApplicationsIcon';
 import ChatIcon from '@/components/Icons/ChatIcon';
-import EliteAIcon from '@/components/Icons/EliteAIcon';
 import useNavBlocker from '@/hooks/useNavBlocker';
 import RouteDefinitions from '@/routes';
 
@@ -225,7 +225,7 @@ const SidebarBody = memo(props => {
             onClick={onClickHomeButton}
             sx={styles.homeButton}
           >
-            <EliteAIcon sx={styles.eliteaIcon} />
+            <BrandLogo sx={styles.eliteaIcon} />
             {isSocketIconVisible && (
               <Tooltip
                 title={`${systemSenderName} is ${socketStatus}`}

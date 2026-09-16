@@ -266,7 +266,7 @@ const folderSectionStyles = () => ({
     marginBottom: '0.5rem',
   },
   title: ({ palette }) => ({
-    color: palette.secondary.main,
+    color: palette.text.primary,
     textTransform: 'uppercase',
     fontWeight: 500,
     fontSize: '.75rem',

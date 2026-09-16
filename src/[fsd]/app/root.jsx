@@ -19,7 +19,7 @@ import { NpsSurveyWidget } from '@/[fsd]/widgets/nps-survey';
 import { ToastComponent, ToastProvider } from '@/components/ToastProvider';
 import { FilePreviewNavigationProvider } from '@/contexts/FilePreviewNavigationContext';
 import SocketContext from '@/contexts/SocketContext';
-import { useEliteATheme } from '@/[fsd]/shared/lib/hooks';
+import { useBrandFavicon, useCustomThemeGuard, useEliteATheme } from '@/[fsd]/shared/lib/hooks';
 import { actions as settingsActions } from '@/slices/settings.js';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp';
 import { logVersion } from '@/utils.js';
@@ -28,6 +28,10 @@ logVersion();
 
 const RootComponent = memo(() => {
   const { globalTheme } = useEliteATheme();
+
+  useBrandFavicon();
+  useCustomThemeGuard();
+
   const userId = useSelector(state => state.user.id);
   const activeMcpUserIdRef = useRef(null);
 

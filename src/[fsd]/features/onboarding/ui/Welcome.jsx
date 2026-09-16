@@ -2,17 +2,16 @@ import { memo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { Button } from '@/[fsd]/shared/ui';
-import WelcomeImage from '@/assets/chat-welcome.png';
+import { BrandLogoConstants } from '@/[fsd]/shared/lib/constants';
+import { BrandLogo, Button } from '@/[fsd]/shared/ui';
 
 const Welcome = memo(props => {
   const { name = 'there', onShowTour } = props;
 
   return (
     <Box sx={styles.container}>
-      <Box
-        component="img"
-        src={WelcomeImage}
+      <BrandLogo
+        variant={BrandLogoConstants.BRAND_LOGO_VARIANTS.Avatar}
         alt="Elitea"
         sx={styles.image}
       />
@@ -77,6 +76,7 @@ const styles = {
   },
   image: {
     width: '4.09rem',
+    height: '4.09rem',
   },
   title: {
     color: 'text.secondary',

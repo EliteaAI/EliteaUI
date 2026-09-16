@@ -20,7 +20,7 @@ import RecommendationList from '@/[fsd]/features/chat/ui/recommendations/Recomme
 import SearchResultList from '@/[fsd]/features/chat/ui/recommendations/SearchResultList';
 import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { MentionSkillList } from '@/[fsd]/features/skill/ui';
-import { InternalToolsConstants, MentionConstants } from '@/[fsd]/shared/lib/constants';
+import { BrandLogoConstants, InternalToolsConstants, MentionConstants } from '@/[fsd]/shared/lib/constants';
 import { DEFAULT_STEPS_LIMIT } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
 import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks/useEnvironmentSettingByKey.hooks';
 import {
@@ -28,10 +28,10 @@ import {
   generateLLMSettings,
   resetLLMSettingsForModel,
 } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
+import BrandLogo from '@/[fsd]/shared/ui/brand-logo';
 import { useConversationEditMutation, useUpdateParticipantLlmSettingsMutation } from '@/api';
 import { useListModelsQuery } from '@/api/configurations.js';
 import { useAuthorModuleSettingsQuery } from '@/api/social';
-import WelcomeImage from '@/assets/chat-welcome.png';
 import {
   ChatParticipantType,
   ConversationNameRegExp,
@@ -898,13 +898,10 @@ const NewConversationView = forwardRef(
             data-testid="chat-new-conversation-greeting"
             sx={styles.welcomeSection}
           >
-            <Box
-              component="img"
-              height={60}
-              width={60}
-              src={WelcomeImage}
+            <BrandLogo
+              variant={BrandLogoConstants.BRAND_LOGO_VARIANTS.Avatar}
               alt={systemSenderName}
-              style={styles.welcomeImage}
+              sx={styles.welcomeImage}
             />
             <Typography
               component="div"
@@ -1097,6 +1094,8 @@ const newConversationViewStyles = () => ({
     flex: 1,
   },
   welcomeImage: {
+    width: '3.75rem',
+    height: '3.75rem',
     marginBottom: '1rem',
   },
   greetingText: ({ palette }) => ({
