@@ -453,6 +453,48 @@ const buildUsersSheet = (data, meta) => {
   };
 };
 
+// The Activity tab owns its granularity and role pickers locally, so the export cannot see
+// them; it takes the unfiltered whole-range view, the same choice the Agents/Tools/Users
+// sheets make by exporting with an empty search. The payload echoes both back, so the sheet
+// states which view it is rather than leaving the reader to assume.
+const buildActivitySheet = (data, meta, isPersonalProject = false) => {
+  const { granularity = 'day', roles = [], buckets = [] } = data || {};
+
+  const bucketCols = [
+    { header: 'Bucket Start', key: 'bucket_start' },
+    { header: 'Bucket End', key: 'bucket_end' },
+    ...(isPersonalProject
+      ? []
+      : [{ header: 'Active Users', key: 'active_users', numFmt: ExcelFormats.integer }]),
+    { header: 'AI Active Users', key: 'ai_active_users', numFmt: ExcelFormats.integer },
+  ];
+
+  return {
+    sheetName: 'Activity',
+    metadata: [
+      ...buildMetadata('Activity', meta),
+      ['Granularity', granularity],
+      ['Roles', roles.length > 0 ? roles.join(', ') : 'All roles'],
+    ],
+    sections: [
+      {
+        title: 'Active Users Trend',
+        columns: bucketCols,
+        rows:
+          buckets.length > 0
+            ? // Every bucket bound is a calendar-aligned midnight, so the time half is noise
+              buckets.map(b => ({
+                bucket_start: fmtISODate(b.bucket_start),
+                bucket_end: fmtISODate(b.bucket_end),
+                ...(isPersonalProject ? {} : { active_users: b.active_users ?? 0 }),
+                ai_active_users: b.ai_active_users ?? 0,
+              }))
+            : emptyRow(bucketCols, NO_DATA_MSG),
+      },
+    ],
+  };
+};
+
 const buildHealthSheet = (overviewData, meta) => {
   const { health = [], daily_activity = [] } = overviewData || {};
 
@@ -504,43 +546,61 @@ export const analyticsExportFileName = ({ projectName, dateFrom, dateTo }) => {
 };
 
 export const fetchAllAnalyticsData = async (dispatch, endpoints, { projectId, dateFrom, dateTo }) => {
-  const [overviewResult, overviewUsageResult, costsResult, agentsResult, toolsResult, usersResult] =
-    await Promise.all([
-      // Overview is served by two endpoints — tracing for chat/health, usage for the AI half
-      dispatch(endpoints.projectAnalytics.initiate({ projectId, dateFrom, dateTo })),
-      dispatch(endpoints.projectAnalyticsUsage.initiate({ projectId, dateFrom, dateTo })),
-      dispatch(endpoints.analyticsCosts.initiate({ projectId, dateFrom, dateTo })),
-      dispatch(
-        endpoints.analyticsAgents.initiate({
-          projectId,
-          dateFrom,
-          dateTo,
-          limit: EXPORT_LIMIT,
-          offset: 0,
-          search: '',
-        }),
-      ),
-      dispatch(
-        endpoints.analyticsTools.initiate({
-          projectId,
-          dateFrom,
-          dateTo,
-          limit: EXPORT_LIMIT,
-          offset: 0,
-          search: '',
-        }),
-      ),
-      dispatch(
-        endpoints.analyticsUsers.initiate({
-          projectId,
-          dateFrom,
-          dateTo,
-          limit: EXPORT_LIMIT,
-          offset: 0,
-          search: '',
-        }),
-      ),
-    ]);
+  const [
+    overviewResult,
+    overviewUsageResult,
+    costsResult,
+    agentsResult,
+    toolsResult,
+    usersResult,
+    activityResult,
+  ] = await Promise.all([
+    // Overview is served by two endpoints — tracing for chat/health, usage for the AI half
+    dispatch(endpoints.projectAnalytics.initiate({ projectId, dateFrom, dateTo })),
+    dispatch(endpoints.projectAnalyticsUsage.initiate({ projectId, dateFrom, dateTo })),
+    dispatch(endpoints.analyticsCosts.initiate({ projectId, dateFrom, dateTo })),
+    dispatch(
+      endpoints.analyticsAgents.initiate({
+        projectId,
+        dateFrom,
+        dateTo,
+        limit: EXPORT_LIMIT,
+        offset: 0,
+        search: '',
+      }),
+    ),
+    dispatch(
+      endpoints.analyticsTools.initiate({
+        projectId,
+        dateFrom,
+        dateTo,
+        limit: EXPORT_LIMIT,
+        offset: 0,
+        search: '',
+      }),
+    ),
+    dispatch(
+      endpoints.analyticsUsers.initiate({
+        projectId,
+        dateFrom,
+        dateTo,
+        limit: EXPORT_LIMIT,
+        offset: 0,
+        search: '',
+      }),
+    ),
+    // Daily and unfiltered by role — the tab's own pickers are local state the export
+    // cannot see, so it takes the widest view, as the search: '' above does
+    dispatch(
+      endpoints.analyticsActivity.initiate({
+        projectId,
+        dateFrom,
+        dateTo,
+        granularity: 'day',
+        roles: [],
+      }),
+    ),
+  ]);
 
   return {
     overview: overviewResult.data,
@@ -549,6 +609,7 @@ export const fetchAllAnalyticsData = async (dispatch, endpoints, { projectId, da
     agents: agentsResult.data,
     tools: toolsResult.data,
     users: usersResult.data,
+    activity: activityResult.data,
   };
 };
 
@@ -559,6 +620,7 @@ export const buildAnalyticsSheets = ({
   agents,
   tools,
   users,
+  activity,
   meta,
   isPersonalProject,
 }) => [
@@ -574,5 +636,6 @@ export const buildAnalyticsSheets = ({
   buildAgentsSheet(agents, meta),
   buildToolsSheet(tools, meta),
   buildUsersSheet(users, meta),
+  buildActivitySheet(activity, meta, isPersonalProject),
   buildHealthSheet(overview, meta),
 ];

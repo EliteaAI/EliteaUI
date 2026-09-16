@@ -75,8 +75,19 @@ The **Tool Details** table lists all tools with call count, distinct users, aver
 Click any user row to open a drill-down showing a daily activity chart broken down by event type, and lists of the models, tools, and agents that user worked with.`,
   },
   {
-    id: 'health-tab',
+    id: 'activity-tab',
     tabIndex: 6,
+    target: ANALYTICS_TOUR_TARGETS.tabSection,
+    placement: 'right',
+    title: 'Activity Tab',
+    content: `The **Activity** tab tracks adoption over time rather than at a single point. A dual-series chart plots **Active Users** (anyone with any event) against **AI Active Users** (only those who triggered an LLM or tool call), so the gap between the lines shows how much of the active team is not yet using AI.
+
+- **Granularity** — switch between **Day**, **Week**, and **Month**; weeks and months are calendar-aligned
+- **Role filter** — narrow the trend to one or more project roles; leaving it empty includes every member`,
+  },
+  {
+    id: 'health-tab',
+    tabIndex: 7,
     target: ANALYTICS_TOUR_TARGETS.tabSection,
     placement: 'right',
     title: 'Health Tab',
@@ -106,7 +117,7 @@ The **Token Usage by User**, **Token Usage by Model**, and **Token Usage by Agen
   },
   {
     id: 'guide-tab',
-    tabIndex: 7,
+    tabIndex: 8,
     target: ANALYTICS_TOUR_TARGETS.tabSection,
     placement: 'right',
     title: 'Guide Tab',

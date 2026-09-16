@@ -13,6 +13,7 @@ import {
 } from '@/[fsd]/features/settings/api/analyticsApi';
 import { AnalyticsExportHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import {
+  AnalyticsActivity,
   AnalyticsAgents,
   AnalyticsCosts,
   AnalyticsGuide,
@@ -58,9 +59,25 @@ const ANALYTICS_TABS = [
   { label: 'Agents & Pipelines', testid: 'analytics-tab-agents-pipelines' },
   { label: 'Tools', testid: 'analytics-tab-tools' },
   { label: 'Users', testid: 'analytics-tab-users' },
+  { label: 'Activity', testid: 'analytics-tab-activity' },
   { label: 'Health', testid: 'analytics-tab-health' },
   { label: 'Guide', testid: 'analytics-tab-guide' },
 ];
+
+// Panel guards below and the interactive tour's step.tabIndex both address tabs by position,
+// so the positions get names: inserting Activity (#5110) must not silently repoint a guard.
+// Order must match ANALYTICS_TABS, and analyticsTour.constants.js carries the same numbers.
+const TAB = {
+  overview: 0,
+  costs: 1,
+  tokens: 2,
+  agents: 3,
+  tools: 4,
+  users: 5,
+  activity: 6,
+  health: 7,
+  guide: 8,
+};
 
 const AnalyticsContainer = memo(() => {
   const projectId = useSelectedProjectId();
@@ -102,10 +119,10 @@ const AnalyticsContainer = memo(() => {
     [projectId, dateFromISO, dateToISO],
   );
 
-  // Only fetch overview data for Overview (0) and Health (6) tabs
-  const needsOverview = activeTab === 0 || activeTab === 6;
+  // Only fetch overview data for the Overview and Health tabs
+  const needsOverview = activeTab === TAB.overview || activeTab === TAB.health;
   // The AI half only feeds Overview; Health reads the tracing payload alone
-  const needsUsage = activeTab === 0;
+  const needsUsage = activeTab === TAB.overview;
 
   const { data, isFetching, isError } = useProjectAnalyticsQuery(queryParams, {
     skip: !projectId || !needsOverview,
@@ -171,12 +188,12 @@ const AnalyticsContainer = memo(() => {
 
   const handleOverviewUserClick = useCallback(userId => {
     setPendingUserId(userId);
-    setActiveTab(5);
+    setActiveTab(TAB.users);
   }, []);
 
   const handleBackToOverview = useCallback(() => {
     setPendingUserId(null);
-    setActiveTab(0);
+    setActiveTab(TAB.overview);
   }, []);
 
   const handleExport = useCallback(async () => {
@@ -399,42 +416,42 @@ const AnalyticsContainer = memo(() => {
               </Typography>
             </Box>
           )}
-          {overviewData && !overviewFetching && activeTab === 0 && (
+          {overviewData && !overviewFetching && activeTab === TAB.overview && (
             <AnalyticsOverview
               data={overviewData}
               onUserClick={handleOverviewUserClick}
               isPersonalProject={isPersonalProject}
             />
           )}
-          {activeTab === 1 && (
+          {activeTab === TAB.costs && (
             <AnalyticsCosts
               projectId={projectId}
               dateFrom={dateFromISO}
               dateTo={dateToISO}
             />
           )}
-          {activeTab === 2 && (
+          {activeTab === TAB.tokens && (
             <AnalyticsTokens
               projectId={projectId}
               dateFrom={dateFromISO}
               dateTo={dateToISO}
             />
           )}
-          {activeTab === 3 && (
+          {activeTab === TAB.agents && (
             <AnalyticsAgents
               projectId={projectId}
               dateFrom={dateFromISO}
               dateTo={dateToISO}
             />
           )}
-          {activeTab === 4 && (
+          {activeTab === TAB.tools && (
             <AnalyticsTools
               projectId={projectId}
               dateFrom={dateFromISO}
               dateTo={dateToISO}
             />
           )}
-          {activeTab === 5 && (
+          {activeTab === TAB.users && (
             <AnalyticsUsers
               projectId={projectId}
               dateFrom={dateFromISO}
@@ -443,13 +460,20 @@ const AnalyticsContainer = memo(() => {
               onBackToSource={handleBackToOverview}
             />
           )}
-          {data && !isFetching && activeTab === 6 && (
+          {activeTab === TAB.activity && (
+            <AnalyticsActivity
+              projectId={projectId}
+              dateFrom={dateFromISO}
+              dateTo={dateToISO}
+            />
+          )}
+          {data && !isFetching && activeTab === TAB.health && (
             <AnalyticsHealth
               health={data.health}
               daily_activity={data.daily_activity}
             />
           )}
-          {activeTab === 7 && <AnalyticsGuide />}
+          {activeTab === TAB.guide && <AnalyticsGuide />}
         </Box>
       </Box>
 
