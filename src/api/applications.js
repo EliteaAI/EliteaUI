@@ -671,32 +671,25 @@ export const apiSlice = eliteaApi
           if (error) return [];
           return [];
         },
-        onQueryStarted: async (args, { dispatch, getState, queryFulfilled }) => {
+        onQueryStarted: async (args, { dispatch, queryFulfilled }) => {
           // eslint-disable-next-line no-unused-vars
           const { projectId, versionId, entityId, ...icon_meta } = args;
-          const {
-            eliteaApi: { queries },
-          } = getState();
-          const cacheKeys = Object.keys(queries || {});
-          let patchResult = null;
-          const foundApplicationDetailKey = cacheKeys.find(
-            key => queries[key].endpointName === 'applicationDetails' && key.includes(entityId),
-          );
-          if (foundApplicationDetailKey) {
-            const queryParams = foundApplicationDetailKey.replace('applicationDetails', '');
-            patchResult = dispatch(
-              eliteaApi.util.updateQueryData('applicationDetails', convertToJson(queryParams), draft => {
+          const patchResult = dispatch(
+            eliteaApi.util.updateQueryData(
+              'applicationDetails',
+              { projectId, applicationId: entityId },
+              draft => {
                 draft.version_details.meta = {
                   ...(draft.version_details.meta || {}),
                   icon_meta,
                 };
-              }),
-            );
-          }
+              },
+            ),
+          );
           try {
             await queryFulfilled;
           } catch {
-            patchResult?.undo();
+            patchResult.undo();
           }
         },
       }),
