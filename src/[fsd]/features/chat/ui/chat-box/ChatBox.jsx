@@ -62,6 +62,12 @@ import { MentionSkillList } from '@/[fsd]/features/skill';
 import { useDeleteSkillMutation } from '@/[fsd]/features/skill/api';
 import { LLMSettingsConstants, MentionConstants } from '@/[fsd]/shared/lib/constants';
 import {
+  autoModel,
+  isAutoSelection,
+  modelsWithAuto,
+  selectionFields,
+} from '@/[fsd]/shared/lib/utils/autoRouting.utils';
+import {
   cleanLLMSettings,
   isLLMSettingsFamilyConflict,
   resetLLMSettingsForModel,
@@ -109,6 +115,8 @@ import { actions as chatActions } from '@/slices/chat';
 const { DEFAULT_MAX_TOKENS, DEFAULT_REASONING_EFFORT, DEFAULT_STEPS_LIMIT, DEFAULT_TEMPERATURE } =
   LLMSettingsConstants;
 
+const EMPTY_LLM_SETTINGS = Object.freeze({});
+
 const ChatBox = forwardRef((props, boxRef) => {
   const {
     fromTheChat,
@@ -146,7 +154,7 @@ const ChatBox = forwardRef((props, boxRef) => {
     newConversationQuestion,
 
     // LLM Settings props for modal dialog
-    llmSettings = {},
+    llmSettings = EMPTY_LLM_SETTINGS,
     onSetLLMSettings,
     showWebhookSecret = false,
     onSend = () => true,
@@ -333,6 +341,10 @@ const ChatBox = forwardRef((props, boxRef) => {
     const stepsLimit =
       unsavedLLMSettings?.steps_limit ?? activeConversation?.meta?.steps_limit ?? DEFAULT_STEPS_LIMIT;
 
+    if (isAutoSelection(userSettings)) {
+      return { ...userSettings, steps_limit: stepsLimit };
+    }
+
     const baseSettings = {
       model_name: userSettings?.model_name || '',
       model_project_id: userSettings?.model_project_id || projectId,
@@ -383,6 +395,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       if (isAgentsPage && llmSettings) {
         // On agents page, use the llmSettings prop directly
         settingsToUse = {
+          selection: llmSettings.selection,
           model_name: llmSettings.model_name,
           model_project_id: llmSettings.model_project_id,
         };
@@ -391,6 +404,7 @@ const ChatBox = forwardRef((props, boxRef) => {
         const userSettings = NewConversationHelpers.getChatUserSettings(activeConversation, userId);
         if (userSettings) {
           settingsToUse = {
+            selection: userSettings.selection,
             model_name: userSettings.model_name,
             model_project_id: userSettings.model_project_id,
           };
@@ -398,6 +412,10 @@ const ChatBox = forwardRef((props, boxRef) => {
       }
       // }
 
+      if (isAutoSelection(settingsToUse)) {
+        setSelectedModel(autoModel(settingsToUse.selection.profile_ref));
+        return;
+      }
       if (settingsToUse) {
         if (settingsToUse.model_name) {
           // First try to find the model with the exact project_id
@@ -474,7 +492,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       // When on agents page, allow model override from dropdown selection
       // Otherwise use agent's configured model
       const llm_settings = isAgentsPage
-        ? unsavedLLMSettings || { model_name: selectedModel.name, model_project_id: selectedModel.project_id }
+        ? unsavedLLMSettings || selectionFields(selectedModel)
         : ChatHelpers.getModelSettings(realParticipant);
       switch (realParticipant.entity_name) {
         case ChatParticipantType.Pipelines:
@@ -2579,6 +2597,7 @@ const ChatBox = forwardRef((props, boxRef) => {
           // Explicitly resets both temperature and reasoning_effort for the new model's
           // family — never leaves a stale value from the previously selected model (issue #5821).
           ...resetLLMSettingsForModel(newModel),
+          ...selectionFields(newModel),
           // Preserve steps_limit — not model-specific
           steps_limit: activeParticipant?.entity_settings.llm_settings?.steps_limit ?? DEFAULT_STEPS_LIMIT,
         };
@@ -2614,6 +2633,7 @@ const ChatBox = forwardRef((props, boxRef) => {
             // Explicitly resets both temperature and reasoning_effort for the new model's
             // family — never leaves a stale value from the previously selected model (issue #5821).
             ...resetLLMSettingsForModel(newModel),
+            ...selectionFields(newModel),
             // steps_limit is stored in conversation meta — do not touch it here
           };
 
@@ -2930,7 +2950,14 @@ const ChatBox = forwardRef((props, boxRef) => {
             onChangeVariables={onChangeVariables}
             activeParticipant={activeParticipant}
             activeParticipantDetails={originalParticipant}
-            modelList={modelsData?.items || []}
+            modelList={modelsWithAuto(
+              modelsData?.items || [],
+              modelsData.auto_routing,
+              (originalParticipant?.version_details?.agent_type ||
+                activeParticipant?.entity_settings?.agent_type) === 'pipeline'
+                ? 'pipeline'
+                : 'chat',
+            )}
             onSelectModel={onSelectModel}
             selectedModel={selectedModel}
             selectSavedOrDefaultModel={selectSavedOrDefaultModel}

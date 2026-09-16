@@ -23,6 +23,7 @@ import { MentionSkillList } from '@/[fsd]/features/skill/ui';
 import { BrandLogoConstants, InternalToolsConstants, MentionConstants } from '@/[fsd]/shared/lib/constants';
 import { DEFAULT_STEPS_LIMIT } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
 import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks/useEnvironmentSettingByKey.hooks';
+import { modelsWithAuto, selectionFields } from '@/[fsd]/shared/lib/utils/autoRouting.utils';
 import {
   cleanLLMSettings,
   generateLLMSettings,
@@ -178,7 +179,7 @@ const NewConversationView = forwardRef(
     // carries a stale temperature (issue #5859).
     useEffect(() => {
       if (!selectedModel) return;
-      setLlmSettings(prev => ({ ...prev, ...resetLLMSettingsForModel(selectedModel) }));
+      setLlmSettings(prev => ({ ...prev, ...selectionFields(selectedModel), ...resetLLMSettingsForModel(selectedModel) }));
     }, [selectedModel]);
 
     useEffect(() => {
@@ -713,9 +714,8 @@ const NewConversationView = forwardRef(
             const { steps_limit, ...llmSettingsOnly } = llmSettings;
             const settingsToSave = {
               ...userSettings,
-              ...llmSettingsOnly,
-              model_name: selectedModel?.name,
-              model_project_id: selectedModel?.project_id,
+              ...selectionFields(selectedModel),
+              ...generateLLMSettings(selectedModel, llmSettingsOnly, { includeModelInfo: true }),
             };
             // Clean settings to remove reasoning_effort if model doesn't support it
             const cleanedSettings = cleanLLMSettings(settingsToSave, selectedModel);
@@ -758,11 +758,7 @@ const NewConversationView = forwardRef(
                 await addNewParticipants(selectedParticipantFiltered, createdConversation, participants => {
                   onComplete?.([
                     ...participants,
-                    ...NewConversationHelpers.setUserLLmSettings(createdConversation.participants, user.id, {
-                      model_name: selectedModel?.name,
-                      model_project_id: selectedModel?.project_id,
-                      ...llmSettingsOnly,
-                    }),
+                    ...NewConversationHelpers.setUserLLmSettings(createdConversation.participants, user.id, cleanedSettings),
                   ]);
                   const participant = participants.find(
                     p =>
@@ -811,11 +807,7 @@ const NewConversationView = forwardRef(
                         ...NewConversationHelpers.setUserLLmSettings(
                           createdConversation.participants,
                           user.id,
-                          {
-                            model_name: selectedModel?.name,
-                            model_project_id: selectedModel?.project_id,
-                            ...llmSettingsOnly,
-                          },
+                          cleanedSettings,
                         ),
                       ]);
                       setTimeout(() => {
@@ -827,11 +819,7 @@ const NewConversationView = forwardRef(
                 }, 0);
               } else {
                 onComplete?.(
-                  NewConversationHelpers.setUserLLmSettings(createdConversation.participants, user.id, {
-                    model_name: selectedModel?.name,
-                    model_project_id: selectedModel?.project_id,
-                    ...llmSettingsOnly,
-                  }),
+                  NewConversationHelpers.setUserLLmSettings(createdConversation.participants, user.id, cleanedSettings),
                 );
                 setTimeout(() => {
                   onPredictStreamRef.current?.(question, null, createdConversation);
@@ -980,7 +968,12 @@ const NewConversationView = forwardRef(
               onCloseAgentEditor={onCloseAgentEditor}
               activeParticipant={selectedParticipant}
               activeParticipantDetails={selectedParticipantDetails}
-              modelList={modelsData?.items || []}
+              modelList={modelsWithAuto(
+                modelsData?.items || [],
+                modelsData.auto_routing,
+                (selectedParticipantDetails?.version_details?.agent_type ||
+                  selectedParticipant?.entity_settings?.agent_type) === 'pipeline' ? 'pipeline' : 'chat',
+              )}
               onSelectModel={onSelectModel}
               selectedModel={selectedModel}
               llmSettings={llmSettings}

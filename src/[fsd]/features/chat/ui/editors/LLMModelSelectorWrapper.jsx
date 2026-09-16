@@ -5,6 +5,12 @@ import { useFormikContext } from 'formik';
 import { Box } from '@mui/material';
 
 import { DEFAULT_MAX_TOKENS } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
+import {
+  autoModel,
+  isAutoSelection,
+  modelsWithAuto,
+  selectionFields,
+} from '@/[fsd]/shared/lib/utils/autoRouting.utils';
 import { resetLLMSettingsForModel } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
 import { LLMModelSelector } from '@/[fsd]/widgets/llm-model-selector';
 import { useListModelsQuery } from '@/api/configurations';
@@ -37,14 +43,27 @@ const LLMModelSelectorWrapper = ({
     { skip: !projectId },
   );
 
-  const modelList = useMemo(() => modelsData.items || [], [modelsData.items]);
+  const modelList = useMemo(
+    () =>
+      modelsWithAuto(
+        modelsData.items || [],
+        modelsData.auto_routing,
+        version_details?.agent_type === 'pipeline' ? 'pipeline' : 'agent',
+      ),
+    [modelsData, version_details?.agent_type],
+  );
 
   const defaultModel = useMemo(() => {
     return modelsData.items.find(model => model.default) || modelsData.items[0] || null;
   }, [modelsData.items]);
 
   useEffect(() => {
-    if (version_details && !version_details?.llm_settings?.model_name && defaultModel) {
+    if (
+      version_details &&
+      !isAutoSelection(version_details.llm_settings) &&
+      !version_details?.llm_settings?.model_name &&
+      defaultModel
+    ) {
       setFieldValue('version_details.llm_settings', {
         ...version_details?.llm_settings,
         model_name: defaultModel?.name,
@@ -60,8 +79,11 @@ const LLMModelSelectorWrapper = ({
   ]);
 
   const selectedModel = useMemo(
-    () => modelList.find(m => m.id === modelName || m.name === modelName) || null,
-    [modelList, modelName],
+    () =>
+      isAutoSelection(version_details.llm_settings)
+        ? autoModel(version_details.llm_settings.selection.profile_ref)
+        : modelList.find(m => m.id === modelName || m.name === modelName) || null,
+    [modelList, modelName, version_details.llm_settings],
   );
 
   const handleSelectModel = useCallback(
@@ -74,6 +96,7 @@ const LLMModelSelectorWrapper = ({
         // Explicitly resets both temperature and reasoning_effort for the new model's family —
         // never leaves a stale value from the previously selected model (issue #5821).
         ...resetLLMSettingsForModel(model),
+        ...selectionFields(model),
       };
       setFieldValue('version_details.llm_settings', newSettings);
       onLLMSettingsChange?.(pev => ({ ...pev, ...newSettings }));
