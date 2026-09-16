@@ -365,7 +365,7 @@ export const ToolInitialValues = {
     type: ToolTypes.ado_repos.value,
     settings: {
       organization_url: null,
-      repository_id: null,
+      repository_id: [],
       project: null,
       token: null,
       base_branch: 'main',
