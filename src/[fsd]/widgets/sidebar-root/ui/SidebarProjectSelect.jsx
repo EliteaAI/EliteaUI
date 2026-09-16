@@ -155,7 +155,7 @@ const sidebarProjectSelectStyles = sideBarCollapsed => ({
     minHeight: '3.5rem',
 
     '&:hover': {
-      backgroundColor: palette.background.button.drawerMenu.hover,
+      backgroundColor: palette.components.sidebar.menuItem.hover,
     },
   }),
   projectRow: {

@@ -76,7 +76,7 @@ FolderItem.displayName = 'FolderItem';
 const folderItemStyles = isSelected => ({
   container: ({ palette }) => {
     const isDark = palette.mode === 'dark';
-    const folder = palette.background.folder;
+    const folder = palette.components.folder;
 
     const base = {
       display: 'flex',
@@ -100,13 +100,13 @@ const folderItemStyles = isSelected => ({
       if (isSelected) {
         return {
           ...base,
-          backgroundColor: folder.active,
-          border: `0.0625rem solid ${folder.borderActive}`,
+          backgroundColor: folder.background.active,
+          border: `0.0625rem solid ${folder.border.active}`,
         };
       }
       return {
         ...base,
-        backgroundColor: folder.default,
+        backgroundColor: folder.background.default,
         border: '0.0625rem solid transparent',
         '&::before': {
           content: '""',
@@ -114,14 +114,14 @@ const folderItemStyles = isSelected => ({
           inset: 0,
           borderRadius: 'inherit',
           padding: '0.0625rem',
-          background: folder.borderGradient,
+          background: folder.border.gradient,
           WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
           WebkitMaskComposite: 'xor',
           maskComposite: 'exclude',
           pointerEvents: 'none',
         },
         '&:hover': {
-          border: `0.0625rem solid ${folder.borderHover}`,
+          border: `0.0625rem solid ${folder.border.hover}`,
           '&::before': {
             display: 'none',
           },
@@ -135,18 +135,18 @@ const folderItemStyles = isSelected => ({
     if (isSelected) {
       return {
         ...base,
-        backgroundColor: folder.active,
-        outline: `0.0625rem solid ${folder.borderActive}`,
+        backgroundColor: folder.background.active,
+        outline: `0.0625rem solid ${folder.border.active}`,
         outlineOffset: '-0.0625rem',
         boxShadow: folder.shadow,
       };
     }
     return {
       ...base,
-      backgroundColor: folder.default,
+      backgroundColor: folder.background.default,
       boxShadow: folder.shadow,
       '&:hover': {
-        outline: `0.0625rem solid ${folder.borderHover}`,
+        outline: `0.0625rem solid ${folder.border.hover}`,
         outlineOffset: '-0.0625rem',
       },
       '&:hover .folder-more-btn': {
@@ -158,7 +158,7 @@ const folderItemStyles = isSelected => ({
     width: '1rem',
     height: '1rem',
     fontSize: '1rem',
-    color: palette.icon.fill.default,
+    color: palette.icon.default,
     flexShrink: 0,
   }),
   nameGroup: {
@@ -184,7 +184,7 @@ const folderItemStyles = isSelected => ({
   pinIcon: ({ palette }) => ({
     width: '0.75rem',
     height: '0.75rem',
-    color: palette.background.button.primary.disabled,
+    color: palette.text.muted,
     flexShrink: 0,
     marginLeft: '.375rem',
   }),
@@ -203,7 +203,7 @@ const folderItemStyles = isSelected => ({
   },
   moreIcon: ({ palette }) => ({
     fontSize: '1.25rem',
-    color: palette.icon.fill.default,
+    color: palette.icon.default,
   }),
 });
 

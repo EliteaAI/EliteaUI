@@ -82,7 +82,7 @@ const FolderMenuContent = memo(props => {
                 {isCurrentFolder && (
                   <CheckIcon
                     sx={styles.checkIcon}
-                    fill={palette.icon.fill.secondary}
+                    fill={palette.icon.secondary}
                   />
                 )}
               </MenuItem>
@@ -131,7 +131,7 @@ const folderMenuContentStyles = () => {
     gap: '0.5rem',
     color: palette.text.secondary,
     '& .MuiListItemIcon-root': {
-      color: palette.icon.fill.default,
+      color: palette.icon.default,
     },
   });
 
@@ -173,7 +173,7 @@ const folderMenuContentStyles = () => {
       gap: '0.75rem',
     }),
     activeMenuItem: ({ palette }) => ({
-      backgroundColor: palette.background.participant.active,
+      backgroundColor: palette.background.interactiveItem.active,
     }),
     menuItemIcon: {
       flex: '0 0 auto',

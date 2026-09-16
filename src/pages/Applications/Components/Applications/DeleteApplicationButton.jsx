@@ -66,7 +66,7 @@ export const useDeleteApplicationMenu = (setBlockNav, disabled) => {
       icon: (
         <DeleteIcon
           sx={{ fontSize: '16px' }}
-          fill={isLoading ? theme.palette.icon.fill.disabled : theme.palette.icon.fill.default}
+          fill={isLoading ? theme.palette.icon.disabled : theme.palette.icon.default}
         />
       ),
       confirmText: `Are you sure you want to delete ${name}?`,
@@ -75,7 +75,7 @@ export const useDeleteApplicationMenu = (setBlockNav, disabled) => {
       entityName: name,
       onConfirm: onDelete,
     }),
-    [disabled, isLoading, name, onDelete, theme.palette.icon.fill.disabled, theme.palette.icon.fill.default],
+    [disabled, isLoading, name, onDelete, theme.palette.icon.disabled, theme.palette.icon.default],
   );
 
   return {

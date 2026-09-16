@@ -132,7 +132,7 @@ const aiPromptInputStyles = () => ({
     alignItems: 'center',
     gap: spacing(2),
     '&:focus-within': {
-      borderColor: palette.border.userMessageEditor,
+      borderColor: palette.components.userMessageEditor.border,
     },
   }),
   iconContainer: ({ palette, spacing }) => ({
@@ -140,7 +140,7 @@ const aiPromptInputStyles = () => ({
     width: spacing(4.5),
     height: spacing(4.5),
     borderRadius: '0.75rem',
-    background: palette.aiAssistant.iconBackground,
+    background: palette.components.aiAssistant.background.icon,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -151,7 +151,7 @@ const aiPromptInputStyles = () => ({
       inset: 0,
       borderRadius: '0.75rem',
       padding: '0.0625rem',
-      background: palette.aiAssistant.iconBorder,
+      background: palette.components.aiAssistant.background.iconBorder,
       WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
       WebkitMaskComposite: 'xor',
       mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
@@ -183,7 +183,7 @@ const aiPromptInputStyles = () => ({
     borderRadius: '50%',
     backgroundColor: palette.primary.main,
     '&.Mui-disabled': {
-      backgroundColor: palette.background.button.primary.disabled,
+      backgroundColor: palette.components.button.background.primary.disabled,
     },
     '&:hover': {
       backgroundColor: palette.primary.main,
@@ -193,22 +193,22 @@ const aiPromptInputStyles = () => ({
     height: spacing(3.5),
     width: spacing(3.5),
     borderRadius: '50%',
-    backgroundColor: palette.background.button.secondary.default,
+    backgroundColor: palette.background.surface.interactive.active,
     color: `${palette.status.onModeration} !important`,
     '& svg': {
       color: `${palette.status.onModeration} !important`,
       fill: `${palette.status.onModeration} !important`,
     },
     '&.Mui-disabled': {
-      backgroundColor: palette.background.button.primary.disabled,
+      backgroundColor: palette.components.button.background.primary.disabled,
     },
     '&:hover': {
-      backgroundColor: palette.background.button.secondary.hover,
+      backgroundColor: palette.background.surface.interactive.selected,
     },
   }),
   sendIcon: ({ palette }) => ({
     fontSize: '1rem',
-    fill: palette.icon.fill.send,
+    fill: palette.icon.send,
   }),
   stopIcon: {
     fontSize: '1rem',

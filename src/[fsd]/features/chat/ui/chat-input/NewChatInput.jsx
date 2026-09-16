@@ -1,6 +1,6 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 
-import { Box } from '@mui/material';
+import { Box, useTheme } from '@mui/material';
 
 import UserInput from '@/ComponentsLib/Chat/UserInput';
 import { useSpeakingModeLoop } from '@/[fsd]/features/chat/lib/hooks';
@@ -11,7 +11,6 @@ import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { LLMModelSelector } from '@/[fsd]/widgets/llm-model-selector';
 import { useChatConfig } from '@/hooks/useChatConfig';
 import useToast from '@/hooks/useToast';
-import { useTheme } from '@emotion/react';
 
 const NewChatInput = forwardRef((props, ref) => {
   const {
@@ -356,15 +355,15 @@ const NewChatInput = forwardRef((props, ref) => {
         input: {
           placeholder: isRecording || isSpeakingMode ? 'Speak your message' : placeholder,
           color: theme.palette.text.secondary,
-          iconColor: theme.palette.icon.fill.default,
+          iconColor: theme.palette.icon.default,
         },
         sendButton: {
-          iconColor: theme.palette.icon.fill.send,
-          disabledBackground: theme.palette.background.button.primary.disabled,
+          iconColor: theme.palette.icon.send,
+          disabledBackground: theme.palette.components.button.background.primary.disabled,
           background: theme.palette.primary.main,
         },
         stopButton: {
-          iconColor: theme.palette.icon.fill.attention,
+          iconColor: theme.palette.icon.attention,
         },
         mentionUser: {
           users,

@@ -3,7 +3,7 @@ export const eliteaToggleButtonStyle = theme => ({
   height: '28px',
   border: 'none',
   color: theme.palette.text.primary,
-  background: theme.palette.background.tabButton.default,
+  background: theme.palette.components.tabGroupButton.background.default,
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -14,12 +14,12 @@ export const eliteaToggleButtonStyle = theme => ({
   textTransform: 'none',
   '&:active': {
     color: theme.palette.text.secondary,
-    background: theme.palette.background.button.secondary.pressed,
-    backgroundColor: `${theme.palette.background.button.secondary.pressed} !important`,
+    background: theme.palette.components.button.background.secondary.pressed,
+    backgroundColor: `${theme.palette.components.button.background.secondary.pressed} !important`,
   },
   '&.Mui-selected': {
     color: theme.palette.text.secondary,
-    background: theme.palette.background.tabButton.active,
+    background: theme.palette.components.tabGroupButton.background.active,
   },
   '& svg': {
     fontSize: '1rem',

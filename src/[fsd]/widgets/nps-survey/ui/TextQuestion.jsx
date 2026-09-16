@@ -31,19 +31,19 @@ TextQuestion.displayName = 'TextQuestion';
 
 /** @type {MuiSx} */
 const styles = {
-  input: {
+  input: ({ palette }) => ({
     '& .MuiOutlinedInput-root': {
-      background: 'rgba(255, 255, 255, 0.6)',
+      background: palette.components.npsSurvey.optionBackground,
       borderRadius: '0.5rem',
 
       '& fieldset': {
         border: '1px solid transparent',
       },
       '&:hover fieldset': {
-        border: '1px solid rgba(99, 144, 254, 1) !important',
+        border: `0.0625rem solid ${palette.components.npsSurvey.accent} !important`,
       },
       '&.Mui-focused fieldset': {
-        border: '1px solid rgba(99, 144, 254, 1) !important',
+        border: `0.0625rem solid ${palette.components.npsSurvey.accent} !important`,
       },
     },
     '& .MuiInputBase-input': {
@@ -51,15 +51,15 @@ const styles = {
       fontWeight: 500,
       fontSize: '0.875rem',
       lineHeight: '1.5rem',
-      color: '#0E131D',
+      color: palette.text.alwaysDark,
       maxHeight: '5rem !important',
 
       '&::placeholder': {
-        color: '#777A83',
+        color: palette.components.npsSurvey.text.placeholder,
         opacity: 1,
       },
     },
-  },
+  }),
 };
 
 export default TextQuestion;

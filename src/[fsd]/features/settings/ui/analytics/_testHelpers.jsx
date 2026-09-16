@@ -45,12 +45,14 @@ export const analyticsTestTheme = createTheme({
     status: { rejected: '#f00', published: '#0f0', pending: '#ff0', draft: '#1976d2' },
     background: {
       surface: { interactive: { default: '#fff' } },
+      interactiveItem: { hover: '#f5f5f5', rowHover: '#f9f9f9', active: '#e3f2fd' },
       card: '#fafafa',
       conversation: { hover: '#fafafa' },
     },
     border: { table: '#eee', divider: '#ddd' },
     action: { hover: '#eee' },
-    // The shared icon components read palette.icon.fill.<variant> inside their sx
+    components: { button: { text: { primary: '#fff' } } },
+    // The shared icon components read palette.icon.<variant> inside their sx
     // functions, so every variant an analytics screen can render needs a value here.
     icon: {
       main: '#888',

@@ -60,13 +60,13 @@ const participantConnectionIconsStyles = () => ({
     marginLeft: '.5rem',
     width: '1rem',
     height: '1rem',
-    color: palette.icon.fill.default,
+    color: palette.icon.default,
   }),
   offlineIcon: ({ palette }) => ({
     marginLeft: '.5rem',
     width: '.875rem',
     height: '.875rem',
-    color: palette.icon.fill.attention,
+    color: palette.icon.attention,
   }),
 });
 

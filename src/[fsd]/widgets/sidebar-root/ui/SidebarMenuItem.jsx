@@ -94,16 +94,16 @@ const sidebarMenuItemStyles = (selected, showLabel, isPersonalSpace) => ({
     boxSizing: 'border-box',
     maxWidth: showLabel ? undefined : isPersonalSpace ? '1.5rem !important' : '2rem !important',
     '&:hover': {
-      background: palette.background.button.drawerMenu.hover,
+      background: palette.components.sidebar.menuItem.hover,
     },
     '&.Mui-selected': {
-      background: palette.background.button.drawerMenu.selected,
+      background: palette.components.sidebar.menuItem.selected,
     },
     '&.Mui-selected:hover': {
-      background: palette.background.button.drawerMenu.hover,
+      background: palette.components.sidebar.menuItem.hover,
     },
     '& path': {
-      fill: selected ? palette.icon.fill.secondary : palette.text.metrics,
+      fill: selected ? palette.icon.secondary : palette.text.metrics,
     },
     '& span': {
       color: selected ? palette.text.secondary : palette.text.metrics,

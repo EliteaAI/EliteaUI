@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 
-import { Box, useTheme } from '@mui/material';
+import { Box, alpha, useTheme } from '@mui/material';
 
 import { useDroppable } from '@dnd-kit/core';
 
@@ -51,10 +51,10 @@ const DroppableFolderItem = memo(props => {
               bottom: -2,
               border: `.125rem dashed ${theme.palette.primary.main}`,
               borderRadius: '.5rem',
-              backgroundColor: `${theme.palette.primary.main}15`, // 15% opacity
+              backgroundColor: alpha(theme.palette.primary.main, 0.08),
               pointerEvents: 'none',
               zIndex: 999, // Very high z-index to ensure it's always on top
-              boxShadow: `0 .25rem .75rem ${theme.palette.primary.main}30`, // Glow effect
+              boxShadow: `0 .25rem .75rem ${alpha(theme.palette.primary.main, 0.19)}`, // Glow effect
             }}
           />
         )}

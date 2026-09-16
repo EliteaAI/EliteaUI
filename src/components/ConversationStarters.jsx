@@ -272,9 +272,9 @@ const ellipsisTextWithTooltipStyles = () => ({
     cursor: 'pointer',
     padding: '0.5rem 1rem',
     borderRadius: '0.75rem',
-    background: palette.background.conversationStarters.default,
+    background: palette.components.conversation.background.starter.strong,
     '&:hover': {
-      background: palette.background.conversationStarters.hover,
+      background: palette.components.conversation.background.starter.subtle,
     },
   }),
   ellipsisText: {
@@ -349,7 +349,7 @@ const conversationStartersViewStyles = () => ({
     padding: ' 0.25rem 0',
   },
   title: ({ palette }) => ({
-    color: palette.text.button.disabled,
+    color: palette.text.muted,
   }),
   starterListItem: {
     padding: '0',

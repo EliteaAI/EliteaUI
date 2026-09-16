@@ -28,7 +28,7 @@ export default BaseTabs;
 const baseTabsStyle = theme => ({
   minHeight: '2rem !important',
   '& .MuiTabs-indicator': {
-    backgroundColor: theme.palette.background.tabs.default,
+    backgroundColor: theme.palette.components.tabs.default,
     borderRadius: '2rem 2rem 0 0',
   },
 });

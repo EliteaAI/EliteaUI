@@ -38,12 +38,13 @@ const LLMModelSelector = memo(props => {
   } = props;
 
   const theme = useTheme();
-  const styles = llmModelSelectorStyles();
 
   const anchorRef = useRef(null);
   const [showLLMSettings, setShowLLMSettings] = useState(false);
 
   const [anchorEl, setAnchorEl] = useState(null);
+
+  const styles = llmModelSelectorStyles(!!anchorEl);
 
   const normalizedLlmSettings = useMemo(
     // Default param `llmSettings = {}` only substitutes for `undefined`; the Toolkit Index History
@@ -253,7 +254,7 @@ const LLMModelSelector = memo(props => {
                 >
                   <SettingIcon
                     sx={styles.settingIcon}
-                    fill={!onSetLLMSettings || disabled ? theme.palette.icon.fill.disabled : undefined}
+                    fill={!onSetLLMSettings || disabled ? theme.palette.icon.disabled : undefined}
                   />
                 </Button.BaseBtn>
               </Box>
@@ -289,7 +290,7 @@ const LLMModelSelector = memo(props => {
 LLMModelSelector.displayName = 'LLMModelSelector';
 
 /** @type {MuiSx} */
-const llmModelSelectorStyles = () => ({
+const llmModelSelectorStyles = isMenuOpen => ({
   fieldRoot: {
     display: 'flex',
     flexDirection: 'row',
@@ -306,7 +307,8 @@ const llmModelSelectorStyles = () => ({
     gap: '0.25rem',
     cursor: 'pointer',
     minWidth: 0,
-    borderBottom: ({ palette }) => `0.0625rem solid ${palette.border.lines}`,
+    borderBottom: ({ palette }) =>
+      `0.0625rem solid ${isMenuOpen ? palette.primary.main : palette.border.lines}`,
     paddingLeft: '.75rem',
     paddingRight: '.75rem',
     '&:hover': {

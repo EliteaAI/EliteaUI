@@ -53,7 +53,7 @@ const caseContentPreviewModalStyles = () => ({
     overflow: 'auto',
   },
   contentText: ({ palette }) => ({
-    color: palette.text.default,
+    color: palette.text.primary,
     whiteSpace: 'pre-wrap',
     wordBreak: 'break-word',
     margin: 0,

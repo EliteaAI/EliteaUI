@@ -174,7 +174,7 @@ const runHistoryListItemStyles = (noVersions, hasEvent) => ({
     },
   }),
   selected: ({ palette }) => ({
-    background: palette.split.pressed,
+    background: palette.components.split.background.pressed,
 
     '&:after': {
       display: 'none',
@@ -182,7 +182,7 @@ const runHistoryListItemStyles = (noVersions, hasEvent) => ({
 
     '&:hover': {
       cursor: 'pointer',
-      background: palette.split.pressed,
+      background: palette.components.split.background.pressed,
     },
 
     '+ *:after': {

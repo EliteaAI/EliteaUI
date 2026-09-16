@@ -115,7 +115,7 @@ const getStyles = () => ({
   },
   button: {
     '&.Mui-disabled path': {
-      fill: ({ palette }) => palette.icon.fill.disabled,
+      fill: ({ palette }) => palette.icon.disabled,
     },
     color: ({ palette }) => `${palette.text.primary} !important`,
     minWidth: '1.75rem !important',

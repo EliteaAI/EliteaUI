@@ -30,9 +30,9 @@ import {
 import {
   bannerOutlivesRun,
   bannerVariant,
-  hasLiveRun,
   hasRetainedIndexData,
   indexBuildBlockedReason,
+  indexRunControls,
   indexScheduleBlockedReason,
   indexSearchBlockedReason,
   shouldDropIndexStateOverride,
@@ -63,6 +63,14 @@ import IndexDetailsLeftBand from './IndexDetailsLeftBand';
 import IndexDetailsTabsBand from './IndexDetailsTabsBand';
 import RunIndexGeneralSection from './RunIndexGeneralSection';
 import RunIndexScheduleContent from './RunIndexScheduleContent';
+
+const SCHEDULE_DATE_FORMAT = {
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+};
 
 const RunIndexPanel = memo(props => {
   const {
@@ -124,7 +132,7 @@ const RunIndexPanel = memo(props => {
 
   const {
     chatHistory,
-    isIndexing,
+    isIndexing: chatIsIndexing,
     isRunning,
     isStoppingIndexing,
     isWaitingForTaskStart,
@@ -180,7 +188,9 @@ const RunIndexPanel = memo(props => {
   }, [toolkitSchema]);
 
   const effectiveState = localMetaOverride?.state ?? index?.metadata?.state;
-  const effectiveIsIndexing = isIndexing || effectiveState === IndexStatuses.progress;
+  // The panel's own notion of "running", which is the row's state OR an active chat run;
+  // `chatIsIndexing` keeps the hook's narrower flag distinguishable from it.
+  const isIndexing = chatIsIndexing || effectiveState === IndexStatuses.progress;
   // Runs observed here aren't in the slice until a fetch happens — arm the poll from
   // local belief. (Second subscription on this route is deliberate; see the hook.)
   const { startedTimeStamp, fulfilledTimeStamp } = useIndexesListPolling({
@@ -201,16 +211,26 @@ const RunIndexPanel = memo(props => {
   // request issued after the observation supersedes it (in-flight fetches carry
   // pre-run data).
   const serverSupersedes = rowReadAfterOverride && startedTimeStamp > overrideObservedAtRef.current;
-  const effectiveStale = localMetaOverride?.state && !serverSupersedes ? false : index?.stale;
-  const isAwaitingTaskStart = isWaitingForTaskStart && !serverSupersedes;
-  const runLooksAbandoned = effectiveIsIndexing && Boolean(effectiveStale);
-  const runIsLive = hasLiveRun({
-    isIndexing: effectiveIsIndexing,
-    isStale: effectiveStale,
-  });
-  const deleteDisabled = isDeleting || isAwaitingTaskStart || runIsLive;
   const buildBlockedReason = indexBuildBlockedReason(selectedIndexTools);
-  const reindexDisabled = Boolean(buildBlockedReason) || isRunning || isAwaitingTaskStart || runIsLive;
+  const {
+    stale: isStale,
+    reclaimable: isReclaimable,
+    runLooksAbandoned,
+    runIsLive,
+    isAwaitingTaskStart,
+    deleteDisabled,
+    reindexDisabled,
+  } = indexRunControls({
+    isIndexing,
+    index,
+    localMetaOverride,
+    serverSupersedes,
+    buildBlockedReason,
+    isDeleting,
+    isRunning,
+    isWaitingForTaskStart,
+  });
+
   const retainsIndexedData = hasRetainedIndexData(index?.metadata);
 
   const schedulingTooltipMessage = useMemo(
@@ -291,14 +311,23 @@ const RunIndexPanel = memo(props => {
     const date = ScheduleHelpers.getNextCronRunInTimezone(cron, scheduleData.timezone);
 
     if (!date) return null;
-    return date.toLocaleString(undefined, {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    return date.toLocaleString(undefined, SCHEDULE_DATE_FORMAT);
   }, [scheduleData.cron, scheduleData.timezone]);
+
+  const scheduleExpiration = useMemo(() => {
+    // An absent value means the scheduler has not priced this schedule yet, not that it
+    // never expires.
+    if (!scheduleData.expires_at) return null;
+    const date = new Date(scheduleData.expires_at);
+    if (Number.isNaN(date.getTime())) return null;
+    return {
+      text: date.toLocaleString(undefined, SCHEDULE_DATE_FORMAT),
+      // Read, never inferred: a schedule its owner switched off by hand keeps its deadline too,
+      // so `!enabled && deadline passed` describes that one just as well as a retired one. The
+      // scheduler sets this flag only where it did the switching off itself.
+      expired: Boolean(scheduleData.expired),
+    };
+  }, [scheduleData.expires_at, scheduleData.expired]);
 
   const handleApplyScheduleModal = useCallback(
     (cron, credentials) => {
@@ -490,7 +519,14 @@ const RunIndexPanel = memo(props => {
 
   const reindexStats = useMemo(() => {
     const md = index?.metadata;
-    if (!md) return { isReindex: false, updatedOn: null, firstEntry: null, latestEntry: null };
+    if (!md)
+      return {
+        isReindex: false,
+        updatedOn: null,
+        firstEntry: null,
+        latestEntry: null,
+        currentRunEntry: null,
+      };
 
     const completedRuns = Array.isArray(md.history)
       ? md.history.filter(h => RUNNABLE_INDEX_STATUSES.includes(h?.state))
@@ -504,21 +540,31 @@ const RunIndexPanel = memo(props => {
       updatedOn: md.updated_on ?? null,
       firstEntry: sortedHistory[0] ?? null,
       latestEntry,
+      currentRunEntry: md,
     };
   }, [index?.metadata]);
-  const runInFlight = effectiveIsIndexing || isAwaitingTaskStart;
+  const runInFlight = isIndexing || isAwaitingTaskStart;
   const banner = useMemo(
     () =>
-      bannerVariant(runInFlight, effectiveState, reindexStats, index?.metadata?.error, effectiveStale, {
-        hasRetainedData: retainsIndexedData,
-        lastSuccessfulRun: index?.last_successful_run,
+      bannerVariant({
+        isIndexing: runInFlight,
+        state: effectiveState,
+        reindexStats,
+        error: index?.metadata?.error,
+        isStale,
+        retention: {
+          hasRetainedData: retainsIndexedData,
+          lastSuccessfulRun: index?.last_successful_run,
+        },
+        isReclaimable,
       }),
     [
       runInFlight,
       effectiveState,
       reindexStats,
       index?.metadata?.error,
-      effectiveStale,
+      isReclaimable,
+      isStale,
       retainsIndexedData,
       index?.last_successful_run,
     ],
@@ -547,7 +593,11 @@ const RunIndexPanel = memo(props => {
           enabled={scheduleData.enabled}
           scheduleSummary={scheduleSummary}
           timezoneHint={scheduleTimezoneHint}
-          nextRun={scheduleNextRun}
+          // A retired schedule will not fire again until it is turned back on, so showing the
+          // cron's next occurrence next to "Expired" would promise a run that cannot happen.
+          nextRun={scheduleExpiration?.expired ? null : scheduleNextRun}
+          expiresAt={scheduleExpiration?.text}
+          expired={Boolean(scheduleExpiration?.expired)}
           credentialsTitle={scheduleData.credentials?.elitea_title}
           onAddSchedule={onAddSchedule}
           onEdit={onEditSchedule}
@@ -587,13 +637,15 @@ const RunIndexPanel = memo(props => {
   const questionItemRef = useRef();
 
   const searchBlockedReason = indexSearchBlockedReason(
-    effectiveIsIndexing ? IndexStatuses.progress : effectiveState,
+    isIndexing ? IndexStatuses.progress : effectiveState,
     selectedIndexTools,
     runLooksAbandoned,
     retainsIndexedData,
   );
 
-  const runBlocksHistory = effectiveIsIndexing && !runLooksAbandoned;
+  // The display flag on purpose: keying this on the control flag would hold History shut
+  // for the whole disconnect timeout on exactly the dead run a user is trying to read.
+  const runBlocksHistory = isIndexing && !runLooksAbandoned;
   const historyDisabled = !index?.metadata?.history?.length || runBlocksHistory;
   const historyTooltip = runBlocksHistory
     ? 'Unavailable while indexing is in progress'
@@ -776,8 +828,8 @@ const runIndexPanelStyles = () => ({
     display: 'flex',
     flexDirection: 'column',
     minHeight: 0,
-    borderRight: ({ palette }) => `0.0625rem solid ${palette.border.table}`,
-    background: ({ palette }) => palette.background.toolkitDetailLeftPanel,
+    borderRight: ({ palette }) => `0.0625rem solid ${palette.border.default}`,
+    background: ({ palette }) => palette.components.indexDetail.background.left,
   },
   accordion: {
     background: 'transparent',

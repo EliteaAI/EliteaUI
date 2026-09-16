@@ -600,12 +600,12 @@ const styles = {
     fontSize: '0.875rem',
     color: ({ palette }) => palette.text.secondary,
     '&:hover': {
-      backgroundColor: ({ palette }) => palette.background.button.iconLabelButton.hover,
+      backgroundColor: ({ palette }) => palette.components.button.background.iconLabelButton.hover,
     },
     '&.Mui-disabled': {
       color: ({ palette }) => palette.text.disabled,
     },
-    background: ({ palette }) => (isSelected ? palette.background.participant.active : undefined),
+    background: ({ palette }) => (isSelected ? palette.background.interactiveItem.active : undefined),
   }),
   checkedIconBox: ({ palette }) => ({
     display: 'flex',

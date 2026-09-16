@@ -347,7 +347,7 @@ const sharedConversationPageStyles = () => ({
     padding: '0 0.25rem',
   },
   messageBody: ({ palette }) => ({
-    background: palette.background.aiAnswerBkg,
+    background: palette.background.aiAnswer,
     borderRadius: '0.5rem',
     padding: '0.75rem 1rem',
     boxShadow: palette.boxShadow.aiAnswer,

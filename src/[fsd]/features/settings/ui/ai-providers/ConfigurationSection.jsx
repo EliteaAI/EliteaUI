@@ -280,13 +280,13 @@ const getStyles = defaultSettingsLayout => ({
     paddingTop: '.5rem',
     paddingBottom: '1rem',
     borderBottom: showBorder ? '0.0625rem solid' : 'none',
-    borderColor: ({ palette }) => palette.border.sidebarDivider,
+    borderColor: ({ palette }) => palette.border.subtle,
   }),
   labelContainerSx: {
     padding: '0.25rem 0.75rem',
     borderRadius: '0.75rem',
     border: '0.0625rem solid',
-    borderColor: ({ palette }) => palette.border.cardsOutlines,
+    borderColor: ({ palette }) => palette.border.default,
     '&:hover': {
       backgroundColor: 'rgba(255, 255, 255, 0.05)',
       borderColor: 'rgba(38, 43, 52, 1)',

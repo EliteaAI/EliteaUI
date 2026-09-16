@@ -110,9 +110,7 @@ const DeleteEntityButton = memo(props => {
                   sx={{ fontSize: '16px' }}
                   fill={
                     iconColor ||
-                    (isLoading || disabled
-                      ? theme.palette.icon.fill.disabled
-                      : theme.palette.icon.fill.secondary)
+                    (isLoading || disabled ? theme.palette.icon.disabled : theme.palette.icon.secondary)
                   }
                 />
                 {isLoading && <StyledCircleProgress size={16} />}

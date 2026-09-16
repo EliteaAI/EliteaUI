@@ -249,7 +249,7 @@ const styles = {
   tableHeader: ({ palette }) => ({
     display: 'flex',
     padding: '0.5rem 0.75rem',
-    borderBottom: `1px solid ${palette.border.table}`,
+    borderBottom: `1px solid ${palette.border.default}`,
     gap: '0.5rem',
   }),
   tableCell: ({ palette }) => ({
@@ -261,10 +261,10 @@ const styles = {
   clickableRow: ({ palette }) => ({
     display: 'flex',
     padding: '0.5rem 0.75rem',
-    borderBottom: `1px solid ${palette.border.table}`,
+    borderBottom: `1px solid ${palette.border.default}`,
     gap: '0.5rem',
     cursor: 'pointer',
-    '&:hover': { backgroundColor: palette.background.conversation?.hover },
+    '&:hover': { backgroundColor: palette.background.interactiveItem.rowHover },
   }),
   tableCellValue: ({ palette }) => ({
     fontSize: '0.8125rem',

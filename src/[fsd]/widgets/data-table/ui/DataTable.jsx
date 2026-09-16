@@ -520,7 +520,7 @@ const dataTableStyles = (isFullWidth, hasListHeader) => ({
   },
   tableCell: ({ palette }) => ({
     padding: '0.375rem 1.5rem',
-    borderBottom: `0.0625rem solid ${palette.border.table}`,
+    borderBottom: `0.0625rem solid ${palette.border.default}`,
     border: 'none',
   }),
   typeLabelText: {
@@ -564,7 +564,7 @@ const dataTableStyles = (isFullWidth, hasListHeader) => ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    color: palette.icon.fill.default,
+    color: palette.icon.default,
     '& svg': {
       width: '1rem',
       height: '1rem',
@@ -574,7 +574,7 @@ const dataTableStyles = (isFullWidth, hasListHeader) => ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    color: palette.icon.fill.attention,
+    color: palette.icon.attention,
     '& svg': {
       width: '1rem',
       height: '1rem',
@@ -584,6 +584,6 @@ const dataTableStyles = (isFullWidth, hasListHeader) => ({
     value =>
     ({ palette }) => ({
       ml: '0.5rem',
-      color: value ? palette.icon.fill.secondary : palette.icon.fill.disabled,
+      color: value ? palette.icon.secondary : palette.icon.disabled,
     }),
 });

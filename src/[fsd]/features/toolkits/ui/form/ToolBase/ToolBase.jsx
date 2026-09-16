@@ -691,7 +691,7 @@ const toolBaseStyles = shouldHideConfigurationHeader => ({
     fontSize: '0.75rem',
     fontWeight: 400,
     lineHeight: '1rem',
-    color: palette.text.button.showMore,
+    color: palette.text.showMore,
     '&:hover': {
       background: 'none',
       textDecoration: 'underline',

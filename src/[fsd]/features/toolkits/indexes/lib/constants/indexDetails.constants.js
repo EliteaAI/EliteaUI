@@ -34,6 +34,10 @@ export const IndexStatuses = {
   runTest: 'run_test',
 };
 
+export const BannerIcon = {
+  attention: 'attention',
+};
+
 export const BannerSeverity = {
   warning: 'warning',
   error: 'error',
@@ -60,6 +64,17 @@ export const BannerMessageMap = {
     "Indexing may take a few minutes depending on size. You can navigate to other sections; indexing will continue in the background and you'll be notified when it's done.",
 };
 
+export const INDEX_PARTIAL_BANNER_TITLE = 'Partially indexed';
+
+export const INDEX_PARTIAL_BANNER_SUFFIX =
+  'The index is searchable, but some items are missing. Check History for details.';
+
+export const INDEX_PARTIAL_BANNER_MESSAGE = `Some items could not be indexed. ${INDEX_PARTIAL_BANNER_SUFFIX}`;
+
+export const INDEX_FAILURE_BANNER_PREFIX = 'Indexing failed:';
+
+export const INDEX_FAILURE_BANNER_SUFFIX = 'See History for error details.';
+
 export const REINDEX_IN_PROGRESS_BANNER_TITLE = 'Reindexing in progress';
 
 export const REINDEX_IN_PROGRESS_BANNER_MESSAGE =
@@ -69,15 +84,34 @@ export const REINDEX_FAILED_BANNER_TITLE = 'Reindex failed';
 
 export const INDEX_RETAINED_DATA_MESSAGE = 'Previously indexed data remains available for search.';
 
-export const REINDEX_FAILED_BANNER_MESSAGE =
-  `The new indexing attempt could not be completed. ${INDEX_RETAINED_DATA_MESSAGE} ` +
+export const REINDEX_FAILED_GUIDANCE =
   'Check History for error details and try again after resolving the issue.';
 
-// `stale` is a no-progress-for-the-timeout heuristic (default 2h), not a terminal
-// state from the worker — the copy has to hedge that the run may still be alive.
+export const REINDEX_FAILED_BANNER_MESSAGE = `The new indexing attempt could not be completed. ${INDEX_RETAINED_DATA_MESSAGE} ${REINDEX_FAILED_GUIDANCE}`;
+
+// Shown while the run looks interrupted but the platform still considers it live, so the
+// panel offers Stop and the server would refuse a Reindex.
+export const INDEX_UNRESPONSIVE_BANNER_MESSAGE =
+  'This run has not reported progress for a while. It may still be finishing; ' +
+  'if it is not, use Stop to end it before starting a new run.';
+
+// `stale` is a no-progress heuristic, never a terminal state from the worker, so the copy
+// hedges that the run may still be alive. The remedy named depends on `reclaimable`.
 export const INDEX_ABANDONED_BANNER_MESSAGE =
   'This run has not reported progress for a long time and looks interrupted. ' +
   'If it is still running it may yet finish; otherwise click Reindex to restart it.';
+
+// The card's one-line counterparts of the two banners above. Kept beside them so the
+// compact row and the panel cannot drift into naming different remedies for one state.
+export const INDEX_ABANDONED_TOOLTIP = 'This run stopped without finishing. Reindex to try again.';
+export const INDEX_UNRESPONSIVE_TOOLTIP =
+  'This run has not reported progress for a while. Use Stop to end it before starting a new run.';
+
+// The counts line under an index name: the live chunk count while a run is in flight,
+// and the persisted document ratio otherwise.
+export const INDEX_RUN_CHUNKS_TOOLTIP = 'chunks written by the current run';
+export const INDEX_DOCS_RATIO_TOOLTIP = 'indexed / total';
+export const INDEX_REINDEXED_RATIO_TOOLTIP = 'reindexed / total';
 
 export const INDEX_ABANDONED_EVENT_LABEL = 'Stopped without finishing';
 

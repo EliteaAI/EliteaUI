@@ -96,7 +96,7 @@ const NewParticipantCard = memo(props => {
           </Typography>
           <Typography
             variant="bodySmall"
-            color="text.default"
+            color="text.primary"
             sx={styles.typeText}
             component={'span'}
             data-testid={typeTestId}
@@ -149,7 +149,7 @@ const styles = {
     padding: '0.5rem 0.75rem',
     height: '3.5rem',
     cursor: alreadyExists ? 'default' : 'pointer',
-    border: alreadyExists ? `1px solid ${theme.palette.border.userMessageEditor}` : 'none',
+    border: alreadyExists ? `1px solid ${theme.palette.components.userMessageEditor.border}` : 'none',
     background: isActive
       ? theme.palette.background.surface.interactive.active
       : theme.palette.background.surface.interactive.default,

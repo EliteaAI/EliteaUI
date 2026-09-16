@@ -152,7 +152,7 @@ const indexChatContainerStyles = () => ({
     fontSize: '1rem',
 
     path: {
-      fill: ({ palette }) => `${palette.icon.fill.secondary} !important`,
+      fill: ({ palette }) => `${palette.icon.secondary} !important`,
     },
   },
   chatContainer: {

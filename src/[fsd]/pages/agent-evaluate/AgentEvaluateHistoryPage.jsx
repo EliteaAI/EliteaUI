@@ -134,7 +134,7 @@ const agentEvaluateHistoryPageStyles = () => ({
     height: '3.8rem',
     minHeight: '3.8rem',
     width: '100%',
-    borderBottom: `0.0625rem solid ${palette.border.table}`,
+    borderBottom: `0.0625rem solid ${palette.border.default}`,
     boxSizing: 'border-box',
     display: 'flex',
     alignItems: 'center',
@@ -164,7 +164,7 @@ const agentEvaluateHistoryPageStyles = () => ({
   },
   divider: ({ palette }) => ({
     width: '0.0625rem',
-    backgroundColor: palette.border.table,
+    backgroundColor: palette.border.default,
     flexShrink: 0,
   }),
   stateContainer: {

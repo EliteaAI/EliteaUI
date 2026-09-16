@@ -6,11 +6,13 @@ import { Box, CircularProgress, Skeleton, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { normalizeIndexingReport } from '@/[fsd]/entities/indexing-report';
+import { IndexStatuses } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
 import {
-  IndexStatuses,
-  RUNNABLE_INDEX_STATUSES,
-} from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
-import { isAbandonedRun } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexDetails.helpers';
+  abandonedRunTooltip,
+  hasReclaimableFlag,
+  indexListCounts,
+  isAbandonedRun,
+} from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexDetails.helpers';
 import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
@@ -52,32 +54,20 @@ const IndexListItem = memo(props => {
 
   const isSelected = useMemo(() => currentIndex?.id === index.id, [currentIndex, index]);
   const isInProgress = index?.metadata?.state === IndexStatuses.progress;
-  // Only the backend's stale flag proves an in_progress run dead, and the lock must
-  // be a visible disabled state — a swallowed click reads as "delete broken".
-  const disableStuckActions = isReindexing || (isInProgress && !index?.stale);
+  // `reclaimable`, not `stale` — Delete drops the whole collection; see indexRunControls.
+  // Falls back to `stale` for an older backend.
+  const reclaimable = hasReclaimableFlag(index);
+  const disableStuckActions = isReindexing || (isInProgress && !reclaimable);
 
   const documents = useMemo(() => {
     if (!index.metadata) return { tooltip: '-', count: '–', skipped: '-' };
 
     const report = normalizeIndexingReport(index.metadata);
-
-    // Reindex detection: the SDK records a history entry per state transition (in_progress
-    // + completed), so history.length > 1 fires on any completed run. Count only completed
-    // entries — more than one means this collection has been indexed more than once.
-    // Units are docs/docs: `indexed` = documents landed in the vector store, `total` =
-    // documents fetched from the source. Mixing chunks and docs (previous behavior) made
-    // the ratio meaningless when a doc chunker produces multiple chunks per document.
-    const completedRuns = Array.isArray(index.metadata.history)
-      ? index.metadata.history.filter(h => RUNNABLE_INDEX_STATUSES.includes(h?.state)).length
-      : 0;
-    const total = index.metadata.total ?? index.metadata.indexed ?? '–';
-    const indexedDocs = index.metadata.indexed ?? '–';
     return {
-      tooltip: completedRuns > 1 ? 'reindexed / total' : 'indexed / total',
-      count: `${indexedDocs} / ${total}`,
+      ...indexListCounts(index.metadata, isInProgress),
       skipped: report?.totals?.leftOut ?? 0,
     };
-  }, [index]);
+  }, [index, isInProgress]);
 
   if (useMock)
     return (
@@ -269,7 +259,7 @@ const IndexListItem = memo(props => {
                 </Box>
               )}
               {isAbandonedRun(index) && (
-                <Tooltip title="This run stopped without finishing. Reindex to try again.">
+                <Tooltip title={abandonedRunTooltip(index)}>
                   <Box sx={[styles.stateIcon, styles.abandonedIcon, styles.stateIconContainer]}>
                     <AttentionIcon
                       width={16}
@@ -300,7 +290,7 @@ const indexListItem = () => ({
     borderRadius: '.5rem',
     background: `${palette.background.surface.interactive.default}`,
     padding: '.5rem 1rem',
-    border: `.0625rem solid ${palette.border.table}`,
+    border: `.0625rem solid ${palette.border.default}`,
     position: 'relative',
     gap: '1rem',
 
@@ -320,21 +310,21 @@ const indexListItem = () => ({
   }),
 
   selectedWrapper: ({ palette }) => ({
-    background: palette.split.pressed,
-    border: `.0625rem solid ${palette.split.hover}`,
+    background: palette.components.split.background.pressed,
+    border: `0.0625rem solid ${palette.components.split.border.hover}`,
   }),
 
   errorWrapper: ({ palette }) => ({
-    border: `1px solid ${palette.background.wrongBkg}`,
-    background: palette.background.errorBkg,
+    border: `0.0625rem solid ${palette.border.error}`,
+    background: palette.background.error,
 
     '&:hover': {
-      background: palette.background.errorBkg,
+      background: palette.background.error,
       border: `1px solid ${palette.error.main}`,
     },
 
     '&.selected': {
-      background: palette.background.errorBkg,
+      background: palette.background.error,
       border: `1px solid ${palette.error.main}`,
     },
   }),
@@ -372,7 +362,7 @@ const indexListItem = () => ({
 
     svg: {
       path: {
-        fill: ({ palette }) => palette.background.button.primary.disabled,
+        fill: ({ palette }) => palette.icon.disabled,
       },
     },
   },
@@ -419,7 +409,7 @@ const indexListItem = () => ({
   },
   warning: {
     path: ({ palette }) => ({
-      fill: palette.background.warning,
+      fill: palette.icon.warning,
     }),
   },
 

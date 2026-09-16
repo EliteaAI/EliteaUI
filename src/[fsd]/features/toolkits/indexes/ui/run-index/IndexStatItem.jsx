@@ -45,13 +45,13 @@ const getStyles = () => ({
     alignItems: 'center',
     gap: '0.375rem',
     flexShrink: 0,
-    color: ({ palette }) => palette.icon.fill.disabled,
+    color: ({ palette }) => palette.icon.disabled,
   },
   statIcon: ({ palette }) => ({
     width: '1rem',
     height: '1rem',
     fontSize: '1rem',
-    color: palette.icon.fill.disabled,
+    color: palette.icon.disabled,
   }),
   statValue: {
     display: 'flex',

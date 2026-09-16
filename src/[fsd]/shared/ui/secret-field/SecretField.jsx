@@ -389,7 +389,7 @@ const secretFieldStyles = error => ({
     },
   },
   refreshIcon: ({ palette }) => ({
-    color: palette.text.default,
+    color: palette.text.primary,
     padding: 0,
     position: 'relative',
     backgroundColor: 'transparent',

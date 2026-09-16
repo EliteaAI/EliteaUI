@@ -104,18 +104,32 @@ describe('buildIndexRunLookup', () => {
     expect(lookup.get(9)[0].abandoned).toBe(false);
   });
 
-  it("admits a stale row's own current run as abandoned", () => {
-    const lookup = buildIndexRunLookup([
-      {
-        stale: true,
-        metadata: {
-          collection: 'docs',
-          state: 'in_progress',
-          conversation_id: 5,
-          history: [entry('in_progress', { conversation_id: 5 })],
-        },
-      },
-    ]);
+  const rowInProgress = over => ({
+    metadata: {
+      collection: 'docs',
+      state: 'in_progress',
+      conversation_id: 5,
+      history: [entry('in_progress', { conversation_id: 5 })],
+    },
+    ...over,
+  });
+
+  it("admits a reclaimable row's own current run as abandoned", () => {
+    const lookup = buildIndexRunLookup([rowInProgress({ stale: true, reclaimable: true })]);
+
+    expect(lookup.get(5)[0].abandoned).toBe(true);
+  });
+
+  it('leaves a display-stale row that is still reclaimable-false out of history', () => {
+    // `stale` fires five heartbeat intervals in, which a healthy run crosses while it is
+    // mid-promote. Listing it would show a live run as a finished, abandoned one.
+    const lookup = buildIndexRunLookup([rowInProgress({ stale: true, reclaimable: false })]);
+
+    expect(lookup.size).toBe(0);
+  });
+
+  it('falls back to stale when the backend sends no control flag', () => {
+    const lookup = buildIndexRunLookup([rowInProgress({ stale: true })]);
 
     expect(lookup.get(5)[0].abandoned).toBe(true);
   });

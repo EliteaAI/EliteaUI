@@ -88,12 +88,12 @@ const resourcesButtonStyles = (fullWidth, isActive) => ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    background: isActive ? palette.background.button.drawerMenu.selected : 'transparent',
+    background: isActive ? palette.components.sidebar.menuItem.selected : 'transparent',
     '&:hover': {
-      backgroundColor: palette.background.button.drawerMenu.hover,
+      backgroundColor: palette.components.sidebar.menuItem.hover,
     },
     '&:active': {
-      backgroundColor: palette.background.button.drawerMenu.selected,
+      backgroundColor: palette.components.sidebar.menuItem.selected,
     },
   }),
   fullWidthContainer: ({ palette }) => ({
@@ -107,14 +107,14 @@ const resourcesButtonStyles = (fullWidth, isActive) => ({
     cursor: 'pointer',
     boxSizing: 'border-box',
     color: isActive ? palette.text.secondary : palette.text.metrics,
-    background: isActive ? palette.background.button.drawerMenu.selected : 'transparent',
+    background: isActive ? palette.components.sidebar.menuItem.selected : 'transparent',
 
     '& svg': {
       color: isActive ? palette.text.secondary : palette.text.metrics,
     },
 
     '&:hover': {
-      background: palette.background.button.drawerMenu.hover,
+      background: palette.components.sidebar.menuItem.hover,
     },
   }),
   icon: {

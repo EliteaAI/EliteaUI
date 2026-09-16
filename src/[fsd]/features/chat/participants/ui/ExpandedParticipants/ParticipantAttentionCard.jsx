@@ -222,7 +222,7 @@ export const participantAttentionCardStyles = ({ isActive, maxWidth }) => ({
     width: '1rem',
     height: '1rem',
     '& svg': {
-      fill: palette.icon.fill.attention,
+      fill: palette.icon.attention,
     },
   }),
   attentionMessage: {
@@ -244,7 +244,7 @@ export const participantAttentionCardStyles = ({ isActive, maxWidth }) => ({
     height: '1rem',
     marginTop: '.0625rem',
     '& svg, & path': {
-      fill: palette.icon.fill.secondary,
+      fill: palette.icon.secondary,
     },
   }),
 });

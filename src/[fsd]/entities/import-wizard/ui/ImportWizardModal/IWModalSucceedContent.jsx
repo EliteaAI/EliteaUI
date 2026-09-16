@@ -171,14 +171,14 @@ const iWModaSucceedlContentStyles = () => ({
       marginTop: '0.25rem',
 
       path: {
-        fill: palette.icon.fill.success,
+        fill: palette.icon.success,
       },
     },
   }),
   skippedItems: ({ palette }) => ({
     svg: {
       path: {
-        fill: palette.icon.fill.attention,
+        fill: palette.icon.attention,
       },
     },
   }),
@@ -193,8 +193,8 @@ const iWModaSucceedlContentStyles = () => ({
     gap: '0.75rem',
     marginTop: '1rem',
     padding: '.75rem 1rem',
-    background: palette.background.warning8,
-    border: `0.0625rem solid ${palette.background.warning40}`,
+    background: palette.background.warning,
+    border: `0.0625rem solid ${palette.border.attention}`,
     borderRadius: '0.5rem',
 
     svg: {
@@ -202,7 +202,7 @@ const iWModaSucceedlContentStyles = () => ({
       minHeight: '1rem',
 
       path: {
-        fill: palette.background.warning,
+        fill: palette.icon.warning,
       },
     },
   }),
@@ -211,7 +211,7 @@ const iWModaSucceedlContentStyles = () => ({
     fontWeight: 400,
     fontSize: '.75rem',
     lineHeight: '1rem',
-    color: theme.palette.text.mcp.logout,
+    color: theme.palette.components.mcp.text.logout,
   }),
 
   infoIconWrapper: {

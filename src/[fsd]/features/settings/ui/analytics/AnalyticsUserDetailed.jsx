@@ -8,6 +8,7 @@ import { useAnalyticsUserDetailQuery } from '@/[fsd]/features/settings/api/analy
 import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { ChartTooltip, KPICard } from '@/[fsd]/features/settings/ui/analytics';
+import { CHART_COLORS } from '@/[fsd]/shared/config/theme/chartPalette';
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 import ArrowBackIcon from '@/components/Icons/ArrowBackIcon';
 
@@ -326,10 +327,7 @@ const AnalyticsUserDetailed = memo(props => {
                       width: 6,
                       height: 6,
                       borderRadius: '50%',
-                      backgroundColor:
-                        AnalyticsCommonConstants.CHART_COLORS[
-                          i % AnalyticsCommonConstants.CHART_COLORS.length
-                        ],
+                      backgroundColor: CHART_COLORS[i % CHART_COLORS.length],
                       flexShrink: 0,
                     }}
                   />
@@ -527,7 +525,7 @@ const analyticsUserDetailedStyles = () => ({
     alignItems: 'center',
     gap: '0.5rem',
     padding: '0.375rem 0',
-    borderBottom: `1px solid ${palette.border.table}`,
+    borderBottom: `1px solid ${palette.border.default}`,
     minWidth: 0,
     '&:last-child': { borderBottom: 'none' },
   }),

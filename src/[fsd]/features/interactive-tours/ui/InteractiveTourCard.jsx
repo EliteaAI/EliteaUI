@@ -227,7 +227,7 @@ const tourCardStyles = () => ({
   },
 
   counter: ({ palette }) => ({
-    color: palette.background.interactiveTourPrompt.counter,
+    color: palette.components.interactiveTour.text,
   }),
 
   footerButtons: {

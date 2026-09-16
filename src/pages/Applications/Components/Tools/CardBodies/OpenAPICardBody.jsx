@@ -1,6 +1,4 @@
-import { Box, Typography } from '@mui/material';
-
-import { useTheme } from '@emotion/react';
+import { Box, Typography, useTheme } from '@mui/material';
 
 export default function OpenAPICardBody({ tool, onClickShowActions, showActions }) {
   const theme = useTheme();
@@ -17,7 +15,7 @@ export default function OpenAPICardBody({ tool, onClickShowActions, showActions 
             sx={{
               color: theme.palette.text.primary,
               '&:hover': {
-                color: theme.palette.text.createButton,
+                color: theme.palette.components.button.text.create,
               },
             }}
           >

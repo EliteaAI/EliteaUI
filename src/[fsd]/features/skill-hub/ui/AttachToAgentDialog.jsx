@@ -438,7 +438,7 @@ const attachToAgentDialogStyles = () => ({
   closeButton: ({ palette }) => ({
     padding: 0,
     margin: 0,
-    color: palette.icon.fill.default,
+    color: palette.icon.default,
     '&:hover': { backgroundColor: 'transparent' },
   }),
   dialogContent: ({ palette }) => ({
@@ -451,7 +451,7 @@ const attachToAgentDialogStyles = () => ({
     background: palette.background.default.secondary,
   }),
   subtitle: ({ palette }) => ({
-    color: palette.text.default,
+    color: palette.text.primary,
   }),
   autocomplete: ({ palette }) => ({
     marginTop: '0.5rem',
@@ -494,7 +494,7 @@ const attachToAgentDialogStyles = () => ({
     borderRadius: '1rem',
     margin: 0,
     paddingLeft: '0.5rem',
-    backgroundColor: palette.background.notificationList,
+    backgroundColor: palette.components.notificationList.background,
     '& .MuiChip-label': {
       ...typography.labelSmall,
       color: palette.text.secondary,
@@ -506,8 +506,8 @@ const attachToAgentDialogStyles = () => ({
       height: '1.125rem',
       marginLeft: 0,
       marginRight: '0.5rem',
-      '& path': { fill: palette.icon.fill.default },
-      '&:hover path': { fill: palette.text.secondary },
+      '& path': { fill: palette.icon.default },
+      '&:hover path': { fill: palette.icon.secondary },
     },
   }),
   chipAvatar: {
@@ -534,7 +534,7 @@ const attachToAgentDialogStyles = () => ({
   }),
   checkIcon: ({ palette }) => ({
     fontSize: '1rem',
-    color: palette.icon.fill.default,
+    color: palette.icon.default,
   }),
   alreadyAddedLabel: ({ palette }) => ({
     color: palette.text.disabled,

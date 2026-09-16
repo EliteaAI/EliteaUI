@@ -13,7 +13,7 @@ import YAML from 'js-yaml';
 import { ErrorBoundary } from 'react-error-boundary';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { Box, IconButton, Typography } from '@mui/material';
+import { Box, IconButton, Typography, useTheme } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip.jsx';
 import {
@@ -35,7 +35,6 @@ import useToast from '@/hooks/useToast.jsx';
 import { ContentContainer } from '@/pages/Common/index.js';
 import RouteDefinitions from '@/routes.js';
 import { actions, selectActivePipeline } from '@/slices/pipeline.js';
-import { useTheme } from '@emotion/react';
 
 import useIsPipelineYamlCodeDirty from '../useIsPipelineYamlCodeDirty.js';
 import PipelineAddNodeMenu from './AddNodeMenu.jsx';
@@ -228,7 +227,7 @@ const EditorPanel = forwardRef(({ setYamlDirty, stopRun, display, sx, disabled, 
               <Box sx={styles.errorFallback(mode, theme)}>
                 <Typography
                   variant="headingSmall"
-                  color={theme.palette.text.warningText}
+                  color={theme.palette.text.warning}
                   sx={styles.errorTitle}
                 >
                   Failed to load the flow editor

@@ -40,7 +40,7 @@ const PipelineAddNodeMenu = memo(props => {
       .map(nodeType => ({
         type: nodeType,
         label: FlowEditorConstants.PipelineNodeDisplayNames[nodeType],
-        icon: NodeHelpers.getNodeIconByType(nodeType, theme, theme.palette.icon.fill.secondary),
+        icon: NodeHelpers.getNodeIconByType(nodeType, theme, theme.palette.icon.secondary),
       }))
       .sort((a, b) => a.label.toLowerCase().localeCompare(b.label.toLowerCase()));
   }, [theme]);
@@ -86,7 +86,7 @@ const PipelineAddNodeMenu = memo(props => {
           disabled={disabled}
           sx={styles.triggerButton}
         >
-          <PlusIcon fill={theme.palette.icon.fill.send} />
+          <PlusIcon fill={theme.palette.icon.send} />
         </IconButton>
       </Tooltip>
       <Menu
@@ -199,13 +199,13 @@ const componentStyles = () => ({
     minHeight: '3rem',
     borderRadius: '0.625rem',
     '&:hover': {
-      backgroundColor: palette.background.conversation.hover,
+      backgroundColor: palette.background.interactiveItem.rowHover,
     },
   }),
   listItemIcon: ({ palette }) => ({
     minWidth: '1.5rem !important',
     maxWidth: '1.5rem',
-    color: palette.icon.fill.secondary,
+    color: palette.icon.secondary,
     '& svg': {
       width: '1rem',
       height: '1rem',

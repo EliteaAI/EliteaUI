@@ -239,8 +239,8 @@ const toolViewStyles = (isSelected, isHovering) => ({
     gap: '0.5rem',
     height: '2rem',
     background: isSelected
-      ? palette.background.select.selected.default
-      : palette.background.button.secondary.default,
+      ? palette.background.selectedItem.default
+      : palette.background.surface.interactive.active,
     borderRadius: '0.625rem',
     cursor: 'pointer',
     transition: 'background-color 0.2s ease, padding-right 0.2s ease',
@@ -248,8 +248,8 @@ const toolViewStyles = (isSelected, isHovering) => ({
     overflow: 'hidden',
     '&:hover': {
       background: isSelected
-        ? palette.background.select.selected.hover
-        : palette.background.button.secondary.hover,
+        ? palette.background.selectedItem.hover
+        : palette.background.surface.interactive.selected,
     },
   }),
   checkIcon: ({ palette }) => ({

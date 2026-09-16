@@ -34,7 +34,7 @@ const blockerSx =
     inset: 0,
     zIndex: zIndex.modal + 1,
     pointerEvents: 'auto',
-    backgroundColor: hasTarget ? 'transparent' : palette.background.interactiveTourPrompt.backdrop,
+    backgroundColor: hasTarget ? 'transparent' : palette.components.interactiveTour.backdrop,
   });
 
 const spotlightSx =
@@ -54,7 +54,7 @@ const spotlightSx =
 
     // Dim everything outside via a huge outward box-shadow.
     // The main element stays transparent so the target content is visible.
-    boxShadow: `0 0 0 9999px ${palette.background.interactiveTourPrompt.backdrop}`,
+    boxShadow: `0 0 0 9999px ${palette.components.interactiveTour.backdrop}`,
 
     // Gradient ring via ::before pseudo-element — standard CSS-Tricks technique.
     // The pseudo-element fills the box with the gradient, then a two-layer mask
@@ -67,7 +67,7 @@ const spotlightSx =
       inset: 0,
       borderRadius: 'inherit',
       padding: `${BORDER_WIDTH_PX}px`,
-      background: palette.background.interactiveTourPrompt.borderGradient,
+      background: palette.components.interactiveTour.background.borderGradient,
       // Clip to padding area only (= the ring), hide the content-box center
       WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
       WebkitMaskComposite: 'xor',

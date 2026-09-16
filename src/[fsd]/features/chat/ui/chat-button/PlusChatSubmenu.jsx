@@ -74,7 +74,7 @@ const PlusChatSubmenu = memo(props => {
         <Box sx={styles.searchInnerContainer}>
           <SearchIcon
             style={styles.searchIcon}
-            fill={theme.palette.text.secondary}
+            fill={theme.palette.icon.default}
           />
           <TextField
             ref={searchRef}
@@ -91,37 +91,37 @@ const PlusChatSubmenu = memo(props => {
         </Box>
       </Box>
 
+      {showCreateNew && (
+        <MenuItem
+          onClick={onCreateNew}
+          sx={styles.createNewItem}
+          data-testid={sectionKey ? `${sectionKey}-create-new-button` : undefined}
+        >
+          <PlusIcon
+            style={styles.plusIcon}
+            fill={theme.palette.icon.default}
+          />
+          <Typography
+            variant="bodyMedium"
+            color="text.secondary"
+            sx={styles.ellipsisText}
+          >
+            {createNewLabel}
+          </Typography>
+        </MenuItem>
+      )}
+
+      {showCreateNew && items.length > 0 && (
+        <Box sx={styles.dividerContainer}>
+          <Box sx={styles.dividerLine} />
+        </Box>
+      )}
+
       <Box
         ref={scrollRef}
         onScroll={handleScroll}
         sx={styles.scrollableContent}
       >
-        {showCreateNew && (
-          <MenuItem
-            onClick={onCreateNew}
-            sx={styles.createNewItem}
-            data-testid={sectionKey ? `${sectionKey}-create-new-button` : undefined}
-          >
-            <PlusIcon
-              style={styles.plusIcon}
-              fill={theme.palette.icon.fill.secondary}
-            />
-            <Typography
-              variant="bodyMedium"
-              color="text.secondary"
-              sx={styles.ellipsisText}
-            >
-              {createNewLabel}
-            </Typography>
-          </MenuItem>
-        )}
-
-        {showCreateNew && items.length > 0 && (
-          <Box sx={styles.dividerContainer}>
-            <Box sx={styles.dividerLine} />
-          </Box>
-        )}
-
         {items.map(item => {
           const isPublic = showPublicLabel && item.data?.project_id == PUBLIC_PROJECT_ID;
 
@@ -254,7 +254,7 @@ const submenuStyles = theme => ({
     gap: '0.75rem',
     color: theme.palette.text.primary,
     '&:hover': {
-      backgroundColor: theme.palette.background.select.hover,
+      backgroundColor: theme.palette.background.interactiveItem.hover,
     },
   },
   dividerContainer: {
@@ -319,7 +319,7 @@ const submenuStyles = theme => ({
     gap: '0.5rem',
     color: theme.palette.text.primary,
     '&:hover': {
-      backgroundColor: theme.palette.background.select.hover,
+      backgroundColor: theme.palette.background.interactiveItem.hover,
     },
   },
   toggleItem: {
@@ -330,7 +330,7 @@ const submenuStyles = theme => ({
     display: 'flex',
     justifyContent: 'space-between',
     '&:hover': {
-      backgroundColor: theme.palette.background.select.hover,
+      backgroundColor: theme.palette.background.interactiveItem.hover,
     },
   },
   messageContainer: {

@@ -77,7 +77,7 @@ const DatasetSection = memo(props => {
               variant="bodySmall"
               sx={styles.emptyText}
             >
-              Choose dataset or create a new one to ...
+              No dataset added yet.
             </Typography>
             <Button.BaseBtn
               color={BUTTON_COLORS.secondary}
@@ -181,11 +181,11 @@ const datasetSectionStyles = () => ({
       height: '0.75rem',
     },
     '& svg path': {
-      fill: palette.text.secondary,
+      fill: palette.icon.secondary,
     },
     '&:hover': {
       borderColor: palette.border.lines,
-      backgroundColor: palette.background.tabButton.default,
+      backgroundColor: palette.background.surface.interactive.default,
     },
   }),
   selectorMenuPaper: ({ palette }) => ({
@@ -210,7 +210,7 @@ const datasetSectionStyles = () => ({
     marginBottom: '.25rem',
     color: palette.text.secondary,
     svg: {
-      path: { fill: palette.text.secondary },
+      path: { fill: palette.icon.secondary },
     },
     ':after': {
       content: "''",
@@ -244,7 +244,7 @@ const datasetSectionStyles = () => ({
       borderBottom: 'none',
     },
     '&:hover': {
-      backgroundColor: palette.background.tabButton.default,
+      backgroundColor: palette.background.surface.interactive.default,
     },
   }),
   datasetInfo: {

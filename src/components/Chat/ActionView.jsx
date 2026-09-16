@@ -2,7 +2,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { Box, Collapse, Tooltip, Typography } from '@mui/material';
+import { Box, Collapse, Tooltip, Typography, useTheme } from '@mui/material';
 
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
@@ -14,7 +14,6 @@ import { getToolInfoFromAction } from '@/common/toolActionUitls';
 import { getToolIconByType } from '@/common/toolkitUtils';
 import useGetComponentWidth from '@/hooks/useGetComponentWidth';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import { useTheme } from '@emotion/react';
 
 import EliteAImage from '../EliteAImage';
 import ModelIcon from '../Icons/ModelIcon';
@@ -574,7 +573,7 @@ const actionViewStyles = () => ({
     cursor: 'pointer',
     fontStyle: 'italic',
     '&:hover': {
-      background: palette.background.participant.hover,
+      background: palette.background.interactiveItem.hover,
     },
   }),
   injectionIconStyle: {
@@ -599,7 +598,7 @@ const actionViewStyles = () => ({
     alignItems: 'center',
     cursor: 'pointer',
     '&:hover': {
-      background: palette.background.participant.hover,
+      background: palette.background.interactiveItem.hover,
     },
   }),
   iconContainer: ({ palette }) => ({
@@ -609,9 +608,9 @@ const actionViewStyles = () => ({
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
-    color: palette.icon.fill.default,
+    color: palette.icon.default,
     '& svg': {
-      fill: `${palette.icon.fill.default} !important`,
+      fill: `${palette.icon.default} !important`,
     },
   }),
   modelIconStyle: {
@@ -651,7 +650,7 @@ const actionViewStyles = () => ({
     cursor: 'pointer',
     backgroundColor: palette.background.default.secondary,
     '&:hover': {
-      backgroundColor: palette.background.participant.hover,
+      backgroundColor: palette.background.interactiveItem.hover,
     },
   }),
   thinkingLabel: ({ palette }) => ({
@@ -728,7 +727,7 @@ const actionViewStyles = () => ({
     gap: '1rem',
   },
   streamingToggleButton: ({ palette }) => ({
-    color: palette.text.button.showMore,
+    color: palette.text.showMore,
     cursor: 'pointer',
     '&:hover': {
       textDecoration: 'underline',

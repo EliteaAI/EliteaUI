@@ -504,43 +504,47 @@ export const analyticsExportFileName = ({ projectName, dateFrom, dateTo }) => {
 };
 
 export const fetchAllAnalyticsData = async (dispatch, endpoints, { projectId, dateFrom, dateTo }) => {
-  const [overviewResult, costsResult, agentsResult, toolsResult, usersResult] = await Promise.all([
-    dispatch(endpoints.projectAnalytics.initiate({ projectId, dateFrom, dateTo })),
-    dispatch(endpoints.analyticsCosts.initiate({ projectId, dateFrom, dateTo })),
-    dispatch(
-      endpoints.analyticsAgents.initiate({
-        projectId,
-        dateFrom,
-        dateTo,
-        limit: EXPORT_LIMIT,
-        offset: 0,
-        search: '',
-      }),
-    ),
-    dispatch(
-      endpoints.analyticsTools.initiate({
-        projectId,
-        dateFrom,
-        dateTo,
-        limit: EXPORT_LIMIT,
-        offset: 0,
-        search: '',
-      }),
-    ),
-    dispatch(
-      endpoints.analyticsUsers.initiate({
-        projectId,
-        dateFrom,
-        dateTo,
-        limit: EXPORT_LIMIT,
-        offset: 0,
-        search: '',
-      }),
-    ),
-  ]);
+  const [overviewResult, overviewUsageResult, costsResult, agentsResult, toolsResult, usersResult] =
+    await Promise.all([
+      // Overview is served by two endpoints — tracing for chat/health, usage for the AI half
+      dispatch(endpoints.projectAnalytics.initiate({ projectId, dateFrom, dateTo })),
+      dispatch(endpoints.projectAnalyticsUsage.initiate({ projectId, dateFrom, dateTo })),
+      dispatch(endpoints.analyticsCosts.initiate({ projectId, dateFrom, dateTo })),
+      dispatch(
+        endpoints.analyticsAgents.initiate({
+          projectId,
+          dateFrom,
+          dateTo,
+          limit: EXPORT_LIMIT,
+          offset: 0,
+          search: '',
+        }),
+      ),
+      dispatch(
+        endpoints.analyticsTools.initiate({
+          projectId,
+          dateFrom,
+          dateTo,
+          limit: EXPORT_LIMIT,
+          offset: 0,
+          search: '',
+        }),
+      ),
+      dispatch(
+        endpoints.analyticsUsers.initiate({
+          projectId,
+          dateFrom,
+          dateTo,
+          limit: EXPORT_LIMIT,
+          offset: 0,
+          search: '',
+        }),
+      ),
+    ]);
 
   return {
     overview: overviewResult.data,
+    overviewUsage: overviewUsageResult.data,
     costs: costsResult.data,
     agents: agentsResult.data,
     tools: toolsResult.data,
@@ -548,8 +552,23 @@ export const fetchAllAnalyticsData = async (dispatch, endpoints, { projectId, da
   };
 };
 
-export const buildAnalyticsSheets = ({ overview, costs, agents, tools, users, meta, isPersonalProject }) => [
-  buildOverviewSheet(overview, meta, isPersonalProject),
+export const buildAnalyticsSheets = ({
+  overview,
+  overviewUsage,
+  costs,
+  agents,
+  tools,
+  users,
+  meta,
+  isPersonalProject,
+}) => [
+  // Merged for Overview, tracing-only for Health: the health trend needs daily_activity's
+  // {events, errors} shape, which only the tracing payload carries.
+  buildOverviewSheet(
+    { ...overview, ...overviewUsage, kpis: { ...overview?.kpis, ...overviewUsage?.kpis } },
+    meta,
+    isPersonalProject,
+  ),
   buildCostsSheet(costs, meta),
   buildTokensSheet(costs, meta),
   buildAgentsSheet(agents, meta),

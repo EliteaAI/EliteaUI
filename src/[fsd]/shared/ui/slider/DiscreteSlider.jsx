@@ -220,7 +220,7 @@ const styles = {
       transform: 'translate(-50%, -50%)',
       top: '50%',
       '&.MuiSlider-markActive': {
-        backgroundColor: palette.text.primary,
+        backgroundColor: palette.components.slider.markActive,
       },
     },
   }),

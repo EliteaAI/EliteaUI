@@ -232,8 +232,8 @@ const attachedDatasetCardStyles = () => ({
     flexDirection: 'column',
     paddingBottom: '0.5rem',
     gap: '0.5rem',
-    backgroundColor: palette.background.accordion.default,
-    border: `0.0625rem solid ${palette.border.folderCard}`,
+    backgroundColor: palette.components.accordion.background.default,
+    border: `0.0625rem solid ${palette.components.folder.border.card}`,
     borderRadius: '0.75rem',
   }),
   header: ({ palette }) => ({
@@ -243,7 +243,7 @@ const attachedDatasetCardStyles = () => ({
     padding: '0.5rem 1rem',
     gap: '0.5rem',
     borderRadius: '0.75rem',
-    backgroundColor: palette.background.folder.secondary,
+    backgroundColor: palette.components.folder.background.secondary,
     position: 'relative',
     '&::before': {
       content: '""',
@@ -251,7 +251,7 @@ const attachedDatasetCardStyles = () => ({
       inset: 0,
       borderRadius: 'inherit',
       padding: '0.0625rem',
-      background: palette.background.folder.borderGradient,
+      background: palette.components.folder.background.borderGradient,
       WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
       WebkitMaskComposite: 'xor',
       maskComposite: 'exclude',
@@ -333,7 +333,7 @@ const attachedDatasetCardStyles = () => ({
     padding: '0.5rem 1rem',
     backgroundColor: palette.background.default.secondary,
     '&:hover': {
-      backgroundColor: palette.background.tabButton.default,
+      backgroundColor: palette.background.surface.interactive.default,
     },
   }),
   overflowMenuIcon: {
@@ -346,7 +346,7 @@ const attachedDatasetCardStyles = () => ({
     height: '1rem',
     flexShrink: 0,
     '& path': {
-      fill: palette.icon.fill.default,
+      fill: palette.icon.default,
     },
   }),
   overflowMenuText: ({ palette }) => ({
@@ -363,21 +363,23 @@ const attachedDatasetCardStyles = () => ({
     border: `0.0625rem solid ${palette.border.lines}`,
     borderRadius: '0.5rem',
     '>ul': {
-      padding: '.25rem 0',
+      padding: '0 0 .25rem',
     },
   }),
   createMenuItem: ({ palette }) => ({
     display: 'flex',
     alignItems: 'center',
-    position: 'relative',
+    position: 'sticky',
+    top: '-.25rem',
+    zIndex: 1,
     gap: '0.75rem',
-    height: '2.5rem',
-    padding: '0.5rem 1rem',
-    backgroundColor: palette.action.hover,
-    marginBottom: '.25rem',
+    height: '2.75rem',
+    marginTop: '-0.25rem',
+    padding: '0.75rem 1rem 0.5rem',
+    background: `linear-gradient(${palette.action.hover}, ${palette.action.hover}), ${palette.background.default.secondary}`,
     color: palette.text.secondary,
     svg: {
-      path: { fill: palette.text.secondary },
+      path: { fill: palette.icon.secondary },
     },
     ':after': {
       content: "''",
@@ -385,11 +387,11 @@ const attachedDatasetCardStyles = () => ({
       height: '0.0625rem',
       width: '100%',
       backgroundColor: palette.border.lines,
-      bottom: '-.25rem',
+      bottom: 0,
       left: 0,
     },
     '&:hover': {
-      backgroundColor: palette.action.selected,
+      background: `linear-gradient(${palette.action.selected}, ${palette.action.selected}), ${palette.background.default.secondary}`,
     },
   }),
   createMenuText: {
@@ -411,7 +413,7 @@ const attachedDatasetCardStyles = () => ({
       borderBottom: 'none',
     },
     '&:hover': {
-      backgroundColor: palette.background.tabButton.default,
+      backgroundColor: palette.background.surface.interactive.default,
     },
   }),
   datasetInfo: {

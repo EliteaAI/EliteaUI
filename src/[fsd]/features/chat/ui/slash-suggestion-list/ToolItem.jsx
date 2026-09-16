@@ -29,7 +29,7 @@ const ToolItem = memo(props => {
       {description && (
         <Typography
           variant="bodySmall"
-          color="text.default"
+          color="text.primary"
           sx={toolItemStyles.description}
         >
           {description}

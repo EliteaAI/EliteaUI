@@ -833,16 +833,16 @@ const singleSelectStyles = (
   chip: {
     height: '1.5rem',
     margin: '0px !important',
-    backgroundColor: theme.palette.background.tagChip.disabled,
+    backgroundColor: theme.palette.components.autocompleteChip.background.disabled,
     '& .MuiChip-label': {
       paddingLeft: '0.5rem',
       paddingRight: '0.75rem',
     },
     '& .MuiChip-deleteIcon': {
-      color: theme.palette.icon.tagChip.default,
+      color: theme.palette.components.autocompleteChip.icon.default,
     },
     '&:not(.Mui-disabled) .MuiChip-deleteIcon:hover': {
-      color: theme.palette.icon.tagChip.hover,
+      color: theme.palette.components.autocompleteChip.icon.hover,
     },
   },
   groupHeader: ({ palette }) => ({
@@ -865,7 +865,7 @@ const singleSelectStyles = (
   groupHeaderTitle: ({ palette }) => ({
     textTransform: 'uppercase',
     padding: '0.125rem 0',
-    color: palette.text.default,
+    color: palette.text.primary,
   }),
   groupHeaderRow: {
     display: 'flex',

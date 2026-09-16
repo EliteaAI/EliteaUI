@@ -168,6 +168,12 @@ Rules:
 - Use `rem` units everywhere (use `0.0625rem` for 1px)
 - **NEVER hardcode colors** — always use palette colors from the theme (e.g., `palette.text.primary`, not
   `rgba(104, 108, 118, 1)` or `#686C76`)
+- **Use semantically correct palette token paths** — tokens must match their CSS property role:
+  - `background.*` and `*.background.*` tokens → only for `backgroundColor`
+  - `border.*` and `*.border.*` tokens → only for `border`, `borderColor`, `outline`
+  - `text.*` tokens → only for `color` on text elements
+  - `icon.*` tokens → only for `color`/`fill` on icons
+  - Never use a `background` token for `color`, a `text` token for `backgroundColor`, etc.
 - Merge external `sx` with array syntax: `sx={[styles.root, sx]}`
 - Style functions can accept parameters for conditional styles
 

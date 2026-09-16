@@ -57,7 +57,7 @@ const pendingInjectionListStyles = () => ({
     gap: '0.25rem',
     padding: '0em 0.25rem',
     height: '1.25rem',
-    color: ({ palette }) => palette.icon.fill.secondary,
+    color: ({ palette }) => palette.icon.secondary,
   },
   headerIcon: {
     fontSize: '1rem',

@@ -191,10 +191,10 @@ const dimensionResultCardStyles = () => ({
     border: `0.0625rem solid transparent`,
   }),
   rootError: ({ palette }) => ({
-    borderColor: palette.border.indexResult.error,
+    borderColor: palette.alert.error.border,
   }),
   rootPending: ({ palette }) => ({
-    backgroundColor: palette.background.participant.active,
+    backgroundColor: palette.components.participant.background.active,
   }),
   header: {
     display: 'flex',
@@ -233,7 +233,7 @@ const dimensionResultCardStyles = () => ({
     backgroundColor: 'transparent',
   }),
   engineText: ({ palette }) => ({
-    color: palette.text.default,
+    color: palette.text.primary,
     fontSize: '0.75rem',
     lineHeight: '1rem',
   }),
@@ -241,11 +241,11 @@ const dimensionResultCardStyles = () => ({
     color: palette.text.secondary,
   }),
   errorLabel: ({ palette }) => ({
-    color: palette.text.indexResult.error,
+    color: palette.alert.error.text,
     fontWeight: 500,
   }),
   pendingLabel: ({ palette }) => ({
-    color: palette.text.indexResult.warning,
+    color: palette.alert.warning.text,
   }),
   evaluateButton: {
     padding: '0 0.25rem',
@@ -259,24 +259,24 @@ const dimensionResultCardStyles = () => ({
       margin: 0,
     },
     '&:hover': {
-      backgroundColor: palette.background.tabButton.active,
+      backgroundColor: palette.background.surface.interactive.selected,
     },
   }),
   editIcon: {
     fontSize: '1rem',
   },
   rationale: ({ palette }) => ({
-    color: palette.text.default,
+    color: palette.text.primary,
     lineHeight: 1.5,
     whiteSpace: 'pre-wrap',
     wordBreak: 'break-word',
   }),
   mutedMessage: ({ palette }) => ({
-    color: palette.text.default,
+    color: palette.text.primary,
     fontStyle: 'italic',
   }),
   errorMessage: ({ palette }) => ({
-    color: palette.text.indexResult.error,
+    color: palette.alert.error.text,
     fontFamily: 'monospace',
     fontSize: '0.75rem',
     whiteSpace: 'pre-wrap',

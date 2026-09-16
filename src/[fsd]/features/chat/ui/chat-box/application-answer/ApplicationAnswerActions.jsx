@@ -133,8 +133,8 @@ const ApplicationAnswerActions = memo(props => {
                   sx={styles.icon}
                   fill={
                     shouldDisableRegenerate || hasCanvasBeingEdited
-                      ? theme.palette.icon.fill.disabled
-                      : theme.palette.icon.fill.default
+                      ? theme.palette.icon.disabled
+                      : theme.palette.icon.default
                   }
                 />
               </IconButton>
@@ -173,9 +173,7 @@ const ApplicationAnswerActions = memo(props => {
               >
                 <DeleteIcon
                   sx={styles.icon}
-                  fill={
-                    hasCanvasBeingEdited ? theme.palette.icon.fill.disabled : theme.palette.icon.fill.default
-                  }
+                  fill={hasCanvasBeingEdited ? theme.palette.icon.disabled : theme.palette.icon.default}
                 />
               </IconButton>
             </Box>

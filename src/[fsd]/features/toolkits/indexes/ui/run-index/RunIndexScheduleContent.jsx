@@ -8,6 +8,7 @@ import PlusIcon from '@/assets/plus-icon.svg?react';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import EditIcon from '@/components/Icons/EditIcon';
 
+import { BannerSeverity } from '../../lib/constants';
 import RunIndexBanner from '../RunIndexBanner';
 
 const RunIndexScheduleContent = memo(props => {
@@ -17,6 +18,8 @@ const RunIndexScheduleContent = memo(props => {
     timezoneHint,
     credentialsTitle,
     nextRun,
+    expiresAt,
+    expired,
     onAddSchedule,
     onEdit,
     onDelete,
@@ -89,6 +92,23 @@ const RunIndexScheduleContent = memo(props => {
               {nextRun}
             </Typography>
           )}
+          {expiresAt && (
+            <Typography
+              variant="bodySmall2"
+              color={enabled ? 'text.secondary' : 'text.primary'}
+              data-testid="schedule-expires-at"
+            >
+              <Typography
+                variant="bodySmall2"
+                component="span"
+                color="text.primary"
+                sx={styles.nextRunLabel}
+              >
+                {expired ? 'Expired:' : 'Expires:'}
+              </Typography>
+              {expiresAt}
+            </Typography>
+          )}
           {credentialsTitle && (
             <Typography
               variant="bodySmall2"
@@ -149,12 +169,22 @@ const RunIndexScheduleContent = memo(props => {
       </Box>
       {!enabled && (
         <RunIndexBanner
-          banner={{
-            severity: 'info',
-            label: 'Schedule is turned off.',
-            message: '',
-          }}
-          CustomIcon={() => <InfoIcon />}
+          banner={
+            expired
+              ? {
+                  severity: BannerSeverity.warning,
+                  label: 'Schedule expired and was turned off.',
+                  message: 'Turn it back on to run it for another period.',
+                }
+              : {
+                  severity: BannerSeverity.info,
+                  label: 'Schedule is turned off.',
+                  message: '',
+                }
+          }
+          // The default info spinner reads as "indexing in progress"; expiry is not a
+          // running state, so it keeps the banner's own warning icon.
+          CustomIcon={expired ? undefined : () => <InfoIcon />}
           sx={styles.banner}
           contentSX={styles.bannerContent}
         />

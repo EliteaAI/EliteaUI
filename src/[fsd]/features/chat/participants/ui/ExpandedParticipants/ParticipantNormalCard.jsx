@@ -172,10 +172,12 @@ export const participantNormalCardStyles = ({ collapsed, isActive, maxWidth, isB
     width: '100%',
     height: '2.5rem',
     boxSizing: 'border-box',
-    background: isActive ? palette.background.participant.active : palette.background.participant.default,
-    border: isActive ? `0.0625rem solid ${palette.split.hover}` : undefined,
+    background: isActive
+      ? palette.background.interactiveItem.active
+      : palette.background.surface.interactive.default,
+    border: isActive ? `0.0625rem solid ${palette.components.split.border.hover}` : undefined,
     ':hover': {
-      background: palette.background.participant.hover,
+      background: palette.background.interactiveItem.hover,
     },
   }),
   nameWrapper: {
@@ -240,7 +242,7 @@ export const participantNormalCardStyles = ({ collapsed, isActive, maxWidth, isB
     height: '1rem',
     marginTop: '.0625rem',
     '& svg, & path': {
-      fill: palette.icon.fill.secondary,
+      fill: palette.icon.secondary,
     },
   }),
   attentionMessage: {

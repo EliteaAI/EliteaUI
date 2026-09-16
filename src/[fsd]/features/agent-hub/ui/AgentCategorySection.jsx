@@ -179,9 +179,9 @@ const agentCategorySectionStyles = () => ({
   },
   showMoreButton: ({ palette }) => ({
     cursor: 'pointer',
-    color: palette.background.button.primary.hover,
+    color: palette.components.button.text.auxiliary,
     '&:hover': {
-      color: palette.text.button.showMore,
+      color: palette.text.showMore,
     },
   }),
 });

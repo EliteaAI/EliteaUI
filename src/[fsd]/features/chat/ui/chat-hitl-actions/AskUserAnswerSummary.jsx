@@ -82,7 +82,7 @@ const askUserAnswerSummaryStyles = () => ({
     marginBottom: '1rem',
     borderRadius: '0.75rem',
     background: palette.background.default.secondary,
-    border: `0.0625rem solid ${palette.border.cardsOutlines}`,
+    border: `0.0625rem solid ${palette.border.default}`,
   }),
   item: {
     display: 'flex',

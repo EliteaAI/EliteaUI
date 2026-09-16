@@ -126,11 +126,7 @@ const editUsersButtonStyles = () => ({
     height: '1rem',
     '& path': {
       fill: ({ palette }) =>
-        disabled
-          ? palette.icon.fill.disabled
-          : isBatchEdit
-            ? palette.icon.fill.secondary
-            : palette.icon.fill.default,
+        disabled ? palette.icon.disabled : isBatchEdit ? palette.icon.secondary : palette.icon.default,
     },
   }),
 });

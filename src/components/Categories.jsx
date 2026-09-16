@@ -302,7 +302,7 @@ const Categories = ({
               >
                 <ClearIcon
                   sx={{ fontSize: '16px' }}
-                  fill={theme.palette.icon.fill.secondary}
+                  fill={theme.palette.icon.secondary}
                 />
               </IconButton>
             </Tooltip>

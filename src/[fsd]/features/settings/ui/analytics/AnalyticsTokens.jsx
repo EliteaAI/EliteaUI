@@ -7,6 +7,7 @@ import { Box, CircularProgress, Typography, useTheme } from '@mui/material';
 import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { ChartTooltip, KPICard } from '@/[fsd]/features/settings/ui/analytics';
+import { CHART_COLORS } from '@/[fsd]/shared/config/theme/chartPalette';
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 import { useAnalyticsCostsQuery } from '@/api';
 
@@ -198,31 +199,31 @@ const AnalyticsTokens = memo(props => {
                 <Bar
                   dataKey="total_tokens"
                   name="Total Tokens"
-                  fill={AnalyticsCommonConstants.CHART_COLORS[0]}
+                  fill={CHART_COLORS[0]}
                   radius={[4, 4, 0, 0]}
                 />
                 <Bar
                   dataKey="input_tokens"
                   name="Input Tokens"
-                  fill={AnalyticsCommonConstants.CHART_COLORS[1]}
+                  fill={CHART_COLORS[1]}
                   radius={[4, 4, 0, 0]}
                 />
                 <Bar
                   dataKey="output_tokens"
                   name="Output Tokens"
-                  fill={AnalyticsCommonConstants.CHART_COLORS[2]}
+                  fill={CHART_COLORS[2]}
                   radius={[4, 4, 0, 0]}
                 />
                 <Bar
                   dataKey="cache_read_tokens"
                   name="Cache Read Tokens"
-                  fill={AnalyticsCommonConstants.CHART_COLORS[3]}
+                  fill={CHART_COLORS[3]}
                   radius={[4, 4, 0, 0]}
                 />
                 <Bar
                   dataKey="cache_creation_tokens"
                   name="Cache Write Tokens"
-                  fill={AnalyticsCommonConstants.CHART_COLORS[4]}
+                  fill={CHART_COLORS[4]}
                   radius={[4, 4, 0, 0]}
                 />
               </BarChart>

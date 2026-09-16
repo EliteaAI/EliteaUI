@@ -56,7 +56,7 @@ const styles = {
     width: '30rem',
     padding: '0.0625rem',
     borderRadius: '2.75rem',
-    background: palette.background.welcome.outside,
+    background: palette.components.welcome.background.outside,
   }),
   cover: {
     width: '100%',
@@ -71,7 +71,7 @@ const styles = {
   mainPanel: ({ palette }) => ({
     width: '100%',
     height: '100%',
-    background: palette.background.welcome.inner,
+    background: palette.components.welcome.background.inner,
     borderRadius: 'calc(1.5rem - 1px)',
     padding: '1rem 1.25rem',
     boxSizing: 'border-box',

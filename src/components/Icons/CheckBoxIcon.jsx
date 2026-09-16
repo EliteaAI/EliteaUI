@@ -8,8 +8,8 @@ export default function CheckBoxIcon(props) {
       width="16"
       height="16"
       viewBox="0 0 16 16"
-      stroke={theme.palette.icon.fill.default}
-      fill={theme.palette.icon.fill.default}
+      stroke={theme.palette.icon.default}
+      fill={theme.palette.icon.default}
       {...props}
     >
       <rect

@@ -27,7 +27,7 @@ const SingleSelectMenuItem = memo(props => {
 
   const styles = menuItemStyles(option);
   const theme = useTheme();
-  const selectedBackground = isSelected ? theme.palette.background.participant.active : undefined;
+  const selectedBackground = isSelected ? theme.palette.background.interactiveItem.active : undefined;
 
   const handleClick = event => {
     if (isSelected && onClear) {

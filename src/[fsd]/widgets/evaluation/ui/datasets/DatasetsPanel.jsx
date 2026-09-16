@@ -75,7 +75,7 @@ const datasetsPanelStyles = () => ({
     width: '16.1875rem',
     minWidth: '16.1875rem',
     height: '100%',
-    borderRight: `0.0625rem solid ${palette.border.table}`,
+    borderRight: `0.0625rem solid ${palette.border.default}`,
     background: palette.background.default.tertiary,
     overflow: 'hidden',
   }),
@@ -86,8 +86,8 @@ const datasetsPanelStyles = () => ({
     height: '3.575rem',
     minHeight: '3.575rem',
     padding: '0.75rem 1rem 0.75rem 1.5625rem',
-    borderBottom: `0.0625rem solid ${palette.border.table}`,
-    backgroundColor: palette.background.toolkitDetailLeftPanel,
+    borderBottom: `0.0625rem solid ${palette.border.default}`,
+    backgroundColor: palette.components.codePreview.background,
   }),
   headerTitle: ({ palette }) => ({
     color: palette.text.primary,
@@ -105,7 +105,7 @@ const datasetsPanelStyles = () => ({
     borderRadius: '50%',
 
     svg: {
-      path: { fill: palette.text.secondary },
+      path: { fill: palette.icon.secondary },
     },
   }),
 });

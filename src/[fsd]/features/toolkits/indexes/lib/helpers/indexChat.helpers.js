@@ -1,6 +1,11 @@
 import { v4 as uuidv4 } from 'uuid';
 
-import { formatIndexingReportText, normalizeIndexingReport } from '@/[fsd]/entities/indexing-report';
+import {
+  IndexingReportStatus,
+  formatIndexingReportText,
+  normalizeIndexingReport,
+  parseIndexEntryJson,
+} from '@/[fsd]/entities/indexing-report';
 import { normalizeContinuationError } from '@/[fsd]/features/chat/lib/helpers/continuationError.helpers.js';
 import {
   IndexStatuses,
@@ -16,6 +21,19 @@ import {
   WELCOME_MESSAGE_ID,
 } from '@/common/constants';
 import { convertJsonToString } from '@/common/utils';
+
+const INDEX_STATE_BY_RUN_STATUS = {
+  [IndexingReportStatus.ok]: IndexStatuses.success,
+  [IndexingReportStatus.partlyIndexed]: IndexStatuses.partlyOk,
+  [IndexingReportStatus.error]: IndexStatuses.fail,
+};
+
+const finishedIndexRunState = toolActions => {
+  const indexRuns = (toolActions || []).filter(action => action.name === IndexesToolsEnum.indexData);
+  const runStatus = parseIndexEntryJson(indexRuns[indexRuns.length - 1]?.content)?.status;
+
+  return INDEX_STATE_BY_RUN_STATUS[runStatus] ?? IndexStatuses.success;
+};
 
 export const getMockToolkitIndexConversation = chatHistory => ({
   id: 'toolkit-test',
@@ -285,7 +303,7 @@ export const generateChatMessageBasedOnResponse = ({ message, chatHistory, onFin
 
         if (response_metadata?.finish_reason) {
           msg.isStreaming = false;
-          onFinish(IndexStatuses.success);
+          onFinish(finishedIndexRunState(msg.toolActions));
           notifyTaskComplete();
           msg.content = withToolExecutionSummary(msg);
         }

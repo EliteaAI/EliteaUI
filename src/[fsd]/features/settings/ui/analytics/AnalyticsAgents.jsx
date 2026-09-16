@@ -18,6 +18,7 @@ import { Box, CircularProgress, TablePagination, Typography, useTheme } from '@m
 import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { AnalyticsAgentDetailed, ChartTooltip } from '@/[fsd]/features/settings/ui/analytics';
+import { CHART_COLORS } from '@/[fsd]/shared/config/theme/chartPalette';
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 import { useAnalyticsAgentsQuery } from '@/api';
 import StyledSearchInput from '@/components/SearchInput';
@@ -59,7 +60,7 @@ const AnalyticsAgents = memo(props => {
       (data?.rows || []).slice(0, 20).map((a, i) => ({
         name: a.entity_name || `Agent #${a.entity_id}`,
         runs: a.events,
-        color: AnalyticsCommonConstants.CHART_COLORS[i % AnalyticsCommonConstants.CHART_COLORS.length],
+        color: CHART_COLORS[i % CHART_COLORS.length],
       })),
     [data?.rows],
   );
@@ -422,7 +423,7 @@ const styles = {
   tableHeader: ({ palette }) => ({
     display: 'flex',
     padding: '0.5rem 0.75rem',
-    borderBottom: `1px solid ${palette.border.table}`,
+    borderBottom: `1px solid ${palette.border.default}`,
     gap: '0.5rem',
   }),
   tableCell: ({ palette }) => ({
@@ -434,10 +435,10 @@ const styles = {
   clickableRow: ({ palette }) => ({
     display: 'flex',
     padding: '0.5rem 0.75rem',
-    borderBottom: `1px solid ${palette.border.table}`,
+    borderBottom: `1px solid ${palette.border.default}`,
     gap: '0.5rem',
     cursor: 'pointer',
-    '&:hover': { backgroundColor: palette.background.conversation?.hover || 'rgba(255,255,255,0.04)' },
+    '&:hover': { backgroundColor: palette.background.interactiveItem.rowHover },
   }),
   tableCellValue: ({ palette }) => ({
     fontSize: '0.8125rem',

@@ -19,20 +19,20 @@ const ContextStats = memo(props => {
     () => [
       {
         label: 'Tokens',
-        icon: <TokensIcon fill={theme.palette.icon.fill.secondary} />,
+        icon: <TokensIcon fill={theme.palette.icon.secondary} />,
         value: tokensDisplay,
         suffix: `${utilizationPercentage}%`,
         testId: 'context-modal-stat-tokens',
       },
       {
         label: 'Messages',
-        icon: <MessagesIcon fill={theme.palette.icon.fill.secondary} />,
+        icon: <MessagesIcon fill={theme.palette.icon.secondary} />,
         value: messageGroups,
         testId: 'context-modal-stat-messages',
       },
       {
         label: 'Summaries',
-        icon: <ClipboardIcon fill={theme.palette.icon.fill.secondary} />,
+        icon: <ClipboardIcon fill={theme.palette.icon.secondary} />,
         value: summariesGenerated || 0,
         isButton: true,
       },

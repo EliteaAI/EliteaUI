@@ -52,7 +52,7 @@ const AddCredentialButton = () => {
           color="primary"
           onClick={onClickAdd}
         >
-          <PlusIcon fill={theme.palette.icon.fill.send} />
+          <PlusIcon fill={theme.palette.icon.send} />
         </IconButton>
       </Box>
     </ClickAwayListener>

@@ -187,7 +187,7 @@ FileList.displayName = 'FileList';
 
 const styles = {
   item: {
-    background: theme => theme.palette.background.button.default,
+    background: theme => theme.palette.background.interactiveItem.hover,
   },
   itemName: {
     width: 'calc(100% - 60px)',

@@ -109,7 +109,7 @@ const indexSearchPanelStyles = () => ({
     minHeight: 0,
   },
   leftColumn: {
-    borderRight: ({ palette }) => `0.0625rem solid ${palette.border.table}`,
+    borderRight: ({ palette }) => `0.0625rem solid ${palette.border.default}`,
   },
   columnHeader: ({ palette }) => ({
     display: 'flex',
@@ -117,8 +117,8 @@ const indexSearchPanelStyles = () => ({
     justifyContent: 'center',
     flexShrink: 0,
     height: PANEL_HEADER_HEIGHT,
-    background: palette.background.surface.container,
-    borderBottom: `0.0625rem solid ${palette.border.table}`,
+    background: palette.background.panel,
+    borderBottom: `0.0625rem solid ${palette.border.default}`,
   }),
   columnBody: {
     display: 'flex',

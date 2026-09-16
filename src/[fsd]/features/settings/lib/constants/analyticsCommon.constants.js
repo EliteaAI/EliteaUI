@@ -2,31 +2,6 @@ export const TOP_LIST_SIZE = 10;
 
 export const MODEL_CHART_SIZE = 15;
 
-export const MEDAL_COLORS = ['#FFD700', '#C0C0C0', '#CD7F32'];
-
-export const CHART_COLORS = [
-  '#10A37F',
-  '#4285F4',
-  '#D4A574',
-  '#FF9900',
-  '#58A6FF',
-  '#3FB950',
-  '#D29922',
-  '#BC8CFF',
-  '#39D2C0',
-  '#F0883E',
-];
-
-export const EVENT_TYPE_COLORS = {
-  api: '#58A6FF',
-  socketio: '#39D2C0',
-  llm: '#BC8CFF',
-  tool: '#F0883E',
-  agent: '#3FB950',
-  rpc: '#D29922',
-  chat: '#79C0FF',
-};
-
 export const TOOLTIP_TEXTS = {
   overview: {
     TEAM: 'Shows active project members out of all project members. Active members performed at least one tracked action during the selected date range.',

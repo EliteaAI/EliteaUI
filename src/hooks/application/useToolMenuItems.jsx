@@ -79,9 +79,9 @@ const useToolMenuItems = ({ onAddTool, isMCP, isApplication } = {}) => {
       return [];
     }
     const iconProps = {
-      // htmlColor: theme.palette.icon.fill.default,
+      // htmlColor: theme.palette.icon.default,
       color: 'secondary',
-      fill: theme.palette.icon.fill.default,
+      fill: theme.palette.icon.default,
       width: '16px',
       height: '16px',
       fontSize: '16px',
@@ -112,7 +112,7 @@ const useToolMenuItems = ({ onAddTool, isMCP, isApplication } = {}) => {
     });
 
     return predefinedItems.sort((a, b) => a.label.toLowerCase().localeCompare(b.label.toLowerCase()));
-  }, [toolkitsItems, theme.palette.icon.fill.default, isMCP, isApplication, onAddTool, toolSchemas]);
+  }, [toolkitsItems, theme.palette.icon.default, isMCP, isApplication, onAddTool, toolSchemas]);
 
   return {
     toolMenuItems,

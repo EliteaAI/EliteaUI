@@ -62,7 +62,9 @@ const nodeCardStyles = (isExpanded, isPerforming, isRunningPipeline, selected, t
     borderRadius: '.5rem',
     position: 'relative',
     border: `${isPerforming ? '.125rem dashed' : '.0625rem solid'} ${
-      isPerforming || (!isRunningPipeline && selected) ? palette.primary.main : palette.border.flowNode
+      isPerforming || (!isRunningPipeline && selected)
+        ? palette.primary.main
+        : palette.components.flowEditor.node.border
     }`,
     background: palette.background.default.tertiary,
   }),
@@ -74,7 +76,7 @@ const nodeCardStyles = (isExpanded, isPerforming, isRunningPipeline, selected, t
     boxSizing: 'border-box',
     alignItems: 'center',
     overflow: 'hidden',
-    borderBottom: isExpanded ? `.0625rem solid ${palette.border.flowNode}` : 'none',
+    borderBottom: isExpanded ? `.0625rem solid ${palette.components.flowEditor.node.border}` : 'none',
     backgroundColor: theme => NodeHelpers.getNodeColor(type, theme),
     borderRadius: isExpanded ? '.5rem .5rem 0 0' : '.5rem',
   }),

@@ -417,7 +417,7 @@ const triggerTypeSelectorStyles = () => ({
   },
   scheduleButton: ({ palette }) => ({
     padding: '0.25rem',
-    color: palette.icon.fill.secondary,
+    color: palette.icon.secondary,
     '&:hover': {
       color: palette.primary.main,
     },

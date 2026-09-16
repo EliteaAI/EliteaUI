@@ -96,10 +96,10 @@ const CronSelect = memo(props => {
               alignItems: 'center',
               padding: '0.5rem 1rem !important',
               background: optionState.selected
-                ? `${palette.background.participant.active} !important`
+                ? `${palette.background.interactiveItem.active} !important`
                 : 'transparent',
               '&:hover': {
-                background: `${palette.background.participant.hover} !important`,
+                background: `${palette.background.interactiveItem.hover} !important`,
               },
             })}
           >

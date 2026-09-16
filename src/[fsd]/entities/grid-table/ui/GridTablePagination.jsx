@@ -154,8 +154,8 @@ const gridTablePaginationStyles = () => ({
     isDisabled =>
     ({ palette }) => ({
       fontSize: '1rem',
-      fill: isDisabled ? palette.icon.fill.disabled : palette.icon.fill.default,
-      color: isDisabled ? palette.icon.fill.disabled : palette.icon.fill.default,
+      fill: isDisabled ? palette.icon.disabled : palette.icon.default,
+      color: isDisabled ? palette.icon.disabled : palette.icon.default,
       transition: 'fill 0.2s ease, color 0.2s ease',
     }),
 });

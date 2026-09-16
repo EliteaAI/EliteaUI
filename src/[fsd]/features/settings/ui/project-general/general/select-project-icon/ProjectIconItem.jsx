@@ -31,11 +31,11 @@ const projectIconItemStyles = isSelected => ({
     width: '3.5rem',
     borderRadius: '0.5rem',
     border: `${isSelected ? 1 : 0}px solid ${palette.primary.main}`,
-    background: isSelected ? palette.background.icon?.default : 'transparent',
+    background: isSelected ? palette.components.entityIcon.background?.default : 'transparent',
 
     '&:hover': {
-      border: `1px solid ${palette.border.flowNode}`,
-      background: palette.background.icon?.default,
+      border: `1px solid ${palette.border.inputHover}`,
+      background: palette.components.entityIcon.background?.default,
     },
     cursor: 'pointer',
   }),

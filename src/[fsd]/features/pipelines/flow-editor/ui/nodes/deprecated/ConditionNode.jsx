@@ -280,7 +280,7 @@ const ConditionNode = memo(props => {
         <Box sx={styles.conditionalOutputsContainer}>
           <Typography
             variant="bodySmall"
-            color="text.default"
+            color="text.primary"
           >
             Conditional outputs
           </Typography>
@@ -354,9 +354,9 @@ const conditionNodeStyles = () => ({
     border: `0.0625rem solid ${borderColor} !important`,
     '& .MuiChip-deleteIcon': {
       margin: '0rem',
-      color: ({ palette }) => palette.icon.fill.secondary,
+      color: ({ palette }) => palette.icon.secondary,
       '&:hover': {
-        color: ({ palette }) => palette.icon.fill.secondary,
+        color: ({ palette }) => palette.icon.secondary,
       },
     },
   }),

@@ -122,7 +122,7 @@ const iWModalEntityToolkitsFieldStyles = () => ({
       minWidth: '1rem',
 
       path: {
-        fill: palette.background.warning,
+        fill: palette.icon.warning,
       },
     },
   }),
@@ -133,10 +133,10 @@ const iWModalEntityToolkitsFieldStyles = () => ({
     justifyContent: 'center',
     gap: '.25rem',
     borderRadius: '1.4375rem',
-    background: palette.background.dataGrid.main,
+    background: palette.components.dataGrid.background.main,
     padding: '.3125rem .5rem',
     height: '1.5rem',
-    border: `0.0625rem solid ${palette.border.sidebarDivider}`,
+    border: `0.0625rem solid ${palette.border.subtle}`,
 
     svg: {
       width: '.875rem',

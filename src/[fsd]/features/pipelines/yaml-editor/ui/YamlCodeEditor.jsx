@@ -60,8 +60,8 @@ const yamlCodeEditorStyles = () => ({
     flexDirection: 'column',
     overflow: 'auto',
     '& .error_yaml_code': {
-      backgroundColor: palette.background.errorBkg,
-      background: palette.background.errorBkg,
+      backgroundColor: palette.alert.error.background,
+      background: palette.alert.error.background,
     },
   }),
 });

@@ -6,7 +6,11 @@ import { Alert, Box, CircularProgress, Snackbar, Tooltip, Typography } from '@mu
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 
 import { ANALYTICS_TOUR_ID, ANALYTICS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
-import { analyticsApi, useProjectAnalyticsQuery } from '@/[fsd]/features/settings/api/analyticsApi';
+import {
+  analyticsApi,
+  useProjectAnalyticsQuery,
+  useProjectAnalyticsUsageQuery,
+} from '@/[fsd]/features/settings/api/analyticsApi';
 import { AnalyticsExportHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import {
   AnalyticsAgents,
@@ -107,10 +111,38 @@ const AnalyticsContainer = memo(() => {
 
   // Only fetch overview data for Overview (0) and Health (6) tabs
   const needsOverview = activeTab === 0 || activeTab === 6;
+  // The AI half only feeds Overview; Health reads the tracing payload alone
+  const needsUsage = activeTab === 0;
 
   const { data, isFetching, isError } = useProjectAnalyticsQuery(queryParams, {
     skip: !projectId || !needsOverview,
   });
+
+  const {
+    data: usageData,
+    isFetching: usageFetching,
+    isError: usageError,
+  } = useProjectAnalyticsUsageQuery(queryParams, {
+    skip: !projectId || !needsUsage,
+  });
+
+  const overviewFetching = isFetching || usageFetching;
+  const overviewError = isError || usageError;
+
+  // Overview is served by two endpoints: tracing keeps the socketio-derived chat counts, usage
+  // owns adoption, tokens, cost, models and the adopter leaderboard.
+  const overviewData = useMemo(() => {
+    if (!data && !usageData) return null;
+    // Either endpoint failing renders the error banner, so the merge must go null with it —
+    // otherwise a half-empty Overview shows underneath the banner
+    if (isError || usageError) return null;
+
+    return {
+      ...data,
+      ...usageData,
+      kpis: { ...data?.kpis, ...usageData?.kpis },
+    };
+  }, [data, usageData, isError, usageError]);
 
   const isCustomRange = selectedDatePreset === CUSTOM_PRESET_VALUE;
   const dateFilterPresets = isCustomRange ? PRESETS_WITH_CUSTOM : DEFAULT_PRESETS;
@@ -196,10 +228,10 @@ const AnalyticsContainer = memo(() => {
   }, []);
 
   useEffect(() => {
-    if (refreshing && !isFetching) {
+    if (refreshing && !overviewFetching) {
       setRefreshing(false);
     }
-  }, [isFetching, refreshing]);
+  }, [overviewFetching, refreshing]);
 
   useEffect(() => {
     if (tourId !== ANALYTICS_TOUR_ID || !currentStep) return;
@@ -366,7 +398,7 @@ const AnalyticsContainer = memo(() => {
         </Box>
 
         <Box sx={styles.contentArea}>
-          {needsOverview && isFetching && (
+          {needsOverview && overviewFetching && (
             <Box
               sx={styles.loadingState}
               data-testid="analytics-loading-indicator"
@@ -374,7 +406,7 @@ const AnalyticsContainer = memo(() => {
               <CircularProgress size={32} />
             </Box>
           )}
-          {needsOverview && isError && !isFetching && (
+          {needsOverview && overviewError && !overviewFetching && (
             <Box sx={styles.emptyState}>
               <Typography
                 variant="bodyMedium"
@@ -384,9 +416,9 @@ const AnalyticsContainer = memo(() => {
               </Typography>
             </Box>
           )}
-          {data && !isFetching && activeTab === 0 && (
+          {overviewData && !overviewFetching && activeTab === 0 && (
             <AnalyticsOverview
-              data={data}
+              data={overviewData}
               onUserClick={handleOverviewUserClick}
               isPersonalProject={isPersonalProject}
             />
@@ -484,7 +516,7 @@ const analyticsContainerStyles = () => ({
     borderRadius: '.75rem',
 
     span: {
-      color: palette.background.tooltip.default,
+      color: palette.text.subtle,
       fontWeight: 500,
       lineHeight: '1rem',
     },
@@ -492,7 +524,7 @@ const analyticsContainerStyles = () => ({
     svg: {
       fontSize: '.825rem',
 
-      path: { fill: palette.background.button.primary.disabled },
+      path: { fill: palette.icon.disabled },
     },
   }),
   filterBar: ({ palette }) => ({
@@ -502,7 +534,7 @@ const analyticsContainerStyles = () => ({
     flexWrap: 'wrap',
     gap: '0.75rem',
     padding: '1rem 1.5rem',
-    borderTop: `1px solid ${palette.border.table}`,
+    borderTop: `1px solid ${palette.border.default}`,
     background: palette.background.default.tertiary,
   }),
   datePickerRow: { display: 'flex', gap: '0.5rem', alignItems: 'center' },
@@ -519,7 +551,7 @@ const analyticsContainerStyles = () => ({
     borderBottomColor: palette.primary.main,
   }),
   datePickerLabel: ({ palette }) => ({
-    color: palette.text.default,
+    color: palette.text.primary,
     fontFamily: 'Montserrat',
     fontSize: '.75rem',
     fontWeight: 500,
@@ -568,7 +600,7 @@ const analyticsContainerStyles = () => ({
           height: '1rem',
           fontSize: '1rem',
 
-          '& path': { fill: palette.background.tooltip.default },
+          '& path': { fill: palette.icon.subtle },
         },
       },
     }),
@@ -594,37 +626,37 @@ const analyticsContainerStyles = () => ({
       fontWeight: 500,
     },
     '& .MuiPickersCalendarHeader-switchViewButton': {
-      color: palette.text.default,
-      '& svg': { fill: palette.text.default },
+      color: palette.text.primary,
+      '& svg': { fill: palette.icon.default },
 
       '&:hover': {
         color: palette.text.secondary,
-        '& svg': { fill: palette.text.secondary },
+        '& svg': { fill: palette.icon.secondary },
       },
     },
 
     // Arrow navigation buttons — tertiary style
     '& .MuiPickersArrowSwitcher-button': {
-      color: palette.text.default,
+      color: palette.text.primary,
       background: 'transparent',
       borderRadius: '50%',
       width: '1.625rem',
       height: '1.625rem',
       padding: 0,
-      '& svg': { fill: palette.text.default },
+      '& svg': { fill: palette.icon.default },
       '&:hover': {
-        background: palette.background.button.tertiary.hover,
+        background: palette.background.interactiveItem.hover,
         color: palette.text.secondary,
-        '& svg': { fill: palette.text.secondary },
+        '& svg': { fill: palette.icon.secondary },
       },
       '&:active': {
-        background: palette.background.button.tertiary.pressed,
+        background: palette.components.button.background.tertiary.pressed,
       },
     },
 
     // Weekday labels (M T W T F S S)
     '& .MuiDayCalendar-weekDayLabel': {
-      color: palette.text.default,
+      color: palette.text.primary,
       fontSize: '.875rem',
     },
 
@@ -634,14 +666,14 @@ const analyticsContainerStyles = () => ({
       fontSize: '.875rem',
       borderRadius: '50%',
       '&:hover': {
-        backgroundColor: palette.background.button.tertiary.hover,
+        backgroundColor: palette.background.interactiveItem.hover,
       },
       '&.Mui-selected': {
-        backgroundColor: palette.split.default,
+        backgroundColor: palette.components.split.background.default,
         color: palette.text.secondary,
         borderRadius: '50%',
         '&:hover': {
-          backgroundColor: palette.split.default,
+          backgroundColor: palette.components.split.background.default,
         },
       },
       '&.MuiPickersDay-today': {
@@ -655,13 +687,13 @@ const analyticsContainerStyles = () => ({
       color: palette.text.secondary,
       fontSize: '.875rem',
       '&:hover': {
-        backgroundColor: palette.background.button.tertiary.hover,
+        backgroundColor: palette.background.interactiveItem.hover,
       },
       '&.Mui-selected': {
-        backgroundColor: palette.split.default,
+        backgroundColor: palette.components.split.background.default,
         color: palette.text.secondary,
         '&:hover': {
-          backgroundColor: palette.split.default,
+          backgroundColor: palette.components.split.background.default,
         },
       },
     },
@@ -681,18 +713,18 @@ const analyticsContainerStyles = () => ({
 
     // Time numbers — keep gray
     '& .MuiMultiSectionDigitalClockSection-item': {
-      color: palette.text.default,
+      color: palette.text.primary,
       fontSize: '.875rem',
       borderRadius: '1.75rem',
       '&:hover': {
-        backgroundColor: palette.background.button.tertiary.hover,
+        backgroundColor: palette.background.interactiveItem.hover,
       },
       '&.Mui-selected': {
-        backgroundColor: palette.split.default,
+        backgroundColor: palette.components.split.background.default,
         color: palette.text.secondary,
         borderRadius: '1.75rem',
         '&:hover': {
-          backgroundColor: palette.split.default,
+          backgroundColor: palette.components.split.background.default,
         },
       },
     },
@@ -706,7 +738,7 @@ const analyticsContainerStyles = () => ({
 
       // Clear button — secondary style
       '& .MuiButton-root': {
-        backgroundColor: palette.background.button.secondary.default,
+        backgroundColor: palette.background.surface.interactive.active,
         color: palette.text.secondary,
         fontFamily: 'Montserrat',
         fontSize: '.75rem',
@@ -716,22 +748,22 @@ const analyticsContainerStyles = () => ({
         textTransform: 'none',
         padding: '.5rem 1.5rem',
         '&:hover': {
-          backgroundColor: palette.background.button.secondary.hover,
+          backgroundColor: palette.background.surface.interactive.selected,
         },
         '&:active': {
-          backgroundColor: palette.background.button.secondary.pressed,
+          backgroundColor: palette.components.button.background.secondary.pressed,
         },
       },
 
       // Apply button — primary style
       '& .MuiButton-root:last-child': {
-        backgroundColor: palette.background.button.primary.default,
-        color: palette.text.button.primary,
+        backgroundColor: palette.primary.main,
+        color: palette.components.button.text.primary,
         '&:hover': {
-          backgroundColor: palette.background.button.primary.hover,
+          backgroundColor: palette.components.button.background.primary.hover,
         },
         '&:active': {
-          backgroundColor: palette.background.button.primary.pressed,
+          backgroundColor: palette.components.button.background.primary.pressed,
         },
       },
     },
@@ -739,7 +771,7 @@ const analyticsContainerStyles = () => ({
   tabSection: { display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' },
   tabsContainer: ({ palette }) => ({
     padding: '0 1.5rem',
-    borderBottom: `1px solid ${palette.border.table}`,
+    borderBottom: `1px solid ${palette.border.default}`,
     background: palette.background.default.tertiary,
   }),
   contentArea: { flex: 1, overflow: 'auto', padding: '1.5rem', position: 'relative' },

@@ -296,7 +296,7 @@ const humanEvaluationModalStyles = columnCount => ({
     fontWeight: 600,
   }),
   guidanceText: ({ palette }) => ({
-    color: palette.text.default,
+    color: palette.text.primary,
     whiteSpace: 'pre-wrap',
     lineHeight: 1.5,
   }),
@@ -305,7 +305,7 @@ const humanEvaluationModalStyles = columnCount => ({
     flex: 1,
     minHeight: 0,
     overflow: 'hidden',
-    backgroundColor: palette.background.dataGrid.secondary,
+    backgroundColor: palette.background.default.tertiary,
     borderTop: `0.0625rem solid ${palette.border.lines}`,
     borderBottom: `0.0625rem solid ${palette.border.lines}`,
   }),

@@ -225,10 +225,10 @@ const getStyles = hasLoggedInToMcp => ({
     display: 'flex',
     alignItems: 'center',
     gap: '0.5rem',
-    color: hasLoggedInToMcp ? palette.icon.fill.success : palette.icon.fill.attention,
+    color: hasLoggedInToMcp ? palette.icon.success : palette.icon.attention,
   }),
   loginStatusText: ({ palette }) => ({
-    color: hasLoggedInToMcp ? palette.text.mcp.loginSuccess : palette.text.mcp.logout,
+    color: hasLoggedInToMcp ? palette.components.mcp.text.loginSuccess : palette.components.mcp.text.logout,
   }),
   loginStatusContainer: ({ palette }) => ({
     marginTop: '1rem',
@@ -240,8 +240,10 @@ const getStyles = hasLoggedInToMcp => ({
     marginBottom: '1rem',
     padding: '.5rem .5rem .5rem 1rem',
     borderRadius: '2.345rem',
-    backgroundColor: hasLoggedInToMcp ? palette.background.mcp.loginSuccess : palette.background.mcp.logout,
-    border: `0.0625rem solid ${hasLoggedInToMcp ? palette.border.mcp.loginSuccess : palette.border.mcp.logout}`,
+    backgroundColor: hasLoggedInToMcp
+      ? palette.components.mcp.background.loginSuccess
+      : palette.components.mcp.background.logout,
+    border: `0.0625rem solid ${hasLoggedInToMcp ? palette.components.mcp.border.loginSuccess : palette.components.mcp.background.logout}`,
     justifyContent: 'space-between',
   }),
 });

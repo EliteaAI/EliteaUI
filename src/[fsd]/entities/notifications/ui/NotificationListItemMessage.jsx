@@ -59,7 +59,7 @@ const notificationListItemMessageStyles = isSeen => ({
   link: ({ palette }) => ({
     textDecoration: 'underline',
     cursor: 'pointer',
-    color: isSeen ? palette.text.linkSeen : palette.text.link,
+    color: isSeen ? palette.text.visitedLink : palette.text.link,
   }),
 });
 

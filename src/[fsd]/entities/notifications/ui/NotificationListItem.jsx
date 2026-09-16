@@ -141,9 +141,9 @@ const notificationListItemStyles = (clampLines, isContextList) => ({
     width: '100%',
     gap: '0.7rem',
     boxSizing: 'border-box',
-    borderBottom: `0.0625rem solid ${palette.border.notificationItem}`,
+    borderBottom: `0.0625rem solid ${palette.components.notificationItem.border}`,
     '&:hover': {
-      backgroundColor: isContextList ? palette.background.tabButton.default : undefined,
+      backgroundColor: isContextList ? palette.background.surface.interactive.default : undefined,
     },
   }),
   markButton: {

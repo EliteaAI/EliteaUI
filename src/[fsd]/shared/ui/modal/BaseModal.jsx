@@ -68,7 +68,7 @@ const BaseModal = memo(props => {
         style={{
           width: ModalConstants.MODAL_ICON_SIZE.width,
           height: ModalConstants.MODAL_ICON_SIZE.height,
-          color: theme.palette.icon.fill[ModalConstants.MODAL_ICON_COLOR_KEYS[typeIcon]],
+          color: theme.palette.icon[ModalConstants.MODAL_ICON_COLOR_KEYS[typeIcon]],
         }}
       />
     );

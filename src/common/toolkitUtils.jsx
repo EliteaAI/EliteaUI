@@ -122,7 +122,7 @@ const EliteASvgIcon = ({ iconUrl, isToolIcon, fallbackIcon, ...iconProps }) => {
   const theme = useTheme();
 
   const [iconError, setIconError] = useState(false);
-  const matrix = generateColorMatrix(theme.palette.icon.fill.default);
+  const matrix = generateColorMatrix(theme.palette.icon.default);
 
   const handleIconError = () => {
     setIconError(true);
@@ -361,9 +361,9 @@ export const getToolIconByType = (
   { toolSchema = {}, isMCP = false, internalToolkitName = '', isAppAll = false } = {},
 ) => {
   const iconProps = {
-    // htmlColor: theme.palette.icon.fill.default,
+    // htmlColor: theme.palette.icon.default,
     color: 'secondary',
-    fill: theme.palette.icon.fill.default,
+    fill: theme.palette.icon.default,
     width: '16px',
     height: '16px',
     fontSize: '16px',

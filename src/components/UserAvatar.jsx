@@ -9,7 +9,7 @@ export default function UserAvatar({ name, avatar, shiftPixels = 0, size = 20, o
     width: size + 'px',
     height: size + 'px',
     transform: `translateX(-${shiftPixels}px)`,
-    backgroundColor: theme.palette.background.icon.default,
+    backgroundColor: theme.palette.background.interactiveItem.hover,
     zIndex,
   };
 

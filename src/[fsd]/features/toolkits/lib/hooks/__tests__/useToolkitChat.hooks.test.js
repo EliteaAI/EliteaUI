@@ -1,7 +1,12 @@
 // @vitest-environment jsdom
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { act, renderHook, waitFor } from '@testing-library/react';
+
+const indexHistoryRef = vi.hoisted(() => ({ current: false }));
+// Stable identity: the recovery effect lists this in its deps, so a fresh function
+// per render re-runs it after every setState and spins the render loop.
+const setProgressingIndexHistoryRecovered = vi.hoisted(() => () => {});
 
 vi.hoisted(() => {
   const entries = new Map();
@@ -22,7 +27,12 @@ vi.mock('@/[fsd]/features/toolkits/lib/helpers/toolkitConversation.helpers', () 
 }));
 
 vi.mock('@/[fsd]/features/toolkits/indexes/lib/hooks', () => ({
-  useIndexHistory: () => ({ setProgressingIndexHistoryRecovered: vi.fn() }),
+  useIndexHistory: () => ({
+    setProgressingIndexHistoryRecovered,
+    // Drives the transcript-recovery effect, which is the only way into the
+    // send-gate latch below.
+    needGenerateProgressingIndexHistory: indexHistoryRef.current,
+  }),
 }));
 
 vi.mock('@/[fsd]/features/toolkits/lib/helpers', () => ({
@@ -188,5 +198,51 @@ describe('useToolkitChat run ownership', () => {
     await settle();
 
     expect(result.current.chatHistory).toHaveLength(before);
+  });
+});
+
+describe('useToolkitChat — the send gate latches on liveness, not on chrome', () => {
+  // `stale` is a five-minute display heuristic that also fires while a healthy run is
+  // mid-promote. Latching on it there skips joining the trace room, so the live
+  // transcript is missing until the next poll; `reclaimable` is the flag that means
+  // the run is actually dead.
+  const progressingIndex = over => ({
+    metadata: { state: 'in_progress', conversation_id: 'conv-1' },
+    ...over,
+  });
+
+  const renderRecovery = index => {
+    indexHistoryRef.current = true;
+    const { result } = renderChat({ index, modes: ['testTools'] });
+    return result;
+  };
+
+  afterEach(() => {
+    indexHistoryRef.current = false;
+  });
+
+  it('latches for a run that is only display-stale', () => {
+    const result = renderRecovery(progressingIndex({ stale: true, reclaimable: false }));
+
+    expect(result.current.isRunning).toBe(true);
+  });
+
+  it('does not latch for a run that is genuinely reclaimable', () => {
+    // Latching here would make the recovery Reindex a silent no-op.
+    const result = renderRecovery(progressingIndex({ stale: true, reclaimable: true }));
+
+    expect(result.current.isRunning).toBe(false);
+  });
+
+  it('latches for a healthy run', () => {
+    const result = renderRecovery(progressingIndex({ stale: false, reclaimable: false }));
+
+    expect(result.current.isRunning).toBe(true);
+  });
+
+  it('falls back to stale when the backend sends no control flag', () => {
+    const result = renderRecovery(progressingIndex({ stale: true }));
+
+    expect(result.current.isRunning).toBe(false);
   });
 });

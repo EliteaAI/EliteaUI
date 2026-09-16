@@ -129,7 +129,7 @@ CaseResultItem.displayName = 'CaseResultItem';
 const caseResultItemStyles = () => ({
   wrapper: {
     display: 'flex',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     gap: '0.5rem',
   },
   container: ({ palette }) => ({
@@ -138,8 +138,8 @@ const caseResultItemStyles = () => ({
     flex: 1,
     minWidth: 0,
     borderRadius: '0.75rem',
-    border: `0.0625rem solid ${palette.background.dataGrid.main}`,
-    backgroundColor: palette.background.folder.default,
+    border: `0.0625rem solid ${palette.components.dataGrid.background.main}`,
+    backgroundColor: palette.components.folder.background.default,
     overflow: 'hidden',
   }),
   header: {
@@ -169,7 +169,7 @@ const caseResultItemStyles = () => ({
   },
   chevron: ({ palette }) => ({
     fontSize: '1.25rem',
-    color: palette.icon.fill.default,
+    color: palette.icon.default,
   }),
   caseLabel: ({ palette }) => ({
     color: palette.text.secondary,
@@ -182,17 +182,17 @@ const caseResultItemStyles = () => ({
     gap: '0.25rem',
     padding: '0 0.5rem',
     borderRadius: '1rem',
-    border: `0.0625rem solid ${palette.border.chatContinue}`,
+    border: `0.0625rem solid ${palette.components.chatContinue.border}`,
   }),
   pendingBadgeIcon: ({ palette }) => ({
     fontSize: '1rem',
-    color: palette.text.button.showMore,
+    color: palette.icon.active,
     '& path': {
-      fill: palette.text.button.showMore,
+      fill: palette.icon.active,
     },
   }),
   pendingBadgeText: ({ palette }) => ({
-    color: palette.text.button.showMore,
+    color: palette.icon.active,
     fontWeight: 500,
     whiteSpace: 'nowrap',
   }),
@@ -208,12 +208,12 @@ const caseResultItemStyles = () => ({
       margin: 0,
     },
     '&:hover': {
-      backgroundColor: palette.background.tabButton.active,
+      backgroundColor: palette.background.surface.interactive.selected,
     },
   }),
   viewIcon: ({ palette }) => ({
     fontSize: '1rem',
-    color: palette.icon.fill.default,
+    color: palette.icon.default,
   }),
   content: {
     display: 'flex',

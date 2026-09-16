@@ -35,15 +35,30 @@ export const categoryHeadline = (category, report) => {
 
 export const reportHeadline = report => {
   const { totals, itemLabels } = report;
+  if (report.isStopped) {
+    return { icon: '⏹', text: 'Stopped before completion', supersedesBreakdown: true };
+  }
   if (report.status === IndexingReportStatus.error && totals.indexed === 0) {
-    return { icon: '❌', text: `Failed to index ${itemLabels.plural}` };
+    return { icon: '❌', text: `Failed to index ${itemLabels.plural}`, supersedesBreakdown: true };
+  }
+  if (report.status === IndexingReportStatus.partlyIndexed) {
+    const { indexed } = totals;
+    return {
+      icon: '⚠️',
+      text: `Partially indexed ${indexed} ${pickItemNoun(indexed, itemLabels)}`,
+      supersedesBreakdown: false,
+    };
   }
   if (report.isUpToDate) {
     const { unchanged } = totals;
-    return { icon: '✅', text: `Up to date — ${unchanged} ${pickItemNoun(unchanged, itemLabels)} unchanged` };
+    return {
+      icon: '✅',
+      text: `Up to date — ${unchanged} ${pickItemNoun(unchanged, itemLabels)} unchanged`,
+      supersedesBreakdown: true,
+    };
   }
   if (totals.indexed === 0 && totals.skipped === 0 && totals.notIndexed === 0 && totals.failed === 0) {
-    return { icon: 'ℹ️', text: 'No documents to index' };
+    return { icon: 'ℹ️', text: 'No documents to index', supersedesBreakdown: true };
   }
   return null;
 };
@@ -105,7 +120,7 @@ export const summarizeIndexingReport = source => {
   if (!report) return '';
 
   const headline = reportHeadline(report);
-  if (headline) return headline.text;
+  if (headline?.supersedesBreakdown) return headline.text;
 
   const parts = visibleCategories(report).map(category => categoryHeadline(category, report).text);
   const { unchanged } = report.totals;

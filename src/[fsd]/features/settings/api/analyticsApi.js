@@ -9,6 +9,8 @@ export const analyticsApi = eliteaApi
   })
   .injectEndpoints({
     endpoints: build => ({
+      // Tracing half of the Overview tab: event-type breakdown, chat counts and health, which are
+      // socketio-derived and have no equivalent in usage_event. Stays on elitea_core.
       projectAnalytics: build.query({
         query: ({ projectId, dateFrom, dateTo }) => {
           const params = new URLSearchParams();
@@ -18,6 +20,23 @@ export const analyticsApi = eliteaApi
           const qs = params.toString();
           return {
             url: `/elitea_core/analytics/prompt_lib/${projectId}${qs ? `?${qs}` : ''}`,
+            method: 'GET',
+          };
+        },
+        providesTags: [TAG_TYPE_ANALYTICS],
+        keepUnusedDataFor: CACHE_LIFETIME,
+      }),
+      // AI half of the same tab: adoption, tokens, cost, models and the adopter leaderboard, from
+      // metered calls in usage_event.
+      projectAnalyticsUsage: build.query({
+        query: ({ projectId, dateFrom, dateTo }) => {
+          const params = new URLSearchParams();
+          if (dateFrom) params.set('date_from', dateFrom);
+          if (dateTo) params.set('date_to', dateTo);
+
+          const qs = params.toString();
+          return {
+            url: `/usage/analytics/prompt_lib/${projectId}${qs ? `?${qs}` : ''}`,
             method: 'GET',
           };
         },
@@ -44,7 +63,7 @@ export const analyticsApi = eliteaApi
           params.set('sort_by', sortBy);
           params.set('sort_order', sortOrder);
           return {
-            url: `/elitea_core/analytics_users/prompt_lib/${projectId}?${params.toString()}`,
+            url: `/usage/analytics_users/prompt_lib/${projectId}?${params.toString()}`,
             method: 'GET',
           };
         },
@@ -57,7 +76,7 @@ export const analyticsApi = eliteaApi
           if (dateFrom) params.set('date_from', dateFrom);
           if (dateTo) params.set('date_to', dateTo);
           return {
-            url: `/elitea_core/analytics_user_detail/prompt_lib/${projectId}?${params.toString()}`,
+            url: `/usage/analytics_user_detail/prompt_lib/${projectId}?${params.toString()}`,
             method: 'GET',
           };
         },
@@ -83,7 +102,7 @@ export const analyticsApi = eliteaApi
           params.set('sort_by', sortBy);
           params.set('sort_order', sortOrder);
           return {
-            url: `/elitea_core/analytics_tools/prompt_lib/${projectId}?${params.toString()}`,
+            url: `/usage/analytics_tools/prompt_lib/${projectId}?${params.toString()}`,
             method: 'GET',
           };
         },
@@ -96,7 +115,7 @@ export const analyticsApi = eliteaApi
           if (dateFrom) params.set('date_from', dateFrom);
           if (dateTo) params.set('date_to', dateTo);
           return {
-            url: `/elitea_core/analytics_tool_detail/prompt_lib/${projectId}?${params.toString()}`,
+            url: `/usage/analytics_tool_detail/prompt_lib/${projectId}?${params.toString()}`,
             method: 'GET',
           };
         },
@@ -122,7 +141,7 @@ export const analyticsApi = eliteaApi
           params.set('sort_by', sortBy);
           params.set('sort_order', sortOrder);
           return {
-            url: `/elitea_core/analytics_agents/prompt_lib/${projectId}?${params.toString()}`,
+            url: `/usage/analytics_agents/prompt_lib/${projectId}?${params.toString()}`,
             method: 'GET',
           };
         },
@@ -135,7 +154,7 @@ export const analyticsApi = eliteaApi
           if (dateFrom) params.set('date_from', dateFrom);
           if (dateTo) params.set('date_to', dateTo);
           return {
-            url: `/elitea_core/analytics_agent_detail/prompt_lib/${projectId}?${params.toString()}`,
+            url: `/usage/analytics_agent_detail/prompt_lib/${projectId}?${params.toString()}`,
             method: 'GET',
           };
         },
@@ -148,7 +167,7 @@ export const analyticsApi = eliteaApi
           if (dateTo) params.set('date_to', dateTo);
           const qs = params.toString();
           return {
-            url: `/elitea_core/analytics_costs/prompt_lib/${projectId}${qs ? `?${qs}` : ''}`,
+            url: `/usage/analytics_costs/prompt_lib/${projectId}${qs ? `?${qs}` : ''}`,
             method: 'GET',
           };
         },
@@ -161,6 +180,7 @@ export const analyticsApi = eliteaApi
 export const {
   useProjectAnalyticsQuery,
   useLazyProjectAnalyticsQuery,
+  useProjectAnalyticsUsageQuery,
   useAnalyticsUsersQuery,
   useAnalyticsUserDetailQuery,
   useAnalyticsToolsQuery,

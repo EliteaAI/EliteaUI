@@ -13,11 +13,11 @@ export default function SortDisabledIcon(props) {
     >
       <path
         d="M5.25 12L9 15.75L12.75 12H5.25Z"
-        fill={theme.palette.icon.fill.default}
+        fill={theme.palette.icon.default}
       />
       <path
         d="M5.25 6L9 2.25L12.75 6H5.25Z"
-        fill={theme.palette.icon.fill.default}
+        fill={theme.palette.icon.default}
       />
     </SvgIcon>
   );

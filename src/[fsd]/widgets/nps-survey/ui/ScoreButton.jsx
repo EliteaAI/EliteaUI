@@ -23,42 +23,42 @@ ScoreButton.displayName = 'ScoreButton';
 
 /** @type {MuiSx} */
 const styles = {
-  default: {
+  default: ({ palette }) => ({
     flex: 1,
     minWidth: 0,
     height: 'auto',
     padding: '0.25rem 0.625rem',
     borderRadius: '0.5rem',
-    background: 'rgba(255, 255, 255, 0.6)',
-    border: '1px solid transparent',
-    color: '#0E131D',
+    background: palette.components.npsSurvey.optionBackground,
+    border: '0.0625rem solid transparent',
+    color: palette.text.alwaysDark,
     fontSize: '0.875rem',
     fontWeight: 500,
     lineHeight: '1.5rem',
 
     '&:hover': {
-      background: '#fff',
-      border: '1px solid rgba(99, 144, 254, 1)',
+      background: palette.components.npsSurvey.optionBackgroundHover,
+      border: `0.0625rem solid ${palette.components.npsSurvey.accent}`,
     },
-  },
-  selected: {
+  }),
+  selected: ({ palette }) => ({
     flex: 1,
     minWidth: 0,
     height: 'auto',
     padding: '0.25rem 0.625rem',
     borderRadius: '0.5rem',
-    border: '1px solid rgba(99, 144, 254, 1)',
-    background: 'rgba(99, 144, 254, 1)',
-    color: '#FFFFFF',
+    border: `0.0625rem solid ${palette.components.npsSurvey.accent}`,
+    background: palette.components.npsSurvey.accent,
+    color: palette.text.alwaysWhite,
     fontSize: '0.875rem',
     fontWeight: 500,
     lineHeight: '1.5rem',
 
     '&:hover': {
-      background: 'rgba(99, 144, 254, 1)',
-      border: '1px solid rgba(99, 144, 254, 1)',
+      background: palette.components.npsSurvey.accent,
+      border: `0.0625rem solid ${palette.components.npsSurvey.accent}`,
     },
-  },
+  }),
 };
 
 export default ScoreButton;

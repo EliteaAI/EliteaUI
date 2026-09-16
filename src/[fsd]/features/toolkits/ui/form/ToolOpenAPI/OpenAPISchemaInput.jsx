@@ -2,7 +2,7 @@ import { memo, useCallback, useMemo, useState } from 'react';
 
 import YAML from 'js-yaml';
 
-import { Box, FormControl, FormHelperText, IconButton, Typography } from '@mui/material';
+import { Box, FormControl, FormHelperText, IconButton, Typography, alpha } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { OpenApiHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
@@ -242,7 +242,8 @@ const getStyles = isDragOver => ({
     borderRadius: '0.5rem',
     overflow: 'hidden',
     border: ({ palette }) => `0.0625rem solid ${palette.border.lines}`,
-    backgroundColor: ({ palette }) => (isDragOver ? palette.text.contextHighLight : 'transparent'),
+    backgroundColor: ({ palette }) =>
+      isDragOver ? alpha(palette.components.contextHighlight.background, 0.08) : 'transparent',
     '&:hover': {
       '& [aria-label="full-scrn-btn"]': { display: 'block' },
     },
@@ -276,7 +277,7 @@ const getStyles = isDragOver => ({
     left: '3.625rem',
     zIndex: 100,
     pointerEvents: 'none',
-    color: ({ palette }) => palette.text.button.disabled,
+    color: ({ palette }) => palette.text.muted,
   },
   chooseFileLink: {
     textDecoration: 'underline',

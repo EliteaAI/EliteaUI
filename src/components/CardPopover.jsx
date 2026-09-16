@@ -26,7 +26,7 @@ const StyledPopoverContainer = styled(Popover)(({ theme }) => ({
 const StyledPopoverItem = styled(ListItem)(({ theme }) => ({
   padding: '.5rem 1rem',
   '&:hover': {
-    background: theme.palette.background.button.default,
+    background: theme.palette.background.interactiveItem.hover,
   },
 }));
 

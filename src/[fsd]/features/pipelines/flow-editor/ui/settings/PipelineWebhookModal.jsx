@@ -431,7 +431,7 @@ const pipelineWebhookModalStyles = () => ({
   }),
   copyButton: ({ palette }) => ({
     padding: '0.5rem',
-    color: palette.icon.fill.secondary,
+    color: palette.icon.secondary,
     '&:hover': {
       color: palette.primary.main,
     },

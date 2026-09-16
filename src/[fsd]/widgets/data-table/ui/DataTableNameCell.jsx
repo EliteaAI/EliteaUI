@@ -104,7 +104,7 @@ const DataTableNameCell = memo(props => {
               display: 'flex',
               justifyContent: 'center',
               alignItems: 'center',
-              svg: { path: { fill: `${palette.icon.fill.success} !important` } },
+              svg: { path: { fill: `${palette.icon.success} !important` } },
             })}
           >
             <PublishIcon sx={{ fontSize: '1rem' }} />
@@ -133,7 +133,7 @@ const DataTableNameCell = memo(props => {
               display: 'flex',
               justifyContent: 'center',
               alignItems: 'center',
-              color: palette.icon.fill.default,
+              color: palette.icon.default,
             })}
           >
             <FolderIcon sx={{ fontSize: '1rem' }} />
@@ -207,11 +207,11 @@ const dataTableNameCellStyles = () => ({
     height: '1.75rem',
     minWidth: '1.75rem',
     padding: 0,
-    color: palette.icon.fill.default,
-    svg: { path: { fill: `${palette.icon.fill.default} !important` } },
+    color: palette.icon.default,
+    svg: { path: { fill: `${palette.icon.default} !important` } },
 
     '&:hover': {
-      backgroundColor: palette.background.button.secondary.default,
+      backgroundColor: palette.background.surface.interactive.active,
     },
   }),
 });

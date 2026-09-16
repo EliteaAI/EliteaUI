@@ -125,7 +125,7 @@ const suitesPanelStyles = () => ({
     minHeight: '3.3125rem',
     boxSizing: 'border-box',
     backgroundColor: palette.background.default.secondary,
-    borderBottom: `0.0625rem solid ${palette.border.table}`,
+    borderBottom: `0.0625rem solid ${palette.border.default}`,
   }),
   headerLabel: ({ palette }) => ({
     color: palette.text.secondary,
@@ -154,14 +154,14 @@ const suitesPanelStyles = () => ({
     fontSize: '2rem',
     marginBottom: '0.5rem',
     '& path': {
-      fill: palette.icon.fill.disabled,
+      fill: palette.icon.disabled,
     },
   }),
   emptyTitle: ({ palette }) => ({
     color: palette.text.secondary,
   }),
   emptyDescription: ({ palette }) => ({
-    color: palette.text.default,
+    color: palette.text.primary,
     textAlign: 'center',
     maxWidth: '20.5rem',
   }),

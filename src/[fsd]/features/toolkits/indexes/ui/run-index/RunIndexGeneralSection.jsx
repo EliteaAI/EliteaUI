@@ -108,7 +108,7 @@ const runIndexGeneralSectionStyles = () => ({
   avatarIcon: ({ palette }) => ({
     width: '1rem',
     height: '1rem',
-    fill: palette.icon.fill.primary,
+    fill: palette.icon.primary,
   }),
   statsSection: {
     display: 'flex',

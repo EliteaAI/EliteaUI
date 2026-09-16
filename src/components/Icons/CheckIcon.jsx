@@ -4,7 +4,7 @@ import { useTheme } from '@emotion/react';
 
 export default function CheckIcon({ fill, ...props }) {
   const theme = useTheme();
-  const fillColor = fill ?? theme.palette.icon.fill.default;
+  const fillColor = fill ?? theme.palette.icon.default;
 
   return (
     <SvgIcon

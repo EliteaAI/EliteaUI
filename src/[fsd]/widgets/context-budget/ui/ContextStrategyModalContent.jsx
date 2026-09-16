@@ -273,13 +273,13 @@ const componentStyles = () => ({
   closeButton: ({ palette }) => ({
     padding: '0.5rem',
     '&:hover': {
-      backgroundColor: palette.background.button.secondary.hover,
+      backgroundColor: palette.background.surface.interactive.selected,
     },
   }),
   closeIcon: ({ palette }) => ({
     width: '1rem',
     height: '1rem',
-    fill: palette.icon.fill.default,
+    fill: palette.icon.default,
   }),
   dialogContent: ({ palette }) => ({
     width: '100%',
@@ -299,9 +299,9 @@ const componentStyles = () => ({
     alignItems: 'center',
     gap: '0.75rem',
     padding: '0.5rem 1rem',
-    backgroundColor: `${palette.warning.yellow}14`,
+    backgroundColor: `${palette.warning.high}14`,
     borderRadius: '0.5rem',
-    border: `0.0625rem solid ${palette.warning.yellow}66`,
+    border: `0.0625rem solid ${palette.warning.high}66`,
     marginTop: '1rem',
     marginBottom: '0.25rem',
   }),

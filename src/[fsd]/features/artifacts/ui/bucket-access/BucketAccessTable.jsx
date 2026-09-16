@@ -428,7 +428,7 @@ const BucketAccessTable = memo(props => {
         </Typography>
         <Typography
           variant="bodyMedium"
-          color="text.default"
+          color="text.primary"
           sx={styles.emptyStateSubtitle}
         >
           All users have read/write permissions by default.
@@ -615,12 +615,12 @@ const bucketAccessTableStyle = () => ({
   },
   actionButton: ({ palette }) => ({
     '&:hover': {
-      backgroundColor: palette.background.button.secondary.hover,
+      backgroundColor: palette.components.button.background.secondary.hover,
     },
   }),
   bulkEditButton: ({ palette }) => ({
     '&:hover': {
-      backgroundColor: palette.background.button.secondary.hover,
+      backgroundColor: palette.components.button.background.secondary.hover,
     },
     '&.Mui-disabled': {
       opacity: 0.5,
@@ -655,12 +655,12 @@ const bucketAccessTableStyle = () => ({
     paddingTop: '4rem',
     gap: '1rem',
     borderRadius: '0.5rem',
-    backgroundColor: palette.background.surface.container,
+    backgroundColor: palette.background.panel,
   }),
   emptyStateIcon: ({ palette }) => ({
     width: '2.5rem',
     height: '2.5rem',
-    color: palette.icon.fill.default,
+    color: palette.icon.default,
     opacity: 0.6,
   }),
   emptyStateTitle: {

@@ -133,17 +133,17 @@ const styles = {
       marginRight: '0.6rem',
     },
     '&:hover': {
-      backgroundColor: palette.background.button.drawerMenu.hover,
+      backgroundColor: palette.background.surface.interactive.default,
     },
     '&.Mui-selected': {
-      backgroundColor: palette.background.participant.active,
+      backgroundColor: palette.background.interactiveItem.active,
     },
     '&.Mui-selected:hover': {
-      backgroundColor: palette.background.participant.active,
+      backgroundColor: palette.background.interactiveItem.active,
     },
   }),
   listItemIcon: ({ palette }) => ({
-    color: palette.icon.fill.default,
+    color: palette.icon.default,
   }),
   checkIconWrapper: {
     display: 'flex',
@@ -151,8 +151,8 @@ const styles = {
     marginLeft: 'auto',
   },
   checkIcon: ({ palette }) => ({
-    width: '1.125rem',
-    height: '1.125rem',
+    width: '1rem',
+    height: '1rem',
     flexShrink: 0,
     color: palette.text.secondary,
     marginLeft: '1rem',

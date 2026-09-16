@@ -148,14 +148,14 @@ const customHandleStyles = ({
   const borderColor =
     isPerforming || (!isRunningPipeline && isConnectedEdgeSelected)
       ? theme.palette.primary.main
-      : theme.palette.border.flowNode;
+      : theme.palette.components.flowEditor.node.border;
 
   // Adjust handle size based on expansion state
   const handleSize = isExpanded === false ? '.75rem' : '1.5rem';
   const handlePadding = isExpanded === false ? '0rem' : '.25rem .75rem';
   const backgroundColor = isExpanded
     ? theme.palette.background.default.tertiary
-    : theme.palette.border.flowNode;
+    : theme.palette.components.flowEditor.node.border;
 
   return {
     handle:

@@ -2,7 +2,7 @@ import { memo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { EVAL_ENGINE } from '../../lib/constants';
+import { EVAL_ENGINE, EVAL_SCALE_TYPE } from '../../lib/constants';
 import { formatScore, getBindingEngineLabel, getScaleTypeLabel } from '../../lib/helpers';
 
 const COLUMNS = [
@@ -17,6 +17,9 @@ const GRID_TEMPLATE = '1fr 0.5fr 5rem 5rem 5rem';
 
 const formatTarget = binding => {
   if (binding.target == null || binding.target === '' || !binding.operator) return '—';
+  const isBinary = binding.scaleType === EVAL_SCALE_TYPE.binary;
+  if (isBinary && binding.operator === '==' && binding.target === 1) return '= pass';
+  if (isBinary && binding.operator === '==' && binding.target === 0) return '= fail';
   const op = binding.operator === '>=' ? '≥' : binding.operator;
   return `${op}${binding.target}`;
 };
@@ -164,7 +167,7 @@ const resultsDimensionTableStyles = () => ({
     gridTemplateColumns: GRID_TEMPLATE,
     alignItems: 'center',
     minHeight: '3.5rem',
-    borderBottom: `0.0625rem solid ${palette.background.dataGrid.main}`,
+    borderBottom: `0.0625rem solid ${palette.components.dataGrid.background.main}`,
   }),
   cell: {
     display: 'flex',
@@ -183,11 +186,11 @@ const resultsDimensionTableStyles = () => ({
     justifyContent: 'center',
     padding: '0.125rem 0.5rem',
     borderRadius: '1rem',
-    border: `0.0625rem solid ${palette.background.dataGrid.main}`,
+    border: `0.0625rem solid ${palette.components.dataGrid.background.main}`,
     backgroundColor: 'transparent',
   }),
   engineText: ({ palette }) => ({
-    color: palette.text.default,
+    color: palette.text.primary,
     fontSize: '0.75rem',
     lineHeight: '1rem',
   }),

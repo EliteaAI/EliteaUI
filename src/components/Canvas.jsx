@@ -106,7 +106,7 @@ const CanvasContent = ({
               >
                 <EditIcon
                   sx={{ fontSize: 16 }}
-                  fill={!isStreaming ? theme.palette.icon.fill.default : theme.palette.icon.fill.disabled}
+                  fill={!isStreaming ? theme.palette.icon.default : theme.palette.icon.disabled}
                 />
               </IconButton>
             </span>
@@ -129,7 +129,7 @@ const CanvasContent = ({
             }}
             onClick={onClickCopy}
           >
-            <ContentCopyIcon sx={{ fontSize: '16px', color: theme.palette.icon.fill.default }} />
+            <ContentCopyIcon sx={{ fontSize: '16px', color: theme.palette.icon.default }} />
           </IconButton>
         </Tooltip>
       </Box>

@@ -377,8 +377,8 @@ const Conversations = memo(props => {
                 }}
                 fill={
                   checkPermission(PERMISSIONS.chat.folders.create)
-                    ? theme.palette.icon.fill.default
-                    : theme.palette.icon.fill.disabled
+                    ? theme.palette.icon.default
+                    : theme.palette.icon.disabled
                 }
               />
               <Box>Create folder</Box>
@@ -402,8 +402,8 @@ const Conversations = memo(props => {
                 }}
                 fill={
                   checkPermission(PERMISSIONS.chat.folders.update)
-                    ? theme.palette.icon.fill.default
-                    : theme.palette.icon.fill.disabled
+                    ? theme.palette.icon.default
+                    : theme.palette.icon.disabled
                 }
               />
               <Box>Back to the list</Box>
@@ -630,8 +630,8 @@ const Conversations = memo(props => {
                         }}
                         fill={
                           checkPermission(PERMISSIONS.chat.folders.create)
-                            ? theme.palette.icon.fill.secondary
-                            : theme.palette.icon.fill.disabled
+                            ? theme.palette.icon.secondary
+                            : theme.palette.icon.disabled
                         }
                       />
                     </Button>
@@ -654,12 +654,12 @@ const Conversations = memo(props => {
             >
               {!collapsed ? (
                 <DoubleLeftIcon
-                  fill={theme.palette.icon.fill.default}
+                  fill={theme.palette.icon.default}
                   width={16}
                 />
               ) : (
                 <DoubleRightIcon
-                  fill={theme.palette.icon.fill.default}
+                  fill={theme.palette.icon.default}
                   width={16}
                 />
               )}
@@ -706,8 +706,8 @@ const Conversations = memo(props => {
                     }}
                     fill={
                       checkPermission(PERMISSIONS.chat.folders.create)
-                        ? theme.palette.icon.fill.secondary
-                        : theme.palette.icon.fill.disabled
+                        ? theme.palette.icon.secondary
+                        : theme.palette.icon.disabled
                     }
                   />
                 </Button>

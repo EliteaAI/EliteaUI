@@ -204,7 +204,7 @@ const getStyles = () => ({
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    background: palette.background.settingsPage,
+    background: palette.components.settingsPage.background,
     width: '100%',
     padding: '1rem 1.5rem',
   }),

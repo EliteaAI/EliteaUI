@@ -125,9 +125,9 @@ const decisionOutputsStyles = () => ({
       gap: '.25rem',
       '& .MuiChip-deleteIcon': {
         margin: '0rem',
-        color: `${palette.icon.fill.secondary} !important`,
+        color: `${palette.icon.secondary} !important`,
         '&:hover': {
-          color: palette.icon.fill.secondary,
+          color: palette.icon.secondary,
         },
       },
       border: `.0625rem solid ${palette.status[borderStatus]} !important`,

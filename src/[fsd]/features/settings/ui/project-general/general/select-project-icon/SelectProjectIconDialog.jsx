@@ -312,7 +312,7 @@ const selectProjectIconDialogStyles = () => ({
     objectFit: 'cover',
   },
   importIcon: ({ palette }) => ({
-    fill: palette.icon.fill.default,
+    fill: palette.icon.default,
   }),
 });
 

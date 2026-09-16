@@ -60,7 +60,7 @@ const BucketHeader = memo(props => {
                   >
                     <NewFolder
                       sx={styles.newFolderIcon}
-                      fill={theme.palette.icon.fill.secondary}
+                      fill={theme.palette.icon.secondary}
                     />
                   </Button>
                 </Box>
@@ -86,12 +86,12 @@ const BucketHeader = memo(props => {
         >
           {!collapsed ? (
             <DoubleLeftIcon
-              fill={theme.palette.icon.fill.default}
+              fill={theme.palette.icon.default}
               width={16}
             />
           ) : (
             <DoubleRightIcon
-              fill={theme.palette.icon.fill.default}
+              fill={theme.palette.icon.default}
               width={16}
             />
           )}

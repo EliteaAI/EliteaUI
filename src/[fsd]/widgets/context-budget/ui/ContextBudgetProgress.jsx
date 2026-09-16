@@ -1,7 +1,8 @@
 import { memo } from 'react';
 
-import { Box, Tooltip, Typography, useTheme } from '@mui/material';
+import { Box, Tooltip, Typography, alpha, useTheme } from '@mui/material';
 
+import { CONTEXT_BUDGET_COLORS } from '@/[fsd]/shared/config/theme/chartPalette';
 import { CONTEXT_MESSAGES, TOOLTIP_CONFIG } from '@/[fsd]/widgets/context-budget/lib/constants';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
 
@@ -56,7 +57,7 @@ const ContextBudgetProgress = memo(props => {
                 <AttentionIcon
                   width={16}
                   height={16}
-                  fill={theme.palette.warning.yellow}
+                  fill={theme.palette.icon.warningHigh}
                 />
               </Box>
             </Tooltip>
@@ -76,15 +77,13 @@ ContextBudgetProgress.displayName = 'ContextBudgetProgress';
 
 /** @type {MuiSx} */
 const contextBudgetProgressStyles = (theme, isHighUtilization) => {
-  const isDarkMode = theme.palette.mode === 'dark';
+  const endColor = isHighUtilization
+    ? CONTEXT_BUDGET_COLORS.highUtilization
+    : CONTEXT_BUDGET_COLORS.normalUtilization;
+  const startRgba = alpha(endColor, 0);
 
-  // Define gradient colors based on utilization
-  const progressGradient = isHighUtilization
-    ? 'linear-gradient(90deg, rgba(255, 193, 7, 0) 0%, #FFC107 100%)'
-    : 'linear-gradient(90deg, rgba(19, 225, 60, 0) 0%, #0FA52D 100%)';
-
-  // Background color for progress bar
-  const backgroundColor = isDarkMode ? theme.palette.border.lines : '#3D44561A';
+  const progressGradient = `linear-gradient(90deg, ${startRgba} 0%, ${endColor} 100%)`;
+  const backgroundColor = theme.palette.border.lines;
 
   return {
     progressSection: {
@@ -121,7 +120,7 @@ const contextBudgetProgressStyles = (theme, isHighUtilization) => {
       display: 'flex',
     },
     attentionTooltip: ({ palette }) => ({
-      backgroundColor: palette.background.tooltip.default,
+      backgroundColor: palette.background.tooltip,
       color: palette.text.tooltip,
       padding: '0.5rem 0.75rem',
       borderRadius: '0.5rem',

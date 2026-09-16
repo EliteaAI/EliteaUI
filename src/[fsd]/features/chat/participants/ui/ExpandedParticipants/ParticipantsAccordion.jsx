@@ -37,7 +37,7 @@ const ParticipantsAccordion = memo(props => {
         <ArrowDownIcon
           width={16}
           height={16}
-          fill={theme.palette.icon.main}
+          fill={theme.palette.icon.default}
           style={{
             transform: expanded ? 'rotate(0deg)' : 'rotate(-90deg)',
             transition: 'transform 0.2s ease-in-out',
@@ -46,7 +46,7 @@ const ParticipantsAccordion = memo(props => {
         <Box sx={styles.headerWrapper}>
           <Typography
             variant="labelSmall"
-            color="text.default"
+            color="text.primary"
             sx={styles.title}
           >
             {title}

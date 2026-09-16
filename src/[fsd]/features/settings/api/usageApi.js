@@ -11,7 +11,7 @@ export const usageApi = eliteaApi
     endpoints: build => ({
       projectUsage: build.query({
         query: ({ projectId, scope = 'project' }) => ({
-          url: `/elitea_core/usage/prompt_lib/${projectId}/usage?scope=${scope}`,
+          url: `/usage/usage/prompt_lib/${projectId}/usage?scope=${scope}`,
           method: 'GET',
         }),
         providesTags: [TAG_TYPE_USAGE],
