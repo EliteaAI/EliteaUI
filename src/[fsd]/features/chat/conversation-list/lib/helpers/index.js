@@ -3,3 +3,11 @@ export {
   redistributeConversationsIntoGroups,
   sortConversations,
 } from './conversationList.helpers';
+export {
+  buildNewParticipants,
+  diffAiParticipants,
+  diffUserParticipants,
+  hasParticipantChanges,
+  mapAiParticipantToSelectItem,
+  mapUserParticipantToSelectItem,
+} from './restrictAccess.helpers';
