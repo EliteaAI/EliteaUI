@@ -3,7 +3,7 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { useFormikContext } from 'formik';
 import { useSelector } from 'react-redux';
 
-import { Box, IconButton, Tooltip, Typography } from '@mui/material';
+import { Box, IconButton, Tooltip, Typography, useTheme } from '@mui/material';
 
 import { useDisassociateToolkit } from '@/[fsd]/features/agent/lib/hooks';
 import { useSaveAgentToolVariables } from '@/[fsd]/features/agent/lib/hooks/useSaveAgentToolVariables.js';
@@ -42,7 +42,6 @@ import useSearchParamValue from '@/hooks/useSearchParamValue';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 import { getBasename } from '@/routes';
-import { useTheme } from '@emotion/react';
 
 import AgentPipelineVersionSelector from './AgentPipelineVersionSelector.jsx';
 import AgentVariables from './AgentVariables.jsx';
@@ -643,11 +642,11 @@ const toolCardStyles = (showActions, isDuplicate, showVariables, hasVariables) =
     borderRadius: '0.5rem',
     backgroundColor:
       showActions || showVariables ? palette.background.surface.interactive.default : 'transparent',
-    border: `0.0625rem solid ${palette.border.table}`,
+    border: `0.0625rem solid ${palette.border.default}`,
     '&:hover': {
       border:
         showActions || showVariables
-          ? `0.0625rem solid ${palette.border.table}`
+          ? `0.0625rem solid ${palette.border.default}`
           : `0.0625rem solid ${palette.border.lines}`,
     },
     boxSize: 'border-box',
@@ -669,7 +668,8 @@ const toolCardStyles = (showActions, isDuplicate, showVariables, hasVariables) =
     backgroundColor:
       showActions || showVariables ? 'transparent' : palette.background.surface.interactive.default,
     '&:hover': {
-      backgroundColor: showActions || showVariables ? 'transparent' : palette.background.toolCard.hover,
+      backgroundColor:
+        showActions || showVariables ? 'transparent' : palette.components.toolCard.background.hover,
       '#DeleteButton': {
         display: 'flex',
       },

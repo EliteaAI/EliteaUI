@@ -232,7 +232,9 @@ const getStyles = (isRecording, disabled) => {
       display: 'flex',
       alignItems: 'center',
       gap: isRecording ? '0.5rem' : '0rem',
-      border: isRecording ? theme => `0.0625rem solid ${theme.palette.border.chatContinue}` : 'none',
+      border: isRecording
+        ? theme => `0.0625rem solid ${theme.palette.components.chatContinue.border}`
+        : 'none',
       padding: '0rem',
       borderRadius: isRecording ? '1.75rem' : '0rem',
       boxSizing: 'border-box',

@@ -120,9 +120,9 @@ const projectParamsHeaderStyles = () => ({
     width: '1.5rem',
     height: '1.5rem',
     backgroundColor: palette.background.default.secondary,
-    border: `.125rem solid ${palette.border.edit}`,
+    border: `.125rem solid ${palette.border.lines}`,
     '&:hover': {
-      backgroundColor: palette.background.dataGrid.main,
+      backgroundColor: palette.components.dataGrid.background.main,
     },
   }),
   editIcon: {

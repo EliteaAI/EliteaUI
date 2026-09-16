@@ -685,8 +685,8 @@ const flowEditorStyles = () => ({
     fontSize: typography.body2.fontSize,
     fontWeight: 400,
     '&:hover': {
-      background: `${palette.background.dataGrid.main} !important`,
-      border: `.0625rem solid ${palette.border.flowNode}`,
+      background: `${palette.background.default.secondary} !important`,
+      border: `.0625rem solid ${palette.components.flowEditor.node.border}`,
     },
   }),
   flowControls: ({ palette }) => ({
@@ -701,7 +701,7 @@ const flowEditorStyles = () => ({
       backgroundColor: palette.background.paper,
       borderBottom: `1px solid ${palette.divider}`,
       '&:hover': {
-        backgroundColor: palette.border.table,
+        backgroundColor: palette.border.default,
         '& svg': {
           color: `${palette.icon.secondary} !important`,
         },

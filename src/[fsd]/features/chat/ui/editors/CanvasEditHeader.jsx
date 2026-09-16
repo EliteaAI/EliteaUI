@@ -158,7 +158,7 @@ const CanvasEditHeader = ({
             >
               <CopyIcon
                 sx={{ fontSize: '16px' }}
-                fill={disabledAll ? theme.palette.text.button.disabled : undefined}
+                fill={disabledAll ? theme.palette.text.disabled : undefined}
               />
             </IconButton>
           </span>
@@ -233,7 +233,7 @@ const CanvasEditHeader = ({
               >
                 <DeleteIcon
                   sx={{ fontSize: '16px' }}
-                  fill={disableDeleteTableRowsCols ? theme.palette.text.button.disabled : undefined}
+                  fill={disableDeleteTableRowsCols ? theme.palette.text.disabled : undefined}
                 />
               </IconButton>
             </span>

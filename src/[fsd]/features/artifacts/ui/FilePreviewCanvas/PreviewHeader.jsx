@@ -225,7 +225,7 @@ const PreviewHeader = memo(props => {
                 background: palette.background.surface.interactive.active,
 
                 ':hover': {
-                  background: palette.background.button.secondary.hover,
+                  background: palette.background.interactiveItem.hover,
                 },
               }),
             }}

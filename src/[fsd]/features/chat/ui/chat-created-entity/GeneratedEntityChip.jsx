@@ -161,7 +161,7 @@ const generatedEntityChipStyles = () => ({
     gap: '.75rem',
     padding: '.375rem .75rem',
     alignItems: 'center',
-    background: palette.background.button.default,
+    background: palette.background.surface.interactive.default,
     cursor: 'default',
   }),
   contentContainer: {

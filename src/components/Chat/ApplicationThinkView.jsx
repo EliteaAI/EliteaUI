@@ -1069,7 +1069,7 @@ const applicationThinkViewStyles = () => ({
     flexWrap: 'wrap',
   },
   accordion: ({ palette }) => ({
-    borderBottom: `0.0625rem solid ${palette.border.table}`,
+    borderBottom: `0.0625rem solid ${palette.border.default}`,
     background: 'transparent',
     '&.Mui-expanded': {
       margin: '0rem 0',

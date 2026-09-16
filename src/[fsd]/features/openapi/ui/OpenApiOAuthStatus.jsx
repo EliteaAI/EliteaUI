@@ -127,7 +127,9 @@ const getStyles = isLoggedIn => ({
     color: isLoggedIn ? palette.icon.success : palette.icon.attention,
   }),
   loginStatusText: ({ palette }) => ({
-    color: isLoggedIn ? palette.text.mcp.loginSuccess : palette.text.mcp.logout,
+    color: isLoggedIn
+      ? palette.components.oauthStatus.text.loginSuccess
+      : palette.components.oauthStatus.text.logout,
   }),
   loginStatusContainer:
     isDelegated =>
@@ -141,8 +143,10 @@ const getStyles = isLoggedIn => ({
       marginBottom: '1rem',
       padding: '.5rem .5rem .5rem 1rem',
       borderRadius: '2.345rem',
-      backgroundColor: isLoggedIn ? palette.background.mcp.loginSuccess : palette.background.mcp.logout,
-      border: `0.0625rem solid ${isLoggedIn ? palette.border.mcp.loginSuccess : palette.border.mcp.logout}`,
+      backgroundColor: isLoggedIn
+        ? palette.components.oauthStatus.background.loginSuccess
+        : palette.components.oauthStatus.background.logout,
+      border: `0.0625rem solid ${isLoggedIn ? palette.components.oauthStatus.border.loginSuccess : palette.components.oauthStatus.border.logout}`,
       justifyContent: 'space-between',
     }),
 });

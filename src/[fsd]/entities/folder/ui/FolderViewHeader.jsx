@@ -91,7 +91,7 @@ const folderViewHeaderStyles = () => ({
     backgroundColor: 'transparent',
     '&:hover': {
       color: palette.icon.secondary,
-      backgroundColor: palette.background.button.secondary.default,
+      backgroundColor: palette.background.surface.interactive.active,
     },
   }),
   closeIcon: {

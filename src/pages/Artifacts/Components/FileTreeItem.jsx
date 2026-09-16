@@ -175,9 +175,9 @@ const calculateIndent = (depth, { basePadding, maxIndent, minIndent, threshold }
 /** @type {MuiSx} */
 const fileTreeItemStyles = ({ isActive, isHovering, depth, theme, nextItemHovered }) => {
   const getBackgroundColor = () => {
-    if (isActive) return theme.palette.background.conversation.selected;
-    if (isHovering) return theme.palette.background.conversation.hover;
-    return theme.palette.background.conversation.normal;
+    if (isActive) return theme.palette.background.selectedItem.default;
+    if (isHovering) return theme.palette.background.interactiveItem.rowHover;
+    return 'transparent';
   };
 
   const isHighlighted = isActive || isHovering;
@@ -224,9 +224,7 @@ const fileTreeItemStyles = ({ isActive, isHovering, depth, theme, nextItemHovere
       background: getBackgroundColor(),
       borderRadius: isHighlighted ? '0.375rem' : '0',
       borderBottom:
-        !isHighlighted && !nextItemHovered
-          ? `0.0625rem solid ${theme.palette.border.conversationItemDivider}`
-          : 'none',
+        !isHighlighted && !nextItemHovered ? `0.0625rem solid ${theme.palette.border.lines}` : 'none',
     },
 
     folderIcon: {

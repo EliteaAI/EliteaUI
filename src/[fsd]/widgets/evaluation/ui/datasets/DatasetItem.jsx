@@ -226,12 +226,12 @@ const datasetItemStyles = () => ({
       padding: '0.5rem 1rem',
       borderRadius: '0.5rem',
       cursor: 'pointer',
-      backgroundColor: isSelected ? palette.background.participant.active : 'transparent',
+      backgroundColor: isSelected ? palette.background.interactiveItem.active : 'transparent',
       transition: 'background-color 0.2s ease',
       '&:hover': {
         backgroundColor: isSelected
-          ? palette.background.participant.active
-          : palette.background.participant.default,
+          ? palette.background.interactiveItem.active
+          : palette.background.surface.interactive.default,
       },
       '&::after': {
         content: '""',
@@ -240,7 +240,7 @@ const datasetItemStyles = () => ({
         left: 0,
         height: '0.0625rem',
         width: '100%',
-        backgroundColor: showSeparator ? palette.border.table : 'transparent',
+        backgroundColor: showSeparator ? palette.border.default : 'transparent',
       },
     }),
   content: {
@@ -275,7 +275,7 @@ const datasetItemStyles = () => ({
   },
   tooltip: ({ palette }) => ({
     maxWidth: '18.1875rem',
-    backgroundColor: palette.text.tooltip.default,
+    backgroundColor: palette.background.tooltip,
     borderRadius: '0.25rem',
     padding: '0.25rem 0.5rem',
   }),
@@ -320,7 +320,7 @@ const datasetItemStyles = () => ({
     color: palette.text.secondary,
     gap: '0.5rem',
     '&:hover': {
-      backgroundColor: palette.background.participant.default,
+      backgroundColor: palette.background.surface.interactive.default,
     },
   }),
   menuItemIcon: ({ palette }) => ({

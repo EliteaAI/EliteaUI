@@ -138,8 +138,8 @@ const caseResultItemStyles = () => ({
     flex: 1,
     minWidth: 0,
     borderRadius: '0.75rem',
-    border: `0.0625rem solid ${palette.background.dataGrid.main}`,
-    backgroundColor: palette.background.folder.default,
+    border: `0.0625rem solid ${palette.border.lines}`,
+    backgroundColor: palette.background.panel,
     overflow: 'hidden',
   }),
   header: {
@@ -182,17 +182,17 @@ const caseResultItemStyles = () => ({
     gap: '0.25rem',
     padding: '0 0.5rem',
     borderRadius: '1rem',
-    border: `0.0625rem solid ${palette.border.chatContinue}`,
+    border: `0.0625rem solid ${palette.primary.main}`,
   }),
   pendingBadgeIcon: ({ palette }) => ({
     fontSize: '1rem',
-    color: palette.text.button.showMore,
+    color: palette.text.showMore,
     '& path': {
-      fill: palette.text.button.showMore,
+      fill: palette.text.showMore,
     },
   }),
   pendingBadgeText: ({ palette }) => ({
-    color: palette.text.button.showMore,
+    color: palette.text.showMore,
     fontWeight: 500,
     whiteSpace: 'nowrap',
   }),
@@ -208,7 +208,7 @@ const caseResultItemStyles = () => ({
       margin: 0,
     },
     '&:hover': {
-      backgroundColor: palette.background.tabButton.active,
+      backgroundColor: palette.background.surface.interactive.selected,
     },
   }),
   viewIcon: ({ palette }) => ({

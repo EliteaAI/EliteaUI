@@ -323,7 +323,7 @@ const collapsedPerticapantsListStyles = () => ({
       },
 
       '&&': {
-        backgroundColor: `${palette.background.participant.default} !important`,
+        backgroundColor: `${palette.background.surface.interactive.default} !important`,
       },
 
       ...(hasError && {

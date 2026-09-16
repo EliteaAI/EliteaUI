@@ -148,7 +148,11 @@ const addDimensionMenuStyles = () => ({
       height: '0.75rem',
     },
     '& svg path': {
-      fill: palette.text.secondary,
+      fill: palette.icon.secondary,
+    },
+    '&:hover': {
+      borderColor: palette.border.lines,
+      backgroundColor: palette.background.surface.interactive.default,
     },
   }),
   menuPaper: ({ palette }) => ({
@@ -170,7 +174,7 @@ const addDimensionMenuStyles = () => ({
     padding: '0.5rem 1rem',
     backgroundColor: palette.background.default.secondary,
     '&:hover': {
-      backgroundColor: palette.background.tabButton.default,
+      backgroundColor: palette.background.surface.interactive.default,
     },
   }),
   menuIcon: ({ palette }) => ({

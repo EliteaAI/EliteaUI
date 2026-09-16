@@ -607,7 +607,7 @@ const mermaidDiagramOutputStyles = (theme, isValidCode, errorMessage, widthsValu
     height: '1.75rem',
     paddingLeft: '0.75rem',
     paddingRight: '0.75rem',
-    color: palette.components.accentButton.text.primary,
+    color: palette.components.accentButton.text.default,
     background: palette.components.accentButton.background.default,
     borderRadius: '1.5rem',
     whiteSpace: 'nowrap',

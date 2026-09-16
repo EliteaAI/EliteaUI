@@ -168,10 +168,10 @@ const manageDimensionCardStyles = () => ({
     gap: '0.5rem',
     padding: '1rem',
     borderRadius: '0.75rem',
-    border: `0.0625rem solid ${palette.border.cardsOutlines}`,
-    backgroundColor: palette.background.aiProviderAccordion.default,
+    border: `0.0625rem solid ${palette.border.default}`,
+    backgroundColor: palette.background.default.secondary,
     '&:hover': {
-      backgroundColor: palette.background.aiProviderAccordion.hover,
+      backgroundColor: palette.background.interactiveItem.hover,
       borderColor: palette.border.lines,
     },
   }),
@@ -209,7 +209,7 @@ const manageDimensionCardStyles = () => ({
     borderRadius: '1.0625rem',
     color: palette.text.primary,
     backgroundColor: 'transparent',
-    border: `0.0625rem solid ${palette.background.tabButton.default}`,
+    border: `0.0625rem solid ${palette.border.lines}`,
     fontSize: '0.75rem',
     lineHeight: '1rem',
     whiteSpace: 'nowrap',
@@ -244,7 +244,7 @@ const manageDimensionCardStyles = () => ({
     color: palette.text.secondary,
     gap: '0.5rem',
     '&:hover': {
-      backgroundColor: palette.background.participant.default,
+      backgroundColor: palette.background.surface.interactive.default,
     },
   }),
   menuItemIcon: ({ palette }) => ({

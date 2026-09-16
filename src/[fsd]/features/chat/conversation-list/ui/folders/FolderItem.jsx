@@ -373,7 +373,7 @@ const folderItemStyles = isFolderSaveEnabled => ({
     flexDirection: 'row',
     alignItems: 'center',
     gap: '0.75rem',
-    background: palette.background.conversationEditor,
+    background: palette.background.default.secondary,
   }),
   checkButton: ({ palette }) => ({
     width: '1.75rem',
@@ -385,7 +385,7 @@ const folderItemStyles = isFolderSaveEnabled => ({
     cursor: isFolderSaveEnabled ? 'pointer' : 'default',
     boxSizing: 'border-box',
     '&:hover': {
-      background: isFolderSaveEnabled ? palette.background.select.hover : undefined,
+      background: isFolderSaveEnabled ? palette.background.interactiveItem.hover : undefined,
     },
   }),
   cancelButton: ({ palette }) => ({
@@ -400,7 +400,7 @@ const folderItemStyles = isFolderSaveEnabled => ({
     paddingTop: '0.125rem',
     paddingLeft: '0.125rem',
     '&:hover': {
-      background: palette.background.select.hover,
+      background: palette.background.interactiveItem.hover,
     },
   }),
 });

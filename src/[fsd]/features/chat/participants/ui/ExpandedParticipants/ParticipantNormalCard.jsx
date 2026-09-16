@@ -169,10 +169,12 @@ export const participantNormalCardStyles = ({ collapsed, isActive, maxWidth, isB
     width: '100%',
     height: '2.5rem',
     boxSizing: 'border-box',
-    background: isActive ? palette.background.participant.active : palette.background.participant.default,
-    border: isActive ? `0.0625rem solid ${palette.split.hover}` : undefined,
+    background: isActive
+      ? palette.background.interactiveItem.active
+      : palette.background.surface.interactive.default,
+    border: isActive ? `0.0625rem solid ${palette.components.split.background.hover}` : undefined,
     ':hover': {
-      background: palette.background.participant.hover,
+      background: palette.background.interactiveItem.hover,
     },
   }),
   nameWrapper: {

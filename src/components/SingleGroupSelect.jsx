@@ -1,14 +1,13 @@
 // import ListSubheader from '@mui/material/ListSubheader';
 import { useCallback, useMemo } from 'react';
 
-import { Box, FormControl, InputLabel, ListItemIcon, MenuItem, Typography } from '@mui/material';
+import { Box, FormControl, InputLabel, ListItemIcon, MenuItem, Typography, useTheme } from '@mui/material';
 import FormHelperText from '@mui/material/FormHelperText';
 
 import { genModelSelectValue } from '@/DEPRECATED';
 import { typographyVariants } from '@/[fsd]/shared/config/theme';
 import CheckedIcon from '@/assets/checked-icon.svg?react';
 import { GROUP_SELECT_VALUE_SEPARATOR } from '@/common/constants';
-import { useTheme } from '@emotion/react';
 import styled from '@emotion/styled';
 
 import ArrowDownIcon from './Icons/ArrowDownIcon';
@@ -17,7 +16,7 @@ import StyledSelect from './StyledSelect';
 const StyledFormControl = styled(FormControl)(({ theme }) => ({
   verticalAlign: 'bottom',
   '& .MuiFormLabel-root': {
-    color: theme.palette.text.input.label,
+    color: theme.palette.text.secondary,
     left: '12px',
     '&.Mui-focused': {
       color: theme.palette.primary.main,
@@ -191,7 +190,7 @@ export default function SingleGroupSelect({
                     sx={{
                       justifyContent: 'space-between',
                       background:
-                        itemValue === value ? theme.palette.background.participant.active : undefined,
+                        itemValue === value ? theme.palette.background.interactiveItem.active : undefined,
                     }}
                     key={option.group + option.value}
                     value={itemValue}
@@ -205,7 +204,7 @@ export default function SingleGroupSelect({
                     </Typography>
                     {itemValue === value && (
                       <StyledMenuItemIcon>
-                        <CheckedIcon fill={theme.palette.text.secondary} />
+                        <CheckedIcon fill={theme.palette.icon.secondary} />
                       </StyledMenuItemIcon>
                     )}
                     <Typography

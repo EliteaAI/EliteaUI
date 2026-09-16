@@ -18,7 +18,7 @@ const StyledChip = styled(
     : theme.palette.components.styledChip.background.default,
   color: isSelected
     ? theme.palette.components.styledChip.text.active
-    : theme.palette.components.styledChip.text.primary,
+    : theme.palette.components.styledChip.text.default,
   boxShadow: theme.palette.mode === 'light' && !isSelected ? '0px 2px 4px rgba(0, 0, 0, 0.12)' : 'none',
   fontFamily: 'Montserrat',
   padding: '8px 16px',

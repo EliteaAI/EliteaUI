@@ -221,7 +221,7 @@ const dataTableRowStyles = () => ({
     (isNameColumn, customPadding) =>
     ({ palette }) => ({
       padding: customPadding || '0.375rem 1.5rem',
-      borderBottom: `0.0625rem solid ${palette.border.table}`,
+      borderBottom: `0.0625rem solid ${palette.border.default}`,
       cursor: isNameColumn ? 'pointer' : 'default',
     }),
   tooltipTitle: {
@@ -293,7 +293,7 @@ const dataTableRowStyles = () => ({
     svg: { path: { fill: `${palette.icon.default} !important` } },
 
     '&:hover': {
-      backgroundColor: palette.background.button.secondary.default,
+      backgroundColor: palette.background.surface.interactive.active,
     },
   }),
 });

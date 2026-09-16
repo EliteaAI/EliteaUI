@@ -64,7 +64,7 @@ const capabilityChipStyles = (showLabel, type) => ({
     display: 'inline-flex',
     alignItems: 'center',
     flexShrink: 0,
-    backgroundColor: palette.capability[type].background,
+    backgroundColor: palette.components.capability[type].background,
     ...(showLabel
       ? {
           gap: '0.375rem',
@@ -81,7 +81,7 @@ const capabilityChipStyles = (showLabel, type) => ({
         }),
   }),
   icon: ({ palette }) => ({
-    color: palette.capability[type].icon,
+    color: palette.components.capability[type].icon,
     flexShrink: 0,
     ...(showLabel
       ? { fontSize: '1rem', width: '1rem', height: '1rem' }

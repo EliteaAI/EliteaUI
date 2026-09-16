@@ -33,7 +33,7 @@ const styles = {
       flexDirection: 'row',
       alignItems: 'center',
       color: !disabled
-        ? palette.components.chipWithCheckIcon.text.primary
+        ? palette.components.chipWithCheckIcon.text.default
         : palette.components.chipWithCheckIcon.text.disabled,
       background: warning
         ? palette.components.chipWithCheckIcon.background.warning
@@ -43,7 +43,7 @@ const styles = {
       border: warning ? `0.0625rem solid ${palette.components.chipWithCheckIcon.border.warning}` : undefined,
       '& .MuiChip-icon': {
         color: !disabled
-          ? palette.components.chipWithCheckIcon.text.primary
+          ? palette.components.chipWithCheckIcon.text.default
           : palette.components.chipWithCheckIcon.text.disabled,
       },
     }),

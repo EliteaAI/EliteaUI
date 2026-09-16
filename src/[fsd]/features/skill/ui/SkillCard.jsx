@@ -147,7 +147,7 @@ const skillCardStyles = () => ({
   cardContainer: ({ palette }) => ({
     borderRadius: '0.5rem',
     backgroundColor: 'transparent',
-    border: `0.0625rem solid ${palette.border.table}`,
+    border: `0.0625rem solid ${palette.border.default}`,
     boxSizing: 'border-box',
     '&:hover': {
       border: `0.0625rem solid ${palette.border.lines}`,
@@ -165,7 +165,7 @@ const skillCardStyles = () => ({
     gap: '1rem',
     backgroundColor: palette.background.surface.interactive.default,
     '&:hover': {
-      backgroundColor: palette.background.toolCard.hover,
+      backgroundColor: palette.components.toolCard.background.hover,
       '#DeleteButton': { display: 'flex' },
       '#OpenInNewTabButton': { display: 'flex' },
     },

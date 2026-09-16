@@ -60,7 +60,7 @@ const agentConversationStartersStyles = () => ({
     alignItems: 'center',
   },
   header: ({ palette }) => ({
-    color: palette.text.tertiary,
+    color: palette.text.secondary,
   }),
   startersGrid: isSingleItem => ({
     display: 'grid',
@@ -70,7 +70,7 @@ const agentConversationStartersStyles = () => ({
     justifyItems: isSingleItem ? 'center' : 'stretch',
   }),
   emptyText: ({ palette }) => ({
-    color: palette.text.tertiary,
+    color: palette.text.secondary,
   }),
 });
 

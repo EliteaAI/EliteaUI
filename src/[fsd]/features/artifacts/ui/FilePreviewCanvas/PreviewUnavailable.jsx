@@ -96,7 +96,7 @@ const previewUnavailableStyles = () => ({
   }),
 
   description: ({ palette }) => ({
-    color: palette.text.tertiary,
+    color: palette.text.secondary,
     fontSize: '.725rem',
   }),
 

@@ -463,7 +463,7 @@ const htmlPreviewFrameStyles = () => ({
     marginBottom: '0.5rem',
   }),
   fallbackDescription: ({ palette }) => ({
-    color: palette.text.tertiary,
+    color: palette.text.secondary,
   }),
   dialogDescription: ({ palette }) => ({
     color: palette.text.secondary,

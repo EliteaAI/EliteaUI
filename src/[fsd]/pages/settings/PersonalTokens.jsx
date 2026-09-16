@@ -360,7 +360,7 @@ const tokensSettingsStyles = (showSettingsPreview, isSmallWindow) => ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: palette.background.primary,
+    backgroundColor: palette.background.default.primary,
   }),
   mainTokensContainer: {
     display: 'flex',

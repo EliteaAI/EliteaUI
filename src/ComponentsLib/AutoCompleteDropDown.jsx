@@ -459,13 +459,13 @@ const autoCompleteDropDownStyled = slotPropsProp => ({
     ({ palette }) => ({
       height: '1.5rem',
       margin: '0 !important',
-      backgroundColor: palette.background.tagChip.disabled,
+      backgroundColor: palette.background.surface.interactive.default,
       '& .MuiChip-deleteIcon': {
-        color: palette.icon.tagChip.default,
+        color: palette.icon.default,
         marginLeft: 0,
       },
       '&:not(.Mui-disabled) .MuiChip-deleteIcon:hover': {
-        color: palette.icon.tagChip.hover,
+        color: palette.icon.default,
       },
     }),
     slotPropsProp.Chip?.sx,
@@ -491,8 +491,8 @@ const autoCompleteDropDownStyled = slotPropsProp => ({
     },
   },
   getOptionLiSx: (selected, palette) => {
-    const activeBg = slotPropsProp.Li?.selectedBackground ?? palette.background.participant.active;
-    const hoverBg = slotPropsProp.Li?.hoverBackgroundColor ?? palette.background.participant.hover;
+    const activeBg = slotPropsProp.Li?.selectedBackground ?? palette.background.interactiveItem.active;
+    const hoverBg = slotPropsProp.Li?.hoverBackgroundColor ?? palette.background.interactiveItem.hover;
     return {
       height: '2.5rem',
       padding: '0.5rem 1.25rem',

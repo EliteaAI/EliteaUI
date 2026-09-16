@@ -61,8 +61,8 @@ const budgetErrorMessageStyles = () => ({
     alignItems: 'flex-start',
     gap: '0.75rem',
     padding: '.75rem 1rem',
-    backgroundColor: palette.background.errorBkg,
-    border: `0.0625rem solid ${palette.background.wrongBkg}`,
+    backgroundColor: palette.alert.error.background,
+    border: `0.0625rem solid ${palette.background.wrong}`,
     borderRadius: BORDER_RADIUS.MD,
     marginBottom: '0.5rem',
   }),
@@ -74,14 +74,14 @@ const budgetErrorMessageStyles = () => ({
   }),
   text: ({ palette }) => ({
     flex: 1,
-    color: palette.text.warningText,
+    color: palette.text.warning,
     wordBreak: 'break-word',
   }),
   link: ({ palette }) => ({
-    color: palette.text.createButton,
-    textDecorationColor: palette.text.createButton,
+    color: palette.text.accent,
+    textDecorationColor: palette.text.accent,
     '&:hover': {
-      color: palette.text.createButton,
+      color: palette.text.accent,
     },
   }),
 });

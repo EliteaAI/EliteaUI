@@ -33,14 +33,14 @@ export const eliteaDataGridStyle = theme => ({
     display: 'flex',
     alignItems: 'center',
     borderTop: '0px !important',
-    borderBottom: `1px solid ${theme.palette.background.dataGrid.main} !important`,
+    borderBottom: `1px solid ${theme.palette.components.dataGrid.background.main} !important`,
   },
   ['& .MuiDataGrid-row']: {
-    '--rowBorderColor': theme.palette.background.dataGrid.main,
+    '--rowBorderColor': theme.palette.components.dataGrid.background.main,
     minHeight: '52px !important',
   },
   ['& .MuiDataGrid-container--top::after']: {
-    backgroundColor: theme.palette.background.dataGrid.main,
+    backgroundColor: theme.palette.components.dataGrid.background.main,
   },
   ['& .css-tgsonj']: {
     borderTop: '0',

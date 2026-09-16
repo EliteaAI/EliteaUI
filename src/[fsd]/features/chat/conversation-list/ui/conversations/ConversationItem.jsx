@@ -242,8 +242,8 @@ const ConversationItem = memo(props => {
             confirmButtonTitle: 'Make public',
             confirmText: 'Are you sure to make your conversation public?',
             confirmButtonSX: {
-              background: `${theme.palette.background.button.primary.default} !important`,
-              color: `${theme.palette.text.button.primary} !important`,
+              background: `${theme.palette.primary.main} !important`,
+              color: `${theme.palette.primary.contrastText} !important`,
             },
             onConfirm: handleMakePublic,
             display: projectId == PUBLIC_PROJECT_ID || projectId == personal_project_id ? 'none' : undefined,
@@ -332,8 +332,8 @@ const ConversationItem = memo(props => {
     isPinned,
     checkPermission,
     moveToFoldersMenuItems,
-    theme.palette.background.button.primary.default,
-    theme.palette.text.button.primary,
+    theme.palette.primary.main,
+    theme.palette.primary.contrastText,
     handleMakePublic,
     projectId,
     personal_project_id,
@@ -463,7 +463,7 @@ const ConversationItem = memo(props => {
         {conversationType === 'public' && (
           <UsersIcon
             fontSize=".875rem"
-            fill={theme.palette.status.published}
+            fill={theme.palette.icon.success}
           />
         )}
         {/* Private without users shows nothing as requested */}
@@ -581,9 +581,9 @@ const conversationItemStyles = ({
   showMenu,
 }) => {
   const getBackgroundColor = palette => {
-    if (isActive) return palette.background.conversation.selected;
-    if (isHovering && !isActive) return palette.background.conversation.hover;
-    return palette.background.conversation.normal;
+    if (isActive) return palette.components.conversation.background.selected;
+    if (isHovering && !isActive) return palette.components.conversation.background.hover;
+    return palette.components.conversation.background.normal;
   };
 
   return {
@@ -591,7 +591,7 @@ const conversationItemStyles = ({
       borderBottom:
         isActive || isHovering || isNextItemHovered
           ? 'none'
-          : `1px solid ${palette.border.conversationItemDivider}`,
+          : `1px solid ${palette.components.conversation.border.itemDivider}`,
       padding: '.5rem .75rem', // Reduced padding to minimize gaps
       gap: '.5rem', // Reduced gap to minimize spacing
       display: 'flex',
@@ -653,7 +653,7 @@ const conversationItemStyles = ({
       flexDirection: 'row',
       alignItems: 'center',
       gap: '.75rem',
-      background: palette.background.conversationEditor,
+      background: palette.components.conversation.background.editor,
     }),
     checkedIconWrapper: ({ palette }) => ({
       width: '1.75rem',
@@ -666,7 +666,7 @@ const conversationItemStyles = ({
       boxSizing: 'border-box',
 
       '&:hover': {
-        background: isSaveEnabled ? palette.background.select.hover : undefined,
+        background: isSaveEnabled ? palette.background.interactiveItem.hover : undefined,
       },
     }),
     cancelIconWrapper: ({ palette }) => ({
@@ -682,7 +682,7 @@ const conversationItemStyles = ({
       paddingLeft: '.125rem',
 
       '&:hover': {
-        background: palette.background.select.hover,
+        background: palette.background.interactiveItem.hover,
       },
     }),
   };

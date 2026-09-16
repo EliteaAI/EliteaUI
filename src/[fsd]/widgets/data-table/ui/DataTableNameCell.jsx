@@ -205,7 +205,7 @@ const dataTableNameCellStyles = () => ({
     svg: { path: { fill: `${palette.icon.default} !important` } },
 
     '&:hover': {
-      backgroundColor: palette.background.button.secondary.default,
+      backgroundColor: palette.background.surface.interactive.active,
     },
   }),
 });

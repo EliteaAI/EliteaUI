@@ -517,7 +517,7 @@ const dataTableStyles = (isFullWidth, hasListHeader) => ({
   },
   tableCell: ({ palette }) => ({
     padding: '0.375rem 1.5rem',
-    borderBottom: `0.0625rem solid ${palette.border.table}`,
+    borderBottom: `0.0625rem solid ${palette.border.default}`,
     border: 'none',
   }),
   typeLabelText: {

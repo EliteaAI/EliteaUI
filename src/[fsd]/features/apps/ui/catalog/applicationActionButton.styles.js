@@ -25,7 +25,7 @@ export const applicationActionButtonStyles = {
     },
   },
   createActionButton: ({ palette }) => ({
-    color: palette.components.accentButton.text.primary,
+    color: palette.components.accentButton.text.default,
     background: palette.components.accentButton.background.default,
     '& .MuiButton-startIcon svg, & .MuiButton-startIcon path': {
       fill: palette.icon.accent,

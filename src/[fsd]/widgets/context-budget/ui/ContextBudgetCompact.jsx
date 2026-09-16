@@ -65,7 +65,7 @@ const ContextBudgetCompact = memo(props => {
                   <AttentionIcon
                     width={16}
                     height={16}
-                    fill={theme.palette.warning.yellow}
+                    fill={theme.palette.icon.warningHigh}
                   />
                 </Box>
               )}
@@ -119,7 +119,7 @@ ContextBudgetCompact.displayName = 'ContextBudgetCompact';
 /** @type {MuiSx} */
 const contextBudgetCompactStyles = () => ({
   tooltipWrapper: ({ palette }) => ({
-    backgroundColor: palette.background.tooltip.default,
+    backgroundColor: palette.background.tooltip,
     color: palette.text.tooltip,
     padding: '0.3rem 0.4rem',
     borderRadius: '0.25rem',
@@ -164,9 +164,9 @@ const contextBudgetCompactStyles = () => ({
   }),
   editButton: ({ palette }) => ({
     marginLeft: '0.5rem',
-    backgroundColor: palette.background.button.secondary.default,
+    backgroundColor: palette.background.surface.interactive.active,
     '&:hover': {
-      backgroundColor: palette.background.button.secondary.hover,
+      backgroundColor: palette.background.surface.interactive.selected,
     },
   }),
 });

@@ -123,17 +123,17 @@ const pinButtonStyles = (isVisible, variant) => ({
     transition: 'opacity 0.2s ease-in-out',
     ...(variant === 'toolbar'
       ? {
-          backgroundColor: palette.background.button.secondary.default,
+          backgroundColor: palette.background.surface.interactive.active,
           '&:hover': {
             color: palette.icon.secondary,
-            backgroundColor: palette.background.button.secondary.hover,
+            backgroundColor: palette.background.surface.interactive.selected,
           },
         }
       : {
           color: palette.icon.default,
           '&:hover': {
             color: palette.icon.secondary,
-            backgroundColor: palette.background.button.secondary.default,
+            backgroundColor: palette.background.surface.interactive.active,
           },
         }),
   }),

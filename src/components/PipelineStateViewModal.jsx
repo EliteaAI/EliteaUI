@@ -1,6 +1,4 @@
-import { Box, Dialog, DialogContent, DialogTitle, IconButton } from '@mui/material';
-
-import { useTheme } from '@emotion/react';
+import { Box, Dialog, DialogContent, DialogTitle, IconButton, useTheme } from '@mui/material';
 
 import CloseIcon from './Icons/CloseIcon';
 
@@ -79,7 +77,7 @@ export default function PipelineStateViewModal({
           maxWidth: '900px',
           height: 'calc(100vh - 220px)',
           borderTop: `1px solid ${theme.palette.border.lines}`,
-          background: theme.palette.background.showContextDialog,
+          background: theme.palette.background.default.secondary,
           overflowY: 'scroll',
           display: 'flex',
           flexDirection: 'column',

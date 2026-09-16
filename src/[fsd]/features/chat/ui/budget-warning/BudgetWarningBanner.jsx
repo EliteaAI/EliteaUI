@@ -72,8 +72,8 @@ const budgetWarningBannerStyles = () => ({
     alignItems: 'center',
     gap: '0.5rem',
     padding: '0.375rem 0.75rem',
-    backgroundColor: palette.background.warning8,
-    border: `0.0625rem solid ${palette.background.warning40}`,
+    backgroundColor: palette.alert.warning.background,
+    border: `0.0625rem solid ${palette.alert.warning.border}`,
     borderRadius: BORDER_RADIUS.MD,
     marginBottom: '0.5rem',
   }),
@@ -89,10 +89,10 @@ const budgetWarningBannerStyles = () => ({
     wordBreak: 'break-word',
   }),
   link: ({ palette }) => ({
-    color: palette.text.createButton,
-    textDecorationColor: palette.text.createButton,
+    color: palette.text.accent,
+    textDecorationColor: palette.text.accent,
     '&:hover': {
-      color: palette.text.createButton,
+      color: palette.text.accent,
     },
   }),
   // Never shrinks away: the banner must stay dismissible at any width

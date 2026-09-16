@@ -504,7 +504,7 @@ const folderPermissionsTableStyles = () => ({
   },
   actionButton: ({ palette }) => ({
     '&:hover': {
-      backgroundColor: palette.background.button.secondary.hover,
+      backgroundColor: palette.background.surface.interactive.selected,
     },
     '&.Mui-disabled': {
       opacity: 0.5,
@@ -512,7 +512,7 @@ const folderPermissionsTableStyles = () => ({
   }),
   bulkEditButton: ({ palette }) => ({
     '&:hover': {
-      backgroundColor: palette.background.button.secondary.hover,
+      backgroundColor: palette.background.surface.interactive.selected,
     },
     '&.Mui-disabled': {
       opacity: 0.5,
@@ -540,7 +540,7 @@ const folderPermissionsTableStyles = () => ({
     gap: '1rem',
     margin: '0 1.5rem 1.5rem',
     borderRadius: '0.5rem',
-    backgroundColor: palette.background.surface.container,
+    backgroundColor: palette.background.panel,
   }),
   noResultsState: ({ palette }) => ({
     flex: 1,
@@ -550,7 +550,7 @@ const folderPermissionsTableStyles = () => ({
     justifyContent: 'center',
     margin: '0 1.5rem 1.5rem',
     borderRadius: '0.5rem',
-    backgroundColor: palette.background.surface.container,
+    backgroundColor: palette.background.panel,
   }),
   emptyStateWrapper: ({ palette }) => ({
     flex: 1,
@@ -569,7 +569,7 @@ const folderPermissionsTableStyles = () => ({
     paddingTop: '4rem',
     gap: '1rem',
     borderRadius: '0.5rem',
-    backgroundColor: palette.background.surface.container,
+    backgroundColor: palette.background.panel,
   }),
   emptyStateIcon: ({ palette }) => ({
     width: '2.5rem',

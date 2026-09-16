@@ -555,7 +555,7 @@ const servicePromptsSectionStyles = () => ({
     gap: spacing(1.5),
   }),
   card: ({ palette, breakpoints }) => ({
-    border: `0.0625rem solid ${palette.border.table}`,
+    border: `0.0625rem solid ${palette.border.default}`,
     backgroundColor: palette.background.default.secondary,
     borderRadius: '0.75rem',
     flex: '0 0 calc((100% - 1.5rem) / 3)',

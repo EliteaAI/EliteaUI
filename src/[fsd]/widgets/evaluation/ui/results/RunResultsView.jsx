@@ -302,7 +302,7 @@ const runResultsViewStyles = () => ({
   runLabelHeader: ({ palette }) => ({
     padding: '0.875rem 1.5rem',
     background: palette.background.default.secondary,
-    borderBottom: `0.0625rem solid ${palette.border.table}`,
+    borderBottom: `0.0625rem solid ${palette.border.default}`,
   }),
   runLabel: ({ palette }) => ({
     color: palette.text.secondary,

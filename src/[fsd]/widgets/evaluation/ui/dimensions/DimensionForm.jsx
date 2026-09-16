@@ -774,7 +774,7 @@ const dimensionFormStyles = () => ({
   evaluatorTag: ({ palette }) => ({
     padding: '0.25rem 0.5rem',
     borderRadius: '1.0625rem',
-    backgroundColor: palette.background.tabButton.default,
+    backgroundColor: palette.background.surface.interactive.default,
     border: `0.0625rem solid ${palette.border.lines}`,
     color: palette.text.secondary,
     fontSize: '0.875rem',
@@ -812,9 +812,9 @@ const dimensionFormStyles = () => ({
     alignItems: 'center',
     gap: '0.75rem',
     padding: '0.5rem 0.75rem',
-    backgroundColor: palette.background.indexResult.info,
+    backgroundColor: palette.alert.info.background,
     borderRadius: '0.5rem',
-    border: `0.0625rem solid ${palette.border.indexResult.info}`,
+    border: `0.0625rem solid ${palette.alert.info.border}`,
   }),
   safetyNoticeIcon: ({ palette }) => ({
     width: '0.875rem',
@@ -826,7 +826,7 @@ const dimensionFormStyles = () => ({
     },
   }),
   safetyNoticeText: ({ palette }) => ({
-    color: palette.text.indexResult.info,
+    color: palette.alert.info.text,
     fontSize: '0.75rem',
     lineHeight: '1.25rem',
     fontWeight: 400,

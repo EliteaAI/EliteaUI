@@ -502,7 +502,7 @@ const getStyles = (limitReached, isEditorFocused) => ({
     display: 'flex',
     flexDirection: 'column',
     borderRadius: '0.375rem',
-    border: `0.0625rem solid ${palette.border.table}`,
+    border: `0.0625rem solid ${palette.border.default}`,
     overflow: 'hidden',
     // react-codemirror renders a plain wrapper div; stretch it to fill this container
     '& > div': {
@@ -524,7 +524,7 @@ const getStyles = (limitReached, isEditorFocused) => ({
     },
     '& .cm-gutters': {
       backgroundColor: 'transparent',
-      borderRight: `0.0625rem solid ${palette.border.table}`,
+      borderRight: `0.0625rem solid ${palette.border.default}`,
     },
   }),
   preview: ({ palette }) => ({
@@ -534,7 +534,7 @@ const getStyles = (limitReached, isEditorFocused) => ({
     height: 'calc(100vh - 18rem)',
     padding: '0.75rem',
     borderRadius: '0.375rem',
-    border: `0.0625rem solid ${palette.border.table}`,
+    border: `0.0625rem solid ${palette.border.default}`,
     backgroundColor: palette.background.surface.interactive.default,
     overflow: 'auto',
     fontSize: '0.875rem',

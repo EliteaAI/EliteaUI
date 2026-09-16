@@ -174,7 +174,7 @@ const bucketStorageSelectorStyles = () => ({
       backgroundColor: palette.action.hover,
     },
     '&.Mui-selected': {
-      backgroundColor: palette.background.participant.active,
+      backgroundColor: palette.background.interactiveItem.active,
       '&:hover': {
         backgroundColor: palette.action.hover,
       },

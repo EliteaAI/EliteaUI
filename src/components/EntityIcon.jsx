@@ -1,6 +1,6 @@
 import React, { memo, useCallback, useState } from 'react';
 
-import { Box } from '@mui/material';
+import { Box, useTheme } from '@mui/material';
 
 import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks/useEnvironmentSettingByKey.hooks';
 import WelcomeImage from '@/assets/chat-welcome.png';
@@ -14,7 +14,6 @@ import EmojiIcon from '@/components/Icons/EmojiIcon';
 import FolderIcon from '@/components/Icons/FolderIcon';
 import ModelIcon from '@/components/Icons/ModelIcon';
 import UserIcon from '@/components/Icons/UserIcon';
-import { useTheme } from '@emotion/react';
 
 import EliteAImage from './EliteAImage';
 import EditIcon from './Icons/EditIcon';
@@ -218,7 +217,7 @@ const EntityIcon = memo(props => {
           <EditIcon
             onClick={onClickEdit}
             sx={styles.editIcon}
-            fill={theme.palette.primary.main}
+            fill={theme.palette.icon.accent}
           />
         )}
       </Box>
@@ -259,7 +258,10 @@ const entityIconStyles = (
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
-    background: showBackgroundColor && !hasIconUrl ? palette.background.icon.entityGradient : 'transparent',
+    background:
+      showBackgroundColor && !hasIconUrl
+        ? palette.components.entityIcon.background.entityGradient
+        : 'transparent',
     cursor: editable ? 'pointer' : undefined,
 
     // Use mask compositing to reveal only the gradient ring and keep the inner circle transparent.
@@ -271,7 +273,7 @@ const entityIconStyles = (
             inset: 0,
             borderRadius: 'inherit',
             padding: '0.0625rem',
-            background: palette.background.icon.entityBorderGradient,
+            background: palette.components.entityIcon.background.entityBorderGradient,
             WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
             WebkitMaskComposite: 'xor',
             maskComposite: 'exclude',

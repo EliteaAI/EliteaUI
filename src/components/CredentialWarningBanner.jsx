@@ -89,7 +89,7 @@ const getStyles = () => ({
     alignItems: 'flex-start',
     gap: '0.75rem',
     padding: '0.5rem 0.75rem',
-    backgroundColor: palette.background.errorBkg,
+    backgroundColor: palette.background.error,
     border: `0.0625rem solid ${palette.border.error}`,
     borderRadius: BORDER_RADIUS.MD,
     marginTop: '0.5rem',
@@ -102,14 +102,14 @@ const getStyles = () => ({
   }),
   text: ({ palette }) => ({
     flex: 1,
-    color: palette.text.warningText,
+    color: palette.text.warning,
     wordBreak: 'break-word',
   }),
   link: ({ palette }) => ({
-    color: palette.text.createButton,
-    textDecorationColor: palette.text.createButton,
+    color: palette.text.accent,
+    textDecorationColor: palette.text.accent,
     '&:hover': {
-      color: palette.text.createButton,
+      color: palette.text.accent,
     },
   }),
 });

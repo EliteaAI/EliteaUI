@@ -378,7 +378,7 @@ RunStateDialog.displayName = 'RunStateDialog';
 const runStateDialogStyles = (editorWidth, editorHeight) => ({
   dialogPaper: ({ palette }) => ({
     borderRadius: '0.5rem',
-    border: `0.0625rem solid ${palette.border.flowNode}`,
+    border: `0.0625rem solid ${palette.components.flowEditor.node.border}`,
     boxShadow: palette.boxShadow.default,
     position: 'absolute',
     top: 0,
@@ -414,7 +414,7 @@ const runStateDialogStyles = (editorWidth, editorHeight) => ({
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderBottom: `0.0625rem solid ${palette.border.flowNode}`,
+    borderBottom: `0.0625rem solid ${palette.components.flowEditor.node.border}`,
   }),
   headerActions: {
     height: '100%',
@@ -478,7 +478,7 @@ const runStateDialogStyles = (editorWidth, editorHeight) => ({
   }),
   stepper: ({ palette }) => ({
     padding: '1rem 1.5rem 1.75rem 1.5rem',
-    borderBottom: `0.0625rem solid ${palette.border.flowNode}`,
+    borderBottom: `0.0625rem solid ${palette.components.flowEditor.node.border}`,
     height: '3.375rem',
   }),
   step: {
@@ -494,7 +494,7 @@ const runStateDialogStyles = (editorWidth, editorHeight) => ({
   stepConnector: ({ palette }) => ({
     display: 'none',
     '.MuiStepConnector-line': {
-      borderColor: `${palette.border.flowNode} !important`,
+      borderColor: `${palette.components.flowEditor.node.border} !important`,
       marginLeft: '-1.0625rem',
       marginRight: '-1.0625rem',
       borderTopWidth: '0.375rem',
@@ -518,7 +518,7 @@ const runStateDialogStyles = (editorWidth, editorHeight) => ({
   statesHeader: ({ palette }) => ({
     padding: '0 1.5rem 0.75rem 1.5rem',
     height: '1.75rem',
-    borderBottom: `0.0625rem solid ${palette.border.flowNode}`,
+    borderBottom: `0.0625rem solid ${palette.components.flowEditor.node.border}`,
   }),
   statesContainer: {
     flex: 1,

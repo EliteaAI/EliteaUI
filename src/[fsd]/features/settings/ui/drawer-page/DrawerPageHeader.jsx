@@ -107,7 +107,7 @@ const getStyles = () => ({
     height: '3.8rem',
     minHeight: '3.8rem',
     width: '100%',
-    borderBottom: ({ palette }) => (showBorder ? `0.0625rem solid ${palette.border.table}` : undefined),
+    borderBottom: ({ palette }) => (showBorder ? `0.0625rem solid ${palette.border.default}` : undefined),
     boxSizing: 'border-box',
     display: 'flex',
     justifyContent: 'space-between',

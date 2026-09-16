@@ -172,10 +172,10 @@ const expandedPerticapantsListStyles = () => ({
     alignItems: 'center',
     width: '100%',
     height: '2.5rem',
-    background: palette.background.participant.default,
+    background: palette.background.surface.interactive.default,
 
     '&:hover': {
-      background: palette.background.tabButton.hover,
+      background: palette.background.interactiveItem.hover,
     },
 
     padding: '.375rem .75rem',

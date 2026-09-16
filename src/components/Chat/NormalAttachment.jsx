@@ -260,7 +260,7 @@ const normalAttachmentStyles = () => ({
     gap: '.75rem',
     padding: '.375rem .75rem',
     alignItems: 'center',
-    background: palette.background.button.default,
+    background: palette.background.interactiveItem.hover,
   }),
   contentContainer: {
     flex: 1,

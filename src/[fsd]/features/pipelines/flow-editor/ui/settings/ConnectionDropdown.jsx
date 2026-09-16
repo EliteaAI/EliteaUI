@@ -323,7 +323,7 @@ const connectionDropdownStyles = () => ({
     borderRadius: '0.625rem',
     gap: '0.5rem',
     '&:hover': {
-      backgroundColor: palette.background.conversation.hover,
+      backgroundColor: palette.background.interactiveItem.hover,
     },
   }),
   gridListItemTextPrimary: {

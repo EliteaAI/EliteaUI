@@ -392,8 +392,8 @@ const nodeCardHeaderStyles = () => ({
     padding: '.25rem .5rem',
     borderRadius: '1.3125rem',
     width: '6.75rem',
-    color: ({ palette }) => palette.text.deprecated,
-    backgroundColor: ({ palette }) => palette.background.deprecated,
+    color: ({ palette }) => palette.components.deprecated.text,
+    backgroundColor: ({ palette }) => palette.components.deprecated.background,
     cursor: 'pointer',
   },
   entrypointIconStyle: {
@@ -408,7 +408,7 @@ const nodeCardHeaderStyles = () => ({
     borderRadius: '.25rem',
     padding: '.25rem',
     boxSizing: 'border-box',
-    border: `.0625rem solid ${palette.border.flowNode}`,
+    border: `.0625rem solid ${palette.components.flowEditor.node.border}`,
   }),
   nameText: ({ palette }) => ({
     flex: 1,

@@ -144,7 +144,7 @@ const getStyles = () => ({
     width: SettingsLayoutConstants.SETTINGS_LAYOUT.DRAWER_WIDTH,
     minWidth: SettingsLayoutConstants.SETTINGS_LAYOUT.DRAWER_WIDTH,
     maxWidth: SettingsLayoutConstants.SETTINGS_LAYOUT.DRAWER_WIDTH,
-    borderRight: `0.0625rem solid ${palette.border.table}`,
+    borderRight: `0.0625rem solid ${palette.border.default}`,
     backgroundColor: palette.background.default.tertiary,
     display: 'flex',
     flexDirection: 'column',
@@ -154,7 +154,7 @@ const getStyles = () => ({
 
   header: ({ palette }) => ({
     padding: '1rem 1rem 1.1875rem 1.5rem',
-    borderBottom: `0.0625rem solid ${palette.border.table}`,
+    borderBottom: `0.0625rem solid ${palette.border.default}`,
   }),
 
   headerText: ({ palette }) => ({
@@ -189,7 +189,7 @@ const getStyles = () => ({
   }),
 
   sectionDivider: ({ palette }) => ({
-    borderColor: palette.border.table,
+    borderColor: palette.border.default,
     margin: 0,
   }),
 
@@ -205,13 +205,13 @@ const getStyles = () => ({
       height: '2rem',
       background: isActive
         ? palette.background.surface.interactive.active
-        : palette.background.conversation.normal,
+        : palette.background.surface.interactive.default,
       borderRadius: '0.375rem',
       cursor: 'pointer',
       transition: 'all 0.2s ease-in-out',
       boxSizing: 'border-box',
       '&:hover': {
-        backgroundColor: palette.background.conversation.hover,
+        backgroundColor: palette.background.interactiveItem.hover,
       },
     }),
 
@@ -221,9 +221,9 @@ const getStyles = () => ({
       display: 'flex',
       alignItems: 'center',
       minWidth: '1rem',
-      color: isActive ? palette.text.secondary : palette.icon.stateButtonHover,
+      color: isActive ? palette.text.secondary : palette.icon.default,
       '& svg': {
-        fill: isActive ? palette.text.secondary : palette.icon.stateButtonHover,
+        fill: isActive ? palette.text.secondary : palette.icon.default,
         width: '1rem',
         height: '1rem',
       },

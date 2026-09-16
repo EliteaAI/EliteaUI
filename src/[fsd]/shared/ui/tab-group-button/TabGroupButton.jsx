@@ -107,25 +107,25 @@ const tabGroupButtonStyle = () => ({
 export const colorTabGroupButtonStyle = theme => ({
   [TAB_GROUP_BUTTON.elitea]: {
     default: {
-      color: theme.palette.text.tabButton.default,
-      fill: theme.palette.text.tabButton.default,
-      background: theme.palette.background.tabButton.default,
+      color: theme.palette.components.tabGroupButton.text.default,
+      fill: theme.palette.components.tabGroupButton.text.default,
+      background: theme.palette.components.tabGroupButton.background.default,
     },
     hover: {
-      color: theme.palette.text.tabButton.hover,
-      fill: theme.palette.text.tabButton.hover,
-      background: theme.palette.background.tabButton.hover,
+      color: theme.palette.components.tabGroupButton.text.hover,
+      fill: theme.palette.components.tabGroupButton.text.hover,
+      background: theme.palette.components.tabGroupButton.background.hover,
     },
     active: {
-      color: theme.palette.text.tabButton.active,
-      fill: theme.palette.text.tabButton.active,
-      pressed: theme.palette.background.button.secondary.pressed,
-      background: theme.palette.background.tabButton.active,
+      color: theme.palette.components.tabGroupButton.text.active,
+      fill: theme.palette.components.tabGroupButton.text.active,
+      pressed: theme.palette.background.surface.interactive.selected,
+      background: theme.palette.components.tabGroupButton.background.active,
     },
     disabled: {
-      color: theme.palette.text.tabButton.disabled,
-      fill: theme.palette.text.tabButton.disabled,
-      background: theme.palette.background.tabButton.disabled,
+      color: theme.palette.components.tabGroupButton.text.disabled,
+      fill: theme.palette.components.tabGroupButton.text.disabled,
+      background: theme.palette.components.tabGroupButton.background.disabled,
     },
   },
 });

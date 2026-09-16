@@ -205,7 +205,7 @@ const imageAttachmentStyles = () => ({
     borderRadius: '0.5rem',
     overflow: 'hidden',
     position: 'relative',
-    background: palette.background.button.default,
+    background: palette.background.surface.interactive.default,
     '& .attachActionButtons': {
       visibility: 'hidden',
       position: 'absolute',
@@ -218,7 +218,7 @@ const imageAttachmentStyles = () => ({
       justifyContent: 'center',
       padding: '0.5rem',
       gap: '0.75rem',
-      background: palette.background.imageAttachment,
+      background: palette.components.imageAttachment.background,
     },
     '&:hover .attachActionButtons': {
       visibility: 'visible',

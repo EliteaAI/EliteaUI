@@ -146,11 +146,11 @@ const dimensionCardStyles = () => ({
     height: '2.625rem',
     padding: '0.5rem 1rem',
     borderRadius: '0.75rem',
-    border: `0.0625rem solid ${palette.border.cardsOutlines}`,
-    backgroundColor: palette.background.aiProviderAccordion.default,
+    border: `0.0625rem solid ${palette.border.default}`,
+    backgroundColor: palette.background.default.secondary,
     gap: '0.625rem',
     '&:hover': {
-      backgroundColor: palette.background.aiProviderAccordion.hover,
+      backgroundColor: palette.background.interactiveItem.hover,
       borderColor: palette.border.lines,
     },
     '&:hover .dimension-card-actions': {
@@ -186,7 +186,7 @@ const dimensionCardStyles = () => ({
     borderRadius: '1.0625rem',
     color: palette.text.primary,
     backgroundColor: 'transparent',
-    border: `0.0625rem solid ${palette.background.tabButton.default}`,
+    border: `0.0625rem solid ${palette.border.lines}`,
     fontSize: '0.75rem',
     lineHeight: '1rem',
     whiteSpace: 'nowrap',
@@ -207,7 +207,7 @@ const dimensionCardStyles = () => ({
     borderRadius: '1rem',
     color: palette.icon.default,
     '&:hover': {
-      backgroundColor: palette.background.tabButton.default,
+      backgroundColor: palette.background.surface.interactive.default,
     },
     '&:hover svg path': {
       fill: palette.icon.secondary,

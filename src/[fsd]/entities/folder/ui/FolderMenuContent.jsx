@@ -171,7 +171,7 @@ const folderMenuContentStyles = () => {
       gap: '0.75rem',
     }),
     activeMenuItem: ({ palette }) => ({
-      backgroundColor: palette.background.participant.active,
+      backgroundColor: palette.background.interactiveItem.active,
     }),
     menuItemIcon: {
       flex: '0 0 auto',

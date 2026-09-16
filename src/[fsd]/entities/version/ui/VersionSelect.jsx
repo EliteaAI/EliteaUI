@@ -243,7 +243,7 @@ const versionSelectStyles = () => ({
     fontWeight: 500,
     fontSize: '.75rem',
     lineHeight: '1rem',
-    color: palette.text.deafult,
+    color: palette.text.secondary,
   }),
   selectContainer: {
     display: 'inline-block',

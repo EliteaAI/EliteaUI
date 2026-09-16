@@ -71,16 +71,16 @@ const variantBannerMessagePalette = ({ palette }) => ({
     text: palette.text.attention,
   },
   [VARIANT_MAPPING.ERROR]: {
-    iconColor: palette.background.button.danger,
-    background: palette.background.errorBkg,
-    border: palette.background.wrongBkg,
-    text: palette.text.warningText,
+    iconColor: palette.icon.error,
+    background: palette.background.error,
+    border: palette.border.error,
+    text: palette.text.warning,
   },
   [VARIANT_MAPPING.INFO]: {
     iconColor: palette.icon.tips,
     border: palette.border.tips,
     text: palette.text.tips,
-    background: palette.background.tips.main,
+    background: palette.alert.info.background,
   },
 });
 

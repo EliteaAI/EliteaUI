@@ -223,7 +223,7 @@ const UnifiedDropdown = memo(
                     <Box sx={styles.searchInnerContainer}>
                       <SearchIcon
                         style={styles.searchIcon}
-                        fill={theme.palette.text.secondary}
+                        fill={theme.palette.icon.secondary}
                       />
                       <TextField
                         data-testid="toolkit-search-input"
@@ -560,7 +560,7 @@ const styles = {
     gap: DROPDOWN_CONSTANTS.SPACING.ITEM_ICON_TEXT_GAP,
     color: palette.text.primary,
     '&:hover': {
-      backgroundColor: palette.background.select.hover,
+      backgroundColor: palette.background.interactiveItem.hover,
     },
   }),
 
@@ -575,7 +575,7 @@ const styles = {
       cursor: isDisabled ? 'not-allowed' : 'pointer',
       opacity: isDisabled ? 0.9 : 1,
       '&:hover': {
-        backgroundColor: isDisabled ? 'transparent' : palette.background.select.hover,
+        backgroundColor: isDisabled ? 'transparent' : palette.background.interactiveItem.hover,
       },
       '&.Mui-disabled': {
         opacity: 0.9,

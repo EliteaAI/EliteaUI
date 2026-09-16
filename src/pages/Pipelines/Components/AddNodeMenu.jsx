@@ -199,7 +199,7 @@ const componentStyles = () => ({
     minHeight: '3rem',
     borderRadius: '0.625rem',
     '&:hover': {
-      backgroundColor: palette.background.conversation.hover,
+      backgroundColor: palette.background.interactiveItem.rowHover,
     },
   }),
   listItemIcon: ({ palette }) => ({

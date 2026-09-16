@@ -144,7 +144,7 @@ const runHistoryActionsMenuStyles = () => ({
     padding: 0,
     borderRadius: '50%',
     '&:hover': {
-      backgroundColor: palette.background.tabButton.default,
+      backgroundColor: palette.background.surface.interactive.default,
     },
   }),
   triggerIcon: ({ palette }) => ({
@@ -169,7 +169,7 @@ const runHistoryActionsMenuStyles = () => ({
     padding: '0.5rem 1rem',
     backgroundColor: palette.background.default.secondary,
     '&:hover': {
-      backgroundColor: palette.background.tabButton.default,
+      backgroundColor: palette.background.surface.interactive.default,
     },
   }),
   menuIcon: ({ palette }) => ({

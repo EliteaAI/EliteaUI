@@ -577,11 +577,11 @@ const plusChatButtonStyles = theme => ({
     cursor: 'pointer',
 
     '&:hover': {
-      backgroundColor: theme.palette.background.select.hover,
+      backgroundColor: theme.palette.background.interactiveItem.hover,
     },
 
     '&:active': {
-      backgroundColor: theme.palette.background.tabButton.active,
+      backgroundColor: theme.palette.background.surface.interactive.active,
     },
 
     '& .MuiFormControlLabel-label': {

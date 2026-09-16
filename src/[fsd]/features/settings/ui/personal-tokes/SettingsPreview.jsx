@@ -255,7 +255,7 @@ const stylesSettingsPreview = () => ({
     flex: 1,
     overflow: 'hidden',
     position: 'relative',
-    backgroundColor: palette.background.primary,
+    backgroundColor: palette.background.default.primary,
     minHeight: 0,
   }),
   selectContainer: {

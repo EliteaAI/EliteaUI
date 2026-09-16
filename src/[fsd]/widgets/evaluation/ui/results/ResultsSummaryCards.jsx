@@ -99,7 +99,7 @@ const resultsSummaryCardsStyles = () => ({
     boxSizing: 'border-box',
   }),
   cardHighlighted: ({ palette }) => ({
-    backgroundColor: palette.background.card.highlighted,
+    backgroundColor: palette.background.selectedItem.default,
   }),
   cardLabel: ({ palette }) => ({
     fontSize: '0.75rem',

@@ -287,8 +287,8 @@ const toolActionsSelectorStyles = () => ({
     gap: '0.5rem',
     padding: '0.5rem 0.75rem',
     borderRadius: '0.75rem',
-    backgroundColor: palette.background.tabButton.default,
-    border: `0.0625rem solid ${palette.border.cardsOutlines}`,
+    backgroundColor: palette.background.surface.interactive.default,
+    border: `0.0625rem solid ${palette.border.lines}`,
   }),
   mcpToggleIcon: ({ palette }) => ({
     width: '1.25rem',
@@ -332,17 +332,17 @@ const toolActionsSelectorStyles = () => ({
     disabled =>
     ({ palette }) => ({
       display: 'inline-block',
-      color: !disabled ? palette.text.secondary : palette.text.button.disabled,
+      color: !disabled ? palette.text.secondary : palette.text.disabled,
       cursor: !disabled ? 'pointer' : 'default',
       height: '1.75rem',
       boxSizing: 'border-box',
       padding: '0.375rem 1rem',
       borderRadius: '1.75rem',
-      backgroundColor: palette.background.button.secondary.default,
+      backgroundColor: palette.background.surface.interactive.default,
       transition: 'all 0.2s',
       userSelect: 'none',
       '&:hover': {
-        backgroundColor: !disabled ? palette.background.button.secondary.hover : undefined,
+        backgroundColor: !disabled ? palette.background.interactiveItem.hover : undefined,
       },
       '&:active': {
         transform: 'scale(0.98)',

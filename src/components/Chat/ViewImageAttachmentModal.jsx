@@ -231,8 +231,8 @@ const styles = {
   },
   dialogContent: ({ palette }) => ({
     background: palette.background.default.tertiary,
-    borderBottom: `1px solid ${palette.border.table}`,
-    borderTop: `1px solid ${palette.border.table}`,
+    borderBottom: `1px solid ${palette.border.default}`,
+    borderTop: `1px solid ${palette.border.default}`,
     width: '100%',
     padding: '0.9375rem 2.5rem',
     boxSizing: 'border-box',
