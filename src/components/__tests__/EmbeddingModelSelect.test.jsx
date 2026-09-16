@@ -135,7 +135,10 @@ describe('EmbeddingModelSelect', () => {
   });
 
   it('still auto-repairs a saved model that no longer exists', async () => {
+    expect(MODELS.map(model => model.name)).not.toContain(DELETED_MODEL);
+
     renderSelect({ value: DELETED_MODEL });
+    await whenOptionsLoaded();
 
     await waitFor(() =>
       expect(onSelectModel).toHaveBeenCalledWith(PROJECT_DEFAULT_MODEL, { isAutoSelect: true }),
