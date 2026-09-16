@@ -34,6 +34,10 @@ export const IndexStatuses = {
   runTest: 'run_test',
 };
 
+export const BannerIcon = {
+  attention: 'attention',
+};
+
 export const BannerSeverity = {
   warning: 'warning',
   error: 'error',
@@ -60,6 +64,17 @@ export const BannerMessageMap = {
     "Indexing may take a few minutes depending on size. You can navigate to other sections; indexing will continue in the background and you'll be notified when it's done.",
 };
 
+export const INDEX_PARTIAL_BANNER_TITLE = 'Partially indexed';
+
+export const INDEX_PARTIAL_BANNER_SUFFIX =
+  'The index is searchable, but some items are missing. Check History for details.';
+
+export const INDEX_PARTIAL_BANNER_MESSAGE = `Some items could not be indexed. ${INDEX_PARTIAL_BANNER_SUFFIX}`;
+
+export const INDEX_FAILURE_BANNER_PREFIX = 'Indexing failed:';
+
+export const INDEX_FAILURE_BANNER_SUFFIX = 'See History for error details.';
+
 export const REINDEX_IN_PROGRESS_BANNER_TITLE = 'Reindexing in progress';
 
 export const REINDEX_IN_PROGRESS_BANNER_MESSAGE =
@@ -69,9 +84,10 @@ export const REINDEX_FAILED_BANNER_TITLE = 'Reindex failed';
 
 export const INDEX_RETAINED_DATA_MESSAGE = 'Previously indexed data remains available for search.';
 
-export const REINDEX_FAILED_BANNER_MESSAGE =
-  `The new indexing attempt could not be completed. ${INDEX_RETAINED_DATA_MESSAGE} ` +
+export const REINDEX_FAILED_GUIDANCE =
   'Check History for error details and try again after resolving the issue.';
+
+export const REINDEX_FAILED_BANNER_MESSAGE = `The new indexing attempt could not be completed. ${INDEX_RETAINED_DATA_MESSAGE} ${REINDEX_FAILED_GUIDANCE}`;
 
 // Shown while the run looks interrupted but the platform still considers it live, so the
 // panel offers Stop and the server would refuse a Reindex.

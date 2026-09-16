@@ -519,7 +519,14 @@ const RunIndexPanel = memo(props => {
 
   const reindexStats = useMemo(() => {
     const md = index?.metadata;
-    if (!md) return { isReindex: false, updatedOn: null, firstEntry: null, latestEntry: null };
+    if (!md)
+      return {
+        isReindex: false,
+        updatedOn: null,
+        firstEntry: null,
+        latestEntry: null,
+        currentRunEntry: null,
+      };
 
     const completedRuns = Array.isArray(md.history)
       ? md.history.filter(h => RUNNABLE_INDEX_STATUSES.includes(h?.state))
@@ -533,6 +540,7 @@ const RunIndexPanel = memo(props => {
       updatedOn: md.updated_on ?? null,
       firstEntry: sortedHistory[0] ?? null,
       latestEntry,
+      currentRunEntry: md,
     };
   }, [index?.metadata]);
   const runInFlight = isIndexing || isAwaitingTaskStart;

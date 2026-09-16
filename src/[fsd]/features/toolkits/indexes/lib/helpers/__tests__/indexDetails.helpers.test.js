@@ -8,14 +8,20 @@ import {
 import {
   BannerMessageMap,
   BannerSeverity,
+  BannerTitleMap,
   INDEX_ABANDONED_BANNER_MESSAGE,
   INDEX_DATA_DISABLED_REASON,
+  INDEX_FAILURE_BANNER_SUFFIX,
+  INDEX_PARTIAL_BANNER_MESSAGE,
+  INDEX_PARTIAL_BANNER_SUFFIX,
+  INDEX_PARTIAL_BANNER_TITLE,
   INDEX_RETAINED_DATA_MESSAGE,
   INDEX_SEARCH_TOOL_OPTIONS,
   INDEX_UNRESPONSIVE_BANNER_MESSAGE,
   IndexStatuses,
   REINDEX_FAILED_BANNER_MESSAGE,
   REINDEX_FAILED_BANNER_TITLE,
+  REINDEX_FAILED_GUIDANCE,
   REINDEX_IN_PROGRESS_BANNER_MESSAGE,
   REINDEX_IN_PROGRESS_BANNER_TITLE,
 } from '../../constants/indexDetails.constants';
@@ -296,7 +302,7 @@ describe('bannerVariant — retained data', () => {
       isIndexing: false,
       state: IndexStatuses.fail,
       reindexStats: NO_STATS,
-      error: 'boom',
+      error: undefined,
       isStale: false,
       retention: retention(),
     });
@@ -306,12 +312,42 @@ describe('bannerVariant — retained data', () => {
     expect(banner.message).toBe(REINDEX_FAILED_BANNER_MESSAGE);
   });
 
-  it('names the last successful run when the backend reports one', () => {
+  it('states the data survived beside the reason the run gave, and still names the retry guidance', () => {
     const banner = bannerVariant({
       isIndexing: false,
       state: IndexStatuses.fail,
       reindexStats: NO_STATS,
       error: 'boom',
+      isStale: false,
+      retention: retention(),
+    });
+
+    expect(banner.message).toContain('boom');
+    expect(banner.message).toContain(INDEX_RETAINED_DATA_MESSAGE);
+    expect(banner.message).toContain(REINDEX_FAILED_GUIDANCE);
+  });
+
+  it('leaves budget copy unwrapped, since it carries its own remedy', () => {
+    const budgetError = `Budget reached. code: ${BUDGET_ERROR_CODES.PROJECT}`;
+    const banner = bannerVariant({
+      isIndexing: false,
+      state: IndexStatuses.fail,
+      reindexStats: NO_STATS,
+      error: budgetError,
+      isStale: false,
+      retention: retention(),
+    });
+
+    expect(banner.message).toContain(BUDGET_ERROR_VARIANTS[BUDGET_ERROR_CODES.PROJECT].message);
+    expect(banner.message).not.toContain(REINDEX_FAILED_GUIDANCE);
+  });
+
+  it('names the last successful run when the backend reports one', () => {
+    const banner = bannerVariant({
+      isIndexing: false,
+      state: IndexStatuses.fail,
+      reindexStats: NO_STATS,
+      error: undefined,
       isStale: false,
       retention: retention({
         lastSuccessfulRun: { updated_on: 1_756_360_800, state: 'completed', indexed: 12 },
@@ -417,6 +453,154 @@ describe('bannerVariant — retained data', () => {
     expect(banner.label).toBe(REINDEX_FAILED_BANNER_TITLE);
     expect(banner.message).toContain(BUDGET_ERROR_VARIANTS[BUDGET_ERROR_CODES.PROJECT].message);
     expect(banner.message).toMatch(/Previously indexed data remains available for search\./);
+  });
+});
+
+describe('bannerVariant — failure cause', () => {
+  const NO_STATS = { isReindex: false };
+  const SDK_RENDERED_REPORT_STORED_AS_ERROR = [
+    'Failed to index documents.',
+    '✅ 0 documents indexed',
+    '⚠ 4 documents skipped',
+    '    → Excluded by configured filters (4): a.md, b.md',
+    'Errors:',
+    '    → Permission denied: /docs/secret.md',
+  ].join('\n');
+
+  const failedRow = errors => ({
+    ...NO_STATS,
+    currentRunEntry: {
+      state: IndexStatuses.fail,
+      report: { status: 'error', totals: {}, categories: [], errors, errors_total: errors.length },
+    },
+  });
+
+  it('names the error the run recorded instead of blaming the source connection', () => {
+    const banner = bannerVariant({
+      isIndexing: false,
+      state: IndexStatuses.fail,
+      reindexStats: failedRow(['Permission denied: /docs/secret.md']),
+      error: SDK_RENDERED_REPORT_STORED_AS_ERROR,
+    });
+
+    expect(banner.message).toContain('Permission denied: /docs/secret.md');
+    expect(banner.message).not.toMatch(/source connection/i);
+  });
+
+  it('never renders the whole stored report in the banner, which has no clamp or scroll', () => {
+    const banner = bannerVariant({
+      isIndexing: false,
+      state: IndexStatuses.fail,
+      reindexStats: NO_STATS,
+      error: SDK_RENDERED_REPORT_STORED_AS_ERROR,
+    });
+
+    expect(banner.message).not.toContain('\n');
+    expect(banner.message).not.toContain('Errors:');
+    expect(banner.message).not.toContain('Excluded by configured filters');
+  });
+
+  it('clamps a cause too long for one paragraph', () => {
+    const banner = bannerVariant({
+      isIndexing: false,
+      state: IndexStatuses.fail,
+      reindexStats: NO_STATS,
+      error: 'x'.repeat(600),
+    });
+
+    expect(banner.message.length).toBeLessThan(300);
+    expect(banner.message).toContain('…');
+  });
+
+  it('keeps budget wording ahead of the reported error', () => {
+    const budgetError = `Budget reached. code: ${BUDGET_ERROR_CODES.PROJECT}`;
+    const banner = bannerVariant({
+      isIndexing: false,
+      state: IndexStatuses.fail,
+      reindexStats: failedRow(['Permission denied']),
+      error: budgetError,
+    });
+
+    expect(banner.message).toBe(BUDGET_ERROR_VARIANTS[BUDGET_ERROR_CODES.PROJECT].message);
+    expect(banner.message).not.toContain(INDEX_FAILURE_BANNER_SUFFIX);
+  });
+
+  it("names the row's own error over a report left behind by the previous run", () => {
+    const stats = {
+      currentRunEntry: {
+        state: IndexStatuses.fail,
+        error: 'Toolkit credentials could not be resolved',
+        report: {
+          status: 'partly_indexed',
+          totals: { indexed: 179 },
+          categories: [],
+          errors: ['Permission denied: /docs/secret.md'],
+          errors_total: 1,
+        },
+      },
+    };
+    const banner = bannerVariant({
+      isIndexing: false,
+      state: IndexStatuses.fail,
+      reindexStats: stats,
+      error: 'Toolkit credentials could not be resolved',
+    });
+
+    expect(banner.message).toContain('Toolkit credentials could not be resolved');
+    expect(banner.message).not.toContain('Permission denied');
+  });
+
+  it("names this run's error when a previous failure left a report behind", () => {
+    const stats = {
+      ...NO_STATS,
+      currentRunEntry: {
+        state: IndexStatuses.fail,
+        error: 'Toolkit credentials could not be resolved for toolkit 42',
+        report: {
+          status: 'error',
+          totals: {},
+          categories: [],
+          errors: ['Permission denied: /docs/secret.md'],
+          errors_total: 1,
+        },
+      },
+    };
+    const banner = bannerVariant({
+      isIndexing: false,
+      state: IndexStatuses.fail,
+      reindexStats: stats,
+      error: 'Toolkit credentials could not be resolved for toolkit 42',
+    });
+
+    expect(banner.message).toContain('Toolkit credentials could not be resolved for toolkit 42');
+    expect(banner.message).not.toContain('Permission denied');
+  });
+
+  it('falls back to the static copy when the run recorded no cause', () => {
+    const banner = bannerVariant({
+      isIndexing: false,
+      state: IndexStatuses.fail,
+      reindexStats: NO_STATS,
+      error: undefined,
+    });
+
+    expect(banner.message).toBe(BannerMessageMap[BannerSeverity.error]);
+  });
+
+  it("prefers the run's own report over latestEntry, which is the previous success", () => {
+    const stats = {
+      ...failedRow(['Permission denied: /docs/secret.md']),
+      latestEntry: { state: IndexStatuses.success, report: { status: 'ok', errors: ['stale error'] } },
+    };
+    const banner = bannerVariant({
+      isIndexing: false,
+      state: IndexStatuses.fail,
+      reindexStats: stats,
+      error: SDK_RENDERED_REPORT_STORED_AS_ERROR,
+    });
+
+    expect(banner.message).toContain('Permission denied');
+    expect(banner.message).not.toContain('stale error');
   });
 });
 
@@ -1161,7 +1345,7 @@ describe('bannerVariant — budget blocks', () => {
 });
 
 describe('bannerVariant — everything else is unchanged', () => {
-  it('keeps the generic copy for a non-budget failure', () => {
+  it('names a non-budget failure instead of guessing at the source connection', () => {
     const banner = bannerVariant({
       isIndexing: false,
       state: IndexStatuses.fail,
@@ -1169,7 +1353,8 @@ describe('bannerVariant — everything else is unchanged', () => {
       error: 'Connection refused by the source',
     });
 
-    expect(banner.message).toBe(GENERIC_FAILURE);
+    expect(banner.message).toContain('Connection refused by the source');
+    expect(banner.message).not.toBe(GENERIC_FAILURE);
   });
 
   it.each([
@@ -1295,6 +1480,55 @@ const runEntry = totals => ({
   },
 });
 
+const partialEntry = totals => {
+  const entry = runEntry(totals);
+  return { ...entry, state: IndexStatuses.partlyOk, report: { ...entry.report, status: 'partly_indexed' } };
+};
+
+describe('bannerVariant — partly indexed', () => {
+  const partialBanner = totals =>
+    bannerVariant({
+      isIndexing: false,
+      state: IndexStatuses.partlyOk,
+      reindexStats: { latestEntry: totals === null ? null : partialEntry(totals) },
+    });
+
+  it('never calls a partly indexed run ready', () => {
+    const banner = partialBanner({ indexed: 179, skipped: 12, failed: 3, total: 194 });
+
+    expect(banner.severity).not.toBe(BannerSeverity.success);
+    expect(banner.label).not.toBe(BannerTitleMap[BannerSeverity.success]);
+  });
+
+  it('names the partial outcome in its own title', () => {
+    const banner = partialBanner({ indexed: 179, skipped: 12, failed: 3, total: 194 });
+
+    expect(banner.severity).toBe(BannerSeverity.warning);
+    expect(banner.label).toBe(INDEX_PARTIAL_BANNER_TITLE);
+    expect(banner.label).not.toBe(BannerTitleMap[BannerSeverity.warning]);
+  });
+
+  it("keeps the run's own skipped and failed counts, which a replacing headline would drop", () => {
+    const banner = partialBanner({ indexed: 179, skipped: 12, failed: 3, total: 194 });
+
+    expect(banner.message).toContain('179 pages indexed');
+    expect(banner.message).toContain('12 pages skipped');
+    expect(banner.message).toContain('3 pages failed');
+    expect(banner.message).not.toContain('Partially indexed');
+    expect(banner.message).toContain(INDEX_PARTIAL_BANNER_SUFFIX);
+  });
+
+  it('falls back to the generic partial copy when a run carries no report', () => {
+    expect(partialBanner(null).message).toBe(INDEX_PARTIAL_BANNER_MESSAGE);
+  });
+
+  it('survives its run, so a revisit does not look untouched', () => {
+    const banner = partialBanner({ indexed: 179, failed: 3, total: 182 });
+
+    expect(bannerOutlivesRun(banner.severity)).toBe(true);
+  });
+});
+
 describe('bannerVariant — success copy', () => {
   it('describes the run in the source\u2019s own units', () => {
     const banner = bannerVariant({
@@ -1323,19 +1557,17 @@ describe('bannerVariant — success copy', () => {
     expect(banner.message).not.toContain('0 pages');
   });
 
-  it('applies to scheduled and partial runs, not just completed ones', () => {
-    for (const state of [IndexStatuses.scheduledReindex, IndexStatuses.partlyOk]) {
-      const banner = bannerVariant({
-        isIndexing: false,
-        state,
-        reindexStats: {
-          latestEntry: runEntry({ indexed: 5, total: 5 }),
-        },
-      });
+  it('applies to a scheduled reindex, not just a manual completion', () => {
+    const banner = bannerVariant({
+      isIndexing: false,
+      state: IndexStatuses.scheduledReindex,
+      reindexStats: {
+        latestEntry: runEntry({ indexed: 5, total: 5 }),
+      },
+    });
 
-      expect(banner.severity).toBe(BannerSeverity.success);
-      expect(banner.message).toContain('5 pages indexed');
-    }
+    expect(banner.severity).toBe(BannerSeverity.success);
+    expect(banner.message).toContain('5 pages indexed');
   });
 
   it('falls back to the generic copy when a run carries no report', () => {

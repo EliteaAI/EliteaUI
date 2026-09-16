@@ -1,6 +1,7 @@
-import { summarizeIndexingReport } from '@/[fsd]/entities/indexing-report';
+import { resolveIndexingReport, summarizeIndexingReport } from '@/[fsd]/entities/indexing-report';
 import {
   BANNER_SUCCESS_SUFFIX,
+  BannerIcon,
   BannerMessageMap,
   BannerSeverity,
   BannerTitleMap,
@@ -8,6 +9,11 @@ import {
   INDEX_ABANDONED_TOOLTIP,
   INDEX_DATA_DISABLED_REASON,
   INDEX_DOCS_RATIO_TOOLTIP,
+  INDEX_FAILURE_BANNER_PREFIX,
+  INDEX_FAILURE_BANNER_SUFFIX,
+  INDEX_PARTIAL_BANNER_MESSAGE,
+  INDEX_PARTIAL_BANNER_SUFFIX,
+  INDEX_PARTIAL_BANNER_TITLE,
   INDEX_REINDEXED_RATIO_TOOLTIP,
   INDEX_RETAINED_DATA_MESSAGE,
   INDEX_RUN_CHUNKS_TOOLTIP,
@@ -18,6 +24,7 @@ import {
   IndexesToolsEnum,
   REINDEX_FAILED_BANNER_MESSAGE,
   REINDEX_FAILED_BANNER_TITLE,
+  REINDEX_FAILED_GUIDANCE,
   REINDEX_IN_PROGRESS_BANNER_MESSAGE,
   REINDEX_IN_PROGRESS_BANNER_TITLE,
   RUNNABLE_INDEX_STATUSES,
@@ -33,6 +40,31 @@ export const budgetErrorMessage = error => {
   const code = Object.keys(BUDGET_ERROR_VARIANTS).find(scope => error.includes(scope));
 
   return code ? BUDGET_ERROR_VARIANTS[code].message : null;
+};
+
+const STORED_ERROR_MAX_LENGTH = 200;
+const SENTENCE_TERMINATORS = ['.', '!', '?', '…'];
+
+const asBannerSentence = text => {
+  if (typeof text !== 'string') return null;
+
+  const [firstLine = ''] = text.split('\n');
+  const trimmed = firstLine.trim();
+  if (!trimmed) return null;
+
+  if (trimmed.length > STORED_ERROR_MAX_LENGTH) {
+    return `${trimmed.slice(0, STORED_ERROR_MAX_LENGTH).trimEnd()}…`;
+  }
+
+  return SENTENCE_TERMINATORS.some(mark => trimmed.endsWith(mark)) ? trimmed : `${trimmed}.`;
+};
+
+export const reportedFailureMessage = (error, currentRunEntry) => {
+  const sampled = resolveIndexingReport(currentRunEntry)?.errors?.[0];
+  const errorWasRenderedFromThisReport =
+    typeof error === 'string' && typeof sampled === 'string' && error.includes(sampled);
+
+  return errorWasRenderedFromThisReport ? asBannerSentence(sampled) : asBannerSentence(error);
 };
 
 export const formatDate = ts => {
@@ -90,10 +122,12 @@ export const bannerVariant = ({
     // A budget block is not a source-connection problem, and Reindex cannot succeed
     // until the budget resets — the default copy would send the user the wrong way
     const budgetMessage = budgetErrorMessage(error);
+    const reportedCause = budgetMessage ? null : reportedFailureMessage(error, reindexStats?.currentRunEntry);
     if (hasRetainedData) {
-      const cause = budgetMessage
-        ? `${budgetMessage} ${INDEX_RETAINED_DATA_MESSAGE}`
-        : REINDEX_FAILED_BANNER_MESSAGE;
+      const budgetCause = budgetMessage && `${budgetMessage} ${INDEX_RETAINED_DATA_MESSAGE}`;
+      const reportedFailureCause =
+        reportedCause && `${reportedCause} ${INDEX_RETAINED_DATA_MESSAGE} ${REINDEX_FAILED_GUIDANCE}`;
+      const cause = budgetCause || reportedFailureCause || REINDEX_FAILED_BANNER_MESSAGE;
       const lastIndexedOn = lastSuccessfulRun?.updated_on;
       return {
         severity: BannerSeverity.error,
@@ -101,10 +135,13 @@ export const bannerVariant = ({
         message: lastIndexedOn ? `${cause} Last successful indexing: ${formatDate(lastIndexedOn)}.` : cause,
       };
     }
+    const reportedFailure = reportedCause
+      ? `${INDEX_FAILURE_BANNER_PREFIX} ${reportedCause} ${INDEX_FAILURE_BANNER_SUFFIX}`
+      : BannerMessageMap[BannerSeverity.error];
     return {
       severity: BannerSeverity.error,
       label: BannerTitleMap[BannerSeverity.error],
-      message: budgetMessage || BannerMessageMap[BannerSeverity.error],
+      message: budgetMessage || reportedFailure,
     };
   }
   if (state === IndexStatuses.cancelled)
@@ -115,6 +152,15 @@ export const bannerVariant = ({
         ? `${BannerMessageMap[BannerSeverity.warning]} ${INDEX_RETAINED_DATA_MESSAGE}`
         : BannerMessageMap[BannerSeverity.warning],
     };
+  if (state === IndexStatuses.partlyOk) {
+    const breakdown = summarizeIndexingReport(reindexStats?.latestEntry);
+    return {
+      severity: BannerSeverity.warning,
+      icon: BannerIcon.attention,
+      label: INDEX_PARTIAL_BANNER_TITLE,
+      message: breakdown ? `${breakdown}. ${INDEX_PARTIAL_BANNER_SUFFIX}` : INDEX_PARTIAL_BANNER_MESSAGE,
+    };
+  }
   if (RUNNABLE_INDEX_STATUSES.includes(state)) {
     // Only the run's own breakdown knows what it indexed and in what units.
     const breakdown = summarizeIndexingReport(reindexStats?.latestEntry);

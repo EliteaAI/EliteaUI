@@ -2,11 +2,12 @@ import { memo, useMemo } from 'react';
 
 import { Box, CircularProgress, Typography } from '@mui/material';
 
+import AttentionIcon from '@/assets/attention-icon.svg?react';
 import ErrorIcon from '@/assets/error-icon.svg?react';
 import FailIcon from '@/assets/fail-icon.svg?react';
 import SuccessIcon from '@/assets/success-icon.svg?react';
 
-import { BannerSeverity } from '../lib/constants';
+import { BannerIcon, BannerSeverity } from '../lib/constants';
 
 const IconMap = {
   [BannerSeverity.success]: SuccessIcon,
@@ -14,10 +15,15 @@ const IconMap = {
   [BannerSeverity.error]: ErrorIcon,
 };
 
+const IconOverrideMap = {
+  [BannerIcon.attention]: AttentionIcon,
+};
+
 const RunIndexBanner = memo(props => {
   const {
     banner: {
       severity,
+      icon,
       label,
       message = 'Some description of status, important details or instructions.',
     } = {},
@@ -31,7 +37,7 @@ const RunIndexBanner = memo(props => {
     () => getStyles(severity, showBottomBorder, fullBleed),
     [severity, showBottomBorder, fullBleed],
   );
-  const Icon = IconMap[severity];
+  const Icon = IconOverrideMap[icon] || IconMap[severity];
   return (
     <Box sx={[styles.root, sx]}>
       <Box sx={[styles.contentContainer, contentSX]}>
