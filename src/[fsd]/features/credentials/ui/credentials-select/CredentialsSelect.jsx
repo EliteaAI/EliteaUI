@@ -129,6 +129,16 @@ const CredentialsSelect = memo(
       resetStatuses,
     });
 
+    const isClearingAllowed = section !== 'vectorstorage';
+
+    const commitConfiguration = useCallback(
+      (configuration, ...rest) => {
+        if (configuration === null && !isClearingAllowed) return;
+        onSelectConfiguration?.(configuration, ...rest);
+      },
+      [isClearingAllowed, onSelectConfiguration],
+    );
+
     const mismatchedPrivateCredential = useMemo(() => {
       if (
         !value?.private ||
@@ -346,30 +356,31 @@ const CredentialsSelect = memo(
       if (!hasFetchedData || hasAutoSelectedRef.current || !credentialToAutoSelect) return;
 
       hasAutoSelectedRef.current = true;
-      onSelectConfiguration?.(
+      commitConfiguration(
         { private: credentialToAutoSelect.private, elitea_title: credentialToAutoSelect.elitea_title },
         { isAutoSelect: true },
       );
-    }, [hasFetchedData, credentialToAutoSelect, onSelectConfiguration, hasAutoSelectedRef]);
+    }, [hasFetchedData, credentialToAutoSelect, commitConfiguration, hasAutoSelectedRef]);
 
     const onSelectItem = useCallback(
       option => {
-        if (
-          selectedOption?.elitea_title === option.elitea_title &&
-          selectedOption?.private === option.private
-        ) {
-          onSelectConfiguration(null);
-        } else {
-          trackEvent(GA_EVENT_NAMES.CREDENTIALS_ATTACHED, {
-            [GA_EVENT_PARAMS.CREDENTIALS_TYPE]: option.private ? 'private' : 'project',
-            [GA_EVENT_PARAMS.TOOLKIT_TYPE]: type || 'unknown',
-            [GA_EVENT_PARAMS.ENTITY]: contextExecutionEntity,
-          });
-          onSelectConfiguration({ private: option.private, elitea_title: option.elitea_title });
+        const isAlreadySelected =
+          selectedOption?.elitea_title === option.elitea_title && selectedOption?.private === option.private;
+
+        if (isAlreadySelected) {
+          commitConfiguration(null);
+          return;
         }
+
+        trackEvent(GA_EVENT_NAMES.CREDENTIALS_ATTACHED, {
+          [GA_EVENT_PARAMS.CREDENTIALS_TYPE]: option.private ? 'private' : 'project',
+          [GA_EVENT_PARAMS.TOOLKIT_TYPE]: type || 'unknown',
+          [GA_EVENT_PARAMS.ENTITY]: contextExecutionEntity,
+        });
+        commitConfiguration({ private: option.private, elitea_title: option.elitea_title });
       },
       [
-        onSelectConfiguration,
+        commitConfiguration,
         selectedOption?.elitea_title,
         selectedOption?.private,
         type,
@@ -377,6 +388,8 @@ const CredentialsSelect = memo(
         contextExecutionEntity,
       ],
     );
+
+    const handleClear = useCallback(() => commitConfiguration(null), [commitConfiguration]);
 
     const createSelectHandler = useCallback(
       (sec, option) => {
@@ -516,6 +529,12 @@ const CredentialsSelect = memo(
       value && !isBlankEliteaTitle(value?.elitea_title) && !selectedOption && hasFetchedData,
     );
 
+    const isLockedToOnlyConfiguration =
+      section === 'vectorstorage' &&
+      Boolean(selectedOption) &&
+      createMenuData.length === 0 &&
+      savedCredentialsMenuData.length === 1;
+
     return (
       <Box sx={[styles.container, sx]}>
         <Select.SingleSelect
@@ -526,14 +545,15 @@ const CredentialsSelect = memo(
           required={required}
           error={error || showMismatchFooter}
           helperText={showMismatchFooter ? '' : helperText}
-          disabled={disabled}
+          disabled={disabled || isLockedToOnlyConfiguration}
+          sx={isLockedToOnlyConfiguration ? styles.lockedSelect : undefined}
           showBorder
           customSelectedFontSize="0.875rem"
           optionGroups={optionGroups}
           options={[]}
           value={selectStringValue}
           onValueChange={handleSelectValueChange}
-          onClear={() => onSelectConfiguration?.(null)}
+          onClear={handleClear}
           customRenderValue={customRenderSelectValue}
           displayEmpty
           showEmptyPlaceholder={false}
@@ -558,6 +578,15 @@ CredentialsSelect.displayName = 'CredentialsSelect';
 /** @type {MuiSx} */
 const styles = {
   container: { marginTop: '0.5rem' },
+  lockedSelect: ({ palette }) => ({
+    '& .MuiInputBase-root.Mui-disabled .MuiSelect-select': {
+      color: `${palette.text.select.selected.primary} !important`,
+      WebkitTextFillColor: `${palette.text.select.selected.primary} !important`,
+    },
+    '& .MuiFormLabel-root.Mui-disabled': {
+      color: palette.text.primary,
+    },
+  }),
   refreshIcon: ({ palette }) => ({
     color: palette.text.primary,
     padding: 0,
