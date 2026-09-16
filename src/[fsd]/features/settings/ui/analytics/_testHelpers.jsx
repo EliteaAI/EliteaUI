@@ -45,6 +45,7 @@ export const analyticsTestTheme = createTheme({
     status: { rejected: '#f00', published: '#0f0', pending: '#ff0', draft: '#1976d2' },
     background: {
       surface: { interactive: { default: '#fff' } },
+      interactiveItem: { hover: '#f5f5f5', rowHover: '#f9f9f9', active: '#e3f2fd' },
       card: '#fafafa',
       conversation: { hover: '#fafafa' },
     },
