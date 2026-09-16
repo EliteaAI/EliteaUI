@@ -25,15 +25,10 @@ const ONLY_VECTOR_STORAGE_CONFIGURATION = [VECTOR_STORAGE_CONFIGURATIONS[0]];
 
 const SELECTED_VALUE_COLOR = '#0E131D';
 const LABEL_COLOR = '#0E131D';
-const DISABLED_GREY = '#777A83';
 const THEME = {
   palette: {
-    text: {
-      default: DISABLED_GREY,
-      primary: LABEL_COLOR,
-      button: { disabled: DISABLED_GREY },
-      select: { selected: { primary: SELECTED_VALUE_COLOR } },
-    },
+    text: { primary: LABEL_COLOR },
+    components: { select: { text: { selected: { primary: SELECTED_VALUE_COLOR } } } },
   },
 };
 

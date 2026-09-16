@@ -580,8 +580,8 @@ const styles = {
   container: { marginTop: '0.5rem' },
   lockedSelect: ({ palette }) => ({
     '& .MuiInputBase-root.Mui-disabled .MuiSelect-select': {
-      color: `${palette.text.select.selected.primary} !important`,
-      WebkitTextFillColor: `${palette.text.select.selected.primary} !important`,
+      color: `${palette.components.select.text.selected.primary} !important`,
+      WebkitTextFillColor: `${palette.components.select.text.selected.primary} !important`,
     },
     '& .MuiFormLabel-root.Mui-disabled': {
       color: palette.text.primary,
