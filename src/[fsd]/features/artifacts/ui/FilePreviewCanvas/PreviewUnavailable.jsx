@@ -81,7 +81,7 @@ const previewUnavailableStyles = () => ({
   icon: ({ palette }) => ({
     width: '2rem',
     height: '2rem',
-    color: palette.text.input.placeholder,
+    color: palette.components.input.text.placeholder,
     marginBottom: 2,
   }),
 

@@ -5,7 +5,7 @@ import { useSelector } from 'react-redux';
 import { createTheme } from '@mui/material/styles';
 
 import getDesignTokens from '@/MainTheme';
-import { blue01 } from '@/lightPalette';
+import lightPalette from '@/lightPalette';
 
 const getSystemPreference = () =>
   window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -39,7 +39,7 @@ export const useEliteATheme = () => {
             palette: {
               mode: 'light',
               background: {
-                default: blue01,
+                default: lightPalette.background.default.secondary,
               },
             },
           }

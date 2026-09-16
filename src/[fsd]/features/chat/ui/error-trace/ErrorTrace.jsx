@@ -130,10 +130,10 @@ const errorTraceStyles = (isExpanded, compact) => ({
     flexDirection: 'row',
     alignItems: 'center',
     padding: '.75rem 1rem',
-    border: ({ palette }) => `1px solid ${palette.background.wrongBkg}`,
-    background: ({ palette }) => palette.background.errorBkg,
+    border: ({ palette }) => `1px solid ${palette.border.error}`,
+    background: ({ palette }) => palette.background.error,
     borderRadius: '0.5rem',
-    color: ({ palette }) => palette.text.warningText,
+    color: ({ palette }) => palette.text.warning,
     fontSize: '.875rem',
     marginBottom: '0.5rem',
   },
@@ -154,7 +154,7 @@ const errorTraceStyles = (isExpanded, compact) => ({
     marginBottom: isExpanded ? '0.5rem' : '0',
 
     span: {
-      color: palette.text.default,
+      color: palette.text.primary,
       fontSize: '.875rem',
     },
 
@@ -163,7 +163,7 @@ const errorTraceStyles = (isExpanded, compact) => ({
       transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
 
       path: {
-        fill: palette.text.default,
+        fill: palette.icon.default,
       },
     },
 

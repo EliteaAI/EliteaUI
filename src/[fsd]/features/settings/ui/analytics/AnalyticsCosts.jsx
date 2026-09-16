@@ -7,6 +7,7 @@ import { Box, CircularProgress, Typography, useTheme } from '@mui/material';
 import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { ChartTooltip, InfoBanner, KPICard, infoBannerTextSx } from '@/[fsd]/features/settings/ui/analytics';
+import { CHART_COLORS } from '@/[fsd]/shared/config/theme/chartPalette';
 import { useAnalyticsCostsQuery } from '@/api';
 
 const AnalyticsCosts = memo(props => {
@@ -167,31 +168,31 @@ const AnalyticsCosts = memo(props => {
                 <Bar
                   dataKey="total_cost"
                   name="Total Cost"
-                  fill={AnalyticsCommonConstants.CHART_COLORS[0]}
+                  fill={CHART_COLORS[0]}
                   radius={[4, 4, 0, 0]}
                 />
                 <Bar
                   dataKey="input_cost"
                   name="Input Token Cost"
-                  fill={AnalyticsCommonConstants.CHART_COLORS[1]}
+                  fill={CHART_COLORS[1]}
                   radius={[4, 4, 0, 0]}
                 />
                 <Bar
                   dataKey="output_cost"
                   name="Output Token Cost"
-                  fill={AnalyticsCommonConstants.CHART_COLORS[2]}
+                  fill={CHART_COLORS[2]}
                   radius={[4, 4, 0, 0]}
                 />
                 <Bar
                   dataKey="cache_read_cost"
                   name="Cache Read Cost"
-                  fill={AnalyticsCommonConstants.CHART_COLORS[3]}
+                  fill={CHART_COLORS[3]}
                   radius={[4, 4, 0, 0]}
                 />
                 <Bar
                   dataKey="cache_creation_cost"
                   name="Cache Write Cost"
-                  fill={AnalyticsCommonConstants.CHART_COLORS[4]}
+                  fill={CHART_COLORS[4]}
                   radius={[4, 4, 0, 0]}
                 />
               </BarChart>
@@ -413,7 +414,7 @@ const styles = {
   tableHeader: ({ palette }) => ({
     display: 'flex',
     padding: '0.5rem 0.75rem',
-    borderBottom: `1px solid ${palette.border.table}`,
+    borderBottom: `1px solid ${palette.border.default}`,
     gap: '0.5rem',
   }),
   tableCell: ({ palette }) => ({
@@ -426,7 +427,7 @@ const styles = {
     display: 'flex',
     padding: '0.5rem 0.75rem',
     gap: '0.5rem',
-    borderBottom: `1px solid ${palette.border.table}`,
+    borderBottom: `1px solid ${palette.border.default}`,
     '&:last-child': { borderBottom: 'none' },
   }),
   tableCellValue: ({ palette }) => ({

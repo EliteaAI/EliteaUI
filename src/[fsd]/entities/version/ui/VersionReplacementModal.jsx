@@ -208,7 +208,7 @@ VersionReplacementModal.displayName = 'VersionReplacementModal';
 /** @type {MuiSx} */
 const getStyles = () => ({
   paper: { width: '37.5rem' },
-  versionName: ({ palette }) => ({ color: palette.text.deleteAlertEntityName }),
+  versionName: ({ palette }) => ({ color: palette.text.link }),
   description: {
     marginBottom: '1rem',
   },
@@ -220,7 +220,7 @@ const getStyles = () => ({
     p: 2,
     borderRadius: '0.5rem',
     border: `.0625rem solid ${palette.border.tips}`,
-    background: palette.background.tips.secondary,
+    background: palette.alert.secondary.background,
     maxHeight: '9.375rem',
     overflowY: 'auto',
   }),

@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, useTheme } from '@mui/material';
 
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import {
@@ -10,7 +10,6 @@ import {
   StyledAccordionSummary,
   StyledExpandMoreIcon,
 } from '@/[fsd]/shared/ui/accordion';
-import { useTheme } from '@emotion/react';
 
 export default function AgentException({ exception, defaultExpanded = false, title = 'Agent Exception' }) {
   const [expanded, setExpanded] = useState(defaultExpanded);

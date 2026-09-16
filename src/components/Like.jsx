@@ -25,7 +25,7 @@ export const StyledItemPair = styled(
   caretColor: 'transparent',
   cursor: disabled ? 'default' : 'pointer',
   '&:hover': {
-    background: disabled ? 'transparent' : theme.palette.background.icon.default,
+    background: disabled ? 'transparent' : theme.palette.background.interactiveItem.hover,
   },
 }));
 

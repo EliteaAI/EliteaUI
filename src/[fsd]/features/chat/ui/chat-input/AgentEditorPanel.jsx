@@ -187,9 +187,7 @@ const AgentEditorPanel = memo(props => {
             <CloseIcon
               sx={styles.closeIcon}
               fill={
-                disabled || disableSwitchToModel
-                  ? theme.palette.icon.fill.disabled
-                  : theme.palette.icon.fill.secondary
+                disabled || disableSwitchToModel ? theme.palette.icon.disabled : theme.palette.icon.secondary
               }
             />
           </IconButton>
@@ -291,7 +289,7 @@ const AgentEditorPanel = memo(props => {
             ) : (
               <SettingIcon
                 sx={styles.settingIcon}
-                fill={disabled || isEditSettingsDisabled ? theme.palette.icon.fill.disabled : undefined}
+                fill={disabled || isEditSettingsDisabled ? theme.palette.icon.disabled : undefined}
               />
             )}
           </Button>
@@ -312,9 +310,7 @@ const AgentEditorPanel = memo(props => {
           <CloseIcon
             sx={styles.closeIcon}
             fill={
-              disabled || disableSwitchToModel
-                ? theme.palette.icon.fill.disabled
-                : theme.palette.icon.fill.secondary
+              disabled || disableSwitchToModel ? theme.palette.icon.disabled : theme.palette.icon.secondary
             }
           />
         </IconButton>

@@ -184,8 +184,8 @@ const npsSurveyCardStyles = () => ({
     paddingLeft: '1.5rem',
     paddingRight: '1.5rem',
     borderRadius: '1rem',
-    background: palette.background.npsCard,
-    border: `0.0625rem solid ${palette.border.npsCard}`,
+    background: palette.components.npsSurvey.background,
+    border: `0.0625rem solid ${palette.components.npsSurvey.border}`,
     width: '27.375rem',
     display: 'flex',
     flexDirection: 'column',
@@ -204,7 +204,7 @@ const npsSurveyCardStyles = () => ({
     fontWeight: 600,
     fontSize: '0.875rem',
     lineHeight: '1.5rem',
-    color: palette.text.darker,
+    color: palette.text.alwaysDark,
     textAlign: 'center',
     width: '100%',
   }),
@@ -229,7 +229,7 @@ const npsSurveyCardStyles = () => ({
     fontWeight: 500,
     fontSize: '0.625rem',
     lineHeight: '1rem',
-    color: palette.text.light,
+    color: palette.components.npsSurvey.text.label,
   }),
   actionsRow: {
     display: 'flex',
@@ -239,28 +239,28 @@ const npsSurveyCardStyles = () => ({
     width: '100%',
   },
   notNowBtn: ({ palette }) => ({
-    background: palette.background.button.npsCard.secondary.default,
-    color: palette.text.darker,
+    background: palette.components.npsSurvey.button.secondary.default,
+    color: palette.text.alwaysDark,
     '&:hover': {
-      background: palette.background.button.npsCard.secondary.hover,
+      background: palette.components.npsSurvey.button.secondary.hover,
     },
     '&:active': {
-      background: palette.background.button.npsCard.secondary.pressed,
+      background: palette.components.npsSurvey.button.secondary.pressed,
       border: 'none',
     },
   }),
   submitBtn: ({ palette }) => ({
-    background: palette.background.button.npsCard.primary.default,
-    color: palette.text.white,
+    background: palette.components.npsSurvey.button.primary.default,
+    color: palette.text.alwaysWhite,
     '&:hover': {
-      background: palette.background.button.npsCard.primary.hover,
+      background: palette.components.npsSurvey.button.primary.hover,
     },
     '&:active': {
-      background: palette.background.button.npsCard.primary.pressed,
+      background: palette.components.npsSurvey.button.primary.pressed,
     },
     '&:disabled': {
-      background: palette.background.button.npsCard.primary.disabled,
-      color: palette.text.white,
+      background: palette.components.npsSurvey.button.primary.disabled,
+      color: palette.text.alwaysWhite,
     },
   }),
 });

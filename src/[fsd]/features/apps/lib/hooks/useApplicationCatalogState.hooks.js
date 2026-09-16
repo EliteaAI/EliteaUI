@@ -52,7 +52,7 @@ export const useApplicationCatalogState = () => {
       const statusLabel = getApplicationStatusLabel(isConfigured, canCreate);
       const iconElement = application.IconComponent
         ? createElement(application.IconComponent, {
-            fill: theme.palette.icon.fill.default,
+            fill: theme.palette.icon.default,
             width: '1rem',
             height: '1rem',
           })

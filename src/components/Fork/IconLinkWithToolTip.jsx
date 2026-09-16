@@ -42,7 +42,7 @@ export const IconLinkWithToolTip = props => {
         >
           <ForkIcon
             sx={{ fontSize: '16px' }}
-            fill={theme.palette.icon.fill.default || theme.palette.icon.fill.secondary}
+            fill={theme.palette.icon.default || theme.palette.icon.secondary}
           />
         </Link>
       </StyledTooltip>

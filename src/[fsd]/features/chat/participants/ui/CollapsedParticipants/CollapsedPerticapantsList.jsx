@@ -323,7 +323,7 @@ const collapsedPerticapantsListStyles = () => ({
       },
 
       '&&': {
-        backgroundColor: `${palette.background.participant.default} !important`,
+        backgroundColor: `${palette.background.surface.interactive.default} !important`,
       },
 
       ...(hasError && {
@@ -349,7 +349,7 @@ const collapsedPerticapantsListStyles = () => ({
     width: '1rem',
     height: '1rem',
     '& svg': {
-      fill: palette.icon.fill.attention,
+      fill: palette.icon.attention,
       width: '1rem',
       height: '1rem',
     },
@@ -362,7 +362,7 @@ const collapsedPerticapantsListStyles = () => ({
     width: '1rem',
     height: '1rem',
     '& svg, & svg path': {
-      fill: palette.icon.fill.secondary,
+      fill: palette.icon.secondary,
       width: '1rem',
       height: '1rem',
     },

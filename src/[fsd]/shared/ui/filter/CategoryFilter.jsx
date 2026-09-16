@@ -47,7 +47,7 @@ const CategoryFilter = memo(props => {
         {/* Search Bar */}
         <Box sx={styles.searchContainer(allCategories.length > 1)}>
           <Box sx={styles.searchIconContainer}>
-            <SearchIcon fill={theme.palette.text.secondary} />
+            <SearchIcon fill={theme.palette.icon.secondary} />
           </Box>
           <TextField
             placeholder={searchPlaceholder}
@@ -151,7 +151,7 @@ const componentStyles = () => ({
         borderColor: palette.border.hover,
       },
       '&.Mui-focused': {
-        border: `0.0625rem solid ${palette.border.flowNode}`,
+        border: `0.0625rem solid ${palette.border.inputHover}`,
         backgroundColor: palette.background.surface.interactive.active,
       },
       '& fieldset': {
@@ -194,11 +194,11 @@ const componentStyles = () => ({
     height: '2rem',
     borderRadius: '0.625rem',
     border: 'none',
-    backgroundColor: palette.background.tag.default,
+    backgroundColor: palette.components.categoryTag.background.default,
     color: palette.text.secondary,
     ...typography.labelSmall,
     padding: '0.5rem 1rem',
-    boxShadow: palette.boxShadow.tag,
+    boxShadow: palette.components.categoryTag.shadow,
     transition: 'all 0.2s ease-in-out',
     '& .MuiChip-label': {
       padding: '0',
@@ -206,7 +206,7 @@ const componentStyles = () => ({
       textTransform: 'capitalize !important',
     },
     '&.MuiChip-clickable:hover': {
-      backgroundColor: palette.background.button.secondary.hover,
+      backgroundColor: palette.background.surface.interactive.selected,
       transform: 'none',
     },
   }),
@@ -214,8 +214,8 @@ const componentStyles = () => ({
     height: '2rem',
     borderRadius: '0.625rem',
     border: 'none',
-    backgroundColor: palette.background.tag.selected,
-    color: palette.text.tag.selected,
+    backgroundColor: palette.components.categoryTag.background.selected,
+    color: palette.components.categoryTag.text.selected,
     ...typography.labelSmall,
     padding: '0.5rem 1rem',
     boxShadow: 'none',
@@ -226,13 +226,13 @@ const componentStyles = () => ({
       textTransform: 'capitalize !important',
     },
     '&.MuiChip-clickable:hover': {
-      backgroundColor: palette.background.button.secondary.hover,
+      backgroundColor: palette.background.surface.interactive.selected,
       transform: 'none',
     },
   }),
   itemsContainer: ({ palette }) => ({
     width: '100%',
-    borderTop: `0.0625rem solid ${palette.border.table}`,
+    borderTop: `0.0625rem solid ${palette.border.default}`,
     background: palette.background.default.primary,
     padding: '1rem 1.5rem 1rem 1.5rem',
     overflowY: 'auto',

@@ -64,11 +64,11 @@ const agentHubButtonStyles = (sideBarCollapsed, isActive) => ({
     padding: sideBarCollapsed ? '0.5rem 0' : '0.5rem',
     borderRadius: '0.5rem',
     background: isActive
-      ? palette.background.button.agentHub.active
-      : palette.background.button.agentHub.default,
+      ? palette.components.agentHubButton.background.active
+      : palette.components.agentHubButton.background.default,
     boxShadow: isActive
-      ? palette.background.button.agentHub.shadowActive
-      : palette.background.button.agentHub.shadowDefault,
+      ? palette.components.agentHubButton.shadow.active
+      : palette.components.agentHubButton.shadow.default,
     cursor: 'pointer',
     display: 'flex',
     justifyContent: sideBarCollapsed ? 'center' : 'flex-start',
@@ -77,15 +77,15 @@ const agentHubButtonStyles = (sideBarCollapsed, isActive) => ({
     alignItems: 'center',
     boxSizing: 'border-box',
     '&:hover': {
-      background: palette.background.button.agentHub.hover,
-      boxShadow: palette.background.button.agentHub.shadowHover,
+      background: palette.components.agentHubButton.background.hover,
+      boxShadow: palette.components.agentHubButton.shadow.hover,
     },
   }),
   icon: ({ palette }) => ({
     width: '1rem',
     height: '1rem',
     flexShrink: 0,
-    background: palette.background.button.agentHub.iconGradient,
+    background: palette.components.agentHubButton.iconGradient,
     WebkitMaskImage: agentHubIconMask,
     maskImage: agentHubIconMask,
     WebkitMaskRepeat: 'no-repeat',
@@ -100,7 +100,7 @@ const agentHubButtonStyles = (sideBarCollapsed, isActive) => ({
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
-    background: palette.background.button.agentHub.textGradient,
+    background: palette.components.agentHubButton.textGradient,
     WebkitBackgroundClip: 'text',
     backgroundClip: 'text',
     WebkitTextFillColor: 'transparent',

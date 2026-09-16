@@ -124,9 +124,7 @@ export default function MarkdownTableBlock({
               >
                 <EditIcon
                   sx={{ fontSize: 16 }}
-                  fill={
-                    !shouldDisableEdit ? theme.palette.icon.fill.default : theme.palette.icon.fill.disabled
-                  }
+                  fill={!shouldDisableEdit ? theme.palette.icon.default : theme.palette.icon.disabled}
                 />
               </IconButton>
             </span>
@@ -149,7 +147,7 @@ export default function MarkdownTableBlock({
             }}
             onClick={onClickCopy}
           >
-            <ContentCopyIcon sx={{ fontSize: '16px', color: theme.palette.icon.fill.default }} />
+            <ContentCopyIcon sx={{ fontSize: '16px', color: theme.palette.icon.default }} />
           </IconButton>
         </Tooltip>
       </Box>

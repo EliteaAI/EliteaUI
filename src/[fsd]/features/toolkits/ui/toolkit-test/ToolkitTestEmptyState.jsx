@@ -61,7 +61,7 @@ const toolkitTestEmptyStateStyles = () => ({
     gap: '1.5rem',
     padding: '3.75rem 0 0 0',
     textAlign: 'center',
-    color: ({ palette }) => palette.icon.fill.disabled,
+    color: ({ palette }) => palette.icon.disabled,
   },
   textContainer: {
     display: 'flex',

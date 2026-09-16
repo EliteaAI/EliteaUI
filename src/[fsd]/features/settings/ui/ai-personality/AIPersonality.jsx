@@ -44,7 +44,7 @@ const aiPersonalityStyles = () => ({
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: '0 1.5rem',
-    borderBottom: `0.0625rem solid ${palette.border.table}`,
+    borderBottom: `0.0625rem solid ${palette.border.default}`,
   }),
   content: ({ palette }) => ({
     backgroundColor: palette.background.default.tertiary,

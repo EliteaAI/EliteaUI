@@ -10,7 +10,7 @@ export const getCardGradientBorderBefore = palette => ({
   inset: 0,
   borderRadius: 'inherit',
   padding: '0.0625rem',
-  background: palette.border.cardsOutlinesGradient,
+  background: palette.components.card.background.borderGradient,
   mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
   maskComposite: 'exclude',
   WebkitMaskComposite: 'xor',
@@ -23,11 +23,11 @@ export const getCardGradientBorderBefore = palette => ({
  * @param {import('@mui/material').Palette} palette
  */
 export const getCardGradientHover = palette => ({
-  background: palette.background.card.hover,
+  background: palette.components.card.background.hover,
   '&::before': {
-    background: palette.background.card.hoverBorderGradient,
+    background: palette.components.card.background.hoverBorderGradient,
   },
-  boxShadow: palette.background.card.hoverShadow,
+  boxShadow: palette.components.card.shadow.hover,
 });
 
 /**
@@ -58,7 +58,7 @@ export const getCardGradientStyles = (palette, { enableHover = true } = {}) => (
   position: 'relative',
   borderRadius: '0.75rem',
   border: 'none',
-  background: palette.background.card.gradientDark,
+  background: palette.components.card.background.gradient,
   '&::before': getCardGradientBorderBefore(palette),
   '&:hover': enableHover && getCardGradientHover(palette),
 });

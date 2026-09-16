@@ -55,12 +55,12 @@ export const TabBarItems = styled('div')(() => ({
 }));
 
 export const StyledUnfoldLessIcon = styled(UnfoldLessIcon)(({ theme }) => ({
-  color: theme.palette.icon.fill.default,
+  color: theme.palette.icon.default,
   fontSize: 'inherit',
 }));
 
 export const StyledUnfoldMoreIcon = styled(UnfoldMoreIcon)(({ theme }) => ({
-  color: theme.palette.icon.fill.default,
+  color: theme.palette.icon.default,
   fontSize: 'inherit',
 }));
 

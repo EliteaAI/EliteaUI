@@ -17,6 +17,7 @@ import {
   EVIDENCE_SCOPE_OPTIONS,
   IMPORTANCE,
   IMPORTANCE_OPTIONS,
+  PASS_FAIL_TARGET_OPTIONS,
   POLARITY_OPTIONS,
   SCALE_TYPE_PRESET,
   SCALE_TYPE_PRESET_OPTIONS,
@@ -71,6 +72,16 @@ const TOOLTIPS = {
 // A record whose stored scale could not be classified (see `hasKnownScale` in dimension.helpers)
 // shows no preset at all, rather than the default one implying a scale it does not have.
 const SCALE_NOT_SET_PLACEHOLDER = <Typography variant="labelMedium">Not set</Typography>;
+
+// A target from the scale being left behind can be meaningless (or invalid) on the new one — e.g.
+// a `>= 80` target surviving a switch to pass/fail. Drop it unless it already fits the new scale.
+const normalizeTargetForScaleTransition = (prev, nextScaleTypePreset) => {
+  const isValidPassFailTarget = prev.successCriteria === '==' && ['0', '1'].includes(prev.targetValue);
+  if (nextScaleTypePreset === SCALE_TYPE_PRESET.passFail) {
+    return isValidPassFailTarget ? {} : { targetValue: '' };
+  }
+  return prev.scaleTypePreset === SCALE_TYPE_PRESET.passFail ? { targetValue: '' } : {};
+};
 
 const CODE_SAFETY_NOTICE =
   'The code is checked by a safety pre-screen before it is stored. Dangerous imports, builtins, and dunder access are rejected.';
@@ -142,6 +153,7 @@ const DimensionForm = memo(props => {
         if (newEvaluator === EVAL_ENGINE.code) {
           next.scaleTypePreset = SCALE_TYPE_PRESET.passFail;
           next.hasKnownScale = true;
+          Object.assign(next, normalizeTargetForScaleTransition(prev, SCALE_TYPE_PRESET.passFail));
         }
         return next;
       });
@@ -189,6 +201,17 @@ const DimensionForm = memo(props => {
       setField('targetValue', event.target.value);
     },
     [setField],
+  );
+
+  const handlePassFailTargetChange = useCallback(
+    value => {
+      setForm(prev => ({
+        ...prev,
+        targetValue: value === 'pass' ? '1' : value === 'fail' ? '0' : '',
+        successCriteria: value === 'none' ? prev.successCriteria : '==',
+      }));
+    },
+    [setForm],
   );
 
   const handleImportanceChange = useCallback(
@@ -239,10 +262,17 @@ const DimensionForm = memo(props => {
         hasKnownScale: true,
         customMin: value === SCALE_TYPE_PRESET.custom ? '' : prev.customMin,
         customMax: value === SCALE_TYPE_PRESET.custom ? '' : prev.customMax,
+        ...normalizeTargetForScaleTransition(prev, value),
       }));
     },
     [setForm],
   );
+
+  const passFailTargetValue = useMemo(() => {
+    if (form.targetValue === '1' && form.successCriteria === '==') return 'pass';
+    if (form.targetValue === '0' && form.successCriteria === '==') return 'fail';
+    return 'none';
+  }, [form.targetValue, form.successCriteria]);
 
   const scaleTypeOptions = useMemo(() => {
     if (isCode) {
@@ -590,6 +620,22 @@ const DimensionForm = memo(props => {
           </>
         )}
 
+        {isPassFail && (
+          <Box sx={styles.verticalField}>
+            <Box sx={styles.fieldLabelRow}>
+              <Typography sx={styles.fieldLabel}>Target</Typography>
+              <InfoTooltip infoTooltip={TOOLTIPS.targetValue} />
+            </Box>
+            <SingleSelect
+              showBorder
+              value={passFailTargetValue}
+              options={PASS_FAIL_TARGET_OPTIONS}
+              onValueChange={handlePassFailTargetChange}
+              data-testid="dimension-pass-fail-target-select"
+            />
+          </Box>
+        )}
+
         <Box sx={styles.verticalField}>
           <Box sx={styles.fieldLabelRow}>
             <Typography sx={styles.fieldLabel}>Importance</Typography>
@@ -728,7 +774,7 @@ const dimensionFormStyles = () => ({
   evaluatorTag: ({ palette }) => ({
     padding: '0.25rem 0.5rem',
     borderRadius: '1.0625rem',
-    backgroundColor: palette.background.tabButton.default,
+    backgroundColor: palette.background.surface.interactive.default,
     border: `0.0625rem solid ${palette.border.lines}`,
     color: palette.text.secondary,
     fontSize: '0.875rem',
@@ -766,21 +812,21 @@ const dimensionFormStyles = () => ({
     alignItems: 'center',
     gap: '0.75rem',
     padding: '0.5rem 0.75rem',
-    backgroundColor: palette.background.indexResult.info,
+    backgroundColor: palette.alert.info.background,
     borderRadius: '0.5rem',
-    border: `0.0625rem solid ${palette.border.indexResult.info}`,
+    border: `0.0625rem solid ${palette.alert.info.border}`,
   }),
   safetyNoticeIcon: ({ palette }) => ({
     width: '0.875rem',
     height: '0.875rem',
-    color: palette.icon.fill.info,
+    color: palette.icon.info,
     flexShrink: 0,
     path: {
-      fill: palette.icon.fill.info,
+      fill: palette.icon.info,
     },
   }),
   safetyNoticeText: ({ palette }) => ({
-    color: palette.text.indexResult.info,
+    color: palette.alert.info.text,
     fontSize: '0.75rem',
     lineHeight: '1.25rem',
     fontWeight: 400,

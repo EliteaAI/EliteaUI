@@ -1,8 +1,9 @@
 import { useMemo } from 'react';
 
+import { useTheme } from '@mui/material';
+
 import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
 import { getToolIconByType } from '@/common/toolkitUtils.jsx';
-import { useTheme } from '@emotion/react';
 
 export const useIconMetaTooltipType = (type, isMCP) => {
   const theme = useTheme();

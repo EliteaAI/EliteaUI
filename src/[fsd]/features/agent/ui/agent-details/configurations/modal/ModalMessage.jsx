@@ -99,13 +99,13 @@ const modalMessageStyles = () => ({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: '0.75rem',
-    background: palette.background.aiParticipantIcon,
-    color: palette.icon.fill.inactive,
+    background: palette.components.aiParticipantIcon.background,
+    color: palette.icon.inactive,
   }),
 
   userIcon: ({ palette }) => ({
     fontSize: '1rem',
-    fill: palette.icon.fill.inactive,
+    fill: palette.icon.inactive,
   }),
 
   eliteaIcon: {
@@ -120,7 +120,7 @@ const modalMessageStyles = () => ({
     padding: '0.75rem 1rem',
     borderRadius: '0.5rem',
     position: 'relative',
-    background: palette.background.aiAnswerBkg,
+    background: palette.background.aiAnswer,
     '&:hover .actionButtons': {
       visibility: 'visible',
     },

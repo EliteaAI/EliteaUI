@@ -4,9 +4,9 @@ import { Area, AreaChart, Tooltip as RechartsTooltip, ResponsiveContainer, XAxis
 
 import { Box, Typography, useTheme } from '@mui/material';
 
-import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { ChartTooltip } from '@/[fsd]/features/settings/ui/analytics';
+import { EVENT_TYPE_COLORS } from '@/[fsd]/shared/config/theme/chartPalette';
 
 const AnalyticsHealth = memo(props => {
   const { health = [], daily_activity = [] } = props;
@@ -138,8 +138,7 @@ const AnalyticsHealth = memo(props => {
                     width: 8,
                     height: 8,
                     borderRadius: '50%',
-                    backgroundColor:
-                      AnalyticsCommonConstants.EVENT_TYPE_COLORS[h.event_type] || palette.status.draft,
+                    backgroundColor: EVENT_TYPE_COLORS[h.event_type] || palette.status.draft,
                     flexShrink: 0,
                   }}
                 />
@@ -211,7 +210,7 @@ const analyticsHealthStyles = () => ({
   tableHeader: ({ palette }) => ({
     display: 'flex',
     padding: '0.5rem 0.75rem',
-    borderBottom: `1px solid ${palette.border.table}`,
+    borderBottom: `1px solid ${palette.border.default}`,
     gap: '0.5rem',
   }),
   tableCell: ({ palette }) => ({
@@ -223,9 +222,9 @@ const analyticsHealthStyles = () => ({
   tableRow: ({ palette }) => ({
     display: 'flex',
     padding: '0.5rem 0.75rem',
-    borderBottom: `1px solid ${palette.border.table}`,
+    borderBottom: `1px solid ${palette.border.default}`,
     gap: '0.5rem',
-    '&:hover': { backgroundColor: palette.background.conversation?.hover },
+    '&:hover': { backgroundColor: palette.background.interactiveItem.rowHover },
   }),
   tableCellValue: ({ palette }) => ({
     fontSize: '0.8125rem',

@@ -4,6 +4,7 @@ import { Box, Typography } from '@mui/material';
 
 import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
+import { CHART_COLORS } from '@/[fsd]/shared/config/theme/chartPalette';
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 
 const ModelUsageTable = memo(props => {
@@ -51,8 +52,7 @@ const ModelUsageTable = memo(props => {
         </Box>
         {models.map((model, index) => {
           const share = totalCalls > 0 ? (model.calls / totalCalls) * 100 : 0;
-          const color =
-            AnalyticsCommonConstants.CHART_COLORS[index % AnalyticsCommonConstants.CHART_COLORS.length];
+          const color = CHART_COLORS[index % CHART_COLORS.length];
 
           return (
             <Box
@@ -130,7 +130,7 @@ const modelUsageTableStyles = () => ({
     padding: '1rem',
     borderRadius: '0.5rem',
     backgroundColor: palette.background.surface.interactive.default,
-    border: `1px solid ${palette.border.table}`,
+    border: `1px solid ${palette.border.default}`,
     display: 'flex',
     flexDirection: 'column',
     minWidth: 0,
@@ -150,7 +150,7 @@ const modelUsageTableStyles = () => ({
   tableHeader: ({ palette }) => ({
     display: 'flex',
     padding: '0.5rem 0.75rem',
-    borderBottom: `1px solid ${palette.border.table}`,
+    borderBottom: `1px solid ${palette.border.default}`,
     gap: '0.5rem',
   }),
   tableCell: ({ palette }) => ({
@@ -162,9 +162,9 @@ const modelUsageTableStyles = () => ({
   tableRow: ({ palette }) => ({
     display: 'flex',
     padding: '0.5rem 0.75rem',
-    borderBottom: `1px solid ${palette.border.table}`,
+    borderBottom: `1px solid ${palette.border.default}`,
     gap: '0.5rem',
-    '&:hover': { backgroundColor: palette.background.conversation?.hover || 'rgba(255,255,255,0.02)' },
+    '&:hover': { backgroundColor: palette.background.interactiveItem.rowHover },
   }),
   tableCellValue: ({ palette }) => ({
     fontSize: '0.8125rem',
@@ -173,13 +173,13 @@ const modelUsageTableStyles = () => ({
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
   }),
-  shareBarBg: ({ palette }) => ({
+  shareBarBg: {
     flex: 1,
     height: 8,
     borderRadius: 4,
-    backgroundColor: palette.background.conversation?.normal || 'rgba(255,255,255,0.06)',
+    backgroundColor: 'transparent',
     overflow: 'hidden',
-  }),
+  },
   shareBarFill: { height: '100%', borderRadius: 4, transition: 'width 0.3s ease' },
 });
 

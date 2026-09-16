@@ -31,9 +31,9 @@ const styles = {
     flexDirection: 'column',
     gap: '0.375rem',
     padding: '0.75rem 1rem',
-    background: palette.background.indexResult.info,
+    background: palette.alert.info.background,
     borderRadius: '0.75rem',
-    border: `0.0625rem solid ${palette.border.indexResult.info}`,
+    border: `0.0625rem solid ${palette.alert.info.border}`,
   }),
   infoBannerTitle: {
     display: 'flex',
@@ -45,12 +45,12 @@ const styles = {
     color: palette.icon.indexResult.info,
   }),
   infoBannerTitleText: ({ palette }) => ({
-    color: palette.text.indexResult.info,
+    color: palette.alert.info.text,
   }),
 };
 
 export const infoBannerTextSx = ({ palette }) => ({
-  color: palette.text.indexResult.info,
+  color: palette.alert.info.text,
 });
 
 export default InfoBanner;

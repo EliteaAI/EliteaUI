@@ -278,7 +278,7 @@ const scheduleModalStyles = () => ({
     fontWeight: 500,
   },
   previewSummaryError: {
-    color: ({ palette }) => palette.text.warningText,
+    color: ({ palette }) => palette.text.warning,
   },
   nextRunContainer: {
     display: 'flex',
@@ -305,14 +305,14 @@ const scheduleModalStyles = () => ({
     padding: '0.5rem 0.75rem',
     gap: '0.5rem',
     border: ({ palette }) => `0.0625rem solid ${palette.border.tips}`,
-    background: ({ palette }) => palette.background.tips.main,
+    background: ({ palette }) => palette.components.tips.background.main,
   },
   noticeIcon: ({ palette }) => ({
     width: '1rem',
     height: '1rem',
     flexShrink: 0,
-    color: palette.icon.fill.tips,
-    fill: palette.icon.fill.tips,
+    color: palette.icon.tips,
+    fill: palette.icon.tips,
   }),
   noticeText: ({ palette }) => ({
     flex: 1,
@@ -325,7 +325,7 @@ const scheduleModalStyles = () => ({
     borderRadius: '0.5rem',
     padding: '0.5rem',
     border: ({ palette }) => `1px solid ${palette.border.error}`,
-    background: ({ palette }) => palette.background.errorBkg,
+    background: ({ palette }) => palette.background.error,
     color: ({ palette }) => palette.text.error,
     gap: '0.5rem',
   },

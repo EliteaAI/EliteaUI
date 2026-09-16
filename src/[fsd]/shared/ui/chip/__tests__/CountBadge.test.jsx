@@ -8,7 +8,7 @@ import { cleanup, render, screen } from '@testing-library/react';
 
 import CountBadge from '../CountBadge';
 
-const theme = createTheme({ palette: { border: { cardsOutlines: '#262B34' } } });
+const theme = createTheme({ palette: { border: { default: '#262B34' } } });
 
 const renderBadge = props =>
   render(

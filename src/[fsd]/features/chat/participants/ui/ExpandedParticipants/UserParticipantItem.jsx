@@ -80,7 +80,7 @@ const userParticipantItemStyles = ({ isOtherUser }) => ({
     boxSizing: 'border-box',
     position: 'relative',
     ':hover': {
-      background: palette.background.participant.hover,
+      background: palette.components.participant.background.hover,
     },
     '&:hover #cover': {
       visibility: isOtherUser ? 'visible' : 'hidden',
@@ -92,7 +92,7 @@ const userParticipantItemStyles = ({ isOtherUser }) => ({
     left: 0,
     width: '100%',
     height: '100%',
-    backgroundColor: palette.background.participant.cover,
+    backgroundColor: palette.components.participant.background.cover,
     borderRadius: '1.75rem',
     display: 'flex',
     justifyContent: 'center',

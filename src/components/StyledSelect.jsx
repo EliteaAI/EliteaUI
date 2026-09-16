@@ -26,7 +26,7 @@ const StyledSelect = styled(
     top: calc(50% - 11px);
   }
   & .MuiSelect-select {
-    color: ${customSelectedColor || theme.palette.text.select.selected.primary};
+    color: ${customSelectedColor || theme.palette.components.select.text.selected.primary};
     font-size: ${customSelectedFontSize || '1rem'};
   }
   & .MuiSelect-select:focus {
@@ -37,8 +37,8 @@ const StyledSelect = styled(
     align-items: center;
   }
   & .MuiInput-input.Mui-disabled {
-    color: ${theme.palette.text.default} !important;
-    -webkit-text-fill-color: ${theme.palette.text.default} !important;
+    color: ${theme.palette.text.primary} !important;
+    -webkit-text-fill-color: ${theme.palette.text.primary} !important;
   }
   fieldset{
     border: none !important;

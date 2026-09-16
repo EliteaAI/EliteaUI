@@ -34,7 +34,7 @@ export const getIcon = (type, theme, notification) => {
     case NotificationType.PromptHasAddedToSomeProject:
     case NotificationType.NewPromptVersionOfSomeProjectWasCreated:
     case NotificationType.UserWasAddedToSomeProjectAsTeammate:
-      return <SuccessIcon fill={theme.palette.icon.fill.tips} />;
+      return <SuccessIcon fill={theme.palette.icon.tips} />;
 
     case NotificationType.PromptModeratorReject:
     case NotificationType.ModeratorUnpublish:
@@ -82,7 +82,7 @@ export const getIcon = (type, theme, notification) => {
     case NotificationType.Rates:
       return (
         <HeartIcon
-          fill={theme.palette.icon.fill.tips}
+          fill={theme.palette.icon.tips}
           size={16}
         />
       );
@@ -90,7 +90,7 @@ export const getIcon = (type, theme, notification) => {
     case NotificationType.Comments:
       return (
         <CommentIcon
-          fill={theme.palette.icon.fill.tips}
+          fill={theme.palette.icon.tips}
           size={16}
         />
       );

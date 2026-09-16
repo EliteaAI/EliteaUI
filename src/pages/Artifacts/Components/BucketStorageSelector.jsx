@@ -160,7 +160,7 @@ const bucketStorageSelectorStyles = () => ({
   }),
   chevron: {
     fontSize: '1.25rem',
-    color: 'text.default',
+    color: 'text.primary',
   },
   menuPaper: ({ palette }) => ({
     boxShadow: palette.boxShadow.default,
@@ -174,7 +174,7 @@ const bucketStorageSelectorStyles = () => ({
       backgroundColor: palette.action.hover,
     },
     '&.Mui-selected': {
-      backgroundColor: palette.background.participant.active,
+      backgroundColor: palette.background.interactiveItem.active,
       '&:hover': {
         backgroundColor: palette.action.hover,
       },

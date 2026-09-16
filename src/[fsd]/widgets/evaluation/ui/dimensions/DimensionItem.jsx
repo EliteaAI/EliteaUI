@@ -10,7 +10,11 @@ const DimensionItem = memo(props => {
   const { dimension, isSelected, onClick } = props;
 
   const engines = dimension.allowed_engines ?? [];
-  const targetLabel = getTargetLabel(dimension.default_target, dimension.default_target_operator);
+  const targetLabel = getTargetLabel(
+    dimension.default_target,
+    dimension.default_target_operator,
+    dimension.scale_type,
+  );
   const weightLabel = getWeightLabel(dimension.default_weight);
   const description = dimension.description || '[No Description]';
 
@@ -86,15 +90,15 @@ const dimensionItemStyles = () => ({
       height: '5.25rem',
       padding: '0.5rem 1.5rem',
       cursor: 'pointer',
-      backgroundColor: isSelected ? palette.background.conversation.selected : 'transparent',
+      backgroundColor: isSelected ? palette.components.conversation.background.selected : 'transparent',
       borderBottom: `0.0625rem solid ${palette.border.lines}`,
       '&:last-child': {
         borderBottom: 'none',
       },
       '&:hover': {
         backgroundColor: isSelected
-          ? palette.background.conversation.selected
-          : palette.background.conversation.hover,
+          ? palette.components.conversation.background.selected
+          : palette.background.interactiveItem.rowHover,
       },
     }),
   content: {
@@ -129,7 +133,7 @@ const dimensionItemStyles = () => ({
     borderRadius: '1.0625rem',
     color: palette.text.primary,
     backgroundColor: 'transparent',
-    border: `0.0625rem solid ${palette.background.tabButton.default}`,
+    border: `0.0625rem solid ${palette.background.surface.interactive.default}`,
     fontSize: '0.75rem',
     lineHeight: '1rem',
     whiteSpace: 'nowrap',
@@ -151,7 +155,7 @@ const dimensionItemStyles = () => ({
     marginTop: '0.125rem',
     color: palette.text.secondary,
     '& path': {
-      fill: palette.text.secondary,
+      fill: palette.icon.secondary,
     },
   }),
 });

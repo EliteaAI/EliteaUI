@@ -42,7 +42,7 @@ const DropdownFooter = memo(props => {
         >
           <Box
             sx={styles.contentRow}
-            color={theme.palette.icon.fill.inactive}
+            color={theme.palette.icon.inactive}
           >
             <UsersIcon
               sx={styles.usersIcon}
@@ -130,7 +130,7 @@ const dropdownFooterStyles = ({ isHovering }) => ({
     left: 0,
     width: '1.25rem',
     height: '100%',
-    backgroundColor: palette.background.participant.cover,
+    backgroundColor: palette.components.participant.background.cover,
     borderRadius: '1.75rem',
     display: 'flex',
     justifyContent: 'center',

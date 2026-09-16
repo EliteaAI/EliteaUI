@@ -360,14 +360,14 @@ const componentStyles = {
     severity =>
     ({ palette }) => ({
       borderRadius: '0.5rem',
-      border: `0.0625rem solid ${palette.border.indexResult[severity] || palette.border.indexResult.info}`,
-      backgroundColor: palette.background.indexResult[severity] || palette.background.indexResult.info,
+      border: `0.0625rem solid ${(palette.alert[severity] || palette.alert.info).border}`,
+      backgroundColor: (palette.alert[severity] || palette.alert.info).background,
       '& .MuiAlert-icon': {
         color: palette.icon.indexResult[severity] || palette.icon.indexResult.info,
       },
       '& .MuiAlert-message': {
         width: '100%',
-        color: palette.text.indexResult[severity] || palette.text.indexResult.info,
+        color: (palette.alert[severity] || palette.alert.info).text,
       },
     }),
 };

@@ -151,7 +151,7 @@ const duplicateDialogContentStyles = () => ({
     width: '1rem',
     height: '1rem',
     flexShrink: 0,
-    color: palette.icon.fill.default,
+    color: palette.icon.default,
   }),
   filenameBase: {
     minWidth: 0,
@@ -170,7 +170,7 @@ const duplicateDialogContentStyles = () => ({
     fontSize: '0.75rem',
     fontWeight: 400,
     cursor: 'pointer',
-    color: palette.text.button.showMore,
+    color: palette.text.showMore,
     textDecoration: 'none',
     '&:hover': {
       backgroundColor: 'transparent',

@@ -96,8 +96,8 @@ const FolderItem = memo(props => {
             sx={{ fontSize: '1rem' }}
             fill={
               checkPermission(PERMISSIONS.chat.create)
-                ? theme.palette.icon.fill.default
-                : theme.palette.icon.fill.disabled
+                ? theme.palette.icon.default
+                : theme.palette.icon.disabled
             }
           />
         ),
@@ -109,7 +109,7 @@ const FolderItem = memo(props => {
         icon: (
           <EditIcon
             sx={{ fontSize: '1rem' }}
-            fill={theme.palette.icon.fill.default}
+            fill={theme.palette.icon.default}
           />
         ),
         disabled: userId != owner_id || !checkPermission(PERMISSIONS.chat.folders.update),
@@ -126,7 +126,7 @@ const FolderItem = memo(props => {
         icon: (
           <DeleteIcon
             sx={{ fontSize: '1rem' }}
-            fill={theme.palette.icon.fill.default}
+            fill={theme.palette.icon.default}
           />
         ),
         entityName: name,
@@ -140,8 +140,8 @@ const FolderItem = memo(props => {
 
     return items;
   }, [
-    theme.palette.icon.fill.default,
-    theme.palette.icon.fill.disabled,
+    theme.palette.icon.default,
+    theme.palette.icon.disabled,
     userId,
     owner_id,
     checkPermission,
@@ -325,7 +325,7 @@ const FolderItem = memo(props => {
             sx={styles.checkButton}
           >
             <CheckedIcon
-              fill={isFolderSaveEnabled ? theme.palette.icon.fill.default : theme.palette.icon.fill.disabled}
+              fill={isFolderSaveEnabled ? theme.palette.icon.default : theme.palette.icon.disabled}
             />
           </Box>
         </Tooltip>
@@ -334,7 +334,7 @@ const FolderItem = memo(props => {
           onClick={isNewFolder ? handleOnCancelCreateFolder : handleOnCloseEditFolder}
           sx={styles.cancelButton}
         >
-          <CancelIcon fill={theme.palette.icon.fill.default} />
+          <CancelIcon fill={theme.palette.icon.default} />
         </Box>
       </Box>
     </ClickAwayListener>
@@ -373,7 +373,7 @@ const folderItemStyles = isFolderSaveEnabled => ({
     flexDirection: 'row',
     alignItems: 'center',
     gap: '0.75rem',
-    background: palette.background.conversationEditor,
+    background: palette.components.conversation.background.editor,
   }),
   checkButton: ({ palette }) => ({
     width: '1.75rem',
@@ -385,7 +385,7 @@ const folderItemStyles = isFolderSaveEnabled => ({
     cursor: isFolderSaveEnabled ? 'pointer' : 'default',
     boxSizing: 'border-box',
     '&:hover': {
-      background: isFolderSaveEnabled ? palette.background.select.hover : undefined,
+      background: isFolderSaveEnabled ? palette.background.interactiveItem.hover : undefined,
     },
   }),
   cancelButton: ({ palette }) => ({
@@ -400,7 +400,7 @@ const folderItemStyles = isFolderSaveEnabled => ({
     paddingTop: '0.125rem',
     paddingLeft: '0.125rem',
     '&:hover': {
-      background: palette.background.select.hover,
+      background: palette.background.interactiveItem.hover,
     },
   }),
 });

@@ -331,12 +331,12 @@ const addCaseFromChatsModalStyles = () => ({
       justifyContent: 'space-between',
       padding: '0.5rem 1.5rem',
       cursor: 'pointer',
-      backgroundColor: isSelected ? palette.background.conversation.selected : 'transparent',
+      backgroundColor: isSelected ? palette.components.conversation.background.selected : 'transparent',
 
       '&:hover': {
         backgroundColor: isSelected
-          ? palette.background.conversation.selected
-          : palette.background.conversation.hover,
+          ? palette.components.conversation.background.selected
+          : palette.background.interactiveItem.rowHover,
       },
     }),
   rowContent: {
@@ -363,7 +363,7 @@ const addCaseFromChatsModalStyles = () => ({
     marginLeft: '0.75rem',
     color: palette.text.secondary,
     '& path': {
-      fill: palette.text.secondary,
+      fill: palette.icon.secondary,
     },
   }),
   error: ({ palette }) => ({

@@ -82,7 +82,7 @@ const evaluationProgressStyles = () => ({
     fontSize: '2rem',
     marginBottom: '0.5rem',
     '& path': {
-      fill: palette.icon.fill.default,
+      fill: palette.icon.default,
     },
   }),
   title: ({ palette }) => ({
@@ -90,7 +90,7 @@ const evaluationProgressStyles = () => ({
     textAlign: 'center',
   }),
   caseCount: ({ palette }) => ({
-    color: palette.text.default,
+    color: palette.text.primary,
     textAlign: 'center',
   }),
   progressRow: {
@@ -105,7 +105,7 @@ const evaluationProgressStyles = () => ({
     flex: 1,
     height: '0.5rem',
     borderRadius: '0.4375rem',
-    backgroundColor: palette.background.tabButton.default,
+    backgroundColor: palette.background.surface.interactive.default,
     '& .MuiLinearProgress-bar': {
       borderRadius: '0.4375rem',
       backgroundColor: palette.info.main,
@@ -115,13 +115,13 @@ const evaluationProgressStyles = () => ({
     padding: '0.25rem',
     minWidth: 0,
     '&:hover svg path': {
-      fill: palette.icon.fill.secondary,
+      fill: palette.icon.secondary,
     },
   }),
   closeIcon: ({ palette }) => ({
     fontSize: '1rem',
     '& path': {
-      fill: palette.icon.fill.default,
+      fill: palette.icon.default,
     },
   }),
 });

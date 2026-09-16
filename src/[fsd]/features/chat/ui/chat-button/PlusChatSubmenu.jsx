@@ -74,7 +74,7 @@ const PlusChatSubmenu = memo(props => {
         <Box sx={styles.searchInnerContainer}>
           <SearchIcon
             style={styles.searchIcon}
-            fill={theme.palette.text.secondary}
+            fill={theme.palette.icon.secondary}
           />
           <TextField
             ref={searchRef}
@@ -104,7 +104,7 @@ const PlusChatSubmenu = memo(props => {
           >
             <PlusIcon
               style={styles.plusIcon}
-              fill={theme.palette.icon.fill.secondary}
+              fill={theme.palette.icon.secondary}
             />
             <Typography
               variant="bodyMedium"
@@ -254,7 +254,7 @@ const submenuStyles = theme => ({
     gap: '0.75rem',
     color: theme.palette.text.primary,
     '&:hover': {
-      backgroundColor: theme.palette.background.select.hover,
+      backgroundColor: theme.palette.background.interactiveItem.hover,
     },
   },
   dividerContainer: {
@@ -319,7 +319,7 @@ const submenuStyles = theme => ({
     gap: '0.5rem',
     color: theme.palette.text.primary,
     '&:hover': {
-      backgroundColor: theme.palette.background.select.hover,
+      backgroundColor: theme.palette.background.interactiveItem.hover,
     },
   },
   toggleItem: {
@@ -330,7 +330,7 @@ const submenuStyles = theme => ({
     display: 'flex',
     justifyContent: 'space-between',
     '&:hover': {
-      backgroundColor: theme.palette.background.select.hover,
+      backgroundColor: theme.palette.background.interactiveItem.hover,
     },
   },
   messageContainer: {

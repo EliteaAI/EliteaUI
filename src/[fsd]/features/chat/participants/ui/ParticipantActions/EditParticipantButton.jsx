@@ -54,7 +54,7 @@ const EditParticipantButton = memo(props => {
         ) : (
           <SettingIcon
             sx={{ fontSize: '1rem' }}
-            fill={disabled ? theme.palette.icon.fill.disabled : undefined}
+            fill={disabled ? theme.palette.icon.disabled : undefined}
           />
         )}
       </IconButton>
@@ -64,7 +64,7 @@ const EditParticipantButton = memo(props => {
 
 const styles = {
   listItemIcon: ({ palette }) => ({
-    fill: palette.text.primary,
+    fill: palette.icon.default,
   }),
 };
 

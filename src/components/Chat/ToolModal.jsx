@@ -165,7 +165,7 @@ const ToolModal = props => {
           <CloseIcon
             sx={{
               fontSize: 16,
-              fill: theme.palette.icon.fill.default,
+              fill: theme.palette.icon.default,
             }}
           />
         </IconButton>
@@ -196,7 +196,7 @@ const ToolModal = props => {
             cursor: 'col-resize',
             transition: 'background-color 0.2s ease',
             '&:hover': {
-              backgroundColor: theme.palette.border.table,
+              backgroundColor: theme.palette.border.default,
             },
           },
           '& .gutter.gutter-horizontal': {

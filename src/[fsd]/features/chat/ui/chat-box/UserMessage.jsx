@@ -372,8 +372,10 @@ const styles = {
   messageVertical:
     highLightMe =>
     ({ palette }) => ({
-      border: highLightMe ? `0.0625rem solid ${palette.border.highlightUserMessage}` : undefined,
-      background: highLightMe ? palette.background.highlightUserMessage : palette.background.aiAnswerBkg,
+      border: highLightMe ? `0.0625rem solid ${palette.components.userMessage.highlightBorder}` : undefined,
+      background: highLightMe
+        ? palette.components.userMessage.highlightBackground
+        : palette.background.aiAnswer,
       width: '100%',
       borderRadius: '0.5rem',
       padding: '0.75rem 1rem 0.75rem 1rem',
@@ -435,7 +437,7 @@ const styles = {
   buttonsContainerVertical:
     highLightMe =>
     ({ palette }) => ({
-      background: highLightMe ? undefined : palette.background.aiAnswerActions,
+      background: highLightMe ? undefined : palette.components.aiAnswer.actionsGradient,
     }),
   iconButton: {
     marginLeft: '0rem',
@@ -450,7 +452,7 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     borderRadius: '0.5rem',
-    border: `0.0625rem solid ${palette.border.userMessageEditor}`,
+    border: `0.0625rem solid ${palette.components.userMessageEditor.border}`,
     background: palette.background.surface.interactive.default,
   }),
   editInputField: ({ palette }) => ({

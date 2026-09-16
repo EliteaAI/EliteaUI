@@ -132,7 +132,7 @@ const runNodeStyles = (status, selected) => {
       case FlowEditorConstants.PipelineStatus.Stopped:
         return palette.status.onModeration;
       default:
-        return palette.icon.fill.inactive;
+        return palette.icon.inactive;
     }
   };
 
@@ -140,8 +140,10 @@ const runNodeStyles = (status, selected) => {
     wrapper: ({ palette }) => ({
       padding: '.375rem .75rem',
       borderRadius: '.5rem',
-      border: `.0625rem solid ${selected ? palette.background.button.primary.disabled : palette.border.lines}`,
-      background: selected ? palette.background.dataGrid.main : palette.background.default.tertiary,
+      border: `.0625rem solid ${selected ? palette.components.button.background.primary.disabled : palette.border.lines}`,
+      background: selected
+        ? palette.components.dataGrid.background.main
+        : palette.background.default.tertiary,
       height: '2.25rem',
       display: 'flex',
       alignItems: 'center',
@@ -150,11 +152,11 @@ const runNodeStyles = (status, selected) => {
 
       '&:hover': {
         cursor: 'pointer',
-        border: `.0625rem solid ${palette.background.button.primary.disabled}`,
-        background: palette.background.dataGrid.main,
+        border: `.0625rem solid ${palette.components.button.background.primary.disabled}`,
+        background: palette.components.dataGrid.background.main,
       },
     }),
-    runName: ({ palette }) => ({ color: palette.text.secondary }),
+    runName: ({ palette }) => ({ color: palette.icon.secondary }),
     statusIcon: ({ palette }) => ({
       display: 'flex',
       justifyContent: 'flex-start',
@@ -186,7 +188,7 @@ const runNodeStyles = (status, selected) => {
           : {
               ':hover': {
                 path: {
-                  fill: ({ palette }) => `${palette.text.secondary} !important`,
+                  fill: ({ palette }) => `${palette.icon.secondary} !important`,
                 },
               },
             }),

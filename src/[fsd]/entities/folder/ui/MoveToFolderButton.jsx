@@ -118,12 +118,12 @@ const moveToFolderButtonVisibilityStyles = isVisible => ({
     backgroundColor: 'transparent',
     '& svg': {
       fontSize: '1rem',
-      fill: palette.icon.fill.default,
+      fill: palette.icon.default,
     },
     '&:hover': {
-      backgroundColor: palette.background.button.secondary.default,
+      backgroundColor: palette.background.surface.interactive.active,
       '& svg': {
-        fill: palette.icon.fill.secondary,
+        fill: palette.icon.secondary,
       },
     },
   }),

@@ -226,13 +226,15 @@ VoiceButton.displayName = 'VoiceButton';
 /** @type {MuiSx} */
 const getStyles = (isRecording, disabled) => {
   const micButtonColor = palette =>
-    disabled ? palette.icon.fill.disabled : isRecording ? palette.primary.main : palette.text.secondary;
+    disabled ? palette.icon.disabled : isRecording ? palette.primary.main : palette.text.secondary;
   return {
     wrapper: {
       display: 'flex',
       alignItems: 'center',
       gap: isRecording ? '0.5rem' : '0rem',
-      border: isRecording ? theme => `0.0625rem solid ${theme.palette.border.chatContinue}` : 'none',
+      border: isRecording
+        ? theme => `0.0625rem solid ${theme.palette.components.chatContinue.border}`
+        : 'none',
       padding: '0rem',
       borderRadius: isRecording ? '1.75rem' : '0rem',
       boxSizing: 'border-box',

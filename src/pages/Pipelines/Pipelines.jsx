@@ -298,7 +298,7 @@ const pipelinesStyles = () => ({
     width: '3.75rem',
   },
   statusFilterLabelText: {
-    color: 'text.default',
+    color: 'text.primary',
   },
   statusFilterSelectWrapper: {
     flex: 1,

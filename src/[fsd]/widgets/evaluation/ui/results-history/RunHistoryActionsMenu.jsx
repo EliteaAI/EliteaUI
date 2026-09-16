@@ -144,12 +144,12 @@ const runHistoryActionsMenuStyles = () => ({
     padding: 0,
     borderRadius: '50%',
     '&:hover': {
-      backgroundColor: palette.background.tabButton.default,
+      backgroundColor: palette.background.surface.interactive.default,
     },
   }),
   triggerIcon: ({ palette }) => ({
     fontSize: '1.125rem',
-    color: palette.icon.fill.default,
+    color: palette.icon.default,
   }),
   menuPaper: ({ palette }) => ({
     minWidth: '11rem',
@@ -169,14 +169,14 @@ const runHistoryActionsMenuStyles = () => ({
     padding: '0.5rem 1rem',
     backgroundColor: palette.background.default.secondary,
     '&:hover': {
-      backgroundColor: palette.background.tabButton.default,
+      backgroundColor: palette.background.surface.interactive.default,
     },
   }),
   menuIcon: ({ palette }) => ({
     fontSize: '1rem',
     flexShrink: 0,
     '& path': {
-      fill: palette.icon.fill.default,
+      fill: palette.icon.default,
     },
   }),
   deleteIconWrapper: ({ palette }) => ({
@@ -187,7 +187,7 @@ const runHistoryActionsMenuStyles = () => ({
       height: '1rem',
     },
     '& path': {
-      fill: palette.icon.fill.default,
+      fill: palette.icon.default,
     },
   }),
   menuText: ({ palette }) => ({

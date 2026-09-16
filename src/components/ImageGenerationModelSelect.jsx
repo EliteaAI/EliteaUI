@@ -346,14 +346,14 @@ const styles = {
     fontSize: '0.875rem',
     color: ({ palette }) => palette.text.secondary,
     '&:hover': {
-      backgroundColor: ({ palette }) => palette.background.button.iconLabelButton.hover,
+      backgroundColor: ({ palette }) => palette.components.button.background.iconLabelButton.hover,
     },
     '&.Mui-disabled': {
       color: ({ palette }) => palette.text.disabled,
     },
     background: ({ palette }) =>
       selectedOption && option.name === selectedOption.name && option.private === selectedOption.private
-        ? palette.background.participant.active
+        ? palette.background.interactiveItem.active
         : undefined,
   }),
   checkedIconBox: ({ palette }) => ({

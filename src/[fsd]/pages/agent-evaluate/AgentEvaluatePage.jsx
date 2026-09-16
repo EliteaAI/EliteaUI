@@ -86,6 +86,7 @@ const AgentEvaluatePage = memo(() => {
         localDimensionId: dim?.local_dimension_id ?? null,
         defaultTarget: dim?.default_target ?? null,
         defaultTargetOperator: dim?.default_target_operator ?? null,
+        defaultScaleType: dim?.scale_type ?? null,
         defaultWeight: dim?.default_weight ?? null,
       };
     });
@@ -138,6 +139,7 @@ const AgentEvaluatePage = memo(() => {
         localDimensionId: pending.local_dimension_id ?? null,
         defaultTarget: pending.default_target ?? null,
         defaultTargetOperator: pending.default_target_operator ?? null,
+        defaultScaleType: pending.scale_type ?? null,
         defaultWeight: pending.default_weight ?? null,
       }));
     }
@@ -344,7 +346,7 @@ const agentEvaluatePageStyles = () => ({
     height: '3.8rem',
     minHeight: '3.8rem',
     width: '100%',
-    borderBottom: `0.0625rem solid ${palette.border.table}`,
+    borderBottom: `0.0625rem solid ${palette.border.default}`,
     boxSizing: 'border-box',
     display: 'flex',
     alignItems: 'center',
@@ -373,7 +375,7 @@ const agentEvaluatePageStyles = () => ({
   },
   divider: ({ palette }) => ({
     width: '0.0625rem',
-    backgroundColor: palette.border.table,
+    backgroundColor: palette.border.default,
     flexShrink: 0,
   }),
 });

@@ -284,7 +284,7 @@ const getStyles = () => ({
     padding: '0.75rem 1rem 1rem 1rem',
     gap: '0.75rem',
     borderRadius: '0.5rem',
-    backgroundColor: palette.background.chatContinueBackground,
+    backgroundColor: palette.components.chatContinue.background,
     alignItems: 'flex-start',
   }),
   authorizationContainer: ({ palette }) => ({

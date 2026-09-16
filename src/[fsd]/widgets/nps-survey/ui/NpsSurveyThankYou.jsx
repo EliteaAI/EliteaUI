@@ -17,7 +17,7 @@ NpsSurveyThankYou.displayName = 'NpsSurveyThankYou';
 
 /** @type {MuiSx} */
 const styles = {
-  container: {
+  container: ({ palette }) => ({
     display: 'flex',
     flexDirection: 'column',
     gap: '0.5rem',
@@ -28,10 +28,10 @@ const styles = {
     paddingLeft: '1.5rem',
     paddingRight: '1.5rem',
     borderRadius: '1rem',
-    background: 'linear-gradient(to top, #f7d9ff, #d5e3fe)',
-    border: '1px solid #93b2ff',
+    background: palette.components.npsSurvey.background,
+    border: `0.0625rem solid ${palette.components.npsSurvey.border}`,
     width: '27.375rem',
-  },
+  }),
   iconWrapper: {
     width: '1.5rem',
     height: '1.5rem',
@@ -39,14 +39,14 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
   },
-  text: {
+  text: ({ palette }) => ({
     fontFamily: '"Montserrat", sans-serif',
     fontWeight: 600,
     fontSize: '0.875rem',
     lineHeight: '1.5rem',
-    color: '#0E131D',
+    color: palette.text.alwaysDark,
     textAlign: 'center',
-  },
+  }),
 };
 
 export default NpsSurveyThankYou;

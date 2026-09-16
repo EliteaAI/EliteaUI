@@ -129,12 +129,12 @@ const styles = {
     fontSize: '1rem',
     color: palette.text.primary,
     '&:hover': {
-      color: palette.icon.fill.secondary,
+      color: palette.icon.secondary,
     },
   }),
   menuIcon: ({ palette }) => ({
     fontSize: '1rem',
-    color: palette.icon.fill.default,
+    color: palette.icon.default,
   }),
   listItemText: ({ palette }) => ({
     color: palette.text.secondary,

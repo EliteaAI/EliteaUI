@@ -579,12 +579,12 @@ const FlowEditor = forwardRef((props, ref) => {
                     {expandAll ? (
                       <CollapseIcon
                         sx={styles.icon}
-                        fill={theme.palette.icon.fill.secondary}
+                        fill={theme.palette.icon.secondary}
                       />
                     ) : (
                       <ExpandIcon
                         sx={styles.icon}
-                        fill={theme.palette.icon.fill.secondary}
+                        fill={theme.palette.icon.secondary}
                       />
                     )}
                   </ControlButton>
@@ -601,7 +601,7 @@ const FlowEditor = forwardRef((props, ref) => {
                   <ControlButton onClick={onReLayout}>
                     <PolylineOutlinedIcon
                       sx={styles.icon}
-                      fill={theme.palette.icon.fill.secondary}
+                      fill={theme.palette.icon.secondary}
                     />
                   </ControlButton>
                 </Box>
@@ -685,8 +685,8 @@ const flowEditorStyles = () => ({
     fontSize: typography.body2.fontSize,
     fontWeight: 400,
     '&:hover': {
-      background: `${palette.background.dataGrid.main} !important`,
-      border: `.0625rem solid ${palette.border.flowNode}`,
+      background: `${palette.components.dataGrid.background.main} !important`,
+      border: `.0625rem solid ${palette.components.flowEditor.node.border}`,
     },
   }),
   flowControls: ({ palette }) => ({
@@ -695,15 +695,15 @@ const flowEditorStyles = () => ({
       borderRadius: '0.25rem',
     },
     '& .react-flow__controls-button svg': {
-      color: `${palette.border.hover} !important`,
+      color: `${palette.icon.default} !important`,
     },
     '& .react-flow__controls-button': {
       backgroundColor: palette.background.paper,
       borderBottom: `1px solid ${palette.divider}`,
       '&:hover': {
-        backgroundColor: palette.border.table,
+        backgroundColor: palette.components.table.border,
         '& svg': {
-          color: `${palette.icon.fill.secondary} !important`,
+          color: `${palette.icon.secondary} !important`,
         },
       },
     },

@@ -3,11 +3,10 @@ import { useCallback } from 'react';
 import Papa from 'papaparse';
 import { PropTypes } from 'prop-types';
 
-import { IconButton } from '@mui/material';
+import { IconButton, useTheme } from '@mui/material';
 
 import ImportIcon from '@/assets/import-icon.svg?react';
 import useToast from '@/hooks/useToast';
-import { useTheme } from '@emotion/react';
 
 import StyledTooltip from '../ComponentsLib/Tooltip';
 
@@ -83,7 +82,7 @@ export default function ImportTableButton({ onImported, disabled }) {
           <ImportIcon
             style={{
               fontSize: '1rem',
-              color: !disabled ? theme.palette.icon.fill.default : theme.palette.text.button.disabled,
+              color: !disabled ? theme.palette.icon.default : theme.palette.text.muted,
             }}
           />
         </IconButton>

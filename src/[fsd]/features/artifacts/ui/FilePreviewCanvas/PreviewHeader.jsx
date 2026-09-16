@@ -225,7 +225,7 @@ const PreviewHeader = memo(props => {
                 background: palette.background.surface.interactive.active,
 
                 ':hover': {
-                  background: palette.background.button.secondary.hover,
+                  background: palette.components.button.background.secondary.hover,
                 },
               }),
             }}
@@ -421,7 +421,7 @@ const previewHeaderStyles = isChatPage => ({
 
   iconAction: ({ palette }) => ({
     fontSize: '0.875rem',
-    fill: palette.icon.fill.default,
+    fill: palette.icon.default,
   }),
 
   iconButtonAction: {

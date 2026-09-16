@@ -88,7 +88,7 @@ const ExpandedViewerModal = memo(props => {
       <Box sx={styles.labelBox}>
         <Typography
           variant="bodyMedium"
-          color="text.default"
+          color="text.primary"
         >
           Content type:
         </Typography>
@@ -163,7 +163,7 @@ const styledInputModalBaseStyles = () => ({
   actionButton: ({ spacing, palette }) => ({
     marginLeft: spacing(2),
     '&:hover svg path': {
-      fill: `${palette.text.secondary} !important`,
+      fill: `${palette.icon.secondary} !important`,
     },
   }),
   icon: {

@@ -161,7 +161,7 @@ const generatedEntityChipStyles = () => ({
     gap: '.75rem',
     padding: '.375rem .75rem',
     alignItems: 'center',
-    background: palette.background.button.default,
+    background: palette.components.button.background.default,
     cursor: 'default',
   }),
   contentContainer: {
@@ -189,7 +189,7 @@ const generatedEntityChipStyles = () => ({
     display: 'flex',
     alignItems: 'center',
     flexShrink: 0,
-    color: ({ palette }) => palette.icon.fill.default,
+    color: ({ palette }) => palette.icon.default,
   },
   entityIcon: {
     width: '1rem',

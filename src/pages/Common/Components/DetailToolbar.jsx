@@ -1,6 +1,7 @@
+import { useTheme } from '@mui/material';
+
 import DotMenu from '@/components/DotMenu';
 import HeaderContainer from '@/components/HeaderContainer';
-import { useTheme } from '@emotion/react';
 
 /**
  * Common DetailToolbar component used by both Prompts and Applications

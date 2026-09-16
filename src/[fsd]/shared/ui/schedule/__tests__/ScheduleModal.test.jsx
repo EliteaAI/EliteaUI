@@ -43,11 +43,13 @@ vi.mock('@/[fsd]/shared/lib/helpers/schedule.helpers', async importOriginal => (
 
 const theme = createTheme({
   palette: {
-    background: { surface: { interactive: { default: '#111' } }, tips: { main: '#112' }, errorBkg: '#311' },
+    background: { surface: { interactive: { default: '#111' } }, error: '#311' },
     border: { tips: '#123', error: '#411' },
     text: { tips: '#abc', warningText: '#f00', error: '#f00' },
     icon: { fill: { tips: '#abc' } },
     secondary: { main: '#888' },
+    alert: { info: { background: '#112', border: '#123', text: '#abc', icon: '#abc' } },
+    components: { tips: { background: { main: '#112', secondary: '#113' } } },
   },
 });
 

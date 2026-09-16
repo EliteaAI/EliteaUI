@@ -354,7 +354,7 @@ const PlusChatButton = memo(props => {
           data-testid="plus-menu-button"
           onClick={handleToggle}
         >
-          <PlusIcon fill={theme.palette.icon.fill.secondary} />
+          <PlusIcon fill={theme.palette.icon.secondary} />
         </IconButton>
       </Tooltip>
 
@@ -401,7 +401,7 @@ const PlusChatButton = memo(props => {
                     <Typography sx={styles.menuLabel}>{label}</Typography>
                     <ArrowRightIcon
                       sx={styles.chevron}
-                      fill={theme.palette.icon.fill.default}
+                      fill={theme.palette.icon.default}
                     />
                   </MenuItem>
                 ),
@@ -492,7 +492,7 @@ const plusChatButtonStyles = theme => ({
       width: '1rem',
       height: '1rem',
       flexShrink: 0,
-      color: theme.palette.icon.fill.default,
+      color: theme.palette.icon.default,
     },
     '& > .MuiIconButton-root .MuiTypography-root': {
       fontSize: '.875rem',
@@ -513,7 +513,7 @@ const plusChatButtonStyles = theme => ({
     height: '1rem',
     fontSize: '1rem',
     flexShrink: 0,
-    color: theme.palette.icon.fill.default,
+    color: theme.palette.icon.default,
   },
   menuLabel: {
     flex: 1,
@@ -524,7 +524,7 @@ const plusChatButtonStyles = theme => ({
   chevron: {
     fontSize: '1rem',
     flexShrink: 0,
-    color: theme.palette.icon.fill.default,
+    color: theme.palette.icon.default,
   },
   subPopper: {
     zIndex: 9999,
@@ -577,11 +577,11 @@ const plusChatButtonStyles = theme => ({
     cursor: 'pointer',
 
     '&:hover': {
-      backgroundColor: theme.palette.background.select.hover,
+      backgroundColor: theme.palette.background.interactiveItem.hover,
     },
 
     '&:active': {
-      backgroundColor: theme.palette.background.tabButton.active,
+      backgroundColor: theme.palette.components.tabGroupButton.background.active,
     },
 
     '& .MuiFormControlLabel-label': {

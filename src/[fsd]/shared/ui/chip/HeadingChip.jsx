@@ -64,7 +64,7 @@ const headingChipStyles = variant => ({
     };
 
     if (variant === HEADING_CHIP_VARIANTS.suggestion) {
-      const { suggestionChip } = palette;
+      const { suggestionChip } = palette.components;
 
       return {
         ...base,

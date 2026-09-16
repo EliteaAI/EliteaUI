@@ -232,8 +232,8 @@ const attachedDatasetCardStyles = () => ({
     flexDirection: 'column',
     paddingBottom: '0.5rem',
     gap: '0.5rem',
-    backgroundColor: palette.background.accordion.default,
-    border: `0.0625rem solid ${palette.border.folderCard}`,
+    backgroundColor: palette.components.accordion.background.default,
+    border: `0.0625rem solid ${palette.components.folder.border.card}`,
     borderRadius: '0.75rem',
   }),
   header: ({ palette }) => ({
@@ -243,7 +243,7 @@ const attachedDatasetCardStyles = () => ({
     padding: '0.5rem 1rem',
     gap: '0.5rem',
     borderRadius: '0.75rem',
-    backgroundColor: palette.background.folder.secondary,
+    backgroundColor: palette.components.folder.background.secondary,
     position: 'relative',
     '&::before': {
       content: '""',
@@ -251,7 +251,7 @@ const attachedDatasetCardStyles = () => ({
       inset: 0,
       borderRadius: 'inherit',
       padding: '0.0625rem',
-      background: palette.background.folder.borderGradient,
+      background: palette.components.folder.background.borderGradient,
       WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
       WebkitMaskComposite: 'xor',
       maskComposite: 'exclude',
@@ -333,7 +333,7 @@ const attachedDatasetCardStyles = () => ({
     padding: '0.5rem 1rem',
     backgroundColor: palette.background.default.secondary,
     '&:hover': {
-      backgroundColor: palette.background.tabButton.default,
+      backgroundColor: palette.background.surface.interactive.default,
     },
   }),
   overflowMenuIcon: {
@@ -346,7 +346,7 @@ const attachedDatasetCardStyles = () => ({
     height: '1rem',
     flexShrink: 0,
     '& path': {
-      fill: palette.icon.fill.default,
+      fill: palette.icon.default,
     },
   }),
   overflowMenuText: ({ palette }) => ({
@@ -379,7 +379,7 @@ const attachedDatasetCardStyles = () => ({
     background: `linear-gradient(${palette.action.hover}, ${palette.action.hover}), ${palette.background.default.secondary}`,
     color: palette.text.secondary,
     svg: {
-      path: { fill: palette.text.secondary },
+      path: { fill: palette.icon.secondary },
     },
     ':after': {
       content: "''",
@@ -408,12 +408,12 @@ const attachedDatasetCardStyles = () => ({
     minHeight: '3.625rem',
     padding: '0.5rem 1.25rem',
     gap: '0.25rem',
-    borderBottom: `0.0625rem solid ${palette.border.table}`,
+    borderBottom: `0.0625rem solid ${palette.border.lines}`,
     '&:last-child': {
       borderBottom: 'none',
     },
     '&:hover': {
-      backgroundColor: palette.background.tabButton.default,
+      backgroundColor: palette.background.surface.interactive.default,
     },
   }),
   datasetInfo: {

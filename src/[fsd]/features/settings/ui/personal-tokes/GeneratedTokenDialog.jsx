@@ -82,7 +82,7 @@ const GeneratedTokenDialog = memo(props => {
           <Typography
             data-testid="generated-token-dialog-token-name"
             variant="bodySmall"
-            color="text.default"
+            color="text.primary"
           >
             {name}
           </Typography>
@@ -91,7 +91,7 @@ const GeneratedTokenDialog = memo(props => {
               data-testid="generated-token-dialog-token-value"
               sx={styles.tokenText}
               variant="bodyMedium"
-              color="text.default"
+              color="text.primary"
             >
               {token}
             </Typography>
@@ -157,7 +157,7 @@ const generatedTokenDialogStyles = () => ({
   }),
   closeIcon: ({ palette }) => ({
     cursor: 'pointer',
-    fill: palette.icon.fill.default,
+    fill: palette.icon.default,
   }),
   tipsContainer: ({ palette }) => ({
     borderColor: palette.border.attention,
@@ -166,7 +166,7 @@ const generatedTokenDialogStyles = () => ({
   attentionIcon: ({ palette }) => ({
     width: '1rem',
     height: '1rem',
-    fill: palette.icon.fill.attention,
+    fill: palette.icon.attention,
   }),
   tokenContainer: ({ palette }) => ({
     marginY: '1rem',

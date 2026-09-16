@@ -293,7 +293,7 @@ const casesPanelStyles = () => ({
     flexDirection: 'column',
     height: '100%',
     overflow: 'hidden',
-    backgroundColor: palette.background.toolkitDetailLeftPanel,
+    backgroundColor: palette.components.codePreview.background,
   }),
   toolbar: {
     display: 'flex',
@@ -319,17 +319,17 @@ const casesPanelStyles = () => ({
     height: '1.75rem',
     padding: '0.375rem',
     borderRadius: '50%',
-    backgroundColor: palette.background.tabButton.default,
+    backgroundColor: palette.background.surface.interactive.default,
     '&:hover': {
       backgroundColor: palette.action.hover,
     },
     '&:hover svg path': {
-      fill: palette.icon.fill.secondary,
+      fill: palette.icon.secondary,
     },
     '&.Mui-disabled': {
-      backgroundColor: palette.background.tabButton.default,
+      backgroundColor: palette.background.surface.interactive.default,
       '& svg path': {
-        fill: palette.icon.fill.disabled,
+        fill: palette.icon.disabled,
       },
     },
   }),
@@ -337,7 +337,7 @@ const casesPanelStyles = () => ({
     width: '1rem',
     height: '1rem',
     '& path': {
-      fill: palette.icon.fill.default,
+      fill: palette.icon.default,
     },
   }),
   emptyState: {

@@ -96,7 +96,7 @@ const aiProviderAccordionStyles = {
     gap: '0.5rem',
     border: '0.0625rem solid transparent',
     position: 'relative',
-    backgroundColor: palette.background.aiProviderAccordion.default,
+    backgroundColor: palette.components.aiProviderAccordion.background.default,
     '&::before': {
       content: '""',
       position: 'absolute',
@@ -110,7 +110,7 @@ const aiProviderAccordionStyles = {
       pointerEvents: 'none',
     },
     '&:hover': {
-      backgroundColor: palette.background.aiProviderAccordion.hover,
+      backgroundColor: palette.components.aiProviderAccordion.background.hover,
     },
     '& .MuiAccordionSummary-content': {
       margin: '0 !important',
@@ -187,7 +187,7 @@ const aiProviderAccordionStyles = {
     justifyContent: 'center',
     borderRadius: '0.75rem',
     boxSizing: 'border-box',
-    border: `0.0625rem solid ${palette.border.cardsOutlines}`,
+    border: `0.0625rem solid ${palette.border.default}`,
   }),
   countText: ({ palette }) => ({
     color: palette.text.primary,

@@ -820,8 +820,8 @@ const runIndexPanelStyles = () => ({
     display: 'flex',
     flexDirection: 'column',
     minHeight: 0,
-    borderRight: ({ palette }) => `0.0625rem solid ${palette.border.table}`,
-    background: ({ palette }) => palette.background.toolkitDetailLeftPanel,
+    borderRight: ({ palette }) => `0.0625rem solid ${palette.border.default}`,
+    background: ({ palette }) => palette.components.indexDetail.background.left,
   },
   accordion: {
     background: 'transparent',

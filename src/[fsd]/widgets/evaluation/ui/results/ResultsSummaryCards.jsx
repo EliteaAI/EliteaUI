@@ -95,11 +95,11 @@ const resultsSummaryCardsStyles = () => ({
     height: '3.875rem',
     padding: '0.5625rem 1rem',
     borderRadius: '0.5rem',
-    backgroundColor: palette.background.tabButton.default,
+    backgroundColor: palette.background.surface.interactive.default,
     boxSizing: 'border-box',
   }),
   cardHighlighted: ({ palette }) => ({
-    backgroundColor: palette.background.card.highlighted,
+    backgroundColor: palette.components.card.background.highlighted,
   }),
   cardLabel: ({ palette }) => ({
     fontSize: '0.75rem',
@@ -107,7 +107,7 @@ const resultsSummaryCardsStyles = () => ({
     lineHeight: '1rem',
     letterSpacing: '0.06em',
     textTransform: 'uppercase',
-    color: palette.text.default,
+    color: palette.text.primary,
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
@@ -124,9 +124,12 @@ const resultsSummaryCardsStyles = () => ({
   cardValueHighlighted: ({ palette }) => ({
     color: palette.text.secondary,
   }),
-  pendingNote: {
+  pendingNote: ({ palette }) => ({
     gridColumn: '1 / -1',
-  },
+    marginTop: '0.25rem',
+    color: palette.text.primary,
+    fontStyle: 'italic',
+  }),
 });
 
 export default ResultsSummaryCards;

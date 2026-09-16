@@ -254,7 +254,7 @@ const LLMModelSelector = memo(props => {
                 >
                   <SettingIcon
                     sx={styles.settingIcon}
-                    fill={!onSetLLMSettings || disabled ? theme.palette.icon.fill.disabled : undefined}
+                    fill={!onSetLLMSettings || disabled ? theme.palette.icon.disabled : undefined}
                   />
                 </Button.BaseBtn>
               </Box>
