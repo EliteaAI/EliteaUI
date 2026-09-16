@@ -64,6 +64,14 @@ import IndexDetailsTabsBand from './IndexDetailsTabsBand';
 import RunIndexGeneralSection from './RunIndexGeneralSection';
 import RunIndexScheduleContent from './RunIndexScheduleContent';
 
+const SCHEDULE_DATE_FORMAT = {
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+};
+
 const RunIndexPanel = memo(props => {
   const {
     toolkitId,
@@ -291,14 +299,22 @@ const RunIndexPanel = memo(props => {
     const date = ScheduleHelpers.getNextCronRunInTimezone(cron, scheduleData.timezone);
 
     if (!date) return null;
-    return date.toLocaleString(undefined, {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    return date.toLocaleString(undefined, SCHEDULE_DATE_FORMAT);
   }, [scheduleData.cron, scheduleData.timezone]);
+
+  const scheduleExpiration = useMemo(() => {
+    // An absent value means the scheduler has not priced this schedule yet, not that it
+    // never expires.
+    if (!scheduleData.expires_at) return null;
+    const date = new Date(scheduleData.expires_at);
+    if (Number.isNaN(date.getTime())) return null;
+    return {
+      text: date.toLocaleString(undefined, SCHEDULE_DATE_FORMAT),
+      // Expiry disables rather than deletes, so a past deadline on a disabled schedule is
+      // the only signal that it was retired rather than turned off by hand.
+      expired: !scheduleData.enabled && date.getTime() <= Date.now(),
+    };
+  }, [scheduleData.expires_at, scheduleData.enabled]);
 
   const handleApplyScheduleModal = useCallback(
     (cron, credentials) => {
@@ -547,7 +563,11 @@ const RunIndexPanel = memo(props => {
           enabled={scheduleData.enabled}
           scheduleSummary={scheduleSummary}
           timezoneHint={scheduleTimezoneHint}
-          nextRun={scheduleNextRun}
+          // A retired schedule will not fire again until it is turned back on, so showing the
+          // cron's next occurrence next to "Expired" would promise a run that cannot happen.
+          nextRun={scheduleExpiration?.expired ? null : scheduleNextRun}
+          expiresAt={scheduleExpiration?.text}
+          expired={Boolean(scheduleExpiration?.expired)}
           credentialsTitle={scheduleData.credentials?.elitea_title}
           onAddSchedule={onAddSchedule}
           onEdit={onEditSchedule}
