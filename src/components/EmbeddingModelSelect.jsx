@@ -50,7 +50,7 @@ const EmbeddingModelSelect = memo(props => {
   );
 
   const [models, setModels] = useState([]);
-  const defaultValueForSelect = value || projectDefaultEmbeddingModel || '';
+  const defaultValueForSelect = value || '';
 
   const isNewConfigurationPersonal = useCallback(
     model => model.project_id === personal_project_id,
