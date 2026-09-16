@@ -46,8 +46,6 @@ UsageMeter.displayName = 'UsageMeter';
 
 /** @type {MuiSx} */
 const usageMeterStyles = (theme, severity) => {
-  const isDarkMode = theme.palette.mode === 'dark';
-
   const gradients = {
     exceeded: 'linear-gradient(90deg, rgba(244, 67, 54, 0) 0%, #F44336 100%)',
     warning: 'linear-gradient(90deg, rgba(255, 193, 7, 0) 0%, #FFC107 100%)',
@@ -86,7 +84,7 @@ const usageMeterStyles = (theme, severity) => {
     barBackground: {
       position: 'absolute',
       inset: 0,
-      backgroundColor: isDarkMode ? theme.palette.border.lines : '#3D44561A',
+      backgroundColor: theme.palette.components.usageMeter.trackBackground,
       borderRadius: '0.3125rem',
     },
     barFill: percentage => ({

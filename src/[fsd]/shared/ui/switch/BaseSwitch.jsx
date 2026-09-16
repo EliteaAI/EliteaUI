@@ -123,22 +123,22 @@ export const eliteaSwitchColors = theme => ({
   [SWITCH_VARIANTS.elitea]: {
     default: {
       on: {
-        thumb: theme.palette.background.switch.default.on.thumb,
-        track: theme.palette.background.switch.default.on.track,
+        thumb: theme.palette.components.switch.background.default.on.thumb,
+        track: theme.palette.components.switch.background.default.on.track,
       },
       off: {
-        thumb: theme.palette.background.switch.default.off.thumb,
-        track: theme.palette.background.switch.default.off.track,
+        thumb: theme.palette.components.switch.background.default.off.thumb,
+        track: theme.palette.components.switch.background.default.off.track,
       },
     },
     disabled: {
       on: {
-        thumb: theme.palette.background.switch.disabled.on.thumb,
-        track: theme.palette.background.switch.disabled.on.track,
+        thumb: theme.palette.components.switch.background.disabled.on.thumb,
+        track: theme.palette.components.switch.background.disabled.on.track,
       },
       off: {
-        thumb: theme.palette.background.switch.disabled.off.thumb,
-        track: theme.palette.background.switch.disabled.off.track,
+        thumb: theme.palette.components.switch.background.disabled.off.thumb,
+        track: theme.palette.components.switch.background.disabled.off.track,
       },
     },
   },

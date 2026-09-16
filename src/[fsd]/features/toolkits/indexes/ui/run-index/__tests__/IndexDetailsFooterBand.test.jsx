@@ -19,7 +19,14 @@ vi.mock('@/[fsd]/shared/ui', () => ({
 afterEach(() => cleanup());
 
 const theme = createTheme({
-  palette: { background: { section: '#111' }, border: { table: '#222' } },
+  palette: {
+    background: { section: '#111' },
+    border: { default: '#222' },
+    components: {
+      table: { border: '#222' },
+      indexDetail: { background: { right: '#111' } },
+    },
+  },
 });
 
 const renderFooter = (props = {}) =>

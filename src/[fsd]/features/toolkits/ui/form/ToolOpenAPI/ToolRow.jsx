@@ -138,14 +138,14 @@ const toolRowStyles = () => ({
   },
   bodyCell: ({ palette }) => ({
     padding: '0.375rem 0.5rem',
-    borderBottom: `0.0625rem solid ${palette.border.table}`,
+    borderBottom: `0.0625rem solid ${palette.border.default}`,
     color: palette.text.secondary,
     backgroundColor: palette.background.default.secondary,
   }),
   methodCell: ({ palette }) => ({
     padding: '0.375rem 0.5rem',
     width: '5rem',
-    borderBottom: `0.0625rem solid ${palette.border.table}`,
+    borderBottom: `0.0625rem solid ${palette.border.default}`,
     color: palette.text.secondary,
     backgroundColor: palette.background.default.secondary,
   }),
@@ -165,7 +165,7 @@ const toolRowStyles = () => ({
   detailsContent: ({ palette }) => ({
     padding: '0.5rem 0.5rem 0.75rem 2.5rem',
     backgroundColor: palette.background.default.tertiary,
-    borderBottom: `0.0625rem solid ${palette.border.table}`,
+    borderBottom: `0.0625rem solid ${palette.border.default}`,
   }),
   detailItem: {
     display: 'flex',

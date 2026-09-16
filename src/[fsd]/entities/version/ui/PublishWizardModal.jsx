@@ -364,7 +364,7 @@ const styles = {
     },
     '& .MuiStepConnector-root.Mui-active .MuiStepConnector-line, & .MuiStepConnector-root.Mui-completed .MuiStepConnector-line':
       {
-        borderColor: `${palette.step.completed.border} !important`,
+        borderColor: `${palette.components.publishWizardStep.completed.border} !important`,
       },
   }),
   configStep: {
@@ -386,10 +386,10 @@ const styles = {
     },
   },
   defaultStep: ({ palette }) => ({
-    border: `1px solid ${palette.step.default.border}`,
-    backgroundColor: palette.step.default.background,
+    border: `1px solid ${palette.components.publishWizardStep.default.border}`,
+    backgroundColor: palette.components.publishWizardStep.default.background,
     '& .MuiStepLabel-iconContainer': {
-      backgroundColor: palette.step.default.icon,
+      backgroundColor: palette.components.publishWizardStep.default.icon,
       color: palette.secondary.main,
     },
     '& .MuiStepLabel-label': {
@@ -397,22 +397,22 @@ const styles = {
     },
   }),
   activeStep: ({ palette }) => ({
-    border: `1px solid ${palette.step.active.border}`,
-    backgroundColor: palette.step.active.background,
+    border: `1px solid ${palette.components.publishWizardStep.active.border}`,
+    backgroundColor: palette.components.publishWizardStep.active.background,
     '& .MuiStepLabel-iconContainer': {
-      backgroundColor: palette.step.active.icon,
-      color: palette.text.tag.selected,
+      backgroundColor: palette.components.publishWizardStep.active.icon,
+      color: palette.text.primary,
     },
     '& .MuiStepLabel-label.Mui-active': {
       color: palette.text.secondary,
     },
   }),
   completedStep: ({ palette }) => ({
-    border: `1px solid ${palette.step.completed.border}`,
-    backgroundColor: palette.step.completed.background,
+    border: `1px solid ${palette.components.publishWizardStep.completed.border}`,
+    backgroundColor: palette.components.publishWizardStep.completed.background,
     '& .MuiStepLabel-iconContainer': {
-      backgroundColor: palette.step.completed.icon,
-      color: palette.text.tag.selected,
+      backgroundColor: palette.components.publishWizardStep.completed.icon,
+      color: palette.text.primary,
     },
     '& .MuiStepLabel-label': {
       color: palette.text.secondary,

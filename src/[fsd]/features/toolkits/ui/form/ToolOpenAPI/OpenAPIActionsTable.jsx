@@ -214,12 +214,12 @@ const openAPIActionsTableStyles = () => ({
   tableContainer: ({ palette }) => ({
     backgroundColor: palette.background.default.secondary,
     boxShadow: 'none',
-    border: `0.0625rem solid ${palette.border.table}`,
+    border: `0.0625rem solid ${palette.border.default}`,
     borderRadius: '0.25rem',
   }),
   headCell: ({ palette }) => ({
     padding: '0.375rem 0.25rem !important',
-    borderBottom: `0.0625rem solid ${palette.border.table}`,
+    borderBottom: `0.0625rem solid ${palette.border.default}`,
     backgroundColor: palette.background.default.secondary,
   }),
   sortLabel: {

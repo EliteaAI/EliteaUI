@@ -2,13 +2,12 @@ import { useCallback, useEffect, useMemo } from 'react';
 
 import { useSelector } from 'react-redux';
 
-import { Typography, debounce } from '@mui/material';
+import { Typography, debounce, useTheme } from '@mui/material';
 
 import { Select } from '@/[fsd]/shared/ui';
 import ToolIcon from '@/assets/tool-icon.svg?react';
 import { Create_Personal_Title, Create_Project_Title, Manual_Title } from '@/hooks/useConfigurations';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import { useTheme } from '@emotion/react';
 
 import FolderIcon from './Icons/FolderIcon';
 import Person from './Icons/Person';

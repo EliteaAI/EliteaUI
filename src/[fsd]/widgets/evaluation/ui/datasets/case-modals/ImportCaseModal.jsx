@@ -272,7 +272,7 @@ const importCaseModalStyles = () => ({
       height: '2rem',
     },
     '& path': {
-      fill: palette.text.secondary,
+      fill: palette.icon.secondary,
     },
   }),
   dropZoneTitle: ({ palette }) => ({

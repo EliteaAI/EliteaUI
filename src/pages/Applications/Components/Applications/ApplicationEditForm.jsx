@@ -2,7 +2,7 @@ import { memo, useCallback, useEffect, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { Box } from '@mui/material';
+import { Box, useTheme } from '@mui/material';
 
 import { AIEditAgentButton } from '@/[fsd]/features/agent/ui/ai-edit-agent-modal';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
@@ -15,7 +15,6 @@ import EntityIcon from '@/components/EntityIcon';
 import { useIsFromPipelineDetail } from '@/hooks/useIsFromSpecificPageHooks';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import TagEditor from '@/pages/Common/Components/TagEditor';
-import { useTheme } from '@emotion/react';
 
 const ApplicationEditForm = memo(props => {
   const { style } = props;

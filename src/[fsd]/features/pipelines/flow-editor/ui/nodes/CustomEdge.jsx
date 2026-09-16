@@ -55,7 +55,7 @@ const CustomEdge = memo(props => {
         id={id}
         path={fallbackPath}
         style={{
-          stroke: !selected ? theme.palette.border.flowNode : theme.palette.primary.main,
+          stroke: !selected ? theme.palette.components.flowEditor.node.border : theme.palette.primary.main,
           strokeWidth: selected ? 3 : 2, // Thicker when selected
           fill: 'none',
           filter: selected ? 'drop-shadow(0px 2px 4px rgba(0,0,0,0.2))' : 'none',
@@ -72,7 +72,7 @@ const CustomEdge = memo(props => {
               background: theme.palette.background.default.tertiary,
               padding: '8px 16px',
               borderRadius: '0.5rem',
-              border: `1px solid ${!selected ? theme.palette.border.flowNode : theme.palette.primary.main}`,
+              border: `1px solid ${!selected ? theme.palette.components.flowEditor.node.border : theme.palette.primary.main}`,
               zIndex: selected ? 10 : undefined,
             }}
             variant="bodyMedium"

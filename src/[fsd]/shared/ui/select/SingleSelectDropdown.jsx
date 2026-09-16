@@ -118,9 +118,9 @@ const selectMenuItemStyles = () => ({
     justifyContent: 'flex-start',
     padding: '0.5rem 1rem',
     borderBottom: `0.0625rem solid ${palette.border.lines}`,
-    color: palette.icon.main,
+    color: palette.icon.default,
     '&:hover': {
-      backgroundColor: palette.background.select.hover,
+      backgroundColor: palette.components.select.hover,
     },
   }),
   menuActionRow: {

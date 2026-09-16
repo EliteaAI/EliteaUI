@@ -87,7 +87,7 @@ const SummaryDetailsItem = memo(props => {
                 sx={styles.iconButton}
               >
                 <EditIcon
-                  fill={theme.palette.text.primary}
+                  fill={theme.palette.icon.default}
                   sx={{ fontSize: '1rem' }}
                 />
               </IconButton>
@@ -98,7 +98,7 @@ const SummaryDetailsItem = memo(props => {
               onDelete={() => onDelete?.(summary.id)}
               shouldRequestInputName={false}
               buttonColor=""
-              iconColor={theme.palette.text.primary}
+              iconColor={theme.palette.icon.default}
               modalSx={styles.deleteModalSx}
             />
           </Box>

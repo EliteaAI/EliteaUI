@@ -55,9 +55,9 @@ const sidebarButtonStyles = (sideBarCollapsed, isActive) => ({
     marginLeft: 0,
     padding: sideBarCollapsed ? '0.5rem 0' : '0.5rem',
     borderRadius: '0.5rem',
-    background: isActive ? palette.background.button.drawerMenu.selected : undefined,
+    background: isActive ? palette.components.sidebar.menuItem.selected : undefined,
     '&:hover': {
-      backgroundColor: palette.background.button.drawerMenu.hover,
+      backgroundColor: palette.components.sidebar.menuItem.hover,
     },
     cursor: 'pointer',
     display: 'flex',

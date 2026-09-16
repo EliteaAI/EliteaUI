@@ -36,6 +36,9 @@ const theme = createTheme({
   palette: {
     border: { lines: '#333' },
     background: { secondary: '#111' },
+    components: {
+      select: { hover: '#eee', selected: { default: '#ddf', hover: '#ccf' } },
+    },
   },
 });
 

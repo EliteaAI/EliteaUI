@@ -206,7 +206,7 @@ const StateVariableList = memo(props => {
         variant="outlined"
         startIcon={
           <Box sx={styles.iconWrapper}>
-            <PlusIcon fill={theme.palette.text.secondary} />
+            <PlusIcon fill={theme.palette.icon.secondary} />
           </Box>
         }
         onClick={() => setIsCreatingNew(true)}
@@ -250,7 +250,7 @@ const stateVariableListStyles = () => ({
       marginRight: spacing(0.5),
     },
     '&:hover': {
-      background: palette.background.button.secondary.hover,
+      background: palette.background.surface.interactive.selected,
       border: `.0625rem solid ${palette.border.lines}`,
     },
   }),

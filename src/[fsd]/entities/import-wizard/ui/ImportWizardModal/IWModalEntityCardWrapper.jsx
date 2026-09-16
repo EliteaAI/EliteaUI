@@ -178,7 +178,7 @@ const iWModalEntityCardWrapperStyles = isExpanded => ({
     fontWeight: 400,
     fontSize: '.75rem',
     lineHeight: '1.25rem',
-    color: palette.text.default,
+    color: palette.text.primary,
   }),
   actionBtn: {
     border: 'none !important',

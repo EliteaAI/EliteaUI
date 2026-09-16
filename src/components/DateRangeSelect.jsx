@@ -2,11 +2,11 @@ import { useCallback, useMemo } from 'react';
 
 import { useLocation, useNavigate } from 'react-router-dom';
 
+import { useTheme } from '@mui/material';
 import Box from '@mui/material/Box';
 
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import { ALL_TIME_DATE } from '@/common/constants';
-import { useTheme } from '@emotion/react';
 
 export const useTrendRange = () => {
   const navigate = useNavigate();

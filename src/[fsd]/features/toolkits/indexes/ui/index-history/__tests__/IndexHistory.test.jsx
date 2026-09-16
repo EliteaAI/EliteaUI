@@ -57,10 +57,15 @@ afterEach(() => cleanup());
 
 const theme = createTheme({
   palette: {
-    background: { surface: { interactive: { default: '#eee' } } },
-    split: { pressed: '#ddd' },
+    background: {
+      surface: { interactive: { default: '#eee' } },
+      selectedItem: { default: '#dde', hover: '#ccd' },
+    },
     border: { lines: '#ccc' },
     icon: { fill: { error: '#f00', warning: '#fa0', info: '#00f', successModal: '#0f0' } },
+    components: {
+      split: { background: { pressed: '#ddd', hover: '#ccc' } },
+    },
   },
 });
 

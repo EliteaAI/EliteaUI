@@ -9,7 +9,7 @@ export const ActionsContainer = styled(Box)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
   gap: '8px',
-  backgroundColor: theme.palette.background.participant.default,
+  backgroundColor: theme.palette.background.surface.interactive.default,
 }));
 
 export const ActionRow = styled(Box)(() => ({

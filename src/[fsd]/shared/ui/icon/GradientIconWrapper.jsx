@@ -22,7 +22,7 @@ const gradientIconWrapperStyles = size => ({
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
-    background: palette.background.icon.entityGradient,
+    background: palette.components.entityIcon.background.entityGradient,
     color: palette.text.primary,
     overflow: 'hidden',
     '&::before': {
@@ -31,7 +31,7 @@ const gradientIconWrapperStyles = size => ({
       inset: 0,
       borderRadius: 'inherit',
       padding: '0.0625rem',
-      background: palette.background.icon.entityBorderGradient,
+      background: palette.components.entityIcon.background.entityBorderGradient,
       WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
       WebkitMaskComposite: 'xor',
       maskComposite: 'exclude',

@@ -1,9 +1,7 @@
 import React from 'react';
 
-import { Typography } from '@mui/material';
+import { Typography, useTheme } from '@mui/material';
 import { Box } from '@mui/system';
-
-import { useTheme } from '@emotion/react';
 
 import EditIcon from '../Icons/EditIcon';
 import { Answer } from './StyledComponents';
@@ -13,7 +11,7 @@ const EditingPlaceholder = ({ title = 'Response editing...' }) => {
   return (
     <Answer
       sx={{
-        background: theme.palette.background.aiAnswerBkg,
+        background: theme.palette.background.aiAnswer,
         width: '100%',
         borderRadius: '8px',
         padding: '12px 16px 12px 16px',
@@ -29,12 +27,12 @@ const EditingPlaceholder = ({ title = 'Response editing...' }) => {
         borderRadius={'8px'}
         gap="8px"
         alignItems={'center'}
-        border={`1px solid ${theme.palette.border.chatEditPlaceholderBorder}`}
+        border={`1px solid ${theme.palette.components.editingPlaceholder.border}`}
         padding="8px 12px"
       >
         <EditIcon
           sx={{ fontSize: '16px' }}
-          fill={theme.palette.border.chatEditPlaceholderBorder}
+          fill={theme.palette.icon.info}
         />
         <Typography
           variant="bodyMedium"

@@ -156,8 +156,8 @@ const styles = {
     border: 'none',
     position: 'relative',
     '&:hover': {
-      '& .version-text': { color: palette.text.createButton },
-      '& .dropdown-icon': { color: palette.text.createButton },
+      '& .version-text': { color: palette.text.accent },
+      '& .dropdown-icon': { color: palette.text.accent },
     },
   }),
   selectorDisabled: {
@@ -207,7 +207,7 @@ const styles = {
   }),
   versionHeaderTitle: ({ palette }) => ({
     fontFamily: 'Montserrat',
-    color: palette.text.default,
+    color: palette.text.primary,
     textTransform: 'uppercase',
   }),
   menuItem: ({ palette }) => ({
@@ -220,7 +220,7 @@ const styles = {
     justifyContent: 'space-between',
     cursor: 'pointer',
     '&:hover': {
-      backgroundColor: palette.background.button.iconLabelButton.hover,
+      backgroundColor: palette.background.surface.interactive.default,
     },
   }),
   selectedMenuItem: ({ palette }) => ({
@@ -232,10 +232,10 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: palette.background.conversation?.selected,
+    backgroundColor: palette.background.selectedItem.default,
     cursor: 'default',
     '&:hover': {
-      backgroundColor: palette.background.conversation?.selected,
+      backgroundColor: palette.background.selectedItem.default,
     },
   }),
   selectedCheckIcon: ({ palette }) => ({

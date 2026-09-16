@@ -78,7 +78,7 @@ const getStyles = (severity, showBottomBorder, fullBleed) => ({
     display: 'flex',
     alignItems: 'center',
     ...(fullBleed ? FULL_BLEED_PRESENTATION.root : CARD_PRESENTATION.root),
-    borderBottom: showBottomBorder ? ({ palette }) => `0.0625rem solid ${palette.border.table}` : 'none',
+    borderBottom: showBottomBorder ? ({ palette }) => `0.0625rem solid ${palette.border.default}` : 'none',
   },
   contentContainer: {
     display: 'flex',
@@ -87,11 +87,12 @@ const getStyles = (severity, showBottomBorder, fullBleed) => ({
     gap: '0.375rem',
     ...(fullBleed ? FULL_BLEED_PRESENTATION.content : CARD_PRESENTATION.content),
     background: ({ palette }) =>
-      palette.background.indexResult[severity] || palette.background.indexResult.info,
+      palette.components.runIndexBanner.background[severity] ||
+      palette.components.runIndexBanner.background.info,
     border: fullBleed
       ? 'none'
       : ({ palette }) =>
-          `0.0625rem solid ${palette.border.indexResult[severity] || palette.border.indexResult.info}`,
+          `0.0625rem solid ${palette.components.runIndexBanner.border[severity] || palette.components.runIndexBanner.border.info}`,
   },
   titleContainer: {
     display: 'flex',
@@ -100,10 +101,12 @@ const getStyles = (severity, showBottomBorder, fullBleed) => ({
     color: ({ palette }) => palette.icon.indexResult[severity] || palette.icon.indexResult.info,
   },
   title: {
-    color: ({ palette }) => palette.text.indexResult[severity] || palette.text.indexResult.info,
+    color: ({ palette }) =>
+      palette.components.runIndexBanner.text[severity] || palette.components.runIndexBanner.text.info,
   },
   message: {
-    color: ({ palette }) => palette.text.indexResult[severity] || palette.text.indexResult.info,
+    color: ({ palette }) =>
+      palette.components.runIndexBanner.text[severity] || palette.components.runIndexBanner.text.info,
   },
 });
 

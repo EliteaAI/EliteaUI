@@ -147,9 +147,9 @@ const componentStyles = (sideBarCollapsed, isOnUserSettings) => ({
     marginLeft: 0,
     padding: sideBarCollapsed ? '0.5rem 0' : '0.5rem 0.5rem',
     borderRadius: '0.5rem',
-    background: isOnUserSettings ? palette.background.button.drawerMenu.selected : undefined,
+    background: isOnUserSettings ? palette.components.sidebar.menuItem.selected : undefined,
     '&:hover': {
-      backgroundColor: palette.background.button.drawerMenu.hover,
+      backgroundColor: palette.components.sidebar.menuItem.hover,
     },
   }),
   menuIconContainer: {
@@ -161,7 +161,7 @@ const componentStyles = (sideBarCollapsed, isOnUserSettings) => ({
     height: '2rem',
     boxSizing: 'border-box',
     cursor: 'pointer',
-    color: ({ palette }) => (isOnUserSettings ? palette.text.button.selected : palette.text.metrics),
+    color: ({ palette }) => (isOnUserSettings ? palette.text.secondary : palette.text.metrics),
   },
   typography: ({ palette }) => ({
     flex: 1,

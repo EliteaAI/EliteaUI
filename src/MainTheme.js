@@ -11,7 +11,7 @@ import { eliteaDataGridStyle } from '@/components/DataGrid.jsx';
 import { eliteaTreeItemStyle } from '@/components/TreeItem.jsx';
 
 import { eliteaIconButtonStyle } from './components/IconButton';
-import darkPalette, { darkBlue, white } from './darkPalette';
+import darkPalette from './darkPalette';
 import lightPalette from './lightPalette';
 import { eliteaMenuItemVariants, eliteaMenuListVariants } from './theme/menuListVariants';
 
@@ -76,7 +76,7 @@ const getDesignTokens = mode => ({
           borderRadius: '1rem',
           border: '0.0625rem solid',
           borderColor: theme.palette.border.lines,
-          boxShadow: '0 0 1.475rem 0 #FFFFFF0D',
+          boxShadow: theme.palette.boxShadow.dialog,
         }),
       },
     },
@@ -137,7 +137,7 @@ const getDesignTokens = mode => ({
       styleOverrides: {
         root: ({ theme }) => ({
           background: theme.palette.background.avatar,
-          color: theme.palette.text.default,
+          color: theme.palette.text.primary,
         }),
       },
     },
@@ -180,18 +180,18 @@ const getDesignTokens = mode => ({
       styleOverrides: {
         root: ({ theme }) => ({
           fontSize: '0.75rem',
-          color: theme.palette.text.default,
+          color: theme.palette.text.primary,
           '& .MuiTablePagination-select.MuiSelect-standard': {
-            color: theme.palette.text.default,
+            color: theme.palette.text.primary,
           },
         }),
         selectLabel: ({ theme }) => ({
           ...typographyVariants.labelSmall,
-          color: theme.palette.text.button.disabled,
+          color: theme.palette.text.disabled,
         }),
         displayedRows: ({ theme }) => ({
           ...typographyVariants.labelSmall,
-          color: theme.palette.text.default,
+          color: theme.palette.text.primary,
         }),
         menuItem: {
           fontSize: '0.75rem',
@@ -202,26 +202,26 @@ const getDesignTokens = mode => ({
     MuiTabs: MuiTabsStyles,
     MuiAlert: {
       styleOverrides: {
-        filledSuccess: {
-          backgroundColor: 'green',
-          background: 'green',
-          color: white,
-        },
-        filledError: {
-          backgroundColor: 'red',
-          background: 'red',
-          color: white,
-        },
-        filledInfo: {
-          backgroundColor: darkBlue,
-          background: darkBlue,
-          color: white,
-        },
-        filledWarning: {
-          backgroundColor: 'orange',
-          background: 'orange',
-          color: white,
-        },
+        filledSuccess: ({ theme }) => ({
+          backgroundColor: theme.palette.components.toast.success.background,
+          background: theme.palette.components.toast.success.background,
+          color: theme.palette.components.toast.success.color,
+        }),
+        filledError: ({ theme }) => ({
+          backgroundColor: theme.palette.components.toast.error.background,
+          background: theme.palette.components.toast.error.background,
+          color: theme.palette.components.toast.error.color,
+        }),
+        filledInfo: ({ theme }) => ({
+          backgroundColor: theme.palette.components.toast.info.background,
+          background: theme.palette.components.toast.info.background,
+          color: theme.palette.components.toast.info.color,
+        }),
+        filledWarning: ({ theme }) => ({
+          backgroundColor: theme.palette.components.toast.warning.background,
+          background: theme.palette.components.toast.warning.background,
+          color: theme.palette.components.toast.warning.color,
+        }),
       },
     },
     MuiRadio: {
@@ -262,18 +262,18 @@ const getDesignTokens = mode => ({
           minWidth: '1rem',
           borderRadius: '0.5rem',
           padding: '0 0.28125rem',
-          background: theme.palette.background.tabButton.active,
+          background: theme.palette.background.badge,
         }),
       },
     },
     MuiTooltip: {
       styleOverrides: {
         tooltip: ({ theme }) => ({
-          backgroundColor: theme.palette.background.tooltip.default,
+          backgroundColor: theme.palette.background.tooltip,
           color: theme.palette.text.tooltip,
           ...typographyVariants.labelSmall,
           '& .MuiTooltip-arrow': {
-            color: theme.palette.background.tooltip.default,
+            color: theme.palette.background.tooltip,
           },
         }),
       },
@@ -284,7 +284,7 @@ const getDesignTokens = mode => ({
           backgroundColor: theme.palette.background.default.secondary,
           border: `0.0625rem solid ${theme.palette.border.lines}`,
           borderRadius: '0.5rem',
-          boxShadow: theme.palette.boxShadow.tagEditorPaper,
+          boxShadow: theme.palette.components.tagEditor.shadow,
         }),
       },
     },

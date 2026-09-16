@@ -3,6 +3,7 @@ import { memo } from 'react';
 import { Box, Typography } from '@mui/material';
 
 import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
+import { CHART_COLORS } from '@/[fsd]/shared/config/theme/chartPalette';
 
 const AnalyticsGuide = memo(() => {
   const styles = analyticsGuideStyles();
@@ -86,7 +87,7 @@ const analyticsGuideStyles = () => ({
     padding: '1rem',
     borderRadius: '0.5rem',
     backgroundColor: palette.background.surface.interactive.default,
-    border: `1px solid ${palette.border.table}`,
+    border: `1px solid ${palette.border.default}`,
     display: 'flex',
     flexDirection: 'column',
     minWidth: 0,
@@ -97,11 +98,11 @@ const analyticsGuideStyles = () => ({
     fontWeight: 600,
     marginBottom: '0.75rem',
     paddingBottom: '0.5rem',
-    borderBottom: `1px solid ${palette.border.table}`,
+    borderBottom: `1px solid ${palette.border.default}`,
   }),
   guideItem: ({ palette }) => ({
     padding: '0.75rem 0',
-    borderBottom: `1px solid ${palette.border.table}`,
+    borderBottom: `1px solid ${palette.border.default}`,
     '&:last-child': { borderBottom: 'none' },
   }),
   guideName: ({ palette }) => ({
@@ -128,7 +129,7 @@ const analyticsGuideStyles = () => ({
     flexShrink: 0,
   }),
   guideCalcValue: {
-    color: '#58A6FF',
+    color: CHART_COLORS[4],
     fontSize: '0.8125rem',
   },
 });

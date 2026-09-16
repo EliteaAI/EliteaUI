@@ -24,10 +24,10 @@ export default BaseTab;
 
 export const eliteaTabColors = theme => ({
   [TABS_VARIANTS.elitea]: {
-    default: theme.palette.background.tab.default,
-    hover: theme.palette.background.tab.hover,
-    active: theme.palette.background.tab.active,
-    disabled: theme.palette.background.tab.disabled,
+    default: theme.palette.components.tab.background.default,
+    hover: theme.palette.components.tab.background.hover,
+    active: theme.palette.components.tab.background.active,
+    disabled: theme.palette.components.tab.background.disabled,
   },
 });
 

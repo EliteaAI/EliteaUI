@@ -423,10 +423,10 @@ const agentPipelineVersionSelectorStyles = () => ({
     position: 'relative',
     '&:hover': {
       '& .version-text': {
-        color: palette.text.createButton,
+        color: palette.text.accent,
       },
       '& .dropdown-icon': {
-        color: palette.text.createButton,
+        color: palette.text.accent,
       },
     },
   }),
@@ -457,7 +457,7 @@ const agentPipelineVersionSelectorStyles = () => ({
     justifyContent: 'space-between',
     cursor: 'pointer',
     '&:hover': {
-      backgroundColor: palette.background.button.iconLabelButton.hover,
+      backgroundColor: palette.background.surface.interactive.default,
     },
   }),
   selectedMenuItem: ({ palette }) => ({
@@ -469,10 +469,10 @@ const agentPipelineVersionSelectorStyles = () => ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: palette.background.conversation?.selected,
+    backgroundColor: palette.background.selectedItem.default,
     cursor: 'default',
     '&:hover': {
-      backgroundColor: palette.background.conversation?.selected,
+      backgroundColor: palette.background.selectedItem.default,
     },
   }),
   versionHeader: ({ palette }) => ({
@@ -533,7 +533,7 @@ const agentPipelineVersionSelectorStyles = () => ({
   },
   versionHeaderTitle: ({ palette }) => ({
     fontFamily: 'Montserrat',
-    color: palette.text.default,
+    color: palette.text.primary,
     textTransform: 'uppercase',
   }),
   refreshIcon: {

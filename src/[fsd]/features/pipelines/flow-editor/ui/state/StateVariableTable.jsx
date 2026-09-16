@@ -323,7 +323,6 @@ const StateVariableTable = memo(props => {
           color: 'text.secondary',
         },
         [`.${gridClasses.cell}.error`]: {
-          // backgroundColor: theme.palette.background.warningBkg,
           borderBottom: `.0625rem solid ${theme.palette.border.error} !important`,
         },
       }}

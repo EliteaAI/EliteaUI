@@ -226,7 +226,8 @@ export default function SearchBar({
                   marginLeft: '6px',
                   borderRadius: '16px',
                   backgroundColor:
-                    theme.palette.background.tagChip?.default || theme.palette.background.button.default,
+                    theme.palette.background.tagChip?.default ||
+                    theme.palette.background.interactiveItem.hover,
                   color: theme.palette.text.tagChip?.default || theme.palette.text.secondary,
                   cursor: 'pointer',
                   userSelect: 'none',
@@ -234,7 +235,8 @@ export default function SearchBar({
                   transition: 'background-color 0.2s ease',
                   '&:hover': {
                     backgroundColor:
-                      theme.palette.background.tagChip?.hover || theme.palette.background.select.hover,
+                      theme.palette.background.tagChip?.hover ||
+                      theme.palette.background.interactiveItem.hover,
                   },
                 }}
               >

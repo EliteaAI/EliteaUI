@@ -105,7 +105,7 @@ const datasetsPanelStyles = () => ({
     borderRadius: '50%',
 
     svg: {
-      path: { fill: palette.text.secondary },
+      path: { fill: palette.icon.secondary },
     },
   }),
 });

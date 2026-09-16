@@ -94,7 +94,7 @@ const AuthorInformation = memo(props => {
 const stylesAuthorInformation = () => ({
   mainContainer: ({ palette }) => ({
     maxHeight: '50vh',
-    border: `0.0625rem solid ${palette.border.table}`,
+    border: `0.0625rem solid ${palette.border.default}`,
     padding: '1rem 0.75rem',
     borderRadius: '0.5rem',
     marginBottom: '1rem',

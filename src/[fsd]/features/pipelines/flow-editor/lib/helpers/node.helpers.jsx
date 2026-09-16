@@ -22,7 +22,7 @@ import ToolIcon from '@/assets/tool-icon.svg?react';
 import FunctionIcon from '@/assets/vector-icon.svg?react';
 
 export const getNodeColor = (nodeType, theme) => {
-  const nodeColors = theme?.palette?.nodeColors;
+  const nodeColors = theme?.palette?.components?.flowEditor?.nodeColors;
 
   return nodeColors?.[nodeType] || nodeColors?.custom || '#666666';
 };
@@ -32,7 +32,7 @@ export const isDeprecatedNodeType = type => {
 };
 
 export const getNodeIconByType = (type, theme, specifiedColor) => {
-  const iconColor = specifiedColor || theme.palette.text.secondary;
+  const iconColor = specifiedColor || theme.palette.icon.secondary;
 
   switch (type) {
     case FlowEditorConstants.PipelineNodeTypes.Mcp:

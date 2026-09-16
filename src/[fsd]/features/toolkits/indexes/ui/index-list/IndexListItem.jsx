@@ -300,7 +300,7 @@ const indexListItem = () => ({
     borderRadius: '.5rem',
     background: `${palette.background.surface.interactive.default}`,
     padding: '.5rem 1rem',
-    border: `.0625rem solid ${palette.border.table}`,
+    border: `.0625rem solid ${palette.border.default}`,
     position: 'relative',
     gap: '1rem',
 
@@ -320,21 +320,21 @@ const indexListItem = () => ({
   }),
 
   selectedWrapper: ({ palette }) => ({
-    background: palette.split.pressed,
-    border: `.0625rem solid ${palette.split.hover}`,
+    background: palette.background.selectedItem.default,
+    border: `0.0625rem solid ${palette.border.lines}`,
   }),
 
   errorWrapper: ({ palette }) => ({
-    border: `1px solid ${palette.background.wrongBkg}`,
-    background: palette.background.errorBkg,
+    border: `0.0625rem solid ${palette.border.error}`,
+    background: palette.background.error,
 
     '&:hover': {
-      background: palette.background.errorBkg,
+      background: palette.background.error,
       border: `1px solid ${palette.error.main}`,
     },
 
     '&.selected': {
-      background: palette.background.errorBkg,
+      background: palette.background.error,
       border: `1px solid ${palette.error.main}`,
     },
   }),
@@ -372,7 +372,7 @@ const indexListItem = () => ({
 
     svg: {
       path: {
-        fill: ({ palette }) => palette.background.button.primary.disabled,
+        fill: ({ palette }) => palette.action.disabledBackground,
       },
     },
   },
@@ -419,7 +419,7 @@ const indexListItem = () => ({
   },
   warning: {
     path: ({ palette }) => ({
-      fill: palette.background.warning,
+      fill: palette.icon.warning,
     }),
   },
 

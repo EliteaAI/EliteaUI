@@ -55,7 +55,7 @@ const tourCardHeaderStyles = () => ({
     height: 0,
     borderBottom: '0.0625rem solid transparent',
     borderImageSlice: 1,
-    borderImageSource: palette.background.interactiveTourPrompt.dividerGradient,
+    borderImageSource: palette.components.interactiveTour.dividerGradient,
   }),
 });
 

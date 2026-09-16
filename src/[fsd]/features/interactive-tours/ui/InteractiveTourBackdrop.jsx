@@ -17,7 +17,7 @@ const backdropStyles = () => ({
     position: 'fixed',
     inset: 0,
     zIndex: zIndex.modal + 1,
-    backgroundColor: palette.background.interactiveTourPrompt.backdrop,
+    backgroundColor: palette.components.interactiveTour.backdrop,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',

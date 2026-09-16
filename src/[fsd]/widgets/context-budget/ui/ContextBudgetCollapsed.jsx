@@ -2,6 +2,7 @@ import { memo } from 'react';
 
 import { Box, Tooltip, Typography } from '@mui/material';
 
+import { CONTEXT_BUDGET_COLORS } from '@/[fsd]/shared/config/theme/chartPalette';
 import { TOOLTIP_CONFIG } from '@/[fsd]/widgets/context-budget/lib/constants';
 import { ContextBudgetTooltipContent } from '@/[fsd]/widgets/context-budget/ui';
 
@@ -56,11 +57,13 @@ ContextBudgetCollapsed.displayName = 'ContextBudgetCollapsed';
 /** @type {MuiSx} */
 const contextBudgetCollapsedStyles = isHighUtilization => {
   // Use the same color as the progress bar
-  const indicatorColor = isHighUtilization ? '#FFC107' : '#0FA52D';
+  const indicatorColor = isHighUtilization
+    ? CONTEXT_BUDGET_COLORS.highUtilization
+    : CONTEXT_BUDGET_COLORS.normalUtilization;
 
   return {
     tooltipWrapper: ({ palette }) => ({
-      backgroundColor: palette.background.tooltip.default,
+      backgroundColor: palette.background.tooltip,
       color: palette.text.tooltip,
       padding: '0.3rem 0.4rem',
       borderRadius: '0.25rem',
