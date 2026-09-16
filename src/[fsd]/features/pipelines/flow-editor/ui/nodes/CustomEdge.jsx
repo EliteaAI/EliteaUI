@@ -55,7 +55,7 @@ const CustomEdge = memo(props => {
         id={id}
         path={fallbackPath}
         style={{
-          stroke: !selected ? theme.palette.components.flowEditor.node.border : theme.palette.primary.main,
+          stroke: !selected ? theme.palette.components.flowEditor.edge.stroke : theme.palette.primary.main,
           strokeWidth: selected ? 3 : 2, // Thicker when selected
           fill: 'none',
           filter: selected ? 'drop-shadow(0px 2px 4px rgba(0,0,0,0.2))' : 'none',

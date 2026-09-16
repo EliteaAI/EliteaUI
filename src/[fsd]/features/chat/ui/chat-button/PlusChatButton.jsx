@@ -581,7 +581,7 @@ const plusChatButtonStyles = theme => ({
     },
 
     '&:active': {
-      backgroundColor: theme.palette.background.surface.interactive.active,
+      backgroundColor: theme.palette.components.tabGroupButton.background.active,
     },
 
     '& .MuiFormControlLabel-label': {

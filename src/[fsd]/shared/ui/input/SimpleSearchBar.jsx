@@ -90,7 +90,7 @@ const simpleSearchBarStyles = () => ({
       padding: 0,
       color: palette.text.secondary,
       '&::placeholder': {
-        color: palette.text.disabled,
+        color: palette.text.muted,
         opacity: 1,
       },
     },

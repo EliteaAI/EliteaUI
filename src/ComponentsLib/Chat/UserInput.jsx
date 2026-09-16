@@ -570,7 +570,7 @@ const userInputStyles = (isFocused, isDragOver, isRecording) => {
 
     return palette.mode === 'light'
       ? palette.background.default.secondary
-      : palette.background.default.secondary;
+      : palette.components.onboarding.bodyBackground;
   };
 
   const getInputBorder = palette => {
@@ -677,7 +677,7 @@ const userInputStyles = (isFocused, isDragOver, isRecording) => {
       paddingLeft: '0.625rem',
       height: '1.75rem',
       borderRadius: '0.875rem',
-      border: `0.0625rem solid ${palette.primary.main}`,
+      border: `0.0625rem solid ${palette.components.chatContinue.border}`,
       flexShrink: 0,
       color: palette.primary.main,
     }),

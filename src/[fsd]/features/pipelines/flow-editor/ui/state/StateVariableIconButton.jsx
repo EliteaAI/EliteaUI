@@ -37,14 +37,14 @@ const iconButtonStyles = isActive => ({
     width: '2rem',
     backgroundColor: `${palette.background.surface.interactive.default} !important`,
     border: isActive
-      ? `0.0625rem solid ${palette.primary.main} !important`
+      ? `0.0625rem solid ${palette.components.userMessageEditor.border} !important`
       : '0.0625rem solid transparent !important',
     '&:hover:not(:disabled)': {
-      borderColor: `${isActive ? palette.primary.main : palette.border.lines} !important`,
+      borderColor: `${isActive ? palette.components.userMessageEditor.border : palette.border.lines} !important`,
       backgroundColor: `${palette.background.surface.interactive.default} !important`,
     },
     '&:focus, &:focus-visible': {
-      borderColor: `${palette.primary.main} !important`,
+      borderColor: `${palette.components.userMessageEditor.border} !important`,
       outline: 'none',
       backgroundColor: `${palette.background.surface.interactive.default} !important`,
     },

@@ -381,12 +381,12 @@ const mdxPreviewStyles = () => ({
     },
 
     '&::-webkit-scrollbar-thumb': {
-      background: palette.scrollbar.thumb,
+      background: palette.border.lines,
       borderRadius: '0.125rem',
     },
 
     '&::-webkit-scrollbar-thumb:hover': {
-      background: palette.scrollbar.thumbHover,
+      background: palette.text.tertiary,
     },
 
     '& pre': {
@@ -429,7 +429,7 @@ const mdxPreviewStyles = () => ({
       borderLeft: `0.1875rem solid ${palette.primary.main}`,
       marginLeft: 0,
       paddingLeft: '0.8em',
-      color: palette.text.disabled,
+      color: palette.text.tertiary,
       fontStyle: 'italic',
     },
   }),
@@ -498,7 +498,7 @@ const mdxPreviewStyles = () => ({
   }),
 
   loadingText: ({ palette }) => ({
-    color: palette.text.disabled,
+    color: palette.text.tertiary,
   }),
 
   fallbackWrapper: {
@@ -517,7 +517,7 @@ const mdxPreviewStyles = () => ({
   }),
 
   fallbackDescription: ({ palette }) => ({
-    color: palette.text.disabled,
+    color: palette.text.tertiary,
   }),
 
   mdxAlert: {

@@ -320,8 +320,8 @@ const indexListItem = () => ({
   }),
 
   selectedWrapper: ({ palette }) => ({
-    background: palette.background.selectedItem.default,
-    border: `0.0625rem solid ${palette.border.lines}`,
+    background: palette.components.split.background.pressed,
+    border: `0.0625rem solid ${palette.components.split.border.hover}`,
   }),
 
   errorWrapper: ({ palette }) => ({

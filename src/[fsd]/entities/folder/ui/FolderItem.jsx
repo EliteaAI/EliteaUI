@@ -182,7 +182,7 @@ const folderItemStyles = isSelected => ({
   pinIcon: ({ palette }) => ({
     width: '0.75rem',
     height: '0.75rem',
-    color: palette.text.disabled,
+    color: palette.text.muted,
     flexShrink: 0,
     marginLeft: '.375rem',
   }),

@@ -168,7 +168,7 @@ const folderAccordionStyles = (
     borderBottom:
       isActive || isHovering || expanded || isNextFolderHovered || shouldBeSelected
         ? 'none'
-        : `0.0625rem solid ${palette.border.lines}`,
+        : `0.0625rem solid ${palette.border.subtle}`,
     borderLeft: isActive
       ? `0.1875rem solid ${is_private ? palette.primary.main : palette.status.published}`
       : 0,
@@ -184,7 +184,7 @@ const folderAccordionStyles = (
     background: isActive
       ? palette.background.surface.interactive.default
       : shouldBeSelected
-        ? palette.background.selectedItem.default
+        ? palette.components.conversation.background.selected
         : 'transparent',
     borderRadius: isActive ? '0.375rem' : 0,
     ':hover': {

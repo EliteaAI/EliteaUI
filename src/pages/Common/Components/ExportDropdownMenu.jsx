@@ -20,7 +20,7 @@ const MenuSection = styled('div')(({ theme, withIcon = false }) => ({
   },
 
   '&:hover': {
-    backgroundColor: withIcon ? '' : theme.palette.background.interactiveItem.rowHover,
+    backgroundColor: withIcon ? '' : theme.palette.background.interactiveItem.hover,
     cursor: 'pointer',
   },
 }));

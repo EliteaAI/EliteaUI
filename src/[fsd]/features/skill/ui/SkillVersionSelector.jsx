@@ -156,8 +156,8 @@ const styles = {
     border: 'none',
     position: 'relative',
     '&:hover': {
-      '& .version-text': { color: palette.text.accent },
-      '& .dropdown-icon': { color: palette.text.accent },
+      '& .version-text': { color: palette.components.button.text.create },
+      '& .dropdown-icon': { color: palette.components.button.text.create },
     },
   }),
   selectorDisabled: {
@@ -232,10 +232,10 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: palette.background.selectedItem.default,
+    backgroundColor: palette.components.conversation.background.selected,
     cursor: 'default',
     '&:hover': {
-      backgroundColor: palette.background.selectedItem.default,
+      backgroundColor: palette.components.conversation.background.selected,
     },
   }),
   selectedCheckIcon: ({ palette }) => ({

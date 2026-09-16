@@ -161,7 +161,7 @@ const componentStyles = (sideBarCollapsed, isOnUserSettings) => ({
     height: '2rem',
     boxSizing: 'border-box',
     cursor: 'pointer',
-    color: ({ palette }) => (isOnUserSettings ? palette.text.secondary : palette.text.metrics),
+    color: ({ palette }) => (isOnUserSettings ? palette.text.button.selected : palette.text.metrics),
   },
   typography: ({ palette }) => ({
     flex: 1,

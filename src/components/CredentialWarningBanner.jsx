@@ -106,10 +106,10 @@ const getStyles = () => ({
     wordBreak: 'break-word',
   }),
   link: ({ palette }) => ({
-    color: palette.text.accent,
-    textDecorationColor: palette.text.accent,
+    color: palette.components.button.text.create,
+    textDecorationColor: palette.components.button.text.create,
     '&:hover': {
-      color: palette.text.accent,
+      color: palette.components.button.text.create,
     },
   }),
 });

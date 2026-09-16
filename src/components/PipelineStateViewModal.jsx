@@ -77,7 +77,7 @@ export default function PipelineStateViewModal({
           maxWidth: '900px',
           height: 'calc(100vh - 220px)',
           borderTop: `1px solid ${theme.palette.border.lines}`,
-          background: theme.palette.background.default.secondary,
+          background: theme.palette.components.contextDialog.background,
           overflowY: 'scroll',
           display: 'flex',
           flexDirection: 'column',

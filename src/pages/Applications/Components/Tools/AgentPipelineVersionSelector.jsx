@@ -423,10 +423,10 @@ const agentPipelineVersionSelectorStyles = () => ({
     position: 'relative',
     '&:hover': {
       '& .version-text': {
-        color: palette.text.accent,
+        color: palette.components.button.text.create,
       },
       '& .dropdown-icon': {
-        color: palette.text.accent,
+        color: palette.components.button.text.create,
       },
     },
   }),
@@ -469,10 +469,10 @@ const agentPipelineVersionSelectorStyles = () => ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: palette.background.selectedItem.default,
+    backgroundColor: palette.components.conversation.background.selected,
     cursor: 'default',
     '&:hover': {
-      backgroundColor: palette.background.selectedItem.default,
+      backgroundColor: palette.components.conversation.background.selected,
     },
   }),
   versionHeader: ({ palette }) => ({

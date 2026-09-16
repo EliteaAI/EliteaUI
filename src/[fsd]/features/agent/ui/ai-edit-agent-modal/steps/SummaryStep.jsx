@@ -464,7 +464,7 @@ const styles = {
       backgroundColor: palette.background.interactiveItem.hover,
     },
     '&:active': {
-      backgroundColor: palette.background.surface.interactive.selected,
+      backgroundColor: palette.components.button.background.tertiary.pressed,
     },
   }),
   removeIcon: {

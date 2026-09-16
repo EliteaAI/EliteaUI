@@ -67,7 +67,7 @@ const artifactTableNoFilesStyles = () => ({
   icon: ({ palette }) => ({
     width: '2rem',
     height: '2rem',
-    color: palette.text.disabled,
+    color: palette.components.input.text.placeholder,
   }),
 
   message: ({ palette }) => ({

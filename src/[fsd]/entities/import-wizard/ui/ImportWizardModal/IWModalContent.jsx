@@ -191,7 +191,10 @@ const iwModalContentStyles = () => ({
     fontWeight: 400,
     fontSize: '.75rem',
     lineHeight: '1rem',
-    color: theme.palette.mode === 'light' ? theme.palette.icon.attention : theme.palette.text.secondary,
+    color:
+      theme.palette.mode === 'light'
+        ? theme.palette.icon.attention
+        : theme.palette.components.mcp.text.logout,
   }),
 });
 

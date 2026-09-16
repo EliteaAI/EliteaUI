@@ -48,7 +48,7 @@ const red8 = '#d7161614';
 const red15 = '#d7161626';
 const red40 = '#d7161666';
 const lightRed = '#ffdfdf';
-const cyanHover = '#FFFFFF';
+const cyanHover = '#83EFFF';
 const cyanPressed = '#2abdd2';
 const blue = '#29b8f5';
 const orange10 = '#d37015';
@@ -92,6 +92,11 @@ const diffAdded = '#2ab37a4d';
 const cssGreen = 'green';
 const cssRed = 'red';
 const toastWarningOrange = '#F2994A';
+const attentionOrange = '#F2994A';
+const cardHighlighted = '#29b8f526';
+const folderSecondaryBg = '#ffffff05';
+const folderCardBorder = 'transparent';
+const accordionDefaultBg = '#ffffff05';
 const purple10 = '#f551f91a';
 const purple20 = '#f551f933';
 const purple30 = '#f551f94d';
@@ -240,6 +245,8 @@ const darkPalette = {
   border: {
     default: gray40,
     lines: gray30,
+    subtle: white10,
+    cardGradient: whiteAlphaGradient,
     hover: gray10,
     inputHover: gray20,
     tips: blue40,
@@ -261,9 +268,10 @@ const darkPalette = {
     tips: veryLightBlue,
     attention: lightOrange,
     metrics: gray00,
+    subtle: gray00,
+    muted: gray20,
     warning: lightRed,
     accent: cyanDefault,
-    disabled: gray20,
     link: blue,
     visitedLink: blue70,
     alwaysWhite: white,
@@ -284,10 +292,11 @@ const darkPalette = {
     secondary: white,
     send: gray60,
     trophy: trophyGold,
+    subtle: gray00,
     tips: skyBlue,
     successModal: greenHoverBtn,
     disabled: gray20,
-    attention: orange,
+    attention: attentionOrange,
     warning: orange,
     highTier: green20,
     success: green,
@@ -340,12 +349,12 @@ const darkPalette = {
       background: {
         default: gray50,
         hover: gray58,
+        highlighted: cardHighlighted,
         gradient: cardBgGradient,
-      },
-      border: {
-        hoverGradient: cardHoverBorderGradient,
         borderGradient: cardBorderGradient,
+        hoverBorderGradient: cardHoverBorderGradient,
       },
+
       shadow: {
         hover: cardHoverShadow,
       },
@@ -419,14 +428,20 @@ const darkPalette = {
         editor: gray40,
         topCover: conversationTopCover,
         bottomCover: conversationBottomCover,
-        starter: { strong: magenta20, subtle: purple10 },
+        starter: { strong: magenta20, subtle: magenta40 },
         highlightUserMessage: magenta20,
       },
       border: { itemDivider: white10, highlightUserMessage: magenta40 },
     },
     folder: {
-      background: { default: white2, active: purple10 },
+      background: {
+        default: white2,
+        secondary: folderSecondaryBg,
+        active: purple10,
+        borderGradient: whiteAlphaGradient,
+      },
       border: {
+        card: folderCardBorder,
         gradient: whiteAlphaGradient,
         hover: purple30,
         active: purple30,
@@ -456,9 +471,9 @@ const darkPalette = {
       text: { selected: { primary: white, secondary: gray10 } },
     },
     publishWizardStep: {
-      default: { background: 'transparent', border: whiteStepBorder, icon: white10 },
-      active: { background: 'transparent', border: darkBlueLowOpacity, icon: darkBlueLowOpacity },
-      completed: { background: completedBlue, border: darkBlueLowOpacity, icon: darkBlue },
+      default: { background: 'transparent', border: whiteStepBorder, iconBackground: white10 },
+      active: { background: 'transparent', border: darkBlueLowOpacity, iconBackground: darkBlueLowOpacity },
+      completed: { background: completedBlue, border: darkBlueLowOpacity, iconBackground: darkBlue },
     },
     checkbox: {
       default: gray10,
@@ -471,7 +486,7 @@ const darkPalette = {
     split: {
       background: { default: blue20, hover: blue30, pressed: blue10, disabled: white10 },
       text: { default: cyanDefault, pressed: cyanPressed, disabled: gray10 },
-      border: { categorySelected: white20 },
+      border: { categorySelected: white20, hover: blue30 },
     },
     accentButton: {
       background: { default: blue20, hover: blue30, pressed: blue10, disabled: white10 },
@@ -487,8 +502,10 @@ const darkPalette = {
       text: { default: gray00, hover: white },
     },
     aiAssistant: {
-      iconBackground: aiAssistantIconBg,
-      iconBorder: aiAssistantIconBorder,
+      background: {
+        icon: aiAssistantIconBg,
+        iconBorder: aiAssistantIconBorder,
+      },
       iconGradientStart: aiAssistantGradientStart,
       iconGradientEnd: aiAssistantGradientEnd,
     },
@@ -511,7 +528,7 @@ const darkPalette = {
       border: whiteAlphaGradient,
     },
     accordion: {
-      background: { default: white2, hover: white5 },
+      background: { default: accordionDefaultBg, hover: white5 },
       border: whiteAlphaGradient,
     },
     listItem: {
@@ -583,8 +600,8 @@ const darkPalette = {
       highlightBackground: magenta20,
       highlightBorder: magenta40,
     },
-    contextBudget: { trackBackground: white10 },
-    usageMeter: { trackBackground: white10 },
+    contextBudget: { trackBackground: gray30 },
+    usageMeter: { trackBackground: gray30 },
     autocompleteChip: {
       background: { default: gray50, hover: white20, disabled: white10 },
       text: { default: white, disabled: gray20 },
@@ -599,16 +616,22 @@ const darkPalette = {
     imageAttachment: { background: imageAttachmentGradient },
     contextDialog: { background: gray50 },
     agentModal: {
-      border: agentModalBorderGradient,
-      background: agentModalBgGradient,
+      background: {
+        default: agentModalBgGradient,
+        borderGradient: agentModalBorderGradient,
+      },
       content: {
-        border: agentModalBorderGradient,
-        background: gray60,
+        background: {
+          default: gray60,
+          borderGradient: agentModalBorderGradient,
+        },
       },
     },
     skillHubModal: {
-      border: agentModalBorderGradient,
-      background: agentModalBgGradient,
+      background: {
+        default: agentModalBgGradient,
+        borderGradient: agentModalBorderGradient,
+      },
     },
     aiAssistantModal: {
       background: { panel: gray50, editor: gray58 },
@@ -620,6 +643,7 @@ const darkPalette = {
     flowEditor: {
       background: gray60,
       node: { border: gray20 },
+      edge: { stroke: gray20 },
       nodeColors: {
         toolkit: flowNodeToolkit,
         mcp: flowNodeMcp,
@@ -664,13 +688,17 @@ const darkPalette = {
       },
     },
     banner: {
-      default: bannerDefaultBg,
-      border: bannerBorderBg,
+      background: {
+        default: bannerDefaultBg,
+        border: bannerBorderBg,
+      },
     },
     interactiveTour: {
       backdrop: tourBackdropColor,
-      card: tourCardBg,
-      borderGradient: tourBorderGradient,
+      background: {
+        card: tourCardBg,
+        borderGradient: tourBorderGradient,
+      },
       dividerGradient: tourDividerGradient,
       text: tourTextColor,
     },
@@ -728,7 +756,7 @@ const darkPalette = {
       },
     },
     configurationCard: { background: { highTier: green20 } },
-    highlightQuery: { background: orange },
+    highlightQuery: { background: attentionOrange },
     runIndexBanner: {
       background: { success: green8, error: red8, warning: orange8, info: blueFill8 },
       border: { success: greenOutline40, error: red40, warning: orangeOutline40, info: blue40 },
@@ -748,7 +776,7 @@ const darkPalette = {
     chipWithCheckIcon: {
       background: {
         default: white5,
-        selected: blue16,
+        selected: blue10,
         warning: red15,
       },
       border: {

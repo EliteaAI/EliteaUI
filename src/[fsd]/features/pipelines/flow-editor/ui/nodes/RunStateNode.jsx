@@ -141,7 +141,9 @@ const runNodeStyles = (status, selected) => {
       padding: '.375rem .75rem',
       borderRadius: '.5rem',
       border: `.0625rem solid ${selected ? palette.components.button.background.primary.disabled : palette.border.lines}`,
-      background: selected ? palette.background.default.secondary : palette.background.default.tertiary,
+      background: selected
+        ? palette.components.dataGrid.background.main
+        : palette.background.default.tertiary,
       height: '2.25rem',
       display: 'flex',
       alignItems: 'center',
@@ -151,7 +153,7 @@ const runNodeStyles = (status, selected) => {
       '&:hover': {
         cursor: 'pointer',
         border: `.0625rem solid ${palette.components.button.background.primary.disabled}`,
-        background: palette.background.default.secondary,
+        background: palette.components.dataGrid.background.main,
       },
     }),
     runName: ({ palette }) => ({ color: palette.icon.secondary }),

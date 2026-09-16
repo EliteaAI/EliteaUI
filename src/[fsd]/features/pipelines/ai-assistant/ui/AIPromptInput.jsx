@@ -132,7 +132,7 @@ const aiPromptInputStyles = () => ({
     alignItems: 'center',
     gap: spacing(2),
     '&:focus-within': {
-      borderColor: palette.primary.main,
+      borderColor: palette.components.userMessageEditor.border,
     },
   }),
   iconContainer: ({ palette, spacing }) => ({
@@ -140,7 +140,7 @@ const aiPromptInputStyles = () => ({
     width: spacing(4.5),
     height: spacing(4.5),
     borderRadius: '0.75rem',
-    background: palette.components.aiAssistant.iconBackground,
+    background: palette.components.aiAssistant.background.icon,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -151,7 +151,7 @@ const aiPromptInputStyles = () => ({
       inset: 0,
       borderRadius: '0.75rem',
       padding: '0.0625rem',
-      background: palette.components.aiAssistant.iconBorder,
+      background: palette.components.aiAssistant.background.iconBorder,
       WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
       WebkitMaskComposite: 'xor',
       mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',

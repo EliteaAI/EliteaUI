@@ -179,11 +179,11 @@ const resourceVersionInfoStyles = () => ({
       backgroundColor: palette.mode === 'dark' ? 'rgba(61, 68, 86, 0.1)' : 'rgba(255, 255, 255, 0.1)',
     },
     '& svg path': {
-      fill: palette.icon.default,
+      fill: palette.mode,
     },
 
     '&:hover svg path': {
-      fill: palette.icon.send,
+      fill: palette.mode,
     },
   }),
   copyIcon: {

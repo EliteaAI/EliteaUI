@@ -275,7 +275,7 @@ const datasetItemStyles = () => ({
   },
   tooltip: ({ palette }) => ({
     maxWidth: '18.1875rem',
-    backgroundColor: palette.background.tooltip,
+    backgroundColor: palette.text.tooltip.default,
     borderRadius: '0.25rem',
     padding: '0.25rem 0.5rem',
   }),

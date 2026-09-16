@@ -183,7 +183,7 @@ const datasetCaseItemStyles = isExcluded => ({
   actionButton: ({ palette }) => ({
     minWidth: 'unset',
     padding: '0.25rem',
-    backgroundColor: palette.background.default.secondary,
+    backgroundColor: palette.background.secondary,
     '&:hover': {
       backgroundColor: palette.action.hover,
     },

@@ -152,7 +152,7 @@ const stateDrawerStyles = (width, isResizing, isHovering) => ({
     height: '100%',
     display: 'flex',
     flexDirection: 'column',
-    borderLeft: `.0625rem solid ${isResizing ? palette.primary.main : isHovering ? palette.components.flowEditor.node.border : palette.border.lines}`,
+    borderLeft: `.0625rem solid ${isResizing ? palette.components.userMessageEditor.border : isHovering ? palette.components.flowEditor.node.border : palette.border.lines}`,
     background: palette.background.default.secondary,
     zIndex: 10,
     transition: isResizing ? 'none' : 'border-color 0.2s ease',

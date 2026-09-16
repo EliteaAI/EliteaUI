@@ -143,7 +143,7 @@ const previewDocumentStyles = () => ({
         background: palette.background.default.tertiary,
       },
       '&::-webkit-scrollbar-thumb': {
-        background: palette.scrollbar.thumb,
+        background: palette.border.lines,
         borderRadius: '.125rem',
       },
     },
@@ -168,7 +168,7 @@ const previewDocumentStyles = () => ({
 
       '& [role="gridcell"][aria-selected="true"]': {
         backgroundColor: `${palette.components.button.background.primary.pressed} !important`,
-        borderColor: `${palette.border.default} !important`,
+        borderColor: `${palette.background.default.secondary} !important`,
       },
     },
 
@@ -306,7 +306,7 @@ const previewDocumentStyles = () => ({
 
       input: {
         background: palette.background.default.tertiary,
-        border: `1px solid ${palette.border.lines} !important`,
+        border: `1px solid ${palette.components.input.border} !important`,
 
         color: `${palette.text.secondary} !important`,
       },
@@ -336,7 +336,7 @@ const previewDocumentStyles = () => ({
     '.layout-page': {
       backgroundColor:
         palette.mode === 'dark'
-          ? `${palette.text.disabled} !important`
+          ? `${palette.components.input.text.disabled} !important`
           : `${palette.background.paper} !important`,
     },
   }),

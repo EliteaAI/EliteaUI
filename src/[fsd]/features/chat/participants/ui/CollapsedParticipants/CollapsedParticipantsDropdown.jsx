@@ -208,7 +208,7 @@ const collapsedParticipantsDropdownStyles = () => ({
     padding: `${SPACING.SM} ${SPACING.XL}`,
     height: DROPDOWN_CONSTANTS.DIMENSIONS.ITEM_HEIGHT,
     gap: DROPDOWN_CONSTANTS.SPACING.ITEM_ICON_TEXT_GAP,
-    color: palette.text.disabled,
+    color: palette.components.input.text.placeholder,
     textTransform: 'uppercase',
   }),
   titleContent: {

@@ -82,7 +82,7 @@ const contextBudgetProgressStyles = (theme, isHighUtilization) => {
   const startRgba = alpha(endColor, 0);
 
   const progressGradient = `linear-gradient(90deg, ${startRgba} 0%, ${endColor} 100%)`;
-  const backgroundColor = theme.palette.components.contextBudget.trackBackground;
+  const backgroundColor = theme.palette.border.lines;
 
   return {
     progressSection: {

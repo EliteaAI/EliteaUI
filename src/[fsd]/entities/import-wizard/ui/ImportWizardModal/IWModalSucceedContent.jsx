@@ -211,7 +211,7 @@ const iWModaSucceedlContentStyles = () => ({
     fontWeight: 400,
     fontSize: '.75rem',
     lineHeight: '1rem',
-    color: theme.palette.text.secondary,
+    color: theme.palette.components.mcp.text.logout,
   }),
 
   infoIconWrapper: {

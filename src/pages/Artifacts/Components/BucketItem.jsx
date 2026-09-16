@@ -316,7 +316,7 @@ BucketItem.displayName = 'BucketItem';
 
 const bucketItemStyles = ({ isActive, isHovering, isNextItemHighlighted, showMenu, theme, isExpanded }) => {
   const getBackgroundColor = () => {
-    if (isActive) return theme.palette.background.selectedItem.default;
+    if (isActive) return theme.palette.components.conversation.background.selected;
     if (isHovering && !isActive) return theme.palette.background.interactiveItem.rowHover;
 
     return 'transparent';
@@ -329,7 +329,7 @@ const bucketItemStyles = ({ isActive, isHovering, isNextItemHighlighted, showMen
       borderBottom:
         isHighlighted || isNextItemHighlighted || isExpanded
           ? 'none'
-          : `0.0625rem solid ${theme.palette.border.lines}`,
+          : `0.0625rem solid ${theme.palette.border.subtle}`,
       padding: '0.5rem 0.5rem',
       gap: '0.5rem',
       display: 'flex',

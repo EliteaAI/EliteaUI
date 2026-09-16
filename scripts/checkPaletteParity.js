@@ -36,6 +36,23 @@ const STOP = new Set(['map', 'filter', 'length', 'replace', 'includes', 'startsW
 // roots MUI derives itself, never declared in the palette files
 const MUI_ROOTS = new Set(['mode', 'getContrastText', 'augmentColor', 'contrastThreshold', 'tonalOffset']);
 
+// Reads that were already broken before the palette refactor: the key has never existed, so these
+// elements render with an inherited colour today. Pointing them at a real token would change how the
+// app looks, which is out of scope for a pure refactor — they need their own fix (and design input on
+// what colour they should be). Remove an entry here once its consumer is corrected.
+const KNOWN_PREEXISTING = new Set([
+  'background.button.hover',
+  'background.errorCodeHighlight',
+  'background.primary',
+  'background.secondary',
+  'boxShadow.elevated',
+  'icon.fill.white',
+  'text.button.selected',
+  'text.deafult', // typo in the consumer, predates this refactor
+  'text.tertiary',
+  'text.tooltip.default',
+]);
+
 const files = execSync('git ls-files src', { cwd: ROOT, maxBuffer: 1 << 26 })
   .toString()
   .trim()
@@ -52,6 +69,7 @@ const resolvePath = (segments, wantsObject) => {
     usable.push(seg);
   }
   if (!usable.length || MUI_ROOTS.has(usable[0])) return null;
+  if (KNOWN_PREEXISTING.has(usable.join('.'))) return null;
 
   for (const [mode, palette] of Object.entries(themes)) {
     let value = palette;

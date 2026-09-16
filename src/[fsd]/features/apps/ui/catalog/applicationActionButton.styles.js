@@ -28,7 +28,7 @@ export const applicationActionButtonStyles = {
     color: palette.components.accentButton.text.default,
     background: palette.components.accentButton.background.default,
     '& .MuiButton-startIcon svg, & .MuiButton-startIcon path': {
-      fill: palette.icon.accent,
+      fill: palette.components.button.text.create,
     },
     '&:hover': {
       background: palette.components.accentButton.background.hover,
@@ -41,7 +41,7 @@ export const applicationActionButtonStyles = {
       color: palette.components.accentButton.text.disabled,
       backgroundColor: palette.components.accentButton.background.disabled,
       '& .MuiButton-startIcon svg, & .MuiButton-startIcon path': {
-        fill: palette.icon.disabled,
+        fill: palette.text.disabled,
       },
     },
   }),

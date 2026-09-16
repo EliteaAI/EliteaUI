@@ -27,7 +27,7 @@ const tourCardStyles = ({ palette }) => ({
   gap: '0.75rem',
   padding: '1.5rem',
   borderRadius: '1rem',
-  background: palette.components.interactiveTour.card,
+  background: palette.components.interactiveTour.background.card,
   color: palette.text.secondary,
   '&::before': {
     content: '""',
@@ -35,7 +35,7 @@ const tourCardStyles = ({ palette }) => ({
     inset: 0,
     borderRadius: 'inherit',
     padding: '0.0625rem',
-    background: palette.components.interactiveTour.borderGradient,
+    background: palette.components.interactiveTour.background.borderGradient,
     WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
     WebkitMaskComposite: 'xor',
     maskComposite: 'exclude',

@@ -836,10 +836,10 @@ const componentStyles = theme => ({
       zIndex: 1,
     },
     '& .MuiDataGrid-cell--selected': {
-      backgroundColor: theme.palette.background.selectedItem.default, // Highlight selected cells
+      backgroundColor: theme.palette.components.dataGrid.background.row.selected, // Highlight selected cells
     },
     '& .MuiDataGrid-columnHeader--selected': {
-      backgroundColor: theme.palette.background.selectedItem.default, // Highlight selected column headers
+      backgroundColor: theme.palette.components.dataGrid.background.row.selected, // Highlight selected column headers
     },
   },
   downloadButtonContainer: {

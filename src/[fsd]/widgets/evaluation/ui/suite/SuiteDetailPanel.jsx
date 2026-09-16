@@ -438,7 +438,7 @@ const suiteDetailPanelStyles = () => ({
     height: '3.3125rem',
     minHeight: '3.3125rem',
     boxSizing: 'border-box',
-    backgroundColor: palette.background.panel,
+    backgroundColor: palette.background.default.secondary,
     borderBottom: `0.0625rem solid ${palette.border.default}`,
   }),
   headerLeft: {
@@ -518,13 +518,13 @@ const suiteDetailPanelStyles = () => ({
     justifyContent: 'center',
     padding: '0.75rem 1.5rem',
     borderTop: `0.0625rem solid ${palette.border.default}`,
-    background: palette.background.panel,
+    background: palette.background.default.secondary,
   }),
   evaluateButton: ({ palette }) => ({
     padding: '0.375rem 1rem 0.375rem 0.75rem',
     gap: '0.5rem',
     borderRadius: '1.5rem',
-    backgroundColor: palette.background.interactiveItem.rowHover,
+    backgroundColor: palette.components.split.background.default,
     color: palette.primary.main,
     fontSize: '0.75rem',
     fontWeight: 500,
@@ -533,13 +533,13 @@ const suiteDetailPanelStyles = () => ({
       fill: palette.icon.accent,
     },
     '&:hover': {
-      backgroundColor: palette.background.interactiveItem.hover,
+      backgroundColor: palette.components.split.background.hover,
     },
     '&.Mui-disabled': {
       backgroundColor: palette.background.surface.interactive.active,
       color: palette.text.disabled,
       '& svg path': {
-        fill: palette.icon.disabled,
+        fill: palette.text.disabled,
       },
     },
   }),

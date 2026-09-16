@@ -437,7 +437,7 @@ const styles = {
   buttonsContainerVertical:
     highLightMe =>
     ({ palette }) => ({
-      background: highLightMe ? undefined : palette.components.userMessage.actionsGradient,
+      background: highLightMe ? undefined : palette.components.aiAnswer.actionsGradient,
     }),
   iconButton: {
     marginLeft: '0rem',
@@ -452,7 +452,7 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     borderRadius: '0.5rem',
-    border: `0.0625rem solid ${palette.border.hover}`,
+    border: `0.0625rem solid ${palette.components.userMessageEditor.border}`,
     background: palette.background.surface.interactive.default,
   }),
   editInputField: ({ palette }) => ({

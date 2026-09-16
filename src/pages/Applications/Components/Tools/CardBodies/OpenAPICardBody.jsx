@@ -15,7 +15,7 @@ export default function OpenAPICardBody({ tool, onClickShowActions, showActions 
             sx={{
               color: theme.palette.text.primary,
               '&:hover': {
-                color: theme.palette.text.accent,
+                color: theme.palette.components.button.text.create,
               },
             }}
           >

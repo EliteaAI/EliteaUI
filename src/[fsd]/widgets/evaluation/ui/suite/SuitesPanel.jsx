@@ -124,7 +124,7 @@ const suitesPanelStyles = () => ({
     height: '3.3125rem',
     minHeight: '3.3125rem',
     boxSizing: 'border-box',
-    backgroundColor: palette.background.panel,
+    backgroundColor: palette.background.default.secondary,
     borderBottom: `0.0625rem solid ${palette.border.default}`,
   }),
   headerLabel: ({ palette }) => ({

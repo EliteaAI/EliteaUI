@@ -208,7 +208,7 @@ VersionReplacementModal.displayName = 'VersionReplacementModal';
 /** @type {MuiSx} */
 const getStyles = () => ({
   paper: { width: '37.5rem' },
-  versionName: ({ palette }) => ({ color: palette.primary.main }),
+  versionName: ({ palette }) => ({ color: palette.text.link }),
   description: {
     marginBottom: '1rem',
   },

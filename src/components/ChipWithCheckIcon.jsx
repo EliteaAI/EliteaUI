@@ -32,9 +32,7 @@ const styles = {
       display: 'flex',
       flexDirection: 'row',
       alignItems: 'center',
-      color: !disabled
-        ? palette.components.chipWithCheckIcon.text.default
-        : palette.components.chipWithCheckIcon.text.disabled,
+      color: !disabled ? palette.components.chipWithCheckIcon.text.default : palette.text.disabled,
       background: warning
         ? palette.components.chipWithCheckIcon.background.warning
         : isSelected
@@ -42,9 +40,7 @@ const styles = {
           : palette.components.chipWithCheckIcon.background.default,
       border: warning ? `0.0625rem solid ${palette.components.chipWithCheckIcon.border.warning}` : undefined,
       '& .MuiChip-icon': {
-        color: !disabled
-          ? palette.components.chipWithCheckIcon.text.default
-          : palette.components.chipWithCheckIcon.text.disabled,
+        color: !disabled ? palette.components.chipWithCheckIcon.text.default : palette.text.disabled,
       },
     }),
 };

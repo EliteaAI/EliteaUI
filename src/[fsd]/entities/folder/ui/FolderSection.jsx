@@ -282,7 +282,7 @@ const folderSectionStyles = () => ({
   },
   emptyText: ({ palette }) => ({
     fontSize: '.875rem',
-    color: palette.text.disabled,
+    color: palette.text.muted,
   }),
   folders: {
     display: 'flex',

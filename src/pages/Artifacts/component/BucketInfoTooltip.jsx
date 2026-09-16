@@ -102,7 +102,7 @@ const bucketInfoTooltipStyles = () => ({
   },
   tooltip: ({ palette, shadows }) => ({
     '& .MuiTooltip-tooltip': {
-      backgroundColor: palette.components.tooltip.background.default,
+      backgroundColor: palette.background.paper,
       color: palette.text.primary,
       border: `0.0625rem solid ${palette.border.lines}`,
       boxShadow: shadows[4],
@@ -110,7 +110,7 @@ const bucketInfoTooltipStyles = () => ({
       maxWidth: '18.75rem',
     },
     '& .MuiTooltip-arrow': {
-      color: palette.components.tooltip.background.default,
+      color: palette.background.paper,
       '&:before': {
         border: `0.0625rem solid ${palette.border.lines}`,
       },

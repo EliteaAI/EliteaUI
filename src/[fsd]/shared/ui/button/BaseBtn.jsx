@@ -49,15 +49,15 @@ export default BaseBtn;
 export const eliteaButtonColors = theme => ({
   [BUTTON_VARIANTS.special]: {
     default: {
-      background: theme.palette.components.accentButton.background.default,
+      background: theme.palette.components.button.background.split.default,
       color: theme.palette.mode === 'dark' ? theme.palette.primary.main : theme.palette.text.secondary,
     },
     hover: {
-      background: theme.palette.components.accentButton.background.hover,
+      background: theme.palette.components.button.background.split.hover,
     },
     active: {
-      background: theme.palette.components.accentButton.background.pressed,
-      color: theme.palette.components.button.text.showMore,
+      background: theme.palette.components.button.background.split.pressed,
+      color: theme.palette.components.split.text.pressed,
     },
     disabled: {
       background: theme.palette.components.button.background.default,
@@ -729,7 +729,7 @@ export const eliteaButtonVariants = [
       alignItems: 'center',
       justifyContent: 'center',
 
-      backgroundColor: theme.palette.components.button.background.maxi.default,
+      backgroundColor: theme.palette.mode,
       color: theme.palette.mode === 'dark' ? theme.palette.primary.main : theme.palette.text.primary,
 
       '& .MuiButton-startIcon': {
@@ -746,13 +746,13 @@ export const eliteaButtonVariants = [
       },
 
       '&:hover': {
-        backgroundColor: theme.palette.components.button.background.maxi.hover,
+        backgroundColor: theme.palette.mode,
       },
       '&:focus-visible': {
-        backgroundColor: theme.palette.components.button.background.maxi.hover,
+        backgroundColor: theme.palette.mode,
       },
       '&:active': {
-        backgroundColor: theme.palette.components.button.background.maxi.pressed,
+        backgroundColor: theme.palette.mode,
       },
       '&:disabled': {
         backgroundColor: theme.palette.components.button.background.default,

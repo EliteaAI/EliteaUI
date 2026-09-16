@@ -179,7 +179,7 @@ const skillHubModalStyles = () => ({
       maxWidth: '37.5rem',
       maxHeight: '85vh',
       borderRadius: '1rem',
-      background: palette.components.skillHubModal.border,
+      background: palette.components.skillHubModal.background.borderGradient,
       boxSizing: 'border-box',
       border: 'none !important',
       padding: '0.0625rem',
@@ -190,7 +190,7 @@ const skillHubModalStyles = () => ({
     },
     '& .MuiDialogContent-root': ({ palette }) => ({
       borderRadius: '1rem',
-      background: palette.components.skillHubModal.border,
+      background: palette.components.skillHubModal.background.borderGradient,
       margin: 0,
       width: '100%',
       border: 'none !important',
@@ -199,7 +199,7 @@ const skillHubModalStyles = () => ({
   },
   mainPanel: ({ palette }) => ({
     width: '100%',
-    background: palette.components.skillHubModal.background,
+    background: palette.components.skillHubModal.background.default,
     borderRadius: 'calc(1rem - 1px)',
     boxSizing: 'border-box',
     display: 'flex',

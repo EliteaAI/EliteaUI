@@ -399,10 +399,10 @@ const buildDimensionWithAiModalStyles = () => ({
     padding: '1rem',
     borderRadius: '0.75rem',
     border: `0.0625rem solid ${palette.border.default}`,
-    backgroundColor: palette.background.default.secondary,
+    backgroundColor: palette.components.aiProviderAccordion.background.default,
     cursor: 'pointer',
     '&:hover': {
-      backgroundColor: palette.background.interactiveItem.hover,
+      backgroundColor: palette.components.aiProviderAccordion.background.hover,
       borderColor: palette.border.lines,
     },
   }),

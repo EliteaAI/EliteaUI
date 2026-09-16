@@ -10,7 +10,7 @@ export const getCardGradientBorderBefore = palette => ({
   inset: 0,
   borderRadius: 'inherit',
   padding: '0.0625rem',
-  background: palette.components.card.border.borderGradient,
+  background: palette.components.card.background.borderGradient,
   mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
   maskComposite: 'exclude',
   WebkitMaskComposite: 'xor',
@@ -25,7 +25,7 @@ export const getCardGradientBorderBefore = palette => ({
 export const getCardGradientHover = palette => ({
   background: palette.components.card.background.hover,
   '&::before': {
-    background: palette.components.card.border.hoverGradient,
+    background: palette.components.card.background.hoverBorderGradient,
   },
   boxShadow: palette.components.card.shadow.hover,
 });

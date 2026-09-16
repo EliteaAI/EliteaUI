@@ -172,7 +172,7 @@ export const participantNormalCardStyles = ({ collapsed, isActive, maxWidth, isB
     background: isActive
       ? palette.background.interactiveItem.active
       : palette.background.surface.interactive.default,
-    border: isActive ? `0.0625rem solid ${palette.components.split.background.hover}` : undefined,
+    border: isActive ? `0.0625rem solid ${palette.components.split.border.hover}` : undefined,
     ':hover': {
       background: palette.background.interactiveItem.hover,
     },

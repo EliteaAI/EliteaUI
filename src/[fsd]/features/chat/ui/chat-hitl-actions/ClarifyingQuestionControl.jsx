@@ -335,7 +335,7 @@ const clarifyingQuestionControlStyles = () => ({
       transition: 'border-color 0.15s ease',
     },
     '& .MuiInputBase-root:hover': {
-      borderColor: palette.border.hover,
+      borderColor: palette.text.secondary,
     },
     '& .MuiInputBase-root.Mui-focused': {
       borderColor: palette.primary.main,

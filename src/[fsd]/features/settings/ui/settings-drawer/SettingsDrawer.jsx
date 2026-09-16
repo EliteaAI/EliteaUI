@@ -205,13 +205,13 @@ const getStyles = () => ({
       height: '2rem',
       background: isActive
         ? palette.background.surface.interactive.active
-        : palette.background.surface.interactive.default,
+        : palette.components.conversation.background.normal,
       borderRadius: '0.375rem',
       cursor: 'pointer',
       transition: 'all 0.2s ease-in-out',
       boxSizing: 'border-box',
       '&:hover': {
-        backgroundColor: palette.background.interactiveItem.hover,
+        backgroundColor: palette.components.conversation.background.hover,
       },
     }),
 
@@ -221,9 +221,9 @@ const getStyles = () => ({
       display: 'flex',
       alignItems: 'center',
       minWidth: '1rem',
-      color: isActive ? palette.icon.secondary : palette.icon.default,
+      color: isActive ? palette.icon.secondary : palette.components.button.icon.stateButton.hover,
       '& svg': {
-        fill: isActive ? palette.icon.secondary : palette.icon.default,
+        fill: isActive ? palette.icon.secondary : palette.components.button.icon.stateButton.hover,
         width: '1rem',
         height: '1rem',
       },

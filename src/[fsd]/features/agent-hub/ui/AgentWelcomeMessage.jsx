@@ -52,7 +52,7 @@ const agentWelcomeMessageStyles = () => ({
     maxHeight: '12.5rem',
   },
   header: ({ palette }) => ({
-    color: palette.text.secondary,
+    color: palette.text.tertiary,
     flexShrink: 0,
   }),
   messageContainer: {
@@ -70,7 +70,7 @@ const agentWelcomeMessageStyles = () => ({
     WebkitLineClamp: 8,
   }),
   emptyText: ({ palette }) => ({
-    color: palette.text.secondary,
+    color: palette.text.tertiary,
     textAlign: 'center',
   }),
 });

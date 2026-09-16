@@ -309,7 +309,7 @@ export const StyledTabBar = styled(Box)(({ theme }) => ({
   boxSizing: 'border-box',
   borderBottomStyle: 'solid !important',
   borderBottomWidth: '0.0625rem',
-  borderBottomColor: theme.palette.border.lines,
+  borderBottomColor: theme.palette.border.subtle,
   width: '100%',
   background: theme.palette.background.default.primary,
 }));
@@ -344,7 +344,7 @@ const styledPureTabsStyles = (componentHeight, shouldShowLabel, tabSX, isCreateP
     boxSizing: 'border-box',
     borderBottomStyle: 'solid !important',
     borderBottomWidth: '0.0625rem',
-    borderBottomColor: palette.border.lines,
+    borderBottomColor: palette.border.subtle,
     width: '100%',
     background: palette.background.default.primary,
   }),

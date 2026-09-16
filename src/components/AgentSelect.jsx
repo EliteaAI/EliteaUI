@@ -600,7 +600,7 @@ const styles = {
     fontSize: '0.875rem',
     color: ({ palette }) => palette.text.secondary,
     '&:hover': {
-      backgroundColor: ({ palette }) => palette.background.interactiveItem.hover,
+      backgroundColor: ({ palette }) => palette.components.button.background.iconLabelButton.hover,
     },
     '&.Mui-disabled': {
       color: ({ palette }) => palette.text.disabled,

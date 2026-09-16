@@ -22,7 +22,7 @@ export const eliteaTextFieldColorStyle = theme => ({
         color: theme.palette.text.primary,
       },
       placeholder: {
-        color: theme.palette.text.disabled,
+        color: theme.palette.text.muted,
       },
       input: {
         color: theme.palette.text.secondary,
@@ -49,7 +49,7 @@ export const eliteaTextFieldColorStyle = theme => ({
     },
     disabled: {
       label: {
-        color: theme.palette.text.disabled,
+        color: theme.palette.text.muted,
       },
       input: {
         color: theme.palette.text.primary,
@@ -76,7 +76,7 @@ export const eliteaTextFieldColorStyle = theme => ({
         color: theme.palette.text.primary,
       },
       placeholder: {
-        color: theme.palette.text.disabled,
+        color: theme.palette.text.muted,
       },
       input: {
         color: theme.palette.text.secondary,
@@ -90,7 +90,7 @@ export const eliteaTextFieldColorStyle = theme => ({
     },
     hover: {
       border: {
-        color: theme.palette.border.inputHover,
+        color: theme.palette.components.input.text.placeholderSecondary,
       },
     },
     active: {
@@ -103,7 +103,7 @@ export const eliteaTextFieldColorStyle = theme => ({
     },
     disabled: {
       label: {
-        color: theme.palette.text.disabled,
+        color: theme.palette.text.muted,
       },
       input: {
         color: theme.palette.text.primary,

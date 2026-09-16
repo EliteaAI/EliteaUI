@@ -277,7 +277,7 @@ const getStyles = defaultSettingsLayout => ({
     paddingTop: '.5rem',
     paddingBottom: '1rem',
     borderBottom: showBorder ? '0.0625rem solid' : 'none',
-    borderColor: ({ palette }) => palette.border.lines,
+    borderColor: ({ palette }) => palette.border.subtle,
   }),
   labelContainerSx: {
     padding: '0.25rem 0.75rem',

@@ -87,7 +87,7 @@ const datasetsPanelStyles = () => ({
     minHeight: '3.575rem',
     padding: '0.75rem 1rem 0.75rem 1.5625rem',
     borderBottom: `0.0625rem solid ${palette.border.default}`,
-    backgroundColor: palette.background.default.secondary,
+    backgroundColor: palette.components.codePreview.background,
   }),
   headerTitle: ({ palette }) => ({
     color: palette.text.primary,

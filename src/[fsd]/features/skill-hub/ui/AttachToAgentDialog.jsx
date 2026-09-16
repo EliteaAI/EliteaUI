@@ -494,7 +494,7 @@ const attachToAgentDialogStyles = () => ({
     borderRadius: '1rem',
     margin: 0,
     paddingLeft: '0.5rem',
-    backgroundColor: palette.background.default.secondary,
+    backgroundColor: palette.components.notificationList.background,
     '& .MuiChip-label': {
       ...typography.labelSmall,
       color: palette.text.secondary,

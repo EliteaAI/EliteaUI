@@ -81,7 +81,7 @@ const previewUnavailableStyles = () => ({
   icon: ({ palette }) => ({
     width: '2rem',
     height: '2rem',
-    color: palette.text.disabled,
+    color: palette.components.input.text.placeholder,
     marginBottom: 2,
   }),
 
@@ -96,7 +96,7 @@ const previewUnavailableStyles = () => ({
   }),
 
   description: ({ palette }) => ({
-    color: palette.text.secondary,
+    color: palette.text.tertiary,
     fontSize: '.725rem',
   }),
 

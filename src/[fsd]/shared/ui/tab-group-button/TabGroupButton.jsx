@@ -119,7 +119,7 @@ export const colorTabGroupButtonStyle = theme => ({
     active: {
       color: theme.palette.components.tabGroupButton.text.active,
       fill: theme.palette.components.tabGroupButton.text.active,
-      pressed: theme.palette.background.surface.interactive.selected,
+      pressed: theme.palette.components.button.background.secondary.pressed,
       background: theme.palette.components.tabGroupButton.background.active,
     },
     disabled: {

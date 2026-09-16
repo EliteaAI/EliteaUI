@@ -242,7 +242,8 @@ const getStyles = isDragOver => ({
     borderRadius: '0.5rem',
     overflow: 'hidden',
     border: ({ palette }) => `0.0625rem solid ${palette.border.lines}`,
-    backgroundColor: ({ palette }) => (isDragOver ? alpha(palette.primary.main, 0.08) : 'transparent'),
+    backgroundColor: ({ palette }) =>
+      isDragOver ? alpha(palette.components.contextHighlight.background, 0.08) : 'transparent',
     '&:hover': {
       '& [aria-label="full-scrn-btn"]': { display: 'block' },
     },
@@ -276,7 +277,7 @@ const getStyles = isDragOver => ({
     left: '3.625rem',
     zIndex: 100,
     pointerEvents: 'none',
-    color: ({ palette }) => palette.text.disabled,
+    color: ({ palette }) => palette.text.muted,
   },
   chooseFileLink: {
     textDecoration: 'underline',

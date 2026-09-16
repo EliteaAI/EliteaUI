@@ -81,6 +81,12 @@ Run the same checks as the `fsd-check` skill:
 - `useTheme` imported from `@emotion/react` instead of `@mui/material`
 - Missing `/** @type {MuiSx} */` annotation on style functions
 - Hardcoded colors instead of palette tokens
+- **Wrong palette token for CSS property** — tokens must match their semantic role:
+  - `background.*` / `*.background.*` tokens should only be used for `backgroundColor`
+  - `border.*` / `*.border.*` tokens should only be used for `border`, `borderColor`, `outline`
+  - `text.*` tokens should only be used for `color` on text elements
+  - `icon.*` tokens should only be used for `color`/`fill` on icons
+  - Example violation: using `palette.background.foo` for `color`, or `palette.text.bar` for `backgroundColor`
 
 #### G. File naming
 

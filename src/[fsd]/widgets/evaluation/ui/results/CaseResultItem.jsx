@@ -138,8 +138,8 @@ const caseResultItemStyles = () => ({
     flex: 1,
     minWidth: 0,
     borderRadius: '0.75rem',
-    border: `0.0625rem solid ${palette.border.lines}`,
-    backgroundColor: palette.background.panel,
+    border: `0.0625rem solid ${palette.components.dataGrid.background.main}`,
+    backgroundColor: palette.components.folder.background.default,
     overflow: 'hidden',
   }),
   header: {
@@ -182,7 +182,7 @@ const caseResultItemStyles = () => ({
     gap: '0.25rem',
     padding: '0 0.5rem',
     borderRadius: '1rem',
-    border: `0.0625rem solid ${palette.primary.main}`,
+    border: `0.0625rem solid ${palette.components.chatContinue.border}`,
   }),
   pendingBadgeIcon: ({ palette }) => ({
     fontSize: '1rem',

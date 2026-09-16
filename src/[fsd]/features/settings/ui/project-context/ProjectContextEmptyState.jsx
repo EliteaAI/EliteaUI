@@ -83,7 +83,7 @@ const getStyles = () => ({
     fontWeight: 600,
   }),
   description: ({ palette }) => ({
-    color: palette.text.secondary,
+    color: palette.text.subtle,
     fontSize: '0.875rem',
     lineHeight: 1.5,
     maxWidth: '30rem',

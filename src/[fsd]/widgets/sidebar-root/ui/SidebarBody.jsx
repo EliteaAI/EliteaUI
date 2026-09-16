@@ -358,10 +358,10 @@ const sideBarBodyStyles = (sideBarCollapsed, socketStatus) => ({
     fontSize: '1.75rem',
   },
   divider: ({ palette }) => ({
-    borderColor: palette.border.lines,
+    borderColor: palette.border.subtle,
   }),
   catalogDivider: ({ palette }) => ({
-    borderColor: palette.border.lines,
+    borderColor: palette.border.subtle,
     marginInline: '-1rem',
   }),
   createSection: {
@@ -380,7 +380,7 @@ const sideBarBodyStyles = (sideBarCollapsed, socketStatus) => ({
     boxSizing: 'border-box',
   },
   sectionDivider: ({ palette }) => ({
-    borderColor: palette.border.lines,
+    borderColor: palette.border.subtle,
     marginInline: '1rem',
   }),
   bottomSection: {
@@ -412,7 +412,7 @@ const sideBarBodyStyles = (sideBarCollapsed, socketStatus) => ({
       top: 0,
       width: '100%',
       height: '0.0625rem',
-      backgroundColor: palette.border.lines,
+      backgroundColor: palette.border.subtle,
     },
   }),
   footerBlock: ({ palette }) => ({
@@ -429,7 +429,7 @@ const sideBarBodyStyles = (sideBarCollapsed, socketStatus) => ({
       top: 0,
       width: '100%',
       height: '0.0625rem',
-      backgroundColor: palette.border.lines,
+      backgroundColor: palette.border.subtle,
     },
   }),
   assistantBlock: ({ palette }) => ({
@@ -438,7 +438,7 @@ const sideBarBodyStyles = (sideBarCollapsed, socketStatus) => ({
     justifyContent: 'center',
     alignItems: 'center',
     minWidth: 0,
-    borderRight: sideBarCollapsed ? 'none' : `1px solid ${palette.border.lines}`,
+    borderRight: sideBarCollapsed ? 'none' : `1px solid ${palette.border.subtle}`,
 
     span: {
       fontSize: '.75rem',

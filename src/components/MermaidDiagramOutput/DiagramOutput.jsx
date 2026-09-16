@@ -627,7 +627,7 @@ const mermaidDiagramOutputStyles = (theme, isValidCode, errorMessage, widthsValu
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    color: ({ palette }) => palette.text.accent,
+    color: ({ palette }) => palette.components.button.text.create,
   },
   quickFixText: ({ typography }) => ({
     color: 'inherit',
@@ -705,7 +705,7 @@ const mermaidDiagramOutputStyles = (theme, isValidCode, errorMessage, widthsValu
   },
   boldErrorText: ({ palette }) => ({
     fontWeight: 'bold',
-    backgroundColor: palette.background.error,
+    backgroundColor: palette.background.errorCodeHighlight,
     padding: '0.125rem 0.25rem',
     borderRadius: '0.25rem',
     fontFamily: 'monospace',

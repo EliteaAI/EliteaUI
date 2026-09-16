@@ -61,13 +61,13 @@ const fStringAutocompletePopperStyles = () => ({
     fontSize: '0.875rem',
     color: palette.text.primary,
     '&:hover': {
-      backgroundColor: palette.background.interactiveItem.rowHover,
+      backgroundColor: palette.background.interactiveItem.hover,
     },
     '&.Mui-selected': {
-      backgroundColor: palette.background.interactiveItem.rowHover,
+      backgroundColor: palette.background.interactiveItem.hover,
     },
     '&.Mui-selected:hover': {
-      backgroundColor: palette.background.interactiveItem.rowHover,
+      backgroundColor: palette.background.interactiveItem.hover,
     },
   }),
 });

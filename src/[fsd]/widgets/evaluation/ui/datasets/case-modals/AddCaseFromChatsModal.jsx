@@ -331,11 +331,11 @@ const addCaseFromChatsModalStyles = () => ({
       justifyContent: 'space-between',
       padding: '0.5rem 1.5rem',
       cursor: 'pointer',
-      backgroundColor: isSelected ? palette.background.selectedItem.default : 'transparent',
+      backgroundColor: isSelected ? palette.components.conversation.background.selected : 'transparent',
 
       '&:hover': {
         backgroundColor: isSelected
-          ? palette.background.selectedItem.default
+          ? palette.components.conversation.background.selected
           : palette.background.interactiveItem.rowHover,
       },
     }),

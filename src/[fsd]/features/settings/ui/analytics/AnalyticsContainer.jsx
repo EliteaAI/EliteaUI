@@ -499,7 +499,7 @@ const analyticsContainerStyles = () => ({
     borderRadius: '.75rem',
 
     span: {
-      color: palette.text.secondary,
+      color: palette.text.subtle,
       fontWeight: 500,
       lineHeight: '1rem',
     },
@@ -583,7 +583,7 @@ const analyticsContainerStyles = () => ({
           height: '1rem',
           fontSize: '1rem',
 
-          '& path': { fill: palette.icon.default },
+          '& path': { fill: palette.icon.subtle },
         },
       },
     }),
@@ -633,7 +633,7 @@ const analyticsContainerStyles = () => ({
         '& svg': { fill: palette.icon.secondary },
       },
       '&:active': {
-        background: palette.background.surface.interactive.selected,
+        background: palette.components.button.background.tertiary.pressed,
       },
     },
 
@@ -652,11 +652,11 @@ const analyticsContainerStyles = () => ({
         backgroundColor: palette.background.interactiveItem.hover,
       },
       '&.Mui-selected': {
-        backgroundColor: palette.background.selectedItem.default,
+        backgroundColor: palette.components.split.background.default,
         color: palette.text.secondary,
         borderRadius: '50%',
         '&:hover': {
-          backgroundColor: palette.background.selectedItem.hover,
+          backgroundColor: palette.components.split.background.default,
         },
       },
       '&.MuiPickersDay-today': {
@@ -673,10 +673,10 @@ const analyticsContainerStyles = () => ({
         backgroundColor: palette.background.interactiveItem.hover,
       },
       '&.Mui-selected': {
-        backgroundColor: palette.background.selectedItem.default,
+        backgroundColor: palette.components.split.background.default,
         color: palette.text.secondary,
         '&:hover': {
-          backgroundColor: palette.background.selectedItem.hover,
+          backgroundColor: palette.components.split.background.default,
         },
       },
     },
@@ -688,7 +688,7 @@ const analyticsContainerStyles = () => ({
       '& .MuiList-root': {
         '&::-webkit-scrollbar': { width: '.25rem' },
         '&::-webkit-scrollbar-thumb': {
-          backgroundColor: palette.scrollbar.thumb,
+          backgroundColor: palette.border.lines,
           borderRadius: '.125rem',
         },
       },
@@ -703,11 +703,11 @@ const analyticsContainerStyles = () => ({
         backgroundColor: palette.background.interactiveItem.hover,
       },
       '&.Mui-selected': {
-        backgroundColor: palette.background.selectedItem.default,
+        backgroundColor: palette.components.split.background.default,
         color: palette.text.secondary,
         borderRadius: '1.75rem',
         '&:hover': {
-          backgroundColor: palette.background.selectedItem.hover,
+          backgroundColor: palette.components.split.background.default,
         },
       },
     },
@@ -734,7 +734,7 @@ const analyticsContainerStyles = () => ({
           backgroundColor: palette.background.surface.interactive.selected,
         },
         '&:active': {
-          backgroundColor: palette.background.surface.interactive.selected,
+          backgroundColor: palette.components.button.background.secondary.pressed,
         },
       },
 

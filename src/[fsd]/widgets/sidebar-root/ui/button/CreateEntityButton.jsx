@@ -431,7 +431,7 @@ const createEntityButtonStyles = sideBarCollapsed => ({
       },
       ...(isSelected &&
         !isDisabled && {
-          backgroundColor: palette.background.selectedItem.default,
+          backgroundColor: palette.components.button.background.drawerMenu.selected,
         }),
     }),
   checkIcon: {

@@ -101,7 +101,7 @@ const styles = {
       },
     },
     '&:active': {
-      backgroundColor: palette.background.surface.interactive.selected,
+      backgroundColor: palette.components.button.background.tertiary.pressed,
     },
   }),
 };

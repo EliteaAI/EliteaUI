@@ -459,7 +459,7 @@ const autoCompleteDropDownStyled = slotPropsProp => ({
     ({ palette }) => ({
       height: '1.5rem',
       margin: '0 !important',
-      backgroundColor: palette.background.surface.interactive.default,
+      backgroundColor: palette.components.styledChip.background.disabled,
       '& .MuiChip-deleteIcon': {
         color: palette.icon.default,
         marginLeft: 0,

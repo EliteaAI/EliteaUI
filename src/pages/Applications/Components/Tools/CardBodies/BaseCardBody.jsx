@@ -55,7 +55,7 @@ const getStyles = () => ({
     textDecoration: 'none',
     color: palette.text.primary,
     '&:hover': {
-      color: palette.text.accent,
+      color: palette.components.button.text.create,
     },
   }),
 });

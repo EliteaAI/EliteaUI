@@ -90,14 +90,14 @@ const dimensionItemStyles = () => ({
       height: '5.25rem',
       padding: '0.5rem 1.5rem',
       cursor: 'pointer',
-      backgroundColor: isSelected ? palette.background.selectedItem.default : 'transparent',
+      backgroundColor: isSelected ? palette.components.conversation.background.selected : 'transparent',
       borderBottom: `0.0625rem solid ${palette.border.lines}`,
       '&:last-child': {
         borderBottom: 'none',
       },
       '&:hover': {
         backgroundColor: isSelected
-          ? palette.background.selectedItem.default
+          ? palette.components.conversation.background.selected
           : palette.background.interactiveItem.rowHover,
       },
     }),
@@ -133,7 +133,7 @@ const dimensionItemStyles = () => ({
     borderRadius: '1.0625rem',
     color: palette.text.primary,
     backgroundColor: 'transparent',
-    border: `0.0625rem solid ${palette.border.lines}`,
+    border: `0.0625rem solid ${palette.background.surface.interactive.default}`,
     fontSize: '0.75rem',
     lineHeight: '1rem',
     whiteSpace: 'nowrap',

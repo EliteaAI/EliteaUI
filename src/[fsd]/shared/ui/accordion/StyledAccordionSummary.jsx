@@ -31,7 +31,7 @@ const cardSurface = palette => {
 
   return {
     borderRadius: '0.75rem',
-    backgroundColor: palette.components.accordion.background.default,
+    backgroundColor: palette.components.aiProviderAccordion.background.default,
     ...(isDark
       ? {
           border: '0.0625rem solid transparent',
@@ -42,7 +42,7 @@ const cardSurface = palette => {
             inset: 0,
             borderRadius: 'inherit',
             padding: '0.0625rem',
-            background: palette.components.accordion.border,
+            background: palette.components.toolCard.background.gradient,
             WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
             WebkitMaskComposite: 'xor',
             maskComposite: 'exclude',
@@ -50,7 +50,7 @@ const cardSurface = palette => {
           },
         }
       : {
-          border: `0.0625rem solid ${palette.components.accordion.border}`,
+          border: `0.0625rem solid ${palette.border.cardGradient}`,
         }),
   };
 };

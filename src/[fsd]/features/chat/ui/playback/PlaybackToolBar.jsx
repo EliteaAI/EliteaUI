@@ -171,7 +171,7 @@ const styles = {
   getArrowLeftColor:
     disableBackward =>
     ({ palette }) => ({
-      color: disableBackward ? palette.text.disabled : 'currentcolor',
+      color: disableBackward ? palette.text.muted : 'currentcolor',
     }),
   contentBox: {
     flex: 1,

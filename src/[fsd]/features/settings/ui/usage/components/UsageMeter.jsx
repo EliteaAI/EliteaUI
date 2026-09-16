@@ -84,7 +84,7 @@ const usageMeterStyles = (theme, severity) => {
     barBackground: {
       position: 'absolute',
       inset: 0,
-      backgroundColor: theme.palette.components.usageMeter.trackBackground,
+      backgroundColor: theme.palette.border.lines,
       borderRadius: '0.3125rem',
     },
     barFill: percentage => ({

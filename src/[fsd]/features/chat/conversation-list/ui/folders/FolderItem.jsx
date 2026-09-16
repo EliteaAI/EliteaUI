@@ -373,7 +373,7 @@ const folderItemStyles = isFolderSaveEnabled => ({
     flexDirection: 'row',
     alignItems: 'center',
     gap: '0.75rem',
-    background: palette.background.default.secondary,
+    background: palette.components.conversation.background.editor,
   }),
   checkButton: ({ palette }) => ({
     width: '1.75rem',

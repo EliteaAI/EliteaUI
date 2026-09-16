@@ -240,7 +240,7 @@ const getStyles = hasLoggedInToMcp => ({
     backgroundColor: hasLoggedInToMcp
       ? palette.components.mcp.background.loginSuccess
       : palette.components.mcp.background.logout,
-    border: `0.0625rem solid ${hasLoggedInToMcp ? palette.components.mcp.border.loginSuccess : palette.components.mcp.border.logout}`,
+    border: `0.0625rem solid ${hasLoggedInToMcp ? palette.components.mcp.border.loginSuccess : palette.components.mcp.background.logout}`,
     justifyContent: 'space-between',
   }),
 });

@@ -194,7 +194,7 @@ const dimensionResultCardStyles = () => ({
     borderColor: palette.alert.error.border,
   }),
   rootPending: ({ palette }) => ({
-    backgroundColor: palette.background.selectedItem.default,
+    backgroundColor: palette.components.participant.background.active,
   }),
   header: {
     display: 'flex',

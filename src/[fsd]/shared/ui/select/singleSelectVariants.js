@@ -39,7 +39,7 @@ export const eliteaSingleSelectColorStyle = theme => ({
     },
     disabled: {
       label: {
-        color: theme.palette.text.disabled,
+        color: theme.palette.text.muted,
       },
       input: {
         color: theme.palette.text.primary,

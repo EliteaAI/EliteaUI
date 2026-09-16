@@ -175,7 +175,7 @@ const modalStyles = () => ({
     maxWidth: '90vw',
     height: 'calc(100vh - 13.75rem)',
     borderTop: `1px solid ${palette.border.lines}`,
-    background: palette.background.default.secondary,
+    background: palette.components.contextDialog.background,
     overflowY: 'scroll',
     display: 'flex',
     flexDirection: 'column',

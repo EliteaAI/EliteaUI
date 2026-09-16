@@ -80,7 +80,7 @@ const variantBannerMessagePalette = ({ palette }) => ({
     iconColor: palette.icon.tips,
     border: palette.border.tips,
     text: palette.text.tips,
-    background: palette.alert.info.background,
+    background: palette.components.tips.background.main,
   },
 });
 

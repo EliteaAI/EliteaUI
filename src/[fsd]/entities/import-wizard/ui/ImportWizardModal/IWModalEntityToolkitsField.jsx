@@ -133,10 +133,10 @@ const iWModalEntityToolkitsFieldStyles = () => ({
     justifyContent: 'center',
     gap: '.25rem',
     borderRadius: '1.4375rem',
-    background: palette.background.default.secondary,
+    background: palette.components.dataGrid.background.main,
     padding: '.3125rem .5rem',
     height: '1.5rem',
-    border: `0.0625rem solid ${palette.border.lines}`,
+    border: `0.0625rem solid ${palette.border.subtle}`,
 
     svg: {
       width: '.875rem',

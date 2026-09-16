@@ -91,14 +91,19 @@ const diffAdded = '#2ab37a4d';
 const cssGreen = 'green';
 const cssRed = 'red';
 const toastWarningOrange = '#F2994A';
+const attentionOrange = '#F2994A';
+const cardHighlighted = '#29b8f526';
+const folderSecondaryBg = '#3d44560d';
+const folderCardBorder = '#41475712';
+const accordionDefaultBg = '#3d445605';
 const contextHighlightBg = '#3d3d3d';
 const tourTextColor = '#5c82bf';
 const entityIconTrophyBg = '#48433F';
 const folderDefaultBg = '#ffffff99';
 const folderActiveBg = '#6390fe1a';
 const folderShadow = '0 0.125rem 0.25rem #0000001f';
-const chatStarterStrong = '#6390fe66';
-const chatStarterSubtle = '#6390fe33';
+const chatStarterStrong = skyBlue20;
+const chatStarterSubtle = skyBlue40;
 const cardGradient = 'linear-gradient(180deg, #FFFFFF 0%, #ffffff00 100%)';
 const cardHoverBorderGradient = 'linear-gradient(0deg, #f7aeff 0%, #F37DFF 100%)';
 const cardBorderGradient = 'linear-gradient(0deg, #d0d5da99 0%, #D0D5DA 100%)';
@@ -133,8 +138,8 @@ const npsPrimaryHover = '#c428ddd9';
 const npsPrimaryPressed = '#c428ddb3';
 const npsPrimaryDisabled = '#c428dd66';
 const npsSecondaryDefault = '#3d44561a';
-const npsSecondaryHover = '#3d445726';
-const npsSecondaryPressed = '#3d445733';
+const npsSecondaryHover = '#3d445626';
+const npsSecondaryPressed = '#3d445633';
 const agentHubHoverBg = '#C6B8FF33';
 const agentHubShadowActive = '0 0 0.9375rem 0 #A754FF33 inset';
 const agentHubTextGradient = 'linear-gradient(90deg, #DD32FF 0.7%, #8147FF 30%)';
@@ -242,6 +247,8 @@ const lightPalette = {
   border: {
     default: light40,
     lines: light30,
+    subtle: dark10,
+    cardGradient: light40,
     hover: light10,
     inputHover: light20,
     tips: blue02,
@@ -263,9 +270,10 @@ const lightPalette = {
     tips: darkBlue,
     attention: warningStatusText,
     metrics: light00,
+    subtle: gray30,
+    muted: light20,
     warning: red,
     accent: magentaDefault,
-    disabled: light20,
     link: darkBlue,
     visitedLink: darkBlue70,
     alwaysWhite: white,
@@ -276,7 +284,7 @@ const lightPalette = {
   alert: {
     info: { icon: irisBlue, background: blueFill8, border: skyBlue40, text: darkBlue },
     success: { icon: greenHoverBtn, background: green8, border: greenOutline40, text: green },
-    warning: { icon: orange, background: orange8, border: orangeOutline40, text: orange },
+    warning: { icon: orange, background: orange8, border: orangeOutline40, text: attentionOrange },
     error: { icon: dangerRed, background: red8, border: red40, text: red },
     secondary: { background: blue8 },
   },
@@ -286,9 +294,10 @@ const lightPalette = {
     secondary: gray60,
     send: white,
     trophy: trophyGold,
+    subtle: gray30,
     tips: darkBlue,
     disabled: light20,
-    attention: orange,
+    attention: attentionOrange,
     warning: orange,
     successModal: greenHoverBtn,
     highTier: green20,
@@ -342,12 +351,12 @@ const lightPalette = {
       background: {
         default: white,
         hover: white,
+        highlighted: cardHighlighted,
         gradient: cardGradient,
-      },
-      border: {
-        hoverGradient: cardHoverBorderGradient,
         borderGradient: cardBorderGradient,
+        hoverBorderGradient: cardHoverBorderGradient,
       },
+
       shadow: {
         hover: cardHoverShadow,
       },
@@ -422,8 +431,13 @@ const lightPalette = {
       border: { itemDivider: dark10, highlightUserMessage: skyBlue40 },
     },
     folder: {
-      background: { default: folderDefaultBg, active: folderActiveBg },
-      border: { gradient: 'none', hover: irisBlue, active: irisBlue },
+      background: {
+        default: folderDefaultBg,
+        secondary: folderSecondaryBg,
+        active: folderActiveBg,
+        borderGradient: 'none',
+      },
+      border: { card: folderCardBorder, gradient: 'none', hover: irisBlue, active: irisBlue },
       shadow: folderShadow,
     },
     switch: {
@@ -455,9 +469,9 @@ const lightPalette = {
       text: { selected: { primary: gray60, secondary: light10 } },
     },
     publishWizardStep: {
-      default: { background: 'transparent', border: lightStepBorder, icon: dark10 },
-      active: { background: 'transparent', border: darkBlueLowOpacity, icon: darkBlueLowOpacity },
-      completed: { background: completedBlue, border: darkBlue, icon: darkBlue },
+      default: { background: 'transparent', border: lightStepBorder, iconBackground: dark10 },
+      active: { background: 'transparent', border: darkBlueLowOpacity, iconBackground: darkBlueLowOpacity },
+      completed: { background: completedBlue, border: darkBlue, iconBackground: darkBlue },
     },
     checkbox: {
       default: light10,
@@ -477,8 +491,10 @@ const lightPalette = {
       text: { default: light00, hover: gray60 },
     },
     aiAssistant: {
-      iconBackground: aiAssistantIconBg,
-      iconBorder: aiAssistantIconBorder,
+      background: {
+        icon: aiAssistantIconBg,
+        iconBorder: aiAssistantIconBorder,
+      },
       iconGradientStart: aiAssistantGradientStart,
       iconGradientEnd: aiAssistantGradientEnd,
     },
@@ -498,7 +514,7 @@ const lightPalette = {
       border: accordionBorderGradient,
     },
     accordion: {
-      background: { default: grey003, hover: grey007 },
+      background: { default: accordionDefaultBg, hover: grey007 },
       border: accordionBorderGradient,
     },
     listItem: { background: { default: white } },
@@ -574,16 +590,22 @@ const lightPalette = {
     imageAttachment: { background: imageAttachmentGradient },
     contextDialog: { background: gradient },
     agentModal: {
-      border: agentModalBorderGradient,
-      background: agentModalBgGradient,
+      background: {
+        default: agentModalBgGradient,
+        borderGradient: agentModalBorderGradient,
+      },
       content: {
-        border: agentModalBorderGradient,
-        background: blue01,
+        background: {
+          default: blue01,
+          borderGradient: agentModalBorderGradient,
+        },
       },
     },
     skillHubModal: {
-      border: agentModalBorderGradient,
-      background: agentModalBgGradient,
+      background: {
+        default: agentModalBgGradient,
+        borderGradient: agentModalBorderGradient,
+      },
     },
     aiAssistantModal: {
       background: { panel: white, editor: white },
@@ -595,6 +617,7 @@ const lightPalette = {
     flowEditor: {
       background: white,
       node: { border: light20 },
+      edge: { stroke: light20 },
       nodeColors: {
         toolkit: flowNodeToolkit,
         mcp: flowNodeMcp,
@@ -621,12 +644,12 @@ const lightPalette = {
     mcp: {
       background: { loginSuccess: green8, logout: orange8 },
       border: { loginSuccess: green40, logout: orange40 },
-      text: { loginSuccess: green, logout: orange },
+      text: { loginSuccess: green, logout: attentionOrange },
     },
     oauthStatus: {
       background: { loginSuccess: green8, logout: orange8 },
       border: { loginSuccess: green40, logout: orange40 },
-      text: { loginSuccess: green, logout: orange },
+      text: { loginSuccess: green, logout: attentionOrange },
     },
     onboarding: {
       background: onboardingBorderBg,
@@ -639,13 +662,17 @@ const lightPalette = {
       },
     },
     banner: {
-      default: bannerDefaultBg,
-      border: bannerBorderBg,
+      background: {
+        default: bannerDefaultBg,
+        border: bannerBorderBg,
+      },
     },
     interactiveTour: {
       backdrop: tourBackdropColor,
-      card: tourCardBg,
-      borderGradient: tourBorderGradient,
+      background: {
+        card: tourCardBg,
+        borderGradient: tourBorderGradient,
+      },
       dividerGradient: tourDividerGradient,
       text: tourTextColor,
     },
@@ -703,7 +730,7 @@ const lightPalette = {
       },
     },
     configurationCard: { background: { highTier: green20 } },
-    highlightQuery: { background: orange },
+    highlightQuery: { background: attentionOrange },
     runIndexBanner: {
       background: { success: green8, error: red8, warning: orange8, info: blueFill8 },
       border: { success: greenOutline40, error: red40, warning: orangeOutline40, info: skyBlue40 },
@@ -719,7 +746,7 @@ const lightPalette = {
     split: {
       background: { default: darkMagenta20, hover: darkMagenta30, pressed: darkMagenta10, disabled: dark10 },
       text: { default: gray60, pressed: gray60, disabled: light10 },
-      border: { categorySelected: dark20 },
+      border: { categorySelected: dark20, hover: darkMagenta30 },
     },
     accentButton: {
       background: { default: darkMagenta20, hover: darkMagenta30, pressed: darkMagenta10, disabled: dark10 },
@@ -732,7 +759,7 @@ const lightPalette = {
     chipWithCheckIcon: {
       background: {
         default: dark5,
-        selected: darkMagenta16,
+        selected: darkMagenta10,
         warning: red15,
       },
       border: {

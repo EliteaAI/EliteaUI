@@ -67,7 +67,7 @@ const spotlightSx =
       inset: 0,
       borderRadius: 'inherit',
       padding: `${BORDER_WIDTH_PX}px`,
-      background: palette.components.interactiveTour.borderGradient,
+      background: palette.components.interactiveTour.background.borderGradient,
       // Clip to padding area only (= the ring), hide the content-box center
       WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
       WebkitMaskComposite: 'xor',

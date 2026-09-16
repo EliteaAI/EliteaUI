@@ -120,7 +120,7 @@ const modalMessageStyles = () => ({
     padding: '0.75rem 1rem',
     borderRadius: '0.5rem',
     position: 'relative',
-    background: palette.background.default.secondary,
+    background: palette.background.aiAnswer,
     '&:hover .actionButtons': {
       visibility: 'visible',
     },

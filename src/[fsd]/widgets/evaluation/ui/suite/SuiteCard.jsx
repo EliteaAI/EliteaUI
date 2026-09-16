@@ -70,7 +70,7 @@ const suiteCardStyles = () => ({
     padding: '0.5rem 1rem',
     borderRadius: '0.75rem',
     border: `0.0625rem solid ${palette.border.default}`,
-    backgroundColor: palette.background.panel,
+    backgroundColor: palette.components.folder.background.default,
     cursor: 'pointer',
     transition: 'background-color 0.15s, border-color 0.15s',
     '&:hover': {

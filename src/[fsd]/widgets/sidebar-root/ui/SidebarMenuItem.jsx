@@ -100,10 +100,10 @@ const sidebarMenuItemStyles = (selected, showLabel, isPersonalSpace) => ({
       background: palette.components.sidebar.menuItem.hover,
     },
     '& path': {
-      fill: selected ? palette.icon.secondary : palette.icon.default,
+      fill: selected ? palette.icon.secondary : palette.text.metrics,
     },
     '& span': {
-      color: selected ? palette.text.secondary : palette.icon.default,
+      color: selected ? palette.text.secondary : palette.text.metrics,
       width: showLabel ? undefined : '0 !important',
     },
   }),

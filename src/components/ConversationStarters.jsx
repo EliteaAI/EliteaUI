@@ -348,7 +348,7 @@ const conversationStartersViewStyles = () => ({
     padding: ' 0.25rem 0',
   },
   title: ({ palette }) => ({
-    color: palette.text.disabled,
+    color: palette.text.muted,
   }),
   starterListItem: {
     padding: '0',

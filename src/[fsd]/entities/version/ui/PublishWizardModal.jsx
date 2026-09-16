@@ -389,7 +389,7 @@ const styles = {
     border: `1px solid ${palette.components.publishWizardStep.default.border}`,
     backgroundColor: palette.components.publishWizardStep.default.background,
     '& .MuiStepLabel-iconContainer': {
-      backgroundColor: palette.components.publishWizardStep.default.icon,
+      backgroundColor: palette.components.publishWizardStep.default.iconBackground,
       color: palette.secondary.main,
     },
     '& .MuiStepLabel-label': {
@@ -400,7 +400,7 @@ const styles = {
     border: `1px solid ${palette.components.publishWizardStep.active.border}`,
     backgroundColor: palette.components.publishWizardStep.active.background,
     '& .MuiStepLabel-iconContainer': {
-      backgroundColor: palette.components.publishWizardStep.active.icon,
+      backgroundColor: palette.components.publishWizardStep.active.iconBackground,
       color: palette.text.alwaysWhite,
     },
     '& .MuiStepLabel-label.Mui-active': {
@@ -411,7 +411,7 @@ const styles = {
     border: `1px solid ${palette.components.publishWizardStep.completed.border}`,
     backgroundColor: palette.components.publishWizardStep.completed.background,
     '& .MuiStepLabel-iconContainer': {
-      backgroundColor: palette.components.publishWizardStep.completed.icon,
+      backgroundColor: palette.components.publishWizardStep.completed.iconBackground,
       color: palette.text.alwaysWhite,
     },
     '& .MuiStepLabel-label': {

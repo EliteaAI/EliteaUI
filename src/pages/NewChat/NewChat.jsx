@@ -1467,7 +1467,7 @@ const NewChat = props => {
             <AttentionIcon
               width={16}
               height={16}
-              fill={theme.palette.icon.attention}
+              fill={theme.palette.status.onModeration}
             />
             Conversation not found
           </Box>

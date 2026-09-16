@@ -177,7 +177,7 @@ const skillCategorySectionStyles = () => ({
   },
   showMoreButton: ({ palette }) => ({
     cursor: 'pointer',
-    color: palette.text.primary,
+    color: palette.components.button.text.auxiliary,
     '&:hover': {
       color: palette.text.showMore,
     },

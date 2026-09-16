@@ -553,7 +553,7 @@ const createCaseModalStyles = () => ({
     fontSize: '0.875rem',
     fontWeight: 400,
     lineHeight: '1.5rem',
-    color: palette.text.disabled,
+    color: palette.text.muted,
   }),
   variableRow: {
     display: 'flex',

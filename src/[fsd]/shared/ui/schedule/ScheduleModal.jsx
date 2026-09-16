@@ -305,7 +305,7 @@ const scheduleModalStyles = () => ({
     padding: '0.5rem 0.75rem',
     gap: '0.5rem',
     border: ({ palette }) => `0.0625rem solid ${palette.border.tips}`,
-    background: ({ palette }) => palette.alert.info.background,
+    background: ({ palette }) => palette.components.tips.background.main,
   },
   noticeIcon: ({ palette }) => ({
     width: '1rem',

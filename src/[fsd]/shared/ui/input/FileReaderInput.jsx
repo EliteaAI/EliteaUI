@@ -149,7 +149,7 @@ const FileReaderEnhancer = memo(
 FileReaderEnhancer.displayName = 'FileReaderEnhancer';
 
 const getStyle = ({ theme, highlightContext }) => ({
-  backgroundColor: highlightContext ? alpha(theme.palette.primary.main, 0.08) : '',
+  backgroundColor: highlightContext ? alpha(theme.palette.components.contextHighlight.background, 0.08) : '',
 });
 
 export default FileReaderEnhancer;

@@ -187,7 +187,7 @@ const getDesignTokens = mode => ({
         }),
         selectLabel: ({ theme }) => ({
           ...typographyVariants.labelSmall,
-          color: theme.palette.text.disabled,
+          color: theme.palette.text.muted,
         }),
         displayedRows: ({ theme }) => ({
           ...typographyVariants.labelSmall,

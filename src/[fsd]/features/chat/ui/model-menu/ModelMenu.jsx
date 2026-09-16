@@ -98,7 +98,7 @@ const ModelMenu = ({
         boxSizing: 'border-box',
         background: 'transparent',
         '&:hover': {
-          color: `${theme.palette.text.primary} !important`,
+          color: `${theme.palette.components.button.background.drawerMenu.hover} !important`,
           background: 'transparent',
         },
       }}
@@ -133,10 +133,10 @@ const ModelMenu = ({
                   wordWrap: 'break-word',
                   textAlign: 'left',
                   '&:hover': {
-                    color: theme.palette.text.accent,
+                    color: theme.palette.components.button.text.create,
                   },
                 }}
-                color={disabled ? theme.palette.text.disabled : 'text.secondary'}
+                color={disabled ? theme.palette.text.muted : 'text.secondary'}
               >
                 {selectedModel?.model_name}
               </Typography>

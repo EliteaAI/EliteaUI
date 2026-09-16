@@ -232,8 +232,8 @@ const attachedDatasetCardStyles = () => ({
     flexDirection: 'column',
     paddingBottom: '0.5rem',
     gap: '0.5rem',
-    backgroundColor: palette.background.panel,
-    border: `0.0625rem solid ${palette.border.default}`,
+    backgroundColor: palette.components.accordion.background.default,
+    border: `0.0625rem solid ${palette.components.folder.border.card}`,
     borderRadius: '0.75rem',
   }),
   header: ({ palette }) => ({
@@ -243,7 +243,7 @@ const attachedDatasetCardStyles = () => ({
     padding: '0.5rem 1rem',
     gap: '0.5rem',
     borderRadius: '0.75rem',
-    backgroundColor: palette.background.panel,
+    backgroundColor: palette.components.folder.background.secondary,
     position: 'relative',
     '&::before': {
       content: '""',
@@ -251,7 +251,7 @@ const attachedDatasetCardStyles = () => ({
       inset: 0,
       borderRadius: 'inherit',
       padding: '0.0625rem',
-      background: palette.border.lines,
+      background: palette.components.folder.background.borderGradient,
       WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
       WebkitMaskComposite: 'xor',
       maskComposite: 'exclude',

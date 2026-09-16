@@ -539,7 +539,7 @@ const cardStyles = (hasCardDetails, showCardBottom, isWholeCardClickable, isClic
     color: palette.icon.default,
 
     '&:hover': {
-      backgroundColor: palette.background.default.secondary,
+      backgroundColor: palette.components.button.background.secondary.default,
     },
     svg: { path: { fill: `${palette.icon.default} !important` } },
   }),
