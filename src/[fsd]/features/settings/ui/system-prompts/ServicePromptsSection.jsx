@@ -545,7 +545,7 @@ const servicePromptsSectionStyles = () => ({
     '& svg': {
       width: '1rem',
       height: '1rem',
-      fill: palette.icon?.fill?.send || palette.text.primary,
+      fill: palette.icon.send,
     },
   }),
   cards: ({ spacing }) => ({
@@ -648,7 +648,7 @@ const servicePromptsSectionStyles = () => ({
   }),
   editButton: ({ palette }) => ({
     '& svg': {
-      fill: palette.icon?.fill?.send || palette.text.primary,
+      fill: palette.icon.send,
     },
   }),
   editIcon: {

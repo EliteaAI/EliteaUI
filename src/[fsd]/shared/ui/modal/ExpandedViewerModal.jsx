@@ -163,7 +163,7 @@ const styledInputModalBaseStyles = () => ({
   actionButton: ({ spacing, palette }) => ({
     marginLeft: spacing(2),
     '&:hover svg path': {
-      fill: `${palette.text.secondary} !important`,
+      fill: `${palette.icon.secondary} !important`,
     },
   }),
   icon: {

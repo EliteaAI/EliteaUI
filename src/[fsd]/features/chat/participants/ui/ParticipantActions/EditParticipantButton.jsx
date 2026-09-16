@@ -64,7 +64,7 @@ const EditParticipantButton = memo(props => {
 
 const styles = {
   listItemIcon: ({ palette }) => ({
-    fill: palette.text.primary,
+    fill: palette.icon.default,
   }),
 };
 

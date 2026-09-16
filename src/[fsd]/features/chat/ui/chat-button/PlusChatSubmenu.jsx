@@ -74,7 +74,7 @@ const PlusChatSubmenu = memo(props => {
         <Box sx={styles.searchInnerContainer}>
           <SearchIcon
             style={styles.searchIcon}
-            fill={theme.palette.text.secondary}
+            fill={theme.palette.icon.secondary}
           />
           <TextField
             ref={searchRef}

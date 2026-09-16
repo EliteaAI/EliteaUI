@@ -186,13 +186,13 @@ const caseResultItemStyles = () => ({
   }),
   pendingBadgeIcon: ({ palette }) => ({
     fontSize: '1rem',
-    color: palette.text.showMore,
+    color: palette.icon.active,
     '& path': {
-      fill: palette.text.showMore,
+      fill: palette.icon.active,
     },
   }),
   pendingBadgeText: ({ palette }) => ({
-    color: palette.text.showMore,
+    color: palette.icon.active,
     fontWeight: 500,
     whiteSpace: 'nowrap',
   }),
