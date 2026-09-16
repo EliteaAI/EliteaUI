@@ -151,8 +151,8 @@ const styles = {
     marginLeft: 'auto',
   },
   checkIcon: ({ palette }) => ({
-    width: '1.125rem',
-    height: '1.125rem',
+    width: '1rem',
+    height: '1rem',
     flexShrink: 0,
     color: palette.text.secondary,
     marginLeft: '1rem',

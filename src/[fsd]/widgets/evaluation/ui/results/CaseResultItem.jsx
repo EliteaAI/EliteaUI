@@ -129,7 +129,7 @@ CaseResultItem.displayName = 'CaseResultItem';
 const caseResultItemStyles = () => ({
   wrapper: {
     display: 'flex',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     gap: '0.5rem',
   },
   container: ({ palette }) => ({

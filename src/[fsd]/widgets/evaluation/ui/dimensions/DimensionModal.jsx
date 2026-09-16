@@ -131,7 +131,7 @@ DimensionModal.displayName = 'DimensionModal';
 /** @type {MuiSx} */
 const dimensionModalStyles = () => ({
   dialogPaper: {
-    width: '50rem',
+    width: '37.5rem',
   },
   dialog: {
     minHeight: '32rem',
