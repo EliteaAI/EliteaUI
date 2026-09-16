@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { useCallback, useState } from 'react';
+import { memo, useCallback, useState } from 'react';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -178,7 +178,8 @@ const renderSelect = ({
   );
 };
 
-const ControlledCredentialsSelect = ({ initialValue, ...rest }) => {
+const ControlledCredentialsSelect = memo(props => {
+  const { initialValue, ...rest } = props;
   const [value, setValue] = useState(initialValue);
 
   const handleSelect = useCallback((...args) => {
@@ -193,7 +194,9 @@ const ControlledCredentialsSelect = ({ initialValue, ...rest }) => {
       {...rest}
     />
   );
-};
+});
+
+ControlledCredentialsSelect.displayName = 'ControlledCredentialsSelect';
 
 const renderControlledSelect = ({
   section = 'vectorstorage',
