@@ -74,6 +74,17 @@ describe('IndexRunDetail', () => {
     expect(screen.getByText('Started by Agent')).toBeInTheDocument();
   });
 
+  it("does not present the count a stopped run inherited as that run's own result", () => {
+    renderRow({
+      ...baseRow,
+      name: 'Stopped — docs',
+      entry: { state: 'cancelled', updated_on: 1786973660, indexed: 191, total: 205 },
+    });
+
+    expect(screen.queryByText(/191/)).not.toBeInTheDocument();
+    expect(screen.getByTestId('indexing-report-summary')).toHaveTextContent('Stopped before completion');
+  });
+
   it('reveals the per-run request parameters on demand', () => {
     renderRow(baseRow);
 

@@ -189,7 +189,7 @@ describe('normalizeIndexingReport guards', () => {
     expect(report.errors).toEqual(['connection refused']);
   });
 
-  it('keeps an error report but sources its totals from the carried counts', () => {
+  it('never credits an error report with the store counts that outlived the run', () => {
     const source = canonicalReport({
       status: 'error',
       totals: { indexed: 0, skipped: 0, not_indexed: 0, failed: 0, unchanged: 0, total: 0 },
@@ -197,8 +197,8 @@ describe('normalizeIndexingReport guards', () => {
 
     const report = normalizeIndexingReport({ report: source, state: 'failed', indexed: 191, total: 192 });
 
-    expect(report.totals.indexed).toBe(191);
-    expect(report.totals.total).toBe(192);
+    expect(report.totals.indexed).toBe(0);
+    expect(report.totals.total).toBe(0);
   });
 
   it.each([null, undefined, 'text', 42, {}])('returns null for %p', value => {
@@ -418,6 +418,91 @@ describe('normalizeIndexingReport with pre-report rows', () => {
     });
 
     expect(report.isUpToDate).toBe(false);
+  });
+});
+
+describe('a report that disagrees with its run state is leftover', () => {
+  it('discards a partly-indexed report left behind on a failed run', () => {
+    const report = normalizeIndexingReport({
+      report: canonicalReport({ status: 'partly_indexed', errors: ['Permission denied: /docs/secret.md'] }),
+      state: 'failed',
+      error: 'Toolkit credentials could not be resolved',
+      indexed: 179,
+    });
+
+    expect(report.isLegacy).toBe(true);
+    expect(report.status).toBe('error');
+    expect(report.errors).toEqual(['Toolkit credentials could not be resolved']);
+    expect(report.totals.indexed).toBe(0);
+  });
+
+  it('discards any report on a stopped run, which never writes one of its own', () => {
+    const report = normalizeIndexingReport({
+      report: canonicalReport({ status: 'partly_indexed' }),
+      state: 'cancelled',
+      indexed: 191,
+    });
+
+    expect(report.isLegacy).toBe(true);
+    expect(report.isStopped).toBe(true);
+    expect(report.totals.indexed).toBe(0);
+  });
+
+  it('keeps a report that agrees with its run state', () => {
+    const report = normalizeIndexingReport({
+      report: canonicalReport({ status: 'partly_indexed' }),
+      state: 'partly_indexed',
+    });
+
+    expect(report.isLegacy).toBe(false);
+    expect(report.status).toBe('partly_indexed');
+  });
+
+  it('leaves an in-flight row alone, since core preserves its report and counts on purpose', () => {
+    const report = normalizeIndexingReport({
+      report: canonicalReport({ status: 'ok' }),
+      state: 'in_progress',
+      indexed: 191,
+    });
+
+    expect(report.isLegacy).toBe(false);
+    expect(report.status).toBe('ok');
+  });
+});
+
+describe('counts preserved across a run', () => {
+  const indexedCount = report => report.categories.find(category => category.kind === 'indexed').count;
+
+  it("never presents the store count as a stopped run's result", () => {
+    const report = normalizeIndexingReport({ state: 'cancelled', indexed: 191, total: 205 });
+
+    expect(report.totals.indexed).toBe(0);
+    expect(report.totals.total).toBe(0);
+    expect(indexedCount(report)).toBe(0);
+  });
+
+  it('does the same for a failed run with no report of its own', () => {
+    const report = normalizeIndexingReport({ state: 'failed', indexed: 191, total: 205 });
+
+    expect(report.totals.indexed).toBe(0);
+    expect(indexedCount(report)).toBe(0);
+  });
+
+  it('flags a stopped run so its headline cannot claim a failure', () => {
+    expect(normalizeIndexingReport({ state: 'cancelled', indexed: 191 }).isStopped).toBe(true);
+    expect(normalizeIndexingReport({ state: 'failed', indexed: 191 }).isStopped).toBe(false);
+  });
+
+  it('still splits the persisted count on a completed run', () => {
+    const report = normalizeIndexingReport({
+      state: 'completed',
+      indexed: 191,
+      total: 191,
+      skipped: { documents_already_indexed: { count: 12, items: [] } },
+    });
+
+    expect(report.totals.indexed).toBe(179);
+    expect(report.totals.unchanged).toBe(12);
   });
 });
 

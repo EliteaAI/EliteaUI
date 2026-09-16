@@ -9,7 +9,10 @@ import {
 } from '../constants/indexingReport.constants';
 
 const ITEMS_SAMPLE_SIZE = 5;
-const FAILED_STATES = ['failed', 'cancelled'];
+const CANCELLED_STATE = 'cancelled';
+const FAILED_STATES = ['failed', CANCELLED_STATE];
+
+const carriesPreviousRunCounts = state => FAILED_STATES.includes(state);
 
 export const parseIndexEntryJson = value => {
   if (value && typeof value === 'object') return value;
@@ -80,31 +83,38 @@ const normalizeTotals = totals => ({
   leftOut: countOf(totals?.skipped) + countOf(totals?.not_indexed) + countOf(totals?.failed),
 });
 
-// A failed run whose report says everything went fine is a report left over from an
-// earlier run. Trusting it would show last run's success on this run's failure.
-const contradictsState = (report, state) =>
-  FAILED_STATES.includes(state) && report?.status === IndexingReportStatus.ok;
+const WRITES_NO_REPORT_OF_ITS_OWN = null;
+
+const EXPECTED_REPORT_STATUS_BY_TERMINAL_STATE = new Map([
+  ['completed', IndexingReportStatus.ok],
+  ['scheduled_reindex', IndexingReportStatus.ok],
+  ['partly_indexed', IndexingReportStatus.partlyIndexed],
+  ['failed', IndexingReportStatus.error],
+  [CANCELLED_STATE, WRITES_NO_REPORT_OF_ITS_OWN],
+]);
+
+const reportBelongsToEarlierRun = (report, state) => {
+  if (!EXPECTED_REPORT_STATUS_BY_TERMINAL_STATE.has(state)) return false;
+
+  const expected = EXPECTED_REPORT_STATUS_BY_TERMINAL_STATE.get(state);
+  return expected === WRITES_NO_REPORT_OF_ITS_OWN || (report?.status || IndexingReportStatus.ok) !== expected;
+};
 
 const fromCanonicalReport = (report, entry) => {
   const itemLabels = labelsOf(report.item_labels, DEFAULT_INDEXING_ITEM_LABELS);
   const dependentLabels = labelsOf(report.dependent_labels, DEFAULT_INDEXING_DEPENDENT_LABELS);
   const totals = normalizeTotals(report.totals);
 
-  // An error report never ran far enough to produce meaningful counts.
-  const carriedTotals =
-    report.status === IndexingReportStatus.error
-      ? { ...totals, indexed: countOf(entry?.indexed), total: countOf(entry?.total) }
-      : totals;
-
   return {
     status: report.status || IndexingReportStatus.ok,
     itemLabels,
     dependentLabels,
-    totals: carriedTotals,
+    totals,
     categories: normalizeCategories(report.categories, dependentLabels),
     errors: report.errors || [],
     errorsTotal: countOf(report.errors_total),
     isUpToDate: isUpToDateRun(report.totals),
+    isStopped: entry?.state === CANCELLED_STATE,
     isLegacy: false,
   };
 };
@@ -162,7 +172,8 @@ const fromLegacyEntry = entry => {
 
   // The persisted `indexed` counts everything in the store, unchanged items included;
   // the breakdown is about this run, so unchanged items are shown on their own line.
-  const persistedIndexed = countOf(entry?.indexed);
+  const preservedCounts = carriesPreviousRunCounts(entry?.state);
+  const persistedIndexed = preservedCounts ? 0 : countOf(entry?.indexed);
   const runIndexed = skipped ? Math.max(0, persistedIndexed - unchanged) : persistedIndexed;
 
   const categories = INDEXING_REPORT_KIND_ORDER.map(kind => {
@@ -204,7 +215,9 @@ const fromLegacyEntry = entry => {
     ),
     // persistedIndexed already counts unchanged items, so it stands in for
     // indexed + unchanged in the totals contract.
-    total: countOf(entry?.total) || persistedIndexed + skippedCount + notIndexedCount + failedCount,
+    total: preservedCounts
+      ? 0
+      : countOf(entry?.total) || persistedIndexed + skippedCount + notIndexedCount + failedCount,
     leftOut: skippedCount + notIndexedCount + failedCount,
   };
 
@@ -220,6 +233,7 @@ const fromLegacyEntry = entry => {
     errors: error ? [error] : [],
     errorsTotal: error ? 1 : 0,
     isUpToDate: !isFailed && isUpToDateRun(totals),
+    isStopped: entry?.state === CANCELLED_STATE,
     isLegacy: true,
   };
 };
@@ -242,7 +256,7 @@ export const normalizeIndexingReport = source => {
   const entry = source.metadata && typeof source.metadata === 'object' ? source.metadata : source;
   const report = parseIndexEntryJson(entry.report);
 
-  if (report && !contradictsState(report, entry.state)) return fromCanonicalReport(report, entry);
+  if (report && !reportBelongsToEarlierRun(report, entry.state)) return fromCanonicalReport(report, entry);
   if (entry.skipped || entry.indexed !== undefined || entry.state || entry.error) {
     return fromLegacyEntry(entry);
   }

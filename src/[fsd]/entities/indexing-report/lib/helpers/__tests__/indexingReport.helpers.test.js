@@ -231,6 +231,87 @@ describe('formatIndexingReportText', () => {
   });
 });
 
+describe('partial and stopped runs', () => {
+  it('names a partly indexed run in the source’s own units, above its breakdown', () => {
+    const rendered = render(
+      report({
+        status: 'partly_indexed',
+        totals: { ...report().totals, skipped: 12, failed: 3, total: 194 },
+        categories: [
+          { kind: 'indexed', count: 179, groups: [] },
+          { kind: 'skipped', count: 12, groups: [] },
+          { kind: 'failed', count: 3, groups: [] },
+        ],
+      }),
+    );
+
+    expect(rendered).toContain('⚠️ Partially indexed 179 pages');
+    expect(rendered).toContain('179 pages indexed');
+    expect(rendered).toContain('12 pages skipped');
+    expect(rendered).toContain('3 pages failed');
+  });
+
+  it('picks the singular noun for a single partly indexed item', () => {
+    const rendered = render(
+      report({
+        status: 'partly_indexed',
+        totals: { ...report().totals, indexed: 1, failed: 2, total: 3 },
+        categories: [
+          { kind: 'indexed', count: 1, groups: [] },
+          { kind: 'failed', count: 2, groups: [] },
+        ],
+      }),
+    );
+
+    expect(rendered).toContain('⚠️ Partially indexed 1 page');
+  });
+
+  it('keeps the skipped and failed counts beside a partial run in one line', () => {
+    const source = report({
+      status: 'partly_indexed',
+      totals: { ...report().totals, skipped: 12, failed: 3, total: 194 },
+      categories: [
+        { kind: 'indexed', count: 179, groups: [] },
+        { kind: 'skipped', count: 12, groups: [] },
+        { kind: 'failed', count: 3, groups: [] },
+      ],
+    });
+
+    const summary = summarizeIndexingReport({ report: source });
+
+    expect(summary).toBe('179 pages indexed, 12 pages skipped, 3 pages failed');
+    expect(summary).not.toContain('Partially indexed');
+  });
+
+  it('still lets a terminal headline stand alone', () => {
+    const source = report({
+      status: 'error',
+      totals: { indexed: 0, skipped: 4, not_indexed: 0, failed: 0, unchanged: 0, total: 4 },
+      categories: [{ kind: 'skipped', count: 4, groups: [] }],
+    });
+
+    expect(summarizeIndexingReport({ report: source })).toBe('Failed to index pages');
+  });
+
+  it('never claims a partial success on a failed run carrying a leftover report', () => {
+    const rendered = formatIndexingReportText({
+      state: 'failed',
+      error: 'Toolkit credentials could not be resolved',
+      report: report({ status: 'partly_indexed' }),
+      indexed: 179,
+    });
+
+    expect(rendered).not.toContain('Partially indexed');
+    expect(rendered).toContain('Failed to index');
+  });
+
+  it('says a stopped run did not finish, rather than claiming it failed', () => {
+    const summary = summarizeIndexingReport({ state: 'cancelled', indexed: 191, total: 205 });
+
+    expect(summary).toBe('Stopped before completion');
+  });
+});
+
 describe('unchangedNotice', () => {
   // visibleCategories strips unchanged from the skipped category, so every renderer
   // has to put it back — this is the single decision they all share.
