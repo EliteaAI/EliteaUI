@@ -21,6 +21,8 @@
     "test:e2e:dev": "cd tests && npm run test:dev",
     "test:e2e:install": "cd tests && npm install",
     "test:e2e:debug": "cd tests && npm run debug",
+    "theme:check": "node scripts/checkPaletteParity.js",
+    "theme:export": "node scripts/exportThemeTokens.js",
     "commit": "npx lint-staged && git-cz --no-verify"
   },
   "lint-staged": {

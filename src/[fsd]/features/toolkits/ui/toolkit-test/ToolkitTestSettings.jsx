@@ -143,7 +143,7 @@ const toolkitTestSettingsStyles = () => ({
     alignItems: 'center',
     justifyContent: 'center',
     padding: '0.5rem 1rem',
-    background: palette.background.default.secondary,
+    background: palette.background.panel,
     borderTop: `0.0625rem solid ${palette.border.default}`,
     flexShrink: 0,
     width: '100%',

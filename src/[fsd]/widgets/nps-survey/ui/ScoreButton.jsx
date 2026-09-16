@@ -29,7 +29,7 @@ const styles = {
     height: 'auto',
     padding: '0.25rem 0.625rem',
     borderRadius: '0.5rem',
-    background: 'rgba(255, 255, 255, 0.6)',
+    background: palette.components.npsSurvey.optionBackground,
     border: '0.0625rem solid transparent',
     color: palette.text.alwaysDark,
     fontSize: '0.875rem',
@@ -37,8 +37,8 @@ const styles = {
     lineHeight: '1.5rem',
 
     '&:hover': {
-      background: '#fff',
-      border: '0.0625rem solid rgba(99, 144, 254, 1)',
+      background: palette.components.npsSurvey.optionBackgroundHover,
+      border: `0.0625rem solid ${palette.components.npsSurvey.accent}`,
     },
   }),
   selected: ({ palette }) => ({
@@ -47,16 +47,16 @@ const styles = {
     height: 'auto',
     padding: '0.25rem 0.625rem',
     borderRadius: '0.5rem',
-    border: '0.0625rem solid rgba(99, 144, 254, 1)',
-    background: 'rgba(99, 144, 254, 1)',
+    border: `0.0625rem solid ${palette.components.npsSurvey.accent}`,
+    background: palette.components.npsSurvey.accent,
     color: palette.text.alwaysWhite,
     fontSize: '0.875rem',
     fontWeight: 500,
     lineHeight: '1.5rem',
 
     '&:hover': {
-      background: 'rgba(99, 144, 254, 1)',
-      border: '0.0625rem solid rgba(99, 144, 254, 1)',
+      background: palette.components.npsSurvey.accent,
+      border: `0.0625rem solid ${palette.components.npsSurvey.accent}`,
     },
   }),
 };

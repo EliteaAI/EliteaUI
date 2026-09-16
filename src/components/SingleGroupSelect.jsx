@@ -16,7 +16,7 @@ import StyledSelect from './StyledSelect';
 const StyledFormControl = styled(FormControl)(({ theme }) => ({
   verticalAlign: 'bottom',
   '& .MuiFormLabel-root': {
-    color: theme.palette.text.secondary,
+    color: theme.palette.components.input.text.label,
     left: '12px',
     '&.Mui-focused': {
       color: theme.palette.primary.main,

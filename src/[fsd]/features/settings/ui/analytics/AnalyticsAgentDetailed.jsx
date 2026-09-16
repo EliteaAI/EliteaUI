@@ -446,7 +446,7 @@ const analyticsAgentDetailedStyles = () => ({
     padding: '0.5rem 0.75rem',
     borderBottom: `1px solid ${palette.border.default}`,
     gap: '0.5rem',
-    '&:hover': { backgroundColor: palette.background.interactiveItem.rowHover || 'rgba(255,255,255,0.02)' },
+    '&:hover': { backgroundColor: palette.background.interactiveItem.rowHover },
   }),
   tableCellValue: ({ palette }) => ({
     fontSize: '0.8125rem',

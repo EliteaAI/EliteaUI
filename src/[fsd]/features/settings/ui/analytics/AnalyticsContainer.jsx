@@ -507,7 +507,7 @@ const analyticsContainerStyles = () => ({
     svg: {
       fontSize: '.825rem',
 
-      path: { fill: palette.action.disabledBackground },
+      path: { fill: palette.icon.disabled },
     },
   }),
   filterBar: ({ palette }) => ({
@@ -652,11 +652,11 @@ const analyticsContainerStyles = () => ({
         backgroundColor: palette.background.interactiveItem.hover,
       },
       '&.Mui-selected': {
-        backgroundColor: palette.background.default.secondary,
+        backgroundColor: palette.background.selectedItem.default,
         color: palette.text.secondary,
         borderRadius: '50%',
         '&:hover': {
-          backgroundColor: palette.background.default.secondary,
+          backgroundColor: palette.background.selectedItem.hover,
         },
       },
       '&.MuiPickersDay-today': {
@@ -673,10 +673,10 @@ const analyticsContainerStyles = () => ({
         backgroundColor: palette.background.interactiveItem.hover,
       },
       '&.Mui-selected': {
-        backgroundColor: palette.background.default.secondary,
+        backgroundColor: palette.background.selectedItem.default,
         color: palette.text.secondary,
         '&:hover': {
-          backgroundColor: palette.background.default.secondary,
+          backgroundColor: palette.background.selectedItem.hover,
         },
       },
     },
@@ -688,7 +688,7 @@ const analyticsContainerStyles = () => ({
       '& .MuiList-root': {
         '&::-webkit-scrollbar': { width: '.25rem' },
         '&::-webkit-scrollbar-thumb': {
-          backgroundColor: palette.background.default.secondary,
+          backgroundColor: palette.scrollbar.thumb,
           borderRadius: '.125rem',
         },
       },
@@ -703,11 +703,11 @@ const analyticsContainerStyles = () => ({
         backgroundColor: palette.background.interactiveItem.hover,
       },
       '&.Mui-selected': {
-        backgroundColor: palette.background.default.secondary,
+        backgroundColor: palette.background.selectedItem.default,
         color: palette.text.secondary,
         borderRadius: '1.75rem',
         '&:hover': {
-          backgroundColor: palette.background.default.secondary,
+          backgroundColor: palette.background.selectedItem.hover,
         },
       },
     },
@@ -741,12 +741,12 @@ const analyticsContainerStyles = () => ({
       // Apply button — primary style
       '& .MuiButton-root:last-child': {
         backgroundColor: palette.primary.main,
-        color: palette.primary.contrastText,
+        color: palette.components.button.text.primary,
         '&:hover': {
-          backgroundColor: palette.primary.light,
+          backgroundColor: palette.components.button.background.primary.hover,
         },
         '&:active': {
-          backgroundColor: palette.primary.dark,
+          backgroundColor: palette.components.button.background.primary.pressed,
         },
       },
     },

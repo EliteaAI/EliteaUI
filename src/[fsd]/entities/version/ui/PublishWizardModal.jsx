@@ -401,7 +401,7 @@ const styles = {
     backgroundColor: palette.components.publishWizardStep.active.background,
     '& .MuiStepLabel-iconContainer': {
       backgroundColor: palette.components.publishWizardStep.active.icon,
-      color: palette.text.primary,
+      color: palette.text.alwaysWhite,
     },
     '& .MuiStepLabel-label.Mui-active': {
       color: palette.text.secondary,
@@ -412,7 +412,7 @@ const styles = {
     backgroundColor: palette.components.publishWizardStep.completed.background,
     '& .MuiStepLabel-iconContainer': {
       backgroundColor: palette.components.publishWizardStep.completed.icon,
-      color: palette.text.primary,
+      color: palette.text.alwaysWhite,
     },
     '& .MuiStepLabel-label': {
       color: palette.text.secondary,

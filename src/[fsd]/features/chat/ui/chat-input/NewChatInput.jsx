@@ -359,7 +359,7 @@ const NewChatInput = forwardRef((props, ref) => {
         },
         sendButton: {
           iconColor: theme.palette.icon.send,
-          disabledBackground: theme.palette.action.disabledBackground,
+          disabledBackground: theme.palette.components.button.background.primary.disabled,
           background: theme.palette.primary.main,
         },
         stopButton: {

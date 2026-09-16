@@ -104,7 +104,7 @@ export const eliteaMenuListVariants = [
       backgroundColor: theme.palette.background.default.secondary,
       borderRadius: theme.spacing(1),
       border: `1px solid ${theme.palette.border.lines}`,
-      boxShadow: theme.palette.boxShadow.elevated || '0 8px 24px rgba(0,0,0,0.12)',
+      boxShadow: theme.palette.boxShadow.listbox,
     }),
   },
 

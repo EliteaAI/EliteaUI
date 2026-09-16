@@ -25,7 +25,7 @@ export const StyledDialog = styled(StyledDialogBase)`
 
 export const StyledDialogContentText = styled(DialogContentText)(
   ({ theme }) => `
-  color: ${theme.palette.text.primary};
+  color: ${theme.palette.components.deleteAlert.text.body};
   font-size: 0.875rem;
   font-style: normal;
   font-weight: 400;

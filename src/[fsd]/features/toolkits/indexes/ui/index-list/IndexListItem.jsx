@@ -372,7 +372,7 @@ const indexListItem = () => ({
 
     svg: {
       path: {
-        fill: ({ palette }) => palette.action.disabledBackground,
+        fill: ({ palette }) => palette.icon.disabled,
       },
     },
   },

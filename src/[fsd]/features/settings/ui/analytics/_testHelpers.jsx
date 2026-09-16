@@ -51,6 +51,7 @@ export const analyticsTestTheme = createTheme({
     },
     border: { table: '#eee', divider: '#ddd' },
     action: { hover: '#eee' },
+    components: { button: { text: { primary: '#fff' } } },
     // The shared icon components read palette.icon.<variant> inside their sx
     // functions, so every variant an analytics screen can render needs a value here.
     icon: {

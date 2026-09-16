@@ -232,7 +232,7 @@ const attachedDatasetCardStyles = () => ({
     flexDirection: 'column',
     paddingBottom: '0.5rem',
     gap: '0.5rem',
-    backgroundColor: palette.background.default.primary,
+    backgroundColor: palette.background.panel,
     border: `0.0625rem solid ${palette.border.default}`,
     borderRadius: '0.75rem',
   }),

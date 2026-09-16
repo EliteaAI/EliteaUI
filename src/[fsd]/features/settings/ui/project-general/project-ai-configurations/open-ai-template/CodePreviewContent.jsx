@@ -54,7 +54,7 @@ const getStyles = () => ({
       background: palette.background.default.secondary,
     },
     '&::-webkit-scrollbar-thumb': {
-      background: palette.components.codePreview.background,
+      background: palette.scrollbar.thumb,
       borderRadius: '0.125rem',
     },
     '&::-webkit-scrollbar-thumb:hover': {

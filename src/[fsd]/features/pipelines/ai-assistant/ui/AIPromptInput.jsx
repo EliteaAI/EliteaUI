@@ -183,7 +183,7 @@ const aiPromptInputStyles = () => ({
     borderRadius: '50%',
     backgroundColor: palette.primary.main,
     '&.Mui-disabled': {
-      backgroundColor: palette.action.disabledBackground,
+      backgroundColor: palette.components.button.background.primary.disabled,
     },
     '&:hover': {
       backgroundColor: palette.primary.main,
@@ -200,7 +200,7 @@ const aiPromptInputStyles = () => ({
       fill: `${palette.status.onModeration} !important`,
     },
     '&.Mui-disabled': {
-      backgroundColor: palette.action.disabledBackground,
+      backgroundColor: palette.components.button.background.primary.disabled,
     },
     '&:hover': {
       backgroundColor: palette.background.surface.interactive.selected,

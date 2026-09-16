@@ -188,6 +188,14 @@ const flowNodePrinter = '#075164';
 const flowNodeHitl = '#5A3D23';
 const flowNodeCustom = '#351C1C';
 
+const npsAccent = '#6390fe';
+const npsAccentSubtle = '#6390fe1a';
+const npsOptionBg = '#ffffff99';
+const npsOptionBgHover = '#ffffff';
+const maxiFillDefault = '#29b8f533';
+const maxiFillHover = '#29b8f54d';
+const maxiFillPressed = '#29b8f51a';
+
 const darkPalette = {
   mode: 'dark',
   primary: {
@@ -348,6 +356,7 @@ const darkPalette = {
         normal: white10,
         danger: dangerRed,
         primary: { default: cyanDefault, hover: cyanHover, pressed: cyanPressed, disabled: gray20 },
+        maxi: { default: maxiFillDefault, hover: maxiFillHover, pressed: maxiFillPressed },
         secondary: { default: white10, hover: white20, pressed: gray60, disabled: gray20 },
         tertiary: { hover: white10, pressed: white20 },
         alarm: { default: dangerRed, hover: hoverRed, pressed: pressedRed, disabled: gray20 },
@@ -514,6 +523,10 @@ const darkPalette = {
     npsSurvey: {
       background: npsSurveyBg,
       border: npsSurveyBorder,
+      accent: npsAccent,
+      accentSubtle: npsAccentSubtle,
+      optionBackground: npsOptionBg,
+      optionBackgroundHover: npsOptionBgHover,
       text: { label: npsSurveyLabelColor, placeholder: npsSurveyLabelColor },
       button: {
         primary: {
@@ -560,7 +573,7 @@ const darkPalette = {
     },
     tabs: { default: cyanDefault },
     tableRow: { background: { default: gray50, hover: gray40 } },
-    slider: { track: white10 },
+    slider: { track: white10, markActive: gray10 },
     aiAnswer: {
       background: gray40,
       actionsGradient: aiAnswerActionsGradient,

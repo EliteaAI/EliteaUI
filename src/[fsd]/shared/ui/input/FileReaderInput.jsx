@@ -2,7 +2,7 @@ import { forwardRef, memo, useCallback, useImperativeHandle, useMemo, useRef, us
 
 import YAML from 'js-yaml';
 
-import { useTheme } from '@mui/material';
+import { alpha, useTheme } from '@mui/material';
 
 import { Input } from '@/[fsd]/shared/ui';
 import { debounce, getFileFormat } from '@/common/utils';
@@ -149,7 +149,7 @@ const FileReaderEnhancer = memo(
 FileReaderEnhancer.displayName = 'FileReaderEnhancer';
 
 const getStyle = ({ theme, highlightContext }) => ({
-  backgroundColor: highlightContext ? `${theme.palette.primary.main}15` : '',
+  backgroundColor: highlightContext ? alpha(theme.palette.primary.main, 0.08) : '',
 });
 
 export default FileReaderEnhancer;

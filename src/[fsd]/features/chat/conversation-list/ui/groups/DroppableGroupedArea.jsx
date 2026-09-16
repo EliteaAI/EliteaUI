@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 
-import { Box, useTheme } from '@mui/material';
+import { Box, alpha, useTheme } from '@mui/material';
 
 import { useDroppable } from '@dnd-kit/core';
 
@@ -51,10 +51,10 @@ const DroppableGroupedArea = memo(props => {
               bottom: -2,
               border: `.125rem dashed ${theme.palette.primary.main}`,
               borderRadius: '.5rem',
-              backgroundColor: `${theme.palette.primary.main}15`,
+              backgroundColor: alpha(theme.palette.primary.main, 0.08),
               pointerEvents: 'none',
               zIndex: 999, // Very high z-index to ensure it's always on top
-              boxShadow: `0 .125rem .5rem ${theme.palette.primary.main}25`, // Subtle glow
+              boxShadow: `0 .125rem .5rem ${alpha(theme.palette.primary.main, 0.15)}`, // Subtle glow
             }}
           />
         )}

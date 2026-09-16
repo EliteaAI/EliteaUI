@@ -4,9 +4,9 @@ import { Bar, BarChart, Cell, Tooltip as RechartsTooltip, ResponsiveContainer, X
 
 import { Box, CircularProgress, TablePagination, Typography, useTheme } from '@mui/material';
 
-import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { AnalyticsToolDetailed, ChartTooltip } from '@/[fsd]/features/settings/ui/analytics';
+import { CHART_COLORS } from '@/[fsd]/shared/config/theme/chartPalette';
 import { useAnalyticsToolsQuery } from '@/api';
 import StyledSearchInput from '@/components/SearchInput';
 
@@ -39,7 +39,7 @@ const AnalyticsTools = memo(props => {
       (data?.rows || []).slice(0, 20).map((t, i) => ({
         tool_name: t.tool_name,
         calls: t.calls,
-        color: AnalyticsCommonConstants.CHART_COLORS[i % AnalyticsCommonConstants.CHART_COLORS.length],
+        color: CHART_COLORS[i % CHART_COLORS.length],
       })),
     [data?.rows],
   );

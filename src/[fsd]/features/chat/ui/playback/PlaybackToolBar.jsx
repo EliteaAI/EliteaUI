@@ -199,6 +199,6 @@ const styles = {
   getArrowRightColor:
     (disableForward, isMockingThinking) =>
     ({ palette }) => ({
-      color: disableForward || isMockingThinking ? palette.action.disabledBackground : 'currentcolor',
+      color: disableForward || isMockingThinking ? palette.icon.disabled : 'currentcolor',
     }),
 };

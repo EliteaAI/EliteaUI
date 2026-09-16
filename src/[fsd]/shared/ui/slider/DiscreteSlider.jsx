@@ -218,7 +218,7 @@ const styles = {
       transform: 'translate(-50%, -50%)',
       top: '50%',
       '&.MuiSlider-markActive': {
-        backgroundColor: palette.components.slider.track,
+        backgroundColor: palette.components.slider.markActive,
       },
     },
   }),

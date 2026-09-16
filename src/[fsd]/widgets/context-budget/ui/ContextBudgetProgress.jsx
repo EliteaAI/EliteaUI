@@ -1,6 +1,6 @@
 import { memo } from 'react';
 
-import { Box, Tooltip, Typography, useTheme } from '@mui/material';
+import { Box, Tooltip, Typography, alpha, useTheme } from '@mui/material';
 
 import { CONTEXT_BUDGET_COLORS } from '@/[fsd]/shared/config/theme/chartPalette';
 import { CONTEXT_MESSAGES, TOOLTIP_CONFIG } from '@/[fsd]/widgets/context-budget/lib/constants';
@@ -79,7 +79,7 @@ const contextBudgetProgressStyles = (theme, isHighUtilization) => {
   const endColor = isHighUtilization
     ? CONTEXT_BUDGET_COLORS.highUtilization
     : CONTEXT_BUDGET_COLORS.normalUtilization;
-  const startRgba = isHighUtilization ? 'rgba(255, 193, 7, 0)' : 'rgba(19, 225, 60, 0)';
+  const startRgba = alpha(endColor, 0);
 
   const progressGradient = `linear-gradient(90deg, ${startRgba} 0%, ${endColor} 100%)`;
   const backgroundColor = theme.palette.components.contextBudget.trackBackground;

@@ -69,7 +69,7 @@ const DeleteEntityModal = memo(props => {
         <Typography
           component="span"
           variant="headingSmall"
-          sx={({ palette }) => ({ color: palette.text.primary })}
+          sx={({ palette }) => ({ color: palette.components.deleteAlert.text.entityName })}
         >
           {name}
         </Typography>

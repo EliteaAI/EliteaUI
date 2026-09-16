@@ -50,33 +50,33 @@ const styles = {
     gap: '0.5rem',
     width: '100%',
   },
-  option: {
+  option: ({ palette }) => ({
     display: 'flex',
     alignItems: 'center',
     gap: '0.25rem',
     padding: '0.25rem 0.75rem',
     borderRadius: '0.5rem',
-    background: 'rgba(255, 255, 255, 0.6)',
+    background: palette.components.npsSurvey.optionBackground,
     border: '1px solid transparent',
     margin: 0,
     width: '100%',
 
     '&:hover': {
-      background: '#fff',
-      border: '1px solid rgba(99, 144, 254, 1)',
+      background: palette.components.npsSurvey.optionBackgroundHover,
+      border: `0.0625rem solid ${palette.components.npsSurvey.accent}`,
     },
-  },
-  optionSelected: {
+  }),
+  optionSelected: ({ palette }) => ({
     display: 'flex',
     alignItems: 'center',
     gap: '0.25rem',
     padding: '0.25rem 0.75rem',
     borderRadius: '0.5rem',
-    background: 'rgba(99, 144, 254, 0.1)',
-    border: '1px solid rgba(99, 144, 254, 1)',
+    background: palette.components.npsSurvey.accentSubtle,
+    border: `0.0625rem solid ${palette.components.npsSurvey.accent}`,
     margin: 0,
     width: '100%',
-  },
+  }),
   label: ({ palette }) => ({
     fontFamily: '"Montserrat", sans-serif',
     fontWeight: 500,

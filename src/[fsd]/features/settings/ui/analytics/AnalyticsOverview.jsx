@@ -16,6 +16,7 @@ import { ANALYTICS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { ChartTooltip, KPICard, ModelUsageTable } from '@/[fsd]/features/settings/ui/analytics';
+import { CHART_COLORS, EVENT_TYPE_COLORS, MEDAL_COLORS } from '@/[fsd]/shared/config/theme/chartPalette';
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 
 const AnalyticsOverview = memo(props => {
@@ -145,8 +146,8 @@ const AnalyticsOverview = memo(props => {
                   type="monotone"
                   dataKey="llm_calls"
                   name="LLM Calls"
-                  stroke={AnalyticsCommonConstants.EVENT_TYPE_COLORS.llm}
-                  fill={AnalyticsCommonConstants.EVENT_TYPE_COLORS.llm}
+                  stroke={EVENT_TYPE_COLORS.llm}
+                  fill={EVENT_TYPE_COLORS.llm}
                   fillOpacity={0.15}
                   strokeWidth={2}
                 />
@@ -155,8 +156,8 @@ const AnalyticsOverview = memo(props => {
                   type="monotone"
                   dataKey="tool_runs"
                   name="Tool Runs"
-                  stroke={AnalyticsCommonConstants.EVENT_TYPE_COLORS.tool}
-                  fill={AnalyticsCommonConstants.EVENT_TYPE_COLORS.tool}
+                  stroke={EVENT_TYPE_COLORS.tool}
+                  fill={EVENT_TYPE_COLORS.tool}
                   fillOpacity={0.1}
                   strokeWidth={2}
                 />
@@ -165,8 +166,8 @@ const AnalyticsOverview = memo(props => {
                   type="monotone"
                   dataKey="agent_runs"
                   name="Agent & Pipeline Runs"
-                  stroke={AnalyticsCommonConstants.EVENT_TYPE_COLORS.agent}
-                  fill={AnalyticsCommonConstants.EVENT_TYPE_COLORS.agent}
+                  stroke={EVENT_TYPE_COLORS.agent}
+                  fill={EVENT_TYPE_COLORS.agent}
                   fillOpacity={0.1}
                   strokeWidth={2}
                 />
@@ -230,11 +231,7 @@ const AnalyticsOverview = memo(props => {
                       styles.leaderboardAvatar,
                       {
                         backgroundColor:
-                          i < 3
-                            ? AnalyticsCommonConstants.MEDAL_COLORS[i]
-                            : AnalyticsCommonConstants.CHART_COLORS[
-                                (i - 3) % AnalyticsCommonConstants.CHART_COLORS.length
-                              ],
+                          i < 3 ? MEDAL_COLORS[i] : CHART_COLORS[(i - 3) % CHART_COLORS.length],
                       },
                     ]}
                   >
@@ -348,7 +345,7 @@ const analyticsOverviewStyles = () => ({
   leaderboardInitial: ({ palette }) => ({
     fontSize: '0.75rem',
     fontWeight: 700,
-    color: palette.primary.contrastText,
+    color: palette.components.button.text.primary,
     lineHeight: 1,
   }),
   leaderboardEmail: ({ palette }) => ({

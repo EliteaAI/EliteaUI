@@ -143,7 +143,7 @@ const previewDocumentStyles = () => ({
         background: palette.background.default.tertiary,
       },
       '&::-webkit-scrollbar-thumb': {
-        background: palette.components.codePreview.background,
+        background: palette.scrollbar.thumb,
         borderRadius: '.125rem',
       },
     },
@@ -167,7 +167,7 @@ const previewDocumentStyles = () => ({
       },
 
       '& [role="gridcell"][aria-selected="true"]': {
-        backgroundColor: `${palette.primary.dark} !important`,
+        backgroundColor: `${palette.components.button.background.primary.pressed} !important`,
         borderColor: `${palette.border.default} !important`,
       },
     },
@@ -217,7 +217,7 @@ const previewDocumentStyles = () => ({
     },
 
     ['& .sticky button[aria-pressed="true"]']: {
-      background: `${palette.primary.dark} !important`,
+      background: `${palette.components.button.background.primary.pressed} !important`,
     },
 
     '& .sticky button[aria-label="Font size"]': {
@@ -289,7 +289,7 @@ const previewDocumentStyles = () => ({
 
       '.docx-hyperlink-dialog-submit': {
         height: '1.75rem !important',
-        color: `${palette.primary.contrastText} !important`,
+        color: `${palette.components.button.text.primary} !important`,
         borderRadius: '1.75rem !important',
         background: `${palette.primary.main} !important`,
         padding: '0.375rem 1rem !important',
@@ -299,8 +299,8 @@ const previewDocumentStyles = () => ({
         justifyContent: 'center',
 
         '&:disabled': {
-          background: `${palette.action.disabledBackground} !important`,
-          color: `${palette.primary.contrastText} !important`,
+          background: `${palette.components.button.background.primary.disabled} !important`,
+          color: `${palette.components.button.text.primary} !important`,
         },
       },
 

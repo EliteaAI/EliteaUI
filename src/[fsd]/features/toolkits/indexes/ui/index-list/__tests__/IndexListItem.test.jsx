@@ -60,6 +60,7 @@ const theme = createTheme({
       warning: '#a60',
     },
     border: { lines: '#333' },
+    icon: { disabled: '#666' },
     text: { info: '#7af' },
     components: {
       split: { background: { pressed: '#444', hover: '#555' } },

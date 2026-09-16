@@ -11,7 +11,7 @@ import {
 
 import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
-import { Box, IconButton, TextField } from '@mui/material';
+import { Box, IconButton, TextField, alpha } from '@mui/material';
 
 import StyledCircleProgress from '@/ComponentsLib/CircularProgress';
 import Tooltip from '@/ComponentsLib/Tooltip';
@@ -600,7 +600,7 @@ const userInputStyles = (isFocused, isDragOver, isRecording) => {
       padding: '.75rem 1rem',
       alignItems: 'flex-start',
       borderRadius: '1rem',
-      background: isDragOver ? `${palette.primary.main}15` : getInputBackground(palette),
+      background: isDragOver ? alpha(palette.primary.main, 0.08) : getInputBackground(palette),
       border: isDragOver
         ? `0.125rem dashed ${palette.primary.main}`
         : `0.0625rem solid ${isFocused || isRecording ? 'transparent' : palette.border.lines}`,

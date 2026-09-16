@@ -2,8 +2,8 @@ import { memo, useMemo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
 import { UsageHelpers } from '@/[fsd]/features/settings/lib/helpers';
+import { CHART_COLORS } from '@/[fsd]/shared/config/theme/chartPalette';
 
 const UsageModelTable = memo(props => {
   const { models = [], canSeeAmounts, currency } = props;
@@ -73,8 +73,7 @@ const UsageModelTable = memo(props => {
         {models.map((model, index) => {
           const weight = canSeeAmounts ? model.spend || 0 : model.api_requests || 0;
           const share = totalWeight > 0 ? (weight / totalWeight) * 100 : 0;
-          const color =
-            AnalyticsCommonConstants.CHART_COLORS[index % AnalyticsCommonConstants.CHART_COLORS.length];
+          const color = CHART_COLORS[index % CHART_COLORS.length];
 
           return (
             <Box
@@ -192,7 +191,7 @@ const usageModelTableStyles = () => ({
     flex: 1,
     height: '0.375rem',
     borderRadius: '0.25rem',
-    backgroundColor: palette.background.default.secondary,
+    backgroundColor: palette.border.lines,
     position: 'relative',
   }),
   shareFill: (share, color) => ({

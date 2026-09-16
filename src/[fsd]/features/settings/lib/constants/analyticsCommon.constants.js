@@ -1,10 +1,6 @@
-import { CHART_COLORS, EVENT_TYPE_COLORS, MEDAL_COLORS } from '@/[fsd]/shared/config/theme/chartPalette';
-
 export const TOP_LIST_SIZE = 10;
 
 export const MODEL_CHART_SIZE = 15;
-
-export { CHART_COLORS, EVENT_TYPE_COLORS, MEDAL_COLORS };
 
 export const TOOLTIP_TEXTS = {
   overview: {

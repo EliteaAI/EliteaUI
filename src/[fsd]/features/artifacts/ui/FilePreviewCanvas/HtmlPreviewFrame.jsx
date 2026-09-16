@@ -481,7 +481,7 @@ const htmlPreviewFrameStyles = () => ({
     flexDirection: 'column',
     gap: '0.25rem',
     padding: '0.5rem 1rem',
-    backgroundColor: palette.warning.background ?? palette.background.default.secondary,
+    backgroundColor: palette.alert.warning.background,
     borderBottom: `0.0625rem solid ${palette.warning.main}`,
     flexShrink: 0,
   }),

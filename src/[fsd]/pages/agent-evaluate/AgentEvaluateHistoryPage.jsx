@@ -164,7 +164,7 @@ const agentEvaluateHistoryPageStyles = () => ({
   },
   divider: ({ palette }) => ({
     width: '0.0625rem',
-    backgroundColor: palette.background.default.secondary,
+    backgroundColor: palette.border.default,
     flexShrink: 0,
   }),
   stateContainer: {

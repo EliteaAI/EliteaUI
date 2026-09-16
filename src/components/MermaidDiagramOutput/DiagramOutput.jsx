@@ -705,7 +705,7 @@ const mermaidDiagramOutputStyles = (theme, isValidCode, errorMessage, widthsValu
   },
   boldErrorText: ({ palette }) => ({
     fontWeight: 'bold',
-    backgroundColor: palette.background.errorCodeHighlight || palette.action.hover,
+    backgroundColor: palette.background.error,
     padding: '0.125rem 0.25rem',
     borderRadius: '0.25rem',
     fontFamily: 'monospace',

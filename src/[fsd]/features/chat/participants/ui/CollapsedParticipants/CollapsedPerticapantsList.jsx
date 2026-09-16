@@ -311,7 +311,7 @@ const collapsedPerticapantsListStyles = () => ({
         minWidth: '1.25rem',
         height: '1.25rem',
         borderRadius: '50%',
-        backgroundColor: palette.background.surface.interactive.default,
+        backgroundColor: palette.border.lines,
         color: palette.text.secondary,
         fontSize: '0.625rem',
         fontWeight: 600,

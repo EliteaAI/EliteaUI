@@ -92,7 +92,7 @@ const getStyles = () => ({
   categoryDivider: ({ palette }) => ({
     width: '100%',
     height: '0.0625rem',
-    backgroundColor: palette.background.default.secondary,
+    backgroundColor: palette.border.default,
     marginBottom: '0.625rem',
     marginTop: '0.3125rem',
   }),

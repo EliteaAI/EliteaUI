@@ -465,7 +465,7 @@ const autoCompleteDropDownStyled = slotPropsProp => ({
         marginLeft: 0,
       },
       '&:not(.Mui-disabled) .MuiChip-deleteIcon:hover': {
-        color: palette.icon.default,
+        color: palette.icon.secondary,
       },
     }),
     slotPropsProp.Chip?.sx,

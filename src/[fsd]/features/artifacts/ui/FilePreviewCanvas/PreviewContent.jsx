@@ -372,7 +372,7 @@ const previewContentStyles = () => ({
     },
 
     '&::-webkit-scrollbar-thumb': {
-      background: palette.components.codePreview.background,
+      background: palette.scrollbar.thumb,
       borderRadius: '.125rem',
     },
 
@@ -486,7 +486,7 @@ const previewContentStyles = () => ({
     },
 
     '&::-webkit-scrollbar-thumb': {
-      background: palette.components.codePreview.background,
+      background: palette.scrollbar.thumb,
       borderRadius: '.125rem',
     },
 
@@ -570,7 +570,7 @@ const previewContentStyles = () => ({
       background: palette.background.default.tertiary,
     },
     '&::-webkit-scrollbar-thumb': {
-      background: palette.components.codePreview.background,
+      background: palette.scrollbar.thumb,
       borderRadius: '.125rem',
     },
     '&::-webkit-scrollbar-thumb:hover': {
@@ -627,7 +627,7 @@ const previewContentStyles = () => ({
     },
 
     '&::-webkit-scrollbar-thumb': {
-      background: palette.components.codePreview.background,
+      background: palette.scrollbar.thumb,
       borderRadius: '.125rem',
     },
 
@@ -683,7 +683,7 @@ const previewContentStyles = () => ({
     },
 
     '&::-webkit-scrollbar-thumb': {
-      background: palette.components.codePreview.background,
+      background: palette.scrollbar.thumb,
       borderRadius: '.125rem',
     },
 

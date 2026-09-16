@@ -49,14 +49,14 @@ export default BaseBtn;
 export const eliteaButtonColors = theme => ({
   [BUTTON_VARIANTS.special]: {
     default: {
-      background: theme.palette.mode === 'dark' ? 'rgba(106, 232, 250, 0.2)' : 'rgba(245, 81, 249, 0.2)',
+      background: theme.palette.components.accentButton.background.default,
       color: theme.palette.mode === 'dark' ? theme.palette.primary.main : theme.palette.text.secondary,
     },
     hover: {
-      background: theme.palette.mode === 'dark' ? 'rgba(106, 232, 250, 0.3)' : 'rgba(245, 81, 249, 0.3)',
+      background: theme.palette.components.accentButton.background.hover,
     },
     active: {
-      background: theme.palette.mode === 'dark' ? 'rgba(106, 232, 250, 0.1)' : 'rgba(245, 81, 249, 0.1)',
+      background: theme.palette.components.accentButton.background.pressed,
       color: theme.palette.components.button.text.showMore,
     },
     disabled: {
@@ -162,30 +162,57 @@ export const eliteaButtonColors = theme => ({
     },
   },
   [BUTTON_VARIANTS.alarm]: {
-    default: { background: theme.palette.components.button.background.alarm.default, color: 'white' },
-    hover: { background: theme.palette.components.button.background.alarm.hover, color: 'white' },
-    active: { background: theme.palette.components.button.background.alarm.pressed, color: 'white' },
+    default: {
+      background: theme.palette.components.button.background.alarm.default,
+      color: theme.palette.text.alwaysWhite,
+    },
+    hover: {
+      background: theme.palette.components.button.background.alarm.hover,
+      color: theme.palette.text.alwaysWhite,
+    },
+    active: {
+      background: theme.palette.components.button.background.alarm.pressed,
+      color: theme.palette.text.alwaysWhite,
+    },
     disabled: {
       background: theme.palette.components.button.background.alarm.disabled,
-      color: 'white',
+      color: theme.palette.text.alwaysWhite,
     },
   },
   [BUTTON_VARIANTS.neutral]: {
-    default: { background: theme.palette.components.button.background.neutral.default, color: 'white' },
-    hover: { background: theme.palette.components.button.background.neutral.hover, color: 'white' },
-    active: { background: theme.palette.components.button.background.neutral.pressed, color: 'white' },
+    default: {
+      background: theme.palette.components.button.background.neutral.default,
+      color: theme.palette.text.alwaysWhite,
+    },
+    hover: {
+      background: theme.palette.components.button.background.neutral.hover,
+      color: theme.palette.text.alwaysWhite,
+    },
+    active: {
+      background: theme.palette.components.button.background.neutral.pressed,
+      color: theme.palette.text.alwaysWhite,
+    },
     disabled: {
       background: theme.palette.components.button.background.neutral.disabled,
-      color: 'white',
+      color: theme.palette.text.alwaysWhite,
     },
   },
   [BUTTON_VARIANTS.positive]: {
-    default: { background: theme.palette.components.button.background.positive.default, color: 'white' },
-    hover: { background: theme.palette.components.button.background.positive.hover, color: 'white' },
-    active: { background: theme.palette.components.button.background.positive.pressed, color: 'white' },
+    default: {
+      background: theme.palette.components.button.background.positive.default,
+      color: theme.palette.text.alwaysWhite,
+    },
+    hover: {
+      background: theme.palette.components.button.background.positive.hover,
+      color: theme.palette.text.alwaysWhite,
+    },
+    active: {
+      background: theme.palette.components.button.background.positive.pressed,
+      color: theme.palette.text.alwaysWhite,
+    },
     disabled: {
       background: theme.palette.components.button.background.positive.disabled,
-      color: 'white',
+      color: theme.palette.text.alwaysWhite,
     },
   },
 });
@@ -598,7 +625,7 @@ export const eliteaButtonVariants = [
       }),
 
       ...(color === BUTTON_COLORS.alarm && {
-        color: 'white',
+        color: theme.palette.text.alwaysWhite,
         background: theme.palette.components.button.background.alarm.default,
         height: '1.75rem',
         borderRadius: '1rem',
@@ -702,7 +729,7 @@ export const eliteaButtonVariants = [
       alignItems: 'center',
       justifyContent: 'center',
 
-      backgroundColor: theme.palette.mode === 'dark' ? 'rgba(41, 184, 245, 0.2)' : 'rgba(196, 40, 221, 0.2)',
+      backgroundColor: theme.palette.components.button.background.maxi.default,
       color: theme.palette.mode === 'dark' ? theme.palette.primary.main : theme.palette.text.primary,
 
       '& .MuiButton-startIcon': {
@@ -719,16 +746,13 @@ export const eliteaButtonVariants = [
       },
 
       '&:hover': {
-        backgroundColor:
-          theme.palette.mode === 'dark' ? 'rgba(41, 184, 245, 0.3)' : 'rgba(196, 40, 221, 0.3)',
+        backgroundColor: theme.palette.components.button.background.maxi.hover,
       },
       '&:focus-visible': {
-        backgroundColor:
-          theme.palette.mode === 'dark' ? 'rgba(41, 184, 245, 0.3)' : 'rgba(196, 40, 221, 0.3)',
+        backgroundColor: theme.palette.components.button.background.maxi.hover,
       },
       '&:active': {
-        backgroundColor:
-          theme.palette.mode === 'dark' ? 'rgba(41, 184, 245, 0.1)' : 'rgba(196, 40, 221, 0.1)',
+        backgroundColor: theme.palette.components.button.background.maxi.pressed,
       },
       '&:disabled': {
         backgroundColor: theme.palette.components.button.background.default,

@@ -190,6 +190,14 @@ const flowNodePrinter = '#63EF9FFF';
 const flowNodeHitl = '#FFE0B6';
 const flowNodeCustom = '#FFD5D5';
 
+const npsAccent = '#6390fe';
+const npsAccentSubtle = '#6390fe1a';
+const npsOptionBg = '#ffffff99';
+const npsOptionBgHover = '#ffffff';
+const maxiFillDefault = '#c428dd33';
+const maxiFillHover = '#c428dd4d';
+const maxiFillPressed = '#c428dd1a';
+
 const lightPalette = {
   mode: 'light',
   primary: {
@@ -350,6 +358,7 @@ const lightPalette = {
         normal: dark10,
         danger: dangerRed,
         primary: { default: magentaDefault, hover: magentaHover, pressed: magentaHover, disabled: light20 },
+        maxi: { default: maxiFillDefault, hover: maxiFillHover, pressed: maxiFillPressed },
         secondary: { default: dark10, hover: dark20, pressed: dark20, disabled: light20 },
         tertiary: { hover: dark10, pressed: dark10 },
         alarm: { default: dangerRed, hover: hoverRed, pressed: pressedRed, disabled: light20 },
@@ -497,6 +506,10 @@ const lightPalette = {
     npsSurvey: {
       background: npsSurveyBg,
       border: npsSurveyBorder,
+      accent: npsAccent,
+      accentSubtle: npsAccentSubtle,
+      optionBackground: npsOptionBg,
+      optionBackgroundHover: npsOptionBgHover,
       text: { label: npsSurveyLabelColor, placeholder: npsSurveyLabelColor },
       button: {
         primary: {
@@ -535,7 +548,7 @@ const lightPalette = {
     },
     tabs: { default: magentaDefault },
     tableRow: { background: { default: white, hover: light40 } },
-    slider: { track: dark10 },
+    slider: { track: dark10, markActive: light10 },
     aiAnswer: {
       background: white,
       actionsGradient: aiAnswerActionsGradient,

@@ -243,7 +243,7 @@ const ConversationItem = memo(props => {
             confirmText: 'Are you sure to make your conversation public?',
             confirmButtonSX: {
               background: `${theme.palette.primary.main} !important`,
-              color: `${theme.palette.primary.contrastText} !important`,
+              color: `${theme.palette.components.button.text.primary} !important`,
             },
             onConfirm: handleMakePublic,
             display: projectId == PUBLIC_PROJECT_ID || projectId == personal_project_id ? 'none' : undefined,
@@ -333,7 +333,7 @@ const ConversationItem = memo(props => {
     checkPermission,
     moveToFoldersMenuItems,
     theme.palette.primary.main,
-    theme.palette.primary.contrastText,
+    theme.palette.components.button.text.primary,
     handleMakePublic,
     projectId,
     personal_project_id,

@@ -225,18 +225,14 @@ export default function SearchBar({
                   padding: '4px 10px',
                   marginLeft: '6px',
                   borderRadius: '16px',
-                  backgroundColor:
-                    theme.palette.background.tagChip?.default ||
-                    theme.palette.background.interactiveItem.hover,
-                  color: theme.palette.text.tagChip?.default || theme.palette.text.secondary,
+                  backgroundColor: theme.palette.components.styledChip.background.default,
+                  color: theme.palette.components.styledChip.text.default,
                   cursor: 'pointer',
                   userSelect: 'none',
                   flexShrink: 0,
                   transition: 'background-color 0.2s ease',
                   '&:hover': {
-                    backgroundColor:
-                      theme.palette.background.tagChip?.hover ||
-                      theme.palette.background.interactiveItem.hover,
+                    backgroundColor: theme.palette.components.styledChip.background.hover,
                   },
                 }}
               >
