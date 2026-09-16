@@ -84,6 +84,110 @@ const darkOrange = '#A5695C';
 const greenOutline40 = '#2ab37a66';
 const lightBlue = '#d7f1ff';
 
+const trophyGold = '#FFD3A0';
+const shadowAiAnswer = '0 0.125rem 0.4375rem 0 #0000001f';
+const shadowDialog = '0 0 1.475rem 0 #FFFFFF0D';
+const diffRemoved = '#d716164d';
+const diffAdded = '#2ab37a4d';
+const cssGreen = 'green';
+const cssRed = 'red';
+const toastWarningOrange = '#F2994A';
+const purple10 = '#f551f91a';
+const purple20 = '#f551f933';
+const purple30 = '#f551f94d';
+const contextHighlightBg = '#3d3d3d';
+const tourBackdropColor = '#3b3e4680';
+const tourTextColor = '#5c82bf';
+const entityIconTrophyBg = '#48433F';
+const cardBgGradient = 'linear-gradient(0deg, #121820 0%, #1D232C 100%)';
+const cardHoverBorderGradient = 'linear-gradient(0deg, #53b0bf66 0%, #53B0BF 100%)';
+const cardBorderGradient = 'linear-gradient(0deg, #262B34 0%, #313A48 100%)';
+const cardHoverShadow = '0 -0.1875rem 0.9375rem 0 #78e6ff4d';
+const whiteAlphaGradient = 'linear-gradient(180deg, #ffffff12 0%, #ffffff00 100%)';
+const tagEditorShadow = '0 0.5rem 0.75rem 0 #0000004d';
+const aiAnswerActionsGradient = 'linear-gradient(270deg, #262B34 82.5%, #262b3400 100%)';
+const conversationTopCover = 'linear-gradient(360deg, #10172100 0%, #0E131D 100%)';
+const conversationBottomCover = 'linear-gradient(180deg, #10172100 0%, #0E131D 100%)';
+const sidebarBgGradient = 'linear-gradient(180deg, #0F1E33 0%, #1B172C 100%)';
+const imageAttachmentGradient = 'linear-gradient(0deg, #262B34 0%, #262b3400 100%)';
+const agentModalBorderGradient = 'linear-gradient(224.97deg, #256B6D 0%, #7E2988 100%)';
+const agentModalBgGradient = 'linear-gradient(199.39deg, #122830 0%, #2C173A 100%)';
+const onboardingBorderBg = 'linear-gradient(247.51deg, #a1c5ff99 0.02%, #a1c5ff1f 50.21%, #a1d6ff99 99.64%)';
+const welcomeOutsideBg = 'linear-gradient(42.04deg, #61ede966 8.85%, #fb42ff66 89.62%)';
+const welcomeInnerBg = 'linear-gradient(63.16deg, #29a9a524 16.12%, #e72feb24 85.3%)';
+const bannerDefaultBg = 'linear-gradient(30deg, #3d2519 8.85%, #240f3c 89.62%)';
+const bannerBorderBg = 'linear-gradient(42.04deg, #a05714 8.85%, #7513aa 89.62%)';
+const tourCardBg = 'linear-gradient(360deg, #122543 0%, #194386 100%)';
+const tourBorderGradient = 'linear-gradient(186.77deg, #2773EE 5.31%, #1A3C74 94.69%)';
+const tourDividerGradient = 'linear-gradient(90deg, #2670e800 0%, #26ABE8 49.7%, #2670e800 100%)';
+const aiAssistantIconBg = 'linear-gradient(to top right, #29a9a561 8.85%, #e72feb61 89.62%)';
+const aiAssistantIconBorder = 'linear-gradient(to top right, #29fff8a3 8.85%, #fb48ff18 89.62%)';
+const aiAssistantGradientStart = '#50D2CE';
+const aiAssistantGradientEnd = '#FA00FF';
+const npsSurveyBg = 'linear-gradient(to top, #f7d9ff, #d5e3fe)';
+const npsSurveyBorder = '#93b2ff';
+const npsSurveyLabelColor = '#777A83';
+const npsPrimaryDefault = '#c428dd';
+const npsPrimaryHover = '#c428ddd9';
+const npsPrimaryPressed = '#c428ddb3';
+const npsPrimaryDisabled = '#c428dd66';
+const npsSecondaryDefault = '#3d44561a';
+const npsSecondaryHover = '#3d455726';
+const npsSecondaryPressed = '#3d445633';
+const agentHubHoverBg = '#60339F33';
+const agentHubShadowActive = '0 0 0.75rem 0 #66D1FF1A inset';
+const agentHubTextGradient = 'linear-gradient(90deg, #58CDEA 0.7%, #AF64FF 25%)';
+const agentHubIconGradient = 'linear-gradient(33.96deg, #58CDEA 0%, #AF64FF 80%)';
+const entityIconEntityGradient = 'linear-gradient(45.36deg, #a9b7c14d 16.25%, #a9b7c117 87.07%)';
+const entityIconBorderGradient = 'linear-gradient(225deg, #9ca9b200 12.64%, #9ca9b266 87.88%)';
+const rcBlueCard = 'linear-gradient(0deg, #0e273e66 0%, #0E273E 100%)';
+const rcBlueIcon = 'linear-gradient(45.36deg, #0094ff4d 16.25%, #0094ff17 87.07%)';
+const rcBlueIconColor = '#0094FF';
+const rcBlueIconBorderGradient = 'linear-gradient(180deg, #0094ff00 0%, #0094ff66 100%)';
+const rcBlueDivider = '#0094ff26';
+const rcBlueBorderGradient = 'linear-gradient(180deg, #0094ff33 0%, #0094ff00 100%)';
+const rcOrangeCard = 'linear-gradient(0deg, #3b332866 0%, #3B3328 100%)';
+const rcOrangeIcon = 'linear-gradient(45.36deg, #f5ad494d 16.25%, #f5ad4917 87.07%)';
+const rcOrangeIconColor = '#F5AD49';
+const rcOrangeIconBorderGradient = 'linear-gradient(180deg, #f5ad4900 0%, #f5ad4966 100%)';
+const rcOrangeDivider = '#f5ad4926';
+const rcOrangeBorderGradient = 'linear-gradient(180deg, #f5ad4933 0%, #f5ad4900 100%)';
+const rcPurpleCard = 'linear-gradient(0deg, #291d4066 0%, #291D40 100%)';
+const rcPurpleIcon = 'linear-gradient(45.36deg, #a473ff4d 16.25%, #a473ff17 87.07%)';
+const rcPurpleIconColor = '#A473FF';
+const rcPurpleIconBorderGradient = 'linear-gradient(180deg, #a473ff00 0%, #a473ff66 100%)';
+const rcPurpleDivider = '#a473ff26';
+const rcPurpleBorderGradient = 'linear-gradient(180deg, #a473ff33 0%, #a473ff00 100%)';
+const rcGreenCard = 'linear-gradient(0deg, #142f2366 0%, #142F23 100%)';
+const rcGreenIcon = 'linear-gradient(45.36deg, #4bba884d 16.25%, #4bba8817 87.07%)';
+const rcGreenIconColor = '#4BBA88';
+const rcGreenIconBorderGradient = 'linear-gradient(180deg, #4bba8800 0%, #4bba8866 100%)';
+const rcGreenDivider = '#4bba8826';
+const rcGreenBorderGradient = 'linear-gradient(180deg, #4bba8833 0%, #4bba8800 100%)';
+const rcPinkCard = 'linear-gradient(180deg, #3A1B27 0%, #3a1b2766 100%)';
+const rcPinkIcon = 'linear-gradient(45.36deg, #ff73b04d 16.25%, #ff73b017 87.07%)';
+const rcPinkIconColor = '#FF73B0';
+const rcPinkIconBorderGradient = 'linear-gradient(180deg, #ff73b000 0%, #ff73b066 100%)';
+const rcPinkDivider = '#ff73b026';
+const rcPinkBorderGradient = 'linear-gradient(180deg, #ff73b033 0%, #ff73b000 100%)';
+const flowNodeToolkit = '#11264C';
+const flowNodeMcp = '#2B006F';
+const flowNodeTool = '#22264C';
+const flowNodeAgent = '#21372D';
+const flowNodePipeline = '#2A173C';
+const flowNodeFunction = '#352340';
+const flowNodeLlm = '#183150';
+const flowNodeDecision = '#331531';
+const flowNodeCondition = '#2C2E1C';
+const flowNodeLoop = '#32281A';
+const flowNodeLoopFromTool = '#3D2418';
+const flowNodeRouter = '#0F342E';
+const flowNodeStateModifier = '#233509';
+const flowNodeCode = '#2D1A3A';
+const flowNodePrinter = '#075164';
+const flowNodeHitl = '#5A3D23';
+const flowNodeCustom = '#351C1C';
+
 const darkPalette = {
   mode: 'dark',
   primary: {
@@ -138,8 +242,8 @@ const darkPalette = {
     default: `0 0 0.5rem 0 ${white14}`,
     onboarding: `0rem 3.975rem 4.2625rem -3.8125rem ${skyBlue20}`,
     listbox: `0 0.25rem 1.875rem ${gray50}`,
-    aiAnswer: '0 0.125rem 0.4375rem 0 #0000001f',
-    dialog: '0 0 1.475rem 0 #FFFFFF0D',
+    aiAnswer: shadowAiAnswer,
+    dialog: shadowDialog,
   },
   text: {
     primary: gray10,
@@ -155,7 +259,7 @@ const darkPalette = {
     link: blue,
     visitedLink: blue70,
     alwaysWhite: white,
-    alwaysDark: '#0E131D',
+    alwaysDark: gray60,
     showMore: cyanPressed,
     tooltip: gray60,
   },
@@ -171,7 +275,7 @@ const darkPalette = {
     primary: grey500,
     secondary: white,
     send: gray60,
-    trophy: '#FFD3A0',
+    trophy: trophyGold,
     tips: skyBlue,
     successModal: greenHoverBtn,
     disabled: gray20,
@@ -213,29 +317,29 @@ const darkPalette = {
     high: warningYellow,
   },
   diff: {
-    removed: '#d716164d',
-    added: '#2ab37a4d',
+    removed: diffRemoved,
+    added: diffAdded,
   },
   scrollbar: { thumb: white10, thumbHover: gray10 },
   components: {
     toast: {
-      success: { background: 'green', color: 'white' },
-      error: { background: 'red', color: 'white' },
-      info: { background: darkBlue, color: 'white' },
-      warning: { background: '#F2994A', color: 'white' },
+      success: { background: cssGreen, color: white },
+      error: { background: cssRed, color: white },
+      info: { background: darkBlue, color: white },
+      warning: { background: toastWarningOrange, color: white },
     },
     card: {
       background: {
         default: gray50,
         hover: gray58,
-        gradient: 'linear-gradient(0deg, #121820 0%, #1D232C 100%)',
+        gradient: cardBgGradient,
       },
       border: {
-        hoverGradient: 'linear-gradient(0deg, #53b0bf66 0%, #53B0BF 100%)',
-        borderGradient: 'linear-gradient(0deg, #262B34 0%, #313A48 100%)',
+        hoverGradient: cardHoverBorderGradient,
+        borderGradient: cardBorderGradient,
       },
       shadow: {
-        hover: '0 -0.1875rem 0.9375rem 0 #78e6ff4d',
+        hover: cardHoverShadow,
       },
     },
     button: {
@@ -288,7 +392,7 @@ const darkPalette = {
       background: {
         default: gray50,
         hover: white20,
-        active: { default: '#f551f94d', hover: '#f551f933' },
+        active: { default: purple30, hover: purple20 },
         disabled: white10,
       },
       text: { default: white, active: white, disabled: gray20 },
@@ -304,19 +408,19 @@ const darkPalette = {
         hover: white6,
         selected: blue10,
         editor: gray40,
-        topCover: 'linear-gradient(360deg, #10172100 0%, #0E131D 100%)',
-        bottomCover: 'linear-gradient(180deg, #10172100 0%, #0E131D 100%)',
-        starter: { strong: magenta20, subtle: '#f551f91a' },
+        topCover: conversationTopCover,
+        bottomCover: conversationBottomCover,
+        starter: { strong: magenta20, subtle: purple10 },
         highlightUserMessage: magenta20,
       },
       border: { itemDivider: white10, highlightUserMessage: magenta40 },
     },
     folder: {
-      background: { default: white2, active: '#f551f91a' },
+      background: { default: white2, active: purple10 },
       border: {
-        gradient: 'linear-gradient(180deg, #ffffff12 0%, #ffffff00 100%)',
-        hover: '#f551f94d',
-        active: '#f551f94d',
+        gradient: whiteAlphaGradient,
+        hover: purple30,
+        active: purple30,
       },
       shadow: 'none',
     },
@@ -374,20 +478,20 @@ const darkPalette = {
       text: { default: gray00, hover: white },
     },
     aiAssistant: {
-      iconBackground: 'linear-gradient(to top right, #29a9a561 8.85%, #e72feb61 89.62%)',
-      iconBorder: 'linear-gradient(to top right, #29fff8a3 8.85%, #fb48ff18 89.62%)',
-      iconGradientStart: '#50D2CE',
-      iconGradientEnd: '#FA00FF',
+      iconBackground: aiAssistantIconBg,
+      iconBorder: aiAssistantIconBorder,
+      iconGradientStart: aiAssistantGradientStart,
+      iconGradientEnd: aiAssistantGradientEnd,
     },
     categoriesButton: {
       background: { selected: { active: darkBlue, hover: blue40 } },
     },
     tagEditor: {
       background: { tag: gray40 },
-      shadow: '0 0.5rem 0.75rem 0 #0000004d',
+      shadow: tagEditorShadow,
     },
     toolCard: {
-      background: { hover: white8, gradient: 'linear-gradient(180deg, #ffffff12 0%, #ffffff00 100%)' },
+      background: { hover: white8, gradient: whiteAlphaGradient },
     },
     chatContinue: {
       background: white10,
@@ -395,40 +499,45 @@ const darkPalette = {
     },
     aiProviderAccordion: {
       background: { default: white2, hover: white5 },
-      border: 'linear-gradient(180deg, #ffffff12 0%, #ffffff00 100%)',
+      border: whiteAlphaGradient,
     },
     accordion: {
       background: { default: white2, hover: white5 },
-      border: 'linear-gradient(180deg, #ffffff12 0%, #ffffff00 100%)',
+      border: whiteAlphaGradient,
     },
     listItem: {
       background: { default: gray50 },
     },
     chatStarter: {
-      background: { strong: magenta20, subtle: '#f551f91a' },
+      background: { strong: magenta20, subtle: purple10 },
     },
     npsSurvey: {
-      background: 'linear-gradient(to top, #f7d9ff, #d5e3fe)',
-      border: '#93b2ff',
-      text: { label: '#777A83', placeholder: '#777A83' },
+      background: npsSurveyBg,
+      border: npsSurveyBorder,
+      text: { label: npsSurveyLabelColor, placeholder: npsSurveyLabelColor },
       button: {
-        primary: { default: '#c428dd', hover: '#c428ddd9', pressed: '#c428ddb3', disabled: '#c428dd66' },
-        secondary: { default: '#3d44561a', hover: '#3d455726', pressed: '#3d445633' },
+        primary: {
+          default: npsPrimaryDefault,
+          hover: npsPrimaryHover,
+          pressed: npsPrimaryPressed,
+          disabled: npsPrimaryDisabled,
+        },
+        secondary: { default: npsSecondaryDefault, hover: npsSecondaryHover, pressed: npsSecondaryPressed },
       },
     },
     agentHubButton: {
       background: {
         default: 'transparent',
-        hover: '#60339F33',
-        active: '#60339F33',
+        hover: agentHubHoverBg,
+        active: agentHubHoverBg,
       },
       shadow: {
         default: 'none',
         hover: 'none',
-        active: '0 0 0.75rem 0 #66D1FF1A inset',
+        active: agentHubShadowActive,
       },
-      textGradient: 'linear-gradient(90deg, #58CDEA 0.7%, #AF64FF 25%)',
-      iconGradient: 'linear-gradient(33.96deg, #58CDEA 0%, #AF64FF 80%)',
+      textGradient: agentHubTextGradient,
+      iconGradient: agentHubIconGradient,
     },
     userMessageEditor: {
       border: cyanPressed,
@@ -454,10 +563,10 @@ const darkPalette = {
     slider: { track: white10 },
     aiAnswer: {
       background: gray40,
-      actionsGradient: 'linear-gradient(270deg, #262B34 82.5%, #262b3400 100%)',
+      actionsGradient: aiAnswerActionsGradient,
     },
     userMessage: {
-      actionsGradient: 'linear-gradient(270deg, #262B34 82.5%, #262b3400 100%)',
+      actionsGradient: aiAnswerActionsGradient,
       highlightBackground: magenta20,
       highlightBorder: magenta40,
     },
@@ -470,23 +579,23 @@ const darkPalette = {
     },
     notificationList: { background: gray40 },
     sidebar: {
-      background: 'linear-gradient(180deg, #0F1E33 0%, #1B172C 100%)',
+      background: sidebarBgGradient,
       divider: white10,
       menuItem: { default: 'transparent', hover: white5, selected: white10 },
     },
-    imageAttachment: { background: `linear-gradient(0deg, #262B34 0%, #262b3400 100%)` },
+    imageAttachment: { background: imageAttachmentGradient },
     contextDialog: { background: gray50 },
     agentModal: {
-      border: 'linear-gradient(224.97deg, #256B6D 0%, #7E2988 100%)',
-      background: 'linear-gradient(199.39deg, #122830 0%, #2C173A 100%)',
+      border: agentModalBorderGradient,
+      background: agentModalBgGradient,
       content: {
-        border: 'linear-gradient(224.97deg, #256B6D 0%, #7E2988 100%)',
+        border: agentModalBorderGradient,
         background: gray60,
       },
     },
     skillHubModal: {
-      border: 'linear-gradient(224.97deg, #256B6D 0%, #7E2988 100%)',
-      background: 'linear-gradient(199.39deg, #122830 0%, #2C173A 100%)',
+      border: agentModalBorderGradient,
+      background: agentModalBgGradient,
     },
     aiAssistantModal: {
       background: { panel: gray50, editor: gray58 },
@@ -499,26 +608,26 @@ const darkPalette = {
       background: gray60,
       node: { border: gray20 },
       nodeColors: {
-        toolkit: '#11264C',
-        mcp: '#2B006F',
-        tool: '#22264C',
-        agent: '#21372D',
-        pipeline: '#2A173C',
-        function: '#352340',
-        llm: '#183150',
-        decision: '#331531',
-        condition: '#2C2E1C',
-        loop: '#32281A',
-        loop_from_tool: '#3D2418',
-        router: '#0F342E',
-        state_modifier: '#233509',
-        code: '#2D1A3A',
-        printer: '#075164',
-        hitl: '#5A3D23',
-        custom: '#351C1C',
+        toolkit: flowNodeToolkit,
+        mcp: flowNodeMcp,
+        tool: flowNodeTool,
+        agent: flowNodeAgent,
+        pipeline: flowNodePipeline,
+        function: flowNodeFunction,
+        llm: flowNodeLlm,
+        decision: flowNodeDecision,
+        condition: flowNodeCondition,
+        loop: flowNodeLoop,
+        loop_from_tool: flowNodeLoopFromTool,
+        router: flowNodeRouter,
+        state_modifier: flowNodeStateModifier,
+        code: flowNodeCode,
+        printer: flowNodePrinter,
+        hitl: flowNodeHitl,
+        custom: flowNodeCustom,
       },
     },
-    contextHighlight: { background: '#3d3d3d' },
+    contextHighlight: { background: contextHighlightBg },
     aiParticipantIcon: { background: skyBlue20 },
     chatSubmenu: { dividerBackground: gray30 },
     mcp: {
@@ -532,77 +641,77 @@ const darkPalette = {
       text: { loginSuccess: lightGreen, logout: lightOrange },
     },
     onboarding: {
-      background: 'linear-gradient(247.51deg, #a1c5ff99 0.02%, #a1c5ff1f 50.21%, #a1d6ff99 99.64%)',
+      background: onboardingBorderBg,
       bodyBackground: gray58,
     },
     welcome: {
       background: {
-        outside: 'linear-gradient(42.04deg, #61ede966 8.85%, #fb42ff66 89.62%)',
-        inner: 'linear-gradient(63.16deg, #29a9a524 16.12%, #e72feb24 85.3%)',
+        outside: welcomeOutsideBg,
+        inner: welcomeInnerBg,
       },
     },
     banner: {
-      default: 'linear-gradient(30deg, #3d2519 8.85%, #240f3c 89.62%)',
-      border: 'linear-gradient(42.04deg, #a05714 8.85%, #7513aa 89.62%)',
+      default: bannerDefaultBg,
+      border: bannerBorderBg,
     },
     interactiveTour: {
-      backdrop: '#3b3e4680',
-      card: 'linear-gradient(360deg, #122543 0%, #194386 100%)',
-      borderGradient: 'linear-gradient(186.77deg, #2773EE 5.31%, #1A3C74 94.69%)',
-      dividerGradient: 'linear-gradient(90deg, #2670e800 0%, #26ABE8 49.7%, #2670e800 100%)',
-      text: '#5c82bf',
+      backdrop: tourBackdropColor,
+      card: tourCardBg,
+      borderGradient: tourBorderGradient,
+      dividerGradient: tourDividerGradient,
+      text: tourTextColor,
     },
     resourceCard: {
       background: {
         blue: {
-          card: 'linear-gradient(0deg, #0e273e66 0%, #0E273E 100%)',
-          icon: 'linear-gradient(45.36deg, #0094ff4d 16.25%, #0094ff17 87.07%)',
-          iconColor: '#0094FF',
-          iconBorderGradient: 'linear-gradient(180deg, #0094ff00 0%, #0094ff66 100%)',
-          divider: '#0094ff26',
-          borderGradient: 'linear-gradient(180deg, #0094ff33 0%, #0094ff00 100%)',
+          card: rcBlueCard,
+          icon: rcBlueIcon,
+          iconColor: rcBlueIconColor,
+          iconBorderGradient: rcBlueIconBorderGradient,
+          divider: rcBlueDivider,
+          borderGradient: rcBlueBorderGradient,
         },
         orange: {
-          card: 'linear-gradient(0deg, #3b332866 0%, #3B3328 100%)',
-          icon: 'linear-gradient(45.36deg, #f5ad494d 16.25%, #f5ad4917 87.07%)',
-          iconColor: '#F5AD49',
-          iconBorderGradient: 'linear-gradient(180deg, #f5ad4900 0%, #f5ad4966 100%)',
-          divider: '#f5ad4926',
-          borderGradient: 'linear-gradient(180deg, #f5ad4933 0%, #f5ad4900 100%)',
+          card: rcOrangeCard,
+          icon: rcOrangeIcon,
+          iconColor: rcOrangeIconColor,
+          iconBorderGradient: rcOrangeIconBorderGradient,
+          divider: rcOrangeDivider,
+          borderGradient: rcOrangeBorderGradient,
         },
         purple: {
-          card: 'linear-gradient(0deg, #291d4066 0%, #291D40 100%)',
-          icon: 'linear-gradient(45.36deg, #a473ff4d 16.25%, #a473ff17 87.07%)',
-          iconColor: '#A473FF',
-          iconBorderGradient: 'linear-gradient(180deg, #a473ff00 0%, #a473ff66 100%)',
-          divider: '#a473ff26',
-          borderGradient: 'linear-gradient(180deg, #a473ff33 0%, #a473ff00 100%)',
+          card: rcPurpleCard,
+          icon: rcPurpleIcon,
+          iconColor: rcPurpleIconColor,
+          iconBorderGradient: rcPurpleIconBorderGradient,
+          divider: rcPurpleDivider,
+          borderGradient: rcPurpleBorderGradient,
         },
         green: {
-          card: 'linear-gradient(0deg, #142f2366 0%, #142F23 100%)',
-          icon: 'linear-gradient(45.36deg, #4bba884d 16.25%, #4bba8817 87.07%)',
-          iconColor: '#4BBA88',
-          iconBorderGradient: 'linear-gradient(180deg, #4bba8800 0%, #4bba8866 100%)',
-          divider: '#4bba8826',
-          borderGradient: 'linear-gradient(180deg, #4bba8833 0%, #4bba8800 100%)',
+          card: rcGreenCard,
+          icon: rcGreenIcon,
+          iconColor: rcGreenIconColor,
+          iconBorderGradient: rcGreenIconBorderGradient,
+          divider: rcGreenDivider,
+          borderGradient: rcGreenBorderGradient,
         },
         pink: {
-          card: 'linear-gradient(180deg, #3A1B27 0%, #3a1b2766 100%)',
-          icon: 'linear-gradient(45.36deg, #ff73b04d 16.25%, #ff73b017 87.07%)',
-          iconColor: '#FF73B0',
-          iconBorderGradient: 'linear-gradient(180deg, #ff73b000 0%, #ff73b066 100%)',
-          divider: '#ff73b026',
-          borderGradient: 'linear-gradient(180deg, #ff73b033 0%, #ff73b000 100%)',
+          card: rcPinkCard,
+          icon: rcPinkIcon,
+          iconColor: rcPinkIconColor,
+          iconBorderGradient: rcPinkIconBorderGradient,
+          divider: rcPinkDivider,
+          borderGradient: rcPinkBorderGradient,
         },
       },
     },
     entityIcon: {
       background: {
         default: white10,
-        trophy: '#48433F',
+        trophy: entityIconTrophyBg,
         checkedBox: gray10,
-        entityGradient: 'linear-gradient(45.36deg, #a9b7c14d 16.25%, #a9b7c117 87.07%)',
-        entityBorderGradient: 'linear-gradient(225deg, #9ca9b200 12.64%, #9ca9b266 87.88%)',
+        entityGradient: entityIconEntityGradient,
+        entityBorderGradient: entityIconBorderGradient,
       },
     },
     configurationCard: { background: { highTier: green20 } },
