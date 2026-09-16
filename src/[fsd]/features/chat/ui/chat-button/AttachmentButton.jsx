@@ -195,6 +195,8 @@ const AttachmentButton = forwardRef((props, ref) => {
 
   const showDisabledTooltip = showLabel && isDisabled && !!disabledTooltip;
 
+  const styles = attachmentButtonStyles(isDisabled);
+
   const button = (
     <IconButton
       ref={buttonRef}
@@ -204,10 +206,7 @@ const AttachmentButton = forwardRef((props, ref) => {
       data-testid={testId}
       onClick={handleClickAttach}
       disabled={isDisabled}
-      sx={{
-        ...styles.iconButton,
-        ...(showDisabledTooltip && { pointerEvents: 'auto !important' }),
-      }}
+      sx={[styles.iconButton, showDisabledTooltip && { pointerEvents: 'auto !important' }]}
     >
       <Box
         hidden
@@ -275,24 +274,31 @@ const AttachmentButton = forwardRef((props, ref) => {
 AttachmentButton.displayName = 'AttachmentButton';
 
 /** @type {MuiSx} */
-const styles = {
+const attachmentButtonStyles = isDisabled => ({
   tooltipWrapper: {
     display: 'inline-flex',
   },
-  iconButton: {
+  iconButton: ({ palette }) => ({
     marginLeft: '0rem',
-  },
-  attachIcon: {
+    '&.MuiIconButton-colorSecondary, &.MuiIconButton-colorSecondary:disabled': {
+      background: `${palette.background.default.secondary} !important`,
+    },
+  }),
+  attachIcon: ({ palette }) => ({
     fontSize: '1rem',
-  },
-  label: {
+    '& path': {
+      fill: isDisabled ? palette.icon.disabled : palette.icon.default,
+    },
+  }),
+  label: ({ palette }) => ({
+    color: isDisabled ? palette.text.primary : palette.text.secondary,
     flex: 1,
     textAlign: 'left',
-  },
-  counter: {
-    color: 'text.disabled',
+  }),
+  counter: ({ palette }) => ({
+    color: isDisabled ? palette.text.muted : palette.text.primary,
     flexShrink: 0,
-  },
-};
+  }),
+});
 
 export default memo(AttachmentButton);

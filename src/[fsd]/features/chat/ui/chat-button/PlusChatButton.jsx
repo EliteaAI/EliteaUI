@@ -89,6 +89,7 @@ const PlusChatButton = memo(props => {
   const buttonRef = useRef(null);
   const hoverTimeoutRef = useRef(null);
   const subMenuRef = useRef(null);
+  const mainPaperRef = useRef(null);
 
   const selectedProjectId = useSelectedProjectId();
   const personalProjectId = useSelector(state => state.user.personal_project_id);
@@ -206,7 +207,7 @@ const PlusChatButton = memo(props => {
       [SUBMENU_KEYS.AGENTS]: {
         searchPlaceholder: 'Search agents...',
         showCreateNew: !!onCreateAgent,
-        createNewLabel: 'Create New Agent',
+        createNewLabel: 'Create Agent',
         onCreateNew: handleCreateAgent,
         emptyMessage: 'No agents available',
         noResultsMessage: 'No agents found',
@@ -214,7 +215,7 @@ const PlusChatButton = memo(props => {
       [SUBMENU_KEYS.PIPELINES]: {
         searchPlaceholder: 'Search pipelines...',
         showCreateNew: !!onCreatePipeline,
-        createNewLabel: 'Create New Pipeline',
+        createNewLabel: 'Create Pipeline',
         onCreateNew: handleCreatePipeline,
         emptyMessage: 'No pipelines available',
         noResultsMessage: 'No pipelines found',
@@ -222,7 +223,7 @@ const PlusChatButton = memo(props => {
       [SUBMENU_KEYS.TOOLKITS]: {
         searchPlaceholder: 'Search toolkits...',
         showCreateNew: !!onCreateToolkit,
-        createNewLabel: 'Create New Toolkit',
+        createNewLabel: 'Create Toolkit',
         onCreateNew: handleCreateToolkit,
         emptyMessage: 'No toolkits available',
         noResultsMessage: 'No toolkits found',
@@ -233,7 +234,7 @@ const PlusChatButton = memo(props => {
         [SUBMENU_KEYS.MCPS]: {
           searchPlaceholder: 'Search MCPs...',
           showCreateNew: !!onCreateToolkit,
-          createNewLabel: 'Create New MCP',
+          createNewLabel: 'Create MCP',
           onCreateNew: handleCreateMCP,
           emptyMessage: 'No MCPs available',
           noResultsMessage: 'No MCPs found',
@@ -367,6 +368,7 @@ const PlusChatButton = memo(props => {
       >
         <ClickAwayListener onClickAway={handleClickAway}>
           <Paper
+            ref={mainPaperRef}
             elevation={8}
             sx={styles.paper}
           >
@@ -426,7 +428,7 @@ const PlusChatButton = memo(props => {
       {hoveredAnchorEl && hoveredItem && (
         <Popper
           open
-          anchorEl={hoveredAnchorEl}
+          anchorEl={mainPaperRef.current}
           placement="right-end"
           style={styles.subPopper}
         >
@@ -463,7 +465,7 @@ const plusChatButtonStyles = theme => ({
     minWidth: '15.125rem',
     borderRadius: '.75rem',
     border: `.0625rem solid ${theme.palette.border.lines}`,
-    background: theme.palette.background.default.primary,
+    background: theme.palette.background.default.secondary,
     padding: 0,
     overflow: 'hidden',
   },
@@ -507,6 +509,10 @@ const plusChatButtonStyles = theme => ({
     padding: '.5rem 1rem',
     height: '2.75rem',
     color: theme.palette.text.secondary,
+    background: theme.palette.background.default.secondary,
+    '&:hover': {
+      background: theme.palette.background.surface.interactive.active,
+    },
   },
   menuIcon: {
     width: '1rem',
@@ -533,7 +539,7 @@ const plusChatButtonStyles = theme => ({
     minWidth: '12rem',
     borderRadius: '.75rem',
     border: `.0625rem solid ${theme.palette.border.lines}`,
-    background: theme.palette.background.default.primary,
+    background: theme.palette.background.default.secondary,
     padding: '1rem',
     ml: '.25rem',
   },
@@ -541,7 +547,7 @@ const plusChatButtonStyles = theme => ({
     width: '14.25rem',
     borderRadius: '.5rem',
     border: `.0625rem solid ${theme.palette.border.lines}`,
-    background: theme.palette.background.default.primary,
+    background: theme.palette.background.default.secondary,
     boxShadow: theme.palette.boxShadow.default,
     padding: 0,
     ml: '.25rem',
@@ -551,7 +557,7 @@ const plusChatButtonStyles = theme => ({
     width: '17rem',
     borderRadius: '.5rem',
     border: `.0625rem solid ${theme.palette.border.lines}`,
-    background: theme.palette.background.default.primary,
+    background: theme.palette.background.default.secondary,
     boxShadow: theme.palette.boxShadow.default,
     padding: 0,
     ml: '.25rem',
@@ -561,7 +567,7 @@ const plusChatButtonStyles = theme => ({
     minWidth: '18.75rem',
     borderRadius: '.75rem',
     border: `.0625rem solid ${theme.palette.border.lines}`,
-    background: theme.palette.background.default.primary,
+    background: theme.palette.background.default.secondary,
     padding: '.5rem 0',
     ml: '.25rem',
   },
