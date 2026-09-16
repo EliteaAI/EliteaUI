@@ -729,7 +729,7 @@ export const eliteaButtonVariants = [
       alignItems: 'center',
       justifyContent: 'center',
 
-      backgroundColor: theme.palette.mode,
+      backgroundColor: theme.palette.components.button.background.maxi.default,
       color: theme.palette.mode === 'dark' ? theme.palette.primary.main : theme.palette.text.primary,
 
       '& .MuiButton-startIcon': {
@@ -746,13 +746,13 @@ export const eliteaButtonVariants = [
       },
 
       '&:hover': {
-        backgroundColor: theme.palette.mode,
+        backgroundColor: theme.palette.components.button.background.maxi.hover,
       },
       '&:focus-visible': {
-        backgroundColor: theme.palette.mode,
+        backgroundColor: theme.palette.components.button.background.maxi.hover,
       },
       '&:active': {
-        backgroundColor: theme.palette.mode,
+        backgroundColor: theme.palette.components.button.background.maxi.pressed,
       },
       '&:disabled': {
         backgroundColor: theme.palette.components.button.background.default,
