@@ -64,13 +64,13 @@ const headingChipStyles = variant => ({
     };
 
     if (variant === HEADING_CHIP_VARIANTS.suggestion) {
-      const { suggestionChip } = palette;
+      const { suggestionChip } = palette.components;
 
       return {
         ...base,
         padding: '0.25rem 1rem',
         background: suggestionChip.background.default,
-        color: suggestionChip.text.primary,
+        color: suggestionChip.text.default,
         border: `0.0625rem solid ${suggestionChip.border}`,
         borderRadius: '1.8125rem',
         cursor: 'pointer',

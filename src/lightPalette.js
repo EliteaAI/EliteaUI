@@ -1,7 +1,7 @@
 const white = '#FFFFFF';
 const blueFill08 = '#29b8f514';
-const skyBlue20 = ' #50a1ff33';
-const skyBlue40 = ' #50a1ff66';
+const skyBlue20 = '#50a1ff33';
+const skyBlue40 = '#50a1ff66';
 const grey003 = '#41475708';
 const grey007 = '#41475712';
 const light00 = '#5B5E69';

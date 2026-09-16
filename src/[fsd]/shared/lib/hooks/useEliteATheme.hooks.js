@@ -39,7 +39,7 @@ export const useEliteATheme = () => {
             palette: {
               mode: 'light',
               background: {
-                default: lightPalette.background.categoryHeader,
+                default: lightPalette.background.default.secondary,
               },
             },
           }
