@@ -30,9 +30,9 @@ import {
 import {
   bannerOutlivesRun,
   bannerVariant,
-  hasLiveRun,
   hasRetainedIndexData,
   indexBuildBlockedReason,
+  indexRunControls,
   indexScheduleBlockedReason,
   indexSearchBlockedReason,
   shouldDropIndexStateOverride,
@@ -132,7 +132,7 @@ const RunIndexPanel = memo(props => {
 
   const {
     chatHistory,
-    isIndexing,
+    isIndexing: chatIsIndexing,
     isRunning,
     isStoppingIndexing,
     isWaitingForTaskStart,
@@ -188,7 +188,9 @@ const RunIndexPanel = memo(props => {
   }, [toolkitSchema]);
 
   const effectiveState = localMetaOverride?.state ?? index?.metadata?.state;
-  const effectiveIsIndexing = isIndexing || effectiveState === IndexStatuses.progress;
+  // The panel's own notion of "running", which is the row's state OR an active chat run;
+  // `chatIsIndexing` keeps the hook's narrower flag distinguishable from it.
+  const isIndexing = chatIsIndexing || effectiveState === IndexStatuses.progress;
   // Runs observed here aren't in the slice until a fetch happens — arm the poll from
   // local belief. (Second subscription on this route is deliberate; see the hook.)
   const { startedTimeStamp, fulfilledTimeStamp } = useIndexesListPolling({
@@ -209,16 +211,26 @@ const RunIndexPanel = memo(props => {
   // request issued after the observation supersedes it (in-flight fetches carry
   // pre-run data).
   const serverSupersedes = rowReadAfterOverride && startedTimeStamp > overrideObservedAtRef.current;
-  const effectiveStale = localMetaOverride?.state && !serverSupersedes ? false : index?.stale;
-  const isAwaitingTaskStart = isWaitingForTaskStart && !serverSupersedes;
-  const runLooksAbandoned = effectiveIsIndexing && Boolean(effectiveStale);
-  const runIsLive = hasLiveRun({
-    isIndexing: effectiveIsIndexing,
-    isStale: effectiveStale,
-  });
-  const deleteDisabled = isDeleting || isAwaitingTaskStart || runIsLive;
   const buildBlockedReason = indexBuildBlockedReason(selectedIndexTools);
-  const reindexDisabled = Boolean(buildBlockedReason) || isRunning || isAwaitingTaskStart || runIsLive;
+  const {
+    stale: isStale,
+    reclaimable: isReclaimable,
+    runLooksAbandoned,
+    runIsLive,
+    isAwaitingTaskStart,
+    deleteDisabled,
+    reindexDisabled,
+  } = indexRunControls({
+    isIndexing,
+    index,
+    localMetaOverride,
+    serverSupersedes,
+    buildBlockedReason,
+    isDeleting,
+    isRunning,
+    isWaitingForTaskStart,
+  });
+
   const retainsIndexedData = hasRetainedIndexData(index?.metadata);
 
   const schedulingTooltipMessage = useMemo(
@@ -523,19 +535,28 @@ const RunIndexPanel = memo(props => {
       latestEntry,
     };
   }, [index?.metadata]);
-  const runInFlight = effectiveIsIndexing || isAwaitingTaskStart;
+  const runInFlight = isIndexing || isAwaitingTaskStart;
   const banner = useMemo(
     () =>
-      bannerVariant(runInFlight, effectiveState, reindexStats, index?.metadata?.error, effectiveStale, {
-        hasRetainedData: retainsIndexedData,
-        lastSuccessfulRun: index?.last_successful_run,
+      bannerVariant({
+        isIndexing: runInFlight,
+        state: effectiveState,
+        reindexStats,
+        error: index?.metadata?.error,
+        isStale,
+        retention: {
+          hasRetainedData: retainsIndexedData,
+          lastSuccessfulRun: index?.last_successful_run,
+        },
+        isReclaimable,
       }),
     [
       runInFlight,
       effectiveState,
       reindexStats,
       index?.metadata?.error,
-      effectiveStale,
+      isReclaimable,
+      isStale,
       retainsIndexedData,
       index?.last_successful_run,
     ],
@@ -608,13 +629,15 @@ const RunIndexPanel = memo(props => {
   const questionItemRef = useRef();
 
   const searchBlockedReason = indexSearchBlockedReason(
-    effectiveIsIndexing ? IndexStatuses.progress : effectiveState,
+    isIndexing ? IndexStatuses.progress : effectiveState,
     selectedIndexTools,
     runLooksAbandoned,
     retainsIndexedData,
   );
 
-  const runBlocksHistory = effectiveIsIndexing && !runLooksAbandoned;
+  // The display flag on purpose: keying this on the control flag would hold History shut
+  // for the whole disconnect timeout on exactly the dead run a user is trying to read.
+  const runBlocksHistory = isIndexing && !runLooksAbandoned;
   const historyDisabled = !index?.metadata?.history?.length || runBlocksHistory;
   const historyTooltip = runBlocksHistory
     ? 'Unavailable while indexing is in progress'
