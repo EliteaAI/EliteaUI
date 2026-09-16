@@ -2,8 +2,9 @@ import React, { memo, useCallback, useState } from 'react';
 
 import { Box, useTheme } from '@mui/material';
 
+import { BrandLogoConstants } from '@/[fsd]/shared/lib/constants';
 import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks/useEnvironmentSettingByKey.hooks';
-import WelcomeImage from '@/assets/chat-welcome.png';
+import BrandLogo from '@/[fsd]/shared/ui/brand-logo';
 import IndexIcon from '@/assets/file-code.svg?react';
 import FlowIcon from '@/assets/flow-icon.svg?react';
 import MCPIcon from '@/assets/mcp-icon.svg?react';
@@ -75,13 +76,9 @@ export const EntityTypeIcon = memo(props => {
       );
 
     case ChatParticipantType.Dummy:
-      // return <EliteAIcon sx={{ fontSize: sizeNumeric }} />;
       return (
-        <Box
-          component="img"
-          height={36}
-          width={36}
-          src={WelcomeImage}
+        <BrandLogo
+          variant={BrandLogoConstants.BRAND_LOGO_VARIANTS.Avatar}
           alt={systemSenderName}
         />
       );

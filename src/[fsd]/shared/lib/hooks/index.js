@@ -18,6 +18,8 @@ export * from './useLanguageLinter.hooks';
 export * from './useMcpVisibility.hooks';
 export * from './useSoundNotification.hooks';
 export * from './useEliteATheme.hooks';
+export * from './useCustomTheme.hooks';
+export * from './useBrandFavicon.hooks';
 export * from './useBreadcrumbTrail.hooks';
 export * from './useCatalogCount.hooks';
 export * from './useRestoredConversation.hooks';

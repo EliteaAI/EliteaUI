@@ -5,6 +5,8 @@ import { useSelector } from 'react-redux';
 import { createTheme } from '@mui/material/styles';
 
 import getDesignTokens from '@/MainTheme';
+import { useCustomTheme } from '@/[fsd]/shared/lib/hooks/useCustomTheme.hooks';
+import { ThemeModeOptions } from '@/common/constants';
 import lightPalette from '@/lightPalette';
 
 const getSystemPreference = () =>
@@ -12,6 +14,7 @@ const getSystemPreference = () =>
 
 export const useEliteATheme = () => {
   const mode = useSelector(state => state.settings.mode);
+  const { isCustomTheme, customPalette } = useCustomTheme();
 
   const [systemPreference, setSystemPreference] = useState(getSystemPreference);
 
@@ -24,17 +27,24 @@ export const useEliteATheme = () => {
     return () => mediaQuery.removeEventListener('change', handler);
   }, []);
 
-  const resolvedMode = mode === 'system' ? systemPreference : mode;
+  const resolvedMode = useMemo(() => {
+    if (mode === ThemeModeOptions.System) return systemPreference;
+    // Custom palette defines its own base mode; fall back to dark while loading or on error
+    if (isCustomTheme) return customPalette?.mode === ThemeModeOptions.Light ? 'light' : 'dark';
+
+    return mode;
+  }, [mode, systemPreference, isCustomTheme, customPalette]);
+
   const isDarkMode = resolvedMode === 'dark';
 
   const globalTheme = useMemo(() => {
-    return createTheme(getDesignTokens(resolvedMode));
-  }, [resolvedMode]);
+    return createTheme(getDesignTokens(resolvedMode, customPalette));
+  }, [resolvedMode, customPalette]);
 
   const localGridTheme = useMemo(() => {
     return createTheme(
       globalTheme,
-      !isDarkMode
+      !isDarkMode && !isCustomTheme
         ? {
             palette: {
               mode: 'light',
@@ -45,12 +55,13 @@ export const useEliteATheme = () => {
           }
         : {},
     );
-  }, [globalTheme, isDarkMode]);
+  }, [globalTheme, isDarkMode, isCustomTheme]);
 
   return {
     globalTheme,
     localGridTheme,
     isDarkMode,
+    isCustomTheme,
     resolvedMode,
   };
 };
