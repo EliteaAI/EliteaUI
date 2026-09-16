@@ -126,13 +126,16 @@ const AnalyticsContainer = memo(() => {
   // owns adoption, tokens, cost, models and the adopter leaderboard.
   const overviewData = useMemo(() => {
     if (!data && !usageData) return null;
+    // Either endpoint failing renders the error banner, so the merge must go null with it —
+    // otherwise a half-empty Overview shows underneath the banner
+    if (isError || usageError) return null;
 
     return {
       ...data,
       ...usageData,
       kpis: { ...data?.kpis, ...usageData?.kpis },
     };
-  }, [data, usageData]);
+  }, [data, usageData, isError, usageError]);
 
   const isCustomRange = selectedDatePreset === CUSTOM_PRESET_VALUE;
   const dateFilterPresets = isCustomRange ? PRESETS_WITH_CUSTOM : DEFAULT_PRESETS;
