@@ -408,7 +408,7 @@ const attachedDatasetCardStyles = () => ({
     minHeight: '3.625rem',
     padding: '0.5rem 1.25rem',
     gap: '0.25rem',
-    borderBottom: `0.0625rem solid ${palette.border.table}`,
+    borderBottom: `0.0625rem solid ${palette.border.lines}`,
     '&:last-child': {
       borderBottom: 'none',
     },

@@ -17,7 +17,7 @@ export const SearchPanel = styled('div')(({ theme }) => ({
   borderRadius: 27,
   backgroundColor: theme.palette.background.interactiveItem.hover,
   '&:hover': {
-    backgroundColor: theme.palette.background.button.hover,
+    backgroundColor: theme.palette.background.surface.interactive.active,
   },
   boxSizing: 'border-box',
   padding: '8px 12px',
