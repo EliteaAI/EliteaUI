@@ -62,7 +62,7 @@ describe('analyticsCosts endpoint', () => {
     const req = requestOf(fetchSpy);
     const url = new URL(req.url);
     expect(req.method).toBe('GET');
-    expect(url.pathname).toBe('/elitea_core/analytics_costs/prompt_lib/42');
+    expect(url.pathname).toBe('/usage/analytics_costs/prompt_lib/42');
     expect(url.searchParams.get('date_from')).toBe('2026-01-01');
     expect(url.searchParams.get('date_to')).toBe('2026-02-01');
   });
@@ -72,7 +72,7 @@ describe('analyticsCosts endpoint', () => {
     await store.dispatch(analyticsApi.endpoints.analyticsCosts.initiate({ projectId: 7 }));
 
     const req = requestOf(fetchSpy);
-    expect(req.url).toBe('http://test.local/elitea_core/analytics_costs/prompt_lib/7');
+    expect(req.url).toBe('http://test.local/usage/analytics_costs/prompt_lib/7');
     expect(req.url).not.toContain('?');
   });
 

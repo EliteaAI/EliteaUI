@@ -7,10 +7,11 @@ import { Box, IconButton, LinearProgress, Typography } from '@mui/material';
 
 import { FIRST_ELITEA_TOUR_ID, markTourPending } from '@/[fsd]/features/interactive-tours';
 import { Welcome, WorkspaceIsReady } from '@/[fsd]/features/onboarding/ui';
+import { BrandLogoConstants } from '@/[fsd]/shared/lib/constants';
 import { ChunkHelpers } from '@/[fsd]/shared/lib/helpers';
+import { BrandLogo } from '@/[fsd]/shared/ui';
 import { useLazyProjectListQuery } from '@/api';
 import { useLazyAuthorDetailsQuery } from '@/api/social.js';
-import Logo from '@/assets/logo.svg?react';
 import ArrowBackIcon from '@/components/Icons/ArrowBackIcon';
 import RouteDefinitions from '@/routes';
 
@@ -151,7 +152,7 @@ const Onboarding = memo(() => {
           data-testid="onboarding-page-logo"
           sx={styles.logo}
         >
-          <Logo />
+          <BrandLogo variant={BrandLogoConstants.BRAND_LOGO_VARIANTS.Wordmark} />
         </Box>
         <Box sx={styles.gradientBorder}>
           <Box sx={styles.mainPanel}>

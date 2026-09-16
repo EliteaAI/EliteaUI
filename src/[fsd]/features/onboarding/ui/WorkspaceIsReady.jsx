@@ -2,8 +2,8 @@ import { memo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { Button } from '@/[fsd]/shared/ui';
-import WelcomeImage from '@/assets/chat-welcome.png';
+import { BrandLogoConstants } from '@/[fsd]/shared/lib/constants';
+import { BrandLogo, Button } from '@/[fsd]/shared/ui';
 
 const WorkspaceIsReady = memo(props => {
   const { onJumpIn } = props;
@@ -13,9 +13,8 @@ const WorkspaceIsReady = memo(props => {
       <Box sx={styles.cover}>
         <Box sx={styles.mainPanel}>
           <Box sx={styles.leftPart}>
-            <Box
-              component="img"
-              src={WelcomeImage}
+            <BrandLogo
+              variant={BrandLogoConstants.BRAND_LOGO_VARIANTS.Avatar}
               alt="Elitea"
               sx={styles.image}
             />
@@ -47,6 +46,7 @@ const WorkspaceIsReady = memo(props => {
 const styles = {
   image: {
     width: '2rem',
+    height: '2rem',
   },
   title: {
     color: 'text.secondary',

@@ -329,6 +329,7 @@ export const ThemeModeOptions = {
   System: 'system',
   Dark: 'dark',
   Light: 'light',
+  Custom: 'custom',
 };
 
 export const ComponentMode = {

@@ -3,10 +3,10 @@ import { memo, useCallback } from 'react';
 import { Box, IconButton, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
+import { BrandLogo } from '@/[fsd]/shared/ui';
 import Markdown from '@/[fsd]/shared/ui/markdown';
 import { ButtonsContainer } from '@/components/Chat/StyledComponents';
 import CopyIcon from '@/components/Icons/CopyIcon';
-import EliteAIcon from '@/components/Icons/EliteAIcon';
 import UserIcon from '@/components/Icons/UserIcon';
 import useToast from '@/hooks/useToast';
 
@@ -33,7 +33,7 @@ const ModalMessage = memo(props => {
             <UserIcon sx={styles.userIcon} />
           </Box>
         ) : (
-          <EliteAIcon sx={styles.eliteaIcon} />
+          <BrandLogo sx={styles.eliteaIcon} />
         )}
         <Typography
           variant="bodyMedium"
