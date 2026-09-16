@@ -21,6 +21,22 @@ const VECTOR_STORAGE_CONFIGURATIONS = [
   { id: 'cfg-chroma', elitea_title: CHROMA_TITLE, project_id: TEAM_PROJECT_ID, data: {} },
 ];
 
+const ONLY_VECTOR_STORAGE_CONFIGURATION = [VECTOR_STORAGE_CONFIGURATIONS[0]];
+
+const SELECTED_VALUE_COLOR = '#0E131D';
+const LABEL_COLOR = '#0E131D';
+const DISABLED_GREY = '#777A83';
+const THEME = {
+  palette: {
+    text: {
+      default: DISABLED_GREY,
+      primary: LABEL_COLOR,
+      button: { disabled: DISABLED_GREY },
+      select: { selected: { primary: SELECTED_VALUE_COLOR } },
+    },
+  },
+};
+
 const CREDENTIAL_CONFIGURATIONS = [
   { id: 'cfg-github', elitea_title: GITHUB_TITLE, project_id: TEAM_PROJECT_ID, type: 'github', data: {} },
 ];
@@ -119,6 +135,10 @@ vi.mock('../CredentialMismatchFooter', () => ({
   default: () => <div data-testid="credential-mismatch-footer" />,
 }));
 
+vi.mock('../CredentialNotFoundValue', () => ({
+  default: props => <div data-testid="credential-not-found-value">{props.eliteaTitle}</div>,
+}));
+
 vi.mock('@/[fsd]/shared/ui/button', async () => {
   const { forwardRef } = await import('react');
 
@@ -164,6 +184,7 @@ const renderSelect = ({
   value = null,
   projectDefault = '',
   configurations = VECTOR_STORAGE_CONFIGURATIONS,
+  isCreationAllowed = section !== 'vectorstorage',
 } = {}) => {
   stubCredentialsData({ configurations, projectDefault });
 
@@ -171,7 +192,7 @@ const renderSelect = ({
     <CredentialsSelect
       label="Vector storage"
       section={section}
-      isCreationAllowed={section !== 'vectorstorage'}
+      isCreationAllowed={isCreationAllowed}
       value={value}
       onSelectConfiguration={onSelectConfiguration}
     />,
@@ -273,28 +294,69 @@ describe('CredentialsSelect', () => {
     expect(within(renderedValue()).queryByText(CHROMA_TITLE)).not.toBeInTheDocument();
   });
 
-  it('lets the cleared vector storage be picked again instead of clearing it a second time', async () => {
-    renderControlledSelect({
-      initialValue: { elitea_title: PGVECTOR_TITLE, private: false },
-      projectDefault: PGVECTOR_TITLE,
+  describe('vector storage can never be cleared', () => {
+    it('ignores a click on the row it already holds instead of emptying the field', async () => {
+      renderControlledSelect({
+        initialValue: { elitea_title: PGVECTOR_TITLE, private: false },
+        projectDefault: PGVECTOR_TITLE,
+      });
+
+      expect(onSelectConfiguration).not.toHaveBeenCalled();
+
+      clickOption(PGVECTOR_TITLE);
+
+      expect(onSelectConfiguration).not.toHaveBeenCalled();
+      await waitFor(() => expect(singleSelectProps.value).toBe(optionValueFor(PGVECTOR_TITLE)));
+      expect(within(renderedValue()).getByText(PGVECTOR_TITLE)).toBeInTheDocument();
     });
 
-    expect(onSelectConfiguration).not.toHaveBeenCalled();
+    it('marks the field required even when the toolkit schema does not', () => {
+      renderSelect({ value: { elitea_title: PGVECTOR_TITLE, private: false } });
 
-    clickOption(PGVECTOR_TITLE);
+      expect(singleSelectProps.required).toBe(true);
+    });
 
-    expect(onSelectConfiguration).toHaveBeenCalledTimes(1);
-    expect(onSelectConfiguration).toHaveBeenCalledWith(null);
-    await waitFor(() => expect(singleSelectProps.value).toBe(''));
-    expect(renderedValue()).toBeEmptyDOMElement();
+    it('leaves the credentials section to the schema for the required marker', () => {
+      renderSelect({
+        section: 'credentials',
+        value: { elitea_title: GITHUB_TITLE, private: false },
+        configurations: CREDENTIAL_CONFIGURATIONS,
+      });
 
-    onSelectConfiguration.mockClear();
-    clickOption(PGVECTOR_TITLE);
+      expect(singleSelectProps.required).toBeFalsy();
+    });
 
-    expect(onSelectConfiguration).toHaveBeenCalledTimes(1);
-    expect(onSelectConfiguration).toHaveBeenCalledWith({
-      private: false,
-      elitea_title: PGVECTOR_TITLE,
+    it('withholds the clear handler so the menu item cannot empty the field either', () => {
+      renderSelect({ value: { elitea_title: PGVECTOR_TITLE, private: false } });
+
+      expect(singleSelectProps.onClear).toBeUndefined();
+    });
+
+    it('still switches to a different vector storage', async () => {
+      renderControlledSelect({ initialValue: { elitea_title: PGVECTOR_TITLE, private: false } });
+
+      clickOption(CHROMA_TITLE);
+
+      expect(onSelectConfiguration).toHaveBeenCalledTimes(1);
+      expect(onSelectConfiguration).toHaveBeenCalledWith({
+        private: false,
+        elitea_title: CHROMA_TITLE,
+      });
+      await waitFor(() => expect(singleSelectProps.value).toBe(optionValueFor(CHROMA_TITLE)));
+    });
+
+    it('leaves the credentials section free to clear its selection', () => {
+      renderSelect({
+        section: 'credentials',
+        value: { elitea_title: GITHUB_TITLE, private: false },
+        configurations: CREDENTIAL_CONFIGURATIONS,
+      });
+
+      expect(singleSelectProps.onClear).toBeInstanceOf(Function);
+
+      clickOption(GITHUB_TITLE);
+
+      expect(onSelectConfiguration).toHaveBeenCalledWith(null);
     });
   });
 
@@ -338,5 +400,103 @@ describe('CredentialsSelect', () => {
         { isAutoSelect: true },
       ),
     );
+  });
+
+  describe('vector storage with a single configuration to choose from', () => {
+    it('locks the field so the only configuration cannot be cleared', () => {
+      renderSelect({
+        value: { elitea_title: PGVECTOR_TITLE, private: false },
+        configurations: ONLY_VECTOR_STORAGE_CONFIGURATION,
+      });
+
+      expect(savedOptions()).toHaveLength(1);
+      expect(singleSelectProps.value).toBe(optionValueFor(PGVECTOR_TITLE));
+      expect(singleSelectProps.disabled).toBe(true);
+    });
+
+    it('locks the field once the repaired configuration is the only one left', async () => {
+      renderSelect({
+        value: { elitea_title: DELETED_TITLE, private: false },
+        projectDefault: PGVECTOR_TITLE,
+        configurations: ONLY_VECTOR_STORAGE_CONFIGURATION,
+      });
+
+      await waitFor(() =>
+        expect(onSelectConfiguration).toHaveBeenCalledWith(
+          { private: false, elitea_title: PGVECTOR_TITLE },
+          { isAutoSelect: true },
+        ),
+      );
+      expect(singleSelectProps.disabled).toBe(true);
+    });
+
+    it('leaves an empty field open so the only configuration can still be picked', () => {
+      renderSelect({ value: null, configurations: ONLY_VECTOR_STORAGE_CONFIGURATION });
+
+      expect(singleSelectProps.value).toBe('');
+      expect(singleSelectProps.disabled).toBe(false);
+    });
+
+    it('leaves the field open while the saved configuration is nowhere to be found', () => {
+      renderSelect({
+        value: { elitea_title: DELETED_TITLE, private: false },
+        configurations: ONLY_VECTOR_STORAGE_CONFIGURATION,
+      });
+
+      expect(singleSelectProps.disabled).toBe(false);
+    });
+
+    it('leaves the field open while a create row shares the menu with it', () => {
+      renderSelect({
+        value: { elitea_title: PGVECTOR_TITLE, private: false },
+        configurations: ONLY_VECTOR_STORAGE_CONFIGURATION,
+        isCreationAllowed: true,
+      });
+
+      expect(singleSelectProps.disabled).toBe(false);
+    });
+
+    it('keeps the locked value at the contrast an enabled field would have', () => {
+      renderSelect({
+        value: { elitea_title: PGVECTOR_TITLE, private: false },
+        configurations: ONLY_VECTOR_STORAGE_CONFIGURATION,
+      });
+
+      const lockedSx = singleSelectProps.sx(THEME);
+
+      expect(lockedSx).toEqual({
+        '& .MuiInputBase-root.Mui-disabled .MuiSelect-select': {
+          color: `${SELECTED_VALUE_COLOR} !important`,
+          WebkitTextFillColor: `${SELECTED_VALUE_COLOR} !important`,
+        },
+        '& .MuiFormLabel-root.Mui-disabled': { color: LABEL_COLOR },
+      });
+    });
+
+    it('leaves an unlocked field to the shared select styling', () => {
+      renderSelect({ value: { elitea_title: PGVECTOR_TITLE, private: false } });
+
+      expect(singleSelectProps.sx).toBeUndefined();
+    });
+  });
+
+  it('keeps the field open when a second vector storage is available to switch to', () => {
+    renderSelect({ value: { elitea_title: PGVECTOR_TITLE, private: false } });
+
+    expect(savedOptions()).toHaveLength(VECTOR_STORAGE_CONFIGURATIONS.length);
+    expect(singleSelectProps.disabled).toBe(false);
+  });
+
+  it('keeps the single saved credential selectable outside the vector storage section', () => {
+    renderSelect({
+      section: 'credentials',
+      value: { elitea_title: GITHUB_TITLE, private: false },
+      configurations: CREDENTIAL_CONFIGURATIONS,
+      isCreationAllowed: false,
+    });
+
+    expect(savedOptions()).toHaveLength(1);
+    expect(singleSelectProps.optionGroups.some(group => group.title === 'Create')).toBe(false);
+    expect(singleSelectProps.disabled).toBe(false);
   });
 });
