@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { ThemeProvider, createTheme } from '@mui/material';
 
+import getDesignTokens from '@/MainTheme';
 import '@testing-library/jest-dom/vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 
@@ -27,19 +28,10 @@ vi.mock('@/[fsd]/shared/ui', () => ({
 
 afterEach(() => cleanup());
 
-const severities = { info: '#123456', warning: '#654321' };
-
-const theme = createTheme({
-  palette: {
-    icon: { secondary: '#333', indexResult: severities },
-    background: {
-      surface: { interactive: { default: '#111' } },
-      indexResult: severities,
-    },
-    text: { button: { disabled: '#444' }, indexResult: severities },
-    border: { table: '#555', lines: '#555', indexResult: severities },
-  },
-});
+// Build the real theme rather than a hand-listed subset of tokens. The expired branch renders
+// RunIndexBanner, which reads palette.components.runIndexBanner, and a stub palette silently goes
+// stale every time a component down here reaches for a token nobody remembered to add.
+const theme = createTheme(getDesignTokens('dark'));
 
 const renderSchedule = (props = {}) =>
   render(
