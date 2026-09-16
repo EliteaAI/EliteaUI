@@ -48,6 +48,7 @@ export const getIcon = (type, theme, notification) => {
 
     case NotificationType.TokenIsExpired:
     case NotificationType.SpendingLimitIsExpired:
+    case NotificationType.IndexScheduleExpired:
       return (
         <ErrorIcon
           fill={theme.palette.status.rejected}
@@ -59,6 +60,7 @@ export const getIcon = (type, theme, notification) => {
     case NotificationType.SpendingLimitExpiring:
     case NotificationType.BucketExpirationWarning:
     case NotificationType.PersonalAccessTokenExpiring:
+    case NotificationType.IndexScheduleExpiring:
     case NotificationType.BudgetThresholdReached:
     case NotificationType.MemberBudgetThresholdReached:
       return (

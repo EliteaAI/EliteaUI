@@ -310,11 +310,12 @@ const RunIndexPanel = memo(props => {
     if (Number.isNaN(date.getTime())) return null;
     return {
       text: date.toLocaleString(undefined, SCHEDULE_DATE_FORMAT),
-      // Expiry disables rather than deletes, so a past deadline on a disabled schedule is
-      // the only signal that it was retired rather than turned off by hand.
-      expired: !scheduleData.enabled && date.getTime() <= Date.now(),
+      // Read, never inferred: a schedule its owner switched off by hand keeps its deadline too,
+      // so `!enabled && deadline passed` describes that one just as well as a retired one. The
+      // scheduler sets this flag only where it did the switching off itself.
+      expired: Boolean(scheduleData.expired),
     };
-  }, [scheduleData.expires_at, scheduleData.enabled]);
+  }, [scheduleData.expires_at, scheduleData.expired]);
 
   const handleApplyScheduleModal = useCallback(
     (cron, credentials) => {
