@@ -6,7 +6,7 @@ import ContrastOutlinedIcon from '@mui/icons-material/ContrastOutlined';
 import PaletteOutlinedIcon from '@mui/icons-material/PaletteOutlined';
 import { Box, Typography } from '@mui/material';
 
-import { useGetCustomThemeQuery } from '@/[fsd]/shared/api/customThemeApi';
+import { CUSTOM_THEME_TAG, customThemeApi, useGetCustomThemeQuery } from '@/[fsd]/shared/api';
 import { Tab } from '@/[fsd]/shared/ui';
 import MoonIcon from '@/assets/moon-icon.svg?react';
 import SunIcon from '@/assets/sun-icon.svg?react';
@@ -24,6 +24,12 @@ const ThemeModeToggle = memo(() => {
   const onChange = useCallback(
     (_event, newValue) => {
       if (newValue) {
+        // Picking Custom must show what the admin has configured right now, not whatever is cached.
+        // Invalidating here refetches once for every subscriber instead of once per mounted consumer.
+        if (newValue === ThemeModeOptions.Custom) {
+          dispatch(customThemeApi.util.invalidateTags([CUSTOM_THEME_TAG]));
+        }
+
         dispatch(actions.setMode(newValue));
       }
     },

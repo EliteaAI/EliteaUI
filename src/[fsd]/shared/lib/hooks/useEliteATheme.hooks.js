@@ -42,20 +42,21 @@ export const useEliteATheme = () => {
   }, [resolvedMode, customPalette]);
 
   const localGridTheme = useMemo(() => {
-    return createTheme(
-      globalTheme,
-      !isDarkMode && !isCustomTheme
-        ? {
-            palette: {
-              mode: 'light',
-              background: {
-                default: lightPalette.background.default.secondary,
-              },
-            },
-          }
-        : {},
-    );
-  }, [globalTheme, isDarkMode, isCustomTheme]);
+    if (isDarkMode) return createTheme(globalTheme, {});
+
+    // DataGrid reads `background.default` as a colour string, but our palettes nest it as
+    // { primary, secondary }. Read the value back off the resolved theme so a light custom palette gets its
+    // own colour here instead of the hardcoded Elitea one.
+    return createTheme(globalTheme, {
+      palette: {
+        mode: 'light',
+        background: {
+          default:
+            globalTheme.palette.background?.default?.secondary ?? lightPalette.background.default.secondary,
+        },
+      },
+    });
+  }, [globalTheme, isDarkMode]);
 
   return {
     globalTheme,

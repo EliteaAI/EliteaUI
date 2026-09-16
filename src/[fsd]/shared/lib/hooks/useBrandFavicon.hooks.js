@@ -29,9 +29,9 @@ export const useBrandFavicon = () => {
         document.head.appendChild(customLinkRef.current);
       }
 
-      // Ensure the favicon URL is absolute and add cache buster
-      const baseUrl = customLogo.startsWith('http') ? customLogo : `${window.location.origin}${customLogo}`;
-      const faviconUrl = `${baseUrl}?v=${Date.now()}`;
+      // Resolve relative paths against the current origin. Appending a cache buster here would corrupt
+      // signed logo URLs, which carry their own query string - the backend versions the URL instead.
+      const faviconUrl = new URL(customLogo, window.location.origin).toString();
 
       customLinkRef.current.rel = 'icon';
       customLinkRef.current.href = faviconUrl;

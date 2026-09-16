@@ -38,7 +38,13 @@ const BrandLogo = memo(props => {
     );
   }
 
-  if (variant === BRAND_LOGO_VARIANTS.Wordmark) return <DefaultWordmark />;
+  if (variant === BRAND_LOGO_VARIANTS.Wordmark)
+    return (
+      <Box
+        component={DefaultWordmark}
+        sx={sx}
+      />
+    );
 
   if (variant === BRAND_LOGO_VARIANTS.Avatar) {
     return (

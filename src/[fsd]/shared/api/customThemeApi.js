@@ -1,6 +1,6 @@
 import { eliteaApi } from '@/api/eliteaApi.js';
 
-const CUSTOM_THEME_TAG = 'CUSTOM_THEME_TAG';
+export const CUSTOM_THEME_TAG = 'CUSTOM_THEME_TAG';
 
 export const customThemeApi = eliteaApi
   .enhanceEndpoints({
