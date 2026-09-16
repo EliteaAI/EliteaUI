@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { Box, Menu, MenuItem, Tooltip, Typography } from '@mui/material';
 
@@ -34,6 +34,9 @@ const DatasetItem = memo(props => {
   const canDelete = checkPermission(EVAL_PERMISSIONS.datasetDelete);
 
   const [menuAnchor, setMenuAnchor] = useState(null);
+  const [isTruncated, setIsTruncated] = useState(false);
+  const nameRef = useRef(null);
+  const metaRef = useRef(null);
 
   const isSelected = dataset.id === selectedDatasetId;
   const isHovered = dataset.id === hoveredDatasetId;
@@ -65,6 +68,24 @@ const DatasetItem = memo(props => {
   const showMenuButton = showMenu && (isHovered || isMenuOpen);
   const styles = datasetItemStyles();
 
+  const checkTruncation = useCallback(() => {
+    const nameTruncated = nameRef.current ? nameRef.current.scrollWidth > nameRef.current.clientWidth : false;
+    const metaTruncated = metaRef.current ? metaRef.current.scrollWidth > metaRef.current.clientWidth : false;
+    setIsTruncated(nameTruncated || metaTruncated);
+  }, []);
+
+  useLayoutEffect(() => {
+    checkTruncation();
+  }, [checkTruncation, dataset.name, dataset.description, caseCount]);
+
+  useEffect(() => {
+    const el = nameRef.current?.closest('[data-testid^="dataset-item"]') ?? nameRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(checkTruncation);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [checkTruncation]);
+
   const tooltipContent = useMemo(() => {
     const descriptionText = dataset.description || '';
 
@@ -95,52 +116,62 @@ const DatasetItem = memo(props => {
     );
   }, [dataset.name, dataset.description, dataset.is_shared, styles]);
 
+  const itemContent = (
+    <Box
+      sx={styles.root(isSelected, showSeparator)}
+      onClick={() => onSelect?.(dataset)}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+      data-testid={`dataset-item-${dataset.id}`}
+    >
+      <Box sx={styles.content}>
+        <Box sx={styles.nameRow}>
+          <Typography
+            ref={nameRef}
+            variant="bodyMedium"
+            sx={styles.name}
+          >
+            {dataset.name}
+          </Typography>
+          {dataset.is_shared && <SharedDatasetBadge showTooltip={false} />}
+        </Box>
+        <Typography
+          ref={metaRef}
+          variant="bodySmall"
+          sx={styles.meta}
+        >
+          {caseCount} case{caseCount === 1 ? '' : 's'}
+          {dataset.description ? ` | ${dataset.description}` : ''}
+        </Typography>
+      </Box>
+      {showMenuButton && (
+        <Button.BaseBtn
+          variant={BUTTON_VARIANTS.tertiary}
+          onClick={handleOpenMenu}
+          startIcon={<DotsMenuIcon />}
+          sx={styles.menuButton}
+          data-testid={`dataset-menu-${dataset.id}`}
+        />
+      )}
+    </Box>
+  );
+
   return (
     <>
-      <Tooltip
-        title={tooltipContent}
-        placement="right"
-        enterDelay={500}
-        slotProps={{
-          tooltip: { sx: styles.tooltip },
-        }}
-      >
-        <Box
-          sx={styles.root(isSelected, showSeparator)}
-          onClick={() => onSelect?.(dataset)}
-          onMouseEnter={onMouseEnter}
-          onMouseLeave={onMouseLeave}
-          data-testid={`dataset-item-${dataset.id}`}
+      {isTruncated ? (
+        <Tooltip
+          title={tooltipContent}
+          placement="right"
+          enterDelay={2000}
+          slotProps={{
+            tooltip: { sx: styles.tooltip },
+          }}
         >
-          <Box sx={styles.content}>
-            <Box sx={styles.nameRow}>
-              <Typography
-                variant="bodyMedium"
-                sx={styles.name}
-              >
-                {dataset.name}
-              </Typography>
-              {dataset.is_shared && <SharedDatasetBadge showTooltip={false} />}
-            </Box>
-            <Typography
-              variant="bodySmall"
-              sx={styles.meta}
-            >
-              {caseCount} case{caseCount === 1 ? '' : 's'}
-              {dataset.description ? ` | ${dataset.description}` : ''}
-            </Typography>
-          </Box>
-          {showMenuButton && (
-            <Button.BaseBtn
-              variant={BUTTON_VARIANTS.tertiary}
-              onClick={handleOpenMenu}
-              startIcon={<DotsMenuIcon />}
-              sx={styles.menuButton}
-              data-testid={`dataset-menu-${dataset.id}`}
-            />
-          )}
-        </Box>
-      </Tooltip>
+          {itemContent}
+        </Tooltip>
+      ) : (
+        itemContent
+      )}
 
       <Menu
         anchorEl={menuAnchor}
