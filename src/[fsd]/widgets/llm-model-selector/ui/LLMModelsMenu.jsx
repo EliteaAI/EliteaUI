@@ -133,13 +133,13 @@ const styles = {
       marginRight: '0.6rem',
     },
     '&:hover': {
-      backgroundColor: palette.background.button.drawerMenu.hover,
+      backgroundColor: palette.background.surface.interactive.default,
     },
     '&.Mui-selected': {
-      backgroundColor: palette.background.participant.active,
+      backgroundColor: palette.background.interactiveItem.active,
     },
     '&.Mui-selected:hover': {
-      backgroundColor: palette.background.participant.active,
+      backgroundColor: palette.background.interactiveItem.active,
     },
   }),
   listItemIcon: ({ palette }) => ({

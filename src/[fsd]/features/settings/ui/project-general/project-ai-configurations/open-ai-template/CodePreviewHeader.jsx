@@ -90,7 +90,7 @@ const getStyles = () => ({
     justifyContent: 'space-between',
     gap: '1.5rem',
     padding: '0.5rem 0.75rem',
-    borderBottom: `0.0625rem solid ${palette.border.sidebarDivider}`,
+    borderBottom: `0.0625rem solid ${palette.border.lines}`,
     minHeight: '3rem',
     flexShrink: 0,
   }),

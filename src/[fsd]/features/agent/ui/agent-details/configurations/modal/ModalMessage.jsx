@@ -99,7 +99,7 @@ const modalMessageStyles = () => ({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: '0.75rem',
-    background: palette.background.aiParticipantIcon,
+    background: palette.components.aiParticipantIcon.background,
     color: palette.icon.inactive,
   }),
 
@@ -120,7 +120,7 @@ const modalMessageStyles = () => ({
     padding: '0.75rem 1rem',
     borderRadius: '0.5rem',
     position: 'relative',
-    background: palette.background.aiAnswerBkg,
+    background: palette.background.default.secondary,
     '&:hover .actionButtons': {
       visibility: 'visible',
     },

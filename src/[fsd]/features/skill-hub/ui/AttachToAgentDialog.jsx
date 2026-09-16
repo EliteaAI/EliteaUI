@@ -451,7 +451,7 @@ const attachToAgentDialogStyles = () => ({
     background: palette.background.default.secondary,
   }),
   subtitle: ({ palette }) => ({
-    color: palette.text.default,
+    color: palette.text.primary,
   }),
   autocomplete: ({ palette }) => ({
     marginTop: '0.5rem',
@@ -494,7 +494,7 @@ const attachToAgentDialogStyles = () => ({
     borderRadius: '1rem',
     margin: 0,
     paddingLeft: '0.5rem',
-    backgroundColor: palette.background.notificationList,
+    backgroundColor: palette.background.default.secondary,
     '& .MuiChip-label': {
       ...typography.labelSmall,
       color: palette.text.secondary,
@@ -507,7 +507,7 @@ const attachToAgentDialogStyles = () => ({
       marginLeft: 0,
       marginRight: '0.5rem',
       '& path': { fill: palette.icon.default },
-      '&:hover path': { fill: palette.text.secondary },
+      '&:hover path': { fill: palette.icon.secondary },
     },
   }),
   chipAvatar: {

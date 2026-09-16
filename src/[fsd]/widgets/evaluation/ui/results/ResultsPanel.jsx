@@ -182,8 +182,8 @@ const resultsPanelStyles = () => ({
     height: '3.3125rem',
     minHeight: '3.3125rem',
     boxSizing: 'border-box',
-    background: palette.background.default.secondary,
-    borderBottom: `0.0625rem solid ${palette.border.table}`,
+    backgroundColor: palette.background.panel,
+    borderBottom: `0.0625rem solid ${palette.border.default}`,
   }),
   headerTitleGroup: {
     display: 'flex',
@@ -200,7 +200,7 @@ const resultsPanelStyles = () => ({
     fontWeight: 600,
   }),
   headerVersion: ({ palette }) => ({
-    color: palette.text.default,
+    color: palette.text.primary,
   }),
   headerActions: {
     display: 'flex',
@@ -232,7 +232,7 @@ const resultsPanelStyles = () => ({
       top: '-0.75rem',
       height: 'calc(100% + 1.5rem)',
       width: '0.0625rem',
-      background: palette.border.table,
+      background: palette.border.default,
     },
   }),
   historyButton: {

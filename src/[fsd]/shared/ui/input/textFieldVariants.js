@@ -22,7 +22,7 @@ export const eliteaTextFieldColorStyle = theme => ({
         color: theme.palette.text.primary,
       },
       placeholder: {
-        color: theme.palette.text.participant.default,
+        color: theme.palette.text.disabled,
       },
       input: {
         color: theme.palette.text.secondary,
@@ -49,13 +49,13 @@ export const eliteaTextFieldColorStyle = theme => ({
     },
     disabled: {
       label: {
-        color: theme.palette.text.button.disabled,
+        color: theme.palette.text.disabled,
       },
       input: {
-        color: theme.palette.text.default,
+        color: theme.palette.text.primary,
       },
       textarea: {
-        color: theme.palette.text.default,
+        color: theme.palette.text.primary,
       },
       underline: {
         color: theme.palette.border.lines,
@@ -76,7 +76,7 @@ export const eliteaTextFieldColorStyle = theme => ({
         color: theme.palette.text.primary,
       },
       placeholder: {
-        color: theme.palette.text.participant.default,
+        color: theme.palette.text.disabled,
       },
       input: {
         color: theme.palette.text.secondary,
@@ -95,21 +95,21 @@ export const eliteaTextFieldColorStyle = theme => ({
     },
     active: {
       label: {
-        color: theme.palette.text.button.showMore,
+        color: theme.palette.text.showMore,
       },
       border: {
-        color: theme.palette.text.button.showMore,
+        color: theme.palette.text.showMore,
       },
     },
     disabled: {
       label: {
-        color: theme.palette.text.button.disabled,
+        color: theme.palette.text.disabled,
       },
       input: {
-        color: theme.palette.text.default,
+        color: theme.palette.text.primary,
       },
       textarea: {
-        color: theme.palette.text.default,
+        color: theme.palette.text.primary,
       },
       border: {
         color: theme.palette.border.lines,

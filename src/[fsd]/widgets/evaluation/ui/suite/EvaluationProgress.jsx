@@ -90,7 +90,7 @@ const evaluationProgressStyles = () => ({
     textAlign: 'center',
   }),
   caseCount: ({ palette }) => ({
-    color: palette.text.default,
+    color: palette.text.primary,
     textAlign: 'center',
   }),
   progressRow: {
@@ -105,7 +105,7 @@ const evaluationProgressStyles = () => ({
     flex: 1,
     height: '0.5rem',
     borderRadius: '0.4375rem',
-    backgroundColor: palette.background.tabButton.default,
+    backgroundColor: palette.background.surface.interactive.default,
     '& .MuiLinearProgress-bar': {
       borderRadius: '0.4375rem',
       backgroundColor: palette.info.main,

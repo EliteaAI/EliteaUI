@@ -15,43 +15,43 @@ export const eliteaIconButtonStyle = (theme, color) => ({
   ...theme.typography.bodySmall,
   textTransform: 'none',
   ['&.' + iconButtonClasses.colorPrimary]: {
-    color: theme.palette.text.button.primary,
-    background: `${theme.palette.background.button.primary.default} !important`,
+    color: theme.palette.components.button.text.primary,
+    background: `${theme.palette.components.button.background.primary.default} !important`,
     '&:hover': {
-      background: theme.palette.background.button.primary.hover,
-      backgroundColor: `${theme.palette.background.button.primary.hover} !important`,
+      background: theme.palette.components.button.background.primary.hover,
+      backgroundColor: `${theme.palette.components.button.background.primary.hover} !important`,
     },
     '&:active': {
-      background: theme.palette.background.button.primary.pressed,
-      backgroundColor: `${theme.palette.background.button.primary.pressed} !important`,
+      background: theme.palette.components.button.background.primary.pressed,
+      backgroundColor: `${theme.palette.components.button.background.primary.pressed} !important`,
     },
     '&:disabled': {
-      color: theme.palette.text.button.primary,
-      background: theme.palette.background.button.primary.disabled,
-      backgroundColor: `${theme.palette.background.button.primary.disabled} !important`,
+      color: theme.palette.components.button.text.primary,
+      background: theme.palette.components.button.background.primary.disabled,
+      backgroundColor: `${theme.palette.components.button.background.primary.disabled} !important`,
     },
   },
   ['&.' + iconButtonClasses.colorSecondary]: {
     color: theme.palette.text.secondary,
     '& .MuiSvgIcon-root path': {
-      fill: theme.palette.text.secondary,
+      fill: theme.palette.icon.secondary,
     },
-    background: theme.palette.background.button.secondary.default,
-    backgroundColor: `${theme.palette.background.button.secondary.default} !important`,
+    background: theme.palette.components.button.background.secondary.default,
+    backgroundColor: `${theme.palette.components.button.background.secondary.default} !important`,
     '&:hover': {
-      background: theme.palette.background.button.secondary.hover,
-      backgroundColor: `${theme.palette.background.button.secondary.hover} !important`,
+      background: theme.palette.components.button.background.secondary.hover,
+      backgroundColor: `${theme.palette.components.button.background.secondary.hover} !important`,
     },
     '&:active': {
       color: theme.palette.text.primary,
-      background: theme.palette.background.button.secondary.pressed,
-      backgroundColor: `${theme.palette.background.button.secondary.pressed} !important`,
+      background: theme.palette.components.button.background.secondary.pressed,
+      backgroundColor: `${theme.palette.components.button.background.secondary.pressed} !important`,
       border: `1px solid ${theme.palette.border.lines}`,
     },
     '&:disabled': {
-      color: theme.palette.text.button.disabled,
-      background: theme.palette.background.button.default,
-      backgroundColor: `${theme.palette.background.button.default} !important`,
+      color: theme.palette.components.button.text.disabled,
+      background: theme.palette.components.button.background.default,
+      backgroundColor: `${theme.palette.components.button.background.default} !important`,
       '& .MuiSvgIcon-root path': {
         fill: theme.palette.icon.disabled,
       },
@@ -59,7 +59,7 @@ export const eliteaIconButtonStyle = (theme, color) => ({
   },
   ...(color === 'tertiary'
     ? {
-        color: theme.palette.text.default,
+        color: theme.palette.text.primary,
         background: 'transparent',
         minWidth: '28px !important',
         height: '28px',
@@ -69,7 +69,7 @@ export const eliteaIconButtonStyle = (theme, color) => ({
           fill: theme.palette.icon.default,
         },
         '&:hover': {
-          background: theme.palette.background.button.secondary.default,
+          background: theme.palette.components.button.background.secondary.default,
           color: theme.palette.text.secondary,
           '& .MuiSvgIcon-root path': {
             fill: theme.palette.icon.secondary,
@@ -77,11 +77,11 @@ export const eliteaIconButtonStyle = (theme, color) => ({
         },
         '&:active': {
           color: theme.palette.text.primary,
-          background: theme.palette.background.button.secondary.pressed,
+          background: theme.palette.components.button.background.secondary.pressed,
           border: `1px solid ${theme.palette.border.lines}`,
         },
         '&:disabled': {
-          color: theme.palette.text.button.disabled,
+          color: theme.palette.components.button.text.disabled,
           '& .MuiSvgIcon-root path': {
             fill: theme.palette.icon.disabled,
           },
@@ -91,7 +91,7 @@ export const eliteaIconButtonStyle = (theme, color) => ({
     : {}),
   ...(color === 'tertiaryCount'
     ? {
-        color: theme.palette.text.default,
+        color: theme.palette.text.primary,
         background: 'transparent',
         minWidth: '49px !important',
         height: '28px',
@@ -100,15 +100,15 @@ export const eliteaIconButtonStyle = (theme, color) => ({
         alignItems: 'center',
         padding: '0px !important',
         '&:hover': {
-          background: theme.palette.background.button.secondary.default,
+          background: theme.palette.components.button.background.secondary.default,
         },
         '&:active': {
           color: theme.palette.text.primary,
-          background: theme.palette.background.button.secondary.pressed,
+          background: theme.palette.components.button.background.secondary.pressed,
           border: `1px solid ${theme.palette.border.lines}`,
         },
         '&:disabled': {
-          color: theme.palette.text.button.disabled,
+          color: theme.palette.components.button.text.disabled,
           background: 'transparent',
         },
       }
@@ -116,42 +116,42 @@ export const eliteaIconButtonStyle = (theme, color) => ({
   ...(color === 'alarm'
     ? {
         color: theme.palette.text.secondary,
-        background: theme.palette.background.button.alarm.default,
+        background: theme.palette.components.button.background.alarm.default,
         minWidth: '28px !important',
         height: '28px',
         borderRadius: '16px',
         padding: '6px',
         gap: '10px',
         '&:hover': {
-          background: theme.palette.background.button.secondary.default,
+          background: theme.palette.components.button.background.secondary.default,
         },
         '&:active': {
           color: theme.palette.text.primary,
-          background: theme.palette.background.button.secondary.pressed,
+          background: theme.palette.components.button.background.secondary.pressed,
           border: `1px solid ${theme.palette.border.lines}`,
         },
         '&:disabled': {
-          color: theme.palette.text.button.primary,
-          background: theme.palette.background.button.alarm.disabled,
+          color: theme.palette.components.button.text.primary,
+          background: theme.palette.components.button.background.alarm.disabled,
         },
       }
     : {}),
   ...(color === 'magicAssistant'
     ? {
-        background: theme.palette.background.button.magicAssistant,
+        background: theme.palette.components.button.background.magicAssistant,
         minWidth: '28px !important',
         height: '28px',
         borderRadius: '16px',
         padding: '6px',
         gap: '10px',
         '&:hover': {
-          background: theme.palette.background.button.magicAssistant,
+          background: theme.palette.components.button.background.magicAssistant,
         },
         '&:active': {
-          background: theme.palette.background.button.magicAssistant,
+          background: theme.palette.components.button.background.magicAssistant,
         },
         '&:disabled': {
-          background: theme.palette.background.button.magicAssistant,
+          background: theme.palette.components.button.background.magicAssistant,
         },
       }
     : {}),
@@ -175,12 +175,12 @@ export const eliteaIconButtonStyle = (theme, color) => ({
         },
         '&:active': {
           color: theme.palette.text.primary,
-          background: theme.palette.background.button.secondary.pressed,
+          background: theme.palette.components.button.background.secondary.pressed,
           border: `1px solid ${theme.palette.border.lines}`,
         },
         '&:disabled': {
-          color: theme.palette.text.button.primary,
-          background: theme.palette.background.button.alarm.disabled,
+          color: theme.palette.components.button.text.primary,
+          background: theme.palette.components.button.background.alarm.disabled,
         },
       }
     : {}),

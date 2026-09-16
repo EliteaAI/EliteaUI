@@ -8,13 +8,12 @@ import React, {
   useState,
 } from 'react';
 
-import { Box, IconButton, Link, TextField, Typography } from '@mui/material';
+import { Box, IconButton, Link, TextField, Typography, useTheme } from '@mui/material';
 import { DataGrid, GRID_CHECKBOX_SELECTION_COL_DEF, gridClasses, useGridApiContext } from '@mui/x-data-grid';
 
 import { Input } from '@/[fsd]/shared/ui';
 import Markdown from '@/[fsd]/shared/ui/markdown';
 import useDownloadTable, { downloadTableOptions } from '@/hooks/useDownloadTable';
-import { useTheme } from '@emotion/react';
 
 import AlertDialog from './AlertDialog';
 import SortUpwardIcon from './Icons/SortUpwardIcon';
@@ -769,7 +768,7 @@ const componentStyles = theme => ({
     '& .MuiInputBase-root': {
       '& input': {
         typography: 'labelSmall', // Apply Typography variant to the input text
-        color: theme.palette.text.default,
+        color: theme.palette.text.primary,
       },
     },
   },
@@ -837,10 +836,10 @@ const componentStyles = theme => ({
       zIndex: 1,
     },
     '& .MuiDataGrid-cell--selected': {
-      backgroundColor: theme.palette.background.dataGrid.row.selected, // Highlight selected cells
+      backgroundColor: theme.palette.background.selectedItem.default, // Highlight selected cells
     },
     '& .MuiDataGrid-columnHeader--selected': {
-      backgroundColor: theme.palette.background.dataGrid.row.selected, // Highlight selected column headers
+      backgroundColor: theme.palette.background.selectedItem.default, // Highlight selected column headers
     },
   },
   downloadButtonContainer: {

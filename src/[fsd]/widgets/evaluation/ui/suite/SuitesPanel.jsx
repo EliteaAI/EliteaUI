@@ -124,8 +124,8 @@ const suitesPanelStyles = () => ({
     height: '3.3125rem',
     minHeight: '3.3125rem',
     boxSizing: 'border-box',
-    backgroundColor: palette.background.default.secondary,
-    borderBottom: `0.0625rem solid ${palette.border.table}`,
+    backgroundColor: palette.background.panel,
+    borderBottom: `0.0625rem solid ${palette.border.default}`,
   }),
   headerLabel: ({ palette }) => ({
     color: palette.text.secondary,
@@ -161,7 +161,7 @@ const suitesPanelStyles = () => ({
     color: palette.text.secondary,
   }),
   emptyDescription: ({ palette }) => ({
-    color: palette.text.default,
+    color: palette.text.primary,
     textAlign: 'center',
     maxWidth: '20.5rem',
   }),

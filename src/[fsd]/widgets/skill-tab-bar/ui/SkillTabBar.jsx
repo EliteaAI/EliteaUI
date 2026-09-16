@@ -178,7 +178,7 @@ const skillTabBarStyles = () => ({
     fontWeight: 500,
     fontSize: '.75rem',
     lineHeight: '1rem',
-    color: palette.text.default,
+    color: palette.text.primary,
   }),
   inputSx: {
     '& .MuiSelect-select': {

@@ -326,7 +326,7 @@ const runResultsViewStyles = () => ({
     color: palette.text.secondary,
   }),
   description: ({ palette }) => ({
-    color: palette.text.default,
+    color: palette.text.primary,
     textAlign: 'center',
     maxWidth: '20.5rem',
   }),

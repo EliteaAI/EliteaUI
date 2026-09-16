@@ -284,7 +284,7 @@ const AIAssistantModal = memo(props => {
 
   const contentBackgroundSx = showSplitView
     ? ({ palette }) => ({
-        background: `linear-gradient(90deg, ${palette.background.card.default} 0%, ${palette.background.card.hover} 100%)`,
+        background: `linear-gradient(90deg, ${palette.components.aiAssistantModal.background.panel} 0%, ${palette.components.aiAssistantModal.background.editor} 100%)`,
       })
     : ({ palette }) => ({
         background: `linear-gradient(90deg, ${palette.background.default.tertiary} 0%, ${palette.background.default.secondary} 100%)`,
@@ -476,7 +476,7 @@ const aiAssistantModalStyles = () => ({
     minWidth: 0,
     borderLeft: `.0625rem solid ${palette.border.lines}`,
     overflow: 'hidden',
-    backgroundColor: palette.background.card.hover,
+    backgroundColor: palette.components.aiAssistantModal.background.editor,
   }),
   iconButton: ({ spacing }) => ({
     padding: spacing(0.5),
@@ -518,24 +518,24 @@ const aiAssistantModalStyles = () => ({
     flex: 1,
     minHeight: 0,
     position: 'relative',
-    backgroundColor: palette.background.card.hover,
+    backgroundColor: palette.components.aiAssistantModal.background.editor,
   }),
   improvedEditorWrapper: ({ palette, spacing }) => ({
     height: '100%',
-    backgroundColor: palette.background.card.hover,
+    backgroundColor: palette.components.aiAssistantModal.background.editor,
     position: 'relative',
     '& .cm-editor': {
-      backgroundColor: palette.background.card.hover,
+      backgroundColor: palette.components.aiAssistantModal.background.editor,
     },
     '& .cm-scroller': {
-      backgroundColor: palette.background.card.hover,
+      backgroundColor: palette.components.aiAssistantModal.background.editor,
     },
     '& .cm-content': {
       paddingTop: spacing(1),
       paddingBottom: spacing(2),
     },
     '& .cm-gutters': {
-      backgroundColor: palette.background.card.hover,
+      backgroundColor: palette.components.aiAssistantModal.background.editor,
       borderRight: `.0313rem solid ${palette.border.lines}`,
     },
     '& .cm-lineNumbers .cm-gutterElement': {
