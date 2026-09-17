@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
@@ -22,6 +22,8 @@ import { ChatParticipantType } from '@/common/constants';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 import { useUserList } from '@/hooks/useUserList';
+
+import AiParticipantSearchSelect from './AiParticipantSearchSelect';
 
 const AI_PARTICIPANT_TYPES = [
   ChatParticipantType.Applications,
@@ -92,11 +94,14 @@ const RestrictAccessDialog = memo(props => {
   const [addParticipant] = useAddParticipantIntoConversationMutation();
   const [deleteParticipant] = useDeleteParticipantFromConversationMutation();
 
+  const hasInitialized = useRef(false);
+
   useEffect(() => {
-    if (!conversationDetails) return;
+    if (!conversationDetails || hasInitialized.current) return;
+    hasInitialized.current = true;
     setSelectedUsers(initialSelectedUsers);
     setSelectedAiParticipants(initialSelectedAiParticipants);
-  }, [conversationDetails, initialSelectedUsers, initialSelectedAiParticipants]);
+  }, [conversationDetails]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleLoadMore = useCallback(() => {
     if (usersTotal > users.length && !isUsersFetching) onLoadMoreUsers();
@@ -113,17 +118,16 @@ const RestrictAccessDialog = memo(props => {
   // Prevent the creator from being deselected
   const handleChangeUsers = useCallback(
     newSelected => {
-      const creatorKept = newSelected.some(u => u.id === authorId);
-      if (!creatorKept) {
-        const creator = selectedUsers.find(u => u.id === authorId);
-        if (creator) {
-          setSelectedUsers([...newSelected, creator]);
-          return;
+      setSelectedUsers(prev => {
+        const creatorKept = authorId == null || newSelected.some(u => u.id === authorId);
+        if (!creatorKept) {
+          const creator = prev.find(u => u.id === authorId);
+          if (creator) return [...newSelected, creator];
         }
-      }
-      setSelectedUsers(newSelected);
+        return newSelected;
+      });
     },
-    [authorId, selectedUsers],
+    [authorId],
   );
 
   const isValid = selectedUsers.length + selectedAiParticipants.length >= 1;
@@ -165,12 +169,8 @@ const RestrictAccessDialog = memo(props => {
       });
       const { aiToRemove, aiToAdd } = diffAiParticipants({ existingAiParticipants, selectedAiParticipants });
 
-      const allToDelete = [...usersToRemove.map(p => p.id), ...aiToRemove.map(p => p.id)];
-
-      if (allToDelete.length > 0) {
-        await Promise.all(
-          allToDelete.map(id => deleteParticipant({ projectId, conversationId, id }).unwrap()),
-        );
+      if (!isAlreadyPrivate) {
+        await conversationEdit({ projectId, id: conversationId, is_private: true }).unwrap();
       }
 
       const allToAdd = buildNewParticipants({ usersToAdd, aiToAdd, projectId });
@@ -179,14 +179,18 @@ const RestrictAccessDialog = memo(props => {
         await addParticipant({ projectId, id: conversationId, participants: allToAdd }).unwrap();
       }
 
-      if (!isAlreadyPrivate) {
-        await conversationEdit({ projectId, id: conversationId, is_private: true }).unwrap();
+      const allToDelete = [...usersToRemove.map(p => p.id), ...aiToRemove.map(p => p.id)];
+
+      if (allToDelete.length > 0) {
+        await Promise.all(
+          allToDelete.map(id => deleteParticipant({ projectId, conversationId, id }).unwrap()),
+        );
       }
 
       onSuccess?.(conversationId);
       onClose();
     } catch {
-      toastError('Failed to restrict access. Please try again.');
+      toastError('Some changes may have been applied. Please refresh and try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -209,7 +213,7 @@ const RestrictAccessDialog = memo(props => {
     toastError,
   ]);
 
-  const styles = restrictAccessDialogStyles();
+  const styles = useMemo(() => restrictAccessDialogStyles(), []);
 
   const conversationName = conversationDetails?.name ?? conversation?.name;
 
@@ -244,7 +248,7 @@ const RestrictAccessDialog = memo(props => {
       )}
 
       <Box sx={styles.section}>
-        <Autocomplete.ParticipantSearchSelect
+        <AiParticipantSearchSelect
           selectedParticipants={selectedAiParticipants}
           onChangeParticipants={setSelectedAiParticipants}
           projectId={projectId}

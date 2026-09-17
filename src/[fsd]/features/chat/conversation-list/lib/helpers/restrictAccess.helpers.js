@@ -10,7 +10,7 @@ export const mapAiParticipantToSelectItem = p => ({
   id: p.entity_meta?.id,
   name: p.entity_meta?.name || p.meta?.name || '',
   project_id: p.entity_meta?.project_id,
-  entity_name: p.entity_name,
+  entity_name: p.meta?.agent_type === 'pipeline' ? ChatParticipantType.Pipelines : p.entity_name,
   _participantRowId: p.id,
 });
 
@@ -40,7 +40,6 @@ export const hasParticipantChanges = ({
   initialSelectedAiParticipants,
   selectedAiParticipants,
 }) => {
-  if (!isAlreadyPrivate) return true;
   const initialUserIds = new Set(initialSelectedUsers.map(u => u.id));
   const currentUserIds = new Set(selectedUsers.map(u => u.id));
   const usersChanged =
@@ -49,7 +48,7 @@ export const hasParticipantChanges = ({
   const currentAiIds = new Set(selectedAiParticipants.map(p => p.id).filter(Boolean));
   const aiChanged =
     currentAiIds.size !== initialAiIds.size || [...currentAiIds].some(id => !initialAiIds.has(id));
-  return usersChanged || aiChanged;
+  return !isAlreadyPrivate || usersChanged || aiChanged;
 };
 
 export const buildNewParticipants = ({ usersToAdd, aiToAdd, projectId }) => {
@@ -58,7 +57,7 @@ export const buildNewParticipants = ({ usersToAdd, aiToAdd, projectId }) => {
     entity_meta: { id: u.id },
   }));
   const newAiParticipants = aiToAdd.map(p => ({
-    entity_name: ChatParticipantType.Applications,
+    entity_name: p.entity_name ?? ChatParticipantType.Applications,
     entity_meta: { id: p.id, project_id: p.project_id || projectId },
   }));
   return [...newUserParticipants, ...newAiParticipants];

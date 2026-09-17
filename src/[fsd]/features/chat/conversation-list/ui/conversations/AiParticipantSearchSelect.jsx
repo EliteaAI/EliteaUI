@@ -4,18 +4,17 @@ import { Typography, useTheme } from '@mui/material';
 import { Box } from '@mui/system';
 
 import AutoCompleteDropDown from '@/ComponentsLib/AutoCompleteDropDown';
-import { useApplicationListQuery } from '@/api/applications';
 import { ChatParticipantType } from '@/common/constants';
 import { EntityTypeIcon } from '@/components/EntityIcon';
 import SearchIcon from '@/components/Icons/SearchIcon';
+import useParticipants from '@/hooks/chat/useParticipants';
 
 const filterOptionsIdentity = options => options;
 
-const ParticipantSearchSelect = memo(props => {
+const AiParticipantSearchSelect = memo(props => {
   const {
     selectedParticipants,
     onChangeParticipants,
-    projectId,
     disabled,
     slotProps = { listBox: {} },
     ...restProps
@@ -24,36 +23,30 @@ const ParticipantSearchSelect = memo(props => {
   const theme = useTheme();
   const [query, setQuery] = useState('');
 
-  const { data: applicationsData, isFetching } = useApplicationListQuery(
-    {
-      projectId,
-      page: 0,
-      pageSize: 50,
-      params: {
-        sort_by: 'name',
-        sort_order: 'asc',
-        query,
-      },
-    },
-    { skip: !projectId },
-  );
+  const { participants, isFetching } = useParticipants({
+    sortBy: 'name',
+    sortOrder: 'asc',
+    query,
+    pageSize: 50,
+    types: [ChatParticipantType.Applications],
+  });
 
   const selectedIds = useMemo(() => new Set(selectedParticipants.map(p => p.id)), [selectedParticipants]);
 
   const optionList = useMemo(() => {
-    const rows = applicationsData?.rows ?? [];
-    const fromApi = rows
-      .filter(app => !selectedIds.has(app.id))
-      .map(app => ({
-        id: app.id,
-        name: app.name || '',
-        project_id: app.project_id,
-        entity_name: ChatParticipantType.Applications,
+    const fromApi = participants
+      .filter(p => !selectedIds.has(p.id))
+      .map(p => ({
+        id: p.id,
+        name: p.name || '',
+        project_id: p.project_id,
+        entity_name:
+          p.agent_type === 'pipeline' ? ChatParticipantType.Pipelines : ChatParticipantType.Applications,
       }));
     // Always include currently selected items so AutoCompleteDropDown's internal
     // validation (canInputNewValues=false) doesn't strip them on chip removal.
     return [...selectedParticipants, ...fromApi];
-  }, [applicationsData, selectedIds, selectedParticipants]);
+  }, [participants, selectedIds, selectedParticipants]);
 
   const handleInputChange = useCallback((_event, newInputValue) => {
     setQuery(newInputValue);
@@ -76,6 +69,29 @@ const ParticipantSearchSelect = memo(props => {
     );
   }, []);
 
+  const renderChipLabel = useCallback(option => {
+    return (
+      <Box
+        height="100%"
+        display="flex"
+        alignItems="center"
+        flexDirection="row"
+        gap="0.25rem"
+      >
+        <EntityTypeIcon
+          type={option.entity_name}
+          specifiedFontSize="0.75rem"
+        />
+        <Typography
+          variant="bodySmall"
+          color="text.secondary"
+        >
+          {option.name}
+        </Typography>
+      </Box>
+    );
+  }, []);
+
   return (
     <AutoCompleteDropDown
       optionList={optionList}
@@ -89,6 +105,7 @@ const ParticipantSearchSelect = memo(props => {
       useInitialValue={false}
       ignoreCase={false}
       renderOptionBody={renderOptionBody}
+      renderChipLabel={renderChipLabel}
       filterOptions={filterOptionsIdentity}
       onInputChange={handleInputChange}
       slotProps={{
@@ -109,6 +126,6 @@ const ParticipantSearchSelect = memo(props => {
   );
 });
 
-ParticipantSearchSelect.displayName = 'ParticipantSearchSelect';
+AiParticipantSearchSelect.displayName = 'AiParticipantSearchSelect';
 
-export default ParticipantSearchSelect;
+export default AiParticipantSearchSelect;

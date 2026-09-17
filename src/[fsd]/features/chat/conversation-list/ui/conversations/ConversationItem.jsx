@@ -261,6 +261,7 @@ const ConversationItem = memo(props => {
             icon: <CloseEyeIcon sx={{ fontSize: '1rem' }} />,
             onClick: handleRestrictAccess,
             display:
+              // Loose equality intentional: userId/author_id may arrive as string or number
               projectId == PUBLIC_PROJECT_ID || projectId == personal_project_id || userId != author_id
                 ? 'none'
                 : undefined,
