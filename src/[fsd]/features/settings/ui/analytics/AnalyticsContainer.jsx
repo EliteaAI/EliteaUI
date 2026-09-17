@@ -465,6 +465,7 @@ const AnalyticsContainer = memo(() => {
               projectId={projectId}
               dateFrom={dateFromISO}
               dateTo={dateToISO}
+              isPersonalProject={isPersonalProject}
             />
           )}
           {data && !isFetching && activeTab === TAB.health && (

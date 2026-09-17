@@ -19,7 +19,7 @@ vi.mock('@/api', () => {
 });
 
 const { configureStore } = await import('@reduxjs/toolkit');
-const { analyticsApi, useAnalyticsCostsQuery } = await import('./analyticsApi.js');
+const { analyticsApi, useAnalyticsActivityQuery, useAnalyticsCostsQuery } = await import('./analyticsApi.js');
 
 const makeStore = () =>
   configureStore({
@@ -96,5 +96,48 @@ describe('analyticsCosts endpoint', () => {
     const store = makeStore();
     const result = await store.dispatch(analyticsApi.endpoints.analyticsCosts.initiate({ projectId: 1 }));
     expect(result.data).toEqual({ kpis: { total_cost: 1.23 } });
+  });
+});
+
+describe('analyticsActivity endpoint', () => {
+  let fetchSpy;
+
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(
+        new Response('{}', { status: 200, headers: { 'content-type': 'application/json' } }),
+      );
+  });
+
+  it('exposes the generated hook and endpoint', () => {
+    expect(typeof useAnalyticsActivityQuery).toBe('function');
+    expect(analyticsApi.endpoints.analyticsActivity).toBeDefined();
+  });
+
+  it('sends roles as a repeated param, not a comma-joined one', async () => {
+    const store = makeStore();
+    await store.dispatch(
+      analyticsApi.endpoints.analyticsActivity.initiate({
+        projectId: 42,
+        dateFrom: '2026-01-01',
+        dateTo: '2026-02-01',
+        roles: ['admin', 'viewer'],
+      }),
+    );
+
+    const req = requestOf(fetchSpy);
+    const url = new URL(req.url);
+    expect(url.searchParams.getAll('roles')).toEqual(['admin', 'viewer']);
+  });
+
+  it('omits the roles param entirely when the array is empty', async () => {
+    const store = makeStore();
+    await store.dispatch(analyticsApi.endpoints.analyticsActivity.initiate({ projectId: 42, roles: [] }));
+
+    const req = requestOf(fetchSpy);
+    const url = new URL(req.url);
+    expect(url.searchParams.getAll('roles')).toEqual([]);
   });
 });

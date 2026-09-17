@@ -43,7 +43,7 @@ const formatAxisLabel = (bucket, granularity) => {
 };
 
 const AnalyticsActivity = memo(props => {
-  const { projectId, dateFrom, dateTo } = props;
+  const { projectId, dateFrom, dateTo, isPersonalProject = false } = props;
 
   const [roles, setRoles] = useState([]);
   const [granularity, setGranularity] = useState('day');
@@ -53,9 +53,13 @@ const AnalyticsActivity = memo(props => {
     { skip: !projectId },
   );
 
+  // Format from the granularity the payload was built with, not the picker: `data` keeps the
+  // previous args' result while the new one is in flight
+  const dataGranularity = data?.granularity ?? granularity;
+
   const { palette } = useTheme();
   const axisStroke = palette.text.primary;
-  const axisTickStyle = { fill: axisStroke, fontSize: 11 };
+  const axisTickStyle = AnalyticCommonHelpers.axisTick(axisStroke);
 
   // Role options come from the same response as the trend — the dedicated roles endpoint is gated
   // behind a permission analytics viewers do not hold, so an empty list means "unknown" here.
@@ -67,11 +71,11 @@ const AnalyticsActivity = memo(props => {
   const chartData = useMemo(
     () =>
       (data?.buckets || []).map(bucket => ({
-        axisLabel: formatAxisLabel(bucket, granularity),
+        axisLabel: formatAxisLabel(bucket, dataGranularity),
         active_users: bucket.active_users ?? 0,
         ai_active_users: bucket.ai_active_users ?? 0,
       })),
-    [data?.buckets, granularity],
+    [data?.buckets, dataGranularity],
   );
 
   const handleGranularityChange = useCallback((_, next) => {
@@ -120,18 +124,20 @@ const AnalyticsActivity = memo(props => {
             </Typography>
           </Box>
           <Box sx={styles.controls}>
-            <Select.SingleSelect
-              options={roleOptions}
-              value={roles}
-              onValueChange={setRoles}
-              label="Role"
-              showBorder
-              multiple
-              showEmptyPlaceholder={false}
-              disabled={roleOptions.length === 0}
-              sx={styles.roleSelect}
-              data-testid="analytics-activity-role-select"
-            />
+            {!isPersonalProject && (
+              <Select.SingleSelect
+                options={roleOptions}
+                value={roles}
+                onValueChange={setRoles}
+                label="Role"
+                showBorder
+                multiple
+                showEmptyPlaceholder={false}
+                disabled={roleOptions.length === 0}
+                sx={styles.roleSelect}
+                data-testid="analytics-activity-role-select"
+              />
+            )}
             <ToggleButtonGroup
               value={granularity}
               exclusive
@@ -181,15 +187,17 @@ const AnalyticsActivity = memo(props => {
                   iconType="circle"
                   iconSize={8}
                 />
-                <Area
-                  type="monotone"
-                  dataKey="active_users"
-                  name="Active Users"
-                  stroke={EVENT_TYPE_COLORS.api}
-                  fill={EVENT_TYPE_COLORS.api}
-                  fillOpacity={0.1}
-                  strokeWidth={2}
-                />
+                {!isPersonalProject && (
+                  <Area
+                    type="monotone"
+                    dataKey="active_users"
+                    name="Active Users"
+                    stroke={EVENT_TYPE_COLORS.api}
+                    fill={EVENT_TYPE_COLORS.api}
+                    fillOpacity={0.1}
+                    strokeWidth={2}
+                  />
+                )}
                 <Area
                   type="monotone"
                   dataKey="ai_active_users"
@@ -227,7 +235,9 @@ const AnalyticsActivity = memo(props => {
               data-testid="analytics-activity-table-header"
             >
               <Typography sx={[styles.tableCell, { flex: 2 }]}>Period</Typography>
-              <Typography sx={[styles.tableCell, { flex: 1 }]}>Active Users</Typography>
+              {!isPersonalProject && (
+                <Typography sx={[styles.tableCell, { flex: 1 }]}>Active Users</Typography>
+              )}
               <Typography sx={[styles.tableCell, { flex: 1 }]}>AI Active Users</Typography>
             </Box>
             {buckets.map(bucket => (
@@ -237,11 +247,13 @@ const AnalyticsActivity = memo(props => {
                 data-testid="analytics-activity-row"
               >
                 <Typography sx={[styles.tableCellValue, { flex: 2 }]}>
-                  {formatPeriod(bucket, granularity)}
+                  {formatPeriod(bucket, dataGranularity)}
                 </Typography>
-                <Typography sx={[styles.tableCellValue, { flex: 1 }]}>
-                  {AnalyticCommonHelpers.fmtNum(bucket.active_users)}
-                </Typography>
+                {!isPersonalProject && (
+                  <Typography sx={[styles.tableCellValue, { flex: 1 }]}>
+                    {AnalyticCommonHelpers.fmtNum(bucket.active_users)}
+                  </Typography>
+                )}
                 <Typography sx={[styles.tableCellValue, { flex: 1 }]}>
                   {AnalyticCommonHelpers.fmtNum(bucket.ai_active_users)}
                 </Typography>
@@ -259,7 +271,7 @@ AnalyticsActivity.displayName = 'AnalyticsActivity';
 /** @type {MuiSx} */
 const analyticsActivityStyles = () => ({
   centered: { display: 'flex', justifyContent: 'center', padding: '2rem' },
-  noDataText: ({ palette }) => ({ color: palette.text.metrics || palette.text.disabled, padding: '1rem' }),
+  noDataText: ({ palette }) => ({ color: palette.text.metrics, padding: '1rem' }),
   container: { display: 'flex', flexDirection: 'column', gap: '1rem' },
   chartCard: ({ palette }) => ({
     padding: '1rem',
@@ -271,7 +283,7 @@ const analyticsActivityStyles = () => ({
   }),
   chartTitle: ({ palette }) => ({ color: palette.text.secondary, display: 'block' }),
   chartSubtitle: ({ palette }) => ({
-    color: palette.text.metrics || palette.text.disabled,
+    color: palette.text.metrics,
     fontSize: '0.6875rem',
     display: 'block',
   }),
@@ -312,7 +324,7 @@ const analyticsActivityStyles = () => ({
   tableCell: ({ palette }) => ({
     fontSize: '0.6875rem',
     fontWeight: 600,
-    color: palette.text.metrics || palette.text.disabled,
+    color: palette.text.metrics,
     textTransform: 'uppercase',
   }),
   tableRow: ({ palette }) => ({
