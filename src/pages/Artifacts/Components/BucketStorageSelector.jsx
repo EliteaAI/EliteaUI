@@ -48,6 +48,12 @@ const BucketStorageSelector = memo(props => {
         <DatasetIcon sx={styles.icon} />
         <Box sx={styles.content}>
           <Typography
+            variant="labelSmall"
+            sx={styles.storageLabel}
+          >
+            Storage:
+          </Typography>
+          <Typography
             variant="bodyMedium"
             sx={styles.storageTitle}
           >
@@ -133,7 +139,7 @@ const bucketStorageSelectorStyles = () => ({
     alignItems: 'center',
     gap: '0.75rem',
     padding: '0.45rem 1.5rem',
-    height: '2.55rem',
+    height: '3.4rem',
     borderBottom: '1px solid',
     borderColor: 'divider',
     cursor: 'pointer',
@@ -149,14 +155,24 @@ const bucketStorageSelectorStyles = () => ({
     color: 'text.secondary',
   },
   content: {
+    display: 'flex',
+    flexDirection: 'column',
     flex: 1,
     minWidth: 0,
   },
+  storageLabel: ({ palette }) => ({
+    color: palette.text.metrics,
+    fontFamily: 'Montserrat, sans-serif',
+    fontSize: '0.625rem',
+    fontWeight: 500,
+    lineHeight: '1rem',
+  }),
   storageTitle: ({ palette }) => ({
     color: palette.text.secondary,
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
+    lineHeight: '1.25rem',
   }),
   chevron: {
     fontSize: '1.25rem',

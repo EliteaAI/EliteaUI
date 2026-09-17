@@ -58,6 +58,7 @@ const bucketFooterStyles = () => ({
     borderColor: 'divider',
     backgroundColor: ({ palette }) => palette.background.default.tertiary,
     marginTop: 'auto',
+    minHeight: '3.25rem',
   },
   statItem: {
     display: 'flex',
