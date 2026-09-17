@@ -8,6 +8,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Box, CircularProgress, Grid, useTheme } from '@mui/material';
 
 import { useEditingArtifactsNavBlocker } from '@/[fsd]/features/artifacts/lib/hooks/useEditingArtifactsNavBlocker.hooks';
+import { useLazyConversationDetailsQuery } from '@/[fsd]/features/chat/api';
 import { redistributeConversationsIntoGroups } from '@/[fsd]/features/chat/conversation-list/lib/helpers';
 import {
   useCreateFolder,
@@ -424,6 +425,30 @@ const NewChat = props => {
     stopListenCanvasContentChangeEvent,
     enableMessagesPagination: true,
   });
+
+  const [getConversationDetailForRefresh] = useLazyConversationDetailsQuery();
+
+  const activeConversationIdRef = useRef(activeConversation?.id);
+  useEffect(() => {
+    activeConversationIdRef.current = activeConversation?.id;
+  }, [activeConversation?.id]);
+
+  const handleRestrictAccessSuccess = useCallback(
+    async conversationId => {
+      if (!activeConversationIdRef.current || activeConversationIdRef.current !== conversationId) return;
+      const result = await getConversationDetailForRefresh({ projectId, id: conversationId });
+      if (!result.data) return;
+      setActiveConversation(prev => {
+        if (!prev || prev.id !== conversationId) return prev;
+        return {
+          ...prev,
+          participants: result.data.participants ?? prev.participants,
+          is_private: result.data.is_private ?? prev.is_private,
+        };
+      });
+    },
+    [getConversationDetailForRefresh, projectId, setActiveConversation],
+  );
 
   const handleNotFoundAcknowledge = useCallback(() => {
     setConversationNotFound(false);
@@ -1261,6 +1286,7 @@ const NewChat = props => {
             onSearchQueryChange={setSidebarSearchQuery}
             onReorderFolders={onReorderFolders}
             isFolderOperationInProgress={isFolderUpdate || isLoadConversations || isLoadMoreConversations}
+            onRestrictAccessSuccess={handleRestrictAccessSuccess}
           />
         </Grid>
 

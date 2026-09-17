@@ -61,6 +61,7 @@ export default function AutoCompleteDropDown({
   showSearchIcon = false,
   ignoreCase = true,
   renderOptionBody = undefined,
+  renderChipLabel = undefined,
   slotProps: slotPropsProp = {},
   slots = {
     SearchIcon: undefined,
@@ -213,27 +214,31 @@ export default function AutoCompleteDropDown({
           <StyledChip
             data-testid={typeof chipTestId === 'function' ? chipTestId(option) : chipTestId}
             label={
-              <Box
-                height={'100%'}
-                display={'flex'}
-                alignItems={'center'}
-                flexDirection="row"
-                gap="0.25rem"
-              >
-                {avatarField && (
-                  <UserAvatar
-                    name={option[nameField]}
-                    avatar={option[avatarField]}
-                    size={16}
-                  />
-                )}
-                <Typography
-                  variant="bodySmall"
-                  color="text.secondary"
+              renderChipLabel ? (
+                renderChipLabel(option)
+              ) : (
+                <Box
+                  height={'100%'}
+                  display={'flex'}
+                  alignItems={'center'}
+                  flexDirection="row"
+                  gap="0.25rem"
                 >
-                  {option[nameField]}
-                </Typography>
-              </Box>
+                  {avatarField && (
+                    <UserAvatar
+                      name={option[nameField]}
+                      avatar={option[avatarField]}
+                      size={16}
+                    />
+                  )}
+                  <Typography
+                    variant="bodySmall"
+                    color="text.secondary"
+                  >
+                    {option[nameField]}
+                  </Typography>
+                </Box>
+              )
             }
             key={index}
             sx={styles.mergedChipSx}
@@ -256,6 +261,7 @@ export default function AutoCompleteDropDown({
       chipTestId,
       handleDelete,
       nameField,
+      renderChipLabel,
       styles.mergedChipSx,
       styles.mergedRemoveIcon.fill,
     ],
