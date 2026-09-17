@@ -428,9 +428,14 @@ const NewChat = props => {
 
   const [getConversationDetailForRefresh] = useLazyConversationDetailsQuery();
 
+  const activeConversationIdRef = useRef(activeConversation?.id);
+  useEffect(() => {
+    activeConversationIdRef.current = activeConversation?.id;
+  }, [activeConversation?.id]);
+
   const handleRestrictAccessSuccess = useCallback(
     async conversationId => {
-      if (!activeConversation?.id || activeConversation.id !== conversationId) return;
+      if (!activeConversationIdRef.current || activeConversationIdRef.current !== conversationId) return;
       const result = await getConversationDetailForRefresh({ projectId, id: conversationId });
       if (!result.data) return;
       setActiveConversation(prev => {
@@ -442,7 +447,7 @@ const NewChat = props => {
         };
       });
     },
-    [activeConversation?.id, getConversationDetailForRefresh, projectId, setActiveConversation],
+    [getConversationDetailForRefresh, projectId, setActiveConversation],
   );
 
   const handleNotFoundAcknowledge = useCallback(() => {
