@@ -655,7 +655,6 @@ const Artifacts = memo(() => {
       />
 
       <UploadingStatus />
-      <Box sx={styles.rootBox} />
       <Box sx={styles.rootContainer}>
         {/* Main Content Area with Canvas-like Grid Layout */}
         <Box
@@ -787,16 +786,12 @@ export default Artifacts;
 
 /** @type {MuiSx} */
 const artifactsStyles = (collapsedBuckets, leftPanelWidth) => ({
-  rootBox: {
-    width: '100%',
-    height: '0.0625rem',
-  },
   rootContainer: ({ palette }) => ({
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'flex-start',
     overflow: 'hidden',
-    height: 'calc(100dvh)', // Just account for the top border (1px) + top offset (17px)
+    height: '100dvh',
     backgroundColor: palette.background.default.tertiary,
     gap: '0.75rem',
   }),
