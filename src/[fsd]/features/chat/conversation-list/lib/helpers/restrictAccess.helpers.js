@@ -10,7 +10,7 @@ export const mapAiParticipantToSelectItem = p => ({
   id: p.entity_meta?.id,
   name: p.entity_meta?.name || p.meta?.name || '',
   project_id: p.entity_meta?.project_id,
-  entity_name: p.meta?.agent_type === 'pipeline' ? ChatParticipantType.Pipelines : p.entity_name,
+  entity_name: p.entity_settings?.agent_type === 'pipeline' ? ChatParticipantType.Pipelines : p.entity_name,
   _participantRowId: p.id,
 });
 
