@@ -5,9 +5,16 @@ import {
   useTestConfigurationConnectionMutation,
 } from '@/api/configurations';
 
+const AUTHORIZATION_REQUIRED_STATUS = 'authorization_required';
+
+const requiresAuthorization = result =>
+  result?.requires_authorization === true ||
+  result?.data?.requires_authorization === true ||
+  result?.error?.data?.requires_authorization === true;
+
 /**
  * On-demand credential validation with per-credential status caching.
- * Status values: 'idle' | 'checking' | 'valid' | 'invalid' | 'unsupported'
+ * Status values: 'idle' | 'checking' | 'valid' | 'invalid' | 'unsupported' | 'authorization_required'
  */
 export const useCredentialValidation = () => {
   const [statuses, setStatuses] = useState({});
@@ -28,7 +35,8 @@ export const useCredentialValidation = () => {
         currentStatus === 'checking' ||
         currentStatus === 'valid' ||
         currentStatus === 'invalid' ||
-        currentStatus === 'unsupported'
+        currentStatus === 'unsupported' ||
+        currentStatus === AUTHORIZATION_REQUIRED_STATUS
       )
         return;
 
@@ -39,6 +47,16 @@ export const useCredentialValidation = () => {
           configType: credential.type,
           body: credential.data || credential.settings || {},
         });
+        if (requiresAuthorization(result)) {
+          setStatuses(prev => ({ ...prev, [key]: AUTHORIZATION_REQUIRED_STATUS }));
+          setMessages(prev => {
+            if (!(key in prev)) return prev;
+            const next = { ...prev };
+            delete next[key];
+            return next;
+          });
+          return;
+        }
         const status = result.error?.status;
         if (status === 404 || status === 405 || status === 501) {
           setStatuses(prev => ({ ...prev, [key]: 'unsupported' }));
@@ -74,6 +92,8 @@ export const useCredentialValidation = () => {
           result.data.forEach(item => {
             if (item.unsupported) {
               updates[item.id] = 'unsupported';
+            } else if (requiresAuthorization(item)) {
+              updates[item.id] = AUTHORIZATION_REQUIRED_STATUS;
             } else {
               updates[item.id] = item.success ? 'valid' : 'invalid';
               if (!item.success && item.message) {
