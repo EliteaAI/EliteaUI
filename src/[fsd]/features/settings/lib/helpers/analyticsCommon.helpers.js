@@ -22,7 +22,6 @@ export const fmtCost = usd => {
   if (usd === 0) return '$0.00';
   const abs = Math.abs(usd);
   const sign = usd < 0 ? '-' : '';
-  if (abs < 0.0001) return `${sign}$${abs.toFixed(8)}`;
   if (abs < 0.01) return `${sign}$${(Math.ceil(abs * 10_000) / 10_000).toFixed(4)}`;
   if (abs < 1) return `${sign}$${abs.toFixed(4)}`;
   if (abs < 1000) return `${sign}$${abs.toFixed(2)}`;
