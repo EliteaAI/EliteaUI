@@ -17,3 +17,7 @@ export const GITLAB_AUTH_METHOD_OPTIONS = [
 ];
 
 export const GITLAB_SIGNING_TOKEN_PREFIX = 'whsec_';
+
+// Floor for the decoded HMAC key, not GitLab's exact key size — which is unconfirmed. Set well below
+// any plausible real key so a truncated paste is caught without risking rejection of a valid token.
+export const GITLAB_SIGNING_KEY_MIN_BYTES = 16;
