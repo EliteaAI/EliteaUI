@@ -580,6 +580,8 @@ export const PERMISSIONS = {
   },
   versions: {
     delete: 'models.applications.version.delete',
+    update: 'models.applications.version.update',
+    create: 'models.applications.version.create',
   },
   mcps: {
     delete: 'models.applications.tool.delete',
