@@ -26,6 +26,7 @@ const ONLY_VECTOR_STORAGE_CONFIGURATION = [VECTOR_STORAGE_CONFIGURATIONS[0]];
 const SELECTED_VALUE_COLOR = '#0E131D';
 const LABEL_COLOR = '#0E131D';
 const DISABLED_GREY = '#777A83';
+const WARNING_ORANGE = '#ED6C02';
 const THEME = {
   palette: {
     text: {
@@ -34,8 +35,14 @@ const THEME = {
       button: { disabled: DISABLED_GREY },
       select: { selected: { primary: SELECTED_VALUE_COLOR } },
     },
+    warning: { main: WARNING_ORANGE },
   },
 };
+
+// The select always carries the shared attention/error underline styling; the locked
+// keys are layered on top of it only when the field is locked to one configuration.
+const ATTENTION_ERROR_SELECTOR =
+  '& .MuiInputBase-root.MuiInput-root.MuiSelect-root.Mui-error.MuiInput-underline:before, & .MuiInputBase-root.MuiInput-root.MuiSelect-root.Mui-error.MuiInput-underline:after';
 
 const CREDENTIAL_CONFIGURATIONS = [
   { id: 'cfg-github', elitea_title: GITHUB_TITLE, project_id: TEAM_PROJECT_ID, type: 'github', data: {} },
@@ -464,6 +471,9 @@ describe('CredentialsSelect', () => {
       const lockedSx = singleSelectProps.sx(THEME);
 
       expect(lockedSx).toEqual({
+        [ATTENTION_ERROR_SELECTOR]: {
+          borderBottom: `0.0625rem solid ${WARNING_ORANGE} !important`,
+        },
         '& .MuiInputBase-root.Mui-disabled .MuiSelect-select': {
           color: `${SELECTED_VALUE_COLOR} !important`,
           WebkitTextFillColor: `${SELECTED_VALUE_COLOR} !important`,
@@ -475,7 +485,12 @@ describe('CredentialsSelect', () => {
     it('leaves an unlocked field to the shared select styling', () => {
       renderSelect({ value: { elitea_title: PGVECTOR_TITLE, private: false } });
 
-      expect(singleSelectProps.sx).toBeUndefined();
+      // Only the shared attention/error styling — none of the locked-value overrides.
+      expect(singleSelectProps.sx(THEME)).toEqual({
+        [ATTENTION_ERROR_SELECTOR]: {
+          borderBottom: `0.0625rem solid ${WARNING_ORANGE} !important`,
+        },
+      });
     });
   });
 
