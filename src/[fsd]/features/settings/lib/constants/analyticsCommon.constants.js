@@ -355,6 +355,30 @@ export const GUIDE_SECTIONS = [
     ],
   },
   {
+    title: 'Activity Tab',
+    metrics: [
+      {
+        name: 'Active Users Trend',
+        description:
+          'Shows how many distinct people were active per calendar day, week, or month, split into Active Users (anyone with any event) and AI Active Users (only those who triggered an LLM or tool call). Comparing the two lines shows how much of the active team is actually using AI rather than only browsing.',
+        calculation:
+          'Active Users = count of distinct user IDs per bucket across all event types. AI Active Users = count of distinct user IDs per bucket restricted to metered LLM and tool events.',
+        source:
+          'Active Users from audit events; AI Active Users from metered usage events, which is the same source the billing figures use.',
+      },
+      {
+        name: 'Granularity',
+        description:
+          'Switches the bucket size between Day, Week, and Month. Weeks and months are calendar-aligned, so a week starts on Monday and a month on the 1st; partial buckets at either end of the date range are reported as-is rather than being padded.',
+      },
+      {
+        name: 'Role Filter',
+        description:
+          'Restricts the trend to members holding one or more selected project roles. Leaving it empty includes every member. A role that currently has no members legitimately shows zero rather than falling back to everyone.',
+      },
+    ],
+  },
+  {
     title: 'Health Tab',
     metrics: [
       {

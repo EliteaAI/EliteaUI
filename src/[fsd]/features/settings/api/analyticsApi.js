@@ -174,6 +174,24 @@ export const analyticsApi = eliteaApi
         keepUnusedDataFor: CACHE_LIFETIME,
         providesTags: [TAG_TYPE_ANALYTICS],
       }),
+      // Activity tab: per-bucket active vs AI-active user counts, filterable by role and bucketed
+      // by day/week/month. `roles` must be sent as a repeated param (roles=a&roles=b), so it is
+      // appended manually rather than passed through RTK Query's `params` object.
+      analyticsActivity: build.query({
+        query: ({ projectId, dateFrom, dateTo, granularity = 'day', roles = [] }) => {
+          const params = new URLSearchParams();
+          if (dateFrom) params.set('date_from', dateFrom);
+          if (dateTo) params.set('date_to', dateTo);
+          params.set('granularity', granularity);
+          roles.forEach(role => params.append('roles', role));
+          return {
+            url: `/elitea_core/analytics_activity/prompt_lib/${projectId}?${params.toString()}`,
+            method: 'GET',
+          };
+        },
+        providesTags: [TAG_TYPE_ANALYTICS],
+        keepUnusedDataFor: CACHE_LIFETIME,
+      }),
     }),
   });
 
@@ -188,4 +206,5 @@ export const {
   useAnalyticsAgentsQuery,
   useAnalyticsAgentDetailQuery,
   useAnalyticsCostsQuery,
+  useAnalyticsActivityQuery,
 } = analyticsApi;
