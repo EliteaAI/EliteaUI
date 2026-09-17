@@ -24,6 +24,7 @@ export const DefaultState = {
 export const STATE_INPUT_ATTACHMENTS = 'input_attachments';
 export const StateDefaultProps = [STATE_INPUT, STATE_MESSAGES];
 export const StateManagedProps = [STATE_INPUT_ATTACHMENTS];
+export const StateSystemProps = ['tool_outcomes', 'last_tool_outcome'];
 
 export const LegacyIntType = 'int';
 
