@@ -27,11 +27,13 @@ const ArrayFieldInput = memo(
       setLocalValue(newDisplayValue);
     }, [settings, k]);
 
+    // OAuth scopes are conventionally space-separated; other values may contain spaces
+    const isSpaceSeparated = k === 'scopes';
+
     const handleBlur = () => {
-      // Convert comma or space-separated string to array on blur
       const arrayResult = localValue
         ? localValue
-            .split(/[,\s]+/)
+            .split(isSpaceSeparated ? /[,\s]+/ : ',')
             .map(s => s.trim())
             .filter(Boolean)
         : [];
@@ -47,7 +49,12 @@ const ArrayFieldInput = memo(
         onChange={e => setLocalValue(e.target.value)}
         onBlur={handleBlur}
         error={toastError}
-        helperText={errorText || 'Enter scopes separated by commas or spaces'}
+        helperText={
+          errorText ||
+          (isSpaceSeparated
+            ? 'Enter scopes separated by commas or spaces'
+            : 'Enter values separated by commas')
+        }
         FormHelperTextProps={{ sx: styles.helperText }}
         disabled={disableConfigFields || disabled}
         inputProps={testId ? { 'data-testid': testId } : undefined}
