@@ -55,17 +55,19 @@ Sidebar.displayName = 'Sidebar';
 
 /** @type {MuiSx} */
 const sideBarStyles = sideBarCollapsed => ({
-  drawer: {
+  drawer: ({ palette }) => ({
     display: { xs: 'none', sm: 'block' },
     '& .MuiDrawer-paper': {
       boxSizing: 'border-box',
       width: `${sideBarCollapsed ? COLLAPSED_SIDE_BAR_WIDTH : SIDE_BAR_WIDTH}`,
       background: 'transparent',
+      // change on palettes path for main DT = "#ffffff1a", LT = "#3d44561a"
+      borderRight: `0.0625rem solid ${palette.mode === 'dark' ? '#ffffff1a' : '#3d44561a'}`,
     },
     background: 'transparent',
     position: 'relative',
     overflow: 'visible',
-  },
+  }),
   collapseButton: ({ palette }) => ({
     position: 'fixed',
     top: '3rem',
