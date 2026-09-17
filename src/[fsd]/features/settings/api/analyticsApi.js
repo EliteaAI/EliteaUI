@@ -185,7 +185,7 @@ export const analyticsApi = eliteaApi
           params.set('granularity', granularity);
           roles.forEach(role => params.append('roles', role));
           return {
-            url: `/elitea_core/analytics_activity/prompt_lib/${projectId}?${params.toString()}`,
+            url: `/usage/analytics_activity/prompt_lib/${projectId}?${params.toString()}`,
             method: 'GET',
           };
         },
