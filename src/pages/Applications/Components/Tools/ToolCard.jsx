@@ -336,6 +336,9 @@ const ToolCard = memo(props => {
     return parsedErrorMessage?.message || validationInfo;
   }, [validationInfo, tool, entityType]);
 
+  const hasVariables = variables?.length > 0;
+  const styles = toolCardStyles(showActions, isDuplicate, showVariables, hasVariables);
+
   const validationBanner = useMemo(() => {
     if (!validationInfo) return null;
 
@@ -353,13 +356,17 @@ const ToolCard = memo(props => {
 
     if (errorType === 'credential_not_found' || errorType === 'private_credential_not_found') {
       return (
-        <Banner.BannerMessage message="Your configuration does not match any available configurations." />
+        <Banner.BannerMessage
+          containerSx={styles.containerBanner}
+          message="Your configuration does not match any available configurations."
+        />
       );
     }
 
     if (errorType === 'configuration_model_not_found') {
       return (
         <Banner.BannerMessage
+          containerSx={styles.containerBanner}
           message={`Model "${toolValidationMessage.model_name}" is no longer available in project configurations.`}
         />
       );
@@ -367,6 +374,7 @@ const ToolCard = memo(props => {
 
     return (
       <Banner.BannerMessage
+        containerSx={styles.containerBanner}
         message={
           typeof toolValidationMessage === 'string'
             ? toolValidationMessage
@@ -374,7 +382,7 @@ const ToolCard = memo(props => {
         }
       />
     );
-  }, [validationInfo, toolValidationMessage, personal_project_id, projectId, tool]);
+  }, [validationInfo, toolValidationMessage, personal_project_id, projectId, tool, styles.containerBanner]);
 
   const dialogTitle = useMemo(() => `Remove ${entityTypeLabel}?`, [entityTypeLabel]);
 
@@ -386,9 +394,6 @@ const ToolCard = memo(props => {
   }, [entityTypeLabel, isAttachmentToolkit, parentEntityType]);
 
   const getToolkitIconMeta = useGetToolkitIconMeta();
-
-  const hasVariables = variables?.length > 0;
-  const styles = toolCardStyles(showActions, isDuplicate, showVariables, hasVariables);
 
   return (
     <Tooltip
@@ -589,12 +594,14 @@ const ToolCard = memo(props => {
           </Box>
           {isBlockedToolkit && !validationInfo && !showActions && (
             <Banner.BannerMessage
+              containerSx={styles.containerBanner}
               data-testid="toolkit-blocked-banner"
               message={`${ToolkitsHelpers.getToolkitTypeLabel(tool?.type)} toolkit is blocked by your organization.`}
             />
           )}
           {!isBlockedToolkit && someToolsAreUnavailable && !validationInfo && !showActions && (
             <Banner.BannerMessage
+              containerSx={styles.containerBanner}
               data-testid="toolkit-tools-unavailable-banner"
               message="Some tools are not available anymore."
             />
@@ -795,6 +802,9 @@ const toolCardStyles = (showActions, isDuplicate, showVariables, hasVariables) =
     marginTop: '0.125rem',
     fill: palette.icon.attention,
   }),
+  containerBanner: {
+    marginTop: 0,
+  },
 });
 
 export default ToolCard;

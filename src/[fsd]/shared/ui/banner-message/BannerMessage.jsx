@@ -22,7 +22,7 @@ const ICON_MAPPING = {
 };
 
 const BannerMessage = memo(props => {
-  const { message, variant = VARIANT_MAPPING.WARNING } = props;
+  const { message, children, containerSx, variant = VARIANT_MAPPING.WARNING } = props;
   const [expanded, setExpanded] = useState(false);
   const theme = useTheme();
 
@@ -32,29 +32,39 @@ const BannerMessage = memo(props => {
     setExpanded(prev => !prev);
   }, []);
 
-  return (
-    <Tooltip
-      title={expanded ? '' : message}
-      placement="top"
-      enterDelay={TIME_SHOW_TOOLTIP_MS}
+  const container = (
+    <Box
+      data-testid="credential-warning-banner"
+      aria-label={children ? undefined : message}
+      sx={[styles.container, children && styles.staticContainer, containerSx]}
+      onClick={children ? undefined : handleToggle}
     >
       <Box
-        data-testid="credential-warning-banner"
-        aria-label={message}
-        sx={styles.container}
-        onClick={handleToggle}
-      >
-        <Box
-          component={ICON_MAPPING[variant]}
-          sx={styles.icon}
-        />
+        component={ICON_MAPPING[variant]}
+        sx={styles.icon}
+      />
+      {children || (
         <Typography
           variant="labelSmall"
           sx={styles.message}
         >
           {message}
         </Typography>
-      </Box>
+      )}
+    </Box>
+  );
+
+  if (children) {
+    return container;
+  }
+
+  return (
+    <Tooltip
+      title={expanded ? '' : message}
+      placement="top"
+      enterDelay={TIME_SHOW_TOOLTIP_MS}
+    >
+      {container}
     </Tooltip>
   );
 });
@@ -99,6 +109,9 @@ const bannerMessageStyles = (expanded, theme, variant) => {
       borderRadius: BORDER_RADIUS.MD,
       cursor: 'pointer',
       marginTop: '0.5rem',
+    },
+    staticContainer: {
+      cursor: 'default',
     },
     icon: {
       fontSize: '1rem',
