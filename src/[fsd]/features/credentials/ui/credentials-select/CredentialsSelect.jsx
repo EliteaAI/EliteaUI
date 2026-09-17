@@ -302,6 +302,7 @@ const CredentialsSelect = memo(
       if (availableSavedData) return availableSavedData;
 
       if (section === 'vectorstorage') {
+        if (isBlankEliteaTitle(value?.elitea_title)) return null;
         if (projectDefaultVectorStorageModel) {
           return (
             savedCredentialsMenuData.find(
@@ -331,13 +332,15 @@ const CredentialsSelect = memo(
 
     const credentialToAutoSelect = useMemo(() => {
       if (section === 'vectorstorage') {
-        return selectedOption;
+        const isAlreadyStored =
+          selectedOption?.elitea_title === value?.elitea_title && selectedOption?.private === value?.private;
+        return isAlreadyStored ? null : selectedOption;
       }
       if (section === 'credentials') {
         return selectedOption?.elitea_title !== value?.elitea_title ? selectedOption : null;
       }
       return null;
-    }, [section, selectedOption, value?.elitea_title]);
+    }, [section, selectedOption, value?.elitea_title, value?.private]);
 
     useEffect(() => {
       if (!hasFetchedData || hasAutoSelectedRef.current || !credentialToAutoSelect) return;
