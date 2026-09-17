@@ -275,6 +275,7 @@ const lightPalette = {
     warning: red,
     accent: magentaDefault,
     link: darkBlue,
+    linkHover: blue,
     visitedLink: darkBlue70,
     alwaysWhite: white,
     alwaysDark: alwaysDarkColor,
