@@ -77,6 +77,9 @@ export const getMessagesFromState = states =>
 
 export const validateVariableName = (name, excludeName = null, states) => {
   if (!name) return '';
+  if (FlowEditorConstants.StateSystemProps.includes(name)) {
+    return ValidationErrors.VariableNameReserved;
+  }
   // Allow the current name when editing (excludeName)
   if (states?.[name] && name !== excludeName) return ValidationErrors.VariableNameExists;
   if (!/^[a-zA-Z][a-zA-Z0-9_]*$/.test(name)) {

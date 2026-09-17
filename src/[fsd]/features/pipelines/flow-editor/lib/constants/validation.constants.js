@@ -5,6 +5,7 @@
 export const ValidationErrors = {
   VariableNameExists: 'Name already exists',
   VariableNameInvalid: 'Only letters, numbers and underscore are allowed. It should start with a letter.',
+  VariableNameReserved: 'This name is reserved for system use and cannot be created manually.',
   NumberFormatInvalid: 'Invalid number format',
   ListFormatInvalid: 'Invalid list format. Use JSON array: [1, 2] or ["item1", "item2"]',
   JsonFormatInvalid: 'Invalid JSON format. Use: {"key": "value"}',

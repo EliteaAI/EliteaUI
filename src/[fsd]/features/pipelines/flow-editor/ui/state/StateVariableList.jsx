@@ -23,13 +23,22 @@ const StateVariableList = memo(props => {
       .filter(
         ([name]) =>
           !FlowEditorConstants.StateDefaultProps.includes(name) &&
-          !FlowEditorConstants.StateManagedProps.includes(name),
+          !FlowEditorConstants.StateManagedProps.includes(name) &&
+          !FlowEditorConstants.StateSystemProps.includes(name),
       )
       .map(([name, config]) => ({
         name,
         type: config.type || 'str',
         value: config.value,
       }));
+  }, [states]);
+
+  const systemEntries = useMemo(() => {
+    return FlowEditorConstants.StateSystemProps.filter(name => states?.[name]).map(name => ({
+      name,
+      type: states[name].type || 'dict',
+      value: states[name].value,
+    }));
   }, [states]);
 
   const validateName = useCallback(
@@ -183,6 +192,25 @@ const StateVariableList = memo(props => {
           onUpdateName={handleUpdateNameWithCreate}
           onUpdateType={handleUpdateType}
           onUpdateDefaultValue={handleUpdateDefaultValue}
+          disabled={disabled}
+        />
+      ))}
+      {systemEntries.map(({ name, type, value }) => (
+        <FlowEditorState.StateVariableItem
+          key={name}
+          name={name}
+          type={type}
+          enabled
+          isDefault
+          defaultValue={value}
+          drawerWidth={drawerWidth}
+          validateName={validateName}
+          onToggle={handleToggle}
+          onDelete={handleDelete}
+          onUpdateName={handleUpdateNameWithCreate}
+          onUpdateType={handleUpdateType}
+          onUpdateDefaultValue={handleUpdateDefaultValue}
+          editable={false}
           disabled={disabled}
         />
       ))}
