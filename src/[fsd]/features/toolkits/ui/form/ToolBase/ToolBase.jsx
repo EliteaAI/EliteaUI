@@ -687,6 +687,7 @@ const toolBaseStyles = shouldHideConfigurationHeader => ({
     minWidth: 'auto',
     padding: 0,
     marginTop: '0.25rem',
+    marginLeft: '0.75rem',
     textTransform: 'none',
     fontSize: '0.75rem',
     fontWeight: 400,

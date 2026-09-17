@@ -14,8 +14,9 @@ import { SectionStatusConstants } from '@/[fsd]/features/toolkits/lib/constants'
 import { useCollapsedSection } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
 import { AccordionConstants, TourTargetConstants } from '@/[fsd]/shared/lib/constants';
-import { Chip, Input } from '@/[fsd]/shared/ui';
+import { Button, Chip, Input } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
+import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import OnlineIcon from '@/assets/online-icon.svg?react';
 import { useToolkitView } from '@/hooks/toolkit/useToolkitView.js';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -93,15 +94,11 @@ export const ToolActionsSelector = memo(props => {
     fetchTools,
   ]);
 
-  const onClickGetTools = useCallback(
-    event => {
-      event.stopPropagation();
-      if (canGetTools) {
-        fetchTools();
-      }
-    },
-    [canGetTools, fetchTools],
-  );
+  const onClickGetTools = useCallback(() => {
+    if (canGetTools) {
+      fetchTools();
+    }
+  }, [canGetTools, fetchTools]);
 
   const toolsOptions = useMemo(
     () =>
@@ -186,14 +183,21 @@ export const ToolActionsSelector = memo(props => {
       <Box sx={styles.headerActions}>
         {isMcpToolkit && (
           <Tooltip title={patInvalid ? PAT_REQUIRED_ACTION_HINT : ''}>
-            <Typography
-              data-testid="toolkit-load-tools-button"
-              variant="labelSmall"
-              sx={styles.syncButton(!canGetTools || isFetchingTools)}
-              onClick={onClickGetTools}
+            <Box
+              component="span"
+              onClick={event => event.stopPropagation()}
             >
-              {isFetchingTools ? 'Loading...' : 'Load Tools'}
-            </Typography>
+              <Button.BaseBtn
+                component="span"
+                variant={BUTTON_VARIANTS.secondary}
+                data-testid="toolkit-load-tools-button"
+                disabled={!canGetTools || isFetchingTools}
+                onClick={onClickGetTools}
+                sx={styles.loadToolsButton}
+              >
+                {isFetchingTools ? 'Loading...' : 'Load Tools'}
+              </Button.BaseBtn>
+            </Box>
           </Tooltip>
         )}
         <Chip.CountBadge
@@ -328,26 +332,12 @@ const toolActionsSelectorStyles = () => ({
     alignItems: 'center',
     gap: '0.5rem',
   },
-  syncButton:
-    disabled =>
-    ({ palette }) => ({
-      display: 'inline-block',
-      color: !disabled ? palette.text.secondary : palette.text.button.disabled,
-      cursor: !disabled ? 'pointer' : 'default',
-      height: '1.75rem',
-      boxSizing: 'border-box',
-      padding: '0.375rem 1rem',
-      borderRadius: '1.75rem',
-      backgroundColor: palette.background.button.secondary.default,
-      transition: 'all 0.2s',
-      userSelect: 'none',
-      '&:hover': {
-        backgroundColor: !disabled ? palette.background.button.secondary.hover : undefined,
-      },
-      '&:active': {
-        transform: 'scale(0.98)',
-      },
-    }),
+  loadToolsButton: ({ palette }) => ({
+    '&.Mui-disabled': {
+      backgroundColor: palette.background.button.default,
+      color: palette.text.button.disabled,
+    },
+  }),
 });
 
 export default ToolActionsSelector;
