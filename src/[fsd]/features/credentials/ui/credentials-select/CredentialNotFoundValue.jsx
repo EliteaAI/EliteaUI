@@ -1,16 +1,16 @@
 import { memo } from 'react';
 
-import { Box, Tooltip, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
-import AttentionIcon from '@/assets/attention-icon.svg?react';
 import BriefcaseIcon from '@/components/Icons/BriefcaseIcon.jsx';
 import Person from '@/components/Icons/Person';
 
 const CredentialNotFoundValue = memo(props => {
-  const { eliteaTitle, isPrivate, hasFetchedData } = props;
+  const { eliteaTitle, isPrivate } = props;
+  const styles = credentialNotFoundValueStyles();
 
   return (
-    <Box sx={styles.container(hasFetchedData)}>
+    <Box sx={styles.container}>
       {isPrivate ? (
         <Person
           key="person-icon"
@@ -24,21 +24,10 @@ const CredentialNotFoundValue = memo(props => {
       )}
       <Typography
         variant="labelMedium"
-        sx={styles.text(hasFetchedData)}
+        sx={styles.text}
       >
         {eliteaTitle}
       </Typography>
-      {hasFetchedData && (
-        <Tooltip
-          key="not-found-tooltip"
-          title="Credential not found"
-          placement="top"
-        >
-          <Box sx={styles.attentionIconBox}>
-            <AttentionIcon />
-          </Box>
-        </Tooltip>
-      )}
     </Box>
   );
 });
@@ -46,20 +35,20 @@ const CredentialNotFoundValue = memo(props => {
 CredentialNotFoundValue.displayName = 'CredentialNotFoundValue';
 
 /** @type {MuiSx} */
-const styles = {
-  container: mismatch => ({
+const credentialNotFoundValueStyles = () => ({
+  container: ({ palette }) => ({
     flex: 1,
     display: 'flex',
     alignItems: 'center',
     gap: '0.5rem',
-    color: ({ palette }) => (mismatch ? palette.status.rejected : palette.text.secondary),
+    color: palette.text.secondary,
   }),
-  text: mismatch => ({
+  text: ({ palette }) => ({
     flex: 1,
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
-    color: ({ palette }) => (mismatch ? palette.status.rejected : palette.text.disabled),
+    color: palette.text.secondary,
   }),
   attentionIconBox: ({ palette }) => ({
     display: 'flex',
@@ -73,6 +62,6 @@ const styles = {
       height: '0.875rem',
     },
   }),
-};
+});
 
 export default CredentialNotFoundValue;

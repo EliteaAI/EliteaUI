@@ -80,6 +80,7 @@ const SingleSelect = memo(props => {
     shrinkLabel = false,
     valueItemSX,
     'data-testid': dataTestId,
+    variantBanner = 'error',
   } = props;
 
   const [menuOpen, setMenuOpen] = useState(false);
@@ -103,8 +104,9 @@ const SingleSelect = memo(props => {
 
   const realValue = useMemo(() => {
     if (effectiveMultiple) return Array.isArray(value) ? value : [];
-    if (hasOptionGroups) return value ?? '';
-    return flatOptions && flatOptions.length ? (value ?? '') : '';
+    if (!flatOptions || !flatOptions.length) return hasOptionGroups ? (value ?? '') : '';
+    const hasMatchingOption = flatOptions.some(opt => opt.value === value);
+    return hasMatchingOption ? (value ?? '') : '';
   }, [effectiveMultiple, flatOptions, hasOptionGroups, value]);
 
   const filteredOptions = useMemo(() => {
@@ -679,7 +681,7 @@ const SingleSelect = memo(props => {
         </Select>
         {error && helperText && !multiple && !!showBorder && (
           <Banner.BannerMessage
-            variant="error"
+            variant={variantBanner}
             message={helperText}
           />
         )}
