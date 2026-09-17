@@ -137,11 +137,12 @@ const ActionView = memo(props => {
     { skip: toolkitType !== 'model' || !projectId },
   );
   const resolvedToolkitName = useMemo(() => {
-    if (toolkitType === 'model' && modelsList.length) {
-      const model = modelsList.find(m => m.name.includes(toolkitName.replace(/^\d+_/, '')));
+    if (toolkitType === 'model' && toolkitName && modelsList.length) {
+      const modelKey = toolkitName.replace(/^\d+_/, '');
+      const model = modelsList.find(m => m.name?.includes(modelKey));
       if (model) return model.display_name || model.name || toolkitName;
     }
-    return toolkitName;
+    return toolkitName || '';
   }, [toolkitType, toolkitName, modelsList]);
 
   const styles = actionViewStyles();
@@ -216,11 +217,11 @@ const ActionView = memo(props => {
         return `Skill${separator}${loadedSkillName}`;
       }
 
-      let title = resolvedToolkitName;
+      let title = resolvedToolkitName || '';
 
       // Determine if tool name should be appended
       const isDifferentName =
-        toolName && toolName !== resolvedToolkitName && toolName !== resolvedToolkitName.replace(/\s/g, '');
+        toolName && toolName !== resolvedToolkitName && toolName !== title.replace(/\s/g, '');
       const isOriginalNameFromTools =
         action.parent_agent_name || (originalToolName && originalToolName !== resolvedToolkitName);
       const shouldInclude = includeToolNameCheck
