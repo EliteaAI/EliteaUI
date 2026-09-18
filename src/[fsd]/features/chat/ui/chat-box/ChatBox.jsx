@@ -288,7 +288,7 @@ const ChatBox = forwardRef((props, boxRef) => {
   const [selectedModel, setSelectedModel] = useState(null);
 
   // Query models data
-  const { data: modelsData = { items: [], total: 0 } } = useListModelsQuery(
+  const { currentData: modelsData = { items: [], total: 0 } } = useListModelsQuery(
     { projectId, include_shared: true },
     { skip: !projectId },
   );
@@ -384,6 +384,7 @@ const ChatBox = forwardRef((props, boxRef) => {
     modelsData.items,
   ]);
 
+  const initializedConversationModelRef = useRef(null);
   const selectSavedOrDefaultModel = useCallback(
     (forceSelect = true) => {
       if (forceSelect) {
@@ -482,9 +483,47 @@ const ChatBox = forwardRef((props, boxRef) => {
   }, [newConversationQuestion, isUploadingAttachments, uploadProgress]);
 
   useEffect(() => {
+    if (!isAgentsPage) {
+      // A saved chat owns its selection. Later catalog/default refreshes must
+      // not replace an explicit composer choice in that same conversation.
+      const identity = activeConversation?.uuid && `${projectId}:${activeConversation.uuid}`;
+      const caller =
+        userId &&
+        activeConversation?.participants?.find(
+          participant =>
+            participant.entity_name === ChatParticipantType.Users && participant.entity_meta?.id === userId,
+        );
+      // Core detail responses include message_groups; sidebar metadata does not.
+      // A loaded shared chat may have no caller participant until they join.
+      const hasDetails =
+        Array.isArray(activeConversation?.participants) && Array.isArray(activeConversation?.message_groups);
+      if (
+        !identity ||
+        !userId ||
+        isLoadingConversation ||
+        (!caller && !hasDetails) ||
+        !modelsData.items.length
+      ) {
+        if (initializedConversationModelRef.current !== identity) setSelectedModel(null);
+        return;
+      }
+      if (initializedConversationModelRef.current === identity) return;
+      initializedConversationModelRef.current = identity;
+    }
     selectSavedOrDefaultModel(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectId, llmSettings, defaultModel, modelsData.items.length]);
+  }, [
+    isAgentsPage,
+    projectId,
+    activeConversation?.uuid,
+    activeConversation?.participants,
+    activeConversation?.message_groups,
+    isLoadingConversation,
+    userId,
+    llmSettings,
+    defaultModel,
+    modelsData.items.length,
+  ]);
 
   const getRegeneratePayload = useCallback(
     ({ question, question_id, participant, conversationUuid, attachmentList }) => {
