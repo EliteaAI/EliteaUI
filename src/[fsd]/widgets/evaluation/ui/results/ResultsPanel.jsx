@@ -1,14 +1,18 @@
-import { memo, useMemo } from 'react';
+import { memo, useMemo, useState } from 'react';
 
 import { Box, CircularProgress, SvgIcon, Tooltip, Typography } from '@mui/material';
 
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import SparkleIcon from '@/assets/ai-sparkle-icon.svg?react';
 import ClockIcon from '@/assets/clock_icon.svg?react';
 import DownloadIcon from '@/assets/download.svg?react';
+import { PERMISSIONS } from '@/common/constants';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
+import useCheckPermission from '@/hooks/useCheckPermission';
 
 import { isRunTerminal, resolveRunVersionName } from '../../lib/helpers';
+import EnhanceWithAiDialog from '../enhance/EnhanceWithAiDialog';
 import EvaluationProgress from '../suite/EvaluationProgress';
 import RunResultsView from './RunResultsView';
 
@@ -41,6 +45,11 @@ const ResultsPanel = memo(props => {
     () => resolveRunVersionName(displayRun, applicationVersions),
     [displayRun, applicationVersions],
   );
+
+  const { checkPermission } = useCheckPermission();
+  const canEnhance = hasResults && checkPermission(PERMISSIONS.versions.update);
+
+  const [enhanceDialogOpen, setEnhanceDialogOpen] = useState(false);
 
   const styles = resultsPanelStyles();
 
@@ -75,6 +84,29 @@ const ResultsPanel = memo(props => {
           )}
         </Box>
         <Box sx={styles.headerActions}>
+          {canEnhance && (
+            <Tooltip
+              title="Enhance with AI"
+              placement="top"
+            >
+              <Box component="span">
+                <Button.BaseBtn
+                  variant={BUTTON_VARIANTS.tertiary}
+                  size="small"
+                  onClick={() => setEnhanceDialogOpen(true)}
+                  sx={styles.actionButton}
+                  data-testid="enhance-with-ai-button"
+                  startIcon={
+                    <SvgIcon
+                      component={SparkleIcon}
+                      inheritViewBox
+                      sx={styles.actionIcon}
+                    />
+                  }
+                />
+              </Box>
+            </Tooltip>
+          )}
           {hasResults && (
             <>
               <Tooltip
@@ -159,6 +191,13 @@ const ResultsPanel = memo(props => {
           />
         )}
       </Box>
+
+      <EnhanceWithAiDialog
+        open={enhanceDialogOpen}
+        onClose={() => setEnhanceDialogOpen(false)}
+        applicationId={applicationId}
+        runId={displayRun?.id}
+      />
     </Box>
   );
 });
