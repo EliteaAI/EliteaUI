@@ -11,7 +11,7 @@ import {
   useProjectAnalyticsQuery,
   useProjectAnalyticsUsageQuery,
 } from '@/[fsd]/features/settings/api/analyticsApi';
-import { AnalyticsExportHelpers } from '@/[fsd]/features/settings/lib/helpers';
+import { AnalyticCommonHelpers, AnalyticsExportHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import {
   AnalyticsActivity,
   AnalyticsAgents,
@@ -111,8 +111,8 @@ const AnalyticsContainer = memo(() => {
   const [exportError, setExportError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  const dateFromISO = useMemo(() => dateFrom?.toISOString(), [dateFrom]);
-  const dateToISO = useMemo(() => dateTo?.toISOString(), [dateTo]);
+  const dateFromISO = useMemo(() => AnalyticCommonHelpers.toValidISOString(dateFrom), [dateFrom]);
+  const dateToISO = useMemo(() => AnalyticCommonHelpers.toValidISOString(dateTo), [dateTo]);
 
   const queryParams = useMemo(
     () => ({ projectId, dateFrom: dateFromISO, dateTo: dateToISO }),
