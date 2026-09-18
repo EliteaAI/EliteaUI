@@ -1023,6 +1023,7 @@ const NewConversationView = forwardRef(
             {query && (
               <SearchResultList
                 query={query.slice(1)}
+                excludePublic={query.startsWith(MentionConstants.PRIVATE_PARTICIPANT_TRIGGER)}
                 onSelectParticipant={onSelectParticipant}
                 stopProcessingSymbols={stopProcessingSymbols}
                 existingParticipants={
