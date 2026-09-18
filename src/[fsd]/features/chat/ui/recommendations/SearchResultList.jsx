@@ -12,6 +12,7 @@ export default function SearchResultList({
   stopProcessingSymbols,
   existingParticipants = [],
   onClose = () => {},
+  excludePublic = false,
 }) {
   const mismatchedTimerRef = useRef(0);
   const { participants, isLoading, isFetching, onLoadMore, total } = useParticipants({
@@ -22,6 +23,7 @@ export default function SearchResultList({
     types: [ChatParticipantType.Applications],
     projectFilter: 'all',
     forceSkip: false,
+    excludePublic,
   });
   const existingParticipantUids = useMemo(
     () => existingParticipants?.map(participant => getChatParticipantUniqueId(participant) || []),

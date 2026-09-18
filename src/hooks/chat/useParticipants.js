@@ -22,11 +22,19 @@ const useParticipants = ({
   types = [],
   projectFilter = 'all', // 'all', 'public', 'teamProject',
   forceSkip = false,
+  // Drops every public agent/pipeline from the results, in every project.
+  excludePublic = false,
 }) => {
   const { id: userId } = useSelector(state => state.user);
   const projectId = useSelectedProjectId();
   const canListPublicAgents = useCanListThisPublicEntity('agents');
   const debouncedQuery = useDebounceValue(query, 200);
+
+  // Public agents reach the list through two endpoints, so `excludePublic` has to close both:
+  // `public_applications/prompt_lib` always serves them, and `applications/prompt_lib/{projectId}`
+  // serves them as well when the selected project IS the public project. Skipping the second one
+  // only matters in that case — in a private/shared project it returns no public agents anyway.
+  const skipPublicProjectApplications = excludePublic && projectId == PUBLIC_PROJECT_ID;
 
   const {
     onLoadMoreUsers,
@@ -69,6 +77,7 @@ const useParticipants = ({
     forceSkip:
       (types.length && !types.includes(ChatParticipantType.Applications)) ||
       (projectFilter === 'public' && !canListPublicAgents) ||
+      skipPublicProjectApplications ||
       forceSkip,
   });
   const { rows: applications = [], total: applicationsTotal = 0 } = applicationData || { rows: [] };
@@ -98,6 +107,7 @@ const useParticipants = ({
       (types.length && !types.includes(ChatParticipantType.Applications)) ||
       projectFilter === 'teamProject' ||
       canListPublicAgents ||
+      excludePublic ||
       forceSkip,
   });
   const { rows: publicApplications = [], total: publicApplicationsTotal = 0 } = publicApplicationData || {
@@ -128,6 +138,7 @@ const useParticipants = ({
     forceSkip:
       (types.length && !types.includes(ChatParticipantType.Applications)) ||
       (projectFilter === 'public' && !canListPublicAgents) ||
+      skipPublicProjectApplications ||
       forceSkip,
   });
   const { rows: pipelines = [], total: pipelinesTotal = 0 } = pipelineData || { rows: [] };
@@ -157,6 +168,7 @@ const useParticipants = ({
       (types.length && !types.includes(ChatParticipantType.Applications)) ||
       projectFilter === 'teamProject' ||
       canListPublicAgents ||
+      excludePublic ||
       forceSkip,
   });
   const { rows: publicPipelines = [], total: publicPipelinesTotal = 0 } = publicPipelineData || { rows: [] };

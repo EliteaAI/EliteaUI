@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-const NewSpecialSymbolsString = '#';
-const AtSymbol = '@';
+import { MentionConstants } from '@/[fsd]/shared/lib/constants';
+
+const { PARTICIPANT_TRIGGERS, USER_TRIGGER: AtSymbol } = MentionConstants;
 const PRINTABLE_ASCII_REGEX = /^[\x20-\x7E]*$/;
 
 export const useNewInputKeyDownHandler = (options = {}) => {
@@ -80,8 +81,11 @@ export const useNewInputKeyDownHandler = (options = {}) => {
         return;
       }
 
-      // --- '#' mention mode ---
+      // --- participant mention mode ('#' / '&') ---
       if (isProcessingSymbols) {
+        // The trigger character that opened this mention is always the first char of the query.
+        const activeTrigger = queryRef.current[0];
+
         if (event.key.length === 1 && event.key.match(PRINTABLE_ASCII_REGEX)) {
           // Add printable characters to query
           setQuery(prev => prev + event.key);
@@ -96,16 +100,16 @@ export const useNewInputKeyDownHandler = (options = {}) => {
           } else {
             // Single character deletion
             if (event.key === 'Backspace') {
-              // Only reset if we're about to delete the "#" symbol itself
+              // Only reset if we're about to delete the trigger symbol itself
               const charToDelete = selectionStart > 0 ? value[selectionStart - 1] : '';
-              willDeleteQuery = charToDelete === '#' && queryRef.current.length === 1;
+              willDeleteQuery = charToDelete === activeTrigger && queryRef.current.length === 1;
             } else if (event.key === 'Delete') {
               // Similar check for forward delete
               const charToDelete = selectionStart < value.length ? value[selectionStart] : '';
-              willDeleteQuery = charToDelete === '#' && queryRef.current.length === 1;
+              willDeleteQuery = charToDelete === activeTrigger && queryRef.current.length === 1;
             }
 
-            // Additional check: if query becomes empty (no "#"), reset
+            // Additional check: if query becomes empty (no trigger), reset
             if (queryRef.current.length === 0) {
               willDeleteQuery = true;
             }
@@ -136,7 +140,7 @@ export const useNewInputKeyDownHandler = (options = {}) => {
         setIsProcessingAtSymbol(true);
         setAtQuery(AtSymbol);
         atAnchorRef.current = selectionStart;
-      } else if (event.key.length === 1 && NewSpecialSymbolsString.includes(event.key)) {
+      } else if (event.key.length === 1 && PARTICIPANT_TRIGGERS.includes(event.key)) {
         setIsProcessingSymbols(true);
         setQuery(event.key);
       }
@@ -165,7 +169,7 @@ export const useNewStartConversationInputKeyDownHandler = (options = {}) => {
     event => {
       if (disableHashtagDetection) return;
 
-      if (!isProcessingSymbols && event.key.length === 1 && NewSpecialSymbolsString.includes(event.key)) {
+      if (!isProcessingSymbols && event.key.length === 1 && PARTICIPANT_TRIGGERS.includes(event.key)) {
         setIsProcessingSymbols(true);
         setQuery(event.key);
       } else if (isProcessingSymbols) {

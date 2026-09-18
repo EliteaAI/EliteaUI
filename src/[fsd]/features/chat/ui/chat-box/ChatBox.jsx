@@ -2865,6 +2865,7 @@ const ChatBox = forwardRef((props, boxRef) => {
           {enableMentions && query && (
             <SearchResultList
               query={query.slice(1)}
+              excludePublic={query.startsWith(MentionConstants.PRIVATE_PARTICIPANT_TRIGGER)}
               onSelectParticipant={onSelectParticipant}
               stopProcessingSymbols={stopProcessingSymbols}
               existingParticipants={activeConversation?.participants || []}
