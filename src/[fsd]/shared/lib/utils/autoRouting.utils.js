@@ -1,5 +1,6 @@
 // Auto is an extra picker item, never a model name sent to a provider.
 export const isAutoSelection = settings => settings?.selection?.mode === 'auto';
+export const AUTO_DEFAULT_VALUE = '__elitea_auto_default__';
 export const autoModel = profile => ({
   id: '__elitea_auto__',
   name: '__elitea_auto__',
@@ -11,6 +12,19 @@ export const modelsWithAuto = (models, availability, surface) =>
   availability?.enabled === true && ['chat', 'agent'].includes(surface)
     ? [autoModel(availability.profile_ref), ...models]
     : models;
+// Only eligible creation surfaces opt into the project default intent. The
+// catalog's existing default flag remains concrete for Pipelines/internal tools.
+export const defaultModelForSurface = (data, surface) =>
+  data?.auto_routing?.enabled === true &&
+  data?.default_selection?.mode === 'auto' &&
+  ['chat', 'agent'].includes(surface)
+    ? autoModel(data.default_selection.profile_ref)
+    : data?.items?.find(model => model.default) || data?.items?.[0] || null;
+export const defaultModelRequest = (section, value) => {
+  if (section === 'llm' && value === AUTO_DEFAULT_VALUE) return { section, mode: 'auto' };
+  const [name, projectId] = value.split('<<>>');
+  return { section, name, target_project_id: +projectId };
+};
 export const selectionFields = model =>
   model?.selection?.mode === 'auto'
     ? {

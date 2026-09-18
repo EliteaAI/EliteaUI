@@ -57,7 +57,7 @@ const ConfigurationsPanel = memo(props => {
 
   const tooltips = {
     default:
-      'Default model used for most AI activities. The system may switch to the Low-tier or High-tier model when needed.',
+      'Default for new chats and agents. Auto selects a model for each task when enabled. Pipelines use the last concrete default selected before Auto. Tier defaults remain separate.',
     lowTier: 'Model used for simpler tasks where faster responses and lower cost are preferred.',
     highTier: 'Model used for complex tasks that require stronger reasoning or higher-quality responses.',
     embedding:

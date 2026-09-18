@@ -6,6 +6,7 @@ import { Box } from '@mui/material';
 
 import { ModelConfigurationHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { useModelConfiguration, useModelOptions } from '@/[fsd]/features/settings/lib/hooks';
+import { AUTO_DEFAULT_VALUE, defaultModelRequest } from '@/[fsd]/shared/lib/utils/autoRouting.utils';
 import { useListModelsQuery, useSetProjectDefaultModelMutation } from '@/api/configurations.js';
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
 import { useMultiSectionConfigurations } from '@/hooks/useMultiSectionConfigurations';
@@ -147,8 +148,11 @@ const AIProvidersContent = memo(() => {
 
   // Default model values for dropdowns
   const projectDefaultModel = useMemo(
-    () => `${modelsData.default_model_name}<<>>${modelsData.default_model_project_id}`,
-    [modelsData.default_model_name, modelsData.default_model_project_id],
+    () =>
+      modelsData.auto_routing?.enabled && modelsData.default_selection?.mode === 'auto'
+        ? AUTO_DEFAULT_VALUE
+        : `${modelsData.default_model_name}<<>>${modelsData.default_model_project_id}`,
+    [modelsData],
   );
 
   const projectLowTierDefaultModel = useMemo(() => {
@@ -194,8 +198,7 @@ const AIProvidersContent = memo(() => {
   const onChangeDefaultModel = useCallback(
     (section = 'llm') =>
       async value => {
-        const [modelName, project_id] = value.split('<<>>');
-        await setProjectDefaultModel({ projectId, name: modelName, target_project_id: +project_id, section })
+        await setProjectDefaultModel({ projectId, ...defaultModelRequest(section, value) })
           .unwrap()
           .catch(error => {
             // eslint-disable-next-line no-console
@@ -224,7 +227,11 @@ const AIProvidersContent = memo(() => {
         projectDefaultEmbeddingModel={projectDefaultEmbeddingModel}
         projectDefaultVectorStorageModel={projectDefaultVectorStorageModel}
         projectDefaultImageGenerationModel={projectDefaultImageGenerationModel}
-        modelOptions={modelOptions}
+        modelOptions={
+          modelsData.auto_routing?.enabled
+            ? [{ value: AUTO_DEFAULT_VALUE, label: 'Auto' }, ...modelOptions]
+            : modelOptions
+        }
         lowTierModelOptions={lowTierModelOptions}
         highTierModelOptions={highTierModelOptions}
         embeddingModelOptions={embeddingModelOptions}
