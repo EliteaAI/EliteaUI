@@ -563,58 +563,60 @@ export const ToolkitForm = memo(props => {
         </Box>
       )}
       <Box sx={styles.content}>
-        <McpPatBanner
-          projectId={selectedProjectId}
-          toolkitType={editToolDetail?.type || values?.type || toolkitType}
-        />
-        {!hideOperationButtons && (
-          <ToolkitsOperationButtons
-            isAdding={!isEditing}
-            setShowValidation={setShowValidation}
-            hasErrors={hasErrors}
-            hasNotSavedToolConfiguration={hasNotSavedCredentials}
-            onCreateConfiguration={onCreateConfiguration}
-            onRevertCredentials={onRevertCredentials}
-            toolSchema={effectiveToolSchema}
+        <Box sx={styles.contentInner}>
+          <McpPatBanner
+            projectId={selectedProjectId}
+            toolkitType={editToolDetail?.type || values?.type || toolkitType}
           />
-        )}
-        <ToolComponent
-          key={updateKey}
-          editToolDetail={editToolDetail}
-          setEditToolDetail={onChangeToolDetail}
-          configurationSection={configurationSection}
-          toolsSection={toolsSection}
-          editField={editField}
-          toolErrors={mergedToolErrors}
-          setToolErrors={setToolErrors}
-          showValidation={showValidation || validationTrigger}
-          configurationErrors={configurationErrors}
-          setConfigurationErrors={setConfigurationErrors}
-          showConfigurationValidateError={showConfigurationValidateError}
-          setShowConfigurationValidateError={setShowConfigurationValidateError}
-          configurationName={configurationName}
-          setConfigurationName={setConfigurationName}
-          configuration={configuration}
-          setConfiguration={setConfiguration}
-          schema={effectiveToolSchema}
-          configurationSchema={configurationSchema}
-          hideConfigurationNameInput={hideConfigurationNameInput}
-          showOnlyRequiredFields={showOnlyRequiredFields}
-          showOnlyConfigurationFields={showOnlyConfigurationFields}
-          showNameFieldForcedly={showNameFieldForcedly}
-          showToolkitIcon={showToolkitIcon}
-          hideNameDescriptionInput={hideNameDescriptionInput}
-          hideNameInput={hideNameInput}
-          disabledConfigFieldsForOldToolkits={shouldShowDisabledConfigFields}
-          autoLoadMcpTools={!isEditing}
-          shouldInitRequiredFields={false}
-          isMCP={isMCP}
-          needToCheckSection={false}
-          disabled={disabled}
-          onSyntaxError={onSyntaxError}
-          excludedFields={toolType !== 'mcp' ? [] : ['discovery_mode', 'discovery_interval']}
-          onCredentialReload={onCredentialReload}
-        />
+          {!hideOperationButtons && (
+            <ToolkitsOperationButtons
+              isAdding={!isEditing}
+              setShowValidation={setShowValidation}
+              hasErrors={hasErrors}
+              hasNotSavedToolConfiguration={hasNotSavedCredentials}
+              onCreateConfiguration={onCreateConfiguration}
+              onRevertCredentials={onRevertCredentials}
+              toolSchema={effectiveToolSchema}
+            />
+          )}
+          <ToolComponent
+            key={updateKey}
+            editToolDetail={editToolDetail}
+            setEditToolDetail={onChangeToolDetail}
+            configurationSection={configurationSection}
+            toolsSection={toolsSection}
+            editField={editField}
+            toolErrors={mergedToolErrors}
+            setToolErrors={setToolErrors}
+            showValidation={showValidation || validationTrigger}
+            configurationErrors={configurationErrors}
+            setConfigurationErrors={setConfigurationErrors}
+            showConfigurationValidateError={showConfigurationValidateError}
+            setShowConfigurationValidateError={setShowConfigurationValidateError}
+            configurationName={configurationName}
+            setConfigurationName={setConfigurationName}
+            configuration={configuration}
+            setConfiguration={setConfiguration}
+            schema={effectiveToolSchema}
+            configurationSchema={configurationSchema}
+            hideConfigurationNameInput={hideConfigurationNameInput}
+            showOnlyRequiredFields={showOnlyRequiredFields}
+            showOnlyConfigurationFields={showOnlyConfigurationFields}
+            showNameFieldForcedly={showNameFieldForcedly}
+            showToolkitIcon={showToolkitIcon}
+            hideNameDescriptionInput={hideNameDescriptionInput}
+            hideNameInput={hideNameInput}
+            disabledConfigFieldsForOldToolkits={shouldShowDisabledConfigFields}
+            autoLoadMcpTools={!isEditing}
+            shouldInitRequiredFields={false}
+            isMCP={isMCP}
+            needToCheckSection={false}
+            disabled={disabled}
+            onSyntaxError={onSyntaxError}
+            excludedFields={toolType !== 'mcp' ? [] : ['discovery_mode', 'discovery_interval']}
+            onCredentialReload={onCredentialReload}
+          />
+        </Box>
       </Box>
     </Box>
   );
@@ -669,18 +671,20 @@ const toolkitFormStyles = (isDetailsActionBar, hasSidePanel) => ({
         }
       : {}),
   },
-  content: ({ palette }) =>
-    isDetailsActionBar
-      ? {
-          flex: 1,
-          minHeight: 0,
-          overflowY: 'auto',
-          width: '100%',
-          padding: `1rem ${PANEL_GUTTER}`,
-          background: palette.background.default.tertiary,
-          ...formContentColumn(hasSidePanel),
-        }
-      : {},
+  content: isDetailsActionBar
+    ? {
+        flex: 1,
+        minHeight: 0,
+        overflowY: 'auto',
+        width: '100%',
+      }
+    : {},
+  contentInner: isDetailsActionBar
+    ? {
+        padding: `1rem ${PANEL_GUTTER}`,
+        ...formContentColumn(hasSidePanel),
+      }
+    : {},
   toolkitIdentity: {
     display: 'flex',
     alignItems: 'center',
