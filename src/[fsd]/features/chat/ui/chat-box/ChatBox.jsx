@@ -206,6 +206,7 @@ const ChatBox = forwardRef((props, boxRef) => {
   const lastSentQuestionRef = useRef('');
   const stopRequestedRef = useRef(false);
   const isStreamingRef = useRef(false);
+  const stopQueueRef = useRef([]);
 
   const dispatch = useDispatch();
   const { toastError, toastInfo } = useToast();
@@ -622,9 +623,6 @@ const ChatBox = forwardRef((props, boxRef) => {
   // looks like it vanished, since its own bubble is scrolled away behind live pins.
   const [pendingInjections, setPendingInjections] = useState([]);
   const pendingInjectionsRef = useRef(new Map());
-  // Sequential queue for stop-one-by-one. Stores { id, text } objects so they can be
-  // mirrored into pendingInjections state for display, and removed by id on user cancel.
-  const stopQueueRef = useRef([]);
 
   // Acked: the loop folded it in and a timeline pin now shows it, so stop waiting.
   const onInjectionConsumed = useCallback(injectionId => {
@@ -652,11 +650,15 @@ const ChatBox = forwardRef((props, boxRef) => {
     pendingInjectionsRef.current = new Map();
     // Items are already visible in pendingInjections (added by onInjectMessage).
     // Just queue them for sequential re-send; they'll be removed from state on dequeue.
+    const wasEmpty = stopQueueRef.current.length === 0;
     stopQueueRef.current.push(...unconsumed);
     // If the stream already ended before this report arrived, the useEffect already
-    // fired on an empty queue. Send the first item now to kick off the chain.
-    if (!isStreamingRef.current) {
+    // fired on an empty queue. Use wasEmpty (not isStreamingRef) to avoid stale-ref
+    // issues: if the queue was empty before this push, the useEffect can't have dequeued
+    // anything, so we must send now. Also guard against user cancelling between push and shift.
+    if (wasEmpty && !isStreamingRef.current) {
       const next = stopQueueRef.current.shift();
+      if (!next) return;
       setPendingInjections(prev => prev.filter(item => item.id !== next.id));
       onPredictStreamRef.current?.(next.text);
     }
@@ -804,8 +806,10 @@ const ChatBox = forwardRef((props, boxRef) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCodeBlockInfo?.canvasId, isEditingAgent]);
 
+  // Sync synchronously during render so callbacks reading this ref in the same tick
+  // always see the current value (a useEffect would leave it stale until after paint).
+  isStreamingRef.current = isStreaming;
   useEffect(() => {
-    isStreamingRef.current = isStreaming;
     setIsStreaming?.(isStreaming);
   }, [isStreaming, setIsStreaming]);
 
