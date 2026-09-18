@@ -7,9 +7,16 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { Box, Button, IconButton, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
+import {
+  GITLAB_AUTH_METHODS,
+  GITLAB_AUTH_METHOD_OPTIONS,
+} from '@/[fsd]/features/pipelines/flow-editor/lib/constants/webhook.constants';
+import { getGitlabSigningTokenError } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers/webhook.helpers';
 import { Checkbox, Modal } from '@/[fsd]/shared/ui';
 import FormInput from '@/components/FormInput';
 import useToast from '@/hooks/useToast';
+
+import GitlabSigningTokenField from './GitlabSigningTokenField';
 
 const WEBHOOK_TYPE_OPTIONS = [
   { label: 'GitHub', value: 'github' },
@@ -34,12 +41,35 @@ const WEBHOOK_TYPE_DESCRIPTIONS = {
   custom: 'Uses X-Webhook-Token header with secret token',
 };
 
-const buildExampleRequest = (webhookType, webhookUrl, secretValue, secretHeader, showSecret) => {
+const GITLAB_SIGNING_DESCRIPTION =
+  'GitLab signs every delivery. Elitea verifies the webhook-signature header and rejects deliveries more than 5 minutes old.';
+
+const buildExampleRequest = ({
+  webhookType,
+  webhookUrl,
+  secretValue,
+  secretHeader,
+  showSecret,
+  isGitlabSigning,
+}) => {
   if (!webhookUrl) return null;
 
   const payload = 'Your message or data here';
   const maskedSecret = '<your_secret>';
   const displaySecret = showSecret ? secretValue || maskedSecret : maskedSecret;
+
+  // Deliberately not a curl command: the signature covers the exact body bytes, so a
+  // hand-written request can never be valid. GitLab sets all three headers itself.
+  if (isGitlabSigning) {
+    return `POST ${webhookUrl}
+webhook-id: <delivery id>
+webhook-timestamp: <unix seconds>
+webhook-signature: v1,<base64 hmac-sha256>
+
+# GitLab sends these headers; the only thing you configure in GitLab is the URL above.
+# The signature is taken over "{webhook-id}.{webhook-timestamp}.{raw body}" using the
+# signing token, so the body cannot be altered after GitLab signs it.`;
+  }
 
   if (webhookType === 'github') {
     return `curl -X POST "${webhookUrl}" \\
@@ -79,6 +109,8 @@ const PipelineWebhookModal = memo(props => {
     secretValue,
     secretHeader,
     secretInstructions,
+    gitlabAuthMethod,
+    secretConfigured,
     isLoading,
   } = props;
 
@@ -86,18 +118,35 @@ const PipelineWebhookModal = memo(props => {
   const { toastSuccess, toastInfo } = useToast();
 
   const [selectedWebhookType, setSelectedWebhookType] = useState('github');
+  const [selectedAuthMethod, setSelectedAuthMethod] = useState(GITLAB_AUTH_METHODS.secret_token);
+  const [signingTokenInput, setSigningTokenInput] = useState('');
   const [showSecretValue, setShowSecretValue] = useState(false);
   const [pendingSecretValue, setPendingSecretValue] = useState(null);
 
   useEffect(() => {
-    if (open && initialWebhookType) {
+    if (!open) return;
+    if (initialWebhookType) {
       setSelectedWebhookType(initialWebhookType);
     }
-    if (open) {
-      setShowSecretValue(false);
-      setPendingSecretValue(null);
-    }
-  }, [open, initialWebhookType]);
+    setSelectedAuthMethod(gitlabAuthMethod || GITLAB_AUTH_METHODS.secret_token);
+    setSigningTokenInput('');
+    setShowSecretValue(false);
+    setPendingSecretValue(null);
+  }, [open, initialWebhookType, gitlabAuthMethod]);
+
+  const isGitlabSigning =
+    selectedWebhookType === 'gitlab' && selectedAuthMethod === GITLAB_AUTH_METHODS.signing_token;
+
+  // Only the server's own auth method tells us a signing token is on record; flipping the radio
+  // does not turn an already-stored secret token into one.
+  const signingTokenConfigured =
+    gitlabAuthMethod === GITLAB_AUTH_METHODS.signing_token && Boolean(secretConfigured);
+
+  // Held back until the user types, so the field does not open in an error state.
+  const signingTokenFormatError = useMemo(
+    () => (isGitlabSigning && signingTokenInput ? getGitlabSigningTokenError(signingTokenInput) : null),
+    [isGitlabSigning, signingTokenInput],
+  );
 
   const handleRegenerateClick = useCallback(() => {
     const newToken = generateSecretToken();
@@ -141,14 +190,15 @@ const PipelineWebhookModal = memo(props => {
 
   const exampleRequest = useMemo(
     () =>
-      buildExampleRequest(
-        selectedWebhookType,
-        fullWebhookUrl,
-        displaySecretValue,
+      buildExampleRequest({
+        webhookType: selectedWebhookType,
+        webhookUrl: fullWebhookUrl,
+        secretValue: displaySecretValue,
         secretHeader,
-        showSecretValue,
-      ),
-    [selectedWebhookType, fullWebhookUrl, displaySecretValue, secretHeader, showSecretValue],
+        showSecret: showSecretValue,
+        isGitlabSigning,
+      }),
+    [selectedWebhookType, fullWebhookUrl, displaySecretValue, secretHeader, showSecretValue, isGitlabSigning],
   );
 
   const handleCopyExample = useCallback(() => {
@@ -159,11 +209,33 @@ const PipelineWebhookModal = memo(props => {
   }, [exampleRequest, toastInfo]);
 
   const applyChanges = useCallback(() => {
-    onSubmit(selectedWebhookType, pendingSecretValue);
+    onSubmit({
+      webhookType: selectedWebhookType,
+      secretValue: isGitlabSigning ? undefined : pendingSecretValue,
+      gitlabAuthMethod: selectedWebhookType === 'gitlab' ? selectedAuthMethod : undefined,
+      signingTokenValue: isGitlabSigning ? signingTokenInput.trim() || undefined : undefined,
+    });
     onClose();
-  }, [onSubmit, selectedWebhookType, pendingSecretValue, onClose]);
+  }, [
+    onSubmit,
+    selectedWebhookType,
+    selectedAuthMethod,
+    isGitlabSigning,
+    signingTokenInput,
+    pendingSecretValue,
+    onClose,
+  ]);
 
-  const currentDescription = WEBHOOK_TYPE_DESCRIPTIONS[selectedWebhookType];
+  const currentDescription = isGitlabSigning
+    ? GITLAB_SIGNING_DESCRIPTION
+    : WEBHOOK_TYPE_DESCRIPTIONS[selectedWebhookType];
+
+  // In signing mode there must be a token to verify with: either one already stored, or one
+  // pasted now.
+  const isApplyDisabled =
+    isLoading ||
+    (isGitlabSigning &&
+      (Boolean(signingTokenFormatError) || !(signingTokenConfigured || signingTokenInput.trim())));
 
   return (
     <Modal.BaseModal
@@ -196,6 +268,23 @@ const PipelineWebhookModal = memo(props => {
             </Typography>
           </Box>
 
+          {selectedWebhookType === 'gitlab' && (
+            <Box sx={styles.section}>
+              <Typography
+                variant="labelMedium"
+                sx={styles.sectionLabel}
+              >
+                Authentication
+              </Typography>
+              <Checkbox.RadioButtonGroup
+                value={selectedAuthMethod}
+                items={GITLAB_AUTH_METHOD_OPTIONS}
+                onChange={setSelectedAuthMethod}
+                testId="pipeline-webhook-gitlab-auth-method-radio"
+              />
+            </Box>
+          )}
+
           {webhookUrl && (
             <Box sx={styles.section}>
               <Typography
@@ -227,7 +316,17 @@ const PipelineWebhookModal = memo(props => {
             </Box>
           )}
 
-          {secretValue && (
+          {isGitlabSigning && (
+            <GitlabSigningTokenField
+              value={signingTokenInput}
+              onChange={setSigningTokenInput}
+              isConfigured={signingTokenConfigured}
+              error={signingTokenFormatError}
+              sx={styles.section}
+            />
+          )}
+
+          {!isGitlabSigning && secretValue && (
             <Box sx={styles.section}>
               <Typography
                 variant="labelMedium"
@@ -371,7 +470,7 @@ const PipelineWebhookModal = memo(props => {
             variant="elitea"
             color="primary"
             onClick={applyChanges}
-            disabled={isLoading}
+            disabled={isApplyDisabled}
             data-testid="pipeline-webhook-modal-apply-button"
           >
             Apply

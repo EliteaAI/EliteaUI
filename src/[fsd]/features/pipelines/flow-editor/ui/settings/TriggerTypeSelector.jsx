@@ -8,6 +8,7 @@ import { Box, IconButton } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { PipelineNodeTypes } from '@/[fsd]/features/pipelines/flow-editor/lib/constants/flowEditor.constants';
+import { GITLAB_AUTH_METHODS } from '@/[fsd]/features/pipelines/flow-editor/lib/constants/webhook.constants';
 import { useDelegatedOauthToolkits } from '@/[fsd]/features/toolkits/lib/hooks';
 import { InfoLabelWithTooltip } from '@/[fsd]/shared/ui/label';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
@@ -171,6 +172,31 @@ const TriggerTypeSelector = memo(props => {
 
   const webhookUrl = useMemo(() => triggerData?.webhook_url || '', [triggerData?.webhook_url]);
 
+  // Triggers saved before signing tokens existed carry no method, and those are secret-token ones.
+  const currentGitlabAuthMethod = useMemo(
+    () => triggerData?.gitlab_auth_method || GITLAB_AUTH_METHODS.secret_token,
+    [triggerData?.gitlab_auth_method],
+  );
+
+  const isGitlabSigningMode =
+    currentWebhookType === WEBHOOK_TYPES.gitlab &&
+    currentGitlabAuthMethod === GITLAB_AUTH_METHODS.signing_token;
+
+  // Saving a gitlab trigger without the method would fall back to the server-side default and
+  // silently downgrade a signing-token trigger to a replayable secret token.
+  const buildWebhookSaveArgs = useCallback(() => {
+    const args = {
+      projectId,
+      versionId,
+      type: TRIGGER_TYPES.webhook,
+      webhook_type: currentWebhookType,
+    };
+    if (currentWebhookType === WEBHOOK_TYPES.gitlab) {
+      args.gitlab_auth_method = currentGitlabAuthMethod;
+    }
+    return args;
+  }, [projectId, versionId, currentWebhookType, currentGitlabAuthMethod]);
+
   const handleTriggerTypeChange = useCallback(
     async newType => {
       if (newType === currentTriggerType) return;
@@ -181,12 +207,7 @@ const TriggerTypeSelector = memo(props => {
       } else if (newType === TRIGGER_TYPES.webhook) {
         // Save webhook trigger first to generate secret, then open modal
         try {
-          await updateTrigger({
-            projectId,
-            versionId,
-            type: TRIGGER_TYPES.webhook,
-            webhook_type: currentWebhookType,
-          }).unwrap();
+          await updateTrigger(buildWebhookSaveArgs()).unwrap();
           setIsWebhookModalOpen(true);
         } catch (error) {
           toastError(error?.data?.error || 'Failed to configure webhook');
@@ -205,7 +226,7 @@ const TriggerTypeSelector = memo(props => {
         }
       }
     },
-    [currentTriggerType, currentWebhookType, projectId, versionId, updateTrigger, toastSuccess, toastError],
+    [currentTriggerType, buildWebhookSaveArgs, projectId, versionId, updateTrigger, toastSuccess, toastError],
   );
 
   const handleScheduleSubmit = useCallback(
@@ -237,15 +258,12 @@ const TriggerTypeSelector = memo(props => {
 
   const handleWebhookIconClick = useCallback(async () => {
     if (currentTriggerType === TRIGGER_TYPES.webhook) {
-      // Ensure webhook is saved (generates secret if not exists) before opening modal
-      if (!triggerData?.secret_value) {
+      // Ensure webhook is saved (generates secret if not exists) before opening modal.
+      // A signing token is issued by GitLab and pasted in by the user, so there is nothing to
+      // pre-generate — opening the modal is what lets them paste one.
+      if (!triggerData?.secret_value && !isGitlabSigningMode) {
         try {
-          await updateTrigger({
-            projectId,
-            versionId,
-            type: TRIGGER_TYPES.webhook,
-            webhook_type: currentWebhookType,
-          }).unwrap();
+          await updateTrigger(buildWebhookSaveArgs()).unwrap();
         } catch (error) {
           toastError(error?.data?.error || 'Failed to load webhook settings');
           return;
@@ -255,18 +273,16 @@ const TriggerTypeSelector = memo(props => {
     }
   }, [
     currentTriggerType,
-    currentWebhookType,
+    isGitlabSigningMode,
+    buildWebhookSaveArgs,
     triggerData?.secret_value,
-    projectId,
-    versionId,
     updateTrigger,
     toastError,
   ]);
 
   const handleWebhookSubmit = useCallback(
-    async (webhookType, newSecretValue) => {
+    async ({ webhookType, secretValue, gitlabAuthMethod, signingTokenValue }) => {
       try {
-        // Build request with optional new secret
         const requestData = {
           projectId,
           versionId,
@@ -274,15 +290,27 @@ const TriggerTypeSelector = memo(props => {
           webhook_type: webhookType,
         };
 
-        // If user regenerated the secret, include it in the request
-        if (newSecretValue) {
-          requestData.webhook_secret_value = newSecretValue;
+        if (webhookType === WEBHOOK_TYPES.gitlab) {
+          requestData.gitlab_auth_method = gitlabAuthMethod || GITLAB_AUTH_METHODS.secret_token;
+        }
+
+        // The two GitLab methods are stored under separate keys so switching between them does
+        // not overwrite the other one's secret.
+        if (signingTokenValue) {
+          requestData.webhook_signing_secret_value = signingTokenValue;
+        } else if (secretValue) {
+          requestData.webhook_secret_value = secretValue;
         }
 
         await updateTrigger(requestData).unwrap();
-        toastSuccess(
-          newSecretValue ? 'Webhook configured with new secret' : 'Webhook configured successfully',
-        );
+
+        if (signingTokenValue) {
+          toastSuccess('Webhook configured with the GitLab signing token');
+        } else if (secretValue) {
+          toastSuccess('Webhook configured with new secret');
+        } else {
+          toastSuccess('Webhook configured successfully');
+        }
       } catch (error) {
         toastError(error?.data?.error || 'Failed to configure webhook');
       }
@@ -383,6 +411,8 @@ const TriggerTypeSelector = memo(props => {
         secretValue={triggerData?.secret_value}
         secretHeader={triggerData?.secret_header}
         secretInstructions={triggerData?.secret_instructions}
+        gitlabAuthMethod={currentGitlabAuthMethod}
+        secretConfigured={triggerData?.secret_configured}
         isLoading={isUpdating}
       />
     </Box>
