@@ -5,7 +5,7 @@ import { Box, Typography } from '@mui/material';
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { useProjectType } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
-import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button';
 import { PERMISSIONS } from '@/common/constants';
 import PlusIcon from '@/components/Icons/PlusIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
@@ -199,13 +199,13 @@ const FolderSection = memo(props => {
       </Box>
 
       {hasMoreFolders && (
-        <Typography
-          variant="bodyMedium"
-          sx={styles.showMoreLink}
+        <Button.BaseBtn
+          variant={BUTTON_VARIANTS.auxiliary}
           onClick={handleToggleExpand}
+          sx={styles.showMoreButton}
         >
-          {isExpanded ? 'Show less' : 'Show more'}
-        </Typography>
+          <Typography variant="labelSmall">{isExpanded ? 'Show less' : 'Show more'}</Typography>
+        </Button.BaseBtn>
       )}
 
       <FolderActionsMenu
@@ -289,15 +289,9 @@ const folderSectionStyles = () => ({
     flexDirection: 'column',
     gap: '.5rem',
   },
-  showMoreLink: ({ palette }) => ({
-    color: palette.primary.main,
-    cursor: 'pointer',
-    fontSize: '0.8125rem',
-    marginTop: '0.5rem',
-    '&:hover': {
-      textDecoration: 'underline',
-    },
-  }),
+  showMoreButton: {
+    marginLeft: '0.75rem',
+  },
 });
 
 export default FolderSection;

@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Box, useTheme } from '@mui/material';
+import { Box, Typography, useTheme } from '@mui/material';
 
 import { McpAuthStatus } from '@/[fsd]/features/mcp';
 import { OpenApiOAuthStatus } from '@/[fsd]/features/openapi/ui';
@@ -17,6 +17,7 @@ import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
 import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks/useEnvironmentSettingByKey.hooks';
 import { Button, Switch } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
+import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button';
 import {
   convertToValidEliteaTitle,
   getEliteATitleValidationError,
@@ -370,12 +371,12 @@ const ToolBase = memo(props => {
 
       {canCollapseConfiguration && !isConfigurationExpanded && (
         <Button.BaseBtn
-          variant="text"
+          variant={BUTTON_VARIANTS.auxiliary}
           sx={styles.showMore}
           onClick={() => setIsConfigurationExpanded(true)}
           data-testid="toolkit-configuration-show-more"
         >
-          Show more
+          <Typography variant="labelSmall">Show more</Typography>
         </Button.BaseBtn>
       )}
 
@@ -541,12 +542,12 @@ const ToolBase = memo(props => {
 
       {canCollapseConfiguration && isConfigurationExpanded && (
         <Button.BaseBtn
-          variant="text"
+          variant={BUTTON_VARIANTS.auxiliary}
           sx={styles.showMore}
           onClick={() => setIsConfigurationExpanded(false)}
           data-testid="toolkit-configuration-show-less"
         >
-          Show less
+          <Typography variant="labelSmall">Show less</Typography>
         </Button.BaseBtn>
       )}
     </Box>
@@ -682,22 +683,11 @@ const toolBaseStyles = shouldHideConfigurationHeader => ({
     gap: '0.5rem',
     ...(shouldHideConfigurationHeader && { padding: '0.5rem 1rem 0' }),
   },
-  showMore: ({ palette }) => ({
+  showMore: {
     alignSelf: 'flex-start',
-    minWidth: 'auto',
-    padding: 0,
     marginTop: '0.25rem',
     marginLeft: '0.75rem',
-    textTransform: 'none',
-    fontSize: '0.75rem',
-    fontWeight: 400,
-    lineHeight: '1rem',
-    color: palette.text.showMore,
-    '&:hover': {
-      background: 'none',
-      textDecoration: 'underline',
-    },
-  }),
+  },
 });
 
 export default ToolBase;
