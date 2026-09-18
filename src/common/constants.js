@@ -1,3 +1,5 @@
+// Import configurable mention triggers
+import { MentionConstants } from '@/[fsd]/shared/lib/constants';
 import { getEnvVar } from '@/utils/env';
 
 export const VITE_GAID = getEnvVar('VITE_GAID');
@@ -1007,18 +1009,18 @@ export const ChatParticipantTypeLabel = {
 };
 
 export const ChatMentionSymbols = {
-  Applications: '@',
+  Applications: MentionConstants.USER_TRIGGER,
   Models: '>',
 };
 
 export const ChatMentionSymbolTypeMap = {
-  '@': ChatParticipantType.Applications,
+  [MentionConstants.USER_TRIGGER]: ChatParticipantType.Applications,
   '>': ChatParticipantType.Models,
 };
 
 export const NewChatMentionSymbolTypeMap = {
-  '#': [ChatParticipantType.Applications],
-  '@': ChatParticipantType.Users,
+  [MentionConstants.PARTICIPANT_TRIGGER]: [ChatParticipantType.Applications],
+  [MentionConstants.USER_TRIGGER]: ChatParticipantType.Users,
 };
 
 export const PinnedConversationListKey = 'EliteAPinnedConversationListKey';
