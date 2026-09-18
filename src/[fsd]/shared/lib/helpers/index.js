@@ -36,5 +36,6 @@ export * as CronBuilderHelpers from './cronBuilder.helpers';
 export * as BreadcrumbHelpers from './breadcrumb.helpers';
 export * as RtkCacheHelpers from './rtkCache.helpers';
 export * as ThemeHelpers from './theme.helpers';
+export * as CustomThemeCacheHelpers from './customThemeCache.helpers';
 export * from './isNewItem.helpers';
 export * from './catalogCard.helpers';

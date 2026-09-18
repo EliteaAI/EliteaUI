@@ -184,14 +184,21 @@ const isHttpUrl = value => typeof value === 'string' && /^https?:\/\//i.test(val
 
 const MCP_AUTHORIZE_PREFIX = 'mcp_authorize_';
 
+const getToolkitNameFromAction = action => {
+  if (typeof action?.name === 'string') {
+    if (action.name.startsWith(MCP_AUTHORIZE_PREFIX)) {
+      return action.name.slice(MCP_AUTHORIZE_PREFIX.length);
+    }
+    return action.name;
+  }
+  return null;
+};
+
 export const getToolkitAuthorizationContext = action => {
   const metadata = action?.toolMeta || {};
   const resourceName = metadata?.resource_metadata?.resource_name;
   const rawToolkitName = metadata.toolkit_name || action?.toolOutputs?.toolkit_name;
-  const nameFromAction =
-    typeof action?.name === 'string' && action.name.startsWith(MCP_AUTHORIZE_PREFIX)
-      ? action.name.slice(MCP_AUTHORIZE_PREFIX.length)
-      : null;
+  const nameFromAction = getToolkitNameFromAction(action);
   const toolkitName =
     (rawToolkitName && !isHttpUrl(rawToolkitName) ? rawToolkitName : null) ||
     nameFromAction ||

@@ -126,7 +126,7 @@ export const apiSlice = eliteaApi
         },
         invalidatesTags: (result, error) => {
           if (error) return [];
-          return [{ type: TAG_TYPE_CONVERSATION_DETAILS, id: result?.id }];
+          return [{ type: TAG_TYPE_CONVERSATION_DETAILS, id: result?.id }, TAG_TYPE_CONVERSATIONS];
         },
       }),
       addParticipantIntoConversation: build.mutation({

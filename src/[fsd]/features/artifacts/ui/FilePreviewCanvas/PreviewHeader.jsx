@@ -13,6 +13,7 @@ import CloseIcon from '@/components/Icons/CloseIcon';
 import CopyIcon from '@/components/Icons/CopyIcon';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import DownloadIcon from '@/components/Icons/DownloadIcon';
+import EditPenIcon from '@/components/Icons/EditPenIcon';
 import useToast from '@/hooks/useToast';
 
 const { AvailableLanguagesEnum } = FilePreviewCanvasConstants;
@@ -42,6 +43,7 @@ const PreviewHeader = memo(props => {
     onClose,
     onDownload,
     onDelete,
+    onRename,
     onDiscard,
     contentToDisplay,
     isChatPage = false,
@@ -57,6 +59,10 @@ const PreviewHeader = memo(props => {
   const handleDelete = useCallback(() => {
     onDelete?.();
   }, [onDelete]);
+
+  const handleRename = useCallback(() => {
+    onRename?.();
+  }, [onRename]);
 
   const handleLanguageSelect = useCallback(
     value => {
@@ -148,6 +154,14 @@ const PreviewHeader = memo(props => {
           show: true,
         },
         {
+          key: 'artifacts-preview-rename',
+          label: 'Rename',
+          icon: <EditPenIcon sx={styles.iconAction} />,
+          onClick: handleRename,
+          disabled: false,
+          show: !isChatPage && !!onRename,
+        },
+        {
           key: 'artifacts-preview-delete',
           label: 'Delete',
           icon: <DeleteIcon sx={styles.iconAction} />,
@@ -162,8 +176,10 @@ const PreviewHeader = memo(props => {
       isImageFileType,
       handleCopyContent,
       handleDownload,
+      handleRename,
       isChatPage,
       handleDelete,
+      onRename,
       styles.iconAction,
     ],
   );
@@ -286,7 +302,7 @@ const PreviewHeader = memo(props => {
           )}
 
           {shouldDetectLanguage && (
-            <Box>
+            <Box sx={styles.languageSelectWrapper}>
               <Select.SingleSelect
                 value={currentLanguage}
                 onValueChange={handleLanguageSelect}
@@ -324,21 +340,21 @@ const previewHeaderStyles = isChatPage => ({
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '.75rem 1.25rem',
-    minHeight: isChatPage ? '3.25rem' : '3.6rem',
-    height: isChatPage ? '3.25rem' : '3.6rem',
+    minHeight: isChatPage ? '3.25rem' : '3.65rem',
+    height: isChatPage ? '3.25rem' : '3.65rem',
     gap: '1rem',
 
     ':last-of-type': ({ palette }) => ({
       borderTop: `1px solid ${palette.border.lines}`,
-      minHeight: isChatPage ? '3rem' : '2.6rem',
-      height: isChatPage ? '3rem' : '2.6rem',
+      minHeight: isChatPage ? '3rem' : '3.4rem',
+      height: isChatPage ? '3rem' : '3.4rem',
       justifyContent: 'flex-start',
     }),
 
     // override when it's the only row AND not chat page
     '&:only-child': {
-      minHeight: !isChatPage ? '3.6rem' : '3rem',
-      height: !isChatPage ? '3.6rem' : '3rem',
+      minHeight: !isChatPage ? '3.65rem' : '3rem',
+      height: !isChatPage ? '3.65rem' : '3rem',
       borderTop: 'none',
       justifyContent: 'space-between',
     },
@@ -375,6 +391,10 @@ const previewHeaderStyles = isChatPage => ({
     alignItems: 'center',
     gap: 1,
     mt: 0.35,
+  },
+
+  languageSelectWrapper: {
+    paddingTop: '0.25rem',
   },
 
   languageSelect: ({ palette }) => ({

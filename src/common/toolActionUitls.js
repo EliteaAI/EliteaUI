@@ -39,15 +39,22 @@ const handleLlmOrSummaryAction = action => {
   // long-standing missing-node-label bug (#5389). Generic transition/agent names
   // are not meaningful labels and stay bare (no "(agent)" on a normal chat).
   const nodeName = action?.name;
+  const isSummary = action?.type === TOOL_ACTION_TYPES.Summary;
   const originalToolName =
     action?.type === TOOL_ACTION_TYPES.Llm && nodeName && !GENERIC_LLM_NODE_NAMES.has(nodeName)
       ? nodeName
       : undefined;
+  // toolkitName must never be undefined: consumers call string methods on it, and an
+  // LLM step persisted while the response was still streaming (user refreshed mid-run)
+  // carries no model_name at all, which used to crash the whole chat route (#6654).
+  // Fall back to the pipeline node label, then to the generic step label.
+  const fallbackToolkitName = isSummary
+    ? TOOL_ACTION_NAMES.Summary
+    : originalToolName || TOOL_ACTION_NAMES.Llm;
   return {
     ...createBaseToolInfo(action),
     toolkitName:
-      action?.toolMeta?.ls_model_name ||
-      (action?.type === TOOL_ACTION_TYPES.Summary ? action?.name : undefined),
+      action?.toolMeta?.ls_model_name || (isSummary ? action?.name : undefined) || fallbackToolkitName,
     toolkitType: 'model',
     thinking: action?.thinking || '',
     originalToolName,

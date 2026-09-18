@@ -4,9 +4,8 @@ import { useSelector } from 'react-redux';
 
 import { Box, Link, Typography } from '@mui/material';
 
+import { Banner } from '@/[fsd]/shared/ui';
 import { useEliteaAssistantRef } from '@/[fsd]/widgets/support-assistant';
-import ErrorIcon from '@/assets/error-icon.svg?react';
-import { BORDER_RADIUS } from '@/common/designTokens';
 import RouteDefinitions, { getBasename } from '@/routes';
 
 // Credential setup required: This toolkit requires your own private GitHub credentials. Create a credential with the ID "github_shared_toolkit" in your Private workspace to use this toolkit.
@@ -55,16 +54,12 @@ const CredentialWarningBanner = memo(({ credentialId, credentialType, section })
   }, [credentialId, credentialType, section, personal_project_id]);
 
   return (
-    <Box sx={styles.container}>
-      <Box
-        component={ErrorIcon}
-        sx={styles.icon}
-      />
+    <Banner.BannerMessage variant="warning">
       <Typography
         variant="bodySmall"
         sx={styles.text}
       >
-        <strong>Credential setup required:</strong>
+        <Box component="strong">Credential setup required:</Box>
         {credentialType ? ` This toolkit requires your own private ${credentialType} credentials. ` : ' '}
         <Link
           href={createUrl}
@@ -76,7 +71,7 @@ const CredentialWarningBanner = memo(({ credentialId, credentialType, section })
         </Link>
         {` with the matching ID ${credentialId ? `"${credentialId}"` : ''} in your Private workspace to use this toolkit.`}
       </Typography>
-    </Box>
+    </Banner.BannerMessage>
   );
 });
 
@@ -84,32 +79,16 @@ CredentialWarningBanner.displayName = 'CredentialWarningBanner';
 
 /** @type {MuiSx} */
 const getStyles = () => ({
-  container: ({ palette }) => ({
-    display: 'flex',
-    alignItems: 'flex-start',
-    gap: '0.75rem',
-    padding: '0.5rem 0.75rem',
-    backgroundColor: palette.background.error,
-    border: `0.0625rem solid ${palette.border.error}`,
-    borderRadius: BORDER_RADIUS.MD,
-    marginTop: '0.5rem',
-  }),
-  icon: ({ palette }) => ({
-    fontSize: '1rem',
-    color: palette.icon.error,
-    flexShrink: 0,
-    marginTop: '0.1rem',
-  }),
   text: ({ palette }) => ({
     flex: 1,
-    color: palette.text.warning,
+    color: palette.text.attention,
     wordBreak: 'break-word',
   }),
   link: ({ palette }) => ({
-    color: palette.components.button.text.create,
-    textDecorationColor: palette.components.button.text.create,
+    color: palette.text.link,
+    textDecorationColor: palette.text.link,
     '&:hover': {
-      color: palette.components.button.text.create,
+      color: palette.text.linkHover,
     },
   }),
 });

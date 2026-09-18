@@ -1,3 +1,12 @@
+// MUI's DateTimePicker calls onChange with a real Date instance even while the
+// user is mid-edit on an out-of-range field (e.g. typing minute "99") — that
+// Date's time value is NaN, and `date.toISOString()` throws RangeError on it
+// instead of returning undefined like a null/undefined date would.
+export const toValidISOString = date => {
+  if (!date || Number.isNaN(date.getTime())) return undefined;
+  return date.toISOString();
+};
+
 export const fmtNum = n => {
   // Missing data renders as an em-dash, mirroring fmtCost/fmtDuration. A real
   // zero is distinct from "unknown" and still formats as '0'.
@@ -22,8 +31,7 @@ export const fmtCost = usd => {
   if (usd === 0) return '$0.00';
   const abs = Math.abs(usd);
   const sign = usd < 0 ? '-' : '';
-  if (abs < 0.0001) return `${sign}$${abs.toFixed(8)}`;
-  if (abs < 0.01) return `${sign}$${abs.toFixed(6)}`;
+  if (abs < 0.01) return `${sign}$${(Math.ceil(abs * 10_000) / 10_000).toFixed(4)}`;
   if (abs < 1) return `${sign}$${abs.toFixed(4)}`;
   if (abs < 1000) return `${sign}$${abs.toFixed(2)}`;
   if (abs < 1_000_000) return `${sign}$${(abs / 1000).toFixed(1)}K`;

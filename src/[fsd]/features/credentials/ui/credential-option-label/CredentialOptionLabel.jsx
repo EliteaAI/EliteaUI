@@ -11,34 +11,34 @@ import BriefcaseIcon from '@/components/Icons/BriefcaseIcon.jsx';
 import Person from '@/components/Icons/Person';
 
 const CredentialOptionLabel = memo(props => {
-  const { isPersonal, label, credentialUrl, isInvalid, isChecking, invalidMessage, onRevalidate } = props;
+  const {
+    isPersonal,
+    label,
+    credentialUrl,
+    isInvalid,
+    isChecking,
+    invalidMessage,
+    onRevalidate,
+    isSelected,
+  } = props;
 
   return (
     <Box
       component="span"
       sx={styles.labelContainer}
     >
-      {isPersonal ? <Person fontSize="1rem" /> : <BriefcaseIcon fontSize="1rem" />}
+      <Box
+        component="span"
+        sx={styles.leadingIconBox}
+      >
+        {isPersonal ? <Person fontSize="1rem" /> : <BriefcaseIcon fontSize="1rem" />}
+      </Box>
       <Box
         component="span"
         sx={styles.labelText}
       >
         {label}
       </Box>
-      {isInvalid && (
-        <Tooltip
-          title={invalidMessage || 'Credential is unavailable or misconfigured'}
-          placement="top"
-        >
-          <Box
-            data-testid="credential-status-indicator"
-            aria-label={invalidMessage || 'Credential is unavailable or misconfigured'}
-            sx={styles.attentionIconBox}
-          >
-            <AttentionIcon />
-          </Box>
-        </Tooltip>
-      )}
       {credentialUrl && (
         <Tooltip
           title="Open in new tab"
@@ -81,6 +81,20 @@ const CredentialOptionLabel = memo(props => {
           </BaseBtn>
         </Tooltip>
       )}
+      {isInvalid && !isSelected && (
+        <Tooltip
+          title={invalidMessage || 'Credential is unavailable or misconfigured'}
+          placement="top"
+        >
+          <Box
+            data-testid="credential-status-indicator"
+            aria-label={invalidMessage || 'Credential is unavailable or misconfigured'}
+            sx={styles.attentionIconBox}
+          >
+            <AttentionIcon />
+          </Box>
+        </Tooltip>
+      )}
     </Box>
   );
 });
@@ -98,6 +112,14 @@ const styles = {
     '& .credential-action': { display: 'none' },
     '&:hover .credential-action': { display: 'inline-flex' },
   },
+  leadingIconBox: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+    width: '1rem',
+    height: '1rem',
+  },
   labelText: {
     flex: 1,
     overflow: 'hidden',
@@ -105,9 +127,13 @@ const styles = {
     whiteSpace: 'nowrap',
   },
   optionActionButton: ({ palette }) => ({
-    padding: '0.125rem',
+    padding: 0,
     marginLeft: 'auto',
     flexShrink: 0,
+    width: '1.5rem !important',
+    height: '1.5rem !important',
+    minWidth: '1.5rem !important',
+    minHeight: '1.5rem !important',
     '& svg': {
       width: '0.875rem',
       height: '0.875rem',
@@ -119,6 +145,7 @@ const styles = {
   }),
   attentionIconBox: ({ palette }) => ({
     display: 'flex',
+    justifyContent: 'center',
     alignItems: 'center',
     flexShrink: 0,
     width: '1rem',

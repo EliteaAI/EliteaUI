@@ -273,6 +273,7 @@ const darkPalette = {
     warning: lightRed,
     accent: cyanDefault,
     link: blue,
+    linkHover: darkBlue,
     visitedLink: blue70,
     alwaysWhite: white,
     alwaysDark: gray60,

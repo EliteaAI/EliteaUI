@@ -286,7 +286,7 @@ const ToolBaseProperty = memo(props => {
         k={k}
         settings={settings}
         required={required}
-        label={label}
+        label={description ? renderLabelWithHint(false) : label}
         toastError={toastError}
         errorText={errorText}
         disableConfigFields={disableConfigFields}

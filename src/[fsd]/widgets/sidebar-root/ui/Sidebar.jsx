@@ -57,17 +57,18 @@ Sidebar.displayName = 'Sidebar';
 
 /** @type {MuiSx} */
 const sideBarStyles = sideBarCollapsed => ({
-  drawer: {
+  drawer: ({ palette }) => ({
     display: { xs: 'none', sm: 'block' },
     '& .MuiDrawer-paper': {
       boxSizing: 'border-box',
       width: `${sideBarCollapsed ? COLLAPSED_SIDE_BAR_WIDTH : SIDE_BAR_WIDTH}`,
       background: 'transparent',
+      borderRight: `0.0625rem solid ${palette.components.sidebar.divider}`,
     },
     background: 'transparent',
     position: 'relative',
     overflow: 'visible',
-  },
+  }),
   collapseButton: ({ palette }) => ({
     position: 'fixed',
     top: '3rem',

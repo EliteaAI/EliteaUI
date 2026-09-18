@@ -33,6 +33,7 @@ import useSortQueryParamsFromUrl from '@/hooks/useSortQueryParamsFromUrl';
 import { DndContext, closestCenter } from '@dnd-kit/core';
 
 import ManageLinksDialog from './ManageLinksDialog';
+import RestrictAccessDialog from './RestrictAccessDialog';
 import ShareConversationDialog from './ShareConversationDialog';
 
 const Conversations = memo(props => {
@@ -79,6 +80,7 @@ const Conversations = memo(props => {
     onReorderFolders,
     isFolderOperationInProgress = false,
     onSearchQueryChange,
+    onRestrictAccessSuccess,
   } = props;
 
   const theme = useTheme();
@@ -101,6 +103,7 @@ const Conversations = memo(props => {
 
   const [shareDialogConversation, setShareDialogConversation] = useState(null);
   const [manageLinksConversation, setManageLinksConversation] = useState(null);
+  const [restrictAccessConversation, setRestrictAccessConversation] = useState(null);
 
   const handleOpenShareDialog = useCallback(conversation => {
     setShareDialogConversation(conversation);
@@ -116,6 +119,10 @@ const Conversations = memo(props => {
 
   const handleCloseManageLinksDialog = useCallback(() => {
     setManageLinksConversation(null);
+  }, []);
+
+  const handleCloseRestrictAccessDialog = useCallback(() => {
+    setRestrictAccessConversation(null);
   }, []);
 
   const savedStateBeforeSearchRef = useRef(null);
@@ -479,6 +486,7 @@ const Conversations = memo(props => {
         isNextItemHovered={isNextItemHovered}
         onShareExternal={handleOpenShareDialog}
         onManageLinks={handleOpenManageLinksDialog}
+        onRestrictAccess={setRestrictAccessConversation}
       />
     ),
     [
@@ -500,6 +508,7 @@ const Conversations = memo(props => {
       enableDragAndDrop,
       handleOpenShareDialog,
       handleOpenManageLinksDialog,
+      setRestrictAccessConversation,
     ],
   );
 
@@ -836,6 +845,13 @@ const Conversations = memo(props => {
         conversation={manageLinksConversation ?? {}}
         onClose={handleCloseManageLinksDialog}
       />
+      {restrictAccessConversation && (
+        <RestrictAccessDialog
+          conversation={restrictAccessConversation}
+          onClose={handleCloseRestrictAccessDialog}
+          onSuccess={onRestrictAccessSuccess}
+        />
+      )}
     </DndContext>
   );
 });

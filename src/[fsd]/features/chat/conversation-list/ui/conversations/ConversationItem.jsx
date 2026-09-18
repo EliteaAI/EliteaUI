@@ -22,6 +22,7 @@ import {
 import DotMenu from '@/components/DotMenu';
 import ArrowRightIcon from '@/components/Icons/ArrowRightIcon.jsx';
 import CancelIcon from '@/components/Icons/CancelIcon';
+import CloseEyeIcon from '@/components/Icons/CloseEyeIcon';
 import CopyIcon from '@/components/Icons/CopyIcon';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import EditIcon from '@/components/Icons/EditIcon';
@@ -57,6 +58,7 @@ const ConversationItem = memo(props => {
     onItemHover,
     onShareExternal,
     onManageLinks,
+    onRestrictAccess,
   } = props;
   const {
     name,
@@ -155,6 +157,10 @@ const ConversationItem = memo(props => {
   const handleMakePublic = useCallback(() => {
     if (is_private) onEdit({ ...conversation, is_private: false });
   }, [conversation, is_private, onEdit]);
+
+  const handleRestrictAccess = useCallback(() => {
+    onRestrictAccess?.(conversation);
+  }, [conversation, onRestrictAccess]);
 
   const handlePlayback = useCallback(() => {
     onPlayback(conversation);
@@ -266,6 +272,18 @@ const ConversationItem = memo(props => {
             cancelButtonTestId: 'chat-conversation-make-public-cancel-button',
           },
           {
+            key: 'chat-conversation-menu-restrict-access',
+            label: 'Restrict access',
+            icon: <CloseEyeIcon sx={{ fontSize: '1rem' }} />,
+            onClick: handleRestrictAccess,
+            display:
+              // Loose equality intentional: userId/author_id may arrive as string or number
+              projectId == PUBLIC_PROJECT_ID || projectId == personal_project_id || userId != author_id
+                ? 'none'
+                : undefined,
+            disabled: isActive && isEditingCanvas,
+          },
+          {
             key: 'chat-conversation-menu-share',
             label: 'Share',
             icon: (
@@ -335,7 +353,7 @@ const ConversationItem = memo(props => {
             onClick: handleEdit,
           },
         ];
-    return !is_private ? items.filter(item => item.label !== 'Make public') : items;
+    return is_private ? items : items.filter(item => item.label !== 'Make public');
   }, [
     isPlayback,
     userId,
@@ -356,6 +374,7 @@ const ConversationItem = memo(props => {
     handleShareConversation,
     handleShareExternal,
     handleManageLinks,
+    handleRestrictAccess,
     handlePlayback,
     conversation.has_shared_links,
     conversation.folder_id,

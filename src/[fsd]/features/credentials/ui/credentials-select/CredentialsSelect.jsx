@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useEffect, useMemo } from 'react';
+import { cloneElement, isValidElement, memo, useCallback, useEffect, useMemo } from 'react';
 
 import { useSelector } from 'react-redux';
 
@@ -129,6 +129,18 @@ const CredentialsSelect = memo(
       resetStatuses,
     });
 
+    const styles = credentialsSelectStyles();
+
+    const isClearingAllowed = section !== 'vectorstorage';
+
+    const commitConfiguration = useCallback(
+      (configuration, ...rest) => {
+        if (configuration === null && !isClearingAllowed) return;
+        onSelectConfiguration?.(configuration, ...rest);
+      },
+      [isClearingAllowed, onSelectConfiguration],
+    );
+
     const mismatchedPrivateCredential = useMemo(() => {
       if (
         !value?.private ||
@@ -243,9 +255,11 @@ const CredentialsSelect = memo(
             }
           };
 
+          const rowEliteaTitle = configuration.elitea_title || configuration.data?.title;
+
           return {
             id: `${configuration.elitea_title}_${configuration.project_id}`,
-            elitea_title: configuration.elitea_title || configuration.data?.title,
+            elitea_title: rowEliteaTitle,
             private: isConfigurationPersonal,
             settings: configuration.data || {},
             shared: configuration.shared || false,
@@ -302,6 +316,7 @@ const CredentialsSelect = memo(
       if (availableSavedData) return availableSavedData;
 
       if (section === 'vectorstorage') {
+        if (isBlankEliteaTitle(value?.elitea_title)) return null;
         if (projectDefaultVectorStorageModel) {
           return (
             savedCredentialsMenuData.find(
@@ -331,42 +346,45 @@ const CredentialsSelect = memo(
 
     const credentialToAutoSelect = useMemo(() => {
       if (section === 'vectorstorage') {
-        return selectedOption;
+        const isAlreadyStored =
+          selectedOption?.elitea_title === value?.elitea_title && selectedOption?.private === value?.private;
+        return isAlreadyStored ? null : selectedOption;
       }
       if (section === 'credentials') {
         return selectedOption?.elitea_title !== value?.elitea_title ? selectedOption : null;
       }
       return null;
-    }, [section, selectedOption, value?.elitea_title]);
+    }, [section, selectedOption, value?.elitea_title, value?.private]);
 
     useEffect(() => {
       if (!hasFetchedData || hasAutoSelectedRef.current || !credentialToAutoSelect) return;
 
       hasAutoSelectedRef.current = true;
-      onSelectConfiguration?.(
+      commitConfiguration(
         { private: credentialToAutoSelect.private, elitea_title: credentialToAutoSelect.elitea_title },
         { isAutoSelect: true },
       );
-    }, [hasFetchedData, credentialToAutoSelect, onSelectConfiguration, hasAutoSelectedRef]);
+    }, [hasFetchedData, credentialToAutoSelect, commitConfiguration, hasAutoSelectedRef]);
 
     const onSelectItem = useCallback(
       option => {
-        if (
-          selectedOption?.elitea_title === option.elitea_title &&
-          selectedOption?.private === option.private
-        ) {
-          onSelectConfiguration(null);
-        } else {
-          trackEvent(GA_EVENT_NAMES.CREDENTIALS_ATTACHED, {
-            [GA_EVENT_PARAMS.CREDENTIALS_TYPE]: option.private ? 'private' : 'project',
-            [GA_EVENT_PARAMS.TOOLKIT_TYPE]: type || 'unknown',
-            [GA_EVENT_PARAMS.ENTITY]: contextExecutionEntity,
-          });
-          onSelectConfiguration({ private: option.private, elitea_title: option.elitea_title });
+        const isAlreadySelected =
+          selectedOption?.elitea_title === option.elitea_title && selectedOption?.private === option.private;
+
+        if (isAlreadySelected) {
+          commitConfiguration(null);
+          return;
         }
+
+        trackEvent(GA_EVENT_NAMES.CREDENTIALS_ATTACHED, {
+          [GA_EVENT_PARAMS.CREDENTIALS_TYPE]: option.private ? 'private' : 'project',
+          [GA_EVENT_PARAMS.TOOLKIT_TYPE]: type || 'unknown',
+          [GA_EVENT_PARAMS.ENTITY]: contextExecutionEntity,
+        });
+        commitConfiguration({ private: option.private, elitea_title: option.elitea_title });
       },
       [
-        onSelectConfiguration,
+        commitConfiguration,
         selectedOption?.elitea_title,
         selectedOption?.private,
         type,
@@ -374,6 +392,8 @@ const CredentialsSelect = memo(
         contextExecutionEntity,
       ],
     );
+
+    const handleClear = useCallback(() => commitConfiguration(null), [commitConfiguration]);
 
     const createSelectHandler = useCallback(
       (sec, option) => {
@@ -430,7 +450,7 @@ const CredentialsSelect = memo(
                   meta: opt,
                 })),
         }));
-    }, [menuData, createSelectHandler, onRefresh]);
+    }, [menuData, createSelectHandler, onRefresh, styles.refreshIcon]);
 
     const isOptionsReady = useMemo(() => {
       if (!hasFetchedData) return false;
@@ -482,6 +502,12 @@ const CredentialsSelect = memo(
       [savedCredentialsMenuData, onSelectItem, onReload, propKey, createMenuData, createSelectHandler],
     );
 
+    const showMismatchFooter = Boolean(
+      value && !isBlankEliteaTitle(value?.elitea_title) && !selectedOption && hasFetchedData,
+    );
+
+    const hasSelectError = Boolean(error || showMismatchFooter);
+
     const customRenderSelectValue = useCallback(
       foundOption => {
         if (!foundOption) {
@@ -502,16 +528,18 @@ const CredentialsSelect = memo(
             variant="labelMedium"
             sx={styles.selectedValueTypography(row)}
           >
-            {row.label}
+            {isValidElement(row.label) ? cloneElement(row.label, { isSelected: true }) : row.label}
           </Typography>
         );
       },
-      [renderValue, value, hasFetchedData],
+      [renderValue, value, hasFetchedData, styles],
     );
 
-    const showMismatchFooter = Boolean(
-      value && !isBlankEliteaTitle(value?.elitea_title) && !selectedOption && hasFetchedData,
-    );
+    const isLockedToOnlyConfiguration =
+      section === 'vectorstorage' &&
+      Boolean(selectedOption) &&
+      createMenuData.length === 0 &&
+      savedCredentialsMenuData.length === 1;
 
     return (
       <Box sx={[styles.container, sx]}>
@@ -521,21 +549,26 @@ const CredentialsSelect = memo(
           shrinkLabel
           infoIconDescription={description}
           required={required}
-          error={error || showMismatchFooter}
+          error={hasSelectError}
           helperText={showMismatchFooter ? '' : helperText}
-          disabled={disabled}
+          disabled={disabled || isLockedToOnlyConfiguration}
+          sx={theme => ({
+            ...styles.attentionErrorSx(theme),
+            ...(isLockedToOnlyConfiguration ? styles.lockedSelect(theme) : {}),
+          })}
           showBorder
           customSelectedFontSize="0.875rem"
           optionGroups={optionGroups}
           options={[]}
           value={selectStringValue}
           onValueChange={handleSelectValueChange}
-          onClear={() => onSelectConfiguration?.(null)}
+          onClear={handleClear}
           customRenderValue={customRenderSelectValue}
           displayEmpty
           showEmptyPlaceholder={false}
           isListFetching={isFetching}
           valueItemSX={styles.valueItemSX}
+          variantBanner="warning"
         />
         {showMismatchFooter && (
           <CredentialMismatchFooter
@@ -553,8 +586,24 @@ const CredentialsSelect = memo(
 CredentialsSelect.displayName = 'CredentialsSelect';
 
 /** @type {MuiSx} */
-const styles = {
+const credentialsSelectStyles = () => ({
   container: { marginTop: '0.5rem' },
+  attentionErrorSx: ({ palette }) => ({
+    '& .MuiInputBase-root.MuiInput-root.MuiSelect-root.Mui-error.MuiInput-underline:before, & .MuiInputBase-root.MuiInput-root.MuiSelect-root.Mui-error.MuiInput-underline:after':
+      {
+        // change in the cherry pick on const warningOrange: "#ED6C02"
+        borderBottom: `0.0625rem solid ${palette.warning.main} !important`,
+      },
+  }),
+  lockedSelect: ({ palette }) => ({
+    '& .MuiInputBase-root.Mui-disabled .MuiSelect-select': {
+      color: `${palette.components.select.text.selected.primary} !important`,
+      WebkitTextFillColor: `${palette.components.select.text.selected.primary} !important`,
+    },
+    '& .MuiFormLabel-root.Mui-disabled': {
+      color: palette.text.primary,
+    },
+  }),
   refreshIcon: ({ palette }) => ({
     color: palette.text.primary,
     padding: 0,
@@ -589,6 +638,6 @@ const styles = {
   valueItemSX: {
     flex: 1,
   },
-};
+});
 
 export default CredentialsSelect;

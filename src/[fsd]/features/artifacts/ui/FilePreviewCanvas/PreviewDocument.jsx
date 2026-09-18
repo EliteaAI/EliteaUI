@@ -100,6 +100,7 @@ const previewDocumentStyles = () => ({
       borderBottom: `0.0625rem solid ${palette.border.lines}`,
       boxShadow: 'none !important',
       flexWrap: 'wrap',
+      minHeight: '3.4rem',
       maxHeight: '5rem',
       overflowY: 'hidden',
       overflowX: 'auto',
