@@ -50,6 +50,7 @@ export const useAddNewParticipants = props => {
           const { entity_name: type } = participant;
           return (
             (type === ChatParticipantType.Applications || type === ChatParticipantType.Pipelines) &&
+            participant.version_details?.llm_settings?.selection?.mode !== 'auto' &&
             !participant.version_details?.llm_settings?.model_name
           );
         });

@@ -235,6 +235,7 @@ const ConfigurationTab = memo(props => {
 
   const memoizedLlmSettings = useMemo(
     () => ({
+      selection: version_details?.llm_settings?.selection,
       model_name: version_details?.llm_settings?.model_name,
       model_project_id: version_details?.llm_settings?.model_project_id,
       temperature: version_details?.llm_settings?.temperature,

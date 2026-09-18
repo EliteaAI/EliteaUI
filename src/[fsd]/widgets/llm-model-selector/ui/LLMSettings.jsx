@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Box } from '@mui/material';
+import { Box, MenuItem, TextField } from '@mui/material';
 
 import {
   DEFAULT_MAX_TOKENS,
@@ -9,6 +9,7 @@ import {
   DEFAULT_STEPS_LIMIT,
   DEFAULT_TEMPERATURE,
 } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
+import { isAutoSelection } from '@/[fsd]/shared/lib/utils/autoRouting.utils';
 import { SecretField } from '@/[fsd]/shared/ui/secret-field';
 import {
   VALIDATION_RULE,
@@ -116,7 +117,36 @@ const LLMSettings = memo(props => {
 
   return (
     <Box sx={styles.container}>
-      {model?.supports_reasoning ? (
+      {isAutoSelection(llmSettings) ? (
+        <TextField
+          select
+          label="Reasoning effort"
+          value={
+            llmSettings.selection.reasoning.mode === 'explicit'
+              ? llmSettings.selection.reasoning.preset
+              : 'auto'
+          }
+          helperText="Auto chooses the effort. An explicit effort limits selection to qualified models supporting that preset."
+          onChange={event =>
+            onChangeLLMSettings('selection')({
+              ...llmSettings.selection,
+              reasoning:
+                event.target.value === 'auto'
+                  ? { mode: 'auto' }
+                  : { mode: 'explicit', preset: event.target.value },
+            })
+          }
+        >
+          {['auto', 'low', 'medium', 'high'].map(value => (
+            <MenuItem
+              key={value}
+              value={value}
+            >
+              {value === 'auto' ? 'Auto' : value[0].toUpperCase() + value.slice(1)}
+            </MenuItem>
+          ))}
+        </TextField>
+      ) : model?.supports_reasoning ? (
         <ReasoningSlider
           value={llmSettings.reasoning_effort || DEFAULT_REASONING_EFFORT}
           onChange={onChangeLLMSettings(PROMPT_PAYLOAD_KEY.reasoningEffort)}
