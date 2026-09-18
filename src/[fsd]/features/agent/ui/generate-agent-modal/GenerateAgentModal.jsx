@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { GenerateEntityModal } from '@/[fsd]/entities/generate-entity-with-ai';
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version';
 import { useLazySkillDetailsQuery, useUpdateSkillRelationMutation } from '@/[fsd]/features/skill';
+import { defaultModelForSurface } from '@/[fsd]/shared/lib/utils/autoRouting.utils';
 import { generateLLMSettings } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
 import {
   useApplicationCreateMutation,
@@ -45,7 +46,7 @@ const GenerateAgentModal = memo(props => {
     { skip: !projectId },
   );
 
-  const defaultModel = modelsData.items.find(m => m.default) || modelsData.items[0] || null;
+  const defaultModel = defaultModelForSurface(modelsData, 'agent');
 
   const [selectedToolkitIds, setSelectedToolkitIds] = useState(new Set());
   const [selectedAgentIds, setSelectedAgentIds] = useState(new Set());

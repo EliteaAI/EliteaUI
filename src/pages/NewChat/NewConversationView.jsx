@@ -23,7 +23,11 @@ import { MentionSkillList } from '@/[fsd]/features/skill/ui';
 import { BrandLogoConstants, InternalToolsConstants, MentionConstants } from '@/[fsd]/shared/lib/constants';
 import { DEFAULT_STEPS_LIMIT } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
 import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks/useEnvironmentSettingByKey.hooks';
-import { modelsWithAuto, selectionFields } from '@/[fsd]/shared/lib/utils/autoRouting.utils';
+import {
+  defaultModelForSurface,
+  modelsWithAuto,
+  selectionFields,
+} from '@/[fsd]/shared/lib/utils/autoRouting.utils';
 import {
   cleanLLMSettings,
   generateLLMSettings,
@@ -122,7 +126,7 @@ const NewConversationView = forwardRef(
       }
     }, [moduleSettingsData]);
     const [showRecommendationList, setShowRecommendationList] = useState(false);
-    const { data: modelsData = { items: [], total: 0 } } = useListModelsQuery(
+    const { currentData: modelsData = { items: [], total: 0 } } = useListModelsQuery(
       { projectId: selectedProjectId, include_shared: true },
       { skip: !selectedProjectId },
     );
@@ -166,20 +170,27 @@ const NewConversationView = forwardRef(
     );
 
     const defaultModel = useMemo(() => {
-      return modelsData.items.find(model => model.default) || modelsData.items[0] || null;
-    }, [modelsData.items]);
+      return defaultModelForSurface(modelsData, 'chat');
+    }, [modelsData]);
 
+    const initializedModelProjectRef = useRef(null);
     useEffect(() => {
+      if (!defaultModel || initializedModelProjectRef.current === selectedProjectId) return;
+      initializedModelProjectRef.current = selectedProjectId;
       setSelectedModel(defaultModel);
       setPrevSelectedModel(defaultModel);
-    }, [defaultModel]);
+    }, [defaultModel, selectedProjectId]);
 
     // llmSettings is seeded before any model is known (generateLLMSettings(null) → temperature-only).
     // Realign temperature/reasoning_effort to the resolved model's family so a reasoning model never
     // carries a stale temperature (issue #5859).
     useEffect(() => {
       if (!selectedModel) return;
-      setLlmSettings(prev => ({ ...prev, ...selectionFields(selectedModel), ...resetLLMSettingsForModel(selectedModel) }));
+      setLlmSettings(prev => ({
+        ...prev,
+        ...selectionFields(selectedModel),
+        ...resetLLMSettingsForModel(selectedModel),
+      }));
     }, [selectedModel]);
 
     useEffect(() => {
@@ -758,7 +769,11 @@ const NewConversationView = forwardRef(
                 await addNewParticipants(selectedParticipantFiltered, createdConversation, participants => {
                   onComplete?.([
                     ...participants,
-                    ...NewConversationHelpers.setUserLLmSettings(createdConversation.participants, user.id, cleanedSettings),
+                    ...NewConversationHelpers.setUserLLmSettings(
+                      createdConversation.participants,
+                      user.id,
+                      cleanedSettings,
+                    ),
                   ]);
                   const participant = participants.find(
                     p =>
@@ -819,7 +834,11 @@ const NewConversationView = forwardRef(
                 }, 0);
               } else {
                 onComplete?.(
-                  NewConversationHelpers.setUserLLmSettings(createdConversation.participants, user.id, cleanedSettings),
+                  NewConversationHelpers.setUserLLmSettings(
+                    createdConversation.participants,
+                    user.id,
+                    cleanedSettings,
+                  ),
                 );
                 setTimeout(() => {
                   onPredictStreamRef.current?.(question, null, createdConversation);
@@ -972,7 +991,9 @@ const NewConversationView = forwardRef(
                 modelsData?.items || [],
                 modelsData.auto_routing,
                 (selectedParticipantDetails?.version_details?.agent_type ||
-                  selectedParticipant?.entity_settings?.agent_type) === 'pipeline' ? 'pipeline' : 'chat',
+                  selectedParticipant?.entity_settings?.agent_type) === 'pipeline'
+                  ? 'pipeline'
+                  : 'chat',
               )}
               onSelectModel={onSelectModel}
               selectedModel={selectedModel}

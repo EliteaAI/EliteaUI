@@ -19,6 +19,7 @@ import {
 } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { DEFAULT_PIPELINE_KEY } from '@/[fsd]/features/pipelines/lib/constants';
 import { InternalToolsConstants } from '@/[fsd]/shared/lib/constants';
+import { defaultModelForSurface } from '@/[fsd]/shared/lib/utils/autoRouting.utils';
 import { cleanLLMSettings, generateLLMSettings } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
 import {
   useApplicationDetailsQuery,
@@ -51,8 +52,8 @@ export const useCreateApplicationInitialValues = forPipeline => {
     { skip: !selectedProjectId },
   );
   const defaultModel = useMemo(() => {
-    return modelsData.items.find(model => model.default) || modelsData.items[0] || null;
-  }, [modelsData.items]);
+    return defaultModelForSurface(modelsData, forPipeline ? 'pipeline' : 'agent');
+  }, [modelsData, forPipeline]);
   const initialValues = useMemo(
     () => ({
       name: '',

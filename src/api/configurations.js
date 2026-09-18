@@ -449,13 +449,13 @@ export const configurationsApi = eliteaApi
         }),
       }),
       setProjectDefaultModel: build.mutation({
-        query: ({ projectId, name, target_project_id, section = 'llm' }) => ({
+        query: ({ projectId, name, target_project_id, section = 'llm', mode = 'fixed' }) => ({
           url: `/configurations/models/${projectId}`,
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: { name, target_project_id, section },
+          body: { name, target_project_id, section, mode },
         }),
         transformResponse: response => {
           response.items = (response.items || []).map(i => ({ ...i, id: `${i.project_id}_${i.name}` }));
