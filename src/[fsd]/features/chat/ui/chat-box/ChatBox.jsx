@@ -207,6 +207,7 @@ const ChatBox = forwardRef((props, boxRef) => {
   const stopRequestedRef = useRef(false);
   const isStreamingRef = useRef(false);
   const stopQueueRef = useRef([]);
+  const isDequeuingRef = useRef(false);
 
   const dispatch = useDispatch();
   const { toastError, toastInfo } = useToast();
@@ -650,15 +651,13 @@ const ChatBox = forwardRef((props, boxRef) => {
     pendingInjectionsRef.current = new Map();
     // Items are already visible in pendingInjections (added by onInjectMessage).
     // Just queue them for sequential re-send; they'll be removed from state on dequeue.
-    const wasEmpty = stopQueueRef.current.length === 0;
     stopQueueRef.current.push(...unconsumed);
-    // If the stream already ended before this report arrived, the useEffect already
-    // fired on an empty queue. Use wasEmpty (not isStreamingRef) to avoid stale-ref
-    // issues: if the queue was empty before this push, the useEffect can't have dequeued
-    // anything, so we must send now. Also guard against user cancelling between push and shift.
-    if (wasEmpty && !isStreamingRef.current) {
+    // If the stream already ended and nothing is currently dequeuing, kick off the chain.
+    // isDequeuingRef prevents the isStreaming effect and this callback from both sending at once.
+    if (!isStreamingRef.current && !isDequeuingRef.current) {
       const next = stopQueueRef.current.shift();
       if (!next) return;
+      isDequeuingRef.current = true;
       setPendingInjections(prev => prev.filter(item => item.id !== next.id));
       onPredictStreamRef.current?.(next.text);
     }
@@ -834,7 +833,8 @@ const ChatBox = forwardRef((props, boxRef) => {
   useEffect(() => {
     if (isStreaming) return;
 
-    const shouldRestore = stopRequestedRef.current && lastSentQuestionRef.current;
+    const wasStopRequested = stopRequestedRef.current;
+    const shouldRestore = wasStopRequested && lastSentQuestionRef.current;
     if (shouldRestore) {
       chatInput.current?.setValue(lastSentQuestionRef.current);
     }
@@ -842,29 +842,40 @@ const ChatBox = forwardRef((props, boxRef) => {
     lastSentQuestionRef.current = '';
     stopRequestedRef.current = false;
 
-    // Safety net: if InjectionConsumedReport was never sent by the backend (e.g. the
-    // task was cancelled before the finally block ran), pending injections are still in
-    // pendingInjectionsRef. Rescue them into the stop queue so they are not silently lost.
-    if (pendingInjectionsRef.current.size) {
+    // Safety net: only rescue pending items when the user explicitly stopped the task.
+    // For normal finishes InjectionConsumedReport will arrive and handle it — rescuing
+    // early would clear the authoritative map before that report arrives, potentially
+    // causing a duplicate send when the report is later processed.
+    if (wasStopRequested && pendingInjectionsRef.current.size) {
       const rescued = [...pendingInjectionsRef.current.entries()].map(([id, text]) => ({ id, text }));
       stopQueueRef.current.push(...rescued);
       pendingInjectionsRef.current = new Map();
-      // Keep them visible — setPendingInjections already has these entries from
-      // onInjectMessage, so no need to add again; they'll be removed on dequeue.
     }
 
-    // Send the next queued message one at a time. When that message finishes or is
-    // stopped, isStreaming drops again and this effect fires, dequeuing the next one.
+    // Dequeue one item at a time. isDequeuingRef prevents onInjectionReport from also
+    // sending when the report arrives in the same tick as the isStreaming flip.
     if (stopQueueRef.current.length) {
       const next = stopQueueRef.current.shift();
+      isDequeuingRef.current = true;
       setPendingInjections(prev => prev.filter(item => item.id !== next.id));
       onPredictStreamRef.current?.(next.text);
+    } else {
+      isDequeuingRef.current = false;
     }
   }, [isStreaming]);
 
   useEffect(() => {
     activeConversationRef.current = activeConversation;
   }, [activeConversation]);
+
+  // Discard queued items when switching conversations so they can't leak into
+  // an unrelated chat via onPredictStreamRef.
+  useEffect(() => {
+    stopQueueRef.current = [];
+    pendingInjectionsRef.current = new Map();
+    isDequeuingRef.current = false;
+    setPendingInjections([]);
+  }, [activeConversation?.uuid]);
 
   // Reset session-declined MCP servers when the conversation changes
   useEffect(() => {
