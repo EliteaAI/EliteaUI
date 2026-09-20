@@ -2465,6 +2465,9 @@ const ChatBox = forwardRef((props, boxRef) => {
       // an undefined version_id plus an llm_settings override the backend rejects, so stop here.
       if (!versionDetails?.id) return;
 
+      // Clear any per-session LLM override so the new version's configured model is used.
+      setUnsavedLLMSettings?.(undefined);
+
       onChangeParticipantSettings(
         {
           ...(activeParticipant || {}),
@@ -2486,7 +2489,7 @@ const ChatBox = forwardRef((props, boxRef) => {
         version_details: { ...versionDetails },
       }));
     },
-    [activeParticipant, fetchOriginalVersionDetails, onChangeParticipantSettings],
+    [activeParticipant, fetchOriginalVersionDetails, onChangeParticipantSettings, setUnsavedLLMSettings],
   );
 
   // Handler for updating LLM settings on conversation pages
