@@ -996,6 +996,7 @@ const NewChat = props => {
     setActiveConversation,
     setConversations,
     setFolders,
+    setPinnedConversations,
     toastError,
     toastSuccess,
     emitLeaveRoom,

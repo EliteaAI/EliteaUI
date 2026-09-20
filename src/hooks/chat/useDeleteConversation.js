@@ -13,6 +13,7 @@ const useDeleteConversation = ({
   setActiveConversation,
   setConversations,
   setFolders,
+  setPinnedConversations,
   toastError,
   toastSuccess,
   emitLeaveRoom,
@@ -121,6 +122,9 @@ const useDeleteConversation = ({
             );
           });
         }
+        setPinnedConversations?.(prev =>
+          prev.filter(item => item.id !== conversation.id || item.isPlayback !== conversation?.isPlayback),
+        );
       }
     },
     [
@@ -133,6 +137,7 @@ const useDeleteConversation = ({
       setActiveConversation,
       setConversations,
       setFolders,
+      setPinnedConversations,
       unselectConversation,
       stopListenCanvasEditorsChangeEvent,
       stopListenCanvasContentChangeEvent,
