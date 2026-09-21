@@ -48,18 +48,22 @@ const EnhanceFixRow = memo(props => {
       onClick={handleRowClick}
       data-testid={testId}
     >
-      {mode === FIX_ROW_MODE.checkbox ? (
-        <BaseCheckbox
-          size="small"
-          checked={checked}
-          disabled={disabled}
-          onChange={() => onToggle?.()}
-          onClick={e => e.stopPropagation()}
-          sx={styles.checkbox}
-        />
-      ) : (
-        <Box sx={styles.statusIcon}>{status === 'success' ? <SuccessIcon /> : <ErrorIcon />}</Box>
-      )}
+      {/* The control sits in a box as tall as the title's line, so the two stay centred on each
+          other whatever the row below them contains. */}
+      <Box sx={styles.controlSlot}>
+        {mode === FIX_ROW_MODE.checkbox ? (
+          <BaseCheckbox
+            size="small"
+            checked={checked}
+            disabled={disabled}
+            onChange={() => onToggle?.()}
+            onClick={e => e.stopPropagation()}
+            sx={styles.checkbox}
+          />
+        ) : (
+          <>{status === 'success' ? <SuccessIcon /> : <ErrorIcon />}</>
+        )}
+      </Box>
       <Box sx={styles.content}>
         {(title || tierLabel) && (
           <Box sx={styles.titleRow}>
@@ -81,22 +85,26 @@ const EnhanceFixRow = memo(props => {
             )}
           </Box>
         )}
-        <Box sx={styles.diffBlock}>
-          {before != null && (
-            <Typography
-              variant="bodySmall"
-              sx={styles.before}
-            >
-              {before}
-            </Typography>
-          )}
-          <Typography
-            variant="bodySmall"
-            sx={styles.after}
-          >
-            {after}
-          </Typography>
-        </Box>
+        {(before != null || after != null) && (
+          <Box sx={styles.diffBlock}>
+            {before != null && (
+              <Typography
+                variant="bodySmall"
+                sx={styles.before}
+              >
+                {before}
+              </Typography>
+            )}
+            {after != null && (
+              <Typography
+                variant="bodySmall"
+                sx={styles.after}
+              >
+                {after}
+              </Typography>
+            )}
+          </Box>
+        )}
         {rationale && (
           <Typography
             variant="bodySmall2"
@@ -132,16 +140,16 @@ const enhanceFixRowStyles = disabled => ({
     cursor: disabled ? 'default' : 'pointer',
     opacity: disabled ? 0.6 : 1,
   }),
-  checkbox: {
-    padding: '0.25rem',
-    flexShrink: 0,
-    marginTop: '-0.25rem',
-  },
-  statusIcon: {
+  controlSlot: {
     display: 'flex',
     alignItems: 'center',
+    justifyContent: 'center',
+    // The title line box (bodyMedium), so the control lands on the title's optical centre.
+    minHeight: '1.5rem',
     flexShrink: 0,
-    marginTop: '0.125rem',
+  },
+  checkbox: {
+    padding: '0.25rem',
   },
   content: {
     display: 'flex',

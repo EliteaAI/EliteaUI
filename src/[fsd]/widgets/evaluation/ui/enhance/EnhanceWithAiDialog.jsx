@@ -1,9 +1,9 @@
-import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Alert, Box, CircularProgress, Typography } from '@mui/material';
-
-import { Button, Modal } from '@/[fsd]/shared/ui';
-import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import { EditEntityModal } from '@/[fsd]/entities/edit-entity-with-ai';
+import { ModalConstants } from '@/[fsd]/shared/lib/constants';
+import { Input, Modal } from '@/[fsd]/shared/ui';
+import { useGetApplicationVersionDetailQuery, useUpdateApplicationVersionMutation } from '@/api/applications';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 
@@ -16,47 +16,51 @@ import {
   useUpdateEvalDimensionMutation,
   useVersionInstructionForkMutation,
 } from '../../api';
-import { parseEvalError } from '../../lib/helpers';
-import EnhanceFixRow, { FIX_ROW_MODE } from './EnhanceFixRow';
-
-const STEPS = {
-  loading: 'loading',
-  error: 'error',
-  review: 'review',
-  applying: 'applying',
-  done: 'done',
-};
-
-const EVAL_FIX_KIND = {
-  dimensionRubric: 'dimension_rubric',
-  dimensionTarget: 'dimension_target',
-  datasetCaseExpected: 'dataset_case_expected',
-  datasetCoverageGap: 'dataset_coverage_gap',
-};
+import { ENHANCE_STEP_KEYS, EVAL_FIX_KIND } from '../../lib/constants';
+import {
+  applyInstructionPatches,
+  computeEnhanceSteps,
+  isAutoApplicableEvalFix,
+  parseEvalError,
+  splitEvalFixes,
+  toInstructionPatch,
+} from '../../lib/helpers';
+import { EnhanceAnalysisStep, EnhanceEvalFixesStep, EnhanceInstructionsStep } from './steps';
 
 const TARGET_PARSE_REGEX = /(>=|<=|==|>|<)\s*([\d.]+)/;
-const NO_AUTO_APPLY_MESSAGE = 'Could not auto-apply — edit the target manually.';
+const NO_AUTO_APPLY_MESSAGE = 'could not be applied automatically — edit the target manually.';
+const UNVERSIONED_DIMENSION_MESSAGE =
+  'Dimension changes are saved to the evaluation setup immediately — they will be updated without versioning.';
+const UNVERSIONED_DATASET_MESSAGE =
+  'Dataset changes are saved to the evaluation setup immediately — they will be updated without versioning.';
 
 const EnhanceWithAiDialog = memo(props => {
   const { open, onClose, applicationId, runId } = props;
 
   const projectId = useSelectedProjectId();
-  const { toastSuccess } = useToast();
+  const { toastSuccess, toastError, toastWarning } = useToast();
 
-  const [step, setStep] = useState(STEPS.loading);
   const [proposal, setProposal] = useState(null);
-  const [errorMessage, setErrorMessage] = useState('');
-  const [checkedAgentFixes, setCheckedAgentFixes] = useState([]);
-  const [checkedEvalFixes, setCheckedEvalFixes] = useState([]);
-  const [agentApplyResult, setAgentApplyResult] = useState(null);
-  const [evalApplyResults, setEvalApplyResults] = useState([]);
-  const generatePromiseRef = useRef(null);
+  const [steps, setSteps] = useState([]);
+  const [acceptedAgentFixes, setAcceptedAgentFixes] = useState([]);
+  const [acceptedEvalFixes, setAcceptedEvalFixes] = useState([]);
+  const [showVersionModal, setShowVersionModal] = useState(false);
+  const [versionName, setVersionName] = useState('');
+  const [isSavingAsVersion, setIsSavingAsVersion] = useState(false);
 
-  const [enhanceFromEval] = useEnhanceFromEvalMutation();
+  const [enhanceFromEval, { error: generateError, reset: resetGenerate }] = useEnhanceFromEvalMutation();
   const [versionInstructionFork] = useVersionInstructionForkMutation();
+  const [updateApplicationVersion] = useUpdateApplicationVersionMutation();
   const [updateEvalDimension] = useUpdateEvalDimensionMutation();
   const [updateEvalDatasetCase] = useUpdateEvalDatasetCaseMutation();
   const [updateEvalBinding] = useUpdateEvalBindingMutation();
+
+  const versionId = proposal?.version_id;
+
+  const { data: versionDetail, isFetching: isFetchingVersion } = useGetApplicationVersionDetailQuery(
+    { projectId, applicationId, versionId },
+    { skip: !open || !projectId || !applicationId || !versionId },
+  );
 
   const { data: resultsData } = useEvalRunResultsQuery(
     { projectId, runId },
@@ -70,100 +74,76 @@ const EnhanceWithAiDialog = memo(props => {
     { skip: !open || !projectId || !suiteId },
   );
 
-  const loadProposal = useCallback(() => {
-    setStep(STEPS.loading);
-    setErrorMessage('');
-    const promise = enhanceFromEval({ projectId, body: { run_id: runId } });
-    generatePromiseRef.current = promise;
-    promise
-      .unwrap()
-      .then(result => {
-        generatePromiseRef.current = null;
-        setProposal(result);
-        setCheckedAgentFixes((result.agent_fixes || []).map(() => true));
-        setCheckedEvalFixes(
-          (result.eval_fixes || []).map(fix => fix.kind !== EVAL_FIX_KIND.datasetCoverageGap),
-        );
-        setStep(STEPS.review);
-      })
-      .catch(err => {
-        generatePromiseRef.current = null;
-        if (err?.name === 'AbortError') return;
-        setErrorMessage(parseEvalError(err, 'Failed to generate suggestions.'));
-        setStep(STEPS.error);
-      });
-  }, [enhanceFromEval, projectId, runId]);
-
   useEffect(() => {
-    if (open && projectId && runId) {
-      setProposal(null);
-      setAgentApplyResult(null);
-      setEvalApplyResults([]);
-      loadProposal();
-    }
-    // Only re-run when the dialog is (re)opened for a given run — loadProposal is stable enough
-    // for the fields it closes over, and re-running on every render would refetch endlessly.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, projectId, runId]);
+    if (open) return;
 
-  const handleClose = useCallback(() => {
-    if (generatePromiseRef.current) {
-      generatePromiseRef.current.abort();
-      generatePromiseRef.current = null;
-    }
-    onClose();
-  }, [onClose]);
+    setProposal(null);
+    setSteps([]);
+    setAcceptedAgentFixes([]);
+    setAcceptedEvalFixes([]);
+    setShowVersionModal(false);
+    setVersionName('');
+    setIsSavingAsVersion(false);
+  }, [open]);
 
-  const toggleAgentFix = useCallback(index => {
-    setCheckedAgentFixes(prev => prev.map((checked, i) => (i === index ? !checked : checked)));
-  }, []);
+  const agentFixes = useMemo(() => proposal?.agent_fixes || [], [proposal]);
 
-  const toggleEvalFix = useCallback(
-    index => {
-      if (proposal?.eval_fixes?.[index]?.kind === EVAL_FIX_KIND.datasetCoverageGap) return;
-      setCheckedEvalFixes(prev => prev.map((checked, i) => (i === index ? !checked : checked)));
-    },
-    [proposal],
+  const { dimensionFixes, datasetFixes } = useMemo(() => splitEvalFixes(proposal?.eval_fixes), [proposal]);
+
+  // Kept as {fix, index} pairs: the index is the position in proposal.agent_fixes, which is what
+  // the accept flags are keyed by, while the patch list itself must stay dense for the server.
+  const acceptedPatches = useMemo(
+    () => agentFixes.map((fix, index) => ({ fix, index })).filter(({ index }) => acceptedAgentFixes[index]),
+    [agentFixes, acceptedAgentFixes],
   );
 
-  const handleApply = useCallback(async () => {
-    if (!proposal) return;
-    setStep(STEPS.applying);
+  const currentInstructions = versionDetail?.instructions || '';
 
-    const agentFixes = proposal.agent_fixes || [];
-    const evalFixes = proposal.eval_fixes || [];
-    const agentIndexes = agentFixes.map((_, i) => i).filter(i => checkedAgentFixes[i]);
-    const evalIndexes = evalFixes.map((_, i) => i).filter(i => checkedEvalFixes[i]);
+  const { proposedInstructions, conflictIndex } = useMemo(() => {
+    const { text, conflictIndex: patchConflict } = applyInstructionPatches(
+      currentInstructions,
+      acceptedPatches.map(({ fix }) => toInstructionPatch(fix)),
+    );
 
-    let agentResult = null;
-    if (agentIndexes.length > 0) {
-      const patches = agentIndexes.map(i => ({
-        old_text: agentFixes[i].old_text,
-        replacement: agentFixes[i].replacement,
-        replace_all: agentFixes[i].replace_all || false,
-      }));
-      try {
-        const forkResult = await versionInstructionFork({
-          projectId,
-          applicationId,
-          versionId: proposal.version_id,
-          body: { expected_instructions_sha256: proposal.instructions_sha256, patches },
-        }).unwrap();
-        agentResult = { indexes: agentIndexes, status: 'success' };
-        toastSuccess(`Agent instructions forked into version "${forkResult?.name || forkResult?.id}".`);
-      } catch (err) {
-        agentResult = {
-          indexes: agentIndexes,
-          status: 'error',
-          message: parseEvalError(err, 'Failed to apply agent fixes.'),
-        };
-      }
-    }
-    setAgentApplyResult(agentResult);
+    return {
+      proposedInstructions: text,
+      conflictIndex: patchConflict === -1 ? -1 : acceptedPatches[patchConflict].index,
+    };
+  }, [currentInstructions, acceptedPatches]);
 
-    const evalResults = [];
-    for (const i of evalIndexes) {
-      const fix = evalFixes[i];
+  const handleGenerate = useCallback(
+    () => enhanceFromEval({ projectId, body: { run_id: runId } }),
+    [enhanceFromEval, projectId, runId],
+  );
+
+  const handleDraftGenerated = useCallback(result => {
+    setProposal(result);
+    setSteps(computeEnhanceSteps(result));
+    setAcceptedAgentFixes((result.agent_fixes || []).map(() => true));
+    setAcceptedEvalFixes((result.eval_fixes || []).map(isAutoApplicableEvalFix));
+
+    return result;
+  }, []);
+
+  const handleToggleAgentFix = useCallback(index => {
+    setAcceptedAgentFixes(prev => prev.map((accepted, i) => (i === index ? !accepted : accepted)));
+  }, []);
+
+  const handleToggleEvalFix = useCallback(index => {
+    setAcceptedEvalFixes(prev => prev.map((accepted, i) => (i === index ? !accepted : accepted)));
+  }, []);
+
+  // Dimensions and dataset cases are not versioned entities — each accepted fix is a direct write,
+  // so a failure is reported per item and never blocks the instruction save that came before it.
+  const applyEvalFixes = useCallback(async () => {
+    const evalFixes = proposal?.eval_fixes || [];
+
+    for (let index = 0; index < evalFixes.length; index += 1) {
+      const fix = evalFixes[index];
+      if (!acceptedEvalFixes[index] || !isAutoApplicableEvalFix(fix)) continue;
+
+      const fixLabel = fix.target_name || `Fix ${index + 1}`;
+
       try {
         if (fix.kind === EVAL_FIX_KIND.dimensionRubric) {
           await updateEvalDimension({
@@ -172,7 +152,6 @@ const EnhanceWithAiDialog = memo(props => {
             agentId: applicationId,
             body: { description: fix.proposed_value },
           }).unwrap();
-          evalResults.push({ index: i, status: 'success' });
         } else if (fix.kind === EVAL_FIX_KIND.datasetCaseExpected) {
           await updateEvalDatasetCase({
             projectId,
@@ -180,293 +159,261 @@ const EnhanceWithAiDialog = memo(props => {
             caseId: fix.target_id,
             body: { expected_output: fix.proposed_value },
           }).unwrap();
-          evalResults.push({ index: i, status: 'success' });
         } else if (fix.kind === EVAL_FIX_KIND.dimensionTarget) {
           const match = TARGET_PARSE_REGEX.exec(fix.proposed_value || '');
           const bindingId = match
             ? bindingsData?.find(binding => binding.dimension_id === fix.target_id)?.id
             : null;
+
           if (!match || !bindingId) {
-            evalResults.push({ index: i, status: 'error', message: NO_AUTO_APPLY_MESSAGE });
+            toastWarning(`"${fixLabel}" ${NO_AUTO_APPLY_MESSAGE}`);
             continue;
           }
+
           await updateEvalBinding({
             projectId,
             suiteId,
             bindingId,
             body: { target: Number(match[2]), target_operator: match[1] },
           }).unwrap();
-          evalResults.push({ index: i, status: 'success' });
         }
       } catch (err) {
-        evalResults.push({ index: i, status: 'error', message: parseEvalError(err, 'Failed to apply fix.') });
+        toastWarning(`"${fixLabel}": ${parseEvalError(err, 'could not be applied.')}`);
       }
     }
-    setEvalApplyResults(evalResults);
-    setStep(STEPS.done);
   }, [
     proposal,
-    checkedAgentFixes,
-    checkedEvalFixes,
+    acceptedEvalFixes,
     projectId,
     applicationId,
     datasetId,
     suiteId,
     bindingsData,
-    versionInstructionFork,
     updateEvalDimension,
     updateEvalDatasetCase,
     updateEvalBinding,
-    toastSuccess,
+    toastWarning,
   ]);
 
-  const styles = enhanceWithAiDialogStyles();
+  const handleSave = useCallback(async () => {
+    if (acceptedPatches.length > 0) {
+      if (conflictIndex !== -1) {
+        toastError('Some accepted edits no longer match the current instructions. Uncheck them and retry.');
+        throw new Error('instruction patch conflict');
+      }
 
-  const renderLoading = () => (
-    <Box
-      sx={styles.loadingContainer}
-      data-testid="enhance-with-ai-loading"
-    >
-      <CircularProgress size={24} />
-      <Typography
-        color="text.secondary"
-        sx={styles.loadingText}
-      >
-        Analyzing run results...
-      </Typography>
-    </Box>
-  );
-
-  const renderError = () => (
-    <Alert
-      severity="error"
-      data-testid="enhance-with-ai-error"
-    >
-      {errorMessage}
-    </Alert>
-  );
-
-  const renderAgentFix = (fix, index) => (
-    <EnhanceFixRow
-      key={`agent-${index}`}
-      testId={`enhance-agent-fix-${index}`}
-      mode={step === STEPS.review ? FIX_ROW_MODE.checkbox : FIX_ROW_MODE.status}
-      checked={checkedAgentFixes[index]}
-      onToggle={() => toggleAgentFix(index)}
-      status={agentApplyResult?.indexes?.includes(index) ? agentApplyResult.status : undefined}
-      statusMessage={agentApplyResult?.indexes?.includes(index) ? agentApplyResult.message : undefined}
-      before={fix.replace_all ? 'Rewrites the entire instructions' : fix.old_text}
-      after={fix.replacement}
-      rationale={fix.rationale}
-    />
-  );
-
-  const renderEvalFix = (fix, index) => {
-    const isCoverageGap = fix.kind === EVAL_FIX_KIND.datasetCoverageGap;
-    const applyResult = evalApplyResults.find(result => result.index === index);
-    return (
-      <EnhanceFixRow
-        key={`eval-${index}`}
-        testId={`enhance-eval-fix-${index}`}
-        mode={step === STEPS.review ? FIX_ROW_MODE.checkbox : FIX_ROW_MODE.status}
-        checked={checkedEvalFixes[index]}
-        onToggle={() => toggleEvalFix(index)}
-        disabled={isCoverageGap}
-        status={applyResult?.status}
-        statusMessage={isCoverageGap ? 'Not auto-applied — review manually.' : applyResult?.message}
-        title={fix.target_name}
-        dimensionTier={fix.dimension_tier}
-        before={isCoverageGap ? null : fix.current_value}
-        after={isCoverageGap ? 'New case' : fix.proposed_value}
-        rationale={fix.rationale}
-      />
-    );
-  };
-
-  const renderReviewOrResults = () => {
-    const agentFixes = proposal?.agent_fixes || [];
-    const evalFixes = proposal?.eval_fixes || [];
-    const isEmpty = agentFixes.length === 0 && evalFixes.length === 0;
-
-    if (isEmpty) {
-      return (
-        <Typography
-          variant="bodyMedium"
-          sx={styles.emptyText}
-          data-testid="enhance-with-ai-empty"
-        >
-          No suggestions — the agent and evaluation look consistent for this run.
-        </Typography>
-      );
+      try {
+        await updateApplicationVersion({
+          ...(versionDetail ?? {}),
+          projectId,
+          applicationId,
+          versionId,
+          instructions: proposedInstructions,
+        }).unwrap();
+        toastSuccess(`Instructions updated in version "${versionDetail?.name}".`);
+      } catch (err) {
+        toastError(parseEvalError(err, 'Failed to update the agent instructions.'));
+        throw err;
+      }
     }
 
-    return (
-      <Box sx={styles.reviewContainer}>
-        {proposal?.diagnosis && <Typography variant="bodyMedium">{proposal.diagnosis}</Typography>}
-        {proposal?.coverage && (
-          <Typography
-            variant="bodySmall"
-            sx={styles.coverageText}
-          >
-            Based on {proposal.coverage.total_cases} cases, {proposal.coverage.missed_bindings} missed
-            targets.
-          </Typography>
-        )}
-        {agentFixes.length > 0 && (
-          <Box sx={styles.section}>
-            <Typography sx={styles.sectionLabel}>Agent Fixes</Typography>
-            <Box sx={styles.cardList}>{agentFixes.map(renderAgentFix)}</Box>
-          </Box>
-        )}
-        {evalFixes.length > 0 && (
-          <Box sx={styles.section}>
-            <Typography sx={styles.sectionLabel}>Evaluation Fixes</Typography>
-            <Box sx={styles.cardList}>{evalFixes.map(renderEvalFix)}</Box>
-          </Box>
-        )}
-      </Box>
-    );
-  };
+    await applyEvalFixes();
+  }, [
+    acceptedPatches,
+    conflictIndex,
+    versionDetail,
+    projectId,
+    applicationId,
+    versionId,
+    proposedInstructions,
+    updateApplicationVersion,
+    applyEvalFixes,
+    toastSuccess,
+    toastError,
+  ]);
 
-  const renderContent = () => {
-    if (step === STEPS.loading) return renderLoading();
-    if (step === STEPS.error) return renderError();
-    return renderReviewOrResults();
-  };
+  const handleSaveAsVersionClick = useCallback(() => {
+    setShowVersionModal(true);
+  }, []);
 
-  const hasAnyFixes = (proposal?.agent_fixes?.length || 0) + (proposal?.eval_fixes?.length || 0) > 0;
+  const handleCancelVersion = useCallback(() => {
+    setShowVersionModal(false);
+    setVersionName('');
+  }, []);
 
-  const renderActions = () => {
-    if (step === STEPS.loading || step === STEPS.applying) return null;
+  const handleConfirmVersion = useCallback(async () => {
+    const trimmedName = versionName.trim();
+    if (!trimmedName || acceptedPatches.length === 0) return;
 
-    if (step === STEPS.error) {
-      return (
-        <>
-          <Button.BaseBtn
-            variant={BUTTON_VARIANTS.elitea}
-            color={BUTTON_COLORS.secondary}
-            onClick={handleClose}
-            data-testid="enhance-with-ai-cancel-button"
-          >
-            Close
-          </Button.BaseBtn>
-          <Button.BaseBtn
-            variant={BUTTON_VARIANTS.elitea}
-            color={BUTTON_COLORS.primary}
-            onClick={loadProposal}
-            data-testid="enhance-with-ai-retry-button"
-          >
-            Try again
-          </Button.BaseBtn>
-        </>
-      );
+    setIsSavingAsVersion(true);
+
+    try {
+      const forkResult = await versionInstructionFork({
+        projectId,
+        applicationId,
+        versionId,
+        body: {
+          expected_instructions_sha256: proposal?.instructions_sha256,
+          patches: acceptedPatches.map(({ fix }) => toInstructionPatch(fix)),
+          new_version_name: trimmedName,
+        },
+      }).unwrap();
+
+      toastSuccess(`Version "${forkResult?.name || trimmedName}" created with the accepted edits.`);
+
+      await applyEvalFixes();
+
+      setShowVersionModal(false);
+      setVersionName('');
+      onClose();
+    } catch (err) {
+      toastError(parseEvalError(err, 'Failed to create the new version.'));
+    } finally {
+      setIsSavingAsVersion(false);
     }
+  }, [
+    versionName,
+    acceptedPatches,
+    versionInstructionFork,
+    projectId,
+    applicationId,
+    versionId,
+    proposal,
+    applyEvalFixes,
+    onClose,
+    toastSuccess,
+    toastError,
+  ]);
 
-    if (step === STEPS.done) {
-      return (
-        <Button.BaseBtn
-          variant={BUTTON_VARIANTS.elitea}
-          color={BUTTON_COLORS.primary}
-          onClick={handleClose}
-          data-testid="enhance-with-ai-done-button"
-        >
-          Close
-        </Button.BaseBtn>
-      );
-    }
+  const handleVersionKeyDown = useCallback(
+    e => {
+      if (e.key === 'Enter' && versionName.trim()) {
+        e.preventDefault();
+        handleConfirmVersion();
+      }
+    },
+    [versionName, handleConfirmVersion],
+  );
 
-    return (
-      <>
-        <Button.BaseBtn
-          variant={BUTTON_VARIANTS.elitea}
-          color={BUTTON_COLORS.secondary}
-          onClick={handleClose}
-          data-testid="enhance-with-ai-decline-button"
-        >
-          Decline
-        </Button.BaseBtn>
-        <Button.BaseBtn
-          variant={BUTTON_VARIANTS.elitea}
-          color={BUTTON_COLORS.primary}
-          onClick={handleApply}
-          disabled={!hasAnyFixes}
-          data-testid="enhance-with-ai-apply-button"
-        >
-          Apply
-        </Button.BaseBtn>
-      </>
-    );
-  };
+  const renderStep = useCallback(
+    (stepKey, draftData) => {
+      switch (stepKey) {
+        case ENHANCE_STEP_KEYS.analysis:
+          return <EnhanceAnalysisStep proposal={draftData} />;
+        case ENHANCE_STEP_KEYS.instructions:
+          return (
+            <EnhanceInstructionsStep
+              currentInstructions={currentInstructions}
+              proposedInstructions={proposedInstructions}
+              isLoadingInstructions={isFetchingVersion && !versionDetail}
+              agentFixes={agentFixes}
+              acceptedFlags={acceptedAgentFixes}
+              onToggle={handleToggleAgentFix}
+              conflictIndex={conflictIndex}
+            />
+          );
+        case ENHANCE_STEP_KEYS.dimensions:
+          return (
+            <EnhanceEvalFixesStep
+              testId="enhance-dimensions-step"
+              fixes={dimensionFixes}
+              acceptedFlags={acceptedEvalFixes}
+              onToggle={handleToggleEvalFix}
+              description="Rubric and target changes the analysis suggests for the dimensions this run scored."
+              bannerMessage={UNVERSIONED_DIMENSION_MESSAGE}
+            />
+          );
+        case ENHANCE_STEP_KEYS.datasetCases:
+          return (
+            <EnhanceEvalFixesStep
+              testId="enhance-dataset-cases-step"
+              fixes={datasetFixes}
+              acceptedFlags={acceptedEvalFixes}
+              onToggle={handleToggleEvalFix}
+              description="Changes to the dataset the run was scored against."
+              bannerMessage={UNVERSIONED_DATASET_MESSAGE}
+            />
+          );
+        default:
+          return null;
+      }
+    },
+    [
+      currentInstructions,
+      proposedInstructions,
+      isFetchingVersion,
+      versionDetail,
+      agentFixes,
+      acceptedAgentFixes,
+      handleToggleAgentFix,
+      conflictIndex,
+      dimensionFixes,
+      datasetFixes,
+      acceptedEvalFixes,
+      handleToggleEvalFix,
+    ],
+  );
+
+  const hasAcceptedEvalFix = acceptedEvalFixes.some(Boolean);
+  const hasConflict = conflictIndex !== -1;
+  const isSaveDisabled = (acceptedPatches.length === 0 && !hasAcceptedEvalFix) || hasConflict;
 
   return (
-    <Modal.BaseModal
-      open={open}
-      title="Enhance with AI"
-      onClose={handleClose}
-      content={renderContent()}
-      actions={renderActions()}
-      sx={styles.dialogPaper}
-      dialogSx={styles.dialogBody}
-      data-testid="enhance-with-ai-dialog"
-    />
+    <>
+      <EditEntityModal
+        open={open}
+        onClose={onClose}
+        title="Enhance with AI"
+        entityLabel="enhancement"
+        skipPrompt
+        loadingText="Analyzing run results..."
+        onGenerate={handleGenerate}
+        generateError={generateError}
+        resetGenerate={resetGenerate}
+        onDraftGenerated={handleDraftGenerated}
+        steps={steps}
+        renderStep={renderStep}
+        onSave={handleSave}
+        onSaveAsVersion={agentFixes.length > 0 ? handleSaveAsVersionClick : undefined}
+        isSavingAsVersion={isSavingAsVersion}
+        saveDisabled={isSaveDisabled}
+        saveAsVersionDisabled={acceptedPatches.length === 0}
+        saveLabel="Save"
+        savingLabel="Saving..."
+        modalTestId="enhance-with-ai-dialog"
+        closeButtonTestId="enhance-with-ai-close-button"
+        errorAlertTestId="enhance-with-ai-error"
+        loadingIndicatorTestId="enhance-with-ai-loading"
+        cancelButtonTestId="enhance-with-ai-cancel-button"
+        retryButtonTestId="enhance-with-ai-retry-button"
+      />
+      <Modal.BaseModal
+        open={showVersionModal}
+        variant={ModalConstants.MODAL_VARIANT.simple}
+        titleIcon={ModalConstants.MODAL_ICON_TYPE.success}
+        title="Create version"
+        onClose={isSavingAsVersion ? undefined : handleCancelVersion}
+        onConfirm={handleConfirmVersion}
+        confirmButtonText="Save"
+        confirming={!versionName.trim() || isSavingAsVersion}
+        onKeyDown={handleVersionKeyDown}
+        closeButtonTestId="enhance-version-dialog-close-button"
+        cancelButtonTestId="enhance-version-dialog-cancel-button"
+        confirmButtonTestId="enhance-version-dialog-save-button"
+        content={
+          <Input.InputBase
+            label="Name"
+            value={versionName}
+            onChange={e => setVersionName(e.target.value)}
+            inputProps={{ maxLength: 255, 'data-testid': 'enhance-version-dialog-name-input' }}
+            autoFocus
+          />
+        }
+      />
+    </>
   );
 });
 
 EnhanceWithAiDialog.displayName = 'EnhanceWithAiDialog';
-
-/** @type {MuiSx} */
-const enhanceWithAiDialogStyles = () => ({
-  dialogPaper: {
-    '& .MuiDialog-paper': {
-      width: '45rem !important',
-      maxWidth: '80% !important',
-    },
-  },
-  dialogBody: {
-    maxHeight: 'calc(100vh - 16rem)',
-  },
-  loadingContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '0.75rem',
-    padding: '2rem 0',
-  },
-  loadingText: {
-    fontSize: '0.875rem',
-  },
-  emptyText: ({ palette }) => ({
-    color: palette.text.primary,
-    padding: '2rem 0',
-    textAlign: 'center',
-  }),
-  reviewContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem',
-  },
-  coverageText: ({ palette }) => ({
-    color: palette.text.primary,
-  }),
-  section: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.75rem',
-  },
-  sectionLabel: {
-    fontSize: '0.75rem',
-    fontWeight: 500,
-    lineHeight: '1rem',
-    letterSpacing: '0.045rem',
-    textTransform: 'uppercase',
-    color: 'text.primary',
-  },
-  cardList: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.5rem',
-  },
-});
 
 export default EnhanceWithAiDialog;

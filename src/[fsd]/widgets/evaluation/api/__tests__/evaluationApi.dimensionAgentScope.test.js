@@ -16,6 +16,13 @@ vi.mock('@/api', async () => {
   return { eliteaApi };
 });
 
+// '@/api/applications' is only read for a tag-name constant, but importing it for real pulls in
+// '@/common/utils.jsx' and through it the whole Redux store, whose reducers then resolve endpoints
+// off a half-initialised api module. Stub it down to the one constant evaluationApi.js uses.
+vi.mock('@/api/applications', () => ({
+  TAG_TYPE_APPLICATION_DETAILS: 'TAG_TYPE_APPLICATION_DETAILS',
+}));
+
 // fetchBaseQuery builds a Request before it calls fetch, and the Node Request implementation
 // used under vitest rejects the relative VITE_SERVER_URL the app ships with. Seed the runtime
 // config getEnvVar reads first — before the api module is imported — so the base query gets the

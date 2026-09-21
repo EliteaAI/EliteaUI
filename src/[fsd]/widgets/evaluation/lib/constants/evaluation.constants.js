@@ -77,6 +77,30 @@ export const SCALE_TYPE_PRESET_CONFIG = {
   [SCALE_TYPE_PRESET.custom]: { scaleType: EVAL_SCALE_TYPE.continuous, min: null, max: null },
 };
 
+// Kinds of evaluation-side fix the "Enhance with AI" analysis can propose. Mirrors EvalFixKind
+// in elitea_core (models/pd/enhance_from_eval.py) — the strings are the API contract.
+export const EVAL_FIX_KIND = {
+  dimensionRubric: 'dimension_rubric',
+  dimensionTarget: 'dimension_target',
+  datasetCaseExpected: 'dataset_case_expected',
+  datasetCoverageGap: 'dataset_coverage_gap',
+};
+
+// A coverage gap describes a case that does not exist yet, so there is nothing to patch — it is
+// review material the user acts on by hand in the dataset editor.
+export const AUTO_APPLICABLE_EVAL_FIX_KINDS = [
+  EVAL_FIX_KIND.dimensionRubric,
+  EVAL_FIX_KIND.dimensionTarget,
+  EVAL_FIX_KIND.datasetCaseExpected,
+];
+
+export const ENHANCE_STEP_KEYS = {
+  analysis: 'analysis',
+  instructions: 'instructions',
+  dimensions: 'dimensions',
+  datasetCases: 'dataset_cases',
+};
+
 // Importance levels for dimension weighting
 export const IMPORTANCE = {
   low: 'low',
