@@ -16,6 +16,7 @@ const OAuthFormFields = memo(props => {
     availableScopes = [],
     needClientId = false,
     needSecret = false,
+    isSecretRequired = true,
     autoFocus = false,
     saveCredentials = false,
     onSaveCredentialsChange,
@@ -45,7 +46,7 @@ const OAuthFormFields = memo(props => {
           value={clientSecret}
           enableAutoBlur={false}
           type="password"
-          required
+          required={isSecretRequired}
         />
       )}
       <Input.StyledInputEnhancer
