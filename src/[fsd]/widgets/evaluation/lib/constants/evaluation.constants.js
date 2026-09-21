@@ -213,6 +213,11 @@ export const DEFAULT_DATASET_FORM = {
   isShared: false,
 };
 
+export const DEFAULT_SUITE_FORM = {
+  name: '',
+  description: '',
+};
+
 // Socket events carrying live run progress. Backend: SioEvents in
 // elitea_core/utils/sio_utils.py — the room is keyed by run id alone.
 export const EVAL_SIO_EVENTS = {

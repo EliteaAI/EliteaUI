@@ -33,13 +33,11 @@ export const useEvalDatasetActions = ({ projectId, editingSuiteId, agentId, tab 
   const [showDatasetDialog, setShowDatasetDialog] = useState(false);
   const [showExcludeCaseConfirm, setShowExcludeCaseConfirm] = useState(false);
   const [caseToExclude, setCaseToExclude] = useState(null);
-  const [pendingDatasetId, setPendingDatasetId] = useState(null);
 
   useEffect(() => {
     setShowDatasetDialog(false);
     setShowExcludeCaseConfirm(false);
     setCaseToExclude(null);
-    setPendingDatasetId(null);
   }, [editingSuiteId]);
 
   const handleManageDatasets = useCallback(() => {
@@ -60,12 +58,7 @@ export const useEvalDatasetActions = ({ projectId, editingSuiteId, agentId, tab 
 
   const handleDatasetSaved = useCallback(
     async dataset => {
-      if (!dataset?.id) return;
-      if (!editingSuiteId) {
-        setPendingDatasetId(dataset.id);
-        toastSuccess(`Dataset "${dataset.name}" has been created and attached to the suite.`);
-        return;
-      }
+      if (!dataset?.id || !editingSuiteId) return;
       try {
         await updateEvalSuite({
           projectId,
@@ -100,10 +93,7 @@ export const useEvalDatasetActions = ({ projectId, editingSuiteId, agentId, tab 
 
   const handleAttachDataset = useCallback(
     async dataset => {
-      if (!editingSuiteId) {
-        setPendingDatasetId(dataset.id);
-        return;
-      }
+      if (!editingSuiteId) return;
       try {
         await updateEvalSuite({
           projectId,
@@ -119,10 +109,7 @@ export const useEvalDatasetActions = ({ projectId, editingSuiteId, agentId, tab 
   );
 
   const handleRemoveDataset = useCallback(async () => {
-    if (!editingSuiteId) {
-      setPendingDatasetId(null);
-      return;
-    }
+    if (!editingSuiteId) return;
     try {
       await updateEvalSuite({
         projectId,
@@ -199,29 +186,11 @@ export const useEvalDatasetActions = ({ projectId, editingSuiteId, agentId, tab 
     [editingSuiteId, excludedCaseIds, updateExclusions, projectId, toastSuccess, toastError],
   );
 
-  const flushPendingDataset = useCallback(
-    async suiteId => {
-      if (pendingDatasetId == null) return;
-      try {
-        await updateEvalSuite({
-          projectId,
-          suiteId,
-          body: { dataset_id: pendingDatasetId },
-        }).unwrap();
-      } catch (error) {
-        toastError(parseEvalError(error, 'Failed to attach dataset to suite.'));
-      }
-      setPendingDatasetId(null);
-    },
-    [pendingDatasetId, updateEvalSuite, projectId, toastError],
-  );
-
   return {
     showDatasetDialog,
     showExcludeCaseConfirm,
     caseToExclude,
     excludedCaseIds,
-    pendingDatasetId,
     handleManageDatasets,
     handleCreateDataset,
     handleCloseDatasetDialog,
@@ -233,6 +202,5 @@ export const useEvalDatasetActions = ({ projectId, editingSuiteId, agentId, tab 
     handleCloseExcludeCaseConfirm,
     handleConfirmExcludeCase,
     handleIncludeCase,
-    flushPendingDataset,
   };
 };
