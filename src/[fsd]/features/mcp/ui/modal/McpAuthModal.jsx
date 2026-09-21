@@ -23,6 +23,18 @@ import OAuthFormFields from './OAuthFormFields';
 
 const { MCP_OAUTH_FLOWS, MCP_OAUTH_ERRORS } = McpAuthFlowConstants;
 
+const PRE_REGISTERED_APPLICATION_NOTICE = 'This server requires a pre-registered OAuth application.';
+
+const describeRequestedCredentials = ({ needClientId, needsClientSecret, mustEnterClientSecret }) => {
+  if (needClientId && mustEnterClientSecret) return 'Please provide your client credentials.';
+  if (needClientId && needsClientSecret) {
+    return 'Please provide its Client ID, and its Client Secret if the application has one.';
+  }
+  if (needClientId) return 'Please provide its Client ID.';
+  if (mustEnterClientSecret) return 'Please provide its Client Secret.';
+  return 'Provide its Client Secret if the application has one.';
+};
+
 const convertScopes = scopes => {
   if (Array.isArray(scopes)) return scopes.join(' ').trim();
   if (typeof scopes === 'string') return scopes;
@@ -124,11 +136,12 @@ const McpAuthModal = memo(props => {
   const hasAuthServerEndpoints = Boolean(
     oauthAuthorizationServer?.authorization_endpoint && oauthAuthorizationServer?.token_endpoint,
   );
-  const { authFlow, requiresClientSecret, supportsPKCE, isClientSecretMandatory } = clientRequirements;
+  const { authFlow, requiresClientSecret, isClientSecretMandatory } = clientRequirements;
   const needClientId = hasAuthServerEndpoints && clientRequirements.needClientId && !client_id?.trim();
   const needsClientSecret =
     hasAuthServerEndpoints && clientRequirements.needClientSecret && !client_secret?.trim();
   const mustEnterClientSecret = needsClientSecret && isClientSecretMandatory;
+  const showsCredentialFields = needClientId || needsClientSecret;
 
   const descriptionText = useMemo(() => {
     if (providedSettings?.has_pat) {
@@ -141,17 +154,26 @@ const McpAuthModal = memo(props => {
     };
     const selectFlowSuffix = () => {
       if (!hasAuthServerEndpoints) return '';
-      if (requiresClientSecret && supportsPKCE) {
-        return 'This server requires a pre-registered OAuth application. Please provide its Client ID, and its Client Secret if the application has one.';
-      }
-      if (requiresClientSecret) {
-        return 'This server requires a pre-registered OAuth application. Please provide your client credentials.';
-      }
-      return AUTH_FLOW_MESSAGES[authFlow] || '';
+      if (!showsCredentialFields || !requiresClientSecret) return AUTH_FLOW_MESSAGES[authFlow] || '';
+      const requestedCredentials = describeRequestedCredentials({
+        needClientId,
+        needsClientSecret,
+        mustEnterClientSecret,
+      });
+      return `${PRE_REGISTERED_APPLICATION_NOTICE} ${requestedCredentials}`;
     };
     const flowSuffix = selectFlowSuffix();
     return `This MCP server requires OAuth authorization to access its tools.${flowSuffix ? ` ${flowSuffix}` : ''}`;
-  }, [providedSettings?.has_pat, hasAuthServerEndpoints, requiresClientSecret, supportsPKCE, authFlow]);
+  }, [
+    providedSettings?.has_pat,
+    hasAuthServerEndpoints,
+    showsCredentialFields,
+    requiresClientSecret,
+    needClientId,
+    needsClientSecret,
+    mustEnterClientSecret,
+    authFlow,
+  ]);
 
   const isAuthorizeDisabled = useMemo(() => {
     if (authLoading || authSuccess) return true;
@@ -382,7 +404,7 @@ const McpAuthModal = memo(props => {
             autoFocus={true}
             saveCredentials={saveCredentials}
             onSaveCredentialsChange={onSaveCredentialsChange}
-            showSaveCredentials={needClientId || needsClientSecret}
+            showSaveCredentials={showsCredentialFields}
           />
         ) : (
           <Typography

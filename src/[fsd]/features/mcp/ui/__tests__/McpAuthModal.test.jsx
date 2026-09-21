@@ -67,7 +67,7 @@ const theme = createTheme({
   },
 });
 
-const renderModal = (oauthAuthorizationServer, providedSettings) =>
+const renderModal = (oauthAuthorizationServer, providedSettings, formClientId) =>
   render(
     <ThemeProvider theme={theme}>
       <McpAuthModal
@@ -80,6 +80,7 @@ const renderModal = (oauthAuthorizationServer, providedSettings) =>
           providedSettings,
           resourceScopes: undefined,
         }}
+        formClientId={formClientId}
         projectId={2}
         toolkitId={1}
         onClose={vi.fn()}
@@ -150,16 +151,74 @@ describe('McpAuthModal client secret requirement (#6689)', () => {
     expect(authorizeButton()).toBeEnabled();
   });
 
-  it('keeps the SharePoint-style Entra flow with backend credentials unchanged', () => {
-    renderModal(findServerMetadata('Entra v2 tenant'), {
-      mcp_client_id: 'backend-client-id',
-      has_mcp_client_secret: true,
-    });
+  it.each([
+    [
+      'SharePoint-style Entra',
+      'Entra v2 tenant',
+      { mcp_client_id: 'backend-client-id', has_mcp_client_secret: true },
+    ],
+    ['pre-built GitHub', 'GitHub', { mcp_client_id: 'backend-client-id', mcp_client_secret: '****' }],
+  ])(
+    'asks for no credentials when the backend supplies them (%s)',
+    (_label, serverName, providedSettings) => {
+      renderModal(findServerMetadata(serverName), providedSettings);
 
-    expect(screen.queryByPlaceholderText('Enter OAuth client ID from the provider')).not.toBeInTheDocument();
+      expect(
+        screen.queryByPlaceholderText('Enter OAuth client ID from the provider'),
+      ).not.toBeInTheDocument();
+      expect(screen.queryByPlaceholderText('Enter OAuth client secret')).not.toBeInTheDocument();
+      expect(screen.queryByText(/pre-registered OAuth application/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Please provide/)).not.toBeInTheDocument();
+      expect(authorizeButton()).toBeEnabled();
+    },
+  );
+});
+
+describe('McpAuthModal description names only the credential fields it shows (#6689)', () => {
+  const descriptionText = () => screen.getByText(/This MCP server requires OAuth authorization/).textContent;
+  const secretInput = () => screen.getByPlaceholderText('Enter OAuth client secret');
+
+  it.each([
+    ['from the backend', { mcp_client_id: 'backend-client-id' }, undefined],
+    ['from saved toolkit credentials', undefined, 'saved-client-id'],
+  ])(
+    'asks only for an optional secret on a PKCE server whose Client ID is known %s',
+    (_route, providedSettings, formClientId) => {
+      renderModal(findServerMetadata('GitHub'), providedSettings, formClientId);
+
+      expect(
+        screen.queryByPlaceholderText('Enter OAuth client ID from the provider'),
+      ).not.toBeInTheDocument();
+      expect(secretInput()).not.toBeRequired();
+      expect(descriptionText()).toContain('Provide its Client Secret if the application has one.');
+      expect(descriptionText()).not.toContain('Client ID');
+      expect(screen.getByRole('button', { name: 'Authorize' })).toBeEnabled();
+    },
+  );
+
+  it('asks only for the mandatory secret on a server without PKCE whose Client ID is known', () => {
+    renderModal(findServerMetadata('Entra v2 tenant'), { mcp_client_id: 'backend-client-id' });
+
+    expect(secretInput()).toBeRequired();
+    expect(descriptionText()).toContain('Please provide its Client Secret.');
+    expect(descriptionText()).not.toContain('Client ID');
+    expect(screen.getByRole('button', { name: 'Authorize' })).toBeDisabled();
+  });
+
+  it('asks only for the Client ID when the backend supplies the secret', () => {
+    renderModal(findServerMetadata('Asana v2'), { has_mcp_client_secret: true });
+
     expect(screen.queryByPlaceholderText('Enter OAuth client secret')).not.toBeInTheDocument();
-    expect(screen.getByText(/Please provide your client credentials/)).toBeInTheDocument();
-    expect(authorizeButton()).toBeEnabled();
+    expect(descriptionText()).toContain('Please provide its Client ID.');
+    expect(descriptionText()).not.toContain('Client Secret');
+  });
+
+  it('keeps the flow message on a server that accepts clients without a secret', () => {
+    renderModal({ ...findServerMetadata('Asana v2'), token_endpoint_auth_methods_supported: ['none'] });
+
+    expect(screen.getByPlaceholderText('Enter OAuth client ID from the provider')).toBeInTheDocument();
+    expect(descriptionText()).toContain('Using PKCE flow for enhanced security.');
+    expect(descriptionText()).not.toContain('pre-registered');
   });
 });
 
