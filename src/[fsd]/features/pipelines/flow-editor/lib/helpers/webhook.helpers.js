@@ -18,9 +18,11 @@ export const getGitlabSigningTokenError = value => {
   const encoded = token.slice(GITLAB_SIGNING_TOKEN_PREFIX.length);
   if (!encoded) return 'Signing token is missing its key';
 
+  // GitLab's documented format is standard base64, which never contains `-` or `_`, so this is a
+  // no-op on a real token. It only stops `atob` from reporting a base64url key as unparseable.
   let decoded;
   try {
-    decoded = atob(encoded);
+    decoded = atob(encoded.replace(/-/g, '+').replace(/_/g, '/'));
   } catch {
     return 'Signing token is not valid base64 — check that the whole value was pasted';
   }

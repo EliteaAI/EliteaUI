@@ -16,17 +16,18 @@ export const GITLAB_AUTH_METHODS = {
 };
 
 export const GITLAB_AUTH_METHOD_OPTIONS = [
-  {
-    label: 'Secret token',
-    value: GITLAB_AUTH_METHODS.secret_token,
-    description: 'Elitea generates the token; you paste it into GitLab under "Secret token".',
-  },
-  {
-    label: 'Signing token',
-    value: GITLAB_AUTH_METHODS.signing_token,
-    description: 'GitLab generates the token and signs every delivery; you paste GitLab’s token here.',
-  },
+  { label: 'Secret token', value: GITLAB_AUTH_METHODS.secret_token },
+  { label: 'Signing token', value: GITLAB_AUTH_METHODS.signing_token },
 ];
+
+// Rendered as a single line under the radio group rather than per item: RadioButtonGroup lays
+// descriptions out inline beside the label in a nowrap row, which a full sentence does not fit.
+export const GITLAB_AUTH_METHOD_DESCRIPTIONS = {
+  [GITLAB_AUTH_METHODS.secret_token]:
+    'Elitea generates the token; you paste it into GitLab under "Secret token".',
+  [GITLAB_AUTH_METHODS.signing_token]:
+    "GitLab generates the token and signs every delivery; you paste GitLab's token here.",
+};
 
 export const GITLAB_SIGNING_TOKEN_PREFIX = 'whsec_';
 

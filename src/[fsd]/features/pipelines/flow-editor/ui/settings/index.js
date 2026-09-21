@@ -10,4 +10,3 @@ export { default as CustomNodeInput } from './CustomNodeInput';
 export { default as PipelineScheduleModal } from './PipelineScheduleModal';
 export { default as ScheduleInfoDisplay } from './ScheduleInfoDisplay';
 export { default as TriggerTypeSelector } from './TriggerTypeSelector';
-export { TRIGGER_TYPES } from '../../lib/constants/webhook.constants';

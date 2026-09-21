@@ -273,4 +273,21 @@ describe('PipelineWebhookModal', () => {
 
     expect(screen.queryByTestId('pipeline-webhook-secret-regenerate-button')).toBeNull();
   });
+
+  it('follows the selected auth method with its description', () => {
+    renderModal({ onSubmit: vi.fn(), webhookType: 'gitlab', gitlabAuthMethod: 'secret_token' });
+
+    const description = () => screen.getByTestId('pipeline-webhook-gitlab-auth-method-description');
+    expect(description().textContent).toContain('Elitea generates the token');
+
+    fireEvent.click(screen.getByTestId('pipeline-webhook-gitlab-auth-method-radio-signing_token'));
+
+    expect(description().textContent).toContain('GitLab generates the token');
+  });
+
+  it('shows no auth method section for non-gitlab types', () => {
+    renderModal({ onSubmit: vi.fn(), webhookType: 'github', secretValue: 'abc' });
+
+    expect(screen.queryByTestId('pipeline-webhook-gitlab-auth-method-description')).toBeNull();
+  });
 });

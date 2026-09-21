@@ -9,6 +9,7 @@ import { Box, Button, IconButton, Typography } from '@mui/material';
 import Tooltip from '@/ComponentsLib/Tooltip';
 import {
   GITLAB_AUTH_METHODS,
+  GITLAB_AUTH_METHOD_DESCRIPTIONS,
   GITLAB_AUTH_METHOD_OPTIONS,
   WEBHOOK_TYPES,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/constants/webhook.constants';
@@ -301,6 +302,13 @@ const PipelineWebhookModal = memo(props => {
                 onChange={setSelectedAuthMethod}
                 testId="pipeline-webhook-gitlab-auth-method-radio"
               />
+              <Typography
+                variant="bodySmall"
+                sx={styles.description}
+                data-testid="pipeline-webhook-gitlab-auth-method-description"
+              >
+                {GITLAB_AUTH_METHOD_DESCRIPTIONS[selectedAuthMethod]}
+              </Typography>
             </Box>
           )}
 
