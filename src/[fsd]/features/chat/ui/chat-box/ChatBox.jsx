@@ -640,45 +640,56 @@ const ChatBox = forwardRef((props, boxRef) => {
     setPendingInjections(prev => prev.filter(item => item.id !== injectionId));
   }, []);
 
+  // Drain stopQueueRef one item at a time, using the return value of onPredictStream to detect
+  // bail-outs. Returns immediately after a successful emit — the isStreaming effect handles the
+  // next dequeue once that stream ends. Loops past bail-outs so a failed send never strands the
+  // remaining queue.
+  const drainQueue = useCallback(async () => {
+    let next = stopQueueRef.current.shift();
+    while (next) {
+      isDequeuingRef.current = true;
+      setPendingInjections(prev => prev.filter(item => item.id !== next.id));
+
+      const emitted = await onPredictStreamRef.current?.(next.text);
+      if (emitted) return; // emit succeeded — isStreaming effect dequeues the rest
+      // bail-out (upload failed, sendResult.success === false, etc.): try the next item
+      isDequeuingRef.current = false;
+      next = stopQueueRef.current.shift();
+    }
+    isDequeuingRef.current = false;
+  }, []);
+
   // Turn ended: anything still pending was never folded in. Queue unconsumed items for
   // sequential re-send — one message at a time, each only after the previous finishes
   // or is stopped. If streaming has already ended by the time this fires (InjectionConsumedReport
   // arrived after finish_reason cleared isStreaming), send the first item immediately.
-  const onInjectionReport = useCallback(({ consumed }) => {
-    const pending = pendingInjectionsRef.current;
-    if (!pending.size) return;
-    if (consumed?.length) {
-      // Remove consumed items from the pending map, the stop queue (in case stop-rescue already
-      // moved them there), and from state so their chips clear even if the live InjectionConsumed
-      // event was dropped.
-      consumed.forEach(id => {
-        pending.delete(id);
-        stopQueueRef.current = stopQueueRef.current.filter(item => item.id !== id);
-      });
-      setPendingInjections(prev => prev.filter(item => !consumed.includes(item.id)));
-    }
-    if (!pending.size) return;
-    const unconsumed = [...pending.entries()].map(([id, text]) => ({ id, text }));
-    pendingInjectionsRef.current = new Map();
-    // Items are already visible in pendingInjections (added by onInjectMessage).
-    // Just queue them for sequential re-send; they'll be removed from state on dequeue.
-    stopQueueRef.current.push(...unconsumed);
-    // If the stream already ended and nothing is currently dequeuing, kick off the chain.
-    // isDequeuingRef prevents the isStreaming effect and this callback from both sending at once.
-    if (!isStreamingRef.current && !isDequeuingRef.current) {
-      const next = stopQueueRef.current.shift();
-      if (!next) return;
-      isDequeuingRef.current = true;
-      setPendingInjections(prev => prev.filter(item => item.id !== next.id));
-      // Release mutex if onPredictStream bails out without starting streaming.
-      (async () => {
-        await onPredictStreamRef.current?.(next.text);
-        if (!isStreamingRef.current) {
-          isDequeuingRef.current = false;
-        }
-      })();
-    }
-  }, []);
+  const onInjectionReport = useCallback(
+    ({ consumed }) => {
+      // Always prune consumed IDs first — on the Stop path the isStreaming effect rescue
+      // has already cleared pendingInjectionsRef, so the pending.size check below would
+      // exit before reaching this block if we put it after.
+      if (consumed?.length) {
+        consumed.forEach(id => {
+          pendingInjectionsRef.current.delete(id);
+          stopQueueRef.current = stopQueueRef.current.filter(item => item.id !== id);
+        });
+        setPendingInjections(prev => prev.filter(item => !consumed.includes(item.id)));
+      }
+      const pending = pendingInjectionsRef.current;
+      if (!pending.size) return;
+      const unconsumed = [...pending.entries()].map(([id, text]) => ({ id, text }));
+      pendingInjectionsRef.current = new Map();
+      // Items are already visible in pendingInjections (added by onInjectMessage).
+      // Just queue them for sequential re-send; they'll be removed from state on dequeue.
+      stopQueueRef.current.push(...unconsumed);
+      // If the stream already ended and nothing is currently dequeuing, kick off the chain.
+      // isDequeuingRef prevents the isStreaming effect and this callback from both sending at once.
+      if (!isStreamingRef.current && !isDequeuingRef.current) {
+        drainQueue();
+      }
+    },
+    [drainQueue],
+  );
 
   const onEntityCreated = useCallback(
     ({ entity_type, entity_id, version_id, entity_name, is_mcp }) => {
@@ -868,16 +879,7 @@ const ChatBox = forwardRef((props, boxRef) => {
     // Dequeue one item at a time. isDequeuingRef prevents onInjectionReport from also
     // sending when the report arrives in the same tick as the isStreaming flip.
     if (stopQueueRef.current.length) {
-      const next = stopQueueRef.current.shift();
-      isDequeuingRef.current = true;
-      setPendingInjections(prev => prev.filter(item => item.id !== next.id));
-      // Release mutex if onPredictStream bails out without starting streaming.
-      (async () => {
-        await onPredictStreamRef.current?.(next.text);
-        if (!isStreamingRef.current) {
-          isDequeuingRef.current = false;
-        }
-      })();
+      drainQueue();
     } else {
       // Restore the stopped question only when there's nothing queued to send next.
       // If we dequeued above, onPredictStream will reset the input anyway.
@@ -886,6 +888,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       }
       isDequeuingRef.current = false;
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isStreaming]);
 
   useEffect(() => {
@@ -1089,6 +1092,7 @@ const ChatBox = forwardRef((props, boxRef) => {
 
   const onPredictStream = useCallback(
     async question => {
+      let emitted = false;
       // Before sending a new message, track any pending MCP server (that required auth) as session-declined.
       // This handles the case where user sends a new message instead of clicking Continue.
       // Only the last message can have actionRequired status.
@@ -1234,6 +1238,7 @@ const ChatBox = forwardRef((props, boxRef) => {
             conversation_uuid: conversationUuid,
           });
           clearMentions();
+          emitted = true;
         }
 
         // If a brand-new conversation was just created and the user had set a custom steps_limit
@@ -1263,6 +1268,7 @@ const ChatBox = forwardRef((props, boxRef) => {
           onClearActiveParticipant(true);
         }
       }
+      return emitted;
     },
     [
       activeConversation,
