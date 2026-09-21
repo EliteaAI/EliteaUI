@@ -67,7 +67,12 @@ const theme = createTheme({
   },
 });
 
-const renderModal = (oauthAuthorizationServer, providedSettings, formClientId) =>
+const renderModal = (
+  oauthAuthorizationServer,
+  providedSettings,
+  formClientId,
+  authServers = ['https://mcp.example.com'],
+) =>
   render(
     <ThemeProvider theme={theme}>
       <McpAuthModal
@@ -75,7 +80,7 @@ const renderModal = (oauthAuthorizationServer, providedSettings, formClientId) =
         serverUrl="https://mcp.example.com"
         tokenStorageKey="cred-1:https://mcp.example.com"
         mcpAuthMetadata={{
-          authServers: ['https://mcp.example.com'],
+          authServers,
           oauthAuthorizationServer,
           providedSettings,
           resourceScopes: undefined,
@@ -243,6 +248,12 @@ describe('McpAuthModal without usable authorization server metadata (#6689)', ()
 
   it('shows the discovery error when the metadata document lacks a token endpoint', () => {
     renderModal({ ...findServerMetadata('Box'), token_endpoint: undefined });
+
+    expectDiscoveryErrorInsteadOfCredentialForm();
+  });
+
+  it('shows the discovery error when the backend names no authorization server', () => {
+    renderModal(findServerMetadata('Box'), undefined, undefined, []);
 
     expectDiscoveryErrorInsteadOfCredentialForm();
   });

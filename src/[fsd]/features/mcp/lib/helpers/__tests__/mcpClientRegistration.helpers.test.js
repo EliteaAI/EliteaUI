@@ -85,3 +85,52 @@ describe('getOAuthClientRequirements with an omitted token_endpoint_auth_methods
     expect(requirements.needClientId).toBe(true);
   });
 });
+
+describe('getOAuthClientRequirements reads an omitted auth-methods list per question (#6689)', () => {
+  const ENDPOINTS = {
+    authorization_endpoint: 'https://auth.example.com/authorize',
+    token_endpoint: 'https://auth.example.com/token',
+  };
+
+  it('lets registration issue a public client when the list is omitted', () => {
+    const requirements = getOAuthClientRequirements(
+      { ...ENDPOINTS, registration_endpoint: 'https://auth.example.com/register' },
+      undefined,
+    );
+
+    expect(requirements.authFlow).toBe('dcr');
+    expect(requirements.needClientId).toBe(false);
+    expect(requirements.needClientSecret).toBe(false);
+  });
+
+  it('keeps the token endpoint confidential when the list is omitted and registration is unavailable', () => {
+    const requirements = getOAuthClientRequirements(ENDPOINTS, undefined);
+
+    expect(requirements.requiresClientSecret).toBe(true);
+  });
+});
+
+describe('getOAuthClientRequirements detects OIDC the same way the authorization flow does (#6689)', () => {
+  const ENDPOINTS = {
+    authorization_endpoint: 'https://auth.example.com/authorize',
+    token_endpoint: 'https://auth.example.com/token',
+  };
+
+  it('treats an issuer that offers the openid scope as OIDC even without a userinfo endpoint', () => {
+    const requirements = getOAuthClientRequirements(
+      { ...ENDPOINTS, issuer: 'https://auth.example.com', scopes_supported: ['openid', 'profile'] },
+      undefined,
+    );
+
+    expect(requirements.authFlow).toBe('oidc');
+  });
+
+  it('does not treat a userinfo endpoint without the openid scope as OIDC', () => {
+    const requirements = getOAuthClientRequirements(
+      { ...ENDPOINTS, userinfo_endpoint: 'https://auth.example.com/userinfo', scopes_supported: ['repo'] },
+      undefined,
+    );
+
+    expect(requirements.authFlow).toBe('standard');
+  });
+});

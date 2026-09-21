@@ -133,13 +133,15 @@ const McpAuthModal = memo(props => {
     () => McpClientRegistrationHelpers.getOAuthClientRequirements(oauthAuthorizationServer, providedSettings),
     [oauthAuthorizationServer, providedSettings],
   );
-  const hasAuthServerEndpoints = Boolean(
-    oauthAuthorizationServer?.authorization_endpoint && oauthAuthorizationServer?.token_endpoint,
+  const hasAuthServerMetadata = Boolean(
+    oauthAuthorizationServer?.authorization_endpoint &&
+    oauthAuthorizationServer?.token_endpoint &&
+    authServers?.length,
   );
   const { authFlow, requiresClientSecret, isClientSecretMandatory } = clientRequirements;
-  const needClientId = hasAuthServerEndpoints && clientRequirements.needClientId && !client_id?.trim();
+  const needClientId = hasAuthServerMetadata && clientRequirements.needClientId && !client_id?.trim();
   const needsClientSecret =
-    hasAuthServerEndpoints && clientRequirements.needClientSecret && !client_secret?.trim();
+    hasAuthServerMetadata && clientRequirements.needClientSecret && !client_secret?.trim();
   const mustEnterClientSecret = needsClientSecret && isClientSecretMandatory;
   const showsCredentialFields = needClientId || needsClientSecret;
 
@@ -153,7 +155,7 @@ const McpAuthModal = memo(props => {
       [MCP_OAUTH_FLOWS.PKCE]: 'Using PKCE flow for enhanced security.',
     };
     const selectFlowSuffix = () => {
-      if (!hasAuthServerEndpoints) return '';
+      if (!hasAuthServerMetadata) return '';
       if (!showsCredentialFields || !requiresClientSecret) return AUTH_FLOW_MESSAGES[authFlow] || '';
       const requestedCredentials = describeRequestedCredentials({
         needClientId,
@@ -166,7 +168,7 @@ const McpAuthModal = memo(props => {
     return `This MCP server requires OAuth authorization to access its tools.${flowSuffix ? ` ${flowSuffix}` : ''}`;
   }, [
     providedSettings?.has_pat,
-    hasAuthServerEndpoints,
+    hasAuthServerMetadata,
     showsCredentialFields,
     requiresClientSecret,
     needClientId,
@@ -181,7 +183,7 @@ const McpAuthModal = memo(props => {
     // For pre-built MCPs, storageKey may not be required (backend manages it)
     if (!storageKey && !isPrebuildMcp) return true;
 
-    if (!hasAuthServerEndpoints) return true;
+    if (!hasAuthServerMetadata) return true;
 
     if (needClientId && !clientId?.trim()) return true;
     return !!(mustEnterClientSecret && !clientSecret?.trim());
@@ -194,7 +196,7 @@ const McpAuthModal = memo(props => {
     mustEnterClientSecret,
     clientId,
     clientSecret,
-    hasAuthServerEndpoints,
+    hasAuthServerMetadata,
   ]);
 
   const handleCancel = useCallback(() => {
@@ -226,12 +228,6 @@ const McpAuthModal = memo(props => {
     setAuthError('');
     setAuthSuccess(false);
     try {
-      // Use metadata from mcp_authorization_required message (no frontend discovery)
-      if (!authServers || !authServers.length) {
-        // noinspection ExceptionCaughtLocallyJS
-        throw new Error('No authorization servers available');
-      }
-
       await McpAuthFlowHelpers.startMcpAuthFlow({
         serverUrl: storageKey,
         resourceMetadata: {
@@ -389,7 +385,7 @@ const McpAuthModal = memo(props => {
             </Link>
           </Typography>
         </Typography>
-        {hasAuthServerEndpoints ? (
+        {hasAuthServerMetadata ? (
           <OAuthFormFields
             clientId={clientId}
             clientSecret={clientSecret}
