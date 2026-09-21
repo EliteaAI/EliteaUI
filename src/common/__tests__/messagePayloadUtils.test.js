@@ -2,11 +2,12 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { autoModel } from '@/[fsd]/shared/lib/utils/autoRouting.utils';
 import { ChatParticipantType } from '@/common/constants';
+
 import {
   generateChatContinuePayload,
   generateMcpContinuePayload,
   generateMessagePayload,
-} from '@/common/messagePayloadUtils';
+} from '../messagePayloadUtils';
 
 vi.mock('@/[fsd]/features/mcp/lib/helpers', () => ({
   McpAuthHelpers: {
