@@ -32,7 +32,6 @@ const VERSION_TOOLTIP =
 const SuiteDetailPanel = memo(props => {
   const {
     suite,
-    isNew,
     isLoading,
     modelsData = { items: [] },
     datasets = [],
@@ -74,19 +73,13 @@ const SuiteDetailPanel = memo(props => {
   const [showDiscardModal, setShowDiscardModal] = useState(false);
 
   useEffect(() => {
-    if (isNew) {
-      setName('');
-      setDescription('');
-      setJudgeModel(null);
-      return;
-    }
     if (suite) {
       setName(suite.name ?? '');
       setDescription(suite.description ?? '');
       setJudgeModel(suite.judge_model ?? null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isNew, suite?.id]);
+  }, [suite?.id]);
 
   const handleNameChange = useCallback(event => {
     setName(event.target.value);
@@ -157,14 +150,13 @@ const SuiteDetailPanel = memo(props => {
   }, [onDiscard, suite]);
 
   const isDirty = useMemo(() => {
-    if (isNew) return !!name.trim();
     if (!suite) return false;
     return (
       name !== (suite.name ?? '') ||
       description !== (suite.description ?? '') ||
       JSON.stringify(judgeModel) !== JSON.stringify(suite.judge_model ?? null)
     );
-  }, [isNew, suite, name, description, judgeModel]);
+  }, [suite, name, description, judgeModel]);
 
   useEffect(() => {
     onDirtyChange?.(isDirty);
@@ -180,15 +172,9 @@ const SuiteDetailPanel = memo(props => {
   const hasDatasetWithCases = attachedDataset != null && caseCount > 0;
   const hasDimensions = attachedDimensions.length > 0;
   const isEvaluateDisabled =
-    isNew ||
-    !suite?.id ||
-    !canRun ||
-    isEvaluating ||
-    !hasDatasetWithCases ||
-    !hasDimensions ||
-    !selectedVersionId;
+    !suite?.id || !canRun || isEvaluating || !hasDatasetWithCases || !hasDimensions || !selectedVersionId;
 
-  const title = isNew ? 'New Suite' : (suite?.name ?? 'Suite');
+  const title = suite?.name ?? 'Suite';
 
   const styles = suiteDetailPanelStyles();
 
@@ -244,28 +230,24 @@ const SuiteDetailPanel = memo(props => {
           >
             Save
           </Button.BaseBtn>
-          {!isNew && (
+          <Button.BaseBtn
+            variant={BUTTON_VARIANTS.elitea}
+            color={BUTTON_COLORS.secondary}
+            disabled={!isDirty}
+            onClick={handleDiscardClick}
+            sx={styles.headerButton}
+          >
+            Discard
+          </Button.BaseBtn>
+          {canDeleteSuite && (
             <>
+              <Box sx={styles.headerDivider} />
               <Button.BaseBtn
-                variant={BUTTON_VARIANTS.elitea}
-                color={BUTTON_COLORS.secondary}
-                disabled={!isDirty}
-                onClick={handleDiscardClick}
-                sx={styles.headerButton}
-              >
-                Discard
-              </Button.BaseBtn>
-              {canDeleteSuite && (
-                <>
-                  <Box sx={styles.headerDivider} />
-                  <Button.BaseBtn
-                    variant={BUTTON_VARIANTS.tertiary}
-                    onClick={handleDelete}
-                    sx={styles.deleteButton}
-                    startIcon={<DeleteIcon sx={styles.deleteIcon} />}
-                  />
-                </>
-              )}
+                variant={BUTTON_VARIANTS.tertiary}
+                onClick={handleDelete}
+                sx={styles.deleteButton}
+                startIcon={<DeleteIcon sx={styles.deleteIcon} />}
+              />
             </>
           )}
         </Box>

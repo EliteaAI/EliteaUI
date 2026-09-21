@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo, useRef } from 'react';
+import { memo, useMemo } from 'react';
 
 import { useParams } from 'react-router-dom';
 
@@ -7,6 +7,7 @@ import { Box } from '@mui/material';
 import { BreadcrumbsOrTitle, Modal } from '@/[fsd]/shared/ui';
 import {
   BuildDimensionWithAiModal,
+  CreateSuiteModal,
   DatasetModal,
   DimensionModal,
   EVAL_TIER,
@@ -37,9 +38,8 @@ const AgentEvaluatePage = memo(() => {
 
   const applicationId = useMemo(() => (agentId ? parseInt(agentId, 10) : null), [agentId]);
 
-  const isCreatingNew = suiteIdParam === 'new';
   const editingSuiteId = useMemo(() => {
-    if (!suiteIdParam || suiteIdParam === 'new') return null;
+    if (!suiteIdParam) return null;
     const parsed = parseInt(suiteIdParam, 10);
     return Number.isNaN(parsed) ? null : parsed;
   }, [suiteIdParam]);
@@ -71,11 +71,10 @@ const AgentEvaluatePage = memo(() => {
   );
 
   // ---- API-based data (before hooks, for hook params) ----
-  const activeSuiteDetail = isCreatingNew ? null : suiteDetail;
-  const apiDatasetId = activeSuiteDetail?.dataset_id ?? null;
+  const attachedDatasetId = suiteDetail?.dataset_id ?? null;
 
-  const apiAttachedDimensions = useMemo(() => {
-    const bindings = (activeSuiteDetail?.bindings ?? []).filter(b => b.dimension_id != null);
+  const attachedDimensions = useMemo(() => {
+    const bindings = (suiteDetail?.bindings ?? []).filter(b => b.dimension_id != null);
     if (bindings.length === 0) return [];
     return bindings.map(binding => {
       const dim = findDimensionByBindingId(dimensions, binding.dimension_id);
@@ -90,19 +89,30 @@ const AgentEvaluatePage = memo(() => {
         defaultWeight: dim?.default_weight ?? null,
       };
     });
-  }, [activeSuiteDetail?.bindings, dimensions]);
+  }, [suiteDetail?.bindings, dimensions]);
+
+  const attachedDimensionRefs = useMemo(
+    () =>
+      attachedDimensions.map(d =>
+        d.tier === EVAL_TIER.platform
+          ? { catalogId: null, materializedId: d.binding.dimension_id, tier: d.tier }
+          : { id: d.binding.dimension_id, tier: d.tier },
+      ),
+    [attachedDimensions],
+  );
+
+  const { data: fetchedDatasetDetails } = useEvalDatasetQuery(
+    { projectId, datasetId: attachedDatasetId },
+    { skip: !projectId || attachedDatasetId == null },
+  );
+  const attachedDatasetDetails = attachedDatasetId != null ? fetchedDatasetDetails : null;
 
   // ---- Domain hooks ----
-  const afterCreateRef = useRef(null);
-
   const suiteActions = useEvalSuiteActions({
     projectId,
-    applicationId,
     agentId,
     tab,
-    isCreatingNew,
     editingSuiteId,
-    afterCreateRef,
   });
 
   const datasetActions = useEvalDatasetActions({
@@ -116,54 +126,10 @@ const AgentEvaluatePage = memo(() => {
     projectId,
     editingSuiteId,
     dimensions,
-    attachedDimensions: apiAttachedDimensions,
+    attachedDimensions,
     agentId,
     tab,
   });
-
-  // ---- Effective values (merge API + pending for new suites) ----
-  const effectiveDatasetId = isCreatingNew ? datasetActions.pendingDatasetId : apiDatasetId;
-
-  const { data: fetchedDatasetDetails } = useEvalDatasetQuery(
-    { projectId, datasetId: effectiveDatasetId },
-    { skip: !projectId || effectiveDatasetId == null },
-  );
-  const attachedDatasetDetails = effectiveDatasetId != null ? fetchedDatasetDetails : null;
-
-  const attachedDimensions = useMemo(() => {
-    if (isCreatingNew) {
-      return dimensionActions.pendingDimensions.map(pending => ({
-        binding: { id: `pending-${pending.id}`, dimension_id: pending.id, engine: pending.engine },
-        name: pending.name || `Dimension #${pending.id}`,
-        tier: pending.tier ?? null,
-        localDimensionId: pending.local_dimension_id ?? null,
-        defaultTarget: pending.default_target ?? null,
-        defaultTargetOperator: pending.default_target_operator ?? null,
-        defaultScaleType: pending.scale_type ?? null,
-        defaultWeight: pending.default_weight ?? null,
-      }));
-    }
-    return apiAttachedDimensions;
-  }, [isCreatingNew, dimensionActions.pendingDimensions, apiAttachedDimensions]);
-
-  const attachedDimensionRefs = useMemo(
-    () =>
-      attachedDimensions.map(d => {
-        const isPending = String(d.binding.id).startsWith('pending-');
-        if (d.tier === EVAL_TIER.platform) {
-          return {
-            catalogId: isPending ? d.binding.dimension_id : null,
-            materializedId: isPending ? (d.localDimensionId ?? null) : d.binding.dimension_id,
-            tier: d.tier,
-          };
-        }
-        return {
-          id: d.binding.dimension_id,
-          tier: d.tier,
-        };
-      }),
-    [attachedDimensions],
-  );
 
   const runActions = useEvalRunActions({
     projectId,
@@ -171,23 +137,10 @@ const AgentEvaluatePage = memo(() => {
     applicationId,
     agentId,
     tab,
-    attachedDatasetId: effectiveDatasetId,
+    attachedDatasetId,
     attachedDatasetDetails,
     attachedDimensionsCount: attachedDimensions.length,
   });
-
-  // Wire up afterCreate to flush pending state. Assigned from an effect rather than
-  // during render so the render pass stays side-effect free; the ref is only read
-  // from the async save handler, which always runs after the commit.
-  const { flushPendingDataset } = datasetActions;
-  const { flushPendingDimensions } = dimensionActions;
-
-  useEffect(() => {
-    afterCreateRef.current = async createdSuiteId => {
-      await flushPendingDataset(createdSuiteId);
-      await flushPendingDimensions(createdSuiteId);
-    };
-  }, [flushPendingDataset, flushPendingDimensions]);
 
   const datasetNamesById = useMemo(() => Object.fromEntries(datasets.map(d => [d.id, d.name])), [datasets]);
 
@@ -204,8 +157,7 @@ const AgentEvaluatePage = memo(() => {
           {suiteActions.isDetailView ? (
             <SuiteDetailPanel
               suite={suiteDetail}
-              isNew={isCreatingNew}
-              isLoading={!isCreatingNew && isSuiteLoading}
+              isLoading={isSuiteLoading}
               modelsData={modelsData}
               datasets={datasets}
               attachedDataset={attachedDatasetDetails}
@@ -228,10 +180,19 @@ const AgentEvaluatePage = memo(() => {
         <Box sx={styles.rightPanel}>
           <ResultsPanel
             runActions={runActions}
-            hasSuite={editingSuiteId != null || isCreatingNew}
+            hasSuite={editingSuiteId != null}
           />
         </Box>
       </Box>
+
+      {/* Suite create modal */}
+      <CreateSuiteModal
+        open={suiteActions.showCreateSuiteModal}
+        onClose={suiteActions.handleCloseCreateSuiteModal}
+        projectId={projectId}
+        applicationId={applicationId}
+        onCreated={suiteActions.handleSuiteCreated}
+      />
 
       {/* Suite delete confirmation */}
       <Modal.DeleteEntityModal
@@ -280,8 +241,8 @@ const AgentEvaluatePage = memo(() => {
         alarm
       />
 
-      {/* Dimension modals (saved suite OR new suite) */}
-      {(editingSuiteId || isCreatingNew) && (
+      {/* Dimension modals */}
+      {editingSuiteId && (
         <>
           <SelectDimensionFromLibraryModal
             open={dimensionActions.showDimensionLibrary}
