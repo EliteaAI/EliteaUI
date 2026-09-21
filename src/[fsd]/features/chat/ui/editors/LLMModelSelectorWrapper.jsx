@@ -4,17 +4,21 @@ import { useFormikContext } from 'formik';
 
 import { Box } from '@mui/material';
 
+import { AutoRoutingConstants } from '@/[fsd]/shared/lib/constants';
 import { DEFAULT_MAX_TOKENS } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
 import {
   autoModel,
   isAutoSelection,
   modelsWithAuto,
+  resolveModelSurface,
   selectionFields,
 } from '@/[fsd]/shared/lib/utils/autoRouting.utils';
 import { resetLLMSettingsForModel } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
 import { LLMModelSelector } from '@/[fsd]/widgets/llm-model-selector';
 import { useListModelsQuery } from '@/api/configurations';
 import { PROMPT_PAYLOAD_KEY } from '@/common/constants';
+
+const { MODEL_SURFACES } = AutoRoutingConstants;
 
 /**
  * Shared wrapper component for LLM model selection in editor contexts
@@ -48,11 +52,14 @@ const LLMModelSelectorWrapper = ({
       modelsWithAuto(
         modelsData.items || [],
         modelsData.auto_routing,
-        version_details?.agent_type === 'pipeline' ? 'pipeline' : 'agent',
+        resolveModelSurface(version_details?.agent_type, undefined, MODEL_SURFACES.agent),
       ),
     [modelsData, version_details?.agent_type],
   );
 
+  // Creation applies the project default before opening this editor. Repair
+  // missing legacy settings with a concrete model, never a new Auto opt-in.
+  // Existing saved concrete/Auto selections are left unchanged.
   const defaultModel = useMemo(() => {
     return modelsData.items.find(model => model.default) || modelsData.items[0] || null;
   }, [modelsData.items]);

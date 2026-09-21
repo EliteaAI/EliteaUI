@@ -20,12 +20,18 @@ import RecommendationList from '@/[fsd]/features/chat/ui/recommendations/Recomme
 import SearchResultList from '@/[fsd]/features/chat/ui/recommendations/SearchResultList';
 import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { MentionSkillList } from '@/[fsd]/features/skill/ui';
-import { BrandLogoConstants, InternalToolsConstants, MentionConstants } from '@/[fsd]/shared/lib/constants';
+import {
+  AutoRoutingConstants,
+  BrandLogoConstants,
+  InternalToolsConstants,
+  MentionConstants,
+} from '@/[fsd]/shared/lib/constants';
 import { DEFAULT_STEPS_LIMIT } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
 import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks/useEnvironmentSettingByKey.hooks';
 import {
   defaultModelForSurface,
   modelsWithAuto,
+  resolveModelSurface,
   selectionFields,
 } from '@/[fsd]/shared/lib/utils/autoRouting.utils';
 import {
@@ -60,6 +66,8 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useSocket from '@/hooks/useSocket';
 import useToast from '@/hooks/useToast';
 import { actions } from '@/slices/chat';
+
+const { MODEL_SURFACES } = AutoRoutingConstants;
 
 const NewConversationView = forwardRef(
   (
@@ -169,8 +177,26 @@ const NewConversationView = forwardRef(
       [toastSuccess],
     );
 
+    const modelList = useMemo(
+      () =>
+        modelsWithAuto(
+          modelsData.items,
+          modelsData.auto_routing,
+          resolveModelSurface(
+            selectedParticipantDetails?.version_details?.agent_type,
+            selectedParticipant?.entity_settings?.agent_type,
+          ),
+        ),
+      [
+        modelsData.items,
+        modelsData.auto_routing,
+        selectedParticipantDetails?.version_details?.agent_type,
+        selectedParticipant?.entity_settings?.agent_type,
+      ],
+    );
+
     const defaultModel = useMemo(() => {
-      return defaultModelForSurface(modelsData, 'chat');
+      return defaultModelForSurface(modelsData, MODEL_SURFACES.chat);
     }, [modelsData]);
 
     const initializedModelProjectRef = useRef(null);
@@ -987,14 +1013,7 @@ const NewConversationView = forwardRef(
               onCloseAgentEditor={onCloseAgentEditor}
               activeParticipant={selectedParticipant}
               activeParticipantDetails={selectedParticipantDetails}
-              modelList={modelsWithAuto(
-                modelsData?.items || [],
-                modelsData.auto_routing,
-                (selectedParticipantDetails?.version_details?.agent_type ||
-                  selectedParticipant?.entity_settings?.agent_type) === 'pipeline'
-                  ? 'pipeline'
-                  : 'chat',
-              )}
+              modelList={modelList}
               onSelectModel={onSelectModel}
               selectedModel={selectedModel}
               llmSettings={llmSettings}

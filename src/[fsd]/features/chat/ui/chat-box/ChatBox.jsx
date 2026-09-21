@@ -47,6 +47,7 @@ import {
   useNewInputKeyDownHandler,
   useNextInputSuggestion,
   useReadAloud,
+  useSelectedChatModel,
   useSlashMention,
 } from '@/[fsd]/features/chat/lib/hooks';
 import { areDetailsOfParticipant } from '@/[fsd]/features/chat/participants/lib/helpers';
@@ -63,9 +64,9 @@ import { MentionSkillList } from '@/[fsd]/features/skill';
 import { useDeleteSkillMutation } from '@/[fsd]/features/skill/api';
 import { LLMSettingsConstants, MentionConstants } from '@/[fsd]/shared/lib/constants';
 import {
-  autoModel,
   isAutoSelection,
   modelsWithAuto,
+  resolveModelSurface,
   selectionFields,
 } from '@/[fsd]/shared/lib/utils/autoRouting.utils';
 import {
@@ -288,9 +289,6 @@ const ChatBox = forwardRef((props, boxRef) => {
   // Speaking mode states
   const [isSpeakingMode, setIsSpeakingMode] = useState(false);
 
-  // Chat model
-  const [selectedModel, setSelectedModel] = useState(null);
-
   // Query models data
   const { currentData: modelsData = { items: [], total: 0 } } = useListModelsQuery(
     { projectId, include_shared: true },
@@ -328,6 +326,20 @@ const ChatBox = forwardRef((props, boxRef) => {
   const defaultModel = useMemo(() => {
     return modelsData.items.find(model => model.default) || modelsData.items[0] || null;
   }, [modelsData.items]);
+
+  const { selectedModel, setSelectedModel, selectSavedOrDefaultModel } = useSelectedChatModel({
+    projectId,
+    userId,
+    activeConversation,
+    modelsData,
+    defaultModel,
+    isAgentsPage,
+    llmSettings,
+    isLoadingConversation,
+    activeParticipant,
+    onClearActiveParticipant,
+    onChangeParticipantSettings,
+  });
 
   useEffect(() => {
     dispatch(chatActions.setCurrentChatModel(selectedModel));
@@ -388,90 +400,6 @@ const ChatBox = forwardRef((props, boxRef) => {
     modelsData.items,
   ]);
 
-  const initializedConversationModelRef = useRef(null);
-  const selectSavedOrDefaultModel = useCallback(
-    (forceSelect = true) => {
-      if (forceSelect) {
-        onClearActiveParticipant(false);
-      }
-
-      let settingsToUse = null;
-
-      if (isAgentsPage && llmSettings) {
-        // On agents page, use the llmSettings prop directly
-        settingsToUse = {
-          selection: llmSettings.selection,
-          model_name: llmSettings.model_name,
-          model_project_id: llmSettings.model_project_id,
-        };
-      } else {
-        // Fallback to user settings (original behavior for conversations)
-        const userSettings = NewConversationHelpers.getChatUserSettings(activeConversation, userId);
-        if (userSettings) {
-          settingsToUse = {
-            selection: userSettings.selection,
-            model_name: userSettings.model_name,
-            model_project_id: userSettings.model_project_id,
-          };
-        }
-      }
-      // }
-
-      if (isAutoSelection(settingsToUse)) {
-        setSelectedModel(autoModel(settingsToUse.selection.profile_ref));
-        return;
-      }
-      if (settingsToUse) {
-        if (settingsToUse.model_name) {
-          // First try to find the model with the exact project_id
-          let model = modelsData.items.find(
-            p => p.name === settingsToUse.model_name && p.project_id === settingsToUse.model_project_id,
-          );
-
-          // If not found, try to find it as a shared model (project_id might be different)
-          if (!model) {
-            model = modelsData.items.find(p => p.name === settingsToUse.model_name);
-          }
-
-          if (model) {
-            setSelectedModel(model);
-          } else {
-            setSelectedModel(defaultModel);
-          }
-        } else {
-          if (isAgentsPage && onChangeParticipantSettings) {
-            // If no model is set in llm settings of agents,
-            // update the participant to use default model
-            const updatedSettings = {
-              ...activeParticipant?.entity_settings,
-              llm_settings: {
-                ...activeParticipant?.entity_settings.llm_settings,
-                model_name: defaultModel?.name,
-                model_project_id: defaultModel?.project_id,
-              },
-            };
-            onChangeParticipantSettings(activeParticipant?.id, { entity_settings: updatedSettings });
-          }
-          setSelectedModel(defaultModel);
-        }
-      } else {
-        setSelectedModel(defaultModel);
-      }
-    },
-    [
-      isAgentsPage,
-      llmSettings,
-      onClearActiveParticipant,
-      activeConversation,
-      userId,
-      modelsData.items,
-      defaultModel,
-      onChangeParticipantSettings,
-      activeParticipant?.entity_settings,
-      activeParticipant?.id,
-    ],
-  );
-
   // We need this useEffect to keep input value while new conversation creation with attachment upload
   useEffect(() => {
     const currentValue = chatInput.current?.getInputContent() || '';
@@ -485,49 +413,6 @@ const ChatBox = forwardRef((props, boxRef) => {
     if (needUpdateInputValue) chatInput.current?.setValue(newConversationQuestion);
     if (needResetInputValue) chatInput.current?.reset();
   }, [newConversationQuestion, isUploadingAttachments, uploadProgress]);
-
-  useEffect(() => {
-    if (!isAgentsPage) {
-      // A saved chat owns its selection. Later catalog/default refreshes must
-      // not replace an explicit composer choice in that same conversation.
-      const identity = activeConversation?.uuid && `${projectId}:${activeConversation.uuid}`;
-      const caller =
-        userId &&
-        activeConversation?.participants?.find(
-          participant =>
-            participant.entity_name === ChatParticipantType.Users && participant.entity_meta?.id === userId,
-        );
-      // Core detail responses include message_groups; sidebar metadata does not.
-      // A loaded shared chat may have no caller participant until they join.
-      const hasDetails =
-        Array.isArray(activeConversation?.participants) && Array.isArray(activeConversation?.message_groups);
-      if (
-        !identity ||
-        !userId ||
-        isLoadingConversation ||
-        (!caller && !hasDetails) ||
-        !modelsData.items.length
-      ) {
-        if (initializedConversationModelRef.current !== identity) setSelectedModel(null);
-        return;
-      }
-      if (initializedConversationModelRef.current === identity) return;
-      initializedConversationModelRef.current = identity;
-    }
-    selectSavedOrDefaultModel(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    isAgentsPage,
-    projectId,
-    activeConversation?.uuid,
-    activeConversation?.participants,
-    activeConversation?.message_groups,
-    isLoadingConversation,
-    userId,
-    llmSettings,
-    defaultModel,
-    modelsData.items.length,
-  ]);
 
   const getRegeneratePayload = useCallback(
     ({ question, question_id, participant, conversationUuid, attachmentList }) => {
@@ -2500,6 +2385,24 @@ const ChatBox = forwardRef((props, boxRef) => {
   const [showRecommendationList, setShowRecommendationList] = useState(false);
   const [originalParticipant, setOriginalParticipant] = useState();
 
+  const modelList = useMemo(
+    () =>
+      modelsWithAuto(
+        modelsData.items,
+        modelsData.auto_routing,
+        resolveModelSurface(
+          originalParticipant?.version_details?.agent_type,
+          activeParticipant?.entity_settings?.agent_type,
+        ),
+      ),
+    [
+      modelsData.items,
+      modelsData.auto_routing,
+      originalParticipant?.version_details?.agent_type,
+      activeParticipant?.entity_settings?.agent_type,
+    ],
+  );
+
   useEffect(() => {
     setShowRecommendationList(false);
   }, [activeParticipant]);
@@ -2784,6 +2687,7 @@ const ChatBox = forwardRef((props, boxRef) => {
     [
       isAgentsPage,
       selectedModel,
+      setSelectedModel,
       onSetLLMSettings,
       onChangeParticipantSettings,
       activeParticipant?.entity_settings,
@@ -3072,14 +2976,7 @@ const ChatBox = forwardRef((props, boxRef) => {
             onChangeVariables={onChangeVariables}
             activeParticipant={activeParticipant}
             activeParticipantDetails={originalParticipant}
-            modelList={modelsWithAuto(
-              modelsData?.items || [],
-              modelsData.auto_routing,
-              (originalParticipant?.version_details?.agent_type ||
-                activeParticipant?.entity_settings?.agent_type) === 'pipeline'
-                ? 'pipeline'
-                : 'chat',
-            )}
+            modelList={modelList}
             onSelectModel={onSelectModel}
             selectedModel={selectedModel}
             selectSavedOrDefaultModel={selectSavedOrDefaultModel}

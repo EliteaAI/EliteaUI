@@ -1,5 +1,8 @@
-import { MenuItem, TextField } from '@mui/material';
+import { memo, useCallback } from 'react';
 
+import { MenuItem } from '@mui/material';
+
+import { Input } from '@/[fsd]/shared/ui';
 import {
   useCreateConfigurationMutation,
   useGetConfigurationsListQuery,
@@ -11,7 +14,8 @@ import useCheckPermission from '@/hooks/useCheckPermission';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 
-export default function AutoRoutingSettings() {
+const AutoRoutingSettings = memo(() => {
+  const styles = autoRoutingSettingsStyles();
   const projectId = useSelectedProjectId();
   const { checkPermission } = useCheckPermission();
   const { toastError } = useToast();
@@ -27,26 +31,30 @@ export default function AutoRoutingSettings() {
   const [update, updating] = useUpdateConfigurationMutation();
   const current = data?.items?.find(item => item.elitea_title === 'auto_routing');
   const value = current?.data?.enabled == null ? 'default' : String(current.data.enabled);
-  const save = async event => {
-    const enabled = event.target.value === 'default' ? null : event.target.value === 'true';
-    try {
-      const body = {
-        elitea_title: 'auto_routing',
-        label: 'Auto model selection',
-        type: 'auto_routing',
-        shared: false,
-        data: { enabled },
-      };
-      if (current?.id) await update({ projectId, configId: current.id, body }).unwrap();
-      else await create({ projectId, body }).unwrap();
-      refreshSettings();
-      refetch();
-    } catch (error) {
-      toastError(error?.data?.error || 'Unable to update Auto model selection');
-    }
-  };
+  const save = useCallback(
+    async event => {
+      const enabled = event.target.value === 'default' ? null : event.target.value === 'true';
+      try {
+        const body = {
+          elitea_title: 'auto_routing',
+          label: 'Auto model selection',
+          type: 'auto_routing',
+          shared: false,
+          data: { enabled },
+        };
+        if (current?.id) await update({ projectId, configId: current.id, body }).unwrap();
+        else await create({ projectId, body }).unwrap();
+        refreshSettings();
+        refetch();
+      } catch (error) {
+        toastError(error?.data?.error || 'Unable to update Auto model selection');
+      }
+    },
+    [current?.id, projectId, update, create, refreshSettings, refetch, toastError],
+  );
+
   return (
-    <TextField
+    <Input.InputBase
       select
       label="Auto model selection"
       value={value}
@@ -59,11 +67,21 @@ export default function AutoRoutingSettings() {
           ? 'Available for chats and ordinary agents.'
           : 'Currently disabled by project or platform settings.'
       }
-      sx={{ m: 2, minWidth: 320 }}
+      containerProps={{ sx: styles.container }}
+      inputProps={{ 'data-testid': 'auto-routing-project-setting' }}
     >
       <MenuItem value="default">Use platform default</MenuItem>
       <MenuItem value="true">Enabled</MenuItem>
       <MenuItem value="false">Disabled</MenuItem>
-    </TextField>
+    </Input.InputBase>
   );
-}
+});
+
+AutoRoutingSettings.displayName = 'AutoRoutingSettings';
+
+/** @type {MuiSx} */
+const autoRoutingSettingsStyles = () => ({
+  container: { margin: '1rem', width: '20rem', maxWidth: 'calc(100% - 2rem)' },
+});
+
+export default AutoRoutingSettings;

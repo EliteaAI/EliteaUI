@@ -39,10 +39,12 @@ export const isReasoningFamilyFromStored = llmSettings => {
  */
 export const generateLLMSettings = (model, existingSettings = {}, options = {}) => {
   const { includeModelInfo = false } = options;
-  if (model?.selection?.mode === 'auto' || (!model && isAutoSelection(existingSettings))) {
+  if (isAutoSelection(model) || (!model && isAutoSelection(existingSettings))) {
     return {
       ...existingSettings,
-      ...selectionFields(isAutoSelection(existingSettings) ? { selection: existingSettings.selection } : model),
+      ...selectionFields(
+        isAutoSelection(existingSettings) ? { selection: existingSettings.selection } : model,
+      ),
       max_tokens: existingSettings.max_tokens ?? DEFAULT_MAX_TOKENS,
     };
   }
@@ -92,7 +94,7 @@ export const isLLMSettingsFamilyConflict = (temperature, reasoningEffort) =>
  * @returns {{temperature: number|null, reasoning_effort: string|null}}
  */
 export const resetLLMSettingsForModel = model => {
-  if (model?.selection?.mode === 'auto') return selectionFields(model);
+  if (isAutoSelection(model)) return selectionFields(model);
   if (modelSupportsReasoning(model)) {
     return { temperature: null, reasoning_effort: DEFAULT_REASONING_EFFORT };
   }

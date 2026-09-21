@@ -32,3 +32,5 @@ export { useMutuallyExclusiveEditors } from './useMutuallyExclusiveEditors.hooks
 export { useRefetchAgentVersionDetailsOnClose } from './useRefetchAgentVersionDetailsOnClose.hooks';
 export { useRecommendations } from './useRecommendations.hooks';
 export { useChatEditors } from './useChatEditors.hooks';
+
+export { useSelectedChatModel } from './useSelectedChatModel.hooks';

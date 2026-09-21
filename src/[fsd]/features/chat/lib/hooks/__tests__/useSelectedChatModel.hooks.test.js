@@ -1,54 +1,14 @@
 // @vitest-environment jsdom
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { afterEach, describe, expect, it } from 'vitest';
 
-import { describe, expect, it } from 'vitest';
+import { autoModel } from '@/[fsd]/shared/lib/utils/autoRouting.utils';
+import { act, cleanup, renderHook } from '@testing-library/react';
 
-import { autoModel, isAutoSelection } from '@/[fsd]/shared/lib/utils/autoRouting.utils';
-import { ChatParticipantType } from '@/common/constants';
-import { act, renderHook } from '@testing-library/react';
+import { useSelectedChatModel } from '../useSelectedChatModel.hooks';
 
-import * as NewConversationHelpers from '../../lib/helpers/newConversation.helpers';
-// Exercise ChatBox's actual callback and dependency list without loading unrelated
-// editor/socket/toolkit UI. The browser acceptance checks cover the full component.
-// Vite's raw query returns the actual source without importing the full UI.
-// eslint-disable-next-line import/no-unresolved
-import source from './ChatBox.jsx?raw';
+afterEach(cleanup);
 
-const callback = source.slice(
-  source.indexOf('  const initializedConversationModelRef = useRef(null);'),
-  source.indexOf('  // We need this useEffect'),
-);
-const effectStart = source.indexOf('  useEffect(() => {\n    if (!isAgentsPage) {\n      // A saved chat');
-const effect = source.slice(effectStart, source.indexOf('\n\n  const getRegeneratePayload', effectStart));
-const buildHook = new Function(
-  'useState',
-  'useCallback',
-  'useEffect',
-  'useRef',
-  'autoModel',
-  'isAutoSelection',
-  'NewConversationHelpers',
-  'ChatParticipantType',
-  `return function useSelection({activeConversation, modelsData, defaultModel, isAgentsPage = false, llmSettings, isLoadingConversation = false, userId = 3}) {
-    const projectId = 2;
-    const activeParticipant = undefined, onChangeParticipantSettings = undefined;
-    const onClearActiveParticipant = () => {};
-    const [selectedModel, setSelectedModel] = useState(null);
-    ${callback}
-    ${effect}
-    return {selectedModel, setSelectedModel};
-  }`,
-);
-const useSelection = buildHook(
-  useState,
-  useCallback,
-  useEffect,
-  useRef,
-  autoModel,
-  isAutoSelection,
-  NewConversationHelpers,
-  ChatParticipantType,
-);
+const useSelection = props => useSelectedChatModel({ projectId: 2, userId: 3, ...props });
 const haiku = { name: 'haiku', project_id: 1 };
 const luna = { name: 'luna', project_id: 1 };
 const auto = {
@@ -160,4 +120,12 @@ describe('saved chat model ownership during SPA navigation', () => {
     rerender(initial(concrete));
     expect(result.current.selectedModel).toBe(haiku);
   });
+});
+
+it('does not reset an Agent composer when only participant callbacks change', () => {
+  const props = { ...initial(concrete), isAgentsPage: true, llmSettings: auto.saved };
+  const { result, rerender } = renderHook(useSelection, { initialProps: props });
+  act(() => result.current.setSelectedModel(luna));
+  rerender({ ...props, onClearActiveParticipant: () => {}, activeParticipant: { id: 42 } });
+  expect(result.current.selectedModel).toBe(luna);
 });

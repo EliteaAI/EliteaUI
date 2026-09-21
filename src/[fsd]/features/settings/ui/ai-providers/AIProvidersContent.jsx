@@ -6,7 +6,8 @@ import { Box } from '@mui/material';
 
 import { ModelConfigurationHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { useModelConfiguration, useModelOptions } from '@/[fsd]/features/settings/lib/hooks';
-import { AUTO_DEFAULT_VALUE, defaultModelRequest } from '@/[fsd]/shared/lib/utils/autoRouting.utils';
+import { AutoRoutingConstants } from '@/[fsd]/shared/lib/constants';
+import { defaultModelRequest } from '@/[fsd]/shared/lib/utils/autoRouting.utils';
 import { useListModelsQuery, useSetProjectDefaultModelMutation } from '@/api/configurations.js';
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
 import { useMultiSectionConfigurations } from '@/hooks/useMultiSectionConfigurations';
@@ -15,6 +16,8 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { DrawerPageHeader } from '../drawer-page';
 import ConfigurationsPanel from './ConfigurationsPanel';
 import ModelCapabilitiesSection from './ModelCapabilitiesSection';
+
+const { AUTO_DEFAULT_VALUE, AUTO_MODEL_LABEL, AUTO_SELECTION_MODE } = AutoRoutingConstants;
 
 const AIProvidersContent = memo(() => {
   const projectId = useSelectedProjectId();
@@ -99,6 +102,14 @@ const AIProvidersContent = memo(() => {
     ttsData,
   });
 
+  const defaultModelOptions = useMemo(
+    () =>
+      modelsData.auto_routing?.enabled
+        ? [{ value: AUTO_DEFAULT_VALUE, label: AUTO_MODEL_LABEL }, ...modelOptions]
+        : modelOptions,
+    [modelsData.auto_routing?.enabled, modelOptions],
+  );
+
   const { model } = useModelConfiguration({
     projectId,
     uniqueConfigurations,
@@ -149,7 +160,7 @@ const AIProvidersContent = memo(() => {
   // Default model values for dropdowns
   const projectDefaultModel = useMemo(
     () =>
-      modelsData.auto_routing?.enabled && modelsData.default_selection?.mode === 'auto'
+      modelsData.auto_routing?.enabled && modelsData.default_selection?.mode === AUTO_SELECTION_MODE
         ? AUTO_DEFAULT_VALUE
         : `${modelsData.default_model_name}<<>>${modelsData.default_model_project_id}`,
     [modelsData],
@@ -227,11 +238,7 @@ const AIProvidersContent = memo(() => {
         projectDefaultEmbeddingModel={projectDefaultEmbeddingModel}
         projectDefaultVectorStorageModel={projectDefaultVectorStorageModel}
         projectDefaultImageGenerationModel={projectDefaultImageGenerationModel}
-        modelOptions={
-          modelsData.auto_routing?.enabled
-            ? [{ value: AUTO_DEFAULT_VALUE, label: 'Auto' }, ...modelOptions]
-            : modelOptions
-        }
+        modelOptions={defaultModelOptions}
         lowTierModelOptions={lowTierModelOptions}
         highTierModelOptions={highTierModelOptions}
         embeddingModelOptions={embeddingModelOptions}

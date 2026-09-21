@@ -19,6 +19,7 @@ const MaxTokensSection = memo(props => {
     error,
     helperText,
     showRemainingTokens = true,
+    defaultModeDescription = 'No custom Elitea limit. The provider and model apply their native output limit.',
   } = props;
 
   const [mode, setMode] = useState(value === DEFAULT_MAX_TOKENS ? 'auto' : 'custom');
@@ -69,7 +70,7 @@ const MaxTokensSection = memo(props => {
           {
             label: 'Default',
             value: 'auto',
-            info: 'No custom Elitea limit. The provider and model apply their native output limit.',
+            info: defaultModeDescription,
           },
           { label: 'Custom', value: 'custom', info: 'Manually set a specific token limit for responses.' },
         ]}

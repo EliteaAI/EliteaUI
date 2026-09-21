@@ -1,7 +1,8 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Box, MenuItem, TextField } from '@mui/material';
+import { Box, MenuItem } from '@mui/material';
 
+import { AutoRoutingConstants } from '@/[fsd]/shared/lib/constants';
 import {
   DEFAULT_MAX_TOKENS,
   DEFAULT_MAX_TOKENS_CUSTOM,
@@ -10,6 +11,7 @@ import {
   DEFAULT_TEMPERATURE,
 } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
 import { isAutoSelection } from '@/[fsd]/shared/lib/utils/autoRouting.utils';
+import { Input } from '@/[fsd]/shared/ui';
 import { SecretField } from '@/[fsd]/shared/ui/secret-field';
 import {
   VALIDATION_RULE,
@@ -26,6 +28,9 @@ import {
 import { PROMPT_PAYLOAD_KEY } from '@/common/constants';
 import { parseValueToIntNumber } from '@/common/utils';
 
+const { AUTO_REASONING_MODE, AUTO_REASONING_OPTIONS, AUTO_REASONING_HELP, AUTO_OUTPUT_HELP } =
+  AutoRoutingConstants;
+
 const LLMSettings = memo(props => {
   const {
     llmSettings = {},
@@ -34,6 +39,23 @@ const LLMSettings = memo(props => {
     showWebhookSecret = false,
     showStepsLimit = false,
   } = props;
+
+  const styles = llmSettingsStyles();
+  const isAuto = isAutoSelection(llmSettings);
+
+  const onChangeAutoReasoning = useCallback(
+    event => {
+      const preset = event.target.value;
+      onChangeLLMSettings('selection')({
+        ...llmSettings.selection,
+        reasoning:
+          preset === AUTO_REASONING_MODE.auto
+            ? { mode: AUTO_REASONING_MODE.auto }
+            : { mode: AUTO_REASONING_MODE.explicit, preset },
+      });
+    },
+    [llmSettings.selection, onChangeLLMSettings],
+  );
 
   const focusOnMaxTokens = useRef(false);
 
@@ -117,35 +139,28 @@ const LLMSettings = memo(props => {
 
   return (
     <Box sx={styles.container}>
-      {isAutoSelection(llmSettings) ? (
-        <TextField
+      {isAuto ? (
+        <Input.InputBase
           select
           label="Reasoning effort"
+          inputProps={{ 'data-testid': 'auto-reasoning-effort' }}
           value={
-            llmSettings.selection.reasoning.mode === 'explicit'
-              ? llmSettings.selection.reasoning.preset
-              : 'auto'
+            llmSettings.selection?.reasoning?.mode === AUTO_REASONING_MODE.explicit
+              ? (llmSettings.selection.reasoning.preset ?? AUTO_REASONING_MODE.auto)
+              : AUTO_REASONING_MODE.auto
           }
-          helperText="Auto chooses the effort. An explicit effort limits selection to qualified models supporting that preset."
-          onChange={event =>
-            onChangeLLMSettings('selection')({
-              ...llmSettings.selection,
-              reasoning:
-                event.target.value === 'auto'
-                  ? { mode: 'auto' }
-                  : { mode: 'explicit', preset: event.target.value },
-            })
-          }
+          helperText={AUTO_REASONING_HELP}
+          onChange={onChangeAutoReasoning}
         >
-          {['auto', 'low', 'medium', 'high'].map(value => (
+          {AUTO_REASONING_OPTIONS.map(({ value, label }) => (
             <MenuItem
               key={value}
               value={value}
             >
-              {value === 'auto' ? 'Auto' : value[0].toUpperCase() + value.slice(1)}
+              {label}
             </MenuItem>
           ))}
-        </TextField>
+        </Input.InputBase>
       ) : model?.supports_reasoning ? (
         <ReasoningSlider
           value={llmSettings.reasoning_effort || DEFAULT_REASONING_EFFORT}
@@ -164,6 +179,8 @@ const LLMSettings = memo(props => {
         onBlur={onMaxTokensBlur}
         onFocus={onMaxTokensFocus}
         maxOutputTokens={model?.max_output_tokens}
+        showRemainingTokens={!isAuto}
+        defaultModeDescription={isAuto ? AUTO_OUTPUT_HELP : undefined}
         error={maxTokensError}
         helperText={maxTokensHelperText}
       />
@@ -193,13 +210,13 @@ const LLMSettings = memo(props => {
 LLMSettings.displayName = 'LLMSettings';
 
 /** @type {MuiSx} */
-const styles = {
+const llmSettingsStyles = () => ({
   container: {
     display: 'flex',
     flexDirection: 'column',
     gap: '2rem',
     padding: '0 1rem',
   },
-};
+});
 
 export default LLMSettings;

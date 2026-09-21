@@ -1,14 +1,18 @@
 import { describe, expect, it } from 'vitest';
 
+import { AutoRoutingConstants } from '@/[fsd]/shared/lib/constants';
+
 import {
-  AUTO_DEFAULT_VALUE,
   autoModel,
   defaultModelForSurface,
   defaultModelRequest,
   modelsWithAuto,
+  resolveModelSurface,
   selectionFields,
-} from './autoRouting.utils';
-import { generateLLMSettings } from './llmSettings.utils';
+} from '../autoRouting.utils';
+import { generateLLMSettings } from '../llmSettings.utils';
+
+const { AUTO_DEFAULT_VALUE } = AutoRoutingConstants;
 
 const profile = { id: 'v7-quality-cost', revision: 1 };
 const fixed = { name: 'chosen', project_id: 7, supports_reasoning: true };
@@ -85,5 +89,25 @@ describe('Auto model picker and explicit selection', () => {
     expect(result.model_name).toBe('chosen');
     expect(result.reasoning_effort).toBe('high');
     expect(result.selection).toBeUndefined();
+  });
+});
+
+describe('Auto output allowance and surface boundaries', () => {
+  it.each([-1, 8000, 32000, 64000])(
+    'preserves the requested allowance %s without inventing a model limit',
+    max_tokens => {
+      const model = autoModel(profile);
+      expect(model).not.toHaveProperty('max_output_tokens');
+      expect(generateLLMSettings(model, { max_tokens }).max_tokens).toBe(max_tokens);
+    },
+  );
+
+  it.each([
+    ['pipeline', 'agent', 'pipeline'],
+    [undefined, 'pipeline', 'pipeline'],
+    ['agent', 'pipeline', 'chat'],
+    [undefined, undefined, 'chat'],
+  ])('resolves the active surface before offering Auto', (primary, fallback, expected) => {
+    expect(resolveModelSurface(primary, fallback)).toBe(expected);
   });
 });
