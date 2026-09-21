@@ -191,18 +191,23 @@ const UsageContainer = memo(() => {
     setRefreshing(true);
     setRefreshError(false);
 
-    const results = await Promise.all([refetchUsage(), ...(showsMembers ? [refetchMembers()] : [])]);
+    try {
+      const results = await Promise.all([refetchUsage(), ...(showsMembers ? [refetchMembers()] : [])]);
 
-    if (results.some(result => result.error)) {
+      if (results.some(result => result.error)) {
+        setRefreshError(true);
+      }
+    } catch {
       setRefreshError(true);
+    } finally {
+      setRefreshing(false);
     }
-    setRefreshing(false);
   }, [refetchUsage, refetchMembers, showsMembers]);
 
   const handleCloseRefreshError = useCallback(() => setRefreshError(false), []);
 
   const exportDisabled = exporting || isLoading || !data;
-  const refreshDisabled = refreshing || isLoading || isMembersFetching || !data;
+  const refreshDisabled = refreshing || isLoading || isMembersFetching;
 
   return (
     <DrawerPage>
@@ -229,7 +234,14 @@ const UsageContainer = memo(() => {
               aria-label="Refresh data"
               data-testid="usage-refresh-button"
             >
-              {refreshing ? <CircularProgress size={16} /> : <RefreshIcon sx={styles.icon} />}
+              {refreshing ? (
+                <CircularProgress size={16} />
+              ) : (
+                <RefreshIcon
+                  width="1rem"
+                  height="1rem"
+                />
+              )}
             </BaseBtn>
           </Box>
         </Tooltip>
@@ -399,9 +411,6 @@ const usageContainerStyles = () => ({
   // Keeps the header actions at the far edge, away from the page title
   exportButtonWrapper: {
     marginLeft: 'auto',
-  },
-  icon: {
-    fontSize: '1rem',
   },
   tabsContainer: ({ palette }) => ({
     padding: '0 1.5rem',
