@@ -1,0 +1,441 @@
+{
+  "source": "_investigations/6689/probes/compare_results.json + as_metadata_snapshot.json, captured 2026-09-21",
+  "servers": [
+    {
+      "name": "Stripe",
+      "metadata": {
+        "issuer": "https://access.stripe.com/mcp",
+        "authorization_endpoint": "https://access.stripe.com/mcp/oauth2/authorize",
+        "token_endpoint": "https://access.stripe.com/mcp/oauth2/token",
+        "registration_endpoint": "https://access.stripe.com/mcp/oauth2/register",
+        "token_endpoint_auth_methods_supported": ["none"],
+        "code_challenge_methods_supported": ["S256"],
+        "scopes_supported": ["mcp"]
+      },
+      "expected": {
+        "authFlow": "dcr",
+        "requiresClientSecret": false,
+        "needClientId": false,
+        "needClientSecret": false,
+        "isClientSecretMandatory": false
+      }
+    },
+    {
+      "name": "monday",
+      "metadata": {
+        "issuer": "https://auth.monday.com/mcp",
+        "authorization_endpoint": "https://auth.monday.com/oauth2/authorize",
+        "token_endpoint": "https://auth.monday.com/oauth_ms/oauth/token",
+        "registration_endpoint": "https://auth.monday.com/oauth_ms/oauth/register",
+        "token_endpoint_auth_methods_supported": ["client_secret_post", "client_secret_basic"],
+        "code_challenge_methods_supported": ["S256"]
+      },
+      "expected": {
+        "authFlow": "dcr",
+        "requiresClientSecret": false,
+        "needClientId": false,
+        "needClientSecret": false,
+        "isClientSecretMandatory": false
+      }
+    },
+    {
+      "name": "Asana v2",
+      "metadata": {
+        "issuer": "https://app.asana.com",
+        "authorization_endpoint": "https://app.asana.com/-/oauth_authorize",
+        "token_endpoint": "https://app.asana.com/-/oauth_token",
+        "token_endpoint_auth_methods_supported": ["client_secret_post", "client_secret_basic"],
+        "code_challenge_methods_supported": ["S256"]
+      },
+      "expected": {
+        "authFlow": "pkce",
+        "requiresClientSecret": true,
+        "needClientId": true,
+        "needClientSecret": true,
+        "isClientSecretMandatory": false
+      }
+    },
+    {
+      "name": "Box",
+      "metadata": {
+        "issuer": "https://api.box.com",
+        "authorization_endpoint": "https://account.box.com/api/oauth2/authorize",
+        "token_endpoint": "https://api.box.com/oauth2/token",
+        "token_endpoint_auth_methods_supported": ["client_secret_basic", "client_secret_post"],
+        "code_challenge_methods_supported": ["S256"]
+      },
+      "expected": {
+        "authFlow": "pkce",
+        "requiresClientSecret": true,
+        "needClientId": true,
+        "needClientSecret": true,
+        "isClientSecretMandatory": false
+      }
+    },
+    {
+      "name": "GitHub",
+      "metadata": {
+        "issuer": "https://github.com/login/oauth",
+        "authorization_endpoint": "https://github.com/login/oauth/authorize",
+        "token_endpoint": "https://github.com/login/oauth/access_token",
+        "code_challenge_methods_supported": ["S256"],
+        "scopes_supported": ["offline_access"]
+      },
+      "expected": {
+        "authFlow": "pkce",
+        "requiresClientSecret": true,
+        "needClientId": true,
+        "needClientSecret": true,
+        "isClientSecretMandatory": false
+      }
+    },
+    {
+      "name": "Miro",
+      "metadata": {
+        "issuer": "https://mcp.miro.com/",
+        "authorization_endpoint": "https://mcp.miro.com/authorize",
+        "token_endpoint": "https://mcp.miro.com/token",
+        "registration_endpoint": "https://mcp.miro.com/register",
+        "token_endpoint_auth_methods_supported": ["client_secret_post", "client_secret_basic"],
+        "code_challenge_methods_supported": ["S256"],
+        "scopes_supported": ["boards:read", "boards:write", "openid", "email"]
+      },
+      "expected": {
+        "authFlow": "dcr",
+        "requiresClientSecret": false,
+        "needClientId": false,
+        "needClientSecret": false,
+        "isClientSecretMandatory": false
+      }
+    },
+    {
+      "name": "Atlassian authv2",
+      "metadata": {
+        "issuer": "https://auth.atlassian.com/VCeDsk8ZHncYF1g234fKtc4lNipbBhu3",
+        "authorization_endpoint": "https://auth.atlassian.com/authorize",
+        "token_endpoint": "https://auth.atlassian.com/oauth/token",
+        "registration_endpoint": "https://auth.atlassian.com/VCeDsk8ZHncYF1g234fKtc4lNipbBhu3/dcr/register",
+        "token_endpoint_auth_methods_supported": [
+          "none",
+          "client_secret_post",
+          "client_secret_basic",
+          "private_key_jwt"
+        ],
+        "code_challenge_methods_supported": ["S256"]
+      },
+      "expected": {
+        "authFlow": "dcr",
+        "requiresClientSecret": false,
+        "needClientId": false,
+        "needClientSecret": false,
+        "isClientSecretMandatory": false
+      }
+    },
+    {
+      "name": "Atlassian /v1/mcp (origin fallback)",
+      "metadata": {
+        "issuer": "https://mcp.atlassian.com",
+        "authorization_endpoint": "https://mcp.atlassian.com/v1/authorize",
+        "token_endpoint": "https://mcp.atlassian.com/v1/token",
+        "registration_endpoint": "https://mcp.atlassian.com/v1/register",
+        "token_endpoint_auth_methods_supported": ["client_secret_basic", "client_secret_post", "none"],
+        "code_challenge_methods_supported": ["plain", "S256"]
+      },
+      "expected": {
+        "authFlow": "dcr",
+        "requiresClientSecret": false,
+        "needClientId": false,
+        "needClientSecret": false,
+        "isClientSecretMandatory": false
+      }
+    },
+    {
+      "name": "Figma (PRM AS)",
+      "metadata": {
+        "issuer": "https://api.figma.com",
+        "authorization_endpoint": "https://www.figma.com/oauth/mcp",
+        "token_endpoint": "https://api.figma.com/v1/oauth/token",
+        "registration_endpoint": "https://api.figma.com/v1/oauth/mcp/register",
+        "token_endpoint_auth_methods_supported": ["client_secret_basic", "client_secret_post"],
+        "code_challenge_methods_supported": ["S256"],
+        "scopes_supported": ["mcp:connect"]
+      },
+      "expected": {
+        "authFlow": "dcr",
+        "requiresClientSecret": false,
+        "needClientId": false,
+        "needClientSecret": false,
+        "isClientSecretMandatory": false
+      }
+    },
+    {
+      "name": "Notion",
+      "metadata": {
+        "issuer": "https://mcp.notion.com",
+        "authorization_endpoint": "https://mcp.notion.com/authorize",
+        "token_endpoint": "https://mcp.notion.com/token",
+        "registration_endpoint": "https://mcp.notion.com/register",
+        "token_endpoint_auth_methods_supported": ["client_secret_basic", "client_secret_post", "none"],
+        "code_challenge_methods_supported": ["plain", "S256"],
+        "scopes_supported": ["default"]
+      },
+      "expected": {
+        "authFlow": "dcr",
+        "requiresClientSecret": false,
+        "needClientId": false,
+        "needClientSecret": false,
+        "isClientSecretMandatory": false
+      }
+    },
+    {
+      "name": "Linear",
+      "metadata": {
+        "issuer": "https://mcp.linear.app",
+        "authorization_endpoint": "https://mcp.linear.app/authorize",
+        "token_endpoint": "https://mcp.linear.app/token",
+        "registration_endpoint": "https://mcp.linear.app/register",
+        "token_endpoint_auth_methods_supported": ["client_secret_basic", "client_secret_post", "none"],
+        "code_challenge_methods_supported": ["S256"],
+        "scopes_supported": ["read", "write", "openid", "email"]
+      },
+      "expected": {
+        "authFlow": "dcr",
+        "requiresClientSecret": false,
+        "needClientId": false,
+        "needClientSecret": false,
+        "isClientSecretMandatory": false
+      }
+    },
+    {
+      "name": "Sentry",
+      "metadata": {
+        "issuer": "https://mcp.sentry.dev",
+        "authorization_endpoint": "https://mcp.sentry.dev/oauth/authorize",
+        "token_endpoint": "https://mcp.sentry.dev/oauth/token",
+        "registration_endpoint": "https://mcp.sentry.dev/oauth/register",
+        "token_endpoint_auth_methods_supported": ["client_secret_basic", "client_secret_post", "none"],
+        "code_challenge_methods_supported": ["S256"],
+        "scopes_supported": ["org:read", "project:write", "team:write", "event:write"]
+      },
+      "expected": {
+        "authFlow": "dcr",
+        "requiresClientSecret": false,
+        "needClientId": false,
+        "needClientSecret": false,
+        "isClientSecretMandatory": false
+      }
+    },
+    {
+      "name": "Canva",
+      "metadata": {
+        "issuer": "https://mcp.canva.com",
+        "authorization_endpoint": "https://mcp.canva.com/authorize",
+        "token_endpoint": "https://mcp.canva.com/token",
+        "registration_endpoint": "https://mcp.canva.com/register",
+        "token_endpoint_auth_methods_supported": ["client_secret_basic", "client_secret_post", "none"],
+        "code_challenge_methods_supported": ["plain", "S256"]
+      },
+      "expected": {
+        "authFlow": "dcr",
+        "requiresClientSecret": false,
+        "needClientId": false,
+        "needClientSecret": false,
+        "isClientSecretMandatory": false
+      }
+    },
+    {
+      "name": "PayPal",
+      "metadata": {
+        "issuer": "https://mcp.paypal.com",
+        "authorization_endpoint": "https://mcp.paypal.com/authorize",
+        "token_endpoint": "https://mcp.paypal.com/token",
+        "registration_endpoint": "https://mcp.paypal.com/register",
+        "token_endpoint_auth_methods_supported": ["client_secret_basic", "client_secret_post", "none"],
+        "code_challenge_methods_supported": ["S256"]
+      },
+      "expected": {
+        "authFlow": "dcr",
+        "requiresClientSecret": false,
+        "needClientId": false,
+        "needClientSecret": false,
+        "isClientSecretMandatory": false
+      }
+    },
+    {
+      "name": "Semgrep",
+      "metadata": {
+        "issuer": "https://login.semgrep.dev",
+        "authorization_endpoint": "https://login.semgrep.dev/oauth2/authorize",
+        "token_endpoint": "https://login.semgrep.dev/oauth2/token",
+        "registration_endpoint": "https://login.semgrep.dev/oauth2/register",
+        "token_endpoint_auth_methods_supported": ["none", "client_secret_post", "client_secret_basic"],
+        "code_challenge_methods_supported": ["S256"],
+        "scopes_supported": ["email", "offline_access", "openid", "profile"]
+      },
+      "expected": {
+        "authFlow": "dcr",
+        "requiresClientSecret": false,
+        "needClientId": false,
+        "needClientSecret": false,
+        "isClientSecretMandatory": false
+      }
+    },
+    {
+      "name": "GitLab",
+      "metadata": {
+        "issuer": "https://gitlab.com",
+        "authorization_endpoint": "https://gitlab.com/oauth/authorize",
+        "token_endpoint": "https://gitlab.com/oauth/token",
+        "registration_endpoint": "https://gitlab.com/oauth/register",
+        "token_endpoint_auth_methods_supported": ["client_secret_basic", "client_secret_post"],
+        "code_challenge_methods_supported": ["plain", "S256"],
+        "userinfo_endpoint": "https://gitlab.com/oauth/userinfo",
+        "scopes_supported": [
+          "api",
+          "read_api",
+          "read_user",
+          "create_runner",
+          "manage_runner",
+          "k8s_proxy",
+          "self_rotate",
+          "mcp",
+          "mcp_orbit",
+          "read_repository",
+          "write_repository",
+          "read_registry",
+          "write_registry",
+          "read_virtual_registry",
+          "write_virtual_registry",
+          "read_observability",
+          "write_observability",
+          "ai_features",
+          "sudo",
+          "admin_mode",
+          "read_service_ping",
+          "openid",
+          "profile",
+          "email",
+          "ai_workflows",
+          "user:*"
+        ]
+      },
+      "expected": {
+        "authFlow": "dcr",
+        "requiresClientSecret": false,
+        "needClientId": false,
+        "needClientSecret": false,
+        "isClientSecretMandatory": false
+      }
+    },
+    {
+      "name": "Vercel",
+      "metadata": {
+        "issuer": "https://vercel.com",
+        "authorization_endpoint": "https://vercel.com/oauth/authorize",
+        "token_endpoint": "https://api.vercel.com/login/oauth/token",
+        "registration_endpoint": "https://api.vercel.com/login/oauth/register",
+        "token_endpoint_auth_methods_supported": [
+          "client_secret_basic",
+          "client_secret_post",
+          "client_secret_jwt",
+          "private_key_jwt"
+        ],
+        "code_challenge_methods_supported": ["S256"],
+        "userinfo_endpoint": "https://api.vercel.com/login/oauth/userinfo",
+        "scopes_supported": ["openid", "email", "profile", "offline_access"]
+      },
+      "expected": {
+        "authFlow": "dcr",
+        "requiresClientSecret": false,
+        "needClientId": false,
+        "needClientSecret": false,
+        "isClientSecretMandatory": false
+      }
+    },
+    {
+      "name": "Supabase",
+      "metadata": {
+        "issuer": "https://api.supabase.com",
+        "authorization_endpoint": "https://api.supabase.com/v1/oauth/authorize",
+        "token_endpoint": "https://api.supabase.com/v1/oauth/token",
+        "registration_endpoint": "https://api.supabase.com/platform/oauth/apps/register",
+        "token_endpoint_auth_methods_supported": ["client_secret_basic", "client_secret_post"],
+        "code_challenge_methods_supported": ["S256", "plain"],
+        "scopes_supported": [
+          "analytics:read",
+          "analytics:write",
+          "analytics_config:read",
+          "analytics_config:write",
+          "auth:read",
+          "auth:write",
+          "database:read",
+          "database:write",
+          "domains:read",
+          "domains:write",
+          "edge_functions:read",
+          "edge_functions:write",
+          "environment:read",
+          "environment:write",
+          "organizations:read",
+          "organizations:write",
+          "projects:read",
+          "projects:write",
+          "rest:read",
+          "rest:write",
+          "secrets:read",
+          "secrets:write",
+          "storage:read",
+          "storage:write"
+        ]
+      },
+      "expected": {
+        "authFlow": "dcr",
+        "requiresClientSecret": false,
+        "needClientId": false,
+        "needClientSecret": false,
+        "isClientSecretMandatory": false
+      }
+    },
+    {
+      "name": "Asana v1 /sse",
+      "metadata": {
+        "issuer": "https://mcp.asana.com",
+        "authorization_endpoint": "https://mcp.asana.com/authorize",
+        "token_endpoint": "https://mcp.asana.com/token",
+        "registration_endpoint": "https://mcp.asana.com/register",
+        "token_endpoint_auth_methods_supported": ["client_secret_basic", "client_secret_post", "none"],
+        "code_challenge_methods_supported": ["plain", "S256"]
+      },
+      "expected": {
+        "authFlow": "dcr",
+        "requiresClientSecret": false,
+        "needClientId": false,
+        "needClientSecret": false,
+        "isClientSecretMandatory": false
+      }
+    },
+    {
+      "name": "Entra v2 tenant",
+      "metadata": {
+        "issuer": "https://login.microsoftonline.com/72f988bf-86f1-41af-91ab-2d7cd011db47/v2.0",
+        "authorization_endpoint": "https://login.microsoftonline.com/72f988bf-86f1-41af-91ab-2d7cd011db47/oauth2/v2.0/authorize",
+        "token_endpoint": "https://login.microsoftonline.com/72f988bf-86f1-41af-91ab-2d7cd011db47/oauth2/v2.0/token",
+        "token_endpoint_auth_methods_supported": [
+          "client_secret_post",
+          "private_key_jwt",
+          "client_secret_basic",
+          "self_signed_tls_client_auth"
+        ],
+        "userinfo_endpoint": "https://graph.microsoft.com/oidc/userinfo",
+        "scopes_supported": ["openid", "profile", "email", "offline_access"]
+      },
+      "expected": {
+        "authFlow": "oidc",
+        "requiresClientSecret": true,
+        "needClientId": true,
+        "needClientSecret": true,
+        "isClientSecretMandatory": true
+      }
+    }
+  ]
+}

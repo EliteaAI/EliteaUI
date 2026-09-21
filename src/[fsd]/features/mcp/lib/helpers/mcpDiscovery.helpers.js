@@ -2,49 +2,15 @@ import { McpAuthFlowConstants } from '@/[fsd]/features/mcp/lib/constants';
 import store from '@/[fsd]/shared/config/store';
 import { mcpOAuthApi } from '@/api/mcpOAuth';
 
-/**
- * Construct OAuth metadata from authorization server URL when discovery metadata is not available.
- * Uses common OAuth endpoint patterns (e.g., GitHub uses /authorize and /access_token).
- */
-const constructOAuthMetadataFromServer = authServerUrl => {
-  if (!authServerUrl) return null;
-
-  const normalizedUrl = authServerUrl.replace(/\/+$/, '');
-
-  return {
-    authorization_endpoint: `${normalizedUrl}/authorize`,
-    token_endpoint: `${normalizedUrl}/access_token`,
-    // No registration_endpoint - server doesn't support DCR
-    // No code_challenge_methods_supported - assume no PKCE unless specified
-  };
+const selectAuthServerMetadata = metadata => {
+  const asMetadata = metadata?.oauth_authorization_server || metadata?.authorization_server || null;
+  if (asMetadata) return asMetadata;
+  if (metadata?.authorization_endpoint && metadata?.token_endpoint) return metadata;
+  return null;
 };
 
 export const extractAuthServerMetadata = metadata => {
-  // Extract auth server metadata from the provided metadata (from mcp_authorization_required message)
-  // No discovery fetches - metadata must be provided by backend
-  let asMetadata = metadata?.oauth_authorization_server || metadata?.authorization_server || null;
-
-  // Check if metadata itself contains endpoints (direct OIDC config)
-  if (!asMetadata && metadata?.authorization_endpoint && metadata?.token_endpoint) {
-    asMetadata = metadata;
-  }
-
-  // Check if asMetadata has the required endpoints
-  const hasRequiredEndpoints = asMetadata?.authorization_endpoint && asMetadata?.token_endpoint;
-
-  // Fallback: construct OAuth metadata from authorization_servers URL
-  // This handles providers like GitHub that don't expose OAuth discovery endpoints
-  // or when oauth_authorization_server is missing required endpoints (e.g., GitHub's OIDC-only metadata)
-  if ((!asMetadata || !hasRequiredEndpoints) && metadata?.authorization_servers?.length > 0) {
-    const constructedMetadata = constructOAuthMetadataFromServer(metadata.authorization_servers[0]);
-    if (constructedMetadata) {
-      // Merge with existing metadata but override scopes_supported with resource scopes if available
-      asMetadata = {
-        ...asMetadata,
-        ...constructedMetadata,
-      };
-    }
-  }
+  const asMetadata = selectAuthServerMetadata(metadata);
 
   if (!asMetadata) {
     throw new Error(McpAuthFlowConstants.MCP_OAUTH_ERRORS.NO_AUTH_SERVERS);

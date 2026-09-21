@@ -11,10 +11,29 @@ import {
   Typography,
 } from '@mui/material';
 
-import { McpAuthFlowHelpers, McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
+import { McpAuthFlowConstants } from '@/[fsd]/features/mcp/lib/constants';
+import {
+  McpAuthFlowHelpers,
+  McpAuthHelpers,
+  McpClientRegistrationHelpers,
+} from '@/[fsd]/features/mcp/lib/helpers';
 import CloseIcon from '@/components/Icons/CloseIcon';
 
 import OAuthFormFields from './OAuthFormFields';
+
+const { MCP_OAUTH_FLOWS, MCP_OAUTH_ERRORS } = McpAuthFlowConstants;
+
+const PRE_REGISTERED_APPLICATION_NOTICE = 'This server requires a pre-registered OAuth application.';
+
+const describeRequestedCredentials = ({ needClientId, needsClientSecret, mustEnterClientSecret }) => {
+  if (needClientId && mustEnterClientSecret) return 'Please provide your client credentials.';
+  if (needClientId && needsClientSecret) {
+    return 'Please provide its Client ID, and its Client Secret if the application has one.';
+  }
+  if (needClientId) return 'Please provide its Client ID.';
+  if (mustEnterClientSecret) return 'Please provide its Client Secret.';
+  return 'Provide its Client Secret if the application has one.';
+};
 
 const convertScopes = scopes => {
   if (Array.isArray(scopes)) return scopes.join(' ').trim();
@@ -58,12 +77,6 @@ const McpAuthModal = memo(props => {
   const client_id = providedSettings?.mcp_client_id || formClientId;
   const client_secret = providedSettings?.mcp_client_secret || formClientSecret;
   const scopes = providedSettings?.scopes || formScopes;
-
-  // Flags to indicate if credentials are provided by backend (don't show inputs).
-  const hasBackendClientId = Boolean(providedSettings?.mcp_client_id);
-  const hasBackendClientSecret = Boolean(
-    providedSettings?.mcp_client_secret || providedSettings?.has_mcp_client_secret,
-  );
 
   const [clientId, setClientId] = useState('');
   const [clientSecret, setClientSecret] = useState('');
@@ -116,107 +129,53 @@ const McpAuthModal = memo(props => {
     };
   }, []);
 
-  // Compute metadata information from provided metadata (from mcp_authorization_required)
-  const serverMetadata = useMemo(() => {
-    const metadata = oauthAuthorizationServer || {};
-
-    // OIDC detection for user login flows:
-    // Must have userinfo_endpoint - this indicates the server supports fetching user info
-    // which is the key differentiator for OIDC user authentication flows.
-    // Note: GitHub has issuer and id_token in response_types, but that's for GitHub Actions OIDC
-    // (machine-to-machine workload identity), NOT for user OAuth login.
-    // Without userinfo_endpoint, we treat it as standard OAuth, requiring client_secret.
-    const isActuallyOIDC = Boolean(metadata.userinfo_endpoint);
-
-    // Check token endpoint auth methods
-    // If server only supports client_secret_basic or client_secret_post (not "none"),
-    // then DCR won't help because we'd still need a pre-registered client with a secret
-    // HOWEVER: If the server supports PKCE (S256), it implicitly supports public clients
-    // per OAuth 2.0 best practices, even if it doesn't explicitly advertise "none"
-    const authMethods = metadata.token_endpoint_auth_methods_supported || [];
-    const supportsPKCE = metadata.code_challenge_methods_supported?.includes('S256') ?? false;
-    const supportsPublicClients = authMethods.length === 0 || authMethods.includes('none') || supportsPKCE; // PKCE support implies public client support
-    const requiresClientSecret = authMethods.length > 0 && !authMethods.includes('none') && !supportsPKCE;
-
-    // DCR is useful if the server supports public clients (via "none" or PKCE)
-    // With PKCE + DCR, we can auto-register and use PKCE without needing pre-registered credentials
-    const hasDCREndpoint = Boolean(metadata.registration_endpoint);
-    const canUseDCR = hasDCREndpoint && supportsPublicClients;
-
-    return {
-      issuer: metadata.issuer,
-      supportsPKCE: metadata.code_challenge_methods_supported?.includes('S256') ?? false,
-      supportsDCR: canUseDCR,
-      hasDCREndpoint, // Server has DCR but may require secret
-      requiresClientSecret, // Server requires client_secret for token endpoint
-      supportsRefreshToken: metadata.grant_types_supported?.includes('refresh_token') ?? false,
-      authEndpoint: metadata.authorization_endpoint,
-      tokenEndpoint: metadata.token_endpoint,
-      isOIDC: isActuallyOIDC,
-      grantTypes: metadata.grant_types_supported || ['authorization_code'],
-      responseTypes: metadata.response_types_supported || ['code'],
-      tokenAuthMethods: authMethods,
-    };
-  }, [oauthAuthorizationServer]);
-
-  // Determine authentication flow based on server capabilities (priority order)
-  const authFlow = useMemo(() => {
-    // DCR has highest priority - but only if server supports public clients
-    if (serverMetadata.supportsDCR) return 'dcr';
-    if (serverMetadata.isOIDC) return 'oidc';
-    if (serverMetadata.supportsPKCE) return 'pkce';
-    return 'standard';
-  }, [serverMetadata.supportsDCR, serverMetadata.isOIDC, serverMetadata.supportsPKCE]);
+  const clientRequirements = useMemo(
+    () => McpClientRegistrationHelpers.getOAuthClientRequirements(oauthAuthorizationServer, providedSettings),
+    [oauthAuthorizationServer, providedSettings],
+  );
+  const hasAuthServerMetadata = Boolean(
+    oauthAuthorizationServer?.authorization_endpoint &&
+    oauthAuthorizationServer?.token_endpoint &&
+    authServers?.length,
+  );
+  const { authFlow, requiresClientSecret, isClientSecretMandatory } = clientRequirements;
+  const needClientId = hasAuthServerMetadata && clientRequirements.needClientId && !client_id?.trim();
+  const needsClientSecret =
+    hasAuthServerMetadata && clientRequirements.needClientSecret && !client_secret?.trim();
+  const mustEnterClientSecret = needsClientSecret && isClientSecretMandatory;
+  const showsCredentialFields = needClientId || needsClientSecret;
 
   const descriptionText = useMemo(() => {
     if (providedSettings?.has_pat) {
       return 'The pre-configured access token for this MCP server appears to be expired or invalid. Please update the token in the toolkit settings, or complete OAuth authorization below to use a different authentication method.';
     }
     const AUTH_FLOW_MESSAGES = {
-      oidc: 'Using OIDC flow.',
-      dcr: 'Supports automatic client registration.',
-      pkce: 'Using PKCE flow for enhanced security.',
+      [MCP_OAUTH_FLOWS.OIDC]: 'Using OIDC flow.',
+      [MCP_OAUTH_FLOWS.DCR]: 'Supports automatic client registration.',
+      [MCP_OAUTH_FLOWS.PKCE]: 'Using PKCE flow for enhanced security.',
     };
-    const flowSuffix = serverMetadata.requiresClientSecret
-      ? 'This server requires a pre-registered OAuth application. Please provide your client credentials.'
-      : AUTH_FLOW_MESSAGES[authFlow] || '';
+    const selectFlowSuffix = () => {
+      if (!hasAuthServerMetadata) return '';
+      if (!showsCredentialFields || !requiresClientSecret) return AUTH_FLOW_MESSAGES[authFlow] || '';
+      const requestedCredentials = describeRequestedCredentials({
+        needClientId,
+        needsClientSecret,
+        mustEnterClientSecret,
+      });
+      return `${PRE_REGISTERED_APPLICATION_NOTICE} ${requestedCredentials}`;
+    };
+    const flowSuffix = selectFlowSuffix();
     return `This MCP server requires OAuth authorization to access its tools.${flowSuffix ? ` ${flowSuffix}` : ''}`;
-  }, [providedSettings?.has_pat, serverMetadata.requiresClientSecret, authFlow]);
-
-  // Determine if we need to show client_id input
-  // Don't show if: DCR flow, or backend already provides it
-  const needClientId = useMemo(() => {
-    // If backend provides client_id, don't show input
-    if (hasBackendClientId) return false;
-    if (authFlow === 'dcr') return false;
-    return !client_id?.trim();
-  }, [authFlow, client_id, hasBackendClientId]);
-
-  // Determine if we need to show client_secret input
-  // Don't show if: backend already provides it, or flow doesn't require it
-  const needsClientSecret = useMemo(() => {
-    // If backend provides client_secret, don't show input
-    if (hasBackendClientSecret) return false;
-    // If server explicitly requires client_secret (only supports client_secret_basic/post)
-    // then we always need it, regardless of flow
-    if (serverMetadata.requiresClientSecret) {
-      return !client_secret?.trim();
-    }
-    // DCR and OIDC flows don't need client secret
-    if (authFlow === 'oidc' || authFlow === 'dcr') return false;
-    // PKCE flow can work without client secret (public client)
-    // But only if the server actually supports PKCE
-    if (authFlow === 'pkce' && serverMetadata.supportsPKCE) return false;
-    // Standard flow or fallback: need client secret if not already provided
-    return !client_secret?.trim();
   }, [
+    providedSettings?.has_pat,
+    hasAuthServerMetadata,
+    showsCredentialFields,
+    requiresClientSecret,
+    needClientId,
+    needsClientSecret,
+    mustEnterClientSecret,
     authFlow,
-    client_secret,
-    hasBackendClientSecret,
-    serverMetadata.supportsPKCE,
-    serverMetadata.requiresClientSecret,
   ]);
-  // No frontend discovery - metadata must come from mcp_authorization_required message
 
   const isAuthorizeDisabled = useMemo(() => {
     if (authLoading || authSuccess) return true;
@@ -224,24 +183,20 @@ const McpAuthModal = memo(props => {
     // For pre-built MCPs, storageKey may not be required (backend manages it)
     if (!storageKey && !isPrebuildMcp) return true;
 
-    // Metadata must be provided by backend
-    const hasMetadata = oauthAuthorizationServer || (authServers && authServers.length > 0);
-    if (!hasMetadata) return true;
+    if (!hasAuthServerMetadata) return true;
 
-    // Check if required credentials are provided
     if (needClientId && !clientId?.trim()) return true;
-    return !!(needsClientSecret && !clientSecret?.trim());
+    return !!(mustEnterClientSecret && !clientSecret?.trim());
   }, [
     authLoading,
     authSuccess,
     storageKey,
     isPrebuildMcp,
     needClientId,
-    needsClientSecret,
+    mustEnterClientSecret,
     clientId,
     clientSecret,
-    oauthAuthorizationServer,
-    authServers,
+    hasAuthServerMetadata,
   ]);
 
   const handleCancel = useCallback(() => {
@@ -273,12 +228,6 @@ const McpAuthModal = memo(props => {
     setAuthError('');
     setAuthSuccess(false);
     try {
-      // Use metadata from mcp_authorization_required message (no frontend discovery)
-      if (!authServers || !authServers.length) {
-        // noinspection ExceptionCaughtLocallyJS
-        throw new Error('No authorization servers available');
-      }
-
       await McpAuthFlowHelpers.startMcpAuthFlow({
         serverUrl: storageKey,
         resourceMetadata: {
@@ -436,21 +385,33 @@ const McpAuthModal = memo(props => {
             </Link>
           </Typography>
         </Typography>
-        <OAuthFormFields
-          clientId={clientId}
-          clientSecret={clientSecret}
-          scope={scope}
-          onClientIdChange={onClientIdChange}
-          onClientSecretChange={onClientSecretChange}
-          onScopeChange={onScopeChange}
-          availableScopes={availableScopes}
-          needSecret={needsClientSecret}
-          needClientId={needClientId}
-          autoFocus={true}
-          saveCredentials={saveCredentials}
-          onSaveCredentialsChange={onSaveCredentialsChange}
-          showSaveCredentials={needClientId || needsClientSecret}
-        />
+        {hasAuthServerMetadata ? (
+          <OAuthFormFields
+            clientId={clientId}
+            clientSecret={clientSecret}
+            scope={scope}
+            onClientIdChange={onClientIdChange}
+            onClientSecretChange={onClientSecretChange}
+            onScopeChange={onScopeChange}
+            availableScopes={availableScopes}
+            needSecret={needsClientSecret}
+            isSecretRequired={mustEnterClientSecret}
+            needClientId={needClientId}
+            autoFocus={true}
+            saveCredentials={saveCredentials}
+            onSaveCredentialsChange={onSaveCredentialsChange}
+            showSaveCredentials={showsCredentialFields}
+          />
+        ) : (
+          <Typography
+            component={'div'}
+            variant="bodyMedium"
+            sx={styles.errorText}
+            data-testid="mcp-auth-metadata-unavailable"
+          >
+            {MCP_OAUTH_ERRORS.AUTH_SERVER_METADATA_UNAVAILABLE}
+          </Typography>
+        )}
         {authError && (
           <Typography
             component={'div'}
