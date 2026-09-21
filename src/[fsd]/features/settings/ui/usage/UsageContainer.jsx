@@ -14,6 +14,7 @@ import { exportToExcel } from '@/[fsd]/shared/lib/utils';
 import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
 import { BaseTab, BaseTabs } from '@/[fsd]/shared/ui/tabs';
 import { useLazyUsageMembersQuery, useProjectUsageQuery, useUsageMembersQuery } from '@/api';
+import RefreshIcon from '@/assets/refresh-icon.svg?react';
 import useDebounceValue from '@/hooks/useDebounceValue';
 import { useSelectedProject, useSelectedProjectId } from '@/hooks/useSelectedProject';
 
@@ -58,7 +59,12 @@ const UsageContainer = memo(() => {
 
   const activeScope = isPersonalProject ? SCOPE_PROJECT : scope;
 
-  const { data, isLoading, isError } = useProjectUsageQuery(
+  const {
+    data,
+    isLoading,
+    isError,
+    refetch: refetchUsage,
+  } = useProjectUsageQuery(
     { projectId, scope: activeScope },
     { skip: !projectId, refetchOnMountOrArgChange: true },
   );
@@ -178,7 +184,25 @@ const UsageContainer = memo(() => {
 
   const handleCloseExportError = useCallback(() => setExportError(false), []);
 
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshError, setRefreshError] = useState(false);
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    setRefreshError(false);
+
+    const results = await Promise.all([refetchUsage(), ...(showsMembers ? [refetchMembers()] : [])]);
+
+    if (results.some(result => result.error)) {
+      setRefreshError(true);
+    }
+    setRefreshing(false);
+  }, [refetchUsage, refetchMembers, showsMembers]);
+
+  const handleCloseRefreshError = useCallback(() => setRefreshError(false), []);
+
   const exportDisabled = exporting || isLoading || !data;
+  const refreshDisabled = refreshing || isLoading || isMembersFetching || !data;
 
   return (
     <DrawerPage>
@@ -190,13 +214,30 @@ const UsageContainer = memo(() => {
           Usage
         </Typography>
         <Tooltip
-          title={exporting ? 'Preparing export…' : 'Export to Excel'}
+          title="Refresh data"
           placement="top"
         >
           <Box
             component="span"
             sx={styles.exportButtonWrapper}
           >
+            <BaseBtn
+              variant={BUTTON_VARIANTS.icon}
+              color="secondary"
+              onClick={handleRefresh}
+              disabled={refreshDisabled}
+              aria-label="Refresh data"
+              data-testid="usage-refresh-button"
+            >
+              {refreshing ? <CircularProgress size={16} /> : <RefreshIcon sx={styles.icon} />}
+            </BaseBtn>
+          </Box>
+        </Tooltip>
+        <Tooltip
+          title={exporting ? 'Preparing export…' : 'Export to Excel'}
+          placement="top"
+        >
+          <Box component="span">
             <BaseBtn
               variant={BUTTON_VARIANTS.icon}
               color="secondary"
@@ -322,6 +363,21 @@ const UsageContainer = memo(() => {
           Unable to export usage data. Please try again.
         </Alert>
       </Snackbar>
+
+      <Snackbar
+        open={refreshError}
+        autoHideDuration={8000}
+        onClose={handleCloseRefreshError}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert
+          onClose={handleCloseRefreshError}
+          severity="error"
+          variant="filled"
+        >
+          Unable to refresh usage data. Please try again.
+        </Alert>
+      </Snackbar>
     </DrawerPage>
   );
 });
@@ -340,9 +396,12 @@ const usageContainerStyles = () => ({
     boxSizing: 'border-box',
     borderBottom: `0.0625rem solid ${palette.border.default}`,
   }),
-  // Keeps the export action at the far edge, away from the page title
+  // Keeps the header actions at the far edge, away from the page title
   exportButtonWrapper: {
     marginLeft: 'auto',
+  },
+  icon: {
+    fontSize: '1rem',
   },
   tabsContainer: ({ palette }) => ({
     padding: '0 1.5rem',
