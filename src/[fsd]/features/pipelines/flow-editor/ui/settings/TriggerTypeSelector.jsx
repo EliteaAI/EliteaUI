@@ -8,7 +8,11 @@ import { Box, IconButton } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { PipelineNodeTypes } from '@/[fsd]/features/pipelines/flow-editor/lib/constants/flowEditor.constants';
-import { GITLAB_AUTH_METHODS } from '@/[fsd]/features/pipelines/flow-editor/lib/constants/webhook.constants';
+import {
+  GITLAB_AUTH_METHODS,
+  TRIGGER_TYPES,
+  WEBHOOK_TYPES,
+} from '@/[fsd]/features/pipelines/flow-editor/lib/constants/webhook.constants';
 import { useDelegatedOauthToolkits } from '@/[fsd]/features/toolkits/lib/hooks';
 import { InfoLabelWithTooltip } from '@/[fsd]/shared/ui/label';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
@@ -22,20 +26,6 @@ import PipelineWebhookModal from './PipelineWebhookModal';
 
 // Node types that require user interaction and thus only support Chat Message trigger
 const INTERACTIVE_NODE_TYPES = [PipelineNodeTypes.Hitl, PipelineNodeTypes.Printer];
-
-// Trigger types
-export const TRIGGER_TYPES = {
-  chat_message: 'chat_message',
-  schedule: 'schedule',
-  webhook: 'webhook',
-};
-
-// Webhook types
-export const WEBHOOK_TYPES = {
-  github: 'github',
-  gitlab: 'gitlab',
-  custom: 'custom',
-};
 
 const TRIGGER_OPTIONS = [
   { label: 'Chat Message', value: TRIGGER_TYPES.chat_message },
@@ -413,6 +403,7 @@ const TriggerTypeSelector = memo(props => {
         secretInstructions={triggerData?.secret_instructions}
         gitlabAuthMethod={currentGitlabAuthMethod}
         secretConfigured={triggerData?.secret_configured}
+        signingSecretConfigured={triggerData?.signing_secret_configured}
         isLoading={isUpdating}
       />
     </Box>

@@ -1,3 +1,15 @@
+export const TRIGGER_TYPES = {
+  chat_message: 'chat_message',
+  schedule: 'schedule',
+  webhook: 'webhook',
+};
+
+export const WEBHOOK_TYPES = {
+  github: 'github',
+  gitlab: 'gitlab',
+  custom: 'custom',
+};
+
 export const GITLAB_AUTH_METHODS = {
   secret_token: 'secret_token',
   signing_token: 'signing_token',

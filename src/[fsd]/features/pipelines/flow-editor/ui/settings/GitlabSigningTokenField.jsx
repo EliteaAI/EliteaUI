@@ -1,8 +1,8 @@
 import { memo, useCallback } from 'react';
 
-import { Box, Typography } from '@mui/material';
+import { Box } from '@mui/material';
 
-import FormInput from '@/components/FormInput';
+import { Input } from '@/[fsd]/shared/ui';
 
 const CONFIGURED_HELPER_TEXT =
   'A signing token is saved. Leave this empty to keep it, or paste a new one to replace it.';
@@ -23,17 +23,14 @@ const GitlabSigningTokenField = memo(props => {
 
   return (
     <Box sx={[styles.root, sx]}>
-      <Typography
-        variant="labelMedium"
-        sx={styles.sectionLabel}
-      >
-        Signing token
-      </Typography>
-      <FormInput
+      <Input.InputBase
+        label="Signing token"
         value={value}
         onChange={handleChange}
         placeholder={isConfigured ? 'Paste a new token to replace the saved one' : 'whsec_…'}
         error={Boolean(error)}
+        helperText={error || (isConfigured ? CONFIGURED_HELPER_TEXT : EMPTY_HELPER_TEXT)}
+        helperTextTestId="pipeline-webhook-signing-token-helper-text"
         sx={styles.input}
         inputProps={{
           'data-testid': 'pipeline-webhook-signing-token-input',
@@ -41,13 +38,6 @@ const GitlabSigningTokenField = memo(props => {
           spellCheck: 'false',
         }}
       />
-      <Typography
-        variant="bodySmall"
-        sx={error ? styles.errorText : styles.helperText}
-        data-testid="pipeline-webhook-signing-token-helper-text"
-      >
-        {error || (isConfigured ? CONFIGURED_HELPER_TEXT : EMPTY_HELPER_TEXT)}
-      </Typography>
     </Box>
   );
 });
@@ -59,28 +49,14 @@ const gitlabSigningTokenFieldStyles = () => ({
   root: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.5rem',
   },
-  sectionLabel: ({ palette }) => ({
-    color: palette.text.secondary,
-    fontWeight: 600,
-  }),
+  // Monospace so a mis-pasted token is legible character by character.
   input: {
-    flex: 1,
     '& input': {
       fontSize: '0.75rem',
       fontFamily: 'monospace',
     },
   },
-  helperText: ({ palette }) => ({
-    color: palette.text.secondary,
-    fontSize: '0.75rem',
-    fontStyle: 'italic',
-  }),
-  errorText: ({ palette }) => ({
-    color: palette.error.main,
-    fontSize: '0.75rem',
-  }),
 });
 
 export default GitlabSigningTokenField;

@@ -67,6 +67,18 @@ vi.mock('@/[fsd]/shared/ui', () => ({
       </div>
     ),
   },
+  Input: {
+    InputBase: ({ value, onChange, helperText, helperTextTestId, inputProps = {} }) => (
+      <div>
+        <input
+          value={value}
+          onChange={onChange}
+          data-testid={inputProps['data-testid']}
+        />
+        <span data-testid={helperTextTestId}>{helperText}</span>
+      </div>
+    ),
+  },
   Modal: {
     BaseModal: ({ open, content, actions }) =>
       open ? (
@@ -196,6 +208,57 @@ describe('PipelineWebhookModal', () => {
     fireEvent.click(screen.getByTestId('pipeline-webhook-gitlab-auth-method-radio-signing_token'));
 
     expect(screen.getByTestId('pipeline-webhook-modal-apply-button').disabled).toBe(true);
+  });
+
+  // On a signing-mode trigger the server returns GitLab's signing token as `secretValue`. Showing it
+  // under "Secret Value" would invite pasting it into GitLab's "Secret token" field, where it is not
+  // what the backend verifies against.
+  it('never shows a stored signing token as the secret token', () => {
+    renderModal({
+      onSubmit: vi.fn(),
+      webhookType: 'gitlab',
+      gitlabAuthMethod: 'signing_token',
+      secretConfigured: true,
+      signingSecretConfigured: true,
+      secretValue: VALID_TOKEN,
+    });
+
+    fireEvent.click(screen.getByTestId('pipeline-webhook-gitlab-auth-method-radio-secret_token'));
+
+    expect(screen.queryByTestId('pipeline-webhook-secret-input')).toBeNull();
+    expect(screen.getByTestId('pipeline-webhook-secret-pending-apply-text')).toBeTruthy();
+  });
+
+  it('keeps the signing token hidden when the webhook type is switched away from gitlab', () => {
+    renderModal({
+      onSubmit: vi.fn(),
+      webhookType: 'gitlab',
+      gitlabAuthMethod: 'signing_token',
+      signingSecretConfigured: true,
+      secretValue: VALID_TOKEN,
+    });
+
+    fireEvent.click(screen.getByTestId('pipeline-webhook-type-radio-custom'));
+
+    expect(screen.queryByTestId('pipeline-webhook-secret-input')).toBeNull();
+  });
+
+  // The server keeps a stored signing token when secret-token mode is saved over it and reuses it on
+  // the way back, so flipping to signing must not demand a token GitLab only ever shows once.
+  it('trusts a stored signing token reported while secret-token mode is active', () => {
+    renderModal({
+      onSubmit: vi.fn(),
+      webhookType: 'gitlab',
+      gitlabAuthMethod: 'secret_token',
+      secretConfigured: true,
+      signingSecretConfigured: true,
+      secretValue: 'stored-secret-token',
+    });
+
+    fireEvent.click(screen.getByTestId('pipeline-webhook-gitlab-auth-method-radio-signing_token'));
+
+    expect(screen.getByTestId('pipeline-webhook-signing-token-input').value).toBe('');
+    expect(screen.getByTestId('pipeline-webhook-modal-apply-button').disabled).toBe(false);
   });
 
   // The regenerate button issues an Elitea-generated secret, which is meaningless when GitLab owns
