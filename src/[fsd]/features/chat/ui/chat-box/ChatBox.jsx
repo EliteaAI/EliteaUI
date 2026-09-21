@@ -5,6 +5,7 @@ import {
   useContext,
   useEffect,
   useImperativeHandle,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -628,6 +629,7 @@ const ChatBox = forwardRef((props, boxRef) => {
   // Acked: the loop folded it in and a timeline pin now shows it, so stop waiting.
   const onInjectionConsumed = useCallback(injectionId => {
     pendingInjectionsRef.current.delete(injectionId);
+    stopQueueRef.current = stopQueueRef.current.filter(item => item.id !== injectionId);
     setPendingInjections(prev => prev.filter(item => item.id !== injectionId));
   }, []);
 
@@ -645,7 +647,16 @@ const ChatBox = forwardRef((props, boxRef) => {
   const onInjectionReport = useCallback(({ consumed }) => {
     const pending = pendingInjectionsRef.current;
     if (!pending.size) return;
-    (consumed || []).forEach(id => pending.delete(id));
+    if (consumed?.length) {
+      // Remove consumed items from the pending map, the stop queue (in case stop-rescue already
+      // moved them there), and from state so their chips clear even if the live InjectionConsumed
+      // event was dropped.
+      consumed.forEach(id => {
+        pending.delete(id);
+        stopQueueRef.current = stopQueueRef.current.filter(item => item.id !== id);
+      });
+      setPendingInjections(prev => prev.filter(item => !consumed.includes(item.id)));
+    }
     if (!pending.size) return;
     const unconsumed = [...pending.entries()].map(([id, text]) => ({ id, text }));
     pendingInjectionsRef.current = new Map();
@@ -659,7 +670,13 @@ const ChatBox = forwardRef((props, boxRef) => {
       if (!next) return;
       isDequeuingRef.current = true;
       setPendingInjections(prev => prev.filter(item => item.id !== next.id));
-      onPredictStreamRef.current?.(next.text);
+      // Release mutex if onPredictStream bails out without starting streaming.
+      (async () => {
+        await onPredictStreamRef.current?.(next.text);
+        if (!isStreamingRef.current) {
+          isDequeuingRef.current = false;
+        }
+      })();
     }
   }, []);
 
@@ -805,9 +822,9 @@ const ChatBox = forwardRef((props, boxRef) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCodeBlockInfo?.canvasId, isEditingAgent]);
 
-  // Sync synchronously during render so callbacks reading this ref in the same tick
-  // always see the current value (a useEffect would leave it stale until after paint).
-  isStreamingRef.current = isStreaming;
+  useLayoutEffect(() => {
+    isStreamingRef.current = isStreaming;
+  }, [isStreaming]);
   useEffect(() => {
     setIsStreaming?.(isStreaming);
   }, [isStreaming, setIsStreaming]);
@@ -834,11 +851,7 @@ const ChatBox = forwardRef((props, boxRef) => {
     if (isStreaming) return;
 
     const wasStopRequested = stopRequestedRef.current;
-    const shouldRestore = wasStopRequested && lastSentQuestionRef.current;
-    if (shouldRestore) {
-      chatInput.current?.setValue(lastSentQuestionRef.current);
-    }
-
+    const lastSentQuestion = lastSentQuestionRef.current;
     lastSentQuestionRef.current = '';
     stopRequestedRef.current = false;
 
@@ -858,8 +871,19 @@ const ChatBox = forwardRef((props, boxRef) => {
       const next = stopQueueRef.current.shift();
       isDequeuingRef.current = true;
       setPendingInjections(prev => prev.filter(item => item.id !== next.id));
-      onPredictStreamRef.current?.(next.text);
+      // Release mutex if onPredictStream bails out without starting streaming.
+      (async () => {
+        await onPredictStreamRef.current?.(next.text);
+        if (!isStreamingRef.current) {
+          isDequeuingRef.current = false;
+        }
+      })();
     } else {
+      // Restore the stopped question only when there's nothing queued to send next.
+      // If we dequeued above, onPredictStream will reset the input anyway.
+      if (wasStopRequested && lastSentQuestion) {
+        chatInput.current?.setValue(lastSentQuestion);
+      }
       isDequeuingRef.current = false;
     }
   }, [isStreaming]);
