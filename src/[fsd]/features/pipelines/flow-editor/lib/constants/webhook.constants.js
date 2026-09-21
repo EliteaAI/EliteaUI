@@ -25,8 +25,9 @@ export const GITLAB_AUTH_METHOD_OPTIONS = [
 export const GITLAB_AUTH_METHOD_DESCRIPTIONS = {
   [GITLAB_AUTH_METHODS.secret_token]:
     'Elitea generates the token; you paste it into GitLab under "Secret token".',
-  [GITLAB_AUTH_METHODS.signing_token]:
-    "GitLab generates the token and signs every delivery; you paste GitLab's token here.",
+  // Says only who issues the token: how verification works is the Webhook Type line directly above,
+  // and where to find the token is the field's own helper text.
+  [GITLAB_AUTH_METHODS.signing_token]: "GitLab generates the token; you paste GitLab's token here.",
 };
 
 export const GITLAB_SIGNING_TOKEN_PREFIX = 'whsec_';
