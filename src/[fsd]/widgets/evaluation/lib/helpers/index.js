@@ -8,3 +8,4 @@ export * from './run.helpers';
 export * from './scaleLabel.helpers';
 export * from './scorecard.helpers';
 export * from './evaluationMessage.helpers';
+export * from './enhanceFix.helpers';
