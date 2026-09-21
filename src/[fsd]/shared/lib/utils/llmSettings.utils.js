@@ -4,6 +4,8 @@ import {
   DEFAULT_TEMPERATURE,
 } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
 
+import { isAutoSelection, selectionFields } from './autoRouting.utils';
+
 /**
  * Check if a model supports reasoning based on its supports_reasoning property
  * @param {Object} model - The model object
@@ -37,6 +39,15 @@ export const isReasoningFamilyFromStored = llmSettings => {
  */
 export const generateLLMSettings = (model, existingSettings = {}, options = {}) => {
   const { includeModelInfo = false } = options;
+  if (isAutoSelection(model) || (!model && isAutoSelection(existingSettings))) {
+    return {
+      ...existingSettings,
+      ...selectionFields(
+        isAutoSelection(existingSettings) ? { selection: existingSettings.selection } : model,
+      ),
+      max_tokens: existingSettings.max_tokens ?? DEFAULT_MAX_TOKENS,
+    };
+  }
 
   const baseSettings = {
     max_tokens: existingSettings.max_tokens ?? DEFAULT_MAX_TOKENS,
@@ -83,6 +94,7 @@ export const isLLMSettingsFamilyConflict = (temperature, reasoningEffort) =>
  * @returns {{temperature: number|null, reasoning_effort: string|null}}
  */
 export const resetLLMSettingsForModel = model => {
+  if (isAutoSelection(model)) return selectionFields(model);
   if (modelSupportsReasoning(model)) {
     return { temperature: null, reasoning_effort: DEFAULT_REASONING_EFFORT };
   }
@@ -103,6 +115,7 @@ export const cleanLLMSettings = (llmSettings, model) => {
     return llmSettings;
   }
 
+  if (isAutoSelection(llmSettings)) return { ...llmSettings };
   const cleanedSettings = { ...llmSettings };
 
   // Remove reasoning_effort if model doesn't support it
@@ -126,7 +139,7 @@ export const cleanLLMSettings = (llmSettings, model) => {
  * @returns {Object} Filtered settings or original if model supports reasoning
  */
 export const filterReasoningEffortFromSettings = (unsavedLLMSettings, model) => {
-  if (!unsavedLLMSettings || modelSupportsReasoning(model)) {
+  if (!unsavedLLMSettings || isAutoSelection(unsavedLLMSettings) || modelSupportsReasoning(model)) {
     return unsavedLLMSettings;
   }
 

@@ -47,6 +47,7 @@ import {
   useNewInputKeyDownHandler,
   useNextInputSuggestion,
   useReadAloud,
+  useSelectedChatModel,
   useSlashMention,
 } from '@/[fsd]/features/chat/lib/hooks';
 import { areDetailsOfParticipant } from '@/[fsd]/features/chat/participants/lib/helpers';
@@ -62,6 +63,12 @@ import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { MentionSkillList } from '@/[fsd]/features/skill';
 import { useDeleteSkillMutation } from '@/[fsd]/features/skill/api';
 import { LLMSettingsConstants, MentionConstants } from '@/[fsd]/shared/lib/constants';
+import {
+  isAutoSelection,
+  modelsWithAuto,
+  resolveModelSurface,
+  selectionFields,
+} from '@/[fsd]/shared/lib/utils/autoRouting.utils';
 import {
   cleanLLMSettings,
   isLLMSettingsFamilyConflict,
@@ -110,6 +117,8 @@ import { actions as chatActions } from '@/slices/chat';
 const { DEFAULT_MAX_TOKENS, DEFAULT_REASONING_EFFORT, DEFAULT_STEPS_LIMIT, DEFAULT_TEMPERATURE } =
   LLMSettingsConstants;
 
+const EMPTY_LLM_SETTINGS = Object.freeze({});
+
 const ChatBox = forwardRef((props, boxRef) => {
   const {
     fromTheChat,
@@ -147,7 +156,7 @@ const ChatBox = forwardRef((props, boxRef) => {
     newConversationQuestion,
 
     // LLM Settings props for modal dialog
-    llmSettings = {},
+    llmSettings = EMPTY_LLM_SETTINGS,
     onSetLLMSettings,
     showWebhookSecret = false,
     onSend = () => true,
@@ -280,11 +289,8 @@ const ChatBox = forwardRef((props, boxRef) => {
   // Speaking mode states
   const [isSpeakingMode, setIsSpeakingMode] = useState(false);
 
-  // Chat model
-  const [selectedModel, setSelectedModel] = useState(null);
-
   // Query models data
-  const { data: modelsData = { items: [], total: 0 } } = useListModelsQuery(
+  const { currentData: modelsData = { items: [], total: 0 } } = useListModelsQuery(
     { projectId, include_shared: true },
     { skip: !projectId },
   );
@@ -321,6 +327,20 @@ const ChatBox = forwardRef((props, boxRef) => {
     return modelsData.items.find(model => model.default) || modelsData.items[0] || null;
   }, [modelsData.items]);
 
+  const { selectedModel, setSelectedModel, selectSavedOrDefaultModel } = useSelectedChatModel({
+    projectId,
+    userId,
+    activeConversation,
+    modelsData,
+    defaultModel,
+    isAgentsPage,
+    llmSettings,
+    isLoadingConversation,
+    activeParticipant,
+    onClearActiveParticipant,
+    onChangeParticipantSettings,
+  });
+
   useEffect(() => {
     dispatch(chatActions.setCurrentChatModel(selectedModel));
   }, [dispatch, selectedModel]);
@@ -336,6 +356,10 @@ const ChatBox = forwardRef((props, boxRef) => {
     // and after the user changes it in the modal before the first message is sent.
     const stepsLimit =
       unsavedLLMSettings?.steps_limit ?? activeConversation?.meta?.steps_limit ?? DEFAULT_STEPS_LIMIT;
+
+    if (isAutoSelection(userSettings)) {
+      return { ...userSettings, steps_limit: stepsLimit };
+    }
 
     const baseSettings = {
       model_name: userSettings?.model_name || '',
@@ -376,83 +400,6 @@ const ChatBox = forwardRef((props, boxRef) => {
     modelsData.items,
   ]);
 
-  const selectSavedOrDefaultModel = useCallback(
-    (forceSelect = true) => {
-      if (forceSelect) {
-        onClearActiveParticipant(false);
-      }
-
-      let settingsToUse = null;
-
-      if (isAgentsPage && llmSettings) {
-        // On agents page, use the llmSettings prop directly
-        settingsToUse = {
-          model_name: llmSettings.model_name,
-          model_project_id: llmSettings.model_project_id,
-        };
-      } else {
-        // Fallback to user settings (original behavior for conversations)
-        const userSettings = NewConversationHelpers.getChatUserSettings(activeConversation, userId);
-        if (userSettings) {
-          settingsToUse = {
-            model_name: userSettings.model_name,
-            model_project_id: userSettings.model_project_id,
-          };
-        }
-      }
-      // }
-
-      if (settingsToUse) {
-        if (settingsToUse.model_name) {
-          // First try to find the model with the exact project_id
-          let model = modelsData.items.find(
-            p => p.name === settingsToUse.model_name && p.project_id === settingsToUse.model_project_id,
-          );
-
-          // If not found, try to find it as a shared model (project_id might be different)
-          if (!model) {
-            model = modelsData.items.find(p => p.name === settingsToUse.model_name);
-          }
-
-          if (model) {
-            setSelectedModel(model);
-          } else {
-            setSelectedModel(defaultModel);
-          }
-        } else {
-          if (isAgentsPage && onChangeParticipantSettings) {
-            // If no model is set in llm settings of agents,
-            // update the participant to use default model
-            const updatedSettings = {
-              ...activeParticipant?.entity_settings,
-              llm_settings: {
-                ...activeParticipant?.entity_settings.llm_settings,
-                model_name: defaultModel?.name,
-                model_project_id: defaultModel?.project_id,
-              },
-            };
-            onChangeParticipantSettings(activeParticipant?.id, { entity_settings: updatedSettings });
-          }
-          setSelectedModel(defaultModel);
-        }
-      } else {
-        setSelectedModel(defaultModel);
-      }
-    },
-    [
-      isAgentsPage,
-      llmSettings,
-      onClearActiveParticipant,
-      activeConversation,
-      userId,
-      modelsData.items,
-      defaultModel,
-      onChangeParticipantSettings,
-      activeParticipant?.entity_settings,
-      activeParticipant?.id,
-    ],
-  );
-
   // We need this useEffect to keep input value while new conversation creation with attachment upload
   useEffect(() => {
     const currentValue = chatInput.current?.getInputContent() || '';
@@ -467,18 +414,13 @@ const ChatBox = forwardRef((props, boxRef) => {
     if (needResetInputValue) chatInput.current?.reset();
   }, [newConversationQuestion, isUploadingAttachments, uploadProgress]);
 
-  useEffect(() => {
-    selectSavedOrDefaultModel(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectId, llmSettings, defaultModel, modelsData.items.length]);
-
   const getRegeneratePayload = useCallback(
     ({ question, question_id, participant, conversationUuid, attachmentList }) => {
       const realParticipant = participant || activeParticipant || {};
       // When on agents page, allow model override from dropdown selection
       // Otherwise use agent's configured model
       const llm_settings = isAgentsPage
-        ? unsavedLLMSettings || { model_name: selectedModel.name, model_project_id: selectedModel.project_id }
+        ? unsavedLLMSettings || selectionFields(selectedModel)
         : ChatHelpers.getModelSettings(realParticipant);
       switch (realParticipant.entity_name) {
         case ChatParticipantType.Pipelines:
@@ -2443,6 +2385,24 @@ const ChatBox = forwardRef((props, boxRef) => {
   const [showRecommendationList, setShowRecommendationList] = useState(false);
   const [originalParticipant, setOriginalParticipant] = useState();
 
+  const modelList = useMemo(
+    () =>
+      modelsWithAuto(
+        modelsData.items,
+        modelsData.auto_routing,
+        resolveModelSurface(
+          originalParticipant?.version_details?.agent_type,
+          activeParticipant?.entity_settings?.agent_type,
+        ),
+      ),
+    [
+      modelsData.items,
+      modelsData.auto_routing,
+      originalParticipant?.version_details?.agent_type,
+      activeParticipant?.entity_settings?.agent_type,
+    ],
+  );
+
   useEffect(() => {
     setShowRecommendationList(false);
   }, [activeParticipant]);
@@ -2661,6 +2621,7 @@ const ChatBox = forwardRef((props, boxRef) => {
           // Explicitly resets both temperature and reasoning_effort for the new model's
           // family — never leaves a stale value from the previously selected model (issue #5821).
           ...resetLLMSettingsForModel(newModel),
+          ...selectionFields(newModel),
           // Preserve steps_limit — not model-specific
           steps_limit: activeParticipant?.entity_settings.llm_settings?.steps_limit ?? DEFAULT_STEPS_LIMIT,
         };
@@ -2696,6 +2657,7 @@ const ChatBox = forwardRef((props, boxRef) => {
             // Explicitly resets both temperature and reasoning_effort for the new model's
             // family — never leaves a stale value from the previously selected model (issue #5821).
             ...resetLLMSettingsForModel(newModel),
+            ...selectionFields(newModel),
             // steps_limit is stored in conversation meta — do not touch it here
           };
 
@@ -2725,6 +2687,7 @@ const ChatBox = forwardRef((props, boxRef) => {
     [
       isAgentsPage,
       selectedModel,
+      setSelectedModel,
       onSetLLMSettings,
       onChangeParticipantSettings,
       activeParticipant?.entity_settings,
@@ -3013,7 +2976,7 @@ const ChatBox = forwardRef((props, boxRef) => {
             onChangeVariables={onChangeVariables}
             activeParticipant={activeParticipant}
             activeParticipantDetails={originalParticipant}
-            modelList={modelsData?.items || []}
+            modelList={modelList}
             onSelectModel={onSelectModel}
             selectedModel={selectedModel}
             selectSavedOrDefaultModel={selectSavedOrDefaultModel}

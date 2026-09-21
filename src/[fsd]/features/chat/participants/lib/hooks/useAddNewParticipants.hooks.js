@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo } from 'react';
 
+import { isAutoSelection } from '@/[fsd]/shared/lib/utils/autoRouting.utils';
 import {
   useAddParticipantIntoConversationMutation,
   useLazyConversationDetailsQuery,
@@ -50,6 +51,7 @@ export const useAddNewParticipants = props => {
           const { entity_name: type } = participant;
           return (
             (type === ChatParticipantType.Applications || type === ChatParticipantType.Pipelines) &&
+            !isAutoSelection(participant.version_details?.llm_settings) &&
             !participant.version_details?.llm_settings?.model_name
           );
         });
