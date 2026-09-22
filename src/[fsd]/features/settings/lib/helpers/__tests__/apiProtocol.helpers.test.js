@@ -36,6 +36,15 @@ describe('findCredentialType', () => {
     expect(findCredentialType(configurations, undefined)).toBe('');
     expect(findCredentialType(undefined, { elitea_title: 'My DIAL' })).toBe('');
   });
+
+  it('disambiguates same-title personal vs project credentials by private/project_id', () => {
+    const shared = [
+      { elitea_title: 'Shared Name', type: 'ai_dial', project_id: 1 },
+      { elitea_title: 'Shared Name', type: 'ai_openai', project_id: 99 },
+    ];
+    expect(findCredentialType(shared, { elitea_title: 'Shared Name', private: true }, 99)).toBe('ai_openai');
+    expect(findCredentialType(shared, { elitea_title: 'Shared Name', private: false }, 99)).toBe('ai_dial');
+  });
 });
 
 describe('resolveApiProtocolForModel', () => {

@@ -7,12 +7,12 @@ import { useSearchParams } from 'react-router-dom';
 import { Box, CircularProgress, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
+import { useApiProtocolField } from '@/[fsd]/features/credentials/lib/hooks';
 import { CREDENTIALS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import { useConfigOAuthModal, useMcpTokenChange } from '@/[fsd]/features/mcp/lib/hooks';
 import { McpAuthModal, McpLogoutModal } from '@/[fsd]/features/mcp/ui';
 import { ApiProtocolConstants } from '@/[fsd]/features/settings/lib/constants';
-import { useApiProtocolField } from '@/[fsd]/features/settings/lib/hooks';
 import { ToolComponentHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
 import { Button } from '@/[fsd]/shared/ui';
@@ -135,6 +135,14 @@ const CredentialForm = memo(props => {
       isApiProtocolHidden ? [...excludedFields, ApiProtocolConstants.API_PROTOCOL_FIELD] : excludedFields,
     [excludedFields, isApiProtocolHidden],
   );
+
+  const apiProtocolValue = credentialDetails?.settings?.[ApiProtocolConstants.API_PROTOCOL_FIELD];
+  useEffect(() => {
+    // don't submit a stale protocol picked while a different credential was selected
+    if (isApiProtocolHidden && apiProtocolValue !== undefined) {
+      editField(`settings.${ApiProtocolConstants.API_PROTOCOL_FIELD}`, undefined);
+    }
+  }, [isApiProtocolHidden, apiProtocolValue, editField]);
 
   const onSaveConfiguration = useCallback(
     async config => {
