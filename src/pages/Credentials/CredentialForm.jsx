@@ -7,12 +7,12 @@ import { useSearchParams } from 'react-router-dom';
 import { Box, CircularProgress, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
+import { ApiProtocolConstants } from '@/[fsd]/features/credentials/lib/constants';
 import { useApiProtocolField } from '@/[fsd]/features/credentials/lib/hooks';
 import { CREDENTIALS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import { useConfigOAuthModal, useMcpTokenChange } from '@/[fsd]/features/mcp/lib/hooks';
 import { McpAuthModal, McpLogoutModal } from '@/[fsd]/features/mcp/ui';
-import { ApiProtocolConstants } from '@/[fsd]/features/settings/lib/constants';
 import { ToolComponentHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
 import { Button } from '@/[fsd]/shared/ui';
@@ -137,12 +137,18 @@ const CredentialForm = memo(props => {
   );
 
   const apiProtocolValue = credentialDetails?.settings?.[ApiProtocolConstants.API_PROTOCOL_FIELD];
+  const credentialFieldValue =
+    credentialDetails?.settings?.[ApiProtocolConstants.API_PROTOCOL_CREDENTIAL_FIELD];
+  const lastCredentialRef = useRef(credentialFieldValue);
+
   useEffect(() => {
-    // don't submit a stale protocol picked while a different credential was selected
-    if (isApiProtocolHidden && apiProtocolValue !== undefined) {
+    const credentialChanged = lastCredentialRef.current !== credentialFieldValue;
+    lastCredentialRef.current = credentialFieldValue;
+    // only clear when the credential itself just changed, not on initial mount of a saved model
+    if (credentialChanged && isApiProtocolHidden && apiProtocolValue !== undefined) {
       editField(`settings.${ApiProtocolConstants.API_PROTOCOL_FIELD}`, undefined);
     }
-  }, [isApiProtocolHidden, apiProtocolValue, editField]);
+  }, [isApiProtocolHidden, apiProtocolValue, credentialFieldValue, editField]);
 
   const onSaveConfiguration = useCallback(
     async config => {

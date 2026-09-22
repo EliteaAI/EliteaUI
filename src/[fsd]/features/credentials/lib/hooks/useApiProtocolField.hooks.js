@@ -2,9 +2,10 @@ import { useEffect, useMemo, useRef } from 'react';
 
 import { useSelector } from 'react-redux';
 
-import { ApiProtocolConstants, ApiProtocolHelpers } from '@/[fsd]/features/settings/lib';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
+import { ApiProtocolConstants } from '../constants/index.js';
+import { ApiProtocolHelpers } from '../helpers/index.js';
 import { useCredentialsData } from './useCredentialsData.hooks.js';
 
 const { API_PROTOCOL_CREDENTIAL_FIELD, API_PROTOCOL_FIELD } = ApiProtocolConstants;
@@ -12,6 +13,9 @@ const { findCredentialType, isApiProtocolCredentialType, resolveApiProtocolForMo
 
 const CREDENTIALS_SECTION = 'ai_credentials';
 const noop = () => {};
+
+const credentialKeyOf = credentialValue =>
+  credentialValue ? `${credentialValue.elitea_title || ''}|${credentialValue.private}` : '';
 
 // Hides api_protocol unless the credential supports it, and auto-suggests it from the model name.
 export const useApiProtocolField = ({ schema, settings, editField }) => {
@@ -21,7 +25,7 @@ export const useApiProtocolField = ({ schema, settings, editField }) => {
   const hasField = !!schema?.properties?.[API_PROTOCOL_FIELD];
   const credentialValue = settings?.[API_PROTOCOL_CREDENTIAL_FIELD];
 
-  const { configurations } = useCredentialsData({
+  const { configurations, hasFetchedData } = useCredentialsData({
     // only fetch while the field can actually be shown for this schema
     selectedProjectId: hasField ? selectedProjectId : undefined,
     personal_project_id: hasField ? personal_project_id : undefined,
@@ -31,12 +35,14 @@ export const useApiProtocolField = ({ schema, settings, editField }) => {
   });
 
   const isSupported = useMemo(() => {
+    // configurations is still empty pre-fetch — don't flash the field visible then hide it
+    if (!hasFetchedData) return true;
     const eliteaTitle = credentialValue?.elitea_title;
     const resolvedType = findCredentialType(configurations, credentialValue, personal_project_id);
     // a credential is being picked/just created and not resolvable yet — don't assume it's unsupported
     if (eliteaTitle && !resolvedType) return true;
     return isApiProtocolCredentialType(resolvedType);
-  }, [configurations, credentialValue, personal_project_id]);
+  }, [hasFetchedData, configurations, credentialValue, personal_project_id]);
 
   const isHidden = hasField && !isSupported;
 
@@ -55,6 +61,16 @@ export const useApiProtocolField = ({ schema, settings, editField }) => {
     hasSeededNameRef.current = true;
     autoSelectedForRef.current = modelName;
   }, [modelName]);
+
+  const credentialKey = credentialKeyOf(credentialValue);
+  const lastCredentialKeyRef = useRef(credentialKey);
+
+  useEffect(() => {
+    if (lastCredentialKeyRef.current === credentialKey) return;
+    lastCredentialKeyRef.current = credentialKey;
+    // a new credential may now support/need a different protocol — allow re-suggesting for it
+    autoSelectedForRef.current = null;
+  }, [credentialKey]);
 
   // the form seeds the schema default, and our own suggestion is not a user choice either
   const isUserPicked =

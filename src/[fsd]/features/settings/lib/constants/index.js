@@ -6,4 +6,3 @@ export * as EnvironmentConstants from './environment.constants.js';
 export * as ProjectGeneralConstants from './projectGeneral.constants.js';
 export * as ProjectContextConstants from './projectContext.constants.js';
 export * as AnalyticsCommonConstants from './analyticsCommon.constants.js';
-export * as ApiProtocolConstants from './apiProtocol.constants.js';
