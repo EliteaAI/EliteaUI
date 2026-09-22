@@ -134,6 +134,7 @@ const SkillRowAction = memo(props => {
           <MoveToFolderSubmenu
             entityId={skillId}
             entityType={ContentType.SkillAll}
+            entityName={skillName}
             currentFolderId={folderId}
             parentMenuOpen={open}
             onAction={handleClose}

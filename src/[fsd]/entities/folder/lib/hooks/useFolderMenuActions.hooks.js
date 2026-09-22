@@ -12,7 +12,7 @@ import { useMoveEntityToFolder, useRemoveEntityFromFolder } from './useFolderMut
  * Shared hook for folder menu actions used by MoveToFolderButton and MoveToFolderSubmenu.
  * Handles folder selection, creation, move/remove operations, and toast notifications.
  */
-export const useFolderMenuActions = ({ entityId, entityType, currentFolderId, onAction }) => {
+export const useFolderMenuActions = ({ entityId, entityType, currentFolderId, onAction, entityName }) => {
   const folderEntityType = useMemo(() => getFolderEntityType(entityType), [entityType]);
   const { folders, isLoading: foldersLoading } = useEntityFolders(folderEntityType, {
     skip: !folderEntityType,
@@ -48,7 +48,7 @@ export const useFolderMenuActions = ({ entityId, entityType, currentFolderId, on
           entityId,
           previousFolderId: currentFolderId,
         });
-        toastSuccess(`Moved to "${folder.name}"`);
+        toastSuccess(`"${entityName}" has been moved to "${folder.name}".`);
       } catch {
         toastError('Failed to move to folder');
       }
@@ -57,6 +57,7 @@ export const useFolderMenuActions = ({ entityId, entityType, currentFolderId, on
       canWrite,
       currentFolderId,
       entityId,
+      entityName,
       folderEntityType,
       moveEntityToFolder,
       onAction,
@@ -78,15 +79,17 @@ export const useFolderMenuActions = ({ entityId, entityType, currentFolderId, on
           entityId,
           previousFolderId: currentFolderId,
         });
-        toastSuccess('Removed from folder');
+        toastSuccess(`"${entityName}" has been removed from "${currentFolder?.name}".`);
       } catch {
         toastError('Failed to remove from folder');
       }
     },
     [
       canWrite,
+      currentFolder,
       currentFolderId,
       entityId,
+      entityName,
       folderEntityType,
       onAction,
       removeEntityFromFolder,
@@ -118,12 +121,12 @@ export const useFolderMenuActions = ({ entityId, entityType, currentFolderId, on
           entityId,
           previousFolderId: currentFolderId,
         });
-        toastSuccess(`Moved to "${newFolder.name}"`);
+        toastSuccess(`"${entityName}" has been moved to "${newFolder.name}".`);
       } catch {
         toastError('Failed to move to folder');
       }
     },
-    [currentFolderId, entityId, folderEntityType, moveEntityToFolder, toastSuccess, toastError],
+    [currentFolderId, entityId, entityName, folderEntityType, moveEntityToFolder, toastSuccess, toastError],
   );
 
   const handleCloseCreateDialog = useCallback(() => {
