@@ -14,9 +14,9 @@ export const formatVersionMeta = version => {
   }
   const authorName =
     version.author_name ??
-    version.author.name ??
+    version.author?.name ??
     version.author_email ??
-    version.author.email ??
+    version.author?.email ??
     'Author unavailable';
   parts.push(`by ${authorName}`);
   return parts.length ? parts.join(' · ') : null;

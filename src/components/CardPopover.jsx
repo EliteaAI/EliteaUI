@@ -108,7 +108,9 @@ const CardPopover = forwardRef((props, ref) => {
         {contentList?.map((content, index) => {
           const contentMap = {
             author: (
-              <StyledAuthorPopoverItem onClick={navigateToAuthorPublicPage(content.id, content.name)}>
+              <StyledAuthorPopoverItem
+                onClick={content.id ? navigateToAuthorPublicPage(content.id, content.name) : undefined}
+              >
                 <UserAvatar
                   name={content.name}
                   avatar={content.avatar}
