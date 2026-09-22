@@ -26,6 +26,7 @@ const McpAuthStatus = memo((props = {}) => {
   const { authConfig } = props;
   const { values } = useFormikContext();
   const { id, type: toolkitType, settings: { url, client_id, client_secret, scopes } = {} } = values ?? {};
+  const hasConfiguredHeaders = Object.keys(values?.settings?.headers || {}).length > 0;
   const { values: formValues } = useFormikContext();
   const projectId = useSelectedProjectId();
 
@@ -83,11 +84,11 @@ const McpAuthStatus = memo((props = {}) => {
   const { patInvalid } = useInternalMcpPatStatus({ projectId, toolkitType });
 
   useEffect(() => {
-    const toolkitKey = id ? `${projectId}:${id}:${toolkitType}` : null;
+    const toolkitKey = id ? `${projectId}:${id}:${toolkitType}:${url || ''}` : null;
     const shouldCheckExistingToolkit =
       toolkitKey &&
       !authConfig &&
-      isPrebuildMcp &&
+      (isPrebuildMcp || (toolkitType === 'mcp' && url && hasConfiguredHeaders)) &&
       !hasLoggedInToMcp &&
       !isRunning &&
       !patInvalid &&
@@ -95,10 +96,7 @@ const McpAuthStatus = memo((props = {}) => {
 
     if (!shouldCheckExistingToolkit) return;
 
-    // Old saved MCPs already have tools, so the creation-time discovery path
-    // never runs for them. Start the same login flow when the editor opens: a
-    // compatible family token is adopted silently, while a true first login
-    // opens the existing OAuth dialog just like new-toolkit creation.
+    // Recheck saved MCPs that can authenticate without a browser token.
     automaticallyCheckedToolkitRef.current = toolkitKey;
     runAuthCheck('list_tools');
   }, [
@@ -107,6 +105,8 @@ const McpAuthStatus = memo((props = {}) => {
     toolkitType,
     authConfig,
     isPrebuildMcp,
+    url,
+    hasConfiguredHeaders,
     hasLoggedInToMcp,
     isRunning,
     patInvalid,

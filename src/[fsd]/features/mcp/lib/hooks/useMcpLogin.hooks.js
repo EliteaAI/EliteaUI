@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 
@@ -6,8 +6,10 @@ import { useMcpAuthCheck } from './useMcpAuthCheck.hooks';
 import { useMcpAuthModal } from './useMcpAuthModal.hooks';
 import { useMcpTokenChange } from './useMcpTokenChange.hooks';
 
-export const useMcpLogin = ({ values, onSuccess, authConfig }) => {
+export const useMcpLogin = ({ values, onSuccess, authConfig, autoVerifyConfiguredHeaders = false }) => {
   const { id, type: toolkitType, settings: { url, client_id, client_secret, scopes } = {} } = values ?? {};
+  const hasConfiguredHeaders = Object.keys(values?.settings?.headers || {}).length > 0;
+  const automaticallyCheckedToolkitRef = useRef(null);
 
   // Check if this is a pre-built MCP type (e.g., mcp_github)
   const isPrebuildMcp = useMemo(() => McpAuthHelpers.isPrebuildMcpType(toolkitType), [toolkitType]);
@@ -40,6 +42,33 @@ export const useMcpLogin = ({ values, onSuccess, authConfig }) => {
     onMcpAuthRequired: handleMcpAuthRequired,
     onSuccess: handleConnectionSuccess,
   });
+
+  useEffect(() => {
+    const toolkitKey = id && url ? `${id}:${url}` : null;
+    if (
+      !autoVerifyConfiguredHeaders ||
+      !toolkitKey ||
+      toolkitType !== 'mcp' ||
+      !hasConfiguredHeaders ||
+      isLoggedIn ||
+      isRunning ||
+      automaticallyCheckedToolkitRef.current === toolkitKey
+    ) {
+      return;
+    }
+
+    automaticallyCheckedToolkitRef.current = toolkitKey;
+    runAuthCheck();
+  }, [
+    autoVerifyConfiguredHeaders,
+    id,
+    url,
+    toolkitType,
+    hasConfiguredHeaders,
+    isLoggedIn,
+    isRunning,
+    runAuthCheck,
+  ]);
 
   const onLogin = useCallback(
     e => {

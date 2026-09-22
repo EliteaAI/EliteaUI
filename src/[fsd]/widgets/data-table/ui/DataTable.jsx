@@ -12,7 +12,7 @@ import {
   GridTablePagination,
   GridTableRow,
 } from '@/[fsd]/entities/grid-table/ui';
-import { McpAuthHelpers } from '@/[fsd]/features/mcp';
+import { McpAuthConstants, McpAuthHelpers } from '@/[fsd]/features/mcp';
 import FlowIcon from '@/assets/flow-icon.svg?react';
 import OfflineIcon from '@/assets/offline-icon.svg?react';
 import OnlineIcon from '@/assets/online-icon.svg?react';
@@ -81,12 +81,20 @@ const DataTable = memo(props => {
 
   const [hoveredRowId, setHoveredRowId] = useState(null);
   const [tablePage, setTablePage] = useState(externalPage || 0);
+  const [mcpTokenVersion, setMcpTokenVersion] = useState(0);
 
   const isCredentials = useMemo(() => String(cardType).toLowerCase().includes('credential'), [cardType]);
   const isToolkits = useMemo(() => String(cardType).toLowerCase().includes('toolkit'), [cardType]);
   const isMCPs = useMemo(() => String(cardType).toLowerCase().includes('mcp'), [cardType]);
   const isPipelines = useMemo(() => isPipelineCard(cardType), [cardType]);
   const isAppAll = useMemo(() => isAppAllCard(cardType), [cardType]);
+
+  useEffect(() => {
+    if (!isMCPs) return;
+    const handleTokenChange = () => setMcpTokenVersion(version => version + 1);
+    window.addEventListener(McpAuthConstants.MCP_TOKEN_CHANGE_EVENT, handleTokenChange);
+    return () => window.removeEventListener(McpAuthConstants.MCP_TOKEN_CHANGE_EVENT, handleTokenChange);
+  }, [isMCPs]);
 
   const styles = useMemo(() => dataTableStyles(isFullWidth, hasListHeader), [isFullWidth, hasListHeader]);
 
@@ -403,7 +411,7 @@ const DataTable = memo(props => {
     return !isToolkits && !isMCPs && !isCredentials
       ? sortedItems.slice(tablePage * rowsPerPage, tablePage * rowsPerPage + rowsPerPage)
       : sortedItems;
-  }, [data, order, orderBy, isToolkits, isMCPs, isCredentials, tablePage, rowsPerPage]);
+  }, [data, order, orderBy, isToolkits, isMCPs, isCredentials, tablePage, rowsPerPage, mcpTokenVersion]);
 
   useEffect(() => {
     if (pageSizeFromUrl && pageSize != pageSizeFromUrl) {

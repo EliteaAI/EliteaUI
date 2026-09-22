@@ -9,11 +9,13 @@ const mocks = vi.hoisted(() => ({
   handleMcpAuthRequired: vi.fn(),
   runAuthCheck: vi.fn(),
   authCheckOptions: null,
+  setConnectionVerified: vi.fn(),
+  values: { id: 924, type: 'mcp_Epam Delivery Central', settings: {} },
 }));
 
 vi.mock('formik', () => ({
   useFormikContext: () => ({
-    values: { id: 924, type: 'mcp_Epam Delivery Central', settings: {} },
+    values: mocks.values,
   }),
 }));
 
@@ -30,7 +32,7 @@ vi.mock('@/[fsd]/features/interactive-tours', () => ({
 vi.mock('@/[fsd]/features/mcp/lib/helpers', () => ({
   McpAuthHelpers: {
     isPrebuildMcpType: type => type?.startsWith('mcp_') && type !== 'mcp',
-    setConnectionVerified: vi.fn(),
+    setConnectionVerified: mocks.setConnectionVerified,
     logout: vi.fn(),
   },
 }));
@@ -87,6 +89,8 @@ describe('McpAuthStatus existing toolkit login', () => {
     mocks.handleMcpAuthRequired.mockReset();
     mocks.runAuthCheck.mockReset();
     mocks.authCheckOptions = null;
+    mocks.setConnectionVerified.mockReset();
+    mocks.values = { id: 924, type: 'mcp_Epam Delivery Central', settings: {} };
   });
 
   it('starts the normal auth flow once for an existing preconfigured MCP', async () => {
@@ -98,5 +102,29 @@ describe('McpAuthStatus existing toolkit login', () => {
     act(() => mocks.authCheckOptions.onMcpAuthRequired(message));
 
     expect(mocks.handleMcpAuthRequired).toHaveBeenCalledWith(message);
+  });
+
+  it('verifies a saved remote MCP with configured headers and marks only a successful check', async () => {
+    mocks.values = {
+      id: 925,
+      type: 'mcp',
+      settings: { url: 'https://example.com/mcp', headers: { Authorization: 'secret-reference' } },
+    };
+
+    render(<McpAuthStatus />);
+
+    await waitFor(() => expect(mocks.runAuthCheck).toHaveBeenCalledTimes(1));
+    expect(mocks.authCheckOptions.values).toBe(mocks.values);
+    expect(mocks.setConnectionVerified).not.toHaveBeenCalled();
+    act(() => mocks.authCheckOptions.onSuccess());
+    expect(mocks.setConnectionVerified).toHaveBeenCalledWith('https://example.com/mcp');
+  });
+
+  it('does not automatically test a remote MCP without configured headers', () => {
+    mocks.values = { id: 926, type: 'mcp', settings: { url: 'https://example.com/mcp' } };
+
+    render(<McpAuthStatus />);
+
+    expect(mocks.runAuthCheck).not.toHaveBeenCalled();
   });
 });
