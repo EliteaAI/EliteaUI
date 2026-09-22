@@ -15,18 +15,20 @@ const DeleteFolderDialog = memo(props => {
   const { toastSuccess, toastError } = useToast();
 
   const entityLabelBase = FOLDER_ENTITY_LABELS[entityType];
-  const entityLabel = entityLabelBase ? entityLabelBase.toLowerCase() + 's' : 'entities';
+  const entityLabel = entityLabelBase ? entityLabelBase + 's' : 'entities';
 
   const handleConfirm = useCallback(async () => {
     if (!folder) return;
     try {
       await deleteFolder({ folderId: folder.id, entityType });
-      toastSuccess('Folder deleted successfully');
+      toastSuccess(
+        `Folder "${folder.name}" has been deleted. Its items remain available in the ${entityLabel} list.`,
+      );
       onDelete?.(folder);
     } catch {
       toastError('Failed to delete folder');
     }
-  }, [folder, entityType, deleteFolder, toastSuccess, toastError, onDelete]);
+  }, [folder, deleteFolder, entityType, toastSuccess, entityLabel, onDelete, toastError]);
 
   const extraContent = (
     <Alert
@@ -34,7 +36,7 @@ const DeleteFolderDialog = memo(props => {
       sx={styles.alert}
     >
       <Typography variant="bodyMedium">
-        {`Deleting this folder will not delete the ${entityLabel} inside. They will be moved back to the main ${entityLabel} list.`}
+        {`${entityLabel} in this folder will not be deleted. They will be removed from the folder and remain available in the ${entityLabel} list.`}
       </Typography>
     </Alert>
   );
@@ -42,7 +44,7 @@ const DeleteFolderDialog = memo(props => {
   return (
     <Modal.DeleteEntityModal
       open={open}
-      title="Delete Folder"
+      title="Delete folder?"
       textContent="Are you sure to delete folder "
       name={folder?.name || ''}
       inlineExtraContent="?"

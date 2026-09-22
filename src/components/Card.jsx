@@ -363,6 +363,7 @@ const Card = memo(props => {
                         entityType={type}
                         currentFolderId={folderId}
                         isVisible={isCardHovered}
+                        entityName={name}
                       />
                     )}
                     <PinButton

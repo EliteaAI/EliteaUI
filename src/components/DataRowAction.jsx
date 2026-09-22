@@ -392,6 +392,7 @@ const DataRowAction = memo(props => {
             parentMenuOpen={open}
             onAction={handleClose}
             menuItemSx={basicMenuItemStyles().menuItem}
+            entityName={data?.name}
           />
         )}
         {menuList}

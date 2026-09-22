@@ -12,7 +12,7 @@ import CreateFolderDialog from './CreateFolderDialog';
 import FolderMenuContent from './FolderMenuContent';
 
 const MoveToFolderButton = memo(props => {
-  const { entityId, entityType, currentFolderId, isVisible = false, userPermission } = props;
+  const { entityId, entityType, currentFolderId, isVisible = false, userPermission, entityName } = props;
 
   const { canWrite: canWriteEntity } = useFolderAccess(userPermission);
 
@@ -44,7 +44,7 @@ const MoveToFolderButton = memo(props => {
     handleCreateFolderClick,
     handleFolderCreated,
     handleCloseCreateDialog,
-  } = useFolderMenuActions({ entityId, entityType, currentFolderId, onAction: handleMenuClose });
+  } = useFolderMenuActions({ entityId, entityType, currentFolderId, onAction: handleMenuClose, entityName });
 
   const buttonStyles = moveToFolderButtonVisibilityStyles(isVisible || isMenuOpen);
 
