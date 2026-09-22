@@ -86,11 +86,17 @@ const StateVariableList = memo(props => {
 
   const handleUpdateType = useCallback(
     (stateName, newType) => {
-      const currentValue = states?.[stateName]?.value;
-      const value =
-        currentValue !== undefined && currentValue !== ''
-          ? currentValue
-          : StateHelpers.getDefaultValueForType(newType);
+      const currentState = states?.[stateName];
+      const currentValue = currentState?.value;
+      const oldType = currentState?.type;
+      const oldDefaultValue = StateHelpers.getDefaultValueForType(oldType);
+
+      const isEmptyOrDefault =
+        currentValue === undefined ||
+        currentValue === '' ||
+        JSON.stringify(currentValue) === JSON.stringify(oldDefaultValue);
+
+      const value = isEmptyOrDefault ? StateHelpers.getDefaultValueForType(newType) : currentValue;
       onUpdateState(stateName, { type: newType, value });
     },
     [onUpdateState, states],
