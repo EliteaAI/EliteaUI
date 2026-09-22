@@ -4,13 +4,14 @@ import { useParams } from 'react-router-dom';
 
 import { Box } from '@mui/material';
 
-import { BreadcrumbsOrTitle, Modal } from '@/[fsd]/shared/ui';
+import { Modal } from '@/[fsd]/shared/ui';
 import {
   BuildDimensionWithAiModal,
   CreateSuiteModal,
   DatasetModal,
   DimensionModal,
   EVAL_TIER,
+  EvaluationBreadcrumbs,
   EvaluationDocsButton,
   ResultsPanel,
   SelectDimensionFromLibraryModal,
@@ -149,7 +150,7 @@ const AgentEvaluatePage = memo(() => {
   return (
     <Box sx={styles.wrapper}>
       <Box sx={styles.header}>
-        <BreadcrumbsOrTitle title="Evaluation (Beta)" />
+        <EvaluationBreadcrumbs title="Evaluation (Beta)" />
         <EvaluationDocsButton />
       </Box>
       <Box sx={styles.body}>

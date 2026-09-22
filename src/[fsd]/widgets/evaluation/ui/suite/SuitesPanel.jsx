@@ -8,6 +8,7 @@ import { EvaluateIcon } from '@/[fsd]/shared/ui/icon';
 import useCheckPermission from '@/hooks/useCheckPermission';
 
 import { EVAL_PERMISSIONS } from '../../lib/constants';
+import { sortSuitesByDate } from '../../lib/helpers';
 import SuiteCard from './SuiteCard';
 
 const SuitesPanel = memo(props => {
@@ -23,13 +24,7 @@ const SuitesPanel = memo(props => {
   const canCreateSuite = checkPermission(EVAL_PERMISSIONS.suiteCreate);
   const canDeleteSuite = checkPermission(EVAL_PERMISSIONS.suiteDelete);
 
-  const sortedSuites = useMemo(() => {
-    return [...suites].sort((a, b) => {
-      const dateA = new Date(a.updated_at || a.created_at || 0);
-      const dateB = new Date(b.updated_at || b.created_at || 0);
-      return dateB - dateA;
-    });
-  }, [suites]);
+  const sortedSuites = useMemo(() => sortSuitesByDate(suites), [suites]);
 
   const styles = suitesPanelStyles();
 

@@ -15,7 +15,7 @@ import {
   useStartEvalRunMutation,
 } from '../../api';
 import { EVAL_RUN_FALLBACK_POLL_MS, EVAL_RUN_TRIGGER } from '../constants';
-import { isRunActive, isRunTerminal, parseEvalError } from '../helpers';
+import { isRunActive, isRunTerminal, parseEvalError, withSuiteSearchParam } from '../helpers';
 import { useEvalRunLiveProgress } from './useEvalRunLiveProgress.hooks';
 import { useEvaluationExport } from './useEvaluationExport.hooks';
 
@@ -205,8 +205,11 @@ export const useEvalRunActions = ({
       ':agentId',
       agentId,
     );
-    navigate({ pathname: historyPath, search: persistentSearch });
-  }, [navigate, tab, agentId, persistentSearch]);
+    navigate({
+      pathname: historyPath,
+      search: withSuiteSearchParam(persistentSearch, editingSuiteId),
+    });
+  }, [navigate, tab, agentId, persistentSearch, editingSuiteId]);
 
   // Determine the "display run" — active run if in progress, otherwise last run from history
   const displayRun = runActive ? activeRunData : lastRun;

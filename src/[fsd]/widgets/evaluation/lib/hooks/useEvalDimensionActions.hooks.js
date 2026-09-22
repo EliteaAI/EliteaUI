@@ -18,6 +18,7 @@ import {
   dimensionsAddedMessage,
   findDimensionByBindingId,
   parseEvalError,
+  withSuiteSearchParam,
 } from '../helpers';
 
 export const useEvalDimensionActions = ({
@@ -59,8 +60,11 @@ export const useEvalDimensionActions = ({
       ':agentId',
       agentId,
     );
-    navigate({ pathname: dimensionsPath, search: persistentSearch });
-  }, [navigate, tab, agentId, persistentSearch]);
+    navigate({
+      pathname: dimensionsPath,
+      search: withSuiteSearchParam(persistentSearch, editingSuiteId),
+    });
+  }, [navigate, tab, agentId, persistentSearch, editingSuiteId]);
 
   const handleSelectDimensionFromLibrary = useCallback(() => {
     setShowDimensionLibrary(true);
