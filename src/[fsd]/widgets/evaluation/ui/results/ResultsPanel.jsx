@@ -10,7 +10,7 @@ import DeleteIcon from '@/components/Icons/DeleteIcon';
 
 import { isRunTerminal, resolveRunVersionName } from '../../lib/helpers';
 import EnhanceWithAiButton from '../enhance/EnhanceWithAiButton';
-import EvaluationProgress from '../suite/EvaluationProgress';
+import EvaluationProgress from './EvaluationProgress';
 import RunResultsView from './RunResultsView';
 
 const ResultsPanel = memo(props => {

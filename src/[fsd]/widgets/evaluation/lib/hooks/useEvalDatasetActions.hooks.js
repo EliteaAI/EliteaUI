@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
+import { SearchParams } from '@/common/constants';
 import useToast from '@/hooks/useToast';
 import RouteDefinitions from '@/routes';
 
@@ -11,7 +12,7 @@ import {
   useUpdateEvalSuiteCaseExclusionsMutation,
   useUpdateEvalSuiteMutation,
 } from '../../api';
-import { caseExcludedMessage, caseIncludedMessage, parseEvalError } from '../helpers';
+import { caseExcludedMessage, caseIncludedMessage, parseEvalError, withSuiteSearchParam } from '../helpers';
 
 export const useEvalDatasetActions = ({ projectId, editingSuiteId, agentId, tab }) => {
   const navigate = useNavigate();
@@ -45,8 +46,11 @@ export const useEvalDatasetActions = ({ projectId, editingSuiteId, agentId, tab 
       ':agentId',
       agentId,
     );
-    navigate({ pathname: datasetsPath, search: persistentSearch });
-  }, [navigate, tab, agentId, persistentSearch]);
+    navigate({
+      pathname: datasetsPath,
+      search: withSuiteSearchParam(persistentSearch, editingSuiteId),
+    });
+  }, [navigate, tab, agentId, persistentSearch, editingSuiteId]);
 
   const handleCreateDataset = useCallback(() => {
     setShowDatasetDialog(true);
@@ -71,8 +75,8 @@ export const useEvalDatasetActions = ({ projectId, editingSuiteId, agentId, tab 
           ':agentId',
           agentId,
         );
-        const newParams = new URLSearchParams(persistentSearch);
-        newParams.set('datasetId', dataset.id);
+        const newParams = new URLSearchParams(withSuiteSearchParam(persistentSearch, editingSuiteId));
+        newParams.set(SearchParams.DatasetId, dataset.id);
         navigate({ pathname: datasetsPath, search: newParams.toString() });
       } catch (error) {
         toastError(parseEvalError(error, 'Dataset created but failed to attach to suite.'));
@@ -128,11 +132,11 @@ export const useEvalDatasetActions = ({ projectId, editingSuiteId, agentId, tab 
         ':agentId',
         agentId,
       );
-      const newParams = new URLSearchParams(persistentSearch);
-      newParams.set('datasetId', dataset.id);
+      const newParams = new URLSearchParams(withSuiteSearchParam(persistentSearch, editingSuiteId));
+      newParams.set(SearchParams.DatasetId, dataset.id);
       navigate({ pathname: datasetsPath, search: newParams.toString() });
     },
-    [navigate, tab, agentId, persistentSearch],
+    [navigate, tab, agentId, persistentSearch, editingSuiteId],
   );
 
   // ---- Case exclusion (from suite) ----

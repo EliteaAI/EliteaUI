@@ -7,8 +7,10 @@ import { Box, Typography } from '@mui/material';
 import { useBreadcrumbTrail } from '@/[fsd]/shared/lib/hooks';
 
 import BreadcrumbItem from './BreadcrumbItem';
+import BreadcrumbMenuTrigger from './BreadcrumbMenuTrigger';
 
-const Breadcrumbs = memo(() => {
+const Breadcrumbs = memo(props => {
+  const { menus = {} } = props;
   const trail = useBreadcrumbTrail();
   const { search } = useLocation();
   const styles = breadcrumbsStyles();
@@ -41,12 +43,22 @@ const Breadcrumbs = memo(() => {
                 /
               </Typography>
             )}
-            <BreadcrumbItem
-              label={crumb.label}
-              to={crumb.isCurrent ? crumb.to : { pathname: crumb.to, search }}
-              isCurrent={crumb.isCurrent}
-              testId={crumb.entry.testId}
-            />
+            {/* The crumb for the page you are on stays plain text — a switcher only makes sense
+                while the crumb still points somewhere other than here. */}
+            {menus[crumb.key] && !crumb.isCurrent ? (
+              <BreadcrumbMenuTrigger
+                label={crumb.label}
+                testId={crumb.entry.testId}
+                menu={menus[crumb.key]}
+              />
+            ) : (
+              <BreadcrumbItem
+                label={crumb.label}
+                to={crumb.isCurrent ? crumb.to : { pathname: crumb.to, search }}
+                isCurrent={crumb.isCurrent}
+                testId={crumb.entry.testId}
+              />
+            )}
           </Box>
         ))}
       </Box>
