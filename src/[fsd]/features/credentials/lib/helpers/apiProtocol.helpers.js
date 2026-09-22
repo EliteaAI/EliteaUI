@@ -19,6 +19,10 @@ export const findCredentialType = (configurations, credentialValue, personalProj
   return match?.type || '';
 };
 
+// a stable identity for the attached credential: the value object is rebuilt on every form edit
+export const credentialKeyOf = credentialValue =>
+  credentialValue ? `${credentialValue.elitea_title || ''}|${!!credentialValue.private}` : '';
+
 export const resolveApiProtocolForModel = modelName => {
   const name = String(modelName || '');
   if (!name) return '';

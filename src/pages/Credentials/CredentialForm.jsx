@@ -136,20 +136,6 @@ const CredentialForm = memo(props => {
     [excludedFields, isApiProtocolHidden],
   );
 
-  const apiProtocolValue = credentialDetails?.settings?.[ApiProtocolConstants.API_PROTOCOL_FIELD];
-  const credentialFieldValue =
-    credentialDetails?.settings?.[ApiProtocolConstants.API_PROTOCOL_CREDENTIAL_FIELD];
-  const lastCredentialRef = useRef(credentialFieldValue);
-
-  useEffect(() => {
-    const credentialChanged = lastCredentialRef.current !== credentialFieldValue;
-    lastCredentialRef.current = credentialFieldValue;
-    // only clear when the credential itself just changed, not on initial mount of a saved model
-    if (credentialChanged && isApiProtocolHidden && apiProtocolValue !== undefined) {
-      editField(`settings.${ApiProtocolConstants.API_PROTOCOL_FIELD}`, undefined);
-    }
-  }, [isApiProtocolHidden, apiProtocolValue, credentialFieldValue, editField]);
-
   const onSaveConfiguration = useCallback(
     async config => {
       setConfiguration({

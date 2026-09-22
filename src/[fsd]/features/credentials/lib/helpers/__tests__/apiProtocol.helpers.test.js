@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  credentialKeyOf,
   findCredentialType,
   isApiProtocolCredentialType,
   resolveApiProtocolForModel,
@@ -44,6 +45,30 @@ describe('findCredentialType', () => {
     ];
     expect(findCredentialType(shared, { elitea_title: 'Shared Name', private: true }, 99)).toBe('ai_openai');
     expect(findCredentialType(shared, { elitea_title: 'Shared Name', private: false }, 99)).toBe('ai_dial');
+  });
+});
+
+describe('credentialKeyOf', () => {
+  it('is stable across rebuilt value objects', () => {
+    const key = credentialKeyOf({ elitea_title: 'My DIAL', private: false });
+    expect(credentialKeyOf({ elitea_title: 'My DIAL', private: false })).toBe(key);
+  });
+
+  it('separates same-title personal and project credentials', () => {
+    expect(credentialKeyOf({ elitea_title: 'Shared Name', private: true })).not.toBe(
+      credentialKeyOf({ elitea_title: 'Shared Name', private: false }),
+    );
+  });
+
+  it('treats a missing private flag as not private', () => {
+    expect(credentialKeyOf({ elitea_title: 'My DIAL' })).toBe(
+      credentialKeyOf({ elitea_title: 'My DIAL', private: false }),
+    );
+  });
+
+  it('returns empty string when nothing is attached', () => {
+    expect(credentialKeyOf(undefined)).toBe('');
+    expect(credentialKeyOf(null)).toBe('');
   });
 });
 

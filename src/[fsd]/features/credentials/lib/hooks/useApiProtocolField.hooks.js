@@ -9,13 +9,11 @@ import { ApiProtocolHelpers } from '../helpers/index.js';
 import { useCredentialsData } from './useCredentialsData.hooks.js';
 
 const { API_PROTOCOL_CREDENTIAL_FIELD, API_PROTOCOL_FIELD } = ApiProtocolConstants;
-const { findCredentialType, isApiProtocolCredentialType, resolveApiProtocolForModel } = ApiProtocolHelpers;
+const { credentialKeyOf, findCredentialType, isApiProtocolCredentialType, resolveApiProtocolForModel } =
+  ApiProtocolHelpers;
 
 const CREDENTIALS_SECTION = 'ai_credentials';
 const noop = () => {};
-
-const credentialKeyOf = credentialValue =>
-  credentialValue ? `${credentialValue.elitea_title || ''}|${credentialValue.private}` : '';
 
 // Hides api_protocol unless the credential supports it, and auto-suggests it from the model name.
 export const useApiProtocolField = ({ schema, settings, editField }) => {
@@ -49,28 +47,32 @@ export const useApiProtocolField = ({ schema, settings, editField }) => {
   const schemaDefault = schema?.properties?.[API_PROTOCOL_FIELD]?.default;
   const rawProtocol = settings?.[API_PROTOCOL_FIELD];
   const modelName = settings?.name;
+  const credentialKey = credentialKeyOf(credentialValue);
   // guards against re-suggesting for a name we already answered, editField being async
   const autoSelectedForRef = useRef(null);
   const autoSelectedValueRef = useRef(null);
-  // seed the "already seen" name once settings actually load, so opening a saved model
-  // whose stored protocol happens to equal the schema default doesn't get rewritten
-  const hasSeededNameRef = useRef(false);
+  const lastCredentialKeyRef = useRef(null);
+  // the loaded state of a saved model is not a user edit, so record name and credential together
+  // before reacting to either: seeding only the name would let the credential effect undo it
+  const hasSeededRef = useRef(false);
 
   useEffect(() => {
-    if (hasSeededNameRef.current || modelName === undefined) return;
-    hasSeededNameRef.current = true;
+    if (hasSeededRef.current || modelName === undefined) return;
+    hasSeededRef.current = true;
     autoSelectedForRef.current = modelName;
-  }, [modelName]);
-
-  const credentialKey = credentialKeyOf(credentialValue);
-  const lastCredentialKeyRef = useRef(credentialKey);
+    lastCredentialKeyRef.current = credentialKey;
+  }, [modelName, credentialKey]);
 
   useEffect(() => {
-    if (lastCredentialKeyRef.current === credentialKey) return;
+    if (!hasSeededRef.current || lastCredentialKeyRef.current === credentialKey) return;
     lastCredentialKeyRef.current = credentialKey;
     // a new credential may now support/need a different protocol — allow re-suggesting for it
     autoSelectedForRef.current = null;
-  }, [credentialKey]);
+    // and never carry a protocol picked for the previous credential into the payload
+    if (isHidden && rawProtocol !== undefined) {
+      editField?.(`settings.${API_PROTOCOL_FIELD}`, undefined);
+    }
+  }, [credentialKey, isHidden, rawProtocol, editField]);
 
   // the form seeds the schema default, and our own suggestion is not a user choice either
   const isUserPicked =
