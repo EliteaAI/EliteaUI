@@ -224,7 +224,9 @@ const fileTreeItemStyles = ({ isActive, isHovering, depth, theme, nextItemHovere
       background: getBackgroundColor(),
       borderRadius: isHighlighted ? '0.375rem' : '0',
       borderBottom:
-        !isHighlighted && !nextItemHovered ? `0.0625rem solid ${theme.palette.border.subtle}` : 'none',
+        !isHighlighted && !nextItemHovered
+          ? `0.0625rem solid ${theme.palette.border.subtle}`
+          : '0.0625rem solid transparent',
     },
 
     folderIcon: {

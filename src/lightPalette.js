@@ -224,6 +224,8 @@ const lightPalette = {
     },
     panel: grey003,
     surface: {
+      default: gradient,
+      secondary: white,
       interactive: {
         default: dark5,
         active: dark10,

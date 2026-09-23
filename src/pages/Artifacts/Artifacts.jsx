@@ -792,7 +792,7 @@ const artifactsStyles = (collapsedBuckets, leftPanelWidth) => ({
     alignItems: 'flex-start',
     overflow: 'hidden',
     height: '100dvh',
-    backgroundColor: palette.background.default.tertiary,
+    background: palette.background.surface.default,
     gap: '0.75rem',
   }),
   mainContentContainer: {
@@ -804,7 +804,7 @@ const artifactsStyles = (collapsedBuckets, leftPanelWidth) => ({
   bucketSidebarBox: ({ palette }) => ({
     width: collapsedBuckets ? '3.75rem' : `${leftPanelWidth}px`,
     height: '100%',
-    borderRight: `0.0625rem solid ${palette.border.lines}`,
+    borderRight: `0.0625rem solid ${palette.border.default}`,
     transition: 'width 0.2s ease-in-out',
     overflow: 'auto',
     flexShrink: 0,

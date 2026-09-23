@@ -1,14 +1,12 @@
 import { memo, useCallback, useState } from 'react';
 
-import { Box, IconButton, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { useDeleteConfirmationDisabled } from '@/[fsd]/shared/lib/hooks';
-import { Modal } from '@/[fsd]/shared/ui';
+import { Button, Modal } from '@/[fsd]/shared/ui';
 import { PERMISSIONS } from '@/common/constants';
-import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
 import useCheckPermission from '@/hooks/useCheckPermission';
-import { useTheme } from '@emotion/react';
 
 import DeleteIcon from './Icons/DeleteIcon';
 
@@ -20,9 +18,7 @@ const DeleteEntityButton = memo(props => {
     isLoading,
     entity_name,
     validatePermission = false,
-    iconColor = '',
     buttonClassName = '',
-    buttonColor = 'secondary',
     sx = {},
     modalSx = {},
     onCloseAlert,
@@ -32,7 +28,6 @@ const DeleteEntityButton = memo(props => {
     testId,
   } = props;
 
-  const theme = useTheme();
   const [openAlert, setOpenAlert] = useState(false);
   const { checkPermission } = useCheckPermission();
   const skipConfirmation = useDeleteConfirmationDisabled();
@@ -95,24 +90,18 @@ const DeleteEntityButton = memo(props => {
               component="span"
               data-testid={testId}
             >
-              <IconButton
-                variant="elitea"
-                color={buttonColor}
+              <Button.BaseBtn
+                variant="secondary"
+                startIcon={<DeleteIcon fill="currentColor" />}
                 aria-label="delete entity"
                 onClick={onClickButton}
                 disabled={isLoading || disabled}
+                loading={isLoading}
+                type={type}
                 className={buttonClassName}
                 sx={{ marginLeft: '0px', ...sx }}
-              >
-                <DeleteIcon
-                  sx={{ fontSize: '16px' }}
-                  fill={
-                    iconColor ||
-                    (isLoading || disabled ? theme.palette.icon.disabled : theme.palette.icon.secondary)
-                  }
-                />
-                {isLoading && <StyledCircleProgress size={16} />}
-              </IconButton>
+                disableRipple
+              />
             </Box>
           </Tooltip>
         )}

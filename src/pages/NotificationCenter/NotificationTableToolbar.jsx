@@ -66,7 +66,6 @@ const NotificationTableToolbar = memo(props => {
           onDelete={onDeleteSelected}
           title="Delete selected notifications"
           isLoading={false}
-          buttonColor="secondary"
           buttonClassName="action"
           disabled={isSelectionEmpty}
           shouldRequestInputName={false}

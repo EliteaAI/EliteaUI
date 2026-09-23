@@ -1,6 +1,6 @@
 import { memo, useCallback, useMemo } from 'react';
 
-import { Box, Tooltip, Typography, useTheme } from '@mui/material';
+import { Box, Tooltip, Typography } from '@mui/material';
 
 import { ARTIFACT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/artifactTourTargets.constants';
 import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
@@ -32,11 +32,12 @@ const ArtifactTableToolbar = memo(props => {
     breadcrumbs = [],
     onBreadcrumbClick,
     currentPrefix,
+    isEmptyFiles,
+    isDeleteLoading,
   } = props;
 
   const { checkPermission } = useCheckPermission();
   const { isPrivate } = useProjectType();
-  const theme = useTheme();
   const styles = artifactTableToolbarStyles();
 
   const canDeleteFiles = isPrivate || checkPermission(PERMISSIONS.artifacts.delete);
@@ -53,8 +54,6 @@ const ArtifactTableToolbar = memo(props => {
   );
 
   const hasSelection = rowSelectionModel.length > 0;
-  const disabledIconColor = theme.palette.icon.disabled;
-  const defaultIconColor = theme.palette.icon.default;
 
   return (
     <Box sx={styles.toolbarContainer}>
@@ -81,89 +80,86 @@ const ArtifactTableToolbar = memo(props => {
         />
       </Box>
 
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        accept="*/*"
+        style={{ display: 'none' }}
+        onChange={handleFileChange}
+      />
+
       {/* Right side: Search and action buttons */}
-      <Box sx={styles.rightSection}>
-        <Box
-          sx={styles.searchWrapper}
-          data-testid="artifacts-file-search-input"
-        >
-          <SimpleSearchBar
-            searchQuery={searchQuery}
-            onSearchChange={onSearchChange}
-            placeholder="Search"
-            autoFocus={false}
-          />
-        </Box>
+      {!isEmptyFiles && (
+        <Box sx={styles.rightSection}>
+          <Box
+            sx={styles.searchWrapper}
+            data-testid="artifacts-file-search-input"
+          >
+            <SimpleSearchBar
+              searchQuery={searchQuery}
+              onSearchChange={onSearchChange}
+              placeholder="Search"
+              autoFocus={false}
+            />
+          </Box>
 
-        {/* Hidden file input for upload */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          accept="*/*"
-          style={{ display: 'none' }}
-          onChange={handleFileChange}
-        />
+          {checkPermission(PERMISSIONS.artifacts.create) && bucket && (
+            <Tooltip
+              title="Upload files"
+              placement="top"
+            >
+              <Box component="span">
+                <Button.BaseBtn
+                  variant="secondary"
+                  startIcon={<FileUploadIcon sx={styles.actionIcon} />}
+                  onClick={handleUploadClick}
+                  data-tour={ARTIFACT_TOUR_TARGET_IDS.uploadButton}
+                  data-testid="artifacts-upload-files-button"
+                />
+              </Box>
+            </Tooltip>
+          )}
 
-        {checkPermission(PERMISSIONS.artifacts.create) && bucket && (
           <Tooltip
-            title="Upload files"
+            title="Download files"
             placement="top"
           >
-            <Box component="span">
+            <Box
+              component="span"
+              data-testid="artifacts-download-files-tooltip"
+            >
               <Button.BaseBtn
-                variant="icon"
-                sx={styles.actionButton}
-                onClick={handleUploadClick}
-                data-tour={ARTIFACT_TOUR_TARGET_IDS.uploadButton}
-                data-testid="artifacts-upload-files-button"
-              >
-                <FileUploadIcon sx={styles.actionIcon} />
-              </Button.BaseBtn>
+                variant="secondary"
+                startIcon={
+                  <DownloadIcon
+                    sx={styles.actionIcon}
+                    fill="currentColor"
+                  />
+                }
+                onClick={onDownloadFiles}
+                disabled={!hasSelection}
+                data-testid="artifacts-download-files-button"
+              />
             </Box>
           </Tooltip>
-        )}
 
-        <Tooltip
-          title="Download files"
-          placement="top"
-        >
-          <Box
-            component="span"
-            data-testid="artifacts-download-files-tooltip"
-          >
-            <Button.BaseBtn
-              variant="icon"
-              sx={styles.actionButton}
-              onClick={onDownloadFiles}
+          {canDeleteFiles && (
+            <DeleteEntityButton
+              testId="artifacts-delete-files-button"
+              name={rowSelectionModel.length === totalRows ? 'all files' : 'selected files'}
+              entity_name="file"
+              onDelete={onDeleteArtifacts}
+              title={`Delete ${rowSelectionModel.length === totalRows ? 'all files' : 'selected files'}`}
+              isLoading={isDeleteLoading}
+              sx={styles.deleteEntityButton}
+              buttonClassName="action"
               disabled={!hasSelection}
-              data-testid="artifacts-download-files-button"
-            >
-              <DownloadIcon
-                sx={styles.actionIcon}
-                fill={hasSelection ? defaultIconColor : disabledIconColor}
-              />
-            </Button.BaseBtn>
-          </Box>
-        </Tooltip>
-
-        {canDeleteFiles && (
-          <DeleteEntityButton
-            testId="artifacts-delete-files-button"
-            name={rowSelectionModel.length === totalRows ? 'all files' : 'selected files'}
-            entity_name="file"
-            onDelete={onDeleteArtifacts}
-            title={`Delete ${rowSelectionModel.length === totalRows ? 'all files' : 'selected files'}`}
-            isLoading={false}
-            sx={styles.deleteEntityButton}
-            buttonColor="secondary"
-            buttonClassName="action"
-            iconColor={hasSelection ? defaultIconColor : disabledIconColor}
-            disabled={!hasSelection}
-            shouldRequestInputName={false}
-          />
-        )}
-      </Box>
+              shouldRequestInputName={false}
+            />
+          )}
+        </Box>
+      )}
     </Box>
   );
 });

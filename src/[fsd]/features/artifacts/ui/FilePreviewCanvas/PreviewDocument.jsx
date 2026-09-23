@@ -97,7 +97,7 @@ const previewDocumentStyles = () => ({
       top: 0,
       zIndex: 50,
       backgroundColor: `${palette.background.default.tertiary} !important`,
-      borderBottom: `0.0625rem solid ${palette.border.lines}`,
+      borderBottom: `0.0625rem solid ${palette.border.default}`,
       boxShadow: 'none !important',
       flexWrap: 'wrap',
       minHeight: '3.4rem',
@@ -331,14 +331,7 @@ const previewDocumentStyles = () => ({
     },
 
     '.docx-vertical-ruler, .paged-editor, .paged-editor__pages': {
-      background: `${palette.background.default.tertiary} !important`,
-    },
-
-    '.layout-page': {
-      backgroundColor:
-        palette.mode === 'dark'
-          ? `${palette.components.input.text.disabled} !important`
-          : `${palette.background.paper} !important`,
+      background: `${palette.background.surface.default} !important`,
     },
   }),
 });

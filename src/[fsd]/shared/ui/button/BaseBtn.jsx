@@ -29,11 +29,13 @@ export const BUTTON_VARIANTS = {
 const BaseBtn = memo(
   forwardRef((props, ref) => {
     const { children, loadingPosition = 'end', ...restProps } = props;
+    const isIconOnly =
+      (children === undefined || children === null) && (restProps.startIcon || restProps.loading);
 
     return (
       <MuiButton
         ref={ref}
-        loadingPosition={loadingPosition}
+        loadingPosition={isIconOnly ? 'center' : loadingPosition}
         {...restProps}
       >
         {children}
@@ -241,6 +243,7 @@ const baseVariantStyle = (theme, ownerState, options = {}) => {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
+      ...(options.iconOnly && isIconOnly && ownerState.loading && { visibility: 'hidden' }),
 
       '& > svg': {
         display: 'block',
@@ -255,11 +258,6 @@ const baseVariantStyle = (theme, ownerState, options = {}) => {
           width: '1.75rem',
           borderRadius: '50%',
           padding: 0,
-          '& .MuiButton-loadingIndicator': {
-            position: 'static',
-            margin: 0,
-            transform: 'none',
-          },
         }
       : {}),
   };

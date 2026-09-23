@@ -97,8 +97,6 @@ const SummaryDetailsItem = memo(props => {
               title="Delete summary"
               onDelete={() => onDelete?.(summary.id)}
               shouldRequestInputName={false}
-              buttonColor=""
-              iconColor={theme.palette.icon.default}
               modalSx={styles.deleteModalSx}
             />
           </Box>

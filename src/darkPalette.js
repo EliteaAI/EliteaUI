@@ -222,6 +222,8 @@ const darkPalette = {
     },
     panel: white3,
     surface: {
+      default: gray50,
+      secondary: gray60,
       interactive: {
         default: white5,
         active: white10,

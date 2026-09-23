@@ -136,7 +136,6 @@ export const getSingleSelectWithoutBorderSx = theme => {
   const colors = eliteaSingleSelectColorStyle(theme)[INPUT_VARIANTS.default];
 
   return {
-    margin: '0 0.5rem',
     verticalAlign: 'bottom',
     '& label, & label.Mui-error, .MuiFormLabel-asterisk.Mui-error': {
       color: colors.default.label.color,
@@ -147,11 +146,17 @@ export const getSingleSelectWithoutBorderSx = theme => {
     '& .MuiInputBase-root.MuiInput-root:before': {
       border: 'none',
     },
+    '& .MuiInputBase-root.MuiInput-root': {
+      padding: '0 0.5rem',
+    },
     '& .MuiInputBase-root.MuiInput-root:not(.Mui-error).MuiInput-underline:before': {
       borderBottomColor: 'transparent',
     },
     '& .MuiSelect-select': {
       paddingRight: '1.5rem !important',
+    },
+    '& .MuiSelect-icon': {
+      right: '0.5rem',
     },
     '& .MuiInputBase-root.MuiInput-root:not(.Mui-error, .Mui-disabled).MuiInput-underline:hover:before': {
       borderBottom: `0.0625rem solid ${colors.hover.withoutBorder.color}`,

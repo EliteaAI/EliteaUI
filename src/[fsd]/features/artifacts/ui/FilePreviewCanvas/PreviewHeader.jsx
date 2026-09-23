@@ -1,6 +1,6 @@
 import React, { memo, useCallback, useMemo } from 'react';
 
-import { Box, IconButton, ToggleButton, ToggleButtonGroup, Tooltip, Typography } from '@mui/material';
+import { Box, Divider, ToggleButton, ToggleButtonGroup, Tooltip, Typography, useTheme } from '@mui/material';
 
 import { useTrackEvent } from '@/GA';
 import { FilePreviewCanvasConstants } from '@/[fsd]/features/artifacts/lib/constants';
@@ -51,6 +51,7 @@ const PreviewHeader = memo(props => {
   } = props;
 
   const trackEvent = useTrackEvent();
+  const theme = useTheme();
 
   const handleDownload = useCallback(() => {
     onDownload?.();
@@ -188,14 +189,13 @@ const PreviewHeader = memo(props => {
     <Box sx={styles.canvasHeader}>
       <Box sx={styles.row}>
         <Tooltip title="Close">
-          <IconButton
+          <Button.BaseBtn
+            variant="secondary"
+            startIcon={<CloseIcon fill="currentColor" />}
             onClick={onClose}
-            sx={styles.actionButton}
             aria-label="Close preview"
             data-testid="artifacts-preview-close-button"
-          >
-            <CloseIcon sx={styles.iconClose} />
-          </IconButton>
+          />
         </Tooltip>
 
         <Box sx={styles.canvasTitle}>
@@ -215,7 +215,7 @@ const PreviewHeader = memo(props => {
         </Box>
 
         <Box sx={styles.canvasControlsWrapper}>
-          {canPreview && (
+          {canPreview && !isImageFileType && (
             <>
               <Button.BaseBtn
                 variant={BUTTON_VARIANTS.elitea}
@@ -231,6 +231,11 @@ const PreviewHeader = memo(props => {
                 disabled={isSaving || !hasUnsavedChanges}
                 discarding={false}
                 dataTestId="artifacts-preview-discard-button"
+              />
+
+              <Divider
+                orientation="vertical"
+                sx={styles.divider}
               />
             </>
           )}
@@ -248,7 +253,7 @@ const PreviewHeader = memo(props => {
           >
             <DotMenu
               id="file-preview-overflow-menu"
-              slotProps={styles.dotMenuSlotProps}
+              slotProps={styles.dotMenuSlotProps(theme)}
               anchorOrigin={{
                 vertical: 'bottom',
                 horizontal: 'right',
@@ -305,7 +310,6 @@ const PreviewHeader = memo(props => {
                   label: `${lang.label}${lang.value === detectedLanguage ? ' (detected)' : ''}`,
                 }))}
                 displayEmpty
-                sx={styles.languageSelect}
                 showBorder={false}
                 customMenuProps={{ sx: styles.languageSelectMenuSx }}
                 data-testid="artifacts-preview-language-select"
@@ -325,8 +329,8 @@ const previewHeaderStyles = isChatPage => ({
   canvasHeader: ({ palette }) => ({
     display: 'flex',
     flexDirection: 'column',
-    backgroundColor: palette.background.surface.interactive.default,
-    borderBottom: `1px solid ${palette.border.lines}`,
+    backgroundColor: palette.background.default.tertiary,
+    borderBottom: `1px solid ${palette.border.default}`,
   }),
 
   row: {
@@ -339,7 +343,7 @@ const previewHeaderStyles = isChatPage => ({
     gap: '1rem',
 
     ':last-of-type': ({ palette }) => ({
-      borderTop: `1px solid ${palette.border.lines}`,
+      borderTop: `1px solid ${palette.border.default}`,
       minHeight: isChatPage ? '3rem' : '3.4rem',
       height: isChatPage ? '3rem' : '3.4rem',
       justifyContent: 'flex-start',
@@ -352,22 +356,6 @@ const previewHeaderStyles = isChatPage => ({
       borderTop: 'none',
       justifyContent: 'space-between',
     },
-  },
-
-  actionButton: ({ palette }) => ({
-    padding: '0.25rem',
-    marginRight: '0.5rem',
-    color: palette.text.secondary,
-
-    '&:hover': {
-      backgroundColor: palette.action.hover,
-      color: palette.text.primary,
-    },
-  }),
-  iconClose: {
-    fontSize: '1.25rem',
-    width: '1.25rem',
-    height: '1.25rem',
   },
 
   canvasTitle: { display: 'flex', alignItems: 'center', gap: 1, flex: 1, minWidth: 0 },
@@ -391,29 +379,6 @@ const previewHeaderStyles = isChatPage => ({
     paddingTop: '0.25rem',
   },
 
-  languageSelect: ({ palette }) => ({
-    color: palette.text.secondary,
-    fontSize: '.6875rem',
-    minWidth: '5rem',
-
-    '& .MuiInput-underline:before': {
-      borderBottom: 'none !important',
-    },
-    '& .MuiInput-underline:after': {
-      borderBottom: 'none !important',
-    },
-    '& .MuiInput-underline:hover:before': {
-      borderBottom: 'none !important',
-    },
-    '&.Mui-focused .MuiInput-underline:after': {
-      borderBottom: 'none !important',
-    },
-
-    '.Mui-Paper-root': {
-      backgroundColor: 'red',
-    },
-  }),
-
   languageSelectMenuSx: {
     marginTop: isChatPage ? '1rem' : '0.5rem',
   },
@@ -428,8 +393,12 @@ const previewHeaderStyles = isChatPage => ({
 
   dotMenuSlotProps: ({ palette }) => ({
     ListItemText: {
-      sx: { color: palette.text.secondary },
-      primaryTypographyProps: { variant: 'bodyMedium' },
+      slotProps: {
+        primary: {
+          variant: 'bodyMedium',
+          sx: { color: palette.text.secondary },
+        },
+      },
     },
     ListItemIcon: {
       sx: {
@@ -437,6 +406,12 @@ const previewHeaderStyles = isChatPage => ({
         marginRight: '.75rem',
       },
     },
+  }),
+
+  divider: ({ palette }) => ({
+    borderColor: palette.border.default,
+    height: '1.25rem',
+    alignSelf: 'center',
   }),
 
   iconAction: ({ palette }) => ({

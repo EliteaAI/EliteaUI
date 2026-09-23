@@ -98,7 +98,7 @@ const gridTablePaginationStyles = () => ({
   footer: ({ palette }) => ({
     display: 'flex',
     paddingTop: '1rem',
-    borderTop: `0.0625rem solid ${palette.border.lines}`,
+    borderTop: `0.0625rem solid ${palette.border.default}`,
   }),
   paddingContent: {
     display: 'flex',
