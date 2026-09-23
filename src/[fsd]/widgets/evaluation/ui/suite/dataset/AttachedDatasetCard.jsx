@@ -88,12 +88,6 @@ const AttachedDatasetCard = memo(props => {
     <Box sx={styles.root}>
       <Box sx={styles.header}>
         <Box sx={styles.nameRow}>
-          <Typography
-            sx={styles.name}
-            onClick={handleNameClick}
-          >
-            {dataset.name}
-          </Typography>
           {dataset.is_shared && (
             <Tooltip
               title="Shared across the project"
@@ -105,6 +99,12 @@ const AttachedDatasetCard = memo(props => {
               </Box>
             </Tooltip>
           )}
+          <Typography
+            sx={styles.name}
+            onClick={handleNameClick}
+          >
+            {dataset.name}
+          </Typography>
         </Box>
         {canUpdateSuite && (
           <Button.BaseBtn
@@ -274,6 +274,7 @@ const attachedDatasetCardStyles = () => ({
     whiteSpace: 'nowrap',
     cursor: 'pointer',
     '&:hover': {
+      color: palette.text.linkHoverSecondary,
       textDecoration: 'underline',
     },
   }),
