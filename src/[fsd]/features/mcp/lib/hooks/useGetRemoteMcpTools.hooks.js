@@ -21,7 +21,7 @@ export const useGetRemoteMcpTools = ({ values, toolkitType, onToolsFetched }) =>
   const executeFetchRef = useRef(null);
   const retryTimerRef = useRef(null);
 
-  const { toastError, toastSuccess } = useToast();
+  const { toastError, toastSuccess, toastWarning } = useToast();
 
   const [mcpSyncTools] = useMcpSyncToolsMutation();
 
@@ -121,7 +121,12 @@ export const useGetRemoteMcpTools = ({ values, toolkitType, onToolsFetched }) =>
           McpAuthHelpers.setConnectionVerified(serverUrl);
         }
 
-        toastSuccess(`Successfully fetched ${result.tools.length} tools`);
+        // The toast provider shows one toast at a time, so a partial refresh is a single warning
+        if (result.warning) {
+          toastWarning(`Fetched ${result.tools.length} tools. ${result.warning}`);
+        } else {
+          toastSuccess(`Successfully fetched ${result.tools.length} tools`);
+        }
       } else if (result?.success === false && result?.error) {
         // Handle explicit failure response from server
         // Parse common error patterns for user-friendly messages
@@ -163,6 +168,7 @@ export const useGetRemoteMcpTools = ({ values, toolkitType, onToolsFetched }) =>
     handleMcpAuthRequired,
     toastError,
     toastSuccess,
+    toastWarning,
     socket,
     isPrebuildMcp,
     effectiveToolkitType,
