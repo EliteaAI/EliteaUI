@@ -2,6 +2,7 @@ import { memo } from 'react';
 
 import { Box } from '@mui/material';
 
+import { stopPropagation } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { McpLogoutButton } from '@/[fsd]/features/mcp';
 import { ChatParticipantType, PUBLIC_PROJECT_ID } from '@/common/constants';
 
@@ -23,7 +24,10 @@ const ParticipantActions = memo(props => {
   const isPublic = participant.entity_meta?.project_id == PUBLIC_PROJECT_ID;
 
   return (
-    <Box sx={{ display: showButtons ? 'flex' : 'none', gap: '0.25rem', alignItems: 'center' }}>
+    <Box
+      onClick={stopPropagation}
+      sx={{ display: showButtons ? 'flex' : 'none', gap: '0.25rem', alignItems: 'center' }}
+    >
       {hasRemoteMcpLoggedIn && <McpLogoutButton serverUrl={serverUrl} />}
       {showEditButton && (
         <EditParticipantButton

@@ -676,17 +676,13 @@ const NewConversationView = forwardRef(
         ) {
           onClearSelectedParticipant();
         }
-        setSelectedParticipants(prev => {
-          const next = prev.filter(
-            p =>
-              p.entity_name !== participantToDelete.entity_name ||
-              p.entity_meta.id !== participantToDelete.entity_meta.id,
-          );
-          // Sync the ref immediately so the async enrichment guard sees the post-delete
-          // state even if the Promise.all resolves before React commits this render.
-          selectedParticipantsRef.current = next;
-          return next;
-        });
+        const next = selectedParticipantsRef.current.filter(
+          p =>
+            p.entity_name !== participantToDelete.entity_name ||
+            p.entity_meta.id !== participantToDelete.entity_meta.id,
+        );
+        selectedParticipantsRef.current = next;
+        setSelectedParticipants(next);
       },
       [selectedParticipant, onClearSelectedParticipant],
     );
