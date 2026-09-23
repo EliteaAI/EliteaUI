@@ -111,17 +111,19 @@ const ParticipantAttentionCard = memo(
             </Box>
           )}
           {!collapsed && !isBeingEdited && (
-            <ParticipantActions
-              participant={participant}
-              onEdit={onEdit}
-              onDelete={onDelete}
-              disabledEdit={disabledEdit || isPublishedAgentGone || isVersionUnavailable}
-              disabledDeleteButton={disabledEdit}
-              showButtons={isHovering}
-              showEditButton={showEditButton}
-              hasRemoteMcpLoggedIn={hasRemoteMcpLoggedIn}
-              serverUrl={originalDetails?.settings?.url}
-            />
+            <Box onClick={stopPropagation}>
+              <ParticipantActions
+                participant={participant}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                disabledEdit={disabledEdit || isPublishedAgentGone || isVersionUnavailable}
+                disabledDeleteButton={disabledEdit}
+                showButtons={isHovering}
+                showEditButton={showEditButton}
+                hasRemoteMcpLoggedIn={hasRemoteMcpLoggedIn}
+                serverUrl={originalDetails?.settings?.url}
+              />
+            </Box>
           )}
         </Box>
         <Box
@@ -165,6 +167,8 @@ const ParticipantAttentionCard = memo(
 );
 
 ParticipantAttentionCard.displayName = 'ParticipantAttentionCard';
+
+const stopPropagation = e => e.stopPropagation();
 
 /** @type {MuiSx} */
 export const participantAttentionCardStyles = ({ isActive, maxWidth }) => ({
