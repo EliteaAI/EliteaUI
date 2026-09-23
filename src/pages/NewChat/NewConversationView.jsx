@@ -526,7 +526,7 @@ const NewConversationView = forwardRef(
         entity_settings: {},
         meta: {},
       }));
-      setSelectedParticipants(baseParticipants);
+      setSelectedParticipants(prev => (prev.length ? prev : baseParticipants));
       if (baseParticipants.length === 1) {
         setSelectedParticipant(baseParticipants[0]);
         setActiveParticipant(baseParticipants[0]);
@@ -537,6 +537,7 @@ const NewConversationView = forwardRef(
         const detailsList = await Promise.all(
           filtered.map(cp => fetchOriginalDetails(cp.entity_name, cp.entity_id, cp.project_id)),
         );
+        if (defaultParticipantsAppliedForRef.current !== sessionKey) return;
         const enriched = baseParticipants.map((base, i) => {
           const details = detailsList[i];
           if (!details || !Object.keys(details).length) return base;
@@ -555,7 +556,7 @@ const NewConversationView = forwardRef(
       })();
     }, [
       activeConversation?.isNew,
-      activeConversation.id,
+      activeConversation?.id,
       projectInfo?.chat_config?.participants,
       setActiveParticipant,
       fetchOriginalDetails,

@@ -34,25 +34,30 @@ const ChatDefaultsSettings = memo(() => {
   const [selectedParticipants, setSelectedParticipants] = useState([]);
   const hasInitializedRef = useRef(false);
 
-  // Fetch all participants to resolve names for saved data that may lack names
+  // Only fetch the full participant list when saved config has entries missing names or project_ids
   const { participants: allParticipants } = useParticipants({
     sortBy: 'name',
     sortOrder: 'asc',
     query: '',
     pageSize: 200,
     types: [ChatParticipantType.Applications],
-    forceSkip: !projectId,
+    forceSkip: !projectId || savedParticipants.every(p => p.name && p.project_id),
   });
+
+  const apiByKey = useMemo(
+    () =>
+      new Map(
+        allParticipants.map(p => {
+          const entityName =
+            p.agent_type === 'pipeline' ? ChatParticipantType.Pipelines : ChatParticipantType.Applications;
+          return [`${p.id}:${entityName}`, p];
+        }),
+      ),
+    [allParticipants],
+  );
 
   // Enriched saved participants with names resolved from allParticipants
   const savedSelectedParticipants = useMemo(() => {
-    const apiByKey = new Map(
-      allParticipants.map(p => {
-        const entityName =
-          p.agent_type === 'pipeline' ? ChatParticipantType.Pipelines : ChatParticipantType.Applications;
-        return [`${p.id}:${entityName}`, p];
-      }),
-    );
     return savedParticipants.map(p => {
       const apiP = apiByKey.get(`${p.entity_id}:${p.entity_name}`);
       return {
@@ -60,9 +65,15 @@ const ChatDefaultsSettings = memo(() => {
         name: apiP?.name ?? p.name ?? '',
         project_id: p.project_id ?? apiP?.project_id,
         entity_name: p.entity_name,
+        agent_type: p.agent_type ?? apiP?.agent_type,
       };
     });
-  }, [savedParticipants, allParticipants]);
+  }, [savedParticipants, apiByKey]);
+
+  // Reset initialization flag when project changes so new project's config is loaded
+  useEffect(() => {
+    hasInitializedRef.current = false;
+  }, [projectId]);
 
   // Initialize from saved config as soon as projectInfo is available
   useEffect(() => {
@@ -85,13 +96,6 @@ const ChatDefaultsSettings = memo(() => {
     if (allParticipants.length === 0) return;
     setSelectedParticipants(prev => {
       if (prev.every(p => p.name && p.project_id)) return prev;
-      const apiByKey = new Map(
-        allParticipants.map(p => {
-          const entityName =
-            p.agent_type === 'pipeline' ? ChatParticipantType.Pipelines : ChatParticipantType.Applications;
-          return [`${p.id}:${entityName}`, p];
-        }),
-      );
       return prev.map(p => {
         if (p.name && p.project_id) return p;
         const apiP = apiByKey.get(`${p.id}:${p.entity_name}`);
@@ -103,7 +107,7 @@ const ChatDefaultsSettings = memo(() => {
         };
       });
     });
-  }, [allParticipants]);
+  }, [allParticipants, apiByKey]);
 
   const isDirty = useMemo(() => {
     if (selectedParticipants.length !== savedParticipants.length) return true;

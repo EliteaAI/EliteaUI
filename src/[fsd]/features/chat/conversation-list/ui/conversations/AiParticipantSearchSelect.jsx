@@ -21,7 +21,7 @@ const AiParticipantSearchSelect = memo(props => {
   } = props;
 
   const theme = useTheme();
-  const styles = aiParticipantSearchSelectStyles();
+  const styles = useMemo(() => aiParticipantSearchSelectStyles(), []);
   const [query, setQuery] = useState('');
 
   const { participants, isFetching } = useParticipants({
@@ -75,66 +75,70 @@ const AiParticipantSearchSelect = memo(props => {
     setQuery(newInputValue);
   }, []);
 
-  const renderOptionBody = useCallback(option => {
-    const isPublic = option.project_id == PUBLIC_PROJECT_ID;
-    return (
-      <>
-        <Box sx={styles.optionBody}>
+  const renderOptionBody = useCallback(
+    option => {
+      const isPublic = option.project_id === PUBLIC_PROJECT_ID;
+      return (
+        <>
+          <Box sx={styles.optionBody}>
+            <EntityTypeIcon
+              type={option.entity_name}
+              specifiedFontSize="1rem"
+            />
+            <Typography
+              variant="bodyMedium"
+              color="text.secondary"
+              sx={styles.optionName}
+            >
+              {option.name}
+            </Typography>
+          </Box>
+          {isPublic && (
+            <Box sx={styles.publicBadge}>
+              <Typography
+                variant="bodySmall"
+                sx={styles.publicBadgeText}
+              >
+                Public
+              </Typography>
+            </Box>
+          )}
+        </>
+      );
+    },
+    [styles],
+  );
+
+  const renderChipLabel = useCallback(
+    option => {
+      const isPublic = option.project_id === PUBLIC_PROJECT_ID;
+      return (
+        <Box sx={styles.chipLabel}>
           <EntityTypeIcon
             type={option.entity_name}
-            specifiedFontSize="1rem"
+            specifiedFontSize="0.75rem"
           />
           <Typography
-            variant="bodyMedium"
+            variant="bodySmall"
             color="text.secondary"
-            sx={styles.optionName}
           >
             {option.name}
           </Typography>
+          {isPublic && (
+            <Box sx={styles.chipPublicBadge}>
+              <Typography
+                variant="bodySmall"
+                sx={styles.chipPublicText}
+              >
+                Public
+              </Typography>
+            </Box>
+          )}
         </Box>
-        {isPublic && (
-          <Box sx={styles.publicBadge}>
-            <Typography
-              variant="bodySmall"
-              sx={styles.publicBadgeText}
-            >
-              Public
-            </Typography>
-          </Box>
-        )}
-      </>
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const renderChipLabel = useCallback(option => {
-    const isPublic = option.project_id == PUBLIC_PROJECT_ID;
-    return (
-      <Box sx={styles.chipLabel}>
-        <EntityTypeIcon
-          type={option.entity_name}
-          specifiedFontSize="0.75rem"
-        />
-        <Typography
-          variant="bodySmall"
-          color="text.secondary"
-        >
-          {option.name}
-        </Typography>
-        {isPublic && (
-          <Box sx={styles.chipPublicBadge}>
-            <Typography
-              variant="bodySmall"
-              sx={styles.chipPublicText}
-            >
-              Public
-            </Typography>
-          </Box>
-        )}
-      </Box>
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+      );
+    },
+    [styles],
+  );
 
   return (
     <AutoCompleteDropDown
