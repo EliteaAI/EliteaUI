@@ -15,6 +15,7 @@ import {
 import { useTheme } from '@mui/material/styles';
 
 import { FLAT_MENU_ACTION_VALUE } from '@/[fsd]/shared/lib/constants/singleSelectConstants';
+import { customScrollbarSx } from '@/[fsd]/shared/lib/helpers/scrollbar.helpers';
 import { Banner } from '@/[fsd]/shared/ui';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import RemoveIcon from '@/assets/remove-icon.svg?react';
@@ -574,6 +575,7 @@ const SingleSelect = memo(props => {
       ...(hasOptionGroups ? { disablePadding: true } : {}),
       sx: [
         { flex: 1, minHeight: 0, overflowY: 'auto' },
+        customScrollbarSx,
         ...(effectiveWithSearch
           ? [
               {
