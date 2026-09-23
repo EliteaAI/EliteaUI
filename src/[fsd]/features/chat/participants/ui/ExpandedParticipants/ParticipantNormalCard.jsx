@@ -129,7 +129,7 @@ const ParticipantNormalCard = memo(
             </Box>
           )}
           {!collapsed && !isBeingEdited && (
-            <Box onClick={e => e.stopPropagation()}>
+            <Box onClick={stopPropagation}>
               <ParticipantActions
                 participant={participant}
                 onEdit={onEdit}
@@ -151,6 +151,8 @@ const ParticipantNormalCard = memo(
 );
 
 ParticipantNormalCard.displayName = 'ParticipantNormalCard';
+
+const stopPropagation = e => e.stopPropagation();
 
 /** @type {MuiSx} */
 export const participantNormalCardStyles = ({ collapsed, isActive, maxWidth, isBeingEdited }) => ({
