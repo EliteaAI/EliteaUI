@@ -129,17 +129,19 @@ const ParticipantNormalCard = memo(
             </Box>
           )}
           {!collapsed && !isBeingEdited && (
-            <ParticipantActions
-              participant={participant}
-              onEdit={onEdit}
-              onDelete={onDelete}
-              disabledEdit={disabledEdit}
-              disabledDeleteButton={disabledEdit}
-              showButtons={isHovering}
-              showEditButton={showEditButton}
-              hasRemoteMcpLoggedIn={hasRemoteMcpLoggedIn}
-              serverUrl={originalDetails?.settings?.url}
-            />
+            <Box onClick={e => e.stopPropagation()}>
+              <ParticipantActions
+                participant={participant}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                disabledEdit={disabledEdit}
+                disabledDeleteButton={disabledEdit}
+                showButtons={isHovering}
+                showEditButton={showEditButton}
+                hasRemoteMcpLoggedIn={hasRemoteMcpLoggedIn}
+                serverUrl={originalDetails?.settings?.url}
+              />
+            </Box>
           )}
         </Box>
         {containerInfoRow}
