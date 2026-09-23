@@ -116,7 +116,6 @@ const NewConversationView = forwardRef(
     const { setLocalActiveParticipant } = useLocalActiveParticipant();
     const [selectedParticipants, setSelectedParticipants] = useState(activeConversation?.participants || []);
     const selectedParticipantsRef = useRef(selectedParticipants);
-    selectedParticipantsRef.current = selectedParticipants;
     const [selectedParticipant, setSelectedParticipant] = useState(activeParticipant || null);
     const [selectedParticipantDetails, setSelectedParticipantDetails] = useState(activeParticipant || null);
     const [prevConversation, setPrevConversation] = useState(activeConversation);
@@ -131,6 +130,9 @@ const NewConversationView = forwardRef(
     // apply it once it arrives instead of only at the lazy useState init above. Reset the guard
     // on project switch so the new project's defaults aren't blocked by the previous one's.
     const moduleSettingsAppliedRef = useRef(false);
+    useEffect(() => {
+      selectedParticipantsRef.current = selectedParticipants;
+    }, [selectedParticipants]);
     useEffect(() => {
       moduleSettingsAppliedRef.current = false;
     }, [selectedProjectId]);
