@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -13,6 +13,7 @@ export const useAutoVerifyMcpConnection = ({
   runAuthCheck,
 }) => {
   const projectId = useSelectedProjectId();
+  const automaticallyCheckedRef = useRef(false);
   const { id, type, settings: { url, headers } = {} } = values ?? {};
   const hasConfiguredHeaders = !!headers && Object.keys(headers).length > 0;
 
@@ -25,15 +26,23 @@ export const useAutoVerifyMcpConnection = ({
       type !== 'mcp' ||
       !url ||
       !hasConfiguredHeaders ||
-      isLoggedIn ||
-      isRunning ||
-      patInvalid ||
-      !McpAuthHelpers.claimAutomaticHeaderCheck(projectId, id, url)
+      automaticallyCheckedRef.current
     ) {
       return;
     }
 
-    runAuthCheck({ silent: true });
+    if (isLoggedIn || isRunning) {
+      automaticallyCheckedRef.current = true;
+      return;
+    }
+    if (patInvalid) return;
+
+    // Keep this mount from retrying after the session claim expires while
+    // an editor is changing its unsaved header values.
+    automaticallyCheckedRef.current = true;
+    if (McpAuthHelpers.claimAutomaticHeaderCheck(projectId, id, url)) {
+      runAuthCheck({ silent: true });
+    }
   }, [
     enabled,
     authConfig,

@@ -35,7 +35,7 @@ export const useMcpLogin = ({ values, onSuccess, authConfig, autoVerifyConfigure
     values,
   });
 
-  const { runAuthCheck, isRunning } = useMcpAuthCheck({
+  const { runAuthCheck, isRunning, isVerifying } = useMcpAuthCheck({
     toolkitId: id,
     values,
     onMcpAuthRequired: handleMcpAuthRequired,
@@ -76,6 +76,7 @@ export const useMcpLogin = ({ values, onSuccess, authConfig, autoVerifyConfigure
   return {
     isLoggedIn,
     isRunning: isRunning || !!authConfig?.isRunning,
+    isVerifying,
     onLogin,
     stopPropagation,
     modalProps: {

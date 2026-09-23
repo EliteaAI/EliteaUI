@@ -24,11 +24,17 @@ const ERROR_MESSAGE_TYPES = [
   SocketMessageType.AgentException,
 ];
 
+const getConnectionSignature = settings => JSON.stringify([settings?.url, settings?.headers || {}]);
+
 export const useMcpAuthCheck = ({ toolkitId, values, onMcpAuthRequired, onSuccess }) => {
   const { toastError } = useToast();
   const projectId = useSelectedProjectId();
   const [isRunning, setIsRunning] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const activeRef = useRef(false);
   const streamIdRef = useRef(null);
+  const checkedSignatureRef = useRef(null);
+  const valuesRef = useRef(values);
   const silentRef = useRef(false);
   const unsubscribeRef = useRef(null);
   const onMcpAuthRequiredRef = useRef(onMcpAuthRequired);
@@ -42,10 +48,17 @@ export const useMcpAuthCheck = ({ toolkitId, values, onMcpAuthRequired, onSucces
     onSuccessRef.current = onSuccess;
   }, [onSuccess]);
 
+  useEffect(() => {
+    valuesRef.current = values;
+  }, [values]);
+
   const cleanupSession = useCallback(() => {
+    activeRef.current = false;
     setIsRunning(false);
+    setIsVerifying(false);
     unsubscribeRef.current?.();
     streamIdRef.current = null;
+    checkedSignatureRef.current = null;
     silentRef.current = false;
   }, []);
 
@@ -68,8 +81,11 @@ export const useMcpAuthCheck = ({ toolkitId, values, onMcpAuthRequired, onSucces
 
       // Handle successful completion
       if (SUCCESS_MESSAGE_TYPES.includes(message.type)) {
+        const matchesCurrentConfig =
+          !silentRef.current ||
+          checkedSignatureRef.current === getConnectionSignature(valuesRef.current?.settings);
         cleanupSession();
-        onSuccessRef.current?.(message);
+        if (matchesCurrentConfig) onSuccessRef.current?.(message);
         return;
       }
 
@@ -101,10 +117,27 @@ export const useMcpAuthCheck = ({ toolkitId, values, onMcpAuthRequired, onSucces
 
   const runAuthCheck = useCallback(
     async ({ silent = false } = {}) => {
-      if (isRunning) return;
+      if (activeRef.current) {
+        if (!silent && silentRef.current) {
+          if (checkedSignatureRef.current === getConnectionSignature(values?.settings)) {
+            // A click adopts the matching background check without a second request.
+            silentRef.current = false;
+            setIsVerifying(false);
+            setIsRunning(true);
+            return;
+          }
+          // The editor changed the config while verifying; test the current
+          // values for this user-initiated login instead.
+          cleanupSession();
+        } else {
+          return;
+        }
+      }
 
+      activeRef.current = true;
       silentRef.current = silent;
-      setIsRunning(true);
+      setIsVerifying(silent);
+      setIsRunning(!silent);
 
       try {
         // Generate unique IDs for tracking
@@ -124,6 +157,7 @@ export const useMcpAuthCheck = ({ toolkitId, values, onMcpAuthRequired, onSucces
             session_id: values?.session_id,
           },
         };
+        checkedSignatureRef.current = getConnectionSignature(toolkitConfig.settings);
 
         subscribeSocket();
 
@@ -145,8 +179,8 @@ export const useMcpAuthCheck = ({ toolkitId, values, onMcpAuthRequired, onSucces
         }
       }
     },
-    [isRunning, toolkitId, projectId, values, subscribeSocket, socketEmit, cleanupSession],
+    [toolkitId, projectId, values, subscribeSocket, socketEmit, cleanupSession],
   );
 
-  return { runAuthCheck, isRunning };
+  return { runAuthCheck, isRunning, isVerifying };
 };

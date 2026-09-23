@@ -63,6 +63,8 @@ describe('useMcpAuthCheck silent automatic verification', () => {
     const { result } = renderHook(() => useMcpAuthCheck({ toolkitId: 925, values, onMcpAuthRequired }));
 
     await act(async () => result.current.runAuthCheck({ silent: true }));
+    expect(result.current.isRunning).toBe(false);
+    expect(result.current.isVerifying).toBe(true);
     act(() =>
       mocks.onMessage({
         type: 'mcp_authorization_required',
@@ -90,6 +92,97 @@ describe('useMcpAuthCheck silent automatic verification', () => {
       }),
     );
     expect(onMcpAuthRequired).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the login button available and adopts an in-flight silent check after a click', async () => {
+    const { result } = renderHook(() => useMcpAuthCheck({ toolkitId: 925, values }));
+
+    await act(async () => result.current.runAuthCheck({ silent: true }));
+    expect(result.current.isRunning).toBe(false);
+    expect(result.current.isVerifying).toBe(true);
+
+    await act(async () => result.current.runAuthCheck());
+    expect(mocks.emit).toHaveBeenCalledTimes(1);
+    expect(result.current.isRunning).toBe(true);
+    expect(result.current.isVerifying).toBe(false);
+
+    act(() =>
+      mocks.onMessage({
+        type: 'error',
+        content: 'unauthorized',
+        stream_id: mocks.emit.mock.calls[0][0].stream_id,
+      }),
+    );
+    expect(mocks.toastError).toHaveBeenCalledExactlyOnceWith('unauthorized');
+    expect(result.current.isRunning).toBe(false);
+  });
+
+  it('does not mark an edited header config from an older silent response', async () => {
+    const onSuccess = vi.fn();
+    const savedConfig = {
+      ...values,
+      settings: { ...values.settings, headers: { Authorization: 'saved-header' } },
+    };
+    const { result, rerender } = renderHook(
+      ({ config }) => useMcpAuthCheck({ toolkitId: 925, values: config, onSuccess }),
+      { initialProps: { config: savedConfig } },
+    );
+
+    await act(async () => result.current.runAuthCheck({ silent: true }));
+    rerender({
+      config: {
+        ...savedConfig,
+        settings: { ...savedConfig.settings, headers: { Authorization: 'unsaved-edit' } },
+      },
+    });
+    act(() =>
+      mocks.onMessage({
+        type: 'agent_tool_end',
+        stream_id: mocks.emit.mock.calls[0][0].stream_id,
+      }),
+    );
+
+    expect(onSuccess).not.toHaveBeenCalled();
+    expect(result.current.isVerifying).toBe(false);
+  });
+
+  it('checks edited headers with a new request when Login is clicked during verification', async () => {
+    const onSuccess = vi.fn();
+    const savedConfig = {
+      ...values,
+      settings: { ...values.settings, headers: { Authorization: 'saved-header' } },
+    };
+    const { result, rerender } = renderHook(
+      ({ config }) => useMcpAuthCheck({ toolkitId: 925, values: config, onSuccess }),
+      { initialProps: { config: savedConfig } },
+    );
+
+    await act(async () => result.current.runAuthCheck({ silent: true }));
+    rerender({
+      config: {
+        ...savedConfig,
+        settings: { ...savedConfig.settings, headers: { Authorization: 'unsaved-edit' } },
+      },
+    });
+    await act(async () => result.current.runAuthCheck());
+
+    expect(mocks.emit).toHaveBeenCalledTimes(2);
+    expect(mocks.emit.mock.calls[1][0].toolkit_config.settings.headers.Authorization).toBe('unsaved-edit');
+    expect(result.current.isRunning).toBe(true);
+    act(() =>
+      mocks.onMessage({
+        type: 'agent_tool_end',
+        stream_id: mocks.emit.mock.calls[0][0].stream_id,
+      }),
+    );
+    expect(onSuccess).not.toHaveBeenCalled();
+    act(() =>
+      mocks.onMessage({
+        type: 'agent_tool_end',
+        stream_id: mocks.emit.mock.calls[1][0].stream_id,
+      }),
+    );
+    expect(onSuccess).toHaveBeenCalledTimes(1);
   });
 
   it('suppresses an automatic error but reports a manual error', async () => {

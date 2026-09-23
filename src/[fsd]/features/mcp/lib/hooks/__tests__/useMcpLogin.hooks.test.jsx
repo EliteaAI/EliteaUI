@@ -11,6 +11,8 @@ const mocks = vi.hoisted(() => ({
   claimAutomaticHeaderCheck: vi.fn(),
   authCheckOptions: null,
   isLoggedIn: false,
+  isRunning: false,
+  isVerifying: false,
 }));
 
 vi.mock('@/[fsd]/features/mcp/lib/helpers', () => ({
@@ -36,7 +38,11 @@ vi.mock('../useMcpAuthModal.hooks', () => ({
 vi.mock('../useMcpAuthCheck.hooks', () => ({
   useMcpAuthCheck: options => {
     mocks.authCheckOptions = options;
-    return { runAuthCheck: mocks.runAuthCheck, isRunning: false };
+    return {
+      runAuthCheck: (...args) => mocks.runAuthCheck(...args),
+      isRunning: mocks.isRunning,
+      isVerifying: mocks.isVerifying,
+    };
   },
 }));
 
@@ -53,6 +59,8 @@ describe('useMcpLogin configured header verification', () => {
     mocks.claimAutomaticHeaderCheck.mockReset().mockReturnValue(true);
     mocks.authCheckOptions = null;
     mocks.isLoggedIn = false;
+    mocks.isRunning = false;
+    mocks.isVerifying = false;
   });
 
   it('checks a saved remote MCP once and marks it connected only after success', () => {
@@ -106,5 +114,45 @@ describe('useMcpLogin configured header verification', () => {
 
     expect(mocks.runAuthCheck).toHaveBeenCalledExactlyOnceWith({ silent: true });
     expect(mocks.claimAutomaticHeaderCheck).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not recheck half-edited headers after the initial automatic attempt', () => {
+    const { rerender } = renderHook(
+      ({ values }) => useMcpLogin({ values, autoVerifyConfiguredHeaders: true }),
+      { initialProps: { values: remoteMcp } },
+    );
+
+    rerender({
+      values: {
+        ...remoteMcp,
+        settings: { ...remoteMcp.settings, headers: { Authorization: 'partially-edited' } },
+      },
+    });
+
+    expect(mocks.runAuthCheck).toHaveBeenCalledExactlyOnceWith({ silent: true });
+    expect(mocks.claimAutomaticHeaderCheck).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not reconnect automatically after logout in the same mount', () => {
+    mocks.isLoggedIn = true;
+    const { rerender } = renderHook(() =>
+      useMcpLogin({ values: remoteMcp, autoVerifyConfiguredHeaders: true }),
+    );
+
+    mocks.isLoggedIn = false;
+    rerender();
+
+    expect(mocks.runAuthCheck).not.toHaveBeenCalled();
+  });
+
+  it('keeps the manual login state separate from background verification', () => {
+    mocks.isVerifying = true;
+    const { result } = renderHook(() => useMcpLogin({ values: remoteMcp }));
+
+    expect(result.current.isRunning).toBe(false);
+    expect(result.current.isVerifying).toBe(true);
+
+    act(() => result.current.onLogin({ stopPropagation: vi.fn() }));
+    expect(mocks.runAuthCheck).toHaveBeenCalledExactlyOnceWith();
   });
 });

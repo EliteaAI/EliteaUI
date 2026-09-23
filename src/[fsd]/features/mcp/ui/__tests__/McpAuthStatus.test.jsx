@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { act, render, waitFor } from '@testing-library/react';
+import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 
 import McpAuthStatus from '../McpAuthStatus';
 
@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   authCheckOptions: null,
   setConnectionVerified: vi.fn(),
   claimAutomaticHeaderCheck: vi.fn(),
+  isVerifying: false,
   values: { id: 924, type: 'mcp_Epam Delivery Central', settings: {} },
 }));
 
@@ -55,7 +56,7 @@ vi.mock('@/[fsd]/features/mcp/lib/hooks', async () => ({
   }),
   useMcpAuthCheck: options => {
     mocks.authCheckOptions = options;
-    return { runAuthCheck: mocks.runAuthCheck, isRunning: false };
+    return { runAuthCheck: mocks.runAuthCheck, isRunning: false, isVerifying: mocks.isVerifying };
   },
 }));
 
@@ -65,7 +66,18 @@ vi.mock('@/[fsd]/features/mcp/ui', () => ({
 }));
 
 vi.mock('@/[fsd]/shared/ui', () => ({
-  Button: { BaseBtn: () => null },
+  Button: {
+    BaseBtn: ({ children, disabled, onClick, 'data-testid': testId }) => (
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={onClick}
+        data-testid={testId}
+      >
+        {children}
+      </button>
+    ),
+  },
 }));
 
 vi.mock('@/[fsd]/shared/ui/button/BaseBtn', () => ({
@@ -90,12 +102,15 @@ vi.mock('@/routes', () => ({
 }));
 
 describe('McpAuthStatus existing toolkit login', () => {
+  afterEach(() => cleanup());
+
   beforeEach(() => {
     mocks.handleMcpAuthRequired.mockReset();
     mocks.runAuthCheck.mockReset();
     mocks.authCheckOptions = null;
     mocks.setConnectionVerified.mockReset();
     mocks.claimAutomaticHeaderCheck.mockReset().mockReturnValue(true);
+    mocks.isVerifying = false;
     mocks.values = { id: 924, type: 'mcp_Epam Delivery Central', settings: {} };
   });
 
@@ -145,5 +160,20 @@ describe('McpAuthStatus existing toolkit login', () => {
 
     expect(mocks.runAuthCheck).not.toHaveBeenCalled();
     expect(mocks.claimAutomaticHeaderCheck).not.toHaveBeenCalled();
+  });
+
+  it('keeps the Login button visible and enabled during background verification', () => {
+    mocks.values = {
+      id: 925,
+      type: 'mcp',
+      settings: { url: 'https://example.com/mcp', headers: { Authorization: 'secret-reference' } },
+    };
+    mocks.isVerifying = true;
+
+    render(<McpAuthStatus />);
+
+    const button = screen.getByTestId('toolkit-connection-login-button');
+    expect(button.textContent).toBe('Login');
+    expect(button.disabled).toBe(false);
   });
 });
