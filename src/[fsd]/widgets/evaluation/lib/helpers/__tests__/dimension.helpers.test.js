@@ -303,4 +303,35 @@ describe('AI-generated draft with a proposed target', () => {
     const { error } = reviewed({ ...draft, default_target: null, default_target_operator: null });
     expect(error).toBe('Target value is required.');
   });
+
+  it('keeps an ordinal draft on a non-preset range ordinal', () => {
+    const { form, error, body } = reviewed({
+      ...draft,
+      scale_type: 'ordinal',
+      scale_min: 1,
+      scale_max: 10,
+      default_target: 8,
+    });
+    expect(form.scaleTypePreset).toBe('custom');
+    expect(error).toBe('');
+    expect(body).toMatchObject({ scale_type: 'ordinal', scale_min: 1, scale_max: 10, default_target: 8 });
+  });
+
+  // The success-criteria select only offers >=, <= and ==; anything else would render blank.
+  it.each(['>', '<'])('asks for a target instead of keeping an unsupported %s operator', operator => {
+    const { form, error, body } = reviewed({ ...draft, default_target_operator: operator });
+    expect(form.targetValue).toBe('');
+    expect(form.successCriteria).toBe('>=');
+    expect(error).toBe('Target value is required.');
+    expect(body).toMatchObject({ default_target: null, default_target_operator: null });
+  });
+
+  it('falls back to output-only when every evaluation target flag is off', () => {
+    const { form, error } = reviewed({
+      ...draft,
+      evidence_scope: { structure: false, input: false, output: false, expected: false },
+    });
+    expect(form.evaluationTarget).toEqual({ structure: false, input: false, output: true });
+    expect(error).toBe('');
+  });
 });

@@ -7,6 +7,7 @@ import {
   NEW_ITEM_EVIDENCE_SCOPE,
   SCALE_TYPE_PRESET,
   SCALE_TYPE_PRESET_CONFIG,
+  SUCCESS_CRITERIA_OPTIONS,
 } from '../constants';
 import { resolveScalePreset } from './scaleLabel.helpers';
 
@@ -272,6 +273,8 @@ export const mapGeneratedDimensionToForm = generated => {
     form.scaleTypePreset = SCALE_TYPE_PRESET.score;
   } else if (generated.scale_min != null && generated.scale_max != null) {
     form.scaleTypePreset = SCALE_TYPE_PRESET.custom;
+    // Without it an ordinal draft on a non-preset range would be saved back as continuous.
+    form.customScaleType = generated.scale_type ?? null;
     form.customMin = String(generated.scale_min);
     form.customMax = String(generated.scale_max);
   }
@@ -280,11 +283,13 @@ export const mapGeneratedDimensionToForm = generated => {
     form.polarity = generated.polarity;
   }
 
-  if (generated.default_target != null) {
+  // An operator the success-criteria select cannot show would render blank and be saved unseen;
+  // dropping the target makes the form ask for one instead of guessing a nearby operator.
+  const operator = generated.default_target_operator;
+  const isOperatorSupported = !operator || SUCCESS_CRITERIA_OPTIONS.some(option => option.value === operator);
+  if (generated.default_target != null && isOperatorSupported) {
     form.targetValue = String(generated.default_target);
-  }
-  if (generated.default_target_operator) {
-    form.successCriteria = generated.default_target_operator;
+    if (operator) form.successCriteria = operator;
   }
 
   if (generated.default_weight != null) {
@@ -298,7 +303,9 @@ export const mapGeneratedDimensionToForm = generated => {
     }
   }
 
-  form.evaluationTarget = generated.evidence_scope
+  // An all-false scope would leave Create disabled with nothing on screen explaining why.
+  const hasScope = Object.values(generated.evidence_scope ?? {}).some(Boolean);
+  form.evaluationTarget = hasScope
     ? { ...NEW_ITEM_EVIDENCE_SCOPE, ...generated.evidence_scope }
     : { ...NEW_ITEM_EVIDENCE_SCOPE };
 
