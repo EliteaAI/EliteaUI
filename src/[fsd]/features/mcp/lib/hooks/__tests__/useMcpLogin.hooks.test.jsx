@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   runAuthCheck: vi.fn(),
   setConnectionVerified: vi.fn(),
   claimAutomaticHeaderCheck: vi.fn(),
+  getAccessToken: vi.fn(),
   authCheckOptions: null,
   isLoggedIn: false,
   isRunning: false,
@@ -20,6 +21,7 @@ vi.mock('@/[fsd]/features/mcp/lib/helpers', () => ({
     isPrebuildMcpType: type => type?.startsWith('mcp_'),
     setConnectionVerified: mocks.setConnectionVerified,
     claimAutomaticHeaderCheck: mocks.claimAutomaticHeaderCheck,
+    getAccessToken: mocks.getAccessToken,
   },
 }));
 
@@ -57,6 +59,7 @@ describe('useMcpLogin configured header verification', () => {
     mocks.runAuthCheck.mockReset();
     mocks.setConnectionVerified.mockReset();
     mocks.claimAutomaticHeaderCheck.mockReset().mockReturnValue(true);
+    mocks.getAccessToken.mockReset().mockReturnValue(null);
     mocks.authCheckOptions = null;
     mocks.isLoggedIn = false;
     mocks.isRunning = false;
@@ -87,7 +90,7 @@ describe('useMcpLogin configured header verification', () => {
     );
     expect(mocks.runAuthCheck).not.toHaveBeenCalled();
 
-    mocks.isLoggedIn = true;
+    mocks.getAccessToken.mockReturnValue('existing-token');
     renderHook(() => useMcpLogin({ values: remoteMcp, autoVerifyConfiguredHeaders: true }));
     expect(mocks.runAuthCheck).not.toHaveBeenCalled();
   });
@@ -133,13 +136,57 @@ describe('useMcpLogin configured header verification', () => {
     expect(mocks.claimAutomaticHeaderCheck).toHaveBeenCalledTimes(1);
   });
 
-  it('does not reconnect automatically after logout in the same mount', () => {
+  it('checks a different toolkit when a card instance is reused', () => {
+    const { rerender } = renderHook(
+      ({ values }) => useMcpLogin({ values, autoVerifyConfiguredHeaders: true }),
+      { initialProps: { values: remoteMcp } },
+    );
+    const nextMcp = {
+      ...remoteMcp,
+      id: 926,
+      settings: { ...remoteMcp.settings, url: 'https://other.example.com/mcp' },
+    };
+
+    rerender({ values: nextMcp });
+    rerender({ values: { ...nextMcp } });
+
+    expect(mocks.runAuthCheck).toHaveBeenCalledTimes(2);
+    expect(mocks.claimAutomaticHeaderCheck).toHaveBeenNthCalledWith(
+      2,
+      30,
+      926,
+      'https://other.example.com/mcp',
+    );
+  });
+
+  it('checks the new toolkit even while the reused card reports the previous login state', () => {
+    mocks.getAccessToken.mockImplementation(url =>
+      url === remoteMcp.settings.url ? 'existing-token' : null,
+    );
     mocks.isLoggedIn = true;
+    const { rerender } = renderHook(
+      ({ values }) => useMcpLogin({ values, autoVerifyConfiguredHeaders: true }),
+      { initialProps: { values: remoteMcp } },
+    );
+    expect(mocks.runAuthCheck).not.toHaveBeenCalled();
+
+    rerender({
+      values: {
+        ...remoteMcp,
+        id: 926,
+        settings: { ...remoteMcp.settings, url: 'https://other.example.com/mcp' },
+      },
+    });
+    expect(mocks.runAuthCheck).toHaveBeenCalledExactlyOnceWith({ silent: true });
+  });
+
+  it('does not reconnect automatically after logout in the same mount', () => {
+    mocks.getAccessToken.mockReturnValue('existing-token');
     const { rerender } = renderHook(() =>
       useMcpLogin({ values: remoteMcp, autoVerifyConfiguredHeaders: true }),
     );
 
-    mocks.isLoggedIn = false;
+    mocks.getAccessToken.mockReturnValue(null);
     rerender();
 
     expect(mocks.runAuthCheck).not.toHaveBeenCalled();

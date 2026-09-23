@@ -46,7 +46,6 @@ export const useMcpLogin = ({ values, onSuccess, authConfig, autoVerifyConfigure
     values,
     enabled: autoVerifyConfiguredHeaders,
     authConfig,
-    isLoggedIn,
     isRunning,
     runAuthCheck,
   });

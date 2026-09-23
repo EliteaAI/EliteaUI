@@ -146,6 +146,79 @@ describe('useMcpAuthCheck silent automatic verification', () => {
     expect(result.current.isVerifying).toBe(false);
   });
 
+  it('restarts an in-flight silent check when a card switches toolkits', async () => {
+    const onSuccess = vi.fn();
+    const { result, rerender } = renderHook(
+      ({ config }) => useMcpAuthCheck({ toolkitId: config.id, values: config, onSuccess }),
+      { initialProps: { config: values } },
+    );
+
+    await act(async () => result.current.runAuthCheck({ silent: true }));
+    const oldStreamId = mocks.emit.mock.calls[0][0].stream_id;
+    rerender({
+      config: { id: 926, type: 'mcp', settings: { url: 'https://other.example.com/mcp' } },
+    });
+    await act(async () => result.current.runAuthCheck({ silent: true }));
+
+    expect(mocks.emit).toHaveBeenCalledTimes(2);
+    expect(mocks.emit.mock.calls[1][0].toolkit_config.toolkit_id).toBe(926);
+    act(() => mocks.onMessage({ type: 'agent_tool_end', stream_id: oldStreamId }));
+    expect(onSuccess).not.toHaveBeenCalled();
+    act(() =>
+      mocks.onMessage({
+        type: 'agent_tool_end',
+        stream_id: mocks.emit.mock.calls[1][0].stream_id,
+      }),
+    );
+    expect(onSuccess).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not apply a manual result to a different toolkit after card reuse', async () => {
+    const onSuccess = vi.fn();
+    const { result, rerender } = renderHook(
+      ({ config }) => useMcpAuthCheck({ toolkitId: config.id, values: config, onSuccess }),
+      { initialProps: { config: values } },
+    );
+
+    await act(async () => result.current.runAuthCheck());
+    expect(result.current.isRunning).toBe(true);
+    const oldStreamId = mocks.emit.mock.calls[0][0].stream_id;
+    rerender({
+      config: { id: 926, type: 'mcp', settings: { url: 'https://other.example.com/mcp' } },
+    });
+    expect(result.current.isRunning).toBe(false);
+    await act(async () => result.current.runAuthCheck({ silent: true }));
+
+    expect(mocks.emit).toHaveBeenCalledTimes(2);
+    act(() => mocks.onMessage({ type: 'agent_tool_end', stream_id: oldStreamId }));
+    expect(onSuccess).not.toHaveBeenCalled();
+    act(() =>
+      mocks.onMessage({
+        type: 'agent_tool_end',
+        stream_id: mocks.emit.mock.calls[1][0].stream_id,
+      }),
+    );
+    expect(onSuccess).toHaveBeenCalledTimes(1);
+  });
+
+  it('ignores a manual authorization challenge from a toolkit the card no longer shows', async () => {
+    const onMcpAuthRequired = vi.fn();
+    const { result, rerender } = renderHook(
+      ({ config }) => useMcpAuthCheck({ toolkitId: config.id, values: config, onMcpAuthRequired }),
+      { initialProps: { config: values } },
+    );
+
+    await act(async () => result.current.runAuthCheck());
+    const oldStreamId = mocks.emit.mock.calls[0][0].stream_id;
+    rerender({
+      config: { id: 926, type: 'mcp', settings: { url: 'https://other.example.com/mcp' } },
+    });
+    act(() => mocks.onMessage({ type: 'mcp_authorization_required', stream_id: oldStreamId }));
+
+    expect(onMcpAuthRequired).not.toHaveBeenCalled();
+    expect(result.current.isRunning).toBe(false);
+  });
+
   it('checks edited headers with a new request when Login is clicked during verification', async () => {
     const onSuccess = vi.fn();
     const savedConfig = {

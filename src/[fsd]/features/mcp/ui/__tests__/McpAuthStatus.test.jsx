@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   authCheckOptions: null,
   setConnectionVerified: vi.fn(),
   claimAutomaticHeaderCheck: vi.fn(),
+  getAccessToken: vi.fn(),
   isVerifying: false,
   values: { id: 924, type: 'mcp_Epam Delivery Central', settings: {} },
 }));
@@ -36,6 +37,7 @@ vi.mock('@/[fsd]/features/mcp/lib/helpers', () => ({
     isPrebuildMcpType: type => type?.startsWith('mcp_') && type !== 'mcp',
     setConnectionVerified: mocks.setConnectionVerified,
     claimAutomaticHeaderCheck: mocks.claimAutomaticHeaderCheck,
+    getAccessToken: mocks.getAccessToken,
     logout: vi.fn(),
   },
 }));
@@ -110,6 +112,7 @@ describe('McpAuthStatus existing toolkit login', () => {
     mocks.authCheckOptions = null;
     mocks.setConnectionVerified.mockReset();
     mocks.claimAutomaticHeaderCheck.mockReset().mockReturnValue(true);
+    mocks.getAccessToken.mockReset().mockReturnValue(null);
     mocks.isVerifying = false;
     mocks.values = { id: 924, type: 'mcp_Epam Delivery Central', settings: {} };
   });

@@ -86,7 +86,6 @@ const McpAuthStatus = memo((props = {}) => {
   useAutoVerifyMcpConnection({
     values,
     authConfig,
-    isLoggedIn: hasLoggedInToMcp,
     isRunning,
     patInvalid,
     runAuthCheck,
