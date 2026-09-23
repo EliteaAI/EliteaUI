@@ -89,6 +89,9 @@ const buildFallbackStyles = ({ textColor, backgroundColor, themeMode }) =>
       color: ${textColor};
       background-color: ${backgroundColor};
     }
+    body {
+       padding: 0 2.5rem !important;
+      }
   </style>`;
 
 // DOMPurify parses input via innerHTML which applies the HTML tokenizer — not the raw-text

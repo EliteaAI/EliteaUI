@@ -48,18 +48,17 @@ BucketFooter.displayName = 'BucketFooter';
 
 /** @type {MuiSx} */
 const bucketFooterStyles = () => ({
-  container: {
+  container: ({ palette }) => ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'flex-start',
     gap: '1rem',
     padding: '0.75rem 1.5rem',
-    borderTop: '1px solid',
-    borderColor: 'divider',
-    backgroundColor: ({ palette }) => palette.background.default.tertiary,
+    borderTop: `0.0625rem solid ${palette.border.default}`,
+    backgroundColor: palette.background.default.tertiary,
     marginTop: 'auto',
     minHeight: '3.25rem',
-  },
+  }),
   statItem: {
     display: 'flex',
     alignItems: 'center',

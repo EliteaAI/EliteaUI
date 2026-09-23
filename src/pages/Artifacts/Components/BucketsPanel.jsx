@@ -195,7 +195,7 @@ const bucketsPanelStyles = collapsed => ({
     display: 'flex',
     flexDirection: 'column',
     alignItems: collapsed ? 'center' : 'stretch',
-    background: palette.background.default.primary,
+    background: palette.background.surface.secondary,
   }),
   searchBarContainer: {
     display: 'flex',

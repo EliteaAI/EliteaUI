@@ -328,7 +328,7 @@ const bucketItemStyles = ({ isActive, isHovering, isNextItemHighlighted, showMen
     container: {
       borderBottom:
         isHighlighted || isNextItemHighlighted || isExpanded
-          ? 'none'
+          ? '0.0625rem solid transparent'
           : `0.0625rem solid ${theme.palette.border.subtle}`,
       padding: '0.5rem 0.5rem',
       gap: '0.5rem',

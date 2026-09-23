@@ -617,13 +617,14 @@ const filePreviewCanvasStyles = (applyWrapper = false, isSmallWindow = false, is
     height: '100%',
     width: '100%',
     overflow: 'hidden',
+    background: palette.background.surface.default,
     ...(applyWrapper
       ? {
           maxHeight: '100%',
           minHeight: '100%',
           justifyContent: 'flex-start',
           minWidth: isSmallWindow ? '100%' : '15rem',
-          background: palette.background.default.tertiary,
+          background: palette.background.surface.default,
           border: `0.0625rem solid ${palette.border?.lines}`,
           borderRadius: '1rem',
           position: 'relative',
