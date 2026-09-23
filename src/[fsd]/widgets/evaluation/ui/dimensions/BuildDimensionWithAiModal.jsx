@@ -23,6 +23,9 @@ const STEPS = {
   REVIEW: 'review',
 };
 
+// Mirrors GenerateEvalDimensionsRequest.custom_instructions max_length on the backend.
+const MAX_PROMPT_LENGTH = 2000;
+
 const BuildDimensionWithAiModal = memo(props => {
   const { open, onClose, projectId, applicationId = null, onSaved } = props;
 
@@ -70,7 +73,7 @@ const BuildDimensionWithAiModal = memo(props => {
       const promise = generateDimensions({
         projectId,
         body: {
-          prompt: prompt.trim(),
+          custom_instructions: prompt.trim(),
           application_id: applicationId,
         },
       });
@@ -157,7 +160,7 @@ const BuildDimensionWithAiModal = memo(props => {
         sx={styles.textField}
         slotProps={{
           input: { disableUnderline: true },
-          htmlInput: { 'data-testid': 'build-dimension-prompt-input' },
+          htmlInput: { 'data-testid': 'build-dimension-prompt-input', maxLength: MAX_PROMPT_LENGTH },
         }}
       />
       {generateError && (
