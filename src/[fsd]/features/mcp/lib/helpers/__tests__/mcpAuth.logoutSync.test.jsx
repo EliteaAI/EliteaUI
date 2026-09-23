@@ -139,6 +139,39 @@ describe('MCP cross-tab logout synchronization', () => {
   });
 });
 
+describe('automatic header connection checks', () => {
+  beforeEach(() => {
+    window.sessionStorage.clear();
+  });
+
+  it('caches a check briefly by toolkit and server without storing headers', () => {
+    vi.spyOn(Date, 'now').mockReturnValue(1000);
+
+    expect(McpAuthHelpers.claimAutomaticHeaderCheck(30, 925, 'https://example.com/mcp')).toBe(true);
+    expect(McpAuthHelpers.claimAutomaticHeaderCheck(30, 925, 'https://example.com/mcp')).toBe(false);
+    expect(McpAuthHelpers.claimAutomaticHeaderCheck(30, 926, 'https://example.com/mcp')).toBe(true);
+    expect(McpAuthHelpers.claimAutomaticHeaderCheck(31, 925, 'https://example.com/mcp')).toBe(true);
+    expect(window.sessionStorage.getItem(McpAuthConstants.MCP_HEADER_CHECKED_STORAGE_KEY)).not.toContain(
+      'Authorization',
+    );
+
+    vi.spyOn(Date, 'now').mockReturnValue(1000 + 5 * 60 * 1000 + 1);
+    expect(McpAuthHelpers.claimAutomaticHeaderCheck(30, 925, 'https://example.com/mcp')).toBe(true);
+  });
+
+  it('reads verified connection status from a token snapshot until it expires', () => {
+    const url = 'https://example.com/mcp';
+    const tokens = { [url]: { access_token: McpAuthConstants.MCP_CONNECTION_VERIFIED, expires_at: 2000 } };
+    vi.spyOn(Date, 'now').mockReturnValue(1000);
+
+    expect(McpAuthHelpers.getAccessTokenFromTokens(tokens, url)).toBe(
+      McpAuthConstants.MCP_CONNECTION_VERIFIED,
+    );
+    vi.spyOn(Date, 'now').mockReturnValue(2001);
+    expect(McpAuthHelpers.getAccessTokenFromTokens(tokens, url)).toBeNull();
+  });
+});
+
 describe('MCP OAuth family reuse', () => {
   beforeEach(() => {
     window.sessionStorage.clear();

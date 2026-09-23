@@ -12,7 +12,7 @@ import {
   GridTablePagination,
   GridTableRow,
 } from '@/[fsd]/entities/grid-table/ui';
-import { McpAuthHelpers } from '@/[fsd]/features/mcp';
+import { McpAuthConstants, McpAuthHelpers } from '@/[fsd]/features/mcp';
 import FlowIcon from '@/assets/flow-icon.svg?react';
 import OfflineIcon from '@/assets/offline-icon.svg?react';
 import OnlineIcon from '@/assets/online-icon.svg?react';
@@ -81,12 +81,20 @@ const DataTable = memo(props => {
 
   const [hoveredRowId, setHoveredRowId] = useState(null);
   const [tablePage, setTablePage] = useState(externalPage || 0);
+  const [mcpTokens, setMcpTokens] = useState(() => McpAuthHelpers.loadTokens());
 
   const isCredentials = useMemo(() => String(cardType).toLowerCase().includes('credential'), [cardType]);
   const isToolkits = useMemo(() => String(cardType).toLowerCase().includes('toolkit'), [cardType]);
   const isMCPs = useMemo(() => String(cardType).toLowerCase().includes('mcp'), [cardType]);
   const isPipelines = useMemo(() => isPipelineCard(cardType), [cardType]);
   const isAppAll = useMemo(() => isAppAllCard(cardType), [cardType]);
+
+  useEffect(() => {
+    if (!isMCPs) return;
+    const handleTokenChange = () => setMcpTokens(McpAuthHelpers.loadTokens());
+    window.addEventListener(McpAuthConstants.MCP_TOKEN_CHANGE_EVENT, handleTokenChange);
+    return () => window.removeEventListener(McpAuthConstants.MCP_TOKEN_CHANGE_EVENT, handleTokenChange);
+  }, [isMCPs]);
 
   const styles = useMemo(() => dataTableStyles(isFullWidth, hasListHeader), [isFullWidth, hasListHeader]);
 
@@ -388,7 +396,9 @@ const DataTable = memo(props => {
       ...row,
       is_pinned: row.is_pinned,
       online:
-        row.type === 'mcp' ? McpAuthHelpers.getAccessToken(row?.settings?.url || '') !== null : row.online,
+        row.type === 'mcp'
+          ? McpAuthHelpers.getAccessTokenFromTokens(mcpTokens, row?.settings?.url || '') !== null
+          : row.online,
       typeLabel:
         row.label || (row.icon_meta && row.icon_meta.alt ? row.icon_meta.alt.replace(' icon', '') : ''),
     }));
@@ -403,7 +413,7 @@ const DataTable = memo(props => {
     return !isToolkits && !isMCPs && !isCredentials
       ? sortedItems.slice(tablePage * rowsPerPage, tablePage * rowsPerPage + rowsPerPage)
       : sortedItems;
-  }, [data, order, orderBy, isToolkits, isMCPs, isCredentials, tablePage, rowsPerPage]);
+  }, [data, order, orderBy, isToolkits, isMCPs, isCredentials, tablePage, rowsPerPage, mcpTokens]);
 
   useEffect(() => {
     if (pageSizeFromUrl && pageSize != pageSizeFromUrl) {

@@ -8,6 +8,7 @@ import { MCP_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { PAT_REQUIRED_ACTION_HINT } from '@/[fsd]/features/mcp/lib/constants';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import {
+  useAutoVerifyMcpConnection,
   useInternalMcpPatStatus,
   useMcpAuthCheck,
   useMcpAuthModal,
@@ -82,6 +83,14 @@ const McpAuthStatus = memo((props = {}) => {
 
   const { patInvalid } = useInternalMcpPatStatus({ projectId, toolkitType });
 
+  useAutoVerifyMcpConnection({
+    values,
+    authConfig,
+    isRunning,
+    patInvalid,
+    runAuthCheck,
+  });
+
   useEffect(() => {
     const toolkitKey = id ? `${projectId}:${id}:${toolkitType}` : null;
     const shouldCheckExistingToolkit =
@@ -95,12 +104,9 @@ const McpAuthStatus = memo((props = {}) => {
 
     if (!shouldCheckExistingToolkit) return;
 
-    // Old saved MCPs already have tools, so the creation-time discovery path
-    // never runs for them. Start the same login flow when the editor opens: a
-    // compatible family token is adopted silently, while a true first login
-    // opens the existing OAuth dialog just like new-toolkit creation.
+    // Existing pre-built MCPs still use the interactive OAuth flow when needed.
     automaticallyCheckedToolkitRef.current = toolkitKey;
-    runAuthCheck('list_tools');
+    runAuthCheck();
   }, [
     id,
     projectId,
@@ -139,7 +145,7 @@ const McpAuthStatus = memo((props = {}) => {
       authConfig.onLogin(handleMcpAuthRequired);
       return;
     }
-    runAuthCheck('list_tools');
+    runAuthCheck();
   }, [authConfig, handleMcpAuthRequired, runAuthCheck]);
 
   const onCloseLogout = useCallback(() => {

@@ -5,10 +5,15 @@ import { McpAuthModal } from '@/[fsd]/features/mcp/ui';
 import { Button } from '@/[fsd]/shared/ui';
 
 const McpLogInButton = memo(props => {
-  const { values, onSuccess, sx, title = 'Log in', authConfig } = props;
+  const { values, onSuccess, sx, title = 'Log in', authConfig, autoVerifyConfiguredHeaders } = props;
   const styles = getStyles();
 
-  const { isLoggedIn, isRunning, onLogin, modalProps } = useMcpLogin({ values, onSuccess, authConfig });
+  const { isLoggedIn, isRunning, onLogin, modalProps } = useMcpLogin({
+    values,
+    onSuccess,
+    authConfig,
+    autoVerifyConfiguredHeaders,
+  });
 
   if (isLoggedIn) {
     return null;

@@ -552,7 +552,12 @@ const ToolCard = memo(props => {
                   {isLoading && <StyledCircleProgress size={20} />}
                 </IconButton>
               </Tooltip>
-              {isMcp && <McpLogInButton values={tool} />}
+              {isMcp && (
+                <McpLogInButton
+                  values={tool}
+                  autoVerifyConfiguredHeaders
+                />
+              )}
               {isMcp && isMcpAuthorized && (
                 <McpLogoutButton
                   serverUrl={mcpServerUrl}

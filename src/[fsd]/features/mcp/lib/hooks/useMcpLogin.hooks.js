@@ -2,11 +2,12 @@ import { useCallback, useMemo } from 'react';
 
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 
+import { useAutoVerifyMcpConnection } from './useAutoVerifyMcpConnection.hooks';
 import { useMcpAuthCheck } from './useMcpAuthCheck.hooks';
 import { useMcpAuthModal } from './useMcpAuthModal.hooks';
 import { useMcpTokenChange } from './useMcpTokenChange.hooks';
 
-export const useMcpLogin = ({ values, onSuccess, authConfig }) => {
+export const useMcpLogin = ({ values, onSuccess, authConfig, autoVerifyConfiguredHeaders = false }) => {
   const { id, type: toolkitType, settings: { url, client_id, client_secret, scopes } = {} } = values ?? {};
 
   // Check if this is a pre-built MCP type (e.g., mcp_github)
@@ -34,11 +35,19 @@ export const useMcpLogin = ({ values, onSuccess, authConfig }) => {
     values,
   });
 
-  const { runAuthCheck, isRunning } = useMcpAuthCheck({
+  const { runAuthCheck, isRunning, isVerifying } = useMcpAuthCheck({
     toolkitId: id,
     values,
     onMcpAuthRequired: handleMcpAuthRequired,
     onSuccess: handleConnectionSuccess,
+  });
+
+  useAutoVerifyMcpConnection({
+    values,
+    enabled: autoVerifyConfiguredHeaders,
+    authConfig,
+    isRunning,
+    runAuthCheck,
   });
 
   const onLogin = useCallback(
@@ -50,7 +59,7 @@ export const useMcpLogin = ({ values, onSuccess, authConfig }) => {
         authConfig.onLogin(handleMcpAuthRequired);
         return;
       }
-      runAuthCheck('list_tools');
+      runAuthCheck();
     },
     [authConfig, handleMcpAuthRequired, runAuthCheck],
   );
@@ -66,6 +75,7 @@ export const useMcpLogin = ({ values, onSuccess, authConfig }) => {
   return {
     isLoggedIn,
     isRunning: isRunning || !!authConfig?.isRunning,
+    isVerifying,
     onLogin,
     stopPropagation,
     modalProps: {
