@@ -4,10 +4,14 @@ import { Box, Typography } from '@mui/material';
 
 import SuggestionItem from './SuggestionItem';
 
+const MAX_SUGGESTIONS = 5;
+
 const ResourceSuggestions = memo(props => {
   const { title, items, selectedIds, onToggle, entityType } = props;
 
   if (!items?.length) return null;
+
+  const cappedItems = items.slice(0, MAX_SUGGESTIONS);
 
   return (
     <Box
@@ -21,7 +25,7 @@ const ResourceSuggestions = memo(props => {
         {title}
       </Typography>
       <Box sx={styles.list}>
-        {items.map(item => (
+        {cappedItems.map(item => (
           <SuggestionItem
             key={item.id}
             item={item}
