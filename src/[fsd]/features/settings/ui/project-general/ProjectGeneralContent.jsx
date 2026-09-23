@@ -16,6 +16,7 @@ import useCheckPermission from '@/hooks/useCheckPermission';
 
 import SettingsFormProvider from '../shared/SettingsFormProvider';
 import AutoRoutingSettings from './AutoRoutingSettings';
+import ChatDefaultsSettings from './ChatDefaultsSettings';
 
 const ProjectGeneralContent = memo(() => {
   const styles = componentStyles();
@@ -101,6 +102,21 @@ const ProjectGeneralContent = memo(() => {
             ]}
           />
         )}
+        <BasicAccordion
+          data-testid="default-chat-configuration-section"
+          showMode={AccordionConstants.AccordionShowMode.LeftMode}
+          accordionSX={styles.accordionStyles}
+          items={[
+            {
+              title: 'Default Chat Configuration',
+              content: (
+                <Box sx={styles.containerStyles}>
+                  <ChatDefaultsSettings />
+                </Box>
+              ),
+            },
+          ]}
+        />
         {isBackupRestoreAvailable && (
           <BasicAccordion
             data-testid="project-backup-restore-section"
