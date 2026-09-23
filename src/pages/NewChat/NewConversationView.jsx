@@ -19,6 +19,7 @@ import NewChatInput from '@/[fsd]/features/chat/ui/chat-input/NewChatInput';
 import RecommendationList from '@/[fsd]/features/chat/ui/recommendations/RecommendationList';
 import SearchResultList from '@/[fsd]/features/chat/ui/recommendations/SearchResultList';
 import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
+import { useProjectInfoQuery } from '@/[fsd]/features/settings/api/projectInfoApi';
 import { MentionSkillList } from '@/[fsd]/features/skill/ui';
 import {
   AutoRoutingConstants,
@@ -98,6 +99,10 @@ const NewConversationView = forwardRef(
   ) => {
     const styles = newConversationViewStyles();
     const selectedProjectId = useSelectedProjectId();
+    const { data: projectInfo } = useProjectInfoQuery(
+      { projectId: selectedProjectId, fields: 'chat_config' },
+      { skip: !selectedProjectId },
+    );
     const { toastSuccess } = useToast();
     const systemSenderName = useSystemSenderName();
     const { selectedAgent, selectedAgentStarter } = useSelector(state => state.chat);
@@ -474,6 +479,90 @@ const NewConversationView = forwardRef(
       if (activeConversation?.isNew) chatInput.current?.focus?.();
     }, [activeConversation?.isNew]);
 
+    const buildEnrichedParticipant = useCallback(
+      (participant, details) => {
+        if (participant.meta?.added_from_agent) return participant;
+        return {
+          ...participant,
+          ...details,
+          entity_name: participant.participantType,
+          entity_meta: { id: participant.id, project_id: participant.project_id || selectedProjectId },
+          entity_settings:
+            participant.participantType === ChatParticipantType.Toolkits
+              ? { icon_meta: details.icon_meta, toolkit_type: details.type }
+              : {
+                  agent_type: details.version_details?.agent_type,
+                  llm_settings: details.version_details?.llm_settings || {},
+                  variables: details.version_details?.variables || [],
+                  version_id: details.version_details?.id,
+                },
+          meta: { name: participant.name, mcp: details.meta?.mcp },
+          originalLatestVersionId: details.version_details?.id,
+        };
+      },
+      [selectedProjectId],
+    );
+
+    const defaultParticipantsAppliedForRef = useRef(null);
+    useEffect(() => {
+      if (!activeConversation?.isNew) return;
+      const sessionKey = activeConversation.id;
+      if (defaultParticipantsAppliedForRef.current === sessionKey) return;
+      const configParticipants = projectInfo?.chat_config?.participants ?? [];
+      if (!configParticipants.length) return;
+      defaultParticipantsAppliedForRef.current = sessionKey;
+      const filtered = configParticipants.filter(cp => cp.entity_id && cp.entity_name);
+      if (!filtered.length) return;
+
+      // Set basic participants immediately so conversation creation has them before async details load
+      const baseParticipants = filtered.map(cp => ({
+        id: cp.entity_id,
+        name: cp.name || '',
+        project_id: cp.project_id,
+        agent_type: cp.agent_type,
+        participantType: cp.entity_name,
+        entity_name: cp.entity_name,
+        entity_meta: { id: cp.entity_id, project_id: cp.project_id || selectedProjectId },
+        entity_settings: {},
+        meta: {},
+      }));
+      setSelectedParticipants(baseParticipants);
+      if (baseParticipants.length === 1) {
+        setSelectedParticipant(baseParticipants[0]);
+        setActiveParticipant(baseParticipants[0]);
+      }
+
+      // Fetch full details async and enrich participants with icon_meta, agent_type, etc.
+      (async () => {
+        const detailsList = await Promise.all(
+          filtered.map(cp => fetchOriginalDetails(cp.entity_name, cp.entity_id, cp.project_id)),
+        );
+        const enriched = baseParticipants.map((base, i) => {
+          const details = detailsList[i];
+          if (!details || !Object.keys(details).length) return base;
+          return buildEnrichedParticipant(base, details);
+        });
+        setSelectedParticipants(enriched);
+        if (enriched.length === 1) {
+          setSelectedParticipant(enriched[0]);
+          setSelectedParticipantDetails(
+            detailsList[0] && Object.keys(detailsList[0]).length ? detailsList[0] : enriched[0],
+          );
+          setActiveParticipant(enriched[0]);
+        } else {
+          setActiveParticipant(null);
+        }
+      })();
+    }, [
+      activeConversation?.isNew,
+      activeConversation.id,
+      projectInfo?.chat_config?.participants,
+      setActiveParticipant,
+      fetchOriginalDetails,
+      buildEnrichedParticipant,
+      selectedProjectId,
+    ]);
+
     const onShowParticipantsList = useCallback(() => {
       setShowRecommendationList(prev => !prev);
       stopProcessingSymbols();
@@ -494,33 +583,7 @@ const NewConversationView = forwardRef(
     const convertParticipantAndAddIt = useCallback(
       ({ participant, details }) => {
         if (Object.keys(details).length) {
-          // Fix for issue #2948: Use optional chaining to prevent TypeError when
-          // participant.meta is undefined (e.g., when selecting from recommendations)
-          const transformedParticipant = participant.meta?.added_from_agent
-            ? participant
-            : {
-                ...participant,
-                ...details,
-                entity_name: participant.participantType,
-                entity_meta: { id: participant.id, project_id: participant.project_id || selectedProjectId },
-                entity_settings:
-                  participant.participantType === ChatParticipantType.Toolkits
-                    ? {
-                        icon_meta: details.icon_meta,
-                        toolkit_type: details.type,
-                      }
-                    : {
-                        // Fix for issue #2948: Use optional chaining to prevent TypeError when
-                        // details.version_details is undefined
-                        agent_type: details.version_details?.agent_type,
-                        llm_settings: details.version_details?.llm_settings || {},
-                        variables: details.version_details?.variables || [],
-                        version_id: details.version_details?.id,
-                      },
-                meta: { name: participant.name, mcp: details.meta?.mcp },
-                // Store the original latest version ID for comparison later
-                originalLatestVersionId: details.version_details?.id,
-              };
+          const transformedParticipant = buildEnrichedParticipant(participant, details);
           if (participant.participantType !== ChatParticipantType.Toolkits) {
             setSelectedParticipant(transformedParticipant);
             setSelectedParticipantDetails(details);
@@ -545,7 +608,7 @@ const NewConversationView = forwardRef(
           });
         }
       },
-      [setActiveParticipant, selectedProjectId],
+      [setActiveParticipant, buildEnrichedParticipant],
     );
 
     const onSelectParticipant = async participant => {

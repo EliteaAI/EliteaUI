@@ -32,6 +32,17 @@ const projectInfoApi = eliteaApi
           return [{ type: TAG_TYPE_PROJECT_INFO, id: projectId }];
         },
       }),
+      updateProjectChatConfig: build.mutation({
+        query: ({ projectId, chat_config }) => ({
+          url: `${apiSlicePath}/project_info/prompt_lib/${projectId}/project-info`,
+          method: 'PUT',
+          body: { chat_config },
+        }),
+        invalidatesTags: (_, error, { projectId }) => {
+          if (error) return [];
+          return [{ type: TAG_TYPE_PROJECT_INFO, id: projectId }];
+        },
+      }),
       uploadProjectIcon: build.mutation({
         query: ({ projectId, files, width, height }) => {
           const form = new FormData();
@@ -88,6 +99,7 @@ const projectInfoApi = eliteaApi
 export const {
   useProjectInfoQuery,
   useUpdateProjectIconMutation,
+  useUpdateProjectChatConfigMutation,
   useUploadProjectIconMutation,
   useGetProjectIconsQuery,
   useDeleteProjectIconMutation,
