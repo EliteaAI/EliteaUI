@@ -17,7 +17,6 @@ import {
   SelectDimensionFromLibraryModal,
   SuiteDetailPanel,
   SuitesPanel,
-  caseLabel,
   findDimensionByBindingId,
   useEvalDatasetActions,
   useEvalDatasetQuery,
@@ -227,19 +226,6 @@ const AgentEvaluatePage = memo(() => {
         name={dimensionActions.dimensionToRemove?.name}
         inlineExtraContent=" from this suite?"
         confirmButtonText="Remove"
-      />
-
-      {/* Case exclude confirmation */}
-      <Modal.DeleteEntityModal
-        open={datasetActions.showExcludeCaseConfirm}
-        onClose={datasetActions.handleCloseExcludeCaseConfirm}
-        onConfirm={datasetActions.handleConfirmExcludeCase}
-        title="Exclude confirmation"
-        textContent="Are you sure to exclude "
-        name={datasetActions.caseToExclude ? caseLabel(datasetActions.caseToExclude.id) : ''}
-        inlineExtraContent=" from this suite? The case will remain in the dataset."
-        confirmButtonText="Exclude"
-        alarm
       />
 
       {/* Dimension modals */}
