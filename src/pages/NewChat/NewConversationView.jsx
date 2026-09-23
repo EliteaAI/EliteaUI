@@ -115,6 +115,8 @@ const NewConversationView = forwardRef(
     const chatInput = useRef(null);
     const { setLocalActiveParticipant } = useLocalActiveParticipant();
     const [selectedParticipants, setSelectedParticipants] = useState(activeConversation?.participants || []);
+    const selectedParticipantsRef = useRef(selectedParticipants);
+    selectedParticipantsRef.current = selectedParticipants;
     const [selectedParticipant, setSelectedParticipant] = useState(activeParticipant || null);
     const [selectedParticipantDetails, setSelectedParticipantDetails] = useState(activeParticipant || null);
     const [prevConversation, setPrevConversation] = useState(activeConversation);
@@ -526,18 +528,28 @@ const NewConversationView = forwardRef(
         entity_settings: {},
         meta: {},
       }));
+      // Only apply defaults when no participants are already set (e.g., via agent catalog selection)
+      const syncApplied = selectedParticipantsRef.current.length === 0;
       setSelectedParticipants(prev => (prev.length ? prev : baseParticipants));
-      if (baseParticipants.length === 1) {
+      if (syncApplied && baseParticipants.length === 1) {
         setSelectedParticipant(baseParticipants[0]);
         setActiveParticipant(baseParticipants[0]);
       }
+
+      // Skip async enrichment entirely when sync phase did not apply defaults
+      if (!syncApplied) return;
 
       // Fetch full details async and enrich participants with icon_meta, agent_type, etc.
       (async () => {
         const detailsList = await Promise.all(
           filtered.map(cp => fetchOriginalDetails(cp.entity_name, cp.entity_id, cp.project_id)),
         );
-        if (defaultParticipantsAppliedForRef.current !== sessionKey) return;
+        const toParticipantKey = p => `${p.entity_name ?? p.participantType}:${p.project_id}:${p.id}`;
+        const currentKeySet = new Set(selectedParticipantsRef.current.map(toParticipantKey));
+        const baseKeySet = new Set(baseParticipants.map(toParticipantKey));
+        const listsMatch =
+          currentKeySet.size === baseKeySet.size && [...baseKeySet].every(key => currentKeySet.has(key));
+        if (defaultParticipantsAppliedForRef.current !== sessionKey || !listsMatch) return;
         const enriched = baseParticipants.map((base, i) => {
           const details = detailsList[i];
           if (!details || !Object.keys(details).length) return base;
