@@ -129,19 +129,17 @@ const ParticipantNormalCard = memo(
             </Box>
           )}
           {!collapsed && !isBeingEdited && (
-            <Box onClick={stopPropagation}>
-              <ParticipantActions
-                participant={participant}
-                onEdit={onEdit}
-                onDelete={onDelete}
-                disabledEdit={disabledEdit}
-                disabledDeleteButton={disabledEdit}
-                showButtons={isHovering}
-                showEditButton={showEditButton}
-                hasRemoteMcpLoggedIn={hasRemoteMcpLoggedIn}
-                serverUrl={originalDetails?.settings?.url}
-              />
-            </Box>
+            <ParticipantActions
+              participant={participant}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              disabledEdit={disabledEdit}
+              disabledDeleteButton={disabledEdit}
+              showButtons={isHovering}
+              showEditButton={showEditButton}
+              hasRemoteMcpLoggedIn={hasRemoteMcpLoggedIn}
+              serverUrl={originalDetails?.settings?.url}
+            />
           )}
         </Box>
         {containerInfoRow}
@@ -151,8 +149,6 @@ const ParticipantNormalCard = memo(
 );
 
 ParticipantNormalCard.displayName = 'ParticipantNormalCard';
-
-const stopPropagation = e => e.stopPropagation();
 
 /** @type {MuiSx} */
 export const participantNormalCardStyles = ({ collapsed, isActive, maxWidth, isBeingEdited }) => ({
