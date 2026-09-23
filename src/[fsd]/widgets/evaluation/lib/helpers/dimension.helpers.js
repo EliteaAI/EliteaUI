@@ -298,7 +298,9 @@ export const mapGeneratedDimensionToForm = generated => {
     }
   }
 
-  form.evaluationTarget = { ...NEW_ITEM_EVIDENCE_SCOPE };
+  form.evaluationTarget = generated.evidence_scope
+    ? { ...NEW_ITEM_EVIDENCE_SCOPE, ...generated.evidence_scope }
+    : { ...NEW_ITEM_EVIDENCE_SCOPE };
 
   return form;
 };
