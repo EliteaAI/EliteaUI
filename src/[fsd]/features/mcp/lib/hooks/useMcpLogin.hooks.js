@@ -1,15 +1,14 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 
+import { useAutoVerifyMcpConnection } from './useAutoVerifyMcpConnection.hooks';
 import { useMcpAuthCheck } from './useMcpAuthCheck.hooks';
 import { useMcpAuthModal } from './useMcpAuthModal.hooks';
 import { useMcpTokenChange } from './useMcpTokenChange.hooks';
 
 export const useMcpLogin = ({ values, onSuccess, authConfig, autoVerifyConfiguredHeaders = false }) => {
   const { id, type: toolkitType, settings: { url, client_id, client_secret, scopes } = {} } = values ?? {};
-  const hasConfiguredHeaders = Object.keys(values?.settings?.headers || {}).length > 0;
-  const automaticallyCheckedToolkitRef = useRef(null);
 
   // Check if this is a pre-built MCP type (e.g., mcp_github)
   const isPrebuildMcp = useMemo(() => McpAuthHelpers.isPrebuildMcpType(toolkitType), [toolkitType]);
@@ -43,32 +42,14 @@ export const useMcpLogin = ({ values, onSuccess, authConfig, autoVerifyConfigure
     onSuccess: handleConnectionSuccess,
   });
 
-  useEffect(() => {
-    const toolkitKey = id && url ? `${id}:${url}` : null;
-    if (
-      !autoVerifyConfiguredHeaders ||
-      !toolkitKey ||
-      toolkitType !== 'mcp' ||
-      !hasConfiguredHeaders ||
-      isLoggedIn ||
-      isRunning ||
-      automaticallyCheckedToolkitRef.current === toolkitKey
-    ) {
-      return;
-    }
-
-    automaticallyCheckedToolkitRef.current = toolkitKey;
-    runAuthCheck();
-  }, [
-    autoVerifyConfiguredHeaders,
-    id,
-    url,
-    toolkitType,
-    hasConfiguredHeaders,
+  useAutoVerifyMcpConnection({
+    values,
+    enabled: autoVerifyConfiguredHeaders,
+    authConfig,
     isLoggedIn,
     isRunning,
     runAuthCheck,
-  ]);
+  });
 
   const onLogin = useCallback(
     e => {
@@ -79,7 +60,7 @@ export const useMcpLogin = ({ values, onSuccess, authConfig, autoVerifyConfigure
         authConfig.onLogin(handleMcpAuthRequired);
         return;
       }
-      runAuthCheck('list_tools');
+      runAuthCheck();
     },
     [authConfig, handleMcpAuthRequired, runAuthCheck],
   );

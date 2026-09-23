@@ -1,0 +1,133 @@
+// @vitest-environment jsdom
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { act, renderHook } from '@testing-library/react';
+
+import { useMcpAuthCheck } from '../useMcpAuthCheck.hooks';
+
+const mocks = vi.hoisted(() => ({
+  emit: vi.fn(),
+  subscribe: vi.fn(),
+  unsubscribe: vi.fn(),
+  toastError: vi.fn(),
+  onMessage: null,
+}));
+
+vi.mock('@/common/constants', () => ({
+  SocketMessageType: {
+    McpAuthorizationRequired: 'mcp_authorization_required',
+    AgentToolEnd: 'agent_tool_end',
+    AgentResponse: 'agent_response',
+    AgentMessage: 'agent_message',
+    ToolResponseComplete: 'tool_response_complete',
+    FullMessage: 'full_message',
+    AgentToolError: 'agent_tool_error',
+    Error: 'error',
+    AgentException: 'agent_exception',
+  },
+  sioEvents: { test_mcp_connection: 'test_mcp_connection' },
+}));
+
+vi.mock('@/[fsd]/features/mcp/lib/helpers', () => ({
+  McpAuthHelpers: { getAllTokens: () => ({}) },
+}));
+
+vi.mock('@/hooks/useSelectedProject', () => ({
+  useSelectedProjectId: () => 30,
+}));
+
+vi.mock('@/hooks/useSocket', () => ({
+  useManualSocket: (_, onMessage) => {
+    mocks.onMessage = onMessage;
+    return { emit: mocks.emit, subscribe: mocks.subscribe, unsubscribe: mocks.unsubscribe };
+  },
+}));
+
+vi.mock('@/hooks/useToast', () => ({
+  default: () => ({ toastError: mocks.toastError }),
+}));
+
+const values = { id: 925, type: 'mcp', settings: { url: 'https://example.com/mcp' } };
+
+describe('useMcpAuthCheck silent automatic verification', () => {
+  beforeEach(() => {
+    mocks.emit.mockReset();
+    mocks.subscribe.mockReset();
+    mocks.unsubscribe.mockReset();
+    mocks.toastError.mockReset();
+    mocks.onMessage = null;
+  });
+
+  it('suppresses the OAuth prompt for a silent check', async () => {
+    const onMcpAuthRequired = vi.fn();
+    const { result } = renderHook(() => useMcpAuthCheck({ toolkitId: 925, values, onMcpAuthRequired }));
+
+    await act(async () => result.current.runAuthCheck({ silent: true }));
+    act(() =>
+      mocks.onMessage({
+        type: 'mcp_authorization_required',
+        stream_id: mocks.emit.mock.calls[0][0].stream_id,
+      }),
+    );
+
+    expect(onMcpAuthRequired).not.toHaveBeenCalled();
+    expect(mocks.toastError).not.toHaveBeenCalled();
+
+    act(() =>
+      mocks.onMessage({
+        type: 'error',
+        content: 'late error',
+        stream_id: mocks.emit.mock.calls[0][0].stream_id,
+      }),
+    );
+    expect(mocks.toastError).not.toHaveBeenCalled();
+
+    await act(async () => result.current.runAuthCheck());
+    act(() =>
+      mocks.onMessage({
+        type: 'mcp_authorization_required',
+        stream_id: mocks.emit.mock.calls[1][0].stream_id,
+      }),
+    );
+    expect(onMcpAuthRequired).toHaveBeenCalledTimes(1);
+  });
+
+  it('suppresses an automatic error but reports a manual error', async () => {
+    const { result } = renderHook(() => useMcpAuthCheck({ toolkitId: 925, values }));
+
+    await act(async () => result.current.runAuthCheck({ silent: true }));
+    act(() =>
+      mocks.onMessage({
+        type: 'error',
+        content: 'unauthorized',
+        stream_id: mocks.emit.mock.calls[0][0].stream_id,
+      }),
+    );
+    expect(mocks.toastError).not.toHaveBeenCalled();
+
+    await act(async () => result.current.runAuthCheck());
+    act(() =>
+      mocks.onMessage({
+        type: 'error',
+        content: 'unauthorized',
+        stream_id: mocks.emit.mock.calls[1][0].stream_id,
+      }),
+    );
+    expect(mocks.toastError).toHaveBeenCalledExactlyOnceWith('unauthorized');
+  });
+
+  it('still reports success from a silent check', async () => {
+    const onSuccess = vi.fn();
+    const { result } = renderHook(() => useMcpAuthCheck({ toolkitId: 925, values, onSuccess }));
+
+    await act(async () => result.current.runAuthCheck({ silent: true }));
+    act(() =>
+      mocks.onMessage({
+        type: 'agent_tool_end',
+        stream_id: mocks.emit.mock.calls[0][0].stream_id,
+      }),
+    );
+
+    expect(onSuccess).toHaveBeenCalledTimes(1);
+  });
+});

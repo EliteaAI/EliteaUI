@@ -81,7 +81,7 @@ const DataTable = memo(props => {
 
   const [hoveredRowId, setHoveredRowId] = useState(null);
   const [tablePage, setTablePage] = useState(externalPage || 0);
-  const [mcpTokenVersion, setMcpTokenVersion] = useState(0);
+  const [mcpTokens, setMcpTokens] = useState(() => McpAuthHelpers.loadTokens());
 
   const isCredentials = useMemo(() => String(cardType).toLowerCase().includes('credential'), [cardType]);
   const isToolkits = useMemo(() => String(cardType).toLowerCase().includes('toolkit'), [cardType]);
@@ -91,7 +91,7 @@ const DataTable = memo(props => {
 
   useEffect(() => {
     if (!isMCPs) return;
-    const handleTokenChange = () => setMcpTokenVersion(version => version + 1);
+    const handleTokenChange = () => setMcpTokens(McpAuthHelpers.loadTokens());
     window.addEventListener(McpAuthConstants.MCP_TOKEN_CHANGE_EVENT, handleTokenChange);
     return () => window.removeEventListener(McpAuthConstants.MCP_TOKEN_CHANGE_EVENT, handleTokenChange);
   }, [isMCPs]);
@@ -396,7 +396,9 @@ const DataTable = memo(props => {
       ...row,
       is_pinned: row.is_pinned,
       online:
-        row.type === 'mcp' ? McpAuthHelpers.getAccessToken(row?.settings?.url || '') !== null : row.online,
+        row.type === 'mcp'
+          ? McpAuthHelpers.getAccessTokenFromTokens(mcpTokens, row?.settings?.url || '') !== null
+          : row.online,
       typeLabel:
         row.label || (row.icon_meta && row.icon_meta.alt ? row.icon_meta.alt.replace(' icon', '') : ''),
     }));
@@ -411,7 +413,7 @@ const DataTable = memo(props => {
     return !isToolkits && !isMCPs && !isCredentials
       ? sortedItems.slice(tablePage * rowsPerPage, tablePage * rowsPerPage + rowsPerPage)
       : sortedItems;
-  }, [data, order, orderBy, isToolkits, isMCPs, isCredentials, tablePage, rowsPerPage, mcpTokenVersion]);
+  }, [data, order, orderBy, isToolkits, isMCPs, isCredentials, tablePage, rowsPerPage, mcpTokens]);
 
   useEffect(() => {
     if (pageSizeFromUrl && pageSize != pageSizeFromUrl) {

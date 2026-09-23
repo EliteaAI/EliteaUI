@@ -2,6 +2,7 @@ export const MC_TOKENS_STORAGE_KEY = 'elitea_mcp_tokens_v1';
 export const MCP_CREDENTIALS_STORAGE_KEY = 'elitea_mcp_credentials_v1';
 export const MCP_IGNORED_SERVERS_STORAGE_KEY = 'elitea_mcp_ignored_servers_v1';
 export const MCP_TOKEN_CHANGE_EVENT = 'elitea_mcp_token_change';
+export const MCP_HEADER_CHECKED_STORAGE_KEY = 'elitea_mcp_header_checked_v1';
 export const MCP_LOGOUT_SYNC_STORAGE_KEY = 'elitea_mcp_logout_sync_v1';
 export const MCP_AUTH_FAMILY_STORAGE_KEY = 'elitea_mcp_auth_families_v1';
 export const MCP_TOKEN_SYNC_CHANNEL = 'elitea_mcp_token_sync_v1';
@@ -14,6 +15,7 @@ export const MCP_SESSION_STORAGE_KEYS = [
   MCP_IGNORED_SERVERS_STORAGE_KEY,
   MCP_AUTH_FAMILY_STORAGE_KEY,
   MCP_TOKEN_OWNER_STORAGE_KEY,
+  MCP_HEADER_CHECKED_STORAGE_KEY,
 ];
 
 export { MCP_PREBUILD_PREFIX } from '@/[fsd]/shared/lib/constants/mcp.constants';

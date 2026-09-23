@@ -8,6 +8,7 @@ import { MCP_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { PAT_REQUIRED_ACTION_HINT } from '@/[fsd]/features/mcp/lib/constants';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import {
+  useAutoVerifyMcpConnection,
   useInternalMcpPatStatus,
   useMcpAuthCheck,
   useMcpAuthModal,
@@ -26,7 +27,6 @@ const McpAuthStatus = memo((props = {}) => {
   const { authConfig } = props;
   const { values } = useFormikContext();
   const { id, type: toolkitType, settings: { url, client_id, client_secret, scopes } = {} } = values ?? {};
-  const hasConfiguredHeaders = Object.keys(values?.settings?.headers || {}).length > 0;
   const { values: formValues } = useFormikContext();
   const projectId = useSelectedProjectId();
 
@@ -83,12 +83,21 @@ const McpAuthStatus = memo((props = {}) => {
 
   const { patInvalid } = useInternalMcpPatStatus({ projectId, toolkitType });
 
+  useAutoVerifyMcpConnection({
+    values,
+    authConfig,
+    isLoggedIn: hasLoggedInToMcp,
+    isRunning,
+    patInvalid,
+    runAuthCheck,
+  });
+
   useEffect(() => {
-    const toolkitKey = id ? `${projectId}:${id}:${toolkitType}:${url || ''}` : null;
+    const toolkitKey = id ? `${projectId}:${id}:${toolkitType}` : null;
     const shouldCheckExistingToolkit =
       toolkitKey &&
       !authConfig &&
-      (isPrebuildMcp || (toolkitType === 'mcp' && url && hasConfiguredHeaders)) &&
+      isPrebuildMcp &&
       !hasLoggedInToMcp &&
       !isRunning &&
       !patInvalid &&
@@ -96,17 +105,15 @@ const McpAuthStatus = memo((props = {}) => {
 
     if (!shouldCheckExistingToolkit) return;
 
-    // Recheck saved MCPs that can authenticate without a browser token.
+    // Existing pre-built MCPs still use the interactive OAuth flow when needed.
     automaticallyCheckedToolkitRef.current = toolkitKey;
-    runAuthCheck('list_tools');
+    runAuthCheck();
   }, [
     id,
     projectId,
     toolkitType,
     authConfig,
     isPrebuildMcp,
-    url,
-    hasConfiguredHeaders,
     hasLoggedInToMcp,
     isRunning,
     patInvalid,
@@ -139,7 +146,7 @@ const McpAuthStatus = memo((props = {}) => {
       authConfig.onLogin(handleMcpAuthRequired);
       return;
     }
-    runAuthCheck('list_tools');
+    runAuthCheck();
   }, [authConfig, handleMcpAuthRequired, runAuthCheck]);
 
   const onCloseLogout = useCallback(() => {

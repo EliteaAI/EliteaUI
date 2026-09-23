@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   runAuthCheck: vi.fn(),
   authCheckOptions: null,
   setConnectionVerified: vi.fn(),
+  claimAutomaticHeaderCheck: vi.fn(),
   values: { id: 924, type: 'mcp_Epam Delivery Central', settings: {} },
 }));
 
@@ -33,11 +34,15 @@ vi.mock('@/[fsd]/features/mcp/lib/helpers', () => ({
   McpAuthHelpers: {
     isPrebuildMcpType: type => type?.startsWith('mcp_') && type !== 'mcp',
     setConnectionVerified: mocks.setConnectionVerified,
+    claimAutomaticHeaderCheck: mocks.claimAutomaticHeaderCheck,
     logout: vi.fn(),
   },
 }));
 
-vi.mock('@/[fsd]/features/mcp/lib/hooks', () => ({
+vi.mock('@/[fsd]/features/mcp/lib/hooks', async () => ({
+  useAutoVerifyMcpConnection: (
+    await vi.importActual('@/[fsd]/features/mcp/lib/hooks/useAutoVerifyMcpConnection.hooks')
+  ).useAutoVerifyMcpConnection,
   useInternalMcpPatStatus: () => ({ patInvalid: false }),
   useMcpTokenChange: () => ({ isLoggedIn: false }),
   useMcpAuthModal: () => ({
@@ -90,13 +95,14 @@ describe('McpAuthStatus existing toolkit login', () => {
     mocks.runAuthCheck.mockReset();
     mocks.authCheckOptions = null;
     mocks.setConnectionVerified.mockReset();
+    mocks.claimAutomaticHeaderCheck.mockReset().mockReturnValue(true);
     mocks.values = { id: 924, type: 'mcp_Epam Delivery Central', settings: {} };
   });
 
   it('starts the normal auth flow once for an existing preconfigured MCP', async () => {
     render(<McpAuthStatus />);
 
-    await waitFor(() => expect(mocks.runAuthCheck).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(mocks.runAuthCheck).toHaveBeenCalledExactlyOnceWith());
 
     const message = { type: 'mcp_authorization_required' };
     act(() => mocks.authCheckOptions.onMcpAuthRequired(message));
@@ -113,7 +119,7 @@ describe('McpAuthStatus existing toolkit login', () => {
 
     render(<McpAuthStatus />);
 
-    await waitFor(() => expect(mocks.runAuthCheck).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(mocks.runAuthCheck).toHaveBeenCalledExactlyOnceWith({ silent: true }));
     expect(mocks.authCheckOptions.values).toBe(mocks.values);
     expect(mocks.setConnectionVerified).not.toHaveBeenCalled();
     act(() => mocks.authCheckOptions.onSuccess());
@@ -126,5 +132,18 @@ describe('McpAuthStatus existing toolkit login', () => {
     render(<McpAuthStatus />);
 
     expect(mocks.runAuthCheck).not.toHaveBeenCalled();
+  });
+
+  it('does not bypass an injected login flow for a header MCP', () => {
+    mocks.values = {
+      id: 925,
+      type: 'mcp',
+      settings: { url: 'https://example.com/mcp', headers: { Authorization: 'secret-reference' } },
+    };
+
+    render(<McpAuthStatus authConfig={{ onLogin: vi.fn() }} />);
+
+    expect(mocks.runAuthCheck).not.toHaveBeenCalled();
+    expect(mocks.claimAutomaticHeaderCheck).not.toHaveBeenCalled();
   });
 });

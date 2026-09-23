@@ -428,9 +428,29 @@ export const removeSavedCredentials = (serverUrl, toolkitType) => {
 };
 
 export const getAccessToken = (serverUrl, toolkitType) => {
-  const tokenInfo = getTokenInfo(serverUrl, toolkitType);
+  return getAccessTokenFromTokens(loadTokens(), serverUrl, toolkitType);
+};
+
+export const getAccessTokenFromTokens = (tokens, serverUrl, toolkitType) => {
+  const key = getStorageKey({ serverUrl, toolkitType });
+  const tokenInfo = key ? tokens?.[key] : null;
   if (!tokenInfo || isExpired(tokenInfo)) return null;
   return tokenInfo.access_token || null;
+};
+
+// Reserve a short-lived check before starting it, so remounted cards do not
+// repeatedly probe a server that rejected its configured headers.
+export const claimAutomaticHeaderCheck = (projectId, toolkitId, serverUrl) => {
+  const key = `${projectId}:${toolkitId}:${getStorageKey({ serverUrl })}`;
+  const checks = loadFromStorage(McpAuthConstants.MCP_HEADER_CHECKED_STORAGE_KEY);
+  const now = Date.now();
+  if (Number(checks[key]) > now) return false;
+  Object.entries(checks).forEach(([checkedKey, expiresAt]) => {
+    if (Number(expiresAt) <= now) delete checks[checkedKey];
+  });
+  checks[key] = now + 5 * 60 * 1000;
+  saveToStorage(McpAuthConstants.MCP_HEADER_CHECKED_STORAGE_KEY, checks);
+  return true;
 };
 
 export const getRefreshToken = (serverUrl, toolkitType) => {

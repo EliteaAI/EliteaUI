@@ -8,6 +8,7 @@ import { useMcpLogin } from '../useMcpLogin.hooks';
 const mocks = vi.hoisted(() => ({
   runAuthCheck: vi.fn(),
   setConnectionVerified: vi.fn(),
+  claimAutomaticHeaderCheck: vi.fn(),
   authCheckOptions: null,
   isLoggedIn: false,
 }));
@@ -16,11 +17,16 @@ vi.mock('@/[fsd]/features/mcp/lib/helpers', () => ({
   McpAuthHelpers: {
     isPrebuildMcpType: type => type?.startsWith('mcp_'),
     setConnectionVerified: mocks.setConnectionVerified,
+    claimAutomaticHeaderCheck: mocks.claimAutomaticHeaderCheck,
   },
 }));
 
 vi.mock('../useMcpTokenChange.hooks', () => ({
   useMcpTokenChange: () => ({ isLoggedIn: mocks.isLoggedIn }),
+}));
+
+vi.mock('@/hooks/useSelectedProject', () => ({
+  useSelectedProjectId: () => 30,
 }));
 
 vi.mock('../useMcpAuthModal.hooks', () => ({
@@ -44,6 +50,7 @@ describe('useMcpLogin configured header verification', () => {
   beforeEach(() => {
     mocks.runAuthCheck.mockReset();
     mocks.setConnectionVerified.mockReset();
+    mocks.claimAutomaticHeaderCheck.mockReset().mockReturnValue(true);
     mocks.authCheckOptions = null;
     mocks.isLoggedIn = false;
   });
@@ -53,7 +60,7 @@ describe('useMcpLogin configured header verification', () => {
       useMcpLogin({ values: remoteMcp, autoVerifyConfiguredHeaders: true }),
     );
 
-    expect(mocks.runAuthCheck).toHaveBeenCalledTimes(1);
+    expect(mocks.runAuthCheck).toHaveBeenCalledExactlyOnceWith({ silent: true });
     expect(mocks.setConnectionVerified).not.toHaveBeenCalled();
 
     rerender();
@@ -75,5 +82,29 @@ describe('useMcpLogin configured header verification', () => {
     mocks.isLoggedIn = true;
     renderHook(() => useMcpLogin({ values: remoteMcp, autoVerifyConfiguredHeaders: true }));
     expect(mocks.runAuthCheck).not.toHaveBeenCalled();
+  });
+
+  it('leaves injected login flows in control', () => {
+    renderHook(() =>
+      useMcpLogin({
+        values: remoteMcp,
+        authConfig: { onLogin: vi.fn() },
+        autoVerifyConfiguredHeaders: true,
+      }),
+    );
+
+    expect(mocks.runAuthCheck).not.toHaveBeenCalled();
+    expect(mocks.claimAutomaticHeaderCheck).not.toHaveBeenCalled();
+  });
+
+  it('does not repeat a failed automatic check when the card remounts', () => {
+    mocks.claimAutomaticHeaderCheck.mockReturnValueOnce(true).mockReturnValue(false);
+
+    const firstCard = renderHook(() => useMcpLogin({ values: remoteMcp, autoVerifyConfiguredHeaders: true }));
+    firstCard.unmount();
+    renderHook(() => useMcpLogin({ values: remoteMcp, autoVerifyConfiguredHeaders: true }));
+
+    expect(mocks.runAuthCheck).toHaveBeenCalledExactlyOnceWith({ silent: true });
+    expect(mocks.claimAutomaticHeaderCheck).toHaveBeenCalledTimes(2);
   });
 });
