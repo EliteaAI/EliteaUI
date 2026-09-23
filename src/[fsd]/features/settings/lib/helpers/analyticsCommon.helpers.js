@@ -26,11 +26,17 @@ export const fmtDuration = ms => {
 // `sx` value, so it lives here rather than inside a component `styles` object.
 export const axisTick = (stroke, fontSize = 11) => ({ fill: stroke, fontSize });
 
-export const fmtCost = usd => {
+// Below this, a cost is shown as a bound rather than rounded to a misleading $0.00
+const MIN_SHOWN_COST = 0.00001;
+
+// `belowResolution`: backend saw priced tokens whose cost was too small to store (reads as 0)
+export const fmtCost = (usd, belowResolution = false) => {
   if (usd == null || !Number.isFinite(usd)) return '-';
-  if (usd === 0) return '$0.00';
+  if (usd === 0) return belowResolution ? `< $${MIN_SHOWN_COST}` : '$0.00';
   const abs = Math.abs(usd);
   const sign = usd < 0 ? '-' : '';
+  if (abs < MIN_SHOWN_COST) return `${sign}< $${MIN_SHOWN_COST}`;
+  if (abs < 0.0001) return `${sign}$${abs.toFixed(5)}`;
   if (abs < 0.01) return `${sign}$${(Math.ceil(abs * 10_000) / 10_000).toFixed(4)}`;
   if (abs < 1) return `${sign}$${abs.toFixed(4)}`;
   if (abs < 1000) return `${sign}$${abs.toFixed(2)}`;

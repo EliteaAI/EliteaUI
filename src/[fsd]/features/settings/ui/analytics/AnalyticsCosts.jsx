@@ -33,6 +33,7 @@ const AnalyticsCosts = memo(props => {
       cache_read_cost: m.cache_read_cost,
       cache_creation_cost: m.cache_creation_cost,
       share: totalCost > 0 ? (m.total_cost / totalCost) * 100 : null,
+      below: m.below_resolution || {},
     }));
   }, [data?.by_model]);
 
@@ -47,6 +48,7 @@ const AnalyticsCosts = memo(props => {
       cache_read_cost: a.cache_read_cost,
       cache_creation_cost: a.cache_creation_cost,
       share: totalCost > 0 ? (a.total_cost / totalCost) * 100 : null,
+      below: a.below_resolution || {},
     }));
   }, [data?.by_agent]);
 
@@ -61,6 +63,7 @@ const AnalyticsCosts = memo(props => {
       cache_read_cost: u.cache_read_cost,
       cache_creation_cost: u.cache_creation_cost,
       share: totalCost > 0 ? (u.total_cost / totalCost) * 100 : null,
+      below: u.below_resolution || {},
     }));
   }, [data?.by_user]);
 
@@ -106,31 +109,43 @@ const AnalyticsCosts = memo(props => {
       <Box sx={styles.kpiRow}>
         <KPICard
           label="TOTAL COST"
-          value={AnalyticCommonHelpers.fmtCost(kpis.total_cost)}
+          value={AnalyticCommonHelpers.fmtCost(kpis.total_cost, kpis.below_resolution?.total_cost)}
           subtitle="estimated USD cost"
           tooltip={AnalyticsCommonConstants.TOOLTIP_TEXTS.costs.TOTAL_COST}
         />
         <KPICard
           label="INPUT TOKEN COST"
-          value={AnalyticCommonHelpers.fmtCost(kpis.total_input_cost)}
+          value={AnalyticCommonHelpers.fmtCost(
+            kpis.total_input_cost,
+            kpis.below_resolution?.total_input_cost,
+          )}
           subtitle="estimated USD cost"
           tooltip={AnalyticsCommonConstants.TOOLTIP_TEXTS.costs.INPUT_TOKEN_COST}
         />
         <KPICard
           label="OUTPUT TOKEN COST"
-          value={AnalyticCommonHelpers.fmtCost(kpis.total_output_cost)}
+          value={AnalyticCommonHelpers.fmtCost(
+            kpis.total_output_cost,
+            kpis.below_resolution?.total_output_cost,
+          )}
           subtitle="estimated USD cost"
           tooltip={AnalyticsCommonConstants.TOOLTIP_TEXTS.costs.OUTPUT_TOKEN_COST}
         />
         <KPICard
           label="CACHE READ COST"
-          value={AnalyticCommonHelpers.fmtCost(kpis.total_cache_read_cost)}
+          value={AnalyticCommonHelpers.fmtCost(
+            kpis.total_cache_read_cost,
+            kpis.below_resolution?.total_cache_read_cost,
+          )}
           subtitle="estimated USD cost"
           tooltip={AnalyticsCommonConstants.TOOLTIP_TEXTS.costs.CACHE_READ_COST}
         />
         <KPICard
           label="CACHE WRITE COST"
-          value={AnalyticCommonHelpers.fmtCost(kpis.total_cache_creation_cost)}
+          value={AnalyticCommonHelpers.fmtCost(
+            kpis.total_cache_creation_cost,
+            kpis.below_resolution?.total_cache_creation_cost,
+          )}
           subtitle="estimated USD cost"
           tooltip={AnalyticsCommonConstants.TOOLTIP_TEXTS.costs.CACHE_WRITE_COST}
         />
@@ -239,19 +254,19 @@ const AnalyticsCosts = memo(props => {
                   {u.name}
                 </Typography>
                 <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
-                  {AnalyticCommonHelpers.fmtCost(u.cost)}
+                  {AnalyticCommonHelpers.fmtCost(u.cost, u.below.total_cost)}
                 </Typography>
                 <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
-                  {AnalyticCommonHelpers.fmtCost(u.input_cost)}
+                  {AnalyticCommonHelpers.fmtCost(u.input_cost, u.below.input_cost)}
                 </Typography>
                 <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
-                  {AnalyticCommonHelpers.fmtCost(u.output_cost)}
+                  {AnalyticCommonHelpers.fmtCost(u.output_cost, u.below.output_cost)}
                 </Typography>
                 <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
-                  {AnalyticCommonHelpers.fmtCost(u.cache_read_cost)}
+                  {AnalyticCommonHelpers.fmtCost(u.cache_read_cost, u.below.cache_read_cost)}
                 </Typography>
                 <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
-                  {AnalyticCommonHelpers.fmtCost(u.cache_creation_cost)}
+                  {AnalyticCommonHelpers.fmtCost(u.cache_creation_cost, u.below.cache_creation_cost)}
                 </Typography>
                 <Typography sx={[styles.tableCellValue, styles.flexOne]}>
                   {u.share != null ? `${u.share.toFixed(1)}%` : '—'}
@@ -300,19 +315,19 @@ const AnalyticsCosts = memo(props => {
                   {m.name}
                 </Typography>
                 <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
-                  {AnalyticCommonHelpers.fmtCost(m.cost)}
+                  {AnalyticCommonHelpers.fmtCost(m.cost, m.below.total_cost)}
                 </Typography>
                 <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
-                  {AnalyticCommonHelpers.fmtCost(m.input_cost)}
+                  {AnalyticCommonHelpers.fmtCost(m.input_cost, m.below.input_cost)}
                 </Typography>
                 <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
-                  {AnalyticCommonHelpers.fmtCost(m.output_cost)}
+                  {AnalyticCommonHelpers.fmtCost(m.output_cost, m.below.output_cost)}
                 </Typography>
                 <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
-                  {AnalyticCommonHelpers.fmtCost(m.cache_read_cost)}
+                  {AnalyticCommonHelpers.fmtCost(m.cache_read_cost, m.below.cache_read_cost)}
                 </Typography>
                 <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
-                  {AnalyticCommonHelpers.fmtCost(m.cache_creation_cost)}
+                  {AnalyticCommonHelpers.fmtCost(m.cache_creation_cost, m.below.cache_creation_cost)}
                 </Typography>
                 <Typography sx={[styles.tableCellValue, styles.flexOne]}>
                   {m.share != null ? `${m.share.toFixed(1)}%` : '—'}
@@ -361,19 +376,19 @@ const AnalyticsCosts = memo(props => {
                   {a.name}
                 </Typography>
                 <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
-                  {AnalyticCommonHelpers.fmtCost(a.cost)}
+                  {AnalyticCommonHelpers.fmtCost(a.cost, a.below.total_cost)}
                 </Typography>
                 <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
-                  {AnalyticCommonHelpers.fmtCost(a.input_cost)}
+                  {AnalyticCommonHelpers.fmtCost(a.input_cost, a.below.input_cost)}
                 </Typography>
                 <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
-                  {AnalyticCommonHelpers.fmtCost(a.output_cost)}
+                  {AnalyticCommonHelpers.fmtCost(a.output_cost, a.below.output_cost)}
                 </Typography>
                 <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
-                  {AnalyticCommonHelpers.fmtCost(a.cache_read_cost)}
+                  {AnalyticCommonHelpers.fmtCost(a.cache_read_cost, a.below.cache_read_cost)}
                 </Typography>
                 <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
-                  {AnalyticCommonHelpers.fmtCost(a.cache_creation_cost)}
+                  {AnalyticCommonHelpers.fmtCost(a.cache_creation_cost, a.below.cache_creation_cost)}
                 </Typography>
                 <Typography sx={[styles.tableCellValue, styles.flexOne]}>
                   {a.share != null ? `${a.share.toFixed(1)}%` : '—'}
