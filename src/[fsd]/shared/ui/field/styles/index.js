@@ -1,3 +1,4 @@
+/** @type {MuiSx} */
 export const includeFieldWrapperOverlapStyles = disabled =>
   disabled
     ? {

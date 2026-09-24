@@ -49,6 +49,7 @@ export const ToolActionsItems = memo(props => {
     disabled,
     styles,
   } = props;
+  const itemStyles = toolActionsItemsStyles();
 
   const hasGroups = toolGroups && Object.keys(toolGroups).length > 0;
   const query = searchTerm.trim().toLowerCase();
@@ -131,9 +132,8 @@ export const ToolActionsItems = memo(props => {
     const visibleOptions = toolsOptions.filter(option => matchesSearch(option, query));
     return (
       <Stack
-        sx={styles.stack}
+        sx={[itemStyles.wrap, styles.stack]}
         useFlexGap
-        flexWrap="wrap"
         direction="row"
         spacing={1}
       >
@@ -153,8 +153,8 @@ export const ToolActionsItems = memo(props => {
     >
       {warningTools.length > 0 && (
         <Stack
+          sx={itemStyles.wrap}
           useFlexGap
-          flexWrap="wrap"
           direction="row"
           spacing={1}
         >
@@ -181,8 +181,8 @@ export const ToolActionsItems = memo(props => {
               disabled={disabled}
             />
             <Stack
+              sx={itemStyles.wrap}
               useFlexGap
-              flexWrap="wrap"
               direction="row"
               spacing={1}
             >
@@ -195,5 +195,12 @@ export const ToolActionsItems = memo(props => {
 });
 
 ToolActionsItems.displayName = 'ToolActionsItems';
+
+/** @type {MuiSx} */
+const toolActionsItemsStyles = () => ({
+  wrap: {
+    flexWrap: 'wrap',
+  },
+});
 
 export default ToolActionsItems;

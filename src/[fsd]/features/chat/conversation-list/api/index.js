@@ -7,3 +7,4 @@ export {
   useDeleteFolderMutation,
   useFolderPinUpdateMutation,
 } from './conversationListApi';
+export { useGetSharedConversationQuery, useUnlockSharedConversationMutation } from './sharedLinksApi';

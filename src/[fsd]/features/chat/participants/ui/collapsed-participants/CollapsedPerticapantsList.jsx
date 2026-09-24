@@ -272,10 +272,7 @@ const CollapsedPerticapantsList = memo(props => {
 
 CollapsedPerticapantsList.displayName = 'CollapsedPerticapantsList';
 
-/**
- *
- * @type MuiSx
- */
+/** @type {MuiSx} */
 const collapsedPerticapantsListStyles = () => ({
   root: {
     width: '2.5rem',
@@ -306,8 +303,8 @@ const collapsedPerticapantsListStyles = () => ({
       '&::after': {
         content: `"${count}"`,
         position: 'absolute',
-        top: '-9px',
-        right: '-9px',
+        top: '-0.5625rem',
+        right: '-0.5625rem',
         minWidth: '1.25rem',
         height: '1.25rem',
         borderRadius: '50%',

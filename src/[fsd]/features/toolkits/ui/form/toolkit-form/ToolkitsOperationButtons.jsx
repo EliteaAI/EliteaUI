@@ -29,8 +29,8 @@ const getToolkitName = (values, toolSchema) => {
   return toolkitNameKey ? values?.settings?.[toolkitNameKey] : values?.name;
 };
 
-const ToolkitsOperationButtons = memo(
-  ({
+const ToolkitsOperationButtons = memo(props => {
+  const {
     isAdding,
     hasErrors = false,
     hasNotSavedToolConfiguration = false,
@@ -38,279 +38,275 @@ const ToolkitsOperationButtons = memo(
     onCreateConfiguration,
     onRevertCredentials,
     toolSchema,
-  }) => {
-    const validateReasonRef = useRef('');
-    const revertCredentialsRef = useRef(onRevertCredentials);
-    const { toastError, toastSuccess } = useToast();
-    const { values, initialValues, resetForm, setValues } = useFormikContext();
-    const projectId = useSelectedProjectId();
-    const dispatch = useDispatch();
-    const [openAlert, setOpenAlert] = useState(false);
+  } = props;
 
-    // Keep revertCredentialsRef updated
-    useEffect(() => {
-      revertCredentialsRef.current = onRevertCredentials;
-    }, [onRevertCredentials]);
+  const validateReasonRef = useRef('');
+  const revertCredentialsRef = useRef(onRevertCredentials);
+  const { toastError, toastSuccess } = useToast();
+  const { values, initialValues, resetForm, setValues } = useFormikContext();
+  const projectId = useSelectedProjectId();
+  const dispatch = useDispatch();
+  const [openAlert, setOpenAlert] = useState(false);
 
-    // Use credential warning hook
-    const { showWarning, checkBeforeSave, handlers } = useCredentialWarning({
-      isCreating: isAdding,
-      editToolDetail: values,
-      originalDetails: initialValues,
-      revertCredentialsRef,
-    });
+  // Keep revertCredentialsRef updated
+  useEffect(() => {
+    revertCredentialsRef.current = onRevertCredentials;
+  }, [onRevertCredentials]);
 
-    const [onSave, { isError: isSaveError, isSuccess: isSaveSuccess, error: saveError }] =
-      useToolkitEditMutation();
+  // Use credential warning hook
+  const { showWarning, checkBeforeSave, handlers } = useCredentialWarning({
+    isCreating: isAdding,
+    editToolDetail: values,
+    originalDetails: initialValues,
+    revertCredentialsRef,
+  });
 
-    const onValidateFailure = useCallback(() => {
-      if (validateReasonRef.current) {
-        eventEmitter.emit(ToolEvents.ResetValidateEvent, validateReasonRef.current);
-        validateReasonRef.current = '';
-      }
-    }, []);
+  const [onSave, { isError: isSaveError, isSuccess: isSaveSuccess, error: saveError }] =
+    useToolkitEditMutation();
 
-    // Centralized save logic
-    const saveToolkit = useCallback(async () => {
-      try {
-        const toolkitName = getToolkitName(values, toolSchema);
-        const data = await onSave({
-          projectId,
-          toolId: values?.id,
-          ...values,
-          name: toolkitName,
-        }).unwrap();
+  const onValidateFailure = useCallback(() => {
+    if (validateReasonRef.current) {
+      eventEmitter.emit(ToolEvents.ResetValidateEvent, validateReasonRef.current);
+      validateReasonRef.current = '';
+    }
+  }, []);
 
-        await setValues(data?.data || values, false);
-        dispatch(
-          eliteaApi.util.updateQueryData(
-            'toolkitsDetails',
-            { projectId, toolkitId: values?.id + '' },
-            () => ({
-              ...(data || {}),
-            }),
-          ),
-        );
-      } catch (error) {
-        toastError(buildErrorMessage(error) || 'An error occurred while saving. Please try again.');
-        throw error;
-      }
-    }, [values, toolSchema, projectId, onSave, setValues, dispatch, toastError]);
+  // Centralized save logic
+  const saveToolkit = useCallback(async () => {
+    try {
+      const toolkitName = getToolkitName(values, toolSchema);
+      const data = await onSave({
+        projectId,
+        toolId: values?.id,
+        ...values,
+        name: toolkitName,
+      }).unwrap();
 
-    const onCloseAlert = useCallback(() => {
-      setOpenAlert(false);
-      onValidateFailure();
-    }, [onValidateFailure]);
+      await setValues(data?.data || values, false);
+      dispatch(
+        eliteaApi.util.updateQueryData('toolkitsDetails', { projectId, toolkitId: values?.id + '' }, () => ({
+          ...(data || {}),
+        })),
+      );
+    } catch (error) {
+      toastError(buildErrorMessage(error) || 'An error occurred while saving. Please try again.');
+      throw error;
+    }
+  }, [values, toolSchema, projectId, onSave, setValues, dispatch, toastError]);
 
-    const handleDiscard = useCallback(() => {
-      setOpenAlert(false);
-      onValidateFailure();
-    }, [onValidateFailure]);
+  const onCloseAlert = useCallback(() => {
+    setOpenAlert(false);
+    onValidateFailure();
+  }, [onValidateFailure]);
 
-    const handleCancel = useCallback(() => {
-      setOpenAlert(false);
-      onValidateFailure();
-      resetForm();
-    }, [onValidateFailure, resetForm]);
+  const handleDiscard = useCallback(() => {
+    setOpenAlert(false);
+    onValidateFailure();
+  }, [onValidateFailure]);
 
-    /**
-     * Creates Toolkit without configurable properties
-     *
-     * Event: ToolEvents.ToolkitsCreateToolkit
-     */
-    const handleCreateToolkit = useCallback(
-      async reason => {
-        validateReasonRef.current = reason;
+  const handleCancel = useCallback(() => {
+    setOpenAlert(false);
+    onValidateFailure();
+    resetForm();
+  }, [onValidateFailure, resetForm]);
 
-        if (hasErrors || hasNotSavedToolConfiguration) {
-          setShowValidation(true);
-          onValidateFailure();
-          return;
-        }
-        eventEmitter.emit(ToolEvents.SaveEvent, validateReasonRef.current);
-      },
-      [hasErrors, hasNotSavedToolConfiguration, onValidateFailure, setShowValidation],
-    );
+  /**
+   * Creates Toolkit without configurable properties
+   *
+   * Event: ToolEvents.ToolkitsCreateToolkit
+   */
+  const handleCreateToolkit = useCallback(
+    async reason => {
+      validateReasonRef.current = reason;
 
-    /**
-     * Creates Toolkit with configurable properties
-     *
-     * Event: ToolEvents.ToolkitsCreateToolkitWithConfiguration
-     *
-     * Step 1: Create configuration (credentials) or select from list
-     * Step 2: Create (save) the toolkit
-     */
-    const handleCreateToolkitWithConfiguration = useCallback(
-      async reason => {
-        setOpenAlert(false);
-        validateReasonRef.current = reason;
-
-        if (hasErrors) {
-          setShowValidation(true);
-          onValidateFailure();
-          return;
-        }
-
-        if (hasNotSavedToolConfiguration) {
-          const success = await onCreateConfiguration();
-          if (!success) {
-            onValidateFailure();
-          }
-          return;
-        }
-
-        eventEmitter.emit(ToolEvents.SaveEvent, validateReasonRef.current);
-      },
-      [hasErrors, hasNotSavedToolConfiguration, onValidateFailure, onCreateConfiguration, setShowValidation],
-    );
-
-    /**
-     * Updates Toolkit without configurable properties
-     *
-     * Event: ToolEvents.ToolkitsUpdateToolkit
-     */
-    const handleUpdateToolkit = useCallback(async () => {
       if (hasErrors || hasNotSavedToolConfiguration) {
         setShowValidation(true);
         onValidateFailure();
         return;
       }
+      eventEmitter.emit(ToolEvents.SaveEvent, validateReasonRef.current);
+    },
+    [hasErrors, hasNotSavedToolConfiguration, onValidateFailure, setShowValidation],
+  );
 
-      const performSave = async () => {
-        try {
-          await saveToolkit();
-        } catch {
-          // Error already handled in saveToolkit
+  /**
+   * Creates Toolkit with configurable properties
+   *
+   * Event: ToolEvents.ToolkitsCreateToolkitWithConfiguration
+   *
+   * Step 1: Create configuration (credentials) or select from list
+   * Step 2: Create (save) the toolkit
+   */
+  const handleCreateToolkitWithConfiguration = useCallback(
+    async reason => {
+      setOpenAlert(false);
+      validateReasonRef.current = reason;
+
+      if (hasErrors) {
+        setShowValidation(true);
+        onValidateFailure();
+        return;
+      }
+
+      if (hasNotSavedToolConfiguration) {
+        const success = await onCreateConfiguration();
+        if (!success) {
+          onValidateFailure();
         }
-      };
-
-      // Use hook's checkBeforeSave to handle credential warning
-      if (checkBeforeSave(performSave)) {
-        await performSave();
+        return;
       }
-    }, [
-      hasErrors,
-      hasNotSavedToolConfiguration,
-      saveToolkit,
-      onValidateFailure,
-      setShowValidation,
-      checkBeforeSave,
-    ]);
 
-    useEffect(() => {
-      if (isSaveError) {
-        toastError(buildErrorMessage(saveError));
-      } else if (isSaveSuccess) {
-        toastSuccess('Updated the toolkit successfully');
+      eventEmitter.emit(ToolEvents.SaveEvent, validateReasonRef.current);
+    },
+    [hasErrors, hasNotSavedToolConfiguration, onValidateFailure, onCreateConfiguration, setShowValidation],
+  );
+
+  /**
+   * Updates Toolkit without configurable properties
+   *
+   * Event: ToolEvents.ToolkitsUpdateToolkit
+   */
+  const handleUpdateToolkit = useCallback(async () => {
+    if (hasErrors || hasNotSavedToolConfiguration) {
+      setShowValidation(true);
+      onValidateFailure();
+      return;
+    }
+
+    const performSave = async () => {
+      try {
+        await saveToolkit();
+      } catch {
+        // Error already handled in saveToolkit
       }
-    }, [saveError, isSaveError, isSaveSuccess, toastError, toastSuccess]);
+    };
 
-    const onValidateEvent = useCallback(reasonFor => {
-      validateReasonRef.current = reasonFor;
-    }, []);
+    // Use hook's checkBeforeSave to handle credential warning
+    if (checkBeforeSave(performSave)) {
+      await performSave();
+    }
+  }, [
+    hasErrors,
+    hasNotSavedToolConfiguration,
+    saveToolkit,
+    onValidateFailure,
+    setShowValidation,
+    checkBeforeSave,
+  ]);
 
-    // Consolidated event listeners
-    useEffect(() => {
-      const eventHandlers = {
-        [ToolEvents.ValidateToolEvent]: onValidateEvent,
-        [ToolEvents.ToolkitsCreateToolkit]: handleCreateToolkit,
-        [ToolEvents.ToolkitsCreateToolkitWithConfiguration]: handleCreateToolkitWithConfiguration,
-        [ToolEvents.ToolkitsUpdateToolkit]: handleUpdateToolkit,
-      };
+  useEffect(() => {
+    if (isSaveError) {
+      toastError(buildErrorMessage(saveError));
+    } else if (isSaveSuccess) {
+      toastSuccess('Updated the toolkit successfully');
+    }
+  }, [saveError, isSaveError, isSaveSuccess, toastError, toastSuccess]);
 
+  const onValidateEvent = useCallback(reasonFor => {
+    validateReasonRef.current = reasonFor;
+  }, []);
+
+  // Consolidated event listeners
+  useEffect(() => {
+    const eventHandlers = {
+      [ToolEvents.ValidateToolEvent]: onValidateEvent,
+      [ToolEvents.ToolkitsCreateToolkit]: handleCreateToolkit,
+      [ToolEvents.ToolkitsCreateToolkitWithConfiguration]: handleCreateToolkitWithConfiguration,
+      [ToolEvents.ToolkitsUpdateToolkit]: handleUpdateToolkit,
+    };
+
+    Object.entries(eventHandlers).forEach(([event, handler]) => {
+      eventEmitter.on(event, handler);
+    });
+
+    return () => {
       Object.entries(eventHandlers).forEach(([event, handler]) => {
-        eventEmitter.on(event, handler);
+        eventEmitter.off(event, handler);
       });
+    };
+  }, [onValidateEvent, handleCreateToolkit, handleCreateToolkitWithConfiguration, handleUpdateToolkit]);
 
-      return () => {
-        Object.entries(eventHandlers).forEach(([event, handler]) => {
-          eventEmitter.off(event, handler);
-        });
-      };
-    }, [onValidateEvent, handleCreateToolkit, handleCreateToolkitWithConfiguration, handleUpdateToolkit]);
-
-    return (
-      <>
-        <StyledDialog
-          open={openAlert}
-          onClose={onCloseAlert}
-          aria-labelledby="alert-dialog-title"
-          aria-describedby="alert-dialog-description"
-        >
-          <DialogTitle id="alert-dialog-title">
-            <Typography
-              color={'text.secondary'}
-              variant="headingSmall"
-            >
-              Some fields have missing or invalid data!
-            </Typography>
-          </DialogTitle>
-          <DialogContent>
-            <StyledDialogContentText id="alert-dialog-description">
-              <Typography variant="labelMedium">Choose the action to proceed.</Typography>
-            </StyledDialogContentText>
-          </DialogContent>
-          <StyledDialogActions>
-            {hasNotSavedToolConfiguration ? (
-              <>
-                <Button.BaseBtn
-                  color="alarm"
-                  variant="elitea"
-                  onClick={handleDiscard}
-                >
-                  <Typography variant="labelSmall">
-                    {isAdding ? 'Delete toolkit' : 'Discard changes'}
-                  </Typography>
-                </Button.BaseBtn>
-                <Button.BaseBtn
-                  color="secondary"
-                  variant="elitea"
-                  onClick={handleCancel}
-                >
-                  <Typography variant="labelSmall">Cancel</Typography>
-                </Button.BaseBtn>
-                <Button.BaseBtn
-                  color="primary"
-                  variant="elitea"
-                  onClick={handleCreateToolkitWithConfiguration}
-                  autoFocus
-                >
-                  <Typography variant="labelSmall">Save</Typography>
-                </Button.BaseBtn>
-              </>
-            ) : (
-              <>
-                <Button.BaseBtn
-                  color="alarm"
-                  variant="elitea"
-                  onClick={handleDiscard}
-                >
-                  <Typography variant="labelSmall">
-                    {isAdding ? 'Delete toolkit' : 'Discard changes'}
-                  </Typography>
-                </Button.BaseBtn>
-                <Button.BaseBtn
-                  color="primary"
-                  variant="elitea"
-                  onClick={onCloseAlert}
-                  autoFocus
-                >
-                  <Typography variant="labelSmall">Continue editing</Typography>
-                </Button.BaseBtn>
-              </>
-            )}
-          </StyledDialogActions>
-        </StyledDialog>
-        <CredentialWarningModal
-          open={showWarning}
-          onConfirm={handlers.onConfirm}
-          onCancel={handlers.onCancel}
-          onClose={handlers.onClose}
-        />
-      </>
-    );
-  },
-);
+  return (
+    <>
+      <StyledDialog
+        open={openAlert}
+        onClose={onCloseAlert}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">
+          <Typography
+            color={'text.secondary'}
+            variant="headingSmall"
+          >
+            Some fields have missing or invalid data!
+          </Typography>
+        </DialogTitle>
+        <DialogContent>
+          <StyledDialogContentText id="alert-dialog-description">
+            <Typography variant="labelMedium">Choose the action to proceed.</Typography>
+          </StyledDialogContentText>
+        </DialogContent>
+        <StyledDialogActions>
+          {hasNotSavedToolConfiguration ? (
+            <>
+              <Button.BaseBtn
+                color="alarm"
+                variant="elitea"
+                onClick={handleDiscard}
+              >
+                <Typography variant="labelSmall">
+                  {isAdding ? 'Delete toolkit' : 'Discard changes'}
+                </Typography>
+              </Button.BaseBtn>
+              <Button.BaseBtn
+                color="secondary"
+                variant="elitea"
+                onClick={handleCancel}
+              >
+                <Typography variant="labelSmall">Cancel</Typography>
+              </Button.BaseBtn>
+              <Button.BaseBtn
+                color="primary"
+                variant="elitea"
+                onClick={handleCreateToolkitWithConfiguration}
+                autoFocus
+              >
+                <Typography variant="labelSmall">Save</Typography>
+              </Button.BaseBtn>
+            </>
+          ) : (
+            <>
+              <Button.BaseBtn
+                color="alarm"
+                variant="elitea"
+                onClick={handleDiscard}
+              >
+                <Typography variant="labelSmall">
+                  {isAdding ? 'Delete toolkit' : 'Discard changes'}
+                </Typography>
+              </Button.BaseBtn>
+              <Button.BaseBtn
+                color="primary"
+                variant="elitea"
+                onClick={onCloseAlert}
+                autoFocus
+              >
+                <Typography variant="labelSmall">Continue editing</Typography>
+              </Button.BaseBtn>
+            </>
+          )}
+        </StyledDialogActions>
+      </StyledDialog>
+      <CredentialWarningModal
+        open={showWarning}
+        onConfirm={handlers.onConfirm}
+        onCancel={handlers.onCancel}
+        onClose={handlers.onClose}
+      />
+    </>
+  );
+});
 
 ToolkitsOperationButtons.displayName = 'ToolkitsOperationButtons';
 

@@ -6,7 +6,7 @@ import { Box } from '@mui/material';
 
 import { RunHistoryContainer } from '@/[fsd]/entities/run-history/ui';
 import { ChatMessageList } from '@/[fsd]/features/chat';
-import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
+import { DrawerPageHeader } from '@/[fsd]/features/settings/ui/drawer-page';
 import { ToolkitsHelpers } from '@/[fsd]/features/toolkits';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import Breadcrumbs from '@/[fsd]/shared/ui/breadcrumbs';
@@ -21,7 +21,7 @@ const RunHistoryPage = memo(props => {
   const navigate = useNavigate();
   const { search } = useLocation();
   const projectId = useSelectedProjectId();
-  const styles = getStyles();
+  const styles = runHistoryPageStyles();
 
   const { data } = useApplicationDetailsQuery(
     { projectId, applicationId: agentId },
@@ -66,7 +66,7 @@ const RunHistoryPage = memo(props => {
 RunHistoryPage.displayName = 'RunHistoryPage';
 
 /** @type {MuiSx} */
-const getStyles = () => ({
+const runHistoryPageStyles = () => ({
   wrapper: {
     display: 'flex',
     flexDirection: 'column',

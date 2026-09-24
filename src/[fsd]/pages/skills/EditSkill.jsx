@@ -207,7 +207,12 @@ const EditSkill = memo(() => {
           panelStyle={styles.tabPanel}
           tabsSX={styles.tabContainer}
           leftTabbarSectionSX={styles.leftTabbarSection}
-          leftPart={<BreadcrumbsOrTitle title={data?.name || 'Edit Skill'} />}
+          leftPart={
+            <BreadcrumbsOrTitle
+              title={data?.name || 'Edit Skill'}
+              entityName={data?.name}
+            />
+          }
           tabs={[
             {
               tabBarItems: isFetching ? null : (
@@ -240,7 +245,10 @@ const EditSkill = memo(() => {
                   <CircularProgress />
                 </Box>
               ) : (
-                <Form style={{ height: '100%' }}>
+                <Box
+                  component={Form}
+                  sx={styles.form}
+                >
                   <DirtyDetector setDirty={setDirty} />
                   <StyledGridContainer
                     sx={styles.gridContainer}
@@ -279,7 +287,7 @@ const EditSkill = memo(() => {
                       />
                     </RightGridItem>
                   </StyledGridContainer>
-                </Form>
+                </Box>
               ),
             },
           ]}
@@ -317,6 +325,9 @@ EditSkill.displayName = 'EditSkill';
 
 /** @type {MuiSx} */
 const editSkillStyles = () => ({
+  form: {
+    height: '100%',
+  },
   tabContainer: {
     '& .MuiTabs-indicator': {
       display: 'none !important',

@@ -24,7 +24,7 @@ import FunctionIcon from '@/assets/vector-icon.svg?react';
 export const getNodeColor = (nodeType, theme) => {
   const nodeColors = theme?.palette?.components?.flowEditor?.nodeColors;
 
-  return nodeColors?.[nodeType] || nodeColors?.custom || '#666666';
+  return nodeColors?.[nodeType] || nodeColors?.custom || theme?.palette?.icon?.secondary;
 };
 
 export const isDeprecatedNodeType = type => {
@@ -33,19 +33,21 @@ export const isDeprecatedNodeType = type => {
 
 export const getNodeIconByType = (type, theme, specifiedColor) => {
   const iconColor = specifiedColor || theme.palette.icon.secondary;
+  // SVGR icons don't support sx, so the size/color go through a shared style object.
+  const iconStyle = { fontSize: '1rem', color: iconColor };
 
   switch (type) {
     case FlowEditorConstants.PipelineNodeTypes.Mcp:
       return (
         <MCPIcon
-          style={{ fontSize: '1rem', color: iconColor }}
+          style={iconStyle}
           fill={iconColor}
         />
       );
     case FlowEditorConstants.PipelineNodeTypes.LLM:
       return (
         <ModelIcon
-          style={{ fontSize: '1rem', color: iconColor }}
+          style={iconStyle}
           fill={iconColor}
         />
       );
@@ -53,112 +55,112 @@ export const getNodeIconByType = (type, theme, specifiedColor) => {
     case FlowEditorConstants.PipelineNodeTypes.Tool:
       return (
         <ToolIcon
-          style={{ fontSize: '1rem', color: iconColor }}
+          style={iconStyle}
           fill={iconColor}
         />
       );
     case FlowEditorConstants.PipelineNodeTypes.Function:
       return (
         <FunctionIcon
-          style={{ fontSize: '1rem', color: iconColor }}
+          style={iconStyle}
           fill={iconColor}
         />
       );
     case FlowEditorConstants.PipelineNodeTypes.Condition:
       return (
         <ConditionIcon
-          style={{ fontSize: '1rem', color: iconColor }}
+          style={iconStyle}
           fill={iconColor}
         />
       );
     case FlowEditorConstants.PipelineNodeTypes.Decision:
       return (
         <DecisionIcon
-          style={{ fontSize: '1rem', color: iconColor }}
+          style={iconStyle}
           fill={iconColor}
         />
       );
     case FlowEditorConstants.PipelineNodeTypes.LoopFromTool:
       return (
         <RepeatIcon
-          style={{ fontSize: '1rem', color: iconColor }}
+          style={iconStyle}
           fill={iconColor}
         />
       );
     case FlowEditorConstants.PipelineNodeTypes.Loop:
       return (
         <RepeatOneIcon
-          style={{ fontSize: '1rem', color: iconColor }}
+          style={iconStyle}
           fill={iconColor}
         />
       );
     case FlowEditorConstants.PipelineNodeTypes.Agent:
       return (
         <AgentIcon
-          style={{ fontSize: '1rem', color: iconColor }}
+          style={iconStyle}
           fill={iconColor}
         />
       );
     case FlowEditorConstants.PipelineNodeTypes.Pipeline:
       return (
         <FlowIcon
-          style={{ fontSize: '1rem', color: iconColor }}
+          style={iconStyle}
           fill={iconColor}
         />
       );
     case FlowEditorConstants.PipelineNodeTypes.Router:
       return (
         <RouterIcon
-          style={{ fontSize: '1rem', color: iconColor }}
+          style={iconStyle}
           fill={iconColor}
         />
       );
     case FlowEditorConstants.PipelineNodeTypes.StateModifier:
       return (
         <StateModifierIcon
-          style={{ fontSize: '1rem', color: iconColor }}
+          style={iconStyle}
           fill={iconColor}
         />
       );
     case FlowEditorConstants.PipelineNodeTypes.Code:
       return (
         <CodeIcon
-          style={{ fontSize: '1rem', color: iconColor }}
+          style={iconStyle}
           fill={iconColor}
         />
       );
     case FlowEditorConstants.PipelineNodeTypes.Printer:
       return (
         <PrinterIcon
-          style={{ fontSize: '1rem', color: iconColor }}
+          style={iconStyle}
           fill={iconColor}
         />
       );
     case FlowEditorConstants.PipelineNodeTypes.Hitl:
       return (
         <HumanIcon
-          style={{ fontSize: '1rem', color: iconColor }}
+          style={iconStyle}
           fill={iconColor}
         />
       );
     case FlowEditorConstants.PipelineNodeTypes.Custom:
       return (
         <JsonIcon
-          style={{ fontSize: '1rem', color: iconColor }}
+          style={iconStyle}
           fill={iconColor}
         />
       );
     case FlowEditorConstants.PipelineNodeTypes.End:
       return (
         <FlagIcon
-          style={{ fontSize: '1rem', color: iconColor }}
+          style={iconStyle}
           fill={iconColor}
         />
       );
     default:
       return (
         <JsonIcon
-          style={{ fontSize: '1rem', color: iconColor }}
+          style={iconStyle}
           fill={iconColor}
         />
       );

@@ -1,5 +1,3 @@
-import { importWizardReducer, importWizardReducerName } from '@/[fsd]/entities/import-wizard';
-import { indexesReducer, name as indexesReducerName } from '@/[fsd]/features/toolkits/indexes/model';
 // Important! Need to have been already imported all APIs before the store will be created
 import '@/api';
 import {
@@ -16,33 +14,33 @@ import pipelineReducer, { name as pipelineReducerName } from '@/slices/pipeline'
 import pipelineEditorReducer, { name as pipelineEditorReducerName } from '@/slices/pipelineEditor';
 import searchReducer, { name as searchReducerName } from '@/slices/search';
 import settingsReducer, { name as settingsReducerName } from '@/slices/settings';
-import skillHubReducer, { name as skillHubReducerName } from '@/slices/skillHub';
 import tagsReducer, { name as tagsReducerName } from '@/slices/tags';
 import authorReducer, { name as authorReducerName } from '@/slices/trendingAuthors';
 import uploadReducer, { name as uploadReducerName } from '@/slices/upload';
 import userReducer, { name as userReducerName } from '@/slices/user';
-import { configureStore } from '@reduxjs/toolkit';
+import { combineReducers, configureStore } from '@reduxjs/toolkit';
+
+import { getRegisteredReducers, setReducersChangeListener } from './reducerRegistry';
+
+const staticReducers = {
+  [eliteaReducerName]: eliteaReducer,
+  [agentHubReducerName]: agentHubReducer,
+  [applicationsReducerName]: applicationsReducer,
+  [artifactReducerName]: artifactReducer,
+  [authorReducerName]: authorReducer,
+  [chatReducerName]: chatReducer,
+  [fileTypesReducerName]: fileTypesReducer,
+  [pipelineEditorReducerName]: pipelineEditorReducer,
+  [pipelineReducerName]: pipelineReducer,
+  [searchReducerName]: searchReducer,
+  [settingsReducerName]: settingsReducer,
+  [tagsReducerName]: tagsReducer,
+  [uploadReducerName]: uploadReducer,
+  [userReducerName]: userReducer,
+};
 
 const store = configureStore({
-  reducer: {
-    [eliteaReducerName]: eliteaReducer,
-    [agentHubReducerName]: agentHubReducer,
-    [skillHubReducerName]: skillHubReducer,
-    [applicationsReducerName]: applicationsReducer,
-    [artifactReducerName]: artifactReducer,
-    [authorReducerName]: authorReducer,
-    [chatReducerName]: chatReducer,
-    [fileTypesReducerName]: fileTypesReducer,
-    [importWizardReducerName]: importWizardReducer,
-    [pipelineEditorReducerName]: pipelineEditorReducer,
-    [pipelineReducerName]: pipelineReducer,
-    [searchReducerName]: searchReducer,
-    [settingsReducerName]: settingsReducer,
-    [tagsReducerName]: tagsReducer,
-    [uploadReducerName]: uploadReducer,
-    [userReducerName]: userReducer,
-    [indexesReducerName]: indexesReducer,
-  },
+  reducer: { ...staticReducers, ...getRegisteredReducers() },
   middleware: getDefaultMiddleware =>
     getDefaultMiddleware({
       serializableCheck: {
@@ -51,6 +49,11 @@ const store = configureStore({
         ignoredPaths: [eliteaReducerName],
       },
     }).concat([eliteaMiddleware]),
+});
+
+// Slices registered after the store exists (see reducerRegistry) are merged in here.
+setReducersChangeListener(() => {
+  store.replaceReducer(combineReducers({ ...staticReducers, ...getRegisteredReducers() }));
 });
 
 export default store;

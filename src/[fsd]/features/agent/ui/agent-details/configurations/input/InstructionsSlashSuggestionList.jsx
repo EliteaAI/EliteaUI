@@ -107,7 +107,7 @@ export default InstructionsSlashSuggestionList;
 /** @type {MuiSx} */
 const instructionsSlashSuggestionListStyles = () => ({
   container: ({ palette }) => ({
-    border: `1px solid ${palette.border.lines}`,
+    border: `0.0625rem solid ${palette.border.lines}`,
     width: '100%',
     maxWidth: '100%',
     maxHeight: '15.4375rem',

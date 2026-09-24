@@ -36,7 +36,7 @@ const UsageContainer = ChunkHelpers.lazyWithRetry(
 );
 const AppDetail = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/apps/AppDetail'));
 const Apps = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/apps/Apps'));
-const McpAuthPage = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/mcp/index.jsx'));
+const McpAuthPage = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/mcp'));
 const Resources = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/resources'));
 const Settings = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/settings'));
 const AIConfiguration = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/settings/AIProviders'));

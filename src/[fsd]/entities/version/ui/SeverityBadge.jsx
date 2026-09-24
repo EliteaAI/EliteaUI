@@ -43,7 +43,7 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: '0.5rem',
-    border: `1px solid ${palette.border.lines}`,
+    border: `0.0625rem solid ${palette.border.lines}`,
     borderRadius: '2rem',
     padding: '0.375rem 0.75rem',
     flex: 1,

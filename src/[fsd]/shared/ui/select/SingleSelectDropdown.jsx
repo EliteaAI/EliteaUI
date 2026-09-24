@@ -62,7 +62,7 @@ const SingleSelectDropdown = memo(props => {
         <Box sx={styles.menuActionRow}>
           <PlusIcon
             aria-hidden
-            style={{ flexShrink: 0 }}
+            style={styles.plusIcon}
           />
           <Typography
             variant="bodyMedium"
@@ -97,6 +97,10 @@ const SingleSelectDropdown = memo(props => {
 
 /** @type {MuiSx} */
 const selectMenuItemStyles = () => ({
+  // SVGR icon: plain style object, not sx.
+  plusIcon: {
+    flexShrink: 0,
+  },
   searchBarHeader: ({ palette }) => ({
     padding: 0,
     position: 'sticky',

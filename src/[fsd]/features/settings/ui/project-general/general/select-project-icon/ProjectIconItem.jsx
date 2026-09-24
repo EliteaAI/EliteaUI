@@ -33,7 +33,7 @@ const projectIconItemStyles = isSelected => ({
     background: isSelected ? palette.components.entityIcon.background?.default : 'transparent',
 
     '&:hover': {
-      border: `1px solid ${palette.border.inputHover}`,
+      border: `0.0625rem solid ${palette.border.inputHover}`,
       background: palette.components.entityIcon.background?.default,
     },
     cursor: 'pointer',

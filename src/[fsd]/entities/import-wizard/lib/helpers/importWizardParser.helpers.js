@@ -239,7 +239,7 @@ export const prepareImportWizardData = (data, modelOptions) => {
 };
 
 export const filterSelected = inputObject => {
-  function filterObject(obj) {
+  const filterObject = obj => {
     // If the object has isSelected === false, return null to exclude it
     if (obj?.isSelected === false) return null;
 
@@ -270,7 +270,7 @@ export const filterSelected = inputObject => {
 
     // For primitives other than object or array, return the value directly
     return obj;
-  }
+  };
 
   return filterObject(inputObject);
 };

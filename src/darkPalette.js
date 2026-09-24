@@ -243,6 +243,16 @@ const darkPalette = {
     tooltip: gray00,
     aiAnswer: gray40,
     badge: white20,
+    // Translucent overlays layered over surfaces (hover states, skeletons, drop targets).
+    overlay: {
+      faint: 'rgba(255, 255, 255, 0.02)',
+      soft: 'rgba(255, 255, 255, 0.05)',
+      medium: 'rgba(255, 255, 255, 0.1)',
+      strong: 'rgba(255, 255, 255, 0.2)',
+      dim: 'rgba(0, 0, 0, 0.3)',
+      sensitive: { default: 'rgba(255, 255, 255, 0.04)', hover: 'rgba(255, 255, 255, 0.08)' },
+      versionHover: 'rgba(61, 68, 86, 0.1)',
+    },
   },
   border: {
     default: gray40,
@@ -254,6 +264,7 @@ const darkPalette = {
     tips: blue40,
     attention: orangeOutline40,
     error: red40,
+    sectionHover: 'rgba(38, 43, 52, 1)',
   },
   boxShadow: {
     default: `0 0 0.5rem 0 ${white14}`,
@@ -542,6 +553,7 @@ const darkPalette = {
       background: { strong: magenta20, subtle: purple10 },
     },
     npsSurvey: {
+      heartGradient: { start: '#FB85FF', end: '#78ABFF' },
       background: npsSurveyBg,
       border: npsSurveyBorder,
       accent: npsAccent,
@@ -647,7 +659,7 @@ const darkPalette = {
     flowEditor: {
       background: gray60,
       node: { border: gray20 },
-      edge: { stroke: gray20 },
+      edge: { stroke: gray20, shadow: 'rgba(0, 0, 0, 0.2)' },
       nodeColors: {
         toolkit: flowNodeToolkit,
         mcp: flowNodeMcp,

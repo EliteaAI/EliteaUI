@@ -37,8 +37,7 @@ const ToolGroupHeader = memo(props => {
       <Stack
         direction="row"
         spacing={0.5}
-        alignItems="center"
-        sx={styles.root}
+        sx={[styles.centered, styles.root]}
       >
         <Typography
           variant="bodyMedium"
@@ -56,8 +55,7 @@ const ToolGroupHeader = memo(props => {
     <Stack
       direction="row"
       spacing={1.25}
-      alignItems="center"
-      sx={styles.root}
+      sx={[styles.centered, styles.root]}
     >
       <Checkbox.BaseCheckbox
         checked={selectedCount === totalCount}
@@ -72,9 +70,9 @@ const ToolGroupHeader = memo(props => {
         sx={styles.checkbox}
       />
       <Stack
+        sx={styles.centered}
         direction="row"
         spacing={0.5}
-        alignItems="center"
       >
         <Typography
           variant="bodyMedium"
@@ -101,6 +99,9 @@ ToolGroupHeader.displayName = 'ToolGroupHeader';
 
 /** @type {MuiSx} */
 const toolGroupHeaderStyles = isSearching => ({
+  centered: {
+    alignItems: 'center',
+  },
   root: {
     display: isSearching ? 'inline-flex' : 'flex',
     marginBottom: isSearching ? '0.5rem' : '1rem',

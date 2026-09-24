@@ -2,8 +2,8 @@ import { memo, useEffect, useState } from 'react';
 
 import FormInput from '@/components/FormInput.jsx';
 
-const ArrayFieldInput = memo(
-  ({
+const ArrayFieldInput = memo(props => {
+  const {
     k,
     settings,
     required,
@@ -15,53 +15,51 @@ const ArrayFieldInput = memo(
     editField,
     buildEditFieldPath,
     testId,
-  }) => {
-    const styles = getStyles();
-    const arrayValue = settings[k];
-    const initialDisplayValue = Array.isArray(arrayValue) ? arrayValue.join(', ') : arrayValue || '';
-    const [localValue, setLocalValue] = useState(initialDisplayValue);
+  } = props;
 
-    // Sync local value when settings change externally
-    useEffect(() => {
-      const newDisplayValue = Array.isArray(settings[k]) ? settings[k].join(', ') : settings[k] || '';
-      setLocalValue(newDisplayValue);
-    }, [settings, k]);
+  const styles = getStyles();
+  const arrayValue = settings[k];
+  const initialDisplayValue = Array.isArray(arrayValue) ? arrayValue.join(', ') : arrayValue || '';
+  const [localValue, setLocalValue] = useState(initialDisplayValue);
 
-    // OAuth scopes are conventionally space-separated; other values may contain spaces
-    const isSpaceSeparated = k === 'scopes';
+  // Sync local value when settings change externally
+  useEffect(() => {
+    const newDisplayValue = Array.isArray(settings[k]) ? settings[k].join(', ') : settings[k] || '';
+    setLocalValue(newDisplayValue);
+  }, [settings, k]);
 
-    const handleBlur = () => {
-      const arrayResult = localValue
-        ? localValue
-            .split(isSpaceSeparated ? /[,\s]+/ : ',')
-            .map(s => s.trim())
-            .filter(Boolean)
-        : [];
-      editField(buildEditFieldPath(k), arrayResult);
-    };
+  // OAuth scopes are conventionally space-separated; other values may contain spaces
+  const isSpaceSeparated = k === 'scopes';
 
-    return (
-      <FormInput
-        key={k}
-        required={required}
-        label={label}
-        value={localValue}
-        onChange={e => setLocalValue(e.target.value)}
-        onBlur={handleBlur}
-        error={toastError}
-        helperText={
-          errorText ||
-          (isSpaceSeparated
-            ? 'Enter scopes separated by commas or spaces'
-            : 'Enter values separated by commas')
-        }
-        FormHelperTextProps={{ sx: styles.helperText }}
-        disabled={disableConfigFields || disabled}
-        inputProps={testId ? { 'data-testid': testId } : undefined}
-      />
-    );
-  },
-);
+  const handleBlur = () => {
+    const arrayResult = localValue
+      ? localValue
+          .split(isSpaceSeparated ? /[,\s]+/ : ',')
+          .map(s => s.trim())
+          .filter(Boolean)
+      : [];
+    editField(buildEditFieldPath(k), arrayResult);
+  };
+
+  return (
+    <FormInput
+      key={k}
+      required={required}
+      label={label}
+      value={localValue}
+      onChange={e => setLocalValue(e.target.value)}
+      onBlur={handleBlur}
+      error={toastError}
+      helperText={
+        errorText ||
+        (isSpaceSeparated ? 'Enter scopes separated by commas or spaces' : 'Enter values separated by commas')
+      }
+      FormHelperTextProps={{ sx: styles.helperText }}
+      disabled={disableConfigFields || disabled}
+      inputProps={testId ? { 'data-testid': testId } : undefined}
+    />
+  );
+});
 
 /** @type {MuiSx} */
 const getStyles = () => ({

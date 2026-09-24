@@ -15,7 +15,7 @@ import {
   useReadAloud,
 } from '@/[fsd]/features/chat';
 import { normalizeContinuationError } from '@/[fsd]/features/chat/lib/helpers';
-import NewChatInput from '@/[fsd]/features/chat/ui/chat-input/NewChatInput';
+import { NewChatInput } from '@/[fsd]/features/chat/ui/chat-input';
 import { LLMSettingsConstants } from '@/[fsd]/shared/lib/constants';
 import { useListModelsQuery } from '@/api/configurations.js';
 import { useGenerateContentStreamingMutation, useStopLlmTaskMutation } from '@/api/llm';

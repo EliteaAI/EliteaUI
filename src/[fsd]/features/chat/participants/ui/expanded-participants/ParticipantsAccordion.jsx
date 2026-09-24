@@ -38,10 +38,7 @@ const ParticipantsAccordion = memo(props => {
           width={16}
           height={16}
           fill={theme.palette.icon.default}
-          style={{
-            transform: expanded ? 'rotate(0deg)' : 'rotate(-90deg)',
-            transition: 'transform 0.2s ease-in-out',
-          }}
+          style={styles.arrowIcon(expanded)}
         />
         <Box sx={styles.headerWrapper}>
           <Typography
@@ -80,6 +77,11 @@ ParticipantsAccordion.displayName = 'ParticipantsAccordion';
 
 /** @type {MuiSx} */
 const participantsAccordionStyles = () => ({
+  // SVGR icon: plain style object, not sx.
+  arrowIcon: expanded => ({
+    transform: expanded ? 'rotate(0deg)' : 'rotate(-90deg)',
+    transition: 'transform 0.2s ease-in-out',
+  }),
   root: { width: '100%', marginBottom: '.5rem' },
   header: {
     display: 'flex',
@@ -90,7 +92,7 @@ const participantsAccordionStyles = () => ({
     userSelect: 'none',
 
     '&:hover': {
-      backgroundColor: 'rgba(255, 255, 255, 0.02)',
+      backgroundColor: ({ palette }) => palette.background.overlay.faint,
       borderRadius: '.25rem',
     },
   },

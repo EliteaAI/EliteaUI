@@ -329,7 +329,7 @@ const agentEditorPanelStyles = (isSmallView, theme) => ({
     gap: '0.25rem',
     padding: '0.25rem',
     borderRadius: '1.25rem',
-    border: `1px solid ${theme.palette.border.lines}`,
+    border: `0.0625rem solid ${theme.palette.border.lines}`,
     minWidth: 0,
     maxWidth: '100%',
   },
@@ -360,10 +360,10 @@ const agentEditorPanelStyles = (isSmallView, theme) => ({
     fontSize: '1rem',
   },
   skeleton: {
-    bgcolor: 'rgba(255, 255, 255, 0.1)',
+    bgcolor: ({ palette }) => palette.background.overlay.medium,
   },
   skeletonText: {
-    bgcolor: 'rgba(255, 255, 255, 0.1)',
+    bgcolor: ({ palette }) => palette.background.overlay.medium,
     borderRadius: '0.25rem',
   },
   closeButton: {

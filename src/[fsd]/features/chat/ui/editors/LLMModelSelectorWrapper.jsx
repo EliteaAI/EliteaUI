@@ -25,15 +25,17 @@ const { MODEL_SURFACES } = AutoRoutingConstants;
  * Shared wrapper component for LLM model selection in editor contexts
  * Works with Formik forms that have version_details.llm_settings structure
  */
-const LLMModelSelectorWrapper = ({
-  projectId,
-  onLLMSettingsChange,
-  disabled,
-  modelTooltip,
-  settingsTooltip,
-  // When provided (for public agents), model changes save to entity_settings instead of agent version
-  onPublicLlmOverride,
-}) => {
+const LLMModelSelectorWrapper = memo(props => {
+  const {
+    projectId,
+    onLLMSettingsChange,
+    disabled,
+    modelTooltip,
+    settingsTooltip,
+    // When provided (for public agents), model changes save to entity_settings instead of agent version
+    onPublicLlmOverride,
+  } = props;
+
   const {
     values: { version_details = {} },
     setFieldValue,
@@ -140,6 +142,8 @@ const LLMModelSelectorWrapper = ({
       />
     </Box>
   );
-};
+});
 
-export default memo(LLMModelSelectorWrapper);
+LLMModelSelectorWrapper.displayName = 'LLMModelSelectorWrapper';
+
+export default LLMModelSelectorWrapper;

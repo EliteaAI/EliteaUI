@@ -112,7 +112,7 @@ const IWModalContent = memo(props => {
           />
         </Box>
       </Box>
-      <Box sx={{ margin: '0.5rem 0 .75rem', maxHeight: '25rem', overflowY: 'auto' }}>
+      <Box sx={styles.entityList}>
         <IWModalDetails
           isProjectSelected={values.selectedProject}
           isForking={isForking}
@@ -135,6 +135,11 @@ IWModalContent.displayName = 'IWModalContent';
 
 /** @type {MuiSx} */
 const iwModalContentStyles = () => ({
+  entityList: {
+    margin: '0.5rem 0 .75rem',
+    maxHeight: '25rem',
+    overflowY: 'auto',
+  },
   root: {
     display: 'flex',
     flexDirection: 'column',

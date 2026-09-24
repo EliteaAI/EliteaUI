@@ -5,8 +5,8 @@ import { Box, IconButton } from '@mui/material';
 import { Select } from '@/[fsd]/shared/ui';
 import CloseIcon from '@/components/Icons/CloseIcon';
 
-const CodePreviewHeader = memo(
-  ({
+const CodePreviewHeader = memo(props => {
+  const {
     selectedLanguage,
     onLanguageChange,
     onClose,
@@ -15,70 +15,70 @@ const CodePreviewHeader = memo(
     models,
     selectedModel,
     onChangeModel,
-  }) => {
-    const styles = getStyles();
-    const languageOptions = useMemo(
-      () =>
-        Object.keys(codeExampleLabels).map(key => ({
-          label: codeExampleLabels[key],
-          value: key,
-        })),
-      [codeExampleLabels],
-    );
-    const modelOptions = useMemo(
-      () =>
-        models.map(model => ({
-          value: `${model.name}<<>>${model.project_id}`,
-          label: model.display_name || model.name,
-        })),
-      [models],
-    );
-    const onHandleChangeModel = useCallback(
-      selectedValue => {
-        const [modelName, projectId] = selectedValue.split('<<>>');
-        const foundModel = models.find(
-          model => model.name === modelName && String(model.project_id) === projectId,
-        );
-        if (foundModel) {
-          onChangeModel(foundModel);
-        }
-      },
-      [models, onChangeModel],
-    );
+  } = props;
 
-    return (
-      <Box sx={styles.headerContainer}>
-        <Box sx={styles.controlsContainer}>
-          <Select.SingleSelect
-            separateLabel
-            label="Model:"
-            value={`${selectedModel?.name}<<>>${selectedModel?.project_id}`}
-            onValueChange={onHandleChangeModel}
-            options={modelOptions}
-            disabled={false}
-          />
-          <Select.SingleSelect
-            separateLabel
-            label="Code:"
-            value={selectedLanguage}
-            onValueChange={onLanguageChange}
-            options={languageOptions}
-            disabled={false}
-          />
-          {showCloseButton && (
-            <IconButton
-              variant="elitea"
-              color="secondary"
-              onClick={onClose}
-            >
-              <CloseIcon sx={styles.closeIcon} />
-            </IconButton>
-          )}
-        </Box>
+  const styles = getStyles();
+  const languageOptions = useMemo(
+    () =>
+      Object.keys(codeExampleLabels).map(key => ({
+        label: codeExampleLabels[key],
+        value: key,
+      })),
+    [codeExampleLabels],
+  );
+  const modelOptions = useMemo(
+    () =>
+      models.map(model => ({
+        value: `${model.name}<<>>${model.project_id}`,
+        label: model.display_name || model.name,
+      })),
+    [models],
+  );
+  const onHandleChangeModel = useCallback(
+    selectedValue => {
+      const [modelName, projectId] = selectedValue.split('<<>>');
+      const foundModel = models.find(
+        model => model.name === modelName && String(model.project_id) === projectId,
+      );
+      if (foundModel) {
+        onChangeModel(foundModel);
+      }
+    },
+    [models, onChangeModel],
+  );
+
+  return (
+    <Box sx={styles.headerContainer}>
+      <Box sx={styles.controlsContainer}>
+        <Select.SingleSelect
+          separateLabel
+          label="Model:"
+          value={`${selectedModel?.name}<<>>${selectedModel?.project_id}`}
+          onValueChange={onHandleChangeModel}
+          options={modelOptions}
+          disabled={false}
+        />
+        <Select.SingleSelect
+          separateLabel
+          label="Code:"
+          value={selectedLanguage}
+          onValueChange={onLanguageChange}
+          options={languageOptions}
+          disabled={false}
+        />
+        {showCloseButton && (
+          <IconButton
+            variant="elitea"
+            color="secondary"
+            onClick={onClose}
+          >
+            <CloseIcon sx={styles.closeIcon} />
+          </IconButton>
+        )}
       </Box>
-    );
-  },
-);
+    </Box>
+  );
+});
 
 CodePreviewHeader.displayName = 'CodePreviewHeader';
 

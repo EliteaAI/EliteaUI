@@ -1,3 +1,4 @@
+import { registerReducer } from '@/[fsd]/shared/config/reducerRegistry';
 import { createSlice } from '@reduxjs/toolkit';
 
 const CACHE_DURATION_MS = 60 * 60 * 1000; // 60 minutes
@@ -89,4 +90,6 @@ export const selectIsCacheValid = (state, query) => {
 };
 
 export const { name, actions } = skillHubSlice;
+registerReducer(skillHubSlice.name, skillHubSlice.reducer);
+
 export default skillHubSlice.reducer;

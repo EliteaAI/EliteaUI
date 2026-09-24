@@ -176,7 +176,7 @@ const resourceVersionInfoStyles = () => ({
     padding: '0',
 
     '&:hover': {
-      backgroundColor: palette.mode === 'dark' ? 'rgba(61, 68, 86, 0.1)' : 'rgba(255, 255, 255, 0.1)',
+      backgroundColor: palette.background.overlay.versionHover,
     },
     '& svg path': {
       fill: palette.mode,

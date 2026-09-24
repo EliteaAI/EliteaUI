@@ -45,7 +45,7 @@ const AnalyticsToolDetailed = memo(props => {
 
   return (
     <Box sx={styles.toolDetailedContent}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+      <Box sx={styles.titleRow}>
         <IconButton
           onClick={onBack}
           size="small"
@@ -146,14 +146,7 @@ const AnalyticsToolDetailed = memo(props => {
         </Box>
       )}
 
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1fr) minmax(0, 1fr)' },
-          gap: '1rem',
-          alignItems: 'stretch',
-        }}
-      >
+      <Box sx={styles.chartsGrid}>
         <Box sx={styles.chartCard}>
           <Typography
             variant="labelMedium"
@@ -268,6 +261,18 @@ AnalyticsToolDetailed.displayName = 'AnalyticsToolDetailed';
 
 /** @type {MuiSx} */
 const analyticsToolDetailedStyles = () => ({
+  titleRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    marginBottom: '0.5rem',
+  },
+  chartsGrid: {
+    display: 'grid',
+    gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1fr) minmax(0, 1fr)' },
+    gap: '1rem',
+    alignItems: 'stretch',
+  },
   toolDetailedContent: { display: 'flex', flexDirection: 'column', gap: '1rem' },
   kpiRow: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(9rem, 1fr))', gap: '0.75rem' },
   chartCard: ({ palette }) => ({
@@ -311,7 +316,7 @@ const analyticsToolDetailedStyles = () => ({
   tableHeader: ({ palette }) => ({
     display: 'flex',
     padding: '0.5rem 0.75rem',
-    borderBottom: `1px solid ${palette.border.default}`,
+    borderBottom: `0.0625rem solid ${palette.border.default}`,
     gap: '0.5rem',
   }),
   tableCell: ({ palette }) => ({
@@ -323,7 +328,7 @@ const analyticsToolDetailedStyles = () => ({
   tableRow: ({ palette }) => ({
     display: 'flex',
     padding: '0.5rem 0.75rem',
-    borderBottom: `1px solid ${palette.border.default}`,
+    borderBottom: `0.0625rem solid ${palette.border.default}`,
     gap: '0.5rem',
     '&:hover': { backgroundColor: palette.background.interactiveItem.rowHover },
   }),

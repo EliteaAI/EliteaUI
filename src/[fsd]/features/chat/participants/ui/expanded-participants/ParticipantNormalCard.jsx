@@ -82,7 +82,7 @@ const ParticipantNormalCard = memo(
                     : participant.entity_name
             }
             editable={false}
-            sx={{ width: '1.5rem', height: '1.5rem', minWidth: '1.5rem' }}
+            sx={styles.entityIcon}
             imageStyle={{ width: '1.5rem', height: '1.5rem' }}
             specifiedFontSize="0.875rem"
             isActive={isActive}
@@ -152,6 +152,11 @@ ParticipantNormalCard.displayName = 'ParticipantNormalCard';
 
 /** @type {MuiSx} */
 export const participantNormalCardStyles = ({ collapsed, isActive, maxWidth, isBeingEdited }) => ({
+  entityIcon: {
+    width: '1.5rem',
+    height: '1.5rem',
+    minWidth: '1.5rem',
+  },
   normalItemWrapper: {
     display: 'flex',
     flexDirection: 'column',

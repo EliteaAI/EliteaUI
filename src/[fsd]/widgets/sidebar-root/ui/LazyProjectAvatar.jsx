@@ -6,6 +6,8 @@ import ProjectAvatar from './ProjectAvatar';
 
 const LazyProjectAvatar = memo(props => {
   const { projectName, projectId, size = '2rem' } = props;
+  const styles = lazyProjectAvatarStyles();
+
   const ref = useRef(null);
   const [isVisible, setIsVisible] = useState(false);
 
@@ -28,7 +30,7 @@ const LazyProjectAvatar = memo(props => {
   return (
     <Box
       ref={ref}
-      sx={{ width: size, height: size, minWidth: size, display: 'inline-flex' }}
+      sx={styles.root(size)}
     >
       <ProjectAvatar
         projectName={projectName}
@@ -41,5 +43,15 @@ const LazyProjectAvatar = memo(props => {
 });
 
 LazyProjectAvatar.displayName = 'LazyProjectAvatar';
+
+/** @type {MuiSx} */
+const lazyProjectAvatarStyles = () => ({
+  root: size => ({
+    width: size,
+    height: size,
+    minWidth: size,
+    display: 'inline-flex',
+  }),
+});
 
 export default LazyProjectAvatar;

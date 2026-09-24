@@ -67,7 +67,7 @@ const draggableFolderItemStyles = ({ isDragging, isDragDisabled, folder, transfo
     left: 0,
     right: 0,
     bottom: 0,
-    border: `2px dashed ${palette.primary.main}`,
+    border: `0.125rem dashed ${palette.primary.main}`,
     borderRadius: '0.375rem',
     backgroundColor: `${palette.primary.main}10`,
     pointerEvents: 'none',

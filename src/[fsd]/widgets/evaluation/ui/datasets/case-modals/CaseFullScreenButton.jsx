@@ -34,6 +34,7 @@ const CaseFullScreenButton = memo(props => {
 
 CaseFullScreenButton.displayName = 'CaseFullScreenButton';
 
+/** @type {MuiSx} */
 const caseFullScreenButtonStyles = {
   button: {
     padding: '0.25rem',

@@ -285,8 +285,8 @@ const getStyles = defaultSettingsLayout => ({
     border: '0.0625rem solid',
     borderColor: ({ palette }) => palette.border.default,
     '&:hover': {
-      backgroundColor: 'rgba(255, 255, 255, 0.05)',
-      borderColor: 'rgba(38, 43, 52, 1)',
+      backgroundColor: ({ palette }) => palette.background.overlay.soft,
+      borderColor: ({ palette }) => palette.border.sectionHover,
     },
   },
 });

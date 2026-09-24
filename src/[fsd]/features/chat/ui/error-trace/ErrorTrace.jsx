@@ -130,7 +130,7 @@ const errorTraceStyles = (isExpanded, compact) => ({
     flexDirection: 'row',
     alignItems: 'center',
     padding: '.75rem 1rem',
-    border: ({ palette }) => `1px solid ${palette.border.error}`,
+    border: ({ palette }) => `0.0625rem solid ${palette.border.error}`,
     background: ({ palette }) => palette.background.error,
     borderRadius: '0.5rem',
     color: ({ palette }) => palette.text.warning,

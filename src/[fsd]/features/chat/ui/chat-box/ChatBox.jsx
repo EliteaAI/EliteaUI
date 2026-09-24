@@ -117,2220 +117,1207 @@ const { DEFAULT_MAX_TOKENS, DEFAULT_REASONING_EFFORT, DEFAULT_STEPS_LIMIT, DEFAU
 
 const EMPTY_LLM_SETTINGS = Object.freeze({});
 
-const ChatBox = forwardRef((props, boxRef) => {
-  const {
-    fromTheChat,
-    hidden = false,
-    messageListSX,
-    activeParticipant,
-    onChangeParticipantSettings,
-    onSelectThisParticipant,
-    onClearActiveParticipant,
-    activeConversation,
-    setActiveConversation,
-    setChatHistory,
-    setIsStreaming,
-    isLoadingConversation,
-    onDeleteMessage,
-    onDeleteAllMessages,
-    conversationStarters,
-    onEditCanvas,
-    selectedCodeBlockInfo,
-    interaction_uuid,
-    enableMentions = true,
-    isAgentsPage = false,
-    isEditingAgent,
-    onShowAgentEditor,
-    onShowPipelineEditor,
-    onShowSkillEditor,
-    onShowProjectContextEditor,
-    onShowToolkitEditor,
-    onCloseAgentEditor,
-    onClosePipelineEditor,
-    activeParticipantDetails,
-    isEditorDirty,
-    onShowVersionChangeAlert,
-    onRefreshParticipantDetails,
-    newConversationQuestion,
-
-    // LLM Settings props for modal dialog
-    llmSettings = EMPTY_LLM_SETTINGS,
-    onSetLLMSettings,
-    showWebhookSecret = false,
-    onSend = () => true,
-    inputPlaceholder = '',
-
-    // For pipeline running
-    onRcvAgentEvent,
-    deleteAllRunNodes,
-    onHandleAttachment,
-    onStopRun,
-
-    //Attachment
-    onAttachFiles,
-    attachments,
-    onDeleteAttachment,
-    disableAttachments = false,
-    hideAttachments = false,
-    onClearAttachments,
-
-    // Internal tools config
-    onInternalToolsConfigChange,
-    onAddNewUsers,
-    isUpdatingInternalToolsConfig,
-
-    // Participant management (for PlusChatButton submenus)
-    onCreateAgent,
-    onCreatePipeline,
-    onCreateToolkit,
-    onDeleteParticipant,
-
-    //Unsaved LLM settings
-    unsavedLLMSettings,
-    setUnsavedLLMSettings,
-    uploadAttachments,
-    isUploadingAttachments,
-    uploadProgress,
-    onOpenArtifactPreview,
-
-    // Override for entity-created routing (e.g. generated-entities tab panel)
-    onEntityCreated: onEntityCreatedProp,
-    onEntityDeleted: onEntityDeletedProp,
-  } = props;
-
-  const styles = chatBoxStyles();
-
-  const chatInput = useRef(null);
-  const setActiveConversationRef = useRef(setActiveConversation);
-  const questionItemRef = useRef();
-  const activeConversationRef = useRef(activeConversation);
-  // Store the participant_id from conversation creation to use for subsequent messages
-  // This ensures we use the correct participant_id even before React state update propagates
-  const participantIdRef = useRef(null);
-  // Track MCP servers the user declined this session (scoped to current conversation).
-  // Map<serverUrl, { tool_name, resource_metadata_url, www_authenticate, resource_metadata }>
-  // Resets automatically when the conversation changes — never written to localStorage.
-  const sessionDeclinedMcpServersRef = useRef(new Map());
-  const lastSentQuestionRef = useRef('');
-  const stopRequestedRef = useRef(false);
-  const isStreamingRef = useRef(false);
-  const stopQueueRef = useRef([]);
-  const isDequeuingRef = useRef(false);
-
-  const dispatch = useDispatch();
-  const { toastError, toastInfo } = useToast();
-
-  // Sockets
-  const socket = useContext(SocketContext);
-  const { emit: emitContinue } = useSocket(sioEvents.chat_continue_predict);
-
-  const projectId = useSelectedProjectId();
-
-  // Advance notice above the input. Shared by chat, agent and pipeline, all of which render
-  // through this component.
-  const budgetWarning = useBudgetWarning({
-    projectId,
-    conversationId: activeConversation?.id,
-  });
-
-  const [regenerate] = useRegenerateMutation();
-  const [injectMessage] = useInjectMessageMutation();
-  const [conversationEdit] = useConversationEditMutation();
-  const [removeAttachment] = useRemoveAttachmentsMutation();
-  const [updateChatLlmSettings, { isLoading: modelSettingsAreSaving }] =
-    useUpdateParticipantLlmSettingsMutation();
-
-  const { name, id: userId, avatar } = useSelector(state => state.user);
-
-  const { chat_history, pendingHitlMessage } = useMemo(() => {
-    const history = activeConversation?.chat_history || [];
-
-    return {
-      chat_history: history,
-      pendingHitlMessage: getPendingHitlMessage(history),
-    };
-  }, [activeConversation?.chat_history]);
-
-  const hasPendingHitlInterrupt = Boolean(
-    pendingHitlMessage?.hitlInterrupt || pendingHitlMessage?.hitlInterrupts?.length,
-  );
-
-  // A clarifying question (ask_user) is a single scalar pause that accepts a
-  // free-text answer. Unlike other HITL pauses it should NOT lock the composer:
-  // the user may either pick an option on the card or type their own reply,
-  // which is routed back as the answer (see onSendMessage).
-  const isPendingClarifyingQuestion = useMemo(() => {
-    if (!pendingHitlMessage) return false;
-    const interrupts = Array.isArray(pendingHitlMessage.hitlInterrupts)
-      ? pendingHitlMessage.hitlInterrupts
-      : pendingHitlMessage.hitlInterrupt
-        ? [pendingHitlMessage.hitlInterrupt]
-        : [];
-    return interrupts.length === 1 && interrupts[0]?.guardrail_type === 'clarifying_question';
-  }, [pendingHitlMessage]);
-
-  const hasBlockingHitlInterrupt = hasPendingHitlInterrupt && !isPendingClarifyingQuestion;
-
-  const hasPendingAuthRequired = useMemo(
-    () => hasPendingAuthRequiredAction(chat_history[chat_history.length - 1]),
-    [chat_history],
-  );
-
-  // Chat states
-  const [selectedUsers, setSelectedUsers] = useState([]);
-  const [hasStarterBeenSent, setHasStarterBeenSent] = useState(false);
-  const [isRegenerating, setIsRegenerating] = useState(false);
-
-  // Mentions states
-  const [isMentioningEveryone, setIsMentioningEveryone] = useState(false);
-
-  // Speaking mode states
-  const [isSpeakingMode, setIsSpeakingMode] = useState(false);
-
-  // Query models data
-  const { currentData: modelsData = { items: [], total: 0 } } = useListModelsQuery(
-    { projectId, include_shared: true },
-    { skip: !projectId },
-  );
-
-  // Read-aloud / text-to-speech mini-player (shared with the skill test panel).
-  const {
-    onAutoSpeak: handleAutoSpeak,
-    speakingMessageId,
-    speakingSegments,
-    spokenRange,
-    showPlayer,
-    isPlaying,
-    stop: stopTTS,
-    voicePlayerProps,
-  } = useReadAloud({ projectId, socket });
-
-  const isTheUserChattingNow = useMemo(() => {
-    const latest40Messages = chat_history.slice(-40);
-
-    let isChatting = false;
-    for (let index = 0; index < latest40Messages.length; index++) {
-      const message = latest40Messages[index];
-      if (message && message.isStreaming && message.participant_id === activeParticipant?.id) {
-        if (latest40Messages.find(msg => msg.id === message.question_id && msg.user_id === userId)) {
-          isChatting = true;
-          break;
-        }
-      }
-    }
-    return isChatting;
-  }, [activeParticipant?.id, chat_history, userId]);
-
-  const defaultModel = useMemo(() => {
-    return modelsData.items.find(model => model.default) || modelsData.items[0] || null;
-  }, [modelsData.items]);
-
-  const { selectedModel, setSelectedModel, selectSavedOrDefaultModel } = useSelectedChatModel({
-    projectId,
-    userId,
-    activeConversation,
-    modelsData,
-    defaultModel,
-    isAgentsPage,
-    llmSettings,
-    isLoadingConversation,
-    activeParticipant,
-    onClearActiveParticipant,
-    onChangeParticipantSettings,
-  });
-
-  useEffect(() => {
-    dispatch(chatActions.setCurrentChatModel(selectedModel));
-  }, [dispatch, selectedModel]);
-
-  // Create LLM settings for conversation pages from user settings
-  const conversationLlmSettings = useMemo(() => {
-    if (isAgentsPage) return llmSettings; // Use prop directly for agents page
-
-    const userSettings = NewConversationHelpers.getChatUserSettings(activeConversation, userId);
-    // For steps_limit: prefer value already set by user this session (unsavedLLMSettings),
-    // then the persisted conversation meta value, then the default.
-    // This ensures the correct value is shown both for new conversations (no meta yet)
-    // and after the user changes it in the modal before the first message is sent.
-    const stepsLimit =
-      unsavedLLMSettings?.steps_limit ?? activeConversation?.meta?.steps_limit ?? DEFAULT_STEPS_LIMIT;
-
-    if (isAutoSelection(userSettings)) {
-      return { ...userSettings, steps_limit: stepsLimit };
-    }
-
-    const baseSettings = {
-      model_name: userSettings?.model_name || '',
-      model_project_id: userSettings?.model_project_id || projectId,
-      temperature: userSettings?.temperature || DEFAULT_TEMPERATURE,
-      max_tokens: userSettings?.max_tokens || DEFAULT_MAX_TOKENS,
-      steps_limit: stepsLimit,
-    };
-
-    // Only include reasoning_effort if user had it set or if model supports reasoning
-    if (userSettings?.reasoning_effort !== undefined) {
-      baseSettings.reasoning_effort = userSettings.reasoning_effort;
-    } else {
-      // Find the selected model to check if it supports reasoning
-      const model = ChatHelpers.getSelectedConversationModel(
-        activeConversation,
-        modelsData.items || [],
-        userId,
-      );
-      if (model?.supports_reasoning) {
-        baseSettings.reasoning_effort = DEFAULT_REASONING_EFFORT;
-      }
-    }
-
-    // A reasoning_effort implies the model rejects a custom temperature (issue #5821)
-    if (isLLMSettingsFamilyConflict(baseSettings.temperature, baseSettings.reasoning_effort)) {
-      delete baseSettings.temperature;
-    }
-
-    return baseSettings;
-  }, [
-    isAgentsPage,
-    llmSettings,
-    unsavedLLMSettings,
-    activeConversation,
-    userId,
-    projectId,
-    modelsData.items,
-  ]);
-
-  // We need this useEffect to keep input value while new conversation creation with attachment upload
-  useEffect(() => {
-    const currentValue = chatInput.current?.getInputContent() || '';
-    const needResetInputValue = newConversationQuestion && uploadProgress === 100;
-    const needUpdateInputValue =
-      newConversationQuestion &&
-      isUploadingAttachments &&
-      uploadProgress < 100 &&
-      currentValue !== newConversationQuestion;
-
-    if (needUpdateInputValue) chatInput.current?.setValue(newConversationQuestion);
-    if (needResetInputValue) chatInput.current?.reset();
-  }, [newConversationQuestion, isUploadingAttachments, uploadProgress]);
-
-  const getRegeneratePayload = useCallback(
-    ({ question, question_id, participant, conversationUuid, attachmentList }) => {
-      const realParticipant = participant || activeParticipant || {};
-      // When on agents page, allow model override from dropdown selection
-      // Otherwise use agent's configured model
-      const llm_settings = isAgentsPage
-        ? unsavedLLMSettings || selectionFields(selectedModel)
-        : ChatHelpers.getModelSettings(realParticipant);
-      switch (realParticipant.entity_name) {
-        case ChatParticipantType.Pipelines:
-        case ChatParticipantType.Applications:
-          return {
-            payload: generateApplicationStreamingPayload({
-              projectId: realParticipant.entity_meta?.project_id || projectId,
-              application_id: realParticipant?.entity_meta.id + '',
-              instructions: realParticipant?.entity_settings.instructions,
-              llm_settings,
-              variables: realParticipant?.entity_settings.variables,
-              question,
-              tools: realParticipant?.entity_settings.tools,
-              name,
-              currentVersionId: realParticipant?.entity_settings.version_id,
-              attachmentList,
-            }),
-            project_id: projectId,
-            participant_id: realParticipant.id,
-            conversation_uuid: conversationUuid || activeConversation?.uuid,
-            question_id,
-            interaction_uuid,
-          };
-        default:
-          // throw new Error('Unsupported participant type for regeneration: ' + realParticipant.entity_name)
-          return {
-            payload: generateMessagePayload({
-              question,
-              question_id,
-              participant,
-              conversation_uuid: conversationUuid || activeConversation?.uuid,
-              activeParticipant,
-              interaction_uuid,
-              projectId,
-              selectedModel,
-              participants: activeConversation?.participants || [],
-              attachmentList,
-            }),
-            project_id: projectId,
-            participant_id: realParticipant.id,
-            conversation_uuid: conversationUuid || activeConversation?.uuid,
-            question_id,
-            interaction_uuid,
-          };
-      }
-    },
-    [
+const ChatBox = memo(
+  forwardRef((props, boxRef) => {
+    const {
+      fromTheChat,
+      hidden = false,
+      messageListSX,
       activeParticipant,
-      projectId,
-      activeConversation?.uuid,
-      activeConversation?.participants,
+      onChangeParticipantSettings,
+      onSelectThisParticipant,
+      onClearActiveParticipant,
+      activeConversation,
+      setActiveConversation,
+      setChatHistory,
+      setIsStreaming,
+      isLoadingConversation,
+      onDeleteMessage,
+      onDeleteAllMessages,
+      conversationStarters,
+      onEditCanvas,
+      selectedCodeBlockInfo,
       interaction_uuid,
-      name,
-      selectedModel,
-      isAgentsPage,
-      unsavedLLMSettings,
-    ],
-  );
-
-  const getPayload = useCallback(
-    ({ question, question_id, participant, conversationUuid, attachmentList }) => {
-      // For published agent/pipeline participants on the Chat page, use their entity_settings.llm_settings
-      // as fallback so the predict payload carries the correct model override
-      const isPublishedAgentParticipant =
-        !isAgentsPage &&
-        activeParticipant?.entity_meta?.project_id === PUBLIC_PROJECT_ID &&
-        (activeParticipant?.entity_name === ChatParticipantType.Applications ||
-          activeParticipant?.entity_name === ChatParticipantType.Pipelines);
-      const participantLlmSettings = isPublishedAgentParticipant
-        ? activeParticipant?.entity_settings?.llm_settings
-        : undefined;
-
-      const isSendingToUser = Boolean(isMentioningEveryone || selectedUsers.length);
-
-      return generateMessagePayload({
-        attachmentList,
-        question,
-        question_id,
-        participant: isSendingToUser ? null : participant,
-        conversation_uuid: conversationUuid || activeConversation?.uuid,
-        activeParticipant: isSendingToUser ? null : activeParticipant,
-        interaction_uuid,
-        projectId,
-        selectedModel,
-        isSendingToUser,
-        userIds: isMentioningEveryone
-          ? activeConversation?.participants
-              .filter(
-                it =>
-                  it.entity_name === ChatParticipantType.Users &&
-                  it.entity_meta?.id &&
-                  userId !== it.entity_meta?.id,
-              )
-              .map(it => it.id) || []
-          : selectedUsers.map(user => user.user.id),
-        unsavedLLMSettings: unsavedLLMSettings || participantLlmSettings,
-        participants: activeConversation?.participants || [],
-        allowLLMSettingsOverride: isAgentsPage || !!participantLlmSettings,
-        conversationMeta: activeConversation?.meta,
-      });
-    },
-    [
-      activeConversation?.participants,
-      activeConversation?.uuid,
-      activeConversation?.meta,
-      activeParticipant,
-      interaction_uuid,
-      isAgentsPage,
-      isMentioningEveryone,
-      projectId,
-      selectedModel,
-      selectedUsers,
-      userId,
-      unsavedLLMSettings,
-    ],
-  );
-
-  const handleError = useCallback(() => {
-    if (isRegenerating) {
-      setIsRegenerating(false);
-    }
-  }, [isRegenerating]);
-
-  const onDeleteChatMessage = useCallback(
-    async (messageIdToDelete, callback) => {
-      if (onDeleteMessage) {
-        await onDeleteMessage(messageIdToDelete, callback);
-      } else {
-        callback?.();
-      }
-    },
-    [onDeleteMessage],
-  );
-
-  const onDeleteAllChatMessages = useCallback(
-    async callback => {
-      await onDeleteAllMessages(callback);
-    },
-    [onDeleteAllMessages],
-  );
-
-  // Injections sent but not yet confirmed consumed. Mirrored into state because the
-  // queue is rendered above the input: with no visible "waiting" chip an injection
-  // looks like it vanished, since its own bubble is scrolled away behind live pins.
-  const [pendingInjections, setPendingInjections] = useState([]);
-  const pendingInjectionsRef = useRef(new Map());
-
-  // Acked: the loop folded it in and a timeline pin now shows it, so stop waiting.
-  const onInjectionConsumed = useCallback(injectionId => {
-    pendingInjectionsRef.current.delete(injectionId);
-    stopQueueRef.current = stopQueueRef.current.filter(item => item.id !== injectionId);
-    setPendingInjections(prev => prev.filter(item => item.id !== injectionId));
-  }, []);
-
-  // User explicitly removed a queued item before it was consumed.
-  const onRemovePendingInjection = useCallback(injectionId => {
-    pendingInjectionsRef.current.delete(injectionId);
-    stopQueueRef.current = stopQueueRef.current.filter(item => item.id !== injectionId);
-    setPendingInjections(prev => prev.filter(item => item.id !== injectionId));
-  }, []);
-
-  // Drain stopQueueRef one item at a time, using the return value of onPredictStream to detect
-  // bail-outs. Returns immediately after a successful emit — the isStreaming effect handles the
-  // next dequeue once that stream ends. Loops past bail-outs so a failed send never strands the
-  // remaining queue.
-  const drainQueue = useCallback(async () => {
-    let next = stopQueueRef.current.shift();
-    while (next) {
-      isDequeuingRef.current = true;
-      setPendingInjections(prev => prev.filter(item => item.id !== next.id));
-
-      const emitted = await onPredictStreamRef.current?.(next.text);
-      if (emitted) return; // emit succeeded — isStreaming effect dequeues the rest
-      // bail-out (upload failed, sendResult.success === false, etc.): try the next item
-      isDequeuingRef.current = false;
-      next = stopQueueRef.current.shift();
-    }
-    isDequeuingRef.current = false;
-  }, []);
-
-  // Turn ended: anything still pending was never folded in. Queue unconsumed items for
-  // sequential re-send — one message at a time, each only after the previous finishes
-  // or is stopped. If streaming has already ended by the time this fires (InjectionConsumedReport
-  // arrived after finish_reason cleared isStreaming), send the first item immediately.
-  const onInjectionReport = useCallback(
-    ({ consumed }) => {
-      // Always prune consumed IDs first — on the Stop path the isStreaming effect rescue
-      // has already cleared pendingInjectionsRef, so the pending.size check below would
-      // exit before reaching this block if we put it after.
-      if (consumed?.length) {
-        consumed.forEach(id => {
-          pendingInjectionsRef.current.delete(id);
-          stopQueueRef.current = stopQueueRef.current.filter(item => item.id !== id);
-        });
-        setPendingInjections(prev => prev.filter(item => !consumed.includes(item.id)));
-      }
-      const pending = pendingInjectionsRef.current;
-      if (!pending.size) return;
-      const unconsumed = [...pending.entries()].map(([id, text]) => ({ id, text }));
-      pendingInjectionsRef.current = new Map();
-      // Items are already visible in pendingInjections (added by onInjectMessage).
-      // Just queue them for sequential re-send; they'll be removed from state on dequeue.
-      // Flip inFlight so the remove button becomes visible while they wait in the queue.
-      stopQueueRef.current.push(...unconsumed);
-      const unconsumedIds = new Set(unconsumed.map(item => item.id));
-      setPendingInjections(prev =>
-        prev.map(item => (unconsumedIds.has(item.id) ? { ...item, inFlight: false } : item)),
-      );
-      // If the stream already ended and nothing is currently dequeuing, kick off the chain.
-      // isDequeuingRef prevents the isStreaming effect and this callback from both sending at once.
-      if (!isStreamingRef.current && !isDequeuingRef.current) {
-        drainQueue();
-      }
-    },
-    [drainQueue],
-  );
-
-  const onEntityCreated = useCallback(
-    ({ entity_type, entity_id, version_id, entity_name, is_mcp }) => {
-      const participant = buildEntityParticipant({ entity_id, entity_name, version_id, is_mcp, projectId });
-      if (entity_type === 'agent') {
-        onShowAgentEditor?.(participant);
-      } else if (entity_type === 'pipeline') {
-        onShowPipelineEditor?.(participant);
-      } else if (entity_type === 'skill') {
-        onShowSkillEditor?.(participant);
-      } else if (entity_type === 'project_context') {
-        dispatch(projectContextApis.util.invalidateTags([{ type: 'PROJECT_CONTEXT', id: projectId }]));
-        onShowProjectContextEditor?.(participant);
-      } else if (entity_type === 'toolkit') {
-        onShowToolkitEditor?.(participant);
-      }
-    },
-    [
-      dispatch,
-      projectId,
+      enableMentions = true,
+      isAgentsPage = false,
+      isEditingAgent,
       onShowAgentEditor,
       onShowPipelineEditor,
       onShowSkillEditor,
       onShowProjectContextEditor,
       onShowToolkitEditor,
-    ],
-  );
+      onCloseAgentEditor,
+      onClosePipelineEditor,
+      activeParticipantDetails,
+      isEditorDirty,
+      onShowVersionChangeAlert,
+      onRefreshParticipantDetails,
+      newConversationQuestion,
 
-  const [deleteApplication] = useDeleteApplicationMutation();
-  const [deleteSkill] = useDeleteSkillMutation();
-  const [deleteProjectContext] = useDeleteProjectContextMutation();
-  const [deleteToolkit] = useToolkitDeleteMutation();
-  const [updateMessageMeta] = useUpdateMessageMetaMutation();
+      // LLM Settings props for modal dialog
+      llmSettings = EMPTY_LLM_SETTINGS,
+      onSetLLMSettings,
+      showWebhookSecret = false,
+      onSend = () => true,
+      inputPlaceholder = '',
 
-  const onDeleteEntity = useCallback(
-    async ({ entity_type, entity_id }, messageId) => {
-      try {
-        if (entity_type === 'agent' || entity_type === 'pipeline') {
-          await deleteApplication({ projectId, applicationId: entity_id, entityType: entity_type }).unwrap();
-        } else if (entity_type === 'skill') {
-          await deleteSkill({ projectId, skillId: entity_id }).unwrap();
-        } else if (entity_type === 'project_context') {
-          await deleteProjectContext({ projectId }).unwrap();
-        } else if (entity_type === 'toolkit') {
-          await deleteToolkit({ projectId, toolkitId: entity_id }).unwrap();
-        }
-        onEntityDeletedProp?.({ entity_type, entity_id });
-      } catch (err) {
-        toastError(buildErrorMessage(err) || 'Failed to delete entity');
-        return;
-      }
-      const updatedHistory = chat_history.map(msg =>
-        msg.created_entities?.length
-          ? { ...msg, created_entities: msg.created_entities.filter(e => e.entity_id !== entity_id) }
-          : msg,
-      );
-      setChatHistory(updatedHistory);
-      if (messageId) {
-        const updatedMsg = updatedHistory.find(msg => msg.id === messageId);
-        updateMessageMeta({
-          projectId,
-          messageId,
-          meta: { created_entities: updatedMsg?.created_entities ?? [] },
-        });
-      }
-    },
-    [
+      // For pipeline running
+      onRcvAgentEvent,
+      deleteAllRunNodes,
+      onHandleAttachment,
+      onStopRun,
+
+      //Attachment
+      onAttachFiles,
+      attachments,
+      onDeleteAttachment,
+      disableAttachments = false,
+      hideAttachments = false,
+      onClearAttachments,
+
+      // Internal tools config
+      onInternalToolsConfigChange,
+      onAddNewUsers,
+      isUpdatingInternalToolsConfig,
+
+      // Participant management (for PlusChatButton submenus)
+      onCreateAgent,
+      onCreatePipeline,
+      onCreateToolkit,
+      onDeleteParticipant,
+
+      //Unsaved LLM settings
+      unsavedLLMSettings,
+      setUnsavedLLMSettings,
+      uploadAttachments,
+      isUploadingAttachments,
+      uploadProgress,
+      onOpenArtifactPreview,
+
+      // Override for entity-created routing (e.g. generated-entities tab panel)
+      onEntityCreated: onEntityCreatedProp,
+      onEntityDeleted: onEntityDeletedProp,
+    } = props;
+
+    const styles = chatBoxStyles();
+
+    const chatInput = useRef(null);
+    const setActiveConversationRef = useRef(setActiveConversation);
+    const questionItemRef = useRef();
+    const activeConversationRef = useRef(activeConversation);
+    // Store the participant_id from conversation creation to use for subsequent messages
+    // This ensures we use the correct participant_id even before React state update propagates
+    const participantIdRef = useRef(null);
+    // Track MCP servers the user declined this session (scoped to current conversation).
+    // Map<serverUrl, { tool_name, resource_metadata_url, www_authenticate, resource_metadata }>
+    // Resets automatically when the conversation changes — never written to localStorage.
+    const sessionDeclinedMcpServersRef = useRef(new Map());
+    const lastSentQuestionRef = useRef('');
+    const stopRequestedRef = useRef(false);
+    const isStreamingRef = useRef(false);
+    const stopQueueRef = useRef([]);
+    const isDequeuingRef = useRef(false);
+
+    const dispatch = useDispatch();
+    const { toastError, toastInfo } = useToast();
+
+    // Sockets
+    const socket = useContext(SocketContext);
+    const { emit: emitContinue } = useSocket(sioEvents.chat_continue_predict);
+
+    const projectId = useSelectedProjectId();
+
+    // Advance notice above the input. Shared by chat, agent and pipeline, all of which render
+    // through this component.
+    const budgetWarning = useBudgetWarning({
       projectId,
-      chat_history,
-      deleteApplication,
-      deleteSkill,
-      deleteProjectContext,
-      deleteToolkit,
-      updateMessageMeta,
-      setChatHistory,
-      toastError,
-      onEntityDeletedProp,
-    ],
-  );
-
-  const { chatHistoryRef, emit, emitLeaveRoom } = useChatSocket({
-    mode: 'chat',
-    handleError,
-    chatHistory: chat_history,
-    setChatHistory,
-    activeParticipant,
-    participants: activeConversation?.participants || [],
-    onRcvAgentEvent,
-    onInjectionReport,
-    onInjectionConsumed,
-    isMonoChatting: isAgentsPage,
-    onEntityCreated: onEntityCreatedProp ?? onEntityCreated,
-  });
-
-  const {
-    suggestions: nextInputSuggestions,
-    accept: acceptNextInputSuggestion,
-    dismiss: dismissNextInputSuggestion,
-  } = useNextInputSuggestion({
-    chatHistoryRef,
-    chatHistory: chat_history,
-    conversationUuid: activeConversation?.uuid,
-    getInputContent: () => chatInput.current?.getInputContent(),
-  });
-
-  const handleSuggestionSelect = useCallback(
-    index => {
-      const text = acceptNextInputSuggestion(index);
-      if (text) {
-        chatInput.current?.setValue(text);
-        chatInput.current?.focus();
-      }
-    },
-    [acceptNextInputSuggestion],
-  );
-
-  const userParticipantId = useMemo(
-    () =>
-      activeConversation?.participants.find(
-        p => p.entity_name === ChatParticipantType.Users && p.entity_meta?.id === userId,
-      )?.id,
-    [activeConversation?.participants, userId],
-  );
-
-  const { isStreaming, onStopStreaming, disableCleanup, enableCleanup } = useStopStreaming({
-    chatHistoryRef,
-    chatHistory: chat_history,
-    setChatHistory,
-    emitLeaveRoom,
-    userParticipantId,
-    userId,
-  });
-
-  // Disable cleanup when editing canvas or agent
-  useEffect(() => {
-    if (selectedCodeBlockInfo?.canvasId || isEditingAgent) {
-      disableCleanup();
-    } else {
-      enableCleanup();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCodeBlockInfo?.canvasId, isEditingAgent]);
-
-  useLayoutEffect(() => {
-    isStreamingRef.current = isStreaming;
-  }, [isStreaming]);
-  useEffect(() => {
-    setIsStreaming?.(isStreaming);
-  }, [isStreaming, setIsStreaming]);
-
-  const { setStreamingInfo, stopStreaming, clearConversationStreamingInfo, isStreamingNow } =
-    useChatStreaming({
-      conversationId: activeConversation?.uuid,
-      chatHistory: chat_history,
-      onStopStreaming,
-      isChatStreaming: !isAgentsPage,
+      conversationId: activeConversation?.id,
     });
 
-  const stopStreamingRef = useRef(stopStreaming);
+    const [regenerate] = useRegenerateMutation();
+    const [injectMessage] = useInjectMessageMutation();
+    const [conversationEdit] = useConversationEditMutation();
+    const [removeAttachment] = useRemoveAttachmentsMutation();
+    const [updateChatLlmSettings, { isLoading: modelSettingsAreSaving }] =
+      useUpdateParticipantLlmSettingsMutation();
 
-  useEffect(() => {
-    setActiveConversationRef.current = setActiveConversation;
-  }, [setActiveConversation]);
+    const { name, id: userId, avatar } = useSelector(state => state.user);
 
-  useEffect(() => {
-    stopStreamingRef.current = stopStreaming;
-  }, [stopStreaming]);
+    const { chat_history, pendingHitlMessage } = useMemo(() => {
+      const history = activeConversation?.chat_history || [];
 
-  useEffect(() => {
-    if (isStreaming) return;
+      return {
+        chat_history: history,
+        pendingHitlMessage: getPendingHitlMessage(history),
+      };
+    }, [activeConversation?.chat_history]);
 
-    const wasStopRequested = stopRequestedRef.current;
-    const lastSentQuestion = lastSentQuestionRef.current;
-    lastSentQuestionRef.current = '';
-    stopRequestedRef.current = false;
+    const hasPendingHitlInterrupt = Boolean(
+      pendingHitlMessage?.hitlInterrupt || pendingHitlMessage?.hitlInterrupts?.length,
+    );
 
-    // Safety net: only rescue pending items when the user explicitly stopped the task.
-    // For normal finishes InjectionConsumedReport will arrive and handle it — rescuing
-    // early would clear the authoritative map before that report arrives, potentially
-    // causing a duplicate send when the report is later processed.
-    if (wasStopRequested && pendingInjectionsRef.current.size) {
-      const rescued = [...pendingInjectionsRef.current.entries()].map(([id, text]) => ({ id, text }));
-      stopQueueRef.current.push(...rescued);
-      pendingInjectionsRef.current = new Map();
-      const rescuedIds = new Set(rescued.map(item => item.id));
-      setPendingInjections(prev =>
-        prev.map(item => (rescuedIds.has(item.id) ? { ...item, inFlight: false } : item)),
-      );
-    }
+    // A clarifying question (ask_user) is a single scalar pause that accepts a
+    // free-text answer. Unlike other HITL pauses it should NOT lock the composer:
+    // the user may either pick an option on the card or type their own reply,
+    // which is routed back as the answer (see onSendMessage).
+    const isPendingClarifyingQuestion = useMemo(() => {
+      if (!pendingHitlMessage) return false;
+      const interrupts = Array.isArray(pendingHitlMessage.hitlInterrupts)
+        ? pendingHitlMessage.hitlInterrupts
+        : pendingHitlMessage.hitlInterrupt
+          ? [pendingHitlMessage.hitlInterrupt]
+          : [];
+      return interrupts.length === 1 && interrupts[0]?.guardrail_type === 'clarifying_question';
+    }, [pendingHitlMessage]);
 
-    // Dequeue one item at a time. isDequeuingRef prevents onInjectionReport from also
-    // sending when the report arrives in the same tick as the isStreaming flip.
-    if (stopQueueRef.current.length) {
-      drainQueue();
-    } else {
-      // Restore the stopped question only when there's nothing queued to send next.
-      // If we dequeued above, onPredictStream will reset the input anyway.
-      if (wasStopRequested && lastSentQuestion) {
-        chatInput.current?.setValue(lastSentQuestion);
+    const hasBlockingHitlInterrupt = hasPendingHitlInterrupt && !isPendingClarifyingQuestion;
+
+    const hasPendingAuthRequired = useMemo(
+      () => hasPendingAuthRequiredAction(chat_history[chat_history.length - 1]),
+      [chat_history],
+    );
+
+    // Chat states
+    const [selectedUsers, setSelectedUsers] = useState([]);
+    const [hasStarterBeenSent, setHasStarterBeenSent] = useState(false);
+    const [isRegenerating, setIsRegenerating] = useState(false);
+
+    // Mentions states
+    const [isMentioningEveryone, setIsMentioningEveryone] = useState(false);
+
+    // Speaking mode states
+    const [isSpeakingMode, setIsSpeakingMode] = useState(false);
+
+    // Query models data
+    const { currentData: modelsData = { items: [], total: 0 } } = useListModelsQuery(
+      { projectId, include_shared: true },
+      { skip: !projectId },
+    );
+
+    // Read-aloud / text-to-speech mini-player (shared with the skill test panel).
+    const {
+      onAutoSpeak: handleAutoSpeak,
+      speakingMessageId,
+      speakingSegments,
+      spokenRange,
+      showPlayer,
+      isPlaying,
+      stop: stopTTS,
+      voicePlayerProps,
+    } = useReadAloud({ projectId, socket });
+
+    const isTheUserChattingNow = useMemo(() => {
+      const latest40Messages = chat_history.slice(-40);
+
+      let isChatting = false;
+      for (let index = 0; index < latest40Messages.length; index++) {
+        const message = latest40Messages[index];
+        if (message && message.isStreaming && message.participant_id === activeParticipant?.id) {
+          if (latest40Messages.find(msg => msg.id === message.question_id && msg.user_id === userId)) {
+            isChatting = true;
+            break;
+          }
+        }
+      }
+      return isChatting;
+    }, [activeParticipant?.id, chat_history, userId]);
+
+    const defaultModel = useMemo(() => {
+      return modelsData.items.find(model => model.default) || modelsData.items[0] || null;
+    }, [modelsData.items]);
+
+    const { selectedModel, setSelectedModel, selectSavedOrDefaultModel } = useSelectedChatModel({
+      projectId,
+      userId,
+      activeConversation,
+      modelsData,
+      defaultModel,
+      isAgentsPage,
+      llmSettings,
+      isLoadingConversation,
+      activeParticipant,
+      onClearActiveParticipant,
+      onChangeParticipantSettings,
+    });
+
+    useEffect(() => {
+      dispatch(chatActions.setCurrentChatModel(selectedModel));
+    }, [dispatch, selectedModel]);
+
+    // Create LLM settings for conversation pages from user settings
+    const conversationLlmSettings = useMemo(() => {
+      if (isAgentsPage) return llmSettings; // Use prop directly for agents page
+
+      const userSettings = NewConversationHelpers.getChatUserSettings(activeConversation, userId);
+      // For steps_limit: prefer value already set by user this session (unsavedLLMSettings),
+      // then the persisted conversation meta value, then the default.
+      // This ensures the correct value is shown both for new conversations (no meta yet)
+      // and after the user changes it in the modal before the first message is sent.
+      const stepsLimit =
+        unsavedLLMSettings?.steps_limit ?? activeConversation?.meta?.steps_limit ?? DEFAULT_STEPS_LIMIT;
+
+      if (isAutoSelection(userSettings)) {
+        return { ...userSettings, steps_limit: stepsLimit };
+      }
+
+      const baseSettings = {
+        model_name: userSettings?.model_name || '',
+        model_project_id: userSettings?.model_project_id || projectId,
+        temperature: userSettings?.temperature || DEFAULT_TEMPERATURE,
+        max_tokens: userSettings?.max_tokens || DEFAULT_MAX_TOKENS,
+        steps_limit: stepsLimit,
+      };
+
+      // Only include reasoning_effort if user had it set or if model supports reasoning
+      if (userSettings?.reasoning_effort !== undefined) {
+        baseSettings.reasoning_effort = userSettings.reasoning_effort;
+      } else {
+        // Find the selected model to check if it supports reasoning
+        const model = ChatHelpers.getSelectedConversationModel(
+          activeConversation,
+          modelsData.items || [],
+          userId,
+        );
+        if (model?.supports_reasoning) {
+          baseSettings.reasoning_effort = DEFAULT_REASONING_EFFORT;
+        }
+      }
+
+      // A reasoning_effort implies the model rejects a custom temperature (issue #5821)
+      if (isLLMSettingsFamilyConflict(baseSettings.temperature, baseSettings.reasoning_effort)) {
+        delete baseSettings.temperature;
+      }
+
+      return baseSettings;
+    }, [
+      isAgentsPage,
+      llmSettings,
+      unsavedLLMSettings,
+      activeConversation,
+      userId,
+      projectId,
+      modelsData.items,
+    ]);
+
+    // We need this useEffect to keep input value while new conversation creation with attachment upload
+    useEffect(() => {
+      const currentValue = chatInput.current?.getInputContent() || '';
+      const needResetInputValue = newConversationQuestion && uploadProgress === 100;
+      const needUpdateInputValue =
+        newConversationQuestion &&
+        isUploadingAttachments &&
+        uploadProgress < 100 &&
+        currentValue !== newConversationQuestion;
+
+      if (needUpdateInputValue) chatInput.current?.setValue(newConversationQuestion);
+      if (needResetInputValue) chatInput.current?.reset();
+    }, [newConversationQuestion, isUploadingAttachments, uploadProgress]);
+
+    const getRegeneratePayload = useCallback(
+      ({ question, question_id, participant, conversationUuid, attachmentList }) => {
+        const realParticipant = participant || activeParticipant || {};
+        // When on agents page, allow model override from dropdown selection
+        // Otherwise use agent's configured model
+        const llm_settings = isAgentsPage
+          ? unsavedLLMSettings || selectionFields(selectedModel)
+          : ChatHelpers.getModelSettings(realParticipant);
+        switch (realParticipant.entity_name) {
+          case ChatParticipantType.Pipelines:
+          case ChatParticipantType.Applications:
+            return {
+              payload: generateApplicationStreamingPayload({
+                projectId: realParticipant.entity_meta?.project_id || projectId,
+                application_id: realParticipant?.entity_meta.id + '',
+                instructions: realParticipant?.entity_settings.instructions,
+                llm_settings,
+                variables: realParticipant?.entity_settings.variables,
+                question,
+                tools: realParticipant?.entity_settings.tools,
+                name,
+                currentVersionId: realParticipant?.entity_settings.version_id,
+                attachmentList,
+              }),
+              project_id: projectId,
+              participant_id: realParticipant.id,
+              conversation_uuid: conversationUuid || activeConversation?.uuid,
+              question_id,
+              interaction_uuid,
+            };
+          default:
+            // throw new Error('Unsupported participant type for regeneration: ' + realParticipant.entity_name)
+            return {
+              payload: generateMessagePayload({
+                question,
+                question_id,
+                participant,
+                conversation_uuid: conversationUuid || activeConversation?.uuid,
+                activeParticipant,
+                interaction_uuid,
+                projectId,
+                selectedModel,
+                participants: activeConversation?.participants || [],
+                attachmentList,
+              }),
+              project_id: projectId,
+              participant_id: realParticipant.id,
+              conversation_uuid: conversationUuid || activeConversation?.uuid,
+              question_id,
+              interaction_uuid,
+            };
+        }
+      },
+      [
+        activeParticipant,
+        projectId,
+        activeConversation?.uuid,
+        activeConversation?.participants,
+        interaction_uuid,
+        name,
+        selectedModel,
+        isAgentsPage,
+        unsavedLLMSettings,
+      ],
+    );
+
+    const getPayload = useCallback(
+      ({ question, question_id, participant, conversationUuid, attachmentList }) => {
+        // For published agent/pipeline participants on the Chat page, use their entity_settings.llm_settings
+        // as fallback so the predict payload carries the correct model override
+        const isPublishedAgentParticipant =
+          !isAgentsPage &&
+          activeParticipant?.entity_meta?.project_id === PUBLIC_PROJECT_ID &&
+          (activeParticipant?.entity_name === ChatParticipantType.Applications ||
+            activeParticipant?.entity_name === ChatParticipantType.Pipelines);
+        const participantLlmSettings = isPublishedAgentParticipant
+          ? activeParticipant?.entity_settings?.llm_settings
+          : undefined;
+
+        const isSendingToUser = Boolean(isMentioningEveryone || selectedUsers.length);
+
+        return generateMessagePayload({
+          attachmentList,
+          question,
+          question_id,
+          participant: isSendingToUser ? null : participant,
+          conversation_uuid: conversationUuid || activeConversation?.uuid,
+          activeParticipant: isSendingToUser ? null : activeParticipant,
+          interaction_uuid,
+          projectId,
+          selectedModel,
+          isSendingToUser,
+          userIds: isMentioningEveryone
+            ? activeConversation?.participants
+                .filter(
+                  it =>
+                    it.entity_name === ChatParticipantType.Users &&
+                    it.entity_meta?.id &&
+                    userId !== it.entity_meta?.id,
+                )
+                .map(it => it.id) || []
+            : selectedUsers.map(user => user.user.id),
+          unsavedLLMSettings: unsavedLLMSettings || participantLlmSettings,
+          participants: activeConversation?.participants || [],
+          allowLLMSettingsOverride: isAgentsPage || !!participantLlmSettings,
+          conversationMeta: activeConversation?.meta,
+        });
+      },
+      [
+        activeConversation?.participants,
+        activeConversation?.uuid,
+        activeConversation?.meta,
+        activeParticipant,
+        interaction_uuid,
+        isAgentsPage,
+        isMentioningEveryone,
+        projectId,
+        selectedModel,
+        selectedUsers,
+        userId,
+        unsavedLLMSettings,
+      ],
+    );
+
+    const handleError = useCallback(() => {
+      if (isRegenerating) {
+        setIsRegenerating(false);
+      }
+    }, [isRegenerating]);
+
+    const onDeleteChatMessage = useCallback(
+      async (messageIdToDelete, callback) => {
+        if (onDeleteMessage) {
+          await onDeleteMessage(messageIdToDelete, callback);
+        } else {
+          callback?.();
+        }
+      },
+      [onDeleteMessage],
+    );
+
+    const onDeleteAllChatMessages = useCallback(
+      async callback => {
+        await onDeleteAllMessages(callback);
+      },
+      [onDeleteAllMessages],
+    );
+
+    // Injections sent but not yet confirmed consumed. Mirrored into state because the
+    // queue is rendered above the input: with no visible "waiting" chip an injection
+    // looks like it vanished, since its own bubble is scrolled away behind live pins.
+    const [pendingInjections, setPendingInjections] = useState([]);
+    const pendingInjectionsRef = useRef(new Map());
+
+    // Acked: the loop folded it in and a timeline pin now shows it, so stop waiting.
+    const onInjectionConsumed = useCallback(injectionId => {
+      pendingInjectionsRef.current.delete(injectionId);
+      stopQueueRef.current = stopQueueRef.current.filter(item => item.id !== injectionId);
+      setPendingInjections(prev => prev.filter(item => item.id !== injectionId));
+    }, []);
+
+    // User explicitly removed a queued item before it was consumed.
+    const onRemovePendingInjection = useCallback(injectionId => {
+      pendingInjectionsRef.current.delete(injectionId);
+      stopQueueRef.current = stopQueueRef.current.filter(item => item.id !== injectionId);
+      setPendingInjections(prev => prev.filter(item => item.id !== injectionId));
+    }, []);
+
+    // Drain stopQueueRef one item at a time, using the return value of onPredictStream to detect
+    // bail-outs. Returns immediately after a successful emit — the isStreaming effect handles the
+    // next dequeue once that stream ends. Loops past bail-outs so a failed send never strands the
+    // remaining queue.
+    const drainQueue = useCallback(async () => {
+      let next = stopQueueRef.current.shift();
+      while (next) {
+        isDequeuingRef.current = true;
+        setPendingInjections(prev => prev.filter(item => item.id !== next.id));
+
+        const emitted = await onPredictStreamRef.current?.(next.text);
+        if (emitted) return; // emit succeeded — isStreaming effect dequeues the rest
+        // bail-out (upload failed, sendResult.success === false, etc.): try the next item
+        isDequeuingRef.current = false;
+        next = stopQueueRef.current.shift();
       }
       isDequeuingRef.current = false;
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isStreaming]);
+    }, []);
 
-  useEffect(() => {
-    activeConversationRef.current = activeConversation;
-  }, [activeConversation]);
+    // Turn ended: anything still pending was never folded in. Queue unconsumed items for
+    // sequential re-send — one message at a time, each only after the previous finishes
+    // or is stopped. If streaming has already ended by the time this fires (InjectionConsumedReport
+    // arrived after finish_reason cleared isStreaming), send the first item immediately.
+    const onInjectionReport = useCallback(
+      ({ consumed }) => {
+        // Always prune consumed IDs first — on the Stop path the isStreaming effect rescue
+        // has already cleared pendingInjectionsRef, so the pending.size check below would
+        // exit before reaching this block if we put it after.
+        if (consumed?.length) {
+          consumed.forEach(id => {
+            pendingInjectionsRef.current.delete(id);
+            stopQueueRef.current = stopQueueRef.current.filter(item => item.id !== id);
+          });
+          setPendingInjections(prev => prev.filter(item => !consumed.includes(item.id)));
+        }
+        const pending = pendingInjectionsRef.current;
+        if (!pending.size) return;
+        const unconsumed = [...pending.entries()].map(([id, text]) => ({ id, text }));
+        pendingInjectionsRef.current = new Map();
+        // Items are already visible in pendingInjections (added by onInjectMessage).
+        // Just queue them for sequential re-send; they'll be removed from state on dequeue.
+        // Flip inFlight so the remove button becomes visible while they wait in the queue.
+        stopQueueRef.current.push(...unconsumed);
+        const unconsumedIds = new Set(unconsumed.map(item => item.id));
+        setPendingInjections(prev =>
+          prev.map(item => (unconsumedIds.has(item.id) ? { ...item, inFlight: false } : item)),
+        );
+        // If the stream already ended and nothing is currently dequeuing, kick off the chain.
+        // isDequeuingRef prevents the isStreaming effect and this callback from both sending at once.
+        if (!isStreamingRef.current && !isDequeuingRef.current) {
+          drainQueue();
+        }
+      },
+      [drainQueue],
+    );
 
-  // Discard queued items when switching conversations so they can't leak into
-  // an unrelated chat via onPredictStreamRef.
-  useEffect(() => {
-    stopQueueRef.current = [];
-    pendingInjectionsRef.current = new Map();
-    isDequeuingRef.current = false;
-    setPendingInjections([]);
-  }, [activeConversation?.uuid]);
+    const onEntityCreated = useCallback(
+      ({ entity_type, entity_id, version_id, entity_name, is_mcp }) => {
+        const participant = buildEntityParticipant({ entity_id, entity_name, version_id, is_mcp, projectId });
+        if (entity_type === 'agent') {
+          onShowAgentEditor?.(participant);
+        } else if (entity_type === 'pipeline') {
+          onShowPipelineEditor?.(participant);
+        } else if (entity_type === 'skill') {
+          onShowSkillEditor?.(participant);
+        } else if (entity_type === 'project_context') {
+          dispatch(projectContextApis.util.invalidateTags([{ type: 'PROJECT_CONTEXT', id: projectId }]));
+          onShowProjectContextEditor?.(participant);
+        } else if (entity_type === 'toolkit') {
+          onShowToolkitEditor?.(participant);
+        }
+      },
+      [
+        dispatch,
+        projectId,
+        onShowAgentEditor,
+        onShowPipelineEditor,
+        onShowSkillEditor,
+        onShowProjectContextEditor,
+        onShowToolkitEditor,
+      ],
+    );
 
-  // Reset session-declined MCP servers when the conversation changes
-  useEffect(() => {
-    sessionDeclinedMcpServersRef.current = new Map();
-  }, [activeConversation?.id]);
+    const [deleteApplication] = useDeleteApplicationMutation();
+    const [deleteSkill] = useDeleteSkillMutation();
+    const [deleteProjectContext] = useDeleteProjectContextMutation();
+    const [deleteToolkit] = useToolkitDeleteMutation();
+    const [updateMessageMeta] = useUpdateMessageMetaMutation();
 
-  // Sync participantIdRef with activeParticipant.id when it changes
-  // Clear the ref when participant is deselected to allow switching back to model-only mode
-  useEffect(() => {
-    if (activeParticipant?.id) {
-      participantIdRef.current = activeParticipant.id;
-    } else {
-      // Clear ref when participant is deselected
-      participantIdRef.current = null;
-    }
-  }, [activeParticipant?.id]);
+    const onDeleteEntity = useCallback(
+      async ({ entity_type, entity_id }, messageId) => {
+        try {
+          if (entity_type === 'agent' || entity_type === 'pipeline') {
+            await deleteApplication({
+              projectId,
+              applicationId: entity_id,
+              entityType: entity_type,
+            }).unwrap();
+          } else if (entity_type === 'skill') {
+            await deleteSkill({ projectId, skillId: entity_id }).unwrap();
+          } else if (entity_type === 'project_context') {
+            await deleteProjectContext({ projectId }).unwrap();
+          } else if (entity_type === 'toolkit') {
+            await deleteToolkit({ projectId, toolkitId: entity_id }).unwrap();
+          }
+          onEntityDeletedProp?.({ entity_type, entity_id });
+        } catch (err) {
+          toastError(buildErrorMessage(err) || 'Failed to delete entity');
+          return;
+        }
+        const updatedHistory = chat_history.map(msg =>
+          msg.created_entities?.length
+            ? { ...msg, created_entities: msg.created_entities.filter(e => e.entity_id !== entity_id) }
+            : msg,
+        );
+        setChatHistory(updatedHistory);
+        if (messageId) {
+          const updatedMsg = updatedHistory.find(msg => msg.id === messageId);
+          updateMessageMeta({
+            projectId,
+            messageId,
+            meta: { created_entities: updatedMsg?.created_entities ?? [] },
+          });
+        }
+      },
+      [
+        projectId,
+        chat_history,
+        deleteApplication,
+        deleteSkill,
+        deleteProjectContext,
+        deleteToolkit,
+        updateMessageMeta,
+        setChatHistory,
+        toastError,
+        onEntityDeletedProp,
+      ],
+    );
 
-  // Clear participantIdRef when conversation is reset (no uuid means new conversation)
-  useEffect(() => {
-    if (!activeConversation?.uuid) {
-      participantIdRef.current = null;
-    }
-  }, [activeConversation?.uuid]);
+    const { chatHistoryRef, emit, emitLeaveRoom } = useChatSocket({
+      mode: 'chat',
+      handleError,
+      chatHistory: chat_history,
+      setChatHistory,
+      activeParticipant,
+      participants: activeConversation?.participants || [],
+      onRcvAgentEvent,
+      onInjectionReport,
+      onInjectionConsumed,
+      isMonoChatting: isAgentsPage,
+      onEntityCreated: onEntityCreatedProp ?? onEntityCreated,
+    });
 
-  const handleStopStreaming = useCallback(() => {
-    stopRequestedRef.current = true;
-    stopStreamingRef.current?.();
-    onStopRun?.();
-  }, [onStopRun]);
+    const {
+      suggestions: nextInputSuggestions,
+      accept: acceptNextInputSuggestion,
+      dismiss: dismissNextInputSuggestion,
+    } = useNextInputSuggestion({
+      chatHistoryRef,
+      chatHistory: chat_history,
+      conversationUuid: activeConversation?.uuid,
+      getInputContent: () => chatInput.current?.getInputContent(),
+    });
 
-  const { openAlert, onDeleteAnswer, onDeleteAll, onConfirmDelete, onCloseAlert } = useDeleteMessageAlert({
-    setChatHistory,
-    chatInput,
-    onDeleteChatMessage,
-    onDeleteAllChatMessages,
-    deleteAllRunNodes,
-    onStopTTS: stopTTS,
-    dismissNextInputSuggestion,
-  });
+    const handleSuggestionSelect = useCallback(
+      index => {
+        const text = acceptNextInputSuggestion(index);
+        if (text) {
+          chatInput.current?.setValue(text);
+          chatInput.current?.focus();
+        }
+      },
+      [acceptNextInputSuggestion],
+    );
 
-  const onClickClearChat = useCallback(() => {
-    if (chat_history?.length) {
-      if (isAgentsPage) {
-        stopTTS?.();
-        const chatHistory = !activeParticipantDetails?.version_details?.welcome_message
-          ? []
-          : [
-              ChatHelpers.getWelcomeMessage(
-                activeParticipantDetails?.version_details?.welcome_message,
-                activeParticipantDetails?.id,
-              ),
-            ];
+    const userParticipantId = useMemo(
+      () =>
+        activeConversation?.participants.find(
+          p => p.entity_name === ChatParticipantType.Users && p.entity_meta?.id === userId,
+        )?.id,
+      [activeConversation?.participants, userId],
+    );
 
-        const conversationParticipant = {
-          id: activeParticipantDetails?.id,
-          entity_name: 'application',
-          entity_meta: {
+    const { isStreaming, onStopStreaming, disableCleanup, enableCleanup } = useStopStreaming({
+      chatHistoryRef,
+      chatHistory: chat_history,
+      setChatHistory,
+      emitLeaveRoom,
+      userParticipantId,
+      userId,
+    });
+
+    // Disable cleanup when editing canvas or agent
+    useEffect(() => {
+      if (selectedCodeBlockInfo?.canvasId || isEditingAgent) {
+        disableCleanup();
+      } else {
+        enableCleanup();
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedCodeBlockInfo?.canvasId, isEditingAgent]);
+
+    useLayoutEffect(() => {
+      isStreamingRef.current = isStreaming;
+    }, [isStreaming]);
+    useEffect(() => {
+      setIsStreaming?.(isStreaming);
+    }, [isStreaming, setIsStreaming]);
+
+    const { setStreamingInfo, stopStreaming, clearConversationStreamingInfo, isStreamingNow } =
+      useChatStreaming({
+        conversationId: activeConversation?.uuid,
+        chatHistory: chat_history,
+        onStopStreaming,
+        isChatStreaming: !isAgentsPage,
+      });
+
+    const stopStreamingRef = useRef(stopStreaming);
+
+    useEffect(() => {
+      setActiveConversationRef.current = setActiveConversation;
+    }, [setActiveConversation]);
+
+    useEffect(() => {
+      stopStreamingRef.current = stopStreaming;
+    }, [stopStreaming]);
+
+    useEffect(() => {
+      if (isStreaming) return;
+
+      const wasStopRequested = stopRequestedRef.current;
+      const lastSentQuestion = lastSentQuestionRef.current;
+      lastSentQuestionRef.current = '';
+      stopRequestedRef.current = false;
+
+      // Safety net: only rescue pending items when the user explicitly stopped the task.
+      // For normal finishes InjectionConsumedReport will arrive and handle it — rescuing
+      // early would clear the authoritative map before that report arrives, potentially
+      // causing a duplicate send when the report is later processed.
+      if (wasStopRequested && pendingInjectionsRef.current.size) {
+        const rescued = [...pendingInjectionsRef.current.entries()].map(([id, text]) => ({ id, text }));
+        stopQueueRef.current.push(...rescued);
+        pendingInjectionsRef.current = new Map();
+        const rescuedIds = new Set(rescued.map(item => item.id));
+        setPendingInjections(prev =>
+          prev.map(item => (rescuedIds.has(item.id) ? { ...item, inFlight: false } : item)),
+        );
+      }
+
+      // Dequeue one item at a time. isDequeuingRef prevents onInjectionReport from also
+      // sending when the report arrives in the same tick as the isStreaming flip.
+      if (stopQueueRef.current.length) {
+        drainQueue();
+      } else {
+        // Restore the stopped question only when there's nothing queued to send next.
+        // If we dequeued above, onPredictStream will reset the input anyway.
+        if (wasStopRequested && lastSentQuestion) {
+          chatInput.current?.setValue(lastSentQuestion);
+        }
+        isDequeuingRef.current = false;
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isStreaming]);
+
+    useEffect(() => {
+      activeConversationRef.current = activeConversation;
+    }, [activeConversation]);
+
+    // Discard queued items when switching conversations so they can't leak into
+    // an unrelated chat via onPredictStreamRef.
+    useEffect(() => {
+      stopQueueRef.current = [];
+      pendingInjectionsRef.current = new Map();
+      isDequeuingRef.current = false;
+      setPendingInjections([]);
+    }, [activeConversation?.uuid]);
+
+    // Reset session-declined MCP servers when the conversation changes
+    useEffect(() => {
+      sessionDeclinedMcpServersRef.current = new Map();
+    }, [activeConversation?.id]);
+
+    // Sync participantIdRef with activeParticipant.id when it changes
+    // Clear the ref when participant is deselected to allow switching back to model-only mode
+    useEffect(() => {
+      if (activeParticipant?.id) {
+        participantIdRef.current = activeParticipant.id;
+      } else {
+        // Clear ref when participant is deselected
+        participantIdRef.current = null;
+      }
+    }, [activeParticipant?.id]);
+
+    // Clear participantIdRef when conversation is reset (no uuid means new conversation)
+    useEffect(() => {
+      if (!activeConversation?.uuid) {
+        participantIdRef.current = null;
+      }
+    }, [activeConversation?.uuid]);
+
+    const handleStopStreaming = useCallback(() => {
+      stopRequestedRef.current = true;
+      stopStreamingRef.current?.();
+      onStopRun?.();
+    }, [onStopRun]);
+
+    const { openAlert, onDeleteAnswer, onDeleteAll, onConfirmDelete, onCloseAlert } = useDeleteMessageAlert({
+      setChatHistory,
+      chatInput,
+      onDeleteChatMessage,
+      onDeleteAllChatMessages,
+      deleteAllRunNodes,
+      onStopTTS: stopTTS,
+      dismissNextInputSuggestion,
+    });
+
+    const onClickClearChat = useCallback(() => {
+      if (chat_history?.length) {
+        if (isAgentsPage) {
+          stopTTS?.();
+          const chatHistory = !activeParticipantDetails?.version_details?.welcome_message
+            ? []
+            : [
+                ChatHelpers.getWelcomeMessage(
+                  activeParticipantDetails?.version_details?.welcome_message,
+                  activeParticipantDetails?.id,
+                ),
+              ];
+
+          const conversationParticipant = {
             id: activeParticipantDetails?.id,
-            name: activeParticipantDetails?.name,
-            project_id: activeParticipantDetails?.project_id,
-          },
-          entity_settings: {
-            variables: activeParticipantDetails?.version_details?.variables || [],
-            instructions: activeParticipantDetails?.version_details?.instructions || '',
-            tools: activeParticipantDetails?.version_details?.tools || [],
-            llm_settings: activeParticipantDetails?.version_details?.llm_settings || {},
-            version_id: activeParticipantDetails?.version_details?.id,
-            icon_meta: activeParticipantDetails?.version_details?.meta?.icon_meta || {},
-            ...(activeParticipantDetails?.version_details?.agent_type && {
-              agent_type: activeParticipantDetails.version_details.agent_type,
-            }),
-          },
-          meta: {
-            name: activeParticipantDetails?.name,
-          },
+            entity_name: 'application',
+            entity_meta: {
+              id: activeParticipantDetails?.id,
+              name: activeParticipantDetails?.name,
+              project_id: activeParticipantDetails?.project_id,
+            },
+            entity_settings: {
+              variables: activeParticipantDetails?.version_details?.variables || [],
+              instructions: activeParticipantDetails?.version_details?.instructions || '',
+              tools: activeParticipantDetails?.version_details?.tools || [],
+              llm_settings: activeParticipantDetails?.version_details?.llm_settings || {},
+              version_id: activeParticipantDetails?.version_details?.id,
+              icon_meta: activeParticipantDetails?.version_details?.meta?.icon_meta || {},
+              ...(activeParticipantDetails?.version_details?.agent_type && {
+                agent_type: activeParticipantDetails.version_details.agent_type,
+              }),
+            },
+            meta: {
+              name: activeParticipantDetails?.name,
+            },
+          };
+
+          setChatHistory(chatHistory);
+          setActiveConversation({
+            name: `Chat with ${activeParticipantDetails.name}`,
+            is_private: true,
+            source: 'agent',
+            participants: [conversationParticipant],
+            chat_history: chatHistory,
+            isNew: true,
+            isApplicationChat: true,
+          });
+
+          chatInput.current?.reset();
+        } else {
+          onDeleteAll();
+        }
+
+        clearConversationStreamingInfo?.();
+      }
+    }, [
+      chat_history?.length,
+      isAgentsPage,
+      clearConversationStreamingInfo,
+      activeParticipantDetails,
+      setChatHistory,
+      setActiveConversation,
+      onDeleteAll,
+      stopTTS,
+    ]);
+
+    useEffect(() => {
+      if (
+        !chat_history?.length ||
+        (chat_history?.length === 1 && chat_history[0].id === WELCOME_MESSAGE_ID)
+      ) {
+        setHasStarterBeenSent(false);
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [chat_history?.length]);
+
+    useImperativeHandle(boxRef, () => ({
+      onClear: onClickClearChat,
+      mentionUser: content => {
+        chatInput.current?.mentionUser(content);
+      },
+      selectEveryoneMention: () => {
+        onSelectUserMention({ id: '@everyone', name: 'Everyone', participant: 'All users' });
+      },
+      stopAll: handleStopStreaming,
+    }));
+    const isSendingToUser = isMentioningEveryone || selectedUsers.length > 0;
+    // Direct state management instead of useScrollUserInputEffect hook
+    const [askingQuestionId, setAskingQuestionId] = useState();
+
+    const onRemoveAttachment = useCallback(
+      async (fileName, needToRemoveFromStorage) => {
+        try {
+          // If the attachment has been uploaded (has URL), call API to remove it from server
+          if (activeConversation?.id) {
+            await removeAttachment({
+              projectId,
+              conversationId: activeConversation.id,
+              attachments: [{ name: fileName }],
+              keep_in_storage: !needToRemoveFromStorage,
+            }).unwrap();
+          }
+
+          if (attachments.length) {
+            // Remove from local state
+            const localIndex = attachments.findIndex(item => item.name === fileName);
+
+            if (localIndex !== -1) onDeleteAttachment?.(localIndex);
+          }
+        } catch (error) {
+          toastError(buildErrorMessage(error) || 'Failed to remove attachment');
+        }
+      },
+      [activeConversation?.id, attachments, onDeleteAttachment, projectId, removeAttachment, toastError],
+    );
+
+    const {
+      slashPhase,
+      slashToolkitQuery,
+      slashToolQuery,
+      slashSelectedToolkit,
+      slashIsQueryFinal,
+      slashOnKeyDown,
+      participantToolkits,
+      resetSlash,
+      clearMentions,
+      onSlashSelectToolkit,
+      onSlashCommitMention,
+      onSlashInputChange,
+      slashHighlightRanges,
+      slashActiveIndex,
+      slashSetActiveIndex,
+      slashItemCountRef,
+      slashOnConfirmActiveRef,
+    } = useSlashMention({ chatInput, activeConversation });
+
+    const {
+      skillPhase,
+      filteredItems: skillFilteredItems,
+      committedMentions: skillCommittedMentions,
+      highlightedIndex: skillHighlightedIndex,
+      onSkillInputChange,
+      onSkillKeyDown,
+      onSelectSkill,
+      resetSkill,
+      skillHighlightRanges,
+    } = useChatSkillMention({ chatInput, activeParticipant, activeParticipantDetails, projectId });
+
+    const isSkillPhaseActive = skillPhase !== MentionConstants.MentionPhase.Idle;
+
+    const onPredictStream = useCallback(
+      async question => {
+        let emitted = false;
+        // Before sending a new message, track any pending MCP server (that required auth) as session-declined.
+        // This handles the case where user sends a new message instead of clicking Continue.
+        // Only the last message can have actionRequired status.
+        const lastMessage = chat_history[chat_history.length - 1];
+        const authRequiredAction = lastMessage?.toolActions?.find(
+          action => action.status === ToolActionStatus.actionRequired,
+        );
+        const serverUrl = authRequiredAction?.toolOutputs?.server_url;
+        if (serverUrl) {
+          const authOutputs = authRequiredAction?.toolOutputs || {};
+          const authMeta = authRequiredAction?.toolMeta || {};
+          sessionDeclinedMcpServersRef.current.set(serverUrl, {
+            actual_server_url: authMeta.server_url || null,
+            tool_name: authOutputs.tool_name || '',
+            resource_metadata_url: authOutputs.resource_metadata_url || null,
+            www_authenticate: authOutputs.www_authenticate || null,
+            resource_metadata: authOutputs.resource_metadata || null,
+            toolkit_type: authOutputs.toolkit_type || null,
+          });
+        }
+
+        const participant = activeParticipant;
+        const question_id = uuidv4(); // Use uuidv4 instead of useId hook
+        const makeEventPayload = conversationUuid =>
+          getPayload({ question, participant, question_id, conversationUuid, attachmentList: attachments });
+        let newMessages = initializeNewMessages({
+          question,
+          question_id,
+          participant,
+          userId,
+          name,
+          avatar,
+          isSendingToUser,
+        });
+        const initialConversationUuid = activeConversation?.uuid;
+        let eventPayload = makeEventPayload(initialConversationUuid);
+
+        // Prepare message data for onSend callback
+        const messageData = {
+          userInput: question,
+          newMessages,
+          eventPayload,
+          needsConversationCreation: !activeConversation?.uuid && isAgentsPage,
+          participant,
+          question_id,
         };
 
-        setChatHistory(chatHistory);
-        setActiveConversation({
-          name: `Chat with ${activeParticipantDetails.name}`,
-          is_private: true,
-          source: 'agent',
-          participants: [conversationParticipant],
-          chat_history: chatHistory,
-          isNew: true,
-          isApplicationChat: true,
-        });
-
-        chatInput.current?.reset();
-      } else {
-        onDeleteAll();
-      }
-
-      clearConversationStreamingInfo?.();
-    }
-  }, [
-    chat_history?.length,
-    isAgentsPage,
-    clearConversationStreamingInfo,
-    activeParticipantDetails,
-    setChatHistory,
-    setActiveConversation,
-    onDeleteAll,
-    stopTTS,
-  ]);
-
-  useEffect(() => {
-    if (!chat_history?.length || (chat_history?.length === 1 && chat_history[0].id === WELCOME_MESSAGE_ID)) {
-      setHasStarterBeenSent(false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chat_history?.length]);
-
-  useImperativeHandle(boxRef, () => ({
-    onClear: onClickClearChat,
-    mentionUser: content => {
-      chatInput.current?.mentionUser(content);
-    },
-    selectEveryoneMention: () => {
-      onSelectUserMention({ id: '@everyone', name: 'Everyone', participant: 'All users' });
-    },
-    stopAll: handleStopStreaming,
-  }));
-  const isSendingToUser = isMentioningEveryone || selectedUsers.length > 0;
-  // Direct state management instead of useScrollUserInputEffect hook
-  const [askingQuestionId, setAskingQuestionId] = useState();
-
-  const onRemoveAttachment = useCallback(
-    async (fileName, needToRemoveFromStorage) => {
-      try {
-        // If the attachment has been uploaded (has URL), call API to remove it from server
-        if (activeConversation?.id) {
-          await removeAttachment({
-            projectId,
-            conversationId: activeConversation.id,
-            attachments: [{ name: fileName }],
-            keep_in_storage: !needToRemoveFromStorage,
-          }).unwrap();
-        }
-
-        if (attachments.length) {
-          // Remove from local state
-          const localIndex = attachments.findIndex(item => item.name === fileName);
-
-          if (localIndex !== -1) onDeleteAttachment?.(localIndex);
-        }
-      } catch (error) {
-        toastError(buildErrorMessage(error) || 'Failed to remove attachment');
-      }
-    },
-    [activeConversation?.id, attachments, onDeleteAttachment, projectId, removeAttachment, toastError],
-  );
-
-  const {
-    slashPhase,
-    slashToolkitQuery,
-    slashToolQuery,
-    slashSelectedToolkit,
-    slashIsQueryFinal,
-    slashOnKeyDown,
-    participantToolkits,
-    resetSlash,
-    clearMentions,
-    onSlashSelectToolkit,
-    onSlashCommitMention,
-    onSlashInputChange,
-    slashHighlightRanges,
-    slashActiveIndex,
-    slashSetActiveIndex,
-    slashItemCountRef,
-    slashOnConfirmActiveRef,
-  } = useSlashMention({ chatInput, activeConversation });
-
-  const {
-    skillPhase,
-    filteredItems: skillFilteredItems,
-    committedMentions: skillCommittedMentions,
-    highlightedIndex: skillHighlightedIndex,
-    onSkillInputChange,
-    onSkillKeyDown,
-    onSelectSkill,
-    resetSkill,
-    skillHighlightRanges,
-  } = useChatSkillMention({ chatInput, activeParticipant, activeParticipantDetails, projectId });
-
-  const isSkillPhaseActive = skillPhase !== MentionConstants.MentionPhase.Idle;
-
-  const onPredictStream = useCallback(
-    async question => {
-      let emitted = false;
-      // Before sending a new message, track any pending MCP server (that required auth) as session-declined.
-      // This handles the case where user sends a new message instead of clicking Continue.
-      // Only the last message can have actionRequired status.
-      const lastMessage = chat_history[chat_history.length - 1];
-      const authRequiredAction = lastMessage?.toolActions?.find(
-        action => action.status === ToolActionStatus.actionRequired,
-      );
-      const serverUrl = authRequiredAction?.toolOutputs?.server_url;
-      if (serverUrl) {
-        const authOutputs = authRequiredAction?.toolOutputs || {};
-        const authMeta = authRequiredAction?.toolMeta || {};
-        sessionDeclinedMcpServersRef.current.set(serverUrl, {
-          actual_server_url: authMeta.server_url || null,
-          tool_name: authOutputs.tool_name || '',
-          resource_metadata_url: authOutputs.resource_metadata_url || null,
-          www_authenticate: authOutputs.www_authenticate || null,
-          resource_metadata: authOutputs.resource_metadata || null,
-          toolkit_type: authOutputs.toolkit_type || null,
-        });
-      }
-
-      const participant = activeParticipant;
-      const question_id = uuidv4(); // Use uuidv4 instead of useId hook
-      const makeEventPayload = conversationUuid =>
-        getPayload({ question, participant, question_id, conversationUuid, attachmentList: attachments });
-      let newMessages = initializeNewMessages({
-        question,
-        question_id,
-        participant,
-        userId,
-        name,
-        avatar,
-        isSendingToUser,
-      });
-      const initialConversationUuid = activeConversation?.uuid;
-      let eventPayload = makeEventPayload(initialConversationUuid);
-
-      // Prepare message data for onSend callback
-      const messageData = {
-        userInput: question,
-        newMessages,
-        eventPayload,
-        needsConversationCreation: !activeConversation?.uuid && isAgentsPage,
-        participant,
-        question_id,
-      };
-
-      let sendResult = { success: true };
-      if (onSend) {
-        sendResult = await onSend(messageData);
-        // If onSend returns an updated event payload, use it
-        if (sendResult?.updatedEventPayload) {
-          eventPayload = sendResult.updatedEventPayload;
-          // Store the participant_id for subsequent messages (before React state update propagates)
-          if (eventPayload.participant_id) {
-            participantIdRef.current = eventPayload.participant_id;
-          }
-        }
-        // Also store participant_id from returned activeParticipant (used by createOrUseConversation)
-        if (sendResult?.activeParticipant?.id) {
-          participantIdRef.current = sendResult.activeParticipant.id;
-        }
-        // If onSend returns updated messages (with correct participant IDs), use them
-        if (sendResult?.updatedMessages) {
-          newMessages = sendResult.updatedMessages;
-        }
-      }
-
-      // Ensure participant_id is set even if activeParticipant.id is undefined
-      // (can happen when React state update hasn't propagated yet)
-      // But skip this when sending to a user via @mention - agent should not respond
-      if (!isSendingToUser && !eventPayload.participant_id && participantIdRef.current) {
-        eventPayload.participant_id = participantIdRef.current;
-      }
-
-      const { success, messages, updatedAttachments } = await uploadAttachments({
-        attachments,
-        conversationId: activeConversation?.id || sendResult.createdConversation?.id || '',
-        messages: newMessages,
-      });
-      if (success) {
-        newMessages = messages;
-        // Rebuild event payload with sanitized attachment names if they were updated
-        if (updatedAttachments) {
-          // Preserve participant_id from the existing eventPayload (which may have been set by onSend)
-          // This is important when creating a new conversation with attachments, as onSend may create
-          // the participant and return its ID in updatedEventPayload, which would otherwise be lost
-          // when rebuilding the payload for sanitized attachments
-          const existingParticipantId = eventPayload?.participant_id;
-          const isNewConversationCreated = sendResult?.createdConversation && !activeConversation?.uuid;
-
-          eventPayload = getPayload({
-            question,
-            participant,
-            question_id,
-            conversationUuid: activeConversation?.uuid || sendResult.createdConversation?.uuid,
-            attachmentList: updatedAttachments,
-          });
-
-          // For agent chats with new conversation creation, always preserve the existing participant_id
-          // to prevent "participant does not exist" errors when attachments are involved
-          // But skip this when sending to a user via @mention - agent should not respond
-          if (!isSendingToUser) {
-            if (isAgentsPage && isNewConversationCreated && existingParticipantId) {
-              eventPayload.participant_id = existingParticipantId;
-            } else {
-              // Restore participant_id if it was set but not included in the rebuilt payload
-              if (existingParticipantId && !eventPayload.participant_id)
-                eventPayload.participant_id = existingParticipantId;
-
-              // Also fall back to stored participant_id ref if still undefined
-              if (!eventPayload.participant_id && participantIdRef.current)
-                eventPayload.participant_id = participantIdRef.current;
+        let sendResult = { success: true };
+        if (onSend) {
+          sendResult = await onSend(messageData);
+          // If onSend returns an updated event payload, use it
+          if (sendResult?.updatedEventPayload) {
+            eventPayload = sendResult.updatedEventPayload;
+            // Store the participant_id for subsequent messages (before React state update propagates)
+            if (eventPayload.participant_id) {
+              participantIdRef.current = eventPayload.participant_id;
             }
           }
+          // Also store participant_id from returned activeParticipant (used by createOrUseConversation)
+          if (sendResult?.activeParticipant?.id) {
+            participantIdRef.current = sendResult.activeParticipant.id;
+          }
+          // If onSend returns updated messages (with correct participant IDs), use them
+          if (sendResult?.updatedMessages) {
+            newMessages = sendResult.updatedMessages;
+          }
         }
-      } else {
-        return;
-      }
 
-      // Continue with common logic if sending was successful
-      if (sendResult?.success !== false) {
-        setChatHistory(prevMessages => {
-          return [...prevMessages, ...newMessages];
+        // Ensure participant_id is set even if activeParticipant.id is undefined
+        // (can happen when React state update hasn't propagated yet)
+        // But skip this when sending to a user via @mention - agent should not respond
+        if (!isSendingToUser && !eventPayload.participant_id && participantIdRef.current) {
+          eventPayload.participant_id = participantIdRef.current;
+        }
+
+        const { success, messages, updatedAttachments } = await uploadAttachments({
+          attachments,
+          conversationId: activeConversation?.id || sendResult.createdConversation?.id || '',
+          messages: newMessages,
         });
-        setAskingQuestionId(question_id);
+        if (success) {
+          newMessages = messages;
+          // Rebuild event payload with sanitized attachment names if they were updated
+          if (updatedAttachments) {
+            // Preserve participant_id from the existing eventPayload (which may have been set by onSend)
+            // This is important when creating a new conversation with attachments, as onSend may create
+            // the participant and return its ID in updatedEventPayload, which would otherwise be lost
+            // when rebuilding the payload for sanitized attachments
+            const existingParticipantId = eventPayload?.participant_id;
+            const isNewConversationCreated = sendResult?.createdConversation && !activeConversation?.uuid;
 
-        // Only set streaming info if not sending to users (captured before state is cleared)
-        if (!isSendingToUser && participant?.entity_name !== 'user') {
-          setStreamingInfo(question_id);
-        }
+            eventPayload = getPayload({
+              question,
+              participant,
+              question_id,
+              conversationUuid: activeConversation?.uuid || sendResult.createdConversation?.uuid,
+              attachmentList: updatedAttachments,
+            });
 
-        // Only emit if we have a conversation UUID (either existing or newly created)
-        // Ensure conversation_uuid is properly set in the payload
-        // Check multiple sources: eventPayload (may be set by onSend), sendResult.createdConversation (new conv), activeConversation (existing)
-        const conversationUuid =
-          eventPayload?.conversation_uuid ||
-          sendResult?.createdConversation?.uuid ||
-          activeConversation?.uuid;
-        if (conversationUuid) {
-          emit({
-            ...eventPayload,
-            conversation_uuid: conversationUuid,
-          });
-          clearMentions();
-          emitted = true;
-        }
+            // For agent chats with new conversation creation, always preserve the existing participant_id
+            // to prevent "participant does not exist" errors when attachments are involved
+            // But skip this when sending to a user via @mention - agent should not respond
+            if (!isSendingToUser) {
+              if (isAgentsPage && isNewConversationCreated && existingParticipantId) {
+                eventPayload.participant_id = existingParticipantId;
+              } else {
+                // Restore participant_id if it was set but not included in the rebuilt payload
+                if (existingParticipantId && !eventPayload.participant_id)
+                  eventPayload.participant_id = existingParticipantId;
 
-        // If a brand-new conversation was just created and the user had set a custom steps_limit
-        // before sending the first message, persist it to the conversation meta now.
-        const newlyCreatedConversationId = sendResult?.createdConversation?.id;
-        if (
-          newlyCreatedConversationId &&
-          !activeConversation?.id &&
-          unsavedLLMSettings?.steps_limit !== undefined
-        ) {
-          conversationEdit({
-            projectId,
-            id: newlyCreatedConversationId,
-            meta: { steps_limit: unsavedLLMSettings.steps_limit },
-          });
-        }
-
-        lastSentQuestionRef.current = question;
-        onClearAttachments?.();
-        chatInput.current?.reset();
-        // Handle participant state changes
-        if (participant?.entity_name === ChatParticipantType.Users) {
-          onClearActiveParticipant(true);
-        } else if (!participant) {
-          setSelectedUsers([]);
-          setIsMentioningEveryone(false);
-          onClearActiveParticipant(true);
-        }
-      }
-      return emitted;
-    },
-    [
-      activeConversation,
-      activeParticipant,
-      attachments,
-      avatar,
-      chat_history,
-      clearMentions,
-      conversationEdit,
-      emit,
-      getPayload,
-      isAgentsPage,
-      isSendingToUser,
-      name,
-      onClearActiveParticipant,
-      onClearAttachments,
-      onSend,
-      projectId,
-      setAskingQuestionId,
-      setChatHistory,
-      setSelectedUsers,
-      setStreamingInfo,
-      unsavedLLMSettings,
-      uploadAttachments,
-      userId,
-    ],
-  );
-
-  const onCopyToClipboard = useCallback(
-    async id => {
-      const message = chat_history.find(item => item.id === id);
-
-      if (message) {
-        if (message.exception) {
-          try {
-            await navigator.clipboard.writeText(JSON.stringify(message.exception));
-            toastInfo('The exception has been copied to the clipboard.');
-          } catch {
-            toastError('Failed to copy the exception!');
+                // Also fall back to stored participant_id ref if still undefined
+                if (!eventPayload.participant_id && participantIdRef.current)
+                  eventPayload.participant_id = participantIdRef.current;
+              }
+            }
           }
         } else {
-          // Handle different message types including images
-          let contentToCopy;
+          return;
+        }
 
-          if (message.message_items) {
-            contentToCopy = message.message_items
-              .map(item => {
-                switch (item.item_type) {
-                  case 'canvas_message':
-                    return item.item_details.latest_version?.canvas_content || '';
-                  case 'attachment_message': {
-                    // Handle attachment as link
-                    const attachmentName = item.item_details.name || 'Attachment';
-                    return `[${attachmentName}]`;
-                  }
-                  default:
-                    return item.item_details.content || '';
-                }
-              })
-              .join(', ');
-          } else {
-            contentToCopy = message.content || '';
+        // Continue with common logic if sending was successful
+        if (sendResult?.success !== false) {
+          setChatHistory(prevMessages => {
+            return [...prevMessages, ...newMessages];
+          });
+          setAskingQuestionId(question_id);
+
+          // Only set streaming info if not sending to users (captured before state is cleared)
+          if (!isSendingToUser && participant?.entity_name !== 'user') {
+            setStreamingInfo(question_id);
           }
 
-          try {
-            await navigator.clipboard.writeText(contentToCopy);
-            toastInfo('The message has been copied to the clipboard.');
-          } catch {
-            toastError('Failed to copy the message!');
+          // Only emit if we have a conversation UUID (either existing or newly created)
+          // Ensure conversation_uuid is properly set in the payload
+          // Check multiple sources: eventPayload (may be set by onSend), sendResult.createdConversation (new conv), activeConversation (existing)
+          const conversationUuid =
+            eventPayload?.conversation_uuid ||
+            sendResult?.createdConversation?.uuid ||
+            activeConversation?.uuid;
+          if (conversationUuid) {
+            emit({
+              ...eventPayload,
+              conversation_uuid: conversationUuid,
+            });
+            clearMentions();
+            emitted = true;
+          }
+
+          // If a brand-new conversation was just created and the user had set a custom steps_limit
+          // before sending the first message, persist it to the conversation meta now.
+          const newlyCreatedConversationId = sendResult?.createdConversation?.id;
+          if (
+            newlyCreatedConversationId &&
+            !activeConversation?.id &&
+            unsavedLLMSettings?.steps_limit !== undefined
+          ) {
+            conversationEdit({
+              projectId,
+              id: newlyCreatedConversationId,
+              meta: { steps_limit: unsavedLLMSettings.steps_limit },
+            });
+          }
+
+          lastSentQuestionRef.current = question;
+          onClearAttachments?.();
+          chatInput.current?.reset();
+          // Handle participant state changes
+          if (participant?.entity_name === ChatParticipantType.Users) {
+            onClearActiveParticipant(true);
+          } else if (!participant) {
+            setSelectedUsers([]);
+            setIsMentioningEveryone(false);
+            onClearActiveParticipant(true);
           }
         }
-      }
-    },
-    [chat_history, toastError, toastInfo],
-  );
-
-  const onRegenerateAnswer = useCallback(
-    async (uuid, messageParticipant, updatedItems, newAttachmentItems) => {
-      stopTTS();
-      chatInput.current?.pauseSpeakingMode?.();
-      setChatHistory(prevMessages => {
-        return prevMessages.map(message =>
-          message.id !== uuid ? message : ChatHelpers.prepareMessageForRegeneration(message),
-        );
-      });
-      chatInput.current?.reset();
-      const oldAnswer = chat_history.find(item => item.id === uuid);
-      const questionIndex = chat_history.findIndex(item => item.id === oldAnswer?.question_id);
-      const theQuestion =
-        chat_history[questionIndex]?.message_items?.find(item => item.item_type === 'text_message')
-          ?.item_details?.content || '';
-      lastSentQuestionRef.current = theQuestion;
-      const attachmentList =
-        newAttachmentItems !== undefined
-          ? newAttachmentItems.map(i => ({ filepath: i.item_details.filepath }))
-          : (
-              chat_history[questionIndex]?.message_items?.filter(
-                item => item.item_type === 'attachment_message',
-              ) || []
-            ).map(i => ({ filepath: i.item_details.filepath }));
-      const question_id = chat_history[questionIndex]?.id;
-      const leftChatHistory = chat_history.slice(0, questionIndex);
-
-      const payload = getRegeneratePayload({
-        question: theQuestion,
-        question_id,
-        participant: messageParticipant,
-        chatHistory: leftChatHistory,
-        attachmentList,
-      });
-      payload.message_id = uuid;
-      payload.stream_id = uuid;
-      if (updatedItems?.length) {
-        payload.updated_items = updatedItems;
-      }
-      setTimeout(() => {
-        setStreamingInfo(question_id);
-      }, 20);
-      const { error: regenerateError } = await regenerate({
-        ...payload,
-        sid: socket?.id,
+        return emitted;
+      },
+      [
+        activeConversation,
+        activeParticipant,
+        attachments,
+        avatar,
+        chat_history,
+        clearMentions,
+        conversationEdit,
+        emit,
+        getPayload,
+        isAgentsPage,
+        isSendingToUser,
+        name,
+        onClearActiveParticipant,
+        onClearAttachments,
+        onSend,
         projectId,
-        id: uuid,
-      });
-      if (regenerateError) {
-        const errorMessage = buildErrorMessage(regenerateError) || 'Regeneration Failed. Please try again.';
-        toastError(errorMessage);
+        setAskingQuestionId,
+        setChatHistory,
+        setSelectedUsers,
+        setStreamingInfo,
+        unsavedLLMSettings,
+        uploadAttachments,
+        userId,
+      ],
+    );
+
+    const onCopyToClipboard = useCallback(
+      async id => {
+        const message = chat_history.find(item => item.id === id);
+
+        if (message) {
+          if (message.exception) {
+            try {
+              await navigator.clipboard.writeText(JSON.stringify(message.exception));
+              toastInfo('The exception has been copied to the clipboard.');
+            } catch {
+              toastError('Failed to copy the exception!');
+            }
+          } else {
+            // Handle different message types including images
+            let contentToCopy;
+
+            if (message.message_items) {
+              contentToCopy = message.message_items
+                .map(item => {
+                  switch (item.item_type) {
+                    case 'canvas_message':
+                      return item.item_details.latest_version?.canvas_content || '';
+                    case 'attachment_message': {
+                      // Handle attachment as link
+                      const attachmentName = item.item_details.name || 'Attachment';
+                      return `[${attachmentName}]`;
+                    }
+                    default:
+                      return item.item_details.content || '';
+                  }
+                })
+                .join(', ');
+            } else {
+              contentToCopy = message.content || '';
+            }
+
+            try {
+              await navigator.clipboard.writeText(contentToCopy);
+              toastInfo('The message has been copied to the clipboard.');
+            } catch {
+              toastError('Failed to copy the message!');
+            }
+          }
+        }
+      },
+      [chat_history, toastError, toastInfo],
+    );
+
+    const onRegenerateAnswer = useCallback(
+      async (uuid, messageParticipant, updatedItems, newAttachmentItems) => {
+        stopTTS();
+        chatInput.current?.pauseSpeakingMode?.();
         setChatHistory(prevMessages => {
           return prevMessages.map(message =>
-            message.id !== uuid ? message : ChatHelpers.applyMessageRegenerationError(message, errorMessage),
+            message.id !== uuid ? message : ChatHelpers.prepareMessageForRegeneration(message),
           );
         });
-      }
-    },
-    [
-      setChatHistory,
-      chat_history,
-      getRegeneratePayload,
-      setStreamingInfo,
-      regenerate,
-      socket?.id,
-      projectId,
-      stopTTS,
-      toastError,
-    ],
-  );
-
-  /**
-   * Continue MCP execution - shared logic for both auth success and skip auth flows.
-   * @param {string} messageId - The message ID to continue from
-   * @param {boolean} addToIgnoreList - If true, adds the toolkit to this run's declined list
-   * @param {string} authorizationRequestId - Exact durable request to resolve
-   * @param {object} selectedAuthorizationAction - Card/routing metadata for that request
-   */
-  const continueMcpExecution = useCallback(
-    async (messageId, addToIgnoreList = false, authorizationRequestId, selectedAuthorizationAction) => {
-      const message = chat_history.find(item => item.id === messageId);
-      const questionIndex = chat_history.findIndex(item => item.id === message?.question_id);
-      const theQuestion =
-        chat_history[questionIndex]?.message_items?.find(item => item.item_type === 'text_message')
-          ?.item_details?.content || 'Continue';
-      if (!message) {
-        return;
-      }
-
-      // Track or remove the MCP server in the session-declined ref (never localStorage)
-      const authRequiredAction =
-        selectedAuthorizationAction ||
-        message.toolActions?.find(
-          action =>
-            action.status === ToolActionStatus.actionRequired &&
-            (!authorizationRequestId ||
-              action.authorizationRequestId === authorizationRequestId ||
-              action.id === authorizationRequestId),
-        );
-      const serverUrl = authRequiredAction?.toolOutputs?.server_url;
-      if (addToIgnoreList) {
-        // User clicked "Skip" — track as declined for this conversation only
-        if (serverUrl) {
-          const outputs = authRequiredAction?.toolOutputs || {};
-          const toolMeta = authRequiredAction?.toolMeta || {};
-          const authorizationServers =
-            outputs.authorization_servers ||
-            toolMeta.authorization_servers ||
-            toolMeta.resource_metadata?.authorization_servers ||
-            null;
-          const skipReason =
-            outputs.skip_reason || outputs.denial_reason || 'User skipped MCP login for this run.';
-          sessionDeclinedMcpServersRef.current.set(serverUrl, {
-            actual_server_url: toolMeta.server_url || null,
-            tool_name: outputs.tool_name || toolMeta.tool_name || authRequiredAction?.name || '',
-            resource_metadata_url: outputs.resource_metadata_url || toolMeta.resource_metadata_url || null,
-            www_authenticate: outputs.www_authenticate || toolMeta.www_authenticate || null,
-            resource_metadata: outputs.resource_metadata || toolMeta.resource_metadata || null,
-            authorization_servers: authorizationServers,
-            toolkit_type: outputs.toolkit_type || toolMeta.toolkit_type || null,
-            skip_reason: skipReason,
-          });
-        }
-      } else {
-        // Auth succeeded — remove from session-declined so the tool is available again
-        if (serverUrl) {
-          sessionDeclinedMcpServersRef.current.delete(serverUrl);
-        }
-      }
-
-      const { question_id, threadId } = message;
-      const authMeta = authRequiredAction?.toolMeta || {};
-      const resumeThreadId =
-        authMeta.resume_strategy === 'aggregate_child'
-          ? authMeta.child_thread_id || authMeta.thread_id
-          : authMeta.root_thread_id || threadId;
-      const authorizationAction = addToIgnoreList ? 'skip' : 'authorize';
-      const exactRequestId =
-        authorizationRequestId || authRequiredAction?.authorizationRequestId || authRequiredAction?.id;
-
-      const sessionDeclinedMcpServers = [...sessionDeclinedMcpServersRef.current.entries()].map(
-        ([url, { actual_server_url, ...rest }]) => ({
-          server_url: actual_server_url || url,
-          ...rest,
-        }),
-      );
-
-      const continuePayload = {
-        conversation_uuid: activeConversation?.uuid,
-        projectId,
-        message_id: messageId,
-        thread_id: resumeThreadId,
-        participants: activeConversation?.participants || [],
-        question: theQuestion,
-        sessionDeclinedMcpServers,
-      };
-      const isDurableAuthorization = authMeta.guardrail_type === 'mcp_auth' && Boolean(authMeta.interrupt_id);
-      const shouldQueueWithRootHitl = shouldQueueRootAuthorizationWithHitl(
-        authMeta,
-        pendingHitlMessage,
-        messageId,
-      );
-      if (shouldQueueWithRootHitl) {
-        // Root-scoped durable MCP auth shares the same LangGraph checkpoint as
-        // sensitive-tool HITL cards. Route it through the root queue so rapid
-        // auth + sensitive decisions cannot launch concurrent worker resumes.
-        setChatHistory(prevMessages =>
-          prevMessages.map(msg =>
-            msg.id !== messageId
-              ? msg
-              : {
-                  ...msg,
-                  toolActions: msg.toolActions?.filter(
-                    action =>
-                      action.authorizationRequestId !== exactRequestId && action.id !== exactRequestId,
-                  ),
-                },
-          ),
-        );
-        onHitlResumeRef.current?.({
-          action: authorizationAction,
-          value: '',
-          toolCallId: authMeta.tool_call_id,
-          interruptId: exactRequestId,
-          guardrailType: authMeta.guardrail_type,
-          sessionDeclinedMcpServers,
-        });
-        return;
-      }
-      const payload = isDurableAuthorization
-        ? generateMcpContinuePayload({
-            ...continuePayload,
-            authorization_request_id: exactRequestId,
-            authorization_action: authorizationAction,
-            mcp_auth_decisions: [
-              {
-                interrupt_id: exactRequestId,
-                tool_call_id: authMeta.tool_call_id,
-                child_thread_id: authMeta.child_thread_id,
-                action: authorizationAction,
-                value: '',
-              },
-            ],
-          })
-        : generateChatContinuePayload(continuePayload);
-
-      setChatHistory(prevMessages =>
-        prevMessages.map(msg =>
-          msg.id !== messageId
-            ? msg
-            : {
-                ...msg,
-                isLoading: true,
-                isStreaming: true,
-                toolActions: msg.toolActions?.filter(
-                  action => action.authorizationRequestId !== exactRequestId && action.id !== exactRequestId,
-                ),
-              },
-        ),
-      );
-
-      setStreamingInfo(question_id);
-      emitContinue(payload);
-    },
-    [
-      chat_history,
-      activeConversation,
-      projectId,
-      pendingHitlMessage,
-      setChatHistory,
-      setStreamingInfo,
-      emitContinue,
-    ],
-  );
-
-  /**
-   * Continue execution after token limit interruption.
-   * Sends a chat continue payload using the existing conversation, question, and participant context,
-   * allowing the backend to resume the interrupted response without re-sending LLM settings.
-   */
-  const onContinueTokenLimitExecution = useCallback(
-    async messageId => {
-      const message = chat_history.find(item => item.id === messageId);
-      const questionIndex = chat_history.findIndex(item => item.id === message?.question_id);
-      const theQuestion =
-        chat_history[questionIndex]?.message_items?.find(item => item.item_type === 'text_message')
-          ?.item_details?.content || 'Continue';
-      if (!message) {
-        return;
-      }
-
-      const { question_id, threadId } = message;
-
-      const payload = generateChatContinuePayload({
-        conversation_uuid: activeConversation?.uuid,
-        projectId,
-        message_id: messageId,
-        thread_id: threadId,
-        participants: activeConversation?.participants || [],
-        question: theQuestion,
-        tokenLimitContinuation: true,
-      });
-
-      // Update UI to show it's continuing and clear the confirmation state
-      setChatHistory(prevMessages =>
-        prevMessages.map(msg =>
-          msg.id !== messageId
-            ? msg
-            : {
-                ...msg,
-                isLoading: true,
-                isStreaming: true,
-                // Clear requiresConfirmation state since user confirmed to continue
-                requiresConfirmation: undefined,
-                // Flag to prevent StartTask from resetting content on continuation
-                isContinuing: true,
-              },
-        ),
-      );
-
-      dismissNextInputSuggestion();
-      setStreamingInfo(question_id);
-      emitContinue(payload);
-    },
-    [
-      chat_history,
-      activeConversation,
-      projectId,
-      setChatHistory,
-      setStreamingInfo,
-      emitContinue,
-      dismissNextInputSuggestion,
-    ],
-  );
-
-  // A separately dispatched worker child is resumed only once, so decisions
-  // belonging to that durable child are grouped here. In-process root
-  // aggregates do not use this buffer: the SDK supports one leaf decision per
-  // root resume and checkpoints the unresolved siblings.
-  const pendingDecisionsRef = useRef({ messageId: null, decisions: {} });
-  // A root LangGraph checkpoint can accept only one resume command at a time.
-  // Keep cards independently actionable and coalesce rapid choices into one
-  // multi-decision resume. Choices made during an in-flight resume form the
-  // next batch. This stays lightweight: no worker park-and-dispatch task per
-  // paused child.
-  const rootHitlResumeQueueRef = useRef({
-    messageId: null,
-    inFlightIdentities: [],
-    requiredTurnEndRevision: 0,
-    decisions: [],
-  });
-  const rootHitlBatchTimerRef = useRef(null);
-  const onHitlResumeRef = useRef(null);
-
-  const onHitlResume = useCallback(
-    async resumeRequest => {
-      const rootBatch = Array.isArray(resumeRequest?.rootBatch) ? resumeRequest.rootBatch : null;
-      const primaryRequest = rootBatch?.[0] || resumeRequest || {};
-      const sessionDeclinedMcpServers =
-        [...(rootBatch || [])].reverse().find(request => Array.isArray(request?.sessionDeclinedMcpServers))
-          ?.sessionDeclinedMcpServers || resumeRequest?.sessionDeclinedMcpServers;
-      const {
-        action,
-        value,
-        toolCallId: providedToolCallId,
-        interruptId: providedInterruptId,
-        guardrailType,
-      } = primaryRequest;
-      const lastMessage = pendingHitlMessage;
-      if (!lastMessage) return;
-
-      const interrupts = Array.isArray(lastMessage.hitlInterrupts)
-        ? lastMessage.hitlInterrupts
-        : lastMessage.hitlInterrupt
-          ? [lastMessage.hitlInterrupt]
-          : [];
-
-      // The edit path (chat input -> onHitlResume({ action: 'edit', value }))
-      // carries no toolCallId. When exactly one interrupt remains, derive it
-      // from that sole entry so a single still-pending parallel/fan-out child
-      // keeps its tool_call_id-routed resume path instead of falling back to
-      // the legacy hitl_action shape (which the SDK can't match to the child).
-      const selectedIdentity =
-        providedInterruptId || (interrupts.length === 1 ? getInterruptIdentity(interrupts[0]) : undefined);
-      const rootBatchIdentities = new Set((rootBatch || []).map(decision => decision.interruptId));
-      const rootBatchEntries = rootBatch
-        ? interrupts.filter(entry => rootBatchIdentities.has(getInterruptIdentity(entry)))
-        : [];
-      const decidedEntry =
-        rootBatchEntries[0] ||
-        (selectedIdentity
-          ? interrupts.find(entry => getInterruptIdentity(entry) === selectedIdentity)
-          : providedToolCallId
-            ? interrupts.find(entry => entry?.tool_call_id === providedToolCallId)
-            : undefined);
-      const toolCallId =
-        providedToolCallId ||
-        decidedEntry?.tool_call_id ||
-        (interrupts.length === 1 ? interrupts[0]?.tool_call_id || undefined : undefined);
-      // Track 2 fan-out child: each paused child carries its OWN thread_id and
-      // resumes INDEPENDENTLY — emit immediately on that child's thread while
-      // siblings keep running, instead of batching until every card is decided.
-      // ``child_thread_id`` is the durable worker route backed by Core's Redis
-      // launch stash. ``thread_id`` may identify a deeper in-process LangGraph
-      // leaf and must stay inside the per-leaf decision, not become the socket
-      // resume route.
-      const childThreadId = getHitlResumeThreadId(decidedEntry);
-      const isFanoutChild = Boolean(childThreadId);
-      const isSupervisedChild = decidedEntry?.resume_strategy === 'supervised_child';
-      const usesDurablePipelineHistory =
-        interrupts.length === 1 &&
-        !isFanoutChild &&
-        !isSupervisedChild &&
-        isPipelineHitlHistoryInterrupt(decidedEntry);
-      const resumeGroup = rootBatch ? rootBatchEntries : getHitlResumeGroup(interrupts, decidedEntry);
-
-      // Detect a (Track 1) parallel aggregate by the PRESENCE of the
-      // hitlInterrupts array (hooks.js sets it only for backend
-      // `hitl_interrupts`), not by length > 1. A multi-round batch may have only
-      // ONE still-pending child yet must still resume via `hitl_decisions`
-      // (routed by tool_call_id) — the single `hitl_action` path would drop the
-      // SDK to the sequential resume and the suffixed child thread_id would
-      // never match. Fan-out children take the independent path above instead.
-      // A clarifying-question ('answer') is always a single scalar pause — it
-      // never fans out — so it must resume via top-level hitl_action/hitl_value,
-      // never the hitl_decisions list protocol.
-      const isParallel =
-        action !== 'answer' &&
-        !isFanoutChild &&
-        !isSupervisedChild &&
-        !usesDurablePipelineHistory &&
-        ((Array.isArray(lastMessage.hitlInterrupts) && lastMessage.hitlInterrupts.length > 0) ||
-          guardrailType === 'mcp_auth' ||
-          rootBatch?.some(decision => decision.guardrailType === 'mcp_auth')) &&
-        Boolean(selectedIdentity || toolCallId);
-      let parallelDecisions;
-
-      // Single-process supervisor (#6264): send one exact decision immediately
-      // on the active root thread. Core's offer/commit handshake assigns live
-      // ownership without starting another agent process.
-      if (isSupervisedChild && !rootBatch) {
-        const decisionIdentity = getInterruptIdentity(decidedEntry);
-        const supervisedPayload = generateChatContinuePayload({
-          conversation_uuid: activeConversation?.uuid,
-          projectId,
-          message_id: lastMessage.id,
-          thread_id: decidedEntry?.root_thread_id || lastMessage.threadId,
-          participants: activeConversation?.participants || [],
-          question: action === 'edit' ? (value ?? '') : action,
-          sessionDeclinedMcpServers,
-        });
-        supervisedPayload.hitl_resume = true;
-        supervisedPayload.hitl_decisions = [
-          {
-            interrupt_id: decisionIdentity,
-            tool_call_id: toolCallId,
-            action,
-            value: value ?? '',
-          },
-        ];
-        setChatHistory(prevMessages =>
-          prevMessages.map(msg =>
-            msg.id !== lastMessage.id || !Array.isArray(msg.hitlInterrupts)
-              ? msg
-              : {
-                  ...msg,
-                  isLoading: false,
-                  isStreaming: true,
-                  resumingAgentPaths: [getActionOwnerPath(decidedEntry)].filter(path => path.length),
-                  hitlInterrupts: msg.hitlInterrupts.map(entry =>
-                    getInterruptIdentity(entry) === decisionIdentity
-                      ? { ...entry, decided: true, hidden: true }
-                      : entry,
-                  ),
-                },
-          ),
-        );
-        emitContinue(supervisedPayload);
-        return;
-      }
-
-      // Track 2 independent child resume: emit this child's decision NOW on its
-      // own thread; clear ONLY this child's card and leave the parent message
-      // streaming so running siblings keep their live boxes + shimmer.
-      if (isFanoutChild) {
-        if (pendingDecisionsRef.current.messageId !== lastMessage.id) {
-          pendingDecisionsRef.current = { messageId: lastMessage.id, decisions: {} };
-        }
-        const decisionIdentity = getInterruptIdentity(decidedEntry);
-        pendingDecisionsRef.current.decisions[decisionIdentity] = {
-          ...(decidedEntry?.interrupt_id ? { interrupt_id: decidedEntry.interrupt_id } : {}),
-          ...(decidedEntry?.thread_id ? { thread_id: decidedEntry.thread_id } : {}),
-          ...(decidedEntry?.child_thread_id ? { child_thread_id: decidedEntry.child_thread_id } : {}),
-          tool_call_id: toolCallId,
-          action,
-          value: value ?? '',
-        };
-
-        setChatHistory(prevMessages =>
-          prevMessages.map(msg =>
-            msg.id !== lastMessage.id || !Array.isArray(msg.hitlInterrupts)
-              ? msg
-              : {
-                  ...msg,
-                  exception: undefined,
-                  hitlInterrupts: msg.hitlInterrupts.map(entry =>
-                    getInterruptIdentity(entry) === decisionIdentity ? { ...entry, decided: true } : entry,
-                  ),
-                },
-          ),
-        );
-
-        const resumeIdentities = new Set(resumeGroup.map(getInterruptIdentity));
-        const groupComplete = [...resumeIdentities].every(
-          identity => pendingDecisionsRef.current.decisions[identity],
-        );
-        if (!groupComplete) return;
-
-        const childPayload = generateChatContinuePayload({
-          conversation_uuid: activeConversation?.uuid,
-          projectId,
-          message_id: lastMessage.id,
-          thread_id: childThreadId,
-          participants: activeConversation?.participants || [],
-          question: action === 'edit' ? (value ?? '') : action,
-        });
-        childPayload.hitl_resume = true;
-        childPayload.thread_id = childThreadId;
-        childPayload.hitl_decisions = [...resumeIdentities].map(
-          identity => pendingDecisionsRef.current.decisions[identity],
-        );
-        resumeIdentities.forEach(identity => {
-          delete pendingDecisionsRef.current.decisions[identity];
-        });
-
-        // Keep the disabled cards until Core accepts the resume. StartTask is
-        // the acceptance signal and removes only this decided child group;
-        // socket_validation_error restores the cards for another attempt.
-        emitContinue(childPayload);
-        return;
-      }
-
-      // In-process root aggregate: retire every clicked card immediately, then
-      // coalesce rapid choices before issuing the single checkpoint command.
-      // The root returns any still-pending siblings with stable public IDs.
-      if (isParallel && !rootBatch) {
-        const decisionIdentity = selectedIdentity || getInterruptIdentity(decidedEntry);
-        const queuedDecision = {
-          action,
-          value: value ?? '',
-          toolCallId,
-          interruptId: decisionIdentity,
-          ...(guardrailType ? { guardrailType } : {}),
-          ...(Array.isArray(sessionDeclinedMcpServers) ? { sessionDeclinedMcpServers } : {}),
-        };
-        const scheduled = scheduleRootHitlDecision(
-          rootHitlResumeQueueRef.current,
-          lastMessage.id,
-          queuedDecision,
-        );
-        rootHitlResumeQueueRef.current = scheduled.state;
-        if (scheduled.status === 'duplicate') return;
-
-        // Retire the chosen card visually on click while retaining its queued
-        // entry until the coalesced checkpoint resume is accepted.
-        setChatHistory(prevMessages =>
-          prevMessages.map(msg => {
-            if (msg.id !== lastMessage.id || !Array.isArray(msg.hitlInterrupts)) {
-              return msg;
-            }
-            return {
-              ...msg,
-              hitlInterrupts: msg.hitlInterrupts.map(entry =>
-                getInterruptIdentity(entry) === decisionIdentity
-                  ? { ...entry, decided: false, queued: true, hidden: true }
-                  : entry,
-              ),
-            };
-          }),
-        );
-
-        if (scheduled.status === 'schedule') {
-          if (rootHitlBatchTimerRef.current) clearTimeout(rootHitlBatchTimerRef.current);
-          rootHitlBatchTimerRef.current = setTimeout(() => {
-            rootHitlBatchTimerRef.current = null;
-            const batch = completeRootHitlDecision(
-              rootHitlResumeQueueRef.current,
-              interrupts,
-              Number(lastMessage.hitlTurnStartRevision || 0) + 1,
-            );
-            rootHitlResumeQueueRef.current = batch.state;
-            if (batch.nextDecisions.length) {
-              onHitlResumeRef.current?.({ rootBatch: batch.nextDecisions });
-            }
-          }, 150);
-        }
-        return;
-      }
-
-      if (isParallel) {
-        parallelDecisions = rootBatch.map(decision => {
-          const entry = interrupts.find(
-            interrupt => getInterruptIdentity(interrupt) === decision.interruptId,
-          );
-          return {
-            ...(entry?.interrupt_id || decision.interruptId
-              ? { interrupt_id: entry?.interrupt_id || decision.interruptId }
-              : {}),
-            tool_call_id: decision.toolCallId || entry?.tool_call_id,
-            action: decision.action,
-            value: decision.value ?? '',
-          };
-        });
-        setChatHistory(prevMessages =>
-          prevMessages.map(msg => {
-            if (msg.id !== lastMessage.id || !Array.isArray(msg.hitlInterrupts)) return msg;
-            return {
-              ...msg,
-              hitlInterrupts: msg.hitlInterrupts.map(entry =>
-                rootBatchIdentities.has(getInterruptIdentity(entry))
-                  ? { ...entry, decided: true, queued: false, hidden: true }
-                  : entry,
-              ),
-            };
-          }),
-        );
-      }
-
-      const { question_id, threadId, participant_id } = lastMessage;
-      const participant = ChatHelpers.getParticipantById(activeConversation, participant_id);
-      const editMessage =
-        action === 'edit' && !isPipelineHitlNodeInterrupt(decidedEntry)
-          ? ChatHelpers.createHitlEditUserMessage({
-              question: value ?? '',
-              userId,
-              name,
-              avatar,
-              participant,
-            })
-          : null;
-
-      const payload = generateChatContinuePayload({
-        conversation_uuid: activeConversation?.uuid,
-        projectId,
-        message_id: lastMessage.id,
-        thread_id: threadId,
-        participants: activeConversation?.participants || [],
-        question: action === 'edit' ? (value ?? '') : action,
-        sessionDeclinedMcpServers,
-      });
-
-      payload.hitl_resume = true;
-      if (isParallel) {
-        payload.hitl_decisions = parallelDecisions;
-      } else {
-        payload.hitl_action = action;
-        // `edit` carries the rewritten prompt; `block_with_comment` carries the
-        // user's free-text note (-> SDK blocked-tool `denial_reason`, #5318);
-        // `answer` carries the clarifying-question answers object.
-        if (action === 'edit' || action === 'block_with_comment') {
-          payload.hitl_value = value ?? '';
-        } else if (action === 'answer') {
-          payload.hitl_value = value ?? {};
-        }
-        if (usesDurablePipelineHistory) {
-          payload.hitl_decisions = [
-            {
-              interrupt_id: getInterruptIdentity(decidedEntry),
-              action,
-              value: value ?? '',
-            },
-          ];
-        }
-      }
-
-      setChatHistory(prevMessages => {
-        const assistantIndex = prevMessages.findIndex(msg => msg.id === lastMessage.id);
-        if (assistantIndex === -1) {
-          return prevMessages;
-        }
-
-        const nextMessages = [...prevMessages];
-        const assistantMessage = nextMessages[assistantIndex];
-        if (usesDurablePipelineHistory) {
-          nextMessages.splice(assistantIndex, 1, {
-            ...assistantMessage,
-            content: assistantMessage.content || decidedEntry?.message || '',
-            isLoading: false,
-            isStreaming: false,
-            isRegenerating: false,
-            isSending: false,
-            requiresConfirmation: undefined,
-            exception: undefined,
-            hitlInterrupt: undefined,
-            hitlInterrupts: undefined,
-            resumingAgentPaths: undefined,
-          });
-          return nextMessages;
-        }
-        // Preserve the streaming view across the resume instead of wiping it.
-        // On the in-process parallel HITL path LangGraph re-runs ONLY the branches
-        // that are still paused; the sub-agents that already returned a real result
-        // are cached and never re-emit. Clearing toolActions wholesale therefore
-        // made every completed sibling — and the coordinator's own activity —
-        // vanish each round, so the view rebuilt from scratch and flashed "Waking
-        // the agent…", making a parallel run look sequential (#5378/#5379). Drop
-        // only the actions of the exact interrupted leaf invocations. An ancestor
-        // container is also technically unreturned while it waits for that leaf,
-        // but it is not itself replayed and must remain mounted/shimmering. Older
-        // interrupts without an identified path retain the broad fallback.
-        const resumingInterrupts = isParallel ? resumeGroup : interrupts;
-        const resumingAgentPaths = resumingInterrupts.map(getActionOwnerPath).filter(path => path.length);
-        const resumingInvocationIds = new Set(
-          resumingAgentPaths.map(path => path[path.length - 1]?.call_id).filter(Boolean),
-        );
-        const prevToolActions = assistantMessage.toolActions || [];
-        const unreturnedInvocationIds = new Set();
-        prevToolActions.forEach(a => {
-          if (!a || a.type !== TOOL_ACTION_TYPES.Tool) return;
-          const callId = a.parent_agent_call_id || a.toolMeta?.parent_agent_call_id;
-          // The bare invocation wrapper is the ONLY action for a child that carries
-          // a parent_agent_call_id but NO parent_agent_name (inner chips always
-          // stamp parent_agent_name = the child name). Match it robustly off that
-          // absence so a self-named pipeline node chip can't masquerade as it.
-          const isInnerChip = !!(a.parent_agent_name || a.toolMeta?.parent_agent_name);
-          if (!callId || isInnerChip) return;
-          const terminal =
-            a.status === ToolActionStatus.complete ||
-            a.status === ToolActionStatus.error ||
-            a.status === ToolActionStatus.cancelled;
-          const deferred = !!a.hitlDeferred || !!a.toolMeta?.hitl_deferred;
-          const isResumingInvocation = resumingInvocationIds.size === 0 || resumingInvocationIds.has(callId);
-          if ((!terminal || deferred) && isResumingInvocation) unreturnedInvocationIds.add(callId);
-        });
-        const preservedToolActions = prevToolActions.filter(
-          candidateAction => !actionBelongsToInvocationSet(candidateAction, unreturnedInvocationIds),
-        );
-        // Clear the interrupt state in place on the existing assistant
-        // message. We intentionally do NOT clone it into a content-bearing
-        // "archived" bubble — that left a stale "...requires approval..."
-        // message lingering in the view until reload.
-        const resumedAssistantMessage = {
-          ...assistantMessage,
-          content: isParallel ? assistantMessage.content : '',
-          isLoading: true,
-          isStreaming: true,
-          isRegenerating: false,
-          isSending: false,
-          requiresConfirmation: undefined,
-          exception: undefined,
-          // A partial root resume keeps sibling cards mounted while the single
-          // worker checkpoint advances. Only the selected/queued cards are
-          // disabled; untouched siblings stay independently actionable.
-          hitlInterrupt: isParallel ? assistantMessage.hitlInterrupt : undefined,
-          hitlInterrupts: isParallel ? assistantMessage.hitlInterrupts : undefined,
-          resumingAgentPaths,
-          references: [],
-          toolActions: preservedToolActions,
-          replyTo: editMessage ? { ...editMessage } : assistantMessage.replyTo,
-          archivedFromHitl: false,
-        };
-
-        nextMessages.splice(assistantIndex, 1, resumedAssistantMessage);
-
-        if (editMessage) {
-          nextMessages.splice(assistantIndex, 0, editMessage);
-        }
-
-        return nextMessages;
-      });
-
-      if (!usesDurablePipelineHistory) setStreamingInfo(question_id);
-      emitContinue(payload);
-    },
-    [
-      pendingHitlMessage,
-      activeConversation,
-      projectId,
-      userId,
-      name,
-      avatar,
-      setChatHistory,
-      setStreamingInfo,
-      emitContinue,
-    ],
-  );
-
-  onHitlResumeRef.current = onHitlResume;
-
-  // An updated aggregate is the acknowledgement that the previous root resume
-  // finished. Drain every choice made during that run as ONE next batch;
-  // emitting concurrent commands against the same checkpoint is unsafe.
-  useEffect(() => {
-    const queueState = rootHitlResumeQueueRef.current;
-    if (!queueState.inFlightIdentities.length) return;
-
-    if (!pendingHitlMessage || pendingHitlMessage.id !== queueState.messageId) {
-      rootHitlResumeQueueRef.current = {
-        messageId: null,
-        inFlightIdentities: [],
-        requiredTurnEndRevision: 0,
-        decisions: [],
-      };
-      return;
-    }
-    if (pendingHitlMessage.exception) {
-      rootHitlResumeQueueRef.current = {
-        messageId: pendingHitlMessage.id,
-        inFlightIdentities: [],
-        requiredTurnEndRevision: 0,
-        decisions: [],
-      };
-      setChatHistory(prevMessages =>
-        prevMessages.map(msg =>
-          msg.id !== pendingHitlMessage.id || !Array.isArray(msg.hitlInterrupts)
-            ? msg
-            : {
-                ...msg,
-                hitlInterrupts: msg.hitlInterrupts.map(entry => ({
-                  ...entry,
-                  queued: false,
-                  decided: false,
-                  hidden: false,
-                })),
-              },
-        ),
-      );
-      return;
-    }
-
-    // Loading and nested HITL events can toggle while the root checkpoint is
-    // still active. The indexer's InjectionConsumedReport is emitted from the
-    // worker finally block and is the authoritative per-turn release signal.
-    if (!hasRootHitlTurnEnded(queueState, pendingHitlMessage.hitlTurnEndRevision)) return;
-
-    const currentInterrupts = Array.isArray(pendingHitlMessage.hitlInterrupts)
-      ? pendingHitlMessage.hitlInterrupts
-      : [];
-    const completed = completeRootHitlDecision(
-      queueState,
-      currentInterrupts,
-      Number(pendingHitlMessage.hitlTurnStartRevision || 0) + 1,
-    );
-    rootHitlResumeQueueRef.current = completed.state;
-    if (completed.nextDecisions.length) {
-      onHitlResumeRef.current?.({ rootBatch: completed.nextDecisions });
-    }
-  }, [onHitlResume, pendingHitlMessage, setChatHistory]);
-
-  useEffect(
-    () => () => {
-      if (rootHitlBatchTimerRef.current) clearTimeout(rootHitlBatchTimerRef.current);
-    },
-    [],
-  );
-
-  const onSendMessage = useCallback(
-    async question => {
-      stopTTS?.();
-      resetSlash();
-      dismissNextInputSuggestion();
-
-      // A clarifying-question pause accepts a free-text reply: route the typed
-      // message back as the answer instead of starting a new turn.
-      if (isPendingClarifyingQuestion) {
-        const text = typeof question === 'string' ? question.trim() : '';
-        if (!text) return;
         chatInput.current?.reset();
-        return onHitlResume({ action: 'answer', value: text });
-      }
-
-      if (hasBlockingHitlInterrupt) {
-        return;
-      }
-
-      return onPredictStream(question);
-    },
-    [
-      hasBlockingHitlInterrupt,
-      isPendingClarifyingQuestion,
-      onHitlResume,
-      onPredictStream,
-      resetSlash,
-      stopTTS,
-      dismissNextInputSuggestion,
-    ],
-  );
-
-  // Rollback re-sends through the normal path; ref because onPredictStream is
-  // declared after the socket hook that owns the report callback.
-  const onPredictStreamRef = useRef(onPredictStream);
-  useEffect(() => {
-    onPredictStreamRef.current = onPredictStream;
-  }, [onPredictStream]);
-
-  const onInjectMessage = useCallback(
-    async question => {
-      const text = question?.trim();
-      if (!text || !activeConversation?.uuid) return;
-      stopTTS?.();
-      resetSlash();
-
-      const injectionId = uuidv4();
-      // Chat passes clearInputAfterSubmit={false}, so clearing is the caller's job
-      // here just as it is in onPredictStream.
-      chatInput.current?.reset();
-      onClearAttachments?.();
-
-      // If items are already waiting in the stop queue, append to the tail so all
-      // messages process in submission order rather than injecting ahead of the queue.
-      if (stopQueueRef.current.length > 0) {
-        stopQueueRef.current.push({ id: injectionId, text });
-        setPendingInjections(prev => [...prev, { id: injectionId, text, inFlight: false }]);
-        return;
-      }
-
-      pendingInjectionsRef.current.set(injectionId, text);
-      // inFlight from the start: the POST fires immediately, so the remove button is hidden.
-      setPendingInjections(prev => [...prev, { id: injectionId, text, inFlight: true }]);
-      try {
-        await injectMessage({
-          projectId,
-          conversationUuid: activeConversation.uuid,
-          userInput: text,
-          injectionId,
-        }).unwrap();
-      } catch {
-        // The turn may have ended between enabling the control and sending (409),
-        // or the text may be over the size cap (400). Either way it was never
-        // delivered, so fall back to a normal message.
-        pendingInjectionsRef.current.delete(injectionId);
-        setPendingInjections(prev => prev.filter(item => item.id !== injectionId));
-        return onPredictStreamRef.current?.(text);
-      }
-    },
-    [activeConversation?.uuid, injectMessage, onClearAttachments, projectId, resetSlash, stopTTS],
-  );
-
-  const {
-    onKeyDown,
-    isProcessingSymbols,
-    query,
-    stopProcessingSymbols,
-    isProcessingAtSymbol,
-    atQuery,
-    stopProcessingAtSymbol,
-    atAnchorRef,
-  } = useNewInputKeyDownHandler({
-    disableHashtagDetection: isAgentsPage,
-  });
-
-  const combinedKeyDown = useCallback(
-    event => {
-      onKeyDown(event);
-      if (isSkillPhaseActive) {
-        onSkillKeyDown(event);
-        return;
-      }
-      slashOnKeyDown(event);
-    },
-    [onKeyDown, slashOnKeyDown, isSkillPhaseActive, onSkillKeyDown],
-  );
-
-  const combinedInputChange = useCallback(
-    value => {
-      onSlashInputChange(value);
-      onSkillInputChange(value);
-    },
-    [onSlashInputChange, onSkillInputChange],
-  );
-
-  const combinedHighlightRanges = useMemo(
-    () => [...slashHighlightRanges, ...skillHighlightRanges].sort((a, b) => a.start - b.start),
-    [slashHighlightRanges, skillHighlightRanges],
-  );
-
-  const onSelectParticipant = selectedParticipant => {
-    const isSearchParticipant = isProcessingSymbols;
-    const currentQuery = query;
-    stopProcessingSymbols();
-    setTimeout(() => {
-      onSelectThisParticipant(selectedParticipant);
-      if (isSearchParticipant) {
-        chatInput.current?.removeSymbol(currentQuery);
-      }
-    }, 0);
-  };
-
-  const onSelectUserMention = useCallback(
-    user => {
-      if (chatInput.current && atAnchorRef.current !== null) {
-        chatInput.current.replaceRange(
-          atAnchorRef.current,
-          atAnchorRef.current + atQuery.length,
-          '@' + user.name + ' ',
-        );
-      }
-      if (user.id === '@everyone') {
-        setIsMentioningEveryone(true);
-        onClearActiveParticipant();
-        setSelectedUsers([]);
-      } else {
-        setSelectedUsers(prev => [...prev.filter(u => u.user?.id !== user.id), { user, isValid: true }]);
-      }
-      stopProcessingAtSymbol();
-    },
-    // atAnchorRef is a ref — stable, no dep needed
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [atQuery, stopProcessingAtSymbol, onClearActiveParticipant],
-  );
-
-  const onResendQuestionStream = useCallback(
-    async (question_id, question, attachmentList = []) => {
-      const leftChatHistory = chat_history.slice(
-        0,
-        chat_history.findIndex(item => item.id === question_id),
-      );
-      const { participant_id } = chat_history.find(item => item.id === question_id) || {};
-      const participant = ChatHelpers.getParticipantById(activeConversation, participant_id);
-      const payload = getPayload({
-        question,
-        question_id,
-        chatHistory: leftChatHistory,
-        participant,
-        attachmentList,
-      });
-      emit(payload);
-    },
-    [chat_history, activeConversation, getPayload, emit],
-  );
-
-  const onAddEditAttachment = useCallback(
-    async files => {
-      if (!files?.length || !activeConversation?.id) return [];
-      const dummyMessages = [{ message_items: [] }];
-      const { success, messages } = await uploadAttachments({
-        attachments: Array.isArray(files) ? files : [files],
-        conversationId: activeConversation.id,
-        messages: dummyMessages,
-      });
-      if (!success) return [];
-      return messages[0]?.message_items || [];
-    },
-    [activeConversation?.id, uploadAttachments],
-  );
-
-  const onSubmitEditedMessage = useCallback(
-    (id, updatedItems, newAttachmentItems) => {
-      dismissNextInputSuggestion();
-      const textUpdate = updatedItems?.find(u => u.item_type === 'text_message');
-      setChatHistory(prev =>
-        prev.map(item => {
-          if (item.id !== id) return item;
-          return {
-            ...item,
-            ...(textUpdate ? { content: textUpdate.content } : {}),
-            message_items: [
-              ...(item.message_items || [])
-                .filter(mi => mi.item_type !== 'attachment_message')
-                .map(mi => {
-                  const update = updatedItems?.find(u => u.uuid === mi.uuid);
-                  if (!update) return mi;
-                  return { ...mi, item_details: { ...mi.item_details, content: update.content } };
-                }),
-              ...newAttachmentItems,
-            ],
-          };
-        }),
-      );
-      const { id: answerId, participant_id } = chat_history.find(item => item.question_id === id) || {};
-      const participant = ChatHelpers.getParticipantById(activeConversation, participant_id);
-
-      if (answerId) {
-        onRegenerateAnswer(answerId, participant, updatedItems, newAttachmentItems);
-      } else {
-        const question = textUpdate?.content || '';
-        const questionIndex = chat_history.findIndex(item => item.id === id);
+        const oldAnswer = chat_history.find(item => item.id === uuid);
+        const questionIndex = chat_history.findIndex(item => item.id === oldAnswer?.question_id);
+        const theQuestion =
+          chat_history[questionIndex]?.message_items?.find(item => item.item_type === 'text_message')
+            ?.item_details?.content || '';
+        lastSentQuestionRef.current = theQuestion;
         const attachmentList =
           newAttachmentItems !== undefined
             ? newAttachmentItems.map(i => ({ filepath: i.item_details.filepath }))
@@ -2339,348 +1326,1259 @@ const ChatBox = forwardRef((props, boxRef) => {
                   item => item.item_type === 'attachment_message',
                 ) || []
               ).map(i => ({ filepath: i.item_details.filepath }));
-        onResendQuestionStream(id, question, attachmentList);
+        const question_id = chat_history[questionIndex]?.id;
+        const leftChatHistory = chat_history.slice(0, questionIndex);
+
+        const payload = getRegeneratePayload({
+          question: theQuestion,
+          question_id,
+          participant: messageParticipant,
+          chatHistory: leftChatHistory,
+          attachmentList,
+        });
+        payload.message_id = uuid;
+        payload.stream_id = uuid;
+        if (updatedItems?.length) {
+          payload.updated_items = updatedItems;
+        }
+        setTimeout(() => {
+          setStreamingInfo(question_id);
+        }, 20);
+        const { error: regenerateError } = await regenerate({
+          ...payload,
+          sid: socket?.id,
+          projectId,
+          id: uuid,
+        });
+        if (regenerateError) {
+          const errorMessage = buildErrorMessage(regenerateError) || 'Regeneration Failed. Please try again.';
+          toastError(errorMessage);
+          setChatHistory(prevMessages => {
+            return prevMessages.map(message =>
+              message.id !== uuid
+                ? message
+                : ChatHelpers.applyMessageRegenerationError(message, errorMessage),
+            );
+          });
+        }
+      },
+      [
+        setChatHistory,
+        chat_history,
+        getRegeneratePayload,
+        setStreamingInfo,
+        regenerate,
+        socket?.id,
+        projectId,
+        stopTTS,
+        toastError,
+      ],
+    );
+
+    /**
+     * Continue MCP execution - shared logic for both auth success and skip auth flows.
+     * @param {string} messageId - The message ID to continue from
+     * @param {boolean} addToIgnoreList - If true, adds the toolkit to this run's declined list
+     * @param {string} authorizationRequestId - Exact durable request to resolve
+     * @param {object} selectedAuthorizationAction - Card/routing metadata for that request
+     */
+    const continueMcpExecution = useCallback(
+      async (messageId, addToIgnoreList = false, authorizationRequestId, selectedAuthorizationAction) => {
+        const message = chat_history.find(item => item.id === messageId);
+        const questionIndex = chat_history.findIndex(item => item.id === message?.question_id);
+        const theQuestion =
+          chat_history[questionIndex]?.message_items?.find(item => item.item_type === 'text_message')
+            ?.item_details?.content || 'Continue';
+        if (!message) {
+          return;
+        }
+
+        // Track or remove the MCP server in the session-declined ref (never localStorage)
+        const authRequiredAction =
+          selectedAuthorizationAction ||
+          message.toolActions?.find(
+            action =>
+              action.status === ToolActionStatus.actionRequired &&
+              (!authorizationRequestId ||
+                action.authorizationRequestId === authorizationRequestId ||
+                action.id === authorizationRequestId),
+          );
+        const serverUrl = authRequiredAction?.toolOutputs?.server_url;
+        if (addToIgnoreList) {
+          // User clicked "Skip" — track as declined for this conversation only
+          if (serverUrl) {
+            const outputs = authRequiredAction?.toolOutputs || {};
+            const toolMeta = authRequiredAction?.toolMeta || {};
+            const authorizationServers =
+              outputs.authorization_servers ||
+              toolMeta.authorization_servers ||
+              toolMeta.resource_metadata?.authorization_servers ||
+              null;
+            const skipReason =
+              outputs.skip_reason || outputs.denial_reason || 'User skipped MCP login for this run.';
+            sessionDeclinedMcpServersRef.current.set(serverUrl, {
+              actual_server_url: toolMeta.server_url || null,
+              tool_name: outputs.tool_name || toolMeta.tool_name || authRequiredAction?.name || '',
+              resource_metadata_url: outputs.resource_metadata_url || toolMeta.resource_metadata_url || null,
+              www_authenticate: outputs.www_authenticate || toolMeta.www_authenticate || null,
+              resource_metadata: outputs.resource_metadata || toolMeta.resource_metadata || null,
+              authorization_servers: authorizationServers,
+              toolkit_type: outputs.toolkit_type || toolMeta.toolkit_type || null,
+              skip_reason: skipReason,
+            });
+          }
+        } else {
+          // Auth succeeded — remove from session-declined so the tool is available again
+          if (serverUrl) {
+            sessionDeclinedMcpServersRef.current.delete(serverUrl);
+          }
+        }
+
+        const { question_id, threadId } = message;
+        const authMeta = authRequiredAction?.toolMeta || {};
+        const resumeThreadId =
+          authMeta.resume_strategy === 'aggregate_child'
+            ? authMeta.child_thread_id || authMeta.thread_id
+            : authMeta.root_thread_id || threadId;
+        const authorizationAction = addToIgnoreList ? 'skip' : 'authorize';
+        const exactRequestId =
+          authorizationRequestId || authRequiredAction?.authorizationRequestId || authRequiredAction?.id;
+
+        const sessionDeclinedMcpServers = [...sessionDeclinedMcpServersRef.current.entries()].map(
+          ([url, { actual_server_url, ...rest }]) => ({
+            server_url: actual_server_url || url,
+            ...rest,
+          }),
+        );
+
+        const continuePayload = {
+          conversation_uuid: activeConversation?.uuid,
+          projectId,
+          message_id: messageId,
+          thread_id: resumeThreadId,
+          participants: activeConversation?.participants || [],
+          question: theQuestion,
+          sessionDeclinedMcpServers,
+        };
+        const isDurableAuthorization =
+          authMeta.guardrail_type === 'mcp_auth' && Boolean(authMeta.interrupt_id);
+        const shouldQueueWithRootHitl = shouldQueueRootAuthorizationWithHitl(
+          authMeta,
+          pendingHitlMessage,
+          messageId,
+        );
+        if (shouldQueueWithRootHitl) {
+          // Root-scoped durable MCP auth shares the same LangGraph checkpoint as
+          // sensitive-tool HITL cards. Route it through the root queue so rapid
+          // auth + sensitive decisions cannot launch concurrent worker resumes.
+          setChatHistory(prevMessages =>
+            prevMessages.map(msg =>
+              msg.id !== messageId
+                ? msg
+                : {
+                    ...msg,
+                    toolActions: msg.toolActions?.filter(
+                      action =>
+                        action.authorizationRequestId !== exactRequestId && action.id !== exactRequestId,
+                    ),
+                  },
+            ),
+          );
+          onHitlResumeRef.current?.({
+            action: authorizationAction,
+            value: '',
+            toolCallId: authMeta.tool_call_id,
+            interruptId: exactRequestId,
+            guardrailType: authMeta.guardrail_type,
+            sessionDeclinedMcpServers,
+          });
+          return;
+        }
+        const payload = isDurableAuthorization
+          ? generateMcpContinuePayload({
+              ...continuePayload,
+              authorization_request_id: exactRequestId,
+              authorization_action: authorizationAction,
+              mcp_auth_decisions: [
+                {
+                  interrupt_id: exactRequestId,
+                  tool_call_id: authMeta.tool_call_id,
+                  child_thread_id: authMeta.child_thread_id,
+                  action: authorizationAction,
+                  value: '',
+                },
+              ],
+            })
+          : generateChatContinuePayload(continuePayload);
+
+        setChatHistory(prevMessages =>
+          prevMessages.map(msg =>
+            msg.id !== messageId
+              ? msg
+              : {
+                  ...msg,
+                  isLoading: true,
+                  isStreaming: true,
+                  toolActions: msg.toolActions?.filter(
+                    action =>
+                      action.authorizationRequestId !== exactRequestId && action.id !== exactRequestId,
+                  ),
+                },
+          ),
+        );
+
+        setStreamingInfo(question_id);
+        emitContinue(payload);
+      },
+      [
+        chat_history,
+        activeConversation,
+        projectId,
+        pendingHitlMessage,
+        setChatHistory,
+        setStreamingInfo,
+        emitContinue,
+      ],
+    );
+
+    /**
+     * Continue execution after token limit interruption.
+     * Sends a chat continue payload using the existing conversation, question, and participant context,
+     * allowing the backend to resume the interrupted response without re-sending LLM settings.
+     */
+    const onContinueTokenLimitExecution = useCallback(
+      async messageId => {
+        const message = chat_history.find(item => item.id === messageId);
+        const questionIndex = chat_history.findIndex(item => item.id === message?.question_id);
+        const theQuestion =
+          chat_history[questionIndex]?.message_items?.find(item => item.item_type === 'text_message')
+            ?.item_details?.content || 'Continue';
+        if (!message) {
+          return;
+        }
+
+        const { question_id, threadId } = message;
+
+        const payload = generateChatContinuePayload({
+          conversation_uuid: activeConversation?.uuid,
+          projectId,
+          message_id: messageId,
+          thread_id: threadId,
+          participants: activeConversation?.participants || [],
+          question: theQuestion,
+          tokenLimitContinuation: true,
+        });
+
+        // Update UI to show it's continuing and clear the confirmation state
+        setChatHistory(prevMessages =>
+          prevMessages.map(msg =>
+            msg.id !== messageId
+              ? msg
+              : {
+                  ...msg,
+                  isLoading: true,
+                  isStreaming: true,
+                  // Clear requiresConfirmation state since user confirmed to continue
+                  requiresConfirmation: undefined,
+                  // Flag to prevent StartTask from resetting content on continuation
+                  isContinuing: true,
+                },
+          ),
+        );
+
+        dismissNextInputSuggestion();
+        setStreamingInfo(question_id);
+        emitContinue(payload);
+      },
+      [
+        chat_history,
+        activeConversation,
+        projectId,
+        setChatHistory,
+        setStreamingInfo,
+        emitContinue,
+        dismissNextInputSuggestion,
+      ],
+    );
+
+    // A separately dispatched worker child is resumed only once, so decisions
+    // belonging to that durable child are grouped here. In-process root
+    // aggregates do not use this buffer: the SDK supports one leaf decision per
+    // root resume and checkpoints the unresolved siblings.
+    const pendingDecisionsRef = useRef({ messageId: null, decisions: {} });
+    // A root LangGraph checkpoint can accept only one resume command at a time.
+    // Keep cards independently actionable and coalesce rapid choices into one
+    // multi-decision resume. Choices made during an in-flight resume form the
+    // next batch. This stays lightweight: no worker park-and-dispatch task per
+    // paused child.
+    const rootHitlResumeQueueRef = useRef({
+      messageId: null,
+      inFlightIdentities: [],
+      requiredTurnEndRevision: 0,
+      decisions: [],
+    });
+    const rootHitlBatchTimerRef = useRef(null);
+    const onHitlResumeRef = useRef(null);
+
+    const onHitlResume = useCallback(
+      async resumeRequest => {
+        const rootBatch = Array.isArray(resumeRequest?.rootBatch) ? resumeRequest.rootBatch : null;
+        const primaryRequest = rootBatch?.[0] || resumeRequest || {};
+        const sessionDeclinedMcpServers =
+          [...(rootBatch || [])].reverse().find(request => Array.isArray(request?.sessionDeclinedMcpServers))
+            ?.sessionDeclinedMcpServers || resumeRequest?.sessionDeclinedMcpServers;
+        const {
+          action,
+          value,
+          toolCallId: providedToolCallId,
+          interruptId: providedInterruptId,
+          guardrailType,
+        } = primaryRequest;
+        const lastMessage = pendingHitlMessage;
+        if (!lastMessage) return;
+
+        const interrupts = Array.isArray(lastMessage.hitlInterrupts)
+          ? lastMessage.hitlInterrupts
+          : lastMessage.hitlInterrupt
+            ? [lastMessage.hitlInterrupt]
+            : [];
+
+        // The edit path (chat input -> onHitlResume({ action: 'edit', value }))
+        // carries no toolCallId. When exactly one interrupt remains, derive it
+        // from that sole entry so a single still-pending parallel/fan-out child
+        // keeps its tool_call_id-routed resume path instead of falling back to
+        // the legacy hitl_action shape (which the SDK can't match to the child).
+        const selectedIdentity =
+          providedInterruptId || (interrupts.length === 1 ? getInterruptIdentity(interrupts[0]) : undefined);
+        const rootBatchIdentities = new Set((rootBatch || []).map(decision => decision.interruptId));
+        const rootBatchEntries = rootBatch
+          ? interrupts.filter(entry => rootBatchIdentities.has(getInterruptIdentity(entry)))
+          : [];
+        const decidedEntry =
+          rootBatchEntries[0] ||
+          (selectedIdentity
+            ? interrupts.find(entry => getInterruptIdentity(entry) === selectedIdentity)
+            : providedToolCallId
+              ? interrupts.find(entry => entry?.tool_call_id === providedToolCallId)
+              : undefined);
+        const toolCallId =
+          providedToolCallId ||
+          decidedEntry?.tool_call_id ||
+          (interrupts.length === 1 ? interrupts[0]?.tool_call_id || undefined : undefined);
+        // Track 2 fan-out child: each paused child carries its OWN thread_id and
+        // resumes INDEPENDENTLY — emit immediately on that child's thread while
+        // siblings keep running, instead of batching until every card is decided.
+        // ``child_thread_id`` is the durable worker route backed by Core's Redis
+        // launch stash. ``thread_id`` may identify a deeper in-process LangGraph
+        // leaf and must stay inside the per-leaf decision, not become the socket
+        // resume route.
+        const childThreadId = getHitlResumeThreadId(decidedEntry);
+        const isFanoutChild = Boolean(childThreadId);
+        const isSupervisedChild = decidedEntry?.resume_strategy === 'supervised_child';
+        const usesDurablePipelineHistory =
+          interrupts.length === 1 &&
+          !isFanoutChild &&
+          !isSupervisedChild &&
+          isPipelineHitlHistoryInterrupt(decidedEntry);
+        const resumeGroup = rootBatch ? rootBatchEntries : getHitlResumeGroup(interrupts, decidedEntry);
+
+        // Detect a (Track 1) parallel aggregate by the PRESENCE of the
+        // hitlInterrupts array (hooks.js sets it only for backend
+        // `hitl_interrupts`), not by length > 1. A multi-round batch may have only
+        // ONE still-pending child yet must still resume via `hitl_decisions`
+        // (routed by tool_call_id) — the single `hitl_action` path would drop the
+        // SDK to the sequential resume and the suffixed child thread_id would
+        // never match. Fan-out children take the independent path above instead.
+        // A clarifying-question ('answer') is always a single scalar pause — it
+        // never fans out — so it must resume via top-level hitl_action/hitl_value,
+        // never the hitl_decisions list protocol.
+        const isParallel =
+          action !== 'answer' &&
+          !isFanoutChild &&
+          !isSupervisedChild &&
+          !usesDurablePipelineHistory &&
+          ((Array.isArray(lastMessage.hitlInterrupts) && lastMessage.hitlInterrupts.length > 0) ||
+            guardrailType === 'mcp_auth' ||
+            rootBatch?.some(decision => decision.guardrailType === 'mcp_auth')) &&
+          Boolean(selectedIdentity || toolCallId);
+        let parallelDecisions;
+
+        // Single-process supervisor (#6264): send one exact decision immediately
+        // on the active root thread. Core's offer/commit handshake assigns live
+        // ownership without starting another agent process.
+        if (isSupervisedChild && !rootBatch) {
+          const decisionIdentity = getInterruptIdentity(decidedEntry);
+          const supervisedPayload = generateChatContinuePayload({
+            conversation_uuid: activeConversation?.uuid,
+            projectId,
+            message_id: lastMessage.id,
+            thread_id: decidedEntry?.root_thread_id || lastMessage.threadId,
+            participants: activeConversation?.participants || [],
+            question: action === 'edit' ? (value ?? '') : action,
+            sessionDeclinedMcpServers,
+          });
+          supervisedPayload.hitl_resume = true;
+          supervisedPayload.hitl_decisions = [
+            {
+              interrupt_id: decisionIdentity,
+              tool_call_id: toolCallId,
+              action,
+              value: value ?? '',
+            },
+          ];
+          setChatHistory(prevMessages =>
+            prevMessages.map(msg =>
+              msg.id !== lastMessage.id || !Array.isArray(msg.hitlInterrupts)
+                ? msg
+                : {
+                    ...msg,
+                    isLoading: false,
+                    isStreaming: true,
+                    resumingAgentPaths: [getActionOwnerPath(decidedEntry)].filter(path => path.length),
+                    hitlInterrupts: msg.hitlInterrupts.map(entry =>
+                      getInterruptIdentity(entry) === decisionIdentity
+                        ? { ...entry, decided: true, hidden: true }
+                        : entry,
+                    ),
+                  },
+            ),
+          );
+          emitContinue(supervisedPayload);
+          return;
+        }
+
+        // Track 2 independent child resume: emit this child's decision NOW on its
+        // own thread; clear ONLY this child's card and leave the parent message
+        // streaming so running siblings keep their live boxes + shimmer.
+        if (isFanoutChild) {
+          if (pendingDecisionsRef.current.messageId !== lastMessage.id) {
+            pendingDecisionsRef.current = { messageId: lastMessage.id, decisions: {} };
+          }
+          const decisionIdentity = getInterruptIdentity(decidedEntry);
+          pendingDecisionsRef.current.decisions[decisionIdentity] = {
+            ...(decidedEntry?.interrupt_id ? { interrupt_id: decidedEntry.interrupt_id } : {}),
+            ...(decidedEntry?.thread_id ? { thread_id: decidedEntry.thread_id } : {}),
+            ...(decidedEntry?.child_thread_id ? { child_thread_id: decidedEntry.child_thread_id } : {}),
+            tool_call_id: toolCallId,
+            action,
+            value: value ?? '',
+          };
+
+          setChatHistory(prevMessages =>
+            prevMessages.map(msg =>
+              msg.id !== lastMessage.id || !Array.isArray(msg.hitlInterrupts)
+                ? msg
+                : {
+                    ...msg,
+                    exception: undefined,
+                    hitlInterrupts: msg.hitlInterrupts.map(entry =>
+                      getInterruptIdentity(entry) === decisionIdentity ? { ...entry, decided: true } : entry,
+                    ),
+                  },
+            ),
+          );
+
+          const resumeIdentities = new Set(resumeGroup.map(getInterruptIdentity));
+          const groupComplete = [...resumeIdentities].every(
+            identity => pendingDecisionsRef.current.decisions[identity],
+          );
+          if (!groupComplete) return;
+
+          const childPayload = generateChatContinuePayload({
+            conversation_uuid: activeConversation?.uuid,
+            projectId,
+            message_id: lastMessage.id,
+            thread_id: childThreadId,
+            participants: activeConversation?.participants || [],
+            question: action === 'edit' ? (value ?? '') : action,
+          });
+          childPayload.hitl_resume = true;
+          childPayload.thread_id = childThreadId;
+          childPayload.hitl_decisions = [...resumeIdentities].map(
+            identity => pendingDecisionsRef.current.decisions[identity],
+          );
+          resumeIdentities.forEach(identity => {
+            delete pendingDecisionsRef.current.decisions[identity];
+          });
+
+          // Keep the disabled cards until Core accepts the resume. StartTask is
+          // the acceptance signal and removes only this decided child group;
+          // socket_validation_error restores the cards for another attempt.
+          emitContinue(childPayload);
+          return;
+        }
+
+        // In-process root aggregate: retire every clicked card immediately, then
+        // coalesce rapid choices before issuing the single checkpoint command.
+        // The root returns any still-pending siblings with stable public IDs.
+        if (isParallel && !rootBatch) {
+          const decisionIdentity = selectedIdentity || getInterruptIdentity(decidedEntry);
+          const queuedDecision = {
+            action,
+            value: value ?? '',
+            toolCallId,
+            interruptId: decisionIdentity,
+            ...(guardrailType ? { guardrailType } : {}),
+            ...(Array.isArray(sessionDeclinedMcpServers) ? { sessionDeclinedMcpServers } : {}),
+          };
+          const scheduled = scheduleRootHitlDecision(
+            rootHitlResumeQueueRef.current,
+            lastMessage.id,
+            queuedDecision,
+          );
+          rootHitlResumeQueueRef.current = scheduled.state;
+          if (scheduled.status === 'duplicate') return;
+
+          // Retire the chosen card visually on click while retaining its queued
+          // entry until the coalesced checkpoint resume is accepted.
+          setChatHistory(prevMessages =>
+            prevMessages.map(msg => {
+              if (msg.id !== lastMessage.id || !Array.isArray(msg.hitlInterrupts)) {
+                return msg;
+              }
+              return {
+                ...msg,
+                hitlInterrupts: msg.hitlInterrupts.map(entry =>
+                  getInterruptIdentity(entry) === decisionIdentity
+                    ? { ...entry, decided: false, queued: true, hidden: true }
+                    : entry,
+                ),
+              };
+            }),
+          );
+
+          if (scheduled.status === 'schedule') {
+            if (rootHitlBatchTimerRef.current) clearTimeout(rootHitlBatchTimerRef.current);
+            rootHitlBatchTimerRef.current = setTimeout(() => {
+              rootHitlBatchTimerRef.current = null;
+              const batch = completeRootHitlDecision(
+                rootHitlResumeQueueRef.current,
+                interrupts,
+                Number(lastMessage.hitlTurnStartRevision || 0) + 1,
+              );
+              rootHitlResumeQueueRef.current = batch.state;
+              if (batch.nextDecisions.length) {
+                onHitlResumeRef.current?.({ rootBatch: batch.nextDecisions });
+              }
+            }, 150);
+          }
+          return;
+        }
+
+        if (isParallel) {
+          parallelDecisions = rootBatch.map(decision => {
+            const entry = interrupts.find(
+              interrupt => getInterruptIdentity(interrupt) === decision.interruptId,
+            );
+            return {
+              ...(entry?.interrupt_id || decision.interruptId
+                ? { interrupt_id: entry?.interrupt_id || decision.interruptId }
+                : {}),
+              tool_call_id: decision.toolCallId || entry?.tool_call_id,
+              action: decision.action,
+              value: decision.value ?? '',
+            };
+          });
+          setChatHistory(prevMessages =>
+            prevMessages.map(msg => {
+              if (msg.id !== lastMessage.id || !Array.isArray(msg.hitlInterrupts)) return msg;
+              return {
+                ...msg,
+                hitlInterrupts: msg.hitlInterrupts.map(entry =>
+                  rootBatchIdentities.has(getInterruptIdentity(entry))
+                    ? { ...entry, decided: true, queued: false, hidden: true }
+                    : entry,
+                ),
+              };
+            }),
+          );
+        }
+
+        const { question_id, threadId, participant_id } = lastMessage;
+        const participant = ChatHelpers.getParticipantById(activeConversation, participant_id);
+        const editMessage =
+          action === 'edit' && !isPipelineHitlNodeInterrupt(decidedEntry)
+            ? ChatHelpers.createHitlEditUserMessage({
+                question: value ?? '',
+                userId,
+                name,
+                avatar,
+                participant,
+              })
+            : null;
+
+        const payload = generateChatContinuePayload({
+          conversation_uuid: activeConversation?.uuid,
+          projectId,
+          message_id: lastMessage.id,
+          thread_id: threadId,
+          participants: activeConversation?.participants || [],
+          question: action === 'edit' ? (value ?? '') : action,
+          sessionDeclinedMcpServers,
+        });
+
+        payload.hitl_resume = true;
+        if (isParallel) {
+          payload.hitl_decisions = parallelDecisions;
+        } else {
+          payload.hitl_action = action;
+          // `edit` carries the rewritten prompt; `block_with_comment` carries the
+          // user's free-text note (-> SDK blocked-tool `denial_reason`, #5318);
+          // `answer` carries the clarifying-question answers object.
+          if (action === 'edit' || action === 'block_with_comment') {
+            payload.hitl_value = value ?? '';
+          } else if (action === 'answer') {
+            payload.hitl_value = value ?? {};
+          }
+          if (usesDurablePipelineHistory) {
+            payload.hitl_decisions = [
+              {
+                interrupt_id: getInterruptIdentity(decidedEntry),
+                action,
+                value: value ?? '',
+              },
+            ];
+          }
+        }
+
+        setChatHistory(prevMessages => {
+          const assistantIndex = prevMessages.findIndex(msg => msg.id === lastMessage.id);
+          if (assistantIndex === -1) {
+            return prevMessages;
+          }
+
+          const nextMessages = [...prevMessages];
+          const assistantMessage = nextMessages[assistantIndex];
+          if (usesDurablePipelineHistory) {
+            nextMessages.splice(assistantIndex, 1, {
+              ...assistantMessage,
+              content: assistantMessage.content || decidedEntry?.message || '',
+              isLoading: false,
+              isStreaming: false,
+              isRegenerating: false,
+              isSending: false,
+              requiresConfirmation: undefined,
+              exception: undefined,
+              hitlInterrupt: undefined,
+              hitlInterrupts: undefined,
+              resumingAgentPaths: undefined,
+            });
+            return nextMessages;
+          }
+          // Preserve the streaming view across the resume instead of wiping it.
+          // On the in-process parallel HITL path LangGraph re-runs ONLY the branches
+          // that are still paused; the sub-agents that already returned a real result
+          // are cached and never re-emit. Clearing toolActions wholesale therefore
+          // made every completed sibling — and the coordinator's own activity —
+          // vanish each round, so the view rebuilt from scratch and flashed "Waking
+          // the agent…", making a parallel run look sequential (#5378/#5379). Drop
+          // only the actions of the exact interrupted leaf invocations. An ancestor
+          // container is also technically unreturned while it waits for that leaf,
+          // but it is not itself replayed and must remain mounted/shimmering. Older
+          // interrupts without an identified path retain the broad fallback.
+          const resumingInterrupts = isParallel ? resumeGroup : interrupts;
+          const resumingAgentPaths = resumingInterrupts.map(getActionOwnerPath).filter(path => path.length);
+          const resumingInvocationIds = new Set(
+            resumingAgentPaths.map(path => path[path.length - 1]?.call_id).filter(Boolean),
+          );
+          const prevToolActions = assistantMessage.toolActions || [];
+          const unreturnedInvocationIds = new Set();
+          prevToolActions.forEach(a => {
+            if (!a || a.type !== TOOL_ACTION_TYPES.Tool) return;
+            const callId = a.parent_agent_call_id || a.toolMeta?.parent_agent_call_id;
+            // The bare invocation wrapper is the ONLY action for a child that carries
+            // a parent_agent_call_id but NO parent_agent_name (inner chips always
+            // stamp parent_agent_name = the child name). Match it robustly off that
+            // absence so a self-named pipeline node chip can't masquerade as it.
+            const isInnerChip = !!(a.parent_agent_name || a.toolMeta?.parent_agent_name);
+            if (!callId || isInnerChip) return;
+            const terminal =
+              a.status === ToolActionStatus.complete ||
+              a.status === ToolActionStatus.error ||
+              a.status === ToolActionStatus.cancelled;
+            const deferred = !!a.hitlDeferred || !!a.toolMeta?.hitl_deferred;
+            const isResumingInvocation =
+              resumingInvocationIds.size === 0 || resumingInvocationIds.has(callId);
+            if ((!terminal || deferred) && isResumingInvocation) unreturnedInvocationIds.add(callId);
+          });
+          const preservedToolActions = prevToolActions.filter(
+            candidateAction => !actionBelongsToInvocationSet(candidateAction, unreturnedInvocationIds),
+          );
+          // Clear the interrupt state in place on the existing assistant
+          // message. We intentionally do NOT clone it into a content-bearing
+          // "archived" bubble — that left a stale "...requires approval..."
+          // message lingering in the view until reload.
+          const resumedAssistantMessage = {
+            ...assistantMessage,
+            content: isParallel ? assistantMessage.content : '',
+            isLoading: true,
+            isStreaming: true,
+            isRegenerating: false,
+            isSending: false,
+            requiresConfirmation: undefined,
+            exception: undefined,
+            // A partial root resume keeps sibling cards mounted while the single
+            // worker checkpoint advances. Only the selected/queued cards are
+            // disabled; untouched siblings stay independently actionable.
+            hitlInterrupt: isParallel ? assistantMessage.hitlInterrupt : undefined,
+            hitlInterrupts: isParallel ? assistantMessage.hitlInterrupts : undefined,
+            resumingAgentPaths,
+            references: [],
+            toolActions: preservedToolActions,
+            replyTo: editMessage ? { ...editMessage } : assistantMessage.replyTo,
+            archivedFromHitl: false,
+          };
+
+          nextMessages.splice(assistantIndex, 1, resumedAssistantMessage);
+
+          if (editMessage) {
+            nextMessages.splice(assistantIndex, 0, editMessage);
+          }
+
+          return nextMessages;
+        });
+
+        if (!usesDurablePipelineHistory) setStreamingInfo(question_id);
+        emitContinue(payload);
+      },
+      [
+        pendingHitlMessage,
+        activeConversation,
+        projectId,
+        userId,
+        name,
+        avatar,
+        setChatHistory,
+        setStreamingInfo,
+        emitContinue,
+      ],
+    );
+
+    onHitlResumeRef.current = onHitlResume;
+
+    // An updated aggregate is the acknowledgement that the previous root resume
+    // finished. Drain every choice made during that run as ONE next batch;
+    // emitting concurrent commands against the same checkpoint is unsafe.
+    useEffect(() => {
+      const queueState = rootHitlResumeQueueRef.current;
+      if (!queueState.inFlightIdentities.length) return;
+
+      if (!pendingHitlMessage || pendingHitlMessage.id !== queueState.messageId) {
+        rootHitlResumeQueueRef.current = {
+          messageId: null,
+          inFlightIdentities: [],
+          requiredTurnEndRevision: 0,
+          decisions: [],
+        };
+        return;
       }
-    },
-    [
-      chat_history,
-      activeConversation,
-      onRegenerateAnswer,
-      onResendQuestionStream,
+      if (pendingHitlMessage.exception) {
+        rootHitlResumeQueueRef.current = {
+          messageId: pendingHitlMessage.id,
+          inFlightIdentities: [],
+          requiredTurnEndRevision: 0,
+          decisions: [],
+        };
+        setChatHistory(prevMessages =>
+          prevMessages.map(msg =>
+            msg.id !== pendingHitlMessage.id || !Array.isArray(msg.hitlInterrupts)
+              ? msg
+              : {
+                  ...msg,
+                  hitlInterrupts: msg.hitlInterrupts.map(entry => ({
+                    ...entry,
+                    queued: false,
+                    decided: false,
+                    hidden: false,
+                  })),
+                },
+          ),
+        );
+        return;
+      }
+
+      // Loading and nested HITL events can toggle while the root checkpoint is
+      // still active. The indexer's InjectionConsumedReport is emitted from the
+      // worker finally block and is the authoritative per-turn release signal.
+      if (!hasRootHitlTurnEnded(queueState, pendingHitlMessage.hitlTurnEndRevision)) return;
+
+      const currentInterrupts = Array.isArray(pendingHitlMessage.hitlInterrupts)
+        ? pendingHitlMessage.hitlInterrupts
+        : [];
+      const completed = completeRootHitlDecision(
+        queueState,
+        currentInterrupts,
+        Number(pendingHitlMessage.hitlTurnStartRevision || 0) + 1,
+      );
+      rootHitlResumeQueueRef.current = completed.state;
+      if (completed.nextDecisions.length) {
+        onHitlResumeRef.current?.({ rootBatch: completed.nextDecisions });
+      }
+    }, [onHitlResume, pendingHitlMessage, setChatHistory]);
+
+    useEffect(
+      () => () => {
+        if (rootHitlBatchTimerRef.current) clearTimeout(rootHitlBatchTimerRef.current);
+      },
+      [],
+    );
+
+    const onSendMessage = useCallback(
+      async question => {
+        stopTTS?.();
+        resetSlash();
+        dismissNextInputSuggestion();
+
+        // A clarifying-question pause accepts a free-text reply: route the typed
+        // message back as the answer instead of starting a new turn.
+        if (isPendingClarifyingQuestion) {
+          const text = typeof question === 'string' ? question.trim() : '';
+          if (!text) return;
+          chatInput.current?.reset();
+          return onHitlResume({ action: 'answer', value: text });
+        }
+
+        if (hasBlockingHitlInterrupt) {
+          return;
+        }
+
+        return onPredictStream(question);
+      },
+      [
+        hasBlockingHitlInterrupt,
+        isPendingClarifyingQuestion,
+        onHitlResume,
+        onPredictStream,
+        resetSlash,
+        stopTTS,
+        dismissNextInputSuggestion,
+      ],
+    );
+
+    // Rollback re-sends through the normal path; ref because onPredictStream is
+    // declared after the socket hook that owns the report callback.
+    const onPredictStreamRef = useRef(onPredictStream);
+    useEffect(() => {
+      onPredictStreamRef.current = onPredictStream;
+    }, [onPredictStream]);
+
+    const onInjectMessage = useCallback(
+      async question => {
+        const text = question?.trim();
+        if (!text || !activeConversation?.uuid) return;
+        stopTTS?.();
+        resetSlash();
+
+        const injectionId = uuidv4();
+        // Chat passes clearInputAfterSubmit={false}, so clearing is the caller's job
+        // here just as it is in onPredictStream.
+        chatInput.current?.reset();
+        onClearAttachments?.();
+
+        // If items are already waiting in the stop queue, append to the tail so all
+        // messages process in submission order rather than injecting ahead of the queue.
+        if (stopQueueRef.current.length > 0) {
+          stopQueueRef.current.push({ id: injectionId, text });
+          setPendingInjections(prev => [...prev, { id: injectionId, text, inFlight: false }]);
+          return;
+        }
+
+        pendingInjectionsRef.current.set(injectionId, text);
+        // inFlight from the start: the POST fires immediately, so the remove button is hidden.
+        setPendingInjections(prev => [...prev, { id: injectionId, text, inFlight: true }]);
+        try {
+          await injectMessage({
+            projectId,
+            conversationUuid: activeConversation.uuid,
+            userInput: text,
+            injectionId,
+          }).unwrap();
+        } catch {
+          // The turn may have ended between enabling the control and sending (409),
+          // or the text may be over the size cap (400). Either way it was never
+          // delivered, so fall back to a normal message.
+          pendingInjectionsRef.current.delete(injectionId);
+          setPendingInjections(prev => prev.filter(item => item.id !== injectionId));
+          return onPredictStreamRef.current?.(text);
+        }
+      },
+      [activeConversation?.uuid, injectMessage, onClearAttachments, projectId, resetSlash, stopTTS],
+    );
+
+    const {
+      onKeyDown,
+      isProcessingSymbols,
+      query,
+      stopProcessingSymbols,
+      isProcessingAtSymbol,
+      atQuery,
+      stopProcessingAtSymbol,
+      atAnchorRef,
+    } = useNewInputKeyDownHandler({
+      disableHashtagDetection: isAgentsPage,
+    });
+
+    const combinedKeyDown = useCallback(
+      event => {
+        onKeyDown(event);
+        if (isSkillPhaseActive) {
+          onSkillKeyDown(event);
+          return;
+        }
+        slashOnKeyDown(event);
+      },
+      [onKeyDown, slashOnKeyDown, isSkillPhaseActive, onSkillKeyDown],
+    );
+
+    const combinedInputChange = useCallback(
+      value => {
+        onSlashInputChange(value);
+        onSkillInputChange(value);
+      },
+      [onSlashInputChange, onSkillInputChange],
+    );
+
+    const combinedHighlightRanges = useMemo(
+      () => [...slashHighlightRanges, ...skillHighlightRanges].sort((a, b) => a.start - b.start),
+      [slashHighlightRanges, skillHighlightRanges],
+    );
+
+    const onSelectParticipant = selectedParticipant => {
+      const isSearchParticipant = isProcessingSymbols;
+      const currentQuery = query;
+      stopProcessingSymbols();
+      setTimeout(() => {
+        onSelectThisParticipant(selectedParticipant);
+        if (isSearchParticipant) {
+          chatInput.current?.removeSymbol(currentQuery);
+        }
+      }, 0);
+    };
+
+    const onSelectUserMention = useCallback(
+      user => {
+        if (chatInput.current && atAnchorRef.current !== null) {
+          chatInput.current.replaceRange(
+            atAnchorRef.current,
+            atAnchorRef.current + atQuery.length,
+            '@' + user.name + ' ',
+          );
+        }
+        if (user.id === '@everyone') {
+          setIsMentioningEveryone(true);
+          onClearActiveParticipant();
+          setSelectedUsers([]);
+        } else {
+          setSelectedUsers(prev => [...prev.filter(u => u.user?.id !== user.id), { user, isValid: true }]);
+        }
+        stopProcessingAtSymbol();
+      },
+      // atAnchorRef is a ref — stable, no dep needed
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      [atQuery, stopProcessingAtSymbol, onClearActiveParticipant],
+    );
+
+    const onResendQuestionStream = useCallback(
+      async (question_id, question, attachmentList = []) => {
+        const leftChatHistory = chat_history.slice(
+          0,
+          chat_history.findIndex(item => item.id === question_id),
+        );
+        const { participant_id } = chat_history.find(item => item.id === question_id) || {};
+        const participant = ChatHelpers.getParticipantById(activeConversation, participant_id);
+        const payload = getPayload({
+          question,
+          question_id,
+          chatHistory: leftChatHistory,
+          participant,
+          attachmentList,
+        });
+        emit(payload);
+      },
+      [chat_history, activeConversation, getPayload, emit],
+    );
+
+    const onAddEditAttachment = useCallback(
+      async files => {
+        if (!files?.length || !activeConversation?.id) return [];
+        const dummyMessages = [{ message_items: [] }];
+        const { success, messages } = await uploadAttachments({
+          attachments: Array.isArray(files) ? files : [files],
+          conversationId: activeConversation.id,
+          messages: dummyMessages,
+        });
+        if (!success) return [];
+        return messages[0]?.message_items || [];
+      },
+      [activeConversation?.id, uploadAttachments],
+    );
+
+    const onSubmitEditedMessage = useCallback(
+      (id, updatedItems, newAttachmentItems) => {
+        dismissNextInputSuggestion();
+        const textUpdate = updatedItems?.find(u => u.item_type === 'text_message');
+        setChatHistory(prev =>
+          prev.map(item => {
+            if (item.id !== id) return item;
+            return {
+              ...item,
+              ...(textUpdate ? { content: textUpdate.content } : {}),
+              message_items: [
+                ...(item.message_items || [])
+                  .filter(mi => mi.item_type !== 'attachment_message')
+                  .map(mi => {
+                    const update = updatedItems?.find(u => u.uuid === mi.uuid);
+                    if (!update) return mi;
+                    return { ...mi, item_details: { ...mi.item_details, content: update.content } };
+                  }),
+                ...newAttachmentItems,
+              ],
+            };
+          }),
+        );
+        const { id: answerId, participant_id } = chat_history.find(item => item.question_id === id) || {};
+        const participant = ChatHelpers.getParticipantById(activeConversation, participant_id);
+
+        if (answerId) {
+          onRegenerateAnswer(answerId, participant, updatedItems, newAttachmentItems);
+        } else {
+          const question = textUpdate?.content || '';
+          const questionIndex = chat_history.findIndex(item => item.id === id);
+          const attachmentList =
+            newAttachmentItems !== undefined
+              ? newAttachmentItems.map(i => ({ filepath: i.item_details.filepath }))
+              : (
+                  chat_history[questionIndex]?.message_items?.filter(
+                    item => item.item_type === 'attachment_message',
+                  ) || []
+                ).map(i => ({ filepath: i.item_details.filepath }));
+          onResendQuestionStream(id, question, attachmentList);
+        }
+      },
+      [
+        chat_history,
+        activeConversation,
+        onRegenerateAnswer,
+        onResendQuestionStream,
+        setChatHistory,
+        dismissNextInputSuggestion,
+      ],
+    );
+
+    const { onLoadMoreMessages, isLoadingMore } = useLoadMoreMessages({
       setChatHistory,
-      dismissNextInputSuggestion,
-    ],
-  );
+      activeConversation,
+      toastError,
+    });
 
-  const { onLoadMoreMessages, isLoadingMore } = useLoadMoreMessages({
-    setChatHistory,
-    activeConversation,
-    toastError,
-  });
+    const onSendConversationStarter = useCallback(starter => {
+      setHasStarterBeenSent(true);
+      chatInput.current.reset();
+      chatInput.current.setValue(starter);
+    }, []);
+    const { fetchOriginalDetails, isFetchingParticipant, fetchOriginalVersionDetails } =
+      useFetchParticipantDetails();
+    const users = useMemo(() => {
+      const userParticipants = (activeConversation?.participants || [])
+        .filter(
+          participant =>
+            participant.entity_name === ChatParticipantType.Users && participant.entity_meta?.id !== userId,
+        )
+        .map(participant => ({
+          id: participant.id,
+          name: participant.meta.user_name,
+          participant,
+        }));
 
-  const onSendConversationStarter = useCallback(starter => {
-    setHasStarterBeenSent(true);
-    chatInput.current.reset();
-    chatInput.current.setValue(starter);
-  }, []);
-  const { fetchOriginalDetails, isFetchingParticipant, fetchOriginalVersionDetails } =
-    useFetchParticipantDetails();
-  const users = useMemo(() => {
-    const userParticipants = (activeConversation?.participants || [])
-      .filter(
-        participant =>
-          participant.entity_name === ChatParticipantType.Users && participant.entity_meta?.id !== userId,
-      )
-      .map(participant => ({
-        id: participant.id,
-        name: participant.meta.user_name,
-        participant,
-      }));
+      if (userParticipants.length > 0) {
+        userParticipants.push({
+          id: '@everyone',
+          name: 'Everyone',
+          participant: 'All users',
+        });
+      }
 
-    if (userParticipants.length > 0) {
-      userParticipants.push({
-        id: '@everyone',
-        name: 'Everyone',
-        participant: 'All users',
-      });
-    }
+      return userParticipants;
+    }, [activeConversation?.participants, userId]);
 
-    return userParticipants;
-  }, [activeConversation?.participants, userId]);
+    const hasOtherUsers = useMemo(
+      () =>
+        (activeConversation?.participants || []).some(
+          participant =>
+            participant.entity_name === ChatParticipantType.Users && participant.entity_meta?.id !== userId,
+        ),
+      [activeConversation?.participants, userId],
+    );
 
-  const hasOtherUsers = useMemo(
-    () =>
-      (activeConversation?.participants || []).some(
-        participant =>
-          participant.entity_name === ChatParticipantType.Users && participant.entity_meta?.id !== userId,
-      ),
-    [activeConversation?.participants, userId],
-  );
+    const [showRecommendationList, setShowRecommendationList] = useState(false);
+    const [originalParticipant, setOriginalParticipant] = useState();
 
-  const [showRecommendationList, setShowRecommendationList] = useState(false);
-  const [originalParticipant, setOriginalParticipant] = useState();
-
-  const modelList = useMemo(
-    () =>
-      modelsWithAuto(
+    const modelList = useMemo(
+      () =>
+        modelsWithAuto(
+          modelsData.items,
+          modelsData.auto_routing,
+          resolveModelSurface(
+            originalParticipant?.version_details?.agent_type,
+            activeParticipant?.entity_settings?.agent_type,
+          ),
+        ),
+      [
         modelsData.items,
         modelsData.auto_routing,
-        resolveModelSurface(
-          originalParticipant?.version_details?.agent_type,
-          activeParticipant?.entity_settings?.agent_type,
-        ),
-      ),
-    [
-      modelsData.items,
-      modelsData.auto_routing,
-      originalParticipant?.version_details?.agent_type,
-      activeParticipant?.entity_settings?.agent_type,
-    ],
-  );
+        originalParticipant?.version_details?.agent_type,
+        activeParticipant?.entity_settings?.agent_type,
+      ],
+    );
 
-  useEffect(() => {
-    setShowRecommendationList(false);
-  }, [activeParticipant]);
+    useEffect(() => {
+      setShowRecommendationList(false);
+    }, [activeParticipant]);
 
-  // todo: rewrite this to fetch details each time when activeParticipant changes
-  useEffect(() => {
-    // If activeParticipantDetails is provided, use it directly instead of fetching
-    if (activeParticipantDetails && activeParticipant) {
-      setOriginalParticipant({
-        ...activeParticipantDetails,
-        participantType: activeParticipant?.entity_name,
-        agent_type: activeParticipant?.entity_settings?.agent_type,
-      });
-      return;
-    }
+    // todo: rewrite this to fetch details each time when activeParticipant changes
+    useEffect(() => {
+      // If activeParticipantDetails is provided, use it directly instead of fetching
+      if (activeParticipantDetails && activeParticipant) {
+        setOriginalParticipant({
+          ...activeParticipantDetails,
+          participantType: activeParticipant?.entity_name,
+          agent_type: activeParticipant?.entity_settings?.agent_type,
+        });
+        return;
+      }
 
-    const fetchDetails = async () => {
-      const details = await fetchOriginalDetails(
-        activeParticipant?.entity_name,
-        activeParticipant?.entity_meta.id,
-        activeParticipant?.entity_meta.project_id,
-      );
+      const fetchDetails = async () => {
+        const details = await fetchOriginalDetails(
+          activeParticipant?.entity_name,
+          activeParticipant?.entity_meta.id,
+          activeParticipant?.entity_meta.project_id,
+        );
+        if (
+          activeParticipant.participantType !== ChatParticipantType.Toolkits &&
+          details?.version_details?.name !== LATEST_VERSION_NAME
+        ) {
+          const versionName = details.versions?.find(
+            v => v.id === activeParticipant?.entity_settings?.version_id,
+          )?.name;
+          const versionDetails = await fetchOriginalVersionDetails(
+            activeParticipant?.entity_name,
+            activeParticipant?.entity_meta.id,
+            activeParticipant?.entity_settings?.version_id,
+            activeParticipant?.entity_meta.project_id,
+            versionName,
+          );
+          setOriginalParticipant({
+            ...details,
+            participantType: activeParticipant?.entity_name,
+            agent_type: activeParticipant?.entity_settings?.agent_type,
+            version_details: { ...versionDetails },
+          });
+        } else {
+          setOriginalParticipant({
+            ...details,
+            agent_type: activeParticipant?.entity_settings?.agent_type,
+            participantType: activeParticipant?.entity_name,
+          });
+        }
+      };
       if (
-        activeParticipant.participantType !== ChatParticipantType.Toolkits &&
-        details?.version_details?.name !== LATEST_VERSION_NAME
+        (originalParticipant?.id !== activeParticipant?.entity_meta.id ||
+          originalParticipant?.participantType !== activeParticipant?.entity_name) &&
+        activeParticipant &&
+        activeParticipant?.entity_name !== ChatParticipantType.Models &&
+        activeParticipant?.entity_name !== ChatParticipantType.Users
       ) {
-        const versionName = details.versions?.find(
-          v => v.id === activeParticipant?.entity_settings?.version_id,
-        )?.name;
+        fetchDetails();
+      }
+    }, [
+      activeParticipant,
+      fetchOriginalDetails,
+      fetchOriginalVersionDetails,
+      originalParticipant?.id,
+      originalParticipant?.participantType,
+      activeParticipantDetails,
+    ]);
+
+    const onMentionChange = useCallback(mentions => {
+      // isMentioningEveryone is only ever SET by onSelectUserMention (dropdown confirmation).
+      // Here we only CLEAR it when the @Everyone text has been deleted from the input.
+      const everyoneStillPresent = mentions.some(mention => mention.user?.id === '@everyone');
+      if (!everyoneStillPresent) {
+        setIsMentioningEveryone(false);
+      }
+
+      const mentionedUsers = mentions.filter(
+        mention => mention.isValid && mention.user && mention.user.id !== '@everyone',
+      );
+      setSelectedUsers(mentionedUsers);
+    }, []);
+
+    const onShowParticipantsList = useCallback(() => {
+      setShowRecommendationList(prev => !prev);
+      stopProcessingSymbols();
+    }, [stopProcessingSymbols]);
+
+    const onSelectVersion = useCallback(
+      async version => {
         const versionDetails = await fetchOriginalVersionDetails(
           activeParticipant?.entity_name,
           activeParticipant?.entity_meta.id,
-          activeParticipant?.entity_settings?.version_id,
+          version.id,
           activeParticipant?.entity_meta.project_id,
-          versionName,
+          version.name,
         );
-        setOriginalParticipant({
-          ...details,
-          participantType: activeParticipant?.entity_name,
-          agent_type: activeParticipant?.entity_settings?.agent_type,
-          version_details: { ...versionDetails },
-        });
-      } else {
-        setOriginalParticipant({
-          ...details,
-          agent_type: activeParticipant?.entity_settings?.agent_type,
-          participantType: activeParticipant?.entity_name,
-        });
-      }
-    };
-    if (
-      (originalParticipant?.id !== activeParticipant?.entity_meta.id ||
-        originalParticipant?.participantType !== activeParticipant?.entity_name) &&
-      activeParticipant &&
-      activeParticipant?.entity_name !== ChatParticipantType.Models &&
-      activeParticipant?.entity_name !== ChatParticipantType.Users
-    ) {
-      fetchDetails();
-    }
-  }, [
-    activeParticipant,
-    fetchOriginalDetails,
-    fetchOriginalVersionDetails,
-    originalParticipant?.id,
-    originalParticipant?.participantType,
-    activeParticipantDetails,
-  ]);
 
-  const onMentionChange = useCallback(mentions => {
-    // isMentioningEveryone is only ever SET by onSelectUserMention (dropdown confirmation).
-    // Here we only CLEAR it when the @Everyone text has been deleted from the input.
-    const everyoneStillPresent = mentions.some(mention => mention.user?.id === '@everyone');
-    if (!everyoneStillPresent) {
-      setIsMentioningEveryone(false);
-    }
+        // The fetch resolves to an empty object when the request fails. Persisting that would write
+        // an undefined version_id plus an llm_settings override the backend rejects, so stop here.
+        if (!versionDetails?.id) return;
 
-    const mentionedUsers = mentions.filter(
-      mention => mention.isValid && mention.user && mention.user.id !== '@everyone',
-    );
-    setSelectedUsers(mentionedUsers);
-  }, []);
+        // Clear any per-session LLM override so the new version's configured model is used.
+        setUnsavedLLMSettings?.(undefined);
 
-  const onShowParticipantsList = useCallback(() => {
-    setShowRecommendationList(prev => !prev);
-    stopProcessingSymbols();
-  }, [stopProcessingSymbols]);
-
-  const onSelectVersion = useCallback(
-    async version => {
-      const versionDetails = await fetchOriginalVersionDetails(
-        activeParticipant?.entity_name,
-        activeParticipant?.entity_meta.id,
-        version.id,
-        activeParticipant?.entity_meta.project_id,
-        version.name,
-      );
-
-      // The fetch resolves to an empty object when the request fails. Persisting that would write
-      // an undefined version_id plus an llm_settings override the backend rejects, so stop here.
-      if (!versionDetails?.id) return;
-
-      // Clear any per-session LLM override so the new version's configured model is used.
-      setUnsavedLLMSettings?.(undefined);
-
-      onChangeParticipantSettings(
-        {
-          ...(activeParticipant || {}),
-          entity_settings: {
-            version_id: versionDetails.id,
-            variables: versionDetails.variables,
-            llm_settings: versionDetails.llm_settings || activeParticipant?.entity_settings.llm_settings,
-            icon_meta: versionDetails.meta?.icon_meta || versionDetails.icon_meta,
-            ...(activeParticipant?.entity_name === 'application' &&
-              versionDetails.agent_type && {
-                agent_type: versionDetails.agent_type,
-              }),
-          },
-          version_details: versionDetails,
-        },
-        true,
-      );
-      setOriginalParticipant(prev => ({
-        ...prev,
-        version_details: { ...versionDetails },
-      }));
-    },
-    [activeParticipant, fetchOriginalVersionDetails, onChangeParticipantSettings, setUnsavedLLMSettings],
-  );
-
-  // Handler for updating LLM settings on conversation pages
-  const handleSetLLMSettings = useCallback(
-    async newSettings => {
-      // Split steps_limit out — it lives in conversation meta, not in llm_settings
-      const { [PROMPT_PAYLOAD_KEY.stepsLimit]: steps_limit, ...llmOnlySettings } = newSettings;
-
-      if (isAgentsPage && onSetLLMSettings) {
-        // Use prop handler for agents page — keep steps_limit in unsavedLLMSettings
-        onSetLLMSettings(llmOnlySettings);
-        setUnsavedLLMSettings?.(prev => ({ ...prev, ...newSettings }));
-      } else if (activeConversation?.id) {
-        // Update user LLM settings in conversation (excluding steps_limit)
-        // Clean settings to remove reasoning_effort if model doesn't support it
-        const cleanedSettings = cleanLLMSettings(llmOnlySettings, selectedModel);
-
-        const result = await updateChatLlmSettings({
-          projectId,
-          conversationId: activeConversation.id,
-          llm_settings: cleanedSettings,
-        });
-        if (result.error) {
-          toastError('Failed to update llm settings: ' + buildErrorMessage(result.error));
-        } else {
-          setActiveConversation(prev => ({
-            ...prev,
-            participants: prev.participants.map(participant => {
-              if (participant.entity_name === 'user' && participant.entity_meta.id === userId) {
-                return {
-                  ...result.data,
-                };
-              }
-              return participant;
-            }),
-          }));
-        }
-
-        // Save steps_limit to conversation meta if it was provided
-        if (steps_limit !== undefined) {
-          const metaResult = await conversationEdit({
-            projectId,
-            id: activeConversation.id,
-            meta: {
-              ...(activeConversation.meta || {}),
-              steps_limit,
+        onChangeParticipantSettings(
+          {
+            ...(activeParticipant || {}),
+            entity_settings: {
+              version_id: versionDetails.id,
+              variables: versionDetails.variables,
+              llm_settings: versionDetails.llm_settings || activeParticipant?.entity_settings.llm_settings,
+              icon_meta: versionDetails.meta?.icon_meta || versionDetails.icon_meta,
+              ...(activeParticipant?.entity_name === 'application' &&
+                versionDetails.agent_type && {
+                  agent_type: versionDetails.agent_type,
+                }),
             },
-          });
-          if (metaResult.error) {
-            toastError('Failed to update steps limit: ' + buildErrorMessage(metaResult.error));
-          } else {
-            setActiveConversation(prev => ({
-              ...prev,
-              meta: { ...(prev.meta || {}), steps_limit },
-            }));
-          }
-        }
-      } else {
-        // No active conversation yet (new chat before first message) — cache in unsaved settings
-        setUnsavedLLMSettings?.(prev => ({ ...prev, ...newSettings }));
-      }
-    },
-    [
-      isAgentsPage,
-      onSetLLMSettings,
-      activeConversation?.id,
-      activeConversation?.meta,
-      setUnsavedLLMSettings,
-      selectedModel,
-      updateChatLlmSettings,
-      projectId,
-      toastError,
-      setActiveConversation,
-      userId,
-      conversationEdit,
-    ],
-  );
-
-  const onSelectModel = useCallback(
-    async newModel => {
-      if (isAgentsPage) {
-        if (selectedModel?.name === newModel.name) return;
-
-        setSelectedModel(newModel);
-        const newLLMSettings = {
-          ...activeParticipant?.entity_settings.llm_settings,
-          model_name: newModel.name,
-          model_project_id: newModel.project_id,
-          max_tokens: DEFAULT_MAX_TOKENS, // Reset max tokens to default when changing model
-          // Explicitly resets both temperature and reasoning_effort for the new model's
-          // family — never leaves a stale value from the previously selected model (issue #5821).
-          ...resetLLMSettingsForModel(newModel),
-          ...selectionFields(newModel),
-          // Preserve steps_limit — not model-specific
-          steps_limit: activeParticipant?.entity_settings.llm_settings?.steps_limit ?? DEFAULT_STEPS_LIMIT,
-        };
-
-        // Update Formik so Save button persists the new model —
-        // strip steps_limit as it lives in conversation meta, not llm_settings.
-        if (onSetLLMSettings) {
-          // eslint-disable-next-line no-unused-vars
-          const { steps_limit: _, ...llmSettingsForFormik } = newLLMSettings;
-          onSetLLMSettings(llmSettingsForFormik);
-        }
-
-        // Update the participant's entity_settings.llm_settings
-        onChangeParticipantSettings?.(activeParticipant.id, {
-          entity_settings: {
-            ...activeParticipant?.entity_settings,
-            llm_settings: newLLMSettings,
+            version_details: versionDetails,
           },
-        });
+          true,
+        );
+        setOriginalParticipant(prev => ({
+          ...prev,
+          version_details: { ...versionDetails },
+        }));
+      },
+      [activeParticipant, fetchOriginalVersionDetails, onChangeParticipantSettings, setUnsavedLLMSettings],
+    );
 
-        // Store in unsaved settings to be used when sending messages
-        setUnsavedLLMSettings?.(prev => ({ ...prev, ...newLLMSettings }));
-      } else {
-        // Original behavior for regular chat
-        setSelectedModel(newModel);
-        const userSettings = NewConversationHelpers.getChatUserSettings(activeConversation, userId);
-        if (activeConversation?.id) {
-          const llmSettingsPayload = {
-            ...userSettings,
-            model_name: newModel.name,
-            model_project_id: newModel.project_id,
-            max_tokens: DEFAULT_MAX_TOKENS, // Reset max tokens to default when changing model
-            // Explicitly resets both temperature and reasoning_effort for the new model's
-            // family — never leaves a stale value from the previously selected model (issue #5821).
-            ...resetLLMSettingsForModel(newModel),
-            ...selectionFields(newModel),
-            // steps_limit is stored in conversation meta — do not touch it here
-          };
+    // Handler for updating LLM settings on conversation pages
+    const handleSetLLMSettings = useCallback(
+      async newSettings => {
+        // Split steps_limit out — it lives in conversation meta, not in llm_settings
+        const { [PROMPT_PAYLOAD_KEY.stepsLimit]: steps_limit, ...llmOnlySettings } = newSettings;
+
+        if (isAgentsPage && onSetLLMSettings) {
+          // Use prop handler for agents page — keep steps_limit in unsavedLLMSettings
+          onSetLLMSettings(llmOnlySettings);
+          setUnsavedLLMSettings?.(prev => ({ ...prev, ...newSettings }));
+        } else if (activeConversation?.id) {
+          // Update user LLM settings in conversation (excluding steps_limit)
+          // Clean settings to remove reasoning_effort if model doesn't support it
+          const cleanedSettings = cleanLLMSettings(llmOnlySettings, selectedModel);
 
           const result = await updateChatLlmSettings({
             projectId,
-            conversationId: activeConversation?.id,
-            llm_settings: llmSettingsPayload,
+            conversationId: activeConversation.id,
+            llm_settings: cleanedSettings,
           });
           if (result.error) {
             toastError('Failed to update llm settings: ' + buildErrorMessage(result.error));
@@ -2697,365 +2595,481 @@ const ChatBox = forwardRef((props, boxRef) => {
               }),
             }));
           }
-        }
-      }
-    },
-    [
-      isAgentsPage,
-      selectedModel,
-      setSelectedModel,
-      onSetLLMSettings,
-      onChangeParticipantSettings,
-      activeParticipant?.entity_settings,
-      activeParticipant?.id,
-      activeConversation,
-      userId,
-      updateChatLlmSettings,
-      projectId,
-      toastError,
-      setActiveConversation,
-      setUnsavedLLMSettings,
-    ],
-  );
 
-  const onChangeVariables = useCallback(
-    newVariables => {
-      onChangeParticipantSettings(
-        {
-          ...(activeParticipant || {}),
-          entity_settings: {
-            ...activeParticipant?.entity_settings,
-            variables: [...newVariables],
-          },
-        },
-        true,
-      );
-    },
-    [activeParticipant, onChangeParticipantSettings],
-  );
-
-  const onShowMenu = useCallback(() => {
-    setShowRecommendationList(false);
-    stopProcessingSymbols();
-  }, [stopProcessingSymbols]);
-
-  useEffect(() => {
-    return () => {
-      stopProcessingSymbols();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (!isAgentsPage) {
-      setHasStarterBeenSent(false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeParticipant]);
-
-  const displayConversationStarters = !isProcessingSymbols && conversationStarters?.length > 0;
-
-  const isMidturnInjectionEnabled = useIsMidturnInjectionEnabled();
-
-  // Scoped to the in-flight turn, not global: the indexer sets isInjectable on
-  // the specific streaming message, so multi-participant conversations with more
-  // than one turn running only open the affordance for a turn that is listening.
-  const isInjectable = useMemo(() => {
-    if (!isMidturnInjectionEnabled) return false;
-    if (hasPendingHitlInterrupt) return false;
-    const streaming = chat_history.find(msg => msg.isStreaming && msg.isInjectable);
-    return Boolean(streaming);
-  }, [chat_history, hasPendingHitlInterrupt, isMidturnInjectionEnabled]);
-
-  const isInputLoading = useMemo(
-    () =>
-      isLoadingConversation ||
-      isFetchingParticipant ||
-      modelSettingsAreSaving ||
-      isUploadingAttachments ||
-      isUpdatingInternalToolsConfig ||
-      activeConversation?.isSending ||
-      (isStreamingNow && !isInjectable),
-    [
-      isLoadingConversation,
-      isFetchingParticipant,
-      modelSettingsAreSaving,
-      isUploadingAttachments,
-      isUpdatingInternalToolsConfig,
-      activeConversation?.isSending,
-      isStreamingNow,
-      isInjectable,
-    ],
-  );
-
-  // Details resolve asynchronously, so right after a participant switch they can still list the
-  // versions of the previously active agent. Reading them then makes the current agent's version
-  // look deleted and auto-selects a version that belongs to another agent.
-  const activeParticipantVersions = useMemo(() => {
-    if (areDetailsOfParticipant(activeParticipantDetails, activeParticipant)) {
-      return activeParticipantDetails.versions;
-    }
-    if (areDetailsOfParticipant(originalParticipant, activeParticipant)) {
-      return originalParticipant.versions;
-    }
-    return undefined;
-  }, [activeParticipant, activeParticipantDetails, originalParticipant]);
-
-  const isActiveParticipantBroken = useMemo(() => {
-    if (!activeParticipant) return false;
-    if (activeParticipant.entity_meta?.project_id != PUBLIC_PROJECT_ID) return false;
-    if (!activeParticipantVersions) return false;
-    return !activeParticipantVersions.some(v => v.id === activeParticipant.entity_settings?.version_id);
-  }, [activeParticipant, activeParticipantVersions]);
-
-  const isActiveParticipantVersionMissing = useMemo(() => {
-    if (!activeParticipant) return false;
-    if (!activeParticipantVersions?.length) return false;
-    const versionId = activeParticipant.entity_settings?.version_id;
-    if (!versionId) return false;
-    return !activeParticipantVersions.some(v => v.id === versionId);
-  }, [activeParticipant, activeParticipantVersions]);
-
-  useEffect(() => {
-    if (!isActiveParticipantVersionMissing) return;
-    if (!activeParticipantVersions?.length) return;
-    const baseVersion =
-      activeParticipantVersions.find(v => v.name === LATEST_VERSION_NAME) || activeParticipantVersions[0];
-    onSelectVersion(baseVersion);
-  }, [isActiveParticipantVersionMissing, activeParticipantVersions, onSelectVersion]);
-
-  const isInputDisabled = useMemo(
-    () =>
-      isLoadingConversation ||
-      isProcessingSymbols ||
-      isFetchingParticipant ||
-      isUploadingAttachments ||
-      isUpdatingInternalToolsConfig ||
-      activeConversation?.isSending ||
-      hasBlockingHitlInterrupt ||
-      hasPendingAuthRequired ||
-      (isStreamingNow && !isInjectable) ||
-      isActiveParticipantBroken,
-    [
-      isLoadingConversation,
-      isProcessingSymbols,
-      isFetchingParticipant,
-      isUploadingAttachments,
-      isUpdatingInternalToolsConfig,
-      activeConversation?.isSending,
-      hasBlockingHitlInterrupt,
-      hasPendingAuthRequired,
-      isStreamingNow,
-      isInjectable,
-      isActiveParticipantBroken,
-    ],
-  );
-
-  const shouldDisableSwitchingParticipant = useMemo(
-    () => isMentioningEveryone || selectedUsers.length > 0 || isStreamingNow || isUploadingAttachments,
-    [isMentioningEveryone, selectedUsers.length, isStreamingNow, isUploadingAttachments],
-  );
-
-  if (hidden) return null;
-
-  return (
-    <>
-      <ChatBodyContainer
-        sx={styles.container}
-        data-tour={CHAT_TOUR_TARGET_IDS.workspace}
-      >
-        <ChatMessageList
-          sx={messageListSX}
-          chat_history={chat_history}
-          suggestions={hasBlockingHitlInterrupt ? [] : nextInputSuggestions}
-          onSelectSuggestion={handleSuggestionSelect}
-          isLoading={isStreaming}
-          isStreaming={isStreaming}
-          activeConversation={activeConversation}
-          onCopyToClipboard={onCopyToClipboard}
-          onDeleteAnswer={onDeleteAnswer}
-          onRegenerateAnswer={onRegenerateAnswer}
-          onContinueMcpExecution={continueMcpExecution}
-          onContinueTokenLimitExecution={onContinueTokenLimitExecution}
-          onHitlResume={onHitlResume}
-          onEditCanvas={onEditCanvas}
-          selectedCodeBlockInfo={selectedCodeBlockInfo}
-          onSubmitEditedMessage={onSubmitEditedMessage}
-          onAddEditAttachment={onAddEditAttachment}
-          onScrollToTop={onLoadMoreMessages}
-          onSelectParticipant={onSelectParticipant}
-          isLoadingMore={isLoadingMore}
-          interaction_uuid={interaction_uuid}
-          askingQuestionId={askingQuestionId}
-          questionItemRef={questionItemRef}
-          onRemoveAttachment={onRemoveAttachment}
-          onOpenArtifactPreview={onOpenArtifactPreview}
-          isSpeakingMode={isSpeakingMode}
-          onAutoSpeak={handleAutoSpeak}
-          speakingMessageId={speakingMessageId}
-          speakingSegments={speakingSegments}
-          spokenRange={spokenRange}
-          onEntityCreated={onEntityCreatedProp ?? onEntityCreated}
-          onDeleteEntity={onDeleteEntity}
-          pendingInjections={pendingInjections}
-          onRemovePendingInjection={onRemovePendingInjection}
-        />
-        {displayConversationStarters && (
-          <ChatConversationStarters
-            onSend={onSendConversationStarter}
-            conversation_starters={hasStarterBeenSent || isTheUserChattingNow ? [] : conversationStarters}
-          />
-        )}
-        {showPlayer && <VoiceMiniPlayer {...voicePlayerProps} />}
-        <Box sx={styles.inputWrapper}>
-          {showRecommendationList && (
-            <RecommendationList
-              onSelectParticipant={onSelectParticipant}
-              existingParticipants={activeConversation?.participants || []}
-              onClose={onShowParticipantsList}
-            />
-          )}
-          {isProcessingAtSymbol && hasOtherUsers && (
-            <UserMentionList
-              users={users}
-              query={atQuery}
-              onSelectUser={onSelectUserMention}
-              onClose={stopProcessingAtSymbol}
-            />
-          )}
-          {enableMentions && query && (
-            <SearchResultList
-              query={query.slice(1)}
-              excludePublic={query.startsWith(MentionConstants.PRIVATE_PARTICIPANT_TRIGGER)}
-              onSelectParticipant={onSelectParticipant}
-              stopProcessingSymbols={stopProcessingSymbols}
-              existingParticipants={activeConversation?.participants || []}
-              onClose={event => {
-                if (event.target.innerHTML !== query) stopProcessingSymbols();
-              }}
-            />
-          )}
-          {slashPhase !== 'idle' && (
-            <SlashSuggestionList
-              phase={slashPhase}
-              toolkitQuery={slashToolkitQuery}
-              toolQuery={slashToolQuery}
-              selectedToolkit={slashSelectedToolkit}
-              isQueryFinal={slashIsQueryFinal}
-              onSelectToolkit={onSlashSelectToolkit}
-              onSelectTool={onSlashCommitMention}
-              onClose={resetSlash}
-              participantToolkits={participantToolkits}
-              activeIndex={slashActiveIndex}
-              setActiveIndex={slashSetActiveIndex}
-              itemCountRef={slashItemCountRef}
-              onConfirmActiveRef={slashOnConfirmActiveRef}
-            />
-          )}
-          {isSkillPhaseActive && (
-            <MentionSkillList
-              phase={skillPhase}
-              filteredItems={skillFilteredItems}
-              committedMentions={skillCommittedMentions}
-              highlightedIndex={skillHighlightedIndex}
-              onSelectItem={onSelectSkill}
-              onClose={resetSkill}
-            />
-          )}
-          {budgetWarning.shouldShow && (
-            <BudgetWarningBanner
-              scope={budgetWarning.scope}
-              percentUsed={budgetWarning.percentUsed}
-              onDismiss={budgetWarning.dismiss}
-            />
-          )}
-          <NewChatInput
-            fromTheChat={fromTheChat}
-            conversationId={activeConversation?.id}
-            placeholder={inputPlaceholder}
-            ref={chatInput}
-            onSend={onSendMessage}
-            isLoading={isInputLoading}
-            disabledSend={isInputDisabled}
-            onNormalKeyDown={combinedKeyDown}
-            onInputChange={combinedInputChange}
-            shouldHandleEnter
-            tooltipOfSendButton=""
-            onShowParticipantsList={onShowParticipantsList}
-            selectedVersionId={activeParticipant?.entity_settings?.version_id}
-            onSelectVersion={onSelectVersion}
-            variables={
-              activeParticipant?.entity_settings.variables ||
-              originalParticipant?.version_details?.variables ||
-              []
+          // Save steps_limit to conversation meta if it was provided
+          if (steps_limit !== undefined) {
+            const metaResult = await conversationEdit({
+              projectId,
+              id: activeConversation.id,
+              meta: {
+                ...(activeConversation.meta || {}),
+                steps_limit,
+              },
+            });
+            if (metaResult.error) {
+              toastError('Failed to update steps limit: ' + buildErrorMessage(metaResult.error));
+            } else {
+              setActiveConversation(prev => ({
+                ...prev,
+                meta: { ...(prev.meta || {}), steps_limit },
+              }));
             }
-            onChangeVariables={onChangeVariables}
-            activeParticipant={activeParticipant}
-            activeParticipantDetails={originalParticipant}
-            modelList={modelList}
-            onSelectModel={onSelectModel}
-            selectedModel={selectedModel}
-            selectSavedOrDefaultModel={selectSavedOrDefaultModel}
-            isStreaming={isStreamingNow || isStreaming}
-            isInjectable={isInjectable}
-            onInject={onInjectMessage}
-            onStopGeneration={handleStopStreaming}
-            disableSwitchingParticipant={shouldDisableSwitchingParticipant}
-            users={users}
-            onMentionChange={onMentionChange}
-            isEditingAgent={isEditingAgent}
-            onShowAgentEditor={onShowAgentEditor}
-            onShowPipelineEditor={onShowPipelineEditor}
-            onCloseAgentEditor={onCloseAgentEditor}
-            onClosePipelineEditor={onClosePipelineEditor}
-            isEditorDirty={isEditorDirty}
-            onShowVersionChangeAlert={onShowVersionChangeAlert}
-            onRefreshParticipantDetails={onRefreshParticipantDetails}
-            onShowMenu={onShowMenu}
-            isAgentsPage={isAgentsPage}
-            llmSettings={conversationLlmSettings}
-            onSetLLMSettings={handleSetLLMSettings}
-            showWebhookSecret={showWebhookSecret}
-            showStepsLimit={!isAgentsPage}
-            //Attachments
-            onHandleAttachment={onHandleAttachment}
-            onAttachFiles={onAttachFiles}
-            attachments={attachments}
-            onDeleteAttachment={onDeleteAttachment}
-            disableAttachments={disableAttachments}
-            hideAttachments={hideAttachments}
-            isUploadingAttachments={isUploadingAttachments}
-            uploadProgress={uploadProgress}
-            clearInputAfterSubmit={false}
-            //internal tools config
-            onInternalToolsConfigChange={onInternalToolsConfigChange}
-            onAddNewUsers={onAddNewUsers}
-            internal_tools={activeConversation?.meta?.internal_tools || []}
-            projectId={projectId}
-            // Participant management (for PlusChatButton submenus)
-            onSelectParticipant={onSelectThisParticipant}
-            onCreateAgent={onCreateAgent}
-            onCreatePipeline={onCreatePipeline}
-            onCreateToolkit={onCreateToolkit}
-            onDeleteParticipant={onDeleteParticipant}
-            participants={activeConversation?.participants || []}
-            slashHighlights={combinedHighlightRanges}
+          }
+        } else {
+          // No active conversation yet (new chat before first message) — cache in unsaved settings
+          setUnsavedLLMSettings?.(prev => ({ ...prev, ...newSettings }));
+        }
+      },
+      [
+        isAgentsPage,
+        onSetLLMSettings,
+        activeConversation?.id,
+        activeConversation?.meta,
+        setUnsavedLLMSettings,
+        selectedModel,
+        updateChatLlmSettings,
+        projectId,
+        toastError,
+        setActiveConversation,
+        userId,
+        conversationEdit,
+      ],
+    );
+
+    const onSelectModel = useCallback(
+      async newModel => {
+        if (isAgentsPage) {
+          if (selectedModel?.name === newModel.name) return;
+
+          setSelectedModel(newModel);
+          const newLLMSettings = {
+            ...activeParticipant?.entity_settings.llm_settings,
+            model_name: newModel.name,
+            model_project_id: newModel.project_id,
+            max_tokens: DEFAULT_MAX_TOKENS, // Reset max tokens to default when changing model
+            // Explicitly resets both temperature and reasoning_effort for the new model's
+            // family — never leaves a stale value from the previously selected model (issue #5821).
+            ...resetLLMSettingsForModel(newModel),
+            ...selectionFields(newModel),
+            // Preserve steps_limit — not model-specific
+            steps_limit: activeParticipant?.entity_settings.llm_settings?.steps_limit ?? DEFAULT_STEPS_LIMIT,
+          };
+
+          // Update Formik so Save button persists the new model —
+          // strip steps_limit as it lives in conversation meta, not llm_settings.
+          if (onSetLLMSettings) {
+            // eslint-disable-next-line no-unused-vars
+            const { steps_limit: _, ...llmSettingsForFormik } = newLLMSettings;
+            onSetLLMSettings(llmSettingsForFormik);
+          }
+
+          // Update the participant's entity_settings.llm_settings
+          onChangeParticipantSettings?.(activeParticipant.id, {
+            entity_settings: {
+              ...activeParticipant?.entity_settings,
+              llm_settings: newLLMSettings,
+            },
+          });
+
+          // Store in unsaved settings to be used when sending messages
+          setUnsavedLLMSettings?.(prev => ({ ...prev, ...newLLMSettings }));
+        } else {
+          // Original behavior for regular chat
+          setSelectedModel(newModel);
+          const userSettings = NewConversationHelpers.getChatUserSettings(activeConversation, userId);
+          if (activeConversation?.id) {
+            const llmSettingsPayload = {
+              ...userSettings,
+              model_name: newModel.name,
+              model_project_id: newModel.project_id,
+              max_tokens: DEFAULT_MAX_TOKENS, // Reset max tokens to default when changing model
+              // Explicitly resets both temperature and reasoning_effort for the new model's
+              // family — never leaves a stale value from the previously selected model (issue #5821).
+              ...resetLLMSettingsForModel(newModel),
+              ...selectionFields(newModel),
+              // steps_limit is stored in conversation meta — do not touch it here
+            };
+
+            const result = await updateChatLlmSettings({
+              projectId,
+              conversationId: activeConversation?.id,
+              llm_settings: llmSettingsPayload,
+            });
+            if (result.error) {
+              toastError('Failed to update llm settings: ' + buildErrorMessage(result.error));
+            } else {
+              setActiveConversation(prev => ({
+                ...prev,
+                participants: prev.participants.map(participant => {
+                  if (participant.entity_name === 'user' && participant.entity_meta.id === userId) {
+                    return {
+                      ...result.data,
+                    };
+                  }
+                  return participant;
+                }),
+              }));
+            }
+          }
+        }
+      },
+      [
+        isAgentsPage,
+        selectedModel,
+        setSelectedModel,
+        onSetLLMSettings,
+        onChangeParticipantSettings,
+        activeParticipant?.entity_settings,
+        activeParticipant?.id,
+        activeConversation,
+        userId,
+        updateChatLlmSettings,
+        projectId,
+        toastError,
+        setActiveConversation,
+        setUnsavedLLMSettings,
+      ],
+    );
+
+    const onChangeVariables = useCallback(
+      newVariables => {
+        onChangeParticipantSettings(
+          {
+            ...(activeParticipant || {}),
+            entity_settings: {
+              ...activeParticipant?.entity_settings,
+              variables: [...newVariables],
+            },
+          },
+          true,
+        );
+      },
+      [activeParticipant, onChangeParticipantSettings],
+    );
+
+    const onShowMenu = useCallback(() => {
+      setShowRecommendationList(false);
+      stopProcessingSymbols();
+    }, [stopProcessingSymbols]);
+
+    useEffect(() => {
+      return () => {
+        stopProcessingSymbols();
+      };
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    useEffect(() => {
+      if (!isAgentsPage) {
+        setHasStarterBeenSent(false);
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [activeParticipant]);
+
+    const displayConversationStarters = !isProcessingSymbols && conversationStarters?.length > 0;
+
+    const isMidturnInjectionEnabled = useIsMidturnInjectionEnabled();
+
+    // Scoped to the in-flight turn, not global: the indexer sets isInjectable on
+    // the specific streaming message, so multi-participant conversations with more
+    // than one turn running only open the affordance for a turn that is listening.
+    const isInjectable = useMemo(() => {
+      if (!isMidturnInjectionEnabled) return false;
+      if (hasPendingHitlInterrupt) return false;
+      const streaming = chat_history.find(msg => msg.isStreaming && msg.isInjectable);
+      return Boolean(streaming);
+    }, [chat_history, hasPendingHitlInterrupt, isMidturnInjectionEnabled]);
+
+    const isInputLoading = useMemo(
+      () =>
+        isLoadingConversation ||
+        isFetchingParticipant ||
+        modelSettingsAreSaving ||
+        isUploadingAttachments ||
+        isUpdatingInternalToolsConfig ||
+        activeConversation?.isSending ||
+        (isStreamingNow && !isInjectable),
+      [
+        isLoadingConversation,
+        isFetchingParticipant,
+        modelSettingsAreSaving,
+        isUploadingAttachments,
+        isUpdatingInternalToolsConfig,
+        activeConversation?.isSending,
+        isStreamingNow,
+        isInjectable,
+      ],
+    );
+
+    // Details resolve asynchronously, so right after a participant switch they can still list the
+    // versions of the previously active agent. Reading them then makes the current agent's version
+    // look deleted and auto-selects a version that belongs to another agent.
+    const activeParticipantVersions = useMemo(() => {
+      if (areDetailsOfParticipant(activeParticipantDetails, activeParticipant)) {
+        return activeParticipantDetails.versions;
+      }
+      if (areDetailsOfParticipant(originalParticipant, activeParticipant)) {
+        return originalParticipant.versions;
+      }
+      return undefined;
+    }, [activeParticipant, activeParticipantDetails, originalParticipant]);
+
+    const isActiveParticipantBroken = useMemo(() => {
+      if (!activeParticipant) return false;
+      if (activeParticipant.entity_meta?.project_id != PUBLIC_PROJECT_ID) return false;
+      if (!activeParticipantVersions) return false;
+      return !activeParticipantVersions.some(v => v.id === activeParticipant.entity_settings?.version_id);
+    }, [activeParticipant, activeParticipantVersions]);
+
+    const isActiveParticipantVersionMissing = useMemo(() => {
+      if (!activeParticipant) return false;
+      if (!activeParticipantVersions?.length) return false;
+      const versionId = activeParticipant.entity_settings?.version_id;
+      if (!versionId) return false;
+      return !activeParticipantVersions.some(v => v.id === versionId);
+    }, [activeParticipant, activeParticipantVersions]);
+
+    useEffect(() => {
+      if (!isActiveParticipantVersionMissing) return;
+      if (!activeParticipantVersions?.length) return;
+      const baseVersion =
+        activeParticipantVersions.find(v => v.name === LATEST_VERSION_NAME) || activeParticipantVersions[0];
+      onSelectVersion(baseVersion);
+    }, [isActiveParticipantVersionMissing, activeParticipantVersions, onSelectVersion]);
+
+    const isInputDisabled = useMemo(
+      () =>
+        isLoadingConversation ||
+        isProcessingSymbols ||
+        isFetchingParticipant ||
+        isUploadingAttachments ||
+        isUpdatingInternalToolsConfig ||
+        activeConversation?.isSending ||
+        hasBlockingHitlInterrupt ||
+        hasPendingAuthRequired ||
+        (isStreamingNow && !isInjectable) ||
+        isActiveParticipantBroken,
+      [
+        isLoadingConversation,
+        isProcessingSymbols,
+        isFetchingParticipant,
+        isUploadingAttachments,
+        isUpdatingInternalToolsConfig,
+        activeConversation?.isSending,
+        hasBlockingHitlInterrupt,
+        hasPendingAuthRequired,
+        isStreamingNow,
+        isInjectable,
+        isActiveParticipantBroken,
+      ],
+    );
+
+    const shouldDisableSwitchingParticipant = useMemo(
+      () => isMentioningEveryone || selectedUsers.length > 0 || isStreamingNow || isUploadingAttachments,
+      [isMentioningEveryone, selectedUsers.length, isStreamingNow, isUploadingAttachments],
+    );
+
+    if (hidden) return null;
+
+    return (
+      <>
+        <ChatBodyContainer
+          sx={styles.container}
+          data-tour={CHAT_TOUR_TARGET_IDS.workspace}
+        >
+          <ChatMessageList
+            sx={messageListSX}
+            chat_history={chat_history}
+            suggestions={hasBlockingHitlInterrupt ? [] : nextInputSuggestions}
+            onSelectSuggestion={handleSuggestionSelect}
+            isLoading={isStreaming}
+            isStreaming={isStreaming}
+            activeConversation={activeConversation}
+            onCopyToClipboard={onCopyToClipboard}
+            onDeleteAnswer={onDeleteAnswer}
+            onRegenerateAnswer={onRegenerateAnswer}
+            onContinueMcpExecution={continueMcpExecution}
+            onContinueTokenLimitExecution={onContinueTokenLimitExecution}
+            onHitlResume={onHitlResume}
+            onEditCanvas={onEditCanvas}
+            selectedCodeBlockInfo={selectedCodeBlockInfo}
+            onSubmitEditedMessage={onSubmitEditedMessage}
+            onAddEditAttachment={onAddEditAttachment}
+            onScrollToTop={onLoadMoreMessages}
+            onSelectParticipant={onSelectParticipant}
+            isLoadingMore={isLoadingMore}
+            interaction_uuid={interaction_uuid}
+            askingQuestionId={askingQuestionId}
+            questionItemRef={questionItemRef}
+            onRemoveAttachment={onRemoveAttachment}
+            onOpenArtifactPreview={onOpenArtifactPreview}
             isSpeakingMode={isSpeakingMode}
-            onSpeakingModeToggle={() => setIsSpeakingMode(v => !v)}
-            isTTSPlaying={isPlaying}
+            onAutoSpeak={handleAutoSpeak}
+            speakingMessageId={speakingMessageId}
+            speakingSegments={speakingSegments}
+            spokenRange={spokenRange}
+            onEntityCreated={onEntityCreatedProp ?? onEntityCreated}
+            onDeleteEntity={onDeleteEntity}
+            pendingInjections={pendingInjections}
+            onRemovePendingInjection={onRemovePendingInjection}
           />
-        </Box>
-      </ChatBodyContainer>
-      <Modal.DeleteEntityModal
-        open={openAlert}
-        onClose={onCloseAlert}
-        onConfirm={onConfirmDelete}
-        textContent="Are you sure to delete the message"
-        inlineExtraContent="? It can't be restored."
-      />
-    </>
-  );
-});
+          {displayConversationStarters && (
+            <ChatConversationStarters
+              onSend={onSendConversationStarter}
+              conversation_starters={hasStarterBeenSent || isTheUserChattingNow ? [] : conversationStarters}
+            />
+          )}
+          {showPlayer && <VoiceMiniPlayer {...voicePlayerProps} />}
+          <Box sx={styles.inputWrapper}>
+            {showRecommendationList && (
+              <RecommendationList
+                onSelectParticipant={onSelectParticipant}
+                existingParticipants={activeConversation?.participants || []}
+                onClose={onShowParticipantsList}
+              />
+            )}
+            {isProcessingAtSymbol && hasOtherUsers && (
+              <UserMentionList
+                users={users}
+                query={atQuery}
+                onSelectUser={onSelectUserMention}
+                onClose={stopProcessingAtSymbol}
+              />
+            )}
+            {enableMentions && query && (
+              <SearchResultList
+                query={query.slice(1)}
+                excludePublic={query.startsWith(MentionConstants.PRIVATE_PARTICIPANT_TRIGGER)}
+                onSelectParticipant={onSelectParticipant}
+                stopProcessingSymbols={stopProcessingSymbols}
+                existingParticipants={activeConversation?.participants || []}
+                onClose={event => {
+                  if (event.target.innerHTML !== query) stopProcessingSymbols();
+                }}
+              />
+            )}
+            {slashPhase !== 'idle' && (
+              <SlashSuggestionList
+                phase={slashPhase}
+                toolkitQuery={slashToolkitQuery}
+                toolQuery={slashToolQuery}
+                selectedToolkit={slashSelectedToolkit}
+                isQueryFinal={slashIsQueryFinal}
+                onSelectToolkit={onSlashSelectToolkit}
+                onSelectTool={onSlashCommitMention}
+                onClose={resetSlash}
+                participantToolkits={participantToolkits}
+                activeIndex={slashActiveIndex}
+                setActiveIndex={slashSetActiveIndex}
+                itemCountRef={slashItemCountRef}
+                onConfirmActiveRef={slashOnConfirmActiveRef}
+              />
+            )}
+            {isSkillPhaseActive && (
+              <MentionSkillList
+                phase={skillPhase}
+                filteredItems={skillFilteredItems}
+                committedMentions={skillCommittedMentions}
+                highlightedIndex={skillHighlightedIndex}
+                onSelectItem={onSelectSkill}
+                onClose={resetSkill}
+              />
+            )}
+            {budgetWarning.shouldShow && (
+              <BudgetWarningBanner
+                scope={budgetWarning.scope}
+                percentUsed={budgetWarning.percentUsed}
+                onDismiss={budgetWarning.dismiss}
+              />
+            )}
+            <NewChatInput
+              fromTheChat={fromTheChat}
+              conversationId={activeConversation?.id}
+              placeholder={inputPlaceholder}
+              ref={chatInput}
+              onSend={onSendMessage}
+              isLoading={isInputLoading}
+              disabledSend={isInputDisabled}
+              onNormalKeyDown={combinedKeyDown}
+              onInputChange={combinedInputChange}
+              shouldHandleEnter
+              tooltipOfSendButton=""
+              onShowParticipantsList={onShowParticipantsList}
+              selectedVersionId={activeParticipant?.entity_settings?.version_id}
+              onSelectVersion={onSelectVersion}
+              variables={
+                activeParticipant?.entity_settings.variables ||
+                originalParticipant?.version_details?.variables ||
+                []
+              }
+              onChangeVariables={onChangeVariables}
+              activeParticipant={activeParticipant}
+              activeParticipantDetails={originalParticipant}
+              modelList={modelList}
+              onSelectModel={onSelectModel}
+              selectedModel={selectedModel}
+              selectSavedOrDefaultModel={selectSavedOrDefaultModel}
+              isStreaming={isStreamingNow || isStreaming}
+              isInjectable={isInjectable}
+              onInject={onInjectMessage}
+              onStopGeneration={handleStopStreaming}
+              disableSwitchingParticipant={shouldDisableSwitchingParticipant}
+              users={users}
+              onMentionChange={onMentionChange}
+              isEditingAgent={isEditingAgent}
+              onShowAgentEditor={onShowAgentEditor}
+              onShowPipelineEditor={onShowPipelineEditor}
+              onCloseAgentEditor={onCloseAgentEditor}
+              onClosePipelineEditor={onClosePipelineEditor}
+              isEditorDirty={isEditorDirty}
+              onShowVersionChangeAlert={onShowVersionChangeAlert}
+              onRefreshParticipantDetails={onRefreshParticipantDetails}
+              onShowMenu={onShowMenu}
+              isAgentsPage={isAgentsPage}
+              llmSettings={conversationLlmSettings}
+              onSetLLMSettings={handleSetLLMSettings}
+              showWebhookSecret={showWebhookSecret}
+              showStepsLimit={!isAgentsPage}
+              //Attachments
+              onHandleAttachment={onHandleAttachment}
+              onAttachFiles={onAttachFiles}
+              attachments={attachments}
+              onDeleteAttachment={onDeleteAttachment}
+              disableAttachments={disableAttachments}
+              hideAttachments={hideAttachments}
+              isUploadingAttachments={isUploadingAttachments}
+              uploadProgress={uploadProgress}
+              clearInputAfterSubmit={false}
+              //internal tools config
+              onInternalToolsConfigChange={onInternalToolsConfigChange}
+              onAddNewUsers={onAddNewUsers}
+              internal_tools={activeConversation?.meta?.internal_tools || []}
+              projectId={projectId}
+              // Participant management (for PlusChatButton submenus)
+              onSelectParticipant={onSelectThisParticipant}
+              onCreateAgent={onCreateAgent}
+              onCreatePipeline={onCreatePipeline}
+              onCreateToolkit={onCreateToolkit}
+              onDeleteParticipant={onDeleteParticipant}
+              participants={activeConversation?.participants || []}
+              slashHighlights={combinedHighlightRanges}
+              isSpeakingMode={isSpeakingMode}
+              onSpeakingModeToggle={() => setIsSpeakingMode(v => !v)}
+              isTTSPlaying={isPlaying}
+            />
+          </Box>
+        </ChatBodyContainer>
+        <Modal.DeleteEntityModal
+          open={openAlert}
+          onClose={onCloseAlert}
+          onConfirm={onConfirmDelete}
+          textContent="Are you sure to delete the message"
+          inlineExtraContent="? It can't be restored."
+        />
+      </>
+    );
+  }),
+);
 
 ChatBox.displayName = 'ChatBox';
 
@@ -3075,4 +3089,4 @@ const chatBoxStyles = () => ({
   },
 });
 
-export default memo(ChatBox);
+export default ChatBox;

@@ -332,7 +332,7 @@ const previewHeaderStyles = isChatPage => ({
     display: 'flex',
     flexDirection: 'column',
     backgroundColor: palette.background.default.tertiary,
-    borderBottom: `1px solid ${palette.border.default}`,
+    borderBottom: `0.0625rem solid ${palette.border.default}`,
   }),
 
   row: {
@@ -345,7 +345,7 @@ const previewHeaderStyles = isChatPage => ({
     gap: '1rem',
 
     ':last-of-type': ({ palette }) => ({
-      borderTop: `1px solid ${palette.border.default}`,
+      borderTop: `0.0625rem solid ${palette.border.default}`,
       minHeight: isChatPage ? '3rem' : '3.4rem',
       height: isChatPage ? '3rem' : '3.4rem',
       justifyContent: 'flex-start',

@@ -436,7 +436,7 @@ const ToolBase = memo(props => {
             .map(([k, v]) => renderConfigurationProperty(k, v))}
 
           {advancedFields.length > 0 && (
-            <Box sx={{ display: 'flex', flexDirection: 'column', marginTop: '0.5rem' }}>
+            <Box sx={styles.actionsColumn}>
               <BasicAccordion
                 showMode={AccordionConstants.AccordionShowMode.LeftMode}
                 accordionSX={{ background: `${theme.palette.background.default.tertiary} !important` }}
@@ -676,6 +676,11 @@ ToolBase.displayName = 'ToolBase';
 
 /** @type {MuiSx} */
 const toolBaseStyles = shouldHideConfigurationHeader => ({
+  actionsColumn: {
+    display: 'flex',
+    flexDirection: 'column',
+    marginTop: '0.5rem',
+  },
   configurationContainer: {
     display: 'flex',
     flexDirection: 'column',

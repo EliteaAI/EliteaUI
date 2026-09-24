@@ -30,7 +30,7 @@ const KpiCard = memo(props => {
           />
         )}
       </Box>
-      <Box sx={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}>
+      <Box sx={styles.valueRow}>
         <Typography
           variant="headingMedium"
           sx={[styles.kpiValue, color ? { color } : {}]}
@@ -71,6 +71,11 @@ KpiCard.displayName = 'KpiCard';
 
 /** @type {MuiSx} */
 const kpiCardStyles = () => ({
+  valueRow: {
+    display: 'flex',
+    alignItems: 'baseline',
+    gap: '0.5rem',
+  },
   kpiCard: ({ palette }) => ({
     padding: '1rem',
     borderRadius: '0.5rem',

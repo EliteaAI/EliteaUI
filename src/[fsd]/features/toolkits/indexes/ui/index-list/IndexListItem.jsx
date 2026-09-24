@@ -2,7 +2,7 @@ import { memo, useMemo } from 'react';
 
 import { format } from 'date-fns';
 
-import { Box, CircularProgress, Skeleton, Typography } from '@mui/material';
+import { Box, CircularProgress, Skeleton, Typography, useTheme } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { normalizeIndexingReport } from '@/[fsd]/entities/indexing-report';
@@ -30,10 +30,6 @@ import DeleteIcon from '@/components/Icons/DeleteIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
-// Shared by the failed InfoTooltip and the abandoned attention icon; predates the
-// theme tokens the rest of the card uses.
-const ERROR_ICON_FILL = '#D71616';
-
 const IndexListItem = memo(props => {
   const {
     index,
@@ -47,6 +43,7 @@ const IndexListItem = memo(props => {
     isReindexing,
   } = props;
   const styles = indexListItem();
+  const { palette } = useTheme();
   const { isPrivate } = useProjectType();
   const { checkPermission } = useCheckPermission();
 
@@ -255,7 +252,7 @@ const IndexListItem = memo(props => {
               )}
               {index.metadata.state === IndexStatuses.fail && (
                 <InfoTooltip
-                  infoTooltip={{ icon: styles.error }}
+                  infoTooltip={{ icon: { fill: palette.icon.error } }}
                   disableTooltip
                   sx={styles.stateIcon}
                 />
@@ -339,12 +336,12 @@ const indexListItem = () => ({
 
     '&:hover': {
       background: palette.background.error,
-      border: `1px solid ${palette.error.main}`,
+      border: `0.0625rem solid ${palette.error.main}`,
     },
 
     '&.selected': {
       background: palette.background.error,
-      border: `1px solid ${palette.error.main}`,
+      border: `0.0625rem solid ${palette.error.main}`,
     },
   }),
 
@@ -442,16 +439,13 @@ const indexListItem = () => ({
   stateIcon: ({ palette }) => ({
     color: palette.text.info,
   }),
-  error: {
-    fill: ERROR_ICON_FILL,
-  },
   // Targets the icon's paths like `warning` does: AttentionIcon sets fill as an svg
   // presentation attribute, which beats a fill inherited from the wrapping Box.
-  abandonedIcon: {
+  abandonedIcon: ({ palette }) => ({
     path: {
-      fill: ERROR_ICON_FILL,
+      fill: palette.icon.error,
     },
-  },
+  }),
   warning: {
     path: ({ palette }) => ({
       fill: palette.icon.warning,

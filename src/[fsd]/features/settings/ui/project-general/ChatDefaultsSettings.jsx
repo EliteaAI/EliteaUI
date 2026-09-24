@@ -2,7 +2,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import AiParticipantSearchSelect from '@/[fsd]/features/chat/conversation-list/ui/conversations/AiParticipantSearchSelect';
+import { AiParticipantSearchSelect } from '@/[fsd]/features/chat/conversation-list/ui/conversations';
 import {
   useProjectInfoQuery,
   useUpdateProjectChatConfigMutation,

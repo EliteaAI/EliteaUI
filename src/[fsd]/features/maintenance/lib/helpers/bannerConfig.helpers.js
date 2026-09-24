@@ -5,7 +5,7 @@ import {
   VITE_MAINTENANCE_START,
 } from '@/[fsd]/features/maintenance/lib/constants';
 
-import { DEFAULT_BANNER_STYLE } from './bannerStyleMap';
+import { DEFAULT_BANNER_STYLE } from './bannerStyleMap.helpers';
 
 const DEFAULT_BANNER_CONFIG = {
   enabled: false,

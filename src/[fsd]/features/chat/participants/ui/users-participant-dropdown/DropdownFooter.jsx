@@ -40,10 +40,7 @@ const DropdownFooter = memo(props => {
           sx={styles.itemWrapper}
           data-testid="chat-participants-all-users-button"
         >
-          <Box
-            sx={styles.contentRow}
-            color={theme.palette.icon.inactive}
-          >
+          <Box sx={[styles.contentRowColor, styles.contentRow]}>
             <UsersIcon
               sx={styles.usersIcon}
               fill={theme.palette.secondary.main}
@@ -79,6 +76,9 @@ DropdownFooter.displayName = 'DropdownFooter';
 
 /** @type {MuiSx} */
 const dropdownFooterStyles = ({ isHovering }) => ({
+  contentRowColor: ({ palette }) => ({
+    color: palette.icon.inactive,
+  }),
   root: {
     display: 'flex',
     flexDirection: 'column',

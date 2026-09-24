@@ -245,7 +245,7 @@ const ApplicationAnswer = memo(
 
                 {references?.length > 0 && !(isLoading || isRegenerating) && (
                   <BasicAccordion
-                    style={{ marginTop: answer ? '0.9375rem' : '2.3125rem' }}
+                    style={styles.referencesAccordion(!!answer)}
                     items={[
                       {
                         title: 'References',
@@ -337,6 +337,9 @@ const createdEntitiesContainerSx = {
 
 /** @type {MuiSx} */
 const applicationAnswerStyles = (verticalMode, minHeight, hasToolActionsOrException, isSwarmChild) => ({
+  referencesAccordion: hasAnswer => ({
+    marginTop: hasAnswer ? '0.9375rem' : '2.3125rem',
+  }),
   userMessageContainer: verticalMode
     ? {
         flexDirection: 'column',

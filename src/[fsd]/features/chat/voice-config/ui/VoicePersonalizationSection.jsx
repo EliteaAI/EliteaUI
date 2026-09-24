@@ -60,7 +60,7 @@ const VoicePersonalizationSection = memo(() => {
 
 VoicePersonalizationSection.displayName = 'VoicePersonalizationSection';
 
-export { VoicePersonalizationSection };
+export default VoicePersonalizationSection;
 
 /** @type {MuiSx} */
 const styles = {

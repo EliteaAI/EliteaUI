@@ -234,14 +234,7 @@ const AnalyticsAgents = memo(props => {
 
       {/* Paginated agent table */}
       <Box sx={styles.chartCard}>
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '0.75rem',
-          }}
-        >
+        <Box sx={styles.tableHeaderRow}>
           <Box>
             <Typography
               variant="labelMedium"
@@ -395,6 +388,12 @@ AnalyticsAgents.displayName = 'AnalyticsAgents';
 
 /** @type {MuiSx} */
 const styles = {
+  tableHeaderRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '0.75rem',
+  },
   agentsContent: { display: 'flex', flexDirection: 'column', gap: '1rem' },
   chartCard: ({ palette }) => ({
     padding: '1rem',
@@ -423,7 +422,7 @@ const styles = {
   tableHeader: ({ palette }) => ({
     display: 'flex',
     padding: '0.5rem 0.75rem',
-    borderBottom: `1px solid ${palette.border.default}`,
+    borderBottom: `0.0625rem solid ${palette.border.default}`,
     gap: '0.5rem',
   }),
   tableCell: ({ palette }) => ({
@@ -435,7 +434,7 @@ const styles = {
   clickableRow: ({ palette }) => ({
     display: 'flex',
     padding: '0.5rem 0.75rem',
-    borderBottom: `1px solid ${palette.border.default}`,
+    borderBottom: `0.0625rem solid ${palette.border.default}`,
     gap: '0.5rem',
     cursor: 'pointer',
     '&:hover': { backgroundColor: palette.background.interactiveItem.rowHover },
