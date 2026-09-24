@@ -623,7 +623,12 @@ const ChatBox = forwardRef((props, boxRef) => {
       pendingInjectionsRef.current = new Map();
       // Items are already visible in pendingInjections (added by onInjectMessage).
       // Just queue them for sequential re-send; they'll be removed from state on dequeue.
+      // Flip inFlight so the remove button becomes visible while they wait in the queue.
       stopQueueRef.current.push(...unconsumed);
+      const unconsumedIds = new Set(unconsumed.map(item => item.id));
+      setPendingInjections(prev =>
+        prev.map(item => (unconsumedIds.has(item.id) ? { ...item, inFlight: false } : item)),
+      );
       // If the stream already ended and nothing is currently dequeuing, kick off the chain.
       // isDequeuingRef prevents the isStreaming effect and this callback from both sending at once.
       if (!isStreamingRef.current && !isDequeuingRef.current) {
@@ -816,6 +821,10 @@ const ChatBox = forwardRef((props, boxRef) => {
       const rescued = [...pendingInjectionsRef.current.entries()].map(([id, text]) => ({ id, text }));
       stopQueueRef.current.push(...rescued);
       pendingInjectionsRef.current = new Map();
+      const rescuedIds = new Set(rescued.map(item => item.id));
+      setPendingInjections(prev =>
+        prev.map(item => (rescuedIds.has(item.id) ? { ...item, inFlight: false } : item)),
+      );
     }
 
     // Dequeue one item at a time. isDequeuingRef prevents onInjectionReport from also
@@ -2150,14 +2159,22 @@ const ChatBox = forwardRef((props, boxRef) => {
       resetSlash();
 
       const injectionId = uuidv4();
-      pendingInjectionsRef.current.set(injectionId, text);
-      // inFlight from the start: the POST fires immediately, so the remove
-      // button should never be shown for this item.
-      setPendingInjections(prev => [...prev, { id: injectionId, text, inFlight: true }]);
       // Chat passes clearInputAfterSubmit={false}, so clearing is the caller's job
       // here just as it is in onPredictStream.
       chatInput.current?.reset();
       onClearAttachments?.();
+
+      // If items are already waiting in the stop queue, append to the tail so all
+      // messages process in submission order rather than injecting ahead of the queue.
+      if (stopQueueRef.current.length > 0) {
+        stopQueueRef.current.push({ id: injectionId, text });
+        setPendingInjections(prev => [...prev, { id: injectionId, text, inFlight: false }]);
+        return;
+      }
+
+      pendingInjectionsRef.current.set(injectionId, text);
+      // inFlight from the start: the POST fires immediately, so the remove button is hidden.
+      setPendingInjections(prev => [...prev, { id: injectionId, text, inFlight: true }]);
       try {
         await injectMessage({
           projectId,
