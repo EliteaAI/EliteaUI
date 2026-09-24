@@ -98,6 +98,8 @@ const CredentialsSelect = memo(
     presetOptions,
     onReload,
     propKey,
+    fallbackToFirstCredential = true,
+    onSelectionListedChange,
   }) => {
     const trackEvent = useTrackEvent();
     const { personal_project_id } = useSelector(state => state.user);
@@ -334,11 +336,23 @@ const CredentialsSelect = memo(
           );
           return sharedMatch ?? null;
         }
-        return savedCredentialsMenuData[0] ?? null;
+        return fallbackToFirstCredential ? (savedCredentialsMenuData[0] ?? null) : null;
       }
 
       return null;
-    }, [createMenuData, savedCredentialsMenuData, value, section, projectDefaultVectorStorageModel]);
+    }, [
+      createMenuData,
+      savedCredentialsMenuData,
+      value,
+      section,
+      projectDefaultVectorStorageModel,
+      fallbackToFirstCredential,
+    ]);
+
+    useEffect(() => {
+      if (!hasFetchedData) return;
+      onSelectionListedChange?.(Boolean(selectedOption));
+    }, [hasFetchedData, selectedOption, onSelectionListedChange]);
 
     useEffect(() => {
       setShowConfigurableFields?.(!!selectedOption);
@@ -368,10 +382,10 @@ const CredentialsSelect = memo(
 
     const onSelectItem = useCallback(
       option => {
-        const isAlreadySelected =
-          selectedOption?.elitea_title === option.elitea_title && selectedOption?.private === option.private;
+        const isCommittedValue =
+          value?.elitea_title === option.elitea_title && Boolean(value?.private) === option.private;
 
-        if (isAlreadySelected) {
+        if (isCommittedValue) {
           commitConfiguration(null);
           return;
         }
@@ -383,14 +397,7 @@ const CredentialsSelect = memo(
         });
         commitConfiguration({ private: option.private, elitea_title: option.elitea_title });
       },
-      [
-        commitConfiguration,
-        selectedOption?.elitea_title,
-        selectedOption?.private,
-        type,
-        trackEvent,
-        contextExecutionEntity,
-      ],
+      [commitConfiguration, value?.elitea_title, value?.private, type, trackEvent, contextExecutionEntity],
     );
 
     const handleClear = useCallback(() => commitConfiguration(null), [commitConfiguration]);
