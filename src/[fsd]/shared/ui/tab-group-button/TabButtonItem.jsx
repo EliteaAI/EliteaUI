@@ -6,14 +6,18 @@ import Tooltip from '@/ComponentsLib/Tooltip';
 
 const TabButtonItem = memo(props => {
   const { item, borderRadius, customSx, theme, disableTooltip } = props;
-  const styles = tabButtonItemStyle(item);
+  const styles = tabButtonItemStyles(item);
 
   const button = (
     <ToggleButton
       variant="elitea"
       value={item.value}
       {...item.buttonProps}
-      sx={{ ...styles.toggleButton, borderRadius, ...customSx }}
+      sx={[
+        styles.toggleButton,
+        styles.toggleButtonRadius(borderRadius),
+        ...(Array.isArray(customSx) ? customSx : [customSx]),
+      ]}
     >
       {item.label && (
         <Typography
@@ -49,7 +53,10 @@ const TabButtonItem = memo(props => {
 TabButtonItem.displayName = 'TabButtonItem';
 
 /** @type {MuiSx} */
-const tabButtonItemStyle = item => ({
+const tabButtonItemStyles = item => ({
+  toggleButtonRadius: borderRadius => ({
+    borderRadius,
+  }),
   toggleButton: {
     ...(item.label ? { padding: '0.375rem 1rem' } : {}),
   },

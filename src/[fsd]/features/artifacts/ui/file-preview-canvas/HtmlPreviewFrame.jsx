@@ -401,7 +401,8 @@ const HtmlPreviewFrame = memo(props => {
           </Typography>
         </Box>
       ) : (
-        <iframe
+        <Box
+          component="iframe"
           key={iframeGeneration}
           ref={iframeRef}
           srcDoc={sanitizeResult.html}
@@ -409,7 +410,7 @@ const HtmlPreviewFrame = memo(props => {
           title="HTML Preview"
           referrerPolicy="no-referrer"
           onLoad={handleIframeLoad}
-          style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
+          sx={styles.iframe}
         />
       )}
       <Modal.BaseModal
@@ -443,6 +444,12 @@ HtmlPreviewFrame.displayName = 'HtmlPreviewFrame';
 
 /** @type {MuiSx} */
 const htmlPreviewFrameStyles = () => ({
+  iframe: {
+    width: '100%',
+    height: '100%',
+    border: 'none',
+    display: 'block',
+  },
   wrapper: ({ palette }) => ({
     flex: 1,
     minHeight: 0,

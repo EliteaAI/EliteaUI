@@ -5,7 +5,7 @@ export { ConditionNode, FunctionNode, ToolNode, LoopNode, LoopToolNode } from '.
 export { default as CustomEdge } from './CustomEdge';
 export { default as CustomHandle } from './CustomHandle';
 
-export { default as DecisionNode } from './decision-node/index.jsx';
+export { default as DecisionNode } from './decision-node';
 export { default as DefaultNode } from './DefaultNode';
 export { default as EndNode } from './EndNode';
 export { default as GhostNode } from './GhostNode';

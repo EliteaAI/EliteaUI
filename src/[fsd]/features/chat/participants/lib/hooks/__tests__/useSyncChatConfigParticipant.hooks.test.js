@@ -9,7 +9,7 @@ const updateChatConfig = vi.fn();
 const fetchProjectInfo = vi.fn();
 const checkPermission = vi.fn(() => true);
 
-vi.mock('@/[fsd]/features/settings/api/projectInfoApi', () => ({
+vi.mock('@/[fsd]/features/settings/api', () => ({
   useLazyProjectInfoQuery: () => [fetchProjectInfo],
   useUpdateProjectChatConfigMutation: () => [updateChatConfig],
 }));

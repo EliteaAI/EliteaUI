@@ -77,8 +77,8 @@ const selectValueToCreateAction = str => {
   }
 };
 
-const CredentialsSelect = memo(
-  ({
+const CredentialsSelect = memo(props => {
+  const {
     label = 'Credentials',
     description,
     required,
@@ -100,495 +100,494 @@ const CredentialsSelect = memo(
     propKey,
     fallbackToFirstCredential = true,
     onSelectionListedChange,
-  }) => {
-    const trackEvent = useTrackEvent();
-    const { personal_project_id } = useSelector(state => state.user);
-    const selectedProjectId = useSelectedProjectId();
-    const { contextExecutionEntity } = useContextExecutionEntity();
-    const {
-      validateCredential,
-      batchValidateCredentials,
-      getCredentialStatus,
-      getCredentialMessage,
-      resetStatus,
-      resetStatuses,
-    } = useCredentialValidation();
+  } = props;
 
-    const {
-      configurations,
-      hasFetchedData,
-      isFetching,
-      onRefresh,
-      hasAutoSelectedRef,
-      projectDefaultVectorStorageModel,
-    } = useCredentialsData({
-      selectedProjectId,
-      personal_project_id,
-      section,
-      type,
-      onlyPublic,
-      batchValidateCredentials,
-      resetStatuses,
-    });
+  const trackEvent = useTrackEvent();
+  const { personal_project_id } = useSelector(state => state.user);
+  const selectedProjectId = useSelectedProjectId();
+  const { contextExecutionEntity } = useContextExecutionEntity();
+  const {
+    validateCredential,
+    batchValidateCredentials,
+    getCredentialStatus,
+    getCredentialMessage,
+    resetStatus,
+    resetStatuses,
+  } = useCredentialValidation();
 
-    const styles = credentialsSelectStyles();
+  const {
+    configurations,
+    hasFetchedData,
+    isFetching,
+    onRefresh,
+    hasAutoSelectedRef,
+    projectDefaultVectorStorageModel,
+  } = useCredentialsData({
+    selectedProjectId,
+    personal_project_id,
+    section,
+    type,
+    onlyPublic,
+    batchValidateCredentials,
+    resetStatuses,
+  });
 
-    const isClearingAllowed = section !== 'vectorstorage';
+  const styles = credentialsSelectStyles();
 
-    const commitConfiguration = useCallback(
-      (configuration, ...rest) => {
-        if (configuration === null && !isClearingAllowed) return;
-        onSelectConfiguration?.(configuration, ...rest);
-      },
-      [isClearingAllowed, onSelectConfiguration],
+  const isClearingAllowed = section !== 'vectorstorage';
+
+  const commitConfiguration = useCallback(
+    (configuration, ...rest) => {
+      if (configuration === null && !isClearingAllowed) return;
+      onSelectConfiguration?.(configuration, ...rest);
+    },
+    [isClearingAllowed, onSelectConfiguration],
+  );
+
+  const mismatchedPrivateCredential = useMemo(() => {
+    if (
+      !value?.private ||
+      isBlankEliteaTitle(value?.elitea_title) ||
+      selectedProjectId === personal_project_id
+    )
+      return false;
+    const match = configurations.find(
+      config =>
+        config.elitea_title &&
+        config.elitea_title === value.elitea_title &&
+        (config.project_id === personal_project_id || config.shared),
     );
+    return !match;
+  }, [value?.private, value?.elitea_title, selectedProjectId, personal_project_id, configurations]);
 
-    const mismatchedPrivateCredential = useMemo(() => {
-      if (
-        !value?.private ||
-        isBlankEliteaTitle(value?.elitea_title) ||
-        selectedProjectId === personal_project_id
-      )
-        return false;
-      const match = configurations.find(
-        config =>
-          config.elitea_title &&
-          config.elitea_title === value.elitea_title &&
-          (config.project_id === personal_project_id || config.shared),
-      );
-      return !match;
-    }, [value?.private, value?.elitea_title, selectedProjectId, personal_project_id, configurations]);
+  const createMenuData = useMemo(() => {
+    const options = [];
+    if (isCreationAllowed) {
+      const isVectorStorageInTeamProject =
+        section === 'vectorstorage' && selectedProjectId !== personal_project_id;
 
-    const createMenuData = useMemo(() => {
-      const options = [];
-      if (isCreationAllowed) {
-        const isVectorStorageInTeamProject =
-          section === 'vectorstorage' && selectedProjectId !== personal_project_id;
-
-        if (!onlyPublic && !isVectorStorageInTeamProject)
-          options.push({
-            elitea_title: Create_Personal_Title,
-            private: true,
-            label: (
-              <CredentialCreateLabel
-                isPrivate
-                type={type}
-              />
-            ),
-            settings: initialToolTypeState || {},
-          });
-
-        if (selectedProjectId != personal_project_id) {
-          options.push({
-            elitea_title: Create_Project_Title,
-            private: false,
-            label: (
-              <CredentialCreateLabel
-                isPrivate={false}
-                type={type}
-              />
-            ),
-            settings: initialToolTypeState || {},
-          });
-        }
-      }
-      return options;
-    }, [
-      isCreationAllowed,
-      type,
-      initialToolTypeState,
-      selectedProjectId,
-      personal_project_id,
-      onlyPublic,
-      section,
-    ]);
-    const tokens = McpAuthHelpers.loadTokens();
-    const savedCredentialsMenuData = useMemo(() => {
-      return (presetOptions?.length ? presetOptions : configurations)
-        .filter(configuration => {
-          const isConfigurationPersonal = configuration.project_id === personal_project_id;
-          if (onlyPublic) return !isConfigurationPersonal;
-          return true;
-        })
-        .map(configuration => {
-          const isConfigurationPersonal = configuration.project_id === personal_project_id;
-          const configUid = configuration.id || configuration.uuid;
-          const credentialUrl = configUid
-            ? (() => {
-                const baseUrl = `${window.location.protocol}//${window.location.host}`;
-                const basename = getBasename();
-                const credProjectId = configuration.project_id || selectedProjectId;
-                const path = RouteDefinitions.EditCredentialFromMain.replace(':tab', 'all').replace(
-                  ':credential_uid',
-                  configUid,
-                );
-                return `${baseUrl}${basename}/${credProjectId}${path}`;
-              })()
-            : null;
-
-          const credStatus = getCredentialStatus(configUid);
-          let isCredentialInvalid = credStatus === 'invalid';
-          const isChecking = credStatus === 'checking';
-          let credentialMessage = getCredentialMessage(configUid);
-          const tokenKey = `${configuration.uuid}:${configuration.data?.oauth_discovery_endpoint}`;
-          const tokenInfo = tokens?.[tokenKey];
-          if (
-            isCredentialInvalid &&
-            credentialMessage?.includes('Please complete the OAuth flow to obtain an access token') &&
-            tokenInfo
-          ) {
-            isCredentialInvalid = false;
-            credentialMessage = null;
-          }
-
-          const handleRevalidate = async event => {
-            event.stopPropagation();
-            const freshConfigurations = await onRefresh();
-            const freshConfig = freshConfigurations?.find(c => (c.id || c.uuid) === configUid);
-            if (freshConfig) {
-              resetStatus(configUid);
-              validateCredential({
-                projectId: freshConfig.project_id || selectedProjectId,
-                credential: freshConfig,
-              });
-              if (freshConfig.elitea_title === value?.elitea_title) {
-                onReload?.();
-              }
-            }
-          };
-
-          const rowEliteaTitle = configuration.elitea_title || configuration.data?.title;
-
-          return {
-            id: `${configuration.elitea_title}_${configuration.project_id}`,
-            elitea_title: rowEliteaTitle,
-            private: isConfigurationPersonal,
-            settings: configuration.data || {},
-            shared: configuration.shared || false,
-            isCredentialInvalid,
-            credentialMessage,
-            label: (
-              <CredentialOptionLabel
-                isPersonal={isConfigurationPersonal}
-                label={configuration.label || configuration.elitea_title || configuration.data?.title}
-                credentialUrl={credentialUrl}
-                isInvalid={isCredentialInvalid}
-                isChecking={isChecking}
-                invalidMessage={credentialMessage}
-                onRevalidate={handleRevalidate}
-              />
-            ),
-          };
+      if (!onlyPublic && !isVectorStorageInTeamProject)
+        options.push({
+          elitea_title: Create_Personal_Title,
+          private: true,
+          label: (
+            <CredentialCreateLabel
+              isPrivate
+              type={type}
+            />
+          ),
+          settings: initialToolTypeState || {},
         });
-    }, [
-      presetOptions,
-      configurations,
-      personal_project_id,
-      onlyPublic,
-      getCredentialStatus,
-      getCredentialMessage,
-      onRefresh,
-      onReload,
-      resetStatus,
-      validateCredential,
-      selectedProjectId,
-      value?.elitea_title,
-      tokens,
-    ]);
 
-    const menuData = useMemo(
-      () => ({
-        Create: createMenuData,
-        [`Saved ${type ? type + ' ' : ''}Credentials`]: savedCredentialsMenuData,
-      }),
-      [createMenuData, savedCredentialsMenuData, type],
-    );
-
-    const selectedOption = useMemo(() => {
-      if ([Manual_Title, Create_Personal_Title, Create_Project_Title].includes(value?.elitea_title)) {
-        return createMenuData.find(
-          option => option.elitea_title === value?.elitea_title && option.private === value?.private,
-        );
+      if (selectedProjectId != personal_project_id) {
+        options.push({
+          elitea_title: Create_Project_Title,
+          private: false,
+          label: (
+            <CredentialCreateLabel
+              isPrivate={false}
+              type={type}
+            />
+          ),
+          settings: initialToolTypeState || {},
+        });
       }
+    }
+    return options;
+  }, [
+    isCreationAllowed,
+    type,
+    initialToolTypeState,
+    selectedProjectId,
+    personal_project_id,
+    onlyPublic,
+    section,
+  ]);
+  const tokens = McpAuthHelpers.loadTokens();
+  const savedCredentialsMenuData = useMemo(() => {
+    return (presetOptions?.length ? presetOptions : configurations)
+      .filter(configuration => {
+        const isConfigurationPersonal = configuration.project_id === personal_project_id;
+        if (onlyPublic) return !isConfigurationPersonal;
+        return true;
+      })
+      .map(configuration => {
+        const isConfigurationPersonal = configuration.project_id === personal_project_id;
+        const configUid = configuration.id || configuration.uuid;
+        const credentialUrl = configUid
+          ? (() => {
+              const baseUrl = `${window.location.protocol}//${window.location.host}`;
+              const basename = getBasename();
+              const credProjectId = configuration.project_id || selectedProjectId;
+              const path = RouteDefinitions.EditCredentialFromMain.replace(':tab', 'all').replace(
+                ':credential_uid',
+                configUid,
+              );
+              return `${baseUrl}${basename}/${credProjectId}${path}`;
+            })()
+          : null;
 
-      const availableSavedData = savedCredentialsMenuData.find(
+        const credStatus = getCredentialStatus(configUid);
+        let isCredentialInvalid = credStatus === 'invalid';
+        const isChecking = credStatus === 'checking';
+        let credentialMessage = getCredentialMessage(configUid);
+        const tokenKey = `${configuration.uuid}:${configuration.data?.oauth_discovery_endpoint}`;
+        const tokenInfo = tokens?.[tokenKey];
+        if (
+          isCredentialInvalid &&
+          credentialMessage?.includes('Please complete the OAuth flow to obtain an access token') &&
+          tokenInfo
+        ) {
+          isCredentialInvalid = false;
+          credentialMessage = null;
+        }
+
+        const handleRevalidate = async event => {
+          event.stopPropagation();
+          const freshConfigurations = await onRefresh();
+          const freshConfig = freshConfigurations?.find(c => (c.id || c.uuid) === configUid);
+          if (freshConfig) {
+            resetStatus(configUid);
+            validateCredential({
+              projectId: freshConfig.project_id || selectedProjectId,
+              credential: freshConfig,
+            });
+            if (freshConfig.elitea_title === value?.elitea_title) {
+              onReload?.();
+            }
+          }
+        };
+
+        const rowEliteaTitle = configuration.elitea_title || configuration.data?.title;
+
+        return {
+          id: `${configuration.elitea_title}_${configuration.project_id}`,
+          elitea_title: rowEliteaTitle,
+          private: isConfigurationPersonal,
+          settings: configuration.data || {},
+          shared: configuration.shared || false,
+          isCredentialInvalid,
+          credentialMessage,
+          label: (
+            <CredentialOptionLabel
+              isPersonal={isConfigurationPersonal}
+              label={configuration.label || configuration.elitea_title || configuration.data?.title}
+              credentialUrl={credentialUrl}
+              isInvalid={isCredentialInvalid}
+              isChecking={isChecking}
+              invalidMessage={credentialMessage}
+              onRevalidate={handleRevalidate}
+            />
+          ),
+        };
+      });
+  }, [
+    presetOptions,
+    configurations,
+    personal_project_id,
+    onlyPublic,
+    getCredentialStatus,
+    getCredentialMessage,
+    onRefresh,
+    onReload,
+    resetStatus,
+    validateCredential,
+    selectedProjectId,
+    value?.elitea_title,
+    tokens,
+  ]);
+
+  const menuData = useMemo(
+    () => ({
+      Create: createMenuData,
+      [`Saved ${type ? type + ' ' : ''}Credentials`]: savedCredentialsMenuData,
+    }),
+    [createMenuData, savedCredentialsMenuData, type],
+  );
+
+  const selectedOption = useMemo(() => {
+    if ([Manual_Title, Create_Personal_Title, Create_Project_Title].includes(value?.elitea_title)) {
+      return createMenuData.find(
         option => option.elitea_title === value?.elitea_title && option.private === value?.private,
       );
+    }
 
-      if (availableSavedData) return availableSavedData;
-
-      if (section === 'vectorstorage') {
-        if (isBlankEliteaTitle(value?.elitea_title)) return null;
-        if (projectDefaultVectorStorageModel) {
-          return (
-            savedCredentialsMenuData.find(
-              option => option.elitea_title === projectDefaultVectorStorageModel,
-            ) ?? null
-          );
-        }
-        return null;
-      }
-
-      if (section === 'credentials') {
-        if (!isBlankEliteaTitle(value?.elitea_title)) {
-          const sharedMatch = savedCredentialsMenuData.find(
-            option => option.elitea_title && option.elitea_title === value?.elitea_title && option.shared,
-          );
-          return sharedMatch ?? null;
-        }
-        return fallbackToFirstCredential ? (savedCredentialsMenuData[0] ?? null) : null;
-      }
-
-      return null;
-    }, [
-      createMenuData,
-      savedCredentialsMenuData,
-      value,
-      section,
-      projectDefaultVectorStorageModel,
-      fallbackToFirstCredential,
-    ]);
-
-    useEffect(() => {
-      if (!hasFetchedData) return;
-      onSelectionListedChange?.(Boolean(selectedOption));
-    }, [hasFetchedData, selectedOption, value, onSelectionListedChange]);
-
-    useEffect(() => {
-      setShowConfigurableFields?.(!!selectedOption);
-    }, [selectedOption, setShowConfigurableFields]);
-
-    const credentialToAutoSelect = useMemo(() => {
-      if (section === 'vectorstorage') {
-        const isAlreadyStored =
-          selectedOption?.elitea_title === value?.elitea_title && selectedOption?.private === value?.private;
-        return isAlreadyStored ? null : selectedOption;
-      }
-      if (section === 'credentials') {
-        return selectedOption?.elitea_title !== value?.elitea_title ? selectedOption : null;
-      }
-      return null;
-    }, [section, selectedOption, value?.elitea_title, value?.private]);
-
-    useEffect(() => {
-      if (!hasFetchedData || hasAutoSelectedRef.current || !credentialToAutoSelect) return;
-
-      hasAutoSelectedRef.current = true;
-      commitConfiguration(
-        { private: credentialToAutoSelect.private, elitea_title: credentialToAutoSelect.elitea_title },
-        { isAutoSelect: true },
-      );
-    }, [hasFetchedData, credentialToAutoSelect, commitConfiguration, hasAutoSelectedRef]);
-
-    const onSelectItem = useCallback(
-      option => {
-        const isCommittedValue =
-          value?.elitea_title === option.elitea_title && Boolean(value?.private) === option.private;
-
-        if (isCommittedValue) {
-          commitConfiguration(null);
-          return;
-        }
-
-        trackEvent(GA_EVENT_NAMES.CREDENTIALS_ATTACHED, {
-          [GA_EVENT_PARAMS.CREDENTIALS_TYPE]: option.private ? 'private' : 'project',
-          [GA_EVENT_PARAMS.TOOLKIT_TYPE]: type || 'unknown',
-          [GA_EVENT_PARAMS.ENTITY]: contextExecutionEntity,
-        });
-        commitConfiguration({ private: option.private, elitea_title: option.elitea_title });
-      },
-      [commitConfiguration, value?.elitea_title, value?.private, type, trackEvent, contextExecutionEntity],
+    const availableSavedData = savedCredentialsMenuData.find(
+      option => option.elitea_title === value?.elitea_title && option.private === value?.private,
     );
 
-    const handleClear = useCallback(() => commitConfiguration(null), [commitConfiguration]);
+    if (availableSavedData) return availableSavedData;
 
-    const createSelectHandler = useCallback(
-      (sec, option) => {
-        if (disabled) return;
-        if (sec === 'Create') {
-          const baseUrl = `${window.location.protocol}//${window.location.host}`;
-          const basename = getBasename();
-          const projectId = option.private ? personal_project_id : selectedProjectId;
-          const newPath = `${baseUrl}${basename}/${projectId}${RouteDefinitions.CreateCredentialTypeFromMain.replace(':credentialType', type)}?${section ? `section=${section}` : ''}`;
-          window.open(newPath, '_blank', 'noopener,noreferrer');
-        } else {
-          onSelectItem(option);
-        }
-      },
-      [disabled, onSelectItem, personal_project_id, section, selectedProjectId, type],
-    );
-
-    const optionGroups = useMemo(() => {
-      const refreshButton = (
-        <Tooltip
-          title="Refresh the configurations"
-          placement="top"
-        >
-          <BaseBtn
-            variant={BUTTON_VARIANTS.tertiary}
-            size="small"
-            onClick={onRefresh}
-            sx={styles.refreshIcon}
-            data-testid="credential-select-refresh-button"
-          >
-            <RefreshIcon />
-          </BaseBtn>
-        </Tooltip>
-      );
-
-      return Object.entries(menuData)
-        .filter(([title, list]) => (title === 'Create' ? list.length > 0 : true))
-        .map(([title, list]) => ({
-          key: title,
-          title,
-          headerEnd: title.includes('Saved') ? refreshButton : undefined,
-          options:
-            title === 'Create'
-              ? list.map(opt => ({
-                  value: createActionToSelectValue(opt.private),
-                  label: opt.label,
-                  variant: 'action',
-                  meta: opt,
-                  onActivate: () => createSelectHandler(title, opt),
-                }))
-              : list.map(opt => ({
-                  value: savedRowToSelectValue(opt),
-                  label: opt.label,
-                  meta: opt,
-                })),
-        }));
-    }, [menuData, createSelectHandler, onRefresh, styles.refreshIcon]);
-
-    const isOptionsReady = useMemo(() => {
-      if (!hasFetchedData) return false;
-      return createMenuData.length > 0 || savedCredentialsMenuData.length > 0;
-    }, [hasFetchedData, createMenuData.length, savedCredentialsMenuData.length]);
-
-    const selectStringValue = useMemo(() => {
-      if (!isOptionsReady) return '';
-      if (selectedOption) {
-        const isCreateSelected = createMenuData.some(
-          o => o.elitea_title === selectedOption.elitea_title && o.private === selectedOption.private,
-        );
-        return isCreateSelected
-          ? createActionToSelectValue(selectedOption.private)
-          : savedRowToSelectValue(selectedOption);
-      }
-      if (!value || isBlankEliteaTitle(value?.elitea_title)) return '';
-      return savedRowToSelectValue({ elitea_title: value.elitea_title, private: !!value.private });
-    }, [isOptionsReady, selectedOption, createMenuData, value]);
-
-    const handleSelectValueChange = useCallback(
-      newValue => {
-        const savedRow = selectValueToSavedRow(newValue);
-        if (savedRow) {
-          const matchingSaved = savedCredentialsMenuData.find(
-            credentialOption =>
-              credentialOption.elitea_title === savedRow.elitea_title &&
-              credentialOption.private === savedRow.private,
-          );
-          if (matchingSaved) {
-            onSelectItem(matchingSaved);
-            onReload?.({
-              notReload: true,
-              clearValidationError: !matchingSaved.isCredentialInvalid,
-              key: propKey,
-              credentialMessage: matchingSaved.credentialMessage,
-            });
-          }
-          return;
-        }
-        const createAction = selectValueToCreateAction(newValue);
-        if (createAction) {
-          const matchingCreate = createMenuData.find(
-            createOption => createOption.private === createAction.isPrivate,
-          );
-          if (matchingCreate) createSelectHandler('Create', matchingCreate);
-        }
-      },
-      [savedCredentialsMenuData, onSelectItem, onReload, propKey, createMenuData, createSelectHandler],
-    );
-
-    const showMismatchFooter = Boolean(
-      value && !isBlankEliteaTitle(value?.elitea_title) && !selectedOption && hasFetchedData,
-    );
-
-    const hasSelectError = Boolean(error || showMismatchFooter);
-
-    const customRenderSelectValue = useCallback(
-      foundOption => {
-        if (!foundOption) {
-          if (!value?.elitea_title) return null;
-          return (
-            <CredentialNotFoundValue
-              eliteaTitle={value.elitea_title}
-              isPrivate={value?.private}
-              hasFetchedData={hasFetchedData}
-            />
-          );
-        }
-
-        const row = foundOption?.meta ?? foundOption;
-        if (renderValue) return renderValue(row);
+    if (section === 'vectorstorage') {
+      if (isBlankEliteaTitle(value?.elitea_title)) return null;
+      if (projectDefaultVectorStorageModel) {
         return (
-          <Typography
-            variant="labelMedium"
-            sx={styles.selectedValueTypography(row)}
-          >
-            {isValidElement(row.label) ? cloneElement(row.label, { isSelected: true }) : row.label}
-          </Typography>
+          savedCredentialsMenuData.find(option => option.elitea_title === projectDefaultVectorStorageModel) ??
+          null
         );
-      },
-      [renderValue, value, hasFetchedData, styles],
+      }
+      return null;
+    }
+
+    if (section === 'credentials') {
+      if (!isBlankEliteaTitle(value?.elitea_title)) {
+        const sharedMatch = savedCredentialsMenuData.find(
+          option => option.elitea_title && option.elitea_title === value?.elitea_title && option.shared,
+        );
+        return sharedMatch ?? null;
+      }
+      return fallbackToFirstCredential ? (savedCredentialsMenuData[0] ?? null) : null;
+    }
+
+    return null;
+  }, [
+    createMenuData,
+    savedCredentialsMenuData,
+    value,
+    section,
+    projectDefaultVectorStorageModel,
+    fallbackToFirstCredential,
+  ]);
+
+  useEffect(() => {
+    if (!hasFetchedData) return;
+    onSelectionListedChange?.(Boolean(selectedOption));
+  }, [hasFetchedData, selectedOption, value, onSelectionListedChange]);
+
+  useEffect(() => {
+    setShowConfigurableFields?.(!!selectedOption);
+  }, [selectedOption, setShowConfigurableFields]);
+
+  const credentialToAutoSelect = useMemo(() => {
+    if (section === 'vectorstorage') {
+      const isAlreadyStored =
+        selectedOption?.elitea_title === value?.elitea_title && selectedOption?.private === value?.private;
+      return isAlreadyStored ? null : selectedOption;
+    }
+    if (section === 'credentials') {
+      return selectedOption?.elitea_title !== value?.elitea_title ? selectedOption : null;
+    }
+    return null;
+  }, [section, selectedOption, value?.elitea_title, value?.private]);
+
+  useEffect(() => {
+    if (!hasFetchedData || hasAutoSelectedRef.current || !credentialToAutoSelect) return;
+
+    hasAutoSelectedRef.current = true;
+    commitConfiguration(
+      { private: credentialToAutoSelect.private, elitea_title: credentialToAutoSelect.elitea_title },
+      { isAutoSelect: true },
+    );
+  }, [hasFetchedData, credentialToAutoSelect, commitConfiguration, hasAutoSelectedRef]);
+
+  const onSelectItem = useCallback(
+    option => {
+      const isCommittedValue =
+        value?.elitea_title === option.elitea_title && Boolean(value?.private) === option.private;
+
+      if (isCommittedValue) {
+        commitConfiguration(null);
+        return;
+      }
+
+      trackEvent(GA_EVENT_NAMES.CREDENTIALS_ATTACHED, {
+        [GA_EVENT_PARAMS.CREDENTIALS_TYPE]: option.private ? 'private' : 'project',
+        [GA_EVENT_PARAMS.TOOLKIT_TYPE]: type || 'unknown',
+        [GA_EVENT_PARAMS.ENTITY]: contextExecutionEntity,
+      });
+      commitConfiguration({ private: option.private, elitea_title: option.elitea_title });
+    },
+    [commitConfiguration, value?.elitea_title, value?.private, type, trackEvent, contextExecutionEntity],
+  );
+
+  const handleClear = useCallback(() => commitConfiguration(null), [commitConfiguration]);
+
+  const createSelectHandler = useCallback(
+    (sec, option) => {
+      if (disabled) return;
+      if (sec === 'Create') {
+        const baseUrl = `${window.location.protocol}//${window.location.host}`;
+        const basename = getBasename();
+        const projectId = option.private ? personal_project_id : selectedProjectId;
+        const newPath = `${baseUrl}${basename}/${projectId}${RouteDefinitions.CreateCredentialTypeFromMain.replace(':credentialType', type)}?${section ? `section=${section}` : ''}`;
+        window.open(newPath, '_blank', 'noopener,noreferrer');
+      } else {
+        onSelectItem(option);
+      }
+    },
+    [disabled, onSelectItem, personal_project_id, section, selectedProjectId, type],
+  );
+
+  const optionGroups = useMemo(() => {
+    const refreshButton = (
+      <Tooltip
+        title="Refresh the configurations"
+        placement="top"
+      >
+        <BaseBtn
+          variant={BUTTON_VARIANTS.tertiary}
+          size="small"
+          onClick={onRefresh}
+          sx={styles.refreshIcon}
+          data-testid="credential-select-refresh-button"
+        >
+          <RefreshIcon />
+        </BaseBtn>
+      </Tooltip>
     );
 
-    const isLockedToOnlyConfiguration =
-      section === 'vectorstorage' &&
-      Boolean(selectedOption) &&
-      createMenuData.length === 0 &&
-      savedCredentialsMenuData.length === 1;
+    return Object.entries(menuData)
+      .filter(([title, list]) => (title === 'Create' ? list.length > 0 : true))
+      .map(([title, list]) => ({
+        key: title,
+        title,
+        headerEnd: title.includes('Saved') ? refreshButton : undefined,
+        options:
+          title === 'Create'
+            ? list.map(opt => ({
+                value: createActionToSelectValue(opt.private),
+                label: opt.label,
+                variant: 'action',
+                meta: opt,
+                onActivate: () => createSelectHandler(title, opt),
+              }))
+            : list.map(opt => ({
+                value: savedRowToSelectValue(opt),
+                label: opt.label,
+                meta: opt,
+              })),
+      }));
+  }, [menuData, createSelectHandler, onRefresh, styles.refreshIcon]);
 
-    return (
-      <Box sx={[styles.container, sx]}>
-        <Select.SingleSelect
-          data-testid={`toolkit-credential-select-${type}`}
-          label={label}
-          shrinkLabel
-          infoIconDescription={description}
-          required={required}
-          error={hasSelectError}
-          helperText={showMismatchFooter ? '' : helperText}
-          disabled={disabled || isLockedToOnlyConfiguration}
-          sx={theme => ({
-            ...styles.attentionErrorSx(theme),
-            ...(isLockedToOnlyConfiguration ? styles.lockedSelect(theme) : {}),
-          })}
-          showBorder
-          customSelectedFontSize="0.875rem"
-          optionGroups={optionGroups}
-          options={[]}
-          value={selectStringValue}
-          onValueChange={handleSelectValueChange}
-          onClear={handleClear}
-          customRenderValue={customRenderSelectValue}
-          displayEmpty
-          showEmptyPlaceholder={false}
-          isListFetching={isFetching}
-          valueItemSX={styles.valueItemSX}
-          variantBanner="warning"
-        />
-        {showMismatchFooter && (
-          <CredentialMismatchFooter
-            mismatchedPrivateCredential={mismatchedPrivateCredential}
-            credentialId={value?.elitea_title}
-            credentialType={type}
-            section={section}
+  const isOptionsReady = useMemo(() => {
+    if (!hasFetchedData) return false;
+    return createMenuData.length > 0 || savedCredentialsMenuData.length > 0;
+  }, [hasFetchedData, createMenuData.length, savedCredentialsMenuData.length]);
+
+  const selectStringValue = useMemo(() => {
+    if (!isOptionsReady) return '';
+    if (selectedOption) {
+      const isCreateSelected = createMenuData.some(
+        o => o.elitea_title === selectedOption.elitea_title && o.private === selectedOption.private,
+      );
+      return isCreateSelected
+        ? createActionToSelectValue(selectedOption.private)
+        : savedRowToSelectValue(selectedOption);
+    }
+    if (!value || isBlankEliteaTitle(value?.elitea_title)) return '';
+    return savedRowToSelectValue({ elitea_title: value.elitea_title, private: !!value.private });
+  }, [isOptionsReady, selectedOption, createMenuData, value]);
+
+  const handleSelectValueChange = useCallback(
+    newValue => {
+      const savedRow = selectValueToSavedRow(newValue);
+      if (savedRow) {
+        const matchingSaved = savedCredentialsMenuData.find(
+          credentialOption =>
+            credentialOption.elitea_title === savedRow.elitea_title &&
+            credentialOption.private === savedRow.private,
+        );
+        if (matchingSaved) {
+          onSelectItem(matchingSaved);
+          onReload?.({
+            notReload: true,
+            clearValidationError: !matchingSaved.isCredentialInvalid,
+            key: propKey,
+            credentialMessage: matchingSaved.credentialMessage,
+          });
+        }
+        return;
+      }
+      const createAction = selectValueToCreateAction(newValue);
+      if (createAction) {
+        const matchingCreate = createMenuData.find(
+          createOption => createOption.private === createAction.isPrivate,
+        );
+        if (matchingCreate) createSelectHandler('Create', matchingCreate);
+      }
+    },
+    [savedCredentialsMenuData, onSelectItem, onReload, propKey, createMenuData, createSelectHandler],
+  );
+
+  const showMismatchFooter = Boolean(
+    value && !isBlankEliteaTitle(value?.elitea_title) && !selectedOption && hasFetchedData,
+  );
+
+  const hasSelectError = Boolean(error || showMismatchFooter);
+
+  const customRenderSelectValue = useCallback(
+    foundOption => {
+      if (!foundOption) {
+        if (!value?.elitea_title) return null;
+        return (
+          <CredentialNotFoundValue
+            eliteaTitle={value.elitea_title}
+            isPrivate={value?.private}
+            hasFetchedData={hasFetchedData}
           />
-        )}
-      </Box>
-    );
-  },
-);
+        );
+      }
+
+      const row = foundOption?.meta ?? foundOption;
+      if (renderValue) return renderValue(row);
+      return (
+        <Typography
+          variant="labelMedium"
+          sx={styles.selectedValueTypography(row)}
+        >
+          {isValidElement(row.label) ? cloneElement(row.label, { isSelected: true }) : row.label}
+        </Typography>
+      );
+    },
+    [renderValue, value, hasFetchedData, styles],
+  );
+
+  const isLockedToOnlyConfiguration =
+    section === 'vectorstorage' &&
+    Boolean(selectedOption) &&
+    createMenuData.length === 0 &&
+    savedCredentialsMenuData.length === 1;
+
+  return (
+    <Box sx={[styles.container, sx]}>
+      <Select.SingleSelect
+        data-testid={`toolkit-credential-select-${type}`}
+        label={label}
+        shrinkLabel
+        infoIconDescription={description}
+        required={required}
+        error={hasSelectError}
+        helperText={showMismatchFooter ? '' : helperText}
+        disabled={disabled || isLockedToOnlyConfiguration}
+        sx={theme => ({
+          ...styles.attentionErrorSx(theme),
+          ...(isLockedToOnlyConfiguration ? styles.lockedSelect(theme) : {}),
+        })}
+        showBorder
+        customSelectedFontSize="0.875rem"
+        optionGroups={optionGroups}
+        options={[]}
+        value={selectStringValue}
+        onValueChange={handleSelectValueChange}
+        onClear={handleClear}
+        customRenderValue={customRenderSelectValue}
+        displayEmpty
+        showEmptyPlaceholder={false}
+        isListFetching={isFetching}
+        valueItemSX={styles.valueItemSX}
+        variantBanner="warning"
+      />
+      {showMismatchFooter && (
+        <CredentialMismatchFooter
+          mismatchedPrivateCredential={mismatchedPrivateCredential}
+          credentialId={value?.elitea_title}
+          credentialType={type}
+          section={section}
+        />
+      )}
+    </Box>
+  );
+});
 
 CredentialsSelect.displayName = 'CredentialsSelect';
 

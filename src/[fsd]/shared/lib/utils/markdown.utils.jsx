@@ -1,4 +1,4 @@
-import { Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import Link from '@mui/material/Link';
 
 import { typographyVariants } from '@/[fsd]/shared/config/theme';
@@ -12,7 +12,7 @@ export const MarkdownMapping = {
       variant: 'headingMedium',
       component: 'h1',
       sx: theme => ({
-        borderBottom: `1px solid ${theme.palette.border.lines}`,
+        borderBottom: `0.0625rem solid ${theme.palette.border.lines}`,
         paddingBottom: '0.4em',
         marginTop: '1.2em',
       }),
@@ -24,7 +24,7 @@ export const MarkdownMapping = {
       variant: 'headingSmall',
       component: 'h2',
       sx: theme => ({
-        borderBottom: `1px solid ${theme.palette.border.lines}`,
+        borderBottom: `0.0625rem solid ${theme.palette.border.lines}`,
         paddingBottom: '0.4em',
         marginTop: '1.2em',
       }),
@@ -103,7 +103,7 @@ export const MarkdownMapping = {
       style: {
         ...typographyVariants.bodyMedium,
         paddingLeft: '1.5rem',
-        margin: '8px 0',
+        margin: '0.5rem 0',
         listStyleType: 'decimal',
         listStylePosition: 'outside',
       },
@@ -115,7 +115,7 @@ export const MarkdownMapping = {
       style: {
         ...typographyVariants.bodyMedium,
         paddingLeft: '1.5rem',
-        margin: '8px 0',
+        margin: '0.5rem 0',
         listStyleType: 'disc',
         listStylePosition: 'outside',
       },
@@ -155,7 +155,8 @@ export const MarkdownMapping = {
       const { src, alt, ...rest } = props;
       if (!src || !/^[a-zA-Z][a-zA-Z0-9+\-.]*:\/\//.test(src)) return null;
       return (
-        <img
+        <Box
+          component="img"
           src={src}
           alt={alt}
           {...rest}

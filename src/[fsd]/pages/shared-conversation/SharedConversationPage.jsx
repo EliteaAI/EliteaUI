@@ -7,7 +7,7 @@ import { Box, CircularProgress, Typography } from '@mui/material';
 import {
   useGetSharedConversationQuery,
   useUnlockSharedConversationMutation,
-} from '@/[fsd]/features/chat/conversation-list/api/sharedLinksApi';
+} from '@/[fsd]/features/chat/conversation-list/api';
 import { ErrorTrace } from '@/[fsd]/features/chat/ui';
 import { Input } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';

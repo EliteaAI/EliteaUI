@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { memo, useEffect, useMemo, useRef } from 'react';
 
 import { getChatParticipantUniqueId } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { ChatParticipantType, PAGE_SIZE } from '@/common/constants';
@@ -6,14 +6,16 @@ import useParticipants from '@/hooks/chat/useParticipants';
 
 import NewParticipantList from './NewParticipantList';
 
-export default function SearchResultList({
-  query,
-  onSelectParticipant,
-  stopProcessingSymbols,
-  existingParticipants = [],
-  onClose = () => {},
-  excludePublic = false,
-}) {
+const SearchResultList = memo(props => {
+  const {
+    query,
+    onSelectParticipant,
+    stopProcessingSymbols,
+    existingParticipants = [],
+    onClose = () => {},
+    excludePublic = false,
+  } = props;
+
   const mismatchedTimerRef = useRef(0);
   const { participants, isLoading, isFetching, onLoadMore, total } = useParticipants({
     sortBy: 'name',
@@ -73,4 +75,8 @@ export default function SearchResultList({
       title={'Search results'}
     />
   );
-}
+});
+
+SearchResultList.displayName = 'SearchResultList';
+
+export default SearchResultList;

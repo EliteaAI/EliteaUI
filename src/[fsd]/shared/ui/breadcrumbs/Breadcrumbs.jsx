@@ -10,8 +10,8 @@ import BreadcrumbItem from './BreadcrumbItem';
 import BreadcrumbMenuTrigger from './BreadcrumbMenuTrigger';
 
 const Breadcrumbs = memo(props => {
-  const { menus = {} } = props;
-  const trail = useBreadcrumbTrail();
+  const { menus = {}, entityName } = props;
+  const trail = useBreadcrumbTrail({ entityName });
   const { search } = useLocation();
   const styles = breadcrumbsStyles();
 

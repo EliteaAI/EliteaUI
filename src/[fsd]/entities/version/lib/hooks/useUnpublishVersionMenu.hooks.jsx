@@ -3,11 +3,10 @@ import { useCallback, useMemo, useState } from 'react';
 import { useFormikContext } from 'formik';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { Box } from '@mui/material';
-
 import { useTrackEvent } from '@/GA';
 import UnpublishConfirmModal from '@/[fsd]/entities/version/ui/UnpublishConfirmModal';
 import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
+import { MenuItemIcon } from '@/[fsd]/shared/ui/icon';
 import { useUnpublishApplicationMutation } from '@/api';
 import { CollectionStatus, PUBLIC_PROJECT_ID } from '@/common/constants';
 import UnpublishIcon from '@/components/Icons/UnpublishIcon';
@@ -110,20 +109,7 @@ export const useUnpublishVersionMenu = onSuccess => {
         ? {
             key: 'unpublish-version',
             label: 'Unpublish',
-            icon: (
-              <Box
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  width: '1rem',
-                  height: '1rem',
-                  color: ({ palette }) => palette.icon.default,
-                }}
-              >
-                <UnpublishIcon sx={{ fontSize: '1rem' }} />
-              </Box>
-            ),
+            icon: <MenuItemIcon icon={UnpublishIcon} />,
             disabled: isUnpublishingVersion,
             onClick: handleOpenConfirm,
           }

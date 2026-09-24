@@ -96,9 +96,9 @@ const styles = {
     padding: '0.375rem 0.625rem',
     cursor: 'pointer',
     userSelect: 'none',
-    backgroundColor: palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.02)',
+    backgroundColor: palette.background.overlay.sensitive.default,
     '&:hover': {
-      backgroundColor: palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
+      backgroundColor: palette.background.overlay.sensitive.hover,
     },
   }),
   headerText: ({ palette }) => ({

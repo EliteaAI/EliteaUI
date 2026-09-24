@@ -18,6 +18,8 @@ const getRowHeight = () => 'auto';
 
 const StateVariableTable = memo(props => {
   const { rows, setRows, setRowModesModel, rowModesModel, cellModesModel, setCellModesModel } = props;
+  const styles = stateVariableTableStyles();
+
   const { toastError } = useToast();
 
   const theme = useTheme();
@@ -313,19 +315,7 @@ const StateVariableTable = memo(props => {
   return (
     <Box
       className="nopan nodrag"
-      sx={{
-        width: '100%',
-        '& .actions': {
-          color: 'text.secondary',
-          justifyContent: 'center',
-        },
-        '& .textPrimary': {
-          color: 'text.secondary',
-        },
-        [`.${gridClasses.cell}.error`]: {
-          borderBottom: `.0625rem solid ${theme.palette.border.error} !important`,
-        },
-      }}
+      sx={styles.root}
     >
       <ThemeProvider theme={localGridTheme}>
         <DataGrid
@@ -387,5 +377,22 @@ const StateVariableTable = memo(props => {
 });
 
 StateVariableTable.displayName = 'StateVariableTable';
+
+/** @type {MuiSx} */
+const stateVariableTableStyles = () => ({
+  root: ({ palette }) => ({
+    width: '100%',
+    '& .actions': {
+      color: 'text.secondary',
+      justifyContent: 'center',
+    },
+    '& .textPrimary': {
+      color: 'text.secondary',
+    },
+    [`.${gridClasses.cell}.error`]: {
+      borderBottom: `.0625rem solid ${palette.border.error} !important`,
+    },
+  }),
+});
 
 export default StateVariableTable;

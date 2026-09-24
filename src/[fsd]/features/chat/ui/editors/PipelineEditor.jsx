@@ -9,21 +9,19 @@ import {
   useState,
 } from 'react';
 
-import { useFormikContext } from 'formik';
 import YAML from 'js-yaml';
 import { useDispatch, useStore } from 'react-redux';
 
 import { Box, Tab, Tabs } from '@mui/material';
 
 import { useTrackEvent } from '@/GA';
-import CreateAgentForm from '@/[fsd]/features/agent/ui/agent-details/configurations/form/CreateAgentForm';
-import { useConversationStartersSync } from '@/[fsd]/features/chat/lib/hooks';
+import { CreateAgentForm } from '@/[fsd]/features/agent/ui';
 import { useRefetchAgentVersionDetailsOnClose } from '@/[fsd]/features/chat/lib/hooks/useRefetchAgentVersionDetailsOnClose.hooks';
 import BaseEditor from '@/[fsd]/features/chat/ui/editors/BaseEditor.jsx';
-import LLMModelSelectorWrapper from '@/[fsd]/features/chat/ui/editors/LLMModelSelectorWrapper';
+import PipelineAttachmentYamlSync from '@/[fsd]/features/chat/ui/editors/PipelineAttachmentYamlSync';
+import PipelineEditorContent from '@/[fsd]/features/chat/ui/editors/PipelineEditorContent';
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { LayoutHelpers, ParsePipelineHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
-import { usePipelineAttachmentYamlSync } from '@/[fsd]/features/pipelines/lib/hooks';
 import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
 import { InstructionsInputRefProvider } from '@/[fsd]/shared/lib/context';
 import { useGetApplicationVersionDetailQuery, usePublicApplicationDetailsQuery } from '@/api/applications';
@@ -36,7 +34,6 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import getValidateSchema from '@/pages/Applications/Components/Applications/ApplicationCreationValidateSchema';
 import ApplicationValidator from '@/pages/Applications/Components/Applications/ApplicationValidator';
 import CreateApplicationSaveButton from '@/pages/Applications/Components/Applications/CreateApplicationSaveButton';
-import PipelineConfigurationForm from '@/pages/Applications/Components/Applications/PipelineConfigurationForm.jsx';
 import SaveApplicationButton from '@/pages/Applications/Components/Applications/SaveApplicationButton.jsx';
 import { useCreateApplicationInitialValues } from '@/pages/Applications/useApplicationInitialValues';
 import { ContentContainer } from '@/pages/Common/Components/StyledComponents.jsx';
@@ -51,77 +48,9 @@ const getPipelineId = pipeline => {
   return pipeline?.entity_meta?.id || pipeline?.id || pipeline?.meta?.id;
 };
 
-const PipelineEditorContent = memo(props => {
-  const {
-    viewMode,
-    canEditIt,
-    isPublic,
-    pipelineId,
-    projectId,
-    handleAttachmentToolChange,
-    entityProjectId,
-    onConversationStartersChange,
-    isCreateMode,
-  } = props;
-  const { setFieldValue } = useFormikContext();
-  const styles = getStyles();
-
-  useConversationStartersSync(onConversationStartersChange);
-
-  // LLM Settings setter for the modal dialog
-  const onLLMSettingsChange = useCallback(
-    newSettings => {
-      // Update each setting individually
-      Object.entries(newSettings).forEach(([key, value]) => {
-        setFieldValue(`version_details.llm_settings.${key}`, value);
-      });
-    },
-    [setFieldValue],
-  );
-
-  return (
-    <Box>
-      <LLMModelSelectorWrapper
-        projectId={projectId}
-        onLLMSettingsChange={onLLMSettingsChange}
-        disabled={!canEditIt}
-        modelTooltip={isPublic ? 'Model configuration is locked for Public agents' : undefined}
-        settingsTooltip={isPublic ? 'Model settings are locked for Public agents' : undefined}
-      />
-      {!isCreateMode && (
-        <PipelineConfigurationForm
-          applicationId={pipelineId}
-          viewMode={viewMode}
-          isChatView
-          containerStyle={styles.configForm}
-          hidePythonSandbox
-          onAttachmentToolChange={handleAttachmentToolChange}
-          entityProjectId={entityProjectId}
-        />
-      )}
-    </Box>
-  );
-});
-
-PipelineEditorContent.displayName = 'PipelineEditorContent';
-
-// Always-mounted component that keeps input_attachments in sync regardless of active tab.
-// Must live inside BaseEditor's children so it has access to Formik context.
-// memo() prevents re-renders from parent state changes; the component still re-renders
-// when its own Formik/Redux subscriptions change, which is exactly when sync is needed.
-// isVisible and pipelineKey are forwarded so the hook writes only to this tab's own
-// Redux key and skips dispatches when the tab is hidden, preventing cross-tab contamination.
-const PipelineAttachmentYamlSync = memo(props => {
-  const { isVisible, pipelineKey } = props;
-  usePipelineAttachmentYamlSync(isVisible, pipelineKey);
-  return null;
-});
-
-PipelineAttachmentYamlSync.displayName = 'PipelineAttachmentYamlSync';
-
-const PipelineEditor = forwardRef(
-  (
-    {
+const PipelineEditor = memo(
+  forwardRef((props, ref) => {
+    const {
       pipeline,
       onClosePipelineEditor,
       isVisible,
@@ -134,9 +63,8 @@ const PipelineEditor = forwardRef(
       onAttachmentToolChange,
       onConversationStartersChange,
       disableNavBlocking = false,
-    },
-    ref,
-  ) => {
+    } = props;
+
     const trackEvent = useTrackEvent();
 
     const dispatch = useDispatch();
@@ -629,7 +557,7 @@ const PipelineEditor = forwardRef(
       ? 'Create New Pipeline'
       : pipeline?.meta?.name || pipeline?.name || 'Unnamed Pipeline';
     const editorSubtitle = isCreateMode ? '' : initialValues?.version_details?.name;
-    const styles = getStyles();
+    const styles = pipelineEditorStyles();
 
     return (
       <InstructionsInputRefProvider inputRef={fileReaderEnhancerRef}>
@@ -740,23 +668,18 @@ const PipelineEditor = forwardRef(
         </BaseEditor>
       </InstructionsInputRefProvider>
     );
-  },
+  }),
 );
 
 PipelineEditor.displayName = 'PipelineEditor';
 
-/**
- * @type {MuiSx}
- */
-const getStyles = () => ({
+/** @type {MuiSx} */
+const pipelineEditorStyles = () => ({
   createForm: {
     margin: '0 auto',
     maxWidth: '100%',
     width: '100%',
     padding: '1rem',
-  },
-  configForm: {
-    paddingBottom: 0,
   },
   tabBar: theme => ({
     boxSizing: 'border-box',
@@ -771,7 +694,7 @@ const getStyles = () => ({
       width: 'auto',
     },
     marginRight: '2rem',
-    marginTop: '16px',
+    marginTop: '1rem',
     minHeight: '2rem',
     fontSize: '0.875rem',
     fontWeight: '500',
@@ -788,10 +711,10 @@ const getStyles = () => ({
     flex: '0 0 auto',
   },
   flowEditorContainer: {
-    height: 'calc(100% + 16px)',
-    marginLeft: '-16px',
-    marginRight: '-16px',
-    marginBottom: '-16px',
+    height: 'calc(100% + 1rem)',
+    marginLeft: '-1rem',
+    marginRight: '-1rem',
+    marginBottom: '-1rem',
   },
   hiddenTab: {
     display: 'none',
@@ -800,7 +723,7 @@ const getStyles = () => ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    height: '200px',
+    height: '12.5rem',
     color: 'text.secondary',
     fontStyle: 'italic',
   },

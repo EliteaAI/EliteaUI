@@ -437,7 +437,7 @@ const sideBarBodyStyles = (sideBarCollapsed, socketStatus) => ({
     justifyContent: 'center',
     alignItems: 'center',
     minWidth: 0,
-    borderRight: sideBarCollapsed ? 'none' : `1px solid ${palette.border.subtle}`,
+    borderRight: sideBarCollapsed ? 'none' : `0.0625rem solid ${palette.border.subtle}`,
 
     span: {
       fontSize: '.75rem',

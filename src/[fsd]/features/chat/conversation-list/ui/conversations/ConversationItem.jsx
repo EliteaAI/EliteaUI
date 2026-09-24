@@ -206,14 +206,7 @@ const ConversationItem = memo(props => {
           {
             key: 'chat-conversation-menu-move-to',
             label: (
-              <Box
-                style={{
-                  display: 'flex',
-                  gap: '2.25rem',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                }}
-              >
+              <Box sx={conversationItemMenuStyles().moveToLabel}>
                 <Box>Move to</Box>
                 <ArrowRightIcon />
               </Box>
@@ -441,7 +434,7 @@ const ConversationItem = memo(props => {
           {isNamingPending && !isEditing ? (
             <Box
               data-testid="conversation-naming-spinner"
-              sx={{ display: 'flex', alignItems: 'center', gap: '.375rem' }}
+              sx={conversationItemMenuStyles().namingSpinner}
             >
               <CircularProgress
                 size={14}
@@ -610,7 +603,7 @@ const conversationItemStyles = ({
       borderBottom:
         isActive || isHovering || isNextItemHovered
           ? 'none'
-          : `1px solid ${palette.components.conversation.border.itemDivider}`,
+          : `0.0625rem solid ${palette.components.conversation.border.itemDivider}`,
       padding: '.5rem .75rem', // Reduced padding to minimize gaps
       gap: '.5rem', // Reduced gap to minimize spacing
       display: 'flex',
@@ -706,5 +699,21 @@ const conversationItemStyles = ({
     }),
   };
 };
+
+// Used inside the memoized menu definition, so it must not depend on per-render styles.
+/** @type {MuiSx} */
+const conversationItemMenuStyles = () => ({
+  namingSpinner: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '.375rem',
+  },
+  moveToLabel: {
+    display: 'flex',
+    gap: '2.25rem',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+});
 
 export default ConversationItem;

@@ -82,7 +82,7 @@ const subAgentAccordionStyles = {
   accordion: ({ palette }) => ({
     width: '100%',
     paddingBottom: '0.5rem',
-    borderBottom: `1px solid ${palette.border.lines}`,
+    borderBottom: `0.0625rem solid ${palette.border.lines}`,
     '&.Mui-expanded': { margin: '0 0' },
     '&::before': { display: 'none' },
     '& .MuiAccordion-heading': { display: 'inline-block' },

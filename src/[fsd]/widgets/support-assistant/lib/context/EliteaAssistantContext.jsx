@@ -13,3 +13,5 @@ EliteaAssistantProvider.displayName = 'EliteaAssistantProvider';
 export const useEliteaAssistantRef = () => {
   return useContext(EliteaAssistantContext);
 };
+
+export default EliteaAssistantProvider;

@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 
 import { useFormikContext } from 'formik';
 
@@ -9,13 +9,9 @@ import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 
-export default function CreateToolkitButton({
-  toolSchema,
-  onToolkitCreated,
-  hasErrors,
-  triggerValidation,
-  testId,
-}) {
+const CreateToolkitButton = memo(props => {
+  const { toolSchema, onToolkitCreated, hasErrors, triggerValidation, testId } = props;
+
   const { dirty: isFormDirty, values } = useFormikContext();
   const { toastError, toastSuccess } = useToast();
   const projectId = useSelectedProjectId();
@@ -85,4 +81,8 @@ export default function CreateToolkitButton({
       Create
     </Button.BaseBtn>
   );
-}
+});
+
+CreateToolkitButton.displayName = 'CreateToolkitButton';
+
+export default CreateToolkitButton;

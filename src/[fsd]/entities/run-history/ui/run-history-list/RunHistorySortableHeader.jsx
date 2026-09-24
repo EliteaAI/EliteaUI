@@ -43,7 +43,7 @@ const runHistorySortableHeaderStyles = gridTemplateColumns => ({
     alignItems: 'center',
     width: '100%',
     backgroundColor: palette.background.surface.interactive.default,
-    border: '1px solid ' + palette.border.lines,
+    border: '0.0625rem solid ' + palette.border.lines,
     borderRadius: '0.5rem',
     marginBottom: '.5rem',
 

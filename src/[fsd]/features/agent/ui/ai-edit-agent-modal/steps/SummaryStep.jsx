@@ -3,7 +3,7 @@ import { memo, useCallback, useEffect, useMemo } from 'react';
 import { Box, IconButton, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
-import { resolveEntityType } from '@/[fsd]/entities/edit-entity-with-ai';
+import { ToolItemCard, resolveEntityType } from '@/[fsd]/entities/edit-entity-with-ai';
 import { Input, Text } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import PlusIcon from '@/assets/plus-icon.svg?react';
@@ -15,8 +15,6 @@ import {
   MAX_WELCOME_MESSAGE_LENGTH,
 } from '@/common/constants';
 import CloseIcon from '@/components/Icons/CloseIcon';
-
-import ToolItemCard from './ToolItemCard';
 
 const normalizeToolItem = (item, entityType) => ({
   ...item,

@@ -53,7 +53,7 @@ const AnalyticsUserDetailed = memo(props => {
 
   return (
     <Box sx={styles.userDetailedContent}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+      <Box sx={styles.titleRow}>
         <IconButton
           onClick={onBack}
           size="small"
@@ -291,14 +291,7 @@ const AnalyticsUserDetailed = memo(props => {
         </Box>
       )}
 
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr)' },
-          gap: '1rem',
-          alignItems: 'stretch',
-        }}
-      >
+      <Box sx={styles.chartsGrid}>
         <Box
           sx={styles.chartCard}
           data-testid="analytics-user-detail-models-panel"
@@ -322,15 +315,7 @@ const AnalyticsUserDetailed = memo(props => {
                   key={i}
                   sx={styles.listItem}
                 >
-                  <Box
-                    sx={{
-                      width: 6,
-                      height: 6,
-                      borderRadius: '50%',
-                      backgroundColor: CHART_COLORS[i % CHART_COLORS.length],
-                      flexShrink: 0,
-                    }}
-                  />
+                  <Box sx={styles.legendDot(i)} />
                   <Typography
                     variant="bodySmall"
                     noWrap
@@ -477,6 +462,25 @@ AnalyticsUserDetailed.displayName = 'AnalyticsUserDetailed';
 
 /** @type {MuiSx} */
 const analyticsUserDetailedStyles = () => ({
+  titleRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.75rem',
+    marginBottom: '0.5rem',
+  },
+  chartsGrid: {
+    display: 'grid',
+    gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr)' },
+    gap: '1rem',
+    alignItems: 'stretch',
+  },
+  legendDot: i => ({
+    width: 6,
+    height: 6,
+    borderRadius: '50%',
+    backgroundColor: CHART_COLORS[i % CHART_COLORS.length],
+    flexShrink: 0,
+  }),
   userDetailedContent: { display: 'flex', flexDirection: 'column', gap: '1rem' },
   kpiRow: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' },
   chartCard: ({ palette }) => ({
@@ -525,7 +529,7 @@ const analyticsUserDetailedStyles = () => ({
     alignItems: 'center',
     gap: '0.5rem',
     padding: '0.375rem 0',
-    borderBottom: `1px solid ${palette.border.default}`,
+    borderBottom: `0.0625rem solid ${palette.border.default}`,
     minWidth: 0,
     '&:last-child': { borderBottom: 'none' },
   }),

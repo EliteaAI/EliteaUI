@@ -223,7 +223,7 @@ const ToolNode = memo(props => {
           hasActionsToolBar
           fieldName="Task"
           containerProps={{
-            marginBottom: '0px !important',
+            marginBottom: '0 !important',
             className: 'nowheel',
           }}
         />

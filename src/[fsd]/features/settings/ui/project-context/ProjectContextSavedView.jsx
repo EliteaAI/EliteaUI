@@ -25,7 +25,7 @@ const ProjectContextSavedView = memo(props => {
 
   const content = serverData?.content ?? '';
   const enabled = serverData?.enabled ?? true;
-  const styles = getStyles(enabled || !canEdit);
+  const styles = projectContextSavedViewStyles(enabled || !canEdit);
 
   const handleToggle = useCallback(
     async e => {
@@ -116,7 +116,7 @@ const ProjectContextSavedView = memo(props => {
                 },
                 ListItemIcon: {
                   sx: {
-                    minWidth: '16px !important',
+                    minWidth: '1rem !important',
                     marginRight: '0.75rem',
                   },
                 },
@@ -175,8 +175,8 @@ const ProjectContextSavedView = memo(props => {
 ProjectContextSavedView.displayName = 'ProjectContextSavedView';
 export default ProjectContextSavedView;
 
-/** @type {(active: boolean) => MuiSx} */
-const getStyles = active => ({
+/** @type {MuiSx} */
+const projectContextSavedViewStyles = active => ({
   headerActions: {
     display: 'flex',
     alignItems: 'center',

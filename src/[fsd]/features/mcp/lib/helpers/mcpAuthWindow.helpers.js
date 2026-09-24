@@ -5,7 +5,7 @@ export const openAuthPopup = () => {
   const popup = window.open('about:blank', '_blank', `width=${width},height=${height}`);
   if (popup) {
     const doc = popup.document;
-    doc.body.style.cssText = 'font-family: sans-serif; padding: 20px; text-align: center;';
+    doc.body.style.cssText = 'font-family: sans-serif; padding: 1.25rem; text-align: center;';
     const h2 = doc.createElement('h2');
     h2.textContent = 'Preparing authorization...';
     const p = doc.createElement('p');

@@ -97,7 +97,7 @@ const VersionSelector = memo(props => {
           aria-haspopup="menu"
           onClick={handleVersionMenuClick}
         >
-          {isSmallView ? <VersionIcon style={{ fontSize: '1rem' }} /> : selectedVersion?.name}
+          {isSmallView ? <VersionIcon style={styles.versionIcon} /> : selectedVersion?.name}
         </Button>
       </Tooltip>
       <Menu
@@ -125,11 +125,7 @@ const VersionSelector = memo(props => {
                 disabled={isRefreshing}
                 sx={styles.iconButton}
               >
-                {isRefreshing ? (
-                  <CircularProgress size={12} />
-                ) : (
-                  <RefreshIcon style={{ fontSize: '.75rem', width: '.75rem', height: '.75rem' }} />
-                )}
+                {isRefreshing ? <CircularProgress size={12} /> : <RefreshIcon style={styles.refreshIcon} />}
               </IconButton>
             </Tooltip>
           </Box>
@@ -150,10 +146,17 @@ const VersionSelector = memo(props => {
 
 VersionSelector.displayName = 'VersionSelector';
 
-/**
- * @type MuiSx
- */
+/** @type {MuiSx} */
 const versionSelectorStyles = () => ({
+  // SVGR icons only accept `style`.
+  versionIcon: {
+    fontSize: '1rem',
+  },
+  refreshIcon: {
+    fontSize: '.75rem',
+    width: '.75rem',
+    height: '.75rem',
+  },
   refreshWrapper: ({ palette }) => ({
     display: 'flex',
     alignItems: 'center',

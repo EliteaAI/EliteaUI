@@ -19,6 +19,8 @@ import { useExportToolkitMenu } from '@/pages/Toolkits/ExportToolkitButton';
 
 const ToolkitsControls = memo(props => {
   const { setBlockNav, publicToolkitData, isMCP } = props;
+  const styles = toolkitsControlsStyles();
+
   const viewMode = useViewMode();
 
   const formik = useFormikContext();
@@ -83,23 +85,7 @@ const ToolkitsControls = memo(props => {
   );
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        position: 'relative',
-        alignItems: 'center',
-        paddingLeft: '0.5rem',
-
-        '&::before': {
-          content: '""',
-          position: 'absolute',
-          left: 0,
-          top: '0.25rem',
-          bottom: '0.25rem',
-          borderLeft: ({ palette }) => `1px solid ${palette.border.lines}`,
-        },
-      }}
-    >
+    <Box sx={styles.divider}>
       {viewMode === ViewMode.Public && (
         <Box
           sx={{
@@ -115,5 +101,23 @@ const ToolkitsControls = memo(props => {
 });
 
 ToolkitsControls.displayName = 'ToolkitsControls';
+
+/** @type {MuiSx} */
+const toolkitsControlsStyles = () => ({
+  divider: {
+    display: 'flex',
+    position: 'relative',
+    alignItems: 'center',
+    paddingLeft: '0.5rem',
+    '&::before': {
+      content: '""',
+      position: 'absolute',
+      left: 0,
+      top: '0.25rem',
+      bottom: '0.25rem',
+      borderLeft: ({ palette }) => `0.0625rem solid ${palette.border.lines}`,
+    },
+  },
+});
 
 export default ToolkitsControls;

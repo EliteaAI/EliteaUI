@@ -19,6 +19,7 @@ import {
   GridTableRow,
 } from '@/[fsd]/entities/grid-table/ui';
 import { RenameArtifactDialog } from '@/[fsd]/features/artifacts';
+import { useAllArtifacts } from '@/[fsd]/features/artifacts/lib/hooks/useAllArtifacts.hooks';
 import {
   useDeleteArtifactMutation,
   useDeleteArtifactsMutation,
@@ -37,7 +38,6 @@ import {
   getItemsUnderFolder,
   parsePrefixToBreadcrumbs,
 } from '../Components/utils/getItemsAtCurrentLevel';
-import { useAllArtifacts } from '../hooks/useAllArtifacts.hooks';
 import { useZipDownload } from '../hooks/useZipDownload.hooks';
 import ArtifactRowActions from './ArtifactRowActions';
 import ArtifactTableContainer from './ArtifactTableContainer';

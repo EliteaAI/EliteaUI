@@ -83,7 +83,7 @@ const IWModalDetails = memo(props => {
       {nestedEntities.length > 0 && (
         <Box sx={styles.entityBlock}>
           <Typography sx={styles.label}>Nested entities</Typography>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <Box sx={styles.column}>
             {nestedEntities.map((entity, index) => (
               <IWModalEntityCard
                 key={index}
@@ -100,7 +100,7 @@ const IWModalDetails = memo(props => {
       {skillEntities.length > 0 && (
         <Box sx={styles.entityBlock}>
           <Typography sx={styles.label}>Skills</Typography>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <Box sx={styles.column}>
             {skillEntities.map((entity, index) => (
               <IWModalEntityCard
                 key={index}
@@ -121,6 +121,11 @@ IWModalDetails.displayName = 'IWModalDetails';
 
 /** @type {MuiSx} */
 const iWModalDetailsStyles = () => ({
+  column: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.5rem',
+  },
   root: {
     padding: '.15rem 0rem',
   },

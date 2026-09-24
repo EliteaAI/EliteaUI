@@ -189,7 +189,7 @@ export const eliteaSingleSelectVariants = [
       return {
         ...getSingleSelectInputStateSx(theme),
         '& .Mui-focused .MuiOutlinedInput-notchedOutline': {
-          border: '0px solid white',
+          border: '0 solid white',
         },
         '& fieldset': {
           border: 'none !important',

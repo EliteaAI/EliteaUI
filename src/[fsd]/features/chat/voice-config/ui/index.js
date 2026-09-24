@@ -1,3 +1,3 @@
 export { default as VoiceConfigControls } from './VoiceConfigControls';
-export { VoiceConfigDialog } from './VoiceConfigDialog';
-export { VoicePersonalizationSection } from './VoicePersonalizationSection';
+export { default as VoiceConfigDialog } from './VoiceConfigDialog';
+export { default as VoicePersonalizationSection } from './VoicePersonalizationSection';

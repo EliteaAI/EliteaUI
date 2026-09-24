@@ -1,4 +1,13 @@
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import {
+  forwardRef,
+  memo,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import { useSelector } from 'react-redux';
 import Split from 'react-split';
@@ -39,7 +48,37 @@ import CanvasEditHeader from './CanvasEditHeader';
 const { GA_EVENT_NAMES, GA_EVENT_PARAMS } = AnalyticConstants;
 
 // Component styles
+/** @type {MuiSx} */
 const componentStyles = (theme, isSmallWindow) => ({
+  statusContainer: ({ palette }) => ({
+    flex: 1,
+    width: '100%',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: '0.5rem',
+    border: `0.0625rem solid ${palette.border.lines};`,
+    boxSizing: 'border-box;',
+  }),
+  errorStatusContainer: ({ palette }) => ({
+    flex: 1,
+    width: '100%',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: '0.5rem',
+    paddingInline: '1.25rem',
+    border: `0.0625rem solid ${palette.border.lines};`,
+    boxSizing: 'border-box;',
+  }),
+  // react-split only accepts `style`.
+  split: {
+    flex: 1,
+    height: isSmallWindow ? 'max-content' : '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    width: '100%',
+  },
   mainContainer: {
     flexDirection: 'column',
     height: '100%',
@@ -47,15 +86,15 @@ const componentStyles = (theme, isSmallWindow) => ({
     minHeight: '100%',
     overflow: 'scroll',
     width: '100%',
-    gap: '8px',
+    gap: '0.5rem',
     justifyContent: 'flex-start',
-    minWidth: isSmallWindow ? '100%' : '240px',
+    minWidth: isSmallWindow ? '100%' : '15rem',
     '& .gutter': {
       backgroundRepeat: 'no-repeat',
       backgroundPosition: '50%',
       width: isSmallWindow ? '100% !important' : undefined,
       '&.gutter-vertical': {
-        minHeight: '24px;',
+        minHeight: '1.5rem;',
         backgroundImage:
           "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAFAQMAAABo7865AAAABlBMVEVHcEzMzMzyAv2sAAAAAXRSTlMAQObYZgAAABBJREFUeF5jOAMEEAIEEFwAn3kMwcB6I2AAAAAASUVORK5CYII=');",
         cursor: 'row-resize;',
@@ -70,35 +109,35 @@ const componentStyles = (theme, isSmallWindow) => ({
   },
   codeEditorContainer: {
     [theme.breakpoints.down('lg')]: {
-      height: '500px',
+      height: '31.25rem',
     },
     overflow: 'scroll',
     minWidth: '100%',
     width: '100%',
     flex: 1,
-    borderRadius: '8px',
-    border: `1px solid ${theme.palette.border.lines};`,
+    borderRadius: '0.5rem',
+    border: `0.0625rem solid ${theme.palette.border.lines};`,
     background: `${theme.palette.background.default.primary};`,
     boxSizing: 'border-box;',
   },
   mermaidCodeEditorContainer: {
     [theme.breakpoints.down('lg')]: {
-      minHeight: '500px',
+      minHeight: '31.25rem',
     },
     overflow: 'scroll',
     minWidth: '100%',
     width: '100%',
     flex: 1,
-    borderRadius: '8px',
-    border: `1px solid ${theme.palette.border.lines};`,
+    borderRadius: '0.5rem',
+    border: `0.0625rem solid ${theme.palette.border.lines};`,
     background: `${theme.palette.background.default.primary};`,
     boxSizing: 'border-box;',
   },
 });
 
-const CanvasEditor = forwardRef(
-  (
-    {
+const CanvasEditor = memo(
+  forwardRef((props, ref) => {
+    const {
       selectedCodeBlockInfo,
       onCloseCanvasEditor,
       onRegenerate,
@@ -106,9 +145,8 @@ const CanvasEditor = forwardRef(
       interaction_uuid,
       conversation_uuid,
       viewOnly = false,
-    },
-    ref,
-  ) => {
+    } = props;
+
     const trackEvent = useTrackEvent();
 
     const { name: userName } = useSelector(state => state.user);
@@ -565,32 +603,11 @@ const CanvasEditor = forwardRef(
           }
         />
         {selectedCodeBlockInfo?.isCreatingCanvas ? (
-          <Box
-            flex={1}
-            width={'100%'}
-            display={'flex'}
-            justifyContent={'center'}
-            alignItems={'center'}
-            borderRadius="8px"
-            border={`1px solid ${theme.palette.border.lines};`}
-            sx={styles.loadingContainer}
-            boxSizing="border-box;"
-          >
+          <Box sx={[styles.statusContainer, styles.loadingContainer]}>
             <Typography variant="labelMedium">Loading the canvas...</Typography>
           </Box>
         ) : selectedCodeBlockInfo?.createCanvasError ? (
-          <Box
-            flex={1}
-            width={'100%'}
-            display={'flex'}
-            justifyContent={'center'}
-            alignItems={'center'}
-            borderRadius="8px"
-            paddingInline={'20px'}
-            border={`1px solid ${theme.palette.border.lines};`}
-            sx={styles.errorContainer}
-            boxSizing="border-box;"
-          >
+          <Box sx={[styles.errorStatusContainer, styles.errorContainer]}>
             <Typography
               variant="labelMedium"
               color={theme.palette.status.rejected}
@@ -639,13 +656,7 @@ const CanvasEditor = forwardRef(
               snapOffset={30}
               dragInterval={1}
               direction={'vertical'}
-              style={{
-                flex: 1,
-                height: isSmallWindow ? 'max-content' : '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                width: '100%',
-              }}
+              style={styles.split}
             >
               <Box
                 data-testid="chat-canvas-mermaid-editor-content"
@@ -675,7 +686,7 @@ const CanvasEditor = forwardRef(
         ) : null}
       </Box>
     );
-  },
+  }),
 );
 
 CanvasEditor.displayName = 'CanvasEditor';

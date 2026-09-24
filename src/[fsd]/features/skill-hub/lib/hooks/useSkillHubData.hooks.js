@@ -5,13 +5,13 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useGetSkillCategoriesQuery } from '@/[fsd]/features/skill';
 import { useLazyPublicSkillsListQuery } from '@/[fsd]/features/skill-hub/api';
 import { SkillHubConstants } from '@/[fsd]/features/skill-hub/lib/constants';
-import { PAGE_SIZE, PUBLIC_PROJECT_ID } from '@/common/constants';
 import {
   selectIsCacheValid,
   selectLastRefreshedAt,
   selectSkillHubData,
   actions as skillHubActions,
-} from '@/slices/skillHub';
+} from '@/[fsd]/features/skill-hub/model';
+import { PAGE_SIZE, PUBLIC_PROJECT_ID } from '@/common/constants';
 
 /** Single bulk-fetch limit — covers realistic max published-skill counts. */
 const ALL_SKILLS_LIMIT = 1000;

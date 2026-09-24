@@ -15,7 +15,7 @@ const VoiceControlButton = memo(props => {
   const { onStop, voiceConfig, voices, onVoiceConfigChange, ttsModel, hasModelTTS, isPlaying, onPlay } =
     props;
   const [dialogOpen, setDialogOpen] = useState(false);
-  const styles = getStyles();
+  const styles = voiceControlButtonStyles();
 
   const handleDialogOpen = useCallback(() => setDialogOpen(true), []);
   const handleDialogClose = useCallback(() => setDialogOpen(false), []);
@@ -34,8 +34,7 @@ const VoiceControlButton = memo(props => {
     <>
       <Box
         variant="elitea"
-        color="secondary"
-        sx={styles.container}
+        sx={[styles.containerColor, styles.container]}
       >
         <StyledTooltip
           title={
@@ -99,7 +98,10 @@ VoiceControlButton.displayName = 'VoiceControlButton';
 export default VoiceControlButton;
 
 /** @type {MuiSx} */
-const getStyles = () => ({
+const voiceControlButtonStyles = () => ({
+  containerColor: {
+    color: 'secondary',
+  },
   container: {
     display: 'flex',
     alignItems: 'center',

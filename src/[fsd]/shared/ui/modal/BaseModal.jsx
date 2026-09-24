@@ -62,13 +62,7 @@ const BaseModal = memo(props => {
     if (!Icon) return null;
 
     return (
-      <Icon
-        style={{
-          width: ModalConstants.MODAL_ICON_SIZE.width,
-          height: ModalConstants.MODAL_ICON_SIZE.height,
-          color: theme.palette.icon[ModalConstants.MODAL_ICON_COLOR_KEYS[typeIcon]],
-        }}
-      />
+      <Icon style={styles.typeIcon(theme.palette.icon[ModalConstants.MODAL_ICON_COLOR_KEYS[typeIcon]])} />
     );
   };
 
@@ -171,6 +165,12 @@ BaseModal.displayName = 'BaseModal';
 
 /** @type {MuiSx} */
 const modalStyles = ({ isSimple, isFullscreen, hideSections, hasActions }) => ({
+  // SVGR icon: plain style object, not sx.
+  typeIcon: color => ({
+    width: ModalConstants.MODAL_ICON_SIZE.width,
+    height: ModalConstants.MODAL_ICON_SIZE.height,
+    color,
+  }),
   dialogPaper: ({ palette }) => ({
     display: 'flex',
     flexDirection: 'column',
@@ -178,7 +178,7 @@ const modalStyles = ({ isSimple, isFullscreen, hideSections, hasActions }) => ({
     width: isFullscreen ? '80vw' : isSimple ? '31.25rem' : '37.5rem',
     maxWidth: isFullscreen ? '80vw' : '60%',
     borderRadius: '1rem',
-    border: `1px solid ${palette.border.lines}`,
+    border: `0.0625rem solid ${palette.border.lines}`,
     background: isSimple ? palette.background.default.secondary : palette.background.default.tertiary,
     ...(isFullscreen && {
       height: 'calc(100vh - 10rem)',

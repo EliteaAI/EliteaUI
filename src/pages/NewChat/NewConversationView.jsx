@@ -14,7 +14,7 @@ import {
 } from '@/[fsd]/features/chat/lib/hooks';
 import { getChatParticipantUniqueId } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { useFetchParticipantDetails } from '@/[fsd]/features/chat/participants/lib/hooks';
-import { BudgetWarningBanner, SlashSuggestionList } from '@/[fsd]/features/chat/ui';
+import { BudgetWarningBanner, ChatWelcomeMessage, SlashSuggestionList } from '@/[fsd]/features/chat/ui';
 import NewChatInput from '@/[fsd]/features/chat/ui/chat-input/NewChatInput';
 import RecommendationList from '@/[fsd]/features/chat/ui/recommendations/RecommendationList';
 import SearchResultList from '@/[fsd]/features/chat/ui/recommendations/SearchResultList';
@@ -696,6 +696,13 @@ const NewConversationView = forwardRef(
       return selectedParticipant?.version_details?.conversation_starters || [];
     }, [selectedParticipant]);
 
+    const welcomeMessage = useMemo(() => {
+      const isAgentOrPipeline =
+        selectedParticipant?.entity_name === ChatParticipantType.Applications ||
+        selectedParticipant?.entity_name === ChatParticipantType.Pipelines;
+      return isAgentOrPipeline ? selectedParticipant?.version_details?.welcome_message || '' : '';
+    }, [selectedParticipant]);
+
     const onSelectModel = useCallback(
       newModel => {
         onClearSelectedParticipant();
@@ -1038,6 +1045,7 @@ const NewConversationView = forwardRef(
             >
               What can I do for you today?
             </Typography>
+            <ChatWelcomeMessage message={welcomeMessage} />
           </Box>
           {slashPhase !== 'idle' && (
             <SlashSuggestionList

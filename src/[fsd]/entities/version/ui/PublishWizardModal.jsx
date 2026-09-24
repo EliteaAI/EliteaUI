@@ -33,8 +33,8 @@ const getStepStyle = (index, step, styles) => {
   return styles.defaultStep;
 };
 
-const PublishWizardModal = memo(
-  ({
+const PublishWizardModal = memo(props => {
+  const {
     open,
     isAdminPublish,
     entityLabel = 'agent',
@@ -53,281 +53,286 @@ const PublishWizardModal = memo(
     onClose,
     onContinue,
     onPublish,
-  }) => {
-    const canContinue = useMemo(
-      () =>
-        versionName.trim().length > 0 &&
-        !!category &&
-        agreed &&
-        /^[a-zA-Z0-9._-]+$/.test(versionName) &&
-        !versionNameError,
-      [versionName, category, agreed, versionNameError],
-    );
+  } = props;
 
-    const canAdminPublish = useMemo(
-      () =>
-        versionName.trim().length > 0 &&
-        !!category &&
-        /^[a-zA-Z0-9._-]+$/.test(versionName) &&
-        !versionNameError,
-      [versionName, category, versionNameError],
-    );
+  const canContinue = useMemo(
+    () =>
+      versionName.trim().length > 0 &&
+      !!category &&
+      agreed &&
+      /^[a-zA-Z0-9._-]+$/.test(versionName) &&
+      !versionNameError,
+    [versionName, category, agreed, versionNameError],
+  );
 
-    const canPublish = useMemo(
-      () => validationResult?.status !== 'FAIL' && !publishError,
-      [validationResult, publishError],
-    );
+  const canAdminPublish = useMemo(
+    () =>
+      versionName.trim().length > 0 &&
+      !!category &&
+      /^[a-zA-Z0-9._-]+$/.test(versionName) &&
+      !versionNameError,
+    [versionName, category, versionNameError],
+  );
 
-    const visualStep = useMemo(() => {
-      if (step === PUBLISH_STEPS.PUBLISHING) {
-        return PUBLISH_STEPS.PUBLISHING + 1;
+  const canPublish = useMemo(
+    () => validationResult?.status !== 'FAIL' && !publishError,
+    [validationResult, publishError],
+  );
+
+  const visualStep = useMemo(() => {
+    if (step === PUBLISH_STEPS.PUBLISHING) {
+      return PUBLISH_STEPS.PUBLISHING + 1;
+    }
+    if (step === PUBLISH_STEPS.VALIDATION && validationResult) {
+      return PUBLISH_STEPS.PUBLISHING;
+    }
+    return step;
+  }, [step, validationResult]);
+
+  const handleEnterDown = useCallback(
+    event => {
+      if (isAdminPublish && canAdminPublish) {
+        event.stopPropagation();
+        event.preventDefault();
+        onPublish();
+      } else if (step === PUBLISH_STEPS.PREPARATION && canContinue) {
+        event.stopPropagation();
+        event.preventDefault();
+        onContinue();
       }
-      if (step === PUBLISH_STEPS.VALIDATION && validationResult) {
-        return PUBLISH_STEPS.PUBLISHING;
+    },
+    [isAdminPublish, canAdminPublish, step, canContinue, onContinue, onPublish],
+  );
+
+  const { onKeyDown, onKeyUp, onCompositionStart, onCompositionEnd } = useCtrlEnterKeyEventsHandler({
+    onEnterDown: handleEnterDown,
+  });
+
+  const handleDialogKeyDown = useCallback(
+    event => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onClose();
       }
-      return step;
-    }, [step, validationResult]);
+      onKeyDown(event);
+    },
+    [onClose, onKeyDown],
+  );
 
-    const handleEnterDown = useCallback(
-      event => {
-        if (isAdminPublish && canAdminPublish) {
-          event.stopPropagation();
-          event.preventDefault();
-          onPublish();
-        } else if (step === PUBLISH_STEPS.PREPARATION && canContinue) {
-          event.stopPropagation();
-          event.preventDefault();
-          onContinue();
-        }
-      },
-      [isAdminPublish, canAdminPublish, step, canContinue, onContinue, onPublish],
-    );
+  const handleVersionNameChange = useCallback(
+    e => {
+      const value = e.target.value;
+      if (VERSION_NAME_REGEX.test(value)) onVersionNameChange(value);
+    },
+    [onVersionNameChange],
+  );
 
-    const { onKeyDown, onKeyUp, onCompositionStart, onCompositionEnd } = useCtrlEnterKeyEventsHandler({
-      onEnterDown: handleEnterDown,
-    });
-
-    const handleDialogKeyDown = useCallback(
-      event => {
-        if (event.key === 'Escape') {
-          event.preventDefault();
-          onClose();
-        }
-        onKeyDown(event);
-      },
-      [onClose, onKeyDown],
-    );
-
-    const handleVersionNameChange = useCallback(
-      e => {
-        const value = e.target.value;
-        if (VERSION_NAME_REGEX.test(value)) onVersionNameChange(value);
-      },
-      [onVersionNameChange],
-    );
-
-    return (
-      <StyledDialog
-        open={!!open}
-        onClose={onClose}
-        onKeyDown={handleDialogKeyDown}
-        onKeyUp={onKeyUp}
-        onCompositionStart={onCompositionStart}
-        onCompositionEnd={onCompositionEnd}
-        aria-labelledby="publish-wizard-title"
-        sx={styles.dialog}
+  return (
+    <StyledDialog
+      open={!!open}
+      onClose={onClose}
+      onKeyDown={handleDialogKeyDown}
+      onKeyUp={onKeyUp}
+      onCompositionStart={onCompositionStart}
+      onCompositionEnd={onCompositionEnd}
+      aria-labelledby="publish-wizard-title"
+      sx={styles.dialog}
+    >
+      <DialogTitle
+        id="publish-wizard-title"
+        sx={styles.dialogTitle}
       >
-        <DialogTitle
-          id="publish-wizard-title"
-          sx={styles.dialogTitle}
+        <Typography
+          variant="headingSmall"
+          color="text.secondary"
         >
-          <Typography
-            variant="headingSmall"
-            color="text.secondary"
-          >
-            Publish version
-          </Typography>
-          <IconButton
-            variant="elitea"
-            color="tertiary"
-            aria-label="close"
-            onClick={onClose}
-            sx={{ padding: 0, margin: 0 }}
-          >
-            <CloseIcon sx={{ fontSize: '1rem' }} />
-          </IconButton>
-        </DialogTitle>
+          Publish version
+        </Typography>
+        <IconButton
+          variant="elitea"
+          color="tertiary"
+          aria-label="close"
+          onClick={onClose}
+          sx={{ padding: 0, margin: 0 }}
+        >
+          <CloseIcon sx={{ fontSize: '1rem' }} />
+        </IconButton>
+      </DialogTitle>
 
-        {!isAdminPublish && (
-          <Box sx={styles.stepperContainer}>
-            <Stepper
-              activeStep={visualStep}
-              sx={styles.stepper}
+      {!isAdminPublish && (
+        <Box sx={styles.stepperContainer}>
+          <Stepper
+            activeStep={visualStep}
+            sx={styles.stepper}
+          >
+            {STEP_LABELS.map((label, index) => (
+              <Step
+                key={label}
+                sx={[styles.configStep, getStepStyle(index, visualStep, styles)]}
+              >
+                <StepLabel slots={{ stepIcon: CheckedIcon }}>{label}</StepLabel>
+              </Step>
+            ))}
+          </Stepper>
+        </Box>
+      )}
+
+      <DialogContent sx={styles.dialogContent}>
+        {isAdminPublish ? (
+          <Box sx={styles.stepColumn}>
+            <Typography
+              variant="bodySmall"
+              color="text.secondary"
+              sx={{ display: 'flex', alignSelf: 'center' }}
             >
-              {STEP_LABELS.map((label, index) => (
-                <Step
-                  key={label}
-                  sx={[styles.configStep, getStepStyle(index, visualStep, styles)]}
+              Enter a version name to publish.
+            </Typography>
+            <Input.InputBase
+              label="Version name"
+              autoComplete="off"
+              value={versionName}
+              onChange={handleVersionNameChange}
+              error={!!(versionNameError || publishError)}
+              helperText={
+                versionNameError ||
+                publishError ||
+                'Only letters, numbers, dots, hyphens and underscores allowed.'
+              }
+              inputProps={{ maxLength: VERSION_NAME_MAX_LENGTH }}
+            />
+            <Select.SingleSelect
+              showBorder
+              displayEmpty
+              emptyPlaceholder={
+                <Typography
+                  variant="labelMedium"
+                  color="text.secondary"
                 >
-                  <StepLabel slots={{ stepIcon: CheckedIcon }}>{label}</StepLabel>
-                </Step>
-              ))}
-            </Stepper>
+                  Category
+                </Typography>
+              }
+              value={category}
+              options={categoryOptions}
+              onValueChange={onCategoryChange}
+              helperText={`Select a category to help users discover your ${entityLabel}.`}
+            />
+          </Box>
+        ) : (
+          <Box sx={styles.stepsContentWrapper}>
+            {step === PUBLISH_STEPS.PREPARATION && (
+              <PreparationStep
+                versionName={versionName}
+                onVersionNameChange={onVersionNameChange}
+                category={category}
+                onCategoryChange={onCategoryChange}
+                categoryOptions={categoryOptions}
+                agreed={agreed}
+                onAgreedChange={onAgreedChange}
+                entityLabel={entityLabel}
+                error={versionNameError || (step === PUBLISH_STEPS.PREPARATION ? publishError : undefined)}
+              />
+            )}
+
+            {step === PUBLISH_STEPS.VALIDATION && (
+              <ValidationStep
+                isValidating={isValidating}
+                validationResult={validationResult}
+                entityLabel={entityLabel}
+              />
+            )}
+
+            {step === PUBLISH_STEPS.PUBLISHING && !publishError && (
+              <Box sx={styles.publishingState}>
+                <CircularProgress size={48} />
+                <Typography
+                  variant="bodySmall"
+                  color="text.secondary"
+                  sx={{ marginTop: '1.5rem' }}
+                >
+                  Publishing your {entityLabel}...
+                </Typography>
+              </Box>
+            )}
+
+            {publishError && step !== PUBLISH_STEPS.PREPARATION && (
+              <Alert
+                severity="error"
+                sx={{ marginTop: '1rem' }}
+              >
+                {publishError}
+              </Alert>
+            )}
           </Box>
         )}
+      </DialogContent>
 
-        <DialogContent sx={styles.dialogContent}>
-          {isAdminPublish ? (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <Typography
-                variant="bodySmall"
-                color="text.secondary"
-                sx={{ display: 'flex', alignSelf: 'center' }}
-              >
-                Enter a version name to publish.
-              </Typography>
-              <Input.InputBase
-                label="Version name"
-                autoComplete="off"
-                value={versionName}
-                onChange={handleVersionNameChange}
-                error={!!(versionNameError || publishError)}
-                helperText={
-                  versionNameError ||
-                  publishError ||
-                  'Only letters, numbers, dots, hyphens and underscores allowed.'
-                }
-                inputProps={{ maxLength: VERSION_NAME_MAX_LENGTH }}
-              />
-              <Select.SingleSelect
-                showBorder
-                displayEmpty
-                emptyPlaceholder={
-                  <Typography
-                    variant="labelMedium"
-                    color="text.secondary"
-                  >
-                    Category
-                  </Typography>
-                }
-                value={category}
-                options={categoryOptions}
-                onValueChange={onCategoryChange}
-                helperText={`Select a category to help users discover your ${entityLabel}.`}
-              />
-            </Box>
-          ) : (
-            <Box sx={styles.stepsContentWrapper}>
-              {step === PUBLISH_STEPS.PREPARATION && (
-                <PreparationStep
-                  versionName={versionName}
-                  onVersionNameChange={onVersionNameChange}
-                  category={category}
-                  onCategoryChange={onCategoryChange}
-                  categoryOptions={categoryOptions}
-                  agreed={agreed}
-                  onAgreedChange={onAgreedChange}
-                  entityLabel={entityLabel}
-                  error={versionNameError || (step === PUBLISH_STEPS.PREPARATION ? publishError : undefined)}
-                />
-              )}
-
-              {step === PUBLISH_STEPS.VALIDATION && (
-                <ValidationStep
-                  isValidating={isValidating}
-                  validationResult={validationResult}
-                  entityLabel={entityLabel}
-                />
-              )}
-
-              {step === PUBLISH_STEPS.PUBLISHING && !publishError && (
-                <Box sx={styles.publishingState}>
-                  <CircularProgress size={48} />
-                  <Typography
-                    variant="bodySmall"
-                    color="text.secondary"
-                    sx={{ marginTop: '1.5rem' }}
-                  >
-                    Publishing your {entityLabel}...
-                  </Typography>
-                </Box>
-              )}
-
-              {publishError && step !== PUBLISH_STEPS.PREPARATION && (
-                <Alert
-                  severity="error"
-                  sx={{ marginTop: '1rem' }}
-                >
-                  {publishError}
-                </Alert>
-              )}
-            </Box>
-          )}
-        </DialogContent>
-
-        <StyledDialogActions
-          disableSpacing
-          sx={styles.dialogActions}
+      <StyledDialogActions
+        disableSpacing
+        sx={styles.dialogActions}
+      >
+        <Button.BaseBtn
+          variant="secondary"
+          onClick={onClose}
         >
+          Cancel
+        </Button.BaseBtn>
+
+        {isAdminPublish ? (
           <Button.BaseBtn
-            variant="secondary"
-            onClick={onClose}
+            variant="contained"
+            disabled={!canAdminPublish}
+            onClick={onPublish}
           >
-            Cancel
+            Publish
           </Button.BaseBtn>
+        ) : (
+          <>
+            {step === PUBLISH_STEPS.PREPARATION && (
+              <Button.BaseBtn
+                data-testid="agent-publish-continue-button"
+                variant="contained"
+                disabled={!canContinue}
+                onClick={onContinue}
+              >
+                Continue
+              </Button.BaseBtn>
+            )}
 
-          {isAdminPublish ? (
-            <Button.BaseBtn
-              variant="contained"
-              disabled={!canAdminPublish}
-              onClick={onPublish}
-            >
-              Publish
-            </Button.BaseBtn>
-          ) : (
-            <>
-              {step === PUBLISH_STEPS.PREPARATION && (
-                <Button.BaseBtn
-                  data-testid="agent-publish-continue-button"
-                  variant="contained"
-                  disabled={!canContinue}
-                  onClick={onContinue}
-                >
-                  Continue
-                </Button.BaseBtn>
-              )}
+            {step === PUBLISH_STEPS.VALIDATION && validationResult && (
+              <Button.BaseBtn
+                data-testid="agent-publish-confirm-button"
+                variant="contained"
+                disabled={!canPublish}
+                onClick={onPublish}
+              >
+                Publish
+              </Button.BaseBtn>
+            )}
 
-              {step === PUBLISH_STEPS.VALIDATION && validationResult && (
-                <Button.BaseBtn
-                  data-testid="agent-publish-confirm-button"
-                  variant="contained"
-                  disabled={!canPublish}
-                  onClick={onPublish}
-                >
-                  Publish
-                </Button.BaseBtn>
-              )}
-
-              {step === PUBLISH_STEPS.PUBLISHING && publishError && (
-                <Button.BaseBtn
-                  variant="contained"
-                  disabled
-                >
-                  Publish
-                </Button.BaseBtn>
-              )}
-            </>
-          )}
-        </StyledDialogActions>
-      </StyledDialog>
-    );
-  },
-);
+            {step === PUBLISH_STEPS.PUBLISHING && publishError && (
+              <Button.BaseBtn
+                variant="contained"
+                disabled
+              >
+                Publish
+              </Button.BaseBtn>
+            )}
+          </>
+        )}
+      </StyledDialogActions>
+    </StyledDialog>
+  );
+});
 
 PublishWizardModal.displayName = 'PublishWizardModal';
 
 /** @type {MuiSx} */
 const styles = {
+  stepColumn: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+  },
   dialog: {
     '& .MuiDialog-paper': {
       width: '37.5rem !important',
@@ -343,7 +348,7 @@ const styles = {
     justifyContent: 'space-between',
     height: '3.75rem',
     padding: '1rem 1.5rem',
-    borderBottom: `1px solid ${palette.border.lines}`,
+    borderBottom: `0.0625rem solid ${palette.border.lines}`,
     backgroundColor: `${palette.background.default.tertiary}`,
   }),
   stepperContainer: {
@@ -386,7 +391,7 @@ const styles = {
     },
   },
   defaultStep: ({ palette }) => ({
-    border: `1px solid ${palette.components.publishWizardStep.default.border}`,
+    border: `0.0625rem solid ${palette.components.publishWizardStep.default.border}`,
     backgroundColor: palette.components.publishWizardStep.default.background,
     '& .MuiStepLabel-iconContainer': {
       backgroundColor: palette.components.publishWizardStep.default.iconBackground,
@@ -397,7 +402,7 @@ const styles = {
     },
   }),
   activeStep: ({ palette }) => ({
-    border: `1px solid ${palette.components.publishWizardStep.active.border}`,
+    border: `0.0625rem solid ${palette.components.publishWizardStep.active.border}`,
     backgroundColor: palette.components.publishWizardStep.active.background,
     '& .MuiStepLabel-iconContainer': {
       backgroundColor: palette.components.publishWizardStep.active.iconBackground,
@@ -408,7 +413,7 @@ const styles = {
     },
   }),
   completedStep: ({ palette }) => ({
-    border: `1px solid ${palette.components.publishWizardStep.completed.border}`,
+    border: `0.0625rem solid ${palette.components.publishWizardStep.completed.border}`,
     backgroundColor: palette.components.publishWizardStep.completed.background,
     '& .MuiStepLabel-iconContainer': {
       backgroundColor: palette.components.publishWizardStep.completed.iconBackground,
@@ -433,7 +438,7 @@ const styles = {
     flexDirection: 'row',
     padding: '1rem 1.5rem !important',
     gap: '.75rem',
-    borderTop: `1px solid ${palette.border.lines}`,
+    borderTop: `0.0625rem solid ${palette.border.lines}`,
     backgroundColor: `${palette.background.default.tertiary}`,
   }),
   publishingState: {

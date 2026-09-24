@@ -34,7 +34,7 @@ const styles = {
     flexShrink: 0,
     padding: '0.0625rem 0.5rem',
     borderRadius: '6.25rem',
-    border: `1px solid ${palette.border.lines}`,
+    border: `0.0625rem solid ${palette.border.lines}`,
     color: palette.text.secondary,
     fontSize: '0.6875rem',
     lineHeight: '1rem',

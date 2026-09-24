@@ -1,3 +1,4 @@
+/** @type {MuiSx} */
 export const catalogCardNewBadgeStyles = ({ palette }) => ({
   height: '1.125rem',
   fontSize: '0.625rem',
@@ -11,6 +12,7 @@ export const catalogCardNewBadgeStyles = ({ palette }) => ({
   },
 });
 
+/** @type {MuiSx} */
 export const catalogCardActionContainerStyles = {
   display: 'flex',
   alignItems: 'center',

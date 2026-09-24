@@ -290,7 +290,7 @@ const skillControlsStyles = {
       left: 0,
       top: '0.25rem',
       bottom: '0.25rem',
-      borderLeft: ({ palette }) => `1px solid ${palette.border.lines}`,
+      borderLeft: ({ palette }) => `0.0625rem solid ${palette.border.lines}`,
     },
   },
 };

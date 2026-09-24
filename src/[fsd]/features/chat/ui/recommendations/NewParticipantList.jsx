@@ -1,6 +1,6 @@
-import { useCallback, useRef } from 'react';
+import { memo, useCallback, useRef } from 'react';
 
-import { Box, ClickAwayListener, Skeleton, Typography, useTheme } from '@mui/material';
+import { Box, ClickAwayListener, Typography } from '@mui/material';
 
 import ListInfiniteMoreLoader from '@/ComponentsLib/ListInfiniteMoreLoader';
 import { useScrollActiveIntoView } from '@/[fsd]/shared/lib/hooks';
@@ -8,42 +8,29 @@ import { getRawParticipantUniqueId } from '@/common/utils';
 import useGetComponentWidth from '@/hooks/useGetComponentWidth';
 
 import NewParticipantCard from './NewParticipantCard';
+import NewPlaceholderCard from './NewPlaceholderCard';
 
-const NewPlaceholderCard = ({ width }) => {
-  const theme = useTheme();
-  return (
-    <Skeleton
-      variant="rectangular"
-      width={width || 250}
-      height={56}
-      sx={{
-        borderRadius: '8px',
-        border: `1px solid ${theme.palette.border.lines}`,
-      }}
-    />
-  );
-};
+const NewParticipantList = memo(props => {
+  const {
+    onSelectParticipant,
+    isLoading,
+    isFetching,
+    participants = [],
+    total = 0,
+    resetPageDependencies,
+    existingParticipantUids = [],
+    onClose = () => {},
+    title = 'Frequently used',
+    onLoadMore,
+    activeIndex = -1,
+    // ELITEA-2202/2203/2204: caller-supplied testids. This component is shared
+    // with RecommendationList/SearchResultList, so both stay undefined unless a
+    // caller opts in (.agents/testing.md § Locator policy — shared components
+    // never hardcode feature-scoped testids).
+    containerTestId,
+    getItemTestId,
+  } = props;
 
-export default function NewParticipantList({
-  onSelectParticipant,
-  isLoading,
-  isFetching,
-  participants = [],
-  total = 0,
-  resetPageDependencies,
-  existingParticipantUids = [],
-  onClose = () => {},
-  title = 'Frequently used',
-  onLoadMore,
-  activeIndex = -1,
-  // ELITEA-2202/2203/2204: caller-supplied testids. This component is shared
-  // with RecommendationList/SearchResultList, so both stay undefined unless a
-  // caller opts in (.agents/testing.md § Locator policy — shared components
-  // never hardcode feature-scoped testids).
-  containerTestId,
-  getItemTestId,
-}) {
-  const theme = useTheme();
   const { componentWidth, componentRef } = useGetComponentWidth();
   const containerRef = useRef(null);
   const { itemRefs } = useScrollActiveIntoView(activeIndex, containerRef);
@@ -55,34 +42,18 @@ export default function NewParticipantList({
     [onSelectParticipant],
   );
 
+  const placeholderWidth = componentWidth ? (componentWidth - 12) / 2 : 250;
+
+  const styles = newParticipantListStyles();
+
   return (
     <ClickAwayListener onClickAway={onClose}>
       <Box
         ref={containerRef}
         data-testid={containerTestId}
-        border={`1px solid ${theme.palette.border.lines}`}
-        width={'100%'}
-        maxWidth={'100%'}
-        maxHeight={'247px'}
-        borderRadius={'16px'}
-        boxSizing={'border-box'}
-        padding={'12px'}
-        display={'flex'}
-        flexDirection={'column'}
-        gap={'12px'}
-        sx={{
-          background: theme.palette.background.default.secondary,
-          height: 'auto',
-          overflowY: 'auto',
-        }}
+        sx={styles.root}
       >
-        <Box
-          height={'16px'}
-          display={'flex'}
-          alignItems={'center'}
-          width={'100%'}
-          padding={'0 8px'}
-        >
+        <Box sx={styles.header}>
           <Typography
             variant="subtitle"
             color="text.primary"
@@ -90,32 +61,16 @@ export default function NewParticipantList({
             {title}
           </Typography>
         </Box>
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'row',
-            justifyContent: 'flex-start',
-            flexWrap: 'wrap',
-            padding: '12px auto',
-            width: '100%',
-          }}
-        >
+        <Box sx={styles.body}>
           <Box
-            display={'flex'}
-            flexWrap={'wrap'}
-            gap={'12px'}
-            justifyContent={'flex-start'}
-            width={'100%'}
-            boxSizing={'border-box'}
+            sx={styles.grid}
             ref={componentRef}
           >
             {!isLoading && !participants?.length && !isFetching && (
               <Typography
-                padding={'0 8px'}
                 variant="bodyMedium"
                 color="text.secondary"
-                width={'100%'}
-                textAlign={'left'}
+                sx={styles.emptyText}
               >
                 No matching results
               </Typography>
@@ -125,7 +80,7 @@ export default function NewParticipantList({
                 .fill(null)
                 .map((u, i) => (
                   <NewPlaceholderCard
-                    width={componentWidth ? (componentWidth - 12) / 2 : 250}
+                    width={placeholderWidth}
                     key={'isLoading' + i}
                   />
                 ))}
@@ -151,7 +106,7 @@ export default function NewParticipantList({
                 .fill(null)
                 .map((u, i) => (
                   <NewPlaceholderCard
-                    width={componentWidth ? (componentWidth - 12) / 2 : 250}
+                    width={placeholderWidth}
                     key={'isFetching_' + i}
                   />
                 ))}
@@ -168,4 +123,55 @@ export default function NewParticipantList({
       </Box>
     </ClickAwayListener>
   );
-}
+});
+
+NewParticipantList.displayName = 'NewParticipantList';
+
+/** @type {MuiSx} */
+const newParticipantListStyles = () => ({
+  root: ({ palette }) => ({
+    border: `0.0625rem solid ${palette.border.lines}`,
+    width: '100%',
+    maxWidth: '100%',
+    maxHeight: '15.4375rem',
+    borderRadius: '1rem',
+    boxSizing: 'border-box',
+    padding: '0.75rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.75rem',
+    background: palette.background.default.secondary,
+    height: 'auto',
+    overflowY: 'auto',
+  }),
+  header: {
+    height: '1rem',
+    display: 'flex',
+    alignItems: 'center',
+    width: '100%',
+    padding: '0 0.5rem',
+  },
+  body: {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    flexWrap: 'wrap',
+    padding: '0.75rem auto',
+    width: '100%',
+  },
+  grid: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '0.75rem',
+    justifyContent: 'flex-start',
+    width: '100%',
+    boxSizing: 'border-box',
+  },
+  emptyText: {
+    padding: '0 0.5rem',
+    width: '100%',
+    textAlign: 'left',
+  },
+});
+
+export default NewParticipantList;

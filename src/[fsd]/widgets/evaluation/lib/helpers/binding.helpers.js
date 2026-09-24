@@ -1,4 +1,4 @@
-import { EVAL_BINDING_KIND, EVAL_ENGINE, EVAL_SCALE_TYPE } from '../constants';
+import { DIMENSION_ENGINE_TOOLTIP, EVAL_BINDING_KIND, EVAL_ENGINE, EVAL_SCALE_TYPE } from '../constants';
 
 /**
  * Derives a binding's kind from which reference column is populated. Exactly one
@@ -51,3 +51,11 @@ export const getBindingEngineLabel = binding => {
   }
   return 'Code';
 };
+
+export const getEngineTooltip = engine => DIMENSION_ENGINE_TOOLTIP[engine] || '';
+
+/** Evaluator badge tooltip; mirrors getBindingEngineLabel's engine resolution. */
+export const getBindingEngineTooltip = binding =>
+  getEngineTooltip(
+    getBindingKind(binding) === EVAL_BINDING_KIND.dimension ? binding.engine : EVAL_ENGINE.code,
+  );

@@ -30,7 +30,7 @@ const FolderAccordionItem = memo(props => {
     <Box
       sx={{
         borderBottom: !sortedConversations?.length
-          ? `1px solid ${theme.palette.background.surface.interactive.active}`
+          ? `0.0625rem solid ${theme.palette.background.surface.interactive.active}`
           : undefined,
         color: theme.palette.text.muted,
       }}

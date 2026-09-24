@@ -9,52 +9,54 @@ import { useTextOverflow } from '@/[fsd]/shared/lib/hooks';
  * Shows tooltip only when text overflows
  */
 
-const TypographyWithConditionalTooltip = forwardRef((props, ref) => {
-  const { title, placement = 'right', children, sx, enterDelay = 100, ...typographyProps } = props;
-  const { textRef, isOverflowing } = useTextOverflow(title);
-  const styles = typographyWithConditionalTooltipStyles();
+const TypographyWithConditionalTooltip = memo(
+  forwardRef((props, ref) => {
+    const { title, placement = 'right', children, sx, enterDelay = 100, ...typographyProps } = props;
+    const { textRef, isOverflowing } = useTextOverflow(title);
+    const styles = typographyWithConditionalTooltipStyles();
 
-  const handleRef = useCallback(
-    el => {
-      textRef.current = el;
-      if (ref) {
-        if (typeof ref === 'function') ref(el);
-        else ref.current = el;
-      }
-    },
-    [ref, textRef],
-  );
+    const handleRef = useCallback(
+      el => {
+        textRef.current = el;
+        if (ref) {
+          if (typeof ref === 'function') ref(el);
+          else ref.current = el;
+        }
+      },
+      [ref, textRef],
+    );
 
-  return (
-    <Tooltip
-      title={isOverflowing ? title : ''}
-      enterNextDelay={enterDelay}
-      placement={placement}
-      disableHoverListener={!isOverflowing}
-      arrow
-      slotProps={{
-        tooltip: { sx: styles.tooltip },
-        popper: {
-          sx: styles.popper,
-          modifiers: [
-            {
-              name: 'offset',
-              options: { offset: [0, 8] },
-            },
-          ],
-        },
-      }}
-    >
-      <Typography
-        ref={handleRef}
-        sx={[styles.typography, sx]}
-        {...typographyProps}
+    return (
+      <Tooltip
+        title={isOverflowing ? title : ''}
+        enterNextDelay={enterDelay}
+        placement={placement}
+        disableHoverListener={!isOverflowing}
+        arrow
+        slotProps={{
+          tooltip: { sx: styles.tooltip },
+          popper: {
+            sx: styles.popper,
+            modifiers: [
+              {
+                name: 'offset',
+                options: { offset: [0, 8] },
+              },
+            ],
+          },
+        }}
       >
-        {children}
-      </Typography>
-    </Tooltip>
-  );
-});
+        <Typography
+          ref={handleRef}
+          sx={[styles.typography, sx]}
+          {...typographyProps}
+        >
+          {children}
+        </Typography>
+      </Tooltip>
+    );
+  }),
+);
 
 TypographyWithConditionalTooltip.displayName = 'TypographyWithConditionalTooltip';
 
@@ -75,4 +77,4 @@ const typographyWithConditionalTooltipStyles = () => ({
   },
 });
 
-export default memo(TypographyWithConditionalTooltip);
+export default TypographyWithConditionalTooltip;

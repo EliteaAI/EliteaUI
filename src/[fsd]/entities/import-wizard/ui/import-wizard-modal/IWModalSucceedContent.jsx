@@ -90,10 +90,10 @@ const IWModaSucceedlContent = memo(props => {
             {Boolean(importedItems[key].length) && (
               <Box sx={[styles.importedItem, key === SKIPPED_TOOLKITS && styles.skippedItems]}>
                 {key === SKIPPED_TOOLKITS ? <FailIcon /> : <SuccessIcon />}
-                <Box sx={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
+                <Box sx={styles.detailRow}>
                   <Typography
                     variant="bodyMedium"
-                    sx={{ textTransform: 'capitalize', minWidth: '5.25rem', whiteSpace: 'nowrap' }}
+                    sx={styles.detailLabel}
                     component="p"
                   >
                     {`${importedItems[key].length} ${key === SKIPPED_TOOLKITS ? 'toolkits' : key}: `}
@@ -143,6 +143,16 @@ IWModaSucceedlContent.displayName = 'IWModaSucceedlContent';
 
 /** @type {MuiSx} */
 const iWModaSucceedlContentStyles = () => ({
+  detailRow: {
+    display: 'flex',
+    gap: '0.5rem',
+    alignItems: 'flex-start',
+  },
+  detailLabel: {
+    textTransform: 'capitalize',
+    minWidth: '5.25rem',
+    whiteSpace: 'nowrap',
+  },
   root: {},
   label: {
     fontWeight: 500,

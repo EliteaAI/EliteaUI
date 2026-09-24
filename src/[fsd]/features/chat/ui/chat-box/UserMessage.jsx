@@ -26,330 +26,332 @@ import EditIcon from '@/components/Icons/EditIcon';
 import UserAvatar from '@/components/UserAvatar';
 import useHighlightUserMessage from '@/hooks/chat/useHighlightUserMessage';
 
-const UserMessage = React.forwardRef((props, ref) => {
-  const {
-    avatar,
-    name,
-    content,
-    message_items,
-    created_at,
-    onCopy,
-    onCopyToMessages,
-    onDelete,
-    verticalMode,
-    onSubmit,
-    shouldDisableEdit,
-    messageId,
-    sentTo,
-    onClickSentTo,
-    markdown = false,
-    onRemoveAttachment,
-    onAddEditAttachment,
-  } = props;
-  const [value, setValue] = useState(content);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editAttachments, setEditAttachments] = useState([]);
-  const { highLightMe } = useHighlightUserMessage(messageId);
-  const participantName = useParticipantName(sentTo);
-  // A turn the user interjected into has more than one text item: the original
-  // question plus each mid-turn injection, in order_index order.
-  const textItems = useMemo(
-    () => message_items?.filter(item => item.item_type === 'text_message') || [],
-    [message_items],
-  );
-  const questionItem = textItems[0];
-  const injectedItems = useMemo(() => textItems.slice(1), [textItems]);
-  // Editing rebuilds the group from questionItem alone, which would drop the
-  // injections. Disable it rather than silently losing them.
-  const hasInjections = injectedItems.length > 0;
-  const attachmentItems = useMemo(
-    () => message_items?.filter(item => item.item_type === 'attachment_message'),
-    [message_items],
-  );
+const UserMessage = memo(
+  React.forwardRef((props, ref) => {
+    const {
+      avatar,
+      name,
+      content,
+      message_items,
+      created_at,
+      onCopy,
+      onCopyToMessages,
+      onDelete,
+      verticalMode,
+      onSubmit,
+      shouldDisableEdit,
+      messageId,
+      sentTo,
+      onClickSentTo,
+      markdown = false,
+      onRemoveAttachment,
+      onAddEditAttachment,
+    } = props;
+    const [value, setValue] = useState(content);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editAttachments, setEditAttachments] = useState([]);
+    const { highLightMe } = useHighlightUserMessage(messageId);
+    const participantName = useParticipantName(sentTo);
+    // A turn the user interjected into has more than one text item: the original
+    // question plus each mid-turn injection, in order_index order.
+    const textItems = useMemo(
+      () => message_items?.filter(item => item.item_type === 'text_message') || [],
+      [message_items],
+    );
+    const questionItem = textItems[0];
+    const injectedItems = useMemo(() => textItems.slice(1), [textItems]);
+    // Editing rebuilds the group from questionItem alone, which would drop the
+    // injections. Disable it rather than silently losing them.
+    const hasInjections = injectedItems.length > 0;
+    const attachmentItems = useMemo(
+      () => message_items?.filter(item => item.item_type === 'attachment_message'),
+      [message_items],
+    );
 
-  const onEdit = useCallback(() => {
-    setValue(content || questionItem?.item_details?.content || '');
-    setEditAttachments([...attachmentItems]);
-    setIsEditing(true);
-  }, [content, questionItem, attachmentItems]);
+    const onEdit = useCallback(() => {
+      setValue(content || questionItem?.item_details?.content || '');
+      setEditAttachments([...attachmentItems]);
+      setIsEditing(true);
+    }, [content, questionItem, attachmentItems]);
 
-  const onCancel = useCallback(() => {
-    setIsEditing(false);
-    setValue(content || questionItem?.item_details?.content || '');
-    setEditAttachments([]);
-  }, [content, questionItem]);
+    const onCancel = useCallback(() => {
+      setIsEditing(false);
+      setValue(content || questionItem?.item_details?.content || '');
+      setEditAttachments([]);
+    }, [content, questionItem]);
 
-  const onChange = useCallback(event => {
-    setValue(event.target.value);
-  }, []);
+    const onChange = useCallback(event => {
+      setValue(event.target.value);
+    }, []);
 
-  const onRemoveEditAttachment = useCallback(
-    (fileName, needToRemoveFromStorage) => {
-      setEditAttachments(prev =>
-        prev.filter(item => {
-          const itemFileName = item.item_details?.filepath || item.item_details?.name;
-          return itemFileName !== fileName;
-        }),
-      );
-      onRemoveAttachment?.(fileName, needToRemoveFromStorage);
-    },
-    [onRemoveAttachment],
-  );
+    const onRemoveEditAttachment = useCallback(
+      (fileName, needToRemoveFromStorage) => {
+        setEditAttachments(prev =>
+          prev.filter(item => {
+            const itemFileName = item.item_details?.filepath || item.item_details?.name;
+            return itemFileName !== fileName;
+          }),
+        );
+        onRemoveAttachment?.(fileName, needToRemoveFromStorage);
+      },
+      [onRemoveAttachment],
+    );
 
-  const onHandleAddFiles = useCallback(
-    async files => {
-      if (!onAddEditAttachment) return;
-      const uploaded = await onAddEditAttachment(files);
-      if (uploaded?.length) {
-        setEditAttachments(prev => [...prev, ...uploaded]);
-      }
-    },
-    [onAddEditAttachment],
-  );
+    const onHandleAddFiles = useCallback(
+      async files => {
+        if (!onAddEditAttachment) return;
+        const uploaded = await onAddEditAttachment(files);
+        if (uploaded?.length) {
+          setEditAttachments(prev => [...prev, ...uploaded]);
+        }
+      },
+      [onAddEditAttachment],
+    );
 
-  const onClickSubmit = useCallback(() => {
-    const updatedItems = questionItem
-      ? [{ uuid: questionItem.uuid, content: value, item_type: 'text_message' }]
-      : [];
-    setIsEditing(false);
-    setEditAttachments([]);
-    onSubmit(messageId, updatedItems, editAttachments);
-  }, [editAttachments, messageId, onSubmit, questionItem, value]);
+    const onClickSubmit = useCallback(() => {
+      const updatedItems = questionItem
+        ? [{ uuid: questionItem.uuid, content: value, item_type: 'text_message' }]
+        : [];
+      setIsEditing(false);
+      setEditAttachments([]);
+      onSubmit(messageId, updatedItems, editAttachments);
+    }, [editAttachments, messageId, onSubmit, questionItem, value]);
 
-  const isSentToDummyParticipant =
-    sentTo &&
-    sentTo.entity_name &&
-    sentTo.entity_name !== ChatParticipantType.Dummy &&
-    participantName !== 'User No Longer Available';
+    const isSentToDummyParticipant =
+      sentTo &&
+      sentTo.entity_name &&
+      sentTo.entity_name !== ChatParticipantType.Dummy &&
+      participantName !== 'User No Longer Available';
 
-  return (
-    <UserMessageContainer
-      data-testid="chat-message-item"
-      sx={verticalMode ? styles.containerVertical : styles.containerHorizontal}
-      ref={ref}
-    >
-      {verticalMode ? (
-        <Box sx={styles.headerBox}>
-          <ListItemAvatar sx={styles.avatarContainer}>
+    return (
+      <UserMessageContainer
+        data-testid="chat-message-item"
+        sx={verticalMode ? styles.containerVertical : styles.containerHorizontal}
+        ref={ref}
+      >
+        {verticalMode ? (
+          <Box sx={styles.headerBox}>
+            <ListItemAvatar sx={styles.avatarContainer}>
+              <UserAvatar
+                name={name}
+                avatar={avatar}
+                size={24}
+              />
+              <Typography
+                variant="bodySmall"
+                color={'text.secondary'}
+                sx={styles.userName}
+              >
+                {name}
+              </Typography>
+              {sentTo && sentTo.entity_name && (
+                <>
+                  <Typography variant="bodySmall">to</Typography>
+                  <StyledTooltip
+                    title={isSentToDummyParticipant ? 'Chat now' : ''}
+                    placement="top"
+                  >
+                    <Typography
+                      onClick={isSentToDummyParticipant ? onClickSentTo : undefined}
+                      variant="bodySmall"
+                      sx={styles.sentToName(isSentToDummyParticipant)}
+                    >
+                      {participantName}
+                    </Typography>
+                  </StyledTooltip>
+                </>
+              )}
+            </ListItemAvatar>
+            <CreatedTimeInfo created_at={created_at} />
+          </Box>
+        ) : (
+          <ListItemAvatar sx={styles.avatarMinimal}>
             <UserAvatar
               name={name}
               avatar={avatar}
               size={24}
             />
-            <Typography
-              variant="bodySmall"
-              color={'text.secondary'}
-              sx={styles.userName}
-            >
-              {name}
-            </Typography>
-            {sentTo && sentTo.entity_name && (
-              <>
-                <Typography variant="bodySmall">to</Typography>
-                <StyledTooltip
-                  title={isSentToDummyParticipant ? 'Chat now' : ''}
-                  placement="top"
-                >
-                  <Typography
-                    onClick={isSentToDummyParticipant ? onClickSentTo : undefined}
-                    variant="bodySmall"
-                    sx={styles.sentToName(isSentToDummyParticipant)}
-                  >
-                    {participantName}
-                  </Typography>
-                </StyledTooltip>
-              </>
-            )}
           </ListItemAvatar>
-          <CreatedTimeInfo created_at={created_at} />
-        </Box>
-      ) : (
-        <ListItemAvatar sx={styles.avatarMinimal}>
-          <UserAvatar
-            name={name}
-            avatar={avatar}
-            size={24}
-          />
-        </ListItemAvatar>
-      )}
-      {!isEditing ? (
-        <Box sx={[styles.messageBase, verticalMode && styles.messageVertical(highLightMe)]}>
-          {markdown ? (
-            <Markdown>{content}</Markdown>
-          ) : (
-            (content || questionItem?.item_details?.content || '').split('\n').map((string, index) => (
-              <Box key={index}>
+        )}
+        {!isEditing ? (
+          <Box sx={[styles.messageBase, verticalMode && styles.messageVertical(highLightMe)]}>
+            {markdown ? (
+              <Markdown>{content}</Markdown>
+            ) : (
+              (content || questionItem?.item_details?.content || '').split('\n').map((string, index) => (
+                <Box key={index}>
+                  <Typography
+                    sx={styles.textContent}
+                    variant="bodyMedium"
+                  >
+                    {string}
+                  </Typography>
+                </Box>
+              ))
+            )}
+            {/* Also shown as a timeline pin in the answer below, which is where it reads
+              chronologically. Kept here too because pins are trace-step rows on the
+              assistant group and regenerate clears them — without this the text would
+              keep influencing the model with no visible trace at all. */}
+            {injectedItems.map(item => (
+              <Box
+                key={item.id}
+                sx={styles.injectedChunk}
+                data-testid="injected-message-chunk"
+              >
+                <Typography
+                  variant="bodySmall"
+                  color="text.secondary"
+                  sx={styles.injectedLabel}
+                >
+                  sent while running
+                </Typography>
                 <Typography
                   sx={styles.textContent}
                   variant="bodyMedium"
                 >
-                  {string}
+                  {item.item_details?.content || ''}
                 </Typography>
               </Box>
-            ))
-          )}
-          {/* Also shown as a timeline pin in the answer below, which is where it reads
-              chronologically. Kept here too because pins are trace-step rows on the
-              assistant group and regenerate clears them — without this the text would
-              keep influencing the model with no visible trace at all. */}
-          {injectedItems.map(item => (
-            <Box
-              key={item.id}
-              sx={styles.injectedChunk}
-              data-testid="injected-message-chunk"
-            >
-              <Typography
-                variant="bodySmall"
-                color="text.secondary"
-                sx={styles.injectedLabel}
-              >
-                sent while running
-              </Typography>
-              <Typography
-                sx={styles.textContent}
-                variant="bodyMedium"
-              >
-                {item.item_details?.content || ''}
-              </Typography>
-            </Box>
-          ))}
-          <MessageAttachmentList
-            items={attachmentItems}
-            onRemoveAttachment={onRemoveAttachment}
-          />
-          <ButtonsContainer
-            className={'actionButtons'}
-            sx={verticalMode ? styles.buttonsContainerVertical(highLightMe) : undefined}
-          >
-            {onCopy && (
-              <StyledTooltip
-                title={'Copy to clipboard'}
-                placement="top"
-              >
-                <IconButton
-                  sx={styles.iconButton}
-                  variant="elitea"
-                  color="tertiary"
-                  onClick={onCopy}
-                >
-                  <CopyIcon sx={styles.icon} />
-                </IconButton>
-              </StyledTooltip>
-            )}
-            {onCopyToMessages && (
-              <StyledTooltip
-                title={'Copy to Messages'}
-                placement="top"
-              >
-                <IconButton
-                  sx={styles.iconButton}
-                  variant="elitea"
-                  color="tertiary"
-                  onClick={onCopyToMessages}
-                >
-                  <CopyMoveIcon sx={styles.icon} />
-                </IconButton>
-              </StyledTooltip>
-            )}
-            {verticalMode && onSubmit && (
-              <StyledTooltip
-                title={
-                  hasInjections
-                    ? 'Editing is unavailable for messages you added to mid-run'
-                    : 'Edit the message and regenerate answer'
-                }
-                placement="top"
-              >
-                <IconButton
-                  sx={styles.iconButton}
-                  variant="elitea"
-                  color="tertiary"
-                  disabled={shouldDisableEdit || hasInjections}
-                  onClick={onEdit}
-                >
-                  <EditIcon sx={styles.icon} />
-                </IconButton>
-              </StyledTooltip>
-            )}
-            {onDelete && (
-              <StyledTooltip
-                title={'Delete'}
-                placement="top"
-              >
-                <IconButton
-                  data-testid="chat-message-delete-button"
-                  sx={styles.iconButton}
-                  variant="elitea"
-                  color="tertiary"
-                  onClick={onDelete}
-                >
-                  <DeleteIcon sx={styles.icon} />
-                </IconButton>
-              </StyledTooltip>
-            )}
-          </ButtonsContainer>
-        </Box>
-      ) : (
-        <Box sx={styles.editContainer}>
-          <ChatInputContainer sx={styles.editInputContainer}>
-            <StyledTextField
-              value={value}
-              fullWidth
-              id="standard-multiline-static"
-              label=""
-              multiline
-              maxRows={15}
-              variant="standard"
-              onChange={onChange}
-              placeholder=""
-              slotProps={{
-                input: {
-                  sx: styles.editInputField,
-                  disableUnderline: true,
-                  endAdornment: null,
-                },
-              }}
+            ))}
+            <MessageAttachmentList
+              items={attachmentItems}
+              onRemoveAttachment={onRemoveAttachment}
             />
-            {onAddEditAttachment && (
-              <ChatButton.AttachmentButton
-                attachments={editAttachments}
-                onAttachFiles={onHandleAddFiles}
+            <ButtonsContainer
+              className={'actionButtons'}
+              sx={verticalMode ? styles.buttonsContainerVertical(highLightMe) : undefined}
+            >
+              {onCopy && (
+                <StyledTooltip
+                  title={'Copy to clipboard'}
+                  placement="top"
+                >
+                  <IconButton
+                    sx={styles.iconButton}
+                    variant="elitea"
+                    color="tertiary"
+                    onClick={onCopy}
+                  >
+                    <CopyIcon sx={styles.icon} />
+                  </IconButton>
+                </StyledTooltip>
+              )}
+              {onCopyToMessages && (
+                <StyledTooltip
+                  title={'Copy to Messages'}
+                  placement="top"
+                >
+                  <IconButton
+                    sx={styles.iconButton}
+                    variant="elitea"
+                    color="tertiary"
+                    onClick={onCopyToMessages}
+                  >
+                    <CopyMoveIcon sx={styles.icon} />
+                  </IconButton>
+                </StyledTooltip>
+              )}
+              {verticalMode && onSubmit && (
+                <StyledTooltip
+                  title={
+                    hasInjections
+                      ? 'Editing is unavailable for messages you added to mid-run'
+                      : 'Edit the message and regenerate answer'
+                  }
+                  placement="top"
+                >
+                  <IconButton
+                    sx={styles.iconButton}
+                    variant="elitea"
+                    color="tertiary"
+                    disabled={shouldDisableEdit || hasInjections}
+                    onClick={onEdit}
+                  >
+                    <EditIcon sx={styles.icon} />
+                  </IconButton>
+                </StyledTooltip>
+              )}
+              {onDelete && (
+                <StyledTooltip
+                  title={'Delete'}
+                  placement="top"
+                >
+                  <IconButton
+                    data-testid="chat-message-delete-button"
+                    sx={styles.iconButton}
+                    variant="elitea"
+                    color="tertiary"
+                    onClick={onDelete}
+                  >
+                    <DeleteIcon sx={styles.icon} />
+                  </IconButton>
+                </StyledTooltip>
+              )}
+            </ButtonsContainer>
+          </Box>
+        ) : (
+          <Box sx={styles.editContainer}>
+            <ChatInputContainer sx={styles.editInputContainer}>
+              <StyledTextField
+                value={value}
+                fullWidth
+                id="standard-multiline-static"
+                label=""
+                multiline
+                maxRows={15}
+                variant="standard"
+                onChange={onChange}
+                placeholder=""
+                slotProps={{
+                  input: {
+                    sx: styles.editInputField,
+                    disableUnderline: true,
+                    endAdornment: null,
+                  },
+                }}
+              />
+              {onAddEditAttachment && (
+                <ChatButton.AttachmentButton
+                  attachments={editAttachments}
+                  onAttachFiles={onHandleAddFiles}
+                />
+              )}
+            </ChatInputContainer>
+            {editAttachments?.length > 0 && (
+              <MessageAttachmentList
+                items={editAttachments}
+                onRemoveAttachment={onRemoveEditAttachment}
               />
             )}
-          </ChatInputContainer>
-          {editAttachments?.length > 0 && (
-            <MessageAttachmentList
-              items={editAttachments}
-              onRemoveAttachment={onRemoveEditAttachment}
-            />
-          )}
-          <Box sx={styles.editButtonsContainer}>
-            <Button.BaseBtn
-              variant={BUTTON_VARIANTS.contained}
-              color={BUTTON_COLORS.primary}
-              sx={styles.submitButton}
-              disabled={!editAttachments.length && (value === content || !value.trim())}
-              onClick={onClickSubmit}
-            >
-              Save and apply
-            </Button.BaseBtn>
-            <Button.BaseBtn
-              variant={BUTTON_VARIANTS.secondary}
-              color={BUTTON_COLORS.secondary}
-              onClick={onCancel}
-            >
-              Cancel
-            </Button.BaseBtn>
+            <Box sx={styles.editButtonsContainer}>
+              <Button.BaseBtn
+                variant={BUTTON_VARIANTS.contained}
+                color={BUTTON_COLORS.primary}
+                sx={styles.submitButton}
+                disabled={!editAttachments.length && (value === content || !value.trim())}
+                onClick={onClickSubmit}
+              >
+                Save and apply
+              </Button.BaseBtn>
+              <Button.BaseBtn
+                variant={BUTTON_VARIANTS.secondary}
+                color={BUTTON_COLORS.secondary}
+                onClick={onCancel}
+              >
+                Cancel
+              </Button.BaseBtn>
+            </Box>
           </Box>
-        </Box>
-      )}
-    </UserMessageContainer>
-  );
-});
+        )}
+      </UserMessageContainer>
+    );
+  }),
+);
 
 UserMessage.displayName = 'UserMessage';
 
-export default memo(UserMessage);
+export default UserMessage;
 
 /** @type {MuiSx} */
 const styles = {

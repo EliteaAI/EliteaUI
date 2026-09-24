@@ -36,45 +36,28 @@ const CustomEdge = memo(props => {
     nodes,
   });
 
+  const styles = customEdgeStyles(theme, selected);
+
   return (
     <>
       {/* Background stroke for fallback path */}
       <BaseEdge
         id={`${id}-bg`}
         path={fallbackPath}
-        style={{
-          stroke: theme.palette.background.paper,
-          strokeWidth: selected ? 8 : 6, // Thicker background for selected
-          fill: 'none',
-          opacity: selected ? 0.9 : 0.8,
-          zIndex: selected ? 999 : 1,
-        }}
+        style={styles.backgroundEdge}
       />
       {/* Main fallback edge */}
       <BaseEdge
         id={id}
         path={fallbackPath}
-        style={{
-          stroke: !selected ? theme.palette.components.flowEditor.edge.stroke : theme.palette.primary.main,
-          strokeWidth: selected ? 3 : 2, // Thicker when selected
-          fill: 'none',
-          filter: selected ? 'drop-shadow(0px 2px 4px rgba(0,0,0,0.2))' : 'none',
-        }}
+        style={styles.mainEdge}
       />
       {data?.label && (
         <EdgeLabelRenderer>
           <Typography
             component={'div'}
             data-testid={`pipeline-edge-label-${id}`}
-            sx={{
-              position: 'absolute',
-              transform: `translate(-50%, -50%) translate(${fallbackLabelX}px,${fallbackLabelY}px)`,
-              background: theme.palette.background.default.tertiary,
-              padding: '8px 16px',
-              borderRadius: '0.5rem',
-              border: `1px solid ${!selected ? theme.palette.components.flowEditor.node.border : theme.palette.primary.main}`,
-              zIndex: selected ? 10 : undefined,
-            }}
+            sx={styles.label(fallbackLabelX, fallbackLabelY)}
             variant="bodyMedium"
             color="text.secondary"
           >
@@ -87,5 +70,35 @@ const CustomEdge = memo(props => {
 });
 
 CustomEdge.displayName = 'CustomEdge';
+
+/** @type {MuiSx} */
+const customEdgeStyles = (theme, selected) => ({
+  // BaseEdge renders an SVG path and only accepts `style`.
+  backgroundEdge: {
+    stroke: theme.palette.background.paper,
+    strokeWidth: selected ? 8 : 6, // Thicker background for selected
+    fill: 'none',
+    opacity: selected ? 0.9 : 0.8,
+    zIndex: selected ? 999 : 1,
+  },
+  mainEdge: {
+    stroke: !selected ? theme.palette.components.flowEditor.edge.stroke : theme.palette.primary.main,
+    strokeWidth: selected ? 3 : 2, // Thicker when selected
+    fill: 'none',
+    filter: selected
+      ? `drop-shadow(0 0.125rem 0.25rem ${theme.palette.components.flowEditor.edge.shadow})`
+      : 'none',
+  },
+  // Label coordinates come from react-flow in canvas pixels.
+  label: (x, y) => ({
+    position: 'absolute',
+    transform: `translate(-50%, -50%) translate(${x}px,${y}px)`,
+    background: theme.palette.background.default.tertiary,
+    padding: '0.5rem 1rem',
+    borderRadius: '0.5rem',
+    border: `0.0625rem solid ${!selected ? theme.palette.components.flowEditor.node.border : theme.palette.primary.main}`,
+    zIndex: selected ? 10 : undefined,
+  }),
+});
 
 export default CustomEdge;

@@ -161,7 +161,7 @@ export const BucketItem = forwardRef((props, ref) => {
         onClick: handleUploadClick,
       },
       {
-        label: 'Rename',
+        label: 'Edit',
         icon: (
           <EditIcon
             sx={{ fontSize: '1rem' }}

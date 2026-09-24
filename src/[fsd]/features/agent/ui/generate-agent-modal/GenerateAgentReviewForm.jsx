@@ -370,7 +370,7 @@ const generateAgentReviewFormStyles = () => ({
     padding: '0.375rem',
     marginTop: '0.25rem',
     '&:hover': {
-      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+      backgroundColor: palette.background.overlay.strong,
     },
   }),
   removeIcon: {

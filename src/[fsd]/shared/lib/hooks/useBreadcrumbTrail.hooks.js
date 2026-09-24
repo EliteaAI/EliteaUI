@@ -2,7 +2,6 @@ import { useMemo } from 'react';
 
 import { useLocation, useParams, useSearchParams } from 'react-router-dom';
 
-import { useSkillDetailsQuery } from '@/[fsd]/features/skill/api';
 import { BreadcrumbHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useApplicationDetailsQuery } from '@/api/applications';
 import { useToolkitsDetailsQuery } from '@/api/toolkits.js';
@@ -12,8 +11,10 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 /**
  * Fully resolved breadcrumb trail for the current route, empty when the route declares no crumbs.
  * Entity name queries reuse the same cache keys as the detail pages so no extra request is issued.
+ * Skill names are passed in by the page (`entityName`), since shared/ cannot query a feature's endpoint.
  */
-export const useBreadcrumbTrail = () => {
+export const useBreadcrumbTrail = (options = {}) => {
+  const { entityName: providedEntityName } = options;
   const { pathname } = useLocation();
   const [searchParams] = useSearchParams();
   const projectId = useSelectedProjectId();
@@ -34,15 +35,10 @@ export const useBreadcrumbTrail = () => {
     { projectId, applicationId: entityId },
     { skip: !isAgent || !projectId || !entityId },
   );
-  const { data: skillDetails } = useSkillDetailsQuery(
-    { projectId, skillId: entityId },
-    { skip: !isSkill || !projectId || !entityId },
-  );
-
   const entityName =
+    providedEntityName ||
     toolkitDetails?.name ||
     applicationDetails?.name ||
-    skillDetails?.name ||
     searchParams.get(SearchParams.Name) ||
     '';
 

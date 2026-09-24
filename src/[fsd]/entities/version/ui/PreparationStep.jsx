@@ -7,8 +7,8 @@ import { Checkbox, Input, Select } from '@/[fsd]/shared/ui';
 import { VERSION_NAME_MAX_LENGTH, VERSION_NAME_REGEX } from '../lib/constants/version.constants';
 import PublishingTerms from './PublishingTerms';
 
-const PreparationStep = memo(
-  ({
+const PreparationStep = memo(props => {
+  const {
     versionName,
     onVersionNameChange,
     category,
@@ -18,99 +18,99 @@ const PreparationStep = memo(
     onAgreedChange,
     entityLabel = 'agent',
     error,
-  }) => {
-    const handleVersionNameChange = useCallback(
-      e => {
-        const value = e.target.value;
-        if (VERSION_NAME_REGEX.test(value)) {
-          onVersionNameChange(value);
-        }
-      },
-      [onVersionNameChange],
-    );
+  } = props;
 
-    const handleAgreedChange = useCallback(
-      (_, checked) => {
-        onAgreedChange(checked);
-      },
-      [onAgreedChange],
-    );
+  const handleVersionNameChange = useCallback(
+    e => {
+      const value = e.target.value;
+      if (VERSION_NAME_REGEX.test(value)) {
+        onVersionNameChange(value);
+      }
+    },
+    [onVersionNameChange],
+  );
 
-    return (
-      <Box sx={styles.root}>
-        <Typography
-          variant="headingSmall"
-          color="text.secondary"
-          sx={{ textAlign: 'center' }}
-        >
-          Enter a version name, choose a category and accept the Publishing Terms to continue.
-        </Typography>
+  const handleAgreedChange = useCallback(
+    (_, checked) => {
+      onAgreedChange(checked);
+    },
+    [onAgreedChange],
+  );
 
-        <Input.InputBase
-          label="Version name"
-          autoComplete="off"
-          value={versionName}
-          onChange={handleVersionNameChange}
-          error={!!error}
-          helperText={error || 'Only letters, numbers, dots, hyphens and underscores allowed.'}
-          inputProps={{
-            maxLength: VERSION_NAME_MAX_LENGTH,
-            'data-testid': 'agent-publish-version-name-input',
-          }}
-          sx={styles.textField}
-        />
+  return (
+    <Box sx={styles.root}>
+      <Typography
+        variant="headingSmall"
+        color="text.secondary"
+        sx={{ textAlign: 'center' }}
+      >
+        Enter a version name, choose a category and accept the Publishing Terms to continue.
+      </Typography>
 
-        <Select.SingleSelect
-          showBorder
-          displayEmpty
-          data-testid="agent-publish-category-select"
-          emptyPlaceholder={
-            <Typography
-              variant="labelMedium"
-              color="text.secondary"
-            >
-              Category
-            </Typography>
-          }
-          value={category}
-          options={categoryOptions}
-          onValueChange={onCategoryChange}
-          helperText={`Select a category to help users discover your ${entityLabel}.`}
-        />
+      <Input.InputBase
+        label="Version name"
+        autoComplete="off"
+        value={versionName}
+        onChange={handleVersionNameChange}
+        error={!!error}
+        helperText={error || 'Only letters, numbers, dots, hyphens and underscores allowed.'}
+        inputProps={{
+          maxLength: VERSION_NAME_MAX_LENGTH,
+          'data-testid': 'agent-publish-version-name-input',
+        }}
+        sx={styles.textField}
+      />
 
-        <Box sx={styles.termsContainer}>
+      <Select.SingleSelect
+        showBorder
+        displayEmpty
+        data-testid="agent-publish-category-select"
+        emptyPlaceholder={
           <Typography
-            variant="labelSmall"
+            variant="labelMedium"
             color="text.secondary"
-            sx={{ fontWeight: 600, marginLeft: '0.75rem' }}
           >
-            Publishing Terms
+            Category
           </Typography>
-          <PublishingTerms entityLabel={entityLabel} />
-        </Box>
+        }
+        value={category}
+        options={categoryOptions}
+        onValueChange={onCategoryChange}
+        helperText={`Select a category to help users discover your ${entityLabel}.`}
+      />
 
-        <FormControlLabel
-          control={
-            <Checkbox.BaseCheckbox
-              data-testid="agent-publish-agree-checkbox"
-              checked={agreed}
-              onChange={handleAgreedChange}
-            />
-          }
-          label={
-            <Typography
-              variant="bodySmall"
-              color="text.secondary"
-            >
-              I agree with the Publishing Terms.
-            </Typography>
-          }
-          sx={styles.checkbox}
-        />
+      <Box sx={styles.termsContainer}>
+        <Typography
+          variant="labelSmall"
+          color="text.secondary"
+          sx={{ fontWeight: 600, marginLeft: '0.75rem' }}
+        >
+          Publishing Terms
+        </Typography>
+        <PublishingTerms entityLabel={entityLabel} />
       </Box>
-    );
-  },
-);
+
+      <FormControlLabel
+        control={
+          <Checkbox.BaseCheckbox
+            data-testid="agent-publish-agree-checkbox"
+            checked={agreed}
+            onChange={handleAgreedChange}
+          />
+        }
+        label={
+          <Typography
+            variant="bodySmall"
+            color="text.secondary"
+          >
+            I agree with the Publishing Terms.
+          </Typography>
+        }
+        sx={styles.checkbox}
+      />
+    </Box>
+  );
+});
 
 PreparationStep.displayName = 'PreparationStep';
 

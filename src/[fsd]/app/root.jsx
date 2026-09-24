@@ -12,6 +12,8 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3';
 
 // Store must be imported before App to ensure API endpoints are injected before slice extraReducers run
 import { store } from '@/[fsd]/shared/config';
+// Slices outside shared/ register their reducers on import; load them before anything reads their state.
+import '@/[fsd]/app/store/registerReducers';
 import App from '@/[fsd]/app/App';
 import { ToolkitSocketProvider } from '@/[fsd]/shared/lib/context';
 import { DEV, VITE_DEV_TOKEN, VITE_SOCKET_PATH, VITE_SOCKET_SERVER } from '@/common/constants';

@@ -8,10 +8,10 @@ import { CredentialWarningModal } from '@/[fsd]/entities/credential-warning/ui';
 import BaseEditor from '@/[fsd]/features/chat/ui/editors/BaseEditor.jsx';
 import CreateToolkitButton from '@/[fsd]/features/chat/ui/editors/CreateToolkitButton.jsx';
 import { usePublicProjectAccessCheck } from '@/[fsd]/features/project/lib/hooks';
+import { ToolkitForm as ToolkitFormUI } from '@/[fsd]/features/toolkits';
 // TODO: DELETE after migration period (Q1 2026) - Legacy OpenAPI toolkit migration
 import { LegacyOpenApiMigration } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
-import { ToolkitForm } from '@/[fsd]/features/toolkits/ui/form/toolkit-form';
 import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
 import { useToolkitsDetailsQuery } from '@/api/toolkits';
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
@@ -289,7 +289,7 @@ const ToolkitEditor = memo(props => {
         // Creation mode: Show ToolkitTypeSelector or ToolkitForm based on whether a type is selected
         <>
           {editToolDetail ? (
-            <ToolkitForm
+            <ToolkitFormUI.ToolkitForm
               editToolDetail={editToolDetail}
               onChangeToolDetail={onChangeToolDetail}
               isEditing={false}
@@ -318,7 +318,7 @@ const ToolkitEditor = memo(props => {
         </>
       ) : editToolDetail ? (
         // Edit mode: Show the existing toolkit configuration
-        <ToolkitForm
+        <ToolkitFormUI.ToolkitForm
           editToolDetail={editToolDetail}
           onChangeToolDetail={handleChangeToolDetail}
           isEditing={true}
@@ -339,7 +339,7 @@ const ToolkitEditor = memo(props => {
           sx={styles.toolkitForm}
         />
       ) : (
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
+        <Box sx={styles.loadingContainer}>
           <Typography
             variant="body2"
             color="text.secondary"
@@ -362,6 +362,12 @@ ToolkitEditor.displayName = 'ToolkitEditor';
 
 /** @type {MuiSx} */
 const toolkitEditorStyles = () => ({
+  loadingContainer: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '12.5rem',
+  },
   toolkitForm: {
     overflow: 'visible',
     maxHeight: 'none',

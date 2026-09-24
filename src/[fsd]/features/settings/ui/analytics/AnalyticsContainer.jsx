@@ -519,7 +519,7 @@ const analyticsContainerStyles = () => ({
     display: 'flex',
     alignItems: 'center',
     gap: '0.25rem',
-    border: `1px solid ${palette.border.lines}`,
+    border: `0.0625rem solid ${palette.border.lines}`,
     padding: '.25rem .5rem',
     borderRadius: '.75rem',
 
@@ -542,7 +542,7 @@ const analyticsContainerStyles = () => ({
     flexWrap: 'wrap',
     gap: '0.75rem',
     padding: '1rem 1.5rem',
-    borderTop: `1px solid ${palette.border.default}`,
+    borderTop: `0.0625rem solid ${palette.border.default}`,
     background: palette.background.default.tertiary,
   }),
   datePickerRow: { display: 'flex', gap: '0.5rem', alignItems: 'center' },
@@ -779,7 +779,7 @@ const analyticsContainerStyles = () => ({
   tabSection: { display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' },
   tabsContainer: ({ palette }) => ({
     padding: '0 1.5rem',
-    borderBottom: `1px solid ${palette.border.default}`,
+    borderBottom: `0.0625rem solid ${palette.border.default}`,
     background: palette.background.default.tertiary,
   }),
   contentArea: { flex: 1, overflow: 'auto', padding: '1.5rem', position: 'relative' },

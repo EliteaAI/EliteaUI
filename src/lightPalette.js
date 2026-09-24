@@ -245,6 +245,16 @@ const lightPalette = {
     tooltip: gray30,
     aiAnswer: white,
     badge: dark20,
+    // Translucent overlays layered over surfaces (hover states, skeletons, drop targets).
+    overlay: {
+      faint: 'rgba(255, 255, 255, 0.02)',
+      soft: 'rgba(255, 255, 255, 0.05)',
+      medium: 'rgba(255, 255, 255, 0.1)',
+      strong: 'rgba(255, 255, 255, 0.2)',
+      dim: 'rgba(0, 0, 0, 0.3)',
+      sensitive: { default: 'rgba(0, 0, 0, 0.02)', hover: 'rgba(0, 0, 0, 0.04)' },
+      versionHover: 'rgba(255, 255, 255, 0.1)',
+    },
   },
   border: {
     default: light40,
@@ -256,6 +266,7 @@ const lightPalette = {
     tips: blue02,
     attention: orangeOutline40,
     error: red40,
+    sectionHover: 'rgba(38, 43, 52, 1)',
   },
   boxShadow: {
     default: shadowBoxDefault,
@@ -524,6 +535,7 @@ const lightPalette = {
     listItem: { background: { default: white } },
     chatStarter: { background: { strong: chatStarterStrong, subtle: chatStarterSubtle } },
     npsSurvey: {
+      heartGradient: { start: '#FB85FF', end: '#78ABFF' },
       background: npsSurveyBg,
       border: npsSurveyBorder,
       accent: npsAccent,
@@ -621,7 +633,7 @@ const lightPalette = {
     flowEditor: {
       background: white,
       node: { border: light20 },
-      edge: { stroke: light20 },
+      edge: { stroke: light20, shadow: 'rgba(0, 0, 0, 0.2)' },
       nodeColors: {
         toolkit: flowNodeToolkit,
         mcp: flowNodeMcp,

@@ -227,7 +227,7 @@ const SingleSelect = memo(props => {
 
   const renderMultipleValue = useCallback(
     selected => (
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem', padding: '0 0 0.375rem' }}>
+      <Box sx={styles.chipsRow}>
         {selected.map(selectedValue => {
           const foundOption = flatOptions.find(({ value: v }) => v === selectedValue);
           if (!foundOption) return null;
@@ -325,7 +325,7 @@ const SingleSelect = memo(props => {
             key="__loading__"
             disabled
             value="__single_select_loading__"
-            sx={{ justifyContent: 'center', pointerEvents: 'none', opacity: 1 }}
+            sx={styles.loadingItem}
             onClick={e => e.preventDefault()}
           >
             <CircularProgress size={24} />
@@ -403,7 +403,7 @@ const SingleSelect = memo(props => {
                       <MenuItem
                         key={`${groupKey}-empty`}
                         disabled
-                        sx={{ justifyContent: 'flex-start', padding: '0.5rem 1rem', fontSize: '0.875rem' }}
+                        sx={styles.emptyGroupItem}
                       >
                         {isListFetching ? '' : group.emptyLabel || 'Still no saved credentials'}
                       </MenuItem>,
@@ -735,6 +735,22 @@ const singleSelectStyles = (
     hasInfoTooltip,
   } = {},
 ) => ({
+  chipsRow: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '0.25rem',
+    padding: '0 0 0.375rem',
+  },
+  loadingItem: {
+    justifyContent: 'center',
+    pointerEvents: 'none',
+    opacity: 1,
+  },
+  emptyGroupItem: {
+    justifyContent: 'flex-start',
+    padding: '0.5rem 1rem',
+    fontSize: '0.875rem',
+  },
   labelContainer: {
     display: 'flex',
     alignItems: 'center',
@@ -786,7 +802,7 @@ const singleSelectStyles = (
       padding: '0.25rem 0 0.5rem',
     },
     '& .MuiSelect-icon': {
-      top: 'calc(50% - 11px)',
+      top: 'calc(50% - 0.6875rem)',
     },
     '& .MuiSelect-select': {
       color: customSelectedColor,
@@ -836,7 +852,7 @@ const singleSelectStyles = (
   },
   chip: {
     height: '1.5rem',
-    margin: '0px !important',
+    margin: '0 !important',
     backgroundColor: theme.palette.components.autocompleteChip.background.disabled,
     '& .MuiChip-label': {
       paddingLeft: '0.5rem',
@@ -854,10 +870,10 @@ const singleSelectStyles = (
     fontSize: '0.875rem',
     color: palette.text.secondary,
     lineHeight: 1.4,
-    borderBottom: `1px solid ${palette.border.lines}`,
+    borderBottom: `0.0625rem solid ${palette.border.lines}`,
     backgroundColor: palette.background.default.secondary,
     '.MuiMenuItem-root + &': {
-      borderTop: `1px solid ${palette.border.lines}`,
+      borderTop: `0.0625rem solid ${palette.border.lines}`,
     },
   }),
   groupAction: ({ palette }) => ({

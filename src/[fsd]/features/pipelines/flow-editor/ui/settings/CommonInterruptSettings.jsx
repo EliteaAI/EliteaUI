@@ -105,13 +105,7 @@ const CommonInterruptSettings = memo(props => {
   const styles = commonInterruptSettingsStyles();
 
   return (
-    <Box
-      display="flex"
-      flexWrap="wrap"
-      gap=".5rem"
-      width="100%"
-      flexDirection="row"
-    >
+    <Box sx={styles.nodesRow}>
       <FormControlLabel
         sx={styles.formControlLabel}
         control={
@@ -203,6 +197,13 @@ CommonInterruptSettings.displayName = 'CommonInterruptSettings';
 
 /** @type {MuiSx} */
 const commonInterruptSettingsStyles = () => ({
+  nodesRow: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '.5rem',
+    width: '100%',
+    flexDirection: 'row',
+  },
   formControlLabel: ({ palette }) => ({
     width: '13.375rem',
     height: '2rem',

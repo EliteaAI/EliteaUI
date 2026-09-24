@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 
 import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
 import ArrowRightIcon from '@mui/icons-material/ArrowRight';
@@ -17,7 +17,7 @@ const MAX_ROWS = 15;
 const MIN_ROWS = 3;
 const MIN_HEIGHT = 70;
 
-export default function PlaybackToolBar(props) {
+const PlaybackToolBar = memo(props => {
   const {
     sx,
     placeholder = 'Type your message',
@@ -160,11 +160,15 @@ export default function PlaybackToolBar(props) {
       </SendButtonContainer>
     </ChatInputContainer>
   );
-}
+});
+
+PlaybackToolBar.displayName = 'PlaybackToolBar';
+
+export default PlaybackToolBar;
 
 const styles = {
   sendButtonContainer: {
-    width: '30px',
+    width: '1.875rem',
     height: '100%',
     cursor: 'pointer',
   },
@@ -177,12 +181,12 @@ const styles = {
     flex: 1,
     marginRight: 1,
     flexDirection: 'column',
-    gap: '24px',
+    gap: '1.5rem',
   },
   textField: ({ palette }) => ({
-    padding: '0px',
+    padding: '0',
     '& textarea': {
-      marginBottom: '0px',
+      marginBottom: '0',
     },
     color: palette.text.secondary,
     '& .MuiInputBase-input.Mui-disabled': {
@@ -194,7 +198,7 @@ const styles = {
     color: palette.text.secondary,
   }),
   iconSize: {
-    fontSize: '16px',
+    fontSize: '1rem',
   },
   getArrowRightColor:
     (disableForward, isMockingThinking) =>

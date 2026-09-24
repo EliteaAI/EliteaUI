@@ -106,20 +106,12 @@ const UsersParticipantDropdown = memo(props => {
           { name: 'preventOverflow', options: { boundary: 'viewport', altBoundary: true, tether: true } },
         ]}
         transition
-        style={{ zIndex: theme.zIndex.modal ? theme.zIndex.modal + 10 : 2200 }}
+        sx={styles.popper}
       >
         {({ TransitionProps, placement: popperPlacement }) => (
           <Grow
             {...TransitionProps}
-            style={{
-              transformOrigin: popperPlacement?.startsWith('left')
-                ? 'right center'
-                : popperPlacement?.startsWith('right')
-                  ? 'left center'
-                  : popperPlacement === 'bottom'
-                    ? 'center top'
-                    : 'center bottom',
-            }}
+            style={styles.grow(popperPlacement)}
           >
             <Paper
               sx={[styles.paper, slotProps?.Paper?.sx || {}]}
@@ -168,10 +160,21 @@ const UsersParticipantDropdown = memo(props => {
 
 UsersParticipantDropdown.displayName = 'UsersParticipantDropdown';
 
-/**
- * @type MuiSx
- */
+/** @type {MuiSx} */
 const usersParticipantDropdownStyles = isTriggerVisible => ({
+  popper: ({ zIndex }) => ({
+    zIndex: zIndex.modal ? zIndex.modal + 10 : 2200,
+  }),
+  // Grow only accepts `style`, so this returns a plain style object.
+  grow: placement => ({
+    transformOrigin: placement?.startsWith('left')
+      ? 'right center'
+      : placement?.startsWith('right')
+        ? 'left center'
+        : placement === 'bottom'
+          ? 'center top'
+          : 'center bottom',
+  }),
   root: {
     visibility: isTriggerVisible ? 'visible' : 'hidden',
     display: 'inline-flex',

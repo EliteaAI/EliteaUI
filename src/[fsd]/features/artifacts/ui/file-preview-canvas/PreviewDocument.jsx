@@ -5,45 +5,47 @@ import { Box, GlobalStyles } from '@mui/material';
 import { DocxEditor } from '@eigenpal/docx-js-editor';
 import '@eigenpal/docx-js-editor/styles.css';
 
-const PreviewDocument = forwardRef((props, ref) => {
-  const { documentBuffer, onChange, onError, onFontsLoaded } = props;
+const PreviewDocument = memo(
+  forwardRef((props, ref) => {
+    const { documentBuffer, onChange, onError, onFontsLoaded } = props;
 
-  const docxEditorRef = useRef(null);
+    const docxEditorRef = useRef(null);
 
-  const styles = previewDocumentStyles();
+    const styles = previewDocumentStyles();
 
-  useImperativeHandle(ref, () => ({
-    getFileBlob: async () => {
-      const buffer = await docxEditorRef.current.save();
+    useImperativeHandle(ref, () => ({
+      getFileBlob: async () => {
+        const buffer = await docxEditorRef.current.save();
 
-      let blob = null;
-      if (buffer)
-        blob = new Blob([buffer], {
-          type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        });
+        let blob = null;
+        if (buffer)
+          blob = new Blob([buffer], {
+            type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          });
 
-      return blob;
-    },
-  }));
+        return blob;
+      },
+    }));
 
-  return (
-    <Box sx={styles.docxEditorWrapper}>
-      <GlobalStyles styles={styles.customDropDown} />
-      <DocxEditor
-        showToolbar
-        showRuler
-        showZoomControl
-        ref={docxEditorRef}
-        documentBuffer={documentBuffer}
-        onChange={onChange}
-        onError={onError}
-        onFontsLoaded={onFontsLoaded}
-        showPageNumbers={false}
-        initialZoom={0.75}
-      />
-    </Box>
-  );
-});
+    return (
+      <Box sx={styles.docxEditorWrapper}>
+        <GlobalStyles styles={styles.customDropDown} />
+        <DocxEditor
+          showToolbar
+          showRuler
+          showZoomControl
+          ref={docxEditorRef}
+          documentBuffer={documentBuffer}
+          onChange={onChange}
+          onError={onError}
+          onFontsLoaded={onFontsLoaded}
+          showPageNumbers={false}
+          initialZoom={0.75}
+        />
+      </Box>
+    );
+  }),
+);
 
 PreviewDocument.displayName = 'PreviewDocument';
 
@@ -129,7 +131,7 @@ const previewDocumentStyles = () => ({
 
             '>div': {
               '&:not(.items-center)': {
-                border: `1px solid ${palette.border.lines} !important`,
+                border: `0.0625rem solid ${palette.border.lines} !important`,
               },
             },
           },
@@ -152,13 +154,13 @@ const previewDocumentStyles = () => ({
     // Table insert popover (grid picker submenu)
     '& div:has(> div > [role="grid"][aria-label="Table size selector"])': {
       background: `${palette.background.default.tertiary} !important`,
-      border: `1px solid ${palette.border.lines} !important`,
+      border: `0.0625rem solid ${palette.border.lines} !important`,
 
       '>div': {
         '>div': {
           '>div': {
             background: `${palette.background.default.tertiary} !important`,
-            border: `1px solid ${palette.border.lines} !important`,
+            border: `0.0625rem solid ${palette.border.lines} !important`,
           },
         },
       },
@@ -210,7 +212,7 @@ const previewDocumentStyles = () => ({
     '& .sticky button[aria-label="Subscript"],' +
     '& .sticky button[aria-label="Center (Ctrl + E)"],' +
     '& .sticky button[data-testid="toolbar-alignment"]']: {
-      border: `1px solid ${palette.border.lines} !important`,
+      border: `0.0625rem solid ${palette.border.lines} !important`,
     },
 
     '& .sticky button[aria-label="Clear formatting"]': {
@@ -226,7 +228,7 @@ const previewDocumentStyles = () => ({
     },
 
     '& .sticky button[role="combobox"]': {
-      border: `1px solid ${palette.border.lines} !important`,
+      border: `0.0625rem solid ${palette.border.lines} !important`,
     },
 
     '.docx-list-buttons': {
@@ -236,7 +238,7 @@ const previewDocumentStyles = () => ({
 
     '.docx-color-picker-dropdown': {
       backgroundColor: `${palette.background.default.tertiary} !important`,
-      border: `1px solid ${palette.border.lines} !important`,
+      border: `0.0625rem solid ${palette.border.lines} !important`,
 
       '>div': {
         '&:last-of-type': {
@@ -267,12 +269,12 @@ const previewDocumentStyles = () => ({
       backgroundColor: `${palette.background.default.secondary} !important`,
 
       '.docx-hyperlink-dialog-header': {
-        borderBottom: `1px solid ${palette.border.lines} !important`,
+        borderBottom: `0.0625rem solid ${palette.border.lines} !important`,
       },
 
       '.docx-hyperlink-dialog-footer': {
         alignItems: 'center',
-        borderTop: `1px solid ${palette.border.lines} !important`,
+        borderTop: `0.0625rem solid ${palette.border.lines} !important`,
       },
 
       '.docx-hyperlink-dialog-cancel': {
@@ -307,7 +309,7 @@ const previewDocumentStyles = () => ({
 
       input: {
         background: palette.background.default.tertiary,
-        border: `1px solid ${palette.components.input.border} !important`,
+        border: `0.0625rem solid ${palette.components.input.border} !important`,
 
         color: `${palette.text.secondary} !important`,
       },
@@ -336,4 +338,4 @@ const previewDocumentStyles = () => ({
   }),
 });
 
-export default memo(PreviewDocument);
+export default PreviewDocument;

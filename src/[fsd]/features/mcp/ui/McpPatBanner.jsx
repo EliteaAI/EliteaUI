@@ -12,6 +12,8 @@ import RouteDefinitions, { getBasename } from '@/routes';
 // Warns when the caller's PAT is missing/expired for an internal MCP toolkit.
 const McpPatBanner = memo(props => {
   const { projectId, toolkitType } = props;
+  const styles = mcpPatBannerStyles();
+
   const { patState } = useInternalMcpPatStatus({ projectId, toolkitType });
   const copy = PAT_GATE_COPY[patState];
 
@@ -28,7 +30,7 @@ const McpPatBanner = memo(props => {
       severity="warning"
       sx={{ mb: '0.75rem' }}
     >
-      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '0.5rem' }}>
+      <Box sx={styles.content}>
         <Typography variant="bodySmall">{copy.content}</Typography>
         <Button.BaseBtn
           variant="elitea"
@@ -48,5 +50,15 @@ McpPatBanner.propTypes = {
 };
 
 McpPatBanner.displayName = 'McpPatBanner';
+
+/** @type {MuiSx} */
+const mcpPatBannerStyles = () => ({
+  content: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    gap: '0.5rem',
+  },
+});
 
 export default McpPatBanner;

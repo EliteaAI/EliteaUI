@@ -1,15 +1,13 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { memo, useEffect, useMemo, useRef } from 'react';
 
 import { useRecommendations } from '@/[fsd]/features/chat/lib/hooks/useRecommendations.hooks';
 import { getChatParticipantUniqueId } from '@/[fsd]/features/chat/participants/lib/helpers';
 
 import NewParticipantList from './NewParticipantList';
 
-export default function RecommendationList({
-  onSelectParticipant,
-  existingParticipants = [],
-  onClose = () => {},
-}) {
+const RecommendationList = memo(props => {
+  const { onSelectParticipant, existingParticipants = [], onClose = () => {} } = props;
+
   const { recommendations, isFetching, isLoading } = useRecommendations();
   const existingParticipantUids = useMemo(
     () => existingParticipants?.map(participant => getChatParticipantUniqueId(participant) || []),
@@ -33,4 +31,8 @@ export default function RecommendationList({
       onClose={onClose}
     />
   );
-}
+});
+
+RecommendationList.displayName = 'RecommendationList';
+
+export default RecommendationList;

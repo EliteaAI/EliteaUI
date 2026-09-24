@@ -188,9 +188,7 @@ const AgentModal = memo(props => {
               <AuthorContainer
                 authors={cardAuthors}
                 showName={false}
-                style={{
-                  minWidth: '1.25rem',
-                }}
+                style={styles.authorAvatars}
               />
               <Typography
                 variant="bodyMedium"
@@ -299,6 +297,9 @@ AgentModal.displayName = 'AgentModal';
 
 /** @type {MuiSx} */
 const agentModalStyles = () => ({
+  authorAvatars: {
+    minWidth: '1.25rem',
+  },
   dialog: {
     '& .MuiDialog-paper': ({ palette }) => ({
       width: '37.5rem',
@@ -327,7 +328,7 @@ const agentModalStyles = () => ({
     width: '100%',
     height: '100%',
     background: palette.components.agentModal.background.default,
-    borderRadius: 'calc(1rem - 1px)',
+    borderRadius: 'calc(1rem - 0.0625rem)',
     boxSizing: 'border-box',
     display: 'flex',
     flexDirection: 'column',
