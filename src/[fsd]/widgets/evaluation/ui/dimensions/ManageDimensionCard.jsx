@@ -2,13 +2,15 @@ import { memo, useCallback, useState } from 'react';
 
 import { Box, Menu, MenuItem, Tooltip, Typography } from '@mui/material';
 
+import { useTextOverflow } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import DotsMenuIcon from '@/components/Icons/DotsMenuIcon';
 import EditIcon from '@/components/Icons/EditIcon';
 
-import { getEngineLabel, getTargetLabel, getWeightLabel } from '../../lib/helpers';
+import { DIMENSION_BADGE_TOOLTIP, DIMENSION_BADGE_TOOLTIP_DELAY } from '../../lib/constants';
+import { getEngineLabel, getEngineTooltip, getTargetLabel, getWeightLabel } from '../../lib/helpers';
 
 const ManageDimensionCard = memo(props => {
   const { dimension, canEdit = false, canDelete = false, onEdit, onDelete } = props;
@@ -24,6 +26,17 @@ const ManageDimensionCard = memo(props => {
   );
   const weightLabel = getWeightLabel(dimension.default_weight);
   const description = dimension.description || '';
+  const { textRef: nameRef, isOverflowing: isNameTruncated } = useTextOverflow(dimension.name);
+  const showNameTooltip = (dimension.name || '').length >= 30 || isNameTruncated;
+  const badges = [
+    ...engines.map(engine => ({
+      key: engine,
+      label: getEngineLabel(engine),
+      tooltip: getEngineTooltip(engine),
+    })),
+    { key: 'target', label: targetLabel, tooltip: DIMENSION_BADGE_TOOLTIP.target },
+    { key: 'weight', label: weightLabel, tooltip: DIMENSION_BADGE_TOOLTIP.weight },
+  ].filter(badge => badge.label);
 
   const handleOpenMenu = useCallback(event => {
     event.stopPropagation();
@@ -59,9 +72,10 @@ const ManageDimensionCard = memo(props => {
             <Tooltip
               title={dimension.name}
               placement="top"
-              disableHoverListener={(dimension.name || '').length < 30}
+              disableHoverListener={!showNameTooltip}
             >
               <Typography
+                ref={nameRef}
                 variant="bodyMedium"
                 sx={styles.name}
               >
@@ -69,34 +83,23 @@ const ManageDimensionCard = memo(props => {
               </Typography>
             </Tooltip>
             <Box sx={styles.badges}>
-              {engines.map(engine => (
-                <Typography
-                  key={engine}
-                  component="span"
-                  variant="bodySmall"
-                  sx={styles.badge}
+              {badges.map(({ key, label, tooltip }) => (
+                <Tooltip
+                  key={key}
+                  title={tooltip}
+                  placement="top"
+                  enterDelay={DIMENSION_BADGE_TOOLTIP_DELAY}
+                  enterNextDelay={DIMENSION_BADGE_TOOLTIP_DELAY}
                 >
-                  {getEngineLabel(engine)}
-                </Typography>
+                  <Typography
+                    component="span"
+                    variant="labelSmall"
+                    sx={styles.badge}
+                  >
+                    {label}
+                  </Typography>
+                </Tooltip>
               ))}
-              {targetLabel && (
-                <Typography
-                  component="span"
-                  variant="bodySmall"
-                  sx={styles.badge}
-                >
-                  {targetLabel}
-                </Typography>
-              )}
-              {weightLabel && (
-                <Typography
-                  component="span"
-                  variant="bodySmall"
-                  sx={styles.badge}
-                >
-                  {weightLabel}
-                </Typography>
-              )}
             </Box>
           </Box>
           {showMenu && (
@@ -200,9 +203,11 @@ const manageDimensionCardStyles = () => ({
   }),
   badges: {
     display: 'flex',
+    flexWrap: 'wrap',
     alignItems: 'center',
     gap: '0.5rem',
-    flexShrink: 0,
+    minWidth: 0,
+    cursor: 'default',
   },
   badge: ({ palette }) => ({
     padding: '0.25rem 0.5rem',
