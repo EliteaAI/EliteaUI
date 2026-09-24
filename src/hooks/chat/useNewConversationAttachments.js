@@ -9,7 +9,7 @@ import { useAttachmentState } from './useAttachmentState';
  * Simplified version - attachments are now handled via internal tools auto-injection
  * and always use the default attachment bucket.
  */
-export default function useNewConversationAttachments({ selectedParticipant, activeParticipantDetails }) {
+const useNewConversationAttachments = ({ selectedParticipant, activeParticipantDetails }) => {
   // selectedParticipant.version_details is set (fresh) by onSelectVersion whenever the user
   // switches versions. Prefer it when available; fall back to activeParticipantDetails (the
   // background-fetched details from NewChat) for the initial state before any version switch.
@@ -32,4 +32,5 @@ export default function useNewConversationAttachments({ selectedParticipant, act
     onDeleteAttachment,
     onClearAttachments,
   };
-}
+};
+export default useNewConversationAttachments;
