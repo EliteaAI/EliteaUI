@@ -1,8 +1,7 @@
 import { useMemo } from 'react';
 
-import { Box } from '@mui/material';
-
 import { PublishWizardModal } from '@/[fsd]/entities/version';
+import { MenuItemIcon } from '@/[fsd]/shared/ui/icon';
 import PublishIcon from '@/assets/publish-version.svg?react';
 
 import { usePublishSkill } from './usePublishSkill.hooks';
@@ -80,11 +79,7 @@ export const usePublishSkillMenu = onSuccess => {
       canShowPublish
         ? {
             label: 'Publish',
-            icon: (
-              <Box sx={publishSkillMenuStyles().menuIcon}>
-                <PublishIcon sx={{ fontSize: '1rem' }} />
-              </Box>
-            ),
+            icon: <MenuItemIcon icon={PublishIcon} />,
             disabled: isPublishBlockedByPolicy,
             onClick: handleOpenModal,
             ...(isPublishBlockedByPolicy && {
@@ -104,15 +99,3 @@ export const usePublishSkillMenu = onSuccess => {
     publishDialog,
   };
 };
-
-/** @type {MuiSx} */
-const publishSkillMenuStyles = () => ({
-  menuIcon: ({ palette }) => ({
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: '1rem',
-    height: '1rem',
-    color: palette.icon.default,
-  }),
-});

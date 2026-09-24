@@ -11,4 +11,3 @@ export { itemToSpeakableText } from './applicationAnswer.helpers.js';
 export * from './continuationError.helpers';
 export * from './mcpAuthorization.helpers';
 export * from './mentionSkillTrace.helpers';
-export * as ChatSocketHelpers from './chatSocket.helpers.js';

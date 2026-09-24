@@ -4,10 +4,9 @@ import { useFormikContext } from 'formik';
 import { useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { Box } from '@mui/material';
-
 import { UnpublishConfirmModal } from '@/[fsd]/entities/version';
 import { useUnpublishSkillMutation } from '@/[fsd]/features/skill/api';
+import { MenuItemIcon } from '@/[fsd]/shared/ui/icon';
 import { CollectionStatus, PERMISSIONS, PUBLIC_PROJECT_ID } from '@/common/constants';
 import UnpublishIcon from '@/components/Icons/UnpublishIcon';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -90,11 +89,7 @@ export const useUnpublishSkillMenu = onSuccess => {
       canUnpublish
         ? {
             label: 'Unpublish',
-            icon: (
-              <Box sx={unpublishSkillMenuStyles().menuIcon}>
-                <UnpublishIcon sx={{ fontSize: '1rem' }} />
-              </Box>
-            ),
+            icon: <MenuItemIcon icon={UnpublishIcon} />,
             disabled: isUnpublishing,
             onClick: handleOpenConfirm,
           }
@@ -131,15 +126,3 @@ export const useUnpublishSkillMenu = onSuccess => {
     unpublishDialog,
   };
 };
-
-/** @type {MuiSx} */
-const unpublishSkillMenuStyles = () => ({
-  menuIcon: ({ palette }) => ({
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: '1rem',
-    height: '1rem',
-    color: palette.icon.default,
-  }),
-});

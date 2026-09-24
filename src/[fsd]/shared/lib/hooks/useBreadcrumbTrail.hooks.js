@@ -4,7 +4,6 @@ import { useLocation, useParams, useSearchParams } from 'react-router-dom';
 
 import { BreadcrumbHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useApplicationDetailsQuery } from '@/api/applications';
-import { eliteaApi } from '@/api/eliteaApi';
 import { useToolkitsDetailsQuery } from '@/api/toolkits.js';
 import { SearchParams } from '@/common/constants.js';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -12,8 +11,10 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 /**
  * Fully resolved breadcrumb trail for the current route, empty when the route declares no crumbs.
  * Entity name queries reuse the same cache keys as the detail pages so no extra request is issued.
+ * Skill names are passed in by the page (`entityName`), since shared/ cannot query a feature's endpoint.
  */
-export const useBreadcrumbTrail = () => {
+export const useBreadcrumbTrail = (options = {}) => {
+  const { entityName: providedEntityName } = options;
   const { pathname } = useLocation();
   const [searchParams] = useSearchParams();
   const projectId = useSelectedProjectId();
@@ -34,17 +35,10 @@ export const useBreadcrumbTrail = () => {
     { projectId, applicationId: entityId },
     { skip: !isAgent || !projectId || !entityId },
   );
-  // The skill endpoint is injected into eliteaApi by features/skill; reading it from the shared api
-  // object keeps shared/ from importing a feature.
-  const { data: skillDetails } = eliteaApi.endpoints.skillDetails.useQuery(
-    { projectId, skillId: entityId },
-    { skip: !isSkill || !projectId || !entityId },
-  );
-
   const entityName =
+    providedEntityName ||
     toolkitDetails?.name ||
     applicationDetails?.name ||
-    skillDetails?.name ||
     searchParams.get(SearchParams.Name) ||
     '';
 

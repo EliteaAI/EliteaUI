@@ -207,7 +207,12 @@ const EditSkill = memo(() => {
           panelStyle={styles.tabPanel}
           tabsSX={styles.tabContainer}
           leftTabbarSectionSX={styles.leftTabbarSection}
-          leftPart={<BreadcrumbsOrTitle title={data?.name || 'Edit Skill'} />}
+          leftPart={
+            <BreadcrumbsOrTitle
+              title={data?.name || 'Edit Skill'}
+              entityName={data?.name}
+            />
+          }
           tabs={[
             {
               tabBarItems: isFetching ? null : (

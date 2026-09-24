@@ -1,8 +1,10 @@
 import React, { memo } from 'react';
 
-import { Box, alpha } from '@mui/material';
+import { Box } from '@mui/material';
 
 import { useDroppable } from '@dnd-kit/core';
+
+import { getDropTargetStyles } from '../../lib/helpers';
 
 const DroppableFolderItem = memo(props => {
   const { folder, children, isDropDisabled = false, isValidDropTarget = true, isActive = true } = props;
@@ -20,13 +22,7 @@ const DroppableFolderItem = memo(props => {
   const shouldShowDropFeedback = isOver && isActive && isValidDropTarget;
 
   return (
-    <Box
-      sx={{
-        // Add padding when drag is active to ensure border has space
-        padding: shouldShowDropFeedback || (isValidDropTarget && isActive && !isOver) ? '.125rem' : '0rem',
-        transition: 'padding 0.2s ease-in-out',
-      }}
-    >
+    <Box sx={styles.wrapper(shouldShowDropFeedback || (isValidDropTarget && isActive && !isOver))}>
       <Box
         ref={setNodeRef}
         sx={styles.dropZone}
@@ -49,48 +45,12 @@ const DroppableFolderItem = memo(props => {
 DroppableFolderItem.displayName = 'DroppableFolderItem';
 
 /** @type {MuiSx} */
-const droppableFolderItemStyles = () => ({
-  dropZone: {
-    position: 'relative',
-    borderRadius: '.375rem',
-    transition: 'all 0.2s ease-in-out',
-  },
-  activeDropBorder: ({ palette }) => ({
-    position: 'absolute',
-    top: -2,
-    left: -2,
-    right: -2,
-    bottom: -2,
-    border: `.125rem dashed ${palette.primary.main}`,
-    borderRadius: '.5rem',
-    backgroundColor: alpha(palette.primary.main, 0.08),
-    pointerEvents: 'none',
-    zIndex: 999,
-    boxShadow: `0 .25rem .75rem ${alpha(palette.primary.main, 0.19)}`,
-  }),
-  validDropHint: ({ palette }) => ({
-    position: 'absolute',
-    top: -1,
-    left: -1,
-    right: -1,
-    bottom: -1,
-    border: `.0625rem solid ${palette.primary.main}40`,
-    borderRadius: '.4375rem',
-    backgroundColor: `${palette.primary.main}08`,
-    pointerEvents: 'none',
-    zIndex: 998,
-  }),
-  disabledOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: ({ palette }) => palette.background.overlay.dim,
-    borderRadius: '.375rem',
-    pointerEvents: 'none',
-    zIndex: 997,
-  },
-});
+const droppableFolderItemStyles = () =>
+  getDropTargetStyles({
+    glowShadow: '0 0.25rem 0.75rem',
+    glowAlpha: 0.19,
+    hintBorderAlpha: 0.25,
+    hintBackgroundAlpha: 0.03,
+  });
 
 export default DroppableFolderItem;

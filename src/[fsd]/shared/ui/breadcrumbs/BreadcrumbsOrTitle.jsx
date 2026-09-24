@@ -8,13 +8,16 @@ import BackButton from '@/components/BackButton';
 import Breadcrumbs from './Breadcrumbs';
 
 const BreadcrumbsOrTitle = memo(props => {
-  const { title, testId, menus } = props;
+  const { title, testId, menus, entityName } = props;
   const hasBreadcrumbTrail = useHasBreadcrumbTrail();
 
   return (
     <Box sx={styles.root}>
       {hasBreadcrumbTrail ? (
-        <Breadcrumbs menus={menus} />
+        <Breadcrumbs
+          menus={menus}
+          entityName={entityName}
+        />
       ) : (
         <>
           <BackButton />

@@ -39,7 +39,6 @@ const ParticipantAttentionCard = memo(
       styles,
       ...restProps
     } = props;
-    const iconStyles = participantAttentionCardIconStyles();
 
     const {
       isPublishedAgentGone,
@@ -87,7 +86,7 @@ const ParticipantAttentionCard = memo(
             icon={entityIcon}
             entityType={isPipelineParticipant ? 'pipeline' : participant.entity_name}
             editable={false}
-            sx={iconStyles.entityIcon}
+            sx={styles.entityIcon}
             imageStyle={{ width: '1.5rem', height: '1.5rem' }}
             specifiedFontSize="0.875rem"
             isActive={isActive}
@@ -169,6 +168,11 @@ ParticipantAttentionCard.displayName = 'ParticipantAttentionCard';
 
 /** @type {MuiSx} */
 export const participantAttentionCardStyles = ({ isActive, maxWidth }) => ({
+  entityIcon: {
+    width: '1.5rem',
+    height: '1.5rem',
+    minWidth: '1.5rem',
+  },
   attentionWrapper: ({ palette }) => ({
     boxSizing: 'border-box',
     display: 'flex',
@@ -248,15 +252,6 @@ export const participantAttentionCardStyles = ({ isActive, maxWidth }) => ({
       fill: palette.icon.secondary,
     },
   }),
-});
-
-/** @type {MuiSx} */
-const participantAttentionCardIconStyles = () => ({
-  entityIcon: {
-    width: '1.5rem',
-    height: '1.5rem',
-    minWidth: '1.5rem',
-  },
 });
 
 export default ParticipantAttentionCard;
