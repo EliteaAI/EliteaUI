@@ -98,6 +98,7 @@ const projectInfoApi = eliteaApi
 
 export const {
   useProjectInfoQuery,
+  useLazyProjectInfoQuery,
   useUpdateProjectIconMutation,
   useUpdateProjectChatConfigMutation,
   useUploadProjectIconMutation,
