@@ -376,7 +376,7 @@ const Conversations = memo(props => {
           // which renders `data-testid="chat-move-to-create-folder-menuitem"`.
           key: 'chat-move-to-create-folder',
           label: (
-            <Box style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <Box sx={conversationsStyles().menuItemRow}>
               <NewFolder
                 sx={{
                   width: '1rem',
@@ -401,7 +401,7 @@ const Conversations = memo(props => {
           // Renamed from 'back_to_the_list' -> testid family, see note above.
           key: 'chat-move-to-back-to-list',
           label: (
-            <Box style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <Box sx={conversationsStyles().menuItemRow}>
               <FromFolder
                 sx={{
                   width: '1rem',
@@ -583,23 +583,10 @@ const Conversations = memo(props => {
     >
       <Box
         data-tour={CHAT_TOUR_TARGET_IDS.conversations}
-        sx={{ height: '100%', position: 'relative', width: collapsed && !isSmallWindow ? '2.25rem' : '100%' }}
+        sx={styles.root(collapsed, isSmallWindow)}
       >
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'row',
-            justifyContent: collapsed && !isSmallWindow ? 'center' : 'space-between',
-            height: '2rem',
-            alignItems: 'center',
-          }}
-        >
-          <Box
-            display={'flex'}
-            flexDirection={'row'}
-            alignItems={'center'}
-            gap={'0.5rem'}
-          >
+        <Box sx={styles.header(collapsed, isSmallWindow)}>
+          <Box sx={styles.headerActions}>
             {(!collapsed || isSmallWindow) && (
               <Typography
                 data-testid="chat-conversations-heading"
@@ -621,16 +608,7 @@ const Conversations = memo(props => {
                       onClick={clickCreateNewFolder(false)}
                       variant="elitea"
                       color="secondary"
-                      sx={{
-                        minWidth: '28px !important',
-                        width: '28px !important',
-                        height: '1.75rem',
-                        boxSizing: 'border-box',
-                        padding: '6px !important',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
+                      sx={styles.createFolderButton}
                     >
                       <NewFolder
                         sx={{
@@ -676,16 +654,7 @@ const Conversations = memo(props => {
           )}
         </Box>
         {collapsed && !isSmallWindow && (
-          <Box
-            sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '0.5rem',
-              justifyContent: 'center',
-              alignItems: 'center',
-              width: '100%',
-            }}
-          >
+          <Box sx={styles.collapsedActions}>
             <Tooltip
               title="Create folder"
               placement="top"
@@ -697,16 +666,7 @@ const Conversations = memo(props => {
                   onClick={clickCreateNewFolder(true)}
                   variant="elitea"
                   color="secondary"
-                  sx={{
-                    minWidth: '28px !important',
-                    width: '28px !important',
-                    height: '1.75rem',
-                    boxSizing: 'border-box',
-                    padding: '6px !important',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
+                  sx={styles.createFolderButton}
                 >
                   <NewFolder
                     sx={{
@@ -757,20 +717,13 @@ const Conversations = memo(props => {
               key={index}
               animation="wave"
               variant="rectangular"
-              sx={{ marginTop: '0.5rem', height: '4.625rem', width: '100%' }}
+              sx={styles.loadingSkeleton}
             />
           ))
         ) : (
           <Box
             ref={listRef}
-            sx={{
-              marginTop: '0.5rem',
-              display: collapsed && !isSmallWindow ? 'none' : 'flex',
-              flexDirection: 'column',
-              overflowY: 'scroll',
-              height: `calc(100% - 40px)`,
-              paddingBottom: '2rem',
-            }}
+            sx={styles.list(collapsed, isSmallWindow)}
           >
             {renderFoldersSection({ isPinned: true })}
 
@@ -805,16 +758,7 @@ const Conversations = memo(props => {
               debouncedSearchQuery.trim() &&
               conversations.length === 0 &&
               folders.every(f => !f.conversations?.length) && (
-                <Box
-                  sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '32px 16px',
-                    textAlign: 'center',
-                  }}
-                >
+                <Box sx={styles.emptyState}>
                   <Typography
                     variant="bodyMedium"
                     color="text.button.disabled"
@@ -858,6 +802,68 @@ Conversations.displayName = 'Conversations';
 
 /** @type {MuiSx} */
 const conversationsStyles = () => ({
+  root: (collapsed, isSmallWindow) => ({
+    height: '100%',
+    position: 'relative',
+    width: collapsed && !isSmallWindow ? '2.25rem' : '100%',
+  }),
+  header: (collapsed, isSmallWindow) => ({
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: collapsed && !isSmallWindow ? 'center' : 'space-between',
+    height: '2rem',
+    alignItems: 'center',
+  }),
+  headerActions: {
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: '0.5rem',
+  },
+  createFolderButton: {
+    minWidth: '1.75rem !important',
+    width: '1.75rem !important',
+    height: '1.75rem',
+    boxSizing: 'border-box',
+    padding: '0.375rem !important',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  collapsedActions: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.5rem',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+  },
+  loadingSkeleton: {
+    marginTop: '0.5rem',
+    height: '4.625rem',
+    width: '100%',
+  },
+  list: (collapsed, isSmallWindow) => ({
+    marginTop: '0.5rem',
+    display: collapsed && !isSmallWindow ? 'none' : 'flex',
+    flexDirection: 'column',
+    overflowY: 'scroll',
+    height: `calc(100% - 2.5rem)`,
+    paddingBottom: '2rem',
+  }),
+  emptyState: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '2rem 1rem',
+    textAlign: 'center',
+  },
+  menuItemRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.75rem',
+  },
   searchBarContainer: {
     display: 'flex',
     alignItems: 'center',

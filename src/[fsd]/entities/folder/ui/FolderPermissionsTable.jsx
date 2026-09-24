@@ -432,6 +432,7 @@ FolderPermissionsTable.displayName = 'FolderPermissionsTable';
 
 export default FolderPermissionsTable;
 
+/** @type {MuiSx} */
 const folderPermissionsTableStyles = () => ({
   root: {
     height: '100%',

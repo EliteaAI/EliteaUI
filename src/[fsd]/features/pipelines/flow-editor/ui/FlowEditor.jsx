@@ -81,568 +81,574 @@ const nodeTypes = {
   [FlowEditorConstants.PipelineNodeTypes.Hitl]: FlowEditorNodes.HITLNode,
 };
 
-const FlowEditor = forwardRef((props, ref) => {
-  const { setYamlJsonObject, stopRun, sx, disabled, isVisible = true, ...leftProps } = props;
-  const styles = flowEditorStyles();
+const FlowEditor = memo(
+  forwardRef((props, ref) => {
+    const { setYamlJsonObject, stopRun, sx, disabled, isVisible = true, ...leftProps } = props;
+    const styles = flowEditorStyles();
 
-  const trackEvent = useTrackEvent();
+    const trackEvent = useTrackEvent();
 
-  const [expandAll, setExpandAll] = useState(true);
-  const [isStateDrawerOpen, setIsStateDrawerOpen] = useState(false);
+    const [expandAll, setExpandAll] = useState(true);
+    const [isStateDrawerOpen, setIsStateDrawerOpen] = useState(false);
 
-  const { setNodes, setEdges } = useSaveNodesAndEdges();
+    const { setNodes, setEdges } = useSaveNodesAndEdges();
 
-  const {
-    yamlJsonObject,
-    nodes: initialNodes,
-    edges: initialEdges,
-    layout_version,
-    resetFlag,
-  } = useSelector(selectActivePipeline);
-  const yamlJsonObjectRef = useRef(yamlJsonObject);
-  const { nodes: cachedNodes, edges: cachedEdges } = useSelector(state => state.pipelineEditor);
-  const theme = useTheme();
-  const editorRef = useRef();
-  const { fitView, getViewport, getZoom } = useReactFlow();
-  const nodesInitialized = useNodesInitialized({
-    includeHiddenNodes: true,
-  });
+    const {
+      yamlJsonObject,
+      nodes: initialNodes,
+      edges: initialEdges,
+      layout_version,
+      resetFlag,
+    } = useSelector(selectActivePipeline);
+    const yamlJsonObjectRef = useRef(yamlJsonObject);
+    const { nodes: cachedNodes, edges: cachedEdges } = useSelector(state => state.pipelineEditor);
+    const theme = useTheme();
+    const editorRef = useRef();
+    const { fitView, getViewport, getZoom } = useReactFlow();
+    const nodesInitialized = useNodesInitialized({
+      includeHiddenNodes: true,
+    });
 
-  const [editorWidth, setEditorWidth] = useState(622);
-  const [editorHeight, setEditorHeight] = useState(677);
-  const dispatch = useDispatch();
+    const [editorWidth, setEditorWidth] = useState(622);
+    const [editorHeight, setEditorHeight] = useState(677);
+    const dispatch = useDispatch();
 
-  useEffect(() => {
-    yamlJsonObjectRef.current = yamlJsonObject;
-  }, [yamlJsonObject]);
+    useEffect(() => {
+      yamlJsonObjectRef.current = yamlJsonObject;
+    }, [yamlJsonObject]);
 
-  const getViewSize = useCallback(
-    () => ({
-      height: editorHeight,
-      width: editorWidth,
-    }),
-    [editorHeight, editorWidth],
-  );
+    const getViewSize = useCallback(
+      () => ({
+        height: editorHeight,
+        width: editorWidth,
+      }),
+      [editorHeight, editorWidth],
+    );
 
-  const [flowNodes, setFlowNodes] = useNodesState(cachedNodes.length ? cachedNodes : initialNodes);
-  const [flowEdges, setFlowEdges] = useEdgesState(cachedEdges.length ? cachedEdges : initialEdges);
-  const {
-    onStopRun,
-    deleteRunNode,
-    deleteAllRunNodes,
-    onRcvAgentEvent,
-    onResetRunParseStatus,
-    isRunningPipeline,
-    pipelineRunNodes,
-  } = useRunEvent(setFlowNodes, yamlJsonObject, flowNodes);
-
-  const handleStopRun = useCallback(
-    id => {
-      stopRun();
-      onStopRun(id);
-    },
-    [onStopRun, stopRun],
-  );
-
-  const {
-    showDeleteConfirmDlg,
-    nodesToDelete,
-    onBeforeDelete,
-    handleDeleteNode,
-    onConfirmDelete,
-    onCancelDelete,
-  } = useDeleteItems({
-    display: sx?.display,
-    yamlJsonObject,
-    flowNodes,
-    flowEdges,
-    setYamlJsonObject,
-    setFlowNodes,
-    setFlowEdges,
-    disabled,
-  });
-
-  const handleDeleteNodeRef = useRef(handleDeleteNode);
-
-  useEffect(() => {
-    handleDeleteNodeRef.current = handleDeleteNode;
-  }, [handleDeleteNode]);
-
-  const onDeleteNode = useCallback(nodeId => {
-    handleDeleteNodeRef.current(nodeId);
-  }, []);
-
-  useEffect(() => {
-    // Only process resets when this tab is visible. When hidden, selectActivePipeline returns
-    // the active tab's data (global key), so resetFlag/initialNodes/initialEdges belong to a
-    // different pipeline. Processing them here would corrupt state.pipelineEditor for that tab.
-    if (!isVisible || !resetFlag) return;
-
-    setFlowNodes(initialNodes);
-    setFlowEdges(initialEdges);
-    onResetRunParseStatus();
-    dispatch(actions.clearResetFlag());
-
-    // Force sync nodes to Redux after reset to ensure measured heights are available for save
-    // Without this, pipelineEditor.nodes stays empty because flowNodes === initialNodes
-    setTimeout(() => {
-      setNodes(initialNodes);
-      setEdges(initialEdges);
-
-      // Fit view after sync completes
-      if (initialNodes.length > 2) {
-        fitView();
-      }
-    }, 150);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isVisible, resetFlag, initialNodes, initialEdges]);
-
-  useCtrlASelectAll({
-    display: sx?.display,
-    setFlowNodes,
-    setFlowEdges,
-  });
-
-  const onNodeCreateAtPosition = useCallback(
-    (type, position) => {
-      const newNode = FlowEditorHelpers.generateNodeIdByType(type, flowNodes);
-
-      // Check if entry_point needs to be set
-      const shouldSetEntryPoint =
-        type !== FlowEditorConstants.PipelineNodeTypes.Condition &&
-        type !== FlowEditorConstants.PipelineNodeTypes.End &&
-        !yamlJsonObjectRef.current?.entry_point;
-
-      if (type !== FlowEditorConstants.PipelineNodeTypes.Condition) {
-        setYamlJsonObject(prevValue => ({
-          ...(prevValue || {}),
-          nodes: [...(prevValue?.nodes || []), newNode],
-          // Set entry_point to the first added node if not already set
-          ...(shouldSetEntryPoint ? { entry_point: newNode.id } : {}),
-        }));
-      }
-      const label = type === FlowEditorConstants.PipelineNodeTypes.Condition ? 'Condition' : newNode.id;
-
-      const newFlowNode = {
-        id: newNode.id,
-        type,
-        data: {
-          label,
-        },
-        position: position || { x: 0, y: 0 },
-        selected: true,
-      };
-      if (type === FlowEditorConstants.PipelineNodeTypes.Condition) {
-        newFlowNode.data.condition = {
-          condition_input: [],
-          condition_definition: '',
-          conditional_outputs: [],
-          default_output: '',
-        };
-      } else if (type === FlowEditorConstants.PipelineNodeTypes.Decision) {
-        newFlowNode.data.decision = {
-          input: [],
-          description: '',
-          nodes: [],
-          default_output: '',
-        };
-      }
-
-      setFlowNodes(prevNodes => {
-        return [...prevNodes.map(node => ({ ...node, selected: false })), newFlowNode];
-      });
-
-      trackEvent(GA_EVENT_NAMES.PIPELINE_NODE_CREATED, {
-        [GA_EVENT_PARAMS.NODE_TYPE]: type,
-      });
-
-      return newFlowNode;
-    },
-    [flowNodes, setFlowNodes, setYamlJsonObject, trackEvent],
-  );
-
-  const onAddNode = useCallback(
-    type => {
-      const viewPort = getViewport();
-      const viewSize = getViewSize();
-      const { xPos, yPos } = FlowEditorHelpers.calculatePositionForNewNode(
-        (viewSize.width / 2 - 230 - viewPort.x) / viewPort.zoom,
-        (viewSize.height / 2 - 200 - viewPort.y) / viewPort.zoom,
-        flowNodes,
-      );
-
-      return onNodeCreateAtPosition(type, { x: xPos, y: yPos });
-    },
-    [getViewSize, getViewport, flowNodes, onNodeCreateAtPosition],
-  );
-
-  const calculateLayoutNodes = useCallback(
-    (parsedYamlJson, shouldDoLayout, layoutAll, expanded) => {
-      const { nodes, edges } = ParsePipelineHelpers.parseYaml(
-        parsedYamlJson,
-        FlowEditorConstants.ORIENTATION.vertical,
-      );
-      let finalNodes = nodes;
-      let finalEdges = edges;
-      if (shouldDoLayout) {
-        const measuredNodes = FlowEditorHelpers.measureNodes(flowNodes, getZoom(), editorRef);
-        const { nodes: layoutNodes, edges: layoutEdges } = LayoutHelpers.doLayout({
-          nodes,
-          edges,
-          flowNodes: measuredNodes,
-          orientation: FlowEditorConstants.ORIENTATION.vertical,
-          expanded,
-        });
-        finalNodes = layoutNodes;
-        finalEdges = layoutEdges;
-      }
-
-      setFlowNodes(prevNodes => {
-        const newNodes = finalNodes.map(node => {
-          const foundNode = prevNodes.find(
-            prevNode => prevNode.type === node.type && prevNode.id === node.id,
-          );
-          return foundNode
-            ? {
-                ...foundNode,
-                position: !layoutAll ? foundNode.position : node.position,
-                data: { ...node.data },
-              }
-            : node;
-        });
-        return newNodes;
-      });
-      setFlowEdges(pervEdges =>
-        finalEdges.map(edge => {
-          const foundEdge = pervEdges.find(
-            prevEdge =>
-              prevEdge.source === edge.source && prevEdge.target === edge.target && edge.id === prevEdge.id,
-          );
-          return foundEdge ? { ...foundEdge, data: { ...foundEdge.data } } : edge;
-        }),
-      );
-    },
-    [flowNodes, getZoom, setFlowEdges, setFlowNodes],
-  );
-
-  useImperativeHandle(
-    ref,
-    () => ({
-      fitView: () => {
-        if (flowNodes.length > 2) {
-          setTimeout(() => {
-            fitView();
-          }, 100);
-        }
-      },
-      onAddNode,
-      onRcvAgentEvent,
-      setFlowEdges,
-      setFlowNodes,
-      deleteAllRunNodes,
-      getCurrentExpandState: () => expandAll,
-      calculateLayoutNodes: (parsedYamlJson, shouldDoLayout, layoutAll, explicitExpandState) => {
-        const finalExpandState = explicitExpandState !== undefined ? explicitExpandState : expandAll;
-        return calculateLayoutNodes(parsedYamlJson, shouldDoLayout, layoutAll, finalExpandState);
-      },
-      stopCurrentRun: () => onStopRun(pipelineRunNodes[pipelineRunNodes.length - 1]?.id || ''), // stop the last run node
-      hasRunsInProgress: () => pipelineRunNodes.some(node => node.data?.status === PipelineStatus.InProgress),
-    }),
-    [
-      fitView,
-      flowNodes.length,
-      onAddNode,
-      onRcvAgentEvent,
-      setFlowEdges,
-      setFlowNodes,
-      deleteAllRunNodes,
-      calculateLayoutNodes,
-      expandAll,
+    const [flowNodes, setFlowNodes] = useNodesState(cachedNodes.length ? cachedNodes : initialNodes);
+    const [flowEdges, setFlowEdges] = useEdgesState(cachedEdges.length ? cachedEdges : initialEdges);
+    const {
       onStopRun,
+      deleteRunNode,
+      deleteAllRunNodes,
+      onRcvAgentEvent,
+      onResetRunParseStatus,
+      isRunningPipeline,
       pipelineRunNodes,
-    ],
-  );
+    } = useRunEvent(setFlowNodes, yamlJsonObject, flowNodes);
 
-  const onNodesChange = useCallback(
-    changes => {
-      setFlowNodes(nds =>
-        applyNodeChanges(
-          changes,
-          nds.map(nd => ({ ...nd, measured: deepClone(nd.measured) })),
-        ),
-      );
-    },
-    [setFlowNodes],
-  );
-  const onEdgesChange = useCallback(
-    changes => {
-      setFlowEdges(eds =>
-        applyEdgeChanges(
-          changes,
-          eds.map(ed => ({ ...ed })),
-        ),
-      );
-    },
-    [setFlowEdges],
-  );
+    const handleStopRun = useCallback(
+      id => {
+        stopRun();
+        onStopRun(id);
+      },
+      [onStopRun, stopRun],
+    );
 
-  const onConnect = useConnectNodes({
-    flowNodes,
-    yamlJsonObjectRef,
-    setFlowNodes,
-    setYamlJsonObject,
-    setFlowEdges,
-    disabled,
-  });
+    const {
+      showDeleteConfirmDlg,
+      nodesToDelete,
+      onBeforeDelete,
+      handleDeleteNode,
+      onConfirmDelete,
+      onCancelDelete,
+    } = useDeleteItems({
+      display: sx?.display,
+      yamlJsonObject,
+      flowNodes,
+      flowEdges,
+      setYamlJsonObject,
+      setFlowNodes,
+      setFlowEdges,
+      disabled,
+    });
 
-  const {
-    onConnectStart,
-    onConnectEnd,
-    onReconnect,
-    onReconnectEnd,
-    showConnectionDropdown,
-    dropdownPosition,
-    handleDropdownClose,
-    handleNodeSelect,
-    handleNodeCreate,
-    availableTargets,
-    availableNodeTypes,
-  } = useIncompleteEdge({ onConnect, onNodeCreateAtPosition, yamlJsonObjectRef, disabled });
+    const handleDeleteNodeRef = useRef(handleDeleteNode);
 
-  // Keep the handlers object for ReactFlow props
-  const handlers = { onConnectStart, onConnectEnd, onReconnect, onReconnectEnd };
+    useEffect(() => {
+      handleDeleteNodeRef.current = handleDeleteNode;
+    }, [handleDeleteNode]);
 
-  const onReLayout = specifiedExpandAll => {
-    calculateLayoutNodes(yamlJsonObject, true, true, specifiedExpandAll || expandAll);
-    setTimeout(() => {
-      fitView();
-    }, 100);
-  };
+    const onDeleteNode = useCallback(nodeId => {
+      handleDeleteNodeRef.current(nodeId);
+    }, []);
 
-  const onExpandAll = () => {
-    setExpandAll(prev => !prev);
-    setTimeout(() => {
-      onReLayout(!expandAll);
-    }, 200);
-  };
+    useEffect(() => {
+      // Only process resets when this tab is visible. When hidden, selectActivePipeline returns
+      // the active tab's data (global key), so resetFlag/initialNodes/initialEdges belong to a
+      // different pipeline. Processing them here would corrupt state.pipelineEditor for that tab.
+      if (!isVisible || !resetFlag) return;
 
-  const onToggleStateDrawer = useCallback(() => {
-    setIsStateDrawerOpen(prev => !prev);
-  }, []);
+      setFlowNodes(initialNodes);
+      setFlowEdges(initialEdges);
+      onResetRunParseStatus();
+      dispatch(actions.clearResetFlag());
 
-  useEffect(() => {
-    let resizeObserver = null;
-    if ('ResizeObserver' in window) {
-      resizeObserver = new ResizeObserver(entries => {
-        for (const entry of entries) {
-          setEditorHeight(entry.target.offsetHeight);
-          setEditorWidth(entry.target.offsetWidth);
+      // Force sync nodes to Redux after reset to ensure measured heights are available for save
+      // Without this, pipelineEditor.nodes stays empty because flowNodes === initialNodes
+      setTimeout(() => {
+        setNodes(initialNodes);
+        setEdges(initialEdges);
+
+        // Fit view after sync completes
+        if (initialNodes.length > 2) {
+          fitView();
         }
-      });
-      resizeObserver.observe(editorRef.current);
-    }
-    return () => {
-      resizeObserver?.disconnect();
-    };
-  }, []);
+      }, 150);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isVisible, resetFlag, initialNodes, initialEdges]);
 
-  useEffect(() => {
-    if (initialNodes.length > 2) {
+    useCtrlASelectAll({
+      display: sx?.display,
+      setFlowNodes,
+      setFlowEdges,
+    });
+
+    const onNodeCreateAtPosition = useCallback(
+      (type, position) => {
+        const newNode = FlowEditorHelpers.generateNodeIdByType(type, flowNodes);
+
+        // Check if entry_point needs to be set
+        const shouldSetEntryPoint =
+          type !== FlowEditorConstants.PipelineNodeTypes.Condition &&
+          type !== FlowEditorConstants.PipelineNodeTypes.End &&
+          !yamlJsonObjectRef.current?.entry_point;
+
+        if (type !== FlowEditorConstants.PipelineNodeTypes.Condition) {
+          setYamlJsonObject(prevValue => ({
+            ...(prevValue || {}),
+            nodes: [...(prevValue?.nodes || []), newNode],
+            // Set entry_point to the first added node if not already set
+            ...(shouldSetEntryPoint ? { entry_point: newNode.id } : {}),
+          }));
+        }
+        const label = type === FlowEditorConstants.PipelineNodeTypes.Condition ? 'Condition' : newNode.id;
+
+        const newFlowNode = {
+          id: newNode.id,
+          type,
+          data: {
+            label,
+          },
+          position: position || { x: 0, y: 0 },
+          selected: true,
+        };
+        if (type === FlowEditorConstants.PipelineNodeTypes.Condition) {
+          newFlowNode.data.condition = {
+            condition_input: [],
+            condition_definition: '',
+            conditional_outputs: [],
+            default_output: '',
+          };
+        } else if (type === FlowEditorConstants.PipelineNodeTypes.Decision) {
+          newFlowNode.data.decision = {
+            input: [],
+            description: '',
+            nodes: [],
+            default_output: '',
+          };
+        }
+
+        setFlowNodes(prevNodes => {
+          return [...prevNodes.map(node => ({ ...node, selected: false })), newFlowNode];
+        });
+
+        trackEvent(GA_EVENT_NAMES.PIPELINE_NODE_CREATED, {
+          [GA_EVENT_PARAMS.NODE_TYPE]: type,
+        });
+
+        return newFlowNode;
+      },
+      [flowNodes, setFlowNodes, setYamlJsonObject, trackEvent],
+    );
+
+    const onAddNode = useCallback(
+      type => {
+        const viewPort = getViewport();
+        const viewSize = getViewSize();
+        const { xPos, yPos } = FlowEditorHelpers.calculatePositionForNewNode(
+          (viewSize.width / 2 - 230 - viewPort.x) / viewPort.zoom,
+          (viewSize.height / 2 - 200 - viewPort.y) / viewPort.zoom,
+          flowNodes,
+        );
+
+        return onNodeCreateAtPosition(type, { x: xPos, y: yPos });
+      },
+      [getViewSize, getViewport, flowNodes, onNodeCreateAtPosition],
+    );
+
+    const calculateLayoutNodes = useCallback(
+      (parsedYamlJson, shouldDoLayout, layoutAll, expanded) => {
+        const { nodes, edges } = ParsePipelineHelpers.parseYaml(
+          parsedYamlJson,
+          FlowEditorConstants.ORIENTATION.vertical,
+        );
+        let finalNodes = nodes;
+        let finalEdges = edges;
+        if (shouldDoLayout) {
+          const measuredNodes = FlowEditorHelpers.measureNodes(flowNodes, getZoom(), editorRef);
+          const { nodes: layoutNodes, edges: layoutEdges } = LayoutHelpers.doLayout({
+            nodes,
+            edges,
+            flowNodes: measuredNodes,
+            orientation: FlowEditorConstants.ORIENTATION.vertical,
+            expanded,
+          });
+          finalNodes = layoutNodes;
+          finalEdges = layoutEdges;
+        }
+
+        setFlowNodes(prevNodes => {
+          const newNodes = finalNodes.map(node => {
+            const foundNode = prevNodes.find(
+              prevNode => prevNode.type === node.type && prevNode.id === node.id,
+            );
+            return foundNode
+              ? {
+                  ...foundNode,
+                  position: !layoutAll ? foundNode.position : node.position,
+                  data: { ...node.data },
+                }
+              : node;
+          });
+          return newNodes;
+        });
+        setFlowEdges(pervEdges =>
+          finalEdges.map(edge => {
+            const foundEdge = pervEdges.find(
+              prevEdge =>
+                prevEdge.source === edge.source && prevEdge.target === edge.target && edge.id === prevEdge.id,
+            );
+            return foundEdge ? { ...foundEdge, data: { ...foundEdge.data } } : edge;
+          }),
+        );
+      },
+      [flowNodes, getZoom, setFlowEdges, setFlowNodes],
+    );
+
+    useImperativeHandle(
+      ref,
+      () => ({
+        fitView: () => {
+          if (flowNodes.length > 2) {
+            setTimeout(() => {
+              fitView();
+            }, 100);
+          }
+        },
+        onAddNode,
+        onRcvAgentEvent,
+        setFlowEdges,
+        setFlowNodes,
+        deleteAllRunNodes,
+        getCurrentExpandState: () => expandAll,
+        calculateLayoutNodes: (parsedYamlJson, shouldDoLayout, layoutAll, explicitExpandState) => {
+          const finalExpandState = explicitExpandState !== undefined ? explicitExpandState : expandAll;
+          return calculateLayoutNodes(parsedYamlJson, shouldDoLayout, layoutAll, finalExpandState);
+        },
+        stopCurrentRun: () => onStopRun(pipelineRunNodes[pipelineRunNodes.length - 1]?.id || ''), // stop the last run node
+        hasRunsInProgress: () =>
+          pipelineRunNodes.some(node => node.data?.status === PipelineStatus.InProgress),
+      }),
+      [
+        fitView,
+        flowNodes.length,
+        onAddNode,
+        onRcvAgentEvent,
+        setFlowEdges,
+        setFlowNodes,
+        deleteAllRunNodes,
+        calculateLayoutNodes,
+        expandAll,
+        onStopRun,
+        pipelineRunNodes,
+      ],
+    );
+
+    const onNodesChange = useCallback(
+      changes => {
+        setFlowNodes(nds =>
+          applyNodeChanges(
+            changes,
+            nds.map(nd => ({ ...nd, measured: deepClone(nd.measured) })),
+          ),
+        );
+      },
+      [setFlowNodes],
+    );
+    const onEdgesChange = useCallback(
+      changes => {
+        setFlowEdges(eds =>
+          applyEdgeChanges(
+            changes,
+            eds.map(ed => ({ ...ed })),
+          ),
+        );
+      },
+      [setFlowEdges],
+    );
+
+    const onConnect = useConnectNodes({
+      flowNodes,
+      yamlJsonObjectRef,
+      setFlowNodes,
+      setYamlJsonObject,
+      setFlowEdges,
+      disabled,
+    });
+
+    const {
+      onConnectStart,
+      onConnectEnd,
+      onReconnect,
+      onReconnectEnd,
+      showConnectionDropdown,
+      dropdownPosition,
+      handleDropdownClose,
+      handleNodeSelect,
+      handleNodeCreate,
+      availableTargets,
+      availableNodeTypes,
+    } = useIncompleteEdge({ onConnect, onNodeCreateAtPosition, yamlJsonObjectRef, disabled });
+
+    // Keep the handlers object for ReactFlow props
+    const handlers = { onConnectStart, onConnectEnd, onReconnect, onReconnectEnd };
+
+    const onReLayout = specifiedExpandAll => {
+      calculateLayoutNodes(yamlJsonObject, true, true, specifiedExpandAll || expandAll);
       setTimeout(() => {
         fitView();
       }, 100);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialNodes.length]);
+    };
 
-  useEffect(() => {
-    if (JSON.stringify(flowNodes) !== JSON.stringify(initialNodes) && !isRunningPipeline) {
+    const onExpandAll = () => {
+      setExpandAll(prev => !prev);
       setTimeout(() => {
-        setNodes(flowNodes);
-      }, 100);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [flowNodes]);
+        onReLayout(!expandAll);
+      }, 200);
+    };
 
-  useEffect(() => {
-    if (JSON.stringify(flowEdges) !== JSON.stringify(initialEdges)) {
-      setTimeout(() => {
-        setEdges(flowEdges);
-      }, 100);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [flowEdges]);
+    const onToggleStateDrawer = useCallback(() => {
+      setIsStateDrawerOpen(prev => !prev);
+    }, []);
 
-  useEffect(() => {
-    if (layout_version !== FlowEditorConstants.LAYOUT_VERSION && nodesInitialized) {
-      onReLayout();
-      dispatch(actions.setLayoutVersion(FlowEditorConstants.LAYOUT_VERSION));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [layout_version, nodesInitialized]);
+    useEffect(() => {
+      let resizeObserver = null;
+      if ('ResizeObserver' in window) {
+        resizeObserver = new ResizeObserver(entries => {
+          for (const entry of entries) {
+            setEditorHeight(entry.target.offsetHeight);
+            setEditorWidth(entry.target.offsetWidth);
+          }
+        });
+        resizeObserver.observe(editorRef.current);
+      }
+      return () => {
+        resizeObserver?.disconnect();
+      };
+    }, []);
 
-  return (
-    <Box
-      sx={[styles.container, sx]}
-      data-tour={PIPELINE_TOUR_TARGET_IDS.flowDesigner}
-      ref={editorRef}
-      {...leftProps}
-    >
-      <Box sx={styles.stateBar}>
-        <FlowEditorNodes.RunStateNodeGroup
-          deleteRunNode={deleteRunNode}
-          handleStopRun={handleStopRun}
-          yamlJsonObject={yamlJsonObject}
+    useEffect(() => {
+      if (initialNodes.length > 2) {
+        setTimeout(() => {
+          fitView();
+        }, 100);
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [initialNodes.length]);
+
+    useEffect(() => {
+      if (JSON.stringify(flowNodes) !== JSON.stringify(initialNodes) && !isRunningPipeline) {
+        setTimeout(() => {
+          setNodes(flowNodes);
+        }, 100);
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [flowNodes]);
+
+    useEffect(() => {
+      if (JSON.stringify(flowEdges) !== JSON.stringify(initialEdges)) {
+        setTimeout(() => {
+          setEdges(flowEdges);
+        }, 100);
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [flowEdges]);
+
+    useEffect(() => {
+      if (layout_version !== FlowEditorConstants.LAYOUT_VERSION && nodesInitialized) {
+        onReLayout();
+        dispatch(actions.setLayoutVersion(FlowEditorConstants.LAYOUT_VERSION));
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [layout_version, nodesInitialized]);
+
+    return (
+      <Box
+        sx={[styles.container, sx]}
+        data-tour={PIPELINE_TOUR_TARGET_IDS.flowDesigner}
+        ref={editorRef}
+        {...leftProps}
+      >
+        <Box sx={styles.stateBar}>
+          <FlowEditorNodes.RunStateNodeGroup
+            deleteRunNode={deleteRunNode}
+            handleStopRun={handleStopRun}
+            yamlJsonObject={yamlJsonObject}
+            editorHeight={editorHeight}
+            editorWidth={editorWidth}
+            nodes={pipelineRunNodes}
+          />
+        </Box>
+        {!isStateDrawerOpen && (
+          <Box
+            sx={styles.stateButton(theme)}
+            data-tour={PIPELINE_TOUR_TARGET_IDS.state}
+          >
+            <Button.BaseBtn
+              variant={BUTTON_VARIANTS.elitea}
+              color={BUTTON_COLORS.secondary}
+              onClick={onToggleStateDrawer}
+              startIcon={
+                <Box sx={styles.iconScale}>
+                  <ClipboardIcon />
+                </Box>
+              }
+              sx={styles.stateDrawerButton}
+              data-testid="pipeline-state-drawer-toggle-button"
+            >
+              State
+            </Button.BaseBtn>
+          </Box>
+        )}
+        <FlowEditorProvider
+          setFlowEdges={setFlowEdges}
+          setFlowNodes={setFlowNodes}
           editorHeight={editorHeight}
           editorWidth={editorWidth}
-          nodes={pipelineRunNodes}
+          yamlJsonObject={yamlJsonObject}
+          setYamlJsonObject={setYamlJsonObject}
+          deleteRunNode={deleteRunNode}
+          isRunningPipeline={isRunningPipeline}
+          handleDeleteNode={onDeleteNode}
+          expandAll={expandAll}
+          disabled={disabled}
+        >
+          <ReactFlow
+            panOnDrag // figma/sketch/design tool controls, panOnDrag should be disabled
+            panOnScroll // figma/sketch/design tool controls, panOnScroll should be enabled
+            selectionOnDrag // figma/sketch/design tool controls, selectionOnDrag should be enabled
+            nodes={flowNodes}
+            onNodesChange={onNodesChange}
+            edges={flowEdges}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            onBeforeDelete={onBeforeDelete}
+            {...handlers}
+            colorMode={theme.palette.mode === 'dark' ? 'dark' : 'light'}
+            proOptions={{ hideAttribution: true }}
+            nodeTypes={nodeTypes}
+            edgeTypes={edgeTypes}
+            zoomOnDoubleClick={false}
+            selectionMode={SelectionMode.Partial} // enabled adding nodes to a selection that are only partially selected.
+            minZoom={0.1}
+            defaultViewport={styles.defaultViewport}
+          >
+            <Background
+              color={theme.palette.border.lines}
+              bgColor={theme.palette.background.default.secondary}
+              size={1.5}
+              offset={[0, 2]}
+              gap={20}
+            />
+            <Box sx={styles.flowControls}>
+              <Controls>
+                <Tooltip
+                  title="Toggle cards size"
+                  placement="right"
+                >
+                  <Box
+                    component="span"
+                    sx={{
+                      display: 'inline-flex',
+                      borderBottom: `0.0625rem solid ${theme.palette.divider}`,
+                    }}
+                  >
+                    <ControlButton onClick={onExpandAll}>
+                      {expandAll ? (
+                        <CollapseIcon
+                          sx={styles.icon}
+                          fill={theme.palette.icon.secondary}
+                        />
+                      ) : (
+                        <ExpandIcon
+                          sx={styles.icon}
+                          fill={theme.palette.icon.secondary}
+                        />
+                      )}
+                    </ControlButton>
+                  </Box>
+                </Tooltip>
+                <Tooltip
+                  title="Auto-arrange"
+                  placement="right"
+                >
+                  <Box
+                    component="span"
+                    sx={{ display: 'inline-flex' }}
+                  >
+                    <ControlButton onClick={onReLayout}>
+                      <PolylineOutlinedIcon
+                        sx={styles.icon}
+                        fill={theme.palette.icon.secondary}
+                      />
+                    </ControlButton>
+                  </Box>
+                </Tooltip>
+              </Controls>
+            </Box>
+          </ReactFlow>
+        </FlowEditorProvider>
+        <FlowEditorState.StateDrawer
+          isOpen={isStateDrawerOpen}
+          onClose={onToggleStateDrawer}
+          setYamlJsonObject={setYamlJsonObject}
+          yamlJsonObject={yamlJsonObject}
+          disabled={disabled}
+        />
+        <Modal.DeleteEntityModal
+          open={showDeleteConfirmDlg}
+          onClose={onCancelDelete}
+          onConfirm={onConfirmDelete}
+          name={nodesToDelete[0]?.data?.label || nodesToDelete[0]?.id || ''}
+          inlineExtraContent=" node? It can't be restored."
+        />
+
+        {/* Connection dropdown for incomplete edges */}
+        <FlowEditorSettings.ConnectionDropdown
+          open={showConnectionDropdown}
+          anchorPosition={dropdownPosition}
+          targetNodes={availableTargets}
+          availableNodeTypes={availableNodeTypes}
+          onNodeSelect={handleNodeSelect}
+          onNodeCreate={handleNodeCreate}
+          onClose={handleDropdownClose}
         />
       </Box>
-      {!isStateDrawerOpen && (
-        <Box
-          position="absolute"
-          top={theme.spacing(2.5)}
-          right={theme.spacing(2.5)}
-          zIndex={100}
-          data-tour={PIPELINE_TOUR_TARGET_IDS.state}
-        >
-          <Button.BaseBtn
-            variant={BUTTON_VARIANTS.elitea}
-            color={BUTTON_COLORS.secondary}
-            onClick={onToggleStateDrawer}
-            startIcon={
-              <Box sx={styles.iconScale}>
-                <ClipboardIcon />
-              </Box>
-            }
-            sx={styles.stateDrawerButton}
-            data-testid="pipeline-state-drawer-toggle-button"
-          >
-            State
-          </Button.BaseBtn>
-        </Box>
-      )}
-      <FlowEditorProvider
-        setFlowEdges={setFlowEdges}
-        setFlowNodes={setFlowNodes}
-        editorHeight={editorHeight}
-        editorWidth={editorWidth}
-        yamlJsonObject={yamlJsonObject}
-        setYamlJsonObject={setYamlJsonObject}
-        deleteRunNode={deleteRunNode}
-        isRunningPipeline={isRunningPipeline}
-        handleDeleteNode={onDeleteNode}
-        expandAll={expandAll}
-        disabled={disabled}
-      >
-        <ReactFlow
-          panOnDrag // figma/sketch/design tool controls, panOnDrag should be disabled
-          panOnScroll // figma/sketch/design tool controls, panOnScroll should be enabled
-          selectionOnDrag // figma/sketch/design tool controls, selectionOnDrag should be enabled
-          nodes={flowNodes}
-          onNodesChange={onNodesChange}
-          edges={flowEdges}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          onBeforeDelete={onBeforeDelete}
-          {...handlers}
-          colorMode={theme.palette.mode === 'dark' ? 'dark' : 'light'}
-          proOptions={{ hideAttribution: true }}
-          nodeTypes={nodeTypes}
-          edgeTypes={edgeTypes}
-          zoomOnDoubleClick={false}
-          selectionMode={SelectionMode.Partial} // enabled adding nodes to a selection that are only partially selected.
-          minZoom={0.1}
-          defaultViewport={styles.defaultViewport}
-        >
-          <Background
-            color={theme.palette.border.lines}
-            bgColor={theme.palette.background.default.secondary}
-            size={1.5}
-            offset={[0, 2]}
-            gap={20}
-          />
-          <Box sx={styles.flowControls}>
-            <Controls>
-              <Tooltip
-                title="Toggle cards size"
-                placement="right"
-              >
-                <Box
-                  component="span"
-                  sx={{
-                    display: 'inline-flex',
-                    borderBottom: `1px solid ${theme.palette.divider}`,
-                  }}
-                >
-                  <ControlButton onClick={onExpandAll}>
-                    {expandAll ? (
-                      <CollapseIcon
-                        sx={styles.icon}
-                        fill={theme.palette.icon.secondary}
-                      />
-                    ) : (
-                      <ExpandIcon
-                        sx={styles.icon}
-                        fill={theme.palette.icon.secondary}
-                      />
-                    )}
-                  </ControlButton>
-                </Box>
-              </Tooltip>
-              <Tooltip
-                title="Auto-arrange"
-                placement="right"
-              >
-                <Box
-                  component="span"
-                  sx={{ display: 'inline-flex' }}
-                >
-                  <ControlButton onClick={onReLayout}>
-                    <PolylineOutlinedIcon
-                      sx={styles.icon}
-                      fill={theme.palette.icon.secondary}
-                    />
-                  </ControlButton>
-                </Box>
-              </Tooltip>
-            </Controls>
-          </Box>
-        </ReactFlow>
-      </FlowEditorProvider>
-      <FlowEditorState.StateDrawer
-        isOpen={isStateDrawerOpen}
-        onClose={onToggleStateDrawer}
-        setYamlJsonObject={setYamlJsonObject}
-        yamlJsonObject={yamlJsonObject}
-        disabled={disabled}
-      />
-      <Modal.DeleteEntityModal
-        open={showDeleteConfirmDlg}
-        onClose={onCancelDelete}
-        onConfirm={onConfirmDelete}
-        name={nodesToDelete[0]?.data?.label || nodesToDelete[0]?.id || ''}
-        inlineExtraContent=" node? It can't be restored."
-      />
-
-      {/* Connection dropdown for incomplete edges */}
-      <FlowEditorSettings.ConnectionDropdown
-        open={showConnectionDropdown}
-        anchorPosition={dropdownPosition}
-        targetNodes={availableTargets}
-        availableNodeTypes={availableNodeTypes}
-        onNodeSelect={handleNodeSelect}
-        onNodeCreate={handleNodeCreate}
-        onClose={handleDropdownClose}
-      />
-    </Box>
-  );
-});
+    );
+  }),
+);
 
 FlowEditor.displayName = 'FlowEditor';
 
 /** @type {MuiSx} */
 const flowEditorStyles = () => ({
+  stateButton: theme => ({
+    position: 'absolute',
+    top: theme.spacing(2.5),
+    right: theme.spacing(2.5),
+    zIndex: 100,
+  }),
   container: {
     height: '100%',
     position: 'relative',
@@ -691,7 +697,7 @@ const flowEditorStyles = () => ({
   }),
   flowControls: ({ palette }) => ({
     '& .react-flow__controls': {
-      border: `1px solid ${palette.border.lines}`,
+      border: `0.0625rem solid ${palette.border.lines}`,
       borderRadius: '0.25rem',
     },
     '& .react-flow__controls-button svg': {
@@ -699,7 +705,7 @@ const flowEditorStyles = () => ({
     },
     '& .react-flow__controls-button': {
       backgroundColor: palette.background.paper,
-      borderBottom: `1px solid ${palette.divider}`,
+      borderBottom: `0.0625rem solid ${palette.divider}`,
       '&:hover': {
         backgroundColor: palette.components.table.border,
         '& svg': {
@@ -716,4 +722,4 @@ const flowEditorStyles = () => ({
   }),
 });
 
-export default memo(FlowEditor);
+export default FlowEditor;

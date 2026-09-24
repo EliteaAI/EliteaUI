@@ -338,7 +338,7 @@ const restrictAccessDialogStyles = () => ({
   warningBanner: ({ palette }) => ({
     padding: '0.75rem',
     borderRadius: '0.375rem',
-    backgroundColor: palette.background.warning || 'rgba(255, 193, 7, 0.12)',
+    backgroundColor: palette.background.warning,
     border: `0.0625rem solid ${palette.warning.main}`,
   }),
   warningText: ({ palette }) => ({

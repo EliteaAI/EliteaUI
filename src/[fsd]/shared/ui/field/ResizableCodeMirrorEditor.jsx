@@ -134,7 +134,7 @@ const resizableCodeMirrorEditorStyles = ({ minHeight }) => ({
     overflow: 'auto',
     minHeight,
     height: 200,
-    border: `1px solid ${palette.border.default}`,
+    border: `0.0625rem solid ${palette.border.default}`,
     borderRadius: '0.375rem',
     transition: 'border-color 0.2s ease',
 

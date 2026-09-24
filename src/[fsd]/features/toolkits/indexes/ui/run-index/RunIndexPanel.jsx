@@ -8,7 +8,7 @@ import { Box, Typography } from '@mui/material';
 
 import { useConversationTranscript } from '@/[fsd]/entities/run-history/lib/hooks';
 import { McpAuthModal, useMcpAuthModal } from '@/[fsd]/features/mcp';
-import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
+import { DrawerPageHeader } from '@/[fsd]/features/settings/ui/drawer-page';
 import {
   useDeleteIndexItemMutation,
   useSaveIndexConfigurationMutation,

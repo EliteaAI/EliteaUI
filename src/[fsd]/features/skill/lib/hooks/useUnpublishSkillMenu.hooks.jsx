@@ -91,16 +91,7 @@ export const useUnpublishSkillMenu = onSuccess => {
         ? {
             label: 'Unpublish',
             icon: (
-              <Box
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  width: '1rem',
-                  height: '1rem',
-                  color: ({ palette }) => palette.icon.default,
-                }}
-              >
+              <Box sx={unpublishSkillMenuStyles().menuIcon}>
                 <UnpublishIcon sx={{ fontSize: '1rem' }} />
               </Box>
             ),
@@ -140,3 +131,15 @@ export const useUnpublishSkillMenu = onSuccess => {
     unpublishDialog,
   };
 };
+
+/** @type {MuiSx} */
+const unpublishSkillMenuStyles = () => ({
+  menuIcon: ({ palette }) => ({
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '1rem',
+    height: '1rem',
+    color: palette.icon.default,
+  }),
+});

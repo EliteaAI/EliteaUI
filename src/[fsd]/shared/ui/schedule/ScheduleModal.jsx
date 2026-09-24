@@ -326,7 +326,7 @@ const scheduleModalStyles = () => ({
     width: '100%',
     borderRadius: '0.5rem',
     padding: '0.5rem',
-    border: ({ palette }) => `1px solid ${palette.border.error}`,
+    border: ({ palette }) => `0.0625rem solid ${palette.border.error}`,
     background: ({ palette }) => palette.background.error,
     color: ({ palette }) => palette.text.error,
     gap: '0.5rem',

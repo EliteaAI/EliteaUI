@@ -111,16 +111,7 @@ export const useUnpublishVersionMenu = onSuccess => {
             key: 'unpublish-version',
             label: 'Unpublish',
             icon: (
-              <Box
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  width: '1rem',
-                  height: '1rem',
-                  color: ({ palette }) => palette.icon.default,
-                }}
-              >
+              <Box sx={unpublishVersionMenuStyles().menuIcon}>
                 <UnpublishIcon sx={{ fontSize: '1rem' }} />
               </Box>
             ),
@@ -159,3 +150,15 @@ export const useUnpublishVersionMenu = onSuccess => {
     unpublishDialog,
   };
 };
+
+/** @type {MuiSx} */
+const unpublishVersionMenuStyles = () => ({
+  menuIcon: ({ palette }) => ({
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '1rem',
+    height: '1rem',
+    color: palette.icon.default,
+  }),
+});

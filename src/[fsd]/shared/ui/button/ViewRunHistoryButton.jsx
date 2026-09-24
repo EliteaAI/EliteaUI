@@ -16,6 +16,7 @@ const ViewRunHistoryButton = memo(props => {
     testId = 'pipeline-history-tab',
   } = props;
   const theme = useTheme();
+  const styles = viewRunHistoryButtonStyles();
 
   const handleShowHistory = useCallback(
     event => {
@@ -41,7 +42,7 @@ const ViewRunHistoryButton = memo(props => {
             onClick={handleShowHistory}
           >
             <ClockIcon
-              style={{ fontSize: 16 }}
+              style={styles.clockIcon}
               fill={theme.palette.icon.secondary}
             />
           </IconButton>
@@ -65,5 +66,13 @@ const ViewRunHistoryButton = memo(props => {
 });
 
 ViewRunHistoryButton.displayName = 'ViewRunHistoryButton';
+
+/** @type {MuiSx} */
+const viewRunHistoryButtonStyles = () => ({
+  // SVGR icon: plain style object, not sx.
+  clockIcon: {
+    fontSize: '1rem',
+  },
+});
 
 export default ViewRunHistoryButton;

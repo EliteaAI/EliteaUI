@@ -41,7 +41,7 @@ const usageTooltipStyles = () => ({
     padding: '0.5rem 0.75rem',
     borderRadius: '0.375rem',
     backgroundColor: palette.background.default.secondary,
-    border: `1px solid ${palette.border.default}`,
+    border: `0.0625rem solid ${palette.border.default}`,
   }),
   label: ({ palette }) => ({
     color: palette.text.secondary,

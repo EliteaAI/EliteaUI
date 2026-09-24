@@ -104,12 +104,7 @@ const DiscreteSlider = memo(props => {
                   <Box
                     onClick={handleMarkClick(mark.value)}
                     data-testid={markTestIdPrefix ? `${markTestIdPrefix}-${mark.value}` : undefined}
-                    sx={{
-                      ...styles.markTooltipTrigger,
-                      left: `${position}%`,
-                      // Hide trigger at current value to allow thumb dragging
-                      pointerEvents: isCurrentValue ? 'none' : 'auto',
-                    }}
+                    sx={[styles.markTooltipTrigger, styles.markPosition(position, isCurrentValue)]}
                   />
                 </Tooltip>
               );
@@ -125,6 +120,11 @@ DiscreteSlider.displayName = 'DiscreteSlider';
 
 /** @type {MuiSx} */
 const styles = {
+  markPosition: (position, isCurrentValue) => ({
+    left: `${position}%`,
+    // Hide trigger at current value to allow thumb dragging
+    pointerEvents: isCurrentValue ? 'none' : 'auto',
+  }),
   container: {
     display: 'flex',
     flexDirection: 'column',

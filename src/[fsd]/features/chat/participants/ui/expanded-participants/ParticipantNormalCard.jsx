@@ -38,6 +38,7 @@ const ParticipantNormalCard = memo(
       styles,
       ...restProps
     } = props;
+    const iconStyles = participantNormalCardIconStyles();
 
     const { hasRemoteMcpLoggedIn, spConfig, spOAuthLoggedIn, openApiConfig, openAPIOAuthLoggedIn } = status;
 
@@ -82,7 +83,7 @@ const ParticipantNormalCard = memo(
                     : participant.entity_name
             }
             editable={false}
-            sx={{ width: '1.5rem', height: '1.5rem', minWidth: '1.5rem' }}
+            sx={iconStyles.entityIcon}
             imageStyle={{ width: '1.5rem', height: '1.5rem' }}
             specifiedFontSize="0.875rem"
             isActive={isActive}
@@ -244,6 +245,15 @@ export const participantNormalCardStyles = ({ collapsed, isActive, maxWidth, isB
   }),
   attentionMessage: {
     wordBreak: 'break-word',
+  },
+});
+
+/** @type {MuiSx} */
+const participantNormalCardIconStyles = () => ({
+  entityIcon: {
+    width: '1.5rem',
+    height: '1.5rem',
+    minWidth: '1.5rem',
   },
 });
 

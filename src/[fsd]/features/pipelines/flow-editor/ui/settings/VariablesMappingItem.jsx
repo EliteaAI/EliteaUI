@@ -22,6 +22,8 @@ const variableSourceOptions = [
 
 const VariablesMappingItem = memo(props => {
   const { fieldLabel, fieldName, fieldValue, onChangeMapping, disabled } = props;
+  const styles = variablesMappingItemStyles();
+
   const inputOptions = useInputOptions();
   const theme = useTheme();
 
@@ -74,12 +76,7 @@ const VariablesMappingItem = memo(props => {
   }, [fieldValue.source, onChangeFieldValue, showSource]);
 
   return (
-    <Box
-      display="flex"
-      flexDirection="column"
-      alignItems="flex-start"
-      paddingTop="1rem"
-    >
+    <Box sx={styles.root}>
       <Typography
         borderRadius=".25rem"
         border={`.0625rem solid ${theme.palette.components.flowEditor.node.border}`}
@@ -93,14 +90,7 @@ const VariablesMappingItem = memo(props => {
       >
         {label}
       </Typography>
-      <Box
-        marginTop="1rem"
-        display="flex"
-        gap="1.1875rem"
-        width="100%"
-        alignItems="flex-end"
-        height="2.8125rem"
-      >
+      <Box sx={styles.fieldsRow}>
         <Box sx={{ width: '7.25rem' }}>
           <SingleSelect
             sx={{ marginBottom: '0rem' }}
@@ -175,5 +165,23 @@ const VariablesMappingItem = memo(props => {
 });
 
 VariablesMappingItem.displayName = 'VariablesMappingItem';
+
+/** @type {MuiSx} */
+const variablesMappingItemStyles = () => ({
+  root: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    paddingTop: '1rem',
+  },
+  fieldsRow: {
+    marginTop: '1rem',
+    display: 'flex',
+    gap: '1.1875rem',
+    width: '100%',
+    alignItems: 'flex-end',
+    height: '2.8125rem',
+  },
+});
 
 export default VariablesMappingItem;

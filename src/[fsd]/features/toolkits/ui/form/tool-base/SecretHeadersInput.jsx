@@ -205,6 +205,7 @@ const SecretHeadersInput = memo(props => {
 
 SecretHeadersInput.displayName = 'SecretHeadersInput';
 
+/** @type {MuiSx} */
 const secretHeadersInputStyles = () => ({
   root: {
     display: 'flex',

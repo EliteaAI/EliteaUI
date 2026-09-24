@@ -11,7 +11,7 @@ import { useGetIndexScheduleQuery } from '@/[fsd]/features/toolkits/indexes/api'
 import { IndexStatuses } from '@/[fsd]/features/toolkits/indexes/lib/constants';
 import { useIndexesListPolling } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
 import { selectIndexesList } from '@/[fsd]/features/toolkits/indexes/model';
-import RunIndexPanel from '@/[fsd]/features/toolkits/indexes/ui/run-index/RunIndexPanel';
+import { RunIndexPanel } from '@/[fsd]/features/toolkits/indexes/ui';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import Breadcrumbs from '@/[fsd]/shared/ui/breadcrumbs';
 import { useToolkitsDetailsQuery } from '@/api/toolkits.js';

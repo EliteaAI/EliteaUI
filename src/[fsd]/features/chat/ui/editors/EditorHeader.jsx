@@ -1,3 +1,5 @@
+import { memo } from 'react';
+
 import { useFormikContext } from 'formik';
 
 import { Box, IconButton, Typography } from '@mui/material';
@@ -23,19 +25,21 @@ import useIsPipelineYamlCodeDirty from '@/pages/Pipelines/useIsPipelineYamlCodeD
  * @param {string} [publicLabelTestId] - Optional data-testid for the "Public" label Typography
  *   shown instead of Discard/Save when `isPublic` is true (ELITEA-2075).
  */
-const EditorHeader = ({
-  title,
-  subtitle,
-  onCancel,
-  onDiscard,
-  saveButton,
-  isPublic,
-  isDirty,
-  titleTestId,
-  subtitleTestId,
-  closeButtonTestId,
-  publicLabelTestId,
-}) => {
+const EditorHeader = memo(props => {
+  const {
+    title,
+    subtitle,
+    onCancel,
+    onDiscard,
+    saveButton,
+    isPublic,
+    isDirty,
+    titleTestId,
+    subtitleTestId,
+    closeButtonTestId,
+    publicLabelTestId,
+  } = props;
+
   const theme = useTheme();
   const { discardApplicationChanges } = useDiscardApplicationChanges(onDiscard);
   const { dirty: isFormDirty } = useFormikContext();
@@ -106,7 +110,9 @@ const EditorHeader = ({
       </Box>
     </Box>
   );
-};
+});
+
+EditorHeader.displayName = 'EditorHeader';
 
 const styles = {
   container: ({ palette }) => ({

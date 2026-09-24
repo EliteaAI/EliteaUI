@@ -28,6 +28,7 @@ FolderDefaultPermissionsBanner.displayName = 'FolderDefaultPermissionsBanner';
 
 export default FolderDefaultPermissionsBanner;
 
+/** @type {MuiSx} */
 const folderDefaultPermissionsBannerStyles = () => ({
   container: ({ palette }) => ({
     padding: '1rem 1.5rem 2rem',

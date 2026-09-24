@@ -5,3 +5,4 @@ export { default as EditEntityStepIndicator } from './EditEntityStepIndicator';
 export { default as GeneralStep } from './GeneralStep';
 export { default as InstructionsStep } from './InstructionsStep';
 export { default as TextDiffHighlight } from './TextDiffHighlight';
+export { default as ToolItemCard } from './ToolItemCard';

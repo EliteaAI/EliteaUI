@@ -21,12 +21,14 @@ const ParticipantActions = memo(props => {
     hasRemoteMcpLoggedIn,
     serverUrl,
   } = props;
+  const styles = participantActionsStyles();
+
   const isPublic = participant.entity_meta?.project_id == PUBLIC_PROJECT_ID;
 
   return (
     <Box
       onClick={stopPropagation}
-      sx={{ display: showButtons ? 'flex' : 'none', gap: '0.25rem', alignItems: 'center' }}
+      sx={styles.root(showButtons)}
     >
       {hasRemoteMcpLoggedIn && <McpLogoutButton serverUrl={serverUrl} />}
       {showEditButton && (
@@ -67,5 +69,14 @@ const ParticipantActions = memo(props => {
 });
 
 ParticipantActions.displayName = 'ParticipantActions';
+
+/** @type {MuiSx} */
+const participantActionsStyles = () => ({
+  root: showButtons => ({
+    display: showButtons ? 'flex' : 'none',
+    gap: '0.25rem',
+    alignItems: 'center',
+  }),
+});
 
 export default ParticipantActions;

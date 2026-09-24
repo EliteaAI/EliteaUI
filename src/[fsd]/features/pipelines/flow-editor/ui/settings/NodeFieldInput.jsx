@@ -67,7 +67,7 @@ const NodeFieldInput = memo(props => {
     minRows: 1,
     collapseContent: true,
     containerProps: {
-      marginBottom: '0px !important',
+      marginBottom: '0 !important',
       className: 'nopan nodrag nowheel',
     },
     inputRef,

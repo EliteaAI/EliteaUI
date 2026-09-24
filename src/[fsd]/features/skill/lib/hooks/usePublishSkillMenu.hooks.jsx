@@ -81,16 +81,7 @@ export const usePublishSkillMenu = onSuccess => {
         ? {
             label: 'Publish',
             icon: (
-              <Box
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  width: '1rem',
-                  height: '1rem',
-                  color: ({ palette }) => palette.icon.default,
-                }}
-              >
+              <Box sx={publishSkillMenuStyles().menuIcon}>
                 <PublishIcon sx={{ fontSize: '1rem' }} />
               </Box>
             ),
@@ -113,3 +104,15 @@ export const usePublishSkillMenu = onSuccess => {
     publishDialog,
   };
 };
+
+/** @type {MuiSx} */
+const publishSkillMenuStyles = () => ({
+  menuIcon: ({ palette }) => ({
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '1rem',
+    height: '1rem',
+    color: palette.icon.default,
+  }),
+});

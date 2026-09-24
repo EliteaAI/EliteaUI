@@ -607,7 +607,7 @@ const pipelineWebhookModalStyles = () => ({
   },
   codeBlock: ({ palette }) => ({
     backgroundColor: palette.background.default.secondary,
-    border: `1px solid ${palette.border.lines}`,
+    border: `0.0625rem solid ${palette.border.lines}`,
     borderRadius: '0.5rem',
     padding: '0.75rem',
     overflow: 'auto',

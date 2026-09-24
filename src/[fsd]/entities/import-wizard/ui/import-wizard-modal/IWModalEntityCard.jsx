@@ -47,7 +47,7 @@ const IWModalEntityCard = memo(props => {
       toggleTestId={toggleTestId}
       renderFullscreenContent={fullscreenData =>
         fullscreenData?.isDiagram ? (
-          <Box sx={{ height: '34rem', borderRadius: '.5rem', overflow: 'hidden' }}>
+          <Box sx={styles.previewFrame}>
             <MermaidDiagramOutput code={mermaidCode} />
           </Box>
         ) : (
@@ -91,13 +91,7 @@ const IWModalEntityCard = memo(props => {
                     </Tooltip>
                   </Box>
 
-                  <Box
-                    sx={{
-                      height: '12.5rem',
-                      borderRadius: '.5rem',
-                      overflow: 'hidden',
-                    }}
-                  >
+                  <Box sx={styles.previewFrameCompact}>
                     <MermaidDiagramOutput code={mermaidCode} />
                   </Box>
                 </Box>
@@ -163,7 +157,7 @@ const IWModalEntityCard = memo(props => {
 
               <Box>
                 <Typography sx={styles.label}>Other:</Typography>
-                <Box sx={{ display: 'flex', flexDirection: 'row', gap: '.35rem', alignItems: 'center' }}>
+                <Box sx={styles.inlineRow}>
                   <Typography variant="bodyMedium">Step Limit:</Typography>
                   <Typography
                     variant="bodyMedium"
@@ -185,6 +179,22 @@ IWModalEntityCard.displayName = 'IWModalEntityCard';
 
 /** @type {MuiSx} */
 const iWModalEntityCardStyles = () => ({
+  previewFrame: {
+    height: '34rem',
+    borderRadius: '.5rem',
+    overflow: 'hidden',
+  },
+  previewFrameCompact: {
+    height: '12.5rem',
+    borderRadius: '.5rem',
+    overflow: 'hidden',
+  },
+  inlineRow: {
+    display: 'flex',
+    flexDirection: 'row',
+    gap: '.35rem',
+    alignItems: 'center',
+  },
   titleWrapper: {
     display: 'flex',
     alignItems: 'center',

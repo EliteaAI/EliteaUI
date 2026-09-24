@@ -176,7 +176,7 @@ const PreviewContent = memo(
                                     ({ palette }) => ({
                                       borderRight:
                                         cellIndex < parsedData.headers.length - 1
-                                          ? `1px solid ${palette.border.lines}`
+                                          ? `0.0625rem solid ${palette.border.lines}`
                                           : 'none',
                                     }),
                                   ]}

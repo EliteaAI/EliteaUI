@@ -160,10 +160,7 @@ const ExpandedPerticapantsList = memo(props => {
 
 ExpandedPerticapantsList.displayName = 'ExpandedPerticapantsList';
 
-/**
- *
- * @type MuiSx
- */
+/** @type {MuiSx} */
 const expandedPerticapantsListStyles = () => ({
   usersSection: ({ palette }) => ({
     display: 'flex',
@@ -194,7 +191,7 @@ const expandedPerticapantsListStyles = () => ({
     fontSize: '1rem',
 
     '&:hover': {
-      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+      backgroundColor: palette.background.overlay.medium,
 
       '& > *': { color: palette.icon.secondary },
       '& svg': { fill: palette.icon.secondary },

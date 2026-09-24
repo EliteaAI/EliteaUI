@@ -8,19 +8,11 @@ import { Box, Chip, CircularProgress, Divider, Link, Paper, ThemeProvider, Typog
 import { MdxStatus } from '@/[fsd]/features/artifacts/lib/constants/previewMdx.constants';
 import { useMdxEvaluator } from '@/[fsd]/features/artifacts/lib/hooks';
 import MdxAlert from '@/[fsd]/features/artifacts/ui/file-preview-canvas/MdxAlert';
+import UnknownComponentFallback from '@/[fsd]/features/artifacts/ui/file-preview-canvas/UnknownComponentFallback';
 import { typographyVariants } from '@/[fsd]/shared/config/theme';
 import { useEliteATheme } from '@/[fsd]/shared/lib/hooks';
 import Markdown from '@/[fsd]/shared/ui/markdown';
 import { MDXProvider } from '@mdx-js/react';
-
-const UnknownComponentFallback = ({ children }) => (
-  <Box
-    component="span"
-    sx={{ display: 'contents' }}
-  >
-    {children}
-  </Box>
-);
 
 const JSX_COMPONENT_RE = /<([A-Z][A-Za-z0-9]*)/g;
 
@@ -94,8 +86,9 @@ const MdxPreview = memo(props => {
         />
       ),
       p: pProps => (
-        <p
-          style={styles.paragraph}
+        <Box
+          component="p"
+          sx={styles.paragraph}
           {...pProps}
         />
       ),
@@ -107,32 +100,37 @@ const MdxPreview = memo(props => {
         />
       ),
       ul: ulProps => (
-        <ul
-          style={styles.ul}
+        <Box
+          component="ul"
+          sx={styles.ul}
           {...ulProps}
         />
       ),
       ol: olProps => (
-        <ol
-          style={styles.ol}
+        <Box
+          component="ol"
+          sx={styles.ol}
           {...olProps}
         />
       ),
       li: liProps => (
-        <li
-          style={styles.li}
+        <Box
+          component="li"
+          sx={styles.li}
           {...liProps}
         />
       ),
       strong: strongProps => (
-        <strong
-          style={styles.inline}
+        <Box
+          component="strong"
+          sx={styles.inline}
           {...strongProps}
         />
       ),
       em: emProps => (
-        <em
-          style={styles.inline}
+        <Box
+          component="em"
+          sx={styles.inline}
           {...emProps}
         />
       ),
@@ -140,10 +138,11 @@ const MdxPreview = memo(props => {
         const { src, alt, ...rest } = imgProps;
         if (!src || !/^[a-zA-Z][a-zA-Z0-9+\-.]*:\/\//.test(src)) return null;
         return (
-          <img
+          <Box
+            component="img"
             src={src}
             alt={alt}
-            style={styles.img}
+            sx={styles.img}
             {...rest}
           />
         );
@@ -215,11 +214,26 @@ const MdxPreview = memo(props => {
         />
       ),
       // eslint-disable-next-line no-unused-vars
-      thead: ({ node: _n, ...theadProps }) => <thead {...theadProps} />,
+      thead: ({ node: _n, ...theadProps }) => (
+        <Box
+          component="thead"
+          {...theadProps}
+        />
+      ),
       // eslint-disable-next-line no-unused-vars
-      tbody: ({ node: _n, ...tbodyProps }) => <tbody {...tbodyProps} />,
+      tbody: ({ node: _n, ...tbodyProps }) => (
+        <Box
+          component="tbody"
+          {...tbodyProps}
+        />
+      ),
       // eslint-disable-next-line no-unused-vars
-      tr: ({ node: _n, ...trProps }) => <tr {...trProps} />,
+      tr: ({ node: _n, ...trProps }) => (
+        <Box
+          component="tr"
+          {...trProps}
+        />
+      ),
       // eslint-disable-next-line no-unused-vars
       th: ({ node: _n, ...thProps }) => (
         <Box

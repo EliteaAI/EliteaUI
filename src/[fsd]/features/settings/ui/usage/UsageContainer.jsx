@@ -414,7 +414,7 @@ const usageContainerStyles = () => ({
   },
   tabsContainer: ({ palette }) => ({
     padding: '0 1.5rem',
-    borderBottom: `1px solid ${palette.border.default}`,
+    borderBottom: `0.0625rem solid ${palette.border.default}`,
     background: palette.background.default.tertiary,
   }),
   contentArea: {

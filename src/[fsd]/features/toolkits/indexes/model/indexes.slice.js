@@ -1,3 +1,4 @@
+import { registerReducer } from '@/[fsd]/shared/config/reducerRegistry';
 import { eliteaApi } from '@/api/eliteaApi.js';
 import { createSlice } from '@reduxjs/toolkit';
 
@@ -77,4 +78,6 @@ export const selectToolkitScheduler = state => state.indexes.toolkitScheduler;
 export const selectHistoryItem = state => state.indexes.selectedHistoryItem;
 
 export const { name, actions } = indexesSlice;
+registerReducer(indexesSlice.name, indexesSlice.reducer);
+
 export default indexesSlice.reducer;

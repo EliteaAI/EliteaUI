@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 
-import { Box, alpha, useTheme } from '@mui/material';
+import { Box, alpha } from '@mui/material';
 
 import { useDroppable } from '@dnd-kit/core';
 
@@ -9,8 +9,8 @@ import { useDroppable } from '@dnd-kit/core';
  */
 const DroppableGroupedArea = memo(props => {
   const { children, isDropDisabled = false, isValidDropTarget = true, isActive = true } = props;
+  const styles = droppableGroupedAreaStyles();
 
-  const theme = useTheme();
   const { isOver, setNodeRef } = useDroppable({
     id: 'ungrouped-conversations',
     disabled: isDropDisabled || !isValidDropTarget,
@@ -31,73 +31,69 @@ const DroppableGroupedArea = memo(props => {
     >
       <Box
         ref={setNodeRef}
-        sx={{
-          position: 'relative',
-          minHeight: '3.125rem',
-          borderRadius: '.375rem',
-          transition: 'all 0.2s ease-in-out',
-        }}
+        sx={styles.dropZone}
       >
         {children}
 
         {/* Absolute positioned border overlay - always visible */}
-        {shouldShowDropFeedback && (
-          <Box
-            sx={{
-              position: 'absolute',
-              top: -2,
-              left: -2,
-              right: -2,
-              bottom: -2,
-              border: `.125rem dashed ${theme.palette.primary.main}`,
-              borderRadius: '.5rem',
-              backgroundColor: alpha(theme.palette.primary.main, 0.08),
-              pointerEvents: 'none',
-              zIndex: 999, // Very high z-index to ensure it's always on top
-              boxShadow: `0 .125rem .5rem ${alpha(theme.palette.primary.main, 0.15)}`, // Subtle glow
-            }}
-          />
-        )}
+        {shouldShowDropFeedback && <Box sx={styles.activeDropBorder} />}
 
         {/* Subtle hover state for valid drop targets */}
-        {isValidDropTarget && isActive && !isOver && (
-          <Box
-            sx={{
-              position: 'absolute',
-              top: -1,
-              left: -1,
-              right: -1,
-              bottom: -1,
-              border: `.0625rem solid ${theme.palette.primary.main}30`,
-              borderRadius: '.4375rem',
-              backgroundColor: `${theme.palette.primary.main}05`,
-              pointerEvents: 'none',
-              zIndex: 998,
-            }}
-          />
-        )}
+        {isValidDropTarget && isActive && !isOver && <Box sx={styles.validDropHint} />}
 
         {/* Dimmed overlay for invalid drop targets */}
-        {!isValidDropTarget && isActive && (
-          <Box
-            sx={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: 'rgba(0,0,0,0.3)',
-              borderRadius: '.375rem',
-              pointerEvents: 'none',
-              zIndex: 997,
-            }}
-          />
-        )}
+        {!isValidDropTarget && isActive && <Box sx={styles.disabledOverlay} />}
       </Box>
     </Box>
   );
 });
 
 DroppableGroupedArea.displayName = 'DroppableGroupedArea';
+
+/** @type {MuiSx} */
+const droppableGroupedAreaStyles = () => ({
+  dropZone: {
+    position: 'relative',
+    minHeight: '3.125rem',
+    borderRadius: '.375rem',
+    transition: 'all 0.2s ease-in-out',
+  },
+  activeDropBorder: ({ palette }) => ({
+    position: 'absolute',
+    top: -2,
+    left: -2,
+    right: -2,
+    bottom: -2,
+    border: `.125rem dashed ${palette.primary.main}`,
+    borderRadius: '.5rem',
+    backgroundColor: alpha(palette.primary.main, 0.08),
+    pointerEvents: 'none',
+    zIndex: 999,
+    boxShadow: `0 .125rem .5rem ${alpha(palette.primary.main, 0.15)}`,
+  }),
+  validDropHint: ({ palette }) => ({
+    position: 'absolute',
+    top: -1,
+    left: -1,
+    right: -1,
+    bottom: -1,
+    border: `.0625rem solid ${palette.primary.main}30`,
+    borderRadius: '.4375rem',
+    backgroundColor: `${palette.primary.main}05`,
+    pointerEvents: 'none',
+    zIndex: 998,
+  }),
+  disabledOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: ({ palette }) => palette.background.overlay.dim,
+    borderRadius: '.375rem',
+    pointerEvents: 'none',
+    zIndex: 997,
+  },
+});
 
 export default DroppableGroupedArea;

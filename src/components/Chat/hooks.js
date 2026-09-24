@@ -14,6 +14,11 @@ import {
   normalizeContinuationError,
   supersedeMentionSkillAction,
 } from '@/[fsd]/features/chat/lib/helpers';
+import {
+  findChatSocketMessageIndex,
+  isLocalAssistantPlaceholder,
+  mergeChatSocketMessage,
+} from '@/[fsd]/features/chat/lib/helpers/chatSocket.helpers';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import { ParsePipelineHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
@@ -39,12 +44,6 @@ import { useIsFrom } from '@/hooks/useIsFromSpecificPageHooks';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useSocket, { useManualSocket } from '@/hooks/useSocket';
 import RouteDefinitions from '@/routes';
-
-import {
-  findChatSocketMessageIndex,
-  isLocalAssistantPlaceholder,
-  mergeChatSocketMessage,
-} from './chatSocket.helpers';
 
 const { GA_EVENT_NAMES, GA_EVENT_PARAMS } = AnalyticConstants;
 

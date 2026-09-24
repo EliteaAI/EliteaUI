@@ -150,10 +150,10 @@ export const partitionActionsIntoBlocks = (
 // @param {(a)=>string} opts.deriveRawKey          raw per-round pcid ('' if none)
 // @param {(a,name)=>boolean} opts.isWrapperCompletion  bare wrapper carrying a real result
 // @returns {Array} cloned actions with parent_agent_call_id normalised
-export function collapseSubAgentInvocationKeys(
+export const collapseSubAgentInvocationKeys = (
   toolActions,
   { deriveName, deriveRawKey, isWrapperCompletion },
-) {
+) => {
   const actions = (toolActions || []).map(action => ({ ...action }));
 
   // Pass 0 — flag per-name CONCURRENCY: a pcid that reappears after a different
@@ -213,7 +213,7 @@ export function collapseSubAgentInvocationKeys(
   });
 
   return actions;
-}
+};
 
 // Live streaming key reconciliation (#5386 / Bug 2).
 //
@@ -237,9 +237,9 @@ const INVOCATION_ID_RE = /^(call_|tooluse_|run--|chatcmpl|lc_run)/i;
  * @param {string} key
  * @returns {boolean}
  */
-export function isInvocationId(key) {
+export const isInvocationId = key => {
   return typeof key === 'string' && INVOCATION_ID_RE.test(key);
-}
+};
 
 /**
  * Build a rawPcid -> anchor instanceKey map from the per-invocation sub groups.
@@ -248,7 +248,7 @@ export function isInvocationId(key) {
  *        streamingSubGroupsFull-shaped: anchor instanceKey -> { aliasKeys, ... }
  * @returns {Map<string,string>} every alias pcid (and the anchor) -> anchor key
  */
-export function buildPcidAnchorMap(subGroups) {
+export const buildPcidAnchorMap = subGroups => {
   const map = new Map();
   if (!subGroups) return map;
   const entries = subGroups instanceof Map ? subGroups.entries() : Object.entries(subGroups);
@@ -259,7 +259,7 @@ export function buildPcidAnchorMap(subGroups) {
     });
   }
   return map;
-}
+};
 
 /**
  * Reconcile the streaming key-union: translate every candidate key (from
@@ -274,7 +274,7 @@ export function buildPcidAnchorMap(subGroups) {
  * @param {Map<string,string>} p.pcidToAnchorKey         rawPcid -> anchor instanceKey
  * @returns {string[]} ordered, de-duplicated ANCHOR keys to render as extras
  */
-export function resolveExtraSubAgentKeys({ renderedKeys, candidateKeys, pcidToAnchorKey }) {
+export const resolveExtraSubAgentKeys = ({ renderedKeys, candidateKeys, pcidToAnchorKey }) => {
   const rendered = renderedKeys instanceof Set ? renderedKeys : new Set(renderedKeys || []);
   const extra = [];
   for (const key of candidateKeys || []) {
@@ -283,7 +283,7 @@ export function resolveExtraSubAgentKeys({ renderedKeys, candidateKeys, pcidToAn
     if (!rendered.has(anchor) && !extra.includes(anchor)) extra.push(anchor);
   }
   return extra;
-}
+};
 
 // Sub-agent accordion liveness (#5386 final — sequential HITL shimmer).
 //
@@ -313,7 +313,7 @@ export function resolveExtraSubAgentKeys({ renderedKeys, candidateKeys, pcidToAn
  * @param {boolean} p.hasError         the child hard-failed (renders an error trace instead)
  * @returns {{running:boolean, done:boolean}}
  */
-export function resolveSubAgentLiveness({
+export const resolveSubAgentLiveness = ({
   paused,
   lastRoundRunning,
   lastRoundDone,
@@ -322,7 +322,7 @@ export function resolveSubAgentLiveness({
   hasActiveDescendant,
   resuming,
   hasError,
-}) {
+}) => {
   // The delegation wrapper is the authoritative "child returned" signal. Its
   // terminal event must win over a dangling inner LLM/tool action whose own end
   // event was lost or arrived under a different run id. A resume marker or an
@@ -340,7 +340,7 @@ export function resolveSubAgentLiveness({
     (!done && !descendantOwnsActivity && (!!lastRoundRunning || !!hasInflight || !!isLiveCurrent));
   const running = !hasError && !paused && !done && active;
   return { running, done };
-}
+};
 
 /**
  * The in-flight tool action is ALSO rendered as the live spinner/content box

@@ -2,9 +2,9 @@ import { useMemo } from 'react';
 
 import { useLocation, useParams, useSearchParams } from 'react-router-dom';
 
-import { useSkillDetailsQuery } from '@/[fsd]/features/skill/api';
 import { BreadcrumbHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useApplicationDetailsQuery } from '@/api/applications';
+import { eliteaApi } from '@/api/eliteaApi';
 import { useToolkitsDetailsQuery } from '@/api/toolkits.js';
 import { SearchParams } from '@/common/constants.js';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -34,7 +34,9 @@ export const useBreadcrumbTrail = () => {
     { projectId, applicationId: entityId },
     { skip: !isAgent || !projectId || !entityId },
   );
-  const { data: skillDetails } = useSkillDetailsQuery(
+  // The skill endpoint is injected into eliteaApi by features/skill; reading it from the shared api
+  // object keeps shared/ from importing a feature.
+  const { data: skillDetails } = eliteaApi.endpoints.skillDetails.useQuery(
     { projectId, skillId: entityId },
     { skip: !isSkill || !projectId || !entityId },
   );

@@ -2,10 +2,12 @@ import { memo, useMemo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { EditEntityComparisonLayout, resolveEntityType } from '@/[fsd]/entities/edit-entity-with-ai';
+import {
+  EditEntityComparisonLayout,
+  ToolItemCard,
+  resolveEntityType,
+} from '@/[fsd]/entities/edit-entity-with-ai';
 import BaseCheckbox from '@/[fsd]/shared/ui/checkbox/BaseCheckbox';
-
-import ToolItemCard from './ToolItemCard';
 
 const normalizeToolItem = (item, entityType) => ({
   ...item,

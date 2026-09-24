@@ -77,7 +77,7 @@ const SkillHubModal = memo(props => {
               <AuthorContainer
                 authors={cardAuthors}
                 showName={false}
-                style={{ minWidth: '1.25rem' }}
+                style={styles.authorAvatars}
               />
               <Typography
                 variant="bodyMedium"
@@ -173,6 +173,9 @@ SkillHubModal.displayName = 'SkillHubModal';
 
 /** @type {MuiSx} */
 const skillHubModalStyles = () => ({
+  authorAvatars: {
+    minWidth: '1.25rem',
+  },
   dialog: {
     '& .MuiDialog-paper': ({ palette }) => ({
       width: '37.5rem',
@@ -200,7 +203,7 @@ const skillHubModalStyles = () => ({
   mainPanel: ({ palette }) => ({
     width: '100%',
     background: palette.components.skillHubModal.background.default,
-    borderRadius: 'calc(1rem - 1px)',
+    borderRadius: 'calc(1rem - 0.0625rem)',
     boxSizing: 'border-box',
     display: 'flex',
     flexDirection: 'column',

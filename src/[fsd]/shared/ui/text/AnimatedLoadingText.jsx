@@ -15,6 +15,7 @@ const waveAnimation = keyframes`
 
 const AnimatedLoadingText = memo(props => {
   const { text } = props;
+  const styles = animatedLoadingTextStyles();
 
   return (
     <Typography
@@ -25,12 +26,7 @@ const AnimatedLoadingText = memo(props => {
         <Box
           key={index}
           component="span"
-          sx={{
-            display: 'inline-block',
-            animation: `${waveAnimation} 2s ease-in-out infinite`,
-            animationDelay: `${index * 0.1}s`,
-            minWidth: char === ' ' ? '0.25em' : 'auto',
-          }}
+          sx={styles.char(index, char)}
         >
           {char === ' ' ? '\u00A0' : char}
         </Box>
@@ -40,5 +36,15 @@ const AnimatedLoadingText = memo(props => {
 });
 
 AnimatedLoadingText.displayName = 'AnimatedLoadingText';
+
+/** @type {MuiSx} */
+const animatedLoadingTextStyles = () => ({
+  char: (index, char) => ({
+    display: 'inline-block',
+    animation: `${waveAnimation} 2s ease-in-out infinite`,
+    animationDelay: `${index * 0.1}s`,
+    minWidth: char === ' ' ? '0.25em' : 'auto',
+  }),
+});
 
 export default AnimatedLoadingText;

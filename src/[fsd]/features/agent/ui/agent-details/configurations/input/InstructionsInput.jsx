@@ -17,7 +17,7 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import InstructionsSlashSuggestionList from './InstructionsSlashSuggestionList';
 
 /**
- * Renders the mirror overlay content using plain <span> elements only — no MUI Typography —
+ * Renders the mirror overlay content using span-rendering Boxes only (no MUI Typography),
  * so font metrics are purely inherited from the mirror container (which is synced to the textarea).
  */
 const renderMirrorHighlights = (text, ranges, textColor, highlightColor) => {
@@ -27,36 +27,42 @@ const renderMirrorHighlights = (text, ranges, textColor, highlightColor) => {
   for (const { start, end } of ranges) {
     if (start > lastIndex) {
       parts.push(
-        <span
+        <Box
+          component="span"
           key={`n-${lastIndex}`}
-          style={{ color: textColor }}
+          sx={mirrorSpanStyles(textColor)}
         >
           {text.slice(lastIndex, start)}
-        </span>,
+        </Box>,
       );
     }
     parts.push(
-      <span
+      <Box
+        component="span"
         key={`h-${start}`}
-        style={{ color: highlightColor }}
+        sx={mirrorSpanStyles(highlightColor)}
       >
         {text.slice(start, end)}
-      </span>,
+      </Box>,
     );
     lastIndex = end;
   }
   if (lastIndex < text.length) {
     parts.push(
-      <span
+      <Box
+        component="span"
         key={`n-${lastIndex}`}
-        style={{ color: textColor }}
+        sx={mirrorSpanStyles(textColor)}
       >
         {text.slice(lastIndex)}
-      </span>,
+      </Box>,
     );
   }
   return parts;
 };
+
+/** @type {(color: string) => MuiSx} */
+const mirrorSpanStyles = color => ({ color });
 
 const InstructionsInput = memo(props => {
   const { style, containerStyle, disabled, applicationId, entityProjectId } = props;

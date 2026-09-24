@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 
-import { useGetBudgetWarningQuery } from '@/api/budgetWarning';
+import { useGetBudgetWarningQuery } from '@/[fsd]/features/chat/api/budgetWarningApi';
 import { useGetPlatformSettingsQuery } from '@/api/platformSettings';
 
 /**

@@ -1,9 +1,6 @@
 import { useCallback } from 'react';
 
-import {
-  useLazyProjectInfoQuery,
-  useUpdateProjectChatConfigMutation,
-} from '@/[fsd]/features/settings/api/projectInfoApi';
+import { useLazyProjectInfoQuery, useUpdateProjectChatConfigMutation } from '@/[fsd]/features/settings/api';
 import { ChatParticipantType, PERMISSIONS } from '@/common/constants';
 import useCheckPermission from '@/hooks/useCheckPermission';
 

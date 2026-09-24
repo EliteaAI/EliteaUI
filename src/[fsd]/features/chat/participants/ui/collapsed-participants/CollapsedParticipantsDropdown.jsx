@@ -123,15 +123,7 @@ const CollapsedParticipantsDropdown = memo(props => {
         {({ TransitionProps, placement: placement }) => (
           <Grow
             {...TransitionProps}
-            style={{
-              transformOrigin: placement?.startsWith('left')
-                ? 'right center'
-                : placement?.startsWith('right')
-                  ? 'left center'
-                  : placement?.startsWith('top')
-                    ? 'center bottom'
-                    : 'center top',
-            }}
+            style={styles.grow(placement)}
           >
             <Paper
               sx={[styles.paper, sx]}
@@ -187,6 +179,16 @@ CollapsedParticipantsDropdown.displayName = 'CollapsedParticipantsDropdown';
 
 /** @type {MuiSx} */
 const collapsedParticipantsDropdownStyles = () => ({
+  // Grow only accepts `style`, so this returns a plain style object.
+  grow: placement => ({
+    transformOrigin: placement?.startsWith('left')
+      ? 'right center'
+      : placement?.startsWith('right')
+        ? 'left center'
+        : placement?.startsWith('top')
+          ? 'center bottom'
+          : 'center top',
+  }),
   paper: ({ palette }) => ({
     borderRadius: DROPDOWN_CONSTANTS.BORDER_RADIUS.MENU,
     border: `.0625rem solid ${palette.border.lines}`,
