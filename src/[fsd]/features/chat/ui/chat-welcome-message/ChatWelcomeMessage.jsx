@@ -24,7 +24,8 @@ ChatWelcomeMessage.displayName = 'ChatWelcomeMessage';
 
 /** @type {MuiSx} */
 const chatWelcomeMessageStyles = () => ({
-  root: ({ palette }) => ({
+  root: ({ palette, typography }) => ({
+    ...typography.bodySmall,
     width: '100%',
     maxHeight: '12.5rem',
     overflowY: 'auto',
