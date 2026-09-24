@@ -676,17 +676,16 @@ const NewConversationView = forwardRef(
         ) {
           onClearSelectedParticipant();
         }
-        setSelectedParticipants(prev =>
-          prev.filter(
-            p =>
-              p.entity_name !== participantToDelete.entity_name ||
-              p.entity_meta.id !== participantToDelete.entity_meta.id,
-          ),
+        const next = selectedParticipantsRef.current.filter(
+          p =>
+            p.entity_name !== participantToDelete.entity_name ||
+            p.entity_meta.id !== participantToDelete.entity_meta.id,
         );
+        selectedParticipantsRef.current = next;
+        setSelectedParticipants(next);
       },
       [selectedParticipant, onClearSelectedParticipant],
     );
-
     useImperativeHandle(ref, () => ({
       onSelectParticipant,
       onDeleteParticipant,
