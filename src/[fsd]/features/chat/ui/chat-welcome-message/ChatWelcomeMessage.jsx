@@ -32,7 +32,7 @@ const chatWelcomeMessageStyles = () => ({
     padding: '0.75rem 1rem',
     boxSizing: 'border-box',
     borderRadius: '0.75rem',
-    background: palette.background.aiAnswerBkg,
+    backgroundColor: palette.background.aiAnswerBkg,
     color: palette.text.secondary,
     wordBreak: 'break-word',
   }),
