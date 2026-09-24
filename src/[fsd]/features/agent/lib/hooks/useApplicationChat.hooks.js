@@ -148,11 +148,13 @@ export const useApplicationChat = ({
     };
   }, [applicationId, applicationName, applicationVersionDetails, projectId]);
 
-  // Keep chatVersionDetails in sync when the page-level version changes (e.g. header selector or initial load).
-  // The in-chat version selector overrides this via onChangeParticipantSettings without touching Formik.
+  // Sync chatVersionDetails only when the page-level version ID changes (navigation / initial load).
+  // Keying on .id avoids resetting the chat's active version on every unrelated Formik form edit,
+  // which would undo a version switch made via the in-chat selector.
   useEffect(() => {
     setChatVersionDetails(applicationVersionDetails);
-  }, [applicationVersionDetails]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [applicationVersionDetails?.id]);
 
   const { onAttachFiles, attachments, onDeleteAttachment, disableAttachments, onClearAttachments } =
     useAgentAttachments({ agentVersionDetails: chatVersionDetails });
@@ -722,18 +724,27 @@ export const useApplicationChat = ({
     ],
   );
 
-  // Handler for updating participant settings (for agents page)
+  // Handler for updating participant settings (for agents page).
+  // Two call shapes exist:
+  //   (editedParticipant, true)            — ChatBox.onSelectVersion (in-chat version switch)
+  //   (participantId, { entity_settings }) — ChatBox model-change and useSelectedChatModel
   const onChangeParticipantSettings = useCallback(
-    editedParticipant => {
-      // When the in-chat version selector changes version, update the local chat version details
-      // so disableAttachments (and other version-derived state) reflects the newly selected version.
-      // Formik is intentionally not updated here — the left-panel config form tracks the page version,
-      // while the chat tracks its own active version independently.
-      if (editedParticipant.version_details) {
+    (participantOrId, updates) => {
+      const isVersionSwitch = updates === true;
+      const editedParticipant = isVersionSwitch ? participantOrId : null;
+      const entitySettings = isVersionSwitch ? participantOrId?.entity_settings : updates?.entity_settings;
+
+      // Update local chat version details when the in-chat version selector changes.
+      // Formik is intentionally not updated — the left-panel form tracks the page-level version.
+      if (editedParticipant?.version_details) {
         setChatVersionDetails(editedParticipant.version_details);
       }
-      if (editedParticipant.entity_settings?.llm_settings && setFieldValue) {
-        Object.entries(editedParticipant.entity_settings.llm_settings).forEach(([key, value]) => {
+
+      // Only write llm_settings into Formik for the explicit model-change path.
+      // Skipping this on version switches prevents version B's llm_settings from overwriting the
+      // version A form fields and making the form dirty unexpectedly.
+      if (!isVersionSwitch && entitySettings?.llm_settings && setFieldValue) {
+        Object.entries(entitySettings.llm_settings).forEach(([key, value]) => {
           setFieldValue(`version_details.llm_settings.${key}`, value);
         });
       }
