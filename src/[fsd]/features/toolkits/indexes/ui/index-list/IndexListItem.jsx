@@ -13,6 +13,7 @@ import {
   indexListCounts,
   isAbandonedRun,
 } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexDetails.helpers';
+import { useIndexScheduleIndicator } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
 import { useProjectType } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
@@ -51,6 +52,7 @@ const IndexListItem = memo(props => {
 
   const canDeleteIndex = isPrivate || checkPermission(PERMISSIONS.index.delete);
   const projectId = useSelectedProjectId();
+  const scheduleIndicator = useIndexScheduleIndicator(index?.metadata?.collection);
 
   const isSelected = useMemo(() => currentIndex?.id === index.id, [currentIndex, index]);
   const isInProgress = index?.metadata?.state === IndexStatuses.progress;
@@ -123,13 +125,30 @@ const IndexListItem = memo(props => {
         editable={false}
       />
       <Box sx={styles.mainContent}>
-        <Typography
-          variant="bodyMedium"
-          color="text.secondary"
-          sx={styles.nameText}
-        >
-          {index.metadata.collection}
-        </Typography>
+        <Box sx={styles.nameRow}>
+          <Typography
+            variant="bodyMedium"
+            color="text.secondary"
+            sx={styles.nameText}
+          >
+            {index.metadata.collection}
+          </Typography>
+          {scheduleIndicator && (
+            <Tooltip
+              title={scheduleIndicator.tooltip}
+              placement="top"
+            >
+              <Box
+                component="span"
+                sx={[styles.scheduleIcon, ...(scheduleIndicator.enabled ? [] : [styles.scheduleIconOff])]}
+                data-testid="index-card-schedule-icon"
+                data-enabled={scheduleIndicator.enabled}
+              >
+                <ClockIcon />
+              </Box>
+            </Tooltip>
+          )}
+        </Box>
         <Box sx={styles.additionalInfo}>
           <Box sx={styles.infoItem}>
             <ClockIcon />
@@ -339,10 +358,36 @@ const indexListItem = () => ({
     overflow: 'hidden',
   },
 
+  nameRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    minWidth: 0,
+  },
+
   nameText: {
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
+  },
+
+  scheduleIcon: {
+    display: 'inline-flex',
+    flexShrink: 0,
+
+    svg: {
+      path: {
+        fill: ({ palette }) => palette.icon.secondary,
+      },
+    },
+  },
+
+  scheduleIconOff: {
+    svg: {
+      path: {
+        fill: ({ palette }) => palette.icon.disabled,
+      },
+    },
   },
 
   additionalInfo: {

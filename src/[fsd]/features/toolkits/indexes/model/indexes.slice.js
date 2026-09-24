@@ -12,6 +12,7 @@ const indexesSlice = createSlice({
       toolkitId: null,
     },
     toolkitScheduler: {},
+    toolkitSchedulerToolkitId: null,
     selectedHistoryItem: null,
   },
   reducers: {
@@ -59,8 +60,9 @@ const indexesSlice = createSlice({
         state.indexesList.isFetching = false;
         state.indexesList.toolkitId = meta?.arg?.originalArgs?.toolkitId ?? null;
       })
-      .addMatcher(eliteaApi.endpoints.getIndexSchedule.matchFulfilled, (state, { payload }) => {
+      .addMatcher(eliteaApi.endpoints.getIndexSchedule.matchFulfilled, (state, { payload, meta }) => {
         state.toolkitScheduler = payload.meta?.indexes_meta ?? {};
+        state.toolkitSchedulerToolkitId = meta?.arg?.originalArgs?.toolkitId ?? null;
       })
       .addMatcher(eliteaApi.endpoints.deleteIndexItem.matchFulfilled, (state, { meta: { arg } }) => {
         const indexName = arg?.originalArgs?.indexName;
@@ -74,6 +76,8 @@ const indexesSlice = createSlice({
 export const selectIndexesList = state => state.indexes.indexesList;
 export const selectIndexesAvailable = state => state.indexes.indexesList.data.length > 0;
 export const selectToolkitScheduler = state => state.indexes.toolkitScheduler;
+export const selectIsSchedulerForListedToolkit = state =>
+  String(state.indexes.toolkitSchedulerToolkitId) === String(state.indexes.indexesList.toolkitId);
 export const selectHistoryItem = state => state.indexes.selectedHistoryItem;
 
 export const { name, actions } = indexesSlice;
