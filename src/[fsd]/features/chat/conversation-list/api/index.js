@@ -6,4 +6,4 @@ export {
   useFolderUpdateMutation,
   useDeleteFolderMutation,
   useFolderPinUpdateMutation,
-} from './conversationList.api';
+} from './conversationListApi';

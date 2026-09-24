@@ -3,7 +3,7 @@ import { memo } from 'react';
 import { Box, Typography } from '@mui/material';
 
 import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
-import { CHART_COLORS } from '@/[fsd]/shared/config/theme/chartPalette';
+import { CHART_COLORS } from '@/[fsd]/shared/config/theme';
 
 const AnalyticsGuide = memo(() => {
   const styles = analyticsGuideStyles();

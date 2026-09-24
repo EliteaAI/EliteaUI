@@ -4,19 +4,20 @@ import { useFormikContext } from 'formik';
 
 import { Box } from '@mui/material';
 
-import { AutoRoutingConstants } from '@/[fsd]/shared/lib/constants';
-import { DEFAULT_MAX_TOKENS } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
+import { AutoRoutingConstants, LLMSettingsConstants } from '@/[fsd]/shared/lib/constants';
 import {
   autoModel,
   isAutoSelection,
   modelsWithAuto,
+  resetLLMSettingsForModel,
   resolveModelSurface,
   selectionFields,
-} from '@/[fsd]/shared/lib/utils/autoRouting.utils';
-import { resetLLMSettingsForModel } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
+} from '@/[fsd]/shared/lib/utils';
 import { LLMModelSelector } from '@/[fsd]/widgets/llm-model-selector';
 import { useListModelsQuery } from '@/api/configurations';
 import { PROMPT_PAYLOAD_KEY } from '@/common/constants';
+
+const { DEFAULT_MAX_TOKENS } = LLMSettingsConstants;
 
 const { MODEL_SURFACES } = AutoRoutingConstants;
 

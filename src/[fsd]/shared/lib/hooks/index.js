@@ -25,3 +25,6 @@ export * from './useBreadcrumbTrail.hooks';
 export * from './useCatalogCount.hooks';
 export * from './useRestoredConversation.hooks';
 export * from './useRunHistoryNavigation.hooks';
+export { default as useCtrlEnterKeyEventsHandler } from './useCtrlEnterKeyEventsHandler.hooks';
+export { default as useScrollActiveIntoView } from './useScrollActiveIntoView.hooks';
+export * from './useShareLink.hooks';

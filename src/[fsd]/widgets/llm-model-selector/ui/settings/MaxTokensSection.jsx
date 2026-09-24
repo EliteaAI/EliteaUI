@@ -2,12 +2,11 @@ import { memo, useCallback, useEffect, useState } from 'react';
 
 import { Box } from '@mui/material';
 
-import {
-  DEFAULT_MAX_TOKENS,
-  DEFAULT_MAX_TOKENS_CUSTOM,
-} from '@/[fsd]/shared/lib/constants/llmSettings.constants';
+import { LLMSettingsConstants } from '@/[fsd]/shared/lib/constants';
 import { Checkbox, Label } from '@/[fsd]/shared/ui';
 import StyledInputEnhancer from '@/[fsd]/shared/ui/input/StyledInputEnhancer';
+
+const { DEFAULT_MAX_TOKENS, DEFAULT_MAX_TOKENS_CUSTOM } = LLMSettingsConstants;
 
 const MaxTokensSection = memo(props => {
   const {

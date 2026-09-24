@@ -1,10 +1,9 @@
-import {
-  ORIENTATION,
-  OrientationKey,
-} from '@/[fsd]/features/pipelines/flow-editor/lib/constants/flowEditor.constants';
+import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { DEFAULT_PIPELINE_KEY } from '@/[fsd]/features/pipelines/lib/constants';
 import { DumpYamlHelpers } from '@/[fsd]/shared/lib/helpers';
 import { createSlice, current } from '@reduxjs/toolkit';
+
+const { ORIENTATION, OrientationKey } = FlowEditorConstants;
 
 export { DEFAULT_PIPELINE_KEY };
 

@@ -16,12 +16,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Box, IconButton, Typography, useTheme } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip.jsx';
-import {
-  DumpYamlHelpers,
-  ParsePipelineHelpers,
-} from '@/[fsd]/features/pipelines/flow-editor/lib/helpers/index.js';
-import YamlCodeEditor from '@/[fsd]/features/pipelines/yaml-editor/ui/YamlCodeEditor.jsx';
-import { ChunkHelpers, FunctionHelpers } from '@/[fsd]/shared/lib/helpers/index.js';
+import { DumpYamlHelpers, ParsePipelineHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
+import { YamlCodeEditor } from '@/[fsd]/features/pipelines/yaml-editor/ui';
+import { ChunkHelpers, FunctionHelpers } from '@/[fsd]/shared/lib/helpers';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import RefreshIcon from '@/assets/refresh-icon.svg?react';

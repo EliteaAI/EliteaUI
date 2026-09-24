@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { Box, CircularProgress, Grid, useTheme } from '@mui/material';
 
-import { useEditingArtifactsNavBlocker } from '@/[fsd]/features/artifacts/lib/hooks/useEditingArtifactsNavBlocker.hooks';
+import { useEditingArtifactsNavBlocker } from '@/[fsd]/features/artifacts/lib/hooks';
 import { useLazyConversationDetailsQuery } from '@/[fsd]/features/chat/api';
 import { redistributeConversationsIntoGroups } from '@/[fsd]/features/chat/conversation-list/lib/helpers';
 import {
@@ -20,11 +20,11 @@ import {
 } from '@/[fsd]/features/chat/conversation-list/lib/hooks';
 import { Conversations } from '@/[fsd]/features/chat/conversation-list/ui';
 import {
+  useChatEditors,
   useConversationNavigation,
   useEditConversation,
   useInternalToolsConfig,
 } from '@/[fsd]/features/chat/lib/hooks';
-import { useChatEditors } from '@/[fsd]/features/chat/lib/hooks/useChatEditors.hooks';
 import {
   canParticipantBeActiveInChat,
   getChatParticipantUniqueId,

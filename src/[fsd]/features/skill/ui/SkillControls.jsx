@@ -14,7 +14,7 @@ import {
   useUnpublishSkillMenu,
 } from '@/[fsd]/features/skill/lib/hooks';
 import { PinEntityConstants } from '@/[fsd]/shared/lib/constants';
-import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
+import { useProjectType } from '@/[fsd]/shared/lib/hooks';
 import { Controls } from '@/[fsd]/shared/ui';
 import { usePin, usePinMenu } from '@/[fsd]/widgets/pin-toggler';
 import { PERMISSIONS, SkillsTabs } from '@/common/constants';

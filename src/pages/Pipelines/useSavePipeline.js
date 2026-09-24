@@ -1,11 +1,13 @@
 import YAML from 'js-yaml';
 import { useSelector } from 'react-redux';
 
-import { ORIENTATION } from '@/[fsd]/features/pipelines/flow-editor/lib/constants/flowEditor.constants';
+import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { LayoutHelpers, ParsePipelineHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { useIsFrom, useIsFromPipelineDetail } from '@/hooks/useIsFromSpecificPageHooks';
 import RouteDefinitions from '@/routes';
 import { selectActivePipeline } from '@/slices/pipeline';
+
+const { ORIENTATION } = FlowEditorConstants;
 
 export default function useSavePipeline() {
   const isFromPipelineDetail = useIsFromPipelineDetail();

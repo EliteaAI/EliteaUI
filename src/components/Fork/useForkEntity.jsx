@@ -5,7 +5,7 @@ import { useDispatch } from 'react-redux';
 
 import { useTrackEvent } from '@/GA';
 import { actions as importWizardActions } from '@/[fsd]/entities/import-wizard/model/importWizard.slice';
-import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
+import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
 import { useLazyApplicationExportQuery } from '@/api/applications';
 import { useToolkitForkMutation } from '@/api/toolkits';
 import {
@@ -18,6 +18,8 @@ import {
 import { buildErrorMessage } from '@/common/utils';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
+
+const { GA_EVENT_NAMES, GA_EVENT_PARAMS } = AnalyticConstants;
 
 export const useForkEntity = ({ id, entity_name, title, data = {} }) => {
   const { toastError } = useToast();

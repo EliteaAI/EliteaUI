@@ -4,11 +4,13 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 
 import { useTrackEvent } from '@/GA';
-import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
+import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
 import { useLikeApplicationMutation, useUnlikeApplicationMutation } from '@/api/applications';
 import { eliteaApi } from '@/api/eliteaApi';
 import { ViewMode } from '@/common/constants';
 import { convertToJson } from '@/common/utils';
+
+const { GA_EVENT_NAMES, GA_EVENT_PARAMS } = AnalyticConstants;
 
 export function useLikeApplicationCard({ id, name, is_liked, type, viewMode, onSuccess }) {
   const dispatch = useDispatch();

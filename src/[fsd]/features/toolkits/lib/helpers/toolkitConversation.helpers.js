@@ -1,5 +1,5 @@
 import { LLMSettingsConstants, ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
-import { generateLLMSettings } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
+import { generateLLMSettings } from '@/[fsd]/shared/lib/utils';
 import { ChatParticipantType } from '@/common/constants';
 
 const { DEFAULT_MAX_TOKENS, DEFAULT_TEMPERATURE } = LLMSettingsConstants;

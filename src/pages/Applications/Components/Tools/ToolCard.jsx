@@ -5,17 +5,16 @@ import { useSelector } from 'react-redux';
 
 import { Box, IconButton, Tooltip, Typography, useTheme } from '@mui/material';
 
-import { useDisassociateToolkit } from '@/[fsd]/features/agent/lib/hooks';
-import { useSaveAgentToolVariables } from '@/[fsd]/features/agent/lib/hooks/useSaveAgentToolVariables.js';
-import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers/index.js';
+import { useDisassociateToolkit, useSaveAgentToolVariables } from '@/[fsd]/features/agent/lib/hooks';
+import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import { useMcpTokenChange } from '@/[fsd]/features/mcp/lib/hooks';
 import { McpLogInButton, McpLogoutButton } from '@/[fsd]/features/mcp/ui';
-import { useResolvedOpenApiConfig } from '@/[fsd]/features/openapi/lib/hooks/useResolvedOpenApiConfig.hooks';
+import { useResolvedOpenApiConfig } from '@/[fsd]/features/openapi/lib/hooks';
 import { OpenApiDelegatedLoginButton } from '@/[fsd]/features/openapi/ui';
-import { useGetToolkitNameFromSchema } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks/useGetToolkitNameFromSchema.hooks.js';
-import { useResolvedSharepointConfig } from '@/[fsd]/features/sharepoint/lib/hooks/useResolvedSharepointConfig.hooks';
+import { useGetToolkitNameFromSchema } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
+import { useResolvedSharepointConfig } from '@/[fsd]/features/sharepoint/lib/hooks';
 import { SharepointDelegatedLoginButton } from '@/[fsd]/features/sharepoint/ui';
-import { ToolkitFormHelpers, ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers/index.js';
+import { ToolkitFormHelpers, ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { Banner, Modal } from '@/[fsd]/shared/ui';
 import { TypographyWithConditionalTooltip } from '@/[fsd]/shared/ui/tooltip';

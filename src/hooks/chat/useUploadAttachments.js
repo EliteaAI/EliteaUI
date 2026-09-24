@@ -3,8 +3,7 @@ import { useCallback, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
 import { useTrackEvent } from '@/GA';
-import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
-import { DEFAULT_ATTACHMENT_BUCKET } from '@/[fsd]/shared/lib/constants/internalTools.constants';
+import { AnalyticConstants, InternalToolsConstants } from '@/[fsd]/shared/lib/constants';
 import { useContextExecutionEntity } from '@/[fsd]/shared/lib/hooks';
 import { buildErrorMessage } from '@/common/utils';
 import { useUploadWithProgress } from '@/hooks/chat/useUploadWithProgress';
@@ -13,6 +12,10 @@ import { getAttachmentContentType, getAttachmentType } from '@/utils/attachmentI
 
 import { useSelectedProjectId } from '../useSelectedProject';
 import useToast from '../useToast';
+
+const { DEFAULT_ATTACHMENT_BUCKET } = InternalToolsConstants;
+
+const { GA_EVENT_NAMES, GA_EVENT_PARAMS } = AnalyticConstants;
 
 export default function useUploadAttachments() {
   const { toastError } = useToast();

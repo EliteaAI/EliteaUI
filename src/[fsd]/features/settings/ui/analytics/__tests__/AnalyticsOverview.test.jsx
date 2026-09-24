@@ -5,7 +5,7 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 import AnalyticsOverview from '../AnalyticsOverview';
-import { AnalyticsTestWrapper as Wrapper } from '../_testHelpers';
+import { AnalyticsTestWrapper as Wrapper } from './_testHelpers';
 
 vi.mock('recharts', () => ({
   ResponsiveContainer: ({ children }) => <div>{children}</div>,

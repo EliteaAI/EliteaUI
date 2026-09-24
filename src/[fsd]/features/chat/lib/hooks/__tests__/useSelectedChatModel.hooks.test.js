@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { autoModel } from '@/[fsd]/shared/lib/utils/autoRouting.utils';
+import { autoModel } from '@/[fsd]/shared/lib/utils';
 import { act, cleanup, renderHook } from '@testing-library/react';
 
 import { useSelectedChatModel } from '../useSelectedChatModel.hooks';

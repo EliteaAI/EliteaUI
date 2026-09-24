@@ -6,7 +6,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Box, Grid, Typography } from '@mui/material';
 
 import { CredentialsTabBar } from '@/[fsd]/features/credentials/ui';
-import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks/useEnvironmentSettingByKey.hooks';
+import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks';
 import { Tooltip } from '@/[fsd]/shared/ui';
 import { convertCredentialConfigSchema } from '@/common/credentialSchemaUtils.js';
 import { SPACING } from '@/common/designTokens';

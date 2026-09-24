@@ -1,14 +1,12 @@
-import {
-  DEFAULT_MAX_TOKENS_CUSTOM,
-  DEFAULT_REASONING_EFFORT,
-  DEFAULT_TEMPERATURE,
-} from '@/[fsd]/shared/lib/constants/llmSettings.constants';
-import { modelSupportsReasoning } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
+import { LLMSettingsConstants } from '@/[fsd]/shared/lib/constants';
+import { modelSupportsReasoning } from '@/[fsd]/shared/lib/utils';
 import {
   CONTEXT_MESSAGES,
   DEFAULT_CONTEXT_STRATEGY,
   DEFAULT_PERSONA,
 } from '@/[fsd]/widgets/context-budget/lib/constants';
+
+const { DEFAULT_MAX_TOKENS_CUSTOM, DEFAULT_REASONING_EFFORT, DEFAULT_TEMPERATURE } = LLMSettingsConstants;
 
 /**
  * Serializes context strategy data into form data structure

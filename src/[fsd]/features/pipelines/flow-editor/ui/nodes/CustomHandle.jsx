@@ -135,6 +135,7 @@ const CustomHandle = memo(props => {
   );
 });
 
+/** @type {MuiSx} */
 const customHandleStyles = ({
   theme,
   orientation,

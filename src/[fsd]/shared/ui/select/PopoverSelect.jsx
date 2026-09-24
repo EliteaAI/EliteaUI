@@ -2,7 +2,7 @@ import { memo, useCallback, useMemo, useRef, useState } from 'react';
 
 import { Box, MenuItem, Popover, Typography } from '@mui/material';
 
-import { customScrollbarSx } from '@/[fsd]/shared/lib/helpers/scrollbar.helpers';
+import { customScrollbarSx } from '@/[fsd]/shared/lib/helpers';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import SimpleSearchBar from '@/[fsd]/shared/ui/input/SimpleSearchBar';

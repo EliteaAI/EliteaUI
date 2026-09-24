@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 
 import { Box } from '@mui/material';
 
-import { NOTIFICATIONS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/notificationsTourTargets.constants';
+import { NOTIFICATIONS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { useNotificationListQuery } from '@/api/notifications';
 import { SortOrderOptions } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';

@@ -1,10 +1,10 @@
 // File Preview Canvas
-export { default as FilePreviewCanvas } from './FilePreviewCanvas';
-export { default as PreviewUnavailable } from './FilePreviewCanvas/PreviewUnavailable';
-export { default as PreviewContent } from './FilePreviewCanvas/PreviewContent';
-export { default as PreviewHeader } from './FilePreviewCanvas/PreviewHeader';
-export { default as PreviewDocument } from './FilePreviewCanvas/PreviewDocument';
-export { default as HtmlPreviewFrame } from './FilePreviewCanvas/HtmlPreviewFrame';
+export { default as FilePreviewCanvas } from './file-preview-canvas';
+export { default as PreviewUnavailable } from './file-preview-canvas/PreviewUnavailable';
+export { default as PreviewContent } from './file-preview-canvas/PreviewContent';
+export { default as PreviewHeader } from './file-preview-canvas/PreviewHeader';
+export { default as PreviewDocument } from './file-preview-canvas/PreviewDocument';
+export { default as HtmlPreviewFrame } from './file-preview-canvas/HtmlPreviewFrame';
 
 // Bucket Access
 export {
@@ -14,7 +14,7 @@ export {
   DefaultPermissionsBanner,
   ManagePermissionsModal,
 } from './bucket-access';
-export { default as MdxPreview } from './FilePreviewCanvas/MdxPreview';
+export { default as MdxPreview } from './file-preview-canvas/MdxPreview';
 
 // Rename
 export { default as RenameArtifactDialog } from './RenameArtifactDialog';

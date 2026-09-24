@@ -7,7 +7,7 @@ import { Typography } from '@mui/material';
 import { Box, useTheme } from '@mui/system';
 
 import { useTrackEvent } from '@/GA';
-import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
+import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
 import { useLanguageLinter } from '@/[fsd]/shared/lib/hooks';
 import { Field } from '@/[fsd]/shared/ui';
 import { useEditCanvasMutation } from '@/api';
@@ -35,6 +35,8 @@ import { SERVICE_PROMPT_KEYS, useServicePromptByKey } from '@/hooks/useServicePr
 import useToast from '@/hooks/useToast';
 
 import CanvasEditHeader from './CanvasEditHeader';
+
+const { GA_EVENT_NAMES, GA_EVENT_PARAMS } = AnalyticConstants;
 
 // Component styles
 const componentStyles = (theme, isSmallWindow) => ({

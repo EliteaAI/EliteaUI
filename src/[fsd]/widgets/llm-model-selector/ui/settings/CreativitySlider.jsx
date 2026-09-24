@@ -1,7 +1,9 @@
 import { memo, useCallback } from 'react';
 
-import { DEFAULT_TEMPERATURE } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
+import { LLMSettingsConstants } from '@/[fsd]/shared/lib/constants';
 import DiscreteSlider from '@/[fsd]/shared/ui/slider/DiscreteSlider';
+
+const { DEFAULT_TEMPERATURE } = LLMSettingsConstants;
 
 /**
  * Creativity Slider Component

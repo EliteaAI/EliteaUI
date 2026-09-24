@@ -40,3 +40,5 @@ export * as CustomThemeCacheHelpers from './customThemeCache.helpers';
 export * from './isNewItem.helpers';
 export * from './catalogCard.helpers';
 export * from './scrollbar.helpers';
+export * from './contextStrategy.helpers';
+export * from './stringField.helpers';

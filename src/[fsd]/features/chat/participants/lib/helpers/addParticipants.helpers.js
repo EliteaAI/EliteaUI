@@ -1,11 +1,9 @@
-import {
-  DEFAULT_MAX_TOKENS,
-  DEFAULT_REASONING_EFFORT,
-  DEFAULT_TEMPERATURE,
-} from '@/[fsd]/shared/lib/constants/llmSettings.constants';
+import { LLMSettingsConstants } from '@/[fsd]/shared/lib/constants';
 import { ChatParticipantType, PUBLIC_PROJECT_ID } from '@/common/constants';
 
 import { getChatParticipantUniqueId } from './participants.helpers';
+
+const { DEFAULT_MAX_TOKENS, DEFAULT_REASONING_EFFORT, DEFAULT_TEMPERATURE } = LLMSettingsConstants;
 
 export const isParticipantOKForChat = participant =>
   participant.entity_name === ChatParticipantType.Users ||

@@ -2,7 +2,7 @@ import { memo, useCallback, useEffect, useState } from 'react';
 
 import { Box, Collapse, useTheme } from '@mui/material';
 
-import { ARTIFACT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/artifactTourTargets.constants';
+import { ARTIFACT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { Tooltip } from '@/[fsd]/shared/ui';
 import FolderIcon from '@/components/Icons/FolderIcon';
 

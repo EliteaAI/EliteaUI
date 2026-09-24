@@ -2,11 +2,13 @@ import { memo } from 'react';
 
 import { Box, ListSubheader, MenuItem, Typography } from '@mui/material';
 
-import { FLAT_MENU_ACTION_VALUE } from '@/[fsd]/shared/lib/constants/singleSelectConstants';
+import { SingleSelectConstants } from '@/[fsd]/shared/lib/constants';
 import SimpleSearchBar from '@/[fsd]/shared/ui/input/SimpleSearchBar';
 import PlusIcon from '@/assets/plus-icon.svg?react';
 
 import SingleSelectMenuItem from './SingleSelectMenuItem';
+
+const { FLAT_MENU_ACTION_VALUE } = SingleSelectConstants;
 
 const SingleSelectDropdown = memo(props => {
   const {

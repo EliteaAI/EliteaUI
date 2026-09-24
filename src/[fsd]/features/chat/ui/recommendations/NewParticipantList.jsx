@@ -3,7 +3,7 @@ import { useCallback, useRef } from 'react';
 import { Box, ClickAwayListener, Skeleton, Typography, useTheme } from '@mui/material';
 
 import ListInfiniteMoreLoader from '@/ComponentsLib/ListInfiniteMoreLoader';
-import useScrollActiveIntoView from '@/[fsd]/shared/lib/hooks/useScrollActiveIntoView.hooks';
+import { useScrollActiveIntoView } from '@/[fsd]/shared/lib/hooks';
 import { getRawParticipantUniqueId } from '@/common/utils';
 import useGetComponentWidth from '@/hooks/useGetComponentWidth';
 

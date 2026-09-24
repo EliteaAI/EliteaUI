@@ -1,6 +1,6 @@
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
-import ToolConfluence from '@/[fsd]/features/toolkits/ui/form/ToolBase/ToolConfluence';
-import ToolJira from '@/[fsd]/features/toolkits/ui/form/ToolBase/ToolJira';
+import ToolConfluence from '@/[fsd]/features/toolkits/ui/form/tool-base/ToolConfluence';
+import ToolJira from '@/[fsd]/features/toolkits/ui/form/tool-base/ToolJira';
 import { ToolTypes } from '@/pages/Applications/Components/Tools/consts';
 
 export const getToolComponent = (type, toolSchema = undefined, isCredential = false) => {

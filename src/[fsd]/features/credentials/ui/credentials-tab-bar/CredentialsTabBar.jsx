@@ -8,7 +8,7 @@ import { Box, Button as MuiButton } from '@mui/material';
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { useTrackEvent } from '@/GA';
 import { CredentialErrorHelpers, CredentialHelpers } from '@/[fsd]/features/credentials/lib/helpers';
-import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
+import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
 import { useFormDirtyExcluding, useProjectType } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { useDeleteConfigurationMutation } from '@/api/configurations';
@@ -23,6 +23,8 @@ import useNavBlocker from '@/hooks/useNavBlocker';
 import useToast from '@/hooks/useToast.jsx';
 import { TabBarItems } from '@/pages/Common/Components';
 import RouteDefinitions from '@/routes.js';
+
+const { GA_EVENT_NAMES, GA_EVENT_PARAMS } = AnalyticConstants;
 
 const CredentialTabBar = memo(props => {
   const {

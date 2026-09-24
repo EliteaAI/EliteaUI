@@ -20,7 +20,7 @@ import {
   findToolkitParticipant,
 } from '@/[fsd]/features/toolkits/lib/helpers/toolkitConversation.helpers';
 import { useToolkitSocketContext } from '@/[fsd]/shared/lib/context';
-import { generateLLMSettings, resetLLMSettingsForModel } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
+import { generateLLMSettings, resetLLMSettingsForModel } from '@/[fsd]/shared/lib/utils';
 import {
   useAddParticipantIntoConversationMutation,
   useConversationCreateMutation,

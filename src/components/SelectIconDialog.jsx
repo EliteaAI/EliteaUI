@@ -12,7 +12,7 @@ import {
   useReplaceSkillIconMutation,
   useUploadSkillIconMutation,
 } from '@/[fsd]/features/skill/api';
-import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks/useEnvironmentSettingByKey.hooks';
+import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import BaseModal from '@/[fsd]/shared/ui/modal/BaseModal';

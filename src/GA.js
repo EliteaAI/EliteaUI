@@ -3,9 +3,11 @@ import { useCallback, useMemo } from 'react';
 import ReactGA from 'react-ga4';
 import { useSelector } from 'react-redux';
 
-import { GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants.js';
+import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
 
 import { DEV, PUBLIC_PROJECT_ID, VITE_GAID } from './common/constants.js';
+
+const { GA_EVENT_PARAMS } = AnalyticConstants;
 
 export const gaInit = () =>
   VITE_GAID !== undefined &&

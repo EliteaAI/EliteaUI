@@ -1,5 +1,5 @@
 import { McpAuthFlowConstants } from '@/[fsd]/features/mcp/lib/constants';
-import store from '@/[fsd]/shared/config/store';
+import { store } from '@/[fsd]/shared/config';
 import { mcpOAuthApi } from '@/api/mcpOAuth';
 
 const selectAuthServerMetadata = metadata => {

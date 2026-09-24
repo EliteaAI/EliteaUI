@@ -7,7 +7,7 @@ import { Box, CircularProgress, Typography, useTheme } from '@mui/material';
 import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { ChartTooltip, InfoBanner, KPICard, infoBannerTextSx } from '@/[fsd]/features/settings/ui/analytics';
-import { CHART_COLORS } from '@/[fsd]/shared/config/theme/chartPalette';
+import { CHART_COLORS } from '@/[fsd]/shared/config/theme';
 import { useAnalyticsCostsQuery } from '@/api';
 
 const AnalyticsCosts = memo(props => {

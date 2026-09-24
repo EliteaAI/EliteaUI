@@ -3,7 +3,7 @@ import { memo, useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
 
 import { UsageHelpers } from '@/[fsd]/features/settings/lib/helpers';
-import { CHART_COLORS } from '@/[fsd]/shared/config/theme/chartPalette';
+import { CHART_COLORS } from '@/[fsd]/shared/config/theme';
 
 const UsageModelTable = memo(props => {
   const { models = [], canSeeAmounts, currency } = props;

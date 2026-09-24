@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Box, ThemeProvider, createTheme } from '@mui/material';
 
-import store from '@/[fsd]/shared/config/store';
+import { store } from '@/[fsd]/shared/config';
 import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 

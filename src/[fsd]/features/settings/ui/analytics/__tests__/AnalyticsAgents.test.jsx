@@ -6,13 +6,13 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 
 import AnalyticsAgents from '../AnalyticsAgents';
-import { AnalyticsTestWrapper as Wrapper } from '../_testHelpers';
+import { AnalyticsTestWrapper as Wrapper } from './_testHelpers';
 
 // Stub browser globals via vi.hoisted BEFORE any vi.mock factory or ESM
 // import can touch slices/settings.js (localStorage) or MUI TablePagination
 // (ResizeObserver) at module scope.
 vi.hoisted(async () => {
-  const { installGlobalStubs } = await import('../_testHelpers');
+  const { installGlobalStubs } = await import('./_testHelpers');
   installGlobalStubs();
 });
 
@@ -23,7 +23,7 @@ vi.mock('@/[fsd]/features/settings/api/analyticsApi', () => ({
 // importWizardApi is reached through the entities barrel and calls eliteaApi.enhanceEndpoints()
 // at module scope, so the mocked barrel has to answer for it. No endpoint is exercised here.
 vi.mock('@/api', async () => {
-  const { createEliteaApiStub } = await import('../_testHelpers');
+  const { createEliteaApiStub } = await import('./_testHelpers');
   return {
     eliteaApi: createEliteaApiStub(),
     TAG_TYPE_APPLICATIONS: 'TAG_TYPE_APPLICATIONS',

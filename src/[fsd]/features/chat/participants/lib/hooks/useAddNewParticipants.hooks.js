@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo } from 'react';
 
-import { isAutoSelection } from '@/[fsd]/shared/lib/utils/autoRouting.utils';
+import { isAutoSelection } from '@/[fsd]/shared/lib/utils';
 import {
   useAddParticipantIntoConversationMutation,
   useLazyConversationDetailsQuery,

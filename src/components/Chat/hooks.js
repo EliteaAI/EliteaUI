@@ -3,34 +3,26 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { v4 as uuidv4, v4 } from 'uuid';
 
 import { useTrackEvent } from '@/GA';
-import { ChatHelpers } from '@/[fsd]/features/chat/lib/helpers';
-import { normalizeContinuationError } from '@/[fsd]/features/chat/lib/helpers/continuationError.helpers.js';
 import {
-  agentPathsEqual,
-  getSubAgentInstanceKey,
-  normalizeExecutionHierarchy,
-} from '@/[fsd]/features/chat/lib/helpers/executionHierarchy.helpers.js';
-import {
-  mergeHitlInterrupts,
-  normalizeHitlInterrupt,
-  reconcileRootHitlInterrupts,
-  settleHitlResumeAttempt,
-} from '@/[fsd]/features/chat/lib/helpers/hitl.helpers.js';
-import {
+  ChatHelpers,
+  ExecutionHierarchyHelpers,
+  HitlHelpers,
   buildMcpAuthorizationToolAction,
   getMcpAuthorizationRequests,
   hasProcessingSiblingForAuthorization,
-} from '@/[fsd]/features/chat/lib/helpers/mcpAuthorization.helpers.js';
-import {
   mentionSkillActions,
+  normalizeContinuationError,
   supersedeMentionSkillAction,
-} from '@/[fsd]/features/chat/lib/helpers/mentionSkillTrace.helpers.js';
+} from '@/[fsd]/features/chat/lib/helpers';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
-import * as ParsePipelineHelpers from '@/[fsd]/features/pipelines/flow-editor/lib/helpers/parsePipeline.helpers';
-import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
-import { useContextExecutionEntity, useProjectType } from '@/[fsd]/shared/lib/hooks';
-import useCtrlEnterKeyEventsHandler from '@/[fsd]/shared/lib/hooks/useCtrlEnterKeyEventsHandler.hooks';
-import { notifyTaskComplete, notifyTaskError } from '@/[fsd]/shared/lib/utils/soundNotification.utils';
+import { ParsePipelineHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
+import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
+import {
+  useContextExecutionEntity,
+  useCtrlEnterKeyEventsHandler,
+  useProjectType,
+} from '@/[fsd]/shared/lib/hooks';
+import { notifyTaskComplete, notifyTaskError } from '@/[fsd]/shared/lib/utils';
 import { useStopChatTaskMutation } from '@/api';
 import {
   ChatParticipantType,
@@ -53,6 +45,13 @@ import {
   isLocalAssistantPlaceholder,
   mergeChatSocketMessage,
 } from './chatSocket.helpers';
+
+const { GA_EVENT_NAMES, GA_EVENT_PARAMS } = AnalyticConstants;
+
+const { mergeHitlInterrupts, normalizeHitlInterrupt, reconcileRootHitlInterrupts, settleHitlResumeAttempt } =
+  HitlHelpers;
+
+const { agentPathsEqual, getSubAgentInstanceKey, normalizeExecutionHierarchy } = ExecutionHierarchyHelpers;
 
 export { useCtrlEnterKeyEventsHandler };
 

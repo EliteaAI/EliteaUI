@@ -7,7 +7,7 @@ import { Box } from '@mui/material';
 import { ModelConfigurationHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { useModelConfiguration, useModelOptions } from '@/[fsd]/features/settings/lib/hooks';
 import { AutoRoutingConstants } from '@/[fsd]/shared/lib/constants';
-import { defaultModelRequest } from '@/[fsd]/shared/lib/utils/autoRouting.utils';
+import { defaultModelRequest } from '@/[fsd]/shared/lib/utils';
 import { useListModelsQuery, useSetProjectDefaultModelMutation } from '@/api/configurations.js';
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
 import { useMultiSectionConfigurations } from '@/hooks/useMultiSectionConfigurations';
