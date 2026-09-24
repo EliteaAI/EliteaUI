@@ -755,7 +755,7 @@ const singleSelectStyles = (
       paddingBottom: '0.1875rem !important',
     },
     '& .MuiSelect-select': {
-      paddingRight: showBorder ? 0 : '0.5rem !important',
+      paddingRight: showBorder ? 0 : '1.5rem !important',
     },
     '& .MuiSelect-icon': {
       top: 'calc(50% - 0.5625rem) !important',

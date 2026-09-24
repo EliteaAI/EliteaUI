@@ -48,6 +48,7 @@ export const useApplicationChat = ({
 
   const [activeConversation, setActiveConversation] = useState(null);
   const [activeParticipant, setActiveParticipant] = useState(null);
+  const [chatVersionDetails, setChatVersionDetails] = useState(applicationVersionDetails);
   const [isCreatingConversation, setIsCreatingConversation] = useState(false);
   const [isRestoringConversation, setIsRestoringConversation] = useState(false);
   const [hasRestoredConversation, setHasRestoredConversation] = useState(false);
@@ -147,8 +148,14 @@ export const useApplicationChat = ({
     };
   }, [applicationId, applicationName, applicationVersionDetails, projectId]);
 
+  // Keep chatVersionDetails in sync when the page-level version changes (e.g. header selector or initial load).
+  // The in-chat version selector overrides this via onChangeParticipantSettings without touching Formik.
+  useEffect(() => {
+    setChatVersionDetails(applicationVersionDetails);
+  }, [applicationVersionDetails]);
+
   const { onAttachFiles, attachments, onDeleteAttachment, disableAttachments, onClearAttachments } =
-    useAgentAttachments({ agentVersionDetails: applicationVersionDetails });
+    useAgentAttachments({ agentVersionDetails: chatVersionDetails });
 
   // Restore conversation effect
   useEffect(() => {
@@ -717,10 +724,16 @@ export const useApplicationChat = ({
 
   // Handler for updating participant settings (for agents page)
   const onChangeParticipantSettings = useCallback(
-    (participantId, updates) => {
-      if (updates.entity_settings?.llm_settings && setFieldValue) {
-        // Update the agent's llm_settings in Formik
-        Object.entries(updates.entity_settings.llm_settings).forEach(([key, value]) => {
+    editedParticipant => {
+      // When the in-chat version selector changes version, update the local chat version details
+      // so disableAttachments (and other version-derived state) reflects the newly selected version.
+      // Formik is intentionally not updated here — the left-panel config form tracks the page version,
+      // while the chat tracks its own active version independently.
+      if (editedParticipant.version_details) {
+        setChatVersionDetails(editedParticipant.version_details);
+      }
+      if (editedParticipant.entity_settings?.llm_settings && setFieldValue) {
+        Object.entries(editedParticipant.entity_settings.llm_settings).forEach(([key, value]) => {
           setFieldValue(`version_details.llm_settings.${key}`, value);
         });
       }
