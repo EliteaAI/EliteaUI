@@ -878,12 +878,23 @@ const NewConversationView = forwardRef(
                       cleanedSettings,
                     ),
                   ]);
-                  const participant = participants.find(
+                  const rawParticipant = participants.find(
                     p =>
                       (p.entity_name === selectedParticipant.entity_name ||
                         p.entity_settings.agent_type === selectedParticipant.entity_name) &&
                       p.entity_meta.id === selectedParticipant.entity_meta.id,
                   );
+                  const selectedVersionId = selectedParticipant?.entity_settings?.version_id;
+                  const participant =
+                    rawParticipant && selectedVersionId && !rawParticipant.entity_settings?.version_id
+                      ? {
+                          ...rawParticipant,
+                          entity_settings: {
+                            ...(rawParticipant.entity_settings || {}),
+                            version_id: selectedVersionId,
+                          },
+                        }
+                      : rawParticipant;
                   setActiveParticipant?.(participant);
                   setLocalActiveParticipant(createdConversation?.id, getChatParticipantUniqueId(participant));
 

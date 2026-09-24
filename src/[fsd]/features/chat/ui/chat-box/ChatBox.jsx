@@ -2537,6 +2537,7 @@ const ChatBox = forwardRef((props, boxRef) => {
                 agent_type: versionDetails.agent_type,
               }),
           },
+          version_details: versionDetails,
         },
         true,
       );
