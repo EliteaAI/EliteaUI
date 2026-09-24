@@ -8,7 +8,7 @@ import { RunHistoryContainer } from '@/[fsd]/entities/run-history/ui';
 import { ChatMessageList } from '@/[fsd]/features/chat';
 import { DrawerPageHeader } from '@/[fsd]/features/settings';
 import { ToolkitsHelpers } from '@/[fsd]/features/toolkits';
-import { buildRunHistoryRowDecorator } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexRunRow.helpers';
+import { buildRunHistoryRowDecorator } from '@/[fsd]/features/toolkits/indexes/lib/helpers';
 import { useToolkitIndexRuns } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
 import { IndexRunDetail } from '@/[fsd]/features/toolkits/indexes/ui';
 import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { autoModel } from '@/[fsd]/shared/lib/utils/autoRouting.utils';
+import { autoModel } from '@/[fsd]/shared/lib/utils';
 import { ChatParticipantType } from '@/common/constants';
 
 import {

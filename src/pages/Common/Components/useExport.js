@@ -1,7 +1,7 @@
 import * as React from 'react';
 
 import { useTrackEvent } from '@/GA';
-import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
+import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
 import { getFilenameFromContentDisposition } from '@/[fsd]/shared/lib/helpers';
 import { useLazyApplicationDetailsQuery } from '@/api/applications';
 import { useLazyToolkitExportQuery } from '@/api/toolkits';
@@ -14,6 +14,8 @@ import {
 } from '@/common/constants';
 import { buildErrorMessage, downloadJSONFile } from '@/common/utils';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
+
+const { GA_EVENT_NAMES, GA_EVENT_PARAMS } = AnalyticConstants;
 
 /**
  * Export formats supported

@@ -1,5 +1,5 @@
 import { parseRunTimestamp } from '@/[fsd]/entities/run-history/lib/helpers';
-import { createSheetNamer } from '@/[fsd]/shared/lib/utils/exportToExcel.utils';
+import { createSheetNamer } from '@/[fsd]/shared/lib/utils';
 
 import {
   DEFAULT_EVIDENCE_SCOPE,

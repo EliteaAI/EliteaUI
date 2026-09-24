@@ -14,8 +14,8 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 
-import { FLAT_MENU_ACTION_VALUE } from '@/[fsd]/shared/lib/constants/singleSelectConstants';
-import { customScrollbarSx } from '@/[fsd]/shared/lib/helpers/scrollbar.helpers';
+import { SingleSelectConstants } from '@/[fsd]/shared/lib/constants';
+import { customScrollbarSx } from '@/[fsd]/shared/lib/helpers';
 import { Banner } from '@/[fsd]/shared/ui';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import RemoveIcon from '@/assets/remove-icon.svg?react';
@@ -25,6 +25,7 @@ import SingleSelectDropdown from './SingleSelectDropdown';
 import { getSingleSelectShowBorderSx, getSingleSelectWithoutBorderSx } from './singleSelectVariants';
 
 const DEFAULT_MAX_MENU_HEIGHT = '30rem';
+const { FLAT_MENU_ACTION_VALUE } = SingleSelectConstants;
 
 const SingleSelect = memo(props => {
   const {

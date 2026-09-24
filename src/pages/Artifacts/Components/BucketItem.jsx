@@ -4,8 +4,7 @@ import { useSelector } from 'react-redux';
 
 import { Box, useTheme } from '@mui/material';
 
-import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
-import { useShareLink } from '@/[fsd]/shared/lib/hooks/useShareLink.hooks';
+import { useProjectType, useShareLink } from '@/[fsd]/shared/lib/hooks';
 import { Button, Tooltip } from '@/[fsd]/shared/ui';
 import CopyLinkIcon from '@/assets/copy-link-icon.svg?react';
 import GroupsIcon from '@/assets/groups-icon.svg?react';

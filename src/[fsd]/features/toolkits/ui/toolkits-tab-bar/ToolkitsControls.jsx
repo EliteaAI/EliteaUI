@@ -5,7 +5,7 @@ import { useFormikContext } from 'formik';
 import { Box } from '@mui/material';
 
 import { PinEntityConstants } from '@/[fsd]/shared/lib/constants';
-import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
+import { useProjectType } from '@/[fsd]/shared/lib/hooks';
 import { Controls } from '@/[fsd]/shared/ui';
 import { usePin, usePinMenu } from '@/[fsd]/widgets/pin-toggler';
 import { PERMISSIONS, ViewMode } from '@/common/constants';

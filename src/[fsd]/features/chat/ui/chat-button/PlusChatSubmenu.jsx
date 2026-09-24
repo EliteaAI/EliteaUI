@@ -209,6 +209,7 @@ const PlusChatSubmenu = memo(props => {
 
 PlusChatSubmenu.displayName = 'PlusChatSubmenu';
 
+/** @type {MuiSx} */
 const submenuStyles = theme => ({
   searchContainer: {
     padding: `${SPACING.XS} ${SPACING.LG}`,

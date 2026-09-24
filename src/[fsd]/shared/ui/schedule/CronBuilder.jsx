@@ -2,7 +2,11 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import {
+import { CronBuilderHelpers } from '@/[fsd]/shared/lib/helpers';
+
+import CronSelect from './CronSelect';
+
+const {
   DEFAULT_CRON_STATE,
   HOUR_OPTIONS,
   MINUTE_OPTIONS,
@@ -11,9 +15,7 @@ import {
   WEEKDAY_OPTIONS,
   buildCron,
   parseCron,
-} from '@/[fsd]/shared/lib/helpers/cronBuilder.helpers';
-
-import CronSelect from './CronSelect';
+} = CronBuilderHelpers;
 
 const CronBuilder = memo(props => {
   const { value, onChange, invalidField } = props;

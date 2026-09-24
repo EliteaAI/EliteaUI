@@ -51,7 +51,7 @@ vi.mock('@/hooks/useSelectedProject', () => ({
 
 const mockScheduleIndicator = vi.hoisted(() => ({ current: null }));
 
-vi.mock('@/[fsd]/features/toolkits/indexes/lib/hooks/useIndexScheduleIndicator.hooks', () => ({
+vi.mock('@/[fsd]/features/toolkits/indexes/lib/hooks', () => ({
   useIndexScheduleIndicator: () => mockScheduleIndicator.current,
 }));
 

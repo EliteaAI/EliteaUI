@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ThemeProvider, createTheme } from '@mui/material';
 
-import { autoModel } from '@/[fsd]/shared/lib/utils/autoRouting.utils';
+import { autoModel } from '@/[fsd]/shared/lib/utils';
 import lightPalette from '@/lightPalette';
 import '@testing-library/jest-dom/vitest';
 import { cleanup, render, screen } from '@testing-library/react';

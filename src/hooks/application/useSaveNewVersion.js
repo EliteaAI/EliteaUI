@@ -3,10 +3,7 @@ import { useCallback, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
-import {
-  LAYOUT_VERSION,
-  ORIENTATION,
-} from '@/[fsd]/features/pipelines/flow-editor/lib/constants/flowEditor.constants';
+import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { useSaveApplicationNewVersionMutation } from '@/api/applications';
 import clearTools, { filterEmptyStrings } from '@/common/applicationUtils';
 import { buildErrorMessage, replaceVersionInPath } from '@/common/utils';
@@ -16,6 +13,8 @@ import useSavePipeline, { calculateNodesAndEdges } from '@/pages/Pipelines/useSa
 
 import useNavBlocker from '../useNavBlocker';
 import useSaveChangedTools from './useSaveChangedTools';
+
+const { LAYOUT_VERSION, ORIENTATION } = FlowEditorConstants;
 
 const useSaveNewVersion = ({
   toastError,

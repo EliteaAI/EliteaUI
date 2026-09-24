@@ -2,13 +2,7 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import {
-  canConvertCronTimezone,
-  convertCronTimezone,
-  getBrowserTimezone,
-  getNextCronRun,
-  validateCronExpression,
-} from '@/[fsd]/shared/lib/helpers/schedule.helpers';
+import { ScheduleHelpers } from '@/[fsd]/shared/lib/helpers';
 import { Button, Modal, Tab } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
@@ -17,6 +11,14 @@ import InfoIcon from '@/assets/info.svg?react';
 import FormInput from '@/components/FormInput';
 
 import CronBuilder from './CronBuilder';
+
+const {
+  canConvertCronTimezone,
+  convertCronTimezone,
+  getBrowserTimezone,
+  getNextCronRun,
+  validateCronExpression,
+} = ScheduleHelpers;
 
 const viewButtons = [
   { value: 'builder', label: 'Builder' },

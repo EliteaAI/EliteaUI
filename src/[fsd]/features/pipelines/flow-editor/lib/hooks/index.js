@@ -12,3 +12,4 @@ export { useGetToolkitNameFromSchema } from './useGetToolkitNameFromSchema.hooks
 export { useNodeCardContext } from './useNodeCardContext.hooks';
 export { useNodeAiAssistantConfig } from './useNodeAiAssistantConfig.hooks';
 export { useStateValidation } from './useStateValidation.hooks';
+export * from './useGetToolkitNameFromSchema.hooks';

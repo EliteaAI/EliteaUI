@@ -1,10 +1,9 @@
 import { memo, useCallback } from 'react';
 
-import {
-  DEFAULT_REASONING_EFFORT,
-  REASONING_EFFORT_VALUES,
-} from '@/[fsd]/shared/lib/constants/llmSettings.constants';
+import { LLMSettingsConstants } from '@/[fsd]/shared/lib/constants';
 import DiscreteSlider from '@/[fsd]/shared/ui/slider/DiscreteSlider';
+
+const { DEFAULT_REASONING_EFFORT, REASONING_EFFORT_VALUES } = LLMSettingsConstants;
 
 /**
  * Reasoning Slider Component

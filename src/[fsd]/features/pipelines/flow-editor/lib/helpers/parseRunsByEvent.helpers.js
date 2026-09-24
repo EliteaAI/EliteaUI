@@ -1,4 +1,4 @@
-import { normalizeContinuationError } from '@/[fsd]/features/chat/lib/helpers/continuationError.helpers.js';
+import { normalizeContinuationError } from '@/[fsd]/features/chat/lib/helpers';
 import {
   CONDITION_NODE_ID_SUFFIX,
   DECISION_NODE_ID_SUFFIX,
@@ -8,7 +8,7 @@ import {
   RUN_STATE_NODE,
   StateVariableTypes,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/constants/flowEditor.constants';
-import { notifyTaskComplete } from '@/[fsd]/shared/lib/utils/soundNotification.utils';
+import { notifyTaskComplete } from '@/[fsd]/shared/lib/utils';
 import { SocketMessageType } from '@/common/constants';
 import { convertJsonToString } from '@/common/utils';
 

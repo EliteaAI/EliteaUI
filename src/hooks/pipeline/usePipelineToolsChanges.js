@@ -3,7 +3,7 @@ import { useCallback } from 'react';
 import YAML from 'js-yaml';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { PipelineNodeTypes } from '@/[fsd]/features/pipelines/flow-editor/lib/constants/flowEditor.constants';
+import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { DumpYamlHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { useGetToolkitNameFromSchema } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
 import { ToolTypes } from '@/pages/Applications/Components/Tools/consts';
@@ -11,6 +11,8 @@ import RouteDefinitions from '@/routes';
 import { actions, selectActivePipeline } from '@/slices/pipeline.js';
 
 import { useIsFrom, useIsFromPipelineDetail } from '../useIsFromSpecificPageHooks';
+
+const { PipelineNodeTypes } = FlowEditorConstants;
 
 // Removes a single key from a tool_names object.
 const removeToolName = (toolNames, name) =>

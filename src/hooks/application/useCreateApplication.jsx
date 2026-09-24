@@ -4,10 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
-import {
-  LAYOUT_VERSION,
-  ORIENTATION,
-} from '@/[fsd]/features/pipelines/flow-editor/lib/constants/flowEditor.constants';
+import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { useApplicationCreateMutation } from '@/api/applications';
 import { filterEmptyStrings } from '@/common/applicationUtils';
 import { PrivateApplicationTabs, SearchParams, ViewMode } from '@/common/constants';
@@ -16,6 +13,8 @@ import useSavePipeline, { calculateNodesAndEdges } from '@/pages/Pipelines/useSa
 import { actions } from '@/slices/pipeline';
 
 import RouteDefinitions from '../../routes';
+
+const { LAYOUT_VERSION, ORIENTATION } = FlowEditorConstants;
 
 const useCreateApplication = (formik, resetBlockNav, options = {}) => {
   const { skipNavigation = false, onSuccess } = options;

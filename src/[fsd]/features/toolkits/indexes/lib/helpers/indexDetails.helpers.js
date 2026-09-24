@@ -32,8 +32,10 @@ import {
   TEAM_SCHEDULE_OWNER_ID,
   TERMINAL_INDEX_STATUSES,
 } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
-import { BUDGET_ERROR_VARIANTS } from '@/[fsd]/shared/lib/constants/budgetError.constants';
-import { getCronSummaryInBrowserTimezone } from '@/[fsd]/shared/lib/helpers/schedule.helpers';
+import { BudgetErrorConstants } from '@/[fsd]/shared/lib/constants';
+import { ScheduleHelpers } from '@/[fsd]/shared/lib/helpers';
+
+const { BUDGET_ERROR_VARIANTS } = BudgetErrorConstants;
 
 // The scope code the backend puts in the persisted index error. Reusing the shared copy
 // keeps the banner and the message below it from drifting apart.
@@ -536,6 +538,6 @@ export const indexScheduleIndicator = schedule => {
 
   return {
     enabled,
-    tooltip: `${label}: ${getCronSummaryInBrowserTimezone(schedule.cron, schedule.timezone)}`,
+    tooltip: `${label}: ${ScheduleHelpers.getCronSummaryInBrowserTimezone(schedule.cron, schedule.timezone)}`,
   };
 };

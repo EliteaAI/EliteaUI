@@ -1,4 +1,6 @@
-import { DEFAULT_MAX_TOKENS, REASONING_MIN_TOKENS } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
+import { LLMSettingsConstants } from '@/[fsd]/shared/lib/constants';
+
+const { DEFAULT_MAX_TOKENS, REASONING_MIN_TOKENS } = LLMSettingsConstants;
 
 export const VALIDATION_RULE = {
   EXCEEDS_MODEL_LIMIT: 'EXCEEDS_MODEL_LIMIT',

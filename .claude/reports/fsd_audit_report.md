@@ -1,8 +1,8 @@
 # FSD Architecture Audit Report
 
 **Date:** 2026-08-11  
-**Scope:** `src/[fsd]/` — **~98 violations** remaining across 4 categories (Section 1: 41 resolved ✓,
-**Section 2: 11 resolved** ✓, **Section 3: 48 resolved** ✓ **COMPLETE**, Section 4: ~102 remaining)
+**Scope:** `src/[fsd]/` — **0 violations** remaining across 4 categories (Section 1: 41 resolved ✓, **Section
+2: 11 resolved** ✓, **Section 3: 48 resolved** ✓ **COMPLETE**, **Section 4: 102 resolved** ✓ **COMPLETE**)
 
 ---
 
@@ -11,7 +11,7 @@
 - [1. Layer Import Violations (41)](#1-layer-import-violations-41)
 - [2. Component Convention Violations (11)](#2-component-convention-violations-11)
 - [3. Styling & HTML Violations (0)](#3-styling--html-violations-48)
-- [4. File Naming & Structure Violations (~102)](#4-file-naming--structure-violations-102)
+- [4. File Naming & Structure Violations (0)](#4-file-naming--structure-violations-0)
 - [5. Priority Recommendations](#5-priority-recommendations)
 
 ---
@@ -238,7 +238,7 @@ Fixed 11 violations across 2 categories:
 - ✓ 3.1 `px` units: 5 → 0 ✓ **COMPLETE**
 - ✓ 3.2 `styled()` API: 4 → 0 ✓ **COMPLETE (Session 14)**
 - ✓ 3.3 Inline Box props: 3 → 0 ✓ **COMPLETE**
-- ✓ 3.4 JSDoc annotations: 29 → 8 (21 fixed, 8 remaining — not violations, deferred JSDoc-only cleanup)
+- ✓ 3.4 JSDoc annotations: 29 → 0 ✓ **COMPLETE (21 fixed Session 13, 8 fixed Session 16)**
 - ✓ 3.5 Raw HTML tags: 9 → 0 ✓ **COMPLETE (Session 14, 8 genuine fixes + 1 stale entry)**
 
 ### 3.1 `px` Unit Violations (5 → 0) ✓ **COMPLETE**
@@ -268,10 +268,10 @@ Fixed 11 violations across 2 categories:
 | ~~`features/pipelines/flow-editor/ui/settings/VariablesMappingItem.jsx`~~ | 117  | ~~`<Box width="7.25rem">`~~ | ✓ Fixed Session 13 |
 | ~~`features/pipelines/flow-editor/ui/settings/VariablesMappingItem.jsx`~~ | 130  | ~~`<Box flex={1}>`~~        | ✓ Fixed Session 13 |
 
-### 3.4 Missing `/** @type {MuiSx} */` Annotation (29 → 8) — **21 FIXED Session 13**
+### 3.4 Missing `/** @type {MuiSx} */` Annotation (29 → 0) ✓ **COMPLETE (Session 16)**
 
 <details>
-<summary>Click to expand full list (8 remaining)</summary>
+<summary>Click to expand full list (29 fixed)</summary>
 
 **21 files fixed in Session 13:**
 
@@ -299,18 +299,18 @@ Fixed 11 violations across 2 categories:
 | ✓ `entities/version/ui/VersionDelete.jsx`                                        | Fixed  |
 | ✓ `entities/generate-entity-with-ai/ui/GenerateEntityModal.jsx`                  | Fixed  |
 
-**8 files remaining (not found or already have annotations):**
+**8 files fixed in Session 16:**
 
-| File                                                       | Line | Function                     |
-| ---------------------------------------------------------- | ---- | ---------------------------- |
-| `features/chat/ui/chat-button/PlusChatSubmenu.jsx`         | 208  | `submenuStyles`              |
-| `features/chat/conversation-list/ui/folders/Folders.jsx`   | 134  | `foldersStyles`              |
-| `features/toolkits/ui/form/ToolBase/EmptyMcpTools.jsx`     | 26   | `getStyles`                  |
-| `features/pipelines/flow-editor/ui/nodes/CustomHandle.jsx` | 136  | `customHandleStyles`         |
-| `shared/ui/select/SingleSelectMenuItem.jsx`                | 150  | `menuItemStyles`             |
-| `widgets/sidebar-root/ui/SidebarProjectSelect.jsx`         | 142  | `sidebarProjectSelectStyles` |
-| `widgets/sidebar-root/ui/SidebarProjectSelect.jsx`         | 223  | `optionStyles`               |
-| `widgets/sidebar-root/ui/button/CreateEntityButton.jsx`    | 374  | `createEntityButtonStyles`   |
+| File                                                         | Line | Function                     |
+| ------------------------------------------------------------ | ---- | ---------------------------- |
+| ✓ `features/chat/ui/chat-button/PlusChatSubmenu.jsx`         | 208  | `submenuStyles`              |
+| ✓ `features/chat/conversation-list/ui/folders/Folders.jsx`   | 134  | `foldersStyles`              |
+| ✓ `features/toolkits/ui/form/ToolBase/EmptyMcpTools.jsx`     | 26   | `getStyles`                  |
+| ✓ `features/pipelines/flow-editor/ui/nodes/CustomHandle.jsx` | 136  | `customHandleStyles`         |
+| ✓ `shared/ui/select/SingleSelectMenuItem.jsx`                | 150  | `menuItemStyles`             |
+| ✓ `widgets/sidebar-root/ui/SidebarProjectSelect.jsx`         | 142  | `sidebarProjectSelectStyles` |
+| ✓ `widgets/sidebar-root/ui/SidebarProjectSelect.jsx`         | 223  | `optionStyles`               |
+| ✓ `widgets/sidebar-root/ui/button/CreateEntityButton.jsx`    | 374  | `createEntityButtonStyles`   |
 
 </details>
 
@@ -325,74 +325,76 @@ Fixed 11 violations across 2 categories:
 
 ---
 
-## 4. File Naming & Structure Violations (~102)
+## 4. File Naming & Structure Violations (0)
 
-### 4.1 Hook Files Missing `.hooks.js` Suffix (5)
+### 4.1 Hook Files Missing `.hooks.js` Suffix (5 → 0) ✓ **COMPLETE (Session 15)**
 
-| File                                                              | Issue                                       |
-| ----------------------------------------------------------------- | ------------------------------------------- |
-| `features/agent/lib/hooks/useSaveAgentToolVariables.js`           | Missing `.hooks` suffix                     |
-| `features/chat/lib/hooks/useNextInputSuggestion.hook.js`          | Singular `.hook.js` — should be `.hooks.js` |
-| `features/chat/lib/hooks/useRefetchAgentVersionDetailsOnClose.js` | Missing `.hooks` suffix                     |
-| `features/settings/lib/hooks/useLoadApplications.js`              | Missing `.hooks` suffix                     |
-| `widgets/context-budget/lib/hooks/useContextStrategySubmit.js`    | Missing `.hooks` suffix                     |
+| File                                                              | Status                                                                  |
+| ----------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `features/agent/lib/hooks/useSaveAgentToolVariables.js`           | ✓ → `.hooks.js`; `ToolCard.jsx` now imports via `lib/hooks` barrel      |
+| `features/chat/lib/hooks/useNextInputSuggestion.hook.js`          | ✓ → `.hooks.js`                                                         |
+| `features/chat/lib/hooks/useRefetchAgentVersionDetailsOnClose.js` | Stale — already `.hooks.js`                                             |
+| `features/settings/lib/hooks/useLoadApplications.js`              | ✓ Deleted — dead code (no importers; legacy `@/hooks/` version is used) |
+| `widgets/context-budget/lib/hooks/useContextStrategySubmit.js`    | ✓ → `.hooks.js`                                                         |
 
-### 4.2 Hook Files Using `.hooks.jsx` Instead of `.hooks.js` (8)
+### 4.2 Hook Files Using `.hooks.jsx` Instead of `.hooks.js` (8 → 0) ✓ **COMPLETE (Session 15)**
 
-Hooks shouldn't need JSX — these should be `.hooks.js`:
+Only 1 genuine violation. The other 7 hooks return JSX (menu icons / dialogs), so `.jsx` is required — Vite
+does not parse JSX in `.js`. Excluded as intentional.
 
-| File                                                           |
-| -------------------------------------------------------------- |
-| `entities/version/lib/hooks/usePublishVersionMenu.hooks.jsx`   |
-| `entities/version/lib/hooks/useSetDefaultVersion.hooks.jsx`    |
-| `entities/version/lib/hooks/useUnpublishVersionMenu.hooks.jsx` |
-| `features/settings/lib/hooks/useModelConfiguration.hooks.jsx`  |
-| `features/skill/lib/hooks/usePublishSkillMenu.hooks.jsx`       |
-| `features/skill/lib/hooks/useUnpublishSkillMenu.hooks.jsx`     |
-| `widgets/pin-toggler/lib/hooks/usePinMenu.hooks.jsx`           |
-| `widgets/sidebar-root/lib/hooks/useSocketIcon.hooks.jsx`       |
+| File                                                           | Status                        |
+| -------------------------------------------------------------- | ----------------------------- |
+| `entities/version/lib/hooks/usePublishVersionMenu.hooks.jsx`   | Excluded — returns JSX icon   |
+| `entities/version/lib/hooks/useSetDefaultVersion.hooks.jsx`    | Excluded — returns JSX dialog |
+| `entities/version/lib/hooks/useUnpublishVersionMenu.hooks.jsx` | Excluded — returns JSX icon   |
+| `features/settings/lib/hooks/useModelConfiguration.hooks.jsx`  | Excluded — returns JSX icons  |
+| `features/skill/lib/hooks/usePublishSkillMenu.hooks.jsx`       | Excluded — returns JSX icon   |
+| `features/skill/lib/hooks/useUnpublishSkillMenu.hooks.jsx`     | Excluded — returns JSX icon   |
+| `widgets/pin-toggler/lib/hooks/usePinMenu.hooks.jsx`           | Excluded — returns JSX icon   |
+| `widgets/sidebar-root/lib/hooks/useSocketIcon.hooks.jsx`       | ✓ → `.hooks.js` (no JSX)      |
 
-### 4.3 Constant File Naming Violations (4)
+### 4.3 Constant File Naming Violations (4 → 0) ✓ **COMPLETE (Session 15)**
 
-| File                                                               | Issue                                               |
-| ------------------------------------------------------------------ | --------------------------------------------------- |
-| `shared/lib/constants/singleSelectConstants.js`                    | Should be `singleSelect.constants.js`               |
-| `widgets/sidebar-root/lib/constants/createEntity.constant.js`      | Singular `.constant.js` — should be `.constants.js` |
-| `features/pipelines/ai-assistant/lib/constants/promptTemplates.js` | Missing `.constants.js` suffix                      |
-| `widgets/context-budget/lib/constants.js`                          | Should be in `lib/constants/<name>.constants.js`    |
+| File                                                               | Status                                                                                  |
+| ------------------------------------------------------------------ | --------------------------------------------------------------------------------------- |
+| `shared/lib/constants/singleSelectConstants.js`                    | ✓ → `singleSelect.constants.js`; exported as `SingleSelectConstants` from shared barrel |
+| `widgets/sidebar-root/lib/constants/createEntity.constant.js`      | ✓ → `createEntity.constants.js`                                                         |
+| `features/pipelines/ai-assistant/lib/constants/promptTemplates.js` | ✓ → `promptTemplates.constants.js`; new `lib/constants/index.js` barrel                 |
+| `widgets/context-budget/lib/constants.js`                          | ✓ → `lib/constants/contextBudget.constants.js` + barrel (importer paths unchanged)      |
 
-### 4.4 API File Naming Inconsistency (3)
+### 4.4 API File Naming Inconsistency (3 → 0) ✓ **COMPLETE (Session 15)**
 
-Most API files use `<name>Api.js`, but these use `.api.js` (dot-separated):
+| File                                                          | Status                       |
+| ------------------------------------------------------------- | ---------------------------- |
+| `features/chat/api/chat.api.js`                               | ✓ → `chatApi.js`             |
+| `features/chat/api/injectMessage.api.js`                      | ✓ → `injectMessageApi.js`    |
+| `features/chat/conversation-list/api/conversationList.api.js` | ✓ → `conversationListApi.js` |
 
-| File                                                          | Expected                 |
-| ------------------------------------------------------------- | ------------------------ |
-| `features/chat/api/chat.api.js`                               | `chatApi.js`             |
-| `features/chat/api/injectMessage.api.js`                      | `injectMessageApi.js`    |
-| `features/chat/conversation-list/api/conversationList.api.js` | `conversationListApi.js` |
+### 4.5 PascalCase Directories (14 → 0) ✓ **COMPLETE (Session 16)**
 
-### 4.5 PascalCase Directories (14)
+Renamed to `kebab-case` manually; verified in Session 16 (imports resolve, build/tests/lint green):
 
-Should be `kebab-case`:
+| Directory                                                  | Status |
+| ---------------------------------------------------------- | ------ |
+| `entities/author/ui/AuthorInfo`                            | ✓      |
+| `entities/import-wizard/ui/ImportWizardModal`              | ✓      |
+| `entities/run-history/ui/RunHistoryList`                   | ✓      |
+| `features/artifacts/ui/FilePreviewCanvas`                  | ✓      |
+| `features/chat/participants/ui/CollapsedParticipants`      | ✓      |
+| `features/chat/participants/ui/ExpandedParticipants`       | ✓      |
+| `features/chat/participants/ui/ParticipantActions`         | ✓      |
+| `features/chat/participants/ui/UsersParticipantDropdown`   | ✓      |
+| `features/pipelines/flow-editor/ui/nodes/BaseNode`         | ✓      |
+| `features/pipelines/flow-editor/ui/nodes/DecisionNode`     | ✓      |
+| `features/pipelines/flow-editor/ui/settings/InputMappings` | ✓      |
+| `features/toolkits/ui/form/ToolBase`                       | ✓      |
+| `features/toolkits/ui/form/ToolOpenAPI`                    | ✓      |
+| `features/toolkits/ui/form/ToolkitForm`                    | ✓      |
 
-| Directory                                                  |
-| ---------------------------------------------------------- |
-| `entities/author/ui/AuthorInfo`                            |
-| `entities/import-wizard/ui/ImportWizardModal`              |
-| `entities/run-history/ui/RunHistoryList`                   |
-| `features/artifacts/ui/FilePreviewCanvas`                  |
-| `features/chat/participants/ui/CollapsedParticipants`      |
-| `features/chat/participants/ui/ExpandedParticipants`       |
-| `features/chat/participants/ui/ParticipantActions`         |
-| `features/chat/participants/ui/UsersParticipantDropdown`   |
-| `features/pipelines/flow-editor/ui/nodes/BaseNode`         |
-| `features/pipelines/flow-editor/ui/nodes/DecisionNode`     |
-| `features/pipelines/flow-editor/ui/settings/InputMappings` |
-| `features/toolkits/ui/form/ToolBase`                       |
-| `features/toolkits/ui/form/ToolOpenAPI`                    |
-| `features/toolkits/ui/form/ToolkitForm`                    |
+### 4.6 Test Files Not in `__tests__/` Directory (16 → 0) ✓ **COMPLETE (Session 16)**
 
-### 4.6 Test Files Not in `__tests__/` Directory (16)
+All 16 listed files (plus 4 more found by sweep — 20 total) moved into sibling `__tests__/`; relative imports
+and `vi.mock` paths updated.
 
 | File                                                                          |
 | ----------------------------------------------------------------------------- |
@@ -413,88 +415,94 @@ Should be `kebab-case`:
 | `shared/lib/constants/budgetWarning.constants.test.js`                        |
 | `shared/lib/utils/llmSettings.utils.test.js`                                  |
 
-### 4.7 Missing Barrel Files — Slice Root Level (5)
+### 4.7 Missing Barrel Files — Slice Root Level (5 → 0) ✓ **COMPLETE (Session 16)**
 
-| Directory                  |
-| -------------------------- |
-| `features/apps/`           |
-| `features/auth/`           |
-| ~~`features/settings/`~~ ✓ |
-| `shared/config/`           |
-| `shared/lib/`              |
-| `stories/shared/`          |
+| Directory                  | Status                                                                               |
+| -------------------------- | ------------------------------------------------------------------------------------ |
+| ~~`features/apps/`~~       | Stale — `index.js` already existed                                                   |
+| ~~`features/auth/`~~       | Stale — `index.js` already existed                                                   |
+| ~~`features/settings/`~~ ✓ | Fixed earlier                                                                        |
+| ~~`shared/config/`~~       | ✓ Created (`store` + `theme`; `theme/index.js` now re-exports chartPalette)          |
+| ~~`shared/lib/`~~          | Intentionally none — a root barrel would pull `utils` → redux store; import segments |
+| `stories/shared/`          | Excluded — Storybook CSF files, never imported                                       |
 
-### 4.8 Missing Barrel Files — Segment Level (42)
+### 4.8 Missing Barrel Files — Segment Level (42 → 0) ✓ **COMPLETE (Session 16)**
+
+34 barrels created (+3 sub-segment barrels: `chat/participants/lib/context`, `chat/voice-config/lib/hooks`,
+`toolkits/indexes/lib/helpers`); 8 entries stale (index already existed — marked "Stale"). External consumers
+(~157 files incl. legacy `src/`) switched from deep file paths to the barrels; intra-slice relative imports
+kept. Intentional deep imports kept where the barrel would create a cycle or pull in the redux store
+(`src/common/constants.js` → `mention.constants.js`, `usageExport.helpers.js` → `exportToExcel.utils`).
 
 <details>
-<summary>Click to expand full list (42 directories missing index.js)</summary>
+<summary>Click to expand full list (42 directories)</summary>
 
-| Directory                                      |
-| ---------------------------------------------- |
-| `entities/edit-entity-with-ai/lib/`            |
-| `entities/edit-entity-with-ai/ui/`             |
-| `entities/empty-state-page/ui/`                |
-| `entities/generate-entity-with-ai/ui/`         |
-| `entities/import-wizard/lib/`                  |
-| ~~`entities/import-wizard/model/`~~ ✓          |
-| `entities/notifications/lib/`                  |
-| `entities/version/lib/`                        |
-| `features/agent-hub/lib/`                      |
-| `features/agent/lib/`                          |
-| `features/apps/lib/`                           |
-| `features/apps/ui/`                            |
-| `features/artifacts/lib/`                      |
-| `features/auth/lib/`                           |
-| `features/chat/conversation-list/lib/`         |
-| `features/chat/lib/`                           |
-| `features/chat/participants/lib/`              |
-| `features/chat/voice-config/lib/`              |
-| `features/chat/voice-config/ui/`               |
-| `features/credentials/lib/`                    |
-| `features/interactive-tours/lib/`              |
-| ~~`features/interactive-tours/ui/`~~ ✓         |
-| `features/maintenance/lib/`                    |
-| `features/mcp/lib/`                            |
-| `features/onboarding/lib/`                     |
-| `features/openapi/lib/`                        |
-| `features/pipelines/ai-assistant/lib/`         |
-| `features/pipelines/flow-editor/lib/`          |
-| `features/pipelines/fstring-autocomplete/lib/` |
-| `features/pipelines/lib/`                      |
-| `features/pipelines/yaml-editor/ui/`           |
-| `features/project/lib/`                        |
-| ~~`features/settings/api/`~~ ✓                 |
-| ~~`features/settings/lib/`~~ ✓                 |
-| ~~`features/settings/ui/`~~ ✓                  |
-| `features/sharepoint/lib/`                     |
-| `features/skill-hub/lib/`                      |
-| `features/skill/lib/`                          |
-| `features/toolkits/indexes/lib/`               |
-| `features/toolkits/indexes/model/`             |
-| `features/toolkits/lib/`                       |
-| `pages/resources/ui/`                          |
-| `shared/lib/`                                  |
-| `widgets/data-table/ui/`                       |
-| `widgets/nps-survey/lib/`                      |
-| `widgets/pin-toggler/lib/`                     |
-| `widgets/sidebar-root/lib/`                    |
+| Directory                                            |
+| ---------------------------------------------------- |
+| ~~`entities/edit-entity-with-ai/lib/`~~ ✓            |
+| ~~`entities/edit-entity-with-ai/ui/`~~ ✓             |
+| ~~`entities/empty-state-page/ui/`~~ ✓                |
+| ~~`entities/generate-entity-with-ai/ui/`~~ ✓         |
+| ~~`entities/import-wizard/lib/`~~ Stale              |
+| ~~`entities/import-wizard/model/`~~ ✓                |
+| ~~`entities/notifications/lib/`~~ ✓                  |
+| ~~`entities/version/lib/`~~ ✓                        |
+| ~~`features/agent-hub/lib/`~~ ✓                      |
+| ~~`features/agent/lib/`~~ ✓                          |
+| ~~`features/apps/lib/`~~ Stale                       |
+| ~~`features/apps/ui/`~~ Stale                        |
+| ~~`features/artifacts/lib/`~~ ✓                      |
+| ~~`features/auth/lib/`~~ Stale                       |
+| ~~`features/chat/conversation-list/lib/`~~ ✓         |
+| ~~`features/chat/lib/`~~ ✓                           |
+| ~~`features/chat/participants/lib/`~~ ✓              |
+| ~~`features/chat/voice-config/lib/`~~ ✓              |
+| ~~`features/chat/voice-config/ui/`~~ ✓               |
+| ~~`features/credentials/lib/`~~ ✓                    |
+| ~~`features/interactive-tours/lib/`~~ Stale          |
+| ~~`features/interactive-tours/ui/`~~ ✓               |
+| ~~`features/maintenance/lib/`~~ ✓                    |
+| ~~`features/mcp/lib/`~~ Stale                        |
+| ~~`features/onboarding/lib/`~~ ✓                     |
+| ~~`features/openapi/lib/`~~ ✓                        |
+| ~~`features/pipelines/ai-assistant/lib/`~~ ✓         |
+| ~~`features/pipelines/flow-editor/lib/`~~ ✓          |
+| ~~`features/pipelines/fstring-autocomplete/lib/`~~ ✓ |
+| ~~`features/pipelines/lib/`~~ ✓                      |
+| ~~`features/pipelines/yaml-editor/ui/`~~ ✓           |
+| ~~`features/project/lib/`~~ ✓                        |
+| ~~`features/settings/api/`~~ ✓                       |
+| ~~`features/settings/lib/`~~ ✓                       |
+| ~~`features/settings/ui/`~~ ✓                        |
+| ~~`features/sharepoint/lib/`~~ ✓                     |
+| ~~`features/skill-hub/lib/`~~ ✓                      |
+| ~~`features/skill/lib/`~~ Stale                      |
+| ~~`features/toolkits/indexes/lib/`~~ ✓               |
+| ~~`features/toolkits/indexes/model/`~~ ✓             |
+| ~~`features/toolkits/lib/`~~ Stale                   |
+| ~~`pages/resources/ui/`~~ ✓                          |
+| ~~`shared/lib/`~~ ✓                                  |
+| ~~`widgets/data-table/ui/`~~ ✓                       |
+| ~~`widgets/nps-survey/lib/`~~ ✓                      |
+| ~~`widgets/pin-toggler/lib/`~~ ✓                     |
+| ~~`widgets/sidebar-root/lib/`~~ ✓                    |
 
 </details>
 
-### 4.9 Segments Outside `lib/` (3)
+### 4.9 Segments Outside `lib/` (3 → 0) ✓ **COMPLETE (Session 16)**
 
-| Directory                               | Issue                      |
-| --------------------------------------- | -------------------------- |
-| `entities/credential-warning/helpers/`  | Should be `lib/helpers/`   |
-| `entities/credential-warning/hooks/`    | Should be `lib/hooks/`     |
-| `features/chat/voice-config/constants/` | Should be `lib/constants/` |
+| Directory                                   | Status                                                                              |
+| ------------------------------------------- | ----------------------------------------------------------------------------------- |
+| ~~`entities/credential-warning/helpers/`~~  | ✓ → `lib/helpers/`; new `lib/index.js`, re-exported from slice root                 |
+| ~~`entities/credential-warning/hooks/`~~    | ✓ → `lib/hooks/`; `ToolkitEditor`, `ToolkitsOperationButtons` import the slice root |
+| ~~`features/chat/voice-config/constants/`~~ | ✓ → `lib/constants/` + barrel, re-exported from `lib/index.js`                      |
 
-### 4.10 Files at Wrong Structural Level (2)
+### 4.10 Files at Wrong Structural Level (2 → 0) ✓ **COMPLETE (Session 16)**
 
-| File                                                          | Issue                                              |
-| ------------------------------------------------------------- | -------------------------------------------------- |
-| `features/chat/ui/sub-agent-section/subAgentIcon.helpers.jsx` | Helper file in `ui/` — should be in `lib/helpers/` |
-| `features/settings/ui/analytics/_testHelpers.jsx`             | Test helper in `ui/` — should be in `__tests__/`   |
+| File                                                              | Status                                                                                                                    |
+| ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| ~~`features/chat/ui/sub-agent-section/subAgentIcon.helpers.jsx`~~ | ✓ → `features/chat/lib/helpers/` (stays `.jsx` — returns JSX). Not in the barrel: it reaches `@/components` → redux store |
+| ~~`features/settings/ui/analytics/_testHelpers.jsx`~~             | ✓ → `ui/analytics/__tests__/_testHelpers.jsx`; 5 tests import `./_testHelpers`                                            |
 
 ---
 
@@ -1201,3 +1209,87 @@ Added `/** @type {MuiSx} */` annotations to style functions in:
 **Next steps:**
 
 - Section 4: File Naming & Structure violations (~102 remaining)
+
+---
+
+### 2026-09-24 — Session 15 — Section 4.1–4.4 Complete (20 violations resolved)
+
+**Scope:** Section 4.1–4.4 — hook, constant and API file naming. Branch
+`refactor/EL-6233/file-naming-structure`.
+
+#### Renames (`git mv`, 11 files)
+
+| From                                                               | To                                         |
+| ------------------------------------------------------------------ | ------------------------------------------ |
+| `features/agent/lib/hooks/useSaveAgentToolVariables.js`            | `useSaveAgentToolVariables.hooks.js`       |
+| `features/chat/lib/hooks/useNextInputSuggestion.hook.js`           | `useNextInputSuggestion.hooks.js`          |
+| `widgets/context-budget/lib/hooks/useContextStrategySubmit.js`     | `useContextStrategySubmit.hooks.js`        |
+| `widgets/sidebar-root/lib/hooks/useSocketIcon.hooks.jsx`           | `useSocketIcon.hooks.js`                   |
+| `shared/lib/constants/singleSelectConstants.js`                    | `singleSelect.constants.js`                |
+| `widgets/sidebar-root/lib/constants/createEntity.constant.js`      | `createEntity.constants.js`                |
+| `features/pipelines/ai-assistant/lib/constants/promptTemplates.js` | `promptTemplates.constants.js`             |
+| `widgets/context-budget/lib/constants.js`                          | `lib/constants/contextBudget.constants.js` |
+| `features/chat/api/chat.api.js`                                    | `chatApi.js`                               |
+| `features/chat/api/injectMessage.api.js`                           | `injectMessageApi.js`                      |
+| `features/chat/conversation-list/api/conversationList.api.js`      | `conversationListApi.js`                   |
+
+#### Other changes
+
+- **Deleted** `features/settings/lib/hooks/useLoadApplications.js` — dead code, no importers (pages use legacy
+  `@/hooks/useLoadApplications`)
+- **New barrels:** `widgets/context-budget/lib/constants/index.js`,
+  `features/pipelines/ai-assistant/lib/constants/index.js`
+- **Shared barrel:** `export * as SingleSelectConstants from './singleSelect.constants.js'`;
+  `SingleSelect.jsx` and `SingleSelectDropdown.jsx` destructure `FLAT_MENU_ACTION_VALUE` at module level
+  (avoids `react-hooks/exhaustive-deps` warnings)
+- **Barrel imports:** all touched importers (`ToolCard.jsx`, `useAIContentGenerationStreaming.hooks.js`,
+  select components) now import via segment barrels instead of deep file paths
+
+**Audit entries excluded from fix count:**
+
+- 4.1 `useRefetchAgentVersionDetailsOnClose` — **stale entry**, already `.hooks.js`
+- 4.2 — **7 intentional exceptions**: hooks returning JSX must stay `.hooks.jsx` (Vite does not parse JSX in
+  `.js`). Attempted rename of `useSetDefaultVersion` / `useModelConfiguration` broke the build and was
+  reverted
+
+**Counters updated:**
+
+- Section 4: `~102` → **82** (−20: 11 renamed, 1 deleted, 1 stale, 7 intentional exceptions)
+- **Total: ~98 violations → 82 violations**
+
+**Verification:** `npm run build` ✓, full `vitest` suite ✓, `npm run lint` ✓, app smoke-tested manually ✓.
+Note: after renames restart dev server with `npm run dev -- --force` (stale Vite resolve cache → 404).
+
+**Next steps:**
+
+- Resolve 4.5 (PascalCase dirs) and 4.8 (segment barrels)
+- Group 2: 4.6 + 4.9 + 4.10 (independent of pending decisions)
+
+### 2026-09-24 — Session 16 — Sections 3.4, 4.5–4.10 Complete (82 violations resolved)
+
+- **3.4:** `/** @type {MuiSx} */` added to the 8 remaining style functions
+- **4.5:** 14 PascalCase dirs renamed to kebab-case (done manually by the user), verified
+- **4.6:** 20 test files moved to `__tests__/`
+- **4.7:** `shared/config/index.js` created; `shared/lib/index.js` dropped in PR review (would load the redux
+  store via `utils` — consumers import segment barrels); `features/apps`, `features/auth` stale;
+  `stories/shared` excluded (Storybook)
+- **4.8:** 34 segment barrels + 3 sub-segment barrels created, 8 stale entries; ~157 external importers
+  switched to barrels (script-driven, merged with existing barrel imports; namespace constants destructured at
+  module level). `vi.mock` file paths left as-is (they still intercept barrel re-exports)
+- **4.9:** `credential-warning/{helpers,hooks}` → `lib/`; `voice-config/constants` → `lib/constants/`; barrels
+  added, external importers switched to the slice root
+- **4.10:** `subAgentIcon.helpers.jsx` → `chat/lib/helpers/`, imported directly (in the barrel it made
+  `convertChatConversationMessages.test` fail with `localStorage is not defined` via `@/components` → store);
+  `_testHelpers.jsx` → `analytics/__tests__/`
+- **Cycle fixes:** `src/common/constants.js` keeps the deep `mention.constants.js` import (barrel →
+  budgetWarning → `@/routes` → `common/constants` cycle); `usageExport.helpers.js` keeps the deep
+  `exportToExcel.utils` import (barrel pulls in the store)
+
+**Counters updated:**
+
+- Section 4: **82 → 0** ✓
+- **Total: 82 → 0 violations** — audit complete
+
+**Verification:** `npm run build` ✓, `vitest` 1469/1469 ✓, `npm run lint` ✓
+
+**Next steps:** `/code-review` against `main`, then commit/PR on user's command

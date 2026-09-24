@@ -268,15 +268,12 @@ const applicationCatalogCardStyles = () => {
       gap: '0.5rem',
       minHeight: '1.75rem',
     },
-    configureButton: ({ palette }) => ({
+    configureButton: {
       '& svg': {
         width: '1rem',
         height: '1rem',
       },
-      '& svg path': {
-        fill: palette.icon.fill.white,
-      },
-    }),
+    },
     pendingStatus: ({ palette }) => ({
       display: 'flex',
       alignItems: 'center',

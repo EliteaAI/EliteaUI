@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { autoModel, isAutoSelection } from '@/[fsd]/shared/lib/utils/autoRouting.utils';
+import { autoModel, isAutoSelection } from '@/[fsd]/shared/lib/utils';
 import { ChatParticipantType } from '@/common/constants';
 
 import * as NewConversationHelpers from '../helpers/newConversation.helpers';

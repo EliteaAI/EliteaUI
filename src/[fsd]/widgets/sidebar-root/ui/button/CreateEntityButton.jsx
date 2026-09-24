@@ -371,6 +371,7 @@ const CreateEntityButton = memo(props => {
 
 CreateEntityButton.displayName = 'CreateEntityButton';
 
+/** @type {MuiSx} */
 const createEntityButtonStyles = sideBarCollapsed => ({
   wrapper: {
     position: 'relative',

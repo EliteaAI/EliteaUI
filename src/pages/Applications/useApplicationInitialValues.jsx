@@ -7,11 +7,7 @@ import { useParams } from 'react-router-dom';
 import { deepClone } from '@mui/x-data-grid/internals';
 
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
-import {
-  ORIENTATION,
-  PIPELINE_STATE,
-  PipelineNodeTypes,
-} from '@/[fsd]/features/pipelines/flow-editor/lib/constants/flowEditor.constants';
+import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import {
   FlowEditorHelpers,
   LayoutHelpers,
@@ -19,8 +15,7 @@ import {
 } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { DEFAULT_PIPELINE_KEY } from '@/[fsd]/features/pipelines/lib/constants';
 import { AutoRoutingConstants, InternalToolsConstants } from '@/[fsd]/shared/lib/constants';
-import { defaultModelForSurface } from '@/[fsd]/shared/lib/utils/autoRouting.utils';
-import { cleanLLMSettings, generateLLMSettings } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
+import { cleanLLMSettings, defaultModelForSurface, generateLLMSettings } from '@/[fsd]/shared/lib/utils';
 import {
   useApplicationDetailsQuery,
   usePublicApplicationDetailsQuery,
@@ -33,6 +28,8 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useViewMode from '@/hooks/useViewMode';
 import { actions } from '@/slices/pipeline';
 import { actions as editorActions } from '@/slices/pipelineEditor';
+
+const { ORIENTATION, PIPELINE_STATE, PipelineNodeTypes } = FlowEditorConstants;
 
 const { MODEL_SURFACES } = AutoRoutingConstants;
 

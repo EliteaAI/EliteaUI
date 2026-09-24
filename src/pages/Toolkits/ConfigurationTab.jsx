@@ -4,7 +4,7 @@ import { Box, CircularProgress, Grid, Typography } from '@mui/material';
 
 import { IndexesPanel } from '@/[fsd]/features/toolkits/indexes/ui';
 import { useToolkitDetailNavigation } from '@/[fsd]/features/toolkits/lib/hooks';
-import { ToolkitForm } from '@/[fsd]/features/toolkits/ui/form/ToolkitForm';
+import { ToolkitForm } from '@/[fsd]/features/toolkits/ui/form/toolkit-form';
 import DirtyDetector from '@/components/Formik/DirtyDetector.jsx';
 
 const ConfigurationTab = memo(props => {

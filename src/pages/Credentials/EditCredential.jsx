@@ -7,7 +7,7 @@ import { Grid } from '@mui/material';
 
 import { CredentialsControls, CredentialsTabBar } from '@/[fsd]/features/credentials/ui';
 import { CREDENTIALS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
-import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks/useEnvironmentSettingByKey.hooks';
+import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks';
 import { Tooltip } from '@/[fsd]/shared/ui';
 import { useGetConfigurationDetailQuery } from '@/api/configurations';
 import { convertCredentialConfigSchema } from '@/common/credentialSchemaUtils';

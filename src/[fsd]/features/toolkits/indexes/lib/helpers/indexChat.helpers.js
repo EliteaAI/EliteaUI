@@ -6,13 +6,12 @@ import {
   normalizeIndexingReport,
   parseIndexEntryJson,
 } from '@/[fsd]/entities/indexing-report';
-import { normalizeContinuationError } from '@/[fsd]/features/chat/lib/helpers/continuationError.helpers.js';
+import { normalizeContinuationError } from '@/[fsd]/features/chat/lib/helpers';
 import {
   IndexStatuses,
   IndexesToolsEnum,
 } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
-import { formatJsonBlock } from '@/[fsd]/shared/lib/utils';
-import { notifyTaskComplete, notifyTaskError } from '@/[fsd]/shared/lib/utils/soundNotification.utils';
+import { formatJsonBlock, notifyTaskComplete, notifyTaskError } from '@/[fsd]/shared/lib/utils';
 import {
   ChatParticipantType,
   ROLES,

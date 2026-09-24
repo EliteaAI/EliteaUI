@@ -1,3 +1,5 @@
+import { McpConstants } from '@/[fsd]/shared/lib/constants';
+
 export const MC_TOKENS_STORAGE_KEY = 'elitea_mcp_tokens_v1';
 export const MCP_CREDENTIALS_STORAGE_KEY = 'elitea_mcp_credentials_v1';
 export const MCP_IGNORED_SERVERS_STORAGE_KEY = 'elitea_mcp_ignored_servers_v1';
@@ -18,7 +20,7 @@ export const MCP_SESSION_STORAGE_KEYS = [
   MCP_HEADER_CHECKED_STORAGE_KEY,
 ];
 
-export { MCP_PREBUILD_PREFIX } from '@/[fsd]/shared/lib/constants/mcp.constants';
+export const { MCP_PREBUILD_PREFIX } = McpConstants;
 
 // Deprecated MCP server URLs mapped to their current replacements.
 // Tokens stored under either URL resolve to the same canonical key.

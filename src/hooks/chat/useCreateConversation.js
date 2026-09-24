@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useTrackEvent } from '@/GA';
 import { sortConversations } from '@/[fsd]/features/chat/conversation-list/lib/helpers';
 import { useConversationNavigation } from '@/[fsd]/features/chat/lib/hooks';
-import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
+import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
 import {
   useConversationCreateMutation,
   useConversationEditMutation,
@@ -14,6 +14,8 @@ import { buildErrorMessage } from '@/common/utils';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import useResetCreateFlag from './useResetCreateFlag';
+
+const { GA_EVENT_NAMES, GA_EVENT_PARAMS } = AnalyticConstants;
 
 export default function useCreateConversation({
   activeConversation,

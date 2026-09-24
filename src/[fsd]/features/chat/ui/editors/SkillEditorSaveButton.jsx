@@ -2,7 +2,7 @@ import { memo, useCallback } from 'react';
 
 import { CircularProgress } from '@mui/material';
 
-import useSaveSkill from '@/[fsd]/features/skill/lib/hooks/useSaveSkill.hooks';
+import { useSaveSkill } from '@/[fsd]/features/skill/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 
 const SkillEditorSaveButton = memo(props => {

@@ -2,8 +2,8 @@ import { memo, useCallback, useMemo } from 'react';
 
 import { Box, Tooltip, Typography } from '@mui/material';
 
-import { ARTIFACT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/artifactTourTargets.constants';
-import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
+import { ARTIFACT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
+import { useProjectType } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { SimpleSearchBar } from '@/[fsd]/shared/ui/input';
 import FileUploadIcon from '@/assets/icons/FileUploadIcon.svg?react';

@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  BUDGET_ERROR_CODES,
-  BUDGET_ERROR_VARIANTS,
-} from '@/[fsd]/shared/lib/constants/budgetError.constants';
+import { BudgetErrorConstants } from '@/[fsd]/shared/lib/constants';
 
 import {
   BannerMessageMap,
@@ -45,6 +42,8 @@ import {
   isReclaimableRun,
   shouldExpireReindexStub,
 } from '../indexDetails.helpers';
+
+const { BUDGET_ERROR_CODES, BUDGET_ERROR_VARIANTS } = BudgetErrorConstants;
 
 const runState = over => ({ isIndexing: true, canStopIndexing: false, isStale: false, ...over });
 

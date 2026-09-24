@@ -1,5 +1,5 @@
 import { typographyVariants } from '@/[fsd]/shared/config/theme';
-import { mergePalette } from '@/[fsd]/shared/lib/helpers/theme.helpers';
+import { ThemeHelpers } from '@/[fsd]/shared/lib/helpers';
 import { MuiButtonStyles } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { eliteaCheckboxVariants, eliteaUnifiedRadioVariants } from '@/[fsd]/shared/ui/checkbox/BaseCheckbox';
 import { eliteaInputVariants, eliteaTextFieldVariants } from '@/[fsd]/shared/ui/input/textFieldVariants';
@@ -15,6 +15,8 @@ import { eliteaIconButtonStyle } from './components/IconButton';
 import darkPalette from './darkPalette';
 import lightPalette from './lightPalette';
 import { eliteaMenuItemVariants, eliteaMenuListVariants } from './theme/menuListVariants';
+
+const { mergePalette } = ThemeHelpers;
 
 const getPalette = (mode, customPalette) => {
   const basePalette = mode === 'dark' ? darkPalette : lightPalette;

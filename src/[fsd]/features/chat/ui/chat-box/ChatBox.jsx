@@ -64,16 +64,14 @@ import { MentionSkillList } from '@/[fsd]/features/skill';
 import { useDeleteSkillMutation } from '@/[fsd]/features/skill/api';
 import { LLMSettingsConstants, MentionConstants } from '@/[fsd]/shared/lib/constants';
 import {
+  cleanLLMSettings,
   isAutoSelection,
+  isLLMSettingsFamilyConflict,
   modelsWithAuto,
+  resetLLMSettingsForModel,
   resolveModelSurface,
   selectionFields,
-} from '@/[fsd]/shared/lib/utils/autoRouting.utils';
-import {
-  cleanLLMSettings,
-  isLLMSettingsFamilyConflict,
-  resetLLMSettingsForModel,
-} from '@/[fsd]/shared/lib/utils/llmSettings.utils';
+} from '@/[fsd]/shared/lib/utils';
 import { Modal } from '@/[fsd]/shared/ui';
 import {
   useConversationEditMutation,
