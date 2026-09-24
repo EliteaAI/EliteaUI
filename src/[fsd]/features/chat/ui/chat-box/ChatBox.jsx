@@ -2149,6 +2149,17 @@ const ChatBox = forwardRef((props, boxRef) => {
       stopTTS?.();
       resetSlash();
 
+      // If items are already waiting in the stop queue, append to the tail so all
+      // messages process in submission order rather than injecting ahead of the queue.
+      if (stopQueueRef.current.length > 0) {
+        const injectionId = uuidv4();
+        stopQueueRef.current.push({ id: injectionId, text });
+        setPendingInjections(prev => [...prev, { id: injectionId, text, inFlight: false }]);
+        chatInput.current?.reset();
+        onClearAttachments?.();
+        return;
+      }
+
       const injectionId = uuidv4();
       pendingInjectionsRef.current.set(injectionId, text);
       // inFlight from the start: the POST fires immediately, so the remove
