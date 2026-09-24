@@ -2159,6 +2159,8 @@ const ChatBox = forwardRef((props, boxRef) => {
       resetSlash();
 
       const injectionId = uuidv4();
+      // Chat passes clearInputAfterSubmit={false}, so clearing is the caller's job
+      // here just as it is in onPredictStream.
       chatInput.current?.reset();
       onClearAttachments?.();
 
@@ -2171,10 +2173,7 @@ const ChatBox = forwardRef((props, boxRef) => {
       }
 
       pendingInjectionsRef.current.set(injectionId, text);
-      // inFlight from the start: the POST fires immediately, so the remove
-      // button should never be shown for this item.
-      // Chat passes clearInputAfterSubmit={false}, so clearing is the caller's job
-      // here just as it is in onPredictStream.
+      // inFlight from the start: the POST fires immediately, so the remove button is hidden.
       setPendingInjections(prev => [...prev, { id: injectionId, text, inFlight: true }]);
       try {
         await injectMessage({
