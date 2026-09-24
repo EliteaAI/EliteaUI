@@ -1,10 +1,13 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useSelector } from 'react-redux';
+import { Typography } from '@mui/material';
 
 import { CredentialsSelect } from '@/[fsd]/features/credentials';
+import { useProjectType } from '@/[fsd]/shared/lib/hooks';
 import { Schedule } from '@/[fsd]/shared/ui';
-import { useSelectedProject } from '@/hooks/useSelectedProject';
+
+const PERSONAL_TOOLKIT_CREDENTIAL_HINT =
+  'This toolkit uses a personal credential; schedules in a team project need a project credential.';
 
 const IndexScheduleModal = memo(props => {
   const {
@@ -14,35 +17,65 @@ const IndexScheduleModal = memo(props => {
     cron,
     timezone,
     credentials,
+    toolkitCredentials,
     credentialsData,
     toolkitSchemaFetching,
     isEdit,
     toolkitName,
   } = props;
-  const { personal_project_id } = useSelector(state => state.user);
-  const selectedProject = useSelectedProject();
-
-  const isPrivateProject = useMemo(
-    () => selectedProject?.id === personal_project_id,
-    [personal_project_id, selectedProject?.id],
-  );
+  const { isPrivate: isPersonalProject } = useProjectType();
+  const styles = indexScheduleModalStyles();
 
   const [innerCredentials, setInnerCredentials] = useState(null);
   const [credentialsError, setCredentialsError] = useState(false);
+  const [isInnerCredentialsListed, setIsInnerCredentialsListed] = useState(null);
+
+  const isToolkitCredentialPersonalInTeam = !isPersonalProject && Boolean(toolkitCredentials?.private);
+
+  const credentialsSeed = useMemo(
+    () => (isToolkitCredentialPersonalInTeam ? null : (toolkitCredentials ?? null)),
+    [isToolkitCredentialPersonalInTeam, toolkitCredentials],
+  );
+
+  const seedOnOpenRef = useRef(credentialsSeed);
+
+  useEffect(() => {
+    seedOnOpenRef.current = credentialsSeed;
+  }, [credentialsSeed]);
+
+  const hasUserPickedRef = useRef(false);
 
   useEffect(() => {
     if (open) {
-      setInnerCredentials(credentials);
+      hasUserPickedRef.current = false;
+      setInnerCredentials(credentials ?? seedOnOpenRef.current);
     }
 
     return () => {
       setCredentialsError(false);
+      setIsInnerCredentialsListed(null);
     };
   }, [open, credentials]);
 
+  useEffect(() => {
+    if (!open || credentials || hasUserPickedRef.current || !credentialsSeed) return;
+    setInnerCredentials(current => current ?? credentialsSeed);
+  }, [open, credentials, credentialsSeed]);
+
+  const handleSelectConfiguration = useCallback(value => {
+    hasUserPickedRef.current = true;
+    setCredentialsError(false);
+    setInnerCredentials(value);
+  }, []);
+
+  const isInnerCredentialsRejected =
+    !innerCredentials ||
+    isInnerCredentialsListed !== true ||
+    (!isPersonalProject && Boolean(innerCredentials.private));
+
   const handleSubmit = useCallback(
     cronExpression => {
-      if (!innerCredentials && credentialsData) {
+      if (isInnerCredentialsRejected && credentialsData) {
         setCredentialsError(true);
         return;
       }
@@ -50,7 +83,7 @@ const IndexScheduleModal = memo(props => {
       onSubmit(cronExpression, innerCredentials);
       onClose();
     },
-    [innerCredentials, credentialsData, onSubmit, onClose],
+    [isInnerCredentialsRejected, innerCredentials, credentialsData, onSubmit, onClose],
   );
 
   return (
@@ -65,25 +98,46 @@ const IndexScheduleModal = memo(props => {
       closeOnSubmit={false}
     >
       {credentialsData && (
-        <CredentialsSelect
-          isCreationAllowed
-          label={`${toolkitName} Credentials`}
-          description={credentialsData.description}
-          onSelectConfiguration={value => setInnerCredentials(value)}
-          value={innerCredentials}
-          configurations={credentialsData.options}
-          error={credentialsError}
-          helperText="Your configuration does not match any available configurations."
-          type={credentialsData.configuration_types?.[0] || ''}
-          section="credentials"
-          disabled={toolkitSchemaFetching}
-          onlyPublic={!isPrivateProject}
-        />
+        <>
+          <CredentialsSelect
+            isCreationAllowed
+            label={`${toolkitName} Credentials`}
+            description={credentialsData.description}
+            onSelectConfiguration={handleSelectConfiguration}
+            value={innerCredentials}
+            configurations={credentialsData.options}
+            error={credentialsError}
+            helperText="Your configuration does not match any available configurations."
+            type={credentialsData.configuration_types?.[0] || ''}
+            section="credentials"
+            disabled={toolkitSchemaFetching}
+            onlyPublic={!isPersonalProject}
+            fallbackToFirstCredential={false}
+            onSelectionListedChange={setIsInnerCredentialsListed}
+          />
+          {isToolkitCredentialPersonalInTeam && !innerCredentials && (
+            <Typography
+              data-testid="index-schedule-personal-credential-hint"
+              variant="bodySmall"
+              sx={styles.hint}
+            >
+              {PERSONAL_TOOLKIT_CREDENTIAL_HINT}
+            </Typography>
+          )}
+        </>
       )}
     </Schedule.ScheduleModal>
   );
 });
 
 IndexScheduleModal.displayName = 'IndexScheduleModal';
+
+/** @type {MuiSx} */
+const indexScheduleModalStyles = () => ({
+  hint: ({ palette }) => ({
+    marginTop: '0.5rem',
+    color: palette.text.secondary,
+  }),
+});
 
 export default IndexScheduleModal;

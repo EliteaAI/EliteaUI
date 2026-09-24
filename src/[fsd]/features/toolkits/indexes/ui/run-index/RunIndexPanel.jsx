@@ -89,7 +89,7 @@ const RunIndexPanel = memo(props => {
   const navigate = useNavigate();
   const projectId = useSelectedProjectId();
   const { toastSuccess, toastError } = useToast();
-  const { values } = useFormikContext();
+  const { values, initialValues } = useFormikContext();
 
   const [activeTab, setActiveTab] = useState(IndexDetailsTabs.activity);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -180,13 +180,16 @@ const RunIndexPanel = memo(props => {
     [toolkitSchemas, toolkitType],
   );
 
-  const credentialsData = useMemo(() => {
-    const entry = Object.entries(toolkitSchema?.properties || {}).find(
-      // eslint-disable-next-line no-unused-vars
-      ([_key, prop]) => prop.section?.includes('credentials') ?? null,
-    );
-    return entry ? entry[1] : null;
-  }, [toolkitSchema]);
+  const [credentialsKey, credentialsData] = useMemo(
+    () =>
+      Object.entries(toolkitSchema?.properties || {}).find(
+        // eslint-disable-next-line no-unused-vars
+        ([_key, prop]) => prop.section?.includes('credentials') ?? null,
+      ) ?? [null, null],
+    [toolkitSchema],
+  );
+
+  const savedToolkitCredentials = credentialsKey ? (initialValues?.settings?.[credentialsKey] ?? null) : null;
 
   const effectiveState = localMetaOverride?.state ?? index?.metadata?.state;
   // The panel's own notion of "running", which is the row's state OR an active chat run;
@@ -801,6 +804,7 @@ const RunIndexPanel = memo(props => {
         cron={scheduleData.cron ?? IndexCronDefault}
         timezone={scheduleData.timezone}
         credentials={scheduleData.credentials}
+        toolkitCredentials={savedToolkitCredentials}
         credentialsData={credentialsData}
         isEdit={scheduleModalIsEdit}
         toolkitName={toolkitName}
