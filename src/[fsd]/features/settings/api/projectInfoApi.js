@@ -4,10 +4,11 @@ const apiSlicePath = '/elitea_core';
 
 const TAG_TYPE_PROJECT_INFO = 'PROJECT_INFO';
 const TAG_TYPE_PROJECT_ICONS = 'PROJECT_ICONS';
+const TAG_TYPE_CHAT_TEMPLATES = 'CHAT_TEMPLATES';
 
 const projectInfoApi = eliteaApi
   .enhanceEndpoints({
-    addTagTypes: [TAG_TYPE_PROJECT_INFO, TAG_TYPE_PROJECT_ICONS],
+    addTagTypes: [TAG_TYPE_PROJECT_INFO, TAG_TYPE_PROJECT_ICONS, TAG_TYPE_CHAT_TEMPLATES],
   })
   .injectEndpoints({
     endpoints: build => ({
@@ -93,6 +94,59 @@ const projectInfoApi = eliteaApi
           return [{ type: TAG_TYPE_PROJECT_ICONS, id: projectId }];
         },
       }),
+
+      getChatTemplates: build.query({
+        query: ({ projectId }) => ({
+          url: `${apiSlicePath}/chat_templates/prompt_lib/${projectId}/templates`,
+        }),
+        providesTags: (_, _error, { projectId }) => [{ type: TAG_TYPE_CHAT_TEMPLATES, id: projectId }],
+      }),
+
+      createChatTemplate: build.mutation({
+        query: ({ projectId, name, participants = [] }) => ({
+          url: `${apiSlicePath}/chat_templates/prompt_lib/${projectId}/templates`,
+          method: 'POST',
+          body: { name, participants },
+        }),
+        invalidatesTags: (_, error, { projectId }) => {
+          if (error) return [];
+          return [{ type: TAG_TYPE_CHAT_TEMPLATES, id: projectId }];
+        },
+      }),
+
+      updateChatTemplate: build.mutation({
+        query: ({ projectId, templateId, name, participants }) => ({
+          url: `${apiSlicePath}/chat_templates/prompt_lib/${projectId}/templates/${templateId}`,
+          method: 'PUT',
+          body: { name, participants },
+        }),
+        invalidatesTags: (_, error, { projectId }) => {
+          if (error) return [];
+          return [{ type: TAG_TYPE_CHAT_TEMPLATES, id: projectId }];
+        },
+      }),
+
+      deleteChatTemplate: build.mutation({
+        query: ({ projectId, templateId }) => ({
+          url: `${apiSlicePath}/chat_templates/prompt_lib/${projectId}/templates/${templateId}`,
+          method: 'DELETE',
+        }),
+        invalidatesTags: (_, error, { projectId }) => {
+          if (error) return [];
+          return [{ type: TAG_TYPE_CHAT_TEMPLATES, id: projectId }];
+        },
+      }),
+
+      setDefaultChatTemplate: build.mutation({
+        query: ({ projectId, templateId }) => ({
+          url: `${apiSlicePath}/chat_templates/prompt_lib/${projectId}/templates/${templateId}/set-default`,
+          method: 'POST',
+        }),
+        invalidatesTags: (_, error, { projectId }) => {
+          if (error) return [];
+          return [{ type: TAG_TYPE_CHAT_TEMPLATES, id: projectId }];
+        },
+      }),
     }),
   });
 
@@ -104,4 +158,9 @@ export const {
   useUploadProjectIconMutation,
   useGetProjectIconsQuery,
   useDeleteProjectIconMutation,
+  useGetChatTemplatesQuery,
+  useCreateChatTemplateMutation,
+  useUpdateChatTemplateMutation,
+  useDeleteChatTemplateMutation,
+  useSetDefaultChatTemplateMutation,
 } = projectInfoApi;

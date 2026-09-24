@@ -2,10 +2,8 @@ import { memo } from 'react';
 
 import { Box } from '@mui/material';
 
-import { useIsMidturnInjectionAvailable } from '@/[fsd]/features/chat';
 import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
 import DefaultModulesSettings from '@/[fsd]/features/settings/ui/project-general/DefaultModulesSettings';
-import MidturnInjection from '@/[fsd]/features/settings/ui/project-general/MidturnInjection';
 import { ProjectBackupRestore } from '@/[fsd]/features/settings/ui/project-general/backup-restore';
 import { ProjectParamsHeader } from '@/[fsd]/features/settings/ui/project-general/general';
 import { ProjectAIConfigurations } from '@/[fsd]/features/settings/ui/project-general/project-ai-configurations';
@@ -16,12 +14,10 @@ import useCheckPermission from '@/hooks/useCheckPermission';
 
 import SettingsFormProvider from '../shared/SettingsFormProvider';
 import AutoRoutingSettings from './AutoRoutingSettings';
-import ChatDefaultsSettings from './ChatDefaultsSettings';
+import ChatConfigurationSection from './ChatConfigurationSection';
 
 const ProjectGeneralContent = memo(() => {
   const styles = componentStyles();
-
-  const isMidturnInjectionAvailable = useIsMidturnInjectionAvailable();
 
   const { checkPermission } = useCheckPermission();
   const isBackupRestoreAvailable =
@@ -83,37 +79,14 @@ const ProjectGeneralContent = memo(() => {
             },
           ]}
         />
-        {/* MidturnInjection renders null unless the platform enabled this project, so the
-            accordion would otherwise show an empty section — gate the whole thing. */}
-        {isMidturnInjectionAvailable && (
-          <BasicAccordion
-            data-testid="midturn-injection-section"
-            showMode={AccordionConstants.AccordionShowMode.LeftMode}
-            accordionSX={styles.accordionStyles}
-            items={[
-              {
-                title: 'Chat',
-                content: (
-                  <Box sx={styles.containerStyles}>
-                    <SettingsFormProvider FormContent={MidturnInjection} />
-                  </Box>
-                ),
-              },
-            ]}
-          />
-        )}
         <BasicAccordion
-          data-testid="default-chat-configuration-section"
+          data-testid="chat-configuration-section"
           showMode={AccordionConstants.AccordionShowMode.LeftMode}
           accordionSX={styles.accordionStyles}
           items={[
             {
-              title: 'Default Chat Configuration',
-              content: (
-                <Box sx={styles.containerStyles}>
-                  <ChatDefaultsSettings />
-                </Box>
-              ),
+              title: 'Chat configuration',
+              content: <ChatConfigurationSection />,
             },
           ]}
         />

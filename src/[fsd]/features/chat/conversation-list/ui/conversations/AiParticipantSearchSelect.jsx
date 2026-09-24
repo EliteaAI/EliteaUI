@@ -9,6 +9,8 @@ import { EntityTypeIcon } from '@/components/EntityIcon';
 import SearchIcon from '@/components/Icons/SearchIcon';
 import useParticipants from '@/hooks/chat/useParticipants';
 
+import { makeRenderOptionBody, participantRenderBaseStyles } from './participantRender.helpers';
+
 const filterOptionsIdentity = options => options;
 
 const AiParticipantSearchSelect = memo(props => {
@@ -75,24 +77,14 @@ const AiParticipantSearchSelect = memo(props => {
     setQuery(newInputValue);
   }, []);
 
+  const renderBaseOptionBody = useMemo(() => makeRenderOptionBody(styles), [styles]);
+
   const renderOptionBody = useCallback(
     option => {
       const isPublic = option.project_id === PUBLIC_PROJECT_ID;
       return (
         <>
-          <Box sx={styles.optionBody}>
-            <EntityTypeIcon
-              type={option.entity_name}
-              specifiedFontSize="1rem"
-            />
-            <Typography
-              variant="bodyMedium"
-              color="text.secondary"
-              sx={styles.optionName}
-            >
-              {option.name}
-            </Typography>
-          </Box>
+          {renderBaseOptionBody(option)}
           {isPublic && (
             <Box sx={styles.publicBadge}>
               <Typography
@@ -106,7 +98,7 @@ const AiParticipantSearchSelect = memo(props => {
         </>
       );
     },
-    [styles],
+    [renderBaseOptionBody, styles],
   );
 
   const renderChipLabel = useCallback(
@@ -179,19 +171,7 @@ AiParticipantSearchSelect.displayName = 'AiParticipantSearchSelect';
 
 /** @type {MuiSx} */
 const aiParticipantSearchSelectStyles = () => ({
-  optionBody: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-    flex: 1,
-    minWidth: 0,
-  },
-  optionName: {
-    minWidth: 0,
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-  },
+  ...participantRenderBaseStyles,
   publicBadge: ({ palette }) => ({
     boxSizing: 'border-box',
     display: 'flex',

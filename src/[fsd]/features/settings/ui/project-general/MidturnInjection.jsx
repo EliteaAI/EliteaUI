@@ -50,7 +50,7 @@ const MidturnInjection = memo(() => {
         enabled={values.midturn_injection_enabled}
         onToggle={handleToggle}
         disabled={!canEditProjectContext}
-        title="Mid-turn Input (Beta)"
+        title="Mid-turn input"
         description="Send a message to an agent while it is still working, to steer the rest of the run."
       />
     </Box>
