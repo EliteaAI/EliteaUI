@@ -9,4 +9,3 @@ export * from './useParticipantOpenApiOAuth.hooks';
 export * from './useParticipantSpOAuth.hooks';
 export * from './useParticipantToolAvailability.hooks';
 export * from './useParticipantValidation.hooks';
-export * from './useSyncChatConfigParticipant.hooks';
