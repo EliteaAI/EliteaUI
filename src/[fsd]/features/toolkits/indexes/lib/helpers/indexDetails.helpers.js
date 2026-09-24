@@ -20,6 +20,7 @@ import {
   INDEX_SEARCH_TOOL_OPTIONS,
   INDEX_UNRESPONSIVE_BANNER_MESSAGE,
   INDEX_UNRESPONSIVE_TOOLTIP,
+  IndexScheduleIndicatorLabel,
   IndexStatuses,
   IndexesToolsEnum,
   REINDEX_FAILED_BANNER_MESSAGE,
@@ -28,9 +29,11 @@ import {
   REINDEX_IN_PROGRESS_BANNER_MESSAGE,
   REINDEX_IN_PROGRESS_BANNER_TITLE,
   RUNNABLE_INDEX_STATUSES,
+  TEAM_SCHEDULE_OWNER_ID,
   TERMINAL_INDEX_STATUSES,
 } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
 import { BUDGET_ERROR_VARIANTS } from '@/[fsd]/shared/lib/constants/budgetError.constants';
+import { getCronSummaryInBrowserTimezone } from '@/[fsd]/shared/lib/helpers/schedule.helpers';
 
 // The scope code the backend puts in the persisted index error. Reusing the shared copy
 // keeps the banner and the message below it from drifting apart.
@@ -512,4 +515,27 @@ export const applyReindexStub = (indexesList, reindexRunning) => {
       },
     };
   });
+};
+
+export const findVisibleIndexSchedule = (toolkitScheduler, indexName, userId) => {
+  const schedules = toolkitScheduler?.[indexName]?.schedules ?? {};
+  const ownerId = [userId, TEAM_SCHEDULE_OWNER_ID].find(candidateId => Boolean(schedules[candidateId]));
+
+  return ownerId === undefined ? null : { ownerId, schedule: schedules[ownerId] };
+};
+
+export const indexScheduleIndicator = schedule => {
+  if (!schedule?.cron) return null;
+
+  const enabled = Boolean(schedule.enabled);
+  const label = enabled
+    ? IndexScheduleIndicatorLabel.enabled
+    : schedule.expired
+      ? IndexScheduleIndicatorLabel.expired
+      : IndexScheduleIndicatorLabel.off;
+
+  return {
+    enabled,
+    tooltip: `${label}: ${getCronSummaryInBrowserTimezone(schedule.cron, schedule.timezone)}`,
+  };
 };

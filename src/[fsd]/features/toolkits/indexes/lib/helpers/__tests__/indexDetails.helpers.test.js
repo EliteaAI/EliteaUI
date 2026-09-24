@@ -31,12 +31,14 @@ import {
   bannerOutlivesRun,
   bannerVariant,
   buildReindexStub,
+  findVisibleIndexSchedule,
   hasLiveRun,
   hasRetainedIndexData,
   indexBuildBlockedReason,
   indexListCounts,
   indexRunControls,
   indexScheduleBlockedReason,
+  indexScheduleIndicator,
   indexSearchBlockedReason,
   indexSearchToolOptions,
   isAbandonedRun,
@@ -1631,5 +1633,67 @@ describe('isReclaimableRun', () => {
   it('tolerates a missing index or metadata', () => {
     expect(isReclaimableRun(undefined)).toBe(false);
     expect(isReclaimableRun({})).toBe(false);
+  });
+});
+
+describe('findVisibleIndexSchedule', () => {
+  const own = { cron: '0 1 * * *' };
+  const team = { cron: '0 2 * * *' };
+  const someoneElse = { cron: '0 3 * * *' };
+
+  it("prefers the user's own schedule over the team one", () => {
+    const scheduler = { docs: { schedules: { 5: own, '-1': team } } };
+
+    expect(findVisibleIndexSchedule(scheduler, 'docs', 5)).toEqual({ ownerId: 5, schedule: own });
+  });
+
+  it('falls back to the team schedule', () => {
+    const scheduler = { docs: { schedules: { '-1': team } } };
+
+    expect(findVisibleIndexSchedule(scheduler, 'docs', 5)).toEqual({ ownerId: -1, schedule: team });
+  });
+
+  it("never shows another user's private schedule", () => {
+    const scheduler = { docs: { schedules: { 9: someoneElse } } };
+
+    expect(findVisibleIndexSchedule(scheduler, 'docs', 5)).toBeNull();
+  });
+
+  it('returns null for an index or toolkit with no schedules', () => {
+    expect(findVisibleIndexSchedule({ docs: { schedules: { 5: own } } }, 'other', 5)).toBeNull();
+    expect(findVisibleIndexSchedule({ docs: {} }, 'docs', 5)).toBeNull();
+    expect(findVisibleIndexSchedule(undefined, 'docs', 5)).toBeNull();
+  });
+});
+
+describe('indexScheduleIndicator', () => {
+  const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const schedule = over => ({ cron: '0 2 * * *', timezone: browserTimezone, enabled: true, ...over });
+
+  it('describes an enabled schedule', () => {
+    expect(indexScheduleIndicator(schedule())).toEqual({ enabled: true, tooltip: 'Scheduled: At 02:00' });
+  });
+
+  it('marks a schedule that is turned off', () => {
+    expect(indexScheduleIndicator(schedule({ enabled: false }))).toEqual({
+      enabled: false,
+      tooltip: 'Schedule is off: At 02:00',
+    });
+  });
+
+  it('marks a schedule the backend turned off at expiry', () => {
+    expect(indexScheduleIndicator(schedule({ enabled: false, expired: true }))).toEqual({
+      enabled: false,
+      tooltip: 'Schedule expired: At 02:00',
+    });
+  });
+
+  it('reads a re-enabled schedule as scheduled even if it still carries the expired flag', () => {
+    expect(indexScheduleIndicator(schedule({ expired: true })).tooltip).toBe('Scheduled: At 02:00');
+  });
+
+  it('shows nothing where the index page would say the schedule is not configured', () => {
+    expect(indexScheduleIndicator(undefined)).toBeNull();
+    expect(indexScheduleIndicator(schedule({ cron: '' }))).toBeNull();
   });
 });

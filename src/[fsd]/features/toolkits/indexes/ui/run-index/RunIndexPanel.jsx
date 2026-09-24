@@ -30,6 +30,7 @@ import {
 import {
   bannerOutlivesRun,
   bannerVariant,
+  findVisibleIndexSchedule,
   hasRetainedIndexData,
   indexBuildBlockedReason,
   indexRunControls,
@@ -106,11 +107,11 @@ const RunIndexPanel = memo(props => {
   const [saveIndexConfiguration, { isLoading: isSavingConfig }] = useSaveIndexConfigurationMutation();
   const [deleteIndexSchedule] = useDeleteIndexScheduleMutation();
 
-  const scheduleData = useMemo(() => {
-    const schedule =
-      toolkitScheduler[indexName]?.schedules?.[userId] ?? toolkitScheduler[indexName]?.schedules?.[-1];
-    return schedule ?? {};
-  }, [toolkitScheduler, indexName, userId]);
+  const visibleSchedule = useMemo(
+    () => findVisibleIndexSchedule(toolkitScheduler, indexName, userId),
+    [toolkitScheduler, indexName, userId],
+  );
+  const scheduleData = useMemo(() => visibleSchedule?.schedule ?? {}, [visibleSchedule]);
 
   const configSchema = useGetSelectedToolSchema({
     toolkitType: values.type,
@@ -381,12 +382,7 @@ const RunIndexPanel = memo(props => {
 
   const closeDeleteSchedule = useCallback(() => setDeleteScheduleOpen(false), []);
 
-  const scheduleOwnerUserId = useMemo(() => {
-    const schedules = toolkitScheduler[indexName]?.schedules ?? {};
-    if (schedules[userId] != null) return userId;
-    if (schedules[-1] != null) return -1;
-    return userId;
-  }, [toolkitScheduler, indexName, userId]);
+  const scheduleOwnerUserId = visibleSchedule?.ownerId ?? userId;
 
   const confirmDeleteSchedule = useCallback(async () => {
     setDeleteScheduleOpen(false);

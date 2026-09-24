@@ -6,3 +6,4 @@ export * from './useIndexRunLiveRefresh.hooks';
 export * from './useIndexesListPolling.hooks';
 export * from './useToolkitIndexes.hooks';
 export * from './useToolkitIndexRuns.hooks';
+export * from './useIndexScheduleIndicator.hooks';

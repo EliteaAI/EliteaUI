@@ -5,7 +5,7 @@ import { ThemeProvider, createTheme } from '@mui/material';
 
 import { IndexStatuses } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
 import '@testing-library/jest-dom/vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 import IndexListItem from '../IndexListItem';
 
@@ -49,7 +49,16 @@ vi.mock('@/hooks/useSelectedProject', () => ({
   useSelectedProjectId: () => 2,
 }));
 
-afterEach(() => cleanup());
+const mockScheduleIndicator = vi.hoisted(() => ({ current: null }));
+
+vi.mock('@/[fsd]/features/toolkits/indexes/lib/hooks/useIndexScheduleIndicator.hooks', () => ({
+  useIndexScheduleIndicator: () => mockScheduleIndicator.current,
+}));
+
+afterEach(() => {
+  cleanup();
+  mockScheduleIndicator.current = null;
+});
 
 const theme = createTheme({
   palette: {
@@ -210,5 +219,53 @@ describe('IndexListItem — destructive actions key on reclaimable, not stale', 
     renderItem(inFlight({ stale: true }));
 
     expect(deleteBtn()).not.toBeDisabled();
+  });
+});
+
+describe('IndexListItem — schedule icon', () => {
+  const scheduleIcon = () => screen.queryByTestId('index-card-schedule-icon');
+
+  it('marks a scheduled index with its schedule in the tooltip', () => {
+    mockScheduleIndicator.current = { enabled: true, tooltip: 'Scheduled: At 02:00' };
+
+    renderItem(indexRow(IndexStatuses.success));
+
+    expect(scheduleIcon()).toBeInTheDocument();
+    expect(scheduleIcon()).toHaveAttribute('data-enabled', 'true');
+    expect(scheduleIcon().closest('[data-tooltip]')).toHaveAttribute('data-tooltip', 'Scheduled: At 02:00');
+  });
+
+  it('shows no icon on an index without a schedule', () => {
+    renderItem(indexRow(IndexStatuses.success));
+
+    expect(scheduleIcon()).not.toBeInTheDocument();
+  });
+
+  it('keeps a turned-off schedule visible but muted', () => {
+    mockScheduleIndicator.current = { enabled: false, tooltip: 'Schedule is off: At 02:00' };
+
+    renderItem(indexRow(IndexStatuses.success));
+
+    expect(scheduleIcon()).toHaveAttribute('data-enabled', 'false');
+  });
+
+  it('shows no icon on a loading skeleton', () => {
+    mockScheduleIndicator.current = { enabled: true, tooltip: 'Scheduled: At 02:00' };
+
+    renderItem(0, { useMock: true });
+
+    expect(scheduleIcon()).not.toBeInTheDocument();
+  });
+
+  it('opens the index once when the icon itself is clicked', () => {
+    mockScheduleIndicator.current = { enabled: true, tooltip: 'Scheduled: At 02:00' };
+    const onIndexClick = vi.fn();
+    const row = indexRow(IndexStatuses.success);
+
+    renderItem(row, { onIndexClick });
+    fireEvent.click(scheduleIcon());
+
+    expect(onIndexClick).toHaveBeenCalledTimes(1);
+    expect(onIndexClick).toHaveBeenCalledWith(row);
   });
 });
