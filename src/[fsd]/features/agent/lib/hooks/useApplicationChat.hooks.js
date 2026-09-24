@@ -48,7 +48,8 @@ export const useApplicationChat = ({
 
   const [activeConversation, setActiveConversation] = useState(null);
   const [activeParticipant, setActiveParticipant] = useState(null);
-  const [chatVersionDetails, setChatVersionDetails] = useState(applicationVersionDetails);
+  const [chatVersionOverride, setChatVersionOverride] = useState(null);
+  const chatVersionDetails = chatVersionOverride ?? applicationVersionDetails;
   const [isCreatingConversation, setIsCreatingConversation] = useState(false);
   const [isRestoringConversation, setIsRestoringConversation] = useState(false);
   const [hasRestoredConversation, setHasRestoredConversation] = useState(false);
@@ -148,12 +149,11 @@ export const useApplicationChat = ({
     };
   }, [applicationId, applicationName, applicationVersionDetails, projectId]);
 
-  // Sync chatVersionDetails only when the page-level version ID changes (navigation / initial load).
-  // Keying on .id avoids resetting the chat's active version on every unrelated Formik form edit,
-  // which would undo a version switch made via the in-chat selector.
+  // Clear the in-chat version override when the page-level version changes (navigation / initial load).
+  // While the override is null, chatVersionDetails falls back to applicationVersionDetails, so
+  // same-version Formik writes (e.g. AttachmentSwitch toggling internal_tools) are still reflected.
   useEffect(() => {
-    setChatVersionDetails(applicationVersionDetails);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    setChatVersionOverride(null);
   }, [applicationVersionDetails?.id]);
 
   const { onAttachFiles, attachments, onDeleteAttachment, disableAttachments, onClearAttachments } =
@@ -734,10 +734,10 @@ export const useApplicationChat = ({
       const editedParticipant = isVersionSwitch ? participantOrId : null;
       const entitySettings = isVersionSwitch ? participantOrId?.entity_settings : updates?.entity_settings;
 
-      // Update local chat version details when the in-chat version selector changes.
+      // Store the in-chat version override so the chat tracks its own active version independently.
       // Formik is intentionally not updated — the left-panel form tracks the page-level version.
       if (editedParticipant?.version_details) {
-        setChatVersionDetails(editedParticipant.version_details);
+        setChatVersionOverride(editedParticipant.version_details);
       }
 
       // Only write llm_settings into Formik for the explicit model-change path.
