@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { EVAL_SCALE_TYPE } from '../../constants';
-import { getTargetLabel } from '../binding.helpers';
+import { EVAL_ENGINE, EVAL_SCALE_TYPE } from '../../constants';
+import { getBindingEngineTooltip, getTargetLabel } from '../binding.helpers';
 
 // A target of exactly 0/1 with '==' is only pass/fail semantics on a binary scale — on a rating
 // or custom scale it is a legitimate numeric value and must render as a plain number, not "pass".
@@ -36,5 +36,19 @@ describe('getTargetLabel', () => {
 
   it('returns null when there is no operator', () => {
     expect(getTargetLabel(1, null, EVAL_SCALE_TYPE.binary)).toBeNull();
+  });
+});
+
+describe('getBindingEngineTooltip', () => {
+  it('uses the dimension engine for dimension bindings', () => {
+    expect(getBindingEngineTooltip({ dimension_id: 1, engine: EVAL_ENGINE.human })).toBe(
+      'This dimension requires manual review.',
+    );
+  });
+
+  it('treats platform validations as code regardless of stored engine', () => {
+    expect(getBindingEngineTooltip({ platform_key: 'json', engine: EVAL_ENGINE.ai })).toBe(
+      'This dimension is evaluated using Python validation logic.',
+    );
   });
 });
