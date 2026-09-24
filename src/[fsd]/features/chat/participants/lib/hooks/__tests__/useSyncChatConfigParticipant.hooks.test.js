@@ -79,6 +79,20 @@ describe('useSyncChatConfigParticipant', () => {
     expect(updateChatConfig).not.toHaveBeenCalled();
   });
 
+  it('no-ops when the matching participant has a non-agent/pipeline entity_name', async () => {
+    fetchProjectInfo.mockResolvedValue({
+      data: makeProjectInfo([
+        { entity_id: APP_ID, entity_name: 'toolkit', name: 'Old', project_id: PROJECT_ID },
+      ]),
+    });
+
+    const { result } = renderHook(() => useSyncChatConfigParticipant({ projectId: PROJECT_ID }));
+
+    await act(() => result.current.syncParticipant({ applicationId: APP_ID, newName: 'New' }));
+
+    expect(updateChatConfig).not.toHaveBeenCalled();
+  });
+
   it('no-ops when name, entity_name, and agent_type are already up to date', async () => {
     fetchProjectInfo.mockResolvedValue({
       data: makeProjectInfo([

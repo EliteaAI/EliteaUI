@@ -26,7 +26,11 @@ export const useSyncChatConfigParticipant = ({ projectId }) => {
 
       let changed = false;
       const updated = participants.map(p => {
-        if (p.entity_id !== applicationId || (p.project_id ?? projectId) !== projectId) return p;
+        const isAgentOrPipeline =
+          p.entity_name === ChatParticipantType.Applications ||
+          p.entity_name === ChatParticipantType.Pipelines;
+        if (p.entity_id !== applicationId || (p.project_id ?? projectId) !== projectId || !isAgentOrPipeline)
+          return p;
         const updatedName = newName !== p.name;
         const updatedEntityName = newEntityName !== p.entity_name;
         const updatedAgentType = newAgentType !== undefined && newAgentType !== p.agent_type;
