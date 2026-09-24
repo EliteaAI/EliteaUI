@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ThemeProvider, createTheme } from '@mui/material';
 
-import { autoModel } from '@/[fsd]/shared/lib/utils/autoRouting.utils';
+import { autoModel } from '@/[fsd]/shared/lib/utils';
 import { cleanup, render } from '@testing-library/react';
 
 import LLMModelSelectorWrapper from '../LLMModelSelectorWrapper';

@@ -9,7 +9,7 @@ import { PIPELINE_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib
 import { usePipelineAttachmentYamlSync, usePipelineChat } from '@/[fsd]/features/pipelines/lib/hooks';
 import { LLMSettingsConstants } from '@/[fsd]/shared/lib/constants';
 import { useRestoredConversation, useRunHistoryNavigation } from '@/[fsd]/shared/lib/hooks';
-import { isReasoningFamilyFromStored } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
+import { isReasoningFamilyFromStored } from '@/[fsd]/shared/lib/utils';
 import DirtyDetector from '@/components/Formik/DirtyDetector';
 import useAgentMCPToolsStatusMonitor from '@/hooks/application/useAgentMCPToolsStatusMonitor';
 import useUploadAttachments from '@/hooks/chat/useUploadAttachments';

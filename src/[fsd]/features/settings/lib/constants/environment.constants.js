@@ -1,6 +1,6 @@
-import { ENVIRONMENT_KEYS } from '@/[fsd]/shared/lib/constants/environment.constants';
+import { EnvironmentConstants } from '@/[fsd]/shared/lib/constants';
 
-export { ENVIRONMENT_KEYS, ENVIRONMENT_SECTION } from '@/[fsd]/shared/lib/constants/environment.constants';
+export const { ENVIRONMENT_KEYS, ENVIRONMENT_SECTION } = EnvironmentConstants;
 
 export const ENVIRONMENT_FIELD_ORDER = [
   ENVIRONMENT_KEYS.SYSTEM_SENDER_NAME,

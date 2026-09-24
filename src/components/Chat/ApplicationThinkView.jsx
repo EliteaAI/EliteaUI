@@ -2,26 +2,11 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { ChatHelpers } from '@/[fsd]/features/chat/lib/helpers';
 import {
-  collapseDelegationWrapperReplays,
-  getActionOwnerPath,
-  getSubAgentInstanceKey,
-  getSubAgentName,
-  omitSupersededGraphInterruptActions,
-  resolveAgentPathActivity,
-  resolvePendingAgentPaths,
-} from '@/[fsd]/features/chat/lib/helpers/executionHierarchy.helpers.js';
-import {
-  buildPcidAnchorMap,
-  computeBreadcrumbs,
-  inflightToolChipId,
-  isInvocationId,
-  partitionActionsIntoBlocks,
-  resolveExtraSubAgentKeys,
-  resolveSubAgentLiveness,
-  selectRichestAgentPath,
-} from '@/[fsd]/features/chat/lib/helpers/subAgentGrouping.helpers.js';
+  ChatHelpers,
+  ExecutionHierarchyHelpers,
+  SubAgentGroupingHelpers,
+} from '@/[fsd]/features/chat/lib/helpers';
 import { ContinuationError, ErrorTrace } from '@/[fsd]/features/chat/ui/error-trace';
 import { SubAgentAccordion } from '@/[fsd]/features/chat/ui/sub-agent-section';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
@@ -31,6 +16,27 @@ import { TOOL_ACTION_NAMES, TOOL_ACTION_TYPES, ToolActionStatus } from '@/common
 import { getToolInfoFromAction } from '@/common/toolActionUitls';
 
 import ActionView from './ActionView';
+
+const {
+  buildPcidAnchorMap,
+  computeBreadcrumbs,
+  inflightToolChipId,
+  isInvocationId,
+  partitionActionsIntoBlocks,
+  resolveExtraSubAgentKeys,
+  resolveSubAgentLiveness,
+  selectRichestAgentPath,
+} = SubAgentGroupingHelpers;
+
+const {
+  collapseDelegationWrapperReplays,
+  getActionOwnerPath,
+  getSubAgentInstanceKey,
+  getSubAgentName,
+  omitSupersededGraphInterruptActions,
+  resolveAgentPathActivity,
+  resolvePendingAgentPaths,
+} = ExecutionHierarchyHelpers;
 
 const SubAgentThinkBlock = memo(props => {
   const {

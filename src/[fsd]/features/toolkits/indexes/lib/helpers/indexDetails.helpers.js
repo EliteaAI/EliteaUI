@@ -30,7 +30,9 @@ import {
   RUNNABLE_INDEX_STATUSES,
   TERMINAL_INDEX_STATUSES,
 } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
-import { BUDGET_ERROR_VARIANTS } from '@/[fsd]/shared/lib/constants/budgetError.constants';
+import { BudgetErrorConstants } from '@/[fsd]/shared/lib/constants';
+
+const { BUDGET_ERROR_VARIANTS } = BudgetErrorConstants;
 
 // The scope code the backend puts in the persisted index error. Reusing the shared copy
 // keeps the banner and the message below it from drifting apart.

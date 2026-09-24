@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useMemo, useState } from 'react';
 
-import { useAllToastDurations } from '@/[fsd]/shared/lib/hooks/useEnvironmentSettingByKey.hooks';
+import { useAllToastDurations } from '@/[fsd]/shared/lib/hooks';
 
 import Toast from './Toast';
 

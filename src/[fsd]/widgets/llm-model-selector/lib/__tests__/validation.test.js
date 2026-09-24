@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { autoModel } from '@/[fsd]/shared/lib/utils/autoRouting.utils';
+import { autoModel } from '@/[fsd]/shared/lib/utils';
 
 import { VALIDATION_RULE, validateMaxTokens } from '../validation';
 

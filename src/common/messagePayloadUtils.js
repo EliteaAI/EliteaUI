@@ -1,6 +1,5 @@
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
-import { selectionFields } from '@/[fsd]/shared/lib/utils/autoRouting.utils';
-import { filterReasoningEffortFromSettings } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
+import { filterReasoningEffortFromSettings, selectionFields } from '@/[fsd]/shared/lib/utils';
 import { ChatParticipantType } from '@/common/constants';
 
 const getMcpServerUrlsFromParticipants = participants => {

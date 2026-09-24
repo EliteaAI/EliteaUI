@@ -6,7 +6,7 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 
 import AnalyticsCosts from '../AnalyticsCosts';
-import { AnalyticsTestWrapper as Wrapper } from '../_testHelpers';
+import { AnalyticsTestWrapper as Wrapper } from './_testHelpers';
 
 vi.mock('@/api', () => ({
   useAnalyticsCostsQuery: vi.fn(),

@@ -18,10 +18,10 @@ is given.
 The invocation may also contain a mode keyword. Pick the mode before starting, and follow it for the whole
 review.
 
-| Mode       | Triggered by                                                       | Behaviour                                                       |
-| ---------- | ------------------------------------------------------------------ | --------------------------------------------------------------- |
-| **Short**  | the word `short`, `brief`, `quick`, or `no summary` in the request | Inline comments only, 1-2 sentences each, no summary message     |
-| **Full**   | anything else (the default)                                        | Full review as described below, with a summary message           |
+| Mode      | Triggered by                                                       | Behaviour                                                    |
+| --------- | ------------------------------------------------------------------ | ------------------------------------------------------------ |
+| **Short** | the word `short`, `brief`, `quick`, or `no summary` in the request | Inline comments only, 1-2 sentences each, no summary message |
+| **Full**  | anything else (the default)                                        | Full review as described below, with a summary message       |
 
 Everything in this document applies to both modes unless a section is explicitly marked as mode-specific.
 Review depth, the checks in step 3, and the filtering in step 4 are identical - only the output differs.
@@ -34,10 +34,8 @@ Review depth, the checks in step 3, and the filtering in step 4 are identical - 
 - Because GitHub rejects a `COMMENT` review with an empty body, in short mode submit with `APPROVE` (no
   blocking findings) or `REQUEST_CHANGES` (business logic bug, crash risk, or significant architectural
   violation) and `body: ""`. Never use `COMMENT` in short mode.
-- If the API still rejects the empty body, retry with a single short sentence - not a summary of the
-  findings.
-- If there is nothing worth commenting on, post no inline comments and submit an `APPROVE` with an empty
-  body.
+- If the API still rejects the empty body, retry with a single short sentence - not a summary of the findings.
+- If there is nothing worth commenting on, post no inline comments and submit an `APPROVE` with an empty body.
 - Keep the total number of inline comments low - only what genuinely matters. Cap at 8.
 
 ## Steps
@@ -183,8 +181,8 @@ Use the GitHub MCP tools to post a formal review:
    **Full mode:** the summary body should be 2-3 sentences max. Mention what looks good if appropriate, then
    state the main concern if any.
 
-   **Short mode:** `body: ""` and the event is `APPROVE` or `REQUEST_CHANGES` only. Do not write a summary,
-   an intro line, or a wrap-up - the inline comments are the whole review.
+   **Short mode:** `body: ""` and the event is `APPROVE` or `REQUEST_CHANGES` only. Do not write a summary, an
+   intro line, or a wrap-up - the inline comments are the whole review.
 
 ### 6. Update PR labels
 
@@ -243,8 +241,8 @@ Comments are posted from the user's GitHub account, so they must read like a rea
 - Mention AI, Claude, automation, or that this review was generated
 
 **Short mode tightens this further:** 1-2 sentences per comment, straight to the point. State the problem and
-the fix in the same breath, e.g. "This will blow up if `items` is undefined - add optional chaining." or
-"We use `rem` units here, so `0.75rem` instead of `12px`." No preamble, no restating the code.
+the fix in the same breath, e.g. "This will blow up if `items` is undefined - add optional chaining." or "We
+use `rem` units here, so `0.75rem` instead of `12px`." No preamble, no restating the code.
 
 ## Rules
 

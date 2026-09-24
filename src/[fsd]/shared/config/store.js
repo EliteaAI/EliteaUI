@@ -1,7 +1,5 @@
 import { importWizardReducer, importWizardReducerName } from '@/[fsd]/entities/import-wizard';
-import indexesReducer, {
-  name as indexesReducerName,
-} from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
+import { indexesReducer, name as indexesReducerName } from '@/[fsd]/features/toolkits/indexes/model';
 // Important! Need to have been already imported all APIs before the store will be created
 import '@/api';
 import {

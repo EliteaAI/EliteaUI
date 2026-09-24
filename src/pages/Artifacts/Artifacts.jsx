@@ -6,9 +6,9 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { Box } from '@mui/material';
 
 import { EmptyStatePage } from '@/[fsd]/entities/empty-state-page';
-import { useFileUpload } from '@/[fsd]/features/artifacts/lib/hooks/useFileUpload.hooks';
+import { useFileUpload } from '@/[fsd]/features/artifacts/lib/hooks';
 import { FilePreviewCanvas, ManagePermissionsModal } from '@/[fsd]/features/artifacts/ui';
-import { ARTIFACT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/artifactTourTargets.constants';
+import { ARTIFACT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { useGetConfigurationsListQuery } from '@/api/configurations';
 import EmptyArtifactBucketsIcon from '@/assets/empty-artifact-buckets.svg?react';
 import { PENDING_BUCKET_SESSION_KEY } from '@/common/artifactConstants';

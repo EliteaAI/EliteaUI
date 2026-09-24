@@ -6,7 +6,7 @@ import { Box, CircularProgress, TablePagination, Typography, useTheme } from '@m
 
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { AnalyticsToolDetailed, ChartTooltip } from '@/[fsd]/features/settings/ui/analytics';
-import { CHART_COLORS } from '@/[fsd]/shared/config/theme/chartPalette';
+import { CHART_COLORS } from '@/[fsd]/shared/config/theme';
 import { useAnalyticsToolsQuery } from '@/api';
 import StyledSearchInput from '@/components/SearchInput';
 

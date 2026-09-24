@@ -1,7 +1,9 @@
-import { INTERNAL_TOOLS_LIST } from '@/[fsd]/shared/lib/constants/internalTools.constants';
+import { InternalToolsConstants } from '@/[fsd]/shared/lib/constants';
 import { ToolTypes } from '@/pages/Applications/Components/Tools/consts';
 
 import { TOOL_ACTION_NAMES, TOOL_ACTION_TYPES } from './constants';
+
+const { INTERNAL_TOOLS_LIST } = InternalToolsConstants;
 
 // Generic node names that are NOT meaningful pipeline-node labels: the default
 // transition step and the single-node names a plain agent graph reports. A chip

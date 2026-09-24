@@ -1,10 +1,8 @@
-import {
-  DEFAULT_MAX_TOKENS,
-  DEFAULT_REASONING_EFFORT,
-  DEFAULT_STEPS_LIMIT,
-  DEFAULT_TEMPERATURE,
-} from '@/[fsd]/shared/lib/constants/llmSettings.constants';
+import { LLMSettingsConstants } from '@/[fsd]/shared/lib/constants';
 import { isNullOrUndefined } from '@/common/utils';
+
+const { DEFAULT_MAX_TOKENS, DEFAULT_REASONING_EFFORT, DEFAULT_STEPS_LIMIT, DEFAULT_TEMPERATURE } =
+  LLMSettingsConstants;
 
 export const normalizeLlmSettings = (settings = {}, model, { showStepsLimit = false } = {}) => {
   const isReasoning = model?.supports_reasoning;

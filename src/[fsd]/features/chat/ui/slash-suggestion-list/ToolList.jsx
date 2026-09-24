@@ -2,7 +2,7 @@ import { memo, useRef } from 'react';
 
 import { Box, CircularProgress, ClickAwayListener, Typography } from '@mui/material';
 
-import useScrollActiveIntoView from '@/[fsd]/shared/lib/hooks/useScrollActiveIntoView.hooks';
+import { useScrollActiveIntoView } from '@/[fsd]/shared/lib/hooks';
 
 import ToolItem from './ToolItem';
 

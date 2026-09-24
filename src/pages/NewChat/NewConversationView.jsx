@@ -25,21 +25,19 @@ import {
   AutoRoutingConstants,
   BrandLogoConstants,
   InternalToolsConstants,
+  LLMSettingsConstants,
   MentionConstants,
 } from '@/[fsd]/shared/lib/constants';
-import { DEFAULT_STEPS_LIMIT } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
-import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks/useEnvironmentSettingByKey.hooks';
-import {
-  defaultModelForSurface,
-  modelsWithAuto,
-  resolveModelSurface,
-  selectionFields,
-} from '@/[fsd]/shared/lib/utils/autoRouting.utils';
+import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks';
 import {
   cleanLLMSettings,
+  defaultModelForSurface,
   generateLLMSettings,
+  modelsWithAuto,
   resetLLMSettingsForModel,
-} from '@/[fsd]/shared/lib/utils/llmSettings.utils';
+  resolveModelSurface,
+  selectionFields,
+} from '@/[fsd]/shared/lib/utils';
 import BrandLogo from '@/[fsd]/shared/ui/brand-logo';
 import { useConversationEditMutation, useUpdateParticipantLlmSettingsMutation } from '@/api';
 import { useListModelsQuery } from '@/api/configurations.js';
@@ -67,6 +65,8 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useSocket from '@/hooks/useSocket';
 import useToast from '@/hooks/useToast';
 import { actions } from '@/slices/chat';
+
+const { DEFAULT_STEPS_LIMIT } = LLMSettingsConstants;
 
 const { MODEL_SURFACES } = AutoRoutingConstants;
 

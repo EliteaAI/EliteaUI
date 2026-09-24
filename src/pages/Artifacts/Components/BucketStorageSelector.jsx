@@ -2,7 +2,7 @@ import { memo, useCallback, useState } from 'react';
 
 import { Box, ListItemIcon, Menu, MenuItem, Typography } from '@mui/material';
 
-import { ARTIFACT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/artifactTourTargets.constants';
+import { ARTIFACT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import DatasetIcon from '@/assets/dataset-icon.svg?react';
 import ArrowDownIcon from '@/components/Icons/ArrowDownIcon';
 import CheckIcon from '@/components/Icons/CheckIcon';

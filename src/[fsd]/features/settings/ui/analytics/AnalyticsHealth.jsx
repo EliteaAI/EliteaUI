@@ -6,7 +6,7 @@ import { Box, Typography, useTheme } from '@mui/material';
 
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { ChartTooltip } from '@/[fsd]/features/settings/ui/analytics';
-import { EVENT_TYPE_COLORS } from '@/[fsd]/shared/config/theme/chartPalette';
+import { EVENT_TYPE_COLORS } from '@/[fsd]/shared/config/theme';
 
 const AnalyticsHealth = memo(props => {
   const { health = [], daily_activity = [] } = props;

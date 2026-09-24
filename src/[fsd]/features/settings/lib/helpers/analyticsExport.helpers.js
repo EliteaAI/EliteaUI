@@ -1,4 +1,4 @@
-import { ExcelFormats, sanitizeFileNamePart } from '@/[fsd]/shared/lib/utils/exportToExcel.utils';
+import { ExcelFormats, sanitizeFileNamePart } from '@/[fsd]/shared/lib/utils';
 
 import { tokenStats } from './analyticsToken.helpers.js';
 

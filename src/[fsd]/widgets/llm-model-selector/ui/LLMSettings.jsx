@@ -2,15 +2,8 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Box, MenuItem } from '@mui/material';
 
-import { AutoRoutingConstants } from '@/[fsd]/shared/lib/constants';
-import {
-  DEFAULT_MAX_TOKENS,
-  DEFAULT_MAX_TOKENS_CUSTOM,
-  DEFAULT_REASONING_EFFORT,
-  DEFAULT_STEPS_LIMIT,
-  DEFAULT_TEMPERATURE,
-} from '@/[fsd]/shared/lib/constants/llmSettings.constants';
-import { isAutoSelection } from '@/[fsd]/shared/lib/utils/autoRouting.utils';
+import { AutoRoutingConstants, LLMSettingsConstants } from '@/[fsd]/shared/lib/constants';
+import { isAutoSelection } from '@/[fsd]/shared/lib/utils';
 import { Input } from '@/[fsd]/shared/ui';
 import { SecretField } from '@/[fsd]/shared/ui/secret-field';
 import {
@@ -27,6 +20,14 @@ import {
 } from '@/[fsd]/widgets/llm-model-selector/ui/settings';
 import { PROMPT_PAYLOAD_KEY } from '@/common/constants';
 import { parseValueToIntNumber } from '@/common/utils';
+
+const {
+  DEFAULT_MAX_TOKENS,
+  DEFAULT_MAX_TOKENS_CUSTOM,
+  DEFAULT_REASONING_EFFORT,
+  DEFAULT_STEPS_LIMIT,
+  DEFAULT_TEMPERATURE,
+} = LLMSettingsConstants;
 
 const { AUTO_REASONING_MODE, AUTO_REASONING_OPTIONS, AUTO_REASONING_HELP, AUTO_OUTPUT_HELP } =
   AutoRoutingConstants;

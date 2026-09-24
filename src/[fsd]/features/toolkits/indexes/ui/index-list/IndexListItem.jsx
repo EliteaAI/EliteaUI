@@ -13,7 +13,7 @@ import {
   indexListCounts,
   isAbandonedRun,
 } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexDetails.helpers';
-import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
+import { useProjectType } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import ClockIcon from '@/assets/clock.svg?react';

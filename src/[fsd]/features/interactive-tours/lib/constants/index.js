@@ -74,3 +74,5 @@ export { RESOURCES_TOUR_COMPLETION, RESOURCES_TOUR_ID, resourcesTourSteps } from
 export { RESOURCES_TOUR_TARGET_IDS, RESOURCES_TOUR_TARGETS } from './resourcesTourTargets.constants.js';
 export { USERS_TOUR_COMPLETION, USERS_TOUR_ID, usersTourSteps } from './usersTour.constants';
 export { USERS_TOUR_TARGET_IDS, USERS_TOUR_TARGETS } from './usersTourTargets.constants.js';
+export * from './artifactTourTargets.constants';
+export * from './notificationsTourTargets.constants';

@@ -7,8 +7,7 @@ import { Box } from '@mui/system';
 
 import { MoveToFolderSubmenu } from '@/[fsd]/entities/folder/ui';
 import SkillRowAction from '@/[fsd]/features/skill/ui/SkillRowAction';
-import { useDeleteConfirmationDisabled } from '@/[fsd]/shared/lib/hooks';
-import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
+import { useDeleteConfirmationDisabled, useProjectType } from '@/[fsd]/shared/lib/hooks';
 import { Modal } from '@/[fsd]/shared/ui';
 import { usePin } from '@/[fsd]/widgets/pin-toggler';
 import { useDeleteApplicationMutation } from '@/api/applications';

@@ -3,7 +3,7 @@ import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from '
 import { Box, Typography } from '@mui/material';
 
 import { useTrackEvent } from '@/GA';
-import { useCredentialWarning } from '@/[fsd]/entities/credential-warning/hooks';
+import { useCredentialWarning } from '@/[fsd]/entities/credential-warning';
 import { CredentialWarningModal } from '@/[fsd]/entities/credential-warning/ui';
 import BaseEditor from '@/[fsd]/features/chat/ui/editors/BaseEditor.jsx';
 import CreateToolkitButton from '@/[fsd]/features/chat/ui/editors/CreateToolkitButton.jsx';
@@ -11,14 +11,16 @@ import { usePublicProjectAccessCheck } from '@/[fsd]/features/project/lib/hooks'
 // TODO: DELETE after migration period (Q1 2026) - Legacy OpenAPI toolkit migration
 import { LegacyOpenApiMigration } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
-import { ToolkitForm } from '@/[fsd]/features/toolkits/ui/form/ToolkitForm';
-import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
+import { ToolkitForm } from '@/[fsd]/features/toolkits/ui/form/toolkit-form';
+import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
 import { useToolkitsDetailsQuery } from '@/api/toolkits';
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import SaveToolkitButton from '@/pages/Toolkits/SaveToolkitButton.jsx';
 import ToolkitTypeSelector from '@/pages/Toolkits/ToolkitTypeSelector';
 import { formatTitleFromSnakeCase } from '@/utils/stringUtils';
+
+const { GA_EVENT_NAMES, GA_EVENT_PARAMS } = AnalyticConstants;
 
 const getToolkitId = toolkit => {
   // toolkit is a chat participant with entity_meta structure
