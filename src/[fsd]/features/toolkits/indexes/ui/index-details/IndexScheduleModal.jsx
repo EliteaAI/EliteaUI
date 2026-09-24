@@ -64,6 +64,7 @@ const IndexScheduleModal = memo(props => {
 
   const handleSelectConfiguration = useCallback(value => {
     hasUserPickedRef.current = true;
+    setCredentialsError(false);
     setInnerCredentials(value);
   }, []);
 

@@ -104,7 +104,11 @@ vi.mock('@/[fsd]/shared/ui', () => ({
                 key={option.value}
                 type="button"
                 data-testid={`option-${option.meta.elitea_title}`}
-                onClick={() => props.onValueChange(option.value)}
+                onClick={event =>
+                  option.value === props.value && props.onClear
+                    ? props.onClear(event)
+                    : props.onValueChange(option.value)
+                }
               />
             ))}
         </div>
@@ -343,6 +347,7 @@ describe('IndexScheduleModal credentials', () => {
 
       pick(PROJECT_A);
       expect(personalHint()).not.toBeInTheDocument();
+      expect(screen.getByTestId('select-error')).toHaveTextContent('false');
       save();
 
       expect(onSubmit).toHaveBeenCalledWith(CRON, { elitea_title: PROJECT_A, private: false });

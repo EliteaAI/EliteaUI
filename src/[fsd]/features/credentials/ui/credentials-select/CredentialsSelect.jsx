@@ -400,7 +400,13 @@ const CredentialsSelect = memo(props => {
     [commitConfiguration, value?.elitea_title, value?.private, type, trackEvent, contextExecutionEntity],
   );
 
-  const handleClear = useCallback(() => commitConfiguration(null), [commitConfiguration]);
+  const handleClear = useCallback(() => {
+    if (selectedOption) {
+      onSelectItem(selectedOption);
+      return;
+    }
+    commitConfiguration(null);
+  }, [selectedOption, onSelectItem, commitConfiguration]);
 
   const createSelectHandler = useCallback(
     (sec, option) => {
