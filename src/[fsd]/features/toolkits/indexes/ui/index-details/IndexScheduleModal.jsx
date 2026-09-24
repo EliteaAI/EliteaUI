@@ -69,7 +69,7 @@ const IndexScheduleModal = memo(props => {
 
   const isInnerCredentialsRejected =
     !innerCredentials ||
-    isInnerCredentialsListed === false ||
+    isInnerCredentialsListed !== true ||
     (!isPersonalProject && Boolean(innerCredentials.private));
 
   const handleSubmit = useCallback(

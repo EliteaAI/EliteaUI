@@ -230,6 +230,18 @@ describe('IndexScheduleModal credentials', () => {
     expect(screen.getByTestId('select-error')).toHaveTextContent('true');
   });
 
+  it('refuses a seeded credential while the credential list is still loading', () => {
+    renderModal({
+      toolkitCredentials: { elitea_title: 'deleted-credential', private: false },
+      hasFetchedData: false,
+    });
+
+    save();
+
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(screen.getByTestId('select-error')).toHaveTextContent('true');
+  });
+
   it('takes the toolkit credential that changed while the dialog was closed, as the panel mounts it', async () => {
     const { rerender } = renderModal({
       open: false,
