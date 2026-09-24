@@ -34,7 +34,6 @@ const PendingInjectionList = memo(props => {
           key={item.id}
           item={item}
           onRemove={onRemove}
-          hideDelete={false}
         />
       ))}
     </Box>
