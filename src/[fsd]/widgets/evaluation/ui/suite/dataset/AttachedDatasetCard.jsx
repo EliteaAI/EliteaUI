@@ -5,6 +5,7 @@ import { Box, Menu, MenuItem, Tooltip, Typography } from '@mui/material';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import LoopToolIcon from '@/assets/loop_tool.svg?react';
+import OpenInNewIcon from '@/assets/open-new-icon.svg?react';
 import ShareIcon from '@/assets/share-icon.svg?react';
 import CloseIcon from '@/components/Icons/CloseIcon';
 import DotsMenuIcon from '@/components/Icons/DotsMenuIcon';
@@ -88,12 +89,6 @@ const AttachedDatasetCard = memo(props => {
     <Box sx={styles.root}>
       <Box sx={styles.header}>
         <Box sx={styles.nameRow}>
-          <Typography
-            sx={styles.name}
-            onClick={handleNameClick}
-          >
-            {dataset.name}
-          </Typography>
           {dataset.is_shared && (
             <Tooltip
               title="Shared across the project"
@@ -105,6 +100,18 @@ const AttachedDatasetCard = memo(props => {
               </Box>
             </Tooltip>
           )}
+          <Box
+            sx={styles.nameLink}
+            onClick={handleNameClick}
+          >
+            <Typography
+              className="dataset-name"
+              sx={styles.name}
+            >
+              {dataset.name}
+            </Typography>
+            <OpenInNewIcon style={styles.nameIcon} />
+          </Box>
         </Box>
         {canUpdateSuite && (
           <Button.BaseBtn
@@ -265,18 +272,37 @@ const attachedDatasetCardStyles = () => ({
     flex: 1,
     minWidth: 0,
   },
-  name: ({ palette }) => ({
-    fontSize: '0.875rem',
-    fontWeight: 500,
+  nameLink: ({ palette }) => ({
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    minWidth: 0,
+    margin: '-0.25rem -0.5rem',
+    padding: '0.25rem 0.5rem',
     color: palette.text.secondary,
+    cursor: 'pointer',
+    '&:hover': {
+      color: palette.text.linkHoverSecondary,
+      '& .dataset-name': {
+        textDecoration: 'underline',
+      },
+    },
+  }),
+  name: {
+    minWidth: 0,
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
-    cursor: 'pointer',
-    '&:hover': {
-      textDecoration: 'underline',
-    },
-  }),
+    fontSize: '0.875rem',
+    fontWeight: 500,
+    color: 'inherit',
+  },
+  nameIcon: {
+    width: '1rem',
+    height: '1rem',
+    flexShrink: 0,
+    marginBottom: '0.25rem',
+  },
   sharedBadge: ({ palette }) => ({
     display: 'inline-flex',
     alignItems: 'center',
@@ -296,7 +322,7 @@ const attachedDatasetCardStyles = () => ({
     display: 'flex',
     flexDirection: 'column',
     gap: '0.5rem',
-    padding: '0.5rem 2rem',
+    padding: '0.5rem 1rem',
   },
   noCasesText: ({ palette }) => ({
     fontSize: '0.875rem',

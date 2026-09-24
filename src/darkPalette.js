@@ -276,6 +276,7 @@ const darkPalette = {
     accent: cyanDefault,
     link: blue,
     linkHover: darkBlue,
+    linkHoverSecondary: skyBlue,
     visitedLink: blue70,
     alwaysWhite: white,
     alwaysDark: gray60,

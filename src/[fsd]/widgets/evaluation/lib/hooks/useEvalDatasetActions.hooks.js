@@ -32,13 +32,9 @@ export const useEvalDatasetActions = ({ projectId, editingSuiteId, agentId, tab 
   const excludedCaseIds = useMemo(() => exclusionsData?.case_ids ?? [], [exclusionsData?.case_ids]);
 
   const [showDatasetDialog, setShowDatasetDialog] = useState(false);
-  const [showExcludeCaseConfirm, setShowExcludeCaseConfirm] = useState(false);
-  const [caseToExclude, setCaseToExclude] = useState(null);
 
   useEffect(() => {
     setShowDatasetDialog(false);
-    setShowExcludeCaseConfirm(false);
-    setCaseToExclude(null);
   }, [editingSuiteId]);
 
   const handleManageDatasets = useCallback(() => {
@@ -141,35 +137,24 @@ export const useEvalDatasetActions = ({ projectId, editingSuiteId, agentId, tab 
 
   // ---- Case exclusion (from suite) ----
 
-  const handleExcludeCase = useCallback(datasetCase => {
-    if (!datasetCase?.id) return;
-    setCaseToExclude(datasetCase);
-    setShowExcludeCaseConfirm(true);
-  }, []);
+  const handleExcludeCase = useCallback(
+    async datasetCase => {
+      if (!datasetCase?.id || !editingSuiteId) return;
 
-  const handleCloseExcludeCaseConfirm = useCallback(() => {
-    setShowExcludeCaseConfirm(false);
-    setCaseToExclude(null);
-  }, []);
-
-  const handleConfirmExcludeCase = useCallback(async () => {
-    if (!caseToExclude?.id || !editingSuiteId) return;
-
-    try {
-      const newExclusions = [...new Set([...excludedCaseIds, caseToExclude.id])];
-      await updateExclusions({
-        projectId,
-        suiteId: editingSuiteId,
-        caseIds: newExclusions,
-      }).unwrap();
-      toastSuccess(caseExcludedMessage(caseToExclude.id));
-    } catch (error) {
-      toastError(parseEvalError(error, 'Failed to exclude case from suite.'));
-    } finally {
-      setShowExcludeCaseConfirm(false);
-      setCaseToExclude(null);
-    }
-  }, [caseToExclude, editingSuiteId, excludedCaseIds, updateExclusions, projectId, toastSuccess, toastError]);
+      try {
+        const newExclusions = [...new Set([...excludedCaseIds, datasetCase.id])];
+        await updateExclusions({
+          projectId,
+          suiteId: editingSuiteId,
+          caseIds: newExclusions,
+        }).unwrap();
+        toastSuccess(caseExcludedMessage(datasetCase.id));
+      } catch (error) {
+        toastError(parseEvalError(error, 'Failed to exclude case from suite.'));
+      }
+    },
+    [editingSuiteId, excludedCaseIds, updateExclusions, projectId, toastSuccess, toastError],
+  );
 
   const handleIncludeCase = useCallback(
     async datasetCase => {
@@ -192,8 +177,6 @@ export const useEvalDatasetActions = ({ projectId, editingSuiteId, agentId, tab 
 
   return {
     showDatasetDialog,
-    showExcludeCaseConfirm,
-    caseToExclude,
     excludedCaseIds,
     handleManageDatasets,
     handleCreateDataset,
@@ -203,8 +186,6 @@ export const useEvalDatasetActions = ({ projectId, editingSuiteId, agentId, tab 
     handleRemoveDataset,
     handleOpenDataset,
     handleExcludeCase,
-    handleCloseExcludeCaseConfirm,
-    handleConfirmExcludeCase,
     handleIncludeCase,
   };
 };

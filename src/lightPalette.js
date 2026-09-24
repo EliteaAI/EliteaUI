@@ -278,6 +278,7 @@ const lightPalette = {
     accent: magentaDefault,
     link: darkBlue,
     linkHover: blue,
+    linkHoverSecondary: darkBlue,
     visitedLink: darkBlue70,
     alwaysWhite: white,
     alwaysDark: alwaysDarkColor,

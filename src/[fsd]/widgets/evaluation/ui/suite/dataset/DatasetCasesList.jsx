@@ -2,6 +2,7 @@ import { memo, useCallback, useMemo, useState } from 'react';
 
 import { Box, Collapse, Typography } from '@mui/material';
 
+import { Chip } from '@/[fsd]/shared/ui';
 import ArrowDownIcon from '@/components/Icons/ArrowDownIcon';
 
 import DatasetCaseItem from './DatasetCaseItem';
@@ -18,6 +19,8 @@ const DatasetCasesList = memo(props => {
   const excludedSet = useMemo(() => new Set(excludedCaseIds), [excludedCaseIds]);
 
   const displayCount = caseCount || cases.length;
+  const excludedCaseCount = cases.filter(caseItem => excludedSet.has(caseItem.id)).length;
+  const activeCaseCount = displayCount - excludedCaseCount;
   const styles = datasetCasesListStyles();
 
   return (
@@ -27,7 +30,14 @@ const DatasetCasesList = memo(props => {
         onClick={handleToggle}
       >
         <ArrowDownIcon style={expanded ? styles.chevron : styles.chevronCollapsed} />
-        <Typography sx={styles.title}>Cases ({displayCount})</Typography>
+        <Typography sx={styles.title}>Cases</Typography>
+        <Chip.CountBadge
+          count={activeCaseCount}
+          total={displayCount}
+          text="active"
+          ariaLabel={`${activeCaseCount} of ${displayCount} active cases`}
+          testId="active-cases-count"
+        />
       </Box>
       <Collapse in={expanded}>
         <Box sx={styles.list}>
@@ -57,9 +67,9 @@ const datasetCasesListStyles = () => ({
   header: {
     display: 'flex',
     alignItems: 'center',
-    gap: '0.5rem',
+    gap: '1rem',
     cursor: 'pointer',
-    padding: '0.25rem 0',
+    padding: '0.25rem 0.5rem',
   },
   chevron: {
     width: '1rem',
@@ -81,7 +91,7 @@ const datasetCasesListStyles = () => ({
     display: 'flex',
     flexDirection: 'column',
     marginTop: '0.5rem',
-    borderTop: `0.0625rem solid ${palette.border.lines}`,
+    borderTop: `0.0625rem solid ${palette.border.default}`,
   }),
 });
 

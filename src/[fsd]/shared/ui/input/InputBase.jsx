@@ -252,7 +252,7 @@ const InputBase = memo(props => {
         <MuiTextField
           variant={variant}
           fullWidth
-          sx={[styles.textField, externalSx]}
+          sx={[styles.textField, externalSx].flat().filter(Boolean)}
           value={value}
           inputRef={inputRef}
           {...leftProps}
