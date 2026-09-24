@@ -352,7 +352,7 @@ const CredentialsSelect = memo(
     useEffect(() => {
       if (!hasFetchedData) return;
       onSelectionListedChange?.(Boolean(selectedOption));
-    }, [hasFetchedData, selectedOption, onSelectionListedChange]);
+    }, [hasFetchedData, selectedOption, value, onSelectionListedChange]);
 
     useEffect(() => {
       setShowConfigurableFields?.(!!selectedOption);

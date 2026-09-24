@@ -294,6 +294,20 @@ describe('IndexScheduleModal credentials', () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
+  it('keeps refusing an unlisted stored credential that is replaced while the dialog is open', async () => {
+    const { rerender } = renderModal({
+      credentials: { elitea_title: 'deleted-credential', private: false },
+      isEdit: true,
+    });
+    await waitFor(() => expect(shownValue()).toHaveTextContent('deleted-credential'));
+
+    rerender(modalElement({ credentials: { elitea_title: 'also-deleted', private: false }, isEdit: true }));
+    await waitFor(() => expect(shownValue()).toHaveTextContent('also-deleted'));
+    save();
+
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
   describe('a toolkit on a personal credential in a team project', () => {
     const toolkitCredentials = { elitea_title: PERSONAL_C, private: true };
 
