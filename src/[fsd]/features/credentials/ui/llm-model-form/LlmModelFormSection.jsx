@@ -1,4 +1,4 @@
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useEffect, useState } from 'react';
 
 import { Box } from '@mui/material';
 
@@ -7,16 +7,20 @@ import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
 
 const LlmModelFormSection = memo(props => {
   const { title, hasError = false, children } = props;
-  const [isExpandedByUser, setIsExpandedByUser] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(true);
   const styles = llmModelFormSectionStyles();
 
-  const onToggle = useCallback((event, isExpanded) => setIsExpandedByUser(isExpanded), []);
+  const onToggle = useCallback((event, isNowExpanded) => setIsExpanded(isNowExpanded), []);
+
+  useEffect(() => {
+    if (hasError) setIsExpanded(true);
+  }, [hasError]);
 
   return (
     <BasicAccordion
       showMode={AccordionConstants.AccordionShowMode.LeftMode}
       accordionSX={styles.accordion}
-      expanded={isExpandedByUser || hasError}
+      expanded={isExpanded || hasError}
       onChange={onToggle}
       items={[
         {

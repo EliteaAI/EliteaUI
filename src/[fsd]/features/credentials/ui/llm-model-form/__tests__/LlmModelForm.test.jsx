@@ -223,6 +223,21 @@ describe('LlmModelForm', () => {
 
     expect(screen.getByTestId('llm-model-section-limits')).toHaveAttribute('aria-expanded', 'true');
     expect(screen.getByTestId('llm-model-error-context_window')).toBeVisible();
+
+    await user.type(inputOf('context_window'), '1000');
+    await user.type(inputOf('max_output_tokens'), '100');
+
+    expect(screen.queryByTestId('llm-model-error-context_window')).not.toBeInTheDocument();
+    expect(screen.getByTestId('llm-model-section-limits')).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  it('clears its errors from the page when it unmounts', () => {
+    const { unmount } = renderForm(NEW_MODEL);
+    expect(Object.keys(lastReportedErrors())).not.toHaveLength(0);
+
+    unmount();
+
+    expect(lastReportedErrors()).toEqual({});
   });
 
   it('starts a new model empty, with every switch off and no protocol field', () => {

@@ -194,6 +194,13 @@ describe('mapLlmModelSaveErrorToFields', () => {
     });
   });
 
+  it('leaves other reasoning errors to the generic error message, as the backend wrote them', () => {
+    const error = {
+      data: { field: 'data', error: "Value error, reasoning effort 'extreme' is not supported" },
+    };
+    expect(mapLlmModelSaveErrorToFields(error)).toEqual({});
+  });
+
   it('leaves other errors to the generic error message', () => {
     expect(mapLlmModelSaveErrorToFields({ data: { field: 'database', error: 'Database error' } })).toEqual(
       {},

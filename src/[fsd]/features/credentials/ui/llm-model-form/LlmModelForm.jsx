@@ -79,6 +79,8 @@ const LlmModelForm = memo(props => {
     setToolErrors(errors);
   }, [errors, setToolErrors]);
 
+  useEffect(() => () => setToolErrors({}), [setToolErrors]);
+
   const visibleErrors = useMemo(
     () => ({
       ...pickVisibleLlmModelErrors({

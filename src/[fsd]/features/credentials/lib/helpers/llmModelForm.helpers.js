@@ -9,7 +9,7 @@ import {
 } from '../constants/llmModelForm.constants.js';
 
 const WHOLE_NUMBER_INPUT = /^\d+$/;
-const REASONING_PROTOCOL_ERROR = /reasoning/i;
+const DIAL_AZURE_REASONING_REJECTION = "api_protocol='azure' does not support reasoning";
 
 export const convertDisplayNameToLlmModelId = displayName =>
   String(displayName || '')
@@ -64,7 +64,7 @@ export const mapLlmModelSaveErrorToFields = error => {
   const { field, error: message } = error?.data || {};
   if (typeof message !== 'string') return {};
   if (field === LLM_MODEL_FIELDS.id) return { [LLM_MODEL_FIELDS.id]: message };
-  if (REASONING_PROTOCOL_ERROR.test(message)) {
+  if (message.includes(DIAL_AZURE_REASONING_REJECTION)) {
     return { [LLM_MODEL_FIELDS.reasoning]: LLM_MODEL_ERROR_MESSAGES.reasoningNotSupportedByProtocol };
   }
   return {};
