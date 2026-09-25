@@ -261,7 +261,7 @@ const AgentEvaluatePage = memo(() => {
             onClose={dimensionActions.handleCloseBuildDimensionWithAi}
             projectId={projectId}
             applicationId={applicationId}
-            onSaved={dimensionActions.handleDimensionCreated}
+            onSaved={dimensionActions.handleDimensionsCreated}
           />
         </>
       )}

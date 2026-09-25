@@ -16,6 +16,7 @@ import { EVAL_TIER } from '../constants';
 import {
   dimensionRemovedMessage,
   dimensionsAddedMessage,
+  dimensionsCreatedMessage,
   findDimensionByBindingId,
   parseEvalError,
   withSuiteSearchParam,
@@ -146,6 +147,41 @@ export const useEvalDimensionActions = ({
     [editingSuiteId, addEvalBinding, projectId, toastSuccess, toastError],
   );
 
+  // Bulk counterpart of `handleDimensionCreated` for the Build with AI modal: one toast for the
+  // whole batch instead of one per created dimension.
+  const handleDimensionsCreated = useCallback(
+    async (items = []) => {
+      const created = items.filter(item => item?.dimension?.id);
+      if (!created.length || !editingSuiteId) return;
+
+      const results = await Promise.allSettled(
+        created.map(({ dimension, evidenceScope, engine }) =>
+          addEvalBinding({
+            projectId,
+            suiteId: editingSuiteId,
+            body: {
+              dimension_id: dimension.id,
+              evidence_scope: evidenceScope,
+              engine,
+            },
+          }).unwrap(),
+        ),
+      );
+
+      const failed = results.filter(r => r.status === 'rejected');
+      const successCount = results.length - failed.length;
+
+      if (!failed.length) {
+        toastSuccess(dimensionsCreatedMessage(successCount, created[0].dimension.name));
+      } else if (!successCount) {
+        toastError(parseEvalError(failed[0].reason, 'Dimensions created but failed to attach to suite.'));
+      } else {
+        toastError(`${successCount} created and added, ${failed.length} failed to attach to suite.`);
+      }
+    },
+    [editingSuiteId, addEvalBinding, projectId, toastSuccess, toastError],
+  );
+
   const handleBuildDimensionWithAi = useCallback(() => {
     setShowBuildDimensionWithAi(true);
   }, []);
@@ -248,6 +284,7 @@ export const useEvalDimensionActions = ({
     handleCreateDimensionManually,
     handleCloseCreateDimensionModal,
     handleDimensionCreated,
+    handleDimensionsCreated,
     handleBuildDimensionWithAi,
     handleCloseBuildDimensionWithAi,
     handleEditDimension,
