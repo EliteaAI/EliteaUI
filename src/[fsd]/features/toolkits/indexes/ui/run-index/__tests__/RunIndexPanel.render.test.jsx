@@ -41,6 +41,9 @@ const traceNewIndex = vi.hoisted(() => ({ current: null }));
 const chatIsRunning = vi.hoisted(() => ({ current: false }));
 const chatIsWaitingForTaskStart = vi.hoisted(() => ({ current: false }));
 const polling = vi.hoisted(() => ({ current: { startedTimeStamp: 0, fulfilledTimeStamp: 0 } }));
+const formik = vi.hoisted(() => ({ current: { values: {} } }));
+const toolkitSchema = vi.hoisted(() => ({ current: {} }));
+const scheduleModalProps = vi.hoisted(() => ({ current: null }));
 
 const stub = (testid, keys) =>
   vi.fn(props => (
@@ -68,7 +71,10 @@ const leftBandStub = stub('left-band', []);
 
 vi.mock('@/[fsd]/features/toolkits/indexes/ui', () => ({
   IndexActivityPanel: () => <div />,
-  IndexScheduleModal: () => <div />,
+  IndexScheduleModal: props => {
+    scheduleModalProps.current = props;
+    return <div />;
+  },
   RunIndexBanner: props => bannerStub(props),
 }));
 vi.mock('../IndexDetailsFooterBand', () => ({ default: props => footerStub(props) }));
@@ -79,7 +85,7 @@ vi.mock('../IndexConfigurationTab', () => ({ default: () => <div /> }));
 vi.mock('../RunIndexGeneralSection', () => ({ default: () => <div /> }));
 vi.mock('../RunIndexScheduleContent', () => ({ default: () => <div /> }));
 
-vi.mock('formik', () => ({ useFormikContext: () => ({ values: {} }) }));
+vi.mock('formik', () => ({ useFormikContext: () => formik.current }));
 vi.mock('react-redux', () => ({ useSelector: () => ({}) }));
 vi.mock('react-router-dom', () => ({ useNavigate: () => vi.fn() }));
 vi.mock('@/[fsd]/entities/run-history/lib/hooks', () => ({
@@ -179,7 +185,7 @@ vi.mock('@/[fsd]/features/toolkits/indexes/model/indexes.slice', () => ({
   actions: {},
   default: (state = {}) => state,
 }));
-vi.mock('@/common/toolkitSchemaUtils', () => ({ convertToolkitSchema: () => ({}) }));
+vi.mock('@/common/toolkitSchemaUtils', () => ({ convertToolkitSchema: () => toolkitSchema.current }));
 vi.mock('@/hooks/toolkit/useGetSelectedToolSchema', () => ({ useGetSelectedToolSchema: () => ({}) }));
 vi.mock('@/hooks/useNavBlocker', () => ({ default: () => ({ setBlockNav: vi.fn() }) }));
 vi.mock('@/hooks/useSelectedProject', () => ({ useSelectedProjectId: () => 1 }));
@@ -231,6 +237,9 @@ afterEach(() => {
   chatIsWaitingForTaskStart.current = false;
   polling.current = { startedTimeStamp: 0, fulfilledTimeStamp: 0 };
   deleteInFlight.current = false;
+  formik.current = { values: {} };
+  toolkitSchema.current = {};
+  scheduleModalProps.current = null;
 });
 
 describe('RunIndexPanel — the liveness flags reach the right consumers', () => {
@@ -365,5 +374,38 @@ describe('RunIndexPanel — the liveness flags reach the right consumers', () =>
     cleanup();
     renderPanel({ stale: true, reclaimable: true });
     expect(propsOf('footer').reindexDisabled).toBe(false);
+  });
+});
+
+describe('RunIndexPanel — the schedule dialog is seeded from the saved toolkit', () => {
+  it('hands the modal the credential the saved toolkit settings hold, keyed by the credentials field', () => {
+    const credentialsField = { section: ['credentials'], description: 'GitHub credentials' };
+    toolkitSchema.current = {
+      properties: { repository: { section: ['general'] }, github_configuration: credentialsField },
+    };
+    formik.current = {
+      initialValues: { settings: { github_configuration: { elitea_title: 'saved-b', private: false } } },
+      values: { settings: { github_configuration: { elitea_title: 'unsaved-a', private: false } } },
+    };
+
+    renderPanel({ stale: false, reclaimable: false });
+
+    expect(scheduleModalProps.current.toolkitCredentials).toEqual({
+      elitea_title: 'saved-b',
+      private: false,
+    });
+    expect(scheduleModalProps.current.credentialsData).toBe(credentialsField);
+  });
+
+  it('seeds nothing when the toolkit schema has no credentials field', () => {
+    formik.current = {
+      initialValues: { settings: { github_configuration: { elitea_title: 'saved-b', private: false } } },
+      values: {},
+    };
+
+    renderPanel({ stale: false, reclaimable: false });
+
+    expect(scheduleModalProps.current.toolkitCredentials).toBeNull();
+    expect(scheduleModalProps.current.credentialsData).toBeNull();
   });
 });
