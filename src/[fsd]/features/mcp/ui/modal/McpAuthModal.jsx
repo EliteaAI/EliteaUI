@@ -15,6 +15,7 @@ import { McpAuthFlowConstants } from '@/[fsd]/features/mcp/lib/constants';
 import {
   McpAuthFlowHelpers,
   McpAuthHelpers,
+  McpAuthWindowHelpers,
   McpClientRegistrationHelpers,
 } from '@/[fsd]/features/mcp/lib/helpers';
 import CloseIcon from '@/components/Icons/CloseIcon';
@@ -72,6 +73,7 @@ const McpAuthModal = memo(props => {
   const oauthMetadata = mcpAuthMetadata?.oauthMetadata;
   const providedSettings = mcpAuthMetadata?.providedSettings;
   const resourceScopes = mcpAuthMetadata?.resourceScopes;
+  const protectedResource = mcpAuthMetadata?.protectedResource;
 
   // Use provided settings from backend if available, otherwise use form values
   const client_id = providedSettings?.mcp_client_id || formClientId;
@@ -233,6 +235,7 @@ const McpAuthModal = memo(props => {
         resourceMetadata: {
           authorization_servers: authServers,
           oauth_authorization_server: oauthAuthorizationServer,
+          resource: protectedResource,
         },
         // Pass OAuth metadata for storage (from mcp_authorization_required message)
         oauthMetadata: oauthMetadata || {
@@ -278,10 +281,7 @@ const McpAuthModal = memo(props => {
       };
     } catch (error) {
       setAuthError(error.message || 'Authorization failed');
-      // Close the popup if it's still open
-      if (authWindowRef.current && !authWindowRef.current.closed) {
-        // authWindowRef.current.close();
-      }
+      McpAuthWindowHelpers.closeUnusedAuthPopup(authWindowRef.current);
       authWindowRef.current = null;
     } finally {
       setAuthLoading(false);
@@ -290,6 +290,7 @@ const McpAuthModal = memo(props => {
     storageKey,
     authServers,
     oauthAuthorizationServer,
+    protectedResource,
     oauthMetadata,
     client_id,
     client_secret,
