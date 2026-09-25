@@ -100,6 +100,7 @@ const CredentialsSelect = memo(props => {
     propKey,
     fallbackToFirstCredential = true,
     onSelectionListedChange,
+    getOptionTypeTag,
   } = props;
 
   const trackEvent = useTrackEvent();
@@ -272,6 +273,7 @@ const CredentialsSelect = memo(props => {
             <CredentialOptionLabel
               isPersonal={isConfigurationPersonal}
               label={configuration.label || configuration.elitea_title || configuration.data?.title}
+              typeTag={getOptionTypeTag?.(configuration)}
               credentialUrl={credentialUrl}
               isInvalid={isCredentialInvalid}
               isChecking={isChecking}
@@ -295,6 +297,7 @@ const CredentialsSelect = memo(props => {
     selectedProjectId,
     value?.elitea_title,
     tokens,
+    getOptionTypeTag,
   ]);
 
   const menuData = useMemo(

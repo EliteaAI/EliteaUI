@@ -5,6 +5,8 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import { Box, Grid, Typography } from '@mui/material';
 
+import { LlmModelFormConstants } from '@/[fsd]/features/credentials/lib/constants';
+import { LlmModelFormHelpers } from '@/[fsd]/features/credentials/lib/helpers';
 import { CredentialsTabBar } from '@/[fsd]/features/credentials/ui';
 import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks';
 import { Tooltip } from '@/[fsd]/shared/ui';
@@ -67,15 +69,18 @@ const CreateCredential = memo(({ forceShowTitle, typeSelectorTitle, searchPlaceh
     if (!credentialType || !configurationsAsSchema || !schema) {
       return {};
     }
+    const isLlmModel = credentialType === LlmModelFormConstants.LLM_MODEL_CONFIGURATION_TYPE;
     const result = {
       type: credentialType,
       schema: convertCredentialConfigSchema(schema?.config_schema, toolSchema, systemSenderName),
       has_test_connection: schema?.has_test_connection || false,
       check_connection_label: schema?.check_connection_label,
-      settings: {},
+      settings: isLlmModel ? LlmModelFormHelpers.buildInitialLlmModelSettings() : {},
     };
+    const requiredPropsSeededFromSchema = isLlmModel ? [] : result.schema?.required || [];
+    const propsSeededFromSchema = isLlmModel ? {} : result.schema?.properties || {};
 
-    result.schema?.required?.forEach(async prop => {
+    requiredPropsSeededFromSchema.forEach(async prop => {
       if (!sectionProps.find(sectionProp => sectionProp === prop)) {
         result.settings[prop] = getPropValue({
           schema: result.schema,
@@ -94,8 +99,7 @@ const CreateCredential = memo(({ forceShowTitle, typeSelectorTitle, searchPlaceh
     // - 'prefill_value': Custom attribute for pre-filling required fields without making them
     //   optional in Pydantic. This keeps the API schema Pydantic-compliant (field stays in
     //   'required' array) while allowing UI to show a sensible initial value.
-    const props = result.schema?.properties || {};
-    Object.entries(props).forEach(([prop, propSchema]) => {
+    Object.entries(propsSeededFromSchema).forEach(([prop, propSchema]) => {
       const prefillValue = propSchema?.prefill_value;
       const defaultValue = propSchema?.default;
       // prefill_value takes precedence - it's explicitly set for UI pre-filling

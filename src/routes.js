@@ -103,6 +103,8 @@ export const BLOCK_NAV_PATTERNS = [
   `${RouteDefinitions.SkillsDetail}/:versionId`,
   RouteDefinitions.UserPublicApplicationDetail,
   RouteDefinitions.CreatePersonalToken,
+  RouteDefinitions.CreateConfiguration,
+  RouteDefinitions.CreateConfigurationWithType,
   RouteDefinitions.EditConfiguration,
   RouteDefinitions.PipelineDetail,
   `${RouteDefinitions.PipelineDetail}/:versionId`,
