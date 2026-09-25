@@ -1,8 +1,8 @@
 import { memo, useRef } from 'react';
 
-import { Box, Chip, TextField, Typography, useTheme } from '@mui/material';
+import { Box, Chip, Typography } from '@mui/material';
 
-import SearchIcon from '@/components/Icons/SearchIcon';
+import { SimpleSearchBar } from '@/[fsd]/shared/ui/input';
 
 const CategoryFilter = memo(props => {
   const {
@@ -22,7 +22,6 @@ const CategoryFilter = memo(props => {
     },
   } = props;
   const { categoryList } = slotProps || {};
-  const theme = useTheme();
   const containerRef = useRef(null);
 
   const styles = componentStyles();
@@ -46,19 +45,13 @@ const CategoryFilter = memo(props => {
       >
         {/* Search Bar */}
         <Box sx={styles.searchContainer(allCategories.length > 1)}>
-          <Box sx={styles.searchIconContainer}>
-            <SearchIcon fill={theme.palette.icon.secondary} />
-          </Box>
-          <TextField
+          <SimpleSearchBar
             placeholder={searchPlaceholder}
-            value={searchQuery}
-            onChange={onSearchChange}
+            searchQuery={searchQuery}
+            onSearchChange={onSearchChange}
             sx={styles.searchField}
-            variant="outlined"
-            size="small"
-            slotProps={{
-              htmlInput: { 'data-testid': searchInputTestId },
-            }}
+            autoFocus={false}
+            data-testid={searchInputTestId}
           />
         </Box>
 
@@ -122,59 +115,10 @@ const componentStyles = () => ({
   searchContainer: showCategory => ({
     width: '23.75rem',
     marginBottom: showCategory ? '1rem' : '2rem',
-    position: 'relative',
   }),
-  searchIconContainer: {
-    position: 'absolute',
-    left: '0.75rem',
-    top: '50%',
-    transform: 'translateY(-50%)',
-    zIndex: 1,
-    display: 'flex',
-    alignItems: 'center',
-    pointerEvents: 'none',
-    '& svg': {
-      width: '1rem',
-      height: '1rem',
-    },
-  },
-  searchField: ({ palette, typography }) => ({
+  searchField: {
     width: '100%',
-    '& .MuiOutlinedInput-root': {
-      ...typography.bodyMedium,
-      backgroundColor: palette.background.surface.interactive.default,
-      border: `0.0625rem solid ${palette.border.lines}`,
-      borderRadius: '1.75rem',
-      height: '2.25rem',
-      transition: 'border 0.3s ease, background-color 0.3s ease',
-      '&:hover': {
-        borderColor: palette.border.hover,
-      },
-      '&.Mui-focused': {
-        border: `0.0625rem solid ${palette.border.inputHover}`,
-        backgroundColor: palette.background.surface.interactive.active,
-      },
-      '& fieldset': {
-        border: 'none',
-      },
-      '&:hover fieldset': {
-        border: 'none',
-      },
-      '&.Mui-focused fieldset': {
-        border: 'none',
-      },
-    },
-    '& .MuiInputBase-input': {
-      padding: '0.375rem 0.75rem',
-      paddingLeft: '2.5rem',
-      ...typography.bodyMedium,
-      color: palette.text.secondary,
-      '&::placeholder': {
-        color: palette.text.disabled,
-        opacity: 1,
-      },
-    },
-  }),
+  },
   categoryFilterContainer: {
     width: '100%',
     maxWidth: '52.5rem',
