@@ -5,9 +5,10 @@ import { ThemeProvider, createTheme } from '@mui/material';
 
 import { McpAuthFlowConstants } from '@/[fsd]/features/mcp/lib/constants';
 import asMetadata6689 from '@/[fsd]/features/mcp/lib/helpers/__fixtures__/asMetadata6689.json';
+import { startMcpAuthFlow } from '@/[fsd]/features/mcp/lib/helpers/mcpAuthFlow.helpers';
 import McpAuthModal from '@/[fsd]/features/mcp/ui/modal/McpAuthModal';
 import '@testing-library/jest-dom/vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 vi.hoisted(() => {
   const store = new Map();
@@ -263,5 +264,49 @@ describe('McpAuthModal without usable authorization server metadata (#6689)', ()
 
     expect(screen.queryByTestId('mcp-auth-metadata-unavailable')).not.toBeInTheDocument();
     expect(screen.getByPlaceholderText('Enter OAuth client secret')).toBeInTheDocument();
+  });
+});
+
+describe('McpAuthModal popup after a failed authorization (#6688)', () => {
+  const REGISTRATION_REJECTED =
+    'Dynamic client registration failed: redirect_uris are not allowed: please contact monday to add the redirect URIs to the allowlist';
+
+  const popupAt = location => ({ closed: false, close: vi.fn(), location });
+  const providerPage = () =>
+    Object.defineProperty({}, 'href', {
+      get: () => {
+        throw new DOMException('Blocked a frame with origin', 'SecurityError');
+      },
+    });
+
+  const authorizeAndFail = async popup => {
+    vi.spyOn(window, 'open').mockReturnValue(popup);
+    startMcpAuthFlow.mockRejectedValue(new Error(REGISTRATION_REJECTED));
+    renderModal(findServerMetadata('Miro'));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Authorize' }));
+
+    await waitFor(() => expect(screen.getByText(REGISTRATION_REJECTED)).toBeInTheDocument());
+  };
+
+  afterEach(() => vi.restoreAllMocks());
+
+  it('closes a popup the flow never navigated, so no blank window is left behind', async () => {
+    const popup = popupAt({ href: 'about:blank' });
+
+    await authorizeAndFail(popup);
+
+    expect(popup.close).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    ['the provider page', providerPage()],
+    ['the callback page', { href: 'https://elitea.test/app/mcp-auth-callback?error=access_denied' }],
+  ])('leaves a popup showing %s open for the user to read', async (_label, location) => {
+    const popup = popupAt(location);
+
+    await authorizeAndFail(popup);
+
+    expect(popup.close).not.toHaveBeenCalled();
   });
 });

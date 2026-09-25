@@ -15,6 +15,7 @@ import { McpAuthFlowConstants } from '@/[fsd]/features/mcp/lib/constants';
 import {
   McpAuthFlowHelpers,
   McpAuthHelpers,
+  McpAuthWindowHelpers,
   McpClientRegistrationHelpers,
 } from '@/[fsd]/features/mcp/lib/helpers';
 import CloseIcon from '@/components/Icons/CloseIcon';
@@ -278,10 +279,7 @@ const McpAuthModal = memo(props => {
       };
     } catch (error) {
       setAuthError(error.message || 'Authorization failed');
-      // Close the popup if it's still open
-      if (authWindowRef.current && !authWindowRef.current.closed) {
-        // authWindowRef.current.close();
-      }
+      McpAuthWindowHelpers.closeUnusedAuthPopup(authWindowRef.current);
       authWindowRef.current = null;
     } finally {
       setAuthLoading(false);

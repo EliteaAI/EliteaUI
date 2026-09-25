@@ -117,6 +117,20 @@ export const createAuthorizationMonitor = (authWindow, state, onSuccess, onError
   return cleanup;
 };
 
+const isStillBlank = authWindow => {
+  try {
+    return authWindow.location.href === 'about:blank';
+  } catch {
+    return false;
+  }
+};
+
+export const closeUnusedAuthPopup = authWindow => {
+  if (authWindow && !authWindow.closed && isStillBlank(authWindow)) {
+    authWindow.close();
+  }
+};
+
 export const navigateAuthPopup = (authWindow, authUrl) => {
   if (authWindow.closed) {
     throw new Error('Authorization window was closed');
