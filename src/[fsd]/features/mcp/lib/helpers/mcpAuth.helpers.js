@@ -545,7 +545,7 @@ export const setAccessToken = (
     authorization_server: authorizationServer,
     resource_server_url: getOrExisting('resource_server_url') || canonicalizeServerUrl(serverUrl),
     resource_scopes: normalizeList(getOrExisting('resource_scopes')),
-    resource: getOrExisting('resource'),
+    resource: 'resource' in oauthMeta ? oauthMeta.resource : existingToken.resource,
     ...(familyRegistration?.family_id && { auth_family_id: familyRegistration.family_id }),
   };
 
