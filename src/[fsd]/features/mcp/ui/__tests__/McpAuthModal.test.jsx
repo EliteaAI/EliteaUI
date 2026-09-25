@@ -73,6 +73,7 @@ const renderModal = (
   providedSettings,
   formClientId,
   authServers = ['https://mcp.example.com'],
+  protectedResource,
 ) =>
   render(
     <ThemeProvider theme={theme}>
@@ -85,6 +86,7 @@ const renderModal = (
           oauthAuthorizationServer,
           providedSettings,
           resourceScopes: undefined,
+          protectedResource,
         }}
         formClientId={formClientId}
         projectId={2}
@@ -308,5 +310,24 @@ describe('McpAuthModal popup after a failed authorization (#6688)', () => {
     await authorizeAndFail(popup);
 
     expect(popup.close).not.toHaveBeenCalled();
+  });
+});
+
+describe('McpAuthModal passes the protected resource to the OAuth flow (#6688)', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('hands the resource metadata resource to startMcpAuthFlow', async () => {
+    vi.spyOn(window, 'open').mockReturnValue({
+      closed: false,
+      close: vi.fn(),
+      location: { href: 'about:blank' },
+    });
+    startMcpAuthFlow.mockResolvedValue({});
+    renderModal(findServerMetadata('Miro'), undefined, undefined, undefined, 'https://mcp.example.com/mcp');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Authorize' }));
+
+    await waitFor(() => expect(startMcpAuthFlow).toHaveBeenCalledTimes(1));
+    expect(startMcpAuthFlow.mock.calls[0][0].resourceMetadata.resource).toBe('https://mcp.example.com/mcp');
   });
 });

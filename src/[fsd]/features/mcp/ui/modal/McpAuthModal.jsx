@@ -73,6 +73,7 @@ const McpAuthModal = memo(props => {
   const oauthMetadata = mcpAuthMetadata?.oauthMetadata;
   const providedSettings = mcpAuthMetadata?.providedSettings;
   const resourceScopes = mcpAuthMetadata?.resourceScopes;
+  const protectedResource = mcpAuthMetadata?.protectedResource;
 
   // Use provided settings from backend if available, otherwise use form values
   const client_id = providedSettings?.mcp_client_id || formClientId;
@@ -234,6 +235,7 @@ const McpAuthModal = memo(props => {
         resourceMetadata: {
           authorization_servers: authServers,
           oauth_authorization_server: oauthAuthorizationServer,
+          resource: protectedResource,
         },
         // Pass OAuth metadata for storage (from mcp_authorization_required message)
         oauthMetadata: oauthMetadata || {
@@ -288,6 +290,7 @@ const McpAuthModal = memo(props => {
     storageKey,
     authServers,
     oauthAuthorizationServer,
+    protectedResource,
     oauthMetadata,
     client_id,
     client_secret,
