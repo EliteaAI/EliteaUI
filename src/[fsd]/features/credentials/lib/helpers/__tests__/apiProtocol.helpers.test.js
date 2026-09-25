@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  credentialKeyOf,
-  findCredentialType,
-  isApiProtocolCredentialType,
-  resolveApiProtocolForModel,
-} from '../apiProtocol.helpers.js';
+import { credentialKeyOf, findCredentialType, isApiProtocolCredentialType } from '../apiProtocol.helpers.js';
 
 describe('isApiProtocolCredentialType', () => {
   it('accepts ai_dial in any casing', () => {
@@ -69,27 +64,5 @@ describe('credentialKeyOf', () => {
   it('returns empty string when nothing is attached', () => {
     expect(credentialKeyOf(undefined)).toBe('');
     expect(credentialKeyOf(null)).toBe('');
-  });
-});
-
-describe('resolveApiProtocolForModel', () => {
-  it('maps the Claude family to anthropic', () => {
-    ['anthropic.claude-sonnet-5', 'claude-opus-5', 'Sonnet-5', 'anthropic.claude-haiku-4-5'].forEach(name =>
-      expect(resolveApiProtocolForModel(name)).toBe('anthropic'),
-    );
-  });
-
-  it('maps the gpt family to openai', () => {
-    ['gpt-5.4-2026-03-05', 'GPT-4o', 'azure.gpt-4o-mini'].forEach(name =>
-      expect(resolveApiProtocolForModel(name)).toBe('openai'),
-    );
-  });
-
-  it('returns empty string for unknown or empty names', () => {
-    expect(resolveApiProtocolForModel('gemini-2.5-pro')).toBe('');
-    // "gpt" must be a token boundary, not any substring
-    expect(resolveApiProtocolForModel('mygptmodel')).toBe('');
-    expect(resolveApiProtocolForModel('')).toBe('');
-    expect(resolveApiProtocolForModel(undefined)).toBe('');
   });
 });

@@ -5,6 +5,8 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import { Box, Grid, Typography } from '@mui/material';
 
+import { LlmModelFormConstants } from '@/[fsd]/features/credentials/lib/constants';
+import { LlmModelFormHelpers } from '@/[fsd]/features/credentials/lib/helpers';
 import { CredentialsTabBar } from '@/[fsd]/features/credentials/ui';
 import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks';
 import { Tooltip } from '@/[fsd]/shared/ui';
@@ -122,6 +124,9 @@ const CreateCredential = memo(({ forceShowTitle, typeSelectorTitle, searchPlaceh
         result.settings[prop] = value;
       }
     });
+    if (credentialType === LlmModelFormConstants.LLM_MODEL_CONFIGURATION_TYPE) {
+      result.settings = LlmModelFormHelpers.buildInitialLlmModelSettings();
+    }
     // Apply pre-fill values from URL params (set by CredentialWarningBanner "Create a credential" link)
     if (prefillId) result.settings.elitea_title = prefillId;
     if (prefillName) result.settings.label = prefillName;
