@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildDimensionApiBody,
   getDefaultDimensionFormState,
+  getDimensionFormFieldErrors,
   getDimensionFormValidationError,
   getScaleBounds,
   getTargetValueError,
@@ -333,5 +334,105 @@ describe('AI-generated draft with a proposed target', () => {
     });
     expect(form.evaluationTarget).toEqual({ structure: false, input: false, output: true });
     expect(error).toBe('');
+  });
+});
+
+describe('getDimensionFormFieldErrors', () => {
+  const validForm = () => ({
+    ...getDefaultDimensionFormState(),
+    name: 'Dim',
+    evaluationInstructions: 'Judge it',
+    targetValue: '80',
+  });
+
+  it('reports nothing for a complete form', () => {
+    expect(getDimensionFormFieldErrors(validForm())).toEqual({});
+  });
+
+  it('marks every missing required field at once', () => {
+    const form = { ...validForm(), name: ' ', evaluationInstructions: '', targetValue: '' };
+    expect(getDimensionFormFieldErrors(form)).toEqual({
+      name: 'Field is required.',
+      evaluationInstructions: 'Field is required.',
+      targetValue: 'Field is required.',
+    });
+  });
+
+  it('asks for at least one evaluation target', () => {
+    const form = { ...validForm(), evaluationTarget: { output: false, input: false, structure: false } };
+    expect(getDimensionFormFieldErrors(form).evaluationTarget).toBe(
+      'At least one evaluation target must be selected.',
+    );
+  });
+
+  it('keeps the range message for an out-of-scale target', () => {
+    const form = { ...validForm(), targetValue: '150' };
+    expect(getDimensionFormFieldErrors(form).targetValue).toBe('Target value must be between 1 and 100.');
+  });
+
+  it('requires validation code only for the code evaluator', () => {
+    const form = { ...validForm(), evaluator: 'code', scaleTypePreset: 'pass_fail', targetValue: '' };
+    expect(getDimensionFormFieldErrors(form)).toEqual({ validationCode: 'Field is required.' });
+  });
+
+  it('flags custom scale bounds', () => {
+    const empty = { ...validForm(), scaleTypePreset: 'custom', customMin: '', customMax: '' };
+    expect(getDimensionFormFieldErrors(empty).customScale).toBe('Field is required.');
+
+    const inverted = { ...validForm(), scaleTypePreset: 'custom', customMin: '10', customMax: '5' };
+    expect(getDimensionFormFieldErrors(inverted).customScale).toBe(
+      'Scale minimum must be less than maximum.',
+    );
+  });
+
+  it('requires a value for a custom importance', () => {
+    const form = { ...validForm(), importance: 'custom', customImportanceValue: '' };
+    expect(getDimensionFormFieldErrors(form).customImportanceValue).toBe('Field is required.');
+  });
+});
+
+describe('getDimensionFormValidationError', () => {
+  const validForm = () => ({
+    ...getDefaultDimensionFormState(),
+    name: 'Dim',
+    evaluationInstructions: 'Judge it',
+    targetValue: '80',
+  });
+
+  it('reports the first problem in the long-standing wording', () => {
+    const form = { ...validForm(), name: '', evaluationInstructions: '', targetValue: '' };
+    expect(getDimensionFormValidationError(form)).toBe('Name is required.');
+  });
+
+  it('keeps the field-specific wording for each rule', () => {
+    expect(getDimensionFormValidationError({ ...validForm(), evaluationInstructions: '' })).toBe(
+      'Evaluation instructions are required for AI evaluator.',
+    );
+    expect(
+      getDimensionFormValidationError({
+        ...validForm(),
+        evaluator: 'code',
+        scaleTypePreset: 'pass_fail',
+        targetValue: '',
+      }),
+    ).toBe('Validation code is required for Code evaluator.');
+    expect(getDimensionFormValidationError({ ...validForm(), targetValue: '' })).toBe(
+      'Target value is required.',
+    );
+    expect(
+      getDimensionFormValidationError({
+        ...validForm(),
+        scaleTypePreset: 'custom',
+        customMin: '',
+        customMax: '',
+      }),
+    ).toBe('Custom scale minimum is required.');
+    expect(
+      getDimensionFormValidationError({ ...validForm(), importance: 'custom', customImportanceValue: '' }),
+    ).toBe('Custom importance value is required.');
+  });
+
+  it('is empty for a valid form', () => {
+    expect(getDimensionFormValidationError(validForm())).toBe('');
   });
 });

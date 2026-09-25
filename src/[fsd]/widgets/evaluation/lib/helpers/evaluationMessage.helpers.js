@@ -38,6 +38,14 @@ export const dimensionsAddedMessage = (count, dimensionName = null) => {
   return `${count} dimension${count === 1 ? '' : 's'} added to the suite.`;
 };
 
+/** Same naming rule as `dimensionsAddedMessage`, for dimensions created and attached in one go. */
+export const dimensionsCreatedMessage = (count, dimensionName = null) => {
+  if (count === 1 && dimensionName) {
+    return `The ${dimensionName} dimension has been created and added to the suite.`;
+  }
+  return `${count} dimension${count === 1 ? ' has' : 's have'} been created and added to the suite.`;
+};
+
 /**
  * `count` is the number of cases the server actually stored, not the number picked for import.
  * A single case is named by its id; when the endpoint reports a count without ids the message

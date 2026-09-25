@@ -32,6 +32,7 @@ import {
   getTargetValueError,
   mapDimensionToFormState,
 } from '../../lib/helpers';
+import DimensionFieldError from './DimensionFieldError';
 
 export {
   buildDimensionApiBody,
@@ -87,7 +88,7 @@ const CODE_SAFETY_NOTICE =
   'The code is checked by a safety pre-screen before it is stored. Dangerous imports, builtins, and dunder access are rejected.';
 
 const DimensionForm = memo(props => {
-  const { form, setForm, errorMessage, isEditMode = false } = props;
+  const { form, setForm, errorMessage, isEditMode = false, fieldErrors = {}, showValidation = false } = props;
 
   const [codeExtensions, setCodeExtensions] = useState([]);
   const [isCodeExpanded, setIsCodeExpanded] = useState(false);
@@ -298,21 +299,32 @@ const DimensionForm = memo(props => {
     return getCustomScaleBoundsError(form);
   }, [form]);
 
+  // Explicit per-field errors are only shown after a save attempt (see `showValidation`); until then
+  // the form keeps its quiet, type-as-you-go behaviour.
+  const visibleErrors = showValidation ? fieldErrors : {};
+
   const styles = dimensionFormStyles();
 
   return (
     <>
       <Box sx={styles.content}>
-        <Input.InputBase
-          data-testid="dimension-name-input"
-          fullWidth
-          variant="standard"
-          label="Name"
-          value={form.name}
-          onChange={handleNameChange}
-          inputProps={{ maxLength: 128 }}
-          required
-        />
+        <Box sx={styles.fieldWithError}>
+          <Input.InputBase
+            data-testid="dimension-name-input"
+            fullWidth
+            variant="standard"
+            label="Name"
+            value={form.name}
+            onChange={handleNameChange}
+            inputProps={{ maxLength: 128 }}
+            required
+            error={!!visibleErrors.name}
+          />
+          <DimensionFieldError
+            message={visibleErrors.name}
+            data-testid="dimension-name-error"
+          />
+        </Box>
 
         <FormControlLabel
           control={
@@ -391,6 +403,11 @@ const DimensionForm = memo(props => {
               showCopyAction={false}
               showExpandAction={false}
               sx={styles.textareaField}
+              error={!!visibleErrors.evaluationInstructions}
+            />
+            <DimensionFieldError
+              message={visibleErrors.evaluationInstructions}
+              data-testid="dimension-instructions-error"
             />
           </Box>
         )}
@@ -454,6 +471,10 @@ const DimensionForm = memo(props => {
                 contentTestId="dimension-code-input"
               />
             </Box>
+            <DimensionFieldError
+              message={visibleErrors.validationCode}
+              data-testid="dimension-code-error"
+            />
             <Box sx={styles.safetyNotice}>
               <InfoIcon sx={styles.safetyNoticeIcon} />
               <Typography
@@ -487,6 +508,10 @@ const DimensionForm = memo(props => {
               />
             ))}
           </Box>
+          <DimensionFieldError
+            message={visibleErrors.evaluationTarget}
+            data-testid="dimension-target-error"
+          />
         </Box>
 
         <Box sx={styles.verticalField}>
@@ -526,7 +551,7 @@ const DimensionForm = memo(props => {
                   variant="standard"
                   value={form.customMin}
                   onChange={handleCustomMinChange}
-                  error={!!customScaleError}
+                  error={!!customScaleError || !!visibleErrors.customScale}
                 />
               </Box>
             </Box>
@@ -549,13 +574,19 @@ const DimensionForm = memo(props => {
                   variant="standard"
                   value={form.customMax}
                   onChange={handleCustomMaxChange}
-                  error={!!customScaleError}
-                  helperText={customScaleError}
+                  error={!!customScaleError || !!visibleErrors.customScale}
+                  helperText={visibleErrors.customScale ? '' : customScaleError}
                   helperTextTestId="dimension-custom-scale-error"
                 />
               </Box>
             </Box>
           </Box>
+        )}
+        {isCustomScale && (
+          <DimensionFieldError
+            message={visibleErrors.customScale}
+            data-testid="dimension-custom-scale-field-error"
+          />
         )}
 
         {!isPassFail && (
@@ -609,12 +640,16 @@ const DimensionForm = memo(props => {
                     variant="standard"
                     value={form.targetValue}
                     onChange={handleTargetValueChange}
-                    error={!!targetValueError}
-                    helperText={targetValueError}
+                    error={!!targetValueError || !!visibleErrors.targetValue}
+                    helperText={visibleErrors.targetValue ? '' : targetValueError}
                     helperTextTestId="dimension-target-value-error"
                     inputProps={scaleBounds ? { min: scaleBounds.min, max: scaleBounds.max } : undefined}
                   />
                 </Box>
+                <DimensionFieldError
+                  message={visibleErrors.targetValue}
+                  data-testid="dimension-target-value-field-error"
+                />
               </Box>
             </Box>
           </>
@@ -663,6 +698,11 @@ const DimensionForm = memo(props => {
               variant="standard"
               value={form.customImportanceValue}
               onChange={handleCustomImportanceChange}
+              error={!!visibleErrors.customImportanceValue}
+            />
+            <DimensionFieldError
+              message={visibleErrors.customImportanceValue}
+              data-testid="dimension-custom-importance-error"
             />
           </Box>
         )}
@@ -700,6 +740,11 @@ const dimensionFormStyles = () => ({
     display: 'flex',
     flexDirection: 'column',
     gap: '1rem',
+  },
+  fieldWithError: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.25rem',
   },
   textareaSection: {
     display: 'flex',

@@ -266,3 +266,11 @@ export const EVAL_RESULT_MAX_LIMIT = 2000;
 // P1 hard cap on cases per dataset (#6349). Backend: MAX_CASES_PER_DATASET in
 // evaluation_dataset_utils.py — keep this in sync with the server-side constant.
 export const MAX_CASES_PER_DATASET = 10;
+
+// Steps of the Build with AI dimension modal: prompt → generation → pick drafts ⇄ edit one draft.
+export const BUILD_DIMENSION_STEPS = {
+  input: 'input',
+  loading: 'loading',
+  select: 'select',
+  review: 'review',
+};

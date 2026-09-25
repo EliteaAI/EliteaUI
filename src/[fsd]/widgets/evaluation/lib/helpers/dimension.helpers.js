@@ -223,31 +223,63 @@ export const getTargetValueError = form => {
   return '';
 };
 
-export const getDimensionFormValidationError = form => {
+const FIELD_REQUIRED_MESSAGE = 'Field is required.';
+
+/**
+ * The single source of the dimension form's validation rules. Reports every invalid field at once
+ * so the form can highlight all of them after an explicit save attempt; the single-message
+ * `getDimensionFormValidationError` is derived from it.
+ */
+export const getDimensionFormFieldErrors = form => {
+  const errors = {};
   const isAI = form.evaluator === EVAL_ENGINE.ai;
   const isCode = form.evaluator === EVAL_ENGINE.code;
-  const isCustomImportance = form.importance === IMPORTANCE.custom;
 
-  if (!form.name.trim()) return 'Name is required.';
-  if (isAI && !form.evaluationInstructions.trim())
-    return 'Evaluation instructions are required for AI evaluator.';
-  if (isCode && !form.validationCode.trim()) return 'Validation code is required for Code evaluator.';
+  if (!form.name.trim()) errors.name = FIELD_REQUIRED_MESSAGE;
+  if (isAI && !form.evaluationInstructions.trim()) errors.evaluationInstructions = FIELD_REQUIRED_MESSAGE;
+  if (isCode && !form.validationCode.trim()) errors.validationCode = FIELD_REQUIRED_MESSAGE;
   if (!Object.values(form.evaluationTarget).some(Boolean)) {
-    return 'At least one evaluation target must be selected.';
+    errors.evaluationTarget = 'At least one evaluation target must be selected.';
   }
 
   const customScaleError = getCustomScaleBoundsError(form);
-  if (customScaleError) return customScaleError;
-
-  const targetValueError = getTargetValueError(form);
-  if (targetValueError) return targetValueError;
-
-  if (isCustomImportance) {
-    if (form.customImportanceValue === '' || Number.isNaN(Number(form.customImportanceValue))) {
-      return 'Custom importance value is required.';
-    }
+  if (customScaleError) {
+    errors.customScale =
+      form.customMin === '' || form.customMax === '' ? FIELD_REQUIRED_MESSAGE : customScaleError;
   }
-  return '';
+
+  if (form.scaleTypePreset !== SCALE_TYPE_PRESET.passFail) {
+    const targetValueError = form.targetValue === '' ? FIELD_REQUIRED_MESSAGE : getTargetValueError(form);
+    if (targetValueError) errors.targetValue = targetValueError;
+  }
+
+  if (
+    form.importance === IMPORTANCE.custom &&
+    (form.customImportanceValue === '' || Number.isNaN(Number(form.customImportanceValue)))
+  ) {
+    errors.customImportanceValue = FIELD_REQUIRED_MESSAGE;
+  }
+
+  return errors;
+};
+
+// Single-message wording used by the manual create/edit modal, which shows only the first problem
+// below the form and has no per-field highlighting to say which field "Field is required." means.
+// Field keys are checked in `getDimensionFormFieldErrors` insertion order, so the first key found
+// is the same first problem the form always reported.
+const FIELD_SUMMARY_MESSAGES = {
+  name: () => 'Name is required.',
+  evaluationInstructions: () => 'Evaluation instructions are required for AI evaluator.',
+  validationCode: () => 'Validation code is required for Code evaluator.',
+  evaluationTarget: () => 'At least one evaluation target must be selected.',
+  customScale: form => getCustomScaleBoundsError(form),
+  targetValue: form => getTargetValueError(form),
+  customImportanceValue: () => 'Custom importance value is required.',
+};
+
+export const getDimensionFormValidationError = form => {
+  const [firstInvalidField] = Object.keys(getDimensionFormFieldErrors(form));
+  return firstInvalidField ? FIELD_SUMMARY_MESSAGES[firstInvalidField](form) : '';
 };
 
 export const mapGeneratedDimensionToForm = generated => {
