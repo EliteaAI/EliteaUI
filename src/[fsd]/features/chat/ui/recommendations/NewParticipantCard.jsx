@@ -14,11 +14,11 @@ const NewParticipantCard = memo(props => {
   useEffect(() => {
     const observer = new IntersectionObserver(
       () => {
-        tooltipRef.current.closeTooltip();
+        tooltipRef.current?.closeTooltip();
       },
       {
         root: null, // relative to document viewport
-        rootMargin: '0',
+        rootMargin: '0px',
         threshold: 0.1,
       },
     );

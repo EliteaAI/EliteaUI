@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import { Box, Grid } from '@mui/material';
 
+import { DiscoverySearchBar } from '@/[fsd]/features/discovery-search';
 import {
   NAV_BAR_HEIGHT_TABLET,
   PAGE_PADDING,
@@ -14,8 +15,6 @@ import { filterProps } from '@/common/utils';
 import useSearchBar from '@/hooks/useSearchBar';
 import useTags from '@/hooks/useTags';
 import { actions } from '@/slices/search';
-
-import SearchBar from './SearchBar';
 
 export const FixedGrid = styled(
   Grid,
@@ -71,7 +70,7 @@ export default function RightPanel({ children, offsetFromTop = RIGHT_PANEL_HEIGH
     >
       <ContainerBox offsetFromTop={offsetFromTop}>
         {showSearchBar && (
-          <SearchBar
+          <DiscoverySearchBar
             searchString={searchString}
             setSearchString={setSearchString}
             searchTags={searchTags}

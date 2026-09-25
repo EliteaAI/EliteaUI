@@ -150,6 +150,9 @@ const getStyles = ({ popoverWidth, maxHeight }) => ({
     backgroundColor: 'transparent',
     padding: '0.75rem 1rem',
     height: 'auto',
+    '&:hover': {
+      borderColor: palette.border.lines,
+    },
     '&:focus-within': {
       backgroundColor: 'transparent',
       borderColor: palette.border.lines,

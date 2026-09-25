@@ -279,3 +279,11 @@ export const DIMENSION_ENGINE_TOOLTIP = {
   [EVAL_ENGINE.human]: 'This dimension requires manual review.',
   [EVAL_ENGINE.code]: 'This dimension is evaluated using Python validation logic.',
 };
+
+// Steps of the Build with AI dimension modal: prompt → generation → pick drafts ⇄ edit one draft.
+export const BUILD_DIMENSION_STEPS = {
+  input: 'input',
+  loading: 'loading',
+  select: 'select',
+  review: 'review',
+};

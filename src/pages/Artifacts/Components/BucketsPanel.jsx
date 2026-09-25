@@ -41,7 +41,7 @@ const BucketsPanel = memo(props => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchActive, setIsSearchActive] = useState(false);
 
-  const styles = bucketsPanelStyles(collapsed);
+  const styles = bucketsPanelStyles(collapsed, isSearchActive);
 
   // Debounce search query
   const debouncedSearchQuery = useDebounceValue(searchQuery, 300);
@@ -187,7 +187,7 @@ const BucketsPanel = memo(props => {
 BucketsPanel.displayName = 'BucketsPanel';
 
 /** @type {MuiSx} */
-const bucketsPanelStyles = collapsed => ({
+const bucketsPanelStyles = (collapsed, isSearchActive) => ({
   root: ({ palette }) => ({
     height: '100%',
     width: '100%',
@@ -202,7 +202,6 @@ const bucketsPanelStyles = collapsed => ({
     alignItems: 'center',
     gap: '0.5rem',
     padding: '0.75rem 0.8rem',
-    paddingBottom: '0',
   },
   closeIcon: {
     fontSize: '1.25rem',
@@ -214,7 +213,7 @@ const bucketsPanelStyles = collapsed => ({
     overflowY: 'auto',
     overflowX: 'auto',
     gap: '0.5rem',
-    padding: '1rem',
+    padding: isSearchActive ? '0 1rem 1rem' : '1rem',
   },
   bucketSkeleton: {
     width: '100%',
