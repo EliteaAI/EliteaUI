@@ -2,14 +2,14 @@ import { memo, useCallback, useMemo, useState } from 'react';
 
 import { useSearchParams } from 'react-router-dom';
 
-import { Box, Divider, TextField, Typography, alpha, useTheme } from '@mui/material';
+import { Box, Divider, Typography, alpha } from '@mui/material';
 
 import { AgentsTab } from '@/[fsd]/features/agent-hub/ui';
 import { SkillsTab } from '@/[fsd]/features/skill-hub/ui';
+import { Input } from '@/[fsd]/shared/ui';
 import { BaseTab, BaseTabs } from '@/[fsd]/shared/ui/tabs';
 import SkillsIcon from '@/assets/skill-icon.svg?react';
 import ApplicationsIcon from '@/components/Icons/ApplicationsIcon';
-import SearchIcon from '@/components/Icons/SearchIcon';
 
 const CATALOG_TABS = {
   agents: 'agents',
@@ -27,8 +27,6 @@ const EliteaCatalog = memo(() => {
   const [skillQuery, setSkillQuery] = useState('');
   const [totalAgents, setTotalAgents] = useState(0);
   const [totalSkills, setTotalSkills] = useState(0);
-  const theme = useTheme();
-
   const activeTab = useMemo(() => {
     const tab = searchParams.get('tab');
     return tab === CATALOG_TABS.skills ? CATALOG_TABS.skills : CATALOG_TABS.agents;
@@ -47,8 +45,7 @@ const EliteaCatalog = memo(() => {
   );
 
   const handleSearchChange = useCallback(
-    event => {
-      const value = event?.target?.value || '';
+    value => {
       if (isSkillsTab) {
         setSkillQuery(value);
       } else {
@@ -72,17 +69,13 @@ const EliteaCatalog = memo(() => {
         </Typography>
 
         <Box sx={styles.searchContainer}>
-          <Box sx={styles.searchIconContainer}>
-            <SearchIcon fill={theme.palette.icon.secondary} />
-          </Box>
-          <TextField
+          <Input.SimpleSearchBar
             placeholder={SEARCH_PLACEHOLDERS[activeTab]}
-            value={isSkillsTab ? skillQuery : agentQuery}
-            onChange={handleSearchChange}
+            searchQuery={isSkillsTab ? skillQuery : agentQuery}
+            onSearchChange={handleSearchChange}
             sx={styles.searchField}
-            variant="outlined"
-            size="small"
-            inputProps={{ 'data-testid': 'catalog-search-input' }}
+            autoFocus={false}
+            data-testid="catalog-search-input"
           />
         </Box>
 
@@ -151,59 +144,10 @@ const eliteaCatalogStyles = () => ({
   searchContainer: {
     width: '40rem',
     maxWidth: '100%',
-    position: 'relative',
   },
-  searchIconContainer: {
-    position: 'absolute',
-    left: '0.75rem',
-    top: '50%',
-    transform: 'translateY(-50%)',
-    zIndex: 1,
-    display: 'flex',
-    alignItems: 'center',
-    pointerEvents: 'none',
-    '& svg': {
-      width: '1rem',
-      height: '1rem',
-    },
-  },
-  searchField: ({ palette, typography }) => ({
+  searchField: {
     width: '100%',
-    '& .MuiOutlinedInput-root': {
-      ...typography.bodyMedium,
-      backgroundColor: palette.background.surface.interactive.default,
-      border: `0.0625rem solid ${palette.border.lines}`,
-      borderRadius: '1.75rem',
-      height: '2.25rem',
-      transition: 'border 0.3s ease, background-color 0.3s ease',
-      '&:hover': {
-        borderColor: palette.border.hover,
-      },
-      '&.Mui-focused': {
-        border: `0.0625rem solid ${palette.border.inputHover}`,
-        backgroundColor: palette.background.surface.interactive.active,
-      },
-      '& fieldset': {
-        border: 'none',
-      },
-      '&:hover fieldset': {
-        border: 'none',
-      },
-      '&.Mui-focused fieldset': {
-        border: 'none',
-      },
-    },
-    '& .MuiInputBase-input': {
-      padding: '0.375rem 0.75rem',
-      paddingLeft: '2.5rem',
-      ...typography.bodyMedium,
-      color: palette.text.secondary,
-      '&::placeholder': {
-        color: palette.text.disabled,
-        opacity: 1,
-      },
-    },
-  }),
+  },
   tabs: {
     minHeight: '2rem',
   },

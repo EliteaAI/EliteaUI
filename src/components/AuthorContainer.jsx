@@ -30,7 +30,7 @@ const AuthorContainer = memo(props => {
     <Box style={styles.avatarsContainerStyle}>
       {firstThreeAvatars.map(({ id, name, avatar }, index) => (
         <UserAvatar
-          key={id}
+          key={`${id ?? 'unknown'}-${index}`}
           name={name}
           avatar={avatar}
           shiftPixels={index * 5}
