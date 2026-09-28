@@ -4,3 +4,5 @@ export * as CredentialHelpers from './credential.helpers';
 export * as CredentialErrorHelpers from './credentialError.helpers';
 export * as CredentialVisibilityHelpers from './credentialVisibility.helpers';
 export * as LlmModelFormHelpers from './llmModelForm.helpers.js';
+export * as CredentialLabelHelpers from './credentialLabel.helpers';
+export * as CredentialsListHelpers from './credentialsList.helpers';

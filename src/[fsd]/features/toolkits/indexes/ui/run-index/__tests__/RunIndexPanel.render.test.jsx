@@ -44,6 +44,9 @@ const polling = vi.hoisted(() => ({ current: { startedTimeStamp: 0, fulfilledTim
 const formik = vi.hoisted(() => ({ current: { values: {} } }));
 const toolkitSchema = vi.hoisted(() => ({ current: {} }));
 const scheduleModalProps = vi.hoisted(() => ({ current: null }));
+const toolkitScheduler = vi.hoisted(() => ({ current: null }));
+const credentialLabel = vi.hoisted(() => vi.fn(() => null));
+const scheduleContentProps = vi.hoisted(() => ({ current: null }));
 
 const stub = (testid, keys) =>
   vi.fn(props => (
@@ -83,10 +86,19 @@ vi.mock('../IndexDetailsLeftBand', () => ({ default: props => leftBandStub(props
 vi.mock('../IndexDetailsTabsBand', () => ({ default: () => <div /> }));
 vi.mock('../IndexConfigurationTab', () => ({ default: () => <div /> }));
 vi.mock('../RunIndexGeneralSection', () => ({ default: () => <div /> }));
-vi.mock('../RunIndexScheduleContent', () => ({ default: () => <div /> }));
+vi.mock('../RunIndexScheduleContent', () => ({
+  default: props => {
+    scheduleContentProps.current = props;
+    return <div />;
+  },
+}));
 
 vi.mock('formik', () => ({ useFormikContext: () => formik.current }));
-vi.mock('react-redux', () => ({ useSelector: () => ({}) }));
+vi.mock('react-redux', () => ({
+  useSelector: selector =>
+    selector({ user: { id: 7 }, settings: { project: {} }, scheduler: toolkitScheduler.current }),
+}));
+vi.mock('@/[fsd]/features/credentials/lib/hooks', () => ({ useCredentialLabel: credentialLabel }));
 vi.mock('react-router-dom', () => ({ useNavigate: () => vi.fn() }));
 vi.mock('@/[fsd]/entities/run-history/lib/hooks', () => ({
   useConversationTranscript: () => ({ transcript: [], isTranscriptLoading: false }),
@@ -144,7 +156,15 @@ vi.mock('@/[fsd]/shared/ui', () => ({
       ) : null,
   },
 }));
-vi.mock('@/[fsd]/shared/ui/accordion', () => ({ BasicAccordion: () => <div /> }));
+vi.mock('@/[fsd]/shared/ui/accordion', () => ({
+  BasicAccordion: props => (
+    <div>
+      {props.items.map(item => (
+        <div key={item.title}>{item.content}</div>
+      ))}
+    </div>
+  ),
+}));
 vi.mock('@/[fsd]/shared/ui/breadcrumbs', () => ({ default: () => <div /> }));
 // The legacy slices import the api object from its own module rather than the barrel,
 // so both specifiers must resolve to the same stub or their extraReducers see undefined.
@@ -180,7 +200,7 @@ vi.mock('@/api', () => apiMock);
 vi.mock('@/api/eliteaApi.js', () => apiMock);
 
 vi.mock('@/[fsd]/features/toolkits/indexes/model/indexes.slice', () => ({
-  selectToolkitScheduler: () => null,
+  selectToolkitScheduler: state => state.scheduler,
   name: 'indexes',
   actions: {},
   default: (state = {}) => state,
@@ -240,6 +260,9 @@ afterEach(() => {
   formik.current = { values: {} };
   toolkitSchema.current = {};
   scheduleModalProps.current = null;
+  toolkitScheduler.current = null;
+  scheduleContentProps.current = null;
+  credentialLabel.mockClear();
 });
 
 describe('RunIndexPanel — the liveness flags reach the right consumers', () => {
@@ -407,5 +430,24 @@ describe('RunIndexPanel — the schedule dialog is seeded from the saved toolkit
 
     expect(scheduleModalProps.current.toolkitCredentials).toBeNull();
     expect(scheduleModalProps.current.credentialsData).toBeNull();
+  });
+});
+
+describe('RunIndexPanel — the schedule card names its credential', () => {
+  it('shows the display name resolved for the schedule credential of the toolkit type', () => {
+    const scheduleCredential = { elitea_title: 'aasd', private: false };
+    toolkitSchema.current = {
+      properties: { github_configuration: { section: ['credentials'], configuration_types: ['github'] } },
+    };
+    toolkitScheduler.current = {
+      docs: { schedules: { 7: { cron: '0 9 * * *', enabled: true, credentials: scheduleCredential } } },
+    };
+    credentialLabel.mockImplementation(({ credential, type }) =>
+      credential === scheduleCredential && type === 'github' ? 'AA' : null,
+    );
+
+    renderPanel({ stale: false, reclaimable: false });
+
+    expect(scheduleContentProps.current.credentialsTitle).toBe('AA');
   });
 });
