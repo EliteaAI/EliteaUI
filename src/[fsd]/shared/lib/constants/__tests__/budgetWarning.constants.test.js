@@ -58,3 +58,12 @@ describe('budget warning variants', () => {
     });
   });
 });
+
+describe('budget warning levels', () => {
+  it('escalates at 90 and turns critical at 95', async () => {
+    const { ELEVATED_LEVEL, CRITICAL_LEVEL } = await import('../budgetWarning.constants');
+
+    // Must match WARNING_LEVELS in the usage plugin, which decides when a level is reached
+    expect([ELEVATED_LEVEL, CRITICAL_LEVEL]).toEqual([90, 95]);
+  });
+});

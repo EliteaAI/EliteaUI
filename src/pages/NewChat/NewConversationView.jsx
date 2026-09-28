@@ -1080,6 +1080,8 @@ const NewConversationView = forwardRef(
               <BudgetWarningBanner
                 scope={budgetWarning.scope}
                 percentUsed={budgetWarning.percentUsed}
+                severity={budgetWarning.severity}
+                dismissible={budgetWarning.dismissible}
                 onDismiss={budgetWarning.dismiss}
               />
             )}

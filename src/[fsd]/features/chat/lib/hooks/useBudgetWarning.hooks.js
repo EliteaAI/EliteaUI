@@ -1,40 +1,82 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+
+import { useSelector } from 'react-redux';
 
 import { useGetBudgetWarningQuery } from '@/[fsd]/features/chat/api/budgetWarningApi';
+import { BudgetWarningHelpers } from '@/[fsd]/features/chat/lib/helpers';
 import { useGetPlatformSettingsQuery } from '@/api/platformSettings';
 
-/**
- * Whether to warn the user a budget is nearing its limit, above the message input.
- *
- * The banner is dismissed per chat: it stays hidden for the conversation the user closed it
- * in and returns in a new one. A budget only grows, so "dismissed until the period resets"
- * would hide it for the rest of the month.
- */
-export const useBudgetWarning = ({ projectId, conversationId } = {}) => {
-  const [dismissedIn, setDismissedIn] = useState({});
+const {
+  budgetPeriod,
+  dismissStorageKey,
+  isWarningVisible,
+  pruneStaleDismissals,
+  readDismissedLevel,
+  severityForLevel,
+  writeDismissedLevel,
+} = BudgetWarningHelpers;
 
+const BUDGET_WARNING_POLL_MS = 60_000;
+
+let prunedForPeriod = null;
+
+// Whether to warn that a budget is nearing its limit; a dismissal lasts until the next level or period
+export const useBudgetWarning = ({ projectId } = {}) => {
   const { data: platformSettings } = useGetPlatformSettingsQuery();
+  const userId = useSelector(state => state.user.id);
 
-  // Observe mode tracks spend without ever blocking, so there is nothing to warn about and
-  // no reason to spend a request finding that out
+  // Observe mode tracks spend without ever blocking, so there is nothing to warn about
   const isEnforcing = Boolean(platformSettings?.cost_budgets_enforcing);
+  const dismissibleByAdmin = platformSettings?.cost_budgets_warning_dismissible !== false;
 
-  const { data } = useGetBudgetWarningQuery({ projectId }, { skip: !isEnforcing || !projectId });
+  // Polls at the backend's 60s cache interval, so a level crossed while a chat stays open still shows.
+  // currentData, not data: after a project switch data still holds the previous project's warning.
+  const { currentData: data } = useGetBudgetWarningQuery(
+    { projectId },
+    {
+      skip: !isEnforcing || !projectId,
+      refetchOnMountOrArgChange: 60,
+      pollingInterval: BUDGET_WARNING_POLL_MS,
+      skipPollingIfUnfocused: true,
+    },
+  );
 
-  const dismissKey = conversationId ?? 'new';
+  const period = budgetPeriod();
+  const storageKey =
+    data?.scope && userId ? dismissStorageKey({ userId, projectId, scope: data.scope, period }) : null;
+
+  // In-memory mirror, so a dismissal still holds when storage is blocked
+  const [dismissedByKey, setDismissedByKey] = useState({});
+
+  useEffect(() => {
+    if (prunedForPeriod === period) return;
+    prunedForPeriod = period;
+    pruneStaleDismissals(period);
+  }, [period]);
+
+  // ChatBox re-renders per streamed token, so storage is read only when the key changes
+  const storedLevel = useMemo(() => (storageKey ? readDismissedLevel(storageKey) : null), [storageKey]);
+  const dismissedLevel = storageKey ? (dismissedByKey[storageKey] ?? storedLevel) : null;
+
+  const level = data?.level;
+  const dismissible = dismissibleByAdmin && Boolean(level) && Boolean(storageKey);
 
   const dismiss = useCallback(() => {
-    setDismissedIn(prev => ({ ...prev, [dismissKey]: true }));
-  }, [dismissKey]);
+    if (!dismissible || !storageKey || !level) return;
+    writeDismissedLevel(storageKey, level);
+    setDismissedByKey(prev => ({ ...prev, [storageKey]: level }));
+  }, [dismissible, storageKey, level]);
 
-  return useMemo(() => {
-    const shouldShow = Boolean(data?.should_warn) && !dismissedIn[dismissKey];
-
-    return {
-      shouldShow,
+  return useMemo(
+    () => ({
+      shouldShow: isWarningVisible({ shouldWarn: data?.should_warn, level, dismissedLevel, dismissible }),
       scope: data?.scope,
       percentUsed: data?.percent_used,
+      level,
+      severity: severityForLevel(level),
+      dismissible,
       dismiss,
-    };
-  }, [data, dismissedIn, dismissKey, dismiss]);
+    }),
+    [data, level, dismissedLevel, dismissible, dismiss],
+  );
 };

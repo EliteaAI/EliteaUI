@@ -297,7 +297,13 @@ const darkPalette = {
   alert: {
     info: { icon: darkBlue, background: blueFill8, border: blue40, text: lightBlue },
     success: { icon: greenHoverBtn, background: green8, border: greenOutline40, text: lightGreen },
-    warning: { icon: orange, background: orange8, border: orangeOutline40, text: lightOrange },
+    warning: {
+      icon: orange,
+      background: orange8,
+      border: orangeOutline40,
+      borderStrong: orange,
+      text: lightOrange,
+    },
     error: { icon: dangerRed, background: red8, border: red40, text: lightRed },
     secondary: { background: blue8 },
   },

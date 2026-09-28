@@ -229,10 +229,7 @@ const ChatBox = memo(
 
     // Advance notice above the input. Shared by chat, agent and pipeline, all of which render
     // through this component.
-    const budgetWarning = useBudgetWarning({
-      projectId,
-      conversationId: activeConversation?.id,
-    });
+    const budgetWarning = useBudgetWarning({ projectId });
 
     const [regenerate] = useRegenerateMutation();
     const [injectMessage] = useInjectMessageMutation();
@@ -2979,6 +2976,8 @@ const ChatBox = memo(
               <BudgetWarningBanner
                 scope={budgetWarning.scope}
                 percentUsed={budgetWarning.percentUsed}
+                severity={budgetWarning.severity}
+                dismissible={budgetWarning.dismissible}
                 onDismiss={budgetWarning.dismiss}
               />
             )}
