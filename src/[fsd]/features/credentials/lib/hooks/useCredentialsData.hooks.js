@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useLazyGetConfigurationsListQuery, useListModelsQuery } from '@/api/configurations';
 
+import { credentialsListQueryArgs } from '../helpers/credentialsList.helpers';
+
 /**
  * Manages credential configuration loading, refreshing, and batch validation.
  * Returns loaded configurations, fetch state, and a refresh handler.
@@ -38,16 +40,9 @@ export const useCredentialsData = ({
       resetStatuses();
       let teamProjectConfigurations = [];
       if (selectedProjectId) {
-        const { data } = await getConfigurations({
-          projectId: selectedProjectId,
-          page: 0,
-          pageSize: 500,
-          sharedOffset: 0,
-          sharedLimit: 500,
-          includeShared: true,
-          section,
-          type,
-        });
+        const { data } = await getConfigurations(
+          credentialsListQueryArgs({ projectId: selectedProjectId, section, type }),
+        );
         teamProjectConfigurations = [
           ...(data?.items?.filter(item => !type || item.type === type) || []),
           ...(data?.shared?.items?.filter(item => !type || item.type === type) || []),
@@ -56,16 +51,9 @@ export const useCredentialsData = ({
       if (personal_project_id && personal_project_id !== selectedProjectId) {
         if (!onlyPublic) {
           if (section !== 'vectorstorage') {
-            const { data } = await getConfigurations({
-              projectId: personal_project_id,
-              page: 0,
-              pageSize: 500,
-              sharedOffset: 0,
-              sharedLimit: 500,
-              includeShared: true,
-              section,
-              type,
-            });
+            const { data } = await getConfigurations(
+              credentialsListQueryArgs({ projectId: personal_project_id, section, type }),
+            );
             teamProjectConfigurations = [
               ...teamProjectConfigurations,
               ...(data?.items?.filter(item => !type || item.type === type) || []),
