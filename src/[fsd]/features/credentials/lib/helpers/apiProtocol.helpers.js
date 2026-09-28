@@ -1,7 +1,4 @@
-import {
-  API_PROTOCOL_CREDENTIAL_TYPES,
-  API_PROTOCOL_MODEL_PATTERNS,
-} from '../constants/apiProtocol.constants.js';
+import { API_PROTOCOL_CREDENTIAL_TYPES } from '../constants/apiProtocol.constants.js';
 
 export const isApiProtocolCredentialType = type =>
   API_PROTOCOL_CREDENTIAL_TYPES.includes(String(type || '').toLowerCase());
@@ -22,9 +19,3 @@ export const findCredentialType = (configurations, credentialValue, personalProj
 // a stable identity for the attached credential: the value object is rebuilt on every form edit
 export const credentialKeyOf = credentialValue =>
   credentialValue ? `${credentialValue.elitea_title || ''}|${!!credentialValue.private}` : '';
-
-export const resolveApiProtocolForModel = modelName => {
-  const name = String(modelName || '');
-  if (!name) return '';
-  return API_PROTOCOL_MODEL_PATTERNS.find(({ pattern }) => pattern.test(name))?.protocol || '';
-};

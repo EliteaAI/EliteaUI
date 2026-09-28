@@ -7,8 +7,8 @@ import { useSearchParams } from 'react-router-dom';
 import { Box, CircularProgress, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
-import { ApiProtocolConstants } from '@/[fsd]/features/credentials/lib/constants';
-import { useApiProtocolField } from '@/[fsd]/features/credentials/lib/hooks';
+import { LlmModelFormConstants } from '@/[fsd]/features/credentials/lib/constants';
+import { LlmModelForm } from '@/[fsd]/features/credentials/ui';
 import { CREDENTIALS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import { useConfigOAuthModal, useMcpTokenChange } from '@/[fsd]/features/mcp/lib/hooks';
@@ -92,6 +92,9 @@ const CredentialForm = memo(props => {
     if (searchParams.get('forceCustom') === 'true' || view === ToolkitViewOptions.Json) {
       return ToolkitForm.ToolCustom;
     }
+    if (toolType === LlmModelFormConstants.LLM_MODEL_CONFIGURATION_TYPE) {
+      return LlmModelForm;
+    }
     const toolTypedComponent = ToolComponentHelpers.getToolComponent(toolType, toolSchema, true);
     return toolTypedComponent;
   }, [searchParams, view, toolType, toolSchema]);
@@ -122,18 +125,6 @@ const CredentialForm = memo(props => {
       await setFieldValue(field, value);
     },
     [onChangeCredentialDetail, setFieldValue, setValidationErrorMessages],
-  );
-
-  const { isApiProtocolHidden } = useApiProtocolField({
-    schema: toolSchema,
-    settings: credentialDetails?.settings,
-    editField,
-  });
-
-  const hiddenFields = useMemo(
-    () =>
-      isApiProtocolHidden ? [...excludedFields, ApiProtocolConstants.API_PROTOCOL_FIELD] : excludedFields,
-    [excludedFields, isApiProtocolHidden],
   );
 
   const onSaveConfiguration = useCallback(
@@ -316,7 +307,7 @@ const CredentialForm = memo(props => {
           checkboxAsteriskRequired={false}
           priorityFieldsOrder={['title']}
           fieldNeedToRenderAtBottom={['shared']}
-          excludedFields={hiddenFields}
+          excludedFields={excludedFields}
           shouldInitRequiredFields={false}
           showSections
           showTools={false}

@@ -7,7 +7,12 @@ import { Box, Button as MuiButton } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { useTrackEvent } from '@/GA';
-import { CredentialErrorHelpers, CredentialHelpers } from '@/[fsd]/features/credentials/lib/helpers';
+import { LlmModelFormConstants } from '@/[fsd]/features/credentials/lib/constants';
+import {
+  CredentialErrorHelpers,
+  CredentialHelpers,
+  LlmModelFormHelpers,
+} from '@/[fsd]/features/credentials/lib/helpers';
 import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
 import { useFormDirtyExcluding, useProjectType } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
@@ -25,6 +30,14 @@ import { TabBarItems } from '@/pages/Common/Components';
 import RouteDefinitions from '@/routes.js';
 
 const { GA_EVENT_NAMES, GA_EVENT_PARAMS } = AnalyticConstants;
+const { LLM_MODEL_CONFIGURATION_TYPE, LLM_MODEL_FIELD_ERROR_ATTRIBUTE } = LlmModelFormConstants;
+
+const scrollToFirstLlmModelFieldError = () =>
+  requestAnimationFrame(() =>
+    document
+      .querySelector(`[${LLM_MODEL_FIELD_ERROR_ATTRIBUTE}]`)
+      ?.scrollIntoView({ behavior: 'smooth', block: 'center' }),
+  );
 
 const CredentialTabBar = memo(props => {
   const {
@@ -89,6 +102,7 @@ const CredentialTabBar = memo(props => {
   );
 
   const toolType = useMemo(() => credentialDetails?.type || '', [credentialDetails?.type]);
+  const isLlmModel = toolType === LLM_MODEL_CONFIGURATION_TYPE;
 
   const { configurationKeys, schemaProperties } = useMemo(() => {
     const configSchema = (configurationsAsSchema || []).find(item => item.type === toolType);
@@ -115,8 +129,8 @@ const CredentialTabBar = memo(props => {
 
   const isLoading = useMemo(() => isCreateLoading || isUpdateLoading, [isCreateLoading, isUpdateLoading]);
   const shouldDisableSave = useMemo(
-    () => isLoading || !isFormDirtyExcluding,
-    [isLoading, isFormDirtyExcluding],
+    () => isLoading || (!isLlmModel && (hasErrors || !isFormDirtyExcluding)),
+    [isLoading, isLlmModel, hasErrors, isFormDirtyExcluding],
   );
 
   const blockOptions = useMemo(
@@ -161,15 +175,18 @@ const CredentialTabBar = memo(props => {
         if (typeof result.error?.data?.error === 'string' && result?.error?.data?.field === 'elitea_title')
           onEnableEditTitle?.();
 
-        const { newErrors } = CredentialErrorHelpers.extractInformationFromCredentialError({
-          error: result.error || {},
-          schemaProperties,
-          settings: credentialDetails?.settings || {},
-        });
+        const newErrors = isLlmModel
+          ? LlmModelFormHelpers.mapLlmModelSaveErrorToFields(result.error)
+          : CredentialErrorHelpers.extractInformationFromCredentialError({
+              error: result.error || {},
+              schemaProperties,
+              settings: credentialDetails?.settings || {},
+            }).newErrors;
         if (Object.keys(newErrors).length > 0) {
           setValidationErrorMessages?.(newErrors);
           setShowValidation?.(true);
           setApiError?.('');
+          if (isLlmModel) scrollToFirstLlmModelFieldError();
         } else {
           setApiError?.(buildErrorMessage(result.error) || 'Failed to save credential');
         }
@@ -179,6 +196,7 @@ const CredentialTabBar = memo(props => {
     }
   }, [
     isEditing,
+    isLlmModel,
     formik,
     toastSuccess,
     trackEvent,
@@ -194,9 +212,13 @@ const CredentialTabBar = memo(props => {
   ]);
 
   const onClickSave = useCallback(() => {
-    if (hasErrors) setShowValidation(true);
-    else doSave();
-  }, [hasErrors, setShowValidation, doSave]);
+    if (!hasErrors) {
+      doSave();
+      return;
+    }
+    setShowValidation(true);
+    if (isLlmModel) scrollToFirstLlmModelFieldError();
+  }, [hasErrors, isLlmModel, setShowValidation, doSave]);
 
   const onCancel = useCallback(() => {
     setWantToCancel(true);
@@ -222,12 +244,7 @@ const CredentialTabBar = memo(props => {
               variant="elitea"
               color="primary"
               data-testid="credential-form-save-button"
-              disabled={
-                hasErrors ||
-                shouldDisableSave ||
-                isDeleting ||
-                !checkPermission(PERMISSIONS.configuration.update)
-              }
+              disabled={shouldDisableSave || isDeleting || !checkPermission(PERMISSIONS.configuration.update)}
               onClick={onClickSave}
             >
               Save
