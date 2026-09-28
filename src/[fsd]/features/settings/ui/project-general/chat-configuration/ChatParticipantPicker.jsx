@@ -5,6 +5,7 @@ import { Box, Chip, Typography, useTheme } from '@mui/material';
 import { getChatParticipantUniqueId } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { ChatParticipantConstants } from '@/[fsd]/features/settings/lib/constants';
 import { ChatParticipantHelpers } from '@/[fsd]/features/settings/lib/helpers';
+import { isMcpToolkitType } from '@/[fsd]/shared/lib/helpers';
 import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
 import { Select } from '@/[fsd]/shared/ui';
 import RemoveIcon from '@/assets/remove-icon.svg?react';
@@ -191,12 +192,13 @@ const ChatParticipantPicker = memo(props => {
 
       // Regular participant option
       const isPublic = option.project_id === PUBLIC_PROJECT_ID;
-      const isToolkitLike =
-        option.entity_name === ChatParticipantType.Toolkits || option.entity_name === 'mcp';
+      const isToolkitLike = option.entity_name === ChatParticipantType.Toolkits;
       return (
         <Box sx={styles.optionBody}>
           {isToolkitLike ? (
-            getToolIconByType(option.toolkit_type ?? '', theme, { isMCP: option.entity_name === 'mcp' })
+            getToolIconByType(option.toolkit_type ?? '', theme, {
+              isMCP: isMcpToolkitType(option.toolkit_type),
+            })
           ) : option.entity_name === ChatParticipantType.Users && option.avatar ? (
             <UserAvatar
               avatar={option.avatar}
@@ -279,10 +281,10 @@ const ChatParticipantPicker = memo(props => {
               key={key}
               label={
                 <Box sx={styles.chipLabel}>
-                  {p.entity_name === ChatParticipantType.Toolkits || p.entity_name === 'mcp' ? (
+                  {p.entity_name === ChatParticipantType.Toolkits ? (
                     p.toolkit_type ? (
                       getToolIconByType(p.toolkit_type, theme, {
-                        isMCP: p.entity_name === 'mcp',
+                        isMCP: isMcpToolkitType(p.toolkit_type),
                       })
                     ) : (
                       <EntityTypeIcon

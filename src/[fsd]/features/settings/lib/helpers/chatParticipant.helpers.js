@@ -6,7 +6,7 @@ import { TABS } from '../constants/chatParticipant.constants.js';
 export const getEntityName = p => {
   if (p.agent_type === 'pipeline') return ChatParticipantType.Pipelines;
   if (p.participantType === ChatParticipantType.Toolkits) {
-    return isMcpToolkit(p) ? 'mcp' : ChatParticipantType.Toolkits;
+    return ChatParticipantType.Toolkits;
   }
   if (p.participantType === ChatParticipantType.Users) return ChatParticipantType.Users;
   return ChatParticipantType.Applications;

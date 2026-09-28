@@ -111,13 +111,16 @@ export const useChatTemplates = projectId => {
     async id => {
       try {
         await deleteTemplate({ projectId, templateId: id }).unwrap();
-        setSelectedId(null);
+        unsavedDirtyRef.current = false;
+        setIsNewDraft(false);
+        const defaultTemplate = templates.find(t => t.is_default && t.id !== id);
+        setSelectedId(defaultTemplate?.id ?? null);
         toastSuccess('Template deleted');
       } catch {
         toastError('Failed to delete template');
       }
     },
-    [projectId, deleteTemplate, toastSuccess, toastError],
+    [projectId, templates, deleteTemplate, toastSuccess, toastError],
   );
 
   const handleSetDefault = useCallback(

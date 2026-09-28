@@ -33,12 +33,6 @@ const ChatTemplateEditor = memo(props => {
   const [participants, setParticipants] = useState(template?.participants ?? []);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  // Reset local state when selected template changes (intentionally keyed on id only)
-  useEffect(() => {
-    setName(template?.name ?? '');
-    setParticipants(template?.participants ?? []);
-  }, [template?.id]); // eslint-disable-line react-hooks/exhaustive-deps
-
   // Notify parent once after mount (used to focus the name field on new templates)
   useEffect(() => {
     onMounted?.();
@@ -60,11 +54,12 @@ const ChatTemplateEditor = memo(props => {
   }, [name, allTemplates, template?.id]);
 
   const isDirty = useMemo(() => {
+    if (template?.id === null) return true;
     if (name.trim() !== savedName.trim()) return true;
     if (participants.length !== savedParticipants.length) return true;
     const savedKeys = new Set(savedParticipants.map(p => `${p.entity_name}:${p.id}`));
     return participants.some(p => !savedKeys.has(`${p.entity_name}:${p.id}`));
-  }, [name, savedName, participants, savedParticipants]);
+  }, [template?.id, name, savedName, participants, savedParticipants]);
 
   useEffect(() => {
     if (unsavedDirtyRef) unsavedDirtyRef.current = isDirty;

@@ -2,6 +2,7 @@ import { memo, useCallback, useMemo } from 'react';
 
 import { Box, Tooltip, Typography, useTheme } from '@mui/material';
 
+import { isMcpToolkitType } from '@/[fsd]/shared/lib/helpers';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
@@ -26,7 +27,9 @@ const getParticipantTypesPresent = participants => {
       if (p.entity_name === ChatParticipantType.Pipelines || p.agent_type === 'pipeline')
         return ChatParticipantType.Pipelines;
       if (p.entity_name === 'mcp') return 'mcp';
-      if (p.entity_name === ChatParticipantType.Toolkits) return ChatParticipantType.Toolkits;
+      if (p.entity_name === ChatParticipantType.Toolkits) {
+        return isMcpToolkitType(p.toolkit_type) ? 'mcp' : ChatParticipantType.Toolkits;
+      }
       if (p.entity_name === ChatParticipantType.Users) return ChatParticipantType.Users;
       return p.entity_name;
     }),
@@ -164,30 +167,31 @@ const ChatTemplateList = memo(props => {
         })}
       </Box>
 
-      {isAtLimit ? (
-        <Tooltip title="You can have up to 5 templates. Delete one to add another.">
-          <Box sx={styles.limitBtnWrapper}>
-            <Button.BaseBtn
-              variant={BUTTON_VARIANTS.secondary}
-              aria-disabled="true"
-              disabled
-              sx={styles.newBtn}
-              fullWidth
-            >
-              Template limit reached ({MAX_TEMPLATES} of {MAX_TEMPLATES})
-            </Button.BaseBtn>
-          </Box>
-        </Tooltip>
-      ) : (
-        <Button.BaseBtn
-          variant={BUTTON_VARIANTS.secondary}
-          onClick={handleNewTemplate}
-          sx={styles.newBtn}
-          fullWidth
-        >
-          + New template
-        </Button.BaseBtn>
-      )}
+      {onNewTemplate &&
+        (isAtLimit ? (
+          <Tooltip title="You can have up to 5 templates. Delete one to add another.">
+            <Box sx={styles.limitBtnWrapper}>
+              <Button.BaseBtn
+                variant={BUTTON_VARIANTS.secondary}
+                aria-disabled="true"
+                disabled
+                sx={styles.newBtn}
+                fullWidth
+              >
+                Template limit reached ({MAX_TEMPLATES} of {MAX_TEMPLATES})
+              </Button.BaseBtn>
+            </Box>
+          </Tooltip>
+        ) : (
+          <Button.BaseBtn
+            variant={BUTTON_VARIANTS.secondary}
+            onClick={handleNewTemplate}
+            sx={styles.newBtn}
+            fullWidth
+          >
+            + New template
+          </Button.BaseBtn>
+        ))}
     </Box>
   );
 });

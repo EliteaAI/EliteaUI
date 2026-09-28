@@ -73,7 +73,7 @@ const ChatConfigurationSection = memo(() => {
         templates={templates}
         selectedId={resolvedSelectedId}
         onSelect={handleSelectTemplate}
-        onNewTemplate={handleNewTemplate}
+        onNewTemplate={canEdit ? handleNewTemplate : undefined}
         isTeamProject={isTeam}
       />
 
