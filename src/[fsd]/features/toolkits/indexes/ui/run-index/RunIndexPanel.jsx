@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { Box, Typography } from '@mui/material';
 
 import { useConversationTranscript } from '@/[fsd]/entities/run-history/lib/hooks';
+import { useCredentialLabel } from '@/[fsd]/features/credentials/lib/hooks';
 import { McpAuthModal, useMcpAuthModal } from '@/[fsd]/features/mcp';
 import { DrawerPageHeader } from '@/[fsd]/features/settings/ui/drawer-page';
 import {
@@ -190,6 +191,11 @@ const RunIndexPanel = memo(props => {
   );
 
   const savedToolkitCredentials = credentialsKey ? (initialValues?.settings?.[credentialsKey] ?? null) : null;
+
+  const scheduleCredentialsLabel = useCredentialLabel({
+    credential: scheduleData.credentials,
+    type: credentialsData?.configuration_types?.[0],
+  });
 
   const effectiveState = localMetaOverride?.state ?? index?.metadata?.state;
   // The panel's own notion of "running", which is the row's state OR an active chat run;
@@ -597,7 +603,7 @@ const RunIndexPanel = memo(props => {
           nextRun={scheduleExpiration?.expired ? null : scheduleNextRun}
           expiresAt={scheduleExpiration?.text}
           expired={Boolean(scheduleExpiration?.expired)}
-          credentialsTitle={scheduleData.credentials?.elitea_title}
+          credentialsTitle={scheduleCredentialsLabel}
           onAddSchedule={onAddSchedule}
           onEdit={onEditSchedule}
           onDelete={onDeleteSchedule}
