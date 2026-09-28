@@ -82,6 +82,12 @@ const ChatParticipantPicker = memo(props => {
     }
   }, [isFetching]);
 
+  // When the tab or search query changes the list resets to page 0; unblock the ref
+  // so the first bottom-scroll on the new list can trigger a load.
+  useEffect(() => {
+    loadMoreInFlightRef.current = false;
+  }, [activeTab, query]);
+
   const handleMenuScroll = useCallback(
     event => {
       if (loadMoreInFlightRef.current || isFetching) return;

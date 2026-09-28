@@ -59,18 +59,18 @@ const ChatTemplateEditor = memo(props => {
   }, [name, allTemplates, template?.id]);
 
   const isDirty = useMemo(() => {
-    if (template?.id === null) return true;
     if (name.trim() !== savedName.trim()) return true;
     if (participants.length !== savedParticipants.length) return true;
     const savedKeys = new Set(savedParticipants.map(p => `${p.entity_name}:${p.id}`));
     return participants.some(p => !savedKeys.has(`${p.entity_name}:${p.id}`));
-  }, [template?.id, name, savedName, participants, savedParticipants]);
+  }, [name, savedName, participants, savedParticipants]);
 
   useEffect(() => {
     onDirtyChange?.(isDirty);
+    return () => onDirtyChange?.(false);
   }, [isDirty, onDirtyChange]);
 
-  const canSave = isDirty && !nameError;
+  const canSave = (isDirty || template?.id === null) && !nameError;
 
   const handleSave = useCallback(() => {
     if (!canSave || isSaving) return;
