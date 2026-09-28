@@ -60,6 +60,15 @@ export const pickVisibleLlmModelErrors = ({ errors, settings, initialSettings, i
   return Object.fromEntries(Object.entries(errors).filter(([field]) => isVisible(field)));
 };
 
+export const omitLlmModelErrorsDependingOn = (errors, editedField) => {
+  const dependsOnEditedField = errorField =>
+    (LLM_MODEL_ERROR_SOURCE_FIELDS[errorField] || [errorField]).includes(editedField);
+  if (!Object.keys(errors || {}).some(dependsOnEditedField)) return errors;
+  return Object.fromEntries(
+    Object.entries(errors).filter(([errorField]) => !dependsOnEditedField(errorField)),
+  );
+};
+
 export const mapLlmModelSaveErrorToFields = error => {
   const { field, error: message } = error?.data || {};
   if (typeof message !== 'string') return {};

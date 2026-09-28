@@ -7,6 +7,7 @@ import {
   getLlmModelTier,
   getLlmModelTierFlags,
   mapLlmModelSaveErrorToFields,
+  omitLlmModelErrorsDependingOn,
   parseLlmModelTokenLimitInput,
   pickVisibleLlmModelErrors,
 } from '../llmModelForm.helpers.js';
@@ -170,6 +171,28 @@ describe('pickVisibleLlmModelErrors', () => {
       showAll: false,
     });
     expect(Object.keys(visible)).toEqual(['label', 'max_output_tokens']);
+  });
+});
+
+describe('omitLlmModelErrorsDependingOn', () => {
+  const serverErrors = { supports_reasoning: 'reasoning rejected', elitea_title: 'ID taken' };
+
+  it('drops an error when a field it depends on is edited', () => {
+    expect(omitLlmModelErrorsDependingOn(serverErrors, 'api_protocol')).toEqual({ elitea_title: 'ID taken' });
+    expect(omitLlmModelErrorsDependingOn(serverErrors, 'ai_credentials')).toEqual({
+      elitea_title: 'ID taken',
+    });
+    expect(omitLlmModelErrorsDependingOn(serverErrors, 'label')).toEqual({
+      supports_reasoning: 'reasoning rejected',
+    });
+  });
+
+  it('drops an error when its own field is edited', () => {
+    expect(omitLlmModelErrorsDependingOn({ name: 'bad name' }, 'name')).toEqual({});
+  });
+
+  it('returns the same object when nothing depends on the edited field', () => {
+    expect(omitLlmModelErrorsDependingOn(serverErrors, 'shared')).toBe(serverErrors);
   });
 });
 

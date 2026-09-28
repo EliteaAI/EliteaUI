@@ -15,6 +15,7 @@ import {
   getLlmModelTier,
   getLlmModelTierFlags,
   hasConflictingLlmModelTiers,
+  omitLlmModelErrorsDependingOn,
   parseLlmModelTokenLimitInput,
   pickVisibleLlmModelErrors,
 } from '../../lib/helpers/llmModelForm.helpers.js';
@@ -43,7 +44,14 @@ const CREDENTIALS_SELECT_SX = { marginTop: 0 };
 const getCredentialOptionTypeTag = configuration => getLlmModelCredentialTypeTag(configuration?.type);
 
 const LlmModelForm = memo(props => {
-  const { editToolDetail, editField, setToolErrors, showValidation, validationErrorMessages } = props;
+  const {
+    editToolDetail,
+    editField,
+    setToolErrors,
+    showValidation,
+    validationErrorMessages,
+    setValidationErrorMessages,
+  } = props;
   const settings = useMemo(() => editToolDetail?.settings || {}, [editToolDetail?.settings]);
   const isEditing = Boolean(editToolDetail?.id);
   const { initialValues } = useFormikContext();
@@ -96,7 +104,13 @@ const LlmModelForm = memo(props => {
 
   const hasVisibleErrorIn = section => section.fields.some(field => visibleErrors[field]);
 
-  const editSetting = useCallback((field, value) => editField(`settings.${field}`, value), [editField]);
+  const editSetting = useCallback(
+    (field, value) => {
+      setValidationErrorMessages?.(serverErrors => omitLlmModelErrorsDependingOn(serverErrors, field));
+      editField(`settings.${field}`, value);
+    },
+    [editField, setValidationErrorMessages],
+  );
 
   const onDisplayNameChange = useCallback(
     event => {

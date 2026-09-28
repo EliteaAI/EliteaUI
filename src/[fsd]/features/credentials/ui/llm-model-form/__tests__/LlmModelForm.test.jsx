@@ -109,6 +109,7 @@ const EditableLlmModelForm = props => {
   const { initialDetail, showValidation, validationErrorMessages } = props;
   const { setFieldValue } = useFormikContext();
   const [detail, setDetail] = useState(initialDetail);
+  const [serverErrors, setServerErrors] = useState(validationErrorMessages);
 
   const editField = useCallback(
     (field, value) => {
@@ -126,7 +127,8 @@ const EditableLlmModelForm = props => {
         editField={editField}
         setToolErrors={setToolErrors}
         showValidation={showValidation}
-        validationErrorMessages={validationErrorMessages}
+        validationErrorMessages={serverErrors}
+        setValidationErrorMessages={setServerErrors}
       />
       <output data-testid="settings">{JSON.stringify(detail.settings)}</output>
     </>
@@ -507,6 +509,40 @@ describe('LlmModelForm', () => {
 
       expect(screen.queryByTestId('llm-model-error-supports_reasoning')).not.toBeInTheDocument();
       expect(lastReportedErrors()).toEqual({});
+    });
+  });
+
+  describe('errors returned by the server', () => {
+    const SERVER_REASONING_ERROR = { supports_reasoning: 'Reasoning rejected by the server' };
+
+    it('clears the reasoning error once the protocol it depends on changes', async () => {
+      const user = userEvent.setup();
+      renderForm(EXISTING_DIAL_MODEL, { validationErrorMessages: SERVER_REASONING_ERROR });
+      expect(screen.getByTestId('llm-model-error-supports_reasoning')).toBeInTheDocument();
+
+      await pickOption(user, 'api_protocol', 'OpenAI');
+
+      expect(screen.queryByTestId('llm-model-error-supports_reasoning')).not.toBeInTheDocument();
+    });
+
+    it('clears the reasoning error once the credential it depends on changes', async () => {
+      const user = userEvent.setup();
+      renderForm(EXISTING_DIAL_MODEL, { validationErrorMessages: SERVER_REASONING_ERROR });
+
+      await user.click(screen.getByRole('button', { name: /dial-cred-2/ }));
+
+      expect(screen.queryByTestId('llm-model-error-supports_reasoning')).not.toBeInTheDocument();
+    });
+
+    it('keeps the reasoning error while an unrelated field is edited', async () => {
+      const user = userEvent.setup();
+      renderForm(EXISTING_DIAL_MODEL, { validationErrorMessages: SERVER_REASONING_ERROR });
+
+      await user.type(inputOf('name'), '-v2');
+
+      expect(screen.getByTestId('llm-model-error-supports_reasoning')).toHaveTextContent(
+        'Reasoning rejected by the server',
+      );
     });
   });
 
