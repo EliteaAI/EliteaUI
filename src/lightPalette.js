@@ -746,6 +746,7 @@ const lightPalette = {
       },
     },
     configurationCard: { background: { highTier: green20 } },
+    chatTemplate: { badge: { background: green20 } },
     highlightQuery: { background: attentionOrange },
     runIndexBanner: {
       background: { success: green8, error: red8, warning: orange8, info: blueFill8 },
@@ -771,6 +772,8 @@ const lightPalette = {
     deleteAlert: { text: { entityName: darkBlue, body: gray60 } },
     chip: {
       background: { warning: red15, selected: darkMagenta16, default: dark5 },
+      border: { default: light30, active: magentaDefault },
+      text: { default: light10, active: magentaDefault },
     },
     chipWithCheckIcon: {
       background: {

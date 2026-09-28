@@ -11,3 +11,4 @@ export * as UsageExportHelpers from './usageExport.helpers.js';
 export * as AnalyticCommonHelpers from './analyticsCommon.helpers.js';
 export * as AnalyticsTokenHelpers from './analyticsToken.helpers.js';
 export * as AnalyticsExportHelpers from './analyticsExport.helpers.js';
+export * as ChatParticipantHelpers from './chatParticipant.helpers.js';

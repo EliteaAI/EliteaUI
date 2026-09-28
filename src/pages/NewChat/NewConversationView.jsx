@@ -19,7 +19,7 @@ import NewChatInput from '@/[fsd]/features/chat/ui/chat-input/NewChatInput';
 import RecommendationList from '@/[fsd]/features/chat/ui/recommendations/RecommendationList';
 import SearchResultList from '@/[fsd]/features/chat/ui/recommendations/SearchResultList';
 import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
-import { useProjectInfoQuery } from '@/[fsd]/features/settings/api/projectInfoApi';
+import { useGetChatTemplatesQuery } from '@/[fsd]/features/settings/api';
 import { MentionSkillList } from '@/[fsd]/features/skill/ui';
 import {
   AutoRoutingConstants,
@@ -99,10 +99,11 @@ const NewConversationView = forwardRef(
   ) => {
     const styles = newConversationViewStyles();
     const selectedProjectId = useSelectedProjectId();
-    const { data: projectInfo } = useProjectInfoQuery(
-      { projectId: selectedProjectId, fields: 'chat_config' },
+    const { data: chatTemplates = [] } = useGetChatTemplatesQuery(
+      { projectId: selectedProjectId },
       { skip: !selectedProjectId },
     );
+    const defaultTemplate = chatTemplates.find(t => t.is_default);
     const { toastSuccess } = useToast();
     const systemSenderName = useSystemSenderName();
     const { selectedAgent, selectedAgentStarter } = useSelector(state => state.chat);
@@ -512,21 +513,21 @@ const NewConversationView = forwardRef(
       if (!activeConversation?.isNew) return;
       const sessionKey = activeConversation.id;
       if (defaultParticipantsAppliedForRef.current === sessionKey) return;
-      const configParticipants = projectInfo?.chat_config?.participants ?? [];
+      const configParticipants = defaultTemplate?.participants ?? [];
       if (!configParticipants.length) return;
       defaultParticipantsAppliedForRef.current = sessionKey;
-      const filtered = configParticipants.filter(cp => cp.entity_id && cp.entity_name);
+      const filtered = configParticipants.filter(cp => cp.id && cp.entity_name);
       if (!filtered.length) return;
 
       // Set basic participants immediately so conversation creation has them before async details load
       const baseParticipants = filtered.map(cp => ({
-        id: cp.entity_id,
+        id: cp.id,
         name: cp.name || '',
         project_id: cp.project_id,
         agent_type: cp.agent_type,
         participantType: cp.entity_name,
         entity_name: cp.entity_name,
-        entity_meta: { id: cp.entity_id, project_id: cp.project_id || selectedProjectId },
+        entity_meta: { id: cp.id, project_id: cp.project_id || selectedProjectId },
         entity_settings: {},
         meta: {},
       }));
@@ -544,7 +545,7 @@ const NewConversationView = forwardRef(
       // Fetch full details async and enrich participants with icon_meta, agent_type, etc.
       (async () => {
         const detailsList = await Promise.all(
-          filtered.map(cp => fetchOriginalDetails(cp.entity_name, cp.entity_id, cp.project_id)),
+          filtered.map(cp => fetchOriginalDetails(cp.entity_name, cp.id, cp.project_id)),
         );
         const toParticipantKey = p => `${p.entity_name ?? p.participantType}:${p.project_id}:${p.id}`;
         const currentKeySet = new Set(selectedParticipantsRef.current.map(toParticipantKey));
@@ -571,7 +572,7 @@ const NewConversationView = forwardRef(
     }, [
       activeConversation?.isNew,
       activeConversation?.id,
-      projectInfo?.chat_config?.participants,
+      defaultTemplate?.participants,
       setActiveParticipant,
       fetchOriginalDetails,
       buildEnrichedParticipant,

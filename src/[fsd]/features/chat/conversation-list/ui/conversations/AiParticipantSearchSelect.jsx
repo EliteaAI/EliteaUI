@@ -79,20 +79,18 @@ const AiParticipantSearchSelect = memo(props => {
     option => {
       const isPublic = option.project_id === PUBLIC_PROJECT_ID;
       return (
-        <>
-          <Box sx={styles.optionBody}>
-            <EntityTypeIcon
-              type={option.entity_name}
-              specifiedFontSize="1rem"
-            />
-            <Typography
-              variant="bodyMedium"
-              color="text.secondary"
-              sx={styles.optionName}
-            >
-              {option.name}
-            </Typography>
-          </Box>
+        <Box sx={styles.optionBody}>
+          <EntityTypeIcon
+            type={option.entity_name}
+            specifiedFontSize="1rem"
+          />
+          <Typography
+            variant="bodyMedium"
+            color="text.secondary"
+            sx={styles.optionName}
+          >
+            {option.name}
+          </Typography>
           {isPublic && (
             <Box sx={styles.publicBadge}>
               <Typography
@@ -103,7 +101,7 @@ const AiParticipantSearchSelect = memo(props => {
               </Typography>
             </Box>
           )}
-        </>
+        </Box>
       );
     },
     [styles],
@@ -187,6 +185,7 @@ const aiParticipantSearchSelectStyles = () => ({
     minWidth: 0,
   },
   optionName: {
+    flex: 1,
     minWidth: 0,
     overflow: 'hidden',
     textOverflow: 'ellipsis',
