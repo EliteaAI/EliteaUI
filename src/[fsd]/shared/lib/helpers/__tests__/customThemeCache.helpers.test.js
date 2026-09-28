@@ -6,6 +6,44 @@ const CACHE_KEY = 'customTheme.v1';
 // The module memoizes its first storage read, so each test imports it fresh.
 const importHelpers = () => import('../customThemeCache.helpers');
 
+class StorageMock {
+  constructor() {
+    this._store = {};
+  }
+
+  get length() {
+    return Object.keys(this._store).length;
+  }
+
+  key(index) {
+    return Object.keys(this._store)[index] ?? null;
+  }
+
+  getItem(key) {
+    return Object.prototype.hasOwnProperty.call(this._store, key) ? this._store[key] : null;
+  }
+
+  setItem(key, value) {
+    this._store[String(key)] = String(value);
+  }
+
+  removeItem(key) {
+    delete this._store[String(key)];
+  }
+
+  clear() {
+    this._store = {};
+  }
+}
+
+// Override the global Storage class with our mock so that
+// vi.spyOn(Storage.prototype, ...) targets our implementation, not any
+// native Node.js Storage that may be undefined or cause illegal invocations.
+globalThis.Storage = StorageMock;
+
+const localStorageMock = new StorageMock();
+Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock, writable: true });
+
 describe('customThemeCache.helpers', () => {
   beforeEach(() => {
     localStorage.clear();

@@ -5,11 +5,10 @@ import { useFormikContext } from 'formik';
 import { Box } from '@mui/material';
 
 import { useIsMidturnInjectionAvailable } from '@/[fsd]/features/chat';
+import EnableToggleCard from '@/[fsd]/features/settings/ui/project-context/EnableToggleCard';
 import { useFormikAutoSaveOnBlur } from '@/[fsd]/shared/lib/hooks';
 import { PERMISSIONS } from '@/common/constants';
 import useCheckPermission from '@/hooks/useCheckPermission';
-
-import EnableToggleCard from '../project-context/EnableToggleCard';
 
 // Tier 2 of the feature gate. Tier 1 (platform admin) decides which projects see this
 // card at all; the stored preference is per-project (#6303) — saved to module_settings
@@ -50,7 +49,7 @@ const MidturnInjection = memo(() => {
         enabled={values.midturn_injection_enabled}
         onToggle={handleToggle}
         disabled={!canEditProjectContext}
-        title="Mid-turn Input (Beta)"
+        title="Mid-turn input"
         description="Send a message to an agent while it is still working, to steer the rest of the run."
       />
     </Box>

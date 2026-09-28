@@ -79,11 +79,19 @@ const getMessage = (
   }
 };
 
+const safeGet = (storage, key) => {
+  try {
+    return storage?.getItem(key) ?? null;
+  } catch {
+    return null;
+  }
+};
+
 const settingsSlice = createSlice({
   name: 'settings',
   initialState: {
     sideBarCollapsed: '',
-    mode: localStorage.getItem('mode') || 'dark',
+    mode: safeGet(typeof localStorage !== 'undefined' ? localStorage : null, 'mode') || 'dark',
     pageSize: 20,
     navBlocker: {
       isBlockNav: false,
@@ -101,15 +109,15 @@ const settingsSlice = createSlice({
       warningMessage: 'There are unsaved changes. Are you sure you want to leave?',
     },
     projects: defaultProjects,
-    project: sessionStorage.getItem(ProjectIdStorageKey)
+    project: safeGet(typeof sessionStorage !== 'undefined' ? sessionStorage : null, ProjectIdStorageKey)
       ? {
-          id: +sessionStorage.getItem(ProjectIdStorageKey),
-          name: sessionStorage.getItem(ProjectNameStorageKey),
+          id: +safeGet(sessionStorage, ProjectIdStorageKey),
+          name: safeGet(sessionStorage, ProjectNameStorageKey),
         }
-      : localStorage.getItem(ProjectIdStorageKey)
+      : safeGet(typeof localStorage !== 'undefined' ? localStorage : null, ProjectIdStorageKey)
         ? {
-            id: +localStorage.getItem(ProjectIdStorageKey),
-            name: localStorage.getItem(ProjectNameStorageKey),
+            id: +safeGet(localStorage, ProjectIdStorageKey),
+            name: safeGet(localStorage, ProjectNameStorageKey),
           }
         : {
             id: undefined,

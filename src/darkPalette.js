@@ -772,6 +772,7 @@ const darkPalette = {
       },
     },
     configurationCard: { background: { highTier: green20 } },
+    chatTemplate: { badge: { background: green20 } },
     highlightQuery: { background: attentionOrange },
     runIndexBanner: {
       background: { success: green8, error: red8, warning: orange8, info: blueFill8 },
@@ -788,6 +789,8 @@ const darkPalette = {
     deleteAlert: { text: { entityName: skyBlue, body: white } },
     chip: {
       background: { warning: red15, selected: blue16, default: white5 },
+      border: { default: gray30, active: cyanDefault },
+      text: { default: gray10, active: cyanDefault },
     },
     chipWithCheckIcon: {
       background: {
