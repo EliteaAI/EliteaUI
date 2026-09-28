@@ -324,6 +324,101 @@ describe('LlmModelForm', () => {
     expect(readSettings().name).toBe('gpt-5.4');
   });
 
+  describe('description', () => {
+    const FORTY = 'Best for coding and agents, fast and fun';
+
+    it('sits between ID and model name, empty for a new model', () => {
+      renderForm(NEW_MODEL);
+      const fieldOrder = screen
+        .getAllByTestId(/^llm-model-field-(elitea_title|description|name)$/)
+        .map(field => field.dataset.testid);
+
+      expect(fieldOrder).toEqual([
+        'llm-model-field-elitea_title',
+        'llm-model-field-description',
+        'llm-model-field-name',
+      ]);
+      expect(inputOf('description')).toHaveValue('');
+      expect(screen.getByTestId('llm-model-description-counter')).toHaveTextContent('40 characters left');
+    });
+
+    it('is optional', async () => {
+      renderForm(NEW_MODEL, { showValidation: true });
+      await waitFor(() => expect(lastReportedErrors()).not.toHaveProperty('description'));
+      expect(screen.queryByTestId('llm-model-error-description')).not.toBeInTheDocument();
+    });
+
+    it('counts the characters left while typing', async () => {
+      const user = userEvent.setup();
+      renderForm(NEW_MODEL);
+
+      await user.type(inputOf('description'), 'Fast for everyday tasks');
+
+      expect(readSettings().description).toBe('Fast for everyday tasks');
+      expect(screen.getByTestId('llm-model-description-counter')).toHaveTextContent('17 characters left');
+    });
+
+    it('accepts exactly 40 characters and refuses a 41st, typed or pasted', async () => {
+      const user = userEvent.setup();
+      renderForm(NEW_MODEL);
+      expect(FORTY).toHaveLength(40);
+
+      await user.type(inputOf('description'), `${FORTY}x`);
+      expect(readSettings().description).toBe(FORTY);
+      expect(screen.getByTestId('llm-model-description-counter')).toHaveTextContent('0 characters left');
+
+      await user.clear(inputOf('description'));
+      await user.click(inputOf('description'));
+      await user.paste(`${FORTY}xyz`);
+      expect(readSettings().description).toBe(FORTY);
+    });
+
+    it('trims surrounding spaces when the field loses focus', async () => {
+      const user = userEvent.setup();
+      renderForm(NEW_MODEL);
+
+      await user.type(inputOf('description'), '  Fast for everyday tasks  ');
+      await user.tab();
+
+      expect(readSettings().description).toBe('Fast for everyday tasks');
+    });
+
+    it('shows the stored description of an existing model and lets it be cleared', async () => {
+      const user = userEvent.setup();
+      renderForm({
+        ...EXISTING_DIAL_MODEL,
+        settings: { ...EXISTING_DIAL_MODEL.settings, description: 'Smart and fast for most tasks' },
+      });
+      expect(inputOf('description')).toHaveValue('Smart and fast for most tasks');
+
+      await user.clear(inputOf('description'));
+
+      expect(readSettings().description).toBe('');
+    });
+
+    it('shows a server rejection under the field', () => {
+      renderForm(EXISTING_DIAL_MODEL, {
+        validationErrorMessages: { description: 'String should have at most 40 characters' },
+      });
+
+      expect(screen.getByTestId('llm-model-error-description')).toHaveTextContent(
+        'String should have at most 40 characters',
+      );
+    });
+
+    it('explains the field in its info text', async () => {
+      const user = userEvent.setup();
+      renderForm(NEW_MODEL);
+
+      await user.hover(screen.getByTestId('llm-model-info-description'));
+      const tooltip = await screen.findByTestId('llm-model-info-text-description');
+      expect(tooltip).toHaveTextContent(
+        'A few words on what the model is best for, shown under its name when people pick a model, for example Fast for everyday tasks or Best for coding and agents.',
+      );
+      expect(within(tooltip).getByText('Fast for everyday tasks').tagName).toBe('STRONG');
+    });
+  });
+
   describe('limits', () => {
     it('flags max output tokens above the context window while typing', async () => {
       const user = userEvent.setup();
@@ -560,6 +655,7 @@ describe('LlmModelForm', () => {
     const INFO_FIELDS = [
       'label',
       'elitea_title',
+      'description',
       'name',
       'context_window',
       'max_output_tokens',

@@ -36,6 +36,7 @@ const ConfigurationSection = memo(props => {
     additionalDefaultSettings = [],
     defaultSettingsLayout = DEFAULT_SETTINGS_LAYOUT.STACK,
     groupTheModelsByProvider = false,
+    showOptionDescription = false,
     tourTargetId,
     defaultExpanded = false,
     sectionTestId,
@@ -145,6 +146,7 @@ const ConfigurationSection = memo(props => {
                 options={defaultSettingOptions}
                 disabled={!canEdit}
                 showOptionIcon
+                showOptionDescription={showOptionDescription}
                 data-testid={sectionTestId ? `${sectionTestId}-default-selector` : undefined}
                 sx={{ marginRight: '0rem !important', paddingRight: '.75rem !important' }}
               />
@@ -162,6 +164,7 @@ const ConfigurationSection = memo(props => {
                     options={setting.options}
                     disabled={!canEdit}
                     showOptionIcon
+                    showOptionDescription={showOptionDescription}
                     data-testid={
                       sectionTestId && setting.key ? `${sectionTestId}-${setting.key}-selector` : undefined
                     }

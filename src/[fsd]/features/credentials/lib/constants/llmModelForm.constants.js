@@ -5,6 +5,7 @@ export const LLM_MODEL_CONFIGURATION_TYPE = 'llm_model';
 export const LLM_MODEL_FIELDS = {
   displayName: 'label',
   id: 'elitea_title',
+  description: 'description',
   modelName: 'name',
   contextWindow: 'context_window',
   maxOutputTokens: 'max_output_tokens',
@@ -23,7 +24,12 @@ export const LLM_MODEL_FIELDS = {
 export const LLM_MODEL_SECTIONS = {
   model: {
     title: 'Model',
-    fields: [LLM_MODEL_FIELDS.displayName, LLM_MODEL_FIELDS.id, LLM_MODEL_FIELDS.modelName],
+    fields: [
+      LLM_MODEL_FIELDS.displayName,
+      LLM_MODEL_FIELDS.id,
+      LLM_MODEL_FIELDS.description,
+      LLM_MODEL_FIELDS.modelName,
+    ],
   },
   limits: { title: 'Limits', fields: [LLM_MODEL_FIELDS.contextWindow, LLM_MODEL_FIELDS.maxOutputTokens] },
   capabilities: { title: 'Capabilities', fields: [LLM_MODEL_FIELDS.vision, LLM_MODEL_FIELDS.reasoning] },
@@ -61,6 +67,8 @@ export const LLM_MODEL_ERROR_SOURCE_FIELDS = {
 export const LLM_MODEL_DISPLAY_NAME_MAX_LENGTH = 60;
 
 export const LLM_MODEL_ID_MAX_LENGTH = 64;
+
+export const LLM_MODEL_DESCRIPTION_MAX_LENGTH = 40;
 
 export const LLM_MODEL_ID_PATTERN = /^[a-z0-9](?:[a-z0-9_-]*[a-z0-9])?$/;
 
@@ -132,6 +140,7 @@ export const LLM_MODEL_SWITCH_DESCRIPTIONS = {
 export const LLM_MODEL_FIELD_LABELS = {
   [LLM_MODEL_FIELDS.displayName]: 'Display name',
   [LLM_MODEL_FIELDS.id]: 'ID',
+  [LLM_MODEL_FIELDS.description]: 'Description',
   [LLM_MODEL_FIELDS.modelName]: 'Model name',
   [LLM_MODEL_FIELDS.contextWindow]: 'Context window',
   [LLM_MODEL_FIELDS.maxOutputTokens]: 'Max output tokens',
@@ -149,6 +158,8 @@ export const LLM_MODEL_FIELD_INFO_TEXTS = {
     'The name people see when they pick a model in chats, agents, and pipelines. Include the provider if you host the same model in several places, for example **Claude Sonnet 5 (Bedrock)**.',
   [LLM_MODEL_FIELDS.id]:
     "Unique identifier of this model configuration. It's generated from the display name and **can't be changed after creation**.",
+  [LLM_MODEL_FIELDS.description]:
+    'A few words on what the model is best for, shown under its name when people pick a model, for example **Fast for everyday tasks** or **Best for coding and agents**.',
   [LLM_MODEL_FIELDS.modelName]:
     "The exact model name or ID the provider expects, copied from the provider's console or docs, for example **global.openai.gpt-5.6-luna**. Requests fail if it doesn't match.",
   [LLM_MODEL_FIELDS.contextWindow]:

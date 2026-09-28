@@ -197,6 +197,18 @@ describe('omitLlmModelErrorsDependingOn', () => {
 });
 
 describe('mapLlmModelSaveErrorToFields', () => {
+  it.each(['data.description', 'description'])('puts a description rejection (%s) on its field', field => {
+    const error = { data: { field, error: 'String should have at most 40 characters' } };
+    expect(mapLlmModelSaveErrorToFields(error)).toEqual({
+      description: 'String should have at most 40 characters',
+    });
+  });
+
+  it('leaves a description error of another entity unmapped', () => {
+    const error = { data: { field: 'data.ai_credentials.description', error: 'Field required' } };
+    expect(mapLlmModelSaveErrorToFields(error)).toEqual({});
+  });
+
   it('puts an ID conflict on the ID field', () => {
     const error = { data: { field: 'elitea_title', error: "Credential with ID 'gpt' already exists" } };
     expect(mapLlmModelSaveErrorToFields(error)).toEqual({

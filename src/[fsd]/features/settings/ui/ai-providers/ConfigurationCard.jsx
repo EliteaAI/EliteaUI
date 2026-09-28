@@ -29,6 +29,10 @@ const ConfigurationCard = memo(props => {
   );
 
   const displayName = useMemo(() => getConfigurationDisplayName(configuration), [configuration]);
+  const description = useMemo(
+    () => (configuration.section === 'llm' ? configuration.data?.description : undefined),
+    [configuration],
+  );
 
   const statusText = useMemo(
     () => getConfigurationStatus(configuration, isShared),
@@ -79,6 +83,16 @@ const ConfigurationCard = memo(props => {
               </StyledTooltip>
             )}
           </Box>
+          {description && (
+            <Typography
+              data-testid="ai-provider-configuration-card-description"
+              variant="bodySmall"
+              color="text.primary"
+              sx={styles.description}
+            >
+              {description}
+            </Typography>
+          )}
           <Typography
             component={Box}
             variant="bodySmall"
@@ -153,7 +167,7 @@ const getStyles = () => ({
       },
       padding: SPACING.SM,
       cursor: disabled ? 'default' : 'pointer',
-      height: '4.4375rem',
+      minHeight: '4.4375rem',
     }),
   container: {
     cursor: 'default',
@@ -168,7 +182,7 @@ const getStyles = () => ({
   }),
   content: {
     display: 'flex',
-    padding: `${SPACING.MD} ${SPACING.SM}`,
+    padding: `0 ${SPACING.SM}`,
     gap: SPACING.MD,
     width: '100%',
     alignItems: 'center',
@@ -202,6 +216,9 @@ const getStyles = () => ({
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
     fontWeight: 500,
+  },
+  description: {
+    overflowWrap: 'anywhere',
   },
   statusText: {
     overflow: 'hidden',
