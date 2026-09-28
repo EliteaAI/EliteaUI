@@ -12,6 +12,7 @@ import { PERMISSIONS } from '@/common/constants';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
+import AutoRoutingSettings from './AutoRoutingSettings';
 import ChatTemplateEditor from './ChatTemplateEditor';
 import ChatTemplateList from './ChatTemplateList';
 import MidturnInjection from './MidturnInjection';
@@ -95,6 +96,8 @@ const ChatConfigurationSection = memo(() => {
       )}
 
       {isMidturnAvailable && <SettingsFormProvider FormContent={MidturnInjection} />}
+
+      <AutoRoutingSettings />
 
       <Modal.BaseModal
         open={showUnsavedDialog}

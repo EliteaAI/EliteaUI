@@ -13,7 +13,6 @@ import { PERMISSIONS } from '@/common/constants';
 import useCheckPermission from '@/hooks/useCheckPermission';
 
 import SettingsFormProvider from '../shared/SettingsFormProvider';
-import AutoRoutingSettings from './AutoRoutingSettings';
 import { ChatConfigurationSection } from './chat-configuration';
 
 const ProjectGeneralContent = memo(() => {
@@ -58,7 +57,6 @@ const ProjectGeneralContent = memo(() => {
               content: (
                 <Box>
                   <ProjectAIConfigurations />
-                  <AutoRoutingSettings />
                 </Box>
               ),
             },

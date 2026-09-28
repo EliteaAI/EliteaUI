@@ -94,9 +94,15 @@ const SuiteDetailPanel = memo(props => {
     [applicationVersions],
   );
 
-  const autoJudgeModelLabel = modelsData.low_tier_default_model_name
-    ? `Auto (${modelsData.low_tier_default_model_name})`
-    : 'Auto';
+  const autoJudgeModelLabel = useMemo(() => {
+    const { low_tier_default_model_name: lowTierName, low_tier_default_model_project_id: lowTierProjectId } =
+      modelsData;
+    if (!lowTierName) return 'Auto';
+    const lowTierModel = modelsData.items.find(
+      m => m.name === lowTierName && (!lowTierProjectId || m.project_id === lowTierProjectId),
+    );
+    return `Auto (${lowTierModel?.display_name || lowTierName})`;
+  }, [modelsData]);
 
   const autoJudgeModelOption = useMemo(
     () => ({ id: AUTO_JUDGE_MODEL_ID, name: AUTO_JUDGE_MODEL_ID, display_name: autoJudgeModelLabel }),
