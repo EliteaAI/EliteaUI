@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { useSelector } from 'react-redux';
+
 import { useGetBudgetWarningQuery } from '@/[fsd]/features/chat/api/budgetWarningApi';
 import { BudgetWarningHelpers } from '@/[fsd]/features/chat/lib/helpers';
 import { useGetPlatformSettingsQuery } from '@/api/platformSettings';
@@ -19,10 +21,11 @@ let prunedForPeriod = null;
 // Whether to warn that a budget is nearing its limit; a dismissal lasts until the next level or period
 export const useBudgetWarning = ({ projectId } = {}) => {
   const { data: platformSettings } = useGetPlatformSettingsQuery();
+  const userId = useSelector(state => state.user.id);
 
   // Observe mode tracks spend without ever blocking, so there is nothing to warn about
   const isEnforcing = Boolean(platformSettings?.cost_budgets_enforcing);
-  const dismissible = platformSettings?.cost_budgets_warning_dismissible !== false;
+  const dismissibleByAdmin = platformSettings?.cost_budgets_warning_dismissible !== false;
 
   // Re-ask on mount once the backend's 60s cache could have moved, so a newly crossed level shows
   const { data } = useGetBudgetWarningQuery(
@@ -31,7 +34,8 @@ export const useBudgetWarning = ({ projectId } = {}) => {
   );
 
   const period = budgetPeriod();
-  const storageKey = data?.scope ? dismissStorageKey({ projectId, scope: data.scope, period }) : null;
+  const storageKey =
+    data?.scope && userId ? dismissStorageKey({ userId, projectId, scope: data.scope, period }) : null;
 
   // In-memory mirror, so a dismissal still holds when storage is blocked
   const [dismissedByKey, setDismissedByKey] = useState({});
@@ -42,9 +46,12 @@ export const useBudgetWarning = ({ projectId } = {}) => {
     pruneStaleDismissals(period);
   }, [period]);
 
-  const dismissedLevel = storageKey ? (dismissedByKey[storageKey] ?? readDismissedLevel(storageKey)) : null;
+  // ChatBox re-renders per streamed token, so storage is read only when the key changes
+  const storedLevel = useMemo(() => (storageKey ? readDismissedLevel(storageKey) : null), [storageKey]);
+  const dismissedLevel = storageKey ? (dismissedByKey[storageKey] ?? storedLevel) : null;
 
   const level = data?.level;
+  const dismissible = dismissibleByAdmin && Boolean(level) && Boolean(storageKey);
 
   const dismiss = useCallback(() => {
     if (!dismissible || !storageKey || !level) return;

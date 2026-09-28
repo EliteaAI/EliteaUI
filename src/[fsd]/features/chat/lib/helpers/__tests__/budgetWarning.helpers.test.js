@@ -47,6 +47,13 @@ describe('budget warning visibility across levels', () => {
     expect(show(92, null)).toBe(true);
     expect(show(95, 92)).toBe(true);
   });
+
+  it('still shows when an older backend omits the level', () => {
+    // UI can deploy ahead of the usage plugin; the hook then also drops the close button
+    expect(
+      isWarningVisible({ shouldWarn: true, level: undefined, dismissedLevel: 95, dismissible: true }),
+    ).toBe(true);
+  });
 });
 
 describe('budget warning severity', () => {
@@ -60,11 +67,13 @@ describe('budget warning severity', () => {
 });
 
 describe('dismissal storage key', () => {
-  it('separates project, scope and period', () => {
-    const key = dismissStorageKey({ projectId: 3, scope: 'member', period: '2026-09' });
+  it('separates user, project, scope and period', () => {
+    const key = dismissStorageKey({ userId: 6, projectId: 3, scope: 'member', period: '2026-09' });
 
-    expect(key).toBe('elitea.budgetWarning.dismissed.3.member.2026-09');
-    expect(key).not.toBe(dismissStorageKey({ projectId: 3, scope: 'project', period: '2026-09' }));
+    expect(key).toBe('elitea.budgetWarning.dismissed.6.3.member.2026-09');
+    expect(key).not.toBe(dismissStorageKey({ userId: 6, projectId: 3, scope: 'project', period: '2026-09' }));
+    // Two users sharing a browser profile must not share a dismissal
+    expect(key).not.toBe(dismissStorageKey({ userId: 3, projectId: 3, scope: 'member', period: '2026-09' }));
   });
 
   it('uses the UTC month, matching the budget reset', () => {
@@ -89,15 +98,15 @@ describe('pruning past periods', () => {
 
   it('drops dismissals from other periods and leaves unrelated keys alone', () => {
     const storage = fakeStorage({
-      'elitea.budgetWarning.dismissed.3.project.2026-08': '95',
-      'elitea.budgetWarning.dismissed.3.project.2026-09': '80',
+      'elitea.budgetWarning.dismissed.6.3.project.2026-08': '95',
+      'elitea.budgetWarning.dismissed.6.3.project.2026-09': '80',
       'some.other.key.2026-08': 'x',
     });
 
     pruneStaleDismissals('2026-09', storage);
 
     expect(storage.keys().sort()).toEqual(
-      ['elitea.budgetWarning.dismissed.3.project.2026-09', 'some.other.key.2026-08'].sort(),
+      ['elitea.budgetWarning.dismissed.6.3.project.2026-09', 'some.other.key.2026-08'].sort(),
     );
   });
 

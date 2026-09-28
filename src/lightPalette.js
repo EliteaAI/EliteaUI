@@ -299,7 +299,13 @@ const lightPalette = {
   alert: {
     info: { icon: irisBlue, background: blueFill8, border: skyBlue40, text: darkBlue },
     success: { icon: greenHoverBtn, background: green8, border: greenOutline40, text: green },
-    warning: { icon: orange, background: orange8, border: orangeOutline40, text: attentionOrange },
+    warning: {
+      icon: orange,
+      background: orange8,
+      border: orangeOutline40,
+      borderStrong: orange,
+      text: attentionOrange,
+    },
     error: { icon: dangerRed, background: red8, border: red40, text: red },
     secondary: { background: blue8 },
   },

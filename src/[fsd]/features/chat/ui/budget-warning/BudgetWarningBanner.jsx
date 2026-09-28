@@ -69,6 +69,28 @@ BudgetWarningBanner.displayName = 'BudgetWarningBanner';
 
 const { BUDGET_WARNING_SEVERITY } = BudgetWarningConstants;
 
+// Border width stays constant so the banner never jumps in height between levels
+const severityTokens = (palette, severity) =>
+  ({
+    [BUDGET_WARNING_SEVERITY.CRITICAL]: {
+      background: palette.alert.error.background,
+      border: palette.alert.error.border,
+      icon: palette.icon.error,
+      text: palette.alert.error.text,
+    },
+    [BUDGET_WARNING_SEVERITY.ELEVATED]: {
+      background: palette.alert.warning.background,
+      border: palette.alert.warning.borderStrong,
+      icon: palette.icon.warning,
+      text: palette.status.warningText,
+    },
+  })[severity] ?? {
+    background: palette.alert.warning.background,
+    border: palette.alert.warning.border,
+    icon: palette.icon.warning,
+    text: palette.status.warningText,
+  };
+
 /** @type {MuiSx} */
 const budgetWarningBannerStyles = severity => ({
   container: ({ palette }) => ({
@@ -76,30 +98,20 @@ const budgetWarningBannerStyles = severity => ({
     alignItems: 'center',
     gap: '0.5rem',
     padding: '0.375rem 0.75rem',
-    backgroundColor:
-      severity === BUDGET_WARNING_SEVERITY.CRITICAL
-        ? palette.alert.error.background
-        : palette.alert.warning.background,
-    // Elevated keeps the amber fill but hardens the border, so 90% reads louder than 80%
-    border:
-      severity === BUDGET_WARNING_SEVERITY.CRITICAL
-        ? `0.0625rem solid ${palette.alert.error.border}`
-        : severity === BUDGET_WARNING_SEVERITY.ELEVATED
-          ? `0.125rem solid ${palette.alert.warning.icon}`
-          : `0.0625rem solid ${palette.alert.warning.border}`,
+    backgroundColor: severityTokens(palette, severity).background,
+    border: `0.0625rem solid ${severityTokens(palette, severity).border}`,
     borderRadius: BORDER_RADIUS.MD,
     marginBottom: '0.5rem',
   }),
   icon: ({ palette }) => ({
     fontSize: '1rem',
-    color: severity === BUDGET_WARNING_SEVERITY.CRITICAL ? palette.icon.error : palette.icon.warning,
+    color: severityTokens(palette, severity).icon,
     flexShrink: 0,
   }),
   // Wraps rather than truncating on a narrow viewport, so the percentage stays readable
   text: ({ palette }) => ({
     flex: 1,
-    color:
-      severity === BUDGET_WARNING_SEVERITY.CRITICAL ? palette.alert.error.text : palette.status.warningText,
+    color: severityTokens(palette, severity).text,
     wordBreak: 'break-word',
   }),
   link: ({ palette }) => ({

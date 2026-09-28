@@ -7,8 +7,9 @@ const { DISMISS_STORAGE_PREFIX, BUDGET_WARNING_SEVERITY, ELEVATED_LEVEL, CRITICA
 export const budgetPeriod = (now = new Date()) =>
   `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`;
 
-export const dismissStorageKey = ({ projectId, scope, period }) =>
-  `${DISMISS_STORAGE_PREFIX}.${projectId}.${scope}.${period}`;
+// Keyed per user so people sharing a browser profile never inherit each other's dismissals
+export const dismissStorageKey = ({ userId, projectId, scope, period }) =>
+  `${DISMISS_STORAGE_PREFIX}.${userId}.${projectId}.${scope}.${period}`;
 
 export const severityForLevel = level => {
   if (level >= CRITICAL_LEVEL) return BUDGET_WARNING_SEVERITY.CRITICAL;
@@ -16,10 +17,11 @@ export const severityForLevel = level => {
   return BUDGET_WARNING_SEVERITY.WARNING;
 };
 
-// A dismissal holds only up to the level it was made at; a higher level shows again
+// A dismissal holds only up to the level it was made at; a higher level shows again.
+// Without a level (older backend) nothing can be tracked, so it shows undismissable.
 export const isWarningVisible = ({ shouldWarn, level, dismissedLevel, dismissible }) => {
-  if (!shouldWarn || !level) return false;
-  if (!dismissible) return true;
+  if (!shouldWarn) return false;
+  if (!dismissible || !level) return true;
   return !(Number(dismissedLevel) >= level);
 };
 
