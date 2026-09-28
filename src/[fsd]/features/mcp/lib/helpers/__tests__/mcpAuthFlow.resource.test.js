@@ -15,7 +15,7 @@ vi.mock('@/api/mcpOAuth', () => ({
     endpoints: {
       exchangeMcpOAuthToken: { initiate: vi.fn(body => ({ exchange: body })) },
       refreshMcpOAuthToken: { initiate: vi.fn(body => ({ refresh: body })) },
-      registerMcpDynamicClient: { initiate: vi.fn() },
+      registerMcpDynamicClient: { initiate: vi.fn(body => ({ register: body })) },
     },
   },
 }));
@@ -41,12 +41,14 @@ const authorizationServer = authorizationEndpoint => ({
   issuer: 'https://auth.example.test',
   authorization_endpoint: authorizationEndpoint,
   token_endpoint: 'https://auth.example.test/token',
+  registration_endpoint: 'https://auth.example.test/register',
   code_challenge_methods_supported: ['S256'],
 });
 
 const authorize = async ({
   resource = SERVER_URL,
   authorizationEndpoint = 'https://auth.monday.com/oauth2/authorize',
+  clientId,
 } = {}) => {
   await startMcpAuthFlow({
     serverUrl: SERVER_URL,
@@ -55,7 +57,7 @@ const authorize = async ({
       oauth_authorization_server: authorizationServer(authorizationEndpoint),
       resource,
     },
-    clientId: 'registered-client',
+    clientId,
     authWindow: { closed: false },
     projectId: 2,
   });
@@ -67,16 +69,30 @@ const authorize = async ({
 
 beforeEach(() => {
   vi.clearAllMocks();
-  store.dispatch.mockImplementation(async () => ({ data: { access_token: 'issued', expires_in: 3600 } }));
+  store.dispatch.mockImplementation(async action =>
+    action.register
+      ? { data: { client_id: 'dcr-client' } }
+      : { data: { access_token: 'issued', expires_in: 3600 } },
+  );
 });
 
 describe('RFC 8707 resource indicator in the MCP OAuth flow (#6688)', () => {
-  it('names the protected resource on the authorization request, the code exchange and the stored token', async () => {
+  it('names the protected resource for a dynamically registered client on the authorization request, the code exchange and the stored token', async () => {
     const { authParams, exchangeBody, storedMetadata } = await authorize();
 
+    expect(authParams.get('client_id')).toBe('dcr-client');
     expect(authParams.get('resource')).toBe(SERVER_URL);
     expect(exchangeBody.resource).toBe(SERVER_URL);
     expect(storedMetadata.resource).toBe(SERVER_URL);
+  });
+
+  it('sends no resource for a pre-registered OAuth app, which monday.com rejects it from', async () => {
+    const { authParams, exchangeBody, storedMetadata } = await authorize({ clientId: 'developer-app' });
+
+    expect(authParams.get('client_id')).toBe('developer-app');
+    expect(authParams.has('resource')).toBe(false);
+    expect(exchangeBody.resource).toBeUndefined();
+    expect(storedMetadata.resource).toBeUndefined();
   });
 
   it('sends no resource when the protected resource metadata declares none', async () => {

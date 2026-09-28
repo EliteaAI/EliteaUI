@@ -37,8 +37,12 @@ const isMicrosoftEntraEndpoint = authorizationEndpoint => {
   );
 };
 
-const resourceIndicatorFor = (resourceMetadata, authorizationEndpoint) =>
-  isMicrosoftEntraEndpoint(authorizationEndpoint) ? undefined : resourceMetadata?.resource || undefined;
+// A pre-registered OAuth app is sent no resource, as before #6688: monday.com rejects it from
+// non-DCR clients ("Only DCR apps ... can use the resource parameter"), while its DCR clients require it.
+const resourceIndicatorFor = ({ resourceMetadata, authorizationEndpoint, usedDCR }) =>
+  usedDCR && !isMicrosoftEntraEndpoint(authorizationEndpoint)
+    ? resourceMetadata?.resource || undefined
+    : undefined;
 
 const resolveCredentials = (serverUrl, tokenInfo) => {
   const savedCredentials = McpAuthHelpers.getSavedCredentials(serverUrl);
@@ -441,7 +445,7 @@ export const startMcpAuthFlow = async options => {
     const nonce = McpCryptoHelpers.randomString(32);
     const redirectUri = getRedirectUri();
     const isOIDC = McpCryptoHelpers.isOIDCFlow(asMetadata);
-    const resource = resourceIndicatorFor(resourceMetadata, authorizationEndpoint);
+    const resource = resourceIndicatorFor({ resourceMetadata, authorizationEndpoint, usedDCR });
 
     // Use PKCE if server supports it (regardless of client secret)
     // Many servers require PKCE even for confidential clients
