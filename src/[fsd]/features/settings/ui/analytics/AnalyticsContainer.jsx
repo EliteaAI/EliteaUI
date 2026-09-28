@@ -7,6 +7,7 @@ import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 
 import { ANALYTICS_TOUR_ID, ANALYTICS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import {
+  TAG_TYPE_ANALYTICS,
   analyticsApi,
   useProjectAnalyticsQuery,
   useProjectAnalyticsUsageQuery,
@@ -41,7 +42,7 @@ import { useSelectedProjectId, useSelectedProjectName } from '@/hooks/useSelecte
 const CUSTOM_PRESET_VALUE = 'custom';
 
 const DEFAULT_PRESETS = [
-  { label: 'Last 24h', value: 1, buttonProps: { 'data-testid': 'analytics-date-preset-1' } },
+  { label: 'Today', value: 0, buttonProps: { 'data-testid': 'analytics-date-preset-0' } },
   { label: 'Last 7d', value: 7, buttonProps: { 'data-testid': 'analytics-date-preset-7' } },
   { label: 'Last 30d', value: 30, buttonProps: { 'data-testid': 'analytics-date-preset-30' } },
   { label: 'Last 90d', value: 90, buttonProps: { 'data-testid': 'analytics-date-preset-90' } },
@@ -93,13 +94,17 @@ const AnalyticsContainer = memo(() => {
 
   const styles = analyticsContainerStyles();
 
-  const [selectedDatePreset, setSelectedDatePreset] = useState(1);
+  const [selectedDatePreset, setSelectedDatePreset] = useState(0);
   const [dateFrom, setDateFrom] = useState(() => {
     const d = new Date();
-    d.setDate(d.getDate() - 1);
+    d.setHours(0, 0, 0, 0);
     return d;
   });
-  const [dateTo, setDateTo] = useState(() => new Date());
+  const [dateTo, setDateTo] = useState(() => {
+    const d = new Date();
+    d.setHours(23, 59, 59, 999);
+    return d;
+  });
   const [fromOpen, setFromOpen] = useState(false);
   const [toOpen, setToOpen] = useState(false);
 
@@ -111,8 +116,32 @@ const AnalyticsContainer = memo(() => {
   const [exportError, setExportError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  const dateFromISO = useMemo(() => AnalyticCommonHelpers.toValidISOString(dateFrom), [dateFrom]);
-  const dateToISO = useMemo(() => AnalyticCommonHelpers.toValidISOString(dateTo), [dateTo]);
+  const isDateRangeValid = useMemo(
+    () =>
+      dateFrom instanceof Date &&
+      dateTo instanceof Date &&
+      !isNaN(dateFrom) &&
+      !isNaN(dateTo) &&
+      dateFrom.getTime() <= dateTo.getTime(),
+    [dateFrom, dateTo],
+  );
+
+  const [committedRange, setCommittedRange] = useState(() => ({ from: dateFrom, to: dateTo }));
+
+  useEffect(() => {
+    if (isDateRangeValid) {
+      setCommittedRange({ from: dateFrom, to: dateTo });
+    }
+  }, [isDateRangeValid, dateFrom, dateTo]);
+
+  const dateFromISO = useMemo(
+    () => AnalyticCommonHelpers.toValidISOString(committedRange.from),
+    [committedRange.from],
+  );
+  const dateToISO = useMemo(
+    () => AnalyticCommonHelpers.toValidISOString(committedRange.to),
+    [committedRange.to],
+  );
 
   const queryParams = useMemo(
     () => ({ projectId, dateFrom: dateFromISO, dateTo: dateToISO }),
@@ -164,11 +193,17 @@ const AnalyticsContainer = memo(() => {
 
     if (newDays === CUSTOM_PRESET_VALUE) return;
 
+    // Calendar-day-aligned, inclusive of today: "Last 7d" spans 7 calendar days
+    // total (today + 6 prior), not 7 days back from today.
     const from = new Date();
-    from.setDate(from.getDate() - newDays);
+    from.setDate(from.getDate() - Math.max(newDays - 1, 0));
+    from.setHours(0, 0, 0, 0);
+
+    const to = new Date();
+    to.setHours(23, 59, 59, 999);
 
     setDateFrom(from);
-    setDateTo(new Date());
+    setDateTo(to);
   }, []);
 
   const handleDateFromChange = useCallback(value => {
@@ -234,8 +269,10 @@ const AnalyticsContainer = memo(() => {
 
   const handleRefresh = useCallback(() => {
     setRefreshing(true);
-    setDateTo(new Date());
-  }, []);
+    // Re-fetch every analytics endpoint without moving the committed date boundaries,
+    // so refresh reflects new events within the same calendar-day window (#6791).
+    store.dispatch(analyticsApi.util.invalidateTags([TAG_TYPE_ANALYTICS]));
+  }, [store]);
 
   useEffect(() => {
     if (refreshing && !overviewFetching) {
@@ -374,6 +411,14 @@ const AnalyticsContainer = memo(() => {
             />
           </Box>
         </Box>
+        {!isDateRangeValid && (
+          <Typography
+            sx={styles.dateRangeError}
+            data-testid="analytics-date-range-error"
+          >
+            &quot;From&quot; date cannot be later than &quot;To&quot; date.
+          </Typography>
+        )}
       </Box>
       <Box
         sx={styles.tabSection}
@@ -546,6 +591,11 @@ const analyticsContainerStyles = () => ({
     background: palette.background.default.tertiary,
   }),
   datePickerRow: { display: 'flex', gap: '0.5rem', alignItems: 'center' },
+  dateRangeError: ({ palette }) => ({
+    color: palette.text.error,
+    fontSize: '.75rem',
+    width: '100%',
+  }),
   datePickerField: ({ palette }) => ({
     display: 'flex',
     alignItems: 'center',

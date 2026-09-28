@@ -26,6 +26,8 @@ const AnalyticsUsers = memo(props => {
       limit: rowsPerPage,
       offset: page * rowsPerPage,
       search,
+      sortBy: 'user_email',
+      sortOrder: 'asc',
     },
     { skip: !projectId },
   );

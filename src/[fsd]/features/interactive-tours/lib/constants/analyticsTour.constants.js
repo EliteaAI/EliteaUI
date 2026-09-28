@@ -22,7 +22,7 @@ export const analyticsTourSteps = [
     title: 'Date Range Controls',
     content: `All tabs share a single date filter that controls the data shown across the entire page.
 
-- **Quick presets** — **Last 24h**, **Last 7d**, **Last 30d**, **Last 90d**; the page loads with **Last 7d** pre-selected
+- **Quick presets** — **Today**, **Last 7d**, **Last 30d**, **Last 90d**; the page loads with **Today** pre-selected
 - **Custom range** — set a precise **From / To** window for targeted analysis
 
 Data is cached for up to 5 minutes.`,

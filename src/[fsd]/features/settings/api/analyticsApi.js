@@ -1,6 +1,6 @@
 import { eliteaApi } from '@/api';
 
-const TAG_TYPE_ANALYTICS = 'ANALYTICS';
+export const TAG_TYPE_ANALYTICS = 'ANALYTICS';
 const CACHE_LIFETIME = 300; // 5 minutes
 
 export const analyticsApi = eliteaApi
@@ -67,6 +67,7 @@ export const analyticsApi = eliteaApi
             method: 'GET',
           };
         },
+        providesTags: [TAG_TYPE_ANALYTICS],
         keepUnusedDataFor: CACHE_LIFETIME,
       }),
       analyticsUserDetail: build.query({
@@ -80,6 +81,7 @@ export const analyticsApi = eliteaApi
             method: 'GET',
           };
         },
+        providesTags: [TAG_TYPE_ANALYTICS],
         keepUnusedDataFor: CACHE_LIFETIME,
       }),
       analyticsTools: build.query({
@@ -106,6 +108,7 @@ export const analyticsApi = eliteaApi
             method: 'GET',
           };
         },
+        providesTags: [TAG_TYPE_ANALYTICS],
         keepUnusedDataFor: CACHE_LIFETIME,
       }),
       analyticsToolDetail: build.query({
@@ -119,6 +122,7 @@ export const analyticsApi = eliteaApi
             method: 'GET',
           };
         },
+        providesTags: [TAG_TYPE_ANALYTICS],
         keepUnusedDataFor: CACHE_LIFETIME,
       }),
       analyticsAgents: build.query({
@@ -145,6 +149,7 @@ export const analyticsApi = eliteaApi
             method: 'GET',
           };
         },
+        providesTags: [TAG_TYPE_ANALYTICS],
         keepUnusedDataFor: CACHE_LIFETIME,
       }),
       analyticsAgentDetail: build.query({
@@ -158,6 +163,7 @@ export const analyticsApi = eliteaApi
             method: 'GET',
           };
         },
+        providesTags: [TAG_TYPE_ANALYTICS],
         keepUnusedDataFor: CACHE_LIFETIME,
       }),
       analyticsCosts: build.query({

@@ -416,7 +416,7 @@ export const GUIDE_SECTIONS = [
       {
         name: 'Date Range',
         description:
-          'All Analytics metrics are filtered by the selected date range. Use Last 24h, Last 7d, Last 30d, or Last 90d for quick selection. To analyze a specific period, select a custom From and To date range. The Custom selector is shown when a custom range is active.',
+          'All Analytics metrics are filtered by the selected date range. Use Today, Last 7d, Last 30d, or Last 90d for calendar-day ranges. Each preset starts at 00:00 on its first day and ends at 23:59 today, including the entire final minute. Last 7d, Last 30d, and Last 90d include today in their day count. To view the last 24 hours or another exact period, set the From and To dates and times manually. The Custom selector appears when a custom range is active.',
       },
       {
         name: 'Project Scope',
