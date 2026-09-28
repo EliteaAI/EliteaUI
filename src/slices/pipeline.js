@@ -34,7 +34,8 @@ const pipelineSlice = createSlice({
     // Which key is currently active (Canvas sets this per-tab; non-Canvas pages use DEFAULT_PIPELINE_KEY)
     activePipelineKey: null,
     // Shared orientation setting (not per-pipeline)
-    orientation: localStorage.getItem(OrientationKey) || ORIENTATION.vertical,
+    orientation:
+      (typeof localStorage !== 'undefined' && localStorage?.getItem(OrientationKey)) || ORIENTATION.vertical,
   },
   reducers: {
     setActivePipelineKey: (state, action) => {
