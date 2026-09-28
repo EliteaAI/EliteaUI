@@ -22,6 +22,7 @@ const ChatTemplateEditor = memo(props => {
     onDelete,
     onSetDefault,
     onUnsetDefault,
+    onCancel,
     isSaving = false,
     nameFieldRef,
     onMounted,
@@ -79,7 +80,9 @@ const ChatTemplateEditor = memo(props => {
   const handleCancel = useCallback(() => {
     setName(savedName);
     setParticipants(savedParticipants);
-  }, [savedName, savedParticipants]);
+    if (unsavedDirtyRef) unsavedDirtyRef.current = false;
+    onCancel?.();
+  }, [savedName, savedParticipants, unsavedDirtyRef, onCancel]);
 
   const handleSetDefault = useCallback(() => {
     onSetDefault?.(template?.id);
@@ -197,7 +200,7 @@ const ChatTemplateEditor = memo(props => {
           <Button.BaseBtn
             variant={BUTTON_VARIANTS.secondary}
             onClick={handleCancel}
-            disabled={!isDirty || isSaving}
+            disabled={isSaving}
           >
             Cancel
           </Button.BaseBtn>

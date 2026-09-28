@@ -20,6 +20,7 @@ const handlers = {
   onDelete: vi.fn(),
   onSetDefault: vi.fn(),
   onUnsetDefault: vi.fn(),
+  onCancel: vi.fn(),
 };
 const renderEditor = template =>
   render(
@@ -60,5 +61,52 @@ describe('ChatTemplateEditor default actions', () => {
   it('allows deleting the default template', () => {
     renderEditor({ id: 5, name: 'Main', participants: [], is_default: true });
     expect(screen.getByRole('button', { name: 'Delete template' })).toBeInTheDocument();
+  });
+});
+
+describe('ChatTemplateEditor Cancel', () => {
+  it('closes an unsaved draft and resets the dirty flag', async () => {
+    const unsavedDirtyRef = { current: false };
+    render(
+      <ThemeProvider theme={theme}>
+        <ChatTemplateEditor
+          template={{ id: null, name: 'Template 1', participants: [] }}
+          unsavedDirtyRef={unsavedDirtyRef}
+          {...handlers}
+        />
+      </ThemeProvider>,
+    );
+    expect(unsavedDirtyRef.current).toBe(true);
+    await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(handlers.onCancel).toHaveBeenCalledTimes(1);
+    expect(unsavedDirtyRef.current).toBe(false);
+  });
+
+  it('discards edits on a saved template and closes the editor', async () => {
+    const unsavedDirtyRef = { current: false };
+    const template = { id: 3, name: 'Sprint', participants: [], is_default: false };
+    render(
+      <ThemeProvider theme={theme}>
+        <ChatTemplateEditor
+          template={template}
+          allTemplates={[template]}
+          unsavedDirtyRef={unsavedDirtyRef}
+          {...handlers}
+        />
+      </ThemeProvider>,
+    );
+    const nameInput = screen.getByDisplayValue('Sprint');
+    await userEvent.clear(nameInput);
+    await userEvent.type(nameInput, 'Renamed');
+    expect(unsavedDirtyRef.current).toBe(true);
+    await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(handlers.onCancel).toHaveBeenCalledTimes(1);
+    expect(handlers.onSave).not.toHaveBeenCalled();
+    expect(unsavedDirtyRef.current).toBe(false);
+  });
+
+  it('keeps Cancel enabled on a saved template without changes', () => {
+    renderEditor({ id: 3, name: 'Sprint', participants: [], is_default: false });
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeEnabled();
   });
 });

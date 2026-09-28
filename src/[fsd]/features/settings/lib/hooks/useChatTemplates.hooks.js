@@ -149,6 +149,13 @@ export const useChatTemplates = projectId => {
     [projectId, unsetDefaultTemplate, toastSuccess, toastError],
   );
 
+  // Discard unsaved draft/edits and close the editor; saved data is untouched
+  const handleCancelEdit = useCallback(() => {
+    unsavedDirtyRef.current = false;
+    setIsNewDraft(false);
+    setSelectedId(null);
+  }, []);
+
   const handleUnsavedDiscard = useCallback(() => {
     unsavedDirtyRef.current = false;
     setShowUnsavedDialog(false);
@@ -184,6 +191,7 @@ export const useChatTemplates = projectId => {
     handleDelete,
     handleSetDefault,
     handleUnsetDefault,
+    handleCancelEdit,
     handleUnsavedDiscard,
     handleUnsavedCancel,
   };
