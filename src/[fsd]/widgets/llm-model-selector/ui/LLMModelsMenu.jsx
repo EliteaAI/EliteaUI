@@ -52,28 +52,39 @@ const LLMModelsMenu = memo(props => {
             {item.shared ? <ShareIcon fontSize="inherit" /> : <BriefcaseIcon fontSize="inherit" />}
           </ListItemIcon>
           <Box sx={styles.itemContent}>
-            <Box sx={styles.itemLeft}>
-              <Typography
-                variant="bodyMedium"
-                sx={styles.itemName}
-              >
-                {item.display_name || item.name}
-              </Typography>
-              {(item.supports_vision || item.supports_reasoning) && (
-                <Box sx={styles.chips}>
-                  {item.supports_vision && (
-                    <CapabilityChip
-                      type="vision"
-                      showTooltip
-                    />
-                  )}
-                  {item.supports_reasoning && (
-                    <CapabilityChip
-                      type="reasoning"
-                      showTooltip
-                    />
-                  )}
-                </Box>
+            <Box sx={styles.itemText}>
+              <Box sx={styles.itemLeft}>
+                <Typography
+                  variant="bodyMedium"
+                  sx={styles.itemName}
+                >
+                  {item.display_name || item.name}
+                </Typography>
+                {(item.supports_vision || item.supports_reasoning) && (
+                  <Box sx={styles.chips}>
+                    {item.supports_vision && (
+                      <CapabilityChip
+                        type="vision"
+                        showTooltip
+                      />
+                    )}
+                    {item.supports_reasoning && (
+                      <CapabilityChip
+                        type="reasoning"
+                        showTooltip
+                      />
+                    )}
+                  </Box>
+                )}
+              </Box>
+              {item.description && (
+                <Typography
+                  variant="bodySmall"
+                  data-testid={`model-selector-option-description-${item.name}`}
+                  sx={styles.itemDescription}
+                >
+                  {item.description}
+                </Typography>
               )}
             </Box>
             {item.id === selectedModel?.id && (
@@ -106,6 +117,11 @@ const styles = {
     minWidth: 0,
     width: '100%',
   },
+  itemText: {
+    display: 'flex',
+    flexDirection: 'column',
+    minWidth: 0,
+  },
   itemLeft: {
     display: 'flex',
     alignItems: 'center',
@@ -120,6 +136,12 @@ const styles = {
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
     color: palette.text.secondary,
+  }),
+  itemDescription: ({ palette }) => ({
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    color: palette.text.primary,
   }),
   chips: {
     display: 'flex',

@@ -73,6 +73,8 @@ export const mapLlmModelSaveErrorToFields = error => {
   const { field, error: message } = error?.data || {};
   if (typeof message !== 'string') return {};
   if (field === LLM_MODEL_FIELDS.id) return { [LLM_MODEL_FIELDS.id]: message };
+  if (field?.split('.').pop() === LLM_MODEL_FIELDS.description)
+    return { [LLM_MODEL_FIELDS.description]: message };
   if (message.includes(DIAL_AZURE_REASONING_REJECTION)) {
     return { [LLM_MODEL_FIELDS.reasoning]: LLM_MODEL_ERROR_MESSAGES.reasoningNotSupportedByProtocol };
   }

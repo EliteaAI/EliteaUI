@@ -4,7 +4,7 @@ import { useFormikContext } from 'formik';
 
 import { Box } from '@mui/material';
 
-import { Input, Select } from '@/[fsd]/shared/ui';
+import { Input, Select, Text } from '@/[fsd]/shared/ui';
 import LockSimple from '@/components/Icons/LockSimple';
 
 import { LlmModelFormConstants } from '../../lib/constants';
@@ -29,6 +29,7 @@ import LlmModelSwitchField from './LlmModelSwitchField';
 const {
   LLM_MODEL_API_PROTOCOL_OPTIONS,
   LLM_MODEL_CREDENTIALS_SECTION,
+  LLM_MODEL_DESCRIPTION_MAX_LENGTH,
   LLM_MODEL_FIELDS: FIELDS,
   LLM_MODEL_MODEL_NAME_HELPER_TEXT,
   LLM_MODEL_SECTIONS: SECTIONS,
@@ -39,6 +40,7 @@ const {
 
 const READ_ONLY_INPUT_PROPS = { readOnly: true };
 const NUMERIC_INPUT_PROPS = { inputMode: 'numeric' };
+const DESCRIPTION_INPUT_PROPS = { maxLength: LLM_MODEL_DESCRIPTION_MAX_LENGTH };
 const CREDENTIALS_SELECT_SX = { marginTop: 0 };
 
 const getCredentialOptionTypeTag = configuration => getLlmModelCredentialTypeTag(configuration?.type);
@@ -124,6 +126,17 @@ const LlmModelForm = memo(props => {
   );
 
   const onIdChange = useCallback(event => editSetting(FIELDS.id, event.target.value), [editSetting]);
+
+  const onDescriptionChange = useCallback(
+    event => editSetting(FIELDS.description, event.target.value),
+    [editSetting],
+  );
+
+  const onDescriptionBlur = useCallback(() => {
+    const trimmedDescription = String(settings.description ?? '').trim();
+    if (trimmedDescription !== (settings.description ?? ''))
+      editSetting(FIELDS.description, trimmedDescription);
+  }, [editSetting, settings.description]);
 
   const onModelNameChange = useCallback(
     event => editSetting(FIELDS.modelName, event.target.value),
@@ -212,6 +225,27 @@ const LlmModelForm = memo(props => {
               />
             )}
           </Box>
+        </LlmModelField>
+        <LlmModelField
+          field={FIELDS.description}
+          error={visibleErrors[FIELDS.description]}
+        >
+          <Input.InputBase
+            id={`llm-model-${FIELDS.description}`}
+            value={settings.description ?? ''}
+            onChange={onDescriptionChange}
+            onBlur={onDescriptionBlur}
+            error={Boolean(visibleErrors[FIELDS.description])}
+            inputProps={DESCRIPTION_INPUT_PROPS}
+            enableAutoBlur={false}
+            autoComplete="off"
+          />
+          <Text.CharacterCounter
+            value={settings.description ?? ''}
+            maxLength={LLM_MODEL_DESCRIPTION_MAX_LENGTH}
+            hideMaxLimitMessage
+            data-testid="llm-model-description-counter"
+          />
         </LlmModelField>
         <LlmModelField
           field={FIELDS.modelName}

@@ -84,6 +84,7 @@ const ConfigurationsPanel = memo(props => {
         defaultSettingOptions={modelOptions}
         onChangeDefaultSetting={onChangeDefaultModel('llm')}
         groupTheModelsByProvider
+        showOptionDescription
         additionalDefaultSettings={[
           {
             key: 'high-tier-model',

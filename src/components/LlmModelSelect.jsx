@@ -92,6 +92,7 @@ const LlmModelSelect = memo(props => {
     return models.map(model => ({
       value: model.name,
       label: model.display_name || model.name,
+      description: model.description,
       icon: isNewConfigurationPersonal(model) ? (
         <Person sx={{ fontSize: '0.875rem' }} />
       ) : (
@@ -147,6 +148,7 @@ const LlmModelSelect = memo(props => {
           value={hasModelsOptions ? value : ''}
           options={optionsWithActions}
           showOptionIcon
+          showOptionDescription
           onValueChange={onSelectModel}
           customRenderValue={customRenderSelectValue}
           error={mergedError}
