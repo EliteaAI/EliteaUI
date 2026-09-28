@@ -1,6 +1,39 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { axisTick, fmtCost, fmtDuration, fmtNum } from '../analyticsCommon.helpers.js';
+import { axisTick, fmtCost, fmtDuration, fmtNum, getPresetRange } from '../analyticsCommon.helpers.js';
+
+describe('getPresetRange', () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
+  it('spans just today for days=0', () => {
+    vi.setSystemTime(new Date('2026-03-15T14:30:00'));
+    const { from, to } = getPresetRange(0);
+    expect(from).toEqual(new Date('2026-03-15T00:00:00'));
+    expect(to).toEqual(new Date('2026-03-15T23:59:59.999'));
+  });
+
+  it('spans 7 calendar days total (today + 6 prior) for days=7', () => {
+    vi.setSystemTime(new Date('2026-03-15T14:30:00'));
+    const { from, to } = getPresetRange(7);
+    expect(from).toEqual(new Date('2026-03-09T00:00:00'));
+    expect(to).toEqual(new Date('2026-03-15T23:59:59.999'));
+  });
+
+  it('crosses a month boundary', () => {
+    vi.setSystemTime(new Date('2026-03-03T09:00:00'));
+    const { from, to } = getPresetRange(7);
+    expect(from).toEqual(new Date('2026-02-25T00:00:00'));
+    expect(to).toEqual(new Date('2026-03-03T23:59:59.999'));
+  });
+
+  it('crosses a year boundary', () => {
+    vi.setSystemTime(new Date('2026-01-02T09:00:00'));
+    const { from, to } = getPresetRange(7);
+    expect(from).toEqual(new Date('2025-12-27T00:00:00'));
+    expect(to).toEqual(new Date('2026-01-02T23:59:59.999'));
+  });
+});
 
 describe('fmtNum', () => {
   it('formats null as dash', () => expect(fmtNum(null)).toBe('-'));

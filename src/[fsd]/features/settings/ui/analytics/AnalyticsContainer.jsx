@@ -111,8 +111,8 @@ const AnalyticsContainer = memo(() => {
   // A cleared field (actionBar "clear" action) sets its date to null, which is a valid
   // "no bound" state, not an invalid range — only flag an actual From > To mismatch.
   const isDateRangeValid = useMemo(() => {
-    const fromValid = dateFrom == null || (dateFrom instanceof Date && !isNaN(dateFrom));
-    const toValid = dateTo == null || (dateTo instanceof Date && !isNaN(dateTo));
+    const fromValid = dateFrom == null || AnalyticCommonHelpers.isValidDate(dateFrom);
+    const toValid = dateTo == null || AnalyticCommonHelpers.isValidDate(dateTo);
     if (!fromValid || !toValid) return false;
     if (dateFrom == null || dateTo == null) return true;
     return dateFrom.getTime() <= dateTo.getTime();
@@ -404,6 +404,7 @@ const AnalyticsContainer = memo(() => {
         </Box>
         {!isDateRangeValid && (
           <Typography
+            variant="bodySmall"
             sx={styles.dateRangeError}
             data-testid="analytics-date-range-error"
           >
@@ -584,7 +585,6 @@ const analyticsContainerStyles = () => ({
   datePickerRow: { display: 'flex', gap: '0.5rem', alignItems: 'center' },
   dateRangeError: ({ palette }) => ({
     color: palette.text.error,
-    fontSize: '.75rem',
     width: '100%',
   }),
   datePickerField: ({ palette }) => ({

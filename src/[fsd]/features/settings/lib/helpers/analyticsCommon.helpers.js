@@ -11,10 +11,9 @@ export const getPresetRange = days => ({
 // user is mid-edit on an out-of-range field (e.g. typing minute "99") — that
 // Date's time value is NaN, and `date.toISOString()` throws RangeError on it
 // instead of returning undefined like a null/undefined date would.
-export const toValidISOString = date => {
-  if (!date || Number.isNaN(date.getTime())) return undefined;
-  return date.toISOString();
-};
+export const isValidDate = date => date instanceof Date && !Number.isNaN(date.getTime());
+
+export const toValidISOString = date => (isValidDate(date) ? date.toISOString() : undefined);
 
 export const fmtNum = n => {
   // Missing data renders as an em-dash, mirroring fmtCost/fmtDuration. A real
