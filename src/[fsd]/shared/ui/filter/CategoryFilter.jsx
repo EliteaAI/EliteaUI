@@ -150,7 +150,7 @@ const componentStyles = () => ({
       textTransform: 'capitalize !important',
     },
     '&.MuiChip-clickable:hover': {
-      backgroundColor: palette.background.surface.interactive.selected,
+      backgroundColor: palette.components.categoryTag.background.hover,
       transform: 'none',
     },
   }),
@@ -170,7 +170,7 @@ const componentStyles = () => ({
       textTransform: 'capitalize !important',
     },
     '&.MuiChip-clickable:hover': {
-      backgroundColor: palette.background.surface.interactive.selected,
+      backgroundColor: palette.components.categoryTag.background.hoverSelected,
       transform: 'none',
     },
   }),

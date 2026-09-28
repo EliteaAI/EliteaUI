@@ -12,7 +12,7 @@ import { convertToJson } from '@/common/utils';
 
 const { GA_EVENT_NAMES, GA_EVENT_PARAMS } = AnalyticConstants;
 
-export function useLikeApplicationCard({ id, name, is_liked, type, viewMode, onSuccess }) {
+export const useLikeApplicationCard = ({ id, name, is_liked, type, viewMode, onSuccess }) => {
   const dispatch = useDispatch();
   const trackEvent = useTrackEvent();
   const { tab } = useParams();
@@ -138,4 +138,4 @@ export function useLikeApplicationCard({ id, name, is_liked, type, viewMode, onS
     handleLikeApplicationClick,
     isLoading,
   };
-}
+};

@@ -414,7 +414,7 @@ const lightPalette = {
     },
     tab: { background: { default: light10, hover: magentaHover, active: magentaDefault, disabled: light20 } },
     categoryTag: {
-      background: { default: white, selected: irisBlue },
+      background: { default: white, hover: light40, selected: irisBlue, hoverSelected: blue02 },
       text: { default: gray60, selected: white },
       shadow: '0 0.125rem 0.25rem 0 #0000000f',
     },
@@ -771,7 +771,7 @@ const lightPalette = {
     },
     deleteAlert: { text: { entityName: darkBlue, body: gray60 } },
     chip: {
-      background: { warning: red15, selected: darkMagenta16, default: dark5 },
+      background: { warning: red15, selected: darkMagenta16, default: dark5, positive: greenOutline40 },
       border: { default: light30, active: magentaDefault },
       text: { default: light10, active: magentaDefault },
     },

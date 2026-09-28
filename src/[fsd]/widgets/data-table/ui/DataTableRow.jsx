@@ -3,6 +3,7 @@ import { memo, useCallback, useMemo, useState } from 'react';
 import { Box, IconButton, TableCell, TableRow, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
+import { LikeButton, useApplicationLike } from '@/[fsd]/entities/like';
 import { PinButton } from '@/[fsd]/widgets/pin-toggler';
 import { useEliteaAssistantRef, useGetSupportAssistantConfigQuery } from '@/[fsd]/widgets/support-assistant';
 import EliteaAssistantIcon from '@/assets/icons/elitea-assistant-icon.svg?react';
@@ -14,7 +15,6 @@ import AuthorContainer from '@/components/AuthorContainer';
 import DataRowAction from '@/components/DataRowAction';
 import { IconLinkWithToolTip } from '@/components/Fork/IconLinkWithToolTip.jsx';
 import HighlightQuery from '@/components/HighlightQuery';
-import Like from '@/components/Like';
 import useCardNavigate from '@/hooks/useCardNavigate';
 import useDataViewMode from '@/hooks/useDataViewMode';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -29,6 +29,7 @@ const DataTableRow = memo(props => {
 
   const { id, name, is_forked: isForked, meta, status, is_pinned: isPinned = false } = row;
   const dataViewMode = useDataViewMode(viewMode, row);
+  const likeProps = useApplicationLike({ data: row, type: cardType, viewMode: dataViewMode });
   const doNavigate = useCardNavigate({
     viewMode: dataViewMode,
     id,
@@ -168,13 +169,7 @@ const DataTableRow = memo(props => {
       );
     }
     if (column.id === SortFields.Likes) {
-      return (
-        <Like
-          viewMode={dataViewMode}
-          type={cardType}
-          data={row}
-        />
-      );
+      return <LikeButton {...likeProps} />;
     }
     if (column.id === 'actions') {
       return (

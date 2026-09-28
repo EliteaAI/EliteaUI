@@ -376,7 +376,6 @@ const agentModalStyles = () => ({
             lineHeight: '1.25rem',
           }
         : {
-            height: '2.5rem',
             display: '-webkit-box',
             WebkitLineClamp: 2,
             WebkitBoxOrient: 'vertical',
