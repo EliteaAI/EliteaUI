@@ -16,6 +16,8 @@ const {
   writeDismissedLevel,
 } = BudgetWarningHelpers;
 
+const BUDGET_WARNING_POLL_MS = 60_000;
+
 let prunedForPeriod = null;
 
 // Whether to warn that a budget is nearing its limit; a dismissal lasts until the next level or period
@@ -27,10 +29,16 @@ export const useBudgetWarning = ({ projectId } = {}) => {
   const isEnforcing = Boolean(platformSettings?.cost_budgets_enforcing);
   const dismissibleByAdmin = platformSettings?.cost_budgets_warning_dismissible !== false;
 
-  // Re-ask on mount once the backend's 60s cache could have moved, so a newly crossed level shows
-  const { data } = useGetBudgetWarningQuery(
+  // Polls at the backend's 60s cache interval, so a level crossed while a chat stays open still shows.
+  // currentData, not data: after a project switch data still holds the previous project's warning.
+  const { currentData: data } = useGetBudgetWarningQuery(
     { projectId },
-    { skip: !isEnforcing || !projectId, refetchOnMountOrArgChange: 60 },
+    {
+      skip: !isEnforcing || !projectId,
+      refetchOnMountOrArgChange: 60,
+      pollingInterval: BUDGET_WARNING_POLL_MS,
+      skipPollingIfUnfocused: true,
+    },
   );
 
   const period = budgetPeriod();
