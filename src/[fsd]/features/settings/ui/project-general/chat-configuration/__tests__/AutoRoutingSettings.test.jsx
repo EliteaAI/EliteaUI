@@ -17,6 +17,7 @@ const api = vi.hoisted(() => ({
   refresh: vi.fn(),
   refetch: vi.fn(),
   permitted: true,
+  autoEnabled: true,
   toastError: vi.fn(),
 }));
 vi.mock('@/api/configurations', async importOriginal => ({
@@ -27,7 +28,7 @@ vi.mock('@/api/configurations', async importOriginal => ({
     data: { items: api.current ? [api.current] : [] },
     refetch: api.refresh,
   }),
-  useListModelsQuery: () => ({ data: { auto_routing: { enabled: true } }, refetch: api.refetch }),
+  useListModelsQuery: () => ({ data: { auto_routing: { enabled: api.autoEnabled } }, refetch: api.refetch }),
 }));
 vi.mock('@/hooks/useSelectedProject', () => ({ useSelectedProjectId: () => 2 }));
 vi.mock('@/hooks/useCheckPermission', () => ({ default: () => ({ checkPermission: () => api.permitted }) }));
@@ -45,12 +46,27 @@ beforeEach(() => {
   vi.clearAllMocks();
   api.current = undefined;
   api.permitted = true;
+  api.autoEnabled = true;
   api.create.mockReturnValue({ unwrap: () => Promise.resolve() });
   api.update.mockReturnValue({ unwrap: () => Promise.resolve() });
 });
 afterEach(cleanup);
 
 describe('project Auto permission and configuration', () => {
+  it('renders as a card with the title, info icon and description', () => {
+    renderSettings();
+    expect(screen.getByText('Auto model selection')).toBeInTheDocument();
+    expect(screen.getByText('Allow Auto model selection in chats and standard agents.')).toBeInTheDocument();
+    expect(screen.getByTestId('auto-routing-info-tooltip')).toBeInTheDocument();
+    expect(screen.queryByTestId('auto-routing-disabled-hint')).not.toBeInTheDocument();
+  });
+  it('shows a hint when Auto is disabled by project or platform settings', () => {
+    api.autoEnabled = false;
+    renderSettings();
+    expect(screen.getByTestId('auto-routing-disabled-hint')).toHaveTextContent(
+      'Currently disabled by project or platform settings.',
+    );
+  });
   it('creates an explicit project opt-in and refreshes availability', async () => {
     renderSettings();
     await userEvent.click(screen.getByRole('combobox'));
