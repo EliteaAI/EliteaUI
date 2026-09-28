@@ -5,3 +5,4 @@ export * as CredentialErrorHelpers from './credentialError.helpers';
 export * as CredentialVisibilityHelpers from './credentialVisibility.helpers';
 export * as ApiProtocolHelpers from './apiProtocol.helpers.js';
 export * as CredentialLabelHelpers from './credentialLabel.helpers';
+export * as CredentialsListHelpers from './credentialsList.helpers';
