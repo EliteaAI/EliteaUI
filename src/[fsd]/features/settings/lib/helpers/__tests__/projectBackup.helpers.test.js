@@ -20,6 +20,20 @@ describe('getRestoreErrorMessage', () => {
     expect(message).not.toContain('allow_project_mismatch');
   });
 
+  it('names the UI checkbox on a project mismatch that arrives without the artifact', () => {
+    const message = getRestoreErrorMessage({
+      status: 409,
+      data: {
+        error:
+          'artifact belongs to project 12; pass allow_project_mismatch=true to restore it into project 7',
+      },
+    });
+
+    expect(message).toBe(
+      'This backup was taken from another project. Check "Restore here anyway" to restore it into this project.',
+    );
+  });
+
   it('replaces the access_denied code with a readable message', () => {
     expect(getRestoreErrorMessage({ status: 403, data: { ok: false, error: 'access_denied' } })).toBe(
       'You do not have permission to restore data into this project.',

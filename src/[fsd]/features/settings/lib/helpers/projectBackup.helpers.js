@@ -1,5 +1,7 @@
 import { ProjectBackupConstants } from '@/[fsd]/features/settings/lib/constants';
 
+const { RESTORE_OPTION_LABELS } = ProjectBackupConstants;
+
 export const formatSize = bytes => {
   if (!bytes) return '0 B';
   const units = ['B', 'KB', 'MB', 'GB'];
@@ -16,10 +18,11 @@ export const formatSize = bytes => {
 // allow_project_mismatch, codes such as access_denied); translate the ones the
 // dialog can trigger into the wording of its own controls
 export const getRestoreErrorMessage = error => {
-  const { RESTORE_OPTION_LABELS } = ProjectBackupConstants;
   const data = error?.data;
 
-  if (error?.status === 409 && data?.artifact) {
+  // The artifact is what the dialog needs to offer the checkbox; the parameter
+  // name in the text is a fallback in case the payload shape changes
+  if (error?.status === 409 && (data?.artifact || data?.error?.includes('allow_project_mismatch'))) {
     return `This backup was taken from another project. Check "${RESTORE_OPTION_LABELS.allowMismatch}" to restore it into this project.`;
   }
 
