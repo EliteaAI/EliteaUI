@@ -179,7 +179,7 @@ const getStyles = () => ({
   }),
   content: {
     display: 'flex',
-    padding: `${SPACING.MD} ${SPACING.SM}`,
+    padding: `0 ${SPACING.SM}`,
     gap: SPACING.MD,
     width: '100%',
     alignItems: 'center',
@@ -215,9 +215,7 @@ const getStyles = () => ({
     fontWeight: 500,
   },
   description: {
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
+    overflowWrap: 'anywhere',
   },
   statusText: {
     overflow: 'hidden',
