@@ -21,6 +21,7 @@ const ChatTemplateEditor = memo(props => {
     onSave,
     onDelete,
     onSetDefault,
+    onUnsetDefault,
     isSaving = false,
     nameFieldRef,
     onMounted,
@@ -42,6 +43,8 @@ const ChatTemplateEditor = memo(props => {
   const savedName = useMemo(() => template?.name ?? '', [template?.name]);
   const savedParticipants = useMemo(() => template?.participants ?? [], [template?.participants]);
   const isDefault = template?.is_default ?? false;
+  // Unsaved drafts have no id yet — default/delete actions apply only to saved templates
+  const isSaved = template?.id != null;
 
   const nameError = useMemo(() => {
     const trimmed = name.trim();
@@ -82,6 +85,10 @@ const ChatTemplateEditor = memo(props => {
     onSetDefault?.(template?.id);
   }, [onSetDefault, template?.id]);
 
+  const handleUnsetDefault = useCallback(() => {
+    onUnsetDefault?.(template?.id);
+  }, [onUnsetDefault, template?.id]);
+
   const handleDeleteConfirm = useCallback(() => {
     setShowDeleteDialog(false);
     onDelete?.(template?.id);
@@ -121,7 +128,7 @@ const ChatTemplateEditor = memo(props => {
         </Box>
 
         <Box sx={styles.actions}>
-          {canEdit && !isDefault && (
+          {canEdit && isSaved && !isDefault && (
             <Button.BaseBtn
               variant={BUTTON_VARIANTS.secondary}
               onClick={handleSetDefault}
@@ -132,7 +139,18 @@ const ChatTemplateEditor = memo(props => {
               Set as default
             </Button.BaseBtn>
           )}
-          {canEdit && !isDefault && (
+          {canEdit && isSaved && isDefault && (
+            <Button.BaseBtn
+              variant={BUTTON_VARIANTS.secondary}
+              onClick={handleUnsetDefault}
+              startIcon={<StarIcon fill={theme.palette.icon.default} />}
+              disabled={isSaving}
+              title="Unset default"
+            >
+              Unset default
+            </Button.BaseBtn>
+          )}
+          {canEdit && isSaved && (
             <Button.BaseBtn
               variant={BUTTON_VARIANTS.tertiary}
               onClick={() => setShowDeleteDialog(true)}
@@ -201,8 +219,8 @@ const ChatTemplateEditor = memo(props => {
         title="Delete template?"
         content={
           <Typography variant="bodySmall">
-            &quot;{template.name}&quot; will be removed. Existing chats keep their participants. This
-            can&apos;t be undone.
+            &quot;{template.name}&quot; will be removed. Existing chats keep their participants.
+            {isDefault && ' New chats will start without a default template.'} This can&apos;t be undone.
           </Typography>
         }
         onClose={handleDeleteCancel}

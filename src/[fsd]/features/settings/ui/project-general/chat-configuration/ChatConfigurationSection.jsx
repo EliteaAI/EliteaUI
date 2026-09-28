@@ -44,6 +44,7 @@ const ChatConfigurationSection = memo(() => {
     handleSave,
     handleDelete,
     handleSetDefault,
+    handleUnsetDefault,
     handleUnsavedDiscard,
     handleUnsavedCancel,
   } = useChatTemplates(projectId);
@@ -88,6 +89,7 @@ const ChatConfigurationSection = memo(() => {
           onSave={canEdit ? handleSave : undefined}
           onDelete={canEdit ? handleDelete : undefined}
           onSetDefault={canEdit ? handleSetDefault : undefined}
+          onUnsetDefault={canEdit ? handleUnsetDefault : undefined}
           isSaving={isBusy}
           nameFieldRef={nameFieldRef}
           onMounted={handleEditorMounted}

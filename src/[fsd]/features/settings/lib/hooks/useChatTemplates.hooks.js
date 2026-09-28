@@ -5,6 +5,7 @@ import {
   useDeleteChatTemplateMutation,
   useGetChatTemplatesQuery,
   useSetDefaultChatTemplateMutation,
+  useUnsetDefaultChatTemplateMutation,
   useUpdateChatTemplateMutation,
 } from '@/[fsd]/features/settings/api';
 import useToast from '@/hooks/useToast';
@@ -51,8 +52,9 @@ export const useChatTemplates = projectId => {
   const [updateTemplate, { isLoading: isUpdating }] = useUpdateChatTemplateMutation();
   const [deleteTemplate, { isLoading: isDeleting }] = useDeleteChatTemplateMutation();
   const [setDefaultTemplate, { isLoading: isSettingDefault }] = useSetDefaultChatTemplateMutation();
+  const [unsetDefaultTemplate, { isLoading: isUnsettingDefault }] = useUnsetDefaultChatTemplateMutation();
 
-  const isBusy = isCreating || isUpdating || isDeleting || isSettingDefault;
+  const isBusy = isCreating || isUpdating || isDeleting || isSettingDefault || isUnsettingDefault;
 
   const { toastError, toastSuccess } = useToast();
 
@@ -135,6 +137,18 @@ export const useChatTemplates = projectId => {
     [projectId, setDefaultTemplate, toastSuccess, toastError],
   );
 
+  const handleUnsetDefault = useCallback(
+    async id => {
+      try {
+        await unsetDefaultTemplate({ projectId, templateId: id }).unwrap();
+        toastSuccess('Default template removed');
+      } catch {
+        toastError('Failed to unset default template');
+      }
+    },
+    [projectId, unsetDefaultTemplate, toastSuccess, toastError],
+  );
+
   const handleUnsavedDiscard = useCallback(() => {
     unsavedDirtyRef.current = false;
     setShowUnsavedDialog(false);
@@ -169,6 +183,7 @@ export const useChatTemplates = projectId => {
     handleSave,
     handleDelete,
     handleSetDefault,
+    handleUnsetDefault,
     handleUnsavedDiscard,
     handleUnsavedCancel,
   };

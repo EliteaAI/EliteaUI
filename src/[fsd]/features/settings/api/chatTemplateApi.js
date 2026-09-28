@@ -51,8 +51,19 @@ const chatTemplateApi = eliteaApi
 
       setDefaultChatTemplate: build.mutation({
         query: ({ projectId, templateId }) => ({
-          url: `${apiSlicePath}/chat_templates/prompt_lib/${projectId}/templates/${templateId}/set-default`,
+          url: `${apiSlicePath}/chat_template_default/prompt_lib/${projectId}/templates/${templateId}/set-default`,
           method: 'POST',
+        }),
+        invalidatesTags: (_, error, { projectId }) => {
+          if (error) return [];
+          return [{ type: TAG_TYPE_CHAT_TEMPLATES, id: projectId }];
+        },
+      }),
+
+      unsetDefaultChatTemplate: build.mutation({
+        query: ({ projectId, templateId }) => ({
+          url: `${apiSlicePath}/chat_template_default/prompt_lib/${projectId}/templates/${templateId}/set-default`,
+          method: 'DELETE',
         }),
         invalidatesTags: (_, error, { projectId }) => {
           if (error) return [];
@@ -68,4 +79,5 @@ export const {
   useUpdateChatTemplateMutation,
   useDeleteChatTemplateMutation,
   useSetDefaultChatTemplateMutation,
+  useUnsetDefaultChatTemplateMutation,
 } = chatTemplateApi;
