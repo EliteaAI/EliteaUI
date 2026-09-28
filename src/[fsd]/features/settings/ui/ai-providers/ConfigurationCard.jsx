@@ -29,7 +29,10 @@ const ConfigurationCard = memo(props => {
   );
 
   const displayName = useMemo(() => getConfigurationDisplayName(configuration), [configuration]);
-  const description = configuration.section === 'llm' ? configuration.data?.description : undefined;
+  const description = useMemo(
+    () => (configuration.section === 'llm' ? configuration.data?.description : undefined),
+    [configuration],
+  );
 
   const statusText = useMemo(
     () => getConfigurationStatus(configuration, isShared),
