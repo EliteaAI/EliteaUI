@@ -95,16 +95,8 @@ const AnalyticsContainer = memo(() => {
   const styles = analyticsContainerStyles();
 
   const [selectedDatePreset, setSelectedDatePreset] = useState(0);
-  const [dateFrom, setDateFrom] = useState(() => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    return d;
-  });
-  const [dateTo, setDateTo] = useState(() => {
-    const d = new Date();
-    d.setHours(23, 59, 59, 999);
-    return d;
-  });
+  const [dateFrom, setDateFrom] = useState(() => AnalyticCommonHelpers.getPresetRange(0).from);
+  const [dateTo, setDateTo] = useState(() => AnalyticCommonHelpers.getPresetRange(0).to);
   const [fromOpen, setFromOpen] = useState(false);
   const [toOpen, setToOpen] = useState(false);
 
@@ -116,15 +108,15 @@ const AnalyticsContainer = memo(() => {
   const [exportError, setExportError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  const isDateRangeValid = useMemo(
-    () =>
-      dateFrom instanceof Date &&
-      dateTo instanceof Date &&
-      !isNaN(dateFrom) &&
-      !isNaN(dateTo) &&
-      dateFrom.getTime() <= dateTo.getTime(),
-    [dateFrom, dateTo],
-  );
+  // A cleared field (actionBar "clear" action) sets its date to null, which is a valid
+  // "no bound" state, not an invalid range — only flag an actual From > To mismatch.
+  const isDateRangeValid = useMemo(() => {
+    const fromValid = dateFrom == null || (dateFrom instanceof Date && !isNaN(dateFrom));
+    const toValid = dateTo == null || (dateTo instanceof Date && !isNaN(dateTo));
+    if (!fromValid || !toValid) return false;
+    if (dateFrom == null || dateTo == null) return true;
+    return dateFrom.getTime() <= dateTo.getTime();
+  }, [dateFrom, dateTo]);
 
   const [committedRange, setCommittedRange] = useState(() => ({ from: dateFrom, to: dateTo }));
 
@@ -193,15 +185,7 @@ const AnalyticsContainer = memo(() => {
 
     if (newDays === CUSTOM_PRESET_VALUE) return;
 
-    // Calendar-day-aligned, inclusive of today: "Last 7d" spans 7 calendar days
-    // total (today + 6 prior), not 7 days back from today.
-    const from = new Date();
-    from.setDate(from.getDate() - Math.max(newDays - 1, 0));
-    from.setHours(0, 0, 0, 0);
-
-    const to = new Date();
-    to.setHours(23, 59, 59, 999);
-
+    const { from, to } = AnalyticCommonHelpers.getPresetRange(newDays);
     setDateFrom(from);
     setDateTo(to);
   }, []);
@@ -269,10 +253,17 @@ const AnalyticsContainer = memo(() => {
 
   const handleRefresh = useCallback(() => {
     setRefreshing(true);
-    // Re-fetch every analytics endpoint without moving the committed date boundaries,
-    // so refresh reflects new events within the same calendar-day window (#6791).
+
+    // A preset's boundaries are relative to "now", so a page left open past midnight
+    // needs its range recomputed on refresh, not just its cache invalidated (#6791).
+    if (selectedDatePreset !== CUSTOM_PRESET_VALUE) {
+      const { from, to } = AnalyticCommonHelpers.getPresetRange(selectedDatePreset);
+      setDateFrom(from);
+      setDateTo(to);
+    }
+
     store.dispatch(analyticsApi.util.invalidateTags([TAG_TYPE_ANALYTICS]));
-  }, [store]);
+  }, [store, selectedDatePreset]);
 
   useEffect(() => {
     if (refreshing && !overviewFetching) {
