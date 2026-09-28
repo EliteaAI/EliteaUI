@@ -1,11 +1,19 @@
+import { endOfDay, startOfDay, subDays } from 'date-fns';
+
+// Calendar-day-aligned, inclusive of today: days=7 spans 7 calendar days total
+// (today + 6 prior) starting at 00:00, not 7 days back from the current time.
+export const getPresetRange = days => ({
+  from: startOfDay(subDays(new Date(), Math.max(days - 1, 0))),
+  to: endOfDay(new Date()),
+});
+
 // MUI's DateTimePicker calls onChange with a real Date instance even while the
 // user is mid-edit on an out-of-range field (e.g. typing minute "99") — that
 // Date's time value is NaN, and `date.toISOString()` throws RangeError on it
 // instead of returning undefined like a null/undefined date would.
-export const toValidISOString = date => {
-  if (!date || Number.isNaN(date.getTime())) return undefined;
-  return date.toISOString();
-};
+export const isValidDate = date => date instanceof Date && !Number.isNaN(date.getTime());
+
+export const toValidISOString = date => (isValidDate(date) ? date.toISOString() : undefined);
 
 export const fmtNum = n => {
   // Missing data renders as an em-dash, mirroring fmtCost/fmtDuration. A real
