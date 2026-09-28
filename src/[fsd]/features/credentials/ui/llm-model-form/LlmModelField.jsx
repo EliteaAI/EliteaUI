@@ -2,15 +2,15 @@ import { memo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { LlmModelFormConstants } from '../../lib/constants';
-import LlmModelFieldInfo from './LlmModelFieldInfo';
+import { Label } from '@/[fsd]/shared/ui';
 
-const { LLM_MODEL_FIELD_ERROR_ATTRIBUTE, LLM_MODEL_FIELD_LABELS } = LlmModelFormConstants;
+import { LlmModelFormConstants } from '../../lib/constants';
+
+const { LLM_MODEL_FIELD_ERROR_ATTRIBUTE, LLM_MODEL_FIELD_INFO_TEXTS, LLM_MODEL_FIELD_LABELS } =
+  LlmModelFormConstants;
 
 const LlmModelField = memo(props => {
-  const { field, required, error, helperText, warning, isInfoOpen, onInfoToggle, onInfoClose, children, sx } =
-    props;
-  const label = LLM_MODEL_FIELD_LABELS[field];
+  const { field, required, error, helperText, warning, children, sx } = props;
   const styles = llmModelFieldStyles();
 
   return (
@@ -19,23 +19,13 @@ const LlmModelField = memo(props => {
       data-testid={`llm-model-field-${field}`}
       {...{ [LLM_MODEL_FIELD_ERROR_ATTRIBUTE]: error ? true : undefined }}
     >
-      <Box sx={styles.labelRow}>
-        <Typography
-          component="label"
-          htmlFor={`llm-model-${field}`}
-          variant="bodySmall"
-          sx={styles.label}
-        >
-          {required ? `${label} *` : label}
-        </Typography>
-        <LlmModelFieldInfo
-          field={field}
-          label={label}
-          isOpen={isInfoOpen}
-          onToggle={onInfoToggle}
-          onClose={onInfoClose}
-        />
-      </Box>
+      <Label.InfoLabelWithTooltip
+        label={LLM_MODEL_FIELD_LABELS[field]}
+        required={required}
+        tooltip={LLM_MODEL_FIELD_INFO_TEXTS[field]}
+        tooltipTestId={`llm-model-info-${field}`}
+        tooltipContentTestId={`llm-model-info-text-${field}`}
+      />
       {children}
       {warning && (
         <Typography
@@ -79,14 +69,6 @@ const llmModelFieldStyles = () => ({
     gap: '0.25rem',
     minWidth: 0,
   },
-  labelRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.25rem',
-  },
-  label: ({ palette }) => ({
-    color: palette.text.primary,
-  }),
   helperText: ({ palette }) => ({
     color: palette.text.primary,
   }),

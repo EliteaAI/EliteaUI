@@ -8,7 +8,7 @@ import { ThemeProvider, createTheme } from '@mui/material';
 
 import lightPalette from '@/lightPalette';
 import '@testing-library/jest-dom/vitest';
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import LlmModelForm from '../LlmModelForm';
@@ -520,59 +520,59 @@ describe('LlmModelForm', () => {
     );
   });
 
-  describe('info popovers', () => {
-    const infoButtonOf = field => screen.getByTestId(`llm-model-info-button-${field}`);
+  describe('info tooltips', () => {
+    const INFO_FIELDS = [
+      'label',
+      'elitea_title',
+      'name',
+      'context_window',
+      'max_output_tokens',
+      'supports_vision',
+      'supports_reasoning',
+      'model_tier',
+      'shared',
+      'ai_credentials',
+      'api_protocol',
+      'openai_compatible',
+    ];
 
-    it('gives every field an info text', () => {
+    it('gives every field an info icon', () => {
       renderForm(EXISTING_DIAL_MODEL);
-      expect(screen.getAllByRole('button', { name: /^About / })).toHaveLength(12);
+      INFO_FIELDS.forEach(field => expect(screen.getByTestId(`llm-model-info-${field}`)).toBeInTheDocument());
     });
 
-    it('opens one popover at a time and closes it on Esc', async () => {
+    it('shows the info text on hover and hides it when the pointer leaves', async () => {
       const user = userEvent.setup();
       renderForm(NEW_MODEL);
 
-      await user.click(infoButtonOf('context_window'));
-      expect(screen.getByRole('dialog', { name: 'About Context window' })).toHaveTextContent(
+      await user.hover(screen.getByTestId('llm-model-info-context_window'));
+      expect(await screen.findByTestId('llm-model-info-text-context_window')).toHaveTextContent(
         'Total tokens the model can handle in one request, input and output combined.',
       );
-      expect(infoButtonOf('context_window')).toHaveAttribute('aria-expanded', 'true');
 
-      await user.click(infoButtonOf('supports_vision'));
-      expect(screen.queryByRole('dialog', { name: 'About Context window' })).not.toBeInTheDocument();
-      expect(screen.getByRole('dialog', { name: 'About Vision' })).toBeInTheDocument();
-
-      await user.keyboard('{Escape}');
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      await user.unhover(screen.getByTestId('llm-model-info-context_window'));
+      await waitFor(() =>
+        expect(screen.queryByTestId('llm-model-info-text-context_window')).not.toBeInTheDocument(),
+      );
     });
 
-    it('closes on the close button and on a click outside', async () => {
+    it('renders the bold parts of an info text in bold', async () => {
       const user = userEvent.setup();
       renderForm(NEW_MODEL);
 
-      await user.click(infoButtonOf('label'));
-      const popover = screen.getByRole('dialog', { name: 'About Display name' });
-      expect(within(popover).getByText('Claude Sonnet 5 (Bedrock)').tagName).toBe('B');
-      await user.click(within(popover).getByRole('button', { name: 'Close' }));
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-
-      await user.click(infoButtonOf('label'));
-      await user.click(screen.getByText('Model name *'));
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      await user.hover(screen.getByTestId('llm-model-info-label'));
+      const tooltip = await screen.findByTestId('llm-model-info-text-label');
+      expect(within(tooltip).getByText('Claude Sonnet 5 (Bedrock)').tagName).toBe('STRONG');
     });
 
-    it('opens from the keyboard', async () => {
+    it('shows the info text on hover for switch fields', async () => {
       const user = userEvent.setup();
       renderForm(NEW_MODEL);
 
-      infoButtonOf('shared').focus();
-      await user.keyboard('{Enter}');
-      expect(screen.getByRole('dialog', { name: 'About Shared' })).toBeInTheDocument();
-
-      await user.keyboard('{Escape}');
-      expect(infoButtonOf('shared')).toHaveFocus();
-      await user.keyboard(' ');
-      expect(screen.getByRole('dialog', { name: 'About Shared' })).toBeInTheDocument();
+      await user.hover(screen.getByTestId('llm-model-info-supports_vision'));
+      expect(await screen.findByTestId('llm-model-info-text-supports_vision')).toHaveTextContent(
+        "The model accepts images as input. When off, image attachments aren't sent to this model.",
+      );
     });
   });
 });

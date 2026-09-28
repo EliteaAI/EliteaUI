@@ -2,29 +2,31 @@ import { memo, useCallback, useMemo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { Switch } from '@/[fsd]/shared/ui';
+import { Label, Switch } from '@/[fsd]/shared/ui';
 
 import { LlmModelFormConstants } from '../../lib/constants';
-import LlmModelFieldInfo from './LlmModelFieldInfo';
 
-const { LLM_MODEL_FIELD_ERROR_ATTRIBUTE, LLM_MODEL_FIELD_LABELS, LLM_MODEL_SWITCH_DESCRIPTIONS } =
-  LlmModelFormConstants;
+const {
+  LLM_MODEL_FIELD_ERROR_ATTRIBUTE,
+  LLM_MODEL_FIELD_INFO_TEXTS,
+  LLM_MODEL_FIELD_LABELS,
+  LLM_MODEL_SWITCH_DESCRIPTIONS,
+} = LlmModelFormConstants;
 
 const LlmModelSwitchField = memo(props => {
-  const { field, checked, onChange, error, isInfoOpen, onInfoToggle, onInfoClose } = props;
+  const { field, checked, onChange, error } = props;
   const label = LLM_MODEL_FIELD_LABELS[field];
-  const titleId = `llm-model-${field}-title`;
   const styles = llmModelSwitchFieldStyles();
 
   const switchSlotProps = useMemo(
     () => ({
       switch: {
         slotProps: {
-          input: { role: 'switch', 'aria-labelledby': titleId, 'data-testid': `llm-model-switch-${field}` },
+          input: { role: 'switch', 'aria-label': label, 'data-testid': `llm-model-switch-${field}` },
         },
       },
     }),
-    [titleId, field],
+    [label, field],
   );
 
   const handleChange = useCallback((event, isChecked) => onChange(field, isChecked), [field, onChange]);
@@ -37,22 +39,14 @@ const LlmModelSwitchField = memo(props => {
     >
       <Box sx={styles.row}>
         <Box sx={styles.text}>
-          <Box sx={styles.titleRow}>
-            <Typography
-              id={titleId}
-              variant="labelMedium"
-              sx={styles.title}
-            >
-              {label}
-            </Typography>
-            <LlmModelFieldInfo
-              field={field}
-              label={label}
-              isOpen={isInfoOpen}
-              onToggle={onInfoToggle}
-              onClose={onInfoClose}
-            />
-          </Box>
+          <Label.InfoLabelWithTooltip
+            label={label}
+            variant="labelMedium"
+            labelSx={styles.title}
+            tooltip={LLM_MODEL_FIELD_INFO_TEXTS[field]}
+            tooltipTestId={`llm-model-info-${field}`}
+            tooltipContentTestId={`llm-model-info-text-${field}`}
+          />
           <Typography
             variant="bodySmall"
             sx={styles.description}
@@ -100,11 +94,6 @@ const llmModelSwitchFieldStyles = () => ({
     flexDirection: 'column',
     gap: '0.125rem',
     minWidth: 0,
-  },
-  titleRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.25rem',
   },
   title: ({ palette }) => ({
     color: palette.text.secondary,

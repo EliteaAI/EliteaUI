@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo } from 'react';
 
 import { useFormikContext } from 'formik';
 
@@ -48,7 +48,6 @@ const LlmModelForm = memo(props => {
   const isEditing = Boolean(editToolDetail?.id);
   const { initialValues } = useFormikContext();
   const initialSettings = initialValues?.settings;
-  const [openInfoField, setOpenInfoField] = useState(null);
   const styles = llmModelFormStyles();
 
   const { credentialType, isCredentialTypePending } = useLlmModelCredentialType(settings.ai_credentials);
@@ -93,16 +92,6 @@ const LlmModelForm = memo(props => {
       ...validationErrorMessages,
     }),
     [errors, settings, initialSettings, isEditing, showValidation, validationErrorMessages],
-  );
-
-  const onInfoToggle = useCallback(
-    field => setOpenInfoField(current => (current === field ? null : field)),
-    [],
-  );
-
-  const onInfoClose = useCallback(
-    field => setOpenInfoField(current => (current === field ? null : current)),
-    [],
   );
 
   const hasVisibleErrorIn = section => section.fields.some(field => visibleErrors[field]);
@@ -176,9 +165,6 @@ const LlmModelForm = memo(props => {
           field={FIELDS.displayName}
           required
           error={visibleErrors[FIELDS.displayName]}
-          isInfoOpen={openInfoField === FIELDS.displayName}
-          onInfoToggle={onInfoToggle}
-          onInfoClose={onInfoClose}
         >
           <Input.InputBase
             id={`llm-model-${FIELDS.displayName}`}
@@ -193,9 +179,6 @@ const LlmModelForm = memo(props => {
           field={FIELDS.id}
           required
           error={visibleErrors[FIELDS.id]}
-          isInfoOpen={openInfoField === FIELDS.id}
-          onInfoToggle={onInfoToggle}
-          onInfoClose={onInfoClose}
         >
           <Box sx={styles.idRow}>
             <Input.InputBase
@@ -221,9 +204,6 @@ const LlmModelForm = memo(props => {
           required
           error={visibleErrors[FIELDS.modelName]}
           helperText={LLM_MODEL_MODEL_NAME_HELPER_TEXT}
-          isInfoOpen={openInfoField === FIELDS.modelName}
-          onInfoToggle={onInfoToggle}
-          onInfoClose={onInfoClose}
         >
           <Input.InputBase
             id={`llm-model-${FIELDS.modelName}`}
@@ -248,9 +228,6 @@ const LlmModelForm = memo(props => {
               field={field}
               required
               error={visibleErrors[field]}
-              isInfoOpen={openInfoField === field}
-              onInfoToggle={onInfoToggle}
-              onInfoClose={onInfoClose}
               sx={styles.limitField}
             >
               <Input.InputBase
@@ -279,9 +256,6 @@ const LlmModelForm = memo(props => {
             checked={settings[field]}
             onChange={onSwitchChange}
             error={visibleErrors[field]}
-            isInfoOpen={openInfoField === field}
-            onInfoToggle={onInfoToggle}
-            onInfoClose={onInfoClose}
           />
         ))}
       </LlmModelFormSection>
@@ -294,9 +268,6 @@ const LlmModelForm = memo(props => {
           field={FIELDS.modelTier}
           error={visibleErrors[FIELDS.modelTier]}
           warning={hasConflictingLlmModelTiers(settings) ? LLM_MODEL_TIER_CONFLICT_WARNING : undefined}
-          isInfoOpen={openInfoField === FIELDS.modelTier}
-          onInfoToggle={onInfoToggle}
-          onInfoClose={onInfoClose}
         >
           <Select.SingleSelect
             id={`llm-model-${FIELDS.modelTier}`}
@@ -315,9 +286,6 @@ const LlmModelForm = memo(props => {
           field={FIELDS.shared}
           checked={settings.shared}
           onChange={onSwitchChange}
-          isInfoOpen={openInfoField === FIELDS.shared}
-          onInfoToggle={onInfoToggle}
-          onInfoClose={onInfoClose}
         />
       </LlmModelFormSection>
 
@@ -329,9 +297,6 @@ const LlmModelForm = memo(props => {
           field={FIELDS.credentials}
           required
           error={visibleErrors[FIELDS.credentials] || visibleErrors[FIELDS.credentialsCheck]}
-          isInfoOpen={openInfoField === FIELDS.credentials}
-          onInfoToggle={onInfoToggle}
-          onInfoClose={onInfoClose}
         >
           <CredentialsSelect
             label=""
@@ -349,9 +314,6 @@ const LlmModelForm = memo(props => {
             field={FIELDS.apiProtocol}
             required
             error={visibleErrors[FIELDS.apiProtocol]}
-            isInfoOpen={openInfoField === FIELDS.apiProtocol}
-            onInfoToggle={onInfoToggle}
-            onInfoClose={onInfoClose}
           >
             <Select.SingleSelect
               id={`llm-model-${FIELDS.apiProtocol}`}
@@ -371,9 +333,6 @@ const LlmModelForm = memo(props => {
           field={FIELDS.openaiCompatible}
           checked={settings.openai_compatible}
           onChange={onSwitchChange}
-          isInfoOpen={openInfoField === FIELDS.openaiCompatible}
-          onInfoToggle={onInfoToggle}
-          onInfoClose={onInfoClose}
         />
       </LlmModelFormSection>
     </Box>
