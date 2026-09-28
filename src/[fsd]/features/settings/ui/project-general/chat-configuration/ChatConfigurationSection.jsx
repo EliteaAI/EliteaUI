@@ -83,6 +83,7 @@ const ChatConfigurationSection = memo(() => {
           template={selectedTemplate}
           allTemplates={templates}
           isTeamProject={isTeam}
+          canEdit={canEdit}
           onSave={canEdit ? handleSave : undefined}
           onDelete={canEdit ? handleDelete : undefined}
           onSetDefault={canEdit ? handleSetDefault : undefined}

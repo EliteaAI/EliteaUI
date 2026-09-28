@@ -17,6 +17,7 @@ const ChatTemplateEditor = memo(props => {
     template,
     allTemplates = [],
     isTeamProject,
+    canEdit = true,
     onSave,
     onDelete,
     onSetDefault,
@@ -113,14 +114,14 @@ const ChatTemplateEditor = memo(props => {
             variant={INPUT_VARIANTS.standard}
             error={!!nameError && name !== savedName}
             helperText={name !== savedName && nameError ? nameError : undefined}
-            disabled={isSaving}
+            disabled={isSaving || !canEdit}
             fullWidth
             inputProps={{ maxLength: 64 }}
           />
         </Box>
 
         <Box sx={styles.actions}>
-          {!isDefault && (
+          {canEdit && !isDefault && (
             <Button.BaseBtn
               variant={BUTTON_VARIANTS.secondary}
               onClick={handleSetDefault}
@@ -131,7 +132,7 @@ const ChatTemplateEditor = memo(props => {
               Set as default
             </Button.BaseBtn>
           )}
-          {!isDefault && (
+          {canEdit && !isDefault && (
             <Button.BaseBtn
               variant={BUTTON_VARIANTS.tertiary}
               onClick={() => setShowDeleteDialog(true)}
@@ -168,28 +169,30 @@ const ChatTemplateEditor = memo(props => {
           participants={participants}
           onChange={setParticipants}
           isTeamProject={isTeamProject}
-          disabled={isSaving}
+          disabled={isSaving || !canEdit}
         />
       </Box>
 
       {/* Save / Cancel */}
-      <Box sx={styles.saveRow}>
-        <Button.BaseBtn
-          variant={BUTTON_VARIANTS.secondary}
-          onClick={handleCancel}
-          disabled={!isDirty || isSaving}
-        >
-          Cancel
-        </Button.BaseBtn>
-        <Button.BaseBtn
-          variant={BUTTON_VARIANTS.elitea}
-          onClick={handleSave}
-          disabled={!canSave}
-          loading={isSaving}
-        >
-          Save
-        </Button.BaseBtn>
-      </Box>
+      {canEdit && (
+        <Box sx={styles.saveRow}>
+          <Button.BaseBtn
+            variant={BUTTON_VARIANTS.secondary}
+            onClick={handleCancel}
+            disabled={!isDirty || isSaving}
+          >
+            Cancel
+          </Button.BaseBtn>
+          <Button.BaseBtn
+            variant={BUTTON_VARIANTS.elitea}
+            onClick={handleSave}
+            disabled={!canSave}
+            loading={isSaving}
+          >
+            Save
+          </Button.BaseBtn>
+        </Box>
+      )}
 
       {/* Delete confirmation dialog */}
       <Modal.BaseModal
