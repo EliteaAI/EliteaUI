@@ -22,11 +22,11 @@ const ChatTemplateEditor = memo(props => {
     onDelete,
     onSetDefault,
     onUnsetDefault,
+    onDirtyChange,
     onCancel,
     isSaving = false,
     nameFieldRef,
     onMounted,
-    unsavedDirtyRef,
   } = props;
 
   const theme = useTheme();
@@ -67,8 +67,8 @@ const ChatTemplateEditor = memo(props => {
   }, [template?.id, name, savedName, participants, savedParticipants]);
 
   useEffect(() => {
-    if (unsavedDirtyRef) unsavedDirtyRef.current = isDirty;
-  }, [isDirty, unsavedDirtyRef]);
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
 
   const canSave = isDirty && !nameError;
 
@@ -78,11 +78,8 @@ const ChatTemplateEditor = memo(props => {
   }, [canSave, isSaving, onSave, template?.id, name, participants]);
 
   const handleCancel = useCallback(() => {
-    setName(savedName);
-    setParticipants(savedParticipants);
-    if (unsavedDirtyRef) unsavedDirtyRef.current = false;
     onCancel?.();
-  }, [savedName, savedParticipants, unsavedDirtyRef, onCancel]);
+  }, [onCancel]);
 
   const handleSetDefault = useCallback(() => {
     onSetDefault?.(template?.id);

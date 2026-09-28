@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import {
   useCreateChatTemplateMutation,
@@ -18,7 +18,7 @@ export const useChatTemplates = projectId => {
   const [draftName, setDraftName] = useState('');
   const [draftKey, setDraftKey] = useState(0);
   const [pendingNewId, setPendingNewId] = useState(null);
-  const unsavedDirtyRef = useRef(false);
+  const [isDirty, setIsDirty] = useState(false);
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
   const [pendingSelectId, setPendingSelectId] = useState(null);
 
@@ -69,7 +69,7 @@ export const useChatTemplates = projectId => {
   const handleSelectTemplate = useCallback(
     id => {
       const nextId = id === resolvedSelectedId ? null : id;
-      if (unsavedDirtyRef.current) {
+      if (isDirty) {
         setPendingSelectId(nextId);
         setShowUnsavedDialog(true);
         return;
@@ -77,17 +77,27 @@ export const useChatTemplates = projectId => {
       setIsNewDraft(false);
       setSelectedId(nextId);
     },
-    [resolvedSelectedId],
+    [resolvedSelectedId, isDirty],
   );
 
   const handleNewTemplate = useCallback(() => {
-    if (unsavedDirtyRef.current) {
+    if (isDirty) {
       setPendingSelectId('__new__');
       setShowUnsavedDialog(true);
       return;
     }
     openNewDraft();
-  }, [openNewDraft]);
+  }, [openNewDraft, isDirty]);
+
+  const handleClose = useCallback(() => {
+    if (isDirty) {
+      setPendingSelectId('__close__');
+      setShowUnsavedDialog(true);
+      return;
+    }
+    setIsNewDraft(false);
+    setSelectedId(null);
+  }, [isDirty]);
 
   const handleSave = useCallback(
     async ({ id, name, participants }) => {
@@ -100,7 +110,7 @@ export const useChatTemplates = projectId => {
         } else {
           await updateTemplate({ projectId, templateId: id, name, participants }).unwrap();
         }
-        unsavedDirtyRef.current = false;
+        setIsDirty(false);
         toastSuccess('Template saved');
       } catch {
         toastError('Failed to save template');
@@ -113,7 +123,7 @@ export const useChatTemplates = projectId => {
     async id => {
       try {
         await deleteTemplate({ projectId, templateId: id }).unwrap();
-        unsavedDirtyRef.current = false;
+        setIsDirty(false);
         setIsNewDraft(false);
         const defaultTemplate = templates.find(t => t.is_default && t.id !== id);
         setSelectedId(defaultTemplate?.id ?? null);
@@ -157,11 +167,15 @@ export const useChatTemplates = projectId => {
   }, []);
 
   const handleUnsavedDiscard = useCallback(() => {
-    unsavedDirtyRef.current = false;
+    setIsDirty(false);
     setShowUnsavedDialog(false);
     if (pendingSelectId === '__new__') {
       setPendingSelectId(null);
       openNewDraft();
+    } else if (pendingSelectId === '__close__') {
+      setPendingSelectId(null);
+      setIsNewDraft(false);
+      setSelectedId(null);
     } else if (pendingSelectId !== null) {
       setIsNewDraft(false);
       setSelectedId(pendingSelectId);
@@ -180,13 +194,15 @@ export const useChatTemplates = projectId => {
     selectedTemplate,
     resolvedSelectedId,
     isBusy,
-    unsavedDirtyRef,
+    isDirty,
+    setIsDirty,
     showUnsavedDialog,
     pendingNewId,
     setPendingNewId,
     draftKey,
     handleSelectTemplate,
     handleNewTemplate,
+    handleClose,
     handleSave,
     handleDelete,
     handleSetDefault,

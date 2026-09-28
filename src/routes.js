@@ -121,6 +121,8 @@ export const BLOCK_NAV_PATTERNS = [
   RouteDefinitions.Chat,
   RouteDefinitions.ChatConversation,
   RouteDefinitions.ProjectContextEdit,
+  RouteDefinitions.Settings,
+  RouteDefinitions.SettingsWithTab,
 ];
 
 /**
