@@ -40,13 +40,17 @@ const agentHubSlice = createSlice({
       state.lastRefreshedAt = Date.now();
     },
     updateApplicationInCategories: (state, action) => {
-      const { applicationId, updateFn } = action.payload;
+      const { applicationId, isLiked, likes } = action.payload;
       Object.keys(state.applicationsByTag).forEach(category => {
-        state.applicationsByTag[category] = state.applicationsByTag[category].map(app => {
-          if (app.id === applicationId) {
-            return updateFn(app);
+        state.applicationsByTag[category] = state.applicationsByTag[category].map(application => {
+          if (application.id === applicationId) {
+            return {
+              ...application,
+              is_liked: isLiked,
+              likes,
+            };
           }
-          return app;
+          return application;
         });
       });
     },

@@ -25,6 +25,8 @@ const StyledChip = styled(
 
   '& .MuiChip-label': {
     padding: '0',
+    fontSize: '0.75rem',
+    fontWeight: 500,
   },
 
   '&:hover': {

@@ -417,7 +417,7 @@ const darkPalette = {
     },
     tab: { background: { default: gray10, hover: cyanPressed, active: cyanDefault, disabled: gray20 } },
     categoryTag: {
-      background: { default: gray50, selected: darkBlue },
+      background: { default: gray50, hover: gray40, selected: purple30, hoverSelected: purple20 },
       text: { default: white, selected: white },
       shadow: 'none',
     },
@@ -788,7 +788,7 @@ const darkPalette = {
     categorySection: { text: { title: gray10 } },
     deleteAlert: { text: { entityName: skyBlue, body: white } },
     chip: {
-      background: { warning: red15, selected: blue16, default: white5 },
+      background: { warning: red15, selected: blue16, default: white5, positive: greenOutline40 },
       border: { default: gray30, active: cyanDefault },
       text: { default: gray10, active: cyanDefault },
     },

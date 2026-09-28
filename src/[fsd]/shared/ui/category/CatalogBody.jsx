@@ -102,10 +102,11 @@ const catalogBodyStyles = () => ({
   railDivider: ({ palette }) => ({
     borderColor: palette.border.default,
   }),
-  railWrapper: {
+  railWrapper: ({ palette }) => ({
     padding: '1.5rem',
     overflowY: 'auto',
-  },
+    background: palette.background.default.tertiary,
+  }),
   loadingContainer: {
     display: 'flex',
     flexWrap: 'wrap',

@@ -142,7 +142,7 @@ const eliteaCatalogStyles = () => ({
     color: palette.text.secondary,
   }),
   searchContainer: {
-    width: '40rem',
+    width: '25rem',
     maxWidth: '100%',
   },
   searchField: {

@@ -2,6 +2,8 @@ import { Box, Typography } from '@mui/material';
 
 import BaseBtn, { eliteaButtonColors } from '@/[fsd]/shared/ui/button/BaseBtn';
 import PlusIcon from '@/assets/plus-icon.svg?react';
+import HeartActiveIcon from '@/components/Icons/HeartActiveIcon';
+import HeartIcon from '@/components/Icons/HeartIcon';
 
 export default {
   title: 'shared/ui/BaseBtn',
@@ -21,6 +23,7 @@ export default {
         'iconCounter',
         'maxi',
         'iconLabel',
+        'toggle',
       ],
     },
     size: {
@@ -151,7 +154,12 @@ const variantsConfig = [
   },
   {
     title: 'Icon + Counter',
-    props: { variant: 'iconCounter', startIcon: <PlusIcon />, endIcon: <span>10</span>, disableRipple: true },
+    props: {
+      variant: 'iconCounter',
+      startIcon: <PlusIcon />,
+      endIcon: <Box component="span">10</Box>,
+      disableRipple: true,
+    },
   },
   {
     title: 'Icon + Label',
@@ -166,6 +174,21 @@ const variantsConfig = [
     props: {
       variant: 'tertiary',
       startIcon: <PlusIcon />,
+      disableRipple: true,
+    },
+  },
+  {
+    title: 'Toggle',
+    props: {
+      variant: 'toggle',
+      startIcon: <HeartIcon />,
+      endIcon: <Box component="span">10</Box>,
+      disableRipple: true,
+    },
+    pressedProps: {
+      variant: 'toggle',
+      startIcon: <HeartActiveIcon />,
+      endIcon: <Box component="span">10</Box>,
       disableRipple: true,
     },
   },
@@ -227,7 +250,7 @@ const getLoadingButtonType = (isPrimary, isCircularIcon) => {
   return isCircularIcon ? LoadingButtonType.PRIMARY_CIRCULAR : LoadingButtonType.PRIMARY_WITH_LABEL;
 };
 
-const ButtonStatesRow = ({ title, props }) => {
+const ButtonStatesRow = ({ title, props, pressedProps }) => {
   const isCircularIcon =
     props.sx?.borderRadius === '50%' ||
     ((props.children === undefined || props.children === null) && Boolean(props.startIcon));
@@ -266,6 +289,13 @@ const ButtonStatesRow = ({ title, props }) => {
                 '& .MuiButton-startIcon': {
                   color: eliteaButtonColors(theme)[props.variant].hover.colorIcon,
                 },
+                ...(props.variant === 'toggle'
+                  ? {
+                      '& .MuiButton-startIcon path': {
+                        fill: theme.palette.icon.secondary,
+                      },
+                    }
+                  : {}),
               };
             },
           ]}
@@ -273,24 +303,28 @@ const ButtonStatesRow = ({ title, props }) => {
       </Box>
 
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-        <BaseBtn
-          {...props}
-          sx={[
-            props.sx,
-            theme => {
-              if (!eliteaButtonColors(theme)[props.variant]) return {};
+        {pressedProps ? (
+          <BaseBtn {...pressedProps} />
+        ) : (
+          <BaseBtn
+            {...props}
+            sx={[
+              props.sx,
+              theme => {
+                if (!eliteaButtonColors(theme)[props.variant]) return {};
 
-              return {
-                backgroundColor: eliteaButtonColors(theme)[props.variant].active.background,
-                color: eliteaButtonColors(theme)[props.variant].active.color,
-                border: eliteaButtonColors(theme)[props.variant].active.border,
-                '& .MuiButton-startIcon': {
-                  color: eliteaButtonColors(theme)[props.variant].active.colorIcon,
-                },
-              };
-            },
-          ]}
-        />
+                return {
+                  backgroundColor: eliteaButtonColors(theme)[props.variant].active.background,
+                  color: eliteaButtonColors(theme)[props.variant].active.color,
+                  border: eliteaButtonColors(theme)[props.variant].active.border,
+                  '& .MuiButton-startIcon': {
+                    color: eliteaButtonColors(theme)[props.variant].active.colorIcon,
+                  },
+                };
+              },
+            ]}
+          />
+        )}
       </Box>
 
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -395,6 +429,7 @@ export const AllButtons = () => {
               key={`${groupTitle}-${index}`}
               title={index === 0 ? groupTitle : ''}
               props={variant.props}
+              pressedProps={variant.pressedProps}
             />
           )),
         )}

@@ -36,7 +36,7 @@ const CategoryRail = memo(props => {
         <Box sx={styles.section}>
           <Typography
             variant="labelSmall"
-            color="text.secondary"
+            color="text.primary"
             sx={styles.heading}
           >
             Featured
@@ -49,7 +49,7 @@ const CategoryRail = memo(props => {
         <Box sx={styles.section}>
           <Typography
             variant="labelSmall"
-            color="text.secondary"
+            color="text.primary"
             sx={styles.heading}
           >
             Categories
@@ -101,7 +101,7 @@ const categoryRailStyles = () => ({
       textTransform: 'capitalize !important',
     },
     '&.MuiChip-clickable:hover': {
-      backgroundColor: palette.background.surface.interactive.selected,
+      backgroundColor: palette.components.categoryTag.background.hover,
       transform: 'none',
     },
   }),
@@ -121,7 +121,7 @@ const categoryRailStyles = () => ({
       textTransform: 'capitalize !important',
     },
     '&.MuiChip-clickable:hover': {
-      backgroundColor: palette.background.surface.interactive.selected,
+      backgroundColor: palette.components.categoryTag.background.hoverSelected,
       transform: 'none',
     },
   }),
