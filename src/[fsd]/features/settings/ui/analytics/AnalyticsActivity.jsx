@@ -295,9 +295,12 @@ const analyticsActivityStyles = () => ({
     gap: '0.75rem',
     marginBottom: '0.75rem',
   },
-  controls: { display: 'flex', alignItems: 'center', gap: '0.75rem' },
-  roleSelect: { minWidth: '12rem' },
+  controls: { display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' },
+  roleSelect: { width: '15rem' },
   toggleGroup: ({ palette }) => ({
+    // `overflow: hidden` drops the flex min-width to 0, so without this the Role select squeezes
+    // the group and clips the trailing option
+    flexShrink: 0,
     border: `0.0625rem solid ${palette.border.default}`,
     borderRadius: '0.5rem',
     overflow: 'hidden',
