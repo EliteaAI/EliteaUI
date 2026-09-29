@@ -231,8 +231,7 @@ const RestrictAccessDialog = memo(props => {
         variant="bodySmall"
         sx={styles.description}
       >
-        Restrict access to selected participants? Project members who are not selected will no longer be able
-        to open this conversation. Existing selected participants will retain access.
+        Only selected participants will have access to this conversation.
       </Typography>
 
       {hasSharedLinks && (
