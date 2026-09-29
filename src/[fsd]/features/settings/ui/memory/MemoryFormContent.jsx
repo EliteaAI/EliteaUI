@@ -2,6 +2,7 @@ import { memo } from 'react';
 
 import { Box } from '@mui/material';
 
+import { SettingsLayoutConstants } from '@/[fsd]/features/settings/lib/constants';
 import { useFormikAutoSaveOnBlur } from '@/[fsd]/shared/lib/hooks';
 
 import MemoryContextManagement from './MemoryContextManagement';
@@ -42,7 +43,7 @@ const memoryFormContentStyles = () => ({
     flexDirection: 'column',
     gap: '0.5rem',
     padding: '1.5rem',
-    maxWidth: '50rem',
+    maxWidth: SettingsLayoutConstants.SETTINGS_LAYOUT.FORM_CONTENT_MAX_WIDTH,
     width: '100%',
   },
 });

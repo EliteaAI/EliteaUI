@@ -30,81 +30,81 @@ const ProjectGeneralContent = memo(() => {
       />
 
       <Box sx={styles.body}>
-        <BasicAccordion
-          data-testid="project-general-section"
-          // style={style}
-          showMode={AccordionConstants.AccordionShowMode.LeftMode}
-          accordionSX={styles.accordionStyles}
-          items={[
-            {
-              title: 'General',
-              content: (
-                <Box>
-                  <ProjectParamsHeader />
-                </Box>
-              ),
-            },
-          ]}
-        />
-        <BasicAccordion
-          data-testid="ai-configurations"
-          // style={style}
-          showMode={AccordionConstants.AccordionShowMode.LeftMode}
-          accordionSX={styles.accordionStyles}
-          items={[
-            {
-              title: 'AI Configurations',
-              content: (
-                <Box>
-                  <ProjectAIConfigurations />
-                </Box>
-              ),
-            },
-          ]}
-        />
-        <BasicAccordion
-          data-testid="default-modules-section"
-          showMode={AccordionConstants.AccordionShowMode.LeftMode}
-          accordionSX={styles.accordionStyles}
-          items={[
-            {
-              title: 'Default Modules',
-              content: (
-                <Box sx={styles.containerStyles}>
-                  <SettingsFormProvider FormContent={DefaultModulesSettings} />
-                </Box>
-              ),
-            },
-          ]}
-        />
-        <BasicAccordion
-          data-testid="chat-configuration-section"
-          showMode={AccordionConstants.AccordionShowMode.LeftMode}
-          accordionSX={styles.accordionStyles}
-          items={[
-            {
-              title: 'Chat configuration',
-              content: <ChatConfigurationSection />,
-            },
-          ]}
-        />
-        {isBackupRestoreAvailable && (
+        <Box sx={styles.inner}>
           <BasicAccordion
-            data-testid="project-backup-restore-section"
+            data-testid="project-general-section"
             showMode={AccordionConstants.AccordionShowMode.LeftMode}
             accordionSX={styles.accordionStyles}
             items={[
               {
-                title: 'Back Up & Restore',
+                title: 'General',
                 content: (
-                  <Box sx={styles.containerStyles}>
-                    <ProjectBackupRestore />
+                  <Box>
+                    <ProjectParamsHeader />
                   </Box>
                 ),
               },
             ]}
           />
-        )}
+          <BasicAccordion
+            data-testid="ai-configurations"
+            showMode={AccordionConstants.AccordionShowMode.LeftMode}
+            accordionSX={styles.accordionStyles}
+            items={[
+              {
+                title: 'AI Configurations',
+                content: (
+                  <Box>
+                    <ProjectAIConfigurations />
+                  </Box>
+                ),
+              },
+            ]}
+          />
+          <BasicAccordion
+            data-testid="default-modules-section"
+            showMode={AccordionConstants.AccordionShowMode.LeftMode}
+            accordionSX={styles.accordionStyles}
+            items={[
+              {
+                title: 'Default Modules',
+                content: (
+                  <Box sx={styles.containerStyles}>
+                    <SettingsFormProvider FormContent={DefaultModulesSettings} />
+                  </Box>
+                ),
+              },
+            ]}
+          />
+          <BasicAccordion
+            data-testid="chat-configuration-section"
+            showMode={AccordionConstants.AccordionShowMode.LeftMode}
+            accordionSX={styles.accordionStyles}
+            items={[
+              {
+                title: 'Chat configuration',
+                content: <ChatConfigurationSection />,
+              },
+            ]}
+          />
+          {isBackupRestoreAvailable && (
+            <BasicAccordion
+              data-testid="project-backup-restore-section"
+              showMode={AccordionConstants.AccordionShowMode.LeftMode}
+              accordionSX={styles.accordionStyles}
+              items={[
+                {
+                  title: 'Back Up & Restore',
+                  content: (
+                    <Box sx={styles.containerStyles}>
+                      <ProjectBackupRestore />
+                    </Box>
+                  ),
+                },
+              ]}
+            />
+          )}
+        </Box>
       </Box>
     </Box>
   );
@@ -138,6 +138,11 @@ const componentStyles = () => ({
     flex: 1,
     overflow: 'auto',
     minHeight: 0,
+    width: '100%',
+    display: 'flex',
+    justifyContent: 'center',
+  },
+  inner: {
     padding: '1rem 1.5rem',
     paddingBottom: '2.375rem',
     display: 'flex',

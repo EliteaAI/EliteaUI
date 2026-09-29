@@ -7,4 +7,5 @@ export const SETTINGS_LAYOUT = {
   ITEM_HEIGHT: '2.75rem',
   GROUP_SPACING: '2rem',
   TRANSITION_DURATION: '0.2s',
+  FORM_CONTENT_MAX_WIDTH: '37.5rem',
 };
