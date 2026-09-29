@@ -23,8 +23,7 @@ const StateVariableList = memo(props => {
       .filter(
         ([name]) =>
           !FlowEditorConstants.StateDefaultProps.includes(name) &&
-          !FlowEditorConstants.StateManagedProps.includes(name) &&
-          !FlowEditorConstants.StateSystemProps.includes(name),
+          !FlowEditorConstants.StateManagedProps.includes(name),
       )
       .map(([name, config]) => ({
         name,
