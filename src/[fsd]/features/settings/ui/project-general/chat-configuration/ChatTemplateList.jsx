@@ -74,7 +74,7 @@ const ChatTemplateList = memo(props => {
           >
             Chat templates
           </Typography>
-          <InfoTooltip infoTooltip="A chat template is a saved starting setup for new chats. You can create up to **5** and mark one as the **default**. Every new chat in this project starts from the default template, with its participants already added." />
+          <InfoTooltip infoTooltip="A chat template is a saved starting setup for new chats. You can create up to **5** and optionally mark one as the **default**. Every new chat in this project starts from the default template, with its participants already added." />
         </Box>
         <Typography
           variant="bodySmall"
