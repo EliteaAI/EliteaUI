@@ -8,7 +8,6 @@ import { SettingsLayoutConstants } from '@/[fsd]/features/settings/lib/constants
 import { dateFormatter } from '@/[fsd]/features/settings/lib/helpers/dateFormatter.helpers';
 import FieldWithCopy from '@/[fsd]/features/settings/ui/ai-providers/FieldWithCopy';
 import { BaseBtn } from '@/[fsd]/shared/ui/button';
-import LogoutIcon from '@/assets/logout-icon.svg?react';
 import UserAvatar from '@/components/UserAvatar';
 import { logout } from '@/slices/user.js';
 
@@ -41,15 +40,23 @@ const Profile = memo(() => {
             <UserAvatar
               avatar={avatar}
               name={name}
-              size={64}
+              size={44}
             />
             <Typography
-              variant="labelMedium"
+              variant="headingMedium"
               color="text.secondary"
               fontWeight={600}
             >
               {name}
             </Typography>
+
+            <BaseBtn
+              variant="secondary"
+              onClick={onLogout}
+              sx={styles.logoutButton}
+            >
+              Log out
+            </BaseBtn>
           </Box>
 
           <Box sx={styles.fieldsSection}>
@@ -70,15 +77,6 @@ const Profile = memo(() => {
               value={dateFormatter(last_login) || ''}
             />
           </Box>
-
-          <BaseBtn
-            variant="secondary"
-            startIcon={<LogoutIcon />}
-            onClick={onLogout}
-            sx={styles.logoutButton}
-          >
-            Log out
-          </BaseBtn>
         </Box>
       </Box>
     </Box>
@@ -120,21 +118,38 @@ const profileStyles = () => ({
     maxWidth: SettingsLayoutConstants.SETTINGS_LAYOUT.FORM_CONTENT_MAX_WIDTH,
     width: '100%',
   },
-  avatarSection: {
+  avatarSection: ({ palette }) => ({
     display: 'flex',
     alignItems: 'center',
     gap: '1rem',
-  },
+    padding: '1rem 1.5rem',
+    position: 'relative',
+    background: palette.background.surface.interactive.default,
+    borderRadius: '0.75rem',
+    border: '0.0625rem solid transparent',
+    '&::before': {
+      content: '""',
+      position: 'absolute',
+      inset: 0,
+      borderRadius: 'inherit',
+      padding: '0.0625rem',
+      background: palette.components.accordion.border,
+      WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+      WebkitMaskComposite: 'xor',
+      maskComposite: 'exclude',
+      pointerEvents: 'none',
+    },
+  }),
   fieldsSection: ({ palette }) => ({
     display: 'flex',
     flexDirection: 'column',
     '& > *': {
-      padding: '0.75rem 0',
+      padding: '0.75rem 0 0.75rem 1rem',
       borderBottom: `0.0625rem solid ${palette.border.default}`,
     },
   }),
   logoutButton: {
-    width: '7rem',
+    marginLeft: 'auto',
   },
 });
 

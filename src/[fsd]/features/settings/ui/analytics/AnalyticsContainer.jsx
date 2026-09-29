@@ -537,7 +537,7 @@ AnalyticsContainer.displayName = 'AnalyticsContainer';
 
 /** @type {MuiSx} */
 const analyticsContainerStyles = () => ({
-  header: {
+  header: ({ palette }) => ({
     height: '3.8rem',
     minHeight: '3.8rem',
     display: 'flex',
@@ -545,7 +545,8 @@ const analyticsContainerStyles = () => ({
     gap: '0.75rem',
     padding: '0 1.5rem',
     boxSizing: 'border-box',
-  },
+    background: palette.background.default.tertiary,
+  }),
   icon: {
     fontSize: '1rem',
   },

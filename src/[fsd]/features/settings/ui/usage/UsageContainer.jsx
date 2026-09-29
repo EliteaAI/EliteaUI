@@ -407,6 +407,7 @@ const usageContainerStyles = () => ({
     padding: '0 1.5rem',
     boxSizing: 'border-box',
     borderBottom: `0.0625rem solid ${palette.border.default}`,
+    background: palette.background.default.tertiary,
   }),
   // Keeps the header actions at the far edge, away from the page title
   exportButtonWrapper: {
