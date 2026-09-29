@@ -83,10 +83,14 @@ const LlmModelForm = memo(props => {
   const isReasoningConfigRequired = !isEditing || isLlmModelReasoningConfigured(settings);
 
   const isApiProtocolShown = isApiProtocolCredentialType(credentialType);
-  const isStoredModelWithoutProtocol =
+  const isStoredCredentialKept =
     isEditing &&
-    !initialSettings?.api_protocol &&
     credentialKeyOf(settings.ai_credentials) === credentialKeyOf(initialSettings?.ai_credentials);
+  const isStoredModelWithoutProtocol = isStoredCredentialKept && !initialSettings?.api_protocol;
+  // Only a credential picked in this session needs its type before saving; a stored one already
+  // carries its protocol, and the server re-checks the DIAL rule anyway, so a slow credentials
+  // list must not hold an unchanged model back
+  const isSaveHeldForCredentialType = isCredentialTypePending && !isStoredCredentialKept;
   const apiProtocol =
     settings.api_protocol || (isStoredModelWithoutProtocol ? LLM_MODEL_STORED_DIAL_PROTOCOL_FALLBACK : '');
 
@@ -97,7 +101,7 @@ const LlmModelForm = memo(props => {
         isEditing,
         takenIds,
         isApiProtocolShown,
-        isCredentialTypePending,
+        isCredentialTypePending: isSaveHeldForCredentialType,
         apiProtocol,
         isReasoningConfigRequired,
       }),
@@ -106,7 +110,7 @@ const LlmModelForm = memo(props => {
       isEditing,
       takenIds,
       isApiProtocolShown,
-      isCredentialTypePending,
+      isSaveHeldForCredentialType,
       apiProtocol,
       isReasoningConfigRequired,
     ],

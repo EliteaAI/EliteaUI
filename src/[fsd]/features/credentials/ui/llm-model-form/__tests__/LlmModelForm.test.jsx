@@ -529,9 +529,11 @@ describe('LlmModelForm', () => {
       );
     });
 
-    it('holds Save back while the selected credential type is still loading', () => {
+    it('holds Save back while a newly picked credential type is still loading', async () => {
+      const user = userEvent.setup();
       isCredentialTypePending = true;
       renderForm(EXISTING_DIAL_MODEL);
+      await user.click(screen.getByRole('button', { name: /openai-cred/ }));
 
       expect(lastReportedErrors()).toEqual({
         ai_credentials_check: 'Checking the selected AI credentials. Try saving again in a moment.',
@@ -539,13 +541,25 @@ describe('LlmModelForm', () => {
       expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     });
 
-    it('explains a held-back Save under the credentials field', () => {
+    it('explains a held-back Save under the credentials field', async () => {
+      const user = userEvent.setup();
       isCredentialTypePending = true;
       renderForm(EXISTING_DIAL_MODEL, { showValidation: true });
+      await user.click(screen.getByRole('button', { name: /dial-cred-2/ }));
 
       expect(screen.getByTestId('llm-model-error-ai_credentials')).toHaveTextContent(
         'Checking the selected AI credentials. Try saving again in a moment.',
       );
+    });
+
+    it('does not hold a stored model back while the credentials list is still loading', () => {
+      // A slow credentials listing used to block re-saving an untouched model with
+      // "Checking the selected AI credentials"; the stored credential already carries its protocol
+      isCredentialTypePending = true;
+      renderForm(EXISTING_DIAL_MODEL, { showValidation: true });
+
+      expect(lastReportedErrors()).toEqual({});
+      expect(screen.queryByTestId('llm-model-error-ai_credentials')).not.toBeInTheDocument();
     });
 
     it('shows a required API protocol only for DIAL credentials', async () => {
