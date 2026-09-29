@@ -7,6 +7,8 @@ export const DEFAULT_OUTPUT = 'default_output';
 export const PIPELINE_STATE = 'state';
 export const STATE_MESSAGES = 'messages';
 export const STATE_INPUT = 'input';
+export const STATE_TOOL_OUTCOMES = 'tool_outcomes';
+export const STATE_LAST_TOOL_OUTCOME = 'last_tool_outcome';
 export const RUN_STATE_NODE = 'run_state';
 
 export const StateVariableTypes = {
@@ -19,12 +21,14 @@ export const StateVariableTypes = {
 export const DefaultState = {
   [STATE_INPUT]: { type: StateVariableTypes.String },
   [STATE_MESSAGES]: { type: StateVariableTypes.List },
+  [STATE_TOOL_OUTCOMES]: { type: StateVariableTypes.Json },
+  [STATE_LAST_TOOL_OUTCOME]: { type: StateVariableTypes.Json },
 };
 
 export const STATE_INPUT_ATTACHMENTS = 'input_attachments';
-export const StateDefaultProps = [STATE_INPUT, STATE_MESSAGES];
+export const StateDefaultProps = [STATE_INPUT, STATE_MESSAGES, STATE_TOOL_OUTCOMES, STATE_LAST_TOOL_OUTCOME];
 export const StateManagedProps = [STATE_INPUT_ATTACHMENTS];
-export const StateSystemProps = ['tool_outcomes', 'last_tool_outcome'];
+export const StateSystemProps = [];
 
 export const LegacyIntType = 'int';
 
