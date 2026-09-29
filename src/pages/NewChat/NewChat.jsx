@@ -434,8 +434,21 @@ const NewChat = props => {
   }, [activeConversation?.id]);
 
   const handleRestrictAccessSuccess = useCallback(
-    async conversationId => {
+    async (conversationId, deletedParticipantIds = []) => {
       if (!activeConversationIdRef.current || activeConversationIdRef.current !== conversationId) return;
+
+      if (deletedParticipantIds.length > 0) {
+        const deletedSet = new Set(deletedParticipantIds);
+        setActiveConversation(prev => {
+          if (!prev || prev.id !== conversationId) return prev;
+          return {
+            ...prev,
+            participants: (prev.participants || []).filter(p => !deletedSet.has(p.id)),
+            is_private: true,
+          };
+        });
+      }
+
       const result = await getConversationDetailForRefresh({ projectId, id: conversationId });
       if (!result.data) return;
       setActiveConversation(prev => {

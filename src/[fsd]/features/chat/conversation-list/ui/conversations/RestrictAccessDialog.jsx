@@ -187,7 +187,7 @@ const RestrictAccessDialog = memo(props => {
         );
       }
 
-      onSuccess?.(conversationId);
+      onSuccess?.(conversationId, allToDelete);
       onClose();
     } catch {
       toastError('Some changes may have been applied. Please refresh and try again.');
