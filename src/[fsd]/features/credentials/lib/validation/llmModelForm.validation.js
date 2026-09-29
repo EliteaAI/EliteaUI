@@ -33,8 +33,12 @@ const validateTokenLimit = (value, requiredMessage) => {
   return null;
 };
 
-const validateReasoningLevels = (settings, isReasoningConfigRequired) => {
-  if (!settings.supports_reasoning || !isReasoningConfigRequired) return {};
+const validateReasoningLevels = (settings, isReasoningConfigRequired, unsupportedEffortLabels) => {
+  if (!settings.supports_reasoning) return {};
+  if (unsupportedEffortLabels.length) {
+    return { [FIELDS.supportedEfforts]: MESSAGES.supportedEffortsNotOffered(unsupportedEffortLabels) };
+  }
+  if (!isReasoningConfigRequired) return {};
   const selectableLevels = (settings.supported_efforts || []).filter(
     level => level !== LLM_MODEL_EFFORT_NONE,
   );
@@ -56,6 +60,7 @@ export const validateLlmModelSettings = ({
   isCredentialTypePending = false,
   apiProtocol = '',
   isReasoningConfigRequired = false,
+  unsupportedEffortLabels = [],
 }) => {
   const contextWindowError = validateTokenLimit(settings.context_window, MESSAGES.contextWindowRequired);
   const maxOutputTokensError =
@@ -77,7 +82,7 @@ export const validateLlmModelSettings = ({
     [FIELDS.credentials]: settings.ai_credentials?.elitea_title ? null : MESSAGES.credentialsRequired,
     [FIELDS.credentialsCheck]: isCredentialTypePending ? MESSAGES.credentialsTypePending : null,
     [FIELDS.apiProtocol]: isApiProtocolShown && !apiProtocol ? MESSAGES.apiProtocolRequired : null,
-    ...validateReasoningLevels(settings, isReasoningConfigRequired),
+    ...validateReasoningLevels(settings, isReasoningConfigRequired, unsupportedEffortLabels),
   };
 
   return Object.fromEntries(Object.entries(errors).filter(([, message]) => message));

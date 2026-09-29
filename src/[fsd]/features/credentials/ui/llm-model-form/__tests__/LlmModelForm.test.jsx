@@ -552,6 +552,19 @@ describe('LlmModelForm', () => {
       );
     });
 
+    it('holds Save while the list loads once a setting the credential type gates is changed', async () => {
+      const user = userEvent.setup();
+      isCredentialTypePending = true;
+      renderForm(EXISTING_DIAL_MODEL, { showValidation: true });
+      expect(lastReportedErrors()).toEqual({});
+
+      await user.click(within(screen.getByTestId('llm-model-field-supports_reasoning')).getByRole('switch'));
+
+      expect(lastReportedErrors()).toMatchObject({
+        ai_credentials_check: 'Checking the selected AI credentials. Try saving again in a moment.',
+      });
+    });
+
     it('does not hold a stored model back while the credentials list is still loading', () => {
       // A slow credentials listing used to block re-saving an untouched model with
       // "Checking the selected AI credentials"; the stored credential already carries its protocol

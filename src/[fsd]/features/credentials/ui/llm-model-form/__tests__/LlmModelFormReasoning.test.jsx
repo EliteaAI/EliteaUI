@@ -235,12 +235,12 @@ describe('LlmModelForm reasoning profiles', () => {
       expect(screen.queryByTestId('llm-model-legacy-tag')).not.toBeInTheDocument();
       expect(offeredLevels()).toEqual(['low', 'medium', 'high', 'xhigh', 'max']);
       expect(checkedLevels()).toEqual(['low', 'medium', 'high', 'xhigh', 'max']);
-      expect(defaultCombobox()).toHaveTextContent('High');
+      expect(defaultCombobox()).toHaveTextContent('Medium');
       expect(reasoningOf()).toEqual({
         supports_reasoning: true,
         thinking_type: 'adaptive',
         supported_efforts: ['low', 'medium', 'high', 'xhigh', 'max'],
-        default_effort: 'high',
+        default_effort: 'medium',
       });
 
       await user.click(reasoningSwitch());
@@ -350,7 +350,7 @@ describe('LlmModelForm reasoning profiles', () => {
         supports_reasoning: true,
         thinking_type: 'always_on',
         supported_efforts: ['low', 'medium', 'high', 'xhigh', 'max'],
-        default_effort: 'high',
+        default_effort: 'medium',
       });
     });
   });
@@ -420,7 +420,7 @@ describe('LlmModelForm reasoning profiles', () => {
       expect(reasoningOf().supported_efforts).toEqual(['none', 'low', 'medium', 'high', 'xhigh']);
     });
 
-    it('does not apply a late-arriving list to a stored row', () => {
+    it('shows an unconfigured stored row from a late-arriving list without editing it', () => {
       profilesPayload = { profiles: [] };
       const stored = storedModel('global.openai.gpt-5.6-luna', { supports_reasoning: true });
       const { rerender } = renderForm(stored);
@@ -439,7 +439,7 @@ describe('LlmModelForm reasoning profiles', () => {
         </ThemeProvider>,
       );
 
-      expect(screen.getByTestId('llm-model-profile-suggestion')).toBeInTheDocument();
+      expect(checkedLevels()).toEqual(['none', 'low', 'medium', 'high', 'xhigh']);
       expect(reasoningOf().supported_efforts).toBeNull();
     });
 
@@ -468,34 +468,77 @@ describe('LlmModelForm reasoning profiles', () => {
 
       expect(checkedLevels()).toEqual(['low', 'high']);
       expect(defaultCombobox()).toHaveTextContent('Low');
-      expect(screen.queryByTestId('llm-model-profile-suggestion')).not.toBeInTheDocument();
       expect(setToolErrors).toHaveBeenLastCalledWith({});
     });
 
-    it('suggests the profile for a row stored before the fields existed and applies it on request', async () => {
+    it('shows a row stored before the fields existed from its profile and writes it with the first edit', async () => {
+      const user = userEvent.setup();
+      renderForm(storedModel('claude-sonnet-5', { supports_reasoning: true }), { showValidation: true });
+
+      expect(screen.queryByTestId('llm-model-reasoning-not-configured')).not.toBeInTheDocument();
+      expect(screen.getByTestId('llm-model-thinking-type-fixed')).toHaveTextContent('Adaptive · always on');
+      expect(checkedLevels()).toEqual(['low', 'medium', 'high', 'xhigh', 'max']);
+      expect(defaultCombobox()).toHaveTextContent('Medium');
+      expect(setToolErrors).toHaveBeenLastCalledWith({});
+      // nothing is written until the admin changes something, so opening the row leaves the form clean
+      expect(reasoningOf()).toEqual({
+        supports_reasoning: true,
+        thinking_type: null,
+        supported_efforts: null,
+        default_effort: null,
+      });
+
+      await user.type(within(screen.getByTestId('llm-model-field-description')).getByRole('textbox'), 'Fast');
+
+      expect(reasoningOf()).toEqual({
+        supports_reasoning: true,
+        thinking_type: 'adaptive',
+        supported_efforts: ['low', 'medium', 'high', 'xhigh', 'max'],
+        default_effort: 'medium',
+      });
+    });
+
+    it('turns reasoning off on an unconfigured stored row in one click', async () => {
       const user = userEvent.setup();
       renderForm(storedModel('global.openai.gpt-5.6-luna', { supports_reasoning: true }), {
         showValidation: true,
       });
 
-      const suggestion = screen.getByTestId('llm-model-profile-suggestion');
-      expect(suggestion).toHaveTextContent('Reasoning levels are not configured for this model yet.');
-      expect(suggestion).toHaveTextContent(
-        'Suggested for OpenAI GPT-5.6: None, Low, Medium, High, Extra high · default Medium',
-      );
-      expect(screen.queryByTestId('llm-model-supported-efforts-group')).not.toBeInTheDocument();
+      await user.click(reasoningSwitch());
+
+      expect(reasoningOf()).toEqual({
+        supports_reasoning: false,
+        thinking_type: null,
+        supported_efforts: null,
+        default_effort: null,
+      });
+      expect(screen.queryByTestId('llm-model-reasoning-panel')).not.toBeInTheDocument();
       expect(setToolErrors).toHaveBeenLastCalledWith({});
+    });
 
-      await user.click(screen.getByTestId('llm-model-apply-profile'));
+    it('keeps the first level change on an unconfigured stored row', async () => {
+      const user = userEvent.setup();
+      renderForm(storedModel('global.openai.gpt-5.6-luna', { supports_reasoning: true }), {
+        showValidation: true,
+      });
 
-      expect(screen.queryByTestId('llm-model-profile-suggestion')).not.toBeInTheDocument();
-      expect(checkedLevels()).toEqual(['none', 'low', 'medium', 'high', 'xhigh']);
+      await user.click(screen.getByTestId('llm-model-effort-medium'));
+
       expect(reasoningOf()).toEqual({
         supports_reasoning: true,
         thinking_type: null,
-        supported_efforts: ['none', 'low', 'medium', 'high', 'xhigh'],
-        default_effort: 'medium',
+        supported_efforts: ['none', 'low', 'high', 'xhigh'],
+        default_effort: null,
       });
+      expect(checkedLevels()).toEqual(['none', 'low', 'high', 'xhigh']);
+      expect(screen.getByTestId('llm-model-error-default_effort')).toHaveTextContent(
+        'Select a default level.',
+      );
+
+      await user.click(defaultCombobox());
+      await user.click(screen.getByRole('option', { name: 'High' }));
+      expect(reasoningOf().default_effort).toBe('high');
+      expect(setToolErrors).toHaveBeenLastCalledWith({});
     });
 
     it('shows the full set with a note for an unrecognized row stored before the fields existed', () => {
@@ -504,6 +547,32 @@ describe('LlmModelForm reasoning profiles', () => {
       expect(screen.getByTestId('llm-model-reasoning-not-configured')).toBeInTheDocument();
       expect(checkedLevels()).toEqual([]);
       expect(screen.queryByTestId('llm-model-error-supported_efforts')).not.toBeInTheDocument();
+    });
+
+    it('shows a stored level the profile does not list and blocks Save until it is unchecked', async () => {
+      const user = userEvent.setup();
+      renderForm(
+        storedModel('gpt-5.2', {
+          supports_reasoning: true,
+          supported_efforts: ['low', 'medium', 'high', 'xhigh'],
+          default_effort: 'medium',
+        }),
+        { showValidation: true },
+      );
+
+      expect(checkedLevels()).toEqual(['none', 'low', 'medium', 'high', 'xhigh'].filter(l => l !== 'none'));
+      expect(screen.getByTestId('llm-model-effort-xhigh')).toBeChecked();
+      expect(screen.getByTestId('llm-model-error-supported_efforts')).toHaveTextContent(
+        "Extra high isn't offered for this model. Uncheck to save.",
+      );
+
+      await user.click(screen.getByTestId('llm-model-effort-xhigh'));
+      expect(screen.queryByTestId('llm-model-effort-xhigh')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('llm-model-error-supported_efforts')).not.toBeInTheDocument();
+      expect(reasoningOf().supported_efforts).toEqual(['low', 'medium', 'high']);
+      expect(screen.getByTestId('llm-model-warning-supported_efforts')).toHaveTextContent(
+        'You removed Extra high.',
+      );
     });
 
     it('warns which stored levels were removed', async () => {

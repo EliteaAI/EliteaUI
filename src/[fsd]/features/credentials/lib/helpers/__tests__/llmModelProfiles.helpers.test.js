@@ -4,8 +4,10 @@ import { LLM_MODEL_PROFILES_FIXTURE } from '../../../ui/llm-model-form/__tests__
 import { mapLlmModelSaveErrorToFields } from '../llmModelForm.helpers.js';
 import {
   buildReasoningSettingsFromProfile,
+  getEffortLevelOptions,
   getLlmModelReasoningDescription,
   getLlmModelRecognition,
+  getUnsupportedStoredLevels,
   isLlmModelReasoningConfigured,
   normalizeLlmModelName,
   recognizeLlmModelProfile,
@@ -63,7 +65,7 @@ describe('profile-derived settings', () => {
       supports_reasoning: true,
       thinking_type: 'adaptive',
       supported_efforts: ['low', 'medium', 'high', 'xhigh', 'max'],
-      default_effort: 'high',
+      default_effort: 'medium',
     });
     expect(buildReasoningSettingsFromProfile(profile).supported_efforts).not.toBe(profile.supported_efforts);
   });
@@ -144,5 +146,26 @@ describe('mapLlmModelSaveErrorToFields for reasoning fields', () => {
     expect(mapLlmModelSaveErrorToFields({ data: { field: 'context_window', error: 'rejected' } })).toEqual(
       {},
     );
+  });
+});
+
+describe('stored levels outside the profile', () => {
+  const gpt52 = LLM_MODEL_PROFILES_FIXTURE.profiles.find(candidate => candidate.id === 'openai-gpt-5-2-5-1');
+  const levels = LLM_MODEL_PROFILES_FIXTURE.effort_levels;
+
+  it('keeps them visible as unsupported options in provider order', () => {
+    const options = getEffortLevelOptions(gpt52, levels, ['max', 'low', 'xhigh']);
+    expect(options.map(option => option.value)).toEqual(['none', 'low', 'medium', 'high', 'xhigh', 'max']);
+    expect(options.filter(option => option.unsupported).map(option => option.value)).toEqual([
+      'xhigh',
+      'max',
+    ]);
+    expect(getUnsupportedStoredLevels(gpt52, ['low', 'xhigh'])).toEqual(['xhigh']);
+  });
+
+  it('flags nothing for unrecognized models or levels the profile lists', () => {
+    expect(getUnsupportedStoredLevels(null, ['xhigh'])).toEqual([]);
+    expect(getUnsupportedStoredLevels(gpt52, ['low', 'high'])).toEqual([]);
+    expect(getEffortLevelOptions(null, levels, ['xhigh']).every(option => !option.unsupported)).toBe(true);
   });
 });

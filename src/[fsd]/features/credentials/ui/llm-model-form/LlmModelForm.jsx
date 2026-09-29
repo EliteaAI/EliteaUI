@@ -21,8 +21,10 @@ import {
 } from '../../lib/helpers/llmModelForm.helpers.js';
 import {
   buildReasoningSettingsFromProfile,
+  getEffortLevelLabel,
   getLlmModelReasoningDescription,
   getLlmModelRecognition,
+  getUnsupportedStoredLevels,
   isLlmModelReasoningConfigured,
   recognizeLlmModelProfile,
 } from '../../lib/helpers/llmModelProfiles.helpers.js';
@@ -78,41 +80,67 @@ const LlmModelForm = memo(props => {
   );
   const recognition = useMemo(() => getLlmModelRecognition(settings.name, profile), [settings.name, profile]);
   // A stored 'on' stays visible for a no-reasoning family so the admin can turn it off and see the server's rejection
+  // A stored row with reasoning on but no levels (saved before the fields existed, or created
+  // through the API) is shown with its profile's values, the same ones the R-2.0.7 backfill
+  // writes. They reach the row only with the admin's first edit, so opening the page stays clean.
+  const isStoredRowUnconfigured =
+    isEditing &&
+    Boolean(settings.supports_reasoning) &&
+    Boolean(profile?.supports_reasoning) &&
+    !isLlmModelReasoningConfigured(settings);
+  const pendingProfileFill = useMemo(
+    () => (isStoredRowUnconfigured ? buildReasoningSettingsFromProfile(profile) : null),
+    [isStoredRowUnconfigured, profile],
+  );
+  const displayedSettings = useMemo(
+    () => (pendingProfileFill ? { ...settings, ...pendingProfileFill } : settings),
+    [settings, pendingProfileFill],
+  );
+
   const isReasoningShown = !profile || profile.supports_reasoning || Boolean(settings.supports_reasoning);
   const isReasoningLocked = Boolean(profile?.locked && settings.supports_reasoning);
-  const isReasoningConfigRequired = !isEditing || isLlmModelReasoningConfigured(settings);
+  const isReasoningConfigRequired = !isEditing || isLlmModelReasoningConfigured(displayedSettings);
+  const unsupportedEffortLabels = useMemo(
+    () => getUnsupportedStoredLevels(profile, displayedSettings.supported_efforts).map(getEffortLevelLabel),
+    [profile, displayedSettings.supported_efforts],
+  );
 
   const isApiProtocolShown = isApiProtocolCredentialType(credentialType);
   const isStoredCredentialKept =
     isEditing &&
     credentialKeyOf(settings.ai_credentials) === credentialKeyOf(initialSettings?.ai_credentials);
   const isStoredModelWithoutProtocol = isStoredCredentialKept && !initialSettings?.api_protocol;
-  // Only a credential picked in this session needs its type before saving; a stored one already
-  // carries its protocol, and the server re-checks the DIAL rule anyway, so a slow credentials
-  // list must not hold an unchanged model back
-  const isSaveHeldForCredentialType = isCredentialTypePending && !isStoredCredentialKept;
+  // The credential type gates the DIAL protocol rule, so Save waits for it only when something that
+  // rule looks at changed in this session; a slow credentials list must not hold an untouched model back
+  const isTypeGatedSettingEdited =
+    !isStoredCredentialKept ||
+    Boolean(settings.supports_reasoning) !== Boolean(initialSettings?.supports_reasoning) ||
+    (settings.api_protocol ?? null) !== (initialSettings?.api_protocol ?? null);
+  const isSaveHeldForCredentialType = isCredentialTypePending && isTypeGatedSettingEdited;
   const apiProtocol =
     settings.api_protocol || (isStoredModelWithoutProtocol ? LLM_MODEL_STORED_DIAL_PROTOCOL_FALLBACK : '');
 
   const errors = useMemo(
     () =>
       validateLlmModelSettings({
-        settings,
+        settings: displayedSettings,
         isEditing,
         takenIds,
         isApiProtocolShown,
         isCredentialTypePending: isSaveHeldForCredentialType,
         apiProtocol,
         isReasoningConfigRequired,
+        unsupportedEffortLabels,
       }),
     [
-      settings,
+      displayedSettings,
       isEditing,
       takenIds,
       isApiProtocolShown,
       isSaveHeldForCredentialType,
       apiProtocol,
       isReasoningConfigRequired,
+      unsupportedEffortLabels,
     ],
   );
 
@@ -138,12 +166,25 @@ const LlmModelForm = memo(props => {
 
   const hasVisibleErrorIn = section => section.fields.some(field => visibleErrors[field]);
 
+  // Handlers issue several edits in one event, so the fill is written once and never again
+  // until the row is unconfigured afresh; later edits in the same event keep the admin's values
+  const isProfileFillWrittenRef = useRef(false);
+  useEffect(() => {
+    if (!pendingProfileFill) isProfileFillWrittenRef.current = false;
+  }, [pendingProfileFill]);
+
   const editSetting = useCallback(
     (field, value) => {
       setValidationErrorMessages?.(serverErrors => omitLlmModelErrorsDependingOn(serverErrors, field));
+      if (pendingProfileFill && !isProfileFillWrittenRef.current) {
+        isProfileFillWrittenRef.current = true;
+        LLM_MODEL_REASONING_FIELDS.filter(filled => filled !== field).forEach(filled =>
+          editField(`settings.${filled}`, pendingProfileFill[filled]),
+        );
+      }
       editField(`settings.${field}`, value);
     },
-    [editField, setValidationErrorMessages],
+    [editField, pendingProfileFill, setValidationErrorMessages],
   );
 
   const onDisplayNameChange = useCallback(
@@ -192,11 +233,6 @@ const LlmModelForm = memo(props => {
     appliedProfileIdRef.current = profileId;
     if (!isEditing || isModelNameEdited) applyReasoningSettings(buildReasoningSettingsFromProfile(profile));
   }, [applyReasoningSettings, isEditing, isModelNameEdited, profile]);
-
-  const onApplyProfile = useCallback(
-    () => applyReasoningSettings(buildReasoningSettingsFromProfile(profile)),
-    [applyReasoningSettings, profile],
-  );
 
   const onReasoningChange = useCallback(
     (field, isChecked) => {
@@ -384,14 +420,13 @@ const LlmModelForm = memo(props => {
           >
             {settings.supports_reasoning && (
               <LlmModelReasoningPanel
-                settings={settings}
+                settings={displayedSettings}
                 initialSettings={initialSettings}
                 isEditing={isEditing}
                 profile={profile}
                 effortLevels={effortLevels}
                 visibleErrors={visibleErrors}
                 editSetting={editSetting}
-                onApplyProfile={onApplyProfile}
               />
             )}
           </LlmModelSwitchField>

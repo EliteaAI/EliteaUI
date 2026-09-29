@@ -14,7 +14,6 @@ import {
   toggleEffortLevel,
 } from '../../lib/helpers/llmModelProfiles.helpers.js';
 import LlmModelField from './LlmModelField';
-import LlmModelProfileSuggestion from './LlmModelProfileSuggestion';
 import LlmModelThinkingModeValue from './LlmModelThinkingModeValue';
 
 const {
@@ -32,23 +31,17 @@ const {
 } = LlmModelFormConstants;
 
 const LlmModelReasoningPanel = memo(props => {
-  const {
-    settings,
-    initialSettings,
-    isEditing,
-    profile,
-    effortLevels,
-    visibleErrors,
-    editSetting,
-    onApplyProfile,
-  } = props;
+  const { settings, initialSettings, isEditing, profile, effortLevels, visibleErrors, editSetting } = props;
   const styles = llmModelReasoningPanelStyles();
   const isRecognized = Boolean(profile?.supports_reasoning);
   const isConfigured = isLlmModelReasoningConfigured(settings);
   const storedEfforts = settings[FIELDS.supportedEfforts];
   const supportedEfforts = useMemo(() => storedEfforts || [], [storedEfforts]);
 
-  const effortOptions = useMemo(() => getEffortLevelOptions(profile, effortLevels), [profile, effortLevels]);
+  const effortOptions = useMemo(
+    () => getEffortLevelOptions(profile, effortLevels, supportedEfforts),
+    [profile, effortLevels, supportedEfforts],
+  );
   const defaultEffortOptions = useMemo(() => getDefaultEffortOptions(supportedEfforts), [supportedEfforts]);
   const removedLevels = useMemo(
     () =>
@@ -74,20 +67,6 @@ const LlmModelReasoningPanel = memo(props => {
     thinkingType => editSetting(FIELDS.thinkingType, thinkingType || null),
     [editSetting],
   );
-
-  if (isRecognized && !isConfigured) {
-    return (
-      <Box
-        sx={styles.panel}
-        data-testid="llm-model-reasoning-panel"
-      >
-        <LlmModelProfileSuggestion
-          profile={profile}
-          onApplyProfile={onApplyProfile}
-        />
-      </Box>
-    );
-  }
 
   const fixedThinkingType = isRecognized ? settings[FIELDS.thinkingType] || profile.thinking_type : null;
   const isThinkingTypeShown = !isRecognized || Boolean(fixedThinkingType);
@@ -159,7 +138,14 @@ const LlmModelReasoningPanel = memo(props => {
             <FormControlLabel
               key={option.value}
               sx={styles.level}
-              label={<Typography variant="bodyMedium">{option.label}</Typography>}
+              label={
+                <Typography
+                  variant="bodyMedium"
+                  sx={option.unsupported ? styles.unsupportedLevel : undefined}
+                >
+                  {option.label}
+                </Typography>
+              }
               control={
                 <Checkbox.BaseCheckbox
                   value={option.value}
@@ -227,6 +213,10 @@ const llmModelReasoningPanelStyles = () => ({
     marginLeft: 0,
     marginRight: 0,
   },
+  unsupportedLevel: ({ palette }) => ({
+    color: palette.text.attention,
+    textDecoration: 'line-through',
+  }),
 });
 
 export default LlmModelReasoningPanel;

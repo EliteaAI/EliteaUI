@@ -76,11 +76,28 @@ export const getLlmModelReasoningDescription = profile => {
 
 export const getEffortLevelLabel = level => LLM_MODEL_EFFORT_LEVEL_LABELS[level] || level;
 
-export const getEffortLevelOptions = (profile, effortLevels = LLM_MODEL_EFFORT_LEVELS) =>
-  (profile?.supports_reasoning ? profile.supported_efforts : effortLevels).map(level => ({
-    value: level,
-    label: getEffortLevelLabel(level),
-  }));
+// Levels the profile does not list are not offered, but a stored one stays visible so the admin
+// can see it and uncheck it instead of having it dropped silently
+export const getUnsupportedStoredLevels = (profile, storedEfforts) =>
+  profile?.supports_reasoning
+    ? (storedEfforts || []).filter(level => !profile.supported_efforts.includes(level))
+    : [];
+
+export const getEffortLevelOptions = (
+  profile,
+  effortLevels = LLM_MODEL_EFFORT_LEVELS,
+  storedEfforts = [],
+) => {
+  const unsupported = getUnsupportedStoredLevels(profile, storedEfforts);
+  const offered = profile?.supports_reasoning ? profile.supported_efforts : effortLevels;
+  return effortLevels
+    .filter(level => offered.includes(level) || unsupported.includes(level))
+    .map(level => ({
+      value: level,
+      label: getEffortLevelLabel(level),
+      unsupported: unsupported.includes(level),
+    }));
+};
 
 export const getDefaultEffortOptions = supportedEfforts =>
   (supportedEfforts || [])

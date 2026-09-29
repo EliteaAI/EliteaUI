@@ -190,10 +190,6 @@ export const LLM_MODEL_REMOVED_EFFORTS_WARNING = removedLabels =>
 export const LLM_MODEL_REASONING_NOT_CONFIGURED_NOTE =
   'Reasoning levels are not configured for this model yet. Users get Low, Medium and High, with Medium as the default.';
 
-export const LLM_MODEL_PROFILE_SUGGESTION_TEXT = label => `Suggested for ${label}:`;
-
-export const LLM_MODEL_APPLY_PROFILE_LABEL = 'Apply profile';
-
 export const LLM_MODEL_DEFAULT_EFFORT_PLACEHOLDERS = {
   select: 'Select default level',
   noLevels: 'Select supported levels first',
@@ -259,6 +255,8 @@ export const LLM_MODEL_ERROR_MESSAGES = {
   reasoningNotSupportedByProtocol:
     "Reasoning isn't supported with the Azure OpenAI protocol. Choose OpenAI or Anthropic, or turn Reasoning off.",
   supportedEffortsRequired: 'Select at least one level other than None.',
+  supportedEffortsNotOffered: labels =>
+    `${labels.join(', ')} ${labels.length > 1 ? "aren't" : "isn't"} offered for this model. Uncheck to save.`,
   defaultEffortRequired: 'Select a default level.',
   defaultEffortNotSupported: 'The default level must be one of the supported levels.',
 };
