@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { useFormikContext } from 'formik';
 
@@ -19,11 +19,19 @@ import {
   parseLlmModelTokenLimitInput,
   pickVisibleLlmModelErrors,
 } from '../../lib/helpers/llmModelForm.helpers.js';
-import { useLlmModelCredentialType, useLlmModelTakenIds } from '../../lib/hooks';
+import {
+  buildReasoningSettingsFromProfile,
+  getLlmModelReasoningDescription,
+  getLlmModelRecognition,
+  isLlmModelReasoningConfigured,
+  recognizeLlmModelProfile,
+} from '../../lib/helpers/llmModelProfiles.helpers.js';
+import { useLlmModelCredentialType, useLlmModelProfiles, useLlmModelTakenIds } from '../../lib/hooks';
 import { validateLlmModelSettings } from '../../lib/validation';
 import CredentialsSelect from '../credentials-select/CredentialsSelect';
 import LlmModelField from './LlmModelField';
 import LlmModelFormSection from './LlmModelFormSection';
+import LlmModelReasoningPanel from './LlmModelReasoningPanel';
 import LlmModelSwitchField from './LlmModelSwitchField';
 
 const {
@@ -32,6 +40,7 @@ const {
   LLM_MODEL_DESCRIPTION_MAX_LENGTH,
   LLM_MODEL_FIELDS: FIELDS,
   LLM_MODEL_MODEL_NAME_HELPER_TEXT,
+  LLM_MODEL_REASONING_FIELDS,
   LLM_MODEL_SECTIONS: SECTIONS,
   LLM_MODEL_STORED_DIAL_PROTOCOL_FALLBACK,
   LLM_MODEL_TIER_CONFLICT_WARNING,
@@ -62,6 +71,16 @@ const LlmModelForm = memo(props => {
 
   const { credentialType, isCredentialTypePending } = useLlmModelCredentialType(settings.ai_credentials);
   const takenIds = useLlmModelTakenIds({ skip: isEditing });
+  const { profilesPayload, effortLevels } = useLlmModelProfiles();
+  const profile = useMemo(
+    () => recognizeLlmModelProfile(settings.name, profilesPayload),
+    [settings.name, profilesPayload],
+  );
+  const recognition = useMemo(() => getLlmModelRecognition(settings.name, profile), [settings.name, profile]);
+  // A stored 'on' stays visible for a no-reasoning family so the admin can turn it off and see the server's rejection
+  const isReasoningShown = !profile || profile.supports_reasoning || Boolean(settings.supports_reasoning);
+  const isReasoningLocked = Boolean(profile?.locked && settings.supports_reasoning);
+  const isReasoningConfigRequired = !isEditing || isLlmModelReasoningConfigured(settings);
 
   const isApiProtocolShown = isApiProtocolCredentialType(credentialType);
   const isStoredModelWithoutProtocol =
@@ -80,8 +99,17 @@ const LlmModelForm = memo(props => {
         isApiProtocolShown,
         isCredentialTypePending,
         apiProtocol,
+        isReasoningConfigRequired,
       }),
-    [settings, isEditing, takenIds, isApiProtocolShown, isCredentialTypePending, apiProtocol],
+    [
+      settings,
+      isEditing,
+      takenIds,
+      isApiProtocolShown,
+      isCredentialTypePending,
+      apiProtocol,
+      isReasoningConfigRequired,
+    ],
   );
 
   useEffect(() => {
@@ -138,9 +166,46 @@ const LlmModelForm = memo(props => {
       editSetting(FIELDS.description, trimmedDescription);
   }, [editSetting, settings.description]);
 
+  const applyReasoningSettings = useCallback(
+    reasoningSettings =>
+      LLM_MODEL_REASONING_FIELDS.forEach(field => editSetting(field, reasoningSettings[field])),
+    [editSetting],
+  );
+
   const onModelNameChange = useCallback(
     event => editSetting(FIELDS.modelName, event.target.value),
     [editSetting],
+  );
+
+  // Typing within the same profile keeps the values; another profile (or none) resets them. Keyed on the
+  // recognized profile rather than on keystrokes so a profile list that arrives after typing still applies.
+  // A stored row keeps its values until its name is changed.
+  const appliedProfileIdRef = useRef(profile?.id ?? null);
+  const isModelNameEdited = settings.name !== initialSettings?.name;
+  useEffect(() => {
+    const profileId = profile?.id ?? null;
+    if (profileId === appliedProfileIdRef.current) return;
+    appliedProfileIdRef.current = profileId;
+    if (!isEditing || isModelNameEdited) applyReasoningSettings(buildReasoningSettingsFromProfile(profile));
+  }, [applyReasoningSettings, isEditing, isModelNameEdited, profile]);
+
+  const onApplyProfile = useCallback(
+    () => applyReasoningSettings(buildReasoningSettingsFromProfile(profile)),
+    [applyReasoningSettings, profile],
+  );
+
+  const onReasoningChange = useCallback(
+    (field, isChecked) => {
+      if (!isChecked) {
+        applyReasoningSettings(buildReasoningSettingsFromProfile(null));
+        return;
+      }
+      editSetting(FIELDS.reasoning, true);
+      if (profile?.supports_reasoning && !isLlmModelReasoningConfigured(settings)) {
+        applyReasoningSettings(buildReasoningSettingsFromProfile(profile));
+      }
+    },
+    [applyReasoningSettings, editSetting, profile, settings],
   );
 
   const onModelNameBlur = useCallback(() => {
@@ -252,6 +317,7 @@ const LlmModelForm = memo(props => {
           required
           error={visibleErrors[FIELDS.modelName]}
           helperText={LLM_MODEL_MODEL_NAME_HELPER_TEXT}
+          status={recognition}
         >
           <Input.InputBase
             id={`llm-model-${FIELDS.modelName}`}
@@ -297,15 +363,35 @@ const LlmModelForm = memo(props => {
         title={SECTIONS.capabilities.title}
         hasError={hasVisibleErrorIn(SECTIONS.capabilities)}
       >
-        {[FIELDS.vision, FIELDS.reasoning].map(field => (
+        <LlmModelSwitchField
+          field={FIELDS.vision}
+          checked={settings.supports_vision}
+          onChange={onSwitchChange}
+          error={visibleErrors[FIELDS.vision]}
+        />
+        {isReasoningShown && (
           <LlmModelSwitchField
-            key={field}
-            field={field}
-            checked={settings[field]}
-            onChange={onSwitchChange}
-            error={visibleErrors[field]}
-          />
-        ))}
+            field={FIELDS.reasoning}
+            checked={settings.supports_reasoning}
+            onChange={onReasoningChange}
+            error={visibleErrors[FIELDS.reasoning]}
+            locked={isReasoningLocked}
+            description={getLlmModelReasoningDescription(profile)}
+          >
+            {settings.supports_reasoning && (
+              <LlmModelReasoningPanel
+                settings={settings}
+                initialSettings={initialSettings}
+                isEditing={isEditing}
+                profile={profile}
+                effortLevels={effortLevels}
+                visibleErrors={visibleErrors}
+                editSetting={editSetting}
+                onApplyProfile={onApplyProfile}
+              />
+            )}
+          </LlmModelSwitchField>
+        )}
       </LlmModelFormSection>
 
       <LlmModelFormSection

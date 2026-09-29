@@ -37,13 +37,21 @@ const CREDENTIAL_TYPES = {
 let takenIds = [];
 let isCredentialTypePending = false;
 
-vi.mock('../../../lib/hooks', () => ({
-  useLlmModelCredentialType: credential => ({
-    credentialType: CREDENTIAL_TYPES[credential?.elitea_title] || '',
-    isCredentialTypePending,
-  }),
-  useLlmModelTakenIds: () => takenIds,
-}));
+vi.mock('../../../lib/hooks', async () => {
+  const { LLM_MODEL_PROFILES_FIXTURE } = await import('./llmModelProfiles.fixture.js');
+  return {
+    useLlmModelCredentialType: credential => ({
+      credentialType: CREDENTIAL_TYPES[credential?.elitea_title] || '',
+      isCredentialTypePending,
+    }),
+    useLlmModelTakenIds: () => takenIds,
+    useLlmModelProfiles: () => ({
+      profilesPayload: LLM_MODEL_PROFILES_FIXTURE,
+      effortLevels: LLM_MODEL_PROFILES_FIXTURE.effort_levels,
+      isProfilesPending: false,
+    }),
+  };
+});
 
 vi.mock('@/hooks/useToast', () => ({
   default: () => ({ toastError: vi.fn(), toastInfo: vi.fn() }),
@@ -633,7 +641,7 @@ describe('LlmModelForm', () => {
       const user = userEvent.setup();
       renderForm(EXISTING_DIAL_MODEL, { validationErrorMessages: SERVER_REASONING_ERROR });
 
-      await user.type(inputOf('name'), '-v2');
+      await user.type(inputOf('description'), 'Fast');
 
       expect(screen.getByTestId('llm-model-error-supports_reasoning')).toHaveTextContent(
         'Reasoning rejected by the server',
