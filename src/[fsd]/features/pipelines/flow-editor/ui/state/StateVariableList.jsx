@@ -33,14 +33,6 @@ const StateVariableList = memo(props => {
       }));
   }, [states]);
 
-  const systemEntries = useMemo(() => {
-    return FlowEditorConstants.StateSystemProps.filter(name => states?.[name]).map(name => ({
-      name,
-      type: states[name].type || 'dict',
-      value: states[name].value,
-    }));
-  }, [states]);
-
   const validateName = useCallback(
     (name, excludeName = null) => {
       return StateHelpers.validateVariableName(name, excludeName, states);
@@ -165,6 +157,40 @@ const StateVariableList = memo(props => {
         editable={false}
         disabled={disabled}
       />
+      <FlowEditorState.StateVariableItem
+        key={FlowEditorConstants.STATE_TOOL_OUTCOMES}
+        name={FlowEditorConstants.STATE_TOOL_OUTCOMES}
+        type={FlowEditorConstants.StateVariableTypes.Json}
+        enabled={!states || !!states?.[FlowEditorConstants.STATE_TOOL_OUTCOMES]}
+        isDefault
+        defaultValue={states?.[FlowEditorConstants.STATE_TOOL_OUTCOMES]?.value}
+        drawerWidth={drawerWidth}
+        validateName={validateName}
+        onToggle={handleToggle}
+        onDelete={handleDelete}
+        onUpdateName={handleUpdateNameWithCreate}
+        onUpdateType={handleUpdateType}
+        onUpdateDefaultValue={handleUpdateDefaultValue}
+        editable={false}
+        disabled={disabled}
+      />
+      <FlowEditorState.StateVariableItem
+        key={FlowEditorConstants.STATE_LAST_TOOL_OUTCOME}
+        name={FlowEditorConstants.STATE_LAST_TOOL_OUTCOME}
+        type={FlowEditorConstants.StateVariableTypes.Json}
+        enabled={!states || !!states?.[FlowEditorConstants.STATE_LAST_TOOL_OUTCOME]}
+        isDefault
+        defaultValue={states?.[FlowEditorConstants.STATE_LAST_TOOL_OUTCOME]?.value}
+        drawerWidth={drawerWidth}
+        validateName={validateName}
+        onToggle={handleToggle}
+        onDelete={handleDelete}
+        onUpdateName={handleUpdateNameWithCreate}
+        onUpdateType={handleUpdateType}
+        onUpdateDefaultValue={handleUpdateDefaultValue}
+        editable={false}
+        disabled={disabled}
+      />
       {!!states?.[FlowEditorConstants.STATE_INPUT_ATTACHMENTS] && (
         <FlowEditorState.StateVariableItem
           key={FlowEditorConstants.STATE_INPUT_ATTACHMENTS}
@@ -201,26 +227,6 @@ const StateVariableList = memo(props => {
           disabled={disabled}
         />
       ))}
-      {systemEntries.map(({ name, type, value }) => (
-        <FlowEditorState.StateVariableItem
-          key={name}
-          name={name}
-          type={type}
-          enabled
-          isDefault
-          defaultValue={value}
-          drawerWidth={drawerWidth}
-          validateName={validateName}
-          onToggle={handleToggle}
-          onDelete={handleDelete}
-          onUpdateName={handleUpdateNameWithCreate}
-          onUpdateType={handleUpdateType}
-          onUpdateDefaultValue={handleUpdateDefaultValue}
-          editable={false}
-          disabled={disabled}
-        />
-      ))}
-
       {/* New context creation row */}
       {isCreatingNew && (
         <FlowEditorState.StateVariableItem

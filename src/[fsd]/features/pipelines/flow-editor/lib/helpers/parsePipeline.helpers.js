@@ -10,15 +10,23 @@ import {
   PipelineNodeTypes,
   ROUTER_HANDLE_ID_SUFFIX,
   STATE_INPUT,
+  STATE_LAST_TOOL_OUTCOME,
   STATE_MESSAGES,
+  STATE_TOOL_OUTCOMES,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/constants/flowEditor.constants';
 
 import * as FlowEditorHelpers from './flowEditor.helpers';
 
 export const parseState = yamlJson => {
   if (yamlJson?.state) {
+    const DEFAULT_STATE_KEYS = new Set([
+      STATE_INPUT,
+      STATE_MESSAGES,
+      STATE_TOOL_OUTCOMES,
+      STATE_LAST_TOOL_OUTCOME,
+    ]);
     const firstTwoDefaultVariables = Object.entries(yamlJson.state)
-      .filter(([key]) => key.toLowerCase() === STATE_INPUT || key.toLowerCase() === STATE_MESSAGES)
+      .filter(([key]) => DEFAULT_STATE_KEYS.has(key.toLowerCase()))
       .map(([key, value]) => ({
         id: key,
         name: key,
@@ -27,7 +35,7 @@ export const parseState = yamlJson => {
         enabled: true,
       }));
     const leftVariables = Object.entries(yamlJson.state)
-      .filter(([key]) => key.toLowerCase() !== STATE_INPUT && key.toLowerCase() !== STATE_MESSAGES)
+      .filter(([key]) => !DEFAULT_STATE_KEYS.has(key.toLowerCase()))
       .map(([key, value]) => ({
         id: key,
         name: key,
