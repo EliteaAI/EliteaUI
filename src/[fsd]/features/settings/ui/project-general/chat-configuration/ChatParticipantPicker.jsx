@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Box, Chip, Typography, useTheme } from '@mui/material';
 
@@ -60,13 +60,45 @@ const ChatParticipantPicker = memo(props => {
     [visibleTabs],
   );
 
-  const { participants: fetched, isFetching } = useParticipants({
+  const {
+    participants: fetched,
+    isFetching,
+    onLoadMore,
+  } = useParticipants({
     sortBy: 'name',
     sortOrder: 'asc',
     query,
     pageSize: 50,
     types: TAB_FETCH_TYPES[activeTab],
   });
+
+  // Prevents calling onLoadMore repeatedly before the in-flight fetch resolves.
+  // The ref is reset once isFetching goes back to false.
+  const loadMoreInFlightRef = useRef(false);
+
+  useEffect(() => {
+    if (!isFetching) {
+      loadMoreInFlightRef.current = false;
+    }
+  }, [isFetching]);
+
+  // When the tab or search query changes the list resets to page 0; unblock the ref
+  // so the first bottom-scroll on the new list can trigger a load.
+  useEffect(() => {
+    loadMoreInFlightRef.current = false;
+  }, [activeTab, query]);
+
+  const handleMenuScroll = useCallback(
+    event => {
+      if (loadMoreInFlightRef.current || isFetching) return;
+      const el = event.currentTarget;
+      if (el.scrollHeight > el.clientHeight && el.scrollTop + el.clientHeight >= el.scrollHeight - 80) {
+        loadMoreInFlightRef.current = true;
+        onLoadMore();
+      }
+    },
+    [isFetching, onLoadMore],
+  );
 
   const fetchedForTab = useMemo(() => filterFetchedForTab(fetched, activeTab), [fetched, activeTab]);
 
@@ -360,6 +392,7 @@ const ChatParticipantPicker = memo(props => {
         customRenderOption={renderOption}
         searchPlaceholder={`Search ${TAB_LABELS[activeTab].toLowerCase()}...`}
         customMenuProps={menuProps}
+        onScroll={handleMenuScroll}
         sx={styles.select}
       />
     </Box>

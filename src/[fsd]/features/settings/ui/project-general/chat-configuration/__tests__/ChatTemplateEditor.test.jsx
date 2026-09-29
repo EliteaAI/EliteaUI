@@ -65,32 +65,28 @@ describe('ChatTemplateEditor default actions', () => {
 });
 
 describe('ChatTemplateEditor Cancel', () => {
-  it('closes an unsaved draft and resets the dirty flag', async () => {
-    const unsavedDirtyRef = { current: false };
+  it('clicking Cancel on a new draft calls onCancel', async () => {
     render(
       <ThemeProvider theme={theme}>
         <ChatTemplateEditor
           template={{ id: null, name: 'Template 1', participants: [] }}
-          unsavedDirtyRef={unsavedDirtyRef}
           {...handlers}
         />
       </ThemeProvider>,
     );
-    expect(unsavedDirtyRef.current).toBe(true);
     await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(handlers.onCancel).toHaveBeenCalledTimes(1);
-    expect(unsavedDirtyRef.current).toBe(false);
   });
 
-  it('discards edits on a saved template and closes the editor', async () => {
-    const unsavedDirtyRef = { current: false };
+  it('notifies parent of dirty state and calls onCancel when Cancel is clicked', async () => {
+    const onDirtyChange = vi.fn();
     const template = { id: 3, name: 'Sprint', participants: [], is_default: false };
     render(
       <ThemeProvider theme={theme}>
         <ChatTemplateEditor
           template={template}
           allTemplates={[template]}
-          unsavedDirtyRef={unsavedDirtyRef}
+          onDirtyChange={onDirtyChange}
           {...handlers}
         />
       </ThemeProvider>,
@@ -98,11 +94,10 @@ describe('ChatTemplateEditor Cancel', () => {
     const nameInput = screen.getByDisplayValue('Sprint');
     await userEvent.clear(nameInput);
     await userEvent.type(nameInput, 'Renamed');
-    expect(unsavedDirtyRef.current).toBe(true);
+    expect(onDirtyChange).toHaveBeenLastCalledWith(true);
     await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(handlers.onCancel).toHaveBeenCalledTimes(1);
     expect(handlers.onSave).not.toHaveBeenCalled();
-    expect(unsavedDirtyRef.current).toBe(false);
   });
 
   it('keeps Cancel enabled on a saved template without changes', () => {

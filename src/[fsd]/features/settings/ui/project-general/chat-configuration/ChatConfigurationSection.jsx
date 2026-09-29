@@ -1,4 +1,4 @@
-import { memo, useRef } from 'react';
+import { memo, useMemo, useRef } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
@@ -10,6 +10,7 @@ import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
 import { Modal } from '@/[fsd]/shared/ui';
 import { PERMISSIONS } from '@/common/constants';
 import useCheckPermission from '@/hooks/useCheckPermission';
+import useNavBlocker from '@/hooks/useNavBlocker';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import AutoRoutingSettings from './AutoRoutingSettings';
@@ -26,29 +27,33 @@ const ChatConfigurationSection = memo(() => {
   const { checkPermission } = useCheckPermission();
   const canEdit = checkPermission(PERMISSIONS.configuration.update);
 
-  const nameFieldRef = useRef(null);
-
   const {
     templates,
     isLoading,
     selectedTemplate,
     resolvedSelectedId,
     isBusy,
-    unsavedDirtyRef,
+    isDirty,
+    setIsDirty,
     showUnsavedDialog,
     pendingNewId,
     setPendingNewId,
     draftKey,
     handleSelectTemplate,
     handleNewTemplate,
+    handleClose,
     handleSave,
     handleDelete,
     handleSetDefault,
     handleUnsetDefault,
-    handleCancelEdit,
     handleUnsavedDiscard,
     handleUnsavedCancel,
   } = useChatTemplates(projectId);
+
+  const blockOptions = useMemo(() => ({ blockCondition: isDirty }), [isDirty]);
+  useNavBlocker(blockOptions);
+
+  const nameFieldRef = useRef(null);
 
   const handleEditorMounted = () => {
     if (pendingNewId && nameFieldRef.current) {
@@ -91,11 +96,11 @@ const ChatConfigurationSection = memo(() => {
           onDelete={canEdit ? handleDelete : undefined}
           onSetDefault={canEdit ? handleSetDefault : undefined}
           onUnsetDefault={canEdit ? handleUnsetDefault : undefined}
-          onCancel={handleCancelEdit}
+          onCancel={handleClose}
+          onDirtyChange={setIsDirty}
           isSaving={isBusy}
           nameFieldRef={nameFieldRef}
           onMounted={handleEditorMounted}
-          unsavedDirtyRef={unsavedDirtyRef}
         />
       )}
 
