@@ -8,7 +8,6 @@ import {
   LLM_MODEL_RECOGNITION_TONES,
 } from '../constants/llmModelForm.constants.js';
 
-// Mirrors the backend rule; the payload's `matching` block is the source of truth when present.
 const DEFAULT_NAME_NORMALIZATION = { lowercase: true, replace: { '.': '-', _: '-' } };
 
 const escapeRegExp = text => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -76,8 +75,6 @@ export const getLlmModelReasoningDescription = profile => {
 
 export const getEffortLevelLabel = level => LLM_MODEL_EFFORT_LEVEL_LABELS[level] || level;
 
-// Levels the profile does not list are not offered, but a stored one stays visible so the admin
-// can see it and uncheck it instead of having it dropped silently
 export const getUnsupportedStoredLevels = (profile, storedEfforts) =>
   profile?.supports_reasoning
     ? (storedEfforts || []).filter(level => !profile.supported_efforts.includes(level))

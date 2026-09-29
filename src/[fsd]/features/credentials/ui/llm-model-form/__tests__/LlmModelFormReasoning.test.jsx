@@ -45,7 +45,6 @@ vi.mock('../../../lib/hooks', () => ({
       'xhigh',
       'max',
     ],
-    isProfilesPending: false,
   }),
 }));
 

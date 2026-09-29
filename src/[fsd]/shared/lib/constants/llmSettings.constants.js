@@ -6,10 +6,14 @@ export const REASONING_EFFORT_VALUES = {
 
 export const REASONING_EFFORT_OFF = 'none';
 
-// Provider order; a model row's supported_efforts is rendered in this order
+export const THINKING_TYPES = {
+  adaptive: 'adaptive',
+  enabled: 'enabled',
+  alwaysOn: 'always_on',
+};
+
 export const REASONING_EFFORT_ORDER = ['none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max'];
 
-// What a model row without supported_efforts offers (the behaviour before #6819)
 export const FALLBACK_REASONING_EFFORTS = [
   REASONING_EFFORT_VALUES.Low,
   REASONING_EFFORT_VALUES.Medium,

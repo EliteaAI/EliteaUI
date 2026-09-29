@@ -1,3 +1,10 @@
+import {
+  REASONING_EFFORT_LABELS,
+  REASONING_EFFORT_OFF,
+  REASONING_EFFORT_ORDER,
+  THINKING_TYPES,
+} from '@/[fsd]/shared/lib/constants/llmSettings.constants';
+
 import { API_PROTOCOLS } from './apiProtocol.constants.js';
 
 export const LLM_MODEL_CONFIGURATION_TYPE = 'llm_model';
@@ -101,25 +108,13 @@ export const LLM_MODEL_REASONING_FIELDS = [
   LLM_MODEL_FIELDS.defaultEffort,
 ];
 
-export const LLM_MODEL_EFFORT_LEVELS = ['none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max'];
+export const LLM_MODEL_EFFORT_LEVELS = REASONING_EFFORT_ORDER;
 
-export const LLM_MODEL_EFFORT_LEVEL_LABELS = {
-  none: 'None',
-  minimal: 'Minimal',
-  low: 'Low',
-  medium: 'Medium',
-  high: 'High',
-  xhigh: 'Extra high',
-  max: 'Max',
-};
+export const LLM_MODEL_EFFORT_LEVEL_LABELS = { ...REASONING_EFFORT_LABELS, [REASONING_EFFORT_OFF]: 'None' };
 
-export const LLM_MODEL_EFFORT_NONE = 'none';
+export const LLM_MODEL_EFFORT_NONE = REASONING_EFFORT_OFF;
 
-export const LLM_MODEL_THINKING_TYPES = {
-  adaptive: 'adaptive',
-  enabled: 'enabled',
-  alwaysOn: 'always_on',
-};
+export const LLM_MODEL_THINKING_TYPES = THINKING_TYPES;
 
 export const LLM_MODEL_THINKING_TYPE_NOT_SET = '';
 

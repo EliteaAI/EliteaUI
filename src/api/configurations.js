@@ -442,7 +442,6 @@ export const configurationsApi = eliteaApi
         },
         providesTags: [TAG_MODELS],
       }),
-      // Ordered reasoning profiles recognized from an LLM model name (#6819)
       getLlmModelProfiles: build.query({
         query: ({ projectId }) => ({
           url: `${apiSlicePath}/llm_model_profiles/${projectId}`,

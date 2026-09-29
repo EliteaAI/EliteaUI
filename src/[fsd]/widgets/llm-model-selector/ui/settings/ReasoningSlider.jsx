@@ -16,16 +16,20 @@ const LABEL_TOOLTIP =
 
 const labelOf = level => REASONING_EFFORT_LABELS[level] || level;
 
+const getHelperText = ({ value, levels, isStoredUnsupported, isSingleLevel, alwaysOn, isBudget }) => {
+  if (isStoredUnsupported) return REASONING_HELPER_TEXTS.unsupportedStored(value);
+  if (isSingleLevel) return REASONING_HELPER_TEXTS.fixedLevel(labelOf(levels[0]));
+  if (String(value).toLowerCase() === REASONING_EFFORT_OFF) return REASONING_HELPER_TEXTS.off;
+  if (alwaysOn) return REASONING_HELPER_TEXTS.alwaysOn;
+  if (isBudget) return REASONING_HELPER_TEXTS.budget;
+  return '';
+};
+
 const positionOf = (levels, level) => {
   const index = levels.indexOf(String(level ?? '').toLowerCase());
   return index === -1 ? null : FIRST_POSITION + index;
 };
 
-/**
- * One slider position per effort level the model offers (#6819). Rows without stored levels
- * fall back to Low / Medium / High. `none` renders as Off. A single-level model shows its
- * level read-only, and a saved level the model no longer offers can be replaced in one click.
- */
 const ReasoningSlider = memo(props => {
   const { value, onChange, disabled = false, capability: capabilityProp } = props;
   const capability = capabilityProp ?? getReasoningCapability({ supports_reasoning: true });
@@ -64,17 +68,7 @@ const ReasoningSlider = memo(props => {
     [numericValue, sliderLevels],
   );
 
-  const helperText = isStoredUnsupported
-    ? REASONING_HELPER_TEXTS.unsupportedStored(value)
-    : isSingleLevel
-      ? REASONING_HELPER_TEXTS.fixedLevel(labelOf(levels[0]))
-      : String(value).toLowerCase() === REASONING_EFFORT_OFF
-        ? REASONING_HELPER_TEXTS.off
-        : alwaysOn
-          ? REASONING_HELPER_TEXTS.alwaysOn
-          : isBudget
-            ? REASONING_HELPER_TEXTS.budget
-            : '';
+  const helperText = getHelperText({ value, levels, isStoredUnsupported, isSingleLevel, alwaysOn, isBudget });
 
   return (
     <Box sx={styles.root}>

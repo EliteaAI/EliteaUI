@@ -5,6 +5,7 @@ import {
   FALLBACK_REASONING_EFFORTS,
   REASONING_EFFORT_OFF,
   REASONING_EFFORT_ORDER,
+  THINKING_TYPES,
 } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
 
 import { isAutoSelection, selectionFields } from './autoRouting.utils';
@@ -18,17 +19,6 @@ export const modelSupportsReasoning = model => {
   return Boolean(model?.supports_reasoning);
 };
 
-const THINKING_TYPE_ALWAYS_ON = 'always_on';
-const THINKING_TYPE_BUDGET = 'enabled';
-
-/**
- * What the reasoning control may offer for a model, read from the model row's stored
- * capability fields (#6819). Rows without them behave exactly as before: low/medium/high,
- * default medium, no Off.
- * @param {Object} model - The model object from the models list
- * @returns {{supported: boolean, levels: string[], defaultLevel: string|null, alwaysOn: boolean,
- *   isBudget: boolean, offAvailable: boolean}}
- */
 export const getReasoningCapability = model => {
   if (!modelSupportsReasoning(model)) {
     return {
@@ -37,7 +27,6 @@ export const getReasoningCapability = model => {
       defaultLevel: null,
       alwaysOn: false,
       isBudget: false,
-      offAvailable: false,
     };
   }
   const stored = Array.isArray(model.supported_efforts) ? model.supported_efforts : [];
@@ -54,17 +43,11 @@ export const getReasoningCapability = model => {
     supported: true,
     levels,
     defaultLevel,
-    alwaysOn: model.thinking_type === THINKING_TYPE_ALWAYS_ON,
-    isBudget: model.thinking_type === THINKING_TYPE_BUDGET,
-    offAvailable: levels.includes(REASONING_EFFORT_OFF),
+    alwaysOn: model.thinking_type === THINKING_TYPES.alwaysOn,
+    isBudget: model.thinking_type === THINKING_TYPES.enabled,
   };
 };
 
-/**
- * The effort to store when a user has not chosen one for this model.
- * @param {Object} model - The model object
- * @returns {string}
- */
 export const defaultReasoningEffortFor = model =>
   getReasoningCapability(model).defaultLevel ?? DEFAULT_REASONING_EFFORT;
 

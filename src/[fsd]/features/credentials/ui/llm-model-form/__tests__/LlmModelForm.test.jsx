@@ -48,7 +48,6 @@ vi.mock('../../../lib/hooks', async () => {
     useLlmModelProfiles: () => ({
       profilesPayload: LLM_MODEL_PROFILES_FIXTURE,
       effortLevels: LLM_MODEL_PROFILES_FIXTURE.effort_levels,
-      isProfilesPending: false,
     }),
   };
 });

@@ -79,10 +79,6 @@ const LlmModelForm = memo(props => {
     [settings.name, profilesPayload],
   );
   const recognition = useMemo(() => getLlmModelRecognition(settings.name, profile), [settings.name, profile]);
-  // A stored 'on' stays visible for a no-reasoning family so the admin can turn it off and see the server's rejection
-  // A stored row with reasoning on but no levels (saved before the fields existed, or created
-  // through the API) is shown with its profile's values, the same ones the R-2.0.7 backfill
-  // writes. They reach the row only with the admin's first edit, so opening the page stays clean.
   const isStoredRowUnconfigured =
     isEditing &&
     Boolean(settings.supports_reasoning) &&
@@ -110,8 +106,6 @@ const LlmModelForm = memo(props => {
     isEditing &&
     credentialKeyOf(settings.ai_credentials) === credentialKeyOf(initialSettings?.ai_credentials);
   const isStoredModelWithoutProtocol = isStoredCredentialKept && !initialSettings?.api_protocol;
-  // The credential type gates the DIAL protocol rule, so Save waits for it only when something that
-  // rule looks at changed in this session; a slow credentials list must not hold an untouched model back
   const isTypeGatedSettingEdited =
     !isStoredCredentialKept ||
     Boolean(settings.supports_reasoning) !== Boolean(initialSettings?.supports_reasoning) ||
@@ -166,8 +160,6 @@ const LlmModelForm = memo(props => {
 
   const hasVisibleErrorIn = section => section.fields.some(field => visibleErrors[field]);
 
-  // Handlers issue several edits in one event, so the fill is written once and never again
-  // until the row is unconfigured afresh; later edits in the same event keep the admin's values
   const isProfileFillWrittenRef = useRef(false);
   useEffect(() => {
     if (!pendingProfileFill) isProfileFillWrittenRef.current = false;
@@ -222,9 +214,6 @@ const LlmModelForm = memo(props => {
     [editSetting],
   );
 
-  // Typing within the same profile keeps the values; another profile (or none) resets them. Keyed on the
-  // recognized profile rather than on keystrokes so a profile list that arrives after typing still applies.
-  // A stored row keeps its values until its name is changed.
   const appliedProfileIdRef = useRef(profile?.id ?? null);
   const isModelNameEdited = settings.name !== initialSettings?.name;
   useEffect(() => {

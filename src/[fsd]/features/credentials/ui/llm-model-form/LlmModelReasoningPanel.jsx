@@ -199,7 +199,7 @@ const llmModelReasoningPanelStyles = () => ({
     marginTop: '0.75rem',
     padding: '1rem',
     borderRadius: '0.5rem',
-    border: `1px solid ${palette.border.lines}`,
+    border: `0.0625rem solid ${palette.border.lines}`,
   }),
   note: ({ palette }) => ({
     color: palette.text.primary,

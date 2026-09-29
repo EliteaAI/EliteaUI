@@ -82,7 +82,6 @@ describe('getReasoningCapability (issue #6819)', () => {
       defaultLevel: 'medium',
       alwaysOn: false,
       isBudget: false,
-      offAvailable: false,
     });
     expect(capabilityOf({ supported_efforts: [], default_effort: null })).toMatchObject({
       levels: ['low', 'medium', 'high'],
@@ -98,7 +97,6 @@ describe('getReasoningCapability (issue #6819)', () => {
     });
     expect(capability.levels).toEqual(['none', 'low', 'high', 'max']);
     expect(capability.defaultLevel).toBe('high');
-    expect(capability.offAvailable).toBe(true);
   });
 
   it('never defaults to Off and falls back to medium, then the first selectable level', () => {
