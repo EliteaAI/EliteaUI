@@ -96,21 +96,21 @@ const aiProviderAccordionStyles = {
     gap: '0.5rem',
     border: '0.0625rem solid transparent',
     position: 'relative',
-    backgroundColor: palette.components.aiProviderAccordion.background.default,
+    backgroundColor: palette.components.accordion.background.default,
     '&::before': {
       content: '""',
       position: 'absolute',
       inset: 0,
       borderRadius: 'inherit',
-      padding: '0.0625rem',
-      background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.0014) 100%)',
-      mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+      padding: '0.0325rem',
+      background: palette.components.accordion.border,
+      WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
       maskComposite: 'exclude',
       WebkitMaskComposite: 'xor',
       pointerEvents: 'none',
     },
     '&:hover': {
-      backgroundColor: palette.components.aiProviderAccordion.background.hover,
+      backgroundColor: palette.background.surface.interactive.default,
     },
     '& .MuiAccordionSummary-content': {
       margin: '0 !important',
@@ -138,14 +138,16 @@ const aiProviderAccordionStyles = {
     flex: 1,
     minWidth: 0,
   },
-  title: ({ palette }) => ({
+  title: ({ palette, typography }) => ({
     color: palette.text.secondary,
+    fontFamily: typography.fontFamily,
     lineHeight: '1.5rem',
   }),
   metaRow: {
     display: 'flex',
     flexDirection: 'row',
     gap: '1.5rem',
+    rowGap: '0.75rem',
     flexWrap: 'wrap',
   },
   metaItem: {
@@ -165,6 +167,7 @@ const aiProviderAccordionStyles = {
     fontFamily: '"Montserrat", sans-serif',
     lineHeight: '1.5rem',
     whiteSpace: 'nowrap',
+    fontWeight: palette.mode === 'light' ? 500 : 400,
   }),
   infoIcon: {
     width: '1rem',
@@ -176,6 +179,7 @@ const aiProviderAccordionStyles = {
     fontFamily: '"Montserrat", sans-serif',
     lineHeight: '1.5rem',
     whiteSpace: 'nowrap',
+    fontWeight: palette.mode === 'light' ? 500 : 400,
   }),
   countBadge: ({ palette }) => ({
     flexShrink: 0,
@@ -187,7 +191,7 @@ const aiProviderAccordionStyles = {
     justifyContent: 'center',
     borderRadius: '0.75rem',
     boxSizing: 'border-box',
-    border: `0.0625rem solid ${palette.border.default}`,
+    border: `0.0625rem solid ${palette.border.subtle}`,
   }),
   countText: ({ palette }) => ({
     color: palette.text.primary,

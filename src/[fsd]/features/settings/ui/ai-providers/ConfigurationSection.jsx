@@ -140,6 +140,8 @@ const ConfigurationSection = memo(props => {
               <Select.SingleSelect
                 separateLabel
                 labelContainerSx={styles.labelContainerSx}
+                labelSX={styles.selectLabelSx}
+                valueItemSX={styles.selectValueSx}
                 label={defaultSettingLabel}
                 value={defaultSettingValue}
                 onValueChange={onChangeDefaultSetting}
@@ -148,7 +150,7 @@ const ConfigurationSection = memo(props => {
                 showOptionIcon
                 showOptionDescription={showOptionDescription}
                 data-testid={sectionTestId ? `${sectionTestId}-default-selector` : undefined}
-                sx={{ marginRight: '0rem !important', paddingRight: '.75rem !important' }}
+                sx={{ marginRight: '0rem !important' }}
               />
 
               {additionalDefaultSettings
@@ -157,6 +159,8 @@ const ConfigurationSection = memo(props => {
                   <Select.SingleSelect
                     separateLabel
                     labelContainerSx={styles.labelContainerSx}
+                    labelSX={styles.selectLabelSx}
+                    valueItemSX={styles.selectValueSx}
                     key={setting.key || setting.label}
                     label={setting.label}
                     value={setting.value}
@@ -168,7 +172,7 @@ const ConfigurationSection = memo(props => {
                     data-testid={
                       sectionTestId && setting.key ? `${sectionTestId}-${setting.key}-selector` : undefined
                     }
-                    sx={{ marginRight: '0rem !important', paddingRight: '.75rem !important' }}
+                    sx={{ marginRight: '0rem !important' }}
                   />
                 ))}
             </Box>
@@ -282,16 +286,23 @@ const getStyles = defaultSettingsLayout => ({
     borderBottom: showBorder ? '0.0625rem solid' : 'none',
     borderColor: ({ palette }) => palette.border.subtle,
   }),
-  labelContainerSx: {
-    padding: '0.25rem 0.75rem',
+  labelContainerSx: ({ palette }) => ({
+    padding: '0.25rem 0 0.25rem 0.75rem',
     borderRadius: '0.75rem',
-    border: '0.0625rem solid',
-    borderColor: ({ palette }) => palette.border.default,
+    border: `0.0625rem solid ${palette.border.subtle}`,
+    gap: '0.5rem',
     '&:hover': {
-      backgroundColor: ({ palette }) => palette.background.overlay.soft,
-      borderColor: ({ palette }) => palette.border.sectionHover,
+      backgroundColor: palette.background.surface.interactive.default,
     },
-  },
+  }),
+  selectLabelSx: ({ palette }) => ({
+    fontWeight: palette.mode === 'light' ? 500 : 400,
+  }),
+  selectValueSx: ({ palette }) => ({
+    '& .MuiTypography-root': {
+      fontWeight: palette.mode === 'light' ? 500 : 400,
+    },
+  }),
 });
 
 export default ConfigurationSection;
