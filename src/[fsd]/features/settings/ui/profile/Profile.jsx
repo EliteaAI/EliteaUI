@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import { Box, Typography } from '@mui/material';
 
+import { SettingsLayoutConstants } from '@/[fsd]/features/settings/lib/constants';
 import { dateFormatter } from '@/[fsd]/features/settings/lib/helpers/dateFormatter.helpers';
 import FieldWithCopy from '@/[fsd]/features/settings/ui/ai-providers/FieldWithCopy';
 import { BaseBtn } from '@/[fsd]/shared/ui/button';
@@ -102,21 +103,21 @@ const profileStyles = () => ({
     alignItems: 'center',
     padding: '0 1.5rem',
     borderBottom: `0.0625rem solid ${palette.border.default}`,
+    background: palette.background.default.tertiary,
   }),
-  content: ({ palette }) => ({
-    backgroundColor: palette.background.default.tertiary,
+  content: {
     flex: 1,
     minHeight: 0,
     overflowY: 'auto',
     display: 'flex',
     justifyContent: 'center',
-  }),
+  },
   inner: {
     display: 'flex',
     flexDirection: 'column',
     gap: '1.5rem',
     padding: '1.5rem',
-    maxWidth: '50rem',
+    maxWidth: SettingsLayoutConstants.SETTINGS_LAYOUT.FORM_CONTENT_MAX_WIDTH,
     width: '100%',
   },
   avatarSection: {

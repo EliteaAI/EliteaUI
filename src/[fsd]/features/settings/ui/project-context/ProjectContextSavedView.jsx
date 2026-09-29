@@ -147,25 +147,27 @@ const ProjectContextSavedView = memo(props => {
         extraContent={headerActions}
       />
       <Box sx={styles.body}>
-        {!canEdit && (
-          <Banner.BannerMessage
-            message="You don't have permission to edit this setting."
-            variant="info"
+        <Box sx={styles.inner}>
+          {!canEdit && (
+            <Banner.BannerMessage
+              message="You don't have permission to edit this setting."
+              variant="info"
+            />
+          )}
+          <EnableToggleCard
+            enabled={enabled}
+            onToggle={handleToggle}
+            disabled={!canEdit || isSavingToggle}
           />
-        )}
-        <EnableToggleCard
-          enabled={enabled}
-          onToggle={handleToggle}
-          disabled={!canEdit || isSavingToggle}
-        />
-        {!enabled && (
-          <Banner.BannerMessage
-            message="Project Context is turned off. The project background is not applied to AI responses or workflows."
-            variant="info"
-          />
-        )}
-        <Box sx={styles.contentArea}>
-          <Markdown renderHtml={false}>{content}</Markdown>
+          {!enabled && (
+            <Banner.BannerMessage
+              message="Project Context is turned off. The project background is not applied to AI responses or workflows."
+              variant="info"
+            />
+          )}
+          <Box sx={styles.contentArea}>
+            <Markdown renderHtml={false}>{content}</Markdown>
+          </Box>
         </Box>
       </Box>
     </Box>
@@ -191,6 +193,10 @@ const projectContextSavedViewStyles = active => ({
     flex: 1,
     overflow: 'auto',
     minHeight: 0,
+    display: 'flex',
+    justifyContent: 'center',
+  },
+  inner: {
     padding: '1rem 1.5rem',
     paddingBottom: '2.375rem',
     display: 'flex',
@@ -198,13 +204,9 @@ const projectContextSavedViewStyles = active => ({
     gap: '1rem',
     width: '100%',
     maxWidth: '46.875rem',
-    alignSelf: 'center',
     boxSizing: 'border-box',
   },
   contentArea: ({ palette }) => ({
-    flex: 1,
-    overflow: 'auto',
-    minHeight: 0,
     padding: '0.75rem',
     borderTop: `0.0625rem solid ${palette.border.default}`,
     fontSize: '0.875rem',
