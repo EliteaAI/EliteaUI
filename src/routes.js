@@ -72,6 +72,7 @@ const RouteDefinitions = {
 
   Settings: '/settings',
   SettingsWithTab: '/settings/:tab',
+  SettingsProjectGeneral: '/settings/project-general',
   CreateConfiguration: '/settings/create-ai-provider',
   CreateConfigurationWithType: '/settings/create-ai-provider/:credentialType',
   CreatePersonalToken: '/settings/create-personal-token',
@@ -121,8 +122,7 @@ export const BLOCK_NAV_PATTERNS = [
   RouteDefinitions.Chat,
   RouteDefinitions.ChatConversation,
   RouteDefinitions.ProjectContextEdit,
-  RouteDefinitions.Settings,
-  RouteDefinitions.SettingsWithTab,
+  RouteDefinitions.SettingsProjectGeneral,
 ];
 
 /**
