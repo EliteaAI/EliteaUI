@@ -38,6 +38,7 @@ const RunHistoryList = memo(props => {
     selectedHistoryItem,
     source,
     handleRestoreConversation,
+    handleOpenAnalytics,
     hasEvent = false,
     shareOpensHistoryTab = false,
   } = props;
@@ -117,6 +118,7 @@ const RunHistoryList = memo(props => {
                   versions={versions}
                   tooltipTrigger={windowWidth}
                   handleRestoreConversation={handleRestoreConversation}
+                  handleOpenAnalytics={handleOpenAnalytics}
                   source={source}
                   hasEvent={hasEvent}
                   shareOpensHistoryTab={shareOpensHistoryTab}

@@ -1,5 +1,13 @@
 import { endOfDay, startOfDay, subDays } from 'date-fns';
 
+import {
+  EVAL_RUN_NO_DATA_MESSAGE,
+  EVAL_RUN_TOOLTIP_TEXTS,
+  RUN_NO_DATA_MESSAGE,
+  RUN_SCOPE_TYPE,
+  RUN_TOOLTIP_TEXTS,
+} from '../constants/analyticsCommon.constants.js';
+
 // Calendar-day-aligned, inclusive of today: days=7 spans 7 calendar days total
 // (today + 6 prior) starting at 00:00, not 7 days back from the current time.
 export const getPresetRange = days => ({
@@ -34,6 +42,9 @@ export const fmtDuration = ms => {
 // `sx` value, so it lives here rather than inside a component `styles` object.
 export const axisTick = (stroke, fontSize = 11) => ({ fill: stroke, fontSize });
 
+// Recharts paints the hovered bar's band with a hardcoded light grey, which glares in dark mode
+export const barChartCursor = palette => ({ fill: palette.background.interactiveItem.hover });
+
 // Below this, a cost is shown as a bound rather than rounded to a misleading $0.00
 const MIN_SHOWN_COST = 0.00001;
 
@@ -50,4 +61,32 @@ export const fmtCost = (usd, belowResolution = false) => {
   if (abs < 1000) return `${sign}$${abs.toFixed(2)}`;
   if (abs < 1_000_000) return `${sign}$${(abs / 1000).toFixed(1)}K`;
   return `${sign}$${(abs / 1_000_000).toFixed(1)}M`;
+};
+
+const RUN_SCOPES = {
+  [RUN_SCOPE_TYPE.run]: {
+    queryKey: 'runId',
+    tooltips: RUN_TOOLTIP_TEXTS,
+    scopeLabel: 'this run',
+    noDataMessage: RUN_NO_DATA_MESSAGE,
+  },
+  [RUN_SCOPE_TYPE.evalRun]: {
+    queryKey: 'evalRunId',
+    tooltips: EVAL_RUN_TOOLTIP_TEXTS,
+    scopeLabel: 'this evaluation run',
+    noDataMessage: EVAL_RUN_NO_DATA_MESSAGE,
+  },
+};
+
+/**
+ * Per-run Analytics scope shared by the run-aware tabs, export and refresh: which query arg narrows the
+ * payload (`run_id` for Agent/Pipeline runs, `eval_run_id` for evaluation runs) and the wording that goes
+ * with it. Null when there is no id, so the page can show its empty state instead of a project-wide view.
+ */
+export const buildRunScope = (type, id) => {
+  if (id == null || id === '') return null;
+
+  const { queryKey, ...rest } = RUN_SCOPES[type];
+
+  return { queryArgs: { [queryKey]: id }, ...rest };
 };

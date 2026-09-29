@@ -30,6 +30,7 @@ const EvaluationRunsTable = memo(props => {
     onSelect,
     onShare,
     onExport,
+    onOpenAnalytics,
     onDelete,
   } = props;
 
@@ -77,6 +78,7 @@ const EvaluationRunsTable = memo(props => {
               onSelect={onSelect}
               onShare={onShare}
               onExport={onExport}
+              onOpenAnalytics={onOpenAnalytics}
               onDelete={onDelete}
             />
           ))}

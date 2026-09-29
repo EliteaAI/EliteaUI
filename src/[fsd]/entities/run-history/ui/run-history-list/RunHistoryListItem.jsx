@@ -17,6 +17,7 @@ const RunHistoryListItem = memo(props => {
     useMock,
     tooltipTrigger,
     handleRestoreConversation,
+    handleOpenAnalytics,
     source,
     hasEvent = false,
     shareOpensHistoryTab = false,
@@ -111,6 +112,7 @@ const RunHistoryListItem = memo(props => {
         source={source}
         onItemSelect={onItemSelect}
         handleRestoreConversation={handleRestoreConversation}
+        handleOpenAnalytics={handleOpenAnalytics}
         shareOpensHistoryTab={shareOpensHistoryTab}
       />
     </Box>

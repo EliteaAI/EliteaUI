@@ -34,6 +34,7 @@ vi.mock('@/[fsd]/features/settings/lib/helpers', () => ({
     fmtCost: v => `$${v ?? 0}`,
     fmtNum: v => String(v ?? 0),
     axisTick: stroke => ({ fill: stroke, fontSize: 11 }),
+    barChartCursor: () => ({}),
   },
 }));
 
@@ -330,5 +331,95 @@ describe('AnalyticsCosts', () => {
     );
     expect(screen.getByText('Zero Cost Agent')).toBeTruthy();
     expect(screen.getByText('—')).toBeTruthy();
+  });
+});
+
+const RUN_SCOPE = {
+  queryArgs: { runId: '555' },
+  tooltips: { costs: {} },
+  scopeLabel: 'this run',
+  noDataMessage: 'No analytics data is available for this run.',
+};
+
+const EVAL_RUN_SCOPE = {
+  queryArgs: { evalRunId: 9 },
+  tooltips: { costs: {} },
+  scopeLabel: 'this evaluation run',
+  noDataMessage: 'Analytics is unavailable for this evaluation run because tracking data is missing.',
+};
+
+describe('AnalyticsCosts — run scope', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
+  });
+
+  it('queries by run id instead of a date range', () => {
+    useAnalyticsCostsQuery.mockReturnValue({ data: MOCK_DATA, isFetching: false, isError: false });
+    render(
+      <AnalyticsCosts
+        projectId={1}
+        runScope={RUN_SCOPE}
+      />,
+      { wrapper: Wrapper },
+    );
+
+    expect(useAnalyticsCostsQuery).toHaveBeenCalledWith({ projectId: 1, runId: '555' }, { skip: false });
+  });
+
+  it('keeps KPI cards, user and model tables but drops the daily trend and agent table', () => {
+    useAnalyticsCostsQuery.mockReturnValue({ data: MOCK_DATA, isFetching: false, isError: false });
+    render(
+      <AnalyticsCosts
+        projectId={1}
+        runScope={RUN_SCOPE}
+      />,
+      { wrapper: Wrapper },
+    );
+
+    expect(screen.getByTestId('kpi-CACHE WRITE COST')).toBeTruthy();
+    expect(screen.getByText('Cost by User')).toBeTruthy();
+    expect(screen.getByText('Cost by Model')).toBeTruthy();
+    expect(screen.getByTestId('info-banner')).toBeTruthy();
+    expect(screen.queryByText('Daily Cost Trend')).toBeNull();
+    expect(screen.queryByText('Cost by Agent & Pipeline')).toBeNull();
+  });
+
+  it('shows the run empty state when the run has no cost data', () => {
+    useAnalyticsCostsQuery.mockReturnValue({
+      data: { kpis: {}, by_model: [], by_user: [] },
+      isFetching: false,
+      isError: false,
+    });
+    render(
+      <AnalyticsCosts
+        projectId={1}
+        runScope={RUN_SCOPE}
+      />,
+      { wrapper: Wrapper },
+    );
+
+    expect(screen.getByText('No analytics data is available for this run.')).toBeTruthy();
+  });
+
+  it('scopes an evaluation run by eval run id and explains missing tracking data', () => {
+    useAnalyticsCostsQuery.mockReturnValue({
+      data: { kpis: {}, by_model: [], by_user: [] },
+      isFetching: false,
+      isError: false,
+    });
+    render(
+      <AnalyticsCosts
+        projectId={1}
+        runScope={EVAL_RUN_SCOPE}
+      />,
+      { wrapper: Wrapper },
+    );
+
+    expect(useAnalyticsCostsQuery).toHaveBeenCalledWith({ projectId: 1, evalRunId: 9 }, { skip: false });
+    expect(screen.getByText(EVAL_RUN_SCOPE.noDataMessage)).toBeTruthy();
   });
 });

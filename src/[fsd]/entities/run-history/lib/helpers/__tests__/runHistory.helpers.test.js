@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  RUN_ANALYTICS_TIMESTAMP_FORMAT,
   byNewestRunFirst,
   compareRunDuration,
   compareRunTimestamp,
   formatRunTimestamp,
   parseRunTimestamp,
   resolveRunHistoryColumns,
+  toRunISOString,
 } from '../runHistory.helpers';
 
 describe('resolveRunHistoryColumns', () => {
@@ -57,6 +59,23 @@ describe('formatRunTimestamp', () => {
     expect(formatRunTimestamp(null)).toBe('—');
     expect(formatRunTimestamp('')).toBe('—');
     expect(formatRunTimestamp('nonsense')).toBe('—');
+  });
+
+  it('accepts a custom pattern, as the run analytics header uses', () => {
+    const epoch = new Date(2026, 8, 2, 12, 23).getTime() / 1000;
+
+    expect(formatRunTimestamp(epoch, RUN_ANALYTICS_TIMESTAMP_FORMAT)).toBe('02 Sep 2026, 12:23 PM');
+  });
+});
+
+describe('toRunISOString', () => {
+  it('normalises a conversation timestamp to an ISO string', () => {
+    expect(toRunISOString('2026-08-17T17:39:00+00:00Z')).toBe('2026-08-17T17:39:00.000Z');
+  });
+
+  it('returns undefined for missing or unparsable values', () => {
+    expect(toRunISOString(null)).toBeUndefined();
+    expect(toRunISOString('nonsense')).toBeUndefined();
   });
 });
 

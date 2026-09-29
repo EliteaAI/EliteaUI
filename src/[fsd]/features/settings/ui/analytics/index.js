@@ -18,3 +18,5 @@ export { default as AnalyticsUsers } from './AnalyticsUsers';
 export { default as AnalyticsGuide } from './AnalyticsGuide';
 export { default as AnalyticsHealth } from './AnalyticsHealth';
 export { default as AnalyticsActivity } from './AnalyticsActivity';
+export { default as RunAnalyticsView } from './RunAnalyticsView';
+export { default as RunAnalyticsContainer } from './RunAnalyticsContainer';

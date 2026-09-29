@@ -15,3 +15,4 @@ export { useEditUser, useBatchEditUsers } from './useEditUser.hooks.js';
 export { useQueryAuthor } from './useQueryAuthor.hooks.js';
 export { useProjectBackup } from './useProjectBackup.hooks.js';
 export { useChatTemplates } from './useChatTemplates.hooks.js';
+export { useRunAnalyticsFetching } from './useRunAnalyticsFetching.hooks.js';

@@ -142,3 +142,84 @@ describe('analyticsActivity endpoint', () => {
     expect(url.searchParams.getAll('roles')).toEqual([]);
   });
 });
+
+describe('run-scoped analytics (run_id)', () => {
+  let fetchSpy;
+
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(
+        new Response('{}', { status: 200, headers: { 'content-type': 'application/json' } }),
+      );
+  });
+
+  it.each([
+    ['analyticsCosts', '/usage/analytics_costs/prompt_lib/42'],
+    ['analyticsTools', '/usage/analytics_tools/prompt_lib/42'],
+    ['projectAnalytics', '/elitea_core/analytics/prompt_lib/42'],
+  ])('%s sends run_id and no date range when scoped to a run', async (endpoint, pathname) => {
+    const store = makeStore();
+    await store.dispatch(analyticsApi.endpoints[endpoint].initiate({ projectId: 42, runId: 777 }));
+
+    const url = new URL(requestOf(fetchSpy).url);
+    expect(url.pathname).toBe(pathname);
+    expect(url.searchParams.get('run_id')).toBe('777');
+    expect(url.searchParams.has('date_from')).toBe(false);
+    expect(url.searchParams.has('date_to')).toBe(false);
+  });
+
+  it.each(['analyticsCosts', 'analyticsTools', 'projectAnalytics'])(
+    '%s omits run_id for project-wide requests',
+    async endpoint => {
+      const store = makeStore();
+      await store.dispatch(
+        analyticsApi.endpoints[endpoint].initiate({
+          projectId: 42,
+          dateFrom: '2026-01-01',
+          dateTo: '2026-02-01',
+        }),
+      );
+
+      const url = new URL(requestOf(fetchSpy).url);
+      expect(url.searchParams.has('run_id')).toBe(false);
+    },
+  );
+});
+
+describe('evaluation-run-scoped analytics (eval_run_id)', () => {
+  let fetchSpy;
+
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(
+        new Response('{}', { status: 200, headers: { 'content-type': 'application/json' } }),
+      );
+  });
+
+  it.each(['analyticsCosts', 'analyticsTools', 'projectAnalytics'])(
+    '%s sends eval_run_id, and neither run_id nor a date range',
+    async endpoint => {
+      const store = makeStore();
+      await store.dispatch(analyticsApi.endpoints[endpoint].initiate({ projectId: 42, evalRunId: 9 }));
+
+      const url = new URL(requestOf(fetchSpy).url);
+      expect(url.searchParams.get('eval_run_id')).toBe('9');
+      expect(url.searchParams.has('run_id')).toBe(false);
+      expect(url.searchParams.has('date_from')).toBe(false);
+    },
+  );
+
+  it.each(['analyticsCosts', 'analyticsTools', 'projectAnalytics'])(
+    '%s omits eval_run_id for other requests',
+    async endpoint => {
+      const store = makeStore();
+      await store.dispatch(analyticsApi.endpoints[endpoint].initiate({ projectId: 42, runId: 'abc' }));
+
+      expect(new URL(requestOf(fetchSpy).url).searchParams.has('eval_run_id')).toBe(false);
+    },
+  );
+});

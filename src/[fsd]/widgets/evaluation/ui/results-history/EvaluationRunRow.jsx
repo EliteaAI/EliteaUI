@@ -22,6 +22,7 @@ const EvaluationRunRow = memo(props => {
     onSelect,
     onShare,
     onExport,
+    onOpenAnalytics,
     onDelete,
   } = props;
 
@@ -102,6 +103,7 @@ const EvaluationRunRow = memo(props => {
             exportingRunId={exportingRunId}
             onShare={onShare}
             onExport={onExport}
+            onOpenAnalytics={onOpenAnalytics}
             onDelete={onDelete}
           />
         </Box>

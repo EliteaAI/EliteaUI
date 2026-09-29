@@ -73,6 +73,9 @@ const AgentEvaluateDimensionsPage = ChunkHelpers.lazyWithRetry(
 const AgentEvaluateHistoryPage = ChunkHelpers.lazyWithRetry(
   () => import('@/[fsd]/pages/agent-evaluate/AgentEvaluateHistoryPage'),
 );
+const AgentEvaluateHistoryAnalyticsPage = ChunkHelpers.lazyWithRetry(
+  () => import('@/[fsd]/pages/agent-evaluate/AgentEvaluateHistoryAnalyticsPage'),
+);
 const Skills = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/skills/Skills'));
 const CreateSkill = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/skills/CreateSkill'));
 const EditSkill = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/skills/EditSkill'));
@@ -96,6 +99,10 @@ const CreateToolkit = ChunkHelpers.lazyWithRetry(() => import('@/pages/Toolkits/
 const EditToolkit = ChunkHelpers.lazyWithRetry(() => import('@/pages/Toolkits/EditToolkit'));
 const Toolkits = ChunkHelpers.lazyWithRetry(() => import('@/pages/Toolkits/Toolkits'));
 const AgentRunHistory = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/agent/AgentRunHistory'));
+const AgentRunAnalytics = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/agent/AgentRunAnalytics'));
+const PipelineRunAnalytics = ChunkHelpers.lazyWithRetry(
+  () => import('@/[fsd]/pages/pipeline/PipelineRunAnalytics'),
+);
 const PipelineRunHistory = ChunkHelpers.lazyWithRetry(
   () => import('@/[fsd]/pages/pipeline/PipelineRunHistory'),
 );
@@ -205,11 +212,16 @@ const ProtectedRoutes = memo(() => {
       { path: RouteDefinitions.ApplicationsWithTab, element: <Applications /> },
       { path: RouteDefinitions.ApplicationsDetail, element: <EditApplication /> },
       { path: RouteDefinitions.ApplicationsRunHistory, element: <AgentRunHistory /> },
+      { path: RouteDefinitions.ApplicationsRunAnalytics, element: <AgentRunAnalytics /> },
       { path: RouteDefinitions.ApplicationsEvaluate, element: <AgentEvaluatePage /> },
       { path: RouteDefinitions.ApplicationsEvaluateSuite, element: <AgentEvaluatePage /> },
       { path: RouteDefinitions.ApplicationsEvaluateDatasets, element: <AgentEvaluateDatasetsPage /> },
       { path: RouteDefinitions.ApplicationsEvaluateDimensions, element: <AgentEvaluateDimensionsPage /> },
       { path: RouteDefinitions.ApplicationsEvaluateHistory, element: <AgentEvaluateHistoryPage /> },
+      {
+        path: RouteDefinitions.ApplicationsEvaluateHistoryAnalytics,
+        element: <AgentEvaluateHistoryAnalyticsPage />,
+      },
 
       /* skills — hidden for public projects */
       { path: RouteDefinitions.Skills, element: <SkillsGuard>{getIndexElement(SkillsTabs[0])}</SkillsGuard> },
@@ -245,6 +257,7 @@ const ProtectedRoutes = memo(() => {
       { path: RouteDefinitions.PipelineDetail, element: <EditPipeline /> },
 
       { path: RouteDefinitions.PipelineRunHistory, element: <PipelineRunHistory /> },
+      { path: RouteDefinitions.PipelineRunAnalytics, element: <PipelineRunAnalytics /> },
 
       /* credentials */
       { path: RouteDefinitions.Credentials, element: getIndexElement(CredentialsTabs[0]) },

@@ -55,6 +55,7 @@ vi.mock('@/[fsd]/features/settings/ui/analytics', () => ({
 vi.mock('@/[fsd]/features/settings/lib/helpers', () => ({
   AnalyticCommonHelpers: {
     fmtNum: v => (v == null ? '0' : String(v)),
+    barChartCursor: () => ({}),
     fmtCost: v => (v == null ? '$0.00' : `$${v.toFixed(4)}`),
     fmtDuration: v => (v == null ? '0ms' : `${v}ms`),
   },
