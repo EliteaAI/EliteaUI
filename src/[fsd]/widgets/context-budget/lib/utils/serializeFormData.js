@@ -1,12 +1,12 @@
 import { LLMSettingsConstants } from '@/[fsd]/shared/lib/constants';
-import { modelSupportsReasoning } from '@/[fsd]/shared/lib/utils';
+import { defaultReasoningEffortFor, modelSupportsReasoning } from '@/[fsd]/shared/lib/utils';
 import {
   CONTEXT_MESSAGES,
   DEFAULT_CONTEXT_STRATEGY,
   DEFAULT_PERSONA,
 } from '@/[fsd]/widgets/context-budget/lib/constants';
 
-const { DEFAULT_MAX_TOKENS_CUSTOM, DEFAULT_REASONING_EFFORT, DEFAULT_TEMPERATURE } = LLMSettingsConstants;
+const { DEFAULT_MAX_TOKENS_CUSTOM, DEFAULT_TEMPERATURE } = LLMSettingsConstants;
 
 /**
  * Serializes context strategy data into form data structure
@@ -36,7 +36,7 @@ export const serializeFormData = (
     ...(modelSupportsReasoning(defaultModel)
       ? {
           reasoning_effort:
-            contextStrategy.summary_llm_settings?.reasoning_effort || DEFAULT_REASONING_EFFORT,
+            contextStrategy.summary_llm_settings?.reasoning_effort || defaultReasoningEffortFor(defaultModel),
         }
       : { temperature: contextStrategy.summary_llm_settings?.temperature || DEFAULT_TEMPERATURE }),
     max_tokens: contextStrategy.summary_llm_settings?.max_tokens || DEFAULT_MAX_TOKENS_CUSTOM,

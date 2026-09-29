@@ -3,7 +3,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Box, MenuItem } from '@mui/material';
 
 import { AutoRoutingConstants, LLMSettingsConstants } from '@/[fsd]/shared/lib/constants';
-import { isAutoSelection } from '@/[fsd]/shared/lib/utils';
+import { getReasoningCapability, isAutoSelection } from '@/[fsd]/shared/lib/utils';
 import { Input } from '@/[fsd]/shared/ui';
 import { SecretField } from '@/[fsd]/shared/ui/secret-field';
 import {
@@ -21,13 +21,8 @@ import {
 import { PROMPT_PAYLOAD_KEY } from '@/common/constants';
 import { parseValueToIntNumber } from '@/common/utils';
 
-const {
-  DEFAULT_MAX_TOKENS,
-  DEFAULT_MAX_TOKENS_CUSTOM,
-  DEFAULT_REASONING_EFFORT,
-  DEFAULT_STEPS_LIMIT,
-  DEFAULT_TEMPERATURE,
-} = LLMSettingsConstants;
+const { DEFAULT_MAX_TOKENS, DEFAULT_MAX_TOKENS_CUSTOM, DEFAULT_STEPS_LIMIT, DEFAULT_TEMPERATURE } =
+  LLMSettingsConstants;
 
 const { AUTO_REASONING_MODE, AUTO_REASONING_OPTIONS, AUTO_REASONING_HELP, AUTO_OUTPUT_HELP } =
   AutoRoutingConstants;
@@ -43,6 +38,7 @@ const LLMSettings = memo(props => {
 
   const styles = llmSettingsStyles();
   const isAuto = isAutoSelection(llmSettings);
+  const reasoningCapability = useMemo(() => getReasoningCapability(model), [model]);
 
   const onChangeAutoReasoning = useCallback(
     event => {
@@ -162,10 +158,11 @@ const LLMSettings = memo(props => {
             </MenuItem>
           ))}
         </Input.InputBase>
-      ) : model?.supports_reasoning ? (
+      ) : reasoningCapability.supported ? (
         <ReasoningSlider
-          value={llmSettings.reasoning_effort || DEFAULT_REASONING_EFFORT}
+          value={llmSettings.reasoning_effort || reasoningCapability.defaultLevel}
           onChange={onChangeLLMSettings(PROMPT_PAYLOAD_KEY.reasoningEffort)}
+          capability={reasoningCapability}
           disabled={false}
         />
       ) : (

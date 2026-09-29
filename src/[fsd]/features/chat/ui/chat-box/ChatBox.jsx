@@ -65,6 +65,7 @@ import { useDeleteSkillMutation } from '@/[fsd]/features/skill/api';
 import { LLMSettingsConstants, MentionConstants } from '@/[fsd]/shared/lib/constants';
 import {
   cleanLLMSettings,
+  defaultReasoningEffortFor,
   isAutoSelection,
   isLLMSettingsFamilyConflict,
   modelsWithAuto,
@@ -112,8 +113,7 @@ import useSocket from '@/hooks/useSocket';
 import useToast from '@/hooks/useToast';
 import { actions as chatActions } from '@/slices/chat';
 
-const { DEFAULT_MAX_TOKENS, DEFAULT_REASONING_EFFORT, DEFAULT_STEPS_LIMIT, DEFAULT_TEMPERATURE } =
-  LLMSettingsConstants;
+const { DEFAULT_MAX_TOKENS, DEFAULT_STEPS_LIMIT, DEFAULT_TEMPERATURE } = LLMSettingsConstants;
 
 const EMPTY_LLM_SETTINGS = Object.freeze({});
 
@@ -376,7 +376,7 @@ const ChatBox = memo(
           userId,
         );
         if (model?.supports_reasoning) {
-          baseSettings.reasoning_effort = DEFAULT_REASONING_EFFORT;
+          baseSettings.reasoning_effort = defaultReasoningEffortFor(model);
         }
       }
 
