@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { CircularProgress, Typography, useTheme } from '@mui/material';
 import { createFilterOptions } from '@mui/material/Autocomplete';
@@ -13,6 +13,8 @@ import useParticipants from '@/hooks/chat/useParticipants';
 const LOADING_SENTINEL_KEY = '__ai_participants_loading__';
 
 const defaultFilter = createFilterOptions();
+
+const isLoadingOption = option => !!option.isLoadingMore;
 
 const AiParticipantSearchSelect = memo(props => {
   const {
@@ -36,11 +38,13 @@ const AiParticipantSearchSelect = memo(props => {
   });
 
   const hasMore = total > participants.length;
+  const listboxScrollRef = useRef({ node: null, scrollTop: 0 });
 
   const handleListboxScroll = useCallback(
     event => {
-      if (!hasMore || isFetching) return;
       const { scrollTop, scrollHeight, clientHeight } = event.currentTarget;
+      listboxScrollRef.current = { node: event.currentTarget, scrollTop };
+      if (!hasMore || isFetching) return;
       if (scrollHeight - scrollTop - clientHeight < 100) {
         onLoadMore();
       }
@@ -109,18 +113,27 @@ const AiParticipantSearchSelect = memo(props => {
     return sentinel ? [...filtered, sentinel] : filtered;
   }, []);
 
-  const handleInputChange = useCallback((_event, newInputValue) => {
-    setQuery(newInputValue);
-  }, []);
+  useEffect(() => {
+    const { node, scrollTop } = listboxScrollRef.current;
+    if (node?.isConnected && node.scrollTop !== scrollTop) {
+      node.scrollTop = scrollTop;
+    }
+  }, [optionList]);
+
+  const handleInputChange = useCallback(
+    (_event, newInputValue) => {
+      if (newInputValue === query) return;
+      listboxScrollRef.current = { node: null, scrollTop: 0 };
+      setQuery(newInputValue);
+    },
+    [query],
+  );
 
   const renderOptionBody = useCallback(
     option => {
       if (option.isLoadingMore) {
         return (
-          <Box
-            sx={styles.loadingOption}
-            onClick={e => e.stopPropagation()}
-          >
+          <Box sx={styles.loadingOption}>
             <CircularProgress size={16} />
           </Box>
         );
@@ -202,6 +215,7 @@ const AiParticipantSearchSelect = memo(props => {
       renderOptionBody={renderOptionBody}
       renderChipLabel={renderChipLabel}
       filterOptions={filterOptionsWithSentinel}
+      getOptionDisabled={isLoadingOption}
       onInputChange={handleInputChange}
       slotProps={{
         listbox: mergedListboxSlotProps,
