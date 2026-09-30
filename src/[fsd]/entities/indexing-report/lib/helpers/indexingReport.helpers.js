@@ -104,6 +104,8 @@ export const formatIndexingReportText = source => {
   const unchanged = unchangedNotice(report);
   if (unchanged) lines.push(`ℹ️ ${unchanged.text}`);
 
+  report.warnings.forEach(message => lines.push(`⚠️ ${message}`));
+
   if (report.errors.length) {
     lines.push('❌ Errors');
     report.errors.forEach(message => lines.push(`    → ${message}`));

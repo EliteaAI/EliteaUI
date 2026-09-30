@@ -404,3 +404,25 @@ describe('summarizeIndexingReport', () => {
     expect(summarizeIndexingReport(null)).toBe('');
   });
 });
+
+describe('formatIndexingReportText warnings (#5261)', () => {
+  it('renders a warning the run reported about itself', () => {
+    // This is how the resumed-run note reaches toolkit chat, index history and
+    // notification rows; the Summary component covers only the run-history panel.
+    // Mutation: drop the report.warnings line from formatIndexingReportText.
+    const text = render(report({ warnings: ['Resumed the interrupted run: 460 chunks were reused.'] }));
+
+    expect(text).toContain('⚠️ Resumed the interrupted run: 460 chunks were reused.');
+  });
+
+  it('renders every warning on its own line', () => {
+    const text = render(report({ warnings: ['first warning', 'second warning'] }));
+
+    expect(text).toContain('⚠️ first warning');
+    expect(text).toContain('⚠️ second warning');
+  });
+
+  it('renders no warning line when the run reported none', () => {
+    expect(render(report())).not.toContain('⚠️');
+  });
+});

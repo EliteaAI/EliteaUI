@@ -185,3 +185,38 @@ describe('IndexingReportSummary', () => {
     expect(screen.getByTestId('indexing-report-category-indexed')).toHaveTextContent('40 documents indexed');
   });
 });
+
+describe('IndexingReportSummary warnings (#5261)', () => {
+  const withWarnings = warnings => {
+    const source = report();
+    source.report.warnings = warnings;
+    return source;
+  };
+
+  it('renders a warning the run reported about itself', () => {
+    // Mutation: drop the report.warnings block from IndexingReportSummary.
+    renderSummary(withWarnings(['Resumed the interrupted run: 460 chunks were reused.']));
+
+    expect(screen.getByTestId('indexing-report-warnings')).toBeInTheDocument();
+    expect(screen.getByText(/460 chunks were reused/)).toBeInTheDocument();
+  });
+
+  it('renders every warning', () => {
+    renderSummary(withWarnings(['first warning', 'second warning']));
+
+    expect(screen.getByText(/first warning/)).toBeInTheDocument();
+    expect(screen.getByText(/second warning/)).toBeInTheDocument();
+  });
+
+  it('renders no warnings block when the run reported none', () => {
+    renderSummary(withWarnings([]));
+
+    expect(screen.queryByTestId('indexing-report-warnings')).not.toBeInTheDocument();
+  });
+
+  it('renders no warnings block for a report that predates the channel', () => {
+    renderSummary(report());
+
+    expect(screen.queryByTestId('indexing-report-warnings')).not.toBeInTheDocument();
+  });
+});

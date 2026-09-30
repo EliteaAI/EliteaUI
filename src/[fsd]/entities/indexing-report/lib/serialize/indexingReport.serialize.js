@@ -113,6 +113,10 @@ const fromCanonicalReport = (report, entry) => {
     categories: normalizeCategories(report.categories, dependentLabels),
     errors: report.errors || [],
     errorsTotal: countOf(report.errors_total),
+    // Non-failing facts a run reports about itself, e.g. rows resumed from an
+    // interrupted run, or previously indexed items kept because the loader could not
+    // confirm they were deleted at source.
+    warnings: report.warnings || [],
     isUpToDate: isUpToDateRun(report.totals),
     isStopped: entry?.state === CANCELLED_STATE,
     isLegacy: false,
@@ -232,6 +236,8 @@ const fromLegacyEntry = entry => {
     categories,
     errors: error ? [error] : [],
     errorsTotal: error ? 1 : 0,
+    // A legacy entry predates the canonical report and carries no warnings channel.
+    warnings: [],
     isUpToDate: !isFailed && isUpToDateRun(totals),
     isStopped: entry?.state === CANCELLED_STATE,
     isLegacy: true,

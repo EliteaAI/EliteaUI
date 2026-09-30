@@ -97,6 +97,23 @@ const IndexingReportSummary = memo(props => {
         </Typography>
       )}
 
+      {report.warnings.length > 0 && (
+        <Box
+          sx={styles.category}
+          data-testid="indexing-report-warnings"
+        >
+          {report.warnings.map((message, messageIndex) => (
+            <Typography
+              key={`${message}-${messageIndex}`}
+              variant="bodyMedium"
+              sx={styles.categoryTitle('warning')}
+            >
+              ⚠️ {message}
+            </Typography>
+          ))}
+        </Box>
+      )}
+
       {report.errors.length > 0 && (
         <Box
           sx={styles.category}
