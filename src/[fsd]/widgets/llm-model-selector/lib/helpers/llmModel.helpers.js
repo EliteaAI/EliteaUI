@@ -30,25 +30,25 @@ const MODEL_DESCRIPTION_PATTERNS = [
   [/o1-mini/, 'Fast, affordable reasoning model'],
   [/(o1-preview|o1-pro)/, 'Enhanced reasoning for hard problems'],
   [/\bo1\b/, 'Reasoning model for multi-step tasks'],
-  // === Claude Opus — newest first ===
-  [/claude.*(opus.*5[._-]5|5[._-]5.*opus)|claude-opus-5-5/, 'Most capable for ambitious work'],
-  [/claude.*(opus.*5|5.*opus)|claude-opus-5/, 'Most capable for ambitious work'],
-  [/claude.*(opus.*4|4.*opus)|claude-opus-4/, 'Most capable for complex work'],
+  // === Claude Opus — 3.x first (exact prefix), then 4.x/5.x anchored to family with (?!\d) ===
   [/claude-3-opus/, 'Most powerful for complex tasks'],
-  // === Claude Sonnet — newest first ===
-  [/claude.*(sonnet.*5[._-]5|5[._-]5.*sonnet)|claude-sonnet-5-5/, 'Smart and fast for most tasks'],
-  [/claude.*(sonnet.*5|5.*sonnet)|claude-sonnet-5/, 'Smart and fast for most tasks'],
-  [/claude.*(sonnet.*4[._-]6|4[._-]6.*sonnet)|claude-sonnet-4-6/, 'Reliable for everyday work and coding'],
-  [/claude.*(sonnet.*4[._-]5|4[._-]5.*sonnet)|claude-sonnet-4-5/, 'Balanced for speed and intelligence'],
+  [/claude[-. ]?opus[-. ]?5[._-]5(?!\d)/, 'Most capable for ambitious work'],
+  [/claude[-. ]?opus[-. ]?5(?!\d)/, 'Most capable for ambitious work'],
+  [/claude[-. ]?opus[-. ]?4(?!\d)/, 'Most capable for complex work'],
+  // === Claude Sonnet — 3.x first (exact prefix), then 4.x/5.x anchored to family with (?!\d) ===
   [/claude-3-7-sonnet/, 'Extended thinking for complex tasks'],
   [/claude-3-5-sonnet/, 'Balanced for speed and intelligence'],
-  [/claude.*(sonnet.*4|4.*sonnet)|claude-sonnet-4/, 'Smart and fast for everyday tasks'],
   [/claude-3-sonnet/, 'Balanced for diverse tasks'],
-  // === Claude Haiku — newest first ===
-  [/claude.*(haiku.*4[._-]5|4[._-]5.*haiku)|claude-haiku-4-5/, 'Fastest Claude for quick, simple tasks'],
+  [/claude[-. ]?sonnet[-. ]?5[._-]5(?!\d)/, 'Smart and fast for most tasks'],
+  [/claude[-. ]?sonnet[-. ]?5(?!\d)/, 'Smart and fast for most tasks'],
+  [/claude[-. ]?sonnet[-. ]?4[._-]6(?!\d)/, 'Reliable for everyday work and coding'],
+  [/claude[-. ]?sonnet[-. ]?4[._-]5(?!\d)/, 'Balanced for speed and intelligence'],
+  [/claude[-. ]?sonnet[-. ]?4(?!\d)/, 'Smart and fast for everyday tasks'],
+  // === Claude Haiku — 3.x first (exact prefix), then 4.x anchored to family with (?!\d) ===
   [/claude-3-5-haiku/, 'Fastest model for near-instant tasks'],
-  [/claude.*(haiku.*4|4.*haiku)|claude-haiku-4/, 'Fastest for quick, simple tasks'],
   [/claude-3-haiku/, 'Fastest for instant responses'],
+  [/claude[-. ]?haiku[-. ]?4[._-]5(?!\d)/, 'Fastest Claude for quick, simple tasks'],
+  [/claude[-. ]?haiku[-. ]?4(?!\d)/, 'Fastest for quick, simple tasks'],
   // === Claude catch-alls (display-name patterns like "Anthropic Claude Sonnet 5") ===
   [/claude.*opus/, 'Most capable for ambitious work'],
   [/claude.*sonnet/, 'Smart and fast for most tasks'],
