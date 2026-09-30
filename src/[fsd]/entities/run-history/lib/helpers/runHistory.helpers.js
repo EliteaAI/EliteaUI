@@ -2,6 +2,8 @@ import { format, fromUnixTime } from 'date-fns';
 
 const RUN_TIMESTAMP_FORMAT = 'dd-MM-yyyy, hh:mm a';
 export const RUN_ANALYTICS_TIMESTAMP_FORMAT = 'dd MMM yyyy, hh:mm a';
+// Usage is tagged with `run_id` / `eval_run_id` only from this date; older runs have nothing to show
+const RUN_ANALYTICS_AVAILABLE_FROM = Date.UTC(2026, 8, 30);
 
 export const resolveRunHistoryColumns = (noVersions, hasEvent) => {
   const date = '1.5fr';
@@ -72,3 +74,8 @@ export const toRunISOString = value => {
 
   return Number.isNaN(time) ? undefined : new Date(time).toISOString();
 };
+
+// Restoring and re-running a chat bumps `updated_at`, so it wins over `created_at`. A missing or
+// unparseable timestamp is NaN, which never passes the cutoff.
+export const hasRunAnalytics = run =>
+  parseRunTimestamp(run?.updated_at || run?.created_at) >= RUN_ANALYTICS_AVAILABLE_FROM;

@@ -88,6 +88,7 @@ const theme = createTheme({
 });
 
 const CONVERSATION_ROW = { id: 42, created_at: 1786693433, duration: 12 };
+const TRACKED_ROW = { ...CONVERSATION_ROW, updated_at: '2026-09-30T09:00:00Z' };
 
 const itemTree = (item, props) => (
   <Provider store={store}>
@@ -158,7 +159,7 @@ describe('RunHistoryListItem actions', () => {
 
   it('offers Analytics right after Restore chat when the page provides it', () => {
     const handleOpenAnalytics = vi.fn();
-    renderItem(CONVERSATION_ROW, {
+    renderItem(TRACKED_ROW, {
       handleRestoreConversation: vi.fn(),
       handleOpenAnalytics,
       source: 'agent',
@@ -168,7 +169,17 @@ describe('RunHistoryListItem actions', () => {
     expect(labels.slice(-2)).toEqual(['menu-item-Restore chat', 'menu-item-Analytics']);
 
     fireEvent.click(screen.getByTestId('menu-item-Analytics'));
-    expect(handleOpenAnalytics).toHaveBeenCalledWith(CONVERSATION_ROW.id);
+    expect(handleOpenAnalytics).toHaveBeenCalledWith(TRACKED_ROW.id);
+  });
+
+  it('does not offer Analytics for runs from before run-level tracking', () => {
+    renderItem(CONVERSATION_ROW, {
+      handleRestoreConversation: vi.fn(),
+      handleOpenAnalytics: vi.fn(),
+      source: 'agent',
+    });
+
+    expect(screen.queryByTestId('menu-item-Analytics')).not.toBeInTheDocument();
   });
 
   it('does not offer Analytics when the page does not provide it', () => {

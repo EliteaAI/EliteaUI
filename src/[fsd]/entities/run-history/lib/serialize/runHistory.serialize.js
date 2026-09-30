@@ -4,6 +4,7 @@ const serializeRunHistory = conversation => {
   return {
     id: conversation.id,
     created_at: conversation.created_at,
+    updated_at: conversation.updated_at,
     name: conversation.name,
     duration: conversation.duration,
     version_id: conversation.meta.single_participant?.entity_settings?.version_id ?? null,

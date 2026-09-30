@@ -20,7 +20,7 @@ const theme = createTheme({
   },
 });
 
-const RUN = { id: 9 };
+const RUN = { id: 9, created_at: '2026-09-30T10:00:00Z' };
 
 const renderMenu = (props = {}) => {
   render(
@@ -55,6 +55,12 @@ describe('RunHistoryActionsMenu', () => {
     fireEvent.click(screen.getByTestId('run-history-analytics'));
 
     expect(onOpenAnalytics).toHaveBeenCalledWith(RUN);
+  });
+
+  it('hides Analytics for runs from before run-level tracking', () => {
+    renderMenu({ run: { id: 9, created_at: '2026-09-29T23:59:00Z' }, onOpenAnalytics: vi.fn() });
+
+    expect(screen.queryByTestId('run-history-analytics')).not.toBeInTheDocument();
   });
 
   it('hides Analytics when the screen does not offer it', () => {

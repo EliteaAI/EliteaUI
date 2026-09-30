@@ -6,6 +6,7 @@ import {
   compareRunDuration,
   compareRunTimestamp,
   formatRunTimestamp,
+  hasRunAnalytics,
   parseRunTimestamp,
   resolveRunHistoryColumns,
   toRunISOString,
@@ -144,5 +145,27 @@ describe('byNewestRunFirst', () => {
       '2026-08-17T17:39:00Z',
       'nonsense',
     ]);
+  });
+});
+
+describe('hasRunAnalytics', () => {
+  it('offers analytics from 30 Sep 2026 (UTC) on', () => {
+    expect(hasRunAnalytics({ created_at: '2026-09-30T00:00:00Z' })).toBe(true);
+    expect(hasRunAnalytics({ created_at: '2026-09-29T23:59:59Z' })).toBe(false);
+  });
+
+  it('prefers updated_at, so a restored and re-run chat qualifies', () => {
+    expect(hasRunAnalytics({ created_at: '2026-09-06T16:35:00Z', updated_at: '2026-09-30T09:00:00Z' })).toBe(
+      true,
+    );
+    expect(hasRunAnalytics({ created_at: '2026-09-30T09:00:00Z', updated_at: '2026-09-29T09:00:00Z' })).toBe(
+      false,
+    );
+  });
+
+  it('hides analytics when the run has no readable timestamp', () => {
+    expect(hasRunAnalytics({})).toBe(false);
+    expect(hasRunAnalytics({ created_at: 'nonsense' })).toBe(false);
+    expect(hasRunAnalytics(undefined)).toBe(false);
   });
 });
