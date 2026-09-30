@@ -128,9 +128,11 @@ const CredentialTabBar = memo(props => {
   const isFormDirtyExcluding = useFormDirtyExcluding();
 
   const isLoading = useMemo(() => isCreateLoading || isUpdateLoading, [isCreateLoading, isUpdateLoading]);
+  const isNewLlmModel = isLlmModel && !isEditing;
+  const canAttemptSave = isNewLlmModel || isFormDirtyExcluding;
   const shouldDisableSave = useMemo(
-    () => isLoading || (!isLlmModel && (hasErrors || !isFormDirtyExcluding)),
-    [isLoading, isLlmModel, hasErrors, isFormDirtyExcluding],
+    () => isLoading || !canAttemptSave || (!isLlmModel && hasErrors),
+    [isLoading, canAttemptSave, isLlmModel, hasErrors],
   );
 
   const blockOptions = useMemo(

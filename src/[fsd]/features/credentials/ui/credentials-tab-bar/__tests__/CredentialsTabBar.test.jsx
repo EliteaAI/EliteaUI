@@ -8,6 +8,7 @@ import userEvent from '@testing-library/user-event';
 import CredentialsTabBar from '../CredentialsTabBar';
 
 let isFormDirty = false;
+let routeParams = {};
 const create = vi.fn();
 
 vi.hoisted(() => {
@@ -23,7 +24,7 @@ vi.hoisted(() => {
 vi.mock('formik', () => ({ useFormikContext: () => ({ resetForm: vi.fn(), values: {} }) }));
 vi.mock('react-router-dom', () => ({
   useNavigate: () => vi.fn(),
-  useParams: () => ({ credentialType: 'llm_model' }),
+  useParams: () => routeParams,
   useSearchParams: () => [new URLSearchParams()],
 }));
 vi.mock('@/ComponentsLib/Tooltip', () => ({ default: props => props.children }));
@@ -72,6 +73,7 @@ describe('CredentialsTabBar save button', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     isFormDirty = false;
+    routeParams = { credentialType: 'llm_model' };
     create.mockResolvedValue({ data: {} });
   });
 
@@ -98,6 +100,19 @@ describe('CredentialsTabBar save button', () => {
 
   describe('LLM models', () => {
     it('is enabled on an untouched form with errors', () => {
+      renderTabBar({ type: 'llm_model', hasErrors: true });
+      expect(saveButton()).toBeEnabled();
+    });
+
+    it('stays disabled on an untouched stored model', () => {
+      routeParams = { credential_uid: '45' };
+      renderTabBar({ type: 'llm_model' });
+      expect(saveButton()).toBeDisabled();
+    });
+
+    it('is enabled on a changed stored model with errors', () => {
+      routeParams = { credential_uid: '45' };
+      isFormDirty = true;
       renderTabBar({ type: 'llm_model', hasErrors: true });
       expect(saveButton()).toBeEnabled();
     });
