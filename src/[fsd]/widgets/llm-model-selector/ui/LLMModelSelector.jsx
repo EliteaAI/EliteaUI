@@ -192,10 +192,13 @@ const LLMModelSelector = memo(props => {
             sx={styles.modelButtonWrapper}
           >
             <Button.BaseBtn
+              id="model-selector-button"
               variant="elitea"
               color="secondary"
               disabled={disabled}
               onClick={handleModelMenuClick}
+              aria-haspopup="listbox"
+              aria-expanded={Boolean(anchorEl)}
               sx={styles.modelButton}
               data-testid="model-selector-name"
             >
