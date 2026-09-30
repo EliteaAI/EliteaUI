@@ -12,10 +12,12 @@ export const analyticsApi = eliteaApi
       // Tracing half of the Overview tab: event-type breakdown, chat counts and health, which are
       // socketio-derived and have no equivalent in usage_event. Stays on elitea_core.
       projectAnalytics: build.query({
-        query: ({ projectId, dateFrom, dateTo }) => {
+        query: ({ projectId, dateFrom, dateTo, runId, evalRunId }) => {
           const params = new URLSearchParams();
           if (dateFrom) params.set('date_from', dateFrom);
           if (dateTo) params.set('date_to', dateTo);
+          if (runId) params.set('run_id', String(runId));
+          if (evalRunId) params.set('eval_run_id', String(evalRunId));
 
           const qs = params.toString();
           return {
@@ -89,6 +91,8 @@ export const analyticsApi = eliteaApi
           projectId,
           dateFrom,
           dateTo,
+          runId,
+          evalRunId,
           limit = 20,
           offset = 0,
           search = '',
@@ -98,6 +102,8 @@ export const analyticsApi = eliteaApi
           const params = new URLSearchParams();
           if (dateFrom) params.set('date_from', dateFrom);
           if (dateTo) params.set('date_to', dateTo);
+          if (runId) params.set('run_id', String(runId));
+          if (evalRunId) params.set('eval_run_id', String(evalRunId));
           params.set('limit', String(limit));
           params.set('offset', String(offset));
           if (search) params.set('search', search);
@@ -166,11 +172,14 @@ export const analyticsApi = eliteaApi
         providesTags: [TAG_TYPE_ANALYTICS],
         keepUnusedDataFor: CACHE_LIFETIME,
       }),
+      // `runId` / `evalRunId` scope the payload to one Agent/Pipeline run or one evaluation run instead of a date range
       analyticsCosts: build.query({
-        query: ({ projectId, dateFrom, dateTo }) => {
+        query: ({ projectId, dateFrom, dateTo, runId, evalRunId }) => {
           const params = new URLSearchParams();
           if (dateFrom) params.set('date_from', dateFrom);
           if (dateTo) params.set('date_to', dateTo);
+          if (runId) params.set('run_id', String(runId));
+          if (evalRunId) params.set('eval_run_id', String(evalRunId));
           const qs = params.toString();
           return {
             url: `/usage/analytics_costs/prompt_lib/${projectId}${qs ? `?${qs}` : ''}`,

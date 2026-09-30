@@ -1,6 +1,7 @@
 import { format, fromUnixTime } from 'date-fns';
 
 const RUN_TIMESTAMP_FORMAT = 'dd-MM-yyyy, hh:mm a';
+export const RUN_ANALYTICS_TIMESTAMP_FORMAT = 'dd MMM yyyy, hh:mm a';
 
 export const resolveRunHistoryColumns = (noVersions, hasEvent) => {
   const date = '1.5fr';
@@ -57,11 +58,17 @@ export const byNewestRunFirst = (a, b) => {
   return right - left;
 };
 
-export const formatRunTimestamp = value => {
+export const formatRunTimestamp = (value, pattern = RUN_TIMESTAMP_FORMAT) => {
   if (value === null || value === undefined || value === '') return '—';
 
   const date = toRunDate(value);
   if (Number.isNaN(date.getTime())) return '—';
 
-  return format(date, RUN_TIMESTAMP_FORMAT);
+  return format(date, pattern);
+};
+
+export const toRunISOString = value => {
+  const time = parseRunTimestamp(value);
+
+  return Number.isNaN(time) ? undefined : new Date(time).toISOString();
 };

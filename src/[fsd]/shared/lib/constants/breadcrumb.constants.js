@@ -67,6 +67,10 @@ export const BREADCRUMB_REGISTRY = {
     parent: RouteDefinitions.ApplicationsDetail,
     label: 'Run History',
   },
+  [RouteDefinitions.ApplicationsRunAnalytics]: {
+    parent: RouteDefinitions.ApplicationsRunHistory,
+    label: 'Analytics',
+  },
   [RouteDefinitions.ApplicationsEvaluate]: {
     parent: RouteDefinitions.ApplicationsDetail,
     label: 'Evaluation (Beta)',
@@ -86,6 +90,10 @@ export const BREADCRUMB_REGISTRY = {
   [RouteDefinitions.ApplicationsEvaluateHistory]: {
     parent: RouteDefinitions.ApplicationsEvaluate,
     label: 'Results History',
+  },
+  [RouteDefinitions.ApplicationsEvaluateHistoryAnalytics]: {
+    parent: RouteDefinitions.ApplicationsEvaluateHistory,
+    label: 'Analytics',
   },
 
   [RouteDefinitions.SkillsWithTab]: { label: PathSessionMap[RouteDefinitions.Skills] },
@@ -108,5 +116,9 @@ export const BREADCRUMB_REGISTRY = {
   [RouteDefinitions.PipelineRunHistory]: {
     parent: RouteDefinitions.PipelineDetail,
     label: 'Run History',
+  },
+  [RouteDefinitions.PipelineRunAnalytics]: {
+    parent: RouteDefinitions.PipelineRunHistory,
+    label: 'Analytics',
   },
 };

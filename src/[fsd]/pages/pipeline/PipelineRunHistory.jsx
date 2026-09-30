@@ -10,6 +10,7 @@ const PipelineRunHistory = memo(() => (
   <RunHistoryPage
     source={ParticipantEntityTypes.Pipeline}
     detailRoute={RouteDefinitions.PipelineDetail}
+    analyticsRoute={RouteDefinitions.PipelineRunAnalytics}
   />
 ));
 

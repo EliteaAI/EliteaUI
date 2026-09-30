@@ -6,6 +6,7 @@ import { RunHistoryApi } from '@/[fsd]/entities/run-history/api';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import { Modal } from '@/[fsd]/shared/ui';
+import AnalyticsIcon from '@/assets/analytics-icon.svg?react';
 import CopyLinkIcon from '@/assets/copy-link-icon.svg?react';
 import { SearchParams } from '@/common/constants';
 import DotMenu from '@/components/DotMenu';
@@ -22,7 +23,14 @@ const TRANSFORM_ORIGIN = { vertical: 'top', horizontal: 'right' };
 const COPIED_FEEDBACK_MS = 2500;
 
 const RunHistoryRowActions = memo(props => {
-  const { item, source, onItemSelect, handleRestoreConversation, shareOpensHistoryTab = false } = props;
+  const {
+    item,
+    source,
+    onItemSelect,
+    handleRestoreConversation,
+    handleOpenAnalytics,
+    shareOpensHistoryTab = false,
+  } = props;
 
   const projectId = useSelectedProjectId();
   const { toastSuccess, toastError, toastInfo } = useToast();
@@ -91,9 +99,11 @@ const RunHistoryRowActions = memo(props => {
         primaryTypographyProps: { variant: 'bodyMedium' },
       },
       ListItemIcon: {
+        // currentColor svgs (Share link, Analytics) inherit this, matching Delete/Restore's own fill
         sx: {
           minWidth: '1rem !important',
           marginRight: '.75rem',
+          color: theme.palette.icon.default,
         },
       },
     }),
@@ -130,6 +140,15 @@ const RunHistoryRowActions = memo(props => {
             },
           ]
         : []),
+      ...(hasConversation && handleOpenAnalytics
+        ? [
+            {
+              label: 'Analytics',
+              icon: <AnalyticsIcon />,
+              onClick: () => handleOpenAnalytics(item.id),
+            },
+          ]
+        : []),
     ],
     [
       canShare,
@@ -138,6 +157,7 @@ const RunHistoryRowActions = memo(props => {
       handleCopyLink,
       openConfirmationModal,
       handleRestoreConversation,
+      handleOpenAnalytics,
       item?.id,
       source,
       styles.deleteIcon,

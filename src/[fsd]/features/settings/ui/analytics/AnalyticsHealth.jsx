@@ -9,7 +9,7 @@ import { ChartTooltip } from '@/[fsd]/features/settings/ui/analytics';
 import { EVENT_TYPE_COLORS } from '@/[fsd]/shared/config/theme';
 
 const AnalyticsHealth = memo(props => {
-  const { health = [], daily_activity = [] } = props;
+  const { health = [], daily_activity = [], hideTrend = false } = props;
 
   const styles = analyticsHealthStyles();
   const { palette } = useTheme();
@@ -41,7 +41,7 @@ const AnalyticsHealth = memo(props => {
 
   return (
     <Box sx={styles.healthContent}>
-      {errorTrend.length > 0 && (
+      {!hideTrend && errorTrend.length > 0 && (
         <Box sx={styles.chartCard}>
           <Typography
             variant="labelMedium"

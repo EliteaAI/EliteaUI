@@ -11,11 +11,13 @@ const RouteDefinitions = {
   CreateApplication: '/agents/create',
   ApplicationsDetail: '/agents/:tab/:agentId',
   ApplicationsRunHistory: '/agents/:tab/:agentId/history',
+  ApplicationsRunAnalytics: '/agents/:tab/:agentId/history/analytics',
   ApplicationsEvaluate: '/agents/:tab/:agentId/evaluate',
   ApplicationsEvaluateSuite: '/agents/:tab/:agentId/evaluate/:suiteId',
   ApplicationsEvaluateDatasets: '/agents/:tab/:agentId/evaluate/datasets',
   ApplicationsEvaluateDimensions: '/agents/:tab/:agentId/evaluate/dimensions',
   ApplicationsEvaluateHistory: '/agents/:tab/:agentId/evaluate/history',
+  ApplicationsEvaluateHistoryAnalytics: '/agents/:tab/:agentId/evaluate/history/analytics',
 
   Skills: '/skills',
   SkillsWithTab: '/skills/:tab',
@@ -27,6 +29,7 @@ const RouteDefinitions = {
   CreatePipeline: '/pipelines/create',
   PipelineDetail: '/pipelines/:tab/:agentId',
   PipelineRunHistory: '/pipelines/:tab/:agentId/history',
+  PipelineRunAnalytics: '/pipelines/:tab/:agentId/history/analytics',
 
   Credentials: '/credentials',
   CredentialsWithTab: '/credentials/:tab',

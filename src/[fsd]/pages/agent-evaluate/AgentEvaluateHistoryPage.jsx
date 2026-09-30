@@ -35,6 +35,7 @@ const AgentEvaluateHistoryPage = memo(() => {
     handleSelectRun,
     handleShareRun,
     handleExportRun,
+    handleOpenRunAnalytics,
     exportingRunId,
     runToDelete,
     isDeleting,
@@ -79,6 +80,7 @@ const AgentEvaluateHistoryPage = memo(() => {
               onSelect={handleSelectRun}
               onShare={handleShareRun}
               onExport={handleExportRun}
+              onOpenAnalytics={handleOpenRunAnalytics}
               onDelete={handleRequestDelete}
             />
           </Box>

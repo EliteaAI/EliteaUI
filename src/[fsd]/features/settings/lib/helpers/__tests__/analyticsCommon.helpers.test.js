@@ -1,6 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { axisTick, fmtCost, fmtDuration, fmtNum, getPresetRange } from '../analyticsCommon.helpers.js';
+import { RUN_SCOPE_TYPE } from '../../constants/analyticsCommon.constants.js';
+import {
+  axisTick,
+  barChartCursor,
+  buildRunScope,
+  fmtCost,
+  fmtDuration,
+  fmtNum,
+  getPresetRange,
+} from '../analyticsCommon.helpers.js';
 
 describe('getPresetRange', () => {
   beforeEach(() => vi.useFakeTimers());
@@ -75,4 +84,40 @@ describe('fmtCost', () => {
   it('formats -Infinity as dash', () => expect(fmtCost(-Infinity)).toBe('-'));
   it('formats negative values with sign', () => expect(fmtCost(-1.5)).toBe('-$1.50'));
   it('formats undefined as dash', () => expect(fmtCost(undefined)).toBe('-'));
+});
+
+describe('barChartCursor', () => {
+  it('paints the hover band with the theme hover token instead of the Recharts light grey', () => {
+    const palette = { background: { interactiveItem: { hover: 'rgba(255,255,255,0.1)' } } };
+
+    expect(barChartCursor(palette)).toEqual({ fill: 'rgba(255,255,255,0.1)' });
+  });
+});
+
+describe('buildRunScope', () => {
+  it('scopes an Agent/Pipeline run by runId with run wording', () => {
+    const scope = buildRunScope(RUN_SCOPE_TYPE.run, '555');
+
+    expect(scope.queryArgs).toEqual({ runId: '555' });
+    expect(scope.scopeLabel).toBe('this run');
+    expect(scope.noDataMessage).toBe('No analytics data is available for this run.');
+  });
+
+  it('scopes an evaluation run by evalRunId with evaluation wording', () => {
+    const scope = buildRunScope(RUN_SCOPE_TYPE.evalRun, 9);
+
+    expect(scope.queryArgs).toEqual({ evalRunId: 9 });
+    expect(scope.scopeLabel).toBe('this evaluation run');
+    expect(scope.tooltips.costs.TOTAL_COST).toMatch(
+      /^Estimated USD cost of this evaluation run, including Agent execution and LLM-as-judge scoring/,
+    );
+    expect(scope.noDataMessage).toBe(
+      'Analytics is unavailable for this evaluation run because tracking data is missing.',
+    );
+  });
+
+  it('returns null without an id so the page never falls back to project-wide data', () => {
+    expect(buildRunScope(RUN_SCOPE_TYPE.evalRun, null)).toBeNull();
+    expect(buildRunScope(RUN_SCOPE_TYPE.run, '')).toBeNull();
+  });
 });

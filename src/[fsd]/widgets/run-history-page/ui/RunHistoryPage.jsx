@@ -11,12 +11,13 @@ import { ToolkitsHelpers } from '@/[fsd]/features/toolkits';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import Breadcrumbs from '@/[fsd]/shared/ui/breadcrumbs';
 import { useApplicationDetailsQuery } from '@/api/applications';
+import { SearchParams } from '@/common/constants';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const DEFAULT_TAB = 'all';
 
 const RunHistoryPage = memo(props => {
-  const { source, detailRoute } = props;
+  const { source, detailRoute, analyticsRoute } = props;
   const { tab, agentId } = useParams();
   const navigate = useNavigate();
   const { search } = useLocation();
@@ -42,6 +43,20 @@ const RunHistoryPage = memo(props => {
     [navigate, tab, agentId, detailRoute, search],
   );
 
+  // The run travels as `history_run_id`, so the Run History breadcrumb (which forwards the search)
+  // brings the user back with the same record selected
+  const handleOpenAnalytics = useCallback(
+    id => {
+      const params = new URLSearchParams(search);
+      params.set(SearchParams.HistoryRunId, String(id));
+
+      navigate(
+        `${NavigationHelpers.buildRoute(analyticsRoute, { tab: tab ?? DEFAULT_TAB, agentId })}?${params.toString()}`,
+      );
+    },
+    [navigate, tab, agentId, analyticsRoute, search],
+  );
+
   return (
     <Box sx={styles.wrapper}>
       <DrawerPageHeader
@@ -54,6 +69,7 @@ const RunHistoryPage = memo(props => {
           source={source}
           versions={versions}
           handleRestoreConversation={handleRestoreConversation}
+          handleOpenAnalytics={analyticsRoute ? handleOpenAnalytics : undefined}
           ChatMessageListComponent={ChatMessageList}
           prettifyConversation={ToolkitsHelpers.prettifyToolkitConversation}
           shareOpensHistoryTab

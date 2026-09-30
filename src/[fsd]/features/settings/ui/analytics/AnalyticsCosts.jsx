@@ -10,15 +10,22 @@ import { ChartTooltip, InfoBanner, KPICard, infoBannerTextSx } from '@/[fsd]/fea
 import { CHART_COLORS } from '@/[fsd]/shared/config/theme';
 import { useAnalyticsCostsQuery } from '@/api';
 
+import RunAnalyticsEmptyState from './components/RunAnalyticsEmptyState';
+
 const AnalyticsCosts = memo(props => {
-  const { projectId, dateFrom, dateTo } = props;
+  const { projectId, dateFrom, dateTo, runScope } = props;
+
+  // Run-scoped (Run History → Analytics): no daily trend, no per-Agent breakdown, run wording
+  const isRunScope = Boolean(runScope);
+  const tooltips = (isRunScope ? runScope.tooltips : AnalyticsCommonConstants.TOOLTIP_TEXTS).costs;
+  const scopeText = isRunScope ? runScope.scopeLabel : 'the selected date range';
 
   const { palette } = useTheme();
   const axisStroke = palette.text.primary;
   const axisTickStyle = AnalyticCommonHelpers.axisTick(axisStroke);
 
   const { data, isFetching, isError } = useAnalyticsCostsQuery(
-    { projectId, dateFrom, dateTo },
+    isRunScope ? { projectId, ...runScope.queryArgs } : { projectId, dateFrom, dateTo },
     { skip: !projectId },
   );
 
@@ -96,6 +103,15 @@ const AnalyticsCosts = memo(props => {
 
   const kpis = data.kpis ?? {};
 
+  if (isRunScope && !userTableData.length && !modelTableData.length && !kpis.total_cost) {
+    return (
+      <RunAnalyticsEmptyState
+        message={runScope.noDataMessage}
+        testId="run-analytics-costs-empty"
+      />
+    );
+  }
+
   return (
     <Box sx={styles.container}>
       <InfoBanner>
@@ -111,7 +127,7 @@ const AnalyticsCosts = memo(props => {
           label="TOTAL COST"
           value={AnalyticCommonHelpers.fmtCost(kpis.total_cost, kpis.below_resolution?.total_cost)}
           subtitle="estimated USD cost"
-          tooltip={AnalyticsCommonConstants.TOOLTIP_TEXTS.costs.TOTAL_COST}
+          tooltip={tooltips.TOTAL_COST}
         />
         <KPICard
           label="INPUT TOKEN COST"
@@ -120,7 +136,7 @@ const AnalyticsCosts = memo(props => {
             kpis.below_resolution?.total_input_cost,
           )}
           subtitle="estimated USD cost"
-          tooltip={AnalyticsCommonConstants.TOOLTIP_TEXTS.costs.INPUT_TOKEN_COST}
+          tooltip={tooltips.INPUT_TOKEN_COST}
         />
         <KPICard
           label="OUTPUT TOKEN COST"
@@ -129,7 +145,7 @@ const AnalyticsCosts = memo(props => {
             kpis.below_resolution?.total_output_cost,
           )}
           subtitle="estimated USD cost"
-          tooltip={AnalyticsCommonConstants.TOOLTIP_TEXTS.costs.OUTPUT_TOKEN_COST}
+          tooltip={tooltips.OUTPUT_TOKEN_COST}
         />
         <KPICard
           label="CACHE READ COST"
@@ -138,7 +154,7 @@ const AnalyticsCosts = memo(props => {
             kpis.below_resolution?.total_cache_read_cost,
           )}
           subtitle="estimated USD cost"
-          tooltip={AnalyticsCommonConstants.TOOLTIP_TEXTS.costs.CACHE_READ_COST}
+          tooltip={tooltips.CACHE_READ_COST}
         />
         <KPICard
           label="CACHE WRITE COST"
@@ -147,82 +163,85 @@ const AnalyticsCosts = memo(props => {
             kpis.below_resolution?.total_cache_creation_cost,
           )}
           subtitle="estimated USD cost"
-          tooltip={AnalyticsCommonConstants.TOOLTIP_TEXTS.costs.CACHE_WRITE_COST}
+          tooltip={tooltips.CACHE_WRITE_COST}
         />
       </Box>
 
-      <Box sx={styles.chartCard}>
-        <Typography
-          variant="labelMedium"
-          sx={styles.chartTitle}
-        >
-          Daily Cost Trend
-        </Typography>
-        {dailyChartData.length ? (
-          <Box sx={styles.chartWrapper}>
-            <ResponsiveContainer
-              width="100%"
-              height="100%"
-            >
-              <BarChart data={dailyChartData}>
-                <XAxis
-                  dataKey="date"
-                  tick={axisTickStyle}
-                  axisLine={{ stroke: axisStroke }}
-                  tickLine={{ stroke: axisStroke }}
-                />
-                <YAxis
-                  tick={axisTickStyle}
-                  tickFormatter={v => AnalyticCommonHelpers.fmtCost(v)}
-                  axisLine={{ stroke: axisStroke }}
-                  tickLine={{ stroke: axisStroke }}
-                />
-                <RechartsTooltip
-                  content={<ChartTooltip formatter={v => AnalyticCommonHelpers.fmtCost(v)} />}
-                />
-                <Bar
-                  dataKey="total_cost"
-                  name="Total Cost"
-                  fill={CHART_COLORS[0]}
-                  radius={[4, 4, 0, 0]}
-                />
-                <Bar
-                  dataKey="input_cost"
-                  name="Input Token Cost"
-                  fill={CHART_COLORS[1]}
-                  radius={[4, 4, 0, 0]}
-                />
-                <Bar
-                  dataKey="output_cost"
-                  name="Output Token Cost"
-                  fill={CHART_COLORS[2]}
-                  radius={[4, 4, 0, 0]}
-                />
-                <Bar
-                  dataKey="cache_read_cost"
-                  name="Cache Read Cost"
-                  fill={CHART_COLORS[3]}
-                  radius={[4, 4, 0, 0]}
-                />
-                <Bar
-                  dataKey="cache_creation_cost"
-                  name="Cache Write Cost"
-                  fill={CHART_COLORS[4]}
-                  radius={[4, 4, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </Box>
-        ) : (
+      {!isRunScope && (
+        <Box sx={styles.chartCard}>
           <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={styles.noDataText}
+            variant="labelMedium"
+            sx={styles.chartTitle}
           >
-            No data
+            Daily Cost Trend
           </Typography>
-        )}
-      </Box>
+          {dailyChartData.length ? (
+            <Box sx={styles.chartWrapper}>
+              <ResponsiveContainer
+                width="100%"
+                height="100%"
+              >
+                <BarChart data={dailyChartData}>
+                  <XAxis
+                    dataKey="date"
+                    tick={axisTickStyle}
+                    axisLine={{ stroke: axisStroke }}
+                    tickLine={{ stroke: axisStroke }}
+                  />
+                  <YAxis
+                    tick={axisTickStyle}
+                    tickFormatter={v => AnalyticCommonHelpers.fmtCost(v)}
+                    axisLine={{ stroke: axisStroke }}
+                    tickLine={{ stroke: axisStroke }}
+                  />
+                  <RechartsTooltip
+                    cursor={AnalyticCommonHelpers.barChartCursor(palette)}
+                    content={<ChartTooltip formatter={v => AnalyticCommonHelpers.fmtCost(v)} />}
+                  />
+                  <Bar
+                    dataKey="total_cost"
+                    name="Total Cost"
+                    fill={CHART_COLORS[0]}
+                    radius={[4, 4, 0, 0]}
+                  />
+                  <Bar
+                    dataKey="input_cost"
+                    name="Input Token Cost"
+                    fill={CHART_COLORS[1]}
+                    radius={[4, 4, 0, 0]}
+                  />
+                  <Bar
+                    dataKey="output_cost"
+                    name="Output Token Cost"
+                    fill={CHART_COLORS[2]}
+                    radius={[4, 4, 0, 0]}
+                  />
+                  <Bar
+                    dataKey="cache_read_cost"
+                    name="Cache Read Cost"
+                    fill={CHART_COLORS[3]}
+                    radius={[4, 4, 0, 0]}
+                  />
+                  <Bar
+                    dataKey="cache_creation_cost"
+                    name="Cache Write Cost"
+                    fill={CHART_COLORS[4]}
+                    radius={[4, 4, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </Box>
+          ) : (
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={styles.noDataText}
+            >
+              No data
+            </Typography>
+          )}
+        </Box>
+      )}
 
       <Box sx={styles.chartCard}>
         <Typography
@@ -280,7 +299,7 @@ const AnalyticsCosts = memo(props => {
             color="text.secondary"
             sx={styles.noDataText}
           >
-            No user cost data is available for the selected date range.
+            No user cost data is available for {scopeText}.
           </Typography>
         )}
       </Box>
@@ -341,71 +360,73 @@ const AnalyticsCosts = memo(props => {
             color="text.secondary"
             sx={styles.noDataText}
           >
-            No model cost data is available for the selected date range.
+            No model cost data is available for {scopeText}.
           </Typography>
         )}
       </Box>
 
-      <Box sx={styles.chartCard}>
-        <Typography
-          variant="labelMedium"
-          sx={styles.chartTitle}
-        >
-          Cost by Agent & Pipeline
-        </Typography>
-        {agentTableData.length > 0 ? (
-          <Box sx={styles.tableWrapper}>
-            <Box sx={styles.tableHeader}>
-              <Typography sx={[styles.tableCell, { flex: 3 }]}>AGENT / PIPELINE</Typography>
-              <Typography sx={[styles.tableCell, styles.flexOneHalf]}>TOTAL COST</Typography>
-              <Typography sx={[styles.tableCell, styles.flexOneHalf]}>INPUT TOKEN COST</Typography>
-              <Typography sx={[styles.tableCell, styles.flexOneHalf]}>OUTPUT TOKEN COST</Typography>
-              <Typography sx={[styles.tableCell, styles.flexOneHalf]}>CACHE READ COST</Typography>
-              <Typography sx={[styles.tableCell, styles.flexOneHalf]}>CACHE WRITE COST</Typography>
-              <Typography sx={[styles.tableCell, styles.flexOne]}>SHARE</Typography>
-            </Box>
-            {agentTableData.map((a, i) => (
-              <Box
-                key={i}
-                sx={styles.tableRow}
-              >
-                <Typography
-                  sx={[styles.tableCellValue, { flex: 3 }]}
-                  noWrap
-                >
-                  {a.name}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
-                  {AnalyticCommonHelpers.fmtCost(a.cost, a.below.total_cost)}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
-                  {AnalyticCommonHelpers.fmtCost(a.input_cost, a.below.input_cost)}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
-                  {AnalyticCommonHelpers.fmtCost(a.output_cost, a.below.output_cost)}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
-                  {AnalyticCommonHelpers.fmtCost(a.cache_read_cost, a.below.cache_read_cost)}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
-                  {AnalyticCommonHelpers.fmtCost(a.cache_creation_cost, a.below.cache_creation_cost)}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
-                  {a.share != null ? `${a.share.toFixed(1)}%` : '—'}
-                </Typography>
-              </Box>
-            ))}
-          </Box>
-        ) : (
+      {!isRunScope && (
+        <Box sx={styles.chartCard}>
           <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={styles.noDataText}
+            variant="labelMedium"
+            sx={styles.chartTitle}
           >
-            No agent & pipeline cost data is available for the selected date range.
+            Cost by Agent & Pipeline
           </Typography>
-        )}
-      </Box>
+          {agentTableData.length > 0 ? (
+            <Box sx={styles.tableWrapper}>
+              <Box sx={styles.tableHeader}>
+                <Typography sx={[styles.tableCell, { flex: 3 }]}>AGENT / PIPELINE</Typography>
+                <Typography sx={[styles.tableCell, styles.flexOneHalf]}>TOTAL COST</Typography>
+                <Typography sx={[styles.tableCell, styles.flexOneHalf]}>INPUT TOKEN COST</Typography>
+                <Typography sx={[styles.tableCell, styles.flexOneHalf]}>OUTPUT TOKEN COST</Typography>
+                <Typography sx={[styles.tableCell, styles.flexOneHalf]}>CACHE READ COST</Typography>
+                <Typography sx={[styles.tableCell, styles.flexOneHalf]}>CACHE WRITE COST</Typography>
+                <Typography sx={[styles.tableCell, styles.flexOne]}>SHARE</Typography>
+              </Box>
+              {agentTableData.map((a, i) => (
+                <Box
+                  key={i}
+                  sx={styles.tableRow}
+                >
+                  <Typography
+                    sx={[styles.tableCellValue, { flex: 3 }]}
+                    noWrap
+                  >
+                    {a.name}
+                  </Typography>
+                  <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
+                    {AnalyticCommonHelpers.fmtCost(a.cost, a.below.total_cost)}
+                  </Typography>
+                  <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
+                    {AnalyticCommonHelpers.fmtCost(a.input_cost, a.below.input_cost)}
+                  </Typography>
+                  <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
+                    {AnalyticCommonHelpers.fmtCost(a.output_cost, a.below.output_cost)}
+                  </Typography>
+                  <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
+                    {AnalyticCommonHelpers.fmtCost(a.cache_read_cost, a.below.cache_read_cost)}
+                  </Typography>
+                  <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
+                    {AnalyticCommonHelpers.fmtCost(a.cache_creation_cost, a.below.cache_creation_cost)}
+                  </Typography>
+                  <Typography sx={[styles.tableCellValue, styles.flexOne]}>
+                    {a.share != null ? `${a.share.toFixed(1)}%` : '—'}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
+          ) : (
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={styles.noDataText}
+            >
+              No agent & pipeline cost data is available for the selected date range.
+            </Typography>
+          )}
+        </Box>
+      )}
     </Box>
   );
 });

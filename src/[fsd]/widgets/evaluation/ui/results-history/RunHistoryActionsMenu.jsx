@@ -5,6 +5,7 @@ import { Box, CircularProgress, Menu, MenuItem, SvgIcon, Typography } from '@mui
 
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import AnalyticsIcon from '@/assets/analytics-icon.svg?react';
 import DownloadIcon from '@/assets/download.svg?react';
 import ShareIcon from '@/assets/share-icon.svg?react';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
@@ -12,6 +13,7 @@ import DeleteIcon from '@/components/Icons/DeleteIcon';
 const RUN_ACTION = {
   share: 'share',
   export: 'export',
+  analytics: 'analytics',
   delete: 'delete',
 };
 
@@ -19,7 +21,15 @@ const ANCHOR_ORIGIN = { vertical: 'bottom', horizontal: 'right' };
 const TRANSFORM_ORIGIN = { vertical: 'top', horizontal: 'right' };
 
 const RunHistoryActionsMenu = memo(props => {
-  const { run, canDelete = false, exportingRunId = null, onShare, onExport, onDelete } = props;
+  const {
+    run,
+    canDelete = false,
+    exportingRunId = null,
+    onShare,
+    onExport,
+    onOpenAnalytics,
+    onDelete,
+  } = props;
 
   // Any export in flight disables the action everywhere, so a second one cannot be started — but
   // only the row being exported shows the spinner.
@@ -51,6 +61,9 @@ const RunHistoryActionsMenu = memo(props => {
         case RUN_ACTION.export:
           onExport?.(run);
           break;
+        case RUN_ACTION.analytics:
+          onOpenAnalytics?.(run);
+          break;
         case RUN_ACTION.delete:
           onDelete?.(run);
           break;
@@ -58,7 +71,7 @@ const RunHistoryActionsMenu = memo(props => {
           break;
       }
     },
-    [run, onShare, onExport, onDelete],
+    [run, onShare, onExport, onOpenAnalytics, onDelete],
   );
 
   const styles = runHistoryActionsMenuStyles();
@@ -113,6 +126,20 @@ const RunHistoryActionsMenu = memo(props => {
           )}
           <Typography sx={styles.menuText}>Export to Excel</Typography>
         </MenuItem>
+        {onOpenAnalytics && (
+          <MenuItem
+            onClick={event => handleMenuItemClick(event, RUN_ACTION.analytics)}
+            sx={styles.menuItem}
+            data-testid="run-history-analytics"
+          >
+            <SvgIcon
+              component={AnalyticsIcon}
+              inheritViewBox
+              sx={styles.menuIcon}
+            />
+            <Typography sx={styles.menuText}>Analytics</Typography>
+          </MenuItem>
+        )}
         {canDelete && (
           <MenuItem
             onClick={event => handleMenuItemClick(event, RUN_ACTION.delete)}

@@ -24,6 +24,7 @@ const RunHistoryContainer = memo(props => {
     versions,
     source,
     handleRestoreConversation,
+    handleOpenAnalytics,
     onClose,
     ChatMessageListComponent,
     prettifyConversation,
@@ -195,6 +196,7 @@ const RunHistoryContainer = memo(props => {
             selectedHistoryItem={selectedHistoryItem}
             source={source}
             handleRestoreConversation={handleRestoreConversation}
+            handleOpenAnalytics={handleOpenAnalytics}
             hasEvent={Boolean(decorateRow)}
             shareOpensHistoryTab={shareOpensHistoryTab}
           />

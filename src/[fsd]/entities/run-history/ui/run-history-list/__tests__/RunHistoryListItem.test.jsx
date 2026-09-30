@@ -156,6 +156,27 @@ describe('RunHistoryListItem actions', () => {
     expect(screen.getByTestId('menu-item-Restore chat')).toBeInTheDocument();
   });
 
+  it('offers Analytics right after Restore chat when the page provides it', () => {
+    const handleOpenAnalytics = vi.fn();
+    renderItem(CONVERSATION_ROW, {
+      handleRestoreConversation: vi.fn(),
+      handleOpenAnalytics,
+      source: 'agent',
+    });
+
+    const labels = screen.getAllByTestId(/^menu-item-/).map(node => node.dataset.testid);
+    expect(labels.slice(-2)).toEqual(['menu-item-Restore chat', 'menu-item-Analytics']);
+
+    fireEvent.click(screen.getByTestId('menu-item-Analytics'));
+    expect(handleOpenAnalytics).toHaveBeenCalledWith(CONVERSATION_ROW.id);
+  });
+
+  it('does not offer Analytics when the page does not provide it', () => {
+    renderItem(CONVERSATION_ROW, { handleRestoreConversation: vi.fn(), source: 'toolkit' });
+
+    expect(screen.queryByTestId('menu-item-Analytics')).not.toBeInTheDocument();
+  });
+
   it('shares a run that has no conversation without offering to delete it', () => {
     renderItem({ ...CONVERSATION_ROW, id: '200_12', hasConversation: false, canShare: true });
 

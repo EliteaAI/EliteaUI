@@ -10,6 +10,7 @@ const AgentRunHistory = memo(() => (
   <RunHistoryPage
     source={ParticipantEntityTypes.Agent}
     detailRoute={RouteDefinitions.ApplicationsDetail}
+    analyticsRoute={RouteDefinitions.ApplicationsRunAnalytics}
   />
 ));
 

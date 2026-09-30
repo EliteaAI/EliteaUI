@@ -10,8 +10,14 @@ import { CHART_COLORS } from '@/[fsd]/shared/config/theme';
 import { useAnalyticsToolsQuery } from '@/api';
 import StyledSearchInput from '@/components/SearchInput';
 
+import RunAnalyticsEmptyState from './components/RunAnalyticsEmptyState';
+
 const AnalyticsTools = memo(props => {
-  const { projectId, dateFrom, dateTo } = props;
+  const { projectId, dateFrom, dateTo, runScope } = props;
+
+  // Run-scoped (Run History → Analytics): only the Tool Details table, no drill-down into a
+  // date-range tool detail that would escape the run's scope
+  const isRunScope = Boolean(runScope);
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(20);
@@ -25,8 +31,7 @@ const AnalyticsTools = memo(props => {
   const { data, isFetching } = useAnalyticsToolsQuery(
     {
       projectId,
-      dateFrom,
-      dateTo,
+      ...(isRunScope ? runScope.queryArgs : { dateFrom, dateTo }),
       limit: rowsPerPage,
       offset: page * rowsPerPage,
       search,
@@ -74,10 +79,19 @@ const AnalyticsTools = memo(props => {
 
   const { total = 0, rows = [] } = data || {};
 
+  if (isRunScope && data && !isFetching && !total && !search) {
+    return (
+      <RunAnalyticsEmptyState
+        message={runScope.noDataMessage}
+        testId="run-analytics-tools-empty"
+      />
+    );
+  }
+
   return (
     <Box sx={styles.toolsContent}>
       {/* Top tools chart */}
-      {toolChartData.length > 0 && (
+      {!isRunScope && toolChartData.length > 0 && (
         <Box sx={styles.chartCard}>
           <Typography
             variant="labelMedium"
@@ -115,7 +129,10 @@ const AnalyticsTools = memo(props => {
                   axisLine={{ stroke: axisStroke }}
                   tickLine={{ stroke: axisStroke }}
                 />
-                <RechartsTooltip content={<ChartTooltip />} />
+                <RechartsTooltip
+                  cursor={AnalyticCommonHelpers.barChartCursor(palette)}
+                  content={<ChartTooltip />}
+                />
                 <Bar
                   dataKey="calls"
                   name="Calls"
@@ -175,8 +192,8 @@ const AnalyticsTools = memo(props => {
             rows.map((t, i) => (
               <Box
                 key={i}
-                sx={styles.clickableRow}
-                onClick={() => handleToolClick(t.tool_name)}
+                sx={isRunScope ? styles.tableRow : styles.clickableRow}
+                onClick={isRunScope ? undefined : () => handleToolClick(t.tool_name)}
               >
                 <Typography
                   sx={[styles.tableCellValue, { flex: 3 }]}
@@ -257,6 +274,12 @@ const styles = {
     fontWeight: 600,
     color: palette.text.metrics || palette.text.disabled,
     textTransform: 'uppercase',
+  }),
+  tableRow: ({ palette }) => ({
+    display: 'flex',
+    padding: '0.5rem 0.75rem',
+    borderBottom: `0.0625rem solid ${palette.border.default}`,
+    gap: '0.5rem',
   }),
   clickableRow: ({ palette }) => ({
     display: 'flex',
