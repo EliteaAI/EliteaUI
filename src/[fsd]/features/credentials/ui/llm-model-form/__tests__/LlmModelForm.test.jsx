@@ -59,6 +59,11 @@ vi.mock('@/hooks/useToast', () => ({
 vi.mock('../../credentials-select/CredentialsSelect', () => ({
   default: props => (
     <div data-testid="credentials-select">
+      <span>{props.label}</span>
+      <span data-testid={props.infoTooltipTestId} />
+      {props.error && props.helperText && (
+        <div data-testid="credential-warning-banner">{props.helperText}</div>
+      )}
       {Object.entries(CREDENTIAL_TYPES).map(([title, type]) => (
         <button
           key={title}
@@ -263,7 +268,7 @@ describe('LlmModelForm', () => {
   it('labels the model name field and explains it with an example', () => {
     renderForm(NEW_MODEL);
     const modelNameField = screen.getByTestId('llm-model-field-name');
-    expect(within(modelNameField).getByText('Model name *')).toBeInTheDocument();
+    expect(within(modelNameField).getByText('Model Name *')).toBeInTheDocument();
     expect(
       within(modelNameField).getByText(
         'The model ID from the provider, for example global.openai.gpt-5.6-luna',
@@ -346,7 +351,18 @@ describe('LlmModelForm', () => {
         'llm-model-field-name',
       ]);
       expect(inputOf('description')).toHaveValue('');
+    });
+
+    it('shows the counter only while the field is focused', async () => {
+      const user = userEvent.setup();
+      renderForm(NEW_MODEL);
+      expect(screen.queryByTestId('llm-model-description-counter')).not.toBeInTheDocument();
+
+      await user.click(inputOf('description'));
       expect(screen.getByTestId('llm-model-description-counter')).toHaveTextContent('40 characters left');
+
+      await user.tab();
+      expect(screen.queryByTestId('llm-model-description-counter')).not.toBeInTheDocument();
     });
 
     it('is optional', async () => {
@@ -461,8 +477,10 @@ describe('LlmModelForm', () => {
       'llm-model-error-name',
       'llm-model-error-context_window',
       'llm-model-error-max_output_tokens',
-      'llm-model-error-ai_credentials',
     ]);
+    expect(
+      within(screen.getByTestId('llm-model-field-ai_credentials')).getByTestId('credential-warning-banner'),
+    ).toHaveTextContent('AI credentials are required.');
     expect(Object.keys(lastReportedErrors())).toHaveLength(6);
   });
 
@@ -546,9 +564,9 @@ describe('LlmModelForm', () => {
       renderForm(EXISTING_DIAL_MODEL, { showValidation: true });
       await user.click(screen.getByRole('button', { name: /dial-cred-2/ }));
 
-      expect(screen.getByTestId('llm-model-error-ai_credentials')).toHaveTextContent(
-        'Checking the selected AI credentials. Try saving again in a moment.',
-      );
+      expect(
+        within(screen.getByTestId('llm-model-field-ai_credentials')).getByTestId('credential-warning-banner'),
+      ).toHaveTextContent('Checking the selected AI credentials. Try saving again in a moment.');
     });
 
     it('holds Save while the list loads once a setting the credential type gates is changed', async () => {
@@ -571,7 +589,7 @@ describe('LlmModelForm', () => {
       renderForm(EXISTING_DIAL_MODEL, { showValidation: true });
 
       expect(lastReportedErrors()).toEqual({});
-      expect(screen.queryByTestId('llm-model-error-ai_credentials')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('credential-warning-banner')).not.toBeInTheDocument();
     });
 
     it('shows a required API protocol only for DIAL credentials', async () => {

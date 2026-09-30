@@ -44,7 +44,7 @@ const llmModelFormSectionStyles = () => ({
   content: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '1.5rem',
+    gap: '1rem',
     marginTop: '0.6rem',
   },
 });

@@ -4,6 +4,8 @@ import {
   buildInitialLlmModelSettings,
   convertDisplayNameToLlmModelId,
   getLlmModelCredentialTypeTag,
+  getLlmModelInputLabelProps,
+  getLlmModelSelectLabelProps,
   getLlmModelTier,
   getLlmModelTierFlags,
   mapLlmModelSaveErrorToFields,
@@ -245,5 +247,35 @@ describe('mapLlmModelSaveErrorToFields', () => {
     );
     expect(mapLlmModelSaveErrorToFields({ status: 500 })).toEqual({});
     expect(mapLlmModelSaveErrorToFields(undefined)).toEqual({});
+  });
+});
+
+describe('getLlmModelInputLabelProps', () => {
+  it('builds the floating label and tooltip props for an input field', () => {
+    expect(getLlmModelInputLabelProps('name', true)).toMatchObject({
+      label: 'Model Name',
+      required: true,
+      tooltipTestId: 'llm-model-info-name',
+      tooltipContentTestId: 'llm-model-info-text-name',
+    });
+    expect(getLlmModelInputLabelProps('name').tooltipDescription).toContain('global.openai.gpt-5.6-luna');
+  });
+
+  it('marks fields optional by default', () => {
+    expect(getLlmModelInputLabelProps('description').required).toBe(false);
+  });
+});
+
+describe('getLlmModelSelectLabelProps', () => {
+  it('builds the label and tooltip props for a select field', () => {
+    expect(getLlmModelSelectLabelProps('ai_credentials', true)).toMatchObject({
+      label: 'AI Credentials',
+      required: true,
+      shrinkLabel: true,
+      infoTooltipTestId: 'llm-model-info-ai_credentials',
+      infoTooltipContentTestId: 'llm-model-info-text-ai_credentials',
+    });
+    expect(getLlmModelSelectLabelProps('api_protocol').label).toBe('API protocol');
+    expect(getLlmModelSelectLabelProps('api_protocol').required).toBe(false);
   });
 });
