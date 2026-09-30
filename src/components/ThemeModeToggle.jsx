@@ -70,17 +70,17 @@ const ThemeModeToggle = memo(() => {
       },
     ];
 
-    // Only show Custom option if custom theme is configured
+    // Only show the Project option if the project-provided theme is configured
     if (hasCustomTheme) {
       buttons.push({
         value: ThemeModeOptions.Custom,
         icon: (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <PaletteOutlinedIcon sx={{ fontSize: '1rem' }} />
-            <Typography variant="labelSmall">Custom</Typography>
+            <Typography variant="labelSmall">Project</Typography>
           </Box>
         ),
-        tooltip: 'Custom theme',
+        tooltip: 'Project theme',
       });
     }
 

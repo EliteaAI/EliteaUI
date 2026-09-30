@@ -158,7 +158,8 @@ const defaultCombobox = () =>
 
 const typeName = async (user, name) => {
   await user.clear(nameInput());
-  await user.type(nameInput(), name);
+  await user.click(nameInput());
+  await user.paste(name);
 };
 
 describe('LlmModelForm reasoning profiles', () => {
