@@ -113,6 +113,22 @@ describe('RunAnalyticsView', () => {
     expect(screen.queryByTestId('tab-health')).not.toBeInTheDocument();
   });
 
+  it('shows a spinner instead of the stale empty state while Health re-fetches after Refresh', () => {
+    useProjectAnalyticsQuery.mockReturnValue({ data: { health: [] }, isFetching: true, isError: false });
+    renderView();
+
+    fireEvent.click(screen.getByTestId('run-analytics-tab-health'));
+
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.queryByTestId('run-analytics-health-empty')).not.toBeInTheDocument();
+  });
+
+  it('forwards its test id to the page root', () => {
+    renderView();
+
+    expect(screen.getByTestId('run-analytics-page')).toContainElement(screen.getByTestId('breadcrumbs'));
+  });
+
   it('shows a spinner instead of the missing-run message while the run is loading', () => {
     renderView({ runScope: null, isRunLoading: true });
 

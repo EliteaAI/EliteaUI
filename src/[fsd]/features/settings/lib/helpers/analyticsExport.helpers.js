@@ -675,7 +675,8 @@ export const buildAnalyticsSheets = ({
   buildHealthSheet(overview, meta),
 ];
 
-export const fmtRunDateTime = fmtISODateTime;
+// Same placeholder as the page header when the run timestamp is missing or unparseable
+export const fmtRunDateTime = iso => fmtISODateTime(iso) || '—';
 
 // `suffix` names the run, e.g. `run-<id>` or `eval-run-<id>`
 export const runAnalyticsExportFileName = ({ projectName, entityName, suffix }) =>

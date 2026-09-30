@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   buildRunAnalyticsSheets,
   fetchRunAnalyticsData,
+  fmtRunDateTime,
   runAnalyticsExportFileName,
 } from '../analyticsExport.helpers';
 
@@ -129,5 +130,16 @@ describe('runAnalyticsExportFileName', () => {
     expect(
       runAnalyticsExportFileName({ projectName: 'Team', entityName: 'Reviewer', suffix: 'eval-run-9' }),
     ).toBe('Team_Reviewer_eval-run-9.xlsx');
+  });
+});
+
+describe('fmtRunDateTime', () => {
+  it('formats a run timestamp as date and local time', () => {
+    expect(fmtRunDateTime('2026-09-27T12:57:00Z')).toMatch(/^2026-09-27 \d{2}:\d{2}:\d{2}$/);
+  });
+
+  it('falls back to a dash when the run timestamp is missing', () => {
+    expect(fmtRunDateTime(undefined)).toBe('—');
+    expect(fmtRunDateTime(null)).toBe('—');
   });
 });

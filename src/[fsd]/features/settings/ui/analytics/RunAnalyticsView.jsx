@@ -229,7 +229,8 @@ const RunAnalyticsView = memo(props => {
               runScope={runScope}
             />
           )}
-          {runScope && isHealthTab && healthFetching && !healthData && (
+          {/* A Refresh re-fetch keeps the stale payload, so spin whenever there are no rows to keep showing */}
+          {runScope && isHealthTab && healthFetching && !healthData?.health?.length && (
             <Box sx={styles.centeredState}>
               <CircularProgress size={32} />
             </Box>
@@ -244,12 +245,17 @@ const RunAnalyticsView = memo(props => {
               </Typography>
             </Box>
           )}
-          {runScope && isHealthTab && healthData && !healthError && !healthData.health?.length && (
-            <RunAnalyticsEmptyState
-              message={runScope.noDataMessage}
-              testId="run-analytics-health-empty"
-            />
-          )}
+          {runScope &&
+            isHealthTab &&
+            healthData &&
+            !healthError &&
+            !healthFetching &&
+            !healthData.health?.length && (
+              <RunAnalyticsEmptyState
+                message={runScope.noDataMessage}
+                testId="run-analytics-health-empty"
+              />
+            )}
           {runScope && isHealthTab && healthData && !healthError && healthData.health?.length > 0 && (
             <AnalyticsHealth
               health={healthData.health}
