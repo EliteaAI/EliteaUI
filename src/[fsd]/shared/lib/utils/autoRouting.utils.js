@@ -17,6 +17,7 @@ export const autoModel = profile => ({
   id: AUTO_MODEL_ID,
   name: AUTO_MODEL_ID,
   display_name: AUTO_MODEL_LABEL,
+  description: 'Based on your task and real-time usage',
   selection: {
     mode: AUTO_SELECTION_MODE,
     profile_ref: profile,
