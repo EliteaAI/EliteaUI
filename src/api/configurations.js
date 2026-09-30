@@ -442,6 +442,12 @@ export const configurationsApi = eliteaApi
         },
         providesTags: [TAG_MODELS],
       }),
+      getLlmModelProfiles: build.query({
+        query: ({ projectId }) => ({
+          url: `${apiSlicePath}/llm_model_profiles/${projectId}`,
+        }),
+        keepUnusedDataFor: 3600,
+      }),
       // list credential types
       listCredentialTypes: build.query({
         query: ({ projectId }) => ({
@@ -492,6 +498,7 @@ export const {
   useLazyGetConfigurationDetailQuery,
   useListModelsQuery,
   useLazyListModelsQuery,
+  useGetLlmModelProfilesQuery,
 
   // Mutations
   useCreateConfigurationMutation,

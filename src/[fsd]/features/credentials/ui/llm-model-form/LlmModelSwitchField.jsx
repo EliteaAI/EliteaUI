@@ -14,22 +14,33 @@ const {
 } = LlmModelFormConstants;
 
 const LlmModelSwitchField = memo(props => {
-  const { field, checked, onChange, error } = props;
+  const { field, checked, onChange, error, locked = false, description, children } = props;
   const label = LLM_MODEL_FIELD_LABELS[field];
   const styles = llmModelSwitchFieldStyles();
 
   const switchSlotProps = useMemo(
     () => ({
       switch: {
+        sx: locked ? styles.lockedSwitch : undefined,
         slotProps: {
-          input: { role: 'switch', 'aria-label': label, 'data-testid': `llm-model-switch-${field}` },
+          input: {
+            role: 'switch',
+            'aria-label': label,
+            'aria-disabled': locked ? 'true' : undefined,
+            'data-testid': `llm-model-switch-${field}`,
+          },
         },
       },
     }),
-    [label, field],
+    [label, field, locked, styles.lockedSwitch],
   );
 
-  const handleChange = useCallback((event, isChecked) => onChange(field, isChecked), [field, onChange]);
+  const handleChange = useCallback(
+    (event, isChecked) => {
+      if (!locked) onChange(field, isChecked);
+    },
+    [field, locked, onChange],
+  );
 
   return (
     <Box
@@ -51,7 +62,7 @@ const LlmModelSwitchField = memo(props => {
             variant="bodySmall"
             sx={styles.description}
           >
-            {LLM_MODEL_SWITCH_DESCRIPTIONS[field]}
+            {description ?? LLM_MODEL_SWITCH_DESCRIPTIONS[field]}
           </Typography>
         </Box>
         <Switch.BaseSwitch
@@ -60,6 +71,7 @@ const LlmModelSwitchField = memo(props => {
           slotProps={switchSlotProps}
         />
       </Box>
+      {children}
       {error && (
         <Typography
           variant="bodySmall"
@@ -105,6 +117,11 @@ const llmModelSwitchFieldStyles = () => ({
   error: ({ palette }) => ({
     color: palette.text.error,
   }),
+  lockedSwitch: {
+    opacity: 0.55,
+    cursor: 'not-allowed',
+    '& .MuiSwitch-input': { cursor: 'not-allowed' },
+  },
 });
 
 export default LlmModelSwitchField;

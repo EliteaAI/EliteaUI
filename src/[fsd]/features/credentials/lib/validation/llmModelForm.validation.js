@@ -2,6 +2,7 @@ import { API_PROTOCOLS } from '../constants/apiProtocol.constants.js';
 import {
   LLM_MODEL_FIELDS as FIELDS,
   LLM_MODEL_DISPLAY_NAME_MAX_LENGTH,
+  LLM_MODEL_EFFORT_NONE,
   LLM_MODEL_ID_MAX_LENGTH,
   LLM_MODEL_ID_PATTERN,
   LLM_MODEL_ERROR_MESSAGES as MESSAGES,
@@ -32,6 +33,25 @@ const validateTokenLimit = (value, requiredMessage) => {
   return null;
 };
 
+const validateReasoningLevels = (settings, isReasoningConfigRequired, unsupportedEffortLabels) => {
+  if (!settings.supports_reasoning) return {};
+  if (unsupportedEffortLabels.length) {
+    return { [FIELDS.supportedEfforts]: MESSAGES.supportedEffortsNotOffered(unsupportedEffortLabels) };
+  }
+  if (!isReasoningConfigRequired) return {};
+  const selectableLevels = (settings.supported_efforts || []).filter(
+    level => level !== LLM_MODEL_EFFORT_NONE,
+  );
+  const defaultEffortError = () => {
+    if (!settings.default_effort) return MESSAGES.defaultEffortRequired;
+    return selectableLevels.includes(settings.default_effort) ? null : MESSAGES.defaultEffortNotSupported;
+  };
+  return {
+    [FIELDS.supportedEfforts]: selectableLevels.length ? null : MESSAGES.supportedEffortsRequired,
+    [FIELDS.defaultEffort]: defaultEffortError(),
+  };
+};
+
 export const validateLlmModelSettings = ({
   settings = {},
   isEditing = false,
@@ -39,6 +59,8 @@ export const validateLlmModelSettings = ({
   isApiProtocolShown = false,
   isCredentialTypePending = false,
   apiProtocol = '',
+  isReasoningConfigRequired = false,
+  unsupportedEffortLabels = [],
 }) => {
   const contextWindowError = validateTokenLimit(settings.context_window, MESSAGES.contextWindowRequired);
   const maxOutputTokensError =
@@ -60,6 +82,7 @@ export const validateLlmModelSettings = ({
     [FIELDS.credentials]: settings.ai_credentials?.elitea_title ? null : MESSAGES.credentialsRequired,
     [FIELDS.credentialsCheck]: isCredentialTypePending ? MESSAGES.credentialsTypePending : null,
     [FIELDS.apiProtocol]: isApiProtocolShown && !apiProtocol ? MESSAGES.apiProtocolRequired : null,
+    ...validateReasoningLevels(settings, isReasoningConfigRequired, unsupportedEffortLabels),
   };
 
   return Object.fromEntries(Object.entries(errors).filter(([, message]) => message));

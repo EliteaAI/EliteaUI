@@ -1,9 +1,10 @@
 import { LLMSettingsConstants } from '@/[fsd]/shared/lib/constants';
+import { defaultReasoningEffortFor } from '@/[fsd]/shared/lib/utils';
 import { ChatParticipantType, PUBLIC_PROJECT_ID } from '@/common/constants';
 
 import { getChatParticipantUniqueId } from './participants.helpers';
 
-const { DEFAULT_MAX_TOKENS, DEFAULT_REASONING_EFFORT, DEFAULT_TEMPERATURE } = LLMSettingsConstants;
+const { DEFAULT_MAX_TOKENS, DEFAULT_TEMPERATURE } = LLMSettingsConstants;
 
 export const isParticipantOKForChat = participant =>
   participant.entity_name === ChatParticipantType.Users ||
@@ -78,7 +79,7 @@ export const transformParticipant = (participantType, participant, variables) =>
       // Only one of temperature/reasoning_effort applies, never both (issue #5821).
       // `??` (not `||`) since 0 is a valid temperature/reasoning_effort value.
       ...(participant.supports_reasoning
-        ? { reasoning_effort: participant.reasoning_effort ?? DEFAULT_REASONING_EFFORT }
+        ? { reasoning_effort: participant.reasoning_effort ?? defaultReasoningEffortFor(participant) }
         : { temperature: participant.temperature ?? DEFAULT_TEMPERATURE }),
     },
   };

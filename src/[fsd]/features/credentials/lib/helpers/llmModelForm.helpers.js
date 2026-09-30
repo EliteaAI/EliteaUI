@@ -5,6 +5,7 @@ import {
   LLM_MODEL_FIELDS,
   LLM_MODEL_FIELDS_CHECKED_ON_OPEN,
   LLM_MODEL_ID_MAX_LENGTH,
+  LLM_MODEL_REASONING_FIELDS,
   LLM_MODEL_TIERS,
 } from '../constants/llmModelForm.constants.js';
 
@@ -46,6 +47,9 @@ export const buildInitialLlmModelSettings = () => ({
   [LLM_MODEL_FIELDS.maxOutputTokens]: '',
   [LLM_MODEL_FIELDS.vision]: false,
   [LLM_MODEL_FIELDS.reasoning]: false,
+  [LLM_MODEL_FIELDS.thinkingType]: null,
+  [LLM_MODEL_FIELDS.supportedEfforts]: null,
+  [LLM_MODEL_FIELDS.defaultEffort]: null,
   [LLM_MODEL_FIELDS.lowTier]: false,
   [LLM_MODEL_FIELDS.highTier]: false,
   [LLM_MODEL_FIELDS.shared]: false,
@@ -75,6 +79,10 @@ export const mapLlmModelSaveErrorToFields = error => {
   if (typeof message !== 'string') return {};
   if (field === LLM_MODEL_FIELDS.id) return { [LLM_MODEL_FIELDS.id]: message };
   if (DESCRIPTION_ERROR_FIELDS.includes(field)) return { [LLM_MODEL_FIELDS.description]: message };
+  const dataField = String(field || '')
+    .replace(/^data\./, '')
+    .split('.')[0];
+  if (LLM_MODEL_REASONING_FIELDS.includes(dataField)) return { [dataField]: message };
   if (message.includes(DIAL_AZURE_REASONING_REJECTION)) {
     return { [LLM_MODEL_FIELDS.reasoning]: LLM_MODEL_ERROR_MESSAGES.reasoningNotSupportedByProtocol };
   }

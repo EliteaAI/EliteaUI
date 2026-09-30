@@ -2,6 +2,10 @@ import {
   DEFAULT_MAX_TOKENS,
   DEFAULT_REASONING_EFFORT,
   DEFAULT_TEMPERATURE,
+  FALLBACK_REASONING_EFFORTS,
+  REASONING_EFFORT_OFF,
+  REASONING_EFFORT_ORDER,
+  THINKING_TYPES,
 } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
 
 import { isAutoSelection, selectionFields } from './autoRouting.utils';
@@ -14,6 +18,38 @@ import { isAutoSelection, selectionFields } from './autoRouting.utils';
 export const modelSupportsReasoning = model => {
   return Boolean(model?.supports_reasoning);
 };
+
+export const getReasoningCapability = model => {
+  if (!modelSupportsReasoning(model)) {
+    return {
+      supported: false,
+      levels: [],
+      defaultLevel: null,
+      alwaysOn: false,
+      isBudget: false,
+    };
+  }
+  const stored = Array.isArray(model.supported_efforts) ? model.supported_efforts : [];
+  const levels = stored.length
+    ? REASONING_EFFORT_ORDER.filter(level => stored.includes(level))
+    : FALLBACK_REASONING_EFFORTS;
+  const selectable = levels.filter(level => level !== REASONING_EFFORT_OFF);
+  const defaultLevel = selectable.includes(model.default_effort)
+    ? model.default_effort
+    : selectable.includes(DEFAULT_REASONING_EFFORT)
+      ? DEFAULT_REASONING_EFFORT
+      : (selectable[0] ?? null);
+  return {
+    supported: true,
+    levels,
+    defaultLevel,
+    alwaysOn: model.thinking_type === THINKING_TYPES.alwaysOn,
+    isBudget: model.thinking_type === THINKING_TYPES.enabled,
+  };
+};
+
+export const defaultReasoningEffortFor = model =>
+  getReasoningCapability(model).defaultLevel ?? DEFAULT_REASONING_EFFORT;
 
 /**
  * Infer whether stored llm_settings belong to the reasoning family when no model lookup is
@@ -56,7 +92,7 @@ export const generateLLMSettings = (model, existingSettings = {}, options = {}) 
   // Only one of temperature/reasoning_effort applies, never both (issue #5821) — a
   // reasoning-capable model rejects a custom temperature.
   if (modelSupportsReasoning(model)) {
-    baseSettings.reasoning_effort = existingSettings.reasoning_effort ?? DEFAULT_REASONING_EFFORT;
+    baseSettings.reasoning_effort = existingSettings.reasoning_effort ?? defaultReasoningEffortFor(model);
   } else {
     baseSettings.temperature = existingSettings.temperature ?? DEFAULT_TEMPERATURE;
   }
@@ -96,7 +132,7 @@ export const isLLMSettingsFamilyConflict = (temperature, reasoningEffort) =>
 export const resetLLMSettingsForModel = model => {
   if (isAutoSelection(model)) return selectionFields(model);
   if (modelSupportsReasoning(model)) {
-    return { temperature: null, reasoning_effort: DEFAULT_REASONING_EFFORT };
+    return { temperature: null, reasoning_effort: defaultReasoningEffortFor(model) };
   }
   return { temperature: DEFAULT_TEMPERATURE, reasoning_effort: null };
 };

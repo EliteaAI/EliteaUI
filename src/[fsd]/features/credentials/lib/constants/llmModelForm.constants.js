@@ -1,3 +1,10 @@
+import {
+  REASONING_EFFORT_LABELS,
+  REASONING_EFFORT_OFF,
+  REASONING_EFFORT_ORDER,
+  THINKING_TYPES,
+} from '@/[fsd]/shared/lib/constants/llmSettings.constants';
+
 import { API_PROTOCOLS } from './apiProtocol.constants.js';
 
 export const LLM_MODEL_CONFIGURATION_TYPE = 'llm_model';
@@ -11,6 +18,9 @@ export const LLM_MODEL_FIELDS = {
   maxOutputTokens: 'max_output_tokens',
   vision: 'supports_vision',
   reasoning: 'supports_reasoning',
+  thinkingType: 'thinking_type',
+  supportedEfforts: 'supported_efforts',
+  defaultEffort: 'default_effort',
   modelTier: 'model_tier',
   lowTier: 'low_tier',
   highTier: 'high_tier',
@@ -32,7 +42,16 @@ export const LLM_MODEL_SECTIONS = {
     ],
   },
   limits: { title: 'Limits', fields: [LLM_MODEL_FIELDS.contextWindow, LLM_MODEL_FIELDS.maxOutputTokens] },
-  capabilities: { title: 'Capabilities', fields: [LLM_MODEL_FIELDS.vision, LLM_MODEL_FIELDS.reasoning] },
+  capabilities: {
+    title: 'Capabilities',
+    fields: [
+      LLM_MODEL_FIELDS.vision,
+      LLM_MODEL_FIELDS.reasoning,
+      LLM_MODEL_FIELDS.thinkingType,
+      LLM_MODEL_FIELDS.supportedEfforts,
+      LLM_MODEL_FIELDS.defaultEffort,
+    ],
+  },
   availability: { title: 'Availability', fields: [LLM_MODEL_FIELDS.modelTier, LLM_MODEL_FIELDS.shared] },
   connection: {
     title: 'Connection',
@@ -60,8 +79,115 @@ export const LLM_MODEL_ERROR_SOURCE_FIELDS = {
     LLM_MODEL_FIELDS.reasoning,
     LLM_MODEL_FIELDS.apiProtocol,
     LLM_MODEL_FIELDS.credentials,
+    LLM_MODEL_FIELDS.modelName,
+  ],
+  [LLM_MODEL_FIELDS.thinkingType]: [
+    LLM_MODEL_FIELDS.thinkingType,
+    LLM_MODEL_FIELDS.reasoning,
+    LLM_MODEL_FIELDS.modelName,
+  ],
+  [LLM_MODEL_FIELDS.supportedEfforts]: [
+    LLM_MODEL_FIELDS.supportedEfforts,
+    LLM_MODEL_FIELDS.thinkingType,
+    LLM_MODEL_FIELDS.reasoning,
+    LLM_MODEL_FIELDS.modelName,
+  ],
+  [LLM_MODEL_FIELDS.defaultEffort]: [
+    LLM_MODEL_FIELDS.defaultEffort,
+    LLM_MODEL_FIELDS.supportedEfforts,
+    LLM_MODEL_FIELDS.reasoning,
+    LLM_MODEL_FIELDS.modelName,
   ],
   [LLM_MODEL_FIELDS.modelTier]: [LLM_MODEL_FIELDS.lowTier, LLM_MODEL_FIELDS.highTier],
+};
+
+export const LLM_MODEL_REASONING_FIELDS = [
+  LLM_MODEL_FIELDS.reasoning,
+  LLM_MODEL_FIELDS.thinkingType,
+  LLM_MODEL_FIELDS.supportedEfforts,
+  LLM_MODEL_FIELDS.defaultEffort,
+];
+
+export const LLM_MODEL_EFFORT_LEVELS = REASONING_EFFORT_ORDER;
+
+export const LLM_MODEL_EFFORT_LEVEL_LABELS = { ...REASONING_EFFORT_LABELS, [REASONING_EFFORT_OFF]: 'None' };
+
+export const LLM_MODEL_EFFORT_NONE = REASONING_EFFORT_OFF;
+
+export const LLM_MODEL_THINKING_TYPES = THINKING_TYPES;
+
+export const LLM_MODEL_THINKING_TYPE_NOT_SET = '';
+
+export const LLM_MODEL_LEGACY_TAG = 'Legacy';
+
+export const LLM_MODEL_THINKING_TYPE_OPTIONS = [
+  { value: LLM_MODEL_THINKING_TYPE_NOT_SET, label: 'Not set' },
+  { value: LLM_MODEL_THINKING_TYPES.adaptive, label: 'Adaptive' },
+  { value: LLM_MODEL_THINKING_TYPES.enabled, label: `Enabled (token budget) · ${LLM_MODEL_LEGACY_TAG}` },
+];
+
+export const LLM_MODEL_THINKING_TYPE_FIXED_LABELS = {
+  [LLM_MODEL_THINKING_TYPES.adaptive]: 'Adaptive · always on',
+  [LLM_MODEL_THINKING_TYPES.alwaysOn]: 'Adaptive · always on',
+  [LLM_MODEL_THINKING_TYPES.enabled]: 'Enabled (token budget)',
+};
+
+export const LLM_MODEL_THINKING_TYPE_FIXED_HELPER_TEXTS = {
+  [LLM_MODEL_THINKING_TYPES.adaptive]: 'The model decides how much to think. Nothing to configure.',
+  [LLM_MODEL_THINKING_TYPES.alwaysOn]: 'The model decides how much to think. Nothing to configure.',
+  [LLM_MODEL_THINKING_TYPES.enabled]:
+    'Older Claude models use a token budget based on the effort level. Supported until these models are retired.',
+};
+
+export const LLM_MODEL_THINKING_TYPE_CHOICE_HELPER_TEXT =
+  'Anthropic models only. Leave it not set for other providers.';
+
+export const LLM_MODEL_REASONING_LOCK_REASONS = {
+  provider: 'provider',
+  platform: 'platform',
+};
+
+export const LLM_MODEL_REASONING_DESCRIPTIONS = {
+  default: 'Thinks before answering. Configure which effort levels users can pick.',
+  unsupported: "This model family doesn't support reasoning. Turn it off to save.",
+  recognized: 'On by default for this model. Configure which effort levels users can pick.',
+  [LLM_MODEL_REASONING_LOCK_REASONS.provider]:
+    'Always on for this model. Configure which effort levels users can pick.',
+  [LLM_MODEL_REASONING_LOCK_REASONS.platform]:
+    'Always on in Elitea. Configure which effort levels users can pick.',
+};
+
+export const LLM_MODEL_RECOGNITION_TONES = {
+  success: 'success',
+  warning: 'warning',
+};
+
+export const LLM_MODEL_RECOGNITION_TEXTS = {
+  recognized: label => `Recognized: ${label}. Only the settings it supports are shown.`,
+  recognizedWithoutReasoning: label =>
+    `Recognized: ${label}. Reasoning isn't supported, so its settings are hidden.`,
+  unrecognized: 'Not recognized. All reasoning options are shown; check compatibility with DevOps.',
+};
+
+export const LLM_MODEL_EFFORT_LEVELS_HELPER_TEXTS = {
+  recognized: "Levels this model supports. Deselect any you don't want to offer.",
+  unrecognized: 'Users can only pick from these levels.',
+};
+
+export const LLM_MODEL_EFFORT_NONE_WARNING =
+  'None lets users turn reasoning off. With reasoning off, models are more likely to make up tool results, so only allow it if you need the cost saving.';
+
+export const LLM_MODEL_REMOVED_EFFORTS_WARNING = removedLabels =>
+  `You removed ${removedLabels.join(', ')}. Chats and agents already set to ${
+    removedLabels.length > 1 ? 'these levels keep sending them' : 'this level keep sending it'
+  } until their settings are changed.`;
+
+export const LLM_MODEL_REASONING_NOT_CONFIGURED_NOTE =
+  'Reasoning levels are not configured for this model yet. Users get Low, Medium and High, with Medium as the default.';
+
+export const LLM_MODEL_DEFAULT_EFFORT_PLACEHOLDERS = {
+  select: 'Select default level',
+  noLevels: 'Select supported levels first',
 };
 
 export const LLM_MODEL_DISPLAY_NAME_MAX_LENGTH = 60;
@@ -123,6 +249,11 @@ export const LLM_MODEL_ERROR_MESSAGES = {
   apiProtocolRequired: 'API protocol is required.',
   reasoningNotSupportedByProtocol:
     "Reasoning isn't supported with the Azure OpenAI protocol. Choose OpenAI or Anthropic, or turn Reasoning off.",
+  supportedEffortsRequired: 'Select at least one level other than None.',
+  supportedEffortsNotOffered: labels =>
+    `${labels.join(', ')} ${labels.length > 1 ? "aren't" : "isn't"} offered for this model. Uncheck to save.`,
+  defaultEffortRequired: 'Select a default level.',
+  defaultEffortNotSupported: 'The default level must be one of the supported levels.',
 };
 
 export const LLM_MODEL_TIER_CONFLICT_WARNING = 'This model was set as both low and high tier. Choose one.';
@@ -132,7 +263,7 @@ export const LLM_MODEL_MODEL_NAME_HELPER_TEXT =
 
 export const LLM_MODEL_SWITCH_DESCRIPTIONS = {
   [LLM_MODEL_FIELDS.vision]: 'Accepts images as input.',
-  [LLM_MODEL_FIELDS.reasoning]: 'Thinks before it answers, with a selectable reasoning effort.',
+  [LLM_MODEL_FIELDS.reasoning]: LLM_MODEL_REASONING_DESCRIPTIONS.default,
   [LLM_MODEL_FIELDS.shared]: 'Available to all projects.',
   [LLM_MODEL_FIELDS.openaiCompatible]: 'Sends requests in the OpenAI API format.',
 };
@@ -146,6 +277,9 @@ export const LLM_MODEL_FIELD_LABELS = {
   [LLM_MODEL_FIELDS.maxOutputTokens]: 'Max output tokens',
   [LLM_MODEL_FIELDS.vision]: 'Vision',
   [LLM_MODEL_FIELDS.reasoning]: 'Reasoning',
+  [LLM_MODEL_FIELDS.thinkingType]: 'Thinking mode',
+  [LLM_MODEL_FIELDS.supportedEfforts]: 'Supported effort levels',
+  [LLM_MODEL_FIELDS.defaultEffort]: 'Default effort level',
   [LLM_MODEL_FIELDS.modelTier]: 'Model tier',
   [LLM_MODEL_FIELDS.shared]: 'Shared',
   [LLM_MODEL_FIELDS.credentials]: 'AI credentials',
@@ -161,7 +295,7 @@ export const LLM_MODEL_FIELD_INFO_TEXTS = {
   [LLM_MODEL_FIELDS.description]:
     'A few words on what the model is best for, shown under its name when people pick a model, for example **Fast for everyday tasks** or **Best for coding and agents**.',
   [LLM_MODEL_FIELDS.modelName]:
-    "The exact model name or ID the provider expects, copied from the provider's console or docs, for example **global.openai.gpt-5.6-luna**. Requests fail if it doesn't match.",
+    "The exact model name or ID the provider expects, copied from the provider's console or docs, for example **global.openai.gpt-5.6-luna**. Requests fail if it doesn't match. It's also used to **recognize the model** and show only the reasoning settings it supports.",
   [LLM_MODEL_FIELDS.contextWindow]:
     'Total tokens the model can handle in one request, input and output combined.',
   [LLM_MODEL_FIELDS.maxOutputTokens]:
@@ -169,7 +303,13 @@ export const LLM_MODEL_FIELD_INFO_TEXTS = {
   [LLM_MODEL_FIELDS.vision]:
     "The model accepts images as input. When off, image attachments aren't sent to this model.",
   [LLM_MODEL_FIELDS.reasoning]:
-    'The model can think before it answers. When on, users can choose a reasoning effort level.',
+    "The model can think before it answers. For recognized reasoning models it's **on by default**, and always on where the model can't work without it. Choose which effort levels users can pick and which one is used by default.",
+  [LLM_MODEL_FIELDS.thinkingType]:
+    "**Anthropic models only.** **Adaptive**: the model decides how much to think. Current Claude models always use it. **Enabled (token budget)**: a **legacy** mode for older Claude models, supported until they're retired. For recognized models this is set automatically.",
+  [LLM_MODEL_FIELDS.supportedEfforts]:
+    'The levels this model accepts. Only these are offered to users, so an unsupported level never reaches the provider. **None** turns reasoning off and is only for models that accept it, such as GPT-5.6.',
+  [LLM_MODEL_FIELDS.defaultEffort]:
+    "Used when a user hasn't chosen a level. It can't be None, so reasoning stays on unless someone turns it off on purpose.",
   [LLM_MODEL_FIELDS.modelTier]:
     'Optional. **Low tier** marks the model for fast, low-cost background tasks; **high tier** marks it for complex tasks. A model can be in one tier only.',
   [LLM_MODEL_FIELDS.shared]:
