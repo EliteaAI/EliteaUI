@@ -1,6 +1,7 @@
 import { memo, useCallback, useMemo, useState } from 'react';
 
-import { Typography, useTheme } from '@mui/material';
+import { CircularProgress, Typography, useTheme } from '@mui/material';
+import { createFilterOptions } from '@mui/material/Autocomplete';
 import { Box } from '@mui/system';
 
 import AutoCompleteDropDown from '@/ComponentsLib/AutoCompleteDropDown';
@@ -9,7 +10,9 @@ import { EntityTypeIcon } from '@/components/EntityIcon';
 import SearchIcon from '@/components/Icons/SearchIcon';
 import useParticipants from '@/hooks/chat/useParticipants';
 
-const filterOptionsIdentity = options => options;
+const LOADING_SENTINEL_KEY = '__ai_participants_loading__';
+
+const defaultFilter = createFilterOptions();
 
 const AiParticipantSearchSelect = memo(props => {
   const {
@@ -24,13 +27,37 @@ const AiParticipantSearchSelect = memo(props => {
   const styles = useMemo(() => aiParticipantSearchSelectStyles(), []);
   const [query, setQuery] = useState('');
 
-  const { participants, isFetching } = useParticipants({
+  const { participants, isFetching, onLoadMore, total } = useParticipants({
     sortBy: 'name',
     sortOrder: 'asc',
     query,
     pageSize: 50,
     types: [ChatParticipantType.Applications],
   });
+
+  const hasMore = total > participants.length;
+
+  const handleListboxScroll = useCallback(
+    event => {
+      if (!hasMore || isFetching) return;
+      const { scrollTop, scrollHeight, clientHeight } = event.currentTarget;
+      if (scrollHeight - scrollTop - clientHeight < 100) {
+        onLoadMore();
+      }
+    },
+    [hasMore, isFetching, onLoadMore],
+  );
+
+  const mergedListboxSlotProps = useMemo(
+    () => ({
+      ...slotProps.listBox,
+      onScroll: event => {
+        slotProps.listBox?.onScroll?.(event);
+        handleListboxScroll(event);
+      },
+    }),
+    [slotProps.listBox, handleListboxScroll],
+  );
 
   const getEntityName = useCallback(
     p => (p.agent_type === 'pipeline' ? ChatParticipantType.Pipelines : ChatParticipantType.Applications),
@@ -68,8 +95,19 @@ const AiParticipantSearchSelect = memo(props => {
       });
     // Always include currently selected items so AutoCompleteDropDown's internal
     // validation (canInputNewValues=false) doesn't strip them on chip removal.
-    return [...enrichedSelectedParticipants, ...fromApi];
-  }, [participants, selectedUniqueKeys, enrichedSelectedParticipants, getEntityName]);
+    const base = [...enrichedSelectedParticipants, ...fromApi];
+    if (isFetching) {
+      base.push({ uniqueKey: LOADING_SENTINEL_KEY, name: '', isLoadingMore: true });
+    }
+    return base;
+  }, [participants, selectedUniqueKeys, enrichedSelectedParticipants, getEntityName, isFetching]);
+
+  const filterOptionsWithSentinel = useCallback((options, state) => {
+    const sentinel = options.find(o => o.isLoadingMore);
+    const regular = options.filter(o => !o.isLoadingMore);
+    const filtered = defaultFilter(regular, state);
+    return sentinel ? [...filtered, sentinel] : filtered;
+  }, []);
 
   const handleInputChange = useCallback((_event, newInputValue) => {
     setQuery(newInputValue);
@@ -77,6 +115,16 @@ const AiParticipantSearchSelect = memo(props => {
 
   const renderOptionBody = useCallback(
     option => {
+      if (option.isLoadingMore) {
+        return (
+          <Box
+            sx={styles.loadingOption}
+            onClick={e => e.stopPropagation()}
+          >
+            <CircularProgress size={16} />
+          </Box>
+        );
+      }
       const isPublic = option.project_id === PUBLIC_PROJECT_ID;
       return (
         <Box sx={styles.optionBody}>
@@ -144,7 +192,7 @@ const AiParticipantSearchSelect = memo(props => {
       selectedOptions={enrichedSelectedParticipants}
       onChangedSelectedOptions={onChangeParticipants}
       idField="uniqueKey"
-      disabled={disabled || isFetching}
+      disabled={disabled}
       label=""
       placeholder="Search AI participants..."
       nameField="name"
@@ -153,10 +201,10 @@ const AiParticipantSearchSelect = memo(props => {
       ignoreCase={false}
       renderOptionBody={renderOptionBody}
       renderChipLabel={renderChipLabel}
-      filterOptions={filterOptionsIdentity}
+      filterOptions={filterOptionsWithSentinel}
       onInputChange={handleInputChange}
       slotProps={{
-        listbox: slotProps.listBox,
+        listbox: mergedListboxSlotProps,
       }}
       showSearchIcon
       slots={{
@@ -177,6 +225,13 @@ AiParticipantSearchSelect.displayName = 'AiParticipantSearchSelect';
 
 /** @type {MuiSx} */
 const aiParticipantSearchSelectStyles = () => ({
+  loadingOption: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    flex: 1,
+    padding: '0.25rem 0',
+  },
   optionBody: {
     display: 'flex',
     alignItems: 'center',
