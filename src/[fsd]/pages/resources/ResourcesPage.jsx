@@ -99,8 +99,16 @@ const ResourcesPage = memo(() => {
 
       <Box sx={styles.content}>
         <Box sx={styles.intro}>
-          <Typography variant="headingLarge">Explore Help Center</Typography>
-          <Typography variant="bodyMedium">
+          <Typography
+            variant="headingLarge"
+            data-testid="help-center-intro-title"
+          >
+            Explore Help Center
+          </Typography>
+          <Typography
+            variant="bodyMedium"
+            data-testid="help-center-intro-description"
+          >
             Guides, documentation, and release notes to support your work.
           </Typography>
         </Box>
@@ -116,10 +124,12 @@ const ResourcesPage = memo(() => {
                 description={configValues[config.descriptionKey] || config.defaultDescription}
                 colorScheme={config.colorScheme}
                 tourTargetId={config.tourTargetId}
+                testId={`help-center-card-${config.testidCategory}`}
                 icon={
                   <config.Icon
                     width="1.5rem"
                     height="1.5rem"
+                    data-testid={`help-center-card-${config.testidCategory}-icon`}
                   />
                 }
               >

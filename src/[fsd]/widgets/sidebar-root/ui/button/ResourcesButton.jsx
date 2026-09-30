@@ -37,6 +37,7 @@ const ResourcesButton = memo(props => {
         enterNextDelay={500}
       >
         <Box
+          data-testid="sidebar-help-center-button"
           data-tour={SIDEBAR_TOUR_TARGET_IDS.resources}
           onClick={handleResourcesClick}
           sx={styles.fullWidthContainer}
@@ -56,6 +57,7 @@ const ResourcesButton = memo(props => {
       enterNextDelay={500}
     >
       <Box
+        data-testid="sidebar-help-center-button"
         data-tour={SIDEBAR_TOUR_TARGET_IDS.resources}
         onClick={handleResourcesClick}
         sx={styles.container}
