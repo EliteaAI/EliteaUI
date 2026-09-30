@@ -90,11 +90,14 @@ LlmModelSwitchField.displayName = 'LlmModelSwitchField';
 
 /** @type {MuiSx} */
 const llmModelSwitchFieldStyles = () => ({
-  field: {
+  field: ({ palette }) => ({
     display: 'flex',
     flexDirection: 'column',
     gap: '0.25rem',
-  },
+    padding: '1rem',
+    borderRadius: '0.75rem',
+    backgroundColor: palette.background.surface.interactive.default,
+  }),
   row: {
     display: 'flex',
     alignItems: 'center',

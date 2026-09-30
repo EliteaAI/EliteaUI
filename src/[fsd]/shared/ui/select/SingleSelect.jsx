@@ -79,6 +79,8 @@ const SingleSelect = memo(props => {
     optionGroups,
     onMenuActionClick,
     infoIconDescription,
+    infoTooltipTestId,
+    infoTooltipContentTestId,
     shrinkLabel = false,
     valueItemSX,
     'data-testid': dataTestId,
@@ -655,6 +657,8 @@ const SingleSelect = memo(props => {
                 <InfoTooltip
                   infoTooltip={{ title: infoIconDescription }}
                   sx={styles.infoTooltip}
+                  testId={infoTooltipTestId}
+                  contentTestId={infoTooltipContentTestId}
                 />
               )}
             </InputLabel>
@@ -709,6 +713,8 @@ const SingleSelect = memo(props => {
           <InfoTooltip
             infoTooltip={{ title: infoIconDescription }}
             sx={styles.infoTooltip}
+            testId={infoTooltipTestId}
+            contentTestId={infoTooltipContentTestId}
           />
         </Box>
       )}

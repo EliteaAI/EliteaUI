@@ -4,6 +4,8 @@ import {
   LLM_MODEL_ERROR_SOURCE_FIELDS,
   LLM_MODEL_FIELDS,
   LLM_MODEL_FIELDS_CHECKED_ON_OPEN,
+  LLM_MODEL_FIELD_INFO_TEXTS,
+  LLM_MODEL_FIELD_LABELS,
   LLM_MODEL_ID_MAX_LENGTH,
   LLM_MODEL_REASONING_FIELDS,
   LLM_MODEL_TIERS,
@@ -36,6 +38,34 @@ export const getLlmModelTierFlags = tier => ({
 });
 
 export const parseLlmModelTokenLimitInput = input => (WHOLE_NUMBER_INPUT.test(input) ? Number(input) : input);
+
+export const getLlmModelInfoTestIds = field => ({
+  testId: `llm-model-info-${field}`,
+  contentTestId: `llm-model-info-text-${field}`,
+});
+
+export const getLlmModelInputLabelProps = (field, required = false) => {
+  const { testId, contentTestId } = getLlmModelInfoTestIds(field);
+  return {
+    label: LLM_MODEL_FIELD_LABELS[field],
+    required,
+    tooltipDescription: LLM_MODEL_FIELD_INFO_TEXTS[field],
+    tooltipTestId: testId,
+    tooltipContentTestId: contentTestId,
+  };
+};
+
+export const getLlmModelSelectLabelProps = (field, required = false) => {
+  const { testId, contentTestId } = getLlmModelInfoTestIds(field);
+  return {
+    label: LLM_MODEL_FIELD_LABELS[field],
+    required,
+    shrinkLabel: true,
+    infoIconDescription: LLM_MODEL_FIELD_INFO_TEXTS[field],
+    infoTooltipTestId: testId,
+    infoTooltipContentTestId: contentTestId,
+  };
+};
 
 export const getLlmModelCredentialTypeTag = type => LLM_MODEL_CREDENTIAL_TYPE_TAGS[type] || type || '';
 
