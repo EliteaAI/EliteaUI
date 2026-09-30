@@ -3,6 +3,7 @@ import { memo, useCallback, useMemo, useState } from 'react';
 import { Box, Typography, useTheme } from '@mui/material';
 
 import { RunHistoryApi } from '@/[fsd]/entities/run-history/api';
+import { hasRunAnalytics } from '@/[fsd]/entities/run-history/lib/helpers';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import { Modal } from '@/[fsd]/shared/ui';
@@ -44,6 +45,7 @@ const RunHistoryRowActions = memo(props => {
 
   const hasConversation = item?.hasConversation ?? true;
   const canShare = item?.canShare ?? hasConversation;
+  const canOpenAnalytics = hasConversation && !!handleOpenAnalytics && hasRunAnalytics(item);
 
   const styles = runHistoryRowActionsStyles(isDeleting);
 
@@ -140,7 +142,7 @@ const RunHistoryRowActions = memo(props => {
             },
           ]
         : []),
-      ...(hasConversation && handleOpenAnalytics
+      ...(canOpenAnalytics
         ? [
             {
               label: 'Analytics',
@@ -157,6 +159,7 @@ const RunHistoryRowActions = memo(props => {
       handleCopyLink,
       openConfirmationModal,
       handleRestoreConversation,
+      canOpenAnalytics,
       handleOpenAnalytics,
       item?.id,
       source,

@@ -3,6 +3,7 @@ import { memo, useCallback, useState } from 'react';
 import { MoreVert as MoreVertIcon } from '@mui/icons-material';
 import { Box, CircularProgress, Menu, MenuItem, SvgIcon, Typography } from '@mui/material';
 
+import { hasRunAnalytics } from '@/[fsd]/entities/run-history/lib/helpers';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import AnalyticsIcon from '@/assets/analytics-icon.svg?react';
@@ -35,6 +36,7 @@ const RunHistoryActionsMenu = memo(props => {
   // only the row being exported shows the spinner.
   const isExportingThisRun = exportingRunId != null && exportingRunId === run?.id;
   const isExportDisabled = exportingRunId != null;
+  const canOpenAnalytics = !!onOpenAnalytics && hasRunAnalytics(run);
 
   const [anchorEl, setAnchorEl] = useState(null);
 
@@ -126,7 +128,7 @@ const RunHistoryActionsMenu = memo(props => {
           )}
           <Typography sx={styles.menuText}>Export to Excel</Typography>
         </MenuItem>
-        {onOpenAnalytics && (
+        {canOpenAnalytics && (
           <MenuItem
             onClick={event => handleMenuItemClick(event, RUN_ACTION.analytics)}
             sx={styles.menuItem}
