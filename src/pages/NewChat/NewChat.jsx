@@ -435,6 +435,14 @@ const NewChat = props => {
 
   const handleRestrictAccessSuccess = useCallback(
     async (conversationId, deletedParticipantIds = []) => {
+      const applyPrivate = conv => (conv.id === conversationId ? { ...conv, is_private: true } : conv);
+
+      setConversations(prev => prev.map(applyPrivate));
+      setPinnedConversations(prev => prev.map(applyPrivate));
+      setFolders(prev =>
+        prev.map(folder => ({ ...folder, conversations: (folder.conversations || []).map(applyPrivate) })),
+      );
+
       if (!activeConversationIdRef.current || activeConversationIdRef.current !== conversationId) return;
 
       if (deletedParticipantIds.length > 0) {
@@ -460,7 +468,14 @@ const NewChat = props => {
         };
       });
     },
-    [getConversationDetailForRefresh, projectId, setActiveConversation],
+    [
+      getConversationDetailForRefresh,
+      projectId,
+      setActiveConversation,
+      setConversations,
+      setPinnedConversations,
+      setFolders,
+    ],
   );
 
   const handleNotFoundAcknowledge = useCallback(() => {
