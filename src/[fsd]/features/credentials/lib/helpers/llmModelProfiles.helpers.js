@@ -5,7 +5,7 @@ import {
   LLM_MODEL_FIELDS,
   LLM_MODEL_REASONING_DESCRIPTIONS,
   LLM_MODEL_RECOGNITION_TEXTS,
-  LLM_MODEL_RECOGNITION_TONES,
+  LLM_MODEL_STATUS_TONES,
 } from '../constants/llmModelForm.constants.js';
 
 const DEFAULT_NAME_NORMALIZATION = { lowercase: true, replace: { '.': '-', _: '-' } };
@@ -57,10 +57,10 @@ export const isLlmModelReasoningConfigured = settings =>
 export const getLlmModelRecognition = (name, profile) => {
   if (!String(name ?? '').trim()) return null;
   if (!profile) {
-    return { tone: LLM_MODEL_RECOGNITION_TONES.warning, text: LLM_MODEL_RECOGNITION_TEXTS.unrecognized };
+    return { tone: LLM_MODEL_STATUS_TONES.warning, text: LLM_MODEL_RECOGNITION_TEXTS.unrecognized };
   }
   return {
-    tone: LLM_MODEL_RECOGNITION_TONES.success,
+    tone: LLM_MODEL_STATUS_TONES.success,
     text: profile.supports_reasoning
       ? LLM_MODEL_RECOGNITION_TEXTS.recognized(profile.label)
       : LLM_MODEL_RECOGNITION_TEXTS.recognizedWithoutReasoning(profile.label),

@@ -3,22 +3,16 @@ import { memo } from 'react';
 import { Box, Typography } from '@mui/material';
 
 import { Label } from '@/[fsd]/shared/ui';
-import CheckIcon from '@/components/Icons/CheckIcon';
-import InfoIcon from '@/components/Icons/InfoIcon';
 
 import { LlmModelFormConstants } from '../../lib/constants';
+import LlmModelStatusLine from './LlmModelStatusLine';
 
-const {
-  LLM_MODEL_FIELD_ERROR_ATTRIBUTE,
-  LLM_MODEL_FIELD_INFO_TEXTS,
-  LLM_MODEL_FIELD_LABELS,
-  LLM_MODEL_RECOGNITION_TONES,
-} = LlmModelFormConstants;
+const { LLM_MODEL_FIELD_ERROR_ATTRIBUTE, LLM_MODEL_FIELD_INFO_TEXTS, LLM_MODEL_FIELD_LABELS } =
+  LlmModelFormConstants;
 
 const LlmModelField = memo(props => {
   const { field, required, error, helperText, warning, status, children, sx } = props;
   const styles = llmModelFieldStyles();
-  const StatusIcon = status?.tone === LLM_MODEL_RECOGNITION_TONES.success ? CheckIcon : InfoIcon;
 
   return (
     <Box
@@ -35,22 +29,10 @@ const LlmModelField = memo(props => {
       />
       {children}
       {status && (
-        <Typography
-          variant="bodySmall"
-          role="status"
-          sx={[
-            styles.status,
-            status.tone === LLM_MODEL_RECOGNITION_TONES.success ? styles.success : styles.warning,
-          ]}
-          data-testid={`llm-model-status-${field}`}
-          data-tone={status.tone}
-        >
-          <StatusIcon
-            sx={styles.statusIcon}
-            fill="currentColor"
-          />
-          {status.text}
-        </Typography>
+        <LlmModelStatusLine
+          status={status}
+          testId={`llm-model-status-${field}`}
+        />
       )}
       {warning && (
         <Typography
@@ -101,19 +83,6 @@ const llmModelFieldStyles = () => ({
     color: palette.text.attention,
     whiteSpace: 'pre-line',
   }),
-  success: ({ palette }) => ({
-    color: palette.alert.success.text,
-  }),
-  status: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.375rem',
-  },
-  statusIcon: {
-    width: '1rem',
-    height: '1rem',
-    flexShrink: 0,
-  },
   error: ({ palette }) => ({
     color: palette.text.error,
   }),

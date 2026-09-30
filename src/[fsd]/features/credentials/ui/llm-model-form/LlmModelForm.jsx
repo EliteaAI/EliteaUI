@@ -31,6 +31,7 @@ import {
 import { useLlmModelCredentialType, useLlmModelProfiles, useLlmModelTakenIds } from '../../lib/hooks';
 import { validateLlmModelSettings } from '../../lib/validation';
 import CredentialsSelect from '../credentials-select/CredentialsSelect';
+import LlmModelConnectionTest from './LlmModelConnectionTest';
 import LlmModelField from './LlmModelField';
 import LlmModelFormSection from './LlmModelFormSection';
 import LlmModelReasoningPanel from './LlmModelReasoningPanel';
@@ -495,6 +496,13 @@ const LlmModelForm = memo(props => {
           field={FIELDS.openaiCompatible}
           checked={settings.openai_compatible}
           onChange={onSwitchChange}
+        />
+        <LlmModelConnectionTest
+          settings={settings}
+          isApiProtocolShown={isApiProtocolShown}
+          apiProtocol={apiProtocol}
+          isCredentialTypePending={isCredentialTypePending}
+          rejectionBeforeRequest={errors[FIELDS.reasoning]}
         />
       </LlmModelFormSection>
     </Box>
