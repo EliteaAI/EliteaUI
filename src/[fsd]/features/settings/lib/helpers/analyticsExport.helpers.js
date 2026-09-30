@@ -1,3 +1,4 @@
+import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
 import { ExcelFormats, sanitizeFileNamePart } from '@/[fsd]/shared/lib/utils';
 
 import { tokenStats } from './analyticsToken.helpers.js';
@@ -129,7 +130,14 @@ const buildOverviewSheet = (data, meta, isPersonalProject = false) => {
 
 const buildCostsSheet = (data, meta, options = {}) => {
   const { runScoped = false } = options;
-  const { kpis = {}, by_model = [], by_agent = [], by_user = [], daily = [] } = data || {};
+  const {
+    kpis = {},
+    by_model = [],
+    by_agent = [],
+    by_evaluation = [],
+    by_user = [],
+    daily = [],
+  } = data || {};
   const emptyMsg = noDataMsg(meta);
 
   const sections = [];
@@ -146,6 +154,7 @@ const buildCostsSheet = (data, meta, options = {}) => {
       { metric: 'Output Token Cost (USD)', value: kpis.total_output_cost ?? 0 },
       { metric: 'Cache Read Cost (USD)', value: kpis.total_cache_read_cost ?? 0 },
       { metric: 'Cache Write Cost (USD)', value: kpis.total_cache_creation_cost ?? 0 },
+      ...(runScoped ? [] : [{ metric: 'Evaluation Cost (USD)', value: kpis.total_evaluation_cost ?? 0 }]),
     ],
   });
 
@@ -165,8 +174,9 @@ const buildCostsSheet = (data, meta, options = {}) => {
     });
   }
 
-  const costShareCols = (nameHeader, nameKey) => [
+  const costShareCols = (nameHeader, nameKey, extraCols = []) => [
     { header: nameHeader, key: nameKey },
+    ...extraCols,
     { header: 'Total Cost (USD)', key: 'total_cost', numFmt: ExcelFormats.currency },
     { header: 'Input Token Cost (USD)', key: 'input_cost', numFmt: ExcelFormats.currency },
     { header: 'Output Token Cost (USD)', key: 'output_cost', numFmt: ExcelFormats.currency },
@@ -175,11 +185,12 @@ const buildCostsSheet = (data, meta, options = {}) => {
     { header: 'Share (%)', key: 'share', numFmt: ExcelFormats.percent },
   ];
 
-  const costShareRows = (items, nameMapper, totalCost) =>
+  const costShareRows = (items, nameMapper, totalCost, extraMapper = () => ({})) =>
     [...items]
       .sort((a, b) => (b.total_cost ?? 0) - (a.total_cost ?? 0))
       .map(item => ({
         name: nameMapper(item),
+        ...extraMapper(item),
         total_cost: item.total_cost ?? 0,
         input_cost: item.input_cost ?? 0,
         output_cost: item.output_cost ?? 0,
@@ -211,15 +222,47 @@ const buildCostsSheet = (data, meta, options = {}) => {
   });
 
   if (!runScoped) {
-    const agentCols = costShareCols('Agent / Pipeline', 'name');
+    const typeCol = { header: 'Type', key: 'kind' };
+    const kindLabel = item => AnalyticsCommonConstants.ENTITY_KIND_LABELS[item.entity_kind] || '';
+
+    const agentCols = costShareCols('Agent / Pipeline', 'name', [typeCol]);
     const totalAgentCost = by_agent.reduce((sum, a) => sum + (a.total_cost ?? 0), 0);
     sections.push({
       title: 'Cost by Agent & Pipeline',
       columns: agentCols,
       rows:
         by_agent.length > 0
-          ? costShareRows(by_agent, a => a.entity_name, totalAgentCost)
+          ? costShareRows(
+              by_agent,
+              a => a.entity_name,
+              totalAgentCost,
+              a => ({ kind: kindLabel(a) }),
+            )
           : emptyRow(agentCols, NO_DATA_MSG),
+    });
+
+    const evaluationCols = costShareCols('Agent / Pipeline', 'name', [
+      typeCol,
+      { header: 'Version', key: 'version' },
+      { header: 'Runs', key: 'runs', numFmt: ExcelFormats.integer },
+    ]);
+    const totalEvaluationCost = by_evaluation.reduce((sum, e) => sum + (e.total_cost ?? 0), 0);
+    sections.push({
+      title: 'Cost by Evaluation',
+      columns: evaluationCols,
+      rows:
+        by_evaluation.length > 0
+          ? costShareRows(
+              by_evaluation,
+              e => e.entity_name,
+              totalEvaluationCost,
+              e => ({
+                kind: kindLabel(e),
+                version: e.version_name || '',
+                runs: e.eval_runs ?? 0,
+              }),
+            )
+          : emptyRow(evaluationCols, NO_DATA_MSG),
     });
   }
 

@@ -38,6 +38,10 @@ vi.mock('@/[fsd]/features/settings/lib/helpers', () => ({
   },
 }));
 
+vi.mock('@/[fsd]/shared/ui/tooltip', () => ({
+  InfoTooltip: () => null,
+}));
+
 vi.mock('@/[fsd]/features/settings/ui/analytics', () => ({
   ChartTooltip: () => null,
   InfoBanner: ({ children }) => <div data-testid="info-banner">{children}</div>,
@@ -318,7 +322,15 @@ describe('AnalyticsCosts', () => {
   it('renders an em dash for share when the agent cost total is zero', () => {
     const dataNoCost = {
       ...MOCK_DATA,
-      by_agent: [{ entity_id: 1, entity_name: 'Zero Cost Agent', total_cost: 0, total_tokens: 0 }],
+      by_agent: [
+        {
+          entity_id: 1,
+          entity_name: 'Zero Cost Agent',
+          entity_kind: 'agent',
+          total_cost: 0,
+          total_tokens: 0,
+        },
+      ],
     };
     useAnalyticsCostsQuery.mockReturnValue({ data: dataNoCost, isFetching: false, isError: false });
     render(
