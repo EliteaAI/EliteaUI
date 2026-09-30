@@ -4,11 +4,13 @@ import UploadFileOutlined from '@mui/icons-material/UploadFileOutlined';
 import { Alert, Box, FormControlLabel, Typography } from '@mui/material';
 
 import { useRestoreProjectBackupMutation } from '@/[fsd]/features/settings/api';
+import { ProjectBackupConstants } from '@/[fsd]/features/settings/lib/constants';
 import { ProjectBackupHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { Checkbox, Modal } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 
-const { formatSize } = ProjectBackupHelpers;
+const { formatSize, getRestoreErrorMessage } = ProjectBackupHelpers;
+const { RESTORE_OPTION_LABELS } = ProjectBackupConstants;
 
 const RestoreProjectDialog = memo(props => {
   const { open, onClose, projectId, projectName } = props;
@@ -78,9 +80,7 @@ const RestoreProjectDialog = memo(props => {
       setResult(response);
       if (response?.artifact) setArtifact(response.artifact);
     } catch (err) {
-      const message = err?.data?.error ?? err?.error ?? 'Restore failed.';
-      const detail = err?.data?.detail;
-      setError(detail ? `${message}: ${detail}` : message);
+      setError(getRestoreErrorMessage(err));
       // A project mismatch comes back as 409 with the artifact the backend read,
       // so the confirmation checkbox below can be offered
       if (err?.data?.artifact) setArtifact(err.data.artifact);
@@ -185,7 +185,7 @@ const RestoreProjectDialog = memo(props => {
                 variant="bodyMedium"
                 color="text.secondary"
               >
-                Restore here anyway
+                {RESTORE_OPTION_LABELS.allowMismatch}
               </Typography>
             }
           />
@@ -207,7 +207,7 @@ const RestoreProjectDialog = memo(props => {
               variant="bodyMedium"
               color="text.secondary"
             >
-              Preview only (no data is restored yet)
+              {RESTORE_OPTION_LABELS.dryRun}
             </Typography>
           }
         />
@@ -225,7 +225,7 @@ const RestoreProjectDialog = memo(props => {
               variant="bodyMedium"
               color="text.secondary"
             >
-              Replace existing data - do not merge
+              {RESTORE_OPTION_LABELS.truncate}
             </Typography>
           }
         />

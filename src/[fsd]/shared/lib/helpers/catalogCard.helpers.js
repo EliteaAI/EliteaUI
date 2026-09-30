@@ -1,16 +1,17 @@
+/** @type {MuiSx} */
 export const catalogCardNewBadgeStyles = ({ palette }) => ({
-  height: '1.125rem',
-  fontSize: '0.625rem',
-  fontWeight: 700,
-  backgroundColor: palette.success.main,
-  color: palette.success.contrastText,
+  height: '1.5rem',
+  marginLeft: 'auto',
+  flexShrink: 0,
+  fontSize: '0.75rem',
+  fontWeight: 500,
+  backgroundColor: palette.components.chip.background.positive,
+  color: palette.text.secondary,
   pointerEvents: 'none',
   zIndex: 1,
-  '& .MuiChip-label': {
-    padding: '0 0.375rem',
-  },
 });
 
+/** @type {MuiSx} */
 export const catalogCardActionContainerStyles = {
   display: 'flex',
   alignItems: 'center',

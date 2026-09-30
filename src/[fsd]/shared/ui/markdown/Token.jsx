@@ -368,7 +368,7 @@ const getStyles = ({ palette }) => ({
       fontWeight: 600,
       fontSize: '1rem',
       lineHeight: '1.5rem',
-      borderBottom: `1px solid ${palette.border.lines}`,
+      borderBottom: `0.0625rem solid ${palette.border.lines}`,
       paddingBottom: '0.4em',
       marginTop: '1.2em',
     },
@@ -377,7 +377,7 @@ const getStyles = ({ palette }) => ({
       fontWeight: 600,
       fontSize: '0.875rem',
       lineHeight: '1.5rem',
-      borderBottom: `1px solid ${palette.border.lines}`,
+      borderBottom: `0.0625rem solid ${palette.border.lines}`,
       paddingBottom: '0.4em',
       marginTop: '1.2em',
     },
@@ -414,7 +414,7 @@ const getStyles = ({ palette }) => ({
     '& ol, & ul': {
       fontSize: '0.875rem',
       paddingLeft: '1.5rem',
-      margin: '8px 0',
+      margin: '0.5rem 0',
     },
     '& li': {
       display: 'list-item',

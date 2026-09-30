@@ -7,6 +7,7 @@ import { CSS } from '@dnd-kit/utilities';
 
 const DraggableConversationItem = memo(props => {
   const { conversation, children, isDragDisabled = false, isActive = false } = props;
+  const styles = draggableConversationItemStyles();
 
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: conversation.id,
@@ -30,21 +31,7 @@ const DraggableConversationItem = memo(props => {
       style={style}
       {...listeners}
       {...attributes}
-      sx={{
-        position: 'relative',
-        '&:active': {
-          cursor: isDragDisabled ? 'default' : 'grabbing',
-        },
-        // Add visual feedback for draggable items
-        ...(!isDragDisabled && {
-          '&:hover': {
-            cursor: 'grab',
-          },
-        }),
-        '&:has(+ .active-conversation) > *': {
-          borderBottom: 'none !important',
-        },
-      }}
+      sx={styles.root(isDragDisabled)}
       className={isActive ? 'active-conversation' : ''}
     >
       {children}
@@ -53,5 +40,23 @@ const DraggableConversationItem = memo(props => {
 });
 
 DraggableConversationItem.displayName = 'DraggableConversationItem';
+
+/** @type {MuiSx} */
+const draggableConversationItemStyles = () => ({
+  root: isDragDisabled => ({
+    position: 'relative',
+    '&:active': {
+      cursor: isDragDisabled ? 'default' : 'grabbing',
+    },
+    ...(!isDragDisabled && {
+      '&:hover': {
+        cursor: 'grab',
+      },
+    }),
+    '&:has(+ .active-conversation) > *': {
+      borderBottom: 'none !important',
+    },
+  }),
+});
 
 export default DraggableConversationItem;

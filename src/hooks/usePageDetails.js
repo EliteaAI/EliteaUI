@@ -27,10 +27,15 @@ export const usePageDetails = () => {
     path: RouteDefinitions.ApplicationsEvaluateDimensions,
   });
   const isApplicationEvaluateHistoryPage = useMatch({ path: RouteDefinitions.ApplicationsEvaluateHistory });
+  const isApplicationEvaluateHistoryAnalyticsPage = useMatch({
+    path: RouteDefinitions.ApplicationsEvaluateHistoryAnalytics,
+  });
+  const isApplicationRunAnalyticsPage = useMatch({ path: RouteDefinitions.ApplicationsRunAnalytics });
 
   const isPipelineDetailPage = useMatch({ path: RouteDefinitions.PipelineDetail });
   const isUserPublicPipelineDetailPage = useMatch({ path: RouteDefinitions.UserPublicPipelineDetail });
   const isPipelinesWithTab = useMatch({ path: RouteDefinitions.PipelinesWithTab });
+  const isPipelineRunAnalyticsPage = useMatch({ path: RouteDefinitions.PipelineRunAnalytics });
 
   const isPipelineVersionDetailPage = useMatch({ path: `${RouteDefinitions.PipelineDetail}/:versionId` });
   const isUserPublicPipelineVersionDetailPage = useMatch({
@@ -79,14 +84,17 @@ export const usePageDetails = () => {
     isApplicationEvaluateSuitePage ||
     isApplicationEvaluateDatasetsPage ||
     isApplicationEvaluateDimensionsPage ||
-    isApplicationEvaluateHistoryPage;
+    isApplicationEvaluateHistoryPage ||
+    isApplicationEvaluateHistoryAnalyticsPage ||
+    isApplicationRunAnalyticsPage;
 
   const isPipelinePage =
     isPipelineDetailPage ||
     isUserPublicPipelineDetailPage ||
     isPipelineVersionDetailPage ||
     isUserPublicPipelineVersionDetailPage ||
-    isPipelinesWithTab;
+    isPipelinesWithTab ||
+    isPipelineRunAnalyticsPage;
 
   const isToolkitPage =
     isUserPublicToolkitDetailPage ||

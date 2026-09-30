@@ -7,7 +7,7 @@ import { Box } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { useTrackEvent } from '@/GA';
-import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
+import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
 import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { useApplicationListQuery } from '@/api/applications';
@@ -25,6 +25,8 @@ import { useIsFrom } from '@/hooks/useIsFromSpecificPageHooks';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 import RouteDefinitions from '@/routes.js';
+
+const { GA_EVENT_NAMES, GA_EVENT_PARAMS } = AnalyticConstants;
 
 const pageSize = 20;
 

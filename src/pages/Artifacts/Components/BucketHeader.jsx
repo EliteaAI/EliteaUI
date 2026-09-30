@@ -113,7 +113,7 @@ const bucketHeaderStyles = collapsed => ({
     alignItems: 'center',
     padding: '1.5rem',
     paddingTop: '1.75rem',
-    borderBottom: !collapsed ? `0.0625rem solid ${palette.border.lines}` : 'none',
+    borderBottom: !collapsed ? `0.0625rem solid ${palette.border.default}` : 'none',
   }),
   headerActions: {
     display: 'flex',

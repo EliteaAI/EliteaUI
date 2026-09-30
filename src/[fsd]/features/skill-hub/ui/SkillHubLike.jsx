@@ -1,18 +1,13 @@
 import { memo, useCallback, useMemo, useRef } from 'react';
 
-import { IconButton, Typography } from '@mui/material';
-
+import { LikeButton } from '@/[fsd]/entities/like';
 import { useLikeSkillMutation, useUnlikeSkillMutation } from '@/[fsd]/features/skill-hub/api';
 import { SkillHubHelpers } from '@/[fsd]/features/skill-hub/lib/helpers';
 import { useSkillHubContext } from '@/[fsd]/shared/lib/context';
 import { ViewMode } from '@/common/constants';
-import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
-import HeartActiveIcon from '@/components/Icons/HeartActiveIcon';
-import HeartIcon from '@/components/Icons/HeartIcon';
 
 /**
- * Skill catalog like button. Unlike the shared Like component (whose click
- * handler only routes application/pipeline cards), this calls the skill social
+ * Skill catalog like button. Unlike application/pipeline likes, this calls the skill social
  * like/unlike mutations directly and mirrors the optimistic update into the
  * skillHub slice + SkillHubContext.
  */
@@ -25,8 +20,6 @@ const SkillHubLike = memo(props => {
 
   const dataRef = useRef(data);
   dataRef.current = data;
-
-  const styles = skillHubLikeStyles();
 
   const id = data?.id;
   const isLiked = !!data?.is_liked;
@@ -80,24 +73,16 @@ const SkillHubLike = memo(props => {
   );
 
   return (
-    <IconButton
-      variant="elitea"
-      color="tertiaryCount"
-      disabled={viewMode !== ViewMode.Public || isLoading}
+    <LikeButton
+      isLiked={isLiked}
+      likes={likes}
+      isLoading={isLoading}
+      disabled={viewMode !== ViewMode.Public}
       onClick={handleLikeClick}
-    >
-      {isLiked ? <HeartActiveIcon width={16} /> : <HeartIcon sx={styles.icon} />}
-      <Typography variant="bodySmall">{likes || 0}</Typography>
-      {isLoading && <StyledCircleProgress size={20} />}
-    </IconButton>
+    />
   );
 });
 
 SkillHubLike.displayName = 'SkillHubLike';
-
-/** @type {MuiSx} */
-const skillHubLikeStyles = () => ({
-  icon: { fontSize: '1rem' },
-});
 
 export default SkillHubLike;

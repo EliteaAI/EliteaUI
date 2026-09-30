@@ -9,8 +9,8 @@ import DoubleRightIcon from '@/components/Icons/DoubleRightIcon';
 import useGetComponentWidth from '@/hooks/useGetComponentWidth';
 import useIsSmallWindow from '@/hooks/useIsSmallWindow';
 
-import CollapsedPerticapantsList from './CollapsedParticipants/CollapsedPerticapantsList';
-import ExpandedPerticapantsList from './ExpandedParticipants/ExpandedParticipantsList';
+import CollapsedPerticapantsList from './collapsed-participants/CollapsedPerticapantsList';
+import ExpandedPerticapantsList from './expanded-participants/ExpandedParticipantsList';
 
 const Participants = memo(props => {
   const {

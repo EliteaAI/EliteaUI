@@ -2,7 +2,8 @@ import { memo, useMemo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { conversationStartersHelpers } from '../../agent/lib/helpers';
+import { conversationStartersHelpers } from '@/[fsd]/features/agent/lib/helpers';
+
 import AgentConversationStarterItem from './AgentConversationStarterItem';
 
 const AgentConversationStarters = memo(props => {

@@ -20,7 +20,7 @@ const FieldWithCopy = memo(props => {
     <Box sx={styles.container}>
       <Typography
         sx={styles.label}
-        variant="bodyMedium"
+        variant="labelMedium"
       >
         {label}
       </Typography>
@@ -30,7 +30,7 @@ const FieldWithCopy = memo(props => {
           placement="top"
         >
           <Typography
-            variant="bodyMedium"
+            variant="labelMedium"
             color="text.secondary"
             onClick={onCopy}
             sx={styles.value}

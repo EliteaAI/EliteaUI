@@ -151,6 +151,7 @@ const SingleSelectMenuItem = memo(props => {
 
 SingleSelectMenuItem.displayName = 'SingleSelectMenuItem';
 
+/** @type {MuiSx} */
 const menuItemStyles = option => ({
   menuItem: ({ palette }) => ({
     justifyContent: 'space-between',

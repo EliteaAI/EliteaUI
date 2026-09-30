@@ -3,7 +3,7 @@ import { memo, useCallback, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { DrawerPage } from '@/[fsd]/features/settings';
-import ProjectContextEditor from '@/[fsd]/features/settings/ui/project-context/ProjectContextEditor';
+import { ProjectContextEditor } from '@/[fsd]/features/settings/ui/project-context';
 import { useProjectContextQuery } from '@/api/projectContext';
 import { PERMISSIONS } from '@/common/constants';
 import useCheckPermission from '@/hooks/useCheckPermission';

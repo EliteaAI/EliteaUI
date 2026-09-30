@@ -21,3 +21,16 @@ export const BUDGET_WARNING_VARIANTS = {
     to: `${RouteDefinitions.Settings}/usage?scope=user`,
   },
 };
+
+// One localStorage entry per budget and period holds the highest level the user dismissed
+export const DISMISS_STORAGE_PREFIX = 'elitea.budgetWarning.dismissed';
+
+// Severity by the level the backend reports; 95% is the last stop before requests are blocked
+export const BUDGET_WARNING_SEVERITY = {
+  WARNING: 'warning',
+  ELEVATED: 'elevated',
+  CRITICAL: 'critical',
+};
+
+export const ELEVATED_LEVEL = 90;
+export const CRITICAL_LEVEL = 95;

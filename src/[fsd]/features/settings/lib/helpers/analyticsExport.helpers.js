@@ -1,4 +1,4 @@
-import { ExcelFormats, sanitizeFileNamePart } from '@/[fsd]/shared/lib/utils/exportToExcel.utils';
+import { ExcelFormats, sanitizeFileNamePart } from '@/[fsd]/shared/lib/utils';
 
 import { tokenStats } from './analyticsToken.helpers.js';
 
@@ -21,6 +21,20 @@ const buildMetadata = (sheetLabel, { projectName, dateFrom, dateTo, timeZone }) 
   ['Exported At', fmtISODateTime(new Date().toISOString())],
 ];
 
+// Per-run Analytics: the sheet describes one run, so the date range gives way to the run's identity rows,
+// which the caller builds (an Agent/Pipeline run and an evaluation run are identified differently)
+const buildRunMetadata = (sheetLabel, { scopeRows = [], timeZone }) => [
+  ...scopeRows,
+  ['Exported Tab', sheetLabel],
+  ['Time Zone', timeZone],
+  ['Exported At', fmtISODateTime(new Date().toISOString())],
+];
+
+const isRunMeta = meta => Array.isArray(meta?.scopeRows);
+
+const sheetMetadata = (sheetLabel, meta) =>
+  isRunMeta(meta) ? buildRunMetadata(sheetLabel, meta) : buildMetadata(sheetLabel, meta);
+
 const emptyRow = (columns, message) => {
   const row = {};
   if (columns.length > 0) row[columns[0].key] = message;
@@ -28,6 +42,8 @@ const emptyRow = (columns, message) => {
 };
 
 const NO_DATA_MSG = 'No data available for the selected date range.';
+
+const noDataMsg = meta => (isRunMeta(meta) ? meta.noDataMessage : NO_DATA_MSG);
 
 const buildOverviewSheet = (data, meta, isPersonalProject = false) => {
   const { kpis = {}, daily_activity = [], models = [], top_ai_users = [] } = data || {};
@@ -111,8 +127,10 @@ const buildOverviewSheet = (data, meta, isPersonalProject = false) => {
   };
 };
 
-const buildCostsSheet = (data, meta) => {
+const buildCostsSheet = (data, meta, options = {}) => {
+  const { runScoped = false } = options;
   const { kpis = {}, by_model = [], by_agent = [], by_user = [], daily = [] } = data || {};
+  const emptyMsg = noDataMsg(meta);
 
   const sections = [];
 
@@ -139,11 +157,13 @@ const buildCostsSheet = (data, meta) => {
     { header: 'Cache Read Cost (USD)', key: 'cache_read_cost', numFmt: ExcelFormats.currency },
     { header: 'Cache Write Cost (USD)', key: 'cache_creation_cost', numFmt: ExcelFormats.currency },
   ];
-  sections.push({
-    title: 'Daily Cost Trend',
-    columns: dailyCols,
-    rows: daily.length > 0 ? daily : emptyRow(dailyCols, NO_DATA_MSG),
-  });
+  if (!runScoped) {
+    sections.push({
+      title: 'Daily Cost Trend',
+      columns: dailyCols,
+      rows: daily.length > 0 ? daily : emptyRow(dailyCols, NO_DATA_MSG),
+    });
+  }
 
   const costShareCols = (nameHeader, nameKey) => [
     { header: nameHeader, key: nameKey },
@@ -176,7 +196,7 @@ const buildCostsSheet = (data, meta) => {
     rows:
       by_user.length > 0
         ? costShareRows(by_user, u => u.user_email, totalUserCost)
-        : emptyRow(userCols, NO_DATA_MSG),
+        : emptyRow(userCols, emptyMsg),
   });
 
   const modelCols = costShareCols('Model', 'name');
@@ -187,23 +207,25 @@ const buildCostsSheet = (data, meta) => {
     rows:
       by_model.length > 0
         ? costShareRows(by_model, m => m.display_name || m.model_name, totalModelCost)
-        : emptyRow(modelCols, NO_DATA_MSG),
+        : emptyRow(modelCols, emptyMsg),
   });
 
-  const agentCols = costShareCols('Agent / Pipeline', 'name');
-  const totalAgentCost = by_agent.reduce((sum, a) => sum + (a.total_cost ?? 0), 0);
-  sections.push({
-    title: 'Cost by Agent & Pipeline',
-    columns: agentCols,
-    rows:
-      by_agent.length > 0
-        ? costShareRows(by_agent, a => a.entity_name, totalAgentCost)
-        : emptyRow(agentCols, NO_DATA_MSG),
-  });
+  if (!runScoped) {
+    const agentCols = costShareCols('Agent / Pipeline', 'name');
+    const totalAgentCost = by_agent.reduce((sum, a) => sum + (a.total_cost ?? 0), 0);
+    sections.push({
+      title: 'Cost by Agent & Pipeline',
+      columns: agentCols,
+      rows:
+        by_agent.length > 0
+          ? costShareRows(by_agent, a => a.entity_name, totalAgentCost)
+          : emptyRow(agentCols, NO_DATA_MSG),
+    });
+  }
 
   return {
     sheetName: 'Costs',
-    metadata: buildMetadata('Costs', meta),
+    metadata: sheetMetadata('Costs', meta),
     sections,
   };
 };
@@ -224,7 +246,8 @@ const buildTokenRows = (items, nameMapper, totalProjectTokens) =>
     })
     .sort((a, b) => b.total_tokens - a.total_tokens);
 
-const buildTokensSheet = (data, meta) => {
+const buildTokensSheet = (data, meta, options = {}) => {
+  const { runScoped = false } = options;
   const { kpis = {}, by_model = [], by_agent = [], by_user = [], daily = [] } = data || {};
   const totalProjectTokens = Number(kpis.total_tokens ?? 0) || 0;
 
@@ -253,21 +276,23 @@ const buildTokensSheet = (data, meta) => {
     { header: 'Cache Read Tokens', key: 'cache_read_tokens', numFmt: ExcelFormats.integer },
     { header: 'Cache Write Tokens', key: 'cache_write_tokens', numFmt: ExcelFormats.integer },
   ];
-  sections.push({
-    title: 'Daily Token Usage',
-    columns: dailyCols,
-    rows: daily.map(d => {
-      const stats = tokenStats(d);
-      return {
-        date: d.date,
-        total_tokens: stats.total,
-        input_tokens: stats.input,
-        output_tokens: stats.output,
-        cache_read_tokens: stats.cacheRead,
-        cache_write_tokens: stats.cacheWrite,
-      };
-    }),
-  });
+  if (!runScoped) {
+    sections.push({
+      title: 'Daily Token Usage',
+      columns: dailyCols,
+      rows: daily.map(d => {
+        const stats = tokenStats(d);
+        return {
+          date: d.date,
+          total_tokens: stats.total,
+          input_tokens: stats.input,
+          output_tokens: stats.output,
+          cache_read_tokens: stats.cacheRead,
+          cache_write_tokens: stats.cacheWrite,
+        };
+      }),
+    });
+  }
 
   const tokenCols = (nameHeader, nameKey = 'name') => [
     { header: nameHeader, key: nameKey },
@@ -300,19 +325,21 @@ const buildTokensSheet = (data, meta) => {
     ),
   });
 
-  sections.push({
-    title: 'Token Usage by Agent & Pipeline',
-    columns: tokenCols('Agent / Pipeline'),
-    rows: buildTokenRows(
-      by_agent,
-      agent => agent.entity_name || agent.display_name || 'Unattributed',
-      totalProjectTokens,
-    ),
-  });
+  if (!runScoped) {
+    sections.push({
+      title: 'Token Usage by Agent & Pipeline',
+      columns: tokenCols('Agent / Pipeline'),
+      rows: buildTokenRows(
+        by_agent,
+        agent => agent.entity_name || agent.display_name || 'Unattributed',
+        totalProjectTokens,
+      ),
+    });
+  }
 
   return {
     sheetName: 'Tokens',
-    metadata: buildMetadata('Tokens', meta),
+    metadata: sheetMetadata('Tokens', meta),
     sections,
   };
 };
@@ -376,7 +403,8 @@ const buildAgentsSheet = (data, meta) => {
   };
 };
 
-const buildToolsSheet = (data, meta) => {
+const buildToolsSheet = (data, meta, options = {}) => {
+  const { runScoped = false } = options;
   const { rows = [] } = data || {};
 
   const topToolCols = [
@@ -398,17 +426,21 @@ const buildToolsSheet = (data, meta) => {
 
   return {
     sheetName: 'Tools',
-    metadata: buildMetadata('Tools', meta),
+    metadata: sheetMetadata('Tools', meta),
     sections: [
-      {
-        title: 'Most Popular Tools',
-        columns: topToolCols,
-        rows: topTools.length > 0 ? topTools : emptyRow(topToolCols, NO_DATA_MSG),
-      },
+      ...(runScoped
+        ? []
+        : [
+            {
+              title: 'Most Popular Tools',
+              columns: topToolCols,
+              rows: topTools.length > 0 ? topTools : emptyRow(topToolCols, NO_DATA_MSG),
+            },
+          ]),
       {
         title: 'Tool Details',
         columns: toolCols,
-        rows: rows.length > 0 ? rows : emptyRow(toolCols, NO_DATA_MSG),
+        rows: rows.length > 0 ? rows : emptyRow(toolCols, noDataMsg(meta)),
       },
     ],
   };
@@ -495,7 +527,8 @@ const buildActivitySheet = (data, meta, isPersonalProject = false) => {
   };
 };
 
-const buildHealthSheet = (overviewData, meta) => {
+const buildHealthSheet = (overviewData, meta, options = {}) => {
+  const { runScoped = false } = options;
   const { health = [], daily_activity = [] } = overviewData || {};
 
   const sections = [];
@@ -512,11 +545,13 @@ const buildHealthSheet = (overviewData, meta) => {
     errors: d.errors ?? 0,
     errorRate: d.events > 0 ? Number(((d.errors / d.events) * 100).toFixed(2)) : 0,
   }));
-  sections.push({
-    title: 'Requests vs Errors',
-    columns: trendCols,
-    rows: trendRows.length > 0 ? trendRows : emptyRow(trendCols, NO_DATA_MSG),
-  });
+  if (!runScoped) {
+    sections.push({
+      title: 'Requests vs Errors',
+      columns: trendCols,
+      rows: trendRows.length > 0 ? trendRows : emptyRow(trendCols, NO_DATA_MSG),
+    });
+  }
 
   const healthCols = [
     { header: 'Event Type', key: 'event_type' },
@@ -528,12 +563,12 @@ const buildHealthSheet = (overviewData, meta) => {
   sections.push({
     title: 'Health by Event Type',
     columns: healthCols,
-    rows: health.length > 0 ? health : emptyRow(healthCols, NO_DATA_MSG),
+    rows: health.length > 0 ? health : emptyRow(healthCols, noDataMsg(meta)),
   });
 
   return {
     sheetName: 'Health',
-    metadata: buildMetadata('Health', meta),
+    metadata: sheetMetadata('Health', meta),
     sections,
   };
 };
@@ -638,4 +673,42 @@ export const buildAnalyticsSheets = ({
   buildUsersSheet(users, meta),
   buildActivitySheet(activity, meta, isPersonalProject),
   buildHealthSheet(overview, meta),
+];
+
+// Same placeholder as the page header when the run timestamp is missing or unparseable
+export const fmtRunDateTime = iso => fmtISODateTime(iso) || '—';
+
+// `suffix` names the run, e.g. `run-<id>` or `eval-run-<id>`
+export const runAnalyticsExportFileName = ({ projectName, entityName, suffix }) =>
+  `${sanitizeFileNamePart(projectName)}_${sanitizeFileNamePart(entityName, 'Agent')}_${suffix}.xlsx`;
+
+// Run-scoped datasets only — tools are fetched unpaginated so the sheet holds the whole run, not the visible page.
+// `queryArgs` is the run scope (`{ runId }` or `{ evalRunId }`).
+export const fetchRunAnalyticsData = async (dispatch, endpoints, { projectId, queryArgs }) => {
+  const [costsResult, toolsResult, healthResult] = await Promise.all([
+    dispatch(endpoints.analyticsCosts.initiate({ projectId, ...queryArgs })),
+    dispatch(
+      endpoints.analyticsTools.initiate({
+        projectId,
+        ...queryArgs,
+        limit: EXPORT_LIMIT,
+        offset: 0,
+        search: '',
+      }),
+    ),
+    dispatch(endpoints.projectAnalytics.initiate({ projectId, ...queryArgs })),
+  ]);
+
+  return {
+    costs: costsResult.data,
+    tools: toolsResult.data,
+    health: healthResult.data,
+  };
+};
+
+export const buildRunAnalyticsSheets = ({ costs, tools, health, meta }) => [
+  buildCostsSheet(costs, meta, { runScoped: true }),
+  buildTokensSheet(costs, meta, { runScoped: true }),
+  buildToolsSheet(tools, meta, { runScoped: true }),
+  buildHealthSheet(health, meta, { runScoped: true }),
 ];

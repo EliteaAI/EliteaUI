@@ -36,8 +36,7 @@ const ConfigurationsPanel = memo(props => {
       return (
         <Box sx={styles.inlineDefaultLabel}>
           <Typography
-            variant="bodyMedium"
-            color="text.primary"
+            variant="inherit"
             sx={styles.inlineDefaultLabelText}
           >
             {label}
@@ -45,7 +44,7 @@ const ConfigurationsPanel = memo(props => {
           <InfoTooltip
             infoTooltip={{
               title: tooltipText,
-              icon: { width: 12, height: 12 },
+              icon: { width: 16, height: 16 },
             }}
             sx={styles.inlineInfoIconWrapper}
           />
@@ -57,7 +56,7 @@ const ConfigurationsPanel = memo(props => {
 
   const tooltips = {
     default:
-      'Default model used for most AI activities. The system may switch to the Low-tier or High-tier model when needed.',
+      'Default for new chats and agents. Auto selects a model for each task when enabled. Pipelines use the last concrete default selected before Auto. Tier defaults remain separate.',
     lowTier: 'Model used for simpler tasks where faster responses and lower cost are preferred.',
     highTier: 'Model used for complex tasks that require stronger reasoning or higher-quality responses.',
     embedding:
@@ -84,6 +83,7 @@ const ConfigurationsPanel = memo(props => {
         defaultSettingOptions={modelOptions}
         onChangeDefaultSetting={onChangeDefaultModel('llm')}
         groupTheModelsByProvider
+        showOptionDescription
         additionalDefaultSettings={[
           {
             key: 'high-tier-model',
@@ -200,22 +200,6 @@ const getStyles = () => ({
     height: '100%',
     padding: '0.5rem 0rem',
   },
-  configurationsContent: ({ palette }) => ({
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    background: palette.components.settingsPage.background,
-    width: '100%',
-    padding: '1rem 1.5rem',
-  }),
-  sectionTitle: ({ palette }) => ({
-    color: palette.text.secondary,
-    fontWeight: 600,
-    fontSize: '1rem',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-  }),
   inlineDefaultLabel: {
     display: 'flex',
     alignItems: 'center',
@@ -230,7 +214,7 @@ const getStyles = () => ({
     alignItems: 'center',
     justifyContent: 'center',
     paddingLeft: '0.125rem',
-    marginTop: '0.125rem',
+    marginTop: '-0.125rem',
   },
 });
 

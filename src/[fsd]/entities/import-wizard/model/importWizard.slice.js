@@ -1,3 +1,4 @@
+import { registerReducer } from '@/[fsd]/shared/config/reducerRegistry';
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
@@ -28,4 +29,6 @@ const importWizardsSlice = createSlice({
 });
 
 export const { name, actions } = importWizardsSlice;
+registerReducer(importWizardsSlice.name, importWizardsSlice.reducer);
+
 export default importWizardsSlice.reducer;

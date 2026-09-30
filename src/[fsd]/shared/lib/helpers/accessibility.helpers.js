@@ -1,4 +1,4 @@
-export function getTabAccessibilityProps(index) {
+export const getTabAccessibilityProps = index => {
   if (typeof index !== 'number' || index < 0) {
     throw new Error('Index must be a non-negative number');
   }
@@ -7,4 +7,4 @@ export function getTabAccessibilityProps(index) {
     id: `simple-tab-${index}`,
     'aria-controls': `simple-tabpanel-${index}`,
   };
-}
+};

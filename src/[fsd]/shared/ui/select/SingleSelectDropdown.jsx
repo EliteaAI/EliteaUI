@@ -2,11 +2,13 @@ import { memo } from 'react';
 
 import { Box, ListSubheader, MenuItem, Typography } from '@mui/material';
 
-import { FLAT_MENU_ACTION_VALUE } from '@/[fsd]/shared/lib/constants/singleSelectConstants';
+import { SingleSelectConstants } from '@/[fsd]/shared/lib/constants';
 import SimpleSearchBar from '@/[fsd]/shared/ui/input/SimpleSearchBar';
 import PlusIcon from '@/assets/plus-icon.svg?react';
 
 import SingleSelectMenuItem from './SingleSelectMenuItem';
+
+const { FLAT_MENU_ACTION_VALUE } = SingleSelectConstants;
 
 const SingleSelectDropdown = memo(props => {
   const {
@@ -60,7 +62,7 @@ const SingleSelectDropdown = memo(props => {
         <Box sx={styles.menuActionRow}>
           <PlusIcon
             aria-hidden
-            style={{ flexShrink: 0 }}
+            style={styles.plusIcon}
           />
           <Typography
             variant="bodyMedium"
@@ -95,6 +97,10 @@ const SingleSelectDropdown = memo(props => {
 
 /** @type {MuiSx} */
 const selectMenuItemStyles = () => ({
+  // SVGR icon: plain style object, not sx.
+  plusIcon: {
+    flexShrink: 0,
+  },
   searchBarHeader: ({ palette }) => ({
     padding: 0,
     position: 'sticky',
@@ -109,6 +115,9 @@ const selectMenuItemStyles = () => ({
     backgroundColor: 'transparent',
     padding: '0.75rem 1rem',
     height: 'auto',
+    '&:hover': {
+      borderColor: palette.border.lines,
+    },
     '&:focus-within': {
       backgroundColor: 'transparent',
       borderColor: palette.border.lines,

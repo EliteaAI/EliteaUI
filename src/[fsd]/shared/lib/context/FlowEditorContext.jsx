@@ -1,8 +1,8 @@
-import React, { useMemo } from 'react';
+import React, { memo, useMemo } from 'react';
 
 export const FlowEditorContext = React.createContext();
 
-export const FlowEditorProvider = props => {
+export const FlowEditorProvider = memo(props => {
   const {
     children,
     setFlowNodes,
@@ -47,4 +47,8 @@ export const FlowEditorProvider = props => {
   ]);
 
   return <FlowEditorContext.Provider value={contextValue}>{children}</FlowEditorContext.Provider>;
-};
+});
+
+FlowEditorProvider.displayName = 'FlowEditorProvider';
+
+export default FlowEditorProvider;

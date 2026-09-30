@@ -4,7 +4,7 @@ import { Box, Typography } from '@mui/material';
 
 import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
-import { CHART_COLORS } from '@/[fsd]/shared/config/theme/chartPalette';
+import { CHART_COLORS } from '@/[fsd]/shared/config/theme';
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 
 const ModelUsageTable = memo(props => {
@@ -78,9 +78,7 @@ const ModelUsageTable = memo(props => {
                   { flex: 3, display: 'flex', alignItems: 'center', gap: '0.5rem' },
                 ]}
               >
-                <Box
-                  sx={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: color, flexShrink: 0 }}
-                />
+                <Box sx={styles.colorDot(color)} />
                 <Typography
                   variant="bodySmall"
                   noWrap
@@ -96,9 +94,7 @@ const ModelUsageTable = memo(props => {
                   {model.users}
                 </Typography>
               )}
-              <Box
-                sx={{ flex: 2, display: 'flex', alignItems: 'center', gap: '0.5rem', paddingLeft: '0.5rem' }}
-              >
+              <Box sx={styles.modelCell}>
                 <Box sx={styles.shareBarBg}>
                   <Box
                     sx={[
@@ -130,11 +126,25 @@ ModelUsageTable.displayName = 'ModelUsageTable';
 
 /** @type {MuiSx} */
 const modelUsageTableStyles = () => ({
+  colorDot: color => ({
+    width: 8,
+    height: 8,
+    borderRadius: '50%',
+    backgroundColor: color,
+    flexShrink: 0,
+  }),
+  modelCell: {
+    flex: 2,
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    paddingLeft: '0.5rem',
+  },
   chartCard: ({ palette }) => ({
     padding: '1rem',
     borderRadius: '0.5rem',
     backgroundColor: palette.background.surface.interactive.default,
-    border: `1px solid ${palette.border.default}`,
+    border: `0.0625rem solid ${palette.border.default}`,
     display: 'flex',
     flexDirection: 'column',
     minWidth: 0,
@@ -154,7 +164,7 @@ const modelUsageTableStyles = () => ({
   tableHeader: ({ palette }) => ({
     display: 'flex',
     padding: '0.5rem 0.75rem',
-    borderBottom: `1px solid ${palette.border.default}`,
+    borderBottom: `0.0625rem solid ${palette.border.default}`,
     gap: '0.5rem',
   }),
   tableCell: ({ palette }) => ({
@@ -166,7 +176,7 @@ const modelUsageTableStyles = () => ({
   tableRow: ({ palette }) => ({
     display: 'flex',
     padding: '0.5rem 0.75rem',
-    borderBottom: `1px solid ${palette.border.default}`,
+    borderBottom: `0.0625rem solid ${palette.border.default}`,
     gap: '0.5rem',
     '&:hover': { backgroundColor: palette.background.interactiveItem.rowHover },
   }),

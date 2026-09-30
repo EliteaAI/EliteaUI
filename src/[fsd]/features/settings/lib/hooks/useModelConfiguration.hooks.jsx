@@ -162,6 +162,7 @@ export const useModelOptions = ({
       ModelConfigurationHelpers.removeDuplicateModels(items || [])?.map(config => ({
         value: `${config.name}<<>>${config.project_id}`,
         label: config.display_name || config.name,
+        description: config.description,
         icon:
           config.project_id !== PUBLIC_PROJECT_ID ? (
             <BriefcaseIcon

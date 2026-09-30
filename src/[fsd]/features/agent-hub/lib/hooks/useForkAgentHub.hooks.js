@@ -4,11 +4,13 @@ import { useDispatch } from 'react-redux';
 
 import { useTrackEvent } from '@/GA';
 import { importWizardActions } from '@/[fsd]/entities/import-wizard';
-import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
+import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
 import { useLazyApplicationExportQuery } from '@/api/applications';
 import { buildErrorMessage } from '@/common/utils';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
+
+const { GA_EVENT_NAMES, GA_EVENT_PARAMS } = AnalyticConstants;
 
 export const useForkAgentHub = overrideProjectId => {
   const dispatch = useDispatch();

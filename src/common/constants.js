@@ -1,5 +1,7 @@
-// Import configurable mention triggers
-import { MentionConstants } from '@/[fsd]/shared/lib/constants';
+// Imported from the module rather than the shared barrel on purpose: the barrel pulls in
+// budgetWarning.constants, which imports @/routes, which imports this file — a cycle that
+// left RouteDefinitions undefined at module-eval time.
+import * as MentionConstants from '@/[fsd]/shared/lib/constants/mention.constants.js';
 import { getEnvVar } from '@/utils/env';
 
 export const VITE_GAID = getEnvVar('VITE_GAID');
@@ -312,6 +314,8 @@ export const SearchParams = {
   IsMCP: 'mcp',
   IndexName: 'index_name',
   HistoryRunId: 'history_run_id',
+  SuiteId: 'suiteId',
+  DatasetId: 'datasetId',
   SharedChat: 'shared_chat',
   Bucket: 'bucket',
   SharedBucket: 'shared_bucket',
@@ -582,6 +586,8 @@ export const PERMISSIONS = {
   },
   versions: {
     delete: 'models.applications.version.delete',
+    update: 'models.applications.version.update',
+    create: 'models.applications.version.create',
   },
   mcps: {
     delete: 'models.applications.tool.delete',

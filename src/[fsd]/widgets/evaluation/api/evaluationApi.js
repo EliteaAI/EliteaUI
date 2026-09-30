@@ -1,4 +1,5 @@
 import { eliteaApi } from '@/api';
+import { TAG_TYPE_APPLICATION_DETAILS } from '@/api/applications';
 
 import {
   EVAL_DATASET_CASE_PAGE_SIZE,
@@ -413,6 +414,27 @@ export const evaluationApi = eliteaApi
         }),
         invalidatesTags: [TAG_EVAL_RESULT, TAG_EVAL_HUMAN_SCORE, TAG_EVAL_RUN],
       }),
+
+      // ---- Enhance with AI (#6650) ----
+      // Sync analysis call: derives application_id/version_id from run_id server-side, so
+      // neither is sent here. Nothing is persisted by this call.
+      enhanceFromEval: build.mutation({
+        query: ({ projectId, body }) => ({
+          url: `/elitea_core/enhance_from_eval/prompt_lib/${projectId}`,
+          method: 'POST',
+          body,
+        }),
+      }),
+      // Forks a new version with the accepted instruction patches applied. Invalidates the
+      // application details tag so the new version shows up in the version list without reload.
+      versionInstructionFork: build.mutation({
+        query: ({ projectId, applicationId, versionId, body }) => ({
+          url: `/elitea_core/version_instruction_fork/prompt_lib/${projectId}/${applicationId}/${versionId}`,
+          method: 'POST',
+          body,
+        }),
+        invalidatesTags: (result, error) => (error ? [] : [TAG_TYPE_APPLICATION_DETAILS]),
+      }),
     }),
   });
 
@@ -456,4 +478,6 @@ export const {
   useEvalRunResultsQuery,
   useEvalHumanScoresQuery,
   useWriteEvalHumanScoreMutation,
+  useEnhanceFromEvalMutation,
+  useVersionInstructionForkMutation,
 } = evaluationApi;

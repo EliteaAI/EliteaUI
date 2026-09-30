@@ -372,6 +372,7 @@ export const useApplicationChat = ({
             // Preserve llm_settings from event payload if provided (from unsavedLLMSettings)
             // Otherwise fall back to applicationVersionDetails
             llm_settings: messageData.eventPayload?.llm_settings || {
+              selection: applicationVersionDetails?.llm_settings?.selection,
               model_name: applicationVersionDetails?.llm_settings?.model_name,
               model_project_id: applicationVersionDetails?.llm_settings?.model_project_id,
               max_tokens: applicationVersionDetails?.llm_settings?.max_tokens,
@@ -413,6 +414,7 @@ export const useApplicationChat = ({
       applicationParticipant,
       projectId,
       emitEnterRoom,
+      applicationVersionDetails?.llm_settings?.selection,
       applicationVersionDetails?.llm_settings?.model_name,
       applicationVersionDetails?.llm_settings?.model_project_id,
       applicationVersionDetails?.llm_settings?.max_tokens,
@@ -435,6 +437,7 @@ export const useApplicationChat = ({
           const updatedEventPayload = {
             ...eventPayload,
             llm_settings: eventPayload.llm_settings || {
+              selection: applicationVersionDetails?.llm_settings?.selection,
               model_name: applicationVersionDetails?.llm_settings?.model_name,
               model_project_id: applicationVersionDetails?.llm_settings?.model_project_id,
               max_tokens: applicationVersionDetails?.llm_settings?.max_tokens,
@@ -459,6 +462,7 @@ export const useApplicationChat = ({
       return { success: true };
     },
     [
+      applicationVersionDetails?.llm_settings?.selection,
       applicationVersionDetails?.llm_settings?.model_name,
       applicationVersionDetails?.llm_settings?.model_project_id,
       applicationVersionDetails?.llm_settings?.max_tokens,

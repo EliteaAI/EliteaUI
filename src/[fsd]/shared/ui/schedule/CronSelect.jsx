@@ -109,9 +109,7 @@ const CronSelect = memo(props => {
             >
               {option.label}
             </Typography>
-            {optionState.selected && (
-              <CheckedIcon style={{ width: '1rem', height: '1rem', flexShrink: 0, marginLeft: '1rem' }} />
-            )}
+            {optionState.selected && <CheckedIcon style={checkedIconStyle} />}
           </Box>
         );
       }}
@@ -161,5 +159,13 @@ const multipleExtraSx = {
 };
 
 const selectErrorSx = {};
+
+// SVGR icon: plain style object, not sx.
+const checkedIconStyle = {
+  width: '1rem',
+  height: '1rem',
+  flexShrink: 0,
+  marginLeft: '1rem',
+};
 
 export default CronSelect;

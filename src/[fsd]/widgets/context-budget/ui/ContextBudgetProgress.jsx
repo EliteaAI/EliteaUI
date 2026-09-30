@@ -2,7 +2,7 @@ import { memo } from 'react';
 
 import { Box, Tooltip, Typography, alpha, useTheme } from '@mui/material';
 
-import { CONTEXT_BUDGET_COLORS } from '@/[fsd]/shared/config/theme/chartPalette';
+import { CONTEXT_BUDGET_COLORS } from '@/[fsd]/shared/config/theme';
 import { CONTEXT_MESSAGES, TOOLTIP_CONFIG } from '@/[fsd]/widgets/context-budget/lib/constants';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
 

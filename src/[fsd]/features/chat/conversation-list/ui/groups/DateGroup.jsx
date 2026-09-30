@@ -16,6 +16,7 @@ const DateGroup = memo(props => {
     onLoadMore,
     isLoadingMore = false,
   } = props;
+  const styles = dateGroupStyles();
 
   const theme = useTheme();
 
@@ -70,24 +71,13 @@ const DateGroup = memo(props => {
       >
         <IconButton
           size="small"
-          sx={{
-            color: theme.palette.mode,
-            padding: '.125rem',
-            minWidth: 'auto',
-            transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
-            transition: 'transform 0.15s',
-          }}
+          sx={styles.expandButton(isExpanded)}
         >
           <ArrowForwardIosSharpIcon sx={{ fontSize: '0.875rem' }} />
         </IconButton>
         <Typography
           variant="subtitle2"
-          sx={{
-            fontSize: '.75rem',
-            fontWeight: 500,
-            textTransform: 'none',
-            color: theme.palette.mode,
-          }}
+          sx={styles.title}
         >
           {group.displayName || group.name}
         </Typography>
@@ -130,5 +120,24 @@ const DateGroup = memo(props => {
 });
 
 DateGroup.displayName = 'DateGroup';
+
+/** @type {MuiSx} */
+const dateGroupStyles = () => ({
+  expandButton:
+    isExpanded =>
+    ({ palette }) => ({
+      color: palette.mode,
+      padding: '.125rem',
+      minWidth: 'auto',
+      transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
+      transition: 'transform 0.15s',
+    }),
+  title: ({ palette }) => ({
+    fontSize: '.75rem',
+    fontWeight: 500,
+    textTransform: 'none',
+    color: palette.mode,
+  }),
+});
 
 export default DateGroup;

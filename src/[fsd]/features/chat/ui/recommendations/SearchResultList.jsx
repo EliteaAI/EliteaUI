@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { memo, useEffect, useMemo, useRef } from 'react';
 
 import { getChatParticipantUniqueId } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { ChatParticipantType, PAGE_SIZE } from '@/common/constants';
@@ -6,19 +6,21 @@ import useParticipants from '@/hooks/chat/useParticipants';
 
 import NewParticipantList from './NewParticipantList';
 
-export default function SearchResultList({
-  query,
-  onSelectParticipant,
-  stopProcessingSymbols,
-  existingParticipants = [],
-  onClose = () => {},
-  // ELITEA-2206: caller-supplied testids, mirroring SlashSuggestionList's own
-  // wiring of the same shared NewParticipantList (.agents/testing.md §
-  // Locator policy — shared components never hardcode feature-scoped testids).
-  containerTestId,
-  getItemTestId,
-  excludePublic = false,
-}) {
+const SearchResultList = memo(props => {
+  const {
+    query,
+    onSelectParticipant,
+    stopProcessingSymbols,
+    existingParticipants = [],
+    onClose = () => {},
+    // ELITEA-2206: caller-supplied testids, mirroring SlashSuggestionList's own
+    // wiring of the same shared NewParticipantList (.agents/testing.md §
+    // Locator policy — shared components never hardcode feature-scoped testids).
+    containerTestId,
+    getItemTestId,
+    excludePublic = false,
+  } = props;
+
   const mismatchedTimerRef = useRef(0);
   const { participants, isLoading, isFetching, onLoadMore, total } = useParticipants({
     sortBy: 'name',
@@ -80,4 +82,8 @@ export default function SearchResultList({
       getItemTestId={getItemTestId}
     />
   );
-}
+});
+
+SearchResultList.displayName = 'SearchResultList';
+
+export default SearchResultList;

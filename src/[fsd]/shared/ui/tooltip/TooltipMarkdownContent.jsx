@@ -4,7 +4,7 @@ import Markdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
 
-import { Box } from '@mui/material';
+import { Box, Link } from '@mui/material';
 
 const TooltipMarkdownContent = memo(props => {
   const { children: externalChildren } = props;
@@ -18,13 +18,14 @@ const TooltipMarkdownContent = memo(props => {
         remarkPlugins={[remarkGfm, remarkBreaks]}
         components={{
           a: ({ href, children }) => (
-            <a
+            <Link
               href={href}
               target="_blank"
               rel="noreferrer"
+              color="inherit"
             >
               {children}
-            </a>
+            </Link>
           ),
         }}
       >

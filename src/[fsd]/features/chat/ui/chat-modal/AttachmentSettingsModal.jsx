@@ -55,11 +55,7 @@ const AttachmentSettingsModal = memo(props => {
       label: 'Create new',
       icon: (
         <PlusIcon
-          style={{
-            width: '1rem',
-            height: '1rem',
-            flexShrink: 0,
-          }}
+          style={styles.createNewIcon}
           fill={theme.palette.icon.secondary}
         />
       ),
@@ -326,6 +322,11 @@ const AttachmentSettingsModal = memo(props => {
 
 /** @type {MuiSx} */
 const styles = {
+  createNewIcon: {
+    width: '1rem',
+    height: '1rem',
+    flexShrink: 0,
+  },
   dialog: {
     '& .MuiDialog-paper': {
       width: '37.5rem !important', // or any custom width

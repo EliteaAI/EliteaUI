@@ -1,9 +1,11 @@
-import { MCP_SESSION_STORAGE_KEYS } from '@/[fsd]/features/mcp/lib/constants/mcAuth.constants';
+import { McpAuthConstants } from '@/[fsd]/features/mcp/lib/constants';
 import { PermissionStorageKey, PublicPermissionStorageKey } from '@/common/constants.js';
 import { actions as settingsActions } from '@/slices/settings';
 import { createSlice } from '@reduxjs/toolkit';
 
 import { eliteaApi } from '../api/eliteaApi.js';
+
+const { MCP_SESSION_STORAGE_KEYS } = McpAuthConstants;
 
 const initialState = () => ({
   id: null,

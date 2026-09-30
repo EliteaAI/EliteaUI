@@ -3,7 +3,7 @@ import { memo } from 'react';
 import { Box, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
-import { NOTIFICATIONS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/notificationsTourTargets.constants';
+import { NOTIFICATIONS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import SimpleSearchBar from '@/[fsd]/shared/ui/input/SimpleSearchBar';
 import MarkReadIcon from '@/assets/icons/mark-read-icon.svg?react';
@@ -69,7 +69,6 @@ const NotificationTableToolbar = memo(props => {
           onDelete={onDeleteSelected}
           title="Delete selected notifications"
           isLoading={false}
-          buttonColor="secondary"
           buttonClassName="action"
           disabled={isSelectionEmpty}
           shouldRequestInputName={false}

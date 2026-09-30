@@ -175,7 +175,7 @@ const HITLNode = memo(props => {
                 isConnectable={!isRunningPipeline && !disabled}
                 isRunningPipeline={isRunningPipeline}
                 isPerforming={data?.isPerforming}
-                style={{ left: `calc(25% + ${index * 25}%)` }}
+                style={styles.actionHandle(index)}
               />
             ))}
           </>
@@ -295,6 +295,10 @@ HITLNode.displayName = 'HITLNode';
 
 /** @type {MuiSx} */
 const hitlNodeStyles = () => ({
+  // CustomHandle wraps react-flow's Handle, which only accepts `style`.
+  actionHandle: index => ({
+    left: `calc(25% + ${index * 25}%)`,
+  }),
   section: {
     display: 'flex',
     flexDirection: 'column',

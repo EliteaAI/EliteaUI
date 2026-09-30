@@ -9,8 +9,8 @@ export {
   EmptyMcpTools,
   ArrayFieldInput,
   SecretHeadersInput,
-} from './ToolBase';
+} from './tool-base';
 export { default as ToolCustom } from './ToolCustom';
 export { default as ToolFormContainer } from './ToolFormContainer';
-export { OpenAPIActions, OpenAPISchemaInput } from './ToolOpenAPI';
-export { ToolkitForm } from './ToolkitForm';
+export { OpenAPIActions, OpenAPISchemaInput } from './tool-open-api';
+export { ToolkitForm } from './toolkit-form';

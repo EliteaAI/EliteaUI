@@ -1,12 +1,12 @@
-import { ChatHelpers } from '@/[fsd]/features/chat/lib/helpers';
-import { normalizeContinuationError } from '@/[fsd]/features/chat/lib/helpers/continuationError.helpers.js';
-import { normalizeExecutionHierarchy } from '@/[fsd]/features/chat/lib/helpers/executionHierarchy.helpers.js';
-import { filterActivePipelineHitlPromptItems } from '@/[fsd]/features/chat/lib/helpers/hitl.helpers.js';
-import { buildMcpAuthorizationToolAction } from '@/[fsd]/features/chat/lib/helpers/mcpAuthorization.helpers.js';
 import {
+  ChatHelpers,
+  ExecutionHierarchyHelpers,
+  HitlHelpers,
+  buildMcpAuthorizationToolAction,
   hasUnresolvedSkillAction,
   mentionSkillActions,
-} from '@/[fsd]/features/chat/lib/helpers/mentionSkillTrace.helpers.js';
+  normalizeContinuationError,
+} from '@/[fsd]/features/chat/lib/helpers';
 import {
   ChatParticipantType,
   ROLES,
@@ -14,6 +14,10 @@ import {
   TOOL_ACTION_TYPES,
   ToolActionStatus,
 } from '@/common/constants';
+
+const { filterActivePipelineHitlPromptItems } = HitlHelpers;
+
+const { normalizeExecutionHierarchy } = ExecutionHierarchyHelpers;
 
 export const isUserMessage = (author_participant_id, sent_to_id, userIds, reply_to_id, sent_to) => {
   return (

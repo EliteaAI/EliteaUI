@@ -11,3 +11,4 @@ export {
   mapAiParticipantToSelectItem,
   mapUserParticipantToSelectItem,
 } from './restrictAccess.helpers';
+export { getDropTargetStyles } from './dropTarget.helpers';

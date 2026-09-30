@@ -2,13 +2,15 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 
-import { ATTACHMENT_ALLOWED_TOOLS } from '@/[fsd]/features/chat/participants/lib/constants/participant.constants';
+import { ParticipantConstants } from '@/[fsd]/features/chat/participants/lib/constants';
 import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
 import { useLazyListModelsQuery } from '@/api/configurations';
 import { useToolkitCreateMutation } from '@/api/toolkits';
 import { convertToolkitSchema } from '@/common/toolkitSchemaUtils';
 
 import { useSelectedProjectId } from './useSelectedProject';
+
+const { ATTACHMENT_ALLOWED_TOOLS } = ParticipantConstants;
 
 export function useCreateArtifactWithDefaultConfiguration({ bucketName }) {
   const [createRequest, { data, error, isLoading, isError }] = useToolkitCreateMutation();

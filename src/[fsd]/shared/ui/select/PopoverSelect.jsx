@@ -2,6 +2,7 @@ import { memo, useCallback, useMemo, useRef, useState } from 'react';
 
 import { Box, MenuItem, Popover, Typography } from '@mui/material';
 
+import { customScrollbarSx } from '@/[fsd]/shared/lib/helpers';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import SimpleSearchBar from '@/[fsd]/shared/ui/input/SimpleSearchBar';
@@ -93,7 +94,7 @@ const PopoverSelect = memo(props => {
           sx={styles.searchBar}
           onKeyDown={e => e.stopPropagation()}
         />
-        <Box sx={styles.optionsList}>
+        <Box sx={[styles.optionsList, customScrollbarSx]}>
           {filteredOptions.length === 0 && (
             <Typography
               variant="bodyMedium"
@@ -149,6 +150,9 @@ const getStyles = ({ popoverWidth, maxHeight }) => ({
     backgroundColor: 'transparent',
     padding: '0.75rem 1rem',
     height: 'auto',
+    '&:hover': {
+      borderColor: palette.border.lines,
+    },
     '&:focus-within': {
       backgroundColor: 'transparent',
       borderColor: palette.border.lines,

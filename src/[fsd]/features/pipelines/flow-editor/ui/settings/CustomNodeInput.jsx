@@ -22,6 +22,8 @@ const MAX_HEIGHT = '37.5rem';
 
 const CustomNodeInput = memo(props => {
   const { id, contentTestId } = props;
+  const styles = customNodeInputStyles();
+
   const editorRef = useRef();
   const fullScreenEditorRef = useRef();
   const theme = useTheme();
@@ -119,15 +121,7 @@ const CustomNodeInput = memo(props => {
       >
         {error && <Typography sx={{ color: theme.palette.error.main }}>{error}</Typography>}
         {isHovering && (
-          <Box
-            position="absolute"
-            display="flex"
-            justifyContent="flex-end"
-            gap=".25rem"
-            top=".3125rem"
-            right=".75rem"
-            zIndex="999"
-          >
+          <Box sx={styles.actions}>
             <StyledTooltip
               title="Copy to clipboard"
               placement="top"
@@ -223,23 +217,10 @@ const CustomNodeInput = memo(props => {
           color="text.secondary"
           sx={{ height: '3.75rem', padding: '1rem 2rem' }}
         >
-          <Box
-            display={'flex'}
-            flexDirection={'row'}
-            justifyContent={'space-between'}
-            alignItems={'center'}
-          >
+          <Box sx={styles.modalHeader}>
             Full screen view
-            <Box
-              display={'flex'}
-              alignItems={'center'}
-              justifyContent={'flex-end'}
-            >
-              <Box
-                height={'1.5rem'}
-                width={'6.25rem'}
-                marginRight={'.5rem'}
-              >
+            <Box sx={styles.modalHeaderActions}>
+              <Box sx={styles.languageSelect}>
                 <Typography
                   component={'div'}
                   variant="bodyMedium"
@@ -290,16 +271,7 @@ const CustomNodeInput = memo(props => {
             </Box>
           </Box>
         </DialogTitle>
-        <DialogContent
-          sx={{
-            padding: '0rem 0rem !important',
-            width: '80vw',
-            height: 'calc(100vh - 13.75rem)',
-            borderTop: `.0625rem solid ${theme.palette.border.lines}`,
-            backgroundColor: theme.palette.background.default.secondary,
-            overflowY: 'hidden',
-          }}
-        >
+        <DialogContent sx={styles.modalContent}>
           {error && <Typography sx={{ color: theme.palette.error.main }}>{error}</Typography>}
           <Field.CodeMirrorEditor
             className="nopan nodrag nowheel"
@@ -317,5 +289,42 @@ const CustomNodeInput = memo(props => {
 });
 
 CustomNodeInput.displayName = 'CustomNodeInput';
+
+/** @type {MuiSx} */
+const customNodeInputStyles = () => ({
+  actions: {
+    position: 'absolute',
+    display: 'flex',
+    justifyContent: 'flex-end',
+    gap: '.25rem',
+    top: '.3125rem',
+    right: '.75rem',
+    zIndex: '999',
+  },
+  modalHeader: {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  modalHeaderActions: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+  },
+  languageSelect: {
+    height: '1.5rem',
+    width: '6.25rem',
+    marginRight: '.5rem',
+  },
+  modalContent: ({ palette }) => ({
+    padding: '0rem 0rem !important',
+    width: '80vw',
+    height: 'calc(100vh - 13.75rem)',
+    borderTop: `.0625rem solid ${palette.border.lines}`,
+    backgroundColor: palette.background.default.secondary,
+    overflowY: 'hidden',
+  }),
+});
 
 export default CustomNodeInput;

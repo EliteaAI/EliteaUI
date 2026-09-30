@@ -222,6 +222,8 @@ const darkPalette = {
     },
     panel: white3,
     surface: {
+      default: gray50,
+      secondary: gray60,
       interactive: {
         default: white5,
         active: white10,
@@ -241,6 +243,16 @@ const darkPalette = {
     tooltip: gray00,
     aiAnswer: gray40,
     badge: white20,
+    // Translucent overlays layered over surfaces (hover states, skeletons, drop targets).
+    overlay: {
+      faint: 'rgba(255, 255, 255, 0.02)',
+      soft: 'rgba(255, 255, 255, 0.05)',
+      medium: 'rgba(255, 255, 255, 0.1)',
+      strong: 'rgba(255, 255, 255, 0.2)',
+      dim: 'rgba(0, 0, 0, 0.3)',
+      sensitive: { default: 'rgba(255, 255, 255, 0.04)', hover: 'rgba(255, 255, 255, 0.08)' },
+      versionHover: 'rgba(61, 68, 86, 0.1)',
+    },
   },
   border: {
     default: gray40,
@@ -252,6 +264,7 @@ const darkPalette = {
     tips: blue40,
     attention: orangeOutline40,
     error: red40,
+    sectionHover: 'rgba(38, 43, 52, 1)',
   },
   boxShadow: {
     default: `0 0 0.5rem 0 ${white14}`,
@@ -274,6 +287,7 @@ const darkPalette = {
     accent: cyanDefault,
     link: blue,
     linkHover: darkBlue,
+    linkHoverSecondary: skyBlue,
     visitedLink: blue70,
     alwaysWhite: white,
     alwaysDark: gray60,
@@ -283,7 +297,13 @@ const darkPalette = {
   alert: {
     info: { icon: darkBlue, background: blueFill8, border: blue40, text: lightBlue },
     success: { icon: greenHoverBtn, background: green8, border: greenOutline40, text: lightGreen },
-    warning: { icon: orange, background: orange8, border: orangeOutline40, text: lightOrange },
+    warning: {
+      icon: orange,
+      background: orange8,
+      border: orangeOutline40,
+      borderStrong: orange,
+      text: lightOrange,
+    },
     error: { icon: dangerRed, background: red8, border: red40, text: lightRed },
     secondary: { background: blue8 },
   },
@@ -403,7 +423,7 @@ const darkPalette = {
     },
     tab: { background: { default: gray10, hover: cyanPressed, active: cyanDefault, disabled: gray20 } },
     categoryTag: {
-      background: { default: gray50, selected: darkBlue },
+      background: { default: gray50, hover: gray40, selected: purple30, hoverSelected: purple20 },
       text: { default: white, selected: white },
       shadow: 'none',
     },
@@ -539,6 +559,7 @@ const darkPalette = {
       background: { strong: magenta20, subtle: purple10 },
     },
     npsSurvey: {
+      heartGradient: { start: '#FB85FF', end: '#78ABFF' },
       background: npsSurveyBg,
       border: npsSurveyBorder,
       accent: npsAccent,
@@ -644,7 +665,7 @@ const darkPalette = {
     flowEditor: {
       background: gray60,
       node: { border: gray20 },
-      edge: { stroke: gray20 },
+      edge: { stroke: gray20, shadow: 'rgba(0, 0, 0, 0.2)' },
       nodeColors: {
         toolkit: flowNodeToolkit,
         mcp: flowNodeMcp,
@@ -757,6 +778,7 @@ const darkPalette = {
       },
     },
     configurationCard: { background: { highTier: green20 } },
+    chatTemplate: { badge: { background: green20 } },
     highlightQuery: { background: attentionOrange },
     runIndexBanner: {
       background: { success: green8, error: red8, warning: orange8, info: blueFill8 },
@@ -772,7 +794,9 @@ const darkPalette = {
     categorySection: { text: { title: gray10 } },
     deleteAlert: { text: { entityName: skyBlue, body: white } },
     chip: {
-      background: { warning: red15, selected: blue16, default: white5 },
+      background: { warning: red15, selected: blue16, default: white5, positive: greenOutline40 },
+      border: { default: gray30, active: cyanDefault },
+      text: { default: gray10, active: cyanDefault },
     },
     chipWithCheckIcon: {
       background: {

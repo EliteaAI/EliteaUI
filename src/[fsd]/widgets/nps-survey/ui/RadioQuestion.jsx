@@ -57,7 +57,7 @@ const styles = {
     padding: '0.25rem 0.75rem',
     borderRadius: '0.5rem',
     background: palette.components.npsSurvey.optionBackground,
-    border: '1px solid transparent',
+    border: '0.0625rem solid transparent',
     margin: 0,
     width: '100%',
     '&:hover': {

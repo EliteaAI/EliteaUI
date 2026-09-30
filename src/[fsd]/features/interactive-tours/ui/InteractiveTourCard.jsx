@@ -6,7 +6,7 @@ import { Box, Typography } from '@mui/material';
 import { keyframes } from '@mui/material/styles';
 
 import { useInteractiveTour } from '@/[fsd]/shared/lib/context';
-import { MarkdownMapping } from '@/[fsd]/shared/lib/utils/markdown.utils';
+import { MarkdownMapping } from '@/[fsd]/shared/lib/utils';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 
 import { CARD_WIDTH_PX } from '../lib/constants';

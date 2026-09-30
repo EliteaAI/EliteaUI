@@ -14,7 +14,7 @@ import {
   useUnpublishSkillMenu,
 } from '@/[fsd]/features/skill/lib/hooks';
 import { PinEntityConstants } from '@/[fsd]/shared/lib/constants';
-import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
+import { useProjectType } from '@/[fsd]/shared/lib/hooks';
 import { Controls } from '@/[fsd]/shared/ui';
 import { usePin, usePinMenu } from '@/[fsd]/widgets/pin-toggler';
 import { PERMISSIONS, SkillsTabs } from '@/common/constants';
@@ -290,7 +290,7 @@ const skillControlsStyles = {
       left: 0,
       top: '0.25rem',
       bottom: '0.25rem',
-      borderLeft: ({ palette }) => `1px solid ${palette.border.lines}`,
+      borderLeft: ({ palette }) => `0.0625rem solid ${palette.border.lines}`,
     },
   },
 };

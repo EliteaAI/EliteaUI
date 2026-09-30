@@ -3,7 +3,7 @@ import { memo } from 'react';
 import { Box } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
-import { useTextOverflow } from '@/[fsd]/shared/lib/hooks/useTextOverflow.hooks';
+import { useTextOverflow } from '@/[fsd]/shared/lib/hooks';
 
 const EllipsisLabelWithTooltip = memo(props => {
   const { label, placement = 'top', sx } = props;

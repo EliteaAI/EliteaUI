@@ -137,7 +137,7 @@ const modalStyles = () => ({
   dialogPaper: ({ palette }) => ({
     background: palette.background.default.tertiary,
     borderRadius: '1rem',
-    border: `1px solid ${palette.border.lines}`,
+    border: `0.0625rem solid ${palette.border.lines}`,
     boxShadow: palette.boxShadow.default,
     marginTop: 0,
     maxWidth: '90vw',
@@ -174,7 +174,7 @@ const modalStyles = () => ({
     width: '80vw',
     maxWidth: '90vw',
     height: 'calc(100vh - 13.75rem)',
-    borderTop: `1px solid ${palette.border.lines}`,
+    borderTop: `0.0625rem solid ${palette.border.lines}`,
     background: palette.components.contextDialog.background,
     overflowY: 'scroll',
     display: 'flex',

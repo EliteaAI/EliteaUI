@@ -5,10 +5,12 @@ import { useDispatch } from 'react-redux';
 import { useTrackEvent } from '@/GA';
 import { importWizardActions } from '@/[fsd]/entities/import-wizard';
 import { useLazySkillExportForkQuery } from '@/[fsd]/features/skill/api';
-import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
+import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
 import { buildErrorMessage } from '@/common/utils';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
+
+const { GA_EVENT_NAMES, GA_EVENT_PARAMS } = AnalyticConstants;
 
 export const useForkSkill = overrideProjectId => {
   const dispatch = useDispatch();

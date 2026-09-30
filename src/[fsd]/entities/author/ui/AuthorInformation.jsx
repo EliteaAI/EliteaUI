@@ -8,7 +8,7 @@ import Skeleton from '@mui/material/Skeleton';
 import Typography from '@mui/material/Typography';
 
 import { ROUTE_STATISTIC_MAP } from '@/[fsd]/entities/author/lib/constants';
-import { AuthorStatistics } from '@/[fsd]/entities/author/ui/AuthorInfo';
+import { AuthorStatistics } from '@/[fsd]/entities/author/ui/author-info';
 import UserAvatar from '@/components/UserAvatar';
 
 const AuthorInformation = memo(props => {

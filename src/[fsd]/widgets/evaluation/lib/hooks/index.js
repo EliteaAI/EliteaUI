@@ -1,3 +1,4 @@
+export * from './useBuildDimensionWithAi.hooks';
 export * from './useEvalDatasetActions.hooks';
 export * from './useEvalDimensionActions.hooks';
 export * from './useEvalRunActions.hooks';

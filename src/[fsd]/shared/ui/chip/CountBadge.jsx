@@ -3,7 +3,10 @@ import { memo } from 'react';
 import { Box, Typography } from '@mui/material';
 
 const CountBadge = memo(props => {
-  const { count, total, ariaLabel, sx, testId } = props;
+  const { count, total, text, ariaLabel, sx, testId } = props;
+
+  const baseText = total === undefined ? `${count}` : `${count} / ${total}`;
+  const displayText = text ? `${baseText} ${text}` : baseText;
 
   const styles = countBadgeStyles();
 
@@ -15,7 +18,7 @@ const CountBadge = memo(props => {
         aria-label={ariaLabel}
         data-testid={testId}
       >
-        {total === undefined ? count : `${count} / ${total}`}
+        {displayText}
       </Typography>
     </Box>
   );

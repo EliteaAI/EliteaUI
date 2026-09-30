@@ -64,4 +64,4 @@ const VoiceConfigDialog = memo(props => {
 
 VoiceConfigDialog.displayName = 'VoiceConfigDialog';
 
-export { VoiceConfigDialog };
+export default VoiceConfigDialog;

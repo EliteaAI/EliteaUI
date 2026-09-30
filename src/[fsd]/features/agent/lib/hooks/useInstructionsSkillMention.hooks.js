@@ -4,10 +4,7 @@ import { useTheme } from '@mui/material';
 
 import { useGetApplicationSkillsQuery } from '@/[fsd]/features/skill';
 import { MentionConstants } from '@/[fsd]/shared/lib/constants';
-import {
-  createMentionCmExtension,
-  parseMentionRanges,
-} from '@/[fsd]/shared/lib/utils/instructionsMention.utils';
+import { createMentionCmExtension, parseMentionRanges } from '@/[fsd]/shared/lib/utils';
 
 import { useInstructionsTildaCommand } from './useInstructionsTildaCommand.hooks';
 

@@ -14,6 +14,7 @@ const RouterNode = memo(props => {
   const { id, data, selected, nodeType = FlowEditorConstants.PipelineNodeTypes.Router } = props;
 
   const edges = useEdges();
+  const styles = routerNodeStyles();
   const { setFlowEdges, yamlJsonObject, isRunningPipeline, setYamlJsonObject, disabled } =
     useContext(FlowEditorContext);
   const pipelineLLMConfig = useNodeAiAssistantConfig();
@@ -117,7 +118,7 @@ const RouterNode = memo(props => {
                 isConnectable={!isRunningPipeline && !disabled}
                 isRunningPipeline={isRunningPipeline}
                 isPerforming={data?.isPerforming}
-                style={{ left: 'calc(50% - 3.125rem)' }}
+                style={styles.routesHandle}
               />
               <FlowEditorNodes.CustomHandle
                 type="source"
@@ -126,7 +127,7 @@ const RouterNode = memo(props => {
                 isConnectable={!isRunningPipeline && isDefaultConnectable && !disabled}
                 isRunningPipeline={isRunningPipeline}
                 isPerforming={data?.isPerforming}
-                style={{ left: 'calc(50% + 3.125rem)' }}
+                style={styles.defaultOutputHandle}
               />
             </>
           );
@@ -174,7 +175,7 @@ const RouterNode = memo(props => {
           dataTestId="pipeline-router-node-input-select"
         />
         <SingleSelect
-          sx={{ marginBottom: '0rem' }}
+          sx={styles.defaultOutputSelect}
           labelNode={<Chip.HeadingChip label="Default output" />}
           value={default_output_node}
           onValueChange={handleDefaultOutput}
@@ -190,5 +191,19 @@ const RouterNode = memo(props => {
 });
 
 RouterNode.displayName = 'RouterNode';
+
+/** @type {MuiSx} */
+const routerNodeStyles = () => ({
+  // CustomHandle wraps react-flow's Handle, which only accepts `style`.
+  routesHandle: {
+    left: 'calc(50% - 3.125rem)',
+  },
+  defaultOutputHandle: {
+    left: 'calc(50% + 3.125rem)',
+  },
+  defaultOutputSelect: {
+    marginBottom: '0rem',
+  },
+});
 
 export default RouterNode;

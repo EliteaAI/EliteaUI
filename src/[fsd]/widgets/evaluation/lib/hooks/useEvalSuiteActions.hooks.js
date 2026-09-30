@@ -7,33 +7,21 @@ import useNavBlocker from '@/hooks/useNavBlocker';
 import useToast from '@/hooks/useToast';
 import RouteDefinitions from '@/routes';
 
-import {
-  useCreateEvalSuiteMutation,
-  useDeleteEvalSuiteMutation,
-  useUpdateEvalSuiteMutation,
-} from '../../api';
+import { useDeleteEvalSuiteMutation, useUpdateEvalSuiteMutation } from '../../api';
 import { parseEvalError, suiteCreatedMessage, suiteDeletedMessage } from '../helpers';
 
-export const useEvalSuiteActions = ({
-  projectId,
-  applicationId,
-  agentId,
-  tab,
-  isCreatingNew,
-  editingSuiteId,
-  afterCreateRef,
-}) => {
+export const useEvalSuiteActions = ({ projectId, agentId, tab, editingSuiteId }) => {
   const navigate = useNavigate();
   const { search } = useLocation();
   const { toastError, toastSuccess } = useToast();
 
-  const isDetailView = isCreatingNew || editingSuiteId !== null;
+  const isDetailView = editingSuiteId !== null;
 
-  const [createEvalSuite, { isLoading: isCreating }] = useCreateEvalSuiteMutation();
   const [updateEvalSuite, { isLoading: isUpdating }] = useUpdateEvalSuiteMutation();
   const [deleteEvalSuite] = useDeleteEvalSuiteMutation();
 
   const [suiteToDelete, setSuiteToDelete] = useState(null);
+  const [showCreateSuiteModal, setShowCreateSuiteModal] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
 
   const blockOptions = useMemo(() => ({ blockCondition: isDetailView && isDirty }), [isDetailView, isDirty]);
@@ -47,8 +35,23 @@ export const useEvalSuiteActions = ({
   const persistentSearch = NavigationHelpers.pickPersistentSearch(search);
 
   const handleNewSuite = useCallback(() => {
-    navigate({ pathname: `${baseEvaluatePath}/new`, search: persistentSearch });
-  }, [navigate, baseEvaluatePath, persistentSearch]);
+    setShowCreateSuiteModal(true);
+  }, []);
+
+  const handleCloseCreateSuiteModal = useCallback(() => {
+    setShowCreateSuiteModal(false);
+  }, []);
+
+  // A suite exists the moment the create modal saves, so the detail form opens on a real
+  // record — datasets and dimensions attach straight away with no draft state to flush.
+  const handleSuiteCreated = useCallback(
+    created => {
+      if (!created?.id) return;
+      toastSuccess(suiteCreatedMessage(created.name));
+      navigate({ pathname: `${baseEvaluatePath}/${created.id}`, search: persistentSearch });
+    },
+    [navigate, baseEvaluatePath, persistentSearch, toastSuccess],
+  );
 
   const handleSelectSuite = useCallback(
     suite => {
@@ -67,60 +70,24 @@ export const useEvalSuiteActions = ({
 
   const handleSave = useCallback(
     async formData => {
+      if (editingSuiteId == null) return;
       try {
-        if (isCreatingNew) {
-          const created = await createEvalSuite({
-            projectId,
-            body: {
-              application_id: applicationId,
-              name: formData.name,
-              description: formData.description,
-              judge_model: formData.judge_model,
-            },
-          }).unwrap();
-          if (afterCreateRef?.current) {
-            await afterCreateRef.current(created.id);
-          }
-          setBlockNav(false);
-          toastSuccess(suiteCreatedMessage(formData.name));
-          navigate(
-            { pathname: `${baseEvaluatePath}/${created.id}`, search: persistentSearch },
-            { replace: true },
-          );
-        } else if (editingSuiteId != null) {
-          await updateEvalSuite({
-            projectId,
-            suiteId: editingSuiteId,
-            body: {
-              name: formData.name,
-              description: formData.description,
-              judge_model: formData.judge_model,
-            },
-          }).unwrap();
-          setBlockNav(false);
-          toastSuccess(`The "${formData.name}" suite has been successfully saved.`);
-        }
+        await updateEvalSuite({
+          projectId,
+          suiteId: editingSuiteId,
+          body: {
+            name: formData.name,
+            description: formData.description,
+            judge_model: formData.judge_model,
+          },
+        }).unwrap();
+        setBlockNav(false);
+        toastSuccess(`The "${formData.name}" suite has been successfully saved.`);
       } catch (error) {
-        toastError(
-          parseEvalError(error, isCreatingNew ? 'Failed to create the suite.' : 'Failed to save the suite.'),
-        );
+        toastError(parseEvalError(error, 'Failed to save the suite.'));
       }
     },
-    [
-      isCreatingNew,
-      editingSuiteId,
-      createEvalSuite,
-      updateEvalSuite,
-      projectId,
-      applicationId,
-      baseEvaluatePath,
-      navigate,
-      persistentSearch,
-      setBlockNav,
-      toastSuccess,
-      toastError,
-      afterCreateRef,
-    ],
+    [editingSuiteId, updateEvalSuite, projectId, setBlockNav, toastSuccess, toastError],
   );
 
   const handleDeleteSuite = useCallback(suite => {
@@ -161,10 +128,13 @@ export const useEvalSuiteActions = ({
 
   return {
     isDetailView,
-    isSaving: isCreating || isUpdating,
+    isSaving: isUpdating,
     suiteToDelete,
+    showCreateSuiteModal,
     baseEvaluatePath,
     handleNewSuite,
+    handleCloseCreateSuiteModal,
+    handleSuiteCreated,
     handleSelectSuite,
     handleBack,
     handleDirtyChange,

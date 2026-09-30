@@ -16,7 +16,7 @@ import { ANALYTICS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { ChartTooltip, KPICard, ModelUsageTable } from '@/[fsd]/features/settings/ui/analytics';
-import { CHART_COLORS, EVENT_TYPE_COLORS, MEDAL_COLORS } from '@/[fsd]/shared/config/theme/chartPalette';
+import { CHART_COLORS, EVENT_TYPE_COLORS, MEDAL_COLORS } from '@/[fsd]/shared/config/theme';
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 
 const AnalyticsOverview = memo(props => {
@@ -214,8 +214,8 @@ const AnalyticsOverview = memo(props => {
                     type="monotone"
                     dataKey="active_users"
                     name="Active Users"
-                    stroke="#58A6FF"
-                    fill="#58A6FF"
+                    stroke={CHART_COLORS[4]}
+                    fill={CHART_COLORS[4]}
                     fillOpacity={0.1}
                     strokeWidth={2}
                   />
@@ -364,7 +364,7 @@ const analyticsOverviewStyles = () => ({
     alignItems: 'center',
     gap: '0.75rem',
     padding: '0.5rem',
-    borderBottom: `1px solid ${palette.border.default}`,
+    borderBottom: `0.0625rem solid ${palette.border.default}`,
     '&:last-child': { borderBottom: 'none' },
   }),
   leaderboardRank: ({ palette }) => ({

@@ -41,11 +41,7 @@ const ToolkitTestSettings = memo(props => {
   const styles = toolkitTestSettingsStyles();
 
   return (
-    <Box
-      width="100%"
-      height="100%"
-      sx={styles.root}
-    >
+    <Box sx={[styles.fullSize, styles.root]}>
       <ScrollableContainer>
         <Box sx={styles.content}>
           <Box sx={styles.toolSelectContainer}>
@@ -115,6 +111,10 @@ const CONTENT_MAX_WIDTH = '35.9375rem';
 
 /** @type {MuiSx} */
 const toolkitTestSettingsStyles = () => ({
+  fullSize: {
+    width: '100%',
+    height: '100%',
+  },
   root: {
     display: 'flex',
     flexDirection: 'column',

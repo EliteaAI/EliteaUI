@@ -21,6 +21,7 @@ export const BUTTON_VARIANTS = {
   iconCounter: 'iconCounter',
   maxi: 'maxi',
   iconLabel: 'iconLabel',
+  toggle: 'toggle',
   tertiary: 'tertiary',
   neutral: 'neutral',
   positive: 'positive',
@@ -29,11 +30,13 @@ export const BUTTON_VARIANTS = {
 const BaseBtn = memo(
   forwardRef((props, ref) => {
     const { children, loadingPosition = 'end', ...restProps } = props;
+    const isIconOnly =
+      (children === undefined || children === null) && (restProps.startIcon || restProps.loading);
 
     return (
       <MuiButton
         ref={ref}
-        loadingPosition={loadingPosition}
+        loadingPosition={isIconOnly ? 'center' : loadingPosition}
         {...restProps}
       >
         {children}
@@ -138,6 +141,24 @@ export const eliteaButtonColors = theme => ({
     },
     disabled: { color: theme.palette.components.button.text.disabled, background: 'transparent' },
   },
+  [BUTTON_VARIANTS.toggle]: {
+    default: {
+      background: 'transparent',
+      color: theme.palette.text.primary,
+    },
+    hover: {
+      background: theme.palette.background.surface.interactive.active,
+      color: theme.palette.text.secondary,
+    },
+    active: {
+      background: 'transparent',
+      color: theme.palette.text.primary,
+    },
+    disabled: {
+      background: 'transparent',
+      color: theme.palette.text.muted,
+    },
+  },
   [BUTTON_VARIANTS.auxiliary]: {
     default: {
       background: 'transparent',
@@ -241,6 +262,7 @@ const baseVariantStyle = (theme, ownerState, options = {}) => {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
+      ...(options.iconOnly && isIconOnly && ownerState.loading && { visibility: 'hidden' }),
 
       '& > svg': {
         display: 'block',
@@ -255,11 +277,6 @@ const baseVariantStyle = (theme, ownerState, options = {}) => {
           width: '1.75rem',
           borderRadius: '50%',
           padding: 0,
-          '& .MuiButton-loadingIndicator': {
-            position: 'static',
-            margin: 0,
-            transform: 'none',
-          },
         }
       : {}),
   };
@@ -479,6 +496,65 @@ export const eliteaButtonVariants = [
     },
   },
 
+  {
+    props: { variant: BUTTON_VARIANTS.toggle },
+    style: ({ theme }) => ({
+      borderRadius: '1rem',
+      padding: '0.375rem 0.625rem 0.375rem 0.5rem',
+      minWidth: 'auto',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: '0.375rem',
+      backgroundColor: eliteaButtonColors(theme)[BUTTON_VARIANTS.toggle].default.background,
+      color: eliteaButtonColors(theme)[BUTTON_VARIANTS.toggle].default.color,
+      '& .MuiButton-startIcon': {
+        margin: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        '& > svg': {
+          width: '1rem',
+          height: '1rem',
+          display: 'block',
+        },
+        '& path': {
+          fill: theme.palette.icon.default,
+        },
+      },
+      '& .MuiButton-endIcon': {
+        margin: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        '& > *:nth-of-type(1)': {
+          fontSize: '0.75rem',
+          lineHeight: '1rem',
+        },
+      },
+      '&:hover, &:focus-visible': {
+        backgroundColor: eliteaButtonColors(theme)[BUTTON_VARIANTS.toggle].hover.background,
+        color: eliteaButtonColors(theme)[BUTTON_VARIANTS.toggle].hover.color,
+        '& .MuiButton-startIcon path': {
+          fill: theme.palette.icon.secondary,
+        },
+      },
+      '&:active': {
+        backgroundColor: eliteaButtonColors(theme)[BUTTON_VARIANTS.toggle].active.background,
+        color: eliteaButtonColors(theme)[BUTTON_VARIANTS.toggle].active.color,
+        '& .MuiButton-startIcon path': {
+          fill: theme.palette.icon.default,
+        },
+      },
+      '&:disabled': {
+        backgroundColor: eliteaButtonColors(theme)[BUTTON_VARIANTS.toggle].disabled.background,
+        color: eliteaButtonColors(theme)[BUTTON_VARIANTS.toggle].disabled.color,
+        '& .MuiButton-startIcon path': {
+          fill: theme.palette.icon.disabled,
+        },
+      },
+    }),
+  },
   {
     props: { variant: BUTTON_VARIANTS.auxiliary },
     style: ({ theme }) => ({

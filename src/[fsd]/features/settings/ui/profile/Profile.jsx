@@ -4,10 +4,10 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import { Box, Typography } from '@mui/material';
 
+import { SettingsLayoutConstants } from '@/[fsd]/features/settings/lib/constants';
 import { dateFormatter } from '@/[fsd]/features/settings/lib/helpers/dateFormatter.helpers';
 import FieldWithCopy from '@/[fsd]/features/settings/ui/ai-providers/FieldWithCopy';
 import { BaseBtn } from '@/[fsd]/shared/ui/button';
-import LogoutIcon from '@/assets/logout-icon.svg?react';
 import UserAvatar from '@/components/UserAvatar';
 import { logout } from '@/slices/user.js';
 
@@ -43,17 +43,26 @@ const Profile = memo(() => {
             <UserAvatar
               avatar={avatar}
               name={name}
-              size={64}
+              size={44}
               testId="settings-profile-avatar"
             />
             <Typography
-              variant="labelMedium"
+              variant="headingMedium"
               color="text.secondary"
               fontWeight={600}
               data-testid="settings-profile-display-name"
             >
               {name}
             </Typography>
+
+            <BaseBtn
+              data-testid="settings-profile-logout-button"
+              variant="secondary"
+              onClick={onLogout}
+              sx={styles.logoutButton}
+            >
+              Log out
+            </BaseBtn>
           </Box>
 
           <Box sx={styles.fieldsSection}>
@@ -76,16 +85,6 @@ const Profile = memo(() => {
               value={dateFormatter(last_login) || ''}
             />
           </Box>
-
-          <BaseBtn
-            data-testid="settings-profile-logout-button"
-            variant="secondary"
-            startIcon={<LogoutIcon data-testid="settings-profile-logout-icon" />}
-            onClick={onLogout}
-            sx={styles.logoutButton}
-          >
-            Log out
-          </BaseBtn>
         </Box>
       </Box>
     </Box>
@@ -110,38 +109,55 @@ const profileStyles = () => ({
     alignItems: 'center',
     padding: '0 1.5rem',
     borderBottom: `0.0625rem solid ${palette.border.default}`,
+    background: palette.background.default.tertiary,
   }),
-  content: ({ palette }) => ({
-    backgroundColor: palette.background.default.tertiary,
+  content: {
     flex: 1,
     minHeight: 0,
     overflowY: 'auto',
     display: 'flex',
     justifyContent: 'center',
-  }),
+  },
   inner: {
     display: 'flex',
     flexDirection: 'column',
     gap: '1.5rem',
     padding: '1.5rem',
-    maxWidth: '50rem',
+    maxWidth: SettingsLayoutConstants.SETTINGS_LAYOUT.FORM_CONTENT_MAX_WIDTH,
     width: '100%',
   },
-  avatarSection: {
+  avatarSection: ({ palette }) => ({
     display: 'flex',
     alignItems: 'center',
     gap: '1rem',
-  },
+    padding: '1rem 1.5rem',
+    position: 'relative',
+    background: palette.background.surface.interactive.default,
+    borderRadius: '0.75rem',
+    border: '0.0625rem solid transparent',
+    '&::before': {
+      content: '""',
+      position: 'absolute',
+      inset: 0,
+      borderRadius: 'inherit',
+      padding: '0.0625rem',
+      background: palette.components.accordion.border,
+      WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+      WebkitMaskComposite: 'xor',
+      maskComposite: 'exclude',
+      pointerEvents: 'none',
+    },
+  }),
   fieldsSection: ({ palette }) => ({
     display: 'flex',
     flexDirection: 'column',
     '& > *': {
-      padding: '0.75rem 0',
+      padding: '0.75rem 0 0.75rem 1rem',
       borderBottom: `0.0625rem solid ${palette.border.default}`,
     },
   }),
   logoutButton: {
-    width: '7rem',
+    marginLeft: 'auto',
   },
 });
 

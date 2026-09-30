@@ -2,3 +2,4 @@ export { useEditingArtifactsNavBlocker } from './useEditingArtifactsNavBlocker.h
 export { useFileUpload } from './useFileUpload.hooks';
 export { useArtifactContentFetch } from './useArtifactContentFetch.hooks';
 export { useMdxEvaluator } from './useMdxEvaluator.hooks';
+export { useAllArtifacts } from './useAllArtifacts.hooks';

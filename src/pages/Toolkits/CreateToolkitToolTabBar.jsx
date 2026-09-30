@@ -7,7 +7,7 @@ import { Box, Button as MuiButton } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { useTrackEvent } from '@/GA';
-import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
+import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
 import { Button } from '@/[fsd]/shared/ui';
 import { SearchParams } from '@/common/constants.js';
 import eventEmitter from '@/common/eventEmitter';
@@ -19,6 +19,8 @@ import useToast from '@/hooks/useToast.jsx';
 import { ToolEvents, ValidateToolEventReason } from '@/pages/Applications/Components/Tools/consts.js';
 import { TabBarItems } from '@/pages/Common/Components';
 import RouteDefinitions from '@/routes.js';
+
+const { GA_EVENT_NAMES, GA_EVENT_PARAMS } = AnalyticConstants;
 
 export default function CreateToolkitToolTabBar({
   onClearEditTool,

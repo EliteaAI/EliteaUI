@@ -40,7 +40,10 @@ const CreateSkill = memo(() => {
             tabBarItems: <CreateSkillTabBar />,
             rightToolbar: <Box />,
             content: (
-              <Form style={{ height: '100%' }}>
+              <Box
+                component={Form}
+                sx={styles.form}
+              >
                 <StyledGridContainer
                   columnSpacing={'2rem'}
                   container
@@ -55,7 +58,7 @@ const CreateSkill = memo(() => {
                     />
                   </Grid>
                 </StyledGridContainer>
-              </Form>
+              </Box>
             ),
           },
         ]}
@@ -68,6 +71,9 @@ CreateSkill.displayName = 'CreateSkill';
 
 /** @type {MuiSx} */
 const createSkillStyles = () => ({
+  form: {
+    height: '100%',
+  },
   tab: { paddingX: '1.5rem' },
   formContainer: {
     margin: '0.75rem auto 0',

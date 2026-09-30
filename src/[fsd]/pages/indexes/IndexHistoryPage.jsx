@@ -10,10 +10,12 @@ import { parseRunTimestamp } from '@/[fsd]/entities/run-history/lib/helpers';
 import { DrawerPageHeader } from '@/[fsd]/features/settings';
 import { useGetIndexesListQuery } from '@/[fsd]/features/toolkits/indexes/api';
 import { IndexStatuses, RUN_TEST_OPERATION_TYPES } from '@/[fsd]/features/toolkits/indexes/lib/constants';
-import { initialCompletedTsOf } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexEvent.helpers';
-import { buildIndexHistoryDetailRow } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexHistoryDetail.helpers';
+import {
+  buildIndexHistoryDetailRow,
+  initialCompletedTsOf,
+} from '@/[fsd]/features/toolkits/indexes/lib/helpers';
 import { useIndexRunLiveRefresh } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
-import { selectHistoryItem, selectIndexesList } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
+import { selectHistoryItem, selectIndexesList } from '@/[fsd]/features/toolkits/indexes/model';
 import { IndexChatContainer, IndexHistory, IndexRunDetail } from '@/[fsd]/features/toolkits/indexes/ui';
 import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';

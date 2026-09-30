@@ -9,7 +9,7 @@ import {
   getItemDescription,
   isToolkitItem,
   parseMentionRanges,
-} from '@/[fsd]/shared/lib/utils/instructionsMention.utils';
+} from '@/[fsd]/shared/lib/utils';
 import { useToolsValidationInfo } from '@/hooks/application/useValidateApplicationVersion';
 
 import { useInstructionsSlashCommand } from './useInstructionsSlashCommand.hooks';

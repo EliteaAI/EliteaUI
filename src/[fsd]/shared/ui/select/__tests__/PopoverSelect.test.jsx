@@ -36,6 +36,7 @@ const theme = createTheme({
   palette: {
     border: { lines: '#333' },
     background: { secondary: '#111' },
+    scrollbar: { thumb: '#444', thumbHover: '#666' },
     components: {
       select: { hover: '#eee', selected: { default: '#ddf', hover: '#ccf' } },
     },

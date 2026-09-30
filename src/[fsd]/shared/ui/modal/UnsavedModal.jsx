@@ -72,13 +72,13 @@ const UnsavedModal = memo(() => {
   }, [blocker, isResetApiState, resetApiState, setBlockNav, setIsResetApiState, setStreamingBlockNav]);
 
   useEffect(() => {
-    function alertLeave(e) {
+    const alertLeave = e => {
       if (!isBlockNav && !isStreaming) {
         return;
       }
       e.preventDefault();
       return true;
-    }
+    };
     window.addEventListener('beforeunload', alertLeave);
     return () => {
       window.removeEventListener('beforeunload', alertLeave);

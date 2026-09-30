@@ -2,7 +2,7 @@ import { memo, useCallback, useState } from 'react';
 
 import { Box, ListItemIcon, Menu, MenuItem, Typography } from '@mui/material';
 
-import { ARTIFACT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/artifactTourTargets.constants';
+import { ARTIFACT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import DatasetIcon from '@/assets/dataset-icon.svg?react';
 import ArrowDownIcon from '@/components/Icons/ArrowDownIcon';
 import CheckIcon from '@/components/Icons/CheckIcon';
@@ -142,8 +142,7 @@ const bucketStorageSelectorStyles = () => ({
     gap: '0.75rem',
     padding: '0.45rem 1.5rem',
     height: '3.4rem',
-    borderBottom: '1px solid',
-    borderColor: 'divider',
+    borderBottom: `0.0625rem solid ${palette.border.default}`,
     cursor: 'pointer',
     backgroundColor: palette.background.default.tertiary,
     transition: 'background-color 0.2s ease',

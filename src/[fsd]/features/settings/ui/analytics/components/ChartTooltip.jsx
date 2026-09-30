@@ -48,7 +48,7 @@ const chartTooltipStyles = () => ({
     padding: '0.5rem 0.75rem',
     borderRadius: '0.375rem',
     backgroundColor: palette.background.default.secondary,
-    border: `1px solid ${palette.border.default}`,
+    border: `0.0625rem solid ${palette.border.default}`,
   }),
   tooltipLabel: ({ palette }) => ({ color: palette.text.secondary, marginBottom: '0.25rem' }),
 });

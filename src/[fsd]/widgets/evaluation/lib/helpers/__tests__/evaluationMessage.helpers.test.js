@@ -11,6 +11,7 @@ import {
   datasetDeletedMessage,
   dimensionRemovedMessage,
   dimensionsAddedMessage,
+  dimensionsCreatedMessage,
   extractAddedCaseId,
   extractAddedCaseIds,
   suiteCreatedMessage,
@@ -136,5 +137,23 @@ describe('countAddedCases', () => {
 
   it('counts a response that describes nothing as the one case it was asked to create', () => {
     expect(countAddedCases({})).toBe(1);
+  });
+});
+
+describe('dimensionsCreatedMessage', () => {
+  it('names the dimension when exactly one was created', () => {
+    expect(dimensionsCreatedMessage(1, 'Politeness')).toBe(
+      'The Politeness dimension has been created and added to the suite.',
+    );
+  });
+
+  it('falls back to the count when a single name is unknown', () => {
+    expect(dimensionsCreatedMessage(1)).toBe('1 dimension has been created and added to the suite.');
+  });
+
+  it('uses the plural count for a batch', () => {
+    expect(dimensionsCreatedMessage(3, 'Politeness')).toBe(
+      '3 dimensions have been created and added to the suite.',
+    );
   });
 });

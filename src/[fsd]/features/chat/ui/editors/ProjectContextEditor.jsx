@@ -1,7 +1,7 @@
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 
 import BaseEditor from '@/[fsd]/features/chat/ui/editors/BaseEditor';
-import ProjectContextEditorFeature from '@/[fsd]/features/settings/ui/project-context/ProjectContextEditor';
+import { ProjectContextEditor as ProjectContextEditorFeature } from '@/[fsd]/features/settings/ui/project-context';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { useProjectContextQuery } from '@/api/projectContext';

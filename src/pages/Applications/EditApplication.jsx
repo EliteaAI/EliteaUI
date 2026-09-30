@@ -33,6 +33,12 @@ const EditApplication = memo(() => {
   const [dirty, setDirty] = useState(false);
   const [unsavedLLMSettings, setUnsavedLLMSettings] = useState();
 
+  // Reset per-session LLM override when navigating to a different version,
+  // so a model change on one version cannot bleed into execution of another (#6676).
+  useEffect(() => {
+    setUnsavedLLMSettings(undefined);
+  }, [version]);
+
   const styles = useMemo(() => editApplicationStyles(), []);
 
   const handleDiscard = useCallback(() => {

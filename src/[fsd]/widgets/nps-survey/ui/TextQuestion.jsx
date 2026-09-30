@@ -37,7 +37,7 @@ const styles = {
       borderRadius: '0.5rem',
 
       '& fieldset': {
-        border: '1px solid transparent',
+        border: '0.0625rem solid transparent',
       },
       '&:hover fieldset': {
         border: `0.0625rem solid ${palette.components.npsSurvey.accent} !important`,

@@ -1,23 +1,23 @@
 import { memo, useCallback, useRef } from 'react';
 
+import { LikeButton, useApplicationLike } from '@/[fsd]/entities/like';
 import { AgentHubHelpers } from '@/[fsd]/features/agent-hub/lib/helpers';
 import { useAgentHubContext } from '@/[fsd]/shared/lib/context';
 import { ContentType } from '@/common/constants';
-import Like from '@/components/Like';
 
 const AgentHubLike = memo(props => {
-  const { viewMode, data, testId } = props;
+  const { viewMode, type = ContentType.ApplicationAll, data, testId } = props;
   const { updateApplicationInState, addToMyLiked, removeFromMyLiked } = useAgentHubContext();
 
   const dataRef = useRef(data);
   dataRef.current = data;
 
   const updateMyLikedCategory = useCallback(
-    (isLiked, newLikesCount, applicationId) => {
+    (nextLiked, newLikesCount, applicationId) => {
       const currentData = dataRef.current;
-      if (isLiked && addToMyLiked) {
+      if (nextLiked && addToMyLiked) {
         addToMyLiked({ ...currentData, is_liked: true, likes: newLikesCount });
-      } else if (!isLiked && removeFromMyLiked) {
+      } else if (!nextLiked && removeFromMyLiked) {
         removeFromMyLiked(applicationId);
       }
     },
@@ -25,30 +25,30 @@ const AgentHubLike = memo(props => {
   );
 
   const handleLikeSuccess = useCallback(
-    (applicationId, isLiked, likesCount) => {
+    (applicationId, nextLiked, likesCount) => {
       if (updateApplicationInState) {
         const currentData = dataRef.current;
         const currentLikes = currentData?.likes || 0;
-        const newLikesCount = AgentHubHelpers.calculateNewLikesCount(likesCount, isLiked, currentLikes);
+        const newLikesCount = AgentHubHelpers.calculateNewLikesCount(likesCount, nextLiked, currentLikes);
 
-        updateApplicationInState(applicationId, app => ({
-          ...app,
-          is_liked: isLiked,
-          likes: newLikesCount,
-        }));
+        updateApplicationInState(applicationId, nextLiked, newLikesCount);
 
-        updateMyLikedCategory(isLiked, newLikesCount, applicationId);
+        updateMyLikedCategory(nextLiked, newLikesCount, applicationId);
       }
     },
     [updateApplicationInState, updateMyLikedCategory],
   );
 
+  const likeProps = useApplicationLike({
+    data,
+    type,
+    viewMode,
+    onSuccess: handleLikeSuccess,
+  });
+
   return (
-    <Like
-      viewMode={viewMode}
-      type={ContentType.ApplicationAll}
-      data={data}
-      onLikeSuccess={handleLikeSuccess}
+    <LikeButton
+      {...likeProps}
       testId={testId}
     />
   );

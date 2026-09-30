@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
+import { SearchParams } from '@/common/constants';
 import useToast from '@/hooks/useToast';
 import RouteDefinitions from '@/routes';
 
@@ -11,7 +12,7 @@ import {
   useUpdateEvalSuiteCaseExclusionsMutation,
   useUpdateEvalSuiteMutation,
 } from '../../api';
-import { caseExcludedMessage, caseIncludedMessage, parseEvalError } from '../helpers';
+import { caseExcludedMessage, caseIncludedMessage, parseEvalError, withSuiteSearchParam } from '../helpers';
 
 export const useEvalDatasetActions = ({ projectId, editingSuiteId, agentId, tab }) => {
   const navigate = useNavigate();
@@ -31,15 +32,9 @@ export const useEvalDatasetActions = ({ projectId, editingSuiteId, agentId, tab 
   const excludedCaseIds = useMemo(() => exclusionsData?.case_ids ?? [], [exclusionsData?.case_ids]);
 
   const [showDatasetDialog, setShowDatasetDialog] = useState(false);
-  const [showExcludeCaseConfirm, setShowExcludeCaseConfirm] = useState(false);
-  const [caseToExclude, setCaseToExclude] = useState(null);
-  const [pendingDatasetId, setPendingDatasetId] = useState(null);
 
   useEffect(() => {
     setShowDatasetDialog(false);
-    setShowExcludeCaseConfirm(false);
-    setCaseToExclude(null);
-    setPendingDatasetId(null);
   }, [editingSuiteId]);
 
   const handleManageDatasets = useCallback(() => {
@@ -47,8 +42,11 @@ export const useEvalDatasetActions = ({ projectId, editingSuiteId, agentId, tab 
       ':agentId',
       agentId,
     );
-    navigate({ pathname: datasetsPath, search: persistentSearch });
-  }, [navigate, tab, agentId, persistentSearch]);
+    navigate({
+      pathname: datasetsPath,
+      search: withSuiteSearchParam(persistentSearch, editingSuiteId),
+    });
+  }, [navigate, tab, agentId, persistentSearch, editingSuiteId]);
 
   const handleCreateDataset = useCallback(() => {
     setShowDatasetDialog(true);
@@ -60,12 +58,7 @@ export const useEvalDatasetActions = ({ projectId, editingSuiteId, agentId, tab 
 
   const handleDatasetSaved = useCallback(
     async dataset => {
-      if (!dataset?.id) return;
-      if (!editingSuiteId) {
-        setPendingDatasetId(dataset.id);
-        toastSuccess(`Dataset "${dataset.name}" has been created and attached to the suite.`);
-        return;
-      }
+      if (!dataset?.id || !editingSuiteId) return;
       try {
         await updateEvalSuite({
           projectId,
@@ -78,8 +71,8 @@ export const useEvalDatasetActions = ({ projectId, editingSuiteId, agentId, tab 
           ':agentId',
           agentId,
         );
-        const newParams = new URLSearchParams(persistentSearch);
-        newParams.set('datasetId', dataset.id);
+        const newParams = new URLSearchParams(withSuiteSearchParam(persistentSearch, editingSuiteId));
+        newParams.set(SearchParams.DatasetId, dataset.id);
         navigate({ pathname: datasetsPath, search: newParams.toString() });
       } catch (error) {
         toastError(parseEvalError(error, 'Dataset created but failed to attach to suite.'));
@@ -100,10 +93,7 @@ export const useEvalDatasetActions = ({ projectId, editingSuiteId, agentId, tab 
 
   const handleAttachDataset = useCallback(
     async dataset => {
-      if (!editingSuiteId) {
-        setPendingDatasetId(dataset.id);
-        return;
-      }
+      if (!editingSuiteId) return;
       try {
         await updateEvalSuite({
           projectId,
@@ -119,10 +109,7 @@ export const useEvalDatasetActions = ({ projectId, editingSuiteId, agentId, tab 
   );
 
   const handleRemoveDataset = useCallback(async () => {
-    if (!editingSuiteId) {
-      setPendingDatasetId(null);
-      return;
-    }
+    if (!editingSuiteId) return;
     try {
       await updateEvalSuite({
         projectId,
@@ -141,44 +128,33 @@ export const useEvalDatasetActions = ({ projectId, editingSuiteId, agentId, tab 
         ':agentId',
         agentId,
       );
-      const newParams = new URLSearchParams(persistentSearch);
-      newParams.set('datasetId', dataset.id);
+      const newParams = new URLSearchParams(withSuiteSearchParam(persistentSearch, editingSuiteId));
+      newParams.set(SearchParams.DatasetId, dataset.id);
       navigate({ pathname: datasetsPath, search: newParams.toString() });
     },
-    [navigate, tab, agentId, persistentSearch],
+    [navigate, tab, agentId, persistentSearch, editingSuiteId],
   );
 
   // ---- Case exclusion (from suite) ----
 
-  const handleExcludeCase = useCallback(datasetCase => {
-    if (!datasetCase?.id) return;
-    setCaseToExclude(datasetCase);
-    setShowExcludeCaseConfirm(true);
-  }, []);
+  const handleExcludeCase = useCallback(
+    async datasetCase => {
+      if (!datasetCase?.id || !editingSuiteId) return;
 
-  const handleCloseExcludeCaseConfirm = useCallback(() => {
-    setShowExcludeCaseConfirm(false);
-    setCaseToExclude(null);
-  }, []);
-
-  const handleConfirmExcludeCase = useCallback(async () => {
-    if (!caseToExclude?.id || !editingSuiteId) return;
-
-    try {
-      const newExclusions = [...new Set([...excludedCaseIds, caseToExclude.id])];
-      await updateExclusions({
-        projectId,
-        suiteId: editingSuiteId,
-        caseIds: newExclusions,
-      }).unwrap();
-      toastSuccess(caseExcludedMessage(caseToExclude.id));
-    } catch (error) {
-      toastError(parseEvalError(error, 'Failed to exclude case from suite.'));
-    } finally {
-      setShowExcludeCaseConfirm(false);
-      setCaseToExclude(null);
-    }
-  }, [caseToExclude, editingSuiteId, excludedCaseIds, updateExclusions, projectId, toastSuccess, toastError]);
+      try {
+        const newExclusions = [...new Set([...excludedCaseIds, datasetCase.id])];
+        await updateExclusions({
+          projectId,
+          suiteId: editingSuiteId,
+          caseIds: newExclusions,
+        }).unwrap();
+        toastSuccess(caseExcludedMessage(datasetCase.id));
+      } catch (error) {
+        toastError(parseEvalError(error, 'Failed to exclude case from suite.'));
+      }
+    },
+    [editingSuiteId, excludedCaseIds, updateExclusions, projectId, toastSuccess, toastError],
+  );
 
   const handleIncludeCase = useCallback(
     async datasetCase => {
@@ -199,29 +175,9 @@ export const useEvalDatasetActions = ({ projectId, editingSuiteId, agentId, tab 
     [editingSuiteId, excludedCaseIds, updateExclusions, projectId, toastSuccess, toastError],
   );
 
-  const flushPendingDataset = useCallback(
-    async suiteId => {
-      if (pendingDatasetId == null) return;
-      try {
-        await updateEvalSuite({
-          projectId,
-          suiteId,
-          body: { dataset_id: pendingDatasetId },
-        }).unwrap();
-      } catch (error) {
-        toastError(parseEvalError(error, 'Failed to attach dataset to suite.'));
-      }
-      setPendingDatasetId(null);
-    },
-    [pendingDatasetId, updateEvalSuite, projectId, toastError],
-  );
-
   return {
     showDatasetDialog,
-    showExcludeCaseConfirm,
-    caseToExclude,
     excludedCaseIds,
-    pendingDatasetId,
     handleManageDatasets,
     handleCreateDataset,
     handleCloseDatasetDialog,
@@ -230,9 +186,6 @@ export const useEvalDatasetActions = ({ projectId, editingSuiteId, agentId, tab 
     handleRemoveDataset,
     handleOpenDataset,
     handleExcludeCase,
-    handleCloseExcludeCaseConfirm,
-    handleConfirmExcludeCase,
     handleIncludeCase,
-    flushPendingDataset,
   };
 };

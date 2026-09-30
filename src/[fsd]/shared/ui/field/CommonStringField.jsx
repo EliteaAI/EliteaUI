@@ -2,7 +2,7 @@ import { memo, useCallback, useMemo } from 'react';
 
 import { Box, IconButton, Typography } from '@mui/material';
 
-import { getStringMaxLength } from '@/[fsd]/shared/lib/helpers/stringField.helpers';
+import { getStringMaxLength } from '@/[fsd]/shared/lib/helpers';
 import { Field, Input } from '@/[fsd]/shared/ui';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';

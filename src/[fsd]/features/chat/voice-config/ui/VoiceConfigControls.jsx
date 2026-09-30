@@ -6,7 +6,7 @@ import { useTextToSpeech } from '@/[fsd]/features/chat/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import SingleSelect from '@/[fsd]/shared/ui/select/SingleSelect';
 
-import * as VoiceConstants from '../constants/voice.constants';
+import * as VoiceConstants from '../lib/constants/voice.constants';
 
 const { VOICE_PREVIEW_TEXT, VOICE_SPEED_MARKS, VOICE_VOLUME_MARKS } = VoiceConstants;
 

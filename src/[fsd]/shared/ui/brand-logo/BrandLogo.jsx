@@ -3,7 +3,7 @@ import { memo, useCallback, useState } from 'react';
 import { Box } from '@mui/material';
 
 import { BrandLogoConstants } from '@/[fsd]/shared/lib/constants';
-import { useCustomTheme } from '@/[fsd]/shared/lib/hooks/useCustomTheme.hooks';
+import { useCustomTheme } from '@/[fsd]/shared/lib/hooks';
 import DefaultAvatar from '@/assets/chat-welcome.png';
 import DefaultWordmark from '@/assets/logo.svg?react';
 import EliteAIcon from '@/components/Icons/EliteAIcon';

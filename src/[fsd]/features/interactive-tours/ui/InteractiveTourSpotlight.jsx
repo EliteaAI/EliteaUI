@@ -54,7 +54,7 @@ const spotlightSx =
 
     // Dim everything outside via a huge outward box-shadow.
     // The main element stays transparent so the target content is visible.
-    boxShadow: `0 0 0 9999px ${palette.components.interactiveTour.backdrop}`,
+    boxShadow: `0 0 0 625rem ${palette.components.interactiveTour.backdrop}`,
 
     // Gradient ring via ::before pseudo-element — standard CSS-Tricks technique.
     // The pseudo-element fills the box with the gradient, then a two-layer mask

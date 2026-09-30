@@ -32,3 +32,15 @@ export const CONTEXT_BUDGET_COLORS = {
   highUtilization: '#FFC107',
   normalUtilization: '#0FA52D',
 };
+
+// Project avatar background, picked by the first letter of the project name — same in dark and light.
+export const PROJECT_AVATAR_COLORS = [
+  { letters: 'ABCD', color: '#eb691e' },
+  { letters: 'EFGH', color: '#3B7DD8' },
+  { letters: 'IJKL', color: '#8E24AA' },
+  { letters: 'MNOP', color: '#00897B' },
+  { letters: 'QRST', color: '#43A047' },
+  { letters: 'UVWXYZ', color: '#C5A62A' },
+];
+
+export const PROJECT_AVATAR_DEFAULT_COLOR = '#757575';

@@ -3,10 +3,12 @@ import { describe, expect, it } from 'vitest';
 import {
   buildDimensionApiBody,
   getDefaultDimensionFormState,
+  getDimensionFormFieldErrors,
   getDimensionFormValidationError,
   getScaleBounds,
   getTargetValueError,
   mapDimensionToFormState,
+  mapGeneratedDimensionToForm,
 } from '../dimension.helpers';
 
 const roundTrip = dimension => buildDimensionApiBody(mapDimensionToFormState(dimension), 7);
@@ -200,5 +202,237 @@ describe('target value range', () => {
     const form = { ...passFailForm(), targetValue: '1', successCriteria: '>=' };
     const body = buildDimensionApiBody(form, 7);
     expect(body).toMatchObject({ default_target: null, default_target_operator: null });
+  });
+});
+
+// "Build with AI" drafts now arrive with a target on the dimension's own scale, so the review step
+// must open with a form that saves as-is — no field left for the user to fill in.
+describe('AI-generated draft with a proposed target', () => {
+  const draft = {
+    name: 'Answer accuracy',
+    description: 'Checks that the answer is factually correct.',
+    allowed_engines: ['ai'],
+    scale_type: 'continuous',
+    scale_min: 0,
+    scale_max: 100,
+    polarity: 'higher_better',
+    default_weight: 1,
+    default_target: 80,
+    default_target_operator: '>=',
+  };
+
+  const reviewed = generated => {
+    const form = mapGeneratedDimensionToForm(generated);
+    return { form, error: getDimensionFormValidationError(form), body: buildDimensionApiBody(form, 7) };
+  };
+
+  it('saves a continuous 0-100 draft unchanged', () => {
+    const { form, error, body } = reviewed(draft);
+    expect(form.targetValue).toBe('80');
+    expect(error).toBe('');
+    expect(body).toMatchObject({
+      scale_min: 0,
+      scale_max: 100,
+      default_target: 80,
+      default_target_operator: '>=',
+    });
+  });
+
+  it('saves a lower-is-better draft with its ceiling', () => {
+    const { error, body } = reviewed({
+      ...draft,
+      polarity: 'lower_better',
+      default_target: 20,
+      default_target_operator: '<=',
+    });
+    expect(error).toBe('');
+    expect(body).toMatchObject({
+      polarity: 'lower_better',
+      default_target: 20,
+      default_target_operator: '<=',
+    });
+  });
+
+  it('saves a 1-5 rating draft', () => {
+    const { form, error, body } = reviewed({
+      ...draft,
+      scale_type: 'ordinal',
+      scale_min: 1,
+      scale_max: 5,
+      default_target: 4,
+    });
+    expect(form.scaleTypePreset).toBe('rating');
+    expect(error).toBe('');
+    expect(body).toMatchObject({ scale_type: 'ordinal', default_target: 4, default_target_operator: '>=' });
+  });
+
+  it('saves a pass/fail draft as "must pass"', () => {
+    const { form, error, body } = reviewed({
+      ...draft,
+      scale_type: 'binary',
+      scale_min: 0,
+      scale_max: 1,
+      default_target: 1,
+      default_target_operator: '==',
+    });
+    expect(form.scaleTypePreset).toBe('pass_fail');
+    expect(error).toBe('');
+    expect(body).toMatchObject({
+      scale_type: 'binary',
+      polarity: 'higher_better',
+      default_target: 1,
+      default_target_operator: '==',
+    });
+  });
+
+  it("keeps the draft's evaluation target", () => {
+    const { form } = reviewed({
+      ...draft,
+      evidence_scope: { structure: false, input: true, output: true, expected: true },
+    });
+    expect(form.evaluationTarget).toEqual({ structure: false, input: true, output: true, expected: true });
+  });
+
+  it('falls back to output-only when the draft has no evaluation target', () => {
+    const { form } = reviewed(draft);
+    expect(form.evaluationTarget).toEqual({ structure: false, input: false, output: true });
+  });
+
+  // The backend drops a target it cannot use rather than failing the draft; the form then asks
+  // the user for one instead of saving a dimension with no pass criterion.
+  it('asks for a target when the draft came without one', () => {
+    const { error } = reviewed({ ...draft, default_target: null, default_target_operator: null });
+    expect(error).toBe('Target value is required.');
+  });
+
+  it('keeps an ordinal draft on a non-preset range ordinal', () => {
+    const { form, error, body } = reviewed({
+      ...draft,
+      scale_type: 'ordinal',
+      scale_min: 1,
+      scale_max: 10,
+      default_target: 8,
+    });
+    expect(form.scaleTypePreset).toBe('custom');
+    expect(error).toBe('');
+    expect(body).toMatchObject({ scale_type: 'ordinal', scale_min: 1, scale_max: 10, default_target: 8 });
+  });
+
+  // The success-criteria select only offers >=, <= and ==; anything else would render blank.
+  it.each(['>', '<'])('asks for a target instead of keeping an unsupported %s operator', operator => {
+    const { form, error, body } = reviewed({ ...draft, default_target_operator: operator });
+    expect(form.targetValue).toBe('');
+    expect(form.successCriteria).toBe('>=');
+    expect(error).toBe('Target value is required.');
+    expect(body).toMatchObject({ default_target: null, default_target_operator: null });
+  });
+
+  it('falls back to output-only when every evaluation target flag is off', () => {
+    const { form, error } = reviewed({
+      ...draft,
+      evidence_scope: { structure: false, input: false, output: false, expected: false },
+    });
+    expect(form.evaluationTarget).toEqual({ structure: false, input: false, output: true });
+    expect(error).toBe('');
+  });
+});
+
+describe('getDimensionFormFieldErrors', () => {
+  const validForm = () => ({
+    ...getDefaultDimensionFormState(),
+    name: 'Dim',
+    evaluationInstructions: 'Judge it',
+    targetValue: '80',
+  });
+
+  it('reports nothing for a complete form', () => {
+    expect(getDimensionFormFieldErrors(validForm())).toEqual({});
+  });
+
+  it('marks every missing required field at once', () => {
+    const form = { ...validForm(), name: ' ', evaluationInstructions: '', targetValue: '' };
+    expect(getDimensionFormFieldErrors(form)).toEqual({
+      name: 'Field is required.',
+      evaluationInstructions: 'Field is required.',
+      targetValue: 'Field is required.',
+    });
+  });
+
+  it('asks for at least one evaluation target', () => {
+    const form = { ...validForm(), evaluationTarget: { output: false, input: false, structure: false } };
+    expect(getDimensionFormFieldErrors(form).evaluationTarget).toBe(
+      'At least one evaluation target must be selected.',
+    );
+  });
+
+  it('keeps the range message for an out-of-scale target', () => {
+    const form = { ...validForm(), targetValue: '150' };
+    expect(getDimensionFormFieldErrors(form).targetValue).toBe('Target value must be between 1 and 100.');
+  });
+
+  it('requires validation code only for the code evaluator', () => {
+    const form = { ...validForm(), evaluator: 'code', scaleTypePreset: 'pass_fail', targetValue: '' };
+    expect(getDimensionFormFieldErrors(form)).toEqual({ validationCode: 'Field is required.' });
+  });
+
+  it('flags custom scale bounds', () => {
+    const empty = { ...validForm(), scaleTypePreset: 'custom', customMin: '', customMax: '' };
+    expect(getDimensionFormFieldErrors(empty).customScale).toBe('Field is required.');
+
+    const inverted = { ...validForm(), scaleTypePreset: 'custom', customMin: '10', customMax: '5' };
+    expect(getDimensionFormFieldErrors(inverted).customScale).toBe(
+      'Scale minimum must be less than maximum.',
+    );
+  });
+
+  it('requires a value for a custom importance', () => {
+    const form = { ...validForm(), importance: 'custom', customImportanceValue: '' };
+    expect(getDimensionFormFieldErrors(form).customImportanceValue).toBe('Field is required.');
+  });
+});
+
+describe('getDimensionFormValidationError', () => {
+  const validForm = () => ({
+    ...getDefaultDimensionFormState(),
+    name: 'Dim',
+    evaluationInstructions: 'Judge it',
+    targetValue: '80',
+  });
+
+  it('reports the first problem in the long-standing wording', () => {
+    const form = { ...validForm(), name: '', evaluationInstructions: '', targetValue: '' };
+    expect(getDimensionFormValidationError(form)).toBe('Name is required.');
+  });
+
+  it('keeps the field-specific wording for each rule', () => {
+    expect(getDimensionFormValidationError({ ...validForm(), evaluationInstructions: '' })).toBe(
+      'Evaluation instructions are required for AI evaluator.',
+    );
+    expect(
+      getDimensionFormValidationError({
+        ...validForm(),
+        evaluator: 'code',
+        scaleTypePreset: 'pass_fail',
+        targetValue: '',
+      }),
+    ).toBe('Validation code is required for Code evaluator.');
+    expect(getDimensionFormValidationError({ ...validForm(), targetValue: '' })).toBe(
+      'Target value is required.',
+    );
+    expect(
+      getDimensionFormValidationError({
+        ...validForm(),
+        scaleTypePreset: 'custom',
+        customMin: '',
+        customMax: '',
+      }),
+    ).toBe('Custom scale minimum is required.');
+    expect(
+      getDimensionFormValidationError({ ...validForm(), importance: 'custom', customImportanceValue: '' }),
+    ).toBe('Custom importance value is required.');
+  });
+
+  it('is empty for a valid form', () => {
+    expect(getDimensionFormValidationError(validForm())).toBe('');
   });
 });

@@ -1,5 +1,5 @@
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
-import { filterReasoningEffortFromSettings } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
+import { filterReasoningEffortFromSettings, selectionFields } from '@/[fsd]/shared/lib/utils';
 import { ChatParticipantType } from '@/common/constants';
 
 const getMcpServerUrlsFromParticipants = participants => {
@@ -64,7 +64,7 @@ export const generateMessagePayload = ({
                   ([key]) => key !== 'steps_limit',
                 ),
               )
-            : { model_name: selectedModel.name, model_project_id: selectedModel.project_id }
+            : selectionFields(selectedModel)
           : undefined,
         mcp_tokens: mcpTokens,
       };
@@ -78,10 +78,7 @@ export const generateMessagePayload = ({
                 ([key]) => key !== 'steps_limit',
               ),
             )
-          : {
-              model_name: selectedModel.name,
-              model_project_id: selectedModel.project_id,
-            }
+          : selectionFields(selectedModel)
         : undefined;
       return {
         user_input: question,

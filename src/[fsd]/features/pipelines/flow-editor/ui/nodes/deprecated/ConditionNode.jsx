@@ -320,7 +320,7 @@ ConditionNode.displayName = 'ConditionNode';
 /** @type {MuiSx} */
 const conditionNodeStyles = () => ({
   inputEnhancerContainer: {
-    marginBottom: '0px !important',
+    marginBottom: '0 !important',
     className: 'nopan nodrag nowheel',
   },
 

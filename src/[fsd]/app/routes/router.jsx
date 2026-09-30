@@ -1,8 +1,8 @@
 import { Route, createBrowserRouter, createRoutesFromElements } from 'react-router-dom';
 
 import { AppLayout } from '@/[fsd]/app/layout';
-import AuthCallbackPage from '@/[fsd]/pages/auth/index.jsx';
-import SharedConversationPage from '@/[fsd]/pages/shared-conversation/index.jsx';
+import AuthCallbackPage from '@/[fsd]/pages/auth';
+import SharedConversationPage from '@/[fsd]/pages/shared-conversation';
 import Page404 from '@/pages/Page404.jsx';
 import RouteDefinitions, { getBasename } from '@/routes';
 

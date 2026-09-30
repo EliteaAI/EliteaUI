@@ -3,7 +3,7 @@ import { createElement, useMemo } from 'react';
 import { useTheme } from '@mui/material';
 
 import { ToolkitsHelpers, useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits';
-import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks/useEnvironmentSettingByKey.hooks';
+import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks';
 import { ChatParticipantType } from '@/common/constants';
 import { EntityTypeIcon } from '@/components/EntityIcon';
 

@@ -7,6 +7,7 @@ import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 
 import { ANALYTICS_TOUR_ID, ANALYTICS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import {
+  TAG_TYPE_ANALYTICS,
   analyticsApi,
   useProjectAnalyticsQuery,
   useProjectAnalyticsUsageQuery,
@@ -41,7 +42,7 @@ import { useSelectedProjectId, useSelectedProjectName } from '@/hooks/useSelecte
 const CUSTOM_PRESET_VALUE = 'custom';
 
 const DEFAULT_PRESETS = [
-  { label: 'Last 24h', value: 1, buttonProps: { 'data-testid': 'analytics-date-preset-1' } },
+  { label: 'Today', value: 0, buttonProps: { 'data-testid': 'analytics-date-preset-0' } },
   { label: 'Last 7d', value: 7, buttonProps: { 'data-testid': 'analytics-date-preset-7' } },
   { label: 'Last 30d', value: 30, buttonProps: { 'data-testid': 'analytics-date-preset-30' } },
   { label: 'Last 90d', value: 90, buttonProps: { 'data-testid': 'analytics-date-preset-90' } },
@@ -100,13 +101,9 @@ const AnalyticsContainer = memo(() => {
 
   const styles = analyticsContainerStyles();
 
-  const [selectedDatePreset, setSelectedDatePreset] = useState(1);
-  const [dateFrom, setDateFrom] = useState(() => {
-    const d = new Date();
-    d.setDate(d.getDate() - 1);
-    return d;
-  });
-  const [dateTo, setDateTo] = useState(() => new Date());
+  const [selectedDatePreset, setSelectedDatePreset] = useState(0);
+  const [dateFrom, setDateFrom] = useState(() => AnalyticCommonHelpers.getPresetRange(0).from);
+  const [dateTo, setDateTo] = useState(() => AnalyticCommonHelpers.getPresetRange(0).to);
   const [fromOpen, setFromOpen] = useState(false);
   const [toOpen, setToOpen] = useState(false);
 
@@ -118,8 +115,32 @@ const AnalyticsContainer = memo(() => {
   const [exportError, setExportError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  const dateFromISO = useMemo(() => AnalyticCommonHelpers.toValidISOString(dateFrom), [dateFrom]);
-  const dateToISO = useMemo(() => AnalyticCommonHelpers.toValidISOString(dateTo), [dateTo]);
+  // A cleared field (actionBar "clear" action) sets its date to null, which is a valid
+  // "no bound" state, not an invalid range — only flag an actual From > To mismatch.
+  const isDateRangeValid = useMemo(() => {
+    const fromValid = dateFrom == null || AnalyticCommonHelpers.isValidDate(dateFrom);
+    const toValid = dateTo == null || AnalyticCommonHelpers.isValidDate(dateTo);
+    if (!fromValid || !toValid) return false;
+    if (dateFrom == null || dateTo == null) return true;
+    return dateFrom.getTime() <= dateTo.getTime();
+  }, [dateFrom, dateTo]);
+
+  const [committedRange, setCommittedRange] = useState(() => ({ from: dateFrom, to: dateTo }));
+
+  useEffect(() => {
+    if (isDateRangeValid) {
+      setCommittedRange({ from: dateFrom, to: dateTo });
+    }
+  }, [isDateRangeValid, dateFrom, dateTo]);
+
+  const dateFromISO = useMemo(
+    () => AnalyticCommonHelpers.toValidISOString(committedRange.from),
+    [committedRange.from],
+  );
+  const dateToISO = useMemo(
+    () => AnalyticCommonHelpers.toValidISOString(committedRange.to),
+    [committedRange.to],
+  );
 
   const queryParams = useMemo(
     () => ({ projectId, dateFrom: dateFromISO, dateTo: dateToISO }),
@@ -171,11 +192,9 @@ const AnalyticsContainer = memo(() => {
 
     if (newDays === CUSTOM_PRESET_VALUE) return;
 
-    const from = new Date();
-    from.setDate(from.getDate() - newDays);
-
+    const { from, to } = AnalyticCommonHelpers.getPresetRange(newDays);
     setDateFrom(from);
-    setDateTo(new Date());
+    setDateTo(to);
   }, []);
 
   const handleDateFromChange = useCallback(value => {
@@ -241,8 +260,17 @@ const AnalyticsContainer = memo(() => {
 
   const handleRefresh = useCallback(() => {
     setRefreshing(true);
-    setDateTo(new Date());
-  }, []);
+
+    // A preset's boundaries are relative to "now", so a page left open past midnight
+    // needs its range recomputed on refresh, not just its cache invalidated (#6791).
+    if (selectedDatePreset !== CUSTOM_PRESET_VALUE) {
+      const { from, to } = AnalyticCommonHelpers.getPresetRange(selectedDatePreset);
+      setDateFrom(from);
+      setDateTo(to);
+    }
+
+    store.dispatch(analyticsApi.util.invalidateTags([TAG_TYPE_ANALYTICS]));
+  }, [store, selectedDatePreset]);
 
   useEffect(() => {
     if (refreshing && !overviewFetching) {
@@ -391,6 +419,15 @@ const AnalyticsContainer = memo(() => {
             />
           </Box>
         </Box>
+        {!isDateRangeValid && (
+          <Typography
+            variant="bodySmall"
+            sx={styles.dateRangeError}
+            data-testid="analytics-date-range-error"
+          >
+            &quot;From&quot; date cannot be later than &quot;To&quot; date.
+          </Typography>
+        )}
       </Box>
       <Box
         sx={styles.tabSection}
@@ -517,7 +554,7 @@ AnalyticsContainer.displayName = 'AnalyticsContainer';
 
 /** @type {MuiSx} */
 const analyticsContainerStyles = () => ({
-  header: {
+  header: ({ palette }) => ({
     height: '3.8rem',
     minHeight: '3.8rem',
     display: 'flex',
@@ -525,7 +562,8 @@ const analyticsContainerStyles = () => ({
     gap: '0.75rem',
     padding: '0 1.5rem',
     boxSizing: 'border-box',
-  },
+    background: palette.background.default.tertiary,
+  }),
   icon: {
     fontSize: '1rem',
   },
@@ -536,7 +574,7 @@ const analyticsContainerStyles = () => ({
     display: 'flex',
     alignItems: 'center',
     gap: '0.25rem',
-    border: `1px solid ${palette.border.lines}`,
+    border: `0.0625rem solid ${palette.border.lines}`,
     padding: '.25rem .5rem',
     borderRadius: '.75rem',
 
@@ -559,10 +597,14 @@ const analyticsContainerStyles = () => ({
     flexWrap: 'wrap',
     gap: '0.75rem',
     padding: '1rem 1.5rem',
-    borderTop: `1px solid ${palette.border.default}`,
+    borderTop: `0.0625rem solid ${palette.border.default}`,
     background: palette.background.default.tertiary,
   }),
   datePickerRow: { display: 'flex', gap: '0.5rem', alignItems: 'center' },
+  dateRangeError: ({ palette }) => ({
+    color: palette.text.error,
+    width: '100%',
+  }),
   datePickerField: ({ palette }) => ({
     display: 'flex',
     alignItems: 'center',
@@ -796,7 +838,7 @@ const analyticsContainerStyles = () => ({
   tabSection: { display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' },
   tabsContainer: ({ palette }) => ({
     padding: '0 1.5rem',
-    borderBottom: `1px solid ${palette.border.default}`,
+    borderBottom: `0.0625rem solid ${palette.border.default}`,
     background: palette.background.default.tertiary,
   }),
   contentArea: { flex: 1, overflow: 'auto', padding: '1.5rem', position: 'relative' },

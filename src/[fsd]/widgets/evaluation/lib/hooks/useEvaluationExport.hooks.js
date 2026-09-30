@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from 'react';
 
 import { useStore } from 'react-redux';
 
-import { exportToExcel } from '@/[fsd]/shared/lib/utils/exportToExcel.utils';
+import { exportToExcel } from '@/[fsd]/shared/lib/utils';
 import { useLazyApplicationDetailsQuery } from '@/api/applications';
 import useToast from '@/hooks/useToast';
 

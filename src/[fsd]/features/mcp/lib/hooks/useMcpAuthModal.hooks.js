@@ -52,6 +52,7 @@ export const extractMcpAuthMetadata = source => {
     // These are the scopes the MCP resource itself requires (e.g. "ea9ffc3e-.../.default").
     // They must be included in the authorization request so the issued token has the correct audience.
     resourceScopes: resourceMetadata?.scopes_supported,
+    protectedResource: resourceMetadata?.resource,
     // Configuration UUID for credential-scoped token storage key isolation.
     // When present, tokens should be stored under "{configUuid}:{oauth_endpoint}" so that
     // two credentials sharing the same Azure AD tenant stay isolated.
@@ -88,6 +89,7 @@ export const extractConfigAuthMetadata = authMetadata => {
       : null,
     providedSettings: authMetadata?.provided_settings || resourceMetadata?.provided_settings || {},
     resourceScopes: resourceMetadata?.scopes_supported,
+    protectedResource: resourceMetadata?.resource,
   };
 };
 

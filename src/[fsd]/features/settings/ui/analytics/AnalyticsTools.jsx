@@ -6,12 +6,18 @@ import { Box, CircularProgress, TablePagination, Typography, useTheme } from '@m
 
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { AnalyticsToolDetailed, ChartTooltip } from '@/[fsd]/features/settings/ui/analytics';
-import { CHART_COLORS } from '@/[fsd]/shared/config/theme/chartPalette';
+import { CHART_COLORS } from '@/[fsd]/shared/config/theme';
 import { useAnalyticsToolsQuery } from '@/api';
 import StyledSearchInput from '@/components/SearchInput';
 
+import RunAnalyticsEmptyState from './components/RunAnalyticsEmptyState';
+
 const AnalyticsTools = memo(props => {
-  const { projectId, dateFrom, dateTo } = props;
+  const { projectId, dateFrom, dateTo, runScope } = props;
+
+  // Run-scoped (Run History → Analytics): only the Tool Details table, no drill-down into a
+  // date-range tool detail that would escape the run's scope
+  const isRunScope = Boolean(runScope);
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(20);
@@ -25,8 +31,7 @@ const AnalyticsTools = memo(props => {
   const { data, isFetching } = useAnalyticsToolsQuery(
     {
       projectId,
-      dateFrom,
-      dateTo,
+      ...(isRunScope ? runScope.queryArgs : { dateFrom, dateTo }),
       limit: rowsPerPage,
       offset: page * rowsPerPage,
       search,
@@ -74,10 +79,19 @@ const AnalyticsTools = memo(props => {
 
   const { total = 0, rows = [] } = data || {};
 
+  if (isRunScope && data && !isFetching && !total && !search) {
+    return (
+      <RunAnalyticsEmptyState
+        message={runScope.noDataMessage}
+        testId="run-analytics-tools-empty"
+      />
+    );
+  }
+
   return (
     <Box sx={styles.toolsContent}>
       {/* Top tools chart */}
-      {toolChartData.length > 0 && (
+      {!isRunScope && toolChartData.length > 0 && (
         <Box sx={styles.chartCard}>
           <Typography
             variant="labelMedium"
@@ -120,7 +134,10 @@ const AnalyticsTools = memo(props => {
                   axisLine={{ stroke: axisStroke }}
                   tickLine={{ stroke: axisStroke }}
                 />
-                <RechartsTooltip content={<ChartTooltip testId="analytics-tools-chart-tooltip" />} />
+                <RechartsTooltip
+                  cursor={AnalyticCommonHelpers.barChartCursor(palette)}
+                  content={<ChartTooltip testId="analytics-tools-chart-tooltip" />}
+                />
                 <Bar
                   dataKey="calls"
                   name="Calls"
@@ -141,14 +158,7 @@ const AnalyticsTools = memo(props => {
 
       {/* Paginated tool table */}
       <Box sx={styles.chartCard}>
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '0.75rem',
-          }}
-        >
+        <Box sx={styles.tableHeaderRow}>
           <Box>
             <Typography
               variant="labelMedium"
@@ -197,8 +207,8 @@ const AnalyticsTools = memo(props => {
               <Box
                 key={i}
                 data-testid="analytics-tools-row"
-                sx={styles.clickableRow}
-                onClick={() => handleToolClick(t.tool_name)}
+                sx={isRunScope ? styles.tableRow : styles.clickableRow}
+                onClick={isRunScope ? undefined : () => handleToolClick(t.tool_name)}
               >
                 <Typography
                   sx={[styles.tableCellValue, { flex: 3 }]}
@@ -253,6 +263,12 @@ AnalyticsTools.displayName = 'AnalyticsTools';
 
 /** @type {MuiSx} */
 const styles = {
+  tableHeaderRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '0.75rem',
+  },
   toolsContent: { display: 'flex', flexDirection: 'column', gap: '1rem' },
   chartCard: ({ palette }) => ({
     padding: '1rem',
@@ -275,7 +291,7 @@ const styles = {
   tableHeader: ({ palette }) => ({
     display: 'flex',
     padding: '0.5rem 0.75rem',
-    borderBottom: `1px solid ${palette.border.default}`,
+    borderBottom: `0.0625rem solid ${palette.border.default}`,
     gap: '0.5rem',
   }),
   tableCell: ({ palette }) => ({
@@ -284,10 +300,16 @@ const styles = {
     color: palette.text.metrics || palette.text.disabled,
     textTransform: 'uppercase',
   }),
+  tableRow: ({ palette }) => ({
+    display: 'flex',
+    padding: '0.5rem 0.75rem',
+    borderBottom: `0.0625rem solid ${palette.border.default}`,
+    gap: '0.5rem',
+  }),
   clickableRow: ({ palette }) => ({
     display: 'flex',
     padding: '0.5rem 0.75rem',
-    borderBottom: `1px solid ${palette.border.default}`,
+    borderBottom: `0.0625rem solid ${palette.border.default}`,
     gap: '0.5rem',
     cursor: 'pointer',
     '&:hover': { backgroundColor: palette.background.interactiveItem.rowHover },

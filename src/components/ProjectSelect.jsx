@@ -6,7 +6,7 @@ import { useLocation, useSearchParams } from 'react-router-dom';
 import { Box, useTheme } from '@mui/material';
 
 import { usePublicProjectAccessCheck, useRestoreLastListRoute } from '@/[fsd]/features/project/lib/hooks';
-import { ProjectSelectShowMode } from '@/[fsd]/shared/lib/constants/projectSelect.constants';
+import { ProjectSelectConstants } from '@/[fsd]/shared/lib/constants';
 import { Select } from '@/[fsd]/shared/ui';
 import { useProjectListQuery } from '@/api/project';
 import {
@@ -18,6 +18,8 @@ import {
 import AlertDialog from '@/components/AlertDialog';
 import { actions as searchActions } from '@/slices/search';
 import { actions as settingsActions } from '@/slices/settings';
+
+const { ProjectSelectShowMode } = ProjectSelectConstants;
 
 const ProjectSelect = memo(props => {
   const {

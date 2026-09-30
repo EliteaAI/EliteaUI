@@ -329,7 +329,7 @@ const CreateEntityButton = memo(props => {
                 >
                   <ArrowDownIcon
                     fill="currentColor"
-                    style={{ transform: openMenu ? 'rotate(180deg)' : 'none' }}
+                    style={styles.chevronIcon(openMenu)}
                   />
                 </Button.BaseBtn>
               </>
@@ -371,7 +371,12 @@ const CreateEntityButton = memo(props => {
 
 CreateEntityButton.displayName = 'CreateEntityButton';
 
+/** @type {MuiSx} */
 const createEntityButtonStyles = sideBarCollapsed => ({
+  // Legacy SvgIcon wrapper: rotation goes through `style`.
+  chevronIcon: isOpen => ({
+    transform: isOpen ? 'rotate(180deg)' : 'none',
+  }),
   wrapper: {
     position: 'relative',
     display: 'flex',

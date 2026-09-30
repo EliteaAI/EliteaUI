@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { createContext, memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useFetchParticipantDetails } from '@/[fsd]/features/chat/participants/lib/hooks';
 import { ChatParticipantType } from '@/common/constants';
@@ -24,7 +24,9 @@ const EMPTY_STATUS = Object.freeze({
   spConfig: null,
 });
 
-export const ParticipantDetailsProvider = ({ participants = [], children }) => {
+export const ParticipantDetailsProvider = memo(props => {
+  const { participants = [], children } = props;
+
   const fetchingRef = useRef(new Set());
 
   const { fetchOriginalDetails } = useFetchParticipantDetails();
@@ -133,7 +135,9 @@ export const ParticipantDetailsProvider = ({ participants = [], children }) => {
       {children}
     </ParticipantDetailsContext.Provider>
   );
-};
+});
+
+ParticipantDetailsProvider.displayName = 'ParticipantDetailsProvider';
 
 export const useParticipantDetailsContext = () => {
   const context = useContext(ParticipantDetailsContext);
@@ -142,3 +146,5 @@ export const useParticipantDetailsContext = () => {
   }
   return context;
 };
+
+export default ParticipantDetailsProvider;

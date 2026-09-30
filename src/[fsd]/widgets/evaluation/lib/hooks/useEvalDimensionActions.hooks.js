@@ -16,8 +16,10 @@ import { EVAL_TIER } from '../constants';
 import {
   dimensionRemovedMessage,
   dimensionsAddedMessage,
+  dimensionsCreatedMessage,
   findDimensionByBindingId,
   parseEvalError,
+  withSuiteSearchParam,
 } from '../helpers';
 
 export const useEvalDimensionActions = ({
@@ -44,7 +46,6 @@ export const useEvalDimensionActions = ({
   const [dimensionToRemove, setDimensionToRemove] = useState(null);
   const [dimensionToEdit, setDimensionToEdit] = useState(null);
   const [bindingToEdit, setBindingToEdit] = useState(null);
-  const [pendingDimensions, setPendingDimensions] = useState([]);
 
   useEffect(() => {
     setShowDimensionLibrary(false);
@@ -53,7 +54,6 @@ export const useEvalDimensionActions = ({
     setDimensionToRemove(null);
     setDimensionToEdit(null);
     setBindingToEdit(null);
-    setPendingDimensions([]);
   }, [editingSuiteId]);
 
   const handleManageDimensions = useCallback(() => {
@@ -61,8 +61,11 @@ export const useEvalDimensionActions = ({
       ':agentId',
       agentId,
     );
-    navigate({ pathname: dimensionsPath, search: persistentSearch });
-  }, [navigate, tab, agentId, persistentSearch]);
+    navigate({
+      pathname: dimensionsPath,
+      search: withSuiteSearchParam(persistentSearch, editingSuiteId),
+    });
+  }, [navigate, tab, agentId, persistentSearch, editingSuiteId]);
 
   const handleSelectDimensionFromLibrary = useCallback(() => {
     setShowDimensionLibrary(true);
@@ -87,22 +90,7 @@ export const useEvalDimensionActions = ({
 
   const handleAddDimensionsFromLibrary = useCallback(
     async selected => {
-      if (selected.length === 0) return;
-      if (!editingSuiteId) {
-        setPendingDimensions(prev => {
-          const existingIds = new Set(prev.map(p => p.id));
-          const newItems = selected
-            .filter(d => !existingIds.has(d.id))
-            .map(d => ({
-              ...d,
-              engine: d.allowed_engines?.[0] ?? 'ai',
-            }));
-          return [...prev, ...newItems];
-        });
-        setShowDimensionLibrary(false);
-        toastSuccess(dimensionsAddedMessage(selected.length, selected[0]?.name));
-        return;
-      }
+      if (selected.length === 0 || !editingSuiteId) return;
       const results = await Promise.allSettled(
         selected.map(async dimension => {
           const dimensionId = await resolveDimensionId(dimension);
@@ -140,12 +128,7 @@ export const useEvalDimensionActions = ({
 
   const handleDimensionCreated = useCallback(
     async (dimension, evidenceScope, engine) => {
-      if (!dimension?.id) return;
-      if (!editingSuiteId) {
-        setPendingDimensions(prev => [...prev, { id: dimension.id, engine, evidenceScope }]);
-        toastSuccess(`Dimension "${dimension.name}" has been created and added to the suite.`);
-        return;
-      }
+      if (!dimension?.id || !editingSuiteId) return;
       try {
         await addEvalBinding({
           projectId,
@@ -159,6 +142,41 @@ export const useEvalDimensionActions = ({
         toastSuccess(`Dimension "${dimension.name}" has been created and added to the suite.`);
       } catch (error) {
         toastError(parseEvalError(error, 'Dimension created but failed to attach to suite.'));
+      }
+    },
+    [editingSuiteId, addEvalBinding, projectId, toastSuccess, toastError],
+  );
+
+  // Bulk counterpart of `handleDimensionCreated` for the Build with AI modal: one toast for the
+  // whole batch instead of one per created dimension.
+  const handleDimensionsCreated = useCallback(
+    async (items = []) => {
+      const created = items.filter(item => item?.dimension?.id);
+      if (!created.length || !editingSuiteId) return;
+
+      const results = await Promise.allSettled(
+        created.map(({ dimension, evidenceScope, engine }) =>
+          addEvalBinding({
+            projectId,
+            suiteId: editingSuiteId,
+            body: {
+              dimension_id: dimension.id,
+              evidence_scope: evidenceScope,
+              engine,
+            },
+          }).unwrap(),
+        ),
+      );
+
+      const failed = results.filter(r => r.status === 'rejected');
+      const successCount = results.length - failed.length;
+
+      if (!failed.length) {
+        toastSuccess(dimensionsCreatedMessage(successCount, created[0].dimension.name));
+      } else if (!successCount) {
+        toastError(parseEvalError(failed[0].reason, 'Dimensions created but failed to attach to suite.'));
+      } else {
+        toastError(`${successCount} created and added, ${failed.length} failed to attach to suite.`);
       }
     },
     [editingSuiteId, addEvalBinding, projectId, toastSuccess, toastError],
@@ -194,14 +212,7 @@ export const useEvalDimensionActions = ({
   // was attached with, so the attached card keeps showing stale values until the binding follows.
   const handleDimensionUpdated = useCallback(
     async (dimension, evidenceScope, engine) => {
-      const dimensionId = bindingToEdit?.dimension_id ?? dimension?.id;
-      if (!editingSuiteId) {
-        setPendingDimensions(prev =>
-          prev.map(p => (p.id === dimensionId ? { ...p, ...dimension, engine, evidenceScope } : p)),
-        );
-        toastSuccess('Dimension has been updated successfully.');
-        return;
-      }
+      if (!editingSuiteId) return;
 
       if (bindingToEdit?.id) {
         try {
@@ -244,12 +255,7 @@ export const useEvalDimensionActions = ({
   }, []);
 
   const handleConfirmRemoveDimension = useCallback(async () => {
-    if (!dimensionToRemove?.binding) return;
-    if (!editingSuiteId) {
-      setPendingDimensions(prev => prev.filter(p => p.id !== dimensionToRemove.binding.dimension_id));
-      setDimensionToRemove(null);
-      return;
-    }
+    if (!dimensionToRemove?.binding || !editingSuiteId) return;
     if (!dimensionToRemove.binding.id) return;
     try {
       await deleteEvalBinding({
@@ -264,32 +270,6 @@ export const useEvalDimensionActions = ({
     setDimensionToRemove(null);
   }, [editingSuiteId, dimensionToRemove, deleteEvalBinding, projectId, toastSuccess, toastError]);
 
-  const flushPendingDimensions = useCallback(
-    async suiteId => {
-      if (pendingDimensions.length === 0) return;
-      const results = await Promise.allSettled(
-        pendingDimensions.map(async dim => {
-          const dimensionId = dim.tier === EVAL_TIER.platform ? await resolveDimensionId(dim) : dim.id;
-          return addEvalBinding({
-            projectId,
-            suiteId,
-            body: {
-              dimension_id: dimensionId,
-              engine: dim.engine ?? 'ai',
-              ...(dim.evidenceScope ? { evidence_scope: dim.evidenceScope } : {}),
-            },
-          }).unwrap();
-        }),
-      );
-      const failCount = results.filter(r => r.status === 'rejected').length;
-      if (failCount > 0) {
-        toastError(`${failCount} dimension${failCount === 1 ? '' : 's'} failed to attach.`);
-      }
-      setPendingDimensions([]);
-    },
-    [pendingDimensions, addEvalBinding, resolveDimensionId, projectId, toastError],
-  );
-
   return {
     showDimensionLibrary,
     showCreateDimensionModal,
@@ -297,7 +277,6 @@ export const useEvalDimensionActions = ({
     dimensionToRemove,
     dimensionToEdit,
     bindingToEdit,
-    pendingDimensions,
     handleManageDimensions,
     handleSelectDimensionFromLibrary,
     handleCloseDimensionLibrary,
@@ -305,6 +284,7 @@ export const useEvalDimensionActions = ({
     handleCreateDimensionManually,
     handleCloseCreateDimensionModal,
     handleDimensionCreated,
+    handleDimensionsCreated,
     handleBuildDimensionWithAi,
     handleCloseBuildDimensionWithAi,
     handleEditDimension,
@@ -313,6 +293,5 @@ export const useEvalDimensionActions = ({
     handleRemoveDimension,
     handleCloseRemoveDimension,
     handleConfirmRemoveDimension,
-    flushPendingDimensions,
   };
 };

@@ -2,14 +2,23 @@ import { memo, useCallback } from 'react';
 
 import { Box, Tooltip, Typography } from '@mui/material';
 
+import { useTextOverflow } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import EditPenIcon from '@/components/Icons/EditPenIcon';
 
-import { EVAL_TIER } from '../../../lib/constants';
-import { getBindingEngineLabel, getTargetLabel, getWeightLabel } from '../../../lib/helpers';
+import { DIMENSION_BADGE_TOOLTIP, DIMENSION_BADGE_TOOLTIP_DELAY, EVAL_TIER } from '../../../lib/constants';
+import {
+  getBindingEngineLabel,
+  getBindingEngineTooltip,
+  getTargetLabel,
+  getWeightLabel,
+} from '../../../lib/helpers';
 import { SharedDatasetBadge } from '../../common';
+
+const NAME_MIN_VISIBLE_CHARS = 9;
+const NAME_TOOLTIP_MIN_LENGTH = 30;
 
 const DimensionCard = memo(props => {
   const {
@@ -25,6 +34,9 @@ const DimensionCard = memo(props => {
     onEdit,
     onRemove,
   } = props;
+
+  const { textRef: nameRef, isOverflowing: isNameTruncated } = useTextOverflow(dimensionName);
+  const showNameTooltip = (dimensionName || '').length >= NAME_TOOLTIP_MIN_LENGTH || isNameTruncated;
 
   const isShared = tier != null && tier !== EVAL_TIER.agent_adhoc;
   const sharedTooltip = tier === EVAL_TIER.platform ? 'Shared across platform' : 'Shared across project';
@@ -52,6 +64,11 @@ const DimensionCard = memo(props => {
     defaultScaleType,
   );
   const weightLabel = getWeightLabel(binding.weight ?? defaultWeight);
+  const badges = [
+    { key: 'engine', label: engineLabel, tooltip: getBindingEngineTooltip(binding) },
+    { key: 'target', label: targetLabel, tooltip: DIMENSION_BADGE_TOOLTIP.target },
+    { key: 'weight', label: weightLabel, tooltip: DIMENSION_BADGE_TOOLTIP.weight },
+  ].filter(badge => badge.label);
 
   const styles = dimensionCardStyles();
 
@@ -64,44 +81,35 @@ const DimensionCard = memo(props => {
         <Tooltip
           title={dimensionName}
           placement="top"
-          disableHoverListener={(dimensionName || '').length < 30}
+          disableHoverListener={!showNameTooltip}
         >
           <Typography
+            ref={nameRef}
             variant="bodyMedium"
             sx={styles.name}
           >
             {dimensionName}
           </Typography>
         </Tooltip>
-        {isShared && <SharedDatasetBadge tooltipTitle={sharedTooltip} />}
         <Box sx={styles.badges}>
-          {engineLabel && (
-            <Typography
-              component="span"
-              variant="bodySmall"
-              sx={styles.badge}
+          {isShared && <SharedDatasetBadge tooltipTitle={sharedTooltip} />}
+          {badges.map(({ key, label, tooltip }) => (
+            <Tooltip
+              key={key}
+              title={tooltip}
+              placement="top"
+              enterDelay={DIMENSION_BADGE_TOOLTIP_DELAY}
+              enterNextDelay={DIMENSION_BADGE_TOOLTIP_DELAY}
             >
-              {engineLabel}
-            </Typography>
-          )}
-          {targetLabel && (
-            <Typography
-              component="span"
-              variant="bodySmall"
-              sx={styles.badge}
-            >
-              {targetLabel}
-            </Typography>
-          )}
-          {weightLabel && (
-            <Typography
-              component="span"
-              variant="bodySmall"
-              sx={styles.badge}
-            >
-              {weightLabel}
-            </Typography>
-          )}
+              <Typography
+                component="span"
+                variant="bodySmall"
+                sx={styles.badge}
+              >
+                {label}
+              </Typography>
+            </Tooltip>
+          ))}
         </Box>
       </Box>
       {(canEdit || canRemove) && (
@@ -143,7 +151,7 @@ const dimensionCardStyles = () => ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    height: '2.625rem',
+    minHeight: '2.625rem',
     padding: '0.5rem 1rem',
     borderRadius: '0.75rem',
     border: `0.0625rem solid ${palette.border.default}`,
@@ -159,8 +167,10 @@ const dimensionCardStyles = () => ({
   }),
   info: {
     display: 'flex',
+    flexWrap: 'wrap',
     alignItems: 'center',
-    gap: '0.625rem',
+    columnGap: '0.625rem',
+    rowGap: '0.5rem',
     minWidth: 0,
     flex: 1,
   },
@@ -172,14 +182,18 @@ const dimensionCardStyles = () => ({
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
-    flexShrink: 1,
+    flex: `1 1 ${NAME_MIN_VISIBLE_CHARS}ch`,
+    maxWidth: 'max-content',
     minWidth: 0,
   }),
   badges: {
     display: 'flex',
+    flexWrap: 'wrap',
     alignItems: 'center',
-    gap: '0.625rem',
-    flexShrink: 0,
+    columnGap: '0.625rem',
+    rowGap: '0.5rem',
+    minWidth: 0,
+    cursor: 'default',
   },
   badge: ({ palette }) => ({
     padding: '0.25rem 0.5rem',

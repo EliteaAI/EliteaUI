@@ -9,7 +9,8 @@ import DownloadIcon from '@/assets/download.svg?react';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 
 import { isRunTerminal, resolveRunVersionName } from '../../lib/helpers';
-import EvaluationProgress from '../suite/EvaluationProgress';
+import EnhanceWithAiButton from '../enhance/EnhanceWithAiButton';
+import EvaluationProgress from './EvaluationProgress';
 import RunResultsView from './RunResultsView';
 
 const ResultsPanel = memo(props => {
@@ -77,6 +78,10 @@ const ResultsPanel = memo(props => {
         <Box sx={styles.headerActions}>
           {hasResults && (
             <>
+              <EnhanceWithAiButton
+                applicationId={applicationId}
+                runId={displayRun?.id}
+              />
               <Tooltip
                 title="Export to Excel"
                 placement="top"

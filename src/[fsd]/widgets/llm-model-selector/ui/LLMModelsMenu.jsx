@@ -1,28 +1,145 @@
-import { memo } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { Box, ListItemIcon, Typography } from '@mui/material';
 import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
 
-import CheckedIcon from '@/assets/checked-icon.svg?react';
-import ShareIcon from '@/assets/share-icon.svg?react';
-import BriefcaseIcon from '@/components/Icons/BriefcaseIcon.jsx';
+import { AUTO_MODEL_ID } from '@/[fsd]/shared/lib/constants/autoRouting.constants';
+import { compareModels } from '@/[fsd]/widgets/llm-model-selector/lib';
 
-import CapabilityChip from './CapabilityChip';
+import ModelRow from './ModelRow';
 
 const LLMModelsMenu = memo(props => {
   const { anchorEl, onClose, models = [], selectedModel, onSelectModel, menuProps = {} } = props;
 
   const open = Boolean(anchorEl);
 
-  const handleMenuItemClick = (event, index) => {
-    onSelectModel(models[index]);
-    onClose();
-  };
+  const sortedModels = useMemo(() => {
+    const autoIndex = models.findIndex(m => m.id === AUTO_MODEL_ID);
+    const nonAuto = models.filter(m => m.id !== AUTO_MODEL_ID);
+    nonAuto.sort(compareModels);
+    return autoIndex !== -1 ? [models[autoIndex], ...nonAuto] : nonAuto;
+  }, [models]);
+
+  const menuListRef = useRef(null);
+  const typeaheadRef = useRef('');
+  const typeaheadTimerRef = useRef(null);
+  const modelsRef = useRef(sortedModels);
+  modelsRef.current = sortedModels;
 
   const anchorOrigin = menuProps.anchorOrigin ?? { vertical: 'top', horizontal: 'right' };
   const transformOrigin = menuProps.transformOrigin ?? { vertical: 'bottom', horizontal: 'right' };
   const paperSx = menuProps.paperSx ?? {};
+
+  const handleSelectModel = useCallback(
+    model => {
+      onSelectModel(model);
+      onClose();
+    },
+    [onSelectModel, onClose],
+  );
+
+  // document-level capture listener: registered on open, removed on close.
+  // Using document (not the ul ref) avoids MUI portal timing: the ref is checked
+  // inside the handler where the menu is guaranteed to be fully mounted.
+  useEffect(() => {
+    if (!open) return;
+
+    const handleKeyDown = e => {
+      const listEl = menuListRef.current;
+      if (!listEl) return;
+
+      // Focus may be on the MUI Paper container (not inside the ul) when the menu
+      // first opens — MUI's focus trap puts focus on the Paper. We still handle
+      // navigation; currentIndex will be -1 and ArrowDown will land on item 0.
+      const activeEl = document.activeElement;
+      const options = Array.from(listEl.children).filter(el => el.getAttribute('aria-disabled') !== 'true');
+      const activeLi = options.find(el => el === activeEl || el.contains(activeEl));
+      const currentIndex = activeLi ? options.indexOf(activeLi) : -1;
+
+      const focusOption = target => {
+        target?.focus();
+        target?.scrollIntoView({ block: 'nearest' });
+      };
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        e.stopPropagation();
+        focusOption(options[currentIndex < options.length - 1 ? currentIndex + 1 : 0]);
+        return;
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        e.stopPropagation();
+        focusOption(options[currentIndex > 0 ? currentIndex - 1 : options.length - 1]);
+        return;
+      }
+      if (e.key === 'Home') {
+        e.preventDefault();
+        e.stopPropagation();
+        focusOption(options[0]);
+        return;
+      }
+      if (e.key === 'End') {
+        e.preventDefault();
+        e.stopPropagation();
+        focusOption(options[options.length - 1]);
+        return;
+      }
+      if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.stopPropagation();
+        clearTimeout(typeaheadTimerRef.current);
+        const prevQuery = typeaheadRef.current;
+        typeaheadRef.current += e.key.toLowerCase();
+        typeaheadTimerRef.current = setTimeout(() => {
+          typeaheadRef.current = '';
+        }, 800);
+        const query = typeaheadRef.current;
+        const currentModels = modelsRef.current;
+
+        // Detect repeated single-char (e.g. "ggg") — cycle through all matches for that char.
+        const isCycle = query.split('').every(c => c === query[0]);
+        let match;
+        if (isCycle && prevQuery) {
+          // Cycle: find the next match after the currently focused item.
+          const char = query[0];
+          const matches = currentModels.filter(m =>
+            (m.display_name || m.name).toLowerCase().startsWith(char),
+          );
+          if (matches.length) {
+            const focusedIndex = currentIndex >= 0 ? currentModels.indexOf(currentModels[currentIndex]) : -1;
+            const focusedMatchIndex = matches.findIndex(m => currentModels.indexOf(m) === focusedIndex);
+            match = matches[(focusedMatchIndex + 1) % matches.length];
+          }
+        } else {
+          // Accumulate: prefer startsWith, fall back to includes.
+          match =
+            currentModels.find(m => (m.display_name || m.name).toLowerCase().startsWith(query)) ??
+            currentModels.find(m => (m.display_name || m.name).toLowerCase().includes(query));
+        }
+
+        if (match) {
+          const target = options[currentModels.indexOf(match)];
+          target?.focus();
+          target?.scrollIntoView({ block: 'nearest' });
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown, true);
+    return () => document.removeEventListener('keydown', handleKeyDown, true);
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    requestAnimationFrame(() => {
+      const listEl = menuListRef.current;
+      if (!listEl) return;
+      const selected = listEl.querySelector('[aria-selected="true"]');
+      if (selected) {
+        selected.scrollIntoView({ block: 'nearest' });
+        selected.focus();
+      }
+    });
+  }, [open]);
 
   return (
     <Menu
@@ -33,59 +150,24 @@ const LLMModelsMenu = memo(props => {
       transformOrigin={transformOrigin}
       slotProps={{
         list: {
+          ref: menuListRef,
+          role: 'listbox',
           'aria-labelledby': 'model-selector-button',
+          sx: styles.menuList,
         },
         paper: {
           sx: [styles.menuPaper, paperSx],
         },
       }}
     >
-      {models.map((item, index) => (
-        <MenuItem
-          key={index}
-          data-testid={`model-selector-option-${item.name}`}
-          selected={item.id === selectedModel?.id}
-          onClick={event => handleMenuItemClick(event, index)}
-          sx={styles.menuItem}
-        >
-          <ListItemIcon sx={styles.listItemIcon}>
-            {item.shared ? <ShareIcon fontSize="inherit" /> : <BriefcaseIcon fontSize="inherit" />}
-          </ListItemIcon>
-          <Box sx={styles.itemContent}>
-            <Box sx={styles.itemLeft}>
-              <Typography
-                variant="bodyMedium"
-                sx={styles.itemName}
-              >
-                {item.display_name || item.name}
-              </Typography>
-              {(item.supports_vision || item.supports_reasoning) && (
-                <Box sx={styles.chips}>
-                  {item.supports_vision && (
-                    <CapabilityChip
-                      type="vision"
-                      showTooltip
-                    />
-                  )}
-                  {item.supports_reasoning && (
-                    <CapabilityChip
-                      type="reasoning"
-                      showTooltip
-                    />
-                  )}
-                </Box>
-              )}
-            </Box>
-            {item.id === selectedModel?.id && (
-              <Box sx={styles.checkIconWrapper}>
-                <Box
-                  component={CheckedIcon}
-                  sx={styles.checkIcon}
-                />
-              </Box>
-            )}
-          </Box>
-        </MenuItem>
+      {sortedModels.map((item, index) => (
+        <ModelRow
+          key={item.id ?? index}
+          model={item}
+          isSelected={item.id === selectedModel?.id}
+          isFirstRow={index === 0}
+          onClick={() => handleSelectModel(item)}
+        />
       ))}
     </Menu>
   );
@@ -97,65 +179,20 @@ LLMModelsMenu.displayName = 'LLMModelsMenu';
 const styles = {
   menuPaper: {
     marginTop: '-0.25rem',
-    width: '20.75rem',
-  },
-  itemContent: {
-    display: 'flex',
-    alignItems: 'center',
-    flex: 1,
-    minWidth: 0,
-    width: '100%',
-  },
-  itemLeft: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.6rem',
-    minWidth: 0,
+    width: '24rem',
     overflow: 'hidden',
   },
-  itemName: ({ palette }) => ({
-    flex: 1,
-    minWidth: 0,
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-    color: palette.text.secondary,
-  }),
-  chips: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.25rem',
-    flexShrink: 0,
-  },
-  menuItem: ({ palette }) => ({
-    '& .MuiListItemIcon-root': {
-      minWidth: 0,
-      marginRight: '0.6rem',
+  menuList: ({ palette }) => ({
+    padding: '0.25rem 0',
+    maxHeight: '22.25rem',
+    overflowY: 'auto',
+    scrollbarWidth: 'thin',
+    scrollbarColor: `${palette.border.lines} transparent`,
+    '&::-webkit-scrollbar': { width: '0.375rem' },
+    '&::-webkit-scrollbar-thumb': {
+      backgroundColor: palette.border.lines,
+      borderRadius: '0.375rem',
     },
-    '&:hover': {
-      backgroundColor: palette.background.surface.interactive.default,
-    },
-    '&.Mui-selected': {
-      backgroundColor: palette.background.interactiveItem.active,
-    },
-    '&.Mui-selected:hover': {
-      backgroundColor: palette.background.interactiveItem.active,
-    },
-  }),
-  listItemIcon: ({ palette }) => ({
-    color: palette.icon.default,
-  }),
-  checkIconWrapper: {
-    display: 'flex',
-    alignItems: 'center',
-    marginLeft: 'auto',
-  },
-  checkIcon: ({ palette }) => ({
-    width: '1rem',
-    height: '1rem',
-    flexShrink: 0,
-    color: palette.text.secondary,
-    marginLeft: '1rem',
   }),
 };
 

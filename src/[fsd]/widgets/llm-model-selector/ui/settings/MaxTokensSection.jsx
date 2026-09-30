@@ -2,12 +2,11 @@ import { memo, useCallback, useEffect, useState } from 'react';
 
 import { Box } from '@mui/material';
 
-import {
-  DEFAULT_MAX_TOKENS,
-  DEFAULT_MAX_TOKENS_CUSTOM,
-} from '@/[fsd]/shared/lib/constants/llmSettings.constants';
+import { LLMSettingsConstants } from '@/[fsd]/shared/lib/constants';
 import { Checkbox, Label } from '@/[fsd]/shared/ui';
 import StyledInputEnhancer from '@/[fsd]/shared/ui/input/StyledInputEnhancer';
+
+const { DEFAULT_MAX_TOKENS, DEFAULT_MAX_TOKENS_CUSTOM } = LLMSettingsConstants;
 
 const MaxTokensSection = memo(props => {
   const {
@@ -19,6 +18,7 @@ const MaxTokensSection = memo(props => {
     error,
     helperText,
     showRemainingTokens = true,
+    defaultModeDescription = 'No custom Elitea limit. The provider and model apply their native output limit.',
   } = props;
 
   const [mode, setMode] = useState(value === DEFAULT_MAX_TOKENS ? 'auto' : 'custom');
@@ -69,7 +69,7 @@ const MaxTokensSection = memo(props => {
           {
             label: 'Default',
             value: 'auto',
-            info: 'No custom Elitea limit. The provider and model apply their native output limit.',
+            info: defaultModeDescription,
           },
           { label: 'Custom', value: 'custom', info: 'Manually set a specific token limit for responses.' },
         ]}

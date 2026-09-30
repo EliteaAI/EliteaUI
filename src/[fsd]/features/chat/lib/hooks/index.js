@@ -22,7 +22,7 @@ export {
 } from './useInputKeyDownHandler.hooks';
 export { useDeleteMessageAlert } from './useDeleteMessageAlert.hooks';
 export { useIsMidturnInjectionAvailable, useIsMidturnInjectionEnabled } from './useMidturnInjection.hooks';
-export { useNextInputSuggestion } from './useNextInputSuggestion.hook';
+export { useNextInputSuggestion } from './useNextInputSuggestion.hooks';
 
 export * from './chat-button/useApplicationSubmenu.hooks';
 
@@ -32,3 +32,5 @@ export { useMutuallyExclusiveEditors } from './useMutuallyExclusiveEditors.hooks
 export { useRefetchAgentVersionDetailsOnClose } from './useRefetchAgentVersionDetailsOnClose.hooks';
 export { useRecommendations } from './useRecommendations.hooks';
 export { useChatEditors } from './useChatEditors.hooks';
+
+export { useSelectedChatModel } from './useSelectedChatModel.hooks';

@@ -8,7 +8,7 @@ import { Box } from '@mui/material';
 
 import { CredentialHelpers, CredentialNameHelpers } from '@/[fsd]/features/credentials/lib/helpers';
 import { PinEntityConstants } from '@/[fsd]/shared/lib/constants';
-import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
+import { useProjectType } from '@/[fsd]/shared/lib/hooks';
 import { Controls } from '@/[fsd]/shared/ui';
 import { usePin, usePinMenu } from '@/[fsd]/widgets/pin-toggler';
 import { TAG_MODELS, useDeleteConfigurationMutation, useGetConfigurationsBySectionQuery } from '@/api';
@@ -208,7 +208,7 @@ const credentialsControlsStyles = () => ({
       left: 0,
       top: '0.25rem',
       bottom: '0.25rem',
-      borderLeft: ({ palette }) => `1px solid ${palette.border.lines}`,
+      borderLeft: ({ palette }) => `0.0625rem solid ${palette.border.lines}`,
     },
   },
   deleteIcon: {

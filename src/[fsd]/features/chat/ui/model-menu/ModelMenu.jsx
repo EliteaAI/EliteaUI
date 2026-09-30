@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 
 import ShareIcon from '@mui/icons-material/Share';
 import { Box, Typography, useTheme } from '@mui/material';
@@ -9,14 +9,17 @@ import ModelIcon from '@/components/Icons/ModelIcon';
 
 // Use Material-UI Star icon for shared models
 
-const ModelMenu = ({
-  disabled,
-  models,
-  onSelectModel,
-  selectedModel,
-  onShowMenu = () => {},
-  tooltip = 'Switch to model',
-}) => {
+const ModelMenu = memo(props => {
+  const {
+    disabled,
+    models,
+    onSelectModel,
+    selectedModel,
+    onShowMenu = () => {},
+    tooltip = 'Switch to model',
+  } = props;
+  const styles = useMemo(() => modelMenuStyles(), []);
+
   const theme = useTheme();
   const onClickItem = useCallback(
     model => () => {
@@ -29,10 +32,7 @@ const ModelMenu = ({
     () =>
       models?.map(model => ({
         label: (
-          <Box
-            display={'flex'}
-            alignItems={'center'}
-          >
+          <Box sx={styles.trigger}>
             {model.shared && (
               <ShareIcon
                 sx={{ mr: 1 }}
@@ -40,12 +40,7 @@ const ModelMenu = ({
               />
             )}
             <Typography
-              sx={{
-                textOverflow: 'ellipsis',
-                overflow: 'hidden',
-                // width: '60%',
-                whiteSpaceCollapse: 'preserve',
-              }}
+              sx={styles.modelName}
               variant="bodyMedium"
             >
               {model.name}
@@ -55,10 +50,10 @@ const ModelMenu = ({
         onClick: onClickItem(model),
         isSelected: selectedModel?.name === model.name || selectedModel?.model_name === model.name,
         showCheckIcon: false,
-        slotProps: { MenuItem: { sx: { minWidth: '268px', justifyContent: 'space-between' } } },
+        slotProps: { MenuItem: { sx: { minWidth: '16.75rem', justifyContent: 'space-between' } } },
         key: `${model.id || model.name}-${model.project_id || 'default'}`, // Create unique key combining id/name and project_id
       })),
-    [models, onClickItem, selectedModel?.model_name, selectedModel?.name],
+    [models, onClickItem, selectedModel?.model_name, selectedModel?.name, styles],
   );
 
   return (
@@ -72,14 +67,14 @@ const ModelMenu = ({
         },
         ListItemIcon: {
           sx: {
-            minWidth: '16px !important',
-            marginRight: '12px',
+            minWidth: '1rem !important',
+            marginRight: '0.75rem',
           },
         },
       }}
       menuStyle={{
-        marginLeft: '0px',
-        marginTop: '4px',
+        marginLeft: '0',
+        marginTop: '0.25rem',
       }}
       anchorOrigin={{
         vertical: 'bottom',
@@ -91,10 +86,10 @@ const ModelMenu = ({
       }}
       menuIconSX={{
         width: 'auto',
-        height: '28px',
-        marginLeft: '0px',
-        padding: '6px 6px',
-        borderRadius: '0px !important',
+        height: '1.75rem',
+        marginLeft: '0',
+        padding: '0.375rem 0.375rem',
+        borderRadius: '0 !important',
         boxSizing: 'border-box',
         background: 'transparent',
         '&:hover': {
@@ -107,35 +102,12 @@ const ModelMenu = ({
           placement="top"
           title={tooltip}
         >
-          <Box
-            width={'100%'}
-            justifyContent={'flex-start'}
-            display={'flex'}
-            flexDirection={'row'}
-            gap="8px"
-            alignItems={'center'}
-            height={'32px'}
-            boxSizing={'border-box'}
-            sx={{
-              cursor: 'pointer',
-              color: theme.palette.text.secondary,
-            }}
-          >
+          <Box sx={styles.menuHeader}>
             {selectedModel?.model_name ? (
               <Typography
                 component={'div'}
                 variant="labelSmall"
-                sx={{
-                  maxWidth: '80px',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                  wordWrap: 'break-word',
-                  textAlign: 'left',
-                  '&:hover': {
-                    color: theme.palette.components.button.text.create,
-                  },
-                }}
+                sx={styles.menuHeaderLabel}
                 color={disabled ? theme.palette.text.muted : 'text.secondary'}
               >
                 {selectedModel?.model_name}
@@ -150,6 +122,44 @@ const ModelMenu = ({
       {menuItems}
     </DotMenu>
   );
-};
+});
+
+ModelMenu.displayName = 'ModelMenu';
+
+/** @type {MuiSx} */
+const modelMenuStyles = () => ({
+  trigger: {
+    display: 'flex',
+    alignItems: 'center',
+  },
+  modelName: {
+    textOverflow: 'ellipsis',
+    overflow: 'hidden',
+    whiteSpaceCollapse: 'preserve',
+  },
+  menuHeader: ({ palette }) => ({
+    width: '100%',
+    justifyContent: 'flex-start',
+    display: 'flex',
+    flexDirection: 'row',
+    gap: '0.5rem',
+    alignItems: 'center',
+    height: '2rem',
+    boxSizing: 'border-box',
+    cursor: 'pointer',
+    color: palette.text.secondary,
+  }),
+  menuHeaderLabel: ({ palette }) => ({
+    maxWidth: '5rem',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    wordWrap: 'break-word',
+    textAlign: 'left',
+    '&:hover': {
+      color: palette.components.button.text.create,
+    },
+  }),
+});
 
 export default ModelMenu;

@@ -4,8 +4,7 @@ import { useSelector } from 'react-redux';
 
 import { Box, useTheme } from '@mui/material';
 
-import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
-import { useShareLink } from '@/[fsd]/shared/lib/hooks/useShareLink.hooks';
+import { useProjectType, useShareLink } from '@/[fsd]/shared/lib/hooks';
 import { Button, Tooltip } from '@/[fsd]/shared/ui';
 import CopyLinkIcon from '@/assets/copy-link-icon.svg?react';
 import GroupsIcon from '@/assets/groups-icon.svg?react';
@@ -163,7 +162,7 @@ export const BucketItem = forwardRef((props, ref) => {
       },
       {
         key: 'bucket-menu-rename',
-        label: 'Rename',
+        label: 'Edit',
         icon: (
           <EditIcon
             sx={{ fontSize: '1rem' }}
@@ -333,7 +332,7 @@ const bucketItemStyles = ({ isActive, isHovering, isNextItemHighlighted, showMen
     container: {
       borderBottom:
         isHighlighted || isNextItemHighlighted || isExpanded
-          ? 'none'
+          ? '0.0625rem solid transparent'
           : `0.0625rem solid ${theme.palette.border.subtle}`,
       padding: '0.5rem 0.5rem',
       gap: '0.5rem',

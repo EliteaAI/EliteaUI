@@ -2,7 +2,7 @@ import { memo, useCallback, useMemo } from 'react';
 
 import { Box, IconButton, Tooltip } from '@mui/material';
 
-import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
+import { useProjectType } from '@/[fsd]/shared/lib/hooks';
 import ViewFileIcon from '@/assets/icons/ViewFileIcon.svg?react';
 import { PERMISSIONS } from '@/common/constants';
 import DotMenu from '@/components/DotMenu';

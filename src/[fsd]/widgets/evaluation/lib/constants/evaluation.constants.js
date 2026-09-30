@@ -77,6 +77,30 @@ export const SCALE_TYPE_PRESET_CONFIG = {
   [SCALE_TYPE_PRESET.custom]: { scaleType: EVAL_SCALE_TYPE.continuous, min: null, max: null },
 };
 
+// Kinds of evaluation-side fix the "Enhance with AI" analysis can propose. Mirrors EvalFixKind
+// in elitea_core (models/pd/enhance_from_eval.py) — the strings are the API contract.
+export const EVAL_FIX_KIND = {
+  dimensionRubric: 'dimension_rubric',
+  dimensionTarget: 'dimension_target',
+  datasetCaseExpected: 'dataset_case_expected',
+  datasetCoverageGap: 'dataset_coverage_gap',
+};
+
+// A coverage gap describes a case that does not exist yet, so there is nothing to patch — it is
+// review material the user acts on by hand in the dataset editor.
+export const AUTO_APPLICABLE_EVAL_FIX_KINDS = [
+  EVAL_FIX_KIND.dimensionRubric,
+  EVAL_FIX_KIND.dimensionTarget,
+  EVAL_FIX_KIND.datasetCaseExpected,
+];
+
+export const ENHANCE_STEP_KEYS = {
+  analysis: 'analysis',
+  instructions: 'instructions',
+  dimensions: 'dimensions',
+  datasetCases: 'dataset_cases',
+};
+
 // Importance levels for dimension weighting
 export const IMPORTANCE = {
   low: 'low',
@@ -213,6 +237,11 @@ export const DEFAULT_DATASET_FORM = {
   isShared: false,
 };
 
+export const DEFAULT_SUITE_FORM = {
+  name: '',
+  description: '',
+};
+
 // Socket events carrying live run progress. Backend: SioEvents in
 // elitea_core/utils/sio_utils.py — the room is keyed by run id alone.
 export const EVAL_SIO_EVENTS = {
@@ -237,3 +266,24 @@ export const EVAL_RESULT_MAX_LIMIT = 2000;
 // P1 hard cap on cases per dataset (#6349). Backend: MAX_CASES_PER_DATASET in
 // evaluation_dataset_utils.py — keep this in sync with the server-side constant.
 export const MAX_CASES_PER_DATASET = 10;
+
+export const DIMENSION_BADGE_TOOLTIP_DELAY = 1000;
+
+export const DIMENSION_BADGE_TOOLTIP = {
+  target: 'The score or rating that must satisfy the selected success criterion for this dimension to pass.',
+  weight: 'Indicates how significant this dimension is when interpreting the overall evaluation result.',
+};
+
+export const DIMENSION_ENGINE_TOOLTIP = {
+  [EVAL_ENGINE.ai]: "This dimension is evaluated using the suite's judge model.",
+  [EVAL_ENGINE.human]: 'This dimension requires manual review.',
+  [EVAL_ENGINE.code]: 'This dimension is evaluated using Python validation logic.',
+};
+
+// Steps of the Build with AI dimension modal: prompt → generation → pick drafts ⇄ edit one draft.
+export const BUILD_DIMENSION_STEPS = {
+  input: 'input',
+  loading: 'loading',
+  select: 'select',
+  review: 'review',
+};

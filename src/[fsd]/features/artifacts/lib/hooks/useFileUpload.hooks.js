@@ -5,12 +5,14 @@ import { useDispatch } from 'react-redux';
 import { useTrackEvent } from '@/GA';
 import { PathValidationHelpers } from '@/[fsd]/features/artifacts/lib/helpers';
 import { FORBIDDEN_FILENAME_HINT } from '@/[fsd]/features/artifacts/lib/helpers/pathValidation.helpers';
-import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
+import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
 import { artifactsApi, useArtifactListQuery } from '@/api/artifacts';
 import { formatFileSize, isNonSvgImage } from '@/common/attachmentValidationUtils';
 import { useChatConfig } from '@/hooks/useChatConfig';
 import useToast from '@/hooks/useToast';
 import { setSkippedFiles, uploadFile } from '@/slices/upload';
+
+const { GA_EVENT_NAMES, GA_EVENT_PARAMS } = AnalyticConstants;
 
 /**
  * Unified hook to handle all bucket upload flows:

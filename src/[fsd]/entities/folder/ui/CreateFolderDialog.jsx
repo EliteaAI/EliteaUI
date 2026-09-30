@@ -64,14 +64,14 @@ const CreateFolderDialog = memo(props => {
     try {
       if (isEditMode) {
         await updateFolder({ folderId: folder.id, name: trimmedName, entityType });
-        toastSuccess('Folder updated successfully');
+        toastSuccess(`Folder has been renamed to "${trimmedName}".`);
         handleClose();
       } else {
         const newFolder = await createFolder({ name: trimmedName, entityType });
         if (onFolderCreated) {
           onFolderCreated(newFolder);
         } else {
-          toastSuccess('Folder created successfully');
+          toastSuccess(`Folder "${trimmedName}" has been created.`);
           handleClose();
         }
       }

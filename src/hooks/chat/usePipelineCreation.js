@@ -1,8 +1,10 @@
 import { useCallback } from 'react';
 
 import { useTrackEvent } from '@/GA';
-import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
+import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
 import { ChatParticipantType } from '@/common/constants';
+
+const { GA_EVENT_NAMES, GA_EVENT_PARAMS } = AnalyticConstants;
 
 /**
  * Hook for managing pipeline creation workflow in chat context

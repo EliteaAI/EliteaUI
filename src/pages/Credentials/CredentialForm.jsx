@@ -7,6 +7,8 @@ import { useSearchParams } from 'react-router-dom';
 import { Box, CircularProgress, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
+import { LlmModelFormConstants } from '@/[fsd]/features/credentials/lib/constants';
+import { LlmModelForm } from '@/[fsd]/features/credentials/ui';
 import { CREDENTIALS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import { useConfigOAuthModal, useMcpTokenChange } from '@/[fsd]/features/mcp/lib/hooks';
@@ -86,13 +88,19 @@ const CredentialForm = memo(props => {
     credentialDetails?.has_test_connection,
     credentialDetails?.settings,
   ]);
+
+  const isLlmModelForm = toolType === LlmModelFormConstants.LLM_MODEL_CONFIGURATION_TYPE;
+
   const ToolComponent = useMemo(() => {
     if (searchParams.get('forceCustom') === 'true' || view === ToolkitViewOptions.Json) {
       return ToolkitForm.ToolCustom;
     }
+    if (isLlmModelForm) {
+      return LlmModelForm;
+    }
     const toolTypedComponent = ToolComponentHelpers.getToolComponent(toolType, toolSchema, true);
     return toolTypedComponent;
-  }, [searchParams, view, toolType, toolSchema]);
+  }, [searchParams, view, toolType, toolSchema, isLlmModelForm]);
 
   const [configurationErrors, setConfigurationErrors] = useState({});
   const [showConfigurationValidateError, setShowConfigurationValidateError] = useState(false);
@@ -260,7 +268,7 @@ const CredentialForm = memo(props => {
     isTestConnectionAllowed,
   ]);
 
-  const styles = credentialFormStyles();
+  const styles = credentialFormStyles(isLlmModelForm);
 
   return isConfigurationDataLoading ? (
     <Box
@@ -375,19 +383,21 @@ const CredentialForm = memo(props => {
 CredentialForm.displayName = 'CredentialForm';
 
 /** @type {MuiSx} */
-const credentialFormStyles = () => ({
+const credentialFormStyles = isLlmModelForm => ({
   container: {
     maxWidth: '40.1875rem',
     margin: '0.75rem auto 0',
     position: 'relative',
     height: '100%',
+    ...(isLlmModelForm && { height: 'auto', minHeight: '100%', paddingBottom: '1.5rem' }),
   },
   formViewToggle: {
     marginBottom: '1.5rem',
   },
   testConnectionContainer: {
     display: 'flex',
-    marginTop: '2rem',
+    marginTop: isLlmModelForm ? '1rem' : '2rem',
+    marginLeft: isLlmModelForm ? '2.25rem' : '0',
     flexDirection: 'row',
     alignItems: 'center',
     gap: '0.5rem',

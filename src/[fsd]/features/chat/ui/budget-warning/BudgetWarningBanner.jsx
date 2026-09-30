@@ -11,23 +11,23 @@ import { BORDER_RADIUS } from '@/common/designTokens';
 import CloseIcon from '@/components/Icons/CloseIcon';
 
 /**
- * Advance notice that a budget is nearing its limit, shown above the message input.
- *
- * Distinct from BudgetErrorMessage: that explains a request already blocked, this arrives
- * while requests still work. The scope decides the wording and where the link goes — the
- * backend sends only one, so there is no precedence rule to apply here.
+ * Advance notice that a budget is nearing its limit; BudgetErrorMessage covers a blocked request.
  */
 const BudgetWarningBanner = memo(props => {
-  const { scope, percentUsed, onDismiss } = props;
+  const { scope, percentUsed, severity, dismissible = true, onDismiss } = props;
 
-  const styles = budgetWarningBannerStyles();
+  const styles = budgetWarningBannerStyles(severity);
 
   const variant = BudgetWarningConstants.BUDGET_WARNING_VARIANTS[scope];
 
   if (!variant || percentUsed === null || percentUsed === undefined) return null;
 
   return (
-    <Box sx={styles.container}>
+    <Box
+      sx={styles.container}
+      data-testid="budget-warning-banner"
+      data-severity={severity}
+    >
       <Box
         component={AttentionIcon}
         sx={styles.icon}
@@ -45,47 +45,73 @@ const BudgetWarningBanner = memo(props => {
           {variant.linkLabel}
         </Link>
       </Typography>
-      <StyledTooltip
-        title="Dismiss budget warning"
-        placement="top"
-      >
-        <IconButton
-          variant="elitea"
-          color="secondary"
-          aria-label="Dismiss budget warning"
-          onClick={onDismiss}
-          sx={styles.closeButton}
+      {dismissible && (
+        <StyledTooltip
+          title="Dismiss budget warning"
+          placement="top"
         >
-          <CloseIcon sx={styles.closeIcon} />
-        </IconButton>
-      </StyledTooltip>
+          <IconButton
+            variant="elitea"
+            color="secondary"
+            aria-label="Dismiss budget warning"
+            onClick={onDismiss}
+            sx={styles.closeButton}
+          >
+            <CloseIcon sx={styles.closeIcon} />
+          </IconButton>
+        </StyledTooltip>
+      )}
     </Box>
   );
 });
 
 BudgetWarningBanner.displayName = 'BudgetWarningBanner';
 
+const { BUDGET_WARNING_SEVERITY } = BudgetWarningConstants;
+
+// Border width stays constant so the banner never jumps in height between levels
+const severityTokens = (palette, severity) =>
+  ({
+    [BUDGET_WARNING_SEVERITY.CRITICAL]: {
+      background: palette.alert.error.background,
+      border: palette.alert.error.border,
+      icon: palette.icon.error,
+      text: palette.alert.error.text,
+    },
+    [BUDGET_WARNING_SEVERITY.ELEVATED]: {
+      background: palette.alert.warning.background,
+      border: palette.alert.warning.borderStrong,
+      icon: palette.icon.warning,
+      text: palette.status.warningText,
+    },
+  })[severity] ?? {
+    background: palette.alert.warning.background,
+    border: palette.alert.warning.border,
+    icon: palette.icon.warning,
+    text: palette.status.warningText,
+  };
+
 /** @type {MuiSx} */
-const budgetWarningBannerStyles = () => ({
+const budgetWarningBannerStyles = severity => ({
   container: ({ palette }) => ({
     display: 'flex',
     alignItems: 'center',
     gap: '0.5rem',
     padding: '0.375rem 0.75rem',
-    backgroundColor: palette.alert.warning.background,
-    border: `0.0625rem solid ${palette.alert.warning.border}`,
+    backgroundColor: severityTokens(palette, severity).background,
+    border: `0.0625rem solid ${severityTokens(palette, severity).border}`,
     borderRadius: BORDER_RADIUS.MD,
     marginBottom: '0.5rem',
   }),
   icon: ({ palette }) => ({
     fontSize: '1rem',
-    color: palette.icon.warning,
+    color: severityTokens(palette, severity).icon,
     flexShrink: 0,
   }),
   // Wraps rather than truncating on a narrow viewport, so the percentage stays readable
   text: ({ palette }) => ({
     flex: 1,
-    color: palette.status.warningText,
+    color: severityTokens(palette, severity).text,
     wordBreak: 'break-word',
   }),
   link: ({ palette }) => ({

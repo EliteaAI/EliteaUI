@@ -95,12 +95,16 @@ const AgentsTab = memo(props => {
   }, []);
 
   const updateApplicationInStateAndModal = useCallback(
-    (applicationId, updateFn) => {
-      updateApplicationInState(applicationId, updateFn);
+    (applicationId, isLiked, newLikesCount) => {
+      updateApplicationInState(applicationId, isLiked, newLikesCount);
 
       setSelectedApplication(prev => {
         if (prev && prev.id === applicationId) {
-          return updateFn(prev);
+          return {
+            ...prev,
+            is_liked: isLiked,
+            likes: newLikesCount,
+          };
         }
         return prev;
       });

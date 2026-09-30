@@ -5,7 +5,7 @@ import { useFormikContext } from 'formik';
 import { Box, Typography } from '@mui/material';
 
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
-import { handleConvertToNumberChange } from '@/[fsd]/shared/lib/helpers/contextStrategy.helpers';
+import { handleConvertToNumberChange } from '@/[fsd]/shared/lib/helpers';
 import { Label, Switch } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import FormInput from '@/components/FormInput';

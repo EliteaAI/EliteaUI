@@ -2,13 +2,20 @@ import { memo } from 'react';
 
 import { Box } from '@mui/material';
 
-import { useModal } from '@/[fsd]/shared/lib/hooks/useModal.hooks';
+import { useModal } from '@/[fsd]/shared/lib/hooks';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import SparkleIcon from '@/assets/ai-sparkle-icon.svg?react';
 import useCheckPermission from '@/hooks/useCheckPermission';
 
 const EditEntityButton = memo(props => {
-  const { permission, renderModal, buttonTestId, disabled, defaultOpen = false } = props;
+  const {
+    permission,
+    renderModal,
+    buttonTestId,
+    disabled,
+    defaultOpen = false,
+    label = 'Edit with AI',
+  } = props;
 
   const { isOpen, handleOpen, handleClose } = useModal(defaultOpen);
   const { checkPermission } = useCheckPermission();
@@ -26,7 +33,7 @@ const EditEntityButton = memo(props => {
         sx={styles.button}
         data-testid={buttonTestId}
       >
-        Edit with AI
+        {label}
       </BaseBtn>
       <Box
         component="span"

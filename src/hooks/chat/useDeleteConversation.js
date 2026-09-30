@@ -13,6 +13,7 @@ const useDeleteConversation = ({
   setActiveConversation,
   setConversations,
   setFolders,
+  setPinnedConversations,
   toastError,
   toastSuccess,
   emitLeaveRoom,
@@ -79,10 +80,10 @@ const useDeleteConversation = ({
         if (areTheSameConversations(conversation, activeConversation)) {
           // If we have a next conversation to select, select it; otherwise use dummy
           if (nextConversation && onSelectConversation) {
-            // Select the next conversation
             onSelectConversation(nextConversation);
           } else {
             setActiveConversation(dummyConversation);
+            unselectConversation({ projectId });
           }
 
           if (activeConversation?.id && !activeConversation?.isPlayback) {
@@ -96,7 +97,6 @@ const useDeleteConversation = ({
           }
           resetCreateFlag();
           clearLocalActiveParticipant(activeConversation?.id);
-          unselectConversation({ projectId });
         }
         if (conversation.folder_id) {
           // Remove from a specific folder in `folders`
@@ -121,6 +121,9 @@ const useDeleteConversation = ({
             );
           });
         }
+        setPinnedConversations?.(prev =>
+          prev.filter(item => item.id !== conversation.id || item.isPlayback !== conversation?.isPlayback),
+        );
       }
     },
     [
@@ -133,6 +136,7 @@ const useDeleteConversation = ({
       setActiveConversation,
       setConversations,
       setFolders,
+      setPinnedConversations,
       unselectConversation,
       stopListenCanvasEditorsChangeEvent,
       stopListenCanvasContentChangeEvent,

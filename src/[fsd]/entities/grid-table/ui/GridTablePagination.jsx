@@ -102,7 +102,7 @@ const gridTablePaginationStyles = () => ({
   footer: ({ palette }) => ({
     display: 'flex',
     paddingTop: '1rem',
-    borderTop: `0.0625rem solid ${palette.border.lines}`,
+    borderTop: `0.0625rem solid ${palette.border.default}`,
   }),
   paddingContent: {
     display: 'flex',
@@ -147,7 +147,7 @@ const gridTablePaginationStyles = () => ({
     opacity: isDisabled ? 0.4 : 1,
     transition: 'opacity 0.2s ease',
     '&:hover': {
-      backgroundColor: isDisabled ? 'transparent' : 'rgba(255, 255, 255, 0.1)',
+      backgroundColor: ({ palette }) => (isDisabled ? 'transparent' : palette.background.overlay.medium),
     },
   }),
   arrowIcon:

@@ -187,7 +187,7 @@ const RestrictAccessDialog = memo(props => {
         );
       }
 
-      onSuccess?.(conversationId);
+      onSuccess?.(conversationId, allToDelete);
       onClose();
     } catch {
       toastError('Some changes may have been applied. Please refresh and try again.');
@@ -231,8 +231,7 @@ const RestrictAccessDialog = memo(props => {
         variant="bodySmall"
         sx={styles.description}
       >
-        Restrict access to selected participants? Project members who are not selected will no longer be able
-        to open this conversation. Existing selected participants will retain access.
+        Only selected participants will have access to this conversation.
       </Typography>
 
       {hasSharedLinks && (
@@ -338,7 +337,7 @@ const restrictAccessDialogStyles = () => ({
   warningBanner: ({ palette }) => ({
     padding: '0.75rem',
     borderRadius: '0.375rem',
-    backgroundColor: palette.background.warning || 'rgba(255, 193, 7, 0.12)',
+    backgroundColor: palette.background.warning,
     border: `0.0625rem solid ${palette.warning.main}`,
   }),
   warningText: ({ palette }) => ({

@@ -59,6 +59,7 @@ FolderManagePermissionsModal.displayName = 'FolderManagePermissionsModal';
 
 export default FolderManagePermissionsModal;
 
+/** @type {MuiSx} */
 const folderManagePermissionsModalStyles = () => ({
   dialogPaper: ({ palette }) => ({
     width: '56.25rem',

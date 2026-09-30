@@ -1,12 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  RUN_ANALYTICS_TIMESTAMP_FORMAT,
   byNewestRunFirst,
   compareRunDuration,
   compareRunTimestamp,
   formatRunTimestamp,
+  hasRunAnalytics,
   parseRunTimestamp,
   resolveRunHistoryColumns,
+  toRunISOString,
 } from '../runHistory.helpers';
 
 describe('resolveRunHistoryColumns', () => {
@@ -57,6 +60,23 @@ describe('formatRunTimestamp', () => {
     expect(formatRunTimestamp(null)).toBe('—');
     expect(formatRunTimestamp('')).toBe('—');
     expect(formatRunTimestamp('nonsense')).toBe('—');
+  });
+
+  it('accepts a custom pattern, as the run analytics header uses', () => {
+    const epoch = new Date(2026, 8, 2, 12, 23).getTime() / 1000;
+
+    expect(formatRunTimestamp(epoch, RUN_ANALYTICS_TIMESTAMP_FORMAT)).toBe('02 Sep 2026, 12:23 PM');
+  });
+});
+
+describe('toRunISOString', () => {
+  it('normalises a conversation timestamp to an ISO string', () => {
+    expect(toRunISOString('2026-08-17T17:39:00+00:00Z')).toBe('2026-08-17T17:39:00.000Z');
+  });
+
+  it('returns undefined for missing or unparsable values', () => {
+    expect(toRunISOString(null)).toBeUndefined();
+    expect(toRunISOString('nonsense')).toBeUndefined();
   });
 });
 
@@ -125,5 +145,27 @@ describe('byNewestRunFirst', () => {
       '2026-08-17T17:39:00Z',
       'nonsense',
     ]);
+  });
+});
+
+describe('hasRunAnalytics', () => {
+  it('offers analytics from 30 Sep 2026 (UTC) on', () => {
+    expect(hasRunAnalytics({ created_at: '2026-09-30T00:00:00Z' })).toBe(true);
+    expect(hasRunAnalytics({ created_at: '2026-09-29T23:59:59Z' })).toBe(false);
+  });
+
+  it('prefers updated_at, so a restored and re-run chat qualifies', () => {
+    expect(hasRunAnalytics({ created_at: '2026-09-06T16:35:00Z', updated_at: '2026-09-30T09:00:00Z' })).toBe(
+      true,
+    );
+    expect(hasRunAnalytics({ created_at: '2026-09-30T09:00:00Z', updated_at: '2026-09-29T09:00:00Z' })).toBe(
+      false,
+    );
+  });
+
+  it('hides analytics when the run has no readable timestamp', () => {
+    expect(hasRunAnalytics({})).toBe(false);
+    expect(hasRunAnalytics({ created_at: 'nonsense' })).toBe(false);
+    expect(hasRunAnalytics(undefined)).toBe(false);
   });
 });

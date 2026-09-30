@@ -6,14 +6,14 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import { Box, CircularProgress, Typography } from '@mui/material';
 
-import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
+import { DrawerPageHeader } from '@/[fsd]/features/settings/ui/drawer-page';
 import {
   hasRetainedIndexData,
   indexSearchBlockedReason,
   isAbandonedRun,
-} from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexDetails.helpers';
+} from '@/[fsd]/features/toolkits/indexes/lib/helpers';
 import { useIndexesListPolling } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
-import { selectIndexesList } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
+import { selectIndexesList } from '@/[fsd]/features/toolkits/indexes/model';
 import { IndexSearchPanel } from '@/[fsd]/features/toolkits/indexes/ui';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import Breadcrumbs from '@/[fsd]/shared/ui/breadcrumbs';

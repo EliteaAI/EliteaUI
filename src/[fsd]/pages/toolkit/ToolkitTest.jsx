@@ -6,7 +6,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Box, CircularProgress } from '@mui/material';
 
 import { McpAuthStatus, McpPatBanner } from '@/[fsd]/features/mcp';
-import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
+import { DrawerPageHeader } from '@/[fsd]/features/settings/ui/drawer-page';
 import { ToolkitFormHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { ToolkitTestPanel } from '@/[fsd]/features/toolkits/ui';
 import { NavigationHelpers, isMcpToolkitType } from '@/[fsd]/shared/lib/helpers';

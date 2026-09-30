@@ -16,6 +16,7 @@ import {
 import { styled as muiStyled } from '@mui/material/styles';
 
 import { typographyVariants } from '@/[fsd]/shared/config/theme';
+import { BaseListSubheader } from '@/[fsd]/shared/ui/list';
 import CheckedIcon from '@/assets/checked-icon.svg?react';
 import { GROUP_SELECT_VALUE_SEPARATOR } from '@/common/constants';
 import { debounce, filterProps } from '@/common/utils';
@@ -24,7 +25,6 @@ import styled from '@emotion/styled';
 import { StyledCircleProgress } from './Chat/StyledComponents';
 import ArrowDownIcon from './Icons/ArrowDownIcon';
 import SearchIcon from './Icons/SearchIcon';
-import { StyledListSubheader } from './SearchBarComponents';
 import StyledSelect from './StyledSelect';
 
 const StyledFormControl = muiStyled(
@@ -288,7 +288,7 @@ export default function GroupedMultipleSelect({
         onOpen={handleFocus}
       >
         {withSearch && (
-          <StyledListSubheader
+          <BaseListSubheader
             disabled
             sx={{ padding: '0px 0px' }}
           >
@@ -311,7 +311,7 @@ export default function GroupedMultipleSelect({
                 }
               />
             </FormControl>
-          </StyledListSubheader>
+          </BaseListSubheader>
         )}
         {options.length < 1 ? (
           <MenuItem

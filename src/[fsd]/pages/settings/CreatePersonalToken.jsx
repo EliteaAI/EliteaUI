@@ -144,7 +144,10 @@ const CreatePersonalToken = memo(() => {
       />
       <Box sx={styles.content}>
         <Box sx={styles.formWrapper}>
-          <form onSubmit={formik.handleSubmit}>
+          <Box
+            component="form"
+            onSubmit={formik.handleSubmit}
+          >
             <Box sx={styles.formFields}>
               <Box sx={styles.nameField}>
                 <Input.InputBase
@@ -200,7 +203,7 @@ const CreatePersonalToken = memo(() => {
                 </Box>
               </Box>
             </Box>
-          </form>
+          </Box>
         </Box>
       </Box>
       <GeneratedTokenDialog

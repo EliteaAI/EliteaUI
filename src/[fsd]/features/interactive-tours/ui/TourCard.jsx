@@ -2,19 +2,21 @@ import { forwardRef, memo } from 'react';
 
 import { Box } from '@mui/material';
 
-const TourCard = forwardRef((props, ref) => {
-  const { children, sx, ...rest } = props;
+const TourCard = memo(
+  forwardRef((props, ref) => {
+    const { children, sx, ...rest } = props;
 
-  return (
-    <Box
-      ref={ref}
-      sx={[tourCardStyles, ...[sx].flat()]}
-      {...rest}
-    >
-      {children}
-    </Box>
-  );
-});
+    return (
+      <Box
+        ref={ref}
+        sx={[tourCardStyles, ...[sx].flat()]}
+        {...rest}
+      >
+        {children}
+      </Box>
+    );
+  }),
+);
 
 TourCard.displayName = 'TourCard';
 
@@ -43,4 +45,4 @@ const tourCardStyles = ({ palette }) => ({
   },
 });
 
-export default memo(TourCard);
+export default TourCard;

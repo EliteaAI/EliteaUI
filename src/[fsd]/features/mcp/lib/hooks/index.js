@@ -1,3 +1,4 @@
+export { useAutoVerifyMcpConnection } from './useAutoVerifyMcpConnection.hooks';
 export { useMcpAuthCheck } from './useMcpAuthCheck.hooks';
 export {
   useMcpAuthModal,

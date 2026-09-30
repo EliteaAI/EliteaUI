@@ -102,6 +102,7 @@ const FolderActionsMenu = memo(props => {
 
 FolderActionsMenu.displayName = 'FolderActionsMenu';
 
+/** @type {MuiSx} */
 const folderActionsMenuStyles = () => ({
   menu: {
     '& .MuiList-root': {

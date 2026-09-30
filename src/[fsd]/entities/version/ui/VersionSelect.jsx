@@ -267,7 +267,7 @@ const versionSelectStyles = () => ({
   }),
   inputSx: {
     '& .MuiSelect-select': {
-      paddingRight: '.5rem !important',
+      paddingRight: '1.5rem !important',
     },
   },
   menuItemIconSx: {

@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { areDetailsOfParticipant } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { useGetApplicationSkillsQuery } from '@/[fsd]/features/skill';
 import { MentionConstants } from '@/[fsd]/shared/lib/constants';
-import { parseMentionRanges } from '@/[fsd]/shared/lib/utils/instructionsMention.utils';
+import { parseMentionRanges } from '@/[fsd]/shared/lib/utils';
 import { ChatParticipantType } from '@/common/constants';
 
 const { MentionPhase, SKILL_TRIGGER } = MentionConstants;

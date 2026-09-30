@@ -6,7 +6,9 @@ import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { StyledAccordion, StyledAccordionDetails, StyledAccordionSummary } from '@/[fsd]/shared/ui/accordion';
 import ArrowRightIcon from '@/assets/arrow-right-icon.svg?react';
 
-import { resolveSubAgentIcon } from './subAgentIcon.helpers';
+// Imported directly rather than through the barrel: it reaches @/components and @/common/toolkitUtils,
+// which would pull the redux store into every consumer of the chat helpers barrel
+import { resolveSubAgentIcon } from '../../lib/helpers/subAgentIcon.helpers';
 
 // VS Code-style collapsible group for one sub-agent's activity. Collapsed by
 // default with a left-to-right shimmer sweeping the name while the sub-agent is
@@ -80,7 +82,7 @@ const subAgentAccordionStyles = {
   accordion: ({ palette }) => ({
     width: '100%',
     paddingBottom: '0.5rem',
-    borderBottom: `1px solid ${palette.border.lines}`,
+    borderBottom: `0.0625rem solid ${palette.border.lines}`,
     '&.Mui-expanded': { margin: '0 0' },
     '&::before': { display: 'none' },
     '& .MuiAccordion-heading': { display: 'inline-block' },

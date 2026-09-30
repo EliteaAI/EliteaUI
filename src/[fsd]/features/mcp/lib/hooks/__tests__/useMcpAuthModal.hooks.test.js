@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { act, renderHook } from '@testing-library/react';
 
-import { useMcpAuthModal } from '../useMcpAuthModal.hooks';
+import { extractConfigAuthMetadata, extractMcpAuthMetadata, useMcpAuthModal } from '../useMcpAuthModal.hooks';
 
 const { reuseAuthFamilyToken } = vi.hoisted(() => ({
   reuseAuthFamilyToken: vi.fn(),
@@ -74,5 +74,24 @@ describe('useMcpAuthModal existing preconfigured MCP reuse', () => {
     });
 
     expect(result.current.showModal).toBe(true);
+  });
+});
+
+describe('protected resource from the resource metadata (#6688)', () => {
+  const resource_metadata = {
+    resource: 'https://mcp.monday.com/mcp',
+    authorization_servers: ['https://auth.monday.com/mcp'],
+  };
+
+  it('is carried out of an mcp_authorization_required message', () => {
+    expect(extractMcpAuthMetadata({ response_metadata: { resource_metadata } }).protectedResource).toBe(
+      'https://mcp.monday.com/mcp',
+    );
+  });
+
+  it('is carried out of a configuration check_connection 401', () => {
+    expect(extractConfigAuthMetadata({ resource_metadata }).protectedResource).toBe(
+      'https://mcp.monday.com/mcp',
+    );
   });
 });

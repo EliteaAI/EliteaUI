@@ -61,7 +61,7 @@ const StateTypeSelector = memo(props => {
         disabled={disabled}
         sx={styles.buttonIcon}
       >
-        <IconComponent style={{ fontSize: '1.25rem' }} />
+        <IconComponent style={styles.typeIcon} />
       </FlowEditorState.StateVariableIconButton>
 
       <Menu
@@ -95,7 +95,7 @@ const StateTypeSelector = memo(props => {
               sx={styles.menuItem(isSelected)}
             >
               <Box sx={styles.menuItemContent}>
-                <MenuIconComponent style={{ fontSize: '1.25rem' }} />
+                <MenuIconComponent style={styles.typeIcon} />
                 <Typography
                   variant="bodyMedium"
                   color="text.secondary"
@@ -103,7 +103,7 @@ const StateTypeSelector = memo(props => {
                   {typeConfig.label}
                 </Typography>
               </Box>
-              {isSelected && <CheckedIcon style={{ fontSize: '0.75rem' }} />}
+              {isSelected && <CheckedIcon style={styles.checkedIcon} />}
             </MenuItem>
           );
         })}
@@ -116,6 +116,13 @@ StateTypeSelector.displayName = 'StateTypeSelector';
 
 /** @type {MuiSx} */
 const stateTypeSelectorStyles = () => ({
+  // SVGR icons only accept `style`.
+  typeIcon: {
+    fontSize: '1.25rem',
+  },
+  checkedIcon: {
+    fontSize: '0.75rem',
+  },
   buttonIcon: {
     fontSize: '1.25rem',
   },

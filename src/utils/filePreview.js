@@ -1,6 +1,8 @@
-import { AvailableFormatsEnum } from '@/[fsd]/features/artifacts/lib/constants/filePreviewCanvas.constants';
+import { FilePreviewCanvasConstants } from '@/[fsd]/features/artifacts/lib/constants';
 import { clearBaseUrlPrefix } from '@/common/utils';
 import { getFileExtensionWithoutDot } from '@/utils/fileUtils';
+
+const { AvailableFormatsEnum } = FilePreviewCanvasConstants;
 
 /**
  * Utility functions for file preview functionality

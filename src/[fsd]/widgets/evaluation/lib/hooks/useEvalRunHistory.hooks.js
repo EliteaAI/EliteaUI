@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useSearchParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import { useTableSort } from '@/[fsd]/entities/grid-table/lib';
 import { compareRunTimestamp } from '@/[fsd]/entities/run-history/lib/helpers';
+import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useApplicationDetailsQuery } from '@/api/applications';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import useToast from '@/hooks/useToast';
+import RouteDefinitions from '@/routes';
 
 import { useDeleteEvalRunMutation, useEvalRunQuery, useEvalRunsQuery, useEvalSuitesQuery } from '../../api';
 import { EVAL_PERMISSIONS } from '../constants';
@@ -37,6 +39,9 @@ const SORT_FIELD = {
  */
 export const useEvalRunHistory = ({ projectId, applicationId }) => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { search } = useLocation();
+  const { tab, agentId } = useParams();
+  const navigate = useNavigate();
   const { toastError, toastSuccess } = useToast();
   const { checkPermission } = useCheckPermission();
 
@@ -154,6 +159,24 @@ export const useEvalRunHistory = ({ projectId, applicationId }) => {
     [toastError, toastSuccess],
   );
 
+  // The run travels as `?run=`, the same param this screen selects by, so the Results History breadcrumb
+  // on the Analytics page (which forwards the search) comes back with the same row selected
+  const handleOpenRunAnalytics = useCallback(
+    run => {
+      if (run?.id == null) return;
+      const params = new URLSearchParams(search);
+      params.set(RUN_SEARCH_PARAM, String(run.id));
+      navigate({
+        pathname: NavigationHelpers.buildRoute(RouteDefinitions.ApplicationsEvaluateHistoryAnalytics, {
+          tab,
+          agentId,
+        }),
+        search: params.toString(),
+      });
+    },
+    [navigate, search, tab, agentId],
+  );
+
   const { exportRun, exportingRunId } = useEvaluationExport({
     projectId,
     applicationId,
@@ -203,6 +226,7 @@ export const useEvalRunHistory = ({ projectId, applicationId }) => {
     handleSelectRun,
     handleShareRun,
     handleExportRun: exportRun,
+    handleOpenRunAnalytics,
     exportingRunId,
     runToDelete,
     isDeleting,

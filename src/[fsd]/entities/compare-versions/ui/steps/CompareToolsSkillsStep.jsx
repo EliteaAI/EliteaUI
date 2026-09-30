@@ -2,8 +2,7 @@ import { memo, useMemo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { EditEntityComparisonLayout } from '@/[fsd]/entities/edit-entity-with-ai';
-import ToolItemCard from '@/[fsd]/features/agent/ui/ai-edit-agent-modal/steps/ToolItemCard';
+import { EditEntityComparisonLayout, ToolItemCard } from '@/[fsd]/entities/edit-entity-with-ai';
 
 import { matchDependencies } from '../../lib/helpers/compareVersions.helpers';
 import CompareVersionHeader from '../CompareVersionHeader';

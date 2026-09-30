@@ -3,7 +3,7 @@ import React, { memo, useCallback, useState } from 'react';
 import { Box, useTheme } from '@mui/material';
 
 import { BrandLogoConstants } from '@/[fsd]/shared/lib/constants';
-import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks/useEnvironmentSettingByKey.hooks';
+import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks';
 import BrandLogo from '@/[fsd]/shared/ui/brand-logo';
 import IndexIcon from '@/assets/file-code.svg?react';
 import FlowIcon from '@/assets/flow-icon.svg?react';

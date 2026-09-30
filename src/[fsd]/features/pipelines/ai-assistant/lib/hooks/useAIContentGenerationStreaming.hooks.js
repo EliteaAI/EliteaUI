@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import {
   buildFieldContextPrompt,
   getServicePromptKeyForFieldName,
-} from '@/[fsd]/features/pipelines/ai-assistant/lib/constants/promptTemplates';
+} from '@/[fsd]/features/pipelines/ai-assistant/lib/constants';
 import { useGetAvailableConfigurationsTypeQuery } from '@/api/configurations';
 import { useGenerateContentStreamingMutation, useStopLlmTaskMutation } from '@/api/llm';
 import { SocketMessageType, sioEvents } from '@/common/constants';

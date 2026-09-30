@@ -14,7 +14,7 @@ const NewParticipantCard = memo(props => {
   useEffect(() => {
     const observer = new IntersectionObserver(
       () => {
-        tooltipRef.current.closeTooltip();
+        tooltipRef.current?.closeTooltip();
       },
       {
         root: null, // relative to document viewport
@@ -149,7 +149,7 @@ const styles = {
     padding: '0.5rem 0.75rem',
     height: '3.5rem',
     cursor: alreadyExists ? 'default' : 'pointer',
-    border: alreadyExists ? `1px solid ${theme.palette.components.userMessageEditor.border}` : 'none',
+    border: alreadyExists ? `0.0625rem solid ${theme.palette.components.userMessageEditor.border}` : 'none',
     background: isActive
       ? theme.palette.background.surface.interactive.active
       : theme.palette.background.surface.interactive.default,
@@ -211,7 +211,7 @@ const styles = {
     padding: '0.125rem 0.375rem', // 2px 6px
     height: '1.25rem', // 20px
     borderRadius: '0.875rem', // 8px
-    border: ({ palette }) => `1px solid ${palette.border.lines}`,
+    border: ({ palette }) => `0.0625rem solid ${palette.border.lines}`,
   },
   publicLabel: {
     textTransform: 'none', // Don't capitalize the public label

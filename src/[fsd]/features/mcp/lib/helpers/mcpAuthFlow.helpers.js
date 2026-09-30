@@ -1,4 +1,4 @@
-import store from '@/[fsd]/shared/config/store';
+import { store } from '@/[fsd]/shared/config';
 import { mcpOAuthApi } from '@/api/mcpOAuth';
 import { toolkitsApi } from '@/api/toolkits';
 import RouteDefinitions, { getBasename } from '@/routes';
@@ -36,6 +36,13 @@ const isMicrosoftEntraEndpoint = authorizationEndpoint => {
     ENTRA_HOSTS.some(host => hostname === host || hostname.endsWith(`.${host}`))
   );
 };
+
+// A pre-registered OAuth app is sent no resource, as before #6688: monday.com rejects it from
+// non-DCR clients ("Only DCR apps ... can use the resource parameter"), while its DCR clients require it.
+const resourceIndicatorFor = ({ resourceMetadata, authorizationEndpoint, usedDCR }) =>
+  usedDCR && !isMicrosoftEntraEndpoint(authorizationEndpoint)
+    ? resourceMetadata?.resource || undefined
+    : undefined;
 
 const resolveCredentials = (serverUrl, tokenInfo) => {
   const savedCredentials = McpAuthHelpers.getSavedCredentials(serverUrl);
@@ -80,6 +87,7 @@ const buildOAuthMetadata = (tokenInfo, clientId, clientSecret, projectId, toolki
   authorization_server: tokenInfo.authorization_server,
   resource_server_url: tokenInfo.resource_server_url,
   resource_scopes: tokenInfo.resource_scopes,
+  resource: tokenInfo.resource,
 });
 
 // Trigger proactive (fire-and-forget) token refresh for near-expiry tokens
@@ -142,6 +150,7 @@ export const triggerProactiveRefresh = serverUrl => {
         client_secret: clientSecret || undefined,
         toolkit_id: tokenInfo.toolkit_id,
         used_dcr: tokenInfo.used_dcr || undefined,
+        resource: tokenInfo.resource,
       };
 
       const tokenResult = await store.dispatch(
@@ -201,6 +210,7 @@ export const refreshAccessToken = async options => {
     client_secret: clientSecret || undefined,
     toolkit_id: toolkitId || undefined,
     used_dcr: usedDcr || undefined,
+    resource: McpAuthHelpers.getTokenInfo(serverUrl)?.resource,
   };
 
   const tokenResult = await store.dispatch(mcpOAuthApi.endpoints.refreshMcpOAuthToken.initiate(requestBody));
@@ -293,6 +303,7 @@ const buildAuthorizationUrl = options => {
     scope,
     isOIDC,
     prompt,
+    resource,
   } = options;
 
   const params = new URLSearchParams({
@@ -317,6 +328,10 @@ const buildAuthorizationUrl = options => {
 
   if (prompt) {
     params.set('prompt', prompt);
+  }
+
+  if (resource) {
+    params.set('resource', resource);
   }
 
   return `${authorizationEndpoint}?${params.toString()}`;
@@ -430,6 +445,7 @@ export const startMcpAuthFlow = async options => {
     const nonce = McpCryptoHelpers.randomString(32);
     const redirectUri = getRedirectUri();
     const isOIDC = McpCryptoHelpers.isOIDCFlow(asMetadata);
+    const resource = resourceIndicatorFor({ resourceMetadata, authorizationEndpoint, usedDCR });
 
     // Use PKCE if server supports it (regardless of client secret)
     // Many servers require PKCE even for confidential clients
@@ -466,6 +482,7 @@ export const startMcpAuthFlow = async options => {
       // even when tenant-wide admin consent already exists. Entra natively
       // re-prompts on scope drift, so forced re-consent is redundant there.
       prompt: isOIDC && !isMicrosoftEntraEndpoint(authorizationEndpoint) ? 'consent' : undefined,
+      resource,
     };
     // Build authorization URL
     const authUrl = buildAuthorizationUrl(buildingOptions);
@@ -509,6 +526,7 @@ export const startMcpAuthFlow = async options => {
       toolkit_id: toolkitId || undefined,
       toolkit_type: isPrebuildMcp ? toolkitType : undefined,
       used_dcr: usedDCR || undefined,
+      resource,
     };
     const tokenResult = await store.dispatch(
       mcpOAuthApi.endpoints.exchangeMcpOAuthToken.initiate(requestBody),
@@ -561,6 +579,7 @@ export const startMcpAuthFlow = async options => {
         authorization_server: resourceMetadata?.authorization_servers?.[0],
         resource_server_url: serverUrl,
         resource_scopes: normalizedScope,
+        resource,
       },
       toolkitType, // Pass toolkitType for pre-built MCPs
     );

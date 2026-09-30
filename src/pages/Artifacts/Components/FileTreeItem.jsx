@@ -2,7 +2,7 @@ import { memo, useCallback, useEffect, useState } from 'react';
 
 import { Box, Collapse, useTheme } from '@mui/material';
 
-import { ARTIFACT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants/artifactTourTargets.constants';
+import { ARTIFACT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { Tooltip } from '@/[fsd]/shared/ui';
 import FolderIcon from '@/components/Icons/FolderIcon';
 
@@ -224,7 +224,9 @@ const fileTreeItemStyles = ({ isActive, isHovering, depth, theme, nextItemHovere
       background: getBackgroundColor(),
       borderRadius: isHighlighted ? '0.375rem' : '0',
       borderBottom:
-        !isHighlighted && !nextItemHovered ? `0.0625rem solid ${theme.palette.border.subtle}` : 'none',
+        !isHighlighted && !nextItemHovered
+          ? `0.0625rem solid ${theme.palette.border.subtle}`
+          : '0.0625rem solid transparent',
     },
 
     folderIcon: {

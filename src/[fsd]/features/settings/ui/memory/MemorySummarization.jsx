@@ -5,7 +5,7 @@ import { useFormikContext } from 'formik';
 import { Box, Typography } from '@mui/material';
 
 import { ContextStrategyConstants } from '@/[fsd]/shared/lib/constants';
-import { handleConvertToNumberChange } from '@/[fsd]/shared/lib/helpers/contextStrategy.helpers';
+import { handleConvertToNumberChange } from '@/[fsd]/shared/lib/helpers';
 import { Input, Switch } from '@/[fsd]/shared/ui';
 
 const MemorySummarization = memo(props => {

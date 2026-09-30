@@ -2,7 +2,7 @@ import { memo, useRef } from 'react';
 
 import { Box, CircularProgress, ClickAwayListener, Typography } from '@mui/material';
 
-import useScrollActiveIntoView from '@/[fsd]/shared/lib/hooks/useScrollActiveIntoView.hooks';
+import { useScrollActiveIntoView } from '@/[fsd]/shared/lib/hooks';
 
 import ToolItem from './ToolItem';
 
@@ -63,7 +63,7 @@ export default ToolList;
 /** @type {MuiSx} */
 const toolListStyles = {
   container: ({ palette }) => ({
-    border: `1px solid ${palette.border.lines}`,
+    border: `0.0625rem solid ${palette.border.lines}`,
     width: '100%',
     maxWidth: '100%',
     maxHeight: '15.4375rem',

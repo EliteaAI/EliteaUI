@@ -85,7 +85,6 @@ const TokenActionsCell = memo(props => {
         title={`Delete token`}
         isLoading={isDeleting}
         validatePermission={false}
-        buttonColor="tertiary"
         testId="token-action-delete-button"
       />
     </Box>

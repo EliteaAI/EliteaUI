@@ -1,3 +1,5 @@
+import { memo } from 'react';
+
 import { useFormikContext } from 'formik';
 
 import { Box, IconButton, Typography } from '@mui/material';
@@ -30,22 +32,24 @@ import useIsPipelineYamlCodeDirty from '@/pages/Pipelines/useIsPipelineYamlCodeD
  * @param {string} [discardConfirmButtonTestId] - Optional data-testid for the Discard
  *   button inside the confirmation modal. Caller-supplied (ELITEA-2076).
  */
-const EditorHeader = ({
-  title,
-  subtitle,
-  onCancel,
-  onDiscard,
-  saveButton,
-  isPublic,
-  isDirty,
-  titleTestId,
-  subtitleTestId,
-  closeButtonTestId,
-  publicLabelTestId,
-  discardButtonTestId,
-  discardModalTestId,
-  discardConfirmButtonTestId,
-}) => {
+const EditorHeader = memo(props => {
+  const {
+    title,
+    subtitle,
+    onCancel,
+    onDiscard,
+    saveButton,
+    isPublic,
+    isDirty,
+    titleTestId,
+    subtitleTestId,
+    closeButtonTestId,
+    publicLabelTestId,
+    discardButtonTestId,
+    discardModalTestId,
+    discardConfirmButtonTestId,
+  } = props;
+
   const theme = useTheme();
   const { discardApplicationChanges } = useDiscardApplicationChanges(onDiscard);
   const { dirty: isFormDirty } = useFormikContext();
@@ -119,7 +123,9 @@ const EditorHeader = ({
       </Box>
     </Box>
   );
-};
+});
+
+EditorHeader.displayName = 'EditorHeader';
 
 const styles = {
   container: ({ palette }) => ({

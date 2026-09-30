@@ -4,6 +4,7 @@ import { Box, CardContent, Divider, IconButton, Card as MuiCard, Typography } fr
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { MoveToFolderButton } from '@/[fsd]/entities/folder/ui';
+import { LikeButton, useApplicationLike } from '@/[fsd]/entities/like';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import { useMcpTokenChange } from '@/[fsd]/features/mcp/lib/hooks';
 import { PinButton } from '@/[fsd]/widgets/pin-toggler/ui';
@@ -21,7 +22,6 @@ import EntityIcon from '@/components/EntityIcon';
 import { IconLinkWithToolTip } from '@/components/Fork/IconLinkWithToolTip.jsx';
 import HighlightQuery from '@/components/HighlightQuery';
 import FolderIcon from '@/components/Icons/FolderIcon';
-import Like from '@/components/Like';
 import useCardNavigate from '@/hooks/useCardNavigate';
 import useCardResize from '@/hooks/useCardResize';
 import useDataViewMode from '@/hooks/useDataViewMode';
@@ -64,6 +64,7 @@ const Card = memo(props => {
   } = data;
 
   const viewMode = useDataViewMode(pageViewMode, data);
+  const likeProps = useApplicationLike({ data, type, viewMode: pageViewMode });
   const [isCardHovered, setIsCardHovered] = useState(false);
   const isPublicProject = projectId === PUBLIC_PROJECT_ID;
 
@@ -261,11 +262,7 @@ const Card = memo(props => {
                 )}
                 {pageViewMode !== ViewMode.Owner && (
                   <Box sx={styles.likeContainer}>
-                    <Like
-                      viewMode={pageViewMode}
-                      type={type}
-                      data={data}
-                    />
+                    <LikeButton {...likeProps} />
                   </Box>
                 )}
                 {(type === ContentType.MCPAdmin || type === ContentType.MCPAll) && (
@@ -364,6 +361,7 @@ const Card = memo(props => {
                         entityType={type}
                         currentFolderId={folderId}
                         isVisible={isCardHovered}
+                        entityName={name}
                       />
                     )}
                     <PinButton
@@ -438,7 +436,7 @@ const cardStyles = (hasCardDetails, showCardBottom, isWholeCardClickable, isClic
     height: hasCardDetails ? '3.75rem' : '4.5rem',
     cursor: isClickable ? 'pointer' : 'default',
     width: '100%',
-    padding: hasCardDetails ? '1rem 0.75rem 0.75rem 1.25rem' : '1.25rem 0.75rem 1.25rem 1.25rem',
+    padding: hasCardDetails ? '1rem 0.875rem 0.75rem 1.25rem' : '1.25rem 0.875rem 1.25rem 1.25rem',
     boxSizing: 'border-box',
     display: 'flex',
     flexDirection: 'row',

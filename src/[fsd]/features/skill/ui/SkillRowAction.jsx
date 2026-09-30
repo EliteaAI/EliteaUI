@@ -7,7 +7,7 @@ import { Box, IconButton, Menu } from '@mui/material';
 import { MoveToFolderSubmenu } from '@/[fsd]/entities/folder/ui';
 import { useDeleteSkillMutation } from '@/[fsd]/features/skill/api';
 import { useSkillExport } from '@/[fsd]/features/skill/lib/hooks';
-import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
+import { useProjectType } from '@/[fsd]/shared/lib/hooks';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { ContentType, PERMISSIONS, SkillsTabs } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils.jsx';
@@ -134,6 +134,7 @@ const SkillRowAction = memo(props => {
           <MoveToFolderSubmenu
             entityId={skillId}
             entityType={ContentType.SkillAll}
+            entityName={skillName}
             currentFolderId={folderId}
             parentMenuOpen={open}
             onAction={handleClose}

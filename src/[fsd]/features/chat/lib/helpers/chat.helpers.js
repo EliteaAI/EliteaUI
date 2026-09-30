@@ -1,10 +1,12 @@
 import { v4 as uuidv4 } from 'uuid';
 
 import * as NewConversationHelpers from '@/[fsd]/features/chat/lib/helpers/newConversation.helpers';
-import { DEFAULT_MAX_TOKENS, DEFAULT_TEMPERATURE } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
+import { LLMSettingsConstants } from '@/[fsd]/shared/lib/constants';
 import { ChatParticipantType, ROLES, WELCOME_MESSAGE_ID } from '@/common/constants';
 
 import { normalizeHitlInterrupt } from './hitl.helpers';
+
+const { DEFAULT_MAX_TOKENS, DEFAULT_TEMPERATURE } = LLMSettingsConstants;
 
 export const getWelcomeMessage = (welcomeMessage, participantId = null) => ({
   id: WELCOME_MESSAGE_ID,

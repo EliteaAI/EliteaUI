@@ -19,6 +19,7 @@ import {
   GridTableRow,
 } from '@/[fsd]/entities/grid-table/ui';
 import { RenameArtifactDialog } from '@/[fsd]/features/artifacts';
+import { useAllArtifacts } from '@/[fsd]/features/artifacts/lib/hooks/useAllArtifacts.hooks';
 import {
   useDeleteArtifactMutation,
   useDeleteArtifactsMutation,
@@ -37,7 +38,6 @@ import {
   getItemsUnderFolder,
   parsePrefixToBreadcrumbs,
 } from '../Components/utils/getItemsAtCurrentLevel';
-import { useAllArtifacts } from '../hooks/useAllArtifacts.hooks';
 import { useZipDownload } from '../hooks/useZipDownload.hooks';
 import ArtifactRowActions from './ArtifactRowActions';
 import ArtifactTableContainer from './ArtifactTableContainer';
@@ -292,6 +292,8 @@ const ArtifactTable = memo(props => {
 
   const paginatedRows = useMemo(() => paginateData(filteredRows), [paginateData, filteredRows]);
 
+  const isEmptyFiles = rows.length === 0 && !isFetching;
+
   const bucketContents = useMemo(() => data?.contents ?? [], [data?.contents]);
 
   const handleFolderClick = useCallback(
@@ -521,18 +523,20 @@ const ArtifactTable = memo(props => {
             handleUploadClick={handleUploadClick}
             bucket={bucket}
             onDeleteArtifacts={onDeleteArtifacts}
+            isDeleteLoading={isDeleteArtifactsLoading}
             totalRows={rows.length}
             searchQuery={searchQuery}
             onSearchChange={handleSearchChange}
             breadcrumbs={breadcrumbs}
             onBreadcrumbClick={handleBreadcrumbClick}
             currentPrefix={currentPrefix}
+            isEmptyFiles={isEmptyFiles}
           />
         }
         isLoading={isFetching}
         loadingMessage="Loading..."
       >
-        {paginatedRows.length === 0 && !isFetching ? (
+        {isEmptyFiles ? (
           <ArtifactTableNoFiles
             message="No files in this bucket"
             onUpload={handleUploadClick}

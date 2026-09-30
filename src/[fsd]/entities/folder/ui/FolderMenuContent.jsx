@@ -146,8 +146,8 @@ const folderMenuContentStyles = () => {
       },
 
       hr: {
-        marginTop: '0px !important',
-        marginBottom: '0px !important',
+        marginTop: '0 !important',
+        marginBottom: '0 !important',
       },
     },
     fixedBottomSection: {

@@ -4,13 +4,14 @@ import { useParams, useSearchParams } from 'react-router-dom';
 
 import { Box, Typography } from '@mui/material';
 
-import { BreadcrumbsOrTitle, Modal } from '@/[fsd]/shared/ui';
+import { Modal } from '@/[fsd]/shared/ui';
 import {
   AddCaseFromChatsModal,
   CasesPanel,
   CreateCaseModal,
   DatasetModal,
   DatasetsPanel,
+  EvaluationBreadcrumbs,
   EvaluationDocsButton,
   ImportCaseModal,
   caseDeletedMessage,
@@ -23,6 +24,7 @@ import {
   useEvalDatasetQuery,
   useEvalDatasetsQuery,
 } from '@/[fsd]/widgets/evaluation';
+import { SearchParams } from '@/common/constants';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 
@@ -34,7 +36,9 @@ const AgentEvaluateDatasetsPage = memo(() => {
 
   const applicationId = useMemo(() => (agentId ? parseInt(agentId, 10) : null), [agentId]);
 
-  const initialDatasetId = searchParams.get('datasetId') ? parseInt(searchParams.get('datasetId'), 10) : null;
+  const initialDatasetId = searchParams.get(SearchParams.DatasetId)
+    ? parseInt(searchParams.get(SearchParams.DatasetId), 10)
+    : null;
 
   const [selectedDatasetId, setSelectedDatasetId] = useState(initialDatasetId);
   const [showDatasetModal, setShowDatasetModal] = useState(false);
@@ -90,7 +94,7 @@ const AgentEvaluateDatasetsPage = memo(() => {
   useEffect(() => {
     if (selectedDatasetId) {
       const newParams = new URLSearchParams(searchParams);
-      newParams.set('datasetId', String(selectedDatasetId));
+      newParams.set(SearchParams.DatasetId, String(selectedDatasetId));
       setSearchParams(newParams, { replace: true });
     }
   }, [selectedDatasetId, searchParams, setSearchParams]);
@@ -254,7 +258,7 @@ const AgentEvaluateDatasetsPage = memo(() => {
     return (
       <Box sx={styles.wrapper}>
         <Box sx={styles.header}>
-          <BreadcrumbsOrTitle title="Manage Datasets" />
+          <EvaluationBreadcrumbs title="Manage Datasets" />
           <EvaluationDocsButton />
         </Box>
         <Box sx={styles.body}>
@@ -274,7 +278,7 @@ const AgentEvaluateDatasetsPage = memo(() => {
   return (
     <Box sx={styles.wrapper}>
       <Box sx={styles.header}>
-        <BreadcrumbsOrTitle title="Manage Datasets" />
+        <EvaluationBreadcrumbs title="Manage Datasets" />
         <EvaluationDocsButton />
       </Box>
       <Box sx={styles.body}>

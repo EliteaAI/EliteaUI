@@ -7,8 +7,9 @@ import { useNavigate } from 'react-router-dom';
 import { Box, Typography } from '@mui/material';
 
 import { useConversationTranscript } from '@/[fsd]/entities/run-history/lib/hooks';
+import { useCredentialLabel } from '@/[fsd]/features/credentials/lib/hooks';
 import { McpAuthModal, useMcpAuthModal } from '@/[fsd]/features/mcp';
-import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
+import { DrawerPageHeader } from '@/[fsd]/features/settings/ui/drawer-page';
 import {
   useDeleteIndexItemMutation,
   useSaveIndexConfigurationMutation,
@@ -30,6 +31,7 @@ import {
 import {
   bannerOutlivesRun,
   bannerVariant,
+  findVisibleIndexSchedule,
   hasRetainedIndexData,
   indexBuildBlockedReason,
   indexRunControls,
@@ -88,7 +90,7 @@ const RunIndexPanel = memo(props => {
   const navigate = useNavigate();
   const projectId = useSelectedProjectId();
   const { toastSuccess, toastError } = useToast();
-  const { values } = useFormikContext();
+  const { values, initialValues } = useFormikContext();
 
   const [activeTab, setActiveTab] = useState(IndexDetailsTabs.activity);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -106,11 +108,11 @@ const RunIndexPanel = memo(props => {
   const [saveIndexConfiguration, { isLoading: isSavingConfig }] = useSaveIndexConfigurationMutation();
   const [deleteIndexSchedule] = useDeleteIndexScheduleMutation();
 
-  const scheduleData = useMemo(() => {
-    const schedule =
-      toolkitScheduler[indexName]?.schedules?.[userId] ?? toolkitScheduler[indexName]?.schedules?.[-1];
-    return schedule ?? {};
-  }, [toolkitScheduler, indexName, userId]);
+  const visibleSchedule = useMemo(
+    () => findVisibleIndexSchedule(toolkitScheduler, indexName, userId),
+    [toolkitScheduler, indexName, userId],
+  );
+  const scheduleData = useMemo(() => visibleSchedule?.schedule ?? {}, [visibleSchedule]);
 
   const configSchema = useGetSelectedToolSchema({
     toolkitType: values.type,
@@ -179,13 +181,21 @@ const RunIndexPanel = memo(props => {
     [toolkitSchemas, toolkitType],
   );
 
-  const credentialsData = useMemo(() => {
-    const entry = Object.entries(toolkitSchema?.properties || {}).find(
-      // eslint-disable-next-line no-unused-vars
-      ([_key, prop]) => prop.section?.includes('credentials') ?? null,
-    );
-    return entry ? entry[1] : null;
-  }, [toolkitSchema]);
+  const [credentialsKey, credentialsData] = useMemo(
+    () =>
+      Object.entries(toolkitSchema?.properties || {}).find(
+        // eslint-disable-next-line no-unused-vars
+        ([_key, prop]) => prop.section?.includes('credentials') ?? null,
+      ) ?? [null, null],
+    [toolkitSchema],
+  );
+
+  const savedToolkitCredentials = credentialsKey ? (initialValues?.settings?.[credentialsKey] ?? null) : null;
+
+  const scheduleCredentialsLabel = useCredentialLabel({
+    credential: scheduleData.credentials,
+    type: credentialsData?.configuration_types?.[0],
+  });
 
   const effectiveState = localMetaOverride?.state ?? index?.metadata?.state;
   // The panel's own notion of "running", which is the row's state OR an active chat run;
@@ -381,12 +391,7 @@ const RunIndexPanel = memo(props => {
 
   const closeDeleteSchedule = useCallback(() => setDeleteScheduleOpen(false), []);
 
-  const scheduleOwnerUserId = useMemo(() => {
-    const schedules = toolkitScheduler[indexName]?.schedules ?? {};
-    if (schedules[userId] != null) return userId;
-    if (schedules[-1] != null) return -1;
-    return userId;
-  }, [toolkitScheduler, indexName, userId]);
+  const scheduleOwnerUserId = visibleSchedule?.ownerId ?? userId;
 
   const confirmDeleteSchedule = useCallback(async () => {
     setDeleteScheduleOpen(false);
@@ -598,7 +603,7 @@ const RunIndexPanel = memo(props => {
           nextRun={scheduleExpiration?.expired ? null : scheduleNextRun}
           expiresAt={scheduleExpiration?.text}
           expired={Boolean(scheduleExpiration?.expired)}
-          credentialsTitle={scheduleData.credentials?.elitea_title}
+          credentialsTitle={scheduleCredentialsLabel}
           onAddSchedule={onAddSchedule}
           onEdit={onEditSchedule}
           onDelete={onDeleteSchedule}
@@ -805,6 +810,7 @@ const RunIndexPanel = memo(props => {
         cron={scheduleData.cron ?? IndexCronDefault}
         timezone={scheduleData.timezone}
         credentials={scheduleData.credentials}
+        toolkitCredentials={savedToolkitCredentials}
         credentialsData={credentialsData}
         isEdit={scheduleModalIsEdit}
         toolkitName={toolkitName}

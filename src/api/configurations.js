@@ -442,6 +442,12 @@ export const configurationsApi = eliteaApi
         },
         providesTags: [TAG_MODELS],
       }),
+      getLlmModelProfiles: build.query({
+        query: ({ projectId }) => ({
+          url: `${apiSlicePath}/llm_model_profiles/${projectId}`,
+        }),
+        keepUnusedDataFor: 3600,
+      }),
       // list credential types
       listCredentialTypes: build.query({
         query: ({ projectId }) => ({
@@ -449,13 +455,13 @@ export const configurationsApi = eliteaApi
         }),
       }),
       setProjectDefaultModel: build.mutation({
-        query: ({ projectId, name, target_project_id, section = 'llm' }) => ({
+        query: ({ projectId, name, target_project_id, section = 'llm', mode = 'fixed' }) => ({
           url: `/configurations/models/${projectId}`,
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: { name, target_project_id, section },
+          body: { name, target_project_id, section, mode },
         }),
         transformResponse: response => {
           response.items = (response.items || []).map(i => ({ ...i, id: `${i.project_id}_${i.name}` }));
@@ -492,6 +498,7 @@ export const {
   useLazyGetConfigurationDetailQuery,
   useListModelsQuery,
   useLazyListModelsQuery,
+  useGetLlmModelProfilesQuery,
 
   // Mutations
   useCreateConfigurationMutation,

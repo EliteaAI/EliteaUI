@@ -14,7 +14,8 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 
-import { FLAT_MENU_ACTION_VALUE } from '@/[fsd]/shared/lib/constants/singleSelectConstants';
+import { SingleSelectConstants } from '@/[fsd]/shared/lib/constants';
+import { customScrollbarSx } from '@/[fsd]/shared/lib/helpers';
 import { Banner } from '@/[fsd]/shared/ui';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import RemoveIcon from '@/assets/remove-icon.svg?react';
@@ -24,6 +25,7 @@ import SingleSelectDropdown from './SingleSelectDropdown';
 import { getSingleSelectShowBorderSx, getSingleSelectWithoutBorderSx } from './singleSelectVariants';
 
 const DEFAULT_MAX_MENU_HEIGHT = '30rem';
+const { FLAT_MENU_ACTION_VALUE } = SingleSelectConstants;
 
 const SingleSelect = memo(props => {
   const {
@@ -77,6 +79,8 @@ const SingleSelect = memo(props => {
     optionGroups,
     onMenuActionClick,
     infoIconDescription,
+    infoTooltipTestId,
+    infoTooltipContentTestId,
     shrinkLabel = false,
     valueItemSX,
     'data-testid': dataTestId,
@@ -225,7 +229,7 @@ const SingleSelect = memo(props => {
 
   const renderMultipleValue = useCallback(
     selected => (
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem', padding: '0 0 0.375rem' }}>
+      <Box sx={styles.chipsRow}>
         {selected.map(selectedValue => {
           const foundOption = flatOptions.find(({ value: v }) => v === selectedValue);
           if (!foundOption) return null;
@@ -324,7 +328,7 @@ const SingleSelect = memo(props => {
             key="__loading__"
             disabled
             value="__single_select_loading__"
-            sx={{ justifyContent: 'center', pointerEvents: 'none', opacity: 1 }}
+            sx={styles.loadingItem}
             onClick={e => e.preventDefault()}
           >
             <CircularProgress size={24} />
@@ -402,7 +406,7 @@ const SingleSelect = memo(props => {
                       <MenuItem
                         key={`${groupKey}-empty`}
                         disabled
-                        sx={{ justifyContent: 'flex-start', padding: '0.5rem 1rem', fontSize: '0.875rem' }}
+                        sx={styles.emptyGroupItem}
                       >
                         {isListFetching ? '' : group.emptyLabel || 'Still no saved credentials'}
                       </MenuItem>,
@@ -575,6 +579,7 @@ const SingleSelect = memo(props => {
       ...(hasOptionGroups ? { disablePadding: true } : {}),
       sx: [
         { flex: 1, minHeight: 0, overflowY: 'auto' },
+        customScrollbarSx,
         ...(effectiveWithSearch
           ? [
               {
@@ -653,6 +658,8 @@ const SingleSelect = memo(props => {
                 <InfoTooltip
                   infoTooltip={{ title: infoIconDescription }}
                   sx={styles.infoTooltip}
+                  testId={infoTooltipTestId}
+                  contentTestId={infoTooltipContentTestId}
                 />
               )}
             </InputLabel>
@@ -707,6 +714,8 @@ const SingleSelect = memo(props => {
           <InfoTooltip
             infoTooltip={{ title: infoIconDescription }}
             sx={styles.infoTooltip}
+            testId={infoTooltipTestId}
+            contentTestId={infoTooltipContentTestId}
           />
         </Box>
       )}
@@ -733,6 +742,22 @@ const singleSelectStyles = (
     hasInfoTooltip,
   } = {},
 ) => ({
+  chipsRow: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '0.25rem',
+    padding: '0 0 0.375rem',
+  },
+  loadingItem: {
+    justifyContent: 'center',
+    pointerEvents: 'none',
+    opacity: 1,
+  },
+  emptyGroupItem: {
+    justifyContent: 'flex-start',
+    padding: '0.5rem 1rem',
+    fontSize: '0.875rem',
+  },
   labelContainer: {
     display: 'flex',
     alignItems: 'center',
@@ -754,7 +779,7 @@ const singleSelectStyles = (
       paddingBottom: '0.1875rem !important',
     },
     '& .MuiSelect-select': {
-      paddingRight: showBorder ? 0 : '0.5rem !important',
+      paddingRight: showBorder ? 0 : '1.5rem !important',
     },
     '& .MuiSelect-icon': {
       top: 'calc(50% - 0.5625rem) !important',
@@ -784,7 +809,7 @@ const singleSelectStyles = (
       padding: '0.25rem 0 0.5rem',
     },
     '& .MuiSelect-icon': {
-      top: 'calc(50% - 11px)',
+      top: 'calc(50% - 0.6875rem)',
     },
     '& .MuiSelect-select': {
       color: customSelectedColor,
@@ -834,7 +859,7 @@ const singleSelectStyles = (
   },
   chip: {
     height: '1.5rem',
-    margin: '0px !important',
+    margin: '0 !important',
     backgroundColor: theme.palette.components.autocompleteChip.background.disabled,
     '& .MuiChip-label': {
       paddingLeft: '0.5rem',
@@ -852,10 +877,10 @@ const singleSelectStyles = (
     fontSize: '0.875rem',
     color: palette.text.secondary,
     lineHeight: 1.4,
-    borderBottom: `1px solid ${palette.border.lines}`,
+    borderBottom: `0.0625rem solid ${palette.border.lines}`,
     backgroundColor: palette.background.default.secondary,
     '.MuiMenuItem-root + &': {
-      borderTop: `1px solid ${palette.border.lines}`,
+      borderTop: `0.0625rem solid ${palette.border.lines}`,
     },
   }),
   groupAction: ({ palette }) => ({

@@ -224,6 +224,8 @@ const lightPalette = {
     },
     panel: grey003,
     surface: {
+      default: gradient,
+      secondary: white,
       interactive: {
         default: dark5,
         active: dark10,
@@ -243,6 +245,16 @@ const lightPalette = {
     tooltip: gray30,
     aiAnswer: white,
     badge: dark20,
+    // Translucent overlays layered over surfaces (hover states, skeletons, drop targets).
+    overlay: {
+      faint: 'rgba(255, 255, 255, 0.02)',
+      soft: 'rgba(255, 255, 255, 0.05)',
+      medium: 'rgba(255, 255, 255, 0.1)',
+      strong: 'rgba(255, 255, 255, 0.2)',
+      dim: 'rgba(0, 0, 0, 0.3)',
+      sensitive: { default: 'rgba(0, 0, 0, 0.02)', hover: 'rgba(0, 0, 0, 0.04)' },
+      versionHover: 'rgba(255, 255, 255, 0.1)',
+    },
   },
   border: {
     default: light40,
@@ -254,6 +266,7 @@ const lightPalette = {
     tips: blue02,
     attention: orangeOutline40,
     error: red40,
+    sectionHover: 'rgba(38, 43, 52, 1)',
   },
   boxShadow: {
     default: shadowBoxDefault,
@@ -276,6 +289,7 @@ const lightPalette = {
     accent: magentaDefault,
     link: darkBlue,
     linkHover: blue,
+    linkHoverSecondary: darkBlue,
     visitedLink: darkBlue70,
     alwaysWhite: white,
     alwaysDark: alwaysDarkColor,
@@ -285,7 +299,13 @@ const lightPalette = {
   alert: {
     info: { icon: irisBlue, background: blueFill8, border: skyBlue40, text: darkBlue },
     success: { icon: greenHoverBtn, background: green8, border: greenOutline40, text: green },
-    warning: { icon: orange, background: orange8, border: orangeOutline40, text: attentionOrange },
+    warning: {
+      icon: orange,
+      background: orange8,
+      border: orangeOutline40,
+      borderStrong: orange,
+      text: attentionOrange,
+    },
     error: { icon: dangerRed, background: red8, border: red40, text: red },
     secondary: { background: blue8 },
   },
@@ -400,7 +420,7 @@ const lightPalette = {
     },
     tab: { background: { default: light10, hover: magentaHover, active: magentaDefault, disabled: light20 } },
     categoryTag: {
-      background: { default: white, selected: irisBlue },
+      background: { default: white, hover: light40, selected: irisBlue, hoverSelected: blue02 },
       text: { default: gray60, selected: white },
       shadow: '0 0.125rem 0.25rem 0 #0000000f',
     },
@@ -521,6 +541,7 @@ const lightPalette = {
     listItem: { background: { default: white } },
     chatStarter: { background: { strong: chatStarterStrong, subtle: chatStarterSubtle } },
     npsSurvey: {
+      heartGradient: { start: '#FB85FF', end: '#78ABFF' },
       background: npsSurveyBg,
       border: npsSurveyBorder,
       accent: npsAccent,
@@ -618,7 +639,7 @@ const lightPalette = {
     flowEditor: {
       background: white,
       node: { border: light20 },
-      edge: { stroke: light20 },
+      edge: { stroke: light20, shadow: 'rgba(0, 0, 0, 0.2)' },
       nodeColors: {
         toolkit: flowNodeToolkit,
         mcp: flowNodeMcp,
@@ -731,6 +752,7 @@ const lightPalette = {
       },
     },
     configurationCard: { background: { highTier: green20 } },
+    chatTemplate: { badge: { background: green20 } },
     highlightQuery: { background: attentionOrange },
     runIndexBanner: {
       background: { success: green8, error: red8, warning: orange8, info: blueFill8 },
@@ -755,7 +777,9 @@ const lightPalette = {
     },
     deleteAlert: { text: { entityName: darkBlue, body: gray60 } },
     chip: {
-      background: { warning: red15, selected: darkMagenta16, default: dark5 },
+      background: { warning: red15, selected: darkMagenta16, default: dark5, positive: greenOutline40 },
+      border: { default: light30, active: magentaDefault },
+      text: { default: light10, active: magentaDefault },
     },
     chipWithCheckIcon: {
       background: {

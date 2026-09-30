@@ -6,7 +6,6 @@ import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { Button, Checkbox, Input, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
-import FullscreenOutlinedIcon from '@/assets/full-screen-icon.svg?react';
 import ArrowDownIcon from '@/components/Icons/ArrowDownIcon';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import PlusIcon from '@/components/Icons/PlusIcon';
@@ -15,6 +14,7 @@ import useToast from '@/hooks/useToast';
 
 import { useAddEvalDatasetCaseMutation, useUpdateEvalDatasetCaseMutation } from '../../../api';
 import { parseEvalError } from '../../../lib/helpers';
+import CaseFullScreenButton from './CaseFullScreenButton';
 
 const INPUT_TOOLTIP = 'The request or prompt that will be sent to the agent when this case is evaluated.';
 const VARIABLES_TOOLTIP = 'Optional key-value inputs that can be referenced when this case is run.';
@@ -43,7 +43,7 @@ const toFormState = datasetCase => ({
 });
 
 const CreateCaseModal = memo(props => {
-  const { open, onClose, projectId, datasetId, datasetCase } = props;
+  const { open, onClose, projectId, datasetId, datasetCase, readOnly = false } = props;
 
   const isEdit = !!datasetCase?.id;
 
@@ -207,6 +207,7 @@ const CreateCaseModal = memo(props => {
   const isValid = !!form.input.trim();
 
   const isSaveDisabled = isSaving || !isValid || (isEdit && !isDirty);
+  const readOnlyInputProps = readOnly ? { 'aria-readonly': true, readOnly: true, tabIndex: -1 } : undefined;
 
   const getExpandedFieldValue = useCallback(() => {
     if (!expandedField) return '';
@@ -226,20 +227,13 @@ const CreateCaseModal = memo(props => {
       <Box sx={styles.fieldSection}>
         <Box sx={styles.labelRow}>
           <Typography sx={styles.label}>Input</Typography>
-          <InfoTooltip infoTooltip={INPUT_TOOLTIP} />
+          {!readOnly && <InfoTooltip infoTooltip={INPUT_TOOLTIP} />}
           <Box sx={styles.expandButton}>
-            <Tooltip
-              title="Full screen view"
-              placement="top"
-            >
-              <Button.BaseBtn
-                variant={BUTTON_VARIANTS.tertiary}
-                onClick={() => handleOpenExpanded('Input', form.input)}
-                sx={styles.iconButton}
-              >
-                <FullscreenOutlinedIcon style={styles.expandIcon} />
-              </Button.BaseBtn>
-            </Tooltip>
+            <CaseFullScreenButton
+              readOnly={readOnly}
+              onClick={() => handleOpenExpanded('Input', form.input)}
+              sx={styles.iconButton}
+            />
           </Box>
         </Box>
         <Input.InputBase
@@ -250,11 +244,12 @@ const CreateCaseModal = memo(props => {
           variant="outlined"
           placeholder=""
           value={form.input}
-          onChange={event => setField('input', event.target.value)}
+          onChange={readOnly ? undefined : event => setField('input', event.target.value)}
+          inputProps={readOnlyInputProps}
           showFullScreenAction={false}
           showCopyAction={false}
           showExpandAction={false}
-          sx={styles.textareaField}
+          sx={[styles.textareaField, readOnly && styles.readOnlyField]}
         />
       </Box>
 
@@ -265,9 +260,11 @@ const CreateCaseModal = memo(props => {
         >
           <ArrowDownIcon style={variablesExpanded ? styles.chevron : styles.chevronCollapsed} />
           <Typography sx={styles.variablesLabel}>VARIABLES</Typography>
-          <Box onClick={event => event.stopPropagation()}>
-            <InfoTooltip infoTooltip={VARIABLES_TOOLTIP} />
-          </Box>
+          {!readOnly && (
+            <Box onClick={event => event.stopPropagation()}>
+              <InfoTooltip infoTooltip={VARIABLES_TOOLTIP} />
+            </Box>
+          )}
         </Box>
         <Collapse in={variablesExpanded}>
           <Box sx={styles.variablesContent}>
@@ -285,12 +282,15 @@ const CreateCaseModal = memo(props => {
                       variant="outlined"
                       placeholder="Key"
                       value={row.key}
-                      onChange={event => handleVariableField(index, 'key', event.target.value)}
+                      onChange={
+                        readOnly ? undefined : event => handleVariableField(index, 'key', event.target.value)
+                      }
+                      inputProps={readOnlyInputProps}
                       data-testid={`create-case-variable-key-${index}`}
                       showFullScreenAction={false}
                       showCopyAction={false}
                       showExpandAction={false}
-                      sx={styles.variableField}
+                      sx={[styles.variableField, readOnly && styles.readOnlyField]}
                     />
                   </Box>
                   <Box sx={styles.valueFieldWrapper}>
@@ -299,51 +299,53 @@ const CreateCaseModal = memo(props => {
                       variant="outlined"
                       placeholder="Value"
                       value={row.value}
-                      onChange={event => handleVariableField(index, 'value', event.target.value)}
+                      onChange={
+                        readOnly
+                          ? undefined
+                          : event => handleVariableField(index, 'value', event.target.value)
+                      }
+                      inputProps={readOnlyInputProps}
                       data-testid={`create-case-variable-value-${index}`}
                       showFullScreenAction={false}
                       showCopyAction={false}
                       showExpandAction={false}
-                      sx={styles.variableField}
+                      sx={[styles.variableField, readOnly && styles.readOnlyField]}
                     />
+                    <CaseFullScreenButton
+                      readOnly={readOnly}
+                      onClick={() => handleOpenExpanded('Variable', row.value, index, row.key)}
+                      sx={styles.valueExpandButton}
+                    />
+                  </Box>
+                  {!readOnly && (
                     <Tooltip
-                      title="Full screen view"
+                      title="Remove variable"
                       placement="top"
                     >
                       <Button.BaseBtn
                         variant={BUTTON_VARIANTS.tertiary}
-                        onClick={() => handleOpenExpanded('Variable', row.value, index, row.key)}
-                        sx={styles.valueExpandButton}
+                        onClick={() => handleRemoveVariable(index)}
+                        data-testid={`create-case-variable-remove-${index}`}
+                        sx={styles.deleteButton}
                       >
-                        <FullscreenOutlinedIcon style={styles.expandIcon} />
+                        <DeleteIcon sx={styles.deleteIcon} />
                       </Button.BaseBtn>
                     </Tooltip>
-                  </Box>
-                  <Tooltip
-                    title="Remove variable"
-                    placement="top"
-                  >
-                    <Button.BaseBtn
-                      variant={BUTTON_VARIANTS.tertiary}
-                      onClick={() => handleRemoveVariable(index)}
-                      data-testid={`create-case-variable-remove-${index}`}
-                      sx={styles.deleteButton}
-                    >
-                      <DeleteIcon sx={styles.deleteIcon} />
-                    </Button.BaseBtn>
-                  </Tooltip>
+                  )}
                 </Box>
               ))
             )}
-            <Button.BaseBtn
-              color={BUTTON_COLORS.secondary}
-              startIcon={<PlusIcon />}
-              onClick={handleAddVariable}
-              sx={styles.addVariableButton}
-              data-testid="create-case-add-variable"
-            >
-              Variable
-            </Button.BaseBtn>
+            {!readOnly && (
+              <Button.BaseBtn
+                color={BUTTON_COLORS.secondary}
+                startIcon={<PlusIcon />}
+                onClick={handleAddVariable}
+                sx={styles.addVariableButton}
+                data-testid="create-case-add-variable"
+              >
+                Variable
+              </Button.BaseBtn>
+            )}
           </Box>
         </Collapse>
       </Box>
@@ -352,26 +354,20 @@ const CreateCaseModal = memo(props => {
         <Box sx={styles.expectedOutputHeader}>
           <Checkbox.BaseCheckbox
             checked={form.hasExpectedOutput}
-            onChange={handleToggleExpectedOutput}
+            onChange={readOnly ? undefined : handleToggleExpectedOutput}
+            disabled={readOnly}
             sx={styles.checkbox}
             data-testid="create-case-expected-output-checkbox"
           />
           <Typography sx={styles.expectedOutputLabel}>Expected Output</Typography>
-          <InfoTooltip infoTooltip={EXPECTED_OUTPUT_TOOLTIP} />
+          {!readOnly && <InfoTooltip infoTooltip={EXPECTED_OUTPUT_TOOLTIP} />}
           <Box sx={styles.expandButton}>
             {form.hasExpectedOutput ? (
-              <Tooltip
-                title="Full screen view"
-                placement="top"
-              >
-                <Button.BaseBtn
-                  variant={BUTTON_VARIANTS.tertiary}
-                  onClick={() => handleOpenExpanded('Expected Output', form.expected_output)}
-                  sx={styles.iconButton}
-                >
-                  <FullscreenOutlinedIcon style={styles.expandIcon} />
-                </Button.BaseBtn>
-              </Tooltip>
+              <CaseFullScreenButton
+                readOnly={readOnly}
+                onClick={() => handleOpenExpanded('Expected Output', form.expected_output)}
+                sx={styles.iconButton}
+              />
             ) : (
               <Box sx={styles.expandIconPlaceholder} />
             )}
@@ -386,16 +382,17 @@ const CreateCaseModal = memo(props => {
             variant="outlined"
             placeholder=""
             value={form.expected_output}
-            onChange={event => setField('expected_output', event.target.value)}
+            onChange={readOnly ? undefined : event => setField('expected_output', event.target.value)}
+            inputProps={readOnlyInputProps}
             showFullScreenAction={false}
             showCopyAction={false}
             showExpandAction={false}
-            sx={styles.textareaField}
+            sx={[styles.textareaField, readOnly && styles.readOnlyField]}
           />
         )}
       </Box>
 
-      {errorMessage && (
+      {!readOnly && errorMessage && (
         <Typography
           data-testid="create-case-error"
           sx={styles.error}
@@ -433,13 +430,13 @@ const CreateCaseModal = memo(props => {
       <Modal.BaseModal
         open={open}
         variant={ModalConstants.MODAL_VARIANT.complex}
-        title={isEdit ? 'Edit Case' : 'Create Case'}
+        title={readOnly ? 'Case Details' : isEdit ? 'Edit Case' : 'Create Case'}
         onClose={onClose}
         content={content}
-        actions={actions}
+        actions={readOnly ? undefined : actions}
         sx={styles.dialogPaper}
         dialogSx={styles.dialogContent}
-        data-testid="create-case-modal"
+        data-testid={readOnly ? 'case-details-modal' : 'create-case-modal'}
       />
       {expandedField && (
         <StyledInputModal
@@ -450,10 +447,11 @@ const CreateCaseModal = memo(props => {
               : expandedField.fieldName
           }
           value={getExpandedFieldValue()}
-          hasOnChangeCallback
-          onChange={handleExpandedChange}
+          hasOnChangeCallback={!readOnly}
+          onChange={readOnly ? undefined : handleExpandedChange}
           onClose={handleCloseExpanded}
           specifiedLanguage="text"
+          disabled={readOnly}
         />
       )}
     </>
@@ -486,6 +484,16 @@ const createCaseModalStyles = () => ({
       overflowY: 'auto',
     },
   },
+  readOnlyField: ({ palette }) => ({
+    pointerEvents: 'none',
+    '& .MuiInputBase-input': {
+      caretColor: 'transparent',
+    },
+    '& .MuiOutlinedInput-root:not(.Mui-error):hover .MuiOutlinedInput-notchedOutline, & .MuiOutlinedInput-root.Mui-focused:not(.Mui-error) .MuiOutlinedInput-notchedOutline':
+      {
+        borderColor: palette.border.lines,
+      },
+  }),
   labelRow: {
     display: 'flex',
     alignItems: 'center',
@@ -501,15 +509,10 @@ const createCaseModalStyles = () => ({
     marginLeft: 'auto',
   },
   iconButton: ({ palette }) => ({
-    padding: '0.25rem',
     '&:hover': {
       backgroundColor: palette.action.hover,
     },
   }),
-  expandIcon: {
-    width: '1rem',
-    height: '1rem',
-  },
   expandIconPlaceholder: {
     width: '1.5rem',
     height: '1.5rem',
@@ -547,7 +550,7 @@ const createCaseModalStyles = () => ({
     flexDirection: 'column',
     gap: '0.75rem',
     marginTop: '0.75rem',
-    padding: '0 1.5rem',
+    padding: '0 0 0 1.5rem',
   },
   noVariablesText: ({ palette }) => ({
     fontSize: '0.875rem',
@@ -579,7 +582,6 @@ const createCaseModalStyles = () => ({
     right: '0.25rem',
     top: '50%',
     transform: 'translateY(-50%)',
-    padding: '0.25rem',
     '&:hover': {
       backgroundColor: palette.action.hover,
     },

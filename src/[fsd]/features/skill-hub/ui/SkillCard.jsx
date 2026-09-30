@@ -56,6 +56,13 @@ const SkillCard = memo(props => {
         >
           {skill.name || 'Untitled'}
         </Typography>
+        {isNew && (
+          <Chip
+            label="New"
+            size="small"
+            sx={styles.newBadge}
+          />
+        )}
       </Box>
       <Box
         data-tour={ELITEA_CATALOG_TOUR_TARGET_IDS.likeButton}
@@ -75,13 +82,6 @@ const SkillCard = memo(props => {
           </Box>
         </StyledTooltip>
         <Box sx={styles.actionContainer}>
-          {isNew && (
-            <Chip
-              label="New"
-              size="small"
-              sx={styles.newBadge}
-            />
-          )}
           <SkillHubLike
             viewMode={ViewMode.Public}
             data={skill}

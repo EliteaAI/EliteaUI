@@ -45,13 +45,13 @@ const aiPersonalityStyles = () => ({
     alignItems: 'center',
     padding: '0 1.5rem',
     borderBottom: `0.0625rem solid ${palette.border.default}`,
+    background: palette.background.default.tertiary,
   }),
-  content: ({ palette }) => ({
-    backgroundColor: palette.background.default.tertiary,
+  content: {
     flex: 1,
     minHeight: 0,
     overflowY: 'auto',
-  }),
+  },
 });
 
 export default AIPersonality;

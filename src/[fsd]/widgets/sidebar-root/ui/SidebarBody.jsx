@@ -6,8 +6,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Box, Divider, IconButton, Tooltip, Typography } from '@mui/material';
 
 import { SIDEBAR_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
-import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
-import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks/useEnvironmentSettingByKey.hooks';
+import { useIsMcpVisible, useSystemSenderName } from '@/[fsd]/shared/lib/hooks';
 import { BrandLogo } from '@/[fsd]/shared/ui';
 import { SidebarConstants, SocketConstants } from '@/[fsd]/widgets/sidebar-root/lib/constants';
 import { useSocketIcon } from '@/[fsd]/widgets/sidebar-root/lib/hooks';
@@ -444,7 +443,7 @@ const sideBarBodyStyles = (sideBarCollapsed, socketStatus) => ({
     justifyContent: 'center',
     alignItems: 'center',
     minWidth: 0,
-    borderRight: sideBarCollapsed ? 'none' : `1px solid ${palette.border.subtle}`,
+    borderRight: sideBarCollapsed ? 'none' : `0.0625rem solid ${palette.border.subtle}`,
 
     span: {
       fontSize: '.75rem',

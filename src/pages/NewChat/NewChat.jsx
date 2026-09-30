@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { Box, CircularProgress, Grid, useTheme } from '@mui/material';
 
-import { useEditingArtifactsNavBlocker } from '@/[fsd]/features/artifacts/lib/hooks/useEditingArtifactsNavBlocker.hooks';
+import { useEditingArtifactsNavBlocker } from '@/[fsd]/features/artifacts/lib/hooks';
 import { useLazyConversationDetailsQuery } from '@/[fsd]/features/chat/api';
 import { redistributeConversationsIntoGroups } from '@/[fsd]/features/chat/conversation-list/lib/helpers';
 import {
@@ -20,11 +20,11 @@ import {
 } from '@/[fsd]/features/chat/conversation-list/lib/hooks';
 import { Conversations } from '@/[fsd]/features/chat/conversation-list/ui';
 import {
+  useChatEditors,
   useConversationNavigation,
   useEditConversation,
   useInternalToolsConfig,
 } from '@/[fsd]/features/chat/lib/hooks';
-import { useChatEditors } from '@/[fsd]/features/chat/lib/hooks/useChatEditors.hooks';
 import {
   canParticipantBeActiveInChat,
   getChatParticipantUniqueId,
@@ -434,8 +434,29 @@ const NewChat = props => {
   }, [activeConversation?.id]);
 
   const handleRestrictAccessSuccess = useCallback(
-    async conversationId => {
+    async (conversationId, deletedParticipantIds = []) => {
+      const applyPrivate = conv => (conv.id === conversationId ? { ...conv, is_private: true } : conv);
+
+      setConversations(prev => prev.map(applyPrivate));
+      setPinnedConversations(prev => prev.map(applyPrivate));
+      setFolders(prev =>
+        prev.map(folder => ({ ...folder, conversations: (folder.conversations || []).map(applyPrivate) })),
+      );
+
       if (!activeConversationIdRef.current || activeConversationIdRef.current !== conversationId) return;
+
+      if (deletedParticipantIds.length > 0) {
+        const deletedSet = new Set(deletedParticipantIds);
+        setActiveConversation(prev => {
+          if (!prev || prev.id !== conversationId) return prev;
+          return {
+            ...prev,
+            participants: (prev.participants || []).filter(p => !deletedSet.has(p.id)),
+            is_private: true,
+          };
+        });
+      }
+
       const result = await getConversationDetailForRefresh({ projectId, id: conversationId });
       if (!result.data) return;
       setActiveConversation(prev => {
@@ -447,7 +468,14 @@ const NewChat = props => {
         };
       });
     },
-    [getConversationDetailForRefresh, projectId, setActiveConversation],
+    [
+      getConversationDetailForRefresh,
+      projectId,
+      setActiveConversation,
+      setConversations,
+      setPinnedConversations,
+      setFolders,
+    ],
   );
 
   const handleNotFoundAcknowledge = useCallback(() => {
@@ -996,6 +1024,7 @@ const NewChat = props => {
     setActiveConversation,
     setConversations,
     setFolders,
+    setPinnedConversations,
     toastError,
     toastSuccess,
     emitLeaveRoom,

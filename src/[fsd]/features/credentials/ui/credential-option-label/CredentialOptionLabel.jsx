@@ -1,6 +1,6 @@
 import { memo } from 'react';
 
-import { Box, Tooltip } from '@mui/material';
+import { Box, Tooltip, Typography } from '@mui/material';
 
 import { BaseBtn } from '@/[fsd]/shared/ui/button';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
@@ -14,6 +14,7 @@ const CredentialOptionLabel = memo(props => {
   const {
     isPersonal,
     label,
+    typeTag,
     credentialUrl,
     isInvalid,
     isChecking,
@@ -39,6 +40,16 @@ const CredentialOptionLabel = memo(props => {
       >
         {label}
       </Box>
+      {typeTag && (
+        <Typography
+          component="span"
+          variant="labelSmall"
+          data-testid="credential-type-tag"
+          sx={styles.typeTag}
+        >
+          {typeTag}
+        </Typography>
+      )}
       {credentialUrl && (
         <Tooltip
           title="Open in new tab"
@@ -126,6 +137,13 @@ const styles = {
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
   },
+  typeTag: ({ palette }) => ({
+    flexShrink: 0,
+    padding: '0.125rem 0.5rem',
+    borderRadius: '0.375rem',
+    color: palette.text.primary,
+    backgroundColor: palette.background.surface.interactive.active,
+  }),
   optionActionButton: ({ palette }) => ({
     padding: 0,
     marginLeft: 'auto',

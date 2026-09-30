@@ -374,6 +374,36 @@ describe('CredentialsSelect', () => {
     );
   });
 
+  describe('with the first-credential fallback switched off', () => {
+    const renderWithoutFallback = value => {
+      stubCredentialsData({ configurations: CREDENTIAL_CONFIGURATIONS, projectDefault: '' });
+      return render(
+        <CredentialsSelect
+          section="credentials"
+          value={value}
+          onSelectConfiguration={onSelectConfiguration}
+          fallbackToFirstCredential={false}
+        />,
+      );
+    };
+
+    it('leaves an empty field empty instead of committing the first saved credential', async () => {
+      renderWithoutFallback(null);
+
+      expect(savedOptions()).toHaveLength(1);
+      expect(singleSelectProps.value).toBe('');
+      expect(renderedValue()).toBeEmptyDOMElement();
+      await new Promise(resolve => setTimeout(resolve, 0));
+      expect(onSelectConfiguration).not.toHaveBeenCalled();
+    });
+
+    it('still shows a credential that is set', () => {
+      renderWithoutFallback({ elitea_title: GITHUB_TITLE, private: false });
+
+      expect(singleSelectProps.value).toBe(optionValueFor(GITHUB_TITLE));
+    });
+  });
+
   it('still repairs a stale private flag when the saved title matches a team configuration', async () => {
     renderSelect({
       value: { elitea_title: PGVECTOR_TITLE, private: true },

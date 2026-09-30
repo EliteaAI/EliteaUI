@@ -5,7 +5,7 @@ import BaseEditor from '@/[fsd]/features/chat/ui/editors/BaseEditor';
 import SkillEditorSaveButton from '@/[fsd]/features/chat/ui/editors/SkillEditorSaveButton';
 import { useSkillDetailsQuery } from '@/[fsd]/features/skill/api';
 import { SkillValidateSchema } from '@/[fsd]/features/skill/lib/validation';
-import CreateSkillForm from '@/[fsd]/features/skill/ui/skill-details/form/CreateSkillForm';
+import { CreateSkillForm } from '@/[fsd]/features/skill/ui';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const buildInitialValues = data => ({

@@ -20,3 +20,5 @@ InstructionsInputRefProvider.displayName = 'InstructionsInputRefProvider';
 export const useInstructionsInputRefContext = () => {
   return useContext(InstructionsInputRefContext);
 };
+
+export default InstructionsInputRefProvider;

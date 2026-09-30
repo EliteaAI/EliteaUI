@@ -2,9 +2,9 @@ import { memo, useCallback, useMemo, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
+import { useAllArtifacts } from '@/[fsd]/features/artifacts/lib/hooks/useAllArtifacts.hooks';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
-import { useAllArtifacts } from '../hooks/useAllArtifacts.hooks';
 import FileTreeItem from './FileTreeItem';
 import { buildFileTree } from './utils/buildFileTree';
 import { getExpandedPathsFromFileKey } from './utils/getExpandedPathsFromFileKey';

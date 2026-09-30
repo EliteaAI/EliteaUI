@@ -6,10 +6,10 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 
 import AnalyticsAgentDetailed from '../AnalyticsAgentDetailed';
-import { AnalyticsTestWrapper as Wrapper } from '../_testHelpers';
+import { AnalyticsTestWrapper as Wrapper } from './_testHelpers';
 
 vi.hoisted(async () => {
-  const { installGlobalStubs } = await import('../_testHelpers');
+  const { installGlobalStubs } = await import('./_testHelpers');
   installGlobalStubs();
 });
 

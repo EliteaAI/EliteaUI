@@ -1,7 +1,11 @@
 import { memo } from 'react';
 
+import { useTheme } from '@mui/material';
+
 const HeartIcon = memo(props => {
   const { width = 21, height = 18, ...restProps } = props;
+  const { palette } = useTheme();
+  const { heartGradient } = palette.components.npsSurvey;
 
   return (
     <svg
@@ -25,10 +29,10 @@ const HeartIcon = memo(props => {
           y2="17.5626"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stopColor="#FB85FF" />
+          <stop stopColor={heartGradient.start} />
           <stop
             offset="1"
-            stopColor="#78ABFF"
+            stopColor={heartGradient.end}
           />
         </linearGradient>
       </defs>

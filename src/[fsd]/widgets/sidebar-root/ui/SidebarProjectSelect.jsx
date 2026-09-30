@@ -143,6 +143,7 @@ const SidebarProjectSelect = memo(() => {
 
 SidebarProjectSelect.displayName = 'SidebarProjectSelect';
 
+/** @type {MuiSx} */
 const sidebarProjectSelectStyles = sideBarCollapsed => ({
   container: ({ palette }) => ({
     display: 'flex',
@@ -224,6 +225,7 @@ const sidebarProjectSelectStyles = sideBarCollapsed => ({
   },
 });
 
+/** @type {MuiSx} */
 const optionStyles = {
   optionRow: {
     display: 'flex',

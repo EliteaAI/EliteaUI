@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { memo, useCallback, useState } from 'react';
 
 import { Form, Formik } from 'formik';
 
@@ -42,34 +42,36 @@ import useIsSmallWindow from '@/hooks/useIsSmallWindow';
  * @param {string} [discardConfirmButtonTestId] - Optional data-testid forwarded to EditorHeader's
  *   Discard confirmation modal's confirm button. Caller-supplied (ELITEA-2076).
  */
-const BaseEditor = ({
-  isVisible,
-  isDirty,
-  setIsDirty,
-  onClose,
-  title,
-  subtitle,
-  onDiscard,
-  saveButton,
-  initialValues = {},
-  validationSchema,
-  error,
-  onCloseError,
-  children,
-  onDirtyStateChange,
-  formContent,
-  isPublic,
-  contentSX,
-  disableNavBlocking = false,
-  titleTestId,
-  subtitleTestId,
-  closeButtonTestId,
-  publicLabelTestId,
-  discardButtonTestId,
-  discardModalTestId,
-  discardConfirmButtonTestId,
-  isFormikContext = true,
-}) => {
+const BaseEditor = memo(props => {
+  const {
+    isVisible,
+    isDirty,
+    setIsDirty,
+    onClose,
+    title,
+    subtitle,
+    onDiscard,
+    saveButton,
+    initialValues = {},
+    validationSchema,
+    error,
+    onCloseError,
+    children,
+    onDirtyStateChange,
+    formContent,
+    isPublic,
+    contentSX,
+    disableNavBlocking = false,
+    titleTestId,
+    subtitleTestId,
+    closeButtonTestId,
+    publicLabelTestId,
+    discardButtonTestId,
+    discardModalTestId,
+    discardConfirmButtonTestId,
+    isFormikContext = true,
+  } = props;
+
   const theme = useTheme();
   const { isSmallWindow } = useIsSmallWindow();
 
@@ -184,7 +186,7 @@ const BaseEditor = ({
       />
     </Box>
   );
-};
+});
 
 BaseEditor.displayName = 'BaseEditor';
 
@@ -198,10 +200,10 @@ const baseEditorStyles = (isVisible, isSmallWindow, theme) => ({
     minHeight: '100%',
     width: '100%',
     justifyContent: 'flex-start',
-    minWidth: isSmallWindow ? '100%' : '240px',
+    minWidth: isSmallWindow ? '100%' : '15rem',
     background: theme.palette.background.default.tertiary,
-    border: `1px solid ${theme.palette.border.lines}`,
-    borderRadius: '16px',
+    border: `0.0625rem solid ${theme.palette.border.lines}`,
+    borderRadius: '1rem',
     overflow: 'hidden',
     position: 'relative',
   },
@@ -215,7 +217,7 @@ const baseEditorStyles = (isVisible, isSmallWindow, theme) => ({
     flexGrow: 1,
     overflow: 'auto',
     width: '100%',
-    padding: '16px',
+    padding: '1rem',
   },
 });
 

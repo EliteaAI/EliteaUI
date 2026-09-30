@@ -37,7 +37,7 @@ const SuiteCard = memo(props => {
             size="small"
             onClick={handleDelete}
             sx={styles.deleteButton}
-            startIcon={<DeleteIcon sx={{ fontSize: '1rem' }} />}
+            startIcon={<DeleteIcon sx={styles.deleteIcon} />}
           />
         )}
       </Box>
@@ -97,6 +97,9 @@ const suiteCardStyles = () => ({
     color: palette.icon.default,
     transition: 'opacity 0.15s',
   }),
+  deleteIcon: {
+    fontSize: '1rem',
+  },
   description: ({ palette }) => ({
     color: palette.text.primary,
     overflow: 'hidden',

@@ -6,10 +6,10 @@ import { Box, Typography, useTheme } from '@mui/material';
 
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { ChartTooltip } from '@/[fsd]/features/settings/ui/analytics';
-import { EVENT_TYPE_COLORS } from '@/[fsd]/shared/config/theme/chartPalette';
+import { EVENT_TYPE_COLORS } from '@/[fsd]/shared/config/theme';
 
 const AnalyticsHealth = memo(props => {
-  const { health = [], daily_activity = [] } = props;
+  const { health = [], daily_activity = [], hideTrend = false } = props;
 
   const styles = analyticsHealthStyles();
   const { palette } = useTheme();
@@ -41,7 +41,7 @@ const AnalyticsHealth = memo(props => {
 
   return (
     <Box sx={styles.healthContent}>
-      {errorTrend.length > 0 && (
+      {!hideTrend && errorTrend.length > 0 && (
         <Box sx={styles.chartCard}>
           <Typography
             variant="labelMedium"
@@ -168,15 +168,7 @@ const AnalyticsHealth = memo(props => {
                   { flex: 2, display: 'flex', alignItems: 'center', gap: '0.5rem' },
                 ]}
               >
-                <Box
-                  sx={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: '50%',
-                    backgroundColor: EVENT_TYPE_COLORS[h.event_type] || palette.status.draft,
-                    flexShrink: 0,
-                  }}
-                />
+                <Box sx={styles.eventDot(EVENT_TYPE_COLORS[h.event_type] || palette.status.draft)} />
                 <Typography
                   variant="bodySmall"
                   data-testid="analytics-health-row-event-type"
@@ -218,6 +210,13 @@ AnalyticsHealth.displayName = 'AnalyticsHealth';
 
 /** @type {MuiSx} */
 const analyticsHealthStyles = () => ({
+  eventDot: color => ({
+    width: 8,
+    height: 8,
+    borderRadius: '50%',
+    backgroundColor: color,
+    flexShrink: 0,
+  }),
   healthContent: { display: 'flex', flexDirection: 'column', gap: '1rem' },
   chartCard: ({ palette }) => ({
     padding: '1rem',
@@ -250,7 +249,7 @@ const analyticsHealthStyles = () => ({
   tableHeader: ({ palette }) => ({
     display: 'flex',
     padding: '0.5rem 0.75rem',
-    borderBottom: `1px solid ${palette.border.default}`,
+    borderBottom: `0.0625rem solid ${palette.border.default}`,
     gap: '0.5rem',
   }),
   tableCell: ({ palette }) => ({
@@ -262,7 +261,7 @@ const analyticsHealthStyles = () => ({
   tableRow: ({ palette }) => ({
     display: 'flex',
     padding: '0.5rem 0.75rem',
-    borderBottom: `1px solid ${palette.border.default}`,
+    borderBottom: `0.0625rem solid ${palette.border.default}`,
     gap: '0.5rem',
     '&:hover': { backgroundColor: palette.background.interactiveItem.rowHover },
   }),

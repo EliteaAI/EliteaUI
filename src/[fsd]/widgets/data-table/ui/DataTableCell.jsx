@@ -2,14 +2,15 @@ import { memo } from 'react';
 
 import { Box } from '@mui/material';
 
+import { LikeButton, useApplicationLike } from '@/[fsd]/entities/like';
 import { SortFields } from '@/common/constants';
 import AuthorContainer from '@/components/AuthorContainer';
-import Like from '@/components/Like';
 import useDataViewMode from '@/hooks/useDataViewMode';
 
 const DataTableCell = memo(props => {
   const { column, value, row, cardType, viewMode } = props;
   const dataViewMode = useDataViewMode(viewMode, row);
+  const likeProps = useApplicationLike({ data: row, type: cardType, viewMode: dataViewMode });
   const styles = dataTableCellStyles();
 
   if (!column) return value ?? '-';
@@ -35,13 +36,7 @@ const DataTableCell = memo(props => {
     return <Box sx={styles.authorsContainer}>{renderAuthorContainer()}</Box>;
   }
   if (column.id === SortFields.Likes) {
-    return (
-      <Like
-        viewMode={dataViewMode}
-        type={cardType}
-        data={row}
-      />
-    );
+    return <LikeButton {...likeProps} />;
   }
   return value ?? '-';
 });

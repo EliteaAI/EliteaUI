@@ -2,10 +2,8 @@ import { memo } from 'react';
 
 import { Box } from '@mui/material';
 
-import { useIsMidturnInjectionAvailable } from '@/[fsd]/features/chat';
 import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
 import DefaultModulesSettings from '@/[fsd]/features/settings/ui/project-general/DefaultModulesSettings';
-import MidturnInjection from '@/[fsd]/features/settings/ui/project-general/MidturnInjection';
 import { ProjectBackupRestore } from '@/[fsd]/features/settings/ui/project-general/backup-restore';
 import { ProjectParamsHeader } from '@/[fsd]/features/settings/ui/project-general/general';
 import { ProjectAIConfigurations } from '@/[fsd]/features/settings/ui/project-general/project-ai-configurations';
@@ -15,11 +13,10 @@ import { PERMISSIONS } from '@/common/constants';
 import useCheckPermission from '@/hooks/useCheckPermission';
 
 import SettingsFormProvider from '../shared/SettingsFormProvider';
+import { ChatConfigurationSection } from './chat-configuration';
 
 const ProjectGeneralContent = memo(() => {
   const styles = componentStyles();
-
-  const isMidturnInjectionAvailable = useIsMidturnInjectionAvailable();
 
   const { checkPermission } = useCheckPermission();
   const isBackupRestoreAvailable =
@@ -33,90 +30,82 @@ const ProjectGeneralContent = memo(() => {
       />
 
       <Box sx={styles.body}>
-        <BasicAccordion
-          data-testid="project-general-section"
-          // style={style}
-          showMode={AccordionConstants.AccordionShowMode.LeftMode}
-          accordionSX={styles.accordionStyles}
-          items={[
-            {
-              title: 'General',
-              content: (
-                <Box>
-                  <ProjectParamsHeader />
-                </Box>
-              ),
-            },
-          ]}
-        />
-        <BasicAccordion
-          data-testid="ai-configurations"
-          // style={style}
-          showMode={AccordionConstants.AccordionShowMode.LeftMode}
-          accordionSX={styles.accordionStyles}
-          items={[
-            {
-              title: 'AI Configurations',
-              testId: 'ai-configuration-accordion-summary',
-              content: (
-                <Box>
-                  <ProjectAIConfigurations />
-                </Box>
-              ),
-            },
-          ]}
-        />
-        <BasicAccordion
-          data-testid="default-modules-section"
-          showMode={AccordionConstants.AccordionShowMode.LeftMode}
-          accordionSX={styles.accordionStyles}
-          items={[
-            {
-              title: 'Default Modules',
-              content: (
-                <Box sx={styles.containerStyles}>
-                  <SettingsFormProvider FormContent={DefaultModulesSettings} />
-                </Box>
-              ),
-            },
-          ]}
-        />
-        {/* MidturnInjection renders null unless the platform enabled this project, so the
-            accordion would otherwise show an empty section — gate the whole thing. */}
-        {isMidturnInjectionAvailable && (
+        <Box sx={styles.inner}>
           <BasicAccordion
-            data-testid="midturn-injection-section"
+            data-testid="project-general-section"
             showMode={AccordionConstants.AccordionShowMode.LeftMode}
             accordionSX={styles.accordionStyles}
             items={[
               {
-                title: 'Chat',
+                title: 'General',
                 content: (
-                  <Box sx={styles.containerStyles}>
-                    <SettingsFormProvider FormContent={MidturnInjection} />
+                  <Box>
+                    <ProjectParamsHeader />
                   </Box>
                 ),
               },
             ]}
           />
-        )}
-        {isBackupRestoreAvailable && (
           <BasicAccordion
-            data-testid="project-backup-restore-section"
+            data-testid="ai-configurations"
             showMode={AccordionConstants.AccordionShowMode.LeftMode}
             accordionSX={styles.accordionStyles}
             items={[
               {
-                title: 'Back Up & Restore',
+                title: 'AI Configurations',
+                testId: 'ai-configuration-accordion-summary',
                 content: (
-                  <Box sx={styles.containerStyles}>
-                    <ProjectBackupRestore />
+                  <Box>
+                    <ProjectAIConfigurations />
                   </Box>
                 ),
               },
             ]}
           />
-        )}
+          <BasicAccordion
+            data-testid="default-modules-section"
+            showMode={AccordionConstants.AccordionShowMode.LeftMode}
+            accordionSX={styles.accordionStyles}
+            items={[
+              {
+                title: 'Default Modules',
+                content: (
+                  <Box sx={styles.containerStyles}>
+                    <SettingsFormProvider FormContent={DefaultModulesSettings} />
+                  </Box>
+                ),
+              },
+            ]}
+          />
+          <BasicAccordion
+            data-testid="chat-configuration-section"
+            showMode={AccordionConstants.AccordionShowMode.LeftMode}
+            accordionSX={styles.accordionStyles}
+            items={[
+              {
+                title: 'Chat configuration',
+                content: <ChatConfigurationSection />,
+              },
+            ]}
+          />
+          {isBackupRestoreAvailable && (
+            <BasicAccordion
+              data-testid="project-backup-restore-section"
+              showMode={AccordionConstants.AccordionShowMode.LeftMode}
+              accordionSX={styles.accordionStyles}
+              items={[
+                {
+                  title: 'Back Up & Restore',
+                  content: (
+                    <Box sx={styles.containerStyles}>
+                      <ProjectBackupRestore />
+                    </Box>
+                  ),
+                },
+              ]}
+            />
+          )}
+        </Box>
       </Box>
     </Box>
   );
@@ -150,6 +139,11 @@ const componentStyles = () => ({
     flex: 1,
     overflow: 'auto',
     minHeight: 0,
+    width: '100%',
+    display: 'flex',
+    justifyContent: 'center',
+  },
+  inner: {
     padding: '1rem 1.5rem',
     paddingBottom: '2.375rem',
     display: 'flex',

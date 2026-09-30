@@ -2,7 +2,7 @@ import { memo } from 'react';
 
 import { Box, IconButton, Tooltip } from '@mui/material';
 
-import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
+import { useProjectType } from '@/[fsd]/shared/lib/hooks';
 import { PERMISSIONS } from '@/common/constants';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';

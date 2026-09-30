@@ -2,7 +2,7 @@ import { memo } from 'react';
 
 import { Box, Tooltip, Typography } from '@mui/material';
 
-import { CONTEXT_BUDGET_COLORS } from '@/[fsd]/shared/config/theme/chartPalette';
+import { CONTEXT_BUDGET_COLORS } from '@/[fsd]/shared/config/theme';
 import { TOOLTIP_CONFIG } from '@/[fsd]/widgets/context-budget/lib/constants';
 import { ContextBudgetTooltipContent } from '@/[fsd]/widgets/context-budget/ui';
 

@@ -21,6 +21,8 @@ const LoopToolSelect = memo(props => {
     onChangeToolkit = () => {},
     onChangeTool = () => {},
   } = props;
+  const styles = useMemo(() => loopToolSelectStyles(), []);
+
   const {
     values: { version_details },
   } = useFormikContext();
@@ -42,12 +44,7 @@ const LoopToolSelect = memo(props => {
             : tool.toolkit_name || getToolkitNameFromSchema(tool),
         icon: (
           <EntityIcon
-            sx={{
-              minWidth: `1rem !important`,
-              width: `1rem !important`,
-              height: `1rem !important`,
-              borderRadius: '0rem',
-            }}
+            sx={styles.toolIcon}
             imageStyle={{
               width: '1rem',
               height: '1rem',
@@ -68,7 +65,7 @@ const LoopToolSelect = memo(props => {
         ),
         originalTool: tool,
       })),
-    [getToolkitIconMeta, getToolkitNameFromSchema, version_details?.tools],
+    [getToolkitIconMeta, getToolkitNameFromSchema, version_details?.tools, styles],
   );
 
   const toolkit = useMemo(() => {
@@ -157,5 +154,15 @@ const LoopToolSelect = memo(props => {
 });
 
 LoopToolSelect.displayName = 'LoopToolSelect';
+
+/** @type {MuiSx} */
+const loopToolSelectStyles = () => ({
+  toolIcon: {
+    minWidth: `1rem !important`,
+    width: `1rem !important`,
+    height: `1rem !important`,
+    borderRadius: '0rem',
+  },
+});
 
 export default LoopToolSelect;

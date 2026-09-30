@@ -7,11 +7,12 @@ import { Box, CircularProgress, Typography, useTheme } from '@mui/material';
 import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { ChartTooltip, KPICard } from '@/[fsd]/features/settings/ui/analytics';
-import { CHART_COLORS } from '@/[fsd]/shared/config/theme/chartPalette';
+import { CHART_COLORS } from '@/[fsd]/shared/config/theme';
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 import { useAnalyticsCostsQuery } from '@/api';
 
 import { tokenStats } from '../../lib/helpers/analyticsToken.helpers.js';
+import RunAnalyticsEmptyState from './components/RunAnalyticsEmptyState';
 import TokenTable from './components/TokenTable';
 
 const NO_TOKENS_MSG = 'No token usage is available for the selected date range.';
@@ -21,14 +22,18 @@ const getNumber = value => (Number.isFinite(Number(value)) ? Number(value) : 0);
 const toPercentage = (value, total) => (total > 0 ? (value / total) * 100 : 0);
 
 const AnalyticsTokens = memo(props => {
-  const { projectId, dateFrom, dateTo } = props;
+  const { projectId, dateFrom, dateTo, runScope } = props;
+
+  // Run-scoped (Run History → Analytics): no daily chart, no per-Agent breakdown, run wording
+  const isRunScope = Boolean(runScope);
+  const noTokensMsg = isRunScope ? `No token usage is available for ${runScope.scopeLabel}.` : NO_TOKENS_MSG;
 
   const { palette } = useTheme();
   const axisStroke = palette.text.primary;
   const axisTickStyle = AnalyticCommonHelpers.axisTick(axisStroke);
 
   const { data, isFetching, isError } = useAnalyticsCostsQuery(
-    { projectId, dateFrom, dateTo },
+    isRunScope ? { projectId, ...runScope.queryArgs } : { projectId, dateFrom, dateTo },
     { skip: !projectId },
   );
 
@@ -118,7 +123,16 @@ const AnalyticsTokens = memo(props => {
   if (!data) return null;
 
   const kpis = data.kpis ?? {};
-  const tt = AnalyticsCommonConstants.TOOLTIP_TEXTS.tokens;
+  const tt = (isRunScope ? runScope.tooltips : AnalyticsCommonConstants.TOOLTIP_TEXTS).tokens;
+
+  if (isRunScope && !userTableData.length && !modelTableData.length && !totalProjectTokens) {
+    return (
+      <RunAnalyticsEmptyState
+        message={runScope.noDataMessage}
+        testId="run-analytics-tokens-empty"
+      />
+    );
+  }
 
   return (
     <Box sx={styles.container}>
@@ -155,112 +169,119 @@ const AnalyticsTokens = memo(props => {
         />
       </Box>
 
-      <Box sx={styles.chartCard}>
-        <Typography
-          variant="labelMedium"
-          sx={styles.chartTitle}
-        >
-          Daily Token Usage
-        </Typography>
-        <Box sx={styles.subtitleRow}>
+      {!isRunScope && (
+        <Box sx={styles.chartCard}>
           <Typography
-            variant="bodySmall"
-            sx={styles.chartSubtitle}
+            variant="labelMedium"
+            sx={styles.chartTitle}
           >
-            Token usage per day
+            Daily Token Usage
           </Typography>
-          <InfoTooltip
-            infoTooltip={{
-              title: tt.DAILY_TOKEN_USAGE,
-              icon: { width: 12, height: 12 },
-            }}
-          />
-        </Box>
-        {dailyChartData.length > 0 ? (
-          <Box sx={styles.chartWrapper}>
-            <ResponsiveContainer
-              width="100%"
-              height="100%"
+          <Box sx={styles.subtitleRow}>
+            <Typography
+              variant="bodySmall"
+              sx={styles.chartSubtitle}
             >
-              <BarChart data={dailyChartData}>
-                <XAxis
-                  dataKey="date"
-                  tick={axisTickStyle}
-                  tickFormatter={value => value?.slice(5)}
-                  axisLine={{ stroke: axisStroke }}
-                  tickLine={{ stroke: axisStroke }}
-                />
-                <YAxis
-                  tick={axisTickStyle}
-                  axisLine={{ stroke: axisStroke }}
-                  tickLine={{ stroke: axisStroke }}
-                />
-                <RechartsTooltip content={<ChartTooltip />} />
-                <Bar
-                  dataKey="total_tokens"
-                  name="Total Tokens"
-                  fill={CHART_COLORS[0]}
-                  radius={[4, 4, 0, 0]}
-                />
-                <Bar
-                  dataKey="input_tokens"
-                  name="Input Tokens"
-                  fill={CHART_COLORS[1]}
-                  radius={[4, 4, 0, 0]}
-                />
-                <Bar
-                  dataKey="output_tokens"
-                  name="Output Tokens"
-                  fill={CHART_COLORS[2]}
-                  radius={[4, 4, 0, 0]}
-                />
-                <Bar
-                  dataKey="cache_read_tokens"
-                  name="Cache Read Tokens"
-                  fill={CHART_COLORS[3]}
-                  radius={[4, 4, 0, 0]}
-                />
-                <Bar
-                  dataKey="cache_creation_tokens"
-                  name="Cache Write Tokens"
-                  fill={CHART_COLORS[4]}
-                  radius={[4, 4, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
+              Token usage per day
+            </Typography>
+            <InfoTooltip
+              infoTooltip={{
+                title: tt.DAILY_TOKEN_USAGE,
+                icon: { width: 12, height: 12 },
+              }}
+            />
           </Box>
-        ) : (
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={styles.noDataText}
-          >
-            {NO_TOKENS_MSG}
-          </Typography>
-        )}
-      </Box>
+          {dailyChartData.length > 0 ? (
+            <Box sx={styles.chartWrapper}>
+              <ResponsiveContainer
+                width="100%"
+                height="100%"
+              >
+                <BarChart data={dailyChartData}>
+                  <XAxis
+                    dataKey="date"
+                    tick={axisTickStyle}
+                    tickFormatter={value => value?.slice(5)}
+                    axisLine={{ stroke: axisStroke }}
+                    tickLine={{ stroke: axisStroke }}
+                  />
+                  <YAxis
+                    tick={axisTickStyle}
+                    axisLine={{ stroke: axisStroke }}
+                    tickLine={{ stroke: axisStroke }}
+                  />
+                  <RechartsTooltip
+                    cursor={AnalyticCommonHelpers.barChartCursor(palette)}
+                    content={<ChartTooltip />}
+                  />
+                  <Bar
+                    dataKey="total_tokens"
+                    name="Total Tokens"
+                    fill={CHART_COLORS[0]}
+                    radius={[4, 4, 0, 0]}
+                  />
+                  <Bar
+                    dataKey="input_tokens"
+                    name="Input Tokens"
+                    fill={CHART_COLORS[1]}
+                    radius={[4, 4, 0, 0]}
+                  />
+                  <Bar
+                    dataKey="output_tokens"
+                    name="Output Tokens"
+                    fill={CHART_COLORS[2]}
+                    radius={[4, 4, 0, 0]}
+                  />
+                  <Bar
+                    dataKey="cache_read_tokens"
+                    name="Cache Read Tokens"
+                    fill={CHART_COLORS[3]}
+                    radius={[4, 4, 0, 0]}
+                  />
+                  <Bar
+                    dataKey="cache_creation_tokens"
+                    name="Cache Write Tokens"
+                    fill={CHART_COLORS[4]}
+                    radius={[4, 4, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </Box>
+          ) : (
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={styles.noDataText}
+            >
+              {NO_TOKENS_MSG}
+            </Typography>
+          )}
+        </Box>
+      )}
 
       <TokenTable
         title="Token Usage by User"
         subtitleTooltip={tt.BY_USER}
         nameHeader="USER"
         rows={userTableData}
-        emptyState={NO_TOKENS_MSG}
+        emptyState={noTokensMsg}
       />
       <TokenTable
         title="Token Usage by Model"
         subtitleTooltip={tt.BY_MODEL}
         nameHeader="MODEL"
         rows={modelTableData}
-        emptyState={NO_TOKENS_MSG}
+        emptyState={noTokensMsg}
       />
-      <TokenTable
-        title="Token Usage by Agent & Pipeline"
-        subtitleTooltip={tt.BY_AGENT_PIPELINE}
-        nameHeader="AGENT / PIPELINE"
-        rows={agentTableData}
-        emptyState={NO_TOKENS_MSG}
-      />
+      {!isRunScope && (
+        <TokenTable
+          title="Token Usage by Agent & Pipeline"
+          subtitleTooltip={tt.BY_AGENT_PIPELINE}
+          nameHeader="AGENT / PIPELINE"
+          rows={agentTableData}
+          emptyState={NO_TOKENS_MSG}
+        />
+      )}
     </Box>
   );
 });

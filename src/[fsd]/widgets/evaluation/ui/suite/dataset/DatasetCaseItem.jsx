@@ -1,35 +1,51 @@
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useState } from 'react';
 
-import { Box, Tooltip, Typography } from '@mui/material';
+import { Box, SvgIcon, Tooltip, Typography } from '@mui/material';
 
-import { Button } from '@/[fsd]/shared/ui';
+import { Button, Checkbox } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
-import CloseEyeIcon from '@/components/Icons/CloseEyeIcon';
-import OpenEyeIcon from '@/components/Icons/OpenEyeIcon';
+import ViewFileIcon from '@/assets/icons/ViewFileIcon.svg?react';
+
+import CreateCaseModal from '../../datasets/case-modals/CreateCaseModal';
 
 const DatasetCaseItem = memo(props => {
   const { caseItem, isExcluded = false, onInclude, onExclude } = props;
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
-  const handleInclude = useCallback(
+  const handleCheckedChange = useCallback(
     event => {
       event.stopPropagation();
-      onInclude?.(caseItem);
-    },
-    [onInclude, caseItem],
-  );
+      if (event.target.checked) {
+        onInclude?.(caseItem);
+        return;
+      }
 
-  const handleExclude = useCallback(
-    event => {
-      event.stopPropagation();
       onExclude?.(caseItem);
     },
-    [onExclude, caseItem],
+    [onInclude, onExclude, caseItem],
   );
+
+  const handleOpenDetails = useCallback(event => {
+    event.stopPropagation();
+    setIsDetailsOpen(true);
+  }, []);
+
+  const handleCloseDetails = useCallback(() => {
+    setIsDetailsOpen(false);
+  }, []);
 
   const styles = datasetCaseItemStyles(isExcluded);
 
   return (
     <Box sx={styles.root}>
+      <Checkbox.BaseCheckbox
+        checked={!isExcluded}
+        onChange={handleCheckedChange}
+        inputProps={{
+          'aria-label': `Include case ${caseItem.id} in suite`,
+          'data-testid': `case-selection-${caseItem.id}`,
+        }}
+      />
       <Box
         className="case-content"
         sx={styles.content}
@@ -41,7 +57,12 @@ const DatasetCaseItem = memo(props => {
           >
             Input:
           </Box>{' '}
-          {caseItem.input}
+          <Box
+            component="span"
+            sx={styles.value}
+          >
+            {caseItem.input}
+          </Box>
         </Typography>
         <Typography sx={styles.text}>
           <Box
@@ -50,53 +71,44 @@ const DatasetCaseItem = memo(props => {
           >
             Output:
           </Box>{' '}
-          {caseItem.expected_output}
-        </Typography>
-        {isExcluded && (
-          <Box sx={styles.excludedBadge}>
-            <CloseEyeIcon sx={styles.excludedIcon} />
-            <Typography sx={styles.excludedText}>Excluded</Typography>
+          <Box
+            component="span"
+            sx={styles.value}
+          >
+            {caseItem.expected_output}
           </Box>
-        )}
+        </Typography>
       </Box>
       <Box
-        className="case-actions"
-        sx={styles.actions}
+        className="case-details-button"
+        sx={styles.detailsButtonWrapper}
       >
-        {isExcluded ? (
-          <Tooltip
-            title="Include in suite"
-            placement="top"
-          >
-            <Box component="span">
-              <Button.BaseBtn
-                variant={BUTTON_VARIANTS.tertiary}
-                onClick={handleInclude}
-                sx={styles.actionButton}
-                data-testid={`case-include-${caseItem.id}`}
-              >
-                <OpenEyeIcon sx={styles.actionIcon} />
-              </Button.BaseBtn>
-            </Box>
-          </Tooltip>
-        ) : (
-          <Tooltip
-            title="Exclude from suite"
-            placement="top"
-          >
-            <Box component="span">
-              <Button.BaseBtn
-                variant={BUTTON_VARIANTS.tertiary}
-                onClick={handleExclude}
-                sx={styles.actionButton}
-                data-testid={`case-exclude-${caseItem.id}`}
-              >
-                <CloseEyeIcon sx={styles.actionIcon} />
-              </Button.BaseBtn>
-            </Box>
-          </Tooltip>
-        )}
+        <Tooltip
+          title="View details"
+          placement="top"
+        >
+          <Button.BaseBtn
+            variant={BUTTON_VARIANTS.tertiary}
+            aria-label="View details"
+            onClick={handleOpenDetails}
+            sx={styles.detailsButton}
+            data-testid={`case-view-details-${caseItem.id}`}
+            startIcon={
+              <SvgIcon
+                component={ViewFileIcon}
+                inheritViewBox
+                sx={styles.detailsIcon}
+              />
+            }
+          />
+        </Tooltip>
       </Box>
+      <CreateCaseModal
+        open={isDetailsOpen}
+        onClose={handleCloseDetails}
+        datasetCase={caseItem}
+        readOnly
+      />
     </Box>
   );
 });
@@ -109,18 +121,19 @@ const datasetCaseItemStyles = isExcluded => ({
     display: 'flex',
     alignItems: 'center',
     position: 'relative',
-    padding: '0.5rem 0.75rem',
-    marginLeft: '-0.75rem',
-    marginRight: '-0.75rem',
-    borderBottom: `0.0625rem solid ${palette.border.lines}`,
+    gap: '0.5rem',
+    padding: '0.5rem 0',
+    borderBottom: `0.0625rem solid ${palette.border.default}`,
 
-    '& .case-actions': {
+    '& .case-details-button': {
       opacity: 0,
+      pointerEvents: 'none',
       transition: 'opacity 0.15s ease',
     },
 
-    '&:hover .case-actions': {
+    '&:hover .case-details-button': {
       opacity: 1,
+      pointerEvents: 'auto',
     },
 
     '&:hover .case-content': {
@@ -136,12 +149,10 @@ const datasetCaseItemStyles = isExcluded => ({
     overflow: 'hidden',
     transition: 'padding-right 0.15s ease',
   },
-  text: ({ palette }) => ({
+  text: {
     fontSize: '0.75rem',
     fontWeight: 400,
     lineHeight: '1.25rem',
-    color: palette.text.primary,
-    opacity: isExcluded ? 0.5 : 1,
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
@@ -149,51 +160,31 @@ const datasetCaseItemStyles = isExcluded => ({
     ':last-of-type': {
       marginBottom: isExcluded ? 0 : '0.25rem',
     },
-  }),
+  },
   label: ({ palette }) => ({
     fontWeight: 500,
-    color: palette.text.secondary,
+    color: isExcluded ? palette.text.primary : palette.text.secondary,
   }),
-  excludedBadge: ({ palette }) => ({
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '0.25rem',
-    marginTop: '0.125rem',
-    color: palette.text.disabled,
-  }),
-  excludedIcon: {
-    width: '0.625rem',
-    height: '0.625rem',
-  },
-  excludedText: {
-    fontSize: '0.5625rem',
-    fontWeight: 600,
-    textTransform: 'uppercase',
-    letterSpacing: '0.05rem',
-  },
-  actions: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.25rem',
+  value: ({ palette }) => ({ color: isExcluded ? palette.text.muted : palette.text.primary }),
+  detailsButtonWrapper: {
     position: 'absolute',
-    right: '0.75rem',
     top: '50%',
+    right: 0,
     transform: 'translateY(-50%)',
   },
-  actionButton: ({ palette }) => ({
+  detailsButton: ({ palette }) => ({
     minWidth: 'unset',
-    padding: '0.25rem',
-    backgroundColor: palette.background.secondary,
+    padding: '0.5rem',
+    '& .MuiButton-startIcon': {
+      margin: 0,
+    },
     '&:hover': {
-      backgroundColor: palette.action.hover,
+      backgroundColor: palette.background.surface.interactive.selected,
     },
   }),
-  actionIcon: ({ palette }) => ({
-    width: '1rem',
-    height: '1rem',
-    '& path': {
-      fill: palette.icon.default,
-    },
+  detailsIcon: ({ palette }) => ({
+    fontSize: '1rem',
+    color: palette.icon.default,
   }),
 });
 

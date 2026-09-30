@@ -11,11 +11,13 @@ const RouteDefinitions = {
   CreateApplication: '/agents/create',
   ApplicationsDetail: '/agents/:tab/:agentId',
   ApplicationsRunHistory: '/agents/:tab/:agentId/history',
+  ApplicationsRunAnalytics: '/agents/:tab/:agentId/history/analytics',
   ApplicationsEvaluate: '/agents/:tab/:agentId/evaluate',
   ApplicationsEvaluateSuite: '/agents/:tab/:agentId/evaluate/:suiteId',
   ApplicationsEvaluateDatasets: '/agents/:tab/:agentId/evaluate/datasets',
   ApplicationsEvaluateDimensions: '/agents/:tab/:agentId/evaluate/dimensions',
   ApplicationsEvaluateHistory: '/agents/:tab/:agentId/evaluate/history',
+  ApplicationsEvaluateHistoryAnalytics: '/agents/:tab/:agentId/evaluate/history/analytics',
 
   Skills: '/skills',
   SkillsWithTab: '/skills/:tab',
@@ -27,6 +29,7 @@ const RouteDefinitions = {
   CreatePipeline: '/pipelines/create',
   PipelineDetail: '/pipelines/:tab/:agentId',
   PipelineRunHistory: '/pipelines/:tab/:agentId/history',
+  PipelineRunAnalytics: '/pipelines/:tab/:agentId/history/analytics',
 
   Credentials: '/credentials',
   CredentialsWithTab: '/credentials/:tab',
@@ -72,6 +75,7 @@ const RouteDefinitions = {
 
   Settings: '/settings',
   SettingsWithTab: '/settings/:tab',
+  SettingsProjectGeneral: '/settings/project-general',
   CreateConfiguration: '/settings/create-ai-provider',
   CreateConfigurationWithType: '/settings/create-ai-provider/:credentialType',
   CreatePersonalToken: '/settings/create-personal-token',
@@ -103,6 +107,8 @@ export const BLOCK_NAV_PATTERNS = [
   `${RouteDefinitions.SkillsDetail}/:versionId`,
   RouteDefinitions.UserPublicApplicationDetail,
   RouteDefinitions.CreatePersonalToken,
+  RouteDefinitions.CreateConfiguration,
+  RouteDefinitions.CreateConfigurationWithType,
   RouteDefinitions.EditConfiguration,
   RouteDefinitions.PipelineDetail,
   `${RouteDefinitions.PipelineDetail}/:versionId`,
@@ -119,6 +125,7 @@ export const BLOCK_NAV_PATTERNS = [
   RouteDefinitions.Chat,
   RouteDefinitions.ChatConversation,
   RouteDefinitions.ProjectContextEdit,
+  RouteDefinitions.SettingsProjectGeneral,
 ];
 
 /**

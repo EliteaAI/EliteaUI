@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import { createContext, memo, useCallback, useContext, useMemo, useState } from 'react';
 
 import { ToolkitSocketConstants } from '@/[fsd]/shared/lib/constants';
 
@@ -19,7 +19,9 @@ const ToolkitSocketContext = createContext({
 /**
  * Provider component for toolkit socket session management
  */
-export const ToolkitSocketProvider = ({ children }) => {
+export const ToolkitSocketProvider = memo(props => {
+  const { children } = props;
+
   const [activeSession, setActiveSession] = useState(null);
   const [sessionType, setSessionType] = useState(ToolkitSocketConstants.ToolkitSocketSessionType.NONE);
 
@@ -55,7 +57,9 @@ export const ToolkitSocketProvider = ({ children }) => {
   );
 
   return <ToolkitSocketContext.Provider value={value}>{children}</ToolkitSocketContext.Provider>;
-};
+});
+
+ToolkitSocketProvider.displayName = 'ToolkitSocketProvider';
 
 /**
  * Hook to access toolkit socket session context
@@ -63,3 +67,5 @@ export const ToolkitSocketProvider = ({ children }) => {
 export const useToolkitSocketContext = () => {
   return useContext(ToolkitSocketContext);
 };
+
+export default ToolkitSocketProvider;

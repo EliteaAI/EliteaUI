@@ -209,10 +209,11 @@ const PlusChatSubmenu = memo(props => {
 
 PlusChatSubmenu.displayName = 'PlusChatSubmenu';
 
+/** @type {MuiSx} */
 const submenuStyles = theme => ({
   searchContainer: {
     padding: `${SPACING.XS} ${SPACING.LG}`,
-    borderBottom: `1px solid ${theme.palette.border.lines}`,
+    borderBottom: `0.0625rem solid ${theme.palette.border.lines}`,
     height: HEIGHTS.buttonLarge,
     display: 'flex',
     alignItems: 'center',
@@ -307,7 +308,7 @@ const submenuStyles = theme => ({
     alignItems: 'center',
     padding: '0.125rem 0.375rem',
     borderRadius: '0.875rem',
-    border: `1px solid ${theme.palette.border.lines}`,
+    border: `0.0625rem solid ${theme.palette.border.lines}`,
   },
   publicLabel: {
     textTransform: 'none',

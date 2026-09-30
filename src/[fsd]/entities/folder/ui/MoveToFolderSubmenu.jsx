@@ -10,8 +10,16 @@ import CreateFolderDialog from './CreateFolderDialog';
 import FolderMenuContent from './FolderMenuContent';
 
 const MoveToFolderSubmenu = memo(props => {
-  const { entityId, entityType, currentFolderId, parentMenuOpen, onAction, menuItemSx, userPermission } =
-    props;
+  const {
+    entityId,
+    entityType,
+    currentFolderId,
+    parentMenuOpen,
+    onAction,
+    menuItemSx,
+    userPermission,
+    entityName,
+  } = props;
 
   const { canWrite: canWriteEntity } = useFolderAccess(userPermission);
 
@@ -27,7 +35,7 @@ const MoveToFolderSubmenu = memo(props => {
     handleCreateFolderClick,
     handleFolderCreated,
     handleCloseCreateDialog,
-  } = useFolderMenuActions({ entityId, entityType, currentFolderId, onAction });
+  } = useFolderMenuActions({ entityId, entityType, currentFolderId, onAction, entityName });
 
   if (!folderEntityType) return null;
 

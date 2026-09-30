@@ -304,32 +304,30 @@ export const useAgentHubData = (query, selectedTagNames) => {
   );
 
   const refetchTrendingApplications = useCallback(
-    (conditionForRefetching, updateFn, currentApp, currentLikes) => {
-      if (conditionForRefetching) {
-        const updatedApp = updateFn(currentApp);
-        const newLikes = updatedApp?.likes || 0;
-        if (newLikes !== currentLikes) {
-          isRefetchingTrendingRef.current = true;
-          fetchTrendingApplications(0).finally(() => {
-            isRefetchingTrendingRef.current = false;
-          });
-        }
+    (conditionForRefetching, newLikesCount, currentLikes) => {
+      if (conditionForRefetching && newLikesCount !== currentLikes) {
+        isRefetchingTrendingRef.current = true;
+        fetchTrendingApplications(0).finally(() => {
+          isRefetchingTrendingRef.current = false;
+        });
       }
     },
     [fetchTrendingApplications],
   );
 
   const updateApplicationInState = useCallback(
-    (applicationId, updateFn) => {
+    (applicationId, isLiked, newLikesCount) => {
       const { applicationsByTag: currentAppsByTag } = stateRef.current;
       const trendingCategory = currentAppsByTag[AgentHubConstants.TRENDING_CATEGORY] || [];
       const currentApp = trendingCategory.find(app => app.id === applicationId);
       const currentLikes = currentApp?.likes || 0;
       const conditionForRefetching = !!currentApp && !isRefetchingTrendingRef.current;
 
-      dispatch(agentHubActions.updateApplicationInCategories({ applicationId, updateFn }));
+      dispatch(
+        agentHubActions.updateApplicationInCategories({ applicationId, isLiked, likes: newLikesCount }),
+      );
 
-      refetchTrendingApplications(conditionForRefetching, updateFn, currentApp, currentLikes);
+      refetchTrendingApplications(conditionForRefetching, newLikesCount, currentLikes);
     },
     [dispatch, refetchTrendingApplications],
   );

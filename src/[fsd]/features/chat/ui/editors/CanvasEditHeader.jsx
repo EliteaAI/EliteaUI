@@ -1,6 +1,6 @@
-import { useMemo } from 'react';
+import { memo, useMemo } from 'react';
 
-import { Box, IconButton, Typography } from '@mui/material';
+import { Box, IconButton, Typography, useTheme } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { CodeMirrorEditorHelpers } from '@/[fsd]/shared/lib/helpers';
@@ -14,31 +14,32 @@ import CopyIcon from '@/components/Icons/CopyIcon';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import RegenerateIcon from '@/components/Icons/RegenerateIcon';
 import ImportTableButton from '@/components/ImportTableButton';
-import { useTheme } from '@emotion/react';
 
-const CanvasEditHeader = ({
-  title = 'Edit response',
-  onUndo,
-  disableUndo = false,
-  onRedo,
-  disableRedo = false,
-  onClose,
-  onCopy,
-  onRegenerate,
-  onDelete,
-  showLangSelect,
-  onChangeLanguage,
-  language = 'text',
-  isThisWholeMessage,
-  isTableEditing,
-  hasSelectedRowsColumns,
-  onImportTableData,
-  onClickAddColumn,
-  onClickAddRow,
-  onDeleteSelectedRowsOrColumns,
-  disabledAll,
-  disableLanguageSelect,
-}) => {
+const CanvasEditHeader = memo(props => {
+  const {
+    title = 'Edit response',
+    onUndo,
+    disableUndo = false,
+    onRedo,
+    disableRedo = false,
+    onClose,
+    onCopy,
+    onRegenerate,
+    onDelete,
+    showLangSelect,
+    onChangeLanguage,
+    language = 'text',
+    isThisWholeMessage,
+    isTableEditing,
+    hasSelectedRowsColumns,
+    onImportTableData,
+    onClickAddColumn,
+    onClickAddRow,
+    onDeleteSelectedRowsOrColumns,
+    disabledAll,
+    disableLanguageSelect,
+  } = props;
+
   const theme = useTheme();
   const disableDeleteTableRowsCols = useMemo(
     () =>
@@ -54,129 +55,97 @@ const CanvasEditHeader = ({
           ? 'typescript'
           : language) ?? 'text';
 
+  const styles = canvasEditHeaderStyles();
+
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingTop: '4px',
-        paddingBottom: '4px',
-        gap: '8px',
-        paddingRight: '8px',
-        boxSizing: 'border-box',
-        height: '36px',
-      }}
-    >
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'row',
-          justifyContent: 'start-start',
-          gap: '8px',
-          alignItems: 'center',
-        }}
-      >
+    <Box sx={styles.root}>
+      <Box sx={styles.titleGroup}>
         <IconButton
           data-testid="chat-canvas-close-button"
-          sx={{ marginLeft: '0px' }}
+          sx={styles.iconButton}
           variant="elitea"
           color="tertiary"
           onClick={onClose}
         >
           <CloseIcon
             fill={theme.palette.icon.default}
-            sx={{ fontSize: '18px', cursor: 'pointer' }}
+            sx={styles.closeIcon}
           />
         </IconButton>
         <Typography
           data-testid="chat-canvas-title"
           variant="bodyMedium"
           color={'text.secondary'}
-          sx={{
-            flex: 1,
-            overflow: 'hidden',
-            whiteSpace: 'nowrap',
-            textOverflow: 'ellipsis',
-          }}
+          sx={styles.title}
         >
           {title}
         </Typography>
       </Box>
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'row',
-          justifyContent: 'start-end',
-          gap: '8px',
-          alignItems: 'center',
-        }}
-      >
+      <Box sx={styles.actions}>
         <Tooltip
           title={'Undo'}
           placement="top"
         >
-          <span>
+          <Box component="span">
             <IconButton
               disabled={disableUndo || disabledAll}
-              sx={{ marginLeft: '0px' }}
+              sx={styles.iconButton}
               variant="elitea"
               color="tertiary"
               onClick={onUndo}
             >
-              <UndoIcon sx={{ fontSize: '16px' }} />
+              <UndoIcon sx={styles.actionIcon} />
             </IconButton>
-          </span>
+          </Box>
         </Tooltip>
         <Tooltip
           title={'Redo'}
           placement="top"
         >
-          <span>
+          <Box component="span">
             <IconButton
               disabled={disableRedo || disabledAll}
-              sx={{ marginLeft: '0px' }}
+              sx={styles.iconButton}
               variant="elitea"
               color="tertiary"
               onClick={onRedo}
             >
-              <RedoIcon sx={{ fontSize: '16px' }} />
+              <RedoIcon sx={styles.actionIcon} />
             </IconButton>
-          </span>
+          </Box>
         </Tooltip>
         <Tooltip
           title={'Copy'}
           placement="top"
         >
-          <span>
+          <Box component="span">
             <IconButton
-              sx={{ marginLeft: '0px' }}
+              sx={styles.iconButton}
               variant="elitea"
               color="tertiary"
               onClick={onCopy}
             >
               <CopyIcon
-                sx={{ fontSize: '16px' }}
+                sx={styles.actionIcon}
                 fill={disabledAll ? theme.palette.icon.disabled : undefined}
               />
             </IconButton>
-          </span>
+          </Box>
         </Tooltip>
         {isThisWholeMessage && (
           <Tooltip title={'Regenerate'}>
-            <span>
+            <Box component="span">
               <IconButton
                 aria-label="stop streaming"
                 variant="elitea"
                 color="tertiary"
                 disabled={disabledAll}
                 onClick={onRegenerate}
-                sx={{ marginLeft: '0px' }}
+                sx={styles.iconButton}
               >
-                <RegenerateIcon sx={{ fontSize: '16px' }} />
+                <RegenerateIcon sx={styles.actionIcon} />
               </IconButton>
-            </span>
+            </Box>
           </Tooltip>
         )}
         {isThisWholeMessage && (
@@ -184,18 +153,18 @@ const CanvasEditHeader = ({
             title="Delete the message"
             placement="top"
           >
-            <span>
+            <Box component="span">
               <IconButton
                 aria-label="delete the message"
                 variant="elitea"
                 color="tertiary"
                 disabled={disabledAll}
                 onClick={onDelete}
-                sx={{ marginLeft: '0px' }}
+                sx={styles.iconButton}
               >
-                <DeleteIcon sx={{ fontSize: '16px' }} />
+                <DeleteIcon sx={styles.actionIcon} />
               </IconButton>
-            </span>
+            </Box>
           </Tooltip>
         )}
         {showLangSelect && (
@@ -207,7 +176,7 @@ const CanvasEditHeader = ({
               options={CodeMirrorEditorHelpers.languageOptions}
               customSelectedColor={`${theme.palette.text.primary} !important`}
               customSelectedFontSize={'0.875rem'}
-              sx={{ margin: '5px 0 0 0 !important' }}
+              sx={styles.languageSelect}
             />
           </Box>
         )}
@@ -222,21 +191,21 @@ const CanvasEditHeader = ({
             }
             placement="top"
           >
-            <span>
+            <Box component="span">
               <IconButton
                 aria-label="delete the message"
                 variant="elitea"
                 color="tertiary"
                 disabled={disableDeleteTableRowsCols}
                 onClick={onDeleteSelectedRowsOrColumns}
-                sx={{ marginLeft: '0px' }}
+                sx={styles.iconButton}
               >
                 <DeleteIcon
-                  sx={{ fontSize: '16px' }}
+                  sx={styles.actionIcon}
                   fill={disableDeleteTableRowsCols ? theme.palette.icon.disabled : undefined}
                 />
               </IconButton>
-            </span>
+            </Box>
           </Tooltip>
         )}
         {isTableEditing && (
@@ -244,18 +213,18 @@ const CanvasEditHeader = ({
             title="Add column"
             placement="top"
           >
-            <span>
+            <Box component="span">
               <IconButton
                 aria-label="add column to table"
                 variant="elitea"
                 color="tertiary"
                 disabled={disabledAll}
                 onClick={onClickAddColumn}
-                sx={{ marginLeft: '0px' }}
+                sx={styles.iconButton}
               >
-                <AddColumnIcon sx={{ fontSize: '16px' }} />
+                <AddColumnIcon sx={styles.actionIcon} />
               </IconButton>
-            </span>
+            </Box>
           </Tooltip>
         )}
         {isTableEditing && (
@@ -263,21 +232,21 @@ const CanvasEditHeader = ({
             title="Add row"
             placement="top"
           >
-            <span>
+            <Box component="span">
               <IconButton
                 aria-label="add row to table"
                 variant="elitea"
                 color="tertiary"
                 disabled={disabledAll}
                 onClick={onClickAddRow}
-                sx={{ marginLeft: '0px' }}
+                sx={styles.iconButton}
               >
                 <AddRowIcon
-                  sx={{ fontSize: '16px' }}
+                  sx={styles.actionIcon}
                   fill={theme.palette.icon.default}
                 />
               </IconButton>
-            </span>
+            </Box>
           </Tooltip>
         )}
         {isTableEditing && (
@@ -289,6 +258,57 @@ const CanvasEditHeader = ({
       </Box>
     </Box>
   );
-};
+});
+
+CanvasEditHeader.displayName = 'CanvasEditHeader';
+
+/** @type {MuiSx} */
+const canvasEditHeaderStyles = () => ({
+  root: {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: '0.25rem',
+    paddingBottom: '0.25rem',
+    gap: '0.5rem',
+    paddingRight: '0.5rem',
+    boxSizing: 'border-box',
+    height: '2.25rem',
+  },
+  titleGroup: {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'start-start',
+    gap: '0.5rem',
+    alignItems: 'center',
+  },
+  title: {
+    flex: 1,
+    overflow: 'hidden',
+    whiteSpace: 'nowrap',
+    textOverflow: 'ellipsis',
+  },
+  actions: {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'start-end',
+    gap: '0.5rem',
+    alignItems: 'center',
+  },
+  iconButton: {
+    marginLeft: '0',
+  },
+  closeIcon: {
+    fontSize: '1.125rem',
+    cursor: 'pointer',
+  },
+  actionIcon: {
+    fontSize: '1rem',
+  },
+  languageSelect: {
+    margin: '0.3125rem 0 0 0 !important',
+  },
+});
 
 export default CanvasEditHeader;

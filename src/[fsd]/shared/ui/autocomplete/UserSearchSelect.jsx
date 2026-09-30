@@ -1,4 +1,4 @@
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 
 import { Typography, useTheme } from '@mui/material';
 import { Box } from '@mui/system';
@@ -16,25 +16,29 @@ const UserSearchSelect = memo(props => {
     slotProps = { listBox: {} },
     ...restProps
   } = props;
+  const styles = useMemo(() => userSearchSelectStyles(), []);
 
   const theme = useTheme();
-  const renderOptionBody = useCallback(option => {
-    return (
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-        <UserAvatar
-          name={option.name}
-          avatar={option.avatar}
-          size={22}
-        />
-        <Typography
-          variant="bodyMedium"
-          color="text.secondary"
-        >
-          {option.name}
-        </Typography>
-      </Box>
-    );
-  }, []);
+  const renderOptionBody = useCallback(
+    option => {
+      return (
+        <Box sx={styles.option}>
+          <UserAvatar
+            name={option.name}
+            avatar={option.avatar}
+            size={22}
+          />
+          <Typography
+            variant="bodyMedium"
+            color="text.secondary"
+          >
+            {option.name}
+          </Typography>
+        </Box>
+      );
+    },
+    [styles],
+  );
   return (
     <AutoCompleteDropDown
       optionList={
@@ -71,5 +75,14 @@ const UserSearchSelect = memo(props => {
 });
 
 UserSearchSelect.displayName = 'UserSearchSelect';
+
+/** @type {MuiSx} */
+const userSearchSelectStyles = () => ({
+  option: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+  },
+});
 
 export default UserSearchSelect;

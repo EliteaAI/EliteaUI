@@ -1,4 +1,5 @@
 // Main suite components
+export { default as CreateSuiteModal } from './CreateSuiteModal';
 export { default as SuiteCard } from './SuiteCard';
 export { default as SuiteDetailPanel } from './SuiteDetailPanel';
 export { default as SuitesPanel } from './SuitesPanel';

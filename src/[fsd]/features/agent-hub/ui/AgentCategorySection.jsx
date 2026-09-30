@@ -3,6 +3,8 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { Box, Skeleton, Typography, useMediaQuery, useTheme } from '@mui/material';
 
 import { AgentHubConstants } from '@/[fsd]/features/agent-hub/lib/constants';
+import { Button } from '@/[fsd]/shared/ui';
+import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button';
 import { INITIAL_CARD_DISPLAY_COUNT } from '@/common/constants';
 
 import AgentCard from './AgentCard';
@@ -102,22 +104,20 @@ const AgentCategorySection = memo(props => {
       {shouldShowButton && (
         <Box sx={styles.showMoreContainer}>
           {isExpanded && (
-            <Typography
-              variant="labelMedium"
+            <Button.BaseBtn
+              variant={BUTTON_VARIANTS.auxiliary}
               onClick={handleShowLess}
-              sx={styles.showMoreButton}
             >
-              Show less
-            </Typography>
+              <Typography variant="labelSmall">Show less</Typography>
+            </Button.BaseBtn>
           )}
           {displayCount < totalCount && (
-            <Typography
-              variant="labelMedium"
+            <Button.BaseBtn
+              variant={BUTTON_VARIANTS.auxiliary}
               onClick={handleShowMore}
-              sx={styles.showMoreButton}
             >
-              Show more
-            </Typography>
+              <Typography variant="labelSmall">Show more</Typography>
+            </Button.BaseBtn>
           )}
         </Box>
       )}
@@ -175,15 +175,9 @@ const agentCategorySectionStyles = () => ({
     justifyContent: 'flex-end',
     alignItems: 'center',
     height: '1.5rem',
+    marginRight: '0.75rem',
     gap: '1rem',
   },
-  showMoreButton: ({ palette }) => ({
-    cursor: 'pointer',
-    color: palette.components.button.text.auxiliary,
-    '&:hover': {
-      color: palette.text.showMore,
-    },
-  }),
 });
 
 export default AgentCategorySection;

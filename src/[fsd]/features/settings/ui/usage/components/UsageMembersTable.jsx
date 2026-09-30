@@ -223,14 +223,14 @@ const usageMembersTableStyles = () => ({
     alignItems: 'center',
     gap: '0.5rem',
     paddingBottom: '0.5rem',
-    borderBottom: `1px solid ${palette.border.lines}`,
+    borderBottom: `0.0625rem solid ${palette.border.lines}`,
   }),
   row: ({ palette }) => ({
     display: 'flex',
     alignItems: 'center',
     gap: '0.5rem',
     padding: '0.5rem 0',
-    borderBottom: `1px solid ${palette.border.lines}`,
+    borderBottom: `0.0625rem solid ${palette.border.lines}`,
     '&:last-of-type': { borderBottom: 'none' },
   }),
   systemRow: {

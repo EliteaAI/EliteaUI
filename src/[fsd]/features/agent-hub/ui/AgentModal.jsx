@@ -20,6 +20,8 @@ import AgentHubLike from '@/[fsd]/features/agent-hub/ui/AgentHubLike';
 import AgentHubModalMenu from '@/[fsd]/features/agent-hub/ui/AgentHubModalMenu';
 import AgentWelcomeMessage from '@/[fsd]/features/agent-hub/ui/AgentWelcomeMessage';
 import { ELITEA_CATALOG_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
+import { Button as SharedButton } from '@/[fsd]/shared/ui';
+import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button';
 import { useLazyPublicApplicationDetailsQuery } from '@/api';
 import { ChatParticipantType, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
 import AuthorContainer from '@/components/AuthorContainer';
@@ -186,9 +188,7 @@ const AgentModal = memo(props => {
               <AuthorContainer
                 authors={cardAuthors}
                 showName={false}
-                style={{
-                  minWidth: '1.25rem',
-                }}
+                style={styles.authorAvatars}
               />
               <Typography
                 variant="bodyMedium"
@@ -247,14 +247,13 @@ const AgentModal = memo(props => {
               >
                 {description}
               </Typography>
-              <Typography
-                variant="bodySmall"
-                sx={styles.showContext}
+              <SharedButton.BaseBtn
+                variant={BUTTON_VARIANTS.auxiliary}
                 onClick={onShowContext}
                 data-testid="catalog-agent-modal-show-instructions-link"
               >
-                Show instructions
-              </Typography>
+                <Typography variant="labelSmall">Show instructions</Typography>
+              </SharedButton.BaseBtn>
               <Box sx={styles.sectionsContainer(isSmallHeight)}>
                 <AgentConversationStarters
                   conversation_starters={agentDetails?.version_details?.conversation_starters || []}
@@ -298,6 +297,9 @@ AgentModal.displayName = 'AgentModal';
 
 /** @type {MuiSx} */
 const agentModalStyles = () => ({
+  authorAvatars: {
+    minWidth: '1.25rem',
+  },
   dialog: {
     '& .MuiDialog-paper': ({ palette }) => ({
       width: '37.5rem',
@@ -326,7 +328,7 @@ const agentModalStyles = () => ({
     width: '100%',
     height: '100%',
     background: palette.components.agentModal.background.default,
-    borderRadius: 'calc(1rem - 1px)',
+    borderRadius: 'calc(1rem - 0.0625rem)',
     boxSizing: 'border-box',
     display: 'flex',
     flexDirection: 'column',
@@ -374,7 +376,6 @@ const agentModalStyles = () => ({
             lineHeight: '1.25rem',
           }
         : {
-            height: '2.5rem',
             display: '-webkit-box',
             WebkitLineClamp: 2,
             WebkitBoxOrient: 'vertical',
@@ -391,14 +392,6 @@ const agentModalStyles = () => ({
     gap: '.75rem',
     height: '3.75rem',
   },
-  showContext: ({ palette }) => ({
-    cursor: 'pointer',
-    color: palette.components.button.text.auxiliary,
-    textAlign: 'center',
-    '&:hover': {
-      color: palette.text.showMore,
-    },
-  }),
   sectionsContainer: isSmallHeight => ({
     width: '100%',
     marginTop: '0.5rem',

@@ -14,9 +14,10 @@ const AuthorContainer = memo(props => {
 
   const cardPopoverRef = useRef(null);
 
-  const firstThreeAvatars = authors.slice(0, MAX_NUMBER_AVATARS_SHOWN);
-  const extraAvatarCounts = authors.length - MAX_NUMBER_AVATARS_SHOWN;
-  const extraNameCounts = authors.length - MAX_NUMBER_NAME_SHOWN;
+  const validAuthors = authors.map(a => a || { id: null, name: 'Unknown user', avatar: '' });
+  const firstThreeAvatars = validAuthors.slice(0, MAX_NUMBER_AVATARS_SHOWN);
+  const extraAvatarCounts = validAuthors.length - MAX_NUMBER_AVATARS_SHOWN;
+  const extraNameCounts = validAuthors.length - MAX_NUMBER_NAME_SHOWN;
   const styles = authorContainerStyle(style, disabledNavigation);
 
   const handleAuthorNumberClick = useCallback(event => {
@@ -29,7 +30,7 @@ const AuthorContainer = memo(props => {
     <Box style={styles.avatarsContainerStyle}>
       {firstThreeAvatars.map(({ id, name, avatar }, index) => (
         <UserAvatar
-          key={id}
+          key={`${id ?? 'unknown'}-${index}`}
           name={name}
           avatar={avatar}
           shiftPixels={index * 5}
@@ -47,13 +48,17 @@ const AuthorContainer = memo(props => {
       {showName && (
         <Box
           style={styles.textStyle}
-          onClick={!disabledNavigation ? navigateToAuthorPublicPage(authors[0]?.id, authors[0]?.name) : null}
+          onClick={
+            !disabledNavigation && validAuthors[0]?.id
+              ? navigateToAuthorPublicPage(validAuthors[0]?.id, validAuthors[0]?.name)
+              : null
+          }
         >
           <Typography
             variant="bodyMedium"
             component="span"
           >
-            {authors[0]?.name}
+            {validAuthors[0]?.name}
           </Typography>
         </Box>
       )}
@@ -67,7 +72,7 @@ const AuthorContainer = memo(props => {
       )}
       <CardPopover
         ref={cardPopoverRef}
-        contentList={authors}
+        contentList={validAuthors}
         type="author"
       />
     </Box>

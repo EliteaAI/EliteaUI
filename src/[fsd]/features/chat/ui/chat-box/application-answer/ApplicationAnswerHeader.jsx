@@ -21,6 +21,7 @@ const ApplicationAnswerHeader = memo(
       onClickReplyTo,
       styles,
     } = props;
+    const headerStyles = applicationAnswerHeaderStyles();
 
     const participantName = useParticipantName(participant);
     const entityIcon = useParticipantEntityIcon(participant);
@@ -31,7 +32,7 @@ const ApplicationAnswerHeader = memo(
           sx={[styles.headerRow, { pr: 2 }]}
           ref={ref}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={headerStyles.titleRow}>
             <Chip
               label={swarmAgentName}
               size="small"
@@ -111,5 +112,14 @@ const ApplicationAnswerHeader = memo(
 );
 
 ApplicationAnswerHeader.displayName = 'ApplicationAnswerHeader';
+
+/** @type {MuiSx} */
+const applicationAnswerHeaderStyles = () => ({
+  titleRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 1,
+  },
+});
 
 export default ApplicationAnswerHeader;

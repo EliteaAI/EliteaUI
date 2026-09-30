@@ -127,8 +127,8 @@ export const useGroupedCategories = (
   }, []);
 
   // Handle search change
-  const onSearchChange = useCallback(e => {
-    setSearchQuery(e.target.value);
+  const onSearchChange = useCallback(value => {
+    setSearchQuery(value);
   }, []);
 
   return {

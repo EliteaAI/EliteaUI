@@ -52,7 +52,7 @@ const AnalyticAgentDetailed = memo(props => {
 
   return (
     <Box sx={styles.agentDetailedContent}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+      <Box sx={styles.titleRow}>
         <IconButton
           onClick={onBack}
           size="small"
@@ -241,14 +241,7 @@ const AnalyticAgentDetailed = memo(props => {
         </Box>
       )}
 
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1fr) minmax(0, 1fr)' },
-          gap: '1rem',
-          alignItems: 'stretch',
-        }}
-      >
+      <Box sx={styles.chartsGrid}>
         <Box
           sx={styles.chartCard}
           data-testid="analytics-agent-detail-users-panel"
@@ -385,6 +378,18 @@ AnalyticAgentDetailed.displayName = 'AnalyticAgentDetailed';
 
 /** @type {MuiSx} */
 const analyticsAgentDetailedStyles = () => ({
+  titleRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    marginBottom: '0.5rem',
+  },
+  chartsGrid: {
+    display: 'grid',
+    gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1fr) minmax(0, 1fr)' },
+    gap: '1rem',
+    alignItems: 'stretch',
+  },
   agentDetailedContent: { display: 'flex', flexDirection: 'column', gap: '1rem' },
   kpiRow: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' },
   chartCard: ({ palette }) => ({
@@ -432,7 +437,7 @@ const analyticsAgentDetailedStyles = () => ({
   tableHeader: ({ palette }) => ({
     display: 'flex',
     padding: '0.5rem 0.75rem',
-    borderBottom: `1px solid ${palette.border.default}`,
+    borderBottom: `0.0625rem solid ${palette.border.default}`,
     gap: '0.5rem',
   }),
   tableCell: ({ palette }) => ({
@@ -444,7 +449,7 @@ const analyticsAgentDetailedStyles = () => ({
   tableRow: ({ palette }) => ({
     display: 'flex',
     padding: '0.5rem 0.75rem',
-    borderBottom: `1px solid ${palette.border.default}`,
+    borderBottom: `0.0625rem solid ${palette.border.default}`,
     gap: '0.5rem',
     '&:hover': { backgroundColor: palette.background.interactiveItem.rowHover },
   }),

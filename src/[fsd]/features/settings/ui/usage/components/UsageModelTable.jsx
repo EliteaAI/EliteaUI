@@ -3,7 +3,7 @@ import { memo, useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
 
 import { UsageHelpers } from '@/[fsd]/features/settings/lib/helpers';
-import { CHART_COLORS } from '@/[fsd]/shared/config/theme/chartPalette';
+import { CHART_COLORS } from '@/[fsd]/shared/config/theme';
 
 const UsageModelTable = memo(props => {
   const { models = [], canSeeAmounts, currency } = props;
@@ -149,7 +149,7 @@ const usageModelTableStyles = () => ({
     alignItems: 'center',
     gap: '0.5rem',
     paddingBottom: '0.5rem',
-    borderBottom: `1px solid ${palette.border.lines}`,
+    borderBottom: `0.0625rem solid ${palette.border.lines}`,
   }),
   row: ({ palette }) => ({
     display: 'flex',
@@ -157,7 +157,7 @@ const usageModelTableStyles = () => ({
     alignItems: 'center',
     gap: '0.5rem',
     padding: '0.5rem 0',
-    borderBottom: `1px solid ${palette.border.lines}`,
+    borderBottom: `0.0625rem solid ${palette.border.lines}`,
     '&:last-of-type': { borderBottom: 'none' },
   }),
   cell: ({ palette }) => ({

@@ -28,32 +28,34 @@ const SIMPLEBAR_FIT_CONTENT_STYLE = { height: 'auto', maxHeight: 'inherit', widt
  * testid hardcoded here per the project's testid policy), so callers opt in
  * with their own literal at the call site.
  */
-const ScrollableContainer = forwardRef((props, ref) => {
-  const { children, fillContainer = true, sx, testId } = props;
+const ScrollableContainer = memo(
+  forwardRef((props, ref) => {
+    const { children, fillContainer = true, sx, testId } = props;
 
-  let resolvedSx;
+    let resolvedSx;
 
-  if (Array.isArray(sx)) {
-    resolvedSx = [scrollableContainerStyles.wrapper, ...sx];
-  } else if (sx == null) {
-    resolvedSx = scrollableContainerStyles.wrapper;
-  } else {
-    resolvedSx = [scrollableContainerStyles.wrapper, sx];
-  }
+    if (Array.isArray(sx)) {
+      resolvedSx = [scrollableContainerStyles.wrapper, ...sx];
+    } else if (sx == null) {
+      resolvedSx = scrollableContainerStyles.wrapper;
+    } else {
+      resolvedSx = [scrollableContainerStyles.wrapper, sx];
+    }
 
-  return (
-    <Box sx={resolvedSx}>
-      <SimpleBar
-        ref={ref}
-        autoHide={false}
-        style={fillContainer ? SIMPLEBAR_FILL_STYLE : SIMPLEBAR_FIT_CONTENT_STYLE}
-        scrollableNodeProps={testId ? { 'data-testid': testId } : undefined}
-      >
-        {children}
-      </SimpleBar>
-    </Box>
-  );
-});
+    return (
+      <Box sx={resolvedSx}>
+        <SimpleBar
+          ref={ref}
+          autoHide={false}
+          style={fillContainer ? SIMPLEBAR_FILL_STYLE : SIMPLEBAR_FIT_CONTENT_STYLE}
+          scrollableNodeProps={testId ? { 'data-testid': testId } : undefined}
+        >
+          {children}
+        </SimpleBar>
+      </Box>
+    );
+  }),
+);
 
 ScrollableContainer.displayName = 'ScrollableContainer';
 
@@ -92,4 +94,4 @@ const scrollableContainerStyles = {
   }),
 };
 
-export default memo(ScrollableContainer);
+export default ScrollableContainer;

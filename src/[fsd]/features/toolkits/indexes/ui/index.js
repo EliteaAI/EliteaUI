@@ -22,3 +22,4 @@ export { default as HeadlessReindexRunner } from './HeadlessReindexRunner';
 export { default as RunIndexBanner } from './RunIndexBanner';
 export { IndexActivityPanel } from './activity';
 export { IndexSearchPanel } from './index-search';
+export { default as RunIndexPanel } from './run-index/RunIndexPanel';

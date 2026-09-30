@@ -15,7 +15,8 @@ npm run dev        # dev server at http://localhost:5173
 npm run build      # production build
 npm run lint       # eslint
 npm run format     # prettier
-npm run test       # playwright e2e tests
+npm test           # Vitest unit/component tests
+npm run test:e2e    # Playwright e2e tests
 ```
 
 ## Architecture: Feature-Sliced Design Migration

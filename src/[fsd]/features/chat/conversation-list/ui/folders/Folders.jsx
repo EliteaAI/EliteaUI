@@ -133,6 +133,7 @@ const Folders = memo(props => {
   );
 });
 
+/** @type {MuiSx} */
 const foldersStyles = (collapsed, isSmallWindow) => {
   const spacing = {
     small: '0.5rem',

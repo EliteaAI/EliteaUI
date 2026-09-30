@@ -1,10 +1,9 @@
-import {
-  ORIENTATION,
-  OrientationKey,
-} from '@/[fsd]/features/pipelines/flow-editor/lib/constants/flowEditor.constants';
+import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { DEFAULT_PIPELINE_KEY } from '@/[fsd]/features/pipelines/lib/constants';
 import { DumpYamlHelpers } from '@/[fsd]/shared/lib/helpers';
 import { createSlice, current } from '@reduxjs/toolkit';
+
+const { ORIENTATION, OrientationKey } = FlowEditorConstants;
 
 export { DEFAULT_PIPELINE_KEY };
 
@@ -35,7 +34,8 @@ const pipelineSlice = createSlice({
     // Which key is currently active (Canvas sets this per-tab; non-Canvas pages use DEFAULT_PIPELINE_KEY)
     activePipelineKey: null,
     // Shared orientation setting (not per-pipeline)
-    orientation: localStorage.getItem(OrientationKey) || ORIENTATION.vertical,
+    orientation:
+      (typeof localStorage !== 'undefined' && localStorage?.getItem(OrientationKey)) || ORIENTATION.vertical,
   },
   reducers: {
     setActivePipelineKey: (state, action) => {

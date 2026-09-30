@@ -2,7 +2,7 @@ import { memo } from 'react';
 
 import { Box } from '@mui/material';
 
-import { useModal } from '@/[fsd]/shared/lib/hooks/useModal.hooks';
+import { useModal } from '@/[fsd]/shared/lib/hooks';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import SparkleIcon from '@/assets/ai-sparkle-icon.svg?react';
 import useCheckPermission from '@/hooks/useCheckPermission';

@@ -14,20 +14,30 @@ import {
 } from '@/[fsd]/features/chat/lib/hooks';
 import { getChatParticipantUniqueId } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { useFetchParticipantDetails } from '@/[fsd]/features/chat/participants/lib/hooks';
-import { BudgetWarningBanner, SlashSuggestionList } from '@/[fsd]/features/chat/ui';
+import { BudgetWarningBanner, ChatWelcomeMessage, SlashSuggestionList } from '@/[fsd]/features/chat/ui';
 import NewChatInput from '@/[fsd]/features/chat/ui/chat-input/NewChatInput';
 import RecommendationList from '@/[fsd]/features/chat/ui/recommendations/RecommendationList';
 import SearchResultList from '@/[fsd]/features/chat/ui/recommendations/SearchResultList';
 import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
+import { useGetChatTemplatesQuery } from '@/[fsd]/features/settings/api';
 import { MentionSkillList } from '@/[fsd]/features/skill/ui';
-import { BrandLogoConstants, InternalToolsConstants, MentionConstants } from '@/[fsd]/shared/lib/constants';
-import { DEFAULT_STEPS_LIMIT } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
-import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks/useEnvironmentSettingByKey.hooks';
+import {
+  AutoRoutingConstants,
+  BrandLogoConstants,
+  InternalToolsConstants,
+  LLMSettingsConstants,
+  MentionConstants,
+} from '@/[fsd]/shared/lib/constants';
+import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks';
 import {
   cleanLLMSettings,
+  defaultModelForSurface,
   generateLLMSettings,
+  modelsWithAuto,
   resetLLMSettingsForModel,
-} from '@/[fsd]/shared/lib/utils/llmSettings.utils';
+  resolveModelSurface,
+  selectionFields,
+} from '@/[fsd]/shared/lib/utils';
 import BrandLogo from '@/[fsd]/shared/ui/brand-logo';
 import { useConversationEditMutation, useUpdateParticipantLlmSettingsMutation } from '@/api';
 import { useListModelsQuery } from '@/api/configurations.js';
@@ -55,6 +65,10 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useSocket from '@/hooks/useSocket';
 import useToast from '@/hooks/useToast';
 import { actions } from '@/slices/chat';
+
+const { DEFAULT_STEPS_LIMIT } = LLMSettingsConstants;
+
+const { MODEL_SURFACES } = AutoRoutingConstants;
 
 const NewConversationView = forwardRef(
   (
@@ -85,6 +99,11 @@ const NewConversationView = forwardRef(
   ) => {
     const styles = newConversationViewStyles();
     const selectedProjectId = useSelectedProjectId();
+    const { data: chatTemplates = [] } = useGetChatTemplatesQuery(
+      { projectId: selectedProjectId },
+      { skip: !selectedProjectId },
+    );
+    const defaultTemplate = chatTemplates.find(t => t.is_default);
     const { toastSuccess } = useToast();
     const systemSenderName = useSystemSenderName();
     const { selectedAgent, selectedAgentStarter } = useSelector(state => state.chat);
@@ -97,6 +116,7 @@ const NewConversationView = forwardRef(
     const chatInput = useRef(null);
     const { setLocalActiveParticipant } = useLocalActiveParticipant();
     const [selectedParticipants, setSelectedParticipants] = useState(activeConversation?.participants || []);
+    const selectedParticipantsRef = useRef(selectedParticipants);
     const [selectedParticipant, setSelectedParticipant] = useState(activeParticipant || null);
     const [selectedParticipantDetails, setSelectedParticipantDetails] = useState(activeParticipant || null);
     const [prevConversation, setPrevConversation] = useState(activeConversation);
@@ -112,6 +132,9 @@ const NewConversationView = forwardRef(
     // on project switch so the new project's defaults aren't blocked by the previous one's.
     const moduleSettingsAppliedRef = useRef(false);
     useEffect(() => {
+      selectedParticipantsRef.current = selectedParticipants;
+    }, [selectedParticipants]);
+    useEffect(() => {
       moduleSettingsAppliedRef.current = false;
     }, [selectedProjectId]);
     useEffect(() => {
@@ -121,7 +144,7 @@ const NewConversationView = forwardRef(
       }
     }, [moduleSettingsData]);
     const [showRecommendationList, setShowRecommendationList] = useState(false);
-    const { data: modelsData = { items: [], total: 0 } } = useListModelsQuery(
+    const { currentData: modelsData = { items: [], total: 0 } } = useListModelsQuery(
       { projectId: selectedProjectId, include_shared: true },
       { skip: !selectedProjectId },
     );
@@ -164,21 +187,46 @@ const NewConversationView = forwardRef(
       [toastSuccess],
     );
 
-    const defaultModel = useMemo(() => {
-      return modelsData.items.find(model => model.default) || modelsData.items[0] || null;
-    }, [modelsData.items]);
+    const modelList = useMemo(
+      () =>
+        modelsWithAuto(
+          modelsData.items,
+          modelsData.auto_routing,
+          resolveModelSurface(
+            selectedParticipantDetails?.version_details?.agent_type,
+            selectedParticipant?.entity_settings?.agent_type,
+          ),
+        ),
+      [
+        modelsData.items,
+        modelsData.auto_routing,
+        selectedParticipantDetails?.version_details?.agent_type,
+        selectedParticipant?.entity_settings?.agent_type,
+      ],
+    );
 
+    const defaultModel = useMemo(() => {
+      return defaultModelForSurface(modelsData, MODEL_SURFACES.chat);
+    }, [modelsData]);
+
+    const initializedModelProjectRef = useRef(null);
     useEffect(() => {
+      if (!defaultModel || initializedModelProjectRef.current === selectedProjectId) return;
+      initializedModelProjectRef.current = selectedProjectId;
       setSelectedModel(defaultModel);
       setPrevSelectedModel(defaultModel);
-    }, [defaultModel]);
+    }, [defaultModel, selectedProjectId]);
 
     // llmSettings is seeded before any model is known (generateLLMSettings(null) → temperature-only).
     // Realign temperature/reasoning_effort to the resolved model's family so a reasoning model never
     // carries a stale temperature (issue #5859).
     useEffect(() => {
       if (!selectedModel) return;
-      setLlmSettings(prev => ({ ...prev, ...resetLLMSettingsForModel(selectedModel) }));
+      setLlmSettings(prev => ({
+        ...prev,
+        ...selectionFields(selectedModel),
+        ...resetLLMSettingsForModel(selectedModel),
+      }));
     }, [selectedModel]);
 
     useEffect(() => {
@@ -436,6 +484,101 @@ const NewConversationView = forwardRef(
       if (activeConversation?.isNew) chatInput.current?.focus?.();
     }, [activeConversation?.isNew]);
 
+    const buildEnrichedParticipant = useCallback(
+      (participant, details) => {
+        if (participant.meta?.added_from_agent) return participant;
+        return {
+          ...participant,
+          ...details,
+          entity_name: participant.participantType,
+          entity_meta: { id: participant.id, project_id: participant.project_id || selectedProjectId },
+          entity_settings:
+            participant.participantType === ChatParticipantType.Toolkits
+              ? { icon_meta: details.icon_meta, toolkit_type: details.type }
+              : {
+                  agent_type: details.version_details?.agent_type,
+                  llm_settings: details.version_details?.llm_settings || {},
+                  variables: details.version_details?.variables || [],
+                  version_id: details.version_details?.id,
+                },
+          meta: { name: participant.name, mcp: details.meta?.mcp },
+          originalLatestVersionId: details.version_details?.id,
+        };
+      },
+      [selectedProjectId],
+    );
+
+    const defaultParticipantsAppliedForRef = useRef(null);
+    useEffect(() => {
+      if (!activeConversation?.isNew) return;
+      const sessionKey = activeConversation.id;
+      if (defaultParticipantsAppliedForRef.current === sessionKey) return;
+      const configParticipants = defaultTemplate?.participants ?? [];
+      if (!configParticipants.length) return;
+      defaultParticipantsAppliedForRef.current = sessionKey;
+      const filtered = configParticipants.filter(cp => cp.id && cp.entity_name);
+      if (!filtered.length) return;
+
+      // Set basic participants immediately so conversation creation has them before async details load
+      const baseParticipants = filtered.map(cp => ({
+        id: cp.id,
+        name: cp.name || '',
+        project_id: cp.project_id,
+        agent_type: cp.agent_type,
+        participantType: cp.entity_name,
+        entity_name: cp.entity_name,
+        entity_meta: { id: cp.id, project_id: cp.project_id || selectedProjectId },
+        entity_settings: {},
+        meta: {},
+      }));
+      // Only apply defaults when no participants are already set (e.g., via agent catalog selection)
+      const syncApplied = selectedParticipantsRef.current.length === 0;
+      setSelectedParticipants(prev => (prev.length ? prev : baseParticipants));
+      if (syncApplied && baseParticipants.length === 1) {
+        setSelectedParticipant(baseParticipants[0]);
+        setActiveParticipant(baseParticipants[0]);
+      }
+
+      // Skip async enrichment entirely when sync phase did not apply defaults
+      if (!syncApplied) return;
+
+      // Fetch full details async and enrich participants with icon_meta, agent_type, etc.
+      (async () => {
+        const detailsList = await Promise.all(
+          filtered.map(cp => fetchOriginalDetails(cp.entity_name, cp.id, cp.project_id)),
+        );
+        const toParticipantKey = p => `${p.entity_name ?? p.participantType}:${p.project_id}:${p.id}`;
+        const currentKeySet = new Set(selectedParticipantsRef.current.map(toParticipantKey));
+        const baseKeySet = new Set(baseParticipants.map(toParticipantKey));
+        const listsMatch =
+          currentKeySet.size === baseKeySet.size && [...baseKeySet].every(key => currentKeySet.has(key));
+        if (defaultParticipantsAppliedForRef.current !== sessionKey || !listsMatch) return;
+        const enriched = baseParticipants.map((base, i) => {
+          const details = detailsList[i];
+          if (!details || !Object.keys(details).length) return base;
+          return buildEnrichedParticipant(base, details);
+        });
+        setSelectedParticipants(enriched);
+        if (enriched.length === 1) {
+          setSelectedParticipant(enriched[0]);
+          setSelectedParticipantDetails(
+            detailsList[0] && Object.keys(detailsList[0]).length ? detailsList[0] : enriched[0],
+          );
+          setActiveParticipant(enriched[0]);
+        } else {
+          setActiveParticipant(null);
+        }
+      })();
+    }, [
+      activeConversation?.isNew,
+      activeConversation?.id,
+      defaultTemplate?.participants,
+      setActiveParticipant,
+      fetchOriginalDetails,
+      buildEnrichedParticipant,
+      selectedProjectId,
+    ]);
+
     const onShowParticipantsList = useCallback(() => {
       setShowRecommendationList(prev => !prev);
       stopProcessingSymbols();
@@ -456,33 +599,7 @@ const NewConversationView = forwardRef(
     const convertParticipantAndAddIt = useCallback(
       ({ participant, details }) => {
         if (Object.keys(details).length) {
-          // Fix for issue #2948: Use optional chaining to prevent TypeError when
-          // participant.meta is undefined (e.g., when selecting from recommendations)
-          const transformedParticipant = participant.meta?.added_from_agent
-            ? participant
-            : {
-                ...participant,
-                ...details,
-                entity_name: participant.participantType,
-                entity_meta: { id: participant.id, project_id: participant.project_id || selectedProjectId },
-                entity_settings:
-                  participant.participantType === ChatParticipantType.Toolkits
-                    ? {
-                        icon_meta: details.icon_meta,
-                        toolkit_type: details.type,
-                      }
-                    : {
-                        // Fix for issue #2948: Use optional chaining to prevent TypeError when
-                        // details.version_details is undefined
-                        agent_type: details.version_details?.agent_type,
-                        llm_settings: details.version_details?.llm_settings || {},
-                        variables: details.version_details?.variables || [],
-                        version_id: details.version_details?.id,
-                      },
-                meta: { name: participant.name, mcp: details.meta?.mcp },
-                // Store the original latest version ID for comparison later
-                originalLatestVersionId: details.version_details?.id,
-              };
+          const transformedParticipant = buildEnrichedParticipant(participant, details);
           if (participant.participantType !== ChatParticipantType.Toolkits) {
             setSelectedParticipant(transformedParticipant);
             setSelectedParticipantDetails(details);
@@ -507,7 +624,7 @@ const NewConversationView = forwardRef(
           });
         }
       },
-      [setActiveParticipant, selectedProjectId],
+      [setActiveParticipant, buildEnrichedParticipant],
     );
 
     const onSelectParticipant = async participant => {
@@ -560,17 +677,16 @@ const NewConversationView = forwardRef(
         ) {
           onClearSelectedParticipant();
         }
-        setSelectedParticipants(prev =>
-          prev.filter(
-            p =>
-              p.entity_name !== participantToDelete.entity_name ||
-              p.entity_meta.id !== participantToDelete.entity_meta.id,
-          ),
+        const next = selectedParticipantsRef.current.filter(
+          p =>
+            p.entity_name !== participantToDelete.entity_name ||
+            p.entity_meta.id !== participantToDelete.entity_meta.id,
         );
+        selectedParticipantsRef.current = next;
+        setSelectedParticipants(next);
       },
       [selectedParticipant, onClearSelectedParticipant],
     );
-
     useImperativeHandle(ref, () => ({
       onSelectParticipant,
       onDeleteParticipant,
@@ -579,6 +695,13 @@ const NewConversationView = forwardRef(
 
     const conversationStarters = useMemo(() => {
       return selectedParticipant?.version_details?.conversation_starters || [];
+    }, [selectedParticipant]);
+
+    const welcomeMessage = useMemo(() => {
+      const isAgentOrPipeline =
+        selectedParticipant?.entity_name === ChatParticipantType.Applications ||
+        selectedParticipant?.entity_name === ChatParticipantType.Pipelines;
+      return isAgentOrPipeline ? selectedParticipant?.version_details?.welcome_message || '' : '';
     }, [selectedParticipant]);
 
     const onSelectModel = useCallback(
@@ -713,9 +836,8 @@ const NewConversationView = forwardRef(
             const { steps_limit, ...llmSettingsOnly } = llmSettings;
             const settingsToSave = {
               ...userSettings,
-              ...llmSettingsOnly,
-              model_name: selectedModel?.name,
-              model_project_id: selectedModel?.project_id,
+              ...selectionFields(selectedModel),
+              ...generateLLMSettings(selectedModel, llmSettingsOnly, { includeModelInfo: true }),
             };
             // Clean settings to remove reasoning_effort if model doesn't support it
             const cleanedSettings = cleanLLMSettings(settingsToSave, selectedModel);
@@ -758,18 +880,29 @@ const NewConversationView = forwardRef(
                 await addNewParticipants(selectedParticipantFiltered, createdConversation, participants => {
                   onComplete?.([
                     ...participants,
-                    ...NewConversationHelpers.setUserLLmSettings(createdConversation.participants, user.id, {
-                      model_name: selectedModel?.name,
-                      model_project_id: selectedModel?.project_id,
-                      ...llmSettingsOnly,
-                    }),
+                    ...NewConversationHelpers.setUserLLmSettings(
+                      createdConversation.participants,
+                      user.id,
+                      cleanedSettings,
+                    ),
                   ]);
-                  const participant = participants.find(
+                  const rawParticipant = participants.find(
                     p =>
                       (p.entity_name === selectedParticipant.entity_name ||
                         p.entity_settings.agent_type === selectedParticipant.entity_name) &&
                       p.entity_meta.id === selectedParticipant.entity_meta.id,
                   );
+                  const selectedVersionId = selectedParticipant?.entity_settings?.version_id;
+                  const participant =
+                    rawParticipant && selectedVersionId && !rawParticipant.entity_settings?.version_id
+                      ? {
+                          ...rawParticipant,
+                          entity_settings: {
+                            ...(rawParticipant.entity_settings || {}),
+                            version_id: selectedVersionId,
+                          },
+                        }
+                      : rawParticipant;
                   setActiveParticipant?.(participant);
                   setLocalActiveParticipant(createdConversation?.id, getChatParticipantUniqueId(participant));
 
@@ -811,11 +944,7 @@ const NewConversationView = forwardRef(
                         ...NewConversationHelpers.setUserLLmSettings(
                           createdConversation.participants,
                           user.id,
-                          {
-                            model_name: selectedModel?.name,
-                            model_project_id: selectedModel?.project_id,
-                            ...llmSettingsOnly,
-                          },
+                          cleanedSettings,
                         ),
                       ]);
                       setTimeout(() => {
@@ -827,11 +956,11 @@ const NewConversationView = forwardRef(
                 }, 0);
               } else {
                 onComplete?.(
-                  NewConversationHelpers.setUserLLmSettings(createdConversation.participants, user.id, {
-                    model_name: selectedModel?.name,
-                    model_project_id: selectedModel?.project_id,
-                    ...llmSettingsOnly,
-                  }),
+                  NewConversationHelpers.setUserLLmSettings(
+                    createdConversation.participants,
+                    user.id,
+                    cleanedSettings,
+                  ),
                 );
                 setTimeout(() => {
                   onPredictStreamRef.current?.(question, null, createdConversation);
@@ -917,6 +1046,7 @@ const NewConversationView = forwardRef(
             >
               What can I do for you today?
             </Typography>
+            <ChatWelcomeMessage message={welcomeMessage} />
           </Box>
           {slashPhase !== 'idle' && (
             <SlashSuggestionList
@@ -950,6 +1080,8 @@ const NewConversationView = forwardRef(
               <BudgetWarningBanner
                 scope={budgetWarning.scope}
                 percentUsed={budgetWarning.percentUsed}
+                severity={budgetWarning.severity}
+                dismissible={budgetWarning.dismissible}
                 onDismiss={budgetWarning.dismiss}
               />
             )}
@@ -980,7 +1112,7 @@ const NewConversationView = forwardRef(
               onCloseAgentEditor={onCloseAgentEditor}
               activeParticipant={selectedParticipant}
               activeParticipantDetails={selectedParticipantDetails}
-              modelList={modelsData?.items || []}
+              modelList={modelList}
               onSelectModel={onSelectModel}
               selectedModel={selectedModel}
               llmSettings={llmSettings}
