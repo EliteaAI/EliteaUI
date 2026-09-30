@@ -1,6 +1,7 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Typography, useTheme } from '@mui/material';
+import { CircularProgress, Typography, useTheme } from '@mui/material';
+import { createFilterOptions } from '@mui/material/Autocomplete';
 import { Box } from '@mui/system';
 
 import AutoCompleteDropDown from '@/ComponentsLib/AutoCompleteDropDown';
@@ -9,7 +10,11 @@ import { EntityTypeIcon } from '@/components/EntityIcon';
 import SearchIcon from '@/components/Icons/SearchIcon';
 import useParticipants from '@/hooks/chat/useParticipants';
 
-const filterOptionsIdentity = options => options;
+const LOADING_SENTINEL_KEY = '__ai_participants_loading__';
+
+const defaultFilter = createFilterOptions();
+
+const isLoadingOption = option => !!option.isLoadingMore;
 
 const AiParticipantSearchSelect = memo(props => {
   const {
@@ -24,13 +29,39 @@ const AiParticipantSearchSelect = memo(props => {
   const styles = useMemo(() => aiParticipantSearchSelectStyles(), []);
   const [query, setQuery] = useState('');
 
-  const { participants, isFetching } = useParticipants({
+  const { participants, isFetching, onLoadMore, total } = useParticipants({
     sortBy: 'name',
     sortOrder: 'asc',
     query,
     pageSize: 50,
     types: [ChatParticipantType.Applications],
   });
+
+  const hasMore = total > participants.length;
+  const listboxScrollRef = useRef({ node: null, scrollTop: 0 });
+
+  const handleListboxScroll = useCallback(
+    event => {
+      const { scrollTop, scrollHeight, clientHeight } = event.currentTarget;
+      listboxScrollRef.current = { node: event.currentTarget, scrollTop };
+      if (!hasMore || isFetching) return;
+      if (scrollHeight - scrollTop - clientHeight < 100) {
+        onLoadMore();
+      }
+    },
+    [hasMore, isFetching, onLoadMore],
+  );
+
+  const mergedListboxSlotProps = useMemo(
+    () => ({
+      ...slotProps.listBox,
+      onScroll: event => {
+        slotProps.listBox?.onScroll?.(event);
+        handleListboxScroll(event);
+      },
+    }),
+    [slotProps.listBox, handleListboxScroll],
+  );
 
   const getEntityName = useCallback(
     p => (p.agent_type === 'pipeline' ? ChatParticipantType.Pipelines : ChatParticipantType.Applications),
@@ -68,15 +99,45 @@ const AiParticipantSearchSelect = memo(props => {
       });
     // Always include currently selected items so AutoCompleteDropDown's internal
     // validation (canInputNewValues=false) doesn't strip them on chip removal.
-    return [...enrichedSelectedParticipants, ...fromApi];
-  }, [participants, selectedUniqueKeys, enrichedSelectedParticipants, getEntityName]);
+    const base = [...enrichedSelectedParticipants, ...fromApi];
+    if (isFetching) {
+      base.push({ uniqueKey: LOADING_SENTINEL_KEY, name: '', isLoadingMore: true });
+    }
+    return base;
+  }, [participants, selectedUniqueKeys, enrichedSelectedParticipants, getEntityName, isFetching]);
 
-  const handleInputChange = useCallback((_event, newInputValue) => {
-    setQuery(newInputValue);
+  const filterOptionsWithSentinel = useCallback((options, state) => {
+    const sentinel = options.find(o => o.isLoadingMore);
+    const regular = options.filter(o => !o.isLoadingMore);
+    const filtered = defaultFilter(regular, state);
+    return sentinel ? [...filtered, sentinel] : filtered;
   }, []);
+
+  useEffect(() => {
+    const { node, scrollTop } = listboxScrollRef.current;
+    if (node?.isConnected && node.scrollTop !== scrollTop) {
+      node.scrollTop = scrollTop;
+    }
+  }, [optionList]);
+
+  const handleInputChange = useCallback(
+    (_event, newInputValue) => {
+      if (newInputValue === query) return;
+      listboxScrollRef.current = { node: null, scrollTop: 0 };
+      setQuery(newInputValue);
+    },
+    [query],
+  );
 
   const renderOptionBody = useCallback(
     option => {
+      if (option.isLoadingMore) {
+        return (
+          <Box sx={styles.loadingOption}>
+            <CircularProgress size={16} />
+          </Box>
+        );
+      }
       const isPublic = option.project_id === PUBLIC_PROJECT_ID;
       return (
         <Box sx={styles.optionBody}>
@@ -144,7 +205,7 @@ const AiParticipantSearchSelect = memo(props => {
       selectedOptions={enrichedSelectedParticipants}
       onChangedSelectedOptions={onChangeParticipants}
       idField="uniqueKey"
-      disabled={disabled || isFetching}
+      disabled={disabled}
       label=""
       placeholder="Search AI participants..."
       nameField="name"
@@ -153,10 +214,11 @@ const AiParticipantSearchSelect = memo(props => {
       ignoreCase={false}
       renderOptionBody={renderOptionBody}
       renderChipLabel={renderChipLabel}
-      filterOptions={filterOptionsIdentity}
+      filterOptions={filterOptionsWithSentinel}
+      getOptionDisabled={isLoadingOption}
       onInputChange={handleInputChange}
       slotProps={{
-        listbox: slotProps.listBox,
+        listbox: mergedListboxSlotProps,
       }}
       showSearchIcon
       slots={{
@@ -177,6 +239,13 @@ AiParticipantSearchSelect.displayName = 'AiParticipantSearchSelect';
 
 /** @type {MuiSx} */
 const aiParticipantSearchSelectStyles = () => ({
+  loadingOption: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    flex: 1,
+    padding: '0.25rem 0',
+  },
   optionBody: {
     display: 'flex',
     alignItems: 'center',
