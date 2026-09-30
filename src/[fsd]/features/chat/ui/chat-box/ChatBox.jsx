@@ -588,7 +588,7 @@ const ChatBox = memo(
         isDequeuingRef.current = true;
         setPendingInjections(prev => prev.filter(item => item.id !== next.id));
 
-        const emitted = await onPredictStreamRef.current?.(next.text);
+        const emitted = await onPredictStreamRef.current?.(next.text, { skipInputReset: true });
         if (emitted) return; // emit succeeded — isStreaming effect dequeues the rest
         // bail-out (upload failed, sendResult.success === false, etc.): try the next item
         isDequeuingRef.current = false;
@@ -1045,7 +1045,7 @@ const ChatBox = memo(
     const isSkillPhaseActive = skillPhase !== MentionConstants.MentionPhase.Idle;
 
     const onPredictStream = useCallback(
-      async question => {
+      async (question, { skipInputReset = false } = {}) => {
         let emitted = false;
         // Before sending a new message, track any pending MCP server (that required auth) as session-declined.
         // This handles the case where user sends a new message instead of clicking Continue.
@@ -1212,7 +1212,9 @@ const ChatBox = memo(
 
           lastSentQuestionRef.current = question;
           onClearAttachments?.();
-          chatInput.current?.reset();
+          if (!skipInputReset) {
+            chatInput.current?.reset();
+          }
           // Handle participant state changes
           if (participant?.entity_name === ChatParticipantType.Users) {
             onClearActiveParticipant(true);
