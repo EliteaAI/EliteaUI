@@ -5,6 +5,9 @@ import { FormControlLabel, Typography } from '@mui/material';
 import { Checkbox, Input } from '@/[fsd]/shared/ui';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 
+const READ_ONLY_SCOPE_TOOLTIP =
+  "Set by the credential's Scopes checkboxes. To change them, edit the credential and sign in again.";
+
 const OAuthFormFields = memo(props => {
   const {
     clientId,
@@ -14,6 +17,7 @@ const OAuthFormFields = memo(props => {
     onClientSecretChange,
     onScopeChange,
     availableScopes = [],
+    isScopeReadOnly = false,
     needClientId = false,
     needSecret = false,
     isSecretRequired = true,
@@ -57,12 +61,19 @@ const OAuthFormFields = memo(props => {
             color="text.primary"
             sx={styles.labelWithIcon}
           >
-            Scope (optional)
-            {availableScopes.length > 0 && (
+            {isScopeReadOnly ? 'Scope' : 'Scope (optional)'}
+            {isScopeReadOnly ? (
               <InfoTooltip
-                infoTooltip={`MCP server supports: ${availableScopes.join(', ')}.`}
+                infoTooltip={READ_ONLY_SCOPE_TOOLTIP}
                 sx={styles.infoIconWrapper}
               />
+            ) : (
+              availableScopes.length > 0 && (
+                <InfoTooltip
+                  infoTooltip={`MCP server supports: ${availableScopes.join(', ')}.`}
+                  sx={styles.infoIconWrapper}
+                />
+              )
             )}
           </Typography>
         }
@@ -70,6 +81,7 @@ const OAuthFormFields = memo(props => {
         value={scope}
         placeholder="Enter OAuth scopes (space-separated)"
         enableAutoBlur={false}
+        disabled={isScopeReadOnly}
       />
       {showSaveCredentials && (
         <FormControlLabel

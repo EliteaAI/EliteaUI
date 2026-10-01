@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { isPropertyVisible, validateRequiredFields } from '../toolBase.helpers';
+import {
+  getCheckboxListValue,
+  isPropertyVisible,
+  toggleCheckboxListValue,
+  validateRequiredFields,
+} from '../toolBase.helpers';
 
 const visible = overrides =>
   isPropertyVisible({
@@ -91,5 +96,48 @@ describe('validateRequiredFields secret headers', () => {
     const requiredHeadersSchema = { ...optionalHeadersSchema, required: ['headers'] };
 
     expect(validateRequiredFields(requiredHeadersSchema, { headers: {} })).toEqual({ headers: true });
+  });
+});
+
+const SCOPE_OPTIONS = [{ value: 'Mail.Read' }, { value: 'Mail.ReadWrite' }, { value: 'Mail.Send' }];
+
+describe('getCheckboxListValue', () => {
+  it('keeps offered values in option order', () => {
+    expect(getCheckboxListValue(['Mail.Send', 'Mail.Read'], SCOPE_OPTIONS, ['Mail.Read'])).toEqual([
+      'Mail.Read',
+      'Mail.Send',
+    ]);
+  });
+
+  it('splits a legacy string and ignores case', () => {
+    expect(getCheckboxListValue('mail.send, MAIL.READ', SCOPE_OPTIONS, [])).toEqual([
+      'Mail.Read',
+      'Mail.Send',
+    ]);
+  });
+
+  it('drops values that are not options', () => {
+    expect(getCheckboxListValue(['offline_access', 'Mail.Send'], SCOPE_OPTIONS, ['Mail.Read'])).toEqual([
+      'Mail.Send',
+    ]);
+  });
+
+  it.each([undefined, null, [], '', ['User.Read']])('falls back to the default for %j', value => {
+    expect(getCheckboxListValue(value, SCOPE_OPTIONS, ['Mail.Read'])).toEqual(['Mail.Read']);
+  });
+});
+
+describe('toggleCheckboxListValue', () => {
+  it('adds a ticked value in option order', () => {
+    expect(toggleCheckboxListValue(['Mail.Send'], 'Mail.Read', true, SCOPE_OPTIONS)).toEqual([
+      'Mail.Read',
+      'Mail.Send',
+    ]);
+  });
+
+  it('removes an unticked value', () => {
+    expect(toggleCheckboxListValue(['Mail.Read', 'Mail.Send'], 'Mail.Send', false, SCOPE_OPTIONS)).toEqual([
+      'Mail.Read',
+    ]);
   });
 });

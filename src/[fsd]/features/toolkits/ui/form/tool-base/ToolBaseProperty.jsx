@@ -7,7 +7,7 @@ import { Box, FormControlLabel, Typography } from '@mui/material';
 import { CredentialsSelect } from '@/[fsd]/features/credentials';
 import { OpenApiHelpers, ToolBaseHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
-import { ArrayFieldInput } from '@/[fsd]/features/toolkits/ui/form/tool-base';
+import { ArrayFieldInput, CheckboxListInput } from '@/[fsd]/features/toolkits/ui/form/tool-base';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { CodeMirrorLinterHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useFieldFocus } from '@/[fsd]/shared/lib/hooks';
@@ -263,6 +263,22 @@ const ToolBaseProperty = memo(props => {
           />
         )}
       </>
+    );
+  }
+  if (uiComponent === 'checkbox_list') {
+    return (
+      <CheckboxListInput
+        key={k}
+        k={k}
+        value={settings[k]}
+        options={v.checkbox_options}
+        defaultValue={v.default}
+        label={description ? renderLabelWithHint(required) : label}
+        editField={editField}
+        fieldPath={buildEditFieldPath(k)}
+        disabled={disableConfigFields || disabled}
+        errorText={errorText}
+      />
     );
   }
   if (k === 'selected_tools') {

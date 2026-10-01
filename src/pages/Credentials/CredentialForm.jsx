@@ -8,11 +8,11 @@ import { Box, CircularProgress, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { LlmModelFormConstants } from '@/[fsd]/features/credentials/lib/constants';
-import { LlmModelForm } from '@/[fsd]/features/credentials/ui';
+import { CredentialLogoutModal, LlmModelForm } from '@/[fsd]/features/credentials/ui';
 import { CREDENTIALS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
-import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
+import { McpAuthFlowHelpers, McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import { useConfigOAuthModal, useMcpTokenChange } from '@/[fsd]/features/mcp/lib/hooks';
-import { McpAuthModal, McpLogoutModal } from '@/[fsd]/features/mcp/ui';
+import { McpAuthModal } from '@/[fsd]/features/mcp/ui';
 import { ToolComponentHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
 import { Button } from '@/[fsd]/shared/ui';
@@ -183,6 +183,10 @@ const CredentialForm = memo(props => {
     return oauthServerUrl;
   }, [credentialUuid, oauthServerUrl]);
   const { isLoggedIn: isOAuthLoggedIn } = useMcpTokenChange({ serverUrl: oauthTokenKey });
+  const isMicrosoftEntraOAuth = useMemo(
+    () => McpAuthFlowHelpers.isMicrosoftEntraEndpoint(oauthServerUrl),
+    [oauthServerUrl],
+  );
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const onConfirmLogout = useCallback(() => {
@@ -368,9 +372,9 @@ const CredentialForm = memo(props => {
         </Typography>
       )}
       <McpAuthModal {...configOAuth.getModalProps()} />
-      <McpLogoutModal
-        serverUrl={oauthTokenKey}
+      <CredentialLogoutModal
         open={showLogoutModal}
+        isMicrosoftEntra={isMicrosoftEntraOAuth}
         onClose={onCloseLogoutModal}
         onConfirm={onConfirmLogout}
       />

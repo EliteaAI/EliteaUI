@@ -135,6 +135,30 @@ export const validateSecretHeaders = headers => {
   );
 };
 
+/**
+ * Ticked values of a checkbox_list field, in option order.
+ * Accepts an array or a comma / space separated string, matches case-insensitively,
+ * drops values that are not options and falls back to the schema default when nothing is left.
+ */
+export const getCheckboxListValue = (value, options = [], defaultValue = []) => {
+  const pick = items => {
+    const picked = new Set(items.map(item => String(item).trim().toLowerCase()).filter(Boolean));
+    return options
+      .map(option => option.value)
+      .filter(optionValue => picked.has(String(optionValue).toLowerCase()));
+  };
+  const items = Array.isArray(value) ? value : typeof value === 'string' ? value.split(/[,\s]+/) : [];
+  const selected = pick(items);
+  return selected.length ? selected : pick(Array.isArray(defaultValue) ? defaultValue : []);
+};
+
+export const toggleCheckboxListValue = (selected = [], optionValue, checked, options = []) => {
+  const next = new Set(selected);
+  if (checked) next.add(optionValue);
+  else next.delete(optionValue);
+  return options.map(option => option.value).filter(value => next.has(value));
+};
+
 export const isPropertyVisible = ({
   propertyKey,
   property,
