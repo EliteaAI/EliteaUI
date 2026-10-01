@@ -148,6 +148,7 @@ export const apis = eliteaApi
 
 export const {
   useUserListQuery,
+  useLazyUserListQuery,
   useRoleListQuery,
   useUserCreateMutation,
   useUserUpdateMutation,

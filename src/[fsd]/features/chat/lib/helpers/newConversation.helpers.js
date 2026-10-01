@@ -1,3 +1,5 @@
+import { ChatParticipantType } from '@/common/constants';
+
 export const extractHumanReadableName = email => {
   if (email) {
     // Step 1: Extract the username part before the '@'
@@ -43,3 +45,17 @@ export const setUserLLmSettings = (participants = [], userId, llm_settings) =>
     }
     return p;
   });
+
+export const buildDefaultUserParticipant = (templateParticipant, projectUser) => {
+  const userName = templateParticipant.name || projectUser?.name || projectUser?.email || '';
+  return {
+    id: templateParticipant.id,
+    name: userName,
+    project_id: templateParticipant.project_id,
+    participantType: ChatParticipantType.Users,
+    entity_name: ChatParticipantType.Users,
+    entity_meta: { id: templateParticipant.id, name: userName },
+    entity_settings: {},
+    meta: { user_name: userName, user_avatar: projectUser?.avatar, email: projectUser?.email },
+  };
+};
