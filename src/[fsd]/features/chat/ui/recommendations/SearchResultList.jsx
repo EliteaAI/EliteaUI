@@ -22,7 +22,7 @@ const SearchResultList = memo(props => {
     sortOrder: 'asc',
     pageSize: PAGE_SIZE,
     query,
-    types: [ChatParticipantType.Applications],
+    types: [ChatParticipantType.Applications, ChatParticipantType.Pipelines],
     projectFilter: 'all',
     forceSkip: false,
     excludePublic,

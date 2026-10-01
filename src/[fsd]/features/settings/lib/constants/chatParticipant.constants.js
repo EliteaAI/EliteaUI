@@ -34,7 +34,7 @@ export const TAB_ENTITY_TYPE = {
 
 export const TAB_FETCH_TYPES = {
   [TABS.AGENTS]: [ChatParticipantType.Applications],
-  [TABS.PIPELINES]: [ChatParticipantType.Applications],
+  [TABS.PIPELINES]: [ChatParticipantType.Pipelines],
   [TABS.TOOLKITS]: [ChatParticipantType.Toolkits],
   [TABS.MCPS]: [ChatParticipantType.Toolkits],
   [TABS.USERS]: [ChatParticipantType.Users],

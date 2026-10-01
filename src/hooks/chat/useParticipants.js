@@ -136,7 +136,7 @@ const useParticipants = ({
     selectedTagIds,
     agents_type: 'pipeline',
     forceSkip:
-      (types.length && !types.includes(ChatParticipantType.Applications)) ||
+      (types.length && !types.includes(ChatParticipantType.Pipelines)) ||
       (projectFilter === 'public' && !canListPublicAgents) ||
       skipPublicProjectApplications ||
       forceSkip,
@@ -165,7 +165,7 @@ const useParticipants = ({
     selectedTagIds,
     agents_type: 'pipeline',
     forceSkip:
-      (types.length && !types.includes(ChatParticipantType.Applications)) ||
+      (types.length && !types.includes(ChatParticipantType.Pipelines)) ||
       projectFilter === 'teamProject' ||
       canListPublicAgents ||
       excludePublic ||
@@ -191,6 +191,8 @@ const useParticipants = ({
     totalCount: totalToolkitsCount,
   } = useLoadToolkits({
     specifiedQuery: debouncedQuery,
+    sortBy,
+    sortOrder,
     forceSkip: !types.includes(ChatParticipantType.Toolkits),
   });
 
@@ -204,6 +206,8 @@ const useParticipants = ({
     totalCount: totalPublicToolkitsCount,
   } = useLoadToolkits({
     specifiedProjectId: PUBLIC_PROJECT_ID,
+    sortBy,
+    sortOrder,
     forceSkip: projectId == PUBLIC_PROJECT_ID || !types.includes(ChatParticipantType.Toolkits),
   });
 
@@ -219,6 +223,8 @@ const useParticipants = ({
   } = useLoadToolkits({
     isMCP: true,
     specifiedQuery: debouncedQuery,
+    sortBy,
+    sortOrder,
     forceSkip: !types.includes(ChatParticipantType.Toolkits),
   });
 
@@ -233,6 +239,8 @@ const useParticipants = ({
   } = useLoadToolkits({
     isMCP: true,
     specifiedProjectId: PUBLIC_PROJECT_ID,
+    sortBy,
+    sortOrder,
     forceSkip: projectId == PUBLIC_PROJECT_ID || !types.includes(ChatParticipantType.Toolkits),
   });
 
@@ -264,8 +272,8 @@ const useParticipants = ({
     if (!isFetching) {
       (!types.length || types.includes(ChatParticipantType.Applications)) && loadMoreApplications();
       (!types.length || types.includes(ChatParticipantType.Applications)) && loadMorePublicApplications();
-      (!types.length || types.includes(ChatParticipantType.Applications)) && loadMorePipelines();
-      (!types.length || types.includes(ChatParticipantType.Applications)) && loadMorePublicPipelines();
+      (!types.length || types.includes(ChatParticipantType.Pipelines)) && loadMorePipelines();
+      (!types.length || types.includes(ChatParticipantType.Pipelines)) && loadMorePublicPipelines();
       (!types.length || types.includes(ChatParticipantType.Users)) && loadMoreUsers();
       (!types.length || types.includes(ChatParticipantType.Toolkits)) && onLoadMoreToolkits();
       (!types.length || types.includes(ChatParticipantType.Toolkits)) && onLoadMorePublicToolkits();
@@ -301,7 +309,7 @@ const useParticipants = ({
           ]
         : [];
     const pipelineList =
-      !types.length || types.includes(ChatParticipantType.Applications)
+      !types.length || types.includes(ChatParticipantType.Pipelines)
         ? [
             ...pipelines.map(pipeline => ({
               ...pipeline,
@@ -421,7 +429,7 @@ const useParticipants = ({
         ? applicationsTotal + publicApplicationsTotal
         : 0;
     const pipelineTotal =
-      !types.length || types.includes(ChatParticipantType.Applications)
+      !types.length || types.includes(ChatParticipantType.Pipelines)
         ? pipelinesTotal + publicPipelinesTotal
         : 0;
     const userTotal = types.includes(ChatParticipantType.Users) ? usersTotal : 0;
