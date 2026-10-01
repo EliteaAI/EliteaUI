@@ -10,7 +10,37 @@ import { ChartTooltip, InfoBanner, KPICard, infoBannerTextSx } from '@/[fsd]/fea
 import { CHART_COLORS } from '@/[fsd]/shared/config/theme';
 import { useAnalyticsCostsQuery } from '@/api';
 
+import CostTable from './components/CostTable';
+import EntityKindChip from './components/EntityKindChip';
 import RunAnalyticsEmptyState from './components/RunAnalyticsEmptyState';
+
+const toCostRows = (items, mapRow) => {
+  const sorted = [...(items || [])].sort((a, b) => (b.total_cost ?? 0) - (a.total_cost ?? 0));
+  const totalCost = sorted.reduce((sum, item) => sum + (item.total_cost ?? 0), 0);
+  return sorted.map(item => ({
+    ...mapRow(item),
+    cost: item.total_cost,
+    input_cost: item.input_cost,
+    output_cost: item.output_cost,
+    cache_read_cost: item.cache_read_cost,
+    cache_creation_cost: item.cache_creation_cost,
+    share: totalCost > 0 ? (item.total_cost / totalCost) * 100 : null,
+    below: item.below_resolution || {},
+  }));
+};
+
+const TYPE_COLUMN = {
+  key: 'kind',
+  header: 'TYPE',
+  flex: 1,
+  render: row => <EntityKindChip kind={row.kind} />,
+};
+
+const EVALUATION_COLUMNS = [
+  TYPE_COLUMN,
+  { key: 'version', header: 'VERSION', flex: 1.5, render: row => row.version || '—' },
+  { key: 'runs', header: 'RUNS', flex: 1, render: row => AnalyticCommonHelpers.fmtNum(row.runs) },
+];
 
 const AnalyticsCosts = memo(props => {
   const { projectId, dateFrom, dateTo, runScope } = props;
@@ -29,50 +59,31 @@ const AnalyticsCosts = memo(props => {
     { skip: !projectId },
   );
 
-  const modelTableData = useMemo(() => {
-    const sorted = [...(data?.by_model || [])].sort((a, b) => (b.total_cost ?? 0) - (a.total_cost ?? 0));
-    const totalCost = sorted.reduce((sum, m) => sum + (m.total_cost ?? 0), 0);
-    return sorted.map(m => ({
-      name: m.display_name || m.model_name,
-      cost: m.total_cost,
-      input_cost: m.input_cost,
-      output_cost: m.output_cost,
-      cache_read_cost: m.cache_read_cost,
-      cache_creation_cost: m.cache_creation_cost,
-      share: totalCost > 0 ? (m.total_cost / totalCost) * 100 : null,
-      below: m.below_resolution || {},
-    }));
-  }, [data?.by_model]);
+  const modelTableData = useMemo(
+    () => toCostRows(data?.by_model, m => ({ name: m.display_name || m.model_name })),
+    [data?.by_model],
+  );
 
-  const agentTableData = useMemo(() => {
-    const sorted = [...(data?.by_agent || [])].sort((a, b) => (b.total_cost ?? 0) - (a.total_cost ?? 0));
-    const totalCost = sorted.reduce((sum, a) => sum + (a.total_cost ?? 0), 0);
-    return sorted.map(a => ({
-      name: a.entity_name,
-      cost: a.total_cost,
-      input_cost: a.input_cost,
-      output_cost: a.output_cost,
-      cache_read_cost: a.cache_read_cost,
-      cache_creation_cost: a.cache_creation_cost,
-      share: totalCost > 0 ? (a.total_cost / totalCost) * 100 : null,
-      below: a.below_resolution || {},
-    }));
-  }, [data?.by_agent]);
+  const agentTableData = useMemo(
+    () => toCostRows(data?.by_agent, a => ({ name: a.entity_name, kind: a.entity_kind })),
+    [data?.by_agent],
+  );
 
-  const userTableData = useMemo(() => {
-    const sorted = [...(data?.by_user || [])].sort((a, b) => (b.total_cost ?? 0) - (a.total_cost ?? 0));
-    const totalCost = sorted.reduce((sum, u) => sum + (u.total_cost ?? 0), 0);
-    return sorted.map(u => ({
-      name: u.user_email,
-      cost: u.total_cost,
-      input_cost: u.input_cost,
-      output_cost: u.output_cost,
-      cache_read_cost: u.cache_read_cost,
-      cache_creation_cost: u.cache_creation_cost,
-      share: totalCost > 0 ? (u.total_cost / totalCost) * 100 : null,
-      below: u.below_resolution || {},
-    }));
-  }, [data?.by_user]);
+  const userTableData = useMemo(
+    () => toCostRows(data?.by_user, u => ({ name: u.user_email })),
+    [data?.by_user],
+  );
+
+  const evaluationTableData = useMemo(
+    () =>
+      toCostRows(data?.by_evaluation, e => ({
+        name: e.entity_name,
+        kind: e.entity_kind,
+        version: e.version_name,
+        runs: e.eval_runs,
+      })),
+    [data?.by_evaluation],
+  );
 
   const dailyChartData = useMemo(
     () => (data?.daily || []).map(d => ({ ...d, date: d.date?.slice(5) })),
@@ -102,6 +113,8 @@ const AnalyticsCosts = memo(props => {
   if (!data) return null;
 
   const kpis = data.kpis ?? {};
+  const evaluationShare =
+    kpis.total_cost > 0 ? ((kpis.total_evaluation_cost ?? 0) / kpis.total_cost) * 100 : null;
 
   if (isRunScope && !userTableData.length && !modelTableData.length && !kpis.total_cost) {
     return (
@@ -165,6 +178,20 @@ const AnalyticsCosts = memo(props => {
           subtitle="estimated USD cost"
           tooltip={tooltips.CACHE_WRITE_COST}
         />
+        {!isRunScope && (
+          <KPICard
+            label="EVALUATION COST"
+            value={AnalyticCommonHelpers.fmtCost(
+              kpis.total_evaluation_cost,
+              kpis.below_resolution?.total_evaluation_cost,
+            )}
+            subtitle={
+              evaluationShare != null ? `${evaluationShare.toFixed(1)}% of total cost` : 'estimated USD cost'
+            }
+            tooltip={tooltips.EVALUATION_COST}
+            testId="analytics-costs-evaluation-kpi"
+          />
+        )}
       </Box>
 
       {!isRunScope && (
@@ -243,189 +270,41 @@ const AnalyticsCosts = memo(props => {
         </Box>
       )}
 
-      <Box sx={styles.chartCard}>
-        <Typography
-          variant="labelMedium"
-          sx={styles.chartTitle}
-        >
-          Cost by User
-        </Typography>
-        {userTableData.length > 0 ? (
-          <Box sx={styles.tableWrapper}>
-            <Box sx={styles.tableHeader}>
-              <Typography sx={[styles.tableCell, { flex: 3 }]}>USER</Typography>
-              <Typography sx={[styles.tableCell, styles.flexOneHalf]}>TOTAL COST</Typography>
-              <Typography sx={[styles.tableCell, styles.flexOneHalf]}>INPUT TOKEN COST</Typography>
-              <Typography sx={[styles.tableCell, styles.flexOneHalf]}>OUTPUT TOKEN COST</Typography>
-              <Typography sx={[styles.tableCell, styles.flexOneHalf]}>CACHE READ COST</Typography>
-              <Typography sx={[styles.tableCell, styles.flexOneHalf]}>CACHE WRITE COST</Typography>
-              <Typography sx={[styles.tableCell, styles.flexOne]}>SHARE</Typography>
-            </Box>
-            {userTableData.map((u, i) => (
-              <Box
-                key={i}
-                sx={styles.tableRow}
-              >
-                <Typography
-                  sx={[styles.tableCellValue, { flex: 3 }]}
-                  noWrap
-                >
-                  {u.name}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
-                  {AnalyticCommonHelpers.fmtCost(u.cost, u.below.total_cost)}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
-                  {AnalyticCommonHelpers.fmtCost(u.input_cost, u.below.input_cost)}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
-                  {AnalyticCommonHelpers.fmtCost(u.output_cost, u.below.output_cost)}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
-                  {AnalyticCommonHelpers.fmtCost(u.cache_read_cost, u.below.cache_read_cost)}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
-                  {AnalyticCommonHelpers.fmtCost(u.cache_creation_cost, u.below.cache_creation_cost)}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
-                  {u.share != null ? `${u.share.toFixed(1)}%` : '—'}
-                </Typography>
-              </Box>
-            ))}
-          </Box>
-        ) : (
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={styles.noDataText}
-          >
-            No user cost data is available for {scopeText}.
-          </Typography>
-        )}
-      </Box>
+      <CostTable
+        title="Cost by User"
+        nameHeader="USER"
+        rows={userTableData}
+        emptyState={`No user cost data is available for ${scopeText}.`}
+      />
 
-      <Box sx={styles.chartCard}>
-        <Typography
-          variant="labelMedium"
-          sx={styles.chartTitle}
-        >
-          Cost by Model
-        </Typography>
-        {modelTableData.length > 0 ? (
-          <Box sx={styles.tableWrapper}>
-            <Box sx={styles.tableHeader}>
-              <Typography sx={[styles.tableCell, { flex: 3 }]}>MODEL</Typography>
-              <Typography sx={[styles.tableCell, styles.flexOneHalf]}>TOTAL COST</Typography>
-              <Typography sx={[styles.tableCell, styles.flexOneHalf]}>INPUT TOKEN COST</Typography>
-              <Typography sx={[styles.tableCell, styles.flexOneHalf]}>OUTPUT TOKEN COST</Typography>
-              <Typography sx={[styles.tableCell, styles.flexOneHalf]}>CACHE READ COST</Typography>
-              <Typography sx={[styles.tableCell, styles.flexOneHalf]}>CACHE WRITE COST</Typography>
-              <Typography sx={[styles.tableCell, styles.flexOne]}>SHARE</Typography>
-            </Box>
-            {modelTableData.map((m, i) => (
-              <Box
-                key={i}
-                sx={styles.tableRow}
-              >
-                <Typography
-                  sx={[styles.tableCellValue, { flex: 3 }]}
-                  noWrap
-                >
-                  {m.name}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
-                  {AnalyticCommonHelpers.fmtCost(m.cost, m.below.total_cost)}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
-                  {AnalyticCommonHelpers.fmtCost(m.input_cost, m.below.input_cost)}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
-                  {AnalyticCommonHelpers.fmtCost(m.output_cost, m.below.output_cost)}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
-                  {AnalyticCommonHelpers.fmtCost(m.cache_read_cost, m.below.cache_read_cost)}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
-                  {AnalyticCommonHelpers.fmtCost(m.cache_creation_cost, m.below.cache_creation_cost)}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
-                  {m.share != null ? `${m.share.toFixed(1)}%` : '—'}
-                </Typography>
-              </Box>
-            ))}
-          </Box>
-        ) : (
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={styles.noDataText}
-          >
-            No model cost data is available for {scopeText}.
-          </Typography>
-        )}
-      </Box>
+      <CostTable
+        title="Cost by Model"
+        nameHeader="MODEL"
+        rows={modelTableData}
+        emptyState={`No model cost data is available for ${scopeText}.`}
+      />
 
       {!isRunScope && (
-        <Box sx={styles.chartCard}>
-          <Typography
-            variant="labelMedium"
-            sx={styles.chartTitle}
-          >
-            Cost by Agent & Pipeline
-          </Typography>
-          {agentTableData.length > 0 ? (
-            <Box sx={styles.tableWrapper}>
-              <Box sx={styles.tableHeader}>
-                <Typography sx={[styles.tableCell, { flex: 3 }]}>AGENT / PIPELINE</Typography>
-                <Typography sx={[styles.tableCell, styles.flexOneHalf]}>TOTAL COST</Typography>
-                <Typography sx={[styles.tableCell, styles.flexOneHalf]}>INPUT TOKEN COST</Typography>
-                <Typography sx={[styles.tableCell, styles.flexOneHalf]}>OUTPUT TOKEN COST</Typography>
-                <Typography sx={[styles.tableCell, styles.flexOneHalf]}>CACHE READ COST</Typography>
-                <Typography sx={[styles.tableCell, styles.flexOneHalf]}>CACHE WRITE COST</Typography>
-                <Typography sx={[styles.tableCell, styles.flexOne]}>SHARE</Typography>
-              </Box>
-              {agentTableData.map((a, i) => (
-                <Box
-                  key={i}
-                  sx={styles.tableRow}
-                >
-                  <Typography
-                    sx={[styles.tableCellValue, { flex: 3 }]}
-                    noWrap
-                  >
-                    {a.name}
-                  </Typography>
-                  <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
-                    {AnalyticCommonHelpers.fmtCost(a.cost, a.below.total_cost)}
-                  </Typography>
-                  <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
-                    {AnalyticCommonHelpers.fmtCost(a.input_cost, a.below.input_cost)}
-                  </Typography>
-                  <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
-                    {AnalyticCommonHelpers.fmtCost(a.output_cost, a.below.output_cost)}
-                  </Typography>
-                  <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
-                    {AnalyticCommonHelpers.fmtCost(a.cache_read_cost, a.below.cache_read_cost)}
-                  </Typography>
-                  <Typography sx={[styles.tableCellValue, styles.flexOneHalf]}>
-                    {AnalyticCommonHelpers.fmtCost(a.cache_creation_cost, a.below.cache_creation_cost)}
-                  </Typography>
-                  <Typography sx={[styles.tableCellValue, styles.flexOne]}>
-                    {a.share != null ? `${a.share.toFixed(1)}%` : '—'}
-                  </Typography>
-                </Box>
-              ))}
-            </Box>
-          ) : (
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={styles.noDataText}
-            >
-              No agent & pipeline cost data is available for the selected date range.
-            </Typography>
-          )}
-        </Box>
+        <CostTable
+          title="Cost by Agent & Pipeline"
+          tooltip={tooltips.BY_AGENT_PIPELINE}
+          nameHeader="AGENT / PIPELINE"
+          rows={agentTableData}
+          extraColumns={[TYPE_COLUMN]}
+          emptyState="No agent & pipeline cost data is available for the selected date range."
+        />
+      )}
+
+      {!isRunScope && (
+        <CostTable
+          title="Cost by Evaluation"
+          tooltip={tooltips.BY_EVALUATION}
+          nameHeader="AGENT / PIPELINE"
+          rows={evaluationTableData}
+          extraColumns={EVALUATION_COLUMNS}
+          emptyState="No evaluation cost data is available for the selected date range."
+          testId="analytics-costs-by-evaluation"
+        />
       )}
     </Box>
   );
@@ -446,36 +325,6 @@ const styles = {
   }),
   chartTitle: ({ palette }) => ({ color: palette.text.secondary, marginBottom: '0.5rem', display: 'block' }),
   chartWrapper: { width: '100%', overflow: 'hidden', height: 240 },
-  tableWrapper: { display: 'flex', flexDirection: 'column', width: '100%', overflow: 'auto' },
-  tableHeader: ({ palette }) => ({
-    display: 'flex',
-    padding: '0.5rem 0.75rem',
-    borderBottom: `0.0625rem solid ${palette.border.default}`,
-    gap: '0.5rem',
-  }),
-  tableCell: ({ palette }) => ({
-    fontSize: '0.6875rem',
-    fontWeight: 600,
-    color: palette.text.metrics || palette.text.disabled,
-    textTransform: 'uppercase',
-  }),
-  tableRow: ({ palette }) => ({
-    display: 'flex',
-    padding: '0.5rem 0.75rem',
-    gap: '0.5rem',
-    borderBottom: `0.0625rem solid ${palette.border.default}`,
-    '&:last-child': { borderBottom: 'none' },
-  }),
-  tableCellValue: ({ palette }) => ({
-    fontSize: '0.8125rem',
-    color: palette.text.secondary,
-    fontVariantNumeric: 'tabular-nums',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-  }),
-  flexOne: { flex: 1 },
-  flexOneHalf: { flex: 1.5 },
 };
 
 AnalyticsCosts.displayName = 'AnalyticsCosts';

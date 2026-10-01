@@ -46,7 +46,7 @@ const AnalyticAgentDetailed = memo(props => {
       </Box>
     );
 
-  const { entity_name, kpis, users = [], tools = [], daily_usage = [] } = data;
+  const { entity_name, kpis, evaluation, users = [], tools = [], daily_usage = [] } = data;
 
   const tt = AnalyticsCommonConstants.TOOLTIP_TEXTS.agentDetail;
 
@@ -143,6 +143,15 @@ const AnalyticAgentDetailed = memo(props => {
           testId="analytics-agent-detail-kpi-card"
           valueTestId="analytics-agent-detail-kpi-value"
         />
+        {evaluation && (
+          <KPICard
+            label="EVALUATION TOKENS"
+            value={(evaluation.total_tokens ?? 0).toLocaleString()}
+            subtitle={`across ${evaluation.runs ?? 0} evaluation run${evaluation.runs === 1 ? '' : 's'}`}
+            tooltip={tt.EVALUATION_TOKENS}
+            testId="analytics-agent-detail-evaluation-kpi"
+          />
+        )}
         <KPICard
           label="CACHE READ COST"
           value={AnalyticCommonHelpers.fmtCost(kpis.cache_read_cost)}
