@@ -20,7 +20,7 @@ const MainSidebar = memo(props => {
 
   const sideBarCollapsed = useSelector(state => state.settings.sideBarCollapsed);
 
-  const { openWizard, data, isForking } = useSelector(state => state.importWizard);
+  const { openWizard, data, isForking, sourceProjectId } = useSelector(state => state.importWizard);
 
   const styles = mainSidebarStyles(sideBarCollapsed);
 
@@ -56,6 +56,7 @@ const MainSidebar = memo(props => {
         onClose={onCloseImportWizard}
         data={data}
         isForking={isForking}
+        sourceProjectId={sourceProjectId}
       />
     </Box>
   );

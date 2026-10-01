@@ -14,9 +14,9 @@ import useCardNavigate from '@/hooks/useCardNavigate';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const ImportWizardModal = memo(props => {
-  const { open, onClose, isForking } = props;
+  const { open, onClose, isForking, sourceProjectId } = props;
 
-  const { excludedProjectIds } = useForkProjectIds(isForking);
+  const { excludedProjectIds } = useForkProjectIds(isForking, sourceProjectId);
   const selectedProjectId = useSelectedProjectId();
 
   const { values } = useFormikContext();

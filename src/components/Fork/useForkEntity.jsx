@@ -98,6 +98,7 @@ export const useForkEntity = ({ id, entity_name, title, data = {} }) => {
       importWizardActions.openImportWizard({
         isForking: true,
         data: result.data,
+        sourceProjectId: projectId,
       }),
     );
   }, [

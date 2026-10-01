@@ -1,14 +1,11 @@
 import { useMemo } from 'react';
 
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
-export const useForkProjectIds = isForking => {
-  const selectedProjectId = useSelectedProjectId();
-
+export const useForkProjectIds = (isForking, sourceProjectId) => {
   const excludedProjectIds = useMemo(
-    () => (isForking ? [PUBLIC_PROJECT_ID, selectedProjectId] : []),
-    [isForking, selectedProjectId],
+    () => (isForking ? [PUBLIC_PROJECT_ID, sourceProjectId] : []),
+    [isForking, sourceProjectId],
   );
 
   return {
