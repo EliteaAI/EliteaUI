@@ -111,7 +111,7 @@ CostTable.displayName = 'CostTable';
 
 /** @type {MuiSx} */
 const costTableStyles = () => ({
-  noDataText: { p: 2 },
+  noDataText: { padding: '1rem' },
   chartCard: ({ palette }) => ({
     padding: '1rem',
     borderRadius: '0.5rem',

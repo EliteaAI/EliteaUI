@@ -346,6 +346,131 @@ describe('AnalyticsCosts', () => {
   });
 });
 
+const EVALUATION_DATA = {
+  ...MOCK_DATA,
+  kpis: { ...MOCK_DATA.kpis, total_cost: 40, total_evaluation_cost: 10 },
+  by_agent: [
+    { entity_id: 1, entity_name: 'Code Review Bot', entity_kind: 'agent', total_cost: 6 },
+    { entity_id: 2, entity_name: 'Release Flow', entity_kind: 'pipeline', total_cost: 4 },
+  ],
+  by_evaluation: [
+    {
+      entity_id: 1,
+      entity_name: 'Eval Target Agent',
+      entity_kind: 'agent',
+      version_name: 'v2',
+      eval_runs: 7,
+      total_cost: 10,
+    },
+  ],
+};
+
+describe('AnalyticsCosts — evaluation spend', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
+  });
+
+  it('renders the evaluation cost KPI with its share of the total cost', () => {
+    useAnalyticsCostsQuery.mockReturnValue({ data: EVALUATION_DATA, isFetching: false, isError: false });
+    render(
+      <AnalyticsCosts
+        projectId={1}
+        dateFrom="2026-01-01"
+        dateTo="2026-01-31"
+      />,
+      { wrapper: Wrapper },
+    );
+    expect(screen.getByTestId('kpi-EVALUATION COST')).toHaveTextContent('$10');
+    expect(screen.getByTestId('kpi-EVALUATION COST-subtitle')).toHaveTextContent('25.0% of total cost');
+  });
+
+  it('falls back to the estimated subtitle when the total cost is zero', () => {
+    useAnalyticsCostsQuery.mockReturnValue({
+      data: { ...EVALUATION_DATA, kpis: { total_cost: 0, total_evaluation_cost: 0 } },
+      isFetching: false,
+      isError: false,
+    });
+    render(
+      <AnalyticsCosts
+        projectId={1}
+        dateFrom="2026-01-01"
+        dateTo="2026-01-31"
+      />,
+      { wrapper: Wrapper },
+    );
+    expect(screen.getByTestId('kpi-EVALUATION COST-subtitle')).toHaveTextContent('estimated USD cost');
+  });
+
+  it('renders the Type column for agents and pipelines', () => {
+    useAnalyticsCostsQuery.mockReturnValue({ data: EVALUATION_DATA, isFetching: false, isError: false });
+    render(
+      <AnalyticsCosts
+        projectId={1}
+        dateFrom="2026-01-01"
+        dateTo="2026-01-31"
+      />,
+      { wrapper: Wrapper },
+    );
+    expect(screen.getAllByText('TYPE')).toHaveLength(2);
+    expect(screen.getByText('Release Flow')).toBeTruthy();
+    expect(screen.getByText('Pipeline')).toBeTruthy();
+    // One agent row in each of the agent and evaluation tables
+    expect(screen.getAllByText('Agent')).toHaveLength(2);
+  });
+
+  it('renders the cost by evaluation table with version and runs', () => {
+    useAnalyticsCostsQuery.mockReturnValue({ data: EVALUATION_DATA, isFetching: false, isError: false });
+    render(
+      <AnalyticsCosts
+        projectId={1}
+        dateFrom="2026-01-01"
+        dateTo="2026-01-31"
+      />,
+      { wrapper: Wrapper },
+    );
+    const table = screen.getByTestId('analytics-costs-by-evaluation');
+    expect(table).toHaveTextContent('Cost by Evaluation');
+    expect(table).toHaveTextContent('VERSION');
+    expect(table).toHaveTextContent('RUNS');
+    expect(table).toHaveTextContent('Eval Target Agent');
+    expect(table).toHaveTextContent('v2');
+    expect(table).toHaveTextContent('7');
+    expect(table).toHaveTextContent('100.0%');
+  });
+
+  it('renders the evaluation empty state when there is no evaluation spend', () => {
+    useAnalyticsCostsQuery.mockReturnValue({ data: MOCK_DATA, isFetching: false, isError: false });
+    render(
+      <AnalyticsCosts
+        projectId={1}
+        dateFrom="2026-01-01"
+        dateTo="2026-01-31"
+      />,
+      { wrapper: Wrapper },
+    );
+    expect(
+      screen.getByText('No evaluation cost data is available for the selected date range.'),
+    ).toBeTruthy();
+  });
+
+  it('hides the evaluation KPI and table in run scope', () => {
+    useAnalyticsCostsQuery.mockReturnValue({ data: EVALUATION_DATA, isFetching: false, isError: false });
+    render(
+      <AnalyticsCosts
+        projectId={1}
+        runScope={{ queryArgs: { runId: '555' }, tooltips: { costs: {} }, scopeLabel: 'this run' }}
+      />,
+      { wrapper: Wrapper },
+    );
+    expect(screen.queryByTestId('kpi-EVALUATION COST')).toBeNull();
+    expect(screen.queryByTestId('analytics-costs-by-evaluation')).toBeNull();
+  });
+});
+
 const RUN_SCOPE = {
   queryArgs: { runId: '555' },
   tooltips: { costs: {} },

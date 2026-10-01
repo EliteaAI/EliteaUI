@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import {
+  buildAnalyticsSheets,
   buildRunAnalyticsSheets,
   fetchRunAnalyticsData,
   fmtRunDateTime,
@@ -95,6 +96,66 @@ describe('buildRunAnalyticsSheets', () => {
 
     expect(metadata).toMatchObject({ Suite: 'Tester', 'Evaluation Run ID': 9, 'Evaluated Version': 'base' });
     expect(tools.sections[0].rows[0].tool_name).toBe(EVAL_META.noDataMessage);
+  });
+});
+
+describe('buildAnalyticsSheets — evaluation spend', () => {
+  const [, costs] = buildAnalyticsSheets({
+    costs: {
+      ...COSTS,
+      kpis: { total_cost: 4, total_evaluation_cost: 1.5 },
+      by_agent: [
+        { entity_name: 'Reviewer', entity_kind: 'agent', total_cost: 3 },
+        { entity_name: 'Flow', entity_kind: 'pipeline', total_cost: 1 },
+      ],
+      by_evaluation: [
+        { entity_name: 'Reviewer', entity_kind: 'agent', version_name: 'base', eval_runs: 4, total_cost: 1 },
+        { entity_name: 'Flow', entity_kind: 'pipeline', eval_runs: 2, total_cost: 0.5 },
+      ],
+    },
+    meta: { projectName: 'Team', dateFrom: '2026-09-01', dateTo: '2026-09-30', timeZone: 'UTC' },
+  });
+  const section = title => costs.sections.find(s => s.title === title);
+
+  it('adds the evaluation cost to the summary metrics', () => {
+    expect(section('Summary Metrics').rows).toContainEqual({ metric: 'Evaluation Cost (USD)', value: 1.5 });
+  });
+
+  it('adds a Type column to the agent & pipeline section', () => {
+    const agents = section('Cost by Agent & Pipeline');
+
+    expect(agents.columns.map(c => c.header).slice(0, 2)).toEqual(['Agent / Pipeline', 'Type']);
+    expect(agents.rows.map(r => r.kind)).toEqual(['Agent', 'Pipeline']);
+  });
+
+  it('exports a cost by evaluation section with type, version and runs', () => {
+    const evaluations = section('Cost by Evaluation');
+
+    expect(evaluations.columns.map(c => c.header).slice(0, 4)).toEqual([
+      'Agent / Pipeline',
+      'Type',
+      'Version',
+      'Runs',
+    ]);
+    expect(evaluations.rows[0]).toMatchObject({ name: 'Reviewer', kind: 'Agent', version: 'base', runs: 4 });
+    expect(evaluations.rows[1]).toMatchObject({ name: 'Flow', kind: 'Pipeline', version: '', runs: 2 });
+  });
+
+  it('marks an empty cost by evaluation section with the no-data message', () => {
+    const [, emptyCosts] = buildAnalyticsSheets({
+      costs: {},
+      meta: { projectName: 'Team', timeZone: 'UTC' },
+    });
+    const evaluations = emptyCosts.sections.find(s => s.title === 'Cost by Evaluation');
+
+    expect(evaluations.rows).toEqual([{ name: 'No data available for the selected date range.' }]);
+  });
+
+  it('leaves evaluation spend out of run-scoped exports', () => {
+    const [runCosts] = buildRunAnalyticsSheets({ costs: COSTS, tools: {}, health: {}, meta: RUN_META });
+
+    expect(sectionTitles(runCosts)).not.toContain('Cost by Evaluation');
+    expect(runCosts.sections[0].rows.map(r => r.metric)).not.toContain('Evaluation Cost (USD)');
   });
 });
 
