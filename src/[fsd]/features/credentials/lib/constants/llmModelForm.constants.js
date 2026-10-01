@@ -286,10 +286,10 @@ export const LLM_MODEL_SWITCH_DESCRIPTIONS = {
 };
 
 export const LLM_MODEL_FIELD_LABELS = {
-  [LLM_MODEL_FIELDS.displayName]: 'Display name',
+  [LLM_MODEL_FIELDS.displayName]: 'Display Name',
   [LLM_MODEL_FIELDS.id]: 'ID',
   [LLM_MODEL_FIELDS.description]: 'Description',
-  [LLM_MODEL_FIELDS.modelName]: 'Model name',
+  [LLM_MODEL_FIELDS.modelName]: 'Model Name',
   [LLM_MODEL_FIELDS.contextWindow]: 'Context window',
   [LLM_MODEL_FIELDS.maxOutputTokens]: 'Max output tokens',
   [LLM_MODEL_FIELDS.vision]: 'Vision',
@@ -299,7 +299,7 @@ export const LLM_MODEL_FIELD_LABELS = {
   [LLM_MODEL_FIELDS.defaultEffort]: 'Default effort level',
   [LLM_MODEL_FIELDS.modelTier]: 'Model tier',
   [LLM_MODEL_FIELDS.shared]: 'Shared',
-  [LLM_MODEL_FIELDS.credentials]: 'AI credentials',
+  [LLM_MODEL_FIELDS.credentials]: 'AI Credentials',
   [LLM_MODEL_FIELDS.apiProtocol]: 'API protocol',
   [LLM_MODEL_FIELDS.openaiCompatible]: 'OpenAI compatible',
 };

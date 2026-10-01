@@ -81,6 +81,9 @@ const CredentialsSelect = memo(props => {
   const {
     label = 'Credentials',
     description,
+    infoTooltipTestId,
+    infoTooltipContentTestId,
+    shrinkLabel = true,
     required,
     error,
     helperText,
@@ -562,8 +565,10 @@ const CredentialsSelect = memo(props => {
       <Select.SingleSelect
         data-testid={`toolkit-credential-select-${type}`}
         label={label}
-        shrinkLabel
+        shrinkLabel={shrinkLabel}
         infoIconDescription={description}
+        infoTooltipTestId={infoTooltipTestId}
+        infoTooltipContentTestId={infoTooltipContentTestId}
         required={required}
         error={hasSelectError}
         helperText={showMismatchFooter ? '' : helperText}

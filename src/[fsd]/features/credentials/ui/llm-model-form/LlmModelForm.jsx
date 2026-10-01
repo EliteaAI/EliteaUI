@@ -4,6 +4,7 @@ import { useFormikContext } from 'formik';
 
 import { Box } from '@mui/material';
 
+import { useFieldFocus } from '@/[fsd]/shared/lib/hooks';
 import { Input, Select, Text } from '@/[fsd]/shared/ui';
 import LockSimple from '@/components/Icons/LockSimple';
 
@@ -12,6 +13,9 @@ import { credentialKeyOf, isApiProtocolCredentialType } from '../../lib/helpers/
 import {
   convertDisplayNameToLlmModelId,
   getLlmModelCredentialTypeTag,
+  getLlmModelInfoTestIds,
+  getLlmModelInputLabelProps,
+  getLlmModelSelectLabelProps,
   getLlmModelTier,
   getLlmModelTierFlags,
   hasConflictingLlmModelTiers,
@@ -41,6 +45,8 @@ const {
   LLM_MODEL_API_PROTOCOL_OPTIONS,
   LLM_MODEL_CREDENTIALS_SECTION,
   LLM_MODEL_DESCRIPTION_MAX_LENGTH,
+  LLM_MODEL_FIELD_INFO_TEXTS,
+  LLM_MODEL_FIELD_LABELS,
   LLM_MODEL_FIELDS: FIELDS,
   LLM_MODEL_MODEL_NAME_HELPER_TEXT,
   LLM_MODEL_REASONING_FIELDS,
@@ -54,6 +60,8 @@ const READ_ONLY_INPUT_PROPS = { readOnly: true };
 const NUMERIC_INPUT_PROPS = { inputMode: 'numeric' };
 const DESCRIPTION_INPUT_PROPS = { maxLength: LLM_MODEL_DESCRIPTION_MAX_LENGTH };
 const CREDENTIALS_SELECT_SX = { marginTop: 0 };
+
+const CREDENTIALS_TOOLTIP_TEST_IDS = getLlmModelInfoTestIds(FIELDS.credentials);
 
 const getCredentialOptionTypeTag = configuration => getLlmModelCredentialTypeTag(configuration?.type);
 
@@ -71,6 +79,7 @@ const LlmModelForm = memo(props => {
   const { initialValues } = useFormikContext();
   const initialSettings = initialValues?.settings;
   const styles = llmModelFormStyles();
+  const { toggleFieldFocus, isFocused } = useFieldFocus();
 
   const { credentialType, isCredentialTypePending } = useLlmModelCredentialType(settings.ai_credentials);
   const takenIds = useLlmModelTakenIds({ skip: isEditing });
@@ -159,6 +168,8 @@ const LlmModelForm = memo(props => {
     [errors, settings, initialSettings, isEditing, showValidation, validationErrorMessages],
   );
 
+  const credentialsErrorMessage = visibleErrors[FIELDS.credentials] || visibleErrors[FIELDS.credentialsCheck];
+
   const hasVisibleErrorIn = section => section.fields.some(field => visibleErrors[field]);
 
   const isProfileFillWrittenRef = useRef(false);
@@ -198,11 +209,14 @@ const LlmModelForm = memo(props => {
     [editSetting],
   );
 
+  const onDescriptionFocus = useCallback(() => toggleFieldFocus(FIELDS.description), [toggleFieldFocus]);
+
   const onDescriptionBlur = useCallback(() => {
     const trimmedDescription = String(settings.description ?? '').trim();
     if (trimmedDescription !== (settings.description ?? ''))
       editSetting(FIELDS.description, trimmedDescription);
-  }, [editSetting, settings.description]);
+    toggleFieldFocus(null);
+  }, [editSetting, settings.description, toggleFieldFocus]);
 
   const applyReasoningSettings = useCallback(
     reasoningSettings =>
@@ -285,10 +299,10 @@ const LlmModelForm = memo(props => {
       >
         <LlmModelField
           field={FIELDS.displayName}
-          required
           error={visibleErrors[FIELDS.displayName]}
         >
           <Input.InputBase
+            {...getLlmModelInputLabelProps(FIELDS.displayName, true)}
             id={`llm-model-${FIELDS.displayName}`}
             value={settings.label ?? ''}
             onChange={onDisplayNameChange}
@@ -299,11 +313,11 @@ const LlmModelForm = memo(props => {
         </LlmModelField>
         <LlmModelField
           field={FIELDS.id}
-          required
           error={visibleErrors[FIELDS.id]}
         >
           <Box sx={styles.idRow}>
             <Input.InputBase
+              {...getLlmModelInputLabelProps(FIELDS.id, true)}
               id={`llm-model-${FIELDS.id}`}
               value={settings.elitea_title ?? ''}
               onChange={onIdChange}
@@ -326,30 +340,35 @@ const LlmModelForm = memo(props => {
           error={visibleErrors[FIELDS.description]}
         >
           <Input.InputBase
+            {...getLlmModelInputLabelProps(FIELDS.description)}
             id={`llm-model-${FIELDS.description}`}
             value={settings.description ?? ''}
             onChange={onDescriptionChange}
+            onFocus={onDescriptionFocus}
             onBlur={onDescriptionBlur}
             error={Boolean(visibleErrors[FIELDS.description])}
             inputProps={DESCRIPTION_INPUT_PROPS}
             enableAutoBlur={false}
             autoComplete="off"
           />
-          <Text.CharacterCounter
-            value={settings.description ?? ''}
-            maxLength={LLM_MODEL_DESCRIPTION_MAX_LENGTH}
-            hideMaxLimitMessage
-            data-testid="llm-model-description-counter"
-          />
+          {isFocused(FIELDS.description) && (
+            <Text.CharacterCounter
+              value={settings.description ?? ''}
+              maxLength={LLM_MODEL_DESCRIPTION_MAX_LENGTH}
+              hideMaxLimitMessage
+              sx={styles.descriptionCounter}
+              data-testid="llm-model-description-counter"
+            />
+          )}
         </LlmModelField>
         <LlmModelField
           field={FIELDS.modelName}
-          required
           error={visibleErrors[FIELDS.modelName]}
           helperText={LLM_MODEL_MODEL_NAME_HELPER_TEXT}
           status={recognition}
         >
           <Input.InputBase
+            {...getLlmModelInputLabelProps(FIELDS.modelName, true)}
             id={`llm-model-${FIELDS.modelName}`}
             value={settings.name ?? ''}
             onChange={onModelNameChange}
@@ -370,11 +389,11 @@ const LlmModelForm = memo(props => {
             <LlmModelField
               key={field}
               field={field}
-              required
               error={visibleErrors[field]}
               sx={styles.limitField}
             >
               <Input.InputBase
+                {...getLlmModelInputLabelProps(field, true)}
                 id={`llm-model-${field}`}
                 name={field}
                 value={settings[field] ?? ''}
@@ -393,34 +412,36 @@ const LlmModelForm = memo(props => {
         title={SECTIONS.capabilities.title}
         hasError={hasVisibleErrorIn(SECTIONS.capabilities)}
       >
-        <LlmModelSwitchField
-          field={FIELDS.vision}
-          checked={settings.supports_vision}
-          onChange={onSwitchChange}
-          error={visibleErrors[FIELDS.vision]}
-        />
-        {isReasoningShown && (
+        <Box sx={styles.switchList}>
           <LlmModelSwitchField
-            field={FIELDS.reasoning}
-            checked={settings.supports_reasoning}
-            onChange={onReasoningChange}
-            error={visibleErrors[FIELDS.reasoning]}
-            locked={isReasoningLocked}
-            description={getLlmModelReasoningDescription(profile)}
-          >
-            {settings.supports_reasoning && (
-              <LlmModelReasoningPanel
-                settings={displayedSettings}
-                initialSettings={initialSettings}
-                isEditing={isEditing}
-                profile={profile}
-                effortLevels={effortLevels}
-                visibleErrors={visibleErrors}
-                editSetting={editSetting}
-              />
-            )}
-          </LlmModelSwitchField>
-        )}
+            field={FIELDS.vision}
+            checked={settings.supports_vision}
+            onChange={onSwitchChange}
+            error={visibleErrors[FIELDS.vision]}
+          />
+          {isReasoningShown && (
+            <LlmModelSwitchField
+              field={FIELDS.reasoning}
+              checked={settings.supports_reasoning}
+              onChange={onReasoningChange}
+              error={visibleErrors[FIELDS.reasoning]}
+              locked={isReasoningLocked}
+              description={getLlmModelReasoningDescription(profile)}
+            >
+              {settings.supports_reasoning && (
+                <LlmModelReasoningPanel
+                  settings={displayedSettings}
+                  initialSettings={initialSettings}
+                  isEditing={isEditing}
+                  profile={profile}
+                  effortLevels={effortLevels}
+                  visibleErrors={visibleErrors}
+                  editSetting={editSetting}
+                />
+              )}
+            </LlmModelSwitchField>
+          )}
+        </Box>
       </LlmModelFormSection>
 
       <LlmModelFormSection
@@ -433,6 +454,7 @@ const LlmModelForm = memo(props => {
           warning={hasConflictingLlmModelTiers(settings) ? LLM_MODEL_TIER_CONFLICT_WARNING : undefined}
         >
           <Select.SingleSelect
+            {...getLlmModelSelectLabelProps(FIELDS.modelTier)}
             id={`llm-model-${FIELDS.modelTier}`}
             data-testid="llm-model-tier-select"
             value={getLlmModelTier(settings)}
@@ -458,14 +480,20 @@ const LlmModelForm = memo(props => {
       >
         <LlmModelField
           field={FIELDS.credentials}
-          required
-          error={visibleErrors[FIELDS.credentials] || visibleErrors[FIELDS.credentialsCheck]}
+          errorInBanner
+          error={credentialsErrorMessage}
         >
           <CredentialsSelect
-            label=""
+            label={LLM_MODEL_FIELD_LABELS[FIELDS.credentials]}
+            required
+            description={LLM_MODEL_FIELD_INFO_TEXTS[FIELDS.credentials]}
+            infoTooltipTestId={CREDENTIALS_TOOLTIP_TEST_IDS.testId}
+            infoTooltipContentTestId={CREDENTIALS_TOOLTIP_TEST_IDS.contentTestId}
+            shrinkLabel={false}
             value={settings.ai_credentials}
             onSelectConfiguration={onCredentialsChange}
-            error={Boolean(visibleErrors[FIELDS.credentials])}
+            error={Boolean(credentialsErrorMessage)}
+            helperText={credentialsErrorMessage}
             section={LLM_MODEL_CREDENTIALS_SECTION}
             getOptionTypeTag={getCredentialOptionTypeTag}
             propKey={FIELDS.credentials}
@@ -475,10 +503,10 @@ const LlmModelForm = memo(props => {
         {isApiProtocolShown && (
           <LlmModelField
             field={FIELDS.apiProtocol}
-            required
             error={visibleErrors[FIELDS.apiProtocol]}
           >
             <Select.SingleSelect
+              {...getLlmModelSelectLabelProps(FIELDS.apiProtocol, true)}
               id={`llm-model-${FIELDS.apiProtocol}`}
               data-testid="llm-model-api-protocol-select"
               value={apiProtocol}
@@ -524,10 +552,18 @@ const llmModelFormStyles = () => ({
     alignItems: 'center',
     gap: '0.5rem',
   },
+  descriptionCounter: {
+    textAlign: 'right',
+  },
   lockIcon: {
     width: '1rem',
     height: '1rem',
     flexShrink: 0,
+  },
+  switchList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.5rem',
   },
   limitsRow: {
     display: 'flex',

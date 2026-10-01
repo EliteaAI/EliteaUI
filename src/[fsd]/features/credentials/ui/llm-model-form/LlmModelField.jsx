@@ -2,16 +2,13 @@ import { memo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { Label } from '@/[fsd]/shared/ui';
-
 import { LlmModelFormConstants } from '../../lib/constants';
 import LlmModelStatusLine from './LlmModelStatusLine';
 
-const { LLM_MODEL_FIELD_ERROR_ATTRIBUTE, LLM_MODEL_FIELD_INFO_TEXTS, LLM_MODEL_FIELD_LABELS } =
-  LlmModelFormConstants;
+const { LLM_MODEL_FIELD_ERROR_ATTRIBUTE } = LlmModelFormConstants;
 
 const LlmModelField = memo(props => {
-  const { field, required, error, helperText, warning, status, children, sx } = props;
+  const { field, errorInBanner = false, error, helperText, warning, status, children, sx } = props;
   const styles = llmModelFieldStyles();
 
   return (
@@ -20,13 +17,6 @@ const LlmModelField = memo(props => {
       data-testid={`llm-model-field-${field}`}
       {...{ [LLM_MODEL_FIELD_ERROR_ATTRIBUTE]: error ? true : undefined }}
     >
-      <Label.InfoLabelWithTooltip
-        label={LLM_MODEL_FIELD_LABELS[field]}
-        required={required}
-        tooltip={LLM_MODEL_FIELD_INFO_TEXTS[field]}
-        tooltipTestId={`llm-model-info-${field}`}
-        tooltipContentTestId={`llm-model-info-text-${field}`}
-      />
       {children}
       {status && (
         <LlmModelStatusLine
@@ -43,7 +33,7 @@ const LlmModelField = memo(props => {
           {warning}
         </Typography>
       )}
-      {error ? (
+      {error && !errorInBanner ? (
         <Typography
           variant="bodySmall"
           role="alert"
@@ -77,6 +67,7 @@ const llmModelFieldStyles = () => ({
     minWidth: 0,
   },
   helperText: ({ palette }) => ({
+    marginLeft: '0.75rem',
     color: palette.text.primary,
   }),
   warning: ({ palette }) => ({

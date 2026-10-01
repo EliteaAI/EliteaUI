@@ -5,6 +5,7 @@ import { Box, FormControlLabel, Typography } from '@mui/material';
 import { Checkbox, Select } from '@/[fsd]/shared/ui';
 
 import { LlmModelFormConstants } from '../../lib/constants';
+import { getLlmModelSelectLabelProps } from '../../lib/helpers/llmModelForm.helpers';
 import {
   getDefaultEffortOptions,
   getEffortLevelLabel,
@@ -14,6 +15,7 @@ import {
   toggleEffortLevel,
 } from '../../lib/helpers/llmModelProfiles.helpers.js';
 import LlmModelField from './LlmModelField';
+import LlmModelFieldLabel from './LlmModelFieldLabel';
 import LlmModelThinkingModeValue from './LlmModelThinkingModeValue';
 
 const {
@@ -100,9 +102,13 @@ const LlmModelReasoningPanel = memo(props => {
           }
         >
           {fixedThinkingType ? (
-            <LlmModelThinkingModeValue thinkingType={fixedThinkingType} />
+            <>
+              <LlmModelFieldLabel field={FIELDS.thinkingType} />
+              <LlmModelThinkingModeValue thinkingType={fixedThinkingType} />
+            </>
           ) : (
             <Select.SingleSelect
+              {...getLlmModelSelectLabelProps(FIELDS.thinkingType)}
               id={`llm-model-${FIELDS.thinkingType}`}
               data-testid="llm-model-thinking-type-select"
               value={settings[FIELDS.thinkingType] ?? LLM_MODEL_THINKING_TYPE_NOT_SET}
@@ -119,7 +125,6 @@ const LlmModelReasoningPanel = memo(props => {
       )}
       <LlmModelField
         field={FIELDS.supportedEfforts}
-        required
         error={visibleErrors[FIELDS.supportedEfforts]}
         warning={effortWarnings.length ? effortWarnings.join('\n') : undefined}
         helperText={
@@ -128,6 +133,10 @@ const LlmModelReasoningPanel = memo(props => {
             : LLM_MODEL_EFFORT_LEVELS_HELPER_TEXTS.unrecognized
         }
       >
+        <LlmModelFieldLabel
+          field={FIELDS.supportedEfforts}
+          required
+        />
         <Box
           sx={styles.levels}
           role="group"
@@ -163,10 +172,10 @@ const LlmModelReasoningPanel = memo(props => {
       </LlmModelField>
       <LlmModelField
         field={FIELDS.defaultEffort}
-        required
         error={visibleErrors[FIELDS.defaultEffort]}
       >
         <Select.SingleSelect
+          {...getLlmModelSelectLabelProps(FIELDS.defaultEffort, true)}
           id={`llm-model-${FIELDS.defaultEffort}`}
           data-testid="llm-model-default-effort-select"
           value={settings[FIELDS.defaultEffort] ?? ''}
@@ -200,6 +209,7 @@ const llmModelReasoningPanelStyles = () => ({
     padding: '1rem',
     borderRadius: '0.5rem',
     border: `0.0625rem solid ${palette.border.lines}`,
+    background: palette.background.default.tertiary,
   }),
   note: ({ palette }) => ({
     color: palette.text.primary,
