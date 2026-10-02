@@ -1,7 +1,7 @@
 import { eliteaApi } from '@/api';
 
 const apiSlicePath = '/elitea_core';
-const TAG_TYPE_CHAT_TEMPLATES = 'CHAT_TEMPLATES';
+export const TAG_TYPE_CHAT_TEMPLATES = 'CHAT_TEMPLATES';
 
 const chatTemplateApi = eliteaApi
   .enhanceEndpoints({ addTagTypes: [TAG_TYPE_CHAT_TEMPLATES] })
