@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
 import { ExcelFormats, sanitizeFileNamePart } from '@/[fsd]/shared/lib/utils';
 
+import { triggerSourceLabel } from './analyticsCommon.helpers.js';
 import { tokenStats } from './analyticsToken.helpers.js';
 
 const EXPORT_LIMIT = 10_000;
@@ -52,9 +53,6 @@ const emptyRow = (columns, message) => {
 const NO_DATA_MSG = 'No data available for the selected date range.';
 
 const noDataMsg = meta => (isRunMeta(meta) ? meta.noDataMessage : NO_DATA_MSG);
-
-const triggerSourceLabel = source =>
-  AnalyticsCommonConstants.TRIGGER_SOURCE_LABELS[source] || source || 'Unknown';
 
 const buildOverviewSheet = (data, meta, isPersonalProject = false) => {
   const { kpis = {}, daily_activity = [], models = [], top_ai_users = [], automated = [] } = data || {};

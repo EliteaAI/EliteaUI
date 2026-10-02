@@ -7,6 +7,8 @@ import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { CHART_COLORS } from '@/[fsd]/shared/config/theme';
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 
+import { analyticsTableStyles } from './analyticsTable.styles';
+
 const COLUMNS = [
   { key: 'runs', label: 'Runs', format: AnalyticCommonHelpers.fmtNum },
   { key: 'llm_calls', label: 'LLM Calls', format: AnalyticCommonHelpers.fmtNum },
@@ -30,11 +32,11 @@ const AutomatedActivityTable = memo(props => {
 
   if (!items.length) return null;
 
-  const { TRIGGER_SOURCE_LABELS, TOOLTIP_TEXTS } = AnalyticsCommonConstants;
+  const { TOOLTIP_TEXTS } = AnalyticsCommonConstants;
 
   return (
     <Box
-      sx={styles.chartCard}
+      sx={[styles.chartCard, styles.dashedCard]}
       data-testid="analytics-overview-automated-activity"
     >
       <Typography
@@ -81,7 +83,7 @@ const AutomatedActivityTable = memo(props => {
                 variant="bodySmall"
                 noWrap
               >
-                {TRIGGER_SOURCE_LABELS[item.trigger_source] || item.trigger_source || 'Unknown'}
+                {AnalyticCommonHelpers.triggerSourceLabel(item.trigger_source)}
               </Typography>
             </Box>
             {COLUMNS.map(({ key, format }) => (
@@ -116,61 +118,10 @@ AutomatedActivityTable.displayName = 'AutomatedActivityTable';
 
 /** @type {MuiSx} */
 const automatedActivityTableStyles = () => ({
-  colorDot: color => ({
-    width: '0.5rem',
-    height: '0.5rem',
-    borderRadius: '50%',
-    backgroundColor: color,
-    flexShrink: 0,
-  }),
-  chartCard: ({ palette }) => ({
-    padding: '1rem',
-    borderRadius: '0.5rem',
-    backgroundColor: palette.background.surface.interactive.default,
-    border: `0.0625rem dashed ${palette.border.default}`,
-    display: 'flex',
-    flexDirection: 'column',
-    minWidth: 0,
-  }),
-  chartTitle: ({ palette }) => ({ color: palette.text.secondary, marginBottom: '0.25rem', display: 'block' }),
-  chartSubtitle: ({ palette }) => ({
-    color: palette.text.metrics || palette.text.disabled,
-    fontSize: '0.6875rem',
-  }),
-  subtitleRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.25rem',
-    marginBottom: '0.5rem',
-  },
-  tableWrapper: { display: 'flex', flexDirection: 'column', width: '100%', overflow: 'auto' },
-  tableHeader: ({ palette }) => ({
-    display: 'flex',
-    padding: '0.5rem 0.75rem',
-    borderBottom: `0.0625rem solid ${palette.border.default}`,
-    gap: '0.5rem',
-  }),
-  tableCell: ({ palette }) => ({
-    fontSize: '0.6875rem',
-    fontWeight: 600,
-    color: palette.text.metrics || palette.text.disabled,
-    textTransform: 'uppercase',
-  }),
-  tableRow: ({ palette }) => ({
-    display: 'flex',
-    padding: '0.5rem 0.75rem',
-    borderBottom: `0.0625rem solid ${palette.border.default}`,
-    gap: '0.5rem',
-    '&:hover': { backgroundColor: palette.background.interactiveItem.rowHover },
-  }),
+  ...analyticsTableStyles,
+  // Dashed so the automated bucket reads as separate from the user-driven cards
+  dashedCard: { borderStyle: 'dashed' },
   totalRow: { borderBottom: 'none' },
-  tableCellValue: ({ palette }) => ({
-    fontSize: '0.8125rem',
-    color: palette.text.secondary,
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-  }),
   totalText: { fontWeight: 600 },
   sourceCol: { flex: 3 },
   sourceCell: { display: 'flex', alignItems: 'center', gap: '0.5rem' },
