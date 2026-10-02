@@ -40,7 +40,6 @@ vi.mock('@/[fsd]/shared/ui', () => ({
         value={props.value}
         type={props.type || 'text'}
         required={props.required}
-        disabled={props.disabled}
         onChange={props.onChange}
       />
     ),
@@ -330,64 +329,5 @@ describe('McpAuthModal passes the protected resource to the OAuth flow (#6688)',
 
     await waitFor(() => expect(startMcpAuthFlow).toHaveBeenCalledTimes(1));
     expect(startMcpAuthFlow.mock.calls[0][0].resourceMetadata.resource).toBe('https://mcp.example.com/mcp');
-  });
-});
-
-describe('McpAuthModal scope input for credentials with fixed scopes (6835)', () => {
-  const GRAPH_SCOPES = ['offline_access', 'Mail.Read', 'Mail.Send'];
-  const scopeInput = () => screen.getByPlaceholderText('Enter OAuth scopes (space-separated)');
-
-  const renderWithToolkitType = toolkitType =>
-    render(
-      <ThemeProvider theme={theme}>
-        <McpAuthModal
-          open
-          serverUrl="https://login.microsoftonline.com/tenant-id"
-          tokenStorageKey="cred-1:https://login.microsoftonline.com/tenant-id"
-          mcpAuthMetadata={{
-            authServers: ['https://login.microsoftonline.com/tenant-id'],
-            oauthAuthorizationServer: findServerMetadata('Entra v2 tenant'),
-            providedSettings: { mcp_client_id: 'stub-client-id', mcp_client_secret: '****' },
-            resourceScopes: GRAPH_SCOPES,
-            toolkitType,
-          }}
-          projectId={2}
-          toolkitId={1}
-          onClose={vi.fn()}
-          onCancel={vi.fn()}
-        />
-      </ThemeProvider>,
-    );
-
-  it.each(['outlook', 'teams'])(
-    'shows the %s scopes read-only, prefilled from the credential',
-    toolkitType => {
-      renderWithToolkitType(toolkitType);
-
-      expect(scopeInput()).toBeDisabled();
-      expect(scopeInput()).toHaveValue('offline_access Mail.Read Mail.Send');
-    },
-  );
-
-  it.each(['sharepoint', undefined])('keeps the scope editable for other toolkits (%s)', toolkitType => {
-    renderWithToolkitType(toolkitType);
-
-    expect(scopeInput()).toBeEnabled();
-  });
-
-  it('sends the credential scopes unchanged to the OAuth flow', async () => {
-    vi.spyOn(window, 'open').mockReturnValue({
-      closed: false,
-      close: vi.fn(),
-      location: { href: 'about:blank' },
-    });
-    startMcpAuthFlow.mockResolvedValue({});
-    renderWithToolkitType('outlook');
-
-    fireEvent.click(screen.getByRole('button', { name: 'Authorize' }));
-
-    await waitFor(() => expect(startMcpAuthFlow).toHaveBeenCalledTimes(1));
-    expect(startMcpAuthFlow.mock.calls[0][0].scope).toBe('offline_access Mail.Read Mail.Send');
-    vi.restoreAllMocks();
   });
 });

@@ -59,8 +59,6 @@ export const extractMcpAuthMetadata = source => {
     configurationUuid: resourceMetadata?.configuration_uuid,
     // Toolkit ID for fetching credentials from database (top-level in payload, not inside resource_metadata)
     toolkitId: responseMetadata?.toolkit_id || toolMeta?.toolkit_id || resourceMetadata?.toolkit_id,
-    // Toolkit type of the resource that asked for auth (e.g. 'outlook', 'teams').
-    toolkitType: responseMetadata?.toolkit_type || toolMeta?.toolkit_type || toolOutputs?.toolkit_type,
   };
 };
 
@@ -92,7 +90,6 @@ export const extractConfigAuthMetadata = authMetadata => {
     providedSettings: authMetadata?.provided_settings || resourceMetadata?.provided_settings || {},
     resourceScopes: resourceMetadata?.scopes_supported,
     protectedResource: resourceMetadata?.resource,
-    toolkitType: authMetadata?.toolkit_type,
   };
 };
 

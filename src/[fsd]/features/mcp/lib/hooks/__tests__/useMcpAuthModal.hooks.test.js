@@ -95,21 +95,3 @@ describe('protected resource from the resource metadata (#6688)', () => {
     );
   });
 });
-
-describe('toolkit type from the auth metadata (6835)', () => {
-  it('is carried out of a configuration check_connection 401', () => {
-    expect(extractConfigAuthMetadata({ toolkit_type: 'outlook', resource_metadata: {} }).toolkitType).toBe(
-      'outlook',
-    );
-  });
-
-  it('is carried out of an mcp_authorization_required message', () => {
-    expect(extractMcpAuthMetadata({ response_metadata: { toolkit_type: 'teams' } }).toolkitType).toBe(
-      'teams',
-    );
-  });
-
-  it('is carried out of a tool action', () => {
-    expect(extractMcpAuthMetadata({ toolMeta: { toolkit_type: 'outlook' } }).toolkitType).toBe('outlook');
-  });
-});

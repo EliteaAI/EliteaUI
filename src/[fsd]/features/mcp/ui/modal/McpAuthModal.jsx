@@ -11,7 +11,7 @@ import {
   Typography,
 } from '@mui/material';
 
-import { McpAuthConstants, McpAuthFlowConstants } from '@/[fsd]/features/mcp/lib/constants';
+import { McpAuthFlowConstants } from '@/[fsd]/features/mcp/lib/constants';
 import {
   McpAuthFlowHelpers,
   McpAuthHelpers,
@@ -23,7 +23,6 @@ import CloseIcon from '@/components/Icons/CloseIcon';
 import OAuthFormFields from './OAuthFormFields';
 
 const { MCP_OAUTH_FLOWS, MCP_OAUTH_ERRORS } = McpAuthFlowConstants;
-const { FIXED_SCOPE_TOOLKIT_TYPES } = McpAuthConstants;
 
 const PRE_REGISTERED_APPLICATION_NOTICE = 'This server requires a pre-registered OAuth application.';
 
@@ -75,8 +74,6 @@ const McpAuthModal = memo(props => {
   const providedSettings = mcpAuthMetadata?.providedSettings;
   const resourceScopes = mcpAuthMetadata?.resourceScopes;
   const protectedResource = mcpAuthMetadata?.protectedResource;
-  // Outlook/Teams scopes are chosen in the credential's Scopes checkboxes, so the modal must not edit them.
-  const isScopeReadOnly = FIXED_SCOPE_TOOLKIT_TYPES.includes(mcpAuthMetadata?.toolkitType);
 
   // Use provided settings from backend if available, otherwise use form values
   const client_id = providedSettings?.mcp_client_id || formClientId;
@@ -398,7 +395,6 @@ const McpAuthModal = memo(props => {
             onClientSecretChange={onClientSecretChange}
             onScopeChange={onScopeChange}
             availableScopes={availableScopes}
-            isScopeReadOnly={isScopeReadOnly}
             needSecret={needsClientSecret}
             isSecretRequired={mustEnterClientSecret}
             needClientId={needClientId}

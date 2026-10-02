@@ -22,10 +22,6 @@ export const MCP_SESSION_STORAGE_KEYS = [
 
 export const { MCP_PREBUILD_PREFIX } = McpConstants;
 
-// Toolkits whose OAuth scopes are picked in the credential's Scopes checkboxes.
-// The auth modal shows their scope read-only so it can't drift from the credential.
-export const FIXED_SCOPE_TOOLKIT_TYPES = ['outlook', 'teams'];
-
 // Deprecated MCP server URLs mapped to their current replacements.
 // Tokens stored under either URL resolve to the same canonical key.
 export const MCP_DEPRECATED_URL_MAP = {
