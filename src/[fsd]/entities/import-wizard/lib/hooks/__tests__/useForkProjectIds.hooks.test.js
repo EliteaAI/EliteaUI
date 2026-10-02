@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import importWizardReducer, { actions } from '@/[fsd]/entities/import-wizard/model/importWizard.slice';
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
@@ -7,10 +7,12 @@ import { cleanup, renderHook } from '@testing-library/react';
 
 import { useForkProjectIds } from '../useForkProjectIds.hooks';
 
-afterEach(cleanup);
-
 const currentProjectId = 2;
 const otherProjectId = 7;
+
+vi.mock('@/hooks/useSelectedProject', () => ({ useSelectedProjectId: () => currentProjectId }));
+
+afterEach(cleanup);
 
 const excludedFor = (isForking, sourceProjectId) =>
   renderHook(() => useForkProjectIds(isForking, sourceProjectId)).result.current.excludedProjectIds;
@@ -23,6 +25,10 @@ describe('fork destination exclusions', () => {
   it('excludes the project the entity is forked from', () => {
     expect(excludedFor(true, currentProjectId)).toEqual([PUBLIC_PROJECT_ID, currentProjectId]);
     expect(excludedFor(true, otherProjectId)).toEqual([PUBLIC_PROJECT_ID, otherProjectId]);
+  });
+
+  it('falls back to excluding the current project when the fork source is unknown', () => {
+    expect(excludedFor(true, undefined)).toEqual([PUBLIC_PROJECT_ID, currentProjectId]);
   });
 
   it('excludes nothing when importing', () => {
