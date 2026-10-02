@@ -219,19 +219,11 @@ const RestrictAccessDialog = memo(props => {
 
   const content = (
     <Box sx={styles.content}>
-      {conversationName && (
-        <Typography
-          variant="labelMedium"
-          color="text.secondary"
-        >
-          {conversationName}
-        </Typography>
-      )}
       <Typography
         variant="bodySmall"
         sx={styles.description}
       >
-        Only selected participants will have access to this conversation.
+        Only selected participants will have access to this chat.
       </Typography>
 
       {hasSharedLinks && (
@@ -240,8 +232,8 @@ const RestrictAccessDialog = memo(props => {
             variant="bodySmall"
             sx={styles.warningText}
           >
-            This conversation has been shared externally. Restricting access will not revoke existing external
-            shares or copies.
+            This chat has been shared externally. Restricting access will not revoke existing external shares
+            or copies.
           </Typography>
         </Box>
       )}
@@ -269,7 +261,7 @@ const RestrictAccessDialog = memo(props => {
               style: { maxHeight: '12rem', overflowY: 'auto' },
             },
           }}
-          label="User participants"
+          label="Users"
         />
       </Box>
 
@@ -282,6 +274,18 @@ const RestrictAccessDialog = memo(props => {
         </Typography>
       )}
     </Box>
+  );
+
+  const titleText = conversationName ? `Restrict access to ${conversationName}` : 'Restrict access';
+  const title = (
+    <Typography
+      variant="headingSmall"
+      color="text.secondary"
+      title={titleText}
+      noWrap
+    >
+      {titleText}
+    </Typography>
   );
 
   const actions = (
@@ -310,7 +314,7 @@ const RestrictAccessDialog = memo(props => {
     <Modal.BaseModal
       open={!!conversationId}
       onClose={handleClose}
-      title="Restrict access"
+      title={title}
       content={content}
       actions={actions}
       sx={styles.modal}
