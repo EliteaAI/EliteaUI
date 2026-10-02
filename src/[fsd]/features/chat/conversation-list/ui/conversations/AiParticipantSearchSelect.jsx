@@ -207,7 +207,7 @@ const AiParticipantSearchSelect = memo(props => {
       idField="uniqueKey"
       disabled={disabled}
       label=""
-      placeholder="Search AI participants..."
+      placeholder="Search AI participants"
       nameField="name"
       canInputNewValues={false}
       useInitialValue={false}

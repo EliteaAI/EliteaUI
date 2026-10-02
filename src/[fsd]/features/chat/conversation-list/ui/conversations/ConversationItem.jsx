@@ -237,9 +237,13 @@ const ConversationItem = memo(props => {
             key: 'chat-conversation-menu-make-public',
             label: 'Make public',
             icon: <OpenEyeIcon sx={{ fontSize: '1rem' }} />,
-            alertTitle: 'Public conversation?',
+            alertTitle: 'Make this chat public?',
             confirmButtonTitle: 'Make public',
-            confirmText: 'Are you sure to make your conversation public?',
+            confirmText: (
+              <Typography variant="bodyMedium">
+                All project members have access to public chats and can collaborate in them.
+              </Typography>
+            ),
             confirmButtonSX: {
               background: `${theme.palette.primary.main} !important`,
               color: `${theme.palette.components.button.text.primary} !important`,

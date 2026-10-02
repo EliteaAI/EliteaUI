@@ -7,7 +7,7 @@ export const EXPIRY_OPTIONS = [
 ];
 
 export const SCOPE_OPTIONS = [
-  { value: 'all', label: 'Entire conversation (messages + attachments)' },
+  { value: 'all', label: 'Entire chat (messages + attachments)' },
   { value: 'messages', label: 'Messages only' },
   { value: 'attachments', label: 'Attachments only' },
   { value: 'partial', label: 'Select specific messages…' },

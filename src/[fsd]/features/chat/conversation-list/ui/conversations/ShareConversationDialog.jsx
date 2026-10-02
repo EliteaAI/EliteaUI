@@ -249,9 +249,9 @@ const ShareConversationDialog = memo(props => {
             color="text.disabled"
             sx={styles.guidelinesText}
           >
-            This link provides read-only access to the selected conversation content. Anyone with the link can
-            view it — avoid sharing links that contain sensitive information. You can revoke access at any
-            time from Manage links.
+            This link provides read-only access to the selected chat content. Anyone with the link can view it
+            — avoid sharing links that contain sensitive information. You can revoke access at any time from
+            Manage links.
           </Typography>
         </>
       )}
@@ -298,7 +298,7 @@ const ShareConversationDialog = memo(props => {
 
   const title = (
     <Box sx={styles.titleContent}>
-      <Typography variant="headingMedium">Share conversation</Typography>
+      <Typography variant="headingMedium">Share chat</Typography>
       {conversation?.name && (
         <Typography
           variant="bodySmall"
