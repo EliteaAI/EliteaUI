@@ -15,7 +15,12 @@ import { Box, Typography, useTheme } from '@mui/material';
 import { ANALYTICS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
-import { ChartTooltip, KPICard, ModelUsageTable } from '@/[fsd]/features/settings/ui/analytics';
+import {
+  AutomatedActivityTable,
+  ChartTooltip,
+  KPICard,
+  ModelUsageTable,
+} from '@/[fsd]/features/settings/ui/analytics';
 import { CHART_COLORS, EVENT_TYPE_COLORS, MEDAL_COLORS } from '@/[fsd]/shared/config/theme';
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 
@@ -27,7 +32,7 @@ const AnalyticsOverview = memo(props => {
   const axisStroke = palette.text.primary;
   const axisTickStyle = AnalyticCommonHelpers.axisTick(axisStroke);
 
-  const { kpis, top_ai_users = [], daily_activity = [], models = [] } = data;
+  const { kpis, top_ai_users = [], daily_activity = [], models = [], automated = [] } = data;
 
   const totalModelCalls = useMemo(() => models.reduce((s, m) => s + m.calls, 0), [models]);
 
@@ -278,6 +283,7 @@ const AnalyticsOverview = memo(props => {
           )}
         </Box>
       </Box>
+      <AutomatedActivityTable items={automated} />
       <ModelUsageTable
         models={models}
         totalCalls={totalModelCalls}
