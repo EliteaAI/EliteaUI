@@ -29,7 +29,7 @@ export const importWizardApi = eliteaApi
           headers,
           body,
         }),
-        invalidatesTags: [],
+        invalidatesTags: [TAG_TYPE_APPLICATIONS, TAG_TYPE_TOTAL_APPLICATIONS],
       }),
     }),
   });

@@ -37,7 +37,13 @@ export const useForkSkill = overrideProjectId => {
         [GA_EVENT_PARAMS.TIMESTAMP]: new Date().toISOString(),
       });
 
-      dispatch(importWizardActions.openImportWizard({ isForking: true, data: result.data }));
+      dispatch(
+        importWizardActions.openImportWizard({
+          isForking: true,
+          data: result.data,
+          sourceProjectId: projectId,
+        }),
+      );
     },
     [projectId, exportForFork, dispatch, toastError, trackEvent],
   );

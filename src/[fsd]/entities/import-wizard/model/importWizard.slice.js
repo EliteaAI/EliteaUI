@@ -4,6 +4,7 @@ import { createSlice } from '@reduxjs/toolkit';
 const initialState = {
   isForking: false,
   data: undefined,
+  sourceProjectId: undefined,
   openWizard: false,
 };
 
@@ -15,15 +16,17 @@ const importWizardsSlice = createSlice({
       state.isForking = action.isForking;
     },
     openImportWizard: (state, action) => {
-      const { isForking, data } = action.payload;
+      const { isForking, data, sourceProjectId } = action.payload;
       state.openWizard = true;
       state.data = data;
       state.isForking = isForking;
+      state.sourceProjectId = sourceProjectId;
     },
     closeImportWizard: state => {
       state.openWizard = false;
       state.data = undefined;
       state.isForking = false;
+      state.sourceProjectId = undefined;
     },
   },
 });
