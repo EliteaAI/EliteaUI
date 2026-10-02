@@ -46,16 +46,22 @@ export const setUserLLmSettings = (participants = [], userId, llm_settings) =>
     return p;
   });
 
-export const buildDefaultUserParticipant = (templateParticipant, projectUser) => {
-  const userName = templateParticipant.name || projectUser?.name || projectUser?.email || '';
-  return {
+export const buildUserParticipant = ({ id, name = '', project_id, avatar, email }) => ({
+  id,
+  name,
+  project_id,
+  participantType: ChatParticipantType.Users,
+  entity_name: ChatParticipantType.Users,
+  entity_meta: { id, name },
+  entity_settings: {},
+  meta: { user_name: name, user_avatar: avatar, email },
+});
+
+export const buildDefaultUserParticipant = (templateParticipant, projectUser) =>
+  buildUserParticipant({
     id: templateParticipant.id,
-    name: userName,
+    name: templateParticipant.name || projectUser?.name || projectUser?.email || '',
     project_id: templateParticipant.project_id,
-    participantType: ChatParticipantType.Users,
-    entity_name: ChatParticipantType.Users,
-    entity_meta: { id: templateParticipant.id, name: userName },
-    entity_settings: {},
-    meta: { user_name: userName, user_avatar: projectUser?.avatar, email: projectUser?.email },
-  };
-};
+    avatar: projectUser?.avatar,
+    email: projectUser?.email,
+  });

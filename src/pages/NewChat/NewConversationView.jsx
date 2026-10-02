@@ -40,9 +40,8 @@ import {
 } from '@/[fsd]/shared/lib/utils';
 import BrandLogo from '@/[fsd]/shared/ui/brand-logo';
 import { useConversationEditMutation, useUpdateParticipantLlmSettingsMutation } from '@/api';
-import { useLazyUserListQuery } from '@/api/admin';
 import { useListModelsQuery } from '@/api/configurations.js';
-import { useAuthorModuleSettingsQuery } from '@/api/social';
+import { useAuthorModuleSettingsQuery, useLazyAuthorListQuery } from '@/api/social';
 import {
   ChatParticipantType,
   ConversationNameRegExp,
@@ -509,14 +508,14 @@ const NewConversationView = forwardRef(
       [selectedProjectId],
     );
 
-    const [getProjectUsers] = useLazyUserListQuery();
+    const [getProjectAuthors] = useLazyAuthorListQuery();
     const fetchDefaultProjectUsers = useCallback(
       async templateParticipants => {
         if (!templateParticipants.some(cp => cp.entity_name === ChatParticipantType.Users)) return [];
-        const { data } = await getProjectUsers({ projectId: selectedProjectId, page: 0 }, true);
-        return data?.rows ?? [];
+        const { data } = await getProjectAuthors({ projectId: selectedProjectId }, true);
+        return data ?? [];
       },
-      [getProjectUsers, selectedProjectId],
+      [getProjectAuthors, selectedProjectId],
     );
 
     const defaultParticipantsAppliedForRef = useRef(null);
@@ -665,10 +664,7 @@ const NewConversationView = forwardRef(
       if (participant.participantType === ChatParticipantType.Users) {
         const userParticipant = {
           ...participant,
-          entity_name: ChatParticipantType.Users,
-          entity_meta: { id: participant.id, name: participant.name },
-          entity_settings: {},
-          meta: { user_name: participant.name, user_avatar: participant.avatar, email: participant.email },
+          ...NewConversationHelpers.buildUserParticipant(participant),
         };
         setSelectedParticipants(prev => {
           if (

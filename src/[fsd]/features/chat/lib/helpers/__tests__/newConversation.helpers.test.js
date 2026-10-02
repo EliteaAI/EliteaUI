@@ -6,7 +6,7 @@ import {
 } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { ChatParticipantType } from '@/common/constants';
 
-import { buildDefaultUserParticipant } from '../newConversation.helpers';
+import { buildDefaultUserParticipant, buildUserParticipant } from '../newConversation.helpers';
 
 const templateUser = { id: 7, name: 'Samvel Petrosyan', entity_name: ChatParticipantType.Users };
 const projectUser = { id: 7, name: 'Samvel P', email: 'samvel@example.com', avatar: 'https://avatars/7.png' };
@@ -48,5 +48,25 @@ describe('buildDefaultUserParticipant', () => {
     expect(participant.entity_name).toBe(ChatParticipantType.Users);
     expect(participant.participantType).toBe(ChatParticipantType.Users);
     expect(getChatParticipantUniqueId(participant)).toBe(`${ChatParticipantType.Users}_7_`);
+  });
+});
+
+describe('buildUserParticipant', () => {
+  it('exposes a picked user name and avatar where participant consumers read them', () => {
+    const participant = buildUserParticipant({
+      id: 9,
+      name: 'Ann Lee',
+      project_id: 3,
+      avatar: 'https://avatars/9.png',
+      email: 'ann@example.com',
+    });
+
+    expect(getParticipantName(participant)).toBe('Ann Lee');
+    expect(participant.meta).toEqual({
+      user_name: 'Ann Lee',
+      user_avatar: 'https://avatars/9.png',
+      email: 'ann@example.com',
+    });
+    expect(participant.entity_meta).toEqual({ id: 9, name: 'Ann Lee' });
   });
 });
