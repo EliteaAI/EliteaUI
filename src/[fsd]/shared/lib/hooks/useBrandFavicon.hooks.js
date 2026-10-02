@@ -6,6 +6,10 @@ import { useCustomTheme } from '@/[fsd]/shared/lib/hooks/useCustomTheme.hooks';
  * Swaps the browser tab favicon to the custom logo while the Custom theme is active,
  * and restores the original favicon when it is not.
  *
+ * The logo is preloaded first and the favicon is swapped only once it loads, so a missing or unreachable
+ * logo (e.g. a stale cached URL) keeps the original favicon instead of showing a broken tab icon - the same
+ * fallback `BrandLogo` applies in the sidebar.
+ *
  * Uses link element replacement to force browser to reload the favicon.
  */
 export const useBrandFavicon = () => {
@@ -15,9 +19,18 @@ export const useBrandFavicon = () => {
   useEffect(() => {
     // Find the original favicon link
     const originalLink = document.querySelector("link[rel='icon']");
-    if (!originalLink) return;
+    if (!originalLink || !customLogo) return;
 
-    if (customLogo) {
+    // Resolve relative paths against the current origin. Appending a cache buster here would corrupt
+    // signed logo URLs, which carry their own query string - the backend versions the URL instead.
+    const faviconUrl = new URL(customLogo, window.location.origin).toString();
+
+    let isCancelled = false;
+    const probe = new Image();
+
+    probe.onload = () => {
+      if (isCancelled) return;
+
       // Hide the original favicon
       originalLink.setAttribute('data-hidden', 'true');
       originalLink.removeAttribute('rel');
@@ -29,15 +42,20 @@ export const useBrandFavicon = () => {
         document.head.appendChild(customLinkRef.current);
       }
 
-      // Resolve relative paths against the current origin. Appending a cache buster here would corrupt
-      // signed logo URLs, which carry their own query string - the backend versions the URL instead.
-      const faviconUrl = new URL(customLogo, window.location.origin).toString();
-
       customLinkRef.current.rel = 'icon';
       customLinkRef.current.href = faviconUrl;
-    }
+    };
+
+    // Logo failed to load - keep the original favicon as the fallback
+    probe.onerror = () => {};
+
+    probe.src = faviconUrl;
 
     return () => {
+      isCancelled = true;
+      probe.onload = null;
+      probe.onerror = null;
+
       // Restore original favicon
       if (originalLink.hasAttribute('data-hidden')) {
         originalLink.removeAttribute('data-hidden');
