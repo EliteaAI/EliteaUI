@@ -206,6 +206,7 @@ export const socialApi = eliteaApi
 
 export const {
   useAuthorListQuery,
+  useLazyAuthorListQuery,
   useAuthorDetailsQuery,
   useLazyAuthorDetailsQuery,
   useAuthorDescriptionMutation,

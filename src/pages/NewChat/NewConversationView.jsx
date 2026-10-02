@@ -41,7 +41,7 @@ import {
 import BrandLogo from '@/[fsd]/shared/ui/brand-logo';
 import { useConversationEditMutation, useUpdateParticipantLlmSettingsMutation } from '@/api';
 import { useListModelsQuery } from '@/api/configurations.js';
-import { useAuthorModuleSettingsQuery } from '@/api/social';
+import { useAuthorModuleSettingsQuery, useLazyAuthorListQuery } from '@/api/social';
 import {
   ChatParticipantType,
   ConversationNameRegExp,
@@ -508,6 +508,16 @@ const NewConversationView = forwardRef(
       [selectedProjectId],
     );
 
+    const [getProjectAuthors] = useLazyAuthorListQuery();
+    const fetchDefaultProjectUsers = useCallback(
+      async templateParticipants => {
+        if (!templateParticipants.some(cp => cp.entity_name === ChatParticipantType.Users)) return [];
+        const { data } = await getProjectAuthors({ projectId: selectedProjectId }, true);
+        return data ?? [];
+      },
+      [getProjectAuthors, selectedProjectId],
+    );
+
     const defaultParticipantsAppliedForRef = useRef(null);
     useEffect(() => {
       if (!activeConversation?.isNew) return;
@@ -520,17 +530,21 @@ const NewConversationView = forwardRef(
       if (!filtered.length) return;
 
       // Set basic participants immediately so conversation creation has them before async details load
-      const baseParticipants = filtered.map(cp => ({
-        id: cp.id,
-        name: cp.name || '',
-        project_id: cp.project_id,
-        agent_type: cp.agent_type,
-        participantType: cp.entity_name,
-        entity_name: cp.entity_name,
-        entity_meta: { id: cp.id, project_id: cp.project_id || selectedProjectId },
-        entity_settings: {},
-        meta: {},
-      }));
+      const baseParticipants = filtered.map(cp =>
+        cp.entity_name === ChatParticipantType.Users
+          ? NewConversationHelpers.buildDefaultUserParticipant(cp)
+          : {
+              id: cp.id,
+              name: cp.name || '',
+              project_id: cp.project_id,
+              agent_type: cp.agent_type,
+              participantType: cp.entity_name,
+              entity_name: cp.entity_name,
+              entity_meta: { id: cp.id, project_id: cp.project_id || selectedProjectId },
+              entity_settings: {},
+              meta: {},
+            },
+      );
       // Only apply defaults when no participants are already set (e.g., via agent catalog selection)
       const syncApplied = selectedParticipantsRef.current.length === 0;
       setSelectedParticipants(prev => (prev.length ? prev : baseParticipants));
@@ -544,9 +558,10 @@ const NewConversationView = forwardRef(
 
       // Fetch full details async and enrich participants with icon_meta, agent_type, etc.
       (async () => {
-        const detailsList = await Promise.all(
-          filtered.map(cp => fetchOriginalDetails(cp.entity_name, cp.id, cp.project_id)),
-        );
+        const [detailsList, projectUsers] = await Promise.all([
+          Promise.all(filtered.map(cp => fetchOriginalDetails(cp.entity_name, cp.id, cp.project_id))),
+          fetchDefaultProjectUsers(filtered),
+        ]);
         const toParticipantKey = p => `${p.entity_name ?? p.participantType}:${p.project_id}:${p.id}`;
         const currentKeySet = new Set(selectedParticipantsRef.current.map(toParticipantKey));
         const baseKeySet = new Set(baseParticipants.map(toParticipantKey));
@@ -554,6 +569,12 @@ const NewConversationView = forwardRef(
           currentKeySet.size === baseKeySet.size && [...baseKeySet].every(key => currentKeySet.has(key));
         if (defaultParticipantsAppliedForRef.current !== sessionKey || !listsMatch) return;
         const enriched = baseParticipants.map((base, i) => {
+          if (base.entity_name === ChatParticipantType.Users) {
+            return NewConversationHelpers.buildDefaultUserParticipant(
+              filtered[i],
+              projectUsers.find(projectUser => projectUser.id === base.id),
+            );
+          }
           const details = detailsList[i];
           if (!details || !Object.keys(details).length) return base;
           return buildEnrichedParticipant(base, details);
@@ -575,6 +596,7 @@ const NewConversationView = forwardRef(
       defaultTemplate?.participants,
       setActiveParticipant,
       fetchOriginalDetails,
+      fetchDefaultProjectUsers,
       buildEnrichedParticipant,
       selectedProjectId,
     ]);
@@ -642,10 +664,7 @@ const NewConversationView = forwardRef(
       if (participant.participantType === ChatParticipantType.Users) {
         const userParticipant = {
           ...participant,
-          entity_name: ChatParticipantType.Users,
-          entity_meta: { id: participant.id, name: participant.name },
-          entity_settings: {},
-          meta: { user_name: participant.name, user_avatar: participant.avatar, email: participant.email },
+          ...NewConversationHelpers.buildUserParticipant(participant),
         };
         setSelectedParticipants(prev => {
           if (
