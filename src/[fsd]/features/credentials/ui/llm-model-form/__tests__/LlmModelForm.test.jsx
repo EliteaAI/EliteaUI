@@ -37,9 +37,24 @@ const CREDENTIAL_TYPES = {
 let takenIds = [];
 let isCredentialTypePending = false;
 
+const { testConnection } = vi.hoisted(() => ({ testConnection: vi.fn() }));
+
+vi.mock('@/api/configurations', async importOriginal => ({
+  ...(await importOriginal()),
+  useTestConfigurationConnectionMutation: () => [testConnection],
+}));
+
+vi.mock('../../../lib/hooks/useLlmModelTargetProjectId.hooks.js', () => ({
+  useLlmModelTargetProjectId: () => '42',
+}));
+
 vi.mock('../../../lib/hooks', async () => {
   const { LLM_MODEL_PROFILES_FIXTURE } = await import('./llmModelProfiles.fixture.js');
+  const { useLlmModelCheckConnection } = await vi.importActual(
+    '../../../lib/hooks/useLlmModelCheckConnection.hooks.js',
+  );
   return {
+    useLlmModelCheckConnection,
     useLlmModelCredentialType: credential => ({
       credentialType: CREDENTIAL_TYPES[credential?.elitea_title] || '',
       isCredentialTypePending,
@@ -757,6 +772,242 @@ describe('LlmModelForm', () => {
       expect(await screen.findByTestId('llm-model-info-text-supports_vision')).toHaveTextContent(
         "The model accepts images as input. When off, image attachments aren't sent to this model.",
       );
+    });
+  });
+  describe('test connection', () => {
+    const testButton = () => screen.getByTestId('llm-model-test-connection');
+    const testResult = () => screen.queryByTestId('llm-model-connection-test-result');
+    const OPENAI_MODEL = {
+      ...NEW_MODEL,
+      settings: {
+        ...NEW_MODEL.settings,
+        name: 'gpt-4o',
+        ai_credentials: { elitea_title: 'openai-cred', private: false },
+      },
+    };
+    const STORED_DIAL_REASONING_MODEL = {
+      ...EXISTING_DIAL_MODEL,
+      settings: { ...EXISTING_DIAL_MODEL.settings, supports_reasoning: true },
+    };
+
+    const answerWith = outcome => testConnection.mockReturnValue({ unwrap: outcome });
+    const answerLater = () => {
+      let settle;
+      const pending = new Promise((resolve, reject) => {
+        settle = { resolve, reject };
+      });
+      testConnection.mockReturnValue({ unwrap: () => pending });
+      return settle;
+    };
+    const expectDisabledWithReason = async (user, reason) => {
+      expect(testButton()).toBeDisabled();
+      await user.hover(screen.getByTestId('llm-model-test-connection-tooltip-target'));
+      expect(await screen.findByRole('tooltip')).toHaveTextContent(reason);
+    };
+
+    it('sits in the Connection section, after OpenAI compatible', () => {
+      renderForm(NEW_MODEL);
+      const connectionSection = screen
+        .getByTestId('llm-model-section-connection')
+        .closest('.MuiAccordion-root');
+      const openaiCompatible = within(connectionSection).getByTestId('llm-model-field-openai_compatible');
+
+      expect(within(connectionSection).getByTestId('llm-model-test-connection')).toBeInTheDocument();
+      expect(openaiCompatible.compareDocumentPosition(testButton())).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    });
+
+    it('stays disabled until AI credentials and Model name are set, naming what is missing', async () => {
+      const user = userEvent.setup();
+      renderForm(NEW_MODEL);
+      await expectDisabledWithReason(user, 'Set AI Credentials and Model Name to test the connection.');
+
+      await user.type(inputOf('name'), 'gpt-4o');
+      await expectDisabledWithReason(user, 'Set AI Credentials to test the connection.');
+
+      await user.click(screen.getByRole('button', { name: /openai-cred/ }));
+      expect(testButton()).toBeEnabled();
+    });
+
+    it('needs API protocol only for DIAL credentials', async () => {
+      const user = userEvent.setup();
+      renderForm(OPENAI_MODEL);
+      expect(testButton()).toBeEnabled();
+
+      await user.click(screen.getByRole('button', { name: /^dial-cred DIAL/ }));
+      await expectDisabledWithReason(user, 'Set API protocol to test the connection.');
+
+      await pickOption(user, 'api_protocol', 'OpenAI');
+      expect(testButton()).toBeEnabled();
+    });
+
+    it('stays disabled while the credential type is still loading', async () => {
+      const user = userEvent.setup();
+      isCredentialTypePending = true;
+      renderForm(OPENAI_MODEL);
+      await expectDisabledWithReason(user, 'Checking the selected AI credentials. Try again in a moment.');
+    });
+
+    it('sends the unsaved form values and shows how long the answer took', async () => {
+      const user = userEvent.setup();
+      answerWith(() => Promise.resolve({ success: true, latency_ms: 900 }));
+      renderForm(OPENAI_MODEL);
+      await user.clear(inputOf('name'));
+      await user.type(inputOf('name'), '  typed-not-saved ');
+
+      await user.click(testButton());
+
+      expect(testConnection).toHaveBeenCalledWith({
+        projectId: '42',
+        configType: 'llm_model',
+        body: {
+          name: 'typed-not-saved',
+          ai_credentials: { elitea_title: 'openai-cred', private: false },
+          api_protocol: null,
+          supports_reasoning: false,
+          openai_compatible: false,
+        },
+      });
+      expect(await screen.findByText(/^Connected in \d+\.\d s$/)).toHaveAttribute('data-tone', 'success');
+    });
+
+    it('shows the failure category and the provider message', async () => {
+      const user = userEvent.setup();
+      answerWith(() =>
+        Promise.reject({
+          status: 400,
+          data: {
+            success: false,
+            message: 'Model not found: The API deployment for this resource does not exist.',
+          },
+        }),
+      );
+      renderForm(OPENAI_MODEL);
+      await user.click(testButton());
+
+      const result = await screen.findByTestId('llm-model-connection-test-result');
+      expect(result).toHaveTextContent(
+        'Model not found: The API deployment for this resource does not exist.',
+      );
+      expect(result).toHaveAttribute('data-tone', 'error');
+    });
+
+    it('keeps the button unclickable while the test runs and frees it afterwards', async () => {
+      const user = userEvent.setup();
+      const settle = answerLater();
+      renderForm(OPENAI_MODEL);
+      await user.click(testButton());
+      expect(testButton()).toBeDisabled();
+
+      settle.reject({
+        status: 400,
+        data: { success: false, message: 'Timed out: the provider did not answer in time' },
+      });
+
+      expect(await screen.findByText('Timed out: the provider did not answer in time')).toBeInTheDocument();
+      expect(testButton()).toBeEnabled();
+    });
+
+    it.each([
+      ['Model name', async user => user.type(inputOf('name'), '-v2')],
+      ['AI credentials', async user => user.click(screen.getByRole('button', { name: /^dial-cred-2/ }))],
+      ['API protocol', async user => pickOption(user, 'api_protocol', 'Anthropic')],
+    ])('clears the result when %s changes', async (_field, change) => {
+      const user = userEvent.setup();
+      answerWith(() => Promise.resolve({ success: true, latency_ms: 10 }));
+      renderForm({
+        ...EXISTING_DIAL_MODEL,
+        settings: { ...EXISTING_DIAL_MODEL.settings, api_protocol: 'openai' },
+      });
+      await user.click(testButton());
+      expect(await screen.findByText(/^Connected in/)).toBeInTheDocument();
+
+      await change(user);
+
+      expect(testResult()).not.toBeInTheDocument();
+    });
+
+    it('drops an answer that arrives after the tested fields changed', async () => {
+      const user = userEvent.setup();
+      const settle = answerLater();
+      renderForm(OPENAI_MODEL);
+      await user.click(testButton());
+      await user.type(inputOf('name'), '-mini');
+
+      settle.resolve({ success: true, latency_ms: 10 });
+      await waitFor(() => expect(testButton()).toBeEnabled());
+
+      expect(testResult()).not.toBeInTheDocument();
+    });
+
+    it('fails DIAL + Azure OpenAI + Reasoning at once with the Save message and sends nothing', async () => {
+      const user = userEvent.setup();
+      renderForm(STORED_DIAL_REASONING_MODEL);
+
+      await user.click(testButton());
+
+      expect(testConnection).not.toHaveBeenCalled();
+      expect(testResult()).toHaveTextContent(
+        "Reasoning isn't supported with the Azure OpenAI protocol. Choose OpenAI or Anthropic, or turn Reasoning off.",
+      );
+    });
+
+    it('clears the reasoning rejection once Reasoning is turned off', async () => {
+      const user = userEvent.setup();
+      renderForm({
+        ...STORED_DIAL_REASONING_MODEL,
+        settings: { ...STORED_DIAL_REASONING_MODEL.settings, name: 'custom-unrecognized-model' },
+      });
+      await user.click(testButton());
+      expect(testResult()).toBeInTheDocument();
+
+      await user.click(
+        within(screen.getByTestId('llm-model-field-supports_reasoning')).getAllByRole('switch')[0],
+      );
+      expect(readSettings().supports_reasoning).toBe(false);
+
+      expect(testResult()).not.toBeInTheDocument();
+    });
+
+    it('shows the Save message when the server rejects the reasoning protocol', async () => {
+      const user = userEvent.setup();
+      answerWith(() =>
+        Promise.reject({
+          status: 400,
+          data: {
+            success: false,
+            message:
+              "Value error, api_protocol='azure' does not support reasoning; use 'anthropic' or 'openai'",
+          },
+        }),
+      );
+      renderForm(OPENAI_MODEL);
+      await user.click(testButton());
+
+      expect(await screen.findByTestId('llm-model-connection-test-result')).toHaveTextContent(
+        "Reasoning isn't supported with the Azure OpenAI protocol. Choose OpenAI or Anthropic, or turn Reasoning off.",
+      );
+    });
+
+    it('tests a stored DIAL model without a protocol through Azure OpenAI', async () => {
+      const user = userEvent.setup();
+      answerWith(() => Promise.resolve({ success: true, latency_ms: 10 }));
+      renderForm(EXISTING_DIAL_MODEL);
+
+      await user.click(testButton());
+
+      expect(testConnection.mock.calls[0][0].body.api_protocol).toBe('azure');
+    });
+
+    it('never edits the form', async () => {
+      const user = userEvent.setup();
+      answerWith(() => Promise.resolve({ success: true, latency_ms: 10 }));
+      renderForm(OPENAI_MODEL);
+      const settingsBefore = readSettings();
+
+      await user.click(testButton());
+      await screen.findByText(/^Connected in/);
+
+      expect(readSettings()).toEqual(settingsBefore);
     });
   });
 });
