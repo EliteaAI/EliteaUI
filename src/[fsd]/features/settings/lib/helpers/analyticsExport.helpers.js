@@ -1,3 +1,5 @@
+import { format } from 'date-fns';
+
 import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
 import { ExcelFormats, sanitizeFileNamePart } from '@/[fsd]/shared/lib/utils';
 
@@ -7,11 +9,16 @@ const EXPORT_LIMIT = 10_000;
 
 const fmtISODate = iso => (iso ? new Date(iso).toISOString().slice(0, 10) : '');
 
-const fmtISODateTime = iso => {
+// Local time, matching the date pickers and the sheet's "Time Zone" row
+const fmtLocal = (iso, pattern) => {
   if (!iso) return '';
   const d = new Date(iso);
-  return `${d.toISOString().slice(0, 10)} ${d.toTimeString().slice(0, 8)}`;
+  return Number.isNaN(d.getTime()) ? '' : format(d, pattern);
 };
+
+const fmtLocalDate = iso => fmtLocal(iso, 'yyyy-MM-dd');
+
+const fmtISODateTime = iso => fmtLocal(iso, 'yyyy-MM-dd HH:mm:ss');
 
 const buildMetadata = (sheetLabel, { projectName, dateFrom, dateTo, timeZone }) => [
   ['Project', projectName],
@@ -617,8 +624,8 @@ const buildHealthSheet = (overviewData, meta, options = {}) => {
 };
 
 export const analyticsExportFileName = ({ projectName, dateFrom, dateTo }) => {
-  const from = fmtISODate(dateFrom);
-  const to = fmtISODate(dateTo);
+  const from = fmtLocalDate(dateFrom);
+  const to = fmtLocalDate(dateTo);
 
   return `${sanitizeFileNamePart(projectName)}_${from}-${to}.xlsx`;
 };
