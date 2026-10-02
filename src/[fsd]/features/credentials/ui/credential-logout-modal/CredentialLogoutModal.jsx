@@ -31,7 +31,8 @@ const CredentialLogoutModal = memo(props => {
         >
           Microsoft keeps the permissions you granted, and you stay signed in to Microsoft in this browser.
           The next login can skip the sign-in and consent screens, and the new token again has every
-          permission you granted before. To revoke permissions, remove the app at{' '}
+          permission you granted before. To revoke permissions, open the app&apos;s Manage your application
+          page at{' '}
           <Link
             href={MY_APPS_URL}
             target="_blank"

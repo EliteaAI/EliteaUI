@@ -43,6 +43,7 @@ describe('CredentialLogoutModal', () => {
     const note = screen.getByTestId('credential-logout-modal-microsoft-note');
     expect(note).toHaveTextContent('Microsoft keeps the permissions you granted');
     expect(note).toHaveTextContent('every permission you granted before');
+    expect(note).toHaveTextContent("open the app's Manage your application page at myapps.microsoft.com");
     expect(screen.getByRole('link', { name: 'myapps.microsoft.com' })).toHaveAttribute(
       'href',
       'https://myapps.microsoft.com',
