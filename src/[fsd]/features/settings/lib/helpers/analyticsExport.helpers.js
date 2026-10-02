@@ -53,8 +53,11 @@ const NO_DATA_MSG = 'No data available for the selected date range.';
 
 const noDataMsg = meta => (isRunMeta(meta) ? meta.noDataMessage : NO_DATA_MSG);
 
+const triggerSourceLabel = source =>
+  AnalyticsCommonConstants.TRIGGER_SOURCE_LABELS[source] || source || 'Unknown';
+
 const buildOverviewSheet = (data, meta, isPersonalProject = false) => {
-  const { kpis = {}, daily_activity = [], models = [], top_ai_users = [] } = data || {};
+  const { kpis = {}, daily_activity = [], models = [], top_ai_users = [], automated = [] } = data || {};
 
   const totalModelCalls = models.reduce((s, m) => s + (m.calls || 0), 0);
 
@@ -126,6 +129,22 @@ const buildOverviewSheet = (data, meta, isPersonalProject = false) => {
     title: 'Top AI Adopters',
     columns: userCols,
     rows: top_ai_users.length > 0 ? top_ai_users : emptyRow(userCols, NO_DATA_MSG),
+  });
+
+  const automatedCols = [
+    { header: 'Trigger Source', key: 'trigger_source' },
+    { header: 'Runs', key: 'runs', numFmt: ExcelFormats.integer },
+    { header: 'LLM Calls', key: 'llm_calls', numFmt: ExcelFormats.integer },
+    { header: 'Tool Runs', key: 'tool_runs', numFmt: ExcelFormats.integer },
+    { header: 'Cost (USD)', key: 'llm_cost', numFmt: ExcelFormats.currency },
+  ];
+  sections.push({
+    title: 'Automated Activity',
+    columns: automatedCols,
+    rows:
+      automated.length > 0
+        ? automated.map(a => ({ ...a, trigger_source: triggerSourceLabel(a.trigger_source) }))
+        : emptyRow(automatedCols, NO_DATA_MSG),
   });
 
   return {

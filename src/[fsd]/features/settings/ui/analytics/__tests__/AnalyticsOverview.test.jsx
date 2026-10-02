@@ -18,6 +18,7 @@ vi.mock('recharts', () => ({
 }));
 
 vi.mock('@/[fsd]/features/settings/ui/analytics', () => ({
+  AutomatedActivityTable: () => null,
   ChartTooltip: () => null,
   KPICard: ({ label, value }) => <div data-testid={`kpi-${label}`}>{value}</div>,
   ModelUsageTable: ({ models }) => (

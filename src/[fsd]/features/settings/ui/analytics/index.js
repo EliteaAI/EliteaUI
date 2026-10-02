@@ -4,6 +4,7 @@ export { default as AnalyticsContainer } from './AnalyticsContainer';
 export { default as KPICard } from './components/KpiCard';
 export { default as ChartTooltip } from './components/ChartTooltip';
 export { default as ModelUsageTable } from './components/ModelUsageTable';
+export { default as AutomatedActivityTable } from './components/AutomatedActivityTable';
 export { default as CostTable } from './components/CostTable';
 export { default as InfoBanner, infoBannerTextSx } from './components/InfoBanner';
 
