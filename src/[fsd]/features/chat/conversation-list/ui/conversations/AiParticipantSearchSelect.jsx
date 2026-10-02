@@ -34,7 +34,7 @@ const AiParticipantSearchSelect = memo(props => {
     sortOrder: 'asc',
     query,
     pageSize: 50,
-    types: [ChatParticipantType.Applications],
+    types: [ChatParticipantType.Applications, ChatParticipantType.Pipelines],
   });
 
   const hasMore = total > participants.length;

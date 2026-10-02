@@ -27,6 +27,8 @@ export const useLoadToolkits = ({
   statuses,
   tags,
   folderEntityIds = null,
+  sortBy,
+  sortOrder,
 } = {}) => {
   const selectedProjectId = useSelectedProjectId();
   const projectId = useMemo(
@@ -130,6 +132,8 @@ export const useLoadToolkits = ({
     statuses,
     tags,
     folderEntityIds,
+    sortBy,
+    sortOrder,
   });
 
   const projectWideTagList = useMemo(() => {
@@ -179,6 +183,8 @@ export const useLoadToolkits = ({
     statuses,
     tags,
     folderEntityIds,
+    sortBy,
+    sortOrder,
   });
 
   const tagList = useMemo(() => {
@@ -235,11 +241,15 @@ const useLoadToolkitData = ({
   statuses,
   tags,
   folderEntityIds = null,
+  sortBy,
+  sortOrder,
 } = {}) => {
-  const { sort_by, sort_order } = useSortQueryParamsFromUrl({
+  const urlSort = useSortQueryParamsFromUrl({
     defaultSortOrder: 'desc',
     defaultSortBy: 'created_at',
   });
+  const sort_by = sortBy || urlSort.sort_by;
+  const sort_order = sortOrder || urlSort.sort_order;
   const params = useMemo(
     () => ({
       specifiedQuery,
