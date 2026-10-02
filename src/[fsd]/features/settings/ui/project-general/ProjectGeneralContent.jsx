@@ -123,6 +123,7 @@ const componentStyles = () => ({
   },
   accordionStyles: {
     padding: '0 !important',
+    background: 'transparent',
   },
   containerStyles: {
     display: 'flex',
