@@ -21,11 +21,10 @@ const StateDrawer = memo(props => {
     // If state is undefined/null, initialize with DefaultState before toggling
     const oldState = yamlJsonObject?.state || { ...FlowEditorConstants.DefaultState };
     if (enabled) {
-      const defaultConfig = FlowEditorConstants.DefaultState[name];
       newState = {
         ...oldState,
         [name]: {
-          type: defaultConfig?.type || FlowEditorConstants.StateVariableTypes.String,
+          type: FlowEditorConstants.DefaultStateTypes[name] || FlowEditorConstants.StateVariableTypes.String,
         },
       };
     } else {

@@ -126,7 +126,7 @@ const StateVariableList = memo(props => {
         key={FlowEditorConstants.STATE_INPUT}
         name={FlowEditorConstants.STATE_INPUT}
         type={FlowEditorConstants.StateVariableTypes.String}
-        enabled={!states || !!states?.[FlowEditorConstants.STATE_INPUT]}
+        enabled={StateHelpers.isDefaultVariableEnabled(states, FlowEditorConstants.STATE_INPUT)}
         isDefault
         defaultValue={states?.[FlowEditorConstants.STATE_INPUT]?.value}
         drawerWidth={drawerWidth}
@@ -143,7 +143,7 @@ const StateVariableList = memo(props => {
         key={FlowEditorConstants.STATE_MESSAGES}
         name={FlowEditorConstants.STATE_MESSAGES}
         type={FlowEditorConstants.StateVariableTypes.List}
-        enabled={!states || !!states?.[FlowEditorConstants.STATE_MESSAGES]}
+        enabled={StateHelpers.isDefaultVariableEnabled(states, FlowEditorConstants.STATE_MESSAGES)}
         isDefault
         defaultValue={StateHelpers.getMessagesFromState(states)}
         drawerWidth={drawerWidth}
@@ -160,7 +160,7 @@ const StateVariableList = memo(props => {
         key={FlowEditorConstants.STATE_TOOL_OUTCOMES}
         name={FlowEditorConstants.STATE_TOOL_OUTCOMES}
         type={FlowEditorConstants.StateVariableTypes.Json}
-        enabled={!states || !!states?.[FlowEditorConstants.STATE_TOOL_OUTCOMES]}
+        enabled={StateHelpers.isDefaultVariableEnabled(states, FlowEditorConstants.STATE_TOOL_OUTCOMES)}
         isDefault
         defaultValue={states?.[FlowEditorConstants.STATE_TOOL_OUTCOMES]?.value}
         drawerWidth={drawerWidth}
@@ -177,7 +177,7 @@ const StateVariableList = memo(props => {
         key={FlowEditorConstants.STATE_LAST_TOOL_OUTCOME}
         name={FlowEditorConstants.STATE_LAST_TOOL_OUTCOME}
         type={FlowEditorConstants.StateVariableTypes.Json}
-        enabled={!states || !!states?.[FlowEditorConstants.STATE_LAST_TOOL_OUTCOME]}
+        enabled={StateHelpers.isDefaultVariableEnabled(states, FlowEditorConstants.STATE_LAST_TOOL_OUTCOME)}
         isDefault
         defaultValue={states?.[FlowEditorConstants.STATE_LAST_TOOL_OUTCOME]?.value}
         drawerWidth={drawerWidth}

@@ -70,6 +70,9 @@ export const getValueByType = (name, type, value) => {
   }
 };
 
+export const isDefaultVariableEnabled = (states, name) =>
+  states ? !!states[name] : name in FlowEditorConstants.DefaultState;
+
 export const getMessagesFromState = states =>
   states?.[FlowEditorConstants.STATE_MESSAGES]?.value
     ? JSON.stringify(states[FlowEditorConstants.STATE_MESSAGES]?.value, null, 2)

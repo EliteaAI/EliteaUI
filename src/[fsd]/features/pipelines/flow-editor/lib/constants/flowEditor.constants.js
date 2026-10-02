@@ -18,11 +18,16 @@ export const StateVariableTypes = {
   Json: 'dict',
 };
 
+export const DefaultStateTypes = {
+  [STATE_INPUT]: StateVariableTypes.String,
+  [STATE_MESSAGES]: StateVariableTypes.List,
+  [STATE_TOOL_OUTCOMES]: StateVariableTypes.Json,
+  [STATE_LAST_TOOL_OUTCOME]: StateVariableTypes.Json,
+};
+
 export const DefaultState = {
-  [STATE_INPUT]: { type: StateVariableTypes.String },
-  [STATE_MESSAGES]: { type: StateVariableTypes.List },
-  [STATE_TOOL_OUTCOMES]: { type: StateVariableTypes.Json },
-  [STATE_LAST_TOOL_OUTCOME]: { type: StateVariableTypes.Json },
+  [STATE_INPUT]: { type: DefaultStateTypes[STATE_INPUT] },
+  [STATE_MESSAGES]: { type: DefaultStateTypes[STATE_MESSAGES] },
 };
 
 export const STATE_INPUT_ATTACHMENTS = 'input_attachments';
