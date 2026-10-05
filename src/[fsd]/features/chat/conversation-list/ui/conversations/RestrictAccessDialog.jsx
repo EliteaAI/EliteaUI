@@ -16,7 +16,7 @@ import {
   mapAiParticipantToSelectItem,
   mapUserParticipantToSelectItem,
 } from '@/[fsd]/features/chat/conversation-list/lib/helpers';
-import { Autocomplete, Button, Modal } from '@/[fsd]/shared/ui';
+import { Autocomplete, Banner, Button, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { ChatParticipantType } from '@/common/constants';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -227,15 +227,19 @@ const RestrictAccessDialog = memo(props => {
       </Typography>
 
       {hasSharedLinks && (
-        <Box sx={styles.warningBanner}>
+        <Banner.BannerMessage
+          variant="warning"
+          containerSx={styles.warningBanner}
+        >
           <Typography
-            variant="bodySmall"
+            variant="labelSmall"
+            color="inherit"
             sx={styles.warningText}
           >
             This chat has been shared externally. Restricting access will not revoke existing external shares
             or copies.
           </Typography>
-        </Box>
+        </Banner.BannerMessage>
       )}
 
       <Box sx={styles.section}>
@@ -338,15 +342,13 @@ const restrictAccessDialogStyles = () => ({
   description: ({ palette }) => ({
     color: palette.text.secondary,
   }),
-  warningBanner: ({ palette }) => ({
-    padding: '0.75rem',
-    borderRadius: '0.375rem',
-    backgroundColor: palette.background.warning,
-    border: `0.0625rem solid ${palette.warning.main}`,
-  }),
-  warningText: ({ palette }) => ({
-    color: palette.warning.dark || palette.warning.main,
-  }),
+  warningBanner: {
+    marginTop: 0,
+  },
+  warningText: {
+    flex: 1,
+    wordBreak: 'break-word',
+  },
   section: {
     display: 'flex',
     flexDirection: 'column',
