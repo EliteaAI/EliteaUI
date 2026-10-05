@@ -157,9 +157,25 @@ export const LLM_MODEL_REASONING_DESCRIPTIONS = {
     'Always on in Elitea. Configure which effort levels users can pick.',
 };
 
-export const LLM_MODEL_RECOGNITION_TONES = {
+export const LLM_MODEL_STATUS_TONES = {
   success: 'success',
   warning: 'warning',
+  error: 'error',
+};
+
+export const LLM_MODEL_CONNECTION_TEST_FIELDS = [
+  LLM_MODEL_FIELDS.modelName,
+  LLM_MODEL_FIELDS.credentials,
+  LLM_MODEL_FIELDS.apiProtocol,
+  LLM_MODEL_FIELDS.reasoning,
+];
+
+export const LLM_MODEL_CONNECTION_TEST_TEXTS = {
+  button: 'Test connection',
+  connected: seconds => `Connected in ${seconds} s`,
+  missingFields: labels => `Set ${labels} to test the connection.`,
+  credentialsTypePending: 'Checking the selected AI credentials. Try again in a moment.',
+  incomplete: 'Connection failed: the test could not be completed.',
 };
 
 export const LLM_MODEL_RECOGNITION_TEXTS = {

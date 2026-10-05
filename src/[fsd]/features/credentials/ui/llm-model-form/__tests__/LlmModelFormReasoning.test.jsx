@@ -31,22 +31,32 @@ vi.hoisted(() => {
 
 let profilesPayload = LLM_MODEL_PROFILES_FIXTURE;
 
-vi.mock('../../../lib/hooks', () => ({
-  useLlmModelCredentialType: () => ({ credentialType: 'open_ai', isCredentialTypePending: false }),
-  useLlmModelTakenIds: () => [],
-  useLlmModelProfiles: () => ({
-    profilesPayload,
-    effortLevels: profilesPayload.effort_levels || [
-      'none',
-      'minimal',
-      'low',
-      'medium',
-      'high',
-      'xhigh',
-      'max',
-    ],
-  }),
-}));
+vi.mock('../../../lib/hooks', () => {
+  const idleConnectionTest = {
+    result: null,
+    isTesting: false,
+    runTest: () => {},
+    showFailure: () => {},
+    reset: () => {},
+  };
+  return {
+    useLlmModelCheckConnection: () => idleConnectionTest,
+    useLlmModelCredentialType: () => ({ credentialType: 'open_ai', isCredentialTypePending: false }),
+    useLlmModelTakenIds: () => [],
+    useLlmModelProfiles: () => ({
+      profilesPayload,
+      effortLevels: profilesPayload.effort_levels || [
+        'none',
+        'minimal',
+        'low',
+        'medium',
+        'high',
+        'xhigh',
+        'max',
+      ],
+    }),
+  };
+});
 
 vi.mock('@/hooks/useToast', () => ({
   default: () => ({ toastError: vi.fn(), toastInfo: vi.fn() }),

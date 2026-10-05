@@ -101,6 +101,7 @@ const CredentialForm = memo(props => {
     const toolTypedComponent = ToolComponentHelpers.getToolComponent(toolType, toolSchema, true);
     return toolTypedComponent;
   }, [searchParams, view, toolType, toolSchema, isLlmModelForm]);
+  const rendersOwnConnectionTest = ToolComponent === LlmModelForm;
 
   const [configurationErrors, setConfigurationErrors] = useState({});
   const [showConfigurationValidateError, setShowConfigurationValidateError] = useState(false);
@@ -318,45 +319,47 @@ const CredentialForm = memo(props => {
           setValidationErrorMessages={setValidationErrorMessages}
         />
       </Box>
-      <Box sx={styles.testConnectionContainer}>
-        <Tooltip
-          title={testConnectionTooltipTitle}
-          placement="bottom"
-        >
-          <span data-tour={CREDENTIALS_TOUR_TARGET_IDS.testConnection}>
+      {!rendersOwnConnectionTest && (
+        <Box sx={styles.testConnectionContainer}>
+          <Tooltip
+            title={testConnectionTooltipTitle}
+            placement="bottom"
+          >
+            <span data-tour={CREDENTIALS_TOUR_TARGET_IDS.testConnection}>
+              <Button.BaseBtn
+                variant="elitea"
+                color="secondary"
+                onClick={onClickTestConnection}
+                disabled={
+                  !credentialDetails?.has_test_connection || !isTestConnectionAllowed || isTestingConnection
+                }
+                loading={isTestingConnection}
+              >
+                {credentialDetails?.check_connection_label || 'Test connection'}
+              </Button.BaseBtn>
+            </span>
+          </Tooltip>
+          {isOAuthLoggedIn && oauthTokenKey && (
+            <Button.BaseBtn
+              variant="elitea"
+              color="secondary"
+              onClick={onLogout}
+            >
+              Logout
+            </Button.BaseBtn>
+          )}
+          {!isOAuthLoggedIn && oauthTokenKey && (
             <Button.BaseBtn
               variant="elitea"
               color="secondary"
               onClick={onClickTestConnection}
-              disabled={
-                !credentialDetails?.has_test_connection || !isTestConnectionAllowed || isTestingConnection
-              }
-              loading={isTestingConnection}
+              disabled={isTestingConnection}
             >
-              {credentialDetails?.check_connection_label || 'Test connection'}
+              Login
             </Button.BaseBtn>
-          </span>
-        </Tooltip>
-        {isOAuthLoggedIn && oauthTokenKey && (
-          <Button.BaseBtn
-            variant="elitea"
-            color="secondary"
-            onClick={onLogout}
-          >
-            Logout
-          </Button.BaseBtn>
-        )}
-        {!isOAuthLoggedIn && oauthTokenKey && (
-          <Button.BaseBtn
-            variant="elitea"
-            color="secondary"
-            onClick={onClickTestConnection}
-            disabled={isTestingConnection}
-          >
-            Login
-          </Button.BaseBtn>
-        )}
-      </Box>
+          )}
+        </Box>
+      )}
       {apiError && (
         <Typography
           variant="bodyMedium"

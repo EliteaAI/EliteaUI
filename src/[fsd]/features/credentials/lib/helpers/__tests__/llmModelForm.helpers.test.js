@@ -2,7 +2,12 @@ import { describe, expect, it } from 'vitest';
 
 import {
   buildInitialLlmModelSettings,
+  buildLlmModelConnectionTestBody,
   convertDisplayNameToLlmModelId,
+  formatLlmModelConnectionLatency,
+  getLlmModelConnectionTestFailureText,
+  getLlmModelConnectionTestMissingFields,
+  getLlmModelConnectionTestMissingFieldsText,
   getLlmModelCredentialTypeTag,
   getLlmModelInputLabelProps,
   getLlmModelSelectLabelProps,
@@ -247,6 +252,118 @@ describe('mapLlmModelSaveErrorToFields', () => {
     );
     expect(mapLlmModelSaveErrorToFields({ status: 500 })).toEqual({});
     expect(mapLlmModelSaveErrorToFields(undefined)).toEqual({});
+  });
+});
+
+describe('getLlmModelConnectionTestMissingFields', () => {
+  const CREDENTIALS = { elitea_title: 'creds', private: false };
+
+  it('asks for AI credentials and a non-blank Model name', () => {
+    expect(getLlmModelConnectionTestMissingFields({ settings: { name: '  ' } })).toEqual([
+      'ai_credentials',
+      'name',
+    ]);
+    expect(
+      getLlmModelConnectionTestMissingFields({ settings: { name: 'gpt-4o', ai_credentials: CREDENTIALS } }),
+    ).toEqual([]);
+  });
+
+  it('asks for API protocol only when the credential needs one', () => {
+    const settings = { name: 'claude', ai_credentials: CREDENTIALS };
+    expect(
+      getLlmModelConnectionTestMissingFields({ settings, isApiProtocolShown: true, apiProtocol: '' }),
+    ).toEqual(['api_protocol']);
+    expect(
+      getLlmModelConnectionTestMissingFields({ settings, isApiProtocolShown: false, apiProtocol: '' }),
+    ).toEqual([]);
+  });
+});
+
+describe('getLlmModelConnectionTestMissingFieldsText', () => {
+  it('names every missing field by its label', () => {
+    expect(getLlmModelConnectionTestMissingFieldsText(['ai_credentials', 'name', 'api_protocol'])).toBe(
+      'Set AI Credentials, Model Name and API protocol to test the connection.',
+    );
+    expect(getLlmModelConnectionTestMissingFieldsText(['name'])).toBe(
+      'Set Model Name to test the connection.',
+    );
+  });
+});
+
+describe('buildLlmModelConnectionTestBody', () => {
+  const settings = {
+    label: 'GPT',
+    elitea_title: 'gpt',
+    name: ' gpt-4o ',
+    context_window: '',
+    max_output_tokens: '',
+    supports_reasoning: true,
+    openai_compatible: true,
+    api_protocol: 'openai',
+    ai_credentials: { elitea_title: 'creds', private: true },
+  };
+
+  it('carries only the fields the test request uses, with a trimmed model name', () => {
+    expect(
+      buildLlmModelConnectionTestBody({ settings, isApiProtocolShown: true, apiProtocol: 'openai' }),
+    ).toEqual({
+      name: 'gpt-4o',
+      ai_credentials: { elitea_title: 'creds', private: true },
+      api_protocol: 'openai',
+      supports_reasoning: true,
+    });
+  });
+
+  it('sends the displayed protocol for DIAL and none for other credentials', () => {
+    expect(
+      buildLlmModelConnectionTestBody({
+        settings: { name: 'x' },
+        isApiProtocolShown: true,
+        apiProtocol: 'azure',
+      }).api_protocol,
+    ).toBe('azure');
+    expect(
+      buildLlmModelConnectionTestBody({ settings, isApiProtocolShown: false, apiProtocol: 'azure' })
+        .api_protocol,
+    ).toBe(null);
+  });
+});
+
+describe('formatLlmModelConnectionLatency', () => {
+  it('shows seconds with one decimal', () => {
+    expect(formatLlmModelConnectionLatency(1234)).toBe('Connected in 1.2 s');
+    expect(formatLlmModelConnectionLatency(80)).toBe('Connected in 0.1 s');
+  });
+});
+
+describe('getLlmModelConnectionTestFailureText', () => {
+  it('shows the server message as is', () => {
+    expect(getLlmModelConnectionTestFailureText({ data: { message: 'Rate limited: slow down' } })).toBe(
+      'Rate limited: slow down',
+    );
+  });
+
+  it("maps the server's reasoning protocol rejection to the Save message", () => {
+    expect(
+      getLlmModelConnectionTestFailureText({
+        data: { message: "Value error, api_protocol='azure' does not support reasoning; use 'anthropic'" },
+      }),
+    ).toBe(
+      "Reasoning isn't supported with the Azure OpenAI protocol. Choose OpenAI or Anthropic, or turn Reasoning off.",
+    );
+  });
+
+  it('falls back to a generic failure when the server says nothing usable', () => {
+    for (const error of [
+      undefined,
+      { status: 'FETCH_ERROR' },
+      { data: { message: ' ' } },
+      { data: 'html' },
+    ]) {
+      expect(getLlmModelConnectionTestFailureText(error)).toBe(
+        'Connection failed: the test could not be completed.',
+      );
+    }
   });
 });
 

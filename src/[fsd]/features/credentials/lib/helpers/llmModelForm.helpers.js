@@ -1,4 +1,6 @@
 import {
+  LLM_MODEL_CONNECTION_TEST_FIELDS,
+  LLM_MODEL_CONNECTION_TEST_TEXTS,
   LLM_MODEL_CREDENTIAL_TYPE_TAGS,
   LLM_MODEL_ERROR_MESSAGES,
   LLM_MODEL_ERROR_SOURCE_FIELDS,
@@ -117,4 +119,36 @@ export const mapLlmModelSaveErrorToFields = error => {
     return { [LLM_MODEL_FIELDS.reasoning]: LLM_MODEL_ERROR_MESSAGES.reasoningNotSupportedByProtocol };
   }
   return {};
+};
+
+const joinWithAnd = items =>
+  items.length > 1 ? `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}` : items[0] || '';
+
+export const getLlmModelConnectionTestMissingFields = ({ settings, isApiProtocolShown, apiProtocol }) =>
+  [
+    !settings?.ai_credentials?.elitea_title && LLM_MODEL_FIELDS.credentials,
+    !String(settings?.name ?? '').trim() && LLM_MODEL_FIELDS.modelName,
+    isApiProtocolShown && !apiProtocol && LLM_MODEL_FIELDS.apiProtocol,
+  ].filter(Boolean);
+
+export const getLlmModelConnectionTestMissingFieldsText = missingFields =>
+  LLM_MODEL_CONNECTION_TEST_TEXTS.missingFields(
+    joinWithAnd(missingFields.map(f => LLM_MODEL_FIELD_LABELS[f])),
+  );
+
+export const buildLlmModelConnectionTestBody = ({ settings, isApiProtocolShown, apiProtocol }) => ({
+  ...Object.fromEntries(LLM_MODEL_CONNECTION_TEST_FIELDS.map(field => [field, settings?.[field]])),
+  [LLM_MODEL_FIELDS.modelName]: String(settings?.name ?? '').trim(),
+  [LLM_MODEL_FIELDS.apiProtocol]: (isApiProtocolShown && apiProtocol) || null,
+});
+
+export const formatLlmModelConnectionLatency = elapsedMs =>
+  LLM_MODEL_CONNECTION_TEST_TEXTS.connected((elapsedMs / 1000).toFixed(1));
+
+export const getLlmModelConnectionTestFailureText = error => {
+  const message = error?.data?.message;
+  if (typeof message !== 'string' || !message.trim()) return LLM_MODEL_CONNECTION_TEST_TEXTS.incomplete;
+  if (message.includes(DIAL_AZURE_REASONING_REJECTION))
+    return LLM_MODEL_ERROR_MESSAGES.reasoningNotSupportedByProtocol;
+  return message;
 };
