@@ -298,12 +298,12 @@ describe('buildLlmModelConnectionTestBody', () => {
     context_window: '',
     max_output_tokens: '',
     supports_reasoning: true,
-    openai_compatible: false,
+    openai_compatible: true,
     api_protocol: 'openai',
     ai_credentials: { elitea_title: 'creds', private: true },
   };
 
-  it('carries only the connection fields, with a trimmed model name', () => {
+  it('carries only the fields the test request uses, with a trimmed model name', () => {
     expect(
       buildLlmModelConnectionTestBody({ settings, isApiProtocolShown: true, apiProtocol: 'openai' }),
     ).toEqual({
@@ -311,7 +311,6 @@ describe('buildLlmModelConnectionTestBody', () => {
       ai_credentials: { elitea_title: 'creds', private: true },
       api_protocol: 'openai',
       supports_reasoning: true,
-      openai_compatible: false,
     });
   });
 

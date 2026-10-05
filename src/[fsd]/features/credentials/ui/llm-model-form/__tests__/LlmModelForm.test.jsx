@@ -864,7 +864,6 @@ describe('LlmModelForm', () => {
           ai_credentials: { elitea_title: 'openai-cred', private: false },
           api_protocol: null,
           supports_reasoning: false,
-          openai_compatible: false,
         },
       });
       expect(await screen.findByText(/^Connected in \d+\.\d s$/)).toHaveAttribute('data-tone', 'success');

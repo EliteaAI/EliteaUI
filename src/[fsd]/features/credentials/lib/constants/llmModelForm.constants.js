@@ -168,7 +168,6 @@ export const LLM_MODEL_CONNECTION_TEST_FIELDS = [
   LLM_MODEL_FIELDS.credentials,
   LLM_MODEL_FIELDS.apiProtocol,
   LLM_MODEL_FIELDS.reasoning,
-  LLM_MODEL_FIELDS.openaiCompatible,
 ];
 
 export const LLM_MODEL_CONNECTION_TEST_TEXTS = {
