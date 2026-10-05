@@ -49,7 +49,7 @@ const Users = memo(() => {
       setSearchParams(newParams, { replace: true });
     }
   }, [location.search, setSearchParams, shouldInvite]);
-  const { data, isFetching, refetch, isError, error } = useUserListQuery(
+  const { data, isFetching, isError, error } = useUserListQuery(
     {
       projectId,
       page,
@@ -179,10 +179,9 @@ const Users = memo(() => {
   useEffect(() => {
     if (isInviteSuccess) {
       toastSuccess(emailCount > 1 ? 'The users have been invited' : 'The user has been invited');
-      refetch();
       reset();
     }
-  }, [emailCount, isInviteSuccess, refetch, reset, toastSuccess]);
+  }, [emailCount, isInviteSuccess, reset, toastSuccess]);
 
   useEffect(() => {
     if (isInviteError) {
@@ -219,7 +218,6 @@ const Users = memo(() => {
               {checkPermission(PERMISSIONS.users.edit) && (
                 <EditUsersButton
                   users={selectedUsers}
-                  refetch={refetch}
                   disabled={!selectedUsers.length}
                   setSelectedUsers={setSelectedUsers}
                   rolesOptions={rolesOptions}
@@ -235,7 +233,6 @@ const Users = memo(() => {
               {checkPermission(PERMISSIONS.users.delete) && (
                 <DeleteUserButton
                   users={selectedUsers}
-                  refetch={refetch}
                   disabled={!selectedUsers.length}
                   setSelectedUsers={setSelectedUsers}
                   useSecondaryButton
@@ -262,7 +259,6 @@ const Users = memo(() => {
                 selectedUsers={selectedUsers}
                 onSelectPage={onSelectPage}
                 onSelectRow={onSelectRow}
-                refetch={refetch}
                 isFetching={isFetching}
                 toastError={toastError}
                 toastSuccess={toastSuccess}

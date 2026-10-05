@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useState } from 'react';
+import { memo, useCallback, useState } from 'react';
 
 import { Box, IconButton } from '@mui/material';
 
@@ -12,13 +12,13 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 
 const DeleteUserButton = memo(props => {
-  const { users, refetch, disabled, setSelectedUsers, useSecondaryButton = false, testId } = props;
+  const { users, disabled, setSelectedUsers, useSecondaryButton = false, testId } = props;
   const styles = deleteUserButtonStyles(disabled, useSecondaryButton);
   const { toastError, toastSuccess } = useToast();
   const projectId = useSelectedProjectId();
   const [openAlert, setOpenAlert] = useState(false);
 
-  const [deleteUser, { isSuccess, isError, error, isLoading }] = useUserDeleteMutation();
+  const [deleteUser, { isLoading }] = useUserDeleteMutation();
   const onClickDelete = useCallback(() => {
     setOpenAlert(true);
   }, []);
@@ -27,33 +27,26 @@ const DeleteUserButton = memo(props => {
     setOpenAlert(false);
   }, []);
 
+  // The users list is refreshed by the mutation's tag invalidation, no manual refetch needed
   const onConfirmAlert = useCallback(async () => {
     onCloseAlert();
-    await deleteUser({
-      projectId,
-      params: {
-        ids: users.map(({ id }) => id),
-      },
-    });
-  }, [deleteUser, onCloseAlert, projectId, users]);
-
-  useEffect(() => {
-    if (isSuccess) {
-      const message =
+    try {
+      await deleteUser({
+        projectId,
+        params: {
+          ids: users.map(({ id }) => id),
+        },
+      }).unwrap();
+      toastSuccess(
         users.length > 1
           ? 'The selected users have been successfully deleted.'
-          : `The ${users[0]?.name || 'user'} user has been successfully deleted.`;
-      toastSuccess(message);
-      setSelectedUsers([]);
-      refetch();
+          : `The ${users[0]?.name || 'user'} user has been successfully deleted.`,
+      );
+      setSelectedUsers?.([]);
+    } catch (err) {
+      toastError(buildErrorMessage(err));
     }
-  }, [users, isSuccess, toastSuccess, refetch, setSelectedUsers]);
-
-  useEffect(() => {
-    if (isError) {
-      toastError(buildErrorMessage(error));
-    }
-  }, [error, isError, toastError]);
+  }, [deleteUser, onCloseAlert, projectId, users, toastSuccess, toastError, setSelectedUsers]);
 
   return (
     <>
