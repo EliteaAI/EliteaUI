@@ -43,7 +43,6 @@ const UsersTable = memo(props => {
     onChangePageSize,
     onPageChange,
     isFetching,
-    refetch,
     onSelectPage,
     onSelectRow,
     rolesOptions,
@@ -150,7 +149,6 @@ const UsersTable = memo(props => {
           {checkPermission(PERMISSIONS.users.edit) && (
             <EditUsersButton
               users={row}
-              refetch={refetch}
               rolesOptions={rolesOptions}
               testId="user-row-edit-button"
             />
@@ -158,7 +156,6 @@ const UsersTable = memo(props => {
           {checkPermission(PERMISSIONS.users.delete) && (
             <DeleteUserButton
               users={[row]}
-              refetch={refetch}
               setSelectedUsers={setSelectedUsers}
               testId="user-row-delete-button"
             />
@@ -166,7 +163,7 @@ const UsersTable = memo(props => {
         </Box>
       );
     },
-    [checkPermission, refetch, rolesOptions, setSelectedUsers, styles.actionsContainer],
+    [checkPermission, rolesOptions, setSelectedUsers, styles.actionsContainer],
   );
 
   return !isFetching ? (
