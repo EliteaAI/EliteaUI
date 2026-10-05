@@ -77,6 +77,7 @@ export const useDeleteMessageAlert = props => {
     openAlert,
     alertContent,
     messageIdToDelete,
+    isDeletingAll: messageIdToDelete === ALL_MESSAGES,
     setOpenAlert,
     setAlertContent,
     setMessageIdToDelete,
