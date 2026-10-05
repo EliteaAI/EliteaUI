@@ -22,7 +22,7 @@ const ICON_MAPPING = {
 };
 
 const BannerMessage = memo(props => {
-  const { message, children, containerSx, variant = VARIANT_MAPPING.WARNING } = props;
+  const { message, children, containerSx, showIcon = true, variant = VARIANT_MAPPING.WARNING } = props;
   const [expanded, setExpanded] = useState(false);
   const theme = useTheme();
 
@@ -39,10 +39,12 @@ const BannerMessage = memo(props => {
       sx={[styles.container, children && styles.staticContainer, containerSx]}
       onClick={children ? undefined : handleToggle}
     >
-      <Box
-        component={ICON_MAPPING[variant]}
-        sx={styles.icon}
-      />
+      {showIcon && (
+        <Box
+          component={ICON_MAPPING[variant]}
+          sx={styles.icon}
+        />
+      )}
       {children || (
         <Typography
           variant="labelSmall"
@@ -107,6 +109,7 @@ const bannerMessageStyles = (expanded, theme, variant) => {
       backgroundColor: styleVariant?.background,
       border: `0.0625rem solid ${styleVariant?.border}`,
       borderRadius: BORDER_RADIUS.MD,
+      color: styleVariant?.text,
       cursor: 'pointer',
       marginTop: '0.5rem',
     },
