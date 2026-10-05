@@ -42,6 +42,7 @@ import MemoryIcon from '@/assets/memory.svg?react';
 import MicIcon from '@/assets/microphone.svg?react';
 import MiroIcon from '@/assets/miro.svg?react';
 import OllamaIcon from '@/assets/ollama.svg?react';
+import OutlookIcon from '@/assets/outlook.svg?react';
 import PieChartIcon from '@/assets/pie-chart-icon.svg?react';
 import PostgreSQLIcon from '@/assets/postgre-sql-icon.svg?react';
 import PostmanIcon from '@/assets/postman.svg?react';
@@ -61,6 +62,7 @@ import SonarIcon from '@/assets/sonar-icon.svg?react';
 import SqlIcon from '@/assets/sql-icon.svg?react';
 import SwarmIconSVG from '@/assets/swarm-icon.svg?react';
 import SyngenIcon from '@/assets/syngen.svg?react';
+import TeamsIcon from '@/assets/teams.svg?react';
 import TestIOIcon from '@/assets/testio-icon.svg?react';
 import TestrailIcon from '@/assets/testrail-icon.svg?react';
 import ToolsIcon from '@/assets/tools-icon.svg?react';
@@ -281,6 +283,10 @@ const getPredefinedIcon = (type, iconProps) => {
       return <ServiceNowIcon {...iconProps} />;
     case 'slack':
       return <SlackIcon {...iconProps} />;
+    case 'outlook':
+      return <OutlookIcon {...iconProps} />;
+    case 'teams':
+      return <TeamsIcon {...iconProps} />;
     case 'postman':
       return <PostmanIcon {...iconProps} />;
     case 'ado':
@@ -489,6 +495,10 @@ export const getToolIcon = toolType => {
       return ServiceNowIcon;
     case 'slack':
       return SlackIcon;
+    case 'outlook':
+      return OutlookIcon;
+    case 'teams':
+      return TeamsIcon;
     case 'postman':
       return PostmanIcon;
     case 'ado':
