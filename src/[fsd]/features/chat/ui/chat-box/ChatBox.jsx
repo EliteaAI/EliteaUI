@@ -884,15 +884,16 @@ const ChatBox = memo(
       onStopRun?.();
     }, [onStopRun]);
 
-    const { openAlert, onDeleteAnswer, onDeleteAll, onConfirmDelete, onCloseAlert } = useDeleteMessageAlert({
-      setChatHistory,
-      chatInput,
-      onDeleteChatMessage,
-      onDeleteAllChatMessages,
-      deleteAllRunNodes,
-      onStopTTS: stopTTS,
-      dismissNextInputSuggestion,
-    });
+    const { openAlert, isDeletingAll, onDeleteAnswer, onDeleteAll, onConfirmDelete, onCloseAlert } =
+      useDeleteMessageAlert({
+        setChatHistory,
+        chatInput,
+        onDeleteChatMessage,
+        onDeleteAllChatMessages,
+        deleteAllRunNodes,
+        onStopTTS: stopTTS,
+        dismissNextInputSuggestion,
+      });
 
     const onClickClearChat = useCallback(() => {
       if (chat_history?.length) {
@@ -959,6 +960,19 @@ const ChatBox = memo(
       onDeleteAll,
       stopTTS,
     ]);
+
+    const hideClearChat = useMemo(
+      () => activeConversation?.isNew || activeConversation?.isPlayback || !activeConversation?.name,
+      [activeConversation],
+    );
+
+    const disableClearChat = useMemo(
+      () =>
+        activeConversation?.author_id !== userId ||
+        activeConversation?.isPlayback ||
+        !activeConversation?.chat_history?.length,
+      [activeConversation, userId],
+    );
 
     useEffect(() => {
       if (
@@ -3053,6 +3067,8 @@ const ChatBox = memo(
               onCreateToolkit={onCreateToolkit}
               onDeleteParticipant={onDeleteParticipant}
               participants={activeConversation?.participants || []}
+              onClearChat={fromTheChat && !hideClearChat ? onClickClearChat : undefined}
+              disableClearChat={disableClearChat}
               slashHighlights={combinedHighlightRanges}
               isSpeakingMode={isSpeakingMode}
               onSpeakingModeToggle={() => setIsSpeakingMode(v => !v)}
@@ -3064,8 +3080,12 @@ const ChatBox = memo(
           open={openAlert}
           onClose={onCloseAlert}
           onConfirm={onConfirmDelete}
-          textContent="Are you sure to delete the message"
-          inlineExtraContent="? It can't be restored."
+          textContent={
+            isDeletingAll
+              ? "The deleted messages can't be restored. Are you sure to delete all the messages"
+              : 'Are you sure to delete the message'
+          }
+          inlineExtraContent={isDeletingAll ? undefined : "? It can't be restored."}
         />
       </>
     );
