@@ -1,12 +1,14 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 
 import { useFormikContext } from 'formik';
 
 import { Box, Typography } from '@mui/material';
 
+import { ChatButton } from '@/[fsd]/features/chat';
 import { McpAuthModal } from '@/[fsd]/features/mcp';
 import { ToolkitLayoutConstants } from '@/[fsd]/features/toolkits/lib/constants';
 import { useToolkitTestRunner } from '@/[fsd]/features/toolkits/lib/hooks';
+import { WELCOME_MESSAGE_ID } from '@/common/constants';
 
 import ToolkitTestEmptyState from './ToolkitTestEmptyState';
 import ToolkitTestResults from './ToolkitTestResults';
@@ -29,6 +31,7 @@ const ToolkitTestPanel = memo(props => {
     chatHistory,
     isRunning,
     handleRunTool,
+    onClearChat,
     modelList,
     selectedModel,
     onSelectModel,
@@ -36,6 +39,11 @@ const ToolkitTestPanel = memo(props => {
     onSetLLMSettings,
     mcpAuthModalProps,
   } = useToolkitTestRunner({ toolkitId, values });
+
+  const hasResults = useMemo(
+    () => chatHistory.some(message => message.id !== WELCOME_MESSAGE_ID),
+    [chatHistory],
+  );
 
   return (
     <Box sx={styles.root}>
@@ -83,6 +91,12 @@ const ToolkitTestPanel = memo(props => {
           >
             Results
           </Typography>
+          <Box sx={styles.headerActions}>
+            <ChatButton.ClearChatButton
+              disabled={!hasResults || isRunning}
+              onClear={onClearChat}
+            />
+          </Box>
         </Box>
         <Box sx={styles.columnBody}>
           <ToolkitTestResults chatHistory={chatHistory} />
@@ -114,6 +128,7 @@ const toolkitTestPanelStyles = () => ({
     borderRight: ({ palette }) => `0.0625rem solid ${palette.border.default}`,
   },
   columnHeader: ({ palette }) => ({
+    position: 'relative',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -122,6 +137,12 @@ const toolkitTestPanelStyles = () => ({
     background: palette.background.panel,
     borderBottom: `0.0625rem solid ${palette.border.default}`,
   }),
+  headerActions: {
+    position: 'absolute',
+    right: '1rem',
+    display: 'flex',
+    alignItems: 'center',
+  },
   columnBody: {
     display: 'flex',
     flex: 1,
