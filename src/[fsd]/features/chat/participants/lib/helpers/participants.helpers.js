@@ -108,3 +108,11 @@ export const isParticipantStillActive = participant => {
       return false;
   }
 };
+
+export const isWelcomeMessageParticipant = participant =>
+  participant?.entity_name === ChatParticipantType.Applications ||
+  participant?.entity_name === ChatParticipantType.Pipelines;
+
+// Includes the pinned version so switching a participant's version yields a new key.
+export const getParticipantWelcomeKey = participant =>
+  `${getChatParticipantUniqueId(participant)}::${participant.entity_settings?.version_id ?? ''}`;
