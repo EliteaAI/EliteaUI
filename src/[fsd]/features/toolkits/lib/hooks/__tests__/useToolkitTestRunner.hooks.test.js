@@ -201,3 +201,20 @@ describe('useToolkitTestRunner tool changes', () => {
     expect(result.current.toolInputVariables).toEqual({ status: 'open' });
   });
 });
+
+describe('useToolkitTestRunner clear chat', () => {
+  it('clears the results and the conversation without touching the tool or its parameters', () => {
+    toolSchema = { properties: { status: { type: 'string', default: 'open' } } };
+
+    const { result } = renderRunner();
+    selectTool(result, 'create_issue');
+    vi.clearAllMocks();
+
+    act(() => result.current.onClearChat());
+
+    expect(handleClearChat).toHaveBeenCalledTimes(1);
+    expect(handleClearActiveConversation).toHaveBeenCalledTimes(1);
+    expect(result.current.selectedTool).toBe('create_issue');
+    expect(result.current.toolInputVariables).toEqual({ status: 'open' });
+  });
+});

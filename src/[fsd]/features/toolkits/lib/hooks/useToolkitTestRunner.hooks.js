@@ -123,6 +123,12 @@ export const useToolkitTestRunner = ({ toolkitId, values, index, adjustSchema })
     setToolInputVariables(inputVariables);
   }, []);
 
+  // Drops the conversation too, so the next run starts without the cleared history.
+  const onClearChat = useCallback(() => {
+    handleClearChat();
+    handleClearActiveConversation();
+  }, [handleClearChat, handleClearActiveConversation]);
+
   const onChangeTool = useCallback(
     value => {
       // Released so re-picking the tool that was just cleared seeds its defaults again.
@@ -156,6 +162,7 @@ export const useToolkitTestRunner = ({ toolkitId, values, index, adjustSchema })
     chatHistory,
     isRunning,
     handleRunTool,
+    onClearChat,
     modelList,
     selectedModel,
     onSelectModel,
