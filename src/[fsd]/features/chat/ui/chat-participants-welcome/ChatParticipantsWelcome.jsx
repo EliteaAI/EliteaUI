@@ -6,7 +6,7 @@ import {
   getParticipantWelcomeKey,
   isWelcomeMessageParticipant,
 } from '@/[fsd]/features/chat/participants/lib/helpers';
-import { useParticipantsWelcomeMessages } from '@/[fsd]/features/chat/participants/lib/hooks';
+import { useParticipantWelcomeMessage } from '@/[fsd]/features/chat/participants/lib/hooks';
 import ArrowDownIcon from '@/components/Icons/ArrowDownIcon';
 
 import ChatParticipantWelcomeItem from './ChatParticipantWelcomeItem';
@@ -20,15 +20,11 @@ import ChatParticipantWelcomeItem from './ChatParticipantWelcomeItem';
  * switch. Selecting another existing participant keeps the current state.
  */
 const ChatParticipantsWelcome = memo(props => {
-  const { conversationId, participants, activeParticipant, userMessageCount = 0 } = props;
+  const { conversationId, participants, activeParticipant, lastUserMessageId } = props;
 
   const theme = useTheme();
-  const activeParticipants = useMemo(
-    () => (activeParticipant ? [activeParticipant] : []),
-    [activeParticipant],
-  );
-  const { entries, isLoading } = useParticipantsWelcomeMessages(activeParticipants);
-  const [expanded, setExpanded] = useState(userMessageCount === 0);
+  const { key: welcomeKey, message, isLoading } = useParticipantWelcomeMessage(activeParticipant);
+  const [expanded, setExpanded] = useState(!lastUserMessageId);
 
   const participantKeys = useMemo(
     () => (participants || []).filter(isWelcomeMessageParticipant).map(getParticipantWelcomeKey).join('|'),
@@ -38,7 +34,7 @@ const ChatParticipantsWelcome = memo(props => {
   const knownKeysRef = useRef({ conversationId: undefined, keys: null });
   // Greetings added mid-chat that should expand the block once their participant is the active one.
   const pendingKeysRef = useRef(new Set());
-  const prevUserMessageCountRef = useRef(userMessageCount);
+  const prevLastUserMessageIdRef = useRef(lastUserMessageId);
 
   useEffect(() => {
     if (!participants) return;
@@ -49,7 +45,7 @@ const ChatParticipantsWelcome = memo(props => {
     if (known.conversationId !== conversationId || known.keys === null) {
       knownKeysRef.current = { conversationId, keys };
       pendingKeysRef.current = new Set();
-      setExpanded(userMessageCount === 0);
+      setExpanded(!lastUserMessageId);
       return;
     }
 
@@ -57,25 +53,24 @@ const ChatParticipantsWelcome = memo(props => {
       if (!known.keys.has(key)) pendingKeysRef.current.add(key);
     });
     knownKeysRef.current = { conversationId, keys };
-    // userMessageCount is read only to pick the initial state of a newly opened conversation.
+    // lastUserMessageId is read only to pick the initial state of a newly opened conversation.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversationId, participantKeys]);
 
-  const activeEntryKey = entries[0]?.key;
-
   useEffect(() => {
-    if (isLoading || !activeEntryKey || !pendingKeysRef.current.has(activeEntryKey)) return;
-    pendingKeysRef.current.delete(activeEntryKey);
+    if (isLoading || !welcomeKey || !pendingKeysRef.current.has(welcomeKey)) return;
+    pendingKeysRef.current.delete(welcomeKey);
     setExpanded(true);
-  }, [activeEntryKey, isLoading, participantKeys]);
+  }, [welcomeKey, isLoading, participantKeys]);
 
+  // Keyed off the latest user message (not a count) so loading older history pages doesn't collapse it.
   useEffect(() => {
-    if (userMessageCount > prevUserMessageCountRef.current) {
+    if (lastUserMessageId && lastUserMessageId !== prevLastUserMessageIdRef.current) {
       setExpanded(false);
       pendingKeysRef.current = new Set();
     }
-    prevUserMessageCountRef.current = userMessageCount;
-  }, [userMessageCount]);
+    prevLastUserMessageIdRef.current = lastUserMessageId;
+  }, [lastUserMessageId]);
 
   const onToggle = useCallback(() => setExpanded(prev => !prev), []);
 
@@ -91,7 +86,7 @@ const ChatParticipantsWelcome = memo(props => {
 
   const styles = chatParticipantsWelcomeStyles();
 
-  if (!entries.length) return null;
+  if (!message) return null;
 
   return (
     <Box
@@ -107,17 +102,18 @@ const ChatParticipantsWelcome = memo(props => {
         onClick={onToggle}
         onKeyDown={onKeyDown}
       >
-        <ArrowDownIcon
-          width={16}
-          height={16}
-          fill={theme.palette.icon.default}
-          style={styles.arrowIcon(expanded)}
-        />
+        <Box sx={styles.arrowIcon(expanded)}>
+          <ArrowDownIcon
+            width={16}
+            height={16}
+            fill={theme.palette.icon.default}
+          />
+        </Box>
         <Typography
           variant="labelSmall"
           color="text.secondary"
         >
-          {entries.length > 1 ? `Welcome messages (${entries.length})` : 'Welcome message'}
+          Welcome message
         </Typography>
       </Box>
       <Collapse
@@ -125,13 +121,10 @@ const ChatParticipantsWelcome = memo(props => {
         unmountOnExit
       >
         <Box sx={styles.list}>
-          {entries.map(entry => (
-            <ChatParticipantWelcomeItem
-              key={entry.key}
-              participant={entry.participant}
-              message={entry.message}
-            />
-          ))}
+          <ChatParticipantWelcomeItem
+            participant={activeParticipant}
+            message={message}
+          />
         </Box>
       </Collapse>
     </Box>
@@ -162,6 +155,7 @@ const chatParticipantsWelcomeStyles = () => ({
     userSelect: 'none',
   },
   arrowIcon: expanded => ({
+    display: 'flex',
     transition: 'transform 0.2s ease',
     transform: expanded ? 'rotate(0deg)' : 'rotate(-90deg)',
   }),

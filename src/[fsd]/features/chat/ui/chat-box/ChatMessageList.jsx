@@ -76,10 +76,10 @@ const ChatMessageList = memo(props => {
     [chat_history],
   );
 
-  const userMessageCount = useMemo(
-    () => chat_history.filter(msg => msg.role === ROLES.User).length,
-    [chat_history],
-  );
+  const lastUserMessageId = useMemo(() => {
+    const lastUserMessage = chat_history[lastUserMessageIndex];
+    return lastUserMessage ? lastUserMessage.id || lastUserMessage.internal_id : undefined;
+  }, [chat_history, lastUserMessageIndex]);
 
   const onClickSentTo = useCallback(
     participant => {
@@ -249,7 +249,7 @@ const ChatMessageList = memo(props => {
             conversationId={activeConversation?.id}
             participants={activeConversation?.participants}
             activeParticipant={activeParticipant}
-            userMessageCount={userMessageCount}
+            lastUserMessageId={lastUserMessageId}
           />
         )}
         {/* Messages */}
