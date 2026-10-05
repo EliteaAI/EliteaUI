@@ -81,6 +81,9 @@ const NewChatInput = memo(
       onInternalToolsConfigChange,
       onAddNewUsers,
       internal_tools = [],
+
+      onClearChat,
+      disableClearChat = false,
       projectId,
 
       // Participant management (for PlusChatButton submenus)
@@ -250,6 +253,12 @@ const NewChatInput = memo(
                     onCreateToolkit={onCreateToolkit}
                     onDeleteParticipant={onDeleteParticipant}
                     participants={participants}
+                  />
+                )}
+                {fromTheChat && onClearChat && (
+                  <ChatButton.ClearChatButton
+                    disabled={disableClearChat}
+                    onClear={onClearChat}
                   />
                 )}
                 {!hideAttachments && !fromTheChat && (
