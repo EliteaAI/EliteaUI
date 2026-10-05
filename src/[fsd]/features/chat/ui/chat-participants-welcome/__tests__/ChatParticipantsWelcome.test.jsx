@@ -9,7 +9,8 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 import ChatParticipantsWelcome from '../ChatParticipantsWelcome';
 
-// The hook resolves the active participant's greeting; here every agent greets with its id and version.
+// The hook resolves the active participant's greeting; here every agent greets with its id and version,
+// except NO_WELCOME_ID which has no greeting.
 vi.mock('@/[fsd]/features/chat/participants/lib/hooks', async () => {
   const helpers = await import('@/[fsd]/features/chat/participants/lib/helpers/participants.helpers');
   return {
@@ -17,12 +18,17 @@ vi.mock('@/[fsd]/features/chat/participants/lib/hooks', async () => {
       participant
         ? {
             key: helpers.getParticipantWelcomeKey(participant),
-            message: `Hello from ${participant.entity_meta.id} v${participant.entity_settings.version_id}`,
+            message:
+              participant.entity_meta.id === NO_WELCOME_ID
+                ? ''
+                : `Hello from ${participant.entity_meta.id} v${participant.entity_settings.version_id}`,
             isLoading: false,
           }
         : { key: null, message: '', isLoading: false },
   };
 });
+
+const NO_WELCOME_ID = 99;
 
 vi.mock('../ChatParticipantWelcomeItem', () => ({
   default: ({ message }) => <div data-testid="chat-participant-welcome-item">{message}</div>,
@@ -124,6 +130,16 @@ describe('ChatParticipantsWelcome', () => {
     rerender(ui({ participants: [A, B], activeParticipant: A, lastUserMessageId: 'm3' }));
     rerender(ui({ participants: [A, B], activeParticipant: B, lastUserMessageId: 'm3' }));
 
+    expect(isExpanded()).toBe(false);
+  });
+
+  it('does not expand for a newly added agent without a greeting', () => {
+    const silent = agent(NO_WELCOME_ID);
+    const { rerender } = render(ui({ participants: [A], activeParticipant: A, lastUserMessageId: 'm2' }));
+    rerender(ui({ participants: [A, silent], activeParticipant: silent, lastUserMessageId: 'm2' }));
+    expect(screen.queryByTestId('chat-participants-welcome')).not.toBeInTheDocument();
+
+    rerender(ui({ participants: [A, silent], activeParticipant: A, lastUserMessageId: 'm2' }));
     expect(isExpanded()).toBe(false);
   });
 

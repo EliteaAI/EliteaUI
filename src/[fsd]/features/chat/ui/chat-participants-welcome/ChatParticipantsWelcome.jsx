@@ -57,11 +57,12 @@ const ChatParticipantsWelcome = memo(props => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversationId, participantKeys]);
 
+  // Only a non-empty greeting expands; otherwise the hidden block would reopen for the next participant.
   useEffect(() => {
-    if (isLoading || !welcomeKey || !pendingKeysRef.current.has(welcomeKey)) return;
+    if (isLoading || !message || !welcomeKey || !pendingKeysRef.current.has(welcomeKey)) return;
     pendingKeysRef.current.delete(welcomeKey);
     setExpanded(true);
-  }, [welcomeKey, isLoading, participantKeys]);
+  }, [welcomeKey, isLoading, message, participantKeys]);
 
   // Keyed off the latest user message (not a count) so loading older history pages doesn't collapse it.
   useEffect(() => {
