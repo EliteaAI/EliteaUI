@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Box, Skeleton } from '@mui/material';
 
 import { getPendingHitlMessage } from '@/[fsd]/features/chat/lib/helpers/hitl.helpers.js';
+import { ChatParticipantsWelcome } from '@/[fsd]/features/chat/ui/chat-participants-welcome';
 import { PendingInjectionList } from '@/[fsd]/features/chat/ui/pending-injection';
 import { ScrollableContainer } from '@/[fsd]/shared/ui';
 import HeadingChip, { HEADING_CHIP_VARIANTS } from '@/[fsd]/shared/ui/chip/HeadingChip';
@@ -52,6 +53,8 @@ const ChatMessageList = memo(props => {
     onDeleteEntity,
     pendingInjections = [],
     onRemovePendingInjection,
+    showParticipantsWelcome = false,
+    activeParticipant,
   } = props;
   const dispatch = useDispatch();
   const listRef = useRef();
@@ -72,6 +75,11 @@ const ChatMessageList = memo(props => {
     () => chat_history.reduce((last, msg, i) => (msg.role === ROLES.User ? i : last), -1),
     [chat_history],
   );
+
+  const lastUserMessageId = useMemo(() => {
+    const lastUserMessage = chat_history[lastUserMessageIndex];
+    return lastUserMessage ? lastUserMessage.id || lastUserMessage.internal_id : undefined;
+  }, [chat_history, lastUserMessageIndex]);
 
   const onClickSentTo = useCallback(
     participant => {
@@ -235,6 +243,14 @@ const ChatMessageList = memo(props => {
               />
             ))}
           </Box>
+        )}
+        {showParticipantsWelcome && (
+          <ChatParticipantsWelcome
+            conversationId={activeConversation?.id}
+            participants={activeConversation?.participants}
+            activeParticipant={activeParticipant}
+            lastUserMessageId={lastUserMessageId}
+          />
         )}
         {/* Messages */}
         {chat_history.map((message, index) => (

@@ -5,6 +5,7 @@ export { ChatContinue } from './chat-continue';
 export { ErrorTrace, BudgetErrorMessage, ContinuationError } from './error-trace';
 export { BudgetWarningBanner } from './budget-warning';
 export { ChatWelcomeMessage } from './chat-welcome-message';
+export { ChatParticipantsWelcome } from './chat-participants-welcome';
 export { AskUserAnswerSummary, ChatHitlActions } from './chat-hitl-actions';
 export { SubAgentAccordion } from './sub-agent-section';
 export { SlashSuggestionList } from './slash-suggestion-list';
