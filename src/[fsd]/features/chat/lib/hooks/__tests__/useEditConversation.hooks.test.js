@@ -63,6 +63,32 @@ describe('useEditConversation', () => {
     expect(setters.setFolders).not.toHaveBeenCalled();
   });
 
+  it('renames a pinned conversation in the pinned list', async () => {
+    const { onEditConversation, setters } = renderEditHook();
+    const pinned = { id: PINNED_ID, name: 'Pinned', is_private: true, isPinned: true };
+
+    await act(() => onEditConversation({ ...pinned, name: 'Renamed' }));
+
+    expect(applyUpdater(setters.setPinnedConversations, [pinned])[0]).toMatchObject({
+      name: 'Renamed',
+      isPinned: true,
+    });
+    expect(setters.setConversations).not.toHaveBeenCalled();
+    expect(setters.setFolders).not.toHaveBeenCalled();
+  });
+
+  it('updates an unpinned conversation inside its folder', async () => {
+    const { onEditConversation, setters } = renderEditHook();
+    const inFolder = { id: 31, name: 'In folder', is_private: true, folder_id: 7 };
+
+    await act(() => onEditConversation({ ...inFolder, is_private: false }));
+
+    const nextFolders = applyUpdater(setters.setFolders, [{ id: 7, conversations: [inFolder] }]);
+    expect(nextFolders[0].conversations[0]).toMatchObject({ is_private: false });
+    expect(setters.setPinnedConversations).not.toHaveBeenCalled();
+    expect(setters.setConversations).not.toHaveBeenCalled();
+  });
+
   it('keeps updating unpinned conversations in the date groups', async () => {
     const { onEditConversation, setters } = renderEditHook();
     const unpinned = { id: 21, name: 'Plain', is_private: true };
