@@ -4,6 +4,7 @@ export {
   sortConversations,
 } from './conversationList.helpers';
 export {
+  applyParticipantChanges,
   buildNewParticipants,
   diffAiParticipants,
   diffUserParticipants,
