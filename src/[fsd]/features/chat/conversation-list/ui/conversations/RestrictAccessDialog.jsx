@@ -39,10 +39,14 @@ const RestrictAccessDialog = memo(props => {
 
   const conversationId = conversation?.id;
 
-  const { data: conversationDetails } = useConversationDetailsQuery(
+  // The cached entry can predate the last restrict-access changes, so the wizard waits for a response
+  // fetched after it opened before pre-selecting participants.
+  const openedAt = useRef(Date.now());
+  const { data: conversationDetails, fulfilledTimeStamp } = useConversationDetailsQuery(
     { projectId, id: conversationId },
-    { skip: !conversationId },
+    { skip: !conversationId, refetchOnMountOrArgChange: true },
   );
+  const isDetailsFresh = !!conversationDetails && (fulfilledTimeStamp ?? 0) >= openedAt.current;
 
   const authorId = conversationDetails?.author_id ?? conversation?.author_id;
   const isAlreadyPrivate = !!(conversationDetails?.is_private ?? conversation?.is_private);
@@ -97,11 +101,11 @@ const RestrictAccessDialog = memo(props => {
   const hasInitialized = useRef(false);
 
   useEffect(() => {
-    if (!conversationDetails || hasInitialized.current) return;
+    if (!isDetailsFresh || hasInitialized.current) return;
     hasInitialized.current = true;
     setSelectedUsers(initialSelectedUsers);
     setSelectedAiParticipants(initialSelectedAiParticipants);
-  }, [conversationDetails]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isDetailsFresh]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleLoadMore = useCallback(() => {
     if (usersTotal > users.length && !isUsersFetching) onLoadMoreUsers();
@@ -175,8 +179,14 @@ const RestrictAccessDialog = memo(props => {
 
       const allToAdd = buildNewParticipants({ usersToAdd, aiToAdd, projectId });
 
+      let addedParticipants = [];
       if (allToAdd.length > 0) {
-        await addParticipant({ projectId, id: conversationId, participants: allToAdd }).unwrap();
+        const addResult = await addParticipant({
+          projectId,
+          id: conversationId,
+          participants: allToAdd,
+        }).unwrap();
+        addedParticipants = Array.isArray(addResult) ? addResult : [];
       }
 
       const allToDelete = [...usersToRemove.map(p => p.id), ...aiToRemove.map(p => p.id)];
@@ -187,7 +197,7 @@ const RestrictAccessDialog = memo(props => {
         );
       }
 
-      onSuccess?.(conversationId, allToDelete);
+      onSuccess?.(conversationId, { deletedIds: allToDelete, addedParticipants });
       onClose();
     } catch {
       toastError('Some changes may have been applied. Please refresh and try again.');
@@ -307,7 +317,7 @@ const RestrictAccessDialog = memo(props => {
         color={BUTTON_COLORS.primary}
         loading={isSubmitting}
         onClick={handleConfirm}
-        disabled={!isValid || !hasChanges || isSubmitting}
+        disabled={!isValid || !hasChanges || isSubmitting || !isDetailsFresh}
       >
         Restrict access
       </Button.BaseBtn>
