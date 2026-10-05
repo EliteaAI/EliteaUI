@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { Fragment, memo } from 'react';
 
 import { Box } from '@mui/material';
 
@@ -61,7 +61,9 @@ const GroupedCategory = memo(props => {
                 (allowEmptyCategory && !selectedCategories.length) ||
                 (groupedItems[category] && groupedItems[category].length > 0),
             )
-            .map(category => renderCategory(category, groupedItems[category]))
+            .map(category => (
+              <Fragment key={category}>{renderCategory(category, groupedItems[category])}</Fragment>
+            ))
         ) : null
       ) : // No categories or items found message
       renderNoResults ? (
