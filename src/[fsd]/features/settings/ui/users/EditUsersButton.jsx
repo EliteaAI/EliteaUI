@@ -12,7 +12,6 @@ import useToast from '@/hooks/useToast';
 const EditUsersButton = memo(props => {
   const {
     users,
-    refetch,
     disabled,
     setSelectedUsers,
     rolesOptions,
@@ -47,7 +46,6 @@ const EditUsersButton = memo(props => {
     toastError,
     toastSuccess,
     onSuccess: handleSuccess,
-    refetch,
   });
 
   const { saveUser, saveUsers, isLoading } = isBatchEdit
@@ -69,10 +67,9 @@ const EditUsersButton = memo(props => {
         await saveUsers(roles);
       } else {
         await saveUser(roles);
-        await refetch();
       }
     },
-    [isBatchEdit, saveUser, saveUsers, refetch, handleCloseEdit],
+    [isBatchEdit, saveUser, saveUsers, handleCloseEdit],
   );
 
   const styles = editUsersButtonStyles();
