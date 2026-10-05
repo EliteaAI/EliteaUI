@@ -53,7 +53,7 @@ export const eliteaButtonColors = theme => ({
   [BUTTON_VARIANTS.special]: {
     default: {
       background: theme.palette.components.button.background.split.default,
-      color: theme.palette.mode === 'dark' ? theme.palette.primary.main : theme.palette.text.secondary,
+      color: theme.palette.components.split.text.default,
     },
     hover: {
       background: theme.palette.components.button.background.split.hover,
