@@ -6,6 +6,7 @@ import {
   RUN_NO_DATA_MESSAGE,
   RUN_SCOPE_TYPE,
   RUN_TOOLTIP_TEXTS,
+  TRIGGER_SOURCE_LABELS,
 } from '../constants/analyticsCommon.constants.js';
 
 // Calendar-day-aligned, inclusive of today: days=7 spans 7 calendar days total
@@ -62,6 +63,9 @@ export const fmtCost = (usd, belowResolution = false) => {
   if (abs < 1_000_000) return `${sign}$${(abs / 1000).toFixed(1)}K`;
   return `${sign}$${(abs / 1_000_000).toFixed(1)}M`;
 };
+
+// An unrecognised trigger_source still renders as itself rather than disappearing
+export const triggerSourceLabel = source => TRIGGER_SOURCE_LABELS[source] || source || 'Unknown';
 
 const RUN_SCOPES = {
   [RUN_SCOPE_TYPE.run]: {
