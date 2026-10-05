@@ -140,6 +140,7 @@ const ChatBox = memo(
       interaction_uuid,
       enableMentions = true,
       isAgentsPage = false,
+      showParticipantsWelcome = false,
       isEditingAgent,
       onShowAgentEditor,
       onShowPipelineEditor,
@@ -2911,6 +2912,8 @@ const ChatBox = memo(
             onDeleteEntity={onDeleteEntity}
             pendingInjections={pendingInjections}
             onRemovePendingInjection={onRemovePendingInjection}
+            showParticipantsWelcome={showParticipantsWelcome}
+            activeParticipant={activeParticipant}
           />
           {displayConversationStarters && (
             <ChatConversationStarters

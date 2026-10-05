@@ -1375,6 +1375,7 @@ const NewChat = props => {
               />
               <ChatBox
                 fromTheChat
+                showParticipantsWelcome
                 hidden={!showChatBox}
                 key={'chatBox' + showChatBox}
                 ref={boxRef}
