@@ -214,3 +214,60 @@ export const getSettlementInfo = settlement => {
       return null;
   }
 };
+
+const formatRange = (range, format, unit = '') => {
+  const low = format(range.low);
+  const high = format(range.high);
+
+  return `${low === high ? low : `${low}–${high}`}${unit}`;
+};
+
+/**
+ * What the suite panel shows before launch (#6716, design Q-S6), from the estimate endpoint. The
+ * estimate is the last finished run of this suite on the same version scaled to today's case
+ * count; with no such run there is no estimate. Cost is preferred; tokens stand in when that run
+ * was not priced.
+ * @param {object} [data] - `eval_suite_estimate` response
+ * @returns {{ available: boolean, label: string, range: string | null, detail: string | null,
+ *   budget: string | null, warning: string | null } | null}
+ */
+export const buildRunEstimateSummary = data => {
+  if (!data || typeof data !== 'object') return null;
+  const { estimate, budget } = data;
+  const remaining = budget ? formatUsd(budget.remaining) : null;
+  const budgetText = remaining
+    ? `${budget.scope === 'member' ? 'Your remaining budget' : 'Remaining project budget'}: ${remaining}`
+    : null;
+
+  if (!data.available || !estimate) {
+    return {
+      available: false,
+      label: 'No estimate (first run)',
+      range: null,
+      detail: 'Estimates come from the last finished run of this suite on the selected version.',
+      budget: budgetText,
+      warning: null,
+    };
+  }
+
+  const priced = estimate.cost != null;
+  const range = priced ? estimate.cost : estimate.tokens;
+  const format = priced ? value => formatUsd(value) ?? '—' : formatTokenCount;
+  const unit = priced ? '' : ' tokens';
+  const parts = [
+    `${estimate.cases} ${estimate.cases === 1 ? 'case' : 'cases'}`,
+    `based on run #${data.history_run_id}`,
+    estimate.includes_judge ? 'agent + judge' : 'agent only',
+  ];
+  if (priced && estimate.unpriced_cases) parts.push(`${estimate.unpriced_cases} not priced`);
+  if (!priced) parts.push('not priced');
+
+  return {
+    available: true,
+    label: `Estimated ${format(range.expected)}${unit}`,
+    range: `Range ${formatRange(range, format, unit)}`,
+    detail: parts.join(' · '),
+    budget: budgetText,
+    warning: data.exceeds_budget ? 'The estimate is over the remaining monthly budget.' : null,
+  };
+};

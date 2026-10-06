@@ -24,6 +24,7 @@ import {
   readRunLimits,
   validateRunLimits,
 } from '../../lib/helpers';
+import SuiteRunEstimate from './SuiteRunEstimate';
 import DatasetSection from './dataset/DatasetSection';
 import DatasetSectionHeader from './dataset/DatasetSectionHeader';
 import DimensionSection from './dimension/DimensionSection';
@@ -482,6 +483,12 @@ const SuiteDetailPanel = memo(props => {
         />
       </Box>
       <Box sx={styles.footer}>
+        {canRun && hasDatasetWithCases && (
+          <SuiteRunEstimate
+            suiteId={suite?.id}
+            versionId={selectedVersionId}
+          />
+        )}
         <Button.BaseBtn
           variant={BUTTON_VARIANTS.elitea}
           color={BUTTON_COLORS.primary}
@@ -636,6 +643,9 @@ const suiteDetailPanelStyles = () => ({
   }),
   footer: ({ palette }) => ({
     display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '0.5rem',
     justifyContent: 'center',
     padding: '0.75rem 1.5rem',
     borderTop: `0.0625rem solid ${palette.border.default}`,

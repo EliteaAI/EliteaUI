@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildBudgetVerdictRows,
   buildRunConsumptionRows,
+  buildRunEstimateSummary,
   formatTokenCount,
   formatUsd,
   getRunEndMessage,
@@ -207,5 +208,65 @@ describe('getSettlementInfo', () => {
 
   it('is null before the run reports a settlement', () => {
     expect(getSettlementInfo(undefined)).toBeNull();
+  });
+});
+
+describe('buildRunEstimateSummary', () => {
+  const estimateResponse = overrides => ({
+    available: true,
+    cases: 10,
+    history_run_id: 149,
+    estimate: {
+      cases: 10,
+      based_on_cases: 2,
+      includes_judge: true,
+      tokens: { low: 1200, expected: 2200, high: 3200 },
+      cost: { low: 0.12, expected: 0.22, high: 0.32 },
+      unpriced_cases: 0,
+    },
+    budget: { scope: 'project', remaining: 5 },
+    exceeds_budget: false,
+    ...overrides,
+  });
+
+  it('shows the cost estimate as a range with the remaining budget', () => {
+    expect(buildRunEstimateSummary(estimateResponse())).toEqual({
+      available: true,
+      label: 'Estimated $0.2200',
+      range: 'Range $0.1200–$0.3200',
+      detail: '10 cases · based on run #149 · agent + judge',
+      budget: 'Remaining project budget: $5.00',
+      warning: null,
+    });
+  });
+
+  it('falls back to tokens when the history run was not priced', () => {
+    const data = estimateResponse();
+    data.estimate = { ...data.estimate, cost: null, includes_judge: false, unpriced_cases: 2 };
+    const summary = buildRunEstimateSummary({ ...data, budget: null, exceeds_budget: null });
+    expect(summary.label).toBe('Estimated 2,200 tokens');
+    expect(summary.range).toBe('Range 1,200–3,200 tokens');
+    expect(summary.detail).toBe('10 cases · based on run #149 · agent only · not priced');
+    expect(summary.budget).toBeNull();
+    expect(summary.warning).toBeNull();
+  });
+
+  it('warns when the estimate is over the remaining budget', () => {
+    const summary = buildRunEstimateSummary(
+      estimateResponse({ budget: { scope: 'member', remaining: 0.1 }, exceeds_budget: true }),
+    );
+    expect(summary.budget).toBe('Your remaining budget: $0.1000');
+    expect(summary.warning).toMatch(/over the remaining monthly budget/);
+  });
+
+  it('says there is no estimate before the first finished run', () => {
+    const summary = buildRunEstimateSummary({ available: false, estimate: null, budget: null });
+    expect(summary.available).toBe(false);
+    expect(summary.label).toBe('No estimate (first run)');
+    expect(summary.range).toBeNull();
+  });
+
+  it('is null until the estimate loads', () => {
+    expect(buildRunEstimateSummary(undefined)).toBeNull();
   });
 });

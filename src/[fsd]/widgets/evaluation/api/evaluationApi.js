@@ -405,6 +405,21 @@ export const evaluationApi = eliteaApi
         providesTags: [TAG_EVAL_RUN],
       }),
 
+      // What a run of this suite would likely use (#6716, design Q-S6): case count × per-case usage
+      // of the last finished run on the same version, and the caller's remaining budget.
+      evalSuiteEstimate: build.query({
+        query: ({ projectId, suiteId, versionId }) => {
+          const params = new URLSearchParams();
+          if (versionId != null) params.set('application_version_id', String(versionId));
+          const qs = params.toString();
+          return {
+            url: `/elitea_core/eval_suite_estimate/prompt_lib/${projectId}/${suiteId}${qs ? `?${qs}` : ''}`,
+            method: 'GET',
+          };
+        },
+        providesTags: [TAG_EVAL_SUITE, TAG_EVAL_RUN],
+      }),
+
       // ---- Human scores (B6, #6203) ----
       evalHumanScores: build.query({
         query: ({ projectId, runId, datasetCaseId, dimensionId, latest }) => {
@@ -494,6 +509,7 @@ export const {
   useDeleteEvalRunMutation,
   useEvalRunResultsQuery,
   useEvalCaseExecutionsQuery,
+  useEvalSuiteEstimateQuery,
   useEvalHumanScoresQuery,
   useWriteEvalHumanScoreMutation,
   useEnhanceFromEvalMutation,
