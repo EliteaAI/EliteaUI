@@ -3,8 +3,9 @@ import { memo, useCallback } from 'react';
 import { Box, Tooltip, Typography } from '@mui/material';
 
 import { formatRunTimestamp } from '@/[fsd]/entities/run-history/lib/helpers';
+import AttentionIcon from '@/components/Icons/AttentionIcon';
 
-import { formatScoreDelta, getRunScoreLabel } from '../../lib/helpers';
+import { formatScoreDelta, getRunScoreLabel, getRunStopLabel } from '../../lib/helpers';
 import RunHistoryActionsMenu from './RunHistoryActionsMenu';
 
 // A run that recorded no version, or whose version has since been deleted, has nothing to name.
@@ -31,6 +32,8 @@ const EvaluationRunRow = memo(props => {
   }, [run, onSelect]);
 
   const deltaLabel = formatScoreDelta(run.delta);
+  // A run stopped by a limit still shows the score of the cases it got through; the icon says so.
+  const stopLabel = getRunStopLabel(run.meta);
   const styles = evaluationRunRowStyles(isSelected, gridTemplateColumns, run.delta);
 
   return (
@@ -93,6 +96,21 @@ const EvaluationRunRow = memo(props => {
         >
           {getRunScoreLabel(run)}
         </Typography>
+        {stopLabel && (
+          <Tooltip
+            title={stopLabel}
+            placement="top"
+          >
+            <Box
+              component="span"
+              sx={styles.stopIcon}
+              aria-label={stopLabel}
+              data-testid={`evaluation-run-stop-${run.id}`}
+            >
+              <AttentionIcon />
+            </Box>
+          </Tooltip>
+        )}
         <Box
           className="run-row-actions"
           sx={styles.actions}
@@ -189,6 +207,15 @@ const evaluationRunRowStyles = (isSelected, gridTemplateColumns, delta) => ({
         : palette.background.surface.interactive.default,
     };
   },
+  stopIcon: ({ palette }) => ({
+    display: 'inline-flex',
+    alignItems: 'center',
+    '& svg': {
+      width: '1rem',
+      height: '1rem',
+      fill: palette.icon.attention,
+    },
+  }),
   actions: {
     display: 'flex',
     alignItems: 'center',

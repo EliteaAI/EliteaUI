@@ -2,18 +2,20 @@ import { memo, useCallback, useMemo, useState } from 'react';
 
 import { Box, CircularProgress, SvgIcon, Typography } from '@mui/material';
 
+import { Banner } from '@/[fsd]/shared/ui';
 import MonitoringIcon from '@/assets/monitoring.svg?react';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import { useEvalDimensionsQuery, useEvalRunResultsQuery, usePlatformDimensionCatalogQuery } from '../../api';
 import { EVAL_PERMISSIONS } from '../../lib/constants';
-import { buildScorecard, formatRunStatus, isRunTerminal } from '../../lib/helpers';
+import { buildScorecard, formatRunStatus, getRunEndMessage, isRunTerminal } from '../../lib/helpers';
 import CaseDetailsModal from './CaseDetailsModal';
 import CaseResultsList from './CaseResultsList';
 import HumanEvaluationModal from './HumanEvaluationModal';
 import ResultsDimensionTable from './ResultsDimensionTable';
 import ResultsSummaryCards from './ResultsSummaryCards';
+import RunConsumptionCard from './RunConsumptionCard';
 
 // A fresh `[]` default would be a new reference on every render while a query is skipped or
 // errored, which would defeat the memo below and rebuild the whole scorecard each time.
@@ -121,6 +123,9 @@ const RunResultsView = memo(props => {
     setHumanEvaluationOpen(false);
   }, []);
 
+  // A run stopped by a limit keeps the cases it scored; its message says how many and why.
+  const endMessage = hasResults ? getRunEndMessage(run) : null;
+
   const styles = runResultsViewStyles();
 
   // Show loader while any data is still in flight. The `!scorecard` fallback catches the window
@@ -224,6 +229,12 @@ const RunResultsView = memo(props => {
   if (!summaryData || !scorecard) {
     return (
       <Box sx={[styles.centered, sx]}>
+        {endMessage && (
+          <Banner.BannerMessage
+            message={endMessage.message}
+            variant={endMessage.variant}
+          />
+        )}
         <Typography
           variant="bodyMedium"
           sx={styles.description}
@@ -259,6 +270,18 @@ const RunResultsView = memo(props => {
           errors={summaryData.errors}
           pendingHuman={summaryData.pendingHuman}
         />
+        {endMessage && (
+          <Box
+            sx={styles.endMessage}
+            data-testid="evaluation-run-end-message"
+          >
+            <Banner.BannerMessage
+              message={endMessage.message}
+              variant={endMessage.variant}
+            />
+          </Box>
+        )}
+        <RunConsumptionCard meta={run.meta} />
       </Box>
       <ResultsDimensionTable bindings={scorecard.bindings ?? []} />
       <CaseResultsList
@@ -300,6 +323,9 @@ const runResultsViewStyles = () => ({
   summarySection: {
     display: 'flex',
     flexDirection: 'column',
+  },
+  endMessage: {
+    padding: '0.75rem 1.5rem 0',
   },
   runLabelHeader: ({ palette }) => ({
     padding: '0.875rem 1.5rem',

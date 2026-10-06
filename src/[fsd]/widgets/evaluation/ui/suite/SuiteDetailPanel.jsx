@@ -16,6 +16,13 @@ import SendIcon from '@/components/Icons/SendIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
 
 import { EVAL_PERMISSIONS } from '../../lib/constants';
+import {
+  MAX_SUITE_STEPS_LIMIT,
+  areRunLimitsEqual,
+  buildRunLimitsMeta,
+  readRunLimits,
+  validateRunLimits,
+} from '../../lib/helpers';
 import DatasetSection from './dataset/DatasetSection';
 import DatasetSectionHeader from './dataset/DatasetSectionHeader';
 import DimensionSection from './dimension/DimensionSection';
@@ -28,6 +35,17 @@ const JUDGE_MODEL_TOOLTIP =
 
 const VERSION_TOOLTIP =
   'The agent version to evaluate. Results are scoped to the selected version, which is locked while a run is in progress.';
+
+const STEPS_LIMIT_TOOLTIP = `The most steps the agent may take on each case of a run, from 1 to ${MAX_SUITE_STEPS_LIMIT}. Leave empty to use the agent's own limit.`;
+
+const RUN_LIMITS_HINT = 'Cost limits are checked after the run; add a token limit to stop early.';
+
+const BUDGET_FIELDS = [
+  { field: 'perCaseTokens', label: 'Tokens per case' },
+  { field: 'perCaseCost', label: 'Cost per case, USD' },
+  { field: 'perRunTokens', label: 'Tokens per run' },
+  { field: 'perRunCost', label: 'Cost per run, USD' },
+];
 
 const SuiteDetailPanel = memo(props => {
   const {
@@ -70,6 +88,7 @@ const SuiteDetailPanel = memo(props => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [judgeModel, setJudgeModel] = useState(null);
+  const [runLimits, setRunLimits] = useState(() => readRunLimits());
   const [showDiscardModal, setShowDiscardModal] = useState(false);
 
   useEffect(() => {
@@ -77,6 +96,7 @@ const SuiteDetailPanel = memo(props => {
       setName(suite.name ?? '');
       setDescription(suite.description ?? '');
       setJudgeModel(suite.judge_model ?? null);
+      setRunLimits(readRunLimits(suite.meta));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [suite?.id]);
@@ -88,6 +108,16 @@ const SuiteDetailPanel = memo(props => {
   const handleDescriptionChange = useCallback(event => {
     setDescription(event.target.value);
   }, []);
+
+  const handleRunLimitChange = useCallback(event => {
+    const { name: field, value } = event.target;
+    setRunLimits(prev => ({ ...prev, [field]: value }));
+  }, []);
+
+  const savedRunLimits = useMemo(() => readRunLimits(suite?.meta), [suite?.meta]);
+  const runLimitsChanged = !areRunLimitsEqual(runLimits, savedRunLimits);
+  const runLimitErrors = useMemo(() => validateRunLimits(runLimits), [runLimits]);
+  const hasRunLimitErrors = Object.keys(runLimitErrors).length > 0;
 
   const versionOptions = useMemo(
     () => applicationVersions.map(version => ({ value: version.id, label: version.name })),
@@ -138,8 +168,14 @@ const SuiteDetailPanel = memo(props => {
   }, []);
 
   const handleSave = useCallback(() => {
-    onSave?.({ name: name.trim(), description, judge_model: judgeModel });
-  }, [onSave, name, description, judgeModel]);
+    onSave?.({
+      name: name.trim(),
+      description,
+      judge_model: judgeModel,
+      // The update API replaces meta as a whole, so it is only sent when the limits changed.
+      ...(runLimitsChanged ? { meta: buildRunLimitsMeta(suite?.meta, runLimits) } : {}),
+    });
+  }, [onSave, name, description, judgeModel, runLimitsChanged, suite?.meta, runLimits]);
 
   const handleDiscardClick = useCallback(() => {
     setShowDiscardModal(true);
@@ -150,6 +186,7 @@ const SuiteDetailPanel = memo(props => {
       setName(suite.name ?? '');
       setDescription(suite.description ?? '');
       setJudgeModel(suite.judge_model ?? null);
+      setRunLimits(readRunLimits(suite.meta));
     }
     setShowDiscardModal(false);
     onDiscard?.();
@@ -160,9 +197,10 @@ const SuiteDetailPanel = memo(props => {
     return (
       name !== (suite.name ?? '') ||
       description !== (suite.description ?? '') ||
-      JSON.stringify(judgeModel) !== JSON.stringify(suite.judge_model ?? null)
+      JSON.stringify(judgeModel) !== JSON.stringify(suite.judge_model ?? null) ||
+      runLimitsChanged
     );
-  }, [suite, name, description, judgeModel]);
+  }, [suite, name, description, judgeModel, runLimitsChanged]);
 
   useEffect(() => {
     onDirtyChange?.(isDirty);
@@ -172,7 +210,7 @@ const SuiteDetailPanel = memo(props => {
     onDelete?.(suite);
   }, [onDelete, suite]);
 
-  const isSaveDisabled = !name.trim() || isSaving || !isDirty || !canUpdateSuite;
+  const isSaveDisabled = !name.trim() || isSaving || !isDirty || !canUpdateSuite || hasRunLimitErrors;
 
   const caseCount = attachedDataset?.case_count ?? attachedDataset?.cases?.length ?? 0;
   const hasDatasetWithCases = attachedDataset != null && caseCount > 0;
@@ -334,6 +372,71 @@ const SuiteDetailPanel = memo(props => {
               ),
             },
             {
+              title: 'Run limits',
+              content: (
+                <Box
+                  sx={styles.formSection}
+                  data-testid="suite-run-limits"
+                >
+                  <Input.InputBase
+                    autoComplete="off"
+                    fullWidth
+                    variant="standard"
+                    label="Steps limit"
+                    name="stepsLimit"
+                    placeholder="Agent default"
+                    value={runLimits.stepsLimit}
+                    onChange={handleRunLimitChange}
+                    disabled={!canUpdateSuite}
+                    error={Boolean(runLimitErrors.stepsLimit)}
+                    helperText={runLimitErrors.stepsLimit}
+                    inputProps={{ inputMode: 'numeric' }}
+                    InputProps={{
+                      endAdornment: (
+                        <Tooltip
+                          title={STEPS_LIMIT_TOOLTIP}
+                          placement="top"
+                          arrow
+                        >
+                          <Box
+                            component="span"
+                            sx={styles.infoIconWrapper}
+                          >
+                            <InfoIcon sx={styles.infoIcon} />
+                          </Box>
+                        </Tooltip>
+                      ),
+                    }}
+                  />
+                  <Box sx={styles.budgetGrid}>
+                    {BUDGET_FIELDS.map(({ field, label }) => (
+                      <Input.InputBase
+                        key={field}
+                        autoComplete="off"
+                        fullWidth
+                        variant="standard"
+                        label={label}
+                        name={field}
+                        placeholder="No limit"
+                        value={runLimits[field]}
+                        onChange={handleRunLimitChange}
+                        disabled={!canUpdateSuite}
+                        error={Boolean(runLimitErrors[field])}
+                        helperText={runLimitErrors[field]}
+                        inputProps={{ inputMode: 'decimal' }}
+                      />
+                    ))}
+                  </Box>
+                  <Typography
+                    variant="bodySmall"
+                    sx={styles.runLimitsHint}
+                  >
+                    {RUN_LIMITS_HINT}
+                  </Typography>
+                </Box>
+              ),
+            },
+            {
               title: 'Dataset',
               headerContent: <DatasetSectionHeader onManageDatasets={onManageDatasets} />,
               content: (
@@ -491,6 +594,15 @@ const suiteDetailPanelStyles = () => ({
     flexDirection: 'column',
     gap: '0.5rem',
     background: palette.background.default.tertiary,
+  }),
+  budgetGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+    columnGap: '1rem',
+    rowGap: '0.5rem',
+  },
+  runLimitsHint: ({ palette }) => ({
+    color: palette.text.primary,
   }),
   infoIconWrapper: {
     display: 'inline-flex',
