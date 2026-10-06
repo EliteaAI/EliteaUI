@@ -745,6 +745,7 @@ const lightPalette = {
     entityIcon: {
       background: {
         default: dark10,
+        hover: light30,
         trophy: entityIconTrophyBg,
         checkedBox: light10,
         entityGradient: entityIconEntityGradient,
