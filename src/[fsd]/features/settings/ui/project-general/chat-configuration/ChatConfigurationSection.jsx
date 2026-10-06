@@ -1,4 +1,4 @@
-import { memo, useMemo, useRef } from 'react';
+import { memo, useCallback, useMemo, useRef, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
@@ -31,7 +31,6 @@ const ChatConfigurationSection = memo(() => {
     templates,
     isLoading,
     selectedTemplate,
-    resolvedSelectedId,
     isBusy,
     isDirty,
     setIsDirty,
@@ -44,8 +43,6 @@ const ChatConfigurationSection = memo(() => {
     handleClose,
     handleSave,
     handleDelete,
-    handleSetDefault,
-    handleUnsetDefault,
     handleUnsavedDiscard,
     handleUnsavedCancel,
   } = useChatTemplates(projectId);
@@ -54,6 +51,18 @@ const ChatConfigurationSection = memo(() => {
   useNavBlocker(blockOptions);
 
   const nameFieldRef = useRef(null);
+
+  const [templateToDelete, setTemplateToDelete] = useState(null);
+
+  const handleDeleteCancel = useCallback(() => setTemplateToDelete(null), []);
+
+  // Keep the dialog open while the request runs so its Delete button shows progress
+  const handleDeleteConfirm = useCallback(async () => {
+    const id = templateToDelete?.id;
+    if (id == null) return;
+    await handleDelete(id);
+    setTemplateToDelete(null);
+  }, [templateToDelete, handleDelete]);
 
   const handleEditorMounted = () => {
     if (pendingNewId && nameFieldRef.current) {
@@ -79,8 +88,9 @@ const ChatConfigurationSection = memo(() => {
     <Box sx={styles.root}>
       <ChatTemplateList
         templates={templates}
-        selectedId={resolvedSelectedId}
-        onSelect={handleSelectTemplate}
+        canEdit={canEdit}
+        onEdit={handleSelectTemplate}
+        onDelete={canEdit ? setTemplateToDelete : undefined}
         onNewTemplate={canEdit ? handleNewTemplate : undefined}
         isTeamProject={isTeam}
       />
@@ -93,9 +103,6 @@ const ChatConfigurationSection = memo(() => {
           isTeamProject={isTeam}
           canEdit={canEdit}
           onSave={canEdit ? handleSave : undefined}
-          onDelete={canEdit ? handleDelete : undefined}
-          onSetDefault={canEdit ? handleSetDefault : undefined}
-          onUnsetDefault={canEdit ? handleUnsetDefault : undefined}
           onCancel={handleClose}
           onDirtyChange={setIsDirty}
           isSaving={isBusy}
@@ -107,6 +114,25 @@ const ChatConfigurationSection = memo(() => {
       {isMidturnAvailable && <SettingsFormProvider FormContent={MidturnInjection} />}
 
       <AutoRoutingSettings />
+
+      <Modal.BaseModal
+        open={!!templateToDelete}
+        variant={ModalConstants.MODAL_VARIANT.simple}
+        title="Delete template?"
+        content={
+          <Typography variant="bodySmall">
+            &quot;{templateToDelete?.name}&quot; will be removed. Existing chats keep their participants.
+            {templateToDelete?.is_default && ' New chats will start without a default template.'} This
+            can&apos;t be undone.
+          </Typography>
+        }
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        confirmButtonText="Delete"
+        cancelButtonText="Cancel"
+        confirming={isBusy}
+        alarm
+      />
 
       <Modal.BaseModal
         open={showUnsavedDialog}

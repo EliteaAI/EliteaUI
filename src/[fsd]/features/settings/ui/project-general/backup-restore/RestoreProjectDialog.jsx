@@ -1,5 +1,6 @@
 import { memo, useCallback, useRef, useState } from 'react';
 
+import CheckOutlined from '@mui/icons-material/CheckOutlined';
 import UploadFileOutlined from '@mui/icons-material/UploadFileOutlined';
 import { Alert, Box, FormControlLabel, Typography } from '@mui/material';
 
@@ -94,6 +95,11 @@ const RestoreProjectDialog = memo(props => {
 
   const summary = result?.result;
 
+  // Once data was actually written (not a preview) without errors, there is nothing left to
+  // submit — an active "Restore" again reads as if it did not happen, so it turns into a
+  // disabled "Restored" confirmation
+  const isRestoreCompleted = !!result?.ok && !!summary && !summary.dry_run && !error;
+
   // A backup taken before a migration carries columns this project no longer
   // has; the backend drops them and lists them per table
   const droppedColumns = Object.entries(summary?.dropped_columns ?? {}).flatMap(([table, columns]) =>
@@ -140,6 +146,7 @@ const RestoreProjectDialog = memo(props => {
           startIcon={<UploadFileOutlined />}
           onClick={handlePick}
           disabled={isLoading}
+          sx={componentStyles.chooseFileButton}
           data-testid="project-restore-choose-file"
         >
           Choose a backup file
@@ -296,16 +303,17 @@ const RestoreProjectDialog = memo(props => {
         disabled={isLoading}
         data-testid="project-restore-cancel"
       >
-        {result && !dryRun ? 'Close' : 'Cancel'}
+        {isRestoreCompleted ? 'Close' : 'Cancel'}
       </BaseBtn>
       <BaseBtn
         variant={BUTTON_VARIANTS.elitea}
         size="small"
         onClick={handleSubmit}
-        disabled={isLoading || !file || (isMismatch && !allowMismatch)}
+        startIcon={isRestoreCompleted ? <CheckOutlined /> : undefined}
+        disabled={isRestoreCompleted || isLoading || !file || (isMismatch && !allowMismatch)}
         data-testid="project-restore-submit"
       >
-        {isLoading ? 'Restoring...' : dryRun ? 'Preview' : 'Restore'}
+        {isRestoreCompleted ? 'Restored' : isLoading ? 'Restoring...' : dryRun ? 'Preview' : 'Restore'}
       </BaseBtn>
     </>
   );
@@ -337,7 +345,12 @@ const componentStyles = {
     alignItems: 'center',
     gap: '0.75rem',
   },
+  chooseFileButton: {
+    flexShrink: 0,
+    whiteSpace: 'nowrap',
+  },
   fileName: {
+    minWidth: 0,
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',

@@ -187,6 +187,7 @@ const useParticipants = ({
     isToolkitsError,
     isToolkitsLoading,
     isToolkitsFetching,
+    isToolkitsFirstFetching,
     toolkitsError,
     totalCount: totalToolkitsCount,
   } = useLoadToolkits({
@@ -202,6 +203,7 @@ const useParticipants = ({
     isToolkitsError: isPublicToolkitsError,
     isToolkitsLoading: isPublicToolkitsLoading,
     isToolkitsFetching: isPublicToolkitsFetching,
+    isToolkitsFirstFetching: isPublicToolkitsFirstFetching,
     toolkitsError: publicToolkitsError,
     totalCount: totalPublicToolkitsCount,
   } = useLoadToolkits({
@@ -218,6 +220,7 @@ const useParticipants = ({
     isToolkitsError: isMCPsError,
     isToolkitsLoading: isMCPsLoading,
     isToolkitsFetching: isMCPsFetching,
+    isToolkitsFirstFetching: isMCPsFirstFetching,
     toolkitsError: mcpsError,
     totalCount: totalMCPsCount,
   } = useLoadToolkits({
@@ -234,6 +237,7 @@ const useParticipants = ({
     isToolkitsError: isPublicMCPsError,
     isToolkitsLoading: isPublicMCPsLoading,
     isToolkitsFetching: isPublicMCPsFetching,
+    isToolkitsFirstFetching: isPublicMCPsFirstFetching,
     toolkitsError: publicMCPsError,
     totalCount: totalPublicMCPsCount,
   } = useLoadToolkits({
@@ -267,6 +271,15 @@ const useParticipants = ({
       isPublicMCPsFetching,
     ],
   );
+
+  // `useLoadToolkits` reports its first page separately (`isToolkitsFetching` is only true for later
+  // pages), so `isFetching` stays false while toolkits/MCPs load initially. Exposed on its own to keep
+  // `isFetching` unchanged for existing consumers.
+  const isFirstPageFetching =
+    isToolkitsFirstFetching ||
+    isPublicToolkitsFirstFetching ||
+    isMCPsFirstFetching ||
+    isPublicMCPsFirstFetching;
 
   const onLoadMore = React.useCallback(() => {
     if (!isFetching) {
@@ -455,6 +468,7 @@ const useParticipants = ({
     participants: realDataList,
     total: realDataTotal,
     isFetching,
+    isFirstPageFetching,
     isLoading:
       isApplicationsLoading ||
       isPublicApplicationsLoading ||
