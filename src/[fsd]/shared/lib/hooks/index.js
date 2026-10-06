@@ -3,6 +3,7 @@ export * from './useCodeMirror.hooks';
 export * from './useIsOnboarding.hooks';
 export * from './useFormikAutoSaveOnBlur.hooks';
 export * from './useModal.hooks';
+export * from './useDropdownAwareModalClose.hooks';
 export * from './useGroupedCategories.hooks';
 export * from './useFieldFocus.hooks';
 export * from './useFormDirtyExcluding.hooks';

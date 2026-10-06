@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 
 import { Box } from '@mui/material';
 
+import { useDropdownAwareModalClose } from '@/[fsd]/shared/lib/hooks';
 import { Autocomplete, Button, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { ChatParticipantType } from '@/common/constants';
@@ -88,6 +89,8 @@ const AddNewUserModal = memo(props => {
     [localUsers.length, handleOK],
   );
 
+  const { handleClose, scopeRef } = useDropdownAwareModalClose(open, onCancel);
+
   useEffect(() => {
     if (!open) setLocalUsers([]); // Reset local users when dialog is closed
   }, [open]);
@@ -96,13 +99,13 @@ const AddNewUserModal = memo(props => {
     <Modal.BaseModal
       open={open}
       title="Add users"
-      onClose={onCancel}
+      onClose={handleClose}
       onKeyDown={handleKeyDown}
       sx={styles.dialog}
       data-testid="add-users-dialog"
       closeButtonTestId="add-users-close-button"
       content={
-        <Box>
+        <Box ref={scopeRef}>
           <Autocomplete.UserSearchSelect
             userList={usersList}
             selectedUsers={localUsers}

@@ -76,6 +76,8 @@ const componentStyles = {
     display: 'flex',
     flexDirection: 'column',
     gap: '1rem',
+    // Last section on the page — keep the buttons off the bottom edge
+    paddingBottom: '1.5rem',
   },
   actions: {
     display: 'flex',

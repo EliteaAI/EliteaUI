@@ -68,16 +68,15 @@ export const useChatTemplates = projectId => {
 
   const handleSelectTemplate = useCallback(
     id => {
-      const nextId = id === resolvedSelectedId ? null : id;
       if (isDirty) {
-        setPendingSelectId(nextId);
+        setPendingSelectId(id);
         setShowUnsavedDialog(true);
         return;
       }
       setIsNewDraft(false);
-      setSelectedId(nextId);
+      setSelectedId(id);
     },
-    [resolvedSelectedId, isDirty],
+    [isDirty],
   );
 
   const handleNewTemplate = useCallback(() => {
@@ -99,64 +98,73 @@ export const useChatTemplates = projectId => {
     setSelectedId(null);
   }, [isDirty]);
 
+  const closeEditor = useCallback(() => {
+    setIsDirty(false);
+    setIsNewDraft(false);
+    setSelectedId(null);
+  }, []);
+
   const handleSave = useCallback(
-    async ({ id, name, participants }) => {
+    async ({ id, name, participants, isDefault }) => {
+      let templateId = id;
+      const wasDefault = templates.find(t => t.id === id)?.is_default ?? false;
       try {
         if (id === null) {
           const result = await createTemplate({ projectId, name, participants }).unwrap();
-          const newId = result?.id ?? result?.template?.id ?? null;
-          setIsNewDraft(false);
-          setSelectedId(newId);
+          templateId = result?.id ?? result?.template?.id ?? null;
         } else {
           await updateTemplate({ projectId, templateId: id, name, participants }).unwrap();
         }
-        setIsDirty(false);
-        toastSuccess('Template saved');
       } catch {
         toastError('Failed to save template');
+        return;
+      }
+
+      // The template itself is already persisted at this point, so the editor closes even if the
+      // default flag fails to update — re-saving a created draft would otherwise duplicate it.
+      closeEditor();
+      const defaultFailedMessage = 'Template saved, but failed to update the default template';
+      if (!!isDefault === wasDefault) {
+        toastSuccess('Template saved');
+        return;
+      }
+      // An unexpected create response without an id leaves nothing to mark as default
+      if (templateId === null) {
+        toastError(defaultFailedMessage);
+        return;
+      }
+      try {
+        const toggleDefault = isDefault ? setDefaultTemplate : unsetDefaultTemplate;
+        await toggleDefault({ projectId, templateId }).unwrap();
+        toastSuccess('Template saved');
+      } catch {
+        toastError(defaultFailedMessage);
       }
     },
-    [projectId, createTemplate, updateTemplate, toastSuccess, toastError],
+    [
+      projectId,
+      templates,
+      createTemplate,
+      updateTemplate,
+      setDefaultTemplate,
+      unsetDefaultTemplate,
+      closeEditor,
+      toastSuccess,
+      toastError,
+    ],
   );
 
   const handleDelete = useCallback(
     async id => {
       try {
         await deleteTemplate({ projectId, templateId: id }).unwrap();
-        setIsDirty(false);
-        setIsNewDraft(false);
-        const defaultTemplate = templates.find(t => t.is_default && t.id !== id);
-        setSelectedId(defaultTemplate?.id ?? null);
+        closeEditor();
         toastSuccess('Template deleted');
       } catch {
         toastError('Failed to delete template');
       }
     },
-    [projectId, templates, deleteTemplate, toastSuccess, toastError],
-  );
-
-  const handleSetDefault = useCallback(
-    async id => {
-      try {
-        await setDefaultTemplate({ projectId, templateId: id }).unwrap();
-        toastSuccess('Default template updated');
-      } catch {
-        toastError('Failed to set default template');
-      }
-    },
-    [projectId, setDefaultTemplate, toastSuccess, toastError],
-  );
-
-  const handleUnsetDefault = useCallback(
-    async id => {
-      try {
-        await unsetDefaultTemplate({ projectId, templateId: id }).unwrap();
-        toastSuccess('Default template removed');
-      } catch {
-        toastError('Failed to unset default template');
-      }
-    },
-    [projectId, unsetDefaultTemplate, toastSuccess, toastError],
+    [projectId, deleteTemplate, closeEditor, toastSuccess, toastError],
   );
 
   const handleUnsavedDiscard = useCallback(() => {
@@ -185,7 +193,6 @@ export const useChatTemplates = projectId => {
     templates,
     isLoading,
     selectedTemplate,
-    resolvedSelectedId,
     isBusy,
     isDirty,
     setIsDirty,
@@ -198,8 +205,6 @@ export const useChatTemplates = projectId => {
     handleClose,
     handleSave,
     handleDelete,
-    handleSetDefault,
-    handleUnsetDefault,
     handleUnsavedDiscard,
     handleUnsavedCancel,
   };

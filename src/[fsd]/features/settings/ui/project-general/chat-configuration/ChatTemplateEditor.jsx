@@ -1,14 +1,12 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Box, Typography, useTheme } from '@mui/material';
+import { Box, FormControlLabel, Typography } from '@mui/material';
 
-import { ModalConstants } from '@/[fsd]/shared/lib/constants';
-import { Button, Input, Modal } from '@/[fsd]/shared/ui';
-import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import { useDropdownAwareModalClose } from '@/[fsd]/shared/lib/hooks';
+import { Button, Checkbox, Input, Modal } from '@/[fsd]/shared/ui';
+import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { INPUT_VARIANTS } from '@/[fsd]/shared/ui/input';
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
-import DeleteIcon from '@/components/Icons/DeleteIcon';
-import StarIcon from '@/components/Icons/StarIcon';
 
 import ChatParticipantPicker from './ChatParticipantPicker';
 
@@ -19,9 +17,6 @@ const ChatTemplateEditor = memo(props => {
     isTeamProject,
     canEdit = true,
     onSave,
-    onDelete,
-    onSetDefault,
-    onUnsetDefault,
     onDirtyChange,
     onCancel,
     isSaving = false,
@@ -29,23 +24,22 @@ const ChatTemplateEditor = memo(props => {
     onMounted,
   } = props;
 
-  const theme = useTheme();
   const styles = chatTemplateEditorStyles();
 
-  const [name, setName] = useState(template?.name ?? '');
-  const [participants, setParticipants] = useState(template?.participants ?? []);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const savedName = template?.name ?? '';
+  const savedParticipants = useMemo(() => template?.participants ?? [], [template?.participants]);
+  const savedIsDefault = template?.is_default ?? false;
+  // Unsaved drafts have no id yet
+  const isSaved = template?.id != null;
+
+  const [name, setName] = useState(savedName);
+  const [participants, setParticipants] = useState(savedParticipants);
+  const [isDefault, setIsDefault] = useState(savedIsDefault);
 
   // Notify parent once after mount (used to focus the name field on new templates)
   useEffect(() => {
     onMounted?.();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const savedName = useMemo(() => template?.name ?? '', [template?.name]);
-  const savedParticipants = useMemo(() => template?.participants ?? [], [template?.participants]);
-  const isDefault = template?.is_default ?? false;
-  // Unsaved drafts have no id yet — default/delete actions apply only to saved templates
-  const isSaved = template?.id != null;
 
   const nameError = useMemo(() => {
     const trimmed = name.trim();
@@ -60,119 +54,85 @@ const ChatTemplateEditor = memo(props => {
 
   const isDirty = useMemo(() => {
     if (name.trim() !== savedName.trim()) return true;
+    if (isDefault !== savedIsDefault) return true;
     if (participants.length !== savedParticipants.length) return true;
     const savedKeys = new Set(savedParticipants.map(p => `${p.entity_name}:${p.id}`));
     return participants.some(p => !savedKeys.has(`${p.entity_name}:${p.id}`));
-  }, [name, savedName, participants, savedParticipants]);
+  }, [name, savedName, isDefault, savedIsDefault, participants, savedParticipants]);
 
   useEffect(() => {
     onDirtyChange?.(isDirty);
     return () => onDirtyChange?.(false);
   }, [isDirty, onDirtyChange]);
 
-  const canSave = (isDirty || template?.id === null) && !nameError;
+  const canSave = (isDirty || !isSaved) && !nameError;
+
+  const handleNameChange = useCallback(event => setName(event.target.value), []);
+
+  const handleDefaultChange = useCallback(event => setIsDefault(event.target.checked), []);
 
   const handleSave = useCallback(() => {
     if (!canSave || isSaving) return;
-    onSave?.({ id: template?.id, name: name.trim(), participants });
-  }, [canSave, isSaving, onSave, template?.id, name, participants]);
+    onSave?.({ id: template?.id ?? null, name: name.trim(), participants, isDefault });
+  }, [canSave, isSaving, onSave, template?.id, name, participants, isDefault]);
 
   const handleCancel = useCallback(() => {
     onCancel?.();
   }, [onCancel]);
 
-  const handleSetDefault = useCallback(() => {
-    onSetDefault?.(template?.id);
-  }, [onSetDefault, template?.id]);
+  const { handleClose, scopeRef } = useDropdownAwareModalClose(true, handleCancel);
 
-  const handleUnsetDefault = useCallback(() => {
-    onUnsetDefault?.(template?.id);
-  }, [onUnsetDefault, template?.id]);
+  if (!template) return null;
 
-  const handleDeleteConfirm = useCallback(() => {
-    setShowDeleteDialog(false);
-    onDelete?.(template?.id);
-  }, [onDelete, template?.id]);
+  // Users without edit permission open the same modal read-only
+  const editTitle = canEdit ? 'Edit Template' : 'View Template';
 
-  const handleDeleteCancel = useCallback(() => setShowDeleteDialog(false), []);
+  const content = (
+    <Box
+      ref={scopeRef}
+      sx={styles.content}
+    >
+      <Input.InputBase
+        inputRef={nameFieldRef}
+        label="Name"
+        required
+        value={name}
+        onChange={handleNameChange}
+        variant={INPUT_VARIANTS.standard}
+        error={!!nameError && name !== savedName}
+        helperText={name !== savedName && nameError ? nameError : undefined}
+        disabled={isSaving || !canEdit}
+        fullWidth
+        inputProps={{ maxLength: 64, 'data-testid': 'chat-template-name-input' }}
+      />
 
-  if (!template) {
-    return (
-      <Typography
-        variant="bodySmall"
-        color="text.secondary"
-        sx={styles.empty}
-      >
-        Select a template to edit it.
-      </Typography>
-    );
-  }
-
-  return (
-    <Box sx={styles.root}>
-      {/* Name + action row */}
-      <Box sx={styles.nameRow}>
-        <Box sx={styles.nameField}>
-          <Input.InputBase
-            inputRef={nameFieldRef}
-            label="Template name"
-            value={name}
-            onChange={e => setName(e.target.value)}
-            variant={INPUT_VARIANTS.standard}
-            error={!!nameError && name !== savedName}
-            helperText={name !== savedName && nameError ? nameError : undefined}
+      <FormControlLabel
+        label={
+          <Typography
+            variant="bodyMedium"
+            color="text.secondary"
+          >
+            Set as default
+          </Typography>
+        }
+        control={
+          <Checkbox.BaseCheckbox
+            checked={isDefault}
+            onChange={handleDefaultChange}
             disabled={isSaving || !canEdit}
-            fullWidth
-            inputProps={{ maxLength: 64 }}
+            data-testid="chat-template-default-checkbox"
           />
-        </Box>
+        }
+        sx={styles.defaultCheckbox}
+      />
 
-        <Box sx={styles.actions}>
-          {canEdit && isSaved && !isDefault && (
-            <Button.BaseBtn
-              variant={BUTTON_VARIANTS.secondary}
-              onClick={handleSetDefault}
-              disabled={isSaving}
-              startIcon={<StarIcon fill={theme.palette.icon.default} />}
-              title="Set as default"
-            >
-              Set as default
-            </Button.BaseBtn>
-          )}
-          {canEdit && isSaved && isDefault && (
-            <Button.BaseBtn
-              variant={BUTTON_VARIANTS.secondary}
-              onClick={handleUnsetDefault}
-              startIcon={<StarIcon fill={theme.palette.icon.default} />}
-              disabled={isSaving}
-              title="Unset default"
-            >
-              Unset default
-            </Button.BaseBtn>
-          )}
-          {canEdit && isSaved && (
-            <Button.BaseBtn
-              variant={BUTTON_VARIANTS.tertiary}
-              onClick={() => setShowDeleteDialog(true)}
-              sx={styles.actionButton}
-              disabled={isSaving}
-              aria-label="Delete template"
-              title="Delete template"
-            >
-              <DeleteIcon sx={styles.icon} />
-            </Button.BaseBtn>
-          )}
-        </Box>
-      </Box>
-
-      {/* Participants */}
       <Box sx={styles.section}>
         <Box sx={styles.sectionHeader}>
           <Typography
-            variant="labelSmall"
-            color="text.secondary"
+            variant="subtitle"
+            color="text.primary"
           >
-            Pre-configured participants
+            Participants
           </Typography>
           <InfoTooltip
             infoTooltip={
@@ -190,46 +150,45 @@ const ChatTemplateEditor = memo(props => {
           disabled={isSaving || !canEdit}
         />
       </Box>
-
-      {/* Save / Cancel */}
-      {canEdit && (
-        <Box sx={styles.saveRow}>
-          <Button.BaseBtn
-            variant={BUTTON_VARIANTS.secondary}
-            onClick={handleCancel}
-            disabled={isSaving}
-          >
-            Cancel
-          </Button.BaseBtn>
-          <Button.BaseBtn
-            variant={BUTTON_VARIANTS.elitea}
-            onClick={handleSave}
-            disabled={!canSave}
-            loading={isSaving}
-          >
-            Save
-          </Button.BaseBtn>
-        </Box>
-      )}
-
-      {/* Delete confirmation dialog */}
-      <Modal.BaseModal
-        open={showDeleteDialog}
-        variant={ModalConstants.MODAL_VARIANT.simple}
-        title="Delete template?"
-        content={
-          <Typography variant="bodySmall">
-            &quot;{template.name}&quot; will be removed. Existing chats keep their participants.
-            {isDefault && ' New chats will start without a default template.'} This can&apos;t be undone.
-          </Typography>
-        }
-        onClose={handleDeleteCancel}
-        onConfirm={handleDeleteConfirm}
-        confirmButtonText="Delete"
-        cancelButtonText="Cancel"
-        alarm
-      />
     </Box>
+  );
+
+  const actions = (
+    <>
+      <Button.BaseBtn
+        variant={BUTTON_VARIANTS.elitea}
+        color={BUTTON_COLORS.secondary}
+        onClick={handleCancel}
+        disabled={isSaving}
+      >
+        {canEdit ? 'Cancel' : 'Close'}
+      </Button.BaseBtn>
+      {canEdit && (
+        <Button.BaseBtn
+          variant={BUTTON_VARIANTS.elitea}
+          color={BUTTON_COLORS.primary}
+          onClick={handleSave}
+          disabled={!canSave}
+          loading={isSaving}
+          data-testid="chat-template-save-button"
+        >
+          Save
+        </Button.BaseBtn>
+      )}
+    </>
+  );
+
+  return (
+    <Modal.BaseModal
+      open
+      title={isSaved ? editTitle : 'Create Template'}
+      onClose={handleClose}
+      content={content}
+      actions={actions}
+      dialogSx={styles.dialogContent}
+      data-testid="chat-template-modal"
+      closeButtonTestId="chat-template-close-button"
+    />
   );
 });
 
@@ -237,31 +196,26 @@ ChatTemplateEditor.displayName = 'ChatTemplateEditor';
 
 /** @type {MuiSx} */
 const chatTemplateEditorStyles = () => ({
-  root: ({ palette }) => ({
+  dialogContent: {
+    padding: '0.5rem 1.5rem 1.5rem !important',
+    // Avoid BaseModal's always-visible scrollbar; the participants dropdown renders in a popper
+    overflowY: 'auto',
+  },
+  content: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '1rem',
-    padding: '1rem 1.5rem',
-    borderRadius: '0.75rem',
-    backgroundColor: palette.background.surface.interactive.default,
-  }),
-  empty: {
-    padding: '1rem 0',
-  },
-  nameRow: {
-    display: 'flex',
-    alignItems: 'flex-start',
-    gap: '0.75rem',
-  },
-  nameField: {
-    flex: 1,
-    minWidth: 0,
-  },
-  actions: {
-    display: 'flex',
-    alignItems: 'center',
     gap: '0.5rem',
-    paddingTop: '1.5rem',
+  },
+  defaultCheckbox: {
+    height: '2.5rem',
+    margin: 0,
+    padding: '0.5rem 0.75rem',
+    gap: '0.75rem',
+    alignSelf: 'stretch',
+    boxSizing: 'border-box',
+    '& .MuiCheckbox-root': {
+      padding: 0,
+    },
   },
   section: {
     display: 'flex',
@@ -272,28 +226,8 @@ const chatTemplateEditorStyles = () => ({
     display: 'flex',
     alignItems: 'center',
     gap: '0.375rem',
+    padding: '1rem 0.75rem 0',
   },
-  saveRow: {
-    display: 'flex',
-    justifyContent: 'flex-end',
-    gap: '0.5rem',
-  },
-  actionButton: ({ palette }) => ({
-    padding: '0.25rem',
-    minWidth: 'auto',
-    '&:hover': {
-      backgroundColor: palette.action.hover,
-    },
-    '&:hover svg path': {
-      fill: palette.icon.secondary,
-    },
-  }),
-  icon: ({ palette }) => ({
-    fontSize: '1rem',
-    '& path': {
-      fill: palette.icon.default,
-    },
-  }),
 });
 
 export default ChatTemplateEditor;
