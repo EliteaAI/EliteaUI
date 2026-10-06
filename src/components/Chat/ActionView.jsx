@@ -4,6 +4,8 @@ import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Box, Collapse, Tooltip, Typography, useTheme } from '@mui/material';
 
+import { useSelectedChatModelContext } from '@/[fsd]/features/chat/lib/context/SelectedChatModelContext';
+import { resolveModelChipLabel } from '@/[fsd]/features/chat/lib/helpers/modelChip.helpers';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import Markdown from '@/[fsd]/shared/ui/markdown';
@@ -136,14 +138,14 @@ const ActionView = memo(props => {
     { projectId, include_shared: true },
     { skip: toolkitType !== 'model' || !projectId },
   );
-  const resolvedToolkitName = useMemo(() => {
-    if (toolkitType === 'model' && toolkitName && modelsList.length) {
-      const modelKey = toolkitName.replace(/^\d+_/, '');
-      const model = modelsList.find(m => m.name?.includes(modelKey));
-      if (model) return model.display_name || model.name || toolkitName;
-    }
-    return toolkitName || '';
-  }, [toolkitType, toolkitName, modelsList]);
+  const selectedChatModel = useSelectedChatModelContext();
+  const resolvedToolkitName = useMemo(
+    () =>
+      toolkitType === 'model'
+        ? resolveModelChipLabel(toolkitName, modelsList, selectedChatModel)
+        : toolkitName || '',
+    [toolkitType, toolkitName, modelsList, selectedChatModel],
+  );
 
   const styles = actionViewStyles();
 
