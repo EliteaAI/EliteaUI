@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  buildRunTrajectorySummary,
   formatDurationMs,
+  getExcludedCasesNote,
   getTrajectoryMetricItems,
   getTrajectoryStateMessage,
   getTrajectoryStepMeta,
@@ -117,5 +119,65 @@ describe('getTrajectoryMetricItems', () => {
 
   it('is empty without metrics', () => {
     expect(getTrajectoryMetricItems(null)).toEqual([]);
+  });
+});
+
+describe('getExcludedCasesNote', () => {
+  it('is null when no case was left out', () => {
+    expect(getExcludedCasesNote({ count: 0 })).toBeNull();
+    expect(getExcludedCasesNote(undefined)).toBeNull();
+  });
+
+  it('counts the left-out cases and says why', () => {
+    expect(getExcludedCasesNote({ count: 3, budget_blocked: 1, not_applicable: 0, not_recorded: 2 })).toBe(
+      '3 cases not recorded (1 blocked by budget, 2 no trajectory)',
+    );
+    expect(getExcludedCasesNote({ count: 1, not_applicable: 1 })).toBe(
+      '1 case not recorded (1 no agent run)',
+    );
+  });
+});
+
+describe('buildRunTrajectorySummary', () => {
+  it('is null for a run that predates the rollup', () => {
+    expect(buildRunTrajectorySummary(undefined)).toBeNull();
+  });
+
+  it('shows averages over recorded cases and the excluded note', () => {
+    const summary = buildRunTrajectorySummary({
+      cases: 5,
+      recorded_cases: 2,
+      averages: { llm_calls: 3, tool_calls: 2, tool_errors: 0, retries: 0.5, redundant_calls: 1 / 3 },
+      step_limit_hits: 1,
+      average_latency_ms: 2000.4,
+      excluded_cases: { count: 3, budget_blocked: 1, not_applicable: 1, not_recorded: 1 },
+    });
+
+    expect(summary.coverage).toBe('Averaged over 2 of 5 cases');
+    expect(summary.items).toEqual([
+      { label: 'LLM calls / case', value: '3' },
+      { label: 'Tool calls / case', value: '2' },
+      { label: 'Tool errors / case', value: '0' },
+      { label: 'Retries / case', value: '0.5' },
+      { label: 'Redundant calls / case', value: '0.3' },
+      { label: 'Step limit hit', value: '1 of 2 cases' },
+      { label: 'Latency / case', value: '2.0 s' },
+    ]);
+    expect(summary.excluded).toBe(
+      '3 cases not recorded (1 blocked by budget, 1 no agent run, 1 no trajectory)',
+    );
+  });
+
+  it('drops averages when nothing was recorded', () => {
+    const summary = buildRunTrajectorySummary({
+      cases: 1,
+      recorded_cases: 0,
+      averages: { llm_calls: null },
+      average_latency_ms: null,
+      excluded_cases: { count: 1, not_recorded: 1 },
+    });
+
+    expect(summary.items).toEqual([]);
+    expect(summary.excluded).toBe('1 case not recorded (1 no trajectory)');
   });
 });

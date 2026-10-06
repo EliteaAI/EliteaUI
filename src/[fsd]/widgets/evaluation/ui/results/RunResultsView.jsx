@@ -16,6 +16,7 @@ import HumanEvaluationModal from './HumanEvaluationModal';
 import ResultsDimensionTable from './ResultsDimensionTable';
 import ResultsSummaryCards from './ResultsSummaryCards';
 import RunConsumptionCard from './RunConsumptionCard';
+import RunTrajectoryCard from './RunTrajectoryCard';
 
 // A fresh `[]` default would be a new reference on every render while a query is skipped or
 // errored, which would defeat the memo below and rebuild the whole scorecard each time.
@@ -282,6 +283,7 @@ const RunResultsView = memo(props => {
           </Box>
         )}
         <RunConsumptionCard meta={run.meta} />
+        <RunTrajectoryCard rollup={run.meta?.trajectory_rollup} />
       </Box>
       <ResultsDimensionTable bindings={scorecard.bindings ?? []} />
       <CaseResultsList

@@ -10,4 +10,5 @@ export { default as ResultsDimensionTable } from './ResultsDimensionTable';
 export { default as ResultsPanel } from './ResultsPanel';
 export { default as ResultsSummaryCards } from './ResultsSummaryCards';
 export { default as RunConsumptionCard } from './RunConsumptionCard';
+export { default as RunTrajectoryCard } from './RunTrajectoryCard';
 export { default as RunResultsView } from './RunResultsView';

@@ -92,3 +92,60 @@ export const getTrajectoryMetricItems = metrics => {
     .filter(([, value]) => value != null)
     .map(([label, value]) => ({ label, value: String(value) }));
 };
+
+const formatAverage = value =>
+  typeof value === 'number' && Number.isFinite(value) ? String(Math.round(value * 10) / 10) : null;
+
+const pluralCases = count => `${count} ${count === 1 ? 'case' : 'cases'}`;
+
+/**
+ * Why some cases are left out of the run's trajectory averages (G7), or null when none are.
+ * @param {{ count?: number, budget_blocked?: number, not_applicable?: number, not_recorded?: number }} [excluded]
+ * @returns {string | null} e.g. "2 cases not recorded (1 blocked by budget, 1 no trajectory)"
+ */
+export const getExcludedCasesNote = excluded => {
+  const count = excluded?.count ?? 0;
+  if (!count) return null;
+  const reasons = [
+    [excluded.budget_blocked, 'blocked by budget'],
+    [excluded.not_applicable, 'no agent run'],
+    [excluded.not_recorded, 'no trajectory'],
+  ]
+    .filter(([n]) => n)
+    .map(([n, label]) => `${n} ${label}`);
+
+  return `${pluralCases(count)} not recorded${reasons.length ? ` (${reasons.join(', ')})` : ''}`;
+};
+
+/**
+ * The run's trajectory rollup (`meta.trajectory_rollup`) as per-case averages, or null for a run
+ * that predates it. Averages cover recorded cases only; `coverage` says how many that is.
+ * @param {object} [rollup]
+ * @returns {{ items: Array<{ label: string, value: string }>, coverage: string | null,
+ *   excluded: string | null } | null}
+ */
+export const buildRunTrajectorySummary = rollup => {
+  if (!rollup || typeof rollup !== 'object') return null;
+  const averages = rollup.averages ?? {};
+  const recorded = rollup.recorded_cases ?? 0;
+  const items = [
+    ['LLM calls / case', formatAverage(averages.llm_calls)],
+    ['Tool calls / case', formatAverage(averages.tool_calls)],
+    ['Tool errors / case', formatAverage(averages.tool_errors)],
+    ['Retries / case', formatAverage(averages.retries)],
+    ['Redundant calls / case', formatAverage(averages.redundant_calls)],
+    ['Step limit hit', recorded ? `${rollup.step_limit_hits ?? 0} of ${pluralCases(recorded)}` : null],
+    [
+      'Latency / case',
+      formatDurationMs(rollup.average_latency_ms == null ? null : Math.round(rollup.average_latency_ms)),
+    ],
+  ]
+    .filter(([, value]) => value != null)
+    .map(([label, value]) => ({ label, value }));
+
+  return {
+    items,
+    coverage: rollup.cases ? `Averaged over ${recorded} of ${pluralCases(rollup.cases)}` : null,
+    excluded: getExcludedCasesNote(rollup.excluded_cases),
+  };
+};
