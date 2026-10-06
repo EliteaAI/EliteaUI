@@ -83,6 +83,7 @@ const CaseDetailsModal = memo(props => {
                 projectId={projectId}
                 runId={runId}
                 datasetCaseId={caseId}
+                expectedTrajectory={caseItem?.expected_trajectory}
               />
             ) : (
               <Box sx={styles.columnsContainer}>

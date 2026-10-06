@@ -194,19 +194,25 @@ export const EVAL_BINDING_KIND = {
 };
 
 // Evidence-scope toggles for a binding (§13.2). Keys match the backend
-// evidence_scope JSON shape { structure, input, output }. When `output` is in
-// scope and the dataset case has an expected_output, it's attached to the
-// judge automatically — there's no separate toggle for it.
+// evidence_scope JSON shape { structure, input, output, trajectory, usage }. When
+// `output` is in scope and the dataset case has an expected_output, it's attached
+// to the judge automatically — there's no separate toggle for it. `trajectory`
+// gives the scorer the recorded tool calls (and the case's expected_trajectory);
+// `usage` gives it the run's token / cost usage (#6809, #6716).
 export const EVIDENCE_SCOPE_OPTIONS = [
   { key: 'output', label: 'Output' },
   { key: 'input', label: 'Input' },
   { key: 'structure', label: 'Agent structure' },
+  { key: 'trajectory', label: 'Trajectory' },
+  { key: 'usage', label: 'Usage' },
 ];
 
 export const DEFAULT_EVIDENCE_SCOPE = {
   structure: false,
   input: true,
   output: true,
+  trajectory: false,
+  usage: false,
 };
 
 // Scope a freshly created dimension / code validation starts with. Distinct from
@@ -216,6 +222,8 @@ export const NEW_ITEM_EVIDENCE_SCOPE = {
   structure: false,
   input: false,
   output: true,
+  trajectory: false,
+  usage: false,
 };
 
 // Dataset case provenance (§17). Set by the backend; the UI only displays it.

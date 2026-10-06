@@ -12,9 +12,18 @@ import PlusIcon from '@/components/Icons/PlusIcon';
 import StyledInputModal from '@/components/StyledInputModal';
 import useToast from '@/hooks/useToast';
 
+import { useApplicationDetailsQuery } from '@/api/applications';
+
 import { useAddEvalDatasetCaseMutation, useUpdateEvalDatasetCaseMutation } from '../../../api';
-import { parseEvalError } from '../../../lib/helpers';
+import {
+  agentToolOptions,
+  fromTrajectoryForm,
+  isTrajectoryFormChanged,
+  parseEvalError,
+  toTrajectoryForm,
+} from '../../../lib/helpers';
 import CaseFullScreenButton from './CaseFullScreenButton';
+import ExpectedTrajectoryEditor from './ExpectedTrajectoryEditor';
 
 const INPUT_TOOLTIP = 'The request or prompt that will be sent to the agent when this case is evaluated.';
 const VARIABLES_TOOLTIP = 'Optional key-value inputs that can be referenced when this case is run.';
@@ -40,10 +49,11 @@ const toFormState = datasetCase => ({
   expected_output: datasetCase?.expected_output ?? '',
   hasExpectedOutput: datasetCase?.id ? !!datasetCase?.expected_output : true,
   variableRows: variablesToRows(datasetCase?.variables),
+  trajectory: toTrajectoryForm(datasetCase?.expected_trajectory),
 });
 
 const CreateCaseModal = memo(props => {
-  const { open, onClose, projectId, datasetId, datasetCase, readOnly = false } = props;
+  const { open, onClose, projectId, datasetId, datasetCase, applicationId, readOnly = false } = props;
 
   const isEdit = !!datasetCase?.id;
 
@@ -56,6 +66,12 @@ const CreateCaseModal = memo(props => {
   const [addCase, { isLoading: isAdding }] = useAddEvalDatasetCaseMutation();
   const [updateCase, { isLoading: isUpdating }] = useUpdateEvalDatasetCaseMutation();
   const { toastSuccess, toastError } = useToast();
+  // Tool-name suggestions for the expected trajectory; free text still works without them.
+  const { data: agentDetails } = useApplicationDetailsQuery(
+    { projectId, applicationId },
+    { skip: !open || !projectId || !applicationId },
+  );
+  const toolOptions = useMemo(() => agentToolOptions(agentDetails?.version_details), [agentDetails]);
 
   const isSaving = isAdding || isUpdating;
 
@@ -110,6 +126,10 @@ const CreateCaseModal = memo(props => {
     }));
   }, []);
 
+  const handleTrajectoryChange = useCallback(trajectory => {
+    setForm(prev => ({ ...prev, trajectory }));
+  }, []);
+
   const handleToggleVariables = useCallback(() => {
     setVariablesExpanded(prev => !prev);
   }, []);
@@ -134,12 +154,21 @@ const CreateCaseModal = memo(props => {
       setErrorMessage(`Duplicate variable key: ${duplicateKey}`);
       return;
     }
+    const trajectory = fromTrajectoryForm(form.trajectory);
+    if (trajectory.error) {
+      setErrorMessage(trajectory.error);
+      return;
+    }
     setErrorMessage('');
 
     const body = {
       input: form.input,
       variables: rowsToVariables(form.variableRows),
       expected_output: form.hasExpectedOutput && form.expected_output?.trim() ? form.expected_output : null,
+      // Sent only when it changed, so an edit elsewhere never rewrites a stored reference; null clears it.
+      ...(isTrajectoryFormChanged(form.trajectory, initialForm.trajectory)
+        ? { expected_trajectory: trajectory.value }
+        : {}),
     };
 
     try {
@@ -156,6 +185,7 @@ const CreateCaseModal = memo(props => {
     }
   }, [
     form,
+    initialForm,
     duplicateKey,
     isEdit,
     updateCase,
@@ -196,6 +226,7 @@ const CreateCaseModal = memo(props => {
     if (form.input !== initialForm.input) return true;
     if (form.expected_output !== initialForm.expected_output) return true;
     if (form.hasExpectedOutput !== initialForm.hasExpectedOutput) return true;
+    if (isTrajectoryFormChanged(form.trajectory, initialForm.trajectory)) return true;
     if (form.variableRows.length !== initialForm.variableRows.length) return true;
     for (let i = 0; i < form.variableRows.length; i++) {
       if (form.variableRows[i].key !== initialForm.variableRows[i]?.key) return true;
@@ -391,6 +422,15 @@ const CreateCaseModal = memo(props => {
           />
         )}
       </Box>
+
+      {(!readOnly || form.trajectory.enabled) && (
+        <ExpectedTrajectoryEditor
+          form={form.trajectory}
+          onChange={handleTrajectoryChange}
+          toolOptions={toolOptions}
+          readOnly={readOnly}
+        />
+      )}
 
       {!readOnly && errorMessage && (
         <Typography

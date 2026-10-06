@@ -59,7 +59,7 @@ const TOOLTIPS = {
   validationCode:
     'Python logic used to evaluate the selected target. The code must return a result compatible with the configured scale.',
   evaluationTarget:
-    'Select the parts of the evaluation case or agent configuration that this dimension should assess.',
+    'Select the parts of the evaluation case or agent configuration that this dimension should assess. Trajectory adds the recorded tool calls (and the case\'s expected trajectory); Usage adds the run\'s token and cost usage.',
   scaleType: 'Defines the format used to score this dimension.',
   polarity: 'Defines whether higher or lower values represent better evaluation results.',
   targetValue:

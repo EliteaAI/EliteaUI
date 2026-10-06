@@ -7,12 +7,14 @@ import { Accordion } from '@/[fsd]/shared/ui';
 import { useEvalCaseExecutionsQuery } from '../../api';
 import {
   buildCaseUsageRows,
+  compareTrajectoryNames,
   formatCaseContent,
   getTrajectoryMetricItems,
   getTrajectoryStateMessage,
   getTrajectoryStepMeta,
   getTrajectoryStepSections,
   getTrajectoryStepTitle,
+  recordedToolNames,
 } from '../../lib/helpers';
 
 const USAGE_COLUMNS = [
@@ -26,9 +28,10 @@ const USAGE_COLUMNS = [
 /**
  * What the agent did on one case of an offline-batch run (#6809 P1): what the agent and the judge
  * spent on it (#6716), the run counters and the ordered LLM and tool steps. Steps a sub-agent ran are indented under the call that started them.
+ * When the case carries an `expected_trajectory` (#6809 item 7), the expected calls are set beside the recorded ones.
  */
 const CaseTrajectoryPanel = memo(props => {
-  const { projectId, runId, datasetCaseId } = props;
+  const { projectId, runId, datasetCaseId, expectedTrajectory } = props;
 
   const { data, isFetching, isError } = useEvalCaseExecutionsQuery(
     { projectId, runId, datasetCaseId },
@@ -40,6 +43,13 @@ const CaseTrajectoryPanel = memo(props => {
   const metricItems = useMemo(() => getTrajectoryMetricItems(execution?.metrics), [execution?.metrics]);
   const usageRows = useMemo(() => buildCaseUsageRows(data?.usage), [data?.usage]);
   const stateMessage = getTrajectoryStateMessage(execution);
+  const comparison = useMemo(
+    () =>
+      execution?.trajectory
+        ? compareTrajectoryNames(expectedTrajectory, recordedToolNames(execution.trajectory))
+        : null,
+    [expectedTrajectory, execution?.trajectory],
+  );
   const styles = caseTrajectoryPanelStyles();
 
   if (isFetching && !data) {
@@ -122,6 +132,8 @@ const CaseTrajectoryPanel = memo(props => {
           ))}
         </Box>
       )}
+
+      {comparison && <ExpectedVsActual comparison={comparison} />}
 
       {stateMessage ? (
         <Typography
@@ -217,6 +229,79 @@ const StepSections = memo(({ step }) => {
 
 StepSections.displayName = 'StepSections';
 
+// By name only: the `trajectory.tool_match` dimension owns the score, args and match-mode rules.
+const ExpectedVsActual = memo(({ comparison }) => {
+  const styles = caseTrajectoryPanelStyles();
+  const line = (key, ok, text) => (
+    <Typography
+      key={key}
+      variant="bodySmall"
+      sx={ok ? undefined : styles.stepError}
+      data-testid={key}
+    >
+      {ok ? '✓' : '✗'} {text}
+    </Typography>
+  );
+  return (
+    <Box
+      sx={styles.expected}
+      data-testid="case-expected-trajectory"
+    >
+      <Typography
+        variant="labelSmall"
+        sx={styles.metricLabel}
+      >
+        Expected vs actual ({comparison.match})
+      </Typography>
+      {comparison.tools.length === 0 && (
+        <Typography
+          variant="bodySmall"
+          sx={styles.stepMeta}
+        >
+          No expected tool calls.
+        </Typography>
+      )}
+      {comparison.tools.map((tool, index) =>
+        line(
+          `expected-tool-${index}`,
+          tool.called,
+          `${tool.name}${tool.hasArgs ? ' (with args)' : ''}: ${tool.called ? 'called' : 'not called'}`,
+        ),
+      )}
+      {comparison.forbidden.map(tool =>
+        line(
+          `forbidden-tool-${tool.name}`,
+          !tool.called,
+          `${tool.name} is forbidden: ${tool.called ? 'called' : 'not called'}`,
+        ),
+      )}
+      {comparison.budget &&
+        line(
+          'expected-budget',
+          comparison.budget.ok,
+          `${comparison.budget.used} of at most ${comparison.budget.max} tool calls`,
+        )}
+      {comparison.extra.length > 0 && (
+        <Typography
+          variant="bodySmall"
+          sx={styles.stepMeta}
+          data-testid="expected-extra-tools"
+        >
+          Also called: {comparison.extra.join(', ')}
+        </Typography>
+      )}
+      <Typography
+        variant="bodySmall"
+        sx={styles.stepMeta}
+      >
+        Matched by tool name; the trajectory dimensions apply the match mode and arguments.
+      </Typography>
+    </Box>
+  );
+});
+
+ExpectedVsActual.displayName = 'ExpectedVsActual';
+
 /** @type {MuiSx} */
 const caseTrajectoryPanelStyles = () => ({
   container: {
@@ -260,6 +345,14 @@ const caseTrajectoryPanelStyles = () => ({
     color: palette.text.primary,
     textTransform: 'uppercase',
     letterSpacing: '0.06em',
+  }),
+  expected: ({ palette }) => ({
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.25rem',
+    padding: '0.75rem',
+    border: `0.0625rem solid ${palette.border.lines}`,
+    borderRadius: '0.5rem',
   }),
   steps: {
     display: 'flex',
