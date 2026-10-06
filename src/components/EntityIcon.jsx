@@ -214,7 +214,7 @@ const EntityIcon = memo(props => {
           <EditIcon
             onClick={onClickEdit}
             sx={styles.editIcon}
-            fill={theme.palette.icon.accent}
+            fill={theme.palette.icon.active}
           />
         )}
       </Box>
@@ -254,16 +254,18 @@ const entityIconStyles = (
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
+    alignSelf: 'center',
     position: 'relative',
     background:
       showBackgroundColor && !hasIconUrl
         ? palette.components.entityIcon.background.entityGradient
         : 'transparent',
+    ...(editable && isHovering && { background: palette.components.entityIcon.background.hover }),
     cursor: editable ? 'pointer' : undefined,
 
     // Use mask compositing to reveal only the gradient ring and keep the inner circle transparent.
     '&::before':
-      showBackgroundColor && !hasIconUrl
+      showBackgroundColor && !hasIconUrl && !(editable && isHovering)
         ? {
             content: '""',
             position: 'absolute',
