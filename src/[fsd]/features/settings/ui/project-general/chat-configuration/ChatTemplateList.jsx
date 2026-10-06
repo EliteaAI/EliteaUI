@@ -6,11 +6,16 @@ import { isMcpToolkitType } from '@/[fsd]/shared/lib/helpers';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
+import PlusIcon from '@/assets/plus-icon.svg?react';
 import { ChatParticipantType } from '@/common/constants';
 import { getToolIconByType } from '@/common/toolkitUtils';
 import { EntityTypeIcon } from '@/components/EntityIcon';
+import DeleteIcon from '@/components/Icons/DeleteIcon';
+import EditIcon from '@/components/Icons/EditIcon';
+import OpenEyeIcon from '@/components/Icons/OpenEyeIcon';
 
 const MAX_TEMPLATES = 5;
+const LIMIT_REACHED_TOOLTIP = `You can have up to ${MAX_TEMPLATES} templates. Delete one to add another.`;
 
 const PARTICIPANT_TYPE_ORDER = [
   ChatParticipantType.Applications,
@@ -44,7 +49,7 @@ const getParticipantCount = participants => {
 };
 
 const ChatTemplateList = memo(props => {
-  const { templates = [], selectedId, onSelect, onNewTemplate, isTeamProject } = props;
+  const { templates = [], canEdit = true, onEdit, onDelete, onNewTemplate, isTeamProject } = props;
 
   const theme = useTheme();
   const isAtLimit = templates.length >= MAX_TEMPLATES;
@@ -93,12 +98,11 @@ const ChatTemplateList = memo(props => {
       </Typography>
 
       <Box
-        role="listbox"
+        role="list"
         aria-label="Chat templates"
         sx={styles.list}
       >
         {visibleTemplates.map(t => {
-          const isSelected = t.id === selectedId;
           const isDefault = t.is_default;
           const typesPresent = getParticipantTypesPresent(t.displayParticipants);
           const count = getParticipantCount(t.displayParticipants);
@@ -106,10 +110,8 @@ const ChatTemplateList = memo(props => {
           return (
             <Box
               key={t.id}
-              role="option"
-              aria-selected={isSelected}
-              onClick={() => onSelect?.(t.id)}
-              sx={[styles.row, isSelected && styles.rowSelected]}
+              role="listitem"
+              sx={styles.row}
               data-testid={`template-row-${t.id}`}
             >
               <Box sx={styles.rowMain}>
@@ -121,6 +123,16 @@ const ChatTemplateList = memo(props => {
                   >
                     {t.name}
                   </Typography>
+                  {isDefault && (
+                    <Typography
+                      component={Box}
+                      variant="bodySmall"
+                      color="text.secondary"
+                      sx={styles.defaultBadge}
+                    >
+                      Default
+                    </Typography>
+                  )}
                 </Box>
                 <Box sx={styles.rowMeta}>
                   <Typography
@@ -152,46 +164,61 @@ const ChatTemplateList = memo(props => {
                   )}
                 </Box>
               </Box>
-              {isDefault && (
-                <Typography
-                  component={Box}
-                  variant="bodySmall"
-                  color="text.secondary"
-                  sx={styles.defaultBadge}
+              {(onEdit || onDelete) && (
+                <Box
+                  className="template-row-actions"
+                  sx={styles.rowActions}
                 >
-                  Default
-                </Typography>
+                  {onEdit && (
+                    // Without edit permission the same action opens the template read-only
+                    <Button.BaseBtn
+                      variant={BUTTON_VARIANTS.tertiary}
+                      onClick={() => onEdit(t.id)}
+                      startIcon={
+                        canEdit ? (
+                          <EditIcon fill={theme.palette.icon.default} />
+                        ) : (
+                          <OpenEyeIcon fill={theme.palette.icon.default} />
+                        )
+                      }
+                      aria-label={`${canEdit ? 'Edit' : 'View'} ${t.name}`}
+                      title={canEdit ? 'Edit template' : 'View template'}
+                      data-testid={`template-edit-${t.id}`}
+                    />
+                  )}
+                  {onDelete && (
+                    <Button.BaseBtn
+                      variant={BUTTON_VARIANTS.tertiary}
+                      onClick={() => onDelete(t)}
+                      startIcon={<DeleteIcon fill={theme.palette.icon.default} />}
+                      aria-label={`Delete ${t.name}`}
+                      title="Delete template"
+                      data-testid={`template-delete-${t.id}`}
+                    />
+                  )}
+                </Box>
               )}
             </Box>
           );
         })}
       </Box>
 
-      {onNewTemplate &&
-        (isAtLimit ? (
-          <Tooltip title="You can have up to 5 templates. Delete one to add another.">
-            <Box sx={styles.limitBtnWrapper}>
-              <Button.BaseBtn
-                variant={BUTTON_VARIANTS.secondary}
-                aria-disabled="true"
-                disabled
-                sx={styles.newBtn}
-                fullWidth
-              >
-                Template limit reached ({MAX_TEMPLATES} of {MAX_TEMPLATES})
-              </Button.BaseBtn>
-            </Box>
-          </Tooltip>
-        ) : (
-          <Button.BaseBtn
-            variant={BUTTON_VARIANTS.secondary}
-            onClick={handleNewTemplate}
-            sx={styles.newBtn}
-            fullWidth
-          >
-            + New template
-          </Button.BaseBtn>
-        ))}
+      {onNewTemplate && (
+        // Disabled buttons do not fire pointer events, so the tooltip needs a wrapper to anchor to
+        <Tooltip title={isAtLimit ? LIMIT_REACHED_TOOLTIP : ''}>
+          <Box sx={styles.newBtnWrapper}>
+            <Button.BaseBtn
+              variant={BUTTON_VARIANTS.iconLabel}
+              startIcon={<PlusIcon />}
+              onClick={handleNewTemplate}
+              disabled={isAtLimit}
+              data-testid="chat-template-create-button"
+            >
+              Template
+            </Button.BaseBtn>
+          </Box>
+        </Tooltip>
+      )}
     </Box>
   );
 });
@@ -229,19 +256,25 @@ const chatTemplateListStyles = () => ({
   row: ({ palette }) => ({
     display: 'flex',
     alignItems: 'center',
-    padding: '0.625rem 0.75rem',
-    borderRadius: '0.6255rem',
-    border: `0.0625rem solid ${palette.border.lines}`,
-    cursor: 'pointer',
-    backgroundColor: palette.background.default.secondary,
+    gap: '3.75rem',
+    padding: '0.75rem 1.5rem 0.75rem 1rem',
+    borderRadius: '0.75rem',
+    backgroundColor: palette.background.surface.interactive.default,
     '&:hover': {
-      backgroundColor: palette.background.interactiveItem.hover,
+      backgroundColor: palette.background.surface.interactive.active,
+    },
+    // Actions appear on hover or keyboard focus. Hidden with opacity, not visibility, so the
+    // buttons stay in the tab order and `:focus-within` can reveal them.
+    '&:hover .template-row-actions, &:focus-within .template-row-actions': {
+      opacity: 1,
     },
   }),
-  rowSelected: ({ palette }) => ({
-    border: `0.0625rem solid ${palette.primary.main}`,
-    backgroundColor: palette.background.selectedItem.default,
-  }),
+  rowActions: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.25rem',
+    opacity: 0,
+  },
   rowMain: {
     flex: 1,
     display: 'flex',
@@ -255,12 +288,14 @@ const chatTemplateListStyles = () => ({
     gap: '0.5rem',
   },
   rowName: {
+    minWidth: 0,
     fontWeight: 500,
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
   },
   defaultBadge: ({ palette }) => ({
+    flexShrink: 0,
     height: '1.25rem',
     display: 'flex',
     alignItems: 'center',
@@ -284,16 +319,11 @@ const chatTemplateListStyles = () => ({
     alignItems: 'center',
     '& svg': { width: '0.75rem', height: '0.75rem' },
   },
-  limitBtnWrapper: {
-    display: 'block',
-    width: '100%',
+  newBtnWrapper: {
+    display: 'inline-flex',
+    alignSelf: 'flex-start',
+    marginTop: '0.5rem',
   },
-  newBtn: ({ palette }) => ({
-    border: `0.0625rem dashed ${palette.border.lines}`,
-    '&:not(:disabled)': {
-      borderStyle: 'dashed',
-    },
-  }),
 });
 
 export default ChatTemplateList;

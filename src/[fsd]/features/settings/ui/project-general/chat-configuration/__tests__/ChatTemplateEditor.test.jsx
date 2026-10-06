@@ -17,9 +17,6 @@ vi.hoisted(() => vi.stubEnv('VITE_SERVER_URL', 'http://localhost/api/v2/'));
 const theme = createTheme({ palette: lightPalette });
 const handlers = {
   onSave: vi.fn(),
-  onDelete: vi.fn(),
-  onSetDefault: vi.fn(),
-  onUnsetDefault: vi.fn(),
   onCancel: vi.fn(),
 };
 const renderEditor = template =>
@@ -36,31 +33,72 @@ const renderEditor = template =>
 beforeEach(() => vi.clearAllMocks());
 afterEach(cleanup);
 
-describe('ChatTemplateEditor default actions', () => {
-  it('hides default and delete actions on an unsaved draft', () => {
+describe('ChatTemplateEditor modal', () => {
+  it('shows "Create Template" on an unsaved draft', () => {
     renderEditor({ id: null, name: 'Template 1', participants: [] });
-    expect(screen.queryByRole('button', { name: 'Set as default' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Unset default' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Delete template' })).not.toBeInTheDocument();
+    expect(screen.getByText('Create Template')).toBeInTheDocument();
   });
 
-  it('offers Set as default on a saved non-default template', async () => {
+  it('shows "Edit Template" without a Delete action on a saved template', () => {
+    renderEditor({ id: 5, name: 'Main', participants: [], is_default: true });
+    expect(screen.getByText('Edit Template')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
+  });
+
+  it('shows "View Template" for read-only users', () => {
+    render(
+      <ThemeProvider theme={theme}>
+        <ChatTemplateEditor
+          template={{ id: 5, name: 'Main', participants: [] }}
+          allTemplates={[]}
+          canEdit={false}
+          {...handlers}
+        />
+      </ThemeProvider>,
+    );
+    expect(screen.getByText('View Template')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Save' })).not.toBeInTheDocument();
+  });
+
+  it('creates a draft with the default flag set', async () => {
+    renderEditor({ id: null, name: 'Template 1', participants: [] });
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Set as default' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+    expect(handlers.onSave).toHaveBeenCalledWith({
+      id: null,
+      name: 'Template 1',
+      participants: [],
+      isDefault: true,
+    });
+  });
+});
+
+describe('ChatTemplateEditor default checkbox', () => {
+  it('reflects the saved default state', () => {
+    renderEditor({ id: 5, name: 'Main', participants: [], is_default: true });
+    expect(screen.getByRole('checkbox', { name: 'Set as default' })).toBeChecked();
+  });
+
+  it('enables Save only after toggling the default flag', async () => {
     renderEditor({ id: 3, name: 'Sprint', participants: [], is_default: false });
-    expect(screen.queryByRole('button', { name: 'Unset default' })).not.toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: 'Set as default' }));
-    expect(handlers.onSetDefault).toHaveBeenCalledWith(3);
+    const saveButton = screen.getByRole('button', { name: 'Save' });
+    expect(saveButton).toBeDisabled();
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Set as default' }));
+    expect(saveButton).toBeEnabled();
+    await userEvent.click(saveButton);
+    expect(handlers.onSave).toHaveBeenCalledWith({
+      id: 3,
+      name: 'Sprint',
+      participants: [],
+      isDefault: true,
+    });
   });
 
-  it('offers Unset default on the default template', async () => {
+  it('unsets the default flag on save', async () => {
     renderEditor({ id: 5, name: 'Main', participants: [], is_default: true });
-    expect(screen.queryByRole('button', { name: 'Set as default' })).not.toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: 'Unset default' }));
-    expect(handlers.onUnsetDefault).toHaveBeenCalledWith(5);
-  });
-
-  it('allows deleting the default template', () => {
-    renderEditor({ id: 5, name: 'Main', participants: [], is_default: true });
-    expect(screen.getByRole('button', { name: 'Delete template' })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Set as default' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+    expect(handlers.onSave).toHaveBeenCalledWith({ id: 5, name: 'Main', participants: [], isDefault: false });
   });
 });
 
