@@ -9,7 +9,10 @@ import { Box, CircularProgress, Grid, useTheme } from '@mui/material';
 
 import { useEditingArtifactsNavBlocker } from '@/[fsd]/features/artifacts/lib/hooks';
 import { useLazyConversationDetailsQuery } from '@/[fsd]/features/chat/api';
-import { redistributeConversationsIntoGroups } from '@/[fsd]/features/chat/conversation-list/lib/helpers';
+import {
+  applyParticipantChanges,
+  redistributeConversationsIntoGroups,
+} from '@/[fsd]/features/chat/conversation-list/lib/helpers';
 import {
   useCreateFolder,
   useDeleteFolder,
@@ -434,7 +437,7 @@ const NewChat = props => {
   }, [activeConversation?.id]);
 
   const handleRestrictAccessSuccess = useCallback(
-    async (conversationId, deletedParticipantIds = []) => {
+    async (conversationId, participantChanges = {}) => {
       const applyPrivate = conv => (conv.id === conversationId ? { ...conv, is_private: true } : conv);
 
       setConversations(prev => prev.map(applyPrivate));
@@ -445,28 +448,23 @@ const NewChat = props => {
 
       if (!activeConversationIdRef.current || activeConversationIdRef.current !== conversationId) return;
 
-      if (deletedParticipantIds.length > 0) {
-        const deletedSet = new Set(deletedParticipantIds);
+      const updateActiveParticipants = participants =>
         setActiveConversation(prev => {
           if (!prev || prev.id !== conversationId) return prev;
           return {
             ...prev,
-            participants: (prev.participants || []).filter(p => !deletedSet.has(p.id)),
+            participants: applyParticipantChanges(participants ?? prev.participants, participantChanges),
             is_private: true,
           };
         });
-      }
 
+      updateActiveParticipants();
+
+      // The refetch may be served by a request that started before the deletes landed, so the confirmed
+      // changes are re-applied on top of whatever it returns.
       const result = await getConversationDetailForRefresh({ projectId, id: conversationId });
-      if (!result.data) return;
-      setActiveConversation(prev => {
-        if (!prev || prev.id !== conversationId) return prev;
-        return {
-          ...prev,
-          participants: result.data.participants ?? prev.participants,
-          is_private: result.data.is_private ?? prev.is_private,
-        };
-      });
+      if (!result.data?.participants) return;
+      updateActiveParticipants(result.data.participants);
     },
     [
       getConversationDetailForRefresh,
