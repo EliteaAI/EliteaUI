@@ -14,7 +14,7 @@ import DeleteIcon from '@/components/Icons/DeleteIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
 
 import { EVAL_CASE_SOURCE, EVAL_CASE_SOURCE_LABEL, EVAL_PERMISSIONS } from '../../lib/constants';
-import { isDatasetSharedIn } from '../../lib/helpers';
+import { isDatasetSharedIn, summarizeExpectedTrajectory } from '../../lib/helpers';
 import CaseInputNameCell from './CaseInputNameCell';
 import CaseRowActions from './CaseRowActions';
 import AddCaseMenu from './case-modals/AddCaseMenu';
@@ -22,12 +22,13 @@ import AddCaseMenu from './case-modals/AddCaseMenu';
 const COLUMNS = [
   { field: 'input', label: 'Input', sortable: true },
   { field: 'expected_output', label: 'Expected Output', sortable: true },
+  { field: 'expected_trajectory', label: 'Expected Trajectory', sortable: false },
   { field: 'source_type', label: 'Source', sortable: true },
   { field: 'variables', label: 'Variables', sortable: false },
 ];
 
-const GRID_TEMPLATE_COLUMNS = '3rem 1fr 1fr 7rem 7rem 5rem';
-const GRID_TEMPLATE_COLUMN_NO_CHECKBOXES = '4fr 4fr 2fr 2fr';
+const GRID_TEMPLATE_COLUMNS = '3rem 1fr 1fr 1fr 7rem 7rem 5rem';
+const GRID_TEMPLATE_COLUMN_NO_CHECKBOXES = '4fr 4fr 4fr 2fr 2fr';
 const NAME_FIELD = 'input';
 
 const getSourceLabel = source => {
@@ -150,6 +151,9 @@ const CasesPanel = memo(props => {
     if (column.field === 'expected_output') {
       if (!row.expected_output) return '—';
       return row.expected_output.split('\n')[0]?.slice(0, 100);
+    }
+    if (column.field === 'expected_trajectory') {
+      return summarizeExpectedTrajectory(row.expected_trajectory) || '—';
     }
     if (column.field === 'source_type') {
       return getSourceLabel(row.source_type);
