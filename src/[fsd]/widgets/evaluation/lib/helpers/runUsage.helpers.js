@@ -140,6 +140,8 @@ export const buildBudgetVerdictRows = verdict => {
       } else {
         detail = entry.value == null ? 'Not known' : `Used ${formatLimit(key, entry.value)}`;
       }
+      // A per-run token limit set to "report" did not stop the run, so it says so.
+      if (entry.on_breach === 'report') detail = `${detail} · reported only`;
       rows.push({
         key: `${scope}.${key}`,
         label: `${scope === 'per_case' ? 'Per case' : 'Per run'} · ${key === 'cost' ? 'cost' : 'tokens'}`,
@@ -152,6 +154,21 @@ export const buildBudgetVerdictRows = verdict => {
   });
 
   return rows;
+};
+
+/**
+ * Short summary for a run that went over a suite limit, or null when it did not (or set none).
+ * @param {object} [meta] - Run meta
+ * @returns {string | null} e.g. "Over budget: Per run · tokens, Per case · cost"
+ */
+export const getRunOverBudgetLabel = meta => {
+  const verdict = meta?.budget_verdict;
+  if (verdict?.verdict !== EVAL_BUDGET_VERDICT.breached) return null;
+  const breached = buildBudgetVerdictRows(verdict)
+    .filter(row => row.verdict === EVAL_BUDGET_VERDICT.breached)
+    .map(row => row.label);
+
+  return breached.length ? `Over budget: ${breached.join(', ')}` : 'Over budget';
 };
 
 const UNAVAILABLE_CAUSE = {

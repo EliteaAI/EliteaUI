@@ -5,7 +5,12 @@ import { Box, Tooltip, Typography } from '@mui/material';
 import { formatRunTimestamp } from '@/[fsd]/entities/run-history/lib/helpers';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
 
-import { formatScoreDelta, getRunScoreLabel, getRunStopLabel } from '../../lib/helpers';
+import {
+  formatScoreDelta,
+  getRunOverBudgetLabel,
+  getRunScoreLabel,
+  getRunStopLabel,
+} from '../../lib/helpers';
 import RunHistoryActionsMenu from './RunHistoryActionsMenu';
 
 // A run that recorded no version, or whose version has since been deleted, has nothing to name.
@@ -34,6 +39,7 @@ const EvaluationRunRow = memo(props => {
   const deltaLabel = formatScoreDelta(run.delta);
   // A run stopped by a limit still shows the score of the cases it got through; the icon says so.
   const stopLabel = getRunStopLabel(run.meta);
+  const overBudgetLabel = getRunOverBudgetLabel(run.meta);
   const styles = evaluationRunRowStyles(isSelected, gridTemplateColumns, run.delta);
 
   return (
@@ -108,6 +114,20 @@ const EvaluationRunRow = memo(props => {
               data-testid={`evaluation-run-stop-${run.id}`}
             >
               <AttentionIcon />
+            </Box>
+          </Tooltip>
+        )}
+        {overBudgetLabel && (
+          <Tooltip
+            title={overBudgetLabel}
+            placement="top"
+          >
+            <Box
+              component="span"
+              sx={styles.overBudget}
+              data-testid={`evaluation-run-over-budget-${run.id}`}
+            >
+              Over budget
             </Box>
           </Tooltip>
         )}
@@ -215,6 +235,16 @@ const evaluationRunRowStyles = (isSelected, gridTemplateColumns, delta) => ({
       height: '1rem',
       fill: palette.icon.attention,
     },
+  }),
+  overBudget: ({ palette }) => ({
+    padding: '0.125rem 0.5rem',
+    borderRadius: '0.625rem',
+    fontSize: '0.75rem',
+    lineHeight: '1rem',
+    whiteSpace: 'nowrap',
+    color: palette.icon.indexResult.error,
+    backgroundColor: palette.alert.error?.background,
+    cursor: 'default',
   }),
   actions: {
     display: 'flex',

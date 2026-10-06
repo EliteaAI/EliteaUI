@@ -7,7 +7,14 @@ import {
   validateRunLimits,
 } from '../runLimits.helpers';
 
-const EMPTY = { stepsLimit: '', perCaseTokens: '', perCaseCost: '', perRunTokens: '', perRunCost: '' };
+const EMPTY = {
+  stepsLimit: '',
+  perCaseTokens: '',
+  perCaseCost: '',
+  perRunTokens: '',
+  perRunCost: '',
+  perRunOnBreach: 'stop',
+};
 
 describe('readRunLimits', () => {
   it('reads an untouched suite as all empty', () => {
@@ -28,7 +35,14 @@ describe('readRunLimits', () => {
       perCaseCost: '',
       perRunTokens: '50000',
       perRunCost: '1.5',
+      perRunOnBreach: 'stop',
     });
+  });
+
+  it('reads a report-only run token limit', () => {
+    expect(
+      readRunLimits({ consumption_budget: { per_run: { tokens: 500, on_breach: 'report' } } }).perRunOnBreach,
+    ).toBe('report');
   });
 });
 
@@ -36,6 +50,7 @@ describe('areRunLimitsEqual', () => {
   it('ignores surrounding whitespace', () => {
     expect(areRunLimitsEqual(EMPTY, { ...EMPTY, stepsLimit: ' ' })).toBe(true);
     expect(areRunLimitsEqual(EMPTY, { ...EMPTY, perRunTokens: '10' })).toBe(false);
+    expect(areRunLimitsEqual(EMPTY, { ...EMPTY, perRunOnBreach: 'report' })).toBe(false);
   });
 });
 
@@ -64,6 +79,18 @@ describe('validateRunLimits', () => {
 });
 
 describe('buildRunLimitsMeta', () => {
+  it('stores "report" only with a run token limit', () => {
+    expect(buildRunLimitsMeta({}, { ...EMPTY, perRunTokens: '500', perRunOnBreach: 'report' })).toEqual({
+      consumption_budget: { per_run: { tokens: 500, on_breach: 'report' } },
+    });
+    expect(buildRunLimitsMeta({}, { ...EMPTY, perRunTokens: '500' })).toEqual({
+      consumption_budget: { per_run: { tokens: 500 } },
+    });
+    expect(buildRunLimitsMeta({}, { ...EMPTY, perRunCost: '1', perRunOnBreach: 'report' })).toEqual({
+      consumption_budget: { per_run: { cost: 1 } },
+    });
+  });
+
   it('keeps the other meta keys', () => {
     expect(buildRunLimitsMeta({ other: 'kept', steps_limit: 3 }, { ...EMPTY, perRunTokens: '1000' })).toEqual(
       {
@@ -98,6 +125,7 @@ describe('buildRunLimitsMeta', () => {
       perCaseCost: '0.05',
       perRunTokens: '900',
       perRunCost: '',
+      perRunOnBreach: 'report',
     };
     expect(readRunLimits(buildRunLimitsMeta({}, limits))).toEqual(limits);
   });

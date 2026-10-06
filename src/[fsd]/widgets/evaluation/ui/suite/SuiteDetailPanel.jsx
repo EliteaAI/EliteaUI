@@ -18,6 +18,7 @@ import useCheckPermission from '@/hooks/useCheckPermission';
 import { EVAL_PERMISSIONS } from '../../lib/constants';
 import {
   MAX_SUITE_STEPS_LIMIT,
+  RUN_LIMIT_ON_BREACH,
   areRunLimitsEqual,
   buildRunLimitsMeta,
   readRunLimits,
@@ -38,7 +39,13 @@ const VERSION_TOOLTIP =
 
 const STEPS_LIMIT_TOOLTIP = `The most steps the agent may take on each case of a run, from 1 to ${MAX_SUITE_STEPS_LIMIT}. Leave empty to use the agent's own limit.`;
 
-const RUN_LIMITS_HINT = 'Cost limits are checked after the run; add a token limit to stop early.';
+const RUN_LIMITS_HINT =
+  'Per-case and cost limits are checked after the run. A per-run token limit stops the run early unless set to only report.';
+
+const ON_BREACH_OPTIONS = [
+  { value: RUN_LIMIT_ON_BREACH.stop, label: 'Stop the run' },
+  { value: RUN_LIMIT_ON_BREACH.report, label: 'Only report' },
+];
 
 const BUDGET_FIELDS = [
   { field: 'perCaseTokens', label: 'Tokens per case' },
@@ -112,6 +119,10 @@ const SuiteDetailPanel = memo(props => {
   const handleRunLimitChange = useCallback(event => {
     const { name: field, value } = event.target;
     setRunLimits(prev => ({ ...prev, [field]: value }));
+  }, []);
+
+  const handleOnBreachChange = useCallback(value => {
+    setRunLimits(prev => ({ ...prev, perRunOnBreach: value }));
   }, []);
 
   const savedRunLimits = useMemo(() => readRunLimits(suite?.meta), [suite?.meta]);
@@ -426,6 +437,16 @@ const SuiteDetailPanel = memo(props => {
                         inputProps={{ inputMode: 'decimal' }}
                       />
                     ))}
+                  </Box>
+                  <Box data-testid="suite-run-limit-on-breach">
+                    <SingleSelect
+                      label="When the run token limit is reached"
+                      showBorder
+                      value={runLimits.perRunOnBreach}
+                      options={ON_BREACH_OPTIONS}
+                      onValueChange={handleOnBreachChange}
+                      disabled={!canUpdateSuite || !runLimits.perRunTokens.trim()}
+                    />
                   </Box>
                   <Typography
                     variant="bodySmall"

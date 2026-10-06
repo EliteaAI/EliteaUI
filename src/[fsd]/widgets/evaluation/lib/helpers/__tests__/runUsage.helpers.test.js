@@ -6,6 +6,7 @@ import {
   formatTokenCount,
   formatUsd,
   getRunEndMessage,
+  getRunOverBudgetLabel,
   getRunStopLabel,
   getSettlementInfo,
 } from '../runUsage.helpers';
@@ -151,6 +152,33 @@ describe('buildBudgetVerdictRows', () => {
 
   it('is empty without a verdict', () => {
     expect(buildBudgetVerdictRows(undefined)).toEqual([]);
+  });
+
+  it('says when a run token limit was only reported', () => {
+    const [row] = buildBudgetVerdictRows({
+      per_run: { tokens: { limit: 500, value: 1377, verdict: 'breached', on_breach: 'report' } },
+    });
+    expect(row.detail).toBe('Used 1,377 tokens · reported only');
+  });
+});
+
+describe('getRunOverBudgetLabel', () => {
+  it('names the limits a run went over', () => {
+    expect(
+      getRunOverBudgetLabel({
+        budget_verdict: {
+          verdict: 'breached',
+          per_case: { cost: { limit: 0.1, cases: 2, breached_cases: 0, unknown_cases: 0, verdict: 'pass' } },
+          per_run: { tokens: { limit: 500, value: 1377, verdict: 'breached', on_breach: 'report' } },
+        },
+      }),
+    ).toBe('Over budget: Per run · tokens');
+  });
+
+  it('is null when the run stayed within its limits or set none', () => {
+    expect(getRunOverBudgetLabel({ budget_verdict: { verdict: 'pass' } })).toBeNull();
+    expect(getRunOverBudgetLabel({ budget_verdict: { verdict: 'unknown' } })).toBeNull();
+    expect(getRunOverBudgetLabel({})).toBeNull();
   });
 });
 

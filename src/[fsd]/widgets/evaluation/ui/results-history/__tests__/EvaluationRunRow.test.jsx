@@ -39,5 +39,21 @@ describe('EvaluationRunRow stop indicator', () => {
     renderRow({ status: 'completed', meta: {} });
 
     expect(screen.queryByTestId('evaluation-run-stop-7')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('evaluation-run-over-budget-7')).not.toBeInTheDocument();
+  });
+
+  it('flags a run that went over a suite limit', () => {
+    renderRow({
+      status: 'completed',
+      meta: {
+        budget_verdict: {
+          verdict: 'breached',
+          per_run: { tokens: { limit: 500, value: 1377, verdict: 'breached', on_breach: 'report' } },
+        },
+      },
+    });
+
+    expect(screen.getByTestId('evaluation-run-over-budget-7')).toHaveTextContent('Over budget');
+    expect(screen.queryByTestId('evaluation-run-stop-7')).not.toBeInTheDocument();
   });
 });

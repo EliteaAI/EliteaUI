@@ -1,10 +1,23 @@
 // Suite run limits (#6809 §4.5, #6716): `meta.steps_limit` caps the agent's steps on every case,
 // `meta.consumption_budget = { per_case: { tokens, cost }, per_run: { tokens, cost } }` bounds what a
 // run may spend. The form edits them as strings so an empty field means "no limit".
+// `per_run.on_breach` says whether reaching the run token limit stops the run or is only reported.
 
 export const MAX_SUITE_STEPS_LIMIT = 100;
 
-export const RUN_LIMIT_FIELDS = ['stepsLimit', 'perCaseTokens', 'perCaseCost', 'perRunTokens', 'perRunCost'];
+export const RUN_LIMIT_FIELDS = [
+  'stepsLimit',
+  'perCaseTokens',
+  'perCaseCost',
+  'perRunTokens',
+  'perRunCost',
+  'perRunOnBreach',
+];
+
+export const RUN_LIMIT_ON_BREACH = {
+  stop: 'stop',
+  report: 'report',
+};
 
 const BUDGET_PATHS = {
   perCaseTokens: ['per_case', 'tokens'],
@@ -18,7 +31,8 @@ const toField = value => (value == null ? '' : String(value));
 /**
  * Run limits of a suite as form strings.
  * @param {object} [meta] - Suite meta
- * @returns {{ stepsLimit: string, perCaseTokens: string, perCaseCost: string, perRunTokens: string, perRunCost: string }}
+ * @returns {{ stepsLimit: string, perCaseTokens: string, perCaseCost: string, perRunTokens: string,
+ *   perRunCost: string, perRunOnBreach: 'stop' | 'report' }}
  */
 export const readRunLimits = (meta = {}) => {
   const budget = meta?.consumption_budget || {};
@@ -26,6 +40,10 @@ export const readRunLimits = (meta = {}) => {
   Object.entries(BUDGET_PATHS).forEach(([field, [scope, key]]) => {
     limits[field] = toField(budget[scope]?.[key]);
   });
+  limits.perRunOnBreach =
+    budget.per_run?.on_breach === RUN_LIMIT_ON_BREACH.report
+      ? RUN_LIMIT_ON_BREACH.report
+      : RUN_LIMIT_ON_BREACH.stop;
 
   return limits;
 };
@@ -80,6 +98,10 @@ export const buildRunLimitsMeta = (meta = {}, limits = {}) => {
     if (!text) return;
     budget[scope] = { ...budget[scope], [key]: key === 'tokens' ? parseInt(text, 10) : Number(text) };
   });
+  // Stopping is the default, so only "report" is stored, and only alongside a run token limit.
+  if (budget.per_run?.tokens != null && limits.perRunOnBreach === RUN_LIMIT_ON_BREACH.report) {
+    budget.per_run.on_breach = RUN_LIMIT_ON_BREACH.report;
+  }
   if (Object.keys(budget).length) next.consumption_budget = budget;
 
   return next;
