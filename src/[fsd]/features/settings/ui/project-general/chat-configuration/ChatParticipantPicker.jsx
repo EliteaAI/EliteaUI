@@ -1,32 +1,35 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Box, Chip, Typography, useTheme } from '@mui/material';
+import { Autocomplete, Box, Chip, InputAdornment, TextField, Typography, useTheme } from '@mui/material';
 
 import { getChatParticipantUniqueId } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { ChatParticipantConstants } from '@/[fsd]/features/settings/lib/constants';
 import { ChatParticipantHelpers } from '@/[fsd]/features/settings/lib/helpers';
-import { isMcpToolkitType } from '@/[fsd]/shared/lib/helpers';
 import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
-import { Select } from '@/[fsd]/shared/ui';
 import RemoveIcon from '@/assets/remove-icon.svg?react';
-import { ChatParticipantType, PUBLIC_PROJECT_ID } from '@/common/constants';
-import { getToolIconByType } from '@/common/toolkitUtils';
-import { EntityTypeIcon } from '@/components/EntityIcon';
-import UserAvatar from '@/components/UserAvatar';
+import SearchIcon from '@/components/Icons/SearchIcon';
 import useParticipants from '@/hooks/chat/useParticipants';
 
-const {
-  TABS,
-  TAB_LABELS,
-  ENTITY_TYPE_LABEL,
-  TAB_ENTITY_TYPE,
-  TAB_FETCH_TYPES,
-  TAB_ROW_OPTION,
-  EMPTY_SENTINEL,
-  TAB_ROW_ITEM_STYLE,
-} = ChatParticipantConstants;
+import ChatParticipantIcon from './ChatParticipantIcon';
+import ChatParticipantOption from './ChatParticipantOption';
+import ChatParticipantPickerPaper from './ChatParticipantPickerPaper';
+
+const { TABS, TAB_LABELS, TAB_FETCH_TYPES } = ChatParticipantConstants;
 
 const { getEntityName, filterFetchedForTab } = ChatParticipantHelpers;
+
+const SEARCH_PLACEHOLDER = 'Search participants...';
+
+// SearchIcon draws a 16.5-unit glyph on a 24-unit canvas; crop it so the glyph is 14px in a 16px box
+const SEARCH_ICON_VIEWBOX = '2.57 1.82 18.86 18.86';
+
+const EMPTY_OPTIONS = [];
+
+// `useParticipants` gives no signal when a source has nothing left to load, so a load-more that does
+// not start a request within this window is treated as "end of list"
+const LOAD_MORE_START_TIMEOUT_MS = 1000;
+
+const POPPER_MODIFIERS = [{ name: 'flip', enabled: false }];
 
 // Picker participants use flat `id`/`project_id` rather than `entity_meta`; adapt to the shared helper.
 const makeParticipantKey = p =>
@@ -35,34 +38,40 @@ const makeParticipantKey = p =>
     entity_meta: { id: p.id, project_id: p.project_id },
   });
 
+const isSameParticipant = (option, value) => makeParticipantKey(option) === makeParticipantKey(value);
+
+const getParticipantName = participant => participant?.name ?? '';
+
+// Options are fetched already filtered by the search query
+const keepRemoteOptions = options => options;
+
 const ChatParticipantPicker = memo(props => {
   const { participants = [], onChange, isTeamProject = false, disabled = false } = props;
 
   const theme = useTheme();
-  const styles = chatParticipantPickerStyles();
+  const hasParticipants = participants.length > 0;
+  const styles = useMemo(() => chatParticipantPickerStyles(), []);
   const isMcpVisible = useIsMcpVisible();
 
   const [activeTab, setActiveTab] = useState(TABS.AGENTS);
   const [query, setQuery] = useState('');
 
-  const visibleTabs = useMemo(
-    () =>
-      Object.values(TABS).filter(tab => {
-        if (tab === TABS.MCPS && !isMcpVisible) return false;
-        if (tab === TABS.USERS && !isTeamProject) return false;
-        return true;
-      }),
-    [isMcpVisible, isTeamProject],
-  );
-
   const tabItems = useMemo(
-    () => visibleTabs.map(tab => ({ value: tab, label: TAB_LABELS[tab] })),
-    [visibleTabs],
+    () =>
+      Object.values(TABS)
+        .filter(tab => {
+          if (tab === TABS.MCPS && !isMcpVisible) return false;
+          if (tab === TABS.USERS && !isTeamProject) return false;
+          return true;
+        })
+        .map(tab => ({ value: tab, label: TAB_LABELS[tab] })),
+    [isMcpVisible, isTeamProject],
   );
 
   const {
     participants: fetched,
     isFetching,
+    isFirstPageFetching,
     onLoadMore,
   } = useParticipants({
     sortBy: 'name',
@@ -72,330 +81,295 @@ const ChatParticipantPicker = memo(props => {
     types: TAB_FETCH_TYPES[activeTab],
   });
 
-  // Prevents calling onLoadMore repeatedly before the in-flight fetch resolves.
-  // The ref is reset once isFetching goes back to false.
-  const loadMoreInFlightRef = useRef(false);
+  // A load-more was requested and has not settled yet
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  // After the first load-more in a tab/search, keep shown items in place and append new pages
+  const [isAppendMode, setIsAppendMode] = useState(false);
+  const hasLoadMoreFetchStartedRef = useRef(false);
+  // `fetched.length` at the moment a load-more turned out to have nothing left to fetch
+  const exhaustedAtCountRef = useRef(null);
+  // Last known listbox scroll position, restored after a loaded page is appended (see below)
+  const listboxScrollRef = useRef({ node: null, scrollTop: 0 });
 
+  const resetPaging = useCallback(() => {
+    setIsLoadingMore(false);
+    setIsAppendMode(false);
+    exhaustedAtCountRef.current = null;
+  }, []);
+
+  // Settle a load-more: done once its request finished, or abandoned if no request ever started
   useEffect(() => {
-    if (!isFetching) {
-      loadMoreInFlightRef.current = false;
+    if (!isLoadingMore) return undefined;
+    if (isFetching) {
+      hasLoadMoreFetchStartedRef.current = true;
+      return undefined;
     }
-  }, [isFetching]);
+    if (hasLoadMoreFetchStartedRef.current) {
+      hasLoadMoreFetchStartedRef.current = false;
+      setIsLoadingMore(false);
+      return undefined;
+    }
+    const timer = setTimeout(() => {
+      exhaustedAtCountRef.current = fetched.length;
+      setIsLoadingMore(false);
+    }, LOAD_MORE_START_TIMEOUT_MS);
+    return () => clearTimeout(timer);
+  }, [isLoadingMore, isFetching, fetched.length]);
 
-  // When the tab or search query changes the list resets to page 0; unblock the ref
-  // so the first bottom-scroll on the new list can trigger a load.
-  useEffect(() => {
-    loadMoreInFlightRef.current = false;
-  }, [activeTab, query]);
-
-  const handleMenuScroll = useCallback(
+  const handleListboxScroll = useCallback(
     event => {
-      if (loadMoreInFlightRef.current || isFetching) return;
       const el = event.currentTarget;
+      listboxScrollRef.current = { node: el, scrollTop: el.scrollTop };
+      if (
+        isLoadingMore ||
+        isFetching ||
+        isFirstPageFetching ||
+        exhaustedAtCountRef.current === fetched.length
+      )
+        return;
       if (el.scrollHeight > el.clientHeight && el.scrollTop + el.clientHeight >= el.scrollHeight - 80) {
-        loadMoreInFlightRef.current = true;
+        hasLoadMoreFetchStartedRef.current = false;
+        setIsLoadingMore(true);
+        setIsAppendMode(true);
         onLoadMore();
       }
     },
-    [isFetching, onLoadMore],
+    [isLoadingMore, isFetching, isFirstPageFetching, fetched.length, onLoadMore],
   );
 
-  const fetchedForTab = useMemo(() => filterFetchedForTab(fetched, activeTab), [fetched, activeTab]);
+  // Display position of every option already shown, so a loaded page is appended below them
+  const optionOrderRef = useRef(new Map());
 
-  const resultOptions = useMemo(
-    () =>
-      fetchedForTab.map(p => {
-        const entity_name = getEntityName(p);
-        const option = {
-          label: p.name,
-          entity_name,
-          project_id: p.project_id,
-          id: p.id,
-          agent_type: p.agent_type ?? null,
-          // toolkit_type is used to resolve the correct toolkit icon in the dropdown
-          toolkit_type: p.type ?? null,
-          avatar: p.avatar ?? null,
-        };
-        return { ...option, value: makeParticipantKey(option) };
-      }),
-    [fetchedForTab],
+  const options = useMemo(() => {
+    const mapped = filterFetchedForTab(fetched, activeTab).map(p => ({
+      id: p.id,
+      name: p.name,
+      project_id: p.project_id,
+      entity_name: getEntityName(p),
+      agent_type: p.agent_type ?? null,
+      // toolkit_type is used to resolve the correct toolkit icon
+      toolkit_type: p.type ?? null,
+      avatar: p.avatar ?? null,
+    }));
+
+    // `useParticipants` merges several sources (project + public) and re-sorts the whole list by
+    // name on every page, which would shuffle items the user has already scrolled past. Once paging
+    // started, keep the existing order and append newcomers; before that, the natural (sorted) order
+    // is the baseline.
+    if (!isAppendMode) optionOrderRef.current = new Map();
+    const order = optionOrderRef.current;
+    mapped.forEach(option => {
+      const key = makeParticipantKey(option);
+      if (!order.has(key)) order.set(key, order.size);
+    });
+    return mapped.sort((a, b) => order.get(makeParticipantKey(a)) - order.get(makeParticipantKey(b)));
+  }, [fetched, activeTab, isAppendMode]);
+
+  // MUI Autocomplete resets its highlight when the option count changes and, with no matching
+  // highlighted option, scrolls the listbox to the top — which throws the user back to the start
+  // every time a page is appended. MUI does that in a passive effect of the (child) Autocomplete,
+  // which runs before this one, so restoring here wins. Pages from several sources (e.g. project +
+  // public agents) can land separately, so keep restoring until the load-more settles.
+  useEffect(() => {
+    if (!isLoadingMore) return;
+    const { node, scrollTop } = listboxScrollRef.current;
+    if (node?.isConnected) node.scrollTop = scrollTop;
+  }, [options.length, isFetching, isLoadingMore]);
+
+  // Agents/pipelines/toolkits come from several requests (project + public) that resolve separately.
+  // During the first page — not a load-more — hide partial results until every source answered, so
+  // the list does not show a few items and then reshuffle when the rest arrive.
+  // Toolkits/MCPs report their first page via `isFirstPageFetching` only, not `isFetching`
+  const isInitialLoading = (isFetching || isFirstPageFetching) && !isLoadingMore;
+  const visibleOptions = isInitialLoading ? EMPTY_OPTIONS : options;
+
+  const handleTabChange = useCallback(
+    (_, tab) => {
+      setActiveTab(tab);
+      setQuery('');
+      resetPaging();
+    },
+    [resetPaging],
   );
 
-  const handleTabChange = useCallback((_, tab) => {
-    setActiveTab(tab);
-    setQuery('');
-  }, []);
-
-  // In multiple mode SingleSelect passes the full new selected-keys array to onValueChange.
-  // We map each key back to a participant object, preserving data for items not in current
-  // resultOptions (e.g. selected participants from a different tab or search context).
-  const handleSelectOption = useCallback(
-    newKeys => {
+  const handleChange = useCallback(
+    (_, newParticipants) => {
       if (disabled) return;
-      const validKeys = (Array.isArray(newKeys) ? newKeys : [newKeys]).filter(
-        k => k && k !== TAB_ROW_OPTION && k !== EMPTY_SENTINEL,
-      );
-      const existingByKey = new Map(participants.map(p => [makeParticipantKey(p), p]));
-      const newParticipants = validKeys
-        .map(key => {
-          if (existingByKey.has(key)) return existingByKey.get(key);
-          const found = resultOptions.find(o => o.value === key);
-          if (!found) return null;
-          return {
-            id: found.id,
-            name: found.label,
-            project_id: found.project_id,
-            entity_name: found.entity_name,
-            agent_type: found.agent_type,
-            toolkit_type: found.toolkit_type ?? null,
-            avatar: found.avatar ?? null,
-          };
-        })
-        .filter(Boolean);
       onChange(newParticipants);
     },
-    [disabled, participants, resultOptions, onChange],
+    [disabled, onChange],
   );
 
-  const handleRemove = useCallback(
-    key => {
-      if (disabled) return;
-      onChange(participants.filter(p => makeParticipantKey(p) !== key));
+  // Keep the search text while picking several options; only typing or clearing changes it
+  const handleInputChange = useCallback(
+    (_, value, reason) => {
+      if (reason !== 'input' && reason !== 'clear') return;
+      setQuery(value);
+      resetPaging();
     },
-    [disabled, participants, onChange],
+    [resetPaging],
   );
 
-  const renderOption = useCallback(
-    // eslint-disable-next-line no-unused-vars
-    (option, _isSelected) => {
-      // Tab filter chips rendered as a non-selectable row inside the dropdown
-      if (option.value === TAB_ROW_OPTION) {
-        return (
-          <Box
-            sx={styles.tabsRow}
-            onClick={e => e.stopPropagation()}
-          >
-            {tabItems.map(tab => (
-              <Chip
-                key={tab.value}
-                icon={
-                  tab.value === TABS.TOOLKITS || tab.value === TABS.MCPS ? (
-                    getToolIconByType('', theme, { isMCP: tab.value === TABS.MCPS })
-                  ) : (
-                    <EntityTypeIcon
-                      type={TAB_ENTITY_TYPE[tab.value]}
-                      specifiedFontSize="0.875rem"
-                      specifiedFill={
-                        activeTab === tab.value
-                          ? theme.palette.components.chip.text.active
-                          : theme.palette.components.chip.text.default
-                      }
-                    />
-                  )
-                }
-                label={
-                  <Typography
-                    variant="labelSmall"
-                    color="inherit"
-                  >
-                    {tab.label}
-                  </Typography>
-                }
-                onClick={() => handleTabChange(null, tab.value)}
-                onMouseDown={e => e.stopPropagation()}
-                sx={styles.tabChip(activeTab === tab.value)}
-              />
-            ))}
-          </Box>
-        );
-      }
+  const handleClose = useCallback(() => {
+    setQuery('');
+    resetPaging();
+  }, [resetPaging]);
 
-      // Empty / no-results row
-      if (option.value === EMPTY_SENTINEL) {
-        return (
-          <Typography
-            variant="bodySmall"
-            color="text.secondary"
-          >
-            {option.label}
-          </Typography>
-        );
-      }
+  // Keep the newest chip and the caret in view once the field starts scrolling
+  const rootRef = useRef(null);
+  const prevParticipantsCountRef = useRef(participants.length);
 
-      // Regular participant option
-      const isPublic = option.project_id === PUBLIC_PROJECT_ID;
-      const isToolkitLike = option.entity_name === ChatParticipantType.Toolkits;
-      return (
-        <Box sx={styles.optionBody}>
-          {isToolkitLike ? (
-            getToolIconByType(option.toolkit_type ?? '', theme, {
-              isMCP: isMcpToolkitType(option.toolkit_type),
-            })
-          ) : option.entity_name === ChatParticipantType.Users && option.avatar ? (
-            <UserAvatar
-              avatar={option.avatar}
-              name={option.label}
-              size={16}
-            />
-          ) : (
-            <EntityTypeIcon
-              type={option.entity_name}
-              specifiedFontSize="1rem"
-            />
-          )}
-          <Typography
-            variant="bodyMedium"
-            color="text.secondary"
-            sx={styles.optionName}
-          >
-            {option.label}
-          </Typography>
-          {isPublic && (
-            <Box sx={styles.publicBadge}>
-              <Typography
-                variant="bodySmall"
-                sx={styles.publicBadgeText}
-              >
-                Public
-              </Typography>
-            </Box>
-          )}
-          <Typography
-            variant="bodySmall"
-            sx={styles.optionTypeLabel}
-          >
-            {ENTITY_TYPE_LABEL[option.entity_name] ?? ''}
-          </Typography>
-        </Box>
-      );
-    },
-    [styles, tabItems, activeTab, handleTabChange, theme],
-  );
-
-  // Tab bar is injected as the first option so it appears right below the search bar
-  const displayOptions = useMemo(() => {
-    const tabRowOption = {
-      value: TAB_ROW_OPTION,
-      label: '',
-      disabled: true,
-      style: TAB_ROW_ITEM_STYLE,
-    };
-
-    if (resultOptions.length > 0 || isFetching) {
-      return [tabRowOption, ...resultOptions];
+  useEffect(() => {
+    if (participants.length > prevParticipantsCountRef.current) {
+      const inputRoot = rootRef.current?.querySelector('.MuiAutocomplete-inputRoot');
+      if (inputRoot) inputRoot.scrollTop = inputRoot.scrollHeight;
     }
+    prevParticipantsCountRef.current = participants.length;
+  }, [participants.length]);
 
-    const emptyLabel = query
-      ? `No ${TAB_LABELS[activeTab].toLowerCase()} match "${query}".`
-      : `No ${TAB_LABELS[activeTab].toLowerCase()} available.`;
-
-    return [tabRowOption, { value: EMPTY_SENTINEL, label: emptyLabel, disabled: true }];
-  }, [resultOptions, isFetching, query, activeTab]);
-
-  const renderSelectValue = useCallback(() => {
-    if (participants.length === 0) {
-      return (
-        <Typography
-          variant="bodyMedium"
-          color="text.secondary"
-        >
-          {`Search ${TAB_LABELS[activeTab].toLowerCase()}...`}
-        </Typography>
-      );
-    }
-
+  const renderOption = useCallback((optionProps, option) => {
+    const { key, ...restOptionProps } = optionProps;
     return (
-      <Box sx={styles.chips}>
-        {participants.map(p => {
-          const key = makeParticipantKey(p);
-          return (
-            <Chip
-              key={key}
-              label={
-                <Box sx={styles.chipLabel}>
-                  {p.entity_name === ChatParticipantType.Toolkits ? (
-                    p.toolkit_type ? (
-                      getToolIconByType(p.toolkit_type, theme, {
-                        isMCP: isMcpToolkitType(p.toolkit_type),
-                      })
-                    ) : (
-                      <EntityTypeIcon
-                        type="skill"
-                        specifiedFontSize="0.875rem"
-                      />
-                    )
-                  ) : p.entity_name === ChatParticipantType.Users && p.avatar ? (
-                    <UserAvatar
-                      avatar={p.avatar}
-                      name={p.name}
-                      size={14}
-                    />
-                  ) : (
-                    <EntityTypeIcon
-                      type={p.entity_name}
-                      specifiedFontSize="0.875rem"
-                    />
-                  )}
-                  <Typography
-                    variant="bodySmall"
-                    color="text.secondary"
-                  >
-                    {p.name}
-                  </Typography>
-                </Box>
-              }
-              deleteIcon={
-                <RemoveIcon
-                  fill={theme.palette.icon.default}
-                  onMouseDown={e => e.stopPropagation()}
-                />
-              }
-              onDelete={disabled ? undefined : () => handleRemove(key)}
-              disabled={disabled}
-              sx={styles.chip}
-            />
-          );
-        })}
+      <Box
+        component="li"
+        key={key}
+        {...restOptionProps}
+      >
+        <ChatParticipantOption option={option} />
       </Box>
     );
-  }, [participants, activeTab, theme, disabled, handleRemove, styles]);
+  }, []);
 
-  const menuProps = useMemo(
+  const renderValue = useCallback(
+    (selected, getItemProps) =>
+      selected.map((participant, index) => {
+        const { key, onDelete, ...itemProps } = getItemProps({ index });
+        return (
+          <Chip
+            key={key}
+            {...itemProps}
+            label={
+              <Box sx={styles.chipLabel}>
+                <ChatParticipantIcon participant={participant} />
+                <Typography
+                  variant="bodySmall"
+                  color="text.secondary"
+                >
+                  {participant.name}
+                </Typography>
+              </Box>
+            }
+            deleteIcon={<RemoveIcon fill={theme.palette.icon.default} />}
+            // Always pass onDelete so the ✕ stays visible while saving; the disabled chip blocks clicks
+            onDelete={onDelete}
+            disabled={disabled}
+            sx={styles.chip}
+          />
+        );
+      }),
+    [disabled, styles, theme],
+  );
+
+  // Plain MUI TextField on purpose: Input.InputBase auto-blurs on change, which would close the dropdown
+  // on every keystroke
+  const renderInput = useCallback(
+    params => (
+      <TextField
+        {...params}
+        variant="standard"
+        sx={styles.textField}
+        placeholder={hasParticipants ? '' : SEARCH_PLACEHOLDER}
+        slotProps={{
+          input: {
+            ...params.InputProps,
+            // The underline is drawn on the field container so it stays put while the chips scroll
+            disableUnderline: true,
+            startAdornment: hasParticipants ? (
+              params.InputProps.startAdornment
+            ) : (
+              <InputAdornment
+                position="start"
+                sx={styles.searchAdornment}
+              >
+                <SearchIcon
+                  width={16}
+                  height={16}
+                  viewBox={SEARCH_ICON_VIEWBOX}
+                  fill={theme.palette.icon.default}
+                />
+              </InputAdornment>
+            ),
+          },
+          htmlInput: {
+            ...params.inputProps,
+            'data-testid': 'chat-template-participants-input',
+          },
+        }}
+      />
+    ),
+    [hasParticipants, styles, theme],
+  );
+
+  const emptyText = query
+    ? `No ${TAB_LABELS[activeTab].toLowerCase()} match "${query}".`
+    : `No ${TAB_LABELS[activeTab].toLowerCase()} available.`;
+
+  const slotProps = useMemo(
     () => ({
-      PaperProps: {
-        sx: ({ palette }) => ({
-          backgroundColor: palette.background.default.secondary,
-        }),
+      paper: {
+        tabs: tabItems,
+        activeTab,
+        onTabChange: handleTabChange,
+        // MUI only shows its loading text for an empty list; show a footer spinner for next pages
+        // Spinner only while a page request is actually running
+        isLoadingMore: isLoadingMore && isFetching && options.length > 0,
       },
+      listbox: { onScroll: handleListboxScroll, sx: styles.listbox },
+      // Always open above the field (not enough room below inside the modal); flipping while
+      // results load makes the dropdown jump
+      popper: { placement: 'top-start', modifiers: POPPER_MODIFIERS },
     }),
-    [],
+    [
+      tabItems,
+      activeTab,
+      handleTabChange,
+      isLoadingMore,
+      isFetching,
+      options.length,
+      handleListboxScroll,
+      styles,
+    ],
   );
 
   return (
-    <Box sx={styles.root}>
-      {/* Search and type-tabbed participant picker; selected participants render as chips inside the Select's value */}
-      <Select.SingleSelect
-        value={participants.map(makeParticipantKey)}
-        options={displayOptions}
-        onValueChange={handleSelectOption}
-        withSearch
-        searchFilterMode="remote"
-        searchString={query}
-        onSearch={setQuery}
-        isListFetching={isFetching}
-        displayEmpty
-        showBorder
-        multiple
-        showEmptyPlaceholder={false}
-        disabled={disabled}
-        customRenderValue={renderSelectValue}
-        customRenderOption={renderOption}
-        searchPlaceholder={`Search ${TAB_LABELS[activeTab].toLowerCase()}...`}
-        customMenuProps={menuProps}
-        onScroll={handleMenuScroll}
-        sx={styles.select}
-      />
-    </Box>
+    <Autocomplete
+      multiple
+      openOnFocus
+      disableCloseOnSelect
+      forcePopupIcon={false}
+      options={visibleOptions}
+      value={participants}
+      onChange={handleChange}
+      inputValue={query}
+      onInputChange={handleInputChange}
+      onClose={handleClose}
+      filterOptions={keepRemoteOptions}
+      getOptionLabel={getParticipantName}
+      getOptionKey={makeParticipantKey}
+      isOptionEqualToValue={isSameParticipant}
+      loading={isInitialLoading}
+      loadingText="Loading…"
+      noOptionsText={emptyText}
+      disabled={disabled}
+      renderOption={renderOption}
+      renderValue={renderValue}
+      renderInput={renderInput}
+      slots={{ paper: ChatParticipantPickerPaper }}
+      slotProps={slotProps}
+      ref={rootRef}
+      sx={styles.root}
+      data-testid="chat-template-participants-picker"
+    />
   );
 });
 
@@ -403,15 +377,52 @@ ChatParticipantPicker.displayName = 'ChatParticipantPicker';
 
 /** @type {MuiSx} */
 const chatParticipantPickerStyles = () => ({
-  root: {
+  root: ({ palette, typography }) => ({
+    width: '100%',
+    // `&&` outranks MUI's own Autocomplete/Input padding rules
+    '&& .MuiAutocomplete-inputRoot': {
+      // Static so the clear button anchors to the field container and does not scroll with chips
+      position: 'static',
+      flexWrap: 'wrap',
+      alignItems: 'center',
+      gap: '0.5rem',
+      minHeight: '2.5rem',
+      // Three rows of chips (3 × 1.75rem + 2 × 0.5rem gap) plus vertical padding, then scroll
+      maxHeight: '7.25rem',
+      overflowY: 'auto',
+      padding: '0.5rem 2rem 0.5rem 0.75rem',
+      boxSizing: 'border-box',
+    },
+    '&& .MuiAutocomplete-input': {
+      ...typography.bodyMedium,
+      height: '1.5rem',
+      padding: 0,
+      // The theme's standard TextField adds a bottom margin under inputs; the root padding covers it
+      marginBottom: 0,
+      color: palette.text.secondary,
+      '&::placeholder': {
+        color: palette.text.primary,
+        opacity: 1,
+      },
+    },
+  }),
+  // Drop the theme's standard TextField top padding; the field spacing comes from the input root
+  textField: ({ palette }) => ({
+    padding: 0,
+    borderBottom: `0.0625rem solid ${palette.border.lines}`,
+    '&:hover:not(:has(.Mui-disabled))': {
+      borderBottomColor: palette.border.hover,
+    },
+    '&:focus-within': {
+      borderBottomColor: palette.primary.main,
+    },
+  }),
+  searchAdornment: {
+    height: '1rem',
+    maxHeight: 'none',
+    margin: 0,
     display: 'flex',
-    flexDirection: 'column',
-    gap: '0.5rem',
-  },
-  chips: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: '0.375rem',
+    alignItems: 'center',
   },
   chip: ({ palette }) => ({
     height: '1.75rem',
@@ -437,79 +448,19 @@ const chatParticipantPickerStyles = () => ({
     flexDirection: 'row',
     gap: '0.375rem',
   },
-  select: {
-    width: '100%',
-  },
-  tabsRow: {
-    width: '100%',
-    padding: '0.5rem 0.5rem',
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: '0.5rem',
-  },
-  tabChip:
-    isActive =>
-    ({ palette }) => ({
-      height: '1.75rem',
-      padding: '0.5rem',
-      cursor: 'pointer',
-      backgroundColor: isActive
-        ? palette.components.chip.background.selected
-        : palette.components.chip.background.default,
-      color: isActive ? palette.components.chip.text.active : palette.components.chip.text.default,
-      border: `0.0625rem solid ${isActive ? palette.components.chip.border.active : palette.components.chip.border.default}`,
-      '& .MuiChip-icon': {
-        fontSize: '0.875rem',
-        marginLeft: '0.375rem',
-        marginRight: '-0.125rem',
-        color: `${isActive ? palette.components.chip.text.active : palette.components.chip.text.default} !important`,
-        '& svg, & svg path': { fill: 'currentColor' },
+  listbox: ({ palette }) => ({
+    padding: '0.25rem 0',
+    '& .MuiAutocomplete-option': {
+      minHeight: '2.5rem',
+      padding: '0.5rem 1rem',
+      '&:hover, &.Mui-focused': {
+        backgroundColor: palette.background.interactiveItem.hover,
       },
-      '& .MuiChip-label': {
-        paddingLeft: '0.375rem',
-        paddingRight: '0.5rem',
+      '&[aria-selected="true"], &[aria-selected="true"].Mui-focused': {
+        backgroundColor: palette.background.interactiveItem.active,
       },
-      '&:hover': {
-        backgroundColor: isActive
-          ? palette.components.chip.background.selected
-          : palette.components.chip.background.default,
-      },
-    }),
-  optionBody: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-    flex: 1,
-    minWidth: 0,
-  },
-  optionName: {
-    flex: 1,
-    minWidth: 0,
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-  },
-  optionTypeLabel: {
-    flexShrink: 0,
-    color: ({ palette }) => palette.text.muted,
-  },
-  publicBadge: ({ palette }) => ({
-    boxSizing: 'border-box',
-    display: 'flex',
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: '0.125rem 0.375rem',
-    height: '1.25rem',
-    borderRadius: '0.875rem',
-    border: `0.0625rem solid ${palette.border.lines}`,
-    flexShrink: 0,
-    'li[aria-selected="true"] &': {
-      border: `0.0625rem solid ${palette.border.hover}`,
     },
   }),
-  publicBadgeText: {
-    color: ({ palette }) => palette.text.metrics,
-  },
 });
 
 export default ChatParticipantPicker;
