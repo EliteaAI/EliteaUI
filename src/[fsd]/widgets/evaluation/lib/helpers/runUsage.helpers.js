@@ -271,3 +271,56 @@ export const buildRunEstimateSummary = data => {
     warning: data.exceeds_budget ? 'The estimate is over the remaining monthly budget.' : null,
   };
 };
+
+const CASE_USAGE_REASON = {
+  timeout: 'the case timed out',
+  no_envelope: 'the agent returned nothing to read',
+  no_callback: 'the agent did not report usage',
+  budget_blocked: 'the monthly budget blocked the call',
+  unsupported: 'this agent type does not report usage',
+  ledger: 'the usage ledger had no figures',
+};
+
+const COST_SOURCE_LABEL = {
+  'runtime:costs-catalog': 'priced at run time',
+  usage_event: 'from the usage ledger',
+};
+
+/**
+ * What one case spent, one row per role, from the case-executions `usage` list (#6716). Token
+ * figures only mean something for a `recorded` row; the others say why there is nothing.
+ * @param {Array<object>} [usage] - `eval_case_executions` `usage` rows for one case
+ * @returns {Array<{ role: string, label: string, inputTokens: string, outputTokens: string,
+ *   totalTokens: string, cost: string, note: string | null, isRecorded: boolean, isUnpriced: boolean }>}
+ */
+export const buildCaseUsageRows = usage =>
+  (Array.isArray(usage) ? usage : [])
+    .filter(row => ROLE_LABEL[row?.role])
+    .sort((a, b) => (a.role === b.role ? 0 : a.role === 'agent' ? -1 : 1))
+    .map(row => {
+      const isRecorded = row.usage_state === 'recorded';
+      const cost = isRecorded ? formatUsd(row.cost) : null;
+      const notes = [];
+      if (isRecorded) {
+        if (row.model_name) notes.push(row.model_name);
+        if (row.token_source === 'estimate') notes.push('tokens estimated');
+        if (cost != null && COST_SOURCE_LABEL[row.cost_source])
+          notes.push(COST_SOURCE_LABEL[row.cost_source]);
+      } else {
+        const reason = CASE_USAGE_REASON[row.usage_state_reason];
+        const what = row.usage_state === 'not_applicable' ? 'Not applicable' : 'Not recorded';
+        notes.push(reason ? `${what}: ${reason}` : what);
+      }
+
+      return {
+        role: row.role,
+        label: ROLE_LABEL[row.role],
+        inputTokens: isRecorded ? formatTokenCount(row.input_tokens) : '—',
+        outputTokens: isRecorded ? formatTokenCount(row.output_tokens) : '—',
+        totalTokens: isRecorded ? formatTokenCount(row.total_tokens) : '—',
+        cost: isRecorded ? (cost ?? 'Not priced') : '—',
+        note: notes.length ? notes.join(' · ') : null,
+        isRecorded,
+        isUnpriced: isRecorded && cost == null,
+      };
+    });

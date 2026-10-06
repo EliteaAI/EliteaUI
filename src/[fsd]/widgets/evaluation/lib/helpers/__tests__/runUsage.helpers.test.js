@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   buildBudgetVerdictRows,
+  buildCaseUsageRows,
   buildRunConsumptionRows,
   buildRunEstimateSummary,
   formatTokenCount,
@@ -268,5 +269,65 @@ describe('buildRunEstimateSummary', () => {
 
   it('is null until the estimate loads', () => {
     expect(buildRunEstimateSummary(undefined)).toBeNull();
+  });
+});
+
+describe('buildCaseUsageRows', () => {
+  it('lists agent before judge with tokens, cost and source', () => {
+    const rows = buildCaseUsageRows([
+      {
+        role: 'judge',
+        usage_state: 'recorded',
+        input_tokens: 300,
+        output_tokens: 20,
+        total_tokens: 320,
+        cost: null,
+      },
+      {
+        role: 'agent',
+        usage_state: 'recorded',
+        input_tokens: 5074,
+        output_tokens: 2373,
+        total_tokens: 7447,
+        cost: 0.0123,
+        cost_source: 'usage_event',
+        model_name: 'haiku',
+      },
+    ]);
+
+    expect(rows.map(row => row.role)).toEqual(['agent', 'judge']);
+    expect(rows[0]).toMatchObject({
+      inputTokens: '5,074',
+      outputTokens: '2,373',
+      totalTokens: '7,447',
+      cost: '$0.0123',
+      note: 'haiku · from the usage ledger',
+      isUnpriced: false,
+    });
+    expect(rows[1]).toMatchObject({ cost: 'Not priced', isUnpriced: true, note: null });
+  });
+
+  it('says why a row has no figures', () => {
+    const [row] = buildCaseUsageRows([
+      { role: 'agent', usage_state: 'not_recorded', usage_state_reason: 'timeout', total_tokens: 0 },
+    ]);
+
+    expect(row).toMatchObject({
+      totalTokens: '—',
+      cost: '—',
+      isRecorded: false,
+      note: 'Not recorded: the case timed out',
+    });
+  });
+
+  it('flags estimated tokens and ignores unknown roles', () => {
+    const rows = buildCaseUsageRows([
+      { role: 'agent', usage_state: 'recorded', token_source: 'estimate', total_tokens: 10 },
+      { role: 'other', usage_state: 'recorded' },
+    ]);
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0].note).toBe('tokens estimated');
+    expect(buildCaseUsageRows(undefined)).toEqual([]);
   });
 });

@@ -6,6 +6,7 @@ import { Accordion } from '@/[fsd]/shared/ui';
 
 import { useEvalCaseExecutionsQuery } from '../../api';
 import {
+  buildCaseUsageRows,
   formatCaseContent,
   getTrajectoryMetricItems,
   getTrajectoryStateMessage,
@@ -14,9 +15,17 @@ import {
   getTrajectoryStepTitle,
 } from '../../lib/helpers';
 
+const USAGE_COLUMNS = [
+  { key: 'label', label: 'Role' },
+  { key: 'inputTokens', label: 'Input tokens' },
+  { key: 'outputTokens', label: 'Output tokens' },
+  { key: 'totalTokens', label: 'Total tokens' },
+  { key: 'cost', label: 'Cost' },
+];
+
 /**
- * What the agent did on one case of an offline-batch run (#6809 P1): the run counters and the
- * ordered LLM and tool steps. Steps a sub-agent ran are indented under the call that started them.
+ * What the agent did on one case of an offline-batch run (#6809 P1): what the agent and the judge
+ * spent on it (#6716), the run counters and the ordered LLM and tool steps. Steps a sub-agent ran are indented under the call that started them.
  */
 const CaseTrajectoryPanel = memo(props => {
   const { projectId, runId, datasetCaseId } = props;
@@ -29,6 +38,7 @@ const CaseTrajectoryPanel = memo(props => {
   const execution = data?.executions?.[0] ?? null;
   const steps = execution?.trajectory?.steps ?? [];
   const metricItems = useMemo(() => getTrajectoryMetricItems(execution?.metrics), [execution?.metrics]);
+  const usageRows = useMemo(() => buildCaseUsageRows(data?.usage), [data?.usage]);
   const stateMessage = getTrajectoryStateMessage(execution);
   const styles = caseTrajectoryPanelStyles();
 
@@ -52,6 +62,48 @@ const CaseTrajectoryPanel = memo(props => {
       sx={styles.container}
       data-testid="case-trajectory-panel"
     >
+      {usageRows.length > 0 && (
+        <Box
+          sx={styles.usageTable}
+          data-testid="case-usage"
+        >
+          {USAGE_COLUMNS.map(({ key, label }) => (
+            <Typography
+              key={key}
+              variant="labelSmall"
+              sx={styles.metricLabel}
+            >
+              {label}
+            </Typography>
+          ))}
+          {usageRows.map(row => (
+            <Box
+              key={row.role}
+              sx={styles.usageRow}
+              data-testid={`case-usage-${row.role}`}
+            >
+              {USAGE_COLUMNS.map(({ key }) => (
+                <Typography
+                  key={key}
+                  variant="bodySmall"
+                  sx={key === 'cost' && row.isUnpriced ? styles.emptyText : undefined}
+                >
+                  {row[key]}
+                </Typography>
+              ))}
+              {row.note && (
+                <Typography
+                  variant="bodySmall"
+                  sx={[styles.usageNote, !row.isRecorded && styles.emptyText]}
+                >
+                  {row.note}
+                </Typography>
+              )}
+            </Box>
+          ))}
+        </Box>
+      )}
+
       {metricItems.length > 0 && (
         <Box sx={styles.metrics}>
           {metricItems.map(({ label, value }) => (
@@ -182,6 +234,19 @@ const caseTrajectoryPanelStyles = () => ({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  usageTable: {
+    display: 'grid',
+    gridTemplateColumns: 'minmax(4rem, 1fr) repeat(4, minmax(0, 1fr))',
+    columnGap: '1rem',
+    rowGap: '0.25rem',
+  },
+  usageRow: {
+    display: 'contents',
+  },
+  usageNote: ({ palette }) => ({
+    gridColumn: '1 / -1',
+    color: palette.text.secondary,
+  }),
   metrics: {
     display: 'flex',
     flexWrap: 'wrap',
