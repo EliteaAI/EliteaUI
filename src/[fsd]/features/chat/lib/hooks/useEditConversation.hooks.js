@@ -9,6 +9,7 @@ export const useEditConversation = ({
   activeConversation,
   setActiveConversation,
   setConversations,
+  setPinnedConversations,
   setFolders,
   toastError,
 }) => {
@@ -54,16 +55,19 @@ export const useEditConversation = ({
           });
         }
 
-        if (conversation.folder_id) {
+        const replaceEdited = item =>
+          areTheSameConversations(conversation, item) ? updatedConversation : item;
+
+        if (conversation.isPinned) {
+          setPinnedConversations(prev => prev.map(replaceEdited));
+        } else if (conversation.folder_id) {
           // Update for a specific folder in `folders`
           setFolders(prevFolders =>
             prevFolders.map(folder => {
               if (folder.id === conversation.folder_id) {
                 return {
                   ...folder,
-                  conversations: folder.conversations.map(item =>
-                    areTheSameConversations(conversation, item) ? updatedConversation : item,
-                  ),
+                  conversations: folder.conversations.map(replaceEdited),
                 };
               }
               return folder;
@@ -71,9 +75,7 @@ export const useEditConversation = ({
           );
         } else {
           // Update for `conversations` state
-          setConversations(prev =>
-            prev.map(item => (areTheSameConversations(conversation, item) ? updatedConversation : item)),
-          );
+          setConversations(prev => prev.map(replaceEdited));
         }
       } else {
         toastError(buildErrorMessage(result.error) || 'Failed to edit conversation, please try again.');
@@ -85,6 +87,7 @@ export const useEditConversation = ({
       projectId,
       setActiveConversation,
       setConversations,
+      setPinnedConversations,
       setFolders,
       changeUrlByConversation,
       toastError,

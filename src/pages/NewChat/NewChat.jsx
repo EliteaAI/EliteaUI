@@ -986,6 +986,7 @@ const NewChat = props => {
     activeConversation,
     setActiveConversation,
     setConversations,
+    setPinnedConversations,
     setFolders,
     toastError,
   });
