@@ -272,6 +272,8 @@ const RunResultsView = memo(props => {
         open={caseDetailsOpen}
         caseData={selectedCaseData}
         onClose={handleCloseCaseDetails}
+        projectId={projectId}
+        runId={runId}
       />
 
       <HumanEvaluationModal

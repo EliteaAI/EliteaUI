@@ -388,6 +388,23 @@ export const evaluationApi = eliteaApi
         providesTags: [TAG_EVAL_RESULT, TAG_EVAL_HUMAN_SCORE],
       }),
 
+      // ---- Case executions (#6809 P1) ----
+      // What the agent did on one case: { run_id, executions: [{ trajectory_state,
+      // trajectory_state_reason, trajectory: { steps[], tool_sequence[], truncated }, metrics }] }.
+      // A run is immutable once finished, so the run tag is enough to refetch after a rerun.
+      evalCaseExecutions: build.query({
+        query: ({ projectId, runId, datasetCaseId }) => {
+          const params = new URLSearchParams();
+          if (datasetCaseId != null) params.set('dataset_case_id', String(datasetCaseId));
+          const qs = params.toString();
+          return {
+            url: `/elitea_core/eval_case_executions/prompt_lib/${projectId}/${runId}${qs ? `?${qs}` : ''}`,
+            method: 'GET',
+          };
+        },
+        providesTags: [TAG_EVAL_RUN],
+      }),
+
       // ---- Human scores (B6, #6203) ----
       evalHumanScores: build.query({
         query: ({ projectId, runId, datasetCaseId, dimensionId, latest }) => {
@@ -476,6 +493,7 @@ export const {
   useCancelEvalRunMutation,
   useDeleteEvalRunMutation,
   useEvalRunResultsQuery,
+  useEvalCaseExecutionsQuery,
   useEvalHumanScoresQuery,
   useWriteEvalHumanScoreMutation,
   useEnhanceFromEvalMutation,

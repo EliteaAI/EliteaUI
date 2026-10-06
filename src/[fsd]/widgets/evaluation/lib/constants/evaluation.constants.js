@@ -287,3 +287,22 @@ export const BUILD_DIMENSION_STEPS = {
   select: 'select',
   review: 'review',
 };
+
+// What an offline-batch run recorded about one case (#6809 P1, design §13).
+export const TRAJECTORY_STATE = {
+  recorded: 'recorded',
+  notRecorded: 'not_recorded',
+  notApplicable: 'not_applicable',
+};
+
+export const TRAJECTORY_STATE_MESSAGE = {
+  timeout: 'The agent timed out, so no steps were returned.',
+  no_envelope: 'The agent run returned no step data.',
+  structure_only: 'This run only scored the agent configuration, so the agent was not executed.',
+  unsupported: 'This agent type is not executed by batch runs, so there is no trajectory.',
+};
+
+export const TRAJECTORY_STEP_KIND = {
+  llm: 'llm',
+  tool: 'tool',
+};
