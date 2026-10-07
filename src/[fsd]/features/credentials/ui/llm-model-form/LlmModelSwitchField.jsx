@@ -14,7 +14,7 @@ const {
 } = LlmModelFormConstants;
 
 const LlmModelSwitchField = memo(props => {
-  const { field, checked, onChange, error, locked = false, description, children } = props;
+  const { field, checked, onChange, error, warning, locked = false, description, children } = props;
   const label = LLM_MODEL_FIELD_LABELS[field];
   const styles = llmModelSwitchFieldStyles();
 
@@ -71,6 +71,15 @@ const LlmModelSwitchField = memo(props => {
           slotProps={switchSlotProps}
         />
       </Box>
+      {warning && (
+        <Typography
+          variant="bodySmall"
+          sx={styles.warning}
+          data-testid={`llm-model-warning-${field}`}
+        >
+          {warning}
+        </Typography>
+      )}
       {children}
       {error && (
         <Typography
@@ -116,6 +125,10 @@ const llmModelSwitchFieldStyles = () => ({
   }),
   description: ({ palette }) => ({
     color: palette.text.primary,
+  }),
+  warning: ({ palette }) => ({
+    color: palette.text.attention,
+    whiteSpace: 'pre-line',
   }),
   error: ({ palette }) => ({
     color: palette.text.error,

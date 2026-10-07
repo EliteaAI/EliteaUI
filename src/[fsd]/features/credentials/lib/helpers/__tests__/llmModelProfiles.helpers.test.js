@@ -8,6 +8,7 @@ import {
   getLlmModelReasoningDescription,
   getLlmModelRecognition,
   getUnsupportedStoredLevels,
+  isAzureReasoningWarned,
   isLlmModelReasoningConfigured,
   normalizeLlmModelName,
   recognizeLlmModelProfile,
@@ -167,5 +168,37 @@ describe('stored levels outside the profile', () => {
     expect(getUnsupportedStoredLevels(null, ['xhigh'])).toEqual([]);
     expect(getUnsupportedStoredLevels(gpt52, ['low', 'high'])).toEqual([]);
     expect(getEffortLevelOptions(null, levels, ['xhigh']).every(option => !option.unsupported)).toBe(true);
+  });
+});
+
+// #6919: DIAL serves Gemini on the azure route and reasoning works there, so only
+// recognized OpenAI/Anthropic models get the warning
+describe('isAzureReasoningWarned', () => {
+  const warned = (name, overrides = {}) =>
+    isAzureReasoningWarned({
+      isApiProtocolShown: true,
+      apiProtocol: 'azure',
+      supportsReasoning: true,
+      profile: recognizeLlmModelProfile(name, LLM_MODEL_PROFILES_FIXTURE),
+      ...overrides,
+    });
+
+  it.each(['anthropic.claude-sonnet-5', 'gpt-5.4-2026-03-05'])('warns for recognized %s', name => {
+    expect(warned(name)).toBe(true);
+  });
+
+  it.each(['gemini-3.8-flash', 'gemini-3.1-pro-preview', 'custom-unrecognized-model'])(
+    'never warns for %s',
+    name => {
+      expect(warned(name)).toBe(false);
+    },
+  );
+
+  it.each([
+    ['another protocol', { apiProtocol: 'anthropic' }],
+    ['reasoning off', { supportsReasoning: false }],
+    ['a non-DIAL credential', { isApiProtocolShown: false }],
+  ])('does not warn with %s', (_label, overrides) => {
+    expect(warned('anthropic.claude-sonnet-5', overrides)).toBe(false);
   });
 });
