@@ -10,7 +10,7 @@ export const INTERNAL_TOOLS_LIST = [
     title: 'Attachments',
     icon: 'AttachSvgIcon',
     infoTooltip: {
-      text: 'Allow the agent to use uploaded files and images as context during conversations.',
+      text: 'Allow the agent to use uploaded files and images as context during chats.',
     },
     // Hidden by default for LLM chats (always enabled), only shown for agents
     agentOnly: true,
@@ -101,7 +101,7 @@ export const INTERNAL_TOOLS_LIST = [
     title: 'Swarm Mode',
     icon: 'UsersIcon',
     infoTooltip: {
-      text: 'Enable multi-agent collaboration by sharing the full conversation history and control between agents.',
+      text: 'Enable multi-agent collaboration by sharing the full chat history and control between agents.',
     },
     toolkitNames: ['swarm'],
   },

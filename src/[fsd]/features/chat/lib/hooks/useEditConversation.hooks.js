@@ -78,7 +78,7 @@ export const useEditConversation = ({
           setConversations(prev => prev.map(replaceEdited));
         }
       } else {
-        toastError(buildErrorMessage(result.error) || 'Failed to edit conversation, please try again.');
+        toastError(buildErrorMessage(result.error) || 'Failed to edit chat, please try again.');
       }
     },
     [

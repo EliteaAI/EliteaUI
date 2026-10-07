@@ -697,7 +697,7 @@ const Conversations = memo(props => {
               searchQuery={searchQuery}
               onSearchChange={handleSearchChange}
               onSearchClear={handleSearchClear}
-              placeholder="Search conversations..."
+              placeholder="Search chats..."
               data-testid="conversation-search-input"
             />
             <IconButton
@@ -764,7 +764,7 @@ const Conversations = memo(props => {
                     color="text.button.disabled"
                     sx={{ marginBottom: '0.5rem' }}
                   >
-                    No conversations found
+                    No chats found
                   </Typography>
                   <Typography
                     variant="bodySmall"
