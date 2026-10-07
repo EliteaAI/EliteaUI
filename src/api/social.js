@@ -13,6 +13,20 @@ const PIN_DETAIL_CACHE_BY_ENTITY_TYPE = {
   skill: { endpoint: 'skillDetails', idKey: 'skillId' },
 };
 
+// List endpoints whose rows carry `is_pinned` for a given pin entity type. `toolkitsList` serves
+// Toolkits, MCPs and Apps, which all share the `toolkit` pin identity.
+const PIN_LIST_CACHE_BY_ENTITY_TYPE = {
+  application: ['applicationList'],
+  toolkit: ['toolkitsList'],
+  configuration: [
+    'getConfigurationsList',
+    'getConfigurationsByType',
+    'getConfigurationsBySection',
+    'getSharedConfigurations',
+  ],
+  skill: ['skillList'],
+};
+
 function applyPinToList(list, entityId, shouldPin) {
   const itemIndex = list.findIndex(item => item.id === entityId);
   if (itemIndex === -1) return;
@@ -27,7 +41,10 @@ function applyPinToList(list, entityId, shouldPin) {
   }
 }
 
-const patchListCachesForPin = (state, entityId, shouldPin, dispatch) => {
+const patchListCachesForPin = (state, projectId, entityType, entityId, shouldPin, dispatch) => {
+  const listEndpoints = PIN_LIST_CACHE_BY_ENTITY_TYPE[entityType];
+  if (!listEndpoints) return [];
+
   const patchResults = [];
   Object.entries(state.eliteaApi.queries).forEach(([cacheKey, cacheEntry]) => {
     if (!cacheEntry?.data?.rows && !cacheEntry?.data?.items) return;
@@ -37,7 +54,13 @@ const patchListCachesForPin = (state, entityId, shouldPin, dispatch) => {
     if (!hasEntity) return;
 
     const parsed = RtkCacheHelpers.parseCacheKey(cacheKey);
-    if (!parsed) return;
+    if (!parsed || !listEndpoints.includes(parsed.endpointName)) return;
+    if (
+      projectId != null &&
+      parsed.args?.projectId != null &&
+      String(parsed.args.projectId) !== String(projectId)
+    )
+      return;
 
     try {
       const patchResult = dispatch(
@@ -174,7 +197,14 @@ export const socialApi = eliteaApi
           { dispatch, queryFulfilled, getState },
         ) {
           const state = getState();
-          const listPatches = patchListCachesForPin(state, entityId, shouldPin, dispatch);
+          const listPatches = patchListCachesForPin(
+            state,
+            projectId,
+            entityType,
+            entityId,
+            shouldPin,
+            dispatch,
+          );
 
           const detailPatches = patchDetailCachesForPin(
             state,
