@@ -8,6 +8,7 @@ import {
   formatTokenCount,
   formatUsd,
   getRunEndMessage,
+  getRunHistoryUsage,
   getRunOverBudgetLabel,
   getRunStopLabel,
   getSettlementInfo,
@@ -329,5 +330,35 @@ describe('buildCaseUsageRows', () => {
     expect(rows).toHaveLength(1);
     expect(rows[0].note).toBe('tokens estimated');
     expect(buildCaseUsageRows(undefined)).toEqual([]);
+  });
+});
+
+describe('getRunHistoryUsage', () => {
+  it('shows the agent tokens per recorded case, with cost and source in the tooltip', () => {
+    const meta = {
+      agent_usage: {
+        cases: 2,
+        recorded_cases: 2,
+        averages: { input_tokens: 1857.5, output_tokens: 63.5, reasoning_tokens: 0 },
+        average_cost: null,
+        token_source: 'estimate',
+      },
+      judge_usage: { cases: 2, recorded_cases: 2, averages: { input_tokens: 9999 } },
+    };
+    expect(getRunHistoryUsage(meta)).toEqual({
+      label: '1,921',
+      tooltip: 'Agent tokens per case, averaged over 2 of 2 cases · Not priced · estimated',
+    });
+    expect(
+      getRunHistoryUsage({
+        agent_usage: { ...meta.agent_usage, average_cost: 0.0021, token_source: 'provider' },
+      }).tooltip,
+    ).toBe('Agent tokens per case, averaged over 2 of 2 cases · $0.0021 per case');
+  });
+
+  it('is empty without a recorded agent rollup', () => {
+    expect(getRunHistoryUsage({})).toBeNull();
+    expect(getRunHistoryUsage(undefined)).toBeNull();
+    expect(getRunHistoryUsage({ agent_usage: { cases: 2, recorded_cases: 0 } })).toBeNull();
   });
 });

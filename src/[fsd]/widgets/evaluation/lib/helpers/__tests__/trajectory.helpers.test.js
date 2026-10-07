@@ -8,6 +8,7 @@ import {
   getCaseGuardrailChip,
   getCasePauseDetails,
   getExcludedCasesNote,
+  getRunHistoryTrajectory,
   getTrajectoryMetricItems,
   getTrajectoryStateMessage,
   getTrajectoryStepMeta,
@@ -278,5 +279,35 @@ describe('pause and guardrail helpers', () => {
     expect(isGuardrailStep({ kind: 'tool', status: 'paused' })).toBe(true);
     expect(isGuardrailStep({ kind: 'tool', status: 'error' })).toBe(false);
     expect(isGuardrailStep({ kind: 'llm', status: 'blocked' })).toBe(false);
+  });
+});
+
+describe('getRunHistoryTrajectory', () => {
+  it('averages LLM plus tool calls and reports the tool-error rate and step-limit hits', () => {
+    const meta = {
+      trajectory_rollup: {
+        cases: 3,
+        recorded_cases: 2,
+        averages: { llm_calls: 1.5, tool_calls: 1 },
+        totals: { tool_calls: 4, tool_errors: 1 },
+        step_limit_hits: 1,
+      },
+    };
+    expect(getRunHistoryTrajectory(meta)).toEqual({
+      label: '2.5',
+      tooltip:
+        'Steps per case, averaged over 2 of 3 cases · tool-error rate 25% (1 of 4 tool calls) · step limit hit 1 of 2 cases',
+      hasErrors: true,
+    });
+  });
+
+  it('dashes the rate when no tool was called and is empty without a rollup', () => {
+    const meta = {
+      trajectory_rollup: { cases: 1, recorded_cases: 1, averages: { llm_calls: 1 }, totals: {} },
+    };
+    expect(getRunHistoryTrajectory(meta)).toMatchObject({ label: '1', hasErrors: false });
+    expect(getRunHistoryTrajectory(meta).tooltip).toContain('tool-error rate — (0 of 0 tool calls)');
+    expect(getRunHistoryTrajectory({})).toBeNull();
+    expect(getRunHistoryTrajectory({ trajectory_rollup: { cases: 1, recorded_cases: 0 } })).toBeNull();
   });
 });

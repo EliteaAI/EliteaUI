@@ -218,6 +218,33 @@ const formatAverage = value =>
 const pluralCases = count => `${count} ${count === 1 ? 'case' : 'cases'}`;
 
 /**
+ * The run-history "Steps" cell (design §6): average LLM plus tool calls per recorded case
+ * from `meta.trajectory_rollup`, with the tool-error rate and step-limit hits in the tooltip.
+ * @param {object} [meta] - Run meta
+ * @returns {{ label: string, tooltip: string, hasErrors: boolean } | null} e.g. label "2.5"
+ */
+export const getRunHistoryTrajectory = meta => {
+  const rollup = meta?.trajectory_rollup;
+  const recorded = rollup?.recorded_cases ?? 0;
+  if (!rollup || typeof rollup !== 'object' || !recorded) return null;
+  const averages = rollup.averages ?? {};
+  const totals = rollup.totals ?? {};
+  const toolCalls = totals.tool_calls ?? 0;
+  const toolErrors = totals.tool_errors ?? 0;
+  const errorRate = toolCalls ? `${Math.round((toolErrors / toolCalls) * 100)}%` : '—';
+
+  return {
+    label: formatAverage((averages.llm_calls ?? 0) + (averages.tool_calls ?? 0)),
+    tooltip: [
+      `Steps per case, averaged over ${recorded} of ${pluralCases(rollup.cases ?? recorded)}`,
+      `tool-error rate ${errorRate} (${toolErrors} of ${toolCalls} tool calls)`,
+      `step limit hit ${rollup.step_limit_hits ?? 0} of ${pluralCases(recorded)}`,
+    ].join(' · '),
+    hasErrors: toolErrors > 0,
+  };
+};
+
+/**
  * Why some cases are left out of the run's trajectory averages (G7), or null when none are.
  * @param {{ count?: number, budget_blocked?: number, not_applicable?: number, not_recorded?: number }} [excluded]
  * @returns {string | null} e.g. "2 cases not recorded (1 blocked by budget, 1 no trajectory)"

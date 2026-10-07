@@ -78,6 +78,26 @@ const sumTokens = (totals = {}) =>
 const ROLE_LABEL = { agent: 'Agent', judge: 'Judge' };
 
 /**
+ * The run-history "Tokens" cell (design §6): the agent's average tokens per recorded case
+ * from `meta.agent_usage`, never the judge's. Null for a run without an agent rollup.
+ * @param {object} [meta] - Run meta
+ * @returns {{ label: string, tooltip: string } | null} e.g. label "1,921"
+ */
+export const getRunHistoryUsage = meta => {
+  const usage = meta?.agent_usage;
+  const recorded = usage?.recorded_cases ?? 0;
+  if (!usage || typeof usage !== 'object' || !recorded) return null;
+  const averageCost = formatUsd(usage.average_cost);
+  const parts = [
+    `Agent tokens per case, averaged over ${recorded} of ${usage.cases ?? recorded} cases`,
+    averageCost ? `${averageCost} per case` : 'Not priced',
+  ];
+  if (usage.token_source === 'estimate') parts.push('estimated');
+
+  return { label: formatTokenCount(sumTokens(usage.averages)), tooltip: parts.join(' · ') };
+};
+
+/**
  * One row per role that has a usage rollup: tokens, cost and how many cases the figures cover.
  * @param {object} [meta] - Run meta
  * @returns {Array<{ role: string, label: string, inputTokens: string, outputTokens: string,

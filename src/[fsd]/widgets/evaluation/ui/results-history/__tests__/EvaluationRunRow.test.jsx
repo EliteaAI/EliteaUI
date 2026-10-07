@@ -57,3 +57,32 @@ describe('EvaluationRunRow stop indicator', () => {
     expect(screen.queryByTestId('evaluation-run-stop-7')).not.toBeInTheDocument();
   });
 });
+
+describe('EvaluationRunRow usage and trajectory cells', () => {
+  afterEach(cleanup);
+
+  it('shows tokens and steps per case from the run rollups', () => {
+    renderRow({
+      status: 'completed',
+      meta: {
+        agent_usage: { cases: 2, recorded_cases: 2, averages: { input_tokens: 1857.5, output_tokens: 63.5 } },
+        trajectory_rollup: {
+          cases: 2,
+          recorded_cases: 2,
+          averages: { llm_calls: 1, tool_calls: 0.5 },
+          totals: {},
+        },
+      },
+    });
+
+    expect(screen.getByTestId('evaluation-run-tokens-7')).toHaveTextContent('1,921');
+    expect(screen.getByTestId('evaluation-run-steps-7')).toHaveTextContent('1.5');
+  });
+
+  it('dashes a run that predates the rollups', () => {
+    renderRow({ status: 'completed', meta: {} });
+
+    expect(screen.getByTestId('evaluation-run-tokens-7')).toHaveTextContent('—');
+    expect(screen.getByTestId('evaluation-run-steps-7')).toHaveTextContent('—');
+  });
+});

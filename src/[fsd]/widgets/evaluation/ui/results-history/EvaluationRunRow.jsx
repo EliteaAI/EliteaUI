@@ -7,14 +7,16 @@ import AttentionIcon from '@/components/Icons/AttentionIcon';
 
 import {
   formatScoreDelta,
+  getRunHistoryTrajectory,
+  getRunHistoryUsage,
   getRunOverBudgetLabel,
   getRunScoreLabel,
   getRunStopLabel,
 } from '../../lib/helpers';
 import RunHistoryActionsMenu from './RunHistoryActionsMenu';
 
-// A run that recorded no version, or whose version has since been deleted, has nothing to name.
-const UNKNOWN_VERSION_LABEL = '—';
+// A run that recorded no version (or whose version was deleted), usage or trajectory shows a dash.
+const EMPTY_CELL_LABEL = '—';
 
 const EvaluationRunRow = memo(props => {
   const {
@@ -40,6 +42,8 @@ const EvaluationRunRow = memo(props => {
   // A run stopped by a limit still shows the score of the cases it got through; the icon says so.
   const stopLabel = getRunStopLabel(run.meta);
   const overBudgetLabel = getRunOverBudgetLabel(run.meta);
+  const usage = getRunHistoryUsage(run.meta);
+  const trajectory = getRunHistoryTrajectory(run.meta);
   const styles = evaluationRunRowStyles(isSelected, gridTemplateColumns, run.delta);
 
   return (
@@ -81,7 +85,37 @@ const EvaluationRunRow = memo(props => {
             sx={styles.text}
             data-testid={`evaluation-run-version-${run.id}`}
           >
-            {versionName ?? UNKNOWN_VERSION_LABEL}
+            {versionName ?? EMPTY_CELL_LABEL}
+          </Typography>
+        </Tooltip>
+      </Box>
+
+      <Box sx={styles.cell}>
+        <Tooltip
+          title={usage?.tooltip ?? 'No agent usage recorded'}
+          placement="top"
+        >
+          <Typography
+            variant="bodySmall"
+            sx={styles.text}
+            data-testid={`evaluation-run-tokens-${run.id}`}
+          >
+            {usage?.label ?? EMPTY_CELL_LABEL}
+          </Typography>
+        </Tooltip>
+      </Box>
+
+      <Box sx={styles.cell}>
+        <Tooltip
+          title={trajectory?.tooltip ?? 'No trajectory recorded'}
+          placement="top"
+        >
+          <Typography
+            variant="bodySmall"
+            sx={[styles.text, trajectory?.hasErrors && styles.errorText]}
+            data-testid={`evaluation-run-steps-${run.id}`}
+          >
+            {trajectory?.label ?? EMPTY_CELL_LABEL}
           </Typography>
         </Tooltip>
       </Box>
@@ -201,6 +235,9 @@ const evaluationRunRowStyles = (isSelected, gridTemplateColumns, delta) => ({
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
+  }),
+  errorText: ({ palette }) => ({
+    color: palette.error.main,
   }),
   score: ({ palette }) => ({
     fontSize: '0.875rem',
