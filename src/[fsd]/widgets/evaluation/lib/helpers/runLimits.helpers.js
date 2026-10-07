@@ -77,6 +77,24 @@ export const validateRunLimits = (limits = {}) => {
   return errors;
 };
 
+// Only a per-run token limit stops a run early; cost is known only after the run (#6809 §5.4).
+export const COST_ONLY_BUDGET_HINT =
+  'Cost limits are checked after the run; add a run token limit to stop early.';
+export const REPORT_ONLY_BUDGET_HINT =
+  'Cost limits are checked after the run, and the run token limit only reports; set it to stop the run to stop early.';
+
+/**
+ * Warning for a budget whose cost limits cannot stop the run, or null when nothing needs saying.
+ * @param {object} limits - Form strings from readRunLimits
+ * @returns {string | null}
+ */
+export const getCostOnlyBudgetHint = (limits = {}) => {
+  const hasCostLimit = ['perCaseCost', 'perRunCost'].some(field => (limits[field] ?? '').trim());
+  if (!hasCostLimit) return null;
+  if (!(limits.perRunTokens ?? '').trim()) return COST_ONLY_BUDGET_HINT;
+  return limits.perRunOnBreach === RUN_LIMIT_ON_BREACH.report ? REPORT_ONLY_BUDGET_HINT : null;
+};
+
 /**
  * Suite meta with the form's limits written in. The update API replaces `meta` as a whole, so every
  * other key is carried over; a limit left empty is dropped rather than stored as null.

@@ -21,6 +21,7 @@ import {
   RUN_LIMIT_ON_BREACH,
   areRunLimitsEqual,
   buildRunLimitsMeta,
+  getCostOnlyBudgetHint,
   readRunLimits,
   validateRunLimits,
 } from '../../lib/helpers';
@@ -130,6 +131,7 @@ const SuiteDetailPanel = memo(props => {
   const runLimitsChanged = !areRunLimitsEqual(runLimits, savedRunLimits);
   const runLimitErrors = useMemo(() => validateRunLimits(runLimits), [runLimits]);
   const hasRunLimitErrors = Object.keys(runLimitErrors).length > 0;
+  const costOnlyBudgetHint = useMemo(() => getCostOnlyBudgetHint(runLimits), [runLimits]);
 
   const versionOptions = useMemo(
     () => applicationVersions.map(version => ({ value: version.id, label: version.name })),
@@ -455,6 +457,15 @@ const SuiteDetailPanel = memo(props => {
                   >
                     {RUN_LIMITS_HINT}
                   </Typography>
+                  {costOnlyBudgetHint && (
+                    <Typography
+                      variant="bodySmall"
+                      sx={styles.costOnlyBudgetHint}
+                      data-testid="suite-run-limits-cost-only-hint"
+                    >
+                      {costOnlyBudgetHint}
+                    </Typography>
+                  )}
                 </Box>
               ),
             },
@@ -631,6 +642,9 @@ const suiteDetailPanelStyles = () => ({
   },
   runLimitsHint: ({ palette }) => ({
     color: palette.text.primary,
+  }),
+  costOnlyBudgetHint: ({ palette }) => ({
+    color: palette.warning.main,
   }),
   infoIconWrapper: {
     display: 'inline-flex',

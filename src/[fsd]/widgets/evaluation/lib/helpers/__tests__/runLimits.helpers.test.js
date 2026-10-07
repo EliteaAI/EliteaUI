@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  COST_ONLY_BUDGET_HINT,
+  REPORT_ONLY_BUDGET_HINT,
   areRunLimitsEqual,
   buildRunLimitsMeta,
+  getCostOnlyBudgetHint,
   readRunLimits,
   validateRunLimits,
 } from '../runLimits.helpers';
@@ -128,5 +131,31 @@ describe('buildRunLimitsMeta', () => {
       perRunOnBreach: 'report',
     };
     expect(readRunLimits(buildRunLimitsMeta({}, limits))).toEqual(limits);
+  });
+});
+
+describe('getCostOnlyBudgetHint', () => {
+  const limits = overrides => ({ ...readRunLimits(), ...overrides });
+
+  it('says nothing without a cost limit', () => {
+    expect(getCostOnlyBudgetHint(limits())).toBeNull();
+    expect(getCostOnlyBudgetHint(limits({ perCaseTokens: '500' }))).toBeNull();
+  });
+
+  it('warns when only cost limits are set', () => {
+    expect(getCostOnlyBudgetHint(limits({ perRunCost: '2' }))).toBe(COST_ONLY_BUDGET_HINT);
+    expect(getCostOnlyBudgetHint(limits({ perCaseCost: '0.1', perCaseTokens: '500' }))).toBe(
+      COST_ONLY_BUDGET_HINT,
+    );
+  });
+
+  it('says nothing when a run token limit stops the run', () => {
+    expect(getCostOnlyBudgetHint(limits({ perRunCost: '2', perRunTokens: '10000' }))).toBeNull();
+  });
+
+  it('warns when the run token limit only reports', () => {
+    expect(
+      getCostOnlyBudgetHint(limits({ perRunCost: '2', perRunTokens: '10000', perRunOnBreach: 'report' })),
+    ).toBe(REPORT_ONLY_BUDGET_HINT);
   });
 });
