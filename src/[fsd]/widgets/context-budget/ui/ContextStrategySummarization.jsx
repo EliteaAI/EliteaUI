@@ -94,7 +94,7 @@ const ContextStrategySummarization = memo(props => {
         {/* <Box sx={[styles.section, styles.sectionSummaryModel]}>
           <Label.InfoLabelWithTooltip
             label="Summary Model"
-            tooltip="AI model used for generating conversation summaries"
+            tooltip="AI model used for generating chat summaries"
             sx={styles.label}
           />
           <SingleSelect

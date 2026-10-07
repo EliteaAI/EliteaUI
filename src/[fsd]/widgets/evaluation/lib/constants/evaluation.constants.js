@@ -228,7 +228,7 @@ export const EVAL_CASE_SOURCE = {
 export const EVAL_CASE_SOURCE_LABEL = {
   [EVAL_CASE_SOURCE.manual]: 'Manual',
   [EVAL_CASE_SOURCE.import]: 'Import',
-  [EVAL_CASE_SOURCE.conversation]: 'Conversation',
+  [EVAL_CASE_SOURCE.conversation]: 'Chat',
 };
 
 export const DEFAULT_DATASET_FORM = {

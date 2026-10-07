@@ -110,7 +110,7 @@ export const usePinConversation = props => {
         if (activeConversation?.id === conversation.id)
           setActiveConversation(prev => ({ ...prev, isPinned: !shouldPin }));
 
-        toastError?.(shouldPin ? 'Failed to pin conversation' : 'Failed to unpin conversation');
+        toastError?.(shouldPin ? 'Failed to pin chat' : 'Failed to unpin chat');
       }
     },
     [

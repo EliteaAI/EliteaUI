@@ -71,7 +71,7 @@ const FolderAccordionItem = memo(props => {
             marginLeft: '0.5rem',
           }}
         >
-          No conversations added
+          No chats added
         </Typography>
       )}
     </Box>

@@ -14,7 +14,7 @@ export const SCOPE_OPTIONS = [
 ];
 
 export const SCOPE_LABELS = {
-  all: 'Full conversation',
+  all: 'Full chat',
   messages: 'Messages only',
   attachments: 'Attachments only',
   partial: 'Selected messages',
