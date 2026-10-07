@@ -174,6 +174,18 @@ describe('buildRunTrajectorySummary', () => {
     );
   });
 
+  it('shows latency percentiles only when the run has both', () => {
+    const latency = rollup =>
+      buildRunTrajectorySummary({ cases: 3, recorded_cases: 3, ...rollup }).items.filter(item =>
+        item.label.startsWith('Latency'),
+      );
+
+    expect(latency({ p50_latency_ms: 850, p95_latency_ms: 3120.6 })).toEqual([
+      { label: 'Latency p50 / p95', value: '850 ms / 3.1 s' },
+    ]);
+    expect(latency({ p50_latency_ms: 850, p95_latency_ms: null })).toEqual([]);
+  });
+
   it('drops averages when nothing was recorded', () => {
     const summary = buildRunTrajectorySummary({
       cases: 1,

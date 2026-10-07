@@ -263,6 +263,12 @@ export const getExcludedCasesNote = excluded => {
   return `${pluralCases(count)} not recorded${reasons.length ? ` (${reasons.join(', ')})` : ''}`;
 };
 
+// Both percentiles or nothing: a run that predates them has only the average.
+const formatLatencyPercentiles = (p50, p95) => {
+  if (p50 == null || p95 == null) return null;
+  return `${formatDurationMs(Math.round(p50))} / ${formatDurationMs(Math.round(p95))}`;
+};
+
 /**
  * The run's trajectory rollup (`meta.trajectory_rollup`) as per-case averages, or null for a run
  * that predates it. Averages cover recorded cases only; `coverage` says how many that is.
@@ -285,6 +291,7 @@ export const buildRunTrajectorySummary = rollup => {
       'Latency / case',
       formatDurationMs(rollup.average_latency_ms == null ? null : Math.round(rollup.average_latency_ms)),
     ],
+    ['Latency p50 / p95', formatLatencyPercentiles(rollup.p50_latency_ms, rollup.p95_latency_ms)],
   ]
     .filter(([, value]) => value != null)
     .map(([label, value]) => ({ label, value }));
