@@ -21,6 +21,7 @@ const buildInitialValues = data => ({
     instructions: data?.version_details?.instructions ?? data?.instructions ?? '',
     meta: data?.version_details?.meta || {},
     status: data?.version_details?.status ?? null,
+    run_settings: data?.version_details?.run_settings ?? null,
   },
 });
 

@@ -26,6 +26,8 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import TagEditor from '@/pages/Common/Components/TagEditor';
 import { markdown } from '@codemirror/lang-markdown';
 
+import SkillRunSettings from './SkillRunSettings';
+
 const CreateSkillForm = memo(props => {
   const {
     accordionStyle,
@@ -339,6 +341,11 @@ const CreateSkillForm = memo(props => {
             ),
           },
         ]}
+      />
+
+      <SkillRunSettings
+        accordionStyle={accordionStyle}
+        disabled={disabled}
       />
     </Box>
   );

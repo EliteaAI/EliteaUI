@@ -16,7 +16,9 @@ import {
 } from '@/[fsd]/features/chat';
 import { normalizeContinuationError } from '@/[fsd]/features/chat/lib/helpers';
 import { NewChatInput } from '@/[fsd]/features/chat/ui/chat-input';
+import { includesProjectContext, testPanelSettingsFor } from '@/[fsd]/features/skill/lib/helpers';
 import { LLMSettingsConstants } from '@/[fsd]/shared/lib/constants';
+import { resetLLMSettingsForModel } from '@/[fsd]/shared/lib/utils';
 import { useListModelsQuery } from '@/api/configurations.js';
 import { useGenerateContentStreamingMutation, useStopLlmTaskMutation } from '@/api/llm';
 import { ChatParticipantType, ROLES, SocketMessageType, sioEvents } from '@/common/constants';
@@ -30,9 +32,17 @@ import { useManualSocket } from '@/hooks/useSocket';
 import useToast from '@/hooks/useToast';
 import { ContentContainer } from '@/pages/Common/Components/StyledComponents';
 
-const { DEFAULT_MAX_TOKENS, DEFAULT_TEMPERATURE } = LLMSettingsConstants;
+const { DEFAULT_MAX_TOKENS } = LLMSettingsConstants;
 
 const SYNTHETIC_PARTICIPANT_ID = 'skill-test-participant';
+const NO_MODELS = [];
+
+const findRunSettingsModel = (models, llmSettings) =>
+  llmSettings?.model_name
+    ? models.find(
+        model => model.name === llmSettings.model_name && model.project_id === llmSettings.model_project_id,
+      ) || models.find(model => model.name === llmSettings.model_name)
+    : null;
 
 // Map local chat_history messages to predict_llm chat_history turns.
 const messagesToTurns = messages =>
@@ -86,6 +96,9 @@ const SkillTestPanel = memo(props => {
   // via a ref so onSend always uses the latest edited instructions).
   const instructionsRef = useRef('');
   instructionsRef.current = values?.version_details?.instructions || '';
+  const runSettings = values?.version_details?.run_settings;
+  const savedLlmSettings = runSettings?.llm_settings;
+  const withProjectContext = includesProjectContext(runSettings);
 
   // Synthetic participant so the bubbles resolve a name/icon exactly like the
   // agent chat. It is never sent to the backend.
@@ -132,11 +145,8 @@ const SkillTestPanel = memo(props => {
   const awaitingStreamRef = useRef(false);
 
   // Model selector wiring (mirrors ConfigurationTab — local llm_settings only).
-  const { data: modelsData = { items: [] } } = useListModelsQuery(
-    { projectId, include_shared: true },
-    { skip: !projectId },
-  );
-  const modelList = modelsData.items;
+  const { data: modelsData } = useListModelsQuery({ projectId, include_shared: true }, { skip: !projectId });
+  const modelList = useMemo(() => modelsData?.items ?? NO_MODELS, [modelsData]);
 
   const defaultModel = useMemo(
     () => modelList.find(model => model.default) || modelList[0] || null,
@@ -144,19 +154,17 @@ const SkillTestPanel = memo(props => {
   );
 
   const [selectedModel, setSelectedModel] = useState(null);
-  const [llmSettings, setLlmSettings] = useState({
-    temperature: DEFAULT_TEMPERATURE,
-    max_tokens: DEFAULT_MAX_TOKENS,
-  });
+  const [llmSettings, setLlmSettings] = useState(() => testPanelSettingsFor(savedLlmSettings, null));
 
   useEffect(() => {
-    if (!selectedModel && defaultModel) {
-      setSelectedModel(defaultModel);
-    }
-  }, [defaultModel, selectedModel]);
+    const model = findRunSettingsModel(modelList, savedLlmSettings) || defaultModel;
+    setSelectedModel(model);
+    setLlmSettings(testPanelSettingsFor(savedLlmSettings, model));
+  }, [defaultModel, modelList, savedLlmSettings]);
 
   const onSelectModel = useCallback(model => {
     setSelectedModel(model);
+    setLlmSettings(prev => ({ ...prev, ...resetLLMSettingsForModel(model) }));
   }, []);
 
   const onSetLLMSettings = useCallback(newSettings => {
@@ -336,9 +344,11 @@ const SkillTestPanel = memo(props => {
           llm_settings: {
             model_name: selectedModel.name,
             model_project_id: selectedModel.project_id,
-            temperature: llmSettings.temperature ?? DEFAULT_TEMPERATURE,
+            temperature: llmSettings.temperature ?? null,
             max_tokens: llmSettings.max_tokens ?? DEFAULT_MAX_TOKENS,
+            reasoning_effort: llmSettings.reasoning_effort ?? null,
           },
+          include_project_context: withProjectContext,
         }).unwrap();
         if (result?.error) throw new Error(result.error);
         if (result?.task_id) activeTaskIdRef.current = result.task_id;
@@ -347,7 +357,16 @@ const SkillTestPanel = memo(props => {
         finishStreaming();
       }
     },
-    [finishStreaming, generateContent, llmSettings, projectId, selectedModel, socket?.id, toastError],
+    [
+      finishStreaming,
+      generateContent,
+      llmSettings,
+      projectId,
+      selectedModel,
+      socket?.id,
+      toastError,
+      withProjectContext,
+    ],
   );
 
   // Build a user+assistant message pair with the real logged-in user identity.

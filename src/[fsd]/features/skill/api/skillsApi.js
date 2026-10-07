@@ -157,14 +157,16 @@ const skillsApi = eliteaApi
         },
       }),
       skillCreateVersion: build.mutation({
-        // body: { name (NOT 'base'), instructions, tags?, meta? } -> 201
-        query: ({ projectId, skillId, name, instructions, tags, meta }) => {
+        query: ({ projectId, skillId, name, instructions, tags, meta, run_settings }) => {
           const body = { name, instructions };
           if (tags) {
             body.tags = tags;
           }
           if (meta) {
             body.meta = meta;
+          }
+          if (run_settings) {
+            body.run_settings = run_settings;
           }
           return {
             url: `${apiSlicePath}/skill/${mode}/${projectId}/${skillId}`,

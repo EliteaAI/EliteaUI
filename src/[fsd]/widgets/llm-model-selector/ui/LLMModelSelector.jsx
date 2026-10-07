@@ -35,6 +35,8 @@ const LLMModelSelector = memo(props => {
     variant = 'default',
     label = 'Model',
     labelAdornment,
+    emptyModelLabel = 'None',
+    fieldTestId,
   } = props;
 
   const theme = useTheme();
@@ -95,6 +97,7 @@ const LLMModelSelector = memo(props => {
           <Box
             sx={styles.fieldSelector}
             onClick={disabled ? undefined : handleModelMenuClick}
+            data-testid={fieldTestId}
           >
             <Box sx={styles.fieldLabelRow}>
               <Typography
@@ -114,7 +117,7 @@ const LLMModelSelector = memo(props => {
                 noWrap
                 sx={styles.fieldValue}
               >
-                {selectedModel?.display_name || selectedModel?.name || 'None'}
+                {selectedModel?.display_name || selectedModel?.name || emptyModelLabel}
               </Typography>
               <ArrowDownIcon sx={styles.fieldChevron} />
             </Box>
@@ -129,6 +132,7 @@ const LLMModelSelector = memo(props => {
                 onClick={handleSettingsClick}
                 disabled={!onSetLLMSettings || disabled}
                 sx={styles.fieldSettingsBtn}
+                data-testid={fieldTestId && `${fieldTestId}-settings`}
                 startIcon={
                   <SettingIcon
                     sx={styles.settingIcon}
