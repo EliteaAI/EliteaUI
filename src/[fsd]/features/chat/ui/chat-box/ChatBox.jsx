@@ -17,6 +17,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Box } from '@mui/system';
 
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version';
+import { SelectedChatModelContext } from '@/[fsd]/features/chat/lib/context/SelectedChatModelContext';
 import * as ChatHelpers from '@/[fsd]/features/chat/lib/helpers/chat.helpers';
 import { buildEntityParticipant } from '@/[fsd]/features/chat/lib/helpers/entityParticipant.helpers.js';
 import {
@@ -2891,44 +2892,46 @@ const ChatBox = memo(
           sx={styles.container}
           data-tour={CHAT_TOUR_TARGET_IDS.workspace}
         >
-          <ChatMessageList
-            sx={messageListSX}
-            chat_history={chat_history}
-            suggestions={hasBlockingHitlInterrupt ? [] : nextInputSuggestions}
-            onSelectSuggestion={handleSuggestionSelect}
-            isLoading={isStreaming}
-            isStreaming={isStreaming}
-            activeConversation={activeConversation}
-            onCopyToClipboard={onCopyToClipboard}
-            onDeleteAnswer={onDeleteAnswer}
-            onRegenerateAnswer={onRegenerateAnswer}
-            onContinueMcpExecution={continueMcpExecution}
-            onContinueTokenLimitExecution={onContinueTokenLimitExecution}
-            onHitlResume={onHitlResume}
-            onEditCanvas={onEditCanvas}
-            selectedCodeBlockInfo={selectedCodeBlockInfo}
-            onSubmitEditedMessage={onSubmitEditedMessage}
-            onAddEditAttachment={onAddEditAttachment}
-            onScrollToTop={onLoadMoreMessages}
-            onSelectParticipant={onSelectParticipant}
-            isLoadingMore={isLoadingMore}
-            interaction_uuid={interaction_uuid}
-            askingQuestionId={askingQuestionId}
-            questionItemRef={questionItemRef}
-            onRemoveAttachment={onRemoveAttachment}
-            onOpenArtifactPreview={onOpenArtifactPreview}
-            isSpeakingMode={isSpeakingMode}
-            onAutoSpeak={handleAutoSpeak}
-            speakingMessageId={speakingMessageId}
-            speakingSegments={speakingSegments}
-            spokenRange={spokenRange}
-            onEntityCreated={onEntityCreatedProp ?? onEntityCreated}
-            onDeleteEntity={onDeleteEntity}
-            pendingInjections={pendingInjections}
-            onRemovePendingInjection={onRemovePendingInjection}
-            showParticipantsWelcome={showParticipantsWelcome}
-            activeParticipant={activeParticipant}
-          />
+          <SelectedChatModelContext.Provider value={selectedModel}>
+            <ChatMessageList
+              sx={messageListSX}
+              chat_history={chat_history}
+              suggestions={hasBlockingHitlInterrupt ? [] : nextInputSuggestions}
+              onSelectSuggestion={handleSuggestionSelect}
+              isLoading={isStreaming}
+              isStreaming={isStreaming}
+              activeConversation={activeConversation}
+              onCopyToClipboard={onCopyToClipboard}
+              onDeleteAnswer={onDeleteAnswer}
+              onRegenerateAnswer={onRegenerateAnswer}
+              onContinueMcpExecution={continueMcpExecution}
+              onContinueTokenLimitExecution={onContinueTokenLimitExecution}
+              onHitlResume={onHitlResume}
+              onEditCanvas={onEditCanvas}
+              selectedCodeBlockInfo={selectedCodeBlockInfo}
+              onSubmitEditedMessage={onSubmitEditedMessage}
+              onAddEditAttachment={onAddEditAttachment}
+              onScrollToTop={onLoadMoreMessages}
+              onSelectParticipant={onSelectParticipant}
+              isLoadingMore={isLoadingMore}
+              interaction_uuid={interaction_uuid}
+              askingQuestionId={askingQuestionId}
+              questionItemRef={questionItemRef}
+              onRemoveAttachment={onRemoveAttachment}
+              onOpenArtifactPreview={onOpenArtifactPreview}
+              isSpeakingMode={isSpeakingMode}
+              onAutoSpeak={handleAutoSpeak}
+              speakingMessageId={speakingMessageId}
+              speakingSegments={speakingSegments}
+              spokenRange={spokenRange}
+              onEntityCreated={onEntityCreatedProp ?? onEntityCreated}
+              onDeleteEntity={onDeleteEntity}
+              pendingInjections={pendingInjections}
+              onRemovePendingInjection={onRemovePendingInjection}
+              showParticipantsWelcome={showParticipantsWelcome}
+              activeParticipant={activeParticipant}
+            />
+          </SelectedChatModelContext.Provider>
           {displayConversationStarters && (
             <ChatConversationStarters
               onSend={onSendConversationStarter}
