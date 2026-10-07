@@ -12,7 +12,7 @@ import { formatScore } from '../../lib/helpers';
 import DimensionResultCard from './DimensionResultCard';
 
 const CaseResultItem = memo(props => {
-  const { card, canEvaluate = false, onViewDetails, onEvaluate } = props;
+  const { card, guardrailChip, canEvaluate = false, onViewDetails, onEvaluate } = props;
 
   const [expanded, setExpanded] = useState(false);
 
@@ -58,6 +58,24 @@ const CaseResultItem = memo(props => {
             >
               Case #{card.id}
             </Typography>
+            {guardrailChip && (
+              <Tooltip
+                title={guardrailChip.tooltip}
+                placement="top"
+              >
+                <Box
+                  sx={styles.guardrailBadge}
+                  data-testid={`case-guardrail-badge-${card.id}`}
+                >
+                  <Typography
+                    variant="labelMedium"
+                    sx={styles.guardrailBadgeText}
+                  >
+                    {guardrailChip.label}
+                  </Typography>
+                </Box>
+              </Tooltip>
+            )}
             {pendingCount > 0 && (
               <Box
                 sx={styles.pendingBadge}
@@ -193,6 +211,18 @@ const caseResultItemStyles = () => ({
   }),
   pendingBadgeText: ({ palette }) => ({
     color: palette.icon.active,
+    fontWeight: 500,
+    whiteSpace: 'nowrap',
+  }),
+  guardrailBadge: ({ palette }) => ({
+    display: 'flex',
+    alignItems: 'center',
+    padding: '0 0.5rem',
+    borderRadius: '1rem',
+    border: `0.0625rem solid ${palette.warning.main}`,
+  }),
+  guardrailBadgeText: ({ palette }) => ({
+    color: palette.warning.main,
     fontWeight: 500,
     whiteSpace: 'nowrap',
   }),

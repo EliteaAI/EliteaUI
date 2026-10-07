@@ -7,9 +7,20 @@ import MonitoringIcon from '@/assets/monitoring.svg?react';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
-import { useEvalDimensionsQuery, useEvalRunResultsQuery, usePlatformDimensionCatalogQuery } from '../../api';
+import {
+  useEvalCaseExecutionsQuery,
+  useEvalDimensionsQuery,
+  useEvalRunResultsQuery,
+  usePlatformDimensionCatalogQuery,
+} from '../../api';
 import { EVAL_PERMISSIONS } from '../../lib/constants';
-import { buildScorecard, formatRunStatus, getRunEndMessage, isRunTerminal } from '../../lib/helpers';
+import {
+  buildCaseGuardrailChips,
+  buildScorecard,
+  formatRunStatus,
+  getRunEndMessage,
+  isRunTerminal,
+} from '../../lib/helpers';
 import CaseDetailsModal from './CaseDetailsModal';
 import CaseResultsList from './CaseResultsList';
 import HumanEvaluationModal from './HumanEvaluationModal';
@@ -53,6 +64,17 @@ const RunResultsView = memo(props => {
   // RTK Query keeps stale data while fetching new. Treat it as absent when the cached run ID
   // doesn't match so the loader stays visible instead of flashing the previous run's results.
   const resultsData = resultsDataRaw?.run?.id === runId ? resultsDataRaw : null;
+
+  // Per-case agent outcomes without the step lists, for the case list's guardrail chips (design §6).
+  // An on-demand run has no executions, so the list simply shows no chips.
+  const { data: executionsData } = useEvalCaseExecutionsQuery(
+    { projectId, runId, includeTrajectory: false },
+    { skip: !projectId || !runId },
+  );
+  const guardrailChips = useMemo(
+    () => (executionsData?.run_id === runId ? buildCaseGuardrailChips(executionsData?.executions) : {}),
+    [executionsData, runId],
+  );
 
   // The run snapshot is the point-in-time record, but it does not key every binding's dimension —
   // these fill the gaps so a rating or pass/fail scale still reaches the score control.
@@ -288,6 +310,7 @@ const RunResultsView = memo(props => {
       <ResultsDimensionTable bindings={scorecard.bindings ?? []} />
       <CaseResultsList
         cases={scorecard.cases}
+        guardrailChips={guardrailChips}
         canEvaluate={canEvaluate}
         onViewDetails={handleViewCaseDetails}
         onEvaluate={handleEvaluateDimension}

@@ -1,4 +1,10 @@
-import { TRAJECTORY_STATE, TRAJECTORY_STATE_MESSAGE, TRAJECTORY_STEP_KIND } from '../constants';
+import {
+  CASE_EXECUTION_STATUS,
+  GUARDRAIL_STEP_STATUSES,
+  TRAJECTORY_STATE,
+  TRAJECTORY_STATE_MESSAGE,
+  TRAJECTORY_STEP_KIND,
+} from '../constants';
 
 /**
  * Display helpers for a case's recorded trajectory (#6809 P1). The backend stores the normalized
@@ -91,6 +97,84 @@ export const getTrajectoryMetricItems = metrics => {
   return items
     .filter(([, value]) => value != null)
     .map(([label, value]) => ({ label, value: String(value) }));
+};
+
+/** Whether a tool step was stopped by a guardrail rather than run. */
+export const isGuardrailStep = step =>
+  step?.kind === TRAJECTORY_STEP_KIND.tool && GUARDRAIL_STEP_STATUSES.includes(step.status);
+
+/**
+ * Why the run stopped on this case instead of answering (a HITL/guardrail pause or a sub-agent
+ * park), or null when it did not. Reads `status` and the stored `trajectory.pause` identities;
+ * the paused call's arguments are never stored.
+ * @returns {{ title: string, items: Array<{ label: string, value: string }>, note: string } | null}
+ */
+export const getCasePauseDetails = execution => {
+  if (!execution) return null;
+  if (execution.status === CASE_EXECUTION_STATUS.parked) {
+    return {
+      title: 'Parked on a sub-agent fan-out',
+      items: [],
+      note: 'The agent handed work to sub-agents and waited for them. A batch run cannot resume it, so the case failed.',
+    };
+  }
+  const pause = execution.trajectory?.pause;
+  if (execution.status !== CASE_EXECUTION_STATUS.guardrailPaused && !pause) return null;
+  const tool =
+    pause?.tool_name && pause?.toolkit_name ? `${pause.tool_name} (${pause.toolkit_name})` : pause?.tool_name;
+  const items = [
+    ['Pause type', pause?.pause_type],
+    ['Interaction', pause?.interaction_type],
+    ['Guardrail', pause?.guardrail_type],
+    ['Tool', tool],
+    ['Node', pause?.node_name],
+    ['Pending calls', pause?.interrupts > 1 ? pause.interrupts : null],
+  ]
+    .filter(([, value]) => value != null && value !== '')
+    .map(([label, value]) => ({ label, value: String(value) }));
+  return {
+    title: 'Paused for human review',
+    items,
+    note: 'Nobody can approve or reject a paused step in a batch run, so the case failed. The steps up to the pause are listed below.',
+  };
+};
+
+/**
+ * The case list's guardrail chip (design §6), or null for a case no guardrail touched. Reads the
+ * execution's status and its `guardrail_events` counter; never recomputed from steps.
+ * @returns {{ label: string, tooltip: string } | null}
+ */
+export const getCaseGuardrailChip = execution => {
+  if (!execution) return null;
+  if (execution.status === CASE_EXECUTION_STATUS.parked) {
+    return {
+      label: 'Parked',
+      tooltip: 'The agent parked on a sub-agent fan-out; a batch run cannot resume it.',
+    };
+  }
+  if (execution.status === CASE_EXECUTION_STATUS.guardrailPaused) {
+    return {
+      label: 'Paused for review',
+      tooltip: 'The agent paused for human review; batch runs fail the case.',
+    };
+  }
+  const events = execution.metrics?.guardrail_events ?? 0;
+  if (!events) return null;
+  return {
+    label: `Guardrail: ${events}`,
+    tooltip: `${events} tool ${events === 1 ? 'call was' : 'calls were'} blocked or waited on authorization.`,
+  };
+};
+
+/** Guardrail chips keyed by dataset case id, for the run's case list. */
+export const buildCaseGuardrailChips = executions => {
+  const chips = {};
+  for (const execution of executions ?? []) {
+    if (execution?.dataset_case_id == null) continue;
+    const chip = getCaseGuardrailChip(execution);
+    if (chip) chips[execution.dataset_case_id] = chip;
+  }
+  return chips;
 };
 
 const formatAverage = value =>

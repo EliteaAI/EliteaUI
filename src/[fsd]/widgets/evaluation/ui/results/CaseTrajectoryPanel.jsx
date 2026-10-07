@@ -9,11 +9,13 @@ import {
   buildCaseUsageRows,
   compareTrajectoryNames,
   formatCaseContent,
+  getCasePauseDetails,
   getTrajectoryMetricItems,
   getTrajectoryStateMessage,
   getTrajectoryStepMeta,
   getTrajectoryStepSections,
   getTrajectoryStepTitle,
+  isGuardrailStep,
   recordedToolNames,
 } from '../../lib/helpers';
 
@@ -43,6 +45,7 @@ const CaseTrajectoryPanel = memo(props => {
   const metricItems = useMemo(() => getTrajectoryMetricItems(execution?.metrics), [execution?.metrics]);
   const usageRows = useMemo(() => buildCaseUsageRows(data?.usage), [data?.usage]);
   const stateMessage = getTrajectoryStateMessage(execution);
+  const pauseDetails = useMemo(() => getCasePauseDetails(execution), [execution]);
   const comparison = useMemo(
     () =>
       execution?.trajectory
@@ -133,6 +136,8 @@ const CaseTrajectoryPanel = memo(props => {
         </Box>
       )}
 
+      {pauseDetails && <PauseDetails details={pauseDetails} />}
+
       {comparison && <ExpectedVsActual comparison={comparison} />}
 
       {stateMessage ? (
@@ -172,7 +177,11 @@ const CaseTrajectoryPanel = memo(props => {
                   headerContent: (
                     <Typography
                       variant="bodySmall"
-                      sx={[styles.stepMeta, step.status === 'error' && styles.stepError]}
+                      sx={[
+                        styles.stepMeta,
+                        step.status === 'error' && styles.stepError,
+                        isGuardrailStep(step) && styles.stepWarning,
+                      ]}
                     >
                       {[step.parent_agent && `in ${step.parent_agent}`, getTrajectoryStepMeta(step)]
                         .filter(Boolean)
@@ -228,6 +237,50 @@ const StepSections = memo(({ step }) => {
 });
 
 StepSections.displayName = 'StepSections';
+
+// Why the run stopped on this case (#6809 item 2): identities only, the paused call's args are not stored.
+const PauseDetails = memo(({ details }) => {
+  const styles = caseTrajectoryPanelStyles();
+  return (
+    <Box
+      sx={[styles.expected, styles.pause]}
+      data-testid="case-pause-details"
+    >
+      <Typography
+        variant="labelSmall"
+        sx={styles.metricLabel}
+      >
+        {details.title}
+      </Typography>
+      {details.items.length > 0 && (
+        <Box sx={styles.metrics}>
+          {details.items.map(({ label, value }) => (
+            <Box
+              key={label}
+              sx={styles.metric}
+            >
+              <Typography
+                variant="labelSmall"
+                sx={styles.stepMeta}
+              >
+                {label}
+              </Typography>
+              <Typography variant="bodySmall">{value}</Typography>
+            </Box>
+          ))}
+        </Box>
+      )}
+      <Typography
+        variant="bodySmall"
+        sx={styles.stepMeta}
+      >
+        {details.note}
+      </Typography>
+    </Box>
+  );
+});
+
+PauseDetails.displayName = 'PauseDetails';
 
 // By name only: the `trajectory.tool_match` dimension owns the score, args and match-mode rules.
 const ExpectedVsActual = memo(({ comparison }) => {
@@ -369,6 +422,12 @@ const caseTrajectoryPanelStyles = () => ({
   }),
   stepError: ({ palette }) => ({
     color: palette.error.main,
+  }),
+  stepWarning: ({ palette }) => ({
+    color: palette.warning.main,
+  }),
+  pause: ({ palette }) => ({
+    borderColor: palette.warning.main,
   }),
   section: {
     marginBottom: '0.75rem',

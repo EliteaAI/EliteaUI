@@ -1,14 +1,18 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  buildCaseGuardrailChips,
   buildRunTrajectorySummary,
   formatDurationMs,
+  getCaseGuardrailChip,
+  getCasePauseDetails,
   getExcludedCasesNote,
   getTrajectoryMetricItems,
   getTrajectoryStateMessage,
   getTrajectoryStepMeta,
   getTrajectoryStepSections,
   getTrajectoryStepTitle,
+  isGuardrailStep,
 } from '../trajectory.helpers';
 
 const llmStep = {
@@ -179,5 +183,76 @@ describe('buildRunTrajectorySummary', () => {
 
     expect(summary.items).toEqual([]);
     expect(summary.excluded).toBe('1 case not recorded (1 no trajectory)');
+  });
+});
+
+describe('pause and guardrail helpers', () => {
+  const paused = {
+    dataset_case_id: 7,
+    status: 'guardrail_paused',
+    trajectory: {
+      pause: {
+        pause_type: 'hitl',
+        interaction_type: 'approve',
+        guardrail_type: null,
+        node_name: 'agent',
+        tool_name: 'delete_branch',
+        toolkit_name: 'GitHub',
+        interrupts: 2,
+      },
+    },
+    metrics: { guardrail_events: 1 },
+  };
+
+  it('lists the pause identities and skips empty ones', () => {
+    const details = getCasePauseDetails(paused);
+    expect(details.title).toBe('Paused for human review');
+    expect(details.items).toEqual([
+      { label: 'Pause type', value: 'hitl' },
+      { label: 'Interaction', value: 'approve' },
+      { label: 'Tool', value: 'delete_branch (GitHub)' },
+      { label: 'Node', value: 'agent' },
+      { label: 'Pending calls', value: '2' },
+    ]);
+  });
+
+  it('still explains a paused status without stored details', () => {
+    const details = getCasePauseDetails({ status: 'guardrail_paused', trajectory: null });
+    expect(details.items).toEqual([]);
+    expect(details.note).toMatch(/case failed/);
+  });
+
+  it('explains a park and ignores an unpaused case', () => {
+    expect(getCasePauseDetails({ status: 'parked' }).title).toBe('Parked on a sub-agent fan-out');
+    expect(getCasePauseDetails({ status: 'ok', trajectory: { steps: [] } })).toBeNull();
+    expect(getCasePauseDetails(null)).toBeNull();
+  });
+
+  it('picks the chip from the status, then the guardrail counter', () => {
+    expect(getCaseGuardrailChip(paused).label).toBe('Paused for review');
+    expect(getCaseGuardrailChip({ status: 'parked' }).label).toBe('Parked');
+    expect(getCaseGuardrailChip({ status: 'ok', metrics: { guardrail_events: 3 } })).toEqual({
+      label: 'Guardrail: 3',
+      tooltip: '3 tool calls were blocked or waited on authorization.',
+    });
+    expect(getCaseGuardrailChip({ status: 'ok', metrics: { guardrail_events: 0 } })).toBeNull();
+    expect(getCaseGuardrailChip({ status: 'ok', metrics: {} })).toBeNull();
+  });
+
+  it('keys chips by dataset case id and leaves out clean cases', () => {
+    const chips = buildCaseGuardrailChips([
+      paused,
+      { dataset_case_id: 8, status: 'ok', metrics: {} },
+      { dataset_case_id: null, status: 'parked' },
+    ]);
+    expect(Object.keys(chips)).toEqual(['7']);
+    expect(buildCaseGuardrailChips(undefined)).toEqual({});
+  });
+
+  it('flags blocked and auth-waiting tool steps only', () => {
+    expect(isGuardrailStep({ kind: 'tool', status: 'blocked' })).toBe(true);
+    expect(isGuardrailStep({ kind: 'tool', status: 'action_required' })).toBe(true);
+    expect(isGuardrailStep({ kind: 'tool', status: 'error' })).toBe(false);
+    expect(isGuardrailStep({ kind: 'llm', status: 'blocked' })).toBe(false);
   });
 });

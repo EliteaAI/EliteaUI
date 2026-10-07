@@ -310,6 +310,15 @@ export const TRAJECTORY_STATE_MESSAGE = {
   unsupported: 'This agent type is not executed by batch runs, so there is no trajectory.',
 };
 
+// Agent outcomes of a case that the run stopped on rather than scored (#6809 item 2, design §4.5).
+export const CASE_EXECUTION_STATUS = {
+  guardrailPaused: 'guardrail_paused',
+  parked: 'parked',
+};
+
+// Tool-step statuses a guardrail produced: a sensitive tool refused, or an MCP call waiting on auth.
+export const GUARDRAIL_STEP_STATUSES = ['blocked', 'action_required'];
+
 export const TRAJECTORY_STEP_KIND = {
   llm: 'llm',
   tool: 'tool',

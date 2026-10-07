@@ -389,13 +389,15 @@ export const evaluationApi = eliteaApi
       }),
 
       // ---- Case executions (#6809 P1) ----
-      // What the agent did on one case: { run_id, executions: [{ trajectory_state,
+      // What the agent did on one case: { run_id, executions: [{ status, trajectory_state,
       // trajectory_state_reason, trajectory: { steps[], tool_sequence[], truncated }, metrics }] }.
       // A run is immutable once finished, so the run tag is enough to refetch after a rerun.
       evalCaseExecutions: build.query({
-        query: ({ projectId, runId, datasetCaseId }) => {
+        // `includeTrajectory: false` drops the step lists: states, statuses and counters for a list view.
+        query: ({ projectId, runId, datasetCaseId, includeTrajectory = true }) => {
           const params = new URLSearchParams();
           if (datasetCaseId != null) params.set('dataset_case_id', String(datasetCaseId));
+          if (!includeTrajectory) params.set('include_trajectory', 'false');
           const qs = params.toString();
           return {
             url: `/elitea_core/eval_case_executions/prompt_lib/${projectId}/${runId}${qs ? `?${qs}` : ''}`,

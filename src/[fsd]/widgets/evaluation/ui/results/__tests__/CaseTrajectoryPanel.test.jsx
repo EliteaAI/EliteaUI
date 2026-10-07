@@ -151,3 +151,56 @@ describe('CaseTrajectoryPanel expected vs actual', () => {
     expect(screen.queryByTestId('case-expected-trajectory')).not.toBeInTheDocument();
   });
 });
+
+describe('CaseTrajectoryPanel pause', () => {
+  afterEach(() => {
+    cleanup();
+    queryState.data = undefined;
+  });
+
+  it('says where a paused run stopped and marks the blocked step', () => {
+    queryState.data = {
+      executions: [
+        {
+          status: 'guardrail_paused',
+          trajectory_state: 'recorded',
+          trajectory: {
+            steps: [{ i: 0, kind: 'tool', tool_name: 'delete_branch', status: 'blocked' }],
+            pause: {
+              pause_type: 'hitl',
+              interaction_type: 'approve',
+              tool_name: 'delete_branch',
+              toolkit_name: 'GitHub',
+            },
+          },
+          metrics: { guardrail_events: 2 },
+        },
+      ],
+      usage: [],
+    };
+    renderPanel();
+
+    const card = screen.getByTestId('case-pause-details');
+    expect(card).toHaveTextContent('Paused for human review');
+    expect(card).toHaveTextContent('delete_branch (GitHub)');
+    expect(card).toHaveTextContent('approve');
+    expect(card).toHaveTextContent('so the case failed');
+    expect(screen.getByTestId('trajectory-step-0')).toHaveTextContent('blocked');
+  });
+
+  it('explains a parked case and shows nothing for a normal one', () => {
+    queryState.data = {
+      executions: [
+        { status: 'parked', trajectory_state: 'recorded', trajectory: { steps: [] }, metrics: {} },
+      ],
+      usage: [],
+    };
+    renderPanel();
+    expect(screen.getByTestId('case-pause-details')).toHaveTextContent('Parked on a sub-agent fan-out');
+    cleanup();
+
+    queryState.data = { executions: [{ ...recordedExecution, status: 'ok' }], usage: [] };
+    renderPanel();
+    expect(screen.queryByTestId('case-pause-details')).not.toBeInTheDocument();
+  });
+});
