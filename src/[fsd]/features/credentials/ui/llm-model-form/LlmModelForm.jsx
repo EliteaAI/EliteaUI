@@ -29,6 +29,7 @@ import {
   getLlmModelReasoningDescription,
   getLlmModelRecognition,
   getUnsupportedStoredLevels,
+  isAzureReasoningWarned,
   isLlmModelReasoningConfigured,
   recognizeLlmModelProfile,
 } from '../../lib/helpers/llmModelProfiles.helpers.js';
@@ -42,6 +43,7 @@ import LlmModelSwitchField from './LlmModelSwitchField';
 
 const {
   LLM_MODEL_API_PROTOCOL_OPTIONS,
+  LLM_MODEL_AZURE_REASONING_WARNING,
   LLM_MODEL_CREDENTIALS_SECTION,
   LLM_MODEL_DESCRIPTION_MAX_LENGTH,
   LLM_MODEL_FIELD_INFO_TEXTS,
@@ -424,6 +426,16 @@ const LlmModelForm = memo(props => {
               checked={settings.supports_reasoning}
               onChange={onReasoningChange}
               error={visibleErrors[FIELDS.reasoning]}
+              warning={
+                isAzureReasoningWarned({
+                  isApiProtocolShown,
+                  apiProtocol,
+                  supportsReasoning: settings.supports_reasoning,
+                  profile,
+                })
+                  ? LLM_MODEL_AZURE_REASONING_WARNING
+                  : undefined
+              }
               locked={isReasoningLocked}
               description={getLlmModelReasoningDescription(profile)}
             >

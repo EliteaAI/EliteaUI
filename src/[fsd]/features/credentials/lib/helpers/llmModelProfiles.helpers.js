@@ -1,3 +1,4 @@
+import { API_PROTOCOLS } from '../constants/apiProtocol.constants.js';
 import {
   LLM_MODEL_EFFORT_LEVELS,
   LLM_MODEL_EFFORT_LEVEL_LABELS,
@@ -8,6 +9,7 @@ import {
   LLM_MODEL_RECOGNITION_TONES,
 } from '../constants/llmModelForm.constants.js';
 
+const AZURE_REASONING_WARNED_VENDORS = ['openai', 'anthropic'];
 const DEFAULT_NAME_NORMALIZATION = { lowercase: true, replace: { '.': '-', _: '-' } };
 
 const escapeRegExp = text => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -66,6 +68,15 @@ export const getLlmModelRecognition = (name, profile) => {
       : LLM_MODEL_RECOGNITION_TEXTS.recognizedWithoutReasoning(profile.label),
   };
 };
+
+// Gemini reasons fine on DIAL's azure route; only recognized OpenAI/Anthropic models need another protocol
+export const isAzureReasoningWarned = ({ isApiProtocolShown, apiProtocol, supportsReasoning, profile }) =>
+  Boolean(
+    isApiProtocolShown &&
+    apiProtocol === API_PROTOCOLS.azure &&
+    supportsReasoning &&
+    AZURE_REASONING_WARNED_VENDORS.some(vendor => profile?.id?.startsWith(`${vendor}-`)),
+  );
 
 export const getLlmModelReasoningDescription = profile => {
   if (!profile) return LLM_MODEL_REASONING_DESCRIPTIONS.default;
