@@ -12,10 +12,13 @@ export const useParticipantSpOAuth = ({
       ? originalDetails?.settings?.sharepoint_configuration
       : null;
 
-  const { spConfig, connectionTokenKey: spConnectionTokenKey } = useResolvedSharepointConfig(
-    spConfigRef,
-    entity_meta?.project_id,
-  );
+  const {
+    spConfig: resolvedSpConfig,
+    oauthEndpoint,
+    connectionTokenKey: spConnectionTokenKey,
+  } = useResolvedSharepointConfig(spConfigRef, entity_meta?.project_id);
+
+  const spConfig = oauthEndpoint ? resolvedSpConfig : null;
 
   const { isLoggedIn: spOAuthLoggedIn } = useMcpTokenChange(
     spConnectionTokenKey ? { serverUrl: spConnectionTokenKey } : null,
