@@ -68,6 +68,29 @@ export const generateMessagePayload = ({
           : undefined,
         mcp_tokens: mcpTokens,
       };
+    case ChatParticipantType.Skills:
+      return {
+        user_input: question,
+        // A skill runs on its saved run settings; only an explicit per-run model choice overrides them
+        llm_settings:
+          allowLLMSettingsOverride && unsavedLLMSettings
+            ? Object.fromEntries(
+                Object.entries(filterReasoningEffortFromSettings(unsavedLLMSettings, selectedModel)).filter(
+                  ([key]) => key !== 'steps_limit',
+                ),
+              )
+            : undefined,
+        project_id: projectId,
+        participant_id: participantId,
+        conversation_uuid,
+        question_id,
+        interaction_uuid,
+        attachments_info: attachmentList
+          .filter(item => item.filepath)
+          .map(item => ({
+            filepath: item.filepath,
+          })),
+      };
     default: {
       // For default case (regular chat), prefer unsavedLLMSettings if available, else use selectedModel
       const stepsLimit = unsavedLLMSettings?.steps_limit ?? conversationMeta?.steps_limit;

@@ -82,7 +82,7 @@ const extractEditedText = items => {
  * agent, subagent, participant or context fork is ever created on the backend.
  */
 const SkillTestPanel = memo(props => {
-  const { isFullScreenChat, setIsFullScreenChat } = props;
+  const { isFullScreenChat, setIsFullScreenChat, banner } = props;
   const projectId = useSelectedProjectId();
   // This panel keeps no persisted conversation, so a dismissal lasts for the panel session
   const budgetWarning = useBudgetWarning({ projectId });
@@ -504,6 +504,7 @@ const SkillTestPanel = memo(props => {
     >
       <Box sx={styles.mainContainer}>
         <Box sx={styles.topBarContainer}>
+          {banner}
           <Box sx={styles.controlsContainer}>
             <FullScreenToggle
               isFullScreenChat={isFullScreenChat}

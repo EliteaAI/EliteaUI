@@ -2,7 +2,7 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Form, Formik } from 'formik';
 import { useDispatch } from 'react-redux';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import { Box, CircularProgress } from '@mui/material';
 
@@ -14,12 +14,14 @@ import {
   CreateSkillForm,
   SkillControls,
   SkillInformation,
-  SkillTestPanel,
+  SkillRunPane,
   SkillValidateSchema,
   useCompareSkillVersions,
   useSetSkillDefaultVersionMutation,
   useSkillDetailsQuery,
 } from '@/[fsd]/features/skill';
+import { SKILL_RUN_FOCUS_TARGET, SKILL_RUN_SEARCH_PARAMS } from '@/[fsd]/features/skill/lib/constants';
+import { useRestoredConversation, useRunHistoryNavigation } from '@/[fsd]/shared/lib/hooks';
 import { BreadcrumbsOrTitle } from '@/[fsd]/shared/ui';
 import { SkillTabBar } from '@/[fsd]/widgets/skill-tab-bar';
 import { eliteaApi } from '@/api/eliteaApi';
@@ -69,6 +71,53 @@ const EditSkill = memo(() => {
   const [dirty, setDirty] = useState(false);
   const [isFullScreenChat, setIsFullScreenChat] = useState(false);
   const [compareVersionsOpen, setCompareVersionsOpen] = useState(false);
+  const [runFocusRequest, setRunFocusRequest] = useState(0);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const runConversationId = searchParams.get(SKILL_RUN_SEARCH_PARAMS.run);
+
+  const { goToRunHistory } = useRunHistoryNavigation({
+    entityId: skillId,
+    historyRoute: RouteDefinitions.SkillRunHistory,
+    entityParam: 'skillId',
+  });
+  const { restoredConversationID, onRestoreConversationComplete } = useRestoredConversation();
+
+  const onRunConversationChange = useCallback(
+    conversationId => {
+      setSearchParams(
+        previous => {
+          const next = new URLSearchParams(previous);
+          if (conversationId) next.set(SKILL_RUN_SEARCH_PARAMS.run, String(conversationId));
+          else next.delete(SKILL_RUN_SEARCH_PARAMS.run);
+          return next;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
+
+  const onRun = useCallback(() => setRunFocusRequest(request => request + 1), []);
+
+  useEffect(() => {
+    if (searchParams.get(SKILL_RUN_SEARCH_PARAMS.focus) !== SKILL_RUN_FOCUS_TARGET) return;
+    onRun();
+    setSearchParams(
+      previous => {
+        const next = new URLSearchParams(previous);
+        next.delete(SKILL_RUN_SEARCH_PARAMS.focus);
+        return next;
+      },
+      { replace: true },
+    );
+  }, [onRun, searchParams, setSearchParams]);
+
+  useEffect(() => {
+    if (!restoredConversationID) return;
+    onRunConversationChange(restoredConversationID);
+    toastSuccess('Chat has been restored successfully.');
+    onRestoreConversationComplete();
+  }, [onRestoreConversationComplete, onRunConversationChange, restoredConversationID, toastSuccess]);
 
   const [setDefaultVersion, { isLoading: isSettingDefault, reset: resetDefaultMutation }] =
     useSetSkillDefaultVersionMutation();
@@ -90,6 +139,27 @@ const EditSkill = memo(() => {
   const { data, isFetching, isError, error } = useSkillDetailsQuery(
     { projectId, skillId, versionId: version },
     { skip: !projectId || !skillId },
+  );
+
+  // Asks the server rather than this page's cached version list, which another tab may have outdated
+  const onOpenRunVersion = useCallback(
+    async (pinnedVersionId, conversationId) => {
+      const pinnedVersionRequest = dispatch(
+        eliteaApi.endpoints.skillDetails.initiate({ projectId, skillId, versionId: String(pinnedVersionId) }),
+      );
+      const { error: pinnedVersionError } = await pinnedVersionRequest;
+      pinnedVersionRequest.unsubscribe();
+      if (pinnedVersionError && isNotFoundError(pinnedVersionError)) {
+        toastError('The version this run used no longer exists; starting a new run');
+        onRunConversationChange(null);
+        return;
+      }
+      const search = new URLSearchParams({ [SKILL_RUN_SEARCH_PARAMS.run]: String(conversationId) });
+      navigate(`${RouteDefinitions.Skills}/${tab}/${skillId}/${pinnedVersionId}?${search.toString()}`, {
+        replace: true,
+      });
+    },
+    [dispatch, navigate, onRunConversationChange, projectId, skillId, tab, toastError],
   );
 
   const initialValues = useMemo(() => buildInitialValues(data), [data]);
@@ -239,6 +309,7 @@ const EditSkill = memo(() => {
                   onSetDefault={() => handleOpenDefaultDialog(currentVersionId)}
                   onSuccess={handleSuccess}
                   onOpenCompare={() => setCompareVersionsOpen(true)}
+                  onRun={onRun}
                 />
               ),
               content: isFetching ? (
@@ -282,9 +353,14 @@ const EditSkill = memo(() => {
                       size={{ xs: 12, lg: lgGridColumns }}
                       sx={styles.rightGridItem}
                     >
-                      <SkillTestPanel
+                      <SkillRunPane
                         isFullScreenChat={isFullScreenChat}
                         setIsFullScreenChat={setIsFullScreenChat}
+                        runConversationId={runConversationId}
+                        onRunConversationChange={onRunConversationChange}
+                        onOpenRunVersion={onOpenRunVersion}
+                        onShowHistory={goToRunHistory}
+                        focusRequest={runFocusRequest}
                       />
                     </RightGridItem>
                   </StyledGridContainer>

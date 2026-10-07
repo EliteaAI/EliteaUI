@@ -1,3 +1,4 @@
+import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { ChatParticipantType, DEFAULT_PARTICIPANT_NAME } from '@/common/constants';
 
 /**
@@ -116,3 +117,9 @@ export const isWelcomeMessageParticipant = participant =>
 // Includes the pinned version so switching a participant's version yields a new key.
 export const getParticipantWelcomeKey = participant =>
   `${getChatParticipantUniqueId(participant)}::${participant.entity_settings?.version_id ?? ''}`;
+
+// A skill run conversation always talks to its skill, even where no active participant was stored locally
+export const getDefaultActiveParticipant = conversation =>
+  conversation?.source === ParticipantEntityConstants.ParticipantEntityTypes.Skill
+    ? conversation.participants?.find(participant => participant.entity_name === ChatParticipantType.Skills)
+    : undefined;

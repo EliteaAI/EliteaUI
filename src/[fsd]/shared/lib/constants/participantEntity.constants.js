@@ -4,4 +4,5 @@ export const ParticipantEntityTypes = {
   Pipeline: 'pipeline',
   Toolkit: 'toolkit',
   MCP: 'mcp',
+  Skill: 'skill',
 };

@@ -10,6 +10,7 @@ import AuthorContainer from '@/components/AuthorContainer';
 import EntityIcon from '@/components/EntityIcon';
 import { getCardGradientStyles } from '@/utils/cardStyles';
 
+import CatalogSkillRunButton from './CatalogSkillRunButton';
 import SkillHubLike from './SkillHubLike';
 
 const SkillCard = memo(props => {
@@ -81,6 +82,7 @@ const SkillCard = memo(props => {
           </Box>
         </StyledTooltip>
         <Box sx={styles.actionContainer}>
+          <CatalogSkillRunButton skill={skill} />
           <SkillHubLike
             viewMode={ViewMode.Public}
             data={skill}

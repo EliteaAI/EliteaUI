@@ -116,3 +116,37 @@ describe('generateChatContinuePayload', () => {
     });
   });
 });
+
+describe('Skill participant payload', () => {
+  const participant = { id: 7, entity_name: ChatParticipantType.Skills };
+  const selectedModel = { name: 'gpt-4.1', project_id: 2 };
+
+  it('lets the skill run on its saved settings when the model was not changed', () => {
+    const payload = generateMessagePayload({ question: 'Hi', participant, selectedModel });
+    expect(payload.llm_settings).toBeUndefined();
+    expect(payload.user_input).toBe('Hi');
+    expect(payload.participant_id).toBe(7);
+  });
+
+  it('sends the per-run model choice only where an override is allowed', () => {
+    const unsavedLLMSettings = { model_name: 'gpt-4.1', model_project_id: 2, steps_limit: 5 };
+    expect(
+      generateMessagePayload({ participant, selectedModel, unsavedLLMSettings }).llm_settings,
+    ).toBeUndefined();
+    const payload = generateMessagePayload({
+      participant,
+      selectedModel,
+      unsavedLLMSettings,
+      allowLLMSettingsOverride: true,
+    });
+    expect(payload.llm_settings).toEqual({ model_name: 'gpt-4.1', model_project_id: 2 });
+  });
+
+  it('carries attachments as uploaded file paths', () => {
+    const payload = generateMessagePayload({
+      participant,
+      attachmentList: [{ filepath: '/bucket/a.png' }, { name: 'pending.png' }],
+    });
+    expect(payload.attachments_info).toEqual([{ filepath: '/bucket/a.png' }]);
+  });
+});

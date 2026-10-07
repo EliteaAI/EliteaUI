@@ -583,6 +583,13 @@ export const PERMISSIONS = {
     publish: 'models.applications.skills.publish',
     delete: 'models.applications.skills.delete',
     update: 'models.applications.skills.update',
+    details: 'models.applications.skills.details',
+  },
+  predict: {
+    post: 'models.applications.predict.post',
+  },
+  catalog: {
+    details: 'models.applications.public_application.details',
   },
   versions: {
     delete: 'models.applications.version.delete',

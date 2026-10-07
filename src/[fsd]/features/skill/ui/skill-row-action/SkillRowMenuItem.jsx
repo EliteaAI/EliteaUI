@@ -3,7 +3,7 @@ import { memo } from 'react';
 import { MenuItem, Typography } from '@mui/material';
 
 const SkillRowMenuItem = memo(props => {
-  const { icon, label, onClick, disabled } = props;
+  const { icon, label, onClick, disabled, testId } = props;
   const styles = skillRowMenuItemStyles();
 
   return (
@@ -11,6 +11,7 @@ const SkillRowMenuItem = memo(props => {
       onClick={onClick}
       sx={styles.menuItem}
       disabled={disabled}
+      data-testid={testId}
     >
       {icon}
       <Typography variant="labelMedium">{label}</Typography>

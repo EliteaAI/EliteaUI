@@ -6,7 +6,7 @@ import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 
 const DEFAULT_TAB = 'all';
 
-export const useRunHistoryNavigation = ({ entityId, historyRoute }) => {
+export const useRunHistoryNavigation = ({ entityId, historyRoute, entityParam = 'agentId' }) => {
   const navigate = useNavigate();
   const { tab } = useParams();
   const { search } = useLocation();
@@ -15,10 +15,10 @@ export const useRunHistoryNavigation = ({ entityId, historyRoute }) => {
     navigate(
       NavigationHelpers.buildRoute(historyRoute, {
         tab: tab ?? DEFAULT_TAB,
-        agentId: entityId,
+        [entityParam]: entityId,
       }) + search,
     );
-  }, [navigate, tab, entityId, historyRoute, search]);
+  }, [navigate, tab, entityId, entityParam, historyRoute, search]);
 
   return { goToRunHistory };
 };

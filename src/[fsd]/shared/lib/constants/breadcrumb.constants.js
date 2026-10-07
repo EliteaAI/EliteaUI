@@ -104,6 +104,10 @@ export const BREADCRUMB_REGISTRY = {
     fallbackLabel: 'Edit Skill',
     testId: 'skill-detail-title',
   },
+  [RouteDefinitions.SkillRunHistory]: {
+    parent: RouteDefinitions.SkillsDetail,
+    label: 'Run History',
+  },
 
   [RouteDefinitions.PipelinesWithTab]: { label: PathSessionMap[RouteDefinitions.Pipelines] },
   [RouteDefinitions.CreatePipeline]: { parent: RouteDefinitions.PipelinesWithTab, label: 'New Pipeline' },
