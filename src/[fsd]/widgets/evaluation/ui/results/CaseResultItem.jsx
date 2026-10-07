@@ -12,7 +12,7 @@ import { formatScore } from '../../lib/helpers';
 import DimensionResultCard from './DimensionResultCard';
 
 const CaseResultItem = memo(props => {
-  const { card, guardrailChip, canEvaluate = false, onViewDetails, onEvaluate } = props;
+  const { card, executionBadge, canEvaluate = false, onViewDetails, onEvaluate } = props;
 
   const [expanded, setExpanded] = useState(false);
 
@@ -36,6 +36,8 @@ const CaseResultItem = memo(props => {
   );
 
   const pendingCount = card.pendingCount ?? 0;
+  const guardrailChip = executionBadge?.guardrail;
+  const counters = executionBadge?.counters;
   const styles = caseResultItemStyles();
 
   return (
@@ -91,12 +93,28 @@ const CaseResultItem = memo(props => {
               </Box>
             )}
           </Box>
-          <Typography
-            variant="bodyMedium"
-            sx={styles.caseScore}
-          >
-            {formatScore(card.caseScore)}
-          </Typography>
+          <Box sx={styles.headerRight}>
+            {counters && (
+              <Tooltip
+                title={counters.tooltip}
+                placement="top"
+              >
+                <Typography
+                  variant="bodySmall"
+                  sx={[styles.caseCounters, counters.hasErrors && styles.caseCountersError]}
+                  data-testid={`case-counters-${card.id}`}
+                >
+                  {counters.label}
+                </Typography>
+              </Tooltip>
+            )}
+            <Typography
+              variant="bodyMedium"
+              sx={styles.caseScore}
+            >
+              {formatScore(card.caseScore)}
+            </Typography>
+          </Box>
         </Box>
 
         <Collapse
@@ -225,6 +243,18 @@ const caseResultItemStyles = () => ({
     color: palette.warning.main,
     fontWeight: 500,
     whiteSpace: 'nowrap',
+  }),
+  headerRight: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '1rem',
+  },
+  caseCounters: ({ palette }) => ({
+    color: palette.text.secondary,
+    whiteSpace: 'nowrap',
+  }),
+  caseCountersError: ({ palette }) => ({
+    color: palette.error.main,
   }),
   caseScore: ({ palette }) => ({
     color: palette.text.secondary,

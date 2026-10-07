@@ -15,7 +15,7 @@ import {
 } from '../../api';
 import { EVAL_PERMISSIONS } from '../../lib/constants';
 import {
-  buildCaseGuardrailChips,
+  buildCaseExecutionBadges,
   buildScorecard,
   formatRunStatus,
   getRunEndMessage,
@@ -65,14 +65,14 @@ const RunResultsView = memo(props => {
   // doesn't match so the loader stays visible instead of flashing the previous run's results.
   const resultsData = resultsDataRaw?.run?.id === runId ? resultsDataRaw : null;
 
-  // Per-case agent outcomes without the step lists, for the case list's guardrail chips (design §6).
-  // An on-demand run has no executions, so the list simply shows no chips.
+  // Per-case agent outcomes without the step lists, for the case list's guardrail chips and counters
+  // (design §6). An on-demand run has no executions, so the list simply shows neither.
   const { data: executionsData } = useEvalCaseExecutionsQuery(
     { projectId, runId, includeTrajectory: false },
     { skip: !projectId || !runId },
   );
-  const guardrailChips = useMemo(
-    () => (executionsData?.run_id === runId ? buildCaseGuardrailChips(executionsData?.executions) : {}),
+  const executionBadges = useMemo(
+    () => (executionsData?.run_id === runId ? buildCaseExecutionBadges(executionsData?.executions) : {}),
     [executionsData, runId],
   );
 
@@ -310,7 +310,7 @@ const RunResultsView = memo(props => {
       <ResultsDimensionTable bindings={scorecard.bindings ?? []} />
       <CaseResultsList
         cases={scorecard.cases}
-        guardrailChips={guardrailChips}
+        executionBadges={executionBadges}
         canEvaluate={canEvaluate}
         onViewDetails={handleViewCaseDetails}
         onEvaluate={handleEvaluateDimension}

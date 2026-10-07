@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  buildCaseGuardrailChips,
+  buildCaseExecutionBadges,
   buildRunTrajectorySummary,
   formatDurationMs,
+  getCaseCounters,
   getCaseGuardrailChip,
   getCasePauseDetails,
   getExcludedCasesNote,
@@ -239,19 +240,42 @@ describe('pause and guardrail helpers', () => {
     expect(getCaseGuardrailChip({ status: 'ok', metrics: {} })).toBeNull();
   });
 
-  it('keys chips by dataset case id and leaves out clean cases', () => {
-    const chips = buildCaseGuardrailChips([
+  it('keys badges by dataset case id and leaves out cases with nothing to show', () => {
+    const badges = buildCaseExecutionBadges([
       paused,
       { dataset_case_id: 8, status: 'ok', metrics: {} },
+      { dataset_case_id: 9, status: 'ok', metrics: { llm_calls: 1, tool_calls: 0 } },
       { dataset_case_id: null, status: 'parked' },
     ]);
-    expect(Object.keys(chips)).toEqual(['7']);
-    expect(buildCaseGuardrailChips(undefined)).toEqual({});
+    expect(Object.keys(badges)).toEqual(['7', '9']);
+    expect(badges[7].guardrail.label).toBe('Paused for review');
+    expect(badges[9]).toEqual({ guardrail: null, counters: expect.objectContaining({ label: '1 step' }) });
+    expect(buildCaseExecutionBadges(undefined)).toEqual({});
+  });
+
+  it('counts steps as LLM plus tool calls and shows errors and retries only when present', () => {
+    expect(getCaseCounters({ metrics: { llm_calls: 3, tool_calls: 3, tool_errors: 1, retries: 1 } })).toEqual(
+      {
+        label: '6 steps · 1 tool error · 1 retry',
+        tooltip: '3 LLM calls, 3 tool calls, 1 tool error, 1 retry',
+        hasErrors: true,
+      },
+    );
+    expect(
+      getCaseCounters({ metrics: { llm_calls: 2, tool_calls: 1, tool_errors: 0, retries: 2 } }),
+    ).toMatchObject({
+      label: '3 steps · 2 retries',
+      hasErrors: false,
+    });
+    expect(getCaseCounters({ metrics: {} })).toBeNull();
+    expect(getCaseCounters({ metrics: null })).toBeNull();
+    expect(getCaseCounters(undefined)).toBeNull();
   });
 
   it('flags blocked and auth-waiting tool steps only', () => {
     expect(isGuardrailStep({ kind: 'tool', status: 'blocked' })).toBe(true);
     expect(isGuardrailStep({ kind: 'tool', status: 'action_required' })).toBe(true);
+    expect(isGuardrailStep({ kind: 'tool', status: 'paused' })).toBe(true);
     expect(isGuardrailStep({ kind: 'tool', status: 'error' })).toBe(false);
     expect(isGuardrailStep({ kind: 'llm', status: 'blocked' })).toBe(false);
   });

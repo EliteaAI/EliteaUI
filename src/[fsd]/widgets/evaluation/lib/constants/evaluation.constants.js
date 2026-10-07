@@ -316,8 +316,9 @@ export const CASE_EXECUTION_STATUS = {
   parked: 'parked',
 };
 
-// Tool-step statuses a guardrail produced: a sensitive tool refused, or an MCP call waiting on auth.
-export const GUARDRAIL_STEP_STATUSES = ['blocked', 'action_required'];
+// Tool-step statuses a guardrail produced: a sensitive tool refused, an MCP call waiting on auth, or
+// the call that paused the run for a human (`ask_user`, a HITL guard).
+export const GUARDRAIL_STEP_STATUSES = ['blocked', 'action_required', 'paused'];
 
 export const TRAJECTORY_STEP_KIND = {
   llm: 'llm',

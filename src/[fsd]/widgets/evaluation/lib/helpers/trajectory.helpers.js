@@ -166,15 +166,50 @@ export const getCaseGuardrailChip = execution => {
   };
 };
 
-/** Guardrail chips keyed by dataset case id, for the run's case list. */
-export const buildCaseGuardrailChips = executions => {
-  const chips = {};
+const plural = (count, word, many = `${word}s`) => `${count} ${count === 1 ? word : many}`;
+
+/**
+ * A case's step, tool-error and retry counts for the case list (design §6), read from the stored
+ * `metrics`; null when the case recorded none. Steps are LLM calls plus tool calls.
+ * @returns {{ label: string, tooltip: string, hasErrors: boolean } | null}
+ *   e.g. label "6 steps · 1 tool error · 1 retry" (zero errors and retries are left out)
+ */
+export const getCaseCounters = execution => {
+  const metrics = execution?.metrics;
+  if (!metrics || (metrics.llm_calls == null && metrics.tool_calls == null)) return null;
+  const llmCalls = metrics.llm_calls ?? 0;
+  const toolCalls = metrics.tool_calls ?? 0;
+  const toolErrors = metrics.tool_errors ?? 0;
+  const retries = metrics.retries ?? 0;
+  const label = [
+    plural(llmCalls + toolCalls, 'step'),
+    toolErrors ? plural(toolErrors, 'tool error') : null,
+    retries ? plural(retries, 'retry', 'retries') : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+
+  return {
+    label,
+    tooltip: `${plural(llmCalls, 'LLM call')}, ${plural(toolCalls, 'tool call')}, ${plural(toolErrors, 'tool error')}, ${plural(retries, 'retry', 'retries')}`,
+    hasErrors: toolErrors > 0,
+  };
+};
+
+/**
+ * The case list's per-case agent outcome, keyed by dataset case id: the guardrail chip and the
+ * counters. Cases with neither are left out.
+ * @returns {Record<number, { guardrail: object | null, counters: object | null }>}
+ */
+export const buildCaseExecutionBadges = executions => {
+  const badges = {};
   for (const execution of executions ?? []) {
     if (execution?.dataset_case_id == null) continue;
-    const chip = getCaseGuardrailChip(execution);
-    if (chip) chips[execution.dataset_case_id] = chip;
+    const guardrail = getCaseGuardrailChip(execution);
+    const counters = getCaseCounters(execution);
+    if (guardrail || counters) badges[execution.dataset_case_id] = { guardrail, counters };
   }
-  return chips;
+  return badges;
 };
 
 const formatAverage = value =>
