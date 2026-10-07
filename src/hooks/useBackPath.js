@@ -139,7 +139,7 @@ export default function useBackPath() {
   const selectedProjectId = useSelectedProjectId();
   const authorName = useAuthorNameFromUrl();
   const authorId = useAuthorIdFromUrl();
-  const { routeStack } = locationState ?? { routeStack: [] };
+  const routeStack = useMemo(() => locationState?.routeStack ?? [], [locationState?.routeStack]);
   const hasMultiplePaths = useMemo(() => {
     if (routeStack.length > 1) {
       return true;
