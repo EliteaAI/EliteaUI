@@ -60,7 +60,7 @@ const ContextStrategyTokenManagement = memo(props => {
       <Box sx={styles.section}>
         <Label.InfoLabelWithTooltip
           label="Max Context Tokens"
-          tooltip="Maximum number of tokens to keep in conversation context"
+          tooltip="Maximum number of tokens to keep in chat context"
           sx={styles.label}
         />
         <FormInput
@@ -106,7 +106,7 @@ const ContextStrategyTokenManagement = memo(props => {
       {/* <Box sx={styles.section}>
         <Label.InfoLabelWithTooltip
           label="Summaries Limit Count"
-          tooltip="Maximum number of conversation summaries to maintain"
+          tooltip="Maximum number of chat summaries to maintain"
           sx={styles.label}
         />
         <FormInput

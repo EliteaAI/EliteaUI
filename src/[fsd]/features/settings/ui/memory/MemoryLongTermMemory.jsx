@@ -21,7 +21,7 @@ const MemoryLongTermMemory = memo(() => {
                 variant="bodyMedium"
                 color="text.primary"
               >
-                Coming soon - Manage what the AI remembers about you across conversations
+                Coming soon - Manage what the AI remembers about you across chats
               </Typography>
             </Box>
           ),

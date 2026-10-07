@@ -149,17 +149,17 @@ export const useMoveToFolderConversation = props => {
     async (conversation, targetFolder) => {
       // Don't allow moving playback conversations
       if (conversation.isPlayback) {
-        return { error: 'Cannot move playback conversations' };
+        return { error: 'Cannot move playback chats' };
       }
 
       // Don't allow moving original conversations if they have playback conversations
       if (!conversation.isPlayback && hasPlaybackConversations(conversation.id, conversations, folders)) {
         if (toastError) {
           toastError(
-            'Cannot move this conversation while playback conversations exist. Please delete all playback conversations first.',
+            'Cannot move this chat while playback chats exist. Please delete all playback chats first.',
           );
         }
-        return { error: 'Cannot move conversation with active playback conversations' };
+        return { error: 'Cannot move chat with active playback chats' };
       }
 
       const targetFolderId = targetFolder?.id || null;
@@ -209,17 +209,17 @@ export const useMoveToFolderConversation = props => {
     async conversation => {
       // Don't allow moving playback conversations
       if (conversation.isPlayback) {
-        return { error: 'Cannot move playback conversations' };
+        return { error: 'Cannot move playback chats' };
       }
 
       // Don't allow moving original conversations if they have playback conversations
       if (!conversation.isPlayback && hasPlaybackConversations(conversation.id, conversations, folders)) {
         if (toastError) {
           toastError(
-            'Cannot move this conversation while playback conversations exist. Please delete all playback conversations first.',
+            'Cannot move this chat while playback chats exist. Please delete all playback chats first.',
           );
         }
-        return { error: 'Cannot move conversation with active playback conversations' };
+        return { error: 'Cannot move chat with active playback chats' };
       }
 
       if (!conversation.isPlayback) {

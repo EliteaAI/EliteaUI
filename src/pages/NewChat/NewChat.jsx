@@ -1527,7 +1527,7 @@ const NewChat = props => {
             Conversation not found
           </Box>
         }
-        alertContent="The conversation you are looking for does not exist in your project or you don't have access to it. For sharing links, please use the Share option in the conversation menu."
+        alertContent="The chat you are looking for does not exist in your project or you don't have access to it. For sharing links, please use the Share option in the chat menu."
         confirmButtonText="Got it"
         cancelButtonText=""
         onClose={handleNotFoundAcknowledge}

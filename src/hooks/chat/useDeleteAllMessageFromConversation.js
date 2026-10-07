@@ -117,7 +117,7 @@ const useDeleteAllMessageFromConversation = ({
   useEffect(() => {
     if (isSuccess) {
       // Use success toast (green with check icon)
-      (toastSuccess || toastInfo)('All messages in this conversation were successfully deleted.');
+      (toastSuccess || toastInfo)('All messages in this chat were successfully deleted.');
       reset();
     }
   }, [isSuccess, reset, toastSuccess, toastInfo]);

@@ -68,7 +68,7 @@ const ManageLinksDialog = memo(props => {
         variant="bodySmall2"
         color="text.disabled"
       >
-        No active share links for this conversation.
+        No active share links for this chat.
       </Typography>
     </Box>
   ) : (
@@ -92,7 +92,7 @@ const ManageLinksDialog = memo(props => {
               variant="bodySmall2"
               color="text.secondary"
             >
-              {SCOPE_LABELS[link.scope] ?? 'Full conversation'}
+              {SCOPE_LABELS[link.scope] ?? 'Full chat'}
               {link.expires_at
                 ? ` · Expires ${new Date(link.expires_at).toLocaleDateString()}`
                 : ' · Never expires'}
