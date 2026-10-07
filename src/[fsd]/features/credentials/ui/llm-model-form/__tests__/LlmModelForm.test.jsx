@@ -642,18 +642,37 @@ describe('LlmModelForm', () => {
       expect(readSettings()).not.toHaveProperty('api_protocol');
     });
 
-    it('rejects reasoning with the Azure OpenAI protocol on the Reasoning field', async () => {
+    // #6919: azure + reasoning is only warned about for recognized Claude/GPT models, never blocked
+    it('warns, without blocking, about reasoning with Azure OpenAI for a recognized Claude model', async () => {
       const user = userEvent.setup();
       renderForm(EXISTING_DIAL_MODEL, { showValidation: true });
 
       await user.click(within(screen.getByTestId('llm-model-field-supports_reasoning')).getByRole('switch'));
 
-      expect(screen.getByTestId('llm-model-error-supports_reasoning')).toHaveTextContent(
-        "Reasoning isn't supported with the Azure OpenAI protocol. Choose OpenAI or Anthropic, or turn Reasoning off.",
+      expect(screen.getByTestId('llm-model-warning-supports_reasoning')).toHaveTextContent(
+        'Reasoning may not work for this model with the Azure OpenAI protocol.',
       );
+      expect(screen.queryByTestId('llm-model-error-supports_reasoning')).not.toBeInTheDocument();
+      expect(lastReportedErrors()).toEqual({});
 
-      await pickOption(user, 'api_protocol', 'OpenAI');
+      await pickOption(user, 'api_protocol', 'Anthropic');
 
+      expect(screen.queryByTestId('llm-model-warning-supports_reasoning')).not.toBeInTheDocument();
+    });
+
+    it('shows no reasoning warning with Azure OpenAI for a Gemini model', async () => {
+      const user = userEvent.setup();
+      renderForm(
+        {
+          ...EXISTING_DIAL_MODEL,
+          settings: { ...EXISTING_DIAL_MODEL.settings, name: 'gemini-3.8-flash', supports_reasoning: true },
+        },
+        { showValidation: true },
+      );
+      await pickOption(user, 'api_protocol', 'Azure OpenAI');
+
+      expect(readSettings().supports_reasoning).toBe(true);
+      expect(screen.queryByTestId('llm-model-warning-supports_reasoning')).not.toBeInTheDocument();
       expect(screen.queryByTestId('llm-model-error-supports_reasoning')).not.toBeInTheDocument();
       expect(lastReportedErrors()).toEqual({});
     });

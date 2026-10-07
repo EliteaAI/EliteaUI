@@ -127,15 +127,8 @@ describe('validateLlmModelSettings', () => {
       expect(validate({}, { isApiProtocolShown: false, apiProtocol: '' }).api_protocol).toBeUndefined();
     });
 
-    it('rejects reasoning with the Azure OpenAI protocol', () => {
-      expect(
-        validate({ supports_reasoning: true }, { ...dial, apiProtocol: 'azure' }).supports_reasoning,
-      ).toBe(
-        "Reasoning isn't supported with the Azure OpenAI protocol. Choose OpenAI or Anthropic, or turn Reasoning off.",
-      );
-    });
-
-    it.each(['openai', 'anthropic'])('accepts reasoning with the %s protocol', apiProtocol => {
+    // #6919: azure is DIAL's route for Gemini, where reasoning works, so it only gets a UI warning
+    it.each(['azure', 'openai', 'anthropic'])('accepts reasoning with the %s protocol', apiProtocol => {
       expect(validate({ supports_reasoning: true }, { ...dial, apiProtocol })).toEqual({});
     });
 

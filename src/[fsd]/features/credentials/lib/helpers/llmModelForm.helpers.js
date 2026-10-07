@@ -1,6 +1,5 @@
 import {
   LLM_MODEL_CREDENTIAL_TYPE_TAGS,
-  LLM_MODEL_ERROR_MESSAGES,
   LLM_MODEL_ERROR_SOURCE_FIELDS,
   LLM_MODEL_FIELDS,
   LLM_MODEL_FIELDS_CHECKED_ON_OPEN,
@@ -12,7 +11,6 @@ import {
 } from '../constants/llmModelForm.constants.js';
 
 const WHOLE_NUMBER_INPUT = /^\d+$/;
-const DIAL_AZURE_REASONING_REJECTION = "api_protocol='azure' does not support reasoning";
 const DESCRIPTION_ERROR_FIELDS = [LLM_MODEL_FIELDS.description, `data.${LLM_MODEL_FIELDS.description}`];
 
 export const convertDisplayNameToLlmModelId = displayName =>
@@ -113,8 +111,5 @@ export const mapLlmModelSaveErrorToFields = error => {
     .replace(/^data\./, '')
     .split('.')[0];
   if (LLM_MODEL_REASONING_FIELDS.includes(dataField)) return { [dataField]: message };
-  if (message.includes(DIAL_AZURE_REASONING_REJECTION)) {
-    return { [LLM_MODEL_FIELDS.reasoning]: LLM_MODEL_ERROR_MESSAGES.reasoningNotSupportedByProtocol };
-  }
   return {};
 };

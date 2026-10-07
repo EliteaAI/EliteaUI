@@ -221,19 +221,6 @@ describe('mapLlmModelSaveErrorToFields', () => {
     });
   });
 
-  it('puts the DIAL azure reasoning rejection on the Reasoning field', () => {
-    const error = {
-      data: {
-        field: 'data',
-        error: "Value error, api_protocol='azure' does not support reasoning; use 'anthropic' or 'openai'",
-      },
-    };
-    expect(mapLlmModelSaveErrorToFields(error)).toEqual({
-      supports_reasoning:
-        "Reasoning isn't supported with the Azure OpenAI protocol. Choose OpenAI or Anthropic, or turn Reasoning off.",
-    });
-  });
-
   it('leaves other reasoning errors to the generic error message, as the backend wrote them', () => {
     const error = {
       data: { field: 'data', error: "Value error, reasoning effort 'extreme' is not supported" },

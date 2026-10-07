@@ -40,7 +40,7 @@
     "@codemirror/lang-json": "^6.0.1",
     "@codemirror/lang-markdown": "^6.3.3",
     "@codemirror/lang-xml": "^6.1.0",
-    "@codemirror/language": "^6.11.0",
+    "@codemirror/language": "~6.12.3",
     "@codemirror/legacy-modes": "^6.5.0",
     "@codemirror/search": "^6.5.11",
     "@codemirror/theme-one-dark": "^6.1.3",

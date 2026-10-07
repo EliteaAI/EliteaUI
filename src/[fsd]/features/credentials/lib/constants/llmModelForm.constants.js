@@ -247,8 +247,6 @@ export const LLM_MODEL_ERROR_MESSAGES = {
   credentialsRequired: 'AI credentials are required.',
   credentialsTypePending: 'Checking the selected AI credentials. Try saving again in a moment.',
   apiProtocolRequired: 'API protocol is required.',
-  reasoningNotSupportedByProtocol:
-    "Reasoning isn't supported with the Azure OpenAI protocol. Choose OpenAI or Anthropic, or turn Reasoning off.",
   supportedEffortsRequired: 'Select at least one level other than None.',
   supportedEffortsNotOffered: labels =>
     `${labels.join(', ')} ${labels.length > 1 ? "aren't" : "isn't"} offered for this model. Uncheck to save.`,
@@ -257,6 +255,9 @@ export const LLM_MODEL_ERROR_MESSAGES = {
 };
 
 export const LLM_MODEL_TIER_CONFLICT_WARNING = 'This model was set as both low and high tier. Choose one.';
+
+export const LLM_MODEL_AZURE_REASONING_WARNING =
+  'Reasoning may not work for this model with the Azure OpenAI protocol. Choose OpenAI or Anthropic for reasoning.';
 
 export const LLM_MODEL_MODEL_NAME_HELPER_TEXT =
   'The model ID from the provider, for example global.openai.gpt-5.6-luna';
@@ -317,7 +318,7 @@ export const LLM_MODEL_FIELD_INFO_TEXTS = {
   [LLM_MODEL_FIELDS.credentials]:
     'The provider connection used to call this model: endpoint and keys. Credentials are managed on the **Credentials** page. Choosing **DIAL** credentials adds the API protocol field.',
   [LLM_MODEL_FIELDS.apiProtocol]:
-    "DIAL routes requests to several providers. Choose the request format this model uses behind DIAL: **OpenAI**, **Azure OpenAI**, or **Anthropic**. Reasoning isn't available with Azure OpenAI.",
+    'DIAL routes requests to several providers. Choose the request format this model uses behind DIAL: **OpenAI**, **Azure OpenAI**, or **Anthropic**. Gemini models use **Azure OpenAI**.',
   [LLM_MODEL_FIELDS.openaiCompatible]:
     "Turn on to send this model's requests in the OpenAI API format, for example through a proxy or a self-hosted endpoint. It only changes how Claude models are called; they otherwise use the Anthropic format.",
 };
