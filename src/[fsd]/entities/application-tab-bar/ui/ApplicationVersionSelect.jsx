@@ -10,6 +10,7 @@ import {
   buildVersionOption,
   useSetDefaultVersion,
 } from '@/[fsd]/entities/version';
+import { NavigationConstants } from '@/[fsd]/shared/lib/constants';
 import { useLazyGetApplicationVersionDetailQuery } from '@/api/applications';
 import { eliteaApi } from '@/api/eliteaApi';
 import { PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
@@ -40,6 +41,7 @@ const ApplicationVersionSelect = memo(props => {
   const [getVersionDetail] = useLazyGetApplicationVersionDetailQuery();
 
   const isFromCreation = useMemo(() => searchParams.get('isFromCreation') === 'true', [searchParams]);
+  const versionFromSearch = searchParams.get(NavigationConstants.VERSION_SEARCH_PARAM);
   const applicationId = useMemo(() => parseInt(agentId, 10), [agentId]);
 
   const projectId = useMemo(
@@ -213,6 +215,21 @@ const ApplicationVersionSelect = memo(props => {
       return;
     }
 
+    if (versionFromSearch) {
+      const nextSearchParams = new URLSearchParams(searchParams);
+      nextSearchParams.delete(NavigationConstants.VERSION_SEARCH_PARAM);
+
+      navigate(
+        {
+          pathname: replaceVersionInPath(versionFromSearch, pathname, undefined, applicationId),
+          search: nextSearchParams.toString(),
+        },
+        { replace: true },
+      );
+
+      return;
+    }
+
     if (versions.length > 0) {
       // No version in URL, load LATEST_VERSION_NAME
       const latestVersion = versions.find(item => item.name === LATEST_VERSION_NAME);
@@ -222,7 +239,7 @@ const ApplicationVersionSelect = memo(props => {
       if (String(currentVersion) !== String(targetVersion.id)) getDetail(targetVersion.id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [version, versions, isFromCreation, defaultVersionID]);
+  }, [version, versionFromSearch, versions, isFromCreation, defaultVersionID]);
 
   return (
     <>
