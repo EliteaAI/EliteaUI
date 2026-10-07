@@ -48,7 +48,11 @@ describe('RunConsumptionCard', () => {
 
     const judge = within(screen.getByTestId('evaluation-consumption-judge'));
     expect(judge.getByText('Not priced')).toBeInTheDocument();
-    expect(judge.getByText('3 of 4 cases recorded · 3 cases not priced')).toBeInTheDocument();
+    expect(
+      judge.getByText(
+        '3 of 4 cases recorded · 3 cases not priced · all AI dimensions together, not split per dimension',
+      ),
+    ).toBeInTheDocument();
   });
 
   it('shows each budget limit with its verdict', () => {

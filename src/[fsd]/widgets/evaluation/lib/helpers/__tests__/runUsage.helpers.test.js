@@ -104,6 +104,15 @@ describe('buildRunConsumptionRows', () => {
     expect(row.isUnpriced).toBe(true);
     expect(row.coverage).toBe('3 of 4 cases recorded · 1 case not priced');
   });
+
+  it('says judge tokens cover all AI dimensions together', () => {
+    const [agent, judge] = buildRunConsumptionRows({ agent_usage: rollup(), judge_usage: rollup() });
+    expect(agent.coverage).toBeNull();
+    expect(judge.coverage).toBe('all AI dimensions together, not split per dimension');
+    expect(buildRunConsumptionRows({ judge_usage: rollup({ recorded_cases: 3 }) })[0].coverage).toBe(
+      '3 of 4 cases recorded · all AI dimensions together, not split per dimension',
+    );
+  });
 });
 
 describe('buildBudgetVerdictRows', () => {
@@ -305,7 +314,11 @@ describe('buildCaseUsageRows', () => {
       note: 'haiku · from the usage ledger',
       isUnpriced: false,
     });
-    expect(rows[1]).toMatchObject({ cost: 'Not priced', isUnpriced: true, note: null });
+    expect(rows[1]).toMatchObject({
+      cost: 'Not priced',
+      isUnpriced: true,
+      note: 'all AI dimensions together, not split per dimension',
+    });
   });
 
   it('says why a row has no figures', () => {

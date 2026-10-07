@@ -77,6 +77,10 @@ const sumTokens = (totals = {}) =>
 
 const ROLE_LABEL = { agent: 'Agent', judge: 'Judge' };
 
+// One judge call scores every AI dimension that shares an evidence scope, so judge tokens exist
+// per case, never per dimension. Said wherever they are shown, rather than split by a guess.
+export const JUDGE_GRANULARITY_NOTE = 'all AI dimensions together, not split per dimension';
+
 /**
  * The run-history "Tokens" cell (design §6): the agent's average tokens per recorded case
  * from `meta.agent_usage`, never the judge's. Null for a run without an agent rollup.
@@ -116,6 +120,7 @@ export const buildRunConsumptionRows = (meta = {}) =>
       const notes = [];
       if (cases && recorded < cases) notes.push(`${recorded} of ${cases} cases recorded`);
       if (unpriced) notes.push(`${unpriced} ${unpriced === 1 ? 'case' : 'cases'} not priced`);
+      if (role === 'judge') notes.push(JUDGE_GRANULARITY_NOTE);
 
       return {
         role,
@@ -326,6 +331,7 @@ export const buildCaseUsageRows = usage =>
         if (row.token_source === 'estimate') notes.push('tokens estimated');
         if (cost != null && COST_SOURCE_LABEL[row.cost_source])
           notes.push(COST_SOURCE_LABEL[row.cost_source]);
+        if (row.role === 'judge') notes.push(JUDGE_GRANULARITY_NOTE);
       } else {
         const reason = CASE_USAGE_REASON[row.usage_state_reason];
         const what = row.usage_state === 'not_applicable' ? 'Not applicable' : 'Not recorded';
