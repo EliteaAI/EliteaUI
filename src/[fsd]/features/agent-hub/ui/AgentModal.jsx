@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
@@ -57,6 +57,9 @@ const AgentModal = memo(props => {
   const styles = agentModalStyles();
   const [showContext, setShowContext] = useState(false);
   const [isSmallHeight, setIsSmallHeight] = useState(false);
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const [isDescriptionTruncated, setIsDescriptionTruncated] = useState(false);
+  const descriptionRef = useRef(null);
   const name = useMemo(() => agent?.name || agentDetails?.name || 'Untitled Agent', [agent, agentDetails]);
   const description = useMemo(
     () => agent?.description || agentDetails?.description || 'No description available.',
@@ -102,6 +105,21 @@ const AgentModal = memo(props => {
   useEffect(() => {
     getDetails();
   }, [getDetails]);
+
+  useEffect(() => {
+    setIsDescriptionExpanded(false);
+    setIsDescriptionTruncated(false);
+  }, [agent?.id]);
+
+  useEffect(() => {
+    if (!isDescriptionExpanded && descriptionRef.current) {
+      setIsDescriptionTruncated(descriptionRef.current.scrollHeight > descriptionRef.current.clientHeight);
+    }
+  }, [isDescriptionExpanded, description]);
+
+  const handleToggleDescription = useCallback(() => {
+    setIsDescriptionExpanded(prev => !prev);
+  }, []);
 
   const onShowContext = () => {
     setShowContext(true);
@@ -241,12 +259,24 @@ const AgentModal = memo(props => {
                 {name}
               </Typography>
               <Typography
+                ref={descriptionRef}
                 variant="bodySmall2"
-                sx={styles.description(isSmallHeight)}
+                sx={styles.description(isSmallHeight, isDescriptionExpanded)}
                 data-testid="catalog-agent-modal-description"
               >
                 {description}
               </Typography>
+              {isDescriptionTruncated && (
+                <SharedButton.BaseBtn
+                  variant={BUTTON_VARIANTS.auxiliary}
+                  onClick={handleToggleDescription}
+                  data-testid="catalog-agent-modal-show-more-description"
+                >
+                  <Typography variant="labelSmall">
+                    {isDescriptionExpanded ? 'Show less' : 'Show more'}
+                  </Typography>
+                </SharedButton.BaseBtn>
+              )}
               <SharedButton.BaseBtn
                 variant={BUTTON_VARIANTS.auxiliary}
                 onClick={onShowContext}
@@ -366,7 +396,7 @@ const agentModalStyles = () => ({
     height: '2.5rem',
   },
   description:
-    isSmallHeight =>
+    (isSmallHeight, isExpanded) =>
     ({ palette }) => ({
       textAlign: 'center',
       color: palette.text.metrics,
@@ -376,11 +406,13 @@ const agentModalStyles = () => ({
             lineHeight: '1.25rem',
           }
         : {
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
+            ...(!isExpanded && {
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }),
             lineHeight: '1.25rem',
           }),
     }),
