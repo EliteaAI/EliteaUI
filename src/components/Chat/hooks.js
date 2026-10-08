@@ -263,11 +263,17 @@ const addMessageToChatHistory = ({
 
     if (question_id) {
       const questionIndex = prevState.findIndex(item => item.role === ROLES.User && item.id === question_id);
-      if (questionIndex === -1) return prevState;
-
-      const newState = [...prevState];
       const theParticipant = participantsRef.current?.find(participant => participant.id === participant_id);
       msg.participant = { ...(theParticipant || { entity_meta: {}, meta: {} }) };
+
+      if (questionIndex === -1) {
+        // User message hasn't arrived in local state yet (race condition between
+        // ChatUserMessage and StartTask socket events). Append at the end so the
+        // assistant message is never lost; position will be correct after reload.
+        return [...prevState, msg];
+      }
+
+      const newState = [...prevState];
       newState.splice(questionIndex + 1, 0, msg);
       return newState;
     }
@@ -741,7 +747,19 @@ export const useChatSocket = ({
 
             // Find matching toolAction
             t = msg.toolActions?.find(i => i.id === stepRunId);
-            if (!t) continue;
+            if (!t) {
+              // AgentLlmStart was missed — reconstruct a synthetic action so the
+              // thinking content from the end event is not silently discarded.
+              if (!msg.toolActions) msg.toolActions = [];
+              t = {
+                id: stepRunId,
+                name: thinkStep.message?.response_metadata?.tool_name || '',
+                type: TOOL_ACTION_TYPES.Llm,
+                status: ToolActionStatus.processing,
+                toolMeta: {},
+              };
+              msg.toolActions.push(t);
+            }
 
             // Backend normalizes text field for all providers (OpenAI, Anthropic, etc.)
             let thinkText = convertJsonToString(thinkStep.text, true);
@@ -1044,6 +1062,20 @@ export const useChatSocket = ({
         // add new events here
         case SocketMessageType.AgentToolEnd:
           t = msg.toolActions?.find(i => i.id === response_metadata?.tool_run_id);
+          if (!t && response_metadata?.tool_run_id) {
+            // AgentToolStart was missed (socket reconnect / out-of-order delivery).
+            // Reconstruct a minimal synthetic action so the end data is not lost.
+            if (!msg.toolActions) msg.toolActions = [];
+            t = {
+              id: response_metadata.tool_run_id,
+              name: response_metadata.tool_name || '',
+              type: TOOL_ACTION_TYPES.Tool,
+              status: ToolActionStatus.processing,
+              toolMeta: {},
+              created_at: message.created_at,
+            };
+            msg.toolActions.push(t);
+          }
           if (t) {
             const newData = message.response_metadata?.tool_output;
             if (typeof newData === 'string') {

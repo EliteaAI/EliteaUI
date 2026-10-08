@@ -72,6 +72,7 @@ const RootComponent = memo(() => {
     if (DEV && VITE_DEV_TOKEN) ioOptions.extraHeaders.Authorization = `Bearer ${VITE_DEV_TOKEN}`;
 
     const socketIo = io(VITE_SOCKET_SERVER, ioOptions);
+    let hasConnectedOnce = false;
 
     socketIo?.on('connect', () => {
       // eslint-disable-next-line no-console
@@ -79,6 +80,11 @@ const RootComponent = memo(() => {
 
       setSocket(socketIo);
       dispatch(settingsActions.setSocketConnected(socketIo.connected));
+      if (hasConnectedOnce) {
+        dispatch(settingsActions.incrementSocketReconnectCount());
+      } else {
+        hasConnectedOnce = true;
+      }
     });
 
     socketIo?.on('connect_error', err => {
