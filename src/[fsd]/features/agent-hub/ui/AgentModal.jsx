@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
@@ -16,6 +16,7 @@ import {
 
 import { AgentDetails } from '@/[fsd]/features/agent';
 import AgentConversationStarters from '@/[fsd]/features/agent-hub/ui/AgentConversationStarters';
+import AgentDescriptionText from '@/[fsd]/features/agent-hub/ui/AgentDescriptionText';
 import AgentHubLike from '@/[fsd]/features/agent-hub/ui/AgentHubLike';
 import AgentHubModalMenu from '@/[fsd]/features/agent-hub/ui/AgentHubModalMenu';
 import AgentWelcomeMessage from '@/[fsd]/features/agent-hub/ui/AgentWelcomeMessage';
@@ -57,9 +58,6 @@ const AgentModal = memo(props => {
   const styles = agentModalStyles();
   const [showContext, setShowContext] = useState(false);
   const [isSmallHeight, setIsSmallHeight] = useState(false);
-  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
-  const [isDescriptionTruncated, setIsDescriptionTruncated] = useState(false);
-  const descriptionRef = useRef(null);
   const name = useMemo(() => agent?.name || agentDetails?.name || 'Untitled Agent', [agent, agentDetails]);
   const description = useMemo(
     () => agent?.description || agentDetails?.description || 'No description available.',
@@ -105,25 +103,6 @@ const AgentModal = memo(props => {
   useEffect(() => {
     getDetails();
   }, [getDetails]);
-
-  useEffect(() => {
-    setIsDescriptionExpanded(false);
-    setIsDescriptionTruncated(false);
-  }, [agent?.id]);
-
-  useEffect(() => {
-    if (!open || isDescriptionExpanded) return;
-    const raf = requestAnimationFrame(() => {
-      if (descriptionRef.current) {
-        setIsDescriptionTruncated(descriptionRef.current.scrollHeight > descriptionRef.current.clientHeight);
-      }
-    });
-    return () => cancelAnimationFrame(raf);
-  }, [open, isDescriptionExpanded, description]);
-
-  const handleToggleDescription = useCallback(() => {
-    setIsDescriptionExpanded(prev => !prev);
-  }, []);
 
   const onShowContext = () => {
     setShowContext(true);
@@ -262,27 +241,11 @@ const AgentModal = memo(props => {
               >
                 {name}
               </Typography>
-              <Typography
-                ref={descriptionRef}
-                variant="bodySmall2"
-                sx={styles.description(isSmallHeight, isDescriptionExpanded)}
-                data-testid="catalog-agent-modal-description"
-              >
-                {description}
-              </Typography>
-              {isDescriptionTruncated && (
-                <Box sx={styles.showMoreRow}>
-                  <SharedButton.BaseBtn
-                    variant={BUTTON_VARIANTS.auxiliary}
-                    onClick={handleToggleDescription}
-                    data-testid="catalog-agent-modal-show-more-description"
-                  >
-                    <Typography variant="labelSmall">
-                      {isDescriptionExpanded ? 'Show less' : 'Show more'}
-                    </Typography>
-                  </SharedButton.BaseBtn>
-                </Box>
-              )}
+              <AgentDescriptionText
+                description={description}
+                isSmallHeight={isSmallHeight}
+                open={open}
+              />
               <SharedButton.BaseBtn
                 variant={BUTTON_VARIANTS.auxiliary}
                 onClick={onShowContext}
@@ -400,34 +363,6 @@ const agentModalStyles = () => ({
     alignItems: 'center',
     width: '2.5rem',
     height: '2.5rem',
-  },
-  description:
-    (isSmallHeight, isExpanded) =>
-    ({ palette }) => ({
-      textAlign: 'center',
-      color: palette.text.metrics,
-      lineHeight: '1.25rem',
-      ...(isSmallHeight
-        ? { width: '100%' }
-        : {
-            ...(!isExpanded && {
-              display: '-webkit-box',
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-            }),
-            ...(isExpanded && {
-              overflowY: 'auto',
-              maxHeight: '6rem',
-              width: '100%',
-            }),
-          }),
-    }),
-  showMoreRow: {
-    width: '100%',
-    display: 'flex',
-    justifyContent: 'flex-end',
   },
   dialogActions: {
     alignItems: 'center',
