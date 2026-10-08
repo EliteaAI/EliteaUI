@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 
 import {
   Box,
@@ -59,11 +59,8 @@ const SkillHubModal = memo(props => {
 
   const canRunSkill = useCanRunSkill({ isCatalogSkill: true });
   const { runCatalogSkill, isStartingRun } = useRunCatalogSkill();
-  const [runVersionId, setRunVersionId] = useState(null);
-
-  useEffect(() => {
-    setRunVersionId(versionId ?? null);
-  }, [versionId]);
+  const [chosenRunVersionId, setChosenRunVersionId] = useState(null);
+  const runVersionId = chosenRunVersionId ?? versionId;
 
   const handleRun = useCallback(async () => {
     const hasStarted = await runCatalogSkill({ skill: { ...skill, name }, versionId: runVersionId });
@@ -169,7 +166,7 @@ const SkillHubModal = memo(props => {
               <CatalogSkillVersionSelect
                 versions={publishedVersions}
                 value={runVersionId}
-                onChange={setRunVersionId}
+                onChange={setChosenRunVersionId}
               />
             )}
             {canRunSkill && (

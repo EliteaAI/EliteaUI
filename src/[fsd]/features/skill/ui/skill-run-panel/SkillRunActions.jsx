@@ -1,9 +1,10 @@
 import { memo, useCallback, useState } from 'react';
 
-import { Box, IconButton, Tooltip, Typography, useTheme } from '@mui/material';
+import { Box, Tooltip, Typography, useTheme } from '@mui/material';
 
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
-import { Modal } from '@/[fsd]/shared/ui';
+import { Button, Modal } from '@/[fsd]/shared/ui';
+import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import PlusIcon from '@/components/Icons/PlusIcon';
 
@@ -28,19 +29,19 @@ const SkillRunActions = memo(props => {
         title="New run"
       >
         <Box component="span">
-          <IconButton
-            variant="elitea"
-            color="secondary"
+          <Button.BaseBtn
+            variant={BUTTON_VARIANTS.tertiary}
+            startIcon={
+              <PlusIcon
+                sx={styles.icon}
+                fill={theme.palette.icon.secondary}
+              />
+            }
             aria-label="new run"
             disabled={!canStartNewRun}
             onClick={onStartNewRun}
             data-testid="skill-run-new-run-button"
-          >
-            <PlusIcon
-              style={styles.icon}
-              fill={theme.palette.icon.secondary}
-            />
-          </IconButton>
+          />
         </Box>
       </Tooltip>
       <Tooltip
@@ -48,19 +49,19 @@ const SkillRunActions = memo(props => {
         title="Delete all messages"
       >
         <Box component="span">
-          <IconButton
-            variant="elitea"
-            color="secondary"
+          <Button.BaseBtn
+            variant={BUTTON_VARIANTS.tertiary}
+            startIcon={
+              <DeleteIcon
+                sx={styles.icon}
+                fill={theme.palette.icon.secondary}
+              />
+            }
             aria-label="delete all messages"
             disabled={!canDeleteMessages}
             onClick={openDeleteDialog}
             data-testid="skill-run-delete-all-button"
-          >
-            <DeleteIcon
-              sx={styles.icon}
-              fill={theme.palette.icon.secondary}
-            />
-          </IconButton>
+          />
         </Box>
       </Tooltip>
       <Modal.BaseModal

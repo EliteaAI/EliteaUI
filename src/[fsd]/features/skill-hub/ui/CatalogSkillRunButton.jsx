@@ -1,9 +1,11 @@
 import { memo, useCallback } from 'react';
 
-import { Box, IconButton, Tooltip, useTheme } from '@mui/material';
+import { Box, Tooltip, useTheme } from '@mui/material';
 
 import { useCanRunSkill } from '@/[fsd]/features/skill';
 import { useRunCatalogSkill } from '@/[fsd]/features/skill-hub/lib/hooks';
+import { Button } from '@/[fsd]/shared/ui';
+import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import PlayIcon from '@/components/Icons/PlayIcon';
 
 const CatalogSkillRunButton = memo(props => {
@@ -29,20 +31,19 @@ const CatalogSkillRunButton = memo(props => {
       title="Run"
     >
       <Box component="span">
-        <IconButton
-          variant="elitea"
-          color="tertiary"
+        <Button.BaseBtn
+          variant={BUTTON_VARIANTS.tertiary}
+          startIcon={
+            <PlayIcon
+              sx={styles.icon}
+              fill={theme.palette.icon.secondary}
+            />
+          }
           aria-label="run skill"
           disabled={isStartingRun}
           onClick={handleRun}
-          sx={styles.button}
           data-testid="catalog-skill-run-button"
-        >
-          <PlayIcon
-            sx={styles.icon}
-            fill={theme.palette.icon.secondary}
-          />
-        </IconButton>
+        />
       </Box>
     </Tooltip>
   );
@@ -52,9 +53,6 @@ CatalogSkillRunButton.displayName = 'CatalogSkillRunButton';
 
 /** @type {MuiSx} */
 const catalogSkillRunButtonStyles = () => ({
-  button: {
-    marginLeft: 0,
-  },
   icon: {
     fontSize: '1rem',
   },
