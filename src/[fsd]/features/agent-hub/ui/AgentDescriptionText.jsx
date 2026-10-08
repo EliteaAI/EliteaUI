@@ -33,7 +33,7 @@ const AgentDescriptionText = memo(props => {
   const styles = agentDescriptionTextStyles();
 
   return (
-    <>
+    <Box sx={styles.container}>
       <Typography
         ref={textRef}
         variant="bodySmall2"
@@ -53,7 +53,7 @@ const AgentDescriptionText = memo(props => {
           </Button.BaseBtn>
         </Box>
       )}
-    </>
+    </Box>
   );
 });
 
@@ -61,6 +61,12 @@ AgentDescriptionText.displayName = 'AgentDescriptionText';
 
 /** @type {MuiSx} */
 const agentDescriptionTextStyles = () => ({
+  container: {
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.75rem',
+  },
   text:
     (isSmallHeight, isExpanded) =>
     ({ palette }) => ({

@@ -60,7 +60,7 @@ const AgentModal = memo(props => {
   const [isSmallHeight, setIsSmallHeight] = useState(false);
   const name = useMemo(() => agent?.name || agentDetails?.name || 'Untitled Agent', [agent, agentDetails]);
   const description = useMemo(
-    () => agent?.description || agentDetails?.description || 'No description available.',
+    () => agentDetails?.description || agent?.description || 'No description available.',
     [agent, agentDetails],
   );
   const icon_meta = useMemo(
