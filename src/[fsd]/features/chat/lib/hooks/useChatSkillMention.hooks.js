@@ -9,7 +9,7 @@ import { MentionConstants } from '@/[fsd]/shared/lib/constants';
 import { parseMentionRanges } from '@/[fsd]/shared/lib/utils';
 import { ChatParticipantType } from '@/common/constants';
 
-const { MentionPhase, SKILL_TRIGGER, SkillMentionGroup } = MentionConstants;
+const { MentionPhase, SKILL_TRIGGER, SkillMentionGroup, SKILL_MENTION_EMPTY_LABELS } = MentionConstants;
 const NO_PARTICIPANTS = [];
 
 const compareByName = (a, b) => a.name.localeCompare(b.name);
@@ -211,5 +211,6 @@ export const useChatSkillMention = ({
     onSelectSkill,
     resetSkill,
     skillHighlightRanges,
+    emptyLabel: isAgent ? SKILL_MENTION_EMPTY_LABELS.agent : SKILL_MENTION_EMPTY_LABELS.chat,
   };
 };

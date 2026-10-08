@@ -52,3 +52,8 @@ export const SKILL_MENTION_GROUP_LABELS = {
   [SkillMentionGroup.Attached]: 'Attached to agent',
   [SkillMentionGroup.Chat]: 'Skills in this chat',
 };
+
+export const SKILL_MENTION_EMPTY_LABELS = {
+  agent: 'No skills attached to this agent',
+  chat: 'No skills in this chat',
+};

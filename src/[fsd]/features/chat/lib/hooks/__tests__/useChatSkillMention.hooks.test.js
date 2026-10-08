@@ -118,6 +118,23 @@ describe('useChatSkillMention without an active agent', () => {
     expect(listFor(writer, [agent, writer, reviewer])).toEqual(['reviewer']);
   });
 
+  it('names the empty list after where the skills come from', () => {
+    const emptyLabelFor = activeParticipant =>
+      renderHook(() =>
+        useChatSkillMention({
+          chatInput: { current: null },
+          activeParticipant,
+          activeParticipantDetails: undefined,
+          projectId: PROJECT_ID,
+          participants: [],
+        }),
+      ).result.current.emptyLabel;
+
+    expect(emptyLabelFor(agent)).toBe('No skills attached to this agent');
+    expect(emptyLabelFor(undefined)).toBe('No skills in this chat');
+    expect(emptyLabelFor(writer)).toBe('No skills in this chat');
+  });
+
   it('offers no chat skills to a pipeline, whose turns never apply them', () => {
     const pipeline = {
       ...buildParticipant({ id: AGENT_ONE_ID, versionId: AGENT_ONE_VERSION_ID }),

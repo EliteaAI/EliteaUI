@@ -289,6 +289,7 @@ const NewConversationView = forwardRef(
       onSelectSkill,
       resetSkill,
       skillHighlightRanges,
+      emptyLabel: skillEmptyLabel,
     } = useChatSkillMention({
       chatInput,
       activeParticipant: selectedParticipant,
@@ -1105,6 +1106,7 @@ const NewConversationView = forwardRef(
               highlightedIndex={skillHighlightedIndex}
               onSelectItem={onSelectSkill}
               onClose={resetSkill}
+              emptyLabel={skillEmptyLabel}
             />
           )}
           <Box sx={styles.inputContainer}>

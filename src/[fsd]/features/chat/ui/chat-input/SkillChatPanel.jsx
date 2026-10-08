@@ -1,7 +1,8 @@
 import { memo, useMemo } from 'react';
 
-import { Box, Button, ButtonGroup, Divider, Tooltip, Typography, useTheme } from '@mui/material';
+import { Box, Button, ButtonGroup, Divider, Tooltip, Typography } from '@mui/material';
 
+import { ParticipantConstants } from '@/[fsd]/features/chat/participants/lib/constants';
 import { areDetailsOfParticipant } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { useParticipantEntityIcon } from '@/[fsd]/features/chat/participants/lib/hooks';
 import { LLMModelSelector } from '@/[fsd]/widgets/llm-model-selector';
@@ -15,6 +16,13 @@ import VersionSelector from './VersionSelector';
 
 const NO_VERSIONS = [];
 
+const UNAVAILABLE_MESSAGES = {
+  [ParticipantConstants.SkillUnavailableReason.Skill]:
+    'This skill is no longer available. Switch to a model or remove it from the chat.',
+  [ParticipantConstants.SkillUnavailableReason.Version]:
+    'This skill version is no longer available. Select another version or switch to a model.',
+};
+
 const SkillChatPanel = memo(props => {
   const {
     activeParticipant,
@@ -27,13 +35,12 @@ const SkillChatPanel = memo(props => {
     onSelectModel,
     llmSettings,
     onSetLLMSettings,
-    isUnavailable,
+    unavailableReason,
     disabled,
     onSwitchToModel,
     disableSwitchToModel,
   } = props;
 
-  const theme = useTheme();
   const { containerRef, isSmallView } = useAgentEditorPanelFit();
   const entityIcon = useParticipantEntityIcon(activeParticipant);
 
@@ -49,7 +56,7 @@ const SkillChatPanel = memo(props => {
     [versions, selectedVersionId, activeParticipant?.meta?.version_name],
   );
 
-  const styles = skillChatPanelStyles(isSmallView, theme);
+  const styles = skillChatPanelStyles(isSmallView);
 
   return (
     <Box
@@ -106,10 +113,10 @@ const SkillChatPanel = memo(props => {
         )}
       </ButtonGroup>
 
-      {isUnavailable && (
+      {unavailableReason && (
         <Tooltip
           placement="top"
-          title="This skill version is no longer available. Select another version or switch to a model."
+          title={UNAVAILABLE_MESSAGES[unavailableReason]}
         >
           <Box
             sx={styles.attentionIcon}
@@ -143,17 +150,17 @@ const SkillChatPanel = memo(props => {
 SkillChatPanel.displayName = 'SkillChatPanel';
 
 /** @type {MuiSx} */
-const skillChatPanelStyles = (isSmallView, theme) => ({
-  outerContainer: {
+const skillChatPanelStyles = isSmallView => ({
+  outerContainer: ({ palette }) => ({
     display: 'flex',
     alignItems: 'center',
     gap: '0.25rem',
     padding: '0.25rem',
     borderRadius: '1.25rem',
-    border: `0.0625rem solid ${theme.palette.border.lines}`,
+    border: `0.0625rem solid ${palette.border.lines}`,
     minWidth: 0,
     maxWidth: '100%',
-  },
+  }),
   buttonGroupContainer: {
     minWidth: 0,
     maxWidth: '100%',

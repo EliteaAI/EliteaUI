@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   areDetailsOfParticipant,
   getDefaultActiveParticipant,
+  getSkillUnavailableReason,
   isSkippedContainerParticipant,
 } from '../participants.helpers';
 
@@ -127,5 +128,20 @@ describe('getDefaultActiveParticipant', () => {
   it('keeps ordinary chats without an active participant', () => {
     expect(getDefaultActiveParticipant({ source: 'elitea', participants: [user, skill] })).toBeUndefined();
     expect(getDefaultActiveParticipant(undefined)).toBeUndefined();
+  });
+});
+
+describe('getSkillUnavailableReason', () => {
+  it('blames the version while the skill still lists versions to pick from', () => {
+    expect(getSkillUnavailableReason(true, [{ id: 252 }])).toBe('version');
+  });
+
+  it('blames the skill when it has no versions left', () => {
+    expect(getSkillUnavailableReason(true, [])).toBe('skill');
+    expect(getSkillUnavailableReason(true, undefined)).toBe('skill');
+  });
+
+  it('gives no reason while the skill can run', () => {
+    expect(getSkillUnavailableReason(false, [{ id: 252 }])).toBeUndefined();
   });
 });

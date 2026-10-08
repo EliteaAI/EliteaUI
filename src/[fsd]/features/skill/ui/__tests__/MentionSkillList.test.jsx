@@ -60,4 +60,30 @@ describe('MentionSkillList groups', () => {
 
     expect(screen.queryByTestId('skill-mention-group-chat')).not.toBeInTheDocument();
   });
+
+  it('shows the empty message it is given, defaulting to the agent wording', () => {
+    const { rerender } = renderList([]);
+    expect(screen.getByTestId('skill-mention-list-empty')).toHaveTextContent(
+      'No skills attached to this agent',
+    );
+
+    rerender(
+      <ThemeProvider
+        theme={createTheme({
+          palette: { border: { lines: '#ccc' }, background: { default: { secondary: '#fff' } } },
+        })}
+      >
+        <MentionSkillList
+          phase="items"
+          filteredItems={[]}
+          committedMentions={[]}
+          highlightedIndex={0}
+          onSelectItem={vi.fn()}
+          onClose={vi.fn()}
+          emptyLabel="No skills in this chat"
+        />
+      </ThemeProvider>,
+    );
+    expect(screen.getByTestId('skill-mention-list-empty')).toHaveTextContent('No skills in this chat');
+  });
 });
