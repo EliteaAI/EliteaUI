@@ -89,6 +89,29 @@ describe('useSkillParticipants', () => {
     expect(shared.own.at(-1).args.page).toBe(0);
   });
 
+  it('lists no skills for the private-only search inside the public project, whose own skills are the Catalog', () => {
+    shared.projectId = PUBLIC_PROJECT_ID;
+    const { result } = renderHook(() => useSkillParticipants({ excludePublic: true }));
+
+    expect(shared.own.at(-1).options.skip).toBe(true);
+    expect(shared.catalog.at(-1).options.skip).toBe(true);
+    expect(result.current.ownSkills).toEqual([]);
+    expect(result.current.total).toBe(0);
+  });
+
+  it('starts from the first page when returning to a search that had loaded more', () => {
+    const { result, rerender } = renderHook(props => useSkillParticipants(props), {
+      initialProps: { query: 'wri', pageSize: 1 },
+    });
+    act(() => result.current.onLoadMore());
+    expect(shared.own.at(-1).args.page).toBe(1);
+
+    rerender({ query: 'rev', pageSize: 1 });
+    rerender({ query: 'wri', pageSize: 1 });
+
+    expect(shared.own.at(-1).args).toMatchObject({ page: 0, params: { query: 'wri' } });
+  });
+
   it('skips the Catalog in the public project and when public entities are excluded', () => {
     renderHook(() => useSkillParticipants({ excludePublic: true }));
     expect(shared.catalog.at(-1).options.skip).toBe(true);

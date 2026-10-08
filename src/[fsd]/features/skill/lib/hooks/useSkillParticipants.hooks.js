@@ -31,6 +31,7 @@ export const useSkillParticipants = props => {
   const debouncedQuery = useDebounceValue(query, debounceMs);
   const [pages, setPages] = useState({ query: debouncedQuery, own: FIRST_PAGE, catalog: FIRST_PAGE });
   const isCurrentSearch = pages.query === debouncedQuery;
+  if (!isCurrentSearch) setPages({ query: debouncedQuery, own: FIRST_PAGE, catalog: FIRST_PAGE });
   const ownPage = isCurrentSearch ? pages.own : FIRST_PAGE;
   const catalogPage = isCurrentSearch ? pages.catalog : FIRST_PAGE;
 
@@ -39,11 +40,13 @@ export const useSkillParticipants = props => {
     [debouncedQuery],
   );
 
-  const skipCatalog = skip || excludePublic || Number(projectId) === PUBLIC_PROJECT_ID;
+  const isPublicProject = Number(projectId) === PUBLIC_PROJECT_ID;
+  const skipOwn = skip || !projectId || (excludePublic && isPublicProject);
+  const skipCatalog = skip || excludePublic || isPublicProject;
 
   const { currentData: ownData, isFetching: isOwnFetching } = useSkillListQuery(
     { projectId, page: ownPage, pageSize, params },
-    { skip: skip || !projectId },
+    { skip: skipOwn },
   );
   const { currentData: catalogData, isFetching: isCatalogFetching } = usePagedPublicSkillsQuery(
     { page: catalogPage, pageSize, params },
@@ -51,8 +54,8 @@ export const useSkillParticipants = props => {
   );
 
   const ownSkills = useMemo(
-    () => (skip ? NO_ROWS : (ownData?.rows || NO_ROWS).map(toSkillParticipant(projectId))),
-    [ownData?.rows, projectId, skip],
+    () => (skipOwn ? NO_ROWS : (ownData?.rows || NO_ROWS).map(toSkillParticipant(projectId))),
+    [ownData?.rows, projectId, skipOwn],
   );
   const catalogSkills = useMemo(
     () => (skipCatalog ? NO_ROWS : (catalogData?.rows || NO_ROWS).map(toSkillParticipant(PUBLIC_PROJECT_ID))),
@@ -60,7 +63,7 @@ export const useSkillParticipants = props => {
   );
 
   const isFetching = isOwnFetching || isCatalogFetching;
-  const canLoadMoreOwn = !skip && hasMoreRows(ownData);
+  const canLoadMoreOwn = !skipOwn && hasMoreRows(ownData);
   const canLoadMoreCatalog = !skipCatalog && hasMoreRows(catalogData);
 
   const onLoadMore = useCallback(() => {
@@ -72,7 +75,7 @@ export const useSkillParticipants = props => {
     });
   }, [isFetching, canLoadMoreOwn, canLoadMoreCatalog, debouncedQuery, ownPage, catalogPage]);
 
-  const total = (skip ? 0 : ownData?.total || 0) + (skipCatalog ? 0 : catalogData?.total || 0);
+  const total = (skipOwn ? 0 : ownData?.total || 0) + (skipCatalog ? 0 : catalogData?.total || 0);
 
   return { ownSkills, catalogSkills, total, isFetching, onLoadMore };
 };
