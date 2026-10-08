@@ -6,7 +6,7 @@ import { Box } from '@mui/material';
 
 import { RunHistoryContainer } from '@/[fsd]/entities/run-history/ui';
 import { ChatMessageList } from '@/[fsd]/features/chat';
-import { DrawerPageHeader } from '@/[fsd]/features/settings/ui/drawer-page';
+import { DrawerPageHeader } from '@/[fsd]/features/settings';
 import { useSkillDetailsQuery } from '@/[fsd]/features/skill';
 import { SKILL_RUN_SEARCH_PARAMS } from '@/[fsd]/features/skill/lib/constants';
 import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
@@ -28,12 +28,11 @@ const SkillRunHistory = memo(() => {
 
   const { data } = useSkillDetailsQuery({ projectId, skillId }, { skip: !projectId || !skillId });
 
-  // The restored run replaces the one the user came from, so its id is dropped from the return URL
   const handleRestoreConversation = useCallback(
     conversationId => {
-      const params = new URLSearchParams(search);
-      params.delete(SKILL_RUN_SEARCH_PARAMS.run);
-      const query = params.toString();
+      const returnParams = new URLSearchParams(search);
+      returnParams.delete(SKILL_RUN_SEARCH_PARAMS.run);
+      const query = returnParams.toString();
       navigate(
         `${NavigationHelpers.buildRoute(RouteDefinitions.SkillsDetail, { tab, skillId })}${query ? `?${query}` : ''}`,
         { state: { restoredConversationID: conversationId } },

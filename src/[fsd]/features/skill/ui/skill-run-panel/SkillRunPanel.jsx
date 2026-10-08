@@ -3,7 +3,7 @@ import { memo, useMemo, useRef } from 'react';
 import { Box, Typography } from '@mui/material';
 
 import { ChatBox } from '@/[fsd]/features/chat/ui';
-import { useSkillRunChat } from '@/[fsd]/features/skill/lib/hooks/useSkillRunChat.hooks';
+import { useFocusRunInput, useSkillRunChat } from '@/[fsd]/features/skill/lib/hooks';
 import { ViewRunHistoryButton } from '@/[fsd]/shared/ui/button';
 import { ContextBudgetUI } from '@/[fsd]/widgets/context-budget';
 import FullScreenToggle from '@/components/Chat/FullScreenToggle';
@@ -14,6 +14,7 @@ import { ContentContainer } from '@/pages/Common/Components/StyledComponents';
 import SkillRunActions from './SkillRunActions';
 
 const NO_STARTERS = [];
+const NO_CONTEXT_STRATEGY = {};
 const NOOP = () => {};
 
 const SkillRunPanel = memo(props => {
@@ -27,9 +28,11 @@ const SkillRunPanel = memo(props => {
     isFullScreenChat,
     setIsFullScreenChat,
     onShowHistory,
+    focusRequest,
+    onFocusHandled,
   } = props;
   const projectId = useSelectedProjectId();
-  const boxRef = useRef();
+  const panelRef = useRef(null);
 
   const {
     activeConversation,
@@ -64,10 +67,14 @@ const SkillRunPanel = memo(props => {
   const { uploadAttachments, isUploading: isUploadingAttachments, uploadProgress } = useUploadAttachments();
 
   const hasMessages = Boolean(activeConversation?.chat_history?.length);
+  const isChatReady = Boolean(activeConversation && activeParticipant);
+
+  useFocusRunInput({ containerRef: panelRef, focusRequest, isReady: isChatReady, onFocusHandled });
   const styles = useMemo(() => skillRunPanelStyles(isFullScreenChat), [isFullScreenChat]);
 
   return (
     <ContentContainer
+      ref={panelRef}
       data-testid="skill-run-panel"
       sx={styles.container}
     >
@@ -77,7 +84,7 @@ const SkillRunPanel = memo(props => {
             <ContextBudgetUI.ContextBudgetInfo
               conversationId={activeConversation.id}
               compact
-              contextStrategy={activeConversation?.meta?.context_strategy || {}}
+              contextStrategy={activeConversation?.meta?.context_strategy ?? NO_CONTEXT_STRATEGY}
               setActiveConversation={setActiveConversation}
               conversationInstructions={activeConversation?.instructions}
             />
@@ -102,10 +109,9 @@ const SkillRunPanel = memo(props => {
           </Box>
         </Box>
 
-        {activeConversation && activeParticipant ? (
+        {isChatReady ? (
           <Box sx={styles.chatBoxContainer}>
             <ChatBox
-              ref={boxRef}
               inputPlaceholder="Type your message..."
               conversationStarters={NO_STARTERS}
               llmSettings={llmSettings}
@@ -141,7 +147,7 @@ const SkillRunPanel = memo(props => {
         ) : (
           <Box sx={styles.initializingContainer}>
             <Typography
-              variant="body1"
+              variant="bodyMedium"
               color="text.secondary"
             >
               Initializing run...

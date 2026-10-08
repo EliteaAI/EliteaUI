@@ -37,16 +37,15 @@ export const testPanelSettingsFor = (savedLlmSettings, model) => ({
     : { temperature: savedLlmSettings?.temperature ?? DEFAULT_TEMPERATURE, reasoning_effort: null }),
 });
 
-const sortedEntries = record =>
+const sortEntriesByKey = record =>
   Object.entries(record || {}).sort(([left], [right]) => left.localeCompare(right));
 
-const runSettingsSignature = runSettings => {
+const buildRunSettingsSignature = runSettings => {
   const { ignore_project_context = false, llm_settings } = toRunSettingsPayload(runSettings) || {};
-  return JSON.stringify([ignore_project_context, sortedEntries(llm_settings)]);
+  return JSON.stringify([ignore_project_context, sortEntriesByKey(llm_settings)]);
 };
 
-// Only what a run executes counts; renaming or retagging keeps the saved version runnable as is
 export const hasUnsavedRunChanges = (values, initialValues) =>
   (values?.version_details?.instructions ?? '') !== (initialValues?.version_details?.instructions ?? '') ||
-  runSettingsSignature(values?.version_details?.run_settings) !==
-    runSettingsSignature(initialValues?.version_details?.run_settings);
+  buildRunSettingsSignature(values?.version_details?.run_settings) !==
+    buildRunSettingsSignature(initialValues?.version_details?.run_settings);

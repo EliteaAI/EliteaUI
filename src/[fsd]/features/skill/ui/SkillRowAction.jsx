@@ -144,7 +144,7 @@ const SkillRowAction = memo(props => {
             icon={<PlayIcon fontSize="inherit" />}
             label="Run"
             onClick={withClose(onRun)}
-            testId="skill-row-run"
+            testId="skill-run-menu-item"
           />
         )}
         {showFolderActions && (

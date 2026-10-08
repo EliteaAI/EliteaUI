@@ -12,3 +12,4 @@ export { usePublishSkillMenu } from './usePublishSkillMenu.hooks';
 export { useUnpublishSkillMenu } from './useUnpublishSkillMenu.hooks';
 export { useSkillRunChat } from './useSkillRunChat.hooks';
 export { useCanRunSkill } from './useCanRunSkill.hooks';
+export { useFocusRunInput } from './useFocusRunInput.hooks';

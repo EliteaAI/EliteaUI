@@ -2,8 +2,8 @@ import { memo, useCallback } from 'react';
 
 import { Box, IconButton, Tooltip, useTheme } from '@mui/material';
 
+import { useCanRunSkill } from '@/[fsd]/features/skill';
 import { useRunCatalogSkill } from '@/[fsd]/features/skill-hub/lib/hooks';
-import { useCanRunSkill } from '@/[fsd]/features/skill/lib/hooks/useCanRunSkill.hooks';
 import PlayIcon from '@/components/Icons/PlayIcon';
 
 const CatalogSkillRunButton = memo(props => {

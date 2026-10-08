@@ -1,7 +1,17 @@
+import { SKILL_RUN_MATCH, SKILL_RUN_SEARCH_PARAMS } from '@/[fsd]/features/skill/lib/constants';
 import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { ChatParticipantType } from '@/common/constants';
 
-export const SKILL_RUN_SOURCE = ParticipantEntityConstants.ParticipantEntityTypes.Skill;
+const { ParticipantEntityTypes } = ParticipantEntityConstants;
+
+const NUMERIC_ID_PATTERN = /^\d+$/;
+
+export const readRunConversationId = searchParams => {
+  const requestedRunId = searchParams.get(SKILL_RUN_SEARCH_PARAMS.run);
+  return NUMERIC_ID_PATTERN.test(requestedRunId ?? '') ? requestedRunId : null;
+};
+
+export const buildSkillRunName = skillName => `Run ${skillName}`;
 
 export const buildSkillRunParticipant = ({ skillId, skillName, projectId, versionId, iconMeta }) => ({
   entity_name: ChatParticipantType.Skills,
@@ -10,7 +20,7 @@ export const buildSkillRunParticipant = ({ skillId, skillName, projectId, versio
   meta: { name: skillName, icon_meta: iconMeta || {} },
 });
 
-const toCreatePayload = participant => ({
+const buildParticipantCreatePayload = participant => ({
   entity_name: participant.entity_name,
   entity_meta: participant.entity_meta,
   entity_settings: participant.entity_settings,
@@ -18,23 +28,16 @@ const toCreatePayload = participant => ({
 
 export const buildSkillRunConversation = ({ projectId, skillName, participant }) => ({
   projectId,
-  name: `Run ${skillName}`,
+  name: buildSkillRunName(skillName),
   is_private: true,
-  source: SKILL_RUN_SOURCE,
-  meta: { single_participant: toCreatePayload(participant) },
-  participants: [toCreatePayload(participant)],
+  source: ParticipantEntityTypes.Skill,
+  meta: { single_participant: buildParticipantCreatePayload(participant) },
+  participants: [buildParticipantCreatePayload(participant)],
 });
 
 export const findSkillParticipant = conversation =>
   conversation?.participants?.find(participant => participant.entity_name === ChatParticipantType.Skills);
 
-export const SKILL_RUN_MATCH = {
-  sameVersion: 'sameVersion',
-  otherVersion: 'otherVersion',
-  otherSkill: 'otherSkill',
-};
-
-// A run always executes its pinned version, so the page must show that version before reopening it
 export const matchSkillRun = (runParticipant, { skillId, projectId, versionId }) => {
   const isThisSkill =
     String(runParticipant?.entity_meta?.id) === String(skillId) &&

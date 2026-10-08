@@ -2,15 +2,17 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useDispatch } from 'react-redux';
 
+import { SKILL_RUN_MATCH, SKILL_RUN_START_ERROR } from '@/[fsd]/features/skill/lib/constants';
 import {
-  SKILL_RUN_MATCH,
-  SKILL_RUN_SOURCE,
   buildSkillRunConversation,
+  buildSkillRunName,
   buildSkillRunParticipant,
   findSkillParticipant,
   matchSkillRun,
-} from '@/[fsd]/features/skill/lib/helpers/skillRun.helpers';
+} from '@/[fsd]/features/skill/lib/helpers';
+import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
 import {
+  TAG_TYPE_CONVERSATION_DETAILS,
   useConversationCreateMutation,
   useConversationDetailsQuery,
   useDeleteAllMessagesFromConversationMutation,
@@ -32,13 +34,10 @@ import useStreamingNavBlocker from '@/hooks/chat/useStreamingNavBlocker';
 import { useManualSocket } from '@/hooks/useSocket';
 import useToast from '@/hooks/useToast';
 
+const { ParticipantEntityTypes } = ParticipantEntityConstants;
+
 const isPendingMessage = message => message.isStreaming || message.isLoading || message.isRegenerating;
 
-/**
- * Persistent skill run chat: one private `source: 'skill'` conversation per run, with the skill
- * pinned to the opened version as its single participant. The run id lives with the caller
- * (`runConversationId`) so it survives the Formik remounts of the skill editor.
- */
 export const useSkillRunChat = ({
   projectId,
   skillId,
@@ -84,9 +83,9 @@ export const useSkillRunChat = ({
 
   const buildNewRun = useCallback(
     () => ({
-      name: `Run ${skillName}`,
+      name: buildSkillRunName(skillName),
       is_private: true,
-      source: SKILL_RUN_SOURCE,
+      source: ParticipantEntityTypes.Skill,
       participants: [skillParticipant],
       chat_history: [],
       isNew: true,
@@ -123,6 +122,7 @@ export const useSkillRunChat = ({
       return;
     }
 
+    let isSuperseded = false;
     const tracesRequest = getMessageTraces({
       projectId,
       conversationId: runConversationData.id,
@@ -131,6 +131,7 @@ export const useSkillRunChat = ({
     (async () => {
       try {
         const tracesResult = await tracesRequest;
+        if (isSuperseded) return;
         const chatHistory = convertConversationToChatHistory(runConversationData, tracesResult.data);
         chatHistoryRef.current = chatHistory;
         setActiveConversation({ ...runConversationData, chat_history: chatHistory, isApplicationChat: true });
@@ -140,11 +141,14 @@ export const useSkillRunChat = ({
           conversation_uuid: runConversationData.uuid,
           project_id: projectId,
         });
-      } catch (error) {
-        if (error?.name !== 'AbortError') toastError('Failed to load the skill run');
+      } catch {
+        if (!isSuperseded) toastError('Failed to load the skill run');
       }
     })();
-    return () => tracesRequest.abort();
+    return () => {
+      isSuperseded = true;
+      tracesRequest.abort();
+    };
   }, [
     emitEnterRoom,
     getMessageTraces,
@@ -171,19 +175,18 @@ export const useSkillRunChat = ({
     if (runConversationId || !skillParticipant) return;
     const isCurrentNewRun =
       activeConversation?.isNew && activeConversation.participants?.[0] === skillParticipant;
-    // The run id reaches the URL a render after the conversation is created
-    const isJustCreatedRun =
+    const isCreatedRunAwaitingUrl =
       activeConversation?.id !== undefined &&
       activeConversation.id === createdRunIdRef.current &&
       findSkillParticipant(activeConversation)?.entity_settings?.version_id === versionId;
-    if (isCurrentNewRun || isJustCreatedRun) return;
+    if (isCurrentNewRun || isCreatedRunAwaitingUrl) return;
     setActiveConversation(buildNewRun());
     setActiveParticipant(skillParticipant);
     setUnsavedLLMSettings(null);
   }, [activeConversation, buildNewRun, runConversationId, skillParticipant, versionId]);
 
   const isStreaming = useMemo(
-    () => activeConversation?.chat_history?.some(isPendingMessage) || false,
+    () => Boolean(activeConversation?.chat_history?.some(isPendingMessage)),
     [activeConversation?.chat_history],
   );
   useStreamingNavBlocker(isStreaming);
@@ -204,7 +207,7 @@ export const useSkillRunChat = ({
         buildSkillRunConversation({ projectId, skillName, participant: skillParticipant }),
       );
       if (!result.data) {
-        toastError(buildErrorMessage(result.error) || 'Failed to start the skill run');
+        toastError(buildErrorMessage(result.error) || SKILL_RUN_START_ERROR);
         return { success: false };
       }
 
@@ -364,17 +367,17 @@ export const useSkillRunChat = ({
   const { onRemoteChatMessageSync } = useSynAgentChatMessage({ activeConversation, setActiveConversation });
   useChatMessageSyncSocket({ onRemoteChatMessageSync });
   const onRemoteDeleteMessage = useCallback(
-    id => setChatHistory(prev => prev.filter(message => message.id != id)),
+    id => setChatHistory(prev => prev.filter(message => message.id !== id)),
     [setChatHistory],
   );
   useChatMessageDeleteSocket({ onRemoteDeleteMessage });
 
-  // Token counts shown for the run are recomputed once a turn finishes
   const wasStreamingRef = useRef(isStreaming);
   useEffect(() => {
-    if (wasStreamingRef.current && !isStreaming && activeConversation?.id) {
+    const hasTurnFinished = wasStreamingRef.current && !isStreaming;
+    if (hasTurnFinished && activeConversation?.id) {
       dispatch(
-        eliteaApi.util.invalidateTags([{ type: 'TAG_TYPE_CONVERSATION_DETAILS', id: activeConversation.id }]),
+        eliteaApi.util.invalidateTags([{ type: TAG_TYPE_CONVERSATION_DETAILS, id: activeConversation.id }]),
       );
     }
     wasStreamingRef.current = isStreaming;

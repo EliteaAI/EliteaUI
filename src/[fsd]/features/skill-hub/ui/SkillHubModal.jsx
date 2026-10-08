@@ -11,6 +11,7 @@ import {
 } from '@mui/material';
 
 import { ELITEA_CATALOG_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
+import { useCanRunSkill } from '@/[fsd]/features/skill';
 import { useGetPublicSkillDetailsQuery } from '@/[fsd]/features/skill-hub/api';
 import { SkillHubConstants } from '@/[fsd]/features/skill-hub/lib/constants';
 import { useRunCatalogSkill } from '@/[fsd]/features/skill-hub/lib/hooks';
@@ -18,7 +19,6 @@ import AttachToAgentDialog from '@/[fsd]/features/skill-hub/ui/AttachToAgentDial
 import CatalogSkillVersionSelect from '@/[fsd]/features/skill-hub/ui/CatalogSkillVersionSelect';
 import SkillHubLike from '@/[fsd]/features/skill-hub/ui/SkillHubLike';
 import SkillHubModalMenu from '@/[fsd]/features/skill-hub/ui/SkillHubModalMenu';
-import { useCanRunSkill } from '@/[fsd]/features/skill/lib/hooks/useCanRunSkill.hooks';
 import { Markdown } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { ChatParticipantType, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
@@ -66,8 +66,8 @@ const SkillHubModal = memo(props => {
   }, [versionId]);
 
   const handleRun = useCallback(async () => {
-    const started = await runCatalogSkill({ skill: { ...skill, name }, versionId: runVersionId });
-    if (started) onClose?.();
+    const hasStarted = await runCatalogSkill({ skill: { ...skill, name }, versionId: runVersionId });
+    if (hasStarted) onClose?.();
   }, [name, onClose, runCatalogSkill, runVersionId, skill]);
 
   const link = useMemo(() => {

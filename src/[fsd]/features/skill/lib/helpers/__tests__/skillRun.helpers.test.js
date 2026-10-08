@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
+import { SKILL_RUN_MATCH } from '@/[fsd]/features/skill/lib/constants';
 import {
-  SKILL_RUN_MATCH,
-  SKILL_RUN_SOURCE,
   buildSkillRunConversation,
   buildSkillRunParticipant,
   findSkillParticipant,
   matchSkillRun,
+  readRunConversationId,
 } from '@/[fsd]/features/skill/lib/helpers/skillRun.helpers';
 import { hasUnsavedRunChanges } from '@/[fsd]/features/skill/lib/helpers/skillRunSettings.helpers';
 
@@ -100,11 +100,10 @@ describe('skill run conversation', () => {
       projectId: 2,
       name: 'Run Reviewer',
       is_private: true,
-      source: SKILL_RUN_SOURCE,
+      source: 'skill',
       meta: { single_participant: sent },
       participants: [sent],
     });
-    expect(SKILL_RUN_SOURCE).toBe('skill');
   });
 
   it('finds the skill participant among the conversation participants', () => {
@@ -134,5 +133,17 @@ describe('matchSkillRun', () => {
     expect(matchSkillRun(run(11, 2, 100), page)).toBe(SKILL_RUN_MATCH.otherSkill);
     expect(matchSkillRun(run(10, 1, 100), page)).toBe(SKILL_RUN_MATCH.otherSkill);
     expect(matchSkillRun(undefined, page)).toBe(SKILL_RUN_MATCH.otherSkill);
+  });
+});
+
+describe('readRunConversationId', () => {
+  it('keeps a numeric conversation id from the URL', () => {
+    expect(readRunConversationId(new URLSearchParams('run=42'))).toBe('42');
+  });
+
+  it('ignores anything that is not a plain id, so it never reaches an API path', () => {
+    expect(readRunConversationId(new URLSearchParams('run=..%2F..%2Fadmin'))).toBeNull();
+    expect(readRunConversationId(new URLSearchParams('run=42abc'))).toBeNull();
+    expect(readRunConversationId(new URLSearchParams(''))).toBeNull();
   });
 });

@@ -1,16 +1,17 @@
-import { memo, useEffect, useRef } from 'react';
+import { memo, useRef } from 'react';
 
 import { useFormikContext } from 'formik';
 
 import { Box } from '@mui/material';
 
 import { hasUnsavedRunChanges } from '@/[fsd]/features/skill/lib/helpers';
+import { useCanRunSkill, useFocusRunInput } from '@/[fsd]/features/skill/lib/hooks';
 
 import SkillTestPanel from '../skill-test-panel/SkillTestPanel';
 import SkillRunPanel from './SkillRunPanel';
 import UnsavedChangesTestBanner from './UnsavedChangesTestBanner';
 
-const MESSAGE_INPUT_SELECTOR = '[contenteditable="true"], textarea';
+const UNSAVED_CHANGES_BANNER = <UnsavedChangesTestBanner />;
 
 const SkillRunPane = memo(props => {
   const {
@@ -21,17 +22,16 @@ const SkillRunPane = memo(props => {
     onOpenRunVersion,
     onShowHistory,
     focusRequest,
+    onFocusHandled,
   } = props;
   const { values, initialValues } = useFormikContext();
   const paneRef = useRef(null);
+  const canRunSkill = useCanRunSkill();
   const isTestingUnsavedChanges = hasUnsavedRunChanges(values, initialValues);
+  const showsTestPanel = isTestingUnsavedChanges || !canRunSkill;
   const styles = skillRunPaneStyles();
 
-  useEffect(() => {
-    if (!focusRequest || !paneRef.current) return;
-    paneRef.current.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-    paneRef.current.querySelector(MESSAGE_INPUT_SELECTOR)?.focus();
-  }, [focusRequest]);
+  useFocusRunInput({ containerRef: paneRef, focusRequest, isReady: showsTestPanel, onFocusHandled });
 
   return (
     <Box
@@ -39,11 +39,11 @@ const SkillRunPane = memo(props => {
       sx={styles.pane}
       data-testid="skill-run-pane"
     >
-      {isTestingUnsavedChanges ? (
+      {showsTestPanel ? (
         <SkillTestPanel
           isFullScreenChat={isFullScreenChat}
           setIsFullScreenChat={setIsFullScreenChat}
-          banner={<UnsavedChangesTestBanner />}
+          banner={isTestingUnsavedChanges ? UNSAVED_CHANGES_BANNER : null}
         />
       ) : (
         <SkillRunPanel
@@ -56,6 +56,8 @@ const SkillRunPane = memo(props => {
           isFullScreenChat={isFullScreenChat}
           setIsFullScreenChat={setIsFullScreenChat}
           onShowHistory={onShowHistory}
+          focusRequest={focusRequest}
+          onFocusHandled={onFocusHandled}
         />
       )}
     </Box>

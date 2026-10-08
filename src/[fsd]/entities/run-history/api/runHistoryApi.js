@@ -8,7 +8,7 @@ const CONVERSATION_INFO_TAG = 'CONVERSATION_INFO_TAG';
 
 const { ParticipantEntityTypes } = ParticipantEntityConstants;
 
-const historyEntityNameFor = source => {
+const getHistoryEntityName = source => {
   if (source === ParticipantEntityTypes.Toolkit || source === ParticipantEntityTypes.MCP)
     return ParticipantEntityTypes.Toolkit;
   if (source === ParticipantEntityTypes.Skill) return ParticipantEntityTypes.Skill;
@@ -26,7 +26,7 @@ const runHistoryApi = eliteaApi
           url: `/elitea_core/conversations/prompt_lib/${projectId}`,
           params: {
             source: source === ParticipantEntityTypes.MCP ? ParticipantEntityTypes.Toolkit : source,
-            entity_name: historyEntityNameFor(source),
+            entity_name: getHistoryEntityName(source),
             entity_meta_id: entityId,
             entity_meta_project_id: projectId,
             limit: pageSize,

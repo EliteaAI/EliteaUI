@@ -1,5 +1,8 @@
+import { findSkillParticipant } from '@/[fsd]/features/skill/lib/helpers';
 import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { ChatParticipantType, DEFAULT_PARTICIPANT_NAME } from '@/common/constants';
+
+const { ParticipantEntityTypes } = ParticipantEntityConstants;
 
 /**
  * True when resolved participant details describe the given participant.
@@ -118,8 +121,5 @@ export const isWelcomeMessageParticipant = participant =>
 export const getParticipantWelcomeKey = participant =>
   `${getChatParticipantUniqueId(participant)}::${participant.entity_settings?.version_id ?? ''}`;
 
-// A skill run conversation always talks to its skill, even where no active participant was stored locally
 export const getDefaultActiveParticipant = conversation =>
-  conversation?.source === ParticipantEntityConstants.ParticipantEntityTypes.Skill
-    ? conversation.participants?.find(participant => participant.entity_name === ChatParticipantType.Skills)
-    : undefined;
+  conversation?.source === ParticipantEntityTypes.Skill ? findSkillParticipant(conversation) : undefined;

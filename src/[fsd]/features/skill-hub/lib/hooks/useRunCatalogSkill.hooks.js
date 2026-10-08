@@ -3,11 +3,12 @@ import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { getChatParticipantUniqueId } from '@/[fsd]/features/chat/participants/lib/helpers';
+import { SKILL_RUN_START_ERROR } from '@/[fsd]/features/skill/lib/constants';
 import {
   buildSkillRunConversation,
   buildSkillRunParticipant,
   findSkillParticipant,
-} from '@/[fsd]/features/skill/lib/helpers/skillRun.helpers';
+} from '@/[fsd]/features/skill/lib/helpers';
 import { useConversationCreateMutation } from '@/api';
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
@@ -16,10 +17,6 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
 import RouteDefinitions from '@/routes';
 
-/**
- * A Catalog skill runs as a private chat in the user's current project, so the history and the bill
- * stay with that project while the participant points at the published skill.
- */
 export const useRunCatalogSkill = () => {
   const navigate = useNavigate();
   const projectId = useSelectedProjectId();
@@ -40,7 +37,7 @@ export const useRunCatalogSkill = () => {
         buildSkillRunConversation({ projectId, skillName: skill.name, participant }),
       );
       if (!result.data) {
-        toastError(buildErrorMessage(result.error) || 'Failed to start the skill run');
+        toastError(buildErrorMessage(result.error) || SKILL_RUN_START_ERROR);
         return false;
       }
       const runParticipant = findSkillParticipant(result.data);

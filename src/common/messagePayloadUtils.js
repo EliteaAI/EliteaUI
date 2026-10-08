@@ -14,6 +14,13 @@ const getMcpServerUrlsFromParticipants = participants => {
     .map(p => p.entity_settings.url);
 };
 
+const buildOverrideLlmSettings = (unsavedLLMSettings, selectedModel) =>
+  Object.fromEntries(
+    Object.entries(filterReasoningEffortFromSettings(unsavedLLMSettings, selectedModel)).filter(
+      ([key]) => key !== 'steps_limit',
+    ),
+  );
+
 export const generateMessagePayload = ({
   question,
   question_id,
@@ -59,11 +66,7 @@ export const generateMessagePayload = ({
         // Strip steps_limit — it is a top-level field, not part of llm_settings.
         llm_settings: allowLLMSettingsOverride
           ? unsavedLLMSettings
-            ? Object.fromEntries(
-                Object.entries(filterReasoningEffortFromSettings(unsavedLLMSettings, selectedModel)).filter(
-                  ([key]) => key !== 'steps_limit',
-                ),
-              )
+            ? buildOverrideLlmSettings(unsavedLLMSettings, selectedModel)
             : selectionFields(selectedModel)
           : undefined,
         mcp_tokens: mcpTokens,
@@ -71,14 +74,9 @@ export const generateMessagePayload = ({
     case ChatParticipantType.Skills:
       return {
         user_input: question,
-        // A skill runs on its saved run settings; only an explicit per-run model choice overrides them
         llm_settings:
           allowLLMSettingsOverride && unsavedLLMSettings
-            ? Object.fromEntries(
-                Object.entries(filterReasoningEffortFromSettings(unsavedLLMSettings, selectedModel)).filter(
-                  ([key]) => key !== 'steps_limit',
-                ),
-              )
+            ? buildOverrideLlmSettings(unsavedLLMSettings, selectedModel)
             : undefined,
         project_id: projectId,
         participant_id: participantId,
@@ -96,11 +94,7 @@ export const generateMessagePayload = ({
       const stepsLimit = unsavedLLMSettings?.steps_limit ?? conversationMeta?.steps_limit;
       const defaultLlmSettings = !isSendingToUser
         ? unsavedLLMSettings
-          ? Object.fromEntries(
-              Object.entries(filterReasoningEffortFromSettings(unsavedLLMSettings, selectedModel)).filter(
-                ([key]) => key !== 'steps_limit',
-              ),
-            )
+          ? buildOverrideLlmSettings(unsavedLLMSettings, selectedModel)
           : selectionFields(selectedModel)
         : undefined;
       return {

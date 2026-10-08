@@ -1,31 +1,30 @@
-import { memo, useCallback } from 'react';
+import { memo, useMemo } from 'react';
 
-import { MenuItem, Select } from '@mui/material';
+import { SingleSelect } from '@/[fsd]/shared/ui/select';
+
+const VERSION_SELECT_INPUT_PROPS = {
+  'aria-label': 'Skill version to run',
+  'data-testid': 'catalog-skill-version-select',
+};
 
 const CatalogSkillVersionSelect = memo(props => {
   const { versions, value, onChange } = props;
   const styles = catalogSkillVersionSelectStyles();
 
-  const handleChange = useCallback(event => onChange(event.target.value), [onChange]);
+  const versionOptions = useMemo(
+    () => versions.map(version => ({ label: version.name, value: version.id })),
+    [versions],
+  );
 
   return (
-    <Select
-      size="small"
+    <SingleSelect
+      label=""
       value={value ?? ''}
-      onChange={handleChange}
+      options={versionOptions}
+      onValueChange={onChange}
       sx={styles.select}
-      inputProps={{ 'aria-label': 'Skill version to run' }}
-      data-testid="catalog-skill-version-select"
-    >
-      {versions.map(version => (
-        <MenuItem
-          key={version.id}
-          value={version.id}
-        >
-          {version.name}
-        </MenuItem>
-      ))}
-    </Select>
+      inputProps={VERSION_SELECT_INPUT_PROPS}
+    />
   );
 });
 

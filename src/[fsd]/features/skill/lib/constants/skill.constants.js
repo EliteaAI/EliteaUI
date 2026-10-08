@@ -8,3 +8,11 @@ export const SKILL_RUN_SEARCH_PARAMS = {
 };
 
 export const SKILL_RUN_FOCUS_TARGET = 'run';
+
+export const SKILL_RUN_MATCH = {
+  sameVersion: 'sameVersion',
+  otherVersion: 'otherVersion',
+  otherSkill: 'otherSkill',
+};
+
+export const SKILL_RUN_START_ERROR = 'Failed to start the skill run';

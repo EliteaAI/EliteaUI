@@ -6,10 +6,19 @@ import { cleanup, render, screen } from '@testing-library/react';
 
 import SkillRunPane from '../SkillRunPane';
 
-const fixture = vi.hoisted(() => ({ values: {}, initialValues: {}, runPanel: vi.fn(() => null) }));
+const fixture = vi.hoisted(() => ({
+  values: {},
+  initialValues: {},
+  canRun: true,
+  runPanel: vi.fn(() => null),
+}));
 
 vi.mock('formik', () => ({
   useFormikContext: () => ({ values: fixture.values, initialValues: fixture.initialValues }),
+}));
+vi.mock('@/[fsd]/features/skill/lib/hooks', () => ({
+  useCanRunSkill: () => fixture.canRun,
+  useFocusRunInput: () => {},
 }));
 vi.mock('../SkillRunPanel', () => ({
   default: props => {
@@ -45,7 +54,10 @@ const renderPane = values => {
   );
 };
 
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => {
+  vi.clearAllMocks();
+  fixture.canRun = true;
+});
 afterEach(cleanup);
 
 describe('SkillRunPane mode', () => {
@@ -75,5 +87,15 @@ describe('SkillRunPane mode', () => {
       version_details: { ...saved.version_details, run_settings: { llm_settings: { model_name: 'other' } } },
     });
     expect(screen.getByTestId('unsaved-banner')).toBeInTheDocument();
+  });
+});
+
+describe('SkillRunPane permission', () => {
+  it('keeps users without the run permission on the stateless panel without the unsaved banner', () => {
+    fixture.canRun = false;
+    renderPane(saved);
+    expect(screen.getByTestId('test-panel')).toBeInTheDocument();
+    expect(screen.queryByTestId('run-panel')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('unsaved-banner')).not.toBeInTheDocument();
   });
 });

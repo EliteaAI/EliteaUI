@@ -21,6 +21,7 @@ import {
   useSkillDetailsQuery,
 } from '@/[fsd]/features/skill';
 import { SKILL_RUN_FOCUS_TARGET, SKILL_RUN_SEARCH_PARAMS } from '@/[fsd]/features/skill/lib/constants';
+import { readRunConversationId } from '@/[fsd]/features/skill/lib/helpers';
 import { useRestoredConversation, useRunHistoryNavigation } from '@/[fsd]/shared/lib/hooks';
 import { BreadcrumbsOrTitle } from '@/[fsd]/shared/ui';
 import { SkillTabBar } from '@/[fsd]/widgets/skill-tab-bar';
@@ -73,7 +74,7 @@ const EditSkill = memo(() => {
   const [compareVersionsOpen, setCompareVersionsOpen] = useState(false);
   const [runFocusRequest, setRunFocusRequest] = useState(0);
   const [searchParams, setSearchParams] = useSearchParams();
-  const runConversationId = searchParams.get(SKILL_RUN_SEARCH_PARAMS.run);
+  const runConversationId = readRunConversationId(searchParams);
 
   const { goToRunHistory } = useRunHistoryNavigation({
     entityId: skillId,
@@ -98,6 +99,7 @@ const EditSkill = memo(() => {
   );
 
   const onRun = useCallback(() => setRunFocusRequest(request => request + 1), []);
+  const onRunFocusHandled = useCallback(() => setRunFocusRequest(0), []);
 
   useEffect(() => {
     if (searchParams.get(SKILL_RUN_SEARCH_PARAMS.focus) !== SKILL_RUN_FOCUS_TARGET) return;
@@ -141,14 +143,13 @@ const EditSkill = memo(() => {
     { skip: !projectId || !skillId },
   );
 
-  // Asks the server rather than this page's cached version list, which another tab may have outdated
   const onOpenRunVersion = useCallback(
     async (pinnedVersionId, conversationId) => {
-      const pinnedVersionRequest = dispatch(
+      const freshPinnedVersionRequest = dispatch(
         eliteaApi.endpoints.skillDetails.initiate({ projectId, skillId, versionId: String(pinnedVersionId) }),
       );
-      const { error: pinnedVersionError } = await pinnedVersionRequest;
-      pinnedVersionRequest.unsubscribe();
+      const { error: pinnedVersionError } = await freshPinnedVersionRequest;
+      freshPinnedVersionRequest.unsubscribe();
       if (pinnedVersionError && isNotFoundError(pinnedVersionError)) {
         toastError('The version this run used no longer exists; starting a new run');
         onRunConversationChange(null);
@@ -361,6 +362,7 @@ const EditSkill = memo(() => {
                         onOpenRunVersion={onOpenRunVersion}
                         onShowHistory={goToRunHistory}
                         focusRequest={runFocusRequest}
+                        onFocusHandled={onRunFocusHandled}
                       />
                     </RightGridItem>
                   </StyledGridContainer>
