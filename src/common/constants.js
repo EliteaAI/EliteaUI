@@ -95,11 +95,12 @@ export const DEFAULT_PARTICIPANT_NAME = 'Elitea';
 export const NormalNameRegExp = /^[a-zA-Z0-9_][a-zA-Z0-9_\s]*/g;
 export const NormalTagNameInputRegExp = /^[\w,\s]+$/g;
 export const NormalSingleTagNameInputRegExp = /^[ \t]*[\w]*[ \t]*$/g;
-export const ConversationNameRegExp = /^[a-zA-Z0-9_[\].()][a-zA-Z0-9_[\].() -]{2,63}$/;
+// Mirrors backend validation (length only): auto-generated names keep the user's punctuation and non-Latin text
+export const ConversationNameRegExp = /^\S.{2,63}$/u;
 export const ConversationNameWarningMessage =
-  'The chat name should be 3 to 64 characters long. It can include letters (a-z, A-Z), numbers (0-9), underscores (_), brackets ([]), parentheses (()), dots (.), hyphen(-), and spaces. Please note that the first character should not be a space.';
+  'The chat name should be 3 to 64 characters long and should not start with a space.';
 export const FolderNameWarningMessage =
-  'The folder name should be 3 to 64 characters long. It can include letters (a-z, A-Z), numbers (0-9), underscores (_), brackets ([]), parentheses (()), dots (.), hyphen(-), and spaces. Please note that the first character should not be a space.';
+  'The folder name should be 3 to 64 characters long and should not start with a space.';
 export const DefaultConversationName = 'New Chat';
 export const DefaultFolderName = 'New folder';
 
