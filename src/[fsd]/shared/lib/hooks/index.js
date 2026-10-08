@@ -20,6 +20,7 @@ export * from './useLanguageLinter.hooks';
 export * from './useMcpVisibility.hooks';
 export * from './useSoundNotification.hooks';
 export * from './useEliteATheme.hooks';
+export * from './useDataGridTheme.hooks';
 export * from './useCustomTheme.hooks';
 export * from './useCustomThemeGuard.hooks';
 export * from './useBrandFavicon.hooks';
