@@ -78,8 +78,6 @@ const agentDescriptionTextStyles = () => ({
               textOverflow: 'ellipsis',
             }),
             ...(isExpanded && {
-              overflowY: 'auto',
-              maxHeight: '6rem',
               width: '100%',
             }),
           }),
