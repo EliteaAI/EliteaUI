@@ -267,15 +267,17 @@ const AgentModal = memo(props => {
                 {description}
               </Typography>
               {isDescriptionTruncated && (
-                <SharedButton.BaseBtn
-                  variant={BUTTON_VARIANTS.auxiliary}
-                  onClick={handleToggleDescription}
-                  data-testid="catalog-agent-modal-show-more-description"
-                >
-                  <Typography variant="labelSmall">
-                    {isDescriptionExpanded ? 'Show less' : 'Show more'}
-                  </Typography>
-                </SharedButton.BaseBtn>
+                <Box sx={styles.showMoreRow}>
+                  <SharedButton.BaseBtn
+                    variant={BUTTON_VARIANTS.auxiliary}
+                    onClick={handleToggleDescription}
+                    data-testid="catalog-agent-modal-show-more-description"
+                  >
+                    <Typography variant="labelSmall">
+                      {isDescriptionExpanded ? 'Show less' : 'Show more'}
+                    </Typography>
+                  </SharedButton.BaseBtn>
+                </Box>
               )}
               <SharedButton.BaseBtn
                 variant={BUTTON_VARIANTS.auxiliary}
@@ -400,11 +402,9 @@ const agentModalStyles = () => ({
     ({ palette }) => ({
       textAlign: 'center',
       color: palette.text.metrics,
+      lineHeight: '1.25rem',
       ...(isSmallHeight
-        ? {
-            width: '100%',
-            lineHeight: '1.25rem',
-          }
+        ? { width: '100%' }
         : {
             ...(!isExpanded && {
               display: '-webkit-box',
@@ -413,9 +413,18 @@ const agentModalStyles = () => ({
               overflow: 'hidden',
               textOverflow: 'ellipsis',
             }),
-            lineHeight: '1.25rem',
+            ...(isExpanded && {
+              overflowY: 'auto',
+              maxHeight: '6rem',
+              width: '100%',
+            }),
           }),
     }),
+  showMoreRow: {
+    width: '100%',
+    display: 'flex',
+    justifyContent: 'flex-end',
+  },
   dialogActions: {
     alignItems: 'center',
     justifyContent: 'center',

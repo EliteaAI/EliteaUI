@@ -49,13 +49,15 @@ const AgentWelcomeMessage = memo(props => {
             {welcome_message}
           </Typography>
           {isTruncated && (
-            <Button.BaseBtn
-              variant={BUTTON_VARIANTS.auxiliary}
-              onClick={handleToggle}
-              data-testid="catalog-agent-modal-show-more-welcome-message"
-            >
-              <Typography variant="labelSmall">{isExpanded ? 'Show less' : 'Show more'}</Typography>
-            </Button.BaseBtn>
+            <Box sx={styles.showMoreRow}>
+              <Button.BaseBtn
+                variant={BUTTON_VARIANTS.auxiliary}
+                onClick={handleToggle}
+                data-testid="catalog-agent-modal-show-more-welcome-message"
+              >
+                <Typography variant="labelSmall">{isExpanded ? 'Show less' : 'Show more'}</Typography>
+              </Button.BaseBtn>
+            </Box>
           )}
         </Box>
       ) : (
@@ -109,6 +111,11 @@ const agentWelcomeMessageStyles = () => ({
         WebkitLineClamp: 8,
       }),
     }),
+  showMoreRow: {
+    width: '100%',
+    display: 'flex',
+    justifyContent: 'flex-end',
+  },
   emptyText: ({ palette }) => ({
     color: palette.text.tertiary,
     textAlign: 'center',
