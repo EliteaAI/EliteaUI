@@ -53,7 +53,7 @@ const NewChatInput = memo(
       onSelectSkillModel,
       skillLLMSettings,
       onSetSkillLLMSettings,
-      isActiveParticipantUnavailable = false,
+      activeSkillUnavailableReason,
 
       onShowAgentEditor,
       onShowPipelineEditor,
@@ -324,7 +324,7 @@ const NewChatInput = memo(
                     onSelectModel={onSelectSkillModel}
                     llmSettings={skillLLMSettings}
                     onSetLLMSettings={onSetSkillLLMSettings}
-                    isUnavailable={isActiveParticipantUnavailable}
+                    unavailableReason={activeSkillUnavailableReason}
                     disabled={isStreaming}
                     onSwitchToModel={selectSavedOrDefaultModel}
                     disableSwitchToModel={disableSwitchingParticipant || isLoading || isStreaming}

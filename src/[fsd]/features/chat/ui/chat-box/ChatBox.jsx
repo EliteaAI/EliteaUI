@@ -52,7 +52,10 @@ import {
   useSkillChatModel,
   useSlashMention,
 } from '@/[fsd]/features/chat/lib/hooks';
-import { areDetailsOfParticipant } from '@/[fsd]/features/chat/participants/lib/helpers';
+import {
+  areDetailsOfParticipant,
+  getSkillUnavailableReason,
+} from '@/[fsd]/features/chat/participants/lib/helpers';
 import { useFetchParticipantDetails } from '@/[fsd]/features/chat/participants/lib/hooks';
 import { BudgetWarningBanner, SlashSuggestionList, VoiceMiniPlayer } from '@/[fsd]/features/chat/ui';
 import { ChatMessageList } from '@/[fsd]/features/chat/ui/chat-box';
@@ -1078,6 +1081,7 @@ const ChatBox = memo(
       onSelectSkill,
       resetSkill,
       skillHighlightRanges,
+      emptyLabel: skillEmptyLabel,
     } = useChatSkillMention({
       chatInput,
       activeParticipant,
@@ -2904,6 +2908,11 @@ const ChatBox = memo(
       [isActiveSkill, activeParticipant?.meta?.is_available, isActiveParticipantVersionMissing],
     );
 
+    const activeSkillUnavailableReason = useMemo(
+      () => getSkillUnavailableReason(isActiveSkillUnavailable, activeParticipantVersions),
+      [isActiveSkillUnavailable, activeParticipantVersions],
+    );
+
     useEffect(() => {
       if (!isActiveParticipantVersionMissing || isActiveSkill) return;
       if (!activeParticipantVersions?.length) return;
@@ -3054,6 +3063,7 @@ const ChatBox = memo(
                 highlightedIndex={skillHighlightedIndex}
                 onSelectItem={onSelectSkill}
                 onClose={resetSkill}
+                emptyLabel={skillEmptyLabel}
               />
             )}
             {budgetWarning.shouldShow && (
@@ -3096,7 +3106,7 @@ const ChatBox = memo(
               onSelectSkillModel={onSelectSkillModel}
               skillLLMSettings={skillLLMSettings}
               onSetSkillLLMSettings={onSetSkillLLMSettings}
-              isActiveParticipantUnavailable={isActiveSkillUnavailable}
+              activeSkillUnavailableReason={activeSkillUnavailableReason}
               isStreaming={isStreamingNow || isStreaming}
               isInjectable={isInjectable}
               onInject={onInjectMessage}

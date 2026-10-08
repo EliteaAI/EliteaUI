@@ -12,6 +12,11 @@ export const ParticipantCreationPermissionMap = {
 
 export const CATALOG_LABEL = 'Catalog';
 
+export const SkillUnavailableReason = {
+  Skill: 'skill',
+  Version: 'version',
+};
+
 export const ParticipantEditPermissionMap = {
   [ChatParticipantType.Applications]: PERMISSIONS.applications.update,
   [ChatParticipantType.Pipelines]: PERMISSIONS.applications.update,

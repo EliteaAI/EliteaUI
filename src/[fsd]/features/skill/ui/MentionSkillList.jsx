@@ -8,7 +8,6 @@ import SkillIcon from '@/assets/skill-icon.svg?react';
 import EliteAImage from '@/components/EliteAImage';
 
 const HEADER_LABEL = 'Mention skill';
-const EMPTY_LABEL = 'No skills attached to this agent';
 
 const startsGroup = (items, index) => index === 0 || items[index - 1].group !== items[index].group;
 
@@ -26,7 +25,15 @@ const startsGroup = (items, index) => index === 0 || items[index - 1].group !== 
  * @param {() => void} props.onClose - Dismiss the dropdown.
  */
 const MentionSkillList = memo(props => {
-  const { phase, filteredItems, committedMentions, highlightedIndex, onSelectItem, onClose } = props;
+  const {
+    phase,
+    filteredItems,
+    committedMentions,
+    highlightedIndex,
+    onSelectItem,
+    onClose,
+    emptyLabel = MentionConstants.SKILL_MENTION_EMPTY_LABELS.agent,
+  } = props;
   const styles = mentionSkillListStyles();
   const containerRef = useRef(null);
   const isGrouped = useMemo(
@@ -78,7 +85,7 @@ const MentionSkillList = memo(props => {
               variant="bodySmall"
               color="text.secondary"
             >
-              {EMPTY_LABEL}
+              {emptyLabel}
             </Typography>
           </Box>
         ) : (
