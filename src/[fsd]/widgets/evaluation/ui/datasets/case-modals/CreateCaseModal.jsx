@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Box, Collapse, Tooltip, Typography } from '@mui/material';
 
@@ -6,13 +6,12 @@ import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { Button, Checkbox, Input, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
+import { useApplicationDetailsQuery } from '@/api/applications';
 import ArrowDownIcon from '@/components/Icons/ArrowDownIcon';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import PlusIcon from '@/components/Icons/PlusIcon';
 import StyledInputModal from '@/components/StyledInputModal';
 import useToast from '@/hooks/useToast';
-
-import { useApplicationDetailsQuery } from '@/api/applications';
 
 import { useAddEvalDatasetCaseMutation, useUpdateEvalDatasetCaseMutation } from '../../../api';
 import {
@@ -60,6 +59,9 @@ const CreateCaseModal = memo(props => {
   const [form, setForm] = useState(() => toFormState(datasetCase));
   const [initialForm, setInitialForm] = useState(() => toFormState(datasetCase));
   const [errorMessage, setErrorMessage] = useState('');
+  // Bumped on every blocked save so the same message scrolls into view again.
+  const [errorShownAt, setErrorShownAt] = useState(0);
+  const errorRef = useRef(null);
   const [variablesExpanded, setVariablesExpanded] = useState(true);
   const [expandedField, setExpandedField] = useState(null);
 
@@ -90,6 +92,20 @@ const CreateCaseModal = memo(props => {
     if (errorMessage) setErrorMessage('');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form]);
+
+  // The message sits below a long form, so bring it into view instead of leaving it off-screen.
+  useEffect(() => {
+    if (errorShownAt) errorRef.current?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
+  }, [errorShownAt]);
+
+  const blockSave = useCallback(
+    message => {
+      setErrorMessage(message);
+      setErrorShownAt(Date.now());
+      toastError(message);
+    },
+    [toastError],
+  );
 
   const setField = useCallback((key, value) => {
     setForm(prev => ({ ...prev, [key]: value }));
@@ -147,16 +163,16 @@ const CreateCaseModal = memo(props => {
 
   const handleSave = useCallback(async () => {
     if (!form.input.trim()) {
-      setErrorMessage('Input is required.');
+      blockSave('Input is required.');
       return;
     }
     if (duplicateKey) {
-      setErrorMessage(`Duplicate variable key: ${duplicateKey}`);
+      blockSave(`Duplicate variable key: ${duplicateKey}`);
       return;
     }
     const trajectory = fromTrajectoryForm(form.trajectory);
     if (trajectory.error) {
-      setErrorMessage(trajectory.error);
+      blockSave(trajectory.error);
       return;
     }
     setErrorMessage('');
@@ -187,6 +203,7 @@ const CreateCaseModal = memo(props => {
     form,
     initialForm,
     duplicateKey,
+    blockSave,
     isEdit,
     updateCase,
     projectId,
@@ -434,6 +451,8 @@ const CreateCaseModal = memo(props => {
 
       {!readOnly && errorMessage && (
         <Typography
+          ref={errorRef}
+          role="alert"
           data-testid="create-case-error"
           sx={styles.error}
         >

@@ -1,4 +1,4 @@
-import { memo, useCallback, useId } from 'react';
+import { memo, useCallback } from 'react';
 
 import { Box, Tooltip, Typography } from '@mui/material';
 
@@ -16,6 +16,7 @@ import {
   TRAJECTORY_MATCH_OPTIONS,
   newTrajectoryToolRow,
 } from '../../../lib/helpers';
+import { ToolNameField, ToolNamesChipsField } from './TrajectoryToolInputs';
 
 const SECTION_TOOLTIP =
   'An optional reference for how the agent should use its tools on this case. The built-in ' +
@@ -23,21 +24,24 @@ const SECTION_TOOLTIP =
 const TOOLS_TOOLTIP =
   'Tool names as the agent records them. Suggestions come from the agent’s toolkits; MCP and other ' +
   'toolkits without a fixed tool list need the name typed in. Arguments are an optional JSON object.';
-const FORBIDDEN_TOOLTIP = 'Comma-separated tools the agent must not call on this case.';
+const FORBIDDEN_TOOLTIP =
+  'Tools the agent must not call on this case. Pick a suggestion or type a name and press Enter.';
 const ALLOW_REPEAT_TOOLTIP =
-  'Comma-separated tools that may be called again with the same arguments (polling and the like) ' +
-  'without counting as redundant.';
+  'Tools that may be called again with the same arguments (polling and the like) without counting as ' +
+  'redundant. Pick a suggestion or type a name and press Enter.';
 const MAX_CALLS_TOOLTIP = 'The most tool calls the agent may make on this case. Leave empty for no budget.';
 
 const ExpectedTrajectoryEditor = memo(props => {
   const { form, onChange, toolOptions = [], readOnly = false } = props;
-  const listId = `expected-trajectory-tools-${useId().replace(/:/g, '')}`;
 
   const setField = useCallback((key, value) => onChange({ ...form, [key]: value }), [form, onChange]);
 
   const setTool = useCallback(
     (index, key, value) =>
-      onChange({ ...form, tools: form.tools.map((row, i) => (i === index ? { ...row, [key]: value } : row)) }),
+      onChange({
+        ...form,
+        tools: form.tools.map((row, i) => (i === index ? { ...row, [key]: value } : row)),
+      }),
     [form, onChange],
   );
 
@@ -109,15 +113,6 @@ const ExpectedTrajectoryEditor = memo(props => {
 
       {form.enabled && (
         <Box sx={styles.body}>
-          <datalist id={listId}>
-            {toolOptions.map(name => (
-              <option
-                key={name}
-                value={name}
-              />
-            ))}
-          </datalist>
-
           <Box sx={styles.column}>
             {label('Match')}
             <SingleSelect
@@ -144,13 +139,21 @@ const ExpectedTrajectoryEditor = memo(props => {
                 >
                   <Box sx={styles.toolMain}>
                     <Typography sx={styles.toolIndex}>{index + 1}.</Typography>
-                    {textField({
-                      testId: `create-case-expected-tool-name-${index}`,
-                      value: row.name,
-                      onValue: value => setTool(index, 'name', value),
-                      placeholder: 'Tool name',
-                      inputProps: { list: listId, autoComplete: 'off' },
-                    })}
+                    {readOnly ? (
+                      textField({
+                        testId: `create-case-expected-tool-name-${index}`,
+                        value: row.name,
+                        placeholder: 'Tool name',
+                      })
+                    ) : (
+                      <ToolNameField
+                        testId={`create-case-expected-tool-name-${index}`}
+                        value={row.name}
+                        onValue={value => setTool(index, 'name', value)}
+                        options={toolOptions}
+                        placeholder="Tool name"
+                      />
+                    )}
                     {!readOnly && (
                       <Box sx={styles.rowActions}>
                         <Tooltip
@@ -243,21 +246,34 @@ const ExpectedTrajectoryEditor = memo(props => {
           <Box sx={styles.pair}>
             <Box sx={styles.column}>
               {label('Forbidden tools', FORBIDDEN_TOOLTIP)}
-              {textField({
-                testId: 'create-case-expected-trajectory-forbidden',
-                value: form.forbiddenText,
-                onValue: value => setField('forbiddenText', value),
-                placeholder: 'e.g. delete_branch, drop_table',
-              })}
+              {readOnly ? (
+                textField({ testId: 'create-case-expected-trajectory-forbidden', value: form.forbiddenText })
+              ) : (
+                <ToolNamesChipsField
+                  testId="create-case-expected-trajectory-forbidden"
+                  text={form.forbiddenText}
+                  onText={value => setField('forbiddenText', value)}
+                  options={toolOptions}
+                  placeholder="e.g. delete_branch"
+                />
+              )}
             </Box>
             <Box sx={styles.column}>
               {label('Allowed repeats', ALLOW_REPEAT_TOOLTIP)}
-              {textField({
-                testId: 'create-case-expected-trajectory-allow-repeat',
-                value: form.allowRepeatText,
-                onValue: value => setField('allowRepeatText', value),
-                placeholder: 'e.g. get_job_status',
-              })}
+              {readOnly ? (
+                textField({
+                  testId: 'create-case-expected-trajectory-allow-repeat',
+                  value: form.allowRepeatText,
+                })
+              ) : (
+                <ToolNamesChipsField
+                  testId="create-case-expected-trajectory-allow-repeat"
+                  text={form.allowRepeatText}
+                  onText={value => setField('allowRepeatText', value)}
+                  options={toolOptions}
+                  placeholder="e.g. get_job_status"
+                />
+              )}
             </Box>
           </Box>
 

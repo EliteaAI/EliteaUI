@@ -9,7 +9,11 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 import CreateCaseModal from '../CreateCaseModal';
 
-const { addCase, updateCase } = vi.hoisted(() => ({ addCase: vi.fn(), updateCase: vi.fn() }));
+const { addCase, updateCase, toastError } = vi.hoisted(() => ({
+  addCase: vi.fn(),
+  updateCase: vi.fn(),
+  toastError: vi.fn(),
+}));
 
 vi.mock('../../../../api', () => ({
   useAddEvalDatasetCaseMutation: () => [addCase, { isLoading: false }],
@@ -31,7 +35,7 @@ vi.mock('@/api/applications', async importOriginal => ({
 }));
 
 vi.mock('@/hooks/useToast', () => ({
-  default: () => ({ toastSuccess: vi.fn(), toastError: vi.fn() }),
+  default: () => ({ toastSuccess: vi.fn(), toastError }),
 }));
 
 const theme = createTheme({ palette: lightPalette });
@@ -41,7 +45,12 @@ const stored = {
   input: 'find EL bugs',
   expected_output: null,
   variables: {},
-  expected_trajectory: { match: 'superset', tools: [{ name: 'search_issues' }], forbidden: [], allow_repeat: [] },
+  expected_trajectory: {
+    match: 'superset',
+    tools: [{ name: 'search_issues' }],
+    forbidden: [],
+    allow_repeat: [],
+  },
 };
 
 const renderModal = (props = {}) =>
@@ -65,6 +74,7 @@ describe('CreateCaseModal expected trajectory', () => {
     cleanup();
     addCase.mockReset();
     updateCase.mockReset();
+    toastError.mockReset();
   });
 
   it('suggests the agent tool names and saves the reference', async () => {
@@ -78,10 +88,27 @@ describe('CreateCaseModal expected trajectory', () => {
     fireEvent.click(screen.getByTestId('create-case-expected-tool-add'));
 
     const nameInput = screen.getByTestId('create-case-expected-tool-name-0').querySelector('input');
-    const options = [...document.getElementById(nameInput.getAttribute('list')).querySelectorAll('option')];
-    expect(options.map(o => o.value)).toEqual(['ChildWriter', 'search_issues']);
+    fireEvent.mouseDown(nameInput);
+    expect(screen.getAllByRole('option').map(o => o.textContent)).toEqual(['ChildWriter', 'search_issues']);
 
-    fireEvent.change(nameInput, { target: { value: 'search_issues' } });
+    fireEvent.change(nameInput, { target: { value: 'sea' } });
+    expect(screen.getAllByRole('option').map(o => o.textContent)).toEqual(['search_issues']);
+    fireEvent.click(screen.getByRole('option', { name: 'search_issues' }));
+    expect(nameInput).toHaveValue('search_issues');
+
+    const forbiddenInput = screen
+      .getByTestId('create-case-expected-trajectory-forbidden')
+      .querySelector('input');
+    fireEvent.change(forbiddenInput, { target: { value: 'drop_table' } });
+    fireEvent.keyDown(forbiddenInput, { key: 'Enter' });
+    fireEvent.change(forbiddenInput, { target: { value: 'mcp_delete' } });
+    fireEvent.blur(forbiddenInput);
+    expect(
+      screen.getByTestId('create-case-expected-trajectory-forbidden-chip-drop_table'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId('create-case-expected-trajectory-forbidden-chip-mcp_delete'),
+    ).toBeInTheDocument();
     fireEvent.change(screen.getByTestId('create-case-expected-trajectory-max-calls').querySelector('input'), {
       target: { value: '4' },
     });
@@ -91,13 +118,32 @@ describe('CreateCaseModal expected trajectory', () => {
     expect(addCase.mock.calls[0][0].body.expected_trajectory).toEqual({
       match: 'superset',
       tools: [{ name: 'search_issues' }],
-      forbidden: [],
+      forbidden: ['drop_table', 'mcp_delete'],
       allow_repeat: [],
       max_tool_calls: 4,
     });
   });
 
+  it('accepts a free-text tool name the agent does not list', async () => {
+    addCase.mockReturnValue(ok());
+    renderModal();
+    fireEvent.change(screen.getByTestId('create-case-input').querySelector('textarea'), {
+      target: { value: 'q' },
+    });
+    fireEvent.click(screen.getByTestId('create-case-expected-trajectory-checkbox').querySelector('input'));
+    fireEvent.click(screen.getByTestId('create-case-expected-tool-add'));
+    fireEvent.change(screen.getByTestId('create-case-expected-tool-name-0').querySelector('input'), {
+      target: { value: 'mcp_get_page' },
+    });
+    fireEvent.click(screen.getByTestId('create-case-save'));
+    await vi.waitFor(() => expect(addCase).toHaveBeenCalled());
+
+    expect(addCase.mock.calls[0][0].body.expected_trajectory.tools).toEqual([{ name: 'mcp_get_page' }]);
+  });
+
   it('blocks the save on bad arguments JSON', () => {
+    const scrollIntoView = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoView;
     renderModal();
     fireEvent.change(screen.getByTestId('create-case-input').querySelector('textarea'), {
       target: { value: 'q' },
@@ -112,8 +158,23 @@ describe('CreateCaseModal expected trajectory', () => {
     });
     fireEvent.click(screen.getByTestId('create-case-save'));
 
-    expect(screen.getByTestId('create-case-error')).toHaveTextContent('Expected tool 1: arguments are not valid JSON');
+    expect(screen.getByTestId('create-case-error')).toHaveTextContent(
+      'Expected tool 1: arguments are not valid JSON',
+    );
+    expect(toastError).toHaveBeenCalledWith('Expected tool 1: arguments are not valid JSON');
+    expect(scrollIntoView).toHaveBeenCalled();
     expect(addCase).not.toHaveBeenCalled();
+
+    fireEvent.change(screen.getByTestId('create-case-expected-tool-args-0').querySelector('textarea'), {
+      target: { value: '[1, 2]' },
+    });
+    fireEvent.click(screen.getByTestId('create-case-save'));
+    expect(screen.getByTestId('create-case-error')).toHaveTextContent(
+      'Expected tool 1: arguments must be a JSON object',
+    );
+    expect(toastError).toHaveBeenLastCalledWith('Expected tool 1: arguments must be a JSON object');
+    expect(addCase).not.toHaveBeenCalled();
+    delete Element.prototype.scrollIntoView;
   });
 
   it('leaves a stored reference alone when only the input changes', async () => {
