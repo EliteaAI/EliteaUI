@@ -1,3 +1,4 @@
+import { getChatParticipantUniqueId } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { isMcpToolkit } from '@/[fsd]/shared/lib/helpers';
 import { ChatParticipantType, PUBLIC_PROJECT_ID } from '@/common/constants';
 
@@ -12,6 +13,12 @@ export const getEntityName = p => {
   if (p.participantType === ChatParticipantType.Skills) return ChatParticipantType.Skills;
   return ChatParticipantType.Applications;
 };
+
+export const getTemplateParticipantKey = p =>
+  getChatParticipantUniqueId({
+    entity_name: p.entity_name,
+    entity_meta: { id: p.id, project_id: p.project_id },
+  });
 
 export const isCatalogSkill = p =>
   p.entity_name === ChatParticipantType.Skills && p.project_id === PUBLIC_PROJECT_ID;

@@ -570,17 +570,14 @@ const NewConversationView = forwardRef(
           Promise.all(filtered.map(cp => fetchOriginalDetails(cp.entity_name, cp.id, cp.project_id))),
           fetchDefaultProjectUsers(filtered),
         ]);
-        const toParticipantKey = p => `${p.entity_name ?? p.participantType}:${p.project_id}:${p.id}`;
-        const currentKeySet = new Set(selectedParticipantsRef.current.map(toParticipantKey));
-        const baseKeySet = new Set(baseParticipants.map(toParticipantKey));
+        const currentKeySet = new Set(selectedParticipantsRef.current.map(getChatParticipantUniqueId));
+        const baseKeySet = new Set(baseParticipants.map(getChatParticipantUniqueId));
         const listsMatch =
           currentKeySet.size === baseKeySet.size && [...baseKeySet].every(key => currentKeySet.has(key));
         if (defaultParticipantsAppliedForRef.current !== sessionKey || !listsMatch) return;
-        const availableIndexes = baseParticipants
-          .map((base, i) => i)
-          .filter(
-            i => !NewConversationHelpers.isUnavailableTemplateSkill(baseParticipants[i], detailsList[i]),
-          );
+        const availableIndexes = baseParticipants.flatMap((base, i) =>
+          NewConversationHelpers.isUnavailableTemplateSkill(base, detailsList[i]) ? [] : [i],
+        );
         const skippedCount = baseParticipants.length - availableIndexes.length;
         if (skippedCount)
           toastInfo(NewConversationHelpers.getSkippedTemplateParticipantsMessage(skippedCount));

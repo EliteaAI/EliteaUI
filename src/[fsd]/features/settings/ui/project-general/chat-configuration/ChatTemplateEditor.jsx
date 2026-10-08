@@ -2,6 +2,7 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Box, FormControlLabel, Typography } from '@mui/material';
 
+import { ChatParticipantHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { useDropdownAwareModalClose } from '@/[fsd]/shared/lib/hooks';
 import { Button, Checkbox, Input, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
@@ -9,8 +10,6 @@ import { INPUT_VARIANTS } from '@/[fsd]/shared/ui/input';
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 
 import ChatParticipantPicker from './ChatParticipantPicker';
-
-const toParticipantKey = p => `${p.entity_name}:${p.project_id}:${p.id}`;
 
 const ChatTemplateEditor = memo(props => {
   const {
@@ -58,8 +57,8 @@ const ChatTemplateEditor = memo(props => {
     if (name.trim() !== savedName.trim()) return true;
     if (isDefault !== savedIsDefault) return true;
     if (participants.length !== savedParticipants.length) return true;
-    const savedKeys = new Set(savedParticipants.map(toParticipantKey));
-    return participants.some(p => !savedKeys.has(toParticipantKey(p)));
+    const savedKeys = new Set(savedParticipants.map(ChatParticipantHelpers.getTemplateParticipantKey));
+    return participants.some(p => !savedKeys.has(ChatParticipantHelpers.getTemplateParticipantKey(p)));
   }, [name, savedName, isDefault, savedIsDefault, participants, savedParticipants]);
 
   useEffect(() => {

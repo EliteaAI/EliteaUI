@@ -3,7 +3,6 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Autocomplete, Box, Chip, InputAdornment, TextField, Typography, useTheme } from '@mui/material';
 
 import { ParticipantConstants } from '@/[fsd]/features/chat/participants/lib/constants';
-import { getChatParticipantUniqueId } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { ChatParticipantConstants } from '@/[fsd]/features/settings/lib/constants';
 import { ChatParticipantHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
@@ -18,7 +17,8 @@ import ChatParticipantPublicBadge from './ChatParticipantPublicBadge';
 
 const { TABS, TAB_LABELS, TAB_FETCH_TYPES } = ChatParticipantConstants;
 
-const { getEntityName, filterFetchedForTab, isCatalogSkill } = ChatParticipantHelpers;
+const { getEntityName, filterFetchedForTab, isCatalogSkill, getTemplateParticipantKey } =
+  ChatParticipantHelpers;
 
 const SEARCH_PLACEHOLDER = 'Search participants...';
 
@@ -33,14 +33,8 @@ const LOAD_MORE_START_TIMEOUT_MS = 1000;
 
 const POPPER_MODIFIERS = [{ name: 'flip', enabled: false }];
 
-// Picker participants use flat `id`/`project_id` rather than `entity_meta`; adapt to the shared helper.
-const makeParticipantKey = p =>
-  getChatParticipantUniqueId({
-    entity_name: p.entity_name,
-    entity_meta: { id: p.id, project_id: p.project_id },
-  });
-
-const isSameParticipant = (option, value) => makeParticipantKey(option) === makeParticipantKey(value);
+const isSameParticipant = (option, value) =>
+  getTemplateParticipantKey(option) === getTemplateParticipantKey(value);
 
 const getParticipantName = participant => participant?.name ?? '';
 
@@ -161,10 +155,12 @@ const ChatParticipantPicker = memo(props => {
     if (!isAppendMode) optionOrderRef.current = new Map();
     const order = optionOrderRef.current;
     mapped.forEach(option => {
-      const key = makeParticipantKey(option);
+      const key = getTemplateParticipantKey(option);
       if (!order.has(key)) order.set(key, order.size);
     });
-    return mapped.sort((a, b) => order.get(makeParticipantKey(a)) - order.get(makeParticipantKey(b)));
+    return mapped.sort(
+      (a, b) => order.get(getTemplateParticipantKey(a)) - order.get(getTemplateParticipantKey(b)),
+    );
   }, [fetched, activeTab, isAppendMode]);
 
   // MUI Autocomplete resets its highlight when the option count changes and, with no matching
@@ -360,7 +356,7 @@ const ChatParticipantPicker = memo(props => {
       onClose={handleClose}
       filterOptions={keepRemoteOptions}
       getOptionLabel={getParticipantName}
-      getOptionKey={makeParticipantKey}
+      getOptionKey={getTemplateParticipantKey}
       isOptionEqualToValue={isSameParticipant}
       loading={isInitialLoading}
       loadingText="Loading…"
