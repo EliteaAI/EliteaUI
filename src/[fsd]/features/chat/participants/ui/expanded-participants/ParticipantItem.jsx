@@ -65,6 +65,8 @@ const ParticipantItem = memo(props => {
     someToolsAreUnavailable,
     isVersionUnavailable,
     isPublishedAgentGone,
+    isSkillGone,
+    isSkillVersionUnavailable,
   } = status;
 
   const isNormal =
@@ -76,7 +78,9 @@ const ParticipantItem = memo(props => {
     !openApiOAuthLoggedOut &&
     !someToolsAreUnavailable &&
     !isVersionUnavailable &&
-    !isPublishedAgentGone;
+    !isPublishedAgentGone &&
+    !isSkillGone &&
+    !isSkillVersionUnavailable;
 
   const sharedCardProps = {
     participant,

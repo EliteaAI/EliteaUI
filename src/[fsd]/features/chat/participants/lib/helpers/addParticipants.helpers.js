@@ -10,14 +10,40 @@ export const isParticipantOKForChat = participant =>
   participant.entity_name === ChatParticipantType.Users ||
   participant.entity_name === ChatParticipantType.Toolkits ||
   participant.entity_name === ChatParticipantType.Applications ||
-  participant.entity_name === ChatParticipantType.Pipelines;
+  participant.entity_name === ChatParticipantType.Pipelines ||
+  participant.entity_name === ChatParticipantType.Skills;
 
 export const canParticipantBeActiveInChat = participant =>
   participant.entity_name === ChatParticipantType.Users ||
   participant.entity_name === ChatParticipantType.Applications ||
-  participant.entity_name === ChatParticipantType.Pipelines;
+  participant.entity_name === ChatParticipantType.Pipelines ||
+  participant.entity_name === ChatParticipantType.Skills;
+
+const transformSkillParticipant = participant => {
+  const versionId = participant.entity_settings?.version_id;
+  const llmSettings = participant.entity_settings?.llm_settings;
+  return {
+    entity_name: ChatParticipantType.Skills,
+    entity_meta: {
+      id: participant.entity_meta?.id ?? participant.id,
+      project_id: participant.entity_meta?.project_id ?? participant.project_id,
+    },
+    entity_settings: {
+      ...(versionId && { version_id: versionId }),
+      icon_meta: {
+        ...(participant.entity_settings?.icon_meta ||
+          participant.version_details?.meta?.icon_meta ||
+          participant.icon_meta ||
+          {}),
+      },
+      ...(llmSettings && Object.keys(llmSettings).length && { llm_settings: llmSettings }),
+    },
+  };
+};
 
 export const transformParticipant = (participantType, participant, variables) => {
+  if (participantType === ChatParticipantType.Skills) return transformSkillParticipant(participant);
+
   if (participantType !== ChatParticipantType.Models)
     return {
       entity_name: participant.agent_type === 'pipeline' ? ChatParticipantType.Applications : participantType,

@@ -2,6 +2,7 @@ import * as React from 'react';
 
 import { useSelector } from 'react-redux';
 
+import { useSkillParticipants } from '@/[fsd]/features/skill/lib/hooks';
 import { useLoadToolkits } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ChatParticipantType, PUBLIC_PROJECT_ID } from '@/common/constants';
 import { sortByName } from '@/common/utils';
@@ -12,6 +13,8 @@ import { useCanListThisPublicEntity } from '@/hooks/users/usePermissions';
 import { useUserList } from '../useUserList';
 import { useApplicationParticipants } from './useApplicationParticipants';
 import { usePublicApplicationParticipants } from './usePublicApplicationParticipants';
+
+const ALREADY_DEBOUNCED = 0;
 
 const useParticipants = ({
   sortBy,
@@ -213,6 +216,21 @@ const useParticipants = ({
     forceSkip: projectId == PUBLIC_PROJECT_ID || !types.includes(ChatParticipantType.Toolkits),
   });
 
+  const includeSkills = types.includes(ChatParticipantType.Skills);
+  const {
+    ownSkills,
+    catalogSkills,
+    total: skillsTotal,
+    isFetching: isSkillsFetching,
+    onLoadMore: onLoadMoreSkills,
+  } = useSkillParticipants({
+    query: debouncedQuery,
+    pageSize,
+    skip: !includeSkills || forceSkip,
+    excludePublic,
+    debounceMs: ALREADY_DEBOUNCED,
+  });
+
   //MCPs
   const {
     onLoadMoreToolkits: onLoadMoreMCPs,
@@ -258,7 +276,8 @@ const useParticipants = ({
       isToolkitsFetching ||
       isPublicToolkitsFetching ||
       isMCPsFetching ||
-      isPublicMCPsFetching,
+      isPublicMCPsFetching ||
+      isSkillsFetching,
     [
       isApplicationsFetching,
       isPipelinesFetching,
@@ -269,6 +288,7 @@ const useParticipants = ({
       isUsersFetching,
       isMCPsFetching,
       isPublicMCPsFetching,
+      isSkillsFetching,
     ],
   );
 
@@ -292,8 +312,11 @@ const useParticipants = ({
       (!types.length || types.includes(ChatParticipantType.Toolkits)) && onLoadMorePublicToolkits();
       (!types.length || types.includes(ChatParticipantType.Toolkits)) && onLoadMoreMCPs();
       (!types.length || types.includes(ChatParticipantType.Toolkits)) && onLoadMorePublicMCPs();
+      includeSkills && onLoadMoreSkills();
     }
   }, [
+    includeSkills,
+    onLoadMoreSkills,
     types,
     isFetching,
     loadMoreApplications,
@@ -418,8 +441,12 @@ const useParticipants = ({
       ...filterToolkitList,
       ...filterUserList,
       ...filterMCPList,
+      ...ownSkills,
+      ...catalogSkills,
     ].sort(sortByName);
   }, [
+    ownSkills,
+    catalogSkills,
     types,
     applications,
     publicApplications,
@@ -450,8 +477,9 @@ const useParticipants = ({
       ? totalToolkitsCount + totalPublicToolkitsCount
       : 0;
     const mcpTotal = types.includes(ChatParticipantType.Toolkits) ? totalMCPsCount + totalPublicMCPsCount : 0;
-    return applicationTotal + userTotal + toolkitTotal + pipelineTotal + mcpTotal;
+    return applicationTotal + userTotal + toolkitTotal + pipelineTotal + mcpTotal + skillsTotal;
   }, [
+    skillsTotal,
     applicationsTotal,
     pipelinesTotal,
     publicApplicationsTotal,

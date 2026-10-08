@@ -1,28 +1,18 @@
 import { memo, useCallback, useMemo } from 'react';
 
-import {
-  Box,
-  Button,
-  ButtonGroup,
-  Divider,
-  IconButton,
-  Skeleton,
-  Tooltip,
-  Typography,
-  useTheme,
-} from '@mui/material';
+import { Box, Button, ButtonGroup, Divider, Skeleton, Tooltip, Typography, useTheme } from '@mui/material';
 
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version';
 import { useParticipantEntityIcon } from '@/[fsd]/features/chat/participants/lib/hooks';
 import { usePublicProjectAccessCheck } from '@/[fsd]/features/project';
 import { PERMISSIONS, PUBLIC_PROJECT_ID } from '@/common/constants';
 import EntityIcon from '@/components/EntityIcon';
-import CloseIcon from '@/components/Icons/CloseIcon';
 import SettingIcon from '@/components/Icons/SettingIcon';
 import useIsActiveParticipantBeingEdited from '@/hooks/chat/useIsActiveParticipantBeingEdited';
 import useAgentEditorPanelFit from '@/hooks/useAgentEditorPanelFit';
 import useCheckPermission from '@/hooks/useCheckPermission';
 
+import SwitchToModelButton from './SwitchToModelButton';
 import VariablesEditor from './VariablesEditor';
 import VersionSelector from './VersionSelector';
 
@@ -173,25 +163,10 @@ const AgentEditorPanel = memo(props => {
           </Button>
         </ButtonGroup>
 
-        <Tooltip
-          placement="top"
-          title="Switch to model"
-        >
-          <IconButton
-            size="small"
-            aria-label="switch to model"
-            onClick={onSwitchToModel}
-            disabled={disabled || disableSwitchToModel}
-            sx={styles.closeButton}
-          >
-            <CloseIcon
-              sx={styles.closeIcon}
-              fill={
-                disabled || disableSwitchToModel ? theme.palette.icon.disabled : theme.palette.icon.secondary
-              }
-            />
-          </IconButton>
-        </Tooltip>
+        <SwitchToModelButton
+          onClick={onSwitchToModel}
+          disabled={disabled || disableSwitchToModel}
+        />
       </Box>
     );
   }
@@ -296,25 +271,10 @@ const AgentEditorPanel = memo(props => {
         </Tooltip>
       </ButtonGroup>
 
-      <Tooltip
-        placement="top"
-        title="Switch to model"
-      >
-        <IconButton
-          size="small"
-          aria-label="switch to model"
-          onClick={onSwitchToModel}
-          disabled={disabled || disableSwitchToModel}
-          sx={styles.closeButton}
-        >
-          <CloseIcon
-            sx={styles.closeIcon}
-            fill={
-              disabled || disableSwitchToModel ? theme.palette.icon.disabled : theme.palette.icon.secondary
-            }
-          />
-        </IconButton>
-      </Tooltip>
+      <SwitchToModelButton
+        onClick={onSwitchToModel}
+        disabled={disabled || disableSwitchToModel}
+      />
     </Box>
   );
 });
@@ -365,13 +325,6 @@ const agentEditorPanelStyles = (isSmallView, theme) => ({
   skeletonText: {
     bgcolor: ({ palette }) => palette.background.overlay.medium,
     borderRadius: '0.25rem',
-  },
-  closeButton: {
-    padding: '0.375rem',
-    flexShrink: 0,
-  },
-  closeIcon: {
-    fontSize: '1rem',
   },
   participantName: {
     overflow: 'hidden',

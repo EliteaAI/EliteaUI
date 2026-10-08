@@ -42,3 +42,13 @@ export const USER_TRIGGER = isValidTrigger(config?.user_trigger) ? config.user_t
 
 // Array of all participant triggers for keydown detection
 export const PARTICIPANT_TRIGGERS = [PARTICIPANT_TRIGGER, PRIVATE_PARTICIPANT_TRIGGER];
+
+export const SkillMentionGroup = {
+  Attached: 'attached',
+  Chat: 'chat',
+};
+
+export const SKILL_MENTION_GROUP_LABELS = {
+  [SkillMentionGroup.Attached]: 'Attached to agent',
+  [SkillMentionGroup.Chat]: 'Skills in this chat',
+};

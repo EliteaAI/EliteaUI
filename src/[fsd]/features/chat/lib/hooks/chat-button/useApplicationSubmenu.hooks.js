@@ -1,10 +1,48 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { getChatParticipantUniqueId } from '@/[fsd]/features/chat/participants/lib/helpers';
+import { useSkillParticipants } from '@/[fsd]/features/skill/lib/hooks';
 import { isMcpToolkit } from '@/[fsd]/shared/lib/helpers';
 import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
 import { ChatParticipantType } from '@/common/constants';
+import EntityIcon from '@/components/EntityIcon';
+import { DROPDOWN_CONSTANTS } from '@/components/UnifiedDropdown';
 import useFilteredEntityItems from '@/hooks/chat/useFilteredEntityItems';
 import { useDropdownData } from '@/hooks/useDropdownData';
+
+const SKILL_PAGE_SIZE = 20;
+
+const SKILL_ICON_SX = {
+  minWidth: '1.25rem !important',
+  width: '1.25rem !important',
+  height: '1.25rem !important',
+  '& > div': {
+    width: '1.25rem',
+    height: '1.25rem',
+  },
+  '& svg': {
+    width: DROPDOWN_CONSTANTS.DIMENSIONS.ICON_SVG_SIZE,
+    height: DROPDOWN_CONSTANTS.DIMENSIONS.ICON_SVG_SIZE,
+    fontSize: DROPDOWN_CONSTANTS.DIMENSIONS.ICON_SVG_SIZE,
+  },
+};
+const SKILL_IMAGE_STYLE = { width: '1.25rem', height: '1.25rem', borderRadius: '50%' };
+
+const toSkillMenuItem = skill => ({
+  key: `skill-${skill.project_id}-${skill.id}`,
+  label: skill.name,
+  description: skill.description,
+  data: skill,
+  icon: createElement(EntityIcon, {
+    sx: SKILL_ICON_SX,
+    imageStyle: SKILL_IMAGE_STYLE,
+    icon: skill.icon_meta,
+    entityType: ChatParticipantType.Skills,
+    projectId: skill.project_id,
+    editable: false,
+    specifiedFontSize: DROPDOWN_CONSTANTS.DIMENSIONS.ICON_SVG_SIZE,
+  }),
+});
 
 export const useApplicationSubmenu = props => {
   const { participants = [], onSelectParticipant, onDeleteParticipant, onClose, isOpen = false } = props;
@@ -20,6 +58,7 @@ export const useApplicationSubmenu = props => {
   const [pipelineSearch, setPipelineSearch] = useState('');
   const [toolkitSearch, setToolkitSearch] = useState('');
   const [mcpSearch, setMcpSearch] = useState('');
+  const [skillSearch, setSkillSearch] = useState('');
   const [pendingToggles, setPendingToggles] = useState(new Set());
 
   const {
@@ -42,6 +81,27 @@ export const useApplicationSubmenu = props => {
     mcpQuery: mcpSearch,
     skip: !hasBeenOpenedRef.current,
   });
+
+  const {
+    ownSkills,
+    catalogSkills,
+    isFetching: isSkillsLoading,
+    onLoadMore: onLoadMoreSkills,
+  } = useSkillParticipants({
+    query: skillSearch,
+    pageSize: SKILL_PAGE_SIZE,
+    skip: !hasBeenOpenedRef.current,
+  });
+
+  const skillParticipantIds = useMemo(
+    () =>
+      new Set(
+        participants
+          .filter(p => p.entity_name === ChatParticipantType.Skills)
+          .map(p => getChatParticipantUniqueId(p)),
+      ),
+    [participants],
+  );
 
   const filteredAgents = useFilteredEntityItems(
     agentMenuItems,
@@ -77,6 +137,18 @@ export const useApplicationSubmenu = props => {
         agent_type: 'pipeline',
       });
       setPipelineSearch('');
+      onClose?.();
+    },
+    [onSelectParticipant, onClose],
+  );
+
+  const handleSkillClick = useCallback(
+    item => () => {
+      onSelectParticipant?.({
+        participantType: ChatParticipantType.Skills,
+        ...item.data,
+      });
+      setSkillSearch('');
       onClose?.();
     },
     [onSelectParticipant, onClose],
@@ -171,6 +243,23 @@ export const useApplicationSubmenu = props => {
     [filteredPipelines, handlePipelineClick],
   );
 
+  const skillItems = useMemo(
+    () =>
+      [...ownSkills, ...catalogSkills]
+        .filter(
+          skill =>
+            !skillParticipantIds.has(
+              getChatParticipantUniqueId({
+                entity_name: ChatParticipantType.Skills,
+                entity_meta: { id: skill.id, project_id: skill.project_id },
+              }),
+            ),
+        )
+        .map(toSkillMenuItem)
+        .map(item => ({ ...item, onClick: handleSkillClick(item) })),
+    [ownSkills, catalogSkills, skillParticipantIds, handleSkillClick],
+  );
+
   const toolkitItems = useMemo(
     () =>
       toolkitMenuItems
@@ -205,6 +294,7 @@ export const useApplicationSubmenu = props => {
   const resetPipelineSearch = useCallback(() => setPipelineSearch(''), []);
   const resetToolkitSearch = useCallback(() => setToolkitSearch(''), []);
   const resetMcpSearch = useCallback(() => setMcpSearch(''), []);
+  const resetSkillSearch = useCallback(() => setSkillSearch(''), []);
 
   return {
     agents: {
@@ -230,6 +320,14 @@ export const useApplicationSubmenu = props => {
       onSearchChange: e => setToolkitSearch(e.target.value),
       onScroll: onLoadMoreToolkits,
       resetSearch: resetToolkitSearch,
+    },
+    skills: {
+      items: skillItems,
+      isLoading: isSkillsLoading,
+      searchValue: skillSearch,
+      onSearchChange: e => setSkillSearch(e.target.value),
+      onScroll: onLoadMoreSkills,
+      resetSearch: resetSkillSearch,
     },
     mcps: {
       items: mcpItems,

@@ -49,6 +49,7 @@ import {
   useNextInputSuggestion,
   useReadAloud,
   useSelectedChatModel,
+  useSkillChatModel,
   useSlashMention,
 } from '@/[fsd]/features/chat/lib/hooks';
 import { areDetailsOfParticipant } from '@/[fsd]/features/chat/participants/lib/helpers';
@@ -1077,7 +1078,13 @@ const ChatBox = memo(
       onSelectSkill,
       resetSkill,
       skillHighlightRanges,
-    } = useChatSkillMention({ chatInput, activeParticipant, activeParticipantDetails, projectId });
+    } = useChatSkillMention({
+      chatInput,
+      activeParticipant,
+      activeParticipantDetails,
+      projectId,
+      participants: activeConversation?.participants,
+    });
 
     const isSkillPhaseActive = skillPhase !== MentionConstants.MentionPhase.Idle;
 
@@ -2568,6 +2575,23 @@ const ChatBox = memo(
         // an undefined version_id plus an llm_settings override the backend rejects, so stop here.
         if (!versionDetails?.id) return;
 
+        if (activeParticipant?.entity_name === ChatParticipantType.Skills) {
+          const isPinned = await onChangeParticipantSettings(
+            {
+              ...activeParticipant,
+              entity_settings: {
+                ...activeParticipant.entity_settings,
+                version_id: versionDetails.id,
+                icon_meta: versionDetails.meta?.icon_meta || {},
+              },
+              meta: { ...activeParticipant.meta, version_name: versionDetails.name, is_available: true },
+            },
+            true,
+          );
+          if (isPinned) setOriginalParticipant(prev => ({ ...prev, version_details: { ...versionDetails } }));
+          return;
+        }
+
         // Clear any per-session LLM override so the new version's configured model is used.
         setUnsavedLLMSettings?.(undefined);
 
@@ -2767,6 +2791,14 @@ const ChatBox = memo(
       ],
     );
 
+    const { isActiveSkill, skillModel, skillLLMSettings, onSelectSkillModel, onSetSkillLLMSettings } =
+      useSkillChatModel({
+        activeParticipant,
+        participantDetails: originalParticipant,
+        models: modelList,
+        onChangeParticipantSettings,
+      });
+
     const onChangeVariables = useCallback(
       newVariables => {
         onChangeParticipantSettings(
@@ -2865,13 +2897,20 @@ const ChatBox = memo(
       return !activeParticipantVersions.some(v => v.id === versionId);
     }, [activeParticipant, activeParticipantVersions]);
 
+    const isActiveSkillUnavailable = useMemo(
+      () =>
+        isActiveSkill &&
+        (activeParticipant.meta?.is_available === false || isActiveParticipantVersionMissing),
+      [isActiveSkill, activeParticipant?.meta?.is_available, isActiveParticipantVersionMissing],
+    );
+
     useEffect(() => {
-      if (!isActiveParticipantVersionMissing) return;
+      if (!isActiveParticipantVersionMissing || isActiveSkill) return;
       if (!activeParticipantVersions?.length) return;
       const baseVersion =
         activeParticipantVersions.find(v => v.name === LATEST_VERSION_NAME) || activeParticipantVersions[0];
       onSelectVersion(baseVersion);
-    }, [isActiveParticipantVersionMissing, activeParticipantVersions, onSelectVersion]);
+    }, [isActiveParticipantVersionMissing, isActiveSkill, activeParticipantVersions, onSelectVersion]);
 
     const isInputDisabled = useMemo(
       () =>
@@ -2884,7 +2923,8 @@ const ChatBox = memo(
         hasBlockingHitlInterrupt ||
         hasPendingAuthRequired ||
         (isStreamingNow && !isInjectable) ||
-        isActiveParticipantBroken,
+        isActiveParticipantBroken ||
+        isActiveSkillUnavailable,
       [
         isLoadingConversation,
         isProcessingSymbols,
@@ -2897,6 +2937,7 @@ const ChatBox = memo(
         isStreamingNow,
         isInjectable,
         isActiveParticipantBroken,
+        isActiveSkillUnavailable,
       ],
     );
 
@@ -3051,6 +3092,11 @@ const ChatBox = memo(
               onSelectModel={onSelectModel}
               selectedModel={selectedModel}
               selectSavedOrDefaultModel={selectSavedOrDefaultModel}
+              skillModel={skillModel}
+              onSelectSkillModel={onSelectSkillModel}
+              skillLLMSettings={skillLLMSettings}
+              onSetSkillLLMSettings={onSetSkillLLMSettings}
+              isActiveParticipantUnavailable={isActiveSkillUnavailable}
               isStreaming={isStreamingNow || isStreaming}
               isInjectable={isInjectable}
               onInject={onInjectMessage}

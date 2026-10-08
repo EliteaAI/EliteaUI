@@ -1221,9 +1221,11 @@ const NewChat = props => {
         onEditPipeline(participant);
       } else if (entity_name === ChatParticipantType.Applications) {
         onEditAgent(participant);
+      } else if (entity_name === ChatParticipantType.Skills) {
+        onEditSkill(participant);
       }
     },
-    [onEditToolkit, onEditAgent, onEditPipeline],
+    [onEditToolkit, onEditAgent, onEditPipeline, onEditSkill],
   );
 
   const renderRightPanel = useCallback(

@@ -43,6 +43,8 @@ const ParticipantAttentionCard = memo(
     const {
       isPublishedAgentGone,
       isVersionUnavailable,
+      isSkillGone,
+      isSkillVersionUnavailable,
       hasMisconfigurationErrors,
       shouldDisableThisItem,
       mcpIsDisconnected,
@@ -75,7 +77,11 @@ const ParticipantAttentionCard = memo(
     return (
       <StyledTipsContainer
         ref={ref}
-        onClick={isActive || isVersionUnavailable ? onClickHandler : undefined}
+        onClick={
+          isActive || isVersionUnavailable || isSkillGone || isSkillVersionUnavailable
+            ? onClickHandler
+            : undefined
+        }
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
         sx={styles.attentionWrapper}
@@ -139,6 +145,8 @@ const ParticipantAttentionCard = memo(
             <ParticipantWarning
               isPublishedAgentGone={isPublishedAgentGone}
               isVersionUnavailable={isVersionUnavailable}
+              isSkillGone={isSkillGone}
+              isSkillVersionUnavailable={isSkillVersionUnavailable}
               hasMisconfigurationErrors={hasMisconfigurationErrors}
               shouldDisableThisItem={shouldDisableThisItem}
               mcpIsDisconnected={mcpIsDisconnected}

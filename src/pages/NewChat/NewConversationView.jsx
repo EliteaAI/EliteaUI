@@ -10,6 +10,7 @@ import {
   useBudgetWarning,
   useChatSkillMention,
   useNewStartConversationInputKeyDownHandler,
+  useSkillChatModel,
   useSlashMention,
 } from '@/[fsd]/features/chat/lib/hooks';
 import { getChatParticipantUniqueId } from '@/[fsd]/features/chat/participants/lib/helpers';
@@ -293,6 +294,7 @@ const NewConversationView = forwardRef(
       activeParticipant: selectedParticipant,
       activeParticipantDetails: selectedParticipantDetails,
       projectId: selectedProjectId,
+      participants: selectedParticipants,
     });
 
     const isSkillPhaseActive = skillPhase !== MentionConstants.MentionPhase.Idle;
@@ -495,12 +497,17 @@ const NewConversationView = forwardRef(
           entity_settings:
             participant.participantType === ChatParticipantType.Toolkits
               ? { icon_meta: details.icon_meta, toolkit_type: details.type }
-              : {
-                  agent_type: details.version_details?.agent_type,
-                  llm_settings: details.version_details?.llm_settings || {},
-                  variables: details.version_details?.variables || [],
-                  version_id: details.version_details?.id,
-                },
+              : participant.participantType === ChatParticipantType.Skills
+                ? {
+                    version_id: details.version_details?.id,
+                    icon_meta: details.version_details?.meta?.icon_meta || details.icon_meta || {},
+                  }
+                : {
+                    agent_type: details.version_details?.agent_type,
+                    llm_settings: details.version_details?.llm_settings || {},
+                    variables: details.version_details?.variables || [],
+                    version_id: details.version_details?.id,
+                  },
           meta: { name: participant.name, mcp: details.meta?.mcp },
           originalLatestVersionId: details.version_details?.id,
         };
@@ -715,6 +722,12 @@ const NewConversationView = forwardRef(
     const conversationStarters = useMemo(() => {
       return selectedParticipant?.version_details?.conversation_starters || [];
     }, [selectedParticipant]);
+
+    const { skillModel, skillLLMSettings } = useSkillChatModel({
+      activeParticipant: selectedParticipant,
+      participantDetails: selectedParticipantDetails,
+      models: modelList,
+    });
 
     const welcomeMessage = useMemo(() => {
       const isAgentOrPipeline =
@@ -1138,6 +1151,8 @@ const NewConversationView = forwardRef(
               onSetLLMSettings={onSetLLMSettings}
               showStepsLimit
               selectSavedOrDefaultModel={selectSavedOrDefaultModel}
+              skillModel={skillModel}
+              skillLLMSettings={skillLLMSettings}
               selectedParticipant={selectedParticipant}
               onClearSelectedParticipant={onClearSelectedParticipant}
               //Attachment settings props

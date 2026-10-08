@@ -3,8 +3,15 @@ import { memo, useCallback, useEffect, useRef } from 'react';
 import { Box, Typography } from '@mui/material';
 
 import { TooltipWithDuration } from '@/ComponentsLib/Tooltip';
+import { ParticipantConstants } from '@/[fsd]/features/chat/participants/lib/constants';
 import { ChatParticipantType, PUBLIC_PROJECT_ID } from '@/common/constants';
 import EntityIcon from '@/components/EntityIcon';
+
+const PUBLIC_LABELS = {
+  [ChatParticipantType.Applications]: 'Public',
+  [ChatParticipantType.Pipelines]: 'Public',
+  [ChatParticipantType.Skills]: ParticipantConstants.CATALOG_LABEL,
+};
 
 const NewParticipantCard = memo(props => {
   const { participant, onClick, alreadyExists, isActive, itemRef, testId } = props;
@@ -87,6 +94,7 @@ const NewParticipantCard = memo(props => {
             color="text.primary"
             sx={styles.typeText}
             component={'span'}
+            data-testid="participant-card-type"
           >
             {participant.participantType === ChatParticipantType.Applications
               ? participant.agent_type === 'pipeline'
@@ -97,15 +105,14 @@ const NewParticipantCard = memo(props => {
                 : participant.participantType}
           </Typography>
         </Box>
-        {participant.project_id == PUBLIC_PROJECT_ID &&
-          (participant.participantType === ChatParticipantType.Applications ||
-            participant.participantType === ChatParticipantType.Pipelines) && (
+        {Number(participant.project_id) === PUBLIC_PROJECT_ID &&
+          PUBLIC_LABELS[participant.participantType] && (
             <Box sx={styles.publicLabelContainer}>
               <Typography
                 variant="bodySmall"
                 sx={styles.publicLabel}
               >
-                {'Public'}
+                {PUBLIC_LABELS[participant.participantType]}
               </Typography>
             </Box>
           )}

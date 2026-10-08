@@ -7,8 +7,10 @@ import { useSpeakingModeLoop } from '@/[fsd]/features/chat/lib/hooks';
 import { ChatButton } from '@/[fsd]/features/chat/ui';
 import { PlusChatButton } from '@/[fsd]/features/chat/ui/chat-button';
 import AgentEditorPanel from '@/[fsd]/features/chat/ui/chat-input/AgentEditorPanel.jsx';
+import SkillChatPanel from '@/[fsd]/features/chat/ui/chat-input/SkillChatPanel.jsx';
 import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { LLMModelSelector } from '@/[fsd]/widgets/llm-model-selector';
+import { ChatParticipantType } from '@/common/constants';
 import { useChatConfig } from '@/hooks/useChatConfig';
 import useToast from '@/hooks/useToast';
 
@@ -46,6 +48,12 @@ const NewChatInput = memo(
       onSelectModel,
       selectedModel,
       selectSavedOrDefaultModel,
+
+      skillModel,
+      onSelectSkillModel,
+      skillLLMSettings,
+      onSetSkillLLMSettings,
+      isActiveParticipantUnavailable = false,
 
       onShowAgentEditor,
       onShowPipelineEditor,
@@ -304,6 +312,24 @@ const NewChatInput = memo(
                       disableSwitchToModel={disableSwitchingParticipant || isLoading || isStreaming}
                     />
                   )}
+                {activeParticipant?.entity_name === ChatParticipantType.Skills && !isAgentsPage && (
+                  <SkillChatPanel
+                    activeParticipant={activeParticipant}
+                    participantDetails={activeParticipantDetails}
+                    onClickParticipant={onShowParticipantsList}
+                    selectedVersionId={selectedVersionId}
+                    onSelectVersion={onSelectVersion}
+                    models={modelList}
+                    selectedModel={skillModel}
+                    onSelectModel={onSelectSkillModel}
+                    llmSettings={skillLLMSettings}
+                    onSetLLMSettings={onSetSkillLLMSettings}
+                    isUnavailable={isActiveParticipantUnavailable}
+                    disabled={isStreaming}
+                    onSwitchToModel={selectSavedOrDefaultModel}
+                    disableSwitchToModel={disableSwitchingParticipant || isLoading || isStreaming}
+                  />
+                )}
                 {(isAgentsPage || !activeParticipant) && (
                   <LLMModelSelector
                     dataTourTargetId={CHAT_TOUR_TARGET_IDS.modelSettings}

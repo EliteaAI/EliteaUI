@@ -89,6 +89,7 @@ export const useDuplicateConversation = props => {
             p =>
               p.entity_name !== ChatParticipantType.Dummy &&
               !p.meta?.added_from_agent &&
+              !(p.entity_name === ChatParticipantType.Skills && p.meta?.is_available === false) &&
               !existingParticipantIds.has(p.id),
           )
           .map(p => ({

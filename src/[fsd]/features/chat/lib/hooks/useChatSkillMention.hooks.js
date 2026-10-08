@@ -1,19 +1,48 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { areDetailsOfParticipant } from '@/[fsd]/features/chat/participants/lib/helpers';
+import {
+  areDetailsOfParticipant,
+  getChatParticipantUniqueId,
+} from '@/[fsd]/features/chat/participants/lib/helpers';
 import { useGetApplicationSkillsQuery } from '@/[fsd]/features/skill';
 import { MentionConstants } from '@/[fsd]/shared/lib/constants';
 import { parseMentionRanges } from '@/[fsd]/shared/lib/utils';
 import { ChatParticipantType } from '@/common/constants';
 
-const { MentionPhase, SKILL_TRIGGER } = MentionConstants;
+const { MentionPhase, SKILL_TRIGGER, SkillMentionGroup } = MentionConstants;
+const NO_PARTICIPANTS = [];
+
+const compareByName = (a, b) => a.name.localeCompare(b.name);
+
+const toConversationSkillItems = (participants, activeParticipant) => {
+  const activeId = getChatParticipantUniqueId(activeParticipant);
+  const items = new Map();
+  participants
+    .filter(
+      participant =>
+        participant.entity_name === ChatParticipantType.Skills &&
+        participant.meta?.is_available !== false &&
+        getChatParticipantUniqueId(participant) !== activeId,
+    )
+    .forEach(participant => {
+      const name = participant.meta?.name || participant.entity_meta?.name;
+      if (name && !items.has(name))
+        items.set(name, {
+          name,
+          skill_id: participant.entity_meta?.id,
+          icon_meta: participant.entity_settings?.icon_meta || participant.meta?.icon_meta,
+          isToolkit: false,
+          group: SkillMentionGroup.Chat,
+        });
+    });
+  return [...items.values()].sort(compareByName);
+};
 
 /**
  * Drives the "~" skill-mention dropdown and highlight for the chat input.
  *
  * Mirrors the chat "/" mention stack (useSlashMention) but for a single-level
- * "~skill" reference. Sources ONLY the skills attached to the conversation's
- * active agent participant, so the dropdown matches the Agent instructions UX.
+ * "~skill" reference.
  *
  * @param {object} params
  * @param {React.RefObject} params.chatInput               - ref to the chat input (getInputContent/getCursorPosition/replaceRange)
@@ -26,6 +55,7 @@ export const useChatSkillMention = ({
   activeParticipant,
   activeParticipantDetails,
   projectId,
+  participants = NO_PARTICIPANTS,
 }) => {
   const [inputContent, setInputContent] = useState('');
   const [phase, setPhase] = useState(MentionPhase.Idle);
@@ -34,14 +64,21 @@ export const useChatSkillMention = ({
   const mentionAnchorRef = useRef(null);
 
   const isAgent = activeParticipant?.entity_name === ChatParticipantType.Applications;
+  const hasOwnDetails = areDetailsOfParticipant(activeParticipantDetails, activeParticipant);
+  const isPipeline =
+    activeParticipant?.entity_settings?.agent_type === ChatParticipantType.Pipelines ||
+    (hasOwnDetails &&
+      activeParticipantDetails?.version_details?.agent_type === ChatParticipantType.Pipelines);
+  const offersChatSkills =
+    !activeParticipant ||
+    activeParticipant.entity_name === ChatParticipantType.Skills ||
+    (isAgent && !isPipeline);
   // The participant's entity_settings.version_id is not always populated (e.g. the agent
   // editor's test chat), so fall back to the resolved details' version_details.id — but only
   // while those details describe this participant, never the one selected before it.
   const appVersionId =
     activeParticipant?.entity_settings?.version_id ||
-    (areDetailsOfParticipant(activeParticipantDetails, activeParticipant)
-      ? activeParticipantDetails?.version_details?.id
-      : undefined);
+    (hasOwnDetails ? activeParticipantDetails?.version_details?.id : undefined);
   const participantProjectId = activeParticipant?.entity_meta?.project_id || projectId;
 
   const { currentData: applicationSkills } = useGetApplicationSkillsQuery(
@@ -49,19 +86,22 @@ export const useChatSkillMention = ({
     { skip: !isAgent || !participantProjectId || !appVersionId },
   );
 
-  const mentionableItems = useMemo(
-    () =>
-      (applicationSkills?.skills || [])
-        .map(skill => ({
-          name: skill.name,
-          description: skill.description,
-          skill_id: skill.skill_id,
-          icon_meta: skill.icon_meta,
-          isToolkit: false,
-        }))
-        .sort((a, b) => a.name.localeCompare(b.name)),
-    [applicationSkills?.skills],
-  );
+  const mentionableItems = useMemo(() => {
+    const chatSkillItems = offersChatSkills ? toConversationSkillItems(participants, activeParticipant) : [];
+    if (!isAgent) return chatSkillItems;
+    const attachedItems = (applicationSkills?.skills || [])
+      .map(skill => ({
+        name: skill.name,
+        description: skill.description,
+        skill_id: skill.skill_id,
+        icon_meta: skill.icon_meta,
+        isToolkit: false,
+        group: SkillMentionGroup.Attached,
+      }))
+      .sort(compareByName);
+    const attachedNames = new Set(attachedItems.map(item => item.name));
+    return [...attachedItems, ...chatSkillItems.filter(item => !attachedNames.has(item.name))];
+  }, [isAgent, offersChatSkills, applicationSkills?.skills, participants, activeParticipant]);
 
   const detectMention = useCallback((text, cursorPos) => {
     const upToCursor = text.slice(0, cursorPos);

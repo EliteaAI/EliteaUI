@@ -15,6 +15,7 @@ import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
 import AgentSvg from '@/assets/agent.svg?react';
 import FlowSvg from '@/assets/flow-icon.svg?react';
 import MCPSvg from '@/assets/mcp-icon.svg?react';
+import SkillSvg from '@/assets/skill-icon.svg?react';
 import ToolSvg from '@/assets/tool-icon.svg?react';
 import { ChatParticipantType } from '@/common/constants';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
@@ -50,6 +51,12 @@ const ENTITY_SECTIONS = [
     type: ChatParticipantType.Pipelines,
     icon: wrapSvg(FlowSvg, 'FlowIcon'),
     label: 'Pipelines',
+  },
+  {
+    section: 'skills',
+    type: ChatParticipantType.Skills,
+    icon: wrapSvg(SkillSvg, 'SkillIcon'),
+    label: 'Skills',
   },
   {
     section: 'toolkits',

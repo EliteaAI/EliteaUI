@@ -16,6 +16,8 @@ const EMPTY_STATUS = Object.freeze({
   someToolsAreUnavailable: false,
   isPublishedAgentGone: false,
   isVersionUnavailable: false,
+  isSkillGone: false,
+  isSkillVersionUnavailable: false,
   mcpIsDisconnected: false,
   remoteMcpLoggedOut: false,
   hasRemoteMcpLoggedIn: false,

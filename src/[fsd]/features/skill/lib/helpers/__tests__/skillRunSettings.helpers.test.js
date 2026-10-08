@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import {
   includesProjectContext,
+  isSkillChatModelPending,
   isSkillVersionLocked,
+  resolveSkillChatLLMSettings,
+  resolveSkillChatModel,
   testPanelSettingsFor,
   toRunSettingsPayload,
   withRunSettings,
@@ -93,6 +96,47 @@ describe('testPanelSettingsFor', () => {
         { supports_reasoning: true, default_effort: 'low', supported_efforts: ['low', 'high'] },
       ),
     ).toMatchObject({ temperature: null, reasoning_effort: 'low' });
+  });
+});
+
+describe('skill chat model precedence', () => {
+  const runSettingsVersion = { run_settings: { llm_settings: { model_name: 'claude', temperature: 0.2 } } };
+  const models = [
+    { name: 'gpt-4.1', project_id: 2, default: true },
+    { name: 'claude', project_id: 2 },
+    { name: 'gemini', project_id: 1 },
+  ];
+
+  it("prefers the chat's own model over the version's run settings", () => {
+    const entitySettings = { version_id: 7, llm_settings: { model_name: 'gemini', model_project_id: 1 } };
+    const llmSettings = resolveSkillChatLLMSettings(entitySettings, runSettingsVersion);
+    expect(llmSettings).toBe(entitySettings.llm_settings);
+    expect(resolveSkillChatModel(models, llmSettings)).toBe(models[2]);
+  });
+
+  it('falls back to the run settings, then to the project default model', () => {
+    expect(
+      resolveSkillChatModel(models, resolveSkillChatLLMSettings({ version_id: 7 }, runSettingsVersion)),
+    ).toBe(models[1]);
+    expect(resolveSkillChatModel(models, resolveSkillChatLLMSettings({ llm_settings: {} }, undefined))).toBe(
+      models[0],
+    );
+  });
+});
+
+describe('isSkillChatModelPending', () => {
+  it("waits for the pinned version's run settings when the chat has no model of its own", () => {
+    expect(isSkillChatModelPending({ version_id: 7 }, undefined)).toBe(true);
+    expect(isSkillChatModelPending({ version_id: 7, llm_settings: { temperature: 0.2 } }, undefined)).toBe(
+      true,
+    );
+  });
+
+  it('is settled once the pinned version is known or the chat picked a model', () => {
+    expect(isSkillChatModelPending({ version_id: 7 }, { id: 7, run_settings: null })).toBe(false);
+    expect(
+      isSkillChatModelPending({ version_id: 7, llm_settings: { model_name: 'gpt-4.1' } }, undefined),
+    ).toBe(false);
   });
 });
 

@@ -58,7 +58,9 @@ const useChangeParticipantSettings = ({
             setActiveParticipant(editedParticipant);
           }
         }
+        return success;
       }
+      return false;
     },
     [
       projectId,

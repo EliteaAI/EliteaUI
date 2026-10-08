@@ -23,13 +23,24 @@ export const diffUserParticipants = ({ existingUserParticipants, selectedUsers, 
   return { usersToRemove, usersToAdd };
 };
 
-export const diffAiParticipants = ({ existingAiParticipants, selectedAiParticipants }) => {
-  const selectedAiIds = new Set(selectedAiParticipants.map(p => p.id));
-  const aiToRemove = existingAiParticipants.filter(
-    p => p.entity_meta?.id != null && !selectedAiIds.has(p.entity_meta.id),
+const isPresent = value => value !== undefined && value !== null;
+
+const buildAiParticipantKey = (item, projectId) =>
+  `${item.entity_name ?? ChatParticipantType.Applications}:${item.project_id ?? projectId}:${item.id}`;
+
+export const diffAiParticipants = ({ existingAiParticipants, selectedAiParticipants, projectId }) => {
+  const selectedKeys = new Set(selectedAiParticipants.map(item => buildAiParticipantKey(item, projectId)));
+  const existingKeys = new Set(
+    existingAiParticipants.map(p => buildAiParticipantKey(mapAiParticipantToSelectItem(p), projectId)),
   );
-  const existingAiEntityIds = new Set(existingAiParticipants.map(p => p.entity_meta?.id).filter(Boolean));
-  const aiToAdd = selectedAiParticipants.filter(p => p.id != null && !existingAiEntityIds.has(p.id));
+  const aiToRemove = existingAiParticipants.filter(
+    p =>
+      isPresent(p.entity_meta?.id) &&
+      !selectedKeys.has(buildAiParticipantKey(mapAiParticipantToSelectItem(p), projectId)),
+  );
+  const aiToAdd = selectedAiParticipants.filter(
+    item => isPresent(item.id) && !existingKeys.has(buildAiParticipantKey(item, projectId)),
+  );
   return { aiToRemove, aiToAdd };
 };
 
@@ -44,10 +55,11 @@ export const hasParticipantChanges = ({
   const currentUserIds = new Set(selectedUsers.map(u => u.id));
   const usersChanged =
     currentUserIds.size !== initialUserIds.size || [...currentUserIds].some(id => !initialUserIds.has(id));
-  const initialAiIds = new Set(initialSelectedAiParticipants.map(p => p.id).filter(Boolean));
-  const currentAiIds = new Set(selectedAiParticipants.map(p => p.id).filter(Boolean));
+  const toAiKeys = items => new Set(items.filter(p => p.id).map(p => buildAiParticipantKey(p)));
+  const initialAiKeys = toAiKeys(initialSelectedAiParticipants);
+  const currentAiKeys = toAiKeys(selectedAiParticipants);
   const aiChanged =
-    currentAiIds.size !== initialAiIds.size || [...currentAiIds].some(id => !initialAiIds.has(id));
+    currentAiKeys.size !== initialAiKeys.size || [...currentAiKeys].some(key => !initialAiKeys.has(key));
   return !isAlreadyPrivate || usersChanged || aiChanged;
 };
 

@@ -17,6 +17,7 @@ import UserParticipantItem from './UserParticipantItem';
 const ENTITY_SECTIONS = [
   { type: ChatParticipantType.Applications, entityType: 'Agent' },
   { type: ChatParticipantType.Pipelines, entityType: 'Pipeline' },
+  { type: ChatParticipantType.Skills, entityType: 'Skill' },
   { type: ChatParticipantType.Toolkits, entityType: 'Toolkit' },
   { type: 'mcp', entityType: 'MCP' },
 ];
