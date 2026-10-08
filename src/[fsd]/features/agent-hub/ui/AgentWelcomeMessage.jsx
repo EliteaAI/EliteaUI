@@ -1,36 +1,27 @@
-import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { memo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
+import { useTextTruncation } from '@/[fsd]/features/agent-hub/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button';
 
 const AgentWelcomeMessage = memo(props => {
   const { welcome_message, testId } = props;
-  const messageRef = useRef(null);
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [isTruncated, setIsTruncated] = useState(false);
-
-  useEffect(() => {
-    setIsExpanded(false);
-    setIsTruncated(false);
-  }, [welcome_message]);
-
-  useEffect(() => {
-    if (!isExpanded && messageRef.current) {
-      setIsTruncated(messageRef.current.scrollHeight > messageRef.current.clientHeight);
-    }
-  }, [isExpanded, welcome_message]);
-
-  const handleToggle = useCallback(() => {
-    setIsExpanded(prev => !prev);
-  }, []);
+  const {
+    ref: messageRef,
+    isExpanded,
+    isTruncated,
+    toggle: handleToggle,
+  } = useTextTruncation({
+    text: welcome_message,
+  });
 
   const styles = agentWelcomeMessageStyles();
 
   return (
     <Box
-      sx={styles.container(isExpanded)}
+      sx={styles.container}
       data-testid={testId}
     >
       <Typography
@@ -76,15 +67,14 @@ AgentWelcomeMessage.displayName = 'AgentWelcomeMessage';
 
 /** @type {MuiSx} */
 const agentWelcomeMessageStyles = () => ({
-  container: isExpanded => ({
+  container: {
     display: 'flex',
     flexDirection: 'column',
     gap: '0.75rem',
     width: '100%',
     flex: '0 1 auto',
     alignItems: 'center',
-    ...(isExpanded ? {} : { maxHeight: '12.5rem' }),
-  }),
+  },
   header: ({ palette }) => ({
     color: palette.text.tertiary,
     flexShrink: 0,

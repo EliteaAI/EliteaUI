@@ -1,34 +1,22 @@
-import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { memo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
+import { useTextTruncation } from '@/[fsd]/features/agent-hub/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button';
 
 const AgentDescriptionText = memo(props => {
-  const { description, isSmallHeight, open } = props;
-  const textRef = useRef(null);
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [isTruncated, setIsTruncated] = useState(false);
-
-  useEffect(() => {
-    setIsExpanded(false);
-    setIsTruncated(false);
-  }, [description]);
-
-  useEffect(() => {
-    if (!open || isExpanded) return;
-    const raf = requestAnimationFrame(() => {
-      if (textRef.current) {
-        setIsTruncated(textRef.current.scrollHeight > textRef.current.clientHeight);
-      }
-    });
-    return () => cancelAnimationFrame(raf);
-  }, [open, isExpanded, description]);
-
-  const handleToggle = useCallback(() => {
-    setIsExpanded(prev => !prev);
-  }, []);
+  const { description, isSmallHeight } = props;
+  const {
+    ref: textRef,
+    isExpanded,
+    isTruncated,
+    toggle: handleToggle,
+  } = useTextTruncation({
+    text: description,
+    disabled: isSmallHeight,
+  });
 
   const styles = agentDescriptionTextStyles();
 

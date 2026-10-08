@@ -244,7 +244,6 @@ const AgentModal = memo(props => {
               <AgentDescriptionText
                 description={description}
                 isSmallHeight={isSmallHeight}
-                open={open}
               />
               <SharedButton.BaseBtn
                 variant={BUTTON_VARIANTS.auxiliary}
