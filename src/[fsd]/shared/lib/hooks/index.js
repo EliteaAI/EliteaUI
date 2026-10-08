@@ -1,4 +1,5 @@
 export * from './useTextOverflow.hooks';
+export * from './useTextTruncation.hooks';
 export * from './useCodeMirror.hooks';
 export * from './useIsOnboarding.hooks';
 export * from './useFormikAutoSaveOnBlur.hooks';
