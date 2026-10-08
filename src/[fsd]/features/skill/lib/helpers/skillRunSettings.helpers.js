@@ -18,6 +18,11 @@ export const toRunSettingsPayload = runSettings => {
   };
 };
 
+export const withRunSettings = (versionUpdate, runSettings) => {
+  const payload = toRunSettingsPayload(runSettings);
+  return payload ? { ...versionUpdate, run_settings: payload } : versionUpdate;
+};
+
 export const includesProjectContext = runSettings => !runSettings?.ignore_project_context;
 
 export const isSkillVersionLocked = status => LOCKED_SKILL_VERSION_STATUSES.includes(status);
