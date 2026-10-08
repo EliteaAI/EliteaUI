@@ -7,6 +7,7 @@ export {
   isSkillVersionLocked,
   testPanelSettingsFor,
   toRunSettingsPayload,
+  withRunSettings,
 } from './skillRunSettings.helpers';
 export {
   SKILL_RUN_SOURCE,

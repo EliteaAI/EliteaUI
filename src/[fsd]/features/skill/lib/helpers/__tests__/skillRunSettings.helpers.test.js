@@ -5,6 +5,7 @@ import {
   isSkillVersionLocked,
   testPanelSettingsFor,
   toRunSettingsPayload,
+  withRunSettings,
 } from '@/[fsd]/features/skill/lib/helpers/skillRunSettings.helpers';
 
 describe('toRunSettingsPayload', () => {
@@ -92,5 +93,21 @@ describe('testPanelSettingsFor', () => {
         { supports_reasoning: true, default_effort: 'low', supported_efforts: ['low', 'high'] },
       ),
     ).toMatchObject({ temperature: null, reasoning_effort: 'low' });
+  });
+});
+
+describe('withRunSettings', () => {
+  const versionUpdate = { id: 7, instructions: 'x', tags: [] };
+
+  it.each([null, undefined])('leaves run_settings out when the form has none (%s)', runSettings => {
+    expect(withRunSettings(versionUpdate, runSettings)).toEqual(versionUpdate);
+    expect('run_settings' in withRunSettings(versionUpdate, runSettings)).toBe(false);
+  });
+
+  it('sends configured run settings', () => {
+    expect(withRunSettings(versionUpdate, { llm_settings: null, ignore_project_context: true })).toEqual({
+      ...versionUpdate,
+      run_settings: { ignore_project_context: true },
+    });
   });
 });
