@@ -90,7 +90,354 @@ const AgentModal = memo(props => {
         applicationId: agent.id,
       });
       setAgentDetails(result?.data || null);
-      setWelcomeMessage(result?.data?.version_details?.welcome_message || '');
+      // setWelcomeMessage(result?.data?.version_details?.welcome_message || '');
+      setWelcomeMessage(`# Quality Assurance: A Comprehensive Overview
+
+## What is QA?
+
+Quality Assurance (QA) is a systematic process designed to ensure that products, services, or deliverables meet specified quality standards and customer expectations. QA focuses on preventing defects through planned and systematic activities, rather than just finding them after they occur.
+
+## QA vs. Quality Control (QC)
+
+**Quality Assurance (QA)**
+- Process-focused
+- Proactive and preventive
+- Applies throughout development
+- Aims to prevent defects
+- Answers: "Are we building it right?"
+
+**Quality Control (QC)**
+- Product-focused
+- Reactive and detective
+- Applied after development
+- Aims to catch defects
+- Answers: "Did we build it right?"
+
+Together, they form a complete quality management system.
+
+## Core Principles of QA
+
+**Prevention Over Detection**
+- Better to prevent defects than find them later
+- Early involvement in development process
+- Establishing standards and processes upfront
+
+**Continuous Improvement**
+- Regularly analyze processes
+- Implement lessons learned
+- Iterate and refine approaches
+
+**Documentation**
+- Clear procedures and checklists
+- Traceability of requirements
+- Evidence of compliance
+
+**Communication**
+- Cross-functional collaboration
+- Clear expectation setting
+- Transparent reporting
+
+## QA in Software Development
+
+### Testing Types
+
+**Unit Testing**
+- Tests individual code components or functions
+- Usually performed by developers
+- Catches logic errors early
+- Fast to execute
+
+**Integration Testing**
+- Tests how different modules work together
+- Verifies data flows between components
+- Catches interface defects
+- More complex than unit testing
+
+**System Testing**
+- Tests the complete integrated system
+- Verifies against system requirements
+- Includes performance and security
+- Closer to real-world usage
+
+**Acceptance Testing**
+- Validates against business requirements
+- Often performed by end-users or business analysts
+- Confirms readiness for production
+- Final gate before release
+
+**Regression Testing**
+- Ensures new changes don't break existing functionality
+- Repeated after code modifications
+- Critical for maintaining stability
+- Often automated for efficiency
+
+**Performance Testing**
+- Tests speed, scalability, and stability under load
+- Identifies bottlenecks
+- Ensures system meets performance requirements
+- Examples: load testing, stress testing, endurance testing
+
+**Security Testing**
+- Identifies vulnerabilities and threats
+- Tests authentication and authorization
+- Checks for data protection
+- Increasingly critical in modern development
+
+**Usability Testing**
+- Evaluates user experience and interface
+- Tests with actual or representative users
+- Identifies design issues
+- Provides feedback on functionality
+
+### Testing Approaches
+
+**Black Box Testing**
+- Tester has no knowledge of internal code
+- Tests based on requirements and specifications
+- Simulates real user behavior
+- Effective for catching unexpected issues
+
+**White Box Testing**
+- Tester has knowledge of internal code
+- Tests specific code paths and logic
+- More thorough but requires technical expertise
+- Useful for unit and integration testing
+
+**Gray Box Testing**
+- Partial knowledge of internal workings
+- Combines benefits of black and white box
+- Useful for integration testing
+
+## QA Methodologies
+
+**Waterfall QA**
+- Testing occurs in distinct phase after development
+- Comprehensive test plans upfront
+- Works for well-defined, stable requirements
+- Risk: defects found late are expensive
+
+**Agile QA**
+- Testing integrated throughout development
+- Continuous testing in sprints
+- Adaptive test strategies
+- Faster feedback loops
+- Requires QA and developers working closely together
+
+**DevOps/Continuous Testing**
+- Automated testing in CI/CD pipelines
+- Tests run with every code commit
+- Immediate feedback
+- Requires strong automation infrastructure
+- Enables faster, safer releases
+
+**Test-Driven Development (TDD)**
+- Write tests before writing code
+- Code is written to pass tests
+- Reduces defects significantly
+- Can slow initial development
+
+## QA Best Practices
+
+**Requirements Clarity**
+- Ensure requirements are clear, complete, and testable
+- Get stakeholder buy-in early
+- Define acceptance criteria upfront
+
+**Test Planning**
+- Create comprehensive test plans
+- Prioritize test cases by risk and importance
+- Plan for various testing types
+- Allocate adequate resources
+
+**Test Case Design**
+- Cover normal scenarios, edge cases, and error conditions
+- Use techniques like boundary testing and equivalence partitioning
+- Make test cases reusable
+- Keep them maintainable and understandable
+
+**Automation Strategy**
+- Automate repetitive, critical tests
+- Balance automation with manual testing
+- Maintain automated test suites carefully
+- Not everything should be automated
+
+**Defect Management**
+- Clear defect reporting procedures
+- Rapid communication of critical issues
+- Track defect trends
+- Root cause analysis
+
+**Environment Management**
+- Maintain test environments that mirror production
+- Control environment data and configurations
+- Ensure reproducibility of issues
+- Minimize environment-related test failures
+
+**Collaboration**
+- QA involved early in planning
+- Regular communication with developers
+- Clear escalation procedures
+- Shared responsibility for quality
+
+## QA Tools & Technologies
+
+**Test Management**
+- TestRail, Zephyr, Azure Test Plans
+- Track test cases, results, and coverage
+
+**Automation Frameworks**
+- Selenium (web automation)
+- Appium (mobile automation)
+- Cypress, Playwright (modern web testing)
+- UFT, Ranorex (commercial tools)
+
+**Performance Testing**
+- JMeter, LoadRunner
+- Gatling, Apache Bench
+- Cloud-based services (Load Impact, Blaze Meter)
+
+**Security Testing**
+- OWASP ZAP, Burp Suite
+- SonarQube (code quality and security)
+- Snyk, Checkmarx
+
+**CI/CD Integration**
+- Jenkins, GitHub Actions, GitLab CI
+- Azure DevOps, CircleCI
+- Automated test execution on every commit
+
+**Monitoring & Analytics**
+- Datadog, New Relic, Splunk
+- Real-time production monitoring
+- User experience analytics
+
+## QA Metrics & KPIs
+
+**Defect Metrics**
+- Defect density (defects per 1000 lines of code)
+- Defect escape rate (defects found in production)
+- Mean time to resolution
+- Defect severity distribution
+
+**Test Metrics**
+- Test case coverage (% of requirements covered)
+- Code coverage (% of code executed by tests)
+- Test execution rate
+- Pass/fail ratios
+
+**Schedule Metrics**
+- Testing time vs. planned time
+- Defect detection rate over time
+- Testing cycle time
+
+**Efficiency Metrics**
+- Cost per defect
+- Return on automation investment
+- Testing cost as % of development cost
+
+## Common QA Challenges
+
+**Scope Creep**
+- Requirements changing mid-project
+- Affects testing plans and timelines
+- Requires flexibility and communication
+
+**Time Pressure**
+- Limited testing time before release
+- Forces prioritization decisions
+- May increase risk of missed defects
+
+**Environment Issues**
+- Difficult to replicate production
+- Infrastructure limitations
+- Data availability and confidentiality
+
+**Automation Maintenance**
+- Tests break when code changes
+- Requires constant upkeep
+- Can become expensive if not well-managed
+
+**Skills Gaps**
+- Need for technical expertise
+- Emerging technologies require new skills
+- Training and hiring challenges
+
+**Communication Gaps**
+- Misunderstanding between QA and development
+- Unclear requirements
+- Ineffective defect reporting
+
+## QA in Different Domains
+
+**Web Applications**
+- Cross-browser testing
+- Responsive design validation
+- Performance under various network conditions
+
+**Mobile Applications**
+- Device fragmentation challenges
+- OS version compatibility
+- Network connectivity variability
+
+**Enterprise Software**
+- Integration with existing systems
+- Compliance and security requirements
+- Large-scale performance testing
+
+**Healthcare/Regulated Industries**
+- Compliance requirements (HIPAA, FDA, etc.)
+- Extensive documentation needs
+- High consequences for failures
+
+**IoT/Embedded Systems**
+- Hardware variability
+- Real-time constraints
+- Difficult debugging and reproduction
+
+## The Future of QA
+
+**AI-Powered Testing**
+- Machine learning to generate test cases
+- Predictive analysis for risk areas
+- Self-healing automation scripts
+- Anomaly detection in production
+
+**Shift-Left Testing**
+- Testing earlier in development cycle
+- Developer involvement in testing
+- Requirement validation testing
+- Reduces time to fix issues
+
+**Continuous Testing**
+- Automated testing throughout development
+- Real-time feedback
+- Integration with DevOps pipelines
+- Enables frequent releases
+
+**Test Orchestration**
+- Intelligent test scheduling
+- Parallel execution optimization
+- Risk-based test selection
+- Resource optimization
+
+**Quality Intelligence**
+- Analytics and insights from test data
+- Predictive quality metrics
+- Trend analysis
+- Better decision-making
+
+## Key Takeaways
+
+- QA is about preventing defects through systematic processes, not just finding bugs
+- Quality Assurance differs from Quality Control—QA is proactive, QC is reactive
+- Different testing types and approaches serve different purposes
+- Automation is powerful but requires strategy and maintenance
+- QA must be integrated throughout development, not as an afterthought
+- Metrics and clear communication are essential for effectiveness
+- Continuous improvement mindset drives better quality outcomes
+- QA plays a critical business role—quality directly impacts customer satisfaction and costs
+
+Quality Assurance is a discipline that requires technical skills, process discipline, and collaboration. Done well, it significantly reduces costs, improves customer satisfaction, and enables confident, rapid software delivery.`);
     }
   }, [agent, getPublicApplicationDetail]);
 
@@ -112,10 +459,14 @@ const AgentModal = memo(props => {
   }, [agent?.id]);
 
   useEffect(() => {
-    if (!isDescriptionExpanded && descriptionRef.current) {
-      setIsDescriptionTruncated(descriptionRef.current.scrollHeight > descriptionRef.current.clientHeight);
-    }
-  }, [isDescriptionExpanded, description]);
+    if (!open || isDescriptionExpanded) return;
+    const raf = requestAnimationFrame(() => {
+      if (descriptionRef.current) {
+        setIsDescriptionTruncated(descriptionRef.current.scrollHeight > descriptionRef.current.clientHeight);
+      }
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [open, isDescriptionExpanded, description]);
 
   const handleToggleDescription = useCallback(() => {
     setIsDescriptionExpanded(prev => !prev);
