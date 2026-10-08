@@ -6,7 +6,12 @@ import {
 } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { ChatParticipantType } from '@/common/constants';
 
-import { buildDefaultUserParticipant, buildUserParticipant } from '../newConversation.helpers';
+import {
+  buildDefaultUserParticipant,
+  buildUserParticipant,
+  getSkippedTemplateParticipantsMessage,
+  isUnavailableTemplateSkill,
+} from '../newConversation.helpers';
 
 const templateUser = { id: 7, name: 'Samvel Petrosyan', entity_name: ChatParticipantType.Users };
 const projectUser = { id: 7, name: 'Samvel P', email: 'samvel@example.com', avatar: 'https://avatars/7.png' };
@@ -68,5 +73,26 @@ describe('buildUserParticipant', () => {
       email: 'ann@example.com',
     });
     expect(participant.entity_meta).toEqual({ id: 9, name: 'Ann Lee' });
+  });
+});
+
+describe('template skills on a new chat', () => {
+  it('skips a template skill whose details could not be loaded', () => {
+    expect(isUnavailableTemplateSkill({ entity_name: 'skill' }, {})).toBe(true);
+    expect(isUnavailableTemplateSkill({ entity_name: 'skill' }, undefined)).toBe(true);
+  });
+
+  it('keeps a template skill with details', () => {
+    expect(isUnavailableTemplateSkill({ entity_name: 'skill' }, { id: 8, name: 'Reviewer' })).toBe(false);
+  });
+
+  it('keeps other participants without details, as before', () => {
+    expect(isUnavailableTemplateSkill({ entity_name: 'application' }, {})).toBe(false);
+    expect(isUnavailableTemplateSkill({ entity_name: 'toolkit' }, {})).toBe(false);
+  });
+
+  it('counts the skipped participants in the notice', () => {
+    expect(getSkippedTemplateParticipantsMessage(1)).toBe('1 template participant was skipped');
+    expect(getSkippedTemplateParticipantsMessage(2)).toBe('2 template participants were skipped');
   });
 });

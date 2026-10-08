@@ -10,6 +10,8 @@ import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 
 import ChatParticipantPicker from './ChatParticipantPicker';
 
+const toParticipantKey = p => `${p.entity_name}:${p.project_id}:${p.id}`;
+
 const ChatTemplateEditor = memo(props => {
   const {
     template,
@@ -56,8 +58,8 @@ const ChatTemplateEditor = memo(props => {
     if (name.trim() !== savedName.trim()) return true;
     if (isDefault !== savedIsDefault) return true;
     if (participants.length !== savedParticipants.length) return true;
-    const savedKeys = new Set(savedParticipants.map(p => `${p.entity_name}:${p.id}`));
-    return participants.some(p => !savedKeys.has(`${p.entity_name}:${p.id}`));
+    const savedKeys = new Set(savedParticipants.map(toParticipantKey));
+    return participants.some(p => !savedKeys.has(toParticipantKey(p)));
   }, [name, savedName, isDefault, savedIsDefault, participants, savedParticipants]);
 
   useEffect(() => {
@@ -137,8 +139,8 @@ const ChatTemplateEditor = memo(props => {
           <InfoTooltip
             infoTooltip={
               isTeamProject
-                ? 'These participants join every new chat created from this template. You can add **agents, pipelines, toolkits, MCPs, and teammates**. If you add exactly one, it becomes the **active participant**, so your messages go to it directly.'
-                : 'These participants join every new chat created from this template. You can add **agents, pipelines, toolkits, and MCPs**. If you add exactly one, it becomes the **active participant**, so your messages go to it directly.'
+                ? 'These participants join every new chat created from this template. You can add **agents, pipelines, toolkits, MCPs, skills, and teammates**. If you add exactly one, it becomes the **active participant**, so your messages go to it directly.'
+                : 'These participants join every new chat created from this template. You can add **agents, pipelines, toolkits, MCPs, and skills**. If you add exactly one, it becomes the **active participant**, so your messages go to it directly.'
             }
           />
         </Box>

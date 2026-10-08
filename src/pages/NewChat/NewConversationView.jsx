@@ -105,7 +105,7 @@ const NewConversationView = forwardRef(
       { skip: !selectedProjectId },
     );
     const defaultTemplate = chatTemplates.find(t => t.is_default);
-    const { toastSuccess } = useToast();
+    const { toastSuccess, toastInfo } = useToast();
     const systemSenderName = useSystemSenderName();
     const { selectedAgent, selectedAgentStarter } = useSelector(state => state.chat);
     const dispatch = useDispatch();
@@ -575,7 +575,16 @@ const NewConversationView = forwardRef(
         const listsMatch =
           currentKeySet.size === baseKeySet.size && [...baseKeySet].every(key => currentKeySet.has(key));
         if (defaultParticipantsAppliedForRef.current !== sessionKey || !listsMatch) return;
-        const enriched = baseParticipants.map((base, i) => {
+        const availableIndexes = baseParticipants
+          .map((base, i) => i)
+          .filter(
+            i => !NewConversationHelpers.isUnavailableTemplateSkill(baseParticipants[i], detailsList[i]),
+          );
+        const skippedCount = baseParticipants.length - availableIndexes.length;
+        if (skippedCount)
+          toastInfo(NewConversationHelpers.getSkippedTemplateParticipantsMessage(skippedCount));
+        const enriched = availableIndexes.map(i => {
+          const base = baseParticipants[i];
           if (base.entity_name === ChatParticipantType.Users) {
             return NewConversationHelpers.buildDefaultUserParticipant(
               filtered[i],
@@ -586,12 +595,17 @@ const NewConversationView = forwardRef(
           if (!details || !Object.keys(details).length) return base;
           return buildEnrichedParticipant(base, details);
         });
+        if (!enriched.length) {
+          setSelectedParticipants([]);
+          setActiveConversation(prev => (prev.isNew || !prev.id ? { ...prev, participants: [] } : prev));
+          onClearSelectedParticipant();
+          return;
+        }
         setSelectedParticipants(enriched);
         if (enriched.length === 1) {
+          const details = detailsList[availableIndexes[0]];
           setSelectedParticipant(enriched[0]);
-          setSelectedParticipantDetails(
-            detailsList[0] && Object.keys(detailsList[0]).length ? detailsList[0] : enriched[0],
-          );
+          setSelectedParticipantDetails(details && Object.keys(details).length ? details : enriched[0]);
           setActiveParticipant(enriched[0]);
         } else {
           setActiveParticipant(null);
@@ -606,6 +620,9 @@ const NewConversationView = forwardRef(
       fetchDefaultProjectUsers,
       buildEnrichedParticipant,
       selectedProjectId,
+      toastInfo,
+      setActiveConversation,
+      onClearSelectedParticipant,
     ]);
 
     const onShowParticipantsList = useCallback(() => {

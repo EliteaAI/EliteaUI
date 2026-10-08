@@ -2,9 +2,14 @@ import { memo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
+import { ParticipantConstants } from '@/[fsd]/features/chat/participants/lib/constants';
+import { ChatParticipantHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
 
 import ChatParticipantIcon from './ChatParticipantIcon';
+import ChatParticipantPublicBadge from './ChatParticipantPublicBadge';
+
+const PUBLIC_LABEL = 'Public';
 
 const ChatParticipantOption = memo(props => {
   const { option } = props;
@@ -26,12 +31,11 @@ const ChatParticipantOption = memo(props => {
         {option.name}
       </Typography>
       {isPublic && (
-        <Typography
-          variant="bodySmall"
-          sx={styles.publicBadge}
-        >
-          Public
-        </Typography>
+        <ChatParticipantPublicBadge
+          label={
+            ChatParticipantHelpers.isCatalogSkill(option) ? ParticipantConstants.CATALOG_LABEL : PUBLIC_LABEL
+          }
+        />
       )}
     </Box>
   );
@@ -55,17 +59,6 @@ const chatParticipantOptionStyles = () => ({
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
   },
-  publicBadge: ({ palette }) => ({
-    flexShrink: 0,
-    display: 'flex',
-    alignItems: 'center',
-    height: '1.25rem',
-    padding: '0.125rem 0.375rem',
-    boxSizing: 'border-box',
-    borderRadius: '0.875rem',
-    border: `0.0625rem solid ${palette.border.lines}`,
-    color: palette.text.metrics,
-  }),
 });
 
 export default ChatParticipantOption;

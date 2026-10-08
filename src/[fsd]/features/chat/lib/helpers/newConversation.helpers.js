@@ -65,3 +65,9 @@ export const buildDefaultUserParticipant = (templateParticipant, projectUser) =>
     avatar: projectUser?.avatar,
     email: projectUser?.email,
   });
+
+export const isUnavailableTemplateSkill = (templateParticipant, details) =>
+  templateParticipant.entity_name === ChatParticipantType.Skills && !Object.keys(details || {}).length;
+
+export const getSkippedTemplateParticipantsMessage = count =>
+  count === 1 ? '1 template participant was skipped' : `${count} template participants were skipped`;

@@ -2,6 +2,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Autocomplete, Box, Chip, InputAdornment, TextField, Typography, useTheme } from '@mui/material';
 
+import { ParticipantConstants } from '@/[fsd]/features/chat/participants/lib/constants';
 import { getChatParticipantUniqueId } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { ChatParticipantConstants } from '@/[fsd]/features/settings/lib/constants';
 import { ChatParticipantHelpers } from '@/[fsd]/features/settings/lib/helpers';
@@ -13,10 +14,11 @@ import useParticipants from '@/hooks/chat/useParticipants';
 import ChatParticipantIcon from './ChatParticipantIcon';
 import ChatParticipantOption from './ChatParticipantOption';
 import ChatParticipantPickerPaper from './ChatParticipantPickerPaper';
+import ChatParticipantPublicBadge from './ChatParticipantPublicBadge';
 
 const { TABS, TAB_LABELS, TAB_FETCH_TYPES } = ChatParticipantConstants;
 
-const { getEntityName, filterFetchedForTab } = ChatParticipantHelpers;
+const { getEntityName, filterFetchedForTab, isCatalogSkill } = ChatParticipantHelpers;
 
 const SEARCH_PLACEHOLDER = 'Search participants...';
 
@@ -257,6 +259,9 @@ const ChatParticipantPicker = memo(props => {
                 >
                   {participant.name}
                 </Typography>
+                {isCatalogSkill(participant) && (
+                  <ChatParticipantPublicBadge label={ParticipantConstants.CATALOG_LABEL} />
+                )}
               </Box>
             }
             deleteIcon={<RemoveIcon fill={theme.palette.icon.default} />}

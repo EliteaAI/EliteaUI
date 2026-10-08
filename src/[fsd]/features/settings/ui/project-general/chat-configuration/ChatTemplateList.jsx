@@ -22,6 +22,7 @@ const PARTICIPANT_TYPE_ORDER = [
   ChatParticipantType.Pipelines,
   ChatParticipantType.Toolkits,
   'mcp',
+  ChatParticipantType.Skills,
   ChatParticipantType.Users,
 ];
 

@@ -26,19 +26,16 @@ const ChatParticipantIcon = memo(props => {
     );
   }
 
-  const isToolkit = entity_name === ChatParticipantType.Toolkits;
   const toolkitIcon =
-    isToolkit && toolkit_type
-      ? getToolIconByType(toolkit_type, theme, { isMCP: isMcpToolkitType(toolkit_type) })
+    entity_name === ChatParticipantType.Toolkits
+      ? getToolIconByType(toolkit_type ?? '', theme, { isMCP: isMcpToolkitType(toolkit_type) })
       : null;
-  // Toolkits without a known type fall back to the generic skill icon
-  const entityType = isToolkit ? 'skill' : entity_name;
 
   if (withBackground) {
     return (
       <EntityIcon
         icon={toolkitIcon ? { component: toolkitIcon } : undefined}
-        entityType={entityType}
+        entityType={entity_name}
         specifiedFontSize="0.75rem"
         sx={styles.circle}
       />
@@ -48,7 +45,7 @@ const ChatParticipantIcon = memo(props => {
   return (
     toolkitIcon ?? (
       <EntityTypeIcon
-        type={entityType}
+        type={entity_name}
         specifiedFontSize="0.875rem"
       />
     )
