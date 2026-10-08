@@ -26,6 +26,7 @@ import CloseEyeIcon from '@/components/Icons/CloseEyeIcon';
 import CopyIcon from '@/components/Icons/CopyIcon';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import EditIcon from '@/components/Icons/EditIcon';
+import ExportIcon from '@/components/Icons/ExportIcon';
 import MoveTo from '@/components/Icons/MoveTo';
 import OpenEyeIcon from '@/components/Icons/OpenEyeIcon';
 import PinIcon from '@/components/Icons/PinIcon';
@@ -47,6 +48,7 @@ const ConversationItem = memo(props => {
     onPin,
     onDuplicate,
     isDuplicating,
+    onExport,
     onCreateConversation,
     onCancelCreate,
     onChangeActiveConversationName,
@@ -170,6 +172,10 @@ const ConversationItem = memo(props => {
     onDuplicate(conversation);
   }, [conversation, onDuplicate]);
 
+  const handleExport = useCallback(() => {
+    onExport?.(conversation);
+  }, [conversation, onExport]);
+
   const handleShareConversation = useCallback(async () => {
     const baseUrl = `${window.location.protocol}//${window.location.host}`;
     const basename = getBasename();
@@ -232,6 +238,13 @@ const ConversationItem = memo(props => {
             icon: <CopyIcon sx={{ fontSize: '1rem' }} />,
             disabled: isActive && isEditingCanvas,
             onClick: handleDuplicate,
+          },
+          {
+            key: 'chat-conversation-menu-export',
+            label: 'Export',
+            icon: <ExportIcon sx={{ fontSize: '1rem' }} />,
+            disabled: isActive && isEditingCanvas,
+            onClick: handleExport,
           },
           {
             key: 'chat-conversation-menu-make-public',
@@ -344,6 +357,7 @@ const ConversationItem = memo(props => {
     handleDelete,
     handleEdit,
     handleDuplicate,
+    handleExport,
     isPinned,
     checkPermission,
     moveToFoldersMenuItems,

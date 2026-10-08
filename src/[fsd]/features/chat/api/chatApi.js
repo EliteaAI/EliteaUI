@@ -259,6 +259,13 @@ export const apiSlice = eliteaApi
           return endpointName + JSON.stringify(sortedObject);
         },
       }),
+      conversationExportSummary: build.query({
+        query: ({ projectId, conversationId }) => ({
+          url: apiSlicePath + '/conversation_export/prompt_lib/' + projectId + '/' + conversationId,
+          params: { summary: true },
+        }),
+        keepUnusedDataFor: 0,
+      }),
       regenerate: build.mutation({
         query: ({ projectId, id, ...body }) => {
           return {
@@ -549,6 +556,7 @@ export const {
   useConversationEditMutation,
   useConversationDetailsQuery,
   useLazyConversationDetailsQuery,
+  useConversationExportSummaryQuery,
   useLazyMessageTracesQuery,
   useLazyMessageTraceQuery,
   useDeleteConversationMutation,

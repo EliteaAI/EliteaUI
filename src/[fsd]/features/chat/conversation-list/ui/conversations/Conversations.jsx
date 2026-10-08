@@ -32,6 +32,7 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useSortQueryParamsFromUrl from '@/hooks/useSortQueryParamsFromUrl';
 import { DndContext, closestCenter } from '@dnd-kit/core';
 
+import ExportConversationModal from './ExportConversationModal';
 import ManageLinksDialog from './ManageLinksDialog';
 import RestrictAccessDialog from './RestrictAccessDialog';
 import ShareConversationDialog from './ShareConversationDialog';
@@ -104,6 +105,11 @@ const Conversations = memo(props => {
   const [shareDialogConversation, setShareDialogConversation] = useState(null);
   const [manageLinksConversation, setManageLinksConversation] = useState(null);
   const [restrictAccessConversation, setRestrictAccessConversation] = useState(null);
+  const [exportConversation, setExportConversation] = useState(null);
+
+  const handleCloseExportModal = useCallback(() => {
+    setExportConversation(null);
+  }, []);
 
   const handleOpenShareDialog = useCallback(conversation => {
     setShareDialogConversation(conversation);
@@ -474,6 +480,7 @@ const Conversations = memo(props => {
         onDelete={onDeleteConversation}
         onDuplicate={onDuplicateConversation}
         isDuplicating={duplicatingConversationId === conversation.id}
+        onExport={setExportConversation}
         onPin={onPinConversation}
         onCreateConversation={onCreateConversation}
         onCancelCreate={onCancelCreateConversation}
@@ -509,6 +516,7 @@ const Conversations = memo(props => {
       handleOpenShareDialog,
       handleOpenManageLinksDialog,
       setRestrictAccessConversation,
+      setExportConversation,
     ],
   );
 
@@ -792,6 +800,12 @@ const Conversations = memo(props => {
           conversation={restrictAccessConversation}
           onClose={handleCloseRestrictAccessDialog}
           onSuccess={onRestrictAccessSuccess}
+        />
+      )}
+      {exportConversation && (
+        <ExportConversationModal
+          conversation={exportConversation}
+          onClose={handleCloseExportModal}
         />
       )}
     </DndContext>
