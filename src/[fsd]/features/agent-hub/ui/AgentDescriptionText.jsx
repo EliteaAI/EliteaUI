@@ -65,7 +65,7 @@ const agentDescriptionTextStyles = () => ({
     width: '100%',
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.75rem',
+    gap: '0.5rem',
   },
   text:
     (isSmallHeight, isExpanded) =>
@@ -85,6 +85,8 @@ const agentDescriptionTextStyles = () => ({
             }),
             ...(isExpanded && {
               width: '100%',
+              maxHeight: '10rem',
+              overflowY: 'auto',
             }),
           }),
     }),
