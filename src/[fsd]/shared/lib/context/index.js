@@ -6,3 +6,4 @@ export * from './ToolkitSocketContext';
 export * from './InstructionsInputRefContext';
 export * from './InteractiveTourContext';
 export * from './ToastContext';
+export * from './FilePreviewNavigationContext';
