@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
 import { SKILL_RUN_MATCH, SKILL_RUN_START_ERROR } from '@/[fsd]/features/skill/lib/constants';
 import {
@@ -48,6 +48,7 @@ export const useSkillRunChat = ({
   onOpenRunVersion,
 }) => {
   const dispatch = useDispatch();
+  const currentUserId = useSelector(state => state.user.id);
   const { toastError, toastInfo, toastSuccess } = useToast();
   const [activeConversation, setActiveConversation] = useState(null);
   const [activeParticipant, setActiveParticipant] = useState(null);
@@ -383,6 +384,9 @@ export const useSkillRunChat = ({
     wasStreamingRef.current = isStreaming;
   }, [activeConversation?.id, dispatch, isStreaming]);
 
+  const isReadOnly =
+    activeConversation?.author_id !== undefined && activeConversation.author_id !== currentUserId;
+
   const activeParticipantDetails = useMemo(
     () =>
       versionDetails
@@ -403,6 +407,7 @@ export const useSkillRunChat = ({
     activeParticipant,
     activeParticipantDetails,
     isStreaming,
+    isReadOnly,
     isLoadingConversation: isCreatingConversation || (Boolean(runConversationId) && !isRunLoaded),
     llmSettings,
     unsavedLLMSettings,

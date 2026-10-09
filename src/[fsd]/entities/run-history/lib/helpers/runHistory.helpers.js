@@ -1,17 +1,22 @@
 import { format, fromUnixTime } from 'date-fns';
 
+import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
+
+const { ParticipantEntityTypes } = ParticipantEntityConstants;
+
 const RUN_TIMESTAMP_FORMAT = 'dd-MM-yyyy, hh:mm a';
 export const RUN_ANALYTICS_TIMESTAMP_FORMAT = 'dd MMM yyyy, hh:mm a';
 // Usage is tagged with `run_id` / `eval_run_id` only from this date; older runs have nothing to show
 const RUN_ANALYTICS_AVAILABLE_FROM = Date.UTC(2026, 8, 30);
 
-export const resolveRunHistoryColumns = (noVersions, hasEvent) => {
+export const resolveRunHistoryColumns = (noVersions, hasEvent, extraColumns = []) => {
   const date = '1.5fr';
   const event = hasEvent ? ['1.5fr'] : [];
   const version = noVersions ? [] : ['1.5fr'];
   const duration = hasEvent || !noVersions ? '1fr' : '1.5fr';
+  const extra = extraColumns.map(column => column.width);
 
-  return [date, ...event, ...version, duration].join(' ');
+  return [date, ...event, ...version, duration, ...extra].join(' ');
 };
 
 export const compareRunDuration = (a, b) => {
@@ -79,3 +84,18 @@ export const toRunISOString = value => {
 // unparseable timestamp is NaN, which never passes the cutoff.
 export const hasRunAnalytics = run =>
   parseRunTimestamp(run?.updated_at || run?.created_at) >= RUN_ANALYTICS_AVAILABLE_FROM;
+
+const SKILL_HISTORY_SOURCES = [ParticipantEntityTypes.Skill, 'elitea'].join(',');
+
+export const resolveRunHistorySource = source => {
+  if (source === ParticipantEntityTypes.MCP) return ParticipantEntityTypes.Toolkit;
+  if (source === ParticipantEntityTypes.Skill) return SKILL_HISTORY_SOURCES;
+  return source;
+};
+
+export const resolveRunHistoryEntityName = source => {
+  if (source === ParticipantEntityTypes.Toolkit || source === ParticipantEntityTypes.MCP)
+    return ParticipantEntityTypes.Toolkit;
+  if (source === ParticipantEntityTypes.Skill) return ParticipantEntityTypes.Skill;
+  return ParticipantEntityTypes.Application;
+};

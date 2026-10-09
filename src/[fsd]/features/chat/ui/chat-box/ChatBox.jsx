@@ -203,6 +203,7 @@ const ChatBox = memo(
       // Override for entity-created routing (e.g. generated-entities tab panel)
       onEntityCreated: onEntityCreatedProp,
       onEntityDeleted: onEntityDeletedProp,
+      isReadOnly = false,
     } = props;
 
     const styles = chatBoxStyles();
@@ -2933,8 +2934,10 @@ const ChatBox = memo(
         hasPendingAuthRequired ||
         (isStreamingNow && !isInjectable) ||
         isActiveParticipantBroken ||
-        isActiveSkillUnavailable,
+        isActiveSkillUnavailable ||
+        isReadOnly,
       [
+        isReadOnly,
         isLoadingConversation,
         isProcessingSymbols,
         isFetchingParticipant,
@@ -3083,6 +3086,7 @@ const ChatBox = memo(
               onSend={onSendMessage}
               isLoading={isInputLoading}
               disabledSend={isInputDisabled}
+              isReadOnly={isReadOnly}
               onNormalKeyDown={combinedKeyDown}
               onInputChange={combinedInputChange}
               shouldHandleEnter

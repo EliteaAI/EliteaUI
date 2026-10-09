@@ -80,6 +80,10 @@ const Skills = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/skills/Ski
 const CreateSkill = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/skills/CreateSkill'));
 const EditSkill = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/skills/EditSkill'));
 const SkillRunHistory = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/skills/SkillRunHistory'));
+const SkillRunAnalytics = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/skills/SkillRunAnalytics'));
+const CatalogSkillRedirect = ChunkHelpers.lazyWithRetry(
+  () => import('@/[fsd]/pages/skills/CatalogSkillRedirect'),
+);
 const Artifacts = ChunkHelpers.lazyWithRetry(() => import('@/pages/Artifacts/Artifacts'));
 const CreateBucket = ChunkHelpers.lazyWithRetry(() => import('@/pages/Artifacts/CreateBucket'));
 const CreateCredentialFromMain = ChunkHelpers.lazyWithRetry(
@@ -255,6 +259,38 @@ const ProtectedRoutes = memo(() => {
         element: (
           <SkillsGuard>
             <SkillRunHistory />
+          </SkillsGuard>
+        ),
+      },
+      {
+        path: RouteDefinitions.SkillsRunAnalytics,
+        element: (
+          <SkillsGuard>
+            <SkillRunAnalytics />
+          </SkillsGuard>
+        ),
+      },
+      {
+        path: RouteDefinitions.CatalogSkill,
+        element: (
+          <SkillsGuard>
+            <CatalogSkillRedirect />
+          </SkillsGuard>
+        ),
+      },
+      {
+        path: RouteDefinitions.CatalogSkillRunHistory,
+        element: (
+          <SkillsGuard>
+            <SkillRunHistory isCatalogSkill />
+          </SkillsGuard>
+        ),
+      },
+      {
+        path: RouteDefinitions.CatalogSkillRunAnalytics,
+        element: (
+          <SkillsGuard>
+            <SkillRunAnalytics isCatalogSkill />
           </SkillsGuard>
         ),
       },

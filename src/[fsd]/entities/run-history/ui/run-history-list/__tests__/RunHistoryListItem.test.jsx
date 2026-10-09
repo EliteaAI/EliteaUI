@@ -230,3 +230,27 @@ describe('RunHistoryListItem re-rendering', () => {
     expect(cellRenders.count).toBe(before);
   });
 });
+
+describe('RunHistoryListItem extra columns', () => {
+  const extraColumns = [
+    { type: 'user', label: 'User', width: '1fr', getText: run => run.author, getTooltip: () => 'tip' },
+    { type: 'cost', label: 'Cost', width: '1fr', getText: run => `$${run.cost}` },
+  ];
+
+  it('renders a cell per extra column after the duration', () => {
+    renderItem({ ...CONVERSATION_ROW, author: 'Admin', cost: 2 }, { extraColumns });
+
+    expect(screen.getByText('Admin')).toBeInTheDocument();
+    expect(screen.getByText('$2')).toBeInTheDocument();
+  });
+
+  it('hands the whole run to restore, so the page can tell a Run panel run from a chat', () => {
+    const handleRestoreConversation = vi.fn();
+    const run = { ...CONVERSATION_ROW, source: 'elitea' };
+    renderItem(run, { handleRestoreConversation });
+
+    screen.getByTestId('menu-item-Restore chat').click();
+
+    expect(handleRestoreConversation).toHaveBeenCalledWith(42, run);
+  });
+});

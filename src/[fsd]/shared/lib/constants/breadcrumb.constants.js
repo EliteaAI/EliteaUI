@@ -108,6 +108,24 @@ export const BREADCRUMB_REGISTRY = {
     parent: RouteDefinitions.SkillsDetail,
     label: 'Run History',
   },
+  [RouteDefinitions.SkillsRunAnalytics]: {
+    parent: RouteDefinitions.SkillRunHistory,
+    label: 'Analytics',
+  },
+  [RouteDefinitions.EliteaCatalog]: { label: 'Catalog' },
+  [RouteDefinitions.CatalogSkill]: {
+    parent: RouteDefinitions.EliteaCatalog,
+    entityName: true,
+    fallbackLabel: 'Skill',
+  },
+  [RouteDefinitions.CatalogSkillRunHistory]: {
+    parent: RouteDefinitions.CatalogSkill,
+    label: 'Run History',
+  },
+  [RouteDefinitions.CatalogSkillRunAnalytics]: {
+    parent: RouteDefinitions.CatalogSkillRunHistory,
+    label: 'Analytics',
+  },
 
   [RouteDefinitions.PipelinesWithTab]: { label: PathSessionMap[RouteDefinitions.Pipelines] },
   [RouteDefinitions.CreatePipeline]: { parent: RouteDefinitions.PipelinesWithTab, label: 'New Pipeline' },

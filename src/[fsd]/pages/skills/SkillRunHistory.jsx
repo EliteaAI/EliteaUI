@@ -1,85 +1,13 @@
-import { memo, useCallback } from 'react';
+import { memo } from 'react';
 
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { SkillRunHistoryView } from '@/[fsd]/widgets/skill-run-history';
 
-import { Box } from '@mui/material';
+const SkillRunHistory = memo(props => {
+  const { isCatalogSkill = false } = props;
 
-import { RunHistoryContainer } from '@/[fsd]/entities/run-history/ui';
-import { ChatMessageList } from '@/[fsd]/features/chat';
-import { DrawerPageHeader } from '@/[fsd]/features/settings';
-import { useSkillDetailsQuery } from '@/[fsd]/features/skill';
-import { SKILL_RUN_SEARCH_PARAMS } from '@/[fsd]/features/skill/lib/constants';
-import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
-import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
-import Breadcrumbs from '@/[fsd]/shared/ui/breadcrumbs';
-import { SkillsTabs } from '@/common/constants';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import RouteDefinitions from '@/routes';
-
-const { ParticipantEntityTypes } = ParticipantEntityConstants;
-const NO_VERSIONS = [];
-
-const SkillRunHistory = memo(() => {
-  const { tab = SkillsTabs[0], skillId } = useParams();
-  const navigate = useNavigate();
-  const { search } = useLocation();
-  const projectId = useSelectedProjectId();
-  const styles = skillRunHistoryStyles();
-
-  const { data } = useSkillDetailsQuery({ projectId, skillId }, { skip: !projectId || !skillId });
-
-  const handleRestoreConversation = useCallback(
-    conversationId => {
-      const returnParams = new URLSearchParams(search);
-      returnParams.delete(SKILL_RUN_SEARCH_PARAMS.run);
-      const query = returnParams.toString();
-      navigate(
-        `${NavigationHelpers.buildRoute(RouteDefinitions.SkillsDetail, { tab, skillId })}${query ? `?${query}` : ''}`,
-        { state: { restoredConversationID: conversationId } },
-      );
-    },
-    [navigate, search, skillId, tab],
-  );
-
-  return (
-    <Box sx={styles.wrapper}>
-      <DrawerPageHeader
-        showBorder
-        title={<Breadcrumbs />}
-      />
-      <Box sx={styles.content}>
-        <RunHistoryContainer
-          entityId={skillId}
-          source={ParticipantEntityTypes.Skill}
-          versions={data?.versions ?? NO_VERSIONS}
-          handleRestoreConversation={handleRestoreConversation}
-          ChatMessageListComponent={ChatMessageList}
-          shareOpensHistoryTab
-        />
-      </Box>
-    </Box>
-  );
+  return <SkillRunHistoryView isCatalogSkill={isCatalogSkill} />;
 });
 
 SkillRunHistory.displayName = 'SkillRunHistory';
-
-/** @type {MuiSx} */
-const skillRunHistoryStyles = () => ({
-  wrapper: {
-    display: 'flex',
-    flexDirection: 'column',
-    height: '100%',
-    overflow: 'hidden',
-  },
-  content: {
-    display: 'flex',
-    flexDirection: 'column',
-    flex: 1,
-    minHeight: 0,
-    padding: '1rem 1.5rem',
-    gap: '1rem',
-    overflow: 'hidden',
-  },
-});
 
 export default SkillRunHistory;
