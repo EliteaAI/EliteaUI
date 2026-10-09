@@ -32,7 +32,9 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useSortQueryParamsFromUrl from '@/hooks/useSortQueryParamsFromUrl';
 import { DndContext, closestCenter } from '@dnd-kit/core';
 
+import ChatImportButton from './ChatImportButton';
 import ExportConversationModal from './ExportConversationModal';
+import ImportConversationModal from './ImportConversationModal';
 import ManageLinksDialog from './ManageLinksDialog';
 import RestrictAccessDialog from './RestrictAccessDialog';
 import ShareConversationDialog from './ShareConversationDialog';
@@ -82,6 +84,7 @@ const Conversations = memo(props => {
     isFolderOperationInProgress = false,
     onSearchQueryChange,
     onRestrictAccessSuccess,
+    onImportedConversation,
   } = props;
 
   const theme = useTheme();
@@ -107,8 +110,18 @@ const Conversations = memo(props => {
   const [restrictAccessConversation, setRestrictAccessConversation] = useState(null);
   const [exportConversation, setExportConversation] = useState(null);
 
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+
   const handleCloseExportModal = useCallback(() => {
     setExportConversation(null);
+  }, []);
+
+  const handleOpenImportModal = useCallback(() => {
+    setIsImportModalOpen(true);
+  }, []);
+
+  const handleCloseImportModal = useCallback(() => {
+    setIsImportModalOpen(false);
   }, []);
 
   const handleOpenShareDialog = useCallback(conversation => {
@@ -637,6 +650,10 @@ const Conversations = memo(props => {
                   onExpand={onCollapsed}
                   onSearchActivate={handleSearchActivate}
                 />
+                <ChatImportButton
+                  iconOnly={isSmallWindow}
+                  onClick={handleOpenImportModal}
+                />
               </>
             )}
           </Box>
@@ -694,6 +711,10 @@ const Conversations = memo(props => {
               collapsed={collapsed}
               onExpand={onCollapsed}
               onSearchActivate={handleSearchActivate}
+            />
+            <ChatImportButton
+              iconOnly
+              onClick={handleOpenImportModal}
             />
           </Box>
         )}
@@ -806,6 +827,12 @@ const Conversations = memo(props => {
         <ExportConversationModal
           conversation={exportConversation}
           onClose={handleCloseExportModal}
+        />
+      )}
+      {isImportModalOpen && (
+        <ImportConversationModal
+          onClose={handleCloseImportModal}
+          onImported={onImportedConversation}
         />
       )}
     </DndContext>
