@@ -9,7 +9,12 @@ import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { AGENT_COMPARE_STEPS, SKILL_COMPARE_STEPS } from '../lib/constants/compareVersions.constants';
 import CompareVersionSelector from './CompareVersionSelector';
 import CompareVersionsStepIndicator from './CompareVersionsStepIndicator';
-import { CompareInstructionsStep, CompareToolsSkillsStep, CompareUserInteractionStep } from './steps';
+import {
+  CompareInstructionsStep,
+  CompareRunSettingsStep,
+  CompareToolsSkillsStep,
+  CompareUserInteractionStep,
+} from './steps';
 
 const PHASES = {
   SELECTION: 'selection',
@@ -208,6 +213,8 @@ const CompareVersionsModal = memo(props => {
         return <CompareUserInteractionStep {...stepProps} />;
       case 'tools-skills':
         return <CompareToolsSkillsStep {...stepProps} />;
+      case 'run-settings':
+        return <CompareRunSettingsStep {...stepProps} />;
       default:
         return null;
     }

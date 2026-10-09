@@ -28,7 +28,34 @@ export const extractAgentCompareData = versionDetail => {
 
 export const extractSkillCompareData = versionDetail => ({
   instructions: versionDetail?.version_details?.instructions ?? '',
+  run_settings: versionDetail?.version_details?.run_settings ?? null,
 });
+
+const describeRunModel = llmSettings => {
+  if (llmSettings?.selection?.mode === 'auto') return 'Auto';
+  return llmSettings?.model_name || 'Project default';
+};
+
+const describeSetting = value => (value === null || value === undefined ? 'Default' : String(value));
+
+export const buildRunSettingsRows = runSettings => {
+  const llmSettings = runSettings?.llm_settings;
+  return [
+    { key: 'model', label: 'Model', value: describeRunModel(llmSettings) },
+    { key: 'temperature', label: 'Temperature', value: describeSetting(llmSettings?.temperature) },
+    {
+      key: 'reasoning_effort',
+      label: 'Reasoning effort',
+      value: describeSetting(llmSettings?.reasoning_effort),
+    },
+    { key: 'max_tokens', label: 'Max tokens', value: describeSetting(llmSettings?.max_tokens) },
+    {
+      key: 'project_context',
+      label: 'Project context',
+      value: runSettings?.ignore_project_context ? 'Excluded' : 'Included',
+    },
+  ];
+};
 
 export const matchDependencies = (leftTools, rightTools) => {
   const key = d => `${d.entityType}:${d.id}`;

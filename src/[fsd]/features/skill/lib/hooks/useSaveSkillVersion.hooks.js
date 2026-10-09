@@ -3,7 +3,7 @@ import { useCallback } from 'react';
 import { useFormikContext } from 'formik';
 
 import { useSkillCreateVersionMutation } from '@/[fsd]/features/skill/api';
-import { normalizeTagsForSave } from '@/[fsd]/features/skill/lib/helpers';
+import { normalizeTagsForSave, toRunSettingsPayload } from '@/[fsd]/features/skill/lib/helpers';
 import { buildErrorMessage } from '@/common/utils.jsx';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
@@ -24,6 +24,7 @@ const useSaveSkillVersion = () => {
           instructions: values?.version_details?.instructions || '',
           tags: normalizeTagsForSave(values?.version_details?.tags),
           meta: values?.version_details?.meta || {},
+          run_settings: toRunSettingsPayload(values?.version_details?.run_settings),
         }).unwrap();
 
         resetForm({ values });

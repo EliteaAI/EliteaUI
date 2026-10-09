@@ -54,6 +54,7 @@ const buildInitialValues = data => ({
     // The publish/unpublish hooks gate on the current version's status read
     // from formik values, so it must be seeded here.
     status: data?.version_details?.status ?? null,
+    run_settings: data?.version_details?.run_settings ?? null,
   },
 });
 
