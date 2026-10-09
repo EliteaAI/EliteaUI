@@ -138,7 +138,7 @@ describe('project Auto permission and configuration', () => {
       renderSettings();
       await userEvent.click(classifierSelect());
       expect(optionLabels()).toEqual(
-        ['Use platform default', 'claude-haiku', 'GPT Luna'].map(label => expect.stringContaining(label)),
+        ['Use default', 'claude-haiku', 'GPT Luna'].map(label => expect.stringContaining(label)),
       );
       expect(screen.getByRole('option', { name: /GPT Luna/ })).toHaveTextContent('gpt-luna-2026-07-09');
       expect(screen.queryByRole('option', { name: /gpt-big/ })).not.toBeInTheDocument();
@@ -158,27 +158,47 @@ describe('project Auto permission and configuration', () => {
       expect(screen.getByText('No low-tier models are flagged; showing all models.')).toBeInTheDocument();
       await userEvent.click(classifierSelect());
       expect(optionLabels()).toEqual(
-        ['Use platform default', 'gpt-big', 'claude-opus'].map(label => expect.stringContaining(label)),
+        ['Use default', 'gpt-big', 'claude-opus'].map(label => expect.stringContaining(label)),
       );
     });
 
-    it('shows the platform classifier name in the default option', async () => {
+    it('labels the default option with the project Low-tier model', () => {
+      api.readiness = {
+        ready: true,
+        default_classifier: {
+          name: 'claude-haiku',
+          project_id: 2,
+          display_name: 'Claude Haiku 4.5',
+          source: 'project_low_tier',
+        },
+      };
+      renderSettings();
+      expect(classifierSelect()).toHaveTextContent('Use default (Claude Haiku 4.5 — project Low-tier model)');
+    });
+
+    it('labels the default option with the platform default, even when the project overrides it', () => {
+      api.readiness = {
+        ready: true,
+        default_classifier: { name: 'claude-haiku', project_id: 1, source: 'platform' },
+        classifier: { name: 'gpt-luna', display_name: 'GPT Luna', source: 'project' },
+      };
+      renderSettings();
+      expect(classifierSelect()).toHaveTextContent('Use default (claude-haiku — platform default)');
+    });
+
+    it('says none is set when default_classifier is null', () => {
+      api.readiness = { ready: false, reasons: [], default_classifier: null };
+      renderSettings();
+      expect(classifierSelect()).toHaveTextContent('Use default (none set)');
+    });
+
+    it('falls back to classifier.source when default_classifier is absent', () => {
       api.readiness = {
         ready: true,
         classifier: { name: 'claude-haiku', display_name: 'Claude Haiku 4.5', source: 'platform' },
       };
       renderSettings();
-      expect(classifierSelect()).toHaveTextContent('Use platform default (Claude Haiku 4.5)');
-    });
-
-    it('prefers platform_classifier for the default label, even when the project overrides it', () => {
-      api.readiness = {
-        ready: true,
-        platform_classifier: { name: 'claude-haiku', project_id: 1, display_name: 'Claude Haiku 4.5' },
-        classifier: { name: 'gpt-luna', display_name: 'GPT Luna', source: 'project' },
-      };
-      renderSettings();
-      expect(classifierSelect()).toHaveTextContent('Use platform default (Claude Haiku 4.5)');
+      expect(classifierSelect()).toHaveTextContent('Use default (Claude Haiku 4.5 — platform default)');
     });
 
     it('saves the classifier together with the current enabled value', async () => {
@@ -217,7 +237,7 @@ describe('project Auto permission and configuration', () => {
         }),
       );
       await userEvent.click(classifierSelect());
-      await userEvent.click(screen.getByRole('option', { name: /Use platform default/ }));
+      await userEvent.click(screen.getByRole('option', { name: /Use default/ }));
       await waitFor(() =>
         expect(api.update).toHaveBeenLastCalledWith({
           projectId: 2,

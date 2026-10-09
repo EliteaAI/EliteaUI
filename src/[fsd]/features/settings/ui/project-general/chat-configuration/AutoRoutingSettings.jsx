@@ -19,7 +19,20 @@ const AUTO_ROUTING_TOOLTIP =
   'Auto lets ELITEA choose the best model for each message, based on the task and current availability. This setting controls whether users can pick Auto in the model selector for chats and standard agents in this project. **Use platform default** follows the setting chosen by your ELITEA administrators.';
 
 const CLASSIFIER_TOOLTIP =
-  'The **Classifier** reads each request and the relevant conversation context, then decides which model Auto uses for the answer. It runs on every Auto request, so choose a **fast, low-cost** model: Haiku, Luna, Gemini Flash, or a mini/nano model. A larger model here adds cost and latency to every request without improving the answer, because the answer comes from the model Auto selects. Only low-tier models are listed; mark a model as Low-tier in AI Providers to make it selectable. **Use platform default** follows the classifier chosen by your ELITEA administrators.';
+  "**Pick a low-tier model.** The classifier runs on every Auto request: it reads the task and chooses the model that answers, but it never writes the answer, so a larger model here only adds cost and latency. Choose Haiku, Luna, Gemini Flash or a mini/nano model. By default Auto uses this project's **Low-tier model** from AI Providers → LLMs; set one there or choose a model here. Only models flagged Low-tier (or recognised as low-tier by name) are listed.";
+const DEFAULT_CLASSIFIER_SOURCE_LABEL = {
+  project_low_tier: 'project Low-tier model',
+  platform: 'platform default',
+};
+const defaultClassifierLabel = readiness => {
+  // Older backends do not send default_classifier; they only mark a platform source on classifier.
+  const fallback = readiness?.classifier?.source === 'platform' ? readiness.classifier : null;
+  const resolved = readiness && 'default_classifier' in readiness ? readiness.default_classifier : fallback;
+  if (!resolved)
+    return readiness && 'default_classifier' in readiness ? 'Use default (none set)' : 'Use default';
+  const source = DEFAULT_CLASSIFIER_SOURCE_LABEL[resolved.source] ?? DEFAULT_CLASSIFIER_SOURCE_LABEL.platform;
+  return `Use default (${resolved.display_name || resolved.name} — ${source})`;
+};
 const PLATFORM_DEFAULT = '__platform_default__';
 const NON_CHAT_KINDS = ['embedding', 'image', 'audio', 'video'];
 const classifierKey = ref => `${ref.name}<<>>${ref.project_id}`;
@@ -50,9 +63,6 @@ const AutoRoutingSettings = memo(() => {
   const value = current?.data?.enabled == null ? 'default' : String(current.data.enabled);
   const classifier = current?.data?.classifier ?? null;
   const readiness = models?.auto_routing?.readiness;
-  const platformClassifier =
-    readiness?.platform_classifier ??
-    (readiness?.classifier?.source === 'platform' ? readiness.classifier : null);
 
   const { classifierOptions, showAllHint } = useMemo(() => {
     const chat = (models?.items || []).filter(isChat);
@@ -61,9 +71,7 @@ const AutoRoutingSettings = memo(() => {
     const options = [
       {
         value: PLATFORM_DEFAULT,
-        label: platformClassifier
-          ? `Use platform default (${platformClassifier.display_name || platformClassifier.name})`
-          : 'Use platform default',
+        label: defaultClassifierLabel(readiness),
       },
       ...listed.map(toOption),
     ];
@@ -77,7 +85,7 @@ const AutoRoutingSettings = memo(() => {
       );
     }
     return { classifierOptions: options, showAllHint: !!models && chat.length > 0 && !lowTier.length };
-  }, [models, classifier, platformClassifier]);
+  }, [models, classifier, readiness]);
 
   const persist = useCallback(
     async nextData => {
