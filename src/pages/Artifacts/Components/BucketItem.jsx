@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 
 import { Box, useTheme } from '@mui/material';
 
+import { BucketAccessConstants } from '@/[fsd]/features/artifacts/lib/constants';
 import { useProjectType, useShareLink } from '@/[fsd]/shared/lib/hooks';
 import { Button, Tooltip } from '@/[fsd]/shared/ui';
 import CopyLinkIcon from '@/assets/copy-link-icon.svg?react';
@@ -21,6 +22,8 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { getBasename } from '@/routes';
 import { generateBucketShareUrl } from '@/utils/shareUtils';
 
+const { BUCKET_ACCESS } = BucketAccessConstants;
+
 export const BucketItem = forwardRef((props, ref) => {
   const {
     bucket = {},
@@ -36,7 +39,7 @@ export const BucketItem = forwardRef((props, ref) => {
     onToggle,
     onPin,
   } = props;
-  const { name, owner_id, isPinned = false } = bucket;
+  const { name, owner_id, isPinned = false, permissions } = bucket;
 
   const { checkPermission } = useCheckPermission();
   const { isPrivate } = useProjectType();
@@ -48,6 +51,13 @@ export const BucketItem = forwardRef((props, ref) => {
   const [showMenu, setShowMenu] = useState(false);
 
   const isPersonalProject = projectId === personal_project_id;
+  const hasBucketWriteAccess = !Array.isArray(permissions) || permissions.includes(BUCKET_ACCESS.write);
+  const canUpdate =
+    hasBucketWriteAccess &&
+    (isPrivate ||
+      checkPermission(PERMISSIONS.artifacts.buckets.update) ||
+      checkPermission(PERMISSIONS.artifacts.edit) ||
+      (owner_id && userId === owner_id));
 
   const theme = useTheme();
 
@@ -138,14 +148,17 @@ export const BucketItem = forwardRef((props, ref) => {
   }, []);
 
   const menuItems = useMemo(() => {
-    const hasActionRights = action =>
-      checkPermission(PERMISSIONS.artifacts.buckets[action]) ||
-      checkPermission(PERMISSIONS.artifacts[action]) ||
-      (owner_id && userId === owner_id);
-
-    const canDelete = isPrivate || checkPermission(PERMISSIONS.artifacts.delete);
-    const canUpdate = hasActionRights('update');
-    const canUpload = hasActionRights('create');
+    const canDelete = hasBucketWriteAccess && (isPrivate || checkPermission(PERMISSIONS.artifacts.delete));
+    const canUpload =
+      hasBucketWriteAccess &&
+      (isPrivate ||
+        checkPermission(PERMISSIONS.artifacts.buckets.create) ||
+        checkPermission(PERMISSIONS.artifacts.create) ||
+        (owner_id && userId === owner_id));
+    const canManagePermissions =
+      !isPersonalProject &&
+      hasBucketWriteAccess &&
+      checkPermission(PERMISSIONS.artifacts.s3_credentials.edit);
 
     return [
       {
@@ -179,6 +192,7 @@ export const BucketItem = forwardRef((props, ref) => {
             sx={styles.menuIcon}
           />
         ),
+        disabled: !canUpdate,
         onClick: handlePinBucket,
       },
       {
@@ -196,7 +210,7 @@ export const BucketItem = forwardRef((props, ref) => {
         label: 'Manage permissions',
         icon: <GroupsIcon color={theme.palette.icon.default} />,
         onClick: handleManageAccessClick,
-        display: isPersonalProject ? 'none' : undefined,
+        display: canManagePermissions ? undefined : 'none',
       },
       canDelete && {
         key: 'bucket-menu-delete',
@@ -229,6 +243,8 @@ export const BucketItem = forwardRef((props, ref) => {
     owner_id,
     userId,
     isPersonalProject,
+    hasBucketWriteAccess,
+    canUpdate,
     isPrivate,
     name,
     isPinned,
@@ -269,12 +285,13 @@ export const BucketItem = forwardRef((props, ref) => {
             variant="tertiary"
             startIcon={<PinIconFilled />}
             sx={styles.pinIcon}
+            disabled={!canUpdate}
             onClick={handlePinBucket}
           />
         </Box>
       )}
 
-      {!isPinned && isHovering && (
+      {!isPinned && isHovering && canUpdate && (
         <Box onClick={e => e.stopPropagation()}>
           <Button.BaseBtn
             variant="tertiary"
