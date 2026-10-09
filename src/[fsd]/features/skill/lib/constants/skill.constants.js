@@ -16,3 +16,10 @@ export const SKILL_RUN_MATCH = {
 };
 
 export const SKILL_RUN_START_ERROR = 'Failed to start the skill run';
+
+export const SKILL_RUN_STATUS_LABELS = {
+  running: 'Running',
+  success: 'Success',
+  error: 'Error',
+  stopped: 'Stopped',
+};

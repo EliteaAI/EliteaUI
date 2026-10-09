@@ -17,6 +17,7 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 const { ParticipantEntityTypes } = ParticipantEntityConstants;
 
 const NO_ADDITIONAL_ROWS = [];
+const NO_FILTERS = {};
 
 const RunHistoryContainer = memo(props => {
   const {
@@ -33,6 +34,13 @@ const RunHistoryContainer = memo(props => {
     decorateRow = null,
     DetailComponent = null,
     shareOpensHistoryTab = false,
+    entityProjectId,
+    filters = NO_FILTERS,
+    onFacets,
+    extraColumns,
+    listWidth,
+    emptyState,
+    fitParent = false,
   } = props;
 
   const projectId = useSelectedProjectId();
@@ -43,6 +51,13 @@ const RunHistoryContainer = memo(props => {
 
   const [allConversations, setAllConversations] = useState([]);
   const [page, setPage] = useState(0);
+  const filtersKey = JSON.stringify(filters);
+  const [pagedFiltersKey, setPagedFiltersKey] = useState(filtersKey);
+  if (pagedFiltersKey !== filtersKey) {
+    setPagedFiltersKey(filtersKey);
+    setPage(0);
+  }
+  const requestFilters = useMemo(() => JSON.parse(filtersKey), [filtersKey]);
   const [selectedHistoryItem, setSelectedHistoryItem] = useState(null);
   const handledSharedRunId = useRef(null);
   const [mergedData, setMergedData] = useState();
@@ -126,14 +141,19 @@ const RunHistoryContainer = memo(props => {
 
   useEffect(() => {
     if (projectId && entityId) {
-      fetchRunList({
+      const request = fetchRunList({
         source,
         projectId,
         entityId,
         page,
+        ...(entityProjectId ? { entityProjectId } : {}),
+        ...requestFilters,
+      });
+      Promise.resolve(request).then(result => {
+        if (result?.data?.facets) onFacets?.(result.data.facets);
       });
     }
-  }, [projectId, entityId, page, fetchRunList, source]);
+  }, [projectId, entityId, entityProjectId, page, fetchRunList, source, requestFilters, onFacets]);
 
   useEffect(() => {
     if (!data?.isLoadMore) {
@@ -158,10 +178,10 @@ const RunHistoryContainer = memo(props => {
     setSelectedHistoryItem(item);
   }, []);
 
-  const styles = runHistoryContainerStyles(isSmallWindow);
+  const styles = runHistoryContainerStyles(isSmallWindow, listWidth);
 
   return (
-    <Box sx={onClose ? styles.outerWrapper : undefined}>
+    <Box sx={onClose ? styles.outerWrapper : fitParent ? styles.outerFitParent : undefined}>
       {onClose && (
         <Box sx={styles.header}>
           <IconButton
@@ -181,7 +201,7 @@ const RunHistoryContainer = memo(props => {
           </Typography>
         </Box>
       )}
-      <Box sx={onClose ? styles.wrapperFlex : styles.wrapper}>
+      <Box sx={onClose ? styles.wrapperFlex : [styles.wrapper, fitParent && styles.wrapperFitParent]}>
         <Box sx={styles.historyList}>
           <RunHistoryList
             conversations={historyRows}
@@ -191,7 +211,7 @@ const RunHistoryContainer = memo(props => {
             listCurrentSize={allConversations.length}
             totalAvailableCount={data?.total || 0}
             onLoadMore={handleLoadMore}
-            resetPageDependencies={[projectId, entityId]}
+            resetPageDependencies={[projectId, entityId, entityProjectId, filtersKey]}
             handleHistoryItemSelect={handleHistoryItemSelect}
             selectedHistoryItem={selectedHistoryItem}
             source={source}
@@ -199,6 +219,9 @@ const RunHistoryContainer = memo(props => {
             handleOpenAnalytics={handleOpenAnalytics}
             hasEvent={Boolean(decorateRow)}
             shareOpensHistoryTab={shareOpensHistoryTab}
+            extraColumns={extraColumns}
+            listWidth={listWidth}
+            emptyState={typeof emptyState === 'function' ? emptyState(data) : emptyState}
           />
         </Box>
 
@@ -220,7 +243,7 @@ const RunHistoryContainer = memo(props => {
 RunHistoryContainer.displayName = 'RunHistoryContainer';
 
 /** @type {MuiSx} */
-const runHistoryContainerStyles = isSmallWindow => ({
+const runHistoryContainerStyles = (isSmallWindow, listWidth = '32rem') => ({
   outerWrapper: {
     display: 'flex',
     flexDirection: 'column',
@@ -249,6 +272,17 @@ const runHistoryContainerStyles = isSmallWindow => ({
     flexDirection: isSmallWindow ? 'column' : 'row',
     gap: '1.5rem',
   },
+  outerFitParent: {
+    display: 'flex',
+    flexDirection: 'column',
+    flex: 1,
+    minHeight: 0,
+  },
+  wrapperFitParent: {
+    height: 'auto',
+    flex: 1,
+    minHeight: 0,
+  },
   wrapperFlex: {
     flex: 1,
     minHeight: 0,
@@ -260,7 +294,7 @@ const runHistoryContainerStyles = isSmallWindow => ({
   },
   historyList: {
     flex: 3,
-    maxWidth: isSmallWindow ? '100%' : '32rem',
+    maxWidth: isSmallWindow ? '100%' : listWidth,
     position: 'relative',
     display: 'flex',
     flexDirection: 'column',

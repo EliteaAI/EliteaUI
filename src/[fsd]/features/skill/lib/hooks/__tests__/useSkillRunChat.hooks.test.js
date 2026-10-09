@@ -10,9 +10,13 @@ const fixture = vi.hoisted(() => ({
   getMessageTraces: vi.fn(),
   emitEnterRoom: vi.fn(),
   toastError: vi.fn(),
+  currentUserId: 3,
 }));
 
-vi.mock('react-redux', () => ({ useDispatch: () => vi.fn() }));
+vi.mock('react-redux', () => ({
+  useDispatch: () => vi.fn(),
+  useSelector: selector => selector({ user: { id: fixture.currentUserId } }),
+}));
 vi.mock('@/api', () => ({
   TAG_TYPE_CONVERSATION_DETAILS: 'TAG_TYPE_CONVERSATION_DETAILS',
   useConversationCreateMutation: () => [vi.fn(), { isLoading: false }],
@@ -91,6 +95,7 @@ const renderRunChat = () =>
 
 beforeEach(() => {
   vi.clearAllMocks();
+  fixture.currentUserId = 3;
   fixture.query = { data: storedRun, isFetching: false, isError: false };
 });
 afterEach(cleanup);
@@ -119,5 +124,30 @@ describe('useSkillRunChat run loading', () => {
     expect(traces.request.abort).toHaveBeenCalled();
     expect(result.current.activeConversation).toBeNull();
     expect(fixture.emitEnterRoom).not.toHaveBeenCalled();
+  });
+});
+
+describe('useSkillRunChat runs of other users', () => {
+  const openRun = async author_id => {
+    const traces = deferTraces();
+    fixture.getMessageTraces.mockReturnValue(traces.request);
+    fixture.query = { data: { ...storedRun, author_id }, isFetching: false, isError: false };
+    const view = renderRunChat();
+    await act(async () => traces.resolve({ data: [] }));
+    return view.result;
+  };
+
+  it("keeps the current user's own restored run open for chatting", async () => {
+    const result = await openRun(3);
+
+    expect(result.current.activeConversation?.id).toBe(5);
+    expect(result.current.isReadOnly).toBe(false);
+  });
+
+  it("opens another user's run read-only", async () => {
+    const result = await openRun(8);
+
+    expect(result.current.activeConversation?.id).toBe(5);
+    expect(result.current.isReadOnly).toBe(true);
   });
 });
