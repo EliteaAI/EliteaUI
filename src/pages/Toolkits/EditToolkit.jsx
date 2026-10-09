@@ -13,7 +13,7 @@ import { indexBuildBlockedReason, shouldFetchIndexes } from '@/[fsd]/features/to
 import { LegacyOpenApiMigration, ToolkitFormHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ToolkitsControls, ToolkitsTabBar } from '@/[fsd]/features/toolkits/ui';
-import { useEliteATheme } from '@/[fsd]/shared/lib/hooks';
+import { useEliteATheme, useToast } from '@/[fsd]/shared/lib/hooks';
 import { BreadcrumbsOrTitle } from '@/[fsd]/shared/ui';
 import { useToolkitsDetailsQuery } from '@/api/toolkits.js';
 import { SearchParams } from '@/common/constants.js';
@@ -23,7 +23,6 @@ import GearIcon from '@/components/Icons/GearIcon.jsx';
 import StyledTabs from '@/components/StyledTabs.jsx';
 import useNavBlocker from '@/hooks/useNavBlocker';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast.jsx';
 import getValidateSchema from '@/pages/Applications/Components/Applications/ApplicationCreationValidateSchema';
 import Page404 from '@/pages/Page404.jsx';
 import ConfigurationTab from '@/pages/Toolkits/ConfigurationTab.jsx';

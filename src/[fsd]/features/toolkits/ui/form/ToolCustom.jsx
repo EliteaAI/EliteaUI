@@ -5,12 +5,11 @@ import { Box, FormControl, FormHelperText, IconButton, Typography } from '@mui/m
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { ToolCustomHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useToolkitNameProp } from '@/[fsd]/features/toolkits/lib/hooks';
-import { useLanguageLinter } from '@/[fsd]/shared/lib/hooks';
+import { useLanguageLinter, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Field } from '@/[fsd]/shared/ui';
 import { handleCopy, isNullOrUndefined } from '@/common/utils';
 import CopyIcon from '@/components/Icons/CopyIcon';
 import { Manual_Title } from '@/hooks/useConfigurations';
-import useToast from '@/hooks/useToast';
 
 const ToolCustom = memo(props => {
   const {

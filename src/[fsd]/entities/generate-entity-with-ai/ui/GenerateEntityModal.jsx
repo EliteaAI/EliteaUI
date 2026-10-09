@@ -2,10 +2,10 @@ import { memo, useCallback, useRef, useState } from 'react';
 
 import { Alert, Box, CircularProgress, TextField, Typography } from '@mui/material';
 
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Modal } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { buildErrorMessage } from '@/common/utils.jsx';
-import useToast from '@/hooks/useToast.jsx';
 
 const STEPS = {
   INPUT: 'input',

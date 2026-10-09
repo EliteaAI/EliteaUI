@@ -30,7 +30,9 @@ vi.mock('@/api/admin', () => ({
   useUserDeleteMutation: () => [deleteUser, { isLoading: false }],
 }));
 vi.mock('@/hooks/useSelectedProject', () => ({ useSelectedProjectId: () => 406 }));
-vi.mock('@/hooks/useToast', () => ({ default: () => ({ toastError, toastSuccess }) }));
+vi.mock('@/[fsd]/shared/lib/hooks', () => ({
+  useToast: () => ({ toastError, toastSuccess }),
+}));
 vi.mock('@/common/utils', () => ({ buildErrorMessage: error => error?.data?.error || 'error' }));
 vi.mock('@/ComponentsLib/Tooltip', () => ({ default: ({ children }) => children }));
 vi.mock('@/components/Chat/StyledComponents', () => ({ StyledCircleProgress: () => null }));

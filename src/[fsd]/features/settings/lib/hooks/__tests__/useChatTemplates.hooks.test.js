@@ -30,7 +30,7 @@ vi.mock('@/[fsd]/features/settings/api', () => ({
   useUnsetDefaultChatTemplateMutation: () => [api.unsetDefault, { isLoading: false }],
 }));
 
-vi.mock('@/hooks/useToast', () => ({ default: () => toast }));
+vi.mock('@/[fsd]/shared/lib/hooks/useToast.hooks', () => ({ useToast: () => toast }));
 
 const resolvesWith = value => ({ unwrap: () => Promise.resolve(value) });
 const rejects = () => ({ unwrap: () => Promise.reject(new Error('boom')) });

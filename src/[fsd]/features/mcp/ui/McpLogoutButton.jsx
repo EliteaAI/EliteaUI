@@ -4,8 +4,8 @@ import { IconButton, Tooltip } from '@mui/material';
 
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import { McpLogoutModal } from '@/[fsd]/features/mcp/ui';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import LogoutIcon from '@/assets/logout-icon.svg?react';
-import useToast from '@/hooks/useToast';
 
 const McpLogoutButton = memo(props => {
   const { serverUrl, toolkitType, onSuccess, sx } = props;

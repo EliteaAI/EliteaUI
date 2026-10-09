@@ -3,13 +3,12 @@ import { memo, useCallback, useMemo, useState } from 'react';
 import { Box, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
-import { useProjectType } from '@/[fsd]/shared/lib/hooks';
+import { useProjectType, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button';
 import { PERMISSIONS } from '@/common/constants';
 import PlusIcon from '@/components/Icons/PlusIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
-import useToast from '@/hooks/useToast';
 
 import { isFolderWritable } from '../lib/helpers';
 import { useEntityFolders, usePinFolder } from '../lib/hooks';

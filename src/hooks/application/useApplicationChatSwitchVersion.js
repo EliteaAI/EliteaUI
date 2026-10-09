@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { useUpdateParticipantSettingsMutation } from '@/api';
 import { buildErrorMessage } from '@/common/utils';
-import useToast from '@/hooks/useToast';
 
 export const useApplicationChatSwitchVersion = ({
   activeParticipant,

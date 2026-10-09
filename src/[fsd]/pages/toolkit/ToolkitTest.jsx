@@ -10,11 +10,11 @@ import { DrawerPageHeader } from '@/[fsd]/features/settings/ui/drawer-page';
 import { ToolkitFormHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { ToolkitTestPanel } from '@/[fsd]/features/toolkits/ui';
 import { NavigationHelpers, isMcpToolkitType } from '@/[fsd]/shared/lib/helpers';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import Breadcrumbs from '@/[fsd]/shared/ui/breadcrumbs';
 import { useToolkitsDetailsQuery } from '@/api/toolkits.js';
 import { buildErrorMessage, isNotFoundError } from '@/common/utils.jsx';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast.jsx';
 import RouteDefinitions from '@/routes';
 
 const emptyToolDetail = {};

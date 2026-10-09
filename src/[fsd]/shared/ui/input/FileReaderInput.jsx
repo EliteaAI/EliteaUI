@@ -4,9 +4,9 @@ import YAML from 'js-yaml';
 
 import { alpha, useTheme } from '@mui/material';
 
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Input } from '@/[fsd]/shared/ui';
 import { debounce, getFileFormat } from '@/common/utils';
-import useToast from '@/hooks/useToast';
 
 const FileReaderEnhancer = memo(
   forwardRef((props, ref) => {

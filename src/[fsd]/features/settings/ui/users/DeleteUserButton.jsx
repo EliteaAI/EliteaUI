@@ -3,13 +3,13 @@ import { memo, useCallback, useState } from 'react';
 import { Box, IconButton } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Modal } from '@/[fsd]/shared/ui';
 import { useUserDeleteMutation } from '@/api/admin';
 import { buildErrorMessage } from '@/common/utils';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast';
 
 const DeleteUserButton = memo(props => {
   const { users, disabled, setSelectedUsers, useSecondaryButton = false, testId } = props;

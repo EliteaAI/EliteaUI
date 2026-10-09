@@ -4,6 +4,7 @@ import { useParams, useSearchParams } from 'react-router-dom';
 
 import { Box, Typography } from '@mui/material';
 
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Modal } from '@/[fsd]/shared/ui';
 import {
   AddCaseFromChatsModal,
@@ -26,7 +27,6 @@ import {
 } from '@/[fsd]/widgets/evaluation';
 import { SearchParams } from '@/common/constants';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast';
 
 const AgentEvaluateDatasetsPage = memo(() => {
   const { agentId } = useParams();

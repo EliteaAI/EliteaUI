@@ -5,7 +5,7 @@ import { useDispatch } from 'react-redux';
 
 import { mdToApplicationJson, parseMdFrontmatter } from '@/[fsd]/entities/import-wizard/lib/helpers';
 import { actions as importWizardActions } from '@/[fsd]/entities/import-wizard/model/importWizard.slice';
-import useToast from '@/hooks/useToast';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 
 export const useImport = () => {
   const dispatch = useDispatch();

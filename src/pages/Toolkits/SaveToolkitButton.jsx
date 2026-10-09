@@ -2,11 +2,11 @@ import { useCallback, useMemo } from 'react';
 
 import { useFormikContext } from 'formik';
 
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { useToolkitEditMutation } from '@/api/toolkits';
 import { buildErrorMessage } from '@/common/utils';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
-import useToast from '@/hooks/useToast';
 
 export default function SaveToolkitButton({
   toolSchema,

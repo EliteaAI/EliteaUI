@@ -6,6 +6,7 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import { ApplicationTabBar } from '@/[fsd]/entities/application-tab-bar/ui';
 import { useIsVersionNotFound } from '@/[fsd]/entities/version/lib/hooks';
 import { InstructionsInputRefProvider } from '@/[fsd]/shared/lib/context';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { BreadcrumbsOrTitle } from '@/[fsd]/shared/ui';
 import { ApplicationControls } from '@/[fsd]/widgets/application-controls';
 import { ViewMode } from '@/common/constants';
@@ -13,7 +14,6 @@ import { buildErrorMessage, isNotFoundError } from '@/common/utils';
 import StyledTabs from '@/components/StyledTabs';
 import useCorrectUserNameInUrl from '@/hooks/application/useCorrectUserNameInUrl';
 import useNavBlocker from '@/hooks/useNavBlocker';
-import useToast from '@/hooks/useToast';
 import useViewMode from '@/hooks/useViewMode';
 import Page404 from '@/pages/Page404.jsx';
 

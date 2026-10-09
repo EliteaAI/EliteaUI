@@ -4,6 +4,7 @@ import { useFormikContext } from 'formik';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { useSetRefetchDetails } from '@/[fsd]/entities/application-tab-bar/lib/hooks';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import {
   TAG_TYPE_APPLICATION_DETAILS,
   useApplicationEditMutation,
@@ -15,7 +16,6 @@ import clearTools from '@/common/applicationUtils';
 import { buildErrorMessage } from '@/common/utils';
 import usePipelineToolsChanges from '@/hooks/pipeline/usePipelineToolsChanges';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast';
 
 /**
  * Checks if an error is due to a stale version reference (version was deleted/replaced)

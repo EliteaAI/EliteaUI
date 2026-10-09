@@ -4,14 +4,13 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { useTrackEvent } from '@/GA';
 import { AnalyticConstants, InternalToolsConstants } from '@/[fsd]/shared/lib/constants';
-import { useContextExecutionEntity } from '@/[fsd]/shared/lib/hooks';
+import { useContextExecutionEntity, useToast } from '@/[fsd]/shared/lib/hooks';
 import { buildErrorMessage } from '@/common/utils';
 import { useUploadWithProgress } from '@/hooks/chat/useUploadWithProgress';
 import { useChatConfig } from '@/hooks/useChatConfig';
 import { getAttachmentContentType, getAttachmentType } from '@/utils/attachmentImageUtils';
 
 import { useSelectedProjectId } from '../useSelectedProject';
-import useToast from '../useToast';
 
 const { DEFAULT_ATTACHMENT_BUCKET } = InternalToolsConstants;
 

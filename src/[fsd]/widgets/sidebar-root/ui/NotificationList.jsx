@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { Box, Popover, Skeleton, Typography } from '@mui/material';
 
 import { NotificationListItem } from '@/[fsd]/entities/notifications/ui';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import {
   TAG_NOTIFICATIONS,
@@ -16,7 +17,6 @@ import {
 import { buildErrorMessage } from '@/common/utils';
 import CloseIcon from '@/components/Icons/CloseIcon';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast';
 import RouteDefinitions, { PathSessionMap } from '@/routes';
 
 const POPOVER_PAGE_SIZE = 5;

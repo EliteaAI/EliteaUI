@@ -2,11 +2,11 @@ import { memo, useCallback, useMemo } from 'react';
 
 import { Box, Skeleton, Tooltip, Typography } from '@mui/material';
 
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import InfoIcon from '@/assets/info.svg?react';
 import CopyIcon from '@/components/Icons/CopyIcon';
-import useToast from '@/hooks/useToast';
 
 const ResourceVersionInfo = memo(props => {
   const { configValues, isConfigLoading, systemInfo, isSystemInfoLoading } = props;

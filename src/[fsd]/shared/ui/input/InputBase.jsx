@@ -2,9 +2,9 @@ import { memo, useCallback, useMemo, useState } from 'react';
 
 import { Box, TextField as MuiTextField } from '@mui/material';
 
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Label } from '@/[fsd]/shared/ui';
 import useAutoBlur from '@/hooks/useAutoBlur';
-import useToast from '@/hooks/useToast';
 
 import InputActionsToolbar from './InputActionsToolbar';
 import { INPUT_VARIANTS } from './textFieldVariants';

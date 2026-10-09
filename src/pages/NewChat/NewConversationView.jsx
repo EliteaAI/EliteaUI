@@ -29,7 +29,7 @@ import {
   LLMSettingsConstants,
   MentionConstants,
 } from '@/[fsd]/shared/lib/constants';
-import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks';
+import { useSystemSenderName, useToast } from '@/[fsd]/shared/lib/hooks';
 import {
   cleanLLMSettings,
   defaultModelForSurface,
@@ -64,7 +64,6 @@ import useLocalActiveParticipant from '@/hooks/chat/useLocalActiveParticipant';
 import useNewConversationAttachments from '@/hooks/chat/useNewConversationAttachments';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useSocket from '@/hooks/useSocket';
-import useToast from '@/hooks/useToast';
 import { actions } from '@/slices/chat';
 
 const { DEFAULT_STEPS_LIMIT } = LLMSettingsConstants;

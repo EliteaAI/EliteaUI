@@ -2,10 +2,10 @@ import { memo, useCallback } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import BaseBtn, { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import BaseModal from '@/[fsd]/shared/ui/modal/BaseModal';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast';
 import { getBasename } from '@/routes';
 
 import { useListShareLinksQuery, useRevokeShareLinkMutation } from '../../api/sharedLinksApi';

@@ -5,6 +5,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { Box, Typography, useTheme } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { useNotificationBulkMarkSeenMutation } from '@/api/notifications';
 import MarkReadIcon from '@/assets/icons/mark-read-icon.svg?react';
@@ -12,7 +13,6 @@ import MarkUnreadIcon from '@/assets/icons/mark-unread-icon.svg?react';
 import { convertTime } from '@/common/convertChatConversationMessages';
 import { buildErrorMessage } from '@/common/utils';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast';
 
 import { getIcon } from '../lib/helpers';
 import NotificationListItemMessage from './NotificationListItemMessage';

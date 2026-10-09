@@ -20,8 +20,8 @@ vi.mock('@/hooks/useSelectedProject', () => ({
   useSelectedProjectId: () => 30,
 }));
 
-vi.mock('@/hooks/useToast', () => ({
-  default: () => ({ toastSuccess: vi.fn() }),
+vi.mock('@/[fsd]/shared/lib/hooks/useToast.hooks', () => ({
+  useToast: () => ({ toastSuccess: vi.fn() }),
 }));
 
 const TOOLKIT_TYPE = 'mcp_Epam Delivery Central';

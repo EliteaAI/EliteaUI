@@ -2,7 +2,7 @@ import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Form, Formik } from 'formik';
 
-import { useDefaultModel } from '@/[fsd]/shared/lib/hooks';
+import { useDefaultModel, useToast } from '@/[fsd]/shared/lib/hooks';
 import { useContextStrategySubmit } from '@/[fsd]/widgets/context-budget/lib/hooks';
 import { serializeFormData } from '@/[fsd]/widgets/context-budget/lib/utils';
 import { contextStrategyValidationSchema } from '@/[fsd]/widgets/context-budget/lib/validation';
@@ -13,7 +13,6 @@ import {
 } from '@/api';
 import { StyledDialog } from '@/components/StyledDialog';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast';
 
 import ContextStrategyModalContent from './ContextStrategyModalContent';
 

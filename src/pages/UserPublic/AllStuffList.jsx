@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 import { Typography } from '@mui/material';
 
 import { useLoadToolkits } from '@/[fsd]/features/toolkits/lib/hooks';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { ContentType } from '@/common/constants';
 import { buildErrorMessage, sortByCreatedAt } from '@/common/utils';
 import CardList from '@/components/CardList';
@@ -13,7 +14,6 @@ import useCardList from '@/hooks/useCardList';
 import usePageQuery from '@/hooks/usePageQuery';
 import { useAuthorIdFromUrl } from '@/hooks/useSearchParamValue';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast';
 import useViewMode from '@/hooks/useViewMode';
 import { getQueryStatuses } from '@/utils/getQueryStatus';
 

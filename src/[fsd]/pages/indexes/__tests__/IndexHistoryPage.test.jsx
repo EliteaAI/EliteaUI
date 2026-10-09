@@ -62,7 +62,7 @@ vi.mock('@/[fsd]/shared/ui/breadcrumbs', () => ({ default: () => null }));
 
 vi.mock('@/hooks/useSelectedProject', () => ({ useSelectedProjectId: () => 2 }));
 
-vi.mock('@/hooks/useToast.jsx', () => ({ default: () => ({ toastError: vi.fn() }) }));
+vi.mock('@/[fsd]/shared/lib/hooks/useToast.hooks', () => ({ useToast: () => ({ toastError: vi.fn() }) }));
 
 const INDEX = {
   metadata: {

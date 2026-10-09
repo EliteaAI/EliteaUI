@@ -11,6 +11,7 @@ import {
 } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { NodeHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Text } from '@/[fsd]/shared/ui';
 import AttentionIcon from '@/assets/attention-icon.svg?react';
 import CollapseIcon from '@/assets/collapse-icon.svg?react';
@@ -18,7 +19,6 @@ import EntrypointIcon from '@/assets/entrypoint-icon.svg?react';
 import ExpandIcon from '@/assets/expand-icon.svg?react';
 import DotMenu from '@/components/DotMenu';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
-import useToast from '@/hooks/useToast';
 
 const NodeCardHeader = memo(props => {
   const { name, isEntrypoint, isExpanded, onExpand, type, id, disabled } = props;

@@ -1,9 +1,9 @@
 import { useCallback } from 'react';
 
 import { useUpdateSkillRelationMutation } from '@/[fsd]/features/skill/api';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { buildErrorMessage } from '@/common/utils';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast';
 
 export const useAttachSkill = ({ entityVersionId }) => {
   const projectId = useSelectedProjectId();

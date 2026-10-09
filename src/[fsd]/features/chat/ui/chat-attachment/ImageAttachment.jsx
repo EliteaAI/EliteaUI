@@ -9,13 +9,13 @@ import {
   getImageSource,
   hasUnresolvedFilepath,
 } from '@/[fsd]/entities/attachment/lib';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Checkbox, Modal } from '@/[fsd]/shared/ui';
 import ImportIcon from '@/assets/import-icon.svg?react';
 import { downloadFileFromArtifact } from '@/common/utils';
 import ViewImageAttachmentModal from '@/components/Chat/ViewImageAttachmentModal';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast';
 
 const ImageAttachment = memo(props => {
   const { attachment = {}, id, onRemoveAttachment, showThumbnail = true } = props;

@@ -2,10 +2,10 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { EditEntityModal } from '@/[fsd]/entities/edit-entity-with-ai';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Input, Modal } from '@/[fsd]/shared/ui';
 import { useGetApplicationVersionDetailQuery, useUpdateApplicationVersionMutation } from '@/api/applications';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast';
 
 import {
   useEnhanceFromEvalMutation,

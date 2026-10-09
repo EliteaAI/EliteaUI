@@ -3,12 +3,12 @@ import { memo, useCallback } from 'react';
 import { Box, IconButton, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { BrandLogo } from '@/[fsd]/shared/ui';
 import Markdown from '@/[fsd]/shared/ui/markdown';
 import { ButtonsContainer } from '@/components/Chat/StyledComponents';
 import CopyIcon from '@/components/Icons/CopyIcon';
 import UserIcon from '@/components/Icons/UserIcon';
-import useToast from '@/hooks/useToast';
 
 const ModalMessage = memo(props => {
   const { title, isUserMessage, message, renderInMarkdown = true } = props;

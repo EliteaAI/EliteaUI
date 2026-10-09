@@ -3,6 +3,7 @@ import { memo, useCallback, useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 
 import { ToolkitsList, useLoadToolkits } from '@/[fsd]/features/toolkits';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { ContentType } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import CardList from '@/components/CardList';
@@ -11,7 +12,6 @@ import useCardList from '@/hooks/useCardList';
 import { useAuthorIdFromUrl } from '@/hooks/useSearchParamValue';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useTags from '@/hooks/useTags';
-import useToast from '@/hooks/useToast';
 import useViewMode from '@/hooks/useViewMode';
 import { getQueryStatuses } from '@/utils/getQueryStatus';
 

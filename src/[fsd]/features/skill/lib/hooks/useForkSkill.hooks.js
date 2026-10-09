@@ -6,9 +6,9 @@ import { useTrackEvent } from '@/GA';
 import { importWizardActions } from '@/[fsd]/entities/import-wizard';
 import { useLazySkillExportForkQuery } from '@/[fsd]/features/skill/api';
 import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { buildErrorMessage } from '@/common/utils';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast';
 
 const { GA_EVENT_NAMES, GA_EVENT_PARAMS } = AnalyticConstants;
 

@@ -13,12 +13,12 @@ import {
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import ModalMessage from '@/[fsd]/features/agent/ui/agent-details/configurations/modal/ModalMessage';
 import { ParseYamlToMermaidHelpers } from '@/[fsd]/shared/lib/helpers';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import Markdown from '@/[fsd]/shared/ui/markdown';
 import { ROLES } from '@/common/constants';
 import CloseIcon from '@/components/Icons/CloseIcon';
 import CopyIcon from '@/components/Icons/CopyIcon';
 import MermaidDiagramOutput from '@/components/MermaidDiagramOutput/DiagramOutput';
-import useToast from '@/hooks/useToast';
 
 const StyledShowContextModal = memo(props => {
   const {

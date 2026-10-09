@@ -7,11 +7,10 @@ import { DataGrid, GridRowEditStopReasons, gridClasses, useGridApiRef } from '@m
 
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { FlowEditorSettings } from '@/[fsd]/features/pipelines/flow-editor/ui';
-import { useDataGridTheme } from '@/[fsd]/shared/lib/hooks';
+import { useDataGridTheme, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Switch } from '@/[fsd]/shared/ui';
 import AlertDialog from '@/components/AlertDialog.jsx';
 import DeleteIcon from '@/components/Icons/DeleteIcon.jsx';
-import useToast from '@/hooks/useToast';
 
 const isRowSelectable = () => false;
 const getRowHeight = () => 'auto';

@@ -12,13 +12,12 @@ import {
 } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers/state.helpers';
 import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
 import { CodeMirrorEditorHelpers } from '@/[fsd]/shared/lib/helpers';
-import { useLanguageLinter } from '@/[fsd]/shared/lib/hooks';
+import { useLanguageLinter, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button, Modal, Text } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { capitalizeFirstChar } from '@/common/utils';
 import CloseIcon from '@/components/Icons/CloseIcon';
 import CopyIcon from '@/components/Icons/CopyIcon';
-import useToast from '@/hooks/useToast';
 
 const AIAssistantModal = memo(props => {
   const {

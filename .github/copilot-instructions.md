@@ -1073,7 +1073,7 @@ Use the existing toast system:
 
 ```javascript
 // ✅ Use existing toast hook
-import useToast from '@/hooks/useToast';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 
 const { toastSuccess, toastError } = useToast();
 

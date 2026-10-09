@@ -3,8 +3,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { useApplicationDetailsQuery } from '@/api/applications';
-import useToast from '@/hooks/useToast';
 import RouteDefinitions from '@/routes';
 
 import {

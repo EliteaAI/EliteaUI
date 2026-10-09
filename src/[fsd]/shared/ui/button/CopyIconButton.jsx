@@ -2,8 +2,8 @@ import { memo, useCallback } from 'react';
 
 import { Box, Tooltip } from '@mui/material';
 
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import CopyIcon from '@/components/Icons/CopyIcon';
-import useToast from '@/hooks/useToast';
 
 import BaseBtn, { BUTTON_VARIANTS } from './BaseBtn';
 

@@ -8,6 +8,7 @@ import {
   ENVIRONMENT_SECTION,
 } from '@/[fsd]/features/settings/lib/constants/environment.constants';
 import { EnvironmentFieldHelpers } from '@/[fsd]/features/settings/lib/helpers';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import {
   useCreateConfigurationMutation,
   useGetAvailableConfigurationsTypeQuery,
@@ -17,7 +18,6 @@ import {
 import { PERMISSIONS, PUBLIC_PROJECT_ID } from '@/common/constants';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast';
 
 import EnvironmentFieldRow from './EnvironmentFieldRow';
 

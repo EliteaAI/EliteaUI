@@ -12,6 +12,7 @@ import {
 
 import StyledCircleProgress from '@/ComponentsLib/CircularProgress';
 import { useLoadToolkits } from '@/[fsd]/features/toolkits';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Select } from '@/[fsd]/shared/ui';
 import { buildErrorMessage } from '@/common/utils';
 import FormInput from '@/components/FormInput';
@@ -19,7 +20,6 @@ import CloseIcon from '@/components/Icons/CloseIcon';
 import PlusIcon from '@/components/Icons/PlusIcon';
 import { StyledDialog, StyledDialogActions } from '@/components/StyledDialog';
 import { useCreateArtifactWithDefaultConfiguration } from '@/hooks/useCreateArtifactWithDefaultConfiguratiion';
-import useToast from '@/hooks/useToast';
 
 const CREATE_NEW_OPTION = 'create_new';
 const SCROLL_LOAD_MORE_THRESHOLD = 10;

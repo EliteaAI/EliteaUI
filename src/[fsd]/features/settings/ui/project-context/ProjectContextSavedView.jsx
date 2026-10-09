@@ -3,6 +3,7 @@ import { memo, useCallback, useMemo } from 'react';
 import { Box, Divider, useTheme } from '@mui/material';
 
 import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Banner, Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import Markdown from '@/[fsd]/shared/ui/markdown';
@@ -11,7 +12,6 @@ import SparkleIcon from '@/assets/ai-sparkle-icon.svg?react';
 import DotMenu from '@/components/DotMenu';
 import CopyIcon from '@/components/Icons/CopyIcon';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
-import useToast from '@/hooks/useToast';
 
 import EnableToggleCard from './EnableToggleCard';
 

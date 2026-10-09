@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from 'react';
 
 import { extractSkillCompareData } from '@/[fsd]/entities/compare-versions';
 import { useLazySkillDetailsQuery, useSkillUpdateMutation } from '@/[fsd]/features/skill/api';
-import useToast from '@/hooks/useToast';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 
 export const useCompareSkillVersions = ({ projectId, skillId }) => {
   const { toastSuccess, toastError } = useToast();

@@ -4,10 +4,10 @@ import { Box } from '@mui/material';
 
 import { ChatButton, ChatMessageList } from '@/[fsd]/features/chat';
 import { useIndexHistory } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { LLMModelSelector } from '@/[fsd]/widgets/llm-model-selector';
 import FullScreenToggle from '@/components/Chat/FullScreenToggle';
 import { ChatBodyContainer } from '@/components/Chat/StyledComponents';
-import useToast from '@/hooks/useToast';
 import { ContentContainer } from '@/pages/Common';
 
 const IndexChatContainer = memo(props => {

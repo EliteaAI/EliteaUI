@@ -3,9 +3,9 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { Box, CircularProgress, Typography } from '@mui/material';
 
 import ListInfiniteMoreLoader from '@/ComponentsLib/ListInfiniteMoreLoader';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Modal } from '@/[fsd]/shared/ui';
 import { useDeleteSummaryMutation, useGetConversationSummariesQuery, useUpdateSummaryMutation } from '@/api';
-import useToast from '@/hooks/useToast';
 
 import SummaryDetailsItem from './SummaryDetailsItem';
 

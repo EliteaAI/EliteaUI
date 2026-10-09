@@ -2,8 +2,8 @@ import { useCallback, useMemo, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { VITE_SERVER_URL } from '@/common/constants';
-import useToast from '@/hooks/useToast';
 
 import { CodeExamplesConstants } from '../constants';
 import { CodeExamplesHelpers } from '../helpers';

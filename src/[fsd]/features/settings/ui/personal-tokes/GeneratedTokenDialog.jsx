@@ -2,10 +2,10 @@ import { memo, useCallback, useState } from 'react';
 
 import { Box, Button, Dialog, DialogActions, DialogContent, Typography } from '@mui/material';
 
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { handleCopy } from '@/common/utils';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
 import CancelIcon from '@/components/Icons/CancelIcon';
-import useToast from '@/hooks/useToast';
 import { StyledTipsContainer } from '@/pages/Common/Components/InputVersionDialog';
 
 const COPY_DISABLED_DURATION = 5000;

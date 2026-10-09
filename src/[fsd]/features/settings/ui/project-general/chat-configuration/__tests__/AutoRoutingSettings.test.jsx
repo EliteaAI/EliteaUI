@@ -32,7 +32,9 @@ vi.mock('@/api/configurations', async importOriginal => ({
 }));
 vi.mock('@/hooks/useSelectedProject', () => ({ useSelectedProjectId: () => 2 }));
 vi.mock('@/hooks/useCheckPermission', () => ({ default: () => ({ checkPermission: () => api.permitted }) }));
-vi.mock('@/hooks/useToast', () => ({ default: () => ({ toastError: api.toastError, toastInfo: vi.fn() }) }));
+vi.mock('@/[fsd]/shared/lib/hooks/useToast.hooks', () => ({
+  useToast: () => ({ toastError: api.toastError, toastInfo: vi.fn() }),
+}));
 vi.hoisted(() => vi.stubEnv('VITE_SERVER_URL', 'http://localhost/api/v2/'));
 
 const theme = createTheme({ palette: lightPalette });

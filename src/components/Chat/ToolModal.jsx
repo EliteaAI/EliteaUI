@@ -5,9 +5,9 @@ import Split from 'react-split';
 import { Box, Dialog, DialogContent, FormControl, IconButton, Typography, useTheme } from '@mui/material';
 
 import { CodeMirrorEditorHelpers, CodeMirrorLinterHelpers } from '@/[fsd]/shared/lib/helpers';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Field } from '@/[fsd]/shared/ui';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
-import useToast from '@/hooks/useToast';
 import { EditorView } from '@codemirror/view';
 
 import CloseIcon from '../Icons/CloseIcon';

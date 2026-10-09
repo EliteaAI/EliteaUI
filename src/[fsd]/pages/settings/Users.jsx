@@ -12,13 +12,13 @@ import {
   EditUsersButton,
   UsersTable,
 } from '@/[fsd]/features/settings';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { useRoleListQuery, useUserCreateMutation, useUserListQuery } from '@/api/admin';
 import { PERMISSIONS } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import InviteUserDialog from '@/components/InviteUserDialog';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast';
 
 const Users = memo(() => {
   const styles = projectsStyles();

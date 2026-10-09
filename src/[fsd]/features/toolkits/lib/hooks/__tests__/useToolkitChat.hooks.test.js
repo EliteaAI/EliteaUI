@@ -64,8 +64,8 @@ vi.mock('@/hooks/useSocket', () => ({
   useManualSocket: () => ({ emit: vi.fn() }),
 }));
 
-vi.mock('@/hooks/useToast', () => ({
-  default: () => ({ toastSuccess: vi.fn(), toastError: vi.fn() }),
+vi.mock('@/[fsd]/shared/lib/hooks/useToast.hooks', () => ({
+  useToast: () => ({ toastSuccess: vi.fn(), toastError: vi.fn() }),
 }));
 
 vi.mock('@/hooks/useSelectedProject', () => ({ useSelectedProjectId: () => 1 }));

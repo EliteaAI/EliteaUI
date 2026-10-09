@@ -6,6 +6,7 @@ import { RunHistoryApi } from '@/[fsd]/entities/run-history/api';
 import { hasRunAnalytics } from '@/[fsd]/entities/run-history/lib/helpers';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Modal } from '@/[fsd]/shared/ui';
 import AnalyticsIcon from '@/assets/analytics-icon.svg?react';
 import CopyLinkIcon from '@/assets/copy-link-icon.svg?react';
@@ -15,7 +16,6 @@ import CheckIcon from '@/components/Icons/CheckIcon.jsx';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import RestoreIcon from '@/components/Icons/RestoreIcon';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast';
 import { getBasename } from '@/routes';
 import { copyToClipboard } from '@/utils/browserUtils';
 

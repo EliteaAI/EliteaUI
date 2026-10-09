@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useMemo } from 'react';
 
 import { ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { useLazyAutoSuggestQuery } from '@/api/search';
 import { useLazyToolkitsListQuery } from '@/api/toolkits';
 import { PAGE_SIZE, SortFields, SortOrderOptions } from '@/common/constants';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-
-import useToast from './useToast';
 
 const getErrorMessage = error => {
   return error?.data?.message || error?.data?.error;

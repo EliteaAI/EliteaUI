@@ -16,9 +16,9 @@ import {
 } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
 import { HeadlessReindexRunner, IndexesList } from '@/[fsd]/features/toolkits/indexes/ui';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Modal } from '@/[fsd]/shared/ui';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast';
 
 // The worker's first metadata write normally lands within seconds of the dispatch;
 // two minutes absorbs queue delay without letting a genuinely dead stub outlive the

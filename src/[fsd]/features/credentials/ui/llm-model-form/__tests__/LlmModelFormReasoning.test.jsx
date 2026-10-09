@@ -58,8 +58,8 @@ vi.mock('../../../lib/hooks', () => {
   };
 });
 
-vi.mock('@/hooks/useToast', () => ({
-  default: () => ({ toastError: vi.fn(), toastInfo: vi.fn() }),
+vi.mock('@/[fsd]/shared/lib/hooks/useToast.hooks', () => ({
+  useToast: () => ({ toastError: vi.fn(), toastInfo: vi.fn() }),
 }));
 
 vi.mock('../../credentials-select/CredentialsSelect', () => ({

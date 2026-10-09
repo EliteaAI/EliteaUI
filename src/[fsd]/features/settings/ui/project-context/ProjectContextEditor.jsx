@@ -7,6 +7,7 @@ import {
   PROJECT_CONTEXT_MAX_LEN,
 } from '@/[fsd]/features/settings/lib/constants/projectContext.constants';
 import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Banner, Button, Field, Input } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { INPUT_VARIANTS } from '@/[fsd]/shared/ui/input';
@@ -18,7 +19,6 @@ import ImportIcon from '@/assets/import-icon.svg?react';
 import OpenEyeIcon from '@/assets/open-eye-icon.svg?react';
 import CopyIcon from '@/components/Icons/CopyIcon';
 import useNavBlocker from '@/hooks/useNavBlocker';
-import useToast from '@/hooks/useToast';
 import { markdown } from '@codemirror/lang-markdown';
 
 import GenerateProjectContextButton from './GenerateProjectContextButton';

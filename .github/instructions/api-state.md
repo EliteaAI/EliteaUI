@@ -180,7 +180,7 @@ const ConditionalData = ({ userId }) => {
 
 ```javascript
 // ✅ Mutation with proper error handling
-import { useToast } from '@/components/useToast';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 
 const CreateApplicationForm = () => {
   const [createApplication, { isLoading }] = useCreateApplicationMutation();

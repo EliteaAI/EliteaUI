@@ -6,8 +6,8 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { Box, IconButton } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import useCopyDownloadHandlers from '@/hooks/chat/useCopyEventHandlers';
-import useToast from '@/hooks/useToast';
 
 import EditingPlaceholder from './Chat/EditingPlaceholder';
 import EditIcon from './Icons/EditIcon';

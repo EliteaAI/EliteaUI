@@ -15,7 +15,7 @@ import {
   useUnpublishSkillMenu,
 } from '@/[fsd]/features/skill/lib/hooks';
 import { PinEntityConstants } from '@/[fsd]/shared/lib/constants';
-import { useProjectType } from '@/[fsd]/shared/lib/hooks';
+import { useProjectType, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button, Controls } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { usePin, usePinMenu } from '@/[fsd]/widgets/pin-toggler';
@@ -31,7 +31,6 @@ import PlayIcon from '@/components/Icons/PlayIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import { useProjectEntityLink } from '@/hooks/useProjectEntityLink';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast';
 import RouteDefinitions from '@/routes';
 
 import { useDeleteSkillMutation } from '../api';

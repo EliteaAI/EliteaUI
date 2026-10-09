@@ -32,3 +32,4 @@ export { default as useCtrlEnterKeyEventsHandler } from './useCtrlEnterKeyEvents
 export { default as useScrollActiveIntoView } from './useScrollActiveIntoView.hooks';
 export * from './useShareLink.hooks';
 export * from './useLikeApplicationCard.hooks';
+export * from './useToast.hooks';

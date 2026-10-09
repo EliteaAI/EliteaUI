@@ -7,10 +7,10 @@ import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { Box, IconButton } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { TypographyWithConditionalTooltip } from '@/[fsd]/shared/ui/tooltip';
 import ChipWithCheckIcon from '@/components/ChipWithCheckIcon';
 import CopyIcon from '@/components/Icons/CopyIcon';
-import useToast from '@/hooks/useToast';
 
 const ToolView = memo(props => {
   const { toolOption, isSelected, toggleHandler } = props;

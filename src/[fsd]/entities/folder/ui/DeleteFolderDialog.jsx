@@ -2,8 +2,8 @@ import { memo, useCallback } from 'react';
 
 import { Alert, Typography } from '@mui/material';
 
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Modal } from '@/[fsd]/shared/ui';
-import useToast from '@/hooks/useToast';
 
 import { FOLDER_ENTITY_LABELS } from '../lib/constants';
 import { useDeleteFolder } from '../lib/hooks';

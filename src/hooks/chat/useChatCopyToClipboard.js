@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 
-import useToast from '@/hooks/useToast';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 
 /**
  * Hook to provide copy-to-clipboard functionality for chat messages.

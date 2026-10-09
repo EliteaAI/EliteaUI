@@ -3,8 +3,8 @@ import { useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { PathValidationHelpers } from '@/[fsd]/features/artifacts/lib/helpers';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { eliteaApi } from '@/api/eliteaApi';
-import useToast from '@/hooks/useToast';
 import { setHasPermissionError, setIsUploading, setSkippedFiles, setUploadFinished } from '@/slices/upload';
 
 const { FORBIDDEN_FILENAME_HINT } = PathValidationHelpers;

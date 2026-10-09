@@ -3,11 +3,11 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { Box, Tooltip, Typography } from '@mui/material';
 
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button, Input, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import FullscreenOutlinedIcon from '@/assets/full-screen-icon.svg?react';
 import StyledInputModal from '@/components/StyledInputModal';
-import useToast from '@/hooks/useToast';
 
 import { useWriteEvalHumanScoreMutation } from '../../api';
 import {

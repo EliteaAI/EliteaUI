@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from 'react';
 
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { downloadArtifactsAsZip } from '@/common/utils';
-import useToast from '@/hooks/useToast';
 
 export const useZipDownload = () => {
   const { toastError, toastSuccess, toastInfo } = useToast();

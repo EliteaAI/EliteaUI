@@ -3,11 +3,11 @@ import { memo, useCallback, useState } from 'react';
 import { Box, IconButton, Tooltip } from '@mui/material';
 
 import { PERSONAL_TOKENS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import VsCodeIcon from '@/assets/vscode.svg?react';
 import DeleteEntityButton from '@/components/DeleteEntityButton';
 import JetBrainsIcon from '@/components/Icons/JetBrainsIcon';
 import OpenEyeIcon from '@/components/Icons/OpenEyeIcon';
-import useToast from '@/hooks/useToast';
 
 const TokenActionsCell = memo(props => {
   const { token, deleteToken, refetch, onDownload, onVsCodeDownload, onPreview, showDownload } = props;

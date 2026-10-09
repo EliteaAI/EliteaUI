@@ -2,10 +2,10 @@ import { memo, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import FileCodeIcon from '@/components/Icons/FileCodeIcon';
-import useToast from '@/hooks/useToast';
 
 import { useImportEvalDatasetMutation } from '../../../api';
 import { casesAddedMessage, extractAddedCaseIds, parseEvalError } from '../../../lib/helpers';

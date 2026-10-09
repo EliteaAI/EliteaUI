@@ -2,11 +2,11 @@ import { useCallback, useRef } from 'react';
 
 import ExcellentExport from 'excellentexport';
 
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import useCopyDownloadHandlers from '@/hooks/chat/useCopyEventHandlers';
 
 import { useDownloadMarkdown } from './useDownloadMarkdown';
 import { removeTagsFromTableCells, useDownloadTableToHtml } from './useDownloadTableToHtml';
-import useToast from './useToast';
 
 export const downloadTableOptions = [
   { label: 'Copy as markdown', value: 'markdown' },

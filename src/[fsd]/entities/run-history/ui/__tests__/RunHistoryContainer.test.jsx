@@ -32,8 +32,8 @@ const { fetchRunList, queryResult, toastInfo } = vi.hoisted(() => ({
   queryResult: { data: undefined, isUninitialized: false, isLoading: false, isFetching: false },
 }));
 
-vi.mock('@/hooks/useToast', () => ({
-  default: () => ({ toastSuccess: vi.fn(), toastError: vi.fn(), toastInfo }),
+vi.mock('@/[fsd]/shared/lib/hooks/useToast.hooks', () => ({
+  useToast: () => ({ toastSuccess: vi.fn(), toastError: vi.fn(), toastInfo }),
 }));
 
 vi.mock('@/[fsd]/entities/run-history/api', () => {

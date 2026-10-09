@@ -45,8 +45,8 @@ vi.mock('@/components/FormInput', () => ({
   ),
 }));
 
-vi.mock('@/hooks/useToast', () => ({
-  default: () => ({ toastSuccess: vi.fn(), toastInfo: vi.fn(), toastError: vi.fn() }),
+vi.mock('@/[fsd]/shared/lib/hooks', () => ({
+  useToast: () => ({ toastSuccess: vi.fn(), toastInfo: vi.fn(), toastError: vi.fn() }),
 }));
 
 vi.mock('@/[fsd]/shared/ui', () => ({

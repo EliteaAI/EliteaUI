@@ -4,12 +4,12 @@ import { useFormikContext } from 'formik';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { useToolkitDeleteMutation } from '@/api/toolkits';
 import { buildErrorMessage } from '@/common/utils';
 import DeleteEntityButton from '@/components/DeleteEntityButton';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast';
 import RouteDefinitions from '@/routes';
 import { useTheme } from '@emotion/react';
 

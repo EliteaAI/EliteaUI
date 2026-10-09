@@ -5,12 +5,11 @@ import { Box, IconButton, Typography, useTheme } from '@mui/material';
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { CodeMirrorEditorHelpers } from '@/[fsd]/shared/lib/helpers';
-import { useLanguageLinter } from '@/[fsd]/shared/lib/hooks';
+import { useLanguageLinter, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Modal } from '@/[fsd]/shared/ui';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import { handleCopy } from '@/common/utils';
 import CopyIcon from '@/components/Icons/CopyIcon';
-import useToast from '@/hooks/useToast';
 
 const ExpandedViewerModal = memo(props => {
   const {

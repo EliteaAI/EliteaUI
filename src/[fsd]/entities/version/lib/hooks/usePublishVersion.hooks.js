@@ -8,12 +8,12 @@ import { useTrackEvent } from '@/GA';
 import { useGetAgentCategoriesQuery } from '@/[fsd]/entities/version/api';
 import { PUBLISH_STEPS } from '@/[fsd]/entities/version/ui/PublishWizardModal';
 import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { usePublishApplicationMutation, useValidateForPublishMutation } from '@/api';
 import { useGetPlatformSettingsQuery } from '@/api/platformSettings';
 import { CollectionStatus, PERMISSIONS, PUBLIC_PROJECT_ID } from '@/common/constants';
 import { useIsFromPipelineDetail } from '@/hooks/useIsFromSpecificPageHooks';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast';
 
 const { GA_EVENT_NAMES, GA_EVENT_PARAMS } = AnalyticConstants;
 const MAX_AI_RETRIES = 2;

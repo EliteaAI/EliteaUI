@@ -3,13 +3,13 @@ import { useCallback, useEffect, useMemo } from 'react';
 import { useFormikContext } from 'formik';
 import { useDispatch, useSelector } from 'react-redux';
 
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import {
   useLazyGetApplicationVersionDetailQuery,
   useLazyValidateApplicationVersionQuery,
   useValidateApplicationVersionQuery,
 } from '@/api/applications';
 import { buildErrorMessage } from '@/common/utils';
-import useToast from '@/hooks/useToast';
 import { actions } from '@/slices/applications';
 
 const buildValidationKey = (projectId, applicationId, versionId) =>

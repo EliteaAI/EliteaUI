@@ -5,11 +5,11 @@ import { useFormikContext } from 'formik';
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version';
 import { useSaveSkillVersion } from '@/[fsd]/features/skill/lib/hooks';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button, Input, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
 import useNavBlocker from '@/hooks/useNavBlocker';
-import useToast from '@/hooks/useToast';
 
 const SaveSkillVersionButton = memo(props => {
   const { onSuccess, onChangeVersion } = props;

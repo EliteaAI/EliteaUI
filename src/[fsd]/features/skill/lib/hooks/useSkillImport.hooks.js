@@ -4,10 +4,10 @@ import { useNavigate } from 'react-router-dom';
 
 import { parseMdFrontmatter } from '@/[fsd]/entities/import-wizard';
 import { useSkillImportMutation } from '@/[fsd]/features/skill/api';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { SkillsTabs } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast';
 import RouteDefinitions from '@/routes';
 
 const ACCEPT = '.md,text/markdown';
