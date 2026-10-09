@@ -22,6 +22,8 @@ const OPTION_DESCRIPTIONS = {
 };
 
 const LARGE_EXPORT_BYTES = 500 * 1024 * 1024;
+// Bigger (or unknown-size) ZIPs go straight to a browser download instead of being buffered in memory
+const STREAM_TO_DISK_BYTES = 200 * 1024 * 1024;
 
 const ExportConversationModal = memo(props => {
   const { conversation = {}, onClose } = props;
@@ -30,7 +32,11 @@ const ExportConversationModal = memo(props => {
   const [selectedOption, setSelectedOption] = useState(EXPORT_OPTIONS.without);
   const { isExporting, startExport, cancelExport } = useExportConversation();
 
-  const { data: summary, isFetching: isSummaryLoading } = useConversationExportSummaryQuery(
+  const {
+    data: summary,
+    isFetching: isSummaryLoading,
+    isError: isSummaryError,
+  } = useConversationExportSummaryQuery(
     { projectId, conversationId: conversation.id },
     { skip: !conversation.id, refetchOnMountOrArgChange: true },
   );
@@ -38,7 +44,9 @@ const ExportConversationModal = memo(props => {
   const attachmentsCount = summary?.attachments_count ?? 0;
   const totalSize = summary?.total_size;
   const includeAttachments = selectedOption === EXPORT_OPTIONS.with;
-  const hasNoAttachments = !isSummaryLoading && attachmentsCount === 0;
+  const hasNoAttachments = !isSummaryLoading && !isSummaryError && attachmentsCount === 0;
+  const streamToDisk =
+    includeAttachments && (isSummaryError || totalSize == null || totalSize > STREAM_TO_DISK_BYTES);
 
   const attachmentsLabel = useMemo(() => {
     if (isSummaryLoading || !attachmentsCount) return 'With attachments';
@@ -65,9 +73,9 @@ const ExportConversationModal = memo(props => {
   }, [cancelExport, isExporting, onClose]);
 
   const handleExport = useCallback(async () => {
-    const isSuccess = await startExport({ conversation, includeAttachments });
+    const isSuccess = await startExport({ conversation, includeAttachments, streamToDisk });
     if (isSuccess) onClose();
-  }, [conversation, includeAttachments, onClose, startExport]);
+  }, [conversation, includeAttachments, onClose, startExport, streamToDisk]);
 
   const styles = exportConversationModalStyles();
 
@@ -108,10 +116,21 @@ const ExportConversationModal = memo(props => {
           {`Large export (${formatFileSize(totalSize)}). This may take a while.`}
         </Typography>
       )}
+      {streamToDisk && (
+        <Typography
+          variant="bodySmall"
+          sx={styles.description}
+          data-testid="export-chat-modal-browser-download-note"
+        >
+          The archive will be downloaded by your browser. Track its progress in the browser downloads.
+        </Typography>
+      )}
       {isExporting && includeAttachments && (
         <Box sx={styles.progress}>
           <Typography variant="bodySmall">
-            {`Exporting chat... ${attachmentsCount} ${attachmentsCount === 1 ? 'file' : 'files'}`}
+            {attachmentsCount
+              ? `Exporting chat... ${attachmentsCount} ${attachmentsCount === 1 ? 'file' : 'files'}`
+              : 'Exporting chat...'}
           </Typography>
           <LinearProgress
             sx={styles.progressBar}
@@ -136,7 +155,7 @@ const ExportConversationModal = memo(props => {
         variant={BUTTON_VARIANTS.elitea}
         color={BUTTON_COLORS.primary}
         onClick={handleExport}
-        disabled={isExporting || isSummaryLoading}
+        disabled={isExporting || (includeAttachments && isSummaryLoading)}
         data-testid="export-chat-modal-export-button"
       >
         {isExporting ? 'Exporting...' : 'Export'}

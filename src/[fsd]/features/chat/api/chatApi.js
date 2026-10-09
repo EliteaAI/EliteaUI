@@ -1,4 +1,5 @@
 import { normalizeFileExtension } from '@/[fsd]/entities/attachment/lib';
+import { getConversationExportPath } from '@/[fsd]/features/chat/conversation-list/lib/helpers/exportConversation.helpers';
 import { eliteaApi } from '@/api';
 import { removeDuplicateObjects } from '@/common/utils.jsx';
 
@@ -261,7 +262,7 @@ export const apiSlice = eliteaApi
       }),
       conversationExportSummary: build.query({
         query: ({ projectId, conversationId }) => ({
-          url: apiSlicePath + '/conversation_export/prompt_lib/' + projectId + '/' + conversationId,
+          url: getConversationExportPath(projectId, conversationId),
           params: { summary: true },
         }),
         keepUnusedDataFor: 0,
