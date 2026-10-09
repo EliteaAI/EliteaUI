@@ -6,15 +6,14 @@ const SCHEME_REGEX = /^[a-zA-Z][a-zA-Z0-9+\-.]*:/;
 const SANDBOX_SCHEME_REGEX = /^sandbox:\/*/i;
 
 /**
- * Converts a raw artifact storage path (`/{bucket}/{file_path}` or `sandbox:/{bucket}/{file_path}`), which LLMs
- * often emit as a markdown link after creating a file via the Artifact toolkit, into the Artifacts viewer URL.
- * Any other href is returned unchanged.
+ * Parses a raw artifact storage path (`/{bucket}/{file_path}` or `sandbox:/{bucket}/{file_path}`), which LLMs
+ * often emit as a markdown link after creating a file via the Artifact toolkit.
  *
  * @param {string} href
- * @returns {string}
+ * @returns {{bucket: string, file: string} | null} `null` when the href is not an artifact path
  */
-export const resolveArtifactHref = href => {
-  if (typeof href !== 'string') return href;
+export const parseArtifactHref = href => {
+  if (typeof href !== 'string') return null;
 
   const isSandboxLink = SANDBOX_SCHEME_REGEX.test(href);
   const normalizedHref = isSandboxLink ? href.replace(SANDBOX_SCHEME_REGEX, '/') : href;
@@ -24,7 +23,7 @@ export const resolveArtifactHref = href => {
     normalizedHref.startsWith('//') ||
     SCHEME_REGEX.test(normalizedHref)
   ) {
-    return href;
+    return null;
   }
 
   const basename = getBasename();
@@ -33,37 +32,61 @@ export const resolveArtifactHref = href => {
     basename &&
     (normalizedHref === basename || normalizedHref.startsWith(`${basename}/`))
   ) {
-    return href;
+    return null;
   }
 
   const path = normalizedHref.split(/[?#]/)[0];
   const segments = path.substring(1).split('/');
-  if (segments.length < 2 || segments.some(segment => !segment)) return href;
+  if (segments.length < 2 || segments.some(segment => !segment)) return null;
 
   try {
     const [bucket, ...fileSegments] = segments.map(segment => decodeURIComponent(segment));
-    const file = fileSegments.join('/');
-    return `${basename}${RouteDefinitions.Artifacts}?${SearchParams.Bucket}=${encodeURIComponent(bucket)}&file=${encodeURIComponent(file)}`;
+    return { bucket, file: fileSegments.join('/') };
   } catch {
-    return href;
+    return null;
   }
 };
 
 /**
- * Applies {@link resolveArtifactHref} to every `<a href>` inside an HTML string.
+ * Builds the Artifacts viewer URL for a file in the currently selected project.
  *
- * @param {string} html - already sanitized HTML
+ * @param {{bucket: string, file: string}} artifact
  * @returns {string}
  */
-export const resolveArtifactHrefsInHtml = html => {
+export const buildArtifactViewerUrl = ({ bucket, file }) =>
+  `${getBasename()}${RouteDefinitions.Artifacts}?${SearchParams.Bucket}=${encodeURIComponent(bucket)}&file=${encodeURIComponent(file)}`;
+
+/**
+ * Converts an artifact storage path href into a navigable URL. Any other href is returned unchanged.
+ *
+ * @param {string} href
+ * @param {(artifact: {bucket: string, file: string}) => string | null} [resolveArtifact] - maps the parsed
+ *   artifact to a URL; returning `null` means the file can't be opened in the current context
+ * @returns {string | null}
+ */
+export const resolveArtifactHref = (href, resolveArtifact = buildArtifactViewerUrl) => {
+  const artifact = parseArtifactHref(href);
+  return artifact ? resolveArtifact(artifact) : href;
+};
+
+/**
+ * Applies {@link resolveArtifactHref} to every `<a href>` inside an HTML string. Links that resolve to `null`
+ * lose their `href`.
+ *
+ * @param {string} html - already sanitized HTML
+ * @param {(artifact: {bucket: string, file: string}) => string | null} [resolveArtifact]
+ * @returns {string}
+ */
+export const resolveArtifactHrefsInHtml = (html, resolveArtifact) => {
   if (!html || !/<a\s/i.test(html) || typeof document === 'undefined') return html;
 
   const template = document.createElement('template');
   template.innerHTML = html;
   template.content.querySelectorAll('a[href]').forEach(anchor => {
     const href = anchor.getAttribute('href');
-    const resolvedHref = resolveArtifactHref(href);
-    if (resolvedHref !== href) anchor.setAttribute('href', resolvedHref);
+    const resolvedHref = resolveArtifactHref(href, resolveArtifact);
+    if (resolvedHref === null) anchor.removeAttribute('href');
+    else if (resolvedHref !== href) anchor.setAttribute('href', resolvedHref);
   });
   return template.innerHTML;
 };

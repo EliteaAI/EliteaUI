@@ -6,6 +6,7 @@ import { MuiMarkdown, getOverrides } from 'mui-markdown';
 import { Box, useTheme } from '@mui/material';
 
 import { MarkdownConstants } from '@/[fsd]/shared/lib/constants';
+import { useArtifactLinkResolver } from '@/[fsd]/shared/lib/context/ArtifactLinkContext';
 import { resolveArtifactHrefsInHtml } from '@/[fsd]/shared/lib/helpers/link.helpers';
 import { MarkdownMapping, removeHTMLTags } from '@/[fsd]/shared/lib/utils';
 import CodeBlock from '@/components/CodeBlock';
@@ -31,6 +32,7 @@ const Token = memo(props => {
 
   const theme = useTheme();
   const styles = getStyles(theme);
+  const resolveArtifact = useArtifactLinkResolver();
 
   const overrides = useCallback(
     rawData => ({
@@ -220,6 +222,7 @@ const Token = memo(props => {
         DOMPurify.sanitize(markedToken.raw, {
           FORBID_TAGS: MarkdownConstants.FORBIDDEN_HTML_TAGS,
         }),
+        resolveArtifact,
       );
       return clean ? (
         <Box

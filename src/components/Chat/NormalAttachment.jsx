@@ -14,7 +14,7 @@ import { Checkbox, Modal } from '@/[fsd]/shared/ui';
 import TypographyWithConditionalTooltip from '@/[fsd]/shared/ui/tooltip/TypographyWithConditionalTooltip';
 import AttachedFileIcon from '@/assets/attached-file-icon.svg?react';
 import ImportIcon from '@/assets/import-icon.svg?react';
-import { downloadFileFromArtifact, parseFilepath } from '@/common/utils';
+import { downloadFile, downloadFileFromArtifact, parseFilepath } from '@/common/utils';
 import OpenEyeIcon from '@/components/Icons/OpenEyeIcon';
 import useIsSmallWindow from '@/hooks/useIsSmallWindow';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -62,8 +62,16 @@ const NormalAttachment = ({
 
     const filepath = attachment.item_details?.filepath;
     const bucket = attachment.item_details?.bucket;
+    const downloadUrl = attachment.item_details?.download_url;
 
-    if (filepath && bucket !== '__undefined__') {
+    if (downloadUrl) {
+      // Direct download URL (e.g. public shared conversation endpoint)
+      downloadFile({
+        url: downloadUrl,
+        filename: getAttachmentName(attachment),
+        handleError: () => toastError('Failed to download attachment'),
+      });
+    } else if (filepath && bucket !== '__undefined__') {
       // Download original file from artifact storage.
       // For image attachments, do NOT fall back to base64 — it may be a thumbnail, not the original.
       downloadFileFromArtifact({

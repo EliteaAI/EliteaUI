@@ -4,6 +4,8 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 
+import { ArtifactLinkContext } from '@/[fsd]/shared/lib/context/ArtifactLinkContext';
+
 import Token from '../Token';
 
 vi.mock('@/components/CodeBlock', () => ({ default: () => null }));
@@ -64,5 +66,26 @@ describe('Token link rendering', () => {
     const rendered = renderMarkdown('[site](https://example.com/bucket/file.html)');
 
     expect(rendered).toContain('href="https://example.com/bucket/file.html"');
+  });
+
+  it('uses the ArtifactLinkContext resolver and renders unresolved artifact links as plain text', () => {
+    const resolver = ({ file }) => (file === 'shared.html' ? '/public/shared.html' : null);
+    const render = source =>
+      renderToStaticMarkup(
+        <ThemeProvider theme={theme}>
+          <ArtifactLinkContext.Provider value={resolver}>
+            <Token
+              markedToken={marked.lexer(source)[0]}
+              renderHtml
+            />
+          </ArtifactLinkContext.Provider>
+        </ThemeProvider>,
+      );
+
+    expect(render('[a](/attach/shared.html)')).toContain('href="/public/shared.html"');
+
+    const unresolved = render('[other file](/attach/other.html)');
+    expect(unresolved).toContain('other file');
+    expect(unresolved).not.toContain('<a');
   });
 });
