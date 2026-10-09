@@ -68,6 +68,7 @@ import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { MentionSkillList } from '@/[fsd]/features/skill';
 import { useDeleteSkillMutation } from '@/[fsd]/features/skill/api';
 import { LLMSettingsConstants, MentionConstants } from '@/[fsd]/shared/lib/constants';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import {
   cleanLLMSettings,
   defaultReasoningEffortFor,
@@ -115,7 +116,6 @@ import useChatStreaming from '@/hooks/chat/useChatStreaming';
 import useLoadMoreMessages from '@/hooks/chat/useLoadMoreMessages';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useSocket from '@/hooks/useSocket';
-import useToast from '@/hooks/useToast';
 import { actions as chatActions } from '@/slices/chat';
 
 const { DEFAULT_MAX_TOKENS, DEFAULT_STEPS_LIMIT, DEFAULT_TEMPERATURE } = LLMSettingsConstants;

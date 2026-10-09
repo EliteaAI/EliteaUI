@@ -32,8 +32,8 @@ vi.mock('@/hooks/useSelectedProject', () => ({ useSelectedProjectId: () => 1 }))
 
 const { toastInfo } = vi.hoisted(() => ({ toastInfo: vi.fn() }));
 
-vi.mock('@/hooks/useToast', () => ({
-  default: () => ({ toastSuccess: vi.fn(), toastError: vi.fn(), toastInfo }),
+vi.mock('@/[fsd]/shared/lib/hooks/useToast.hooks', () => ({
+  useToast: () => ({ toastSuccess: vi.fn(), toastError: vi.fn(), toastInfo }),
 }));
 
 vi.mock('@/hooks/useGetWindowWidth', () => ({ default: () => ({ windowWidth: 1280 }) }));

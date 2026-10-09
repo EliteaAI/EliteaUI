@@ -6,13 +6,13 @@ import { Box, IconButton, Typography } from '@mui/material';
 
 import { TokensConstants } from '@/[fsd]/features/settings/lib/constants';
 import { CodeMirrorLinterHelpers } from '@/[fsd]/shared/lib/helpers';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Field } from '@/[fsd]/shared/ui';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import { VITE_SERVER_URL } from '@/common/constants';
 import CloseIcon from '@/components/Icons/CloseIcon';
 import CopyIcon from '@/components/Icons/CopyIcon';
 import DownloadIcon from '@/components/Icons/DownloadIcon';
-import useToast from '@/hooks/useToast';
 
 const options = Object.values(TokensConstants.SETTINGS_PREVIEW_TYPES).map(type => ({
   label: TokensConstants.SETTINGS_PREVIEW_LABELS[type],

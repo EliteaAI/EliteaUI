@@ -2,9 +2,9 @@ import { useCallback, useRef, useState } from 'react';
 
 import { useStore } from 'react-redux';
 
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { exportToExcel } from '@/[fsd]/shared/lib/utils';
 import { useLazyApplicationDetailsQuery } from '@/api/applications';
-import useToast from '@/hooks/useToast';
 
 import { evaluationApi } from '../../api';
 import {

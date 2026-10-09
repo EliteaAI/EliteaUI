@@ -43,6 +43,7 @@ import { AddNewUserModal } from '@/[fsd]/features/chat/ui/chat-modal';
 import { ChatEditorPanel } from '@/[fsd]/features/chat/ui/editors';
 import { FIRST_ELITEA_TOUR_ID, useProposePendingTour } from '@/[fsd]/features/interactive-tours';
 import { ChunkHelpers } from '@/[fsd]/shared/lib/helpers';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { eliteaApi } from '@/api/eliteaApi';
 import {
   ChatParticipantType,
@@ -92,7 +93,6 @@ import { useIsCreatingConversation } from '@/hooks/useIsFromSpecificPageHooks';
 import useIsSmallWindow from '@/hooks/useIsSmallWindow';
 import useNavBlocker from '@/hooks/useNavBlocker';
 import { useManualSocket } from '@/hooks/useSocket';
-import useToast from '@/hooks/useToast';
 import NewConversationView from '@/pages/NewChat/NewConversationView';
 import { actions as chatActions } from '@/slices/chat';
 import { actions } from '@/slices/settings';

@@ -4,12 +4,12 @@ import { useSelector } from 'react-redux';
 
 import { Typography } from '@mui/material';
 
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { ContentType } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import CardList from '@/components/CardList';
 import RightInfoPanel from '@/components/RightInfoPanel';
 import useCardList from '@/hooks/useCardList';
-import useToast from '@/hooks/useToast';
 import useViewMode from '@/hooks/useViewMode';
 
 import useAuthorName from '../../hooks/useAuthorName';

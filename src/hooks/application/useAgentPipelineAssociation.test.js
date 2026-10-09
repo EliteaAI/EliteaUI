@@ -23,7 +23,7 @@ vi.mock('@/api/applications', () => ({
 vi.mock('@/assets/flow-icon.svg?react', () => ({ default: () => null }));
 vi.mock('@/components/Icons/ApplicationsIcon', () => ({ default: () => null }));
 vi.mock('@/hooks/useSelectedProject', () => ({ useSelectedProjectId: vi.fn() }));
-vi.mock('@/hooks/useToast', () => ({ default: vi.fn() }));
+vi.mock('@/[fsd]/shared/lib/hooks', () => ({ useToast: vi.fn() }));
 vi.mock('formik', () => ({ useFormikContext: vi.fn() }));
 vi.mock('react-redux', () => ({ useDispatch: vi.fn() }));
 

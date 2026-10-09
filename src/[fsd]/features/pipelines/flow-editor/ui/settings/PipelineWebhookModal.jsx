@@ -14,9 +14,9 @@ import {
   WEBHOOK_TYPES,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/constants/webhook.constants';
 import { getGitlabSigningTokenError } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers/webhook.helpers';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Checkbox, Modal } from '@/[fsd]/shared/ui';
 import FormInput from '@/components/FormInput';
-import useToast from '@/hooks/useToast';
 
 import GitlabSigningTokenField from './GitlabSigningTokenField';
 

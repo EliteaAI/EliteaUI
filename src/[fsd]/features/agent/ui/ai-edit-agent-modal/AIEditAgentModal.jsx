@@ -18,6 +18,7 @@ import {
   useUpdateSkillRelationMutation,
 } from '@/[fsd]/features/skill';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Input, Modal } from '@/[fsd]/shared/ui';
 import {
   useLazyApplicationDetailsQuery,
@@ -30,7 +31,6 @@ import { mapAssociationError } from '@/hooks/application/useAgentPipelineAssocia
 import useSaveNewVersion from '@/hooks/application/useSaveNewVersion';
 import useSaveVersion from '@/hooks/application/useSaveVersion';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast';
 
 import { SummaryStep, ToolsSkillsStep, UserInteractionStep } from './steps';
 

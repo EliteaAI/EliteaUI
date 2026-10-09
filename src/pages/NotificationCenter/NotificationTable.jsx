@@ -15,10 +15,10 @@ import {
 } from '@/[fsd]/entities/grid-table/ui';
 import { getIcon } from '@/[fsd]/entities/notifications/lib/helpers';
 import { NotificationListItem } from '@/[fsd]/entities/notifications/ui';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { useNotificationBulkDeleteMutation, useNotificationBulkMarkSeenMutation } from '@/api/notifications';
 import { SortOrderOptions } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
-import useToast from '@/hooks/useToast';
 
 import NotificationTableToolbar from './NotificationTableToolbar';
 

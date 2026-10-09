@@ -20,8 +20,8 @@ vi.mock('../../../api', () => ({
 }));
 
 // InputBase (used by the review form) wires copy actions to toasts, which need the app's provider.
-vi.mock('@/hooks/useToast', () => ({
-  default: () => ({ toastError: vi.fn(), toastSuccess: vi.fn(), toastInfo: vi.fn(), toastWarning: vi.fn() }),
+vi.mock('@/[fsd]/shared/lib/hooks/useToast.hooks', () => ({
+  useToast: () => ({ toastError: vi.fn(), toastSuccess: vi.fn(), toastInfo: vi.fn(), toastWarning: vi.fn() }),
 }));
 
 const theme = createTheme(getDesignTokens('dark'));

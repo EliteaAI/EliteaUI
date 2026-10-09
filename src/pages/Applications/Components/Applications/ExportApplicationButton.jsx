@@ -5,10 +5,10 @@ import { useFormikContext } from 'formik';
 import { IconButton } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
 import ExportIcon from '@/components/Icons/ExportIcon.jsx';
 import { useIsFromPipelineDetail } from '@/hooks/useIsFromSpecificPageHooks';
-import useToast from '@/hooks/useToast';
 import { ExportFormat, useExport } from '@/pages/Common/Components/useExport';
 import { useTheme } from '@emotion/react';
 

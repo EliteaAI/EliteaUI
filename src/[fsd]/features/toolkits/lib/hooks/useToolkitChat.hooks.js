@@ -20,6 +20,7 @@ import {
   findToolkitParticipant,
 } from '@/[fsd]/features/toolkits/lib/helpers/toolkitConversation.helpers';
 import { useToolkitSocketContext } from '@/[fsd]/shared/lib/context';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { generateLLMSettings, resetLLMSettingsForModel } from '@/[fsd]/shared/lib/utils';
 import {
   useAddParticipantIntoConversationMutation,
@@ -32,7 +33,6 @@ import { convertConversationToChatHistory } from '@/common/convertChatConversati
 import { generateMessagePayload } from '@/common/messagePayloadUtils';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useSocket, { useManualSocket } from '@/hooks/useSocket';
-import useToast from '@/hooks/useToast';
 
 export const useToolkitChat = props => {
   const runningToolRef = useRef(null);

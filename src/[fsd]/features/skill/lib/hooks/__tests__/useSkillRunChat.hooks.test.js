@@ -45,8 +45,8 @@ vi.mock('@/hooks/chat/useAttachmentState', () => ({
 }));
 vi.mock('@/hooks/chat/useStreamingNavBlocker', () => ({ default: () => {} }));
 vi.mock('@/hooks/useSocket', () => ({ useManualSocket: () => ({ emit: fixture.emitEnterRoom }) }));
-vi.mock('@/hooks/useToast', () => ({
-  default: () => ({ toastError: fixture.toastError, toastInfo: vi.fn(), toastSuccess: vi.fn() }),
+vi.mock('@/[fsd]/shared/lib/hooks', () => ({
+  useToast: () => ({ toastError: fixture.toastError, toastInfo: vi.fn(), toastSuccess: vi.fn() }),
 }));
 
 const SKILL_ID = 10;

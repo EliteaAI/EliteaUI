@@ -8,7 +8,7 @@ import {
   useUnsetDefaultChatTemplateMutation,
   useUpdateChatTemplateMutation,
 } from '@/[fsd]/features/settings/api';
-import useToast from '@/hooks/useToast';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 
 export const useChatTemplates = projectId => {
   const { data: templates = [], isLoading } = useGetChatTemplatesQuery({ projectId }, { skip: !projectId });

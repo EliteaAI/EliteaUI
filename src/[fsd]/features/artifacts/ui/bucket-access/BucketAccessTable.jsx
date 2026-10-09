@@ -11,6 +11,7 @@ import {
 } from '@/[fsd]/entities/grid-table/ui';
 import { BucketAccessConstants } from '@/[fsd]/features/artifacts/lib/constants';
 import { BucketAccessHelpers } from '@/[fsd]/features/artifacts/lib/helpers';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button, Text } from '@/[fsd]/shared/ui';
 import { AddButton } from '@/[fsd]/shared/ui/button';
 import { SimpleSearchBar } from '@/[fsd]/shared/ui/input';
@@ -24,7 +25,6 @@ import NoPermissionsIcon from '@/assets/file-lock.svg?react';
 import PlusIcon from '@/assets/plus-icon.svg?react';
 import EditIcon from '@/components/Icons/EditIcon';
 import useGetWindowWidth from '@/hooks/useGetWindowWidth';
-import useToast from '@/hooks/useToast';
 
 import AddBucketUserDialog from './AddBucketUserDialog';
 import EditBucketUserDialog from './EditBucketUserDialog';

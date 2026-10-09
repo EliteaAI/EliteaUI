@@ -20,6 +20,7 @@ import {
 } from '@/[fsd]/entities/grid-table/ui';
 import { RenameArtifactDialog } from '@/[fsd]/features/artifacts';
 import { useAllArtifacts } from '@/[fsd]/features/artifacts/lib/hooks/useAllArtifacts.hooks';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import {
   useDeleteArtifactMutation,
   useDeleteArtifactsMutation,
@@ -28,7 +29,6 @@ import {
 import { buildErrorMessage, downloadFileFromArtifact } from '@/common/utils';
 import FolderIcon from '@/components/Icons/FolderIcon';
 import useGetWindowWidth from '@/hooks/useGetWindowWidth';
-import useToast from '@/hooks/useToast';
 import { canPreviewFile, formatFileSize, isFileSizePreviewableFlexible } from '@/utils/filePreview';
 import { getFileTypeName } from '@/utils/fileTypes';
 

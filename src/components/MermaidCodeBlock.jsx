@@ -4,6 +4,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { Box, IconButton } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { useListModelsQuery } from '@/api/configurations.js';
 import { useGenerateContentBlockingMutation } from '@/api/llm.js';
 import { PUBLIC_PROJECT_ID } from '@/common/constants.js';
@@ -11,7 +12,6 @@ import { useCanvasEditSocket } from '@/hooks/chat/useCanvasSocket';
 import useCopyDownloadHandlers from '@/hooks/chat/useCopyEventHandlers';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { SERVICE_PROMPT_KEYS, useServicePromptByKey } from '@/hooks/useServicePromptByKey';
-import useToast from '@/hooks/useToast';
 
 import EditingPlaceholder from './Chat/EditingPlaceholder';
 import { useCheckIsBlockEditing } from './CodeBlock';

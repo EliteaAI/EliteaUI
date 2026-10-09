@@ -14,6 +14,7 @@ import {
   useFolderView,
 } from '@/[fsd]/entities/folder';
 import { useLoadSkills } from '@/[fsd]/features/skill/lib/hooks';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import skillsDarkImage from '@/assets/images/Skills_Dark_1.png';
 import skillsLightImage from '@/assets/images/Skills_Light_1.png';
 import { ContentType, ViewMode } from '@/common/constants';
@@ -22,7 +23,6 @@ import CardList from '@/components/CardList';
 import RightInfoPanel from '@/components/RightInfoPanel';
 import useCardList from '@/hooks/useCardList';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast';
 import RouteDefinitions from '@/routes';
 
 import PrivateSkillsListEmptyState from './PrivateSkillsListEmptyState';

@@ -3,9 +3,8 @@ import * as React from 'react';
 import { Typography } from '@mui/material';
 import { styled } from '@mui/system';
 
-import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks';
+import { useSystemSenderName, useToast } from '@/[fsd]/shared/lib/hooks';
 import ExportIcon from '@/components/Icons/ExportIcon';
-import useToast from '@/hooks/useToast';
 import { useExport } from '@/pages/Common/Components/useExport';
 import { Menu } from '@base-ui-components/react/menu';
 import { Select as Dropdown } from '@base-ui-components/react/select';

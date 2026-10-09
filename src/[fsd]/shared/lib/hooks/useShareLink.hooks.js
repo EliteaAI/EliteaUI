@@ -2,7 +2,8 @@ import { useCallback } from 'react';
 
 import { useTrackEvent } from '@/GA';
 import { GA_EVENT_NAMES, GA_EVENT_PARAMS } from '@/[fsd]/shared/lib/constants/analytic.constants';
-import useToast from '@/hooks/useToast';
+
+import { useToast } from './useToast.hooks';
 
 export const useShareLink = () => {
   const { toastInfo } = useToast();

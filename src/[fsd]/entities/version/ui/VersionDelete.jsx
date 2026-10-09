@@ -7,11 +7,11 @@ import { Box, Typography } from '@mui/material';
 
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
 import VersionReplacementModal from '@/[fsd]/entities/version/ui/VersionReplacementModal';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button, Modal } from '@/[fsd]/shared/ui';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import useDeleteVersion from '@/hooks/application/useDeleteVersion';
-import useToast from '@/hooks/useToast';
 import useDiscardApplicationChanges from '@/pages/Applications/useDiscardApplicationChanges';
 
 const VersionDelete = memo(

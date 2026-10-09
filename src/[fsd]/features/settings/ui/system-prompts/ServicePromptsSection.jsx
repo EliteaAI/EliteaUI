@@ -5,7 +5,7 @@ import { Box, IconButton, MenuItem, TextField, Typography } from '@mui/material'
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { DrawerPageHeader } from '@/[fsd]/features/settings/ui/drawer-page';
 import RestoreButton from '@/[fsd]/features/settings/ui/system-prompts/RestoreButton';
-import { useLanguageLinter } from '@/[fsd]/shared/lib/hooks';
+import { useLanguageLinter, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button, Field, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import {
@@ -18,7 +18,6 @@ import EditIcon from '@/assets/edit.svg?react';
 import { PERMISSIONS, PUBLIC_PROJECT_ID } from '@/common/constants';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast';
 
 const ServicePromptsSection = memo(() => {
   const projectId = useSelectedProjectId();

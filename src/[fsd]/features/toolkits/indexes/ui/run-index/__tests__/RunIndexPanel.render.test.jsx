@@ -209,8 +209,8 @@ vi.mock('@/common/toolkitSchemaUtils', () => ({ convertToolkitSchema: () => tool
 vi.mock('@/hooks/toolkit/useGetSelectedToolSchema', () => ({ useGetSelectedToolSchema: () => ({}) }));
 vi.mock('@/hooks/useNavBlocker', () => ({ default: () => ({ setBlockNav: vi.fn() }) }));
 vi.mock('@/hooks/useSelectedProject', () => ({ useSelectedProjectId: () => 1 }));
-vi.mock('@/hooks/useToast.jsx', () => ({
-  default: () => ({ toastSuccess: vi.fn(), toastError: vi.fn() }),
+vi.mock('@/[fsd]/shared/lib/hooks/useToast.hooks', () => ({
+  useToast: () => ({ toastSuccess: vi.fn(), toastError: vi.fn() }),
 }));
 
 const { default: RunIndexPanel } = await import('../RunIndexPanel');

@@ -6,11 +6,11 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import { UnpublishConfirmModal } from '@/[fsd]/entities/version';
 import { useUnpublishSkillMutation } from '@/[fsd]/features/skill/api';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { MenuItemIcon } from '@/[fsd]/shared/ui/icon';
 import { CollectionStatus, PERMISSIONS, PUBLIC_PROJECT_ID } from '@/common/constants';
 import UnpublishIcon from '@/components/Icons/UnpublishIcon';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast';
 import RouteDefinitions from '@/routes';
 
 export const useUnpublishSkillMenu = onSuccess => {

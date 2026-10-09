@@ -3,6 +3,7 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { Box, Collapse, Tooltip, Typography } from '@mui/material';
 
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button, Checkbox, Input, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
@@ -10,7 +11,6 @@ import ArrowDownIcon from '@/components/Icons/ArrowDownIcon';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import PlusIcon from '@/components/Icons/PlusIcon';
 import StyledInputModal from '@/components/StyledInputModal';
-import useToast from '@/hooks/useToast';
 
 import { useAddEvalDatasetCaseMutation, useUpdateEvalDatasetCaseMutation } from '../../../api';
 import { parseEvalError } from '../../../lib/helpers';

@@ -8,7 +8,7 @@ import { Box } from '@mui/material';
 
 import { CredentialHelpers, CredentialNameHelpers } from '@/[fsd]/features/credentials/lib/helpers';
 import { PinEntityConstants } from '@/[fsd]/shared/lib/constants';
-import { useProjectType } from '@/[fsd]/shared/lib/hooks';
+import { useProjectType, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Controls } from '@/[fsd]/shared/ui';
 import { usePin, usePinMenu } from '@/[fsd]/widgets/pin-toggler';
 import { TAG_MODELS, useDeleteConfigurationMutation, useGetConfigurationsBySectionQuery } from '@/api';
@@ -16,7 +16,6 @@ import { eliteaApi } from '@/api/eliteaApi';
 import { PERMISSIONS } from '@/common/constants';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
-import useToast from '@/hooks/useToast';
 import RouteDefinitions from '@/routes';
 
 const CredentialsControls = memo(props => {

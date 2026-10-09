@@ -14,7 +14,7 @@ import {
   LlmModelFormHelpers,
 } from '@/[fsd]/features/credentials/lib/helpers';
 import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
-import { useFormDirtyExcluding, useProjectType } from '@/[fsd]/shared/lib/hooks';
+import { useFormDirtyExcluding, useProjectType, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { useDeleteConfigurationMutation } from '@/api/configurations';
 import { PERMISSIONS } from '@/common/constants';
@@ -25,7 +25,6 @@ import { useCreateCredential } from '@/hooks/credentials/useCreateCredential';
 import { useUpdateCredential } from '@/hooks/credentials/useUpdateCredential.jsx';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import useNavBlocker from '@/hooks/useNavBlocker';
-import useToast from '@/hooks/useToast.jsx';
 import { TabBarItems } from '@/pages/Common/Components';
 import RouteDefinitions from '@/routes.js';
 

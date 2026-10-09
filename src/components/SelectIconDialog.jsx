@@ -12,7 +12,7 @@ import {
   useReplaceSkillIconMutation,
   useUploadSkillIconMutation,
 } from '@/[fsd]/features/skill/api';
-import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks';
+import { useSystemSenderName, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import BaseModal from '@/[fsd]/shared/ui/modal/BaseModal';
@@ -25,7 +25,6 @@ import {
 } from '@/api/applications';
 import ImportIcon from '@/assets/import-icon.svg?react';
 import { buildErrorMessage } from '@/common/utils';
-import useToast from '@/hooks/useToast';
 
 import { StyledCircleProgress } from './Chat/StyledComponents';
 import EliteAImage from './EliteAImage';

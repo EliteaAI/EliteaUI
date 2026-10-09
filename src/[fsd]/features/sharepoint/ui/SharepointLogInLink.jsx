@@ -11,7 +11,7 @@ import {
 } from '@/[fsd]/features/mcp';
 import { getSharepointConnectionTokenKey } from '@/[fsd]/features/sharepoint/lib/helpers';
 import { useSharepointCheckConnection } from '@/[fsd]/features/sharepoint/lib/hooks/useSharepointCheckConnection.hooks';
-import useToast from '@/hooks/useToast';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 
 const SharepointLogInLink = memo(props => {
   const { projectId, spConfig, toolkitId } = props;

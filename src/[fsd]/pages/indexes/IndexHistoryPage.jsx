@@ -19,11 +19,11 @@ import { selectHistoryItem, selectIndexesList } from '@/[fsd]/features/toolkits/
 import { IndexChatContainer, IndexHistory, IndexRunDetail } from '@/[fsd]/features/toolkits/indexes/ui';
 import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import Breadcrumbs from '@/[fsd]/shared/ui/breadcrumbs';
 import { useToolkitsDetailsQuery } from '@/api/toolkits.js';
 import { buildErrorMessage, isNotFoundError } from '@/common/utils.jsx';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast.jsx';
 import RouteDefinitions from '@/routes';
 
 const { ParticipantEntityTypes } = ParticipantEntityConstants;

@@ -1,8 +1,8 @@
 import { useCallback, useMemo, useState } from 'react';
 
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { PERMISSIONS } from '@/common/constants';
 import useCheckPermission from '@/hooks/useCheckPermission';
-import useToast from '@/hooks/useToast';
 
 import { getFolderEntityType, isFolderWritable } from '../helpers';
 import { useEntityFolders } from './useEntityFolders.hooks';

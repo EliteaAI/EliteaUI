@@ -16,11 +16,11 @@ import { useIndexesListPolling } from '@/[fsd]/features/toolkits/indexes/lib/hoo
 import { selectIndexesList } from '@/[fsd]/features/toolkits/indexes/model';
 import { IndexSearchPanel } from '@/[fsd]/features/toolkits/indexes/ui';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import Breadcrumbs from '@/[fsd]/shared/ui/breadcrumbs';
 import { useToolkitsDetailsQuery } from '@/api/toolkits.js';
 import { buildErrorMessage, isNotFoundError } from '@/common/utils.jsx';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast.jsx';
 import RouteDefinitions from '@/routes';
 
 const emptyToolDetail = {};

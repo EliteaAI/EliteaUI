@@ -18,6 +18,7 @@ import { normalizeContinuationError } from '@/[fsd]/features/chat/lib/helpers';
 import { NewChatInput } from '@/[fsd]/features/chat/ui/chat-input';
 import { includesProjectContext, testPanelSettingsFor } from '@/[fsd]/features/skill/lib/helpers';
 import { LLMSettingsConstants } from '@/[fsd]/shared/lib/constants';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { resetLLMSettingsForModel } from '@/[fsd]/shared/lib/utils';
 import { useListModelsQuery } from '@/api/configurations.js';
 import { useGenerateContentStreamingMutation, useStopLlmTaskMutation } from '@/api/llm';
@@ -29,7 +30,6 @@ import { ChatBodyContainer } from '@/components/Chat/StyledComponents';
 import SocketContext from '@/contexts/SocketContext';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { useManualSocket } from '@/hooks/useSocket';
-import useToast from '@/hooks/useToast';
 import { ContentContainer } from '@/pages/Common/Components/StyledComponents';
 
 const { DEFAULT_MAX_TOKENS } = LLMSettingsConstants;

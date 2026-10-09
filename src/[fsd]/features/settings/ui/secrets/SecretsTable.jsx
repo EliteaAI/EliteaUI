@@ -27,6 +27,7 @@ import {
   SecretExternalAccessCell,
   SecretValueCell,
 } from '@/[fsd]/features/settings/ui/secrets';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Modal, Text } from '@/[fsd]/shared/ui';
 import {
   useLazySecretShowQuery,
@@ -44,7 +45,6 @@ import CopyIcon from '@/components/Icons/CopyIcon.jsx';
 import DotsMenuIcon from '@/components/Icons/DotsMenuIcon.jsx';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import useGetWindowWidth from '@/hooks/useGetWindowWidth';
-import useToast from '@/hooks/useToast.jsx';
 import { isSafari } from '@/utils/browserUtils.js';
 
 const SECRETS_TABLE_CONFIG = {

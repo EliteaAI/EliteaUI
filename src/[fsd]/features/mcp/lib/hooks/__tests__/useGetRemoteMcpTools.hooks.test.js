@@ -30,8 +30,8 @@ vi.mock('@/hooks/useSelectedProject', () => ({
   useSelectedProjectId: () => 2,
 }));
 
-vi.mock('@/hooks/useToast', () => ({
-  default: () => toasts,
+vi.mock('@/[fsd]/shared/lib/hooks', () => ({
+  useToast: () => toasts,
 }));
 
 const VALUES = { type: 'mcp', settings: { url: 'https://mcp.example.test/mcp' } };

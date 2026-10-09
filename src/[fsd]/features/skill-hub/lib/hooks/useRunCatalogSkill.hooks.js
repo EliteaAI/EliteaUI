@@ -9,12 +9,12 @@ import {
   buildSkillRunParticipant,
   findSkillParticipant,
 } from '@/[fsd]/features/skill/lib/helpers';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { useConversationCreateMutation } from '@/api';
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import useLocalActiveParticipant from '@/hooks/chat/useLocalActiveParticipant';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast';
 import RouteDefinitions from '@/routes';
 
 export const useRunCatalogSkill = () => {

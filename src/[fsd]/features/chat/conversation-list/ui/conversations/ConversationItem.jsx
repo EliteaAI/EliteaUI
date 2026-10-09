@@ -6,6 +6,7 @@ import { Box, CircularProgress, ClickAwayListener, Typography, useTheme } from '
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { DraggableConversationItem } from '@/[fsd]/features/chat/conversation-list/ui';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Input } from '@/[fsd]/shared/ui';
 import CheckedIcon from '@/assets/checked-icon.svg?react';
 import CopyLinkIcon from '@/assets/copy-link-icon.svg?react';
@@ -34,7 +35,6 @@ import PlayIcon from '@/components/Icons/PlayIcon';
 import UsersIcon from '@/components/Icons/UsersIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast';
 import { getBasename } from '@/routes';
 
 const ConversationItem = memo(props => {

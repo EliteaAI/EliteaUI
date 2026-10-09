@@ -8,13 +8,13 @@ import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
 import { CodeMirrorEditorHelpers, CodeMirrorLinterHelpers } from '@/[fsd]/shared/lib/helpers';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Field } from '@/[fsd]/shared/ui';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import CollapseIcon from '@/assets/collapse-icon.svg?react';
 import ExpandIcon from '@/assets/expand-icon.svg?react';
 import CloseIcon from '@/components/Icons/CloseIcon';
 import CopyIcon from '@/components/Icons/CopyIcon';
-import useToast from '@/hooks/useToast';
 import { json } from '@codemirror/lang-json';
 
 const MIN_HEIGHT = '18.75rem';

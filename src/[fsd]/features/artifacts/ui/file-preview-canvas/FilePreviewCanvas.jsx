@@ -8,7 +8,7 @@ import { ArtifactParserHelpers } from '@/[fsd]/features/artifacts/lib/helpers';
 import { useArtifactContentFetch } from '@/[fsd]/features/artifacts/lib/hooks';
 import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
 import { CodeMirrorLinterHelpers } from '@/[fsd]/shared/lib/helpers';
-import { useProjectType } from '@/[fsd]/shared/lib/hooks';
+import { useProjectType, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Modal } from '@/[fsd]/shared/ui';
 import {
   useCreateArtifactMutation,
@@ -21,7 +21,6 @@ import AlertDialog from '@/components/AlertDialog';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import { useIsFrom } from '@/hooks/useIsFromSpecificPageHooks';
 import useIsSmallWindow from '@/hooks/useIsSmallWindow';
-import useToast from '@/hooks/useToast';
 import RouteDefinitions from '@/routes';
 import {
   canPreviewFile,

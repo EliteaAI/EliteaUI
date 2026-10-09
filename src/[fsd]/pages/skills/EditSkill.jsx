@@ -22,7 +22,7 @@ import {
 } from '@/[fsd]/features/skill';
 import { SKILL_RUN_FOCUS_TARGET, SKILL_RUN_SEARCH_PARAMS } from '@/[fsd]/features/skill/lib/constants';
 import { readRunConversationId } from '@/[fsd]/features/skill/lib/helpers';
-import { useRestoredConversation, useRunHistoryNavigation } from '@/[fsd]/shared/lib/hooks';
+import { useRestoredConversation, useRunHistoryNavigation, useToast } from '@/[fsd]/shared/lib/hooks';
 import { BreadcrumbsOrTitle } from '@/[fsd]/shared/ui';
 import { SkillTabBar } from '@/[fsd]/widgets/skill-tab-bar';
 import { eliteaApi } from '@/api/eliteaApi';
@@ -32,7 +32,6 @@ import DirtyDetector from '@/components/Formik/DirtyDetector';
 import StyledTabs from '@/components/StyledTabs';
 import useNavBlocker from '@/hooks/useNavBlocker';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast.jsx';
 import {
   ContentContainer,
   LeftGridItem,

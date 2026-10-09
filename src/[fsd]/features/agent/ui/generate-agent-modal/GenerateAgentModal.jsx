@@ -6,6 +6,7 @@ import { GenerateEntityModal } from '@/[fsd]/entities/generate-entity-with-ai';
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version';
 import { useLazySkillDetailsQuery, useUpdateSkillRelationMutation } from '@/[fsd]/features/skill';
 import { AutoRoutingConstants } from '@/[fsd]/shared/lib/constants';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { defaultModelForSurface, generateLLMSettings } from '@/[fsd]/shared/lib/utils';
 import {
   useApplicationCreateMutation,
@@ -20,7 +21,6 @@ import { PrivateApplicationTabs, SearchParams, ViewMode } from '@/common/constan
 import { buildErrorMessage, contextResolver } from '@/common/utils';
 import { mapAssociationError } from '@/hooks/application/useAgentPipelineAssociation';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast';
 import RouteDefinitions from '@/routes';
 
 import GenerateAgentReviewForm from './GenerateAgentReviewForm';

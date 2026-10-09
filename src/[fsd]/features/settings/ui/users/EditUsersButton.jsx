@@ -4,10 +4,10 @@ import { Box, IconButton } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { useBatchEditUsers, useEditUser } from '@/[fsd]/features/settings/lib/hooks';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
 import EditUserRolesDialog from '@/components/EditUserRolesDialog';
 import EditIcon from '@/components/Icons/EditIcon';
-import useToast from '@/hooks/useToast';
 
 const EditUsersButton = memo(props => {
   const {

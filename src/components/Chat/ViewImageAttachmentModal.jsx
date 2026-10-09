@@ -4,6 +4,7 @@ import { Box, Dialog, DialogContent, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 
 import { downloadAttachmentImage, getAttachmentName, getImageSource } from '@/[fsd]/entities/attachment/lib';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Checkbox, Modal } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { downloadFileFromArtifact, fetchArtifactBlobUrl } from '@/common/utils';
@@ -11,7 +12,6 @@ import CloseIcon from '@/components/Icons/CloseIcon';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import DownloadIcon from '@/components/Icons/DownloadIcon';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast';
 
 const ViewImageAttachmentModal = memo(props => {
   const { open, onRemoveAttachment, onClose, attachment } = props;

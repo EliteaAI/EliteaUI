@@ -6,6 +6,7 @@ import { useDispatch } from 'react-redux';
 import { useTrackEvent } from '@/GA';
 import { actions as importWizardActions } from '@/[fsd]/entities/import-wizard/model/importWizard.slice';
 import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { useLazyApplicationExportQuery } from '@/api/applications';
 import { useToolkitForkMutation } from '@/api/toolkits';
 import {
@@ -17,7 +18,6 @@ import {
 } from '@/common/checkCardType';
 import { buildErrorMessage } from '@/common/utils';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast';
 
 const { GA_EVENT_NAMES, GA_EVENT_PARAMS } = AnalyticConstants;
 

@@ -12,10 +12,10 @@ import {
   useMcpTokenChange,
 } from '@/[fsd]/features/mcp';
 import { useOpenApiCheckConnection, useResolvedOpenApiConfig } from '@/[fsd]/features/openapi/lib/hooks';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import BaseBtn from '@/[fsd]/shared/ui/button/BaseBtn';
 import OnlineIcon from '@/assets/online-icon.svg?react';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast';
 
 const OpenApiOAuthStatus = memo(() => {
   const { values } = useFormikContext();

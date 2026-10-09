@@ -2,8 +2,8 @@ import { memo, useCallback, useMemo } from 'react';
 
 import { Box, Tooltip, Typography } from '@mui/material';
 
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { handleCopy } from '@/common/utils';
-import useToast from '@/hooks/useToast';
 
 const FieldWithCopy = memo(props => {
   const { label = '', value = '' } = props;

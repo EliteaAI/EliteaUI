@@ -6,6 +6,7 @@ import { useTrackEvent } from '@/GA';
 import { FilePreviewCanvasConstants } from '@/[fsd]/features/artifacts/lib/constants';
 import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
 import { CodeMirrorEditorHelpers } from '@/[fsd]/shared/lib/helpers';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button, Select } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import DotMenu from '@/components/DotMenu';
@@ -14,7 +15,6 @@ import CopyIcon from '@/components/Icons/CopyIcon';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import DownloadIcon from '@/components/Icons/DownloadIcon';
 import EditPenIcon from '@/components/Icons/EditPenIcon';
-import useToast from '@/hooks/useToast';
 
 const { GA_EVENT_NAMES, GA_EVENT_PARAMS } = AnalyticConstants;
 

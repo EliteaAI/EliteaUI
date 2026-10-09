@@ -14,12 +14,12 @@ import {
   WEBHOOK_TYPES,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/constants/webhook.constants';
 import { useDelegatedOauthToolkits } from '@/[fsd]/features/toolkits/lib/hooks';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { InfoLabelWithTooltip } from '@/[fsd]/shared/ui/label';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import { useGetPipelineTriggerQuery, useUpdatePipelineTriggerMutation } from '@/api/applications';
 import ClockIcon from '@/assets/clock.svg?react';
 import { useSelectedProject } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast';
 
 import PipelineScheduleModal from './PipelineScheduleModal';
 import PipelineWebhookModal from './PipelineWebhookModal';

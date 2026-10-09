@@ -12,11 +12,11 @@ import {
   extractMcpAuthMetadata,
   useMcpTokenChange,
 } from '@/[fsd]/features/mcp';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import BaseBtn from '@/[fsd]/shared/ui/button/BaseBtn';
 import CheckedIcon from '@/assets/checked-icon.svg?react';
 import ArrowForwardIcon from '@/assets/icons/arrow-forward.svg?react';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast';
 
 const ChatContinue = memo(props => {
   const {

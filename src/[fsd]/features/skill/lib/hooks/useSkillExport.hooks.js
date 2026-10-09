@@ -3,9 +3,9 @@ import { useCallback } from 'react';
 import { useTrackEvent } from '@/GA';
 import { useLazySkillExportMdQuery } from '@/[fsd]/features/skill/api';
 import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { buildErrorMessage, downloadBlobFile } from '@/common/utils';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast';
 
 const { GA_EVENT_NAMES, GA_EVENT_PARAMS } = AnalyticConstants;
 

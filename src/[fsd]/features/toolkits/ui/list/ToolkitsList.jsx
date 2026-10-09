@@ -18,7 +18,7 @@ import { ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useLoadToolkits } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ToolkitTypesPanel, ToolkitsEmptyListPlaceHolder } from '@/[fsd]/features/toolkits/ui/list';
 import { isMcpToolkit } from '@/[fsd]/shared/lib/helpers';
-import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
+import { useIsMcpVisible, useToast } from '@/[fsd]/shared/lib/hooks';
 import { ContentType, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
 import { buildErrorMessage, uniqueArrayByProp } from '@/common/utils';
 import CardList from '@/components/CardList';
@@ -27,7 +27,6 @@ import useTypes from '@/hooks/toolkit/useTypes';
 import useCardList from '@/hooks/useCardList';
 import useIsTableView from '@/hooks/useIsTableView';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast';
 import RouteDefinitions from '@/routes';
 import { actions as tagsActions } from '@/slices/tags';
 

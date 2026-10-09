@@ -11,6 +11,7 @@ import {
   matchSkillRun,
 } from '@/[fsd]/features/skill/lib/helpers';
 import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import {
   TAG_TYPE_CONVERSATION_DETAILS,
   useConversationCreateMutation,
@@ -32,7 +33,6 @@ import useSynAgentChatMessage from '@/hooks/application/useSynAgentChatMessage';
 import { useAttachmentState } from '@/hooks/chat/useAttachmentState';
 import useStreamingNavBlocker from '@/hooks/chat/useStreamingNavBlocker';
 import { useManualSocket } from '@/hooks/useSocket';
-import useToast from '@/hooks/useToast';
 
 const { ParticipantEntityTypes } = ParticipantEntityConstants;
 

@@ -17,7 +17,7 @@ import { Box, useTheme } from '@mui/system';
 
 import { useTrackEvent } from '@/GA';
 import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
-import { useLanguageLinter } from '@/[fsd]/shared/lib/hooks';
+import { useLanguageLinter, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Field } from '@/[fsd]/shared/ui';
 import { useEditCanvasMutation } from '@/api';
 import { useListModelsQuery } from '@/api/configurations.js';
@@ -41,7 +41,6 @@ import {
 import useIsSmallWindow from '@/hooks/useIsSmallWindow';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { SERVICE_PROMPT_KEYS, useServicePromptByKey } from '@/hooks/useServicePromptByKey';
-import useToast from '@/hooks/useToast';
 
 import CanvasEditHeader from './CanvasEditHeader';
 

@@ -4,11 +4,11 @@ import { format, parseISO } from 'date-fns';
 
 import { Box, CircularProgress, Typography } from '@mui/material';
 
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button, Input, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { BaseTab, BaseTabs } from '@/[fsd]/shared/ui/tabs';
 import CheckIcon from '@/components/Icons/CheckIcon';
-import useToast from '@/hooks/useToast';
 
 import { useEvalConversationsQuery, usePromoteEvalDatasetMutation } from '../../../api';
 import { PROMOTE_CONVERSATION_SOURCE } from '../../../lib/constants';

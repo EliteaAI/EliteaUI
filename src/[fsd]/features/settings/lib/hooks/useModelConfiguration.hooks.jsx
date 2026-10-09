@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { ModelConfigurationHelpers } from '@/[fsd]/features/settings/lib/helpers';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import ShareIcon from '@/assets/share-icon.svg?react';
 import { CollectionStatus, PUBLIC_PROJECT_ID } from '@/common/constants';
 import BriefcaseIcon from '@/components/Icons/BriefcaseIcon.jsx';
-import useToast from '@/hooks/useToast';
 
 export const useModelConfiguration = ({ projectId, uniqueConfigurations }) => {
   const [model, setModel] = useState({

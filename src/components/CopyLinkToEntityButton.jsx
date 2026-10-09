@@ -3,10 +3,10 @@ import { useCallback, useMemo, useState } from 'react';
 import { Box, IconButton } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip.jsx';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import CopyLinkIcon from '@/assets/copy-link-icon.svg?react';
 import CheckIcon from '@/components/Icons/CheckIcon.jsx';
 import { useProjectEntityLink } from '@/hooks/useProjectEntityLink.js';
-import useToast from '@/hooks/useToast.jsx';
 import { useTheme } from '@emotion/react';
 
 const COPIED_EVENT_DURATION = 2500; // Reset after 2.5 seconds

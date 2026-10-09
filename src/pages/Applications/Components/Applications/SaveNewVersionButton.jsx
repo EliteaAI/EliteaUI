@@ -3,10 +3,10 @@ import { forwardRef, useCallback, useImperativeHandle, useState } from 'react';
 import { useFormikContext } from 'formik';
 
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button, Input, Modal } from '@/[fsd]/shared/ui';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
 import useSaveNewVersion from '@/hooks/application/useSaveNewVersion';
-import useToast from '@/hooks/useToast';
 
 const SaveNewVersionButton = forwardRef((props, ref) => {
   const { disabled, onClickHandler, onSuccess } = props;

@@ -32,6 +32,7 @@ vi.mock('@/GA', () => ({ useTrackEvent: () => vi.fn() }));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useFormDirtyExcluding: () => isFormDirty,
   useProjectType: () => ({ projectType: 'team' }),
+  useToast: () => ({ toastSuccess: vi.fn() }),
 }));
 vi.mock('@/[fsd]/shared/ui', () => ({ Button: { DiscardButton: () => null } }));
 vi.mock('@/api/configurations', async importOriginal => ({
@@ -47,7 +48,6 @@ vi.mock('@/hooks/credentials/useUpdateCredential.jsx', () => ({
 }));
 vi.mock('@/hooks/useCheckPermission', () => ({ default: () => ({ checkPermission: () => true }) }));
 vi.mock('@/hooks/useNavBlocker', () => ({ default: vi.fn() }));
-vi.mock('@/hooks/useToast.jsx', () => ({ default: () => ({ toastSuccess: vi.fn() }) }));
 vi.mock('@/pages/Common/Components', () => ({ TabBarItems: props => props.children }));
 
 const setShowValidation = vi.fn();

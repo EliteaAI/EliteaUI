@@ -14,13 +14,13 @@ import {
 import { ENTITY_STUDIO } from '@/[fsd]/entities/version/lib/constants';
 import DetailsContent from '@/[fsd]/entities/version/ui/DetailsContent';
 import SeverityBadge from '@/[fsd]/entities/version/ui/SeverityBadge';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import InputActionsToolbar from '@/[fsd]/shared/ui/input/InputActionsToolbar';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
 import CloseIcon from '@/components/Icons/CloseIcon';
 import ErrorIcon from '@/components/Icons/ErrorIcon';
 import InfoIcon from '@/components/Icons/InfoIcon';
 import SuccessIcon from '@/components/Icons/SuccessIcon';
-import useToast from '@/hooks/useToast';
 
 const STATUS_CONFIG = {
   PASS: {

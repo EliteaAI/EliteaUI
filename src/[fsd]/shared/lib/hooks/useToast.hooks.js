@@ -3,7 +3,7 @@ import { useContext, useEffect, useMemo } from 'react';
 import { DEFAULT_TOP_POSITION } from '@/[fsd]/shared/lib/constants/toast.constants';
 import { ToastContext } from '@/[fsd]/shared/lib/context/ToastContext';
 
-const useToast = (options = {}) => {
+export const useToast = (options = {}) => {
   const { topPosition = DEFAULT_TOP_POSITION, onCloseToast, icon } = useMemo(() => options, [options]);
   const { toastHandlers, clearToast, setTopPosition, setIcon, setOnCloseToast } = useContext(ToastContext);
 
@@ -32,5 +32,3 @@ const useToast = (options = {}) => {
     clearToast,
   };
 };
-
-export default useToast;

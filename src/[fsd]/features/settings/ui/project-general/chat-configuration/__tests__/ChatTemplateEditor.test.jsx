@@ -11,7 +11,9 @@ import userEvent from '@testing-library/user-event';
 import ChatTemplateEditor from '../ChatTemplateEditor';
 
 vi.mock('../ChatParticipantPicker', () => ({ default: () => null }));
-vi.mock('@/hooks/useToast', () => ({ default: () => ({ toastError: vi.fn(), toastInfo: vi.fn() }) }));
+vi.mock('@/[fsd]/shared/lib/hooks/useToast.hooks', () => ({
+  useToast: () => ({ toastError: vi.fn(), toastInfo: vi.fn() }),
+}));
 vi.hoisted(() => vi.stubEnv('VITE_SERVER_URL', 'http://localhost/api/v2/'));
 
 const theme = createTheme({ palette: lightPalette });

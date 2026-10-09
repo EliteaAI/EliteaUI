@@ -4,12 +4,12 @@ import { useDispatch } from 'react-redux';
 
 import { extractAgentCompareData } from '@/[fsd]/entities/compare-versions';
 import { useLazyGetApplicationSkillsQuery } from '@/[fsd]/features/skill/api';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import {
   useLazyGetApplicationVersionDetailQuery,
   useUpdateApplicationVersionMutation,
 } from '@/api/applications';
 import { eliteaApi } from '@/api/eliteaApi';
-import useToast from '@/hooks/useToast';
 
 export const useCompareAgentVersions = ({ projectId, applicationId }) => {
   const dispatch = useDispatch();

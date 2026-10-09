@@ -6,11 +6,11 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { Box, IconButton, Typography, useTheme } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import Markdown from '@/[fsd]/shared/ui/markdown';
 import { CANVAS_ADMIN_USER, CANVAS_SYSTEM_USER, PERMISSIONS } from '@/common/constants';
 import useCopyDownloadHandlers from '@/hooks/chat/useCopyEventHandlers';
 import useCheckPermission from '@/hooks/useCheckPermission';
-import useToast from '@/hooks/useToast';
 
 import AuthorContainer from './AuthorContainer';
 import EditingPlaceholder from './Chat/EditingPlaceholder';

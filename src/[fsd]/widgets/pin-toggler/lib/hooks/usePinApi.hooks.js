@@ -1,9 +1,9 @@
 import { useCallback, useMemo } from 'react';
 
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { mapContentTypeToEntityType } from '@/[fsd]/widgets/pin-toggler/lib/helpers/pinToggler.helpers';
 import { useTogglePinItemMutation } from '@/api/social';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast';
 
 export const usePinApi = props => {
   const { id, isPinned, type, onSuccess } = props;

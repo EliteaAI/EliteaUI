@@ -13,10 +13,10 @@ import {
 } from '@/[fsd]/features/mcp';
 import { useResolvedSharepointConfig } from '@/[fsd]/features/sharepoint/lib/hooks/useResolvedSharepointConfig.hooks';
 import { useSharepointCheckConnection } from '@/[fsd]/features/sharepoint/lib/hooks/useSharepointCheckConnection.hooks';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import OnlineIcon from '@/assets/online-icon.svg?react';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast';
 
 const SharepointOAuthStatus = memo(() => {
   const { values } = useFormikContext();

@@ -5,9 +5,9 @@ import { useLocation, useNavigate, useParams, useSearchParams } from 'react-rout
 import { useTableSort } from '@/[fsd]/entities/grid-table/lib';
 import { compareRunTimestamp } from '@/[fsd]/entities/run-history/lib/helpers';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { useApplicationDetailsQuery } from '@/api/applications';
 import useCheckPermission from '@/hooks/useCheckPermission';
-import useToast from '@/hooks/useToast';
 import RouteDefinitions from '@/routes';
 
 import { useDeleteEvalRunMutation, useEvalRunQuery, useEvalRunsQuery, useEvalSuitesQuery } from '../../api';

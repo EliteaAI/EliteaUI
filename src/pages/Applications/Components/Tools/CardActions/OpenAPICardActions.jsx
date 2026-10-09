@@ -3,8 +3,8 @@ import { useCallback } from 'react';
 import { Box, IconButton, Typography, useTheme } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip.jsx';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import CopyIcon from '@/components/Icons/CopyIcon.jsx';
-import useToast from '@/hooks/useToast.jsx';
 
 import { ActionRow, ActionsContainer } from '../ActionsComponent.jsx';
 

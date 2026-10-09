@@ -9,6 +9,7 @@ import {
   useUpdateProjectIconMutation,
   useUploadProjectIconMutation,
 } from '@/[fsd]/features/settings/api/projectInfoApi';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import BaseModal from '@/[fsd]/shared/ui/modal/BaseModal';
@@ -18,7 +19,6 @@ import ImportIcon from '@/assets/import-icon.svg?react';
 import { buildErrorMessage } from '@/common/utils';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
 import EliteAImage from '@/components/EliteAImage';
-import useToast from '@/hooks/useToast';
 
 import ProjectIconItem from './ProjectIconItem';
 import UserIconItem from './UserIconItem';

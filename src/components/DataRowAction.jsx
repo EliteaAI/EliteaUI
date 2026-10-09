@@ -7,7 +7,7 @@ import { Box } from '@mui/system';
 
 import { MoveToFolderSubmenu } from '@/[fsd]/entities/folder/ui';
 import SkillRowAction from '@/[fsd]/features/skill/ui/SkillRowAction';
-import { useDeleteConfirmationDisabled, useProjectType } from '@/[fsd]/shared/lib/hooks';
+import { useDeleteConfirmationDisabled, useProjectType, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Modal } from '@/[fsd]/shared/ui';
 import { usePin } from '@/[fsd]/widgets/pin-toggler';
 import { useDeleteApplicationMutation } from '@/api/applications';
@@ -23,7 +23,6 @@ import PinIcon from '@/components/Icons/PinIcon';
 import NestedMenuItem from '@/components/NestedMenuItem';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast';
 
 const BasicMenuItem = memo(props => {
   const { icon, label, onClick, disabled } = props;

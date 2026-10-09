@@ -43,8 +43,8 @@ vi.mock('@/hooks/useSocket', () => ({
   },
 }));
 
-vi.mock('@/hooks/useToast', () => ({
-  default: () => ({ toastError: mocks.toastError }),
+vi.mock('@/[fsd]/shared/lib/hooks', () => ({
+  useToast: () => ({ toastError: mocks.toastError }),
 }));
 
 const values = { id: 925, type: 'mcp', settings: { url: 'https://example.com/mcp' } };

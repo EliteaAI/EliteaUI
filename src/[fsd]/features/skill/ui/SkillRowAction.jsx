@@ -8,7 +8,7 @@ import { MoveToFolderSubmenu } from '@/[fsd]/entities/folder/ui';
 import { useDeleteSkillMutation } from '@/[fsd]/features/skill/api';
 import { SKILL_RUN_FOCUS_TARGET, SKILL_RUN_SEARCH_PARAMS } from '@/[fsd]/features/skill/lib/constants';
 import { useCanRunSkill, useSkillExport } from '@/[fsd]/features/skill/lib/hooks';
-import { useProjectType } from '@/[fsd]/shared/lib/hooks';
+import { useProjectType, useToast } from '@/[fsd]/shared/lib/hooks';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { ContentType, PERMISSIONS, SkillsTabs } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils.jsx';
@@ -17,7 +17,6 @@ import ExportIcon from '@/components/Icons/ExportIcon';
 import PlayIcon from '@/components/Icons/PlayIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast';
 import RouteDefinitions from '@/routes';
 
 import { DisabledPublishMenuItem, SkillDeleteActionWithDialog, SkillRowMenuItem } from './skill-row-action';

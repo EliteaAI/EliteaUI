@@ -6,6 +6,7 @@ import {
   buildFieldContextPrompt,
   getServicePromptKeyForFieldName,
 } from '@/[fsd]/features/pipelines/ai-assistant/lib/constants';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { useGetAvailableConfigurationsTypeQuery } from '@/api/configurations';
 import { useGenerateContentStreamingMutation, useStopLlmTaskMutation } from '@/api/llm';
 import { SocketMessageType, sioEvents } from '@/common/constants';
@@ -13,7 +14,6 @@ import SocketContext from '@/contexts/SocketContext';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { useServicePromptByKey } from '@/hooks/useServicePromptByKey';
 import { useManualSocket } from '@/hooks/useSocket';
-import useToast from '@/hooks/useToast';
 
 /**
  * Extracts the backend-shipped Service Prompt defaults from the

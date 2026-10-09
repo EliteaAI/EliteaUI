@@ -5,11 +5,11 @@ import { useSelector } from 'react-redux';
 import { Box } from '@mui/material';
 
 import { NOTIFICATIONS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { useNotificationListQuery } from '@/api/notifications';
 import { SortOrderOptions } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import useDebounceValue from '@/hooks/useDebounceValue';
-import useToast from '@/hooks/useToast';
 
 import NotificationTable from './NotificationTable';
 

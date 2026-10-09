@@ -11,11 +11,11 @@ import {
   updateAgentToolImportUUIDs,
   updateValidationStatus,
 } from '@/[fsd]/entities/import-wizard/lib/helpers';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { useToolkitForkMutation } from '@/api/toolkits.js';
 import { buildErrorMessage, genForkedEntityLink } from '@/common/utils';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
-import useToast from '@/hooks/useToast.jsx';
 
 const IWModalForkButton = memo(props => {
   const { selectedProject, onSuccess } = props;

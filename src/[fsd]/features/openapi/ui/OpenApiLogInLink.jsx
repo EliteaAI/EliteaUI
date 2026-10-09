@@ -10,7 +10,7 @@ import {
   useMcpTokenChange,
 } from '@/[fsd]/features/mcp';
 import { useOpenApiCheckConnection } from '@/[fsd]/features/openapi/lib/hooks';
-import useToast from '@/hooks/useToast';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 
 const OpenApiLogInLink = memo(props => {
   const { projectId, openApiConfig, toolkitId } = props;

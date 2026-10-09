@@ -8,6 +8,7 @@ import { Button as MuiButton } from '@mui/material';
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version';
 import { useSkillCreateMutation } from '@/[fsd]/features/skill/api';
 import { toRunSettingsPayload } from '@/[fsd]/features/skill/lib/helpers';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { SearchParams, SkillsTabs } from '@/common/constants';
@@ -15,7 +16,6 @@ import { buildErrorMessage } from '@/common/utils.jsx';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
 import useNavBlocker from '@/hooks/useNavBlocker';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast.jsx';
 import { TabBarItems } from '@/pages/Common/Components';
 import RouteDefinitions from '@/routes';
 

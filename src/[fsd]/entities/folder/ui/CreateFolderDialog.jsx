@@ -2,9 +2,9 @@ import { memo, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Box } from '@mui/material';
 
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Input, Modal } from '@/[fsd]/shared/ui';
 import { INPUT_VARIANTS } from '@/[fsd]/shared/ui/input';
-import useToast from '@/hooks/useToast';
 
 import { useCreateFolder, useUpdateFolder } from '../lib/hooks';
 

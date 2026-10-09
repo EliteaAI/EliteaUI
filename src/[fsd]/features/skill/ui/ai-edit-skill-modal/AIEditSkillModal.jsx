@@ -13,11 +13,11 @@ import { EDIT_STEP_KEYS, SKILL_NAME_MAX_LENGTH } from '@/[fsd]/features/skill/li
 import { SkillAIEditionStepsHelpers } from '@/[fsd]/features/skill/lib/helpers';
 import { useSaveSkill, useSaveSkillVersion } from '@/[fsd]/features/skill/lib/hooks';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Input, Modal } from '@/[fsd]/shared/ui';
 import { MAX_INSTRUCTIONS_LENGTH } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast';
 
 import { SummaryStep } from './steps';
 

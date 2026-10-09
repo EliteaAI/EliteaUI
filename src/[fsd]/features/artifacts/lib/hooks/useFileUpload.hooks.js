@@ -6,10 +6,10 @@ import { useTrackEvent } from '@/GA';
 import { PathValidationHelpers } from '@/[fsd]/features/artifacts/lib/helpers';
 import { FORBIDDEN_FILENAME_HINT } from '@/[fsd]/features/artifacts/lib/helpers/pathValidation.helpers';
 import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { artifactsApi, useArtifactListQuery } from '@/api/artifacts';
 import { formatFileSize, isNonSvgImage } from '@/common/attachmentValidationUtils';
 import { useChatConfig } from '@/hooks/useChatConfig';
-import useToast from '@/hooks/useToast';
 import { setSkippedFiles, uploadFile } from '@/slices/upload';
 
 const { GA_EVENT_NAMES, GA_EVENT_PARAMS } = AnalyticConstants;

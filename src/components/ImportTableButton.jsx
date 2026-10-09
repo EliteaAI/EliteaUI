@@ -5,8 +5,8 @@ import { PropTypes } from 'prop-types';
 
 import { IconButton, useTheme } from '@mui/material';
 
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import ImportIcon from '@/assets/import-icon.svg?react';
-import useToast from '@/hooks/useToast';
 
 import StyledTooltip from '../ComponentsLib/Tooltip';
 

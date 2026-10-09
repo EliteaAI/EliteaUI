@@ -18,9 +18,9 @@ import {
   indexHistoryRowId,
 } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexHistoryRow.helpers';
 import { actions, selectHistoryItem } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { SearchParams } from '@/common/constants';
 import useGetWindowWidth from '@/hooks/useGetWindowWidth';
-import useToast from '@/hooks/useToast';
 
 const SORT_TYPES = {
   DATE: 'date',

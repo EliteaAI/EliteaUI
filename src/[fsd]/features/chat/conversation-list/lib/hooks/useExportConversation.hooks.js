@@ -4,10 +4,10 @@ import {
   buildExportFileName,
   getConversationExportPath,
 } from '@/[fsd]/features/chat/conversation-list/lib/helpers';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { DEV, VITE_DEV_TOKEN, VITE_SERVER_URL } from '@/common/constants';
 import { clearBaseUrlPrefix, downloadBlobFile } from '@/common/utils';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast';
 
 // Browser-managed download streams to disk instead of holding the archive in memory.
 // DEV auth is a bearer header that a plain navigation cannot send, so DEV always uses fetch.

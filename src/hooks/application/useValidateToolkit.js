@@ -3,9 +3,9 @@ import { useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { useValidateToolkitQuery } from '@/api/toolkits';
 import { buildErrorMessage } from '@/common/utils';
-import useToast from '@/hooks/useToast';
 import { actions } from '@/slices/chat';
 
 export default function useValidateToolkit({ projectId, toolkitId, forceSkip } = {}) {

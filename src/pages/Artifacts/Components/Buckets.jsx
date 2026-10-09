@@ -3,12 +3,12 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
 
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { useBucketListQuery, useDeleteBucketMutation, useUpdateBucketPinMutation } from '@/api/artifacts';
 import { isSystemBucket } from '@/common/artifactConstants';
 import { sortBucketsByRecent } from '@/common/bucketSortingUtils';
 import { ViewMode } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
-import useToast from '@/hooks/useToast';
 import RouteDefinitions from '@/routes';
 import { actions } from '@/slices/artifact';
 

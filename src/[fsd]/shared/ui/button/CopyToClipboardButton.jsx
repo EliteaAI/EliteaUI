@@ -3,7 +3,7 @@ import { memo, useCallback } from 'react';
 import { Box, Typography, useTheme } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
-import useToast from '@/hooks/useToast';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 
 import BaseBtn from './BaseBtn';
 

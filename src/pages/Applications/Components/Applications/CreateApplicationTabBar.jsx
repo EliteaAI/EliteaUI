@@ -6,12 +6,12 @@ import { useNavigate } from 'react-router-dom';
 
 import { Button as MuiButton } from '@mui/material';
 
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { buildErrorMessage } from '@/common/utils.jsx';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
 import useCreateApplication from '@/hooks/application/useCreateApplication';
 import useNavBlocker from '@/hooks/useNavBlocker';
-import useToast from '@/hooks/useToast.jsx';
 import { TabBarItems } from '@/pages/Common/Components';
 import useIsPipelineYamlCodeDirty from '@/pages/Pipelines/useIsPipelineYamlCodeDirty';
 import { selectActivePipeline } from '@/slices/pipeline';

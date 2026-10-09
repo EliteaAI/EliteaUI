@@ -12,10 +12,10 @@ import {
   getImportedUUIDMap,
   updateValidationStatus,
 } from '@/[fsd]/entities/import-wizard/lib/helpers';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { buildErrorMessage } from '@/common/utils';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
-import useToast from '@/hooks/useToast.jsx';
 
 const IWModalImportButton = memo(props => {
   const { selectedProject, onSuccess, isDisabled, canImport } = props;

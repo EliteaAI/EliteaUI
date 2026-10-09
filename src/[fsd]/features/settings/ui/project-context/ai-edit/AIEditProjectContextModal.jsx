@@ -8,12 +8,12 @@ import {
   PROJECT_CONTEXT_ACTIVATION_DESCRIPTION_MAX_LEN,
   PROJECT_CONTEXT_MAX_LEN,
 } from '@/[fsd]/features/settings/lib/constants/projectContext.constants';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Input, Modal, Text } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { INPUT_VARIANTS } from '@/[fsd]/shared/ui/input';
 import { buildErrorMessage } from '@/common/utils.jsx';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToast from '@/hooks/useToast.jsx';
 
 const STEPS = {
   INPUT: 'input',
