@@ -171,6 +171,16 @@ describe('project Auto permission and configuration', () => {
       expect(classifierSelect()).toHaveTextContent('Use platform default (Claude Haiku 4.5)');
     });
 
+    it('prefers platform_classifier for the default label, even when the project overrides it', () => {
+      api.readiness = {
+        ready: true,
+        platform_classifier: { name: 'claude-haiku', project_id: 1, display_name: 'Claude Haiku 4.5' },
+        classifier: { name: 'gpt-luna', display_name: 'GPT Luna', source: 'project' },
+      };
+      renderSettings();
+      expect(classifierSelect()).toHaveTextContent('Use platform default (Claude Haiku 4.5)');
+    });
+
     it('saves the classifier together with the current enabled value', async () => {
       api.current = { id: 12, elitea_title: 'auto_routing', data: { enabled: true } };
       renderSettings();

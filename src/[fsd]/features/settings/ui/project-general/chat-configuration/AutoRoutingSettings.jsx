@@ -50,7 +50,9 @@ const AutoRoutingSettings = memo(() => {
   const value = current?.data?.enabled == null ? 'default' : String(current.data.enabled);
   const classifier = current?.data?.classifier ?? null;
   const readiness = models?.auto_routing?.readiness;
-  const platformClassifier = readiness?.classifier?.source === 'platform' ? readiness.classifier : null;
+  const platformClassifier =
+    readiness?.platform_classifier ??
+    (readiness?.classifier?.source === 'platform' ? readiness.classifier : null);
 
   const { classifierOptions, showAllHint } = useMemo(() => {
     const chat = (models?.items || []).filter(isChat);
