@@ -22,6 +22,7 @@ export { default as Breadcrumbs, BreadcrumbsOrTitle } from './breadcrumbs';
 export * as Icon from './icon';
 export { default as Markdown } from './markdown';
 export { default as SoonLabel } from './soon-label';
+export { Toast, ToastComponent, ToastProvider } from './toast';
 export { default as BrandLogo } from './brand-logo';
 export * as Mention from './mention';
 export * as SecretField from './secret-field';
