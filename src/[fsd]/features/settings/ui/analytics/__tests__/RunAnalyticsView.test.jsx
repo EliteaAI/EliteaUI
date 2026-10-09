@@ -32,6 +32,7 @@ vi.mock('@/[fsd]/features/settings/ui/analytics', () => ({
     <div
       data-testid="tab-health"
       data-hide-trend={String(props.hideTrend)}
+      data-failed-calls={JSON.stringify(props.failedCalls ?? null)}
     />
   ),
 }));
@@ -142,5 +143,33 @@ describe('RunAnalyticsView', () => {
     expect(screen.getByTestId('run-analytics-empty')).toHaveTextContent('No run selected.');
     expect(screen.queryByTestId('tab-costs')).not.toBeInTheDocument();
     expect(screen.getByTestId('run-analytics-refresh-button')).toBeDisabled();
+  });
+
+  it('drops the Tools tab when the run has no tool rows and keeps the rest in order', () => {
+    renderView({ showToolsTab: false });
+
+    expect(screen.getAllByRole('tab').map(tab => tab.textContent)).toEqual(['Costs', 'Tokens', 'Health']);
+    fireEvent.click(screen.getByTestId('run-analytics-tab-health'));
+    expect(useProjectAnalyticsQuery).toHaveBeenLastCalledWith(
+      { projectId: 1, evalRunId: 9 },
+      expect.objectContaining({ skip: false }),
+    );
+  });
+
+  it('hands the run failing calls to Health', () => {
+    const failedCalls = [{ key: 'llm-1', eventType: 'llm', name: 'GPT', isError: true }];
+    useProjectAnalyticsQuery.mockReturnValue({
+      data: { health: [{ event_type: 'llm', total: 2, errors: 1 }] },
+      isFetching: false,
+      isError: false,
+    });
+    renderView({ failedCalls });
+
+    fireEvent.click(screen.getByTestId('run-analytics-tab-health'));
+
+    expect(screen.getByTestId('tab-health')).toHaveAttribute(
+      'data-failed-calls',
+      JSON.stringify(failedCalls),
+    );
   });
 });

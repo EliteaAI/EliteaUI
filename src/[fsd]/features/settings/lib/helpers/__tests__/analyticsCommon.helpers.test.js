@@ -5,6 +5,10 @@ import {
   axisTick,
   barChartCursor,
   buildRunScope,
+  collectFailedRunCalls,
+  describeRunModels,
+  describeRunTotals,
+  describeRunVersions,
   fmtCost,
   fmtDuration,
   fmtNum,
@@ -95,6 +99,15 @@ describe('barChartCursor', () => {
 });
 
 describe('buildRunScope', () => {
+  it('adds the root entity to the run query so one participant of a conversation is counted', () => {
+    const rootEntity = { rootEntityType: 'skill', rootEntityId: 174, rootEntityProjectId: 1 };
+
+    expect(buildRunScope(RUN_SCOPE_TYPE.run, '555', rootEntity).queryArgs).toEqual({
+      runId: '555',
+      ...rootEntity,
+    });
+  });
+
   it('scopes an Agent/Pipeline run by runId with run wording', () => {
     const scope = buildRunScope(RUN_SCOPE_TYPE.run, '555');
 
@@ -119,5 +132,56 @@ describe('buildRunScope', () => {
   it('returns null without an id so the page never falls back to project-wide data', () => {
     expect(buildRunScope(RUN_SCOPE_TYPE.evalRun, null)).toBeNull();
     expect(buildRunScope(RUN_SCOPE_TYPE.run, '')).toBeNull();
+  });
+});
+
+describe('run trace helpers', () => {
+  const runDetail = {
+    models: [
+      { model_name: 'gpt-x', display_name: 'GPT X' },
+      { model_name: 'sonnet', display_name: 'Sonnet' },
+    ],
+    llm_calls: [
+      { model_name: 'sonnet', ts: '2026-10-09T10:02:00Z', duration_ms: 50, is_error: true },
+      { model_name: 'gpt-x', ts: '2026-10-09T10:00:00Z', is_error: false },
+    ],
+    tool_calls: [{ tool_name: 'search', ts: '2026-10-09T10:01:00Z', duration_ms: 20, is_error: true }],
+  };
+
+  it('lists every model of the run by display name', () => {
+    expect(describeRunModels(runDetail)).toBe('GPT X, Sonnet');
+    expect(describeRunModels(undefined)).toBe('—');
+  });
+
+  it('names each recorded version and skips ids the entity no longer lists', () => {
+    const versions = [
+      { id: 1, name: 'base' },
+      { id: 2, name: 'v2' },
+    ];
+
+    expect(describeRunVersions([2, 1, 99], versions)).toBe('v2, base');
+    expect(describeRunVersions([99], versions)).toBe('—');
+  });
+
+  it('formats the run totals the way the Costs tab formats them', () => {
+    const totals = describeRunTotals({
+      kpis: { llm_calls: 3, billable_tokens: 1234, total_cost: 0.001012, errors: 1, calls_duration_ms: 3370 },
+    });
+
+    expect(totals).toBe(
+      `Calls: 3 · Tokens: 1,234 · Cost: ${fmtCost(0.001012)} · Errors: 1 · Model time: ${fmtDuration(3370)}`,
+    );
+    expect(totals).toContain('Cost: $0.0011');
+  });
+
+  it('describes no totals before the run trace arrives', () => {
+    expect(describeRunTotals(undefined)).toBeNull();
+  });
+
+  it('collects only the failing llm and tool calls, in time order', () => {
+    expect(collectFailedRunCalls(runDetail).map(call => [call.eventType, call.name])).toEqual([
+      ['tool', 'search'],
+      ['llm', 'Sonnet'],
+    ]);
   });
 });

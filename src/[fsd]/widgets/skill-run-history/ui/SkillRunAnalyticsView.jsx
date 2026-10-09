@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 
 import { RunAnalyticsContainer } from '@/[fsd]/features/settings/ui/analytics';
 import { findSkillParticipant } from '@/[fsd]/features/skill/lib/helpers';
@@ -12,7 +12,19 @@ const readSkillRunVersionId = runDetails => findSkillParticipant(runDetails)?.en
 
 const SkillRunAnalyticsView = memo(props => {
   const { isCatalogSkill = false } = props;
-  const { skill } = useSkillHistoryEntity({ isCatalogSkill });
+  const { skillId, skill, entityProjectId } = useSkillHistoryEntity({ isCatalogSkill });
+
+  const rootEntity = useMemo(
+    () =>
+      skillId
+        ? {
+            rootEntityType: ParticipantEntityTypes.Skill,
+            rootEntityId: Number(skillId),
+            rootEntityProjectId: entityProjectId,
+          }
+        : undefined,
+    [skillId, entityProjectId],
+  );
 
   return (
     <RunAnalyticsContainer
@@ -21,6 +33,7 @@ const SkillRunAnalyticsView = memo(props => {
       entityLabel="Skill"
       breadcrumbs={<Breadcrumbs entityName={skill?.name} />}
       readRunVersionId={readSkillRunVersionId}
+      rootEntity={rootEntity}
     />
   );
 });

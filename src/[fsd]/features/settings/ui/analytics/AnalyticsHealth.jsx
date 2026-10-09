@@ -4,12 +4,12 @@ import { Area, AreaChart, Tooltip as RechartsTooltip, ResponsiveContainer, XAxis
 
 import { Box, Typography, useTheme } from '@mui/material';
 
-import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
+import { AnalyticCommonHelpers, AnalyticsExportHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { ChartTooltip } from '@/[fsd]/features/settings/ui/analytics';
 import { EVENT_TYPE_COLORS } from '@/[fsd]/shared/config/theme';
 
 const AnalyticsHealth = memo(props => {
-  const { health = [], daily_activity = [], hideTrend = false } = props;
+  const { health = [], daily_activity = [], hideTrend = false, failedCalls = [] } = props;
 
   const styles = analyticsHealthStyles();
   const { palette } = useTheme();
@@ -162,6 +162,45 @@ const AnalyticsHealth = memo(props => {
           ))}
         </Box>
       </Box>
+      {failedCalls.length > 0 && (
+        <Box
+          sx={styles.chartCard}
+          data-testid="run-analytics-failed-calls"
+        >
+          <Typography
+            variant="labelMedium"
+            sx={styles.chartTitle}
+          >
+            Failed Calls
+          </Typography>
+          <Box sx={styles.tableWrapper}>
+            <Box sx={styles.tableHeader}>
+              <Typography sx={[styles.tableCell, { flex: 2 }]}>Time</Typography>
+              <Typography sx={[styles.tableCell, { flex: 1 }]}>Event Type</Typography>
+              <Typography sx={[styles.tableCell, { flex: 2 }]}>Model / Tool</Typography>
+              <Typography sx={[styles.tableCell, { flex: 1 }]}>Latency</Typography>
+            </Box>
+            {failedCalls.map(call => (
+              <Box
+                key={call.key}
+                sx={styles.tableRow}
+                data-testid="run-analytics-failed-call"
+              >
+                <Typography sx={[styles.tableCellValue, { flex: 2 }]}>
+                  {AnalyticsExportHelpers.fmtRunDateTime(call.ts)}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, { flex: 1 }]}>{call.eventType}</Typography>
+                <Typography sx={[styles.tableCellValue, { flex: 2, color: palette.status.rejected }]}>
+                  {call.name || '—'}
+                </Typography>
+                <Typography sx={[styles.tableCellValue, { flex: 1 }]}>
+                  {AnalyticCommonHelpers.fmtDuration(call.durationMs)}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        </Box>
+      )}
     </Box>
   );
 });

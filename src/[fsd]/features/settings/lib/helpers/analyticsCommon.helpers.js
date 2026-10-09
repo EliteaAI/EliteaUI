@@ -87,10 +87,61 @@ const RUN_SCOPES = {
  * payload (`run_id` for Agent/Pipeline runs, `eval_run_id` for evaluation runs) and the wording that goes
  * with it. Null when there is no id, so the page can show its empty state instead of a project-wide view.
  */
-export const buildRunScope = (type, id) => {
+export const buildRunScope = (type, id, rootEntity) => {
   if (id == null || id === '') return null;
 
   const { queryKey, ...rest } = RUN_SCOPES[type];
 
-  return { queryArgs: { [queryKey]: id }, ...rest };
+  return { queryArgs: { [queryKey]: id, ...rootEntity }, ...rest };
 };
+
+const NO_RUN_VALUE = '—';
+
+const modelDisplayName = (runDetail, modelName) =>
+  runDetail?.models?.find(model => model.model_name === modelName)?.display_name ?? modelName;
+
+export const describeRunModels = runDetail =>
+  runDetail?.models?.length ? runDetail.models.map(model => model.display_name).join(', ') : NO_RUN_VALUE;
+
+export const describeRunVersions = (versionIds, versions) => {
+  const names = (versionIds ?? [])
+    .map(versionId => versions?.find(version => version.id === versionId)?.name)
+    .filter(Boolean);
+
+  return names.length ? names.join(', ') : NO_RUN_VALUE;
+};
+
+export const describeRunTotals = runDetail => {
+  const kpis = runDetail?.kpis;
+  if (!kpis) return null;
+
+  return [
+    `Calls: ${fmtNum(kpis.llm_calls ?? 0)}`,
+    `Tokens: ${(kpis.billable_tokens ?? 0).toLocaleString()}`,
+    `Cost: ${fmtCost(kpis.total_cost)}`,
+    `Errors: ${fmtNum(kpis.errors ?? 0)}`,
+    `Model time: ${fmtDuration(kpis.calls_duration_ms)}`,
+  ].join(' · ');
+};
+
+export const collectFailedRunCalls = runDetail =>
+  [
+    ...(runDetail?.llm_calls ?? []).map((call, index) => ({
+      key: `llm-${index}`,
+      ts: call.ts,
+      eventType: 'llm',
+      name: modelDisplayName(runDetail, call.model_name),
+      durationMs: call.duration_ms,
+      isError: call.is_error,
+    })),
+    ...(runDetail?.tool_calls ?? []).map((call, index) => ({
+      key: `tool-${index}`,
+      ts: call.ts,
+      eventType: 'tool',
+      name: call.tool_name,
+      durationMs: call.duration_ms,
+      isError: call.is_error,
+    })),
+  ]
+    .filter(call => call.isError)
+    .sort((left, right) => (left.ts ?? '').localeCompare(right.ts ?? ''));
