@@ -336,7 +336,11 @@ export const downloadFile = ({ url, filename, handleError = () => {} }) => {
     method: 'GET',
     headers,
   })
-    .then(response => response.blob())
+    .then(response => {
+      // Never save an error response body (e.g. `{"error": "..."}`) as the downloaded file
+      if (!response.ok) throw new Error(`Download failed with status ${response.status}`);
+      return response.blob();
+    })
     .then(blob => {
       // Create a new URL for the blob object
       const blobUrl = window.URL.createObjectURL(blob);
