@@ -7,7 +7,7 @@ import { DataGrid, GridRowEditStopReasons, gridClasses, useGridApiRef } from '@m
 
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { FlowEditorSettings } from '@/[fsd]/features/pipelines/flow-editor/ui';
-import { useEliteATheme } from '@/[fsd]/shared/lib/hooks';
+import { useDataGridTheme } from '@/[fsd]/shared/lib/hooks';
 import { Switch } from '@/[fsd]/shared/ui';
 import AlertDialog from '@/components/AlertDialog.jsx';
 import DeleteIcon from '@/components/Icons/DeleteIcon.jsx';
@@ -23,7 +23,7 @@ const StateVariableTable = memo(props => {
   const { toastError } = useToast();
 
   const theme = useTheme();
-  const { localGridTheme } = useEliteATheme();
+  const dataGridTheme = useDataGridTheme();
   const apiRef = useGridApiRef();
 
   const handleRowEditStop = useCallback(
@@ -317,7 +317,7 @@ const StateVariableTable = memo(props => {
       className="nopan nodrag"
       sx={styles.root}
     >
-      <ThemeProvider theme={localGridTheme}>
+      <ThemeProvider theme={dataGridTheme}>
         <DataGrid
           apiRef={apiRef}
           disableColumnSorting

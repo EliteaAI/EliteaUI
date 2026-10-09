@@ -657,18 +657,37 @@ describe('LlmModelForm', () => {
       expect(readSettings()).not.toHaveProperty('api_protocol');
     });
 
-    it('rejects reasoning with the Azure OpenAI protocol on the Reasoning field', async () => {
+    // #6919: azure + reasoning is only warned about for recognized Claude/GPT models, never blocked
+    it('warns, without blocking, about reasoning with Azure OpenAI for a recognized Claude model', async () => {
       const user = userEvent.setup();
       renderForm(EXISTING_DIAL_MODEL, { showValidation: true });
 
       await user.click(within(screen.getByTestId('llm-model-field-supports_reasoning')).getByRole('switch'));
 
-      expect(screen.getByTestId('llm-model-error-supports_reasoning')).toHaveTextContent(
-        "Reasoning isn't supported with the Azure OpenAI protocol. Choose OpenAI or Anthropic, or turn Reasoning off.",
+      expect(screen.getByTestId('llm-model-warning-supports_reasoning')).toHaveTextContent(
+        'Reasoning may not work for this model with the Azure OpenAI protocol.',
       );
+      expect(screen.queryByTestId('llm-model-error-supports_reasoning')).not.toBeInTheDocument();
+      expect(lastReportedErrors()).toEqual({});
 
-      await pickOption(user, 'api_protocol', 'OpenAI');
+      await pickOption(user, 'api_protocol', 'Anthropic');
 
+      expect(screen.queryByTestId('llm-model-warning-supports_reasoning')).not.toBeInTheDocument();
+    });
+
+    it('shows no reasoning warning with Azure OpenAI for a Gemini model', async () => {
+      const user = userEvent.setup();
+      renderForm(
+        {
+          ...EXISTING_DIAL_MODEL,
+          settings: { ...EXISTING_DIAL_MODEL.settings, name: 'gemini-3.8-flash', supports_reasoning: true },
+        },
+        { showValidation: true },
+      );
+      await pickOption(user, 'api_protocol', 'Azure OpenAI');
+
+      expect(readSettings().supports_reasoning).toBe(true);
+      expect(screen.queryByTestId('llm-model-warning-supports_reasoning')).not.toBeInTheDocument();
       expect(screen.queryByTestId('llm-model-error-supports_reasoning')).not.toBeInTheDocument();
       expect(lastReportedErrors()).toEqual({});
     });
@@ -938,16 +957,14 @@ describe('LlmModelForm', () => {
       expect(testResult()).not.toBeInTheDocument();
     });
 
-    it('fails DIAL + Azure OpenAI + Reasoning at once with the Save message and sends nothing', async () => {
+    it('sends DIAL + Azure OpenAI + Reasoning to the gateway instead of failing it locally', async () => {
       const user = userEvent.setup();
+      answerWith(() => Promise.resolve({ success: true, latency_ms: 10 }));
       renderForm(STORED_DIAL_REASONING_MODEL);
 
       await user.click(testButton());
 
-      expect(testConnection).not.toHaveBeenCalled();
-      expect(testResult()).toHaveTextContent(
-        "Reasoning isn't supported with the Azure OpenAI protocol. Choose OpenAI or Anthropic, or turn Reasoning off.",
-      );
+      await waitFor(() => expect(testConnection).toHaveBeenCalledTimes(1));
     });
 
     it('clears the reasoning rejection once Reasoning is turned off', async () => {
@@ -965,26 +982,6 @@ describe('LlmModelForm', () => {
       expect(readSettings().supports_reasoning).toBe(false);
 
       expect(testResult()).not.toBeInTheDocument();
-    });
-
-    it('shows the Save message when the server rejects the reasoning protocol', async () => {
-      const user = userEvent.setup();
-      answerWith(() =>
-        Promise.reject({
-          status: 400,
-          data: {
-            success: false,
-            message:
-              "Value error, api_protocol='azure' does not support reasoning; use 'anthropic' or 'openai'",
-          },
-        }),
-      );
-      renderForm(OPENAI_MODEL);
-      await user.click(testButton());
-
-      expect(await screen.findByTestId('llm-model-connection-test-result')).toHaveTextContent(
-        "Reasoning isn't supported with the Azure OpenAI protocol. Choose OpenAI or Anthropic, or turn Reasoning off.",
-      );
     });
 
     it('tests a stored DIAL model without a protocol through Azure OpenAI', async () => {

@@ -138,25 +138,5 @@ describe('CredentialsTabBar save button', () => {
       await waitFor(() => expect(setValidationErrorMessages).toHaveBeenCalledWith({ elitea_title: message }));
       expect(setApiError).toHaveBeenCalledWith('');
     });
-
-    it('puts the DIAL reasoning rejection on the Reasoning field', async () => {
-      create.mockResolvedValue({
-        error: {
-          status: 400,
-          data: { field: 'data', error: "Value error, api_protocol='azure' does not support reasoning" },
-        },
-      });
-      const user = userEvent.setup();
-      renderTabBar({ type: 'llm_model' });
-
-      await user.click(saveButton());
-
-      await waitFor(() =>
-        expect(setValidationErrorMessages).toHaveBeenCalledWith({
-          supports_reasoning:
-            "Reasoning isn't supported with the Azure OpenAI protocol. Choose OpenAI or Anthropic, or turn Reasoning off.",
-        }),
-      );
-    });
   });
 });

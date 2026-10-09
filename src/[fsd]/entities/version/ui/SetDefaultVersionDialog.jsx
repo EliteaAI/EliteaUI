@@ -8,9 +8,9 @@ import AttentionIcon from '@/components/Icons/AttentionIcon';
 
 const entityMessages = {
   agent:
-    'will be automatically used whenever this agent is added to new or existing conversations, other agents or pipelines as a toolkit, or as an MCP toolkit.',
+    'will be automatically used whenever this agent is added to new or existing chats, other agents or pipelines as a toolkit, or as an MCP toolkit.',
   skill:
-    'will be automatically used whenever this skill is added to new or existing agents, pipelines, or conversations.',
+    'will be automatically used whenever this skill is added to new or existing agents, pipelines, or chats.',
 };
 
 const SetDefaultVersionDialog = memo(props => {

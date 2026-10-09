@@ -8,9 +8,10 @@ import React, {
   useState,
 } from 'react';
 
-import { Box, IconButton, Link, TextField, Typography, useTheme } from '@mui/material';
+import { Box, IconButton, Link, TextField, ThemeProvider, Typography, useTheme } from '@mui/material';
 import { DataGrid, GRID_CHECKBOX_SELECTION_COL_DEF, gridClasses, useGridApiContext } from '@mui/x-data-grid';
 
+import { useDataGridTheme } from '@/[fsd]/shared/lib/hooks';
 import { Input } from '@/[fsd]/shared/ui';
 import Markdown from '@/[fsd]/shared/ui/markdown';
 import useDownloadTable, { downloadTableOptions } from '@/hooks/useDownloadTable';
@@ -314,6 +315,7 @@ const MarkdownTableEditor = forwardRef(
     ref,
   ) => {
     const theme = useTheme();
+    const dataGridTheme = useDataGridTheme();
     const styles = useMemo(() => componentStyles(theme), [theme]);
     const [debounceTimeout, setDebounceTimeout] = useState(null);
     const [openWarningAlert, setOpenWarningAlert] = useState(false);
@@ -646,72 +648,79 @@ const MarkdownTableEditor = forwardRef(
           data-testid="chat-table-canvas-grid"
           sx={styles.tableContainer}
         >
-          <DataGrid
-            rows={rows}
-            columns={[
-              {
-                ...GRID_CHECKBOX_SELECTION_COL_DEF,
-                hideable: false,
-              },
-              ...[...columns]
-                .filter(col => col)
-                .map(col => ({
-                  ...col,
-                  sortable: true,
-                  hideable: visibleColumnsCount === 1 && columnVisibilityModel[col.field] ? false : undefined,
-                  // width: 300,
-                  minWidth: 160,
-                  flex: 1,
-                  renderCell: params => <ExpandableCell {...params} />,
-                  renderEditCell: params => (
-                    <CellEditor
-                      {...params}
-                      rows={rows}
-                      readOnly={readOnly}
-                    />
-                  ),
-                  renderHeader: params => (
-                    <ColumnHeader
-                      handleHeaderChangeRef={handleHeaderChangeRef}
-                      rows={rows}
-                      setRows={setRows}
-                      setSortModel={setSortModel}
-                      sortModel={sortModel}
-                      readOnly={readOnly}
-                      {...params}
-                    />
-                  ),
-                  headerClassName: selectedColumns.includes(col.field)
-                    ? 'MuiDataGrid-columnHeader--selected'
-                    : undefined,
-                })),
-            ]}
-            sx={styles.dataGrid}
-            getRowHeight={() => 'auto'}
-            getEstimatedRowHeight={() => 200}
-            columnThreshold={0}
-            processRowUpdate={handleProcessRowUpdate}
-            experimentalFeatures={{ newEditingApi: true }}
-            showCellVerticalBorder
-            showColumnVerticalBorder
-            // disableColumnResize
-            pageSizeOptions={[5, 10, 50, 100]}
-            // paginationMode='server'
-            paginationModel={paginationModel}
-            onPaginationModelChange={setPaginationModel}
-            onCellClick={onCellClick}
-            onColumnHeaderClick={onColumnHeaderClick}
-            getCellClassName={getCellClassName}
-            getColumnHeaderClassName={getColumnHeaderClassName}
-            checkboxSelection={!readOnly && !!rows.length}
-            disableRowSelectionOnClick={!readOnly}
-            rowSelectionModel={rowSelectionModel}
-            onRowSelectionModelChange={onRowSelectionModelChange}
-            disableColumnSorting
-            columnVisibilityModel={columnVisibilityModel}
-            onColumnVisibilityModelChange={onColumnVisibilityModelChange}
-            onCellEditStart={handleCellEditStart} // Customize keyboard behavior
-          />
+          <ThemeProvider theme={dataGridTheme}>
+            <DataGrid
+              rows={rows}
+              columns={[
+                {
+                  ...GRID_CHECKBOX_SELECTION_COL_DEF,
+                  hideable: false,
+                },
+                ...[...columns]
+                  .filter(col => col)
+                  .map(col => ({
+                    ...col,
+                    sortable: true,
+                    hideable:
+                      visibleColumnsCount === 1 && columnVisibilityModel[col.field] ? false : undefined,
+                    // width: 300,
+                    minWidth: 160,
+                    flex: 1,
+                    renderCell: params => <ExpandableCell {...params} />,
+                    // The cell editor's expand modal reads nested `background.default.*` tokens, so give it the app
+                    // theme back instead of the flattened grid theme.
+                    renderEditCell: params => (
+                      <ThemeProvider theme={theme}>
+                        <CellEditor
+                          {...params}
+                          rows={rows}
+                          readOnly={readOnly}
+                        />
+                      </ThemeProvider>
+                    ),
+                    renderHeader: params => (
+                      <ColumnHeader
+                        handleHeaderChangeRef={handleHeaderChangeRef}
+                        rows={rows}
+                        setRows={setRows}
+                        setSortModel={setSortModel}
+                        sortModel={sortModel}
+                        readOnly={readOnly}
+                        {...params}
+                      />
+                    ),
+                    headerClassName: selectedColumns.includes(col.field)
+                      ? 'MuiDataGrid-columnHeader--selected'
+                      : undefined,
+                  })),
+              ]}
+              sx={styles.dataGrid}
+              getRowHeight={() => 'auto'}
+              getEstimatedRowHeight={() => 200}
+              columnThreshold={0}
+              processRowUpdate={handleProcessRowUpdate}
+              experimentalFeatures={{ newEditingApi: true }}
+              showCellVerticalBorder
+              showColumnVerticalBorder
+              // disableColumnResize
+              pageSizeOptions={[5, 10, 50, 100]}
+              // paginationMode='server'
+              paginationModel={paginationModel}
+              onPaginationModelChange={setPaginationModel}
+              onCellClick={onCellClick}
+              onColumnHeaderClick={onColumnHeaderClick}
+              getCellClassName={getCellClassName}
+              getColumnHeaderClassName={getColumnHeaderClassName}
+              checkboxSelection={!readOnly && !!rows.length}
+              disableRowSelectionOnClick={!readOnly}
+              rowSelectionModel={rowSelectionModel}
+              onRowSelectionModelChange={onRowSelectionModelChange}
+              disableColumnSorting
+              columnVisibilityModel={columnVisibilityModel}
+              onColumnVisibilityModelChange={onColumnVisibilityModelChange}
+              onCellEditStart={handleCellEditStart} // Customize keyboard behavior
+            />
+          </ThemeProvider>
           <Box sx={styles.downloadButtonContainer}>
             <SplitButton
               testId="chat-table-download-button"

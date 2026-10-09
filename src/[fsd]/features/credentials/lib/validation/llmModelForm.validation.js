@@ -1,4 +1,3 @@
-import { API_PROTOCOLS } from '../constants/apiProtocol.constants.js';
 import {
   LLM_MODEL_FIELDS as FIELDS,
   LLM_MODEL_DISPLAY_NAME_MAX_LENGTH,
@@ -68,16 +67,12 @@ export const validateLlmModelSettings = ({
     (!contextWindowError && settings.max_output_tokens > settings.context_window
       ? MESSAGES.maxOutputTokensAboveContextWindow
       : null);
-  const isAzureProtocolWithReasoning =
-    isApiProtocolShown && apiProtocol === API_PROTOCOLS.azure && Boolean(settings.supports_reasoning);
-
   const errors = {
     [FIELDS.displayName]: validateDisplayName(settings.label),
     [FIELDS.id]: isEditing ? null : validateId(settings.elitea_title, takenIds),
     [FIELDS.modelName]: isBlank(settings.name) ? MESSAGES.modelNameRequired : null,
     [FIELDS.contextWindow]: contextWindowError,
     [FIELDS.maxOutputTokens]: maxOutputTokensError,
-    [FIELDS.reasoning]: isAzureProtocolWithReasoning ? MESSAGES.reasoningNotSupportedByProtocol : null,
     [FIELDS.modelTier]: hasConflictingLlmModelTiers(settings) ? MESSAGES.modelTierConflict : null,
     [FIELDS.credentials]: settings.ai_credentials?.elitea_title ? null : MESSAGES.credentialsRequired,
     [FIELDS.credentialsCheck]: isCredentialTypePending ? MESSAGES.credentialsTypePending : null,

@@ -16,6 +16,7 @@ import {
 
 import { AgentDetails } from '@/[fsd]/features/agent';
 import AgentConversationStarters from '@/[fsd]/features/agent-hub/ui/AgentConversationStarters';
+import AgentDescriptionText from '@/[fsd]/features/agent-hub/ui/AgentDescriptionText';
 import AgentHubLike from '@/[fsd]/features/agent-hub/ui/AgentHubLike';
 import AgentHubModalMenu from '@/[fsd]/features/agent-hub/ui/AgentHubModalMenu';
 import AgentWelcomeMessage from '@/[fsd]/features/agent-hub/ui/AgentWelcomeMessage';
@@ -59,7 +60,7 @@ const AgentModal = memo(props => {
   const [isSmallHeight, setIsSmallHeight] = useState(false);
   const name = useMemo(() => agent?.name || agentDetails?.name || 'Untitled Agent', [agent, agentDetails]);
   const description = useMemo(
-    () => agent?.description || agentDetails?.description || 'No description available.',
+    () => agentDetails?.description || agent?.description || 'No description available.',
     [agent, agentDetails],
   );
   const icon_meta = useMemo(
@@ -240,13 +241,10 @@ const AgentModal = memo(props => {
               >
                 {name}
               </Typography>
-              <Typography
-                variant="bodySmall2"
-                sx={styles.description(isSmallHeight)}
-                data-testid="catalog-agent-modal-description"
-              >
-                {description}
-              </Typography>
+              <AgentDescriptionText
+                description={description}
+                isSmallHeight={isSmallHeight}
+              />
               <SharedButton.BaseBtn
                 variant={BUTTON_VARIANTS.auxiliary}
                 onClick={onShowContext}
@@ -365,25 +363,6 @@ const agentModalStyles = () => ({
     width: '2.5rem',
     height: '2.5rem',
   },
-  description:
-    isSmallHeight =>
-    ({ palette }) => ({
-      textAlign: 'center',
-      color: palette.text.metrics,
-      ...(isSmallHeight
-        ? {
-            width: '100%',
-            lineHeight: '1.25rem',
-          }
-        : {
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            lineHeight: '1.25rem',
-          }),
-    }),
   dialogActions: {
     alignItems: 'center',
     justifyContent: 'center',
