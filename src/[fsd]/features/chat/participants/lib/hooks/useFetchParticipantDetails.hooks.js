@@ -1,5 +1,7 @@
 import { useCallback, useMemo } from 'react';
 
+import { useLazyGetPublicSkillDetailsQuery } from '@/[fsd]/features/skill-hub/api';
+import { useLazySkillDetailsQuery } from '@/[fsd]/features/skill/api';
 import {
   useLazyApplicationDetailsQuery,
   useLazyGetApplicationVersionDetailQuery,
@@ -15,13 +17,24 @@ export const useFetchParticipantDetails = () => {
   const [getApplicationVersion, { isFetching: isFetchingApplicationVersion }] =
     useLazyGetApplicationVersionDetailQuery();
   const [getToolkitDetail, { isFetching: isFetchingToolkit }] = useLazyToolkitsDetailsQuery();
+  const [getSkillDetail, { isFetching: isFetchingSkill }] = useLazySkillDetailsQuery();
+  const [getPublicSkillDetail, { isFetching: isFetchingPublicSkill }] = useLazyGetPublicSkillDetailsQuery();
   const isFetchingParticipant = useMemo(
     () =>
       isFetchingApplication ||
       isFetchingPublicApplication ||
       isFetchingApplicationVersion ||
+      isFetchingToolkit ||
+      isFetchingSkill ||
+      isFetchingPublicSkill,
+    [
+      isFetchingApplication,
+      isFetchingApplicationVersion,
+      isFetchingPublicApplication,
       isFetchingToolkit,
-    [isFetchingApplication, isFetchingApplicationVersion, isFetchingPublicApplication, isFetchingToolkit],
+      isFetchingSkill,
+      isFetchingPublicSkill,
+    ],
   );
 
   const fetchOriginalDetails = useCallback(
@@ -39,12 +52,25 @@ export const useFetchParticipantDetails = () => {
           const result = await getToolkitDetail({ projectId, toolkitId: id }, queryOptions);
           return result?.data || {};
         }
+        case ChatParticipantType.Skills: {
+          const result =
+            Number(projectId) === PUBLIC_PROJECT_ID
+              ? await getPublicSkillDetail({ skillId: id }, queryOptions)
+              : await getSkillDetail({ projectId, skillId: id }, queryOptions);
+          return result?.data || {};
+        }
         default:
           break;
       }
       return {};
     },
-    [getApplicationDetail, getPublicApplicationDetail, getToolkitDetail],
+    [
+      getApplicationDetail,
+      getPublicApplicationDetail,
+      getToolkitDetail,
+      getSkillDetail,
+      getPublicSkillDetail,
+    ],
   );
 
   const fetchOriginalVersionDetails = useCallback(
@@ -63,12 +89,19 @@ export const useFetchParticipantDetails = () => {
           const result = await getApplicationVersion({ projectId, applicationId: id, versionId });
           return result?.data || {};
         }
+        case ChatParticipantType.Skills: {
+          const result =
+            Number(projectId) === PUBLIC_PROJECT_ID
+              ? await getPublicSkillDetail({ skillId: id, versionName })
+              : await getSkillDetail({ projectId, skillId: id, versionId });
+          return result?.data?.version_details || {};
+        }
         default:
           break;
       }
       return {};
     },
-    [getApplicationVersion, getPublicApplicationDetail],
+    [getApplicationVersion, getPublicApplicationDetail, getSkillDetail, getPublicSkillDetail],
   );
 
   return {

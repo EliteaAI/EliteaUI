@@ -4,15 +4,9 @@ import { useFormikContext } from 'formik';
 
 import { Box, Typography, useTheme } from '@mui/material';
 
-import { isSkillVersionLocked } from '@/[fsd]/features/skill/lib/helpers';
+import { findSkillSavedModel, isSkillVersionLocked } from '@/[fsd]/features/skill/lib/helpers';
 import { AccordionConstants, AutoRoutingConstants, LLMSettingsConstants } from '@/[fsd]/shared/lib/constants';
-import {
-  autoModel,
-  isAutoSelection,
-  modelsWithAuto,
-  resetLLMSettingsForModel,
-  selectionFields,
-} from '@/[fsd]/shared/lib/utils';
+import { modelsWithAuto, resetLLMSettingsForModel, selectionFields } from '@/[fsd]/shared/lib/utils';
 import { Button, Checkbox, Label } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
@@ -25,16 +19,6 @@ const { MODEL_SURFACES } = AutoRoutingConstants;
 
 const RUN_SETTINGS_FIELD = 'version_details.run_settings';
 const PROJECT_DEFAULT_LABEL = 'Project default';
-
-const findSavedModel = (models, llmSettings) => {
-  if (isAutoSelection(llmSettings)) return autoModel(llmSettings.selection.profile_ref);
-  const name = llmSettings?.model_name;
-  if (!name) return null;
-  return (
-    models.find(model => model.name === name && model.project_id === llmSettings.model_project_id) ||
-    models.find(model => model.name === name) || { name, project_id: llmSettings.model_project_id }
-  );
-};
 
 const SkillRunSettings = memo(props => {
   const { accordionStyle, disabled = false } = props;
@@ -55,7 +39,7 @@ const SkillRunSettings = memo(props => {
     () => modelsWithAuto(modelsData.items || [], modelsData.auto_routing, MODEL_SURFACES.agent),
     [modelsData],
   );
-  const selectedModel = useMemo(() => findSavedModel(modelList, llmSettings), [modelList, llmSettings]);
+  const selectedModel = useMemo(() => findSkillSavedModel(modelList, llmSettings), [modelList, llmSettings]);
 
   const updateRunSettings = useCallback(
     patch => setFieldValue(RUN_SETTINGS_FIELD, { ...runSettings, ...patch }),

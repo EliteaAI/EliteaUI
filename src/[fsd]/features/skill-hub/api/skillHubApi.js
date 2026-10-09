@@ -1,6 +1,7 @@
 import { RtkTagsConstants } from '@/[fsd]/shared/lib/constants';
 import { eliteaApi } from '@/api/eliteaApi.js';
 import { PAGE_SIZE, PUBLIC_PROJECT_ID } from '@/common/constants';
+import { removeDuplicateObjects } from '@/common/utils.jsx';
 
 const { TAG_TYPE_PUBLIC_SKILLS, TAG_TYPE_PUBLIC_SKILL_DETAILS } = RtkTagsConstants;
 const TAG_TYPE_AGENTS_WITH_SKILL = 'TAG_TYPE_AGENTS_WITH_SKILL';
@@ -35,6 +36,43 @@ const skillHubApi = eliteaApi
           total: response?.total ?? (response?.rows?.length || 0),
           rows: response?.rows ?? [],
         }),
+      }),
+      pagedPublicSkills: build.query({
+        query: ({ page = 0, params, pageSize = PAGE_SIZE }) => ({
+          url: `${apiSlicePath}/public_skills/${mode}/`,
+          params: {
+            ...params,
+            limit: pageSize,
+            offset: page * pageSize,
+          },
+        }),
+        providesTags: [TAG_TYPE_PUBLIC_SKILLS],
+        transformResponse: (response, meta, args) => ({
+          total: response?.total ?? 0,
+          rows: response?.rows ?? [],
+          isLoadMore: args.page > 0,
+        }),
+        serializeQueryArgs: ({ endpointName, queryArgs }) => {
+          const sortedObject = {};
+          Object.keys(queryArgs)
+            .filter(prop => prop !== 'page')
+            .sort()
+            .forEach(prop => {
+              sortedObject[prop] = queryArgs[prop];
+            });
+          return endpointName + JSON.stringify(sortedObject);
+        },
+        merge: (currentCache, newItems) => {
+          if (newItems.isLoadMore) {
+            currentCache.rows = removeDuplicateObjects([...currentCache.rows, ...newItems.rows]);
+          } else {
+            currentCache.rows = newItems.rows;
+            currentCache.total = newItems.total;
+          }
+        },
+        forceRefetch({ currentArg, previousArg }) {
+          return currentArg !== previousArg;
+        },
       }),
       getPublicSkillDetails: build.query({
         query: ({ skillId, versionName }) => {
@@ -98,7 +136,9 @@ const skillHubApi = eliteaApi
 
 export const {
   useLazyPublicSkillsListQuery,
+  usePagedPublicSkillsQuery,
   useGetPublicSkillDetailsQuery,
+  useLazyGetPublicSkillDetailsQuery,
   useLikeSkillMutation,
   useUnlikeSkillMutation,
   useAgentsWithSkillQuery,

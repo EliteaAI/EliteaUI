@@ -79,7 +79,13 @@ export const useAddNewParticipants = props => {
           let updatedParticipants = result.data;
           let attachmentParticipantId = null;
 
-          if (participantsToAdd.some(p => p.entity_name === ChatParticipantType.Applications)) {
+          if (
+            participantsToAdd.some(
+              p =>
+                p.entity_name === ChatParticipantType.Applications ||
+                p.entity_name === ChatParticipantType.Skills,
+            )
+          ) {
             const conversationId = newConversation?.id || activeConversation.id;
             const updatedConversationResult = await getConversationDetail({
               projectId,

@@ -16,11 +16,13 @@ import {
 } from '@mui/material';
 
 import { useApplicationSubmenu } from '@/[fsd]/features/chat/lib/hooks';
+import { ParticipantConstants } from '@/[fsd]/features/chat/participants/lib/constants';
 import { useAvailableInternalTools } from '@/[fsd]/features/toolkits';
 import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
 import { Switch, Text } from '@/[fsd]/shared/ui';
 import FlowIcon from '@/assets/flow-icon.svg?react';
 import MCPIcon from '@/assets/mcp-icon.svg?react';
+import SkillIcon from '@/assets/skill-icon.svg?react';
 import ToolIcon from '@/assets/tool-icon.svg?react';
 import ValueIcon from '@/assets/value-icon.svg?react';
 import ApplicationsIcon from '@/components/Icons/ApplicationsIcon.jsx';
@@ -36,6 +38,7 @@ const SUBMENU_KEYS = {
   INTERNAL_TOOLS: 'internalTools',
   AGENTS: 'agents',
   PIPELINES: 'pipelines',
+  SKILLS: 'skills',
   TOOLKITS: 'toolkits',
   MCPS: 'mcps',
 };
@@ -44,6 +47,7 @@ const EXPANDABLE_ITEMS = [
   { key: SUBMENU_KEYS.INTERNAL_TOOLS, label: 'Modules', Icon: ValueIcon, testId: 'internal-tools-menuitem' },
   { key: SUBMENU_KEYS.AGENTS, label: 'Agents', Icon: ApplicationsIcon, testId: 'agents-menuitem' },
   { key: SUBMENU_KEYS.PIPELINES, label: 'Pipelines', Icon: FlowIcon, testId: 'pipelines-menuitem' },
+  { key: SUBMENU_KEYS.SKILLS, label: 'Skills', Icon: SkillIcon, testId: 'skills-menuitem' },
   { key: SUBMENU_KEYS.TOOLKITS, label: 'Toolkits', Icon: ToolIcon, testId: 'toolkits-menuitem' },
   { key: SUBMENU_KEYS.MCPS, label: 'MCPs', Icon: MCPIcon, testId: 'mcps-menuitem' },
 ];
@@ -51,6 +55,7 @@ const EXPANDABLE_ITEMS = [
 const SEARCHABLE_KEYS = [
   SUBMENU_KEYS.AGENTS,
   SUBMENU_KEYS.PIPELINES,
+  SUBMENU_KEYS.SKILLS,
   SUBMENU_KEYS.TOOLKITS,
   SUBMENU_KEYS.MCPS,
 ];
@@ -61,6 +66,7 @@ const PAPER_STYLE_MAP = {
   [SUBMENU_KEYS.MCPS]: 'toggleSubmenuPaper',
   [SUBMENU_KEYS.AGENTS]: 'entitySubmenuPaper',
   [SUBMENU_KEYS.PIPELINES]: 'entitySubmenuPaper',
+  [SUBMENU_KEYS.SKILLS]: 'entitySubmenuPaper',
 };
 
 const PlusChatButton = memo(props => {
@@ -112,7 +118,7 @@ const PlusChatButton = memo(props => {
     setHoveredAnchorEl(null);
   }, []);
 
-  const { agents, pipelines, toolkits, mcps } = useApplicationSubmenu({
+  const { agents, pipelines, skills, toolkits, mcps } = useApplicationSubmenu({
     participants,
     onSelectParticipant,
     onDeleteParticipant,
@@ -124,10 +130,11 @@ const PlusChatButton = memo(props => {
     () => ({
       [SUBMENU_KEYS.AGENTS]: agents,
       [SUBMENU_KEYS.PIPELINES]: pipelines,
+      [SUBMENU_KEYS.SKILLS]: skills,
       [SUBMENU_KEYS.TOOLKITS]: toolkits,
       ...(isMcpVisible && { [SUBMENU_KEYS.MCPS]: mcps }),
     }),
-    [agents, pipelines, toolkits, mcps, isMcpVisible],
+    [agents, pipelines, skills, toolkits, mcps, isMcpVisible],
   );
 
   const handleClickAway = useCallback(
@@ -219,6 +226,12 @@ const PlusChatButton = memo(props => {
         onCreateNew: handleCreatePipeline,
         emptyMessage: 'No pipelines available',
         noResultsMessage: 'No pipelines found',
+      },
+      [SUBMENU_KEYS.SKILLS]: {
+        searchPlaceholder: 'Search skills...',
+        emptyMessage: 'No skills available',
+        noResultsMessage: 'No skills found',
+        publicLabel: ParticipantConstants.CATALOG_LABEL,
       },
       [SUBMENU_KEYS.TOOLKITS]: {
         searchPlaceholder: 'Search toolkits...',

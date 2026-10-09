@@ -2,6 +2,7 @@ import { forwardRef, memo } from 'react';
 
 import { Box, IconButton, Typography } from '@mui/material';
 
+import { ParticipantConstants } from '@/[fsd]/features/chat/participants/lib/constants';
 import AttachIcon from '@/assets/attach-icon.svg?react';
 import { ChatParticipantType, PUBLIC_PROJECT_ID } from '@/common/constants';
 import EntityIcon from '@/components/EntityIcon';
@@ -107,6 +108,17 @@ const ParticipantNormalCard = memo(
                     <AttachIcon style={styles.attachIcon} />
                   </IconButton>
                 )}
+                {participant.entity_name === ChatParticipantType.Skills &&
+                  Number(participant.entity_meta?.project_id) === PUBLIC_PROJECT_ID && (
+                    <Typography
+                      component="span"
+                      variant="bodySmall"
+                      sx={styles.catalogTag}
+                      data-testid="chat-participant-catalog-tag"
+                    >
+                      {ParticipantConstants.CATALOG_LABEL}
+                    </Typography>
+                  )}
                 <ParticipantConnectionIcons
                   showMcp={!!originalDetails?.meta?.mcp}
                   mcpOnline={originalDetails?.online}
@@ -219,6 +231,14 @@ export const participantNormalCardStyles = ({ collapsed, isActive, maxWidth, isB
     width: '0.75rem',
     height: '0.75rem',
   },
+  catalogTag: ({ palette }) => ({
+    flexShrink: 0,
+    marginLeft: '.5rem',
+    padding: '0 .375rem',
+    borderRadius: '.875rem',
+    border: `.0625rem solid ${palette.border.lines}`,
+    color: palette.text.metrics,
+  }),
   versionLabel: ({ palette }) => ({
     flexShrink: 0,
     maxWidth: isBeingEdited ? 'none' : '50%',

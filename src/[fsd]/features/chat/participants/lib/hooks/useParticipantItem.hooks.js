@@ -9,7 +9,7 @@ import {
 } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { useParticipantEntityIcon } from '@/[fsd]/features/chat/participants/lib/hooks';
 import { useEliteaAssistantRef } from '@/[fsd]/widgets/support-assistant';
-import { ChatParticipantType, SearchParams } from '@/common/constants';
+import { ChatParticipantType, PUBLIC_PROJECT_ID, SearchParams } from '@/common/constants';
 import useNavBlocker from '@/hooks/useNavBlocker';
 
 export const useParticipantItem = ({
@@ -94,8 +94,10 @@ export const useParticipantItem = ({
     () =>
       participant.entity_name === ChatParticipantType.Toolkits ||
       participant.entity_name === ChatParticipantType.Pipelines ||
-      participant.entity_name === ChatParticipantType.Applications,
-    [participant.entity_name],
+      participant.entity_name === ChatParticipantType.Applications ||
+      (participant.entity_name === ChatParticipantType.Skills &&
+        Number(entity_meta?.project_id) !== PUBLIC_PROJECT_ID),
+    [participant.entity_name, entity_meta?.project_id],
   );
 
   const maxWidth = useMemo(() => {
@@ -139,9 +141,9 @@ export const useParticipantItem = ({
         originalDetails.versions.find(v => v.id === participant.entity_settings?.version_id)?.name || '',
       );
     } else {
-      setVersionName('');
+      setVersionName(participant.meta?.version_name || '');
     }
-  }, [originalDetails?.versions, participant.entity_settings?.version_id]);
+  }, [originalDetails?.versions, participant.entity_settings?.version_id, participant.meta?.version_name]);
 
   useEffect(() => {
     if (!isHovering && nameTextRef.current) {

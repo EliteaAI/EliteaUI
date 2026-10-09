@@ -34,4 +34,5 @@ export { useRecommendations } from './useRecommendations.hooks';
 export { useChatEditors } from './useChatEditors.hooks';
 
 export { useSelectedChatModel } from './useSelectedChatModel.hooks';
+export * from './useSkillChatModel.hooks';
 export { useChatSocketReconnect } from './useChatSocketReconnect.hooks';

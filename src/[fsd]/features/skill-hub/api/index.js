@@ -1,6 +1,8 @@
 export {
   useLazyPublicSkillsListQuery,
+  usePagedPublicSkillsQuery,
   useGetPublicSkillDetailsQuery,
+  useLazyGetPublicSkillDetailsQuery,
   useLikeSkillMutation,
   useUnlikeSkillMutation,
   useAgentsWithSkillQuery,

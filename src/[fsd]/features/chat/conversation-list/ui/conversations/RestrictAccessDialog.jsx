@@ -29,6 +29,7 @@ const AI_PARTICIPANT_TYPES = [
   ChatParticipantType.Applications,
   ChatParticipantType.Pipelines,
   ChatParticipantType.Models,
+  ChatParticipantType.Skills,
 ];
 
 const RestrictAccessDialog = memo(props => {
@@ -171,7 +172,11 @@ const RestrictAccessDialog = memo(props => {
         selectedUsers,
         initialUserEntityIds,
       });
-      const { aiToRemove, aiToAdd } = diffAiParticipants({ existingAiParticipants, selectedAiParticipants });
+      const { aiToRemove, aiToAdd } = diffAiParticipants({
+        existingAiParticipants,
+        selectedAiParticipants,
+        projectId,
+      });
 
       if (!isAlreadyPrivate) {
         await conversationEdit({ projectId, id: conversationId, is_private: true }).unwrap();

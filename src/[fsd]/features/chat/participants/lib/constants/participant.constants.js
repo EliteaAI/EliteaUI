@@ -10,10 +10,18 @@ export const ParticipantCreationPermissionMap = {
   [ParticipantEntityTypes.MCP]: PERMISSIONS.toolkits.create,
 };
 
+export const CATALOG_LABEL = 'Catalog';
+
+export const SkillUnavailableReason = {
+  Skill: 'skill',
+  Version: 'version',
+};
+
 export const ParticipantEditPermissionMap = {
   [ChatParticipantType.Applications]: PERMISSIONS.applications.update,
   [ChatParticipantType.Pipelines]: PERMISSIONS.applications.update,
   [ChatParticipantType.Toolkits]: PERMISSIONS.toolkits.update,
+  [ChatParticipantType.Skills]: PERMISSIONS.skills.update,
 };
 
 /**

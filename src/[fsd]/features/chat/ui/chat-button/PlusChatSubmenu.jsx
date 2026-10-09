@@ -25,6 +25,7 @@ const PlusChatSubmenu = memo(props => {
     noResultsMessage = 'No items found',
     onScroll,
     showPublicLabel = true,
+    publicLabel = 'Public',
     showToggle = false,
     sectionKey,
   } = props;
@@ -158,7 +159,7 @@ const PlusChatSubmenu = memo(props => {
                     variant="bodySmall"
                     sx={styles.publicLabel}
                   >
-                    Public
+                    {publicLabel}
                   </Typography>
                 </Box>
               )}

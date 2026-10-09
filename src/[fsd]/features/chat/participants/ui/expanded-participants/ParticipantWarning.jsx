@@ -11,6 +11,8 @@ const ParticipantWarning = memo(props => {
   const {
     isPublishedAgentGone,
     isVersionUnavailable,
+    isSkillGone,
+    isSkillVersionUnavailable,
     hasMisconfigurationErrors,
     shouldDisableThisItem,
     mcpIsDisconnected,
@@ -45,6 +47,10 @@ const ParticipantWarning = memo(props => {
   if (isPublishedAgentGone) return 'Published agent is no longer available';
 
   if (isVersionUnavailable) return 'Published version not available, select another version';
+
+  if (isSkillGone) return 'Skill is no longer available, switch to a model or remove it';
+
+  if (isSkillVersionUnavailable) return 'Skill version is no longer available, select another version';
 
   if (hasMisconfigurationErrors) {
     const isPipelineAgent = participant.entity_settings?.agent_type === 'pipeline';

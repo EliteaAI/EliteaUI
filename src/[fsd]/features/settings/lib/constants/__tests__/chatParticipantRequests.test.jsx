@@ -18,7 +18,7 @@ vi.hoisted(() => {
   };
 });
 
-const requests = vi.hoisted(() => ({ applications: [], toolkits: [] }));
+const requests = vi.hoisted(() => ({ applications: [], toolkits: [], skills: [] }));
 
 const EMPTY_RESULT = vi.hoisted(() => ({
   data: undefined,
@@ -59,6 +59,13 @@ vi.mock('@/api/toolkits', () => ({
   useListToolkitTypesQuery: () => ({ data: undefined }),
 }));
 
+vi.mock('@/[fsd]/features/skill/lib/hooks', () => ({
+  useSkillParticipants: props => {
+    if (!props.skip) requests.skills.push(props);
+    return { ownSkills: [], catalogSkills: [], total: 0, isFetching: false, onLoadMore: () => {} };
+  },
+}));
+
 vi.mock('@/[fsd]/shared/config/store', () => ({
   default: { getState: () => ({}), dispatch: vi.fn(), subscribe: () => () => {} },
 }));
@@ -88,6 +95,7 @@ describe('chat participant picker requests', () => {
   beforeEach(() => {
     requests.applications = [];
     requests.toolkits = [];
+    requests.skills = [];
   });
 
   afterEach(() => cleanup());
@@ -127,5 +135,6 @@ describe('chat participant picker requests', () => {
     );
 
     expect(requestedAgentTypes().sort()).toEqual(['classic', 'pipeline']);
+    expect(requests.skills).toEqual([]);
   });
 });

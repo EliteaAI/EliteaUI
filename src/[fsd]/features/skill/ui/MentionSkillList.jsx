@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef } from 'react';
+import { Fragment, memo, useEffect, useMemo, useRef } from 'react';
 
 import { Box, ClickAwayListener, Typography } from '@mui/material';
 
@@ -8,7 +8,8 @@ import SkillIcon from '@/assets/skill-icon.svg?react';
 import EliteAImage from '@/components/EliteAImage';
 
 const HEADER_LABEL = 'Mention skill';
-const EMPTY_LABEL = 'No skills attached to this agent';
+
+const startsGroup = (items, index) => index === 0 || items[index - 1].group !== items[index].group;
 
 /**
  * Dropdown listing the skills attached to the current agent, rendered while the
@@ -24,9 +25,21 @@ const EMPTY_LABEL = 'No skills attached to this agent';
  * @param {() => void} props.onClose - Dismiss the dropdown.
  */
 const MentionSkillList = memo(props => {
-  const { phase, filteredItems, committedMentions, highlightedIndex, onSelectItem, onClose } = props;
+  const {
+    phase,
+    filteredItems,
+    committedMentions,
+    highlightedIndex,
+    onSelectItem,
+    onClose,
+    emptyLabel = MentionConstants.SKILL_MENTION_EMPTY_LABELS.agent,
+  } = props;
   const styles = mentionSkillListStyles();
   const containerRef = useRef(null);
+  const isGrouped = useMemo(
+    () => new Set(filteredItems.map(item => item.group).filter(Boolean)).size > 1,
+    [filteredItems],
+  );
 
   useEffect(() => {
     if (!containerRef.current || highlightedIndex < 0) return;
@@ -72,31 +85,42 @@ const MentionSkillList = memo(props => {
               variant="bodySmall"
               color="text.secondary"
             >
-              {EMPTY_LABEL}
+              {emptyLabel}
             </Typography>
           </Box>
         ) : (
           filteredItems.map((item, index) => (
-            <Mention.MentionToolItem
-              key={item.name}
-              label={item.name}
-              description={item.description}
-              testId={`skill-mention-item-${item.name}`}
-              icon={
-                item.icon_meta?.url ? (
-                  <EliteAImage
-                    style={styles.itemCustomIcon}
-                    image={item.icon_meta}
-                    alt={item.name}
-                  />
-                ) : (
-                  <SkillIcon style={styles.itemIcon} />
-                )
-              }
-              onClick={() => onSelectItem(item)}
-              isHighlighted={index === highlightedIndex}
-              isSelected={committedMentions?.some(m => m.name === item.name) ?? false}
-            />
+            <Fragment key={item.name}>
+              {isGrouped && startsGroup(filteredItems, index) && (
+                <Typography
+                  variant="bodySmall"
+                  color="text.secondary"
+                  sx={styles.groupLabel}
+                  data-testid={`skill-mention-group-${item.group}`}
+                >
+                  {MentionConstants.SKILL_MENTION_GROUP_LABELS[item.group]}
+                </Typography>
+              )}
+              <Mention.MentionToolItem
+                label={item.name}
+                description={item.description}
+                testId={`skill-mention-item-${item.name}`}
+                icon={
+                  item.icon_meta?.url ? (
+                    <EliteAImage
+                      style={styles.itemCustomIcon}
+                      image={item.icon_meta}
+                      alt={item.name}
+                    />
+                  ) : (
+                    <SkillIcon style={styles.itemIcon} />
+                  )
+                }
+                onClick={() => onSelectItem(item)}
+                isHighlighted={index === highlightedIndex}
+                isSelected={committedMentions?.some(m => m.name === item.name) ?? false}
+              />
+            </Fragment>
           ))
         )}
       </Box>
@@ -134,6 +158,9 @@ const mentionSkillListStyles = () => ({
     padding: '1rem .75rem',
     margin: '-0.75rem -0.75rem 0',
     background: 'inherit',
+  },
+  groupLabel: {
+    padding: '0.25rem 0.75rem 0',
   },
   empty: {
     display: 'flex',

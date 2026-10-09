@@ -2,6 +2,8 @@ import { findSkillParticipant } from '@/[fsd]/features/skill/lib/helpers';
 import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { ChatParticipantType, DEFAULT_PARTICIPANT_NAME } from '@/common/constants';
 
+import { SkillUnavailableReason } from '../constants/participant.constants';
+
 const { ParticipantEntityTypes } = ParticipantEntityConstants;
 
 /**
@@ -123,3 +125,8 @@ export const getParticipantWelcomeKey = participant =>
 
 export const getDefaultActiveParticipant = conversation =>
   conversation?.source === ParticipantEntityTypes.Skill ? findSkillParticipant(conversation) : undefined;
+
+export const getSkillUnavailableReason = (isUnavailable, versions) => {
+  if (!isUnavailable) return undefined;
+  return versions?.length ? SkillUnavailableReason.Version : SkillUnavailableReason.Skill;
+};

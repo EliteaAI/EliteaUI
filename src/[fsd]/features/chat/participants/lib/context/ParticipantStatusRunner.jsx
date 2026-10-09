@@ -17,6 +17,7 @@ const ParticipantStatusRunner = memo(props => {
   const { entity_meta, entity_name: type } = participant;
   const isToolkitParticipant = type === ChatParticipantType.Toolkits;
   const isPublishedParticipant = entity_meta?.project_id == PUBLIC_PROJECT_ID;
+  const isSkillParticipant = type === ChatParticipantType.Skills;
 
   const shared = { participant, originalDetails, entity_meta, type, isToolkitParticipant };
 
@@ -32,14 +33,25 @@ const ParticipantStatusRunner = memo(props => {
 
   const shouldDisableThisItem = !isParticipantOKForChat(participant);
 
+  const isPinnedVersionListed = !!originalDetails?.versions?.some(
+    v => v.id === participant.entity_settings?.version_id,
+  );
+
   const isPublishedAgentGone =
-    isPublishedParticipant && hasFetchedDetails && !originalDetails?.versions?.length;
+    !isSkillParticipant && isPublishedParticipant && hasFetchedDetails && !originalDetails?.versions?.length;
 
   const isVersionUnavailable =
+    !isSkillParticipant &&
     isPublishedParticipant &&
     hasFetchedDetails &&
     originalDetails?.versions?.length > 0 &&
-    !originalDetails.versions.some(v => v.id === participant.entity_settings?.version_id);
+    !isPinnedVersionListed;
+
+  const isSkillGone = isSkillParticipant && hasFetchedDetails && !originalDetails?.versions?.length;
+  const isSkillVersionUnavailable =
+    isSkillParticipant &&
+    !isSkillGone &&
+    ((hasFetchedDetails && !isPinnedVersionListed) || participant.meta?.is_available === false);
 
   const hasError =
     shouldDisableThisItem ||
@@ -51,7 +63,9 @@ const ParticipantStatusRunner = memo(props => {
     someToolsAreUnavailable ||
     blockedToolkitNames.length > 0 ||
     isPublishedAgentGone ||
-    isVersionUnavailable;
+    isVersionUnavailable ||
+    isSkillGone ||
+    isSkillVersionUnavailable;
 
   useEffect(() => {
     setParticipantStatus(cacheKey, {
@@ -62,6 +76,8 @@ const ParticipantStatusRunner = memo(props => {
       blockedToolkitNames,
       isPublishedAgentGone,
       isVersionUnavailable,
+      isSkillGone,
+      isSkillVersionUnavailable,
       mcpIsDisconnected,
       remoteMcpLoggedOut,
       hasRemoteMcpLoggedIn,
@@ -83,6 +99,8 @@ const ParticipantStatusRunner = memo(props => {
     blockedToolkitNames,
     isPublishedAgentGone,
     isVersionUnavailable,
+    isSkillGone,
+    isSkillVersionUnavailable,
     mcpIsDisconnected,
     remoteMcpLoggedOut,
     hasRemoteMcpLoggedIn,

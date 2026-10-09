@@ -34,7 +34,7 @@ const AiParticipantSearchSelect = memo(props => {
     sortOrder: 'asc',
     query,
     pageSize: 50,
-    types: [ChatParticipantType.Applications, ChatParticipantType.Pipelines],
+    types: [ChatParticipantType.Applications, ChatParticipantType.Pipelines, ChatParticipantType.Skills],
   });
 
   const hasMore = total > participants.length;
@@ -63,10 +63,10 @@ const AiParticipantSearchSelect = memo(props => {
     [slotProps.listBox, handleListboxScroll],
   );
 
-  const getEntityName = useCallback(
-    p => (p.agent_type === 'pipeline' ? ChatParticipantType.Pipelines : ChatParticipantType.Applications),
-    [],
-  );
+  const getEntityName = useCallback(p => {
+    if (p.participantType === ChatParticipantType.Skills) return ChatParticipantType.Skills;
+    return p.agent_type === 'pipeline' ? ChatParticipantType.Pipelines : ChatParticipantType.Applications;
+  }, []);
 
   const getUniqueKey = useCallback(
     p => `${p.entity_name ?? getEntityName(p)}:${p.project_id}:${p.id}`,

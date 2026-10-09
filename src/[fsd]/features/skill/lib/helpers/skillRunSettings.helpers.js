@@ -1,5 +1,6 @@
 import { LOCKED_SKILL_VERSION_STATUSES } from '@/[fsd]/features/skill/lib/constants/skill.constants';
 import { DEFAULT_MAX_TOKENS, DEFAULT_TEMPERATURE } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
+import { autoModel, isAutoSelection } from '@/[fsd]/shared/lib/utils/autoRouting.utils';
 import {
   defaultReasoningEffortFor,
   modelSupportsReasoning,
@@ -17,6 +18,29 @@ export const toRunSettingsPayload = runSettings => {
     ...(Object.keys(llmSettings).length ? { llm_settings: llmSettings } : {}),
   };
 };
+
+export const findSkillSavedModel = (models, llmSettings) => {
+  if (isAutoSelection(llmSettings)) return autoModel(llmSettings.selection.profile_ref);
+  const name = llmSettings?.model_name;
+  if (!name) return null;
+  return (
+    models.find(model => model.name === name && model.project_id === llmSettings.model_project_id) ||
+    models.find(model => model.name === name) || { name, project_id: llmSettings.model_project_id }
+  );
+};
+
+const choosesModel = llmSettings => !!llmSettings?.model_name || isAutoSelection(llmSettings);
+
+export const resolveSkillChatLLMSettings = (entitySettings, versionDetails) =>
+  choosesModel(entitySettings?.llm_settings)
+    ? entitySettings.llm_settings
+    : versionDetails?.run_settings?.llm_settings || {};
+
+export const isSkillChatModelPending = (entitySettings, pinnedVersionDetails) =>
+  !choosesModel(entitySettings?.llm_settings) && !pinnedVersionDetails;
+
+export const resolveSkillChatModel = (models, llmSettings) =>
+  findSkillSavedModel(models, llmSettings) || models.find(model => model.default) || models[0] || null;
 
 export const withRunSettings = (versionUpdate, runSettings) => {
   const payload = toRunSettingsPayload(runSettings);
