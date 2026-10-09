@@ -2,9 +2,9 @@ import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'r
 
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import { useMcpAuthModal } from '@/[fsd]/features/mcp/lib/hooks/useMcpAuthModal.hooks';
+import { SocketContext } from '@/[fsd]/shared/lib/context';
 import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { useMcpSyncToolsMutation } from '@/api/toolkits';
-import SocketContext from '@/contexts/SocketContext';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 /**

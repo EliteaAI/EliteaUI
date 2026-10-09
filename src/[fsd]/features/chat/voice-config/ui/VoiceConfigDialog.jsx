@@ -1,7 +1,7 @@
 import { memo, useCallback, useContext, useEffect, useState } from 'react';
 
+import { SocketContext } from '@/[fsd]/shared/lib/context';
 import { Button, Modal } from '@/[fsd]/shared/ui';
-import SocketContext from '@/contexts/SocketContext';
 
 import { useVoiceConfig } from '../lib/hooks/useVoiceConfig.hooks';
 import VoiceConfigControls from './VoiceConfigControls';

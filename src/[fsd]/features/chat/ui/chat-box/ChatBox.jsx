@@ -68,6 +68,7 @@ import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { MentionSkillList } from '@/[fsd]/features/skill';
 import { useDeleteSkillMutation } from '@/[fsd]/features/skill/api';
 import { LLMSettingsConstants, MentionConstants } from '@/[fsd]/shared/lib/constants';
+import { SocketContext } from '@/[fsd]/shared/lib/context';
 import { useToast } from '@/[fsd]/shared/lib/hooks';
 import {
   cleanLLMSettings,
@@ -111,7 +112,6 @@ import {
 import { buildErrorMessage } from '@/common/utils';
 import { ChatBodyContainer } from '@/components/Chat/StyledComponents';
 import { useChatSocket, useStopStreaming } from '@/components/Chat/hooks';
-import SocketContext from '@/contexts/SocketContext';
 import useChatStreaming from '@/hooks/chat/useChatStreaming';
 import useLoadMoreMessages from '@/hooks/chat/useLoadMoreMessages';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';

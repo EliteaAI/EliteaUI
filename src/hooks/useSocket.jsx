@@ -1,6 +1,6 @@
 import { useCallback, useContext, useEffect } from 'react';
 
-import SocketContext from '@/contexts/SocketContext';
+import { SocketContext } from '@/[fsd]/shared/lib/context';
 import { generateTraceId } from '@/services/tracing';
 
 // Check if tracing is enabled

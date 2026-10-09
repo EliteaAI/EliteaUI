@@ -1,7 +1,7 @@
 import { useCallback, useContext, useEffect, useRef } from 'react';
 
+import { SocketContext } from '@/[fsd]/shared/lib/context';
 import { useListModelsQuery } from '@/api/configurations';
-import SocketContext from '@/contexts/SocketContext';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import { useSpeechRecognition } from './useSpeechRecognition.hooks';
