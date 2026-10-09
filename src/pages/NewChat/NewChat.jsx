@@ -8,7 +8,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Box, CircularProgress, Grid, useTheme } from '@mui/material';
 
 import { useEditingArtifactsNavBlocker } from '@/[fsd]/features/artifacts/lib/hooks';
-import { useLazyConversationDetailsQuery } from '@/[fsd]/features/chat/api';
+import { useLazyConversationDetailsQuery, useLazyMessageTracesQuery } from '@/[fsd]/features/chat/api';
 import {
   applyParticipantChanges,
   redistributeConversationsIntoGroups,
@@ -53,6 +53,10 @@ import {
   dummyFolder,
   sioEvents,
 } from '@/common/constants';
+import {
+  buildTraceListParams,
+  convertConversationToChatHistory,
+} from '@/common/convertChatConversationMessages';
 import { genConversationId, getRawParticipantUniqueId } from '@/common/utils';
 import AlertDialog from '@/components/AlertDialog';
 import {
@@ -430,11 +434,68 @@ const NewChat = props => {
   });
 
   const [getConversationDetailForRefresh] = useLazyConversationDetailsQuery();
+  const [getMessageTracesForReconnect] = useLazyMessageTracesQuery();
 
   const activeConversationIdRef = useRef(activeConversation?.id);
   useEffect(() => {
     activeConversationIdRef.current = activeConversation?.id;
   }, [activeConversation?.id]);
+
+  const socketConnected = useSelector(state => state.settings.socketConnected);
+  // null = initial mount (no reconnect yet), true = was disconnected, false = normal connected state
+  const wasDisconnectedRef = useRef(null);
+
+  useEffect(() => {
+    if (!socketConnected) {
+      // Mark as disconnected only when a conversation is active (room was joined)
+      if (activeConversation?.uuid) {
+        wasDisconnectedRef.current = true;
+      }
+      return;
+    }
+
+    if (wasDisconnectedRef.current !== true) {
+      // First connect on mount — no need to rejoin or refetch
+      wasDisconnectedRef.current = false;
+      return;
+    }
+
+    // Socket reconnected after a drop — re-join the room and refetch history
+    wasDisconnectedRef.current = false;
+
+    const uuid = activeConversation?.uuid;
+    const convId = activeConversation?.id;
+    if (!uuid || !convId) return;
+
+    emitEnterRoom({ conversation_uuid: uuid, project_id: projectId });
+
+    (async () => {
+      const result = await getConversationDetailForRefresh({ projectId, id: convId });
+      if (!result.data) return;
+      const tracesResult = await getMessageTracesForReconnect({
+        projectId,
+        conversationId: convId,
+        params: buildTraceListParams(result.data.message_groups),
+      });
+      setActiveConversation(prev => {
+        if (!prev || prev.id !== convId) return prev;
+        return {
+          ...prev,
+          ...result.data,
+          chat_history: convertConversationToChatHistory(result.data, tracesResult.data),
+        };
+      });
+    })();
+  }, [
+    socketConnected,
+    activeConversation?.uuid,
+    activeConversation?.id,
+    projectId,
+    emitEnterRoom,
+    getConversationDetailForRefresh,
+    getMessageTracesForReconnect,
+    setActiveConversation,
+  ]);
 
   const handleRestrictAccessSuccess = useCallback(
     async (conversationId, participantChanges = {}) => {
