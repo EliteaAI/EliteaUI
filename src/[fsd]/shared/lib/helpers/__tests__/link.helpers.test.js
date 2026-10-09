@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { getBasename } from '@/routes';
 
-import { resolveArtifactHref, resolveArtifactHrefsInHtml } from '../link.helpers';
+import { parseArtifactHref, resolveArtifactHref, resolveArtifactHrefsInHtml } from '../link.helpers';
 
 vi.mock('@/routes', () => ({
   default: { Artifacts: '/artifacts' },
@@ -88,7 +88,54 @@ describe('resolveArtifactHrefsInHtml', () => {
     expect(result).toContain('href="https://example.com"');
   });
 
+  it('uses a custom resolver and drops href when it returns null', () => {
+    const html = '<a href="/attach/shared.html">a</a> <a href="/attach/other.html">b</a>';
+    const result = resolveArtifactHrefsInHtml(html, ({ file }) =>
+      file === 'shared.html' ? '/public/x' : null,
+    );
+
+    expect(result).toContain('<a href="/public/x">a</a>');
+    expect(result).toContain('<a>b</a>');
+  });
+
   it('returns HTML without links as is', () => {
     expect(resolveArtifactHrefsInHtml('<b>bold</b>')).toBe('<b>bold</b>');
+  });
+});
+
+describe('parseArtifactHref', () => {
+  beforeEach(() => {
+    vi.mocked(getBasename).mockReturnValue('/app');
+  });
+
+  it('returns bucket and file for artifact paths', () => {
+    expect(parseArtifactHref('sandbox:/attach/dir/file.html')).toEqual({
+      bucket: 'attach',
+      file: 'dir/file.html',
+    });
+  });
+
+  it('returns null for non-artifact hrefs', () => {
+    expect(parseArtifactHref('https://example.com/a/b')).toBeNull();
+  });
+});
+
+describe('resolveArtifactHref with a custom resolver', () => {
+  it('passes the parsed artifact to the resolver', () => {
+    const resolver = vi.fn(() => '/public/url');
+
+    expect(resolveArtifactHref('/attach/file.html', resolver)).toBe('/public/url');
+    expect(resolver).toHaveBeenCalledWith({ bucket: 'attach', file: 'file.html' });
+  });
+
+  it('returns null when the resolver cannot open the file', () => {
+    expect(resolveArtifactHref('/attach/file.html', () => null)).toBeNull();
+  });
+
+  it('does not call the resolver for non-artifact links', () => {
+    const resolver = vi.fn();
+
+    expect(resolveArtifactHref('https://example.com', resolver)).toBe('https://example.com');
+    expect(resolver).not.toHaveBeenCalled();
   });
 });

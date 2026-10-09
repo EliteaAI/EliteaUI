@@ -25,3 +25,29 @@ export const buildSharedAttachment = (item, token, groupId) => {
     },
   };
 };
+
+/**
+ * Builds a resolver for chat links to generated artifact files (`/{bucket}/{file}`). The recipient of a
+ * shared chat has no access to the owner's project, so a link can only be opened when the file is one of the
+ * conversation's attachments — then it points to the public shared endpoint. Other files resolve to `null`.
+ *
+ * @returns {(artifact: {bucket: string, file: string}) => string | null}
+ */
+export const buildSharedArtifactLinkResolver = (groups = [], token) => {
+  const urlsByPath = new Map();
+
+  groups.forEach(group => {
+    (group.items || []).forEach(item => {
+      const { bucket, name } = item.attachment || {};
+      if (item.type !== 'attachment_message' || !bucket || !name) return;
+
+      const filePath = name.replace(/^\/+/, '');
+      urlsByPath.set(
+        `${bucket}/${filePath}`,
+        buildSharedAttachmentUrl(token, group.id, filePath.split('/').pop()),
+      );
+    });
+  });
+
+  return ({ bucket, file }) => urlsByPath.get(`${bucket}/${file}`) ?? null;
+};
