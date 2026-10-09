@@ -18,7 +18,8 @@ const useLoadMoreMessages = ({ setChatHistory, activeConversation, toastError })
 
   const onLoadMoreMessages = useCallback(
     async callback => {
-      if (!isLoadingMore && activeConversation?.messages_count > page * 10) {
+      const totalMessages = activeConversation?.messages_count ?? activeConversation?.message_groups_count;
+      if (!isLoadingMore && totalMessages > page * 10) {
         setIsLoadingMore(true);
         const result = await getMessageList({
           projectId,
@@ -55,6 +56,7 @@ const useLoadMoreMessages = ({ setChatHistory, activeConversation, toastError })
     [
       activeConversation?.id,
       activeConversation?.messages_count,
+      activeConversation?.message_groups_count,
       activeConversation?.participants,
       getMessageList,
       getMessageTraces,
