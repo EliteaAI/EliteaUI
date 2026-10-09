@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { areDetailsOfParticipant, isSkippedContainerParticipant } from '../participants.helpers';
+import {
+  areDetailsOfParticipant,
+  getDefaultActiveParticipant,
+  isSkippedContainerParticipant,
+} from '../participants.helpers';
 
 // --- isSkippedContainerParticipant — #5778 depth-aware container gate -------- //
 //
@@ -109,5 +113,19 @@ describe('areDetailsOfParticipant', () => {
   it('rejects a missing participant or one without an entity id', () => {
     expect(areDetailsOfParticipant({ id: 562 }, null)).toBe(false);
     expect(areDetailsOfParticipant({ id: 562 }, { entity_meta: {} })).toBe(false);
+  });
+});
+
+describe('getDefaultActiveParticipant', () => {
+  const skill = { id: 7, entity_name: 'skill' };
+  const user = { id: 1, entity_name: 'user' };
+
+  it('makes the skill active in a skill run conversation', () => {
+    expect(getDefaultActiveParticipant({ source: 'skill', participants: [user, skill] })).toBe(skill);
+  });
+
+  it('keeps ordinary chats without an active participant', () => {
+    expect(getDefaultActiveParticipant({ source: 'elitea', participants: [user, skill] })).toBeUndefined();
+    expect(getDefaultActiveParticipant(undefined)).toBeUndefined();
   });
 });

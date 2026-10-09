@@ -1,4 +1,4 @@
-import { memo, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 
 import {
   Box,
@@ -11,9 +11,12 @@ import {
 } from '@mui/material';
 
 import { ELITEA_CATALOG_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
+import { useCanRunSkill } from '@/[fsd]/features/skill';
 import { useGetPublicSkillDetailsQuery } from '@/[fsd]/features/skill-hub/api';
 import { SkillHubConstants } from '@/[fsd]/features/skill-hub/lib/constants';
+import { useRunCatalogSkill } from '@/[fsd]/features/skill-hub/lib/hooks';
 import AttachToAgentDialog from '@/[fsd]/features/skill-hub/ui/AttachToAgentDialog';
+import CatalogSkillVersionSelect from '@/[fsd]/features/skill-hub/ui/CatalogSkillVersionSelect';
 import SkillHubLike from '@/[fsd]/features/skill-hub/ui/SkillHubLike';
 import SkillHubModalMenu from '@/[fsd]/features/skill-hub/ui/SkillHubModalMenu';
 import { Markdown } from '@/[fsd]/shared/ui';
@@ -52,6 +55,17 @@ const SkillHubModal = memo(props => {
   );
   const instructions = useMemo(() => skillDetails?.version_details?.instructions || '', [skillDetails]);
   const versionId = useMemo(() => skillDetails?.version_details?.id, [skillDetails]);
+  const publishedVersions = useMemo(() => skillDetails?.versions ?? [], [skillDetails]);
+
+  const canRunSkill = useCanRunSkill({ isCatalogSkill: true });
+  const { runCatalogSkill, isStartingRun } = useRunCatalogSkill();
+  const [chosenRunVersionId, setChosenRunVersionId] = useState(null);
+  const runVersionId = chosenRunVersionId ?? versionId;
+
+  const handleRun = useCallback(async () => {
+    const hasStarted = await runCatalogSkill({ skill: { ...skill, name }, versionId: runVersionId });
+    if (hasStarted) onClose?.();
+  }, [name, onClose, runCatalogSkill, runVersionId, skill]);
 
   const link = useMemo(() => {
     if (!skill?.id) return '';
@@ -148,6 +162,24 @@ const SkillHubModal = memo(props => {
             </Box>
           </DialogContent>
           <DialogActions sx={styles.dialogActions}>
+            {canRunSkill && publishedVersions.length > 1 && (
+              <CatalogSkillVersionSelect
+                versions={publishedVersions}
+                value={runVersionId}
+                onChange={setChosenRunVersionId}
+              />
+            )}
+            {canRunSkill && (
+              <BaseBtn
+                variant={BUTTON_VARIANTS.elitea}
+                color={BUTTON_COLORS.secondary}
+                onClick={handleRun}
+                disabled={isStartingRun || !skill?.id}
+                data-testid="catalog-skill-modal-run-button"
+              >
+                Run
+              </BaseBtn>
+            )}
             <BaseBtn
               data-tour={ELITEA_CATALOG_TOUR_TARGET_IDS.primaryActionButton}
               variant={BUTTON_VARIANTS.elitea}

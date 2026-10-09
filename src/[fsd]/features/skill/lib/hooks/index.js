@@ -10,3 +10,6 @@ export { useForkSkill } from './useForkSkill.hooks';
 export { usePublishSkill } from './usePublishSkill.hooks';
 export { usePublishSkillMenu } from './usePublishSkillMenu.hooks';
 export { useUnpublishSkillMenu } from './useUnpublishSkillMenu.hooks';
+export { useSkillRunChat } from './useSkillRunChat.hooks';
+export { useCanRunSkill } from './useCanRunSkill.hooks';
+export { useFocusRunInput } from './useFocusRunInput.hooks';

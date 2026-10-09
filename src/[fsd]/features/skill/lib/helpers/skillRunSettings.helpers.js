@@ -36,3 +36,16 @@ export const testPanelSettingsFor = (savedLlmSettings, model) => ({
       }
     : { temperature: savedLlmSettings?.temperature ?? DEFAULT_TEMPERATURE, reasoning_effort: null }),
 });
+
+const sortEntriesByKey = record =>
+  Object.entries(record || {}).sort(([left], [right]) => left.localeCompare(right));
+
+const buildRunSettingsSignature = runSettings => {
+  const { ignore_project_context = false, llm_settings } = toRunSettingsPayload(runSettings) || {};
+  return JSON.stringify([ignore_project_context, sortEntriesByKey(llm_settings)]);
+};
+
+export const hasUnsavedRunChanges = (values, initialValues) =>
+  (values?.version_details?.instructions ?? '') !== (initialValues?.version_details?.instructions ?? '') ||
+  buildRunSettingsSignature(values?.version_details?.run_settings) !==
+    buildRunSettingsSignature(initialValues?.version_details?.run_settings);

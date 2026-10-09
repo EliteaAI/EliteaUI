@@ -442,6 +442,27 @@ const ChatBox = memo(
               question_id,
               interaction_uuid,
             };
+          case ChatParticipantType.Skills:
+            return {
+              payload: generateMessagePayload({
+                question,
+                question_id,
+                participant,
+                conversation_uuid: conversationUuid || activeConversation?.uuid,
+                activeParticipant,
+                interaction_uuid,
+                projectId,
+                selectedModel,
+                attachmentList,
+                unsavedLLMSettings,
+                allowLLMSettingsOverride: isAgentsPage,
+              }),
+              project_id: projectId,
+              participant_id: realParticipant.id,
+              conversation_uuid: conversationUuid || activeConversation?.uuid,
+              question_id,
+              interaction_uuid,
+            };
           default:
             // throw new Error('Unsupported participant type for regeneration: ' + realParticipant.entity_name)
             return {

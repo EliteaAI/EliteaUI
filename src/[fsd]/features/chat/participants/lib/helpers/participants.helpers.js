@@ -1,4 +1,8 @@
+import { findSkillParticipant } from '@/[fsd]/features/skill/lib/helpers';
+import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { ChatParticipantType, DEFAULT_PARTICIPANT_NAME } from '@/common/constants';
+
+const { ParticipantEntityTypes } = ParticipantEntityConstants;
 
 /**
  * True when resolved participant details describe the given participant.
@@ -116,3 +120,6 @@ export const isWelcomeMessageParticipant = participant =>
 // Includes the pinned version so switching a participant's version yields a new key.
 export const getParticipantWelcomeKey = participant =>
   `${getChatParticipantUniqueId(participant)}::${participant.entity_settings?.version_id ?? ''}`;
+
+export const getDefaultActiveParticipant = conversation =>
+  conversation?.source === ParticipantEntityTypes.Skill ? findSkillParticipant(conversation) : undefined;

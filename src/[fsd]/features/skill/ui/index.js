@@ -11,6 +11,7 @@ export { default as SkillCard } from './SkillCard.jsx';
 export { default as SkillControls } from './SkillControls';
 export { default as SkillInformation } from './SkillInformation';
 export { default as SkillMenu } from './SkillMenu.jsx';
+export { default as SkillRunPane } from './skill-run-panel/SkillRunPane';
 export { default as SkillTestPanel } from './skill-test-panel/SkillTestPanel';
 export { default as SkillVersionSelector } from './SkillVersionSelector.jsx';
 export { SkillImportButton } from './import';

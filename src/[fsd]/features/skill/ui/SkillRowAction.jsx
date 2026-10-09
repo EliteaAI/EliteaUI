@@ -1,18 +1,20 @@
 import { memo, useCallback, useMemo, useState } from 'react';
 
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import { Box, IconButton, Menu } from '@mui/material';
 
 import { MoveToFolderSubmenu } from '@/[fsd]/entities/folder/ui';
 import { useDeleteSkillMutation } from '@/[fsd]/features/skill/api';
-import { useSkillExport } from '@/[fsd]/features/skill/lib/hooks';
+import { SKILL_RUN_FOCUS_TARGET, SKILL_RUN_SEARCH_PARAMS } from '@/[fsd]/features/skill/lib/constants';
+import { useCanRunSkill, useSkillExport } from '@/[fsd]/features/skill/lib/hooks';
 import { useProjectType } from '@/[fsd]/shared/lib/hooks';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { ContentType, PERMISSIONS, SkillsTabs } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils.jsx';
 import DotsMenuIcon from '@/components/Icons/DotsMenuIcon';
 import ExportIcon from '@/components/Icons/ExportIcon';
+import PlayIcon from '@/components/Icons/PlayIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useToast from '@/hooks/useToast';
@@ -34,7 +36,9 @@ const SkillRowAction = memo(props => {
   } = props;
 
   const navigate = useNavigate();
+  const { tab = SkillsTabs[0] } = useParams();
   const projectId = useSelectedProjectId();
+  const canRunSkill = useCanRunSkill();
   const { toastError, toastSuccess } = useToast();
   const { isPrivate, isPublic: isPublicProject } = useProjectType();
   const { checkPermission } = useCheckPermission();
@@ -68,6 +72,11 @@ const SkillRowAction = memo(props => {
   const onExport = useCallback(() => {
     doExport({ skillId, versionId, skillName });
   }, [doExport, skillId, versionId, skillName]);
+
+  const onRun = useCallback(() => {
+    const search = new URLSearchParams({ [SKILL_RUN_SEARCH_PARAMS.focus]: SKILL_RUN_FOCUS_TARGET });
+    navigate(`${RouteDefinitions.Skills}/${tab}/${skillId}?${search.toString()}`);
+  }, [navigate, skillId, tab]);
 
   const onDelete = useCallback(async () => {
     try {
@@ -130,6 +139,14 @@ const SkillRowAction = memo(props => {
         }}
         keepMounted
       >
+        {canRunSkill && (
+          <SkillRowMenuItem
+            icon={<PlayIcon fontSize="inherit" />}
+            label="Run"
+            onClick={withClose(onRun)}
+            testId="skill-run-menu-item"
+          />
+        )}
         {showFolderActions && (
           <MoveToFolderSubmenu
             entityId={skillId}

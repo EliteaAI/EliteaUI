@@ -3,7 +3,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
 
 import { useConversationNavigation } from '@/[fsd]/features/chat/lib/hooks';
-import { getChatParticipantUniqueId } from '@/[fsd]/features/chat/participants/lib/helpers';
+import {
+  getChatParticipantUniqueId,
+  getDefaultActiveParticipant,
+} from '@/[fsd]/features/chat/participants/lib/helpers';
 import {
   useLazyConversationDetailsQuery,
   useLazyMessageTracesQuery,
@@ -119,7 +122,7 @@ export default function useSelectConversation({
                 clearLocalActiveParticipant(result.data.id);
               }
             } else {
-              setActiveParticipant();
+              setActiveParticipant(getDefaultActiveParticipant(result.data));
             }
             setConversations(prev => prev.filter(item => !item.isNew));
             if (
