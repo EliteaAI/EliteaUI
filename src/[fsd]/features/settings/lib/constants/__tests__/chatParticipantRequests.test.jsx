@@ -121,6 +121,15 @@ describe('chat participant picker requests', () => {
     });
   });
 
+  it('requests only skills on the Skills tab', () => {
+    renderPickerTab(TABS.SKILLS);
+
+    expect(requests.applications).toEqual([]);
+    expect(requests.toolkits).toEqual([]);
+    expect(requests.skills.length).toBeGreaterThan(0);
+    requests.skills.forEach(props => expect(props).toMatchObject({ pageSize: 50, excludePublic: false }));
+  });
+
   it('keeps fetching agents and pipelines together for callers that ask for both', () => {
     renderHook(
       () =>

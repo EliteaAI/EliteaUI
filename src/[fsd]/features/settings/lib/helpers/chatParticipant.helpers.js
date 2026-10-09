@@ -1,5 +1,6 @@
+import { getChatParticipantUniqueId } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { isMcpToolkit } from '@/[fsd]/shared/lib/helpers';
-import { ChatParticipantType } from '@/common/constants';
+import { ChatParticipantType, PUBLIC_PROJECT_ID } from '@/common/constants';
 
 import { TABS } from '../constants/chatParticipant.constants.js';
 
@@ -9,8 +10,18 @@ export const getEntityName = p => {
     return ChatParticipantType.Toolkits;
   }
   if (p.participantType === ChatParticipantType.Users) return ChatParticipantType.Users;
+  if (p.participantType === ChatParticipantType.Skills) return ChatParticipantType.Skills;
   return ChatParticipantType.Applications;
 };
+
+export const getTemplateParticipantKey = p =>
+  getChatParticipantUniqueId({
+    entity_name: p.entity_name,
+    entity_meta: { id: p.id, project_id: p.project_id },
+  });
+
+export const isCatalogSkill = p =>
+  p.entity_name === ChatParticipantType.Skills && p.project_id === PUBLIC_PROJECT_ID;
 
 export const filterFetchedForTab = (fetched, tab) => {
   switch (tab) {
@@ -24,6 +35,8 @@ export const filterFetchedForTab = (fetched, tab) => {
       return fetched.filter(p => p.participantType === ChatParticipantType.Toolkits && !isMcpToolkit(p));
     case TABS.MCPS:
       return fetched.filter(p => p.participantType === ChatParticipantType.Toolkits && isMcpToolkit(p));
+    case TABS.SKILLS:
+      return fetched.filter(p => p.participantType === ChatParticipantType.Skills);
     case TABS.USERS:
       return fetched.filter(p => p.participantType === ChatParticipantType.Users);
     default:
