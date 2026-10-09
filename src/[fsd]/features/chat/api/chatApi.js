@@ -1,4 +1,5 @@
 import { normalizeFileExtension } from '@/[fsd]/entities/attachment/lib';
+import { getConversationExportPath } from '@/[fsd]/features/chat/conversation-list/lib/helpers/exportConversation.helpers';
 import { eliteaApi } from '@/api';
 import { removeDuplicateObjects } from '@/common/utils.jsx';
 
@@ -258,6 +259,13 @@ export const apiSlice = eliteaApi
             });
           return endpointName + JSON.stringify(sortedObject);
         },
+      }),
+      conversationExportSummary: build.query({
+        query: ({ projectId, conversationId }) => ({
+          url: getConversationExportPath(projectId, conversationId),
+          params: { summary: true },
+        }),
+        keepUnusedDataFor: 0,
       }),
       regenerate: build.mutation({
         query: ({ projectId, id, ...body }) => {
@@ -549,6 +557,7 @@ export const {
   useConversationEditMutation,
   useConversationDetailsQuery,
   useLazyConversationDetailsQuery,
+  useConversationExportSummaryQuery,
   useLazyMessageTracesQuery,
   useLazyMessageTraceQuery,
   useDeleteConversationMutation,

@@ -34,6 +34,7 @@ Use the **search** icon in the CHATS header to filter chats by name — results 
 - **Make Public** — Share the chat with all project members; cannot be reversed
 - **Share** — Copy a direct link to the chat to your clipboard (team projects only)
 - **Playback** — Replay the chat step by step without re-engaging models; use arrow keys or on-screen controls to navigate; designed for demos
+- **Export** — Download the chat as a JSON file, or as a ZIP archive that also includes its attached and generated files
 - **Pin on top** — Pin the chat to the top of the list
 - **Delete** — Permanently delete the chat`,
   },
