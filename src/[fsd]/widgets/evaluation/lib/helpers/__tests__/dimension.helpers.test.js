@@ -290,12 +290,25 @@ describe('AI-generated draft with a proposed target', () => {
       ...draft,
       evidence_scope: { structure: false, input: true, output: true, expected: true },
     });
-    expect(form.evaluationTarget).toEqual({ structure: false, input: true, output: true, expected: true });
+    expect(form.evaluationTarget).toEqual({
+      structure: false,
+      input: true,
+      output: true,
+      expected: true,
+      trajectory: false,
+      usage: false,
+    });
   });
 
   it('falls back to output-only when the draft has no evaluation target', () => {
     const { form } = reviewed(draft);
-    expect(form.evaluationTarget).toEqual({ structure: false, input: false, output: true });
+    expect(form.evaluationTarget).toEqual({
+      structure: false,
+      input: false,
+      output: true,
+      trajectory: false,
+      usage: false,
+    });
   });
 
   // The backend drops a target it cannot use rather than failing the draft; the form then asks
@@ -332,7 +345,13 @@ describe('AI-generated draft with a proposed target', () => {
       ...draft,
       evidence_scope: { structure: false, input: false, output: false, expected: false },
     });
-    expect(form.evaluationTarget).toEqual({ structure: false, input: false, output: true });
+    expect(form.evaluationTarget).toEqual({
+      structure: false,
+      input: false,
+      output: true,
+      trajectory: false,
+      usage: false,
+    });
     expect(error).toBe('');
   });
 });

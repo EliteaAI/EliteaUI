@@ -388,6 +388,40 @@ export const evaluationApi = eliteaApi
         providesTags: [TAG_EVAL_RESULT, TAG_EVAL_HUMAN_SCORE],
       }),
 
+      // ---- Case executions (#6809 P1) ----
+      // What the agent did on one case: { run_id, executions: [{ status, trajectory_state,
+      // trajectory_state_reason, trajectory: { steps[], tool_sequence[], truncated }, metrics }] }.
+      // A run is immutable once finished, so the run tag is enough to refetch after a rerun.
+      evalCaseExecutions: build.query({
+        // `includeTrajectory: false` drops the step lists: states, statuses and counters for a list view.
+        query: ({ projectId, runId, datasetCaseId, includeTrajectory = true }) => {
+          const params = new URLSearchParams();
+          if (datasetCaseId != null) params.set('dataset_case_id', String(datasetCaseId));
+          if (!includeTrajectory) params.set('include_trajectory', 'false');
+          const qs = params.toString();
+          return {
+            url: `/elitea_core/eval_case_executions/prompt_lib/${projectId}/${runId}${qs ? `?${qs}` : ''}`,
+            method: 'GET',
+          };
+        },
+        providesTags: [TAG_EVAL_RUN],
+      }),
+
+      // What a run of this suite would likely use (#6716, design Q-S6): case count × per-case usage
+      // of the last finished run on the same version, and the caller's remaining budget.
+      evalSuiteEstimate: build.query({
+        query: ({ projectId, suiteId, versionId }) => {
+          const params = new URLSearchParams();
+          if (versionId != null) params.set('application_version_id', String(versionId));
+          const qs = params.toString();
+          return {
+            url: `/elitea_core/eval_suite_estimate/prompt_lib/${projectId}/${suiteId}${qs ? `?${qs}` : ''}`,
+            method: 'GET',
+          };
+        },
+        providesTags: [TAG_EVAL_SUITE, TAG_EVAL_RUN],
+      }),
+
       // ---- Human scores (B6, #6203) ----
       evalHumanScores: build.query({
         query: ({ projectId, runId, datasetCaseId, dimensionId, latest }) => {
@@ -476,6 +510,8 @@ export const {
   useCancelEvalRunMutation,
   useDeleteEvalRunMutation,
   useEvalRunResultsQuery,
+  useEvalCaseExecutionsQuery,
+  useEvalSuiteEstimateQuery,
   useEvalHumanScoresQuery,
   useWriteEvalHumanScoreMutation,
   useEnhanceFromEvalMutation,

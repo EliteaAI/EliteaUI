@@ -11,10 +11,12 @@ const COLUMNS = [
   { field: 'date', label: 'Date', sortable: true },
   { field: 'suite', label: 'Suite', sortable: true },
   { field: 'version', label: 'Version', sortable: true },
+  { field: 'tokens', label: 'Tokens', sortable: false },
+  { field: 'steps', label: 'Steps', sortable: false },
   { field: 'score', label: 'Score', sortable: true },
 ];
 
-const GRID_TEMPLATE_COLUMNS = '1.15fr 1fr 0.8fr 1fr';
+const GRID_TEMPLATE_COLUMNS = '1.1fr 1fr 0.9fr 0.7fr 0.6fr 0.9fr';
 
 const EvaluationRunsTable = memo(props => {
   const {

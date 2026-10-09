@@ -1,7 +1,8 @@
 import { forwardRef, memo, useCallback, useMemo } from 'react';
 
-import { Box, List, ListItem, ListItemText } from '@mui/material';
+import { Box, List, ListItem, ListItemText, Typography } from '@mui/material';
 
+import { ANSWERLESS_REPLY_TEXT } from '@/[fsd]/features/chat/lib/helpers/applicationAnswer.helpers.js';
 import { useApplicationAnswerState } from '@/[fsd]/features/chat/lib/hooks/useApplicationAnswerState.hooks';
 import { ChatContinue, GeneratedEntityChip } from '@/[fsd]/features/chat/ui';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
@@ -97,6 +98,7 @@ const ApplicationAnswer = memo(
       hasAttachments,
       canRenderContent,
       shouldRenderAnswerBlock,
+      isAnswerless,
       onContinueWithoutAuth,
       onAuthSuccess,
       resolveAuthorizationAgentType,
@@ -188,11 +190,21 @@ const ApplicationAnswer = memo(
 
             {!isProcessing && <SwarmChildList actions={swarmChildActions} />}
 
-            {!isEditing && shouldRenderAnswerBlock && (
+            {!isEditing && (shouldRenderAnswerBlock || isAnswerless) && (
               <Answer
                 data-testid={isLastMessage ? 'skill-test-last-response' : 'chat-answer-content'}
                 sx={styles.answerBlock(messageId === speakingMessageId)}
               >
+                {isAnswerless && (
+                  <Typography
+                    data-testid="chat-answerless-placeholder"
+                    variant="bodyMedium"
+                    color="text.secondary"
+                  >
+                    {ANSWERLESS_REPLY_TEXT}
+                  </Typography>
+                )}
+
                 {canRenderContent && (
                   <AnswerMessageItems
                     answer={answer}

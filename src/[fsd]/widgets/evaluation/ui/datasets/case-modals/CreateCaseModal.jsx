@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Box, Collapse, Tooltip, Typography } from '@mui/material';
 
@@ -6,6 +6,7 @@ import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { Button, Checkbox, Input, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
+import { useApplicationDetailsQuery } from '@/api/applications';
 import ArrowDownIcon from '@/components/Icons/ArrowDownIcon';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import PlusIcon from '@/components/Icons/PlusIcon';
@@ -13,8 +14,15 @@ import StyledInputModal from '@/components/StyledInputModal';
 import useToast from '@/hooks/useToast';
 
 import { useAddEvalDatasetCaseMutation, useUpdateEvalDatasetCaseMutation } from '../../../api';
-import { parseEvalError } from '../../../lib/helpers';
+import {
+  agentToolOptions,
+  fromTrajectoryForm,
+  isTrajectoryFormChanged,
+  parseEvalError,
+  toTrajectoryForm,
+} from '../../../lib/helpers';
 import CaseFullScreenButton from './CaseFullScreenButton';
+import ExpectedTrajectoryEditor from './ExpectedTrajectoryEditor';
 
 const INPUT_TOOLTIP = 'The request or prompt that will be sent to the agent when this case is evaluated.';
 const VARIABLES_TOOLTIP = 'Optional key-value inputs that can be referenced when this case is run.';
@@ -40,22 +48,32 @@ const toFormState = datasetCase => ({
   expected_output: datasetCase?.expected_output ?? '',
   hasExpectedOutput: datasetCase?.id ? !!datasetCase?.expected_output : true,
   variableRows: variablesToRows(datasetCase?.variables),
+  trajectory: toTrajectoryForm(datasetCase?.expected_trajectory),
 });
 
 const CreateCaseModal = memo(props => {
-  const { open, onClose, projectId, datasetId, datasetCase, readOnly = false } = props;
+  const { open, onClose, projectId, datasetId, datasetCase, applicationId, readOnly = false } = props;
 
   const isEdit = !!datasetCase?.id;
 
   const [form, setForm] = useState(() => toFormState(datasetCase));
   const [initialForm, setInitialForm] = useState(() => toFormState(datasetCase));
   const [errorMessage, setErrorMessage] = useState('');
+  // Bumped on every blocked save so the same message scrolls into view again.
+  const [errorShownAt, setErrorShownAt] = useState(0);
+  const errorRef = useRef(null);
   const [variablesExpanded, setVariablesExpanded] = useState(true);
   const [expandedField, setExpandedField] = useState(null);
 
   const [addCase, { isLoading: isAdding }] = useAddEvalDatasetCaseMutation();
   const [updateCase, { isLoading: isUpdating }] = useUpdateEvalDatasetCaseMutation();
   const { toastSuccess, toastError } = useToast();
+  // Tool-name suggestions for the expected trajectory; free text still works without them.
+  const { data: agentDetails } = useApplicationDetailsQuery(
+    { projectId, applicationId },
+    { skip: !open || !projectId || !applicationId },
+  );
+  const toolOptions = useMemo(() => agentToolOptions(agentDetails?.version_details), [agentDetails]);
 
   const isSaving = isAdding || isUpdating;
 
@@ -74,6 +92,20 @@ const CreateCaseModal = memo(props => {
     if (errorMessage) setErrorMessage('');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form]);
+
+  // The message sits below a long form, so bring it into view instead of leaving it off-screen.
+  useEffect(() => {
+    if (errorShownAt) errorRef.current?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
+  }, [errorShownAt]);
+
+  const blockSave = useCallback(
+    message => {
+      setErrorMessage(message);
+      setErrorShownAt(Date.now());
+      toastError(message);
+    },
+    [toastError],
+  );
 
   const setField = useCallback((key, value) => {
     setForm(prev => ({ ...prev, [key]: value }));
@@ -110,6 +142,10 @@ const CreateCaseModal = memo(props => {
     }));
   }, []);
 
+  const handleTrajectoryChange = useCallback(trajectory => {
+    setForm(prev => ({ ...prev, trajectory }));
+  }, []);
+
   const handleToggleVariables = useCallback(() => {
     setVariablesExpanded(prev => !prev);
   }, []);
@@ -127,11 +163,16 @@ const CreateCaseModal = memo(props => {
 
   const handleSave = useCallback(async () => {
     if (!form.input.trim()) {
-      setErrorMessage('Input is required.');
+      blockSave('Input is required.');
       return;
     }
     if (duplicateKey) {
-      setErrorMessage(`Duplicate variable key: ${duplicateKey}`);
+      blockSave(`Duplicate variable key: ${duplicateKey}`);
+      return;
+    }
+    const trajectory = fromTrajectoryForm(form.trajectory);
+    if (trajectory.error) {
+      blockSave(trajectory.error);
       return;
     }
     setErrorMessage('');
@@ -140,6 +181,10 @@ const CreateCaseModal = memo(props => {
       input: form.input,
       variables: rowsToVariables(form.variableRows),
       expected_output: form.hasExpectedOutput && form.expected_output?.trim() ? form.expected_output : null,
+      // Sent only when it changed, so an edit elsewhere never rewrites a stored reference; null clears it.
+      ...(isTrajectoryFormChanged(form.trajectory, initialForm.trajectory)
+        ? { expected_trajectory: trajectory.value }
+        : {}),
     };
 
     try {
@@ -156,7 +201,9 @@ const CreateCaseModal = memo(props => {
     }
   }, [
     form,
+    initialForm,
     duplicateKey,
+    blockSave,
     isEdit,
     updateCase,
     projectId,
@@ -196,6 +243,7 @@ const CreateCaseModal = memo(props => {
     if (form.input !== initialForm.input) return true;
     if (form.expected_output !== initialForm.expected_output) return true;
     if (form.hasExpectedOutput !== initialForm.hasExpectedOutput) return true;
+    if (isTrajectoryFormChanged(form.trajectory, initialForm.trajectory)) return true;
     if (form.variableRows.length !== initialForm.variableRows.length) return true;
     for (let i = 0; i < form.variableRows.length; i++) {
       if (form.variableRows[i].key !== initialForm.variableRows[i]?.key) return true;
@@ -392,8 +440,19 @@ const CreateCaseModal = memo(props => {
         )}
       </Box>
 
+      {(!readOnly || form.trajectory.enabled) && (
+        <ExpectedTrajectoryEditor
+          form={form.trajectory}
+          onChange={handleTrajectoryChange}
+          toolOptions={toolOptions}
+          readOnly={readOnly}
+        />
+      )}
+
       {!readOnly && errorMessage && (
         <Typography
+          ref={errorRef}
+          role="alert"
           data-testid="create-case-error"
           sx={styles.error}
         >
