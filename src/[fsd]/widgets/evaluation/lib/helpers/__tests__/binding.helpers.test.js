@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { EVAL_ENGINE, EVAL_SCALE_TYPE } from '../../constants';
-import { getBindingEngineTooltip, getTargetLabel } from '../binding.helpers';
+import { EVAL_ENGINE, EVAL_SCALE_TYPE, IMPORTANCE } from '../../constants';
+import {
+  getBindingEngineTooltip,
+  getTargetLabel,
+  importanceFormToWeight,
+  weightToImportanceForm,
+} from '../binding.helpers';
 
 // A target of exactly 0/1 with '==' is only pass/fail semantics on a binary scale — on a rating
 // or custom scale it is a legitimate numeric value and must render as a plain number, not "pass".
@@ -50,5 +55,40 @@ describe('getBindingEngineTooltip', () => {
     expect(getBindingEngineTooltip({ platform_key: 'json', engine: EVAL_ENGINE.ai })).toBe(
       'This dimension is evaluated using Python validation logic.',
     );
+  });
+});
+
+describe('weightToImportanceForm', () => {
+  it('maps a preset weight to its importance', () => {
+    expect(weightToImportanceForm(3)).toEqual({ importance: IMPORTANCE.high, customImportanceValue: '' });
+  });
+
+  it('maps an off-preset weight, including 0, to custom', () => {
+    expect(weightToImportanceForm(0)).toEqual({ importance: IMPORTANCE.custom, customImportanceValue: '0' });
+    expect(weightToImportanceForm(2.5)).toEqual({
+      importance: IMPORTANCE.custom,
+      customImportanceValue: '2.5',
+    });
+  });
+
+  it('falls back to medium when there is no weight', () => {
+    expect(weightToImportanceForm(null).importance).toBe(IMPORTANCE.medium);
+  });
+});
+
+describe('importanceFormToWeight', () => {
+  it('maps a preset importance to its weight', () => {
+    expect(importanceFormToWeight(IMPORTANCE.critical, '')).toBe(4);
+  });
+
+  it('accepts a custom value of zero or more', () => {
+    expect(importanceFormToWeight(IMPORTANCE.custom, '0')).toBe(0);
+    expect(importanceFormToWeight(IMPORTANCE.custom, '1.5')).toBe(1.5);
+  });
+
+  it('rejects an empty, non-numeric or negative custom value', () => {
+    expect(importanceFormToWeight(IMPORTANCE.custom, '')).toBeNull();
+    expect(importanceFormToWeight(IMPORTANCE.custom, 'abc')).toBeNull();
+    expect(importanceFormToWeight(IMPORTANCE.custom, '-1')).toBeNull();
   });
 });

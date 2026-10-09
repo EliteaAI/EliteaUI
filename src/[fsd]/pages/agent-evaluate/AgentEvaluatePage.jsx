@@ -6,6 +6,7 @@ import { Box } from '@mui/material';
 
 import { Modal } from '@/[fsd]/shared/ui';
 import {
+  BindingWeightDialog,
   BuildDimensionWithAiModal,
   CreateSuiteModal,
   DatasetModal,
@@ -262,6 +263,15 @@ const AgentEvaluatePage = memo(() => {
             projectId={projectId}
             applicationId={applicationId}
             onSaved={dimensionActions.handleDimensionsCreated}
+          />
+          <BindingWeightDialog
+            open={!!dimensionActions.bindingWeightToEdit}
+            binding={dimensionActions.bindingWeightToEdit?.binding}
+            dimensionName={dimensionActions.bindingWeightToEdit?.name}
+            defaultWeight={dimensionActions.bindingWeightToEdit?.defaultWeight}
+            saving={dimensionActions.isSavingBindingWeight}
+            onClose={dimensionActions.handleCloseEditBindingWeight}
+            onSave={dimensionActions.handleSaveBindingWeight}
           />
         </>
       )}

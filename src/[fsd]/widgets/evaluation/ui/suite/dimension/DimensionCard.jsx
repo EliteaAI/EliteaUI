@@ -31,7 +31,9 @@ const DimensionCard = memo(props => {
     defaultWeight = null,
     canEdit = false,
     canRemove = false,
+    canEditWeight = false,
     onEdit,
+    onEditWeight,
     onRemove,
   } = props;
 
@@ -47,6 +49,14 @@ const DimensionCard = memo(props => {
       onEdit?.(binding);
     },
     [onEdit, binding],
+  );
+
+  const handleEditWeight = useCallback(
+    event => {
+      event.stopPropagation();
+      onEditWeight?.(binding);
+    },
+    [onEditWeight, binding],
   );
 
   const handleRemove = useCallback(
@@ -69,6 +79,9 @@ const DimensionCard = memo(props => {
     { key: 'target', label: targetLabel, tooltip: DIMENSION_BADGE_TOOLTIP.target },
     { key: 'weight', label: weightLabel, tooltip: DIMENSION_BADGE_TOOLTIP.weight },
   ].filter(badge => badge.label);
+
+  // Full editing already covers the weight, so the weight-only action is for cards that can't be edited.
+  const showEditWeight = !canEdit && canEditWeight;
 
   const styles = dimensionCardStyles();
 
@@ -112,7 +125,7 @@ const DimensionCard = memo(props => {
           ))}
         </Box>
       </Box>
-      {(canEdit || canRemove) && (
+      {(canEdit || showEditWeight || canRemove) && (
         <Box
           className="dimension-card-actions"
           sx={styles.actions}
@@ -126,6 +139,22 @@ const DimensionCard = memo(props => {
             >
               <EditPenIcon sx={styles.actionIcon} />
             </Button.BaseBtn>
+          )}
+          {showEditWeight && (
+            <Tooltip
+              title="Edit weight in this suite"
+              placement="top"
+            >
+              <Button.BaseBtn
+                variant={BUTTON_VARIANTS.tertiary}
+                onClick={handleEditWeight}
+                sx={styles.actionButton}
+                aria-label="Edit weight in this suite"
+                data-testid={`dimension-card-edit-weight-${binding.id}`}
+              >
+                <EditPenIcon sx={styles.actionIcon} />
+              </Button.BaseBtn>
+            </Tooltip>
           )}
           {canRemove && (
             <Button.BaseBtn

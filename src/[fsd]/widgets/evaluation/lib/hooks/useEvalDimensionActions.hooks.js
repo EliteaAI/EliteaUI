@@ -46,6 +46,8 @@ export const useEvalDimensionActions = ({
   const [dimensionToRemove, setDimensionToRemove] = useState(null);
   const [dimensionToEdit, setDimensionToEdit] = useState(null);
   const [bindingToEdit, setBindingToEdit] = useState(null);
+  const [bindingWeightToEdit, setBindingWeightToEdit] = useState(null);
+  const [isSavingBindingWeight, setIsSavingBindingWeight] = useState(false);
 
   useEffect(() => {
     setShowDimensionLibrary(false);
@@ -54,6 +56,7 @@ export const useEvalDimensionActions = ({
     setDimensionToRemove(null);
     setDimensionToEdit(null);
     setBindingToEdit(null);
+    setBindingWeightToEdit(null);
   }, [editingSuiteId]);
 
   const handleManageDimensions = useCallback(() => {
@@ -242,6 +245,45 @@ export const useEvalDimensionActions = ({
     [editingSuiteId, bindingToEdit, updateEvalBinding, projectId, toastSuccess, toastError],
   );
 
+  const handleEditBindingWeight = useCallback(
+    binding => {
+      const dim = attachedDimensions.find(d => d.binding.id === binding.id);
+      setBindingWeightToEdit({
+        binding,
+        name: dim?.name || `Dimension #${binding.dimension_id}`,
+        defaultWeight: dim?.defaultWeight ?? null,
+      });
+    },
+    [attachedDimensions],
+  );
+
+  const handleCloseEditBindingWeight = useCallback(() => {
+    setBindingWeightToEdit(null);
+  }, []);
+
+  const handleSaveBindingWeight = useCallback(
+    async weight => {
+      const bindingId = bindingWeightToEdit?.binding?.id;
+      if (!editingSuiteId || !bindingId) return;
+      setIsSavingBindingWeight(true);
+      try {
+        await updateEvalBinding({
+          projectId,
+          suiteId: editingSuiteId,
+          bindingId,
+          body: { weight },
+        }).unwrap();
+        toastSuccess('Weight has been updated for this suite.');
+        setBindingWeightToEdit(null);
+      } catch (error) {
+        toastError(parseEvalError(error, 'Failed to update the weight.'));
+      } finally {
+        setIsSavingBindingWeight(false);
+      }
+    },
+    [editingSuiteId, bindingWeightToEdit, updateEvalBinding, projectId, toastSuccess, toastError],
+  );
+
   const handleRemoveDimension = useCallback(
     binding => {
       const dim = attachedDimensions.find(d => d.binding.id === binding.id);
@@ -277,6 +319,8 @@ export const useEvalDimensionActions = ({
     dimensionToRemove,
     dimensionToEdit,
     bindingToEdit,
+    bindingWeightToEdit,
+    isSavingBindingWeight,
     handleManageDimensions,
     handleSelectDimensionFromLibrary,
     handleCloseDimensionLibrary,
@@ -290,6 +334,9 @@ export const useEvalDimensionActions = ({
     handleEditDimension,
     handleCloseEditDimension,
     handleDimensionUpdated,
+    handleEditBindingWeight,
+    handleCloseEditBindingWeight,
+    handleSaveBindingWeight,
     handleRemoveDimension,
     handleCloseRemoveDimension,
     handleConfirmRemoveDimension,
