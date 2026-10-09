@@ -122,10 +122,10 @@ const previewDocumentStyles = () => ({
 
         '&:first-of-type': {
           '>div': {
-            '&:nth-child(1)': {
+            '&:nth-of-type(1)': {
               display: 'none',
             },
-            '&:nth-child(8)': {
+            '&:nth-of-type(8)': {
               display: 'none',
             },
 
