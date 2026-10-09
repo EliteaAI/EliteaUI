@@ -350,13 +350,6 @@ export const ViewMode = {
   Public: 'public',
 };
 
-export const TOAST_DURATION_DEFAULTS = {
-  error: 10000,
-  warning: 7000,
-  success: 3000,
-  info: 3000,
-};
-
 export const MIN_CARD_WIDTH = '300px';
 export const CARD_WIDTH_PX = 300;
 export const CARD_TOTAL_WIDTH_PX = 316; // card width (300px) + gap (16px)

@@ -1,9 +1,10 @@
 import { useContext, useEffect, useMemo } from 'react';
 
-import { ToastContext } from '../components/ToastProvider';
+import { DEFAULT_TOP_POSITION } from '@/[fsd]/shared/lib/constants/toast.constants';
+import { ToastContext } from '@/[fsd]/shared/lib/context/ToastContext';
 
 const useToast = (options = {}) => {
-  const { topPosition = '90px', onCloseToast, icon } = useMemo(() => options, [options]);
+  const { topPosition = DEFAULT_TOP_POSITION, onCloseToast, icon } = useMemo(() => options, [options]);
   const { toastHandlers, clearToast, setTopPosition, setIcon, setOnCloseToast } = useContext(ToastContext);
 
   const { toastError, toastSuccess, toastInfo, toastWarning } = useMemo(() => toastHandlers, [toastHandlers]);
@@ -16,7 +17,7 @@ const useToast = (options = {}) => {
 
   useEffect(() => {
     return () => {
-      setTopPosition('90px');
+      setTopPosition(DEFAULT_TOP_POSITION);
       setOnCloseToast(undefined);
       setIcon(undefined);
     };

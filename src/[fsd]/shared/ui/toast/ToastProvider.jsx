@@ -1,13 +1,12 @@
-import React, { useCallback, useContext, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 
-import { useAllToastDurations } from '@/[fsd]/shared/lib/hooks';
+import { DEFAULT_TOP_POSITION } from '@/[fsd]/shared/lib/constants/toast.constants';
+import { ToastContext } from '@/[fsd]/shared/lib/context/ToastContext';
 
-import Toast from './Toast';
+const ToastProvider = memo(props => {
+  const { children } = props;
 
-export const ToastContext = React.createContext();
-
-export const ToastProvider = ({ children }) => {
-  const [topPosition, setTopPosition] = useState('90px');
+  const [topPosition, setTopPosition] = useState(DEFAULT_TOP_POSITION);
   const [onCloseToast, setOnCloseToast] = useState(undefined);
   const [icon, setIcon] = useState(undefined);
   const [toastProps, setToastProps] = useState({
@@ -25,7 +24,7 @@ export const ToastProvider = ({ children }) => {
     if (onCloseToast) {
       onCloseToast();
     }
-  }, [onCloseToast, setToastProps]);
+  }, [onCloseToast]);
 
   const toastHandlers = useMemo(
     () => ({
@@ -54,26 +53,8 @@ export const ToastProvider = ({ children }) => {
       {children}
     </ToastContext.Provider>
   );
-};
+});
 
-export const ToastComponent = () => {
-  const { clearToast, toastProps, topPosition, icon } = useContext(ToastContext);
-  const toastDurations = useAllToastDurations();
-  const resolvedDuration = toastDurations[toastProps.severity] ?? toastDurations.info;
+ToastProvider.displayName = 'ToastProvider';
 
-  return (
-    <Toast
-      open={toastProps.open}
-      severity={toastProps.severity}
-      message={
-        typeof toastProps.message === 'string'
-          ? toastProps.message
-          : toastProps.message?.toString() || 'Unknown error'
-      }
-      onClose={clearToast}
-      autoHideDuration={resolvedDuration}
-      topPosition={topPosition}
-      icon={icon}
-    />
-  );
-};
+export default ToastProvider;

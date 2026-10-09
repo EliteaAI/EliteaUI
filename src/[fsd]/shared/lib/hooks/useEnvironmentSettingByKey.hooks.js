@@ -1,8 +1,9 @@
 import { useMemo } from 'react';
 
 import { ENVIRONMENT_KEYS, ENVIRONMENT_SECTION } from '@/[fsd]/shared/lib/constants/environment.constants';
+import { TOAST_DURATION_DEFAULTS } from '@/[fsd]/shared/lib/constants/toast.constants';
 import { useGetConfigurationsListQuery } from '@/api/configurations.js';
-import { DEFAULT_PARTICIPANT_NAME, PUBLIC_PROJECT_ID, TOAST_DURATION_DEFAULTS } from '@/common/constants.js';
+import { DEFAULT_PARTICIPANT_NAME, PUBLIC_PROJECT_ID } from '@/common/constants.js';
 
 const ENVIRONMENT_QUERY_ARGS = {
   projectId: PUBLIC_PROJECT_ID,
