@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 
 import { Box, useTheme } from '@mui/material';
 
+import { BucketAccessConstants } from '@/[fsd]/features/artifacts/lib/constants';
 import { useProjectType, useShareLink } from '@/[fsd]/shared/lib/hooks';
 import { Button, Tooltip } from '@/[fsd]/shared/ui';
 import CopyLinkIcon from '@/assets/copy-link-icon.svg?react';
@@ -21,7 +22,7 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { getBasename } from '@/routes';
 import { generateBucketShareUrl } from '@/utils/shareUtils';
 
-const MANAGE_BUCKET_PERMISSIONS_PERMISSION = 'configuration.artifacts.s3_credentials.edit';
+const { BUCKET_ACCESS } = BucketAccessConstants;
 
 export const BucketItem = forwardRef((props, ref) => {
   const {
@@ -50,7 +51,7 @@ export const BucketItem = forwardRef((props, ref) => {
   const [showMenu, setShowMenu] = useState(false);
 
   const isPersonalProject = projectId === personal_project_id;
-  const hasBucketWriteAccess = !Array.isArray(permissions) || permissions.includes('write');
+  const hasBucketWriteAccess = !Array.isArray(permissions) || permissions.includes(BUCKET_ACCESS.write);
   const canUpdate =
     hasBucketWriteAccess &&
     (isPrivate ||
@@ -155,7 +156,9 @@ export const BucketItem = forwardRef((props, ref) => {
         checkPermission(PERMISSIONS.artifacts.create) ||
         (owner_id && userId === owner_id));
     const canManagePermissions =
-      !isPersonalProject && hasBucketWriteAccess && checkPermission(MANAGE_BUCKET_PERMISSIONS_PERMISSION);
+      !isPersonalProject &&
+      hasBucketWriteAccess &&
+      checkPermission(PERMISSIONS.artifacts.s3_credentials.edit);
 
     return [
       {
