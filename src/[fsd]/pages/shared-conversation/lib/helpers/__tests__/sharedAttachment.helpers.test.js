@@ -52,18 +52,22 @@ describe('buildSharedAttachment', () => {
 });
 
 describe('buildSharedArtifactLinkResolver', () => {
+  // The shared view payload has no bucket and strips the first path segment from attachment names
   const groups = [
     { id: 1, items: [{ type: 'text_message', content: 'hi' }] },
     {
       id: 5,
       items: [
-        { type: 'attachment_message', attachment: { name: 'artifact-demo.html', bucket: 'attach' } },
-        { type: 'attachment_message', attachment: { name: 'reports/q3 summary.html', bucket: 'docs' } },
+        {
+          type: 'attachment_message',
+          attachment: { name: 'artifact-demo.html', attachment_type: 'document' },
+        },
+        { type: 'attachment_message', attachment: { name: 'q3 summary.html', attachment_type: 'document' } },
       ],
     },
   ];
 
-  it('maps a conversation attachment to the public shared endpoint', () => {
+  it('maps a conversation attachment to the public shared endpoint by file name', () => {
     const resolve = buildSharedArtifactLinkResolver(groups, 'tok');
 
     expect(resolve({ bucket: 'attach', file: 'artifact-demo.html' })).toBe(
@@ -75,10 +79,9 @@ describe('buildSharedArtifactLinkResolver', () => {
   });
 
   it('returns null for files that are not attachments of the conversation', () => {
-    const resolve = buildSharedArtifactLinkResolver(groups, 'tok');
-
-    expect(resolve({ bucket: 'attach', file: 'secret.html' })).toBeNull();
-    expect(resolve({ bucket: 'other', file: 'artifact-demo.html' })).toBeNull();
+    expect(
+      buildSharedArtifactLinkResolver(groups, 'tok')({ bucket: 'attach', file: 'secret.html' }),
+    ).toBeNull();
   });
 
   it('handles missing groups', () => {

@@ -1,3 +1,5 @@
+const getFileName = path => (path || '').split('/').pop();
+
 export const buildSharedAttachmentUrl = (token, groupId, fileName) =>
   `${window.location.protocol}//${window.location.host}/api/v2/elitea_core/shared_chat_attachment/prompt_lib/${token}/${groupId}/${encodeURIComponent(fileName)}`;
 
@@ -31,23 +33,22 @@ export const buildSharedAttachment = (item, token, groupId) => {
  * shared chat has no access to the owner's project, so a link can only be opened when the file is one of the
  * conversation's attachments — then it points to the public shared endpoint. Other files resolve to `null`.
  *
+ * The shared view intentionally omits attachment buckets and full storage paths, so files are matched by
+ * file name (the same way the public endpoint looks them up).
+ *
  * @returns {(artifact: {bucket: string, file: string}) => string | null}
  */
 export const buildSharedArtifactLinkResolver = (groups = [], token) => {
-  const urlsByPath = new Map();
+  const urlsByFileName = new Map();
 
   groups.forEach(group => {
     (group.items || []).forEach(item => {
-      const { bucket, name } = item.attachment || {};
-      if (item.type !== 'attachment_message' || !bucket || !name) return;
+      const fileName = getFileName(item.attachment?.name);
+      if (item.type !== 'attachment_message' || !fileName) return;
 
-      const filePath = name.replace(/^\/+/, '');
-      urlsByPath.set(
-        `${bucket}/${filePath}`,
-        buildSharedAttachmentUrl(token, group.id, filePath.split('/').pop()),
-      );
+      urlsByFileName.set(fileName, buildSharedAttachmentUrl(token, group.id, fileName));
     });
   });
 
-  return ({ bucket, file }) => urlsByPath.get(`${bucket}/${file}`) ?? null;
+  return ({ file }) => urlsByFileName.get(getFileName(file)) ?? null;
 };
