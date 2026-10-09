@@ -37,8 +37,7 @@ export const useChatSocketReconnect = ({ activeConversation, projectId, setActiv
     const uuid = activeConversation?.uuid;
     const convId = activeConversation?.id;
     if (!uuid || !convId) return;
-
-    emitEnterRoom({ conversation_uuid: uuid, project_id: projectId });
+    emitEnterRoom({ conversation_id: convId, conversation_uuid: uuid, project_id: projectId });
 
     (async () => {
       const result = await getConversationDetail({ projectId, id: convId });
