@@ -1,4 +1,4 @@
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 
 import { useParams } from 'react-router-dom';
 
@@ -9,6 +9,8 @@ import {
   useUnlockSharedConversationMutation,
 } from '@/[fsd]/features/chat/conversation-list/api';
 import { ErrorTrace } from '@/[fsd]/features/chat/ui';
+import { buildSharedArtifactLinkResolver } from '@/[fsd]/pages/shared-conversation/lib/helpers';
+import { ArtifactLinkContext } from '@/[fsd]/shared/lib/context';
 import { Input } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 
@@ -31,6 +33,11 @@ const SharedConversationPage = memo(() => {
   const [unlockConversation, { isLoading: isUnlocking }] = useUnlockSharedConversationMutation();
 
   const styles = sharedConversationPageStyles();
+
+  const resolveArtifactLink = useMemo(
+    () => buildSharedArtifactLinkResolver(data?.messages, token),
+    [data?.messages, token],
+  );
 
   const handleUnlock = useCallback(async () => {
     setPasswordError('');
@@ -205,70 +212,72 @@ const SharedConversationPage = memo(() => {
         </Typography>
       </Box>
 
-      <Box sx={styles.messagesContainer}>
-        {conversation.messages.length === 0 && (
-          <Typography
-            variant="bodyMedium"
-            color="text.disabled"
-            sx={styles.emptyText}
-          >
-            No messages to display for this scope.
-          </Typography>
-        )}
-        {conversation.messages.map(group => (
-          <Box
-            key={group.id}
-            sx={styles.messageGroup}
-          >
-            <Box sx={styles.authorRow}>
-              <ParticipantAvatar
-                participantType={group.participant_type}
-                participantAgentType={group.participant_agent_type}
-                participantIcon={group.participant_icon}
-                authorName={group.author_name}
-              />
-              <Typography
-                variant="bodySmall"
-                color="text.secondary"
-              >
-                {group.author_name || (group.author_type === 'user' ? 'User' : 'Assistant')}
-              </Typography>
-              <Typography
-                variant="bodySmall"
-                color="text.disabled"
-              >
-                {new Date(group.created_at).toLocaleString()}
-              </Typography>
-            </Box>
-            <Box sx={styles.messageBody}>
-              {group.is_error ? (
-                <ErrorTrace
-                  headline={
-                    group.items.find(i => i.type === 'text_message')?.content ||
-                    group.error ||
-                    'Unknown error'
-                  }
-                  trace={group.error}
+      <ArtifactLinkContext.Provider value={resolveArtifactLink}>
+        <Box sx={styles.messagesContainer}>
+          {conversation.messages.length === 0 && (
+            <Typography
+              variant="bodyMedium"
+              color="text.disabled"
+              sx={styles.emptyText}
+            >
+              No messages to display for this scope.
+            </Typography>
+          )}
+          {conversation.messages.map(group => (
+            <Box
+              key={group.id}
+              sx={styles.messageGroup}
+            >
+              <Box sx={styles.authorRow}>
+                <ParticipantAvatar
+                  participantType={group.participant_type}
+                  participantAgentType={group.participant_agent_type}
+                  participantIcon={group.participant_icon}
+                  authorName={group.author_name}
                 />
-              ) : (
-                <>
-                  {group.items.map((item, itemIndex) => (
-                    <MessageItemRenderer
-                      key={itemIndex}
-                      item={item}
-                    />
-                  ))}
-                  <GroupAttachmentList
-                    items={group.items}
-                    token={token}
-                    groupId={group.id}
+                <Typography
+                  variant="bodySmall"
+                  color="text.secondary"
+                >
+                  {group.author_name || (group.author_type === 'user' ? 'User' : 'Assistant')}
+                </Typography>
+                <Typography
+                  variant="bodySmall"
+                  color="text.disabled"
+                >
+                  {new Date(group.created_at).toLocaleString()}
+                </Typography>
+              </Box>
+              <Box sx={styles.messageBody}>
+                {group.is_error ? (
+                  <ErrorTrace
+                    headline={
+                      group.items.find(i => i.type === 'text_message')?.content ||
+                      group.error ||
+                      'Unknown error'
+                    }
+                    trace={group.error}
                   />
-                </>
-              )}
+                ) : (
+                  <>
+                    {group.items.map((item, itemIndex) => (
+                      <MessageItemRenderer
+                        key={itemIndex}
+                        item={item}
+                      />
+                    ))}
+                    <GroupAttachmentList
+                      items={group.items}
+                      token={token}
+                      groupId={group.id}
+                    />
+                  </>
+                )}
+              </Box>
             </Box>
-          </Box>
-        ))}
-      </Box>
+          ))}
+        </Box>
+      </ArtifactLinkContext.Provider>
     </Box>
   );
 });
