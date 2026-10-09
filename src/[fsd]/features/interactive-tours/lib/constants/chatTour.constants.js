@@ -27,6 +27,8 @@ Chats can be **Private** (visible only to you) or **Public** (shared with all pr
 
 Use the **search** icon in the CHATS header to filter chats by name — results update as you type.
 
+Use **Import** in the CHATS header to restore a chat exported from this ELITEA setup (.json.enc or .zip.enc). You can choose which attachments to bring in; the imported chat appears under Today.
+
 **Chat actions** (three-dot menu on any chat):
 
 - **Edit** — Rename the chat
@@ -34,7 +36,7 @@ Use the **search** icon in the CHATS header to filter chats by name — results 
 - **Make Public** — Share the chat with all project members; cannot be reversed
 - **Share** — Copy a direct link to the chat to your clipboard (team projects only)
 - **Playback** — Replay the chat step by step without re-engaging models; use arrow keys or on-screen controls to navigate; designed for demos
-- **Export** — Download the chat as a JSON file, or as a ZIP archive that also includes its attached and generated files
+- **Export** — Download the chat as an encrypted JSON file, or as an encrypted ZIP archive that also includes its attached and generated files; it can be imported only into the same ELITEA setup
 - **Pin on top** — Pin the chat to the top of the list
 - **Delete** — Permanently delete the chat`,
   },
