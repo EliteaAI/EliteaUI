@@ -24,6 +24,7 @@ import {
 import { Conversations } from '@/[fsd]/features/chat/conversation-list/ui';
 import {
   useChatEditors,
+  useChatSocketReconnect,
   useConversationNavigation,
   useEditConversation,
   useInternalToolsConfig,
@@ -435,6 +436,8 @@ const NewChat = props => {
   useEffect(() => {
     activeConversationIdRef.current = activeConversation?.id;
   }, [activeConversation?.id]);
+
+  useChatSocketReconnect({ activeConversation, projectId, setActiveConversation });
 
   const handleRestrictAccessSuccess = useCallback(
     async (conversationId, participantChanges = {}) => {
