@@ -33,3 +33,36 @@ describe('Token ordered-list rendering', () => {
     expect(rendered).toContain('item-101');
   });
 });
+
+describe('Token link rendering', () => {
+  const theme = createTheme({
+    palette: {
+      border: { lines: '#000' },
+      text: { highlighted: '#000' },
+    },
+  });
+
+  const renderMarkdown = source =>
+    renderToStaticMarkup(
+      <ThemeProvider theme={theme}>
+        <Token
+          markedToken={marked.lexer(source)[0]}
+          renderHtml
+        />
+      </ThemeProvider>,
+    );
+
+  it('rewrites artifact storage path links to the Artifacts viewer URL', () => {
+    const rendered = renderMarkdown('[file](/architecture/architecture/elitea-mcp-architecture.html)');
+
+    expect(rendered).toContain(
+      'href="/artifacts?bucket=architecture&amp;file=architecture%2Felitea-mcp-architecture.html"',
+    );
+  });
+
+  it('keeps external links unchanged', () => {
+    const rendered = renderMarkdown('[site](https://example.com/bucket/file.html)');
+
+    expect(rendered).toContain('href="https://example.com/bucket/file.html"');
+  });
+});

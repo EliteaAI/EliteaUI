@@ -1,7 +1,7 @@
 import { Box, Typography } from '@mui/material';
-import Link from '@mui/material/Link';
 
 import { typographyVariants } from '@/[fsd]/shared/config/theme';
+import MarkdownLink from '@/[fsd]/shared/ui/markdown/MarkdownLink';
 
 export const removeHTMLTags = htmlString => htmlString.replace(/<\/?[^>]+(>|$)/g, '');
 
@@ -91,7 +91,7 @@ export const MarkdownMapping = {
     },
   },
   a: {
-    component: Link,
+    component: MarkdownLink,
     props: {
       target: '_blank',
       variant: 'bodySmall',
