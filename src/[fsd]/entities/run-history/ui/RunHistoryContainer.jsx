@@ -221,7 +221,7 @@ const RunHistoryContainer = memo(props => {
             shareOpensHistoryTab={shareOpensHistoryTab}
             extraColumns={extraColumns}
             listWidth={listWidth}
-            emptyState={emptyState}
+            emptyState={typeof emptyState === 'function' ? emptyState(data) : emptyState}
           />
         </Box>
 

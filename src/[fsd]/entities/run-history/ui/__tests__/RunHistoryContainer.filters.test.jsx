@@ -152,6 +152,14 @@ describe('RunHistoryContainer filters', () => {
     await vi.waitFor(() => expect(onFacets).toHaveBeenCalledWith(facets));
   });
 
+  it('builds the empty state from the page the list shows', () => {
+    queryResult.data = { rows: [], total: 0, modelFilterUnavailable: true };
+
+    render(tree({ emptyState: page => <Box data-testid={`empty-${page.modelFilterUnavailable}`} /> }));
+
+    expect(screen.getByTestId('empty-true')).toBeInTheDocument();
+  });
+
   it('passes the empty state, columns and width to the list', () => {
     queryResult.data = { rows: [], total: 0 };
     const extraColumns = [{ type: 'cost', label: 'Cost', width: '1fr', getText: () => '' }];

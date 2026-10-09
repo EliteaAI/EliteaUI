@@ -45,7 +45,8 @@ const RunHistoryRowActions = memo(props => {
 
   const hasConversation = item?.hasConversation ?? true;
   const canShare = item?.canShare ?? hasConversation;
-  const canOpenAnalytics = hasConversation && !!handleOpenAnalytics && hasRunAnalytics(item);
+  const canOpenAnalytics =
+    hasConversation && !!handleOpenAnalytics && !item?.is_shared_chat && hasRunAnalytics(item);
 
   const styles = runHistoryRowActionsStyles(isDeleting);
 

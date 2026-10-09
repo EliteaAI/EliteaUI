@@ -2,7 +2,9 @@ import { memo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-const resolveEmptyMessage = (isFiltered, isCatalogSkill) => {
+const resolveEmptyMessage = (isFiltered, isCatalogSkill, isModelFilterUnavailable) => {
+  if (isModelFilterUnavailable)
+    return 'Usage data is unavailable right now, so runs cannot be filtered by model. Clear the model filter to see them.';
   if (isFiltered) return 'No runs match these filters.';
   if (isCatalogSkill)
     return 'No runs of this Catalog skill in this project yet. Run it from the Catalog, and its runs appear here.';
@@ -10,7 +12,7 @@ const resolveEmptyMessage = (isFiltered, isCatalogSkill) => {
 };
 
 const SkillRunHistoryEmptyState = memo(props => {
-  const { isFiltered, isCatalogSkill } = props;
+  const { isFiltered, isCatalogSkill, isModelFilterUnavailable } = props;
   const styles = skillRunHistoryEmptyStateStyles();
 
   return (
@@ -22,7 +24,7 @@ const SkillRunHistoryEmptyState = memo(props => {
         variant="bodyMedium"
         color="text.secondary"
       >
-        {resolveEmptyMessage(isFiltered, isCatalogSkill)}
+        {resolveEmptyMessage(isFiltered, isCatalogSkill, isModelFilterUnavailable)}
       </Typography>
     </Box>
   );

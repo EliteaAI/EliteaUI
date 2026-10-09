@@ -132,3 +132,22 @@ describe('serializeRunHistory — skill run summary', () => {
     expect(serializeRunHistoryListResponse({ rows: [], total: 0 })).not.toHaveProperty('facets');
   });
 });
+
+describe('serializeRunHistory — shared chats and the model filter', () => {
+  it('marks a chat the skill shares with other participants', () => {
+    const { rows } = serializeRunHistoryListResponse({
+      rows: [skillChatRun, { ...skillChatRun, id: 4, source: 'skill' }],
+      total: 2,
+    });
+
+    expect(rows.map(row => row.is_shared_chat)).toEqual([true, false]);
+  });
+
+  it('says when the model filter could not be applied', () => {
+    expect(
+      serializeRunHistoryListResponse({ rows: [], total: 0, model_filter_unavailable: true })
+        .modelFilterUnavailable,
+    ).toBe(true);
+    expect(serializeRunHistoryListResponse({ rows: [], total: 0 }).modelFilterUnavailable).toBe(false);
+  });
+});

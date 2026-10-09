@@ -95,11 +95,12 @@ const SkillRunHistoryView = memo(props => {
     [isCatalogSkill, navigate, search, skillId, tab],
   );
 
-  const emptyState = useMemo(
-    () => (
+  const renderEmptyState = useCallback(
+    page => (
       <SkillRunHistoryEmptyState
         isFiltered={hasSkillRunHistoryFilters(appliedFilters)}
         isCatalogSkill={isCatalogSkill}
+        isModelFilterUnavailable={Boolean(page?.modelFilterUnavailable)}
       />
     ),
     [appliedFilters, isCatalogSkill],
@@ -128,7 +129,7 @@ const SkillRunHistoryView = memo(props => {
           onFacets={setFacets}
           extraColumns={extraColumns}
           listWidth={LIST_WIDTH}
-          emptyState={emptyState}
+          emptyState={renderEmptyState}
           handleRestoreConversation={handleRestoreConversation}
           handleOpenAnalytics={handleOpenAnalytics}
           ChatMessageListComponent={ChatMessageList}

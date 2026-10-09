@@ -254,3 +254,17 @@ describe('RunHistoryListItem extra columns', () => {
     expect(handleRestoreConversation).toHaveBeenCalledWith(42, run);
   });
 });
+
+describe('RunHistoryListItem analytics of shared chats', () => {
+  it('offers no analytics for a chat the history entity shares with other participants', () => {
+    renderItem({ ...TRACKED_ROW, is_shared_chat: true }, { handleOpenAnalytics: vi.fn() });
+
+    expect(screen.queryByTestId('menu-item-Analytics')).not.toBeInTheDocument();
+  });
+
+  it('keeps analytics for a run the entity had to itself', () => {
+    renderItem({ ...TRACKED_ROW, is_shared_chat: false }, { handleOpenAnalytics: vi.fn() });
+
+    expect(screen.getByTestId('menu-item-Analytics')).toBeInTheDocument();
+  });
+});

@@ -85,7 +85,9 @@ export const toRunISOString = value => {
 export const hasRunAnalytics = run =>
   parseRunTimestamp(run?.updated_at || run?.created_at) >= RUN_ANALYTICS_AVAILABLE_FROM;
 
-const SKILL_HISTORY_SOURCES = [ParticipantEntityTypes.Skill, 'elitea'].join(',');
+export const CHAT_CONVERSATION_SOURCE = 'elitea';
+
+const SKILL_HISTORY_SOURCES = [ParticipantEntityTypes.Skill, CHAT_CONVERSATION_SOURCE].join(',');
 
 export const resolveRunHistorySource = source => {
   if (source === ParticipantEntityTypes.MCP) return ParticipantEntityTypes.Toolkit;

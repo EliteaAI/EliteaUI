@@ -1,9 +1,12 @@
+import { CHAT_CONVERSATION_SOURCE } from '@/[fsd]/entities/run-history/lib/helpers';
+
 const serializeRunSummary = conversation => {
   const summary = conversation.run_summary;
   if (!summary) return {};
 
   return {
     source: conversation.source,
+    is_shared_chat: conversation.source === CHAT_CONVERSATION_SOURCE,
     message_count: conversation.message_groups_count ?? 0,
     status: summary.status ?? null,
     author: summary.author ?? null,
@@ -58,5 +61,6 @@ export const serializeRunHistoryListResponse = (response, isLoadMore) => {
     nextPage: response.next_page || null,
     isLoadMore,
     ...(response.facets ? { facets: response.facets } : {}),
+    modelFilterUnavailable: Boolean(response.model_filter_unavailable),
   };
 };
