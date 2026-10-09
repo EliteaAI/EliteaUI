@@ -108,7 +108,7 @@ const AddCaseFromChatsModal = memo(props => {
     }
 
     if (failures.length > 0) {
-      setErrorMessage(parseEvalError(failures[0].reason, 'Failed to add cases from conversation.'));
+      setErrorMessage(parseEvalError(failures[0].reason, 'Failed to add cases from chat.'));
     } else {
       onClose();
     }
@@ -169,7 +169,7 @@ const AddCaseFromChatsModal = memo(props => {
             color="text.secondary"
             sx={styles.emptyText}
           >
-            {isRunHistory ? 'No run-history conversations found for this agent.' : 'No conversations found.'}
+            {isRunHistory ? 'No run-history chats found for this agent.' : 'No chats found.'}
           </Typography>
         ) : (
           rows.map(row => {

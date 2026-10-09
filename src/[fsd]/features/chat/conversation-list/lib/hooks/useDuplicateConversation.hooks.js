@@ -61,7 +61,7 @@ export const useDuplicateConversation = props => {
         });
 
         if (detailResult.error) {
-          toastError('Failed to duplicate conversation');
+          toastError('Failed to duplicate chat');
           return;
         }
 
@@ -76,7 +76,7 @@ export const useDuplicateConversation = props => {
         });
 
         if (!createResult.data) {
-          toastError('Failed to duplicate conversation');
+          toastError('Failed to duplicate chat');
           return;
         }
 
@@ -141,9 +141,8 @@ export const useDuplicateConversation = props => {
           conversationId: finalConversation.id,
         });
 
-        if (hasParticipantIssues)
-          toastInfo('Conversation duplicated, but some participants could not be added');
-        else toastSuccess('Conversation duplicated successfully');
+        if (hasParticipantIssues) toastInfo('Chat duplicated, but some participants could not be added');
+        else toastSuccess('Chat duplicated successfully');
       } finally {
         setDuplicatingConversationId(null);
       }

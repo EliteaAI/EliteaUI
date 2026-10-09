@@ -152,7 +152,7 @@ const CollapsedPerticapantsList = memo(props => {
       {showUsersSection && usersGroup && (
         <StyledTooltip
           disableInteractive
-          title={`${USERS_SECTION.label} in this conversation`}
+          title={`${USERS_SECTION.label} in this chat`}
           placement="right"
           open={collapsedTooltipType === USERS_SECTION.type && !isUsersMenuOpen}
           onOpen={() => onTriggerTooltipOpen(USERS_SECTION.type)}
@@ -214,7 +214,7 @@ const CollapsedPerticapantsList = memo(props => {
                 ? `Misconfiguration error in ${entity?.label?.toLowerCase()}`
                 : sectionHasSkippedContainer
                   ? 'Its sub-agent chain is at the nesting limit (3 tiers) — select it to run.'
-                  : `${entity.label} in this conversation`
+                  : `${entity.label} in this chat`
             }
             placement="right"
             disableInteractive

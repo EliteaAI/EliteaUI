@@ -309,7 +309,7 @@ export const ConversationStartersView = memo(props => {
               variant="bodyMedium"
               sx={styles.title}
             >
-              You may start conversation from following:
+              You may start chat from following:
             </Typography>
           </ListItem>
           {filteredItems.map((starter, index) =>

@@ -175,15 +175,29 @@ const StreamingThinkBlocks = memo(props => {
   const pcidToAnchorKey = buildPcidAnchorMap(streamingSubGroupsFull);
   const resolveAnchor = key => (key && pcidToAnchorKey.get(key)) || key;
 
+  // Collect anchor keys for all sub-agents that currently have live signals.
+  // Raw pcids (e.g. a resume round's pcid) are resolved to their anchor so
+  // the filter below matches the anchor keys stored in streamingSubGroupsFull.
+  const liveAnchorKeys = new Set(
+    [
+      ...subAgentInflight.keys(),
+      ...(subAgentRunning ? subAgentRunning.keys() : []),
+      ...(currentActionKey ? [currentActionKey] : []),
+    ].map(resolveAnchor),
+  );
+
   // Keyed by sub-agent INVOCATION (parent_agent_call_id), so two calls to the
-  // same sub-agent each get their own accordion (#5386). Any invocation with
-  // arrived actions that the throttled reveal hasn't surfaced yet still gets an
-  // accordion (its chips come from the full groups below). Each candidate key is
-  // reconciled to its folded anchor and de-duplicated.
+  // same sub-agent each get their own accordion (#5386). Only surface arrived-
+  // but-unthrottled sub-agents that have live activity: a completed sub-agent
+  // that hasn't been revealed by the throttle yet renders as a collapsed
+  // accordion whose borderBottom is visually indistinguishable from a separator
+  // line (#6832). Sub-agents without live signals will be revealed naturally
+  // once the throttle catches up. Each candidate key is reconciled to its
+  // folded anchor and de-duplicated.
   const extraSub = resolveExtraSubAgentKeys({
     renderedKeys: renderedSubKeys,
     candidateKeys: [
-      ...streamingSubGroupsFull.keys(),
+      ...[...streamingSubGroupsFull.keys()].filter(k => liveAnchorKeys.has(k)),
       ...subAgentInflight.keys(),
       ...(subAgentRunning ? subAgentRunning.keys() : []),
       ...(currentActionKey ? [currentActionKey] : []),

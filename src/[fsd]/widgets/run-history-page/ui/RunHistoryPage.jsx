@@ -8,6 +8,7 @@ import { RunHistoryContainer } from '@/[fsd]/entities/run-history/ui';
 import { ChatMessageList } from '@/[fsd]/features/chat';
 import { DrawerPageHeader } from '@/[fsd]/features/settings/ui/drawer-page';
 import { ToolkitsHelpers } from '@/[fsd]/features/toolkits';
+import { NavigationConstants } from '@/[fsd]/shared/lib/constants';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import Breadcrumbs from '@/[fsd]/shared/ui/breadcrumbs';
 import { useApplicationDetailsQuery } from '@/api/applications';
@@ -32,11 +33,19 @@ const RunHistoryPage = memo(props => {
 
   const handleRestoreConversation = useCallback(
     id => {
+      const { VERSION_SEARCH_PARAM } = NavigationConstants;
+      const params = new URLSearchParams(search);
+      const version = params.get(VERSION_SEARCH_PARAM);
+      params.delete(VERSION_SEARCH_PARAM);
+
+      const query = params.toString();
+
       navigate(
-        NavigationHelpers.buildRoute(detailRoute, {
+        NavigationHelpers.buildRoute(version ? `${detailRoute}/:version` : detailRoute, {
           tab: tab ?? DEFAULT_TAB,
           agentId,
-        }) + search,
+          version,
+        }) + (query ? `?${query}` : ''),
         { state: { restoredConversationID: id } },
       );
     },

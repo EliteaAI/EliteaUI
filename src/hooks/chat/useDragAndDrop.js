@@ -275,7 +275,7 @@ const useDragAndDrop = ({
                 await onMoveToFolderConversation(conversation, targetFolder);
                 successCount++;
               } catch {
-                toastError('Error moving conversations');
+                toastError('Error moving chats');
               }
             }
           }
@@ -296,7 +296,7 @@ const useDragAndDrop = ({
                 await onMoveToFolderConversation(conversation, null);
                 successCount++;
               } catch {
-                toastError('Error moving conversations');
+                toastError('Error moving chats');
               }
             }
           }
@@ -305,12 +305,12 @@ const useDragAndDrop = ({
         if (successCount > 0 && toastSuccess && currentDraggedItems.length > 1) {
           const message =
             successCount === 1
-              ? `1 conversation moved to ${targetLocation} successfully`
-              : `${successCount} conversations moved to ${targetLocation} successfully`;
+              ? `1 chat moved to ${targetLocation} successfully`
+              : `${successCount} chats moved to ${targetLocation} successfully`;
           toastSuccess(message);
         }
       } catch {
-        toastError('Error moving conversations');
+        toastError('Error moving chats');
       }
     },
     [

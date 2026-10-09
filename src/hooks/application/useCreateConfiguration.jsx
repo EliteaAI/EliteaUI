@@ -82,7 +82,7 @@ export default function useCreateConfiguration({
   // SharePoint credentials sharing the same oauth_discovery_endpoint remain isolated.
   oauthTokenKey,
 }) {
-  const { toastError, toastSuccess } = useToast();
+  const { toastError, toastSuccess, toastWarning } = useToast();
   const [testConnection, { isLoading: isTestingConnection }] = useTestConfigurationConnectionMutation();
   const [createConfiguration, { isLoading: isCreatingConfiguration }] = useCreateConfigurationMutation();
   const selectedProjectId = useSelectedProjectId();
@@ -171,6 +171,9 @@ export default function useCreateConfiguration({
           if (data?.tools && Array.isArray(data.tools)) {
             toastSuccess(`Discovered ${data.tools.length} tools`);
             onToolsDiscovered?.(data.tools);
+          } else if (data?.warning) {
+            // Connected, but the backend normalized the input (e.g. a padded api_key) - tell the user
+            toastWarning(`The connection is OK, but: ${data.warning}`);
           } else {
             toastSuccess('The connection is OK!');
           }
@@ -214,6 +217,7 @@ export default function useCreateConfiguration({
     configurationName,
     configurationsAsSchema,
     toastSuccess,
+    toastWarning,
     toastError,
     setShowConfigurationValidateError,
     setValidationErrorMessages,

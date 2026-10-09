@@ -71,7 +71,7 @@ const SharedConversationPage = memo(() => {
           color="text.disabled"
           sx={styles.subtitleText}
         >
-          This shared conversation link is invalid or has been removed.
+          This shared chat link is invalid or has been removed.
         </Typography>
       </Box>
     );
@@ -99,7 +99,7 @@ const SharedConversationPage = memo(() => {
           color="text.disabled"
           sx={styles.subtitleText}
         >
-          This shared conversation link has expired.
+          This shared chat link has expired.
         </Typography>
       </Box>
     );
@@ -127,7 +127,7 @@ const SharedConversationPage = memo(() => {
             color="text.disabled"
             sx={styles.subtitleText}
           >
-            This conversation is password protected. Enter the password to view it.
+            This chat is password protected. Enter the password to view it.
           </Typography>
           <Input.StyledInputEnhancer
             fullWidth
@@ -169,7 +169,7 @@ const SharedConversationPage = memo(() => {
           color="text.disabled"
           sx={styles.subtitleText}
         >
-          This shared conversation link is invalid or has been removed.
+          This shared chat link is invalid or has been removed.
         </Typography>
       </Box>
     );
@@ -198,7 +198,7 @@ const SharedConversationPage = memo(() => {
           variant="bodySmall2"
           color="text.disabled"
         >
-          Shared conversation · Read only
+          Shared chat · Read only
           {conversation.expires_at
             ? ` · Expires ${new Date(conversation.expires_at).toLocaleDateString()}`
             : ''}

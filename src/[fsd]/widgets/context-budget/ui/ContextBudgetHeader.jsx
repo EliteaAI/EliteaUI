@@ -23,7 +23,7 @@ const ContextBudgetHeader = memo(props => {
           Context Budget
         </Typography>
         <Tooltip
-          title="Shows how much of your conversation context window is being used"
+          title="Shows how much of your chat context window is being used"
           placement={TOOLTIP_CONFIG.INFO.placement}
         >
           <Box sx={styles.infoIconWrapper}>

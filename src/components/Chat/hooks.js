@@ -15,9 +15,12 @@ import {
   supersedeMentionSkillAction,
 } from '@/[fsd]/features/chat/lib/helpers';
 import {
+  createSyntheticToolAction,
   findChatSocketMessageIndex,
+  insertNewAssistantMessage,
   isLocalAssistantPlaceholder,
   mergeChatSocketMessage,
+  reorderHistoryOnUserArrival,
 } from '@/[fsd]/features/chat/lib/helpers/chatSocket.helpers';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import { ParsePipelineHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
@@ -262,14 +265,9 @@ const addMessageToChatHistory = ({
     }
 
     if (question_id) {
-      const questionIndex = prevState.findIndex(item => item.role === ROLES.User && item.id === question_id);
-      if (questionIndex === -1) return prevState;
-
-      const newState = [...prevState];
       const theParticipant = participantsRef.current?.find(participant => participant.id === participant_id);
       msg.participant = { ...(theParticipant || { entity_meta: {}, meta: {} }) };
-      newState.splice(questionIndex + 1, 0, msg);
-      return newState;
+      return insertNewAssistantMessage(prevState, msg, question_id);
     }
 
     return [...prevState, { ...msg, participant: { ...activeParticipantRef.current } }];
@@ -574,25 +572,22 @@ export const useChatSocket = ({
               next[existingIdx] = { ...next[existingIdx], message_items, content: question };
               return next;
             }
-            return [
-              ...prev,
-              {
-                id: userMessageId,
-                role: ROLES.User,
-                name: theUser?.meta.user_name || '',
-                avatar: theUser?.meta.user_avatar || '',
-                content: question,
-                message_items,
-                created_at: new Date(convertTime(created_at)).getTime(),
-                // Match the persisted-history converter: ownership checks use
-                // the platform user id, not the conversation participant id.
-                // They differ in normal chats, which hid Regenerate until a
-                // reload rebuilt this message from the API payload.
-                user_id: theUser?.entity_meta?.id ?? author_participant_id,
-                participant_id: sent_to_id,
-                sentTo,
-              },
-            ];
+            return reorderHistoryOnUserArrival(prev, {
+              id: userMessageId,
+              role: ROLES.User,
+              name: theUser?.meta.user_name || '',
+              avatar: theUser?.meta.user_avatar || '',
+              content: question,
+              message_items,
+              created_at: new Date(convertTime(created_at)).getTime(),
+              // Match the persisted-history converter: ownership checks use
+              // the platform user id, not the conversation participant id.
+              // They differ in normal chats, which hid Regenerate until a
+              // reload rebuilt this message from the API payload.
+              user_id: theUser?.entity_meta?.id ?? author_participant_id,
+              participant_id: sent_to_id,
+              sentTo,
+            });
           });
           break;
         }
@@ -741,7 +736,16 @@ export const useChatSocket = ({
 
             // Find matching toolAction
             t = msg.toolActions?.find(i => i.id === stepRunId);
-            if (!t) continue;
+            if (!t) {
+              // AgentLlmStart was missed — reconstruct so the thinking content is not lost.
+              t = createSyntheticToolAction(
+                stepRunId,
+                thinkStep.message?.response_metadata?.tool_name,
+                TOOL_ACTION_TYPES.Llm,
+                thinkStep.message?.created_at,
+              );
+              msg.toolActions = [...(msg.toolActions ?? []), t];
+            }
 
             // Backend normalizes text field for all providers (OpenAI, Anthropic, etc.)
             let thinkText = convertJsonToString(thinkStep.text, true);
@@ -1044,6 +1048,16 @@ export const useChatSocket = ({
         // add new events here
         case SocketMessageType.AgentToolEnd:
           t = msg.toolActions?.find(i => i.id === response_metadata?.tool_run_id);
+          if (!t && response_metadata?.tool_run_id) {
+            // AgentToolStart was missed — reconstruct so the end data is not lost.
+            t = createSyntheticToolAction(
+              response_metadata.tool_run_id,
+              response_metadata.tool_name,
+              TOOL_ACTION_TYPES.Tool,
+              message.created_at,
+            );
+            msg.toolActions = [...(msg.toolActions ?? []), t];
+          }
           if (t) {
             const newData = message.response_metadata?.tool_output;
             if (typeof newData === 'string') {
@@ -1090,6 +1104,16 @@ export const useChatSocket = ({
           break;
         case SocketMessageType.AgentToolError:
           t = msg.toolActions?.find(i => i.id === response_metadata?.tool_run_id);
+          if (!t && response_metadata?.tool_run_id) {
+            // AgentToolStart was missed — reconstruct so the error chip is not lost.
+            t = createSyntheticToolAction(
+              response_metadata.tool_run_id,
+              response_metadata.tool_name,
+              TOOL_ACTION_TYPES.Tool,
+              message.created_at,
+            );
+            msg.toolActions = [...(msg.toolActions ?? []), t];
+          }
           if (t) {
             const errorMetadata = response_metadata?.metadata;
             const errorHierarchy = normalizeExecutionHierarchy(errorMetadata, t, t.toolMeta);

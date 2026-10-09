@@ -127,7 +127,7 @@ const ContextStrategyModalContent = memo(props => {
             checked={values.enabled}
             onChange={e => handleInputChange(e, 'enabled')}
             label="Context Management"
-            infoTooltip="Configure how conversation context is managed and optimized"
+            infoTooltip="Configure how chat context is managed and optimized"
             slotProps={{
               label: {
                 variant: 'headingMedium',

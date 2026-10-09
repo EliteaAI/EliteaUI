@@ -59,7 +59,7 @@ const AIPersonalityPersonalization = memo(props => {
               <Box sx={styles.section}>
                 <Label.InfoLabelWithTooltip
                   label="Default persona"
-                  tooltip="Select the default assistant persona for your conversations"
+                  tooltip="Select the default assistant persona for your chats"
                   sx={styles.label}
                 />
                 <SingleSelect
@@ -92,7 +92,7 @@ const AIPersonalityPersonalization = memo(props => {
                 <Box sx={styles.section}>
                   <Input.StyledInputEnhancer
                     label="User instructions"
-                    tooltipDescription="Custom instructions for the selected persona, applied to new conversations that use it. Each persona keeps its own instructions."
+                    tooltipDescription="Custom instructions for the selected persona, applied to new chats that use it. Each persona keeps its own instructions."
                     autoComplete="off"
                     variantInput="outlined"
                     fullWidth

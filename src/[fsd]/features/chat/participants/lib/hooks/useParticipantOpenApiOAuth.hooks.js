@@ -28,11 +28,8 @@ export const useParticipantOpenApiOAuth = ({
 
   const openApiTokenKey = isReferenceMode ? resolvedOpenApiTokenKey : openAPIOauthEndpoint;
 
-  const effectiveOpenApiConfig = isReferenceMode
-    ? openApiConfig
-    : openAPIOauthEndpoint
-      ? (originalDetails?.settings ?? null)
-      : null;
+  const credentialSettings = isReferenceMode ? openApiConfig : (originalDetails?.settings ?? null);
+  const effectiveOpenApiConfig = openAPIOauthEndpoint ? credentialSettings : null;
 
   const { isLoggedIn: openAPIOAuthLoggedIn } = useMcpTokenChange({ serverUrl: openApiTokenKey });
   const openApiOAuthLoggedOut = !!effectiveOpenApiConfig && !openAPIOAuthLoggedIn;

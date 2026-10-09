@@ -65,7 +65,7 @@ const MemoryContextManagement = memo(props => {
                   >
                     Context Management
                   </Typography>
-                  <Typography variant="bodySmall">Enable context management for new conversations</Typography>
+                  <Typography variant="bodySmall">Enable context management for new chats</Typography>
                 </Box>
                 <Switch.BaseSwitch
                   data-testid="context-management-toggle"
@@ -80,7 +80,7 @@ const MemoryContextManagement = memo(props => {
                     <Box sx={styles.field}>
                       <Label.InfoLabelWithTooltip
                         label="Max Context Tokens"
-                        tooltip="Maximum number of tokens to keep in conversation context"
+                        tooltip="Maximum number of tokens to keep in chat context"
                         sx={styles.label}
                       />
                       <FormInput

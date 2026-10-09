@@ -208,7 +208,7 @@ export const useApplicationChat = ({
           onRestoreConversationComplete();
         } catch (error) {
           if (error?.name !== 'AbortError') {
-            toastError('Failed to restore conversation');
+            toastError('Failed to restore chat');
           }
         } finally {
           setIsRestoringConversation(false);
@@ -234,7 +234,7 @@ export const useApplicationChat = ({
   // Handle restoration errors
   useEffect(() => {
     if (restoredConversationID && isErrorRestoredConversation && !isLoadingRestoredConversation) {
-      toastError('Failed to restore conversation');
+      toastError('Failed to restore chat');
       setIsRestoringConversation(false);
 
       onRestoreConversationComplete();
@@ -397,11 +397,11 @@ export const useApplicationChat = ({
             updatedMessages,
           };
         } else {
-          toastError('Failed to create conversation');
+          toastError('Failed to create chat');
           return { success: false };
         }
       } catch (error) {
-        toastError('Failed to create conversation');
+        toastError('Failed to create chat');
 
         // eslint-disable-next-line no-console
         console.error('Conversation creation error:', error);
@@ -453,7 +453,7 @@ export const useApplicationChat = ({
           };
         }
       } catch (error) {
-        toastError('Failed to create conversation');
+        toastError('Failed to create chat');
 
         // eslint-disable-next-line no-console
         console.error('Conversation creation error:', error);

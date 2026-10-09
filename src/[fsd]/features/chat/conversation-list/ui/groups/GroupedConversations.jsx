@@ -83,7 +83,7 @@ const GroupedConversations = memo(props => {
           variant="bodyMedium"
           color="text.button.disabled"
         >
-          Still no conversations created.
+          Still no chats created.
         </Typography>
       )}
     </>

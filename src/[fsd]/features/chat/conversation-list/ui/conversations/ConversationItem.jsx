@@ -174,7 +174,7 @@ const ConversationItem = memo(props => {
     const baseUrl = `${window.location.protocol}//${window.location.host}`;
     const basename = getBasename();
 
-    const destinationUrl = `${baseUrl}${basename}/${projectId}/chat/${conversation.id}?name=${conversation.name.replaceAll(' ', '+')}&${SearchParams.SharedChat}=1`;
+    const destinationUrl = `${baseUrl}${basename}/${projectId}/chat/${conversation.id}?name=${encodeURIComponent(conversation.name)}&${SearchParams.SharedChat}=1`;
 
     await navigator.clipboard.writeText(destinationUrl);
 
