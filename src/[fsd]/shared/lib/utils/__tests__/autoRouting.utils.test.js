@@ -63,6 +63,15 @@ describe('Auto model picker and explicit selection', () => {
     expect(modelsWithAuto([fixed], { ...enabled, enabled: false }, 'chat')).toEqual([fixed]);
   });
 
+  it('hides Auto when readiness says it cannot run, and keeps it when readiness is absent or ready', () => {
+    const enabled = { enabled: true, profile_ref: profile };
+    const ids = readiness =>
+      modelsWithAuto([fixed], { ...enabled, readiness }, 'chat').map(m => m.display_name || m.name);
+    expect(ids({ ready: false, reasons: [{ code: 'CLASSIFIER_UNAVAILABLE' }] })).toEqual(['chosen']);
+    expect(ids({ ready: true, reasons: [] })).toEqual(['Auto', 'chosen']);
+    expect(ids(undefined)).toEqual(['Auto', 'chosen']);
+  });
+
   it('never sends the UI sentinel as a model identity', () => {
     const selected = selectionFields(autoModel(profile));
     expect(selected.model_name).toBeNull();
