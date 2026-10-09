@@ -124,7 +124,6 @@ const settingsSlice = createSlice({
             name: '',
           },
     socketConnected: false,
-    socketReconnectCount: 0,
   },
   reducers: {
     setMode: (state, { payload }) => {
@@ -300,9 +299,6 @@ const settingsSlice = createSlice({
     },
     setSocketConnected: (state, { payload }) => {
       state.socketConnected = payload;
-    },
-    incrementSocketReconnectCount: state => {
-      state.socketReconnectCount += 1;
     },
   },
   extraReducers: builder => {

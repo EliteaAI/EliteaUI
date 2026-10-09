@@ -15,9 +15,12 @@ import {
   supersedeMentionSkillAction,
 } from '@/[fsd]/features/chat/lib/helpers';
 import {
+  createSyntheticToolAction,
   findChatSocketMessageIndex,
+  insertNewAssistantMessage,
   isLocalAssistantPlaceholder,
   mergeChatSocketMessage,
+  reorderHistoryOnUserArrival,
 } from '@/[fsd]/features/chat/lib/helpers/chatSocket.helpers';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import { ParsePipelineHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
@@ -262,20 +265,9 @@ const addMessageToChatHistory = ({
     }
 
     if (question_id) {
-      const questionIndex = prevState.findIndex(item => item.role === ROLES.User && item.id === question_id);
       const theParticipant = participantsRef.current?.find(participant => participant.id === participant_id);
       msg.participant = { ...(theParticipant || { entity_meta: {}, meta: {} }) };
-
-      if (questionIndex === -1) {
-        // User message hasn't arrived in local state yet (race condition between
-        // ChatUserMessage and StartTask socket events). Append at the end so the
-        // assistant message is never lost; position will be correct after reload.
-        return [...prevState, msg];
-      }
-
-      const newState = [...prevState];
-      newState.splice(questionIndex + 1, 0, msg);
-      return newState;
+      return insertNewAssistantMessage(prevState, msg, question_id);
     }
 
     return [...prevState, { ...msg, participant: { ...activeParticipantRef.current } }];
@@ -580,25 +572,22 @@ export const useChatSocket = ({
               next[existingIdx] = { ...next[existingIdx], message_items, content: question };
               return next;
             }
-            return [
-              ...prev,
-              {
-                id: userMessageId,
-                role: ROLES.User,
-                name: theUser?.meta.user_name || '',
-                avatar: theUser?.meta.user_avatar || '',
-                content: question,
-                message_items,
-                created_at: new Date(convertTime(created_at)).getTime(),
-                // Match the persisted-history converter: ownership checks use
-                // the platform user id, not the conversation participant id.
-                // They differ in normal chats, which hid Regenerate until a
-                // reload rebuilt this message from the API payload.
-                user_id: theUser?.entity_meta?.id ?? author_participant_id,
-                participant_id: sent_to_id,
-                sentTo,
-              },
-            ];
+            return reorderHistoryOnUserArrival(prev, {
+              id: userMessageId,
+              role: ROLES.User,
+              name: theUser?.meta.user_name || '',
+              avatar: theUser?.meta.user_avatar || '',
+              content: question,
+              message_items,
+              created_at: new Date(convertTime(created_at)).getTime(),
+              // Match the persisted-history converter: ownership checks use
+              // the platform user id, not the conversation participant id.
+              // They differ in normal chats, which hid Regenerate until a
+              // reload rebuilt this message from the API payload.
+              user_id: theUser?.entity_meta?.id ?? author_participant_id,
+              participant_id: sent_to_id,
+              sentTo,
+            });
           });
           break;
         }
@@ -748,16 +737,13 @@ export const useChatSocket = ({
             // Find matching toolAction
             t = msg.toolActions?.find(i => i.id === stepRunId);
             if (!t) {
-              // AgentLlmStart was missed — reconstruct a synthetic action so the
-              // thinking content from the end event is not silently discarded.
+              // AgentLlmStart was missed — reconstruct so the thinking content is not lost.
               if (!msg.toolActions) msg.toolActions = [];
-              t = {
-                id: stepRunId,
-                name: thinkStep.message?.response_metadata?.tool_name || '',
-                type: TOOL_ACTION_TYPES.Llm,
-                status: ToolActionStatus.processing,
-                toolMeta: {},
-              };
+              t = createSyntheticToolAction(
+                stepRunId,
+                thinkStep.message?.response_metadata?.tool_name,
+                TOOL_ACTION_TYPES.Llm,
+              );
               msg.toolActions.push(t);
             }
 
@@ -1063,17 +1049,14 @@ export const useChatSocket = ({
         case SocketMessageType.AgentToolEnd:
           t = msg.toolActions?.find(i => i.id === response_metadata?.tool_run_id);
           if (!t && response_metadata?.tool_run_id) {
-            // AgentToolStart was missed (socket reconnect / out-of-order delivery).
-            // Reconstruct a minimal synthetic action so the end data is not lost.
+            // AgentToolStart was missed — reconstruct so the end data is not lost.
             if (!msg.toolActions) msg.toolActions = [];
-            t = {
-              id: response_metadata.tool_run_id,
-              name: response_metadata.tool_name || '',
-              type: TOOL_ACTION_TYPES.Tool,
-              status: ToolActionStatus.processing,
-              toolMeta: {},
-              created_at: message.created_at,
-            };
+            t = createSyntheticToolAction(
+              response_metadata.tool_run_id,
+              response_metadata.tool_name,
+              TOOL_ACTION_TYPES.Tool,
+              message.created_at,
+            );
             msg.toolActions.push(t);
           }
           if (t) {
