@@ -6,6 +6,7 @@ import { MuiMarkdown, getOverrides } from 'mui-markdown';
 import { Box, useTheme } from '@mui/material';
 
 import { MarkdownConstants } from '@/[fsd]/shared/lib/constants';
+import { resolveArtifactHrefsInHtml } from '@/[fsd]/shared/lib/helpers/link.helpers';
 import { MarkdownMapping, removeHTMLTags } from '@/[fsd]/shared/lib/utils';
 import CodeBlock from '@/components/CodeBlock';
 import MarkdownTableBlock from '@/components/MarkdownTableBlock';
@@ -215,9 +216,11 @@ const Token = memo(props => {
       }
       return fallback;
     case 'html': {
-      const clean = DOMPurify.sanitize(markedToken.raw, {
-        FORBID_TAGS: MarkdownConstants.FORBIDDEN_HTML_TAGS,
-      });
+      const clean = resolveArtifactHrefsInHtml(
+        DOMPurify.sanitize(markedToken.raw, {
+          FORBID_TAGS: MarkdownConstants.FORBIDDEN_HTML_TAGS,
+        }),
+      );
       return clean ? (
         <Box
           component="span"
