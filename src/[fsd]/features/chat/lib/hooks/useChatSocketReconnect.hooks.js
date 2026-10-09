@@ -10,7 +10,8 @@ import {
 } from '@/common/convertChatConversationMessages';
 import { useManualSocket } from '@/hooks/useSocket';
 
-export const useChatSocketReconnect = ({ activeConversation, projectId, setActiveConversation }) => {
+export const useChatSocketReconnect = props => {
+  const { activeConversation, projectId, setActiveConversation } = props;
   const { emit: emitEnterRoom } = useManualSocket(sioEvents.chat_enter_room);
   const [getConversationDetail] = useLazyConversationDetailsQuery();
   const [getMessageTraces] = useLazyMessageTracesQuery();
@@ -40,21 +41,26 @@ export const useChatSocketReconnect = ({ activeConversation, projectId, setActiv
     emitEnterRoom({ conversation_id: convId, conversation_uuid: uuid, project_id: projectId });
 
     (async () => {
-      const result = await getConversationDetail({ projectId, id: convId });
-      if (!result.data) return;
-      const tracesResult = await getMessageTraces({
-        projectId,
-        conversationId: convId,
-        params: buildTraceListParams(result.data.message_groups),
-      });
-      setActiveConversation(prev => {
-        if (!prev || prev.id !== convId) return prev;
-        return {
-          ...prev,
-          ...result.data,
-          chat_history: convertConversationToChatHistory(result.data, tracesResult.data),
-        };
-      });
+      try {
+        const result = await getConversationDetail({ projectId, id: convId });
+        if (!result.data) return;
+        const tracesResult = await getMessageTraces({
+          projectId,
+          conversationId: convId,
+          params: buildTraceListParams(result.data.message_groups),
+        });
+        if (tracesResult.isError) return;
+        setActiveConversation(prev => {
+          if (!prev || prev.id !== convId) return prev;
+          return {
+            ...prev,
+            ...result.data,
+            chat_history: convertConversationToChatHistory(result.data, tracesResult.data),
+          };
+        });
+      } catch {
+        // reconnect refetch failed — live view retains pre-disconnect state
+      }
     })();
   }, [
     socketConnected,

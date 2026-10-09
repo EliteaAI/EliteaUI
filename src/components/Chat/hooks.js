@@ -738,13 +738,13 @@ export const useChatSocket = ({
             t = msg.toolActions?.find(i => i.id === stepRunId);
             if (!t) {
               // AgentLlmStart was missed — reconstruct so the thinking content is not lost.
-              if (!msg.toolActions) msg.toolActions = [];
               t = createSyntheticToolAction(
                 stepRunId,
                 thinkStep.message?.response_metadata?.tool_name,
                 TOOL_ACTION_TYPES.Llm,
+                thinkStep.message?.created_at,
               );
-              msg.toolActions.push(t);
+              msg.toolActions = [...(msg.toolActions ?? []), t];
             }
 
             // Backend normalizes text field for all providers (OpenAI, Anthropic, etc.)
@@ -1050,14 +1050,13 @@ export const useChatSocket = ({
           t = msg.toolActions?.find(i => i.id === response_metadata?.tool_run_id);
           if (!t && response_metadata?.tool_run_id) {
             // AgentToolStart was missed — reconstruct so the end data is not lost.
-            if (!msg.toolActions) msg.toolActions = [];
             t = createSyntheticToolAction(
               response_metadata.tool_run_id,
               response_metadata.tool_name,
               TOOL_ACTION_TYPES.Tool,
               message.created_at,
             );
-            msg.toolActions.push(t);
+            msg.toolActions = [...(msg.toolActions ?? []), t];
           }
           if (t) {
             const newData = message.response_metadata?.tool_output;
@@ -1105,6 +1104,16 @@ export const useChatSocket = ({
           break;
         case SocketMessageType.AgentToolError:
           t = msg.toolActions?.find(i => i.id === response_metadata?.tool_run_id);
+          if (!t && response_metadata?.tool_run_id) {
+            // AgentToolStart was missed — reconstruct so the error chip is not lost.
+            t = createSyntheticToolAction(
+              response_metadata.tool_run_id,
+              response_metadata.tool_name,
+              TOOL_ACTION_TYPES.Tool,
+              message.created_at,
+            );
+            msg.toolActions = [...(msg.toolActions ?? []), t];
+          }
           if (t) {
             const errorMetadata = response_metadata?.metadata;
             const errorHierarchy = normalizeExecutionHierarchy(errorMetadata, t, t.toolMeta);
