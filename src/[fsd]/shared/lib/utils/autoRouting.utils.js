@@ -36,7 +36,9 @@ export const resolveModelSurface = (
     : defaultSurface;
 
 export const modelsWithAuto = (models, availability, surface) =>
-  availability?.enabled === true && [MODEL_SURFACES.chat, MODEL_SURFACES.agent].includes(surface)
+  availability?.enabled === true &&
+  availability.readiness?.ready !== false &&
+  [MODEL_SURFACES.chat, MODEL_SURFACES.agent].includes(surface)
     ? [autoModel(availability.profile_ref), ...models]
     : models;
 
