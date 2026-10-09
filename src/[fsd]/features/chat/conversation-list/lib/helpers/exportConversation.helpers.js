@@ -11,7 +11,7 @@ export const sanitizeExportFileName = (name, fallback = 'chat') => {
 export const getConversationExportPath = (projectId, conversationId) =>
   `/elitea_core/conversation_export/prompt_lib/${projectId}/${conversationId}`;
 
-export const buildExportFileName =(name, date = new Date()) => {
+export const buildExportFileName = (name, date = new Date()) => {
   const datePart = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
   const timePart = `${pad(date.getHours())}-${pad(date.getMinutes())}-${pad(date.getSeconds())}`;
   return `${sanitizeExportFileName(name)}_${datePart}_${timePart}`;
