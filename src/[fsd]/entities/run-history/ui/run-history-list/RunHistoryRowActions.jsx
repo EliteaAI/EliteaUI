@@ -44,9 +44,9 @@ const RunHistoryRowActions = memo(props => {
   const [deleteHistoryItem, { isLoading: isDeleting }] = RunHistoryApi.useDeleteRunHistoryItemMutation();
 
   const hasConversation = item?.hasConversation ?? true;
+  const isChatRun = Boolean(item?.is_chat_run);
   const canShare = item?.canShare ?? hasConversation;
-  const canOpenAnalytics =
-    hasConversation && !!handleOpenAnalytics && !item?.is_shared_chat && hasRunAnalytics(item);
+  const canOpenAnalytics = hasConversation && !!handleOpenAnalytics && !isChatRun && hasRunAnalytics(item);
 
   const styles = runHistoryRowActionsStyles(isDeleting);
 
@@ -124,7 +124,7 @@ const RunHistoryRowActions = memo(props => {
             },
           ]
         : []),
-      ...(hasConversation
+      ...(hasConversation && !isChatRun
         ? [
             {
               label: 'Delete',
@@ -156,6 +156,7 @@ const RunHistoryRowActions = memo(props => {
     [
       canShare,
       hasConversation,
+      isChatRun,
       linkCopied,
       handleCopyLink,
       openConfirmationModal,

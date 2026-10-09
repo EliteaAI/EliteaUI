@@ -54,6 +54,8 @@ const skillChatRun = {
   message_groups_count: 8,
   meta: {},
   run_summary: {
+    started_at: '2026-10-09T09:15:00',
+    message_count: 2,
     version_id: 276,
     status: 'error',
     author: { id: 3, name: 'Admin', email: 'admin@centry.user' },
@@ -77,7 +79,7 @@ describe('serializeRunHistory — skill run summary', () => {
 
     expect(rows[0]).toMatchObject({
       source: 'elitea',
-      message_count: 8,
+      message_count: 2,
       status: 'error',
       author: { id: 3, name: 'Admin', email: 'admin@centry.user' },
       models: ['opus'],
@@ -105,7 +107,7 @@ describe('serializeRunHistory — skill run summary', () => {
     expect(rows[0]).toMatchObject({ models: null, tokens: null, cost: null, usage_available: false });
   });
 
-  it('adds nothing to rows of other histories', () => {
+  it('adds only the source and chat-run flag to rows of other histories', () => {
     const { rows } = serializeRunHistoryListResponse({
       rows: [{ ...agentRun, run_summary: null }],
       total: 1,
@@ -119,6 +121,8 @@ describe('serializeRunHistory — skill run summary', () => {
         'index_name',
         'name',
         'operation_type',
+        'source',
+        'is_chat_run',
         'updated_at',
         'version_id',
       ].sort(),
@@ -140,7 +144,7 @@ describe('serializeRunHistory — shared chats and the model filter', () => {
       total: 2,
     });
 
-    expect(rows.map(row => row.is_shared_chat)).toEqual([true, false]);
+    expect(rows.map(row => row.is_chat_run)).toEqual([true, false]);
   });
 
   it('says when the model filter could not be applied', () => {
@@ -149,5 +153,21 @@ describe('serializeRunHistory — shared chats and the model filter', () => {
         .modelFilterUnavailable,
     ).toBe(true);
     expect(serializeRunHistoryListResponse({ rows: [], total: 0 }).modelFilterUnavailable).toBe(false);
+  });
+});
+
+describe('serializeRunHistory — when a skill run happened', () => {
+  it('dates a chat run by the first prompt the skill answered, not by when the chat began', () => {
+    const { rows } = serializeRunHistoryListResponse({ rows: [skillChatRun], total: 1 });
+
+    expect(rows[0].created_at).toBe('2026-10-09T09:15:00');
+    expect(rows[0].message_count).toBe(2);
+  });
+
+  it('keeps the conversation date for rows without a run summary', () => {
+    const { rows } = serializeRunHistoryListResponse([agentRun]);
+
+    expect(rows[0].created_at).toBe(agentRun.created_at);
+    expect(rows[0].is_chat_run).toBe(false);
   });
 });

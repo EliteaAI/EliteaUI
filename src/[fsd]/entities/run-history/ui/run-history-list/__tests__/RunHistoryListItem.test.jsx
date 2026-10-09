@@ -256,15 +256,18 @@ describe('RunHistoryListItem extra columns', () => {
 });
 
 describe('RunHistoryListItem analytics of shared chats', () => {
-  it('offers no analytics for a chat the history entity shares with other participants', () => {
-    renderItem({ ...TRACKED_ROW, is_shared_chat: true }, { handleOpenAnalytics: vi.fn() });
+  it('offers neither analytics nor delete for a chat the history entity took part in', () => {
+    renderItem({ ...TRACKED_ROW, is_chat_run: true }, { handleOpenAnalytics: vi.fn() });
 
     expect(screen.queryByTestId('menu-item-Analytics')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('menu-item-Delete')).not.toBeInTheDocument();
+    expect(screen.getByTestId('menu-item-Share link')).toBeInTheDocument();
   });
 
-  it('keeps analytics for a run the entity had to itself', () => {
-    renderItem({ ...TRACKED_ROW, is_shared_chat: false }, { handleOpenAnalytics: vi.fn() });
+  it('keeps analytics and delete for a run the entity had to itself', () => {
+    renderItem({ ...TRACKED_ROW, is_chat_run: false }, { handleOpenAnalytics: vi.fn() });
 
     expect(screen.getByTestId('menu-item-Analytics')).toBeInTheDocument();
+    expect(screen.getByTestId('menu-item-Delete')).toBeInTheDocument();
   });
 });

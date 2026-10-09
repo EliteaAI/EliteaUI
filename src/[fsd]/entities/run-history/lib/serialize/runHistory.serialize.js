@@ -5,9 +5,7 @@ const serializeRunSummary = conversation => {
   if (!summary) return {};
 
   return {
-    source: conversation.source,
-    is_shared_chat: conversation.source === CHAT_CONVERSATION_SOURCE,
-    message_count: conversation.message_groups_count ?? 0,
+    message_count: summary.message_count ?? conversation.message_groups_count ?? 0,
     status: summary.status ?? null,
     author: summary.author ?? null,
     models: summary.models ?? null,
@@ -23,7 +21,7 @@ const serializeRunHistory = conversation => {
 
   return {
     id: conversation.id,
-    created_at: conversation.created_at,
+    created_at: conversation.run_summary?.started_at ?? conversation.created_at,
     updated_at: conversation.updated_at,
     name: conversation.name,
     duration: conversation.duration,
@@ -33,6 +31,8 @@ const serializeRunHistory = conversation => {
       null,
     index_name: conversation.meta?.index_name ?? null,
     operation_type: conversation.meta?.operation_type ?? null,
+    source: conversation.source ?? null,
+    is_chat_run: conversation.source === CHAT_CONVERSATION_SOURCE,
     ...serializeRunSummary(conversation),
   };
 };

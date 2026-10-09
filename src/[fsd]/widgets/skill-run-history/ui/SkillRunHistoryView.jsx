@@ -77,7 +77,7 @@ const SkillRunHistoryView = memo(props => {
 
   const handleRestoreConversation = useCallback(
     (conversationId, run) => {
-      if (isCatalogSkill || run?.source !== ParticipantEntityTypes.Skill) openInChat(conversationId);
+      if (isCatalogSkill || run?.is_chat_run) openInChat(conversationId);
       else restoreIntoRunPanel(conversationId);
     },
     [isCatalogSkill, openInChat, restoreIntoRunPanel],
