@@ -64,14 +64,16 @@ const TextDiffHighlight = memo(props => {
       if (maxLength && newText.length > maxLength) newText = newText.slice(0, maxLength);
 
       if (newText !== modified) onChange(newText);
+      // Text was already synced on input, so the highlight effect won't re-run — refresh it manually.
+      else editableRef.current.innerHTML = highlightHtml;
     }
-  }, [onChange, modified, maxLength]);
+  }, [onChange, modified, maxLength, highlightHtml]);
 
   const handleInput = useCallback(() => {
-    if (!editableRef.current || !maxLength) return;
+    if (!editableRef.current) return;
 
     const text = editableRef.current.innerText || '';
-    if (text.length <= maxLength) {
+    if (!maxLength || text.length <= maxLength) {
       onChange?.(text);
       return;
     }
