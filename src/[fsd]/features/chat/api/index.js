@@ -36,6 +36,8 @@ export {
   useUploadAttachmentsMutation,
   useRemoveAttachmentsMutation,
   useUpdateMessageMetaMutation,
+  useConversationImportCommitMutation,
+  useConversationImportCancelMutation,
   TAG_TYPE_CONVERSATION_DETAILS,
 } from './chatApi';
 
