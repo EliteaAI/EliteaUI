@@ -15,11 +15,10 @@ import { store } from '@/[fsd]/shared/config';
 // Slices outside shared/ register their reducers on import; load them before anything reads their state.
 import '@/[fsd]/app/store/registerReducers';
 import App from '@/[fsd]/app/App';
-import { ToolkitSocketProvider } from '@/[fsd]/shared/lib/context';
+import { SocketContext, ToolkitSocketProvider } from '@/[fsd]/shared/lib/context';
 import { FilePreviewNavigationProvider, ToastComponent, ToastProvider } from '@/[fsd]/shared/ui';
 import { DEV, VITE_DEV_TOKEN, VITE_SOCKET_PATH, VITE_SOCKET_SERVER } from '@/common/constants';
 import { NpsSurveyWidget } from '@/[fsd]/widgets/nps-survey';
-import SocketContext from '@/contexts/SocketContext';
 import { useBrandFavicon, useCustomThemeGuard, useEliteATheme } from '@/[fsd]/shared/lib/hooks';
 import { actions as settingsActions } from '@/slices/settings.js';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp';

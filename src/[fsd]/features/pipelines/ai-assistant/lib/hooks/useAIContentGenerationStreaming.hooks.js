@@ -6,11 +6,11 @@ import {
   buildFieldContextPrompt,
   getServicePromptKeyForFieldName,
 } from '@/[fsd]/features/pipelines/ai-assistant/lib/constants';
+import { SocketContext } from '@/[fsd]/shared/lib/context';
 import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { useGetAvailableConfigurationsTypeQuery } from '@/api/configurations';
 import { useGenerateContentStreamingMutation, useStopLlmTaskMutation } from '@/api/llm';
 import { SocketMessageType, sioEvents } from '@/common/constants';
-import SocketContext from '@/contexts/SocketContext';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { useServicePromptByKey } from '@/hooks/useServicePromptByKey';
 import { useManualSocket } from '@/hooks/useSocket';
