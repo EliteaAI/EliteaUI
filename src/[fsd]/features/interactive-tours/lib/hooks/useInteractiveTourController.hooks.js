@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useReducer } from 'react';
 
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
 import { actions as settingsActions } from '@/slices/settings';
 
@@ -25,6 +25,11 @@ import {
   USERS_TOUR_ID,
 } from '../constants';
 import { initialState, lsCompletedKey, lsPromptKey, tourReducer } from '../helpers';
+
+const EMPTY_PERMISSIONS = [];
+
+const isStepAvailable = (step, permissions) =>
+  !step.skip && (!step.requiredPermission || permissions.includes(step.requiredPermission));
 
 // ─── Tour loaders (lazy) ───────────────────────────────────────────────────────
 const TOUR_LOADERS = {
@@ -64,6 +69,7 @@ const TOUR_LOADERS = {
 export const useInteractiveTourController = () => {
   const dispatchRedux = useDispatch();
   const [state, dispatch] = useReducer(tourReducer, initialState);
+  const permissions = useSelector(reduxState => reduxState.user?.permissions ?? EMPTY_PERMISSIONS);
 
   const proposeTour = useCallback(id => {
     const seen = localStorage.getItem(lsPromptKey(id)) === 'true';
@@ -85,7 +91,7 @@ export const useInteractiveTourController = () => {
       }
 
       const steps = (await TOUR_LOADERS[id]?.()) ?? [];
-      const activeSteps = steps.filter(step => !step.skip);
+      const activeSteps = steps.filter(step => isStepAvailable(step, permissions));
 
       if (!activeSteps.length) {
         // Unknown tour id or loader returned no steps — reset to idle rather than
@@ -96,7 +102,7 @@ export const useInteractiveTourController = () => {
 
       dispatch({ type: 'START', tourId: id, steps: activeSteps });
     },
-    [dispatchRedux],
+    [dispatchRedux, permissions],
   );
 
   const next = useCallback(() => dispatch({ type: 'NEXT' }), []);

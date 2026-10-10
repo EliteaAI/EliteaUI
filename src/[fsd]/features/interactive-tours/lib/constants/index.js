@@ -9,7 +9,11 @@ export {
   APPLICATIONS_TOUR_TARGETS,
 } from '@/[fsd]/features/interactive-tours/lib/constants/applicationsTourTargets.constants.js';
 export { ANALYTICS_TOUR_COMPLETION, ANALYTICS_TOUR_ID, analyticsTourSteps } from './analyticsTour.constants';
-export { ANALYTICS_TOUR_TARGET_IDS, ANALYTICS_TOUR_TARGETS } from './analyticsTourTargets.constants.js';
+export {
+  ANALYTICS_TAB_IDS,
+  ANALYTICS_TOUR_TARGET_IDS,
+  ANALYTICS_TOUR_TARGETS,
+} from './analyticsTourTargets.constants.js';
 export {
   ELITEA_CATALOG_TOUR_COMPLETION,
   ELITEA_CATALOG_TOUR_ID,

@@ -180,6 +180,48 @@ export const analyticsApi = eliteaApi
         providesTags: [TAG_TYPE_ANALYTICS],
         keepUnusedDataFor: CACHE_LIFETIME,
       }),
+      analyticsSkills: build.query({
+        query: ({
+          projectId,
+          dateFrom,
+          dateTo,
+          limit = 20,
+          offset = 0,
+          search = '',
+          sortBy = 'runs',
+          sortOrder = 'desc',
+        }) => {
+          const params = new URLSearchParams();
+          if (dateFrom) params.set('date_from', dateFrom);
+          if (dateTo) params.set('date_to', dateTo);
+          params.set('limit', String(limit));
+          params.set('offset', String(offset));
+          if (search) params.set('search', search);
+          params.set('sort_by', sortBy);
+          params.set('sort_order', sortOrder);
+          return {
+            url: `/usage/analytics_skills/prompt_lib/${projectId}?${params.toString()}`,
+            method: 'GET',
+          };
+        },
+        providesTags: [TAG_TYPE_ANALYTICS],
+        keepUnusedDataFor: CACHE_LIFETIME,
+      }),
+      analyticsSkillDetail: build.query({
+        query: ({ projectId, skillId, skillProjectId, dateFrom, dateTo }) => {
+          const params = new URLSearchParams();
+          params.set('skill_id', String(skillId));
+          if (skillProjectId != null) params.set('skill_project_id', String(skillProjectId));
+          if (dateFrom) params.set('date_from', dateFrom);
+          if (dateTo) params.set('date_to', dateTo);
+          return {
+            url: `/usage/analytics_skill_detail/prompt_lib/${projectId}?${params.toString()}`,
+            method: 'GET',
+          };
+        },
+        providesTags: [TAG_TYPE_ANALYTICS],
+        keepUnusedDataFor: CACHE_LIFETIME,
+      }),
       // `runId` / `evalRunId` scope the payload to one Agent/Pipeline run or one evaluation run instead of a date range
       analyticsCosts: build.query({
         query: ({ projectId, dateFrom, dateTo, ...runScopeArgs }) => {
@@ -239,6 +281,9 @@ export const {
   useAnalyticsToolDetailQuery,
   useAnalyticsAgentsQuery,
   useAnalyticsAgentDetailQuery,
+  useAnalyticsSkillsQuery,
+  useAnalyticsSkillDetailQuery,
+  useLazyAnalyticsSkillDetailQuery,
   useAnalyticsCostsQuery,
   useAnalyticsRunDetailQuery,
   useAnalyticsActivityQuery,

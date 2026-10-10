@@ -5,6 +5,7 @@ import { ExcelFormats, sanitizeFileNamePart } from '@/[fsd]/shared/lib/utils';
 
 import { triggerSourceLabel } from './analyticsCommon.helpers.js';
 import { tokenStats } from './analyticsToken.helpers.js';
+import { skillSourceLabel, skillTriggerLabel, skillVersionLabel } from './skillAnalytics.helpers.js';
 
 const EXPORT_LIMIT = 10_000;
 
@@ -470,6 +471,181 @@ const buildAgentsSheet = (data, meta) => {
   };
 };
 
+const SKILL_TOTAL_COLUMNS = [
+  { header: 'Runs', key: 'runs', numFmt: ExcelFormats.integer },
+  { header: 'In-Agent Uses', key: 'in_agent_uses', numFmt: ExcelFormats.integer },
+  { header: 'Total Tokens', key: 'total_tokens', numFmt: ExcelFormats.integer },
+  { header: 'Cost (USD)', key: 'cost', numFmt: ExcelFormats.currency },
+];
+
+const skillDisplayName = skill => (skill.deleted ? `${skill.skill_name} (deleted)` : skill.skill_name);
+
+const buildSkillsSheet = (data, meta) => {
+  const { rows = [], summary = {} } = data || {};
+
+  const summaryCols = [
+    { header: 'Metric', key: 'metric' },
+    { header: 'Value', key: 'value' },
+  ];
+  const skillCols = [
+    { header: 'Skill', key: 'name' },
+    ...SKILL_TOTAL_COLUMNS.slice(0, 2),
+    { header: 'Users', key: 'users', numFmt: ExcelFormats.integer },
+    { header: 'Agents Using', key: 'agents_using', numFmt: ExcelFormats.integer },
+    { header: 'Avg Latency (ms)', key: 'avg_duration_ms', numFmt: ExcelFormats.integer },
+    { header: 'Errors', key: 'errors', numFmt: ExcelFormats.integer },
+    ...SKILL_TOTAL_COLUMNS.slice(2),
+    { header: 'Last Used', key: 'last_used' },
+  ];
+  const skillRows = rows.map(r => ({
+    ...r,
+    name: skillDisplayName(r),
+    last_used: fmtISODateTime(r.last_used),
+  }));
+
+  return {
+    sheetName: 'Skills',
+    metadata: buildMetadata('Skills', meta),
+    sections: [
+      {
+        title: 'Summary',
+        columns: summaryCols,
+        rows: [
+          { metric: 'Skill Runs', value: summary.runs ?? 0 },
+          { metric: 'Skills Used', value: summary.skills_used ?? 0 },
+          { metric: 'In-Agent Uses', value: summary.in_agent_uses ?? 0 },
+          { metric: 'Skill Run Cost (USD)', value: summary.cost ?? 0 },
+        ],
+      },
+      {
+        title: 'Skill Activity',
+        columns: skillCols,
+        rows: skillRows.length > 0 ? skillRows : emptyRow(skillCols, NO_DATA_MSG),
+      },
+    ],
+  };
+};
+
+const skillSection = (title, firstColumn, rows, toFirstValue) => {
+  const columns = [firstColumn, ...SKILL_TOTAL_COLUMNS];
+  return {
+    title,
+    columns,
+    rows:
+      rows.length > 0
+        ? rows.map(r => ({ ...r, [firstColumn.key]: toFirstValue(r) }))
+        : emptyRow(columns, NO_DATA_MSG),
+  };
+};
+
+export const buildSkillDetailSheet = (detail, meta) => {
+  const {
+    kpis = {},
+    daily = [],
+    by_version = [],
+    by_model = [],
+    by_user = [],
+    by_trigger_source = [],
+    agents = [],
+    by_source = [],
+    recent_runs = [],
+  } = detail || {};
+  const name = detail ? skillDisplayName(detail) : '';
+
+  const modelCols = [
+    { header: 'Model', key: 'display_name' },
+    { header: 'Runs', key: 'runs', numFmt: ExcelFormats.integer },
+    { header: 'Calls', key: 'calls', numFmt: ExcelFormats.integer },
+    { header: 'Total Tokens', key: 'total_tokens', numFmt: ExcelFormats.integer },
+    { header: 'Cost (USD)', key: 'cost', numFmt: ExcelFormats.currency },
+  ];
+  const agentCols = [
+    { header: 'Agent / Pipeline', key: 'entity_name' },
+    { header: 'Uses', key: 'uses', numFmt: ExcelFormats.integer },
+    { header: 'Agent Runs', key: 'runs', numFmt: ExcelFormats.integer },
+    { header: 'Users', key: 'users', numFmt: ExcelFormats.integer },
+  ];
+  const sourceCols = [
+    { header: 'Activation', key: 'source' },
+    { header: 'Uses', key: 'uses', numFmt: ExcelFormats.integer },
+  ];
+  const runCols = [
+    { header: 'Started', key: 'started_at' },
+    { header: 'User', key: 'user_email' },
+    { header: 'Version', key: 'version_name' },
+    { header: 'Model', key: 'model_name' },
+    { header: 'Total Tokens', key: 'total_tokens', numFmt: ExcelFormats.integer },
+    { header: 'Cost (USD)', key: 'cost', numFmt: ExcelFormats.currency },
+    { header: 'Error', key: 'is_error' },
+  ];
+
+  return {
+    sheetName: 'Skill',
+    metadata: [['Skill', name], ...buildMetadata('Skills', meta)],
+    sections: [
+      {
+        title: 'KPIs',
+        columns: [
+          { header: 'Metric', key: 'metric' },
+          { header: 'Value', key: 'value' },
+        ],
+        rows: [
+          { metric: 'Runs', value: kpis.runs ?? 0 },
+          { metric: 'In-Agent Uses', value: kpis.in_agent_uses ?? 0 },
+          { metric: 'Users', value: kpis.users ?? 0 },
+          { metric: 'Agents Using', value: kpis.agents_using ?? 0 },
+          { metric: 'Total Tokens', value: kpis.total_tokens ?? 0 },
+          { metric: 'Cost (USD)', value: kpis.cost ?? 0 },
+          { metric: 'Errors', value: kpis.errors ?? 0 },
+        ],
+      },
+      skillSection('Daily Trend', { header: 'Date', key: 'date' }, daily, r => r.date),
+      skillSection('By Version', { header: 'Version', key: 'version_name' }, by_version, r =>
+        skillVersionLabel(r.version_name),
+      ),
+      {
+        title: 'By Model',
+        columns: modelCols,
+        rows: by_model.length ? by_model : emptyRow(modelCols, NO_DATA_MSG),
+      },
+      skillSection(
+        'By User',
+        { header: 'User', key: 'user_email' },
+        by_user,
+        r => r.user_email || `User ${r.user_id}`,
+      ),
+      skillSection('By Trigger Source', { header: 'Trigger', key: 'trigger_source' }, by_trigger_source, r =>
+        skillTriggerLabel(r.trigger_source),
+      ),
+      {
+        title: 'Used by Agents',
+        columns: agentCols,
+        rows: agents.length ? agents : emptyRow(agentCols, NO_DATA_MSG),
+      },
+      {
+        title: 'Load vs Mention',
+        columns: sourceCols,
+        rows: by_source.length
+          ? by_source.map(r => ({ ...r, source: skillSourceLabel(r.source) }))
+          : emptyRow(sourceCols, NO_DATA_MSG),
+      },
+      {
+        title: 'Recent Runs',
+        columns: runCols,
+        rows: recent_runs.length
+          ? recent_runs.map(r => ({
+              ...r,
+              started_at: fmtISODateTime(r.started_at),
+              user_email: r.user_email || `User ${r.user_id}`,
+              version_name: skillVersionLabel(r.version_name),
+              is_error: r.is_error ? 'Yes' : 'No',
+            }))
+          : emptyRow(runCols, NO_DATA_MSG),
+      },
+    ],
+  };
+};
+
 const buildToolsSheet = (data, meta, options = {}) => {
   const { runScoped = false } = options;
   const { rows = [] } = data || {};
@@ -640,6 +816,9 @@ const buildHealthSheet = (overviewData, meta, options = {}) => {
   };
 };
 
+export const skillAnalyticsExportFileName = ({ projectName, skillName, dateFrom, dateTo }) =>
+  `${sanitizeFileNamePart(projectName)}_skill_${sanitizeFileNamePart(skillName)}_${fmtLocalDate(dateFrom)}-${fmtLocalDate(dateTo)}.xlsx`;
+
 export const analyticsExportFileName = ({ projectName, dateFrom, dateTo }) => {
   const from = fmtLocalDate(dateFrom);
   const to = fmtLocalDate(dateTo);
@@ -647,7 +826,26 @@ export const analyticsExportFileName = ({ projectName, dateFrom, dateTo }) => {
   return `${sanitizeFileNamePart(projectName)}_${from}-${to}.xlsx`;
 };
 
-export const fetchAllAnalyticsData = async (dispatch, endpoints, { projectId, dateFrom, dateTo }) => {
+const fetchSkillsData = async (dispatch, endpoints, { projectId, dateFrom, dateTo, includeSkills }) => {
+  if (!includeSkills) return undefined;
+  const result = await dispatch(
+    endpoints.analyticsSkills.initiate({
+      projectId,
+      dateFrom,
+      dateTo,
+      limit: EXPORT_LIMIT,
+      offset: 0,
+      search: '',
+    }),
+  );
+  return result.data;
+};
+
+export const fetchAllAnalyticsData = async (
+  dispatch,
+  endpoints,
+  { projectId, dateFrom, dateTo, includeSkills = false },
+) => {
   const [
     overviewResult,
     overviewUsageResult,
@@ -656,6 +854,7 @@ export const fetchAllAnalyticsData = async (dispatch, endpoints, { projectId, da
     toolsResult,
     usersResult,
     activityResult,
+    skills,
   ] = await Promise.all([
     // Overview is served by two endpoints — tracing for chat/health, usage for the AI half
     dispatch(endpoints.projectAnalytics.initiate({ projectId, dateFrom, dateTo })),
@@ -702,6 +901,7 @@ export const fetchAllAnalyticsData = async (dispatch, endpoints, { projectId, da
         roles: [],
       }),
     ),
+    fetchSkillsData(dispatch, endpoints, { projectId, dateFrom, dateTo, includeSkills }),
   ]);
 
   return {
@@ -712,6 +912,7 @@ export const fetchAllAnalyticsData = async (dispatch, endpoints, { projectId, da
     tools: toolsResult.data,
     users: usersResult.data,
     activity: activityResult.data,
+    skills,
   };
 };
 
@@ -723,8 +924,10 @@ export const buildAnalyticsSheets = ({
   tools,
   users,
   activity,
+  skills,
   meta,
   isPersonalProject,
+  includeSkills = false,
 }) => [
   // Merged for Overview, tracing-only for Health: the health trend needs daily_activity's
   // {events, errors} shape, which only the tracing payload carries.
@@ -736,6 +939,7 @@ export const buildAnalyticsSheets = ({
   buildCostsSheet(costs, meta),
   buildTokensSheet(costs, meta),
   buildAgentsSheet(agents, meta),
+  ...(includeSkills ? [buildSkillsSheet(skills, meta)] : []),
   buildToolsSheet(tools, meta),
   buildUsersSheet(users, meta),
   buildActivitySheet(activity, meta, isPersonalProject),

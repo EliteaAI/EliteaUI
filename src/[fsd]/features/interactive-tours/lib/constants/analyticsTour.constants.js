@@ -1,4 +1,6 @@
-import { ANALYTICS_TOUR_TARGETS } from './analyticsTourTargets.constants';
+import { PERMISSIONS } from '@/common/constants';
+
+import { ANALYTICS_TAB_IDS, ANALYTICS_TOUR_TARGETS } from './analyticsTourTargets.constants';
 import { ANALYTICS_TOUR_ID } from './tourIds.constants';
 
 export { ANALYTICS_TOUR_ID };
@@ -29,7 +31,7 @@ Data is cached for up to 5 minutes.`,
   },
   {
     id: 'overview-tab',
-    tabIndex: 0,
+    tabId: ANALYTICS_TAB_IDS.overview,
     target: ANALYTICS_TOUR_TARGETS.tabSection,
     placement: 'right',
     title: 'Overview Tab',
@@ -46,7 +48,7 @@ Below the cards: a **Daily Activity** area chart, a **Top 5 AI Adopters** leader
   },
   {
     id: 'agents-tab',
-    tabIndex: 3,
+    tabId: ANALYTICS_TAB_IDS.agents,
     target: ANALYTICS_TOUR_TARGETS.tabSection,
     placement: 'right',
     title: 'Agents & Pipelines Tab',
@@ -55,8 +57,22 @@ Below the cards: a **Daily Activity** area chart, a **Top 5 AI Adopters** leader
 The **Agent & Pipeline Activity** table lists all agents and pipelines with total events, distinct users, average latency, and error count. Click any row to open a drill-down with daily usage trends, a per-user breakdown, and the tools called by that agent or pipeline.`,
   },
   {
+    id: 'skills-tab',
+    tabId: ANALYTICS_TAB_IDS.skills,
+    requiredPermission: PERMISSIONS.skills.list,
+    target: ANALYTICS_TOUR_TARGETS.tabSection,
+    placement: 'right',
+    title: 'Skills Tab',
+    content: `The **Skills** tab shows how skills are used in the project. Summary cards count skill runs, the skills used, in-agent uses, and the cost of skill runs.
+
+- **Runs** — a skill run on its own or as a chat participant; runs carry their own tokens and cost
+- **In-agent uses** — an agent loaded or mentioned the skill; these have no tokens or cost of their own, because they are part of the agent's calls
+
+Click any skill to open a drill-down with a daily trend, version, model, user, and trigger breakdowns, the agents using it, and its recent runs.`,
+  },
+  {
     id: 'tools-tab',
-    tabIndex: 4,
+    tabId: ANALYTICS_TAB_IDS.tools,
     target: ANALYTICS_TOUR_TARGETS.tabSection,
     placement: 'right',
     title: 'Tools Tab',
@@ -66,7 +82,7 @@ The **Tool Details** table lists all tools with call count, distinct users, aver
   },
   {
     id: 'users-tab',
-    tabIndex: 5,
+    tabId: ANALYTICS_TAB_IDS.users,
     target: ANALYTICS_TOUR_TARGETS.tabSection,
     placement: 'right',
     title: 'Users Tab',
@@ -76,7 +92,7 @@ Click any user row to open a drill-down showing a daily activity chart broken do
   },
   {
     id: 'activity-tab',
-    tabIndex: 6,
+    tabId: ANALYTICS_TAB_IDS.activity,
     target: ANALYTICS_TOUR_TARGETS.tabSection,
     placement: 'right',
     title: 'Activity Tab',
@@ -87,7 +103,7 @@ Click any user row to open a drill-down showing a daily activity chart broken do
   },
   {
     id: 'health-tab',
-    tabIndex: 7,
+    tabId: ANALYTICS_TAB_IDS.health,
     target: ANALYTICS_TOUR_TARGETS.tabSection,
     placement: 'right',
     title: 'Health Tab',
@@ -97,7 +113,7 @@ The **Health by Event Type** table shows error rate and average latency for each
   },
   {
     id: 'costs-tab',
-    tabIndex: 1,
+    tabId: ANALYTICS_TAB_IDS.costs,
     target: ANALYTICS_TOUR_TARGETS.tabSection,
     placement: 'right',
     title: 'Costs Tab',
@@ -107,7 +123,7 @@ The **Cost by Agent & Pipeline** and **Cost by User** lists rank the top spender
   },
   {
     id: 'tokens-tab',
-    tabIndex: 2,
+    tabId: ANALYTICS_TAB_IDS.tokens,
     target: ANALYTICS_TOUR_TARGETS.tabSection,
     placement: 'right',
     title: 'Tokens Tab',
@@ -117,7 +133,7 @@ The **Token Usage by User**, **Token Usage by Model**, and **Token Usage by Agen
   },
   {
     id: 'guide-tab',
-    tabIndex: 8,
+    tabId: ANALYTICS_TAB_IDS.guide,
     target: ANALYTICS_TOUR_TARGETS.tabSection,
     placement: 'right',
     title: 'Guide Tab',

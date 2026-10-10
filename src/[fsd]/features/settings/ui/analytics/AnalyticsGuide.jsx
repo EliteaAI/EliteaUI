@@ -1,19 +1,29 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
 import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
 import { CHART_COLORS } from '@/[fsd]/shared/config/theme';
 
-const AnalyticsGuide = memo(() => {
+const AnalyticsGuide = memo(props => {
+  const { visibleTabIds } = props;
+
   const styles = analyticsGuideStyles();
+  const sections = useMemo(
+    () =>
+      AnalyticsCommonConstants.GUIDE_SECTIONS.filter(
+        section => !section.tabId || !visibleTabIds || visibleTabIds.includes(section.tabId),
+      ),
+    [visibleTabIds],
+  );
 
   return (
     <Box sx={styles.analyticsGuideContent}>
-      {AnalyticsCommonConstants.GUIDE_SECTIONS.map((section, si) => (
+      {sections.map(section => (
         <Box
-          key={si}
+          key={section.title}
           sx={styles.chartCard}
+          data-testid={section.tabId ? `analytics-guide-section-${section.tabId}` : undefined}
         >
           <Typography
             variant="labelMedium"

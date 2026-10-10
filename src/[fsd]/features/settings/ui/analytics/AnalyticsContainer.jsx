@@ -5,7 +5,11 @@ import { useSelector, useStore } from 'react-redux';
 import { Alert, Box, CircularProgress, Snackbar, Tooltip, Typography } from '@mui/material';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 
-import { ANALYTICS_TOUR_ID, ANALYTICS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
+import {
+  ANALYTICS_TAB_IDS,
+  ANALYTICS_TOUR_ID,
+  ANALYTICS_TOUR_TARGET_IDS,
+} from '@/[fsd]/features/interactive-tours';
 import {
   TAG_TYPE_ANALYTICS,
   analyticsApi,
@@ -20,6 +24,7 @@ import {
   AnalyticsGuide,
   AnalyticsHealth,
   AnalyticsOverview,
+  AnalyticsSkills,
   AnalyticsTokens,
   AnalyticsTools,
   AnalyticsUsers,
@@ -32,6 +37,7 @@ import TabGroupButton from '@/[fsd]/shared/ui/tab-group-button/TabGroupButton';
 import { BaseTab, BaseTabs } from '@/[fsd]/shared/ui/tabs';
 import DownloadIcon from '@/assets/download.svg?react';
 import RefreshIcon from '@/assets/refresh-icon.svg?react';
+import { PERMISSIONS } from '@/common/constants';
 import ArrowDownIcon from '@/components/Icons/ArrowDownIcon';
 import ArrowLeftIcon from '@/components/Icons/ArrowLeftIcon';
 import ArrowRightIcon from '@/components/Icons/ArrowRightIcon';
@@ -50,41 +56,38 @@ const DEFAULT_PRESETS = [
 
 const PRESETS_WITH_CUSTOM = [...DEFAULT_PRESETS, { label: 'Custom', value: CUSTOM_PRESET_VALUE }];
 
-// {label, testid} pairs for the Analytics tabs (ELITEA-2310) — kept as a
+const TAB = ANALYTICS_TAB_IDS;
+
+// {id, label, testid} for the Analytics tabs (ELITEA-2310) — kept as a
 // module-level template so the testid inventory stays greppable, per
 // .agents/testing.md § Locator policy (dynamic/derived-list testid pattern).
 const ANALYTICS_TABS = [
-  { label: 'Overview', testid: 'analytics-tab-overview' },
-  { label: 'Costs', testid: 'analytics-tab-costs' },
-  { label: 'Tokens', testid: 'analytics-tab-tokens' },
-  { label: 'Agents & Pipelines', testid: 'analytics-tab-agents-pipelines' },
-  { label: 'Tools', testid: 'analytics-tab-tools' },
-  { label: 'Users', testid: 'analytics-tab-users' },
-  { label: 'Activity', testid: 'analytics-tab-activity' },
-  { label: 'Health', testid: 'analytics-tab-health' },
-  { label: 'Guide', testid: 'analytics-tab-guide' },
+  { id: TAB.overview, label: 'Overview', testid: 'analytics-tab-overview' },
+  { id: TAB.costs, label: 'Costs', testid: 'analytics-tab-costs' },
+  { id: TAB.tokens, label: 'Tokens', testid: 'analytics-tab-tokens' },
+  { id: TAB.agents, label: 'Agents & Pipelines', testid: 'analytics-tab-agents-pipelines' },
+  { id: TAB.skills, label: 'Skills', testid: 'analytics-tab-skills' },
+  { id: TAB.tools, label: 'Tools', testid: 'analytics-tab-tools' },
+  { id: TAB.users, label: 'Users', testid: 'analytics-tab-users' },
+  { id: TAB.activity, label: 'Activity', testid: 'analytics-tab-activity' },
+  { id: TAB.health, label: 'Health', testid: 'analytics-tab-health' },
+  { id: TAB.guide, label: 'Guide', testid: 'analytics-tab-guide' },
 ];
 
-// Panel guards below and the interactive tour's step.tabIndex both address tabs by position,
-// so the positions get names: inserting Activity (#5110) must not silently repoint a guard.
-// Order must match ANALYTICS_TABS, and analyticsTour.constants.js carries the same numbers.
-const TAB = {
-  overview: 0,
-  costs: 1,
-  tokens: 2,
-  agents: 3,
-  tools: 4,
-  users: 5,
-  activity: 6,
-  health: 7,
-  guide: 8,
-};
+const EMPTY_PERMISSIONS = [];
 
 const AnalyticsContainer = memo(() => {
   const projectId = useSelectedProjectId();
   const projectName = useSelectedProjectName();
   const store = useStore();
   const personalProjectId = useSelector(state => state.user?.personal_project_id);
+  const permissions = useSelector(state => state.user?.permissions ?? EMPTY_PERMISSIONS);
+  const canViewSkills = permissions.includes(PERMISSIONS.skills.list);
+  const visibleTabs = useMemo(
+    () => ANALYTICS_TABS.filter(({ id }) => id !== TAB.skills || canViewSkills),
+    [canViewSkills],
+  );
+  const visibleTabIds = useMemo(() => visibleTabs.map(({ id }) => id), [visibleTabs]);
   const isPersonalProject = useMemo(
     () => Boolean(projectId && personalProjectId && projectId === personalProjectId),
     [projectId, personalProjectId],
@@ -100,7 +103,8 @@ const AnalyticsContainer = memo(() => {
   const [fromOpen, setFromOpen] = useState(false);
   const [toOpen, setToOpen] = useState(false);
 
-  const [activeTab, setActiveTab] = useState(0);
+  const [selectedTab, setSelectedTab] = useState(TAB.overview);
+  const activeTab = visibleTabIds.includes(selectedTab) ? selectedTab : TAB.overview;
 
   const [pendingUserId, setPendingUserId] = useState(null);
 
@@ -202,17 +206,17 @@ const AnalyticsContainer = memo(() => {
 
   const handleTabChange = useCallback((_, newTab) => {
     setPendingUserId(null);
-    setActiveTab(newTab);
+    setSelectedTab(newTab);
   }, []);
 
   const handleOverviewUserClick = useCallback(userId => {
     setPendingUserId(userId);
-    setActiveTab(TAB.users);
+    setSelectedTab(TAB.users);
   }, []);
 
   const handleBackToOverview = useCallback(() => {
     setPendingUserId(null);
-    setActiveTab(TAB.overview);
+    setSelectedTab(TAB.overview);
   }, []);
 
   const handleExport = useCallback(async () => {
@@ -223,7 +227,7 @@ const AnalyticsContainer = memo(() => {
       const allData = await AnalyticsExportHelpers.fetchAllAnalyticsData(
         store.dispatch,
         analyticsApi.endpoints,
-        { projectId, dateFrom: dateFromISO, dateTo: dateToISO },
+        { projectId, dateFrom: dateFromISO, dateTo: dateToISO, includeSkills: canViewSkills },
       );
 
       const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -232,6 +236,7 @@ const AnalyticsContainer = memo(() => {
         ...allData,
         meta: { projectName, dateFrom: dateFromISO, dateTo: dateToISO, timeZone },
         isPersonalProject,
+        includeSkills: canViewSkills,
       });
 
       await exportToExcel(
@@ -247,7 +252,7 @@ const AnalyticsContainer = memo(() => {
     } finally {
       setExporting(false);
     }
-  }, [store, projectId, projectName, dateFromISO, dateToISO, isPersonalProject]);
+  }, [store, projectId, projectName, dateFromISO, dateToISO, isPersonalProject, canViewSkills]);
 
   const handleCloseExportError = useCallback(() => setExportError(false), []);
 
@@ -273,9 +278,9 @@ const AnalyticsContainer = memo(() => {
 
   useEffect(() => {
     if (tourId !== ANALYTICS_TOUR_ID || !currentStep) return;
-    if (typeof currentStep.tabIndex === 'number') {
+    if (currentStep.tabId) {
       setPendingUserId(null);
-      setActiveTab(currentStep.tabIndex);
+      setSelectedTab(currentStep.tabId);
     }
   }, [currentStep, tourId]);
 
@@ -424,9 +429,10 @@ const AnalyticsContainer = memo(() => {
             value={activeTab}
             onChange={handleTabChange}
           >
-            {ANALYTICS_TABS.map(({ label, testid }) => (
+            {visibleTabs.map(({ id, label, testid }) => (
               <BaseTab
-                key={label}
+                key={id}
+                value={id}
                 label={label}
                 data-testid={testid}
               />
@@ -481,6 +487,13 @@ const AnalyticsContainer = memo(() => {
               dateTo={dateToISO}
             />
           )}
+          {activeTab === TAB.skills && (
+            <AnalyticsSkills
+              projectId={projectId}
+              dateFrom={dateFromISO}
+              dateTo={dateToISO}
+            />
+          )}
           {activeTab === TAB.tools && (
             <AnalyticsTools
               projectId={projectId}
@@ -511,7 +524,7 @@ const AnalyticsContainer = memo(() => {
               daily_activity={data.daily_activity}
             />
           )}
-          {activeTab === TAB.guide && <AnalyticsGuide />}
+          {activeTab === TAB.guide && <AnalyticsGuide visibleTabIds={visibleTabIds} />}
         </Box>
       </Box>
 

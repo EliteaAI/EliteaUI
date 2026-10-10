@@ -14,6 +14,8 @@ export { default as AnalyticsAgentDetailed } from './AnalyticsAgentDetailed';
 export { default as AnalyticsCosts } from './AnalyticsCosts';
 export { default as AnalyticsTokens } from './AnalyticsTokens';
 export { default as AnalyticsAgents } from './AnalyticsAgents';
+export { default as AnalyticsSkillDetailed } from './AnalyticsSkillDetailed';
+export { default as AnalyticsSkills } from './AnalyticsSkills';
 export { default as AnalyticsToolDetailed } from './AnalyticsToolDetailed';
 export { default as AnalyticsTools } from './AnalyticsTools';
 export { default as AnalyticsUserDetailed } from './AnalyticsUserDetailed';
