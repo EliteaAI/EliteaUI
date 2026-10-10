@@ -1,4 +1,7 @@
-export const MAX_ATTACHED_SKILLS = 5;
+// Fallback only: the agent's skills endpoint returns the admin-configured max_skills.
+export const MAX_ATTACHED_SKILLS = 50;
+
+export const ATTACHED_SKILLS_SEARCH_THRESHOLD = 8;
 
 export const LOCKED_SKILL_VERSION_STATUSES = ['published', 'embedded'];
 
