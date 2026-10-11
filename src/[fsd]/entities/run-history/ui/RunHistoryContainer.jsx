@@ -139,8 +139,13 @@ const RunHistoryContainer = memo(props => {
     toastInfo,
   ]);
 
+  const entityKey = `${projectId}:${entityProjectId}:${entityId}`;
+  const currentEntityKeyRef = useRef(entityKey);
+  currentEntityKeyRef.current = entityKey;
+
   useEffect(() => {
     if (projectId && entityId) {
+      const requestedEntityKey = `${projectId}:${entityProjectId}:${entityId}`;
       const request = fetchRunList({
         source,
         projectId,
@@ -150,7 +155,8 @@ const RunHistoryContainer = memo(props => {
         ...requestFilters,
       });
       Promise.resolve(request).then(result => {
-        if (result?.data?.facets) onFacets?.(result.data.facets);
+        const isForCurrentEntity = requestedEntityKey === currentEntityKeyRef.current;
+        if (isForCurrentEntity && result?.data?.facets) onFacets?.(result.data.facets);
       });
     }
   }, [projectId, entityId, entityProjectId, page, fetchRunList, source, requestFilters, onFacets]);
@@ -221,7 +227,7 @@ const RunHistoryContainer = memo(props => {
             shareOpensHistoryTab={shareOpensHistoryTab}
             extraColumns={extraColumns}
             listWidth={listWidth}
-            emptyState={typeof emptyState === 'function' ? emptyState(data) : emptyState}
+            emptyState={typeof emptyState === 'function' ? data && emptyState(data) : emptyState}
           />
         </Box>
 

@@ -152,6 +152,34 @@ describe('RunHistoryContainer filters', () => {
     await vi.waitFor(() => expect(onFacets).toHaveBeenCalledWith(facets));
   });
 
+  it('ignores the facets of a skill the page has already left', async () => {
+    const onFacets = vi.fn();
+    const staleFacets = { authors: [{ id: 3 }], models: ['old-skill-model'] };
+    const currentFacets = { authors: [{ id: 3 }], models: ['current-skill-model'] };
+    let resolvePreviousSkill;
+    fetchRunList
+      .mockReturnValueOnce(new Promise(resolve => (resolvePreviousSkill = resolve)))
+      .mockResolvedValueOnce({ data: { rows: ROWS, total: 1, facets: currentFacets } });
+    const { rerender } = render(tree({ onFacets, entityId: 174 }));
+
+    rerender(tree({ onFacets, entityId: 175 }));
+    await vi.waitFor(() => expect(onFacets).toHaveBeenCalledWith(currentFacets));
+    resolvePreviousSkill({ data: { rows: ROWS, total: 1, facets: staleFacets } });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(onFacets).not.toHaveBeenCalledWith(staleFacets);
+  });
+
+  it('asks for the empty state only once a page has loaded', () => {
+    queryResult.data = undefined;
+    const emptyState = vi.fn(() => null);
+
+    render(tree({ emptyState }));
+
+    expect(emptyState).not.toHaveBeenCalled();
+  });
+
   it('builds the empty state from the page the list shows', () => {
     queryResult.data = { rows: [], total: 0, modelFilterUnavailable: true };
 
