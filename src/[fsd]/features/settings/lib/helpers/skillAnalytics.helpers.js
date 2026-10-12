@@ -1,3 +1,4 @@
+import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import { SearchParams, SkillsTabs } from '@/common/constants';
 import RouteDefinitions from '@/routes';
@@ -8,12 +9,9 @@ const MANUAL_TRIGGER = 'manual';
 const ENTITY_KIND_PIPELINE = 'pipeline';
 const ENTITY_DETAIL_TAB = 'all';
 
-export const SKILL_SOURCE_LABELS = {
-  load_skill: 'Loaded by the agent',
-  mention: 'Mentioned in a message',
-};
+const { SKILL_SOURCE_LABELS, VERSION_UNKNOWN_LABEL } = AnalyticsCommonConstants;
 
-export const VERSION_UNKNOWN_LABEL = 'Version unknown';
+const hasValue = value => value !== undefined && value !== null;
 
 export const skillTriggerLabel = source =>
   source === MANUAL_TRIGGER ? 'Manual' : triggerSourceLabel(source);
@@ -25,7 +23,7 @@ export const skillVersionLabel = versionName => versionName || VERSION_UNKNOWN_L
 const isCatalogSkill = (skill, projectId) => String(skill.skill_project_id) !== String(projectId);
 
 export const skillRunAnalyticsPath = (skill, run, projectId) => {
-  if (!skill || skill.deleted || run?.conversation_id == null) return null;
+  if (!skill || skill.deleted || !hasValue(run?.conversation_id)) return null;
 
   const route = isCatalogSkill(skill, projectId)
     ? NavigationHelpers.buildRoute(RouteDefinitions.CatalogSkillRunAnalytics, { skillId: skill.skill_id })
@@ -38,10 +36,10 @@ export const skillRunAnalyticsPath = (skill, run, projectId) => {
 };
 
 const isOtherProjectAgent = (agent, projectId) =>
-  agent.entity_project_id != null && String(agent.entity_project_id) !== String(projectId);
+  hasValue(agent.entity_project_id) && String(agent.entity_project_id) !== String(projectId);
 
 export const skillAgentPath = (agent, projectId) => {
-  if (!agent || agent.deleted || agent.entity_id == null || isOtherProjectAgent(agent, projectId))
+  if (!agent || agent.deleted || !hasValue(agent.entity_id) || isOtherProjectAgent(agent, projectId))
     return null;
 
   const pattern =

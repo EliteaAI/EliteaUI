@@ -43,6 +43,7 @@ import ArrowLeftIcon from '@/components/Icons/ArrowLeftIcon';
 import ArrowRightIcon from '@/components/Icons/ArrowRightIcon';
 import BriefcaseIcon from '@/components/Icons/BriefcaseIcon.jsx';
 import CalendarIcon from '@/components/Icons/CalendarIcon';
+import useCheckPermission from '@/hooks/useCheckPermission';
 import { useSelectedProjectId, useSelectedProjectName } from '@/hooks/useSelectedProject';
 
 const CUSTOM_PRESET_VALUE = 'custom';
@@ -74,15 +75,13 @@ const ANALYTICS_TABS = [
   { id: TAB.guide, label: 'Guide', testid: 'analytics-tab-guide' },
 ];
 
-const EMPTY_PERMISSIONS = [];
-
 const AnalyticsContainer = memo(() => {
   const projectId = useSelectedProjectId();
   const projectName = useSelectedProjectName();
   const store = useStore();
   const personalProjectId = useSelector(state => state.user?.personal_project_id);
-  const permissions = useSelector(state => state.user?.permissions ?? EMPTY_PERMISSIONS);
-  const canViewSkills = permissions.includes(PERMISSIONS.skills.list);
+  const { checkPermission } = useCheckPermission();
+  const canViewSkills = checkPermission(PERMISSIONS.skills.list);
   const visibleTabs = useMemo(
     () => ANALYTICS_TABS.filter(({ id }) => id !== TAB.skills || canViewSkills),
     [canViewSkills],

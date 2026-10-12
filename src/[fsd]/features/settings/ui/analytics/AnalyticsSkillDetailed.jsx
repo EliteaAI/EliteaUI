@@ -1,4 +1,4 @@
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useEffect, useState } from 'react';
 
 import { Link as RouterLink } from 'react-router-dom';
 import {
@@ -11,7 +11,17 @@ import {
   YAxis,
 } from 'recharts';
 
-import { Box, CircularProgress, IconButton, Link, Tooltip, Typography, useTheme } from '@mui/material';
+import {
+  Alert,
+  Box,
+  CircularProgress,
+  IconButton,
+  Link,
+  Snackbar,
+  Tooltip,
+  Typography,
+  useTheme,
+} from '@mui/material';
 
 import { useAnalyticsSkillDetailQuery } from '@/[fsd]/features/settings/api/analyticsApi';
 import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
@@ -20,11 +30,13 @@ import {
   AnalyticsExportHelpers,
   SkillAnalyticsHelpers,
 } from '@/[fsd]/features/settings/lib/helpers';
-import ChartTooltip from '@/[fsd]/features/settings/ui/analytics/components/ChartTooltip';
-import DeletedChip from '@/[fsd]/features/settings/ui/analytics/components/DeletedChip';
+import {
+  ChartTooltip,
+  DeletedChip,
+  KPICard,
+  SkillBreakdownTable,
+} from '@/[fsd]/features/settings/ui/analytics';
 import EntityKindChip from '@/[fsd]/features/settings/ui/analytics/components/EntityKindChip';
-import KPICard from '@/[fsd]/features/settings/ui/analytics/components/KpiCard';
-import SkillBreakdownTable from '@/[fsd]/features/settings/ui/analytics/components/SkillBreakdownTable';
 import { analyticsTableStyles } from '@/[fsd]/features/settings/ui/analytics/components/analyticsTable.styles';
 import { exportToExcel } from '@/[fsd]/shared/lib/utils';
 import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
@@ -32,7 +44,9 @@ import DownloadIcon from '@/assets/download.svg?react';
 import ArrowBackIcon from '@/components/Icons/ArrowBackIcon';
 import { useSelectedProjectName } from '@/hooks/useSelectedProject';
 
-const fmtDateTime = iso => (iso ? new Date(iso).toLocaleString() : '—');
+const HTTP_NOT_FOUND = 404;
+
+const fmtDateTime = AnalyticsExportHelpers.fmtRunDateTime;
 
 const fmtNum = AnalyticCommonHelpers.fmtNum;
 const fmtCost = AnalyticCommonHelpers.fmtCost;
@@ -91,8 +105,13 @@ const AnalyticsSkillDetailed = memo(props => {
   const axisTickStyle = { fill: axisStroke, fontSize: 11 };
   const projectName = useSelectedProjectName();
   const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState(false);
 
-  const { data, isFetching, isError } = useAnalyticsSkillDetailQuery(
+  useEffect(() => {
+    setExportError(false);
+  }, [skillId, skillProjectId, dateFrom, dateTo]);
+
+  const { data, isFetching, error } = useAnalyticsSkillDetailQuery(
     { projectId, skillId, skillProjectId, dateFrom, dateTo },
     { skip: !projectId || !skillId },
   );
@@ -170,6 +189,7 @@ const AnalyticsSkillDetailed = memo(props => {
 
   const handleExport = useCallback(async () => {
     setExporting(true);
+    setExportError(false);
     try {
       const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
       await exportToExcel(
@@ -181,10 +201,14 @@ const AnalyticsSkillDetailed = memo(props => {
         }),
         [AnalyticsExportHelpers.buildSkillDetailSheet(data, { projectName, dateFrom, dateTo, timeZone })],
       );
+    } catch {
+      setExportError(true);
     } finally {
       setExporting(false);
     }
   }, [data, dateFrom, dateTo, projectName]);
+
+  const handleCloseExportError = useCallback(() => setExportError(false), []);
 
   if (isFetching)
     return (
@@ -212,7 +236,9 @@ const AnalyticsSkillDetailed = memo(props => {
           sx={styles.emptyText}
           data-testid="analytics-skill-detail-empty"
         >
-          {isError ? 'No usage of this skill in the selected period.' : 'No data found.'}
+          {error?.status === HTTP_NOT_FOUND
+            ? 'No usage of this skill in the selected period.'
+            : 'Failed to load skill analytics.'}
         </Typography>
       </Box>
     );
@@ -470,6 +496,21 @@ const AnalyticsSkillDetailed = memo(props => {
         emptyText="No runs in the selected period"
         testId="analytics-skill-detail-recent-runs"
       />
+      <Snackbar
+        open={exportError}
+        autoHideDuration={8000}
+        onClose={handleCloseExportError}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert
+          onClose={handleCloseExportError}
+          severity="error"
+          variant="filled"
+          data-testid="analytics-skill-detail-export-error"
+        >
+          Unable to export skill analytics. Please try again.
+        </Alert>
+      </Snackbar>
     </Box>
   );
 });

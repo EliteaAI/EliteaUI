@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ThemeProvider } from '@mui/material';
 
 import { useInteractiveTour } from '@/[fsd]/shared/lib/context';
+import { PUBLIC_PROJECT_ID } from '@/common/constants';
 import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
@@ -77,19 +78,21 @@ vi.mock('@/[fsd]/features/settings/lib/helpers', () => ({
   AnalyticsExportHelpers: {},
 }));
 
+const selectedProject = vi.hoisted(() => ({ id: 2 }));
+
 vi.mock('@/hooks/useSelectedProject', () => ({
-  useSelectedProjectId: () => 2,
+  useSelectedProjectId: () => selectedProject.id,
   useSelectedProjectName: () => 'Private',
 }));
 
-const storeWith = permissions => {
-  const state = Object.freeze({ user: { personal_project_id: 2, permissions } });
+const storeWith = (permissions, publicPermissions = []) => {
+  const state = Object.freeze({ user: { personal_project_id: 2, permissions, publicPermissions } });
   return { getState: () => state, subscribe: () => () => {}, dispatch: action => action };
 };
 
-const renderContainer = permissions =>
+const renderContainer = (permissions, publicPermissions) =>
   render(
-    <Provider store={storeWith(permissions)}>
+    <Provider store={storeWith(permissions, publicPermissions)}>
       <ThemeProvider theme={analyticsTestTheme}>
         <AnalyticsContainer />
       </ThemeProvider>
@@ -147,6 +150,14 @@ describe('AnalyticsContainer tabs', () => {
       expect(screen.getByTestId(panel)).toBeInTheDocument();
       expect(screen.queryByTestId('panel-skills')).not.toBeInTheDocument();
     });
+  });
+
+  it('reads the public permissions in the Public project', () => {
+    selectedProject.id = PUBLIC_PROJECT_ID;
+    renderContainer([], [SKILLS_LIST]);
+    selectedProject.id = 2;
+
+    expect(tabLabels()).toEqual(ALL_TABS);
   });
 
   it('opens the Skills panel from its tab', () => {

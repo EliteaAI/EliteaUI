@@ -1,3 +1,5 @@
+import { ANALYTICS_TAB_IDS } from '@/[fsd]/features/interactive-tours';
+
 export const TOP_LIST_SIZE = 10;
 
 export const MODEL_CHART_SIZE = 15;
@@ -17,6 +19,13 @@ export const TRIGGER_SOURCE_LABELS = {
 // Embedding calls are metered as llm events, so every token, call and cost figure covers both (#6878)
 const MODEL_REQUESTS = 'LLM and embedding model requests';
 const EMBEDDING_OUTPUT_NOTE = 'Embedding model requests produce no output tokens.';
+
+export const SKILL_SOURCE_LABELS = {
+  load_skill: 'Loaded by the agent',
+  mention: 'Mentioned in a message',
+};
+
+export const VERSION_UNKNOWN_LABEL = 'Version unknown';
 
 export const TOOLTIP_TEXTS = {
   overview: {
@@ -385,7 +394,7 @@ export const GUIDE_SECTIONS = [
   },
   {
     title: 'Skills Tab',
-    tabId: 'skills',
+    tabId: ANALYTICS_TAB_IDS.skills,
     metrics: [
       {
         name: 'Skill Runs',

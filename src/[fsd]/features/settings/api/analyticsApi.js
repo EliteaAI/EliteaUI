@@ -211,7 +211,8 @@ export const analyticsApi = eliteaApi
         query: ({ projectId, skillId, skillProjectId, dateFrom, dateTo }) => {
           const params = new URLSearchParams();
           params.set('skill_id', String(skillId));
-          if (skillProjectId != null) params.set('skill_project_id', String(skillProjectId));
+          if (skillProjectId !== undefined && skillProjectId !== null)
+            params.set('skill_project_id', String(skillProjectId));
           if (dateFrom) params.set('date_from', dateFrom);
           if (dateTo) params.set('date_to', dateTo);
           return {
@@ -283,7 +284,6 @@ export const {
   useAnalyticsAgentDetailQuery,
   useAnalyticsSkillsQuery,
   useAnalyticsSkillDetailQuery,
-  useLazyAnalyticsSkillDetailQuery,
   useAnalyticsCostsQuery,
   useAnalyticsRunDetailQuery,
   useAnalyticsActivityQuery,

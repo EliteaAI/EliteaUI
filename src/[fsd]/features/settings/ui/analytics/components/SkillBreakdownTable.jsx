@@ -9,7 +9,7 @@ import { analyticsTableStyles as styles } from './analyticsTable.styles';
 const rowKey = (row, index) => row.key ?? index;
 
 const SkillBreakdownTable = memo(props => {
-  const { title, tooltip, subtitle, columns, rows = [], emptyText = 'No data', testId, onRowClick } = props;
+  const { title, tooltip, subtitle, columns, rows = [], emptyText = 'No data', testId } = props;
 
   const tableStyles = skillBreakdownTableStyles();
 
@@ -57,8 +57,7 @@ const SkillBreakdownTable = memo(props => {
           {rows.map((row, index) => (
             <Box
               key={rowKey(row, index)}
-              sx={[styles.tableRow, onRowClick && tableStyles.clickable]}
-              onClick={onRowClick ? () => onRowClick(row) : undefined}
+              sx={styles.tableRow}
               data-testid={testId ? `${testId}-row` : undefined}
             >
               {columns.map(column => (
@@ -91,7 +90,6 @@ SkillBreakdownTable.displayName = 'SkillBreakdownTable';
 /** @type {MuiSx} */
 const skillBreakdownTableStyles = () => ({
   scrollList: { maxHeight: '18.75rem', overflowY: 'auto', overflowX: 'hidden' },
-  clickable: { cursor: 'pointer' },
   emptyText: ({ palette }) => ({
     color: palette.text.metrics || palette.text.disabled,
     padding: '0.5rem 0.75rem',

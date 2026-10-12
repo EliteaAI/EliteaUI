@@ -2,6 +2,7 @@
 import { Provider } from 'react-redux';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { PUBLIC_PROJECT_ID } from '@/common/constants';
 import { act, cleanup, renderHook } from '@testing-library/react';
 
 import { ANALYTICS_TOUR_ID } from '../../constants';
@@ -11,8 +12,11 @@ vi.mock('@/slices/settings', () => ({ actions: { setSideBarCollapsed: vi.fn(() =
 
 const SKILLS_LIST = 'models.applications.skills.list';
 
-const startAnalyticsTour = async permissions => {
-  const state = Object.freeze({ user: { permissions } });
+const startAnalyticsTour = async (permissions, { projectId = 2, publicPermissions = [] } = {}) => {
+  const state = Object.freeze({
+    user: { permissions, publicPermissions },
+    settings: { project: { id: projectId } },
+  });
   const store = { getState: () => state, subscribe: () => () => {}, dispatch: action => action };
   const { result } = renderHook(() => useInteractiveTourController(), {
     wrapper: ({ children }) => <Provider store={store}>{children}</Provider>,
@@ -36,6 +40,15 @@ describe('analytics tour steps', () => {
     expect(withSkills).toContain('skills');
     expect(withoutSkills).not.toContain('skills');
     expect(withoutSkills).toEqual(withSkills.filter(tabId => tabId !== 'skills'));
+  });
+
+  it('reads the public permissions in the Public project', async () => {
+    const tabIds = await startAnalyticsTour([], {
+      projectId: PUBLIC_PROJECT_ID,
+      publicPermissions: [SKILLS_LIST],
+    });
+
+    expect(tabIds).toContain('skills');
   });
 
   it('addresses every tab by id', async () => {

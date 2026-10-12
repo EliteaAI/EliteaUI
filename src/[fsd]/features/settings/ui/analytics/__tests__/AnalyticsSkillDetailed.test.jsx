@@ -179,8 +179,48 @@ describe('AnalyticsSkillDetailed', () => {
     ]);
   });
 
-  it('says so when the skill has no usage in the period', () => {
-    useAnalyticsSkillDetailQuery.mockReturnValue({ data: undefined, isFetching: false, isError: true });
+  it('reports a failed export', async () => {
+    exportToExcel.mockRejectedValueOnce(new Error('disk full'));
+    renderDetail();
+
+    fireEvent.click(screen.getByTestId('analytics-skill-detail-export-button'));
+
+    expect(await screen.findByTestId('analytics-skill-detail-export-error')).toHaveTextContent(
+      'Unable to export skill analytics',
+    );
+  });
+
+  it('drops a failed export notice once the period changes', async () => {
+    exportToExcel.mockRejectedValueOnce(new Error('disk full'));
+    const { rerender } = renderDetail();
+    fireEvent.click(screen.getByTestId('analytics-skill-detail-export-button'));
+    await screen.findByTestId('analytics-skill-detail-export-error');
+
+    rerender(
+      <MemoryRouter>
+        <AnalyticsTestWrapper>
+          <AnalyticsSkillDetailed
+            projectId={2}
+            skillId={DETAIL.skill_id}
+            skillProjectId={DETAIL.skill_project_id}
+            dateFrom="2026-09-01T00:00:00Z"
+            dateTo="2026-10-10T00:00:00Z"
+            onBack={vi.fn()}
+          />
+        </AnalyticsTestWrapper>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() =>
+      expect(screen.queryByTestId('analytics-skill-detail-export-error')).not.toBeInTheDocument(),
+    );
+  });
+
+  it.each([
+    [404, 'No usage of this skill in the selected period.'],
+    [500, 'Failed to load skill analytics.'],
+  ])('tells a %s apart from no usage', (status, message) => {
+    useAnalyticsSkillDetailQuery.mockReturnValue({ data: undefined, isFetching: false, error: { status } });
     render(
       <MemoryRouter>
         <AnalyticsTestWrapper>
@@ -193,7 +233,7 @@ describe('AnalyticsSkillDetailed', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByTestId('analytics-skill-detail-empty')).toHaveTextContent('No usage');
+    expect(screen.getByTestId('analytics-skill-detail-empty')).toHaveTextContent(message);
     expect(within(document.body).getByTestId('analytics-skill-detail-back-button')).toBeInTheDocument();
   });
 });

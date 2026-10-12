@@ -15,12 +15,14 @@ import { Box, CircularProgress, TablePagination, TableSortLabel, Typography, use
 
 import { useAnalyticsSkillsQuery } from '@/[fsd]/features/settings/api/analyticsApi';
 import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
-import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
-import AnalyticsSkillDetailed from '@/[fsd]/features/settings/ui/analytics/AnalyticsSkillDetailed';
-import ChartTooltip from '@/[fsd]/features/settings/ui/analytics/components/ChartTooltip';
-import DeletedChip from '@/[fsd]/features/settings/ui/analytics/components/DeletedChip';
-import KPICard from '@/[fsd]/features/settings/ui/analytics/components/KpiCard';
-import SkillsEmptyState from '@/[fsd]/features/settings/ui/analytics/components/SkillsEmptyState';
+import { AnalyticCommonHelpers, AnalyticsExportHelpers } from '@/[fsd]/features/settings/lib/helpers';
+import {
+  AnalyticsSkillDetailed,
+  ChartTooltip,
+  DeletedChip,
+  KPICard,
+  SkillsEmptyState,
+} from '@/[fsd]/features/settings/ui/analytics';
 import { analyticsTableStyles } from '@/[fsd]/features/settings/ui/analytics/components/analyticsTable.styles';
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 import StyledSearchInput from '@/components/SearchInput';
@@ -28,8 +30,6 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const CHART_SIZE = 20;
 const DEFAULT_SORT = { sortBy: 'runs', sortOrder: 'desc' };
-
-const fmtLastUsed = iso => (iso ? new Date(iso).toLocaleString() : '—');
 
 const SKILL_COLUMNS = [
   { key: 'skill_name', label: 'Skill', flex: 3 },
@@ -49,7 +49,12 @@ const SKILL_COLUMNS = [
   { key: 'errors', label: 'Errors', render: r => r.errors },
   { key: 'total_tokens', label: 'Tokens', render: r => AnalyticCommonHelpers.fmtNum(r.total_tokens) },
   { key: 'cost', label: 'Cost', render: r => AnalyticCommonHelpers.fmtCost(r.cost) },
-  { key: 'last_used', label: 'Last Used', flex: 1.5, render: r => fmtLastUsed(r.last_used) },
+  {
+    key: 'last_used',
+    label: 'Last Used',
+    flex: 1.5,
+    render: r => AnalyticsExportHelpers.fmtRunDateTime(r.last_used),
+  },
 ];
 
 const AnalyticsSkills = memo(props => {
