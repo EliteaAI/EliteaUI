@@ -63,6 +63,32 @@ describe('Auto model picker and explicit selection', () => {
     expect(modelsWithAuto([fixed], { ...enabled, enabled: false }, 'chat')).toEqual([fixed]);
   });
 
+  it('falls back to the concrete default when the project default is Auto but Auto cannot run', () => {
+    const data = {
+      items: [{ ...fixed, default: true }],
+      auto_routing: {
+        enabled: true,
+        readiness: { ready: false, reasons: [{ code: 'CLASSIFIER_UNAVAILABLE' }] },
+      },
+      default_selection: autoModel(profile).selection,
+    };
+    for (const surface of ['chat', 'agent']) {
+      expect(defaultModelForSurface(data, surface).name).toBe('chosen');
+      expect(modelsWithAuto(data.items, data.auto_routing, surface).map(m => m.name)).toContain(
+        defaultModelForSurface(data, surface).name,
+      );
+    }
+  });
+
+  it('hides Auto when readiness says it cannot run, and keeps it when readiness is absent or ready', () => {
+    const enabled = { enabled: true, profile_ref: profile };
+    const ids = readiness =>
+      modelsWithAuto([fixed], { ...enabled, readiness }, 'chat').map(m => m.display_name || m.name);
+    expect(ids({ ready: false, reasons: [{ code: 'CLASSIFIER_UNAVAILABLE' }] })).toEqual(['chosen']);
+    expect(ids({ ready: true, reasons: [] })).toEqual(['Auto', 'chosen']);
+    expect(ids(undefined)).toEqual(['Auto', 'chosen']);
+  });
+
   it('never sends the UI sentinel as a model identity', () => {
     const selected = selectionFields(autoModel(profile));
     expect(selected.model_name).toBeNull();
