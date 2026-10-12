@@ -22,3 +22,4 @@ export * as BrandLogoConstants from './brandLogo.constants.js';
 export * as AutoRoutingConstants from './autoRouting.constants';
 export * as NavigationConstants from './navigation.constants.js';
 export * as ToastConstants from './toast.constants.js';
+export * as AutocompleteConstants from './autocomplete.constants.js';
