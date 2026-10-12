@@ -7,7 +7,6 @@ import {
   buildRunScope,
   collectFailedRunCalls,
   describeRunModels,
-  describeRunTotals,
   describeRunVersions,
   fmtCost,
   fmtDuration,
@@ -136,11 +135,11 @@ describe('buildRunScope', () => {
 });
 
 describe('run trace helpers', () => {
+  const byModel = [
+    { model_name: 'gpt-x', display_name: 'GPT X' },
+    { model_name: 'sonnet', display_name: 'Sonnet' },
+  ];
   const runDetail = {
-    models: [
-      { model_name: 'gpt-x', display_name: 'GPT X' },
-      { model_name: 'sonnet', display_name: 'Sonnet' },
-    ],
     llm_calls: [
       { model_name: 'sonnet', ts: '2026-10-09T10:02:00Z', duration_ms: 50, is_error: true },
       { model_name: 'gpt-x', ts: '2026-10-09T10:00:00Z', is_error: false },
@@ -148,8 +147,9 @@ describe('run trace helpers', () => {
     tool_calls: [{ tool_name: 'search', ts: '2026-10-09T10:01:00Z', duration_ms: 20, is_error: true }],
   };
 
-  it('lists every model of the run by display name', () => {
-    expect(describeRunModels(runDetail)).toBe('GPT X, Sonnet');
+  it('lists every model of the run costs by display name', () => {
+    expect(describeRunModels(byModel)).toBe('GPT X, Sonnet');
+    expect(describeRunModels([{ model_name: 'raw-model' }])).toBe('raw-model');
     expect(describeRunModels(undefined)).toBe('—');
   });
 
@@ -163,25 +163,14 @@ describe('run trace helpers', () => {
     expect(describeRunVersions([99], versions)).toBe('—');
   });
 
-  it('formats the run totals the way the Costs tab formats them', () => {
-    const totals = describeRunTotals({
-      kpis: { llm_calls: 3, billable_tokens: 1234, total_cost: 0.001012, errors: 1, calls_duration_ms: 3370 },
-    });
-
-    expect(totals).toBe(
-      `Calls: 3 · Tokens: 1,234 · Cost: ${fmtCost(0.001012)} · Errors: 1 · Model time: ${fmtDuration(3370)}`,
-    );
-    expect(totals).toContain('Cost: $0.0011');
-  });
-
-  it('describes no totals before the run trace arrives', () => {
-    expect(describeRunTotals(undefined)).toBeNull();
-  });
-
-  it('collects only the failing llm and tool calls, in time order', () => {
-    expect(collectFailedRunCalls(runDetail).map(call => [call.eventType, call.name])).toEqual([
+  it('collects only the failing llm and tool calls, in time order, naming models by display name', () => {
+    expect(collectFailedRunCalls(runDetail, byModel).map(call => [call.eventType, call.name])).toEqual([
       ['tool', 'search'],
       ['llm', 'Sonnet'],
     ]);
+  });
+
+  it('falls back to the raw model name when the costs have no display name for it', () => {
+    expect(collectFailedRunCalls(runDetail, undefined).map(call => call.name)).toEqual(['search', 'sonnet']);
   });
 });

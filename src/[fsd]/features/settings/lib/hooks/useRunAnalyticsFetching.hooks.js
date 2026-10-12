@@ -2,7 +2,12 @@ import { useSelector } from 'react-redux';
 
 import { analyticsApi } from '@/[fsd]/features/settings/api/analyticsApi';
 
-const RUN_ANALYTICS_ENDPOINTS = ['analyticsCosts', 'analyticsTools', 'projectAnalytics'];
+const RUN_ANALYTICS_ENDPOINTS = [
+  'analyticsCosts',
+  'analyticsTools',
+  'projectAnalytics',
+  'analyticsRunDetail',
+];
 
 const matchesScope = (originalArgs, queryArgs) =>
   Object.entries(queryArgs).every(([key, value]) => String(originalArgs?.[key]) === String(value));

@@ -10,15 +10,24 @@ import { AnalyticsTestWrapper, installGlobalStubs } from './_testHelpers';
 
 installGlobalStubs();
 
-const { useGetRunHistoryDetailsQuery, useApplicationDetailsQuery, useAnalyticsRunDetailQuery, viewProps } =
-  vi.hoisted(() => ({
-    useGetRunHistoryDetailsQuery: vi.fn(),
-    useApplicationDetailsQuery: vi.fn(),
-    useAnalyticsRunDetailQuery: vi.fn(),
-    viewProps: { current: null },
-  }));
+const {
+  useGetRunHistoryDetailsQuery,
+  useApplicationDetailsQuery,
+  useAnalyticsRunDetailQuery,
+  useAnalyticsCostsQuery,
+  viewProps,
+} = vi.hoisted(() => ({
+  useGetRunHistoryDetailsQuery: vi.fn(),
+  useApplicationDetailsQuery: vi.fn(),
+  useAnalyticsRunDetailQuery: vi.fn(),
+  useAnalyticsCostsQuery: vi.fn(),
+  viewProps: { current: null },
+}));
 
-vi.mock('@/[fsd]/features/settings/api/analyticsApi', () => ({ useAnalyticsRunDetailQuery }));
+vi.mock('@/[fsd]/features/settings/api/analyticsApi', () => ({
+  useAnalyticsRunDetailQuery,
+  useAnalyticsCostsQuery,
+}));
 
 vi.mock('@/[fsd]/entities/run-history/api', () => ({
   RunHistoryApi: { useGetRunHistoryDetailsQuery },
@@ -66,15 +75,7 @@ const SKILL_DETAILS = {
 
 const RUN_DETAIL = {
   root_entity_version_ids: [252],
-  models: [{ model_name: 'eu.anthropic.claude-sonnet-4-6', display_name: 'Claude Sonnet 4.6' }],
-  kpis: {
-    llm_calls: 2,
-    tool_calls: 0,
-    billable_tokens: 1200,
-    total_cost: 0.0042,
-    errors: 1,
-    calls_duration_ms: 2500,
-  },
+  kpis: { llm_calls: 2, tool_calls: 0, errors: 1 },
   llm_calls: [
     { model_name: 'eu.anthropic.claude-sonnet-4-6', ts: '2026-10-09T10:00:00+00:00', is_error: false },
     {
@@ -85,6 +86,10 @@ const RUN_DETAIL = {
     },
   ],
   tool_calls: [],
+};
+
+const RUN_COSTS = {
+  by_model: [{ model_name: 'eu.anthropic.claude-sonnet-4-6', display_name: 'Claude Sonnet 4.6' }],
 };
 
 const renderSkillRun = (props = {}) =>
@@ -104,6 +109,7 @@ describe('RunAnalyticsContainer', () => {
     vi.clearAllMocks();
     viewProps.current = null;
     useAnalyticsRunDetailQuery.mockReturnValue({ data: undefined, isFetching: false });
+    useAnalyticsCostsQuery.mockReturnValue({ data: undefined, isFetching: false });
     useGetRunHistoryDetailsQuery.mockReturnValue({
       data: {
         uuid: '0b7c3a2e-5d4f-4c1a-9e8b-1f2a3b4c5d6e',
@@ -172,6 +178,10 @@ describe('RunAnalyticsContainer', () => {
       expect.anything(),
       expect.objectContaining({ skip: true }),
     );
+    expect(useAnalyticsCostsQuery).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ skip: true }),
+    );
     expect(viewProps.current.showToolsTab).toBe(true);
     expect(viewProps.current.failedCalls).toBeUndefined();
   });
@@ -190,6 +200,7 @@ describe('RunAnalyticsContainer for a root entity', () => {
     });
     useApplicationDetailsQuery.mockReturnValue({ data: undefined });
     useAnalyticsRunDetailQuery.mockReturnValue({ data: RUN_DETAIL, isFetching: false });
+    useAnalyticsCostsQuery.mockReturnValue({ data: RUN_COSTS, isFetching: false, isError: false });
   });
 
   afterEach(() => cleanup());
@@ -205,12 +216,21 @@ describe('RunAnalyticsContainer for a root entity', () => {
     );
   });
 
-  it('names the version and model the usage rows recorded, not the participant settings', () => {
+  it('reads the model from the same costs request the Costs tab makes', () => {
     renderSkillRun();
 
-    expect(screen.getByTestId('run-analytics-view')).toHaveTextContent(
-      'Run: 09 Oct 2026, 10:00 AM · Version: v2 · Model: Claude Sonnet 4.6',
+    expect(useAnalyticsCostsQuery).toHaveBeenCalledWith(
+      { projectId: 1, ...viewProps.current.runScope.queryArgs },
+      expect.objectContaining({ skip: false }),
     );
+  });
+
+  it('names the version and model the run used, not the participant settings', () => {
+    renderSkillRun();
+
+    expect(viewProps.current.infoLines).toEqual([
+      'Run: 09 Oct 2026, 10:00 AM · Version: v2 · Model: Claude Sonnet 4.6',
+    ]);
     expect(Object.fromEntries(viewProps.current.exportMeta.scopeRows)).toMatchObject({
       Skill: 'Summarizer',
       Version: 'v2',
@@ -218,26 +238,36 @@ describe('RunAnalyticsContainer for a root entity', () => {
     });
   });
 
-  it('falls back to the participant version while the run has no usage rows', () => {
-    useAnalyticsRunDetailQuery.mockReturnValue({ data: undefined, isFetching: false });
+  it('shows placeholders, not the participant version, while the usage data loads', () => {
+    useAnalyticsRunDetailQuery.mockReturnValue({ data: undefined, isFetching: true, isError: false });
     renderSkillRun();
 
-    expect(screen.getByTestId('run-analytics-view')).toHaveTextContent('Version: base · Model: —');
+    expect(viewProps.current.infoLines[0]).toContain('Version: … · Model: …');
+    expect(Object.fromEntries(viewProps.current.exportMeta.scopeRows)).toMatchObject({ Version: '…' });
   });
 
-  it('adds the run totals from the usage trace on a second line', () => {
+  it('says unavailable instead of an empty run when a usage request fails', () => {
+    useAnalyticsRunDetailQuery.mockReturnValue({
+      data: undefined,
+      isFetching: false,
+      error: { status: 500 },
+    });
+    useAnalyticsCostsQuery.mockReturnValue({ data: undefined, isFetching: false, isError: true });
     renderSkillRun();
 
-    expect(viewProps.current.infoLines[1]).toBe(
-      'Calls: 2 · Tokens: 1,200 · Cost: $0.0042 · Errors: 1 · Model time: 2.5s',
-    );
+    expect(viewProps.current.infoLines[0]).toContain('Version: unavailable · Model: unavailable');
   });
 
-  it('keeps a single line while the run has no usage trace', () => {
-    useAnalyticsRunDetailQuery.mockReturnValue({ data: undefined, isFetching: false });
+  it('falls back to the participant version when the run has no usage rows', () => {
+    useAnalyticsRunDetailQuery.mockReturnValue({
+      data: undefined,
+      isFetching: false,
+      error: { status: 404 },
+    });
+    useAnalyticsCostsQuery.mockReturnValue({ data: { by_model: [] }, isFetching: false, isError: false });
     renderSkillRun();
 
-    expect(viewProps.current.infoLines).toHaveLength(1);
+    expect(viewProps.current.infoLines[0]).toContain('Version: base · Model: —');
   });
 
   it('hides the Tools tab unless the run made a tool call', () => {
@@ -248,12 +278,13 @@ describe('RunAnalyticsContainer for a root entity', () => {
     useAnalyticsRunDetailQuery.mockReturnValue({
       data: { ...RUN_DETAIL, kpis: { ...RUN_DETAIL.kpis, tool_calls: 1 } },
       isFetching: false,
+      isError: false,
     });
     renderSkillRun();
     expect(viewProps.current.showToolsTab).toBe(true);
   });
 
-  it('hands the failing calls to Health', () => {
+  it('hands the failing calls to the view, named by the costs display name', () => {
     renderSkillRun();
 
     expect(viewProps.current.failedCalls).toEqual([

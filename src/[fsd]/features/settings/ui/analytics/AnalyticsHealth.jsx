@@ -5,11 +5,11 @@ import { Area, AreaChart, Tooltip as RechartsTooltip, ResponsiveContainer, XAxis
 import { Box, Typography, useTheme } from '@mui/material';
 
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
-import { ChartTooltip, RunFailedCallsTable } from '@/[fsd]/features/settings/ui/analytics';
+import { ChartTooltip } from '@/[fsd]/features/settings/ui/analytics';
 import { EVENT_TYPE_COLORS } from '@/[fsd]/shared/config/theme';
 
 const AnalyticsHealth = memo(props => {
-  const { health = [], daily_activity = [], hideTrend = false, failedCalls = [] } = props;
+  const { health = [], daily_activity = [], hideTrend = false } = props;
 
   const styles = analyticsHealthStyles();
   const { palette } = useTheme();
@@ -162,7 +162,6 @@ const AnalyticsHealth = memo(props => {
           ))}
         </Box>
       </Box>
-      <RunFailedCallsTable calls={failedCalls} />
     </Box>
   );
 });

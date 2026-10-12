@@ -98,11 +98,11 @@ export const buildRunScope = (type, id, rootEntity) => {
 
 const NO_RUN_VALUE = '—';
 
-const modelDisplayName = (runDetail, modelName) =>
-  runDetail?.models?.find(model => model.model_name === modelName)?.display_name ?? modelName;
+const modelDisplayName = (byModel, modelName) =>
+  byModel?.find(model => model.model_name === modelName)?.display_name ?? modelName;
 
-export const describeRunModels = runDetail =>
-  runDetail?.models?.length ? runDetail.models.map(model => model.display_name).join(', ') : NO_RUN_VALUE;
+export const describeRunModels = byModel =>
+  byModel?.length ? byModel.map(model => model.display_name || model.model_name).join(', ') : NO_RUN_VALUE;
 
 export const describeRunVersions = (versionIds, versions) => {
   const names = (versionIds ?? [])
@@ -112,26 +112,13 @@ export const describeRunVersions = (versionIds, versions) => {
   return names.length ? names.join(', ') : NO_RUN_VALUE;
 };
 
-export const describeRunTotals = runDetail => {
-  const kpis = runDetail?.kpis;
-  if (!kpis) return null;
-
-  return [
-    `Calls: ${fmtNum(kpis.llm_calls ?? 0)}`,
-    `Tokens: ${(kpis.billable_tokens ?? 0).toLocaleString()}`,
-    `Cost: ${fmtCost(kpis.total_cost)}`,
-    `Errors: ${fmtNum(kpis.errors ?? 0)}`,
-    `Model time: ${fmtDuration(kpis.calls_duration_ms)}`,
-  ].join(' · ');
-};
-
-export const collectFailedRunCalls = runDetail =>
+export const collectFailedRunCalls = (runDetail, byModel) =>
   [
     ...(runDetail?.llm_calls ?? []).map((call, index) => ({
       key: `llm-${index}`,
       ts: call.ts,
       eventType: RUN_CALL_EVENT_TYPE.llm,
-      name: modelDisplayName(runDetail, call.model_name),
+      name: modelDisplayName(byModel, call.model_name),
       durationMs: call.duration_ms,
       isError: call.is_error,
     })),

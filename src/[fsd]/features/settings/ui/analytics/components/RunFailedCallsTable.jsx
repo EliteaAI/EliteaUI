@@ -22,7 +22,7 @@ const COLUMNS = [
 ];
 
 const RunFailedCallsTable = memo(props => {
-  const { calls = [] } = props;
+  const { calls = [], sx = {} } = props;
 
   const styles = runFailedCallsTableStyles();
 
@@ -30,7 +30,7 @@ const RunFailedCallsTable = memo(props => {
 
   return (
     <Box
-      sx={styles.chartCard}
+      sx={[styles.chartCard, sx]}
       data-testid="run-analytics-failed-calls"
     >
       <Typography

@@ -8,7 +8,10 @@ import {
   formatRunTimestamp,
   toRunISOString,
 } from '@/[fsd]/entities/run-history/lib/helpers';
-import { useAnalyticsRunDetailQuery } from '@/[fsd]/features/settings/api/analyticsApi';
+import {
+  useAnalyticsCostsQuery,
+  useAnalyticsRunDetailQuery,
+} from '@/[fsd]/features/settings/api/analyticsApi';
 import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
 import { AnalyticCommonHelpers, AnalyticsExportHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { RunAnalyticsView } from '@/[fsd]/features/settings/ui/analytics';
@@ -59,37 +62,68 @@ const RunAnalyticsContainer = memo(props => {
     [runDetails?.uuid, rootEntity],
   );
 
-  const { data: runDetail, isFetching: isRunDetailFetching } = useAnalyticsRunDetailQuery(
-    { projectId, ...runScope?.queryArgs },
-    { skip: !isEntityScoped || !projectId || !runScope },
-  );
+  const usageQueryArgs = { projectId, ...runScope?.queryArgs };
+  const skipUsageQueries = !isEntityScoped || !projectId || !runScope;
+  const {
+    data: runDetail,
+    isFetching: isRunDetailFetching,
+    error: runDetailError,
+  } = useAnalyticsRunDetailQuery(usageQueryArgs, { skip: skipUsageQueries });
+  const {
+    data: runCosts,
+    isFetching: isRunCostsFetching,
+    isError: isRunCostsError,
+  } = useAnalyticsCostsQuery(usageQueryArgs, { skip: skipUsageQueries });
+
+  const isRunWithoutUsage = runDetailError?.status === 404;
+  const isRunDetailUnavailable = Boolean(runDetailError) && !isRunWithoutUsage;
+
+  const isUsagePending =
+    isEntityScoped && ((isRunDetailFetching && !runDetail) || (isRunCostsFetching && !runCosts));
 
   // The version the run executed with, not the one currently open in the editor
   const { date, version, model, createdAt } = useMemo(() => {
     const usageVersionIds = isEntityScoped ? runDetail?.root_entity_version_ids : undefined;
     const versionIds = usageVersionIds?.length ? usageVersionIds : [readRunVersionId(runDetails)];
+    const runVersion = isRunDetailUnavailable
+      ? 'unavailable'
+      : AnalyticCommonHelpers.describeRunVersions(versionIds, entityDetails?.versions);
+    const runModel = isRunCostsError
+      ? 'unavailable'
+      : AnalyticCommonHelpers.describeRunModels(runCosts?.by_model);
 
     return {
       createdAt: runDetails?.created_at,
       date: runDetails ? formatRunTimestamp(runDetails.created_at, RUN_ANALYTICS_TIMESTAMP_FORMAT) : '—',
-      version: AnalyticCommonHelpers.describeRunVersions(versionIds, entityDetails?.versions),
-      model: isRunDetailFetching && !runDetail ? '…' : AnalyticCommonHelpers.describeRunModels(runDetail),
+      version: isUsagePending ? '…' : runVersion,
+      model: isUsagePending ? '…' : runModel,
     };
-  }, [isEntityScoped, isRunDetailFetching, runDetail, runDetails, entityDetails?.versions, readRunVersionId]);
+  }, [
+    isEntityScoped,
+    isUsagePending,
+    isRunDetailUnavailable,
+    isRunCostsError,
+    runDetail,
+    runCosts?.by_model,
+    runDetails,
+    entityDetails?.versions,
+    readRunVersionId,
+  ]);
 
-  const infoLines = useMemo(() => {
-    if (!isEntityScoped) return [`Run: ${date} · Version: ${version}`];
-
-    const totals = AnalyticCommonHelpers.describeRunTotals(runDetail);
-    const runLine = `Run: ${date} · Version: ${version} · Model: ${model}`;
-
-    return totals ? [runLine, totals] : [runLine];
-  }, [isEntityScoped, date, version, model, runDetail]);
+  const infoLines = useMemo(
+    () => [
+      isEntityScoped
+        ? `Run: ${date} · Version: ${version} · Model: ${model}`
+        : `Run: ${date} · Version: ${version}`,
+    ],
+    [isEntityScoped, date, version, model],
+  );
 
   const showToolsTab = !isEntityScoped || Boolean(runDetail?.kpis?.tool_calls);
   const failedCalls = useMemo(
-    () => (isEntityScoped ? AnalyticCommonHelpers.collectFailedRunCalls(runDetail) : undefined),
-    [isEntityScoped, runDetail],
+    () =>
+      isEntityScoped ? AnalyticCommonHelpers.collectFailedRunCalls(runDetail, runCosts?.by_model) : undefined,
+    [isEntityScoped, runDetail, runCosts?.by_model],
   );
 
   const exportMeta = useMemo(

@@ -16,6 +16,7 @@ import {
   AnalyticsHealth,
   AnalyticsTokens,
   AnalyticsTools,
+  RunFailedCallsTable,
 } from '@/[fsd]/features/settings/ui/analytics';
 import { DrawerPage } from '@/[fsd]/features/settings/ui/drawer-page';
 import { exportToExcel } from '@/[fsd]/shared/lib/utils';
@@ -80,6 +81,7 @@ const RunAnalyticsView = memo(props => {
 
   const queryArgs = runScope?.queryArgs ?? NO_QUERY_ARGS;
   const isHealthTab = activeTab === TAB.health;
+  const hasFailedCalls = Boolean(failedCalls?.length);
 
   const {
     data: healthData,
@@ -245,7 +247,7 @@ const RunAnalyticsView = memo(props => {
             </Box>
           )}
           {runScope && isHealthTab && healthError && !healthFetching && (
-            <Box sx={styles.centeredState}>
+            <Box sx={hasFailedCalls ? styles.inlineState : styles.centeredState}>
               <Typography
                 variant="bodyMedium"
                 sx={styles.emptyText}
@@ -259,6 +261,7 @@ const RunAnalyticsView = memo(props => {
             healthData &&
             !healthError &&
             !healthFetching &&
+            !hasFailedCalls &&
             !healthData.health?.length && (
               <RunAnalyticsEmptyState
                 message={runScope.noDataMessage}
@@ -268,8 +271,13 @@ const RunAnalyticsView = memo(props => {
           {runScope && isHealthTab && healthData && !healthError && healthData.health?.length > 0 && (
             <AnalyticsHealth
               health={healthData.health}
-              failedCalls={failedCalls}
               hideTrend
+            />
+          )}
+          {runScope && isHealthTab && !healthFetching && hasFailedCalls && (
+            <RunFailedCallsTable
+              calls={failedCalls}
+              sx={styles.failedCalls}
             />
           )}
         </Box>
@@ -343,6 +351,14 @@ const runAnalyticsViewStyles = () => ({
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
+  },
+  inlineState: {
+    display: 'flex',
+    justifyContent: 'center',
+    padding: '1rem',
+  },
+  failedCalls: {
+    marginTop: '1rem',
   },
   emptyText: ({ palette }) => ({ color: palette.text.metrics || palette.text.disabled }),
 });

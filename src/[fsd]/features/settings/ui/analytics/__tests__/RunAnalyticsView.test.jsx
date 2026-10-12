@@ -28,11 +28,16 @@ vi.mock('@/[fsd]/features/settings/ui/analytics', () => ({
   AnalyticsCosts: props => <div data-testid="tab-costs">{JSON.stringify(props.runScope.queryArgs)}</div>,
   AnalyticsTokens: () => <div data-testid="tab-tokens" />,
   AnalyticsTools: () => <div data-testid="tab-tools" />,
+  RunFailedCallsTable: props => (
+    <div
+      data-testid="failed-calls-table"
+      data-calls={JSON.stringify(props.calls)}
+    />
+  ),
   AnalyticsHealth: props => (
     <div
       data-testid="tab-health"
       data-hide-trend={String(props.hideTrend)}
-      data-failed-calls={JSON.stringify(props.failedCalls ?? null)}
     />
   ),
 }));
@@ -156,20 +161,49 @@ describe('RunAnalyticsView', () => {
     );
   });
 
-  it('hands the run failing calls to Health', () => {
-    const failedCalls = [{ key: 'llm-1', eventType: 'llm', name: 'GPT', isError: true }];
+  const FAILED_CALLS = [{ key: 'llm-1', eventType: 'llm', name: 'GPT', isError: true }];
+
+  it('lists the run failing calls under the Health table', () => {
     useProjectAnalyticsQuery.mockReturnValue({
       data: { health: [{ event_type: 'llm', total: 2, errors: 1 }] },
       isFetching: false,
       isError: false,
     });
-    renderView({ failedCalls });
+    renderView({ failedCalls: FAILED_CALLS });
 
     fireEvent.click(screen.getByTestId('run-analytics-tab-health'));
 
-    expect(screen.getByTestId('tab-health')).toHaveAttribute(
-      'data-failed-calls',
-      JSON.stringify(failedCalls),
+    expect(screen.getByTestId('tab-health')).toBeInTheDocument();
+    expect(screen.getByTestId('failed-calls-table')).toHaveAttribute(
+      'data-calls',
+      JSON.stringify(FAILED_CALLS),
     );
+  });
+
+  it('lists the failing calls instead of the empty state when tracing has no health rows', () => {
+    renderView({ failedCalls: FAILED_CALLS });
+
+    fireEvent.click(screen.getByTestId('run-analytics-tab-health'));
+
+    expect(screen.getByTestId('failed-calls-table')).toBeInTheDocument();
+    expect(screen.queryByTestId('run-analytics-health-empty')).not.toBeInTheDocument();
+  });
+
+  it('keeps the failing calls next to the error when the health request fails', () => {
+    useProjectAnalyticsQuery.mockReturnValue({ data: undefined, isFetching: false, isError: true });
+    renderView({ failedCalls: FAILED_CALLS });
+
+    fireEvent.click(screen.getByTestId('run-analytics-tab-health'));
+
+    expect(screen.getByText('Failed to load analytics data.')).toBeInTheDocument();
+    expect(screen.getByTestId('failed-calls-table')).toBeInTheDocument();
+  });
+
+  it('shows no failed-calls table without failing calls', () => {
+    renderView();
+
+    fireEvent.click(screen.getByTestId('run-analytics-tab-health'));
+
+    expect(screen.queryByTestId('failed-calls-table')).not.toBeInTheDocument();
   });
 });
