@@ -21,14 +21,7 @@ const { GA_EVENT_NAMES, GA_EVENT_PARAMS } = AnalyticConstants;
  * - Table drag-and-drop upload
  */
 export const useFileUpload = props => {
-  const {
-    selectedProjectId,
-    allBuckets,
-    queryParams,
-    onSelectBucket,
-    handlePrefixChange,
-    currentPrefix = '',
-  } = props;
+  const { selectedProjectId, allBuckets, queryParams, onSelectBucket, handlePrefixChange } = props;
 
   const bucketUploadFileInputRef = useRef(null);
 
@@ -60,24 +53,25 @@ export const useFileUpload = props => {
   const [showDuplicateWarning, setShowDuplicateWarning] = useState(false);
   const [duplicateFilenames, setDuplicateFilenames] = useState([]);
 
-  // Internal: calculate full path from the entered folder path with security validation
+  // Internal: calculate full path from the entered folder path with security validation.
+  // The dialog now delivers the full path (not relative to currentPrefix), so we validate
+  // against an empty base prefix.
   const computeFullPath = useCallback(
     folderPath => {
       try {
-        // Use the secure path computation which includes validation
-        return PathValidationHelpers.computeSecurePath(folderPath, currentPrefix);
+        return PathValidationHelpers.computeSecurePath(folderPath, '');
       } catch (error) {
         toastError(`Invalid path: ${error.message}`);
-        return currentPrefix ? currentPrefix.replace(/\/+$/, '') : '';
+        return null;
       }
     },
-    [currentPrefix, toastError],
+    [toastError],
   );
 
   // Internal: perform the actual upload (called after all checks pass)
   const executeUpload = useCallback(
     (files, bucketName, folderPath, onSelectFolder) => {
-      const validationError = PathValidationHelpers.validateFolderPath(folderPath, currentPrefix);
+      const validationError = PathValidationHelpers.validateFolderPath(folderPath, '');
       if (validationError) {
         toastError(`Upload blocked: ${validationError}`);
         return;
@@ -174,9 +168,7 @@ export const useFileUpload = props => {
 
         if (onSelectFolder && bucketToSelect) onSelectFolder(fullPath, bucketToSelect);
       } else if (folderPath === '') {
-        const targetPath = currentPrefix || '';
-
-        handlePrefixChange(targetPath);
+        handlePrefixChange('');
       }
 
       setPendingUploadFiles(null);
@@ -185,7 +177,6 @@ export const useFileUpload = props => {
       setPendingOnSelectFolder(null);
     },
     [
-      currentPrefix,
       allBuckets,
       queryParams.selectedBucket,
       onSelectBucket,

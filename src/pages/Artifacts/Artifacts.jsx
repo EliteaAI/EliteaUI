@@ -767,7 +767,7 @@ const Artifacts = memo(() => {
         onClose={handlePathDialogClose}
         onConfirm={handlePathConfirmWithSelection}
         bucket={pendingUploadBucket}
-        currentPrefix={currentPrefix}
+        currentPrefix={pendingUploadBucket === queryParams.selectedBucket?.name ? currentPrefix : ''}
       />
 
       <ManagePermissionsModal
