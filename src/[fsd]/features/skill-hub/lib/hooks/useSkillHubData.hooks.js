@@ -235,9 +235,11 @@ export const useSkillHubData = (query, selectedTagNames) => {
     }
 
     if (!isCacheValid) {
-      fetchAllAndCategorize(categoryNames);
-      fetchTrendingSkills(0);
-      fetchMyLikedSkills(0);
+      Promise.all([
+        fetchAllAndCategorize(categoryNames),
+        fetchTrendingSkills(0),
+        fetchMyLikedSkills(0),
+      ]).catch(() => {});
     }
   }, [
     categoryNames,
