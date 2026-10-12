@@ -16,7 +16,7 @@ const ChatImportButton = memo(props => {
   const projectId = useSelectedProjectId();
   const { checkPermission } = useCheckPermission();
 
-  if (projectId == PUBLIC_PROJECT_ID) return null;
+  if (Number(projectId) === PUBLIC_PROJECT_ID) return null;
 
   const canImport = checkPermission(PERMISSIONS.chat.create);
 

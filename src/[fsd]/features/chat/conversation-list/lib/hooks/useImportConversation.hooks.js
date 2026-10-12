@@ -52,13 +52,15 @@ const sendChunk = ({ url, formData, onProgress, xhrRef }) =>
     xhr.send(formData);
   });
 
-const uploadImportFile = async ({ projectId, file, onProgress, xhrRef }) => {
+const uploadImportFile = async ({ projectId, file, onProgress, xhrRef, isCurrent }) => {
   const url = `${clearBaseUrlPrefix(VITE_SERVER_URL)}${getConversationImportPath(projectId)}`;
   const totalChunks = Math.max(1, Math.ceil(file.size / IMPORT_CHUNK_SIZE));
   const fileId = uuidv4();
   let response = null;
 
   for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
+    // A superseded upload must not start new requests (it would take over xhrRef)
+    if (!isCurrent()) throw new DOMException('Aborted', 'AbortError');
     const start = chunkIndex * IMPORT_CHUNK_SIZE;
     const chunk = file.slice(start, Math.min(start + IMPORT_CHUNK_SIZE, file.size));
     const formData = new FormData();
@@ -95,6 +97,8 @@ export const useImportConversation = props => {
 
   const xhrRef = useRef(null);
   const importIdRef = useRef(null);
+  // Bumped on every file selection so a superseded upload can't touch the current one's state
+  const uploadGenerationRef = useRef(0);
 
   const discardPreview = useCallback(() => {
     const importId = importIdRef.current;
@@ -104,6 +108,7 @@ export const useImportConversation = props => {
 
   useEffect(
     () => () => {
+      uploadGenerationRef.current += 1;
       xhrRef.current?.abort();
       discardPreview();
     },
@@ -121,7 +126,10 @@ export const useImportConversation = props => {
   const selectFile = useCallback(
     async newFile => {
       if (!newFile) return;
+      const generation = ++uploadGenerationRef.current;
+      const isCurrent = () => uploadGenerationRef.current === generation;
       xhrRef.current?.abort();
+      xhrRef.current = null;
       discardPreview();
 
       if (!isImportFileSupported(newFile.name)) {
@@ -144,21 +152,28 @@ export const useImportConversation = props => {
           projectId,
           file: newFile,
           xhrRef,
-          onProgress: setUploadProgress,
+          isCurrent,
+          onProgress: progress => isCurrent() && setUploadProgress(progress),
         });
+        if (!isCurrent()) {
+          // Superseded by another file: drop the staging this upload created
+          if (result?.import_id) cancelImport({ projectId, importId: result.import_id });
+          return;
+        }
+        if (!result?.import_id) throw new Error(IMPORT_MESSAGES.checkFailed);
         importIdRef.current = result.import_id;
         setPreview(result);
         setSelectedPaths(getSelectableAttachments(result.attachments).map(item => item.export_path));
         setStep(IMPORT_STEPS.ready);
       } catch (error) {
-        if (error.name === 'AbortError') return;
+        if (error.name === 'AbortError' || !isCurrent()) return;
         resetToSelect();
         toastError(error.message || IMPORT_MESSAGES.checkFailed);
       } finally {
-        xhrRef.current = null;
+        if (isCurrent()) xhrRef.current = null;
       }
     },
-    [discardPreview, limits.MAX_TOTAL_SIZE, projectId, resetToSelect, toastError],
+    [cancelImport, discardPreview, limits.MAX_TOTAL_SIZE, projectId, resetToSelect, toastError],
   );
 
   const toggleAttachment = useCallback(exportPath => {
@@ -181,7 +196,7 @@ export const useImportConversation = props => {
     // The server discards the staging on commit, success or failure
     importIdRef.current = null;
 
-    if (result.error) {
+    if (result.error || !result.data?.conversation) {
       resetToSelect();
       toastError(result.error?.data?.error || IMPORT_MESSAGES.failed);
       return false;
@@ -204,7 +219,9 @@ export const useImportConversation = props => {
   ]);
 
   const cancel = useCallback(() => {
+    uploadGenerationRef.current += 1;
     xhrRef.current?.abort();
+    xhrRef.current = null;
     discardPreview();
   }, [discardPreview]);
 
