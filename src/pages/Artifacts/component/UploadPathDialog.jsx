@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useMemo, useState } from 'react';
+import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Box, InputAdornment, TextField, Typography } from '@mui/material';
 
@@ -6,40 +6,31 @@ import { PathValidationHelpers } from '@/[fsd]/features/artifacts/lib/helpers';
 import { Button } from '@/[fsd]/shared/ui';
 import BaseModal from '@/[fsd]/shared/ui/modal/BaseModal';
 
-const MAX_FOLDER_DEPTH = 10;
-
 const UploadPathDialog = memo(props => {
   const { open, onClose, onConfirm, bucket = '', currentPrefix = '' } = props;
 
-  const [folderPath, setFolderPath] = useState('');
+  const [folderPath, setFolderPath] = useState(currentPrefix || '');
 
-  const getCurrentDepth = useCallback(prefix => {
-    return prefix ? prefix.split('/').filter(Boolean).length : 0;
-  }, []);
+  useEffect(() => {
+    if (open) setFolderPath(currentPrefix || '');
+  }, [open, currentPrefix]);
 
   const normalizePath = useCallback(path => {
     return path.endsWith('/') ? path.slice(0, -1) : path;
   }, []);
 
   const validationError = useMemo(
-    () => PathValidationHelpers.validateFolderPath(folderPath, currentPrefix),
-    [folderPath, currentPrefix],
+    () => PathValidationHelpers.validateFolderPath(folderPath, ''),
+    [folderPath],
   );
-
-  const currentDepth = useMemo(() => getCurrentDepth(currentPrefix), [currentPrefix, getCurrentDepth]);
-  const isAtMaxDepth = currentDepth >= MAX_FOLDER_DEPTH;
 
   const descriptionMessage = useMemo(() => {
     if (!currentPrefix) {
-      return `Files will be uploaded to the selected bucket. Optionally, enter a folder path to organize your files. Use "/" to create nested folder(s).`;
+      return `Files will be uploaded to the selected bucket. Edit the path to choose a destination folder, or leave empty to upload to the bucket root.`;
     }
 
-    if (isAtMaxDepth) {
-      return `Files will be uploaded to "${bucket}/${currentPrefix}". Maximum folder depth reached. Files can only be uploaded to this location.`;
-    }
-
-    return `Files will be uploaded to "${bucket}/${currentPrefix}". Optionally, enter a subfolder path (relative to current location). Leave empty to upload to the current folder.`;
-  }, [bucket, currentPrefix, isAtMaxDepth]);
+    return `Edit the path to choose any destination within "${bucket}/". You can navigate to a parent folder by removing path segments, or enter a deeper subfolder.`;
+  }, [bucket, currentPrefix]);
 
   const handleConfirm = useCallback(() => {
     if (validationError) return;
@@ -48,9 +39,9 @@ const UploadPathDialog = memo(props => {
   }, [folderPath, onConfirm, validationError, normalizePath]);
 
   const handleCancel = useCallback(() => {
-    setFolderPath('');
+    setFolderPath(currentPrefix || '');
     onClose();
-  }, [onClose]);
+  }, [onClose, currentPrefix]);
 
   const handleKeyDown = useCallback(
     event => {
@@ -83,7 +74,6 @@ const UploadPathDialog = memo(props => {
           sx={styles.textField}
           error={!!validationError}
           helperText={validationError || ' '}
-          disabled={isAtMaxDepth}
           slotProps={{
             input: {
               startAdornment: bucket && (
@@ -91,15 +81,10 @@ const UploadPathDialog = memo(props => {
                   position="start"
                   sx={styles.adornment}
                 >
-                  {bucket}/{currentPrefix}
+                  {bucket}/
                 </InputAdornment>
               ),
             },
-            // 'data-testid' on the TextField above lands on the
-            // MuiFormControl-root wrapper (read-only startAdornment +
-            // label), not the editable native <input> itself -- htmlInput
-            // targets the real <input> element, same pattern already
-            // established in UserInput.jsx / CreateSkillForm.jsx.
             htmlInput: { 'data-testid': 'artifacts-upload-path-input-field' },
           }}
           autoFocus
