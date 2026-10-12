@@ -255,6 +255,26 @@ export const getRunHistoryTrajectory = meta => {
 };
 
 /**
+ * The run-history "Guardrails" cell (design §6): guardrail events summed over the recorded cases
+ * in `meta.trajectory_rollup` (HITL pauses plus blocked and auth-paused tool calls). Null for a
+ * run with no recorded case, or a rollup written before the counter existed.
+ * @param {object} [meta] - Run meta
+ * @returns {{ label: string, tooltip: string, hasEvents: boolean } | null} e.g. label "3"
+ */
+export const getRunHistoryGuardrails = meta => {
+  const rollup = meta?.trajectory_rollup;
+  const recorded = rollup?.recorded_cases ?? 0;
+  const events = rollup?.totals?.guardrail_events;
+  if (!rollup || typeof rollup !== 'object' || !recorded || events == null) return null;
+
+  return {
+    label: String(events),
+    tooltip: `${events} guardrail ${events === 1 ? 'event' : 'events'} over ${pluralCases(recorded)} (paused for review, blocked or waiting on auth)`,
+    hasEvents: events > 0,
+  };
+};
+
+/**
  * Why some cases are left out of the run's trajectory averages (G7), or null when none are.
  * @param {{ count?: number, budget_blocked?: number, not_applicable?: number, not_recorded?: number }} [excluded]
  * @returns {string | null} e.g. "2 cases not recorded (1 blocked by budget, 1 no trajectory)"

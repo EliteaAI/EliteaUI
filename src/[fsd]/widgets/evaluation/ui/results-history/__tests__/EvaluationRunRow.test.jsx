@@ -70,13 +70,14 @@ describe('EvaluationRunRow usage and trajectory cells', () => {
           cases: 2,
           recorded_cases: 2,
           averages: { llm_calls: 1, tool_calls: 0.5 },
-          totals: {},
+          totals: { guardrail_events: 2 },
         },
       },
     });
 
     expect(screen.getByTestId('evaluation-run-tokens-7')).toHaveTextContent('1,921');
     expect(screen.getByTestId('evaluation-run-steps-7')).toHaveTextContent('1.5');
+    expect(screen.getByTestId('evaluation-run-guardrails-7')).toHaveTextContent('2');
   });
 
   it('dashes a run that predates the rollups', () => {
@@ -84,5 +85,6 @@ describe('EvaluationRunRow usage and trajectory cells', () => {
 
     expect(screen.getByTestId('evaluation-run-tokens-7')).toHaveTextContent('—');
     expect(screen.getByTestId('evaluation-run-steps-7')).toHaveTextContent('—');
+    expect(screen.getByTestId('evaluation-run-guardrails-7')).toHaveTextContent('—');
   });
 });

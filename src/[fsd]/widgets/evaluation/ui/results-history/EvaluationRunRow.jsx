@@ -7,6 +7,7 @@ import AttentionIcon from '@/components/Icons/AttentionIcon';
 
 import {
   formatScoreDelta,
+  getRunHistoryGuardrails,
   getRunHistoryTrajectory,
   getRunHistoryUsage,
   getRunOverBudgetLabel,
@@ -44,6 +45,7 @@ const EvaluationRunRow = memo(props => {
   const overBudgetLabel = getRunOverBudgetLabel(run.meta);
   const usage = getRunHistoryUsage(run.meta);
   const trajectory = getRunHistoryTrajectory(run.meta);
+  const guardrails = getRunHistoryGuardrails(run.meta);
   const styles = evaluationRunRowStyles(isSelected, gridTemplateColumns, run.delta);
 
   return (
@@ -116,6 +118,21 @@ const EvaluationRunRow = memo(props => {
             data-testid={`evaluation-run-steps-${run.id}`}
           >
             {trajectory?.label ?? EMPTY_CELL_LABEL}
+          </Typography>
+        </Tooltip>
+      </Box>
+
+      <Box sx={styles.cell}>
+        <Tooltip
+          title={guardrails?.tooltip ?? 'No trajectory recorded'}
+          placement="top"
+        >
+          <Typography
+            variant="bodySmall"
+            sx={[styles.text, guardrails?.hasEvents && styles.attentionText]}
+            data-testid={`evaluation-run-guardrails-${run.id}`}
+          >
+            {guardrails?.label ?? EMPTY_CELL_LABEL}
           </Typography>
         </Tooltip>
       </Box>
@@ -238,6 +255,9 @@ const evaluationRunRowStyles = (isSelected, gridTemplateColumns, delta) => ({
   }),
   errorText: ({ palette }) => ({
     color: palette.error.main,
+  }),
+  attentionText: ({ palette }) => ({
+    color: palette.icon.attention,
   }),
   score: ({ palette }) => ({
     fontSize: '0.875rem',

@@ -10,6 +10,7 @@ import {
   getCaseGuardrailChip,
   getCasePauseDetails,
   getExcludedCasesNote,
+  getRunHistoryGuardrails,
   getRunHistoryTrajectory,
   getTrajectoryMetricItems,
   getTrajectoryStateMessage,
@@ -241,7 +242,10 @@ describe('pause and guardrail helpers', () => {
   });
 
   it('shows the recorded pause policy, raw when unknown', () => {
-    const withPolicy = policy => ({ ...paused, trajectory: { pause: { ...paused.trajectory.pause, policy } } });
+    const withPolicy = policy => ({
+      ...paused,
+      trajectory: { pause: { ...paused.trajectory.pause, policy } },
+    });
     expect(getCasePauseDetails(withPolicy('fail_case')).items.at(-1)).toEqual({
       label: 'Policy',
       value: 'Fail the case',
@@ -313,6 +317,30 @@ describe('pause and guardrail helpers', () => {
     expect(isGuardrailStep({ kind: 'tool', status: 'paused' })).toBe(true);
     expect(isGuardrailStep({ kind: 'tool', status: 'error' })).toBe(false);
     expect(isGuardrailStep({ kind: 'llm', status: 'blocked' })).toBe(false);
+  });
+});
+
+describe('getRunHistoryGuardrails', () => {
+  const rollup = totals => ({ trajectory_rollup: { cases: 3, recorded_cases: 2, totals } });
+
+  it('sums guardrail events over the recorded cases', () => {
+    expect(getRunHistoryGuardrails(rollup({ guardrail_events: 3 }))).toEqual({
+      label: '3',
+      tooltip: '3 guardrail events over 2 cases (paused for review, blocked or waiting on auth)',
+      hasEvents: true,
+    });
+    expect(getRunHistoryGuardrails(rollup({ guardrail_events: 0 }))).toMatchObject({
+      label: '0',
+      hasEvents: false,
+    });
+  });
+
+  it('is empty without a recorded case or the counter', () => {
+    expect(getRunHistoryGuardrails(rollup({}))).toBeNull();
+    expect(
+      getRunHistoryGuardrails({ trajectory_rollup: { recorded_cases: 0, totals: { guardrail_events: 0 } } }),
+    ).toBeNull();
+    expect(getRunHistoryGuardrails({})).toBeNull();
   });
 });
 
