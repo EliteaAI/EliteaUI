@@ -204,3 +204,39 @@ describe('CaseTrajectoryPanel pause', () => {
     expect(screen.queryByTestId('case-pause-details')).not.toBeInTheDocument();
   });
 });
+
+describe('CaseTrajectoryPanel stored outputs (#6809 Q-S5)', () => {
+  afterEach(() => {
+    cleanup();
+    queryState.data = undefined;
+  });
+
+  const withTrajectory = trajectory => ({
+    executions: [{ ...recordedExecution, status: 'ok', trajectory }],
+    usage: [],
+  });
+  const toolStep = { i: 0, kind: 'tool', tool_name: 'search', status: 'ok', tool_inputs: { q: 'x' } };
+
+  it('says when the suite does not store tool outputs', () => {
+    queryState.data = withTrajectory({
+      steps: [{ ...toolStep, tool_output: null, output_omitted: true }],
+      tool_outputs_stored: false,
+    });
+    renderPanel();
+    expect(screen.getByTestId('trajectory-outputs-not-stored')).toBeInTheDocument();
+  });
+
+  it('says nothing for a suite that stores outputs, or a trajectory from before the flag', () => {
+    queryState.data = withTrajectory({
+      steps: [{ ...toolStep, tool_output: 'rows' }],
+      tool_outputs_stored: true,
+    });
+    renderPanel();
+    expect(screen.queryByTestId('trajectory-outputs-not-stored')).not.toBeInTheDocument();
+    cleanup();
+
+    queryState.data = withTrajectory({ steps: [{ ...toolStep, tool_output: 'rows' }] });
+    renderPanel();
+    expect(screen.queryByTestId('trajectory-outputs-not-stored')).not.toBeInTheDocument();
+  });
+});

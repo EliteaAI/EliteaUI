@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  OUTPUT_NOT_STORED_NOTE,
+  OUTPUT_SIZE_CUT_NOTE,
   buildCaseExecutionBadges,
   buildRunTrajectorySummary,
   formatDurationMs,
@@ -85,6 +87,14 @@ describe('getTrajectoryStepSections', () => {
   it('says when a payload was dropped for size', () => {
     const sections = getTrajectoryStepSections({ ...toolStep, tool_output: null, output_omitted: true });
     expect(sections.map(s => s.label)).toEqual(['Input', 'Note']);
+  });
+
+  it('tells a suite opt-out from a size cut', () => {
+    const omitted = { ...toolStep, tool_output: null, output_omitted: true };
+    const note = options => getTrajectoryStepSections(omitted, options).at(-1).content;
+    expect(note({ outputsStored: false })).toBe(OUTPUT_NOT_STORED_NOTE);
+    expect(note({ outputsStored: true })).toBe(OUTPUT_SIZE_CUT_NOTE);
+    expect(note()).toBe(OUTPUT_SIZE_CUT_NOTE);
   });
 });
 

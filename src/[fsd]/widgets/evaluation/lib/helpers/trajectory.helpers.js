@@ -50,8 +50,16 @@ export const getTrajectoryStepMeta = step => {
   return parts.join(' · ');
 };
 
-/** The labelled payload blocks shown when a step is expanded; empty fields are left out. */
-export const getTrajectoryStepSections = step => {
+export const OUTPUT_NOT_STORED_NOTE = 'Tool output not stored: this suite keeps tool names and inputs only.';
+export const OUTPUT_SIZE_CUT_NOTE = 'Payload dropped to keep the stored trajectory within its size limit.';
+
+/**
+ * The labelled payload blocks shown when a step is expanded; empty fields are left out.
+ * @param {object} step - Trajectory step
+ * @param {{ outputsStored?: boolean }} [options] - `outputsStored` is the trajectory's
+ *   `tool_outputs_stored`; `false` means the suite opted out, so an omitted output is not a size cut.
+ */
+export const getTrajectoryStepSections = (step, { outputsStored } = {}) => {
   if (!step) return [];
   const sections =
     step.kind === TRAJECTORY_STEP_KIND.tool
@@ -63,10 +71,8 @@ export const getTrajectoryStepSections = step => {
       : [{ label: 'Text', content: step.text }];
   const filled = sections.filter(({ content }) => content != null && content !== '');
   if (step.output_omitted) {
-    filled.push({
-      label: 'Note',
-      content: 'Payload dropped to keep the stored trajectory within its size limit.',
-    });
+    const notStored = outputsStored === false && step.kind === TRAJECTORY_STEP_KIND.tool;
+    filled.push({ label: 'Note', content: notStored ? OUTPUT_NOT_STORED_NOTE : OUTPUT_SIZE_CUT_NOTE });
   }
   return filled;
 };

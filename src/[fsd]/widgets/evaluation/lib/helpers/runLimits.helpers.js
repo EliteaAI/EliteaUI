@@ -2,6 +2,8 @@
 // `meta.consumption_budget = { per_case: { tokens, cost }, per_run: { tokens, cost } }` bounds what a
 // run may spend. The form edits them as strings so an empty field means "no limit".
 // `per_run.on_breach` says whether reaching the run token limit stops the run or is only reported.
+// `meta.store_tool_outputs = false` keeps tool names and masked inputs in the stored trajectory but
+// drops every tool output (#6809 Q-S5); absent means outputs are stored.
 
 export const MAX_SUITE_STEPS_LIMIT = 100;
 
@@ -12,6 +14,7 @@ export const RUN_LIMIT_FIELDS = [
   'perRunTokens',
   'perRunCost',
   'perRunOnBreach',
+  'storeToolOutputs',
 ];
 
 export const RUN_LIMIT_ON_BREACH = {
@@ -32,7 +35,7 @@ const toField = value => (value == null ? '' : String(value));
  * Run limits of a suite as form strings.
  * @param {object} [meta] - Suite meta
  * @returns {{ stepsLimit: string, perCaseTokens: string, perCaseCost: string, perRunTokens: string,
- *   perRunCost: string, perRunOnBreach: 'stop' | 'report' }}
+ *   perRunCost: string, perRunOnBreach: 'stop' | 'report', storeToolOutputs: boolean }}
  */
 export const readRunLimits = (meta = {}) => {
   const budget = meta?.consumption_budget || {};
@@ -44,12 +47,15 @@ export const readRunLimits = (meta = {}) => {
     budget.per_run?.on_breach === RUN_LIMIT_ON_BREACH.report
       ? RUN_LIMIT_ON_BREACH.report
       : RUN_LIMIT_ON_BREACH.stop;
+  limits.storeToolOutputs = meta?.store_tool_outputs !== false;
 
   return limits;
 };
 
+const normalizeField = value => (typeof value === 'string' ? value.trim() : (value ?? ''));
+
 export const areRunLimitsEqual = (a = {}, b = {}) =>
-  RUN_LIMIT_FIELDS.every(field => (a[field] ?? '').trim() === (b[field] ?? '').trim());
+  RUN_LIMIT_FIELDS.every(field => normalizeField(a[field]) === normalizeField(b[field]));
 
 const isWholeNumber = text => /^\d+$/.test(text);
 const isDecimal = text => /^(\d+(\.\d*)?|\.\d+)$/.test(text);
@@ -103,8 +109,14 @@ export const getCostOnlyBudgetHint = (limits = {}) => {
  * @returns {object} Meta to send
  */
 export const buildRunLimitsMeta = (meta = {}, limits = {}) => {
-  // eslint-disable-next-line no-unused-vars
-  const { steps_limit: _steps, consumption_budget: _budget, ...rest } = meta || {};
+  /* eslint-disable no-unused-vars */
+  const {
+    steps_limit: _steps,
+    consumption_budget: _budget,
+    store_tool_outputs: _storeToolOutputs,
+    ...rest
+  } = meta || {};
+  /* eslint-enable no-unused-vars */
   const next = { ...rest };
 
   const steps = (limits.stepsLimit ?? '').trim();
@@ -121,6 +133,8 @@ export const buildRunLimitsMeta = (meta = {}, limits = {}) => {
     budget.per_run.on_breach = RUN_LIMIT_ON_BREACH.report;
   }
   if (Object.keys(budget).length) next.consumption_budget = budget;
+  // Storing outputs is the default, so only the opt-out is stored.
+  if (limits.storeToolOutputs === false) next.store_tool_outputs = false;
 
   return next;
 };

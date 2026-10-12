@@ -42,6 +42,7 @@ const CaseTrajectoryPanel = memo(props => {
 
   const execution = data?.executions?.[0] ?? null;
   const steps = execution?.trajectory?.steps ?? [];
+  const outputsStored = execution?.trajectory?.tool_outputs_stored;
   const metricItems = useMemo(() => getTrajectoryMetricItems(execution?.metrics), [execution?.metrics]);
   const usageRows = useMemo(() => buildCaseUsageRows(data?.usage), [data?.usage]);
   const stateMessage = getTrajectoryStateMessage(execution);
@@ -164,6 +165,15 @@ const CaseTrajectoryPanel = memo(props => {
               This trajectory was shortened to fit the storage limit; late payloads may be missing.
             </Typography>
           )}
+          {outputsStored === false && (
+            <Typography
+              variant="bodySmall"
+              sx={styles.emptyText}
+              data-testid="trajectory-outputs-not-stored"
+            >
+              This suite does not store tool outputs; only tool names and inputs were kept.
+            </Typography>
+          )}
           {steps.map(step => (
             <Accordion.BasicAccordion
               key={step.i}
@@ -188,7 +198,12 @@ const CaseTrajectoryPanel = memo(props => {
                         .join(' · ')}
                     </Typography>
                   ),
-                  content: <StepSections step={step} />,
+                  content: (
+                    <StepSections
+                      step={step}
+                      outputsStored={outputsStored}
+                    />
+                  ),
                 },
               ]}
             />
@@ -201,8 +216,8 @@ const CaseTrajectoryPanel = memo(props => {
 
 CaseTrajectoryPanel.displayName = 'CaseTrajectoryPanel';
 
-const StepSections = memo(({ step }) => {
-  const sections = getTrajectoryStepSections(step);
+const StepSections = memo(({ step, outputsStored }) => {
+  const sections = getTrajectoryStepSections(step, { outputsStored });
   const styles = caseTrajectoryPanelStyles();
   if (!sections.length) {
     return (

@@ -3,7 +3,7 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { Box, CircularProgress, Skeleton, Tooltip, Typography } from '@mui/material';
 
 import { AccordionConstants, ModalConstants } from '@/[fsd]/shared/lib/constants';
-import { Button, Input, Modal } from '@/[fsd]/shared/ui';
+import { Button, Checkbox, Input, Modal } from '@/[fsd]/shared/ui';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import SingleSelect from '@/[fsd]/shared/ui/select/SingleSelect';
@@ -43,6 +43,9 @@ const STEPS_LIMIT_TOOLTIP = `The most steps the agent may take on each case of a
 
 const RUN_LIMITS_HINT =
   'Per-case and cost limits are checked after the run. A per-run token limit stops the run early unless set to only report.';
+
+const STORE_TOOL_OUTPUTS_TOOLTIP =
+  'Keep what each tool returned in the stored trajectory. Secrets are masked either way; turn this off when tool outputs may hold sensitive data. Tool names and inputs are always kept.';
 
 const ON_BREACH_OPTIONS = [
   { value: RUN_LIMIT_ON_BREACH.stop, label: 'Stop the run' },
@@ -125,6 +128,11 @@ const SuiteDetailPanel = memo(props => {
 
   const handleOnBreachChange = useCallback(value => {
     setRunLimits(prev => ({ ...prev, perRunOnBreach: value }));
+  }, []);
+
+  const handleStoreToolOutputsChange = useCallback(event => {
+    const { checked } = event.target;
+    setRunLimits(prev => ({ ...prev, storeToolOutputs: checked }));
   }, []);
 
   const savedRunLimits = useMemo(() => readRunLimits(suite?.meta), [suite?.meta]);
@@ -451,6 +459,30 @@ const SuiteDetailPanel = memo(props => {
                       disabled={!canUpdateSuite || !runLimits.perRunTokens.trim()}
                     />
                   </Box>
+                  <Box
+                    sx={styles.storeToolOutputs}
+                    data-testid="suite-store-tool-outputs"
+                  >
+                    <Checkbox.BaseCheckbox
+                      checked={runLimits.storeToolOutputs}
+                      onChange={handleStoreToolOutputsChange}
+                      disabled={!canUpdateSuite}
+                      data-testid="suite-store-tool-outputs-checkbox"
+                    />
+                    <Typography variant="bodyMedium">Store tool outputs</Typography>
+                    <Tooltip
+                      title={STORE_TOOL_OUTPUTS_TOOLTIP}
+                      placement="top"
+                      arrow
+                    >
+                      <Box
+                        component="span"
+                        sx={styles.infoIconWrapper}
+                      >
+                        <InfoIcon sx={styles.infoIcon} />
+                      </Box>
+                    </Tooltip>
+                  </Box>
                   <Typography
                     variant="bodySmall"
                     sx={styles.runLimitsHint}
@@ -639,6 +671,11 @@ const suiteDetailPanelStyles = () => ({
     gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
     columnGap: '1rem',
     rowGap: '0.5rem',
+  },
+  storeToolOutputs: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
   },
   runLimitsHint: ({ palette }) => ({
     color: palette.text.primary,

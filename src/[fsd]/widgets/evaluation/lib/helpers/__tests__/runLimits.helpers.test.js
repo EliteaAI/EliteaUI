@@ -17,6 +17,7 @@ const EMPTY = {
   perRunTokens: '',
   perRunCost: '',
   perRunOnBreach: 'stop',
+  storeToolOutputs: true,
 };
 
 describe('readRunLimits', () => {
@@ -39,6 +40,7 @@ describe('readRunLimits', () => {
       perRunTokens: '50000',
       perRunCost: '1.5',
       perRunOnBreach: 'stop',
+      storeToolOutputs: true,
     });
   });
 
@@ -129,8 +131,30 @@ describe('buildRunLimitsMeta', () => {
       perRunTokens: '900',
       perRunCost: '',
       perRunOnBreach: 'report',
+      storeToolOutputs: false,
     };
     expect(readRunLimits(buildRunLimitsMeta({}, limits))).toEqual(limits);
+  });
+});
+
+describe('store tool outputs (#6809 Q-S5)', () => {
+  it('reads an absent or null flag as storing outputs', () => {
+    expect(readRunLimits({}).storeToolOutputs).toBe(true);
+    expect(readRunLimits({ store_tool_outputs: null }).storeToolOutputs).toBe(true);
+    expect(readRunLimits({ store_tool_outputs: false }).storeToolOutputs).toBe(false);
+  });
+
+  it('stores only the opt-out and keeps other meta', () => {
+    expect(buildRunLimitsMeta({ other: 1 }, { ...EMPTY, storeToolOutputs: false })).toEqual({
+      other: 1,
+      store_tool_outputs: false,
+    });
+    expect(buildRunLimitsMeta({ store_tool_outputs: false }, EMPTY)).toEqual({});
+  });
+
+  it('counts a flipped flag as a change', () => {
+    expect(areRunLimitsEqual(EMPTY, { ...EMPTY, storeToolOutputs: false })).toBe(false);
+    expect(areRunLimitsEqual(EMPTY, { ...EMPTY })).toBe(true);
   });
 });
 
