@@ -9,8 +9,6 @@ import {
   hasRunAnalytics,
   parseRunTimestamp,
   resolveRunHistoryColumns,
-  resolveRunHistoryEntityName,
-  resolveRunHistorySource,
   toRunISOString,
 } from '../runHistory.helpers';
 
@@ -169,21 +167,5 @@ describe('hasRunAnalytics', () => {
     expect(hasRunAnalytics({})).toBe(false);
     expect(hasRunAnalytics({ created_at: 'nonsense' })).toBe(false);
     expect(hasRunAnalytics(undefined)).toBe(false);
-  });
-});
-
-describe('run history request mapping', () => {
-  it('asks for a skill’s Run panel runs and the chats it answered in', () => {
-    expect(resolveRunHistorySource('skill')).toBe('skill,elitea');
-    expect(resolveRunHistoryEntityName('skill')).toBe('skill');
-  });
-
-  it('keeps the agent, pipeline, toolkit and MCP requests as they were', () => {
-    expect(resolveRunHistorySource('agent')).toBe('agent');
-    expect(resolveRunHistorySource('pipeline')).toBe('pipeline');
-    expect(resolveRunHistorySource('mcp')).toBe('toolkit');
-    expect(resolveRunHistoryEntityName('agent')).toBe('application');
-    expect(resolveRunHistoryEntityName('pipeline')).toBe('application');
-    expect(resolveRunHistoryEntityName('mcp')).toBe('toolkit');
   });
 });

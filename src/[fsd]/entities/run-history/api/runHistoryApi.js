@@ -1,13 +1,19 @@
-import {
-  resolveRunHistoryEntityName,
-  resolveRunHistorySource,
-  serializeRunHistoryListResponse,
-} from '@/[fsd]/entities/run-history/lib';
+import { serializeRunHistoryListResponse } from '@/[fsd]/entities/run-history/lib';
+import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { eliteaApi } from '@/api/eliteaApi.js';
 import { PAGE_SIZE } from '@/common/constants';
 
 const HISTORY_ITEMS_TAG = 'HISTORY_ITEMS_TAG';
 const CONVERSATION_INFO_TAG = 'CONVERSATION_INFO_TAG';
+
+const { ParticipantEntityTypes } = ParticipantEntityConstants;
+
+const getHistoryEntityName = source => {
+  if (source === ParticipantEntityTypes.Toolkit || source === ParticipantEntityTypes.MCP)
+    return ParticipantEntityTypes.Toolkit;
+  if (source === ParticipantEntityTypes.Skill) return ParticipantEntityTypes.Skill;
+  return ParticipantEntityTypes.Application;
+};
 
 const runHistoryApi = eliteaApi
   .enhanceEndpoints({
@@ -27,8 +33,8 @@ const runHistoryApi = eliteaApi
         }) => ({
           url: `/elitea_core/conversations/prompt_lib/${projectId}`,
           params: {
-            source: resolveRunHistorySource(source),
-            entity_name: resolveRunHistoryEntityName(source),
+            source: source === ParticipantEntityTypes.MCP ? ParticipantEntityTypes.Toolkit : source,
+            entity_name: getHistoryEntityName(source),
             entity_meta_id: entityId,
             entity_meta_project_id: entityProjectId,
             limit: pageSize,

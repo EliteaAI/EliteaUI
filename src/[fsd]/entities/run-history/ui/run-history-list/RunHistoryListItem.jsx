@@ -8,8 +8,6 @@ import { SharedHelpers } from '@/[fsd]/shared/lib/helpers';
 
 import RunHistoryRowActions from './RunHistoryRowActions';
 
-const NO_EXTRA_COLUMNS = [];
-
 const RunHistoryListItem = memo(props => {
   const {
     item,
@@ -23,12 +21,11 @@ const RunHistoryListItem = memo(props => {
     source,
     hasEvent = false,
     shareOpensHistoryTab = false,
-    extraColumns = NO_EXTRA_COLUMNS,
   } = props;
 
   const noVersions = useMemo(() => versions === null, [versions]);
 
-  const styles = runHistoryListItemStyles(resolveRunHistoryColumns(noVersions, hasEvent, extraColumns));
+  const styles = runHistoryListItemStyles(noVersions, hasEvent);
 
   const getCurrentVersion = useCallback(
     id => {
@@ -79,14 +76,6 @@ const RunHistoryListItem = memo(props => {
           height={20}
           sx={{ minWidth: '5rem' }}
         />
-        {extraColumns.map(column => (
-          <Skeleton
-            key={column.type}
-            variant="text"
-            width="50%"
-            height={20}
-          />
-        ))}
       </Box>
     );
 
@@ -118,14 +107,6 @@ const RunHistoryListItem = memo(props => {
         text={duration}
         trigger={tooltipTrigger}
       />
-      {extraColumns.map(column => (
-        <RunHistoryTooltipCell
-          key={column.type}
-          text={column.getText(item)}
-          tooltipText={column.getTooltip?.(item) ?? ''}
-          trigger={tooltipTrigger}
-        />
-      ))}
       <RunHistoryRowActions
         item={item}
         source={source}
@@ -141,10 +122,10 @@ const RunHistoryListItem = memo(props => {
 RunHistoryListItem.displayName = 'RunHistoryListItem';
 
 /** @type {MuiSx} */
-const runHistoryListItemStyles = gridTemplateColumns => ({
+const runHistoryListItemStyles = (noVersions, hasEvent) => ({
   listItem: ({ palette }) => ({
     display: 'grid',
-    gridTemplateColumns,
+    gridTemplateColumns: resolveRunHistoryColumns(noVersions, hasEvent),
     alignItems: 'center',
     padding: '.5rem 1rem',
     width: '100%',
