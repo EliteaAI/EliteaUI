@@ -111,7 +111,11 @@ const AnalyticsSkillDetailed = memo(props => {
     setExportError(false);
   }, [skillId, skillProjectId, dateFrom, dateTo]);
 
-  const { data, isFetching, error } = useAnalyticsSkillDetailQuery(
+  const {
+    currentData: data,
+    isFetching,
+    error,
+  } = useAnalyticsSkillDetailQuery(
     { projectId, skillId, skillProjectId, dateFrom, dateTo },
     { skip: !projectId || !skillId },
   );

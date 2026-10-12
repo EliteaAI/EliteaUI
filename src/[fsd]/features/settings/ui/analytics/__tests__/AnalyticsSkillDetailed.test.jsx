@@ -77,7 +77,7 @@ const DETAIL = {
 };
 
 const renderDetail = (detail = DETAIL) => {
-  useAnalyticsSkillDetailQuery.mockReturnValue({ data: detail, isFetching: false, isError: false });
+  useAnalyticsSkillDetailQuery.mockReturnValue({ currentData: detail, data: detail, isFetching: false });
   return render(
     <MemoryRouter>
       <AnalyticsTestWrapper>
@@ -220,7 +220,12 @@ describe('AnalyticsSkillDetailed', () => {
     [404, 'No usage of this skill in the selected period.'],
     [500, 'Failed to load skill analytics.'],
   ])('tells a %s apart from no usage', (status, message) => {
-    useAnalyticsSkillDetailQuery.mockReturnValue({ data: undefined, isFetching: false, error: { status } });
+    useAnalyticsSkillDetailQuery.mockReturnValue({
+      currentData: undefined,
+      data: DETAIL,
+      isFetching: false,
+      error: { status },
+    });
     render(
       <MemoryRouter>
         <AnalyticsTestWrapper>
