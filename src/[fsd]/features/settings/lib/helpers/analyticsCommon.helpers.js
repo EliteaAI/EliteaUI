@@ -3,6 +3,7 @@ import { endOfDay, startOfDay, subDays } from 'date-fns';
 import {
   EVAL_RUN_NO_DATA_MESSAGE,
   EVAL_RUN_TOOLTIP_TEXTS,
+  RUN_CALL_EVENT_TYPE,
   RUN_NO_DATA_MESSAGE,
   RUN_SCOPE_TYPE,
   RUN_TOOLTIP_TEXTS,
@@ -87,10 +88,48 @@ const RUN_SCOPES = {
  * payload (`run_id` for Agent/Pipeline runs, `eval_run_id` for evaluation runs) and the wording that goes
  * with it. Null when there is no id, so the page can show its empty state instead of a project-wide view.
  */
-export const buildRunScope = (type, id) => {
+export const buildRunScope = (type, id, rootEntity) => {
   if (id == null || id === '') return null;
 
   const { queryKey, ...rest } = RUN_SCOPES[type];
 
-  return { queryArgs: { [queryKey]: id }, ...rest };
+  return { queryArgs: { [queryKey]: id, ...rootEntity }, ...rest };
 };
+
+const NO_RUN_VALUE = '—';
+
+const modelDisplayName = (byModel, modelName) =>
+  byModel?.find(model => model.model_name === modelName)?.display_name ?? modelName;
+
+export const describeRunModels = byModel =>
+  byModel?.length ? byModel.map(model => model.display_name || model.model_name).join(', ') : NO_RUN_VALUE;
+
+export const describeRunVersions = (versionIds, versions) => {
+  const names = (versionIds ?? [])
+    .map(versionId => versions?.find(version => version.id === versionId)?.name)
+    .filter(Boolean);
+
+  return names.length ? names.join(', ') : NO_RUN_VALUE;
+};
+
+export const collectFailedRunCalls = (runDetail, byModel) =>
+  [
+    ...(runDetail?.llm_calls ?? []).map((call, index) => ({
+      key: `llm-${index}`,
+      ts: call.ts,
+      eventType: RUN_CALL_EVENT_TYPE.llm,
+      name: modelDisplayName(byModel, call.model_name),
+      durationMs: call.duration_ms,
+      isError: call.is_error,
+    })),
+    ...(runDetail?.tool_calls ?? []).map((call, index) => ({
+      key: `tool-${index}`,
+      ts: call.ts,
+      eventType: RUN_CALL_EVENT_TYPE.tool,
+      name: call.tool_name,
+      durationMs: call.duration_ms,
+      isError: call.is_error,
+    })),
+  ]
+    .filter(call => call.isError)
+    .sort((left, right) => (left.ts ?? '').localeCompare(right.ts ?? ''));

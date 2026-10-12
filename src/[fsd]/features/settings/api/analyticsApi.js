@@ -3,6 +3,17 @@ import { eliteaApi } from '@/api';
 export const TAG_TYPE_ANALYTICS = 'ANALYTICS';
 const CACHE_LIFETIME = 300; // 5 minutes
 
+const setRunScopeParams = (
+  params,
+  { runId, evalRunId, rootEntityType, rootEntityId, rootEntityProjectId },
+) => {
+  if (runId) params.set('run_id', String(runId));
+  if (evalRunId) params.set('eval_run_id', String(evalRunId));
+  if (rootEntityType) params.set('root_entity_type', rootEntityType);
+  if (rootEntityId) params.set('root_entity_id', String(rootEntityId));
+  if (rootEntityProjectId) params.set('root_entity_project_id', String(rootEntityProjectId));
+};
+
 export const analyticsApi = eliteaApi
   .enhanceEndpoints({
     addTagTypes: [TAG_TYPE_ANALYTICS],
@@ -12,12 +23,11 @@ export const analyticsApi = eliteaApi
       // Tracing half of the Overview tab: event-type breakdown, chat counts and health, which are
       // socketio-derived and have no equivalent in usage_event. Stays on elitea_core.
       projectAnalytics: build.query({
-        query: ({ projectId, dateFrom, dateTo, runId, evalRunId }) => {
+        query: ({ projectId, dateFrom, dateTo, ...runScopeArgs }) => {
           const params = new URLSearchParams();
           if (dateFrom) params.set('date_from', dateFrom);
           if (dateTo) params.set('date_to', dateTo);
-          if (runId) params.set('run_id', String(runId));
-          if (evalRunId) params.set('eval_run_id', String(evalRunId));
+          setRunScopeParams(params, runScopeArgs);
 
           const qs = params.toString();
           return {
@@ -91,19 +101,17 @@ export const analyticsApi = eliteaApi
           projectId,
           dateFrom,
           dateTo,
-          runId,
-          evalRunId,
           limit = 20,
           offset = 0,
           search = '',
           sortBy = 'calls',
           sortOrder = 'desc',
+          ...runScopeArgs
         }) => {
           const params = new URLSearchParams();
           if (dateFrom) params.set('date_from', dateFrom);
           if (dateTo) params.set('date_to', dateTo);
-          if (runId) params.set('run_id', String(runId));
-          if (evalRunId) params.set('eval_run_id', String(evalRunId));
+          setRunScopeParams(params, runScopeArgs);
           params.set('limit', String(limit));
           params.set('offset', String(offset));
           if (search) params.set('search', search);
@@ -174,12 +182,11 @@ export const analyticsApi = eliteaApi
       }),
       // `runId` / `evalRunId` scope the payload to one Agent/Pipeline run or one evaluation run instead of a date range
       analyticsCosts: build.query({
-        query: ({ projectId, dateFrom, dateTo, runId, evalRunId }) => {
+        query: ({ projectId, dateFrom, dateTo, ...runScopeArgs }) => {
           const params = new URLSearchParams();
           if (dateFrom) params.set('date_from', dateFrom);
           if (dateTo) params.set('date_to', dateTo);
-          if (runId) params.set('run_id', String(runId));
-          if (evalRunId) params.set('eval_run_id', String(evalRunId));
+          setRunScopeParams(params, runScopeArgs);
           const qs = params.toString();
           return {
             url: `/usage/analytics_costs/prompt_lib/${projectId}${qs ? `?${qs}` : ''}`,
@@ -188,6 +195,18 @@ export const analyticsApi = eliteaApi
         },
         keepUnusedDataFor: CACHE_LIFETIME,
         providesTags: [TAG_TYPE_ANALYTICS],
+      }),
+      analyticsRunDetail: build.query({
+        query: ({ projectId, ...runScopeArgs }) => {
+          const params = new URLSearchParams();
+          setRunScopeParams(params, runScopeArgs);
+          return {
+            url: `/usage/analytics_run_detail/prompt_lib/${projectId}?${params.toString()}`,
+            method: 'GET',
+          };
+        },
+        providesTags: [TAG_TYPE_ANALYTICS],
+        keepUnusedDataFor: CACHE_LIFETIME,
       }),
       // Activity tab: per-bucket active vs AI-active user counts, filterable by role and bucketed
       // by day/week/month. `roles` must be sent as a repeated param (roles=a&roles=b), so it is
@@ -221,5 +240,6 @@ export const {
   useAnalyticsAgentsQuery,
   useAnalyticsAgentDetailQuery,
   useAnalyticsCostsQuery,
+  useAnalyticsRunDetailQuery,
   useAnalyticsActivityQuery,
 } = analyticsApi;

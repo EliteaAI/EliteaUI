@@ -28,6 +28,12 @@ vi.mock('@/[fsd]/features/settings/ui/analytics', () => ({
   AnalyticsCosts: props => <div data-testid="tab-costs">{JSON.stringify(props.runScope.queryArgs)}</div>,
   AnalyticsTokens: () => <div data-testid="tab-tokens" />,
   AnalyticsTools: () => <div data-testid="tab-tools" />,
+  RunFailedCallsTable: props => (
+    <div
+      data-testid="failed-calls-table"
+      data-calls={JSON.stringify(props.calls)}
+    />
+  ),
   AnalyticsHealth: props => (
     <div
       data-testid="tab-health"
@@ -142,5 +148,62 @@ describe('RunAnalyticsView', () => {
     expect(screen.getByTestId('run-analytics-empty')).toHaveTextContent('No run selected.');
     expect(screen.queryByTestId('tab-costs')).not.toBeInTheDocument();
     expect(screen.getByTestId('run-analytics-refresh-button')).toBeDisabled();
+  });
+
+  it('drops the Tools tab when the run has no tool rows and keeps the rest in order', () => {
+    renderView({ showToolsTab: false });
+
+    expect(screen.getAllByRole('tab').map(tab => tab.textContent)).toEqual(['Costs', 'Tokens', 'Health']);
+    fireEvent.click(screen.getByTestId('run-analytics-tab-health'));
+    expect(useProjectAnalyticsQuery).toHaveBeenLastCalledWith(
+      { projectId: 1, evalRunId: 9 },
+      expect.objectContaining({ skip: false }),
+    );
+  });
+
+  const FAILED_CALLS = [{ key: 'llm-1', eventType: 'llm', name: 'GPT', isError: true }];
+
+  it('lists the run failing calls under the Health table', () => {
+    useProjectAnalyticsQuery.mockReturnValue({
+      data: { health: [{ event_type: 'llm', total: 2, errors: 1 }] },
+      isFetching: false,
+      isError: false,
+    });
+    renderView({ failedCalls: FAILED_CALLS });
+
+    fireEvent.click(screen.getByTestId('run-analytics-tab-health'));
+
+    expect(screen.getByTestId('tab-health')).toBeInTheDocument();
+    expect(screen.getByTestId('failed-calls-table')).toHaveAttribute(
+      'data-calls',
+      JSON.stringify(FAILED_CALLS),
+    );
+  });
+
+  it('lists the failing calls instead of the empty state when tracing has no health rows', () => {
+    renderView({ failedCalls: FAILED_CALLS });
+
+    fireEvent.click(screen.getByTestId('run-analytics-tab-health'));
+
+    expect(screen.getByTestId('failed-calls-table')).toBeInTheDocument();
+    expect(screen.queryByTestId('run-analytics-health-empty')).not.toBeInTheDocument();
+  });
+
+  it('keeps the failing calls next to the error when the health request fails', () => {
+    useProjectAnalyticsQuery.mockReturnValue({ data: undefined, isFetching: false, isError: true });
+    renderView({ failedCalls: FAILED_CALLS });
+
+    fireEvent.click(screen.getByTestId('run-analytics-tab-health'));
+
+    expect(screen.getByText('Failed to load analytics data.')).toBeInTheDocument();
+    expect(screen.getByTestId('failed-calls-table')).toBeInTheDocument();
+  });
+
+  it('shows no failed-calls table without failing calls', () => {
+    renderView();
+
+    fireEvent.click(screen.getByTestId('run-analytics-tab-health'));
+
+    expect(screen.queryByTestId('failed-calls-table')).not.toBeInTheDocument();
   });
 });

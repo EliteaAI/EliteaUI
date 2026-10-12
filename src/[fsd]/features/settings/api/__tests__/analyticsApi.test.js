@@ -188,6 +188,54 @@ describe('run-scoped analytics (run_id)', () => {
   );
 });
 
+describe('root-entity-scoped run analytics', () => {
+  let fetchSpy;
+
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(
+        new Response('{}', { status: 200, headers: { 'content-type': 'application/json' } }),
+      );
+  });
+
+  it.each([
+    ['analyticsCosts', '/usage/analytics_costs/prompt_lib/42'],
+    ['analyticsTools', '/usage/analytics_tools/prompt_lib/42'],
+    ['projectAnalytics', '/elitea_core/analytics/prompt_lib/42'],
+    ['analyticsRunDetail', '/usage/analytics_run_detail/prompt_lib/42'],
+  ])('%s narrows the run to one root entity', async (endpoint, pathname) => {
+    const store = makeStore();
+    await store.dispatch(
+      analyticsApi.endpoints[endpoint].initiate({
+        projectId: 42,
+        runId: 777,
+        rootEntityType: 'skill',
+        rootEntityId: 174,
+        rootEntityProjectId: 1,
+      }),
+    );
+
+    const url = new URL(requestOf(fetchSpy).url);
+    expect(url.pathname).toBe(pathname);
+    expect(Object.fromEntries(url.searchParams)).toMatchObject({
+      run_id: '777',
+      root_entity_type: 'skill',
+      root_entity_id: '174',
+      root_entity_project_id: '1',
+    });
+  });
+
+  it('leaves the root entity out of an agent run request', async () => {
+    const store = makeStore();
+    await store.dispatch(analyticsApi.endpoints.analyticsCosts.initiate({ projectId: 42, runId: 777 }));
+
+    const url = new URL(requestOf(fetchSpy).url);
+    expect([...url.searchParams.keys()]).toEqual(['run_id']);
+  });
+});
+
 describe('evaluation-run-scoped analytics (eval_run_id)', () => {
   let fetchSpy;
 

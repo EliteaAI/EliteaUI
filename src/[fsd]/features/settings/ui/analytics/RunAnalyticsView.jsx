@@ -1,4 +1,4 @@
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 
 import { useStore } from 'react-redux';
 
@@ -16,6 +16,7 @@ import {
   AnalyticsHealth,
   AnalyticsTokens,
   AnalyticsTools,
+  RunFailedCallsTable,
 } from '@/[fsd]/features/settings/ui/analytics';
 import { DrawerPage } from '@/[fsd]/features/settings/ui/drawer-page';
 import { exportToExcel } from '@/[fsd]/shared/lib/utils';
@@ -27,20 +28,20 @@ import { useSelectedProjectId, useSelectedProjectName } from '@/hooks/useSelecte
 
 import RunAnalyticsEmptyState from './components/RunAnalyticsEmptyState';
 
+const TAB = {
+  costs: 'costs',
+  tokens: 'tokens',
+  tools: 'tools',
+  health: 'health',
+};
+
 // Per-run analytics keeps only the tabs that make sense for one run (#6816, #6817), in this order
 const RUN_ANALYTICS_TABS = [
-  { label: 'Costs', testid: 'run-analytics-tab-costs' },
-  { label: 'Tokens', testid: 'run-analytics-tab-tokens' },
-  { label: 'Tools', testid: 'run-analytics-tab-tools' },
-  { label: 'Health', testid: 'run-analytics-tab-health' },
+  { value: TAB.costs, label: 'Costs', testid: 'run-analytics-tab-costs' },
+  { value: TAB.tokens, label: 'Tokens', testid: 'run-analytics-tab-tokens' },
+  { value: TAB.tools, label: 'Tools', testid: 'run-analytics-tab-tools' },
+  { value: TAB.health, label: 'Health', testid: 'run-analytics-tab-health' },
 ];
-
-const TAB = {
-  costs: 0,
-  tokens: 1,
-  tools: 2,
-  health: 3,
-};
 
 const NO_QUERY_ARGS = {};
 
@@ -58,6 +59,8 @@ const RunAnalyticsView = memo(props => {
     exportMeta = {},
     missingRunMessage,
     isRunLoading = false,
+    showToolsTab = true,
+    failedCalls,
   } = props;
 
   const projectId = useSelectedProjectId();
@@ -66,12 +69,19 @@ const RunAnalyticsView = memo(props => {
 
   const styles = runAnalyticsViewStyles();
 
-  const [activeTab, setActiveTab] = useState(TAB.costs);
+  const [selectedTab, setSelectedTab] = useState(TAB.costs);
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState(false);
 
+  const tabs = useMemo(
+    () => RUN_ANALYTICS_TABS.filter(({ value }) => showToolsTab || value !== TAB.tools),
+    [showToolsTab],
+  );
+  const activeTab = tabs.some(({ value }) => value === selectedTab) ? selectedTab : TAB.costs;
+
   const queryArgs = runScope?.queryArgs ?? NO_QUERY_ARGS;
   const isHealthTab = activeTab === TAB.health;
+  const hasFailedCalls = Boolean(failedCalls?.length);
 
   const {
     data: healthData,
@@ -84,7 +94,7 @@ const RunAnalyticsView = memo(props => {
 
   const isFetching = useRunAnalyticsFetching(queryArgs);
 
-  const handleTabChange = useCallback((_, newTab) => setActiveTab(newTab), []);
+  const handleTabChange = useCallback((_, newTab) => setSelectedTab(newTab), []);
 
   const handleRefresh = useCallback(() => {
     if (isFetching) return;
@@ -189,9 +199,10 @@ const RunAnalyticsView = memo(props => {
             value={activeTab}
             onChange={handleTabChange}
           >
-            {RUN_ANALYTICS_TABS.map(({ label, testid }) => (
+            {tabs.map(({ value, label, testid }) => (
               <BaseTab
-                key={label}
+                key={value}
+                value={value}
                 label={label}
                 data-testid={testid}
               />
@@ -236,7 +247,7 @@ const RunAnalyticsView = memo(props => {
             </Box>
           )}
           {runScope && isHealthTab && healthError && !healthFetching && (
-            <Box sx={styles.centeredState}>
+            <Box sx={hasFailedCalls ? styles.inlineState : styles.centeredState}>
               <Typography
                 variant="bodyMedium"
                 sx={styles.emptyText}
@@ -250,6 +261,7 @@ const RunAnalyticsView = memo(props => {
             healthData &&
             !healthError &&
             !healthFetching &&
+            !hasFailedCalls &&
             !healthData.health?.length && (
               <RunAnalyticsEmptyState
                 message={runScope.noDataMessage}
@@ -260,6 +272,12 @@ const RunAnalyticsView = memo(props => {
             <AnalyticsHealth
               health={healthData.health}
               hideTrend
+            />
+          )}
+          {runScope && isHealthTab && !healthFetching && hasFailedCalls && (
+            <RunFailedCallsTable
+              calls={failedCalls}
+              sx={styles.failedCalls}
             />
           )}
         </Box>
@@ -333,6 +351,14 @@ const runAnalyticsViewStyles = () => ({
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
+  },
+  inlineState: {
+    display: 'flex',
+    justifyContent: 'center',
+    padding: '1rem',
+  },
+  failedCalls: {
+    marginTop: '1rem',
   },
   emptyText: ({ palette }) => ({ color: palette.text.metrics || palette.text.disabled }),
 });

@@ -5,6 +5,9 @@ import {
   axisTick,
   barChartCursor,
   buildRunScope,
+  collectFailedRunCalls,
+  describeRunModels,
+  describeRunVersions,
   fmtCost,
   fmtDuration,
   fmtNum,
@@ -95,6 +98,15 @@ describe('barChartCursor', () => {
 });
 
 describe('buildRunScope', () => {
+  it('adds the root entity to the run query so one participant of a conversation is counted', () => {
+    const rootEntity = { rootEntityType: 'skill', rootEntityId: 174, rootEntityProjectId: 1 };
+
+    expect(buildRunScope(RUN_SCOPE_TYPE.run, '555', rootEntity).queryArgs).toEqual({
+      runId: '555',
+      ...rootEntity,
+    });
+  });
+
   it('scopes an Agent/Pipeline run by runId with run wording', () => {
     const scope = buildRunScope(RUN_SCOPE_TYPE.run, '555');
 
@@ -119,5 +131,46 @@ describe('buildRunScope', () => {
   it('returns null without an id so the page never falls back to project-wide data', () => {
     expect(buildRunScope(RUN_SCOPE_TYPE.evalRun, null)).toBeNull();
     expect(buildRunScope(RUN_SCOPE_TYPE.run, '')).toBeNull();
+  });
+});
+
+describe('run trace helpers', () => {
+  const byModel = [
+    { model_name: 'gpt-x', display_name: 'GPT X' },
+    { model_name: 'sonnet', display_name: 'Sonnet' },
+  ];
+  const runDetail = {
+    llm_calls: [
+      { model_name: 'sonnet', ts: '2026-10-09T10:02:00Z', duration_ms: 50, is_error: true },
+      { model_name: 'gpt-x', ts: '2026-10-09T10:00:00Z', is_error: false },
+    ],
+    tool_calls: [{ tool_name: 'search', ts: '2026-10-09T10:01:00Z', duration_ms: 20, is_error: true }],
+  };
+
+  it('lists every model of the run costs by display name', () => {
+    expect(describeRunModels(byModel)).toBe('GPT X, Sonnet');
+    expect(describeRunModels([{ model_name: 'raw-model' }])).toBe('raw-model');
+    expect(describeRunModels(undefined)).toBe('—');
+  });
+
+  it('names each recorded version and skips ids the entity no longer lists', () => {
+    const versions = [
+      { id: 1, name: 'base' },
+      { id: 2, name: 'v2' },
+    ];
+
+    expect(describeRunVersions([2, 1, 99], versions)).toBe('v2, base');
+    expect(describeRunVersions([99], versions)).toBe('—');
+  });
+
+  it('collects only the failing llm and tool calls, in time order, naming models by display name', () => {
+    expect(collectFailedRunCalls(runDetail, byModel).map(call => [call.eventType, call.name])).toEqual([
+      ['tool', 'search'],
+      ['llm', 'Sonnet'],
+    ]);
+  });
+
+  it('falls back to the raw model name when the costs have no display name for it', () => {
+    expect(collectFailedRunCalls(runDetail, undefined).map(call => call.name)).toEqual(['search', 'sonnet']);
   });
 });
