@@ -4,6 +4,7 @@ import { Typography, useTheme } from '@mui/material';
 import { Box } from '@mui/system';
 
 import AutoCompleteDropDown from '@/ComponentsLib/AutoCompleteDropDown';
+import { AutocompleteHelpers } from '@/[fsd]/shared/lib/helpers';
 import SearchIcon from '@/components/Icons/SearchIcon';
 import UserAvatar from '@/components/UserAvatar';
 
@@ -57,9 +58,13 @@ const UserSearchSelect = memo(props => {
       ignoreCase={false}
       renderOptionBody={renderOptionBody}
       slotProps={{
-        listbox: slotProps.listBox,
+        listbox: slotProps.listBox && {
+          ...slotProps.listBox,
+          style: AutocompleteHelpers.clampListBoxStyle(slotProps.listBox.style),
+        },
       }}
       showSearchIcon
+      fitListboxToViewport
       slots={{
         SearchIcon: (
           <SearchIcon

@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Autocomplete, Box, Chip, InputAdornment, ListItemIcon, TextField, Typography } from '@mui/material';
 import { createFilterOptions } from '@mui/material/Autocomplete';
 import { styled as muiStyled } from '@mui/material/styles';
 
+import { clampListBoxStyle } from '@/[fsd]/shared/lib/helpers/autocomplete.helpers';
+import { useListboxMaxHeight } from '@/[fsd]/shared/lib/hooks/useListboxMaxHeight.hooks';
 import CheckedIcon from '@/assets/checked-icon.svg?react';
 import RemoveIcon from '@/assets/remove-icon.svg?react';
 import UserAvatar from '@/components/UserAvatar';
@@ -68,6 +70,9 @@ export default function AutoCompleteDropDown({
   },
   sx,
   filterOptions: filterOptionsProp,
+  fitListboxToViewport = false,
+  onOpen: onOpenProp,
+  onClose: onCloseProp,
   // Optional stable test hooks (testid-only locator policy). All four are
   // additive/no-op when omitted, so existing callers are unaffected.
   inputTestId,
@@ -78,6 +83,9 @@ export default function AutoCompleteDropDown({
 }) {
   const filterFn = filterOptionsProp ?? defaultFilterOptions;
   const [options, setOptions] = useState(selectedOptions);
+  const anchorRef = useRef(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const listboxMaxHeight = useListboxMaxHeight(fitListboxToViewport ? anchorRef : null, isOpen);
 
   const styles = useMemo(() => autoCompleteDropDownStyled(slotPropsProp), [slotPropsProp]);
 
@@ -385,6 +393,33 @@ export default function AutoCompleteDropDown({
     [filterFn, optionList, inputValue, getOptionLabel],
   );
 
+  const handleOpen = useCallback(
+    event => {
+      setIsOpen(true);
+      onOpenProp?.(event);
+    },
+    [onOpenProp],
+  );
+
+  const handleClose = useCallback(
+    (event, reason) => {
+      setIsOpen(false);
+      onCloseProp?.(event, reason);
+    },
+    [onCloseProp],
+  );
+
+  const listboxProps = useMemo(
+    () =>
+      listboxMaxHeight === null
+        ? styles.listboxProps
+        : {
+            ...styles.listboxProps,
+            style: clampListBoxStyle(styles.listboxProps.style, listboxMaxHeight),
+          },
+    [listboxMaxHeight, styles.listboxProps],
+  );
+
   const showSuggestionsPopper = (optionList?.length ?? 0) > 0 && filteredOptionsCount > 0;
 
   return (
@@ -397,6 +432,9 @@ export default function AutoCompleteDropDown({
       defaultValue={[]}
       disabled={disabled}
       inputValue={inputValue}
+      ref={anchorRef}
+      onOpen={handleOpen}
+      onClose={handleClose}
       onChange={onChangeMulti}
       onInput={handleInputChange}
       renderValue={renderValue}
@@ -412,7 +450,7 @@ export default function AutoCompleteDropDown({
             ...normalizeSx(slotPropsProp.paper?.sx),
           ],
         },
-        listbox: styles.listboxProps,
+        listbox: listboxProps,
         popper: {
           placement: 'bottom-start',
           sx: {
