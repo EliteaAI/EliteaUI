@@ -18,6 +18,7 @@ import {
   useDeleteFolder,
   useDuplicateConversation,
   useMoveToFolderConversation,
+  useOpenImportedConversation,
   usePinConversation,
   useQueryFoldersList,
 } from '@/[fsd]/features/chat/conversation-list/lib/hooks';
@@ -428,6 +429,11 @@ const NewChat = props => {
     listenCanvasContentChangeEvent,
     stopListenCanvasContentChangeEvent,
     enableMessagesPagination: true,
+  });
+
+  const { onImportedConversation } = useOpenImportedConversation({
+    setConversations,
+    onSelectConversation,
   });
 
   const [getConversationDetailForRefresh] = useLazyConversationDetailsQuery();
@@ -1320,6 +1326,7 @@ const NewChat = props => {
             onReorderFolders={onReorderFolders}
             isFolderOperationInProgress={isFolderUpdate || isLoadConversations || isLoadMoreConversations}
             onRestrictAccessSuccess={handleRestrictAccessSuccess}
+            onImportedConversation={onImportedConversation}
           />
         </Grid>
 

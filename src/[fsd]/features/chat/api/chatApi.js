@@ -1,5 +1,6 @@
 import { normalizeFileExtension } from '@/[fsd]/entities/attachment/lib';
 import { getConversationExportPath } from '@/[fsd]/features/chat/conversation-list/lib/helpers/exportConversation.helpers';
+import { getConversationImportPath } from '@/[fsd]/features/chat/conversation-list/lib/helpers/importConversation.helpers';
 import { eliteaApi } from '@/api';
 import { removeDuplicateObjects } from '@/common/utils.jsx';
 
@@ -548,6 +549,21 @@ export const apiSlice = eliteaApi
           return [{ type: TAG_TYPE_CONVERSATION_DETAILS, id: conversationId }];
         },
       }),
+      conversationImportCommit: build.mutation({
+        query: ({ projectId, importId, selectedAttachments }) => ({
+          url: getConversationImportPath(projectId, importId),
+          method: 'PUT',
+          headers,
+          body: { selected_attachments: selectedAttachments },
+        }),
+        invalidatesTags: (result, error) => (error ? [] : [TAG_TYPE_TOTAL_CONVERSATIONS]),
+      }),
+      conversationImportCancel: build.mutation({
+        query: ({ projectId, importId }) => ({
+          url: getConversationImportPath(projectId, importId),
+          method: 'DELETE',
+        }),
+      }),
     }),
   });
 
@@ -589,4 +605,6 @@ export const {
   useSetAttachmentStorageMutation,
   useUploadAttachmentsMutation,
   useRemoveAttachmentsMutation,
+  useConversationImportCommitMutation,
+  useConversationImportCancelMutation,
 } = apiSlice;

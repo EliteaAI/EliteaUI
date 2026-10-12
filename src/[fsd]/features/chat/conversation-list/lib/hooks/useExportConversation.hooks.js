@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { ENCRYPTED_FILE_SUFFIX } from '@/[fsd]/features/chat/conversation-list/lib/constants';
 import {
   buildExportFileName,
   getConversationExportPath,
@@ -42,7 +43,8 @@ export const useExportConversation = () => {
       const url = `${clearBaseUrlPrefix(VITE_SERVER_URL)}${getConversationExportPath(projectId, conversation.id)}?${params}`;
 
       if (streamToDisk && !DEV) {
-        startBrowserDownload(url, `${fileName}.${extension}`);
+        // Empty name: the browser takes it from Content-Disposition (the server may add the .enc suffix)
+        startBrowserDownload(url, '');
         toastInfo('Export started. Your browser will download the archive.');
         return true;
       }
@@ -59,8 +61,9 @@ export const useExportConversation = () => {
         const contentType = response.headers.get('content-type') || '';
         if (!response.ok || contentType.startsWith('text/html')) throw new Error(`HTTP ${response.status}`);
 
+        const isEncrypted = contentType.startsWith('application/octet-stream');
         const blob = await response.blob();
-        downloadBlobFile(blob, `${fileName}.${extension}`);
+        downloadBlobFile(blob, `${fileName}.${extension}${isEncrypted ? ENCRYPTED_FILE_SUFFIX : ''}`);
 
         const missingCount = Number(response.headers.get('X-Export-Missing-Files') || 0);
         if (missingCount > 0) toastWarning(`Chat exported. ${missingCount} file(s) could not be included.`);

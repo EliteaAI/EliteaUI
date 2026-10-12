@@ -18,3 +18,9 @@ export {
   getConversationExportPath,
   sanitizeExportFileName,
 } from './exportConversation.helpers';
+export {
+  getAttachmentsSelectionSummary,
+  getConversationImportPath,
+  getSelectableAttachments,
+  isImportFileSupported,
+} from './importConversation.helpers';

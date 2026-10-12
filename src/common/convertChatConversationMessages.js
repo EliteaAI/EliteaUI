@@ -52,7 +52,7 @@ export const convertToUserQuestion = (message_group, users, participants) => {
     sent_to_id,
     sent_to,
     likes,
-    meta: { interaction_uuid },
+    meta: { interaction_uuid, imported_author: importedAuthor },
   } = message_group;
   const foundUser = users.find(user => user.id === author_participant_id);
   const foundParticipant = participants.find(participant => participant.id === sent_to_id);
@@ -74,7 +74,8 @@ export const convertToUserQuestion = (message_group, users, participants) => {
   return {
     id: uuid,
     role: ROLES.User,
-    name: getUserName(foundUser),
+    // Imported chats keep the original author's display name
+    name: importedAuthor?.name || getUserName(foundUser),
     avatar: foundUser?.meta.user_avatar || '',
     content,
     message_items,
@@ -394,6 +395,7 @@ export const convertToAIAnswer = (message_group, message_groups, participants, t
     content: is_streaming ? '...' : content,
     created_at: new Date(convertTime(displayTime)).getTime(),
     participant_id: author_participant_id,
+    importedAuthorName: meta?.imported_author?.name,
     question_id: foundQuestion?.uuid || foundQuestion?.id,
     replyTo: foundQuestion,
     isStreaming: is_streaming,

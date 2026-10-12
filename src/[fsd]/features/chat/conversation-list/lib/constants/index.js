@@ -6,3 +6,10 @@ export {
 } from './conversationList.constants';
 
 export { EXPIRY_OPTIONS, SCOPE_OPTIONS, SCOPE_LABELS } from './shareLink.constants';
+export {
+  ENCRYPTED_FILE_SUFFIX,
+  IMPORT_ACCEPTED_EXTENSIONS,
+  IMPORT_CHUNK_SIZE,
+  IMPORT_MESSAGES,
+  IMPORT_STEPS,
+} from './importConversation.constants';

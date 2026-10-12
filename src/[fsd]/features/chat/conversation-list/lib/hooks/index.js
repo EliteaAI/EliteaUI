@@ -3,6 +3,8 @@ export * from './useDateGroupExpansion.hooks';
 export * from './useDeleteFolder.hooks';
 export * from './useDuplicateConversation.hooks';
 export * from './useExportConversation.hooks';
+export * from './useImportConversation.hooks';
+export * from './useOpenImportedConversation.hooks';
 export * from './useMoveToFolderConversation.hooks';
 export * from './usePinConversation.hooks';
 export * from './useQueryFoldersList.hooks';
