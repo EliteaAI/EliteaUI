@@ -574,6 +574,7 @@ export const PERMISSIONS = {
     delete: 'models.applications.application.delete',
   },
   skills: {
+    list: 'models.applications.skills.list',
     publish: 'models.applications.skills.publish',
     delete: 'models.applications.skills.delete',
     update: 'models.applications.skills.update',

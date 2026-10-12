@@ -8,12 +8,17 @@ export { default as AutomatedActivityTable } from './components/AutomatedActivit
 export { default as RunFailedCallsTable } from './components/RunFailedCallsTable';
 export { default as CostTable } from './components/CostTable';
 export { default as InfoBanner, infoBannerTextSx } from './components/InfoBanner';
+export { default as DeletedChip } from './components/DeletedChip';
+export { default as SkillBreakdownTable } from './components/SkillBreakdownTable';
+export { default as SkillsEmptyState } from './components/SkillsEmptyState';
 
 export { default as AnalyticsOverview } from './AnalyticsOverview';
 export { default as AnalyticsAgentDetailed } from './AnalyticsAgentDetailed';
 export { default as AnalyticsCosts } from './AnalyticsCosts';
 export { default as AnalyticsTokens } from './AnalyticsTokens';
 export { default as AnalyticsAgents } from './AnalyticsAgents';
+export { default as AnalyticsSkillDetailed } from './AnalyticsSkillDetailed';
+export { default as AnalyticsSkills } from './AnalyticsSkills';
 export { default as AnalyticsToolDetailed } from './AnalyticsToolDetailed';
 export { default as AnalyticsTools } from './AnalyticsTools';
 export { default as AnalyticsUserDetailed } from './AnalyticsUserDetailed';

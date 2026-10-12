@@ -1,4 +1,5 @@
 export * as AnalyticConstants from './analytic.constants.js';
+export * as AnalyticsTabConstants from './analyticsTab.constants.js';
 export * as InternalToolsConstants from './internalTools.constants.js';
 export * as AccordionConstants from './accordion.constants.js';
 export * as LLMSettingsConstants from './llmSettings.constants.js';

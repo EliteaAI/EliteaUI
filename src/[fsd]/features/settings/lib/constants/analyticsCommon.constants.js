@@ -1,3 +1,7 @@
+import { AnalyticsTabConstants } from '@/[fsd]/shared/lib/constants';
+
+const { ANALYTICS_TAB_IDS } = AnalyticsTabConstants;
+
 export const TOP_LIST_SIZE = 10;
 
 export const MODEL_CHART_SIZE = 15;
@@ -17,6 +21,13 @@ export const TRIGGER_SOURCE_LABELS = {
 // Embedding calls are metered as llm events, so every token, call and cost figure covers both (#6878)
 const MODEL_REQUESTS = 'LLM and embedding model requests';
 const EMBEDDING_OUTPUT_NOTE = 'Embedding model requests produce no output tokens.';
+
+export const SKILL_SOURCE_LABELS = {
+  load_skill: 'Loaded by the agent',
+  mention: 'Mentioned in a message',
+};
+
+export const VERSION_UNKNOWN_LABEL = 'Version unknown';
 
 export const TOOLTIP_TEXTS = {
   overview: {
@@ -81,6 +92,35 @@ export const TOOLTIP_TEXTS = {
     MOST_ACTIVE:
       'Shows the Agents and Pipelines with the most runs during the selected date range. Interrupt continuations are counted as additional runs.',
     ACTIVITY_COUNT: 'Number of Agents and Pipelines with recorded activity during the selected date range.',
+  },
+  skills: {
+    RUNS: 'Skill runs during the selected date range: a skill run on its own or as a chat participant. Each reply the skill generates is one run.',
+    SKILLS_USED: 'Number of skills that ran or were used by an agent during the selected date range.',
+    IN_AGENT_USES:
+      'Times an agent loaded or mentioned a skill during the selected date range. One use is one skill activation in one agent run.',
+    COST: 'Estimated USD cost of skill runs. In-agent uses have no cost of their own: the agent pays for the skill as part of its own model calls.',
+    MOST_USED: 'Skills with the most runs and in-agent uses during the selected date range.',
+    ACTIVITY_COUNT: 'Number of skills with recorded runs or in-agent uses during the selected date range.',
+  },
+  skillDetail: {
+    RUNS: 'Runs of this skill on its own or as a chat participant during the selected date range.',
+    IN_AGENT_USES: 'Times an agent loaded or mentioned this skill during the selected date range.',
+    UNIQUE_USERS: 'Number of distinct users who ran this skill or used it through an agent.',
+    AGENTS_USING: 'Number of distinct Agents and Pipelines that loaded or mentioned this skill.',
+    TOTAL_COST: 'Estimated USD cost of this skill’s runs. In-agent uses add no cost of their own.',
+    TOTAL_TOKENS: 'Tokens used by this skill’s runs. In-agent uses add no tokens of their own.',
+    AVG_LATENCY: 'Average duration of the model calls made by this skill’s runs.',
+    ERRORS: 'Number of this skill’s runs that ended with a detected error.',
+    AVG_BODY_TOKENS:
+      'Estimated average size, in tokens, of the skill instructions an agent received on each in-agent use.',
+    VERSIONS:
+      'Runs and in-agent uses per skill version. Version unknown means the agent did not record which version it used.',
+    MODELS: 'Model calls made by this skill’s runs, per model.',
+    USERS: 'Users who ran this skill or used it through an agent.',
+    TRIGGERS: 'How the runs and uses started: manually, or by a schedule, webhook, or index run.',
+    AGENTS: 'Agents and Pipelines that loaded or mentioned this skill, by number of uses.',
+    SOURCES: 'How agents activated this skill: loaded on demand (load_skill) or mentioned in the message.',
+    RECENT_RUNS: 'The latest runs of this skill. Open a run to see its own analytics.',
   },
   agentDetail: {
     TOTAL_RUNS:
@@ -355,6 +395,33 @@ export const GUIDE_SECTIONS = [
     ],
   },
   {
+    title: 'Skills Tab',
+    tabId: ANALYTICS_TAB_IDS.skills,
+    metrics: [
+      {
+        name: 'Skill Runs',
+        description:
+          'A skill runs on its own (Run panel) or as a participant in a chat. Each reply the skill generates is one run, and the run carries its own tokens and cost.',
+        calculation: 'Distinct runs among the model calls whose root entity is the skill.',
+      },
+      {
+        name: 'In-Agent Uses',
+        description:
+          'An agent uses a skill when it loads the skill on demand (load_skill) or the user mentions the skill in a message. One use is one skill activation in one agent run. In-agent uses show no tokens or cost: the skill instructions are part of the agent’s own model calls, so they are counted on the agent.',
+        calculation: 'Count of skill activation events.',
+      },
+      {
+        name: 'Tokens and Cost',
+        description:
+          'Skill tokens and cost come from skill runs only, so they are part of the totals on the Costs and Tokens tabs and are never counted twice.',
+      },
+      {
+        name: 'Deleted Skills',
+        description: 'A deleted skill keeps its last known name and is marked as deleted.',
+      },
+    ],
+  },
+  {
     title: 'Tools Tab',
     metrics: [
       {
@@ -462,6 +529,12 @@ export const GUIDE_SECTIONS = [
     ],
   },
 ];
+
+export const SKILLS_EMPTY_STATE = {
+  title: 'No skill usage in this period',
+  description:
+    'Skills appear here once they are used. Run a skill from the Skills page, add it to a chat as a participant, or attach it to an agent so the agent can load it.',
+};
 
 export const RUN_NO_DATA_MESSAGE = 'No analytics data is available for this run.';
 
