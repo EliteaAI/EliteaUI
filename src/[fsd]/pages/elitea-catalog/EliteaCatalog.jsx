@@ -4,8 +4,8 @@ import { useSearchParams } from 'react-router-dom';
 
 import { Box, Divider, Typography, alpha } from '@mui/material';
 
-import { AgentsTab } from '@/[fsd]/features/agent-hub/ui';
-import { SkillsTab } from '@/[fsd]/features/skill-hub/ui';
+import { AgentsTab, AgentsTabCount } from '@/[fsd]/features/agent-hub/ui';
+import { SkillsTab, SkillsTabCount } from '@/[fsd]/features/skill-hub/ui';
 import { Input } from '@/[fsd]/shared/ui';
 import { BaseTab, BaseTabs } from '@/[fsd]/shared/ui/tabs';
 import SkillsIcon from '@/assets/skill-icon.svg?react';
@@ -103,15 +103,28 @@ const EliteaCatalog = memo(() => {
 
       <Box sx={styles.body}>
         {isSkillsTab ? (
-          <SkillsTab
-            query={skillQuery}
-            onTotalCountChange={setTotalSkills}
-          />
+          <>
+            <SkillsTab
+              query={skillQuery}
+              onTotalCountChange={setTotalSkills}
+            />
+            {/* Only the active tab is mounted, so the other tab's counter is fed separately. */}
+            <AgentsTabCount
+              query={agentQuery}
+              onTotalCountChange={setTotalAgents}
+            />
+          </>
         ) : (
-          <AgentsTab
-            query={agentQuery}
-            onTotalCountChange={setTotalAgents}
-          />
+          <>
+            <AgentsTab
+              query={agentQuery}
+              onTotalCountChange={setTotalAgents}
+            />
+            <SkillsTabCount
+              query={skillQuery}
+              onTotalCountChange={setTotalSkills}
+            />
+          </>
         )}
       </Box>
     </Box>

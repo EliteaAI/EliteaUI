@@ -266,9 +266,11 @@ export const useAgentHubData = (query, selectedTagNames) => {
     }
 
     if (!isCacheValid) {
-      fetchAllAndCategorize(categoryNames);
-      fetchTrendingApplications(0);
-      fetchMyLikedApplications(0);
+      Promise.all([
+        fetchAllAndCategorize(categoryNames),
+        fetchTrendingApplications(0),
+        fetchMyLikedApplications(0),
+      ]).catch(() => {});
     }
   }, [
     categoryNames,
