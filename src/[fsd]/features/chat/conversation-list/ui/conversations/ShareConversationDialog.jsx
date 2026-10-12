@@ -77,13 +77,12 @@ const ShareConversationDialog = memo(props => {
   }, []);
 
   const messageGroups = useMemo(() => {
-    const rows = accumulatedRows;
-    return rows.map((group, index) => {
+    return [...accumulatedRows].reverse().map((group, index) => {
       const textItem = (group.message_items ?? []).find(item => item.item_type === 'text_message');
       const preview = textItem?.item_details?.content
         ? String(textItem.item_details.content).slice(0, 80)
         : '';
-      const authorName = group.sent_to_id ? 'Assistant' : 'User';
+      const authorName = group.reply_to_id ? 'Assistant' : 'User';
       return {
         id: group.id,
         preview,
