@@ -20,21 +20,31 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 const { ParticipantEntityTypes } = ParticipantEntityConstants;
 const { RUN_SCOPE_TYPE, RUN_NO_DATA_MESSAGE } = AnalyticsCommonConstants;
 
+const readSingleParticipantVersionId = runDetails =>
+  runDetails?.meta?.single_participant?.entity_settings?.version_id;
+
 /**
  * Agent/Pipeline Run History → Analytics (#6816): one run, identified by `history_run_id`.
  */
 const RunAnalyticsContainer = memo(props => {
-  const { source } = props;
+  const {
+    source,
+    entityDetails: providedEntityDetails,
+    entityLabel,
+    breadcrumbs = <Breadcrumbs />,
+    readRunVersionId = readSingleParticipantVersionId,
+  } = props;
 
   const { agentId } = useParams();
   const [searchParams] = useSearchParams();
   const runId = searchParams.get(SearchParams.HistoryRunId);
   const projectId = useSelectedProjectId();
 
-  const { data: entityDetails } = useApplicationDetailsQuery(
+  const { data: applicationDetails } = useApplicationDetailsQuery(
     { projectId, applicationId: agentId },
-    { skip: !projectId || !agentId },
+    { skip: Boolean(providedEntityDetails) || !projectId || !agentId },
   );
+  const entityDetails = providedEntityDetails ?? applicationDetails;
   const { data: runDetails, isLoading: isRunLoading } = RunHistoryApi.useGetRunHistoryDetailsQuery(
     { projectId, conversationId: runId },
     { skip: !projectId || !runId },
@@ -48,14 +58,14 @@ const RunAnalyticsContainer = memo(props => {
 
   // The version the run executed with, not the one currently open in the editor
   const { date, version, createdAt } = useMemo(() => {
-    const versionId = runDetails?.meta?.single_participant?.entity_settings?.version_id;
+    const versionId = readRunVersionId(runDetails);
 
     return {
       createdAt: runDetails?.created_at,
       date: runDetails ? formatRunTimestamp(runDetails.created_at, RUN_ANALYTICS_TIMESTAMP_FORMAT) : '—',
       version: entityDetails?.versions?.find(v => v.id === versionId)?.name ?? '—',
     };
-  }, [runDetails, entityDetails?.versions]);
+  }, [runDetails, entityDetails?.versions, readRunVersionId]);
 
   const infoLines = useMemo(() => [`Run: ${date} · Version: ${version}`], [date, version]);
 
@@ -64,19 +74,22 @@ const RunAnalyticsContainer = memo(props => {
       entityName: entityDetails?.name ?? '',
       fileSuffix: `run-${runId}`,
       scopeRows: [
-        [source === ParticipantEntityTypes.Pipeline ? 'Pipeline' : 'Agent', entityDetails?.name ?? ''],
+        [
+          entityLabel ?? (source === ParticipantEntityTypes.Pipeline ? 'Pipeline' : 'Agent'),
+          entityDetails?.name ?? '',
+        ],
         ['Run ID', runId],
         ['Run Date/Time', AnalyticsExportHelpers.fmtRunDateTime(toRunISOString(createdAt))],
         ['Version', version],
       ],
     }),
-    [entityDetails?.name, runId, source, createdAt, version],
+    [entityDetails?.name, entityLabel, runId, source, createdAt, version],
   );
 
   return (
     <RunAnalyticsView
       runScope={runScope}
-      breadcrumbs={<Breadcrumbs />}
+      breadcrumbs={breadcrumbs}
       infoLines={infoLines}
       exportMeta={exportMeta}
       missingRunMessage={RUN_NO_DATA_MESSAGE}

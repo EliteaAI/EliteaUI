@@ -24,6 +24,9 @@ const SORT_TYPES = {
   DURATION: 'duration',
 };
 
+const NO_EXTRA_COLUMNS = [];
+const DEFAULT_LIST_WIDTH = '32rem';
+
 const RunHistoryList = memo(props => {
   const {
     conversations = [],
@@ -41,15 +44,19 @@ const RunHistoryList = memo(props => {
     handleOpenAnalytics,
     hasEvent = false,
     shareOpensHistoryTab = false,
+    extraColumns = NO_EXTRA_COLUMNS,
+    listWidth = DEFAULT_LIST_WIDTH,
+    emptyState = null,
   } = props;
   const { isSmallWindow } = useIsSmallWindow();
   const { windowWidth } = useGetWindowWidth();
 
-  const styles = runHistoryListStyles(isSmallWindow);
+  const styles = runHistoryListStyles(isSmallWindow, listWidth);
 
   const { sortConfig, handleSortItems, getSortedData } = useRunHistorySorting(SORT_TYPES.DATE);
 
   const noVersions = useMemo(() => versions === null, [versions]);
+  const gridTemplateColumns = resolveRunHistoryColumns(noVersions, hasEvent, extraColumns);
 
   const sortFunctions = useMemo(
     () => ({
@@ -66,8 +73,9 @@ const RunHistoryList = memo(props => {
         return versionA.localeCompare(versionB);
       },
       [SORT_TYPES.DURATION]: compareRunDuration,
+      ...Object.fromEntries(extraColumns.map(column => [column.type, column.compare])),
     }),
-    [noVersions, versions],
+    [noVersions, versions, extraColumns],
   );
 
   const tableHeaderItems = useMemo(
@@ -76,8 +84,9 @@ const RunHistoryList = memo(props => {
       ...(hasEvent ? [{ label: 'Event', type: SORT_TYPES.EVENT }] : []),
       ...(noVersions ? [] : [{ label: 'Version', type: SORT_TYPES.VERSION }]),
       { label: 'Duration', type: SORT_TYPES.DURATION },
+      ...extraColumns.map(({ label, type }) => ({ label, type })),
     ],
-    [noVersions, hasEvent],
+    [noVersions, hasEvent, extraColumns],
   );
 
   const sortedConversations = useMemo(
@@ -93,7 +102,7 @@ const RunHistoryList = memo(props => {
             headerItems={tableHeaderItems}
             sortConfig={sortConfig}
             onSort={handleSortItems}
-            gridTemplateColumns={resolveRunHistoryColumns(noVersions, hasEvent)}
+            gridTemplateColumns={gridTemplateColumns}
           />
         )}
         <Box sx={styles.list}>
@@ -104,6 +113,7 @@ const RunHistoryList = memo(props => {
                 useMock
                 source={source}
                 hasEvent={hasEvent}
+                extraColumns={extraColumns}
                 {...(source === ParticipantEntityTypes.Toolkit ? { versions: null } : {})}
               />
             ))
@@ -121,9 +131,11 @@ const RunHistoryList = memo(props => {
                   handleOpenAnalytics={handleOpenAnalytics}
                   source={source}
                   hasEvent={hasEvent}
+                  extraColumns={extraColumns}
                   shareOpensHistoryTab={shareOpensHistoryTab}
                 />
               ))}
+              {!conversations.length && emptyState}
             </>
           )}
           {conversations.length > 0 && onLoadMore && (
@@ -144,8 +156,8 @@ const RunHistoryList = memo(props => {
 RunHistoryList.displayName = 'RunHistoryList';
 
 /** @type {MuiSx} */
-const runHistoryListStyles = isSmallWindow => {
-  const wrapperWidth = isSmallWindow ? '100%' : '32rem';
+const runHistoryListStyles = (isSmallWindow, listWidth) => {
+  const wrapperWidth = isSmallWindow ? '100%' : listWidth;
 
   return {
     wrapper: {

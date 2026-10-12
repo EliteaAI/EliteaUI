@@ -44,8 +44,9 @@ const RunHistoryRowActions = memo(props => {
   const [deleteHistoryItem, { isLoading: isDeleting }] = RunHistoryApi.useDeleteRunHistoryItemMutation();
 
   const hasConversation = item?.hasConversation ?? true;
+  const isChatRun = Boolean(item?.is_chat_run);
   const canShare = item?.canShare ?? hasConversation;
-  const canOpenAnalytics = hasConversation && !!handleOpenAnalytics && hasRunAnalytics(item);
+  const canOpenAnalytics = hasConversation && !!handleOpenAnalytics && !isChatRun && hasRunAnalytics(item);
 
   const styles = runHistoryRowActionsStyles(isDeleting);
 
@@ -123,7 +124,7 @@ const RunHistoryRowActions = memo(props => {
             },
           ]
         : []),
-      ...(hasConversation
+      ...(hasConversation && !isChatRun
         ? [
             {
               label: 'Delete',
@@ -137,7 +138,7 @@ const RunHistoryRowActions = memo(props => {
             {
               label: 'Restore chat',
               icon: <RestoreIcon />,
-              onClick: () => handleRestoreConversation(item.id),
+              onClick: () => handleRestoreConversation(item.id, item),
               tooltip: `Restores chat history only. ${source?.charAt(0)?.toUpperCase() + source?.slice(1)} configuration, behavior, or settings are not restored and may have changed since then.`,
             },
           ]
@@ -155,13 +156,14 @@ const RunHistoryRowActions = memo(props => {
     [
       canShare,
       hasConversation,
+      isChatRun,
       linkCopied,
       handleCopyLink,
       openConfirmationModal,
       handleRestoreConversation,
       canOpenAnalytics,
       handleOpenAnalytics,
-      item?.id,
+      item,
       source,
       styles.deleteIcon,
     ],

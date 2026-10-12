@@ -24,6 +24,10 @@ const RouteDefinitions = {
   CreateSkill: '/skills/create',
   SkillsDetail: '/skills/:tab/:skillId',
   SkillRunHistory: '/skills/:tab/:skillId/history',
+  SkillsRunAnalytics: '/skills/:tab/:skillId/history/analytics',
+  CatalogSkill: '/skills/catalog/:skillId',
+  CatalogSkillRunHistory: '/skills/catalog/:skillId/history',
+  CatalogSkillRunAnalytics: '/skills/catalog/:skillId/history/analytics',
 
   Pipelines: '/pipelines',
   PipelinesWithTab: '/pipelines/:tab',

@@ -39,6 +39,7 @@ const SkillRunPanel = memo(props => {
     activeParticipant,
     activeParticipantDetails,
     isStreaming,
+    isReadOnly,
     isLoadingConversation,
     llmSettings,
     unsavedLLMSettings,
@@ -96,7 +97,9 @@ const SkillRunPanel = memo(props => {
             />
             <SkillRunActions
               canStartNewRun={!isStreaming && Boolean(activeConversation?.id || hasMessages)}
-              canDeleteMessages={!isStreaming && hasMessages && Boolean(activeConversation?.id)}
+              canDeleteMessages={
+                !isReadOnly && !isStreaming && hasMessages && Boolean(activeConversation?.id)
+              }
               onStartNewRun={onStartNewRun}
               onDeleteAllMessages={onDeleteAllMessages}
             />
@@ -109,6 +112,15 @@ const SkillRunPanel = memo(props => {
           </Box>
         </Box>
 
+        {isReadOnly && (
+          <Typography
+            variant="bodySmall"
+            color="text.secondary"
+            data-testid="skill-run-read-only"
+          >
+            This run belongs to another user, so it is read-only. Start a new run to chat with the skill.
+          </Typography>
+        )}
         {isChatReady ? (
           <Box sx={styles.chatBoxContainer}>
             <ChatBox
@@ -142,6 +154,7 @@ const SkillRunPanel = memo(props => {
               uploadProgress={uploadProgress}
               unsavedLLMSettings={unsavedLLMSettings}
               setUnsavedLLMSettings={setUnsavedLLMSettings}
+              isReadOnly={isReadOnly}
             />
           </Box>
         ) : (

@@ -310,6 +310,7 @@ const EditSkill = memo(() => {
                   onSuccess={handleSuccess}
                   onOpenCompare={() => setCompareVersionsOpen(true)}
                   onRun={onRun}
+                  onShowHistory={goToRunHistory}
                 />
               ),
               content: isFetching ? (

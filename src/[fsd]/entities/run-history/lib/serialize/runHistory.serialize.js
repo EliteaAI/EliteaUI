@@ -1,15 +1,39 @@
+import { CHAT_CONVERSATION_SOURCE } from '@/[fsd]/entities/run-history/lib/helpers';
+
+const serializeRunSummary = conversation => {
+  const summary = conversation.run_summary;
+  if (!summary) return {};
+
+  return {
+    message_count: summary.message_count ?? conversation.message_groups_count ?? 0,
+    status: summary.status ?? null,
+    author: summary.author ?? null,
+    models: summary.models ?? null,
+    tokens: summary.tokens ?? null,
+    cost: summary.cost ?? null,
+    last_run_id: summary.last_run_id ?? null,
+    usage_available: Boolean(summary.usage_available),
+  };
+};
+
 const serializeRunHistory = conversation => {
   if (!conversation) return null;
 
   return {
     id: conversation.id,
-    created_at: conversation.created_at,
+    created_at: conversation.run_summary?.started_at ?? conversation.created_at,
     updated_at: conversation.updated_at,
     name: conversation.name,
     duration: conversation.duration,
-    version_id: conversation.meta.single_participant?.entity_settings?.version_id ?? null,
+    version_id:
+      conversation.run_summary?.version_id ??
+      conversation.meta.single_participant?.entity_settings?.version_id ??
+      null,
     index_name: conversation.meta?.index_name ?? null,
     operation_type: conversation.meta?.operation_type ?? null,
+    source: conversation.source ?? null,
+    is_chat_run: conversation.source === CHAT_CONVERSATION_SOURCE,
+    ...serializeRunSummary(conversation),
   };
 };
 
@@ -36,5 +60,7 @@ export const serializeRunHistoryListResponse = (response, isLoadMore) => {
     hasMore: response.has_more ?? false,
     nextPage: response.next_page || null,
     isLoadMore,
+    ...(response.facets ? { facets: response.facets } : {}),
+    modelFilterUnavailable: Boolean(response.model_filter_unavailable),
   };
 };

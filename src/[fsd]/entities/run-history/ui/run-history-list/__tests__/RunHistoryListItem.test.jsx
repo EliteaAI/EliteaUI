@@ -230,3 +230,44 @@ describe('RunHistoryListItem re-rendering', () => {
     expect(cellRenders.count).toBe(before);
   });
 });
+
+describe('RunHistoryListItem extra columns', () => {
+  const extraColumns = [
+    { type: 'user', label: 'User', width: '1fr', getText: run => run.author, getTooltip: () => 'tip' },
+    { type: 'cost', label: 'Cost', width: '1fr', getText: run => `$${run.cost}` },
+  ];
+
+  it('renders a cell per extra column after the duration', () => {
+    renderItem({ ...CONVERSATION_ROW, author: 'Admin', cost: 2 }, { extraColumns });
+
+    expect(screen.getByText('Admin')).toBeInTheDocument();
+    expect(screen.getByText('$2')).toBeInTheDocument();
+  });
+
+  it('hands the whole run to restore, so the page can tell a Run panel run from a chat', () => {
+    const handleRestoreConversation = vi.fn();
+    const run = { ...CONVERSATION_ROW, source: 'elitea' };
+    renderItem(run, { handleRestoreConversation });
+
+    screen.getByTestId('menu-item-Restore chat').click();
+
+    expect(handleRestoreConversation).toHaveBeenCalledWith(42, run);
+  });
+});
+
+describe('RunHistoryListItem analytics of shared chats', () => {
+  it('offers neither analytics nor delete for a chat the history entity took part in', () => {
+    renderItem({ ...TRACKED_ROW, is_chat_run: true }, { handleOpenAnalytics: vi.fn() });
+
+    expect(screen.queryByTestId('menu-item-Analytics')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('menu-item-Delete')).not.toBeInTheDocument();
+    expect(screen.getByTestId('menu-item-Share link')).toBeInTheDocument();
+  });
+
+  it('keeps analytics and delete for a run the entity had to itself', () => {
+    renderItem({ ...TRACKED_ROW, is_chat_run: false }, { handleOpenAnalytics: vi.fn() });
+
+    expect(screen.getByTestId('menu-item-Analytics')).toBeInTheDocument();
+    expect(screen.getByTestId('menu-item-Delete')).toBeInTheDocument();
+  });
+});

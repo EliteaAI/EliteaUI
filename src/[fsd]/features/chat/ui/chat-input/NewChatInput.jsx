@@ -26,6 +26,7 @@ const NewChatInput = memo(
       onInject,
       onStopGeneration,
       disabledSend,
+      isReadOnly = false,
       placeholder = '',
       clearInputAfterSubmit = true,
       onNormalKeyDown,
@@ -384,7 +385,7 @@ const NewChatInput = memo(
         }}
         clearInputAfterSend={clearInputAfterSubmit}
         disabledSend={disabledSend || isRecording}
-        disabledInput={isLoading}
+        disabledInput={isLoading || isReadOnly}
         onSend={handleSend}
         onNormalKeyDown={onNormalKeyDown}
         onInputChange={handleInputChange}
