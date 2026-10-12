@@ -212,18 +212,20 @@ const NormalAttachment = ({
               fill={theme.palette.icon.default}
             />
           </IconButton>
-          <IconButton
-            variant="elitea"
-            color="tertiary"
-            onClick={onClickRemove}
-            sx={styles.iconButton}
-            aria-label="Remove attachment"
-          >
-            <DeleteIcon
-              sx={styles.icon}
-              fill={theme.palette.icon.default}
-            />
-          </IconButton>
+          {onRemoveAttachment && (
+            <IconButton
+              variant="elitea"
+              color="tertiary"
+              onClick={onClickRemove}
+              sx={styles.iconButton}
+              aria-label="Remove attachment"
+            >
+              <DeleteIcon
+                sx={styles.icon}
+                fill={theme.palette.icon.default}
+              />
+            </IconButton>
+          )}
         </Box>
       </Box>
       <Modal.DeleteEntityModal
