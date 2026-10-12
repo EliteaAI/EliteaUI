@@ -8,7 +8,6 @@ import { Box } from '@mui/material';
 
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version';
 import {
-  useCanRunSkill,
   useForkSkill,
   usePublishSkillMenu,
   useSkillExport,
@@ -16,8 +15,7 @@ import {
 } from '@/[fsd]/features/skill/lib/hooks';
 import { PinEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { useProjectType, useToast } from '@/[fsd]/shared/lib/hooks';
-import { Button, Controls } from '@/[fsd]/shared/ui';
-import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import { Controls } from '@/[fsd]/shared/ui';
 import { usePin, usePinMenu } from '@/[fsd]/widgets/pin-toggler';
 import ClockIcon from '@/assets/clock_icon.svg?react';
 import { PERMISSIONS, SkillsTabs } from '@/common/constants';
@@ -28,7 +26,6 @@ import DifferenceIcon from '@/components/Icons/DifferenceIcon';
 import ExportIcon from '@/components/Icons/ExportIcon';
 import ForkIcon from '@/components/Icons/ForkIcon';
 import PinIcon from '@/components/Icons/PinIcon';
-import PlayIcon from '@/components/Icons/PlayIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import { useProjectEntityLink } from '@/hooks/useProjectEntityLink';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -59,7 +56,6 @@ const SkillControls = memo(props => {
     onSetDefault,
     onSuccess,
     onOpenCompare,
-    onRun,
     onShowHistory,
   } = props;
 
@@ -67,7 +63,6 @@ const SkillControls = memo(props => {
   const projectId = useSelectedProjectId();
   const { isPrivate } = useProjectType();
   const { checkPermission } = useCheckPermission();
-  const canRunSkill = useCanRunSkill();
   const { toastError, toastSuccess } = useToast();
   const { values } = useFormikContext();
   const versions = useMemo(() => values?.versions ?? [], [values?.versions]);
@@ -281,16 +276,6 @@ const SkillControls = memo(props => {
 
   return (
     <Box sx={skillControlsStyles.wrapper}>
-      {onRun && canRunSkill && (
-        <Button.BaseBtn
-          variant={BUTTON_VARIANTS.iconLabel}
-          startIcon={<PlayIcon sx={skillControlsStyles.runIcon} />}
-          onClick={onRun}
-          data-testid="skill-run-button"
-        >
-          Run
-        </Button.BaseBtn>
-      )}
       <Controls.ControlsDropdown
         menuItems={menuItems}
         anchorButtonProps={{ 'data-testid': 'skill-controls-menu-button' }}
@@ -318,9 +303,6 @@ const skillControlsStyles = {
       bottom: '0.25rem',
       borderLeft: ({ palette }) => `0.0625rem solid ${palette.border.lines}`,
     },
-  },
-  runIcon: {
-    fontSize: '1rem',
   },
 };
 

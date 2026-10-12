@@ -97,12 +97,12 @@ const EditSkill = memo(() => {
     [setSearchParams],
   );
 
-  const onRun = useCallback(() => setRunFocusRequest(request => request + 1), []);
+  const focusRunPane = useCallback(() => setRunFocusRequest(request => request + 1), []);
   const onRunFocusHandled = useCallback(() => setRunFocusRequest(0), []);
 
   useEffect(() => {
     if (searchParams.get(SKILL_RUN_SEARCH_PARAMS.focus) !== SKILL_RUN_FOCUS_TARGET) return;
-    onRun();
+    focusRunPane();
     setSearchParams(
       previous => {
         const next = new URLSearchParams(previous);
@@ -111,7 +111,7 @@ const EditSkill = memo(() => {
       },
       { replace: true },
     );
-  }, [onRun, searchParams, setSearchParams]);
+  }, [focusRunPane, searchParams, setSearchParams]);
 
   useEffect(() => {
     if (!restoredConversationID) return;
@@ -309,7 +309,6 @@ const EditSkill = memo(() => {
                   onSetDefault={() => handleOpenDefaultDialog(currentVersionId)}
                   onSuccess={handleSuccess}
                   onOpenCompare={() => setCompareVersionsOpen(true)}
-                  onRun={onRun}
                   onShowHistory={goToRunHistory}
                 />
               ),
