@@ -9,6 +9,7 @@ import {
   useUnlockSharedConversationMutation,
 } from '@/[fsd]/features/chat/conversation-list/api';
 import { ErrorTrace } from '@/[fsd]/features/chat/ui';
+import { SHARED_CONVERSATION_CONSTANTS } from '@/[fsd]/pages/shared-conversation/lib/constants/sharedConversation.constants';
 import { buildSharedArtifactLinkResolver } from '@/[fsd]/pages/shared-conversation/lib/helpers';
 import { ArtifactLinkContext } from '@/[fsd]/shared/lib/context';
 import { Input } from '@/[fsd]/shared/ui';
@@ -17,6 +18,11 @@ import BaseBtn, { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/butto
 import GroupAttachmentList from './GroupAttachmentList';
 import MessageItemRenderer from './MessageItemRenderer';
 import ParticipantAvatar from './ParticipantAvatar';
+
+const normalizeAuthorName = authorName =>
+  authorName === SHARED_CONVERSATION_CONSTANTS.LEGACY_ASSISTANT_NAME
+    ? SHARED_CONVERSATION_CONSTANTS.CURRENT_ASSISTANT_NAME
+    : authorName;
 
 const SharedConversationPage = memo(() => {
   const { token } = useParams();
@@ -239,7 +245,8 @@ const SharedConversationPage = memo(() => {
                   variant="bodySmall"
                   color="text.secondary"
                 >
-                  {group.author_name || (group.author_type === 'user' ? 'User' : 'Assistant')}
+                  {normalizeAuthorName(group.author_name) ||
+                    (group.author_type === 'user' ? 'User' : 'Assistant')}
                 </Typography>
                 <Typography
                   variant="bodySmall"

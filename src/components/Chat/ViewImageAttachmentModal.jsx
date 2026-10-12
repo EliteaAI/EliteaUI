@@ -127,18 +127,20 @@ const ViewImageAttachmentModal = memo(props => {
                 fill={theme.palette.icon.secondary}
               />
             </BaseBtn>
-            <BaseBtn
-              variant={BUTTON_VARIANTS.icon}
-              color="secondary"
-              onClick={onClickRemove}
-              aria-label="Remove attachment"
-              sx={styles.iconButton}
-            >
-              <DeleteIcon
-                sx={styles.icon}
-                fill={theme.palette.icon.secondary}
-              />
-            </BaseBtn>
+            {onRemoveAttachment && (
+              <BaseBtn
+                variant={BUTTON_VARIANTS.icon}
+                color="secondary"
+                onClick={onClickRemove}
+                aria-label="Remove attachment"
+                sx={styles.iconButton}
+              >
+                <DeleteIcon
+                  sx={styles.icon}
+                  fill={theme.palette.icon.secondary}
+                />
+              </BaseBtn>
+            )}
             <BaseBtn
               variant="tertiary"
               onClick={onClose}
