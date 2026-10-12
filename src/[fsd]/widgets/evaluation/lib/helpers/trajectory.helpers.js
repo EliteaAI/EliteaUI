@@ -109,6 +109,9 @@ export const getTrajectoryMetricItems = metrics => {
 export const isGuardrailStep = step =>
   step?.kind === TRAJECTORY_STEP_KIND.tool && GUARDRAIL_STEP_STATUSES.includes(step.status);
 
+// What the batch run did with the pause (design §4.5, Q-S10), recorded on the case. P1 has one.
+const PAUSE_POLICY_LABELS = { fail_case: 'Fail the case' };
+
 /**
  * Why the run stopped on this case instead of answering (a HITL/guardrail pause or a sub-agent
  * park), or null when it did not. Reads `status` and the stored `trajectory.pause` identities;
@@ -135,6 +138,7 @@ export const getCasePauseDetails = execution => {
     ['Tool', tool],
     ['Node', pause?.node_name],
     ['Pending calls', pause?.interrupts > 1 ? pause.interrupts : null],
+    ['Policy', PAUSE_POLICY_LABELS[pause?.policy] ?? pause?.policy],
   ]
     .filter(([, value]) => value != null && value !== '')
     .map(([label, value]) => ({ label, value: String(value) }));

@@ -240,6 +240,18 @@ describe('pause and guardrail helpers', () => {
     ]);
   });
 
+  it('shows the recorded pause policy, raw when unknown', () => {
+    const withPolicy = policy => ({ ...paused, trajectory: { pause: { ...paused.trajectory.pause, policy } } });
+    expect(getCasePauseDetails(withPolicy('fail_case')).items.at(-1)).toEqual({
+      label: 'Policy',
+      value: 'Fail the case',
+    });
+    expect(getCasePauseDetails(withPolicy('deny_continue')).items.at(-1)).toEqual({
+      label: 'Policy',
+      value: 'deny_continue',
+    });
+  });
+
   it('still explains a paused status without stored details', () => {
     const details = getCasePauseDetails({ status: 'guardrail_paused', trajectory: null });
     expect(details.items).toEqual([]);
