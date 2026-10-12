@@ -628,6 +628,9 @@ export const PERMISSIONS = {
       create: 'configuration.artifacts.buckets.create',
       view: 'configuration.artifacts.buckets.view',
     },
+    s3_credentials: {
+      edit: 'configuration.artifacts.s3_credentials.edit',
+    },
   },
   toolkits: {
     list: 'models.applications.tools.list',

@@ -1,3 +1,9 @@
+// Raw per-bucket permission values as returned by the backend in `bucket.permissions`
+export const BUCKET_ACCESS = {
+  read: 'read',
+  write: 'write',
+};
+
 export const PERMISSION_OPTIONS = {
   READ_WRITE: 'read_write',
   READ: 'read',
