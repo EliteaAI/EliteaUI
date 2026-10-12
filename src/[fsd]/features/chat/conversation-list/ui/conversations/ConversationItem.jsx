@@ -297,6 +297,8 @@ const ConversationItem = memo(props => {
               </Box>
             ),
             onClick: handleShareExternal,
+            // Loose equality intentional: userId/author_id may arrive as string or number
+            display: userId != author_id ? 'none' : undefined,
           },
           ...(conversation.has_shared_links
             ? [
