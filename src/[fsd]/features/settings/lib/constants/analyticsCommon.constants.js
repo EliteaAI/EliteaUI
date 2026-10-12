@@ -529,3 +529,8 @@ export const RUN_SCOPE_TYPE = {
   run: 'run',
   evalRun: 'evalRun',
 };
+
+export const RUN_CALL_EVENT_TYPE = {
+  llm: 'llm',
+  tool: 'tool',
+};

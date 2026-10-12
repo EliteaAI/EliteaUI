@@ -3,6 +3,7 @@ import { endOfDay, startOfDay, subDays } from 'date-fns';
 import {
   EVAL_RUN_NO_DATA_MESSAGE,
   EVAL_RUN_TOOLTIP_TEXTS,
+  RUN_CALL_EVENT_TYPE,
   RUN_NO_DATA_MESSAGE,
   RUN_SCOPE_TYPE,
   RUN_TOOLTIP_TEXTS,
@@ -129,7 +130,7 @@ export const collectFailedRunCalls = runDetail =>
     ...(runDetail?.llm_calls ?? []).map((call, index) => ({
       key: `llm-${index}`,
       ts: call.ts,
-      eventType: 'llm',
+      eventType: RUN_CALL_EVENT_TYPE.llm,
       name: modelDisplayName(runDetail, call.model_name),
       durationMs: call.duration_ms,
       isError: call.is_error,
@@ -137,7 +138,7 @@ export const collectFailedRunCalls = runDetail =>
     ...(runDetail?.tool_calls ?? []).map((call, index) => ({
       key: `tool-${index}`,
       ts: call.ts,
-      eventType: 'tool',
+      eventType: RUN_CALL_EVENT_TYPE.tool,
       name: call.tool_name,
       durationMs: call.duration_ms,
       isError: call.is_error,

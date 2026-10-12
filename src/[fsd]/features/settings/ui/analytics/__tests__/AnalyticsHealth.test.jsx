@@ -11,10 +11,17 @@ installGlobalStubs();
 
 vi.mock('@/[fsd]/features/settings/lib/helpers', () => ({
   AnalyticCommonHelpers: { fmtNum: v => String(v ?? 0), fmtDuration: ms => `${ms}ms` },
-  AnalyticsExportHelpers: { fmtRunDateTime: iso => `at ${iso}` },
 }));
 
-vi.mock('@/[fsd]/features/settings/ui/analytics', () => ({ ChartTooltip: () => null }));
+vi.mock('@/[fsd]/features/settings/ui/analytics', () => ({
+  ChartTooltip: () => null,
+  RunFailedCallsTable: props => (
+    <div
+      data-testid="failed-calls-table"
+      data-calls={JSON.stringify(props.calls)}
+    />
+  ),
+}));
 
 const HEALTH = [{ event_type: 'llm', total: 2, errors: 1, error_rate: 50, avg_duration_ms: 700 }];
 
@@ -32,32 +39,19 @@ const renderHealth = props =>
 describe('AnalyticsHealth failed calls', () => {
   afterEach(() => cleanup());
 
-  it('lists each failing call of the run under the event type health', () => {
-    renderHealth({
-      failedCalls: [
-        {
-          key: 'llm-1',
-          ts: '2026-10-09T10:01:00Z',
-          eventType: 'llm',
-          name: 'Claude Sonnet',
-          durationMs: 900,
-        },
-      ],
-    });
+  it('hands the run failed calls to the failed-calls table under the event type health', () => {
+    const failedCalls = [{ key: 'llm-1', eventType: 'llm', name: 'Claude Sonnet' }];
+    renderHealth({ failedCalls });
 
-    const rows = screen.getAllByTestId('run-analytics-failed-call');
-    expect(rows).toHaveLength(1);
-    expect(rows[0]).toHaveTextContent('at 2026-10-09T10:01:00Z');
-    expect(rows[0]).toHaveTextContent('Claude Sonnet');
-    expect(rows[0]).toHaveTextContent('900ms');
+    expect(screen.getByTestId('failed-calls-table')).toHaveAttribute(
+      'data-calls',
+      JSON.stringify(failedCalls),
+    );
   });
 
-  it('shows no failed-calls card for a run without failures or without a trace', () => {
-    renderHealth({ failedCalls: [] });
-    expect(screen.queryByTestId('run-analytics-failed-calls')).not.toBeInTheDocument();
-
-    cleanup();
+  it('passes no calls when the page has no run trace', () => {
     renderHealth({});
-    expect(screen.queryByTestId('run-analytics-failed-calls')).not.toBeInTheDocument();
+
+    expect(screen.getByTestId('failed-calls-table')).toHaveAttribute('data-calls', '[]');
   });
 });

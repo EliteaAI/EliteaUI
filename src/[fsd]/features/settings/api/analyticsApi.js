@@ -10,8 +10,8 @@ const setRunScopeParams = (
   if (runId) params.set('run_id', String(runId));
   if (evalRunId) params.set('eval_run_id', String(evalRunId));
   if (rootEntityType) params.set('root_entity_type', rootEntityType);
-  if (rootEntityId != null) params.set('root_entity_id', String(rootEntityId));
-  if (rootEntityProjectId != null) params.set('root_entity_project_id', String(rootEntityProjectId));
+  if (rootEntityId) params.set('root_entity_id', String(rootEntityId));
+  if (rootEntityProjectId) params.set('root_entity_project_id', String(rootEntityProjectId));
 };
 
 export const analyticsApi = eliteaApi

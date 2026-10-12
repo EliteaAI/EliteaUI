@@ -86,7 +86,7 @@ const RunAnalyticsContainer = memo(props => {
     return totals ? [runLine, totals] : [runLine];
   }, [isEntityScoped, date, version, model, runDetail]);
 
-  const showToolsTab = !isEntityScoped || runDetail?.kpis?.tool_calls > 0;
+  const showToolsTab = !isEntityScoped || Boolean(runDetail?.kpis?.tool_calls);
   const failedCalls = useMemo(
     () => (isEntityScoped ? AnalyticCommonHelpers.collectFailedRunCalls(runDetail) : undefined),
     [isEntityScoped, runDetail],
