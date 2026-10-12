@@ -42,3 +42,4 @@ export * from './catalogCard.helpers';
 export * from './scrollbar.helpers';
 export * from './contextStrategy.helpers';
 export * from './stringField.helpers';
+export * as AutocompleteHelpers from './autocomplete.helpers.js';

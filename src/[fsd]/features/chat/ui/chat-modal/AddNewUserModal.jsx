@@ -125,10 +125,6 @@ const AddNewUserModal = memo(props => {
               listBox: {
                 ref: listboxRef,
                 onScroll: handleScroll,
-                style: {
-                  maxHeight: '40rem',
-                  overflowY: 'auto',
-                },
               },
             }}
           />
