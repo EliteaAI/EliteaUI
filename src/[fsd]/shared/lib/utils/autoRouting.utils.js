@@ -35,19 +35,19 @@ export const resolveModelSurface = (
     ? MODEL_SURFACES.pipeline
     : defaultSurface;
 
-export const modelsWithAuto = (models, availability, surface) =>
+const isAutoOffered = (availability, surface) =>
   availability?.enabled === true &&
   availability.readiness?.ready !== false &&
-  [MODEL_SURFACES.chat, MODEL_SURFACES.agent].includes(surface)
-    ? [autoModel(availability.profile_ref), ...models]
-    : models;
+  [MODEL_SURFACES.chat, MODEL_SURFACES.agent].includes(surface);
+
+export const modelsWithAuto = (models, availability, surface) =>
+  isAutoOffered(availability, surface) ? [autoModel(availability.profile_ref), ...models] : models;
 
 // Only eligible creation surfaces opt into the project default intent. The
 // catalog's existing default flag remains concrete for Pipelines/internal tools.
+// Auto is never the default while the picker hides it (not ready).
 export const defaultModelForSurface = (data, surface) =>
-  data?.auto_routing?.enabled === true &&
-  data?.default_selection?.mode === AUTO_SELECTION_MODE &&
-  [MODEL_SURFACES.chat, MODEL_SURFACES.agent].includes(surface)
+  isAutoOffered(data?.auto_routing, surface) && data.default_selection?.mode === AUTO_SELECTION_MODE
     ? autoModel(data.default_selection.profile_ref)
     : data?.items?.find(model => model.default) || data?.items?.[0] || null;
 

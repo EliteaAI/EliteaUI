@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 
 import { Box, MenuItem, Typography } from '@mui/material';
 
@@ -57,8 +57,8 @@ const AutoRoutingSettings = memo(() => {
     { projectId, type: 'auto_routing', includeShared: false },
     { skip: !projectId },
   );
-  const [create, creating] = useCreateConfigurationMutation();
-  const [update, updating] = useUpdateConfigurationMutation();
+  const [create] = useCreateConfigurationMutation();
+  const [update] = useUpdateConfigurationMutation();
   const current = data?.items?.find(item => item.elitea_title === 'auto_routing');
   const value = current?.data?.enabled == null ? 'default' : String(current.data.enabled);
   const classifier = current?.data?.classifier ?? null;
@@ -87,8 +87,10 @@ const AutoRoutingSettings = memo(() => {
     return { classifierOptions: options, showAllHint: !!models && chat.length > 0 && !lowTier.length };
   }, [models, classifier, readiness]);
 
+  const [saving, setSaving] = useState(false);
   const persist = useCallback(
     async nextData => {
+      setSaving(true);
       try {
         const body = {
           elitea_title: 'auto_routing',
@@ -99,10 +101,12 @@ const AutoRoutingSettings = memo(() => {
         };
         if (current?.id) await update({ projectId, configId: current.id, body }).unwrap();
         else await create({ projectId, body }).unwrap();
-        refreshSettings();
         refetch();
+        await refreshSettings();
       } catch (error) {
         toastError(error?.data?.error || 'Unable to update Auto model selection');
+      } finally {
+        setSaving(false);
       }
     },
     [current?.id, projectId, update, create, refreshSettings, refetch, toastError],
@@ -125,8 +129,8 @@ const AutoRoutingSettings = memo(() => {
     },
     [persist, current?.data?.enabled],
   );
-  const disabled =
-    !checkPermission(PERMISSIONS.configuration.update) || creating.isLoading || updating.isLoading;
+  // Stay locked until the saved row is re-read, so a quick second change never builds on stale data.
+  const disabled = !checkPermission(PERMISSIONS.configuration.update) || saving;
 
   return (
     <Box

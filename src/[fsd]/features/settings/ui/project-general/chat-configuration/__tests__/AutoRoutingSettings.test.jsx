@@ -68,6 +68,7 @@ beforeEach(() => {
   api.autoEnabled = true;
   api.readiness = undefined;
   api.items = [];
+  api.refresh.mockReturnValue(undefined);
   api.create.mockReturnValue({ unwrap: () => Promise.resolve() });
   api.update.mockReturnValue({ unwrap: () => Promise.resolve() });
 });
@@ -114,6 +115,19 @@ describe('project Auto permission and configuration', () => {
       }),
     );
     expect(api.create).not.toHaveBeenCalled();
+  });
+  it('keeps both controls locked until the saved setting is re-read', async () => {
+    let settingsReread;
+    api.refresh.mockReturnValue(new Promise(resolve => (settingsReread = resolve)));
+    renderSettings();
+    await userEvent.click(enableSelect());
+    await userEvent.click(screen.getByRole('option', { name: 'Enabled', exact: true }));
+    await waitFor(() => expect(api.create).toHaveBeenCalledTimes(1));
+    expect(screen.getByTestId('auto-routing-project-setting')).toBeDisabled();
+    expect(screen.getByTestId('auto-routing-classifier')).toHaveClass('Mui-disabled');
+    settingsReread();
+    await waitFor(() => expect(screen.getByTestId('auto-routing-project-setting')).not.toBeDisabled());
+    expect(screen.getByTestId('auto-routing-classifier')).not.toHaveClass('Mui-disabled');
   });
   it('disables configuration without update permission', () => {
     api.permitted = false;
