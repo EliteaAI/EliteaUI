@@ -190,6 +190,48 @@ describe('AnalyticsSkills', () => {
     expect(screen.queryByTestId('analytics-skills-table-header')).not.toBeInTheDocument();
   });
 
+  it('keeps the search when a search fails, showing the error in the table', () => {
+    renderSkills();
+    fireEvent.change(screen.getByTestId('analytics-skills-search-input'), { target: { value: 'pir' } });
+    useAnalyticsSkillsQuery.mockReturnValue({ data: PAYLOAD, isFetching: false, isError: true });
+    fireEvent.change(screen.getByTestId('analytics-skills-search-input'), { target: { value: 'pira' } });
+
+    expect(screen.getByTestId('analytics-skills-search-input')).toHaveValue('pira');
+    expect(screen.getByTestId('analytics-skills-error')).toHaveTextContent('Failed to load skill analytics.');
+    expect(screen.queryAllByTestId('analytics-skills-row')).toHaveLength(0);
+  });
+
+  it('shows no KPI values from the previous period when a load fails', () => {
+    useAnalyticsSkillsQuery.mockReturnValue({ data: PAYLOAD, isFetching: false, isError: true });
+    renderSkills();
+
+    expect(screen.queryByTestId('analytics-skills-kpi-runs-value')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('analytics-skills-kpi-cost-value')).not.toBeInTheDocument();
+    expect(screen.getByTestId('analytics-skills-error')).toBeInTheDocument();
+  });
+
+  it('keeps the controls when the first load fails', () => {
+    useAnalyticsSkillsQuery.mockReturnValue({ data: undefined, isFetching: false, isError: true });
+    renderSkills();
+
+    expect(screen.getByTestId('analytics-skills-search-input')).toBeInTheDocument();
+    expect(screen.getByTestId('analytics-skills-error')).toBeInTheDocument();
+    expect(screen.queryByTestId('analytics-skills-empty-state')).not.toBeInTheDocument();
+  });
+
+  it('keeps the search input while a search is active even without usage', () => {
+    renderSkills();
+    useAnalyticsSkillsQuery.mockReturnValue({
+      data: { total: 0, rows: [], summary: { skills_used: 0 } },
+      isFetching: false,
+      isError: false,
+    });
+    fireEvent.change(screen.getByTestId('analytics-skills-search-input'), { target: { value: 'zz' } });
+
+    expect(screen.getByTestId('analytics-skills-search-input')).toHaveValue('zz');
+    expect(screen.queryByTestId('analytics-skills-empty-state')).not.toBeInTheDocument();
+  });
+
   it('keeps the table when only the search matches nothing', () => {
     useAnalyticsSkillsQuery.mockReturnValue({
       data: { ...PAYLOAD, total: 0, rows: [] },

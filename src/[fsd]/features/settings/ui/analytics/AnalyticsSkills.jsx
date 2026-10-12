@@ -141,58 +141,48 @@ const AnalyticsSkills = memo(props => {
     );
   }
 
-  if (isError) {
-    return (
-      <Box sx={styles.message}>
-        <Typography
-          variant="bodyMedium"
-          sx={styles.emptyText}
-          data-testid="analytics-skills-error"
-        >
-          Failed to load skill analytics.
-        </Typography>
-      </Box>
-    );
-  }
-
   const tt = AnalyticsCommonConstants.TOOLTIP_TEXTS.skills;
   const hasUsage = Boolean(summary.skills_used);
+  const showsTable = hasUsage || Boolean(search) || isError;
+  const showsRows = !isFetching && !isError;
 
   return (
     <Box sx={styles.content}>
-      <Box sx={styles.kpiRow}>
-        <KPICard
-          label="SKILL RUNS"
-          value={AnalyticCommonHelpers.fmtNum(summary.runs)}
-          tooltip={tt.RUNS}
-          testId="analytics-skills-kpi-runs"
-          valueTestId="analytics-skills-kpi-runs-value"
-        />
-        <KPICard
-          label="SKILLS USED"
-          value={AnalyticCommonHelpers.fmtNum(summary.skills_used)}
-          tooltip={tt.SKILLS_USED}
-          testId="analytics-skills-kpi-skills-used"
-          valueTestId="analytics-skills-kpi-skills-used-value"
-        />
-        <KPICard
-          label="IN-AGENT USES"
-          value={AnalyticCommonHelpers.fmtNum(summary.in_agent_uses)}
-          tooltip={tt.IN_AGENT_USES}
-          testId="analytics-skills-kpi-in-agent-uses"
-          valueTestId="analytics-skills-kpi-in-agent-uses-value"
-        />
-        <KPICard
-          label="SKILL RUN COST"
-          value={AnalyticCommonHelpers.fmtCost(summary.cost)}
-          subtitle="estimated"
-          tooltip={tt.COST}
-          testId="analytics-skills-kpi-cost"
-          valueTestId="analytics-skills-kpi-cost-value"
-        />
-      </Box>
+      {!isError && (
+        <Box sx={styles.kpiRow}>
+          <KPICard
+            label="SKILL RUNS"
+            value={AnalyticCommonHelpers.fmtNum(summary.runs)}
+            tooltip={tt.RUNS}
+            testId="analytics-skills-kpi-runs"
+            valueTestId="analytics-skills-kpi-runs-value"
+          />
+          <KPICard
+            label="SKILLS USED"
+            value={AnalyticCommonHelpers.fmtNum(summary.skills_used)}
+            tooltip={tt.SKILLS_USED}
+            testId="analytics-skills-kpi-skills-used"
+            valueTestId="analytics-skills-kpi-skills-used-value"
+          />
+          <KPICard
+            label="IN-AGENT USES"
+            value={AnalyticCommonHelpers.fmtNum(summary.in_agent_uses)}
+            tooltip={tt.IN_AGENT_USES}
+            testId="analytics-skills-kpi-in-agent-uses"
+            valueTestId="analytics-skills-kpi-in-agent-uses-value"
+          />
+          <KPICard
+            label="SKILL RUN COST"
+            value={AnalyticCommonHelpers.fmtCost(summary.cost)}
+            subtitle="estimated"
+            tooltip={tt.COST}
+            testId="analytics-skills-kpi-cost"
+            valueTestId="analytics-skills-kpi-cost-value"
+          />
+        </Box>
+      )}
 
-      {isFetching && !hasUsage && (
+      {isFetching && !showsTable && (
         <Box
           sx={styles.loadingState}
           data-testid="analytics-skills-loading-indicator"
@@ -200,9 +190,9 @@ const AnalyticsSkills = memo(props => {
           <CircularProgress size={24} />
         </Box>
       )}
-      {!isFetching && !hasUsage && <SkillsEmptyState />}
+      {!isFetching && !showsTable && <SkillsEmptyState />}
 
-      {chartData.length > 0 && (
+      {!isError && chartData.length > 0 && (
         <Box sx={analyticsTableStyles.chartCard}>
           <Typography
             variant="labelMedium"
@@ -271,7 +261,7 @@ const AnalyticsSkills = memo(props => {
         </Box>
       )}
 
-      {hasUsage && (
+      {showsTable && (
         <Box sx={analyticsTableStyles.chartCard}>
           <Box sx={styles.tableHeaderRow}>
             <Box>
@@ -330,7 +320,16 @@ const AnalyticsSkills = memo(props => {
                 <CircularProgress size={24} />
               </Box>
             )}
-            {!isFetching &&
+            {!isFetching && isError && (
+              <Typography
+                variant="bodySmall"
+                sx={styles.noMatch}
+                data-testid="analytics-skills-error"
+              >
+                Failed to load skill analytics.
+              </Typography>
+            )}
+            {showsRows &&
               rows.map(skill => (
                 <Box
                   key={`${skill.skill_project_id}:${skill.skill_id}`}
@@ -366,7 +365,7 @@ const AnalyticsSkills = memo(props => {
                   ))}
                 </Box>
               ))}
-            {!isFetching && !rows.length && (
+            {showsRows && !rows.length && (
               <Typography
                 variant="bodySmall"
                 sx={styles.noMatch}
@@ -440,8 +439,6 @@ const analyticsSkillsStyles = () => ({
   name: ({ palette }) => ({ fontSize: '0.8125rem', color: palette.text.secondary, minWidth: 0 }),
   errorValue: ({ palette }) => ({ color: palette.status.rejected }),
   loadingState: { display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem' },
-  message: { display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem' },
-  emptyText: ({ palette }) => ({ color: palette.text.metrics || palette.text.disabled }),
   noMatch: ({ palette }) => ({
     color: palette.text.metrics || palette.text.disabled,
     padding: '1rem 0.75rem',

@@ -1,7 +1,10 @@
+import { AnalyticsTabConstants } from '@/[fsd]/shared/lib/constants';
 import { PERMISSIONS } from '@/common/constants';
 
-import { ANALYTICS_TAB_IDS, ANALYTICS_TOUR_TARGETS } from './analyticsTourTargets.constants';
+import { ANALYTICS_TOUR_TARGETS } from './analyticsTourTargets.constants';
 import { ANALYTICS_TOUR_ID } from './tourIds.constants';
+
+const { ANALYTICS_TAB_IDS } = AnalyticsTabConstants;
 
 export { ANALYTICS_TOUR_ID };
 

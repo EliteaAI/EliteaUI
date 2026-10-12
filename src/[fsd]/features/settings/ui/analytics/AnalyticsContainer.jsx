@@ -5,11 +5,7 @@ import { useSelector, useStore } from 'react-redux';
 import { Alert, Box, CircularProgress, Snackbar, Tooltip, Typography } from '@mui/material';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 
-import {
-  ANALYTICS_TAB_IDS,
-  ANALYTICS_TOUR_ID,
-  ANALYTICS_TOUR_TARGET_IDS,
-} from '@/[fsd]/features/interactive-tours';
+import { ANALYTICS_TOUR_ID, ANALYTICS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import {
   TAG_TYPE_ANALYTICS,
   analyticsApi,
@@ -30,6 +26,7 @@ import {
   AnalyticsUsers,
 } from '@/[fsd]/features/settings/ui/analytics';
 import { DrawerPage } from '@/[fsd]/features/settings/ui/drawer-page';
+import { AnalyticsTabConstants } from '@/[fsd]/shared/lib/constants';
 import { useInteractiveTour } from '@/[fsd]/shared/lib/context';
 import { exportToExcel } from '@/[fsd]/shared/lib/utils';
 import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
@@ -57,7 +54,7 @@ const DEFAULT_PRESETS = [
 
 const PRESETS_WITH_CUSTOM = [...DEFAULT_PRESETS, { label: 'Custom', value: CUSTOM_PRESET_VALUE }];
 
-const TAB = ANALYTICS_TAB_IDS;
+const { ANALYTICS_TAB_IDS: TAB } = AnalyticsTabConstants;
 
 // {id, label, testid} for the Analytics tabs (ELITEA-2310) — kept as a
 // module-level template so the testid inventory stays greppable, per

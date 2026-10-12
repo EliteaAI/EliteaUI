@@ -1,4 +1,6 @@
-import { ANALYTICS_TAB_IDS } from '@/[fsd]/features/interactive-tours';
+import { AnalyticsTabConstants } from '@/[fsd]/shared/lib/constants';
+
+const { ANALYTICS_TAB_IDS } = AnalyticsTabConstants;
 
 export const TOP_LIST_SIZE = 10;
 

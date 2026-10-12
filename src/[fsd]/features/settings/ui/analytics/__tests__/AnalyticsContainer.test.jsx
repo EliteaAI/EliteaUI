@@ -34,7 +34,6 @@ vi.mock('@/[fsd]/features/interactive-tours', async () => {
   const targets =
     await import('@/[fsd]/features/interactive-tours/lib/constants/analyticsTourTargets.constants');
   return {
-    ANALYTICS_TAB_IDS: targets.ANALYTICS_TAB_IDS,
     ANALYTICS_TOUR_TARGET_IDS: targets.ANALYTICS_TOUR_TARGET_IDS,
     ANALYTICS_TOUR_ID: 'analytics',
   };
