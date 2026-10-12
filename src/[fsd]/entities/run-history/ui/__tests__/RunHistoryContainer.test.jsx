@@ -357,3 +357,18 @@ describe('RunHistoryContainer initial selection', () => {
     expect(screen.getByTestId('selection')).toHaveAttribute('data-value', '5678');
   });
 });
+
+describe('RunHistoryContainer owner project', () => {
+  it('asks for the runs of the owner project it is given', () => {
+    renderContainer('', { source: 'skill', entityProjectId: 1 });
+
+    expect(fetchRunList).toHaveBeenCalledWith(expect.objectContaining({ entityId: 1, entityProjectId: 1 }));
+  });
+
+  it('asks again when the owner project changes', () => {
+    const { rerender } = renderContainer('', { source: 'skill', entityProjectId: 7 });
+    rerender(containerTree('', { source: 'skill', entityProjectId: 1 }));
+
+    expect(fetchRunList).toHaveBeenLastCalledWith(expect.objectContaining({ entityProjectId: 1 }));
+  });
+});

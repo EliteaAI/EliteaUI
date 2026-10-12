@@ -17,11 +17,11 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 const { ParticipantEntityTypes } = ParticipantEntityConstants;
 
 const NO_ADDITIONAL_ROWS = [];
-const NO_FILTERS = {};
 
 const RunHistoryContainer = memo(props => {
   const {
     entityId,
+    entityProjectId,
     versions,
     source,
     handleRestoreConversation,
@@ -34,13 +34,6 @@ const RunHistoryContainer = memo(props => {
     decorateRow = null,
     DetailComponent = null,
     shareOpensHistoryTab = false,
-    entityProjectId,
-    filters = NO_FILTERS,
-    onFacets,
-    extraColumns,
-    listWidth,
-    emptyState,
-    fitParent = false,
   } = props;
 
   const projectId = useSelectedProjectId();
@@ -51,13 +44,6 @@ const RunHistoryContainer = memo(props => {
 
   const [allConversations, setAllConversations] = useState([]);
   const [page, setPage] = useState(0);
-  const filtersKey = JSON.stringify(filters);
-  const [pagedFiltersKey, setPagedFiltersKey] = useState(filtersKey);
-  if (pagedFiltersKey !== filtersKey) {
-    setPagedFiltersKey(filtersKey);
-    setPage(0);
-  }
-  const requestFilters = useMemo(() => JSON.parse(filtersKey), [filtersKey]);
   const [selectedHistoryItem, setSelectedHistoryItem] = useState(null);
   const handledSharedRunId = useRef(null);
   const [mergedData, setMergedData] = useState();
@@ -139,27 +125,17 @@ const RunHistoryContainer = memo(props => {
     toastInfo,
   ]);
 
-  const entityKey = `${projectId}:${entityProjectId}:${entityId}`;
-  const currentEntityKeyRef = useRef(entityKey);
-  currentEntityKeyRef.current = entityKey;
-
   useEffect(() => {
     if (projectId && entityId) {
-      const requestedEntityKey = `${projectId}:${entityProjectId}:${entityId}`;
-      const request = fetchRunList({
+      fetchRunList({
         source,
         projectId,
         entityId,
+        entityProjectId,
         page,
-        ...(entityProjectId ? { entityProjectId } : {}),
-        ...requestFilters,
-      });
-      Promise.resolve(request).then(result => {
-        const isForCurrentEntity = requestedEntityKey === currentEntityKeyRef.current;
-        if (isForCurrentEntity && result?.data?.facets) onFacets?.(result.data.facets);
       });
     }
-  }, [projectId, entityId, entityProjectId, page, fetchRunList, source, requestFilters, onFacets]);
+  }, [projectId, entityId, entityProjectId, page, fetchRunList, source]);
 
   useEffect(() => {
     if (!data?.isLoadMore) {
@@ -184,10 +160,10 @@ const RunHistoryContainer = memo(props => {
     setSelectedHistoryItem(item);
   }, []);
 
-  const styles = runHistoryContainerStyles(isSmallWindow, listWidth);
+  const styles = runHistoryContainerStyles(isSmallWindow);
 
   return (
-    <Box sx={onClose ? styles.outerWrapper : fitParent ? styles.outerFitParent : undefined}>
+    <Box sx={onClose ? styles.outerWrapper : undefined}>
       {onClose && (
         <Box sx={styles.header}>
           <IconButton
@@ -207,7 +183,7 @@ const RunHistoryContainer = memo(props => {
           </Typography>
         </Box>
       )}
-      <Box sx={onClose ? styles.wrapperFlex : [styles.wrapper, fitParent && styles.wrapperFitParent]}>
+      <Box sx={onClose ? styles.wrapperFlex : styles.wrapper}>
         <Box sx={styles.historyList}>
           <RunHistoryList
             conversations={historyRows}
@@ -217,7 +193,7 @@ const RunHistoryContainer = memo(props => {
             listCurrentSize={allConversations.length}
             totalAvailableCount={data?.total || 0}
             onLoadMore={handleLoadMore}
-            resetPageDependencies={[projectId, entityId, entityProjectId, filtersKey]}
+            resetPageDependencies={[projectId, entityId, entityProjectId]}
             handleHistoryItemSelect={handleHistoryItemSelect}
             selectedHistoryItem={selectedHistoryItem}
             source={source}
@@ -225,9 +201,6 @@ const RunHistoryContainer = memo(props => {
             handleOpenAnalytics={handleOpenAnalytics}
             hasEvent={Boolean(decorateRow)}
             shareOpensHistoryTab={shareOpensHistoryTab}
-            extraColumns={extraColumns}
-            listWidth={listWidth}
-            emptyState={typeof emptyState === 'function' ? data && emptyState(data) : emptyState}
           />
         </Box>
 
@@ -249,7 +222,7 @@ const RunHistoryContainer = memo(props => {
 RunHistoryContainer.displayName = 'RunHistoryContainer';
 
 /** @type {MuiSx} */
-const runHistoryContainerStyles = (isSmallWindow, listWidth = '32rem') => ({
+const runHistoryContainerStyles = isSmallWindow => ({
   outerWrapper: {
     display: 'flex',
     flexDirection: 'column',
@@ -278,17 +251,6 @@ const runHistoryContainerStyles = (isSmallWindow, listWidth = '32rem') => ({
     flexDirection: isSmallWindow ? 'column' : 'row',
     gap: '1.5rem',
   },
-  outerFitParent: {
-    display: 'flex',
-    flexDirection: 'column',
-    flex: 1,
-    minHeight: 0,
-  },
-  wrapperFitParent: {
-    height: 'auto',
-    flex: 1,
-    minHeight: 0,
-  },
   wrapperFlex: {
     flex: 1,
     minHeight: 0,
@@ -300,7 +262,7 @@ const runHistoryContainerStyles = (isSmallWindow, listWidth = '32rem') => ({
   },
   historyList: {
     flex: 3,
-    maxWidth: isSmallWindow ? '100%' : listWidth,
+    maxWidth: isSmallWindow ? '100%' : '32rem',
     position: 'relative',
     display: 'flex',
     flexDirection: 'column',
