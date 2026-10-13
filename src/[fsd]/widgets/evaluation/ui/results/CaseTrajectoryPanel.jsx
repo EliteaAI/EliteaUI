@@ -27,6 +27,8 @@ const USAGE_COLUMNS = [
   { key: 'cost', label: 'Cost' },
 ];
 
+const STEP_SLOT_PROPS = { transition: { unmountOnExit: true } };
+
 /**
  * What the agent did on one case of an offline-batch run (#6809 P1): what the agent and the judge
  * spent on it (#6716), the run counters and the ordered LLM and tool steps. Steps a sub-agent ran are indented under the call that started them.
@@ -179,6 +181,8 @@ const CaseTrajectoryPanel = memo(props => {
               key={step.i}
               defaultExpanded={false}
               uppercase={false}
+              // Mount a step's payload only while it is open: a long run would otherwise render every input and output.
+              slotProps={STEP_SLOT_PROPS}
               style={step.parent_agent ? styles.childStep : undefined}
               data-testid={`trajectory-step-${step.i}`}
               items={[

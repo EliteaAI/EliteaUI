@@ -24,6 +24,7 @@ const BasicAccordion = memo(props => {
     titleSX,
     accordionDetailsSX,
     card = false,
+    slotProps,
     'data-testid': dataTestId,
   } = props;
 
@@ -46,6 +47,7 @@ const BasicAccordion = memo(props => {
             defaultExpanded={defaultExpanded}
             expanded={expanded}
             onChange={onChange}
+            slotProps={slotProps}
           >
             <StyledAccordionSummary
               expandIcon={<StyledExpandMoreIcon sx={styles.expandIcon} />}

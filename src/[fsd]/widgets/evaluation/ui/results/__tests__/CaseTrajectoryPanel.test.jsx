@@ -5,7 +5,7 @@ import { ThemeProvider, createTheme } from '@mui/material';
 
 import lightPalette from '@/lightPalette';
 import '@testing-library/jest-dom/vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 import CaseTrajectoryPanel from '../CaseTrajectoryPanel';
 
@@ -238,5 +238,32 @@ describe('CaseTrajectoryPanel stored outputs (#6809 Q-S5)', () => {
     queryState.data = withTrajectory({ steps: [{ ...toolStep, tool_output: 'rows' }] });
     renderPanel();
     expect(screen.queryByTestId('trajectory-outputs-not-stored')).not.toBeInTheDocument();
+  });
+});
+
+describe('CaseTrajectoryPanel step payloads', () => {
+  afterEach(() => {
+    cleanup();
+    queryState.data = undefined;
+  });
+
+  it('renders a step payload only once the step is opened', () => {
+    queryState.data = {
+      executions: [
+        {
+          ...recordedExecution,
+          status: 'ok',
+          trajectory: {
+            steps: [{ i: 0, kind: 'tool', tool_name: 'search', status: 'ok', tool_output: 'big-output-marker' }],
+          },
+        },
+      ],
+      usage: [],
+    };
+    renderPanel();
+    expect(screen.queryByText(/big-output-marker/)).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByText(/search/));
+    expect(screen.getByText(/big-output-marker/)).toBeInTheDocument();
   });
 });
