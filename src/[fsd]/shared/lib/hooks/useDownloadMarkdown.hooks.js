@@ -3,7 +3,7 @@
  */
 import { useCallback } from 'react';
 
-export function useDownloadMarkdown({ markdown, filename }) {
+export const useDownloadMarkdown = ({ markdown, filename }) => {
   const onDownloadMarkdown = useCallback(() => {
     const element = document.createElement('a');
     const file = new Blob([markdown], { type: 'text/plain' });
@@ -22,4 +22,4 @@ export function useDownloadMarkdown({ markdown, filename }) {
     onDownloadMarkdown,
     onCopyRawTable,
   };
-}
+};

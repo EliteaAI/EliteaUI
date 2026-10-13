@@ -74,7 +74,8 @@ const uploadImportFile = async ({ projectId, file, onProgress, xhrRef, isCurrent
       url,
       formData,
       xhrRef,
-      onProgress: loaded => onProgress(Math.min(100, Math.round(((start + loaded) / (file.size || 1)) * 100))),
+      onProgress: loaded =>
+        onProgress(Math.min(100, Math.round(((start + loaded) / (file.size || 1)) * 100))),
     });
   }
   return response;

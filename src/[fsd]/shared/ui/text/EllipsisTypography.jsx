@@ -3,7 +3,7 @@ import { memo } from 'react';
 import { Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
-import useCheckViewScrollHorizontally from '@/hooks/useCheckViewScrollHorizontally';
+import { useCheckViewScrollHorizontally } from '@/[fsd]/shared/lib/hooks';
 
 const EllipsisTypography = memo(props => {
   const { children, sx, ...rest } = props;

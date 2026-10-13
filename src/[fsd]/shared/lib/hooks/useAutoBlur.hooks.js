@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 
-const useAutoBlur = () => {
+export const useAutoBlur = () => {
   const timerRef = useRef(null);
   const doTriggerBlur = () => {
     if (document.activeElement && document.activeElement.tagName !== 'BODY') {
@@ -17,5 +17,3 @@ const useAutoBlur = () => {
   };
   return autoBlur;
 };
-
-export default useAutoBlur;

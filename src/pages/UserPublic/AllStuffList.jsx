@@ -5,7 +5,7 @@ import { useSelector } from 'react-redux';
 import { Typography } from '@mui/material';
 
 import { useLoadToolkits } from '@/[fsd]/features/toolkits/lib/hooks';
-import { useToast } from '@/[fsd]/shared/lib/hooks';
+import { useAuthorName, useToast } from '@/[fsd]/shared/lib/hooks';
 import { ContentType } from '@/common/constants';
 import { buildErrorMessage, sortByCreatedAt } from '@/common/utils';
 import CardList from '@/components/CardList';
@@ -17,7 +17,6 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useViewMode from '@/hooks/useViewMode';
 import { getQueryStatuses } from '@/utils/getQueryStatus';
 
-import useAuthorName from '../../hooks/useAuthorName';
 import { useLoadApplications } from '../../hooks/useLoadApplications';
 
 const EmptyListPlaceHolder = memo(props => {

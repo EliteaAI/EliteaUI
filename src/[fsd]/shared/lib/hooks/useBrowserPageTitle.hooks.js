@@ -4,8 +4,7 @@ import { useLocation, useParams } from 'react-router-dom';
 
 import { useSelectedProjectName } from '@/hooks/useSelectedProject';
 
-// Custom Hook to Set Title
-function useBrowserPageTitle() {
+export const useBrowserPageTitle = () => {
   const location = useLocation();
   const params = useParams();
   const projectName = useSelectedProjectName();
@@ -122,10 +121,4 @@ function useBrowserPageTitle() {
   useEffect(() => {
     document.title = title;
   }, [location, params, title]);
-}
-
-// Component to Set Title
-export function PageTitleSetter() {
-  useBrowserPageTitle(); // Custom hook to set title
-  return null; // This component doesn't render anything
-}
+};

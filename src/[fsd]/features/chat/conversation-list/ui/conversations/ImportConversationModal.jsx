@@ -232,7 +232,9 @@ const ImportConversationModal = memo(props => {
       {step === IMPORT_STEPS.importing && (
         <Box sx={styles.progress}>
           <Typography variant="bodySmall">
-            {selectedCount ? `Importing chat... Uploading ${selectedCount} attachment(s)` : 'Importing chat...'}
+            {selectedCount
+              ? `Importing chat... Uploading ${selectedCount} attachment(s)`
+              : 'Importing chat...'}
           </Typography>
           <LinearProgress
             sx={styles.progressBar}
@@ -290,17 +292,19 @@ const importConversationModalStyles = () => ({
   hiddenInput: {
     display: 'none',
   },
-  dropZone: isDragOver => ({ palette }) => ({
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '0.75rem',
-    padding: '1rem',
-    borderRadius: '0.5rem',
-    border: `0.0625rem dashed ${isDragOver ? palette.primary.main : palette.border.lines}`,
-    textAlign: 'center',
-    wordBreak: 'break-word',
-  }),
+  dropZone:
+    isDragOver =>
+    ({ palette }) => ({
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: '0.75rem',
+      padding: '1rem',
+      borderRadius: '0.5rem',
+      border: `0.0625rem dashed ${isDragOver ? palette.primary.main : palette.border.lines}`,
+      textAlign: 'center',
+      wordBreak: 'break-word',
+    }),
   preview: {
     display: 'flex',
     flexDirection: 'column',

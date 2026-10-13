@@ -13,7 +13,7 @@ const CHAT_CONTROLS_WIDTH_THRESHOLD = 430;
  *
  * @returns {Object} - { containerRef, isSmallView }
  */
-const useAgentEditorPanelFit = () => {
+export const useAgentEditorPanelFit = () => {
   const containerRef = useRef(null);
   const [isSmallView, setIsSmallView] = useState(false);
 
@@ -89,5 +89,3 @@ const useAgentEditorPanelFit = () => {
     isSmallView,
   };
 };
-
-export default useAgentEditorPanelFit;

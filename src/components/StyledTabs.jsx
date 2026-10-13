@@ -16,8 +16,8 @@ import { Box } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { AccessibilityAriaHelpers } from '@/[fsd]/shared/lib/helpers';
+import { useGetComponentHeight } from '@/[fsd]/shared/lib/hooks';
 import { BaseTab, BaseTabs } from '@/[fsd]/shared/ui/tabs';
-import useGetComponentHeight from '@/hooks/useGetComponentHeight';
 import useShouldCollapseRightToolbar from '@/hooks/useShouldCollapseRightToolbar';
 import RouteDefinitions from '@/routes';
 import styled from '@emotion/styled';

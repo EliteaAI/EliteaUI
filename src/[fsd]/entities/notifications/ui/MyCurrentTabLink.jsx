@@ -3,8 +3,8 @@ import { memo, useCallback } from 'react';
 import { Link } from '@mui/material';
 
 import { formatName } from '@/[fsd]/entities/notifications/lib/helpers/notificationLegacy.helpers.js';
+import { useNotificationNavigate } from '@/[fsd]/entities/notifications/lib/hooks';
 import { PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
-import useNotificationNavigate from '@/hooks/useNotificationNavigate';
 
 const MyCurrentTabLink = memo(props => {
   const { linkInfo, needTrim, onCloseNotificationList, event_type } = props;

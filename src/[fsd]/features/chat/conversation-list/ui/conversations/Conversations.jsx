@@ -13,6 +13,7 @@ import {
   PinnedConversations,
 } from '@/[fsd]/features/chat/conversation-list/ui';
 import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
+import { usePreventDoubleClick } from '@/[fsd]/shared/lib/hooks';
 import { SimpleSearchBar } from '@/[fsd]/shared/ui/input';
 import { useLazyDateGroupConversationsQuery, useLazyFolderConversationsQuery } from '@/api';
 import { PERMISSIONS } from '@/common/constants';
@@ -27,7 +28,6 @@ import useDragAndDrop from '@/hooks/chat/useDragAndDrop';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import useDebounceValue from '@/hooks/useDebounceValue';
 import useIsSmallWindow from '@/hooks/useIsSmallWindow';
-import usePreventDoubleClick from '@/hooks/usePreventDoubleClick';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useSortQueryParamsFromUrl from '@/hooks/useSortQueryParamsFromUrl';
 import { DndContext, closestCenter } from '@dnd-kit/core';

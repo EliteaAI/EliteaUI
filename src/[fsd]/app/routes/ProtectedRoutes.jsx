@@ -7,6 +7,7 @@ import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom';
 import IndexRoute from '@/[fsd]/app/routes/IndexRoute';
 import IntegrationGuard from '@/[fsd]/app/routes/IntegrationGuard';
 import LegacyCatalogRedirect from '@/[fsd]/app/routes/LegacyCatalogRedirect';
+import PageTitleSetter from '@/[fsd]/app/routes/PageTitleSetter';
 import ProtectedRoute from '@/[fsd]/app/routes/ProtectedRoute';
 import SkillsGuard from '@/[fsd]/app/routes/SkillsGuard';
 import { ChunkHelpers } from '@/[fsd]/shared/lib/helpers';
@@ -21,7 +22,6 @@ import {
   ToolkitsTabs,
 } from '@/common/constants';
 import RouteChangeResetSearch from '@/components/RouteChangeResetSearch';
-import { PageTitleSetter } from '@/hooks/useBrowserPageTitle';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import LoadingPage from '@/pages/LoadingPage';
 import Page404 from '@/pages/Page404.jsx';

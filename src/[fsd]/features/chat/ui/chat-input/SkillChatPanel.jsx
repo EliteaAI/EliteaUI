@@ -2,6 +2,7 @@ import { memo, useMemo } from 'react';
 
 import { Box, Button, ButtonGroup, Divider, Tooltip, Typography } from '@mui/material';
 
+import { useAgentEditorPanelFit } from '@/[fsd]/features/chat/lib/hooks';
 import { ParticipantConstants } from '@/[fsd]/features/chat/participants/lib/constants';
 import { areDetailsOfParticipant } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { useParticipantEntityIcon } from '@/[fsd]/features/chat/participants/lib/hooks';
@@ -9,7 +10,6 @@ import { LLMModelSelector } from '@/[fsd]/widgets/llm-model-selector';
 import { ChatParticipantType } from '@/common/constants';
 import EntityIcon from '@/components/EntityIcon';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
-import useAgentEditorPanelFit from '@/hooks/useAgentEditorPanelFit';
 
 import SwitchToModelButton from './SwitchToModelButton';
 import VersionSelector from './VersionSelector';

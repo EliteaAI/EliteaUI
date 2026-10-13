@@ -2,10 +2,10 @@ import { memo, useMemo } from 'react';
 
 import { Box } from '@mui/material';
 
+import { useIsTableView } from '@/[fsd]/shared/lib/hooks';
 import DataTable from '@/[fsd]/widgets/data-table';
 import { RIGHT_PANEL_WIDTH } from '@/common/constants';
 import EmptyListBox from '@/components/EmptyListBox';
-import useIsTableView from '@/hooks/useIsTableView';
 import useShouldCollapseRightToolbar from '@/hooks/useShouldCollapseRightToolbar';
 
 import DataCards from './DataCards';

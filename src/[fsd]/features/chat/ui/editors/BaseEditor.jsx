@@ -7,9 +7,9 @@ import { useTheme } from '@mui/material/styles';
 
 import EditorHeader from '@/[fsd]/features/chat/ui/editors/EditorHeader';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
+import { useEditorNavBlocking } from '@/[fsd]/shared/lib/hooks';
 import { Modal } from '@/[fsd]/shared/ui';
 import DirtyDetector from '@/components/Formik/DirtyDetector';
-import useEditorNavBlocking from '@/hooks/useEditorNavBlocking';
 import useIsSmallWindow from '@/hooks/useIsSmallWindow';
 
 /**

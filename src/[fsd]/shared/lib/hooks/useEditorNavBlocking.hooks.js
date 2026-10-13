@@ -10,7 +10,7 @@ import useNavBlocker from '@/hooks/useNavBlocker';
  *   Use this for editors rendered inside a multi-tab panel where the parent manages the nav block.
  * @returns {object} - Object containing setBlockNav function
  */
-export default function useEditorNavBlocking(isVisible, isDirty, disabled = false) {
+export const useEditorNavBlocking = (isVisible, isDirty, disabled = false) => {
   const { setBlockNav } = useNavBlocker();
 
   useEffect(() => {
@@ -28,4 +28,4 @@ export default function useEditorNavBlocking(isVisible, isDirty, disabled = fals
   }, [isVisible, isDirty, disabled, setBlockNav]);
 
   return { setBlockNav };
-}
+};

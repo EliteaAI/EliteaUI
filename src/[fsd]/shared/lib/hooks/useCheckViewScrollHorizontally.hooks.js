@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-export default function useCheckViewScrollHorizontally() {
+export const useCheckViewScrollHorizontally = () => {
   const viewRef = useRef(null);
   const [isScrollable, setIsScrollable] = useState(false);
 
@@ -21,4 +21,4 @@ export default function useCheckViewScrollHorizontally() {
     viewRef,
     isScrollable,
   };
-}
+};
