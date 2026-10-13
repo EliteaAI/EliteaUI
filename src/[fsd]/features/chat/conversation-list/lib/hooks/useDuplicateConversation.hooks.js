@@ -1,5 +1,7 @@
 import { useCallback, useState } from 'react';
 
+import { useDispatch } from 'react-redux';
+
 import {
   generateDuplicateName,
   sortConversations,
@@ -14,6 +16,7 @@ import {
 } from '@/api';
 import { ChatParticipantType } from '@/common/constants';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
+import { actions as chatActions } from '@/slices/chat';
 
 export const useDuplicateConversation = props => {
   const {
@@ -27,6 +30,7 @@ export const useDuplicateConversation = props => {
     listenCanvasContentChangeEvent,
     stopListenCanvasContentChangeEvent,
   } = props;
+  const dispatch = useDispatch();
   const projectId = useSelectedProjectId();
   const { toastError, toastInfo, toastSuccess } = useToast();
   const { changeUrlByConversation } = useConversationNavigation();
@@ -136,9 +140,11 @@ export const useDuplicateConversation = props => {
           sortConversations([...prevConversations, conversationWithTimestamp]),
         );
 
-        selectConversation({
-          projectId,
-          conversationId: finalConversation.id,
+        selectConversation({ projectId, conversationId: finalConversation.id }).then(({ error }) => {
+          if (!error)
+            dispatch(
+              chatActions.setLastSelectedConversationId({ projectId, conversationId: finalConversation.id }),
+            );
         });
 
         if (hasParticipantIssues) toastInfo('Chat duplicated, but some participants could not be added');
@@ -164,6 +170,7 @@ export const useDuplicateConversation = props => {
       stopListenCanvasContentChangeEvent,
       stopListenCanvasEditorsChangeEvent,
       toastError,
+      dispatch,
       toastInfo,
       toastSuccess,
     ],

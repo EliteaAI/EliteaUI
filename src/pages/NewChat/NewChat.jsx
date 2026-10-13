@@ -506,6 +506,9 @@ const NewChat = props => {
     setPinnedConversations,
     onSelectConversation,
     searchQuery: sidebarSearchQuery,
+    folders,
+    dateGroups,
+    pinnedConversations,
     skipSetConversation:
       isCreatingConversation ||
       activeConversation?.isNew ||
