@@ -62,6 +62,7 @@ import SonarIcon from '@/assets/sonar-icon.svg?react';
 import SqlIcon from '@/assets/sql-icon.svg?react';
 import SwarmIconSVG from '@/assets/swarm-icon.svg?react';
 import SyngenIcon from '@/assets/syngen.svg?react';
+import TavilyIcon from '@/assets/tavily-icon.svg?react';
 import TeamsIcon from '@/assets/teams.svg?react';
 import TestIOIcon from '@/assets/testio-icon.svg?react';
 import TestrailIcon from '@/assets/testrail-icon.svg?react';
@@ -253,6 +254,8 @@ const getPredefinedIcon = (type, iconProps) => {
       return <SonarIcon {...iconProps} />;
     case ToolTypes.google_places.value:
       return <GplacesIcon {...iconProps} />;
+    case 'tavily':
+      return <TavilyIcon {...iconProps} />;
     case ToolTypes.sharepoint.value:
       return <SharepointIcon {...iconProps} />;
     case 'salesforce':
@@ -465,6 +468,8 @@ export const getToolIcon = toolType => {
       return SonarIcon;
     case ToolTypes.google_places.value:
       return GplacesIcon;
+    case 'tavily':
+      return TavilyIcon;
     case ToolTypes.sharepoint.value:
       return SharepointIcon;
     case 'salesforce':
