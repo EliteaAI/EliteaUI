@@ -11,6 +11,7 @@ const chatSlice = createSlice({
     selectedAgentStarter: null,
     currentChatModel: null,
     isCreatingNewConversation: false,
+    lastSelectedConversationIdByProject: {},
   },
   reducers: {
     setMessageIdToView: (state, action) => {
@@ -54,6 +55,10 @@ const chatSlice = createSlice({
     setIsCreatingNewConversation: (state, action) => {
       state.isCreatingNewConversation = action.payload;
     },
+    setLastSelectedConversationId: (state, action) => {
+      const { projectId, conversationId } = action.payload;
+      state.lastSelectedConversationIdByProject[projectId] = conversationId;
+    },
   },
   extraReducers: builder => {
     builder.addMatcher(eliteaApi.endpoints.validateToolkit.matchFulfilled, (state, { meta: { arg } }) => {
@@ -70,3 +75,5 @@ export const { name, actions } = chatSlice;
 export default chatSlice.reducer;
 
 export const selectMessageIdToView = state => state.chat.messageIdToView;
+export const selectLastSelectedConversationIdByProject = projectId => state =>
+  state.chat.lastSelectedConversationIdByProject[projectId] ?? null;

@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { useSelector } from 'react-redux';
+
 import { sortConversations } from '@/[fsd]/features/chat/conversation-list/lib/helpers';
 import { useFoldersListQuery } from '@/api';
 import { PERMISSIONS } from '@/common/constants';
@@ -7,6 +9,7 @@ import { buildErrorMessage } from '@/common/utils';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useSortQueryParamsFromUrl from '@/hooks/useSortQueryParamsFromUrl';
+import { selectLastSelectedConversationIdByProject } from '@/slices/chat';
 
 export const useQueryFoldersList = props => {
   const {
@@ -17,6 +20,9 @@ export const useQueryFoldersList = props => {
     onSelectConversation,
     skipSetConversation,
     searchQuery,
+    folders,
+    dateGroups,
+    pinnedConversations,
   } = props;
   const projectId = useSelectedProjectId();
 
@@ -24,6 +30,9 @@ export const useQueryFoldersList = props => {
   const setDateGroupsRef = useRef(setDateGroups);
   const setFoldersRef = useRef(setFolders);
   const setPinnedConversationsRef = useRef(setPinnedConversations);
+  const foldersRef = useRef(folders);
+  const dateGroupsRef = useRef(dateGroups);
+  const pinnedConversationsRef = useRef(pinnedConversations);
 
   const [isConversationsLoaded, setIsConversationsLoaded] = useState(false);
 
@@ -44,6 +53,28 @@ export const useQueryFoldersList = props => {
   useEffect(() => {
     setPinnedConversationsRef.current = setPinnedConversations;
   }, [setPinnedConversations]);
+
+  useEffect(() => {
+    foldersRef.current = folders;
+  }, [folders]);
+
+  useEffect(() => {
+    dateGroupsRef.current = dateGroups;
+  }, [dateGroups]);
+
+  useEffect(() => {
+    pinnedConversationsRef.current = pinnedConversations;
+  }, [pinnedConversations]);
+
+  const lastSelectedConversationId = useSelector(selectLastSelectedConversationIdByProject(projectId));
+
+  const prevProjectIdRef = useRef(projectId);
+  useEffect(() => {
+    if (prevProjectIdRef.current !== projectId) {
+      prevProjectIdRef.current = projectId;
+      setIsConversationsLoaded(false);
+    }
+  }, [projectId]);
 
   const { sort_by: sortBy, sort_order: sortOrder } = useSortQueryParamsFromUrl({
     defaultSortOrder: 'desc',
@@ -157,22 +188,25 @@ export const useQueryFoldersList = props => {
   const selectConversationIfNeeded = useCallback(() => {
     if (skipSetConversation || !isConversationsLoaded) return;
 
-    const pinnedConversations = data?.pinned?.conversations || [];
-    const dateGroupConversations = data?.date_groups?.flatMap(group => group.conversations) || [];
-    const folderConversations = data?.folders?.flatMap(folder => folder.conversations) || [];
-    const conversationList = [...pinnedConversations, ...dateGroupConversations, ...folderConversations];
+    const pinnedList = pinnedConversationsRef.current || [];
+    const dateGroupList = (dateGroupsRef.current || []).flatMap(group => group.conversations || []);
+    const folderList = (foldersRef.current || []).flatMap(folder => folder.conversations || []);
+    const conversationList = [...pinnedList, ...dateGroupList, ...folderList];
 
+    const effectiveSelectedId = lastSelectedConversationId ?? data?.selected_conversation_id;
     const selectedConversation =
-      conversationList.find(conversation => conversation.id == data?.selected_conversation_id) ||
-      conversationList[0];
-    if (selectedConversation) onSelectConversationRef?.current(selectedConversation);
+      conversationList.find(conversation => conversation.id == effectiveSelectedId) ||
+      (effectiveSelectedId ? null : conversationList[0]);
+    if (selectedConversation) {
+      onSelectConversationRef?.current(selectedConversation);
+    } else if (effectiveSelectedId) {
+      onSelectConversationRef?.current({ id: effectiveSelectedId });
+    }
   }, [
     skipSetConversation,
     isConversationsLoaded,
-    data?.pinned?.conversations,
-    data?.date_groups,
-    data?.folders,
     data?.selected_conversation_id,
+    lastSelectedConversationId,
   ]);
 
   useEffect(() => {
