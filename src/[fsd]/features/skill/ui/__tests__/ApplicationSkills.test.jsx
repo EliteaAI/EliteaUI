@@ -124,4 +124,26 @@ describe('ApplicationSkills with a large skill library', () => {
     expect(screen.queryByTestId('attached-skill')).not.toBeInTheDocument();
     expect(screen.getByTestId('agent-skills-search-empty')).toBeInTheDocument();
   });
+
+  it('starts with an empty search when the list grows past the threshold again', () => {
+    // A fresh style object per render gets past memo without remounting, so local state survives.
+    const renderWith = (count, mount) => {
+      query.data = { skills: skills(count), max_skills: 50 };
+      return mount(
+        <ThemeProvider theme={createTheme({ palette: { background: { default: { tertiary: '#fff' } } } })}>
+          <ApplicationSkills style={{}} />
+        </ThemeProvider>,
+      );
+    };
+    const { rerender } = renderWith(12, render);
+    fireEvent.change(screen.getByTestId('agent-skills-search'), { target: { value: 'INVOICES' } });
+    expect(screen.getAllByTestId('attached-skill')).toHaveLength(1);
+
+    renderWith(8, rerender);
+    expect(screen.queryByTestId('agent-skills-search')).not.toBeInTheDocument();
+    renderWith(12, rerender);
+
+    expect(screen.getByTestId('agent-skills-search').value).toBe('');
+    expect(screen.getAllByTestId('attached-skill')).toHaveLength(12);
+  });
 });

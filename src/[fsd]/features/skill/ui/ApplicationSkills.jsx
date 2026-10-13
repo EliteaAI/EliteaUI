@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 
@@ -51,6 +51,11 @@ const ApplicationSkills = memo(props => {
   const [search, setSearch] = useState('');
   const clearSearch = useCallback(() => setSearch(''), []);
   const isSearchable = skills.length > ATTACHED_SKILLS_SEARCH_THRESHOLD;
+
+  // The bar unmounts below the threshold; a kept query would silently filter the list when it returns.
+  useEffect(() => {
+    if (!isSearchable) setSearch('');
+  }, [isSearchable]);
   const visibleSkills = useMemo(
     () => (isSearchable ? filterAttachedSkills(skills, search) : skills),
     [isSearchable, skills, search],
@@ -103,7 +108,7 @@ const ApplicationSkills = memo(props => {
               {isSearchable && !visibleSkills.length && (
                 <Typography
                   variant="bodySmall"
-                  sx={styles.counter}
+                  sx={styles.emptyMessage}
                   data-testid="agent-skills-search-empty"
                 >
                   No attached skills match your search.
@@ -146,6 +151,9 @@ const styles = {
     gap: '1rem',
     margin: '.75rem 0',
   },
+  emptyMessage: ({ palette }) => ({
+    color: palette.text.secondary,
+  }),
   counter: ({ palette }) => ({
     color: palette.text.secondary,
     flexShrink: 0,
