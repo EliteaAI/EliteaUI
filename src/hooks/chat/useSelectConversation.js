@@ -105,7 +105,13 @@ export default function useSelectConversation({
             );
           }
 
-          changeUrlByConversation(conversation.id, result.data?.name || conversation.name);
+          if (result.data) {
+            changeUrlByConversation(conversation.id, result.data.name || conversation.name);
+          } else {
+            dispatch(
+              chatActions.clearLastSelectedConversationId({ projectId, conversationId: conversation.id }),
+            );
+          }
 
           if (result.data) {
             // Pins are served from message_trace_step (TS-4), not meta — fetch the light list and

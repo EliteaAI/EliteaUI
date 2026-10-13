@@ -59,6 +59,12 @@ const chatSlice = createSlice({
       const { projectId, conversationId } = action.payload;
       state.lastSelectedConversationIdByProject[projectId] = conversationId;
     },
+    clearLastSelectedConversationId: (state, action) => {
+      const { projectId, conversationId } = action.payload;
+      if (state.lastSelectedConversationIdByProject[projectId] === conversationId) {
+        delete state.lastSelectedConversationIdByProject[projectId];
+      }
+    },
   },
   extraReducers: builder => {
     builder.addMatcher(eliteaApi.endpoints.validateToolkit.matchFulfilled, (state, { meta: { arg } }) => {
