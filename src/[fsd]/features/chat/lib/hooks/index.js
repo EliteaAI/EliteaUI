@@ -37,3 +37,6 @@ export { useSelectedChatModel } from './useSelectedChatModel.hooks';
 export * from './useSkillChatModel.hooks';
 export { useChatSocketReconnect } from './useChatSocketReconnect.hooks';
 export { useAgentEditorPanelFit } from './useAgentEditorPanelFit.hooks';
+export * from './useFileTypes.hooks';
+export { useChatConfig } from './useChatConfig.hooks';
+export { useCreateArtifactWithDefaultConfiguration } from './useCreateArtifactWithDefaultConfiguration.hooks';

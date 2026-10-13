@@ -4,8 +4,8 @@ import { flushSync } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
+import { usePageDetails } from '@/[fsd]/shared/lib/hooks';
 import { useIsCreatingEntities, useIsFrom } from '@/hooks/useIsFromSpecificPageHooks';
-import { usePageDetails } from '@/hooks/usePageDetails';
 import RouteDefinitions from '@/routes';
 
 export const useRestoreLastListRoute = () => {

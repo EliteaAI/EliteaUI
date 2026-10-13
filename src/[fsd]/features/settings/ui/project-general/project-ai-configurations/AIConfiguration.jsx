@@ -9,13 +9,13 @@ import {
   useCopyConfiguration,
   useModelConfiguration,
   useModelOptions,
+  useMultiSectionConfigurations,
 } from '@/[fsd]/features/settings/lib/hooks';
 import FieldWithCopy from '@/[fsd]/features/settings/ui/ai-providers/FieldWithCopy';
 import { Button } from '@/[fsd]/shared/ui';
 import { useListModelsQuery } from '@/api';
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
 import CopyIcon from '@/components/Icons/CopyIcon';
-import { useMultiSectionConfigurations } from '@/hooks/useMultiSectionConfigurations';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const AIConfiguration = memo(() => {

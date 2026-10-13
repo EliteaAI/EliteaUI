@@ -2,6 +2,7 @@ import React, { forwardRef, memo, useImperativeHandle, useMemo, useRef, useState
 
 import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 
+import { useAllowedExtensions, useAllowedFileTypes, useFileTypes } from '@/[fsd]/features/chat/lib/hooks';
 import { useToast } from '@/[fsd]/shared/lib/hooks';
 import AttachIcon from '@/assets/attach-icon.svg?react';
 import {
@@ -11,7 +12,6 @@ import {
   validateAttachmentFiles,
 } from '@/common/attachmentValidationUtils';
 import { ATTACHMENT_LIMITS } from '@/common/constants';
-import { useAllowedExtensions, useAllowedFileTypes, useFileTypes } from '@/hooks/useFileTypes';
 
 /**
  * Supports dynamic file types from backend API.

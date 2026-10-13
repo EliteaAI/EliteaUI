@@ -6,10 +6,10 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { IconButton } from '@mui/material';
 
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
+import { usePageDetails } from '@/[fsd]/shared/lib/hooks';
 import { SearchParams } from '@/common/constants';
 import ArrowBackIcon from '@/components/Icons/ArrowBackIcon';
 import useBackPath from '@/hooks/useBackPath';
-import { usePageDetails } from '@/hooks/usePageDetails';
 import RouteDefinitions from '@/routes';
 
 const BackButton = memo(() => {
