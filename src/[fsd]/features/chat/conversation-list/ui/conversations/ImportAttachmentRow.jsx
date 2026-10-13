@@ -73,7 +73,7 @@ const importAttachmentRowStyles = () => ({
       overflow: 'hidden',
       textOverflow: 'ellipsis',
       whiteSpace: 'nowrap',
-      color: disabled ? palette.text.button.disabled : palette.text.primary,
+      color: disabled ? palette.text.disabled : palette.text.primary,
     }),
   meta: ({ palette }) => ({
     flexShrink: 0,
