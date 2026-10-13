@@ -3,9 +3,8 @@ import { memo, useCallback, useRef } from 'react';
 import { Box, ClickAwayListener, Typography } from '@mui/material';
 
 import ListInfiniteMoreLoader from '@/ComponentsLib/ListInfiniteMoreLoader';
-import { useScrollActiveIntoView } from '@/[fsd]/shared/lib/hooks';
+import { useGetComponentWidth, useScrollActiveIntoView } from '@/[fsd]/shared/lib/hooks';
 import { getRawParticipantUniqueId } from '@/common/utils';
-import useGetComponentWidth from '@/hooks/useGetComponentWidth';
 
 import NewParticipantCard from './NewParticipantCard';
 import NewPlaceholderCard from './NewPlaceholderCard';

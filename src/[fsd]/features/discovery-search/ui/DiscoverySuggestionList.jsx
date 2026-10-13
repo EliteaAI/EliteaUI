@@ -3,11 +3,11 @@ import { Fragment, memo, useCallback, useEffect, useMemo, useState } from 'react
 import { useSelector } from 'react-redux';
 
 import { DiscoverySearchHelpers } from '@/[fsd]/features/discovery-search/lib/helpers';
+import { useSearchBar } from '@/[fsd]/shared/lib/hooks';
 import { AutoSuggestionTitles, SortFields, SortOrderOptions } from '@/common/constants';
 import { useSearchPromptNavigate } from '@/hooks/useCardNavigate';
 import useDebounceValue from '@/hooks/useDebounceValue';
 import useSearch from '@/hooks/useSearch';
-import useSearchBar from '@/hooks/useSearchBar';
 import { useAuthorIdFromUrl } from '@/hooks/useSearchParamValue';
 
 import DiscoverySearchList from './DiscoverySearchList';

@@ -4,12 +4,12 @@ import { Box, ListItemIcon, Typography } from '@mui/material';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 
+import { useGetComponentWidth } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { TypographyWithConditionalTooltip } from '@/[fsd]/shared/ui/tooltip';
 import AttachedFileIcon from '@/assets/attached-file-icon.svg?react';
 import CloseIcon from '@/components/Icons/CloseIcon';
-import useGetComponentWidth from '@/hooks/useGetComponentWidth';
 
 const FileList = memo(props => {
   const { files = [], onDeleteFile, disabledDelete } = props;

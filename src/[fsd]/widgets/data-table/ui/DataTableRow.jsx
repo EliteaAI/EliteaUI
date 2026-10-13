@@ -4,6 +4,7 @@ import { Box, IconButton, TableCell, TableRow, Typography } from '@mui/material'
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { LikeButton, useApplicationLike } from '@/[fsd]/entities/like';
+import { useDataViewMode } from '@/[fsd]/shared/lib/hooks';
 import { PinButton } from '@/[fsd]/widgets/pin-toggler';
 import { useEliteaAssistantRef, useGetSupportAssistantConfigQuery } from '@/[fsd]/widgets/support-assistant';
 import EliteaAssistantIcon from '@/assets/icons/elitea-assistant-icon.svg?react';
@@ -16,7 +17,6 @@ import DataRowAction from '@/components/DataRowAction';
 import { IconLinkWithToolTip } from '@/components/Fork/IconLinkWithToolTip.jsx';
 import HighlightQuery from '@/components/HighlightQuery';
 import useCardNavigate from '@/hooks/useCardNavigate';
-import useDataViewMode from '@/hooks/useDataViewMode';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const DataTableRow = memo(props => {

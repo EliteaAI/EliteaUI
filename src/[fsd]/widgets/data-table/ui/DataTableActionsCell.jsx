@@ -1,7 +1,7 @@
 import { memo } from 'react';
 
+import { useDataViewMode } from '@/[fsd]/shared/lib/hooks';
 import DataRowAction from '@/components/DataRowAction';
-import useDataViewMode from '@/hooks/useDataViewMode';
 
 const DataTableActionsCell = memo(props => {
   const { row, cardType, viewMode, showFolders = true } = props;

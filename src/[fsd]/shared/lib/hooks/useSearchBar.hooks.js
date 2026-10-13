@@ -4,7 +4,7 @@ import { useLocation, useMatch } from 'react-router-dom';
 
 import RouteDefinitions from '@/routes';
 
-const useSearchBar = () => {
+export const useSearchBar = () => {
   const { pathname } = useLocation();
   const isPublicApplicationsPage = useMatch({ path: RouteDefinitions.ApplicationsWithTab });
   const isSkillsPage = useMatch({ path: RouteDefinitions.SkillsWithTab });
@@ -47,5 +47,3 @@ const useSearchBar = () => {
     isMCPsPage,
   };
 };
-
-export default useSearchBar;
