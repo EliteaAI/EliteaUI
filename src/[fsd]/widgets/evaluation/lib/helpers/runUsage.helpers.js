@@ -63,11 +63,21 @@ const tokenFormatter = new Intl.NumberFormat('en-US');
 export const formatTokenCount = value =>
   typeof value === 'number' && Number.isFinite(value) ? tokenFormatter.format(Math.round(value)) : '—';
 
-/** USD with enough digits that a small run does not read as $0.00. */
+// The usage ledger counts nano-USD, so no real cost has more decimal places than this.
+const MAX_USD_DIGITS = 9;
+
+/**
+ * USD with enough digits that a small run does not read as $0.00: 2 places from $1, 4 below,
+ * and 2 significant digits below $0.0001 (one cheap LLM call is a few millionths of a dollar).
+ */
 export const formatUsd = value => {
   if (typeof value !== 'number' || !Number.isFinite(value)) return null;
   if (value === 0) return '$0.00';
-  const digits = Math.abs(value) < 1 ? 4 : 2;
+  const abs = Math.abs(value);
+  if (abs < 10 ** -MAX_USD_DIGITS) return `< $${(10 ** -MAX_USD_DIGITS).toFixed(MAX_USD_DIGITS)}`;
+  let digits = 2;
+  if (abs < 1e-4) digits = Math.min(MAX_USD_DIGITS, 1 - Math.floor(Math.log10(abs)));
+  else if (abs < 1) digits = 4;
 
   return `$${value.toFixed(digits)}`;
 };

@@ -73,6 +73,15 @@ describe('formatters', () => {
     expect(formatUsd(0)).toBe('$0.00');
     expect(formatUsd(null)).toBeNull();
   });
+
+  it('shows sub-cent costs below $0.0001 instead of $0.0000', () => {
+    expect(formatUsd(0.0001)).toBe('$0.0001');
+    expect(formatUsd(0.000029)).toBe('$0.000029');
+    expect(formatUsd(0.0000294)).toBe('$0.000029');
+    expect(formatUsd(0.00000005)).toBe('$0.000000050');
+    expect(formatUsd(0.000000001)).toBe('$0.000000001');
+    expect(formatUsd(0.0000000004)).toBe('< $0.000000001');
+  });
 });
 
 describe('buildRunConsumptionRows', () => {
