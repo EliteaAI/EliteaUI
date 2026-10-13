@@ -10,6 +10,7 @@ import {
   useCollapsedSection,
   useExpandOnAttention,
   useSectionExpansion,
+  useToolkitConfigurationProperties,
 } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
 import { AccordionConstants, TourTargetConstants } from '@/[fsd]/shared/lib/constants';
@@ -25,7 +26,6 @@ import {
 import { MAX_NAME_LENGTH } from '@/common/constants';
 import { getPropValue } from '@/common/getToolInitialValueBySchema';
 import { useToolkitView } from '@/hooks/toolkit/useToolkitView.js';
-import useToolkitConfigurationProperties from '@/hooks/useToolkitConfigurationProperties';
 
 const ToolBase = memo(props => {
   const {

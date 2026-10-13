@@ -10,7 +10,7 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 const getErrorMessage = error => {
   return error?.data?.message || error?.data?.error;
 };
-export default function useSearch() {
+export const useSearch = () => {
   const projectId = useSelectedProjectId();
   const toastProps = useMemo(() => ({ topPosition: '10px' }), []);
   const { toastError } = useToast(toastProps);
@@ -152,4 +152,4 @@ export default function useSearch() {
     skillResult: sortedSkills,
     skillTotal,
   };
-}
+};

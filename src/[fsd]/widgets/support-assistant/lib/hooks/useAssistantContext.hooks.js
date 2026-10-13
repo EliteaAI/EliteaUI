@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { useLocation } from 'react-router-dom';
 
-import { usePageDetails } from '@/hooks/usePageDetails';
+import { usePageDetails } from '@/[fsd]/shared/lib/hooks';
 import { useSelectedProjectId, useSelectedProjectName } from '@/hooks/useSelectedProject';
 
 import {

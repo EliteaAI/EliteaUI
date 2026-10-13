@@ -7,12 +7,11 @@ import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks
 import { useLazyListModelsQuery } from '@/api/configurations';
 import { useToolkitCreateMutation } from '@/api/toolkits';
 import { convertToolkitSchema } from '@/common/toolkitSchemaUtils';
-
-import { useSelectedProjectId } from './useSelectedProject';
+import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const { ATTACHMENT_ALLOWED_TOOLS } = ParticipantConstants;
 
-export function useCreateArtifactWithDefaultConfiguration({ bucketName }) {
+export const useCreateArtifactWithDefaultConfiguration = ({ bucketName }) => {
   const [createRequest, { data, error, isLoading, isError }] = useToolkitCreateMutation();
   const projectId = useSelectedProjectId();
   const { personal_project_id } = useSelector(state => state.user);
@@ -86,4 +85,4 @@ export function useCreateArtifactWithDefaultConfiguration({ bucketName }) {
     isLoading,
     isError,
   };
-}
+};

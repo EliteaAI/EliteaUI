@@ -7,6 +7,7 @@ import { Grid } from '@mui/material';
 
 import { CredentialsControls, CredentialsTabBar } from '@/[fsd]/features/credentials/ui';
 import { CREDENTIALS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
+import { useToolkitConfigurationProperties } from '@/[fsd]/features/toolkits/lib/hooks';
 import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks';
 import { Tooltip } from '@/[fsd]/shared/ui';
 import { useGetConfigurationDetailQuery } from '@/api/configurations';
@@ -16,7 +17,6 @@ import { isNotFoundError } from '@/common/utils.jsx';
 import StyledTabs from '@/components/StyledTabs';
 import useGetCurrentConfigurationAsSchemas from '@/hooks/useGetCurrentConfigurationAsSchemas';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-import useToolkitConfigurationProperties from '@/hooks/useToolkitConfigurationProperties';
 import { StyledGridContainer } from '@/pages/Common/Components';
 import CredentialForm from '@/pages/Credentials/CredentialForm.jsx';
 import Page404 from '@/pages/Page404.jsx';

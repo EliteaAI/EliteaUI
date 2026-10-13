@@ -4,11 +4,10 @@ import { useSelector } from 'react-redux';
 
 import { Box } from '@mui/material';
 
-import { useDropdownAwareModalClose } from '@/[fsd]/shared/lib/hooks';
+import { useDropdownAwareModalClose, useUserList } from '@/[fsd]/shared/lib/hooks';
 import { Autocomplete, Button, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { ChatParticipantType } from '@/common/constants';
-import { useUserList } from '@/hooks/useUserList';
 
 const AddNewUserModal = memo(props => {
   const { participants, open, onAdd, onCancel } = props;

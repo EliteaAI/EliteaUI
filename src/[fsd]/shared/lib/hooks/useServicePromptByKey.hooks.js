@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 
-import { useGetConfigurationsListQuery } from '@/api/configurations.js';
-import { PUBLIC_PROJECT_ID } from '@/common/constants.js';
+import { useGetConfigurationsListQuery } from '@/api/configurations';
+import { PUBLIC_PROJECT_ID } from '@/common/constants';
 
 export const SERVICE_PROMPT_KEYS = {
   MERMAID_QUICK_FIX: 'mermaid_quick_fix',

@@ -3,7 +3,7 @@ import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useRef, 
 import { Box, useTheme } from '@mui/material';
 
 import UserInput from '@/ComponentsLib/Chat/UserInput';
-import { useSpeakingModeLoop } from '@/[fsd]/features/chat/lib/hooks';
+import { useChatConfig, useSpeakingModeLoop } from '@/[fsd]/features/chat/lib/hooks';
 import { ChatButton } from '@/[fsd]/features/chat/ui';
 import { PlusChatButton } from '@/[fsd]/features/chat/ui/chat-button';
 import AgentEditorPanel from '@/[fsd]/features/chat/ui/chat-input/AgentEditorPanel.jsx';
@@ -12,7 +12,6 @@ import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { LLMModelSelector } from '@/[fsd]/widgets/llm-model-selector';
 import { ChatParticipantType } from '@/common/constants';
-import { useChatConfig } from '@/hooks/useChatConfig';
 
 const NewChatInput = memo(
   forwardRef((props, ref) => {

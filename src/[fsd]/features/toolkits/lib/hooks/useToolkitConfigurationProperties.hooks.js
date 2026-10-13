@@ -1,9 +1,11 @@
 import { useMemo } from 'react';
 
-import { useGetCurrentToolkitSchemas, useParseSections } from '@/[fsd]/features/toolkits/lib/hooks';
 import useGetCurrentConfigurationAsSchemas from '@/hooks/useGetCurrentConfigurationAsSchemas';
 
-export default function useToolkitConfigurationProperties({ toolType }) {
+import { useGetCurrentToolkitSchemas } from './useGetCurrentToolkitSchemas.hooks';
+import { useParseSections } from './useParseSections.hooks';
+
+export const useToolkitConfigurationProperties = ({ toolType }) => {
   const { toolkitSchemas } = useGetCurrentToolkitSchemas();
   const { configurationsAsSchema } = useGetCurrentConfigurationAsSchemas();
 
@@ -43,4 +45,4 @@ export default function useToolkitConfigurationProperties({ toolType }) {
     configurationRequiredProps,
     toolSchema,
   };
-}
+};

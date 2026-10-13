@@ -17,7 +17,9 @@ vi.mock('react-redux', () => ({ useSelector: selector => selector({ user: { id: 
 vi.mock('@/hooks/useSelectedProject', () => ({ useSelectedProjectId: () => 2 }));
 vi.mock('@/hooks/useDebounceValue', () => ({ default: value => value }));
 vi.mock('@/hooks/users/usePermissions', () => ({ useCanListThisPublicEntity: () => false }));
-vi.mock('../../useUserList', () => ({ useUserList: () => ({ data: emptyPage, onLoadMoreUsers: vi.fn() }) }));
+vi.mock('@/[fsd]/shared/lib/hooks', () => ({
+  useUserList: () => ({ data: emptyPage, onLoadMoreUsers: vi.fn() }),
+}));
 vi.mock('../useApplicationParticipants', () => ({
   useApplicationParticipants: () => ({ data: emptyPage, onLoadMoreApplications: vi.fn() }),
 }));

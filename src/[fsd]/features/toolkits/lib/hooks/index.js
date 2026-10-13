@@ -10,3 +10,4 @@ export { useToolkitToolOptions } from './useToolkitToolOptions.hooks.js';
 export { useToolkitTestRunner } from './useToolkitTestRunner.hooks.js';
 export { useToolkitDetailNavigation } from './useToolkitDetailNavigation.hooks.js';
 export { useDelegatedOauthToolkits } from './useDelegatedOauthToolkits.hooks.js';
+export { useToolkitConfigurationProperties } from './useToolkitConfigurationProperties.hooks';

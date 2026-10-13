@@ -5,12 +5,15 @@ import { useLocation } from 'react-router-dom';
 import { Box } from '@mui/material';
 
 import { ModelConfigurationHelpers } from '@/[fsd]/features/settings/lib/helpers';
-import { useModelConfiguration, useModelOptions } from '@/[fsd]/features/settings/lib/hooks';
+import {
+  useModelConfiguration,
+  useModelOptions,
+  useMultiSectionConfigurations,
+} from '@/[fsd]/features/settings/lib/hooks';
 import { AutoRoutingConstants } from '@/[fsd]/shared/lib/constants';
 import { defaultModelRequest } from '@/[fsd]/shared/lib/utils';
 import { useListModelsQuery, useSetProjectDefaultModelMutation } from '@/api/configurations.js';
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
-import { useMultiSectionConfigurations } from '@/hooks/useMultiSectionConfigurations';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import { DrawerPageHeader } from '../drawer-page';
