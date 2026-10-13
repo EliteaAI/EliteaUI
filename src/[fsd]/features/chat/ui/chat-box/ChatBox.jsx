@@ -2272,12 +2272,16 @@ const ChatBox = memo(
 
     const onSelectUserMention = useCallback(
       user => {
-        if (chatInput.current && atAnchorRef.current !== null) {
-          chatInput.current.replaceRange(
-            atAnchorRef.current,
-            atAnchorRef.current + atQuery.length,
-            '@' + user.name + ' ',
-          );
+        if (chatInput.current) {
+          if (atAnchorRef.current !== null) {
+            chatInput.current.replaceRange(
+              atAnchorRef.current,
+              atAnchorRef.current + atQuery.length,
+              '@' + user.name + ' ',
+            );
+          } else {
+            chatInput.current.mentionUser('@' + user.name + ' ');
+          }
         }
         if (user.id === '@everyone') {
           setIsMentioningEveryone(true);
