@@ -1,9 +1,12 @@
 import { useCallback, useEffect } from 'react';
 
+import { useDispatch } from 'react-redux';
+
 import { useDeleteConversationMutation, useUnselectConversationMutation } from '@/api';
 import { dummyConversation } from '@/common/constants';
 import { areTheSameConversations, buildErrorMessage } from '@/common/utils';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
+import { actions as chatActions } from '@/slices/chat';
 
 import useLocalActiveParticipant from './useLocalActiveParticipant';
 import useResetCreateFlag from './useResetCreateFlag';
@@ -24,6 +27,7 @@ const useDeleteConversation = ({
   folders,
   onSelectConversation,
 }) => {
+  const dispatch = useDispatch();
   const projectId = useSelectedProjectId();
   const { resetCreateFlag } = useResetCreateFlag();
   const [deleteConversation, { isError, error }] = useDeleteConversationMutation();
@@ -71,6 +75,7 @@ const useDeleteConversation = ({
       if (!result.error) {
         const chatName = conversation.name || conversation.title || 'chat';
         toastSuccess?.(`The ${chatName} chat has been successfully deleted.`);
+        dispatch(chatActions.clearLastSelectedConversationId({ projectId, conversationId: conversation.id }));
 
         // Find next conversation to select BEFORE deleting current one
         const nextConversation = areTheSameConversations(conversation, activeConversation)
@@ -130,6 +135,7 @@ const useDeleteConversation = ({
       activeConversation,
       clearLocalActiveParticipant,
       deleteConversation,
+      dispatch,
       emitLeaveRoom,
       projectId,
       resetCreateFlag,
@@ -141,7 +147,6 @@ const useDeleteConversation = ({
       stopListenCanvasEditorsChangeEvent,
       stopListenCanvasContentChangeEvent,
       toastSuccess,
-      // Add new dependencies
       conversations,
       folders,
       onSelectConversation,
