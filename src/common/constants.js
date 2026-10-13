@@ -70,7 +70,6 @@ export const TAG_NAME_MAX_LENGTH = 48;
 export const MAX_NAME_LENGTH = 32;
 export const MAX_DESCRIPTION_LENGTH = 2304;
 export const MAX_INSTRUCTIONS_LENGTH = 5000;
-export const MAX_SKILLS_PER_AGENT = 5;
 export const MAX_VARIABLES_LENGTH = 768;
 export const MAX_STEP_LIMIT = 999;
 export const MIN_STEP_LIMIT = 0;

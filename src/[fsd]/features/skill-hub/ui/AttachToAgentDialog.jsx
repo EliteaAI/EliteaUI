@@ -41,6 +41,11 @@ const getAgentVersionId = agent => agent?.meta?.default_version_id ?? agent?.ver
 
 const agentWord = count => (count === 1 ? 'agent' : 'agents');
 
+const FAILURE_REASONS = {
+  limit: 'skill limit reached',
+  published: 'published version',
+};
+
 const AttachToAgentDialog = memo(props => {
   const { open, onClose, skill, versionId } = props;
 
@@ -127,9 +132,12 @@ const AttachToAgentDialog = memo(props => {
 
       const bulletList = list =>
         list
-          .map(r => byVersionId.get(r.agent_version_id)?.name)
+          .map(r => {
+            const name = byVersionId.get(r.agent_version_id)?.name;
+            const reason = FAILURE_REASONS[r.error];
+            return name && (reason ? `• ${name} (${reason})` : `• ${name}`);
+          })
           .filter(Boolean)
-          .map(name => `• ${name}`)
           .join('\n');
 
       // No real failures: everything either attached or was already present.
@@ -156,7 +164,9 @@ const AttachToAgentDialog = memo(props => {
 
       // Some genuine failures — nothing usable got through.
       if (okResults.length === 0 && alreadyResults.length === 0) {
-        toastError(`The skill was not added to ${attemptedCount} ${agentWord(attemptedCount)}.`);
+        toastError(
+          `The skill was not added to ${attemptedCount} ${agentWord(attemptedCount)}:\n${bulletList(failedResults)}`,
+        );
         return failedAgents;
       }
 

@@ -1,13 +1,15 @@
-import { memo, useMemo } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 
 import { Box, Typography } from '@mui/material';
 
 import { useGetApplicationSkillsQuery } from '@/[fsd]/features/skill/api';
-import { MAX_ATTACHED_SKILLS } from '@/[fsd]/features/skill/lib/constants';
+import { ATTACHED_SKILLS_SEARCH_THRESHOLD, MAX_ATTACHED_SKILLS } from '@/[fsd]/features/skill/lib/constants';
+import { filterAttachedSkills } from '@/[fsd]/features/skill/lib/helpers';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
+import SimpleSearchBar from '@/[fsd]/shared/ui/input/SimpleSearchBar';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import SkillCard from './SkillCard.jsx';
@@ -46,6 +48,19 @@ const ApplicationSkills = memo(props => {
   const attachedSkillIds = useMemo(() => skills.map(skill => skill.skill_id), [skills]);
   const isAtLimit = skills.length >= maxSkills;
 
+  const [search, setSearch] = useState('');
+  const clearSearch = useCallback(() => setSearch(''), []);
+  const isSearchable = skills.length > ATTACHED_SKILLS_SEARCH_THRESHOLD;
+
+  // The bar unmounts below the threshold; a kept query would silently filter the list when it returns.
+  useEffect(() => {
+    if (!isSearchable) setSearch('');
+  }, [isSearchable]);
+  const visibleSkills = useMemo(
+    () => (isSearchable ? filterAttachedSkills(skills, search) : skills),
+    [isSearchable, skills, search],
+  );
+
   return (
     <BasicAccordion
       style={style}
@@ -79,7 +94,28 @@ const ApplicationSkills = memo(props => {
                 </Typography>
               </Box>
 
-              {skills.map(skill => (
+              {isSearchable && (
+                <SimpleSearchBar
+                  searchQuery={search}
+                  onSearchChange={setSearch}
+                  onSearchClear={clearSearch}
+                  placeholder="Search attached skills"
+                  autoFocus={false}
+                  data-testid="agent-skills-search"
+                />
+              )}
+
+              {isSearchable && !visibleSkills.length && (
+                <Typography
+                  variant="bodySmall"
+                  sx={styles.emptyMessage}
+                  data-testid="agent-skills-search-empty"
+                >
+                  No attached skills match your search.
+                </Typography>
+              )}
+
+              {visibleSkills.map(skill => (
                 <SkillCard
                   key={skill.skill_id}
                   skill={skill}
@@ -115,6 +151,9 @@ const styles = {
     gap: '1rem',
     margin: '.75rem 0',
   },
+  emptyMessage: ({ palette }) => ({
+    color: palette.text.secondary,
+  }),
   counter: ({ palette }) => ({
     color: palette.text.secondary,
     flexShrink: 0,
