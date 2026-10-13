@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
+import { useDispatch } from 'react-redux';
+
 import { useTrackEvent } from '@/GA';
 import { sortConversations } from '@/[fsd]/features/chat/conversation-list/lib/helpers';
 import { useConversationNavigation } from '@/[fsd]/features/chat/lib/hooks';
@@ -12,6 +14,7 @@ import {
 import { DefaultConversationName, dummyConversation } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
+import { actions as chatActions } from '@/slices/chat';
 
 import useResetCreateFlag from './useResetCreateFlag';
 
@@ -32,6 +35,7 @@ export default function useCreateConversation({
   listenCanvasContentChangeEvent,
   stopListenCanvasContentChangeEvent,
 }) {
+  const dispatch = useDispatch();
   const projectId = useSelectedProjectId();
   const trackEvent = useTrackEvent();
   const { resetCreateFlag } = useResetCreateFlag();
@@ -163,9 +167,11 @@ export default function useCreateConversation({
           }
 
           onCreatedCallback && onCreatedCallback(result.data);
-          selectConversation({
-            projectId,
-            conversationId: result.data.id,
+          selectConversation({ projectId, conversationId: result.data.id }).then(({ error }) => {
+            if (!error)
+              dispatch(
+                chatActions.setLastSelectedConversationId({ projectId, conversationId: result.data.id }),
+              );
           });
         } else {
           onCreatedCallback &&
@@ -231,9 +237,11 @@ export default function useCreateConversation({
                 ]);
                 setConversations(sortedData);
               }
-              selectConversation({
-                projectId,
-                conversationId: result.data.id,
+              selectConversation({ projectId, conversationId: result.data.id }).then(({ error }) => {
+                if (!error)
+                  dispatch(
+                    chatActions.setLastSelectedConversationId({ projectId, conversationId: result.data.id }),
+                  );
               });
             });
         }
@@ -262,6 +270,7 @@ export default function useCreateConversation({
       setConversations,
       setFolders,
       updateFolderConversations,
+      dispatch,
       selectConversation,
       toastError,
       listenCanvasEditorsChangeEvent,

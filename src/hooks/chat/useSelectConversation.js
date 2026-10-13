@@ -42,6 +42,14 @@ export default function useSelectConversation({
   const [isSelectingConversation, setIsSelectingConversation] = useState(false);
   const prevSelectedConversationIdRef = useRef({ id: undefined, isPlayback: false });
   const inFlightConversationIdRef = useRef(null);
+  const prevProjectIdRef = useRef(projectId);
+  useEffect(() => {
+    if (prevProjectIdRef.current !== projectId) {
+      prevProjectIdRef.current = projectId;
+      prevSelectedConversationIdRef.current = { id: undefined, isPlayback: false };
+      inFlightConversationIdRef.current = null;
+    }
+  }, [projectId]);
   const { clearLocalActiveParticipant } = useLocalActiveParticipant();
   const [
     getConversationDetail,
@@ -79,7 +87,7 @@ export default function useSelectConversation({
         if (!conversation.isPlayback) {
           setIsSelectingConversation(true);
 
-          const [result] = await Promise.all([
+          const [result, selectResult] = await Promise.all([
             getConversationDetail({
               projectId,
               id: conversation.id,
@@ -91,8 +99,19 @@ export default function useSelectConversation({
             }),
             selectConversation({ projectId, conversationId: conversation.id }),
           ]);
+          if (!selectResult.error) {
+            dispatch(
+              chatActions.setLastSelectedConversationId({ projectId, conversationId: conversation.id }),
+            );
+          }
 
-          changeUrlByConversation(conversation.id, result.data?.name || conversation.name);
+          if (result.data) {
+            changeUrlByConversation(conversation.id, result.data.name || conversation.name);
+          } else {
+            dispatch(
+              chatActions.clearLastSelectedConversationId({ projectId, conversationId: conversation.id }),
+            );
+          }
 
           if (result.data) {
             // Pins are served from message_trace_step (TS-4), not meta — fetch the light list and
