@@ -731,6 +731,7 @@ const NewConversationView = forwardRef(
       onSelectParticipant,
       onDeleteParticipant,
       mentionUser: (...args) => chatInput.current?.mentionUser?.(...args),
+      selectEveryoneMention: () => chatInput.current?.mentionUser?.('@Everyone '),
     }));
 
     const conversationStarters = useMemo(() => {
