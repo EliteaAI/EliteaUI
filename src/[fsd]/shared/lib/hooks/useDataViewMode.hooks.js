@@ -1,10 +1,9 @@
 import { useMemo } from 'react';
 
 import { ViewMode } from '@/common/constants';
+import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
-import { useSelectedProjectId } from './useSelectedProject';
-
-export default function useDataViewMode(pageViewMode, { owner_id: ownerId }) {
+export const useDataViewMode = (pageViewMode, { owner_id: ownerId }) => {
   const selectedProjectId = useSelectedProjectId();
 
   const dataViewMode = useMemo(() => {
@@ -15,4 +14,4 @@ export default function useDataViewMode(pageViewMode, { owner_id: ownerId }) {
   }, [ownerId, pageViewMode, selectedProjectId]);
 
   return dataViewMode;
-}
+};

@@ -7,10 +7,10 @@ import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
 
 import { AccessibilityAriaHelpers } from '@/[fsd]/shared/lib/helpers';
+import { useShouldCollapseRightToolbar } from '@/[fsd]/shared/lib/hooks';
 import { BaseTab, BaseTabs } from '@/[fsd]/shared/ui/tabs';
 import { RIGHT_PANEL_WIDTH } from '@/common/constants';
 import { filterProps } from '@/common/utils';
-import useShouldCollapseRightToolbar from '@/hooks/useShouldCollapseRightToolbar';
 
 import BackButton from './BackButton';
 

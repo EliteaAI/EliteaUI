@@ -45,3 +45,7 @@ export * from './useIsTableView.hooks';
 export * from './useBrowserPageTitle.hooks';
 export * from './useEditorNavBlocking.hooks';
 export * from './useAuthorName.hooks';
+export * from './useDataViewMode.hooks';
+export * from './useGetComponentWidth.hooks';
+export * from './useSearchBar.hooks';
+export * from './useShouldCollapseRightToolbar.hooks';

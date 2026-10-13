@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-export default function useGetComponentWidth() {
+export const useGetComponentWidth = () => {
   const componentRef = useRef(null);
   const [componentWidth, setComponentWidth] = useState(0);
 
@@ -30,4 +30,4 @@ export default function useGetComponentWidth() {
     componentRef,
     componentWidth,
   };
-}
+};

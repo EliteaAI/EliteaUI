@@ -3,6 +3,7 @@ import { memo } from 'react';
 import { Box, IconButton, useTheme } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
+import { useGetComponentWidth } from '@/[fsd]/shared/lib/hooks';
 import { BaseBtn } from '@/[fsd]/shared/ui/button';
 import MicphoneIcon from '@/assets/megaphone.svg?react';
 import { VOICE_FEATURES_ENABLED, VOICE_FEATURES_TEMPORARILY_DISABLED } from '@/common/constants.js';
@@ -12,7 +13,6 @@ import CopyMoveIcon from '@/components/Icons/CopyMoveIcon';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import EditIcon from '@/components/Icons/EditIcon';
 import RegenerateIcon from '@/components/Icons/RegenerateIcon';
-import useGetComponentWidth from '@/hooks/useGetComponentWidth';
 
 import { ALLOW_EDIT_WHOLE_MESSAGE } from './ApplicationAnswer';
 

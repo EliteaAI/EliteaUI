@@ -3,9 +3,9 @@ import { memo } from 'react';
 import { Box } from '@mui/material';
 
 import { LikeButton, useApplicationLike } from '@/[fsd]/entities/like';
+import { useDataViewMode } from '@/[fsd]/shared/lib/hooks';
 import { SortFields } from '@/common/constants';
 import AuthorContainer from '@/components/AuthorContainer';
-import useDataViewMode from '@/hooks/useDataViewMode';
 
 const DataTableCell = memo(props => {
   const { column, value, row, cardType, viewMode } = props;

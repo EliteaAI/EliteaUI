@@ -6,10 +6,9 @@ import {
   DETAILS_PAGE_COLLAPSE_THRESHOLD,
   DETAILS_PAGE_COLLAPSE_THRESHOLD_WITH_SIDEBAR_OPEN,
 } from '@/common/constants';
+import useGetWindowWidth from '@/hooks/useGetWindowWidth';
 
-import useGetWindowWidth from './useGetWindowWidth';
-
-export default function useShouldCollapseRightToolbar() {
+export const useShouldCollapseRightToolbar = () => {
   const { windowWidth } = useGetWindowWidth();
   const sideBarCollapsed = useSelector(state => state.settings.sideBarCollapsed);
   const shouldCollapseRightToolbar = useMemo(
@@ -22,4 +21,4 @@ export default function useShouldCollapseRightToolbar() {
     return (sideBarCollapsed && windowWidth < 1220) || (!sideBarCollapsed && windowWidth < 1430);
   }, [sideBarCollapsed, windowWidth]);
   return { shouldCollapseRightToolbar, shouldCollapseTabs };
-}
+};
