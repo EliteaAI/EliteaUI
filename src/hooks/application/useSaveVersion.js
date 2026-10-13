@@ -8,7 +8,7 @@ import { deepClone } from '@mui/x-data-grid/internals';
 
 import { useSyncChatConfigParticipant } from '@/[fsd]/features/chat/participants/lib/hooks';
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
-import { useToast } from '@/[fsd]/shared/lib/hooks';
+import { useChangeNameInUrlSearchParams, useToast } from '@/[fsd]/shared/lib/hooks';
 import { cleanLLMSettings } from '@/[fsd]/shared/lib/utils';
 import { useApplicationEditMutation } from '@/api/applications';
 import { useListModelsQuery } from '@/api/configurations';
@@ -21,7 +21,6 @@ import useSavePipeline, { calculateNodesAndEdges } from '@/pages/Pipelines/useSa
 import RouteDefinitions from '@/routes';
 import { actions as appActions } from '@/slices/applications';
 
-import useChangeNameInUrlSearchParams from '../useChangeNameInUrlSearchParams';
 import useSaveChangedTools from './useSaveChangedTools';
 
 const { LAYOUT_VERSION, ORIENTATION } = FlowEditorConstants;

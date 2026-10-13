@@ -4,7 +4,7 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { SearchParams } from '@/common/constants';
 
-const useChangeNameInUrlSearchParams = () => {
+export const useChangeNameInUrlSearchParams = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { pathname, state: locationState } = useLocation();
@@ -41,5 +41,3 @@ const useChangeNameInUrlSearchParams = () => {
 
   return handleChangeName;
 };
-
-export default useChangeNameInUrlSearchParams;

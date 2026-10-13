@@ -4,7 +4,7 @@ import { resolveHref } from '@/[fsd]/entities/notifications/lib/helpers';
 import { NotificationType, SearchParams } from '@/common/constants';
 import RouteDefinitions, { getBasename } from '@/routes';
 
-const useNotificationNewTabNavigate = ({ project_id, id, event_type, indexName }) => {
+export const useNotificationNewTabNavigate = ({ project_id, id, event_type, indexName }) => {
   const baseUrl = `${window.location.protocol}//${window.location.host}`;
   const basename = getBasename();
 
@@ -44,5 +44,3 @@ const useNotificationNewTabNavigate = ({ project_id, id, event_type, indexName }
 
   return href;
 };
-
-export default useNotificationNewTabNavigate;

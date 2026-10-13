@@ -15,10 +15,10 @@ import Table from '@mui/material/Table';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { useEliteATheme, useToast } from '@/[fsd]/shared/lib/hooks';
+import { downloadTableOptions, useDownloadTable } from '@/[fsd]/shared/lib/hooks/useDownloadTable.hooks';
 import { PERMISSIONS } from '@/common/constants';
 import useCopyDownloadHandlers from '@/hooks/chat/useCopyEventHandlers';
 import useCheckPermission from '@/hooks/useCheckPermission';
-import useDownloadTable, { downloadTableOptions } from '@/hooks/useDownloadTable';
 import { useTheme } from '@emotion/react';
 
 import EditingPlaceholder from './Chat/EditingPlaceholder';

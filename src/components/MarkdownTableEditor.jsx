@@ -12,9 +12,9 @@ import { Box, IconButton, Link, TextField, ThemeProvider, Typography, useTheme }
 import { DataGrid, GRID_CHECKBOX_SELECTION_COL_DEF, gridClasses, useGridApiContext } from '@mui/x-data-grid';
 
 import { useDataGridTheme } from '@/[fsd]/shared/lib/hooks';
+import { downloadTableOptions, useDownloadTable } from '@/[fsd]/shared/lib/hooks/useDownloadTable.hooks';
 import { Input } from '@/[fsd]/shared/ui';
 import Markdown from '@/[fsd]/shared/ui/markdown';
-import useDownloadTable, { downloadTableOptions } from '@/hooks/useDownloadTable';
 
 import AlertDialog from './AlertDialog';
 import SortUpwardIcon from './Icons/SortUpwardIcon';

@@ -7,7 +7,15 @@ import { formatFileSize } from '@/common/attachmentValidationUtils';
 
 const ImportAttachmentRow = memo(props => {
   const { attachment, checked, onToggle } = props;
-  const { export_path: exportPath, name, size, kind, available, too_large: tooLarge, max_size_mb } = attachment;
+  const {
+    export_path: exportPath,
+    name,
+    size,
+    kind,
+    available,
+    too_large: tooLarge,
+    max_size_mb,
+  } = attachment;
 
   const disabled = !available || tooLarge;
   let status = kind === 'generated' ? 'Generated' : 'Uploaded';
@@ -57,14 +65,16 @@ const importAttachmentRowStyles = () => ({
     gap: '0.5rem',
     minWidth: 0,
   },
-  name: disabled => ({ palette }) => ({
-    flex: 1,
-    minWidth: 0,
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-    color: disabled ? palette.text.button.disabled : palette.text.primary,
-  }),
+  name:
+    disabled =>
+    ({ palette }) => ({
+      flex: 1,
+      minWidth: 0,
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      whiteSpace: 'nowrap',
+      color: disabled ? palette.text.button.disabled : palette.text.primary,
+    }),
   meta: ({ palette }) => ({
     flexShrink: 0,
     color: palette.text.secondary,

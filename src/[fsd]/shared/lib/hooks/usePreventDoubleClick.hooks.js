@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 
-export default function usePreventDoubleClick() {
+export const usePreventDoubleClick = () => {
   const [actionInProgress, setActionInProgress] = useState(false);
 
   let actionLock = false;
@@ -26,4 +26,4 @@ export default function usePreventDoubleClick() {
   );
 
   return preventDoubleClick;
-}
+};

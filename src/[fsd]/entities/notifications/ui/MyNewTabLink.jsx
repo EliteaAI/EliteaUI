@@ -3,7 +3,7 @@ import { memo } from 'react';
 import { Link } from '@mui/material';
 
 import { formatName } from '@/[fsd]/entities/notifications/lib/helpers/notificationLegacy.helpers.js';
-import useNotificationNewTabNavigate from '@/hooks/useNotificationNewTabNavigate.js';
+import { useNotificationNewTabNavigate } from '@/[fsd]/entities/notifications/lib/hooks';
 
 const MyNewTabLink = memo(props => {
   const { linkInfo, needTrim, event_type } = props;

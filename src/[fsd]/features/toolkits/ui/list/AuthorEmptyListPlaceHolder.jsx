@@ -2,7 +2,7 @@ import { memo } from 'react';
 
 import { Typography } from '@mui/material';
 
-import useAuthorName from '@/hooks/useAuthorName';
+import { useAuthorName } from '@/[fsd]/shared/lib/hooks';
 
 const AuthorEmptyListPlaceHolder = memo(props => {
   const { query, name } = props;

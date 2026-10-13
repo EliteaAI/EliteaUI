@@ -5,7 +5,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { NotificationType, SearchParams } from '@/common/constants';
 import RouteDefinitions from '@/routes';
 
-const useNotificationNavigate = ({ viewMode, id, event_type, name, replace = false, indexName }) => {
+export const useNotificationNavigate = ({ viewMode, id, event_type, name, replace = false, indexName }) => {
   const { state } = useLocation();
   const { routeStack = [] } = useMemo(() => state || { routeStack: [] }, [state]);
   const navigate = useNavigate();
@@ -59,5 +59,3 @@ const useNotificationNavigate = ({ viewMode, id, event_type, name, replace = fal
   }, [viewMode, name, id, routeStack, event_type, replace, navigate, indexName]);
   return doNavigate;
 };
-
-export default useNotificationNavigate;

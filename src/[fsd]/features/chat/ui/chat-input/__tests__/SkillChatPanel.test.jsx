@@ -12,8 +12,8 @@ vi.mock('@/[fsd]/features/chat/participants/lib/hooks', () => ({ useParticipantE
 vi.mock('@/[fsd]/widgets/llm-model-selector', () => ({ LLMModelSelector: () => null }));
 vi.mock('@/components/EntityIcon', () => ({ default: () => null }));
 vi.mock('@/components/Icons/AttentionIcon', () => ({ default: () => <span>!</span> }));
-vi.mock('@/hooks/useAgentEditorPanelFit', () => ({
-  default: () => ({ containerRef: { current: null }, isSmallView: false }),
+vi.mock('@/[fsd]/features/chat/lib/hooks', () => ({
+  useAgentEditorPanelFit: () => ({ containerRef: { current: null }, isSmallView: false }),
 }));
 vi.mock('../SwitchToModelButton', () => ({ default: () => null }));
 vi.mock('../VersionSelector', () => ({ default: () => null }));

@@ -27,7 +27,7 @@ const template =
 ` +
   '</head><body>{table}</body></html>';
 
-export function removeTagsFromTableCells(table) {
+export const removeTagsFromTableCells = table => {
   const cloneTable = table.cloneNode(true);
   // Get all the cells in the new table
   const cells = cloneTable.getElementsByTagName('td');
@@ -44,17 +44,17 @@ export function removeTagsFromTableCells(table) {
     heads[i].innerHTML = textContent;
   }
   return cloneTable;
-}
+};
 
-function getTable(table) {
+const getTable = table => {
   return removeTagsFromTableCells(table).outerHTML;
-}
+};
 
-function format(string, context) {
+const format = (string, context) => {
   return string.replace(/{(\w+)}/g, (_, p) => context[p]);
-}
+};
 
-function download(fileName, context) {
+const download = (fileName, context) => {
   const element = window.document.createElement('a');
   const data = new Blob([format(template, context)], { type: 'application/vnd.ms-excel' });
   const url = URL.createObjectURL(data);
@@ -64,9 +64,9 @@ function download(fileName, context) {
   element.click();
   document.body.removeChild(element);
   return true;
-}
+};
 
-export function useDownloadTableToHtml({ tableRef, filename }) {
+export const useDownloadTableToHtml = ({ tableRef, filename }) => {
   const onDownloadHtml = useCallback(() => {
     const table = getTable(tableRef);
     const fileName = `${filename}.html`;
@@ -91,4 +91,4 @@ export function useDownloadTableToHtml({ tableRef, filename }) {
     onDownloadHtml,
     onCopyHtml,
   };
-}
+};

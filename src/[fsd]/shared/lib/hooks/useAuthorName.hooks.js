@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
 
-import { useAuthorNameFromUrl } from './useSearchParamValue';
+import { useAuthorNameFromUrl } from '@/hooks/useSearchParamValue';
 
-export default function useAuthorName(userName) {
+export const useAuthorName = userName => {
   const authorNameFromUrl = useAuthorNameFromUrl();
   const authorName = useMemo(() => authorNameFromUrl || userName, [authorNameFromUrl, userName]);
   return authorName;
-}
+};

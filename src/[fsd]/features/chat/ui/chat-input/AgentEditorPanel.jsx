@@ -3,13 +3,13 @@ import { memo, useCallback, useMemo } from 'react';
 import { Box, Button, ButtonGroup, Divider, Skeleton, Tooltip, Typography, useTheme } from '@mui/material';
 
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version';
+import { useAgentEditorPanelFit } from '@/[fsd]/features/chat/lib/hooks';
 import { useParticipantEntityIcon } from '@/[fsd]/features/chat/participants/lib/hooks';
 import { usePublicProjectAccessCheck } from '@/[fsd]/features/project';
 import { PERMISSIONS, PUBLIC_PROJECT_ID } from '@/common/constants';
 import EntityIcon from '@/components/EntityIcon';
 import SettingIcon from '@/components/Icons/SettingIcon';
 import useIsActiveParticipantBeingEdited from '@/hooks/chat/useIsActiveParticipantBeingEdited';
-import useAgentEditorPanelFit from '@/hooks/useAgentEditorPanelFit';
 import useCheckPermission from '@/hooks/useCheckPermission';
 
 import SwitchToModelButton from './SwitchToModelButton';
