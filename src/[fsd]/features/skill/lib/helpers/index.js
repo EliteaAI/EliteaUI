@@ -4,7 +4,9 @@ export { validateSkillDraft } from './skillDraftValidation.helpers';
 export * as SkillAIEditionStepsHelpers from './skillAIEditionSteps.helpers';
 export {
   findSkillSavedModel,
+  hasSkillChatModelOverride,
   hasUnsavedRunChanges,
+  hasVersionModelChanged,
   includesProjectContext,
   isSkillChatModelPending,
   resolveSkillChatLLMSettings,
@@ -12,6 +14,8 @@ export {
   isSkillVersionLocked,
   testPanelSettingsFor,
   toRunSettingsPayload,
+  withoutSkillChatModel,
+  withPinnedSkillVersion,
   withRunSettings,
 } from './skillRunSettings.helpers';
 export {

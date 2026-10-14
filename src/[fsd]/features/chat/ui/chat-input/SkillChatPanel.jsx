@@ -1,16 +1,17 @@
-import { memo, useMemo } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 
 import { Box, Button, ButtonGroup, Divider, Tooltip, Typography } from '@mui/material';
 
 import { useAgentEditorPanelFit } from '@/[fsd]/features/chat/lib/hooks';
 import { ParticipantConstants } from '@/[fsd]/features/chat/participants/lib/constants';
-import { areDetailsOfParticipant } from '@/[fsd]/features/chat/participants/lib/helpers';
+import { areDetailsOfParticipant, isSameChatEntity } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { useParticipantEntityIcon } from '@/[fsd]/features/chat/participants/lib/hooks';
-import { LLMModelSelector } from '@/[fsd]/widgets/llm-model-selector';
-import { ChatParticipantType } from '@/common/constants';
+import { ChatParticipantType, PERMISSIONS } from '@/common/constants';
 import EntityIcon from '@/components/EntityIcon';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
+import useCheckPermission from '@/hooks/useCheckPermission';
 
+import ParticipantSettingsButton from './ParticipantSettingsButton';
 import SwitchToModelButton from './SwitchToModelButton';
 import VersionSelector from './VersionSelector';
 
@@ -30,11 +31,11 @@ const SkillChatPanel = memo(props => {
     onClickParticipant,
     selectedVersionId,
     onSelectVersion,
-    models,
-    selectedModel,
-    onSelectModel,
-    llmSettings,
-    onSetLLMSettings,
+    onShowSkillEditor,
+    onCloseSkillEditor,
+    editingSkill,
+    isEditorDirty,
+    onShowVersionChangeAlert,
     unavailableReason,
     disabled,
     onSwitchToModel,
@@ -43,6 +44,13 @@ const SkillChatPanel = memo(props => {
 
   const { containerRef, isSmallView } = useAgentEditorPanelFit();
   const entityIcon = useParticipantEntityIcon(activeParticipant);
+  const { checkPermission } = useCheckPermission();
+  const canEdit = checkPermission(PERMISSIONS.skills.update);
+
+  const onClickSettings = useCallback(
+    () => onShowSkillEditor?.(activeParticipant),
+    [onShowSkillEditor, activeParticipant],
+  );
 
   const hasDetails = areDetailsOfParticipant(participantDetails, activeParticipant);
   const versions = (hasDetails && participantDetails.versions) || NO_VERSIONS;
@@ -107,10 +115,25 @@ const SkillChatPanel = memo(props => {
               selectedVersion={selectedVersion}
               versions={versions}
               onSelect={onSelectVersion}
+              onCloseEditor={onCloseSkillEditor}
+              isEditorDirty={isEditorDirty}
+              onShowVersionChangeAlert={onShowVersionChangeAlert}
               isSmallView={isSmallView}
             />
           </>
         )}
+
+        <Divider orientation="vertical" />
+
+        <ParticipantSettingsButton
+          tooltip={canEdit ? 'Skill settings' : 'View skill settings'}
+          isEditing={isSameChatEntity(editingSkill, activeParticipant)}
+          canEdit={canEdit}
+          disabled={disabled || !onShowSkillEditor}
+          onClick={onClickSettings}
+          testId="chat-skill-settings-button"
+          ariaLabel="skill settings menu"
+        />
       </ButtonGroup>
 
       {unavailableReason && (
@@ -126,17 +149,6 @@ const SkillChatPanel = memo(props => {
           </Box>
         </Tooltip>
       )}
-
-      <LLMModelSelector
-        selectedModel={selectedModel}
-        onSelectModel={onSelectModel}
-        models={models}
-        disabled={disabled || !onSelectModel}
-        llmSettings={llmSettings}
-        onSetLLMSettings={onSetLLMSettings}
-        showSettingsEntry={!!onSetLLMSettings}
-        modelTooltip="Model the skill runs with in this chat"
-      />
 
       <SwitchToModelButton
         onClick={onSwitchToModel}

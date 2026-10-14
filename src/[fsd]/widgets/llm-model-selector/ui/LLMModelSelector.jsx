@@ -234,7 +234,7 @@ const LLMModelSelector = memo(props => {
                   noWrap
                   overflow="hidden"
                 >
-                  {selectedModel?.display_name || selectedModel?.name || 'None'}
+                  {selectedModel?.display_name || selectedModel?.name || emptyModelLabel}
                 </Typography>
               </Box>
             </Button.BaseBtn>

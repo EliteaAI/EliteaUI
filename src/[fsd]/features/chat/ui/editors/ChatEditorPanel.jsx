@@ -58,6 +58,8 @@ const ChatEditorPanel = memo(props => {
     isEditingSkill,
     editingSkill,
     onCloseSkillEditor,
+    handleSkillSettingsChange,
+    isNewConversation,
     // Project context
     isEditingProjectContext,
     onCloseProjectContextEditor,
@@ -172,6 +174,9 @@ const ChatEditorPanel = memo(props => {
           <SkillEditor
             skill={editingSkill}
             onCloseSkillEditor={onCloseSkillEditor}
+            onChangeSkillSettings={handleSkillSettingsChange}
+            isNewConversation={isNewConversation}
+            onDirtyStateChange={handleEditorDirtyStateChange}
             isVisible={isEditingSkill}
           />
         </Suspense>

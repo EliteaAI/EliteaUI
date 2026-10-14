@@ -31,13 +31,25 @@ export const findSkillSavedModel = (models, llmSettings) => {
 
 const choosesModel = llmSettings => !!llmSettings?.model_name || isAutoSelection(llmSettings);
 
+export const hasSkillChatModelOverride = entitySettings => choosesModel(entitySettings?.llm_settings);
+
+export const withPinnedSkillVersion = (skill, versionId) =>
+  !skill || skill.entity_settings?.version_id || !versionId
+    ? skill
+    : { ...skill, entity_settings: { ...skill.entity_settings, version_id: versionId } };
+
+export const withoutSkillChatModel = skill => ({
+  ...skill,
+  entity_settings: { ...skill.entity_settings, llm_settings: undefined },
+});
+
 export const resolveSkillChatLLMSettings = (entitySettings, versionDetails) =>
-  choosesModel(entitySettings?.llm_settings)
+  hasSkillChatModelOverride(entitySettings)
     ? entitySettings.llm_settings
     : versionDetails?.run_settings?.llm_settings || {};
 
 export const isSkillChatModelPending = (entitySettings, pinnedVersionDetails) =>
-  !choosesModel(entitySettings?.llm_settings) && !pinnedVersionDetails;
+  !hasSkillChatModelOverride(entitySettings) && !pinnedVersionDetails;
 
 export const resolveSkillChatModel = (models, llmSettings) =>
   findSkillSavedModel(models, llmSettings) || models.find(model => model.default) || models[0] || null;
@@ -68,6 +80,12 @@ const buildRunSettingsSignature = runSettings => {
   const { ignore_project_context = false, llm_settings } = toRunSettingsPayload(runSettings) || {};
   return JSON.stringify([ignore_project_context, sortEntriesByKey(llm_settings)]);
 };
+
+const buildVersionModelSignature = values =>
+  JSON.stringify(sortEntriesByKey(toRunSettingsPayload(values?.version_details?.run_settings)?.llm_settings));
+
+export const hasVersionModelChanged = (values, initialValues) =>
+  buildVersionModelSignature(values) !== buildVersionModelSignature(initialValues);
 
 export const hasUnsavedRunChanges = (values, initialValues) =>
   (values?.version_details?.instructions ?? '') !== (initialValues?.version_details?.instructions ?? '') ||

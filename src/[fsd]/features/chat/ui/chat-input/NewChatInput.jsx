@@ -49,13 +49,12 @@ const NewChatInput = memo(
       selectedModel,
       selectSavedOrDefaultModel,
 
-      skillModel,
-      onSelectSkillModel,
-      skillLLMSettings,
-      onSetSkillLLMSettings,
       activeSkillUnavailableReason,
 
       onShowAgentEditor,
+      onShowSkillEditor,
+      onCloseSkillEditor,
+      editingSkill,
       onShowPipelineEditor,
       onCloseAgentEditor,
       onClosePipelineEditor,
@@ -319,11 +318,11 @@ const NewChatInput = memo(
                     onClickParticipant={onShowParticipantsList}
                     selectedVersionId={selectedVersionId}
                     onSelectVersion={onSelectVersion}
-                    models={modelList}
-                    selectedModel={skillModel}
-                    onSelectModel={onSelectSkillModel}
-                    llmSettings={skillLLMSettings}
-                    onSetLLMSettings={onSetSkillLLMSettings}
+                    onShowSkillEditor={onShowSkillEditor}
+                    onCloseSkillEditor={onCloseSkillEditor}
+                    editingSkill={editingSkill}
+                    isEditorDirty={isEditorDirty}
+                    onShowVersionChangeAlert={onShowVersionChangeAlert}
                     unavailableReason={activeSkillUnavailableReason}
                     disabled={isStreaming}
                     onSwitchToModel={selectSavedOrDefaultModel}
