@@ -7,6 +7,7 @@ import { Box, Typography } from '@mui/material';
 import { useDataverseLogin } from '@/[fsd]/features/dataverse/lib/hooks';
 import { McpAuthModal, McpLogoutModal } from '@/[fsd]/features/mcp';
 import { Button } from '@/[fsd]/shared/ui';
+import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import OnlineIcon from '@/assets/online-icon.svg?react';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
@@ -48,7 +49,7 @@ const DataverseLoginStatus = memo(() => {
         <Button.BaseBtn
           onClick={isConnected ? onOpenLogout : login}
           disabled={isBusy}
-          variant="secondary"
+          variant={BUTTON_VARIANTS.secondary}
           data-testid="dataverse-connection-button"
         >
           {isConnected ? 'Logout' : isBusy ? 'Logging in...' : 'Login'}

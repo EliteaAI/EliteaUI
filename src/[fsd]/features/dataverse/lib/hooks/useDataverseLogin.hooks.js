@@ -48,12 +48,13 @@ export const useDataverseLogin = ({ credentialRef, projectId }) => {
 
   const onAuthorized = useCallback(async () => {
     const tokenKey = tokenKeyRef.current;
-    const refreshToken = McpAuthHelpers.getRefreshToken(tokenKey);
-    if (!refreshToken) {
-      toastError('Microsoft did not return a refresh token, so scheduled runs cannot use this login.');
-      return;
-    }
+    // The vault copy is the one that counts, so the browser copy is dropped on every path
     try {
+      const refreshToken = McpAuthHelpers.getRefreshToken(tokenKey);
+      if (!refreshToken) {
+        toastError('Microsoft did not return a refresh token, so scheduled runs cannot use this login.');
+        return;
+      }
       await saveRefreshToken(refreshToken);
       toastSuccess('Connected! The login is saved for scheduled runs.');
     } catch {
@@ -65,6 +66,8 @@ export const useDataverseLogin = ({ credentialRef, projectId }) => {
 
   const configOAuth = useConfigOAuthModal({
     onSuccess: onAuthorized,
+    // Success is only reported after the credential is saved, by onAuthorized
+    showSuccessToast: false,
     credentials: {
       client_id: credential?.data?.client_id,
       client_secret: credential?.data?.client_secret,

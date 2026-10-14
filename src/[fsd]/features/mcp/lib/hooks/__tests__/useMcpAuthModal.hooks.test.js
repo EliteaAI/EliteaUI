@@ -3,10 +3,16 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { act, renderHook } from '@testing-library/react';
 
-import { extractConfigAuthMetadata, extractMcpAuthMetadata, useMcpAuthModal } from '../useMcpAuthModal.hooks';
+import {
+  extractConfigAuthMetadata,
+  extractMcpAuthMetadata,
+  useConfigOAuthModal,
+  useMcpAuthModal,
+} from '../useMcpAuthModal.hooks';
 
-const { reuseAuthFamilyToken } = vi.hoisted(() => ({
+const { reuseAuthFamilyToken, toastSuccess } = vi.hoisted(() => ({
   reuseAuthFamilyToken: vi.fn(),
+  toastSuccess: vi.fn(),
 }));
 
 vi.mock('@/[fsd]/features/mcp/lib/helpers', () => ({
@@ -21,7 +27,7 @@ vi.mock('@/hooks/useSelectedProject', () => ({
 }));
 
 vi.mock('@/[fsd]/shared/lib/hooks/useToast.hooks', () => ({
-  useToast: () => ({ toastSuccess: vi.fn() }),
+  useToast: () => ({ toastSuccess }),
 }));
 
 const TOOLKIT_TYPE = 'mcp_Epam Delivery Central';
@@ -93,5 +99,30 @@ describe('protected resource from the resource metadata (#6688)', () => {
     expect(extractConfigAuthMetadata({ resource_metadata }).protectedResource).toBe(
       'https://mcp.monday.com/mcp',
     );
+  });
+});
+
+describe('useConfigOAuthModal success toast', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it('shows the generic toast by default', () => {
+    const onSuccess = vi.fn();
+    const { result } = renderHook(() => useConfigOAuthModal({ onSuccess }));
+
+    act(() => result.current.getModalProps().onClose(true));
+
+    expect(toastSuccess).toHaveBeenCalledWith('Successful authentication!');
+    expect(onSuccess).toHaveBeenCalledTimes(1);
+  });
+
+  it('lets callers that report their own outcome turn it off', () => {
+    // Dataverse saves the login after OAuth and toasts only once that save succeeds.
+    const onSuccess = vi.fn();
+    const { result } = renderHook(() => useConfigOAuthModal({ onSuccess, showSuccessToast: false }));
+
+    act(() => result.current.getModalProps().onClose(true));
+
+    expect(toastSuccess).not.toHaveBeenCalled();
+    expect(onSuccess).toHaveBeenCalledTimes(1);
   });
 });

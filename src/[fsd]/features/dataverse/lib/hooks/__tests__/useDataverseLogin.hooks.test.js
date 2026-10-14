@@ -31,6 +31,7 @@ vi.mock('@/[fsd]/features/mcp', () => ({
   McpAuthHelpers: { getRefreshToken: mocks.getRefreshToken, logout: mocks.logout },
   useConfigOAuthModal: options => {
     mocks.onOAuthSuccess = options.onSuccess;
+    mocks.modalOptions = options;
     return {
       handleConfigAuthRequired: mocks.handleConfigAuthRequired,
       getModalProps: () => ({ open: false }),
@@ -138,6 +139,31 @@ describe('useDataverseLogin', () => {
 
     expect(mocks.updateConfiguration).not.toHaveBeenCalled();
     expect(mocks.toastError).toHaveBeenCalled();
+    // Browser-held OAuth state is cleared even though nothing was saved
+    expect(mocks.logout).toHaveBeenCalledWith(`uuid-1:${AUTHORITY}`);
+  });
+
+  it('clears the browser token and reports failure when saving to the credential fails', async () => {
+    const error = {
+      status: 401,
+      data: { requires_authorization: true, auth_metadata: { server_url: AUTHORITY } },
+    };
+    mocks.testConnection.mockReturnValue({ unwrap: () => Promise.reject(error) });
+    mocks.getRefreshToken.mockReturnValue('refresh-abc');
+    mocks.updateConfiguration.mockReturnValue({ unwrap: () => Promise.reject(new Error('save failed')) });
+    const { result } = render();
+    await act(async () => result.current.login());
+
+    await act(async () => mocks.onOAuthSuccess());
+
+    expect(mocks.toastError).toHaveBeenCalledWith('Could not save the login to the credential.');
+    expect(mocks.toastSuccess).not.toHaveBeenCalled();
+    expect(mocks.logout).toHaveBeenCalledWith(`uuid-1:${AUTHORITY}`);
+  });
+
+  it('suppresses the generic modal toast so success is reported only after saving', () => {
+    render();
+    expect(mocks.modalOptions.showSuccessToast).toBe(false);
   });
 
   it('logout removes the saved login by leaving the key out of the update', async () => {
