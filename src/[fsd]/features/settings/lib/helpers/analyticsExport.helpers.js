@@ -5,7 +5,12 @@ import { ExcelFormats, sanitizeFileNamePart } from '@/[fsd]/shared/lib/utils';
 
 import { triggerSourceLabel } from './analyticsCommon.helpers.js';
 import { tokenStats } from './analyticsToken.helpers.js';
-import { skillSourceLabel, skillTriggerLabel, skillVersionLabel } from './skillAnalytics.helpers.js';
+import {
+  skillDisplayName,
+  skillSourceLabel,
+  skillTriggerLabel,
+  skillVersionLabel,
+} from './skillAnalytics.helpers.js';
 
 const EXPORT_LIMIT = 10_000;
 
@@ -477,8 +482,6 @@ const SKILL_TOTAL_COLUMNS = [
   { header: 'Total Tokens', key: 'total_tokens', numFmt: ExcelFormats.integer },
   { header: 'Cost (USD)', key: 'cost', numFmt: ExcelFormats.currency },
 ];
-
-const skillDisplayName = skill => (skill.deleted ? `${skill.skill_name} (deleted)` : skill.skill_name);
 
 const buildSkillsSheet = (data, meta) => {
   const { rows = [], summary = {} } = data || {};

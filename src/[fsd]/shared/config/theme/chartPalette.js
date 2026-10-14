@@ -21,6 +21,7 @@ export const EVENT_TYPE_COLORS = {
   llm: '#BC8CFF',
   tool: '#F0883E',
   agent: '#3FB950',
+  skill: '#F778BA',
   rpc: '#D29922',
   chat: '#79C0FF',
 };

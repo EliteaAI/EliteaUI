@@ -20,6 +20,8 @@ export const skillSourceLabel = source => SKILL_SOURCE_LABELS[source] || source 
 
 export const skillVersionLabel = versionName => versionName || VERSION_UNKNOWN_LABEL;
 
+export const skillDisplayName = skill => (skill.deleted ? `${skill.skill_name} (deleted)` : skill.skill_name);
+
 const isCatalogSkill = (skill, projectId) => String(skill.skill_project_id) !== String(projectId);
 
 export const skillRunAnalyticsPath = (skill, run, projectId) => {

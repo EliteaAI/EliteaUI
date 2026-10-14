@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useAnalyticsAgentsQuery } from '@/api';
 import '@testing-library/jest-dom/vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 import AnalyticsAgents from '../AnalyticsAgents';
 import { AnalyticsTestWrapper as Wrapper } from './_testHelpers';
@@ -48,7 +48,12 @@ vi.mock('@/components/SearchInput', () => ({
 // The analytics barrel pulls in the whole feature. Stub the two consumers
 // this file uses.
 vi.mock('@/[fsd]/features/settings/ui/analytics', () => ({
-  AnalyticsAgentDetailed: () => null,
+  AnalyticsAgentDetailed: props => (
+    <div
+      data-testid="agent-detail"
+      data-can-view-skills={String(props.canViewSkills)}
+    />
+  ),
   ChartTooltip: () => null,
 }));
 
@@ -163,5 +168,33 @@ describe('AnalyticsAgents', () => {
         },
       ),
     ).not.toThrow();
+  });
+});
+
+describe('AnalyticsAgents — agent detail skills gating (#7030)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    useAnalyticsAgentsQuery.mockReturnValue({ data: MOCK, isFetching: false });
+  });
+
+  afterEach(() => cleanup());
+
+  it.each([
+    [true, 'true'],
+    [false, 'false'],
+  ])('passes canViewSkills=%s to the selected agent detail', (canViewSkills, expected) => {
+    render(
+      <AnalyticsAgents
+        projectId={1}
+        dateFrom="2026-01-01"
+        dateTo="2026-01-31"
+        canViewSkills={canViewSkills}
+      />,
+      { wrapper: Wrapper },
+    );
+
+    fireEvent.click(screen.getAllByText('CodeReviewBot').at(-1));
+
+    expect(screen.getByTestId('agent-detail')).toHaveAttribute('data-can-view-skills', expected);
   });
 });

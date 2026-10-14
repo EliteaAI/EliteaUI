@@ -43,7 +43,12 @@ vi.mock('@/[fsd]/shared/lib/context', () => ({ useInteractiveTour: vi.fn() }));
 
 vi.mock('@/[fsd]/features/settings/ui/analytics', () => {
   const stub = testId => {
-    const Stub = () => <div data-testid={testId} />;
+    const Stub = props => (
+      <div
+        data-testid={testId}
+        data-can-view-skills={String(props.canViewSkills)}
+      />
+    );
     return Stub;
   };
   return {
@@ -173,6 +178,35 @@ describe('AnalyticsContainer tabs', () => {
     fireEvent.click(screen.getByRole('tab', { name: 'Guide' }));
 
     expect(screen.getByTestId('panel-guide').textContent).not.toContain('skills');
+  });
+});
+
+describe('AnalyticsContainer skill usage gating (#7030)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    useInteractiveTour.mockReturnValue({});
+  });
+
+  afterEach(() => cleanup());
+
+  const SKILL_AWARE_PANELS = {
+    Overview: 'panel-overview',
+    Costs: 'panel-costs',
+    Tokens: 'panel-tokens',
+    'Agents & Pipelines': 'panel-agents',
+    Users: 'panel-users',
+  };
+
+  it.each([
+    [[SKILLS_LIST], 'true'],
+    [[], 'false'],
+  ])('passes the skills permission to every tab that shows skill usage (%j)', (permissions, expected) => {
+    renderContainer(permissions);
+
+    Object.entries(SKILL_AWARE_PANELS).forEach(([label, panel]) => {
+      fireEvent.click(screen.getByRole('tab', { name: label }));
+      expect(screen.getByTestId(panel)).toHaveAttribute('data-can-view-skills', expected);
+    });
   });
 });
 

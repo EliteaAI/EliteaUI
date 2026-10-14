@@ -25,7 +25,7 @@ import { CHART_COLORS, EVENT_TYPE_COLORS, MEDAL_COLORS } from '@/[fsd]/shared/co
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 
 const AnalyticsOverview = memo(props => {
-  const { data, onUserClick, isPersonalProject = false } = props;
+  const { data, onUserClick, isPersonalProject = false, canViewSkills = false } = props;
 
   const styles = analyticsOverviewStyles();
   const { palette } = useTheme();
@@ -83,6 +83,15 @@ const AnalyticsOverview = memo(props => {
           subtitle="agents and pipelines interactions"
           tooltip={tt.AGENT_PIPELINE_RUNS}
         />
+        {canViewSkills && (
+          <KPICard
+            label="SKILL RUNS"
+            value={AnalyticCommonHelpers.fmtNum(kpis.skill_runs)}
+            subtitle="skill runs"
+            tooltip={tt.SKILL_RUNS}
+            testId="analytics-overview-skill-runs-kpi"
+          />
+        )}
         <KPICard
           label="TOKENS"
           value={AnalyticCommonHelpers.fmtNum(kpis.total_tokens)}
@@ -107,7 +116,12 @@ const AnalyticsOverview = memo(props => {
             </Typography>
             <InfoTooltip
               infoTooltip={{
-                title: isPersonalProject ? tt.DAILY_ACTIVITY_PRIVATE : tt.DAILY_ACTIVITY,
+                title: [
+                  isPersonalProject ? tt.DAILY_ACTIVITY_PRIVATE : tt.DAILY_ACTIVITY,
+                  canViewSkills && tt.DAILY_ACTIVITY_SKILL_RUNS,
+                ]
+                  .filter(Boolean)
+                  .join(' '),
                 icon: { width: 12, height: 12 },
               }}
             />
@@ -176,6 +190,18 @@ const AnalyticsOverview = memo(props => {
                   fillOpacity={0.1}
                   strokeWidth={2}
                 />
+                {canViewSkills && (
+                  <Area
+                    yAxisId="metrics"
+                    type="monotone"
+                    dataKey="skill_runs"
+                    name="Skill Runs"
+                    stroke={EVENT_TYPE_COLORS.skill}
+                    fill={EVENT_TYPE_COLORS.skill}
+                    fillOpacity={0.1}
+                    strokeWidth={2}
+                  />
+                )}
                 {!isPersonalProject && (
                   <Area
                     yAxisId="users"
@@ -204,11 +230,11 @@ const AnalyticsOverview = memo(props => {
               variant="bodySmall"
               sx={styles.chartSubtitle}
             >
-              Leaderboard by AI events (LLM + Tool + Agent / Pipeline)
+              {`Leaderboard by AI events (LLM + Tool + Agent / Pipeline${canViewSkills ? ' + Skill' : ''})`}
             </Typography>
             <InfoTooltip
               infoTooltip={{
-                title: tt.LEADERBOARD,
+                title: [tt.LEADERBOARD, canViewSkills && tt.LEADERBOARD_SKILL_RUNS].filter(Boolean).join(' '),
                 icon: { width: 12, height: 12 },
               }}
             />
@@ -262,6 +288,7 @@ const AnalyticsOverview = memo(props => {
                       {AnalyticCommonHelpers.fmtNum(u.llm_calls)} LLM &middot;{' '}
                       {AnalyticCommonHelpers.fmtNum(u.tool_runs)} Tool &middot;{' '}
                       {AnalyticCommonHelpers.fmtNum(u.agent_runs)} Agent / Pipeline
+                      {canViewSkills && <> &middot; {AnalyticCommonHelpers.fmtNum(u.skill_runs)} Skill</>}
                     </Typography>
                   </Box>
                   <Typography

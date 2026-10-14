@@ -6,10 +6,13 @@ import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 
 const TokenTable = memo(props => {
-  const { title, subtitleTooltip, nameHeader, rows, emptyState } = props;
+  const { title, subtitleTooltip, nameHeader, rows, emptyState, testId } = props;
 
   return (
-    <Box sx={styles.chartCard}>
+    <Box
+      sx={styles.chartCard}
+      data-testid={testId}
+    >
       <Box sx={styles.subtitleRow}>
         <Typography
           variant="labelMedium"

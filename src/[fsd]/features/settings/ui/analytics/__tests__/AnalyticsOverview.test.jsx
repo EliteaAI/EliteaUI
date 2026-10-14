@@ -10,17 +10,33 @@ import { AnalyticsTestWrapper as Wrapper } from './_testHelpers';
 vi.mock('recharts', () => ({
   ResponsiveContainer: ({ children }) => <div>{children}</div>,
   AreaChart: ({ children }) => <div data-testid="area-chart">{children}</div>,
-  Area: () => null,
+  Area: ({ name }) => <span data-testid={`area-${name}`} />,
   XAxis: () => null,
   YAxis: () => null,
   Tooltip: () => null,
   Legend: () => null,
 }));
 
+vi.mock('@/[fsd]/shared/ui/tooltip', () => ({
+  InfoTooltip: ({ infoTooltip }) => (
+    <span
+      data-testid="info-tooltip"
+      data-title={infoTooltip.title}
+    />
+  ),
+}));
+
 vi.mock('@/[fsd]/features/settings/ui/analytics', () => ({
   AutomatedActivityTable: () => null,
   ChartTooltip: () => null,
-  KPICard: ({ label, value }) => <div data-testid={`kpi-${label}`}>{value}</div>,
+  KPICard: ({ label, value, tooltip }) => (
+    <div
+      data-testid={`kpi-${label}`}
+      data-tooltip={tooltip}
+    >
+      {value}
+    </div>
+  ),
   ModelUsageTable: ({ models }) => (
     <div data-testid="model-usage-table">
       {models.map((m, i) => (
@@ -38,12 +54,16 @@ vi.mock('@/[fsd]/features/settings/lib/constants', () => ({
       llm: '#BC8CFF',
       tool: '#F0883E',
       agent: '#3FB950',
+      skill: '#F778BA',
     },
     TOOLTIP_TEXTS: {
       overview: {
         DAILY_ACTIVITY: 'Shows daily AI usage for the selected period.',
         DAILY_ACTIVITY_PRIVATE: 'Shows daily AI usage for the selected period.',
         LEADERBOARD: 'Ranks users by combined LLM calls, tool runs, and Agent & Pipeline runs.',
+        SKILL_RUNS: 'Total skill runs during the selected date range.',
+        DAILY_ACTIVITY_SKILL_RUNS: 'Skill Runs shows skills run on their own.',
+        LEADERBOARD_SKILL_RUNS: 'Model and tool calls made by skill runs count toward the score.',
       },
     },
   },
@@ -71,6 +91,7 @@ const MOCK_DATA = {
     tool_runs: 1200,
     chat_msgs: 890,
     agent_runs: 340,
+    skill_runs: 47,
     total_tokens: 1250000,
     total_llm_cost: 42.56,
   },
@@ -81,6 +102,7 @@ const MOCK_DATA = {
       llm_calls: 200,
       tool_runs: 50,
       agent_runs: 30,
+      skill_runs: 3,
       ai_events: 280,
     },
     {
@@ -89,6 +111,7 @@ const MOCK_DATA = {
       llm_calls: 150,
       tool_runs: 40,
       agent_runs: 20,
+      skill_runs: 0,
       ai_events: 210,
     },
   ],
@@ -161,5 +184,75 @@ describe('AnalyticsOverview', () => {
     const emailElement = screen.getByText('alice@example.com');
     fireEvent.click(emailElement.closest('[class*="MuiBox"]'));
     expect(onUserClick).toHaveBeenCalledWith(1);
+  });
+
+  describe('skill usage (#7030)', () => {
+    const tooltipTitles = () =>
+      screen.getAllByTestId('info-tooltip').map(node => node.getAttribute('data-title'));
+
+    it('places a Skill Runs KPI card right after Agent & Pipeline Runs', () => {
+      render(
+        <AnalyticsOverview
+          data={MOCK_DATA}
+          canViewSkills
+        />,
+        { wrapper: Wrapper },
+      );
+      const labels = Array.from(
+        screen.getByTestId('analytics-overview-kpi-row').querySelectorAll('[data-testid^="kpi-"]'),
+      ).map(node => node.getAttribute('data-testid'));
+      expect(labels.indexOf('kpi-SKILL RUNS')).toBe(labels.indexOf('kpi-AGENT & PIPELINE RUNS') + 1);
+      expect(screen.getByTestId('kpi-SKILL RUNS')).toHaveTextContent('47');
+      expect(screen.getByTestId('kpi-SKILL RUNS')).toHaveAttribute(
+        'data-tooltip',
+        'Total skill runs during the selected date range.',
+      );
+    });
+
+    it('adds a Skill Runs series to Daily Activity and explains it in the tooltip', () => {
+      render(
+        <AnalyticsOverview
+          data={MOCK_DATA}
+          canViewSkills
+        />,
+        { wrapper: Wrapper },
+      );
+      expect(screen.getByTestId('area-Skill Runs')).toBeInTheDocument();
+      expect(tooltipTitles()).toContain(
+        'Shows daily AI usage for the selected period. Skill Runs shows skills run on their own.',
+      );
+    });
+
+    it('shows skill runs in the Top 5 AI Adopters breakdown, subtitle and tooltip', () => {
+      render(
+        <AnalyticsOverview
+          data={MOCK_DATA}
+          canViewSkills
+        />,
+        { wrapper: Wrapper },
+      );
+      const aliceRow = screen.getByText('alice@example.com').parentElement;
+      expect(aliceRow).toHaveTextContent('30 Agent / Pipeline · 3 Skill');
+      expect(screen.getByText(/Leaderboard by AI events/)).toHaveTextContent(
+        'Leaderboard by AI events (LLM + Tool + Agent / Pipeline + Skill)',
+      );
+      expect(tooltipTitles()).toContain(
+        'Ranks users by combined LLM calls, tool runs, and Agent & Pipeline runs. Model and tool calls made by skill runs count toward the score.',
+      );
+    });
+
+    it('hides every skill figure without the skills permission', () => {
+      render(<AnalyticsOverview data={MOCK_DATA} />, { wrapper: Wrapper });
+      expect(screen.queryByTestId('kpi-SKILL RUNS')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('area-Skill Runs')).not.toBeInTheDocument();
+      expect(screen.getByText('alice@example.com').parentElement).not.toHaveTextContent('Skill');
+      expect(screen.getByText(/Leaderboard by AI events/)).toHaveTextContent(
+        'Leaderboard by AI events (LLM + Tool + Agent / Pipeline)',
+      );
+      expect(tooltipTitles()).toEqual([
+        'Shows daily AI usage for the selected period.',
+        'Ranks users by combined LLM calls, tool runs, and Agent & Pipeline runs.',
+      ]);
+    });
   });
 });

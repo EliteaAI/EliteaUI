@@ -5,7 +5,7 @@ import { Bar, BarChart, Tooltip as RechartsTooltip, ResponsiveContainer, XAxis, 
 import { Box, CircularProgress, Typography, useTheme } from '@mui/material';
 
 import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
-import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
+import { AnalyticCommonHelpers, SkillAnalyticsHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { ChartTooltip, KPICard } from '@/[fsd]/features/settings/ui/analytics';
 import { CHART_COLORS } from '@/[fsd]/shared/config/theme';
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
@@ -22,7 +22,7 @@ const getNumber = value => (Number.isFinite(Number(value)) ? Number(value) : 0);
 const toPercentage = (value, total) => (total > 0 ? (value / total) * 100 : 0);
 
 const AnalyticsTokens = memo(props => {
-  const { projectId, dateFrom, dateTo, runScope } = props;
+  const { projectId, dateFrom, dateTo, runScope, canViewSkills = false } = props;
 
   // Run-scoped (Run History → Analytics): no daily chart, no per-Agent breakdown, run wording
   const isRunScope = Boolean(runScope);
@@ -86,6 +86,21 @@ const AnalyticsTokens = memo(props => {
         })
         .sort((a, b) => b.total - a.total),
     [data?.by_agent, totalProjectTokens],
+  );
+
+  const skillTableData = useMemo(
+    () =>
+      [...(data?.by_skill || [])]
+        .map(skill => {
+          const tokens = tokenStats(skill);
+          return {
+            name: SkillAnalyticsHelpers.skillDisplayName(skill),
+            ...tokens,
+            share: toPercentage(tokens.total, totalProjectTokens),
+          };
+        })
+        .sort((a, b) => b.total - a.total),
+    [data?.by_skill, totalProjectTokens],
   );
 
   const dailyChartData = useMemo(
@@ -280,6 +295,16 @@ const AnalyticsTokens = memo(props => {
           nameHeader="AGENT / PIPELINE"
           rows={agentTableData}
           emptyState={NO_TOKENS_MSG}
+        />
+      )}
+      {!isRunScope && canViewSkills && (
+        <TokenTable
+          title="Token Usage by Skill"
+          subtitleTooltip={tt.BY_SKILL}
+          nameHeader="SKILL"
+          rows={skillTableData}
+          emptyState={NO_TOKENS_MSG}
+          testId="analytics-tokens-by-skill"
         />
       )}
     </Box>

@@ -25,7 +25,7 @@ import StyledSearchInput from '@/components/SearchInput';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const AnalyticsAgents = memo(props => {
-  const { projectId, dateFrom, dateTo } = props;
+  const { projectId, dateFrom, dateTo, canViewSkills = false } = props;
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(20);
@@ -91,6 +91,7 @@ const AnalyticsAgents = memo(props => {
         dateFrom={dateFrom}
         dateTo={dateTo}
         onBack={handleBack}
+        canViewSkills={canViewSkills}
       />
     );
   }

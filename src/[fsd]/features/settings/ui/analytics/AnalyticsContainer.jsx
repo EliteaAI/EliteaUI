@@ -460,6 +460,7 @@ const AnalyticsContainer = memo(() => {
               data={overviewData}
               onUserClick={handleOverviewUserClick}
               isPersonalProject={isPersonalProject}
+              canViewSkills={canViewSkills}
             />
           )}
           {activeTab === TAB.costs && (
@@ -467,6 +468,7 @@ const AnalyticsContainer = memo(() => {
               projectId={projectId}
               dateFrom={dateFromISO}
               dateTo={dateToISO}
+              canViewSkills={canViewSkills}
             />
           )}
           {activeTab === TAB.tokens && (
@@ -474,6 +476,7 @@ const AnalyticsContainer = memo(() => {
               projectId={projectId}
               dateFrom={dateFromISO}
               dateTo={dateToISO}
+              canViewSkills={canViewSkills}
             />
           )}
           {activeTab === TAB.agents && (
@@ -481,6 +484,7 @@ const AnalyticsContainer = memo(() => {
               projectId={projectId}
               dateFrom={dateFromISO}
               dateTo={dateToISO}
+              canViewSkills={canViewSkills}
             />
           )}
           {activeTab === TAB.skills && (
@@ -504,6 +508,7 @@ const AnalyticsContainer = memo(() => {
               dateTo={dateToISO}
               initialUserId={pendingUserId}
               onBackToSource={handleBackToOverview}
+              canViewSkills={canViewSkills}
             />
           )}
           {activeTab === TAB.activity && (
