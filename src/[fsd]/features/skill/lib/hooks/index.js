@@ -14,3 +14,4 @@ export { useSkillRunChat } from './useSkillRunChat.hooks';
 export { useCanRunSkill } from './useCanRunSkill.hooks';
 export { useSkillParticipants } from './useSkillParticipants.hooks';
 export { useFocusRunInput } from './useFocusRunInput.hooks';
+export { useSkillVersionModel } from './useSkillVersionModel.hooks';

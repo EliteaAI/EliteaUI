@@ -611,6 +611,7 @@ const NewChat = props => {
     handleAttachmentToolChange,
     handleEditorConversationStartersChange,
     handleConversationLlmOverride,
+    handleSkillSettingsChange,
     openEditingAlert,
     onCloseEditorAlert,
     onConfirmCloseEditor,
@@ -1376,6 +1377,11 @@ const NewChat = props => {
                 interaction_uuid={interaction_uuid}
                 onShowAgentEditor={onEditAgent}
                 onShowPipelineEditor={onEditPipeline}
+                onShowSkillEditor={onEditSkill}
+                onCloseSkillEditor={onCloseSkillEditor}
+                editingSkill={editingSkill}
+                isEditorDirty={editorIsDirty}
+                onShowVersionChangeAlert={handleShowVersionChangeAlert}
                 onCloseAgentEditor={handleCloseAgentEditor}
                 onCreateAgent={onCreateAgent}
                 onCreatePipeline={onCreatePipeline}
@@ -1398,6 +1404,8 @@ const NewChat = props => {
                 onShowAgentEditor={onEditAgent}
                 onShowPipelineEditor={onEditPipeline}
                 onShowSkillEditor={onEditSkill}
+                onCloseSkillEditor={onCloseSkillEditor}
+                editingSkill={editingSkill}
                 onShowProjectContextEditor={onEditProjectContext}
                 onShowToolkitEditor={onEditToolkit}
                 onCloseAgentEditor={handleCloseAgentEditor}
@@ -1488,6 +1496,7 @@ const NewChat = props => {
                 // Skill
                 isEditingSkill={isEditingSkill}
                 editingSkill={editingSkill}
+                handleSkillSettingsChange={handleSkillSettingsChange}
                 onCloseSkillEditor={onCloseSkillEditor}
                 // Project context
                 isEditingProjectContext={isEditingProjectContext}

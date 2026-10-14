@@ -1,15 +1,16 @@
-import { memo, useMemo } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 
-import { Box, Button, ButtonGroup, Divider, Tooltip, Typography } from '@mui/material';
+import { Box, Button, ButtonGroup, Divider, Tooltip, Typography, useTheme } from '@mui/material';
 
 import { useAgentEditorPanelFit } from '@/[fsd]/features/chat/lib/hooks';
 import { ParticipantConstants } from '@/[fsd]/features/chat/participants/lib/constants';
 import { areDetailsOfParticipant } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { useParticipantEntityIcon } from '@/[fsd]/features/chat/participants/lib/hooks';
-import { LLMModelSelector } from '@/[fsd]/widgets/llm-model-selector';
-import { ChatParticipantType } from '@/common/constants';
+import { ChatParticipantType, PERMISSIONS } from '@/common/constants';
 import EntityIcon from '@/components/EntityIcon';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
+import SettingIcon from '@/components/Icons/SettingIcon';
+import useCheckPermission from '@/hooks/useCheckPermission';
 
 import SwitchToModelButton from './SwitchToModelButton';
 import VersionSelector from './VersionSelector';
@@ -30,11 +31,11 @@ const SkillChatPanel = memo(props => {
     onClickParticipant,
     selectedVersionId,
     onSelectVersion,
-    models,
-    selectedModel,
-    onSelectModel,
-    llmSettings,
-    onSetLLMSettings,
+    onShowSkillEditor,
+    onCloseSkillEditor,
+    editingSkill,
+    isEditorDirty,
+    onShowVersionChangeAlert,
     unavailableReason,
     disabled,
     onSwitchToModel,
@@ -43,6 +44,18 @@ const SkillChatPanel = memo(props => {
 
   const { containerRef, isSmallView } = useAgentEditorPanelFit();
   const entityIcon = useParticipantEntityIcon(activeParticipant);
+  const theme = useTheme();
+  const { checkPermission } = useCheckPermission();
+  const canEdit = checkPermission(PERMISSIONS.skills.update);
+  const isBeingEdited =
+    !!editingSkill && String(editingSkill.entity_meta?.id) === String(activeParticipant?.entity_meta?.id);
+
+  const isSettingsDisabled = disabled || !onShowSkillEditor;
+
+  const onClickSettings = useCallback(
+    () => onShowSkillEditor?.(activeParticipant),
+    [onShowSkillEditor, activeParticipant],
+  );
 
   const hasDetails = areDetailsOfParticipant(participantDetails, activeParticipant);
   const versions = (hasDetails && participantDetails.versions) || NO_VERSIONS;
@@ -107,10 +120,45 @@ const SkillChatPanel = memo(props => {
               selectedVersion={selectedVersion}
               versions={versions}
               onSelect={onSelectVersion}
+              onCloseEditor={onCloseSkillEditor}
+              isEditorDirty={isEditorDirty}
+              onShowVersionChangeAlert={onShowVersionChangeAlert}
               isSmallView={isSmallView}
             />
           </>
         )}
+
+        <Divider orientation="vertical" />
+
+        <Tooltip
+          placement="top"
+          title={canEdit ? 'Skill settings' : 'View skill settings'}
+        >
+          <Button
+            data-testid="chat-skill-settings-button"
+            size="small"
+            aria-label="skill settings menu"
+            onClick={onClickSettings}
+            disabled={isSettingsDisabled}
+            variant="elitea"
+            color="secondary"
+          >
+            {isBeingEdited ? (
+              <Typography
+                variant="labelSmall"
+                color="primary"
+                sx={styles.editingText}
+              >
+                {canEdit ? 'Editing...' : 'Viewing...'}
+              </Typography>
+            ) : (
+              <SettingIcon
+                sx={styles.settingIcon}
+                fill={isSettingsDisabled ? theme.palette.icon.disabled : undefined}
+              />
+            )}
+          </Button>
+        </Tooltip>
       </ButtonGroup>
 
       {unavailableReason && (
@@ -126,17 +174,6 @@ const SkillChatPanel = memo(props => {
           </Box>
         </Tooltip>
       )}
-
-      <LLMModelSelector
-        selectedModel={selectedModel}
-        onSelectModel={onSelectModel}
-        models={models}
-        disabled={disabled || !onSelectModel}
-        llmSettings={llmSettings}
-        onSetLLMSettings={onSetLLMSettings}
-        showSettingsEntry={!!onSetLLMSettings}
-        modelTooltip="Model the skill runs with in this chat"
-      />
 
       <SwitchToModelButton
         onClick={onSwitchToModel}
@@ -185,6 +222,13 @@ const skillChatPanelStyles = isSmallView => ({
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
     maxWidth: '100%',
+  },
+  editingText: {
+    fontSize: '.75rem',
+    fontWeight: 400,
+  },
+  settingIcon: {
+    fontSize: '1rem',
   },
   attentionIcon: {
     display: 'flex',

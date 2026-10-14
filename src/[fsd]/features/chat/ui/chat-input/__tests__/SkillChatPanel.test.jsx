@@ -9,25 +9,41 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import SkillChatPanel from '../SkillChatPanel';
 
 vi.mock('@/[fsd]/features/chat/participants/lib/hooks', () => ({ useParticipantEntityIcon: () => ({}) }));
-vi.mock('@/[fsd]/widgets/llm-model-selector', () => ({ LLMModelSelector: () => null }));
 vi.mock('@/components/EntityIcon', () => ({ default: () => null }));
 vi.mock('@/components/Icons/AttentionIcon', () => ({ default: () => <span>!</span> }));
+vi.mock('@/components/Icons/SettingIcon', () => ({
+  default: ({ fill }) => (
+    <span
+      data-testid="setting-icon"
+      data-fill={fill ?? ''}
+    />
+  ),
+}));
+vi.mock('@/hooks/useCheckPermission', () => ({ default: () => ({ checkPermission: () => true }) }));
 vi.mock('@/[fsd]/features/chat/lib/hooks', () => ({
   useAgentEditorPanelFit: () => ({ containerRef: { current: null }, isSmallView: false }),
 }));
 vi.mock('../SwitchToModelButton', () => ({ default: () => null }));
-vi.mock('../VersionSelector', () => ({ default: () => null }));
+const versionSelectorProps = vi.hoisted(() => ({ current: null }));
+vi.mock('../VersionSelector', () => ({
+  default: props => {
+    versionSelectorProps.current = props;
+    return null;
+  },
+}));
 
 const skill = { entity_name: 'skill', entity_meta: { id: 5, project_id: 2 }, meta: { name: 'writer' } };
 
-const renderPanel = unavailableReason =>
+const renderPanel = (unavailableReason, props = {}) =>
   render(
-    <ThemeProvider theme={createTheme({ palette: { border: { lines: '#ccc' } } })}>
+    <ThemeProvider
+      theme={createTheme({ palette: { border: { lines: '#ccc' }, icon: { disabled: '#999' } } })}
+    >
       <SkillChatPanel
         activeParticipant={skill}
         participantDetails={undefined}
-        models={[]}
         unavailableReason={unavailableReason}
+        {...props}
       />
     </ThemeProvider>,
   );
@@ -56,5 +72,68 @@ describe('SkillChatPanel unavailable skill', () => {
     expect(await tooltipFor('version')).toBe(
       'This skill version is no longer available. Select another version or switch to a model.',
     );
+  });
+});
+
+describe('SkillChatPanel settings', () => {
+  afterEach(() => cleanup());
+
+  it('opens the skill canvas instead of offering a model selector', () => {
+    const onShowSkillEditor = vi.fn();
+    renderPanel(undefined, { onShowSkillEditor });
+
+    expect(screen.queryByTestId('model-selector-button')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('chat-skill-settings-button'));
+    expect(onShowSkillEditor).toHaveBeenCalledWith(skill);
+  });
+
+  it('shows the canvas is open for this skill only', () => {
+    renderPanel(undefined, { onShowSkillEditor: vi.fn(), editingSkill: { entity_meta: { id: 5 } } });
+    expect(screen.getByTestId('chat-skill-settings-button')).toHaveTextContent('Editing...');
+    cleanup();
+
+    renderPanel(undefined, { onShowSkillEditor: vi.fn(), editingSkill: { entity_meta: { id: 6 } } });
+    expect(screen.getByTestId('chat-skill-settings-button')).not.toHaveTextContent('Editing...');
+    expect(screen.getByTestId('setting-icon')).toBeInTheDocument();
+  });
+
+  it('cannot open a canvas the page does not provide', () => {
+    renderPanel(undefined);
+    expect(screen.getByTestId('chat-skill-settings-button')).toBeDisabled();
+  });
+});
+
+describe('SkillChatPanel version switch', () => {
+  afterEach(() => cleanup());
+
+  it('guards unsaved canvas edits like the agent panel', () => {
+    const onCloseSkillEditor = vi.fn();
+    const onShowVersionChangeAlert = vi.fn();
+    renderPanel(undefined, {
+      participantDetails: { id: 5, name: 'writer', versions: [{ id: 1, name: 'base' }] },
+      onCloseSkillEditor,
+      isEditorDirty: true,
+      onShowVersionChangeAlert,
+    });
+
+    expect(versionSelectorProps.current).toMatchObject({
+      onCloseEditor: onCloseSkillEditor,
+      isEditorDirty: true,
+      onShowVersionChangeAlert,
+    });
+  });
+});
+
+describe('SkillChatPanel settings icon', () => {
+  afterEach(() => cleanup());
+
+  it('greys out with the button while the chat streams', () => {
+    renderPanel(undefined, { onShowSkillEditor: vi.fn(), disabled: true });
+    expect(screen.getByTestId('setting-icon')).toHaveAttribute('data-fill', '#999');
+  });
+
+  it('keeps its colour while the canvas can open', () => {
+    renderPanel(undefined, { onShowSkillEditor: vi.fn() });
+    expect(screen.getByTestId('setting-icon')).toHaveAttribute('data-fill', '');
   });
 });

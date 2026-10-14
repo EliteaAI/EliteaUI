@@ -51,8 +51,8 @@ const VersionSelector = memo(props => {
   );
 
   // Get editing state from Redux to check if any editor is open with unsaved changes
-  const { isEditingAgent, isEditingPipeline } = useNavBlocker();
-  const isAnyEditorOpen = isEditingAgent || isEditingPipeline;
+  const { isEditingAgent, isEditingPipeline, isEditingSkill } = useNavBlocker();
+  const isAnyEditorOpen = isEditingAgent || isEditingPipeline || isEditingSkill;
 
   // TODO: Confirm with Hawk START
   const handleVersionSelect = index => {

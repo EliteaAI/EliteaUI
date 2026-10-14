@@ -6,12 +6,12 @@ import { useSaveSkill } from '@/[fsd]/features/skill/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 
 const SkillEditorSaveButton = memo(props => {
-  const { isDirty } = props;
+  const { isDirty, onSaved } = props;
   const { onSave, isSaving } = useSaveSkill();
 
   const handleSave = useCallback(async () => {
-    await onSave();
-  }, [onSave]);
+    if (await onSave()) onSaved?.();
+  }, [onSave, onSaved]);
 
   return (
     <Button.BaseBtn

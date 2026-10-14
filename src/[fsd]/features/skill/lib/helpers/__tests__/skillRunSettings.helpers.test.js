@@ -9,6 +9,7 @@ import {
   testPanelSettingsFor,
   toRunSettingsPayload,
   withRunSettings,
+  withoutSkillChatModel,
 } from '@/[fsd]/features/skill/lib/helpers/skillRunSettings.helpers';
 
 describe('toRunSettingsPayload', () => {
@@ -153,5 +154,20 @@ describe('withRunSettings', () => {
       ...versionUpdate,
       run_settings: { ignore_project_context: true },
     });
+  });
+});
+
+describe('withoutSkillChatModel', () => {
+  it("drops only the chat's model and keeps the pinned version", () => {
+    const skill = {
+      id: 4,
+      entity_settings: { version_id: 8, icon_meta: {}, llm_settings: { model_name: 'haiku' } },
+    };
+
+    expect(withoutSkillChatModel(skill)).toEqual({
+      id: 4,
+      entity_settings: { version_id: 8, icon_meta: {}, llm_settings: undefined },
+    });
+    expect(skill.entity_settings.llm_settings).toEqual({ model_name: 'haiku' });
   });
 });

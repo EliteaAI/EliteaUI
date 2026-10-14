@@ -10,7 +10,6 @@ import {
   useBudgetWarning,
   useChatSkillMention,
   useNewStartConversationInputKeyDownHandler,
-  useSkillChatModel,
   useSlashMention,
 } from '@/[fsd]/features/chat/lib/hooks';
 import { getChatParticipantUniqueId } from '@/[fsd]/features/chat/participants/lib/helpers';
@@ -84,6 +83,11 @@ const NewConversationView = forwardRef(
       interaction_uuid,
       onShowAgentEditor,
       onShowPipelineEditor,
+      onShowSkillEditor,
+      onCloseSkillEditor,
+      editingSkill,
+      isEditorDirty,
+      onShowVersionChangeAlert,
       onCloseAgentEditor,
       onCreateAgent,
       onCreatePipeline,
@@ -738,12 +742,6 @@ const NewConversationView = forwardRef(
       return selectedParticipant?.version_details?.conversation_starters || [];
     }, [selectedParticipant]);
 
-    const { skillModel, skillLLMSettings } = useSkillChatModel({
-      activeParticipant: selectedParticipant,
-      participantDetails: selectedParticipantDetails,
-      models: modelList,
-    });
-
     const welcomeMessage = useMemo(() => {
       const isAgentOrPipeline =
         selectedParticipant?.entity_name === ChatParticipantType.Applications ||
@@ -1156,6 +1154,11 @@ const NewConversationView = forwardRef(
               variables={selectedParticipant?.entity_settings?.variables || []}
               onChangeVariables={onChangeVariables}
               onShowAgentEditor={onShowAgentEditor}
+              onShowSkillEditor={onShowSkillEditor}
+              onCloseSkillEditor={onCloseSkillEditor}
+              editingSkill={editingSkill}
+              isEditorDirty={isEditorDirty}
+              onShowVersionChangeAlert={onShowVersionChangeAlert}
               onShowPipelineEditor={onShowPipelineEditor}
               onCloseAgentEditor={onCloseAgentEditor}
               activeParticipant={selectedParticipant}
@@ -1167,8 +1170,6 @@ const NewConversationView = forwardRef(
               onSetLLMSettings={onSetLLMSettings}
               showStepsLimit
               selectSavedOrDefaultModel={selectSavedOrDefaultModel}
-              skillModel={skillModel}
-              skillLLMSettings={skillLLMSettings}
               selectedParticipant={selectedParticipant}
               onClearSelectedParticipant={onClearSelectedParticipant}
               //Attachment settings props

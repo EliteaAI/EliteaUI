@@ -1,9 +1,11 @@
-import { memo, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
 import BaseEditor from '@/[fsd]/features/chat/ui/editors/BaseEditor';
+import SkillCanvasModelSelector from '@/[fsd]/features/chat/ui/editors/SkillCanvasModelSelector';
 import SkillEditorSaveButton from '@/[fsd]/features/chat/ui/editors/SkillEditorSaveButton';
 import { useSkillDetailsQuery } from '@/[fsd]/features/skill/api';
+import { hasSkillChatModelOverride, withoutSkillChatModel } from '@/[fsd]/features/skill/lib/helpers';
 import { SkillValidateSchema } from '@/[fsd]/features/skill/lib/validation';
 import { CreateSkillForm } from '@/[fsd]/features/skill/ui';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
@@ -26,7 +28,14 @@ const buildInitialValues = data => ({
 });
 
 const SkillEditor = memo(props => {
-  const { skill, onCloseSkillEditor, isVisible, onDirtyStateChange, disableNavBlocking = false } = props;
+  const {
+    skill,
+    onCloseSkillEditor,
+    isVisible,
+    onDirtyStateChange,
+    disableNavBlocking = false,
+    onChangeSkillSettings,
+  } = props;
   const projectId = useSelectedProjectId();
   const skillId = skill?.entity_meta?.id;
   const versionId = skill?.entity_settings?.version_id;
@@ -38,6 +47,19 @@ const SkillEditor = memo(props => {
   );
 
   const initialValues = useMemo(() => buildInitialValues(data), [data]);
+
+  const onDirtyStateChangeRef = useRef(onDirtyStateChange);
+
+  useEffect(() => {
+    onDirtyStateChangeRef.current = onDirtyStateChange;
+  }, [onDirtyStateChange]);
+
+  useEffect(() => () => onDirtyStateChangeRef.current?.(false), []);
+
+  const onSkillSaved = useCallback(() => {
+    if (!onChangeSkillSettings || !hasSkillChatModelOverride(skill?.entity_settings)) return;
+    onChangeSkillSettings(withoutSkillChatModel(skill), true);
+  }, [onChangeSkillSettings, skill]);
 
   return (
     <BaseEditor
@@ -51,9 +73,18 @@ const SkillEditor = memo(props => {
       initialValues={initialValues}
       validationSchema={SkillValidateSchema}
       error={error}
-      saveButton={<SkillEditorSaveButton isDirty={isDirty} />}
+      saveButton={
+        <SkillEditorSaveButton
+          isDirty={isDirty}
+          onSaved={onSkillSaved}
+        />
+      }
     >
-      <CreateSkillForm />
+      <SkillCanvasModelSelector
+        skill={skill}
+        onChangeSkillSettings={onChangeSkillSettings}
+      />
+      <CreateSkillForm showRunSettingsModel={false} />
     </BaseEditor>
   );
 });

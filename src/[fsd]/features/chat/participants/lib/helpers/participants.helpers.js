@@ -23,6 +23,23 @@ export const areDetailsOfParticipant = (details, participant) => {
   return String(details.id) === String(entityId);
 };
 
+export const findChatParticipantOfEntity = (participants, entity) =>
+  participants?.find(
+    participant =>
+      participant.entity_name === entity?.entity_name &&
+      String(participant.entity_meta?.id) === String(entity?.entity_meta?.id) &&
+      String(participant.entity_meta?.project_id) === String(entity?.entity_meta?.project_id),
+  );
+
+export const resolveChatSkillParticipant = (participants, skill) => {
+  const participant = findChatParticipantOfEntity(participants, skill);
+  if (!participant || participant.entity_settings?.version_id) return participant;
+  return {
+    ...participant,
+    entity_settings: { ...participant.entity_settings, version_id: skill.entity_settings?.version_id },
+  };
+};
+
 export const getChatParticipantUniqueId = participant => {
   if (participant) {
     const entity_name =

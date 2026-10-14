@@ -31,13 +31,20 @@ export const findSkillSavedModel = (models, llmSettings) => {
 
 const choosesModel = llmSettings => !!llmSettings?.model_name || isAutoSelection(llmSettings);
 
+export const hasSkillChatModelOverride = entitySettings => choosesModel(entitySettings?.llm_settings);
+
+export const withoutSkillChatModel = skill => ({
+  ...skill,
+  entity_settings: { ...skill.entity_settings, llm_settings: undefined },
+});
+
 export const resolveSkillChatLLMSettings = (entitySettings, versionDetails) =>
-  choosesModel(entitySettings?.llm_settings)
+  hasSkillChatModelOverride(entitySettings)
     ? entitySettings.llm_settings
     : versionDetails?.run_settings?.llm_settings || {};
 
 export const isSkillChatModelPending = (entitySettings, pinnedVersionDetails) =>
-  !choosesModel(entitySettings?.llm_settings) && !pinnedVersionDetails;
+  !hasSkillChatModelOverride(entitySettings) && !pinnedVersionDetails;
 
 export const resolveSkillChatModel = (models, llmSettings) =>
   findSkillSavedModel(models, llmSettings) || models.find(model => model.default) || models[0] || null;

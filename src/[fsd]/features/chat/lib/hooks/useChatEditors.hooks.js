@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useDispatch } from 'react-redux';
 
+import { resolveChatSkillParticipant } from '@/[fsd]/features/chat/participants/lib/helpers';
 import useAgentCreation from '@/hooks/chat/useAgentCreation';
 import { useAgentEditorUrlSync } from '@/hooks/chat/useAgentEditorUrlSync';
 import useEditAgent from '@/hooks/chat/useEditAgent';
@@ -71,6 +72,14 @@ export const useChatEditors = ({
   } = useEditPipeline();
 
   const { isEditingSkill, editingSkill, onShowSkillEditor, onCloseSkillEditor } = useEditSkill();
+
+  const chatEditingSkill = useMemo(
+    () =>
+      activeConversation?.isNew
+        ? undefined
+        : resolveChatSkillParticipant(activeConversation?.participants, editingSkill),
+    [activeConversation?.isNew, activeConversation?.participants, editingSkill],
+  );
 
   const { isEditingProjectContext, onShowProjectContextEditor, onCloseProjectContextEditor } =
     useEditProjectContext();
@@ -206,6 +215,7 @@ export const useChatEditors = ({
   const handleVersionChangeConfirm = useCallback(() => {
     if (isEditingAgent) handleCloseAgentEditorWithUrlSync();
     if (isEditingPipeline) handleClosePipelineEditorWithUrlSync();
+    if (isEditingSkill) onCloseSkillEditor();
     if (pendingVersionChangeCallback) pendingVersionChangeCallback();
     setShowVersionChangeAlert(false);
     setPendingVersionChangeCallback(null);
@@ -213,8 +223,10 @@ export const useChatEditors = ({
   }, [
     isEditingAgent,
     isEditingPipeline,
+    isEditingSkill,
     handleCloseAgentEditorWithUrlSync,
     handleClosePipelineEditorWithUrlSync,
+    onCloseSkillEditor,
     pendingVersionChangeCallback,
   ]);
 
@@ -359,7 +371,7 @@ export const useChatEditors = ({
     editingAgent,
     editingToolkit,
     editingPipeline,
-    editingSkill,
+    editingSkill: chatEditingSkill ?? editingSkill,
 
     // Pipeline split props
     pipelineSizes,
@@ -378,6 +390,7 @@ export const useChatEditors = ({
     handleAttachmentToolChange,
     handleEditorConversationStartersChange,
     handleConversationLlmOverride,
+    handleSkillSettingsChange: chatEditingSkill ? onChangeParticipantSettings : undefined,
 
     // Alert state
     openEditingAlert,

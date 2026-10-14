@@ -49,7 +49,6 @@ import {
   useNextInputSuggestion,
   useReadAloud,
   useSelectedChatModel,
-  useSkillChatModel,
   useSlashMention,
 } from '@/[fsd]/features/chat/lib/hooks';
 import {
@@ -150,6 +149,8 @@ const ChatBox = memo(
       onShowAgentEditor,
       onShowPipelineEditor,
       onShowSkillEditor,
+      onCloseSkillEditor,
+      editingSkill,
       onShowProjectContextEditor,
       onShowToolkitEditor,
       onCloseAgentEditor,
@@ -2800,13 +2801,7 @@ const ChatBox = memo(
       ],
     );
 
-    const { isActiveSkill, skillModel, skillLLMSettings, onSelectSkillModel, onSetSkillLLMSettings } =
-      useSkillChatModel({
-        activeParticipant,
-        participantDetails: originalParticipant,
-        models: modelList,
-        onChangeParticipantSettings,
-      });
+    const isActiveSkill = activeParticipant?.entity_name === ChatParticipantType.Skills;
 
     const onChangeVariables = useCallback(
       newVariables => {
@@ -3110,10 +3105,6 @@ const ChatBox = memo(
               onSelectModel={onSelectModel}
               selectedModel={selectedModel}
               selectSavedOrDefaultModel={selectSavedOrDefaultModel}
-              skillModel={skillModel}
-              onSelectSkillModel={onSelectSkillModel}
-              skillLLMSettings={skillLLMSettings}
-              onSetSkillLLMSettings={onSetSkillLLMSettings}
               activeSkillUnavailableReason={activeSkillUnavailableReason}
               isStreaming={isStreamingNow || isStreaming}
               isInjectable={isInjectable}
@@ -3125,6 +3116,9 @@ const ChatBox = memo(
               isEditingAgent={isEditingAgent}
               onShowAgentEditor={onShowAgentEditor}
               onShowPipelineEditor={onShowPipelineEditor}
+              onShowSkillEditor={onShowSkillEditor}
+              onCloseSkillEditor={onCloseSkillEditor}
+              editingSkill={editingSkill}
               onCloseAgentEditor={onCloseAgentEditor}
               onClosePipelineEditor={onClosePipelineEditor}
               isEditorDirty={isEditorDirty}
