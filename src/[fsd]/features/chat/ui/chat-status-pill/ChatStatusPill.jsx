@@ -31,8 +31,7 @@ const ChatStatusPill = memo(props => {
   if (participantType !== 'application' && participantType !== 'pipeline') return null;
   if (!isRunning && !isInterrupt) return null;
 
-  const isPipeline = agentType === 'pipeline';
-  const entityLabel = isPipeline ? 'Pipeline' : 'Agent';
+  const entityLabel = participantType === 'pipeline' || agentType === 'pipeline' ? 'Pipeline' : 'Agent';
   const label = isInterrupt
     ? isNarrow
       ? 'Waiting for your input...'
