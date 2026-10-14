@@ -53,7 +53,8 @@ const CREDENTIAL = {
 const CONNECTED = { ...CREDENTIAL, data: { ...CREDENTIAL.data, refresh_token: '{{secret.r}}' } };
 const REF = { elitea_title: 'onecrm_dataverse', private: true };
 
-const render = (ref = REF) => renderHook(() => useDataverseLogin({ credentialRef: ref, projectId: 5 }));
+const render = (ref = REF, onLoginChange) =>
+  renderHook(() => useDataverseLogin({ credentialRef: ref, projectId: 5, onLoginChange }));
 
 describe('useDataverseLogin', () => {
   beforeEach(() => {
@@ -186,5 +187,59 @@ describe('useDataverseLogin', () => {
     await act(async () => result.current.logout());
 
     expect(mocks.updateConfiguration).toHaveBeenCalledWith(expect.objectContaining({ projectId: 5 }));
+  });
+
+  it('runs the code exchange in the project that owns a private credential, not the page project', () => {
+    // The client secret is a vault reference that only resolves in its own (personal) project.
+    render();
+    expect(mocks.modalOptions.projectId).toBe(77);
+  });
+
+  it('runs the code exchange in the page project for a project credential', () => {
+    render({ elitea_title: 'onecrm_dataverse', private: false });
+    expect(mocks.modalOptions.projectId).toBe(5);
+  });
+
+  it('notifies the page after a saved login so stale validation warnings are refreshed', async () => {
+    const error = {
+      status: 401,
+      data: { requires_authorization: true, auth_metadata: { server_url: AUTHORITY } },
+    };
+    mocks.testConnection.mockReturnValue({ unwrap: () => Promise.reject(error) });
+    mocks.getRefreshToken.mockReturnValue('refresh-abc');
+    const onLoginChange = vi.fn();
+    const { result } = render(REF, onLoginChange);
+    await act(async () => result.current.login());
+
+    await act(async () => mocks.onOAuthSuccess());
+
+    expect(onLoginChange).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not notify the page when saving the login fails', async () => {
+    const error = {
+      status: 401,
+      data: { requires_authorization: true, auth_metadata: { server_url: AUTHORITY } },
+    };
+    mocks.testConnection.mockReturnValue({ unwrap: () => Promise.reject(error) });
+    mocks.getRefreshToken.mockReturnValue('refresh-abc');
+    mocks.updateConfiguration.mockReturnValue({ unwrap: () => Promise.reject(new Error('save failed')) });
+    const onLoginChange = vi.fn();
+    const { result } = render(REF, onLoginChange);
+    await act(async () => result.current.login());
+
+    await act(async () => mocks.onOAuthSuccess());
+
+    expect(onLoginChange).not.toHaveBeenCalled();
+  });
+
+  it('notifies the page after logout', async () => {
+    mocks.items = [CONNECTED];
+    const onLoginChange = vi.fn();
+    const { result } = render(REF, onLoginChange);
+
+    await act(async () => result.current.logout());
+
+    expect(onLoginChange).toHaveBeenCalledTimes(1);
   });
 });

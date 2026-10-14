@@ -13,7 +13,7 @@ import {
 const CONFIGURATION_TYPE = 'dataverse';
 
 // "Connected" means the credential holds a refresh token in the vault, not that this browser has a token.
-export const useDataverseLogin = ({ credentialRef, projectId }) => {
+export const useDataverseLogin = ({ credentialRef, projectId, onLoginChange }) => {
   const { personal_project_id } = useSelector(state => state.user);
   const { toastSuccess, toastError } = useToast();
   const [isBusy, setIsBusy] = useState(false);
@@ -57,17 +57,20 @@ export const useDataverseLogin = ({ credentialRef, projectId }) => {
       }
       await saveRefreshToken(refreshToken);
       toastSuccess('Connected! The login is saved for scheduled runs.');
+      onLoginChange?.();
     } catch {
       toastError('Could not save the login to the credential.');
     } finally {
       McpAuthHelpers.logout(tokenKey);
     }
-  }, [saveRefreshToken, toastError, toastSuccess]);
+  }, [saveRefreshToken, toastError, toastSuccess, onLoginChange]);
 
   const configOAuth = useConfigOAuthModal({
     onSuccess: onAuthorized,
     // Success is only reported after the credential is saved, by onAuthorized
     showSuccessToast: false,
+    // A private credential lives in the personal project: its secret resolves there, not in the team project
+    projectId: credProjectId,
     credentials: {
       client_id: credential?.data?.client_id,
       client_secret: credential?.data?.client_secret,
@@ -103,12 +106,13 @@ export const useDataverseLogin = ({ credentialRef, projectId }) => {
     try {
       await saveRefreshToken(null);
       toastSuccess('You have successfully logged out!');
+      onLoginChange?.();
     } catch {
       toastError('Could not remove the login from the credential.');
     } finally {
       setIsBusy(false);
     }
-  }, [credential, saveRefreshToken, toastError, toastSuccess]);
+  }, [credential, saveRefreshToken, toastError, toastSuccess, onLoginChange]);
 
   return {
     hasCredential: Boolean(credential),

@@ -651,7 +651,7 @@ const ToolBase = memo(props => {
     <>
       {isAnyMcpType && <McpAuthStatus />}
       {isSharepointToolkit && <SharepointOAuthStatus />}
-      {isDataverseToolkit && <DataverseLoginStatus />}
+      {isDataverseToolkit && <DataverseLoginStatus onLoginChange={onCredentialReload} />}
       {isOpenApiToolkit && showTools && <OpenApiOAuthStatus />}
 
       {shouldUseAccordionView && !shouldHideConfigurationHeader ? (

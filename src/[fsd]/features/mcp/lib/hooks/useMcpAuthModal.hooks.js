@@ -274,10 +274,18 @@ export const useMcpAuthModal = (options = {}) => {
  * @param {string} [options.credentials.client_secret] - OAuth client secret from credential settings
  * @param {string|string[]} [options.credentials.scopes] - OAuth scopes from credential settings
  * @param {boolean} [options.showSuccessToast=true] - Set false when onSuccess reports the outcome itself
+ * @param {number} [options.projectId] - Project owning the credential; vault references resolve only there
  */
 export const useConfigOAuthModal = (options = {}) => {
-  const { onSuccess, credentials, toolkitId, showSuccessToast = true } = options;
-  const projectId = useSelectedProjectId();
+  const {
+    onSuccess,
+    credentials,
+    toolkitId,
+    showSuccessToast = true,
+    projectId: credentialProjectId,
+  } = options;
+  const selectedProjectId = useSelectedProjectId();
+  const projectId = credentialProjectId || selectedProjectId;
   const { toastSuccess } = useToast();
 
   const [showModal, setShowModal] = useState(false);
