@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useGetChatConfigQuery } from '@/api/chatConfig';
 import { ATTACHMENT_LIMITS } from '@/common/constants';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 /**
  * Hook to fetch chat attachment limits from backend and provide FE-friendly values.

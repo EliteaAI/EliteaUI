@@ -1,7 +1,7 @@
 import { useSelector } from 'react-redux';
 
+import { useSelectedProject } from '@/[fsd]/shared/lib/hooks';
 import { useGetAvailableConfigurationsTypeQuery } from '@/api/configurations';
-import { useSelectedProject } from '@/hooks/useSelectedProject';
 
 const ALL_SECTIONS = [
   'credentials',

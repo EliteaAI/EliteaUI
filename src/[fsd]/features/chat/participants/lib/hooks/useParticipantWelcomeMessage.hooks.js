@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { useFetchParticipantDetails } from '@/[fsd]/features/chat/participants/lib/hooks/useFetchParticipantDetails.hooks';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 
 import {
   getChatParticipantUniqueId,

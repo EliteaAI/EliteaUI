@@ -6,6 +6,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Box } from '@mui/material';
 
 import { SettingsDrawer, SettingsLayoutConstants, SettingsRedirect } from '@/[fsd]/features/settings';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useGetPlatformSettingsQuery } from '@/api/platformSettings';
 import AnalyticsIcon from '@/assets/analytics-icon.svg?react';
 import BrainIcon from '@/assets/brain.svg?react';
@@ -23,7 +24,6 @@ import ModelIcon from '@/components/Icons/ModelIcon';
 import Person from '@/components/Icons/Person';
 import UsersIcon from '@/components/Icons/UsersIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import RouteDefinitions, { PathSessionMap } from '@/routes';
 
 const VALID_TAB_IDS = [

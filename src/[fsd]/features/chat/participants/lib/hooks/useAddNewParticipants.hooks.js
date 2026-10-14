@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo } from 'react';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { isAutoSelection } from '@/[fsd]/shared/lib/utils';
 import {
   useAddParticipantIntoConversationMutation,
@@ -9,7 +10,6 @@ import {
 } from '@/api';
 import { ChatParticipantType } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import { isParticipantsEqual, transformParticipant } from '../helpers/addParticipants.helpers';
 import { getChatParticipantUniqueId } from '../helpers/participants.helpers';

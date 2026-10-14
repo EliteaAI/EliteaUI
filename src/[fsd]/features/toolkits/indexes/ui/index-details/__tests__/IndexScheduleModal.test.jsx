@@ -34,7 +34,8 @@ vi.mock('react-redux', () => ({
   useSelector: selector => selector({ user: { personal_project_id: PERSONAL_PROJECT_ID } }),
 }));
 
-vi.mock('@/hooks/useSelectedProject', () => ({
+// useProjectType reads the project through a sibling import, so the barrel mock alone does not reach it.
+vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({
   useSelectedProject: () => ({ id: selectedProject.id }),
   useSelectedProjectId: () => selectedProject.id,
 }));
@@ -69,6 +70,8 @@ vi.mock('@/[fsd]/features/credentials/ui/credentials-select/CredentialNotFoundVa
 }));
 
 vi.mock('@/[fsd]/shared/lib/hooks', async () => ({
+  useSelectedProject: () => ({ id: selectedProject.id }),
+  useSelectedProjectId: () => selectedProject.id,
   useContextExecutionEntity: () => ({ contextExecutionEntity: 'toolkit' }),
   useProjectType: (await import('@/[fsd]/shared/lib/hooks/useProjectType.hooks')).useProjectType,
 }));

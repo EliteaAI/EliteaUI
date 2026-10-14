@@ -29,8 +29,8 @@ const { deleteUser, unwrap, toastError, toastSuccess } = vi.hoisted(() => {
 vi.mock('@/api/admin', () => ({
   useUserDeleteMutation: () => [deleteUser, { isLoading: false }],
 }));
-vi.mock('@/hooks/useSelectedProject', () => ({ useSelectedProjectId: () => 406 }));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
+  useSelectedProjectId: () => 406,
   useToast: () => ({ toastError, toastSuccess }),
 }));
 vi.mock('@/common/utils', () => ({ buildErrorMessage: error => error?.data?.error || 'error' }));

@@ -3,12 +3,11 @@ import { useCallback } from 'react';
 import { useFormikContext } from 'formik';
 
 import { useSetRefetchDetails } from '@/[fsd]/entities/application-tab-bar/lib/hooks';
-import { useToast } from '@/[fsd]/shared/lib/hooks';
+import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { useLazyApplicationDetailsQuery, useUpdateApplicationRelationMutation } from '@/api/applications';
 import FlowIcon from '@/assets/flow-icon.svg?react';
 import { buildErrorMessage } from '@/common/utils';
 import ApplicationsIcon from '@/components/Icons/ApplicationsIcon';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 /**
  * Map a backend sub-agent validation error (issue #5680 cycle / leaf-rule rejections and others)

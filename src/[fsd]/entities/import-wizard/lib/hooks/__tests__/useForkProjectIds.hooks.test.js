@@ -10,7 +10,9 @@ import { useForkProjectIds } from '../useForkProjectIds.hooks';
 const currentProjectId = 2;
 const otherProjectId = 7;
 
-vi.mock('@/hooks/useSelectedProject', () => ({ useSelectedProjectId: () => currentProjectId }));
+vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({
+  useSelectedProjectId: () => currentProjectId,
+}));
 
 afterEach(cleanup);
 

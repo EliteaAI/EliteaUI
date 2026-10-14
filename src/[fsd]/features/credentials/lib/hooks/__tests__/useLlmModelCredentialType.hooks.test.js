@@ -9,7 +9,7 @@ const onRefresh = vi.fn();
 let credentialsData;
 
 vi.mock('react-redux', () => ({ useSelector: selector => selector({ user: { personal_project_id: 99 } }) }));
-vi.mock('@/hooks/useSelectedProject', () => ({ useSelectedProjectId: () => 2 }));
+vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({ useSelectedProjectId: () => 2 }));
 vi.mock('../useCredentialsData.hooks.js', () => ({ useCredentialsData: () => credentialsData }));
 
 const DIAL_CREDENTIAL = { elitea_title: 'dial-cred', private: false };

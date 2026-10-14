@@ -20,6 +20,7 @@ import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
 import {
   SERVICE_PROMPT_KEYS,
   useLanguageLinter,
+  useSelectedProjectId,
   useServicePromptByKey,
   useToast,
 } from '@/[fsd]/shared/lib/hooks';
@@ -44,7 +45,6 @@ import {
   useLeaveCanvasRoomSocket,
 } from '@/hooks/chat/useCanvasSocket';
 import useIsSmallWindow from '@/hooks/useIsSmallWindow';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import CanvasEditHeader from './CanvasEditHeader';
 

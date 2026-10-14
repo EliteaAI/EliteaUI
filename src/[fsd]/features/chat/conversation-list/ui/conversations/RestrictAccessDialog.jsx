@@ -16,11 +16,10 @@ import {
   mapAiParticipantToSelectItem,
   mapUserParticipantToSelectItem,
 } from '@/[fsd]/features/chat/conversation-list/lib/helpers';
-import { useToast, useUserList } from '@/[fsd]/shared/lib/hooks';
+import { useSelectedProjectId, useToast, useUserList } from '@/[fsd]/shared/lib/hooks';
 import { Autocomplete, Banner, Button, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { ChatParticipantType } from '@/common/constants';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import AiParticipantSearchSelect from './AiParticipantSearchSelect';
 

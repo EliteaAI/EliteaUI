@@ -8,7 +8,7 @@ import { useSkillDetailsQuery } from '@/[fsd]/features/skill/api';
 import { hasSkillChatModelOverride, withoutSkillChatModel } from '@/[fsd]/features/skill/lib/helpers';
 import { SkillValidateSchema } from '@/[fsd]/features/skill/lib/validation';
 import { CreateSkillForm } from '@/[fsd]/features/skill/ui';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 
 const buildInitialValues = data => ({
   id: data?.id ?? null,

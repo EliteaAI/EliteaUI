@@ -9,13 +9,12 @@ import { useCredentialValidation, useCredentialsData } from '@/[fsd]/features/cr
 import { CredentialOptionLabel } from '@/[fsd]/features/credentials/ui';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp';
 import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
-import { useContextExecutionEntity } from '@/[fsd]/shared/lib/hooks';
+import { useContextExecutionEntity, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { Select } from '@/[fsd]/shared/ui';
 import { BaseBtn } from '@/[fsd]/shared/ui/button';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import RefreshIcon from '@/assets/refresh-icon.svg?react';
 import { Create_Personal_Title, Create_Project_Title, Manual_Title } from '@/hooks/useConfigurations';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import RouteDefinitions, { getBasename } from '@/routes';
 
 import CredentialCreateLabel from './CredentialCreateLabel';

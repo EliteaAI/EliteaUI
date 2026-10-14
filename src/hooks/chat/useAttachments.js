@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useMemo } from 'react';
 
 import { getAttachmentDisabledStatus, getAttachmentManagerId } from '@/[fsd]/entities/attachment/lib';
-import { useToast } from '@/[fsd]/shared/lib/hooks';
+import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { useSetAttachmentStorageMutation } from '@/api';
 
-import { useSelectedProjectId } from '../useSelectedProject';
 import { createAttachmentManagerService } from './attachmentManagerService';
 import { useAttachmentState } from './useAttachmentState';
 

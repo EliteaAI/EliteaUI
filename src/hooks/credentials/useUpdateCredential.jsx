@@ -1,8 +1,8 @@
 import { useCallback } from 'react';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useUpdateConfigurationMutation } from '@/api/configurations';
 import { isNullOrUndefined } from '@/common/utils.jsx';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const VALUE_OR_NULL_FIELDS = ['port'];
 

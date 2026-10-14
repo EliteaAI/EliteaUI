@@ -5,10 +5,10 @@ import { useNavigate } from 'react-router-dom';
 
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useApplicationCreateMutation } from '@/api/applications';
 import { filterEmptyStrings } from '@/common/applicationUtils';
 import { PrivateApplicationTabs, SearchParams, ViewMode } from '@/common/constants';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useSavePipeline, { calculateNodesAndEdges } from '@/pages/Pipelines/useSavePipeline';
 import { actions } from '@/slices/pipeline';
 

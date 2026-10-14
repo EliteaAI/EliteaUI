@@ -26,7 +26,9 @@ vi.mock('@/api/configurations', () => ({
 vi.mock('react-redux', () => ({
   useSelector: selector => selector({ user: { personal_project_id: 5 } }),
 }));
-vi.mock('@/hooks/useSelectedProject', () => ({ useSelectedProjectId: () => 9 }));
+vi.mock('@/[fsd]/shared/lib/hooks', () => ({
+  useSelectedProjectId: () => 9,
+}));
 
 const { useCredentialLabel } = await import('../useCredentialLabel.hooks');
 const { useCredentialsData } = await import('../useCredentialsData.hooks');

@@ -4,9 +4,8 @@ import { useFormikContext } from 'formik';
 
 import { useSkillUpdateMutation } from '@/[fsd]/features/skill/api';
 import { normalizeTagsForSave, withRunSettings } from '@/[fsd]/features/skill/lib/helpers';
-import { useToast } from '@/[fsd]/shared/lib/hooks';
+import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { buildErrorMessage } from '@/common/utils.jsx';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const useSaveSkill = () => {
   const projectId = useSelectedProjectId();

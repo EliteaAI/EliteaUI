@@ -2,8 +2,8 @@ import { memo } from 'react';
 
 import { Navigate } from 'react-router-dom';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { ALLOW_PROJECT_OWN_LLMS, PUBLIC_PROJECT_ID } from '@/common/constants';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import RouteDefinitions from '@/routes';
 
 const IntegrationGuard = memo(props => {

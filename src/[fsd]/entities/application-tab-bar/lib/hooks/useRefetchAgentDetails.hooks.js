@@ -3,8 +3,8 @@ import { useCallback, useEffect, useRef } from 'react';
 import { useFormikContext } from 'formik';
 import { useDispatch, useSelector } from 'react-redux';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { eliteaApi } from '@/api/eliteaApi';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { actions } from '@/slices/applications';
 
 export const useRefetchAgentDetails = () => {

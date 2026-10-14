@@ -38,11 +38,11 @@ import {
 } from '@/[fsd]/features/settings/ui/analytics';
 import EntityKindChip from '@/[fsd]/features/settings/ui/analytics/components/EntityKindChip';
 import { analyticsTableStyles } from '@/[fsd]/features/settings/ui/analytics/components/analyticsTable.styles';
+import { useSelectedProjectName } from '@/[fsd]/shared/lib/hooks';
 import { exportToExcel } from '@/[fsd]/shared/lib/utils';
 import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
 import DownloadIcon from '@/assets/download.svg?react';
 import ArrowBackIcon from '@/components/Icons/ArrowBackIcon';
-import { useSelectedProjectName } from '@/hooks/useSelectedProject';
 
 const HTTP_NOT_FOUND = 404;
 

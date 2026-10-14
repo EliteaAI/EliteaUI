@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
 
 import { ViewMode } from '@/common/constants';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
+
+import { useSelectedProjectId } from './useSelectedProject.hooks';
 
 export const useDataViewMode = (pageViewMode, { owner_id: ownerId }) => {
   const selectedProjectId = useSelectedProjectId();

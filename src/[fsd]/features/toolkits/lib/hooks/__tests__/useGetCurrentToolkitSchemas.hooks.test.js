@@ -22,7 +22,9 @@ vi.mock('@/api/toolkits', () => ({
   ],
 }));
 
-vi.mock('@/hooks/useSelectedProject', () => ({ useSelectedProjectId: () => 2 }));
+vi.mock('@/[fsd]/shared/lib/hooks', () => ({
+  useSelectedProjectId: () => 2,
+}));
 vi.mock('@/hooks/useSocket', () => ({ default: () => {} }));
 vi.mock('@/common/constants', () => ({ sioEvents: { mcp_status: 'mcp_status' } }));
 

@@ -13,14 +13,13 @@ import {
   useFolderApplications,
   useFolderView,
 } from '@/[fsd]/entities/folder';
-import { useIsTableView, useToast } from '@/[fsd]/shared/lib/hooks';
+import { useIsTableView, useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { ContentType, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
 import { buildErrorMessage, uniqueArrayByProp } from '@/common/utils';
 import CardList from '@/components/CardList';
 import useCredentialTypes from '@/hooks/credentials/useCredentialTypes';
 import { useLoadAllCredentials } from '@/hooks/credentials/useLoadAllCredentials';
 import useCardList from '@/hooks/useCardList';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import RouteDefinitions from '@/routes';
 
 import CredentialsTypesPanel from './CredentialsTypesPanel';

@@ -29,7 +29,7 @@ vi.mock('../useMcpTokenChange.hooks', () => ({
   useMcpTokenChange: () => ({ isLoggedIn: mocks.isLoggedIn }),
 }));
 
-vi.mock('@/hooks/useSelectedProject', () => ({
+vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({
   useSelectedProjectId: () => 30,
 }));
 

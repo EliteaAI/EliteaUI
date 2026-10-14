@@ -11,13 +11,13 @@ import {
   useSetDefaultVersion,
 } from '@/[fsd]/entities/version';
 import { NavigationConstants } from '@/[fsd]/shared/lib/constants';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useLazyGetApplicationVersionDetailQuery } from '@/api/applications';
 import { eliteaApi } from '@/api/eliteaApi';
 import { PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
 import { replaceVersionInPath } from '@/common/utils';
 import { useToolsValidationInfo } from '@/hooks/application/useValidateApplicationVersion';
 import { useViewModeFromUrl } from '@/hooks/useSearchParamValue';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const ApplicationVersionSelect = memo(props => {
   const { disabled, onSuccess, enableVersionListAvatar = false, isFromPipeline = false } = props;

@@ -30,7 +30,7 @@ vi.mock('@/[fsd]/features/chat/ui/editors/SkillCanvasModelSelector', () => ({
 vi.mock('@/[fsd]/features/skill/api', () => ({ useSkillDetailsQuery: () => ({ data: undefined }) }));
 vi.mock('@/[fsd]/features/skill/lib/validation', () => ({ SkillValidateSchema: {} }));
 vi.mock('@/[fsd]/features/skill/ui', () => ({ CreateSkillForm: () => null }));
-vi.mock('@/hooks/useSelectedProject', () => ({ useSelectedProjectId: () => 2 }));
+vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({ useSelectedProjectId: () => 2 }));
 
 const skill = llmSettings => ({
   id: 4,

@@ -2,8 +2,8 @@ import { useMemo } from 'react';
 
 import { useSelector } from 'react-redux';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 export const publicAdminPermissions = {
   agents: ['models.applications.applications.list'],

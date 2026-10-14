@@ -10,10 +10,9 @@ import {
   usePublishSkillMutation,
   useValidateSkillForPublishMutation,
 } from '@/[fsd]/features/skill/api';
-import { useToast } from '@/[fsd]/shared/lib/hooks';
+import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { useGetPlatformSettingsQuery } from '@/api/platformSettings';
 import { CollectionStatus, PERMISSIONS, PUBLIC_PROJECT_ID } from '@/common/constants';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const MAX_AI_RETRIES = 2;
 

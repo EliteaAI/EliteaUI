@@ -90,11 +90,8 @@ vi.mock('@/hooks/useIsFromSpecificPageHooks', () => ({
   useIsFrom: () => false,
 }));
 
-vi.mock('@/hooks/useSelectedProject', () => ({
-  useSelectedProjectId: () => 30,
-}));
-
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
+  useSelectedProjectId: () => 30,
   useToast: () => ({ toastSuccess: vi.fn() }),
 }));
 

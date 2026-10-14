@@ -13,7 +13,7 @@ import {
   useFolderApplications,
   useFolderView,
 } from '@/[fsd]/entities/folder';
-import { useToast } from '@/[fsd]/shared/lib/hooks';
+import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { ContentType, ViewMode } from '@/common/constants';
 import { buildErrorMessage, uniqueArrayByProp } from '@/common/utils';
 import CardList from '@/components/CardList';
@@ -21,7 +21,6 @@ import Categories from '@/components/Categories';
 import RightInfoPanel from '@/components/RightInfoPanel';
 import useCardList from '@/hooks/useCardList';
 import { useLoadApplications } from '@/hooks/useLoadApplications';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import RouteDefinitions from '@/routes';
 import { rightInfoPanelStyle } from '@/styles/RightInfoPanelStyle';
 

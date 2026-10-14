@@ -77,7 +77,7 @@ export const analyticsTestTheme = createTheme({
 });
 
 /**
- * The analytics screens reach the redux store through @/hooks/useSelectedProject, and the store
+ * The analytics screens reach the redux store through @/[fsd]/shared/lib/hooks, and the store
  * pulls in api slices that call eliteaApi.enhanceEndpoints(...).injectEndpoints(...) at module
  * scope. None of those endpoints are exercised in these tests, so a self-returning stub is
  * enough to satisfy the chain when a test mocks the '@/api' barrel.

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useCreateModerationRequestMutation, useLazyModerationStatusQuery } from '@/api/admin';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import { APPLICATION_CATALOG, REQUEST_STATUS } from '../constants/applicationCatalog.constants';
 

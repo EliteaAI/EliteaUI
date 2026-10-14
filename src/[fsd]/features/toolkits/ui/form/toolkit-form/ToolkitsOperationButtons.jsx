@@ -10,14 +10,13 @@ import DialogTitle from '@mui/material/DialogTitle';
 import { useCredentialWarning } from '@/[fsd]/entities/credential-warning';
 import { CredentialWarningModal } from '@/[fsd]/entities/credential-warning/ui';
 import { ToolkitFormConstants } from '@/[fsd]/features/toolkits/lib/constants';
-import { useToast } from '@/[fsd]/shared/lib/hooks';
+import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { eliteaApi } from '@/api/eliteaApi.js';
 import { useToolkitEditMutation } from '@/api/toolkits.js';
 import eventEmitter from '@/common/eventEmitter';
 import { buildErrorMessage } from '@/common/utils.jsx';
 import { StyledDialog, StyledDialogActions, StyledDialogContentText } from '@/components/StyledDialog';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const { ToolEvents } = ToolkitFormConstants;
 

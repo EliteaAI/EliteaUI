@@ -43,7 +43,9 @@ vi.mock('@/api/configurations', () => ({
 vi.mock('@/hooks/useCheckPermission', () => ({
   default: () => ({ checkPermission: () => access.canUpdateSkill }),
 }));
-vi.mock('@/hooks/useSelectedProject', () => ({ useSelectedProjectId: () => 2 }));
+vi.mock('@/[fsd]/shared/lib/hooks', () => ({
+  useSelectedProjectId: () => 2,
+}));
 vi.mock('@/[fsd]/features/skill/lib/hooks', async () => ({
   useSkillVersionModel: (await import('@/[fsd]/features/skill/lib/hooks/useSkillVersionModel.hooks'))
     .useSkillVersionModel,

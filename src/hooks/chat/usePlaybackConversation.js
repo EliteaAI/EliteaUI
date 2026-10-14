@@ -3,9 +3,9 @@ import { useCallback, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 
 import { useConversationNavigation } from '@/[fsd]/features/chat/lib/hooks';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useLazyConversationDetailsQuery, useLazyMessageListQuery, useLazyMessageTracesQuery } from '@/api';
 import { buildErrorMessage } from '@/common/utils';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import {
   buildTraceListParams,

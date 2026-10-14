@@ -5,9 +5,8 @@ import { useSelector } from 'react-redux';
 import { Box, Typography } from '@mui/material';
 
 import { isMcpToolkitType, isRemoteMcpToolkitType } from '@/[fsd]/shared/lib/helpers';
-import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
+import { useIsMcpVisible, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { ChatParticipantType } from '@/common/constants';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import UsersParticipantDropdown from '../users-participant-dropdown';
 import ParticipantSection from './ParticipantSection';

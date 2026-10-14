@@ -8,7 +8,13 @@ import { act, cleanup, renderHook } from '@testing-library/react';
 import { ANALYTICS_TOUR_ID } from '../../constants';
 import { useInteractiveTourController } from '../useInteractiveTourController.hooks';
 
-vi.mock('@/slices/settings', () => ({ actions: { setSideBarCollapsed: vi.fn(() => ({ type: 'noop' })) } }));
+vi.mock('@/slices/settings', async importOriginal => {
+  const original = await importOriginal();
+  return {
+    ...original,
+    actions: { ...original.actions, setSideBarCollapsed: vi.fn(() => ({ type: 'noop' })) },
+  };
+});
 
 const SKILLS_LIST = 'models.applications.skills.list';
 

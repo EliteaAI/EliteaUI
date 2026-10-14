@@ -3,8 +3,8 @@ import React, { memo, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { PERMISSIONS } from '@/common/constants';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import LoadingPage from '@/pages/LoadingPage';
 import RouteDefinitions from '@/routes';
 

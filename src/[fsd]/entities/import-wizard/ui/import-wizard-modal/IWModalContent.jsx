@@ -7,10 +7,10 @@ import { Box, Typography } from '@mui/material';
 import { rematchModels } from '@/[fsd]/entities/import-wizard/lib/helpers';
 import IWModalDetails from '@/[fsd]/entities/import-wizard/ui/import-wizard-modal/IWModalDetails';
 import { ProjectSelectConstants } from '@/[fsd]/shared/lib/constants';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useListModelsQuery } from '@/api';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
 import ProjectSelect from '@/components/ProjectSelect';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const IWModalContent = memo(props => {
   const { isForking, excludedProjectIds } = props;

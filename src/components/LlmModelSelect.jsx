@@ -4,11 +4,11 @@ import { useSelector } from 'react-redux';
 
 import { Box, Typography } from '@mui/material';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { Select } from '@/[fsd]/shared/ui';
 import { useLazyListModelsQuery } from '@/api/configurations';
 import RefreshIcon from '@/assets/refresh-icon.svg?react';
 import BriefcaseIcon from '@/components/Icons/BriefcaseIcon.jsx';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import Person from './Icons/Person';
 

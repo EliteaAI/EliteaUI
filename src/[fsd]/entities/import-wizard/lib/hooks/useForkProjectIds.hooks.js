@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 export const useForkProjectIds = (isForking, sourceProjectId) => {
   const selectedProjectId = useSelectedProjectId();

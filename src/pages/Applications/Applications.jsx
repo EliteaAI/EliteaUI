@@ -3,11 +3,11 @@ import { memo, useCallback, useEffect, useMemo } from 'react';
 import { useLocation, useMatch, useNavigate, useParams } from 'react-router-dom';
 
 import { ToolbarImportButton } from '@/[fsd]/entities/import-wizard/ui';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { ApplicationsTabs, PUBLIC_PROJECT_ID, PrivateApplicationTabs } from '@/common/constants';
 import DateRangeSelect, { useTrendRange } from '@/components/DateRangeSelect';
 import StickyTabs from '@/components/StickyTabs';
 import ViewToggle from '@/components/ViewToggle';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { useHasAdminPermissionOfThisEntity } from '@/hooks/users/usePermissions';
 import RouteDefinitions, { PathSessionMap } from '@/routes';
 

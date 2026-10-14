@@ -11,6 +11,7 @@ import PageTitleSetter from '@/[fsd]/app/routes/PageTitleSetter';
 import ProtectedRoute from '@/[fsd]/app/routes/ProtectedRoute';
 import SkillsGuard from '@/[fsd]/app/routes/SkillsGuard';
 import { ChunkHelpers } from '@/[fsd]/shared/lib/helpers';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useLazyPermissionListQuery, useLazyPublicPermissionListQuery } from '@/api/auth';
 import { useLazyAuthorDetailsQuery } from '@/api/social.js';
 import {
@@ -22,7 +23,6 @@ import {
   ToolkitsTabs,
 } from '@/common/constants';
 import RouteChangeResetSearch from '@/components/RouteChangeResetSearch';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import LoadingPage from '@/pages/LoadingPage';
 import Page404 from '@/pages/Page404.jsx';
 import RouteDefinitions from '@/routes';

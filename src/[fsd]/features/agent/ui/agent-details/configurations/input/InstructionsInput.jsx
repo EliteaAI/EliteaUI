@@ -9,10 +9,10 @@ import { useInstructionsSkillMention } from '@/[fsd]/features/agent/lib/hooks/us
 import { MentionSkillList } from '@/[fsd]/features/skill';
 import { AccordionConstants, MentionConstants, TourTargetConstants } from '@/[fsd]/shared/lib/constants';
 import { useInstructionsInputRefContext } from '@/[fsd]/shared/lib/context';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { FileReaderEnhancer } from '@/[fsd]/shared/ui/input';
 import { contextResolver } from '@/common/utils';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import InstructionsSlashSuggestionList from './InstructionsSlashSuggestionList';
 

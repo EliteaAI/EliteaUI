@@ -2,9 +2,9 @@ import { memo, useContext, useMemo } from 'react';
 
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { SocketContext } from '@/[fsd]/shared/lib/context';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { useGetTtsVoicesQuery, useListModelsQuery } from '@/api/configurations.js';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import { useVoiceConfig } from '../lib/hooks/useVoiceConfig.hooks';
 import VoiceConfigControls from './VoiceConfigControls';

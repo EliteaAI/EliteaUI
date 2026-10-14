@@ -92,7 +92,7 @@ const INDEX_RUN_ROW = {
   entry: {},
 };
 
-vi.mock('@/hooks/useSelectedProject', () => ({ useSelectedProjectId: () => 7 }));
+vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({ useSelectedProjectId: () => 7 }));
 
 vi.mock('@/hooks/useIsSmallWindow', () => ({ default: () => ({ isSmallWindow: false }) }));
 

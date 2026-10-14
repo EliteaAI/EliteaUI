@@ -84,7 +84,7 @@ vi.mock('@/[fsd]/features/settings/lib/helpers', () => ({
 
 const selectedProject = vi.hoisted(() => ({ id: 2 }));
 
-vi.mock('@/hooks/useSelectedProject', () => ({
+vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({
   useSelectedProjectId: () => selectedProject.id,
   useSelectedProjectName: () => 'Private',
 }));

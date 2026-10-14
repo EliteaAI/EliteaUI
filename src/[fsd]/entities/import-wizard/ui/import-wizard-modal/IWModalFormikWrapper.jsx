@@ -3,9 +3,8 @@ import React, { memo, useMemo } from 'react';
 import { Formik } from 'formik';
 
 import { prepareImportWizardData } from '@/[fsd]/entities/import-wizard/lib/helpers';
-import { useToast } from '@/[fsd]/shared/lib/hooks';
+import { useSelectedProject, useToast } from '@/[fsd]/shared/lib/hooks';
 import { useListModelsQuery } from '@/api/configurations.js';
-import { useSelectedProject } from '@/hooks/useSelectedProject';
 
 const IWModalFormikWrapper = memo(props => {
   const { data = {}, isForking, onClose, children } = props;

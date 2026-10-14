@@ -16,7 +16,7 @@ vi.mock('@/common/utils', () => ({
   buildErrorMessage: () => '',
 }));
 
-vi.mock('@/hooks/useSelectedProject', () => ({
+vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useSelectedProjectId: () => 2,
 }));
 

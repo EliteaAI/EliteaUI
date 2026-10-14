@@ -29,6 +29,7 @@ import {
   useContextExecutionEntity,
   useCtrlEnterKeyEventsHandler,
   useProjectType,
+  useSelectedProjectId,
 } from '@/[fsd]/shared/lib/hooks';
 import { notifyTaskComplete, notifyTaskError } from '@/[fsd]/shared/lib/utils';
 import { useStopChatTaskMutation } from '@/api';
@@ -44,7 +45,6 @@ import {
 import { convertTime } from '@/common/convertChatConversationMessages.js';
 import { convertJsonToString } from '@/common/utils';
 import { useIsFrom } from '@/hooks/useIsFromSpecificPageHooks';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useSocket, { useManualSocket } from '@/hooks/useSocket';
 import RouteDefinitions from '@/routes';
 

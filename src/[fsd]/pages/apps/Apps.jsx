@@ -7,14 +7,13 @@ import { Box } from '@mui/material';
 import { ApplicationCatalog } from '@/[fsd]/features/apps';
 import { APPLICATIONS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { ToolkitsList } from '@/[fsd]/features/toolkits';
-import { useShouldCollapseRightToolbar } from '@/[fsd]/shared/lib/hooks';
+import { useSelectedProjectId, useShouldCollapseRightToolbar } from '@/[fsd]/shared/lib/hooks';
 import { useToolkitsListQuery } from '@/api/toolkits';
 import AppCatalogIcon from '@/assets/app-catalog-icon.svg?react';
 import ApplicationsIcon from '@/assets/applications-icon.svg?react';
 import { AppsTabs, ContentType, SearchParams } from '@/common/constants';
 import StickyTabs from '@/components/StickyTabs';
 import ViewToggle from '@/components/ViewToggle';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import RouteDefinitions from '@/routes';
 
 const LEGACY_APPS_TABS = {

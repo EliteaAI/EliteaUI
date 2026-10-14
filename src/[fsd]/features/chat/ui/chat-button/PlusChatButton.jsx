@@ -18,7 +18,7 @@ import {
 import { useApplicationSubmenu } from '@/[fsd]/features/chat/lib/hooks';
 import { ParticipantConstants } from '@/[fsd]/features/chat/participants/lib/constants';
 import { useAvailableInternalTools } from '@/[fsd]/features/toolkits';
-import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
+import { useIsMcpVisible, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { Switch, Text } from '@/[fsd]/shared/ui';
 import FlowIcon from '@/assets/flow-icon.svg?react';
 import MCPIcon from '@/assets/mcp-icon.svg?react';
@@ -29,7 +29,6 @@ import ApplicationsIcon from '@/components/Icons/ApplicationsIcon.jsx';
 import ArrowRightIcon from '@/components/Icons/ArrowRightIcon';
 import PlusIcon from '@/components/Icons/PlusIcon';
 import UsersIcon from '@/components/Icons/UsersIcon';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import AttachmentButton from './AttachmentButton';
 import PlusChatSubmenu from './PlusChatSubmenu';

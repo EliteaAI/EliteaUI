@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
 
 import { useListModelsQuery } from '@/api/configurations';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
+
+import { useSelectedProjectId } from './useSelectedProject.hooks';
 
 /**
  * Hook to fetch and resolve the default model for the current project.

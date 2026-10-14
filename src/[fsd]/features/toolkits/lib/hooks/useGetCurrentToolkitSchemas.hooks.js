@@ -2,10 +2,10 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { useSelector } from 'react-redux';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { eliteaApi } from '@/api/eliteaApi.js';
 import { useLazyToolkitTypesQuery } from '@/api/toolkits';
 import { sioEvents } from '@/common/constants';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useSocket from '@/hooks/useSocket';
 
 // Module-level Map to track ongoing fetches by projectId

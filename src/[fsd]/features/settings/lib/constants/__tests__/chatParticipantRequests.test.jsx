@@ -70,7 +70,7 @@ vi.mock('@/[fsd]/shared/config/store', () => ({
   default: { getState: () => ({}), dispatch: vi.fn(), subscribe: () => () => {} },
 }));
 vi.mock('@/api/admin', () => ({ useUserListQuery: () => EMPTY_RESULT }));
-vi.mock('@/hooks/useSelectedProject', () => ({ useSelectedProjectId: () => 2 }));
+vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({ useSelectedProjectId: () => 2 }));
 vi.mock('@/hooks/users/usePermissions', () => ({ useCanListThisPublicEntity: () => false }));
 vi.mock('@/[fsd]/features/toolkits/lib/hooks/useGetCurrentToolkitSchemas.hooks', () => ({
   useGetCurrentToolkitSchemas: () => TOOLKIT_SCHEMAS,

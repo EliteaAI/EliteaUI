@@ -3,11 +3,10 @@ import { useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 
 import { useLazyDownloadProjectBackupQuery } from '@/[fsd]/features/settings/api';
-import { useToast } from '@/[fsd]/shared/lib/hooks';
+import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { PERMISSIONS } from '@/common/constants';
 import { buildErrorMessage, downloadBlobFile } from '@/common/utils';
 import useCheckPermission from '@/hooks/useCheckPermission';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 export const useProjectBackup = () => {
   const projectId = useSelectedProjectId();

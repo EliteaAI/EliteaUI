@@ -4,6 +4,7 @@ import { useParams } from 'react-router-dom';
 
 import { Box, Typography } from '@mui/material';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { Modal } from '@/[fsd]/shared/ui';
 import {
   EvaluationBreadcrumbs,
@@ -12,7 +13,6 @@ import {
   RunResultsView,
   useEvalRunHistory,
 } from '@/[fsd]/widgets/evaluation';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const AgentEvaluateHistoryPage = memo(() => {
   const { agentId } = useParams();

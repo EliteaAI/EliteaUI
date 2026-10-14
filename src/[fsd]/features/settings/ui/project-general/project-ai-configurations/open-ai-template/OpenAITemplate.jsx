@@ -4,11 +4,11 @@ import { Box, IconButton, Tooltip } from '@mui/material';
 
 import { useCodePreview, useModelConfiguration, useModelOptions } from '@/[fsd]/features/settings/lib/hooks';
 import { CodePreview } from '@/[fsd]/features/settings/ui/project-general/project-ai-configurations/open-ai-template';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useListModelsQuery } from '@/api/configurations.js';
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
 import CopyIcon from '@/components/Icons/CopyIcon';
 import DownloadIcon from '@/components/Icons/DownloadIcon';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const exampleToken = 'Your_Personal_Token';
 

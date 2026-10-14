@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 
 import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useToolkitAvailableToolsQuery } from '@/api/toolkits.js';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 export const useGetSelectedToolSchema = ({ toolkitType, toolOptionType, toolkitId, availableMcpTools }) => {
   const { toolkitSchemas } = useGetCurrentToolkitSchemas();

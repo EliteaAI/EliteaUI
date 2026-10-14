@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useApplicationListQuery } from '@/api/applications';
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { useCanListThisPublicEntity } from '@/hooks/users/usePermissions';
 
 import { useParticipantsQueryParams } from './useParticipantsQueryParams';

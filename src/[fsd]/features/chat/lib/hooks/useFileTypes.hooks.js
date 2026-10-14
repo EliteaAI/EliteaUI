@@ -2,8 +2,8 @@ import { useEffect } from 'react';
 
 import { useDispatch, useSelector } from 'react-redux';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useGetDocumentLoadersQuery } from '@/api/applications';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import {
   clearError,
   selectAllowedExtensions,

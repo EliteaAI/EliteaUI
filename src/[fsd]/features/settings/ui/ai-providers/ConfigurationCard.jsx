@@ -5,9 +5,9 @@ import { Box, Typography } from '@mui/material';
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { ConfigurationHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { useConfigurationNavigation } from '@/[fsd]/features/settings/lib/hooks';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import EditDisabledIcon from '@/assets/edit-disabled.svg?react';
 import { BORDER_RADIUS, HEIGHTS, SPACING } from '@/common/designTokens';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { getCardGradientStyles } from '@/utils/cardStyles';
 
 import ConfigurationIcon from './ConfigurationIcon';

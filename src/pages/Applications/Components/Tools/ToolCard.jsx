@@ -16,7 +16,7 @@ import { useResolvedSharepointConfig } from '@/[fsd]/features/sharepoint/lib/hoo
 import { SharepointDelegatedLoginButton } from '@/[fsd]/features/sharepoint/ui';
 import { ToolkitFormHelpers, ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
-import { useToast } from '@/[fsd]/shared/lib/hooks';
+import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Banner, Modal } from '@/[fsd]/shared/ui';
 import { TypographyWithConditionalTooltip } from '@/[fsd]/shared/ui/tooltip';
 import AttachIcon from '@/assets/attach-icon.svg?react';
@@ -39,7 +39,6 @@ import {
 } from '@/hooks/application/useValidateApplicationVersion';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import useSearchParamValue from '@/hooks/useSearchParamValue';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { getBasename } from '@/routes';
 
 import AgentPipelineVersionSelector from './AgentPipelineVersionSelector.jsx';

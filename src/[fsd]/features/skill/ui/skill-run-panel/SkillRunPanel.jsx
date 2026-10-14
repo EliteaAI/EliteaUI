@@ -4,11 +4,11 @@ import { Box, Typography } from '@mui/material';
 
 import { ChatBox } from '@/[fsd]/features/chat/ui';
 import { useFocusRunInput, useSkillRunChat } from '@/[fsd]/features/skill/lib/hooks';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { ViewRunHistoryButton } from '@/[fsd]/shared/ui/button';
 import { ContextBudgetUI } from '@/[fsd]/widgets/context-budget';
 import FullScreenToggle from '@/components/Chat/FullScreenToggle';
 import useUploadAttachments from '@/hooks/chat/useUploadAttachments';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { ContentContainer } from '@/pages/Common/Components/StyledComponents';
 
 import SkillRunActions from './SkillRunActions';

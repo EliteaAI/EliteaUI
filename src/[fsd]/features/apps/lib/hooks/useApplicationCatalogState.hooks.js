@@ -3,8 +3,8 @@ import { createElement, useMemo } from 'react';
 import { useTheme } from '@mui/material';
 
 import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useListToolkitTypesQuery } from '@/api/toolkits';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import {
   APPLICATION_CATALOG,

@@ -60,7 +60,7 @@ vi.mock('@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader', () => ({ de
 
 vi.mock('@/[fsd]/shared/ui/breadcrumbs', () => ({ default: () => null }));
 
-vi.mock('@/hooks/useSelectedProject', () => ({ useSelectedProjectId: () => 2 }));
+vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({ useSelectedProjectId: () => 2 }));
 
 vi.mock('@/[fsd]/shared/lib/hooks/useToast.hooks', () => ({ useToast: () => ({ toastError: vi.fn() }) }));
 

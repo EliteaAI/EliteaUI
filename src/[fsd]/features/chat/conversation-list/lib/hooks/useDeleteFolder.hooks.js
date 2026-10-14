@@ -1,8 +1,8 @@
 import { useCallback, useEffect } from 'react';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useDeleteFolderMutation } from '@/api';
 import { areTheSameFolders, buildErrorMessage } from '@/common/utils';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 export const useDeleteFolder = props => {
   const projectId = useSelectedProjectId();

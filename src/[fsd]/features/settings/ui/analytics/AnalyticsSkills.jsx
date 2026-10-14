@@ -24,9 +24,9 @@ import {
   SkillsEmptyState,
 } from '@/[fsd]/features/settings/ui/analytics';
 import { analyticsTableStyles } from '@/[fsd]/features/settings/ui/analytics/components/analyticsTable.styles';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 import StyledSearchInput from '@/components/SearchInput';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const CHART_SIZE = 20;
 const DEFAULT_SORT = { sortBy: 'runs', sortOrder: 'desc' };

@@ -4,10 +4,9 @@ import { Box, Typography } from '@mui/material';
 
 // FEATURE TOGGLE: Summarization details modal
 // import Tooltip from '@/ComponentsLib/Tooltip';
-// import { useModal } from '@/[fsd]/shared/lib/hooks';
+// import { useModal, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 // import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
-// import { useSelectedProjectId } from '@/hooks/useSelectedProject';
-// import SummaryDetailsModal from './SummaryDetailsModal';
+// // import SummaryDetailsModal from './SummaryDetailsModal';
 
 const SummaryDetailsButton = memo(props => {
   const { count } = props;

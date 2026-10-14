@@ -3,6 +3,7 @@ import * as React from 'react';
 import { useTrackEvent } from '@/GA';
 import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
 import { getFilenameFromContentDisposition } from '@/[fsd]/shared/lib/helpers';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useLazyApplicationDetailsQuery } from '@/api/applications';
 import { useLazyToolkitExportQuery } from '@/api/toolkits';
 import {
@@ -13,7 +14,6 @@ import {
   VITE_SERVER_URL,
 } from '@/common/constants';
 import { buildErrorMessage, downloadJSONFile } from '@/common/utils';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const { GA_EVENT_NAMES, GA_EVENT_PARAMS } = AnalyticConstants;
 

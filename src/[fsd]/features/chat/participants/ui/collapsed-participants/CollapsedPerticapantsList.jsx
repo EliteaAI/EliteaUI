@@ -11,7 +11,7 @@ import {
   isSkippedContainerParticipant,
 } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { isMcpToolkitType, isRemoteMcpToolkitType } from '@/[fsd]/shared/lib/helpers';
-import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
+import { useIsMcpVisible, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import AgentSvg from '@/assets/agent.svg?react';
 import FlowSvg from '@/assets/flow-icon.svg?react';
 import MCPSvg from '@/assets/mcp-icon.svg?react';
@@ -20,7 +20,6 @@ import ToolSvg from '@/assets/tool-icon.svg?react';
 import { ChatParticipantType } from '@/common/constants';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
 import InfoIcon from '@/components/Icons/InfoIcon';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import UsersParticipantDropdown from '../users-participant-dropdown';
 import CollapsedParticipantsDropdown from './CollapsedParticipantsDropdown';

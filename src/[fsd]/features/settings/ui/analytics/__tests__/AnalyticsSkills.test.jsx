@@ -37,7 +37,7 @@ vi.mock('@/[fsd]/shared/config/store', () => ({
   default: { getState: () => ({}), dispatch: vi.fn(), subscribe: vi.fn() },
 }));
 
-vi.mock('@/hooks/useSelectedProject', () => ({ useSelectedProjectId: () => 1 }));
+vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({ useSelectedProjectId: () => 1 }));
 
 const ROWS = [
   {

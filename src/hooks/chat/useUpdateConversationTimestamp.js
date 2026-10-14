@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useConversationEditMutation } from '@/api';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 /**
  * Custom hook to update a conversation's updated_at timestamp on the backend

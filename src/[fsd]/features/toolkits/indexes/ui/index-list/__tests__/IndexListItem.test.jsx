@@ -45,7 +45,7 @@ vi.mock('@/hooks/useCheckPermission', () => ({
   default: () => ({ checkPermission: () => true }),
 }));
 
-vi.mock('@/hooks/useSelectedProject', () => ({
+vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({
   useSelectedProjectId: () => 2,
 }));
 
