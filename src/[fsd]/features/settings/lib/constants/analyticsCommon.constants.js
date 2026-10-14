@@ -41,10 +41,14 @@ export const TOOLTIP_TEXTS = {
       'Total user messages sent through Chat, Agent, and Pipeline chat interfaces during the selected date range.',
     AGENT_PIPELINE_RUNS:
       'Total Agent and Pipeline runs. Each initial run and every continuation after a static or dynamic interrupt is counted as a separate run.',
+    SKILL_RUNS:
+      'Total skill runs during the selected date range: a skill run on its own or as a chat participant. Each reply the skill generates is one run. A skill loaded or mentioned by an agent is part of that Agent or Pipeline run and is not counted here.',
     TOKENS: `Total input and output tokens used by ${MODEL_REQUESTS} during the selected date range.`,
     COST: `Estimated USD cost of ${MODEL_REQUESTS} during the selected date range. Costs are calculated from the platform's local model-price table and may differ from provider invoices.`,
     LEADERBOARD:
       'Ranks users by combined LLM calls, tool runs, and Agent & Pipeline runs during the selected date range. Only manually started activity (UI or API) is ranked.',
+    LEADERBOARD_SKILL_RUNS:
+      'Model and tool calls made by skill runs count toward the score; the Skill figure shows how many skill runs they came from.',
     AUTOMATED_ACTIVITY:
       'Runs started automatically by a schedule, a webhook, or indexing during the selected date range. They are included in project totals and cost, but are not counted as activity of the user who configured them.',
     MODEL_USAGE:
@@ -55,6 +59,7 @@ export const TOOLTIP_TEXTS = {
       'Shows daily AI usage for the selected period, including LLM Calls, Tool Runs, and Agent & Pipeline Runs. For Team Projects, it also shows the number of distinct active users per day, excluding automated runs.',
     DAILY_ACTIVITY_PRIVATE:
       'Shows daily AI usage for the selected period, including LLM Calls, Tool Runs, and Agent & Pipeline Runs.',
+    DAILY_ACTIVITY_SKILL_RUNS: 'Skill Runs shows skills run on their own or as a chat participant.',
   },
   costs: {
     TOTAL_COST: `Estimated total USD cost of ${MODEL_REQUESTS}. It includes input-token, output-token, cache read, and cache write costs.`,
@@ -67,6 +72,8 @@ export const TOOLTIP_TEXTS = {
       'Estimated USD cost of evaluation runs, including the evaluated Agent or Pipeline calls and judge calls. It is already included in Total Cost.',
     BY_AGENT_PIPELINE:
       'Shows estimated LLM cost attributed to Agents and Pipelines during the selected date range. Evaluation runs are excluded and shown in Cost by Evaluation.',
+    BY_SKILL:
+      'Shows estimated LLM cost of skill runs during the selected date range. Skills loaded or mentioned by an agent add no cost of their own and are included in Cost by Agent & Pipeline.',
     BY_EVALUATION:
       'Shows estimated LLM cost of evaluation runs by the evaluated Agent or Pipeline version, including judge calls. Share is relative to the total evaluation cost.',
     TOTAL_TOKENS: `Combined number of input and output tokens used by ${MODEL_REQUESTS} during the selected date range.`,
@@ -85,6 +92,8 @@ export const TOOLTIP_TEXTS = {
     BY_USER: 'Shows token usage attributed to each project user during the selected date range.',
     BY_MODEL: 'Shows token usage for each AI model used in the selected date range.',
     BY_AGENT_PIPELINE: 'Shows token usage attributed to Agents and Pipelines during the selected date range.',
+    BY_SKILL:
+      'Shows token usage of skill runs during the selected date range. Tokens used after an agent loads a skill are attributed to that Agent or Pipeline.',
   },
   agents: {
     CHAT_MESSAGES:
@@ -146,6 +155,8 @@ export const TOOLTIP_TEXTS = {
     USERS_SECTION: 'Number of distinct users who ran this Agent or Pipeline during the selected date range.',
     TOOLS_SECTION:
       'Number of distinct tools, including nested sub-agents and sub-pipelines, used by this Agent or Pipeline during the selected date range.',
+    SKILLS_SECTION:
+      'Skills this Agent or Pipeline loaded or mentioned during the selected date range. Uses counts every activation; one run can use a skill more than once.',
   },
   userDetail: {
     ACTIVE_DAYS:

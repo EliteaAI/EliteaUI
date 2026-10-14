@@ -8,7 +8,7 @@ import { useAnalyticsUsersQuery } from '@/api';
 import StyledSearchInput from '@/components/SearchInput';
 
 const AnalyticsUsers = memo(props => {
-  const { projectId, dateFrom, dateTo, initialUserId, onBackToSource } = props;
+  const { projectId, dateFrom, dateTo, initialUserId, onBackToSource, canViewSkills = false } = props;
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(20);
@@ -106,6 +106,7 @@ const AnalyticsUsers = memo(props => {
             <Typography sx={[styles.tableCell, { flex: 1 }]}>LLM Calls</Typography>
             <Typography sx={[styles.tableCell, { flex: 1 }]}>Tool Calls</Typography>
             <Typography sx={[styles.tableCell, { flex: 1 }]}>Agent/Pipeline Runs</Typography>
+            {canViewSkills && <Typography sx={[styles.tableCell, { flex: 1 }]}>Skill Runs</Typography>}
             <Typography sx={[styles.tableCell, { flex: 1 }]}>Chat Msg</Typography>
             <Typography sx={[styles.tableCell, { flex: 1 }]}>Errors</Typography>
             <Typography sx={[styles.tableCell, styles.flexOne]}>Total Tokens</Typography>
@@ -151,6 +152,11 @@ const AnalyticsUsers = memo(props => {
                 <Typography sx={[styles.tableCellValue, { flex: 1 }]}>
                   {AnalyticCommonHelpers.fmtNum(u.agent_events)}
                 </Typography>
+                {canViewSkills && (
+                  <Typography sx={[styles.tableCellValue, { flex: 1 }]}>
+                    {AnalyticCommonHelpers.fmtNum(u.skill_events)}
+                  </Typography>
+                )}
                 <Typography sx={[styles.tableCellValue, { flex: 1 }]}>
                   {AnalyticCommonHelpers.fmtNum(u.chat_events)}
                 </Typography>

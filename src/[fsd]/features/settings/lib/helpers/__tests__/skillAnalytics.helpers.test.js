@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { buildAnalyticsSheets, fetchAllAnalyticsData } from '../analyticsExport.helpers';
 import {
   skillAgentPath,
+  skillDisplayName,
   skillRunAnalyticsPath,
   skillSourceLabel,
   skillTriggerLabel,
@@ -58,6 +59,11 @@ describe('skillAgentPath', () => {
 });
 
 describe('labels', () => {
+  it('marks a deleted skill in its display name', () => {
+    expect(skillDisplayName({ skill_name: 'Summarizer', deleted: false })).toBe('Summarizer');
+    expect(skillDisplayName({ skill_name: 'Summarizer', deleted: true })).toBe('Summarizer (deleted)');
+  });
+
   it('names the trigger, the activation and an unknown version', () => {
     expect(skillTriggerLabel('manual')).toBe('Manual');
     expect(skillTriggerLabel('webhook')).toBe('Webhook Triggers');

@@ -7,12 +7,51 @@ import { Box, CircularProgress, IconButton, Typography, useTheme } from '@mui/ma
 import { useAnalyticsAgentDetailQuery } from '@/[fsd]/features/settings/api/analyticsApi';
 import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
-import { ChartTooltip, KPICard } from '@/[fsd]/features/settings/ui/analytics';
+import {
+  ChartTooltip,
+  DeletedChip,
+  KPICard,
+  SkillBreakdownTable,
+} from '@/[fsd]/features/settings/ui/analytics';
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 import ArrowBackIcon from '@/components/Icons/ArrowBackIcon';
 
+const skillNameStyles = {
+  cell: { display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 },
+  name: { minWidth: 0 },
+};
+
+const SKILL_COLUMNS = [
+  {
+    key: 'skill_name',
+    label: 'Skill',
+    flex: 3,
+    render: skill => (
+      <Box sx={skillNameStyles.cell}>
+        <Typography
+          component="span"
+          sx={skillNameStyles.name}
+          noWrap
+        >
+          {skill.skill_name}
+        </Typography>
+        {skill.deleted && <DeletedChip testId="analytics-agent-detail-skill-deleted" />}
+      </Box>
+    ),
+  },
+  { key: 'uses', label: 'Uses', flex: 1, render: skill => AnalyticCommonHelpers.fmtNum(skill.uses) },
+];
+
+const skillRowsWithKeys = skills =>
+  skills.map(skill => ({ ...skill, key: `${skill.skill_project_id}-${skill.skill_id}` }));
+
+const skillsSubtitle = (skills, skillsTotal, skillsTruncated) =>
+  skillsTruncated
+    ? `Top ${skills.length} of ${skillsTotal} skills used by this agent / pipeline`
+    : `${skills.length} skills used by this agent / pipeline`;
+
 const AnalyticAgentDetailed = memo(props => {
-  const { projectId, entityId, dateFrom, dateTo, onBack } = props;
+  const { projectId, entityId, dateFrom, dateTo, onBack, canViewSkills = false } = props;
 
   const styles = analyticsAgentDetailedStyles();
   const { palette } = useTheme();
@@ -46,7 +85,17 @@ const AnalyticAgentDetailed = memo(props => {
       </Box>
     );
 
-  const { entity_name, kpis, evaluation, users = [], tools = [], daily_usage = [] } = data;
+  const {
+    entity_name,
+    kpis,
+    evaluation,
+    users = [],
+    tools = [],
+    skills = [],
+    skills_total,
+    skills_truncated = false,
+    daily_usage = [],
+  } = data;
 
   const tt = AnalyticsCommonConstants.TOOLTIP_TEXTS.agentDetail;
 
@@ -378,6 +427,17 @@ const AnalyticAgentDetailed = memo(props => {
             </Box>
           </Box>
         </Box>
+        {canViewSkills && (
+          <SkillBreakdownTable
+            title="Skills"
+            tooltip={tt.SKILLS_SECTION}
+            subtitle={skillsSubtitle(skills, skills_total, skills_truncated)}
+            columns={SKILL_COLUMNS}
+            rows={skillRowsWithKeys(skills)}
+            emptyText="No skill data"
+            testId="analytics-agent-detail-skills-panel"
+          />
+        )}
       </Box>
     </Box>
   );

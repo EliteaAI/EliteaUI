@@ -5,7 +5,12 @@ import { ExcelFormats, sanitizeFileNamePart } from '@/[fsd]/shared/lib/utils';
 
 import { triggerSourceLabel } from './analyticsCommon.helpers.js';
 import { tokenStats } from './analyticsToken.helpers.js';
-import { skillSourceLabel, skillTriggerLabel, skillVersionLabel } from './skillAnalytics.helpers.js';
+import {
+  skillDisplayName,
+  skillSourceLabel,
+  skillTriggerLabel,
+  skillVersionLabel,
+} from './skillAnalytics.helpers.js';
 
 const EXPORT_LIMIT = 10_000;
 
@@ -55,7 +60,9 @@ const NO_DATA_MSG = 'No data available for the selected date range.';
 
 const noDataMsg = meta => (isRunMeta(meta) ? meta.noDataMessage : NO_DATA_MSG);
 
-const buildOverviewSheet = (data, meta, isPersonalProject = false) => {
+const skillRunsColumn = { header: 'Skill Runs', key: 'skill_runs', numFmt: ExcelFormats.integer };
+
+const buildOverviewSheet = (data, meta, isPersonalProject = false, includeSkills = false) => {
   const { kpis = {}, daily_activity = [], models = [], top_ai_users = [], automated = [] } = data || {};
 
   const totalModelCalls = models.reduce((s, m) => s + (m.calls || 0), 0);
@@ -77,6 +84,7 @@ const buildOverviewSheet = (data, meta, isPersonalProject = false) => {
       { metric: 'Tool Runs', value: kpis.tool_runs ?? 0 },
       { metric: 'Chat Messages', value: kpis.chat_msgs ?? 0 },
       { metric: 'Agent & Pipeline Runs', value: kpis.agent_runs ?? 0 },
+      ...(includeSkills ? [{ metric: 'Skill Runs', value: kpis.skill_runs ?? 0 }] : []),
       { metric: 'Total Tokens', value: kpis.total_tokens ?? 0 },
       { metric: 'Cost (USD)', value: kpis.total_llm_cost ?? 0 },
     ],
@@ -90,6 +98,7 @@ const buildOverviewSheet = (data, meta, isPersonalProject = false) => {
     { header: 'LLM Calls', key: 'llm_calls', numFmt: ExcelFormats.integer },
     { header: 'Tool Runs', key: 'tool_runs', numFmt: ExcelFormats.integer },
     { header: 'Agent & Pipeline Runs', key: 'agent_runs', numFmt: ExcelFormats.integer },
+    ...(includeSkills ? [skillRunsColumn] : []),
   ];
   sections.push({
     title: 'Daily Activity',
@@ -123,6 +132,7 @@ const buildOverviewSheet = (data, meta, isPersonalProject = false) => {
     { header: 'LLM Calls', key: 'llm_calls', numFmt: ExcelFormats.integer },
     { header: 'Tool Runs', key: 'tool_runs', numFmt: ExcelFormats.integer },
     { header: 'Agent & Pipeline Runs', key: 'agent_runs', numFmt: ExcelFormats.integer },
+    ...(includeSkills ? [skillRunsColumn] : []),
   ];
   sections.push({
     title: 'Top AI Adopters',
@@ -154,11 +164,12 @@ const buildOverviewSheet = (data, meta, isPersonalProject = false) => {
 };
 
 const buildCostsSheet = (data, meta, options = {}) => {
-  const { runScoped = false } = options;
+  const { runScoped = false, includeSkills = false } = options;
   const {
     kpis = {},
     by_model = [],
     by_agent = [],
+    by_skill = [],
     by_evaluation = [],
     by_user = [],
     daily = [],
@@ -266,6 +277,19 @@ const buildCostsSheet = (data, meta, options = {}) => {
           : emptyRow(agentCols, NO_DATA_MSG),
     });
 
+    if (includeSkills) {
+      const skillCols = costShareCols('Skill', 'name');
+      const totalSkillCost = by_skill.reduce((sum, s) => sum + (s.total_cost ?? 0), 0);
+      sections.push({
+        title: 'Cost by Skill',
+        columns: skillCols,
+        rows:
+          by_skill.length > 0
+            ? costShareRows(by_skill, skillDisplayName, totalSkillCost)
+            : emptyRow(skillCols, NO_DATA_MSG),
+      });
+    }
+
     const evaluationCols = costShareCols('Agent / Pipeline', 'name', [
       typeCol,
       { header: 'Version', key: 'version' },
@@ -315,8 +339,8 @@ const buildTokenRows = (items, nameMapper, totalProjectTokens) =>
     .sort((a, b) => b.total_tokens - a.total_tokens);
 
 const buildTokensSheet = (data, meta, options = {}) => {
-  const { runScoped = false } = options;
-  const { kpis = {}, by_model = [], by_agent = [], by_user = [], daily = [] } = data || {};
+  const { runScoped = false, includeSkills = false } = options;
+  const { kpis = {}, by_model = [], by_agent = [], by_skill = [], by_user = [], daily = [] } = data || {};
   const totalProjectTokens = Number(kpis.total_tokens ?? 0) || 0;
 
   const sections = [];
@@ -403,6 +427,16 @@ const buildTokensSheet = (data, meta, options = {}) => {
         totalProjectTokens,
       ),
     });
+
+    if (includeSkills) {
+      const skillCols = tokenCols('Skill');
+      const skillRows = buildTokenRows(by_skill, skillDisplayName, totalProjectTokens);
+      sections.push({
+        title: 'Token Usage by Skill',
+        columns: skillCols,
+        rows: skillRows.length > 0 ? skillRows : emptyRow(skillCols, NO_DATA_MSG),
+      });
+    }
   }
 
   return {
@@ -477,8 +511,6 @@ const SKILL_TOTAL_COLUMNS = [
   { header: 'Total Tokens', key: 'total_tokens', numFmt: ExcelFormats.integer },
   { header: 'Cost (USD)', key: 'cost', numFmt: ExcelFormats.currency },
 ];
-
-const skillDisplayName = skill => (skill.deleted ? `${skill.skill_name} (deleted)` : skill.skill_name);
 
 const buildSkillsSheet = (data, meta) => {
   const { rows = [], summary = {} } = data || {};
@@ -689,7 +721,7 @@ const buildToolsSheet = (data, meta, options = {}) => {
   };
 };
 
-const buildUsersSheet = (data, meta) => {
+const buildUsersSheet = (data, meta, includeSkills = false) => {
   const { rows = [] } = data || {};
 
   const userCols = [
@@ -698,6 +730,7 @@ const buildUsersSheet = (data, meta) => {
     { header: 'LLM Calls', key: 'llm_events', numFmt: ExcelFormats.integer },
     { header: 'Tool Calls', key: 'tool_events', numFmt: ExcelFormats.integer },
     { header: 'Agent & Pipeline Runs', key: 'agent_events', numFmt: ExcelFormats.integer },
+    ...(includeSkills ? [{ header: 'Skill Runs', key: 'skill_events', numFmt: ExcelFormats.integer }] : []),
     { header: 'Chat Messages', key: 'chat_events', numFmt: ExcelFormats.integer },
     { header: 'Errors', key: 'errors', numFmt: ExcelFormats.integer },
     { header: 'Total Tokens', key: 'total_tokens', numFmt: ExcelFormats.integer },
@@ -935,13 +968,14 @@ export const buildAnalyticsSheets = ({
     { ...overview, ...overviewUsage, kpis: { ...overview?.kpis, ...overviewUsage?.kpis } },
     meta,
     isPersonalProject,
+    includeSkills,
   ),
-  buildCostsSheet(costs, meta),
-  buildTokensSheet(costs, meta),
+  buildCostsSheet(costs, meta, { includeSkills }),
+  buildTokensSheet(costs, meta, { includeSkills }),
   buildAgentsSheet(agents, meta),
   ...(includeSkills ? [buildSkillsSheet(skills, meta)] : []),
   buildToolsSheet(tools, meta),
-  buildUsersSheet(users, meta),
+  buildUsersSheet(users, meta, includeSkills),
   buildActivitySheet(activity, meta, isPersonalProject),
   buildHealthSheet(overview, meta),
 ];

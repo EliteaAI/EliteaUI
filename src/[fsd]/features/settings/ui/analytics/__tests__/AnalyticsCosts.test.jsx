@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
 import { useAnalyticsCostsQuery } from '@/api';
 import '@testing-library/jest-dom/vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 
 import AnalyticsCosts from '../AnalyticsCosts';
 import { AnalyticsTestWrapper as Wrapper } from './_testHelpers';
@@ -29,17 +30,25 @@ vi.mock('recharts', () => ({
   Tooltip: () => null,
 }));
 
-vi.mock('@/[fsd]/features/settings/lib/helpers', () => ({
+vi.mock('@/[fsd]/features/settings/lib/helpers', async () => ({
   AnalyticCommonHelpers: {
     fmtCost: v => `$${v ?? 0}`,
     fmtNum: v => String(v ?? 0),
     axisTick: stroke => ({ fill: stroke, fontSize: 11 }),
     barChartCursor: () => ({}),
   },
+  SkillAnalyticsHelpers: await vi.importActual(
+    '@/[fsd]/features/settings/lib/helpers/skillAnalytics.helpers.js',
+  ),
 }));
 
 vi.mock('@/[fsd]/shared/ui/tooltip', () => ({
-  InfoTooltip: () => null,
+  InfoTooltip: ({ infoTooltip }) => (
+    <span
+      data-testid="info-tooltip"
+      data-title={infoTooltip.title}
+    />
+  ),
 }));
 
 vi.mock('@/[fsd]/features/settings/ui/analytics', () => ({
@@ -558,5 +567,130 @@ describe('AnalyticsCosts — run scope', () => {
 
     expect(useAnalyticsCostsQuery).toHaveBeenCalledWith({ projectId: 1, evalRunId: 9 }, { skip: false });
     expect(screen.getByText(EVAL_RUN_SCOPE.noDataMessage)).toBeTruthy();
+  });
+});
+
+const SKILL_DATA = {
+  ...MOCK_DATA,
+  by_skill: [
+    {
+      skill_id: 5,
+      skill_project_id: 1,
+      skill_name: 'Summarizer',
+      deleted: false,
+      total_cost: 1,
+      input_cost: 0.6,
+      output_cost: 0.4,
+      cache_read_cost: 0,
+      cache_creation_cost: 0,
+    },
+    {
+      skill_id: 6,
+      skill_project_id: 1,
+      skill_name: 'Translator',
+      deleted: true,
+      total_cost: 3,
+      input_cost: 2,
+      output_cost: 1,
+      cache_read_cost: 0,
+      cache_creation_cost: 0,
+    },
+  ],
+};
+
+describe('AnalyticsCosts — cost by skill (#7030)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    useAnalyticsCostsQuery.mockReturnValue({ data: SKILL_DATA, isFetching: false, isError: false });
+  });
+
+  afterEach(() => {
+    cleanup();
+  });
+
+  it('lists skills by cost with shares relative to the skill table total', () => {
+    render(
+      <AnalyticsCosts
+        projectId={1}
+        dateFrom="2026-01-01"
+        dateTo="2026-01-31"
+        canViewSkills
+      />,
+      { wrapper: Wrapper },
+    );
+    const table = within(screen.getByTestId('analytics-costs-by-skill'));
+    expect(table.getByText('Cost by Skill')).toBeTruthy();
+    expect(table.getByText('SKILL')).toBeTruthy();
+    const names = table.getAllByText(/Summarizer|Translator/).map(node => node.textContent);
+    expect(names).toEqual(['Translator (deleted)', 'Summarizer']);
+    expect(table.getByText('75.0%')).toBeTruthy();
+    expect(table.getByText('25.0%')).toBeTruthy();
+    expect(table.getByText('$0.6')).toBeTruthy();
+    expect(table.getByTestId('info-tooltip')).toHaveAttribute(
+      'data-title',
+      AnalyticsCommonConstants.TOOLTIP_TEXTS.costs.BY_SKILL,
+    );
+  });
+
+  it('places the skill table right after the agent & pipeline table', () => {
+    render(
+      <AnalyticsCosts
+        projectId={1}
+        dateFrom="2026-01-01"
+        dateTo="2026-01-31"
+        canViewSkills
+      />,
+      { wrapper: Wrapper },
+    );
+    const agentTitle = screen.getByText('Cost by Agent & Pipeline');
+    const skillTable = screen.getByTestId('analytics-costs-by-skill');
+    const evaluationTable = screen.getByTestId('analytics-costs-by-evaluation');
+    expect(agentTitle.compareDocumentPosition(skillTable) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(
+      skillTable.compareDocumentPosition(evaluationTable) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it('renders the skill empty state when no skill ran', () => {
+    useAnalyticsCostsQuery.mockReturnValue({ data: MOCK_DATA, isFetching: false, isError: false });
+    render(
+      <AnalyticsCosts
+        projectId={1}
+        dateFrom="2026-01-01"
+        dateTo="2026-01-31"
+        canViewSkills
+      />,
+      { wrapper: Wrapper },
+    );
+    expect(
+      within(screen.getByTestId('analytics-costs-by-skill')).getByText(
+        'No skill cost data is available for the selected date range.',
+      ),
+    ).toBeTruthy();
+  });
+
+  it('hides the skill table without the skills permission', () => {
+    render(
+      <AnalyticsCosts
+        projectId={1}
+        dateFrom="2026-01-01"
+        dateTo="2026-01-31"
+      />,
+      { wrapper: Wrapper },
+    );
+    expect(screen.queryByTestId('analytics-costs-by-skill')).toBeNull();
+    expect(screen.queryByText('Cost by Skill')).toBeNull();
+  });
+
+  it('hides the skill table in run scope', () => {
+    render(
+      <AnalyticsCosts
+        projectId={1}
+        runScope={RUN_SCOPE}
+        canViewSkills
+      />,
+      { wrapper: Wrapper },
+    );
+    expect(screen.queryByTestId('analytics-costs-by-skill')).toBeNull();
   });
 });

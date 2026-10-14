@@ -5,7 +5,7 @@ import { Bar, BarChart, Tooltip as RechartsTooltip, ResponsiveContainer, XAxis, 
 import { Box, CircularProgress, Typography, useTheme } from '@mui/material';
 
 import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
-import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
+import { AnalyticCommonHelpers, SkillAnalyticsHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { ChartTooltip, InfoBanner, KPICard, infoBannerTextSx } from '@/[fsd]/features/settings/ui/analytics';
 import { CHART_COLORS } from '@/[fsd]/shared/config/theme';
 import { useAnalyticsCostsQuery } from '@/api';
@@ -43,7 +43,7 @@ const EVALUATION_COLUMNS = [
 ];
 
 const AnalyticsCosts = memo(props => {
-  const { projectId, dateFrom, dateTo, runScope } = props;
+  const { projectId, dateFrom, dateTo, runScope, canViewSkills = false } = props;
 
   // Run-scoped (Run History → Analytics): no daily trend, no per-Agent breakdown, run wording
   const isRunScope = Boolean(runScope);
@@ -67,6 +67,11 @@ const AnalyticsCosts = memo(props => {
   const agentTableData = useMemo(
     () => toCostRows(data?.by_agent, a => ({ name: a.entity_name, kind: a.entity_kind })),
     [data?.by_agent],
+  );
+
+  const skillTableData = useMemo(
+    () => toCostRows(data?.by_skill, s => ({ name: SkillAnalyticsHelpers.skillDisplayName(s) })),
+    [data?.by_skill],
   );
 
   const userTableData = useMemo(
@@ -292,6 +297,17 @@ const AnalyticsCosts = memo(props => {
           rows={agentTableData}
           extraColumns={[TYPE_COLUMN]}
           emptyState="No agent & pipeline cost data is available for the selected date range."
+        />
+      )}
+
+      {!isRunScope && canViewSkills && (
+        <CostTable
+          title="Cost by Skill"
+          tooltip={tooltips.BY_SKILL}
+          nameHeader="SKILL"
+          rows={skillTableData}
+          emptyState="No skill cost data is available for the selected date range."
+          testId="analytics-costs-by-skill"
         />
       )}
 
