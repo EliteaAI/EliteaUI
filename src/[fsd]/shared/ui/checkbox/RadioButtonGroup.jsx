@@ -20,9 +20,9 @@ const RadioButtonGroup = memo(props => {
 
   return (
     <RadioGroup
-      aria-labelledby="radio-buttons-group-label"
+      aria-labelledby={testId ? `${testId}-label` : 'radio-buttons-group-label'}
       defaultValue={defaultValue}
-      name="radio-buttons-group"
+      name={testId ?? 'radio-buttons-group'}
       value={value}
       onChange={onChangeHandler}
     >
