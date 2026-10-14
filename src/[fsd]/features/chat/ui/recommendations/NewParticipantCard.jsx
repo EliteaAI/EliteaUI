@@ -8,8 +8,8 @@ import { ChatParticipantType, PUBLIC_PROJECT_ID } from '@/common/constants';
 import EntityIcon from '@/components/EntityIcon';
 
 const PUBLIC_LABELS = {
-  [ChatParticipantType.Applications]: 'Public',
-  [ChatParticipantType.Pipelines]: 'Public',
+  [ChatParticipantType.Applications]: ParticipantConstants.CATALOG_LABEL,
+  [ChatParticipantType.Pipelines]: ParticipantConstants.CATALOG_LABEL,
   [ChatParticipantType.Skills]: ParticipantConstants.CATALOG_LABEL,
 };
 
