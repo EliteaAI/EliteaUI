@@ -57,7 +57,12 @@ import {
   getSkillUnavailableReason,
 } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { useFetchParticipantDetails } from '@/[fsd]/features/chat/participants/lib/hooks';
-import { BudgetWarningBanner, SlashSuggestionList, VoiceMiniPlayer } from '@/[fsd]/features/chat/ui';
+import {
+  BudgetWarningBanner,
+  ChatStatusPill,
+  SlashSuggestionList,
+  VoiceMiniPlayer,
+} from '@/[fsd]/features/chat/ui';
 import { ChatMessageList } from '@/[fsd]/features/chat/ui/chat-box';
 import ChatConversationStarters from '@/[fsd]/features/chat/ui/chat-conversation-starters/ChatConversationStarters';
 import NewChatInput from '@/[fsd]/features/chat/ui/chat-input/NewChatInput';
@@ -97,6 +102,7 @@ import {
   ChatParticipantType,
   PROMPT_PAYLOAD_KEY,
   PUBLIC_PROJECT_ID,
+  ROLES,
   TOOL_ACTION_TYPES,
   ToolActionStatus,
   WELCOME_MESSAGE_ID,
@@ -275,6 +281,31 @@ const ChatBox = memo(
     }, [pendingHitlMessage]);
 
     const hasBlockingHitlInterrupt = hasPendingHitlInterrupt && !isPendingClarifyingQuestion;
+
+    const statusSource = useMemo(() => {
+      const isOwnTurn = msg => {
+        const question = chat_history.find(item => item.id === msg.question_id);
+        return !question || question.user_id === userId;
+      };
+      if (pendingHitlMessage && isOwnTurn(pendingHitlMessage)) {
+        return { message: pendingHitlMessage, isInterrupt: true };
+      }
+      const running = [...chat_history]
+        .reverse()
+        .find(
+          msg =>
+            msg.role === ROLES.Assistant &&
+            (msg.isStreaming || msg.isLoading || msg.isRegenerating) &&
+            isOwnTurn(msg),
+        );
+      return running ? { message: running, isInterrupt: false } : null;
+    }, [pendingHitlMessage, chat_history, userId]);
+
+    const statusParticipant = useMemo(
+      () =>
+        activeConversation?.participants?.find(p => p.id === statusSource?.message?.participant_id) ?? null,
+      [activeConversation?.participants, statusSource],
+    );
 
     const hasPendingAuthRequired = useMemo(
       () => hasPendingAuthRequiredAction(chat_history[chat_history.length - 1]),
@@ -3082,6 +3113,12 @@ const ChatBox = memo(
                 onDismiss={budgetWarning.dismiss}
               />
             )}
+            <ChatStatusPill
+              isRunning={(isStreamingNow || isStreaming) && statusSource?.isInterrupt === false}
+              isInterrupt={statusSource?.isInterrupt === true && !isReadOnly}
+              participantType={statusParticipant?.entity_name}
+              agentType={statusParticipant?.entity_settings?.agent_type}
+            />
             <NewChatInput
               fromTheChat={fromTheChat}
               conversationId={activeConversation?.id}
