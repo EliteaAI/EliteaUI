@@ -1,5 +1,8 @@
 import { useCallback, useContext, useEffect } from 'react';
 
+import { useStore } from 'react-redux';
+
+import { SocketSessionGateHelpers } from '@/[fsd]/features/auth/lib/helpers';
 import { SocketContext } from '@/[fsd]/shared/lib/context';
 import { generateTraceId } from '@/services/tracing';
 
@@ -8,6 +11,8 @@ const TRACING_ENABLED = import.meta.env.VITE_TRACING_ENABLED === 'true';
 
 export const useManualSocket = (event, responseHandler) => {
   const socket = useContext(SocketContext);
+  // Read lazily at emit time: subscribing every socket hook to the store would re-render all of them
+  const store = useStore();
 
   const reconnect = useCallback(() => {
     socket && socket.disconnected && socket.connect();
@@ -39,9 +44,14 @@ export const useManualSocket = (event, responseHandler) => {
           }
         : payload;
 
-      return !!socket?.emit(event, enrichedPayload);
+      return SocketSessionGateHelpers.emitWithSessionGate({
+        socket,
+        event,
+        payload: enrichedPayload,
+        isSessionExpired: !!store.getState().settings?.sessionExpired,
+      });
     },
-    [socket, event, reconnect],
+    [socket, event, reconnect, store],
   );
 
   return {

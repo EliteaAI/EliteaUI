@@ -55,11 +55,14 @@ vi.mock('@/api', () => ({
 }));
 
 const socketHandlerRef = { current: null };
+const validationErrorHandlerRef = { current: null };
+const socketEmit = vi.fn();
 
 vi.mock('@/hooks/useSocket', () => ({
-  default: (_event, handler) => {
-    socketHandlerRef.current = handler;
-    return { emit: vi.fn() };
+  default: (event, handler) => {
+    if (event === 'socket_validation_error') validationErrorHandlerRef.current = handler;
+    else socketHandlerRef.current = handler;
+    return { emit: socketEmit };
   },
   useManualSocket: () => ({ emit: vi.fn() }),
 }));
@@ -244,5 +247,66 @@ describe('useToolkitChat — the send gate latches on liveness, not on chrome', 
     const result = renderRecovery(progressingIndex({ stale: true }));
 
     expect(result.current.isRunning).toBe(false);
+  });
+});
+
+describe('useToolkitChat validation errors', () => {
+  const startRun = async () => {
+    createToolkitConversationWithParticipant.mockResolvedValueOnce({ id: 7, uuid: 'conv-7' });
+
+    const view = renderChat({ traceNewIndex: vi.fn() });
+
+    act(() => view.result.current.handleRunTool());
+    await waitFor(() => expect(socketEmit).toHaveBeenCalled());
+    expect(view.result.current.isRunning).toBe(true);
+
+    return view;
+  };
+
+  it('settles the run when the server rejects it', async () => {
+    const { result } = await startRun();
+
+    act(() =>
+      validationErrorHandlerRef.current({
+        type: 'error',
+        stream_id: 'conv-7',
+        content: 'Your session has expired. Please sign in again and resend the message.',
+      }),
+    );
+
+    expect(result.current.isRunning).toBe(false);
+    expect(JSON.stringify(result.current.chatHistory)).toContain('Your session has expired');
+  });
+
+  it('settles the run when the rejection arrives during the emit itself', async () => {
+    socketEmit.mockImplementationOnce(() => {
+      validationErrorHandlerRef.current({ type: 'error', stream_id: 'conv-7', content: 'rejected on send' });
+    });
+    createToolkitConversationWithParticipant.mockResolvedValueOnce({ id: 7, uuid: 'conv-7' });
+
+    const { result } = renderChat({ traceNewIndex: vi.fn() });
+
+    act(() => result.current.handleRunTool());
+    await waitFor(() => expect(socketEmit).toHaveBeenCalled());
+
+    await waitFor(() => expect(result.current.isRunning).toBe(false));
+    expect(JSON.stringify(result.current.chatHistory)).toContain('rejected on send');
+  });
+
+  it('ignores rejections of other conversations', async () => {
+    const { result } = await startRun();
+
+    act(() => validationErrorHandlerRef.current({ type: 'error', stream_id: 'other', content: 'nope' }));
+
+    expect(result.current.isRunning).toBe(true);
+  });
+
+  it('ignores rejections once the task has started', async () => {
+    const { result } = await startRun();
+
+    act(() => socketHandlerRef.current({ type: 'start_task', content: { task_id: 't1' } }));
+    act(() => validationErrorHandlerRef.current({ type: 'error', stream_id: 'conv-7', content: 'late' }));
+
+    expect(JSON.stringify(result.current.chatHistory)).not.toContain('late');
   });
 });

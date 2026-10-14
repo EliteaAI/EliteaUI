@@ -31,6 +31,7 @@ import {
 import { SocketMessageType, sioEvents } from '@/common/constants';
 import { convertConversationToChatHistory } from '@/common/convertChatConversationMessages';
 import { generateMessagePayload } from '@/common/messagePayloadUtils';
+import { convertJsonToString } from '@/common/utils';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useSocket, { useManualSocket } from '@/hooks/useSocket';
 
@@ -217,6 +218,10 @@ export const useToolkitChat = props => {
     isAuthCheckSessionRef.current = isAuthCheckSession;
   }, [isAuthCheckSession]);
 
+  // The run whose start is still pending: a socket_validation_error for its conversation means the
+  // server rejected it (or re-login was abandoned before sending), and no other frame will settle it
+  const pendingRunRef = useRef(null);
+
   const handleSocketResponse = useCallback(
     message => {
       // Skip messages if auth check session is active (handled by useMcpAuthCheck)
@@ -241,6 +246,7 @@ export const useToolkitChat = props => {
       // inside a React state-updater function, which would trigger the
       // "Cannot update a component while rendering" warning.
       if (message.type === SocketMessageType.StartTask) {
+        pendingRunRef.current = null;
         const { task_id } = message.content instanceof Object ? message.content : {};
         onStartTask(task_id);
       }
@@ -256,7 +262,32 @@ export const useToolkitChat = props => {
     [onRunFinish, onStartTask],
   );
 
+  const handleSocketValidationError = useCallback(
+    message => {
+      const pendingRun = pendingRunRef.current;
+      if (!pendingRun || !message?.stream_id || message.stream_id !== pendingRun.streamId) return;
+      pendingRunRef.current = null;
+
+      setIsRunning(false);
+      setIsWaitingForTaskStart(false);
+
+      if (traceNewIndex && pendingRun.indexing)
+        traceNewIndex(index?.id ?? null, {
+          collection: pendingRun.collection,
+          state: IndexStatuses.fail,
+        });
+
+      const errorChatMessage = generateMockMessageTemplate(
+        `❌ Failed to execute tool "${pendingRun.tool}"\n\n**Error:** ${convertJsonToString(message.content)}`,
+        'toolkit',
+      );
+      setChatHistory(prev => [...prev, errorChatMessage]);
+    },
+    [traceNewIndex, index?.id],
+  );
+
   const { emit: socketEmit } = useSocket(sioEvents.chat_predict, handleSocketResponse);
+  useSocket(sioEvents.socket_validation_error, handleSocketValidationError);
   const { emit: emitEnterRoom } = useManualSocket(sioEvents.chat_enter_room);
   const { emit: emitLeaveRoom } = useManualSocket(sioEvents.chat_leave_rooms);
 
@@ -403,6 +434,12 @@ export const useToolkitChat = props => {
           },
         };
 
+        pendingRunRef.current = {
+          streamId: currentConversation?.uuid,
+          tool,
+          indexing,
+          collection: relevantInputVariables.index_name,
+        };
         socketEmit(specificToolkitPayload);
       } catch (error) {
         if (runGenerationRef.current !== runGeneration) return;
