@@ -97,11 +97,8 @@ const SkillRunPanel = memo(props => {
             />
             <SkillRunActions
               canStartNewRun={!isStreaming && Boolean(activeConversation?.id || hasMessages)}
-              canDeleteMessages={
-                !isReadOnly && !isStreaming && hasMessages && Boolean(activeConversation?.id)
-              }
+              canClearChat={!isStreaming && hasMessages}
               onStartNewRun={onStartNewRun}
-              onDeleteAllMessages={onDeleteAllMessages}
             />
             {onShowHistory && (
               <ViewRunHistoryButton
