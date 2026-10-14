@@ -124,6 +124,9 @@ const settingsSlice = createSlice({
             name: '',
           },
     socketConnected: false,
+    // True when the session behind the socket is known to be expired: a socket that
+    // (re)connected with it is anonymous on the server and its chat events are dropped
+    sessionExpired: false,
   },
   reducers: {
     setMode: (state, { payload }) => {
@@ -299,6 +302,9 @@ const settingsSlice = createSlice({
     },
     setSocketConnected: (state, { payload }) => {
       state.socketConnected = payload;
+    },
+    setSessionExpired: (state, { payload }) => {
+      state.sessionExpired = payload;
     },
   },
   extraReducers: builder => {

@@ -19,6 +19,7 @@ import { SocketContext, ToolkitSocketProvider } from '@/[fsd]/shared/lib/context
 import { FilePreviewNavigationProvider, ToastComponent, ToastProvider } from '@/[fsd]/shared/ui';
 import { DEV, VITE_DEV_TOKEN, VITE_SOCKET_PATH, VITE_SOCKET_SERVER } from '@/common/constants';
 import { NpsSurveyWidget } from '@/[fsd]/widgets/nps-survey';
+import { useSocketSessionGuard } from '@/[fsd]/app/lib/hooks';
 import { useBrandFavicon, useCustomThemeGuard, useEliteATheme } from '@/[fsd]/shared/lib/hooks';
 import { actions as settingsActions } from '@/slices/settings.js';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp';
@@ -37,6 +38,8 @@ const RootComponent = memo(() => {
 
   const [socket, setSocket] = useState(null);
   const dispatch = useDispatch();
+
+  useSocketSessionGuard(socket);
 
   useEffect(() => {
     const normalizedUserId = userId == null ? null : String(userId);

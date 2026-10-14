@@ -9,6 +9,7 @@ let authReject = null;
 let authState = null;
 let broadcastChannel = null;
 let popupCheckInterval = null;
+const reauthListeners = new Set();
 
 // Popup size constraints
 const AUTH_POPUP_MIN_WIDTH = 500;
@@ -17,6 +18,29 @@ const AUTH_POPUP_MAX_WIDTH = 800;
 const AUTH_POPUP_MAX_HEIGHT = 900;
 const AUTH_POPUP_WIDTH_RATIO = 0.4; // 40% of browser width
 const AUTH_POPUP_HEIGHT_RATIO = 0.7; // 70% of browser height
+
+/**
+ * Subscribe to successful re-authentications (from any caller of openAuthPopup).
+ * Session-bound connections, like the socket, use it to re-handshake with the fresh session.
+ * Returns an unsubscribe function.
+ */
+export const onReauthenticated = listener => {
+  reauthListeners.add(listener);
+  return () => {
+    reauthListeners.delete(listener);
+  };
+};
+
+const notifyReauthenticated = () => {
+  reauthListeners.forEach(listener => {
+    try {
+      listener();
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Re-authentication listener failed:', error);
+    }
+  });
+};
 
 /**
  * Open a popup window for re-authentication when session expires.
@@ -178,6 +202,9 @@ export const handleAuthResult = event => {
 
   // Then resolve/reject
   if (success) {
+    // Notify before resolving so session-bound connections start re-handshaking
+    // before callers act on the renewed session
+    notifyReauthenticated();
     resolve?.();
   } else {
     reject?.(new Error('Re-authentication failed'));
