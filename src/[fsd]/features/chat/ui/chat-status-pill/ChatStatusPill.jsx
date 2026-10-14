@@ -18,7 +18,7 @@ const ChatStatusPill = memo(props => {
       observerRef.current = null;
     }
     const el = node?.parentElement;
-    if (!el) return;
+    if (!el || typeof ResizeObserver === 'undefined') return;
 
     const observer = new ResizeObserver(entries => {
       for (const entry of entries) {
