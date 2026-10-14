@@ -13,6 +13,7 @@ import {
   useTheme,
 } from '@mui/material';
 
+import { ParticipantConstants } from '@/[fsd]/features/chat/participants/lib';
 import { TypographyWithConditionalTooltip } from '@/[fsd]/shared/ui/tooltip';
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
 import { HEIGHTS, ICON_SIZES, SPACING } from '@/common/designTokens';
@@ -328,7 +329,7 @@ const UnifiedDropdown = memo(
                                       variant="bodySmall"
                                       sx={styles.publicLabel}
                                     >
-                                      {'Public'}
+                                      {ParticipantConstants.CATALOG_LABEL}
                                     </Typography>
                                   </Box>
                                 )}
@@ -365,7 +366,7 @@ const UnifiedDropdown = memo(
                                 variant="bodySmall"
                                 sx={styles.publicLabel}
                               >
-                                {'Public'}
+                                {ParticipantConstants.CATALOG_LABEL}
                               </Typography>
                             </Box>
                           )}
