@@ -273,9 +273,10 @@ export const useMcpAuthModal = (options = {}) => {
  * @param {string} [options.credentials.client_id] - OAuth client ID from credential settings
  * @param {string} [options.credentials.client_secret] - OAuth client secret from credential settings
  * @param {string|string[]} [options.credentials.scopes] - OAuth scopes from credential settings
+ * @param {boolean} [options.showSuccessToast=true] - Set false when onSuccess reports the outcome itself
  */
 export const useConfigOAuthModal = (options = {}) => {
-  const { onSuccess, credentials, toolkitId } = options;
+  const { onSuccess, credentials, toolkitId, showSuccessToast = true } = options;
   const projectId = useSelectedProjectId();
   const { toastSuccess } = useToast();
 
@@ -307,11 +308,11 @@ export const useConfigOAuthModal = (options = {}) => {
       setServerUrl('');
       setTokenStorageKey('');
       if (success) {
-        toastSuccess('Successful authentication!');
+        if (showSuccessToast) toastSuccess('Successful authentication!');
         onSuccess?.();
       }
     },
-    [toastSuccess, onSuccess],
+    [toastSuccess, onSuccess, showSuccessToast],
   );
 
   const handleCancelModal = useCallback(() => {
