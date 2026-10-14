@@ -30,10 +30,15 @@ export const findSkillSavedModel = (models, llmSettings) => {
   );
 };
 
-export const findListedModel = (models, model) =>
-  model
-    ? models.find(listed => listed.name === model.name && listed.project_id === model.project_id) || null
-    : null;
+export const findRunnableModel = (models, llmSettings) => {
+  if (isAutoSelection(llmSettings)) return models.find(model => isAutoSelection(model)) || null;
+  const name = llmSettings?.model_name;
+  if (!name) return null;
+  const projectId = llmSettings.model_project_id;
+  return (
+    models.find(model => model.name === name && (projectId == null || model.project_id === projectId)) || null
+  );
+};
 
 const choosesModel = llmSettings => !!llmSettings?.model_name || isAutoSelection(llmSettings);
 
@@ -100,6 +105,11 @@ export const testPanelRequestSettings = (model, llmSettings, savedLlmSettings) =
   reasoning_effort: llmSettings.reasoning_effort ?? null,
   ...testPanelSelectionFor(model, savedLlmSettings),
 });
+
+export const withRunStepsLimit = (versionLLMSettings, runLLMSettings) =>
+  versionLLMSettings && runLLMSettings?.steps_limit !== undefined
+    ? { ...versionLLMSettings, steps_limit: runLLMSettings.steps_limit }
+    : versionLLMSettings;
 
 const sortEntriesByKey = record =>
   Object.entries(record || {}).sort(([left], [right]) => left.localeCompare(right));

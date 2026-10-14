@@ -3,6 +3,7 @@ import { memo, useMemo, useRef } from 'react';
 import { Box, Typography } from '@mui/material';
 
 import { ChatBox } from '@/[fsd]/features/chat/ui';
+import { withRunStepsLimit } from '@/[fsd]/features/skill/lib/helpers';
 import { useFocusRunInput, useSkillRunChat, useSkillVersionModel } from '@/[fsd]/features/skill/lib/hooks';
 import { ViewRunHistoryButton } from '@/[fsd]/shared/ui/button';
 import { ContextBudgetUI } from '@/[fsd]/widgets/context-budget';
@@ -159,7 +160,11 @@ const SkillRunPanel = memo(props => {
               uploadAttachments={uploadAttachments}
               isUploadingAttachments={isUploadingAttachments}
               uploadProgress={uploadProgress}
-              unsavedLLMSettings={canEditVersionModel ? unsavedVersionLLMSettings : unsavedLLMSettings}
+              unsavedLLMSettings={
+                canEditVersionModel
+                  ? withRunStepsLimit(unsavedVersionLLMSettings, unsavedLLMSettings)
+                  : unsavedLLMSettings
+              }
               setUnsavedLLMSettings={setUnsavedLLMSettings}
               isReadOnly={isReadOnly}
             />

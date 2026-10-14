@@ -7,7 +7,7 @@ import SkillRunPanel from '../SkillRunPanel';
 
 const VERSION_LLM_SETTINGS = vi.hoisted(() => ({ model_name: 'unsaved-haiku' }));
 const RUN_LLM_SETTINGS = vi.hoisted(() => ({ model_name: 'saved-sonnet' }));
-const RUN_OVERRIDE = vi.hoisted(() => ({ model_name: 'run-only-gpt' }));
+const RUN_OVERRIDE = vi.hoisted(() => ({ model_name: 'run-only-gpt', steps_limit: 12 }));
 const fixture = vi.hoisted(() => ({
   canEditVersionModel: true,
   unsavedVersionLLMSettings: null,
@@ -78,11 +78,11 @@ describe('SkillRunPanel model chip', () => {
     expect(fixture.chatBoxProps.unsavedLLMSettings).toBe(RUN_OVERRIDE);
   });
 
-  it('sends the unsaved version model with every message, even after a new run', () => {
+  it('sends the unsaved version model with every message and keeps the run steps limit', () => {
     fixture.unsavedVersionLLMSettings = VERSION_LLM_SETTINGS;
     renderPanel(true);
 
-    expect(fixture.chatBoxProps.unsavedLLMSettings).toBe(VERSION_LLM_SETTINGS);
+    expect(fixture.chatBoxProps.unsavedLLMSettings).toEqual({ ...VERSION_LLM_SETTINGS, steps_limit: 12 });
   });
 
   it('runs on the saved settings once the version model is saved or discarded', () => {

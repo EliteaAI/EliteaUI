@@ -17,7 +17,7 @@ import {
 import { normalizeContinuationError } from '@/[fsd]/features/chat/lib/helpers';
 import { NewChatInput } from '@/[fsd]/features/chat/ui/chat-input';
 import {
-  findListedModel,
+  findRunnableModel,
   includesProjectContext,
   testPanelRequestSettings,
   testPanelSettingsFor,
@@ -143,14 +143,13 @@ const SkillTestPanel = memo(props => {
 
   const { models: modelList, defaultModel } = useSkillModels();
   const {
-    selectedModel: versionModel,
     canEditVersionModel,
     onSelectModel: onSelectVersionModel,
     onSetLLMSettings: onSetVersionLLMSettings,
   } = useSkillVersionModel();
   const usableVersionModel = useMemo(
-    () => findListedModel(modelList, versionModel),
-    [modelList, versionModel],
+    () => findRunnableModel(modelList, savedLlmSettings),
+    [modelList, savedLlmSettings],
   );
 
   const [selectedModel, setSelectedModel] = useState(null);

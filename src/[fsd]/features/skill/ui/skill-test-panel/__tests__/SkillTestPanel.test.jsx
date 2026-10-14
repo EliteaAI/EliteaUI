@@ -142,4 +142,13 @@ describe('SkillTestPanel model chip', () => {
       model_project_id: 1,
     });
   });
+
+  it('tests on the project default when the saved model belongs to another project, like Run', async () => {
+    renderPanel(true, { llm_settings: { model_name: 'sonnet', model_project_id: 9 } });
+
+    await act(async () => fixture.inputProps.onSend('hello'));
+
+    expect(fixture.inputProps.selectedModel).toBe(MODELS[0]);
+    expect(fixture.generateContent.mock.calls[0][0].llm_settings).toMatchObject({ model_name: 'haiku' });
+  });
 });
