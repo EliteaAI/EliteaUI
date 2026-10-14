@@ -3088,8 +3088,8 @@ const ChatBox = memo(
               />
             )}
             <ChatStatusPill
-              isRunning={isStreaming && !hasBlockingHitlInterrupt}
-              isInterrupt={Boolean(hasBlockingHitlInterrupt)}
+              isRunning={isStreaming && !hasPendingHitlInterrupt}
+              isInterrupt={Boolean(hasPendingHitlInterrupt)}
               participantType={activeParticipant?.entity_name}
               agentType={activeParticipant?.entity_settings?.agent_type}
             />

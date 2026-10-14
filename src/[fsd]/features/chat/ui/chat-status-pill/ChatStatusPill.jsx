@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useRef, useState } from 'react';
 
 import { Box, CircularProgress, Typography } from '@mui/material';
 
@@ -9,21 +9,24 @@ const NARROW_WIDTH_THRESHOLD = 320;
 const ChatStatusPill = memo(props => {
   const { isRunning = false, isInterrupt = false, participantType, agentType } = props;
 
-  const containerRef = useRef(null);
   const [isNarrow, setIsNarrow] = useState(false);
+  const observerRef = useRef(null);
 
-  useEffect(() => {
-    const el = containerRef.current?.parentElement;
-    if (!el || typeof ResizeObserver === 'undefined') return;
+  const containerRef = useCallback(node => {
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+      observerRef.current = null;
+    }
+    const el = node?.parentElement;
+    if (!el) return;
 
     const observer = new ResizeObserver(entries => {
       for (const entry of entries) {
         setIsNarrow(entry.contentRect.width < NARROW_WIDTH_THRESHOLD);
       }
     });
-
     observer.observe(el);
-    return () => observer.disconnect();
+    observerRef.current = observer;
   }, []);
 
   const styles = chatStatusPillStyles(isInterrupt);
