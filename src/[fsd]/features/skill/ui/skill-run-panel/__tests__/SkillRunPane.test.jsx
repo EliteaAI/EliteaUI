@@ -84,9 +84,23 @@ describe('SkillRunPane mode', () => {
   it('tests unsaved run settings statelessly behind the banner', () => {
     renderPane({
       ...saved,
-      version_details: { ...saved.version_details, run_settings: { llm_settings: { model_name: 'other' } } },
+      version_details: {
+        ...saved.version_details,
+        run_settings: { ...saved.version_details.run_settings, ignore_project_context: true },
+      },
     });
     expect(screen.getByTestId('unsaved-banner')).toBeInTheDocument();
+  });
+
+  it('keeps the run open when only the model changes, like the agent chat pane', () => {
+    renderPane({
+      ...saved,
+      version_details: {
+        ...saved.version_details,
+        run_settings: { ...saved.version_details.run_settings, llm_settings: { model_name: 'other' } },
+      },
+    });
+    expect(screen.getByTestId('run-panel')).toBeInTheDocument();
   });
 });
 

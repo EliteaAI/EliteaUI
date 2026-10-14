@@ -37,7 +37,6 @@ const CreateSkillForm = memo(props => {
     onSkillCreated,
     showGenerateButton = false,
     summaryEditAction = null,
-    showRunSettingsModel = true,
   } = props;
   const formik = useFormikContext();
   const theme = useTheme();
@@ -347,7 +346,6 @@ const CreateSkillForm = memo(props => {
       <SkillRunSettings
         accordionStyle={accordionStyle}
         disabled={disabled}
-        showModel={showRunSettingsModel}
       />
     </Box>
   );

@@ -3,7 +3,7 @@ import { memo, useMemo, useRef } from 'react';
 import { Box, Typography } from '@mui/material';
 
 import { ChatBox } from '@/[fsd]/features/chat/ui';
-import { useFocusRunInput, useSkillRunChat } from '@/[fsd]/features/skill/lib/hooks';
+import { useFocusRunInput, useSkillRunChat, useSkillVersionModel } from '@/[fsd]/features/skill/lib/hooks';
 import { ViewRunHistoryButton } from '@/[fsd]/shared/ui/button';
 import { ContextBudgetUI } from '@/[fsd]/widgets/context-budget';
 import FullScreenToggle from '@/components/Chat/FullScreenToggle';
@@ -15,6 +15,7 @@ import SkillRunActions from './SkillRunActions';
 
 const NO_STARTERS = [];
 const NO_CONTEXT_STRATEGY = {};
+const NO_LLM_SETTINGS = {};
 const NOOP = () => {};
 
 const SkillRunPanel = memo(props => {
@@ -33,6 +34,12 @@ const SkillRunPanel = memo(props => {
   } = props;
   const projectId = useSelectedProjectId();
   const panelRef = useRef(null);
+  const {
+    llmSettings: versionLLMSettings,
+    canEditVersionModel,
+    unsavedVersionLLMSettings,
+    onSetLLMSettings: onSetVersionLLMSettings,
+  } = useSkillVersionModel();
 
   const {
     activeConversation,
@@ -126,7 +133,7 @@ const SkillRunPanel = memo(props => {
             <ChatBox
               inputPlaceholder="Type your message..."
               conversationStarters={NO_STARTERS}
-              llmSettings={llmSettings}
+              llmSettings={canEditVersionModel ? (versionLLMSettings ?? NO_LLM_SETTINGS) : llmSettings}
               activeParticipant={activeParticipant}
               activeConversation={activeConversation}
               setActiveConversation={setActiveConversation}
@@ -141,7 +148,7 @@ const SkillRunPanel = memo(props => {
               enableMentions={false}
               isLoadingConversation={isLoadingConversation}
               isAgentsPage
-              onSetLLMSettings={onSetLLMSettings}
+              onSetLLMSettings={canEditVersionModel ? onSetVersionLLMSettings : onSetLLMSettings}
               showWebhookSecret={false}
               onSend={onSend}
               attachments={attachments}
@@ -152,7 +159,7 @@ const SkillRunPanel = memo(props => {
               uploadAttachments={uploadAttachments}
               isUploadingAttachments={isUploadingAttachments}
               uploadProgress={uploadProgress}
-              unsavedLLMSettings={unsavedLLMSettings}
+              unsavedLLMSettings={canEditVersionModel ? unsavedVersionLLMSettings : unsavedLLMSettings}
               setUnsavedLLMSettings={setUnsavedLLMSettings}
               isReadOnly={isReadOnly}
             />

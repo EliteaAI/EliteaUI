@@ -3,6 +3,7 @@ export { normalizeTagsForSave } from './tags.helpers';
 export { validateSkillDraft } from './skillDraftValidation.helpers';
 export * as SkillAIEditionStepsHelpers from './skillAIEditionSteps.helpers';
 export {
+  findListedModel,
   findSkillSavedModel,
   hasSkillChatModelOverride,
   hasUnsavedRunChanges,
@@ -12,10 +13,12 @@ export {
   resolveSkillChatLLMSettings,
   resolveSkillChatModel,
   isSkillVersionLocked,
+  testPanelRequestSettings,
   testPanelSettingsFor,
   toRunSettingsPayload,
   withoutSkillChatModel,
   withPinnedSkillVersion,
+  withDefaultSkillModel,
   withRunSettings,
 } from './skillRunSettings.helpers';
 export {

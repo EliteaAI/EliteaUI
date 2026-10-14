@@ -16,12 +16,17 @@ import {
 } from '@/[fsd]/features/chat';
 import { normalizeContinuationError } from '@/[fsd]/features/chat/lib/helpers';
 import { NewChatInput } from '@/[fsd]/features/chat/ui/chat-input';
-import { includesProjectContext, testPanelSettingsFor } from '@/[fsd]/features/skill/lib/helpers';
-import { LLMSettingsConstants } from '@/[fsd]/shared/lib/constants';
+import {
+  findListedModel,
+  includesProjectContext,
+  testPanelRequestSettings,
+  testPanelSettingsFor,
+} from '@/[fsd]/features/skill/lib/helpers';
+import { useSkillModels, useSkillVersionModel } from '@/[fsd]/features/skill/lib/hooks';
+import { AutoRoutingConstants } from '@/[fsd]/shared/lib/constants';
 import { SocketContext } from '@/[fsd]/shared/lib/context';
 import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { resetLLMSettingsForModel } from '@/[fsd]/shared/lib/utils';
-import { useListModelsQuery } from '@/api/configurations.js';
 import { useGenerateContentStreamingMutation, useStopLlmTaskMutation } from '@/api/llm';
 import { ChatParticipantType, ROLES, SocketMessageType, sioEvents } from '@/common/constants';
 import { initializeNewMessages } from '@/common/initializeNewMessages';
@@ -32,17 +37,9 @@ import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { useManualSocket } from '@/hooks/useSocket';
 import { ContentContainer } from '@/pages/Common/Components/StyledComponents';
 
-const { DEFAULT_MAX_TOKENS } = LLMSettingsConstants;
+const { MODEL_SURFACES } = AutoRoutingConstants;
 
 const SYNTHETIC_PARTICIPANT_ID = 'skill-test-participant';
-const NO_MODELS = [];
-
-const findRunSettingsModel = (models, llmSettings) =>
-  llmSettings?.model_name
-    ? models.find(
-        model => model.name === llmSettings.model_name && model.project_id === llmSettings.model_project_id,
-      ) || models.find(model => model.name === llmSettings.model_name)
-    : null;
 
 // Map local chat_history messages to predict_llm chat_history turns.
 const messagesToTurns = messages =>
@@ -144,32 +141,49 @@ const SkillTestPanel = memo(props => {
   // first incoming socket event.
   const awaitingStreamRef = useRef(false);
 
-  // Model selector wiring (mirrors ConfigurationTab — local llm_settings only).
-  const { data: modelsData } = useListModelsQuery({ projectId, include_shared: true }, { skip: !projectId });
-  const modelList = useMemo(() => modelsData?.items ?? NO_MODELS, [modelsData]);
-
-  const defaultModel = useMemo(
-    () => modelList.find(model => model.default) || modelList[0] || null,
-    [modelList],
+  const { models: modelList, defaultModel } = useSkillModels();
+  const {
+    selectedModel: versionModel,
+    canEditVersionModel,
+    onSelectModel: onSelectVersionModel,
+    onSetLLMSettings: onSetVersionLLMSettings,
+  } = useSkillVersionModel();
+  const usableVersionModel = useMemo(
+    () => findListedModel(modelList, versionModel),
+    [modelList, versionModel],
   );
 
   const [selectedModel, setSelectedModel] = useState(null);
   const [llmSettings, setLlmSettings] = useState(() => testPanelSettingsFor(savedLlmSettings, null));
 
   useEffect(() => {
-    const model = findRunSettingsModel(modelList, savedLlmSettings) || defaultModel;
+    const model = usableVersionModel || defaultModel;
     setSelectedModel(model);
     setLlmSettings(testPanelSettingsFor(savedLlmSettings, model));
-  }, [defaultModel, modelList, savedLlmSettings]);
+  }, [defaultModel, savedLlmSettings, usableVersionModel]);
 
-  const onSelectModel = useCallback(model => {
-    setSelectedModel(model);
-    setLlmSettings(prev => ({ ...prev, ...resetLLMSettingsForModel(model) }));
-  }, []);
+  const onSelectModel = useCallback(
+    model => {
+      if (canEditVersionModel) {
+        onSelectVersionModel(model);
+        return;
+      }
+      setSelectedModel(model);
+      setLlmSettings(prev => ({ ...prev, ...resetLLMSettingsForModel(model) }));
+    },
+    [canEditVersionModel, onSelectVersionModel],
+  );
 
-  const onSetLLMSettings = useCallback(newSettings => {
-    setLlmSettings(prev => ({ ...prev, ...newSettings }));
-  }, []);
+  const onSetLLMSettings = useCallback(
+    newSettings => {
+      if (canEditVersionModel) {
+        onSetVersionLLMSettings(newSettings);
+        return;
+      }
+      setLlmSettings(prev => ({ ...prev, ...newSettings }));
+    },
+    [canEditVersionModel, onSetVersionLLMSettings],
+  );
 
   // Read-aloud / text-to-speech mini-player (shared with the agent ChatBox).
   const { onAutoSpeak, speakingMessageId, speakingSegments, spokenRange, showPlayer, voicePlayerProps } =
@@ -341,14 +355,9 @@ const SkillTestPanel = memo(props => {
           instructions: instructionsRef.current,
           user_input: userInput,
           chat_history: priorTurns,
-          llm_settings: {
-            model_name: selectedModel.name,
-            model_project_id: selectedModel.project_id,
-            temperature: llmSettings.temperature ?? null,
-            max_tokens: llmSettings.max_tokens ?? DEFAULT_MAX_TOKENS,
-            reasoning_effort: llmSettings.reasoning_effort ?? null,
-          },
+          llm_settings: testPanelRequestSettings(selectedModel, llmSettings, savedLlmSettings),
           include_project_context: withProjectContext,
+          routing_surface: MODEL_SURFACES.agent,
         }).unwrap();
         if (result?.error) throw new Error(result.error);
         if (result?.task_id) activeTaskIdRef.current = result.task_id;
@@ -362,6 +371,7 @@ const SkillTestPanel = memo(props => {
       generateContent,
       llmSettings,
       projectId,
+      savedLlmSettings,
       selectedModel,
       socket?.id,
       toastError,

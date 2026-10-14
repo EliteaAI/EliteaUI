@@ -5,7 +5,6 @@ import { useFormikContext } from 'formik';
 import { Box, Typography } from '@mui/material';
 
 import { useSkillChatModel } from '@/[fsd]/features/chat/lib/hooks';
-import { PROJECT_DEFAULT_MODEL_LABEL } from '@/[fsd]/features/skill/lib/constants';
 import {
   hasSkillChatModelOverride,
   isSkillVersionLocked,
@@ -47,7 +46,6 @@ const SkillCanvasModelSelector = memo(props => {
     selectedModel: versionModel,
     onSelectModel: onSelectVersionModel,
     onSetLLMSettings: onSetVersionLLMSettings,
-    onUseProjectDefault,
   } = useSkillVersionModel();
 
   const skillDetails = useMemo(
@@ -109,10 +107,8 @@ const SkillCanvasModelSelector = memo(props => {
           models={models}
           llmSettings={versionLLMSettings}
           onSetLLMSettings={onSetVersionLLMSettings}
-          onResetToDefaults={canUpdateSkill ? onUseProjectDefault : undefined}
           disabled={!canUpdateSkill}
           modelTooltip={VERSION_MODEL_TOOLTIP}
-          emptyModelLabel={PROJECT_DEFAULT_MODEL_LABEL}
         />
       )}
       {hasChatOverride && (

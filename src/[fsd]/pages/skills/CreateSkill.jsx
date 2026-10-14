@@ -2,9 +2,11 @@ import { memo, useMemo } from 'react';
 
 import { Form, Formik } from 'formik';
 
-import { Box, Grid } from '@mui/material';
+import { Box, CircularProgress, Grid } from '@mui/material';
 
 import { CreateSkillForm, CreateSkillTabBar, SkillValidateSchema } from '@/[fsd]/features/skill';
+import { withDefaultSkillModel } from '@/[fsd]/features/skill/lib/helpers';
+import { useSkillModels } from '@/[fsd]/features/skill/lib/hooks';
 import { Breadcrumbs } from '@/[fsd]/shared/ui';
 import StyledTabs from '@/components/StyledTabs';
 import { StyledGridContainer } from '@/pages/Common/Components';
@@ -12,6 +14,7 @@ import { StyledGridContainer } from '@/pages/Common/Components';
 const CreateSkill = memo(() => {
   const styles = createSkillStyles();
 
+  const { defaultModel, isLoadingModels } = useSkillModels();
   const initialValues = useMemo(
     () => ({
       name: '',
@@ -19,9 +22,10 @@ const CreateSkill = memo(() => {
       version_details: {
         tags: [],
         instructions: '',
+        run_settings: withDefaultSkillModel(null, defaultModel),
       },
     }),
-    [],
+    [defaultModel],
   );
 
   return (
@@ -52,10 +56,16 @@ const CreateSkill = memo(() => {
                     size={{ xs: 12 }}
                     sx={styles.gridItem}
                   >
-                    <CreateSkillForm
-                      sx={styles.formContainer}
-                      showGenerateButton
-                    />
+                    {isLoadingModels ? (
+                      <Box sx={styles.loadingContainer}>
+                        <CircularProgress />
+                      </Box>
+                    ) : (
+                      <CreateSkillForm
+                        sx={styles.formContainer}
+                        showGenerateButton
+                      />
+                    )}
                   </Grid>
                 </StyledGridContainer>
               </Box>
@@ -75,6 +85,13 @@ const createSkillStyles = () => ({
     height: '100%',
   },
   tab: { paddingX: '1.5rem' },
+  loadingContainer: {
+    height: '100%',
+    width: '100%',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   formContainer: {
     margin: '0.75rem auto 0',
     maxWidth: '40.1875rem',

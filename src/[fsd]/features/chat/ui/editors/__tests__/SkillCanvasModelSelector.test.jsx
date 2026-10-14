@@ -124,12 +124,11 @@ describe('SkillCanvasModelSelector', () => {
     });
   });
 
-  it('falls back to the project default on reset of an editable version', async () => {
+  it('offers no project default on an editable version', () => {
     renderSelector('draft', skill(), vi.fn());
 
-    await act(async () => selectorProps.current.onResetToDefaults());
-
-    expect(formRef.current.values.version_details.run_settings.llm_settings).toBeNull();
+    expect(selectorProps.current.onResetToDefaults).toBeUndefined();
+    expect(selectorProps.current.emptyModelLabel).toBeUndefined();
   });
 
   it('saves the model of a published version to this chat only', async () => {
@@ -166,25 +165,6 @@ describe('SkillCanvasModelSelector', () => {
 
     expect(selectorProps.current.disabled).toBe(true);
     expect(selectorProps.current.onResetToDefaults).toBeUndefined();
-  });
-});
-
-describe('SkillCanvasModelSelector on the project default', () => {
-  afterEach(() => cleanup());
-
-  it('shows the project default instead of naming a model', () => {
-    renderSelector('draft', skill(), vi.fn(), null);
-
-    expect(selectorProps.current.selectedModel).toBeNull();
-    expect(selectorProps.current.emptyModelLabel).toBe('Project default');
-  });
-
-  it('keeps following the project default when only settings change', async () => {
-    renderSelector('draft', skill(), vi.fn(), null);
-
-    await act(async () => selectorProps.current.onSetLLMSettings({ max_tokens: 8192 }));
-
-    expect(formRef.current.values.version_details.run_settings.llm_settings).toEqual({ max_tokens: 8192 });
   });
 });
 

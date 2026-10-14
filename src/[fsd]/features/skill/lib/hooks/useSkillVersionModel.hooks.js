@@ -3,30 +3,31 @@ import { useCallback, useMemo } from 'react';
 import { useFormikContext } from 'formik';
 
 import { RUN_SETTINGS_FIELD } from '@/[fsd]/features/skill/lib/constants';
-import { findSkillSavedModel } from '@/[fsd]/features/skill/lib/helpers';
-import { AutoRoutingConstants, LLMSettingsConstants } from '@/[fsd]/shared/lib/constants';
-import { modelsWithAuto, resetLLMSettingsForModel, selectionFields } from '@/[fsd]/shared/lib/utils';
-import { useListModelsQuery } from '@/api/configurations';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
+import {
+  findSkillSavedModel,
+  hasVersionModelChanged,
+  isSkillVersionLocked,
+} from '@/[fsd]/features/skill/lib/helpers';
+import { LLMSettingsConstants } from '@/[fsd]/shared/lib/constants';
+import { resetLLMSettingsForModel, selectionFields } from '@/[fsd]/shared/lib/utils';
+import { PERMISSIONS } from '@/common/constants';
+import useCheckPermission from '@/hooks/useCheckPermission';
+
+import { useSkillModels } from './useSkillModels.hooks';
 
 const { DEFAULT_MAX_TOKENS } = LLMSettingsConstants;
-const { MODEL_SURFACES } = AutoRoutingConstants;
 
 export const useSkillVersionModel = () => {
-  const { values, setFieldValue } = useFormikContext();
-  const projectId = useSelectedProjectId();
+  const { values, initialValues, setFieldValue } = useFormikContext();
   const runSettings = values?.version_details?.run_settings;
   const llmSettings = runSettings?.llm_settings;
-
-  const { data: modelsData = { items: [] }, isLoading: isLoadingModels } = useListModelsQuery(
-    { projectId, include_shared: true },
-    { skip: !projectId },
-  );
-  const models = useMemo(
-    () => modelsWithAuto(modelsData.items || [], modelsData.auto_routing, MODEL_SURFACES.agent),
-    [modelsData],
-  );
+  const { models, isLoadingModels } = useSkillModels();
+  const { checkPermission } = useCheckPermission();
+  const canEditVersionModel =
+    checkPermission(PERMISSIONS.skills.update) && !isSkillVersionLocked(values?.version_details?.status);
   const selectedModel = useMemo(() => findSkillSavedModel(models, llmSettings), [models, llmSettings]);
+  const unsavedVersionLLMSettings =
+    canEditVersionModel && hasVersionModelChanged(values, initialValues) ? llmSettings : null;
 
   const updateRunSettings = useCallback(
     patch => setFieldValue(RUN_SETTINGS_FIELD, { ...runSettings, ...patch }),
@@ -50,20 +51,16 @@ export const useSkillVersionModel = () => {
     [llmSettings, updateRunSettings],
   );
 
-  const onUseProjectDefault = useCallback(
-    () => updateRunSettings({ llm_settings: null }),
-    [updateRunSettings],
-  );
-
   return {
     runSettings,
     llmSettings,
     models,
     isLoadingModels,
     selectedModel,
+    canEditVersionModel,
+    unsavedVersionLLMSettings,
     updateRunSettings,
     onSelectModel,
     onSetLLMSettings,
-    onUseProjectDefault,
   };
 };

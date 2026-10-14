@@ -7,12 +7,15 @@ import {
   isSkillVersionLocked,
   resolveSkillChatLLMSettings,
   resolveSkillChatModel,
+  testPanelRequestSettings,
   testPanelSettingsFor,
   toRunSettingsPayload,
+  withDefaultSkillModel,
   withPinnedSkillVersion,
   withRunSettings,
   withoutSkillChatModel,
 } from '@/[fsd]/features/skill/lib/helpers/skillRunSettings.helpers';
+import { DEFAULT_MAX_TOKENS, DEFAULT_TEMPERATURE } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
 
 describe('toRunSettingsPayload', () => {
   it('keeps never-configured run settings as null', () => {
@@ -220,5 +223,72 @@ describe('hasVersionModelChanged', () => {
         values({ model_name: 'haiku', max_tokens: 10 }),
       ),
     ).toBe(false);
+  });
+});
+
+describe('withDefaultSkillModel', () => {
+  const DEFAULT_MODEL = { name: 'haiku', project_id: 1 };
+
+  it('pins the default model with its settings when the version has none', () => {
+    expect(withDefaultSkillModel({ ignore_project_context: true }, DEFAULT_MODEL)).toEqual({
+      ignore_project_context: true,
+      llm_settings: {
+        model_name: 'haiku',
+        model_project_id: 1,
+        max_tokens: DEFAULT_MAX_TOKENS,
+        temperature: DEFAULT_TEMPERATURE,
+      },
+    });
+  });
+
+  it('keeps settings the user already tuned', () => {
+    const { llm_settings } = withDefaultSkillModel({ llm_settings: { max_tokens: 8192 } }, DEFAULT_MODEL);
+
+    expect(llm_settings).toMatchObject({ model_name: 'haiku', max_tokens: 8192 });
+  });
+
+  it('keeps a chosen model or Auto', () => {
+    const fixed = { llm_settings: { model_name: 'sonnet', model_project_id: 2 } };
+    const auto = { llm_settings: { selection: { mode: 'auto' } } };
+
+    expect(withDefaultSkillModel(fixed, DEFAULT_MODEL)).toBe(fixed);
+    expect(withDefaultSkillModel(auto, DEFAULT_MODEL)).toBe(auto);
+  });
+
+  it('leaves the version alone until the models load', () => {
+    expect(withDefaultSkillModel(null, null)).toBeNull();
+  });
+});
+
+describe('testPanelRequestSettings', () => {
+  const AUTO = {
+    mode: 'auto',
+    profile_ref: { id: 'quality-auto', revision: 1 },
+    reasoning: { mode: 'auto' },
+  };
+  const TUNED = { temperature: 0.3, max_tokens: 8192, reasoning_effort: null };
+
+  it('sends the fixed model with its tuned settings', () => {
+    expect(testPanelRequestSettings({ name: 'sonnet', project_id: 1 }, TUNED, null)).toEqual({
+      temperature: 0.3,
+      max_tokens: 8192,
+      reasoning_effort: null,
+      selection: null,
+      model_name: 'sonnet',
+      model_project_id: 1,
+    });
+  });
+
+  it('sends Auto as a selection without a fixed model or effort', () => {
+    const request = testPanelRequestSettings({ selection: AUTO }, TUNED, null);
+
+    expect(request).toMatchObject({ selection: AUTO, model_name: null, model_project_id: null });
+    expect(request).toMatchObject({ temperature: null, reasoning_effort: null, max_tokens: 8192 });
+  });
+
+  it("keeps the version's own Auto selection, explicit effort included", () => {
+    const saved = { selection: { ...AUTO, reasoning: { mode: 'explicit', preset: 'high' } } };
+
+    expect(testPanelRequestSettings({ selection: AUTO }, TUNED, saved).selection).toBe(saved.selection);
   });
 });

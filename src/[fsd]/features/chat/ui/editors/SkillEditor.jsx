@@ -5,12 +5,17 @@ import BaseEditor from '@/[fsd]/features/chat/ui/editors/BaseEditor';
 import SkillCanvasModelSelector from '@/[fsd]/features/chat/ui/editors/SkillCanvasModelSelector';
 import SkillEditorSaveButton from '@/[fsd]/features/chat/ui/editors/SkillEditorSaveButton';
 import { useSkillDetailsQuery } from '@/[fsd]/features/skill/api';
-import { hasSkillChatModelOverride, withoutSkillChatModel } from '@/[fsd]/features/skill/lib/helpers';
+import {
+  hasSkillChatModelOverride,
+  withDefaultSkillModel,
+  withoutSkillChatModel,
+} from '@/[fsd]/features/skill/lib/helpers';
+import { useSkillModels } from '@/[fsd]/features/skill/lib/hooks';
 import { SkillValidateSchema } from '@/[fsd]/features/skill/lib/validation';
 import { CreateSkillForm } from '@/[fsd]/features/skill/ui';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
-const buildInitialValues = data => ({
+const buildInitialValues = (data, defaultModel) => ({
   id: data?.id ?? null,
   name: data?.name || '',
   description: data?.description || '',
@@ -23,7 +28,7 @@ const buildInitialValues = data => ({
     instructions: data?.version_details?.instructions ?? data?.instructions ?? '',
     meta: data?.version_details?.meta || {},
     status: data?.version_details?.status ?? null,
-    run_settings: data?.version_details?.run_settings ?? null,
+    run_settings: withDefaultSkillModel(data?.version_details?.run_settings ?? null, defaultModel),
   },
 });
 
@@ -47,7 +52,8 @@ const SkillEditor = memo(props => {
     { skip: !projectId || !skillId },
   );
 
-  const initialValues = useMemo(() => buildInitialValues(data), [data]);
+  const { defaultModel, isLoadingModels } = useSkillModels();
+  const initialValues = useMemo(() => buildInitialValues(data, defaultModel), [data, defaultModel]);
 
   const onDirtyStateChangeRef = useRef(onDirtyStateChange);
 
@@ -86,7 +92,7 @@ const SkillEditor = memo(props => {
         onChangeSkillSettings={onChangeSkillSettings}
         isNewConversation={isNewConversation}
       />
-      <CreateSkillForm showRunSettingsModel={false} />
+      {!isLoadingModels && <CreateSkillForm />}
     </BaseEditor>
   );
 });
