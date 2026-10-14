@@ -287,6 +287,15 @@ describe('buildAnalyticsSheets — skill usage', () => {
       expect(emptyCosts.rows).toEqual([{ name: 'No data available for the selected date range.' }]);
     });
 
+    it('marks an empty token usage by skill section with the no-data message', () => {
+      const emptyTokens = sheet(
+        buildAnalyticsSheets({ ...DATA, costs: {}, includeSkills: true }),
+        'Tokens',
+      ).sections.find(s => s.title === 'Token Usage by Skill');
+
+      expect(emptyTokens.rows).toEqual([{ name: 'No data available for the selected date range.' }]);
+    });
+
     it('exports token usage by skill last, with the share of project tokens', () => {
       const tokens = sheet(sheets, 'Tokens');
       const skills = section(sheets, 'Tokens', 'Token Usage by Skill');

@@ -429,10 +429,12 @@ const buildTokensSheet = (data, meta, options = {}) => {
     });
 
     if (includeSkills) {
+      const skillCols = tokenCols('Skill');
+      const skillRows = buildTokenRows(by_skill, skillDisplayName, totalProjectTokens);
       sections.push({
         title: 'Token Usage by Skill',
-        columns: tokenCols('Skill'),
-        rows: buildTokenRows(by_skill, skillDisplayName, totalProjectTokens),
+        columns: skillCols,
+        rows: skillRows.length > 0 ? skillRows : emptyRow(skillCols, NO_DATA_MSG),
       });
     }
   }
