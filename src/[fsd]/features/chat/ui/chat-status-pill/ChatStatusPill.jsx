@@ -3,6 +3,7 @@ import { memo, useCallback, useRef, useState } from 'react';
 import { Box, CircularProgress, Typography } from '@mui/material';
 
 import PauseIcon from '@/assets/pause-icon.svg?react';
+import { ChatParticipantType } from '@/common/constants';
 
 const NARROW_WIDTH_THRESHOLD = 320;
 
@@ -31,10 +32,15 @@ const ChatStatusPill = memo(props => {
 
   const styles = chatStatusPillStyles(isInterrupt);
 
-  if (participantType !== 'application' && participantType !== 'pipeline') return null;
+  if (
+    participantType !== ChatParticipantType.Applications &&
+    participantType !== ChatParticipantType.Pipelines
+  )
+    return null;
   if (!isRunning && !isInterrupt) return null;
 
-  const entityLabel = participantType === 'pipeline' || agentType === 'pipeline' ? 'Pipeline' : 'Agent';
+  const entityLabel =
+    participantType === ChatParticipantType.Pipelines || agentType === 'pipeline' ? 'Pipeline' : 'Agent';
   const label = isInterrupt
     ? isNarrow
       ? 'Waiting for your input...'
@@ -81,6 +87,8 @@ const chatStatusPillStyles = isInterrupt => ({
     backgroundColor: ({ palette }) => `${palette.primary.main}1A`,
     alignSelf: 'center',
     flexShrink: 0,
+    maxWidth: '100%',
+    minWidth: 0,
   },
   iconWrap: ({ palette }) => ({
     display: 'flex',
@@ -111,6 +119,9 @@ const chatStatusPillStyles = isInterrupt => ({
   label: ({ palette }) => ({
     color: palette.primary.main,
     whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    minWidth: 0,
   }),
 });
 

@@ -281,6 +281,13 @@ const ChatBox = memo(
 
     const hasBlockingHitlInterrupt = hasPendingHitlInterrupt && !isPendingClarifyingQuestion;
 
+    const statusParticipant = useMemo(() => {
+      const source =
+        pendingHitlMessage || [...chat_history].reverse().find(msg => msg.isStreaming && msg.task_id);
+      if (!source?.participant_id) return null;
+      return activeConversation?.participants?.find(p => p.id === source.participant_id) ?? null;
+    }, [pendingHitlMessage, chat_history, activeConversation?.participants]);
+
     const hasPendingAuthRequired = useMemo(
       () => hasPendingAuthRequiredAction(chat_history[chat_history.length - 1]),
       [chat_history],
@@ -3088,10 +3095,10 @@ const ChatBox = memo(
               />
             )}
             <ChatStatusPill
-              isRunning={isStreaming && !hasPendingHitlInterrupt}
-              isInterrupt={Boolean(hasPendingHitlInterrupt)}
-              participantType={activeParticipant?.entity_name}
-              agentType={activeParticipant?.entity_settings?.agent_type}
+              isRunning={(isStreamingNow || isStreaming) && !hasPendingHitlInterrupt}
+              isInterrupt={hasPendingHitlInterrupt && !isReadOnly}
+              participantType={statusParticipant?.entity_name}
+              agentType={statusParticipant?.entity_settings?.agent_type}
             />
             <NewChatInput
               fromTheChat={fromTheChat}
