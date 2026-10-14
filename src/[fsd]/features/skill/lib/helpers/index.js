@@ -6,6 +6,7 @@ export {
   findSkillSavedModel,
   hasSkillChatModelOverride,
   hasUnsavedRunChanges,
+  hasVersionModelChanged,
   includesProjectContext,
   isSkillChatModelPending,
   resolveSkillChatLLMSettings,
@@ -14,6 +15,7 @@ export {
   testPanelSettingsFor,
   toRunSettingsPayload,
   withoutSkillChatModel,
+  withPinnedSkillVersion,
   withRunSettings,
 } from './skillRunSettings.helpers';
 export {

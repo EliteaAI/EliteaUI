@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  hasVersionModelChanged,
   includesProjectContext,
   isSkillChatModelPending,
   isSkillVersionLocked,
@@ -8,6 +9,7 @@ import {
   resolveSkillChatModel,
   testPanelSettingsFor,
   toRunSettingsPayload,
+  withPinnedSkillVersion,
   withRunSettings,
   withoutSkillChatModel,
 } from '@/[fsd]/features/skill/lib/helpers/skillRunSettings.helpers';
@@ -169,5 +171,54 @@ describe('withoutSkillChatModel', () => {
       entity_settings: { version_id: 8, icon_meta: {}, llm_settings: undefined },
     });
     expect(skill.entity_settings.llm_settings).toEqual({ model_name: 'haiku' });
+  });
+});
+
+describe('withPinnedSkillVersion', () => {
+  const unpinned = { id: 4, entity_settings: { icon_meta: {} } };
+
+  it('pins a skill that follows its default version to the loaded one', () => {
+    expect(withPinnedSkillVersion(unpinned, 8)).toEqual({
+      id: 4,
+      entity_settings: { icon_meta: {}, version_id: 8 },
+    });
+  });
+
+  it('keeps an explicit pin and leaves the skill alone without a loaded version', () => {
+    const pinned = { id: 4, entity_settings: { version_id: 7 } };
+    expect(withPinnedSkillVersion(pinned, 8)).toBe(pinned);
+    expect(withPinnedSkillVersion(unpinned, null)).toBe(unpinned);
+    expect(withPinnedSkillVersion(undefined, 8)).toBeUndefined();
+  });
+});
+
+describe('hasVersionModelChanged', () => {
+  const values = (llmSettings, instructions = 'Answer briefly') => ({
+    version_details: {
+      instructions,
+      run_settings: { ignore_project_context: true, llm_settings: llmSettings },
+    },
+  });
+
+  it('sees a change of the version model or its settings', () => {
+    expect(hasVersionModelChanged(values({ model_name: 'sonnet' }), values({ model_name: 'haiku' }))).toBe(
+      true,
+    );
+    expect(
+      hasVersionModelChanged(
+        values({ model_name: 'haiku', max_tokens: 10 }),
+        values({ model_name: 'haiku' }),
+      ),
+    ).toBe(true);
+    expect(hasVersionModelChanged(values(null), values({ model_name: 'haiku' }))).toBe(true);
+  });
+
+  it('ignores other fields and key order', () => {
+    expect(
+      hasVersionModelChanged(
+        values({ max_tokens: 10, model_name: 'haiku' }, 'Answer in detail'),
+        values({ model_name: 'haiku', max_tokens: 10 }),
+      ),
+    ).toBe(false);
   });
 });

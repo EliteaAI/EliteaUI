@@ -1,4 +1,4 @@
-import { findSkillParticipant } from '@/[fsd]/features/skill/lib/helpers';
+import { findSkillParticipant, withPinnedSkillVersion } from '@/[fsd]/features/skill/lib/helpers';
 import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { ChatParticipantType, DEFAULT_PARTICIPANT_NAME } from '@/common/constants';
 
@@ -23,22 +23,21 @@ export const areDetailsOfParticipant = (details, participant) => {
   return String(details.id) === String(entityId);
 };
 
-export const findChatParticipantOfEntity = (participants, entity) =>
-  participants?.find(
-    participant =>
-      participant.entity_name === entity?.entity_name &&
-      String(participant.entity_meta?.id) === String(entity?.entity_meta?.id) &&
-      String(participant.entity_meta?.project_id) === String(entity?.entity_meta?.project_id),
-  );
+export const isSameChatEntity = (participant, other) =>
+  !!participant &&
+  !!other &&
+  participant.entity_name === other.entity_name &&
+  String(participant.entity_meta?.id) === String(other.entity_meta?.id) &&
+  String(participant.entity_meta?.project_id) === String(other.entity_meta?.project_id);
 
-export const resolveChatSkillParticipant = (participants, skill) => {
-  const participant = findChatParticipantOfEntity(participants, skill);
-  if (!participant || participant.entity_settings?.version_id) return participant;
-  return {
-    ...participant,
-    entity_settings: { ...participant.entity_settings, version_id: skill.entity_settings?.version_id },
-  };
-};
+export const findChatParticipantOfEntity = (participants, entity) =>
+  participants?.find(participant => isSameChatEntity(participant, entity));
+
+export const resolveChatSkillParticipant = (participants, skill) =>
+  withPinnedSkillVersion(
+    findChatParticipantOfEntity(participants, skill),
+    skill?.entity_settings?.version_id,
+  );
 
 export const getChatParticipantUniqueId = participant => {
   if (participant) {

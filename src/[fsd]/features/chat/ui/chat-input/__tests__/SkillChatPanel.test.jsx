@@ -88,13 +88,24 @@ describe('SkillChatPanel settings', () => {
   });
 
   it('shows the canvas is open for this skill only', () => {
-    renderPanel(undefined, { onShowSkillEditor: vi.fn(), editingSkill: { entity_meta: { id: 5 } } });
+    renderPanel(undefined, { onShowSkillEditor: vi.fn(), editingSkill: { ...skill, id: 41 } });
     expect(screen.getByTestId('chat-skill-settings-button')).toHaveTextContent('Editing...');
     cleanup();
 
-    renderPanel(undefined, { onShowSkillEditor: vi.fn(), editingSkill: { entity_meta: { id: 6 } } });
+    renderPanel(undefined, {
+      onShowSkillEditor: vi.fn(),
+      editingSkill: { ...skill, entity_meta: { id: 6, project_id: 2 } },
+    });
     expect(screen.getByTestId('chat-skill-settings-button')).not.toHaveTextContent('Editing...');
     expect(screen.getByTestId('setting-icon')).toBeInTheDocument();
+  });
+
+  it('does not mistake a skill of another project with the same id for this one', () => {
+    renderPanel(undefined, {
+      onShowSkillEditor: vi.fn(),
+      editingSkill: { ...skill, entity_meta: { id: 5, project_id: 1 } },
+    });
+    expect(screen.getByTestId('chat-skill-settings-button')).not.toHaveTextContent('Editing...');
   });
 
   it('cannot open a canvas the page does not provide', () => {

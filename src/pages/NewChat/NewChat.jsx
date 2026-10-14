@@ -1497,6 +1497,7 @@ const NewChat = props => {
                 isEditingSkill={isEditingSkill}
                 editingSkill={editingSkill}
                 handleSkillSettingsChange={handleSkillSettingsChange}
+                isNewConversation={!!activeConversation?.isNew}
                 onCloseSkillEditor={onCloseSkillEditor}
                 // Project context
                 isEditingProjectContext={isEditingProjectContext}

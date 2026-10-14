@@ -35,6 +35,7 @@ const SkillEditor = memo(props => {
     onDirtyStateChange,
     disableNavBlocking = false,
     onChangeSkillSettings,
+    isNewConversation = false,
   } = props;
   const projectId = useSelectedProjectId();
   const skillId = skill?.entity_meta?.id;
@@ -56,7 +57,7 @@ const SkillEditor = memo(props => {
 
   useEffect(() => () => onDirtyStateChangeRef.current?.(false), []);
 
-  const onSkillSaved = useCallback(() => {
+  const onVersionModelSaved = useCallback(() => {
     if (!onChangeSkillSettings || !hasSkillChatModelOverride(skill?.entity_settings)) return;
     onChangeSkillSettings(withoutSkillChatModel(skill), true);
   }, [onChangeSkillSettings, skill]);
@@ -76,13 +77,14 @@ const SkillEditor = memo(props => {
       saveButton={
         <SkillEditorSaveButton
           isDirty={isDirty}
-          onSaved={onSkillSaved}
+          onModelSaved={onVersionModelSaved}
         />
       }
     >
       <SkillCanvasModelSelector
         skill={skill}
         onChangeSkillSettings={onChangeSkillSettings}
+        isNewConversation={isNewConversation}
       />
       <CreateSkillForm showRunSettingsModel={false} />
     </BaseEditor>

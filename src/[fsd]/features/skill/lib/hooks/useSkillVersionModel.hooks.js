@@ -18,7 +18,7 @@ export const useSkillVersionModel = () => {
   const runSettings = values?.version_details?.run_settings;
   const llmSettings = runSettings?.llm_settings;
 
-  const { data: modelsData = { items: [] } } = useListModelsQuery(
+  const { data: modelsData = { items: [] }, isLoading: isLoadingModels } = useListModelsQuery(
     { projectId, include_shared: true },
     { skip: !projectId },
   );
@@ -59,6 +59,7 @@ export const useSkillVersionModel = () => {
     runSettings,
     llmSettings,
     models,
+    isLoadingModels,
     selectedModel,
     updateRunSettings,
     onSelectModel,

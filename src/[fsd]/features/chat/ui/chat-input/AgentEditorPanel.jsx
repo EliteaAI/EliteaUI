@@ -8,10 +8,10 @@ import { useParticipantEntityIcon } from '@/[fsd]/features/chat/participants/lib
 import { usePublicProjectAccessCheck } from '@/[fsd]/features/project';
 import { PERMISSIONS, PUBLIC_PROJECT_ID } from '@/common/constants';
 import EntityIcon from '@/components/EntityIcon';
-import SettingIcon from '@/components/Icons/SettingIcon';
 import useIsActiveParticipantBeingEdited from '@/hooks/chat/useIsActiveParticipantBeingEdited';
 import useCheckPermission from '@/hooks/useCheckPermission';
 
+import ParticipantSettingsButton from './ParticipantSettingsButton';
 import SwitchToModelButton from './SwitchToModelButton';
 import VariablesEditor from './VariablesEditor';
 import VersionSelector from './VersionSelector';
@@ -239,36 +239,15 @@ const AgentEditorPanel = memo(props => {
 
         <Divider orientation="vertical" />
 
-        <Tooltip
-          placement="top"
-          title={settingsTooltipTitle}
-        >
-          <Button
-            data-testid="chat-participant-settings-button"
-            size="small"
-            aria-label="agent settings menu"
-            aria-haspopup="settings"
-            onClick={onClickAgentEditor}
-            disabled={disabled || isEditSettingsDisabled}
-            variant="elitea"
-            color="secondary"
-          >
-            {isActiveParticipantBeingEdited ? (
-              <Typography
-                variant="labelSmall"
-                color="primary"
-                sx={styles.editingText}
-              >
-                {canEdit ? 'Editing...' : 'Viewing...'}
-              </Typography>
-            ) : (
-              <SettingIcon
-                sx={styles.settingIcon}
-                fill={disabled || isEditSettingsDisabled ? theme.palette.icon.disabled : undefined}
-              />
-            )}
-          </Button>
-        </Tooltip>
+        <ParticipantSettingsButton
+          tooltip={settingsTooltipTitle}
+          isEditing={isActiveParticipantBeingEdited}
+          canEdit={canEdit}
+          disabled={disabled || isEditSettingsDisabled}
+          onClick={onClickAgentEditor}
+          testId="chat-participant-settings-button"
+          ariaLabel="agent settings menu"
+        />
       </ButtonGroup>
 
       <SwitchToModelButton
@@ -311,13 +290,6 @@ const agentEditorPanelStyles = (isSmallView, theme) => ({
     width: '1rem',
     height: '1rem',
     borderRadius: '50%',
-  },
-  editingText: {
-    fontSize: '.75rem',
-    fontWeight: 400,
-  },
-  settingIcon: {
-    fontSize: '1rem',
   },
   skeleton: {
     bgcolor: ({ palette }) => palette.background.overlay.medium,

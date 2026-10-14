@@ -9,29 +9,41 @@ import { PROJECT_DEFAULT_MODEL_LABEL } from '@/[fsd]/features/skill/lib/constant
 import {
   hasSkillChatModelOverride,
   isSkillVersionLocked,
+  withPinnedSkillVersion,
   withoutSkillChatModel,
 } from '@/[fsd]/features/skill/lib/helpers';
 import { useSkillVersionModel } from '@/[fsd]/features/skill/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { LLMModelSelector } from '@/[fsd]/widgets/llm-model-selector';
+import { PERMISSIONS } from '@/common/constants';
+import useCheckPermission from '@/hooks/useCheckPermission';
 
-const EMPTY_LLM_SETTINGS = Object.freeze({});
 const VERSION_MODEL_TOOLTIP = 'Model this skill version runs with';
 const CHAT_MODEL_TOOLTIP = 'Published versions are locked. The model applies to this chat only';
 const LOCKED_MODEL_TOOLTIP = 'Published versions are locked';
+const NEW_CHAT_MODEL_TOOLTIP =
+  'Published versions are locked. Send the first message to choose a model for this chat';
 const CHAT_OVERRIDE_NOTICE = 'This chat runs the skill with its own model instead of the version model.';
 
+const resolveLockedModelTooltip = (canPickChatModel, isNewConversation) => {
+  if (canPickChatModel) return CHAT_MODEL_TOOLTIP;
+  return isNewConversation ? NEW_CHAT_MODEL_TOOLTIP : LOCKED_MODEL_TOOLTIP;
+};
+
 const SkillCanvasModelSelector = memo(props => {
-  const { skill, onChangeSkillSettings } = props;
+  const { skill, onChangeSkillSettings, isNewConversation } = props;
   const { values } = useFormikContext();
   const versionDetails = values?.version_details;
   const isLocked = isSkillVersionLocked(versionDetails?.status);
+  const { checkPermission } = useCheckPermission();
+  const canUpdateSkill = checkPermission(PERMISSIONS.skills.update);
   const styles = skillCanvasModelSelectorStyles();
 
   const {
     llmSettings: versionLLMSettings,
     models,
+    isLoadingModels,
     selectedModel: versionModel,
     onSelectModel: onSelectVersionModel,
     onSetLLMSettings: onSetVersionLLMSettings,
@@ -42,8 +54,12 @@ const SkillCanvasModelSelector = memo(props => {
     () => ({ id: values?.id, version_details: versionDetails }),
     [values?.id, versionDetails],
   );
+  const pinnedSkill = useMemo(
+    () => withPinnedSkillVersion(skill, versionDetails?.id),
+    [skill, versionDetails?.id],
+  );
   const { skillModel, skillLLMSettings, onSelectSkillModel, onSetSkillLLMSettings } = useSkillChatModel({
-    activeParticipant: skill,
+    activeParticipant: pinnedSkill,
     participantDetails: skillDetails,
     models,
     onChangeParticipantSettings: onChangeSkillSettings,
@@ -57,7 +73,7 @@ const SkillCanvasModelSelector = memo(props => {
   const hasChatOverride =
     !isLocked && !!onChangeSkillSettings && hasSkillChatModelOverride(skill?.entity_settings);
 
-  if (!models.length) return <Box sx={styles.container}>Loading models...</Box>;
+  if (isLoadingModels || !versionDetails?.id) return <Box sx={styles.container}>Loading models...</Box>;
 
   return (
     <Box
@@ -73,16 +89,17 @@ const SkillCanvasModelSelector = memo(props => {
           onSetLLMSettings={onSetSkillLLMSettings}
           onResetToDefaults={onSelectSkillModel ? onUseVersionModel : undefined}
           disabled={!onSelectSkillModel}
-          modelTooltip={onSelectSkillModel ? CHAT_MODEL_TOOLTIP : LOCKED_MODEL_TOOLTIP}
+          modelTooltip={resolveLockedModelTooltip(!!onSelectSkillModel, isNewConversation)}
         />
       ) : (
         <LLMModelSelector
           selectedModel={versionModel}
           onSelectModel={onSelectVersionModel}
           models={models}
-          llmSettings={versionLLMSettings || EMPTY_LLM_SETTINGS}
+          llmSettings={versionLLMSettings}
           onSetLLMSettings={onSetVersionLLMSettings}
-          onResetToDefaults={onUseProjectDefault}
+          onResetToDefaults={canUpdateSkill ? onUseProjectDefault : undefined}
+          disabled={!canUpdateSkill}
           modelTooltip={VERSION_MODEL_TOOLTIP}
           emptyModelLabel={PROJECT_DEFAULT_MODEL_LABEL}
         />

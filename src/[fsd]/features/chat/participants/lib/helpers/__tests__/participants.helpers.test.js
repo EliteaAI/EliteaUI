@@ -5,6 +5,7 @@ import {
   findChatParticipantOfEntity,
   getDefaultActiveParticipant,
   getSkillUnavailableReason,
+  isSameChatEntity,
   isSkippedContainerParticipant,
   resolveChatSkillParticipant,
 } from '../participants.helpers';
@@ -175,11 +176,33 @@ describe('resolveChatSkillParticipant', () => {
     });
   });
 
+  it('never replaces the version the chat participant is pinned to', () => {
+    const otherVersionCanvas = { ...draft, entity_settings: { version_id: 705 } };
+    expect(resolveChatSkillParticipant([chatSkill], otherVersionCanvas).entity_settings.version_id).toBe(704);
+  });
+
   it('finds nothing for a skill of another project or a skill not in the chat', () => {
     expect(
       findChatParticipantOfEntity([chatSkill], { ...draft, entity_meta: { id: 602, project_id: 1 } }),
     ).toBeUndefined();
     expect(resolveChatSkillParticipant([userParticipant], draft)).toBeUndefined();
     expect(resolveChatSkillParticipant(undefined, draft)).toBeUndefined();
+  });
+});
+
+describe('isSameChatEntity', () => {
+  const skill = { id: 41, entity_name: 'skill', entity_meta: { id: 602, project_id: 2 } };
+
+  it('matches the same skill across chat and canvas objects', () => {
+    expect(
+      isSameChatEntity(skill, { id: 602, entity_name: 'skill', entity_meta: { id: '602', project_id: '2' } }),
+    ).toBe(true);
+  });
+
+  it('tells apart another project, another entity type and a missing side', () => {
+    expect(isSameChatEntity(skill, { ...skill, entity_meta: { id: 602, project_id: 1 } })).toBe(false);
+    expect(isSameChatEntity(skill, { ...skill, entity_name: 'application' })).toBe(false);
+    expect(isSameChatEntity(skill, undefined)).toBe(false);
+    expect(isSameChatEntity(null, skill)).toBe(false);
   });
 });

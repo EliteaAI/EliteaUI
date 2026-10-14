@@ -13,6 +13,7 @@ const MODELS = [
 ];
 
 const selectorProps = vi.hoisted(() => ({ current: null }));
+const access = vi.hoisted(() => ({ canUpdateSkill: true, isLoadingModels: false, hasNoModels: false }));
 
 vi.mock('@/[fsd]/widgets/llm-model-selector', () => ({
   LLMModelSelector: props => {
@@ -34,7 +35,13 @@ vi.mock('@/[fsd]/shared/ui', () => ({
 }));
 vi.mock('@/[fsd]/shared/ui/button/BaseBtn', () => ({ BUTTON_VARIANTS: { secondary: 'secondary' } }));
 vi.mock('@/api/configurations', () => ({
-  useListModelsQuery: () => ({ data: { items: MODELS } }),
+  useListModelsQuery: () =>
+    access.isLoadingModels
+      ? { data: undefined, isLoading: true }
+      : { data: { items: access.hasNoModels ? [] : MODELS }, isLoading: false },
+}));
+vi.mock('@/hooks/useCheckPermission', () => ({
+  default: () => ({ checkPermission: () => access.canUpdateSkill }),
 }));
 vi.mock('@/hooks/useSelectedProject', () => ({ useSelectedProjectId: () => 2 }));
 vi.mock('@/[fsd]/features/skill/lib/hooks', async () => ({
@@ -55,10 +62,10 @@ const skill = (entitySettings = { version_id: 8 }) => ({
 
 const HAIKU_SETTINGS = { model_name: 'haiku', model_project_id: 1, max_tokens: 2048 };
 
-const formValues = (status, llmSettings) => ({
+const formValues = (status, llmSettings, versionId = 8) => ({
   id: 174,
   version_details: {
-    id: 8,
+    id: versionId,
     status,
     run_settings: { ignore_project_context: true, llm_settings: llmSettings },
   },
@@ -71,10 +78,16 @@ const FormSpy = () => {
   return null;
 };
 
-const renderSelector = (status, participant, onChangeSkillSettings, llmSettings = HAIKU_SETTINGS) =>
+const renderSelector = (
+  status,
+  participant,
+  onChangeSkillSettings,
+  llmSettings = HAIKU_SETTINGS,
+  versionId = 8,
+) =>
   render(
     <Formik
-      initialValues={formValues(status, llmSettings)}
+      initialValues={formValues(status, llmSettings, versionId)}
       onSubmit={vi.fn()}
     >
       <>
@@ -207,5 +220,96 @@ describe('SkillCanvasModelSelector chat override on an editable version', () => 
   it('leaves a locked version to the chip itself', () => {
     renderSelector('published', skill({ version_id: 8, llm_settings: { model_name: 'sonnet' } }), vi.fn());
     expect(screen.queryByTestId('skill-canvas-chat-override')).not.toBeInTheDocument();
+  });
+});
+
+describe('SkillCanvasModelSelector access and loading', () => {
+  afterEach(() => {
+    cleanup();
+    selectorProps.current = null;
+    access.canUpdateSkill = true;
+    access.isLoadingModels = false;
+    access.hasNoModels = false;
+  });
+
+  it('shows the selector, not a loader, when the project has no models', () => {
+    access.hasNoModels = true;
+    renderSelector('draft', skill(), vi.fn(), null);
+
+    expect(screen.queryByText('Loading models...')).not.toBeInTheDocument();
+    expect(selectorProps.current.models).toEqual([]);
+  });
+
+  it('locks the version model for someone who cannot update the skill', () => {
+    access.canUpdateSkill = false;
+    renderSelector('draft', skill(), vi.fn());
+
+    expect(selectorProps.current.disabled).toBe(true);
+    expect(selectorProps.current.onResetToDefaults).toBeUndefined();
+  });
+
+  it('waits for the models before showing a selector', () => {
+    access.isLoadingModels = true;
+    renderSelector('draft', skill(), vi.fn());
+
+    expect(screen.getByText('Loading models...')).toBeInTheDocument();
+    expect(selectorProps.current).toBeNull();
+  });
+
+  it('waits for the version before choosing which selector to show', () => {
+    renderSelector('published', skill(), vi.fn(), HAIKU_SETTINGS, null);
+
+    expect(screen.getByText('Loading models...')).toBeInTheDocument();
+    expect(selectorProps.current).toBeNull();
+  });
+
+  it('lets a chat whose skill follows its default version pick a model for the loaded version', async () => {
+    const onChangeSkillSettings = vi.fn();
+    renderSelector('published', skill({}), onChangeSkillSettings);
+
+    expect(selectorProps.current.disabled).toBe(false);
+    await act(async () => selectorProps.current.onSelectModel(MODELS[0]));
+
+    const [saved] = onChangeSkillSettings.mock.calls[0];
+    expect(saved.entity_settings).toMatchObject({ version_id: 8, llm_settings: { model_name: 'sonnet' } });
+  });
+});
+
+describe('SkillCanvasModelSelector in a chat that starts', () => {
+  afterEach(() => {
+    cleanup();
+    selectorProps.current = null;
+  });
+
+  const canvas = props => (
+    <Formik
+      initialValues={formValues('published', HAIKU_SETTINGS)}
+      onSubmit={vi.fn()}
+    >
+      <SkillCanvasModelSelector
+        skill={skill()}
+        {...props}
+      />
+    </Formik>
+  );
+
+  it('explains that a new chat needs its first message before a model can be chosen', () => {
+    render(canvas({ isNewConversation: true }));
+
+    expect(selectorProps.current.disabled).toBe(true);
+    expect(selectorProps.current.modelTooltip).toBe(
+      'Published versions are locked. Send the first message to choose a model for this chat',
+    );
+  });
+
+  it('enables the chat model once the chat exists, without reopening the canvas', () => {
+    const { rerender } = render(canvas({ isNewConversation: true }));
+
+    rerender(canvas({ isNewConversation: false, onChangeSkillSettings: vi.fn() }));
+
+    expect(selectorProps.current.disabled).toBe(false);
+    expect(selectorProps.current.modelTooltip).toBe(
+      'Published versions are locked. The model applies to this chat only',
+    );
   });
 });

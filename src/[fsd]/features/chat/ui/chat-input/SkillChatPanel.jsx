@@ -1,17 +1,17 @@
 import { memo, useCallback, useMemo } from 'react';
 
-import { Box, Button, ButtonGroup, Divider, Tooltip, Typography, useTheme } from '@mui/material';
+import { Box, Button, ButtonGroup, Divider, Tooltip, Typography } from '@mui/material';
 
 import { useAgentEditorPanelFit } from '@/[fsd]/features/chat/lib/hooks';
 import { ParticipantConstants } from '@/[fsd]/features/chat/participants/lib/constants';
-import { areDetailsOfParticipant } from '@/[fsd]/features/chat/participants/lib/helpers';
+import { areDetailsOfParticipant, isSameChatEntity } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { useParticipantEntityIcon } from '@/[fsd]/features/chat/participants/lib/hooks';
 import { ChatParticipantType, PERMISSIONS } from '@/common/constants';
 import EntityIcon from '@/components/EntityIcon';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
-import SettingIcon from '@/components/Icons/SettingIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
 
+import ParticipantSettingsButton from './ParticipantSettingsButton';
 import SwitchToModelButton from './SwitchToModelButton';
 import VersionSelector from './VersionSelector';
 
@@ -44,13 +44,8 @@ const SkillChatPanel = memo(props => {
 
   const { containerRef, isSmallView } = useAgentEditorPanelFit();
   const entityIcon = useParticipantEntityIcon(activeParticipant);
-  const theme = useTheme();
   const { checkPermission } = useCheckPermission();
   const canEdit = checkPermission(PERMISSIONS.skills.update);
-  const isBeingEdited =
-    !!editingSkill && String(editingSkill.entity_meta?.id) === String(activeParticipant?.entity_meta?.id);
-
-  const isSettingsDisabled = disabled || !onShowSkillEditor;
 
   const onClickSettings = useCallback(
     () => onShowSkillEditor?.(activeParticipant),
@@ -130,35 +125,15 @@ const SkillChatPanel = memo(props => {
 
         <Divider orientation="vertical" />
 
-        <Tooltip
-          placement="top"
-          title={canEdit ? 'Skill settings' : 'View skill settings'}
-        >
-          <Button
-            data-testid="chat-skill-settings-button"
-            size="small"
-            aria-label="skill settings menu"
-            onClick={onClickSettings}
-            disabled={isSettingsDisabled}
-            variant="elitea"
-            color="secondary"
-          >
-            {isBeingEdited ? (
-              <Typography
-                variant="labelSmall"
-                color="primary"
-                sx={styles.editingText}
-              >
-                {canEdit ? 'Editing...' : 'Viewing...'}
-              </Typography>
-            ) : (
-              <SettingIcon
-                sx={styles.settingIcon}
-                fill={isSettingsDisabled ? theme.palette.icon.disabled : undefined}
-              />
-            )}
-          </Button>
-        </Tooltip>
+        <ParticipantSettingsButton
+          tooltip={canEdit ? 'Skill settings' : 'View skill settings'}
+          isEditing={isSameChatEntity(editingSkill, activeParticipant)}
+          canEdit={canEdit}
+          disabled={disabled || !onShowSkillEditor}
+          onClick={onClickSettings}
+          testId="chat-skill-settings-button"
+          ariaLabel="skill settings menu"
+        />
       </ButtonGroup>
 
       {unavailableReason && (
@@ -222,13 +197,6 @@ const skillChatPanelStyles = isSmallView => ({
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
     maxWidth: '100%',
-  },
-  editingText: {
-    fontSize: '.75rem',
-    fontWeight: 400,
-  },
-  settingIcon: {
-    fontSize: '1rem',
   },
   attentionIcon: {
     display: 'flex',

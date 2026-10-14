@@ -16,8 +16,8 @@ vi.mock('@/[fsd]/features/chat/ui/editors/BaseEditor', () => ({
   ),
 }));
 vi.mock('@/[fsd]/features/chat/ui/editors/SkillEditorSaveButton', () => ({
-  default: ({ onSaved }) => {
-    captured.onSaved = onSaved;
+  default: ({ onModelSaved }) => {
+    captured.onSaved = onModelSaved;
     return null;
   },
 }));
