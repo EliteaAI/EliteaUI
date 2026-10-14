@@ -73,7 +73,18 @@ const SkillCanvasModelSelector = memo(props => {
   const hasChatOverride =
     !isLocked && !!onChangeSkillSettings && hasSkillChatModelOverride(skill?.entity_settings);
 
-  if (isLoadingModels || !versionDetails?.id) return <Box sx={styles.container}>Loading models...</Box>;
+  if (isLoadingModels || !versionDetails?.id) {
+    return (
+      <Box sx={styles.container}>
+        <Typography
+          variant="bodySmall"
+          sx={styles.secondaryText}
+        >
+          Loading models...
+        </Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box
@@ -111,7 +122,7 @@ const SkillCanvasModelSelector = memo(props => {
         >
           <Typography
             variant="bodySmall"
-            sx={styles.overrideText}
+            sx={styles.secondaryText}
           >
             {CHAT_OVERRIDE_NOTICE}
           </Typography>
@@ -143,7 +154,7 @@ const skillCanvasModelSelectorStyles = () => ({
     gap: '0.5rem',
     marginTop: '0.5rem',
   },
-  overrideText: ({ palette }) => ({
+  secondaryText: ({ palette }) => ({
     color: palette.text.secondary,
   }),
 });
