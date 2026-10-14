@@ -71,12 +71,15 @@ export const convertToUserQuestion = (message_group, users, participants) => {
     return 'User No Longer Available';
   };
 
+  const userName = getUserName(foundUser);
+  // Imported chats keep the original author's display name; the importer's avatar applies only to their own messages
+  const isForeignImportedAuthor = !!importedAuthor?.name && importedAuthor.name !== userName;
+
   return {
     id: uuid,
     role: ROLES.User,
-    // Imported chats keep the original author's display name
-    name: importedAuthor?.name || getUserName(foundUser),
-    avatar: foundUser?.meta.user_avatar || '',
+    name: importedAuthor?.name || userName,
+    avatar: isForeignImportedAuthor ? '' : foundUser?.meta.user_avatar || '',
     content,
     message_items,
     created_at: new Date(convertTime(created_at)).getTime(),
