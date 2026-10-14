@@ -257,7 +257,7 @@ const evaluationRunRowStyles = (isSelected, gridTemplateColumns, delta) => ({
     color: palette.error.main,
   }),
   attentionText: ({ palette }) => ({
-    color: palette.icon.attention,
+    color: palette.text.attention,
   }),
   score: ({ palette }) => ({
     fontSize: '0.875rem',
@@ -299,7 +299,7 @@ const evaluationRunRowStyles = (isSelected, gridTemplateColumns, delta) => ({
     fontSize: '0.75rem',
     lineHeight: '1rem',
     whiteSpace: 'nowrap',
-    color: palette.icon.indexResult.error,
+    color: palette.text.error,
     backgroundColor: palette.alert.error?.background,
     cursor: 'default',
   }),

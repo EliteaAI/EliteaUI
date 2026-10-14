@@ -6,7 +6,7 @@ import { Button, Checkbox, Input } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import SingleSelect from '@/[fsd]/shared/ui/select/SingleSelect';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
-import ArrowDownIcon from '@/components/Icons/ArrowDownIcon';
+import ArrowDownMuiSvgIcon from '@/components/Icons/ArrowDownMuiSvgIcon';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import PlusIcon from '@/components/Icons/PlusIcon';
 
@@ -16,7 +16,8 @@ import {
   TRAJECTORY_MATCH_OPTIONS,
   newTrajectoryToolRow,
 } from '../../../lib/helpers';
-import { ToolNameField, ToolNamesChipsField } from './TrajectoryToolInputs';
+import ToolNameField from './ToolNameField';
+import ToolNamesChipsField from './ToolNamesChipsField';
 
 const SECTION_TOOLTIP =
   'An optional reference for how the agent should use its tools on this case. The built-in ' +
@@ -160,7 +161,7 @@ const ExpectedTrajectoryEditor = memo(props => {
                           title="Move up"
                           placement="top"
                         >
-                          <span>
+                          <Box component="span">
                             <Button.BaseBtn
                               variant={BUTTON_VARIANTS.tertiary}
                               disabled={index === 0}
@@ -168,15 +169,15 @@ const ExpectedTrajectoryEditor = memo(props => {
                               data-testid={`create-case-expected-tool-up-${index}`}
                               sx={styles.iconButton}
                             >
-                              <ArrowDownIcon style={styles.arrowUp} />
+                              <ArrowDownMuiSvgIcon sx={styles.arrowUp} />
                             </Button.BaseBtn>
-                          </span>
+                          </Box>
                         </Tooltip>
                         <Tooltip
                           title="Move down"
                           placement="top"
                         >
-                          <span>
+                          <Box component="span">
                             <Button.BaseBtn
                               variant={BUTTON_VARIANTS.tertiary}
                               disabled={index === form.tools.length - 1}
@@ -184,9 +185,9 @@ const ExpectedTrajectoryEditor = memo(props => {
                               data-testid={`create-case-expected-tool-down-${index}`}
                               sx={styles.iconButton}
                             >
-                              <ArrowDownIcon style={styles.arrow} />
+                              <ArrowDownMuiSvgIcon sx={styles.arrow} />
                             </Button.BaseBtn>
-                          </span>
+                          </Box>
                         </Tooltip>
                         <Tooltip
                           title="Remove tool call"
