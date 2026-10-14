@@ -2,12 +2,12 @@ import { memo } from 'react';
 
 import { Autocomplete, TextField } from '@mui/material';
 
-import { filterToolOptions, toolPickerStyles } from './toolPicker';
+import { filterToolOptions } from '../../../lib/helpers';
 
 /** One tool name: free text with suggestions from the agent's toolkits. */
 const ToolNameField = memo(props => {
   const { value, onValue, options = [], placeholder, testId } = props;
-  const styles = toolPickerStyles();
+  const styles = toolNameFieldStyles();
 
   return (
     <Autocomplete
@@ -35,5 +35,24 @@ const ToolNameField = memo(props => {
 });
 
 ToolNameField.displayName = 'ToolNameField';
+
+/** @type {MuiSx} */
+const toolNameFieldStyles = () => ({
+  autocomplete: {
+    flex: 1,
+    minWidth: 0,
+    '& .MuiOutlinedInput-root': {
+      minHeight: '2.5rem',
+    },
+  },
+  popper: {
+    '& .MuiAutocomplete-option': {
+      fontSize: '0.875rem',
+    },
+  },
+  listbox: {
+    maxHeight: '18rem',
+  },
+});
 
 export default ToolNameField;

@@ -2,7 +2,7 @@ import { memo, useCallback, useMemo, useState } from 'react';
 
 import { Autocomplete, Box, Chip, TextField } from '@mui/material';
 
-import { filterToolOptions, toolPickerStyles } from './toolPicker';
+import { filterToolOptions } from '../../../lib/helpers';
 
 const splitNames = text =>
   String(text ?? '')
@@ -95,7 +95,21 @@ ToolNamesChipsField.displayName = 'ToolNamesChipsField';
 
 /** @type {MuiSx} */
 const toolNamesChipsFieldStyles = () => ({
-  ...toolPickerStyles(),
+  autocomplete: {
+    flex: 1,
+    minWidth: 0,
+    '& .MuiOutlinedInput-root': {
+      minHeight: '2.5rem',
+    },
+  },
+  popper: {
+    '& .MuiAutocomplete-option': {
+      fontSize: '0.875rem',
+    },
+  },
+  listbox: {
+    maxHeight: '18rem',
+  },
   chips: {
     display: 'flex',
     flexWrap: 'wrap',
