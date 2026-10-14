@@ -2,18 +2,32 @@ import { memo, useCallback, useMemo, useState } from 'react';
 
 import { Box, CircularProgress, SvgIcon, Typography } from '@mui/material';
 
+import { Banner } from '@/[fsd]/shared/ui';
 import MonitoringIcon from '@/assets/monitoring.svg?react';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
-import { useEvalDimensionsQuery, useEvalRunResultsQuery, usePlatformDimensionCatalogQuery } from '../../api';
+import {
+  useEvalCaseExecutionsQuery,
+  useEvalDimensionsQuery,
+  useEvalRunResultsQuery,
+  usePlatformDimensionCatalogQuery,
+} from '../../api';
 import { EVAL_PERMISSIONS } from '../../lib/constants';
-import { buildScorecard, formatRunStatus, isRunTerminal } from '../../lib/helpers';
+import {
+  buildCaseExecutionBadges,
+  buildScorecard,
+  formatRunStatus,
+  getRunEndMessage,
+  isRunTerminal,
+} from '../../lib/helpers';
 import CaseDetailsModal from './CaseDetailsModal';
 import CaseResultsList from './CaseResultsList';
 import HumanEvaluationModal from './HumanEvaluationModal';
 import ResultsDimensionTable from './ResultsDimensionTable';
 import ResultsSummaryCards from './ResultsSummaryCards';
+import RunConsumptionCard from './RunConsumptionCard';
+import RunTrajectoryCard from './RunTrajectoryCard';
 
 // A fresh `[]` default would be a new reference on every render while a query is skipped or
 // errored, which would defeat the memo below and rebuild the whole scorecard each time.
@@ -50,6 +64,17 @@ const RunResultsView = memo(props => {
   // RTK Query keeps stale data while fetching new. Treat it as absent when the cached run ID
   // doesn't match so the loader stays visible instead of flashing the previous run's results.
   const resultsData = resultsDataRaw?.run?.id === runId ? resultsDataRaw : null;
+
+  // Per-case agent outcomes without the step lists, for the case list's guardrail chips and counters
+  // (design §6). An on-demand run has no executions, so the list simply shows neither.
+  const { data: executionsData } = useEvalCaseExecutionsQuery(
+    { projectId, runId, includeTrajectory: false },
+    { skip: !projectId || !runId },
+  );
+  const executionBadges = useMemo(
+    () => (executionsData?.run_id === runId ? buildCaseExecutionBadges(executionsData?.executions) : {}),
+    [executionsData, runId],
+  );
 
   // The run snapshot is the point-in-time record, but it does not key every binding's dimension —
   // these fill the gaps so a rating or pass/fail scale still reaches the score control.
@@ -120,6 +145,9 @@ const RunResultsView = memo(props => {
   const handleCloseHumanEvaluation = useCallback(() => {
     setHumanEvaluationOpen(false);
   }, []);
+
+  // A run stopped by a limit keeps the cases it scored; its message says how many and why.
+  const endMessage = hasResults ? getRunEndMessage(run) : null;
 
   const styles = runResultsViewStyles();
 
@@ -224,6 +252,12 @@ const RunResultsView = memo(props => {
   if (!summaryData || !scorecard) {
     return (
       <Box sx={[styles.centered, sx]}>
+        {endMessage && (
+          <Banner.BannerMessage
+            message={endMessage.message}
+            variant={endMessage.variant}
+          />
+        )}
         <Typography
           variant="bodyMedium"
           sx={styles.description}
@@ -259,10 +293,24 @@ const RunResultsView = memo(props => {
           errors={summaryData.errors}
           pendingHuman={summaryData.pendingHuman}
         />
+        {endMessage && (
+          <Box
+            sx={styles.endMessage}
+            data-testid="evaluation-run-end-message"
+          >
+            <Banner.BannerMessage
+              message={endMessage.message}
+              variant={endMessage.variant}
+            />
+          </Box>
+        )}
+        <RunConsumptionCard meta={run.meta} />
+        <RunTrajectoryCard rollup={run.meta?.trajectory_rollup} />
       </Box>
       <ResultsDimensionTable bindings={scorecard.bindings ?? []} />
       <CaseResultsList
         cases={scorecard.cases}
+        executionBadges={executionBadges}
         canEvaluate={canEvaluate}
         onViewDetails={handleViewCaseDetails}
         onEvaluate={handleEvaluateDimension}
@@ -272,6 +320,8 @@ const RunResultsView = memo(props => {
         open={caseDetailsOpen}
         caseData={selectedCaseData}
         onClose={handleCloseCaseDetails}
+        projectId={projectId}
+        runId={runId}
       />
 
       <HumanEvaluationModal
@@ -298,6 +348,9 @@ const runResultsViewStyles = () => ({
   summarySection: {
     display: 'flex',
     flexDirection: 'column',
+  },
+  endMessage: {
+    padding: '0.75rem 1.5rem 0',
   },
   runLabelHeader: ({ palette }) => ({
     padding: '0.875rem 1.5rem',

@@ -12,7 +12,7 @@ import { formatScore } from '../../lib/helpers';
 import DimensionResultCard from './DimensionResultCard';
 
 const CaseResultItem = memo(props => {
-  const { card, canEvaluate = false, onViewDetails, onEvaluate } = props;
+  const { card, executionBadge, canEvaluate = false, onViewDetails, onEvaluate } = props;
 
   const [expanded, setExpanded] = useState(false);
 
@@ -36,6 +36,8 @@ const CaseResultItem = memo(props => {
   );
 
   const pendingCount = card.pendingCount ?? 0;
+  const guardrailChip = executionBadge?.guardrail;
+  const counters = executionBadge?.counters;
   const styles = caseResultItemStyles();
 
   return (
@@ -58,6 +60,24 @@ const CaseResultItem = memo(props => {
             >
               Case #{card.id}
             </Typography>
+            {guardrailChip && (
+              <Tooltip
+                title={guardrailChip.tooltip}
+                placement="top"
+              >
+                <Box
+                  sx={styles.guardrailBadge}
+                  data-testid={`case-guardrail-badge-${card.id}`}
+                >
+                  <Typography
+                    variant="labelMedium"
+                    sx={styles.guardrailBadgeText}
+                  >
+                    {guardrailChip.label}
+                  </Typography>
+                </Box>
+              </Tooltip>
+            )}
             {pendingCount > 0 && (
               <Box
                 sx={styles.pendingBadge}
@@ -73,12 +93,28 @@ const CaseResultItem = memo(props => {
               </Box>
             )}
           </Box>
-          <Typography
-            variant="bodyMedium"
-            sx={styles.caseScore}
-          >
-            {formatScore(card.caseScore)}
-          </Typography>
+          <Box sx={styles.headerRight}>
+            {counters && (
+              <Tooltip
+                title={counters.tooltip}
+                placement="top"
+              >
+                <Typography
+                  variant="bodySmall"
+                  sx={[styles.caseCounters, counters.hasErrors && styles.caseCountersError]}
+                  data-testid={`case-counters-${card.id}`}
+                >
+                  {counters.label}
+                </Typography>
+              </Tooltip>
+            )}
+            <Typography
+              variant="bodyMedium"
+              sx={styles.caseScore}
+            >
+              {formatScore(card.caseScore)}
+            </Typography>
+          </Box>
         </Box>
 
         <Collapse
@@ -195,6 +231,30 @@ const caseResultItemStyles = () => ({
     color: palette.icon.active,
     fontWeight: 500,
     whiteSpace: 'nowrap',
+  }),
+  guardrailBadge: ({ palette }) => ({
+    display: 'flex',
+    alignItems: 'center',
+    padding: '0 0.5rem',
+    borderRadius: '1rem',
+    border: `0.0625rem solid ${palette.warning.main}`,
+  }),
+  guardrailBadgeText: ({ palette }) => ({
+    color: palette.warning.main,
+    fontWeight: 500,
+    whiteSpace: 'nowrap',
+  }),
+  headerRight: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '1rem',
+  },
+  caseCounters: ({ palette }) => ({
+    color: palette.text.secondary,
+    whiteSpace: 'nowrap',
+  }),
+  caseCountersError: ({ palette }) => ({
+    color: palette.error.main,
   }),
   caseScore: ({ palette }) => ({
     color: palette.text.secondary,

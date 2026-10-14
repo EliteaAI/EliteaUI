@@ -336,6 +336,7 @@ const AgentEvaluateDatasetsPage = memo(() => {
             projectId={projectId}
             datasetId={selectedDatasetId}
             datasetCase={caseToEdit}
+            applicationId={applicationId}
           />
           <AddCaseFromChatsModal
             open={showChatsModal}

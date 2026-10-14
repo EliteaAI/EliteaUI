@@ -2,7 +2,10 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { buildAttachmentSummary } from '@/[fsd]/entities/attachment/lib';
 import { toSpeakableText, translateSpokenPos } from '@/[fsd]/features/chat/lib/helpers';
-import { itemToSpeakableText } from '@/[fsd]/features/chat/lib/helpers/applicationAnswer.helpers.js';
+import {
+  isAnswerlessReply,
+  itemToSpeakableText,
+} from '@/[fsd]/features/chat/lib/helpers/applicationAnswer.helpers.js';
 import {
   getActionOwnerPath,
   normalizeExecutionHierarchy,
@@ -376,6 +379,13 @@ export const useApplicationAnswerState = props => {
     visibleHitlInterrupts.length,
   ]);
 
+  const isAnswerless = isAnswerlessReply({
+    isProcessing,
+    isEditing,
+    shouldRenderAnswerBlock,
+    hasSwarmChildren: swarmChildActions.length > 0,
+  });
+
   return {
     headerRef,
     realAnswer,
@@ -399,6 +409,7 @@ export const useApplicationAnswerState = props => {
     hasAttachments,
     canRenderContent,
     shouldRenderAnswerBlock,
+    isAnswerless,
     onContinueWithoutAuth,
     onAuthSuccess,
     resolveAuthorizationAgentType,

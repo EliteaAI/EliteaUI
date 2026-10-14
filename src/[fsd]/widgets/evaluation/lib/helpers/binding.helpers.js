@@ -1,4 +1,11 @@
-import { DIMENSION_ENGINE_TOOLTIP, EVAL_BINDING_KIND, EVAL_ENGINE, EVAL_SCALE_TYPE } from '../constants';
+import {
+  DIMENSION_ENGINE_TOOLTIP,
+  EVAL_BINDING_KIND,
+  EVAL_ENGINE,
+  EVAL_SCALE_TYPE,
+  IMPORTANCE,
+  IMPORTANCE_WEIGHT_MAP,
+} from '../constants';
 
 /**
  * Derives a binding's kind from which reference column is populated. Exactly one
@@ -21,6 +28,22 @@ const WEIGHT_LABEL = {
 export const getWeightLabel = weight => {
   if (weight == null) return null;
   return WEIGHT_LABEL[weight] || `w${weight}`;
+};
+
+/** Splits a weight into the importance select value and, for off-map weights, the custom value. */
+export const weightToImportanceForm = weight => {
+  if (weight == null) return { importance: IMPORTANCE.medium, customImportanceValue: '' };
+  const importance = Object.entries(IMPORTANCE_WEIGHT_MAP).find(([, w]) => w === weight)?.[0];
+  if (importance) return { importance, customImportanceValue: '' };
+  return { importance: IMPORTANCE.custom, customImportanceValue: String(weight) };
+};
+
+/** Inverse of weightToImportanceForm; null when a custom value is empty, non-numeric or negative. */
+export const importanceFormToWeight = (importance, customImportanceValue) => {
+  if (importance !== IMPORTANCE.custom) return IMPORTANCE_WEIGHT_MAP[importance] ?? null;
+  if (customImportanceValue === '' || customImportanceValue == null) return null;
+  const weight = Number(customImportanceValue);
+  return Number.isFinite(weight) && weight >= 0 ? weight : null;
 };
 
 export const getTargetLabel = (target, targetOperator, scaleType) => {

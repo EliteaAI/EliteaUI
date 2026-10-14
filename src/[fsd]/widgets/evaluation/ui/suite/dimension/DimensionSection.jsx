@@ -16,6 +16,7 @@ const DimensionSection = memo(props => {
     handleCreateDimensionManually: onCreateManually,
     handleBuildDimensionWithAi: onBuildWithAi,
     handleEditDimension: onEditDimension,
+    handleEditBindingWeight: onEditBindingWeight,
     handleRemoveDimension: onRemoveDimension,
   } = dimensionActions;
 
@@ -33,7 +34,8 @@ const DimensionSection = memo(props => {
         <Box sx={styles.cardList}>
           {attachedDimensions.map(item => {
             // Only agent-level dimensions can be edited from Suite view
-            // Shared dimensions (project/platform) must be edited from Manage Dimensions
+            // Shared dimensions (project/platform) must be edited from Manage Dimensions; their
+            // per-suite weight lives on the binding, so that part stays editable here
             const isAgentTier = item.tier === EVAL_TIER.agent_adhoc;
             return (
               <DimensionCard
@@ -47,7 +49,9 @@ const DimensionSection = memo(props => {
                 defaultWeight={item.defaultWeight}
                 canEdit={canUpdateDimension && isAgentTier}
                 canRemove={canUpdateSuite}
+                canEditWeight={canUpdateSuite && !isAgentTier}
                 onEdit={onEditDimension}
+                onEditWeight={onEditBindingWeight}
                 onRemove={onRemoveDimension}
               />
             );

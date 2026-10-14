@@ -194,19 +194,25 @@ export const EVAL_BINDING_KIND = {
 };
 
 // Evidence-scope toggles for a binding (§13.2). Keys match the backend
-// evidence_scope JSON shape { structure, input, output }. When `output` is in
-// scope and the dataset case has an expected_output, it's attached to the
-// judge automatically — there's no separate toggle for it.
+// evidence_scope JSON shape { structure, input, output, trajectory, usage }. When
+// `output` is in scope and the dataset case has an expected_output, it's attached
+// to the judge automatically — there's no separate toggle for it. `trajectory`
+// gives the scorer the recorded tool calls (and the case's expected_trajectory);
+// `usage` gives it the run's token / cost usage (#6809, #6716).
 export const EVIDENCE_SCOPE_OPTIONS = [
   { key: 'output', label: 'Output' },
   { key: 'input', label: 'Input' },
   { key: 'structure', label: 'Agent structure' },
+  { key: 'trajectory', label: 'Trajectory' },
+  { key: 'usage', label: 'Usage' },
 ];
 
 export const DEFAULT_EVIDENCE_SCOPE = {
   structure: false,
   input: true,
   output: true,
+  trajectory: false,
+  usage: false,
 };
 
 // Scope a freshly created dimension / code validation starts with. Distinct from
@@ -216,6 +222,8 @@ export const NEW_ITEM_EVIDENCE_SCOPE = {
   structure: false,
   input: false,
   output: true,
+  trajectory: false,
+  usage: false,
 };
 
 // Dataset case provenance (§17). Set by the backend; the UI only displays it.
@@ -286,4 +294,33 @@ export const BUILD_DIMENSION_STEPS = {
   loading: 'loading',
   select: 'select',
   review: 'review',
+};
+
+// What an offline-batch run recorded about one case (#6809 P1, design §13).
+export const TRAJECTORY_STATE = {
+  recorded: 'recorded',
+  notRecorded: 'not_recorded',
+  notApplicable: 'not_applicable',
+};
+
+export const TRAJECTORY_STATE_MESSAGE = {
+  timeout: 'The agent timed out, so no steps were returned.',
+  no_envelope: 'The agent run returned no step data.',
+  structure_only: 'This run only scored the agent configuration, so the agent was not executed.',
+  unsupported: 'This agent type is not executed by batch runs, so there is no trajectory.',
+};
+
+// Agent outcomes of a case that the run stopped on rather than scored (#6809 item 2, design §4.5).
+export const CASE_EXECUTION_STATUS = {
+  guardrailPaused: 'guardrail_paused',
+  parked: 'parked',
+};
+
+// Tool-step statuses a guardrail produced: a sensitive tool refused, an MCP call waiting on auth, or
+// the call that paused the run for a human (`ask_user`, a HITL guard).
+export const GUARDRAIL_STEP_STATUSES = ['blocked', 'action_required', 'paused'];
+
+export const TRAJECTORY_STEP_KIND = {
+  llm: 'llm',
+  tool: 'tool',
 };
