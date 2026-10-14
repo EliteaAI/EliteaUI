@@ -57,7 +57,12 @@ import {
   getSkillUnavailableReason,
 } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { useFetchParticipantDetails } from '@/[fsd]/features/chat/participants/lib/hooks';
-import { BudgetWarningBanner, SlashSuggestionList, VoiceMiniPlayer } from '@/[fsd]/features/chat/ui';
+import {
+  BudgetWarningBanner,
+  ChatStatusPill,
+  SlashSuggestionList,
+  VoiceMiniPlayer,
+} from '@/[fsd]/features/chat/ui';
 import { ChatMessageList } from '@/[fsd]/features/chat/ui/chat-box';
 import ChatConversationStarters from '@/[fsd]/features/chat/ui/chat-conversation-starters/ChatConversationStarters';
 import NewChatInput from '@/[fsd]/features/chat/ui/chat-input/NewChatInput';
@@ -3082,6 +3087,12 @@ const ChatBox = memo(
                 onDismiss={budgetWarning.dismiss}
               />
             )}
+            <ChatStatusPill
+              isRunning={isStreaming && !hasBlockingHitlInterrupt}
+              isInterrupt={Boolean(hasBlockingHitlInterrupt)}
+              participantType={activeParticipant?.entity_name}
+              agentType={activeParticipant?.entity_settings?.agent_type}
+            />
             <NewChatInput
               fromTheChat={fromTheChat}
               conversationId={activeConversation?.id}
