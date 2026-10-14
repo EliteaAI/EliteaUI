@@ -14,7 +14,7 @@ const ChatStatusPill = memo(props => {
 
   useEffect(() => {
     const el = containerRef.current?.parentElement;
-    if (!el) return;
+    if (!el || typeof ResizeObserver === 'undefined') return;
 
     const observer = new ResizeObserver(entries => {
       for (const entry of entries) {
@@ -28,7 +28,7 @@ const ChatStatusPill = memo(props => {
 
   const styles = chatStatusPillStyles(isInterrupt);
 
-  if (participantType !== 'application') return null;
+  if (participantType !== 'application' && participantType !== 'pipeline') return null;
   if (!isRunning && !isInterrupt) return null;
 
   const isPipeline = agentType === 'pipeline';
