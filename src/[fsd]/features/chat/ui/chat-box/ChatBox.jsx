@@ -281,12 +281,20 @@ const ChatBox = memo(
 
     const hasBlockingHitlInterrupt = hasPendingHitlInterrupt && !isPendingClarifyingQuestion;
 
-    const statusParticipant = useMemo(() => {
+    const { statusParticipant, isCurrentUserStatus } = useMemo(() => {
       const source =
         pendingHitlMessage || [...chat_history].reverse().find(msg => msg.isStreaming && msg.task_id);
-      if (!source?.participant_id) return null;
-      return activeConversation?.participants?.find(p => p.id === source.participant_id) ?? null;
-    }, [pendingHitlMessage, chat_history, activeConversation?.participants]);
+      // No source yet — early phase before first streaming message arrives; treat as current user
+      if (!source) return { statusParticipant: null, isCurrentUserStatus: true };
+      if (!source.participant_id) return { statusParticipant: null, isCurrentUserStatus: true };
+      const participant = activeConversation?.participants?.find(p => p.id === source.participant_id) ?? null;
+      const questionMessage = source.question_id
+        ? chat_history.find(msg => msg.id === source.question_id)
+        : null;
+      // If we can't resolve the question author, assume current user (single-user / legacy messages)
+      const isCurrentUser = questionMessage ? questionMessage.user_id === userId : true;
+      return { statusParticipant: participant, isCurrentUserStatus: isCurrentUser };
+    }, [pendingHitlMessage, chat_history, activeConversation?.participants, userId]);
 
     const hasPendingAuthRequired = useMemo(
       () => hasPendingAuthRequiredAction(chat_history[chat_history.length - 1]),
@@ -3095,8 +3103,8 @@ const ChatBox = memo(
               />
             )}
             <ChatStatusPill
-              isRunning={(isStreamingNow || isStreaming) && !hasPendingHitlInterrupt}
-              isInterrupt={hasPendingHitlInterrupt && !isReadOnly}
+              isRunning={(isStreamingNow || isStreaming) && !hasPendingHitlInterrupt && isCurrentUserStatus}
+              isInterrupt={hasPendingHitlInterrupt && !isReadOnly && isCurrentUserStatus}
               participantType={statusParticipant?.entity_name}
               agentType={statusParticipant?.entity_settings?.agent_type}
             />
