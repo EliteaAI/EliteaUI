@@ -73,10 +73,10 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe('SkillRunPanel clear the chat', () => {
-  it('shows the shared Clear the chat button next to New run and Run History', async () => {
+  it('shows the shared Clear the chat button next to Run History, without a separate New run', async () => {
     renderPanel();
 
-    expect(screen.getByTestId('skill-run-new-run-button')).toBeEnabled();
+    expect(screen.queryByTestId('skill-run-new-run-button')).not.toBeInTheDocument();
 
     const clearButton = screen.getByTestId('chat-clear-button');
     expect(clearButton).toHaveAccessibleName('clear the chat');
@@ -112,10 +112,26 @@ describe('SkillRunPanel clear the chat', () => {
     expect(screen.getByTestId('chat-clear-button')).toBeDisabled();
   });
 
-  it('disables clearing when the run has no messages', () => {
-    setRunChat({ activeConversation: { id: 1780, chat_history: [] } });
+  it('disables clearing on a fresh chat with no messages', () => {
+    setRunChat({ activeConversation: { chat_history: [] } });
     renderPanel();
 
     expect(screen.getByTestId('chat-clear-button')).toBeDisabled();
+  });
+
+  it('enables clearing once a new run has messages, before it is saved', () => {
+    setRunChat({ activeConversation: { chat_history: runWithMessages.chat_history } });
+    renderPanel();
+
+    expect(screen.getByTestId('chat-clear-button')).toBeEnabled();
+  });
+
+  it('lets a saved run without messages be cleared to start a fresh run', async () => {
+    setRunChat({ activeConversation: { id: 1780, chat_history: [] }, isReadOnly: true });
+    renderPanel();
+
+    await userEvent.click(screen.getByTestId('chat-clear-button'));
+
+    expect(fixture.runChat.onStartNewRun).toHaveBeenCalledTimes(1);
   });
 });

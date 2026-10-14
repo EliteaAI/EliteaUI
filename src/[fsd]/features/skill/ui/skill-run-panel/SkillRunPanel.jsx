@@ -2,7 +2,7 @@ import { memo, useMemo, useRef } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { ChatBox } from '@/[fsd]/features/chat/ui';
+import { ChatBox, ChatButton } from '@/[fsd]/features/chat/ui';
 import { useFocusRunInput, useSkillRunChat } from '@/[fsd]/features/skill/lib/hooks';
 import { ViewRunHistoryButton } from '@/[fsd]/shared/ui/button';
 import { ContextBudgetUI } from '@/[fsd]/widgets/context-budget';
@@ -10,8 +10,6 @@ import FullScreenToggle from '@/components/Chat/FullScreenToggle';
 import useUploadAttachments from '@/hooks/chat/useUploadAttachments';
 import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { ContentContainer } from '@/pages/Common/Components/StyledComponents';
-
-import SkillRunActions from './SkillRunActions';
 
 const NO_STARTERS = [];
 const NO_CONTEXT_STRATEGY = {};
@@ -95,10 +93,9 @@ const SkillRunPanel = memo(props => {
               isFullScreenChat={isFullScreenChat}
               setIsFullScreenChat={setIsFullScreenChat}
             />
-            <SkillRunActions
-              canStartNewRun={!isStreaming && Boolean(activeConversation?.id || hasMessages)}
-              canClearChat={!isStreaming && hasMessages}
-              onStartNewRun={onStartNewRun}
+            <ChatButton.ClearChatButton
+              disabled={isStreaming || !(hasMessages || activeConversation?.id)}
+              onClear={onStartNewRun}
             />
             {onShowHistory && (
               <ViewRunHistoryButton
@@ -115,7 +112,7 @@ const SkillRunPanel = memo(props => {
             color="text.secondary"
             data-testid="skill-run-read-only"
           >
-            This run belongs to another user, so it is read-only. Start a new run to chat with the skill.
+            This run belongs to another user, so it is read-only. Clear the chat to start your own run.
           </Typography>
         )}
         {isChatReady ? (
