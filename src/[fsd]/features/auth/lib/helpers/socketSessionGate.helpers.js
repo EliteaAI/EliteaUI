@@ -24,6 +24,10 @@ const notifySessionExpired = (socket, event, payload) => {
  * Must be called synchronously from the send handler, so the popup counts as a user gesture.
  * After a successful re-login the socket session guard re-handshakes the socket; the emit is
  * buffered by socket.io until the new, authenticated connection is up.
+ *
+ * Returns whether the event was emitted right away; `false` while the emit waits for re-login.
+ * When login is abandoned, the socket_validation_error listeners registered at that moment are called;
+ * a listener whose component unmounted in the meantime only performs a no-op state update.
  */
 export const emitWithSessionGate = ({ socket, event, payload, isSessionExpired }) => {
   if (!isSessionExpired || !SESSION_GATED_EVENTS.has(event)) {
@@ -37,5 +41,5 @@ export const emitWithSessionGate = ({ socket, event, payload, isSessionExpired }
     .catch(() => {
       notifySessionExpired(socket, event, payload);
     });
-  return true;
+  return false;
 };

@@ -51,13 +51,14 @@ describe('emitWithSessionGate', () => {
     const socket = createSocket([]);
     openAuthPopup.mockResolvedValue();
 
-    emitWithSessionGate({
+    const result = emitWithSessionGate({
       socket,
       event: 'chat_predict',
       payload: { question_id: 'q1' },
       isSessionExpired: true,
     });
 
+    expect(result).toBe(false);
     expect(openAuthPopup).toHaveBeenCalledTimes(1);
     expect(socket.emit).not.toHaveBeenCalled();
 

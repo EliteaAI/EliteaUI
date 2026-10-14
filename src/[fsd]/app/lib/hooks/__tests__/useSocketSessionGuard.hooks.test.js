@@ -3,13 +3,18 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react';
 
-const dispatch = vi.fn();
+let sessionExpired = false;
+const dispatch = vi.fn(action => {
+  if (action.type === 'settings/setSessionExpired') sessionExpired = action.payload;
+});
+const store = { getState: () => ({ settings: { sessionExpired } }) };
 const probeSession = vi.fn();
 let reauthListener = null;
 const stopReauthListener = vi.fn();
 
 vi.mock('react-redux', () => ({
   useDispatch: () => dispatch,
+  useStore: () => store,
 }));
 
 vi.mock('@/slices/settings.js', () => ({
@@ -54,6 +59,7 @@ describe('useSocketSessionGuard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     reauthListener = null;
+    sessionExpired = false;
   });
 
   afterEach(() => {
@@ -134,6 +140,33 @@ describe('useSocketSessionGuard', () => {
     await act(async () => document.dispatchEvent(new Event('visibilitychange')));
 
     expect(probeSession).toHaveBeenCalledTimes(1);
+  });
+
+  it('re-handshakes when the session flag was set outside the hook and the session is alive', async () => {
+    probeSession.mockResolvedValue('alive');
+    sessionExpired = true;
+    const { socket, managerHandlers } = createSocket();
+    renderHook(() => useSocketSessionGuard(socket));
+
+    await act(async () => managerHandlers.reconnect());
+
+    expect(dispatch).toHaveBeenCalledWith(aliveAction);
+    expect(socket.disconnect).toHaveBeenCalledTimes(1);
+  });
+
+  it('resets the visibility throttle when the socket changes', async () => {
+    probeSession.mockResolvedValue('alive');
+    const { socket: firstSocket } = createSocket();
+    const { socket: secondSocket } = createSocket();
+    const { rerender } = renderHook(({ socket }) => useSocketSessionGuard(socket), {
+      initialProps: { socket: firstSocket },
+    });
+
+    await act(async () => document.dispatchEvent(new Event('visibilitychange')));
+    rerender({ socket: secondSocket });
+    await act(async () => document.dispatchEvent(new Event('visibilitychange')));
+
+    expect(probeSession).toHaveBeenCalledTimes(2);
   });
 
   it('unsubscribes on unmount', () => {

@@ -278,6 +278,21 @@ describe('useToolkitChat validation errors', () => {
     expect(JSON.stringify(result.current.chatHistory)).toContain('Your session has expired');
   });
 
+  it('settles the run when the rejection arrives during the emit itself', async () => {
+    socketEmit.mockImplementationOnce(() => {
+      validationErrorHandlerRef.current({ type: 'error', stream_id: 'conv-7', content: 'rejected on send' });
+    });
+    createToolkitConversationWithParticipant.mockResolvedValueOnce({ id: 7, uuid: 'conv-7' });
+
+    const { result } = renderChat({ traceNewIndex: vi.fn() });
+
+    act(() => result.current.handleRunTool());
+    await waitFor(() => expect(socketEmit).toHaveBeenCalled());
+
+    await waitFor(() => expect(result.current.isRunning).toBe(false));
+    expect(JSON.stringify(result.current.chatHistory)).toContain('rejected on send');
+  });
+
   it('ignores rejections of other conversations', async () => {
     const { result } = await startRun();
 

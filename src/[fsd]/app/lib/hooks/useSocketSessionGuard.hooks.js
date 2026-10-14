@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react';
 
-import { useDispatch } from 'react-redux';
+import { useDispatch, useStore } from 'react-redux';
 
 import { SessionConstants } from '@/[fsd]/features/auth/lib/constants';
 import { AuthPopupHelpers, SessionProbeHelpers } from '@/[fsd]/features/auth/lib/helpers';
@@ -21,13 +21,12 @@ const VISIBILITY_PROBE_THROTTLE_MS = 60 * 1000;
  */
 export const useSocketSessionGuard = socket => {
   const dispatch = useDispatch();
+  // Read lazily at check time: subscribing would re-render the app root on every flag change
+  const store = useStore();
   const lastProbeAtRef = useRef(0);
-
-  const sessionExpiredRef = useRef(false);
 
   const setSessionExpired = useCallback(
     isExpired => {
-      sessionExpiredRef.current = isExpired;
       dispatch(settingsActions.setSessionExpired(isExpired));
     },
     [dispatch],
@@ -39,16 +38,19 @@ export const useSocketSessionGuard = socket => {
     if (status === SessionConstants.SESSION_STATUS.expired) {
       setSessionExpired(true);
     } else if (status === SessionConstants.SESSION_STATUS.alive) {
-      const wasExpired = sessionExpiredRef.current;
+      const wasExpired = !!store.getState().settings?.sessionExpired;
       setSessionExpired(false);
       // The session was renewed elsewhere (another tab), but this socket handshook while it was
       // expired and is still anonymous on the server, so it has to handshake again
       if (wasExpired) socket?.disconnect().connect();
     }
-  }, [socket, setSessionExpired]);
+  }, [socket, store, setSessionExpired]);
 
   useEffect(() => {
     if (!socket) return;
+
+    // The throttle window belongs to the previous socket; let the new one be checked right away
+    lastProbeAtRef.current = 0;
 
     const handleReconnect = () => {
       checkSession();
