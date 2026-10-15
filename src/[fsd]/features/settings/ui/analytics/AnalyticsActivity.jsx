@@ -183,7 +183,14 @@ const AnalyticsActivity = memo(props => {
                 />
                 <RechartsTooltip content={<ChartTooltip />} />
                 <Legend
-                  wrapperStyle={{ fontSize: '0.6875rem' }}
+                  formatter={value => (
+                    <Typography
+                      variant="bodySmall"
+                      sx={styles.legendLabel}
+                    >
+                      {value}
+                    </Typography>
+                  )}
                   iconType="circle"
                   iconSize={8}
                 />
@@ -317,6 +324,7 @@ const analyticsActivityStyles = () => ({
     },
   }),
   chartWrapper: { width: '100%', overflow: 'hidden', flex: 1, minHeight: '12.5rem' },
+  legendLabel: ({ palette }) => ({ color: palette.text.secondary }),
   tableWrapper: { display: 'flex', flexDirection: 'column', width: '100%', overflow: 'auto' },
   tableHeader: ({ palette }) => ({
     display: 'flex',
