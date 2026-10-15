@@ -195,12 +195,15 @@ export const buildScorecard = ({
       let nativeScore = null;
       let normalizedScore = null;
       let pending = false;
+      // The backend skipped this binding (e.g. the agent hit the case time limit): nothing to
+      // score, and a human one is not waiting for a reviewer either.
+      const skipped = result?.status === EVAL_RESULT_STATUS.skipped;
 
       if (isHuman) {
         if (human) {
           nativeScore = human.native_score ?? null;
           normalizedScore = human.normalized_score ?? null;
-        } else {
+        } else if (!skipped) {
           pending = true;
           pendingHuman += 1;
         }
@@ -250,6 +253,7 @@ export const buildScorecard = ({
         normalizedScore: normalized,
         met,
         pending,
+        skipped,
         humanNote: human?.note ?? null,
         verdict: result?.verdict ?? null,
         evidence: result?.evidence ?? null,

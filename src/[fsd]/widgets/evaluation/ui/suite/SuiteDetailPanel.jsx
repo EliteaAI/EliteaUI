@@ -17,7 +17,10 @@ import useCheckPermission from '@/hooks/useCheckPermission';
 
 import { EVAL_PERMISSIONS } from '../../lib/constants';
 import {
+  DEFAULT_CASE_TIME_LIMIT_SECONDS,
+  MAX_CASE_TIME_LIMIT_SECONDS,
   MAX_SUITE_STEPS_LIMIT,
+  MIN_CASE_TIME_LIMIT_SECONDS,
   RUN_LIMIT_ON_BREACH,
   areRunLimitsEqual,
   buildRunLimitsMeta,
@@ -40,6 +43,8 @@ const VERSION_TOOLTIP =
   'The agent version to evaluate. Results are scoped to the selected version, which is locked while a run is in progress.';
 
 const STEPS_LIMIT_TOOLTIP = `The most steps the agent may take on each case of a run, from 1 to ${MAX_SUITE_STEPS_LIMIT}. Leave empty to use the agent's own limit.`;
+
+const CASE_TIME_LIMIT_TOOLTIP = `The longest the agent may work on one case, from ${MIN_CASE_TIME_LIMIT_SECONDS} to ${MAX_CASE_TIME_LIMIT_SECONDS} seconds. A case that reaches it is stopped and counted as timed out. Leave empty for ${DEFAULT_CASE_TIME_LIMIT_SECONDS} seconds.`;
 
 const RUN_LIMITS_HINT =
   'Per-case and cost limits are checked after the run. A per-run token limit stops the run early unless set to only report.';
@@ -417,6 +422,36 @@ const SuiteDetailPanel = memo(props => {
                       endAdornment: (
                         <Tooltip
                           title={STEPS_LIMIT_TOOLTIP}
+                          placement="top"
+                          arrow
+                        >
+                          <Box
+                            component="span"
+                            sx={styles.infoIconWrapper}
+                          >
+                            <InfoIcon sx={styles.infoIcon} />
+                          </Box>
+                        </Tooltip>
+                      ),
+                    }}
+                  />
+                  <Input.InputBase
+                    autoComplete="off"
+                    fullWidth
+                    variant="standard"
+                    label="Case time limit, seconds"
+                    name="caseTimeLimit"
+                    placeholder={`${DEFAULT_CASE_TIME_LIMIT_SECONDS} (default)`}
+                    value={runLimits.caseTimeLimit}
+                    onChange={handleRunLimitChange}
+                    disabled={!canUpdateSuite}
+                    error={Boolean(runLimitErrors.caseTimeLimit)}
+                    helperText={runLimitErrors.caseTimeLimit}
+                    inputProps={{ inputMode: 'numeric', 'data-testid': 'suite-case-time-limit' }}
+                    InputProps={{
+                      endAdornment: (
+                        <Tooltip
+                          title={CASE_TIME_LIMIT_TOOLTIP}
                           placement="top"
                           arrow
                         >

@@ -19,6 +19,7 @@ import {
   buildScorecard,
   formatRunStatus,
   getRunEndMessage,
+  getRunTimeoutNote,
   isRunTerminal,
 } from '../../lib/helpers';
 import CaseDetailsModal from './CaseDetailsModal';
@@ -27,6 +28,7 @@ import HumanEvaluationModal from './HumanEvaluationModal';
 import ResultsDimensionTable from './ResultsDimensionTable';
 import ResultsSummaryCards from './ResultsSummaryCards';
 import RunConsumptionCard from './RunConsumptionCard';
+import RunEfficiencyStrip from './RunEfficiencyStrip';
 import RunTrajectoryCard from './RunTrajectoryCard';
 
 // A fresh `[]` default would be a new reference on every render while a query is skipped or
@@ -118,6 +120,7 @@ const RunResultsView = memo(props => {
       missed: counts.missedAny ?? 0,
       errors: counts.errors ?? 0,
       pendingHuman: scorecard?.pendingHuman ?? 0,
+      timeoutNote: getRunTimeoutNote(run.meta?.trajectory_rollup),
     };
   }, [hasResults, run, scorecard]);
 
@@ -292,6 +295,7 @@ const RunResultsView = memo(props => {
           missed={summaryData.missed}
           errors={summaryData.errors}
           pendingHuman={summaryData.pendingHuman}
+          timeoutNote={summaryData.timeoutNote}
         />
         {endMessage && (
           <Box
@@ -304,6 +308,7 @@ const RunResultsView = memo(props => {
             />
           </Box>
         )}
+        <RunEfficiencyStrip meta={run.meta} />
         <RunConsumptionCard meta={run.meta} />
         <RunTrajectoryCard rollup={run.meta?.trajectory_rollup} />
       </Box>
