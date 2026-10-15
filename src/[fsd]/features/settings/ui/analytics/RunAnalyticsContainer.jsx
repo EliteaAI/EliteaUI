@@ -16,10 +16,10 @@ import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constant
 import { AnalyticCommonHelpers, AnalyticsExportHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { RunAnalyticsView } from '@/[fsd]/features/settings/ui/analytics';
 import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import Breadcrumbs from '@/[fsd]/shared/ui/breadcrumbs';
 import { useApplicationDetailsQuery } from '@/api/applications';
 import { SearchParams } from '@/common/constants';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const { ParticipantEntityTypes } = ParticipantEntityConstants;
 const { RUN_SCOPE_TYPE, RUN_NO_DATA_MESSAGE } = AnalyticsCommonConstants;

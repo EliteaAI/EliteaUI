@@ -1,9 +1,9 @@
 import { useCallback } from 'react';
 
 import { useConversationNavigation } from '@/[fsd]/features/chat/lib/hooks/useConversationNavigation.hooks';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useConversationEditMutation } from '@/api';
 import { areTheSameConversations, buildErrorMessage } from '@/common/utils';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 export const useEditConversation = ({
   activeConversation,

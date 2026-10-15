@@ -2,7 +2,7 @@ import { memo, useCallback } from 'react';
 
 import { GenerateEntityModal } from '@/[fsd]/entities/generate-entity-with-ai';
 import { useGenerateProjectContextDraftMutation } from '@/[fsd]/features/settings/api/generateProjectContextDraftApi';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 
 import GenerateProjectContextReviewForm from './GenerateProjectContextReviewForm';
 

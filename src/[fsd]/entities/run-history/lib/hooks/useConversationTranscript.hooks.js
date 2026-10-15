@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { RunHistoryApi } from '@/[fsd]/entities/run-history/api';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useLazyMessageTracesQuery } from '@/api';
 import {
   buildTraceListParams,
   convertConversationToChatHistory,
 } from '@/common/convertChatConversationMessages';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 /**
  * Loads a finished conversation and converts it into chat messages. Trace pins are best-effort: a

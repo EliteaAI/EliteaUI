@@ -24,9 +24,9 @@ import {
   SkillsEmptyState,
 } from '@/[fsd]/features/settings/ui/analytics';
 import { analyticsTableStyles } from '@/[fsd]/features/settings/ui/analytics/components/analyticsTable.styles';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 import StyledSearchInput from '@/components/SearchInput';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const CHART_SIZE = 20;
 const DEFAULT_SORT = { sortBy: 'runs', sortOrder: 'desc' };
@@ -241,7 +241,18 @@ const AnalyticsSkills = memo(props => {
                   cursor={AnalyticCommonHelpers.barChartCursor(palette)}
                   content={<ChartTooltip />}
                 />
-                <Legend />
+                <Legend
+                  formatter={value => (
+                    <Typography
+                      variant="bodySmall"
+                      sx={styles.legendLabel}
+                    >
+                      {value}
+                    </Typography>
+                  )}
+                  iconType="circle"
+                  iconSize={8}
+                />
                 <Bar
                   dataKey="runs"
                   name="Runs"
@@ -406,6 +417,7 @@ const analyticsSkillsStyles = () => ({
   content: { display: 'flex', flexDirection: 'column', gap: '1rem' },
   kpiRow: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' },
   chartWrapper: { width: '100%', overflow: 'hidden', flex: 1, minHeight: '12.5rem' },
+  legendLabel: ({ palette }) => ({ color: palette.text.secondary }),
   tableHeaderRow: {
     display: 'flex',
     justifyContent: 'space-between',

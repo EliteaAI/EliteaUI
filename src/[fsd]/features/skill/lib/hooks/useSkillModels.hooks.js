@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
 
 import { AutoRoutingConstants } from '@/[fsd]/shared/lib/constants';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { defaultModelForSurface, modelsWithAuto } from '@/[fsd]/shared/lib/utils';
 import { useListModelsQuery } from '@/api/configurations';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const { MODEL_SURFACES } = AutoRoutingConstants;
 

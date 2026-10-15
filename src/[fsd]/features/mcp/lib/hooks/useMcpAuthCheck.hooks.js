@@ -3,9 +3,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
-import { useToast } from '@/[fsd]/shared/lib/hooks';
+import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { SocketMessageType, sioEvents } from '@/common/constants';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { useManualSocket } from '@/hooks/useSocket';
 
 // Message types that indicate the operation has finished successfully

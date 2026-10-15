@@ -49,7 +49,9 @@ vi.mock('react-redux', () => ({
   useSelector: selector => selector({ user: { personal_project_id: 'personal-project' } }),
 }));
 
-vi.mock('@/hooks/useSelectedProject', () => ({ useSelectedProjectId: () => 'project-1' }));
+vi.mock('@/[fsd]/shared/lib/hooks', () => ({
+  useSelectedProjectId: () => 'project-1',
+}));
 
 // The project default arrives on the standing query; the option list arrives on the lazy one.
 vi.mock('@/api/configurations', () => ({

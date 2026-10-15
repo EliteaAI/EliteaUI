@@ -1,8 +1,8 @@
 import { useCallback, useEffect } from 'react';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useDeleteParticipantFromConversationMutation } from '@/api';
 import { buildErrorMessage } from '@/common/utils';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import useLocalActiveParticipant from './useLocalActiveParticipant';
 

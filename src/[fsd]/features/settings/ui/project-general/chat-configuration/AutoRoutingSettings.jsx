@@ -2,7 +2,7 @@ import { memo, useCallback, useMemo, useState } from 'react';
 
 import { Box, MenuItem, Typography } from '@mui/material';
 
-import { useToast } from '@/[fsd]/shared/lib/hooks';
+import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Input, Select } from '@/[fsd]/shared/ui';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import {
@@ -13,7 +13,6 @@ import {
 } from '@/api/configurations';
 import { PERMISSIONS } from '@/common/constants';
 import useCheckPermission from '@/hooks/useCheckPermission';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const AUTO_ROUTING_TOOLTIP =
   'Auto lets ELITEA choose the best model for each message, based on the task and current availability. This setting controls whether users can pick Auto in the model selector for chats and standard agents in this project. **Use platform default** follows the setting chosen by your ELITEA administrators.';

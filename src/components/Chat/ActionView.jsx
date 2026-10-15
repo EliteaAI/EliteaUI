@@ -6,7 +6,7 @@ import { Box, Collapse, Tooltip, Typography, useTheme } from '@mui/material';
 
 import { useSelectedChatModelContext } from '@/[fsd]/features/chat/lib/context/SelectedChatModelContext';
 import { resolveModelChipLabel } from '@/[fsd]/features/chat/lib/helpers/modelChip.helpers';
-import { useGetComponentWidth } from '@/[fsd]/shared/lib/hooks';
+import { useGetComponentWidth, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import Markdown from '@/[fsd]/shared/ui/markdown';
@@ -15,7 +15,6 @@ import { useListModelsQuery } from '@/api/configurations';
 import { TOOL_ACTION_TYPES, ToolActionStatus } from '@/common/constants';
 import { getToolInfoFromAction } from '@/common/toolActionUitls';
 import { getToolIconByType } from '@/common/toolkitUtils';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import EliteAImage from '../EliteAImage';
 import ModelIcon from '../Icons/ModelIcon';

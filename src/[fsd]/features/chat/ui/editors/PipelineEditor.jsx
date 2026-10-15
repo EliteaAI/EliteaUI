@@ -24,13 +24,13 @@ import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/
 import { LayoutHelpers, ParsePipelineHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
 import { InstructionsInputRefProvider } from '@/[fsd]/shared/lib/context';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useGetApplicationVersionDetailQuery, usePublicApplicationDetailsQuery } from '@/api/applications';
 import FlowIcon from '@/assets/flow-icon.svg?react';
 import { ChatParticipantType, PERMISSIONS, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants.js';
 import GearIcon from '@/components/Icons/GearIcon.jsx';
 import { StyledTabBar } from '@/components/StyledTabs.jsx';
 import useCheckPermission from '@/hooks/useCheckPermission';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import getValidateSchema from '@/pages/Applications/Components/Applications/ApplicationCreationValidateSchema';
 import ApplicationValidator from '@/pages/Applications/Components/Applications/ApplicationValidator';
 import CreateApplicationSaveButton from '@/pages/Applications/Components/Applications/CreateApplicationSaveButton';

@@ -26,7 +26,9 @@ vi.mock('@/[fsd]/shared/config/store', () => ({
   default: { getState: () => ({}), dispatch: vi.fn(), subscribe: vi.fn() },
 }));
 
-vi.mock('@/hooks/useSelectedProject', () => ({ useSelectedProjectName: () => 'Private' }));
+vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({
+  useSelectedProjectName: () => 'Private',
+}));
 
 const totals = (runs, uses) => ({ runs, in_agent_uses: uses, total_tokens: runs * 10, cost: runs / 100 });
 

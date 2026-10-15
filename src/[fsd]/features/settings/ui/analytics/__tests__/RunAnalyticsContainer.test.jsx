@@ -40,7 +40,7 @@ vi.mock('@/api/applications', async importOriginal => ({
 
 vi.mock('@/[fsd]/shared/ui/breadcrumbs', () => ({ default: () => <nav data-testid="breadcrumbs" /> }));
 
-vi.mock('@/hooks/useSelectedProject', () => ({ useSelectedProjectId: () => 1 }));
+vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({ useSelectedProjectId: () => 1 }));
 
 vi.mock('@/[fsd]/features/settings/ui/analytics', () => ({
   RunAnalyticsView: props => {

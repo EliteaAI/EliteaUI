@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef } from 'react';
 
 import { useSelector } from 'react-redux';
 
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 
 import { LLM_MODEL_CREDENTIALS_SECTION } from '../constants/llmModelForm.constants.js';
 import { credentialKeyOf, findCredentialType } from '../helpers/apiProtocol.helpers.js';

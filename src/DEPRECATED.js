@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useListModelsQuery } from '@/api/configurations.js';
 import { GROUP_SELECT_VALUE_SEPARATOR, PUBLIC_PROJECT_ID } from '@/common/constants.js';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 export const genModelSelectValue = (integrationUid, modelName, integrationName = '') => {
   if (integrationUid || modelName || integrationName) {

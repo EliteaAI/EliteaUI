@@ -38,7 +38,7 @@ vi.mock('@/[fsd]/features/skill/lib/hooks', () => ({
 }));
 vi.mock('@/[fsd]/features/skill/lib/validation', () => ({ SkillValidateSchema: {} }));
 vi.mock('@/[fsd]/features/skill/ui', () => ({ CreateSkillForm: () => <div data-testid="skill-form" /> }));
-vi.mock('@/hooks/useSelectedProject', () => ({ useSelectedProjectId: () => 2 }));
+vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({ useSelectedProjectId: () => 2 }));
 
 const skill = llmSettings => ({
   id: 4,

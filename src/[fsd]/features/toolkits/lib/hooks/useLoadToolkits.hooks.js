@@ -6,10 +6,10 @@ import { CredentialNameHelpers } from '@/[fsd]/features/credentials';
 import { McpAuthConstants } from '@/[fsd]/features/mcp';
 import { McpConstants } from '@/[fsd]/features/toolkits/lib/constants';
 import { McpToolkitHelpers, ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useListToolkitTypesQuery, useToolkitsListQuery } from '@/api/toolkits.js';
 import useTypes from '@/hooks/toolkit/useTypes';
 import usePageQuery from '@/hooks/usePageQuery';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useSortQueryParamsFromUrl from '@/hooks/useSortQueryParamsFromUrl';
 
 import { useGetCurrentToolkitSchemas } from './useGetCurrentToolkitSchemas.hooks';

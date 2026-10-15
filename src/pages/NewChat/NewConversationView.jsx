@@ -28,7 +28,7 @@ import {
   LLMSettingsConstants,
   MentionConstants,
 } from '@/[fsd]/shared/lib/constants';
-import { useSystemSenderName, useToast } from '@/[fsd]/shared/lib/hooks';
+import { useSelectedProjectId, useSystemSenderName, useToast } from '@/[fsd]/shared/lib/hooks';
 import {
   cleanLLMSettings,
   defaultModelForSurface,
@@ -61,7 +61,6 @@ import useValidateToolkit, { useToolkitValidationInfo } from '@/hooks/applicatio
 import useChatStreaming from '@/hooks/chat/useChatStreaming';
 import useLocalActiveParticipant from '@/hooks/chat/useLocalActiveParticipant';
 import useNewConversationAttachments from '@/hooks/chat/useNewConversationAttachments';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useSocket from '@/hooks/useSocket';
 import { actions } from '@/slices/chat';
 

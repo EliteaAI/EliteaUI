@@ -6,13 +6,12 @@ import Tooltip from '@/ComponentsLib/Tooltip';
 import { isWhisperModel } from '@/[fsd]/features/chat/lib/helpers';
 import { useSpeechRecognition, useStreamingSpeechRecognition } from '@/[fsd]/features/chat/lib/hooks';
 import { SocketContext } from '@/[fsd]/shared/lib/context';
-import { useToast } from '@/[fsd]/shared/lib/hooks';
+import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { useListModelsQuery } from '@/api/configurations';
 import MicIcon from '@/assets/microphone.svg?react';
 import StopIcon from '@/assets/stop_record.svg?react';
 import { VOICE_FEATURES_ENABLED, VOICE_FEATURES_TEMPORARILY_DISABLED } from '@/common/constants';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 /**
  * Smart voice input toolbar button.

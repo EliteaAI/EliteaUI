@@ -5,7 +5,7 @@ import { useTheme } from '@mui/material';
 import { ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
 import { isMcpToolkit, resolveToolkitSchemaByType } from '@/[fsd]/shared/lib/helpers';
-import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
+import { useIsMcpVisible, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useToolkitsListQuery } from '@/api/toolkits';
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
 import { getToolIconByType } from '@/common/toolkitUtils';
@@ -13,7 +13,6 @@ import EntityIcon from '@/components/EntityIcon';
 import { DROPDOWN_CONSTANTS } from '@/components/UnifiedDropdown';
 import { useApplicationParticipants } from '@/hooks/chat/useApplicationParticipants';
 import { usePublicApplicationParticipants } from '@/hooks/chat/usePublicApplicationParticipants';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const pageSize = 20;
 const emptyTagIds = []; // Stable reference to prevent infinite re-renders

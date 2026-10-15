@@ -73,7 +73,7 @@ import { MentionSkillList } from '@/[fsd]/features/skill';
 import { useDeleteSkillMutation } from '@/[fsd]/features/skill/api';
 import { LLMSettingsConstants, MentionConstants } from '@/[fsd]/shared/lib/constants';
 import { SocketContext } from '@/[fsd]/shared/lib/context';
-import { useToast } from '@/[fsd]/shared/lib/hooks';
+import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import {
   cleanLLMSettings,
   defaultReasoningEffortFor,
@@ -119,7 +119,6 @@ import { ChatBodyContainer } from '@/components/Chat/StyledComponents';
 import { useChatSocket, useStopStreaming } from '@/components/Chat/hooks';
 import useChatStreaming from '@/hooks/chat/useChatStreaming';
 import useLoadMoreMessages from '@/hooks/chat/useLoadMoreMessages';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useSocket from '@/hooks/useSocket';
 import { actions as chatActions } from '@/slices/chat';
 

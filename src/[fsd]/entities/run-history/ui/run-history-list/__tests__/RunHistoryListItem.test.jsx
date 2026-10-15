@@ -40,7 +40,7 @@ vi.mock('@/[fsd]/entities/run-history/api', () => ({
   },
 }));
 
-vi.mock('@/hooks/useSelectedProject', () => ({ useSelectedProjectId: () => 7 }));
+vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({ useSelectedProjectId: () => 7 }));
 
 vi.mock('@/[fsd]/shared/lib/hooks/useToast.hooks', () => ({
   useToast: () => ({ toastSuccess: vi.fn(), toastError, toastInfo }),

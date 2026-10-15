@@ -16,11 +16,11 @@ import {
 } from '@mui/material';
 import MenuItem from '@mui/material/MenuItem';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useLazyListModelsQuery } from '@/api/configurations';
 import CheckedIcon from '@/assets/checked-icon.svg?react';
 import RefreshIcon from '@/assets/refresh-icon.svg?react';
 import BriefcaseIcon from '@/components/Icons/BriefcaseIcon.jsx';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import ArrowDownIcon from './Icons/ArrowDownIcon';
 import Person from './Icons/Person';

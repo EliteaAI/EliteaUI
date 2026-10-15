@@ -19,7 +19,7 @@ vi.mock('@/[fsd]/features/settings/api/analyticsApi', () => ({
 
 vi.mock('@/[fsd]/features/settings/lib/hooks', () => ({ useRunAnalyticsFetching: () => false }));
 
-vi.mock('@/hooks/useSelectedProject', () => ({
+vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({
   useSelectedProjectId: () => 1,
   useSelectedProjectName: () => 'Team',
 }));

@@ -2,8 +2,8 @@ import { useCallback, useMemo } from 'react';
 
 import { useSearchParams } from 'react-router-dom';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useCreateConfigurationMutation } from '@/api/configurations';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const getRequestBody = ({ toolType, configurationKeys, settings }) => {
   const data = {};

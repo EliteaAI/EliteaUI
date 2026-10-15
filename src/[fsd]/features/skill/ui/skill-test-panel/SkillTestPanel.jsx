@@ -24,7 +24,7 @@ import {
 import { useSkillModels, useSkillVersionModel } from '@/[fsd]/features/skill/lib/hooks';
 import { LLMSettingsConstants } from '@/[fsd]/shared/lib/constants';
 import { SocketContext } from '@/[fsd]/shared/lib/context';
-import { useToast } from '@/[fsd]/shared/lib/hooks';
+import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { isAutoSelection, resetLLMSettingsForModel } from '@/[fsd]/shared/lib/utils';
 import { useGenerateContentStreamingMutation, useStopLlmTaskMutation } from '@/api/llm';
 import { ChatParticipantType, ROLES, SocketMessageType, sioEvents } from '@/common/constants';
@@ -32,7 +32,6 @@ import { initializeNewMessages } from '@/common/initializeNewMessages';
 import { buildErrorMessage } from '@/common/utils';
 import FullScreenToggle from '@/components/Chat/FullScreenToggle';
 import { ChatBodyContainer } from '@/components/Chat/StyledComponents';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { useManualSocket } from '@/hooks/useSocket';
 import { ContentContainer } from '@/pages/Common/Components/StyledComponents';
 

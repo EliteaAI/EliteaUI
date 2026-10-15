@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom';
 
 import { Box, CircularProgress, Tooltip, Typography } from '@mui/material';
 
-import { useToast } from '@/[fsd]/shared/lib/hooks';
+import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button, Input, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { BaseTab, BaseTabs } from '@/[fsd]/shared/ui/tabs';
@@ -21,7 +21,6 @@ import {
 import { EVAL_PERMISSIONS, EVAL_TIER } from '@/[fsd]/widgets/evaluation/lib/constants';
 import PlusIcon from '@/components/Icons/PlusIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const DIMENSION_TABS = {
   agent: EVAL_TIER.agent_adhoc,

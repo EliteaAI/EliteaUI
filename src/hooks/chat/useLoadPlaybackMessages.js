@@ -2,10 +2,10 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useLazyMessageListQuery, useLazyMessageTracesQuery } from '@/api';
 import { buildErrorMessage } from '@/common/utils';
 import { PLAYBACK_PAGE_SIZE } from '@/hooks/chat/usePlaybackConversation.js';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import {
   buildTraceListParams,

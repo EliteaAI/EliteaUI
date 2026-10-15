@@ -7,6 +7,7 @@ import {
   getChatParticipantUniqueId,
   getDefaultActiveParticipant,
 } from '@/[fsd]/features/chat/participants/lib/helpers';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import {
   useLazyConversationDetailsQuery,
   useLazyMessageTracesQuery,
@@ -17,7 +18,6 @@ import {
   convertConversationToChatHistory,
 } from '@/common/convertChatConversationMessages';
 import { areTheSameConversations, buildErrorMessage } from '@/common/utils';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { actions as chatActions } from '@/slices/chat';
 
 import useLocalActiveParticipant from './useLocalActiveParticipant';

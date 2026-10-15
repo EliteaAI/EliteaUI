@@ -7,7 +7,7 @@ import { Box, Typography, useTheme } from '@mui/material';
 import { SKILL_NAME_MAX_LENGTH } from '@/[fsd]/features/skill/lib/constants';
 import { GenerateSkillButton } from '@/[fsd]/features/skill/ui/generate-skill-modal';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
-import { useFieldFocus } from '@/[fsd]/shared/lib/hooks';
+import { useFieldFocus, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { Field, Input, Markdown, Text } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import TabGroupButton from '@/[fsd]/shared/ui/tab-group-button/TabGroupButton';
@@ -22,7 +22,6 @@ import {
 } from '@/common/constants';
 import EntityIcon from '@/components/EntityIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import TagEditor from '@/pages/Common/Components/TagEditor';
 import { markdown } from '@codemirror/lang-markdown';
 

@@ -6,8 +6,8 @@ import { Box, Typography } from '@mui/material';
 
 import { useProjectBackup } from '@/[fsd]/features/settings/lib/hooks';
 import RestoreProjectDialog from '@/[fsd]/features/settings/ui/project-general/backup-restore/RestoreProjectDialog';
+import { useSelectedProjectName } from '@/[fsd]/shared/lib/hooks';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
-import { useSelectedProjectName } from '@/hooks/useSelectedProject';
 
 const ProjectBackupRestore = memo(() => {
   const [isRestoreOpen, setIsRestoreOpen] = useState(false);

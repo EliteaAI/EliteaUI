@@ -2,10 +2,10 @@ import { memo, useCallback, useMemo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { includeFieldWrapperOverlapStyles } from '@/[fsd]/shared/ui/field/styles';
 import { SecretManagementInput } from '@/[fsd]/shared/ui/secret-field';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const SecretInputFieldField = memo(props => {
   const { fieldKey, fieldProperties, fieldValue, onChangeInputVariables, toolInputVariables } = props;

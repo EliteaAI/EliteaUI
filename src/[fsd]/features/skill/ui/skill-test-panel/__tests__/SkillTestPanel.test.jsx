@@ -62,6 +62,7 @@ vi.mock('@/[fsd]/features/skill/lib/hooks', () => ({
   }),
 }));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
+  useSelectedProjectId: () => 2,
   useToast: () => ({ toastError: vi.fn(), toastInfo: vi.fn() }),
 }));
 vi.mock('@/api/llm', () => ({
@@ -69,7 +70,6 @@ vi.mock('@/api/llm', () => ({
   useStopLlmTaskMutation: () => [vi.fn()],
 }));
 vi.mock('@/common/utils', () => ({ buildErrorMessage: vi.fn() }));
-vi.mock('@/hooks/useSelectedProject', () => ({ useSelectedProjectId: () => 2 }));
 vi.mock('@/hooks/useSocket', () => ({
   useManualSocket: () => ({ subscribe: vi.fn(), unsubscribe: vi.fn() }),
 }));

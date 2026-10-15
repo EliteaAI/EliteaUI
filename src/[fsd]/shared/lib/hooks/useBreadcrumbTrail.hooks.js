@@ -6,7 +6,8 @@ import { BreadcrumbHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useApplicationDetailsQuery } from '@/api/applications';
 import { useToolkitsDetailsQuery } from '@/api/toolkits.js';
 import { SearchParams } from '@/common/constants.js';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
+
+import { useSelectedProjectId } from './useSelectedProject.hooks';
 
 /**
  * Fully resolved breadcrumb trail for the current route, empty when the route declares no crumbs.

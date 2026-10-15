@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
 
 import { useSecretShowQuery, useSecretsListQuery } from '@/api';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
+
+import { useSelectedProjectId } from './useSelectedProject.hooks';
 
 const SECRET_NAME = 'disable_confirmation_delete_mode';
 

@@ -6,10 +6,9 @@ import { useParams } from 'react-router-dom';
 import { Box, Grid } from '@mui/material';
 
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui/form/toolkit-form';
-import { useEliteATheme, useToast } from '@/[fsd]/shared/lib/hooks';
+import { useEliteATheme, useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { NAV_BAR_HEIGHT_IN_PX } from '@/common/constants';
 import StyledTabs from '@/components/StyledTabs';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { StyledGridContainer } from '@/pages/Common/Components';
 import CreateToolkitToolTabBar from '@/pages/Toolkits/CreateToolkitToolTabBar';
 import ToolkitTypeSelector from '@/pages/Toolkits/ToolkitTypeSelector';

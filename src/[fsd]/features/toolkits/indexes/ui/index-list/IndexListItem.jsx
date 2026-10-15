@@ -14,7 +14,7 @@ import {
   isAbandonedRun,
 } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexDetails.helpers';
 import { useIndexScheduleIndicator } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
-import { useProjectType } from '@/[fsd]/shared/lib/hooks';
+import { useProjectType, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import ClockIcon from '@/assets/clock.svg?react';
@@ -28,7 +28,6 @@ import EntityIcon from '@/components/EntityIcon';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const IndexListItem = memo(props => {
   const {

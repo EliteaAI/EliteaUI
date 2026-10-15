@@ -3,12 +3,12 @@ import { memo, useCallback, useState } from 'react';
 import { Box, IconButton, Typography } from '@mui/material';
 
 import { useProjectInfoQuery } from '@/[fsd]/features/settings/api/projectInfoApi';
+import { useSelectedProjectId, useSelectedProjectName } from '@/[fsd]/shared/lib/hooks';
 import { ProjectAvatar } from '@/[fsd]/widgets/sidebar-root';
 import { PERMISSIONS, PUBLIC_PROJECT_ID } from '@/common/constants';
 import EditIcon from '@/components/Icons/EditIcon';
 import UsersIcon from '@/components/Icons/UsersIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
-import { useSelectedProjectId, useSelectedProjectName } from '@/hooks/useSelectedProject';
 
 import { SelectProjectIconDialog } from './select-project-icon';
 

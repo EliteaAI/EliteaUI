@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useGetPlatformSettingsQuery } from '@/api/platformSettings';
 import { useAuthorModuleSettingsQuery } from '@/api/social';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 /**
  * Tier 1 of the mid-turn input gate: whether the platform offers the feature to

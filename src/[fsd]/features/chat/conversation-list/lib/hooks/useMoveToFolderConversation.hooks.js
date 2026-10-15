@@ -1,10 +1,10 @@
 import { useCallback, useEffect } from 'react';
 
 import { sortConversations } from '@/[fsd]/features/chat/conversation-list/lib/helpers';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useConversationEditMutation, useFolderCreateMutation } from '@/api';
 import { DefaultFolderName, dummyConversation } from '@/common/constants.js';
 import { buildErrorMessage } from '@/common/utils';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 export const useMoveToFolderConversation = props => {
   const {

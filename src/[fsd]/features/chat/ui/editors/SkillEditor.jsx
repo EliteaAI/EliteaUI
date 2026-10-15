@@ -13,7 +13,7 @@ import {
 import { useSkillModels } from '@/[fsd]/features/skill/lib/hooks';
 import { SkillValidateSchema } from '@/[fsd]/features/skill/lib/validation';
 import { CreateSkillForm } from '@/[fsd]/features/skill/ui';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 
 const buildInitialValues = (data, defaultModel) => ({
   id: data?.id ?? null,

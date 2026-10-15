@@ -8,11 +8,10 @@ import { RunHistoryApi } from '@/[fsd]/entities/run-history/api';
 import { byNewestRunFirst } from '@/[fsd]/entities/run-history/lib/helpers';
 import { RunHistoryChat, RunHistoryList } from '@/[fsd]/entities/run-history/ui';
 import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
-import { useToast } from '@/[fsd]/shared/lib/hooks';
+import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { SearchParams } from '@/common/constants';
 import CloseIcon from '@/components/Icons/CloseIcon';
 import useIsSmallWindow from '@/hooks/useIsSmallWindow';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const { ParticipantEntityTypes } = ParticipantEntityConstants;
 

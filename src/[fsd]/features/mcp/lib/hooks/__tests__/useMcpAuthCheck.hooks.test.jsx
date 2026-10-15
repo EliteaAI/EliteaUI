@@ -32,10 +32,6 @@ vi.mock('@/[fsd]/features/mcp/lib/helpers', () => ({
   McpAuthHelpers: { getAllTokens: () => ({}) },
 }));
 
-vi.mock('@/hooks/useSelectedProject', () => ({
-  useSelectedProjectId: () => 30,
-}));
-
 vi.mock('@/hooks/useSocket', () => ({
   useManualSocket: (_, onMessage) => {
     mocks.onMessage = onMessage;
@@ -44,6 +40,7 @@ vi.mock('@/hooks/useSocket', () => ({
 }));
 
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
+  useSelectedProjectId: () => 30,
   useToast: () => ({ toastError: mocks.toastError }),
 }));
 

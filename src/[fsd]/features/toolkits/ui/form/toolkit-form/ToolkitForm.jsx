@@ -16,6 +16,7 @@ import {
 } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ToolkitForm as GeneralToolkitForm } from '@/[fsd]/features/toolkits/ui';
 import { TourTargetConstants } from '@/[fsd]/shared/lib/constants';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import ViewRunHistoryButton from '@/[fsd]/shared/ui/button/ViewRunHistoryButton.jsx';
 import { FormViewToggle } from '@/[fsd]/shared/ui/tab-group-button';
@@ -28,7 +29,6 @@ import useCreateConfiguration from '@/hooks/application/useCreateConfiguration';
 import { useIconMetaTooltipType } from '@/hooks/toolkit/useIconMetaTooltipType.js';
 import { Create_Personal_Title, Create_Project_Title } from '@/hooks/useConfigurations';
 import useGetCurrentConfigurationAsSchemas from '@/hooks/useGetCurrentConfigurationAsSchemas';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { formatTitleFromSnakeCase } from '@/utils/stringUtils';
 
 import ToolkitsOperationButtons from './ToolkitsOperationButtons.jsx';

@@ -1,8 +1,9 @@
 import { useLocation, useMatch, useParams } from 'react-router-dom';
 
 import { DEFAULT_ENTITY_TAB, PROJECT_ID_URL_PREFIX, replacePathParams } from '@/common/utils';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import RouteDefinitions from '@/routes';
+
+import { useSelectedProjectId } from './useSelectedProject.hooks';
 
 export const usePageDetails = () => {
   const { pathname, search } = useLocation();

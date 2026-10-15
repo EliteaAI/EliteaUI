@@ -3,7 +3,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import { useUserListQuery } from '@/api/admin';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
+
+import { useSelectedProjectId } from './useSelectedProject.hooks';
 
 export const useUserList = ({ sortBy, sortOrder, query, pageSize, selectedTagIds, forceSkip = false }) => {
   const { personal_project_id: privateProjectId } = useSelector(state => state.user);

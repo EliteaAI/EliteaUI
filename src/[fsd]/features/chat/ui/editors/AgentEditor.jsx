@@ -6,10 +6,10 @@ import AgentEditorContent from '@/[fsd]/features/chat/ui/editors/AgentEditorCont
 import BaseEditor from '@/[fsd]/features/chat/ui/editors/BaseEditor.jsx';
 import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
 import { InstructionsInputRefProvider } from '@/[fsd]/shared/lib/context';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useGetApplicationVersionDetailQuery, usePublicApplicationDetailsQuery } from '@/api/applications';
 import { ChatParticipantType, PERMISSIONS, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants.js';
 import useCheckPermission from '@/hooks/useCheckPermission';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import getValidateSchema from '@/pages/Applications/Components/Applications/ApplicationCreationValidateSchema';
 import CreateApplicationSaveButton from '@/pages/Applications/Components/Applications/CreateApplicationSaveButton';
 import SaveApplicationButton from '@/pages/Applications/Components/Applications/SaveApplicationButton.jsx';

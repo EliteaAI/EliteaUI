@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { ActiveConversationParticipantKey } from '@/common/constants';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 export default function useLocalActiveParticipant() {
   const projectId = useSelectedProjectId();

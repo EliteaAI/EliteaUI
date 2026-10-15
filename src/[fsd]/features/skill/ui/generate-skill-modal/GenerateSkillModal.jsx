@@ -5,8 +5,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { GenerateEntityModal } from '@/[fsd]/entities/generate-entity-with-ai';
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version';
 import { useGenerateSkillDraftMutation, useSkillCreateMutation } from '@/[fsd]/features/skill/api';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { SearchParams, SkillsTabs } from '@/common/constants';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import RouteDefinitions from '@/routes';
 
 import GenerateSkillReviewForm from './GenerateSkillReviewForm';

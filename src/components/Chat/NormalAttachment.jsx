@@ -9,7 +9,7 @@ import {
   downloadAttachmentImage,
   getAttachmentName,
 } from '@/[fsd]/entities/attachment/lib';
-import { useToast } from '@/[fsd]/shared/lib/hooks';
+import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Checkbox, Modal } from '@/[fsd]/shared/ui';
 import TypographyWithConditionalTooltip from '@/[fsd]/shared/ui/tooltip/TypographyWithConditionalTooltip';
 import AttachedFileIcon from '@/assets/attached-file-icon.svg?react';
@@ -17,7 +17,6 @@ import ImportIcon from '@/assets/import-icon.svg?react';
 import { downloadFile, downloadFileFromArtifact, parseFilepath } from '@/common/utils';
 import OpenEyeIcon from '@/components/Icons/OpenEyeIcon';
 import useIsSmallWindow from '@/hooks/useIsSmallWindow';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import DeleteIcon from '../Icons/DeleteIcon';
 

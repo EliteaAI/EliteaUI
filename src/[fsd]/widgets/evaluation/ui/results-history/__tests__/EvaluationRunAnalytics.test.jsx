@@ -21,7 +21,7 @@ vi.mock('@/api/applications', async importOriginal => ({
   useApplicationDetailsQuery,
 }));
 
-vi.mock('@/hooks/useSelectedProject', () => ({ useSelectedProjectId: () => 1 }));
+vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({ useSelectedProjectId: () => 1 }));
 
 vi.mock('../../common', () => ({
   EvaluationBreadcrumbs: props => <nav data-testid="evaluation-breadcrumbs">{props.title}</nav>,

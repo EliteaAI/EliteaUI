@@ -8,9 +8,9 @@ import { useGetApplicationSkillsQuery } from '@/[fsd]/features/skill/api';
 import { ATTACHED_SKILLS_SEARCH_THRESHOLD, MAX_ATTACHED_SKILLS } from '@/[fsd]/features/skill/lib/constants';
 import { filterAttachedSkills } from '@/[fsd]/features/skill/lib/helpers';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import SimpleSearchBar from '@/[fsd]/shared/ui/input/SimpleSearchBar';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import SkillCard from './SkillCard.jsx';
 import SkillMenu from './SkillMenu.jsx';

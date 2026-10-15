@@ -38,6 +38,7 @@ vi.mock('@/[fsd]/entities/version/ui', () => ({ SetDefaultVersionDialog: () => n
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useRestoredConversation: () => ({}),
   useRunHistoryNavigation: () => ({}),
+  useSelectedProjectId: () => 2,
   useToast: () => ({ toastError: vi.fn(), toastSuccess: vi.fn() }),
 }));
 vi.mock('@/[fsd]/shared/ui', () => ({ Breadcrumbs: () => null, BreadcrumbsOrTitle: () => null }));
@@ -48,7 +49,6 @@ vi.mock('@/common/utils.jsx', () => ({ buildErrorMessage: vi.fn(), isNotFoundErr
 vi.mock('@/components/Formik/DirtyDetector', () => ({ default: () => null }));
 vi.mock('@/components/StyledTabs', () => ({ default: ({ tabs }) => <>{tabs[0].content}</> }));
 vi.mock('@/hooks/useNavBlocker', () => ({ default: () => {} }));
-vi.mock('@/hooks/useSelectedProject', () => ({ useSelectedProjectId: () => 2 }));
 vi.mock('@/pages/Common/Components', () => ({ StyledGridContainer: ({ children }) => <>{children}</> }));
 vi.mock('@/pages/Common/Components/StyledComponents', () => {
   const Passthrough = ({ children }) => <>{children}</>;

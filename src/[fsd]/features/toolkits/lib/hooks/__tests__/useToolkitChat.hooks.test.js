@@ -71,7 +71,7 @@ vi.mock('@/[fsd]/shared/lib/hooks/useToast.hooks', () => ({
   useToast: () => ({ toastSuccess: vi.fn(), toastError: vi.fn() }),
 }));
 
-vi.mock('@/hooks/useSelectedProject', () => ({ useSelectedProjectId: () => 1 }));
+vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({ useSelectedProjectId: () => 1 }));
 
 vi.mock('@/common/convertChatConversationMessages', () => ({
   convertConversationToChatHistory: () => [],

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useLazyMessageListQuery, useLazyMessageTracesQuery } from '@/api';
 import {
   buildTraceListParams,
@@ -7,7 +8,6 @@ import {
   groupTraceStepsByGroupId,
 } from '@/common/convertChatConversationMessages';
 import { buildErrorMessage } from '@/common/utils';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const useLoadMoreMessages = ({ setChatHistory, activeConversation, toastError }) => {
   const [isLoadingMore, setIsLoadingMore] = useState(false);

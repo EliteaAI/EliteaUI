@@ -5,12 +5,10 @@ import { v4 as uuidv4 } from 'uuid';
 import { useTrackEvent } from '@/GA';
 import { useChatConfig } from '@/[fsd]/features/chat/lib/hooks';
 import { AnalyticConstants, InternalToolsConstants } from '@/[fsd]/shared/lib/constants';
-import { useContextExecutionEntity, useToast } from '@/[fsd]/shared/lib/hooks';
+import { useContextExecutionEntity, useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { buildErrorMessage } from '@/common/utils';
 import { useUploadWithProgress } from '@/hooks/chat/useUploadWithProgress';
 import { getAttachmentContentType, getAttachmentType } from '@/utils/attachmentImageUtils';
-
-import { useSelectedProjectId } from '../useSelectedProject';
 
 const { DEFAULT_ATTACHMENT_BUCKET } = InternalToolsConstants;
 

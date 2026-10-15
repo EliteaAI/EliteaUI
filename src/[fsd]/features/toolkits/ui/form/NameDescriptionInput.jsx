@@ -3,12 +3,11 @@ import { memo, useCallback } from 'react';
 import { Box } from '@mui/material';
 
 import { useToolkitNameProp } from '@/[fsd]/features/toolkits/lib/hooks';
-import { useFieldFocus } from '@/[fsd]/shared/lib/hooks';
+import { useFieldFocus, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { Input, Text } from '@/[fsd]/shared/ui';
 import { MAX_DESCRIPTION_LENGTH, MAX_NAME_LENGTH, PROMPT_PAYLOAD_KEY } from '@/common/constants';
 import EntityIcon from '@/components/EntityIcon';
 import { useIconMetaTooltipType } from '@/hooks/toolkit/useIconMetaTooltipType.js';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const NameDescriptionInput = memo(props => {
   const {

@@ -6,12 +6,12 @@ import { useIsMidturnInjectionAvailable } from '@/[fsd]/features/chat/lib/hooks'
 import { useChatTemplates } from '@/[fsd]/features/settings/lib/hooks';
 import SettingsFormProvider from '@/[fsd]/features/settings/ui/shared/SettingsFormProvider';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useProjectType } from '@/[fsd]/shared/lib/hooks/useProjectType.hooks';
 import { Modal } from '@/[fsd]/shared/ui';
 import { PERMISSIONS } from '@/common/constants';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import useNavBlocker from '@/hooks/useNavBlocker';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import AutoRoutingSettings from './AutoRoutingSettings';
 import ChatTemplateEditor from './ChatTemplateEditor';

@@ -1,9 +1,9 @@
 import { useLocation } from 'react-router-dom';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
 
 import { useViewModeFromUrl } from './useSearchParamValue';
-import { useSelectedProjectId } from './useSelectedProject';
 
 export default function useViewMode() {
   const viewModeFromUrl = useViewModeFromUrl();

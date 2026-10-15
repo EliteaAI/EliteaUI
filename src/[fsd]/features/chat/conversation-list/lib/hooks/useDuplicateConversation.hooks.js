@@ -7,7 +7,7 @@ import {
   sortConversations,
 } from '@/[fsd]/features/chat/conversation-list/lib/helpers';
 import { useConversationNavigation } from '@/[fsd]/features/chat/lib/hooks';
-import { useToast } from '@/[fsd]/shared/lib/hooks';
+import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import {
   useAddParticipantIntoConversationMutation,
   useConversationCreateMutation,
@@ -15,7 +15,6 @@ import {
   useSelectConversationMutation,
 } from '@/api';
 import { ChatParticipantType } from '@/common/constants';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { actions as chatActions } from '@/slices/chat';
 
 export const useDuplicateConversation = props => {

@@ -111,6 +111,7 @@ const EMPTY_TOKENS = Object.freeze({});
 vi.mock('@/[fsd]/features/mcp', () => ({ McpAuthHelpers: { loadTokens: () => EMPTY_TOKENS } }));
 
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
+  useSelectedProjectId: () => TEAM_PROJECT_ID,
   useContextExecutionEntity: () => ({ contextExecutionEntity: 'agent' }),
 }));
 
@@ -119,8 +120,6 @@ vi.mock('@/GA', () => ({ useTrackEvent: () => trackEvent }));
 vi.mock('react-redux', () => ({
   useSelector: selector => selector({ user: { personal_project_id: PERSONAL_PROJECT_ID } }),
 }));
-
-vi.mock('@/hooks/useSelectedProject', () => ({ useSelectedProjectId: () => TEAM_PROJECT_ID }));
 
 vi.mock('@/routes', async importOriginal => {
   const actual = await importOriginal();

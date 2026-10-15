@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 
+import { useSelectedProject } from '@/[fsd]/shared/lib/hooks';
 import { useGetAvailableConfigurationsTypeQuery as getAvailableConfigurationsType } from '@/api/configurations.js';
-import { useSelectedProject } from '@/hooks/useSelectedProject';
 
 /**
  * Custom hook to fetch configurations from multiple sections

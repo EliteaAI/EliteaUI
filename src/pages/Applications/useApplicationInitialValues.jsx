@@ -15,6 +15,7 @@ import {
 } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { DEFAULT_PIPELINE_KEY } from '@/[fsd]/features/pipelines/lib/constants';
 import { AutoRoutingConstants, InternalToolsConstants } from '@/[fsd]/shared/lib/constants';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { cleanLLMSettings, defaultModelForSurface, generateLLMSettings } from '@/[fsd]/shared/lib/utils';
 import {
   useApplicationDetailsQuery,
@@ -24,7 +25,6 @@ import {
 import { useListModelsQuery } from '@/api/configurations';
 import { useAuthorModuleSettingsQuery } from '@/api/social';
 import { PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants.js';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useViewMode from '@/hooks/useViewMode';
 import { actions } from '@/slices/pipeline';
 import { actions as editorActions } from '@/slices/pipelineEditor';

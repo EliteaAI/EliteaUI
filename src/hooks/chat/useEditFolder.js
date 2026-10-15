@@ -1,10 +1,10 @@
 import { useCallback, useEffect } from 'react';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useFolderPinUpdateMutation, useFolderUpdateMutation } from '@/api';
 import { PERMISSIONS } from '@/common/constants.js';
 import { areTheSameFolders, buildErrorMessage } from '@/common/utils';
 import useCheckPermission from '@/hooks/useCheckPermission';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const useEditFolder = ({ activeFolder, setActiveFolder, setFolders, toastError }) => {
   const { checkPermission } = useCheckPermission();

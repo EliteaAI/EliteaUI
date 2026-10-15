@@ -19,7 +19,7 @@ vi.hoisted(() => {
   };
 });
 
-vi.mock('@/hooks/useSelectedProject', () => ({ useSelectedProjectId: () => 1 }));
+vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({ useSelectedProjectId: () => 1 }));
 vi.mock('@/[fsd]/features/settings/lib/hooks', () => ({
   useConfigurationNavigation: () => ({ navigateToConfiguration: vi.fn() }),
 }));

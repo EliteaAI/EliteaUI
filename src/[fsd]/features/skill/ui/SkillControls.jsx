@@ -14,7 +14,12 @@ import {
   useUnpublishSkillMenu,
 } from '@/[fsd]/features/skill/lib/hooks';
 import { PinEntityConstants } from '@/[fsd]/shared/lib/constants';
-import { useProjectEntityLink, useProjectType, useToast } from '@/[fsd]/shared/lib/hooks';
+import {
+  useProjectEntityLink,
+  useProjectType,
+  useSelectedProjectId,
+  useToast,
+} from '@/[fsd]/shared/lib/hooks';
 import { Controls } from '@/[fsd]/shared/ui';
 import { usePin, usePinMenu } from '@/[fsd]/widgets/pin-toggler';
 import ClockIcon from '@/assets/clock_icon.svg?react';
@@ -27,7 +32,6 @@ import ExportIcon from '@/components/Icons/ExportIcon';
 import ForkIcon from '@/components/Icons/ForkIcon';
 import PinIcon from '@/components/Icons/PinIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import RouteDefinitions from '@/routes';
 
 import { useDeleteSkillMutation } from '../api';

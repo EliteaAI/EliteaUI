@@ -2,12 +2,12 @@ import { useCallback, useEffect } from 'react';
 
 import { useTrackEvent } from '@/GA';
 import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useFolderCreateMutation } from '@/api';
 import { PERMISSIONS, dummyConversation, dummyFolder } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import useResetCreateFlag from '@/hooks/chat/useResetCreateFlag';
 import useCheckPermission from '@/hooks/useCheckPermission';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const { GA_EVENT_NAMES, GA_EVENT_PARAMS } = AnalyticConstants;
 

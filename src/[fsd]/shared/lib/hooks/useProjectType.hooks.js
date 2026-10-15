@@ -3,7 +3,8 @@ import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
-import { useSelectedProject } from '@/hooks/useSelectedProject';
+
+import { useSelectedProject } from './useSelectedProject.hooks';
 
 const PROJECT_TYPES = {
   PRIVATE: 'private',

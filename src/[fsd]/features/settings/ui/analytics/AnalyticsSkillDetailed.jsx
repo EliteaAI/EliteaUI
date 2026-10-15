@@ -38,11 +38,11 @@ import {
 } from '@/[fsd]/features/settings/ui/analytics';
 import EntityKindChip from '@/[fsd]/features/settings/ui/analytics/components/EntityKindChip';
 import { analyticsTableStyles } from '@/[fsd]/features/settings/ui/analytics/components/analyticsTable.styles';
+import { useSelectedProjectName } from '@/[fsd]/shared/lib/hooks';
 import { exportToExcel } from '@/[fsd]/shared/lib/utils';
 import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
 import DownloadIcon from '@/assets/download.svg?react';
 import ArrowBackIcon from '@/components/Icons/ArrowBackIcon';
-import { useSelectedProjectName } from '@/hooks/useSelectedProject';
 
 const HTTP_NOT_FOUND = 404;
 
@@ -402,7 +402,18 @@ const AnalyticsSkillDetailed = memo(props => {
                   tickLine={{ stroke: axisStroke }}
                 />
                 <RechartsTooltip content={<ChartTooltip />} />
-                <Legend />
+                <Legend
+                  formatter={value => (
+                    <Typography
+                      variant="bodySmall"
+                      sx={styles.legendLabel}
+                    >
+                      {value}
+                    </Typography>
+                  )}
+                  iconType="circle"
+                  iconSize={8}
+                />
                 <Area
                   yAxisId="count"
                   type="monotone"
@@ -536,6 +547,7 @@ const analyticsSkillDetailedStyles = () => ({
     alignItems: 'stretch',
   },
   chartWrapper: { width: '100%', overflow: 'hidden', flex: 1, minHeight: '12.5rem' },
+  legendLabel: ({ palette }) => ({ color: palette.text.secondary }),
   link: ({ palette }) => ({ color: palette.text.accent, cursor: 'pointer' }),
   errorValue: ({ palette }) => ({ color: palette.status.rejected }),
   loadingState: { display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem' },

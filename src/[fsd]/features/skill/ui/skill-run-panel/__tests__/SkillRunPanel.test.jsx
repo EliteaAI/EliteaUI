@@ -1,111 +1,138 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { cleanup, render } from '@testing-library/react';
+import { ThemeProvider, createTheme } from '@mui/material';
+
+import lightPalette from '@/lightPalette';
+import '@testing-library/jest-dom/vitest';
+import { cleanup, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
 import SkillRunPanel from '../SkillRunPanel';
 
-const VERSION_LLM_SETTINGS = vi.hoisted(() => ({ model_name: 'unsaved-haiku' }));
-const RUN_LLM_SETTINGS = vi.hoisted(() => ({ model_name: 'saved-sonnet' }));
-const RUN_OVERRIDE = vi.hoisted(() => ({ model_name: 'run-only-gpt', steps_limit: 12 }));
-const fixture = vi.hoisted(() => ({
-  canEditVersionModel: true,
-  unsavedVersionLLMSettings: null,
-  chatBoxProps: null,
-  onSetRunLLMSettings: vi.fn(),
-  setRunLLMSettings: vi.fn(),
-  onSetVersionLLMSettings: vi.fn(),
-}));
+const fixture = vi.hoisted(() => ({ runChat: {} }));
 
-vi.mock('@/[fsd]/features/chat/ui', () => ({
-  ChatBox: props => {
-    fixture.chatBoxProps = props;
-    return null;
+vi.hoisted(() => vi.stubEnv('VITE_SERVER_URL', 'http://localhost/api/v2/'));
+vi.mock('@/[fsd]/features/chat/ui', async () => ({
+  ChatBox: () => <div data-testid="chat-box" />,
+  ChatButton: {
+    ClearChatButton: (await import('@/[fsd]/features/chat/ui/chat-button/ClearChatButton')).default,
   },
 }));
 vi.mock('@/[fsd]/features/skill/lib/hooks', () => ({
+  useSkillRunChat: () => fixture.runChat,
   useFocusRunInput: () => {},
-  useSkillRunChat: () => ({
-    activeConversation: { id: 7, chat_history: [] },
-    activeParticipant: { id: 3 },
-    llmSettings: RUN_LLM_SETTINGS,
-    unsavedLLMSettings: RUN_OVERRIDE,
-    setUnsavedLLMSettings: fixture.setRunLLMSettings,
-    onSetLLMSettings: fixture.onSetRunLLMSettings,
-  }),
-  useSkillVersionModel: () => ({
-    llmSettings: VERSION_LLM_SETTINGS,
-    canEditVersionModel: fixture.canEditVersionModel,
-    unsavedVersionLLMSettings: fixture.canEditVersionModel ? fixture.unsavedVersionLLMSettings : null,
-    onSetLLMSettings: fixture.onSetVersionLLMSettings,
-  }),
+  useSkillVersionModel: () => ({ canEditVersionModel: false }),
 }));
-vi.mock('@/[fsd]/shared/ui/button', () => ({ ViewRunHistoryButton: () => null }));
-vi.mock('@/[fsd]/widgets/context-budget', () => ({ ContextBudgetUI: { ContextBudgetInfo: () => null } }));
+vi.mock('@/[fsd]/shared/ui/button', async importOriginal => ({
+  ...(await importOriginal()),
+  ViewRunHistoryButton: () => <div data-testid="skill-run-history-button" />,
+}));
+vi.mock('@/[fsd]/widgets/context-budget', () => ({
+  ContextBudgetUI: { ContextBudgetInfo: () => null },
+}));
 vi.mock('@/components/Chat/FullScreenToggle', () => ({ default: () => null }));
 vi.mock('@/hooks/chat/useUploadAttachments', () => ({ default: () => ({}) }));
-vi.mock('@/hooks/useSelectedProject', () => ({ useSelectedProjectId: () => 2 }));
-vi.mock('../SkillRunActions', () => ({ default: () => null }));
+vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({ useSelectedProjectId: () => 2 }));
 
-const renderPanel = canEditVersionModel => {
-  fixture.canEditVersionModel = canEditVersionModel;
-  return render(
-    <SkillRunPanel
-      skillId={10}
-      skillName="Reviewer"
-      versionDetails={{ id: 100 }}
-    />,
-  );
+const theme = createTheme({ palette: lightPalette });
+const runWithMessages = {
+  id: 1780,
+  chat_history: [
+    { id: 'm1', role: 'user', content: 'hi' },
+    { id: 'm2', role: 'assistant', content: 'Hello' },
+  ],
 };
 
-describe('SkillRunPanel model chip', () => {
-  afterEach(() => {
-    cleanup();
-    fixture.chatBoxProps = null;
-    fixture.unsavedVersionLLMSettings = null;
-    fixture.setRunLLMSettings.mockClear();
+const setRunChat = overrides => {
+  fixture.runChat = {
+    activeConversation: runWithMessages,
+    activeParticipant: { id: 601 },
+    isStreaming: false,
+    isReadOnly: false,
+    onStartNewRun: vi.fn(),
+    onDeleteAllMessages: vi.fn(),
+    ...overrides,
+  };
+};
+
+const renderPanel = () =>
+  render(
+    <ThemeProvider theme={theme}>
+      <SkillRunPanel
+        skillId={601}
+        skillName="Reviewer"
+        onShowHistory={vi.fn()}
+      />
+    </ThemeProvider>,
+  );
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  setRunChat();
+});
+afterEach(cleanup);
+
+describe('SkillRunPanel clear the chat', () => {
+  it('shows the shared Clear the chat button next to Run History, without a separate New run', async () => {
+    renderPanel();
+
+    expect(screen.queryByTestId('skill-run-new-run-button')).not.toBeInTheDocument();
+
+    const clearButton = screen.getByTestId('chat-clear-button');
+    expect(clearButton).toHaveAccessibleName('clear the chat');
+    expect(screen.getByTestId('skill-run-history-button')).toBeInTheDocument();
+
+    await userEvent.hover(clearButton);
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('Clear the chat');
   });
 
-  it('runs on and edits the version model, unsaved included, like the agent chat pane', () => {
-    renderPanel(true);
+  it('starts a fresh run like agents do, without deleting the messages', async () => {
+    renderPanel();
 
-    expect(fixture.chatBoxProps.llmSettings).toBe(VERSION_LLM_SETTINGS);
-    expect(fixture.chatBoxProps.onSetLLMSettings).toBe(fixture.onSetVersionLLMSettings);
+    await userEvent.click(screen.getByTestId('chat-clear-button'));
+
+    expect(fixture.runChat.onStartNewRun).toHaveBeenCalledTimes(1);
+    expect(fixture.runChat.onDeleteAllMessages).not.toHaveBeenCalled();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  it('keeps the model to this run when the version model cannot be edited', () => {
-    renderPanel(false);
+  it('lets a read-only run be cleared to start an own run', async () => {
+    setRunChat({ isReadOnly: true });
+    renderPanel();
 
-    expect(fixture.chatBoxProps.llmSettings).toBe(RUN_LLM_SETTINGS);
-    expect(fixture.chatBoxProps.onSetLLMSettings).toBe(fixture.onSetRunLLMSettings);
-    expect(fixture.chatBoxProps.unsavedLLMSettings).toBe(RUN_OVERRIDE);
+    await userEvent.click(screen.getByTestId('chat-clear-button'));
+
+    expect(fixture.runChat.onStartNewRun).toHaveBeenCalledTimes(1);
   });
 
-  it('sends the unsaved version model with every message and keeps the run steps limit', () => {
-    fixture.unsavedVersionLLMSettings = VERSION_LLM_SETTINGS;
-    renderPanel(true);
+  it('disables clearing while the skill is answering', () => {
+    setRunChat({ isStreaming: true });
+    renderPanel();
 
-    expect(fixture.chatBoxProps.unsavedLLMSettings).toEqual({ ...VERSION_LLM_SETTINGS, steps_limit: 12 });
+    expect(screen.getByTestId('chat-clear-button')).toBeDisabled();
   });
 
-  it('runs on the saved settings once the version model is saved or discarded', () => {
-    renderPanel(true);
+  it('disables clearing on a fresh chat with no messages', () => {
+    setRunChat({ activeConversation: { chat_history: [] } });
+    renderPanel();
 
-    expect(fixture.chatBoxProps.unsavedLLMSettings).toBeNull();
+    expect(screen.getByTestId('chat-clear-button')).toBeDisabled();
   });
 
-  it('drops the run override once the version model is saved or discarded', () => {
-    renderPanel(true);
+  it('enables clearing once a new run has messages, before it is saved', () => {
+    setRunChat({ activeConversation: { chat_history: runWithMessages.chat_history } });
+    renderPanel();
 
-    expect(fixture.setRunLLMSettings).toHaveBeenCalledWith(null);
+    expect(screen.getByTestId('chat-clear-button')).toBeEnabled();
   });
 
-  it('keeps the run override while the version model is unsaved or cannot be edited', () => {
-    fixture.unsavedVersionLLMSettings = VERSION_LLM_SETTINGS;
-    renderPanel(true);
-    cleanup();
-    renderPanel(false);
+  it('lets a saved run without messages be cleared to start a fresh run', async () => {
+    setRunChat({ activeConversation: { id: 1780, chat_history: [] }, isReadOnly: true });
+    renderPanel();
 
-    expect(fixture.setRunLLMSettings).not.toHaveBeenCalled();
+    await userEvent.click(screen.getByTestId('chat-clear-button'));
+
+    expect(fixture.runChat.onStartNewRun).toHaveBeenCalledTimes(1);
   });
 });

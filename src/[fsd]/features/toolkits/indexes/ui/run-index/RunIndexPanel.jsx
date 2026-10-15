@@ -46,7 +46,7 @@ import { ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useGetCurrentToolkitSchemas, useToolkitChat } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { NavigationHelpers, ScheduleHelpers } from '@/[fsd]/shared/lib/helpers';
-import { useToast } from '@/[fsd]/shared/lib/hooks';
+import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Modal } from '@/[fsd]/shared/ui';
 import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
 import Breadcrumbs from '@/[fsd]/shared/ui/breadcrumbs';
@@ -55,7 +55,6 @@ import { PERMISSIONS, ROLES, WELCOME_MESSAGE_ID } from '@/common/constants';
 import { convertToolkitSchema } from '@/common/toolkitSchemaUtils';
 import { useGetSelectedToolSchema } from '@/hooks/toolkit/useGetSelectedToolSchema';
 import useNavBlocker from '@/hooks/useNavBlocker';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import RouteDefinitions from '@/routes';
 
 import IndexConfigurationTab from './IndexConfigurationTab';

@@ -2,10 +2,9 @@ import { useCallback, useMemo } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { useToast } from '@/[fsd]/shared/lib/hooks';
+import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { useToolkitAssociateMutation } from '@/api/toolkits';
 import { buildErrorMessage } from '@/common/utils';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const getChangedTools = (currentTools = [], originalTools = []) => {
   const result = [];

@@ -1,10 +1,10 @@
 import { useCallback, useEffect } from 'react';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useFolderUpdateMutation } from '@/api';
 import { PERMISSIONS } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import useCheckPermission from '@/hooks/useCheckPermission';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const useReorderFolders = ({ folders, setFolders, toastError, toastSuccess }) => {
   const { checkPermission } = useCheckPermission();

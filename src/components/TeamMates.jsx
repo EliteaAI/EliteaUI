@@ -1,6 +1,6 @@
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useAuthorListQuery } from '@/api/social';
 import PeopleList from '@/components/PeopleList';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const DEFAULT_LIMIT = 5;
 

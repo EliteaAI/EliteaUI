@@ -4,14 +4,13 @@ import { Form, Formik } from 'formik';
 
 import { ProfileHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { useQueryAuthor } from '@/[fsd]/features/settings/lib/hooks';
-import { useDefaultModel, useToast } from '@/[fsd]/shared/lib/hooks';
+import { useDefaultModel, useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import {
   useAuthorDescriptionMutation,
   useAuthorDetailsQuery,
   useAuthorModuleSettingsQuery,
   useUpdateAuthorModuleSettingsMutation,
 } from '@/api/social';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const SettingsFormProvider = memo(props => {
   const { FormContent } = props;

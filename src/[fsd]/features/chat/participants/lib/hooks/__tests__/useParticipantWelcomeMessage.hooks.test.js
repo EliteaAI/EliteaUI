@@ -12,7 +12,7 @@ vi.mock('@/[fsd]/features/chat/participants/lib/hooks/useFetchParticipantDetails
   useFetchParticipantDetails: () => ({ fetchOriginalDetails, fetchOriginalVersionDetails }),
 }));
 
-vi.mock('@/hooks/useSelectedProject', () => ({
+vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({
   useSelectedProjectId: () => 1,
 }));
 

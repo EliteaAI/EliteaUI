@@ -15,13 +15,10 @@ vi.mock('../../../api', () => ({
   useEvalSuitesQuery: () => suitesQuery.current,
 }));
 
-vi.mock('@/hooks/useSelectedProject', () => ({
-  useSelectedProjectId: () => 1,
-}));
-
 // The trail itself is covered by the breadcrumbs tests; here it only has to put the evaluation
 // crumb above the current page so its menu renders.
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
+  useSelectedProjectId: () => 1,
   useHasBreadcrumbTrail: () => true,
   useBreadcrumbTrail: () => [
     {

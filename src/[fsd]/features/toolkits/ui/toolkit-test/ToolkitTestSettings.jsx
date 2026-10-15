@@ -6,11 +6,11 @@ import { Box, Tooltip } from '@mui/material';
 
 import { PAT_REQUIRED_ACTION_HINT, useInternalMcpPatStatus } from '@/[fsd]/features/mcp';
 import { useToolkitToolOptions } from '@/[fsd]/features/toolkits/lib/hooks';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { Button, ScrollableContainer, Select } from '@/[fsd]/shared/ui/';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { LLMModelSelector } from '@/[fsd]/widgets/llm-model-selector';
 import SendIcon from '@/components/Icons/SendIcon';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import ToolFormContainer from '../form/ToolFormContainer';
 

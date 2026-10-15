@@ -7,12 +7,12 @@ import { Box, Typography } from '@mui/material';
 import { ConfigurationModal } from '@/[fsd]/features/agent/ui/agent-details/configurations/index.js';
 import { ScheduleInfoDisplay } from '@/[fsd]/features/pipelines/flow-editor/ui/settings';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
+import { useSelectedProject } from '@/[fsd]/shared/lib/hooks';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { CopyToClipboardButton } from '@/[fsd]/shared/ui/button';
 import { useForkedFromApplicationDetailsQuery, useGetPipelineTriggerQuery } from '@/api/applications';
 import { buildForkedEntityHref, capitalizeFirstChar } from '@/common/utils.jsx';
 import { LabelLinkWithToolTip } from '@/components/Fork/LabelLinkWithToolTip.jsx';
-import { useSelectedProject } from '@/hooks/useSelectedProject';
 
 const TRIGGER_TYPE_LABELS = {
   chat_message: 'Chat Message',

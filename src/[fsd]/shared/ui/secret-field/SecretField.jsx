@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { Box, InputAdornment, TextField, Tooltip } from '@mui/material';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { BaseBtn } from '@/[fsd]/shared/ui/button';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
@@ -14,7 +15,6 @@ import RefreshIcon from '@/assets/refresh-icon.svg?react';
 import { PERMISSIONS } from '@/common/constants';
 import Toggle from '@/components/Toggle.jsx';
 import useCheckPermission from '@/hooks/useCheckPermission';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import RouteDefinitions, { getBasename } from '@/routes';
 
 export const secretRegex = /^{{secret\.([A-Za-z0-9_]+)}}$/;

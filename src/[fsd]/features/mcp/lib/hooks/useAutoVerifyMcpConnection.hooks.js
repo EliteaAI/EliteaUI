@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 
 export const useAutoVerifyMcpConnection = ({
   values,

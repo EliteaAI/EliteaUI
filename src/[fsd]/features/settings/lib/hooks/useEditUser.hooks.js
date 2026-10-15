@@ -1,8 +1,8 @@
 import { useCallback } from 'react';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useUserUpdateMutation } from '@/api/admin';
 import { buildErrorMessage } from '@/common/utils';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 export const useEditUser = ({ userId, toastError, toastSuccess }) => {
   const projectId = useSelectedProjectId();

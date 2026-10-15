@@ -2,10 +2,10 @@ import { memo, useCallback, useEffect, useRef, useState } from 'react';
 
 import BaseEditor from '@/[fsd]/features/chat/ui/editors/BaseEditor';
 import { ProjectContextEditor as ProjectContextEditorFeature } from '@/[fsd]/features/settings/ui/project-context';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { useProjectContextQuery } from '@/api/projectContext';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const ProjectContextEditor = memo(props => {
   const { onCloseProjectContextEditor, isVisible, onDirtyStateChange, disableNavBlocking = false } = props;
