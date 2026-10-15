@@ -4,7 +4,8 @@ import { Box } from '@mui/material';
 
 import { useTags } from '@/[fsd]/shared/lib/hooks';
 import CardPopover from '@/components/CardPopover';
-import CardTagSectionItem from '@/components/CardTagSectionItem';
+
+import CardTagSectionItem from './CardTagSectionItem';
 
 const MAX_NUMBER_TAGS_SHOWN = 2;
 

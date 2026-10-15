@@ -15,11 +15,11 @@ import {
 } from '@/[fsd]/entities/folder';
 import { useLoadApplications } from '@/[fsd]/features/agent/lib/hooks';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
+import { useCardList } from '@/[fsd]/widgets/entity-card';
 import { CollectionStatus, ContentType, ViewMode } from '@/common/constants';
 import { buildErrorMessage, uniqueArrayByProp } from '@/common/utils';
 import CardList from '@/components/CardList';
 import Categories from '@/components/Categories';
-import useCardList from '@/hooks/useCardList';
 import RouteDefinitions from '@/routes';
 import { rightInfoPanelStyle } from '@/styles/RightInfoPanelStyle';
 

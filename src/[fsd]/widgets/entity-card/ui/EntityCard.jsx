@@ -1,6 +1,6 @@
 import { memo, useCallback, useMemo, useRef, useState } from 'react';
 
-import { Box, CardContent, Divider, IconButton, Card as MuiCard, Typography } from '@mui/material';
+import { Box, CardContent, Divider, Card as MuiCard, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { MoveToFolderButton } from '@/[fsd]/entities/folder/ui';
@@ -13,6 +13,8 @@ import {
   useDataViewMode,
   useSelectedProjectId,
 } from '@/[fsd]/shared/lib/hooks';
+import { Button } from '@/[fsd]/shared/ui';
+import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { PinButton } from '@/[fsd]/widgets/pin-toggler/ui';
 import { useEliteaAssistantRef, useGetSupportAssistantConfigQuery } from '@/[fsd]/widgets/support-assistant';
 import EliteaAssistantIcon from '@/assets/icons/elitea-assistant-icon.svg?react';
@@ -23,7 +25,6 @@ import { isApplicationCard, isSkillCard, isToolkitCard } from '@/common/checkCar
 import { ContentType, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
 import { getEntityType, getEntityTypeByCardType } from '@/common/utils';
 import AuthorContainer from '@/components/AuthorContainer';
-import CardTagSection from '@/components/CardTagSection';
 import EntityIcon from '@/components/EntityIcon';
 import { IconLinkWithToolTip } from '@/components/Fork/IconLinkWithToolTip.jsx';
 import HighlightQuery from '@/components/HighlightQuery';
@@ -31,7 +32,9 @@ import FolderIcon from '@/components/Icons/FolderIcon';
 import { useIsFrom } from '@/hooks/useIsFromSpecificPageHooks';
 import RouteDefinitions from '@/routes';
 
-const Card = memo(props => {
+import CardTagSection from './CardTagSection';
+
+const EntityCard = memo(props => {
   const {
     data = {},
     viewMode: pageViewMode,
@@ -154,7 +157,13 @@ const Card = memo(props => {
   const isWholeCardClickable = hasCardDetails && Boolean(onCardClick) && !disableCardClick;
   const isClickable = !disableCardClick;
   const hasIndexes = isToolkitCard(type) && typeof data.indexes_count === 'number';
-  const styles = cardStyles(hasCardDetails, showCardBottom, isWholeCardClickable, isClickable, hasIndexes);
+  const styles = entityCardStyles(
+    hasCardDetails,
+    showCardBottom,
+    isWholeCardClickable,
+    isClickable,
+    hasIndexes,
+  );
 
   const isOnApplicationsPage = useIsFrom(RouteDefinitions.Applications);
   const showForkedFromLink = isForked && isOnApplicationsPage;
@@ -239,8 +248,10 @@ const Card = memo(props => {
                 onClick={event => event.stopPropagation()}
               >
                 {isSupportAssistant && (
-                  <IconButton
+                  <Button.BaseBtn
+                    variant={BUTTON_VARIANTS.tertiary}
                     disableRipple
+                    aria-label="Open support assistant"
                     onClick={handleAssistantClick}
                     sx={styles.supportAssistantIconContainer}
                   >
@@ -248,7 +259,7 @@ const Card = memo(props => {
                       component={EliteaAssistantIcon}
                       sx={{ width: '1.45rem', height: '1.45rem' }}
                     />
-                  </IconButton>
+                  </Button.BaseBtn>
                 )}
                 {(((status === 'published' || status === 'embedded') && isApplicationCard(type)) ||
                   (hasPublishedVersion && isSkillCard(type))) && (
@@ -383,7 +394,7 @@ const Card = memo(props => {
   );
 });
 
-Card.displayName = 'Card';
+EntityCard.displayName = 'EntityCard';
 
 const lineClamp = lines => ({
   width: '100%',
@@ -398,7 +409,7 @@ const lineClamp = lines => ({
 });
 
 /** @type {MuiSx} */
-const cardStyles = (hasCardDetails, showCardBottom, isWholeCardClickable, isClickable, hasIndexes) => ({
+const entityCardStyles = (hasCardDetails, showCardBottom, isWholeCardClickable, isClickable, hasIndexes) => ({
   wrapper: {
     width: '100%',
     ...(hasCardDetails ? { height: '100%' } : {}),
@@ -537,10 +548,6 @@ const cardStyles = (hasCardDetails, showCardBottom, isWholeCardClickable, isClic
     minWidth: '1.75rem',
     padding: 0,
     color: palette.icon.default,
-
-    '&:hover': {
-      backgroundColor: palette.components.button.background.secondary.default,
-    },
     svg: { path: { fill: `${palette.icon.default} !important` } },
   }),
   indexesCount: {
@@ -559,4 +566,4 @@ const cardStyles = (hasCardDetails, showCardBottom, isWholeCardClickable, isClic
   },
 });
 
-export default Card;
+export default EntityCard;

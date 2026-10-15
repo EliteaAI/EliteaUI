@@ -3,12 +3,12 @@ import { useCallback, useEffect } from 'react';
 import { Box } from '@mui/material';
 
 import { usePageQuery, useSortQueryParamsFromUrl, useToast } from '@/[fsd]/shared/lib/hooks';
+import { useCardList } from '@/[fsd]/widgets/entity-card';
 import { usePublicApplicationsListQuery } from '@/api/applications';
 import { CollectionStatus, ContentType, ViewMode } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import CardList from '@/components/CardList';
 import Categories from '@/components/Categories';
-import useCardList from '@/hooks/useCardList';
 import { rightInfoPanelStyle } from '@/styles/RightInfoPanelStyle';
 
 const emptyListPlaceHolder = (
