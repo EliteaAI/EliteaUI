@@ -402,7 +402,18 @@ const AnalyticsSkillDetailed = memo(props => {
                   tickLine={{ stroke: axisStroke }}
                 />
                 <RechartsTooltip content={<ChartTooltip />} />
-                <Legend />
+                <Legend
+                  formatter={value => (
+                    <Typography
+                      variant="bodySmall"
+                      sx={styles.legendLabel}
+                    >
+                      {value}
+                    </Typography>
+                  )}
+                  iconType="circle"
+                  iconSize={8}
+                />
                 <Area
                   yAxisId="count"
                   type="monotone"
@@ -536,6 +547,7 @@ const analyticsSkillDetailedStyles = () => ({
     alignItems: 'stretch',
   },
   chartWrapper: { width: '100%', overflow: 'hidden', flex: 1, minHeight: '12.5rem' },
+  legendLabel: ({ palette }) => ({ color: palette.text.secondary }),
   link: ({ palette }) => ({ color: palette.text.accent, cursor: 'pointer' }),
   errorValue: ({ palette }) => ({ color: palette.status.rejected }),
   loadingState: { display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem' },
