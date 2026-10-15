@@ -6,7 +6,7 @@ import { useLocation, useMatch, useNavigate, useParams, useSearchParams } from '
 import { Box, Typography } from '@mui/material';
 
 import { ToolbarImportButton } from '@/[fsd]/entities/import-wizard/ui';
-import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
+import { useSelectedProjectId, useTags } from '@/[fsd]/shared/lib/hooks';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import {
   useTotalApplicationsQuery,
@@ -31,7 +31,6 @@ import Fire from '@/components/Icons/Fire';
 import HeartIcon from '@/components/Icons/HeartIcon';
 import StickyTabs from '@/components/StickyTabs';
 import ViewToggle from '@/components/ViewToggle';
-import useTags from '@/hooks/useTags';
 import { useHasAdminPermissionOfThisEntity } from '@/hooks/users/usePermissions';
 import RouteDefinitions, { PathSessionMap } from '@/routes';
 import { useTheme } from '@emotion/react';

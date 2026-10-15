@@ -3,8 +3,9 @@ import * as React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { debounce } from '@/common/utils';
-import { calculateOneTagWidthOnCard } from '@/hooks/useTags';
 import { actions as tagsActions } from '@/slices/tags';
+
+import { calculateOneTagWidthOnCard } from './useTags.hooks';
 
 // recalculate card width after CARD_WIDTH_RECALCULATE_INTERVAL while resizing
 const CARD_WIDTH_RECALCULATE_INTERVAL = 100;

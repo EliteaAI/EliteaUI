@@ -13,7 +13,7 @@ import {
   GridTableRow,
 } from '@/[fsd]/entities/grid-table/ui';
 import { McpAuthConstants, McpAuthHelpers } from '@/[fsd]/features/mcp';
-import { useGetWindowWidth } from '@/[fsd]/shared/lib/hooks';
+import { useGetWindowWidth, useSetUrlSearchParams } from '@/[fsd]/shared/lib/hooks';
 import FlowIcon from '@/assets/flow-icon.svg?react';
 import OfflineIcon from '@/assets/offline-icon.svg?react';
 import OnlineIcon from '@/assets/online-icon.svg?react';
@@ -33,7 +33,6 @@ import ApplicationsIcon from '@/components/Icons/ApplicationsIcon';
 import CalendarIcon from '@/components/Icons/CalendarIcon';
 import FolderIcon from '@/components/Icons/FolderIcon';
 import StatusBar from '@/components/StatusBar';
-import { useSetUrlSearchParams } from '@/hooks/useCardNavigate';
 import { actions as settingsActions } from '@/slices/settings';
 
 import DataTableActionsCell from './DataTableActionsCell';

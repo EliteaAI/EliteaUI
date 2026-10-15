@@ -3,12 +3,6 @@ import { useCallback, useMemo } from 'react';
 import { useLocation, useMatch, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import {
-  useAuthorIdFromUrl,
-  useAuthorNameFromUrl,
-  useSearchBar,
-  useSelectedProjectId,
-} from '@/[fsd]/shared/lib/hooks';
-import {
   ApplicationsTabs,
   AppsTabs,
   ContentType,
@@ -19,6 +13,10 @@ import {
   publicTabs,
 } from '@/common/constants';
 import RouteDefinitions, { PathSessionMap } from '@/routes';
+
+import { useSearchBar } from './useSearchBar.hooks';
+import { useAuthorIdFromUrl, useAuthorNameFromUrl } from './useSearchParamValue.hooks';
+import { useSelectedProjectId } from './useSelectedProject.hooks';
 
 const buildReplaceNavOptions = (pagePath, locationState, breadCrumb) => {
   const { routeStack } = locationState || {};
@@ -67,7 +65,7 @@ export const useSetUrlSearchParams = () => {
   );
   return setUrlSearchParams;
 };
-const useCardNavigate = props => {
+export const useCardNavigate = props => {
   const {
     viewMode,
     id,
@@ -430,5 +428,3 @@ export const useNavigateToAuthorPublicPage = () => {
 
   return { navigateToAuthorPublicPage };
 };
-
-export default useCardNavigate;

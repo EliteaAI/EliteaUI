@@ -3,14 +3,18 @@ import { memo, useCallback, useMemo } from 'react';
 import { Box, IconButton, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
-import { useDataViewMode, useProjectType, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
+import {
+  useCardNavigate,
+  useDataViewMode,
+  useProjectType,
+  useSelectedProjectId,
+} from '@/[fsd]/shared/lib/hooks';
 import { useEliteaAssistantRef, useGetSupportAssistantConfigQuery } from '@/[fsd]/widgets/support-assistant';
 import EliteaAssistantIcon from '@/assets/icons/elitea-assistant-icon.svg?react';
 import PublishIcon from '@/assets/publish-version.svg?react';
 import { isApplicationCard } from '@/common/checkCardType';
 import HighlightQuery from '@/components/HighlightQuery';
 import FolderIcon from '@/components/Icons/FolderIcon';
-import useCardNavigate from '@/hooks/useCardNavigate';
 
 const DataTableNameCell = memo(props => {
   const styles = dataTableNameCellStyles();

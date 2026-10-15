@@ -2,9 +2,9 @@ import { useCallback, useMemo } from 'react';
 
 import { useSearchParams } from 'react-router-dom';
 
+import { useSetUrlSearchParams } from '@/[fsd]/shared/lib/hooks';
 import TabGroupButton from '@/[fsd]/shared/ui/tab-group-button/TabGroupButton';
 import { SearchParams, ViewOptions } from '@/common/constants';
-import { useSetUrlSearchParams } from '@/hooks/useCardNavigate';
 
 import CardsViewIcon from './Icons/CardsViewIcon';
 import TableViewIcon from './Icons/TableViewIcon';

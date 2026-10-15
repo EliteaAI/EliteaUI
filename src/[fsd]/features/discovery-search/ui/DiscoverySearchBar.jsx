@@ -5,14 +5,13 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Box, Chip, ClickAwayListener, Popper, Typography, useTheme } from '@mui/material';
 
 import { DiscoverySearchConstants } from '@/[fsd]/features/discovery-search/lib/constants';
-import { useToast } from '@/[fsd]/shared/lib/hooks';
+import { useTags, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button, Input } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button';
 import { MIN_SEARCH_KEYWORD_LENGTH } from '@/common/constants';
 import CancelIcon from '@/components/Icons/CancelIcon';
 import RemoveIcon from '@/components/Icons/RemoveIcon';
 import SendIcon from '@/components/Icons/SendIcon';
-import useTags from '@/hooks/useTags';
 import { actions } from '@/slices/search';
 
 import DiscoverySearchList from './DiscoverySearchList';

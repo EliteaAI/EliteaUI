@@ -1,8 +1,8 @@
 import { TableCell, TableHead, TableRow, TableSortLabel, Typography } from '@mui/material';
 
+import { useSetUrlSearchParams } from '@/[fsd]/shared/lib/hooks';
 import { SearchParams, SortFields, SortOrderOptions } from '@/common/constants';
 import { filterProps } from '@/common/utils';
-import { useSetUrlSearchParams } from '@/hooks/useCardNavigate';
 
 import SortDisabledIcon from './Icons/SortDisabledIcon';
 import SortUpwardIcon from './Icons/SortUpwardIcon';

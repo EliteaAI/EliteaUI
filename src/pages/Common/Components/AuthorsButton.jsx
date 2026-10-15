@@ -1,9 +1,9 @@
 import { useFormikContext } from 'formik';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
+import { useNavigateToAuthorPublicPage } from '@/[fsd]/shared/lib/hooks';
 import { deduplicateVersionByAuthor } from '@/common/utils';
 import { VersionAuthorAvatar } from '@/components/VersionAuthorAvatar';
-import { useNavigateToAuthorPublicPage } from '@/hooks/useCardNavigate';
 
 /**
  * Common AuthorsButton component used by both Prompts and Applications

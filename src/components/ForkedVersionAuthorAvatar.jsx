@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
+import { useNavigateToAuthorPublicPage } from '@/[fsd]/shared/lib/hooks';
 import { useForkedFromApplicationDetailsQuery } from '@/api/applications';
 import { ViewMode } from '@/common/constants';
 import UserAvatar from '@/components/UserAvatar';
-import { useNavigateToAuthorPublicPage } from '@/hooks/useCardNavigate.js';
 
 export function ForkedVersionAuthorAvatar({
   forkedEntityId,

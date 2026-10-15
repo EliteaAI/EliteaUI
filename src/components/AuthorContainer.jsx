@@ -2,9 +2,9 @@ import { memo, useCallback, useRef } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
+import { useNavigateToAuthorPublicPage } from '@/[fsd]/shared/lib/hooks';
 import CardPopover from '@/components/CardPopover';
 import UserAvatar from '@/components/UserAvatar';
-import { useNavigateToAuthorPublicPage } from '@/hooks/useCardNavigate';
 
 const MAX_NUMBER_AVATARS_SHOWN = 3;
 const MAX_NUMBER_NAME_SHOWN = 1;

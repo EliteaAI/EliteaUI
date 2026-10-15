@@ -14,7 +14,7 @@ import { actions as tagsActions } from '@/slices/tags';
 const CARD_SELECTOR_PATH =
   '.MuiCardContent-root div[style="cursor: pointer; caret-color: transparent;"], .MuiCardContent-root div[style="cursor: auto; caret-color: transparent;"]';
 
-const useTags = (tagList = []) => {
+export const useTags = (tagList = []) => {
   const dispatch = useDispatch();
   const location = useLocation();
   const { tagsOnVisibleCards = [] } = useSelector(state => state.tags);
@@ -197,5 +197,3 @@ export const calculateOneTagWidthOnCard = (tag, maxWidth) => {
     width: Math.round(currentTagWidthOnCard),
   };
 };
-
-export default useTags;

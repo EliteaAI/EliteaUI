@@ -7,11 +7,10 @@ import { useForkProjectIds } from '@/[fsd]/entities/import-wizard/lib/hooks';
 import IWModalActions from '@/[fsd]/entities/import-wizard/ui/import-wizard-modal/IWModalActions';
 import IWModalContent from '@/[fsd]/entities/import-wizard/ui/import-wizard-modal/IWModalContent';
 import IWModaSucceedlContent from '@/[fsd]/entities/import-wizard/ui/import-wizard-modal/IWModalSucceedContent';
-import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
+import { useCardNavigate, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { Modal } from '@/[fsd]/shared/ui';
 import { useLazyCheckPermissionListQuery } from '@/api';
 import { ContentType, ViewMode } from '@/common/constants';
-import useCardNavigate from '@/hooks/useCardNavigate';
 
 const ImportWizardModal = memo(props => {
   const { open, onClose, isForking, sourceProjectId } = props;
