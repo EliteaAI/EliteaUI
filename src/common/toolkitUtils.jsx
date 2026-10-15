@@ -4,6 +4,7 @@ import BuildIcon from '@mui/icons-material/Build';
 import EmailIcon from '@mui/icons-material/Email';
 import { SvgIcon, useTheme } from '@mui/material';
 
+import { ConfigurationTitlesConstants } from '@/[fsd]/features/credentials/lib/constants';
 import AdoGeneralIcon from '@/assets/ado-general.svg?react';
 import AdoPlansIcon from '@/assets/ado-plans.svg?react';
 import AdoReposIcon from '@/assets/ado-repos-icon.svg?react';
@@ -82,8 +83,9 @@ import HuggingFaceIcon from '@/components/Icons/HuggingFaceIcon';
 import JsonIcon from '@/components/Icons/JsonIcon.jsx';
 import OpenAIIcon from '@/components/Icons/OpenAIIcon';
 import VertexAIIcon from '@/components/Icons/VertexAIIcon';
-import { Create_Personal_Title, Create_Project_Title, Manual_Title } from '@/hooks/useConfigurations';
 import { ToolTypes, toolIconStaticURL } from '@/pages/Applications/Components/Tools/consts';
+
+const { Create_Personal_Title, Create_Project_Title, Manual_Title } = ConfigurationTitlesConstants;
 
 const generateColorMatrix = color => {
   let r = 0,

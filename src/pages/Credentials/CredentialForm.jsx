@@ -7,7 +7,10 @@ import { useSearchParams } from 'react-router-dom';
 import { Box, CircularProgress, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
-import { LlmModelFormConstants } from '@/[fsd]/features/credentials/lib/constants';
+import {
+  ConfigurationTitlesConstants,
+  LlmModelFormConstants,
+} from '@/[fsd]/features/credentials/lib/constants';
 import { LlmModelForm } from '@/[fsd]/features/credentials/ui';
 import { CREDENTIALS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
@@ -21,8 +24,9 @@ import { FormViewToggle } from '@/[fsd]/shared/ui/tab-group-button';
 import { PUBLIC_PROJECT_ID, ToolkitViewOptions } from '@/common/constants';
 import { updateObjectByPath } from '@/common/utils.jsx';
 import useCreateConfiguration from '@/hooks/application/useCreateConfiguration';
-import { Create_Personal_Title, Create_Project_Title, Manual_Title } from '@/hooks/useConfigurations';
 import { ToolTypes } from '@/pages/Applications/Components/Tools/consts';
+
+const { Create_Personal_Title, Create_Project_Title, Manual_Title } = ConfigurationTitlesConstants;
 
 const CredentialForm = memo(props => {
   const {

@@ -126,12 +126,6 @@ vi.mock('@/routes', async importOriginal => {
   return { ...actual, getBasename: () => '' };
 });
 
-vi.mock('@/hooks/useConfigurations', () => ({
-  Manual_Title: 'Manual_Title',
-  Create_Personal_Title: 'Create_Personal_Title',
-  Create_Project_Title: 'Create_Project_Title',
-}));
-
 vi.mock('../CredentialMismatchFooter', () => ({
   default: () => <div data-testid="credential-mismatch-footer" />,
 }));

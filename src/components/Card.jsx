@@ -7,7 +7,7 @@ import { MoveToFolderButton } from '@/[fsd]/entities/folder/ui';
 import { LikeButton, useApplicationLike } from '@/[fsd]/entities/like';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import { useMcpTokenChange } from '@/[fsd]/features/mcp/lib/hooks';
-import { useDataViewMode, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
+import { useCardResize, useDataViewMode, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { PinButton } from '@/[fsd]/widgets/pin-toggler/ui';
 import { useEliteaAssistantRef, useGetSupportAssistantConfigQuery } from '@/[fsd]/widgets/support-assistant';
 import EliteaAssistantIcon from '@/assets/icons/elitea-assistant-icon.svg?react';
@@ -24,7 +24,6 @@ import { IconLinkWithToolTip } from '@/components/Fork/IconLinkWithToolTip.jsx';
 import HighlightQuery from '@/components/HighlightQuery';
 import FolderIcon from '@/components/Icons/FolderIcon';
 import useCardNavigate from '@/hooks/useCardNavigate';
-import useCardResize from '@/hooks/useCardResize';
 import { useIsFrom } from '@/hooks/useIsFromSpecificPageHooks';
 import RouteDefinitions from '@/routes';
 

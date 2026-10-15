@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { useSearchParams } from 'react-router-dom';
 
+import { ConfigurationTitlesConstants } from '@/[fsd]/features/credentials/lib/constants';
 import { CredentialErrorHelpers } from '@/[fsd]/features/credentials/lib/helpers';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
@@ -11,7 +12,8 @@ import {
   useTestConfigurationConnectionMutation,
 } from '@/api/configurations.js';
 import { buildErrorMessage } from '@/common/utils';
-import { Create_Personal_Title, Create_Project_Title, Manual_Title } from '@/hooks/useConfigurations';
+
+const { Create_Personal_Title, Create_Project_Title, Manual_Title } = ConfigurationTitlesConstants;
 
 const getRequestBody = ({ type, configurationKeys, settings, configurationName, configurationsAsSchema }) => {
   let configurationsSchema = configurationsAsSchema?.find(item => item.type === type);

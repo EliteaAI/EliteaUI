@@ -2,7 +2,6 @@ import { useMemo } from 'react';
 
 import { useLocation } from 'react-router-dom';
 
-import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import {
   ApplicationsTabs,
   AppsTabs,
@@ -13,9 +12,10 @@ import {
   ViewMode,
 } from '@/common/constants';
 import { useAuthorIdFromUrl, useAuthorNameFromUrl, useNameFromUrl } from '@/hooks/useSearchParamValue';
-import useViewMode from '@/hooks/useViewMode';
+import RouteDefinitions, { PathSessionMap } from '@/routes';
 
-import RouteDefinitions, { PathSessionMap } from '../routes';
+import { useSelectedProjectId } from './useSelectedProject.hooks';
+import { useViewMode } from './useViewMode.hooks';
 
 const getPrevPathName = (routeStack, currentPath, name, authorName) => {
   if (routeStack.length > 1) {
@@ -122,7 +122,7 @@ const hasSubPath = url => {
 
 const isPathOrSubPath = (url, basePath) => url === basePath || url.startsWith(`${basePath}/`);
 
-export default function useBackPath() {
+export const useBackPath = () => {
   const { pathname, search, state: locationState } = useLocation();
   // const location = useLocation();
   const isCreating = useMemo(
@@ -192,4 +192,4 @@ export default function useBackPath() {
   ]);
 
   return prevPathInfo;
-}
+};

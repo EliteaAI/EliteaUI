@@ -13,6 +13,7 @@ import {
   useFolderApplications,
   useFolderView,
 } from '@/[fsd]/entities/folder';
+import { useLoadApplications } from '@/[fsd]/features/agent/lib/hooks';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { CollectionStatus, ContentType, ViewMode } from '@/common/constants';
 import { buildErrorMessage, uniqueArrayByProp } from '@/common/utils';
@@ -23,7 +24,6 @@ import RouteDefinitions from '@/routes';
 import { rightInfoPanelStyle } from '@/styles/RightInfoPanelStyle';
 
 import RightInfoPanel from '../../components/RightInfoPanel';
-import { useLoadApplications } from '../../hooks/useLoadApplications';
 
 const EmptyListPlaceHolder = memo(props => {
   const { query } = props;

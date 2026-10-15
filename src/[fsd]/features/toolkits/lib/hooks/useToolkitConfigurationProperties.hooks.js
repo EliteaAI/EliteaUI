@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import useGetCurrentConfigurationAsSchemas from '@/hooks/useGetCurrentConfigurationAsSchemas';
+import { useGetCurrentConfigurationAsSchemas } from '@/[fsd]/features/credentials/lib/hooks';
 
 import { useGetCurrentToolkitSchemas } from './useGetCurrentToolkitSchemas.hooks';
 import { useParseSections } from './useParseSections.hooks';

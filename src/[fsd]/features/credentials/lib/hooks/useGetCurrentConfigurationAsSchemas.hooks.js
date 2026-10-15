@@ -15,7 +15,7 @@ const ALL_SECTIONS = [
   'tts',
 ];
 
-export default function useGetCurrentConfigurationAsSchemas({ skip = false } = {}) {
+export const useGetCurrentConfigurationAsSchemas = ({ skip = false } = {}) => {
   // Scoped because this feeds the create form's schema lookup, which is reachable by
   // direct URL — gating only the type picker would leave that route open
   const projectId = useSelectedProject()?.id;
@@ -32,4 +32,4 @@ export default function useGetCurrentConfigurationAsSchemas({ skip = false } = {
     isFetching,
     isLoading,
   };
-}
+};

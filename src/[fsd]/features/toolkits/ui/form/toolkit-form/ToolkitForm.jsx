@@ -6,6 +6,8 @@ import { useParams, useSearchParams } from 'react-router-dom';
 
 import { Box, CircularProgress, Tooltip, Typography } from '@mui/material';
 
+import { ConfigurationTitlesConstants } from '@/[fsd]/features/credentials/lib/constants';
+import { useGetCurrentConfigurationAsSchemas } from '@/[fsd]/features/credentials/lib/hooks';
 import { McpAuthHelpers, McpPatBanner } from '@/[fsd]/features/mcp';
 import { ToolkitFormConstants, ToolkitLayoutConstants } from '@/[fsd]/features/toolkits/lib/constants';
 import { ToolComponentHelpers, ToolkitFormHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
@@ -27,11 +29,11 @@ import { convertToolkitSchema } from '@/common/toolkitSchemaUtils';
 import { updateObjectByPath } from '@/common/utils.jsx';
 import useCreateConfiguration from '@/hooks/application/useCreateConfiguration';
 import { useIconMetaTooltipType } from '@/hooks/toolkit/useIconMetaTooltipType.js';
-import { Create_Personal_Title, Create_Project_Title } from '@/hooks/useConfigurations';
-import useGetCurrentConfigurationAsSchemas from '@/hooks/useGetCurrentConfigurationAsSchemas';
 import { formatTitleFromSnakeCase } from '@/utils/stringUtils';
 
 import ToolkitsOperationButtons from './ToolkitsOperationButtons.jsx';
+
+const { Create_Personal_Title, Create_Project_Title } = ConfigurationTitlesConstants;
 
 const { ToolTypes } = ToolkitFormConstants;
 
