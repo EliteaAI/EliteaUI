@@ -1,6 +1,6 @@
 import { LOCKED_SKILL_VERSION_STATUSES } from '@/[fsd]/features/skill/lib/constants/skill.constants';
 import { DEFAULT_MAX_TOKENS, DEFAULT_TEMPERATURE } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
-import { autoModel, isAutoSelection, selectionFields } from '@/[fsd]/shared/lib/utils/autoRouting.utils';
+import { autoModel, isAutoSelection } from '@/[fsd]/shared/lib/utils/autoRouting.utils';
 import {
   defaultReasoningEffortFor,
   generateLLMSettings,
@@ -92,18 +92,6 @@ export const testPanelSettingsFor = (savedLlmSettings, model) => ({
         reasoning_effort: savedLlmSettings?.reasoning_effort ?? defaultReasoningEffortFor(model),
       }
     : { temperature: savedLlmSettings?.temperature ?? DEFAULT_TEMPERATURE, reasoning_effort: null }),
-});
-
-const testPanelSelectionFor = (model, savedLlmSettings) =>
-  isAutoSelection(model) && isAutoSelection(savedLlmSettings)
-    ? selectionFields({ selection: savedLlmSettings.selection })
-    : selectionFields(model);
-
-export const testPanelRequestSettings = (model, llmSettings, savedLlmSettings) => ({
-  temperature: llmSettings.temperature ?? null,
-  max_tokens: llmSettings.max_tokens ?? DEFAULT_MAX_TOKENS,
-  reasoning_effort: llmSettings.reasoning_effort ?? null,
-  ...testPanelSelectionFor(model, savedLlmSettings),
 });
 
 export const withRunStepsLimit = (versionLLMSettings, runLLMSettings) =>
