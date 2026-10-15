@@ -47,15 +47,15 @@ describe('hasUnsavedRunChanges', () => {
     expect(hasUnsavedRunChanges(edited, saved)).toBe(true);
   });
 
-  it('ignores key order and unset fields in the saved settings', () => {
-    const reordered = formValues({
+  it('stays in Run mode when only the model changes, like the agent chat pane', () => {
+    const edited = formValues({
       ...saved.version_details,
       run_settings: {
         ignore_project_context: false,
-        llm_settings: { temperature: 0.3, reasoning_effort: null, model_name: 'gpt-4.1' },
+        llm_settings: { model_name: 'claude-haiku', temperature: 0.7 },
       },
     });
-    expect(hasUnsavedRunChanges(reordered, saved)).toBe(false);
+    expect(hasUnsavedRunChanges(edited, saved)).toBe(false);
   });
 
   it('treats never-configured settings like an explicit empty configuration', () => {

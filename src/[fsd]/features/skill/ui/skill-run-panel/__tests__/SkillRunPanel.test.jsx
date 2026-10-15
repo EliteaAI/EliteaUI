@@ -22,6 +22,7 @@ vi.mock('@/[fsd]/features/chat/ui', async () => ({
 vi.mock('@/[fsd]/features/skill/lib/hooks', () => ({
   useSkillRunChat: () => fixture.runChat,
   useFocusRunInput: () => {},
+  useSkillVersionModel: () => ({ canEditVersionModel: false }),
 }));
 vi.mock('@/[fsd]/shared/ui/button', async importOriginal => ({
   ...(await importOriginal()),
@@ -32,7 +33,7 @@ vi.mock('@/[fsd]/widgets/context-budget', () => ({
 }));
 vi.mock('@/components/Chat/FullScreenToggle', () => ({ default: () => null }));
 vi.mock('@/hooks/chat/useUploadAttachments', () => ({ default: () => ({}) }));
-vi.mock('@/hooks/useSelectedProject', () => ({ useSelectedProjectId: () => 2 }));
+vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({ useSelectedProjectId: () => 2 }));
 
 const theme = createTheme({ palette: lightPalette });
 const runWithMessages = {

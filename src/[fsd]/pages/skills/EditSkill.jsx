@@ -21,7 +21,8 @@ import {
   useSkillDetailsQuery,
 } from '@/[fsd]/features/skill';
 import { SKILL_RUN_FOCUS_TARGET, SKILL_RUN_SEARCH_PARAMS } from '@/[fsd]/features/skill/lib/constants';
-import { readRunConversationId } from '@/[fsd]/features/skill/lib/helpers';
+import { readRunConversationId, withDefaultSkillModel } from '@/[fsd]/features/skill/lib/helpers';
+import { useSkillModels } from '@/[fsd]/features/skill/lib/hooks';
 import {
   useRestoredConversation,
   useRunHistoryNavigation,
@@ -45,7 +46,7 @@ import {
 import Page404 from '@/pages/Page404.jsx';
 import RouteDefinitions from '@/routes';
 
-const buildInitialValues = data => ({
+const buildInitialValues = (data, defaultModel) => ({
   id: data?.id ?? null,
   name: data?.name || '',
   description: data?.description || '',
@@ -60,7 +61,7 @@ const buildInitialValues = data => ({
     // The publish/unpublish hooks gate on the current version's status read
     // from formik values, so it must be seeded here.
     status: data?.version_details?.status ?? null,
-    run_settings: data?.version_details?.run_settings ?? null,
+    run_settings: withDefaultSkillModel(data?.version_details?.run_settings ?? null, defaultModel),
   },
 });
 
@@ -166,7 +167,9 @@ const EditSkill = memo(() => {
     [dispatch, navigate, onRunConversationChange, projectId, skillId, tab, toastError],
   );
 
-  const initialValues = useMemo(() => buildInitialValues(data), [data]);
+  const { defaultModel, isLoadingModels } = useSkillModels();
+  const isLoadingForm = isFetching || isLoadingModels;
+  const initialValues = useMemo(() => buildInitialValues(data, defaultModel), [data, defaultModel]);
 
   const formKey = useMemo(
     () =>
@@ -316,7 +319,7 @@ const EditSkill = memo(() => {
                   onShowHistory={goToRunHistory}
                 />
               ),
-              content: isFetching ? (
+              content: isLoadingForm ? (
                 <Box sx={styles.loadingContainer}>
                   <CircularProgress />
                 </Box>

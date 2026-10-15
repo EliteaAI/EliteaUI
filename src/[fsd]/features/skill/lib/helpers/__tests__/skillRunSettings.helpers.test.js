@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  findRunnableModel,
   hasVersionModelChanged,
   includesProjectContext,
   isSkillChatModelPending,
@@ -9,10 +10,13 @@ import {
   resolveSkillChatModel,
   testPanelSettingsFor,
   toRunSettingsPayload,
+  withDefaultSkillModel,
   withPinnedSkillVersion,
   withRunSettings,
+  withRunStepsLimit,
   withoutSkillChatModel,
 } from '@/[fsd]/features/skill/lib/helpers/skillRunSettings.helpers';
+import { DEFAULT_MAX_TOKENS, DEFAULT_TEMPERATURE } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
 
 describe('toRunSettingsPayload', () => {
   it('keeps never-configured run settings as null', () => {
@@ -220,5 +224,83 @@ describe('hasVersionModelChanged', () => {
         values({ model_name: 'haiku', max_tokens: 10 }),
       ),
     ).toBe(false);
+  });
+});
+
+describe('withDefaultSkillModel', () => {
+  const DEFAULT_MODEL = { name: 'haiku', project_id: 1 };
+
+  it('pins the default model with its settings when the version has none', () => {
+    expect(withDefaultSkillModel({ ignore_project_context: true }, DEFAULT_MODEL)).toEqual({
+      ignore_project_context: true,
+      llm_settings: {
+        model_name: 'haiku',
+        model_project_id: 1,
+        max_tokens: DEFAULT_MAX_TOKENS,
+        temperature: DEFAULT_TEMPERATURE,
+      },
+    });
+  });
+
+  it('keeps settings the user already tuned', () => {
+    const { llm_settings } = withDefaultSkillModel({ llm_settings: { max_tokens: 8192 } }, DEFAULT_MODEL);
+
+    expect(llm_settings).toMatchObject({ model_name: 'haiku', max_tokens: 8192 });
+  });
+
+  it('keeps a chosen model or Auto', () => {
+    const fixed = { llm_settings: { model_name: 'sonnet', model_project_id: 2 } };
+    const auto = { llm_settings: { selection: { mode: 'auto' } } };
+
+    expect(withDefaultSkillModel(fixed, DEFAULT_MODEL)).toBe(fixed);
+    expect(withDefaultSkillModel(auto, DEFAULT_MODEL)).toBe(auto);
+  });
+
+  it('leaves the version alone until the models load', () => {
+    expect(withDefaultSkillModel(null, null)).toBeNull();
+  });
+});
+
+describe('findRunnableModel', () => {
+  const HAIKU = { name: 'haiku', project_id: 1 };
+  const LOCAL_SONNET = { name: 'sonnet', project_id: 2 };
+  const AUTO = { name: 'auto', selection: { mode: 'auto' } };
+  const MODELS = [HAIKU, LOCAL_SONNET, AUTO];
+
+  it('runs the saved model only on its own project, like a skill Run', () => {
+    expect(findRunnableModel(MODELS, { model_name: 'sonnet', model_project_id: 2 })).toBe(LOCAL_SONNET);
+  });
+
+  it('does not borrow a same-named model from another project', () => {
+    expect(findRunnableModel(MODELS, { model_name: 'sonnet', model_project_id: 9 })).toBeNull();
+  });
+
+  it('matches by name when no project is saved', () => {
+    expect(findRunnableModel(MODELS, { model_name: 'haiku' })).toBe(HAIKU);
+  });
+
+  it('runs Auto only while Auto is offered', () => {
+    const auto = { selection: { mode: 'auto' } };
+    expect(findRunnableModel(MODELS, auto)).toBe(AUTO);
+    expect(findRunnableModel([HAIKU], auto)).toBeNull();
+  });
+});
+
+describe('withRunStepsLimit', () => {
+  const VERSION = { model_name: 'sonnet', model_project_id: 2 };
+
+  it("carries the run's steps limit with the unsaved version model", () => {
+    expect(withRunStepsLimit(VERSION, { model_name: 'stale', steps_limit: 12 })).toEqual({
+      ...VERSION,
+      steps_limit: 12,
+    });
+  });
+
+  it('keeps the version model when the run has no steps limit', () => {
+    expect(withRunStepsLimit(VERSION, null)).toBe(VERSION);
+  });
+
+  it('sends nothing once the version model is saved or discarded', () => {
+    expect(withRunStepsLimit(null, { model_name: 'stale', steps_limit: 12 })).toBeNull();
   });
 });

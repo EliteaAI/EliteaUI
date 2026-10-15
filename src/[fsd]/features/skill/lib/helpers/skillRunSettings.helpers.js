@@ -3,6 +3,7 @@ import { DEFAULT_MAX_TOKENS, DEFAULT_TEMPERATURE } from '@/[fsd]/shared/lib/cons
 import { autoModel, isAutoSelection } from '@/[fsd]/shared/lib/utils/autoRouting.utils';
 import {
   defaultReasoningEffortFor,
+  generateLLMSettings,
   modelSupportsReasoning,
 } from '@/[fsd]/shared/lib/utils/llmSettings.utils';
 
@@ -29,7 +30,27 @@ export const findSkillSavedModel = (models, llmSettings) => {
   );
 };
 
+export const findRunnableModel = (models, llmSettings) => {
+  if (isAutoSelection(llmSettings)) return models.find(model => isAutoSelection(model)) || null;
+  const name = llmSettings?.model_name;
+  if (!name) return null;
+  const projectId = llmSettings.model_project_id;
+  return (
+    models.find(model => model.name === name && (projectId == null || model.project_id === projectId)) || null
+  );
+};
+
 const choosesModel = llmSettings => !!llmSettings?.model_name || isAutoSelection(llmSettings);
+
+export const withDefaultSkillModel = (runSettings, defaultModel) =>
+  choosesModel(runSettings?.llm_settings) || !defaultModel
+    ? runSettings
+    : {
+        ...runSettings,
+        llm_settings: generateLLMSettings(defaultModel, runSettings?.llm_settings || {}, {
+          includeModelInfo: true,
+        }),
+      };
 
 export const hasSkillChatModelOverride = entitySettings => choosesModel(entitySettings?.llm_settings);
 
@@ -73,13 +94,13 @@ export const testPanelSettingsFor = (savedLlmSettings, model) => ({
     : { temperature: savedLlmSettings?.temperature ?? DEFAULT_TEMPERATURE, reasoning_effort: null }),
 });
 
+export const withRunStepsLimit = (versionLLMSettings, runLLMSettings) =>
+  versionLLMSettings && runLLMSettings?.steps_limit !== undefined
+    ? { ...versionLLMSettings, steps_limit: runLLMSettings.steps_limit }
+    : versionLLMSettings;
+
 const sortEntriesByKey = record =>
   Object.entries(record || {}).sort(([left], [right]) => left.localeCompare(right));
-
-const buildRunSettingsSignature = runSettings => {
-  const { ignore_project_context = false, llm_settings } = toRunSettingsPayload(runSettings) || {};
-  return JSON.stringify([ignore_project_context, sortEntriesByKey(llm_settings)]);
-};
 
 const buildVersionModelSignature = values =>
   JSON.stringify(sortEntriesByKey(toRunSettingsPayload(values?.version_details?.run_settings)?.llm_settings));
@@ -89,5 +110,5 @@ export const hasVersionModelChanged = (values, initialValues) =>
 
 export const hasUnsavedRunChanges = (values, initialValues) =>
   (values?.version_details?.instructions ?? '') !== (initialValues?.version_details?.instructions ?? '') ||
-  buildRunSettingsSignature(values?.version_details?.run_settings) !==
-    buildRunSettingsSignature(initialValues?.version_details?.run_settings);
+  includesProjectContext(values?.version_details?.run_settings) !==
+    includesProjectContext(initialValues?.version_details?.run_settings);

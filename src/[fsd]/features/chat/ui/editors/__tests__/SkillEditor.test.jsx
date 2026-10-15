@@ -5,15 +5,20 @@ import { act, cleanup, render } from '@testing-library/react';
 
 import SkillEditor from '../SkillEditor';
 
-const captured = vi.hoisted(() => ({ onSaved: null, canvasSkill: null }));
+const captured = vi.hoisted(() => ({ onSaved: null, canvasSkill: null, initialValues: null }));
+const DEFAULT_MODEL = vi.hoisted(() => ({ name: 'haiku', project_id: 1 }));
+const models = vi.hoisted(() => ({ isLoadingModels: false }));
 
 vi.mock('@/[fsd]/features/chat/ui/editors/BaseEditor', () => ({
-  default: ({ saveButton, children }) => (
-    <>
-      {saveButton}
-      {children}
-    </>
-  ),
+  default: ({ saveButton, children, initialValues }) => {
+    captured.initialValues = initialValues;
+    return (
+      <>
+        {saveButton}
+        {children}
+      </>
+    );
+  },
 }));
 vi.mock('@/[fsd]/features/chat/ui/editors/SkillEditorSaveButton', () => ({
   default: ({ onModelSaved }) => {
@@ -28,8 +33,11 @@ vi.mock('@/[fsd]/features/chat/ui/editors/SkillCanvasModelSelector', () => ({
   },
 }));
 vi.mock('@/[fsd]/features/skill/api', () => ({ useSkillDetailsQuery: () => ({ data: undefined }) }));
+vi.mock('@/[fsd]/features/skill/lib/hooks', () => ({
+  useSkillModels: () => ({ defaultModel: DEFAULT_MODEL, isLoadingModels: models.isLoadingModels }),
+}));
 vi.mock('@/[fsd]/features/skill/lib/validation', () => ({ SkillValidateSchema: {} }));
-vi.mock('@/[fsd]/features/skill/ui', () => ({ CreateSkillForm: () => null }));
+vi.mock('@/[fsd]/features/skill/ui', () => ({ CreateSkillForm: () => <div data-testid="skill-form" /> }));
 vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({ useSelectedProjectId: () => 2 }));
 
 const skill = llmSettings => ({
@@ -37,6 +45,43 @@ const skill = llmSettings => ({
   entity_name: 'skill',
   entity_meta: { id: 174 },
   entity_settings: { version_id: 8, ...(llmSettings ? { llm_settings: llmSettings } : {}) },
+});
+
+describe('SkillEditor initial values', () => {
+  afterEach(() => cleanup());
+
+  it('pins the project default model on a version without one', () => {
+    render(
+      <SkillEditor
+        skill={skill()}
+        isVisible
+      />,
+    );
+
+    expect(captured.initialValues.version_details.run_settings.llm_settings).toMatchObject({
+      model_name: 'haiku',
+      model_project_id: 1,
+    });
+  });
+});
+
+describe('SkillEditor while the models load', () => {
+  afterEach(() => {
+    cleanup();
+    models.isLoadingModels = false;
+  });
+
+  it('holds the form back so a late default model cannot reset typed edits', () => {
+    models.isLoadingModels = true;
+    const { queryByTestId } = render(
+      <SkillEditor
+        skill={skill()}
+        isVisible
+      />,
+    );
+
+    expect(queryByTestId('skill-form')).toBeNull();
+  });
 });
 
 describe('SkillEditor save', () => {
