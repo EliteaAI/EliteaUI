@@ -2,7 +2,6 @@ import { memo, useCallback, useMemo, useState } from 'react';
 
 import { Box, MenuItem, Typography } from '@mui/material';
 
-import useToast from '@/hooks/useToast';
 import { Input, Select } from '@/[fsd]/shared/ui';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import {
