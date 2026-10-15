@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 import { Box, Tooltip, Typography } from '@mui/material';
 
 import { useTrackEvent } from '@/GA';
+import { ConfigurationTitlesConstants } from '@/[fsd]/features/credentials/lib/constants';
 import { useCredentialValidation, useCredentialsData } from '@/[fsd]/features/credentials/lib/hooks';
 import { CredentialOptionLabel } from '@/[fsd]/features/credentials/ui';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp';
@@ -14,12 +15,13 @@ import { Select } from '@/[fsd]/shared/ui';
 import { BaseBtn } from '@/[fsd]/shared/ui/button';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import RefreshIcon from '@/assets/refresh-icon.svg?react';
-import { Create_Personal_Title, Create_Project_Title, Manual_Title } from '@/hooks/useConfigurations';
 import RouteDefinitions, { getBasename } from '@/routes';
 
 import CredentialCreateLabel from './CredentialCreateLabel';
 import CredentialMismatchFooter from './CredentialMismatchFooter';
 import CredentialNotFoundValue from './CredentialNotFoundValue';
+
+const { Create_Personal_Title, Create_Project_Title, Manual_Title } = ConfigurationTitlesConstants;
 
 const { GA_EVENT_NAMES, GA_EVENT_PARAMS } = AnalyticConstants;
 

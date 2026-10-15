@@ -7,6 +7,7 @@ import { Box, Grid, Typography } from '@mui/material';
 
 import { LlmModelFormConstants } from '@/[fsd]/features/credentials/lib/constants';
 import { LlmModelFormHelpers } from '@/[fsd]/features/credentials/lib/helpers';
+import { useGetCurrentConfigurationAsSchemas } from '@/[fsd]/features/credentials/lib/hooks';
 import { CredentialsTabBar } from '@/[fsd]/features/credentials/ui';
 import { useToolkitConfigurationProperties } from '@/[fsd]/features/toolkits/lib/hooks';
 import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks';
@@ -16,7 +17,6 @@ import { SPACING } from '@/common/designTokens';
 import { getPropValue } from '@/common/getToolInitialValueBySchema.js';
 import StyledTabs from '@/components/StyledTabs';
 import { useGetMultiSectionConfigurations } from '@/hooks/credentials/useMultiSectionConfigurations.js';
-import useGetCurrentConfigurationAsSchemas from '@/hooks/useGetCurrentConfigurationAsSchemas';
 import { StyledGridContainer } from '@/pages/Common/Components';
 import CredentialForm from '@/pages/Credentials/CredentialForm.jsx';
 import CredentialTypeSelector from '@/pages/Credentials/CredentialTypeSelector.jsx';

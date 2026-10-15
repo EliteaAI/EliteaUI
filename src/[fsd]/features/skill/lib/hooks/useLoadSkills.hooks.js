@@ -3,7 +3,7 @@ import { useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 
 import { useSkillListQuery } from '@/[fsd]/features/skill/api';
-import usePageQuery from '@/hooks/usePageQuery';
+import { usePageQuery } from '@/[fsd]/shared/lib/hooks';
 import { useAuthorIdFromUrl } from '@/hooks/useSearchParamValue';
 
 export const useLoadSkills = ({

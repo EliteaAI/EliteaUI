@@ -1,11 +1,11 @@
 import { useLocation } from 'react-router-dom';
 
-import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
+import { useViewModeFromUrl } from '@/hooks/useSearchParamValue';
 
-import { useViewModeFromUrl } from './useSearchParamValue';
+import { useSelectedProjectId } from './useSelectedProject.hooks';
 
-export default function useViewMode() {
+export const useViewMode = () => {
   const viewModeFromUrl = useViewModeFromUrl();
   const { state } = useLocation();
   const projectId = useSelectedProjectId();
@@ -16,4 +16,4 @@ export default function useViewMode() {
     viewModeFromState ||
     (projectId == PUBLIC_PROJECT_ID ? ViewMode.Public : ViewMode.Owner)
   );
-}
+};

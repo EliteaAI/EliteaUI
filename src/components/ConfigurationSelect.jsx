@@ -4,13 +4,15 @@ import { useSelector } from 'react-redux';
 
 import { Typography, debounce, useTheme } from '@mui/material';
 
+import { ConfigurationTitlesConstants } from '@/[fsd]/features/credentials/lib/constants';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { Select } from '@/[fsd]/shared/ui';
 import ToolIcon from '@/assets/tool-icon.svg?react';
-import { Create_Personal_Title, Create_Project_Title, Manual_Title } from '@/hooks/useConfigurations';
 
 import FolderIcon from './Icons/FolderIcon';
 import Person from './Icons/Person';
+
+const { Create_Personal_Title, Create_Project_Title, Manual_Title } = ConfigurationTitlesConstants;
 
 const SCROLL_LOAD_MORE_THRESHOLD = 10;
 const DEBOUNCE_DELAY_MS = 300;

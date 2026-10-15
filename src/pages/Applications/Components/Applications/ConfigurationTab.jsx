@@ -11,6 +11,7 @@ import {
   useRestoredConversation,
   useRunHistoryNavigation,
   useSelectedProjectId,
+  useViewMode,
 } from '@/[fsd]/shared/lib/hooks';
 import { ViewRunHistoryButton } from '@/[fsd]/shared/ui/button';
 import { ContextBudgetUI } from '@/[fsd]/widgets/context-budget';
@@ -19,7 +20,6 @@ import FullScreenToggle from '@/components/Chat/FullScreenToggle';
 import DirtyDetector from '@/components/Formik/DirtyDetector';
 import useAgentMCPToolsStatusMonitor from '@/hooks/application/useAgentMCPToolsStatusMonitor';
 import useUploadAttachments from '@/hooks/chat/useUploadAttachments';
-import useViewMode from '@/hooks/useViewMode';
 import {
   ContentContainer,
   LeftGridItem,

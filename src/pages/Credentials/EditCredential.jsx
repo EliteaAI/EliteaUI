@@ -5,6 +5,7 @@ import { useParams } from 'react-router-dom';
 
 import { Grid } from '@mui/material';
 
+import { useGetCurrentConfigurationAsSchemas } from '@/[fsd]/features/credentials/lib/hooks';
 import { CredentialsControls, CredentialsTabBar } from '@/[fsd]/features/credentials/ui';
 import { CREDENTIALS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { useToolkitConfigurationProperties } from '@/[fsd]/features/toolkits/lib/hooks';
@@ -15,7 +16,6 @@ import { convertCredentialConfigSchema } from '@/common/credentialSchemaUtils';
 import { SPACING } from '@/common/designTokens';
 import { isNotFoundError } from '@/common/utils.jsx';
 import StyledTabs from '@/components/StyledTabs';
-import useGetCurrentConfigurationAsSchemas from '@/hooks/useGetCurrentConfigurationAsSchemas';
 import { StyledGridContainer } from '@/pages/Common/Components';
 import CredentialForm from '@/pages/Credentials/CredentialForm.jsx';
 import Page404 from '@/pages/Page404.jsx';

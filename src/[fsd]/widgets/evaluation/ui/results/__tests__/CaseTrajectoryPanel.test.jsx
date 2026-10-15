@@ -254,7 +254,9 @@ describe('CaseTrajectoryPanel step payloads', () => {
           ...recordedExecution,
           status: 'ok',
           trajectory: {
-            steps: [{ i: 0, kind: 'tool', tool_name: 'search', status: 'ok', tool_output: 'big-output-marker' }],
+            steps: [
+              { i: 0, kind: 'tool', tool_name: 'search', status: 'ok', tool_output: 'big-output-marker' },
+            ],
           },
         },
       ],

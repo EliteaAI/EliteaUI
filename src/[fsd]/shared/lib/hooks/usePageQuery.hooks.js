@@ -2,10 +2,11 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 
-import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import useTags from '@/hooks/useTags';
 
-const usePageQuery = (specifiedProjectId, extraParams) => {
+import { useSelectedProjectId } from './useSelectedProject.hooks';
+
+export const usePageQuery = (specifiedProjectId, extraParams) => {
   const pageSizeFromRedux = useSelector(state => state.settings.pageSize);
   const { query: queryFromRedux } = useSelector(state => state.search);
   const { tagList } = useSelector(state => state.tags);
@@ -76,5 +77,3 @@ const usePageQuery = (specifiedProjectId, extraParams) => {
 
   return { ...requestParams, setPage, tagList, calculateTagsWidthOnCard };
 };
-
-export default usePageQuery;

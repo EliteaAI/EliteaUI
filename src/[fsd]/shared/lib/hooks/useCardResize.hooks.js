@@ -3,14 +3,13 @@ import * as React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { debounce } from '@/common/utils';
+import { calculateOneTagWidthOnCard } from '@/hooks/useTags';
 import { actions as tagsActions } from '@/slices/tags';
-
-import { calculateOneTagWidthOnCard } from './useTags';
 
 // recalculate card width after CARD_WIDTH_RECALCULATE_INTERVAL while resizing
 const CARD_WIDTH_RECALCULATE_INTERVAL = 100;
 
-const useCardResize = (cardRef, notFirstCard = 0) => {
+export const useCardResize = (cardRef, notFirstCard = 0) => {
   const [cardWidth, setCardWidth] = React.useState(0);
   const { currentCardWidth, tagWidthOnCard } = useSelector(state => state.tags);
   // const dispatch = useDispatch();
@@ -101,5 +100,3 @@ const useCardResize = (cardRef, notFirstCard = 0) => {
     processTagsByCurrentCardWidth,
   };
 };
-
-export default useCardResize;

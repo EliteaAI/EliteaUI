@@ -5,12 +5,11 @@ import { useSelector } from 'react-redux';
 import { useTheme } from '@mui/material';
 
 import { CredentialHelpers } from '@/[fsd]/features/credentials/lib/helpers';
+import { useGetCurrentConfigurationAsSchemas } from '@/[fsd]/features/credentials/lib/hooks';
 import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
-import { useUserList } from '@/[fsd]/shared/lib/hooks';
+import { usePageQuery, useUserList } from '@/[fsd]/shared/lib/hooks';
 import { useGetConfigurationsListQuery } from '@/api/configurations';
 import { pinnedComparator, stableSort } from '@/common/utils';
-import useGetCurrentConfigurationAsSchemas from '@/hooks/useGetCurrentConfigurationAsSchemas';
-import usePageQuery from '@/hooks/usePageQuery';
 import useSortQueryParamsFromUrl from '@/hooks/useSortQueryParamsFromUrl';
 
 export const useLoadCredentials = ({

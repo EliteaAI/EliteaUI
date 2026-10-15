@@ -5,14 +5,13 @@ import { useFormikContext } from 'formik';
 import { Box } from '@mui/material';
 
 import { PinEntityConstants } from '@/[fsd]/shared/lib/constants';
-import { useProjectType } from '@/[fsd]/shared/lib/hooks';
+import { useProjectType, useViewMode } from '@/[fsd]/shared/lib/hooks';
 import { Controls } from '@/[fsd]/shared/ui';
 import { usePin, usePinMenu } from '@/[fsd]/widgets/pin-toggler';
 import { PERMISSIONS, ViewMode } from '@/common/constants';
 import { useCopyLinkMenu } from '@/components/CopyLinkToEntityButton.jsx';
 import { useForkEntityMenu } from '@/components/Fork/ForkEntityButton';
 import useCheckPermission from '@/hooks/useCheckPermission';
-import useViewMode from '@/hooks/useViewMode';
 import AuthorsButton from '@/pages/Applications/Components/Applications/AuthorsButton';
 import { useDeleteToolkitMenu } from '@/pages/Toolkits/DeleteToolkitButton.jsx';
 import { useExportToolkitMenu } from '@/pages/Toolkits/ExportToolkitButton';

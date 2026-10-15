@@ -1,7 +1,7 @@
-import useViewMode from '@/hooks/useViewMode';
 import { getBasename } from '@/routes';
 
 import { usePageDetails } from './usePageDetails.hooks';
+import { useViewMode } from './useViewMode.hooks';
 
 export const useProjectEntityLink = ({ isRelative, versionId } = {}) => {
   const baseUrl = `${window.location.protocol}//${window.location.host}`;

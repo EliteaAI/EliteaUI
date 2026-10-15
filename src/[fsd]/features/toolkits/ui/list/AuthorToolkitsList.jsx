@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 
 import { useLoadToolkits } from '@/[fsd]/features/toolkits/lib/hooks';
 import { AuthorEmptyListPlaceHolder } from '@/[fsd]/features/toolkits/ui/list';
-import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
+import { useSelectedProjectId, useToast, useViewMode } from '@/[fsd]/shared/lib/hooks';
 import { ContentType } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import CardList from '@/components/CardList';
@@ -12,7 +12,6 @@ import RightInfoPanel from '@/components/RightInfoPanel';
 import useCardList from '@/hooks/useCardList';
 import { useAuthorIdFromUrl } from '@/hooks/useSearchParamValue';
 import useTags from '@/hooks/useTags';
-import useViewMode from '@/hooks/useViewMode';
 import { getQueryStatuses } from '@/utils/getQueryStatus';
 
 const AuthorToolkitsList = memo(props => {

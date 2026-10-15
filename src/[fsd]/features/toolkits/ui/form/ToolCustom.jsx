@@ -3,13 +3,15 @@ import { memo, useCallback, useEffect, useState } from 'react';
 import { Box, FormControl, FormHelperText, IconButton, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
+import { ConfigurationTitlesConstants } from '@/[fsd]/features/credentials/lib/constants';
 import { ToolCustomHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useToolkitNameProp } from '@/[fsd]/features/toolkits/lib/hooks';
 import { useLanguageLinter, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Field } from '@/[fsd]/shared/ui';
 import { handleCopy, isNullOrUndefined } from '@/common/utils';
 import CopyIcon from '@/components/Icons/CopyIcon';
-import { Manual_Title } from '@/hooks/useConfigurations';
+
+const { Manual_Title } = ConfigurationTitlesConstants;
 
 const ToolCustom = memo(props => {
   const {

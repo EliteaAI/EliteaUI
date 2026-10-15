@@ -26,7 +26,11 @@ const cases = [
   {
     id: 1,
     input: 'find EL bugs',
-    expected_trajectory: { match: 'in_order', tools: [{ name: 'jira_search' }], forbidden: ['delete_branch'] },
+    expected_trajectory: {
+      match: 'in_order',
+      tools: [{ name: 'jira_search' }],
+      forbidden: ['delete_branch'],
+    },
   },
   { id: 2, input: 'say hi', expected_trajectory: null },
 ];

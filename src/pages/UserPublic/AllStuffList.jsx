@@ -4,19 +4,22 @@ import { useSelector } from 'react-redux';
 
 import { Typography } from '@mui/material';
 
+import { useLoadApplications } from '@/[fsd]/features/agent/lib/hooks';
 import { useLoadToolkits } from '@/[fsd]/features/toolkits/lib/hooks';
-import { useAuthorName, useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
+import {
+  useAuthorName,
+  usePageQuery,
+  useSelectedProjectId,
+  useToast,
+  useViewMode,
+} from '@/[fsd]/shared/lib/hooks';
 import { ContentType } from '@/common/constants';
 import { buildErrorMessage, sortByCreatedAt } from '@/common/utils';
 import CardList from '@/components/CardList';
 import RightInfoPanel from '@/components/RightInfoPanel';
 import useCardList from '@/hooks/useCardList';
-import usePageQuery from '@/hooks/usePageQuery';
 import { useAuthorIdFromUrl } from '@/hooks/useSearchParamValue';
-import useViewMode from '@/hooks/useViewMode';
 import { getQueryStatuses } from '@/utils/getQueryStatus';
-
-import { useLoadApplications } from '../../hooks/useLoadApplications';
 
 const EmptyListPlaceHolder = memo(props => {
   const { query, name } = props;

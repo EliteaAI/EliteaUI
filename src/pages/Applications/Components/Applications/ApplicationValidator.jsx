@@ -3,10 +3,10 @@ import { memo, useEffect, useMemo, useRef } from 'react';
 import { useFormikContext } from 'formik';
 import { useDispatch } from 'react-redux';
 
+import { useViewMode } from '@/[fsd]/shared/lib/hooks';
 import { eliteaApi } from '@/api/eliteaApi';
 import { ViewMode } from '@/common/constants';
 import useValidateApplicationVersion from '@/hooks/application/useValidateApplicationVersion';
-import useViewMode from '@/hooks/useViewMode';
 
 const ApplicationValidator = props => {
   const { agentId, projectId, isCreateMode = false } = props;

@@ -4,15 +4,13 @@ import { useSelector } from 'react-redux';
 
 import { Typography } from '@mui/material';
 
-import { useAuthorName, useToast } from '@/[fsd]/shared/lib/hooks';
+import { useLoadApplications } from '@/[fsd]/features/agent/lib/hooks';
+import { useAuthorName, useToast, useViewMode } from '@/[fsd]/shared/lib/hooks';
 import { ContentType } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import CardList from '@/components/CardList';
 import RightInfoPanel from '@/components/RightInfoPanel';
 import useCardList from '@/hooks/useCardList';
-import useViewMode from '@/hooks/useViewMode';
-
-import { useLoadApplications } from '../../hooks/useLoadApplications';
 
 const EmptyListPlaceHolder = memo(props => {
   const { query, name, forPipeline } = props;

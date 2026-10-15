@@ -120,11 +120,6 @@ vi.mock('@/[fsd]/shared/ui', () => ({
   },
 }));
 
-vi.mock('@/hooks/useConfigurations', () => ({
-  Manual_Title: 'Manual_Title',
-  Create_Personal_Title: 'Create_Personal_Title',
-  Create_Project_Title: 'Create_Project_Title',
-}));
 vi.mock('@/[fsd]/features/mcp', () => ({ McpAuthHelpers: { loadTokens: () => ({}) } }));
 vi.mock('@/GA', () => ({ useTrackEvent: () => vi.fn() }));
 vi.mock('@/routes', async importOriginal => ({ ...(await importOriginal()), getBasename: () => '' }));
