@@ -271,7 +271,7 @@ describe('testPanelRequestSettings', () => {
   const TUNED = { temperature: 0.3, max_tokens: 8192, reasoning_effort: null };
 
   it('sends the fixed model with its tuned settings', () => {
-    expect(testPanelRequestSettings({ name: 'sonnet', project_id: 1 }, TUNED, null)).toEqual({
+    expect(testPanelRequestSettings({ name: 'sonnet', project_id: 1 }, TUNED)).toEqual({
       temperature: 0.3,
       max_tokens: 8192,
       reasoning_effort: null,
@@ -282,16 +282,43 @@ describe('testPanelRequestSettings', () => {
   });
 
   it('sends Auto as a selection without a fixed model or effort', () => {
-    const request = testPanelRequestSettings({ selection: AUTO }, TUNED, null);
+    const request = testPanelRequestSettings({ selection: AUTO }, TUNED);
 
     expect(request).toMatchObject({ selection: AUTO, model_name: null, model_project_id: null });
     expect(request).toMatchObject({ temperature: null, reasoning_effort: null, max_tokens: 8192 });
   });
 
-  it("keeps the version's own Auto selection, explicit effort included", () => {
-    const saved = { selection: { ...AUTO, reasoning: { mode: 'explicit', preset: 'high' } } };
+  it('sends the Auto effort picked in the panel', () => {
+    const picked = { ...AUTO, reasoning: { mode: 'explicit', preset: 'high' } };
 
-    expect(testPanelRequestSettings({ selection: AUTO }, TUNED, saved).selection).toBe(saved.selection);
+    expect(testPanelRequestSettings({ selection: AUTO }, { ...TUNED, selection: picked }).selection).toBe(
+      picked,
+    );
+  });
+});
+
+describe('testPanelSettingsFor on Auto', () => {
+  const AUTO_MODEL = { selection: { mode: 'auto', reasoning: { mode: 'auto' } } };
+
+  it("carries the version's own Auto selection so the panel shows the Auto effort picker", () => {
+    const saved = {
+      selection: { mode: 'auto', reasoning: { mode: 'explicit', preset: 'high' } },
+      max_tokens: 4096,
+    };
+
+    expect(testPanelSettingsFor(saved, AUTO_MODEL)).toMatchObject({
+      selection: saved.selection,
+      temperature: null,
+      reasoning_effort: null,
+      max_tokens: 4096,
+    });
+  });
+
+  it('starts a fixed-model version tested on Auto from the Auto default selection', () => {
+    expect(testPanelSettingsFor({ model_name: 'sonnet', temperature: 0.3 }, AUTO_MODEL)).toMatchObject({
+      selection: AUTO_MODEL.selection,
+      temperature: null,
+    });
   });
 });
 

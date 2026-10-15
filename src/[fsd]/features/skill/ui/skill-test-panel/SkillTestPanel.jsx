@@ -26,7 +26,7 @@ import { useSkillModels, useSkillVersionModel } from '@/[fsd]/features/skill/lib
 import { AutoRoutingConstants } from '@/[fsd]/shared/lib/constants';
 import { SocketContext } from '@/[fsd]/shared/lib/context';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
-import { resetLLMSettingsForModel } from '@/[fsd]/shared/lib/utils';
+import { resetLLMSettingsForModel, selectionFields } from '@/[fsd]/shared/lib/utils';
 import { useGenerateContentStreamingMutation, useStopLlmTaskMutation } from '@/api/llm';
 import { ChatParticipantType, ROLES, SocketMessageType, sioEvents } from '@/common/constants';
 import { initializeNewMessages } from '@/common/initializeNewMessages';
@@ -167,7 +167,7 @@ const SkillTestPanel = memo(props => {
         return;
       }
       setSelectedModel(model);
-      setLlmSettings(prev => ({ ...prev, ...resetLLMSettingsForModel(model) }));
+      setLlmSettings(prev => ({ ...prev, ...resetLLMSettingsForModel(model), ...selectionFields(model) }));
     },
     [canEditVersionModel, onSelectVersionModel],
   );
@@ -353,7 +353,7 @@ const SkillTestPanel = memo(props => {
           instructions: instructionsRef.current,
           user_input: userInput,
           chat_history: priorTurns,
-          llm_settings: testPanelRequestSettings(selectedModel, llmSettings, savedLlmSettings),
+          llm_settings: testPanelRequestSettings(selectedModel, llmSettings),
           include_project_context: withProjectContext,
           routing_surface: MODEL_SURFACES.agent,
         }).unwrap();
@@ -369,7 +369,6 @@ const SkillTestPanel = memo(props => {
       generateContent,
       llmSettings,
       projectId,
-      savedLlmSettings,
       selectedModel,
       socket?.id,
       toastError,

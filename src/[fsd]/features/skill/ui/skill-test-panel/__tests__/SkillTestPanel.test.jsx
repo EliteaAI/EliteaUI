@@ -151,4 +151,29 @@ describe('SkillTestPanel model chip', () => {
     expect(fixture.inputProps.selectedModel).toBe(MODELS[0]);
     expect(fixture.generateContent.mock.calls[0][0].llm_settings).toMatchObject({ model_name: 'haiku' });
   });
+
+  it('gives the chip the Auto selection so it shows the Auto effort picker, not a temperature', () => {
+    renderPanel(true, { llm_settings: { selection: AUTO_SELECTION, max_tokens: 4096 } });
+
+    expect(fixture.inputProps.llmSettings).toMatchObject({ selection: AUTO_SELECTION, temperature: null });
+  });
+
+  it('tests a locked Auto version on the effort picked in the panel', async () => {
+    const picked = { ...AUTO_SELECTION, reasoning: { mode: 'explicit', preset: 'high' } };
+    renderPanel(false, { llm_settings: { selection: AUTO_SELECTION, max_tokens: 4096 } });
+
+    await act(async () => fixture.inputProps.onSetLLMSettings({ selection: picked }));
+    await act(async () => fixture.inputProps.onSend('hello'));
+
+    expect(fixture.generateContent.mock.calls[0][0].llm_settings.selection).toEqual(picked);
+  });
+
+  it('leaves Auto when a locked version switches to a fixed model, like the agent pane', async () => {
+    renderPanel(false, { llm_settings: { selection: AUTO_SELECTION, max_tokens: 4096 } });
+
+    await act(async () => fixture.inputProps.onSelectModel(MODELS[1]));
+
+    expect(fixture.inputProps.llmSettings.selection).toBeNull();
+    expect(fixture.inputProps.llmSettings.temperature).not.toBeNull();
+  });
 });

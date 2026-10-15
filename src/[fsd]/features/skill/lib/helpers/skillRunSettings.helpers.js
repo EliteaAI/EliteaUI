@@ -84,26 +84,30 @@ export const includesProjectContext = runSettings => !runSettings?.ignore_projec
 
 export const isSkillVersionLocked = status => LOCKED_SKILL_VERSION_STATUSES.includes(status);
 
-export const testPanelSettingsFor = (savedLlmSettings, model) => ({
-  max_tokens: savedLlmSettings?.max_tokens ?? DEFAULT_MAX_TOKENS,
-  ...(modelSupportsReasoning(model)
-    ? {
-        temperature: null,
-        reasoning_effort: savedLlmSettings?.reasoning_effort ?? defaultReasoningEffortFor(model),
-      }
-    : { temperature: savedLlmSettings?.temperature ?? DEFAULT_TEMPERATURE, reasoning_effort: null }),
-});
+export const testPanelSettingsFor = (savedLlmSettings, model) => {
+  const max_tokens = savedLlmSettings?.max_tokens ?? DEFAULT_MAX_TOKENS;
+  if (isAutoSelection(model)) {
+    const selection = isAutoSelection(savedLlmSettings) ? savedLlmSettings.selection : model.selection;
+    return { max_tokens, ...selectionFields({ selection }) };
+  }
+  return {
+    max_tokens,
+    ...(modelSupportsReasoning(model)
+      ? {
+          temperature: null,
+          reasoning_effort: savedLlmSettings?.reasoning_effort ?? defaultReasoningEffortFor(model),
+        }
+      : { temperature: savedLlmSettings?.temperature ?? DEFAULT_TEMPERATURE, reasoning_effort: null }),
+  };
+};
 
-const testPanelSelectionFor = (model, savedLlmSettings) =>
-  isAutoSelection(model) && isAutoSelection(savedLlmSettings)
-    ? selectionFields({ selection: savedLlmSettings.selection })
-    : selectionFields(model);
-
-export const testPanelRequestSettings = (model, llmSettings, savedLlmSettings) => ({
+export const testPanelRequestSettings = (model, llmSettings) => ({
   temperature: llmSettings.temperature ?? null,
   max_tokens: llmSettings.max_tokens ?? DEFAULT_MAX_TOKENS,
   reasoning_effort: llmSettings.reasoning_effort ?? null,
-  ...testPanelSelectionFor(model, savedLlmSettings),
+  ...selectionFields(
+    isAutoSelection(model) ? { selection: llmSettings.selection ?? model.selection } : model,
+  ),
 });
 
 export const withRunStepsLimit = (versionLLMSettings, runLLMSettings) =>
