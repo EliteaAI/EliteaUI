@@ -8,14 +8,13 @@ import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
 import { buildVersionOption } from '@/[fsd]/entities/version/lib/helpers';
 import { useVersionSelectSearch } from '@/[fsd]/entities/version/lib/hooks';
 import { VersionSelectOption } from '@/[fsd]/entities/version/ui';
-import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
+import { useNameFromUrl, useSelectedProjectId, useViewModeFromUrl } from '@/[fsd]/shared/lib/hooks';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import PublishIcon from '@/assets/publish-version.svg?react';
 import { PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
 import { replaceVersionInPath } from '@/common/utils';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
 import PinIcon from '@/components/Icons/PinIcon';
-import { useNameFromUrl, useViewModeFromUrl } from '@/hooks/useSearchParamValue';
 
 const VersionSelect = memo(props => {
   const {

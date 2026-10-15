@@ -1,9 +1,8 @@
 import { useCallback, useMemo } from 'react';
 
-import { usePageQuery } from '@/[fsd]/shared/lib/hooks';
+import { useAuthorIdFromUrl, usePageQuery } from '@/[fsd]/shared/lib/hooks';
 import { useApplicationListQuery, usePublicApplicationsListQuery } from '@/api/applications';
 import { ViewMode } from '@/common/constants';
-import { useAuthorIdFromUrl } from '@/hooks/useSearchParamValue';
 import { getQueryStatuses } from '@/utils/getQueryStatus';
 
 export const useLoadApplications = (

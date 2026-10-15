@@ -4,7 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 
 import { SearchParams } from '@/common/constants';
 
-export default function useSortQueryParamsFromUrl({ defaultSortOrder, defaultSortBy }) {
+export const useSortQueryParamsFromUrl = ({ defaultSortOrder, defaultSortBy }) => {
   const [searchParams] = useSearchParams();
   const sort_order = useMemo(
     () => searchParams.get(SearchParams.SortOrder) || defaultSortOrder,
@@ -18,4 +18,4 @@ export default function useSortQueryParamsFromUrl({ defaultSortOrder, defaultSor
     sort_order,
     sort_by,
   };
-}
+};

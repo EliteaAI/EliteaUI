@@ -15,9 +15,9 @@ import {
 import { PERSONAL_TOKENS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import ExpiryInDays from '@/[fsd]/features/settings/ui/personal-tokes/ExpiryInDays';
 import TokenActionsCell from '@/[fsd]/features/settings/ui/personal-tokes/TokenActionsCell';
+import { useGetWindowWidth } from '@/[fsd]/shared/lib/hooks';
 import { Text } from '@/[fsd]/shared/ui';
 import { useTokenDeleteMutation, useTokenListQuery } from '@/api/auth';
-import useGetWindowWidth from '@/hooks/useGetWindowWidth';
 
 const TOKENS_TABLE_CONFIG = {
   DEFAULT_PAGE_SIZE: 10,

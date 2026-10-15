@@ -1,8 +1,8 @@
 import { useLocation } from 'react-router-dom';
 
 import { PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
-import { useViewModeFromUrl } from '@/hooks/useSearchParamValue';
 
+import { useViewModeFromUrl } from './useSearchParamValue.hooks';
 import { useSelectedProjectId } from './useSelectedProject.hooks';
 
 export const useViewMode = () => {

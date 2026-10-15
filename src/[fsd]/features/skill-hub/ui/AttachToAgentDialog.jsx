@@ -18,7 +18,7 @@ import {
 } from '@mui/material';
 
 import { useAgentsWithSkillQuery, useAttachPublicSkillMutation } from '@/[fsd]/features/skill-hub/api';
-import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
+import { useDebounceValue, useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Banner } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { useLazyApplicationListQuery } from '@/api/applications';
@@ -28,7 +28,6 @@ import ArrowDownMuiSvgIcon from '@/components/Icons/ArrowDownMuiSvgIcon';
 import CheckIcon from '@/components/Icons/CheckIcon';
 import CloseIcon from '@/components/Icons/CloseIcon';
 import RemoveIcon from '@/components/Icons/RemoveIcon';
-import useDebounceValue from '@/hooks/useDebounceValue';
 import RouteDefinitions from '@/routes';
 import { actions as chatActions } from '@/slices/chat';
 

@@ -11,7 +11,7 @@ import {
 import { useRunHistorySorting } from '@/[fsd]/entities/run-history/lib/hooks';
 import { RunHistoryListItem, RunHistorySortableHeader } from '@/[fsd]/entities/run-history/ui';
 import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
-import useGetWindowWidth from '@/hooks/useGetWindowWidth';
+import { useGetWindowWidth } from '@/[fsd]/shared/lib/hooks';
 import useIsSmallWindow from '@/hooks/useIsSmallWindow';
 import { ContentContainer } from '@/pages/Common';
 

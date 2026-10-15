@@ -18,7 +18,7 @@ vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({
   useSelectedProjectId: () => shared.projectId,
 }));
 
-vi.mock('@/hooks/useDebounceValue', () => ({ default: value => value }));
+vi.mock('@/[fsd]/shared/lib/hooks/useDebounceValue.hooks', () => ({ useDebounceValue: value => value }));
 
 vi.mock('@/[fsd]/features/skill/api', () => ({
   useSkillListQuery: (args, options) => {

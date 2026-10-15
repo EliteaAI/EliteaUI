@@ -7,10 +7,9 @@ import { useTheme } from '@mui/material';
 import { CredentialHelpers } from '@/[fsd]/features/credentials/lib/helpers';
 import { useGetCurrentConfigurationAsSchemas } from '@/[fsd]/features/credentials/lib/hooks';
 import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
-import { usePageQuery, useUserList } from '@/[fsd]/shared/lib/hooks';
+import { usePageQuery, useSortQueryParamsFromUrl, useUserList } from '@/[fsd]/shared/lib/hooks';
 import { useGetConfigurationsListQuery } from '@/api/configurations';
 import { pinnedComparator, stableSort } from '@/common/utils';
-import useSortQueryParamsFromUrl from '@/hooks/useSortQueryParamsFromUrl';
 
 export const useLoadCredentials = ({
   specifiedProjectId,

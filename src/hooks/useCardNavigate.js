@@ -2,7 +2,12 @@ import { useCallback, useMemo } from 'react';
 
 import { useLocation, useMatch, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
-import { useSearchBar, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
+import {
+  useAuthorIdFromUrl,
+  useAuthorNameFromUrl,
+  useSearchBar,
+  useSelectedProjectId,
+} from '@/[fsd]/shared/lib/hooks';
 import {
   ApplicationsTabs,
   AppsTabs,
@@ -13,7 +18,6 @@ import {
   ViewMode,
   publicTabs,
 } from '@/common/constants';
-import { useAuthorIdFromUrl, useAuthorNameFromUrl } from '@/hooks/useSearchParamValue';
 import RouteDefinitions, { PathSessionMap } from '@/routes';
 
 const buildReplaceNavOptions = (pagePath, locationState, breadCrumb) => {

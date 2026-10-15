@@ -14,9 +14,9 @@ vi.mock('@/common/utils', () => ({
   sortByName: (a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
 }));
 vi.mock('react-redux', () => ({ useSelector: selector => selector({ user: { id: 1 } }) }));
-vi.mock('@/hooks/useDebounceValue', () => ({ default: value => value }));
 vi.mock('@/hooks/users/usePermissions', () => ({ useCanListThisPublicEntity: () => false }));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
+  useDebounceValue: value => value,
   useSelectedProjectId: () => 2,
   useUserList: () => ({ data: emptyPage, onLoadMoreUsers: vi.fn() }),
 }));

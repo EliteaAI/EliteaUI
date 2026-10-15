@@ -13,10 +13,10 @@ import {
   GridTableRow,
 } from '@/[fsd]/entities/grid-table/ui';
 import { USERS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
+import { useGetWindowWidth } from '@/[fsd]/shared/lib/hooks';
 import { Text } from '@/[fsd]/shared/ui';
 import { PERMISSIONS } from '@/common/constants';
 import useCheckPermission from '@/hooks/useCheckPermission';
-import useGetWindowWidth from '@/hooks/useGetWindowWidth';
 
 import DeleteUserButton from './DeleteUserButton';
 import EditUsersButton from './EditUsersButton';

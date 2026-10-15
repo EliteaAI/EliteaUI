@@ -7,6 +7,7 @@ import { Typography } from '@mui/material';
 import { useLoadApplications } from '@/[fsd]/features/agent/lib/hooks';
 import { useLoadToolkits } from '@/[fsd]/features/toolkits/lib/hooks';
 import {
+  useAuthorIdFromUrl,
   useAuthorName,
   usePageQuery,
   useSelectedProjectId,
@@ -18,7 +19,6 @@ import { buildErrorMessage, sortByCreatedAt } from '@/common/utils';
 import CardList from '@/components/CardList';
 import RightInfoPanel from '@/components/RightInfoPanel';
 import useCardList from '@/hooks/useCardList';
-import { useAuthorIdFromUrl } from '@/hooks/useSearchParamValue';
 import { getQueryStatuses } from '@/utils/getQueryStatus';
 
 const EmptyListPlaceHolder = memo(props => {

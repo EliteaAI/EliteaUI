@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
-export default function useGetWindowWidth() {
+export const useGetWindowWidth = () => {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
   const onSize = useCallback(() => {
@@ -16,4 +16,4 @@ export default function useGetWindowWidth() {
   }, [onSize]);
 
   return { windowWidth };
-}
+};

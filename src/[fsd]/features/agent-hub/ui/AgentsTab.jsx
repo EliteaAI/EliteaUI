@@ -12,10 +12,9 @@ import AgentModal from '@/[fsd]/features/agent-hub/ui/AgentModal';
 import { ELITEA_CATALOG_TOUR_ID, ELITEA_CATALOG_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { AgentHubContext, useInteractiveTour } from '@/[fsd]/shared/lib/context';
 import { DEFAULT_NEW_ITEM_DAYS, isNewItem } from '@/[fsd]/shared/lib/helpers';
-import { useCatalogCount, useGroupedCategories } from '@/[fsd]/shared/lib/hooks';
+import { useCatalogCount, useDebounceValue, useGroupedCategories } from '@/[fsd]/shared/lib/hooks';
 import { Category } from '@/[fsd]/shared/ui';
 import { useGetPlatformSettingsQuery } from '@/api/platformSettings';
-import useDebounceValue from '@/hooks/useDebounceValue';
 
 const AgentsTab = memo(props => {
   const { query = '', onTotalCountChange } = props;
