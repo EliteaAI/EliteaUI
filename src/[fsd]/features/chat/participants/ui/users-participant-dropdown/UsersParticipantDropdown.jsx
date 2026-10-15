@@ -4,10 +4,10 @@ import { useSelector } from 'react-redux';
 
 import { Box, ClickAwayListener, Grow, IconButton, Paper, Popper, Typography, useTheme } from '@mui/material';
 
+import { DropdownConstants } from '@/[fsd]/shared/lib/constants';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { SPACING } from '@/common/designTokens';
 import UsersIcon from '@/components/Icons/UsersIcon';
-import { DROPDOWN_CONSTANTS } from '@/components/UnifiedDropdown';
 
 import DropdownFooter from './DropdownFooter';
 import UserMenu from './UserMenu';
@@ -191,20 +191,20 @@ const usersParticipantDropdownStyles = isTriggerVisible => ({
   }),
   usersIcons: { width: '1.5rem', height: '1.5rem' },
   paper: ({ palette }) => ({
-    borderRadius: DROPDOWN_CONSTANTS.BORDER_RADIUS.MENU,
+    borderRadius: DropdownConstants.BORDER_RADIUS.MENU,
     border: `.0625rem solid ${palette.border.lines}`,
     background: palette.background.default.secondary,
     boxShadow: '0rem .5rem .75rem 0rem rgba(0, 0, 0, 0.3)',
     width: '16.9375rem',
-    maxHeight: DROPDOWN_CONSTANTS.DIMENSIONS.MENU_MAX_HEIGHT,
+    maxHeight: DropdownConstants.DIMENSIONS.MENU_MAX_HEIGHT,
     padding: '.5rem 0',
   }),
   titleWrapper: ({ palette }) => ({
     display: 'flex',
     alignItems: 'center',
     padding: `${SPACING.SM} ${SPACING.XL}`,
-    height: DROPDOWN_CONSTANTS.DIMENSIONS.ITEM_HEIGHT,
-    gap: DROPDOWN_CONSTANTS.SPACING.ITEM_ICON_TEXT_GAP,
+    height: DropdownConstants.DIMENSIONS.ITEM_HEIGHT,
+    gap: DropdownConstants.SPACING.ITEM_ICON_TEXT_GAP,
     color: palette.components.input.text.placeholder,
     textTransform: 'uppercase',
   }),

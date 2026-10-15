@@ -3,8 +3,8 @@ import { memo, useMemo } from 'react';
 import { Box, Typography, useTheme } from '@mui/material';
 
 import BaseCheckbox from '@/[fsd]/shared/ui/checkbox/BaseCheckbox';
+import { EntityIcon } from '@/[fsd]/shared/ui/icon';
 import { getToolIconByType } from '@/common/toolkitUtils';
-import EntityIcon from '@/components/EntityIcon';
 
 const SuggestionItem = memo(props => {
   const { item, checked, onToggle, entityType } = props;

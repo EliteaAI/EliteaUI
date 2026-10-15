@@ -4,8 +4,8 @@ import { useTheme } from '@mui/material';
 
 import { ToolkitsHelpers, useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits';
 import { useSystemSenderName } from '@/[fsd]/shared/lib/hooks';
+import { EntityTypeIcon } from '@/[fsd]/shared/ui/icon';
 import { ChatParticipantType } from '@/common/constants';
-import { EntityTypeIcon } from '@/components/EntityIcon';
 
 export const useParticipantEntityIcon = participant => {
   const theme = useTheme();

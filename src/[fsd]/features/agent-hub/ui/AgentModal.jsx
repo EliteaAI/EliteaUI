@@ -23,10 +23,10 @@ import AgentWelcomeMessage from '@/[fsd]/features/agent-hub/ui/AgentWelcomeMessa
 import { ELITEA_CATALOG_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { Button as SharedButton } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button';
+import { EntityIcon } from '@/[fsd]/shared/ui/icon';
 import { useLazyPublicApplicationDetailsQuery } from '@/api';
 import { ChatParticipantType, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
 import AuthorContainer from '@/components/AuthorContainer';
-import EntityIcon from '@/components/EntityIcon';
 import CloseIcon from '@/components/Icons/CloseIcon';
 import RouteDefinitions, { getBasename } from '@/routes';
 import { actions } from '@/slices/chat';

@@ -2,13 +2,14 @@ import { createElement, useCallback, useEffect, useMemo, useRef, useState } from
 
 import { getChatParticipantUniqueId } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { useSkillParticipants } from '@/[fsd]/features/skill/lib/hooks';
+import { DropdownConstants } from '@/[fsd]/shared/lib/constants';
 import { isMcpToolkit } from '@/[fsd]/shared/lib/helpers';
 import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
+import { EntityIcon } from '@/[fsd]/shared/ui/icon';
 import { ChatParticipantType } from '@/common/constants';
-import EntityIcon from '@/components/EntityIcon';
-import { DROPDOWN_CONSTANTS } from '@/components/UnifiedDropdown';
 import useFilteredEntityItems from '@/hooks/chat/useFilteredEntityItems';
-import { useDropdownData } from '@/hooks/useDropdownData';
+
+import { useDropdownData } from './useDropdownData.hooks';
 
 const SKILL_PAGE_SIZE = 20;
 
@@ -21,9 +22,9 @@ const SKILL_ICON_SX = {
     height: '1.25rem',
   },
   '& svg': {
-    width: DROPDOWN_CONSTANTS.DIMENSIONS.ICON_SVG_SIZE,
-    height: DROPDOWN_CONSTANTS.DIMENSIONS.ICON_SVG_SIZE,
-    fontSize: DROPDOWN_CONSTANTS.DIMENSIONS.ICON_SVG_SIZE,
+    width: DropdownConstants.DIMENSIONS.ICON_SVG_SIZE,
+    height: DropdownConstants.DIMENSIONS.ICON_SVG_SIZE,
+    fontSize: DropdownConstants.DIMENSIONS.ICON_SVG_SIZE,
   },
 };
 const SKILL_IMAGE_STYLE = { width: '1.25rem', height: '1.25rem', borderRadius: '50%' };
@@ -40,7 +41,7 @@ const toSkillMenuItem = skill => ({
     entityType: ChatParticipantType.Skills,
     projectId: skill.project_id,
     editable: false,
-    specifiedFontSize: DROPDOWN_CONSTANTS.DIMENSIONS.ICON_SVG_SIZE,
+    specifiedFontSize: DropdownConstants.DIMENSIONS.ICON_SVG_SIZE,
   }),
 });
 

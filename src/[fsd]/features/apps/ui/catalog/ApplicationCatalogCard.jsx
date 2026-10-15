@@ -6,10 +6,10 @@ import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { APPLICATIONS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import { EntityIcon } from '@/[fsd]/shared/ui/icon';
 import ClockIcon from '@/assets/clock.svg?react';
 import GearIcon from '@/assets/gear-icon.svg?react';
 import LinkIcon from '@/assets/link-icon.svg?react';
-import EntityIcon from '@/components/EntityIcon';
 import HighlightQuery from '@/components/HighlightQuery';
 import { getCardGradientStyles } from '@/utils/cardStyles';
 

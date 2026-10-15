@@ -4,7 +4,7 @@ import { Box, Typography } from '@mui/material';
 
 import { ToolkitLayoutConstants } from '@/[fsd]/features/toolkits/lib/constants';
 import { SearchIndexButton, ViewRunHistoryButton } from '@/[fsd]/shared/ui/button';
-import { EntityTypeIcon } from '@/components/EntityIcon';
+import { EntityTypeIcon } from '@/[fsd]/shared/ui/icon';
 
 const { PANEL_GUTTER, PANEL_HEADER_HEIGHT } = ToolkitLayoutConstants;
 

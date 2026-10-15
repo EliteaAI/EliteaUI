@@ -16,6 +16,7 @@ import {
 import { useIndexScheduleIndicator } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
 import { useProjectType, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
+import { EntityIcon } from '@/[fsd]/shared/ui/icon';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import ClockIcon from '@/assets/clock.svg?react';
 import FileIcon from '@/assets/file.svg?react';
@@ -24,7 +25,6 @@ import OpenInNewIcon from '@/assets/open-new-icon.svg?react';
 import StopIcon from '@/assets/stop-icon.svg?react';
 import UnavailableIcon from '@/assets/unavailable.svg?react';
 import { PERMISSIONS } from '@/common/constants';
-import EntityIcon from '@/components/EntityIcon';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';

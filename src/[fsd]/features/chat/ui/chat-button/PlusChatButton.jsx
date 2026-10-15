@@ -16,8 +16,8 @@ import {
 } from '@mui/material';
 
 import { useApplicationSubmenu } from '@/[fsd]/features/chat/lib/hooks';
-import { ParticipantConstants } from '@/[fsd]/features/chat/participants/lib/constants';
 import { useAvailableInternalTools } from '@/[fsd]/features/toolkits';
+import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { useIsMcpVisible, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { Switch, Text } from '@/[fsd]/shared/ui';
 import FlowIcon from '@/assets/flow-icon.svg?react';
@@ -230,7 +230,7 @@ const PlusChatButton = memo(props => {
         searchPlaceholder: 'Search skills...',
         emptyMessage: 'No skills available',
         noResultsMessage: 'No skills found',
-        publicLabel: ParticipantConstants.CATALOG_LABEL,
+        publicLabel: ParticipantEntityConstants.CATALOG_LABEL,
       },
       [SUBMENU_KEYS.TOOLKITS]: {
         searchPlaceholder: 'Search toolkits...',

@@ -9,7 +9,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import SkillChatPanel from '../SkillChatPanel';
 
 vi.mock('@/[fsd]/features/chat/participants/lib/hooks', () => ({ useParticipantEntityIcon: () => ({}) }));
-vi.mock('@/components/EntityIcon', () => ({ default: () => null }));
+vi.mock('@/[fsd]/shared/ui/icon/EntityIcon', () => ({ default: () => null }));
 vi.mock('@/components/Icons/AttentionIcon', () => ({ default: () => <span>!</span> }));
 vi.mock('@/components/Icons/SettingIcon', () => ({
   default: ({ fill }) => (

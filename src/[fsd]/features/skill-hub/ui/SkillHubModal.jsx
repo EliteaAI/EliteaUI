@@ -21,9 +21,9 @@ import SkillHubLike from '@/[fsd]/features/skill-hub/ui/SkillHubLike';
 import SkillHubModalMenu from '@/[fsd]/features/skill-hub/ui/SkillHubModalMenu';
 import { Markdown } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import { EntityIcon } from '@/[fsd]/shared/ui/icon';
 import { ChatParticipantType, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
 import AuthorContainer from '@/components/AuthorContainer';
-import EntityIcon from '@/components/EntityIcon';
 import CloseIcon from '@/components/Icons/CloseIcon';
 import RouteDefinitions, { getBasename } from '@/routes';
 

@@ -5,9 +5,9 @@ import { useFormikContext } from 'formik';
 import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { useGetToolkitNameFromSchema } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
+import { EntityIcon } from '@/[fsd]/shared/ui/icon';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import { useToolkitAvailableToolsQuery } from '@/api/toolkits.js';
-import EntityIcon from '@/components/EntityIcon';
 import { useGetToolkitIconMeta } from '@/hooks/application/useLibraryToolkits';
 import { ToolTypes } from '@/pages/Applications/Components/Tools/consts.js';
 

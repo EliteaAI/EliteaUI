@@ -2,9 +2,9 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Autocomplete, Box, Chip, InputAdornment, TextField, Typography, useTheme } from '@mui/material';
 
-import { ParticipantConstants } from '@/[fsd]/features/chat/participants/lib/constants';
 import { ChatParticipantConstants } from '@/[fsd]/features/settings/lib/constants';
 import { ChatParticipantHelpers } from '@/[fsd]/features/settings/lib/helpers';
+import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
 import RemoveIcon from '@/assets/remove-icon.svg?react';
 import SearchIcon from '@/components/Icons/SearchIcon';
@@ -256,7 +256,7 @@ const ChatParticipantPicker = memo(props => {
                   {participant.name}
                 </Typography>
                 {isCatalogSkill(participant) && (
-                  <ChatParticipantPublicBadge label={ParticipantConstants.CATALOG_LABEL} />
+                  <ChatParticipantPublicBadge label={ParticipantEntityConstants.CATALOG_LABEL} />
                 )}
               </Box>
             }

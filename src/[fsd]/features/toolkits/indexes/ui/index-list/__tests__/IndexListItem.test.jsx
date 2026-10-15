@@ -33,7 +33,7 @@ vi.mock('@/[fsd]/shared/ui/tooltip/InfoTooltip', () => ({
   default: () => <span data-testid="fail-icon" />,
 }));
 
-vi.mock('@/components/EntityIcon', () => ({ default: () => null }));
+vi.mock('@/[fsd]/shared/ui/icon/EntityIcon', () => ({ default: () => null }));
 
 vi.mock('@/components/Icons/AttentionIcon', () => ({
   default: () => <span data-testid="attention-icon" />,

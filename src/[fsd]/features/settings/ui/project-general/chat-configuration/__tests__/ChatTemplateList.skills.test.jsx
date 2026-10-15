@@ -13,11 +13,13 @@ import ChatTemplateList from '../ChatTemplateList';
 
 vi.hoisted(() => vi.stubEnv('VITE_SERVER_URL', 'http://localhost/api/v2/'));
 
-vi.mock('@/components/EntityIcon', () => ({
+vi.mock('@/[fsd]/shared/ui/icon/EntityIcon', () => ({
   default: ({ entityType, icon }) => (
     <span data-testid={icon ? 'circle-icon-custom' : `circle-icon-${entityType}`} />
   ),
-  EntityTypeIcon: ({ type }) => <span data-testid={`type-icon-${type}`} />,
+}));
+vi.mock('@/[fsd]/shared/ui/icon/EntityTypeIcon', () => ({
+  default: ({ type }) => <span data-testid={`type-icon-${type}`} />,
 }));
 vi.mock('@/common/toolkitUtils', () => ({
   getToolIconByType: (type, theme, { isMCP }) => (

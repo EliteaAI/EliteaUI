@@ -3,14 +3,14 @@ import { memo, useCallback, useEffect, useRef } from 'react';
 import { Box, Typography } from '@mui/material';
 
 import { TooltipWithDuration } from '@/ComponentsLib/Tooltip';
-import { ParticipantConstants } from '@/[fsd]/features/chat/participants/lib/constants';
+import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
+import { EntityIcon } from '@/[fsd]/shared/ui/icon';
 import { ChatParticipantType, PUBLIC_PROJECT_ID } from '@/common/constants';
-import EntityIcon from '@/components/EntityIcon';
 
 const PUBLIC_LABELS = {
-  [ChatParticipantType.Applications]: ParticipantConstants.CATALOG_LABEL,
-  [ChatParticipantType.Pipelines]: ParticipantConstants.CATALOG_LABEL,
-  [ChatParticipantType.Skills]: ParticipantConstants.CATALOG_LABEL,
+  [ChatParticipantType.Applications]: ParticipantEntityConstants.CATALOG_LABEL,
+  [ChatParticipantType.Pipelines]: ParticipantEntityConstants.CATALOG_LABEL,
+  [ChatParticipantType.Skills]: ParticipantEntityConstants.CATALOG_LABEL,
 };
 
 const NewParticipantCard = memo(props => {

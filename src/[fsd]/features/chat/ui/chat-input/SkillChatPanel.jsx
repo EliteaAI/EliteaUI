@@ -6,8 +6,8 @@ import { useAgentEditorPanelFit } from '@/[fsd]/features/chat/lib/hooks';
 import { ParticipantConstants } from '@/[fsd]/features/chat/participants/lib/constants';
 import { areDetailsOfParticipant, isSameChatEntity } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { useParticipantEntityIcon } from '@/[fsd]/features/chat/participants/lib/hooks';
+import { EntityIcon } from '@/[fsd]/shared/ui/icon';
 import { ChatParticipantType, PERMISSIONS } from '@/common/constants';
-import EntityIcon from '@/components/EntityIcon';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
 

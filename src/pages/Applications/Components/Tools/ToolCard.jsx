@@ -18,6 +18,7 @@ import { ToolkitFormHelpers, ToolkitsHelpers } from '@/[fsd]/features/toolkits/l
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { useSearchParamValue, useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Banner, Modal } from '@/[fsd]/shared/ui';
+import { EntityIcon } from '@/[fsd]/shared/ui/icon';
 import { TypographyWithConditionalTooltip } from '@/[fsd]/shared/ui/tooltip';
 import AttachIcon from '@/assets/attach-icon.svg?react';
 import OfflineIcon from '@/assets/offline-icon.svg?react';
@@ -28,7 +29,6 @@ import { PERMISSIONS, PUBLIC_PROJECT_ID, SearchParams, ViewMode } from '@/common
 import { buildErrorMessage } from '@/common/utils';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
 import CredentialWarningBanner from '@/components/CredentialWarningBanner';
-import EntityIcon from '@/components/EntityIcon';
 import AttentionIcon from '@/components/Icons/AttentionIcon.jsx';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import { mapAssociationError } from '@/hooks/application/useAgentPipelineAssociation';

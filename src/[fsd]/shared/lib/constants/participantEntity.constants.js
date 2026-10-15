@@ -6,3 +6,5 @@ export const ParticipantEntityTypes = {
   MCP: 'mcp',
   Skill: 'skill',
 };
+
+export const CATALOG_LABEL = 'Catalog';

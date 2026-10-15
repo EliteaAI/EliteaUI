@@ -30,9 +30,11 @@ vi.mock('@/[fsd]/shared/lib/hooks', async importOriginal => ({
   ...(await importOriginal()),
   useIsMcpVisible: () => true,
 }));
-vi.mock('@/components/EntityIcon', () => ({
+vi.mock('@/[fsd]/shared/ui/icon/EntityIcon', () => ({
   default: ({ entityType }) => <span data-testid={`option-icon-${entityType}`} />,
-  EntityTypeIcon: ({ type }) => <span data-testid={`chip-icon-${type}`} />,
+}));
+vi.mock('@/[fsd]/shared/ui/icon/EntityTypeIcon', () => ({
+  default: ({ type }) => <span data-testid={`chip-icon-${type}`} />,
 }));
 
 const ownSkill = { id: 8, name: 'Reviewer', project_id: 2, participantType: ChatParticipantType.Skills };

@@ -7,16 +7,16 @@ import { Box } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { useTrackEvent } from '@/GA';
-import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
+import { AnalyticConstants, DropdownConstants } from '@/[fsd]/shared/lib/constants';
 import { useDebounceValue, useIsMcpVisible, useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
+import { Dropdown } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import { EntityIcon } from '@/[fsd]/shared/ui/icon';
 import { useApplicationListQuery } from '@/api/applications';
 import { useLazyToolkitsDetailsQuery } from '@/api/toolkits';
 import PlusIcon from '@/assets/plus-icon.svg?react';
 import { SearchParams, VITE_BASE_URI } from '@/common/constants';
 import { HEIGHTS, ICON_SIZES, SPACING } from '@/common/designTokens';
-import EntityIcon from '@/components/EntityIcon';
-import UnifiedDropdown, { DROPDOWN_CONSTANTS } from '@/components/UnifiedDropdown';
 import { useAgentPipelineAssociation } from '@/hooks/application/useAgentPipelineAssociation.jsx';
 import { useFilterAddedItems } from '@/hooks/application/useFilterAddedItems.js';
 import { useLibraryToolkits } from '@/hooks/application/useLibraryToolkits';
@@ -442,7 +442,7 @@ const ToolMenu = memo(props => {
             entityType={'application'}
             projectId={projectId}
             editable={false}
-            specifiedFontSize={DROPDOWN_CONSTANTS.DIMENSIONS.ICON_SVG_SIZE}
+            specifiedFontSize={DropdownConstants.DIMENSIONS.ICON_SVG_SIZE}
           />
         ),
         onClick: async () => {
@@ -481,7 +481,7 @@ const ToolMenu = memo(props => {
             entityType={'pipeline'}
             projectId={projectId}
             editable={false}
-            specifiedFontSize={DROPDOWN_CONSTANTS.DIMENSIONS.ICON_SVG_SIZE}
+            specifiedFontSize={DropdownConstants.DIMENSIONS.ICON_SVG_SIZE}
           />
         ),
         onClick: async () => {
@@ -529,7 +529,7 @@ const ToolMenu = memo(props => {
           imageStyle={styles.entityImageStyle}
           icon={{ component: item.icon }}
           editable={false}
-          specifiedFontSize={DROPDOWN_CONSTANTS.DIMENSIONS.ICON_SVG_SIZE}
+          specifiedFontSize={DropdownConstants.DIMENSIONS.ICON_SVG_SIZE}
         />
       ),
     }));
@@ -554,7 +554,7 @@ const ToolMenu = memo(props => {
           imageStyle={styles.entityImageStyle}
           icon={{ component: item.icon }}
           editable={false}
-          specifiedFontSize={DROPDOWN_CONSTANTS.DIMENSIONS.ICON_SVG_SIZE}
+          specifiedFontSize={DropdownConstants.DIMENSIONS.ICON_SVG_SIZE}
         />
       ),
     }));
@@ -673,7 +673,7 @@ const ToolMenu = memo(props => {
       </Box>
 
       {/* Toolkit Dropdown */}
-      <UnifiedDropdown
+      <Dropdown.UnifiedDropdown
         anchorEl={toolkitAnchor}
         open={Boolean(toolkitAnchor)}
         onClose={handleToolkitMenuClose}
@@ -694,7 +694,7 @@ const ToolMenu = memo(props => {
 
       {/* MCP Dropdown */}
       {isMcpVisible && (
-        <UnifiedDropdown
+        <Dropdown.UnifiedDropdown
           anchorEl={mcpAnchor}
           open={Boolean(mcpAnchor)}
           onClose={handleMCPMenuClose}
@@ -715,7 +715,7 @@ const ToolMenu = memo(props => {
       )}
 
       {/* Agent Dropdown */}
-      <UnifiedDropdown
+      <Dropdown.UnifiedDropdown
         anchorEl={agentAnchor}
         open={Boolean(agentAnchor)}
         onClose={handleAgentMenuClose}
@@ -733,7 +733,7 @@ const ToolMenu = memo(props => {
       />
 
       {/* Pipeline Dropdown */}
-      <UnifiedDropdown
+      <Dropdown.UnifiedDropdown
         anchorEl={pipelineAnchor}
         open={Boolean(pipelineAnchor)}
         onClose={handlePipelineMenuClose}
@@ -773,9 +773,9 @@ const toolMenuStyles = () => ({
       height: TOOL_MENU_CONSTANTS.DIMENSIONS.ICON_SIZE,
     },
     '& svg': {
-      width: DROPDOWN_CONSTANTS.DIMENSIONS.ICON_SVG_SIZE,
-      height: DROPDOWN_CONSTANTS.DIMENSIONS.ICON_SVG_SIZE,
-      fontSize: DROPDOWN_CONSTANTS.DIMENSIONS.ICON_SVG_SIZE,
+      width: DropdownConstants.DIMENSIONS.ICON_SVG_SIZE,
+      height: DropdownConstants.DIMENSIONS.ICON_SVG_SIZE,
+      fontSize: DropdownConstants.DIMENSIONS.ICON_SVG_SIZE,
     },
   },
   entityImageStyle: {
