@@ -3,9 +3,9 @@ import { memo } from 'react';
 import { useTheme } from '@mui/material';
 
 import { isMcpToolkitType } from '@/[fsd]/shared/lib/helpers';
+import { EntityIcon, EntityTypeIcon } from '@/[fsd]/shared/ui/icon';
 import { ChatParticipantType } from '@/common/constants';
 import { getToolIconByType } from '@/common/toolkitUtils';
-import EntityIcon, { EntityTypeIcon } from '@/components/EntityIcon';
 import UserAvatar from '@/components/UserAvatar';
 
 // Type icon for a template participant: compact for value chips, circled for dropdown options

@@ -2,7 +2,7 @@ import { memo, useCallback, useEffect, useRef } from 'react';
 
 import { Box, MenuItem, Switch, TextField, Typography, useTheme } from '@mui/material';
 
-import { ParticipantConstants } from '@/[fsd]/features/chat/participants/lib/constants';
+import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { TypographyWithConditionalTooltip } from '@/[fsd]/shared/ui/tooltip';
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
 import { HEIGHTS, SPACING } from '@/common/designTokens';
@@ -26,7 +26,7 @@ const PlusChatSubmenu = memo(props => {
     noResultsMessage = 'No items found',
     onScroll,
     showPublicLabel = true,
-    publicLabel = ParticipantConstants.CATALOG_LABEL,
+    publicLabel = ParticipantEntityConstants.CATALOG_LABEL,
     showToggle = false,
     sectionKey,
   } = props;

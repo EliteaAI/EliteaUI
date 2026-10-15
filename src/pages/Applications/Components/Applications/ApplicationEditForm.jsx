@@ -5,13 +5,13 @@ import { useFormikContext } from 'formik';
 import { Box, useTheme } from '@mui/material';
 
 import { AIEditAgentButton } from '@/[fsd]/features/agent/ui/ai-edit-agent-modal';
+import { EditableEntityIcon } from '@/[fsd]/features/entity-icon-editor';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { useFieldFocus, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { Input, Text } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { useTagListQuery } from '@/api/tags';
 import { MAX_DESCRIPTION_LENGTH, MAX_NAME_LENGTH, PROMPT_PAYLOAD_KEY } from '@/common/constants';
-import EntityIcon from '@/components/EntityIcon';
 import { useIsFromPipelineDetail } from '@/hooks/useIsFromSpecificPageHooks';
 import TagEditor from '@/pages/Common/Components/TagEditor';
 
@@ -96,7 +96,7 @@ const ApplicationEditForm = memo(props => {
           content: (
             <Box>
               <Box sx={styles.nameContainer}>
-                <EntityIcon
+                <EditableEntityIcon
                   data-testid="agent-form-icon-button"
                   imgTestId="agent-form-icon-img"
                   icon={formik.values?.version_details?.meta?.icon_meta}

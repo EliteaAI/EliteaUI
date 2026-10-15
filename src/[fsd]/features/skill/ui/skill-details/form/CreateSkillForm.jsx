@@ -4,6 +4,7 @@ import { useFormikContext } from 'formik';
 
 import { Box, Typography, useTheme } from '@mui/material';
 
+import { EditableEntityIcon } from '@/[fsd]/features/entity-icon-editor';
 import { SKILL_NAME_MAX_LENGTH } from '@/[fsd]/features/skill/lib/constants';
 import { GenerateSkillButton } from '@/[fsd]/features/skill/ui/generate-skill-modal';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
@@ -20,7 +21,6 @@ import {
   MAX_INSTRUCTIONS_LENGTH,
   PROMPT_PAYLOAD_KEY,
 } from '@/common/constants';
-import EntityIcon from '@/components/EntityIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import TagEditor from '@/pages/Common/Components/TagEditor';
 import { markdown } from '@codemirror/lang-markdown';
@@ -159,7 +159,7 @@ const CreateSkillForm = memo(props => {
             content: (
               <Box sx={styles.accordionContent}>
                 <Box sx={styles.nameContainer}>
-                  <EntityIcon
+                  <EditableEntityIcon
                     entityType={ChatParticipantType.Skills}
                     icon={formik.values?.version_details?.meta?.icon_meta}
                     editable={canUploadIcon}

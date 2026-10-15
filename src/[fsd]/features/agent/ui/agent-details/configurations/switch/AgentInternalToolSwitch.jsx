@@ -5,6 +5,7 @@ import { useFormikContext } from 'formik';
 import { Box, FormControlLabel, Typography } from '@mui/material';
 
 import { Switch, Text } from '@/[fsd]/shared/ui';
+import { EntityIcon } from '@/[fsd]/shared/ui/icon';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import AttachSvgIcon from '@/assets/attach-icon.svg?react';
 import CalendarIcon from '@/assets/calendar.svg?react';
@@ -14,7 +15,6 @@ import PieChartIcon from '@/assets/pie-chart-icon.svg?react';
 import PythonIcon from '@/assets/python.svg?react';
 import SwarmIconSVG from '@/assets/swarm-icon.svg?react';
 import ToolsIcon from '@/assets/tools-icon.svg?react';
-import EntityIcon from '@/components/EntityIcon';
 
 const AgentInternalToolSwitch = memo(props => {
   const { title, name, disabled, infoTooltip, icon } = props;

@@ -2,8 +2,8 @@ import { forwardRef, memo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
+import { EntityIcon } from '@/[fsd]/shared/ui/icon';
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
-import EntityIcon from '@/components/EntityIcon';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
 import InfoIcon from '@/components/Icons/InfoIcon';
 import { StyledTipsContainer } from '@/pages/Common/Components/InputVersionDialog';

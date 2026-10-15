@@ -7,6 +7,7 @@ import { Box, useTheme } from '@mui/material';
 import { AgentInput } from '@/[fsd]/features/agent/ui/agent-details/configurations';
 import ApplicationAdvanceSettings from '@/[fsd]/features/agent/ui/agent-details/configurations/ApplicationAdvanceSettings';
 import { GenerateAgentButton } from '@/[fsd]/features/agent/ui/generate-agent-modal';
+import { EditableEntityIcon } from '@/[fsd]/features/entity-icon-editor';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { useFieldFocus, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { Input, Text } from '@/[fsd]/shared/ui';
@@ -15,7 +16,6 @@ import { useTagListQuery } from '@/api/tags.js';
 import { MAX_DESCRIPTION_LENGTH, MAX_NAME_LENGTH, PROMPT_PAYLOAD_KEY } from '@/common/constants';
 import ApplicationVariables from '@/components/ApplicationVariables';
 import ConversationStarters from '@/components/ConversationStarters';
-import EntityIcon from '@/components/EntityIcon';
 import useCreateApplication from '@/hooks/application/useCreateApplication';
 import TagEditor from '@/pages/Common/Components/TagEditor';
 
@@ -108,7 +108,7 @@ const CreateAgentForm = memo(props => {
             content: (
               <Box sx={styles.accordionContent}>
                 <Box sx={styles.nameContainer}>
-                  <EntityIcon
+                  <EditableEntityIcon
                     data-testid="agent-form-icon-button"
                     imgTestId="agent-form-icon-img"
                     icon={formik.values?.version_details?.meta?.icon_meta}

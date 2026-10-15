@@ -10,8 +10,6 @@ export const ParticipantCreationPermissionMap = {
   [ParticipantEntityTypes.MCP]: PERMISSIONS.toolkits.create,
 };
 
-export const CATALOG_LABEL = 'Catalog';
-
 export const SkillUnavailableReason = {
   Skill: 'skill',
   Version: 'version',

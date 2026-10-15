@@ -3,8 +3,8 @@ import { memo, useCallback, useMemo, useRef } from 'react';
 import { Box, ClickAwayListener, Grow, Paper, Popper, Typography } from '@mui/material';
 
 import { getChatParticipantUniqueId } from '@/[fsd]/features/chat/participants/lib/helpers';
+import { DropdownConstants } from '@/[fsd]/shared/lib/constants';
 import { SPACING } from '@/common/designTokens';
-import { DROPDOWN_CONSTANTS } from '@/components/UnifiedDropdown';
 
 import ParticipantItem from '../expanded-participants/ParticipantItem';
 
@@ -190,12 +190,12 @@ const collapsedParticipantsDropdownStyles = () => ({
           : 'center top',
   }),
   paper: ({ palette }) => ({
-    borderRadius: DROPDOWN_CONSTANTS.BORDER_RADIUS.MENU,
+    borderRadius: DropdownConstants.BORDER_RADIUS.MENU,
     border: `.0625rem solid ${palette.border.lines}`,
     background: palette.background.default.secondary,
     boxShadow: '0rem .5rem .75rem 0rem rgba(0, 0, 0, 0.3)',
     width: '16.9375rem',
-    maxHeight: DROPDOWN_CONSTANTS.DIMENSIONS.MENU_MAX_HEIGHT,
+    maxHeight: DropdownConstants.DIMENSIONS.MENU_MAX_HEIGHT,
   }),
   contentWrapper: {
     height: 'auto',
@@ -208,8 +208,8 @@ const collapsedParticipantsDropdownStyles = () => ({
     display: 'flex',
     alignItems: 'center',
     padding: `${SPACING.SM} ${SPACING.XL}`,
-    height: DROPDOWN_CONSTANTS.DIMENSIONS.ITEM_HEIGHT,
-    gap: DROPDOWN_CONSTANTS.SPACING.ITEM_ICON_TEXT_GAP,
+    height: DropdownConstants.DIMENSIONS.ITEM_HEIGHT,
+    gap: DropdownConstants.SPACING.ITEM_ICON_TEXT_GAP,
     color: palette.components.input.text.placeholder,
     textTransform: 'uppercase',
   }),

@@ -2,10 +2,10 @@ import { forwardRef, memo } from 'react';
 
 import { Box, IconButton, Typography } from '@mui/material';
 
-import { ParticipantConstants } from '@/[fsd]/features/chat/participants/lib/constants';
+import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
+import { EntityIcon } from '@/[fsd]/shared/ui/icon';
 import AttachIcon from '@/assets/attach-icon.svg?react';
 import { ChatParticipantType, PUBLIC_PROJECT_ID } from '@/common/constants';
-import EntityIcon from '@/components/EntityIcon';
 import InfoIcon from '@/components/Icons/InfoIcon';
 
 import ParticipantActions from '../participant-actions/ParticipantActions';
@@ -116,7 +116,7 @@ const ParticipantNormalCard = memo(
                       sx={styles.catalogTag}
                       data-testid="chat-participant-catalog-tag"
                     >
-                      {ParticipantConstants.CATALOG_LABEL}
+                      {ParticipantEntityConstants.CATALOG_LABEL}
                     </Typography>
                   )}
                 <ParticipantConnectionIcons

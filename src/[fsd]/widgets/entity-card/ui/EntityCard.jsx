@@ -15,6 +15,7 @@ import {
 } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import { EntityIcon } from '@/[fsd]/shared/ui/icon';
 import { PinButton } from '@/[fsd]/widgets/pin-toggler/ui';
 import { useEliteaAssistantRef, useGetSupportAssistantConfigQuery } from '@/[fsd]/widgets/support-assistant';
 import EliteaAssistantIcon from '@/assets/icons/elitea-assistant-icon.svg?react';
@@ -25,7 +26,6 @@ import { isApplicationCard, isSkillCard, isToolkitCard } from '@/common/checkCar
 import { ContentType, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
 import { getEntityType, getEntityTypeByCardType } from '@/common/utils';
 import AuthorContainer from '@/components/AuthorContainer';
-import EntityIcon from '@/components/EntityIcon';
 import { IconLinkWithToolTip } from '@/components/Fork/IconLinkWithToolTip.jsx';
 import HighlightQuery from '@/components/HighlightQuery';
 import FolderIcon from '@/components/Icons/FolderIcon';

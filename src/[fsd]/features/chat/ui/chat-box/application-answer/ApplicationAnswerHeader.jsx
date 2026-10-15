@@ -5,9 +5,9 @@ import { Box, Chip, ListItemAvatar, Typography } from '@mui/material';
 
 import { useParticipantEntityIcon, useParticipantName } from '@/[fsd]/features/chat/participants/lib/hooks';
 import { BrandLogo } from '@/[fsd]/shared/ui';
+import { EntityIcon } from '@/[fsd]/shared/ui/icon';
 import { ChatParticipantType, WELCOME_MESSAGE_ID } from '@/common/constants.js';
 import CreatedTimeInfo from '@/components/Chat/CreatedTimeInfo';
-import EntityIcon from '@/components/EntityIcon';
 
 const ApplicationAnswerHeader = memo(
   forwardRef((props, ref) => {

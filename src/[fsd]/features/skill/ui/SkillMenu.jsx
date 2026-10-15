@@ -9,13 +9,13 @@ import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version';
 import { useLazySkillDetailsQuery, useSkillListQuery } from '@/[fsd]/features/skill/api';
 import { useAttachSkill } from '@/[fsd]/features/skill/lib/hooks';
 import { useDebounceValue, useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
+import { Dropdown } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import PlusIcon from '@/assets/plus-icon.svg?react';
 import SkillIcon from '@/assets/skill-icon.svg?react';
 import { SearchParams, VITE_BASE_URI } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import EliteAImage from '@/components/EliteAImage';
-import UnifiedDropdown from '@/components/UnifiedDropdown';
 import RouteDefinitions from '@/routes.js';
 
 const SEARCH_DEBOUNCE_MS = 300;
@@ -196,7 +196,7 @@ const SkillMenu = memo(props => {
         </Tooltip>
       </Box>
 
-      <UnifiedDropdown
+      <Dropdown.UnifiedDropdown
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
         onClose={handleClose}

@@ -21,9 +21,9 @@ import { useAgentsWithSkillQuery, useAttachPublicSkillMutation } from '@/[fsd]/f
 import { useDebounceValue, useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Banner } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import { EntityIcon } from '@/[fsd]/shared/ui/icon';
 import { useLazyApplicationListQuery } from '@/api/applications';
 import { ChatParticipantType, ViewMode } from '@/common/constants';
-import EntityIcon from '@/components/EntityIcon';
 import ArrowDownMuiSvgIcon from '@/components/Icons/ArrowDownMuiSvgIcon';
 import CheckIcon from '@/components/Icons/CheckIcon';
 import CloseIcon from '@/components/Icons/CloseIcon';

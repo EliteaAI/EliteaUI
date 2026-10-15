@@ -4,13 +4,13 @@ import { useTheme } from '@mui/material';
 
 import { ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
+import { DropdownConstants } from '@/[fsd]/shared/lib/constants';
 import { isMcpToolkit, resolveToolkitSchemaByType } from '@/[fsd]/shared/lib/helpers';
 import { useIsMcpVisible, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
+import { EntityIcon } from '@/[fsd]/shared/ui/icon';
 import { useToolkitsListQuery } from '@/api/toolkits';
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
 import { getToolIconByType } from '@/common/toolkitUtils';
-import EntityIcon from '@/components/EntityIcon';
-import { DROPDOWN_CONSTANTS } from '@/components/UnifiedDropdown';
 import { useApplicationParticipants } from '@/hooks/chat/useApplicationParticipants';
 import { usePublicApplicationParticipants } from '@/hooks/chat/usePublicApplicationParticipants';
 
@@ -169,9 +169,9 @@ export const useDropdownData = ({ agentQuery, pipelineQuery, toolkitQuery, mcpQu
         height: '1.25rem',
       },
       '& svg': {
-        width: DROPDOWN_CONSTANTS.DIMENSIONS.ICON_SVG_SIZE,
-        height: DROPDOWN_CONSTANTS.DIMENSIONS.ICON_SVG_SIZE,
-        fontSize: DROPDOWN_CONSTANTS.DIMENSIONS.ICON_SVG_SIZE,
+        width: DropdownConstants.DIMENSIONS.ICON_SVG_SIZE,
+        height: DropdownConstants.DIMENSIONS.ICON_SVG_SIZE,
+        fontSize: DropdownConstants.DIMENSIONS.ICON_SVG_SIZE,
       },
     }),
     [],
@@ -210,7 +210,7 @@ export const useDropdownData = ({ agentQuery, pipelineQuery, toolkitQuery, mcpQu
           entityType={'application'}
           projectId={agent.project_id}
           editable={false}
-          specifiedFontSize={DROPDOWN_CONSTANTS.DIMENSIONS.ICON_SVG_SIZE}
+          specifiedFontSize={DropdownConstants.DIMENSIONS.ICON_SVG_SIZE}
         />
       ),
     }));
@@ -238,7 +238,7 @@ export const useDropdownData = ({ agentQuery, pipelineQuery, toolkitQuery, mcpQu
           entityType={'pipeline'}
           projectId={pipeline.project_id}
           editable={false}
-          specifiedFontSize={DROPDOWN_CONSTANTS.DIMENSIONS.ICON_SVG_SIZE}
+          specifiedFontSize={DropdownConstants.DIMENSIONS.ICON_SVG_SIZE}
         />
       ),
     }));
@@ -271,7 +271,7 @@ export const useDropdownData = ({ agentQuery, pipelineQuery, toolkitQuery, mcpQu
               }),
             }}
             editable={false}
-            specifiedFontSize={DROPDOWN_CONSTANTS.DIMENSIONS.ICON_SVG_SIZE}
+            specifiedFontSize={DropdownConstants.DIMENSIONS.ICON_SVG_SIZE}
           />
         ),
       };
@@ -306,7 +306,7 @@ export const useDropdownData = ({ agentQuery, pipelineQuery, toolkitQuery, mcpQu
               }),
             }}
             editable={false}
-            specifiedFontSize={DROPDOWN_CONSTANTS.DIMENSIONS.ICON_SVG_SIZE}
+            specifiedFontSize={DropdownConstants.DIMENSIONS.ICON_SVG_SIZE}
           />
         ),
       };

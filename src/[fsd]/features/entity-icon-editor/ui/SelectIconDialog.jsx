@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
@@ -15,6 +15,7 @@ import {
 import { useSystemSenderName, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import { EntityTypeIcon } from '@/[fsd]/shared/ui/icon';
 import BaseModal from '@/[fsd]/shared/ui/modal/BaseModal';
 import {
   useDeleteApplicationIconMutation,
@@ -25,21 +26,12 @@ import {
 } from '@/api/applications';
 import ImportIcon from '@/assets/import-icon.svg?react';
 import { buildErrorMessage } from '@/common/utils';
+import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
+import EliteAImage from '@/components/EliteAImage';
 
-import { StyledCircleProgress } from './Chat/StyledComponents';
-import EliteAImage from './EliteAImage';
-import { EntityTypeIcon } from './EntityIcon';
+const SelectIconDialog = memo(props => {
+  const { open, onClose, entityType, selectedIcon, onSelectIcon, projectId, entityId, versionId } = props;
 
-export default function SelectIconDialog({
-  open,
-  onClose,
-  entityType,
-  selectedIcon,
-  onSelectIcon,
-  projectId,
-  entityId,
-  versionId,
-}) {
   const systemSenderName = useSystemSenderName();
   const { toastError, toastSuccess } = useToast();
   const fileInputRef = useRef(null);
@@ -432,7 +424,9 @@ export default function SelectIconDialog({
       sx={styles.modal}
     />
   );
-}
+});
+
+SelectIconDialog.displayName = 'SelectIconDialog';
 
 /** @type {MuiSx} */
 const selectIconDialogStyles = () => ({
@@ -487,3 +481,5 @@ const selectIconDialogStyles = () => ({
     fill: palette.icon.default,
   }),
 });
+
+export default SelectIconDialog;

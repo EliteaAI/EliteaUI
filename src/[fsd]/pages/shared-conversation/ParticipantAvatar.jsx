@@ -1,6 +1,6 @@
 import { memo } from 'react';
 
-import EntityIcon from '@/components/EntityIcon';
+import { EntityIcon } from '@/[fsd]/shared/ui/icon';
 import UserAvatar from '@/components/UserAvatar';
 
 const ParticipantAvatar = memo(props => {

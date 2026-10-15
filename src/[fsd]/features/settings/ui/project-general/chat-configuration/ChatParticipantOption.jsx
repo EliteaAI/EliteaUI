@@ -2,7 +2,7 @@ import { memo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { ParticipantConstants } from '@/[fsd]/features/chat/participants/lib/constants';
+import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
 
 import ChatParticipantIcon from './ChatParticipantIcon';
@@ -27,7 +27,7 @@ const ChatParticipantOption = memo(props => {
       >
         {option.name}
       </Typography>
-      {isPublic && <ChatParticipantPublicBadge label={ParticipantConstants.CATALOG_LABEL} />}
+      {isPublic && <ChatParticipantPublicBadge label={ParticipantEntityConstants.CATALOG_LABEL} />}
     </Box>
   );
 });

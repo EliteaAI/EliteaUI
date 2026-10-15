@@ -2,10 +2,10 @@ import { memo, useCallback, useMemo } from 'react';
 
 import { Box, IconButton, Tooltip, Typography, useTheme } from '@mui/material';
 
+import { EntityIcon } from '@/[fsd]/shared/ui/icon';
 import OpenNewIcon from '@/assets/open-new-icon.svg?react';
 import { SearchParams } from '@/common/constants';
 import { getToolIconByType } from '@/common/toolkitUtils';
-import EntityIcon from '@/components/EntityIcon';
 import { getBasename } from '@/routes';
 
 const ENTITY_TYPE_LABELS = {

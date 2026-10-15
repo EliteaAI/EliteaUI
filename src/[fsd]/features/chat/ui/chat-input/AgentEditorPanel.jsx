@@ -6,8 +6,8 @@ import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version';
 import { useAgentEditorPanelFit } from '@/[fsd]/features/chat/lib/hooks';
 import { useParticipantEntityIcon } from '@/[fsd]/features/chat/participants/lib/hooks';
 import { usePublicProjectAccessCheck } from '@/[fsd]/features/project';
+import { EntityIcon } from '@/[fsd]/shared/ui/icon';
 import { PERMISSIONS, PUBLIC_PROJECT_ID } from '@/common/constants';
-import EntityIcon from '@/components/EntityIcon';
 import useIsActiveParticipantBeingEdited from '@/hooks/chat/useIsActiveParticipantBeingEdited';
 import useCheckPermission from '@/hooks/useCheckPermission';
 

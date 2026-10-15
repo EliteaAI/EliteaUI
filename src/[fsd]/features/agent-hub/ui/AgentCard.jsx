@@ -5,9 +5,9 @@ import { Box, Card, Chip, Typography } from '@mui/material';
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { ELITEA_CATALOG_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { catalogCardActionContainerStyles, catalogCardNewBadgeStyles } from '@/[fsd]/shared/lib/helpers';
+import { EntityIcon } from '@/[fsd]/shared/ui/icon';
 import { ChatParticipantType, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
 import AuthorContainer from '@/components/AuthorContainer';
-import EntityIcon from '@/components/EntityIcon';
 import { getCardGradientStyles } from '@/utils/cardStyles';
 
 import AgentHubLike from './AgentHubLike';

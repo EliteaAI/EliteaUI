@@ -4,8 +4,8 @@ import { Box, Typography } from '@mui/material';
 
 import { useParticipantEntityIcon, useParticipantName } from '@/[fsd]/features/chat/participants/lib/hooks';
 import { ChatWelcomeMessage } from '@/[fsd]/features/chat/ui/chat-welcome-message';
+import { EntityIcon } from '@/[fsd]/shared/ui/icon';
 import { ChatParticipantType } from '@/common/constants';
-import EntityIcon from '@/components/EntityIcon';
 
 const ChatParticipantWelcomeItem = memo(props => {
   const { participant, message } = props;

@@ -5,8 +5,8 @@ import { createFilterOptions } from '@mui/material/Autocomplete';
 import { Box } from '@mui/system';
 
 import AutoCompleteDropDown from '@/ComponentsLib/AutoCompleteDropDown';
+import { EntityTypeIcon } from '@/[fsd]/shared/ui/icon';
 import { ChatParticipantType, PUBLIC_PROJECT_ID } from '@/common/constants';
-import { EntityTypeIcon } from '@/components/EntityIcon';
 import SearchIcon from '@/components/Icons/SearchIcon';
 import useParticipants from '@/hooks/chat/useParticipants';
 
