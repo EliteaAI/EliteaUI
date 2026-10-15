@@ -1,6 +1,6 @@
 import { LOCKED_SKILL_VERSION_STATUSES } from '@/[fsd]/features/skill/lib/constants/skill.constants';
 import { DEFAULT_MAX_TOKENS, DEFAULT_TEMPERATURE } from '@/[fsd]/shared/lib/constants/llmSettings.constants';
-import { autoModel, isAutoSelection } from '@/[fsd]/shared/lib/utils/autoRouting.utils';
+import { autoModel, isAutoSelection, selectionFields } from '@/[fsd]/shared/lib/utils/autoRouting.utils';
 import {
   defaultReasoningEffortFor,
   generateLLMSettings,
@@ -84,14 +84,30 @@ export const includesProjectContext = runSettings => !runSettings?.ignore_projec
 
 export const isSkillVersionLocked = status => LOCKED_SKILL_VERSION_STATUSES.includes(status);
 
-export const testPanelSettingsFor = (savedLlmSettings, model) => ({
-  max_tokens: savedLlmSettings?.max_tokens ?? DEFAULT_MAX_TOKENS,
-  ...(modelSupportsReasoning(model)
-    ? {
-        temperature: null,
-        reasoning_effort: savedLlmSettings?.reasoning_effort ?? defaultReasoningEffortFor(model),
-      }
-    : { temperature: savedLlmSettings?.temperature ?? DEFAULT_TEMPERATURE, reasoning_effort: null }),
+export const testPanelSettingsFor = (savedLlmSettings, model) => {
+  const max_tokens = savedLlmSettings?.max_tokens ?? DEFAULT_MAX_TOKENS;
+  if (isAutoSelection(model)) {
+    const selection = isAutoSelection(savedLlmSettings) ? savedLlmSettings.selection : model.selection;
+    return { max_tokens, ...selectionFields({ selection }) };
+  }
+  return {
+    max_tokens,
+    ...(modelSupportsReasoning(model)
+      ? {
+          temperature: null,
+          reasoning_effort: savedLlmSettings?.reasoning_effort ?? defaultReasoningEffortFor(model),
+        }
+      : { temperature: savedLlmSettings?.temperature ?? DEFAULT_TEMPERATURE, reasoning_effort: null }),
+  };
+};
+
+export const testPanelRequestSettings = (model, llmSettings) => ({
+  temperature: llmSettings.temperature ?? null,
+  max_tokens: llmSettings.max_tokens ?? DEFAULT_MAX_TOKENS,
+  reasoning_effort: llmSettings.reasoning_effort ?? null,
+  ...selectionFields(
+    isAutoSelection(model) ? { selection: llmSettings.selection ?? model.selection } : model,
+  ),
 });
 
 export const withRunStepsLimit = (versionLLMSettings, runLLMSettings) =>
