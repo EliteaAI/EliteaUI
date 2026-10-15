@@ -8,6 +8,7 @@ import {
   isSkillVersionLocked,
   resolveSkillChatLLMSettings,
   resolveSkillChatModel,
+  testPanelRequestSettings,
   testPanelSettingsFor,
   toRunSettingsPayload,
   withDefaultSkillModel,
@@ -258,6 +259,39 @@ describe('withDefaultSkillModel', () => {
 
   it('leaves the version alone until the models load', () => {
     expect(withDefaultSkillModel(null, null)).toBeNull();
+  });
+});
+
+describe('testPanelRequestSettings', () => {
+  const AUTO = {
+    mode: 'auto',
+    profile_ref: { id: 'quality-auto', revision: 1 },
+    reasoning: { mode: 'auto' },
+  };
+  const TUNED = { temperature: 0.3, max_tokens: 8192, reasoning_effort: null };
+
+  it('sends the fixed model with its tuned settings', () => {
+    expect(testPanelRequestSettings({ name: 'sonnet', project_id: 1 }, TUNED, null)).toEqual({
+      temperature: 0.3,
+      max_tokens: 8192,
+      reasoning_effort: null,
+      selection: null,
+      model_name: 'sonnet',
+      model_project_id: 1,
+    });
+  });
+
+  it('sends Auto as a selection without a fixed model or effort', () => {
+    const request = testPanelRequestSettings({ selection: AUTO }, TUNED, null);
+
+    expect(request).toMatchObject({ selection: AUTO, model_name: null, model_project_id: null });
+    expect(request).toMatchObject({ temperature: null, reasoning_effort: null, max_tokens: 8192 });
+  });
+
+  it("keeps the version's own Auto selection, explicit effort included", () => {
+    const saved = { selection: { ...AUTO, reasoning: { mode: 'explicit', preset: 'high' } } };
+
+    expect(testPanelRequestSettings({ selection: AUTO }, TUNED, saved).selection).toBe(saved.selection);
   });
 });
 

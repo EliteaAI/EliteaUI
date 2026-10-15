@@ -115,6 +115,21 @@ describe('SkillTestPanel model chip', () => {
     expect(fixture.inputProps.selectedModel).toBe(MODELS[1]);
   });
 
+  it('runs an Auto version on Auto, routed as the agent task a skill run is', async () => {
+    const selection = AUTO_SELECTION;
+    fixture.versionModel = { id: 'auto', name: 'auto', selection };
+    renderPanel(true, { llm_settings: { selection, max_tokens: 4096 } });
+
+    await act(async () => fixture.inputProps.onSend('hello'));
+
+    expect(fixture.generateContent.mock.calls[0][0].llm_settings).toMatchObject({
+      selection,
+      model_name: null,
+      max_tokens: 4096,
+    });
+    expect(fixture.generateContent.mock.calls[0][0].routing_surface).toBe('agent');
+  });
+
   it('tests on the project default when the version model is not available, like Run', async () => {
     fixture.versionModel = { name: 'unshared-model', project_id: 9 };
     renderPanel(true, { llm_settings: { model_name: 'unshared-model', model_project_id: 9 } });
@@ -126,12 +141,6 @@ describe('SkillTestPanel model chip', () => {
       model_name: 'haiku',
       model_project_id: 1,
     });
-  });
-
-  it('does not offer Auto in the Test panel', () => {
-    renderPanel(true);
-
-    expect(fixture.inputProps.modelList).not.toContainEqual(expect.objectContaining({ id: 'auto' }));
   });
 
   it('tests on the project default when the saved model belongs to another project, like Run', async () => {

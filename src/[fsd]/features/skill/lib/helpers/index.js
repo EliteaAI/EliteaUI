@@ -13,6 +13,7 @@ export {
   resolveSkillChatLLMSettings,
   resolveSkillChatModel,
   isSkillVersionLocked,
+  testPanelRequestSettings,
   testPanelSettingsFor,
   toRunSettingsPayload,
   withoutSkillChatModel,

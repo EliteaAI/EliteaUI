@@ -19,13 +19,14 @@ import { NewChatInput } from '@/[fsd]/features/chat/ui/chat-input';
 import {
   findRunnableModel,
   includesProjectContext,
+  testPanelRequestSettings,
   testPanelSettingsFor,
 } from '@/[fsd]/features/skill/lib/helpers';
 import { useSkillModels, useSkillVersionModel } from '@/[fsd]/features/skill/lib/hooks';
-import { LLMSettingsConstants } from '@/[fsd]/shared/lib/constants';
+import { AutoRoutingConstants } from '@/[fsd]/shared/lib/constants';
 import { SocketContext } from '@/[fsd]/shared/lib/context';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
-import { isAutoSelection, resetLLMSettingsForModel } from '@/[fsd]/shared/lib/utils';
+import { resetLLMSettingsForModel } from '@/[fsd]/shared/lib/utils';
 import { useGenerateContentStreamingMutation, useStopLlmTaskMutation } from '@/api/llm';
 import { ChatParticipantType, ROLES, SocketMessageType, sioEvents } from '@/common/constants';
 import { initializeNewMessages } from '@/common/initializeNewMessages';
@@ -35,7 +36,7 @@ import { ChatBodyContainer } from '@/components/Chat/StyledComponents';
 import { useManualSocket } from '@/hooks/useSocket';
 import { ContentContainer } from '@/pages/Common/Components/StyledComponents';
 
-const { DEFAULT_MAX_TOKENS } = LLMSettingsConstants;
+const { MODEL_SURFACES } = AutoRoutingConstants;
 
 const SYNTHETIC_PARTICIPANT_ID = 'skill-test-participant';
 
@@ -139,12 +140,7 @@ const SkillTestPanel = memo(props => {
   // first incoming socket event.
   const awaitingStreamRef = useRef(false);
 
-  const { models } = useSkillModels();
-  const modelList = useMemo(() => models.filter(model => !isAutoSelection(model)), [models]);
-  const defaultModel = useMemo(
-    () => modelList.find(model => model.default) || modelList[0] || null,
-    [modelList],
-  );
+  const { models: modelList, defaultModel } = useSkillModels();
   const {
     canEditVersionModel,
     onSelectModel: onSelectVersionModel,
@@ -357,14 +353,9 @@ const SkillTestPanel = memo(props => {
           instructions: instructionsRef.current,
           user_input: userInput,
           chat_history: priorTurns,
-          llm_settings: {
-            model_name: selectedModel.name,
-            model_project_id: selectedModel.project_id,
-            temperature: llmSettings.temperature ?? null,
-            max_tokens: llmSettings.max_tokens ?? DEFAULT_MAX_TOKENS,
-            reasoning_effort: llmSettings.reasoning_effort ?? null,
-          },
+          llm_settings: testPanelRequestSettings(selectedModel, llmSettings, savedLlmSettings),
           include_project_context: withProjectContext,
+          routing_surface: MODEL_SURFACES.agent,
         }).unwrap();
         if (result?.error) throw new Error(result.error);
         if (result?.task_id) activeTaskIdRef.current = result.task_id;
@@ -378,6 +369,7 @@ const SkillTestPanel = memo(props => {
       generateContent,
       llmSettings,
       projectId,
+      savedLlmSettings,
       selectedModel,
       socket?.id,
       toastError,
