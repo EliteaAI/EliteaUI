@@ -1,12 +1,12 @@
 import { useCallback } from 'react';
 
-import EntityCard from '@/components/Card';
+import EntityCard from '../../ui/EntityCard';
 
 /**
  * Custom hook that provides a memoized card renderer function for EntityCard component.
  * Used by list pages (Applications, Pipelines, Credentials, etc.) to render cards consistently.
  */
-const useCardList = (viewMode, customTagClickHandler = null, options = {}) => {
+export const useCardList = (viewMode, customTagClickHandler = null, options = {}) => {
   const { showFolders = true } = options;
 
   const renderCard = useCallback(
@@ -36,5 +36,3 @@ const useCardList = (viewMode, customTagClickHandler = null, options = {}) => {
     renderCard,
   };
 };
-
-export default useCardList;

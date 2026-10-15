@@ -10,11 +10,11 @@ import {
   useToast,
   useViewMode,
 } from '@/[fsd]/shared/lib/hooks';
+import { useCardList } from '@/[fsd]/widgets/entity-card';
 import { ContentType } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import CardList from '@/components/CardList';
 import RightInfoPanel from '@/components/RightInfoPanel';
-import useCardList from '@/hooks/useCardList';
 import { getQueryStatuses } from '@/utils/getQueryStatus';
 
 const AuthorMCPList = memo(props => {

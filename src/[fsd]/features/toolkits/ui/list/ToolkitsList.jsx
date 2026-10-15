@@ -19,12 +19,12 @@ import { useLoadToolkits } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ToolkitTypesPanel, ToolkitsEmptyListPlaceHolder } from '@/[fsd]/features/toolkits/ui/list';
 import { isMcpToolkit } from '@/[fsd]/shared/lib/helpers';
 import { useIsMcpVisible, useIsTableView, useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
+import { useCardList } from '@/[fsd]/widgets/entity-card';
 import { ContentType, PUBLIC_PROJECT_ID, ViewMode } from '@/common/constants';
 import { buildErrorMessage, uniqueArrayByProp } from '@/common/utils';
 import CardList from '@/components/CardList';
 import useMCPListStatusMonitor from '@/hooks/toolkit/useMCPListStatusMonitor';
 import useTypes from '@/hooks/toolkit/useTypes';
-import useCardList from '@/hooks/useCardList';
 import RouteDefinitions from '@/routes';
 import { actions as tagsActions } from '@/slices/tags';
 
