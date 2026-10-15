@@ -498,7 +498,8 @@ const ToolBaseProperty = memo(props => {
           label={label}
           description={v.description}
           onSelectConfiguration={(value, options) =>
-            editField(buildEditFieldPath(k), value, undefined, { ...options, section })
+            // replace: a previous pick's configuration_uuid must not survive a switch to a row without one
+            editField(buildEditFieldPath(k), value, true, { ...options, section })
           }
           onReload={onCredentialReload}
           value={settings[k]}

@@ -6,9 +6,12 @@ export const resolveCredentialLabel = ({ configurations = [], credential, person
 
   const sameTitle = configurations.filter(configuration => configurationTitle(configuration) === eliteaTitle);
   const match =
-    sameTitle.find(
+    (credential.configuration_uuid &&
+      configurations.find(configuration => configuration.uuid === credential.configuration_uuid)) ||
+    (sameTitle.find(
       configuration => (configuration.project_id === personalProjectId) === Boolean(credential.private),
-    ) ?? sameTitle.find(configuration => configuration.shared);
+    ) ??
+      sameTitle.find(configuration => configuration.shared));
 
   return match?.label || eliteaTitle;
 };

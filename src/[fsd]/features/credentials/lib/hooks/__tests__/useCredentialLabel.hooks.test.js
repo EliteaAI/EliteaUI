@@ -77,6 +77,26 @@ describe('useCredentialLabel', () => {
     expect(result.current).toBe('AA');
   });
 
+  it('resolves the display name by the saved configuration uuid when two credentials share a title', () => {
+    listQuery.mockReturnValue({
+      data: {
+        items: [
+          { elitea_title: 'aasd', uuid: 'uuid-a', label: 'Twin A', type: 'github', project_id: 9 },
+          { elitea_title: 'aasd', uuid: 'uuid-b', label: 'Twin B', type: 'github', project_id: 9 },
+        ],
+      },
+    });
+
+    const { result } = renderHook(() =>
+      useCredentialLabel({
+        credential: { ...scheduleCredential, configuration_uuid: 'uuid-b' },
+        type: 'github',
+      }),
+    );
+
+    expect(result.current).toBe('Twin B');
+  });
+
   it('resolves a personal credential while a team project is selected', () => {
     listQuery.mockImplementation(({ projectId }) => ({
       data:

@@ -29,11 +29,34 @@ const credentialMenuItemValue = Object.freeze({
   keyKind: 'kind',
   keyEliteaTitle: 'elitea_title',
   keyPrivate: 'private',
+  keyConfigurationUuid: 'configuration_uuid',
+  keyConfigurationProjectId: 'configuration_project_id',
   kindSaved: 'saved',
   kindCreateAction: 'create_action',
 });
 
 const isBlankEliteaTitle = title => title == null || String(title).trim() === '';
+
+// The value stored in the toolkit settings. The immutable reference (uuid + project) is only added when the row has one.
+const toSavedCredential = row => ({
+  private: row.private,
+  elitea_title: row.elitea_title,
+  ...(row.uuid && {
+    [credentialMenuItemValue.keyConfigurationUuid]: row.uuid,
+    [credentialMenuItemValue.keyConfigurationProjectId]: row.project_id,
+  }),
+});
+
+// Saved value (or select-value payload) -> menu row. A saved reference resolves by uuid only (the backend
+// resolves it the same way, so a stale uuid must show as missing, not as a same-title row); legacy values
+// without a reference keep the title + private match.
+const findSavedOption = (options, saved) => {
+  const savedUuid = saved?.[credentialMenuItemValue.keyConfigurationUuid];
+  if (savedUuid) return options.find(option => option.uuid === savedUuid);
+  return options.find(
+    option => option.elitea_title === saved?.elitea_title && option.private === saved?.private,
+  );
+};
 
 const savedRowToSelectValue = row => {
   if (isBlankEliteaTitle(row?.elitea_title)) return '';
@@ -41,6 +64,8 @@ const savedRowToSelectValue = row => {
     [credentialMenuItemValue.keyKind]: credentialMenuItemValue.kindSaved,
     [credentialMenuItemValue.keyEliteaTitle]: row.elitea_title,
     [credentialMenuItemValue.keyPrivate]: !!row.private,
+    [credentialMenuItemValue.keyConfigurationUuid]: row.uuid,
+    [credentialMenuItemValue.keyConfigurationProjectId]: row.uuid ? row.project_id : undefined,
   });
 };
 
@@ -55,6 +80,11 @@ const selectValueToSavedRow = str => {
     return {
       elitea_title: title,
       private: !!payload[credentialMenuItemValue.keyPrivate],
+      ...(payload[credentialMenuItemValue.keyConfigurationUuid] && {
+        [credentialMenuItemValue.keyConfigurationUuid]: payload[credentialMenuItemValue.keyConfigurationUuid],
+        [credentialMenuItemValue.keyConfigurationProjectId]:
+          payload[credentialMenuItemValue.keyConfigurationProjectId],
+      }),
     };
   } catch {
     return null;
@@ -267,6 +297,8 @@ const CredentialsSelect = memo(props => {
 
         return {
           id: `${configuration.elitea_title}_${configuration.project_id}`,
+          uuid: configuration.uuid,
+          project_id: configuration.project_id,
           elitea_title: rowEliteaTitle,
           private: isConfigurationPersonal,
           settings: configuration.data || {},
@@ -319,9 +351,7 @@ const CredentialsSelect = memo(props => {
       );
     }
 
-    const availableSavedData = savedCredentialsMenuData.find(
-      option => option.elitea_title === value?.elitea_title && option.private === value?.private,
-    );
+    const availableSavedData = findSavedOption(savedCredentialsMenuData, value);
 
     if (availableSavedData) return availableSavedData;
 
@@ -381,16 +411,15 @@ const CredentialsSelect = memo(props => {
     if (!hasFetchedData || hasAutoSelectedRef.current || !credentialToAutoSelect) return;
 
     hasAutoSelectedRef.current = true;
-    commitConfiguration(
-      { private: credentialToAutoSelect.private, elitea_title: credentialToAutoSelect.elitea_title },
-      { isAutoSelect: true },
-    );
+    commitConfiguration(toSavedCredential(credentialToAutoSelect), { isAutoSelect: true });
   }, [hasFetchedData, credentialToAutoSelect, commitConfiguration, hasAutoSelectedRef]);
 
   const onSelectItem = useCallback(
     option => {
       const isCommittedValue =
-        value?.elitea_title === option.elitea_title && Boolean(value?.private) === option.private;
+        value?.configuration_uuid && option.uuid
+          ? value.configuration_uuid === option.uuid
+          : value?.elitea_title === option.elitea_title && Boolean(value?.private) === option.private;
 
       if (isCommittedValue) {
         commitConfiguration(null);
@@ -402,9 +431,17 @@ const CredentialsSelect = memo(props => {
         [GA_EVENT_PARAMS.TOOLKIT_TYPE]: type || 'unknown',
         [GA_EVENT_PARAMS.ENTITY]: contextExecutionEntity,
       });
-      commitConfiguration({ private: option.private, elitea_title: option.elitea_title });
+      commitConfiguration(toSavedCredential(option));
     },
-    [commitConfiguration, value?.elitea_title, value?.private, type, trackEvent, contextExecutionEntity],
+    [
+      commitConfiguration,
+      value?.elitea_title,
+      value?.private,
+      value?.configuration_uuid,
+      type,
+      trackEvent,
+      contextExecutionEntity,
+    ],
   );
 
   const handleClear = useCallback(() => {
@@ -488,18 +525,19 @@ const CredentialsSelect = memo(props => {
         : savedRowToSelectValue(selectedOption);
     }
     if (!value || isBlankEliteaTitle(value?.elitea_title)) return '';
-    return savedRowToSelectValue({ elitea_title: value.elitea_title, private: !!value.private });
+    return savedRowToSelectValue({
+      elitea_title: value.elitea_title,
+      private: !!value.private,
+      uuid: value.configuration_uuid,
+      project_id: value.configuration_project_id,
+    });
   }, [isOptionsReady, selectedOption, createMenuData, value]);
 
   const handleSelectValueChange = useCallback(
     newValue => {
       const savedRow = selectValueToSavedRow(newValue);
       if (savedRow) {
-        const matchingSaved = savedCredentialsMenuData.find(
-          credentialOption =>
-            credentialOption.elitea_title === savedRow.elitea_title &&
-            credentialOption.private === savedRow.private,
-        );
+        const matchingSaved = findSavedOption(savedCredentialsMenuData, savedRow);
         if (matchingSaved) {
           onSelectItem(matchingSaved);
           onReload?.({
