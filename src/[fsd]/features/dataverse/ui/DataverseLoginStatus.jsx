@@ -11,7 +11,8 @@ import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import OnlineIcon from '@/assets/online-icon.svg?react';
 
-const DataverseLoginStatus = memo(() => {
+const DataverseLoginStatus = memo(props => {
+  const { onLoginChange } = props;
   const { values } = useFormikContext();
   const projectId = useSelectedProjectId();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -20,6 +21,8 @@ const DataverseLoginStatus = memo(() => {
     useDataverseLogin({
       credentialRef: values?.settings?.dataverse_configuration,
       projectId,
+      // Re-runs toolkit validation so the stale "Sign in" warning under the credential goes away
+      onLoginChange,
     });
 
   const onOpenLogout = useCallback(() => setShowLogoutModal(true), []);

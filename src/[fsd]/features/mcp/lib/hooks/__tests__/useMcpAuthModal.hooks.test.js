@@ -125,4 +125,12 @@ describe('useConfigOAuthModal success toast', () => {
     expect(toastSuccess).not.toHaveBeenCalled();
     expect(onSuccess).toHaveBeenCalledTimes(1);
   });
+
+  it('uses the page project unless the caller names the credential project', () => {
+    const { result: pageProject } = renderHook(() => useConfigOAuthModal({}));
+    const { result: ownProject } = renderHook(() => useConfigOAuthModal({ projectId: 82 }));
+
+    expect(pageProject.current.getModalProps().projectId).toBe(30);
+    expect(ownProject.current.getModalProps().projectId).toBe(82);
+  });
 });
