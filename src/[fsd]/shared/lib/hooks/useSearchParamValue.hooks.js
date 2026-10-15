@@ -4,14 +4,14 @@ import { useSearchParams } from 'react-router-dom';
 
 import { SearchParams, ViewMode } from '@/common/constants';
 
-export default function useSearchParamValue(searchParamKey) {
+export const useSearchParamValue = searchParamKey => {
   const [searchParams] = useSearchParams();
   const searchParamValue = useMemo(
     () => searchParams.get(SearchParams[searchParamKey]) || undefined,
     [searchParamKey, searchParams],
   );
   return searchParamValue;
-}
+};
 
 export const useAuthorNameFromUrl = () => {
   return useSearchParamValue('AuthorName');

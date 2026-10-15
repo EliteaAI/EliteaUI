@@ -2,9 +2,8 @@ import { useCallback, useMemo, useState } from 'react';
 
 import { usePagedPublicSkillsQuery } from '@/[fsd]/features/skill-hub/api';
 import { useSkillListQuery } from '@/[fsd]/features/skill/api';
-import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
+import { useDebounceValue, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { ChatParticipantType, PAGE_SIZE, PUBLIC_PROJECT_ID } from '@/common/constants';
-import useDebounceValue from '@/hooks/useDebounceValue';
 
 const SEARCH_DEBOUNCE_MS = 200;
 const FIRST_PAGE = 0;

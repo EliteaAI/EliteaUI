@@ -6,13 +6,12 @@ import { useSetRefetchDetails } from '@/[fsd]/entities/application-tab-bar/lib/h
 import { ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useGetCurrentMCPSchemas, useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
 import { resolveToolkitSchemaByType } from '@/[fsd]/shared/lib/helpers';
-import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
+import { useSelectedProjectId, useSortQueryParamsFromUrl, useToast } from '@/[fsd]/shared/lib/hooks';
 import { useApplicationDetailsQuery } from '@/api/applications';
 import { useToolkitAssociateMutation, useToolkitsListQuery } from '@/api/toolkits.js';
 import { PAGE_SIZE_TOOLKITS_DROPDOWN_LIST } from '@/common/constants';
 import { getToolIconByType } from '@/common/toolkitUtils';
 import { buildErrorMessage } from '@/common/utils';
-import useSortQueryParamsFromUrl from '@/hooks/useSortQueryParamsFromUrl';
 
 export const useAssociateToolkit = ({ applicationId, versionId, onSelectToolkit, formik, entityType }) => {
   const [associateToolkit, { isLoading: isAssociating, isError: isAssociateError, error: associateError }] =

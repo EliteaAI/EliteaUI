@@ -8,7 +8,7 @@ import { Box } from '@mui/material';
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { useTrackEvent } from '@/GA';
 import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
-import { useIsMcpVisible, useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
+import { useDebounceValue, useIsMcpVisible, useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { useApplicationListQuery } from '@/api/applications';
 import { useLazyToolkitsDetailsQuery } from '@/api/toolkits';
@@ -20,7 +20,6 @@ import UnifiedDropdown, { DROPDOWN_CONSTANTS } from '@/components/UnifiedDropdow
 import { useAgentPipelineAssociation } from '@/hooks/application/useAgentPipelineAssociation.jsx';
 import { useFilterAddedItems } from '@/hooks/application/useFilterAddedItems.js';
 import { useLibraryToolkits } from '@/hooks/application/useLibraryToolkits';
-import useDebounceValue from '@/hooks/useDebounceValue';
 import { useIsFrom } from '@/hooks/useIsFromSpecificPageHooks';
 import RouteDefinitions from '@/routes.js';
 

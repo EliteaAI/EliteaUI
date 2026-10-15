@@ -10,13 +10,12 @@ import { usePagination } from '@/[fsd]/entities/grid-table';
 import { UsageExportHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { InfoBanner, infoBannerTextSx } from '@/[fsd]/features/settings/ui/analytics';
 import { DrawerPage } from '@/[fsd]/features/settings/ui/drawer-page';
-import { useSelectedProject, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
+import { useDebounceValue, useSelectedProject, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { exportToExcel } from '@/[fsd]/shared/lib/utils';
 import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
 import { BaseTab, BaseTabs } from '@/[fsd]/shared/ui/tabs';
 import { useLazyUsageMembersQuery, useProjectUsageQuery, useUsageMembersQuery } from '@/api';
 import RefreshIcon from '@/assets/refresh-icon.svg?react';
-import useDebounceValue from '@/hooks/useDebounceValue';
 
 import UsageDailyChart from './components/UsageDailyChart';
 import UsageMembersTable from './components/UsageMembersTable';

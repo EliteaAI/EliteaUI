@@ -6,7 +6,8 @@ import {
   DETAILS_PAGE_COLLAPSE_THRESHOLD,
   DETAILS_PAGE_COLLAPSE_THRESHOLD_WITH_SIDEBAR_OPEN,
 } from '@/common/constants';
-import useGetWindowWidth from '@/hooks/useGetWindowWidth';
+
+import { useGetWindowWidth } from './useGetWindowWidth.hooks';
 
 export const useShouldCollapseRightToolbar = () => {
   const { windowWidth } = useGetWindowWidth();

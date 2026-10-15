@@ -2,9 +2,9 @@ import { memo, useCallback, useMemo, useState } from 'react';
 
 import { Box, IconButton, Skeleton } from '@mui/material';
 
+import { useDebounceValue } from '@/[fsd]/shared/lib/hooks';
 import { SimpleSearchBar } from '@/[fsd]/shared/ui/input';
 import CloseIcon from '@/components/Icons/CloseIcon';
-import useDebounceValue from '@/hooks/useDebounceValue';
 
 import BucketFooter from './BucketFooter';
 import BucketHeader from './BucketHeader';

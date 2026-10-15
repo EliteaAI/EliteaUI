@@ -4,10 +4,9 @@ import { useSelector } from 'react-redux';
 
 import { useSkillParticipants } from '@/[fsd]/features/skill/lib/hooks';
 import { useLoadToolkits } from '@/[fsd]/features/toolkits/lib/hooks';
-import { useSelectedProjectId, useUserList } from '@/[fsd]/shared/lib/hooks';
+import { useDebounceValue, useSelectedProjectId, useUserList } from '@/[fsd]/shared/lib/hooks';
 import { ChatParticipantType, PUBLIC_PROJECT_ID } from '@/common/constants';
 import { sortByName } from '@/common/utils';
-import useDebounceValue from '@/hooks/useDebounceValue';
 import { useCanListThisPublicEntity } from '@/hooks/users/usePermissions';
 
 import { useApplicationParticipants } from './useApplicationParticipants';

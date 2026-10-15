@@ -1,8 +1,7 @@
 import { memo, useEffect } from 'react';
 
 import { useSkillHubData } from '@/[fsd]/features/skill-hub/lib/hooks';
-import { useCatalogCount } from '@/[fsd]/shared/lib/hooks';
-import useDebounceValue from '@/hooks/useDebounceValue';
+import { useCatalogCount, useDebounceValue } from '@/[fsd]/shared/lib/hooks';
 
 const NO_SELECTED_TAGS = [];
 

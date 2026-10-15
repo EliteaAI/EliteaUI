@@ -4,12 +4,11 @@ import { useFormikContext } from 'formik';
 import { useDispatch } from 'react-redux';
 
 import { SetDefaultVersionDialog } from '@/[fsd]/entities/version/ui';
-import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
+import { useSelectedProjectId, useToast, useViewModeFromUrl } from '@/[fsd]/shared/lib/hooks';
 import { useSetApplicationDefaultVersionMutation } from '@/api/applications';
 import { eliteaApi } from '@/api/eliteaApi';
 import { ViewMode } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
-import { useViewModeFromUrl } from '@/hooks/useSearchParamValue';
 
 export const useSetDefaultVersion = onSuccess => {
   const dispatch = useDispatch();

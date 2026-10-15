@@ -3,8 +3,7 @@ import { useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 
 import { useSkillListQuery } from '@/[fsd]/features/skill/api';
-import { usePageQuery } from '@/[fsd]/shared/lib/hooks';
-import { useAuthorIdFromUrl } from '@/hooks/useSearchParamValue';
+import { useAuthorIdFromUrl, usePageQuery } from '@/[fsd]/shared/lib/hooks';
 
 export const useLoadSkills = ({
   sortBy = 'created_at',

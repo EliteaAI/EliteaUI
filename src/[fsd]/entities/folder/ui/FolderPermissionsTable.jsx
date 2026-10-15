@@ -9,7 +9,7 @@ import {
 } from '@/[fsd]/entities/folder/lib/constants';
 import { useResponsiveColumns, useRowSelection, useTableSort } from '@/[fsd]/entities/grid-table/lib';
 import { GridTableBody, GridTableHeader, GridTableRow } from '@/[fsd]/entities/grid-table/ui';
-import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
+import { useGetWindowWidth, useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button, Text } from '@/[fsd]/shared/ui';
 import { AddButton } from '@/[fsd]/shared/ui/button';
 import { SimpleSearchBar } from '@/[fsd]/shared/ui/input';
@@ -17,7 +17,6 @@ import { useGetFolderAccessQuery, useRemoveFolderAccessMutation, useSetFolderAcc
 import NoPermissionsIcon from '@/assets/file-lock.svg?react';
 import PlusIcon from '@/assets/plus-icon.svg?react';
 import EditIcon from '@/components/Icons/EditIcon';
-import useGetWindowWidth from '@/hooks/useGetWindowWidth';
 
 import AddFolderPermissionDialog from './AddFolderPermissionDialog';
 import EditFolderPermissionDialog from './EditFolderPermissionDialog';

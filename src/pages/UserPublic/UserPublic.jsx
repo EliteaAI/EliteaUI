@@ -8,7 +8,12 @@ import { Box } from '@mui/material';
 import { MCPList } from '@/[fsd]/features/mcp/ui';
 import { useLoadToolkits } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ToolkitsList } from '@/[fsd]/features/toolkits/ui';
-import { useSelectedProjectId, useViewMode } from '@/[fsd]/shared/lib/hooks';
+import {
+  useAuthorIdFromUrl,
+  useSelectedProjectId,
+  useSortQueryParamsFromUrl,
+  useViewMode,
+} from '@/[fsd]/shared/lib/hooks';
 import { Select } from '@/[fsd]/shared/ui';
 import { useTotalApplicationsQuery, useTotalPublicApplicationsQuery } from '@/api/applications';
 import FlowIcon from '@/assets/flow-icon.svg?react';
@@ -25,8 +30,6 @@ import {
 import ApplicationsIcon from '@/components/Icons/ApplicationsIcon';
 import StickyTabs from '@/components/StickyTabs';
 import ViewToggle from '@/components/ViewToggle';
-import { useAuthorIdFromUrl } from '@/hooks/useSearchParamValue';
-import useSortQueryParamsFromUrl from '@/hooks/useSortQueryParamsFromUrl';
 import useTags from '@/hooks/useTags';
 import { publicAdminPermissions } from '@/hooks/users/usePermissions';
 import RouteDefinitions, { PathSessionMap } from '@/routes';

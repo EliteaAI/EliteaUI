@@ -11,9 +11,9 @@ import {
   UserPublicTabs,
   ViewMode,
 } from '@/common/constants';
-import { useAuthorIdFromUrl, useAuthorNameFromUrl, useNameFromUrl } from '@/hooks/useSearchParamValue';
 import RouteDefinitions, { PathSessionMap } from '@/routes';
 
+import { useAuthorIdFromUrl, useAuthorNameFromUrl, useNameFromUrl } from './useSearchParamValue.hooks';
 import { useSelectedProjectId } from './useSelectedProject.hooks';
 import { useViewMode } from './useViewMode.hooks';
 

@@ -4,11 +4,9 @@ import { useSelector } from 'react-redux';
 
 import { DiscoverySearchHelpers } from '@/[fsd]/features/discovery-search/lib/helpers';
 import { useSearch } from '@/[fsd]/features/discovery-search/lib/hooks';
-import { useSearchBar } from '@/[fsd]/shared/lib/hooks';
+import { useAuthorIdFromUrl, useDebounceValue, useSearchBar } from '@/[fsd]/shared/lib/hooks';
 import { AutoSuggestionTitles, SortFields, SortOrderOptions } from '@/common/constants';
 import { useSearchPromptNavigate } from '@/hooks/useCardNavigate';
-import useDebounceValue from '@/hooks/useDebounceValue';
-import { useAuthorIdFromUrl } from '@/hooks/useSearchParamValue';
 
 import DiscoverySearchList from './DiscoverySearchList';
 import DiscoverySearchListItem from './DiscoverySearchListItem';

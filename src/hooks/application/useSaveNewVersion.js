@@ -4,11 +4,10 @@ import { useSelector } from 'react-redux';
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
-import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
+import { useNameFromUrl, useSelectedProjectId, useViewModeFromUrl } from '@/[fsd]/shared/lib/hooks';
 import { useSaveApplicationNewVersionMutation } from '@/api/applications';
 import clearTools, { filterEmptyStrings } from '@/common/applicationUtils';
 import { buildErrorMessage, replaceVersionInPath } from '@/common/utils';
-import { useNameFromUrl, useViewModeFromUrl } from '@/hooks/useSearchParamValue';
 import useSavePipeline, { calculateNodesAndEdges } from '@/pages/Pipelines/useSavePipeline';
 
 import useNavBlocker from '../useNavBlocker';

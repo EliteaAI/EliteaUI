@@ -12,10 +12,9 @@ import SkillCategorySection from '@/[fsd]/features/skill-hub/ui/SkillCategorySec
 import SkillHubModal from '@/[fsd]/features/skill-hub/ui/SkillHubModal';
 import { SkillHubContext, useInteractiveTour } from '@/[fsd]/shared/lib/context';
 import { DEFAULT_NEW_ITEM_DAYS, isNewItem } from '@/[fsd]/shared/lib/helpers';
-import { useCatalogCount, useGroupedCategories } from '@/[fsd]/shared/lib/hooks';
+import { useCatalogCount, useDebounceValue, useGroupedCategories } from '@/[fsd]/shared/lib/hooks';
 import { Category } from '@/[fsd]/shared/ui';
 import { useGetPlatformSettingsQuery } from '@/api/platformSettings';
-import useDebounceValue from '@/hooks/useDebounceValue';
 
 const SkillsTab = memo(props => {
   const { query = '', onTotalCountChange } = props;

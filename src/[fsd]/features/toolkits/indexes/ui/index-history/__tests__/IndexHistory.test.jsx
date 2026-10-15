@@ -36,7 +36,9 @@ vi.mock('@/[fsd]/shared/lib/hooks/useToast.hooks', () => ({
   useToast: () => ({ toastSuccess: vi.fn(), toastError: vi.fn(), toastInfo }),
 }));
 
-vi.mock('@/hooks/useGetWindowWidth', () => ({ default: () => ({ windowWidth: 1280 }) }));
+vi.mock('@/[fsd]/shared/lib/hooks/useGetWindowWidth.hooks', () => ({
+  useGetWindowWidth: () => ({ windowWidth: 1280 }),
+}));
 
 vi.mock('@/components/DotMenu', () => ({
   default: props => (
