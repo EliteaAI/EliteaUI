@@ -57,6 +57,29 @@ describe('resolveCredentialLabel', () => {
     expect(label).toBe('AA');
   });
 
+  it('resolves the credential by its uuid before looking at the title', () => {
+    const label = resolveCredentialLabel({
+      configurations: [
+        configuration({ label: 'Twin A', uuid: 'uuid-a' }),
+        configuration({ label: 'Twin B', uuid: 'uuid-b' }),
+      ],
+      credential: { elitea_title: 'aasd', private: false, configuration_uuid: 'uuid-b' },
+      personalProjectId: PERSONAL_PROJECT_ID,
+    });
+
+    expect(label).toBe('Twin B');
+  });
+
+  it('falls back to the title when the saved uuid is not in the list', () => {
+    const label = resolveCredentialLabel({
+      configurations: [configuration({ uuid: 'uuid-a' })],
+      credential: { elitea_title: 'aasd', private: false, configuration_uuid: 'uuid-gone' },
+      personalProjectId: PERSONAL_PROJECT_ID,
+    });
+
+    expect(label).toBe('AA');
+  });
+
   it.each([
     ['the credential is not in the list', [configuration({ elitea_title: 'other' })]],
     ['the list has not loaded', undefined],
