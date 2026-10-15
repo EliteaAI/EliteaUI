@@ -1,5 +1,6 @@
 import { useSelector } from 'react-redux';
 
+import { useTags } from '@/[fsd]/shared/lib/hooks';
 import {
   useTotalApplicationsQuery,
   useTotalMyLikedPublicApplicationsQuery,
@@ -7,7 +8,6 @@ import {
   useTotalTrendingPublicApplicationsQuery,
 } from '@/api/applications';
 import { CollectionStatus, PUBLIC_PROJECT_ID } from '@/common/constants';
-import useTags from '@/hooks/useTags';
 
 export const useApplicationsData = (projectId, trendRange, hasAdminPermission) => {
   const { query } = useSelector(state => state.search);

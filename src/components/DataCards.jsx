@@ -5,14 +5,13 @@ import { useSelector } from 'react-redux';
 import { Grid, Skeleton } from '@mui/material';
 
 import ListInfiniteMoreLoader from '@/ComponentsLib/ListInfiniteMoreLoader';
-import { useCardLayout, useGetComponentWidth } from '@/[fsd]/shared/lib/hooks';
+import { useCardLayout, useGetComponentWidth, useTags } from '@/[fsd]/shared/lib/hooks';
 import {
   CARD_LIST_WIDTH,
   CARD_LIST_WIDTH_FULL,
   MARGIN_COMPENSATION,
   MIN_CARD_WIDTH,
 } from '@/common/constants';
-import useTags from '@/hooks/useTags';
 import { getCardGradientStyles } from '@/utils/cardStyles';
 
 const DataCards = memo(props => {

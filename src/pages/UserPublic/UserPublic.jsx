@@ -12,6 +12,7 @@ import {
   useAuthorIdFromUrl,
   useSelectedProjectId,
   useSortQueryParamsFromUrl,
+  useTags,
   useViewMode,
 } from '@/[fsd]/shared/lib/hooks';
 import { Select } from '@/[fsd]/shared/ui';
@@ -30,7 +31,6 @@ import {
 import ApplicationsIcon from '@/components/Icons/ApplicationsIcon';
 import StickyTabs from '@/components/StickyTabs';
 import ViewToggle from '@/components/ViewToggle';
-import useTags from '@/hooks/useTags';
 import { publicAdminPermissions } from '@/hooks/users/usePermissions';
 import RouteDefinitions, { PathSessionMap } from '@/routes';
 import { getQueryStatuses } from '@/utils/getQueryStatus';

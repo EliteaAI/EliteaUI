@@ -6,8 +6,7 @@ import ListItemText from '@mui/material/ListItemText';
 import Popover from '@mui/material/Popover';
 import Typography from '@mui/material/Typography';
 
-import { useNavigateToAuthorPublicPage } from '@/hooks/useCardNavigate';
-import useTags from '@/hooks/useTags';
+import { useNavigateToAuthorPublicPage, useTags } from '@/[fsd]/shared/lib/hooks';
 import styled from '@emotion/styled';
 
 import UserAvatar from './UserAvatar';

@@ -2,9 +2,9 @@ import { memo, useCallback, useMemo, useRef } from 'react';
 
 import { Box } from '@mui/material';
 
+import { useTags } from '@/[fsd]/shared/lib/hooks';
 import CardPopover from '@/components/CardPopover';
 import CardTagSectionItem from '@/components/CardTagSectionItem';
-import useTags from '@/hooks/useTags';
 
 const MAX_NUMBER_TAGS_SHOWN = 2;
 

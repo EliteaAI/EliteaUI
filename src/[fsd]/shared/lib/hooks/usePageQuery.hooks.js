@@ -2,9 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 
-import useTags from '@/hooks/useTags';
-
 import { useSelectedProjectId } from './useSelectedProject.hooks';
+import { useTags } from './useTags.hooks';
 
 export const usePageQuery = (specifiedProjectId, extraParams) => {
   const pageSizeFromRedux = useSelector(state => state.settings.pageSize);

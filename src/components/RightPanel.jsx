@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Box, Grid } from '@mui/material';
 
 import { DiscoverySearchBar } from '@/[fsd]/features/discovery-search';
-import { useSearchBar } from '@/[fsd]/shared/lib/hooks';
+import { useSearchBar, useTags } from '@/[fsd]/shared/lib/hooks';
 import {
   NAV_BAR_HEIGHT_TABLET,
   PAGE_PADDING,
@@ -13,7 +13,6 @@ import {
   RIGHT_PANEL_WIDTH_OF_CARD_LIST_PAGE,
 } from '@/common/constants';
 import { filterProps } from '@/common/utils';
-import useTags from '@/hooks/useTags';
 import { actions } from '@/slices/search';
 
 export const FixedGrid = styled(
