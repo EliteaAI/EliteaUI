@@ -4,10 +4,10 @@ import { useLocation, useNavigate } from 'react-router-dom';
 
 import { DrawerPage } from '@/[fsd]/features/settings';
 import { ProjectContextEditor } from '@/[fsd]/features/settings/ui/project-context';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useProjectContextQuery } from '@/api/projectContext';
 import { PERMISSIONS } from '@/common/constants';
 import useCheckPermission from '@/hooks/useCheckPermission';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import RouteDefinitions from '@/routes';
 
 const ProjectContextEdit = memo(() => {

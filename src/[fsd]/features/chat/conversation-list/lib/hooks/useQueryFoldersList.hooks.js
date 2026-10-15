@@ -3,11 +3,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import { sortConversations } from '@/[fsd]/features/chat/conversation-list/lib/helpers';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useFoldersListQuery } from '@/api';
 import { PERMISSIONS } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import useCheckPermission from '@/hooks/useCheckPermission';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useSortQueryParamsFromUrl from '@/hooks/useSortQueryParamsFromUrl';
 import { selectLastSelectedConversationIdByProject } from '@/slices/chat';
 

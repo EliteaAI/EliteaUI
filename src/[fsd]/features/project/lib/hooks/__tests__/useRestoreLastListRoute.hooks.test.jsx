@@ -8,7 +8,7 @@ import { act, cleanup, render, screen } from '@testing-library/react';
 
 import { useRestoreLastListRoute } from '../useRestoreLastListRoute.hooks';
 
-vi.mock('@/hooks/useSelectedProject', () => ({ useSelectedProjectId: () => 1 }));
+vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({ useSelectedProjectId: () => 1 }));
 
 vi.mock('@/hooks/useIsFromSpecificPageHooks', () => ({
   useIsCreatingEntities: () => false,

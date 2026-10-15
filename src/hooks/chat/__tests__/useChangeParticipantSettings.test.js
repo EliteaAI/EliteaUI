@@ -11,7 +11,9 @@ vi.mock('@/api', () => ({
   useUpdateParticipantSettingsMutation: () => [vi.fn(async () => shared.result), { isError: false }],
 }));
 vi.mock('@/common/utils', () => ({ buildErrorMessage: () => '' }));
-vi.mock('@/hooks/useSelectedProject', () => ({ useSelectedProjectId: () => 2 }));
+vi.mock('@/[fsd]/shared/lib/hooks', () => ({
+  useSelectedProjectId: () => 2,
+}));
 
 const participant = { id: 7, entity_settings: { version_id: 2 } };
 

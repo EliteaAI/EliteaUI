@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useCreateCanvasMutation } from '@/api';
 import { isNullOrUndefined } from '@/common/utils';
 import { useCanvasEditSocket } from '@/hooks/chat/useCanvasSocket';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 export default function useEditCanvas({
   setCollapsedParticipants,

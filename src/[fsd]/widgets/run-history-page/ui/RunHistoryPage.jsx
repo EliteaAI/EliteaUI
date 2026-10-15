@@ -10,10 +10,10 @@ import { DrawerPageHeader } from '@/[fsd]/features/settings/ui/drawer-page';
 import { ToolkitsHelpers } from '@/[fsd]/features/toolkits';
 import { NavigationConstants } from '@/[fsd]/shared/lib/constants';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import Breadcrumbs from '@/[fsd]/shared/ui/breadcrumbs';
 import { useApplicationDetailsQuery } from '@/api/applications';
 import { SearchParams } from '@/common/constants';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const DEFAULT_TAB = 'all';
 

@@ -5,12 +5,12 @@ import { useSelector } from 'react-redux';
 import { RunHistoryApi } from '@/[fsd]/entities/run-history/api';
 import { selectHistoryItem } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
 import { ToolkitsHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useLazyMessageTracesQuery } from '@/api';
 import {
   buildTraceListParams,
   convertConversationToChatHistory,
 } from '@/common/convertChatConversationMessages';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 export const useIndexHistory = (progressHistoryOptions = null) => {
   const projectId = useSelectedProjectId();

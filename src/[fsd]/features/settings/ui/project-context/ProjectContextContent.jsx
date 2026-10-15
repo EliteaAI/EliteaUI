@@ -4,10 +4,10 @@ import { useNavigate } from 'react-router-dom';
 
 import { Box, CircularProgress } from '@mui/material';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useProjectContextQuery } from '@/api/projectContext';
 import { PERMISSIONS } from '@/common/constants';
 import useCheckPermission from '@/hooks/useCheckPermission';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import RouteDefinitions from '@/routes';
 
 import ProjectContextEmptyState from './ProjectContextEmptyState';

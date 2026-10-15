@@ -4,7 +4,7 @@ import { Box, Typography } from '@mui/material';
 
 import { useLazyMessageTraceQuery } from '@/[fsd]/features/chat/api';
 import { buildAskUserSummary, findAskUserAction } from '@/[fsd]/features/chat/lib/helpers/hitl.helpers.js';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 
 // Summarizes completed ask_user actions, including reloaded traces.
 const AskUserAnswerSummary = memo(props => {

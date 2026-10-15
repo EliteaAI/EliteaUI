@@ -4,10 +4,10 @@ import { useSelector } from 'react-redux';
 
 import { ParticipantConstants } from '@/[fsd]/features/chat/participants/lib/constants';
 import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useLazyListModelsQuery } from '@/api/configurations';
 import { useToolkitCreateMutation } from '@/api/toolkits';
 import { convertToolkitSchema } from '@/common/toolkitSchemaUtils';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const { ATTACHMENT_ALLOWED_TOOLS } = ParticipantConstants;
 

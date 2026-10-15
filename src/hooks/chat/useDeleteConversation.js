@@ -2,10 +2,10 @@ import { useCallback, useEffect } from 'react';
 
 import { useDispatch } from 'react-redux';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useDeleteConversationMutation, useUnselectConversationMutation } from '@/api';
 import { dummyConversation } from '@/common/constants';
 import { areTheSameConversations, buildErrorMessage } from '@/common/utils';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { actions as chatActions } from '@/slices/chat';
 
 import useLocalActiveParticipant from './useLocalActiveParticipant';

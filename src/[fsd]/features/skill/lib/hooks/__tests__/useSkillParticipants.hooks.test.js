@@ -14,7 +14,9 @@ const shared = vi.hoisted(() => ({
   catalogData: undefined,
 }));
 
-vi.mock('@/hooks/useSelectedProject', () => ({ useSelectedProjectId: () => shared.projectId }));
+vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({
+  useSelectedProjectId: () => shared.projectId,
+}));
 
 vi.mock('@/hooks/useDebounceValue', () => ({ default: value => value }));
 

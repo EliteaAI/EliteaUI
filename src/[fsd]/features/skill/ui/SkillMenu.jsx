@@ -8,7 +8,7 @@ import Tooltip from '@/ComponentsLib/Tooltip';
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version';
 import { useLazySkillDetailsQuery, useSkillListQuery } from '@/[fsd]/features/skill/api';
 import { useAttachSkill } from '@/[fsd]/features/skill/lib/hooks';
-import { useToast } from '@/[fsd]/shared/lib/hooks';
+import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import PlusIcon from '@/assets/plus-icon.svg?react';
 import SkillIcon from '@/assets/skill-icon.svg?react';
@@ -17,7 +17,6 @@ import { buildErrorMessage } from '@/common/utils';
 import EliteAImage from '@/components/EliteAImage';
 import UnifiedDropdown from '@/components/UnifiedDropdown';
 import useDebounceValue from '@/hooks/useDebounceValue';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import RouteDefinitions from '@/routes.js';
 
 const SEARCH_DEBOUNCE_MS = 300;

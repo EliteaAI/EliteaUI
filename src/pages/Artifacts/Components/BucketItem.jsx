@@ -5,7 +5,7 @@ import { useSelector } from 'react-redux';
 import { Box, useTheme } from '@mui/material';
 
 import { BucketAccessConstants } from '@/[fsd]/features/artifacts/lib/constants';
-import { useProjectType, useShareLink } from '@/[fsd]/shared/lib/hooks';
+import { useProjectType, useSelectedProjectId, useShareLink } from '@/[fsd]/shared/lib/hooks';
 import { Button, Tooltip } from '@/[fsd]/shared/ui';
 import CopyLinkIcon from '@/assets/copy-link-icon.svg?react';
 import GroupsIcon from '@/assets/groups-icon.svg?react';
@@ -18,7 +18,6 @@ import DotMenu from '@/components/DotMenu';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import EditIcon from '@/components/Icons/EditIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { getBasename } from '@/routes';
 import { generateBucketShareUrl } from '@/utils/shareUtils';
 

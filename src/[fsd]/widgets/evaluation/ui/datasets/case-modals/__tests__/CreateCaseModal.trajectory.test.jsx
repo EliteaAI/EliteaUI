@@ -34,8 +34,8 @@ vi.mock('@/api/applications', async importOriginal => ({
   }),
 }));
 
-vi.mock('@/hooks/useToast', () => ({
-  default: () => ({ toastSuccess: vi.fn(), toastError }),
+vi.mock('@/[fsd]/shared/lib/hooks/useToast.hooks', () => ({
+  useToast: () => ({ toastSuccess: vi.fn(), toastError, toastInfo: vi.fn() }),
 }));
 
 const theme = createTheme({ palette: lightPalette });

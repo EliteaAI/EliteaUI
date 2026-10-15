@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useGetRecommendationsQuery } from '@/api/applications';
 import { ChatParticipantType } from '@/common/constants';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 export const useRecommendations = () => {
   const selectedProjectId = useSelectedProjectId();

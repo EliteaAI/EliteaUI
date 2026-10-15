@@ -2,8 +2,8 @@ import { useEffect, useRef } from 'react';
 
 import { useSelector } from 'react-redux';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useLazyToolkitTypesQuery } from '@/api/toolkits';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 // Module-level Map to track ongoing MCP fetches by projectId
 // Prevents duplicate API calls when multiple components use this hook simultaneously

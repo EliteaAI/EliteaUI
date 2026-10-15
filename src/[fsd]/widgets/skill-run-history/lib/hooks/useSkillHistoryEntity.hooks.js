@@ -2,8 +2,8 @@ import { useParams } from 'react-router-dom';
 
 import { useSkillDetailsQuery } from '@/[fsd]/features/skill';
 import { useGetPublicSkillDetailsQuery } from '@/[fsd]/features/skill-hub/api';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const NO_VERSIONS = [];
 

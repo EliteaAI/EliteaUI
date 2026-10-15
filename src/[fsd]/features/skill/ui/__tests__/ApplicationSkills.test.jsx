@@ -16,7 +16,7 @@ vi.mock('formik', () => ({
 vi.mock('@/[fsd]/features/skill/api', () => ({
   useGetApplicationSkillsQuery: () => ({ data: query.data }),
 }));
-vi.mock('@/hooks/useSelectedProject', () => ({ useSelectedProjectId: () => 2 }));
+vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({ useSelectedProjectId: () => 2 }));
 vi.mock('@/[fsd]/shared/ui/accordion/BasicAccordion', () => ({
   default: ({ items }) => (
     <div>

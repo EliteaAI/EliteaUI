@@ -8,7 +8,7 @@ import StyledCircleProgress from '@/ComponentsLib/CircularProgress';
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version';
 import { useSkillDetailsQuery } from '@/[fsd]/features/skill/api';
 import { useAttachSkill, useDetachSkill } from '@/[fsd]/features/skill/lib/hooks';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 
 /**
  * Version dropdown for an attached skill card.

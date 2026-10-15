@@ -6,6 +6,7 @@ import { useTrackEvent } from '@/GA';
 import { sortConversations } from '@/[fsd]/features/chat/conversation-list/lib/helpers';
 import { useConversationNavigation } from '@/[fsd]/features/chat/lib/hooks';
 import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import {
   useConversationCreateMutation,
   useConversationEditMutation,
@@ -13,7 +14,6 @@ import {
 } from '@/api';
 import { DefaultConversationName, dummyConversation } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { actions as chatActions } from '@/slices/chat';
 
 import useResetCreateFlag from './useResetCreateFlag';

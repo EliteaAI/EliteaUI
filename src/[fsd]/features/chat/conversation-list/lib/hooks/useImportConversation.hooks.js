@@ -17,11 +17,10 @@ import {
   isImportFileSupported,
 } from '@/[fsd]/features/chat/conversation-list/lib/helpers';
 import { useChatConfig } from '@/[fsd]/features/chat/lib/hooks';
-import { useToast } from '@/[fsd]/shared/lib/hooks';
+import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { formatFileSize } from '@/common/attachmentValidationUtils';
 import { DEV, VITE_DEV_TOKEN, VITE_SERVER_URL } from '@/common/constants';
 import { clearBaseUrlPrefix } from '@/common/utils';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const sendChunk = ({ url, formData, onProgress, xhrRef }) =>
   new Promise((resolve, reject) => {

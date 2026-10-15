@@ -2,7 +2,7 @@ import { memo, useMemo } from 'react';
 
 import { Box, Tooltip, Typography } from '@mui/material';
 
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 
 import { useEvalSuiteEstimateQuery } from '../../api/evaluationApi';
 import { buildRunEstimateSummary } from '../../lib/helpers';

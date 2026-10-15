@@ -5,10 +5,10 @@ import { Box, LinearProgress, Typography } from '@mui/material';
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { useConversationExportSummaryQuery } from '@/[fsd]/features/chat/api';
 import { useExportConversation } from '@/[fsd]/features/chat/conversation-list/lib/hooks';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { Button, Checkbox, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { formatFileSize } from '@/common/attachmentValidationUtils';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const EXPORT_OPTIONS = {
   without: 'without',

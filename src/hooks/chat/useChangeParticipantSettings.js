@@ -1,8 +1,8 @@
 import { useCallback, useEffect } from 'react';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useUpdateParticipantSettingsMutation } from '@/api';
 import { buildErrorMessage } from '@/common/utils';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const useChangeParticipantSettings = ({
   setActiveConversation,

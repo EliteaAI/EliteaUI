@@ -22,7 +22,7 @@ vi.mock('@/[fsd]/features/mcp/lib/helpers', () => ({
   },
 }));
 
-vi.mock('@/hooks/useSelectedProject', () => ({
+vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({
   useSelectedProjectId: () => 30,
 }));
 

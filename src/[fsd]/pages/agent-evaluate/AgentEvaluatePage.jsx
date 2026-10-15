@@ -4,6 +4,7 @@ import { useParams } from 'react-router-dom';
 
 import { Box } from '@mui/material';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { Modal } from '@/[fsd]/shared/ui';
 import {
   BindingWeightDialog,
@@ -31,7 +32,6 @@ import {
   usePlatformDimensionCatalogQuery,
 } from '@/[fsd]/widgets/evaluation';
 import { useListModelsQuery } from '@/api/configurations';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const AgentEvaluatePage = memo(() => {
   const { agentId, tab, suiteId: suiteIdParam } = useParams();

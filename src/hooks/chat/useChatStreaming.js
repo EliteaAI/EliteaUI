@@ -2,8 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { useDispatch, useSelector } from 'react-redux';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { ROLES } from '@/common/constants';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { actions } from '@/slices/chat';
 
 export default function useChatStreaming({

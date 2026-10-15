@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 
 import { usePinFolderMutation } from '@/[fsd]/entities/folder/api/entityFoldersApi';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import {
   useCreateEntityFolderMutation,
   useDeleteEntityFolderMutation,
@@ -8,7 +9,6 @@ import {
   useRemoveEntityFromFolderMutation,
   useUpdateEntityFolderMutation,
 } from '@/api';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 /**
  * Consolidated folder mutation hooks. Each mutation type follows the same pattern:

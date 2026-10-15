@@ -28,7 +28,7 @@ vi.mock('@/[fsd]/entities/run-history/api', () => ({
   },
 }));
 
-vi.mock('@/hooks/useSelectedProject', () => ({ useSelectedProjectId: () => 1 }));
+vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({ useSelectedProjectId: () => 1 }));
 
 const { toastInfo } = vi.hoisted(() => ({ toastInfo: vi.fn() }));
 

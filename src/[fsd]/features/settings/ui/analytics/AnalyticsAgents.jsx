@@ -19,10 +19,10 @@ import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constant
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { AnalyticsAgentDetailed, ChartTooltip } from '@/[fsd]/features/settings/ui/analytics';
 import { CHART_COLORS } from '@/[fsd]/shared/config/theme';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 import { useAnalyticsAgentsQuery } from '@/api';
 import StyledSearchInput from '@/components/SearchInput';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const AnalyticsAgents = memo(props => {
   const { projectId, dateFrom, dateTo, canViewSkills = false } = props;

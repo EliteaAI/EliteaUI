@@ -1,8 +1,8 @@
 /* eslint-disable */
 import { useCallback } from 'react';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useToolkitCreateMutation } from '@/api/toolkits';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const useCreateToolkit = formik => {
   const projectId = useSelectedProjectId();

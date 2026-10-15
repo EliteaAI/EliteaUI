@@ -7,11 +7,11 @@ import { Box, Divider, Typography } from '@mui/material';
 import { IWModalEntityCardWrapper, IWModalEntityTextField } from '@/[fsd]/entities/import-wizard/ui';
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version';
 import { ProjectSelectConstants } from '@/[fsd]/shared/lib/constants';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { Button, Modal } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import SkillIcon from '@/assets/skill-icon.svg?react';
 import ProjectSelect from '@/components/ProjectSelect';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const { ProjectSelectShowMode } = ProjectSelectConstants;
 

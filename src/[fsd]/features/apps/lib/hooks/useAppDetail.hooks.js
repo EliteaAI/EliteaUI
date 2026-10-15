@@ -2,10 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { useParams } from 'react-router-dom';
 
-import { useEliteATheme, useToast } from '@/[fsd]/shared/lib/hooks';
+import { useEliteATheme, useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { useToolkitsDetailsQuery } from '@/api/toolkits.js';
 import { buildErrorMessage } from '@/common/utils.jsx';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 export const useAppDetail = () => {
   const { toastError } = useToast();

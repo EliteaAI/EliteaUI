@@ -19,12 +19,12 @@ import {
   RunFailedCallsTable,
 } from '@/[fsd]/features/settings/ui/analytics';
 import { DrawerPage } from '@/[fsd]/features/settings/ui/drawer-page';
+import { useSelectedProjectId, useSelectedProjectName } from '@/[fsd]/shared/lib/hooks';
 import { exportToExcel } from '@/[fsd]/shared/lib/utils';
 import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
 import { BaseTab, BaseTabs } from '@/[fsd]/shared/ui/tabs';
 import DownloadIcon from '@/assets/download.svg?react';
 import RefreshIcon from '@/assets/refresh-icon.svg?react';
-import { useSelectedProjectId, useSelectedProjectName } from '@/hooks/useSelectedProject';
 
 import RunAnalyticsEmptyState from './components/RunAnalyticsEmptyState';
 

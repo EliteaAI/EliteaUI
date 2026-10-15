@@ -2,7 +2,7 @@ import { useEffect, useMemo } from 'react';
 
 import { useLocation, useParams } from 'react-router-dom';
 
-import { useSelectedProjectName } from '@/hooks/useSelectedProject';
+import { useSelectedProjectName } from './useSelectedProject.hooks';
 
 export const useBrowserPageTitle = () => {
   const location = useLocation();

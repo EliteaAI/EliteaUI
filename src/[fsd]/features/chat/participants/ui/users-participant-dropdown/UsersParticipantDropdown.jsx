@@ -4,10 +4,10 @@ import { useSelector } from 'react-redux';
 
 import { Box, ClickAwayListener, Grow, IconButton, Paper, Popper, Typography, useTheme } from '@mui/material';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { SPACING } from '@/common/designTokens';
 import UsersIcon from '@/components/Icons/UsersIcon';
 import { DROPDOWN_CONSTANTS } from '@/components/UnifiedDropdown';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import DropdownFooter from './DropdownFooter';
 import UserMenu from './UserMenu';

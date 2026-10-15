@@ -10,12 +10,11 @@ import { SECRETS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { SecretRowsHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { DrawerPageHeader } from '@/[fsd]/features/settings/ui/drawer-page';
 import { SecretsTable } from '@/[fsd]/features/settings/ui/secrets';
-import { useToast } from '@/[fsd]/shared/lib/hooks';
+import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { useSecretsListQuery } from '@/api/secrets.js';
 import { PERMISSIONS } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import useCheckPermission from '@/hooks/useCheckPermission';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const SecretsContent = memo(() => {
   const styles = getStyles();

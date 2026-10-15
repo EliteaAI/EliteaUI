@@ -11,10 +11,10 @@ import {
   FlowEditorSettings,
 } from '@/[fsd]/features/pipelines/flow-editor/ui';
 import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { Input } from '@/[fsd]/shared/ui';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import { useToolkitAvailableToolsQuery } from '@/api/toolkits.js';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { ToolTypes } from '@/pages/Applications/Components/Tools/consts';
 import { useEdges } from '@xyflow/react';
 

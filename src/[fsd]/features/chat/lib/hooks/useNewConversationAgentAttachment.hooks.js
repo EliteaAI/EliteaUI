@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 
 import { useSelector } from 'react-redux';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import {
   useLazyGetConfigurationsListQuery,
   useLazyToolkitsDetailsQuery,
@@ -9,7 +10,6 @@ import {
   useToolkitCreateMutation,
 } from '@/api';
 import { ChatParticipantType } from '@/common/constants';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 export const useNewConversationAgentAttachment = () => {
   const selectedProjectId = useSelectedProjectId();

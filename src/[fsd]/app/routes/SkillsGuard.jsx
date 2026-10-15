@@ -3,8 +3,8 @@ import { memo } from 'react';
 import { useSelector } from 'react-redux';
 import { Navigate } from 'react-router-dom';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { PERMISSIONS, PUBLIC_PROJECT_ID } from '@/common/constants';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import RouteDefinitions from '@/routes';
 
 const EMPTY_PERMISSIONS = [];

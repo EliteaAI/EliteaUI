@@ -28,6 +28,7 @@ import {
 import { DrawerPage } from '@/[fsd]/features/settings/ui/drawer-page';
 import { AnalyticsTabConstants } from '@/[fsd]/shared/lib/constants';
 import { useInteractiveTour } from '@/[fsd]/shared/lib/context';
+import { useSelectedProjectId, useSelectedProjectName } from '@/[fsd]/shared/lib/hooks';
 import { exportToExcel } from '@/[fsd]/shared/lib/utils';
 import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
 import TabGroupButton from '@/[fsd]/shared/ui/tab-group-button/TabGroupButton';
@@ -41,7 +42,6 @@ import ArrowRightIcon from '@/components/Icons/ArrowRightIcon';
 import BriefcaseIcon from '@/components/Icons/BriefcaseIcon.jsx';
 import CalendarIcon from '@/components/Icons/CalendarIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
-import { useSelectedProjectId, useSelectedProjectName } from '@/hooks/useSelectedProject';
 
 const CUSTOM_PRESET_VALUE = 'custom';
 

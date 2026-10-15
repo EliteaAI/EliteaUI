@@ -11,10 +11,10 @@ import {
   useMultiSectionConfigurations,
 } from '@/[fsd]/features/settings/lib/hooks';
 import { AutoRoutingConstants } from '@/[fsd]/shared/lib/constants';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { defaultModelRequest } from '@/[fsd]/shared/lib/utils';
 import { useListModelsQuery, useSetProjectDefaultModelMutation } from '@/api/configurations.js';
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import { DrawerPageHeader } from '../drawer-page';
 import ConfigurationsPanel from './ConfigurationsPanel';

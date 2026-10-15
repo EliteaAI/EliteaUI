@@ -8,7 +8,7 @@ import { AgentInput } from '@/[fsd]/features/agent/ui/agent-details/configuratio
 import ApplicationAdvanceSettings from '@/[fsd]/features/agent/ui/agent-details/configurations/ApplicationAdvanceSettings';
 import { GenerateAgentButton } from '@/[fsd]/features/agent/ui/generate-agent-modal';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
-import { useFieldFocus } from '@/[fsd]/shared/lib/hooks';
+import { useFieldFocus, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { Input, Text } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { useTagListQuery } from '@/api/tags.js';
@@ -17,7 +17,6 @@ import ApplicationVariables from '@/components/ApplicationVariables';
 import ConversationStarters from '@/components/ConversationStarters';
 import EntityIcon from '@/components/EntityIcon';
 import useCreateApplication from '@/hooks/application/useCreateApplication';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import TagEditor from '@/pages/Common/Components/TagEditor';
 
 const CreateAgentForm = memo(props => {

@@ -6,8 +6,8 @@ import * as FlowEditorHelpers from '@/[fsd]/features/pipelines/flow-editor/lib/h
 import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits';
 import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
 import { isMcpToolkit } from '@/[fsd]/shared/lib/helpers';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useToolkitAvailableToolsQuery } from '@/api/toolkits.js';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import { PipelineNodeTypes } from '../constants/flowEditor.constants';
 import { useGetToolkitNameFromSchema } from './useGetToolkitNameFromSchema.hooks';

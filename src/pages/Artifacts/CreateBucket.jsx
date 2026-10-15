@@ -7,14 +7,13 @@ import * as yup from 'yup';
 
 import { Box, TextField, Typography } from '@mui/material';
 
-import { useFieldFocus, useToast } from '@/[fsd]/shared/lib/hooks';
+import { useFieldFocus, useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button, Select, Text } from '@/[fsd]/shared/ui';
 import { useArtifactListQuery, useCreateBucketMutation, useEditBucketMutation } from '@/api/artifacts';
 import { PENDING_BUCKET_SESSION_KEY } from '@/common/artifactConstants';
 import { DEFAULT_RETENTION_VALUE, RETENTION_MEASURES } from '@/common/constants';
 import { buildErrorMessage, capitalizeFirstChar } from '@/common/utils';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { actions } from '@/slices/artifact';
 import { convertRetentionDaysToPolicy, getRetentionPolicyForEditing } from '@/utils/retentionPolicy';
 

@@ -1,7 +1,6 @@
-import { useToast } from '@/[fsd]/shared/lib/hooks';
+import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { useConversationEditMutation } from '@/api';
 import { buildErrorMessage } from '@/common/utils';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 export const useInternalToolsConfig = ({ activeConversation, setActiveConversation }) => {
   const projectId = useSelectedProjectId();

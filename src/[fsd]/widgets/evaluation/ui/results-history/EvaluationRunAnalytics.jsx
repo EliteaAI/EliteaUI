@@ -10,8 +10,8 @@ import {
 import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
 import { AnalyticCommonHelpers, AnalyticsExportHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { RunAnalyticsView } from '@/[fsd]/features/settings/ui/analytics';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useApplicationDetailsQuery } from '@/api/applications';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import { useEvalRunQuery, useEvalSuitesQuery } from '../../api';
 import { resolveRunSuiteName, resolveRunVersionName } from '../../lib/helpers';

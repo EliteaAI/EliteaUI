@@ -7,13 +7,12 @@ import { Box, Button as MuiButton, Typography } from '@mui/material';
 
 import { selectIndexesAvailable } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
-import { useFormDirtyExcluding, useToast } from '@/[fsd]/shared/lib/hooks';
+import { useFormDirtyExcluding, useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button, Modal } from '@/[fsd]/shared/ui';
 import { useToolkitEditMutation } from '@/api/toolkits';
 import eventEmitter from '@/common/eventEmitter';
 import { buildErrorMessage } from '@/common/utils';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { ToolEvents, ValidateToolEventReason } from '@/pages/Applications/Components/Tools/consts';
 import useDiscardApplicationChanges from '@/pages/Applications/useDiscardApplicationChanges';
 import { TabBarItems } from '@/pages/Common/Components';

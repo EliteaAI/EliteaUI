@@ -26,11 +26,8 @@ vi.mock('@/api/toolkits', () => ({
   useMcpSyncToolsMutation: () => [mcpSyncTools],
 }));
 
-vi.mock('@/hooks/useSelectedProject', () => ({
-  useSelectedProjectId: () => 2,
-}));
-
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
+  useSelectedProjectId: () => 2,
   useToast: () => toasts,
 }));
 

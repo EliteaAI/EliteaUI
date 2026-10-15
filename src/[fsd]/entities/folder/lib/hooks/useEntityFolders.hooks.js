@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useGetEntityFoldersQuery } from '@/api';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 export const useEntityFolders = (entityType, options = {}) => {
   const { skip = false, includeCounts = false } = options;

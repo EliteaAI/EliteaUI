@@ -4,13 +4,13 @@ import { Box, CircularProgress, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { APPLICATIONS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import ClockIcon from '@/assets/clock.svg?react';
 import GearIcon from '@/assets/gear-icon.svg?react';
 import LinkIcon from '@/assets/link-icon.svg?react';
 import EntityIcon from '@/components/EntityIcon';
 import HighlightQuery from '@/components/HighlightQuery';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { getCardGradientStyles } from '@/utils/cardStyles';
 
 const TYPE_TO_TOUR_TARGET_ID = {

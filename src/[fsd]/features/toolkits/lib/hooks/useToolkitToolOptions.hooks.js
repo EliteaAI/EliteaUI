@@ -4,8 +4,8 @@ import { useFormikContext } from 'formik';
 
 import { IndexesToolsEnum } from '@/[fsd]/features/toolkits/indexes/lib/constants/indexDetails.constants';
 import { useGetCurrentToolkitSchemas } from '@/[fsd]/features/toolkits/lib/hooks/useGetCurrentToolkitSchemas.hooks';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useToolkitAvailableToolsQuery } from '@/api/toolkits.js';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 export const useToolkitToolOptions = ({ toolkitId }) => {
   const { values } = useFormikContext();

@@ -4,13 +4,13 @@ import { useSelector } from 'react-redux';
 
 import { Box, FormControl, FormHelperText, Tooltip, Typography } from '@mui/material';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { Select } from '@/[fsd]/shared/ui';
 import { BaseBtn } from '@/[fsd]/shared/ui/button';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { useLazyListModelsQuery, useListModelsQuery } from '@/api/configurations';
 import RefreshIcon from '@/assets/refresh-icon.svg?react';
 import BriefcaseIcon from '@/components/Icons/BriefcaseIcon.jsx';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import Person from './Icons/Person';
 

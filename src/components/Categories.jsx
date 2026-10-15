@@ -6,13 +6,13 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import { IconButton, Skeleton, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useLazyTagListQuery } from '@/api/tags.js';
 import { CollectionStatus, RIGHT_PANEL_WIDTH_OF_CARD_LIST_PAGE, SearchParams } from '@/common/constants';
 import { debounce, filterProps, removeDuplicateObjects } from '@/common/utils';
 import ClearIcon from '@/components/Icons/ClearIcon';
 import { useIsFrom } from '@/hooks/useIsFromSpecificPageHooks';
 import { useAuthorIdFromUrl } from '@/hooks/useSearchParamValue';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useTags from '@/hooks/useTags';
 import RouteDefinitions from '@/routes';
 import { useTheme } from '@emotion/react';

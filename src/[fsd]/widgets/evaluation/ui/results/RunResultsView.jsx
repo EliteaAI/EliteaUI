@@ -2,10 +2,10 @@ import { memo, useCallback, useMemo, useState } from 'react';
 
 import { Box, CircularProgress, SvgIcon, Typography } from '@mui/material';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { Banner } from '@/[fsd]/shared/ui';
 import MonitoringIcon from '@/assets/monitoring.svg?react';
 import useCheckPermission from '@/hooks/useCheckPermission';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import {
   useEvalCaseExecutionsQuery,

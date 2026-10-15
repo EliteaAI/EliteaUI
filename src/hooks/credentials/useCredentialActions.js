@@ -2,11 +2,10 @@ import { useCallback, useMemo, useState } from 'react';
 
 import { useLocation, useNavigate } from 'react-router-dom';
 
-import { useToast } from '@/[fsd]/shared/lib/hooks';
+import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { useDeleteConfigurationMutation, useMakeConfigurationDefaultMutation } from '@/api/configurations';
 import { ViewMode } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import RouteDefinitions from '@/routes';
 
 export const useCredentialActions = ({ integration, refetch }) => {

@@ -3,9 +3,9 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useDeleteApplicationVersionMutation, useLazyCheckVersionInUseQuery } from '@/api/applications';
 import { buildErrorMessage, replaceVersionInPath } from '@/common/utils';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const useReplaceVersionInPath = (versions, currentVersionId, defaultVersionID) => {
   const { pathname, search } = useLocation();

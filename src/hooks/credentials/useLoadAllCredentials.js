@@ -1,11 +1,10 @@
 import { useMemo } from 'react';
 
 import { CredentialNameHelpers, CredentialVisibilityHelpers } from '@/[fsd]/features/credentials/lib/helpers';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useListCredentialTypesQuery } from '@/api/configurations';
 import { useLoadCredentials } from '@/hooks/credentials/useLoadCredentials';
 import useGetCurrentConfigurationAsSchemas from '@/hooks/useGetCurrentConfigurationAsSchemas';
-
-import { useSelectedProjectId } from '../useSelectedProject';
 
 const CREDENTIAL_SECTIONS = ['credentials', 'storage'];
 

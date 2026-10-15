@@ -6,7 +6,7 @@ import { useParams } from 'react-router-dom';
 import { Link, Typography } from '@mui/material';
 
 import { useGetToolkitNameFromSchema } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
-import { useIsMcpVisible } from '@/[fsd]/shared/lib/hooks';
+import { useIsMcpVisible, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { Category } from '@/[fsd]/shared/ui';
 import { useLazyListModelsQuery } from '@/api/configurations';
 import getToolInitialValueBySchema from '@/common/getToolInitialValueBySchema.js';
@@ -14,7 +14,6 @@ import { convertToolkitSchema } from '@/common/toolkitSchemaUtils';
 import { getDefaultTools } from '@/common/toolkitUtils';
 import useToolMenuItems from '@/hooks/application/useToolMenuItems';
 import { useToolkitSearch } from '@/hooks/toolkit/useToolkitSearch';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import { ToolInitialValues } from '@/pages/Applications/Components/Tools/consts';
 
 const predefinedTools = ['custom'];

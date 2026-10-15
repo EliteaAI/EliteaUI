@@ -5,14 +5,13 @@ import { useSearchParams } from 'react-router-dom';
 
 import { CredentialErrorHelpers } from '@/[fsd]/features/credentials/lib/helpers';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
-import { useToast } from '@/[fsd]/shared/lib/hooks';
+import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import {
   useCreateConfigurationMutation,
   useTestConfigurationConnectionMutation,
 } from '@/api/configurations.js';
 import { buildErrorMessage } from '@/common/utils';
 import { Create_Personal_Title, Create_Project_Title, Manual_Title } from '@/hooks/useConfigurations';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const getRequestBody = ({ type, configurationKeys, settings, configurationName, configurationsAsSchema }) => {
   let configurationsSchema = configurationsAsSchema?.find(item => item.type === type);

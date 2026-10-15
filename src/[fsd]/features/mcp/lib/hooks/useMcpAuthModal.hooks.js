@@ -1,8 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
-import { useToast } from '@/[fsd]/shared/lib/hooks';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
+import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 
 /**
  * Extract MCP auth metadata from various sources.

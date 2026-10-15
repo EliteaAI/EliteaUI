@@ -5,9 +5,9 @@ import { useFormikContext } from 'formik';
 import { RUN_SETTINGS_FIELD } from '@/[fsd]/features/skill/lib/constants';
 import { findSkillSavedModel } from '@/[fsd]/features/skill/lib/helpers';
 import { AutoRoutingConstants, LLMSettingsConstants } from '@/[fsd]/shared/lib/constants';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { modelsWithAuto, resetLLMSettingsForModel, selectionFields } from '@/[fsd]/shared/lib/utils';
 import { useListModelsQuery } from '@/api/configurations';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const { DEFAULT_MAX_TOKENS } = LLMSettingsConstants;
 const { MODEL_SURFACES } = AutoRoutingConstants;

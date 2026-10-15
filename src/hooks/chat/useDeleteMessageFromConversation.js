@@ -1,8 +1,8 @@
 import { useCallback, useEffect } from 'react';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useDeleteMessageFromConversationMutation } from '@/api';
 import { areTheSameConversations, buildErrorMessage } from '@/common/utils';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import useUpdateConversationTimestamp from './useUpdateConversationTimestamp';
 

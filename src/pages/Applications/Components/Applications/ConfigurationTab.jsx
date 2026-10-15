@@ -7,7 +7,11 @@ import { Box, CircularProgress, Typography } from '@mui/material';
 import { useApplicationChat } from '@/[fsd]/features/agent/lib/hooks';
 import { ChatBox, ChatButton } from '@/[fsd]/features/chat/ui';
 import { AGENT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
-import { useRestoredConversation, useRunHistoryNavigation } from '@/[fsd]/shared/lib/hooks';
+import {
+  useRestoredConversation,
+  useRunHistoryNavigation,
+  useSelectedProjectId,
+} from '@/[fsd]/shared/lib/hooks';
 import { ViewRunHistoryButton } from '@/[fsd]/shared/ui/button';
 import { ContextBudgetUI } from '@/[fsd]/widgets/context-budget';
 import { WELCOME_MESSAGE_ID } from '@/common/constants';
@@ -15,7 +19,6 @@ import FullScreenToggle from '@/components/Chat/FullScreenToggle';
 import DirtyDetector from '@/components/Formik/DirtyDetector';
 import useAgentMCPToolsStatusMonitor from '@/hooks/application/useAgentMCPToolsStatusMonitor';
 import useUploadAttachments from '@/hooks/chat/useUploadAttachments';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useViewMode from '@/hooks/useViewMode';
 import {
   ContentContainer,

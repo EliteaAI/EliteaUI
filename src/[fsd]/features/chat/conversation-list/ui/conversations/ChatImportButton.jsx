@@ -3,12 +3,12 @@ import { memo } from 'react';
 import { Box } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import ImportIcon from '@/assets/import-icon.svg?react';
 import { PERMISSIONS, PUBLIC_PROJECT_ID } from '@/common/constants';
 import useCheckPermission from '@/hooks/useCheckPermission';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const ChatImportButton = memo(props => {
   const { iconOnly = false, onClick } = props;

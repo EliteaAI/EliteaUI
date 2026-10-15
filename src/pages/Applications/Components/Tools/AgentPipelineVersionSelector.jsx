@@ -10,7 +10,7 @@ import { Box, IconButton, Menu, MenuItem, Tooltip, Typography } from '@mui/mater
 import StyledCircleProgress from '@/ComponentsLib/CircularProgress';
 import { useSetRefetchDetails } from '@/[fsd]/entities/application-tab-bar/lib/hooks';
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
-import { useToast } from '@/[fsd]/shared/lib/hooks';
+import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import {
   useApplicationDetailsQuery,
   useLazyGetApplicationVersionDetailQuery,
@@ -19,7 +19,6 @@ import {
 import RefreshIcon from '@/assets/refresh-icon.svg?react';
 import { buildErrorMessage } from '@/common/utils';
 import { mapAssociationError } from '@/hooks/application/useAgentPipelineAssociation';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 /**
  * Checks if an error is because the relation already exists

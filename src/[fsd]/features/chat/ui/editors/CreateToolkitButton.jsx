@@ -2,12 +2,11 @@ import { memo, useCallback, useMemo } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { useToast } from '@/[fsd]/shared/lib/hooks';
+import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { useToolkitCreateMutation } from '@/api/toolkits';
 import { buildErrorMessage } from '@/common/utils';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const CreateToolkitButton = memo(props => {
   const { toolSchema, onToolkitCreated, hasErrors, triggerValidation, testId } = props;

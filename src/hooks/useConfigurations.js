@@ -2,8 +2,8 @@ import { useCallback, useMemo, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useGetConfigurationsListQuery } from '@/api/configurations';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 export const Manual_Title = 'Manual_Title';
 export const Create_Personal_Title = 'Create_Personal_Title';

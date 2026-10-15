@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 
 import { useLocation } from 'react-router-dom';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import {
   ApplicationsTabs,
   AppsTabs,
@@ -12,7 +13,6 @@ import {
   ViewMode,
 } from '@/common/constants';
 import { useAuthorIdFromUrl, useAuthorNameFromUrl, useNameFromUrl } from '@/hooks/useSearchParamValue';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 import useViewMode from '@/hooks/useViewMode';
 
 import RouteDefinitions, { PathSessionMap } from '../routes';

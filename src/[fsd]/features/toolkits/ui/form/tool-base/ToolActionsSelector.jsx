@@ -14,12 +14,12 @@ import { SectionStatusConstants } from '@/[fsd]/features/toolkits/lib/constants'
 import { useCollapsedSection } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
 import { AccordionConstants, TourTargetConstants } from '@/[fsd]/shared/lib/constants';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { Button, Chip, Input } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import OnlineIcon from '@/assets/online-icon.svg?react';
 import { useToolkitView } from '@/hooks/toolkit/useToolkitView.js';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const { SECTION_STATUS } = SectionStatusConstants;
 

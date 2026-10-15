@@ -11,7 +11,7 @@ import SuiteRunEstimate from '../SuiteRunEstimate';
 
 const queryState = vi.hoisted(() => ({ data: undefined, args: null }));
 
-vi.mock('@/hooks/useSelectedProject', () => ({ useSelectedProjectId: () => 1 }));
+vi.mock('@/[fsd]/shared/lib/hooks', () => ({ useSelectedProjectId: () => 1 }));
 vi.mock('../../../api/evaluationApi', () => ({
   useEvalSuiteEstimateQuery: (args, options) => {
     queryState.args = { args, options };

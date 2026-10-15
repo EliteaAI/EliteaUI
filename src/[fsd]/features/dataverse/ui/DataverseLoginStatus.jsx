@@ -6,10 +6,10 @@ import { Box, Typography } from '@mui/material';
 
 import { useDataverseLogin } from '@/[fsd]/features/dataverse/lib/hooks';
 import { McpAuthModal, McpLogoutModal } from '@/[fsd]/features/mcp';
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import OnlineIcon from '@/assets/online-icon.svg?react';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 const DataverseLoginStatus = memo(() => {
   const { values } = useFormikContext();

@@ -2,8 +2,8 @@ import { useMemo } from 'react';
 
 import { useSelector } from 'react-redux';
 
+import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useGetConfigurationsListQuery } from '@/api/configurations';
-import { useSelectedProjectId } from '@/hooks/useSelectedProject';
 
 import { resolveCredentialLabel } from '../helpers/credentialLabel.helpers';
 import { credentialsListQueryArgs } from '../helpers/credentialsList.helpers';
