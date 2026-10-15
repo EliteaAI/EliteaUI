@@ -1,4 +1,4 @@
-import { memo, useMemo, useRef } from 'react';
+import { memo, useEffect, useMemo, useRef } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
@@ -73,6 +73,10 @@ const SkillRunPanel = memo(props => {
     onRunConversationChange,
     onOpenRunVersion,
   });
+  const hasUnsavedVersionModel = Boolean(unsavedVersionLLMSettings);
+  useEffect(() => {
+    if (canEditVersionModel && !hasUnsavedVersionModel) setUnsavedLLMSettings(null);
+  }, [canEditVersionModel, hasUnsavedVersionModel, setUnsavedLLMSettings]);
   const { uploadAttachments, isUploading: isUploadingAttachments, uploadProgress } = useUploadAttachments();
 
   const hasMessages = Boolean(activeConversation?.chat_history?.length);

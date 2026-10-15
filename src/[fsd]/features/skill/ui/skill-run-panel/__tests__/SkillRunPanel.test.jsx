@@ -13,6 +13,7 @@ const fixture = vi.hoisted(() => ({
   unsavedVersionLLMSettings: null,
   chatBoxProps: null,
   onSetRunLLMSettings: vi.fn(),
+  setRunLLMSettings: vi.fn(),
   onSetVersionLLMSettings: vi.fn(),
 }));
 
@@ -29,6 +30,7 @@ vi.mock('@/[fsd]/features/skill/lib/hooks', () => ({
     activeParticipant: { id: 3 },
     llmSettings: RUN_LLM_SETTINGS,
     unsavedLLMSettings: RUN_OVERRIDE,
+    setUnsavedLLMSettings: fixture.setRunLLMSettings,
     onSetLLMSettings: fixture.onSetRunLLMSettings,
   }),
   useSkillVersionModel: () => ({
@@ -61,6 +63,7 @@ describe('SkillRunPanel model chip', () => {
     cleanup();
     fixture.chatBoxProps = null;
     fixture.unsavedVersionLLMSettings = null;
+    fixture.setRunLLMSettings.mockClear();
   });
 
   it('runs on and edits the version model, unsaved included, like the agent chat pane', () => {
@@ -89,5 +92,20 @@ describe('SkillRunPanel model chip', () => {
     renderPanel(true);
 
     expect(fixture.chatBoxProps.unsavedLLMSettings).toBeNull();
+  });
+
+  it('drops the run override once the version model is saved or discarded', () => {
+    renderPanel(true);
+
+    expect(fixture.setRunLLMSettings).toHaveBeenCalledWith(null);
+  });
+
+  it('keeps the run override while the version model is unsaved or cannot be edited', () => {
+    fixture.unsavedVersionLLMSettings = VERSION_LLM_SETTINGS;
+    renderPanel(true);
+    cleanup();
+    renderPanel(false);
+
+    expect(fixture.setRunLLMSettings).not.toHaveBeenCalled();
   });
 });
