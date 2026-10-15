@@ -285,7 +285,7 @@ export const useConfigOAuthModal = (options = {}) => {
     projectId: credentialProjectId,
   } = options;
   const selectedProjectId = useSelectedProjectId();
-  const projectId = credentialProjectId || selectedProjectId;
+  const projectId = credentialProjectId ?? selectedProjectId;
   const { toastSuccess } = useToast();
 
   const [showModal, setShowModal] = useState(false);
