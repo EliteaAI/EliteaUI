@@ -72,14 +72,14 @@ export const convertToUserQuestion = (message_group, users, participants) => {
   };
 
   const userName = getUserName(foundUser);
-  // Imported chats keep the original author's display name; the importer's avatar applies only to their own messages
+  // Imported chats keep the original author's name and avatar; the importer's avatar applies only to their own messages
   const isForeignImportedAuthor = !!importedAuthor?.name && importedAuthor.name !== userName;
 
   return {
     id: uuid,
     role: ROLES.User,
     name: importedAuthor?.name || userName,
-    avatar: isForeignImportedAuthor ? '' : foundUser?.meta.user_avatar || '',
+    avatar: isForeignImportedAuthor ? importedAuthor.avatar || '' : foundUser?.meta.user_avatar || '',
     content,
     message_items,
     created_at: new Date(convertTime(created_at)).getTime(),
