@@ -11,11 +11,21 @@ import {
   YAxis,
 } from 'recharts';
 
-import { Box, CircularProgress, ToggleButton, ToggleButtonGroup, Typography, useTheme } from '@mui/material';
+import {
+  Box,
+  CircularProgress,
+  TableSortLabel,
+  ToggleButton,
+  ToggleButtonGroup,
+  Typography,
+  useTheme,
+} from '@mui/material';
 
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { ChartTooltip } from '@/[fsd]/features/settings/ui/analytics';
+import { analyticsTableSortLabelSx } from '@/[fsd]/features/settings/ui/analytics/components/analyticsTable.styles';
 import { EVENT_TYPE_COLORS } from '@/[fsd]/shared/config/theme';
+import { useClientSort, useSortedRows } from '@/[fsd]/shared/lib/hooks';
 import { Select } from '@/[fsd]/shared/ui';
 import { useAnalyticsActivityQuery } from '@/api';
 
@@ -82,6 +92,16 @@ const AnalyticsActivity = memo(props => {
     if (next) setGranularity(next);
   }, []);
 
+  const { sort: periodSort, handleSort: handlePeriodSort } = useClientSort('bucket_start', 'desc');
+
+  const getPeriodValue = useCallback((row, key) => {
+    if (key === 'bucket_start') return new Date(row.bucket_start).getTime();
+    return row[key];
+  }, []);
+
+  const buckets = data?.buckets ?? [];
+  const sortedBuckets = useSortedRows(buckets, periodSort, getPeriodValue);
+
   const styles = analyticsActivityStyles();
 
   if (isFetching && !data) {
@@ -101,8 +121,6 @@ const AnalyticsActivity = memo(props => {
   }
 
   if (!data) return null;
-
-  const buckets = data.buckets ?? [];
 
   return (
     <Box sx={styles.container}>
@@ -241,13 +259,40 @@ const AnalyticsActivity = memo(props => {
               sx={styles.tableHeader}
               data-testid="analytics-activity-table-header"
             >
-              <Typography sx={[styles.tableCell, { flex: 2 }]}>Period</Typography>
+              <Box sx={[styles.tableCell, { flex: 2 }]}>
+                <TableSortLabel
+                  active={periodSort.sortBy === 'bucket_start'}
+                  direction={periodSort.sortBy === 'bucket_start' ? periodSort.sortOrder : 'desc'}
+                  onClick={() => handlePeriodSort('bucket_start')}
+                  sx={analyticsTableSortLabelSx}
+                >
+                  Period
+                </TableSortLabel>
+              </Box>
               {!isPersonalProject && (
-                <Typography sx={[styles.tableCell, { flex: 1 }]}>Active Users</Typography>
+                <Box sx={[styles.tableCell, { flex: 1 }]}>
+                  <TableSortLabel
+                    active={periodSort.sortBy === 'active_users'}
+                    direction={periodSort.sortBy === 'active_users' ? periodSort.sortOrder : 'desc'}
+                    onClick={() => handlePeriodSort('active_users')}
+                    sx={analyticsTableSortLabelSx}
+                  >
+                    Active Users
+                  </TableSortLabel>
+                </Box>
               )}
-              <Typography sx={[styles.tableCell, { flex: 1 }]}>AI Active Users</Typography>
+              <Box sx={[styles.tableCell, { flex: 1 }]}>
+                <TableSortLabel
+                  active={periodSort.sortBy === 'ai_active_users'}
+                  direction={periodSort.sortBy === 'ai_active_users' ? periodSort.sortOrder : 'desc'}
+                  onClick={() => handlePeriodSort('ai_active_users')}
+                  sx={analyticsTableSortLabelSx}
+                >
+                  AI Active Users
+                </TableSortLabel>
+              </Box>
             </Box>
-            {buckets.map(bucket => (
+            {sortedBuckets.map(bucket => (
               <Box
                 key={bucket.bucket_start}
                 sx={styles.tableRow}

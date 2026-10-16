@@ -1,8 +1,8 @@
-import { memo } from 'react';
+import { memo, useCallback } from 'react';
 
 import { Area, AreaChart, Tooltip as RechartsTooltip, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 
-import { Box, CircularProgress, IconButton, Typography, useTheme } from '@mui/material';
+import { Box, CircularProgress, IconButton, TableSortLabel, Typography, useTheme } from '@mui/material';
 
 import { useAnalyticsAgentDetailQuery } from '@/[fsd]/features/settings/api/analyticsApi';
 import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
@@ -13,6 +13,8 @@ import {
   KPICard,
   SkillBreakdownTable,
 } from '@/[fsd]/features/settings/ui/analytics';
+import { analyticsTableSortLabelSx } from '@/[fsd]/features/settings/ui/analytics/components/analyticsTable.styles';
+import { useClientSort, useSortedRows } from '@/[fsd]/shared/lib/hooks';
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 import ArrowBackIcon from '@/components/Icons/ArrowBackIcon';
 
@@ -42,6 +44,18 @@ const SKILL_COLUMNS = [
   { key: 'uses', label: 'Uses', flex: 1, render: skill => AnalyticCommonHelpers.fmtNum(skill.uses) },
 ];
 
+const USER_COLUMNS = [
+  { key: 'user_email', label: 'User', flex: 3 },
+  { key: 'events', label: 'Runs', flex: 1 },
+  { key: 'avg_duration_ms', label: 'Avg Latency', flex: 1 },
+  { key: 'errors', label: 'Errors', flex: 1 },
+];
+
+const TOOL_COLUMNS = [
+  { key: 'tool_name', label: 'Tool', flex: 3 },
+  { key: 'calls', label: 'Calls', flex: 1 },
+];
+
 const skillRowsWithKeys = skills =>
   skills.map(skill => ({ ...skill, key: `${skill.skill_project_id}-${skill.skill_id}` }));
 
@@ -62,6 +76,26 @@ const AnalyticAgentDetailed = memo(props => {
     { projectId, entityId, dateFrom, dateTo },
     { skip: !projectId || !entityId },
   );
+
+  const {
+    entity_name,
+    kpis,
+    evaluation,
+    users = [],
+    tools = [],
+    skills = [],
+    skills_total,
+    skills_truncated = false,
+    daily_usage = [],
+  } = data ?? {};
+
+  const { sort: userSort, handleSort: handleUserSort } = useClientSort('events');
+  const { sort: toolSort, handleSort: handleToolSort } = useClientSort('calls');
+
+  const defaultGetValue = useCallback((row, key) => row[key], []);
+
+  const sortedUsers = useSortedRows(users, userSort, defaultGetValue);
+  const sortedTools = useSortedRows(tools, toolSort, defaultGetValue);
 
   if (isFetching)
     return (
@@ -84,18 +118,6 @@ const AnalyticAgentDetailed = memo(props => {
         </Typography>
       </Box>
     );
-
-  const {
-    entity_name,
-    kpis,
-    evaluation,
-    users = [],
-    tools = [],
-    skills = [],
-    skills_total,
-    skills_truncated = false,
-    daily_usage = [],
-  } = data;
 
   const tt = AnalyticsCommonConstants.TOOLTIP_TEXTS.agentDetail;
 
@@ -326,13 +348,24 @@ const AnalyticAgentDetailed = memo(props => {
           </Box>
           <Box sx={styles.tableWrapper}>
             <Box sx={styles.tableHeader}>
-              <Typography sx={[styles.tableCell, { flex: 3 }]}>User</Typography>
-              <Typography sx={[styles.tableCell, { flex: 1 }]}>Runs</Typography>
-              <Typography sx={[styles.tableCell, { flex: 1 }]}>Avg Latency</Typography>
-              <Typography sx={[styles.tableCell, { flex: 1 }]}>Errors</Typography>
+              {USER_COLUMNS.map(col => (
+                <Box
+                  key={col.key}
+                  sx={[styles.tableCell, { flex: col.flex }]}
+                >
+                  <TableSortLabel
+                    active={userSort.sortBy === col.key}
+                    direction={userSort.sortBy === col.key ? userSort.sortOrder : 'desc'}
+                    onClick={() => handleUserSort(col.key)}
+                    sx={analyticsTableSortLabelSx}
+                  >
+                    {col.label}
+                  </TableSortLabel>
+                </Box>
+              ))}
             </Box>
             <Box sx={styles.fixedScrollList}>
-              {users.map((u, i) => (
+              {sortedUsers.map((u, i) => (
                 <Box
                   key={i}
                   sx={styles.tableRow}
@@ -396,11 +429,24 @@ const AnalyticAgentDetailed = memo(props => {
           </Box>
           <Box sx={styles.tableWrapper}>
             <Box sx={styles.tableHeader}>
-              <Typography sx={[styles.tableCell, { flex: 3 }]}>Tool</Typography>
-              <Typography sx={[styles.tableCell, { flex: 1 }]}>Calls</Typography>
+              {TOOL_COLUMNS.map(col => (
+                <Box
+                  key={col.key}
+                  sx={[styles.tableCell, { flex: col.flex }]}
+                >
+                  <TableSortLabel
+                    active={toolSort.sortBy === col.key}
+                    direction={toolSort.sortBy === col.key ? toolSort.sortOrder : 'desc'}
+                    onClick={() => handleToolSort(col.key)}
+                    sx={analyticsTableSortLabelSx}
+                  >
+                    {col.label}
+                  </TableSortLabel>
+                </Box>
+              ))}
             </Box>
             <Box sx={styles.fixedScrollList}>
-              {tools.map((t, i) => (
+              {sortedTools.map((t, i) => (
                 <Box
                   key={i}
                   sx={styles.tableRow}

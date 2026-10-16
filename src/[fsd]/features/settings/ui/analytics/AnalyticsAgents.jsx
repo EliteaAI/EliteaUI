@@ -13,16 +13,65 @@ import {
   YAxis,
 } from 'recharts';
 
-import { Box, CircularProgress, TablePagination, Typography, useTheme } from '@mui/material';
+import { Box, CircularProgress, TablePagination, TableSortLabel, Typography, useTheme } from '@mui/material';
 
 import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { AnalyticsAgentDetailed, ChartTooltip } from '@/[fsd]/features/settings/ui/analytics';
+import { analyticsTableSortLabelSx } from '@/[fsd]/features/settings/ui/analytics/components/analyticsTable.styles';
 import { CHART_COLORS } from '@/[fsd]/shared/config/theme';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 import { useAnalyticsAgentsQuery } from '@/api';
 import StyledSearchInput from '@/components/SearchInput';
+
+const DEFAULT_AGENT_SORT = { sortBy: 'events', sortOrder: 'desc' };
+
+const AGENT_COLUMNS = [
+  { key: 'entity_name', label: 'Agent / Pipeline', flex: 3, render: r => r.entity_name },
+  { key: 'events', label: 'Runs', render: r => AnalyticCommonHelpers.fmtNum(r.events) },
+  { key: 'users', label: 'Users', teamOnly: true, render: r => r.users },
+  { key: 'llm_cost', label: 'Total Cost', render: r => AnalyticCommonHelpers.fmtCost(r.llm_cost) },
+  { key: 'input_cost', label: 'Input Token Cost', render: r => AnalyticCommonHelpers.fmtCost(r.input_cost) },
+  {
+    key: 'output_cost',
+    label: 'Output Token Cost',
+    render: r => AnalyticCommonHelpers.fmtCost(r.output_cost),
+  },
+  { key: 'total_tokens', label: 'Total Tokens', render: r => AnalyticCommonHelpers.fmtNum(r.total_tokens) },
+  { key: 'input_tokens', label: 'Input Tokens', render: r => AnalyticCommonHelpers.fmtNum(r.input_tokens) },
+  {
+    key: 'output_tokens',
+    label: 'Output Tokens',
+    render: r => AnalyticCommonHelpers.fmtNum(r.output_tokens),
+  },
+  {
+    key: 'cache_read_tokens',
+    label: 'Cache Read Tokens',
+    render: r => AnalyticCommonHelpers.fmtNum(r.cache_read_tokens),
+  },
+  {
+    key: 'cache_creation_tokens',
+    label: 'Cache Write Tokens',
+    render: r => AnalyticCommonHelpers.fmtNum(r.cache_creation_tokens),
+  },
+  {
+    key: 'cache_read_cost',
+    label: 'Cache Read Cost',
+    render: r => AnalyticCommonHelpers.fmtCost(r.cache_read_cost),
+  },
+  {
+    key: 'cache_creation_cost',
+    label: 'Cache Write Cost',
+    render: r => AnalyticCommonHelpers.fmtCost(r.cache_creation_cost),
+  },
+  {
+    key: 'avg_duration_ms',
+    label: 'Avg Latency',
+    render: r => AnalyticCommonHelpers.fmtDuration(r.avg_duration_ms),
+  },
+  { key: 'errors', label: 'Errors', render: r => r.errors },
+];
 
 const AnalyticsAgents = memo(props => {
   const { projectId, dateFrom, dateTo, canViewSkills = false } = props;
@@ -30,6 +79,7 @@ const AnalyticsAgents = memo(props => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(20);
   const [search, setSearch] = useState('');
+  const [sort, setSort] = useState(DEFAULT_AGENT_SORT);
   const [selectedAgent, setSelectedAgent] = useState(null);
 
   const { palette } = useTheme();
@@ -43,6 +93,11 @@ const AnalyticsAgents = memo(props => {
     [selectedProjectId, personalProjectId],
   );
 
+  const columns = useMemo(
+    () => AGENT_COLUMNS.filter(column => !column.teamOnly || !isPersonalProject),
+    [isPersonalProject],
+  );
+
   const { data, isFetching } = useAnalyticsAgentsQuery(
     {
       projectId,
@@ -51,24 +106,39 @@ const AnalyticsAgents = memo(props => {
       limit: rowsPerPage,
       offset: page * rowsPerPage,
       search,
+      sortBy: sort.sortBy,
+      sortOrder: sort.sortOrder,
     },
+    { skip: !projectId },
+  );
+
+  const { data: topAgentsData } = useAnalyticsAgentsQuery(
+    { projectId, dateFrom, dateTo, limit: 20, offset: 0, search, ...DEFAULT_AGENT_SORT },
     { skip: !projectId },
   );
 
   const agentChartData = useMemo(
     () =>
-      (data?.rows || []).slice(0, 20).map((a, i) => ({
+      (topAgentsData?.rows || []).map((a, i) => ({
         name: a.entity_name || `Agent #${a.entity_id}`,
         runs: a.events,
         color: CHART_COLORS[i % CHART_COLORS.length],
       })),
-    [data?.rows],
+    [topAgentsData?.rows],
   );
 
   const chatDaily = data?.chat_daily || [];
 
   const handleSearchChange = useCallback(event => {
     setSearch(event.target.value);
+    setPage(0);
+  }, []);
+
+  const handleSort = useCallback(key => {
+    setSort(previous => ({
+      sortBy: key,
+      sortOrder: previous.sortBy === key && previous.sortOrder === 'desc' ? 'asc' : 'desc',
+    }));
     setPage(0);
   }, []);
 
@@ -276,21 +346,22 @@ const AnalyticsAgents = memo(props => {
             sx={styles.tableHeader}
             data-testid="analytics-agents-table-header"
           >
-            <Typography sx={[styles.tableCell, { flex: 3 }]}>Agent / Pipeline</Typography>
-            <Typography sx={[styles.tableCell, { flex: 1 }]}>Runs</Typography>
-            {!isPersonalProject && <Typography sx={[styles.tableCell, { flex: 1 }]}>Users</Typography>}
-            <Typography sx={[styles.tableCell, styles.flexOne]}>Total Cost</Typography>
-            <Typography sx={[styles.tableCell, styles.flexOne]}>Input Token Cost</Typography>
-            <Typography sx={[styles.tableCell, styles.flexOne]}>Output Token Cost</Typography>
-            <Typography sx={[styles.tableCell, styles.flexOne]}>Total Tokens</Typography>
-            <Typography sx={[styles.tableCell, styles.flexOne]}>Input Tokens</Typography>
-            <Typography sx={[styles.tableCell, styles.flexOne]}>Output Tokens</Typography>
-            <Typography sx={[styles.tableCell, styles.flexOne]}>Cache Read Tokens</Typography>
-            <Typography sx={[styles.tableCell, styles.flexOne]}>Cache Write Tokens</Typography>
-            <Typography sx={[styles.tableCell, styles.flexOne]}>Cache Read Cost</Typography>
-            <Typography sx={[styles.tableCell, styles.flexOne]}>Cache Write Cost</Typography>
-            <Typography sx={[styles.tableCell, { flex: 1 }]}>Avg Latency</Typography>
-            <Typography sx={[styles.tableCell, { flex: 1 }]}>Errors</Typography>
+            {columns.map(column => (
+              <Box
+                key={column.key}
+                sx={[styles.tableCell, { flex: column.flex ?? 1 }]}
+              >
+                <TableSortLabel
+                  active={sort.sortBy === column.key}
+                  direction={sort.sortBy === column.key ? sort.sortOrder : 'desc'}
+                  onClick={() => handleSort(column.key)}
+                  sx={analyticsTableSortLabelSx}
+                  data-testid={`analytics-agents-sort-${column.key}`}
+                >
+                  {column.label}
+                </TableSortLabel>
+              </Box>
+            ))}
           </Box>
           {isFetching && (
             <Box
@@ -308,60 +379,19 @@ const AnalyticsAgents = memo(props => {
                 onClick={() => handleAgentClick(a.entity_id)}
                 data-testid="analytics-agents-row"
               >
-                <Typography
-                  sx={[styles.tableCellValue, { flex: 3 }]}
-                  noWrap
-                >
-                  {a.entity_name}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, { flex: 1 }]}>
-                  {AnalyticCommonHelpers.fmtNum(a.events)}
-                </Typography>
-                {!isPersonalProject && (
-                  <Typography sx={[styles.tableCellValue, { flex: 1 }]}>{a.users}</Typography>
-                )}
-                <Typography sx={[styles.tableCellValue, { flex: 1 }]}>
-                  {AnalyticCommonHelpers.fmtCost(a.llm_cost)}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
-                  {AnalyticCommonHelpers.fmtCost(a.input_cost)}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
-                  {AnalyticCommonHelpers.fmtCost(a.output_cost)}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
-                  {AnalyticCommonHelpers.fmtNum(a.total_tokens)}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
-                  {AnalyticCommonHelpers.fmtNum(a.input_tokens)}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
-                  {AnalyticCommonHelpers.fmtNum(a.output_tokens)}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
-                  {AnalyticCommonHelpers.fmtNum(a.cache_read_tokens)}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
-                  {AnalyticCommonHelpers.fmtNum(a.cache_creation_tokens)}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
-                  {AnalyticCommonHelpers.fmtCost(a.cache_read_cost)}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
-                  {AnalyticCommonHelpers.fmtCost(a.cache_creation_cost)}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, { flex: 1 }]}>
-                  {AnalyticCommonHelpers.fmtDuration(a.avg_duration_ms)}
-                </Typography>
-                <Typography
-                  sx={[
-                    styles.tableCellValue,
-                    { flex: 1, color: a.errors > 0 ? palette.status.rejected : undefined },
-                  ]}
-                  data-testid="analytics-agents-row-errors"
-                >
-                  {a.errors}
-                </Typography>
+                {columns.map(column => (
+                  <Box
+                    key={column.key}
+                    sx={[
+                      styles.tableCellValue,
+                      { flex: column.flex ?? 1 },
+                      column.key === 'errors' && a.errors > 0 && styles.errorValue,
+                    ]}
+                    data-testid={`analytics-agents-row-${column.key}`}
+                  >
+                    {column.render(a)}
+                  </Box>
+                ))}
               </Box>
             ))}
         </Box>
@@ -450,6 +480,7 @@ const styles = {
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
   }),
+  errorValue: ({ palette }) => ({ color: palette.status.rejected }),
   userSearch: {
     width: '15rem',
     height: '2.25rem',
@@ -463,7 +494,6 @@ const styles = {
     color: palette.text.secondary,
     '& .MuiTablePagination-selectIcon': { color: palette.text.secondary },
   }),
-  flexOne: { flex: 1 },
 };
 
 export default AnalyticsAgents;
