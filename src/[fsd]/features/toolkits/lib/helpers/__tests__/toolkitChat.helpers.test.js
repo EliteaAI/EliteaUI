@@ -109,6 +109,10 @@ describe('selectRunModel', () => {
     expect(selectRunModel({ items: [first, lowTier] }, { forIndexing: true })).toBe(first);
   });
 
+  it('returns null before the models list has loaded', () => {
+    expect(selectRunModel(undefined, { forIndexing: true })).toBeNull();
+  });
+
   it('returns null when the project has no models', () => {
     expect(selectRunModel({ items: [] }, { forIndexing: true })).toBeNull();
   });
