@@ -1,6 +1,6 @@
 import { memo, useMemo } from 'react';
 
-import { Box, IconButton, Tooltip, Typography } from '@mui/material';
+import { Box, Chip, IconButton, Tooltip, Typography } from '@mui/material';
 
 import IWModalEntityCardFullscreenText from '@/[fsd]/entities/import-wizard/ui/import-wizard-modal/IWModalEntityCardFullscreenText';
 import IWModalEntityCardWrapper from '@/[fsd]/entities/import-wizard/ui/import-wizard-modal/IWModalEntityCardWrapper';
@@ -155,6 +155,22 @@ const IWModalEntityCard = memo(props => {
                 </Box>
               )}
 
+              {Boolean(entity?.details?.tags?.length) && (
+                <Box>
+                  <Typography sx={styles.label}>Tags:</Typography>
+                  <Box sx={styles.tagsRow}>
+                    {entity.details.tags.map((tag, i) => (
+                      <Chip
+                        key={i}
+                        label={tag.name}
+                        size="small"
+                        sx={styles.tagChip}
+                      />
+                    ))}
+                  </Box>
+                </Box>
+              )}
+
               <Box>
                 <Typography sx={styles.label}>Other:</Typography>
                 <Box sx={styles.inlineRow}>
@@ -163,9 +179,20 @@ const IWModalEntityCard = memo(props => {
                     variant="bodyMedium"
                     sx={({ palette }) => ({ color: palette.text.secondary })}
                   >
-                    {entity?.details?.meta.step_limit}
+                    {entity?.details?.meta?.step_limit}
                   </Typography>
                 </Box>
+                {entity?.details?.meta?.ignore_project_context != null && (
+                  <Box sx={styles.inlineRow}>
+                    <Typography variant="bodyMedium">Ignore Project Context:</Typography>
+                    <Typography
+                      variant="bodyMedium"
+                      sx={({ palette }) => ({ color: palette.text.secondary })}
+                    >
+                      {entity.details.meta.ignore_project_context ? 'Yes' : 'No'}
+                    </Typography>
+                  </Box>
+                )}
               </Box>
             </>
           )}
@@ -194,7 +221,23 @@ const iWModalEntityCardStyles = () => ({
     flexDirection: 'row',
     gap: '.35rem',
     alignItems: 'center',
+    marginTop: '.25rem',
   },
+  tagsRow: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '.35rem',
+  },
+  tagChip: ({ palette }) => ({
+    backgroundColor: palette.components.styledChip.background.disabled,
+    color: palette.text.secondary,
+    height: '1.5rem',
+    margin: '0 !important',
+    '& .MuiChip-label': {
+      fontSize: '.75rem',
+      padding: '0 .5rem',
+    },
+  }),
   titleWrapper: {
     display: 'flex',
     alignItems: 'center',
