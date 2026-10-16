@@ -16,3 +16,4 @@ export * from './runUsage.helpers';
 export * from './efficiency.helpers';
 export * from './expectedTrajectory.helpers';
 export * from './toolPicker.helpers';
+export * from './performanceDiff.helpers';
