@@ -83,9 +83,12 @@ export const useToolkitChat = props => {
 
   const modelList = useMemo(() => modelsData?.items || [], [modelsData.items]);
 
-  const defaultModel = useMemo(() => {
-    return modelsData.items.find(model => model.default) || modelsData.items[0] || null;
-  }, [modelsData.items]);
+  const isIndexingRun = !isTestToolsMode || Boolean(index);
+
+  const defaultModel = useMemo(
+    () => ToolkitChatHelpers.selectRunModel(modelsData, { forIndexing: isIndexingRun }),
+    [modelsData, isIndexingRun],
+  );
 
   // Configuration state
   const [selectedModel, setSelectedModel] = useState(defaultModel);
