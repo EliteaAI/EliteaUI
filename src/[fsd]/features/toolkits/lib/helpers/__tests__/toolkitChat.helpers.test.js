@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { omitSchemaProperties, sanitizeToolParams } from '../toolkitChat.helpers';
+import { omitSchemaProperties, sanitizeToolParams, selectRunModel } from '../toolkitChat.helpers';
 
 const searchSchema = {
   type: 'object',
@@ -78,5 +78,38 @@ describe('sanitizeToolParams', () => {
   it('handles a missing schema/variables gracefully', () => {
     expect(sanitizeToolParams(null, { a: 1 })).toEqual({ a: 1 });
     expect(sanitizeToolParams(listBranchesSchema, null)).toEqual({});
+  });
+});
+
+describe('selectRunModel', () => {
+  const first = { name: 'bedrock-luna', project_id: 1, default: false };
+  const projectDefault = { name: 'sonnet', project_id: 1, default: true };
+  const lowTier = { name: 'haiku', project_id: 7, default: false };
+  const withLowTier = {
+    items: [first, projectDefault, lowTier],
+    low_tier_default_model_name: 'haiku',
+    low_tier_default_model_project_id: '7',
+  };
+
+  it('prefers the project Low-tier model for an indexing run', () => {
+    expect(selectRunModel(withLowTier, { forIndexing: true })).toBe(lowTier);
+  });
+
+  it('keeps the project Default for a non-indexing run', () => {
+    expect(selectRunModel(withLowTier, { forIndexing: false })).toBe(projectDefault);
+  });
+
+  it('does not match a Low-tier name that belongs to another project', () => {
+    const otherProject = { ...withLowTier, low_tier_default_model_project_id: 1 };
+
+    expect(selectRunModel(otherProject, { forIndexing: true })).toBe(projectDefault);
+  });
+
+  it('falls back to the first model when neither Low-tier nor Default is set', () => {
+    expect(selectRunModel({ items: [first, lowTier] }, { forIndexing: true })).toBe(first);
+  });
+
+  it('returns null when the project has no models', () => {
+    expect(selectRunModel({ items: [] }, { forIndexing: true })).toBeNull();
   });
 });
