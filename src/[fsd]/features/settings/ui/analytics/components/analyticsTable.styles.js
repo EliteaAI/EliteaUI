@@ -1,4 +1,9 @@
 // Card + flex-table layout shared by the Overview tables (ModelUsageTable, AutomatedActivityTable)
+export const analyticsTableSortLabelSx = {
+  color: 'inherit',
+  '&.Mui-active': { color: 'inherit' },
+  '& .MuiTableSortLabel-icon': { fontSize: '0.875rem' },
+};
 /** @type {MuiSx} */
 export const analyticsTableStyles = {
   colorDot: color => ({

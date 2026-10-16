@@ -1,15 +1,26 @@
 import { memo } from 'react';
 
-import { Box, Typography } from '@mui/material';
+import { Box, TableSortLabel, Typography } from '@mui/material';
 
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 
-import { analyticsTableStyles as styles } from './analyticsTable.styles';
+import { analyticsTableSortLabelSx, analyticsTableStyles as styles } from './analyticsTable.styles';
 
 const rowKey = (row, index) => row.key ?? index;
 
 const SkillBreakdownTable = memo(props => {
-  const { title, tooltip, subtitle, columns, rows = [], emptyText = 'No data', testId } = props;
+  const {
+    title,
+    tooltip,
+    subtitle,
+    columns,
+    rows = [],
+    emptyText = 'No data',
+    testId,
+    sortBy,
+    sortOrder,
+    onSort,
+  } = props;
 
   const tableStyles = skillBreakdownTableStyles();
 
@@ -44,14 +55,30 @@ const SkillBreakdownTable = memo(props => {
       </Box>
       <Box sx={styles.tableWrapper}>
         <Box sx={styles.tableHeader}>
-          {columns.map(column => (
-            <Typography
-              key={column.key}
-              sx={[styles.tableCell, { flex: column.flex ?? 1 }]}
-            >
-              {column.label}
-            </Typography>
-          ))}
+          {columns.map(column =>
+            onSort ? (
+              <Box
+                key={column.key}
+                sx={[styles.tableCell, { flex: column.flex ?? 1 }]}
+              >
+                <TableSortLabel
+                  active={sortBy === column.key}
+                  direction={sortBy === column.key ? sortOrder : 'desc'}
+                  onClick={() => onSort(column.key)}
+                  sx={analyticsTableSortLabelSx}
+                >
+                  {column.label}
+                </TableSortLabel>
+              </Box>
+            ) : (
+              <Typography
+                key={column.key}
+                sx={[styles.tableCell, { flex: column.flex ?? 1 }]}
+              >
+                {column.label}
+              </Typography>
+            ),
+          )}
         </Box>
         <Box sx={tableStyles.scrollList}>
           {rows.map((row, index) => (

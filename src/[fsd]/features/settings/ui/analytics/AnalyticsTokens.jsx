@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 
 import { Bar, BarChart, Tooltip as RechartsTooltip, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 
@@ -8,6 +8,7 @@ import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constant
 import { AnalyticCommonHelpers, SkillAnalyticsHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { ChartTooltip, KPICard } from '@/[fsd]/features/settings/ui/analytics';
 import { CHART_COLORS } from '@/[fsd]/shared/config/theme';
+import { useClientSort, useSortedRows } from '@/[fsd]/shared/lib/hooks';
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 import { useAnalyticsCostsQuery } from '@/api';
 
@@ -41,67 +42,72 @@ const AnalyticsTokens = memo(props => {
 
   const userTableData = useMemo(
     () =>
-      [...(data?.by_user || [])]
-        .map(user => {
-          const tokens = tokenStats(user);
-          return {
-            name:
-              user.user_display_name ||
-              user.user_email ||
-              `User ${user.user_id ?? ''}`.trim() ||
-              'Unknown user',
-            ...tokens,
-            share: toPercentage(tokens.total, totalProjectTokens),
-          };
-        })
-        .sort((a, b) => b.total - a.total),
+      (data?.by_user || []).map(user => {
+        const tokens = tokenStats(user);
+        return {
+          name:
+            user.user_display_name ||
+            user.user_email ||
+            `User ${user.user_id ?? ''}`.trim() ||
+            'Unknown user',
+          ...tokens,
+          share: toPercentage(tokens.total, totalProjectTokens),
+        };
+      }),
     [data?.by_user, totalProjectTokens],
   );
 
   const modelTableData = useMemo(
     () =>
-      [...(data?.by_model || [])]
-        .map(model => {
-          const tokens = tokenStats(model);
-          return {
-            name: model.display_name || model.model_name || 'Unknown model',
-            ...tokens,
-            share: toPercentage(tokens.total, totalProjectTokens),
-          };
-        })
-        .sort((a, b) => b.total - a.total),
+      (data?.by_model || []).map(model => {
+        const tokens = tokenStats(model);
+        return {
+          name: model.display_name || model.model_name || 'Unknown model',
+          ...tokens,
+          share: toPercentage(tokens.total, totalProjectTokens),
+        };
+      }),
     [data?.by_model, totalProjectTokens],
   );
 
   const agentTableData = useMemo(
     () =>
-      [...(data?.by_agent || [])]
-        .map(agent => {
-          const tokens = tokenStats(agent);
-          return {
-            name: agent.entity_name || agent.display_name || 'Unattributed',
-            ...tokens,
-            share: toPercentage(tokens.total, totalProjectTokens),
-          };
-        })
-        .sort((a, b) => b.total - a.total),
+      (data?.by_agent || []).map(agent => {
+        const tokens = tokenStats(agent);
+        return {
+          name: agent.entity_name || agent.display_name || 'Unattributed',
+          ...tokens,
+          share: toPercentage(tokens.total, totalProjectTokens),
+        };
+      }),
     [data?.by_agent, totalProjectTokens],
   );
 
   const skillTableData = useMemo(
     () =>
-      [...(data?.by_skill || [])]
-        .map(skill => {
-          const tokens = tokenStats(skill);
-          return {
-            name: SkillAnalyticsHelpers.skillDisplayName(skill),
-            ...tokens,
-            share: toPercentage(tokens.total, totalProjectTokens),
-          };
-        })
-        .sort((a, b) => b.total - a.total),
+      (data?.by_skill || []).map(skill => {
+        const tokens = tokenStats(skill);
+        return {
+          name: SkillAnalyticsHelpers.skillDisplayName(skill),
+          ...tokens,
+          share: toPercentage(tokens.total, totalProjectTokens),
+        };
+      }),
     [data?.by_skill, totalProjectTokens],
   );
+
+  const { sort: userSort, handleSort: handleUserSort } = useClientSort('total');
+  const { sort: modelSort, handleSort: handleModelSort } = useClientSort('total');
+  const { sort: agentSort, handleSort: handleAgentSort } = useClientSort('total');
+  const { sort: skillSort, handleSort: handleSkillSort } = useClientSort('total');
+
+  // TOKEN_COLUMNS keys and row fields align: total, input, output, cacheRead, cacheWrite, share, name
+  const getTokenValue = useCallback((row, key) => row[key], []);
+
+  const sortedUserRows = useSortedRows(userTableData, userSort, getTokenValue);
+  const sortedModelRows = useSortedRows(modelTableData, modelSort, getTokenValue);
+  const sortedAgentRows = useSortedRows(agentTableData, agentSort, getTokenValue);
+  const sortedSkillRows = useSortedRows(skillTableData, skillSort, getTokenValue);
 
   const dailyChartData = useMemo(
     () =>
@@ -278,23 +284,32 @@ const AnalyticsTokens = memo(props => {
         title="Token Usage by User"
         subtitleTooltip={tt.BY_USER}
         nameHeader="USER"
-        rows={userTableData}
+        rows={sortedUserRows}
         emptyState={noTokensMsg}
+        sortBy={userSort.sortBy}
+        sortOrder={userSort.sortOrder}
+        onSort={handleUserSort}
       />
       <TokenTable
         title="Token Usage by Model"
         subtitleTooltip={tt.BY_MODEL}
         nameHeader="MODEL"
-        rows={modelTableData}
+        rows={sortedModelRows}
         emptyState={noTokensMsg}
+        sortBy={modelSort.sortBy}
+        sortOrder={modelSort.sortOrder}
+        onSort={handleModelSort}
       />
       {!isRunScope && (
         <TokenTable
           title="Token Usage by Agent & Pipeline"
           subtitleTooltip={tt.BY_AGENT_PIPELINE}
           nameHeader="AGENT / PIPELINE"
-          rows={agentTableData}
+          rows={sortedAgentRows}
           emptyState={NO_TOKENS_MSG}
+          sortBy={agentSort.sortBy}
+          sortOrder={agentSort.sortOrder}
+          onSort={handleAgentSort}
         />
       )}
       {!isRunScope && canViewSkills && (
@@ -302,9 +317,12 @@ const AnalyticsTokens = memo(props => {
           title="Token Usage by Skill"
           subtitleTooltip={tt.BY_SKILL}
           nameHeader="SKILL"
-          rows={skillTableData}
+          rows={sortedSkillRows}
           emptyState={NO_TOKENS_MSG}
           testId="analytics-tokens-by-skill"
+          sortBy={skillSort.sortBy}
+          sortOrder={skillSort.sortOrder}
+          onSort={handleSkillSort}
         />
       )}
     </Box>

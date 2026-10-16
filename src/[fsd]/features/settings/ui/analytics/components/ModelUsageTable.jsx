@@ -1,22 +1,41 @@
-import { memo } from 'react';
+import { memo, useCallback } from 'react';
 
-import { Box, Typography } from '@mui/material';
+import { Box, TableSortLabel, Typography } from '@mui/material';
 
 import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { CHART_COLORS } from '@/[fsd]/shared/config/theme';
+import { useClientSort, useSortedRows } from '@/[fsd]/shared/lib/hooks';
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 
-import { analyticsTableStyles } from './analyticsTable.styles';
+import { analyticsTableSortLabelSx, analyticsTableStyles } from './analyticsTable.styles';
+
+const MODEL_COLUMNS = [
+  { key: 'model_name', label: 'Model', flex: 3 },
+  { key: 'calls', label: 'Calls/Runs', flex: 1, align: 'right' },
+  { key: 'users', label: 'Users', flex: 1, align: 'right', personalHide: true },
+  { key: 'share', label: 'Share', flex: 2, align: 'right' },
+];
 
 const ModelUsageTable = memo(props => {
   const { models = [], totalCalls, isPersonalProject = false } = props;
 
   const styles = modelUsageTableStyles();
 
+  const { sort: modelSort, handleSort: handleModelSort } = useClientSort('calls');
+  const getModelValue = useCallback(
+    (row, key) => {
+      if (key === 'model_name') return row.display_name || row.model_name || '';
+      if (key === 'share') return totalCalls > 0 ? row.calls / totalCalls : 0;
+      return row[key];
+    },
+    [totalCalls],
+  );
+  const sortedModels = useSortedRows(models, modelSort, getModelValue);
+
   if (!models.length) return null;
 
-  const maxCalls = models[0]?.calls || 1;
+  const maxCalls = sortedModels[0] ? Math.max(...sortedModels.map(m => m.calls || 0)) || 1 : 1;
 
   return (
     <Box sx={styles.chartCard}>
@@ -45,14 +64,30 @@ const ModelUsageTable = memo(props => {
       <Box sx={styles.tableWrapper}>
         <Box sx={styles.tableHeader}>
           <Typography sx={[styles.tableCell, { flex: '0 0 2rem', textAlign: 'right' }]}>#</Typography>
-          <Typography sx={[styles.tableCell, { flex: 3 }]}>Model</Typography>
-          <Typography sx={[styles.tableCell, { flex: 1, textAlign: 'right' }]}>Calls/Runs</Typography>
-          {!isPersonalProject && (
-            <Typography sx={[styles.tableCell, { flex: 1, textAlign: 'right' }]}>Users</Typography>
-          )}
-          <Typography sx={[styles.tableCell, { flex: 2, textAlign: 'right' }]}>Share</Typography>
+          {MODEL_COLUMNS.filter(col => !col.personalHide || !isPersonalProject).map(col => (
+            <Box
+              key={col.key}
+              sx={[
+                styles.tableCell,
+                {
+                  flex: col.flex,
+                  display: 'flex',
+                  justifyContent: col.align === 'right' ? 'flex-end' : 'flex-start',
+                },
+              ]}
+            >
+              <TableSortLabel
+                active={modelSort.sortBy === col.key}
+                direction={modelSort.sortBy === col.key ? modelSort.sortOrder : 'desc'}
+                onClick={() => handleModelSort(col.key)}
+                sx={analyticsTableSortLabelSx}
+              >
+                {col.label}
+              </TableSortLabel>
+            </Box>
+          ))}
         </Box>
-        {models.map((model, index) => {
+        {sortedModels.map((model, index) => {
           const share = totalCalls > 0 ? (model.calls / totalCalls) * 100 : 0;
           const color = CHART_COLORS[index % CHART_COLORS.length];
 

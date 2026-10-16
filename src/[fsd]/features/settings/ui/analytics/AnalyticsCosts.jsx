@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 
 import { Bar, BarChart, Tooltip as RechartsTooltip, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 
@@ -8,6 +8,7 @@ import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constant
 import { AnalyticCommonHelpers, SkillAnalyticsHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { ChartTooltip, InfoBanner, KPICard, infoBannerTextSx } from '@/[fsd]/features/settings/ui/analytics';
 import { CHART_COLORS } from '@/[fsd]/shared/config/theme';
+import { useClientSort, useSortedRows } from '@/[fsd]/shared/lib/hooks';
 import { useAnalyticsCostsQuery } from '@/api';
 
 import CostTable from './components/CostTable';
@@ -41,6 +42,13 @@ const EVALUATION_COLUMNS = [
   { key: 'version', header: 'VERSION', flex: 1.5, render: row => row.version || '—' },
   { key: 'runs', header: 'RUNS', flex: 1, render: row => AnalyticCommonHelpers.fmtNum(row.runs) },
 ];
+
+// Extracts the raw numeric value for a CostTable row field key
+const getCostValue = (row, key) => {
+  if (key === 'name') return row.name;
+  if (key === 'share') return row.share;
+  return row[key];
+};
 
 const AnalyticsCosts = memo(props => {
   const { projectId, dateFrom, dateTo, runScope, canViewSkills = false } = props;
@@ -94,6 +102,20 @@ const AnalyticsCosts = memo(props => {
     () => (data?.daily || []).map(d => ({ ...d, date: d.date?.slice(5) })),
     [data?.daily],
   );
+
+  const { sort: modelSort, handleSort: handleModelSort } = useClientSort('cost');
+  const { sort: agentSort, handleSort: handleAgentSort } = useClientSort('cost');
+  const { sort: skillSort, handleSort: handleSkillSort } = useClientSort('cost');
+  const { sort: userSort, handleSort: handleUserSort } = useClientSort('cost');
+  const { sort: evalSort, handleSort: handleEvalSort } = useClientSort('cost');
+
+  const getValueCallback = useCallback(getCostValue, []);
+
+  const sortedModelRows = useSortedRows(modelTableData, modelSort, getValueCallback);
+  const sortedAgentRows = useSortedRows(agentTableData, agentSort, getValueCallback);
+  const sortedSkillRows = useSortedRows(skillTableData, skillSort, getValueCallback);
+  const sortedUserRows = useSortedRows(userTableData, userSort, getValueCallback);
+  const sortedEvalRows = useSortedRows(evaluationTableData, evalSort, getValueCallback);
 
   // Only blank the whole view on the initial load. On subsequent refetches
   // (e.g. date-range changes) RTK Query keeps the previous `data`, so we keep
@@ -278,15 +300,21 @@ const AnalyticsCosts = memo(props => {
       <CostTable
         title="Cost by User"
         nameHeader="USER"
-        rows={userTableData}
+        rows={sortedUserRows}
         emptyState={`No user cost data is available for ${scopeText}.`}
+        sortBy={userSort.sortBy}
+        sortOrder={userSort.sortOrder}
+        onSort={handleUserSort}
       />
 
       <CostTable
         title="Cost by Model"
         nameHeader="MODEL"
-        rows={modelTableData}
+        rows={sortedModelRows}
         emptyState={`No model cost data is available for ${scopeText}.`}
+        sortBy={modelSort.sortBy}
+        sortOrder={modelSort.sortOrder}
+        onSort={handleModelSort}
       />
 
       {!isRunScope && (
@@ -294,9 +322,12 @@ const AnalyticsCosts = memo(props => {
           title="Cost by Agent & Pipeline"
           tooltip={tooltips.BY_AGENT_PIPELINE}
           nameHeader="AGENT / PIPELINE"
-          rows={agentTableData}
+          rows={sortedAgentRows}
           extraColumns={[TYPE_COLUMN]}
           emptyState="No agent & pipeline cost data is available for the selected date range."
+          sortBy={agentSort.sortBy}
+          sortOrder={agentSort.sortOrder}
+          onSort={handleAgentSort}
         />
       )}
 
@@ -305,9 +336,12 @@ const AnalyticsCosts = memo(props => {
           title="Cost by Skill"
           tooltip={tooltips.BY_SKILL}
           nameHeader="SKILL"
-          rows={skillTableData}
+          rows={sortedSkillRows}
           emptyState="No skill cost data is available for the selected date range."
           testId="analytics-costs-by-skill"
+          sortBy={skillSort.sortBy}
+          sortOrder={skillSort.sortOrder}
+          onSort={handleSkillSort}
         />
       )}
 
@@ -316,10 +350,13 @@ const AnalyticsCosts = memo(props => {
           title="Cost by Evaluation"
           tooltip={tooltips.BY_EVALUATION}
           nameHeader="AGENT / PIPELINE"
-          rows={evaluationTableData}
+          rows={sortedEvalRows}
           extraColumns={EVALUATION_COLUMNS}
           emptyState="No evaluation cost data is available for the selected date range."
           testId="analytics-costs-by-evaluation"
+          sortBy={evalSort.sortBy}
+          sortOrder={evalSort.sortOrder}
+          onSort={handleEvalSort}
         />
       )}
     </Box>
