@@ -1,17 +1,24 @@
-import { memo, useCallback, useRef, useState } from 'react';
+import { memo, useCallback, useMemo, useRef, useState } from 'react';
+
+import { useDispatch } from 'react-redux';
 
 import CheckOutlined from '@mui/icons-material/CheckOutlined';
 import UploadFileOutlined from '@mui/icons-material/UploadFileOutlined';
-import { Alert, Box, FormControlLabel, Typography } from '@mui/material';
+import { Alert, Box, FormControlLabel, Tooltip, Typography } from '@mui/material';
 
 import { useRestoreProjectBackupMutation } from '@/[fsd]/features/settings/api';
 import { ProjectBackupConstants } from '@/[fsd]/features/settings/lib/constants';
 import { ProjectBackupHelpers } from '@/[fsd]/features/settings/lib/helpers';
+import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Checkbox, Modal } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import { actions as chatActions } from '@/slices/chat';
 
-const { formatSize, getRestoreErrorMessage } = ProjectBackupHelpers;
-const { RESTORE_OPTION_LABELS } = ProjectBackupConstants;
+const { formatSize, getRestoreErrorMessage, getDefaultRestoreChats, getChatsSummaryText } =
+  ProjectBackupHelpers;
+const { CHATS_OPTION, CHAT_RESTORE_OPTION_LABELS, RESTORE_OPTION_LABELS } = ProjectBackupConstants;
+
+const NO_FILES_TOOLTIP = 'This backup has no attachment files';
 
 const RestoreProjectDialog = memo(props => {
   const { open, onClose, projectId, projectName } = props;
@@ -25,8 +32,18 @@ const RestoreProjectDialog = memo(props => {
   const [allowMismatch, setAllowMismatch] = useState(false);
   const [error, setError] = useState('');
   const [result, setResult] = useState(null);
+  const [restoreChats, setRestoreChats] = useState(CHATS_OPTION.none);
+  const [isInspecting, setIsInspecting] = useState(false);
 
-  const [restoreProject, { isLoading }] = useRestoreProjectBackupMutation();
+  const [restoreProject, { isLoading: isRestoring }] = useRestoreProjectBackupMutation();
+  const { toastWarning } = useToast();
+  const dispatch = useDispatch();
+  const isLoading = isRestoring || isInspecting;
+
+  const backupChats = artifact?.chats_included ?? CHATS_OPTION.none;
+  const hasChats = backupChats !== CHATS_OPTION.none;
+  const hasFiles = !!artifact?.has_attachment_files;
+  const isChatRestore = hasChats && restoreChats !== CHATS_OPTION.none;
 
   // The backend recognizes the uploaded file and reports what it found in
   // "artifact"; the dialog only reacts to that answer.
@@ -44,6 +61,7 @@ const RestoreProjectDialog = memo(props => {
     setAllowMismatch(false);
     setError('');
     setResult(null);
+    setRestoreChats(CHATS_OPTION.none);
     if (inputRef.current) inputRef.current.value = '';
   }, []);
 
@@ -57,14 +75,40 @@ const RestoreProjectDialog = memo(props => {
     inputRef.current?.click();
   }, []);
 
-  const handleFileChange = useCallback(event => {
-    setError('');
-    setResult(null);
-    setArtifact(null);
-    setAllowMismatch(false);
-    setDryRun(true);
-    setFile(event.target.files?.[0] ?? null);
-  }, []);
+  const handleFileChange = useCallback(
+    async event => {
+      const picked = event.target.files?.[0] ?? null;
+      setError('');
+      setResult(null);
+      setArtifact(null);
+      setAllowMismatch(false);
+      setDryRun(true);
+      setRestoreChats(CHATS_OPTION.none);
+      setFile(picked);
+      if (!picked) return;
+
+      // Read what the backup carries right away, so the chat options can be offered
+      setIsInspecting(true);
+      try {
+        const response = await restoreProject({
+          projectId,
+          file: picked,
+          inspect: true,
+          allowProjectMismatch: true,
+        }).unwrap();
+        if (response?.artifact) {
+          setArtifact(response.artifact);
+          setRestoreChats(getDefaultRestoreChats(response.artifact));
+        }
+      } catch (err) {
+        setError(getRestoreErrorMessage(err));
+        if (err?.data?.artifact) setArtifact(err.data.artifact);
+      } finally {
+        setIsInspecting(false);
+      }
+    },
+    [projectId, restoreProject],
+  );
 
   const handleSubmit = useCallback(async () => {
     setError('');
@@ -77,9 +121,18 @@ const RestoreProjectDialog = memo(props => {
         truncate,
         dryRun,
         allowProjectMismatch: isMismatch && allowMismatch,
+        restoreChats: hasChats ? restoreChats : undefined,
       }).unwrap();
       setResult(response);
       if (response?.artifact) setArtifact(response.artifact);
+      // Replacing the chats deletes the one the chat page would reopen
+      if (truncate && response?.result?.chats && !response.result.dry_run) {
+        dispatch(chatActions.resetLastSelectedConversationId({ projectId }));
+      }
+      const failedAttachments = response?.result?.attachments?.failed;
+      if (failedAttachments && !response.result.dry_run) {
+        toastWarning(`Restore completed. ${failedAttachments} attachment file(s) could not be restored.`);
+      }
     } catch (err) {
       setError(getRestoreErrorMessage(err));
       // A project mismatch comes back as 409 with the artifact the backend read,
@@ -87,13 +140,49 @@ const RestoreProjectDialog = memo(props => {
       if (err?.data?.artifact) setArtifact(err.data.artifact);
       if (err?.data?.result) setResult(err.data);
     }
-  }, [restoreProject, projectId, file, truncate, dryRun, isMismatch, allowMismatch]);
+  }, [
+    restoreProject,
+    projectId,
+    file,
+    truncate,
+    dryRun,
+    isMismatch,
+    allowMismatch,
+    hasChats,
+    restoreChats,
+    toastWarning,
+    dispatch,
+  ]);
 
   const handleTruncateChange = useCallback(event => setTruncate(event.target.checked), []);
   const handleDryRunChange = useCallback(event => setDryRun(event.target.checked), []);
   const handleAllowMismatchChange = useCallback(event => setAllowMismatch(event.target.checked), []);
 
   const summary = result?.result;
+  const chatsSummary = getChatsSummaryText(summary);
+
+  const chatItems = useMemo(
+    () =>
+      Object.values(CHATS_OPTION).map(value => {
+        const label = CHAT_RESTORE_OPTION_LABELS[value];
+        const noFiles = value === CHATS_OPTION.withAttachments && !hasFiles;
+        return {
+          value,
+          disabled: noFiles,
+          label: noFiles ? (
+            <Tooltip
+              title={NO_FILES_TOOLTIP}
+              placement="top"
+            >
+              <Box component="span">{label}</Box>
+            </Tooltip>
+          ) : (
+            label
+          ),
+        };
+      }),
+    [hasFiles],
+  );
 
   // Once data was actually written (not a preview) without errors, there is nothing left to
   // submit — an active "Restore" again reads as if it did not happen, so it turns into a
@@ -162,7 +251,7 @@ const RestoreProjectDialog = memo(props => {
           component="input"
           ref={inputRef}
           type="file"
-          accept=".enc,.sql,text/plain,application/sql,application/octet-stream"
+          accept=".enc,.sql,.zip,text/plain,application/sql,application/zip,application/octet-stream"
           sx={componentStyles.hiddenInput}
           onChange={handleFileChange}
         />
@@ -238,6 +327,42 @@ const RestoreProjectDialog = memo(props => {
         />
       </Box>
 
+      {!!artifact && !hasChats && (
+        <Typography
+          variant="bodySmall"
+          color="text.secondary"
+          data-testid="project-restore-no-chats"
+        >
+          This backup does not contain chats.
+        </Typography>
+      )}
+
+      {hasChats && (
+        <Box sx={componentStyles.chats}>
+          <Typography
+            variant="labelMedium"
+            color="text.secondary"
+          >
+            Chats
+          </Typography>
+          <Checkbox.RadioButtonGroup
+            value={restoreChats}
+            onChange={setRestoreChats}
+            items={chatItems}
+            disabled={isLoading}
+            testId="project-restore-chats-option"
+          />
+          <Typography
+            variant="bodySmall2"
+            color="text.secondary"
+            data-testid="project-restore-chats-info"
+          >
+            Backup contains {artifact.chats_count ?? 0} chats · {artifact.attachments_count ?? 0} attachments
+            {hasFiles ? ` (~${formatSize(artifact.attachments_size)})` : ''}
+          </Typography>
+        </Box>
+      )}
+
       {truncate && (
         <Alert
           severity="warning"
@@ -245,6 +370,17 @@ const RestoreProjectDialog = memo(props => {
         >
           If checked, the existing rows in the affected tables will be deleted before applying the backup. If
           unchecked, the existing rows will be preserved and new rows will be merged with them.
+        </Alert>
+      )}
+
+      {truncate && isChatRestore && (
+        <Alert
+          severity="warning"
+          sx={componentStyles.alert('warning')}
+          data-testid="project-restore-replace-chats-warning"
+        >
+          All existing chats in {projectName || 'this project'} will be permanently deleted and replaced with
+          the chats from the backup.
         </Alert>
       )}
 
@@ -278,6 +414,16 @@ const RestoreProjectDialog = memo(props => {
             >
               Columns missing in this project were dropped: {droppedColumns.join(', ')}
               {summary.dropped_values ? ` (${summary.dropped_values} values not restored)` : ''}
+            </Typography>
+          )}
+          {!!chatsSummary && (
+            <Typography
+              variant="bodySmall2"
+              color="inherit"
+              sx={componentStyles.summaryBody}
+              data-testid="project-restore-chats-summary"
+            >
+              {chatsSummary}
             </Typography>
           )}
           {filledColumns.length > 0 && (
@@ -361,6 +507,11 @@ const componentStyles = {
   options: {
     display: 'flex',
     flexDirection: 'column',
+  },
+  chats: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.25rem',
   },
   summaryBody: {
     marginTop: '0.25rem',

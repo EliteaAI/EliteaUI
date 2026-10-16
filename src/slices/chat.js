@@ -59,6 +59,9 @@ const chatSlice = createSlice({
       const { projectId, conversationId } = action.payload;
       state.lastSelectedConversationIdByProject[projectId] = conversationId;
     },
+    resetLastSelectedConversationId: (state, action) => {
+      delete state.lastSelectedConversationIdByProject[action.payload.projectId];
+    },
     clearLastSelectedConversationId: (state, action) => {
       const { projectId, conversationId } = action.payload;
       if (state.lastSelectedConversationIdByProject[projectId] === conversationId) {
