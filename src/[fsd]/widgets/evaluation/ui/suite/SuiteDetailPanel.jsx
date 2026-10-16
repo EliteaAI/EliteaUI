@@ -44,7 +44,7 @@ const VERSION_TOOLTIP =
 
 const STEPS_LIMIT_TOOLTIP = `The most steps the agent may take on each case of a run, from 1 to ${MAX_SUITE_STEPS_LIMIT}. Leave empty to use the agent's own limit.`;
 
-const CASE_TIME_LIMIT_TOOLTIP = `The longest the agent may work on one case, from ${MIN_CASE_TIME_LIMIT_SECONDS} to ${MAX_CASE_TIME_LIMIT_SECONDS} seconds. A case that reaches it is stopped and counted as timed out. Leave empty for ${DEFAULT_CASE_TIME_LIMIT_SECONDS} seconds.`;
+const CASE_TIME_LIMIT_TOOLTIP = `The longest the agent may work on one case, from ${MIN_CASE_TIME_LIMIT_SECONDS} to ${MAX_CASE_TIME_LIMIT_SECONDS} seconds. Applies to each case separately, not to the whole run. A case that reaches it is stopped and counted as timed out. A case can override it in the dataset. Leave empty for ${DEFAULT_CASE_TIME_LIMIT_SECONDS} seconds.`;
 
 const RUN_LIMITS_HINT =
   'Per-case and cost limits are checked after the run. A per-run token limit stops the run early unless set to only report.';
@@ -439,7 +439,7 @@ const SuiteDetailPanel = memo(props => {
                     autoComplete="off"
                     fullWidth
                     variant="standard"
-                    label="Case time limit, seconds"
+                    label="Time limit per case, seconds"
                     name="caseTimeLimit"
                     placeholder={`${DEFAULT_CASE_TIME_LIMIT_SECONDS} (default)`}
                     value={runLimits.caseTimeLimit}

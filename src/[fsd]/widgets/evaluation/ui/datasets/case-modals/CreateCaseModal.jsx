@@ -32,7 +32,7 @@ const INPUT_TOOLTIP = 'The request or prompt that will be sent to the agent when
 const VARIABLES_TOOLTIP = 'Optional key-value inputs that can be referenced when this case is run.';
 const EXPECTED_OUTPUT_TOOLTIP =
   "An optional reference response or expected outcome used to assess the agent's generated response.";
-const TIME_LIMIT_TOOLTIP = `Optional. Seconds the agent may spend on this case before it is stopped and marked timed out, from ${MIN_CASE_TIME_LIMIT_SECONDS} to ${MAX_CASE_TIME_LIMIT_SECONDS}. Leave empty to use the suite's case time limit (${DEFAULT_CASE_TIME_LIMIT_SECONDS} s by default).`;
+const TIME_LIMIT_TOOLTIP = `Optional. Seconds the agent may spend on this case before it is stopped and marked timed out, from ${MIN_CASE_TIME_LIMIT_SECONDS} to ${MAX_CASE_TIME_LIMIT_SECONDS}. Leave empty to use the time limit per case of the suite that runs it (${DEFAULT_CASE_TIME_LIMIT_SECONDS} s if the suite sets none).`;
 
 const variablesToRows = variables =>
   Object.entries(variables || {}).map(([key, value]) => ({
@@ -471,7 +471,7 @@ const CreateCaseModal = memo(props => {
           <Input.InputBase
             data-testid="create-case-time-limit"
             variant="outlined"
-            placeholder="Suite limit"
+            placeholder="Same as suite"
             value={form.timeLimit}
             onChange={readOnly ? undefined : event => setField('timeLimit', event.target.value)}
             inputProps={readOnlyInputProps ?? { inputMode: 'numeric' }}
