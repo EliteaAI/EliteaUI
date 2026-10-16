@@ -1,4 +1,4 @@
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 
 import { Bar, BarChart, Cell, Tooltip as RechartsTooltip, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 
@@ -57,11 +57,20 @@ const AnalyticsTools = memo(props => {
     { skip: !projectId },
   );
 
-  const toolChartData = (data?.rows || []).slice(0, 20).map((t, i) => ({
-    tool_name: t.tool_name,
-    calls: t.calls,
-    color: CHART_COLORS[i % CHART_COLORS.length],
-  }));
+  const { data: topToolsData } = useAnalyticsToolsQuery(
+    { projectId, dateFrom, dateTo, limit: 20, offset: 0, search, ...DEFAULT_TOOL_SORT },
+    { skip: !projectId || isRunScope },
+  );
+
+  const toolChartData = useMemo(
+    () =>
+      (topToolsData?.rows || []).map((t, i) => ({
+        tool_name: t.tool_name,
+        calls: t.calls,
+        color: CHART_COLORS[i % CHART_COLORS.length],
+      })),
+    [topToolsData?.rows],
+  );
 
   const handleSearchChange = useCallback(event => {
     setSearch(event.target.value);

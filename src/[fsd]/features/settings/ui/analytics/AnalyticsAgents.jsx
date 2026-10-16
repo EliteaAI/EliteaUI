@@ -112,14 +112,19 @@ const AnalyticsAgents = memo(props => {
     { skip: !projectId },
   );
 
+  const { data: topAgentsData } = useAnalyticsAgentsQuery(
+    { projectId, dateFrom, dateTo, limit: 20, offset: 0, search, ...DEFAULT_AGENT_SORT },
+    { skip: !projectId },
+  );
+
   const agentChartData = useMemo(
     () =>
-      (data?.rows || []).slice(0, 20).map((a, i) => ({
+      (topAgentsData?.rows || []).map((a, i) => ({
         name: a.entity_name || `Agent #${a.entity_id}`,
         runs: a.events,
         color: CHART_COLORS[i % CHART_COLORS.length],
       })),
-    [data?.rows],
+    [topAgentsData?.rows],
   );
 
   const chatDaily = data?.chat_daily || [];

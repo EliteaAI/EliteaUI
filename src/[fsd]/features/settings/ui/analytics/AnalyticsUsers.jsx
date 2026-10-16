@@ -26,7 +26,12 @@ const USER_COLUMNS = [
     skillOnly: true,
     render: u => AnalyticCommonHelpers.fmtNum(u.skill_events),
   },
-  { key: 'chat_events', label: 'Chat Msg', render: u => AnalyticCommonHelpers.fmtNum(u.chat_events) },
+  {
+    key: 'chat_events',
+    label: 'Chat Msg',
+    sortable: false,
+    render: u => AnalyticCommonHelpers.fmtNum(u.chat_events),
+  },
   { key: 'errors', label: 'Errors', render: u => u.errors },
   { key: 'total_tokens', label: 'Total Tokens', render: u => AnalyticCommonHelpers.fmtNum(u.total_tokens) },
   { key: 'input_tokens', label: 'Input Tokens', render: u => AnalyticCommonHelpers.fmtNum(u.input_tokens) },
@@ -175,15 +180,19 @@ const AnalyticsUsers = memo(props => {
                 key={column.key}
                 sx={[styles.tableCell, { flex: column.flex ?? 1 }]}
               >
-                <TableSortLabel
-                  active={sort.sortBy === column.key}
-                  direction={sort.sortBy === column.key ? sort.sortOrder : 'desc'}
-                  onClick={() => handleSort(column.key)}
-                  sx={analyticsTableSortLabelSx}
-                  data-testid={`analytics-users-sort-${column.key}`}
-                >
-                  {column.label}
-                </TableSortLabel>
+                {column.sortable === false ? (
+                  column.label
+                ) : (
+                  <TableSortLabel
+                    active={sort.sortBy === column.key}
+                    direction={sort.sortBy === column.key ? sort.sortOrder : 'desc'}
+                    onClick={() => handleSort(column.key)}
+                    sx={analyticsTableSortLabelSx}
+                    data-testid={`analytics-users-sort-${column.key}`}
+                  >
+                    {column.label}
+                  </TableSortLabel>
+                )}
               </Box>
             ))}
           </Box>
