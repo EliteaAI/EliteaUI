@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, renderHook, waitFor } from '@testing-library/react';
 
 const indexHistoryRef = vi.hoisted(() => ({ current: false }));
+const modelsResponseRef = vi.hoisted(() => ({ current: { items: [], total: 0 } }));
 // Stable identity: the recovery effect lists this in its deps, so a fresh function
 // per render re-runs it after every setState and spins the render loop.
 const setProgressingIndexHistoryRecovered = vi.hoisted(() => () => {});
@@ -35,8 +36,9 @@ vi.mock('@/[fsd]/features/toolkits/indexes/lib/hooks', () => ({
   }),
 }));
 
-vi.mock('@/[fsd]/features/toolkits/lib/helpers', () => ({
+vi.mock('@/[fsd]/features/toolkits/lib/helpers', async () => ({
   ToolkitsHelpers: { prettifyToolkitConversation: messages => messages },
+  ToolkitChatHelpers: await vi.importActual('@/[fsd]/features/toolkits/lib/helpers/toolkitChat.helpers'),
 }));
 
 vi.mock('@/[fsd]/shared/lib/context', () => ({
@@ -50,7 +52,7 @@ vi.mock('@/[fsd]/shared/config/store', () => ({
 vi.mock('@/api', () => ({
   useAddParticipantIntoConversationMutation: () => [vi.fn()],
   useConversationCreateMutation: () => [vi.fn()],
-  useListModelsQuery: () => ({ data: { items: [], total: 0 }, isSuccess: true }),
+  useListModelsQuery: () => ({ data: modelsResponseRef.current, isSuccess: true }),
   useStopIndexingItemMutation: () => [vi.fn(), { isLoading: false }],
 }));
 
@@ -77,6 +79,7 @@ vi.mock('@/common/convertChatConversationMessages', () => ({
 vi.mock('@/common/messagePayloadUtils', () => ({ generateMessagePayload: () => ({}) }));
 
 const { useToolkitChat } = await import('../useToolkitChat.hooks');
+const { ToolkitChatModesEnum } = await import('@/[fsd]/features/toolkits/lib/constants');
 
 const deferred = () => {
   let resolve;
@@ -101,7 +104,10 @@ const renderChat = (over = {}) =>
     }),
   );
 
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => {
+  vi.clearAllMocks();
+  modelsResponseRef.current = { items: [], total: 0 };
+});
 
 describe('useToolkitChat conversation ownership', () => {
   it('abandons a conversation whose creation outlived the tool it was started for', async () => {
@@ -244,5 +250,57 @@ describe('useToolkitChat — the send gate latches on liveness, not on chrome', 
     const result = renderRecovery(progressingIndex({ stale: true }));
 
     expect(result.current.isRunning).toBe(false);
+  });
+});
+
+describe('useToolkitChat model preselection', () => {
+  const ALPHABETICALLY_FIRST = { name: 'bedrock-luna', project_id: 1, default: false };
+  const PROJECT_DEFAULT = { name: 'sonnet', project_id: 1, default: true };
+  const PROJECT_LOW_TIER = { name: 'haiku', project_id: 1, default: false };
+  const INDEX = { id: 5, metadata: { collection: 'docs', index_configuration: { index_name: 'docs' } } };
+
+  beforeEach(() => {
+    modelsResponseRef.current = {
+      items: [ALPHABETICALLY_FIRST, PROJECT_DEFAULT, PROJECT_LOW_TIER],
+      total: 3,
+      low_tier_default_model_name: 'haiku',
+      low_tier_default_model_project_id: 1,
+    };
+  });
+
+  it('preselects the project Low-tier model for an index run', () => {
+    const { result } = renderChat({ modes: [], index: INDEX, runTool: 'index_data' });
+
+    expect(result.current.selectedModel).toBe(PROJECT_LOW_TIER);
+  });
+
+  it('preselects the project Low-tier model when creating an index', () => {
+    const { result } = renderChat({ modes: [ToolkitChatModesEnum.createIndex], runTool: 'index_data' });
+
+    expect(result.current.selectedModel).toBe(PROJECT_LOW_TIER);
+  });
+
+  it('preselects the project Low-tier model for a search against an index', () => {
+    const { result } = renderChat({ modes: [ToolkitChatModesEnum.testTools], index: INDEX });
+
+    expect(result.current.selectedModel).toBe(PROJECT_LOW_TIER);
+  });
+
+  it('keeps the project Default for the toolkit Test panel', () => {
+    const { result } = renderChat({ modes: [ToolkitChatModesEnum.testTools] });
+
+    expect(result.current.selectedModel).toBe(PROJECT_DEFAULT);
+  });
+
+  it('falls back to the project Default for an index run when no Low-tier model is set', () => {
+    modelsResponseRef.current = {
+      ...modelsResponseRef.current,
+      low_tier_default_model_name: '',
+      low_tier_default_model_project_id: '',
+    };
+
+    const { result } = renderChat({ modes: [], index: INDEX, runTool: 'index_data' });
+
+    expect(result.current.selectedModel).toBe(PROJECT_DEFAULT);
   });
 });
