@@ -21,7 +21,7 @@ const DEFAULT_ROWS_PER_PAGE = 20;
 const { AGENT_DETAIL_EMPTY_MESSAGE, TOOLTIP_TEXTS } = AnalyticsCommonConstants;
 
 const AgentRecentRunsTable = memo(props => {
-  const { projectId, entityId, kind, entityProjectId, dateFrom, dateTo } = props;
+  const { projectId, entityId, kind, dateFrom, dateTo } = props;
 
   const styles = agentRecentRunsTableStyles();
   const [page, setPage] = useState(0);
@@ -44,7 +44,7 @@ const AgentRecentRunsTable = memo(props => {
 
   const { total = 0, rows = [] } = data || {};
 
-  const entity = { agentId: entityId, kind, entityProjectId, projectId };
+  const entity = { agentId: entityId, kind, projectId };
 
   const columns = [
     {

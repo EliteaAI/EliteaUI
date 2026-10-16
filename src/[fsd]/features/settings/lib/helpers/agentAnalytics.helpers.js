@@ -19,11 +19,10 @@ export const formatAgentRunModels = models =>
 
 export const formatAgentUserLabel = row => row.user_email || `User ${row.user_id}`;
 
-const isNavigableEntity = ({ kind, entityProjectId, projectId }) =>
-  hasValue(kind) && String(entityProjectId) === String(projectId);
+const isLocalRun = (run, projectId) => String(run.root_project_id) === String(projectId);
 
 export const buildAgentRunAnalyticsPath = (entity, run) => {
-  if (!isNavigableEntity(entity) || !hasValue(run?.run_id)) return null;
+  if (!hasValue(entity.kind) || !hasValue(run?.run_id) || !isLocalRun(run, entity.projectId)) return null;
 
   const pattern = pickEntityRoutePattern(entity.kind, {
     agentRoute: RouteDefinitions.ApplicationsRunAnalytics,

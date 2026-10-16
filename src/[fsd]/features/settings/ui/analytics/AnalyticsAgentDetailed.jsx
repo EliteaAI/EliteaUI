@@ -173,7 +173,6 @@ const AnalyticAgentDetailed = memo(props => {
   const {
     entity_name,
     kind,
-    entity_project_id,
     kpis,
     evaluation,
     users = [],
@@ -210,7 +209,6 @@ const AnalyticAgentDetailed = memo(props => {
       const entity = {
         agentId: entityId,
         kind: data.kind,
-        entityProjectId: data.entity_project_id,
         projectId,
       };
       const { runs, total, truncated } = await AnalyticsExportHelpers.fetchAllAgentRuns(
@@ -714,7 +712,6 @@ const AnalyticAgentDetailed = memo(props => {
         projectId={projectId}
         entityId={entityId}
         kind={kind}
-        entityProjectId={entity_project_id}
         dateFrom={dateFrom}
         dateTo={dateTo}
       />

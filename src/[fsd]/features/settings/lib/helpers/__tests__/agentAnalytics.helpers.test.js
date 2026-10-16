@@ -8,8 +8,8 @@ import {
   formatAgentRunModels,
 } from '../agentAnalytics.helpers';
 
-const OWN_AGENT = { agentId: 42, kind: 'agent', entityProjectId: 2, projectId: 2 };
-const RUN = { run_id: '0b7c3a2e-5d4f-4c1a-9e8b-1f2a3b4c5d6e', conversation_id: 1701 };
+const OWN_AGENT = { agentId: 42, kind: 'agent', projectId: 2 };
+const RUN = { run_id: '0b7c3a2e-5d4f-4c1a-9e8b-1f2a3b4c5d6e', conversation_id: 1701, root_project_id: 2 };
 
 describe('buildAgentRunAnalyticsPath', () => {
   it('opens an agent run on the agent run analytics, scoped to the usage run and its conversation', () => {
@@ -31,11 +31,11 @@ describe('buildAgentRunAnalyticsPath', () => {
   });
 
   it('matches the project across a numeric and a string id', () => {
-    expect(buildAgentRunAnalyticsPath({ ...OWN_AGENT, entityProjectId: '2' }, RUN)).not.toBeNull();
+    expect(buildAgentRunAnalyticsPath(OWN_AGENT, { ...RUN, root_project_id: '2' })).not.toBeNull();
   });
 
   it('gives a Catalog agent run from another project no link', () => {
-    expect(buildAgentRunAnalyticsPath({ ...OWN_AGENT, entityProjectId: 1 }, RUN)).toBeNull();
+    expect(buildAgentRunAnalyticsPath(OWN_AGENT, { ...RUN, root_project_id: 1 })).toBeNull();
   });
 
   it('gives a deleted or unknown agent no link', () => {
@@ -43,7 +43,7 @@ describe('buildAgentRunAnalyticsPath', () => {
   });
 
   it('gives a run without a run id no link', () => {
-    expect(buildAgentRunAnalyticsPath(OWN_AGENT, { conversation_id: 1701 })).toBeNull();
+    expect(buildAgentRunAnalyticsPath(OWN_AGENT, { conversation_id: 1701, root_project_id: 2 })).toBeNull();
   });
 });
 
@@ -56,6 +56,7 @@ describe('buildAgentRunAnalyticsUrl', () => {
 
   it('is empty for a run without a run page', () => {
     expect(buildAgentRunAnalyticsUrl({ ...OWN_AGENT, kind: null }, RUN)).toBe('');
+    expect(buildAgentRunAnalyticsUrl(OWN_AGENT, { ...RUN, root_project_id: 1 })).toBe('');
   });
 });
 

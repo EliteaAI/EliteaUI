@@ -252,7 +252,6 @@ describe('AnalyticsAgentDetailed — skills panel (#7030)', () => {
 const TABLES = {
   ...MOCK,
   kind: 'agent',
-  entity_project_id: 1,
   skills: SKILLS,
   by_version: [
     { version_id: 31, version_name: 'base', runs: 9, total_tokens: 900, cost: 0.009 },
@@ -272,6 +271,7 @@ const TABLES = {
 const RUN_ROWS = [
   {
     run_id: 'run-1',
+    root_project_id: 1,
     started_at: '2026-01-15T09:12:03+00:00',
     user_id: 11,
     user_email: 'a@b.c',
@@ -288,6 +288,7 @@ const RUN_ROWS = [
   },
   {
     run_id: 'run-2',
+    root_project_id: 1,
     started_at: '2026-01-14T09:12:03+00:00',
     user_id: 12,
     user_email: null,
@@ -475,15 +476,26 @@ describe('AnalyticsAgentDetailed — versions, models, triggers and recent runs 
     );
   });
 
-  it('shows Catalog agent runs without a link', () => {
-    useAnalyticsAgentDetailQuery.mockReturnValue({
-      data: { ...TABLES, entity_project_id: 7 },
+  it('links the local run and leaves a Catalog run with the same agent id as text', () => {
+    useAnalyticsAgentRunsQuery.mockReturnValue({
+      data: {
+        total: 2,
+        rows: [
+          { ...RUN_ROWS[0], root_project_id: 1 },
+          { ...RUN_ROWS[1], root_project_id: 7 },
+        ],
+      },
       isFetching: false,
     });
     renderDetail();
 
-    expect(screen.queryByTestId('analytics-agent-detail-run-link')).toBeNull();
-    expect(screen.getAllByTestId('analytics-agent-detail-recent-runs-row')).toHaveLength(2);
+    const [localRow, catalogRow] = screen.getAllByTestId('analytics-agent-detail-recent-runs-row');
+    expect(within(localRow).getByTestId('analytics-agent-detail-run-link')).toHaveAttribute(
+      'href',
+      '/agents/all/42/history/analytics?usage_run_id=run-1&history_run_id=1701',
+    );
+    expect(within(catalogRow).queryByTestId('analytics-agent-detail-run-link')).toBeNull();
+    expect(within(catalogRow).queryByRole('link')).toBeNull();
   });
 
   it('lists every model of a run, with status, user and version labels', () => {
@@ -562,6 +574,33 @@ describe('AnalyticsAgentDetailed — export (#7033)', () => {
     const [, [sheet]] = exportToExcel.mock.calls[0];
     expect(sheet.sections.at(-1).title).toBe('Recent Runs (first 10,000 of 25,000 runs)');
     expect(sheet.sections.at(-1).rows).toHaveLength(10_000);
+  });
+
+  it('leaves the run URL of a Catalog run blank in the export', async () => {
+    analyticsApi.endpoints.analyticsAgentRuns.initiate.mockImplementation(args => ({
+      unwrap: () =>
+        Promise.resolve({
+          total: 2,
+          rows:
+            args.offset === 0
+              ? [
+                  { ...RUN_ROWS[0], root_project_id: 1 },
+                  { ...RUN_ROWS[1], root_project_id: 7 },
+                ]
+              : [],
+        }),
+      unsubscribe: vi.fn(),
+    }));
+    renderDetail();
+
+    fireEvent.click(screen.getByTestId('analytics-agent-detail-export-button'));
+
+    await waitFor(() => expect(exportToExcel).toHaveBeenCalledTimes(1));
+    const [, [sheet]] = exportToExcel.mock.calls[0];
+    expect(sheet.sections.at(-1).rows.map(run => run.run_url)).toEqual([
+      `${window.location.origin}/1/agents/all/42/history/analytics?usage_run_id=run-1&history_run_id=1701`,
+      '',
+    ]);
   });
 
   it('reports a failed export', async () => {
