@@ -88,4 +88,28 @@ describe('buildPerformanceDiff', () => {
     expect(view.timeouts).toBeNull();
     expect(view.notes[0]).toMatch(/time limit changed/);
   });
+
+  it('notes cases whose own time limit changed', () => {
+    const view = buildPerformanceDiff({
+      ...COMPARE,
+      diff: { ...COMPARE.diff, coverage: { ...COMPARE.diff.coverage, changed: [], limit_changed: [3, 5] } },
+    });
+
+    expect(view.notes).toContain(
+      '2 cases had a different time limit in the reference and are left out of latency and timeouts.',
+    );
+  });
+
+  it('skips the per-case note when every case changed its limit', () => {
+    const view = buildPerformanceDiff({
+      ...COMPARE,
+      diff: {
+        ...COMPARE.diff,
+        not_comparable: ['time_limit_changed'],
+        coverage: { ...COMPARE.diff.coverage, limit_changed: [1, 2, 3] },
+      },
+    });
+
+    expect(view.notes.some(note => note.includes('different time limit'))).toBe(false);
+  });
 });

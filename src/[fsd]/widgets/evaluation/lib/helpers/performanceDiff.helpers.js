@@ -106,6 +106,13 @@ export const buildPerformanceDiff = compare => {
     notes.push(
       `${pluralCases(oneSided)} ran in only one of the two runs and ${oneSided === 1 ? 'is' : 'are'} left out.`,
     );
+  // A case whose own time limit changed is left out of latency and timeouts, not of tokens or cost.
+  // When every matched case changed, the not_comparable note above already says so.
+  const limitChanged = coverage.limit_changed?.length ?? 0;
+  if (limitChanged && !(diff.not_comparable ?? []).includes('time_limit_changed'))
+    notes.push(
+      `${pluralCases(limitChanged)} had a different time limit in the reference and ${limitChanged === 1 ? 'is' : 'are'} left out of latency and timeouts.`,
+    );
 
   const timeouts =
     diff.timeouts && !diff.timeouts.not_comparable

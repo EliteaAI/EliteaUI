@@ -6,6 +6,7 @@ import {
   areRunLimitsEqual,
   buildRunLimitsMeta,
   getCostOnlyBudgetHint,
+  parseCaseTimeLimitOverride,
   readRunLimits,
   validateRunLimits,
 } from '../runLimits.helpers';
@@ -211,5 +212,22 @@ describe('getCostOnlyBudgetHint', () => {
     expect(
       getCostOnlyBudgetHint(limits({ perRunCost: '2', perRunTokens: '10000', perRunOnBreach: 'report' })),
     ).toBe(REPORT_ONLY_BUDGET_HINT);
+  });
+});
+
+describe('parseCaseTimeLimitOverride', () => {
+  it('reads empty as the suite limit', () => {
+    expect(parseCaseTimeLimitOverride('')).toEqual({ value: null });
+    expect(parseCaseTimeLimitOverride('  ')).toEqual({ value: null });
+    expect(parseCaseTimeLimitOverride(undefined)).toEqual({ value: null });
+  });
+
+  it('accepts whole seconds from 10 to 900', () => {
+    expect(parseCaseTimeLimitOverride('10')).toEqual({ value: 10 });
+    expect(parseCaseTimeLimitOverride(' 900 ')).toEqual({ value: 900 });
+  });
+
+  it.each(['9', '901', '30.5', 'abc', '-20'])('rejects %s', text => {
+    expect(parseCaseTimeLimitOverride(text).error).toMatch(/from 10 to 900/);
   });
 });

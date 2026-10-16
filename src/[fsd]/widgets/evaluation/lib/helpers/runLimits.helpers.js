@@ -159,3 +159,25 @@ export const buildRunLimitsMeta = (meta = {}, limits = {}) => {
 
   return next;
 };
+
+/**
+ * A dataset case's own time limit (performance P-5) from its form string: empty means the suite's
+ * limit applies and is sent as null.
+ * @param {string} text - Form value
+ * @returns {{ value: number | null, error?: string }}
+ */
+export const parseCaseTimeLimitOverride = text => {
+  const seconds = (text ?? '').trim();
+  if (!seconds) return { value: null };
+  if (
+    !isWholeNumber(seconds) ||
+    +seconds < MIN_CASE_TIME_LIMIT_SECONDS ||
+    +seconds > MAX_CASE_TIME_LIMIT_SECONDS
+  ) {
+    return {
+      value: null,
+      error: `Time limit: enter a whole number of seconds from ${MIN_CASE_TIME_LIMIT_SECONDS} to ${MAX_CASE_TIME_LIMIT_SECONDS}, or leave it empty.`,
+    };
+  }
+  return { value: parseInt(seconds, 10) };
+};

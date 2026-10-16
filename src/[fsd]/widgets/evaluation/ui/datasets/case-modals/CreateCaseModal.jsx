@@ -15,9 +15,13 @@ import StyledInputModal from '@/components/StyledInputModal';
 
 import { useAddEvalDatasetCaseMutation, useUpdateEvalDatasetCaseMutation } from '../../../api';
 import {
+  DEFAULT_CASE_TIME_LIMIT_SECONDS,
+  MAX_CASE_TIME_LIMIT_SECONDS,
+  MIN_CASE_TIME_LIMIT_SECONDS,
   agentToolOptions,
   fromTrajectoryForm,
   isTrajectoryFormChanged,
+  parseCaseTimeLimitOverride,
   parseEvalError,
   toTrajectoryForm,
 } from '../../../lib/helpers';
@@ -28,6 +32,7 @@ const INPUT_TOOLTIP = 'The request or prompt that will be sent to the agent when
 const VARIABLES_TOOLTIP = 'Optional key-value inputs that can be referenced when this case is run.';
 const EXPECTED_OUTPUT_TOOLTIP =
   "An optional reference response or expected outcome used to assess the agent's generated response.";
+const TIME_LIMIT_TOOLTIP = `Optional. Seconds the agent may spend on this case before it is stopped and marked timed out, from ${MIN_CASE_TIME_LIMIT_SECONDS} to ${MAX_CASE_TIME_LIMIT_SECONDS}. Leave empty to use the suite's case time limit (${DEFAULT_CASE_TIME_LIMIT_SECONDS} s by default).`;
 
 const variablesToRows = variables =>
   Object.entries(variables || {}).map(([key, value]) => ({
@@ -49,6 +54,7 @@ const toFormState = datasetCase => ({
   hasExpectedOutput: datasetCase?.id ? !!datasetCase?.expected_output : true,
   variableRows: variablesToRows(datasetCase?.variables),
   trajectory: toTrajectoryForm(datasetCase?.expected_trajectory),
+  timeLimit: datasetCase?.time_limit_seconds == null ? '' : String(datasetCase.time_limit_seconds),
 });
 
 const CreateCaseModal = memo(props => {
@@ -175,12 +181,18 @@ const CreateCaseModal = memo(props => {
       blockSave(trajectory.error);
       return;
     }
+    const timeLimit = parseCaseTimeLimitOverride(form.timeLimit);
+    if (timeLimit.error) {
+      blockSave(timeLimit.error);
+      return;
+    }
     setErrorMessage('');
 
     const body = {
       input: form.input,
       variables: rowsToVariables(form.variableRows),
       expected_output: form.hasExpectedOutput && form.expected_output?.trim() ? form.expected_output : null,
+      time_limit_seconds: timeLimit.value,
       // Sent only when it changed, so an edit elsewhere never rewrites a stored reference; null clears it.
       ...(isTrajectoryFormChanged(form.trajectory, initialForm.trajectory)
         ? { expected_trajectory: trajectory.value }
@@ -244,6 +256,7 @@ const CreateCaseModal = memo(props => {
     if (form.expected_output !== initialForm.expected_output) return true;
     if (form.hasExpectedOutput !== initialForm.hasExpectedOutput) return true;
     if (isTrajectoryFormChanged(form.trajectory, initialForm.trajectory)) return true;
+    if (form.timeLimit.trim() !== initialForm.timeLimit.trim()) return true;
     if (form.variableRows.length !== initialForm.variableRows.length) return true;
     for (let i = 0; i < form.variableRows.length; i++) {
       if (form.variableRows[i].key !== initialForm.variableRows[i]?.key) return true;
@@ -449,6 +462,27 @@ const CreateCaseModal = memo(props => {
         />
       )}
 
+      {(!readOnly || form.timeLimit) && (
+        <Box sx={styles.fieldSection}>
+          <Box sx={styles.labelRow}>
+            <Typography sx={styles.label}>Time limit, seconds</Typography>
+            {!readOnly && <InfoTooltip infoTooltip={TIME_LIMIT_TOOLTIP} />}
+          </Box>
+          <Input.InputBase
+            data-testid="create-case-time-limit"
+            variant="outlined"
+            placeholder="Suite limit"
+            value={form.timeLimit}
+            onChange={readOnly ? undefined : event => setField('timeLimit', event.target.value)}
+            inputProps={readOnlyInputProps ?? { inputMode: 'numeric' }}
+            showFullScreenAction={false}
+            showCopyAction={false}
+            showExpandAction={false}
+            sx={[styles.timeLimitField, readOnly && styles.readOnlyField]}
+          />
+        </Box>
+      )}
+
       {!readOnly && errorMessage && (
         <Typography
           ref={errorRef}
@@ -542,6 +576,9 @@ const createCaseModalStyles = () => ({
       maxHeight: '7.5rem',
       overflowY: 'auto',
     },
+  },
+  timeLimitField: {
+    maxWidth: '12rem',
   },
   readOnlyField: ({ palette }) => ({
     pointerEvents: 'none',
