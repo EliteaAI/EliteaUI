@@ -407,6 +407,22 @@ export const evaluationApi = eliteaApi
         providesTags: [TAG_EVAL_RUN],
       }),
 
+      // Run-over-run performance diff (performance design §3.4): latency, final-answer time, tokens,
+      // cost, tool calls and timeouts against the suite baseline or the previous finished run on the
+      // same dataset. `{ run, reference, diff }`; `reference` and `diff` are null when there is none.
+      evalRunCompare: build.query({
+        query: ({ projectId, runId, referenceRunId }) => {
+          const params = new URLSearchParams();
+          if (referenceRunId != null) params.set('reference_run_id', String(referenceRunId));
+          const qs = params.toString();
+          return {
+            url: `/elitea_core/eval_run_compare/prompt_lib/${projectId}/${runId}${qs ? `?${qs}` : ''}`,
+            method: 'GET',
+          };
+        },
+        providesTags: [TAG_EVAL_RUN],
+      }),
+
       // What a run of this suite would likely use (#6716, design Q-S6): case count × per-case usage
       // of the last finished run on the same version, and the caller's remaining budget.
       evalSuiteEstimate: build.query({
@@ -511,6 +527,7 @@ export const {
   useDeleteEvalRunMutation,
   useEvalRunResultsQuery,
   useEvalCaseExecutionsQuery,
+  useEvalRunCompareQuery,
   useEvalSuiteEstimateQuery,
   useEvalHumanScoresQuery,
   useWriteEvalHumanScoreMutation,

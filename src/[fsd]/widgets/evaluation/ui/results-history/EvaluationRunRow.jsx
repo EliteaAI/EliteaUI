@@ -13,6 +13,7 @@ import {
   getRunOverBudgetLabel,
   getRunScoreLabel,
   getRunStopLabel,
+  getRunTimeoutNote,
 } from '../../lib/helpers';
 import RunHistoryActionsMenu from './RunHistoryActionsMenu';
 
@@ -43,6 +44,7 @@ const EvaluationRunRow = memo(props => {
   // A run stopped by a limit still shows the score of the cases it got through; the icon says so.
   const stopLabel = getRunStopLabel(run.meta);
   const overBudgetLabel = getRunOverBudgetLabel(run.meta);
+  const timeoutNote = getRunTimeoutNote(run.meta?.trajectory_rollup);
   const usage = getRunHistoryUsage(run.meta);
   const trajectory = getRunHistoryTrajectory(run.meta);
   const guardrails = getRunHistoryGuardrails(run.meta);
@@ -179,6 +181,20 @@ const EvaluationRunRow = memo(props => {
               data-testid={`evaluation-run-over-budget-${run.id}`}
             >
               Over budget
+            </Box>
+          </Tooltip>
+        )}
+        {timeoutNote && (
+          <Tooltip
+            title={`${timeoutNote.label}. ${timeoutNote.coverage}.`}
+            placement="top"
+          >
+            <Box
+              component="span"
+              sx={styles.overBudget}
+              data-testid={`evaluation-run-timeouts-${run.id}`}
+            >
+              {run.meta.trajectory_rollup.timed_out_cases} timed out
             </Box>
           </Tooltip>
         )}

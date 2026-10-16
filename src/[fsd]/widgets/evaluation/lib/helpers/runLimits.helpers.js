@@ -4,11 +4,17 @@
 // `per_run.on_breach` says whether reaching the run token limit stops the run or is only reported.
 // `meta.store_tool_outputs = false` keeps tool names and masked inputs in the stored trajectory but
 // drops every tool output (#6809 Q-S5); absent means outputs are stored.
+// `meta.case_time_limit_seconds` stops a case that runs longer (performance §3.1); absent means the
+// platform default.
 
 export const MAX_SUITE_STEPS_LIMIT = 100;
+export const MIN_CASE_TIME_LIMIT_SECONDS = 10;
+export const MAX_CASE_TIME_LIMIT_SECONDS = 900;
+export const DEFAULT_CASE_TIME_LIMIT_SECONDS = 120;
 
 export const RUN_LIMIT_FIELDS = [
   'stepsLimit',
+  'caseTimeLimit',
   'perCaseTokens',
   'perCaseCost',
   'perRunTokens',
@@ -34,12 +40,15 @@ const toField = value => (value == null ? '' : String(value));
 /**
  * Run limits of a suite as form strings.
  * @param {object} [meta] - Suite meta
- * @returns {{ stepsLimit: string, perCaseTokens: string, perCaseCost: string, perRunTokens: string,
+ * @returns {{ stepsLimit: string, caseTimeLimit: string, perCaseTokens: string, perCaseCost: string, perRunTokens: string,
  *   perRunCost: string, perRunOnBreach: 'stop' | 'report', storeToolOutputs: boolean }}
  */
 export const readRunLimits = (meta = {}) => {
   const budget = meta?.consumption_budget || {};
-  const limits = { stepsLimit: toField(meta?.steps_limit) };
+  const limits = {
+    stepsLimit: toField(meta?.steps_limit),
+    caseTimeLimit: toField(meta?.case_time_limit_seconds),
+  };
   Object.entries(BUDGET_PATHS).forEach(([field, [scope, key]]) => {
     limits[field] = toField(budget[scope]?.[key]);
   });
@@ -70,6 +79,15 @@ export const validateRunLimits = (limits = {}) => {
   const steps = (limits.stepsLimit ?? '').trim();
   if (steps && (!isWholeNumber(steps) || +steps < 1 || +steps > MAX_SUITE_STEPS_LIMIT)) {
     errors.stepsLimit = `Enter a whole number from 1 to ${MAX_SUITE_STEPS_LIMIT}.`;
+  }
+  const seconds = (limits.caseTimeLimit ?? '').trim();
+  if (
+    seconds &&
+    (!isWholeNumber(seconds) ||
+      +seconds < MIN_CASE_TIME_LIMIT_SECONDS ||
+      +seconds > MAX_CASE_TIME_LIMIT_SECONDS)
+  ) {
+    errors.caseTimeLimit = `Enter a whole number of seconds from ${MIN_CASE_TIME_LIMIT_SECONDS} to ${MAX_CASE_TIME_LIMIT_SECONDS}.`;
   }
   ['perCaseTokens', 'perRunTokens'].forEach(field => {
     const text = (limits[field] ?? '').trim();
@@ -112,6 +130,7 @@ export const buildRunLimitsMeta = (meta = {}, limits = {}) => {
   /* eslint-disable no-unused-vars */
   const {
     steps_limit: _steps,
+    case_time_limit_seconds: _caseTimeLimit,
     consumption_budget: _budget,
     store_tool_outputs: _storeToolOutputs,
     ...rest
@@ -121,6 +140,8 @@ export const buildRunLimitsMeta = (meta = {}, limits = {}) => {
 
   const steps = (limits.stepsLimit ?? '').trim();
   if (steps) next.steps_limit = parseInt(steps, 10);
+  const seconds = (limits.caseTimeLimit ?? '').trim();
+  if (seconds) next.case_time_limit_seconds = parseInt(seconds, 10);
 
   const budget = {};
   Object.entries(BUDGET_PATHS).forEach(([field, [scope, key]]) => {
@@ -137,4 +158,26 @@ export const buildRunLimitsMeta = (meta = {}, limits = {}) => {
   if (limits.storeToolOutputs === false) next.store_tool_outputs = false;
 
   return next;
+};
+
+/**
+ * A dataset case's own time limit (performance P-5) from its form string: empty means the suite's
+ * limit applies and is sent as null.
+ * @param {string} text - Form value
+ * @returns {{ value: number | null, error?: string }}
+ */
+export const parseCaseTimeLimitOverride = text => {
+  const seconds = (text ?? '').trim();
+  if (!seconds) return { value: null };
+  if (
+    !isWholeNumber(seconds) ||
+    +seconds < MIN_CASE_TIME_LIMIT_SECONDS ||
+    +seconds > MAX_CASE_TIME_LIMIT_SECONDS
+  ) {
+    return {
+      value: null,
+      error: `Time limit: enter a whole number of seconds from ${MIN_CASE_TIME_LIMIT_SECONDS} to ${MAX_CASE_TIME_LIMIT_SECONDS}, or leave it empty.`,
+    };
+  }
+  return { value: parseInt(seconds, 10) };
 };

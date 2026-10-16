@@ -6,12 +6,14 @@ import {
   areRunLimitsEqual,
   buildRunLimitsMeta,
   getCostOnlyBudgetHint,
+  parseCaseTimeLimitOverride,
   readRunLimits,
   validateRunLimits,
 } from '../runLimits.helpers';
 
 const EMPTY = {
   stepsLimit: '',
+  caseTimeLimit: '',
   perCaseTokens: '',
   perCaseCost: '',
   perRunTokens: '',
@@ -35,6 +37,7 @@ describe('readRunLimits', () => {
       }),
     ).toEqual({
       stepsLimit: '12',
+      caseTimeLimit: '',
       perCaseTokens: '4000',
       perCaseCost: '',
       perRunTokens: '50000',
@@ -126,6 +129,7 @@ describe('buildRunLimitsMeta', () => {
   it('round-trips through readRunLimits', () => {
     const limits = {
       stepsLimit: '8',
+      caseTimeLimit: '45',
       perCaseTokens: '',
       perCaseCost: '0.05',
       perRunTokens: '900',
@@ -134,6 +138,33 @@ describe('buildRunLimitsMeta', () => {
       storeToolOutputs: false,
     };
     expect(readRunLimits(buildRunLimitsMeta({}, limits))).toEqual(limits);
+  });
+});
+
+describe('case time limit (performance §3.1)', () => {
+  it('reads the limit as a string and an absent one as empty', () => {
+    expect(readRunLimits({ case_time_limit_seconds: 300 }).caseTimeLimit).toBe('300');
+    expect(readRunLimits({ case_time_limit_seconds: null }).caseTimeLimit).toBe('');
+  });
+
+  it.each(['9', '901', '30.5', 'abc', '0'])('rejects %s seconds', value => {
+    expect(validateRunLimits({ ...EMPTY, caseTimeLimit: value })).toHaveProperty('caseTimeLimit');
+  });
+
+  it.each(['10', '120', '900'])('accepts %s seconds', value => {
+    expect(validateRunLimits({ ...EMPTY, caseTimeLimit: value })).toEqual({});
+  });
+
+  it('writes a number and drops a cleared limit', () => {
+    expect(buildRunLimitsMeta({ other: 'kept' }, { ...EMPTY, caseTimeLimit: '60' })).toEqual({
+      other: 'kept',
+      case_time_limit_seconds: 60,
+    });
+    expect(buildRunLimitsMeta({ case_time_limit_seconds: 60 }, EMPTY)).toEqual({});
+  });
+
+  it('counts a changed limit as a change', () => {
+    expect(areRunLimitsEqual(EMPTY, { ...EMPTY, caseTimeLimit: '30' })).toBe(false);
   });
 });
 
@@ -181,5 +212,22 @@ describe('getCostOnlyBudgetHint', () => {
     expect(
       getCostOnlyBudgetHint(limits({ perRunCost: '2', perRunTokens: '10000', perRunOnBreach: 'report' })),
     ).toBe(REPORT_ONLY_BUDGET_HINT);
+  });
+});
+
+describe('parseCaseTimeLimitOverride', () => {
+  it('reads empty as the suite limit', () => {
+    expect(parseCaseTimeLimitOverride('')).toEqual({ value: null });
+    expect(parseCaseTimeLimitOverride('  ')).toEqual({ value: null });
+    expect(parseCaseTimeLimitOverride(undefined)).toEqual({ value: null });
+  });
+
+  it('accepts whole seconds from 10 to 900', () => {
+    expect(parseCaseTimeLimitOverride('10')).toEqual({ value: 10 });
+    expect(parseCaseTimeLimitOverride(' 900 ')).toEqual({ value: 900 });
+  });
+
+  it.each(['9', '901', '30.5', 'abc', '-20'])('rejects %s', text => {
+    expect(parseCaseTimeLimitOverride(text).error).toMatch(/from 10 to 900/);
   });
 });
