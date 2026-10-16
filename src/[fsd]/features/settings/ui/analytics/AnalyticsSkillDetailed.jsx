@@ -63,7 +63,7 @@ const usageTable = firstColumn => [{ flex: 2.5, ...firstColumn }, ...USAGE_COLUM
 const VERSION_COLUMNS = usageTable({
   key: 'version_name',
   label: 'Version',
-  render: r => SkillAnalyticsHelpers.skillVersionLabel(r.version_name),
+  render: r => AnalyticCommonHelpers.formatVersionLabel(r.version_name),
 });
 
 const USER_COLUMNS = usageTable({
@@ -75,7 +75,7 @@ const USER_COLUMNS = usageTable({
 const TRIGGER_COLUMNS = usageTable({
   key: 'trigger_source',
   label: 'Trigger',
-  render: r => SkillAnalyticsHelpers.skillTriggerLabel(r.trigger_source),
+  render: r => AnalyticCommonHelpers.formatTriggerLabel(r.trigger_source),
 });
 
 const MODEL_COLUMNS = [
@@ -172,7 +172,7 @@ const AnalyticsSkillDetailed = memo(props => {
     {
       key: 'version_name',
       label: 'Version',
-      render: run => SkillAnalyticsHelpers.skillVersionLabel(run.version_name),
+      render: run => AnalyticCommonHelpers.formatVersionLabel(run.version_name),
     },
     { key: 'model_name', label: 'Model', flex: 1.5 },
     { key: 'total_tokens', label: 'Tokens', render: run => fmtNum(run.total_tokens) },

@@ -57,6 +57,7 @@ const RunHistoryPage = memo(props => {
   const handleOpenAnalytics = useCallback(
     id => {
       const params = new URLSearchParams(search);
+      params.delete(SearchParams.UsageRunId);
       params.set(SearchParams.HistoryRunId, String(id));
 
       navigate(

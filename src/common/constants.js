@@ -314,6 +314,7 @@ export const SearchParams = {
   IsMCP: 'mcp',
   IndexName: 'index_name',
   HistoryRunId: 'history_run_id',
+  UsageRunId: 'usage_run_id',
   SuiteId: 'suiteId',
   DatasetId: 'datasetId',
   SharedChat: 'shared_chat',

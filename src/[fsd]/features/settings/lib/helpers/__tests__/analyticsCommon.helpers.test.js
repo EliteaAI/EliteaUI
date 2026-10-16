@@ -11,7 +11,10 @@ import {
   fmtCost,
   fmtDuration,
   fmtNum,
+  formatTriggerLabel,
+  formatVersionLabel,
   getPresetRange,
+  pickEntityRoutePattern,
 } from '../analyticsCommon.helpers.js';
 
 describe('getPresetRange', () => {
@@ -163,6 +166,17 @@ describe('run trace helpers', () => {
     expect(describeRunVersions([99], versions)).toBe('—');
   });
 
+  it('names a deleted version from the usage run and prefers the current version name', () => {
+    const versions = [{ id: 1, name: 'base' }];
+    const usageVersions = [
+      { id: 1, name: 'base (run-time)' },
+      { id: 99, name: 'v3' },
+    ];
+
+    expect(describeRunVersions([99], versions, usageVersions)).toBe('v3');
+    expect(describeRunVersions([1, 99], versions, usageVersions)).toBe('base, v3');
+  });
+
   it('collects only the failing llm and tool calls, in time order, naming models by display name', () => {
     expect(collectFailedRunCalls(runDetail, byModel).map(call => [call.eventType, call.name])).toEqual([
       ['tool', 'search'],
@@ -172,5 +186,26 @@ describe('run trace helpers', () => {
 
   it('falls back to the raw model name when the costs have no display name for it', () => {
     expect(collectFailedRunCalls(runDetail, undefined).map(call => call.name)).toEqual(['search', 'sonnet']);
+  });
+});
+
+describe('shared entity labels', () => {
+  it('names the manual trigger Manual and keeps the automated labels', () => {
+    expect(formatTriggerLabel('manual')).toBe('Manual');
+    expect(formatTriggerLabel('scheduled')).toBe('Scheduled Pipelines');
+    expect(formatTriggerLabel('webhook')).toBe('Webhook Triggers');
+  });
+
+  it('names a run with no recorded version Unknown version', () => {
+    expect(formatVersionLabel(null)).toBe('Unknown version');
+    expect(formatVersionLabel('base')).toBe('base');
+  });
+
+  it('picks the pipeline route only for a pipeline', () => {
+    const routes = { agentRoute: '/agents', pipelineRoute: '/pipelines' };
+
+    expect(pickEntityRoutePattern('pipeline', routes)).toBe('/pipelines');
+    expect(pickEntityRoutePattern('agent', routes)).toBe('/agents');
+    expect(pickEntityRoutePattern(null, routes)).toBe('/agents');
   });
 });

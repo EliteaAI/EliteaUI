@@ -10,6 +10,7 @@
  * (border.table, status.rejected, text.accent, background.card, etc).
  */
 import { Provider } from 'react-redux';
+import { MemoryRouter } from 'react-router-dom';
 
 import { ThemeProvider, createTheme } from '@mui/material';
 
@@ -113,4 +114,10 @@ export const AnalyticsTestWrapper = ({ children }) => (
   <Provider store={testStore}>
     <ThemeProvider theme={analyticsTestTheme}>{children}</ThemeProvider>
   </Provider>
+);
+
+export const AnalyticsRouterTestWrapper = ({ children }) => (
+  <MemoryRouter>
+    <AnalyticsTestWrapper>{children}</AnalyticsTestWrapper>
+  </MemoryRouter>
 );

@@ -3,22 +3,11 @@ import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import { SearchParams, SkillsTabs } from '@/common/constants';
 import RouteDefinitions from '@/routes';
 
-import { triggerSourceLabel } from './analyticsCommon.helpers.js';
+import { hasValue, pickEntityRoutePattern } from './analyticsCommon.helpers.js';
 
-const MANUAL_TRIGGER = 'manual';
-const ENTITY_KIND_PIPELINE = 'pipeline';
-const ENTITY_DETAIL_TAB = 'all';
-
-const { SKILL_SOURCE_LABELS, VERSION_UNKNOWN_LABEL } = AnalyticsCommonConstants;
-
-const hasValue = value => value !== undefined && value !== null;
-
-export const skillTriggerLabel = source =>
-  source === MANUAL_TRIGGER ? 'Manual' : triggerSourceLabel(source);
+const { SKILL_SOURCE_LABELS, ENTITY_DETAIL_TAB } = AnalyticsCommonConstants;
 
 export const skillSourceLabel = source => SKILL_SOURCE_LABELS[source] || source || 'Unknown';
-
-export const skillVersionLabel = versionName => versionName || VERSION_UNKNOWN_LABEL;
 
 export const skillDisplayName = skill => (skill.deleted ? `${skill.skill_name} (deleted)` : skill.skill_name);
 
@@ -44,9 +33,9 @@ export const skillAgentPath = (agent, projectId) => {
   if (!agent || agent.deleted || !hasValue(agent.entity_id) || isOtherProjectAgent(agent, projectId))
     return null;
 
-  const pattern =
-    agent.kind === ENTITY_KIND_PIPELINE
-      ? RouteDefinitions.PipelineDetail
-      : RouteDefinitions.ApplicationsDetail;
+  const pattern = pickEntityRoutePattern(agent.kind, {
+    agentRoute: RouteDefinitions.ApplicationsDetail,
+    pipelineRoute: RouteDefinitions.PipelineDetail,
+  });
   return NavigationHelpers.buildRoute(pattern, { tab: ENTITY_DETAIL_TAB, agentId: agent.entity_id });
 };

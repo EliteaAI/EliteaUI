@@ -130,6 +130,17 @@ describe('RunHistoryListItem actions', () => {
     expect(toastInfo).toHaveBeenCalledWith('The link has been copied to the clipboard.');
   });
 
+  it('copies a conversation-scoped link even when the page was reached from a single analytics run', async () => {
+    window.history.replaceState({}, '', '/app/agents/all/127/history?usage_run_id=run-x&history_run_id=9');
+    renderItem();
+
+    await clickShare();
+
+    expect(copyToClipboard).toHaveBeenCalledWith(
+      `${window.location.origin}/app/7/agents/all/127/history?history_run_id=42`,
+    );
+  });
+
   it('asks for the History tab only where a tab has to be reopened', async () => {
     renderItem(CONVERSATION_ROW, { shareOpensHistoryTab: true });
 

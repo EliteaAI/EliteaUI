@@ -1,6 +1,7 @@
 import { memo, useCallback, useMemo, useState } from 'react';
 
 import { useSelector } from 'react-redux';
+import { useSearchParams } from 'react-router-dom';
 import {
   Area,
   AreaChart,
@@ -16,7 +17,7 @@ import {
 import { Box, CircularProgress, TablePagination, TableSortLabel, Typography, useTheme } from '@mui/material';
 
 import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
-import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
+import { AnalyticCommonHelpers, AnalyticsUrlStateHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { AnalyticsAgentDetailed, ChartTooltip } from '@/[fsd]/features/settings/ui/analytics';
 import { analyticsTableSortLabelSx } from '@/[fsd]/features/settings/ui/analytics/components/analyticsTable.styles';
 import { CHART_COLORS } from '@/[fsd]/shared/config/theme';
@@ -73,6 +74,8 @@ const AGENT_COLUMNS = [
   { key: 'errors', label: 'Errors', render: r => r.errors },
 ];
 
+const { ANALYTICS_SEARCH_PARAMS } = AnalyticsCommonConstants;
+
 const AnalyticsAgents = memo(props => {
   const { projectId, dateFrom, dateTo, canViewSkills = false } = props;
 
@@ -80,7 +83,8 @@ const AnalyticsAgents = memo(props => {
   const [rowsPerPage, setRowsPerPage] = useState(20);
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState(DEFAULT_AGENT_SORT);
-  const [selectedAgent, setSelectedAgent] = useState(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedAgent = searchParams.get(ANALYTICS_SEARCH_PARAMS.agentId);
 
   const { palette } = useTheme();
   const axisStroke = palette.text.primary;
@@ -149,9 +153,19 @@ const AnalyticsAgents = memo(props => {
     setPage(0);
   }, []);
 
-  const handleAgentClick = useCallback(entityId => setSelectedAgent(entityId), []);
+  const handleAgentClick = useCallback(
+    entityId =>
+      setSearchParams(
+        previous =>
+          AnalyticsUrlStateHelpers.updateAnalyticsSearchParams(previous, {
+            [ANALYTICS_SEARCH_PARAMS.agentId]: entityId,
+          }),
+        { replace: true },
+      ),
+    [setSearchParams],
+  );
 
-  const handleBack = useCallback(() => setSelectedAgent(null), []);
+  const handleBack = useCallback(() => handleAgentClick(null), [handleAgentClick]);
 
   if (selectedAgent) {
     return (
