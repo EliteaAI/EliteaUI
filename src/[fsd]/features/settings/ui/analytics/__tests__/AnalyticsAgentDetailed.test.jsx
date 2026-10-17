@@ -51,7 +51,8 @@ vi.mock('@/[fsd]/shared/ui/tooltip', () => ({
 }));
 
 vi.mock('@/[fsd]/features/settings/ui/analytics', async () => ({
-  SkillBreakdownTable: (await vi.importActual('../components/SkillBreakdownTable')).default,
+  AnalyticsBreakdownTable: (await vi.importActual('../components/AnalyticsBreakdownTable')).default,
+  AgentRecentRunsTable: (await vi.importActual('../components/AgentRecentRunsTable')).default,
   DeletedChip: (await vi.importActual('../components/DeletedChip')).default,
   ChartTooltip: () => null,
   KPICard: ({ label, value, subtitle }) => (

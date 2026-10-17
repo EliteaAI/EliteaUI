@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
-import SkillBreakdownTable from '../components/SkillBreakdownTable';
+import AnalyticsBreakdownTable from '../components/AnalyticsBreakdownTable';
 import { AnalyticsTestWrapper as Wrapper } from './_testHelpers';
 
 vi.mock('@/[fsd]/shared/ui/tooltip', () => ({ InfoTooltip: () => null }));
@@ -24,7 +24,7 @@ const TEST_ID = 'breakdown';
 
 const renderTable = props =>
   render(
-    <SkillBreakdownTable
+    <AnalyticsBreakdownTable
       title="Breakdown"
       columns={COLUMNS}
       rows={ROWS}
@@ -36,7 +36,7 @@ const renderTable = props =>
 
 const rowTexts = () => screen.getAllByTestId(`${TEST_ID}-row`).map(row => row.textContent);
 
-describe('SkillBreakdownTable', () => {
+describe('AnalyticsBreakdownTable', () => {
   afterEach(() => cleanup());
 
   it('renders rows in the given order with plain headers when it cannot sort', () => {

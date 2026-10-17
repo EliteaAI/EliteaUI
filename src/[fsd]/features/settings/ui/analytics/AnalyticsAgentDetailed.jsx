@@ -23,12 +23,12 @@ import {
   AnalyticsExportHelpers,
 } from '@/[fsd]/features/settings/lib/helpers';
 import {
+  AgentRecentRunsTable,
+  AnalyticsBreakdownTable,
   ChartTooltip,
   DeletedChip,
   KPICard,
-  SkillBreakdownTable,
 } from '@/[fsd]/features/settings/ui/analytics';
-import AgentRecentRunsTable from '@/[fsd]/features/settings/ui/analytics/components/AgentRecentRunsTable';
 import { analyticsTableSortLabelSx } from '@/[fsd]/features/settings/ui/analytics/components/analyticsTable.styles';
 import { useClientSort, useSelectedProjectName, useSortedRows } from '@/[fsd]/shared/lib/hooks';
 import { exportToExcel } from '@/[fsd]/shared/lib/utils';
@@ -268,14 +268,14 @@ const AnalyticAgentDetailed = memo(props => {
   if (!data)
     return (
       <Box sx={styles.agentDetailedContent}>
-        <IconButton
+        <BaseBtn
+          variant={BUTTON_VARIANTS.tertiary}
           onClick={onBack}
-          size="small"
+          startIcon={<ArrowBackIcon />}
+          aria-label="Back"
           sx={styles.backButton}
           data-testid="analytics-agent-detail-back-button"
-        >
-          <ArrowBackIcon />
-        </IconButton>
+        />
         <Typography
           variant="bodyMedium"
           sx={styles.emptyText}
@@ -510,7 +510,7 @@ const AnalyticAgentDetailed = memo(props => {
       )}
 
       <Box sx={styles.chartsGrid}>
-        <SkillBreakdownTable
+        <AnalyticsBreakdownTable
           title="Versions"
           tooltip={tt.VERSIONS_SECTION}
           columns={VERSION_COLUMNS}
@@ -521,7 +521,7 @@ const AnalyticAgentDetailed = memo(props => {
           sortOrder={versionSort.sortOrder}
           onSort={handleVersionSort}
         />
-        <SkillBreakdownTable
+        <AnalyticsBreakdownTable
           title="Models"
           tooltip={tt.MODELS_SECTION}
           columns={MODEL_COLUMNS}
@@ -684,7 +684,7 @@ const AnalyticAgentDetailed = memo(props => {
           </Box>
         </Box>
         {canViewSkills && (
-          <SkillBreakdownTable
+          <AnalyticsBreakdownTable
             title="Skills"
             tooltip={tt.SKILLS_SECTION}
             subtitle={skillsSubtitle(skills, skills_total, skills_truncated)}
@@ -694,7 +694,7 @@ const AnalyticAgentDetailed = memo(props => {
             testId="analytics-agent-detail-skills-panel"
           />
         )}
-        <SkillBreakdownTable
+        <AnalyticsBreakdownTable
           title="Trigger Sources"
           tooltip={tt.TRIGGERS_SECTION}
           columns={TRIGGER_COLUMNS}

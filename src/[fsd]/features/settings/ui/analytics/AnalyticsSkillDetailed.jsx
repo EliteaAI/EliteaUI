@@ -31,10 +31,10 @@ import {
   SkillAnalyticsHelpers,
 } from '@/[fsd]/features/settings/lib/helpers';
 import {
+  AnalyticsBreakdownTable,
   ChartTooltip,
   DeletedChip,
   KPICard,
-  SkillBreakdownTable,
 } from '@/[fsd]/features/settings/ui/analytics';
 import EntityKindChip from '@/[fsd]/features/settings/ui/analytics/components/EntityKindChip';
 import { analyticsTableStyles } from '@/[fsd]/features/settings/ui/analytics/components/analyticsTable.styles';
@@ -479,7 +479,7 @@ const AnalyticsSkillDetailed = memo(props => {
       )}
 
       <Box sx={styles.grid}>
-        <SkillBreakdownTable
+        <AnalyticsBreakdownTable
           title="Versions"
           tooltip={tt.VERSIONS}
           columns={VERSION_COLUMNS}
@@ -489,7 +489,7 @@ const AnalyticsSkillDetailed = memo(props => {
           sortOrder={versionSort.sortOrder}
           onSort={handleVersionSort}
         />
-        <SkillBreakdownTable
+        <AnalyticsBreakdownTable
           title="Models"
           tooltip={tt.MODELS}
           columns={MODEL_COLUMNS}
@@ -500,7 +500,7 @@ const AnalyticsSkillDetailed = memo(props => {
           sortOrder={modelSort.sortOrder}
           onSort={handleModelSort}
         />
-        <SkillBreakdownTable
+        <AnalyticsBreakdownTable
           title="Users"
           tooltip={tt.USERS}
           columns={USER_COLUMNS}
@@ -510,7 +510,7 @@ const AnalyticsSkillDetailed = memo(props => {
           sortOrder={userSort.sortOrder}
           onSort={handleUserSort}
         />
-        <SkillBreakdownTable
+        <AnalyticsBreakdownTable
           title="Trigger Sources"
           tooltip={tt.TRIGGERS}
           columns={TRIGGER_COLUMNS}
@@ -520,7 +520,7 @@ const AnalyticsSkillDetailed = memo(props => {
           sortOrder={triggerSort.sortOrder}
           onSort={handleTriggerSort}
         />
-        <SkillBreakdownTable
+        <AnalyticsBreakdownTable
           title="Used by Agents"
           tooltip={tt.AGENTS}
           columns={agentColumns}
@@ -531,7 +531,7 @@ const AnalyticsSkillDetailed = memo(props => {
           sortOrder={agentSort.sortOrder}
           onSort={handleAgentSort}
         />
-        <SkillBreakdownTable
+        <AnalyticsBreakdownTable
           title="Load vs Mention"
           tooltip={tt.SOURCES}
           subtitle={
@@ -549,7 +549,7 @@ const AnalyticsSkillDetailed = memo(props => {
         />
       </Box>
 
-      <SkillBreakdownTable
+      <AnalyticsBreakdownTable
         title="Recent Runs"
         tooltip={tt.RECENT_RUNS}
         columns={recentRunColumns}

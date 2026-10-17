@@ -10,7 +10,7 @@ const rowKey = (row, index) => row.key ?? index;
 
 const columnSortKey = column => column.sortKey ?? column.key;
 
-const SkillBreakdownTable = memo(props => {
+const AnalyticsBreakdownTable = memo(props => {
   const {
     title,
     tooltip,
@@ -26,7 +26,7 @@ const SkillBreakdownTable = memo(props => {
     footer,
   } = props;
 
-  const tableStyles = skillBreakdownTableStyles();
+  const tableStyles = analyticsBreakdownTableStyles();
 
   return (
     <Box
@@ -127,10 +127,10 @@ const SkillBreakdownTable = memo(props => {
   );
 });
 
-SkillBreakdownTable.displayName = 'SkillBreakdownTable';
+AnalyticsBreakdownTable.displayName = 'AnalyticsBreakdownTable';
 
 /** @type {MuiSx} */
-const skillBreakdownTableStyles = () => ({
+const analyticsBreakdownTableStyles = () => ({
   scrollList: { maxHeight: '18.75rem', overflowY: 'auto', overflowX: 'hidden' },
   emptyText: ({ palette }) => ({
     color: palette.text.metrics || palette.text.disabled,
@@ -139,4 +139,4 @@ const skillBreakdownTableStyles = () => ({
   loadingState: { display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '2rem' },
 });
 
-export default SkillBreakdownTable;
+export default AnalyticsBreakdownTable;
