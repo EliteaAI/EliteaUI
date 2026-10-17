@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useAnalyticsSkillsQuery } from '@/[fsd]/features/settings/api/analyticsApi';
@@ -6,7 +7,7 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 
 import AnalyticsSkills from '../AnalyticsSkills';
-import { AnalyticsTestWrapper as Wrapper } from './_testHelpers';
+import { AnalyticsTestWrapper, AnalyticsRouterTestWrapper as Wrapper } from './_testHelpers';
 
 vi.hoisted(async () => {
   const { installGlobalStubs } = await import('./_testHelpers');
@@ -242,5 +243,30 @@ describe('AnalyticsSkills', () => {
 
     expect(screen.getByTestId('analytics-skills-no-match')).toBeInTheDocument();
     expect(screen.queryByTestId('analytics-skills-empty-state')).not.toBeInTheDocument();
+  });
+});
+
+describe('AnalyticsSkills — selected skill in the URL (#7033)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    useAnalyticsSkillsQuery.mockReturnValue({ data: PAYLOAD, isFetching: false, isError: false });
+  });
+
+  afterEach(() => cleanup());
+
+  it('reopens the skill named in the URL, so Back from a run page restores it', () => {
+    render(
+      <MemoryRouter initialEntries={['/settings/analytics?tab=skills&skill_id=180&skill_project_id=2']}>
+        <AnalyticsTestWrapper>
+          <AnalyticsSkills
+            projectId={2}
+            dateFrom="2026-10-01T00:00:00Z"
+            dateTo="2026-10-10T00:00:00Z"
+          />
+        </AnalyticsTestWrapper>
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByTestId('skill-detail')).toHaveTextContent('2:180');
   });
 });

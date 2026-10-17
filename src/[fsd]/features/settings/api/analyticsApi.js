@@ -180,6 +180,33 @@ export const analyticsApi = eliteaApi
         providesTags: [TAG_TYPE_ANALYTICS],
         keepUnusedDataFor: CACHE_LIFETIME,
       }),
+      analyticsAgentRuns: build.query({
+        query: ({
+          projectId,
+          entityId,
+          dateFrom,
+          dateTo,
+          limit = 20,
+          offset = 0,
+          sortBy = 'started_at',
+          sortOrder = 'desc',
+        }) => {
+          const params = new URLSearchParams();
+          params.set('entity_id', String(entityId));
+          if (dateFrom) params.set('date_from', dateFrom);
+          if (dateTo) params.set('date_to', dateTo);
+          params.set('limit', String(limit));
+          params.set('offset', String(offset));
+          params.set('sort_by', sortBy);
+          params.set('sort_order', sortOrder);
+          return {
+            url: `/usage/analytics_agent_runs/prompt_lib/${projectId}?${params.toString()}`,
+            method: 'GET',
+          };
+        },
+        providesTags: [TAG_TYPE_ANALYTICS],
+        keepUnusedDataFor: CACHE_LIFETIME,
+      }),
       analyticsSkills: build.query({
         query: ({
           projectId,
@@ -282,6 +309,7 @@ export const {
   useAnalyticsToolDetailQuery,
   useAnalyticsAgentsQuery,
   useAnalyticsAgentDetailQuery,
+  useAnalyticsAgentRunsQuery,
   useAnalyticsSkillsQuery,
   useAnalyticsSkillDetailQuery,
   useAnalyticsCostsQuery,

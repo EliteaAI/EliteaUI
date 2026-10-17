@@ -299,3 +299,131 @@ describe('RunAnalyticsContainer for a root entity', () => {
     ]);
   });
 });
+
+const USAGE_RUN_ID = '7d1e2f3a-4b5c-4d6e-8f90-a1b2c3d4e5f6';
+
+describe('RunAnalyticsContainer opened from Analytics Recent Runs (#7033)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    viewProps.current = null;
+    useGetRunHistoryDetailsQuery.mockReturnValue({
+      data: {
+        uuid: '0b7c3a2e-5d4f-4c1a-9e8b-1f2a3b4c5d6e',
+        created_at: new Date(2026, 8, 2, 12, 23).getTime() / 1000,
+        meta: { single_participant: { entity_settings: { version_id: 11 } } },
+      },
+    });
+    useApplicationDetailsQuery.mockReturnValue({
+      data: {
+        name: 'Reviewer',
+        versions: [
+          { id: 10, name: 'latest' },
+          { id: 11, name: 'base' },
+        ],
+      },
+    });
+    useAnalyticsRunDetailQuery.mockReturnValue({
+      data: {
+        ...RUN_DETAIL,
+        started_at: new Date(2026, 9, 9, 10, 0).toISOString(),
+        root_entity_version_ids: [10],
+      },
+      isFetching: false,
+    });
+    useAnalyticsCostsQuery.mockReturnValue({ data: RUN_COSTS, isFetching: false, isError: false });
+  });
+
+  afterEach(() => cleanup());
+
+  it('scopes every tab to the usage run, not to its whole conversation', () => {
+    renderAt(`/agents/all/5/history/analytics?usage_run_id=${USAGE_RUN_ID}&history_run_id=555`);
+
+    expect(viewProps.current.runScope.queryArgs).toEqual({ runId: USAGE_RUN_ID });
+    expect(useAnalyticsRunDetailQuery).toHaveBeenCalledWith(
+      { projectId: 1, runId: USAGE_RUN_ID },
+      expect.objectContaining({ skip: false }),
+    );
+  });
+
+  it('opens a run that has no conversation', () => {
+    useGetRunHistoryDetailsQuery.mockReturnValue({ data: undefined, isLoading: false });
+    renderAt(`/agents/all/5/history/analytics?usage_run_id=${USAGE_RUN_ID}`);
+
+    expect(useGetRunHistoryDetailsQuery).toHaveBeenCalledWith(
+      { projectId: 1, conversationId: null },
+      { skip: true },
+    );
+    expect(viewProps.current.runScope.queryArgs).toEqual({ runId: USAGE_RUN_ID });
+  });
+
+  it('dates and versions the header from the usage run, not the conversation', () => {
+    renderAt(`/agents/all/5/history/analytics?usage_run_id=${USAGE_RUN_ID}&history_run_id=555`);
+
+    expect(viewProps.current.infoLines).toEqual([
+      'Run: 09 Oct 2026, 10:00 AM · Version: latest · Model: Claude Sonnet 4.6',
+    ]);
+    expect(Object.fromEntries(viewProps.current.exportMeta.scopeRows)).toMatchObject({
+      'Run ID': USAGE_RUN_ID,
+      Version: 'latest',
+    });
+    expect(viewProps.current.exportMeta.fileSuffix).toBe(`run-${USAGE_RUN_ID}`);
+  });
+});
+
+describe('RunAnalyticsContainer version names from the usage run (#7033)', () => {
+  const runDetailWith = versionIds => ({
+    ...RUN_DETAIL,
+    started_at: new Date(2026, 9, 9, 10, 0).toISOString(),
+    root_entity_version_ids: versionIds,
+    root_entity_versions: [
+      { id: 10, name: 'latest (run-time)' },
+      { id: 242, name: 'v3' },
+    ],
+  });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    viewProps.current = null;
+    useGetRunHistoryDetailsQuery.mockReturnValue({
+      data: {
+        uuid: '0b7c3a2e-5d4f-4c1a-9e8b-1f2a3b4c5d6e',
+        created_at: new Date(2026, 8, 2, 12, 23).getTime() / 1000,
+        meta: { single_participant: { entity_settings: { version_id: 11 } } },
+      },
+    });
+    useApplicationDetailsQuery.mockReturnValue({
+      data: {
+        name: 'Reviewer',
+        versions: [
+          { id: 10, name: 'latest' },
+          { id: 11, name: 'base' },
+        ],
+      },
+    });
+    useAnalyticsCostsQuery.mockReturnValue({ data: RUN_COSTS, isFetching: false, isError: false });
+  });
+
+  afterEach(() => cleanup());
+
+  it('names a deleted version with the usage run name instead of a dash', () => {
+    useAnalyticsRunDetailQuery.mockReturnValue({ data: runDetailWith([242]), isFetching: false });
+    renderAt(`/agents/all/130/history/analytics?usage_run_id=${USAGE_RUN_ID}`);
+
+    expect(viewProps.current.infoLines[0]).toContain('Version: v3 ·');
+    expect(Object.fromEntries(viewProps.current.exportMeta.scopeRows)).toMatchObject({ Version: 'v3' });
+  });
+
+  it('keeps the current name of a version that still exists', () => {
+    useAnalyticsRunDetailQuery.mockReturnValue({ data: runDetailWith([10]), isFetching: false });
+    renderAt(`/agents/all/130/history/analytics?usage_run_id=${USAGE_RUN_ID}`);
+
+    expect(viewProps.current.infoLines[0]).toContain('Version: latest ·');
+  });
+
+  it('leaves a Run History link on the participant version', () => {
+    useAnalyticsRunDetailQuery.mockReturnValue({ data: runDetailWith([242]), isFetching: false });
+    renderAt('/agents/all/130/history/analytics?history_run_id=555');
+
+    expect(viewProps.current.infoLines).toEqual(['Run: 02 Sep 2026, 12:23 PM · Version: base']);
+  });
+});

@@ -56,6 +56,7 @@ const RunHistoryRowActions = memo(props => {
   const handleCopyLink = useCallback(async () => {
     const url = new URL(window.location.href);
 
+    url.searchParams.delete(SearchParams.UsageRunId);
     url.searchParams.set(SearchParams.HistoryRunId, item.id);
     if (shareOpensHistoryTab) url.searchParams.set(SearchParams.DestTab, 'History');
 

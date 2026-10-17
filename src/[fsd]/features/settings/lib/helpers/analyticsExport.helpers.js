@@ -3,14 +3,15 @@ import { format } from 'date-fns';
 import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
 import { ExcelFormats, sanitizeFileNamePart } from '@/[fsd]/shared/lib/utils';
 
-import { triggerSourceLabel } from './analyticsCommon.helpers.js';
-import { tokenStats } from './analyticsToken.helpers.js';
 import {
-  skillDisplayName,
-  skillSourceLabel,
-  skillTriggerLabel,
-  skillVersionLabel,
-} from './skillAnalytics.helpers.js';
+  formatAgentEntityLabel,
+  formatAgentModelLabel,
+  formatAgentRunModels,
+  formatAgentUserLabel,
+} from './agentAnalytics.helpers.js';
+import { formatTriggerLabel, formatVersionLabel, triggerSourceLabel } from './analyticsCommon.helpers.js';
+import { tokenStats } from './analyticsToken.helpers.js';
+import { skillDisplayName, skillSourceLabel } from './skillAnalytics.helpers.js';
 
 const EXPORT_LIMIT = 10_000;
 
@@ -633,7 +634,7 @@ export const buildSkillDetailSheet = (detail, meta) => {
       },
       skillSection('Daily Trend', { header: 'Date', key: 'date' }, daily, r => r.date),
       skillSection('By Version', { header: 'Version', key: 'version_name' }, by_version, r =>
-        skillVersionLabel(r.version_name),
+        formatVersionLabel(r.version_name),
       ),
       {
         title: 'By Model',
@@ -647,7 +648,7 @@ export const buildSkillDetailSheet = (detail, meta) => {
         r => r.user_email || `User ${r.user_id}`,
       ),
       skillSection('By Trigger Source', { header: 'Trigger', key: 'trigger_source' }, by_trigger_source, r =>
-        skillTriggerLabel(r.trigger_source),
+        formatTriggerLabel(r.trigger_source),
       ),
       {
         title: 'Used by Agents',
@@ -669,12 +670,197 @@ export const buildSkillDetailSheet = (detail, meta) => {
               ...r,
               started_at: fmtISODateTime(r.started_at),
               user_email: r.user_email || `User ${r.user_id}`,
-              version_name: skillVersionLabel(r.version_name),
+              version_name: formatVersionLabel(r.version_name),
               is_error: r.is_error ? 'Yes' : 'No',
             }))
           : emptyRow(runCols, NO_DATA_MSG),
       },
     ],
+  };
+};
+
+const AGENT_RUNS_EXPORT_PAGE_SIZE = 100;
+
+const AGENT_TOTAL_COLUMNS = [
+  { header: 'Runs', key: 'runs', numFmt: ExcelFormats.integer },
+  { header: 'Total Tokens', key: 'total_tokens', numFmt: ExcelFormats.integer },
+  { header: 'Cost (USD)', key: 'cost', numFmt: ExcelFormats.currency },
+];
+
+const buildAgentSection = (title, columns, rows, toRow = row => row) => ({
+  title,
+  columns,
+  rows: rows.length ? rows.map(toRow) : emptyRow(columns, NO_DATA_MSG),
+});
+
+const recentRunsTitle = (shown, total, truncated) =>
+  truncated
+    ? `Recent Runs (first ${shown.toLocaleString('en-US')} of ${total.toLocaleString('en-US')} runs)`
+    : 'Recent Runs';
+
+const buildAgentKpiRows = (kpis, evaluation) => [
+  { metric: 'Total Runs', value: kpis.total_events ?? 0 },
+  { metric: 'Unique Users', value: kpis.unique_users ?? 0 },
+  { metric: 'Total Cost (USD)', value: kpis.llm_cost ?? 0 },
+  { metric: 'Input Token Cost (USD)', value: kpis.input_cost ?? 0 },
+  { metric: 'Output Token Cost (USD)', value: kpis.output_cost ?? 0 },
+  { metric: 'Total Tokens', value: kpis.total_tokens ?? 0 },
+  { metric: 'Input Tokens', value: kpis.input_tokens ?? 0 },
+  { metric: 'Output Tokens', value: kpis.output_tokens ?? 0 },
+  { metric: 'Cache Read Tokens', value: kpis.cache_read_tokens ?? 0 },
+  { metric: 'Cache Write Tokens', value: kpis.cache_creation_tokens ?? 0 },
+  ...(evaluation ? [{ metric: 'Evaluation Tokens', value: evaluation.total_tokens ?? 0 }] : []),
+  { metric: 'Cache Read Cost (USD)', value: kpis.cache_read_cost ?? 0 },
+  { metric: 'Cache Write Cost (USD)', value: kpis.cache_creation_cost ?? 0 },
+  { metric: 'Avg Latency (ms)', value: kpis.avg_duration_ms ?? 0 },
+  { metric: 'Errors', value: kpis.errors ?? 0 },
+];
+
+export const buildAgentDetailSheet = (
+  detail,
+  { runs = [], runsTotal = runs.length, runsTruncated = false, includeSkills = false, ...meta },
+) => {
+  const {
+    entity_name = '',
+    kind,
+    kpis = {},
+    evaluation,
+    daily_usage = [],
+    users = [],
+    tools = [],
+    skills = [],
+    by_version = [],
+    by_model = [],
+    by_trigger_source = [],
+  } = detail || {};
+  const entityLabel = formatAgentEntityLabel(kind);
+
+  const kpiCols = [
+    { header: 'Metric', key: 'metric' },
+    { header: 'Value', key: 'value' },
+  ];
+  const dailyCols = [
+    { header: 'Date', key: 'date' },
+    { header: 'Runs', key: 'events', numFmt: ExcelFormats.integer },
+    { header: 'Errors', key: 'errors', numFmt: ExcelFormats.integer },
+  ];
+  const userCols = [
+    { header: 'User', key: 'user_email' },
+    { header: 'Runs', key: 'events', numFmt: ExcelFormats.integer },
+    { header: 'Avg Latency (ms)', key: 'avg_duration_ms', numFmt: ExcelFormats.integer },
+    { header: 'Errors', key: 'errors', numFmt: ExcelFormats.integer },
+  ];
+  const toolCols = [
+    { header: 'Tool', key: 'tool_name' },
+    { header: 'Calls', key: 'calls', numFmt: ExcelFormats.integer },
+  ];
+  const skillCols = [
+    { header: 'Skill', key: 'skill_name' },
+    { header: 'Uses', key: 'uses', numFmt: ExcelFormats.integer },
+  ];
+  const versionCols = [{ header: 'Version', key: 'version_name' }, ...AGENT_TOTAL_COLUMNS];
+  const modelCols = [
+    { header: 'Model', key: 'display_name' },
+    { header: 'Runs', key: 'runs', numFmt: ExcelFormats.integer },
+    { header: 'LLM Calls', key: 'calls', numFmt: ExcelFormats.integer },
+    ...AGENT_TOTAL_COLUMNS.slice(1),
+  ];
+  const triggerCols = [{ header: 'Trigger', key: 'trigger_source' }, ...AGENT_TOTAL_COLUMNS];
+  const runCols = [
+    { header: 'Started', key: 'started_at' },
+    { header: 'User', key: 'user_email' },
+    { header: 'Version', key: 'version_name' },
+    { header: 'Models', key: 'models' },
+    { header: 'Total Tokens', key: 'total_tokens', numFmt: ExcelFormats.integer },
+    { header: 'Cost (USD)', key: 'cost', numFmt: ExcelFormats.currency },
+    { header: 'Status', key: 'is_error' },
+    { header: 'Run URL', key: 'run_url' },
+  ];
+
+  return {
+    sheetName: entityLabel,
+    metadata: [[entityLabel, entity_name], ...buildMetadata('Agents & Pipelines', meta)],
+    sections: [
+      { title: 'KPIs', columns: kpiCols, rows: buildAgentKpiRows(kpis, evaluation) },
+      buildAgentSection('Daily', dailyCols, daily_usage),
+      buildAgentSection('Users', userCols, users, row => ({ ...row, user_email: formatAgentUserLabel(row) })),
+      buildAgentSection('Tools', toolCols, tools),
+      ...(includeSkills
+        ? [
+            buildAgentSection('Skills', skillCols, skills, row => ({
+              ...row,
+              skill_name: skillDisplayName(row),
+            })),
+          ]
+        : []),
+      buildAgentSection('Versions', versionCols, by_version, row => ({
+        ...row,
+        version_name: formatVersionLabel(row.version_name),
+      })),
+      buildAgentSection('Models', modelCols, by_model, row => ({
+        ...row,
+        display_name: formatAgentModelLabel(row),
+      })),
+      buildAgentSection('Trigger Sources', triggerCols, by_trigger_source, row => ({
+        ...row,
+        trigger_source: formatTriggerLabel(row.trigger_source),
+      })),
+      buildAgentSection(recentRunsTitle(runs.length, runsTotal, runsTruncated), runCols, runs, row => ({
+        ...row,
+        started_at: fmtISODateTime(row.started_at),
+        user_email: formatAgentUserLabel(row),
+        version_name: formatVersionLabel(row.version_name),
+        models: formatAgentRunModels(row.models),
+        is_error: row.is_error ? 'Error' : 'Success',
+      })),
+    ],
+  };
+};
+
+export const buildAgentAnalyticsExportFileName = ({ projectName, entityName, kind, dateFrom, dateTo }) =>
+  `${sanitizeFileNamePart(projectName)}_${formatAgentEntityLabel(kind).toLowerCase()}_${sanitizeFileNamePart(entityName)}_${fmtLocalDate(dateFrom)}-${fmtLocalDate(dateTo)}.xlsx`;
+
+const fetchAgentRunsPage = async (dispatch, endpoints, args) => {
+  const subscription = dispatch(endpoints.analyticsAgentRuns.initiate(args));
+  try {
+    return await subscription.unwrap();
+  } finally {
+    subscription.unsubscribe();
+  }
+};
+
+export const fetchAllAgentRuns = async (dispatch, endpoints, { projectId, entityId, dateFrom, dateTo }) => {
+  const runs = [];
+  const seenRunIds = new Set();
+  let offset = 0;
+  let total = Infinity;
+
+  while (offset < total && runs.length < EXPORT_LIMIT) {
+    const page = await fetchAgentRunsPage(dispatch, endpoints, {
+      projectId,
+      entityId,
+      dateFrom,
+      dateTo,
+      limit: AGENT_RUNS_EXPORT_PAGE_SIZE,
+      offset,
+    });
+
+    const rows = page?.rows ?? [];
+    total = page?.total ?? 0;
+    offset += rows.length;
+    rows
+      .filter(row => !seenRunIds.has(row.run_id))
+      .forEach(row => {
+        seenRunIds.add(row.run_id);
+        runs.push(row);
+      });
+    if (!rows.length) break;
+  }
+
+  return {
+    runs: runs.slice(0, EXPORT_LIMIT),
+    total,
+    truncated: runs.length >= EXPORT_LIMIT && runs.length < total,
   };
 };
 
