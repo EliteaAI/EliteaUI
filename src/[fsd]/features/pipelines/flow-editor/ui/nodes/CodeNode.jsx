@@ -105,11 +105,10 @@ const CodeNode = memo(props => {
         disabled={isRunningPipeline || disabled}
         dataTestId="pipeline-code-node-output-select"
       />
-      <FlowEditorSettings.CommonInterruptSettings
+      <FlowEditorSettings.CommonNodeSettings
         id={id}
         type={FlowEditorConstants.PipelineNodeTypes.Code}
         disabled={isRunningPipeline || disabled}
-        interruptAfterTestId="pipeline-code-node-interrupt-after-toggle"
         structuredOutputTestId="pipeline-code-node-structured-output-toggle"
       />
     </FlowEditorNodes.NodeCard>

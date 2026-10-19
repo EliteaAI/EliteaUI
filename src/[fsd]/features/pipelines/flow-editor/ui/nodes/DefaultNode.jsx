@@ -205,12 +205,11 @@ const DefaultNode = memo(props => {
         requiredHeadingTestId={testIdPrefix ? `${testIdPrefix}-input-mapping-heading` : undefined}
         optionalHeadingTestId={testIdPrefix ? `${testIdPrefix}-input-mapping-optional-heading` : undefined}
       />
-      <FlowEditorSettings.CommonInterruptSettings
+      <FlowEditorSettings.CommonNodeSettings
         id={id}
         showStructuredOutput={true}
         type={type}
         disabled={isRunningPipeline || disabled}
-        interruptAfterTestId={testIdPrefix ? `${testIdPrefix}-interrupt-after-toggle` : undefined}
         structuredOutputTestId={testIdPrefix ? `${testIdPrefix}-structured-output-toggle` : undefined}
       />
       <FlowEditorSettings.CustomNodeInput

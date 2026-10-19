@@ -139,12 +139,11 @@ const NormalDecisionNode = memo(props => {
         isRunningPipeline={isRunningPipeline}
         disabled={disabled}
       />
-      <FlowEditorSettings.CommonInterruptSettings
+      <FlowEditorSettings.CommonNodeSettings
         id={id}
         showStructuredOutput={false}
         type={FlowEditorConstants.PipelineNodeTypes.Decision}
         disabled={isRunningPipeline}
-        interruptAfterTestId="pipeline-decision-node-interrupt-after-toggle"
       />
     </FlowEditorNodes.NodeCard>
   );

@@ -160,12 +160,11 @@ const AgentNode = memo(props => {
             requiredHeadingTestId={`${AGENT_NODE_TESTID_PREFIX}-input-mapping-heading`}
           />
         )}
-        <FlowEditorSettings.CommonInterruptSettings
+        <FlowEditorSettings.CommonNodeSettings
           id={id}
           type={FlowEditorConstants.PipelineNodeTypes.Agent}
           disabled={isRunningPipeline || disabled}
           showStructuredOutput={false}
-          interruptAfterTestId={`${AGENT_NODE_TESTID_PREFIX}-interrupt-after-toggle`}
         />
       </FlowEditorNodes.NodeCard>
     </>

@@ -96,7 +96,7 @@ const SubgraphNode = memo(props => {
         disabled={isRunningPipeline || disabled}
         filterTypes={toolkitFilter}
       />
-      <FlowEditorSettings.CommonInterruptSettings
+      <FlowEditorSettings.CommonNodeSettings
         id={id}
         type={FlowEditorConstants.PipelineNodeTypes.Pipeline}
         disabled={isRunningPipeline || disabled}
