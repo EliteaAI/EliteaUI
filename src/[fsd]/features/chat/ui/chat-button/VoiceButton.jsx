@@ -154,9 +154,12 @@ const VoiceButton = memo(
     }, [inputRef, startRecording]);
 
     const handleStopRecording = useCallback(() => {
+      const wasRecording = isRecording;
       stopRecording();
-      inputRef.current?.focus();
-    }, [inputRef, stopRecording]);
+      if (wasRecording) {
+        inputRef.current?.focus();
+      }
+    }, [inputRef, isRecording, stopRecording]);
 
     useImperativeHandle(ref, () => ({ stop: handleStopRecording }), [handleStopRecording]);
 
