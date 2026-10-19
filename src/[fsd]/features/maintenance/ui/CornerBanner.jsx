@@ -4,6 +4,7 @@ import { useDispatch } from 'react-redux';
 
 import { Box } from '@mui/material';
 
+import { BANNER_CONTENT_LAYOUT } from '@/[fsd]/features/maintenance/lib/constants';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import CloseIcon from '@/components/Icons/CloseIcon';
@@ -48,7 +49,7 @@ const CornerBanner = memo(props => {
           <BannerContent
             banner={banner}
             styleTokens={styleTokens}
-            sideIcon
+            layout={BANNER_CONTENT_LAYOUT.side}
           />
         </Box>
       </MaintenaceTipsContainer>

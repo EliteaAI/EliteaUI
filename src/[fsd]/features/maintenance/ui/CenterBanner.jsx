@@ -2,6 +2,7 @@ import { memo } from 'react';
 
 import { Box, Dialog } from '@mui/material';
 
+import { BANNER_CONTENT_LAYOUT } from '@/[fsd]/features/maintenance/lib/constants';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 
@@ -23,6 +24,7 @@ const CenterBanner = memo(props => {
       disableEscapeKeyDown
       maxWidth={false}
       data-testid="platform-banner-center"
+      sx={styles.dialog}
       slotProps={{ paper: { sx: styles.paper } }}
     >
       <MaintenaceTipsContainer sx={styles.frame}>
@@ -30,7 +32,7 @@ const CenterBanner = memo(props => {
           <BannerContent
             banner={banner}
             styleTokens={styleTokens}
-            sideIcon
+            layout={BANNER_CONTENT_LAYOUT.stacked}
           />
         </Box>
         {banner.dismissible && (
@@ -54,6 +56,12 @@ CenterBanner.displayName = 'CenterBanner';
 
 /** @type {MuiSx} */
 const centerBannerStyles = styleTokens => ({
+  // The focus trap focuses the dialog wrappers on open; hide their browser focus ring
+  dialog: {
+    '& .MuiDialog-container, & .MuiDialog-paper': {
+      outline: 'none',
+    },
+  },
   paper: {
     width: '42rem',
     maxWidth: 'calc(100vw - 2rem)',
@@ -65,21 +73,22 @@ const centerBannerStyles = styleTokens => ({
   },
   frame: {
     '& > div > div': {
-      alignItems: 'stretch !important',
-      gap: '1.25rem',
+      alignItems: 'center !important',
+      gap: '1.5rem',
       padding: '2rem 2.5rem',
       background: styleTokens.backgroundColor,
     },
   },
   body: {
     display: 'flex',
-    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
     overflowY: 'auto',
     maxHeight: '60vh',
   },
   actions: {
     display: 'flex',
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
   },
 });
 
