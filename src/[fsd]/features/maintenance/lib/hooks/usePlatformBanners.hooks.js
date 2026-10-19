@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useGetPlatformBannersQuery } from '@/[fsd]/features/maintenance/api';
 import { LEGACY_BANNER_STORAGE_KEY } from '@/[fsd]/features/maintenance/lib/constants';
-import { getActiveBanner } from '@/[fsd]/features/maintenance/lib/helpers';
+import { getActiveBanner, getBannerVersionKey } from '@/[fsd]/features/maintenance/lib/helpers';
 import { persistDismissedBanners, readDismissedBanners } from '@/[fsd]/features/maintenance/lib/utils';
 
 const EMPTY_BANNERS = [];
@@ -36,7 +36,7 @@ export const usePlatformBanners = () => {
   const dismissBanner = useCallback(() => {
     if (!activeBanner?.dismissible) return;
 
-    setSessionDismissed(prev => new Set(prev).add(activeBanner.id));
+    setSessionDismissed(prev => new Set(prev).add(getBannerVersionKey(activeBanner)));
 
     if (!activeBanner.persist_dismissal) return;
 

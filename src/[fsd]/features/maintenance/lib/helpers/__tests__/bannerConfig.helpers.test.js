@@ -21,7 +21,11 @@ describe('getActiveBanner', () => {
   });
 
   it('reveals the next banner after the current one is closed in this session', () => {
-    expect(getActiveBanner([banner(1), banner(2)], {}, new Set([1]))?.id).toBe(2);
+    expect(getActiveBanner([banner(1), banner(2)], {}, new Set(['1:v1']))?.id).toBe(2);
+  });
+
+  it('shows a banner closed in this session again after it was changed', () => {
+    expect(getActiveBanner([banner(1, { updated_at: 'v2' })], {}, new Set(['1:v1']))?.id).toBe(1);
   });
 
   it('skips a banner closed in a previous visit when persistence is on', () => {
