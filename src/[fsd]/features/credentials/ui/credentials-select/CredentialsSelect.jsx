@@ -296,7 +296,7 @@ const CredentialsSelect = memo(props => {
         const rowEliteaTitle = configuration.elitea_title || configuration.data?.title;
 
         return {
-          id: `${configuration.elitea_title}_${configuration.project_id}`,
+          id: configuration.uuid ?? `${configuration.elitea_title}_${configuration.project_id}`,
           uuid: configuration.uuid,
           project_id: configuration.project_id,
           elitea_title: rowEliteaTitle,

@@ -6,6 +6,7 @@ import { useParams, useSearchParams } from 'react-router-dom';
 
 import { Box, CircularProgress, Tooltip, Typography } from '@mui/material';
 
+import { CredentialWarningHelpers } from '@/[fsd]/entities/credential-warning/lib/helpers';
 import { ConfigurationTitlesConstants } from '@/[fsd]/features/credentials/lib/constants';
 import { useGetCurrentConfigurationAsSchemas } from '@/[fsd]/features/credentials/lib/hooks';
 import { McpAuthHelpers, McpPatBanner } from '@/[fsd]/features/mcp';
@@ -366,11 +367,7 @@ export const ToolkitForm = memo(props => {
 
       // Only revert if this is a credential that was changed from team to private
       if (typeof curr === 'object' && curr && 'elitea_title' in curr) {
-        if (
-          curr.private !== orig?.private ||
-          curr.elitea_title !== orig?.elitea_title ||
-          (Boolean(orig?.configuration_uuid) && curr.configuration_uuid !== orig.configuration_uuid)
-        ) {
+        if (CredentialWarningHelpers.isCredentialSelectionChanged(curr, orig)) {
           // Revert to original team credential
           editField(`settings.${key}`, orig, true);
         }

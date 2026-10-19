@@ -17,8 +17,11 @@ describe('hasCredentialConfigChanged', () => {
     expect(hasCredentialConfigChanged(toolkit(legacy), toolkit(pinnedA))).toBe(true);
   });
 
-  it('does not flag re-picking the same row, with or without a uuid', () => {
+  it('does not flag re-picking the same pinned row', () => {
     expect(hasCredentialConfigChanged(toolkit(pinnedA), toolkit(pinnedA))).toBe(false);
+  });
+
+  it('does not flag upgrading a legacy original to a pinned value of the same title', () => {
     expect(hasCredentialConfigChanged(toolkit(pinnedA), toolkit(legacy))).toBe(false);
   });
 

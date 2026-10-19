@@ -1,5 +1,5 @@
 // A legacy original (no configuration_uuid) is compared by title + private only, so re-picking it is not a change.
-const isCredentialSelectionChanged = (curr, orig) =>
+export const isCredentialSelectionChanged = (curr, orig) =>
   curr.private !== orig?.private ||
   curr.elitea_title !== orig?.elitea_title ||
   (Boolean(orig?.configuration_uuid) && curr.configuration_uuid !== orig.configuration_uuid);
