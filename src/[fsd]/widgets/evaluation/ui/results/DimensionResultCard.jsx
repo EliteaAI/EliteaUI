@@ -11,6 +11,11 @@ import { formatHumanOutcome, formatScore, getBindingEngineLabel, resolveHumanSca
 
 const NO_COMMENTS = 'No comments provided.';
 const AWAITING_HUMAN = 'Awaiting human evaluation.';
+const NOT_SCORED = 'Not scored for this case.';
+
+// A latency check on a case that hit the suite's time limit (performance design §3.3): scored as
+// the worst value without running the check.
+const EXCEEDED_STATUS = 'exceeded';
 
 const isErrored = cell =>
   cell.result?.status === EVAL_RESULT_STATUS.error || !!cell.verdict?.error || !!cell.evidence?.error;
@@ -20,7 +25,20 @@ const getMetLabel = met => {
   return met ? 'Met' : 'Missed';
 };
 
-const getRationale = cell => cell.verdict?.rationale ?? cell.evidence?.rationale ?? null;
+// A code check has no rationale; what it printed (e.g. "1.7 s of the 10 s limit") stands in.
+const getRationale = cell =>
+  cell.verdict?.rationale ?? cell.evidence?.rationale ?? cell.verdict?.note ?? cell.verdict?.stdout ?? null;
+
+// Why a check did not score this case. The server writes `note` on every skip (time limit reached,
+// nothing recorded for the scope, or the reference a built-in check needs); a code row stored before
+// that keeps the reason in `stderr`. A script's own output follows as detail.
+const getSkipReason = cell => {
+  const verdict = cell.verdict ?? {};
+  const reason =
+    verdict.note || (verdict.stderr?.startsWith('Skipped') ? verdict.stderr : null) || NOT_SCORED;
+  const detail = verdict.stdout?.trim();
+  return { reason, detail: detail && detail !== reason ? detail : null };
+};
 
 const getErrorMessage = cell =>
   cell.verdict?.stderr ||
@@ -42,15 +60,18 @@ const DimensionResultCard = memo(props => {
 
   const isHuman = binding.engine === EVAL_ENGINE.human;
   const isError = isErrored(cell);
-  const isPending = !isError && cell.pending;
+  const isSkipped = !isError && (cell.skipped || cell.result?.status === EVAL_RESULT_STATUS.skipped);
+  const isExceeded = !isError && cell.verdict?.status === EXCEEDED_STATUS;
+  const isPending = !isError && !isSkipped && cell.pending;
   const canAct = canEvaluate && isHuman && !!onEvaluate;
 
   const engineLabel = getBindingEngineLabel(binding);
   const metLabel = getMetLabel(met);
   const rationale = getRationale(cell);
+  const skipReason = isSkipped ? getSkipReason(cell) : null;
 
   const scoreText = isHuman ? formatHumanOutcome(nativeScore, scale) : formatScore(nativeScore);
-  const scoreLabel = `Score: ${scoreText}${metLabel ? ` | ${metLabel}` : ''}`;
+  const scoreLabel = `${isExceeded ? 'Exceeded' : `Score: ${scoreText}`}${metLabel ? ` | ${metLabel}` : ''}`;
 
   const styles = dimensionResultCardStyles();
 
@@ -86,6 +107,16 @@ const DimensionResultCard = memo(props => {
             </Typography>
           )}
 
+          {isSkipped && (
+            <Typography
+              variant="bodySmall"
+              sx={styles.skippedLabel}
+              data-testid="dimension-skipped-label"
+            >
+              Skipped
+            </Typography>
+          )}
+
           {!isError && isPending && canAct && (
             <Button.BaseBtn
               variant={BUTTON_VARIANTS.auxiliary}
@@ -108,11 +139,12 @@ const DimensionResultCard = memo(props => {
             </Typography>
           )}
 
-          {!isError && !isPending && (
+          {!isError && !isSkipped && !isPending && (
             <>
               <Typography
                 variant="bodySmall"
-                sx={styles.scoreInfo}
+                sx={[styles.scoreInfo, isExceeded && styles.exceededLabel]}
+                data-testid="dimension-score-label"
               >
                 {scoreLabel}
               </Typography>
@@ -147,6 +179,26 @@ const DimensionResultCard = memo(props => {
         </Typography>
       )}
 
+      {skipReason && (
+        <>
+          <Typography
+            variant="bodySmall"
+            sx={styles.mutedMessage}
+            data-testid="dimension-skip-reason"
+          >
+            {skipReason.reason}
+          </Typography>
+          {skipReason.detail && (
+            <Typography
+              variant="bodySmall"
+              sx={styles.rationale}
+            >
+              {skipReason.detail}
+            </Typography>
+          )}
+        </>
+      )}
+
       {!isError && isPending && !canAct && (
         <Typography
           variant="bodySmall"
@@ -156,7 +208,7 @@ const DimensionResultCard = memo(props => {
         </Typography>
       )}
 
-      {!isError && !isPending && isHuman && (
+      {!isError && !isSkipped && !isPending && isHuman && (
         <Typography
           variant="bodySmall"
           sx={[styles.rationale, !cell.humanNote && styles.mutedMessage]}
@@ -165,7 +217,7 @@ const DimensionResultCard = memo(props => {
         </Typography>
       )}
 
-      {!isError && !isPending && !isHuman && rationale && (
+      {!isError && !isSkipped && !isPending && !isHuman && rationale && (
         <Typography
           variant="bodySmall"
           sx={styles.rationale}
@@ -241,6 +293,14 @@ const dimensionResultCardStyles = () => ({
     color: palette.text.secondary,
   }),
   errorLabel: ({ palette }) => ({
+    color: palette.alert.error.text,
+    fontWeight: 500,
+  }),
+  skippedLabel: ({ palette }) => ({
+    color: palette.text.primary,
+    fontStyle: 'italic',
+  }),
+  exceededLabel: ({ palette }) => ({
     color: palette.alert.error.text,
     fontWeight: 500,
   }),

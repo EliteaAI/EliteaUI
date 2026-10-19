@@ -176,7 +176,7 @@ export const getCaseGuardrailChip = execution => {
   };
 };
 
-const plural = (count, word, many = `${word}s`) => `${count} ${count === 1 ? word : many}`;
+export const plural = (count, word, many = `${word}s`) => `${count} ${count === 1 ? word : many}`;
 
 /**
  * A case's step, tool-error and retry counts for the case list (design §6), read from the stored
@@ -225,8 +225,6 @@ export const buildCaseExecutionBadges = executions => {
 const formatAverage = value =>
   typeof value === 'number' && Number.isFinite(value) ? String(Math.round(value * 10) / 10) : null;
 
-const pluralCases = count => `${count} ${count === 1 ? 'case' : 'cases'}`;
-
 /**
  * The run-history "Steps" cell (design §6): average LLM plus tool calls per recorded case
  * from `meta.trajectory_rollup`, with the tool-error rate and step-limit hits in the tooltip.
@@ -246,9 +244,9 @@ export const getRunHistoryTrajectory = meta => {
   return {
     label: formatAverage((averages.llm_calls ?? 0) + (averages.tool_calls ?? 0)),
     tooltip: [
-      `Steps per case, averaged over ${recorded} of ${pluralCases(rollup.cases ?? recorded)}`,
+      `Steps per case, averaged over ${recorded} of ${plural(rollup.cases ?? recorded, 'case')}`,
       `tool-error rate ${errorRate} (${toolErrors} of ${toolCalls} tool calls)`,
-      `step limit hit ${rollup.step_limit_hits ?? 0} of ${pluralCases(recorded)}`,
+      `step limit hit ${rollup.step_limit_hits ?? 0} of ${plural(recorded, 'case')}`,
     ].join(' · '),
     hasErrors: toolErrors > 0,
   };
@@ -269,7 +267,7 @@ export const getRunHistoryGuardrails = meta => {
 
   return {
     label: String(events),
-    tooltip: `${events} guardrail ${events === 1 ? 'event' : 'events'} over ${pluralCases(recorded)} (paused for review, blocked or waiting on auth)`,
+    tooltip: `${events} guardrail ${events === 1 ? 'event' : 'events'} over ${plural(recorded, 'case')} (paused for review, blocked or waiting on auth)`,
     hasEvents: events > 0,
   };
 };
@@ -290,7 +288,7 @@ export const getExcludedCasesNote = excluded => {
     .filter(([n]) => n)
     .map(([n, label]) => `${n} ${label}`);
 
-  return `${pluralCases(count)} not recorded${reasons.length ? ` (${reasons.join(', ')})` : ''}`;
+  return `${plural(count, 'case')} not recorded${reasons.length ? ` (${reasons.join(', ')})` : ''}`;
 };
 
 // Both percentiles or nothing: a run that predates them has only the average.
@@ -316,7 +314,7 @@ export const buildRunTrajectorySummary = rollup => {
     ['Tool errors / case', formatAverage(averages.tool_errors)],
     ['Retries / case', formatAverage(averages.retries)],
     ['Redundant calls / case', formatAverage(averages.redundant_calls)],
-    ['Step limit hit', recorded ? `${rollup.step_limit_hits ?? 0} of ${pluralCases(recorded)}` : null],
+    ['Step limit hit', recorded ? `${rollup.step_limit_hits ?? 0} of ${plural(recorded, 'case')}` : null],
     [
       'Latency / case',
       formatDurationMs(rollup.average_latency_ms == null ? null : Math.round(rollup.average_latency_ms)),
@@ -328,7 +326,7 @@ export const buildRunTrajectorySummary = rollup => {
 
   return {
     items,
-    coverage: rollup.cases ? `Averaged over ${recorded} of ${pluralCases(rollup.cases)}` : null,
+    coverage: rollup.cases ? `Averaged over ${recorded} of ${plural(rollup.cases, 'case')}` : null,
     excluded: getExcludedCasesNote(rollup.excluded_cases),
   };
 };
