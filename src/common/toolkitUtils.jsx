@@ -191,6 +191,9 @@ const getInternalToolIcon = (toolkitName, iconProps) => {
     case 'image_generation':
     case 'ImageGen':
       return <ImageIcon {...iconProps} />;
+    case 'web_search':
+    case 'Web Search':
+      return <WebSearchIcon {...iconProps} />;
     case 'memory':
       return <MemoryIcon {...iconProps} />;
     case 'skills':

@@ -90,7 +90,7 @@ const PlusChatButton = memo(props => {
 
   const theme = useTheme();
   const isMcpVisible = useIsMcpVisible();
-  const availableTools = useAvailableInternalTools();
+  const availableTools = useAvailableInternalTools({ activeToolNames: internal_tools });
   const buttonRef = useRef(null);
   const hoverTimeoutRef = useRef(null);
   const subMenuRef = useRef(null);
@@ -275,7 +275,7 @@ const PlusChatButton = memo(props => {
       return availableTools.map(tool => {
         const isChecked = internal_tools.includes(tool.name);
         const handleRowClick = () => {
-          if (!disableInternalTools) {
+          if (!disableInternalTools && !tool.unavailable) {
             onInternalToolsConfigChange?.({ key: tool.name, value: !isChecked });
           }
         };
@@ -283,13 +283,15 @@ const PlusChatButton = memo(props => {
           <Switch.BaseSwitch
             key={tool.name}
             label={tool.title}
-            checked={isChecked}
-            disabled={disableInternalTools}
+            checked={isChecked && !tool.unavailable}
+            disabled={disableInternalTools || tool.unavailable}
             onChange={(_, checkedValue) =>
               onInternalToolsConfigChange?.({ key: tool.name, value: checkedValue })
             }
             width="100%"
-            infoTooltip={<Text.TextWithLink {...tool.infoTooltip} />}
+            infoTooltip={
+              tool.unavailable ? tool.unavailableTooltip : <Text.TextWithLink {...tool.infoTooltip} />
+            }
             slotProps={{
               formControlLabel: {
                 sx: styles.toolFormControlLabel,

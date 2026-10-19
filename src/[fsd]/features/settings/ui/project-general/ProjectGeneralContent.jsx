@@ -4,6 +4,7 @@ import { Box } from '@mui/material';
 
 import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
 import DefaultModulesSettings from '@/[fsd]/features/settings/ui/project-general/DefaultModulesSettings';
+import WebSearchSettings from '@/[fsd]/features/settings/ui/project-general/WebSearchSettings';
 import { ProjectBackupRestore } from '@/[fsd]/features/settings/ui/project-general/backup-restore';
 import { ProjectParamsHeader } from '@/[fsd]/features/settings/ui/project-general/general';
 import { ProjectAIConfigurations } from '@/[fsd]/features/settings/ui/project-general/project-ai-configurations';
@@ -19,6 +20,7 @@ const ProjectGeneralContent = memo(() => {
   const styles = componentStyles();
 
   const { checkPermission } = useCheckPermission();
+  const canViewProjectContext = checkPermission(PERMISSIONS.projectContext.view);
   const isBackupRestoreAvailable =
     checkPermission(PERMISSIONS.projectBackup.download) || checkPermission(PERMISSIONS.projectBackup.restore);
 
@@ -76,6 +78,19 @@ const ProjectGeneralContent = memo(() => {
               },
             ]}
           />
+          {canViewProjectContext && (
+            <BasicAccordion
+              data-testid="web-search-section"
+              showMode={AccordionConstants.AccordionShowMode.LeftMode}
+              accordionSX={styles.accordionStyles}
+              items={[
+                {
+                  title: 'Web Search',
+                  content: <WebSearchSettings />,
+                },
+              ]}
+            />
+          )}
           <BasicAccordion
             data-testid="chat-configuration-section"
             showMode={AccordionConstants.AccordionShowMode.LeftMode}

@@ -28,6 +28,18 @@ export const INTERNAL_TOOLS_LIST = [
     toolkitNames: ['ImageGen', 'image_generation'],
   },
   {
+    name: 'web_search',
+    title: 'Web Search',
+    icon: 'GlobeIcon',
+    infoTooltip: {
+      text: 'Let the model search the web and read pages, and cite its sources.',
+    },
+    // Shown only when platform_settings.tool_spend.web_search.available
+    requiresWebSearch: true,
+    unavailableTooltip: 'Web Search is disabled by your administrator.',
+    toolkitNames: ['Web Search', 'tavily'],
+  },
+  {
     name: 'data_analysis',
     title: 'Data Analysis',
     icon: 'DatabaseIcon',
@@ -122,6 +134,7 @@ export const INTERNAL_TOOL_PERSONALIZATION_FIELD_MAP = {
   project_context_builder: 'default_project_context_builder_enabled',
   ask_user: 'default_ask_user_enabled',
   image_generation: 'default_image_generation_enabled',
+  web_search: 'default_web_search_enabled',
   data_analysis: 'default_data_analysis_enabled',
   planner: 'default_planner_enabled',
   pyodide: 'default_pyodide_enabled',
@@ -135,6 +148,7 @@ export const INTERNAL_TOOL_AGENT_PERSONALIZATION_FIELD_MAP = {
   project_context_builder: 'default_agent_project_context_builder_enabled',
   ask_user: 'default_agent_ask_user_enabled',
   image_generation: 'default_agent_image_generation_enabled',
+  web_search: 'default_agent_web_search_enabled',
   data_analysis: 'default_agent_data_analysis_enabled',
   planner: 'default_agent_planner_enabled',
   pyodide: 'default_agent_pyodide_enabled',

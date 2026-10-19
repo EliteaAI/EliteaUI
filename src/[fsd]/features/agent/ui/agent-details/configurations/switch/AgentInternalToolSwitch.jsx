@@ -15,6 +15,7 @@ import PieChartIcon from '@/assets/pie-chart-icon.svg?react';
 import PythonIcon from '@/assets/python.svg?react';
 import SwarmIconSVG from '@/assets/swarm-icon.svg?react';
 import ToolsIcon from '@/assets/tools-icon.svg?react';
+import WebSearchIcon from '@/assets/web_search.svg?react';
 
 const AgentInternalToolSwitch = memo(props => {
   const { title, name, disabled, infoTooltip, icon } = props;
@@ -52,6 +53,7 @@ const AgentInternalToolSwitch = memo(props => {
       UsersIcon: SwarmIconSVG,
       AttachSvgIcon,
       McpIcon: McpIconSVG,
+      GlobeIcon: WebSearchIcon,
     }),
     [],
   );

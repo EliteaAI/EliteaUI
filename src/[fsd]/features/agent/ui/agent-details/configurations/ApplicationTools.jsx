@@ -38,14 +38,17 @@ const ApplicationTools = memo(props => {
   const isMcpVisible = useIsMcpVisible();
   // Use POC approach: get available internal tools based on toolkit availability
   // Include agent-only tools since this is agent configuration
-  const availableInternalTools = useAvailableInternalTools({ includeAgentOnly: true });
-
   const [showAllInternalTools, setShowAllInternalTools] = useState(false);
 
   const currentInternalTools = useMemo(
     () => values?.version_details?.meta?.internal_tools || [],
     [values?.version_details?.meta?.internal_tools],
   );
+
+  const availableInternalTools = useAvailableInternalTools({
+    includeAgentOnly: true,
+    activeToolNames: currentInternalTools,
+  });
 
   const tools = useMemo(() => values?.version_details?.tools || [], [values?.version_details?.tools]);
 
@@ -162,7 +165,7 @@ const ApplicationTools = memo(props => {
                         name={tool.name}
                         icon={tool.icon}
                         disabled={disabled}
-                        infoTooltip={tool.infoTooltip}
+                        infoTooltip={tool.unavailable ? { text: tool.unavailableTooltip } : tool.infoTooltip}
                       />
                     ))}
                   </Box>
