@@ -5,7 +5,7 @@ import { useSelector } from 'react-redux';
 import { Box } from '@mui/material';
 
 import { ProtectedRoutes } from '@/[fsd]/app/routes';
-import { MaintenanceBanner } from '@/[fsd]/features/maintenance/ui';
+import { PlatformBanner } from '@/[fsd]/features/maintenance';
 import { useIsOnboarding } from '@/[fsd]/shared/lib/hooks';
 import { Modal } from '@/[fsd]/shared/ui';
 import { COLLAPSED_SIDE_BAR_WIDTH, SIDE_BAR_WIDTH } from '@/common/constants';
@@ -27,7 +27,7 @@ const MainPanel = memo(() => {
       component="main"
       sx={styles.mainPanel}
     >
-      <MaintenanceBanner />
+      <PlatformBanner />
       <ProtectedRoutes />
       <Modal.UnsavedModal />
     </Box>
