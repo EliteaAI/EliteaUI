@@ -564,7 +564,10 @@ const ConversationItem = memo(props => {
     );
 
   return (
-    <ClickAwayListener onClickAway={isNew ? onCancelCreate : onCloseEdit}>
+    <ClickAwayListener
+      mouseEvent="onMouseDown"
+      onClickAway={isNew ? onCancelCreate : onCloseEdit}
+    >
       <Box sx={styles.inputWrapper}>
         <Input.StyledInputEnhancer
           autoFocus
