@@ -14,4 +14,9 @@ export const getBannerStyleMap = palette => ({
     accentColor: palette.icon.warning,
     backgroundColor: palette.components.banner.background.default,
   },
+  info: {
+    iconColor: palette.icon.info,
+    accentColor: palette.icon.info,
+    backgroundColor: palette.components.banner.background.default,
+  },
 });
