@@ -6,38 +6,41 @@ import remarkGfm from 'remark-gfm';
 
 import { Box, Typography } from '@mui/material';
 
-import { BANNER_ICON_MAP, bannerMarkdownComponents } from '@/[fsd]/features/maintenance/lib/helpers';
+import { BANNER_CONTENT_LAYOUT } from '@/[fsd]/features/maintenance/lib/constants';
+import { bannerMarkdownComponents } from '@/[fsd]/features/maintenance/lib/helpers';
+
+import BannerIcon from './BannerIcon';
+
+const ICON_SIZES = {
+  [BANNER_CONTENT_LAYOUT.inline]: 16,
+  [BANNER_CONTENT_LAYOUT.side]: 24,
+  [BANNER_CONTENT_LAYOUT.stacked]: 32,
+};
 
 /**
  * Icon + Markdown message shared by every banner placement.
- * `sideIcon` puts the icon in its own column, vertically centered next to the text block
- * (center / corner banners), instead of inline with the first line (top bar).
+ * The icon is omitted when the banner is configured without one.
  */
 const BannerContent = memo(props => {
-  const { banner, styleTokens, sideIcon = false } = props;
+  const { banner, styleTokens, layout = BANNER_CONTENT_LAYOUT.inline } = props;
 
   const processedMessage = useMemo(
     () => (banner.message ? banner.message.replace(/<br\s*\/?>/gi, '\n') : ''),
     [banner.message],
   );
 
-  const IconComponent = BANNER_ICON_MAP[banner.icon] || BANNER_ICON_MAP.warning;
-  const iconSize = sideIcon ? 24 : 16;
+  const iconSize = ICON_SIZES[layout] ?? ICON_SIZES[BANNER_CONTENT_LAYOUT.inline];
 
-  const styles = bannerContentStyles(styleTokens, sideIcon);
+  const styles = bannerContentStyles(layout);
 
   return (
     <Box sx={styles.root}>
-      <Box
-        component="span"
+      <BannerIcon
+        icon={banner.icon}
+        size={iconSize}
+        styleTokens={styleTokens}
         sx={styles.icon}
-      >
-        <IconComponent
-          width={iconSize}
-          height={iconSize}
-          fill={styleTokens.iconColor}
-        />
-      </Box>
+      />
       <Typography
         component="div"
         variant="bodyMedium"
@@ -56,29 +59,46 @@ const BannerContent = memo(props => {
 
 BannerContent.displayName = 'BannerContent';
 
-/** @type {MuiSx} */
-const bannerContentStyles = (styleTokens, sideIcon) => ({
-  root: sideIcon
-    ? { display: 'flex', alignItems: 'center', gap: '1.25rem', width: '100%', minWidth: 0 }
-    : { display: 'inline' },
-  icon: {
-    display: 'inline-flex',
+const ROOT_STYLES = {
+  [BANNER_CONTENT_LAYOUT.inline]: { display: 'inline' },
+  [BANNER_CONTENT_LAYOUT.side]: {
+    display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-    verticalAlign: 'middle',
-    marginRight: sideIcon ? 0 : '0.5rem',
-    color: styleTokens.accentColor,
-  },
-  text: ({ palette }) => ({
-    display: sideIcon ? 'block' : 'inline',
-    flex: sideIcon ? 1 : 'none',
+    gap: '1.25rem',
+    width: '100%',
     minWidth: 0,
-    textAlign: 'left',
-    color: palette.text.secondary,
-    wordBreak: 'break-word',
-    ...(sideIcon && { lineHeight: 1.6 }),
-  }),
-});
+  },
+  [BANNER_CONTENT_LAYOUT.stacked]: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '1rem',
+    width: '100%',
+    minWidth: 0,
+  },
+};
+
+/** @type {MuiSx} */
+const bannerContentStyles = layout => {
+  const isInline = layout === BANNER_CONTENT_LAYOUT.inline;
+  const isStacked = layout === BANNER_CONTENT_LAYOUT.stacked;
+
+  return {
+    root: ROOT_STYLES[layout] ?? ROOT_STYLES[BANNER_CONTENT_LAYOUT.inline],
+    icon: {
+      marginRight: isInline ? '0.5rem' : 0,
+    },
+    text: ({ palette }) => ({
+      display: isInline ? 'inline' : 'block',
+      flex: isInline ? 'none' : 1,
+      width: isStacked ? '100%' : 'auto',
+      minWidth: 0,
+      textAlign: isStacked ? 'center' : 'left',
+      color: palette.text.secondary,
+      wordBreak: 'break-word',
+      ...(!isInline && { lineHeight: 1.6 }),
+    }),
+  };
+};
 
 export default BannerContent;
