@@ -2,6 +2,9 @@ import { ProjectBackupConstants } from '@/[fsd]/features/settings/lib/constants'
 
 const { CHATS_OPTION, CHAT_TAG_TYPES, RESTORE_OPTION_LABELS } = ProjectBackupConstants;
 
+export const formatCount = (count, singular, plural = `${singular}s`) =>
+  `${count} ${count === 1 ? singular : plural}`;
+
 export const formatSize = bytes => {
   if (!bytes) return '0 B';
   const units = ['B', 'KB', 'MB', 'GB'];
@@ -50,9 +53,8 @@ export const getChatsSummaryText = summary => {
   const parts = [`Chats: ${chats.restored} restored, ${chats.skipped} skipped (already exist)`];
   const attachments = summary.attachments;
   if (attachments?.total) {
-    const restored = attachments.uploaded
-      ? `${attachments.uploaded} uploaded`
-      : `${attachments.linked} linked`;
+    const restored =
+      attachments.linked > 0 ? `${attachments.linked} linked` : `${attachments.uploaded ?? 0} uploaded`;
     parts.push(`Attachments: ${restored}, ${attachments.failed} failed`);
   }
   return parts.join(' · ');

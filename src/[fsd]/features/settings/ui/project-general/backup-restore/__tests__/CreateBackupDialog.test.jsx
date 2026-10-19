@@ -121,6 +121,28 @@ describe('CreateBackupDialog', () => {
     expect(option('none')).not.toBeDisabled();
   });
 
+  it('keeps the chat options available when the summary fails to load', () => {
+    summaryQuery.current = { data: undefined, isFetching: false, isError: true };
+    renderDialog();
+
+    expect(option('without_attachments')).not.toBeDisabled();
+    expect(option('with_attachments')).not.toBeDisabled();
+    expect(screen.getByTestId('project-backup-chats-summary')).toHaveTextContent("Couldn't load chat info.");
+    expect(screen.queryByText('This project has no chats')).not.toBeInTheDocument();
+  });
+
+  it('uses the singular for a single chat and attachment', () => {
+    summaryQuery.current = {
+      data: { chats_count: 1, attachments_count: 1, attachments_size: 1024, missing_attachments: 0 },
+      isFetching: false,
+    };
+    renderDialog();
+
+    expect(screen.getByTestId('project-backup-chats-summary')).toHaveTextContent(
+      '1 chat · 1 attachment · ~1.0 KB',
+    );
+  });
+
   it('warns about a large backup with attachments only', () => {
     summaryQuery.current = {
       data: {

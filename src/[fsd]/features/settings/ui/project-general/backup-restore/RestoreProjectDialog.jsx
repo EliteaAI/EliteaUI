@@ -4,7 +4,7 @@ import { useDispatch } from 'react-redux';
 
 import CheckOutlined from '@mui/icons-material/CheckOutlined';
 import UploadFileOutlined from '@mui/icons-material/UploadFileOutlined';
-import { Alert, Box, FormControlLabel, Tooltip, Typography } from '@mui/material';
+import { Box, FormControlLabel, Tooltip, Typography } from '@mui/material';
 
 import { useRestoreProjectBackupMutation } from '@/[fsd]/features/settings/api';
 import { ProjectBackupConstants } from '@/[fsd]/features/settings/lib/constants';
@@ -14,7 +14,9 @@ import { Checkbox, Modal } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { actions as chatActions } from '@/slices/chat';
 
-const { formatSize, getRestoreErrorMessage, getDefaultRestoreChats, getChatsSummaryText } =
+import BackupAlert from './BackupAlert';
+
+const { formatCount, formatSize, getRestoreErrorMessage, getDefaultRestoreChats, getChatsSummaryText } =
   ProjectBackupHelpers;
 const { CHATS_OPTION, CHAT_RESTORE_OPTION_LABELS, RESTORE_OPTION_LABELS } = ProjectBackupConstants;
 
@@ -201,8 +203,10 @@ const RestoreProjectDialog = memo(props => {
     columns.map(column => `${table}.${column}`),
   );
 
+  const styles = restoreProjectDialogStyles();
+
   const renderContent = () => (
-    <Box sx={componentStyles.root}>
+    <Box sx={styles.root}>
       <Typography
         variant="bodySmall"
         color="text.secondary"
@@ -219,23 +223,16 @@ const RestoreProjectDialog = memo(props => {
         {'here only after you solve the conflicts and confirm the differences.'}
       </Typography>
 
-      {!!error && (
-        <Alert
-          severity="error"
-          sx={componentStyles.alert('error')}
-        >
-          {error}
-        </Alert>
-      )}
+      {!!error && <BackupAlert severity="error">{error}</BackupAlert>}
 
-      <Box sx={componentStyles.filePicker}>
+      <Box sx={styles.filePicker}>
         <BaseBtn
           variant={BUTTON_VARIANTS.secondary}
           size="small"
           startIcon={<UploadFileOutlined />}
           onClick={handlePick}
           disabled={isLoading}
-          sx={componentStyles.chooseFileButton}
+          sx={styles.chooseFileButton}
           data-testid="project-restore-choose-file"
         >
           Choose a backup file
@@ -243,7 +240,7 @@ const RestoreProjectDialog = memo(props => {
         <Typography
           variant="bodySmall2"
           color="text.secondary"
-          sx={componentStyles.fileName}
+          sx={styles.fileName}
         >
           {file ? `${file.name} (${formatSize(file.size)})` : 'No files selected'}
         </Typography>
@@ -252,21 +249,18 @@ const RestoreProjectDialog = memo(props => {
           ref={inputRef}
           type="file"
           accept=".enc,.sql,.zip,text/plain,application/sql,application/zip,application/octet-stream"
-          sx={componentStyles.hiddenInput}
+          sx={styles.hiddenInput}
           onChange={handleFileChange}
         />
       </Box>
 
       {isMismatch && (
         <>
-          <Alert
-            severity="warning"
-            sx={componentStyles.alert('warning')}
-          >
+          <BackupAlert severity="warning">
             This data was backed up from project {artifact.project_id}. If you restore it to{' '}
             {projectName ? `"${projectName}"` : 'this project'} (project {projectId}), you will put foreign
             data into the project.
-          </Alert>
+          </BackupAlert>
           <FormControlLabel
             control={
               <Checkbox.BaseCheckbox
@@ -288,7 +282,7 @@ const RestoreProjectDialog = memo(props => {
         </>
       )}
 
-      <Box sx={componentStyles.options}>
+      <Box sx={styles.options}>
         <FormControlLabel
           control={
             <Checkbox.BaseCheckbox
@@ -338,7 +332,7 @@ const RestoreProjectDialog = memo(props => {
       )}
 
       {hasChats && (
-        <Box sx={componentStyles.chats}>
+        <Box sx={styles.chats}>
           <Typography
             variant="labelMedium"
             color="text.secondary"
@@ -357,38 +351,32 @@ const RestoreProjectDialog = memo(props => {
             color="text.secondary"
             data-testid="project-restore-chats-info"
           >
-            Backup contains {artifact.chats_count ?? 0} chats · {artifact.attachments_count ?? 0} attachments
+            Backup contains {formatCount(artifact.chats_count ?? 0, 'chat')} ·{' '}
+            {formatCount(artifact.attachments_count ?? 0, 'attachment')}
             {hasFiles ? ` (~${formatSize(artifact.attachments_size)})` : ''}
           </Typography>
         </Box>
       )}
 
       {truncate && (
-        <Alert
-          severity="warning"
-          sx={componentStyles.alert('warning')}
-        >
+        <BackupAlert severity="warning">
           If checked, the existing rows in the affected tables will be deleted before applying the backup. If
           unchecked, the existing rows will be preserved and new rows will be merged with them.
-        </Alert>
+        </BackupAlert>
       )}
 
       {truncate && isChatRestore && (
-        <Alert
+        <BackupAlert
           severity="warning"
-          sx={componentStyles.alert('warning')}
           data-testid="project-restore-replace-chats-warning"
         >
           All existing chats in {projectName || 'this project'} will be permanently deleted and replaced with
           the chats from the backup.
-        </Alert>
+        </BackupAlert>
       )}
 
       {!!summary && (
-        <Alert
-          severity={result?.ok ? 'success' : 'warning'}
-          sx={componentStyles.alert(result?.ok ? 'success' : 'warning')}
-        >
+        <BackupAlert severity={result?.ok ? 'success' : 'warning'}>
           <Typography
             variant="labelMedium"
             color="inherit"
@@ -399,7 +387,7 @@ const RestoreProjectDialog = memo(props => {
           <Typography
             variant="bodySmall2"
             color="inherit"
-            sx={componentStyles.summaryBody}
+            sx={styles.summaryBody}
           >
             {summary.statements} statements, {summary.total_rows} rows into{' '}
             {summary.applied_tables?.length ?? 0} tables
@@ -410,7 +398,7 @@ const RestoreProjectDialog = memo(props => {
             <Typography
               variant="bodySmall2"
               color="inherit"
-              sx={componentStyles.summaryBody}
+              sx={styles.summaryBody}
             >
               Columns missing in this project were dropped: {droppedColumns.join(', ')}
               {summary.dropped_values ? ` (${summary.dropped_values} values not restored)` : ''}
@@ -420,7 +408,7 @@ const RestoreProjectDialog = memo(props => {
             <Typography
               variant="bodySmall2"
               color="inherit"
-              sx={componentStyles.summaryBody}
+              sx={styles.summaryBody}
               data-testid="project-restore-chats-summary"
             >
               {chatsSummary}
@@ -430,12 +418,12 @@ const RestoreProjectDialog = memo(props => {
             <Typography
               variant="bodySmall2"
               color="inherit"
-              sx={componentStyles.summaryBody}
+              sx={styles.summaryBody}
             >
               Columns this project requires were restored empty: {filledColumns.join(', ')}
             </Typography>
           )}
-        </Alert>
+        </BackupAlert>
       )}
     </Box>
   );
@@ -480,7 +468,7 @@ const RestoreProjectDialog = memo(props => {
 RestoreProjectDialog.displayName = 'RestoreProjectDialog';
 
 /** @type {MuiSx} */
-const componentStyles = {
+const restoreProjectDialogStyles = () => ({
   root: {
     display: 'flex',
     flexDirection: 'column',
@@ -516,24 +504,6 @@ const componentStyles = {
   summaryBody: {
     marginTop: '0.25rem',
   },
-  // MuiAlert only carries theme overrides for the "filled" variant (and those use raw,
-  // non-palette colors), so the default "standard" Alerts we render here fall back to
-  // MUI's stock palette and clash with the app background. Re-theme them with the same
-  // background/border/icon/text tokens the toolkits "index result" banners already use.
-  alert:
-    severity =>
-    ({ palette }) => ({
-      borderRadius: '0.5rem',
-      border: `0.0625rem solid ${(palette.alert[severity] || palette.alert.info).border}`,
-      backgroundColor: (palette.alert[severity] || palette.alert.info).background,
-      '& .MuiAlert-icon': {
-        color: palette.icon.indexResult[severity] || palette.icon.indexResult.info,
-      },
-      '& .MuiAlert-message': {
-        width: '100%',
-        color: (palette.alert[severity] || palette.alert.info).text,
-      },
-    }),
-};
+});
 
 export default RestoreProjectDialog;

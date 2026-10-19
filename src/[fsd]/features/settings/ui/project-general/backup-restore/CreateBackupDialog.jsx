@@ -1,6 +1,6 @@
 import { memo, useCallback, useMemo, useState } from 'react';
 
-import { Alert, Box, Tooltip, Typography } from '@mui/material';
+import { Box, Tooltip, Typography } from '@mui/material';
 
 import { useProjectBackupSummaryQuery } from '@/[fsd]/features/settings/api';
 import { ProjectBackupConstants } from '@/[fsd]/features/settings/lib/constants';
@@ -8,7 +8,9 @@ import { ProjectBackupHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { Checkbox, Modal } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 
-const { formatSize } = ProjectBackupHelpers;
+import BackupAlert from './BackupAlert';
+
+const { formatCount, formatSize } = ProjectBackupHelpers;
 const { CHATS_OPTION, CHAT_BACKUP_OPTION_LABELS, LARGE_BACKUP_BYTES } = ProjectBackupConstants;
 
 const NO_CHATS_TOOLTIP = 'This project has no chats';
@@ -18,12 +20,17 @@ const CreateBackupDialog = memo(props => {
 
   const [chats, setChats] = useState(CHATS_OPTION.none);
 
-  const { data: summary, isFetching: isSummaryLoading } = useProjectBackupSummaryQuery(
+  const {
+    data: summary,
+    isFetching: isSummaryLoading,
+    isError: isSummaryError,
+  } = useProjectBackupSummaryQuery(
     { projectId },
     { skip: !open || !projectId, refetchOnMountOrArgChange: true },
   );
 
-  const hasChats = !!summary?.chats_count;
+  // Without the summary the chat count is unknown, so the chat options stay available
+  const hasChats = isSummaryError || !!summary?.chats_count;
   const chatOptionsDisabled = isDownloading || isSummaryLoading || !hasChats;
   const estimatedSize = chats === CHATS_OPTION.withAttachments ? summary?.attachments_size || 0 : 0;
 
@@ -41,7 +48,7 @@ const CreateBackupDialog = memo(props => {
                 title={NO_CHATS_TOOLTIP}
                 placement="top"
               >
-                <span>{label}</span>
+                <Box component="span">{label}</Box>
               </Tooltip>
             ) : (
               label
@@ -65,19 +72,22 @@ const CreateBackupDialog = memo(props => {
     }
   }, [chats, onBackup, onClose, summary]);
 
+  const styles = createBackupDialogStyles();
+
   const renderSummary = () => {
     if (isSummaryLoading) return 'Counting chats...';
+    if (isSummaryError) return "Couldn't load chat info.";
     if (!summary) return null;
     const parts = [
-      `${summary.chats_count} ${summary.chats_count === 1 ? 'chat' : 'chats'}`,
-      `${summary.attachments_count} ${summary.attachments_count === 1 ? 'attachment' : 'attachments'}`,
+      formatCount(summary.chats_count, 'chat'),
+      formatCount(summary.attachments_count, 'attachment'),
       `~${formatSize(summary.attachments_size)}`,
     ];
     return parts.join(' · ');
   };
 
   const renderContent = () => (
-    <Box sx={componentStyles.root}>
+    <Box sx={styles.root}>
       <Typography
         variant="bodySmall"
         color="text.secondary"
@@ -94,7 +104,7 @@ const CreateBackupDialog = memo(props => {
         other secrets are excluded.
       </Typography>
 
-      <Box sx={componentStyles.chats}>
+      <Box sx={styles.chats}>
         <Typography
           variant="labelMedium"
           color="text.secondary"
@@ -111,7 +121,7 @@ const CreateBackupDialog = memo(props => {
         <Typography
           variant="bodySmall2"
           color="text.secondary"
-          sx={componentStyles.summary}
+          sx={styles.summary}
           data-testid="project-backup-chats-summary"
         >
           {renderSummary()}
@@ -119,21 +129,15 @@ const CreateBackupDialog = memo(props => {
       </Box>
 
       {chats !== CHATS_OPTION.none && (
-        <Alert
-          severity="info"
-          sx={componentStyles.alert('info')}
-        >
+        <BackupAlert severity="info">
           Chats contain conversation history of all project members. Store the backup file securely.
-        </Alert>
+        </BackupAlert>
       )}
 
       {estimatedSize > LARGE_BACKUP_BYTES && (
-        <Alert
-          severity="warning"
-          sx={componentStyles.alert('warning')}
-        >
+        <BackupAlert severity="warning">
           Large backup (~{formatSize(estimatedSize)}). It may take a while.
-        </Alert>
+        </BackupAlert>
       )}
     </Box>
   );
@@ -177,7 +181,7 @@ const CreateBackupDialog = memo(props => {
 CreateBackupDialog.displayName = 'CreateBackupDialog';
 
 /** @type {MuiSx} */
-const componentStyles = {
+const createBackupDialogStyles = () => ({
   root: {
     display: 'flex',
     flexDirection: 'column',
@@ -191,20 +195,6 @@ const componentStyles = {
   summary: {
     paddingLeft: '0.25rem',
   },
-  alert:
-    severity =>
-    ({ palette }) => ({
-      borderRadius: '0.5rem',
-      border: `0.0625rem solid ${(palette.alert[severity] || palette.alert.info).border}`,
-      backgroundColor: (palette.alert[severity] || palette.alert.info).background,
-      '& .MuiAlert-icon': {
-        color: palette.icon.indexResult[severity] || palette.icon.indexResult.info,
-      },
-      '& .MuiAlert-message': {
-        width: '100%',
-        color: (palette.alert[severity] || palette.alert.info).text,
-      },
-    }),
-};
+});
 
 export default CreateBackupDialog;

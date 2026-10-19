@@ -5,7 +5,7 @@ import { eliteaApi } from '@/api';
 
 import { TAG_TYPE_CHAT_TEMPLATES } from './chatTemplateApi';
 
-const { CHAT_TAG_TYPES } = ProjectBackupConstants;
+const { CHATS_OPTION, CHAT_TAG_TYPES } = ProjectBackupConstants;
 const { getRestoreInvalidatedTags } = ProjectBackupHelpers;
 
 const apiSlicePath = '/admin';
@@ -32,7 +32,9 @@ const projectBackupApi = eliteaApi
             // the JSON error body as err.data — only the success path needs handling here.
             const contentDisposition = response.headers.get('content-disposition') || '';
             const fallbackName =
-              includeChats === 'with_attachments' ? 'project-backup.zip.enc' : 'project-backup.sql.enc';
+              includeChats === CHATS_OPTION.withAttachments
+                ? 'project-backup.zip.enc'
+                : 'project-backup.sql.enc';
             const filename = getFilenameFromContentDisposition(contentDisposition, fallbackName);
             const blob = await response.blob();
             return { blob, filename };

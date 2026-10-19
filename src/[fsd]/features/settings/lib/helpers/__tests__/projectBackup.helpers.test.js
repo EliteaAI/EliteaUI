@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { CHAT_TAG_TYPES } from '../../constants/projectBackup.constants.js';
 import {
+  formatCount,
   getChatsSummaryText,
   getDefaultRestoreChats,
   getRestoreErrorMessage,
@@ -81,6 +82,14 @@ describe('getDefaultRestoreChats', () => {
   });
 });
 
+describe('formatCount', () => {
+  it('uses the singular for one and the plural otherwise', () => {
+    expect(formatCount(1, 'chat')).toBe('1 chat');
+    expect(formatCount(0, 'chat')).toBe('0 chats');
+    expect(formatCount(2, 'attachment')).toBe('2 attachments');
+  });
+});
+
 describe('getChatsSummaryText', () => {
   it('is empty when no chats were restored', () => {
     expect(getChatsSummaryText(undefined)).toBe('');
@@ -94,6 +103,15 @@ describe('getChatsSummaryText', () => {
         attachments: { total: 118, uploaded: 115, linked: 0, failed: 3 },
       }),
     ).toBe('Chats: 42 restored, 3 skipped (already exist) · Attachments: 115 uploaded, 3 failed');
+  });
+
+  it('reports uploaded attachments when nothing was linked and every upload failed', () => {
+    expect(
+      getChatsSummaryText({
+        chats: { restored: 2, skipped: 0 },
+        attachments: { total: 3, uploaded: 0, linked: 0, failed: 3 },
+      }),
+    ).toBe('Chats: 2 restored, 0 skipped (already exist) · Attachments: 0 uploaded, 3 failed');
   });
 
   it('reports linked attachments when no files were uploaded', () => {

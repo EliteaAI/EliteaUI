@@ -3,10 +3,13 @@ import { useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 
 import { useLazyDownloadProjectBackupQuery } from '@/[fsd]/features/settings/api';
+import { ProjectBackupConstants } from '@/[fsd]/features/settings/lib/constants';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { PERMISSIONS } from '@/common/constants';
 import { buildErrorMessage, downloadBlobFile } from '@/common/utils';
 import useCheckPermission from '@/hooks/useCheckPermission';
+
+const { CHATS_OPTION } = ProjectBackupConstants;
 
 export const useProjectBackup = () => {
   const projectId = useSelectedProjectId();
@@ -30,11 +33,11 @@ export const useProjectBackup = () => {
       if (!projectId) return false;
 
       try {
-        const includeChats = chats && chats !== 'none' ? chats : undefined;
+        const includeChats = chats && chats !== CHATS_OPTION.none ? chats : undefined;
         const { blob, filename } = await downloadBackup({ projectId, includeChats }).unwrap();
-        downloadBlobFile(blob, filename || `project-${projectId}-backup.sql.enc`);
+        downloadBlobFile(blob, filename);
         // Files that could not be read are left out of the archive and listed in its manifest
-        if (includeChats === 'with_attachments' && missingAttachments) {
+        if (includeChats === CHATS_OPTION.withAttachments && missingAttachments) {
           toastWarning(`Backup created. ${missingAttachments} attachment file(s) could not be included.`);
         } else {
           toastInfo('Backup downloaded.');
