@@ -79,4 +79,35 @@ describe('DimensionResultCard — case time limit (performance §3.2, §3.3)', (
     expect(screen.getByTestId('dimension-score-label')).toHaveTextContent('Met');
     expect(screen.getByText('1.7 s of the 10 s limit')).toBeInTheDocument();
   });
+
+  it('shows the reason a built-in check skipped, with what it printed', () => {
+    renderCard({
+      binding: { key: 'dim:4', name: 'trajectory.step_budget', engine: 'code' },
+      result: { status: 'skipped' },
+      skipped: true,
+      verdict: {
+        status: 'na',
+        note: 'Skipped: the case sets no tool-call budget (max_tool_calls).',
+        stdout: 'no budget on this case',
+      },
+    });
+
+    expect(screen.getByTestId('dimension-skip-reason')).toHaveTextContent(
+      'Skipped: the case sets no tool-call budget (max_tool_calls).',
+    );
+    expect(screen.getByText('no budget on this case')).toBeInTheDocument();
+  });
+
+  it('reads the reason of a code row stored before notes from stderr', () => {
+    renderCard({
+      result: { status: 'skipped' },
+      skipped: true,
+      verdict: { status: 'na', stderr: 'Skipped: the check needs a reference the case does not have.' },
+    });
+
+    expect(screen.getByTestId('dimension-skip-reason')).toHaveTextContent(
+      'Skipped: the check needs a reference the case does not have.',
+    );
+    expect(screen.queryByText('Error')).not.toBeInTheDocument();
+  });
 });

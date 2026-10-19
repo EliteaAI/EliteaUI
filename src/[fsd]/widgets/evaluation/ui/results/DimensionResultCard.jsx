@@ -29,6 +29,17 @@ const getMetLabel = met => {
 const getRationale = cell =>
   cell.verdict?.rationale ?? cell.evidence?.rationale ?? cell.verdict?.note ?? cell.verdict?.stdout ?? null;
 
+// Why a check did not score this case. The server writes `note` on every skip (time limit reached,
+// nothing recorded for the scope, or the reference a built-in check needs); a code row stored before
+// that keeps the reason in `stderr`. A script's own output follows as detail.
+const getSkipReason = cell => {
+  const verdict = cell.verdict ?? {};
+  const reason =
+    verdict.note || (verdict.stderr?.startsWith('Skipped') ? verdict.stderr : null) || NOT_SCORED;
+  const detail = verdict.stdout?.trim();
+  return { reason, detail: detail && detail !== reason ? detail : null };
+};
+
 const getErrorMessage = cell =>
   cell.verdict?.stderr ||
   cell.verdict?.error ||
@@ -57,6 +68,7 @@ const DimensionResultCard = memo(props => {
   const engineLabel = getBindingEngineLabel(binding);
   const metLabel = getMetLabel(met);
   const rationale = getRationale(cell);
+  const skipReason = isSkipped ? getSkipReason(cell) : null;
 
   const scoreText = isHuman ? formatHumanOutcome(nativeScore, scale) : formatScore(nativeScore);
   const scoreLabel = `${isExceeded ? 'Exceeded' : `Score: ${scoreText}`}${metLabel ? ` | ${metLabel}` : ''}`;
@@ -167,13 +179,24 @@ const DimensionResultCard = memo(props => {
         </Typography>
       )}
 
-      {isSkipped && (
-        <Typography
-          variant="bodySmall"
-          sx={styles.mutedMessage}
-        >
-          {cell.verdict?.note || NOT_SCORED}
-        </Typography>
+      {skipReason && (
+        <>
+          <Typography
+            variant="bodySmall"
+            sx={styles.mutedMessage}
+            data-testid="dimension-skip-reason"
+          >
+            {skipReason.reason}
+          </Typography>
+          {skipReason.detail && (
+            <Typography
+              variant="bodySmall"
+              sx={styles.rationale}
+            >
+              {skipReason.detail}
+            </Typography>
+          )}
+        </>
       )}
 
       {!isError && isPending && !canAct && (
