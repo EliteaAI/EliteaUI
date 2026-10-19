@@ -7,3 +7,4 @@ export { default as ToolBaseProperty } from './ToolBaseProperty';
 export { default as EmptyMcpTools } from './EmptyMcpTools';
 export { default as ArrayFieldInput } from './ArrayFieldInput';
 export { default as SecretHeadersInput } from './SecretHeadersInput';
+export { default as CheckboxListInput } from './CheckboxListInput';
