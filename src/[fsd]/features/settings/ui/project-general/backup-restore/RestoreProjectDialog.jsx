@@ -343,6 +343,7 @@ const RestoreProjectDialog = memo(props => {
             value={restoreChats}
             onChange={setRestoreChats}
             items={chatItems}
+            wrapRow
             disabled={isLoading}
             testId="project-restore-chats-option"
           />
