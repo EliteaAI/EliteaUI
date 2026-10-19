@@ -9,8 +9,21 @@ import { cleanup, render, screen, within } from '@testing-library/react';
 import AnalyticsTokens from '../AnalyticsTokens';
 import { AnalyticsTestWrapper as Wrapper } from './_testHelpers';
 
-vi.mock('@/api', () => ({
-  useAnalyticsCostsQuery: vi.fn(),
+vi.hoisted(async () => {
+  const { installGlobalStubs } = await import('./_testHelpers');
+  installGlobalStubs();
+});
+
+vi.mock('@/api', async () => {
+  const { createEliteaApiStub } = await import('./_testHelpers');
+  return {
+    eliteaApi: createEliteaApiStub(),
+    useAnalyticsCostsQuery: vi.fn(),
+  };
+});
+
+vi.mock('@/[fsd]/shared/config/store', () => ({
+  default: { getState: () => ({}), dispatch: vi.fn(), subscribe: vi.fn() },
 }));
 
 vi.mock('recharts', () => ({

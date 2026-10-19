@@ -4,6 +4,7 @@ import { useFormikContext } from 'formik';
 
 import { useForkAgentMutation } from '@/[fsd]/entities/import-wizard/api';
 import {
+  buildAccessDeniedMessage,
   filterSelected,
   getErrorImportUUID,
   getExistingUUIDMap,
@@ -20,6 +21,7 @@ import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
 const IWModalForkButton = memo(props => {
   const { selectedProject, onSuccess } = props;
   const selectedProjectId = selectedProject?.id;
+  const selectedProjectName = selectedProject?.name;
 
   const { toastError, toastWarning } = useToast();
 
@@ -257,7 +259,7 @@ const IWModalForkButton = memo(props => {
       });
     } else {
       if (response?.error?.status === 403) {
-        toastError('Forking is not allowed on the selected project');
+        toastError(buildAccessDeniedMessage('fork', selectedProjectName));
       } else {
         toastError(buildErrorMessage(response?.error));
       }
@@ -267,6 +269,7 @@ const IWModalForkButton = memo(props => {
     forkAgent,
     mainEntityName,
     selectedProjectId,
+    selectedProjectName,
     selectedData,
     selectedSkills,
     generateValidationPromises,
