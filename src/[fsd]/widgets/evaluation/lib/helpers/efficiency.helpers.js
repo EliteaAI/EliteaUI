@@ -1,13 +1,11 @@
 import { formatTokenCount, formatUsd, sumTokens } from './runUsage.helpers';
-import { formatDurationMs } from './trajectory.helpers';
+import { formatDurationMs, plural } from './trajectory.helpers';
 
 /**
  * The run header's "Efficiency" strip (tokenomics design §6, performance design §3.2): latency
  * percentiles, timeouts, the agent's tokens and cost, tool calls and the tool-error rate, read
  * from `run.meta`. Pure.
  */
-
-const pluralCases = count => `${count} ${count === 1 ? 'case' : 'cases'}`;
 
 const formatSeconds = seconds => (seconds == null ? null : `${seconds} s`);
 
@@ -29,9 +27,9 @@ export const getRunTimeoutNote = rollup => {
   if (!rollup || typeof rollup !== 'object' || !timedOut) return null;
   const cases = rollup.cases ?? timedOut;
   const limit = formatSeconds(rollup.case_time_limit_seconds);
-  const label = `${timedOut} of ${pluralCases(cases)} timed out${limit ? ` at ${limit}` : ''}`;
+  const label = `${timedOut} of ${plural(cases, 'case')} timed out${limit ? ` at ${limit}` : ''}`;
   const others = Math.max(cases - timedOut, 0);
-  const coverage = others ? `Scores cover the other ${pluralCases(others)}` : 'No case was scored';
+  const coverage = others ? `Scores cover the other ${plural(others, 'case')}` : 'No case was scored';
 
   return {
     label,
@@ -68,7 +66,7 @@ export const buildRunEfficiencyStrip = meta => {
     }
     if (rollup.timed_out_cases != null) {
       const timedOut = rollup.timed_out_cases;
-      push('Timeouts', `${timedOut} of ${pluralCases(rollup.cases ?? 0)}`, { isAttention: timedOut > 0 });
+      push('Timeouts', `${timedOut} of ${plural(rollup.cases ?? 0, 'case')}`, { isAttention: timedOut > 0 });
     }
   }
 

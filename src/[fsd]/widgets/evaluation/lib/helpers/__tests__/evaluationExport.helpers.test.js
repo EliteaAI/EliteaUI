@@ -147,6 +147,20 @@ describe('buildEvaluationResultsSheets — workbook shape', () => {
     expect(overall.find(row => row.metric === 'Total Score').value).toBe(78.5);
     expect(sectionByTitle(summary, 'Dimension Results').rows[0].average).toBe(3.5);
   });
+  it('reports timed-out cases next to the headline when the run counted them', () => {
+    const run = { ...makeRun(), meta: { trajectory_rollup: { cases: 2, timed_out_cases: 1 } } };
+    const [summary] = buildEvaluationResultsSheets(makeScorecard(RESULTS), { run });
+    const overall = sectionByTitle(summary, 'Overall Results').rows;
+
+    expect(overall.find(row => row.metric === 'Timed out').value).toBe(1);
+  });
+
+  it('omits the timed-out row for a run that never counted timeouts', () => {
+    const [summary] = buildEvaluationResultsSheets(makeScorecard(RESULTS), { run: makeRun() });
+    const overall = sectionByTitle(summary, 'Overall Results').rows;
+
+    expect(overall.some(row => row.metric === 'Timed out')).toBe(false);
+  });
 });
 
 describe('buildEvaluationResultsSheets — dimension sheets', () => {

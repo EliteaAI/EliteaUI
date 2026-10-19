@@ -1,6 +1,6 @@
 import { memo, useMemo } from 'react';
 
-import { Box, Typography } from '@mui/material';
+import { Box, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material';
 
 import { PERFORMANCE_VERDICT, buildPerformanceDiff } from '../../lib/helpers';
 
@@ -9,6 +9,8 @@ import { PERFORMANCE_VERDICT, buildPerformanceDiff } from '../../lib/helpers';
  * suite baseline or the previous finished run on the same dataset. Each figure covers only the
  * cases both runs measured. Renders nothing when the run has no reference.
  */
+const COLUMNS = ['Metric', 'This run', 'Reference', 'Change', 'Cases'];
+
 const RunPerformanceDiff = memo(props => {
   const { compare } = props;
 
@@ -41,44 +43,45 @@ const RunPerformanceDiff = memo(props => {
         )}
       </Box>
 
-      <Box
-        component="table"
+      <Table
+        size="small"
         sx={styles.table}
       >
-        <thead>
-          <tr>
-            <th>Metric</th>
-            <th>This run</th>
-            <th>Reference</th>
-            <th>Change</th>
-            <th>Cases</th>
-          </tr>
-        </thead>
-        <tbody>
+        <TableHead>
+          <TableRow>
+            {COLUMNS.map(column => (
+              <TableCell
+                key={column}
+                sx={[styles.cell, styles.headCell]}
+              >
+                {column}
+              </TableCell>
+            ))}
+          </TableRow>
+        </TableHead>
+        <TableBody>
           {view.rows.map(row => (
-            <tr
+            <TableRow
               key={row.key}
               data-testid={`evaluation-perf-row-${row.key}`}
             >
-              <td>{row.label}</td>
-              <td>{row.run}</td>
-              <td>{row.reference}</td>
-              <td>
-                <Box
-                  component="span"
-                  sx={[
-                    row.verdict === PERFORMANCE_VERDICT.worse && styles.worseText,
-                    row.verdict === PERFORMANCE_VERDICT.better && styles.betterText,
-                  ]}
-                >
-                  {[row.change, row.verdictLabel].filter(Boolean).join(' · ') || '—'}
-                </Box>
-              </td>
-              <td>{row.coverage ?? '—'}</td>
-            </tr>
+              <TableCell sx={styles.cell}>{row.label}</TableCell>
+              <TableCell sx={styles.cell}>{row.run}</TableCell>
+              <TableCell sx={styles.cell}>{row.reference}</TableCell>
+              <TableCell
+                sx={[
+                  styles.cell,
+                  row.verdict === PERFORMANCE_VERDICT.worse && styles.worseText,
+                  row.verdict === PERFORMANCE_VERDICT.better && styles.betterText,
+                ]}
+              >
+                {[row.change, row.verdictLabel].filter(Boolean).join(' · ') || '—'}
+              </TableCell>
+              <TableCell sx={styles.cell}>{row.coverage ?? '—'}</TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </Box>
+        </TableBody>
+      </Table>
 
       {view.timeouts && (
         <Box
@@ -162,34 +165,31 @@ const runPerformanceDiffStyles = () => ({
     lineHeight: '1rem',
   },
   worse: ({ palette }) => ({
-    color: palette.icon.indexResult.error,
-    backgroundColor: palette.alert.error?.background,
+    color: palette.alert.error.text,
+    backgroundColor: palette.alert.error.background,
   }),
-  table: ({ palette }) => ({
-    borderCollapse: 'collapse',
+  table: {
     width: '100%',
-    '& th, & td': {
-      padding: '0.25rem 1rem 0.25rem 0',
-      textAlign: 'left',
-      fontSize: '0.75rem',
-      lineHeight: '1rem',
-      whiteSpace: 'nowrap',
-    },
-    '& th': {
-      color: palette.text.primary,
-      textTransform: 'uppercase',
-      letterSpacing: '0.06em',
-      fontWeight: 500,
-    },
-    '& td': {
-      color: palette.text.secondary,
-    },
+  },
+  cell: ({ palette }) => ({
+    padding: '0.25rem 1rem 0.25rem 0',
+    border: 'none',
+    fontSize: '0.75rem',
+    lineHeight: '1rem',
+    whiteSpace: 'nowrap',
+    color: palette.text.secondary,
+  }),
+  headCell: ({ palette }) => ({
+    color: palette.text.primary,
+    textTransform: 'uppercase',
+    letterSpacing: '0.06em',
+    fontWeight: 500,
   }),
   worseText: ({ palette }) => ({
-    color: palette.icon.indexResult.error,
+    color: palette.alert.error.text,
   }),
   betterText: ({ palette }) => ({
-    color: palette.icon.indexResult.success,
+    color: palette.alert.success.text,
   }),
   notes: {
     display: 'flex',

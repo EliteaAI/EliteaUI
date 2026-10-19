@@ -1,5 +1,5 @@
 import { formatTokenCount, formatUsd } from './runUsage.helpers';
-import { formatDurationMs } from './trajectory.helpers';
+import { formatDurationMs, plural } from './trajectory.helpers';
 
 /**
  * The run's "Performance vs reference" panel (performance design §3.4), read from the server's
@@ -49,8 +49,6 @@ const METRIC_ROWS = [
   { key: 'tool_calls', label: 'Tool calls', format: formatCount },
 ];
 
-const pluralCases = count => `${count} ${count === 1 ? 'case' : 'cases'}`;
-
 const formatDeltaPct = pct => {
   if (typeof pct !== 'number' || !Number.isFinite(pct)) return null;
   const rounded = Math.round(pct);
@@ -81,7 +79,7 @@ export const buildPerformanceDiff = compare => {
     if (!metric) return null;
     const withheld = metric.not_comparable === 'time_limit_changed';
     const coverage = metric.cases
-      ? `${pluralCases(metric.cases)}${metric.excluded ? `, ${metric.excluded} left out` : ''}`
+      ? `${plural(metric.cases, 'case')}${metric.excluded ? `, ${metric.excluded} left out` : ''}`
       : null;
     return {
       key,
@@ -99,19 +97,19 @@ export const buildPerformanceDiff = compare => {
   const coverage = diff.coverage ?? {};
   if (coverage.changed?.length)
     notes.push(
-      `${pluralCases(coverage.changed.length)} changed input since the reference and ${coverage.changed.length === 1 ? 'is' : 'are'} left out.`,
+      `${plural(coverage.changed.length, 'case')} changed input since the reference and ${coverage.changed.length === 1 ? 'is' : 'are'} left out.`,
     );
   const oneSided = (coverage.only_in_run?.length ?? 0) + (coverage.only_in_reference?.length ?? 0);
   if (oneSided)
     notes.push(
-      `${pluralCases(oneSided)} ran in only one of the two runs and ${oneSided === 1 ? 'is' : 'are'} left out.`,
+      `${plural(oneSided, 'case')} ran in only one of the two runs and ${oneSided === 1 ? 'is' : 'are'} left out.`,
     );
   // A case whose own time limit changed is left out of latency and timeouts, not of tokens or cost.
   // When every matched case changed, the not_comparable note above already says so.
   const limitChanged = coverage.limit_changed?.length ?? 0;
   if (limitChanged && !(diff.not_comparable ?? []).includes('time_limit_changed'))
     notes.push(
-      `${pluralCases(limitChanged)} had a different time limit in the reference and ${limitChanged === 1 ? 'is' : 'are'} left out of latency and timeouts.`,
+      `${plural(limitChanged, 'case')} had a different time limit in the reference and ${limitChanged === 1 ? 'is' : 'are'} left out of latency and timeouts.`,
     );
 
   const timeouts =
