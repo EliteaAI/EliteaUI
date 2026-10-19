@@ -7,10 +7,8 @@ import { Box, Typography } from '@mui/material';
 
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { Switch } from '@/[fsd]/shared/ui';
-import { PUBLIC_PROJECT_ID } from '@/common/constants';
+import { PERMISSIONS, PUBLIC_PROJECT_ID } from '@/common/constants';
 
-// Held only by public-project admins; the backend re-checks the admin role on save
-const PUBLIC_ADMIN_PERMISSION = 'projects.projects.project.edit';
 const SHARED_TOOLTIP = 'Other projects can use this toolkit through the Web Search module';
 
 const ToolkitSharedSwitch = memo(props => {
@@ -21,7 +19,7 @@ const ToolkitSharedSwitch = memo(props => {
   const styles = toolkitSharedSwitchStyles();
 
   const isPublicAdmin = useMemo(
-    () => +projectId === PUBLIC_PROJECT_ID && publicPermissions.includes(PUBLIC_ADMIN_PERMISSION),
+    () => +projectId === PUBLIC_PROJECT_ID && publicPermissions.includes(PERMISSIONS.projects.edit),
     [projectId, publicPermissions],
   );
 

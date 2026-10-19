@@ -18,7 +18,7 @@ import ToolsIcon from '@/assets/tools-icon.svg?react';
 import WebSearchIcon from '@/assets/web_search.svg?react';
 
 const AgentInternalToolSwitch = memo(props => {
-  const { title, name, disabled, infoTooltip, icon } = props;
+  const { title, name, disabled, unavailable = false, infoTooltip, icon } = props;
   const { values, setFieldValue } = useFormikContext();
 
   const styles = agentInternalToolSwitchStyles();
@@ -31,12 +31,13 @@ const AgentInternalToolSwitch = memo(props => {
 
   const onChange = useCallback(
     (_, checkedValue) => {
+      if (unavailable) return;
       setFieldValue(
         'version_details.meta.internal_tools',
-        checkedValue ? [...internal_tools, name] : internal_tools.filter(t => t !== name),
+        checkedValue ? [...new Set([...internal_tools, name])] : internal_tools.filter(t => t !== name),
       );
     },
-    [setFieldValue, internal_tools, name],
+    [setFieldValue, internal_tools, name, unavailable],
   );
 
   useEffect(() => {
@@ -91,9 +92,9 @@ const AgentInternalToolSwitch = memo(props => {
       <FormControlLabel
         control={
           <Switch.BaseSwitch
-            checked={allowTool}
+            checked={allowTool && !unavailable}
             onChange={onChange}
-            disabled={disabled}
+            disabled={disabled || unavailable}
             // NOTE: the legacy `inputProps` prop on MUI v7's <Switch> is
             // silently discarded — Switch.js unconditionally rebuilds its
             // own `slotProps.input` (merging in `role: "switch"`) and passes

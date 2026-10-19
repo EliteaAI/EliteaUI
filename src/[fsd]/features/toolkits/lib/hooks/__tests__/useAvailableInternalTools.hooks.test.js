@@ -5,7 +5,8 @@ import { renderHook } from '@testing-library/react';
 
 import { useAvailableInternalTools } from '../useAvailableInternalTools.hooks';
 
-const shared = vi.hoisted(() => ({ platformSettings: undefined, queryArgs: null }));
+// toolkitSchemas comes from the redux store in production, so it is a stable reference
+const shared = vi.hoisted(() => ({ platformSettings: undefined, queryArgs: null, toolkitSchemas: {} }));
 
 vi.mock('@/api/platformSettings', () => ({
   useGetPlatformSettingsQuery: args => {
@@ -18,7 +19,7 @@ vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useSelectedProjectId: () => 3,
 }));
 vi.mock('../useGetCurrentToolkitSchemas.hooks', () => ({
-  useGetCurrentToolkitSchemas: () => ({ toolkitSchemas: {} }),
+  useGetCurrentToolkitSchemas: () => ({ toolkitSchemas: shared.toolkitSchemas }),
 }));
 
 const names = tools => tools.map(tool => tool.name);
@@ -70,5 +71,13 @@ describe('useAvailableInternalTools web_search gate (#6982)', () => {
     givenWebSearch(false);
     const { result } = renderHook(() => useAvailableInternalTools());
     expect(names(result.current)).toEqual(expect.arrayContaining(['data_analysis', 'pyodide']));
+  });
+
+  it('returns the same array between renders when the caller passes no activeToolNames', () => {
+    givenWebSearch(true);
+    const { result, rerender } = renderHook(() => useAvailableInternalTools());
+    const first = result.current;
+    rerender();
+    expect(result.current).toBe(first);
   });
 });

@@ -165,6 +165,7 @@ const ApplicationTools = memo(props => {
                         name={tool.name}
                         icon={tool.icon}
                         disabled={disabled}
+                        unavailable={tool.unavailable}
                         infoTooltip={tool.unavailable ? { text: tool.unavailableTooltip } : tool.infoTooltip}
                       />
                     ))}

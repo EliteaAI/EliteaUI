@@ -6,9 +6,11 @@ import { useGetPlatformSettingsQuery } from '@/api/platformSettings';
 
 import { useGetCurrentToolkitSchemas } from './useGetCurrentToolkitSchemas.hooks';
 
+const EMPTY_TOOL_NAMES = [];
+
 export const useAvailableInternalTools = (options = {}) => {
   // activeToolNames: tools already on in this conversation/agent stay listed (inactive) when unavailable
-  const { includeAgentOnly = false, activeToolNames = [] } = options;
+  const { includeAgentOnly = false, activeToolNames = EMPTY_TOOL_NAMES } = options;
   const { toolkitSchemas } = useGetCurrentToolkitSchemas();
   const isMcpVisible = useIsMcpVisible();
   const projectId = useSelectedProjectId();
