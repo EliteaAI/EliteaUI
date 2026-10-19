@@ -31,6 +31,7 @@ import useCreateConfiguration from '@/hooks/application/useCreateConfiguration';
 import { useIconMetaTooltipType } from '@/hooks/toolkit/useIconMetaTooltipType.js';
 import { formatTitleFromSnakeCase } from '@/utils/stringUtils';
 
+import ToolkitSharedSwitch from './ToolkitSharedSwitch.jsx';
 import ToolkitsOperationButtons from './ToolkitsOperationButtons.jsx';
 
 const { Create_Personal_Title, Create_Project_Title } = ConfigurationTitlesConstants;
@@ -581,6 +582,7 @@ export const ToolkitForm = memo(props => {
               toolSchema={effectiveToolSchema}
             />
           )}
+          {isEditing && <ToolkitSharedSwitch disabled={disabled} />}
           <ToolComponent
             key={updateKey}
             editToolDetail={editToolDetail}

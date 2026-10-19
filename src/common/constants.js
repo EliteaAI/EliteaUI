@@ -601,6 +601,9 @@ export const PERMISSIONS = {
     create: 'configuration.users.users.create',
     delete: 'configuration.users.users.delete',
   },
+  projects: {
+    edit: 'projects.projects.project.edit',
+  },
   projectContext: {
     view: 'models.project_context.view',
     edit: 'models.project_context.edit',
