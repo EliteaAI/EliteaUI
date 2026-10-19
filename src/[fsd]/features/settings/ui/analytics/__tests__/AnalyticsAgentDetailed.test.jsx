@@ -376,6 +376,46 @@ describe('AnalyticsAgentDetailed — versions, models, triggers and recent runs 
     ]);
   });
 
+  it('keeps both scope rows of one model through re-sorting', () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    useAnalyticsAgentDetailQuery.mockReturnValue(
+      detailQuery({
+        ...TABLES,
+        by_model: [
+          {
+            model_name: 'gpt-4o',
+            model_scope: 'own',
+            display_name: 'GPT-4o (project)',
+            runs: 1,
+            calls: 1,
+            total_tokens: 5,
+            cost: 0,
+          },
+          {
+            model_name: 'gpt-4o',
+            model_scope: 'shared',
+            display_name: 'GPT-4o (shared)',
+            runs: 2,
+            calls: 2,
+            total_tokens: 9,
+            cost: 0,
+          },
+        ],
+      }),
+    );
+    renderDetail();
+
+    fireEvent.click(screen.getByTestId('analytics-agent-detail-models-sort-display_name'));
+    fireEvent.click(screen.getByTestId('analytics-agent-detail-models-sort-display_name'));
+
+    expect(firstCells('analytics-agent-detail-models').sort()).toEqual([
+      'GPT-4o (project)',
+      'GPT-4o (shared)',
+    ]);
+    expect(consoleError.mock.calls.flat().join(' ')).not.toMatch(/same key/);
+    consoleError.mockRestore();
+  });
+
   it('carries the ticket tooltips, the Models one noting it covers LLM calls only', () => {
     renderDetail();
 
