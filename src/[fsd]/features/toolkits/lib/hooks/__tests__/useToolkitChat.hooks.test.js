@@ -60,8 +60,8 @@ const socketHandlerRef = { current: null };
 const validationErrorHandlerRef = { current: null };
 const socketEmit = vi.fn();
 
-vi.mock('@/hooks/useSocket', () => ({
-  default: (event, handler) => {
+vi.mock('@/[fsd]/features/auth/lib/hooks/useSocket.hooks', () => ({
+  useSocket: (event, handler) => {
     if (event === 'socket_validation_error') validationErrorHandlerRef.current = handler;
     else socketHandlerRef.current = handler;
     return { emit: socketEmit };

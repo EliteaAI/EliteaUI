@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useDispatch, useSelector } from 'react-redux';
 
-import useSocket, { useManualSocket } from '@/hooks/useSocket';
+import { useManualSocket, useSocket } from '@/[fsd]/features/auth/lib/hooks';
 
 import { TAG_EVAL_RUN, evaluationApi } from '../../api';
 import { EVAL_SIO_EVENTS } from '../constants';

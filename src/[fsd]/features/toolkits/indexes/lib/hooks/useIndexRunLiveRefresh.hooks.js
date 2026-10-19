@@ -2,9 +2,9 @@ import { useCallback } from 'react';
 
 import { useDispatch } from 'react-redux';
 
+import { useSocket } from '@/[fsd]/features/auth/lib/hooks';
 import { invalidateIndexesList } from '@/[fsd]/features/toolkits/indexes/api';
 import { NotificationType, sioEvents } from '@/common/constants';
-import useSocket from '@/hooks/useSocket';
 
 export const isIndexRunNotification = notification =>
   notification?.event_type === NotificationType.IndexDataChanged;

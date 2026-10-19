@@ -8,8 +8,8 @@ import { useIndexRunLiveRefresh } from '../useIndexRunLiveRefresh.hooks';
 const socketHandler = vi.hoisted(() => ({ current: null }));
 const dispatched = vi.hoisted(() => []);
 
-vi.mock('@/hooks/useSocket', () => ({
-  default: (event, handler) => {
+vi.mock('@/[fsd]/features/auth/lib/hooks/useSocket.hooks', () => ({
+  useSocket: (event, handler) => {
     socketHandler.current = handler;
   },
 }));

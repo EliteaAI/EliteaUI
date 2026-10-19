@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { useSocket } from '@/[fsd]/features/auth/lib/hooks';
 import { sioEvents } from '@/common/constants';
-import useSocket from '@/hooks/useSocket';
 
 // Ephemeral, per-sid hint: only ever shown if it matches the conversation's
 // latest message, so a newer send or a reconnect naturally invalidates it.

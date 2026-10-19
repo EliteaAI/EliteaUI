@@ -2,13 +2,13 @@ import { useEffect, useRef } from 'react';
 
 import { useSelector } from 'react-redux';
 
+import { useManualSocket } from '@/[fsd]/features/auth/lib/hooks';
 import { useLazyConversationDetailsQuery, useLazyMessageTracesQuery } from '@/[fsd]/features/chat/api';
 import { sioEvents } from '@/common/constants';
 import {
   buildTraceListParams,
   convertConversationToChatHistory,
 } from '@/common/convertChatConversationMessages';
-import { useManualSocket } from '@/hooks/useSocket';
 
 export const useChatSocketReconnect = props => {
   const { activeConversation, projectId, setActiveConversation } = props;

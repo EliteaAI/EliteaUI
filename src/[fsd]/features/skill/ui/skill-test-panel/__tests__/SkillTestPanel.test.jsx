@@ -70,7 +70,7 @@ vi.mock('@/api/llm', () => ({
   useStopLlmTaskMutation: () => [vi.fn()],
 }));
 vi.mock('@/common/utils', () => ({ buildErrorMessage: vi.fn() }));
-vi.mock('@/hooks/useSocket', () => ({
+vi.mock('@/[fsd]/features/auth/lib/hooks/useSocket.hooks', () => ({
   useManualSocket: () => ({ subscribe: vi.fn(), unsubscribe: vi.fn() }),
 }));
 vi.mock('@/components/Chat/FullScreenToggle', () => ({ default: () => null }));

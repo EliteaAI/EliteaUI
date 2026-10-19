@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { Box, Typography } from '@mui/material';
 
+import { useSocket } from '@/[fsd]/features/auth/lib/hooks';
 import { NewConversationHelpers } from '@/[fsd]/features/chat/lib/helpers';
 import {
   useBudgetWarning,
@@ -61,7 +62,6 @@ import useValidateToolkit, { useToolkitValidationInfo } from '@/hooks/applicatio
 import useChatStreaming from '@/hooks/chat/useChatStreaming';
 import useLocalActiveParticipant from '@/hooks/chat/useLocalActiveParticipant';
 import useNewConversationAttachments from '@/hooks/chat/useNewConversationAttachments';
-import useSocket from '@/hooks/useSocket';
 import { actions } from '@/slices/chat';
 
 const { DEFAULT_STEPS_LIMIT } = LLMSettingsConstants;
