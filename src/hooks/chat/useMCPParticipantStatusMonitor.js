@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 
+import { useSocket } from '@/[fsd]/features/auth/lib/hooks';
 import { sioEvents } from '@/common/constants';
-import useSocket from '@/hooks/useSocket';
 
 export default function useMCPParticipantStatusMonitor({
   projectId,

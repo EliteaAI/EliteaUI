@@ -32,7 +32,7 @@ vi.mock('@/[fsd]/features/mcp/lib/helpers', () => ({
   McpAuthHelpers: { getAllTokens: () => ({}) },
 }));
 
-vi.mock('@/hooks/useSocket', () => ({
+vi.mock('@/[fsd]/features/auth/lib/hooks/useSocket.hooks', () => ({
   useManualSocket: (_, onMessage) => {
     mocks.onMessage = onMessage;
     return { emit: mocks.emit, subscribe: mocks.subscribe, unsubscribe: mocks.unsubscribe };

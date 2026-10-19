@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { v4 as uuidv4 } from 'uuid';
 
+import { useManualSocket, useSocket } from '@/[fsd]/features/auth/lib/hooks';
 import {
   IndexStatuses,
   IndexesToolsEnum,
@@ -32,7 +33,6 @@ import { SocketMessageType, sioEvents } from '@/common/constants';
 import { convertConversationToChatHistory } from '@/common/convertChatConversationMessages';
 import { generateMessagePayload } from '@/common/messagePayloadUtils';
 import { convertJsonToString } from '@/common/utils';
-import useSocket, { useManualSocket } from '@/hooks/useSocket';
 
 export const useToolkitChat = props => {
   const runningToolRef = useRef(null);

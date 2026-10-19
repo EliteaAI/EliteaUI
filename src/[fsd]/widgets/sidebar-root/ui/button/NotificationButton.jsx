@@ -5,12 +5,12 @@ import { useNavigate } from 'react-router-dom';
 
 import { Box } from '@mui/material';
 
+import { useSocket } from '@/[fsd]/features/auth/lib/hooks';
 import { SIDEBAR_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import NotificationList from '@/[fsd]/widgets/sidebar-root/ui/NotificationList';
 import { useNotificationListQuery } from '@/api/notifications';
 import { sioEvents } from '@/common/constants';
 import BellIcon from '@/components/Icons/BellIcon';
-import useSocket from '@/hooks/useSocket';
 import RouteDefinitions from '@/routes';
 
 const NotificationButton = memo(() => {

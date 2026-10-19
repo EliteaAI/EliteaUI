@@ -2,9 +2,10 @@ import { useCallback, useContext, useEffect } from 'react';
 
 import { useStore } from 'react-redux';
 
-import { SocketSessionGateHelpers } from '@/[fsd]/features/auth/lib/helpers';
 import { SocketContext } from '@/[fsd]/shared/lib/context';
 import { generateTraceId } from '@/services/tracing';
+
+import { SocketSessionGateHelpers } from '../helpers';
 
 // Check if tracing is enabled
 const TRACING_ENABLED = import.meta.env.VITE_TRACING_ENABLED === 'true';
@@ -62,7 +63,7 @@ export const useManualSocket = (event, responseHandler) => {
   };
 };
 
-const useSocket = (event, responseHandler) => {
+export const useSocket = (event, responseHandler) => {
   const { subscribe, unsubscribe, emit, socket } = useManualSocket(event, responseHandler);
 
   useEffect(() => {
@@ -77,5 +78,3 @@ const useSocket = (event, responseHandler) => {
     connected: socket?.connected || false,
   };
 };
-
-export default useSocket;

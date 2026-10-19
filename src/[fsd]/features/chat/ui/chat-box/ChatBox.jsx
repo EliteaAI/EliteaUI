@@ -17,6 +17,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Box } from '@mui/system';
 
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version';
+import { useSocket } from '@/[fsd]/features/auth/lib/hooks';
 import { SelectedChatModelContext } from '@/[fsd]/features/chat/lib/context/SelectedChatModelContext';
 import * as ChatHelpers from '@/[fsd]/features/chat/lib/helpers/chat.helpers';
 import { buildEntityParticipant } from '@/[fsd]/features/chat/lib/helpers/entityParticipant.helpers.js';
@@ -119,7 +120,6 @@ import { ChatBodyContainer } from '@/components/Chat/StyledComponents';
 import { useChatSocket, useStopStreaming } from '@/components/Chat/hooks';
 import useChatStreaming from '@/hooks/chat/useChatStreaming';
 import useLoadMoreMessages from '@/hooks/chat/useLoadMoreMessages';
-import useSocket from '@/hooks/useSocket';
 import { actions as chatActions } from '@/slices/chat';
 
 const { DEFAULT_MAX_TOKENS, DEFAULT_STEPS_LIMIT, DEFAULT_TEMPERATURE } = LLMSettingsConstants;

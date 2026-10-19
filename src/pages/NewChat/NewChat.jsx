@@ -8,6 +8,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Box, CircularProgress, Grid, useTheme } from '@mui/material';
 
 import { useEditingArtifactsNavBlocker } from '@/[fsd]/features/artifacts/lib/hooks';
+import { useManualSocket } from '@/[fsd]/features/auth/lib/hooks';
 import { useLazyConversationDetailsQuery } from '@/[fsd]/features/chat/api';
 import {
   applyParticipantChanges,
@@ -92,7 +93,6 @@ import useUploadAttachments from '@/hooks/chat/useUploadAttachments';
 import { useIsCreatingConversation } from '@/hooks/useIsFromSpecificPageHooks';
 import useIsSmallWindow from '@/hooks/useIsSmallWindow';
 import useNavBlocker from '@/hooks/useNavBlocker';
-import { useManualSocket } from '@/hooks/useSocket';
 import NewConversationView from '@/pages/NewChat/NewConversationView';
 import { actions as chatActions } from '@/slices/chat';
 import { actions } from '@/slices/settings';
