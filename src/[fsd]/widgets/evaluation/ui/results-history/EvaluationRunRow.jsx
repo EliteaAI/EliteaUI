@@ -14,6 +14,7 @@ import {
   getRunScoreLabel,
   getRunStopLabel,
   getRunTimeoutNote,
+  getScoreDeltaTooltip,
 } from '../../lib/helpers';
 import RunHistoryActionsMenu from './RunHistoryActionsMenu';
 
@@ -41,6 +42,7 @@ const EvaluationRunRow = memo(props => {
   }, [run, onSelect]);
 
   const deltaLabel = formatScoreDelta(run.delta);
+  const deltaTooltip = getScoreDeltaTooltip(run);
   // A run stopped by a limit still shows the score of the cases it got through; the icon says so.
   const stopLabel = getRunStopLabel(run.meta);
   const overBudgetLabel = getRunOverBudgetLabel(run.meta);
@@ -141,13 +143,19 @@ const EvaluationRunRow = memo(props => {
 
       <Box sx={styles.scoreCell}>
         {!!deltaLabel && (
-          <Typography
-            variant="bodySmall2"
-            sx={styles.delta}
-            data-testid={`evaluation-run-delta-${run.id}`}
+          <Tooltip
+            title={deltaTooltip}
+            placement="top"
           >
-            {deltaLabel}
-          </Typography>
+            <Typography
+              variant="bodySmall2"
+              sx={styles.delta}
+              aria-label={deltaTooltip || undefined}
+              data-testid={`evaluation-run-delta-${run.id}`}
+            >
+              {deltaLabel}
+            </Typography>
+          </Tooltip>
         )}
         <Typography
           variant="bodySmall"

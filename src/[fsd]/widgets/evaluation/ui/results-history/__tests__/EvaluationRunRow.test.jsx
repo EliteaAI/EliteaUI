@@ -88,3 +88,15 @@ describe('EvaluationRunRow usage and trajectory cells', () => {
     expect(screen.getByTestId('evaluation-run-guardrails-7')).toHaveTextContent('—');
   });
 });
+
+describe('EvaluationRunRow score delta', () => {
+  afterEach(cleanup);
+
+  it('says which run the delta compares with', () => {
+    renderRow({ status: 'finished', headline_score: 80, delta: 4.5, comparedToRunId: 3, meta: {} });
+
+    const delta = screen.getByTestId('evaluation-run-delta-7');
+    expect(delta).toHaveTextContent('+4.5');
+    expect(delta).toHaveAttribute('aria-label', expect.stringContaining('vs Run #3'));
+  });
+});
