@@ -98,7 +98,10 @@ const versionRowsWithKeys = versions =>
   versions.map((version, index) => ({ ...version, key: version.version_id ?? `unknown-${index}` }));
 
 const modelRowsWithKeys = models =>
-  models.map((model, index) => ({ ...model, key: model.model_name ?? `unknown-${index}` }));
+  models.map((model, index) => ({
+    ...model,
+    key: model.model_name ? `${model.model_name}-${model.model_scope}` : `unknown-${index}`,
+  }));
 
 const triggerRowsWithKeys = triggers =>
   triggers.map((trigger, index) => ({ ...trigger, key: trigger.trigger_source ?? `manual-${index}` }));
