@@ -1,22 +1,107 @@
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useEffect, useState } from 'react';
 
+import { useStore } from 'react-redux';
 import { Area, AreaChart, Tooltip as RechartsTooltip, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 
-import { Box, CircularProgress, IconButton, TableSortLabel, Typography, useTheme } from '@mui/material';
-
-import { useAnalyticsAgentDetailQuery } from '@/[fsd]/features/settings/api/analyticsApi';
-import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
-import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import {
+  Alert,
+  Box,
+  CircularProgress,
+  IconButton,
+  Snackbar,
+  TableSortLabel,
+  Tooltip,
+  Typography,
+  useTheme,
+} from '@mui/material';
+
+import { analyticsApi, useAnalyticsAgentDetailQuery } from '@/[fsd]/features/settings/api/analyticsApi';
+import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
+import {
+  AgentAnalyticsHelpers,
+  AnalyticCommonHelpers,
+  AnalyticsExportHelpers,
+} from '@/[fsd]/features/settings/lib/helpers';
+import {
+  AgentRecentRunsTable,
+  AnalyticsBreakdownTable,
   ChartTooltip,
   DeletedChip,
   KPICard,
-  SkillBreakdownTable,
 } from '@/[fsd]/features/settings/ui/analytics';
 import { analyticsTableSortLabelSx } from '@/[fsd]/features/settings/ui/analytics/components/analyticsTable.styles';
-import { useClientSort, useSortedRows } from '@/[fsd]/shared/lib/hooks';
+import { useClientSort, useSelectedProjectName, useSortedRows } from '@/[fsd]/shared/lib/hooks';
+import { exportToExcel } from '@/[fsd]/shared/lib/utils';
+import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
+import DownloadIcon from '@/assets/download.svg?react';
 import ArrowBackIcon from '@/components/Icons/ArrowBackIcon';
+
+const HTTP_NOT_FOUND = 404;
+
+const { AGENT_DETAIL_EMPTY_MESSAGE } = AnalyticsCommonConstants;
+
+const fmtNum = AnalyticCommonHelpers.fmtNum;
+const fmtCost = AnalyticCommonHelpers.fmtCost;
+
+const USAGE_COLUMNS = [
+  { key: 'runs', label: 'Runs', render: row => fmtNum(row.runs) },
+  { key: 'total_tokens', label: 'Total Tokens', render: row => fmtNum(row.total_tokens) },
+  { key: 'cost', label: 'Cost', render: row => fmtCost(row.cost) },
+];
+
+const VERSION_COLUMNS = [
+  {
+    key: 'version_name',
+    label: 'Version',
+    flex: 2.5,
+    sortValue: row => AnalyticCommonHelpers.formatVersionLabel(row.version_name),
+    render: row => AnalyticCommonHelpers.formatVersionLabel(row.version_name),
+  },
+  ...USAGE_COLUMNS,
+];
+
+const MODEL_COLUMNS = [
+  {
+    key: 'display_name',
+    label: 'Model',
+    flex: 2.5,
+    sortValue: AgentAnalyticsHelpers.formatAgentModelLabel,
+    render: AgentAnalyticsHelpers.formatAgentModelLabel,
+  },
+  USAGE_COLUMNS[0],
+  { key: 'calls', label: 'LLM Calls', render: row => fmtNum(row.calls) },
+  ...USAGE_COLUMNS.slice(1),
+];
+
+const TRIGGER_COLUMNS = [
+  {
+    key: 'trigger_source',
+    label: 'Trigger',
+    flex: 2.5,
+    sortValue: row => AnalyticCommonHelpers.formatTriggerLabel(row.trigger_source),
+    render: row => AnalyticCommonHelpers.formatTriggerLabel(row.trigger_source),
+  },
+  ...USAGE_COLUMNS,
+];
+
+const readColumnSortValue = columns => (row, key) => {
+  const column = columns.find(candidate => candidate.key === key);
+  return column?.sortValue ? column.sortValue(row) : row[key];
+};
+
+const readVersionSortValue = readColumnSortValue(VERSION_COLUMNS);
+const readModelSortValue = readColumnSortValue(MODEL_COLUMNS);
+const readTriggerSortValue = readColumnSortValue(TRIGGER_COLUMNS);
+
+const versionRowsWithKeys = versions =>
+  versions.map((version, index) => ({ ...version, key: version.version_id ?? `unknown-${index}` }));
+
+const modelRowsWithKeys = models =>
+  models.map((model, index) => ({ ...model, key: model.model_name ?? `unknown-${index}` }));
+
+const triggerRowsWithKeys = triggers =>
+  triggers.map((trigger, index) => ({ ...trigger, key: trigger.trigger_source ?? `manual-${index}` }));
 
 const skillNameStyles = {
   cell: { display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 },
@@ -71,14 +156,27 @@ const AnalyticAgentDetailed = memo(props => {
   const { palette } = useTheme();
   const axisStroke = palette.text.primary;
   const axisTickStyle = { fill: axisStroke, fontSize: 11 };
+  const store = useStore();
+  const projectName = useSelectedProjectName();
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState(false);
 
-  const { data, isFetching } = useAnalyticsAgentDetailQuery(
+  useEffect(() => {
+    setExportError(false);
+  }, [entityId, dateFrom, dateTo]);
+
+  const {
+    currentData: data,
+    isFetching,
+    error,
+  } = useAnalyticsAgentDetailQuery(
     { projectId, entityId, dateFrom, dateTo },
     { skip: !projectId || !entityId },
   );
 
   const {
     entity_name,
+    kind,
     kpis,
     evaluation,
     users = [],
@@ -87,6 +185,9 @@ const AnalyticAgentDetailed = memo(props => {
     skills_total,
     skills_truncated = false,
     daily_usage = [],
+    by_version = [],
+    by_model = [],
+    by_trigger_source = [],
   } = data ?? {};
 
   const { sort: userSort, handleSort: handleUserSort } = useClientSort('events');
@@ -96,6 +197,67 @@ const AnalyticAgentDetailed = memo(props => {
 
   const sortedUsers = useSortedRows(users, userSort, defaultGetValue);
   const sortedTools = useSortedRows(tools, toolSort, defaultGetValue);
+
+  const { sort: versionSort, handleSort: handleVersionSort } = useClientSort('runs');
+  const { sort: modelSort, handleSort: handleModelSort } = useClientSort('total_tokens');
+  const { sort: triggerSort, handleSort: handleTriggerSort } = useClientSort('runs');
+
+  const sortedVersions = useSortedRows(by_version, versionSort, readVersionSortValue);
+  const sortedModels = useSortedRows(by_model, modelSort, readModelSortValue);
+  const sortedTriggers = useSortedRows(by_trigger_source, triggerSort, readTriggerSortValue);
+
+  const handleExport = useCallback(async () => {
+    setExporting(true);
+    setExportError(false);
+    try {
+      const entity = {
+        agentId: entityId,
+        kind: data.kind,
+        projectId,
+      };
+      const { runs, total, truncated } = await AnalyticsExportHelpers.fetchAllAgentRuns(
+        store.dispatch,
+        analyticsApi.endpoints,
+        {
+          projectId,
+          entityId,
+          dateFrom,
+          dateTo,
+        },
+      );
+      const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      await exportToExcel(
+        AnalyticsExportHelpers.buildAgentAnalyticsExportFileName({
+          projectName,
+          entityName: data.entity_name,
+          kind: data.kind,
+          dateFrom,
+          dateTo,
+        }),
+        [
+          AnalyticsExportHelpers.buildAgentDetailSheet(data, {
+            runs: runs.map(run => ({
+              ...run,
+              run_url: AgentAnalyticsHelpers.buildAgentRunAnalyticsUrl(entity, run),
+            })),
+            runsTotal: total,
+            runsTruncated: truncated,
+            includeSkills: canViewSkills,
+            projectName,
+            dateFrom,
+            dateTo,
+            timeZone,
+          }),
+        ],
+      );
+    } catch {
+      setExportError(true);
+    } finally {
+      setExporting(false);
+    }
+  }, [store, data, entityId, projectId, dateFrom, dateTo, projectName, canViewSkills]);
+
+  const handleCloseExportError = useCallback(() => setExportError(false), []);
 
   if (isFetching)
     return (
@@ -109,12 +271,23 @@ const AnalyticAgentDetailed = memo(props => {
 
   if (!data)
     return (
-      <Box sx={styles.emptyState}>
+      <Box sx={styles.agentDetailedContent}>
+        <BaseBtn
+          variant={BUTTON_VARIANTS.tertiary}
+          onClick={onBack}
+          startIcon={<ArrowBackIcon />}
+          aria-label="Back"
+          sx={styles.backButton}
+          data-testid="analytics-agent-detail-back-button"
+        />
         <Typography
           variant="bodyMedium"
           sx={styles.emptyText}
+          data-testid="analytics-agent-detail-empty"
         >
-          No data found.
+          {error?.status === HTTP_NOT_FOUND
+            ? AGENT_DETAIL_EMPTY_MESSAGE
+            : 'Failed to load Agent or Pipeline analytics.'}
         </Typography>
       </Box>
     );
@@ -138,6 +311,25 @@ const AnalyticAgentDetailed = memo(props => {
         >
           {entity_name}
         </Typography>
+        <Tooltip
+          title={exporting ? 'Preparing export…' : 'Export Agent or Pipeline to Excel'}
+          placement="top"
+        >
+          <Box
+            component="span"
+            sx={styles.exportButton}
+          >
+            <BaseBtn
+              variant={BUTTON_VARIANTS.secondary}
+              color="secondary"
+              onClick={handleExport}
+              disabled={exporting}
+              aria-label="Export Agent or Pipeline to Excel"
+              data-testid="analytics-agent-detail-export-button"
+              startIcon={exporting ? <CircularProgress size="1rem" /> : <DownloadIcon sx={styles.icon} />}
+            />
+          </Box>
+        </Tooltip>
       </Box>
 
       <Box sx={styles.kpiRow}>
@@ -322,6 +514,28 @@ const AnalyticAgentDetailed = memo(props => {
       )}
 
       <Box sx={styles.chartsGrid}>
+        <AnalyticsBreakdownTable
+          title="Versions"
+          tooltip={tt.VERSIONS_SECTION}
+          columns={VERSION_COLUMNS}
+          rows={versionRowsWithKeys(sortedVersions)}
+          emptyText={AGENT_DETAIL_EMPTY_MESSAGE}
+          testId="analytics-agent-detail-versions"
+          sortBy={versionSort.sortBy}
+          sortOrder={versionSort.sortOrder}
+          onSort={handleVersionSort}
+        />
+        <AnalyticsBreakdownTable
+          title="Models"
+          tooltip={tt.MODELS_SECTION}
+          columns={MODEL_COLUMNS}
+          rows={modelRowsWithKeys(sortedModels)}
+          emptyText={AGENT_DETAIL_EMPTY_MESSAGE}
+          testId="analytics-agent-detail-models"
+          sortBy={modelSort.sortBy}
+          sortOrder={modelSort.sortOrder}
+          onSort={handleModelSort}
+        />
         <Box
           sx={styles.chartCard}
           data-testid="analytics-agent-detail-users-panel"
@@ -474,7 +688,7 @@ const AnalyticAgentDetailed = memo(props => {
           </Box>
         </Box>
         {canViewSkills && (
-          <SkillBreakdownTable
+          <AnalyticsBreakdownTable
             title="Skills"
             tooltip={tt.SKILLS_SECTION}
             subtitle={skillsSubtitle(skills, skills_total, skills_truncated)}
@@ -484,7 +698,42 @@ const AnalyticAgentDetailed = memo(props => {
             testId="analytics-agent-detail-skills-panel"
           />
         )}
+        <AnalyticsBreakdownTable
+          title="Trigger Sources"
+          tooltip={tt.TRIGGERS_SECTION}
+          columns={TRIGGER_COLUMNS}
+          rows={triggerRowsWithKeys(sortedTriggers)}
+          emptyText={AGENT_DETAIL_EMPTY_MESSAGE}
+          testId="analytics-agent-detail-triggers"
+          sortBy={triggerSort.sortBy}
+          sortOrder={triggerSort.sortOrder}
+          onSort={handleTriggerSort}
+        />
       </Box>
+
+      <AgentRecentRunsTable
+        key={`${entityId}-${dateFrom}-${dateTo}`}
+        projectId={projectId}
+        entityId={entityId}
+        kind={kind}
+        dateFrom={dateFrom}
+        dateTo={dateTo}
+      />
+      <Snackbar
+        open={exportError}
+        autoHideDuration={8000}
+        onClose={handleCloseExportError}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert
+          onClose={handleCloseExportError}
+          severity="error"
+          variant="filled"
+          data-testid="analytics-agent-detail-export-error"
+        >
+          Unable to export Agent or Pipeline analytics. Please try again.
+        </Alert>
+      </Snackbar>
     </Box>
   );
 });
@@ -499,6 +748,9 @@ const analyticsAgentDetailedStyles = () => ({
     gap: '0.5rem',
     marginBottom: '0.5rem',
   },
+  backButton: { alignSelf: 'flex-start' },
+  exportButton: { marginLeft: 'auto' },
+  icon: { fontSize: '1rem' },
   chartsGrid: {
     display: 'grid',
     gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1fr) minmax(0, 1fr)' },
@@ -528,16 +780,6 @@ const analyticsAgentDetailedStyles = () => ({
   },
   chartWrapper: { width: '100%', overflow: 'hidden', flex: 1, minHeight: 200 },
   loadingState: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: '4rem',
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-  },
-  emptyState: {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',

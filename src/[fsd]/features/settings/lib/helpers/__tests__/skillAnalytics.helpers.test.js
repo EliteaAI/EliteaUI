@@ -6,8 +6,6 @@ import {
   skillDisplayName,
   skillRunAnalyticsPath,
   skillSourceLabel,
-  skillTriggerLabel,
-  skillVersionLabel,
 } from '../skillAnalytics.helpers';
 
 const META = {
@@ -64,12 +62,8 @@ describe('labels', () => {
     expect(skillDisplayName({ skill_name: 'Summarizer', deleted: true })).toBe('Summarizer (deleted)');
   });
 
-  it('names the trigger, the activation and an unknown version', () => {
-    expect(skillTriggerLabel('manual')).toBe('Manual');
-    expect(skillTriggerLabel('webhook')).toBe('Webhook Triggers');
+  it('names the activation', () => {
     expect(skillSourceLabel('load_skill')).toBe('Loaded by the agent');
-    expect(skillVersionLabel(null)).toBe('Version unknown');
-    expect(skillVersionLabel('base')).toBe('base');
   });
 });
 

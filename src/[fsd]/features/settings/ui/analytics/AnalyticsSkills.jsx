@@ -1,6 +1,7 @@
 import { memo, useCallback, useMemo, useState } from 'react';
 
 import { useSelector } from 'react-redux';
+import { useSearchParams } from 'react-router-dom';
 import {
   Bar,
   BarChart,
@@ -15,7 +16,11 @@ import { Box, CircularProgress, TablePagination, TableSortLabel, Typography, use
 
 import { useAnalyticsSkillsQuery } from '@/[fsd]/features/settings/api/analyticsApi';
 import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
-import { AnalyticCommonHelpers, AnalyticsExportHelpers } from '@/[fsd]/features/settings/lib/helpers';
+import {
+  AnalyticCommonHelpers,
+  AnalyticsExportHelpers,
+  AnalyticsUrlStateHelpers,
+} from '@/[fsd]/features/settings/lib/helpers';
 import {
   AnalyticsSkillDetailed,
   ChartTooltip,
@@ -30,6 +35,8 @@ import StyledSearchInput from '@/components/SearchInput';
 
 const CHART_SIZE = 20;
 const DEFAULT_SORT = { sortBy: 'runs', sortOrder: 'desc' };
+
+const { ANALYTICS_SEARCH_PARAMS } = AnalyticsCommonConstants;
 
 const SKILL_COLUMNS = [
   { key: 'skill_name', label: 'Skill', flex: 3 },
@@ -64,7 +71,9 @@ const AnalyticsSkills = memo(props => {
   const [rowsPerPage, setRowsPerPage] = useState(20);
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState(DEFAULT_SORT);
-  const [selectedSkill, setSelectedSkill] = useState(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedSkillId = searchParams.get(ANALYTICS_SEARCH_PARAMS.skillId);
+  const selectedSkillProjectId = searchParams.get(ANALYTICS_SEARCH_PARAMS.skillProjectId);
 
   const styles = analyticsSkillsStyles();
   const { palette } = useTheme();
@@ -126,14 +135,25 @@ const AnalyticsSkills = memo(props => {
     setPage(0);
   }, []);
 
-  const handleBack = useCallback(() => setSelectedSkill(null), []);
+  const selectSkill = useCallback(
+    skill =>
+      setSearchParams(previous =>
+        AnalyticsUrlStateHelpers.updateAnalyticsSearchParams(previous, {
+          [ANALYTICS_SEARCH_PARAMS.skillId]: skill?.skill_id,
+          [ANALYTICS_SEARCH_PARAMS.skillProjectId]: skill?.skill_project_id,
+        }),
+      ),
+    [setSearchParams],
+  );
 
-  if (selectedSkill) {
+  const handleBack = useCallback(() => selectSkill(null), [selectSkill]);
+
+  if (selectedSkillId) {
     return (
       <AnalyticsSkillDetailed
         projectId={projectId}
-        skillId={selectedSkill.skill_id}
-        skillProjectId={selectedSkill.skill_project_id}
+        skillId={selectedSkillId}
+        skillProjectId={selectedSkillProjectId}
         dateFrom={dateFrom}
         dateTo={dateTo}
         onBack={handleBack}
@@ -345,7 +365,7 @@ const AnalyticsSkills = memo(props => {
                 <Box
                   key={`${skill.skill_project_id}:${skill.skill_id}`}
                   sx={styles.clickableRow}
-                  onClick={() => setSelectedSkill(skill)}
+                  onClick={() => selectSkill(skill)}
                   data-testid="analytics-skills-row"
                 >
                   {columns.map(column => (

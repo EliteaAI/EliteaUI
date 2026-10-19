@@ -13,3 +13,5 @@ export * as AnalyticsTokenHelpers from './analyticsToken.helpers.js';
 export * as AnalyticsExportHelpers from './analyticsExport.helpers.js';
 export * as ChatParticipantHelpers from './chatParticipant.helpers.js';
 export * as SkillAnalyticsHelpers from './skillAnalytics.helpers.js';
+export * as AgentAnalyticsHelpers from './agentAnalytics.helpers.js';
+export * as AnalyticsUrlStateHelpers from './analyticsUrlState.helpers.js';

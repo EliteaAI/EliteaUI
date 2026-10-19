@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { Provider } from 'react-redux';
+import { MemoryRouter, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ThemeProvider } from '@mui/material';
@@ -10,7 +11,7 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 import AnalyticsContainer from '../AnalyticsContainer';
-import { analyticsTestTheme } from './_testHelpers';
+import { RouterHistoryProbe, analyticsTestTheme } from './_testHelpers';
 
 vi.hoisted(async () => {
   const { installGlobalStubs } = await import('./_testHelpers');
@@ -47,6 +48,8 @@ vi.mock('@/[fsd]/features/settings/ui/analytics', () => {
       <div
         data-testid={testId}
         data-can-view-skills={String(props.canViewSkills)}
+        data-date-from={props.dateFrom}
+        data-date-to={props.dateTo}
       />
     );
     return Stub;
@@ -73,7 +76,10 @@ vi.mock('@mui/x-date-pickers/DateTimePicker', () => ({ DateTimePicker: () => nul
 
 vi.mock('@/[fsd]/shared/lib/utils', () => ({ exportToExcel: vi.fn() }));
 
-vi.mock('@/[fsd]/features/settings/lib/helpers', () => ({
+vi.mock('@/[fsd]/features/settings/lib/helpers', async () => ({
+  AnalyticsUrlStateHelpers: await vi.importActual(
+    '@/[fsd]/features/settings/lib/helpers/analyticsUrlState.helpers.js',
+  ),
   AnalyticCommonHelpers: {
     getPresetRange: () => ({ from: new Date('2026-10-01'), to: new Date('2026-10-02') }),
     isValidDate: d => d instanceof Date,
@@ -94,14 +100,26 @@ const storeWith = (permissions, publicPermissions = []) => {
   return { getState: () => state, subscribe: () => () => {}, dispatch: action => action };
 };
 
-const renderContainer = (permissions, publicPermissions) =>
-  render(
+const LocationProbe = () => (
+  <div
+    data-testid="location"
+    data-search={useLocation().search}
+  />
+);
+
+const containerTree = (permissions, publicPermissions, url = '/settings/analytics') => (
+  <MemoryRouter initialEntries={[url]}>
+    <LocationProbe />
     <Provider store={storeWith(permissions, publicPermissions)}>
       <ThemeProvider theme={analyticsTestTheme}>
         <AnalyticsContainer />
       </ThemeProvider>
-    </Provider>,
-  );
+    </Provider>
+  </MemoryRouter>
+);
+
+const renderContainer = (permissions, publicPermissions, url) =>
+  render(containerTree(permissions, publicPermissions, url));
 
 const tabLabels = () => screen.getAllByRole('tab').map(tab => tab.textContent);
 
@@ -232,13 +250,7 @@ describe('AnalyticsContainer tour steps', () => {
     const { rerender } = renderContainer([SKILLS_LIST]);
 
     useInteractiveTour.mockReturnValue({ tourId: 'analytics', currentStep: { id: 'date-range-controls' } });
-    rerender(
-      <Provider store={storeWith([SKILLS_LIST])}>
-        <ThemeProvider theme={analyticsTestTheme}>
-          <AnalyticsContainer />
-        </ThemeProvider>
-      </Provider>,
-    );
+    rerender(containerTree([SKILLS_LIST]));
 
     expect(screen.getByTestId('panel-tools')).toBeInTheDocument();
   });
@@ -250,5 +262,183 @@ describe('AnalyticsContainer tour steps', () => {
 
     expect(screen.getByTestId('panel-overview')).toBeInTheDocument();
     expect(screen.queryByTestId('panel-skills')).not.toBeInTheDocument();
+  });
+});
+
+const urlParams = () => new URLSearchParams(screen.getByTestId('location').dataset.search);
+
+describe('AnalyticsContainer URL state (#7033)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    useInteractiveTour.mockReturnValue({});
+  });
+
+  afterEach(() => cleanup());
+
+  it('writes the open tab and the date preset into the URL', () => {
+    renderContainer([]);
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Agents & Pipelines' }));
+
+    expect(urlParams().get('tab')).toBe('agents');
+    expect(urlParams().get('range')).toBe('0');
+  });
+
+  it('restores the tab and a custom range from the URL', () => {
+    const from = '2026-09-01T08:00:00.000Z';
+    const to = '2026-09-03T18:00:00.000Z';
+    renderContainer([], [], `/settings/analytics?tab=agents&range=custom&from=${from}&to=${to}&agent_id=42`);
+
+    const panel = screen.getByTestId('panel-agents');
+    expect(panel).toHaveAttribute('data-date-from', from);
+    expect(panel).toHaveAttribute('data-date-to', to);
+    expect(urlParams().get('agent_id')).toBe('42');
+  });
+
+  it('keeps a pasted skill detail link while the permissions are still loading', () => {
+    const url = '/settings/analytics?tab=skills&range=7&skill_id=5&skill_project_id=2';
+    const { rerender } = renderContainer([], [], url);
+
+    expect(urlParams().get('skill_id')).toBe('5');
+
+    rerender(containerTree([SKILLS_LIST], [], url));
+
+    expect(screen.getByTestId('panel-skills')).toBeInTheDocument();
+    expect(urlParams().get('skill_id')).toBe('5');
+    expect(urlParams().get('skill_project_id')).toBe('2');
+  });
+
+  it('closes the selected agent when another tab opens', () => {
+    renderContainer([], [], '/settings/analytics?tab=agents&range=7&agent_id=42');
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Tools' }));
+
+    expect(urlParams().get('tab')).toBe('tools');
+    expect(urlParams().has('agent_id')).toBe(false);
+  });
+});
+
+describe('AnalyticsContainer tour steps and the selected entity (#7033)', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  afterEach(() => cleanup());
+
+  it('shows the agents list on the agents step of a tour started from an agent detail', () => {
+    const url = '/settings/analytics?tab=agents&range=7&agent_id=5';
+    useInteractiveTour.mockReturnValue({ tourId: 'analytics', currentStep: { tabId: 'overview' } });
+    const { rerender } = renderContainer([], [], url);
+
+    useInteractiveTour.mockReturnValue({ tourId: 'analytics', currentStep: { tabId: 'agents' } });
+    rerender(containerTree([], [], url));
+
+    expect(screen.getByTestId('panel-agents')).toBeInTheDocument();
+    expect(urlParams().has('agent_id')).toBe(false);
+  });
+
+  it('keeps a deep-linked agent through a tour step on the same tab and a later range change', () => {
+    useInteractiveTour.mockReturnValue({ tourId: 'analytics', currentStep: { tabId: 'agents' } });
+    renderContainer([], [], '/settings/analytics?tab=agents&range=7&agent_id=5');
+
+    fireEvent.click(screen.getByTestId('analytics-date-preset-30'));
+
+    expect(urlParams().get('range')).toBe('30');
+    expect(urlParams().get('agent_id')).toBe('5');
+  });
+});
+
+const renderWithHistory = (permissions, entries) =>
+  render(
+    <MemoryRouter
+      initialEntries={entries}
+      initialIndex={entries.length - 1}
+    >
+      <RouterHistoryProbe />
+      <Provider store={storeWith(permissions, [])}>
+        <ThemeProvider theme={analyticsTestTheme}>
+          <AnalyticsContainer />
+        </ThemeProvider>
+      </Provider>
+    </MemoryRouter>,
+  );
+
+const historyLocation = () => screen.getByTestId('history-location');
+
+describe('AnalyticsContainer browser history (#7033)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    useInteractiveTour.mockReturnValue({});
+  });
+
+  afterEach(() => cleanup());
+
+  it('returns to the previous tab on browser Back after a tab click', () => {
+    renderWithHistory([], ['/settings/analytics?tab=agents&range=0']);
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Tools' }));
+    expect(screen.getByTestId('panel-tools')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('history-back'));
+
+    expect(screen.getByTestId('panel-agents')).toBeInTheDocument();
+    expect(new URLSearchParams(historyLocation().dataset.search).get('tab')).toBe('agents');
+  });
+
+  it('restores the agent detail on browser Back after a tab click', () => {
+    renderWithHistory([], ['/settings/analytics?tab=agents&range=0&agent_id=5']);
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Tools' }));
+    fireEvent.click(screen.getByTestId('history-back'));
+
+    expect(new URLSearchParams(historyLocation().dataset.search).get('agent_id')).toBe('5');
+  });
+
+  it('adds no history entry for a date preset change', () => {
+    renderWithHistory([], ['/elsewhere', '/settings/analytics?tab=agents&range=0']);
+
+    fireEvent.click(screen.getByTestId('analytics-date-preset-30'));
+    expect(new URLSearchParams(historyLocation().dataset.search).get('range')).toBe('30');
+
+    fireEvent.click(screen.getByTestId('history-back'));
+
+    expect(historyLocation()).toHaveAttribute('data-pathname', '/elsewhere');
+  });
+});
+
+describe('AnalyticsContainer tour step shown again (#7033)', () => {
+  const overviewStep = { tabId: 'overview' };
+  const introStep = { id: 'intro' };
+
+  beforeEach(() => vi.clearAllMocks());
+
+  afterEach(() => cleanup());
+
+  it.each([
+    ['restarted after a skip', null],
+    ['reached again with tour Next after tour Back', introStep],
+  ])('opens the step tab when the same step is %s', (_, stepBetween) => {
+    const url = '/settings/analytics?tab=overview&range=0';
+    useInteractiveTour.mockReturnValue({ tourId: 'analytics', currentStep: overviewStep });
+    const { rerender } = renderContainer([], [], url);
+
+    useInteractiveTour.mockReturnValue(stepBetween ? { tourId: 'analytics', currentStep: stepBetween } : {});
+    rerender(containerTree([], [], url));
+    fireEvent.click(screen.getByRole('tab', { name: 'Agents & Pipelines' }));
+    expect(screen.getByTestId('panel-agents')).toBeInTheDocument();
+
+    useInteractiveTour.mockReturnValue({ tourId: 'analytics', currentStep: introStep });
+    rerender(containerTree([], [], url));
+    useInteractiveTour.mockReturnValue({ tourId: 'analytics', currentStep: overviewStep });
+    rerender(containerTree([], [], url));
+
+    expect(screen.getByTestId('panel-overview')).toBeInTheDocument();
+  });
+
+  it('keeps the tab a user picks while the same tour step stays shown', () => {
+    useInteractiveTour.mockReturnValue({ tourId: 'analytics', currentStep: overviewStep });
+    renderContainer([], [], '/settings/analytics?tab=overview&range=0');
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Agents & Pipelines' }));
+
+    expect(screen.getByTestId('panel-agents')).toBeInTheDocument();
   });
 });

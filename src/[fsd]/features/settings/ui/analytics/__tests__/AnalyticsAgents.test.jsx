@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { MemoryRouter, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useAnalyticsAgentsQuery } from '@/api';
@@ -6,7 +7,11 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 import AnalyticsAgents from '../AnalyticsAgents';
-import { AnalyticsTestWrapper as Wrapper } from './_testHelpers';
+import {
+  AnalyticsTestWrapper,
+  RouterHistoryProbe,
+  AnalyticsRouterTestWrapper as Wrapper,
+} from './_testHelpers';
 
 // Stub browser globals via vi.hoisted BEFORE any vi.mock factory or ESM
 // import can touch slices/settings.js (localStorage) or MUI TablePagination
@@ -49,15 +54,20 @@ vi.mock('@/components/SearchInput', () => ({
 // this file uses.
 vi.mock('@/[fsd]/features/settings/ui/analytics', () => ({
   AnalyticsAgentDetailed: props => (
-    <div
+    <button
       data-testid="agent-detail"
       data-can-view-skills={String(props.canViewSkills)}
+      data-entity-id={props.entityId}
+      onClick={props.onBack}
     />
   ),
   ChartTooltip: () => null,
 }));
 
-vi.mock('@/[fsd]/features/settings/lib/helpers', () => ({
+vi.mock('@/[fsd]/features/settings/lib/helpers', async () => ({
+  AnalyticsUrlStateHelpers: await vi.importActual(
+    '@/[fsd]/features/settings/lib/helpers/analyticsUrlState.helpers.js',
+  ),
   AnalyticCommonHelpers: {
     fmtNum: v => (v == null ? '0' : String(v)),
     barChartCursor: () => ({}),
@@ -196,5 +206,109 @@ describe('AnalyticsAgents — agent detail skills gating (#7030)', () => {
     fireEvent.click(screen.getAllByText('CodeReviewBot').at(-1));
 
     expect(screen.getByTestId('agent-detail')).toHaveAttribute('data-can-view-skills', expected);
+  });
+});
+
+const LocationProbe = () => (
+  <div
+    data-testid="location"
+    data-search={useLocation().search}
+  />
+);
+
+const renderAt = url =>
+  render(
+    <MemoryRouter initialEntries={[url]}>
+      <LocationProbe />
+      <AnalyticsTestWrapper>
+        <AnalyticsAgents
+          projectId={1}
+          dateFrom="2026-01-01"
+          dateTo="2026-01-31"
+        />
+      </AnalyticsTestWrapper>
+    </MemoryRouter>,
+  );
+
+const searchOf = () => new URLSearchParams(screen.getByTestId('location').dataset.search);
+
+describe('AnalyticsAgents — selected agent in the URL (#7033)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    useAnalyticsAgentsQuery.mockReturnValue({ data: MOCK, isFetching: false });
+  });
+
+  afterEach(() => cleanup());
+
+  it('opens the agent named in the URL, so Back from a run page restores it', () => {
+    renderAt('/settings/analytics?tab=agents&agent_id=42');
+
+    expect(screen.getByTestId('agent-detail')).toHaveAttribute('data-entity-id', '42');
+  });
+
+  it('writes the clicked agent into the URL and keeps the other params', () => {
+    renderAt('/settings/analytics?tab=agents&range=30');
+
+    fireEvent.click(screen.getAllByText('CodeReviewBot').at(-1));
+
+    expect(searchOf().get('agent_id')).toBe('42');
+    expect(searchOf().get('range')).toBe('30');
+  });
+
+  it('clears the agent from the URL on Back', () => {
+    renderAt('/settings/analytics?tab=agents&agent_id=42');
+
+    fireEvent.click(screen.getByTestId('agent-detail'));
+
+    expect(searchOf().has('agent_id')).toBe(false);
+    expect(screen.queryByTestId('agent-detail')).toBeNull();
+  });
+});
+
+const renderWithHistory = url =>
+  render(
+    <MemoryRouter initialEntries={[url]}>
+      <RouterHistoryProbe />
+      <AnalyticsTestWrapper>
+        <AnalyticsAgents
+          projectId={1}
+          dateFrom="2026-01-01"
+          dateTo="2026-01-31"
+        />
+      </AnalyticsTestWrapper>
+    </MemoryRouter>,
+  );
+
+const historySearch = () => new URLSearchParams(screen.getByTestId('history-location').dataset.search);
+
+describe('AnalyticsAgents browser history (#7033)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    useAnalyticsAgentsQuery.mockReturnValue({ data: MOCK, isFetching: false });
+  });
+
+  afterEach(() => cleanup());
+
+  it('returns from an opened agent to the list on browser Back', () => {
+    renderWithHistory('/settings/analytics?tab=agents&range=0');
+
+    fireEvent.click(screen.getAllByText('CodeReviewBot').at(-1));
+    expect(screen.getByTestId('agent-detail')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('history-back'));
+
+    expect(screen.queryByTestId('agent-detail')).toBeNull();
+    expect(historySearch().has('agent_id')).toBe(false);
+  });
+
+  it('returns to the agent detail on browser Back after the in-page Back arrow', () => {
+    renderWithHistory('/settings/analytics?tab=agents&range=0&agent_id=42');
+
+    fireEvent.click(screen.getByTestId('agent-detail'));
+    expect(screen.queryByTestId('agent-detail')).toBeNull();
+
+    fireEvent.click(screen.getByTestId('history-back'));
+
+    expect(screen.getByTestId('agent-detail')).toHaveAttribute('data-entity-id', '42');
   });
 });

@@ -1,6 +1,6 @@
 import { memo } from 'react';
 
-import { Box, TableSortLabel, Typography } from '@mui/material';
+import { Box, CircularProgress, TableSortLabel, Typography } from '@mui/material';
 
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 
@@ -8,7 +8,9 @@ import { analyticsTableSortLabelSx, analyticsTableStyles as styles } from './ana
 
 const rowKey = (row, index) => row.key ?? index;
 
-const SkillBreakdownTable = memo(props => {
+const columnSortKey = column => column.sortKey ?? column.key;
+
+const AnalyticsBreakdownTable = memo(props => {
   const {
     title,
     tooltip,
@@ -20,9 +22,11 @@ const SkillBreakdownTable = memo(props => {
     sortBy,
     sortOrder,
     onSort,
+    loading = false,
+    footer,
   } = props;
 
-  const tableStyles = skillBreakdownTableStyles();
+  const tableStyles = analyticsBreakdownTableStyles();
 
   return (
     <Box
@@ -62,10 +66,11 @@ const SkillBreakdownTable = memo(props => {
                 sx={[styles.tableCell, { flex: column.flex ?? 1 }]}
               >
                 <TableSortLabel
-                  active={sortBy === column.key}
-                  direction={sortBy === column.key ? sortOrder : 'desc'}
-                  onClick={() => onSort(column.key)}
+                  active={sortBy === columnSortKey(column)}
+                  direction={sortBy === columnSortKey(column) ? sortOrder : 'desc'}
+                  onClick={() => onSort(columnSortKey(column))}
                   sx={analyticsTableSortLabelSx}
+                  data-testid={testId ? `${testId}-sort-${column.key}` : undefined}
                 >
                   {column.label}
                 </TableSortLabel>
@@ -81,23 +86,32 @@ const SkillBreakdownTable = memo(props => {
           )}
         </Box>
         <Box sx={tableStyles.scrollList}>
-          {rows.map((row, index) => (
+          {loading && (
             <Box
-              key={rowKey(row, index)}
-              sx={styles.tableRow}
-              data-testid={testId ? `${testId}-row` : undefined}
+              sx={tableStyles.loadingState}
+              data-testid={testId ? `${testId}-loading` : undefined}
             >
-              {columns.map(column => (
-                <Box
-                  key={column.key}
-                  sx={[styles.tableCellValue, { flex: column.flex ?? 1 }]}
-                >
-                  {column.render ? column.render(row) : row[column.key]}
-                </Box>
-              ))}
+              <CircularProgress size={24} />
             </Box>
-          ))}
-          {!rows.length && (
+          )}
+          {!loading &&
+            rows.map((row, index) => (
+              <Box
+                key={rowKey(row, index)}
+                sx={styles.tableRow}
+                data-testid={testId ? `${testId}-row` : undefined}
+              >
+                {columns.map(column => (
+                  <Box
+                    key={column.key}
+                    sx={[styles.tableCellValue, { flex: column.flex ?? 1 }]}
+                  >
+                    {column.render ? column.render(row) : row[column.key]}
+                  </Box>
+                ))}
+              </Box>
+            ))}
+          {!loading && !rows.length && (
             <Typography
               variant="bodySmall"
               sx={tableStyles.emptyText}
@@ -108,19 +122,21 @@ const SkillBreakdownTable = memo(props => {
           )}
         </Box>
       </Box>
+      {footer}
     </Box>
   );
 });
 
-SkillBreakdownTable.displayName = 'SkillBreakdownTable';
+AnalyticsBreakdownTable.displayName = 'AnalyticsBreakdownTable';
 
 /** @type {MuiSx} */
-const skillBreakdownTableStyles = () => ({
+const analyticsBreakdownTableStyles = () => ({
   scrollList: { maxHeight: '18.75rem', overflowY: 'auto', overflowX: 'hidden' },
   emptyText: ({ palette }) => ({
     color: palette.text.metrics || palette.text.disabled,
     padding: '0.5rem 0.75rem',
   }),
+  loadingState: { display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '2rem' },
 });
 
-export default SkillBreakdownTable;
+export default AnalyticsBreakdownTable;

@@ -31,10 +31,10 @@ import {
   SkillAnalyticsHelpers,
 } from '@/[fsd]/features/settings/lib/helpers';
 import {
+  AnalyticsBreakdownTable,
   ChartTooltip,
   DeletedChip,
   KPICard,
-  SkillBreakdownTable,
 } from '@/[fsd]/features/settings/ui/analytics';
 import EntityKindChip from '@/[fsd]/features/settings/ui/analytics/components/EntityKindChip';
 import { analyticsTableStyles } from '@/[fsd]/features/settings/ui/analytics/components/analyticsTable.styles';
@@ -63,7 +63,7 @@ const usageTable = firstColumn => [{ flex: 2.5, ...firstColumn }, ...USAGE_COLUM
 const VERSION_COLUMNS = usageTable({
   key: 'version_name',
   label: 'Version',
-  render: r => SkillAnalyticsHelpers.skillVersionLabel(r.version_name),
+  render: r => AnalyticCommonHelpers.formatVersionLabel(r.version_name),
 });
 
 const USER_COLUMNS = usageTable({
@@ -75,7 +75,7 @@ const USER_COLUMNS = usageTable({
 const TRIGGER_COLUMNS = usageTable({
   key: 'trigger_source',
   label: 'Trigger',
-  render: r => SkillAnalyticsHelpers.skillTriggerLabel(r.trigger_source),
+  render: r => AnalyticCommonHelpers.formatTriggerLabel(r.trigger_source),
 });
 
 const MODEL_COLUMNS = [
@@ -172,7 +172,7 @@ const AnalyticsSkillDetailed = memo(props => {
     {
       key: 'version_name',
       label: 'Version',
-      render: run => SkillAnalyticsHelpers.skillVersionLabel(run.version_name),
+      render: run => AnalyticCommonHelpers.formatVersionLabel(run.version_name),
     },
     { key: 'model_name', label: 'Model', flex: 1.5 },
     { key: 'total_tokens', label: 'Tokens', render: run => fmtNum(run.total_tokens) },
@@ -479,7 +479,7 @@ const AnalyticsSkillDetailed = memo(props => {
       )}
 
       <Box sx={styles.grid}>
-        <SkillBreakdownTable
+        <AnalyticsBreakdownTable
           title="Versions"
           tooltip={tt.VERSIONS}
           columns={VERSION_COLUMNS}
@@ -489,7 +489,7 @@ const AnalyticsSkillDetailed = memo(props => {
           sortOrder={versionSort.sortOrder}
           onSort={handleVersionSort}
         />
-        <SkillBreakdownTable
+        <AnalyticsBreakdownTable
           title="Models"
           tooltip={tt.MODELS}
           columns={MODEL_COLUMNS}
@@ -500,7 +500,7 @@ const AnalyticsSkillDetailed = memo(props => {
           sortOrder={modelSort.sortOrder}
           onSort={handleModelSort}
         />
-        <SkillBreakdownTable
+        <AnalyticsBreakdownTable
           title="Users"
           tooltip={tt.USERS}
           columns={USER_COLUMNS}
@@ -510,7 +510,7 @@ const AnalyticsSkillDetailed = memo(props => {
           sortOrder={userSort.sortOrder}
           onSort={handleUserSort}
         />
-        <SkillBreakdownTable
+        <AnalyticsBreakdownTable
           title="Trigger Sources"
           tooltip={tt.TRIGGERS}
           columns={TRIGGER_COLUMNS}
@@ -520,7 +520,7 @@ const AnalyticsSkillDetailed = memo(props => {
           sortOrder={triggerSort.sortOrder}
           onSort={handleTriggerSort}
         />
-        <SkillBreakdownTable
+        <AnalyticsBreakdownTable
           title="Used by Agents"
           tooltip={tt.AGENTS}
           columns={agentColumns}
@@ -531,7 +531,7 @@ const AnalyticsSkillDetailed = memo(props => {
           sortOrder={agentSort.sortOrder}
           onSort={handleAgentSort}
         />
-        <SkillBreakdownTable
+        <AnalyticsBreakdownTable
           title="Load vs Mention"
           tooltip={tt.SOURCES}
           subtitle={
@@ -549,7 +549,7 @@ const AnalyticsSkillDetailed = memo(props => {
         />
       </Box>
 
-      <SkillBreakdownTable
+      <AnalyticsBreakdownTable
         title="Recent Runs"
         tooltip={tt.RECENT_RUNS}
         columns={recentRunColumns}

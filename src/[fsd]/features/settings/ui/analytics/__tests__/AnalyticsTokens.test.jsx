@@ -26,6 +26,10 @@ vi.mock('@/[fsd]/shared/config/store', () => ({
   default: { getState: () => ({}), dispatch: vi.fn(), subscribe: vi.fn() },
 }));
 
+vi.mock('@/[fsd]/shared/config/store', () => ({
+  default: { getState: () => ({}), dispatch: vi.fn(), subscribe: vi.fn() },
+}));
+
 vi.mock('recharts', () => ({
   ResponsiveContainer: ({ children }) => <div>{children}</div>,
   BarChart: ({ children }) => <div data-testid="bar-chart">{children}</div>,
