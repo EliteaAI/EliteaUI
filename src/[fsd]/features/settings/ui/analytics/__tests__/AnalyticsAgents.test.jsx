@@ -7,7 +7,11 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 import AnalyticsAgents from '../AnalyticsAgents';
-import { AnalyticsTestWrapper, AnalyticsRouterTestWrapper as Wrapper } from './_testHelpers';
+import {
+  AnalyticsTestWrapper,
+  RouterHistoryProbe,
+  AnalyticsRouterTestWrapper as Wrapper,
+} from './_testHelpers';
 
 // Stub browser globals via vi.hoisted BEFORE any vi.mock factory or ESM
 // import can touch slices/settings.js (localStorage) or MUI TablePagination
@@ -258,5 +262,53 @@ describe('AnalyticsAgents — selected agent in the URL (#7033)', () => {
 
     expect(searchOf().has('agent_id')).toBe(false);
     expect(screen.queryByTestId('agent-detail')).toBeNull();
+  });
+});
+
+const renderWithHistory = url =>
+  render(
+    <MemoryRouter initialEntries={[url]}>
+      <RouterHistoryProbe />
+      <AnalyticsTestWrapper>
+        <AnalyticsAgents
+          projectId={1}
+          dateFrom="2026-01-01"
+          dateTo="2026-01-31"
+        />
+      </AnalyticsTestWrapper>
+    </MemoryRouter>,
+  );
+
+const historySearch = () => new URLSearchParams(screen.getByTestId('history-location').dataset.search);
+
+describe('AnalyticsAgents browser history (#7033)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    useAnalyticsAgentsQuery.mockReturnValue({ data: MOCK, isFetching: false });
+  });
+
+  afterEach(() => cleanup());
+
+  it('returns from an opened agent to the list on browser Back', () => {
+    renderWithHistory('/settings/analytics?tab=agents&range=0');
+
+    fireEvent.click(screen.getAllByText('CodeReviewBot').at(-1));
+    expect(screen.getByTestId('agent-detail')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('history-back'));
+
+    expect(screen.queryByTestId('agent-detail')).toBeNull();
+    expect(historySearch().has('agent_id')).toBe(false);
+  });
+
+  it('returns to the agent detail on browser Back after the in-page Back arrow', () => {
+    renderWithHistory('/settings/analytics?tab=agents&range=0&agent_id=42');
+
+    fireEvent.click(screen.getByTestId('agent-detail'));
+    expect(screen.queryByTestId('agent-detail')).toBeNull();
+
+    fireEvent.click(screen.getByTestId('history-back'));
+
+    expect(screen.getByTestId('agent-detail')).toHaveAttribute('data-entity-id', '42');
   });
 });

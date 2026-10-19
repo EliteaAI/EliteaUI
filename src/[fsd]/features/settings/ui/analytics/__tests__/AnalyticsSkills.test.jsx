@@ -7,7 +7,11 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 
 import AnalyticsSkills from '../AnalyticsSkills';
-import { AnalyticsTestWrapper, AnalyticsRouterTestWrapper as Wrapper } from './_testHelpers';
+import {
+  AnalyticsTestWrapper,
+  RouterHistoryProbe,
+  AnalyticsRouterTestWrapper as Wrapper,
+} from './_testHelpers';
 
 vi.hoisted(async () => {
   const { installGlobalStubs } = await import('./_testHelpers');
@@ -18,9 +22,12 @@ vi.mock('@/[fsd]/features/settings/api/analyticsApi', () => ({ useAnalyticsSkill
 
 vi.mock('@/[fsd]/features/settings/ui/analytics/AnalyticsSkillDetailed', () => ({
   default: props => (
-    <div data-testid="skill-detail">
+    <button
+      data-testid="skill-detail"
+      onClick={props.onBack}
+    >
       {props.skillProjectId}:{props.skillId}
-    </div>
+    </button>
   ),
 }));
 
@@ -266,6 +273,54 @@ describe('AnalyticsSkills — selected skill in the URL (#7033)', () => {
         </AnalyticsTestWrapper>
       </MemoryRouter>,
     );
+
+    expect(screen.getByTestId('skill-detail')).toHaveTextContent('2:180');
+  });
+});
+
+const renderSkillsWithHistory = url =>
+  render(
+    <MemoryRouter initialEntries={[url]}>
+      <RouterHistoryProbe />
+      <AnalyticsTestWrapper>
+        <AnalyticsSkills
+          projectId={2}
+          dateFrom="2026-10-01T00:00:00Z"
+          dateTo="2026-10-10T00:00:00Z"
+        />
+      </AnalyticsTestWrapper>
+    </MemoryRouter>,
+  );
+
+describe('AnalyticsSkills browser history (#7033)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    useAnalyticsSkillsQuery.mockReturnValue({ data: PAYLOAD, isFetching: false, isError: false });
+  });
+
+  afterEach(() => cleanup());
+
+  it('returns from an opened skill to the list on browser Back', () => {
+    renderSkillsWithHistory('/settings/analytics?tab=skills&range=0');
+
+    fireEvent.click(screen.getAllByTestId('analytics-skills-row')[1]);
+    expect(screen.getByTestId('skill-detail')).toHaveTextContent('2:180');
+
+    fireEvent.click(screen.getByTestId('history-back'));
+
+    expect(screen.queryByTestId('skill-detail')).toBeNull();
+    expect(new URLSearchParams(screen.getByTestId('history-location').dataset.search).has('skill_id')).toBe(
+      false,
+    );
+  });
+
+  it('returns to the skill detail on browser Back after the in-page Back arrow', () => {
+    renderSkillsWithHistory('/settings/analytics?tab=skills&range=0&skill_id=180&skill_project_id=2');
+
+    fireEvent.click(screen.getByTestId('skill-detail'));
+    expect(screen.queryByTestId('skill-detail')).toBeNull();
+
+    fireEvent.click(screen.getByTestId('history-back'));
 
     expect(screen.getByTestId('skill-detail')).toHaveTextContent('2:180');
   });

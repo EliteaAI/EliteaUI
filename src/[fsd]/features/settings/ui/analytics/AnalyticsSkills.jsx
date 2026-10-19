@@ -137,13 +137,11 @@ const AnalyticsSkills = memo(props => {
 
   const selectSkill = useCallback(
     skill =>
-      setSearchParams(
-        previous =>
-          AnalyticsUrlStateHelpers.updateAnalyticsSearchParams(previous, {
-            [ANALYTICS_SEARCH_PARAMS.skillId]: skill?.skill_id,
-            [ANALYTICS_SEARCH_PARAMS.skillProjectId]: skill?.skill_project_id,
-          }),
-        { replace: true },
+      setSearchParams(previous =>
+        AnalyticsUrlStateHelpers.updateAnalyticsSearchParams(previous, {
+          [ANALYTICS_SEARCH_PARAMS.skillId]: skill?.skill_id,
+          [ANALYTICS_SEARCH_PARAMS.skillProjectId]: skill?.skill_project_id,
+        }),
       ),
     [setSearchParams],
   );

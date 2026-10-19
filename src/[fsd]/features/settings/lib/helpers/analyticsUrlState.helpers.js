@@ -15,8 +15,10 @@ const parseDate = value => {
 const readPreset = (rawRange, presetValues) =>
   presetValues.find(value => String(value) === rawRange) ?? presetValues[0];
 
+export const readAnalyticsTab = (searchParams, defaultTab) => searchParams.get(KEYS.tab) || defaultTab;
+
 export const readAnalyticsView = (searchParams, { presetValues, customPreset, defaultTab }) => {
-  const tab = searchParams.get(KEYS.tab) || defaultTab;
+  const tab = readAnalyticsTab(searchParams, defaultTab);
   const rawRange = searchParams.get(KEYS.range);
 
   if (rawRange === customPreset) {
@@ -55,3 +57,6 @@ export const writeAnalyticsView = (searchParams, { tab, preset, from, to, custom
 
 export const clearAnalyticsEntity = searchParams =>
   updateAnalyticsSearchParams(searchParams, Object.fromEntries(ENTITY_KEYS.map(key => [key, null])));
+
+export const switchAnalyticsTab = (searchParams, tab) =>
+  updateAnalyticsSearchParams(clearAnalyticsEntity(searchParams), { [KEYS.tab]: tab });

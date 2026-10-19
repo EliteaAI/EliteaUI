@@ -11,7 +11,7 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 import AnalyticsContainer from '../AnalyticsContainer';
-import { analyticsTestTheme } from './_testHelpers';
+import { RouterHistoryProbe, analyticsTestTheme } from './_testHelpers';
 
 vi.hoisted(async () => {
   const { installGlobalStubs } = await import('./_testHelpers');
@@ -343,5 +343,102 @@ describe('AnalyticsContainer tour steps and the selected entity (#7033)', () => 
 
     expect(urlParams().get('range')).toBe('30');
     expect(urlParams().get('agent_id')).toBe('5');
+  });
+});
+
+const renderWithHistory = (permissions, entries) =>
+  render(
+    <MemoryRouter
+      initialEntries={entries}
+      initialIndex={entries.length - 1}
+    >
+      <RouterHistoryProbe />
+      <Provider store={storeWith(permissions, [])}>
+        <ThemeProvider theme={analyticsTestTheme}>
+          <AnalyticsContainer />
+        </ThemeProvider>
+      </Provider>
+    </MemoryRouter>,
+  );
+
+const historyLocation = () => screen.getByTestId('history-location');
+
+describe('AnalyticsContainer browser history (#7033)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    useInteractiveTour.mockReturnValue({});
+  });
+
+  afterEach(() => cleanup());
+
+  it('returns to the previous tab on browser Back after a tab click', () => {
+    renderWithHistory([], ['/settings/analytics?tab=agents&range=0']);
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Tools' }));
+    expect(screen.getByTestId('panel-tools')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('history-back'));
+
+    expect(screen.getByTestId('panel-agents')).toBeInTheDocument();
+    expect(new URLSearchParams(historyLocation().dataset.search).get('tab')).toBe('agents');
+  });
+
+  it('restores the agent detail on browser Back after a tab click', () => {
+    renderWithHistory([], ['/settings/analytics?tab=agents&range=0&agent_id=5']);
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Tools' }));
+    fireEvent.click(screen.getByTestId('history-back'));
+
+    expect(new URLSearchParams(historyLocation().dataset.search).get('agent_id')).toBe('5');
+  });
+
+  it('adds no history entry for a date preset change', () => {
+    renderWithHistory([], ['/elsewhere', '/settings/analytics?tab=agents&range=0']);
+
+    fireEvent.click(screen.getByTestId('analytics-date-preset-30'));
+    expect(new URLSearchParams(historyLocation().dataset.search).get('range')).toBe('30');
+
+    fireEvent.click(screen.getByTestId('history-back'));
+
+    expect(historyLocation()).toHaveAttribute('data-pathname', '/elsewhere');
+  });
+});
+
+describe('AnalyticsContainer tour step shown again (#7033)', () => {
+  const overviewStep = { tabId: 'overview' };
+  const introStep = { id: 'intro' };
+
+  beforeEach(() => vi.clearAllMocks());
+
+  afterEach(() => cleanup());
+
+  it.each([
+    ['restarted after a skip', null],
+    ['reached again with tour Next after tour Back', introStep],
+  ])('opens the step tab when the same step is %s', (_, stepBetween) => {
+    const url = '/settings/analytics?tab=overview&range=0';
+    useInteractiveTour.mockReturnValue({ tourId: 'analytics', currentStep: overviewStep });
+    const { rerender } = renderContainer([], [], url);
+
+    useInteractiveTour.mockReturnValue(stepBetween ? { tourId: 'analytics', currentStep: stepBetween } : {});
+    rerender(containerTree([], [], url));
+    fireEvent.click(screen.getByRole('tab', { name: 'Agents & Pipelines' }));
+    expect(screen.getByTestId('panel-agents')).toBeInTheDocument();
+
+    useInteractiveTour.mockReturnValue({ tourId: 'analytics', currentStep: introStep });
+    rerender(containerTree([], [], url));
+    useInteractiveTour.mockReturnValue({ tourId: 'analytics', currentStep: overviewStep });
+    rerender(containerTree([], [], url));
+
+    expect(screen.getByTestId('panel-overview')).toBeInTheDocument();
+  });
+
+  it('keeps the tab a user picks while the same tour step stays shown', () => {
+    useInteractiveTour.mockReturnValue({ tourId: 'analytics', currentStep: overviewStep });
+    renderContainer([], [], '/settings/analytics?tab=overview&range=0');
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Agents & Pipelines' }));
+
+    expect(screen.getByTestId('panel-agents')).toBeInTheDocument();
   });
 });

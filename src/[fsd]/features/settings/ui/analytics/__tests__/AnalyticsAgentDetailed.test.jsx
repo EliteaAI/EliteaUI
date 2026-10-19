@@ -106,7 +106,7 @@ describe('AnalyticsAgentDetailed', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     useAnalyticsAgentRunsQuery.mockReturnValue({ data: undefined, isFetching: false });
-    useAnalyticsAgentDetailQuery.mockReturnValue({ data: MOCK, isFetching: false });
+    useAnalyticsAgentDetailQuery.mockReturnValue(detailQuery(MOCK));
   });
 
   afterEach(() => cleanup());
@@ -178,6 +178,8 @@ const SKILLS = [
   { skill_id: 6, skill_project_id: 2, skill_name: 'Translator', deleted: true, uses: 3, runs: 1 },
 ];
 
+const detailQuery = detail => ({ data: detail, currentData: detail, isFetching: false });
+
 const renderDetail = props =>
   render(
     <AnalyticsAgentDetailed
@@ -194,7 +196,7 @@ describe('AnalyticsAgentDetailed — skills panel (#7030)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     useAnalyticsAgentRunsQuery.mockReturnValue({ data: undefined, isFetching: false });
-    useAnalyticsAgentDetailQuery.mockReturnValue({ data: { ...MOCK, skills: SKILLS }, isFetching: false });
+    useAnalyticsAgentDetailQuery.mockReturnValue(detailQuery({ ...MOCK, skills: SKILLS }));
   });
 
   afterEach(() => cleanup());
@@ -216,10 +218,9 @@ describe('AnalyticsAgentDetailed — skills panel (#7030)', () => {
   });
 
   it('says how many skills the agent used in total when the list is capped', () => {
-    useAnalyticsAgentDetailQuery.mockReturnValue({
-      data: { ...MOCK, skills: SKILLS, skills_total: 35, skills_truncated: true },
-      isFetching: false,
-    });
+    useAnalyticsAgentDetailQuery.mockReturnValue(
+      detailQuery({ ...MOCK, skills: SKILLS, skills_total: 35, skills_truncated: true }),
+    );
     renderDetail({ canViewSkills: true });
 
     const panel = screen.getByTestId('analytics-agent-detail-skills-panel');
@@ -235,7 +236,7 @@ describe('AnalyticsAgentDetailed — skills panel (#7030)', () => {
   });
 
   it('shows the empty text when the agent used no skill', () => {
-    useAnalyticsAgentDetailQuery.mockReturnValue({ data: MOCK, isFetching: false });
+    useAnalyticsAgentDetailQuery.mockReturnValue(detailQuery(MOCK));
     renderDetail({ canViewSkills: true });
 
     expect(screen.getByTestId('analytics-agent-detail-skills-panel-empty')).toHaveTextContent(
@@ -309,17 +310,16 @@ const firstCells = testId =>
 describe('AnalyticsAgentDetailed — versions, models, triggers and recent runs (#7033)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    useAnalyticsAgentDetailQuery.mockReturnValue({ data: TABLES, isFetching: false });
+    useAnalyticsAgentDetailQuery.mockReturnValue(detailQuery(TABLES));
     useAnalyticsAgentRunsQuery.mockReturnValue({ data: { total: 2, rows: RUN_ROWS }, isFetching: false });
   });
 
   afterEach(() => cleanup());
 
   it('renders the tables in the ticket order with Skills beside Trigger Sources', () => {
-    useAnalyticsAgentDetailQuery.mockReturnValue({
-      data: { ...TABLES, daily_usage: [{ date: '2026-01-15', events: 1, errors: 0 }] },
-      isFetching: false,
-    });
+    useAnalyticsAgentDetailQuery.mockReturnValue(
+      detailQuery({ ...TABLES, daily_usage: [{ date: '2026-01-15', events: 1, errors: 0 }] }),
+    );
     renderDetail({ canViewSkills: true });
 
     const order = [
@@ -389,7 +389,7 @@ describe('AnalyticsAgentDetailed — versions, models, triggers and recent runs 
   });
 
   it('shows the ticket empty state in a table with no rows', () => {
-    useAnalyticsAgentDetailQuery.mockReturnValue({ data: { ...TABLES, by_version: [] }, isFetching: false });
+    useAnalyticsAgentDetailQuery.mockReturnValue(detailQuery({ ...TABLES, by_version: [] }));
     renderDetail();
 
     expect(screen.getByTestId('analytics-agent-detail-versions-empty')).toHaveTextContent(
@@ -400,6 +400,7 @@ describe('AnalyticsAgentDetailed — versions, models, triggers and recent runs 
   it('shows the ticket empty state when the agent has no data in the range', () => {
     useAnalyticsAgentDetailQuery.mockReturnValue({
       data: undefined,
+      currentData: undefined,
       isFetching: false,
       error: { status: 404 },
     });
@@ -466,10 +467,7 @@ describe('AnalyticsAgentDetailed — versions, models, triggers and recent runs 
   });
 
   it('opens a pipeline run on the pipeline route', () => {
-    useAnalyticsAgentDetailQuery.mockReturnValue({
-      data: { ...TABLES, kind: 'pipeline' },
-      isFetching: false,
-    });
+    useAnalyticsAgentDetailQuery.mockReturnValue(detailQuery({ ...TABLES, kind: 'pipeline' }));
     renderDetail();
 
     expect(screen.getAllByTestId('analytics-agent-detail-run-link')[0].getAttribute('href')).toMatch(
@@ -516,7 +514,7 @@ describe('AnalyticsAgentDetailed — versions, models, triggers and recent runs 
 describe('AnalyticsAgentDetailed — export (#7033)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    useAnalyticsAgentDetailQuery.mockReturnValue({ data: TABLES, isFetching: false });
+    useAnalyticsAgentDetailQuery.mockReturnValue(detailQuery(TABLES));
     useAnalyticsAgentRunsQuery.mockReturnValue({ data: { total: 2, rows: RUN_ROWS }, isFetching: false });
     analyticsApi.endpoints.analyticsAgentRuns.initiate.mockImplementation(args => ({
       unwrap: () => Promise.resolve({ total: 2, rows: args.offset === 0 ? RUN_ROWS : [] }),
@@ -611,5 +609,68 @@ describe('AnalyticsAgentDetailed — export (#7033)', () => {
     fireEvent.click(screen.getByTestId('analytics-agent-detail-export-button'));
 
     expect(await screen.findByTestId('analytics-agent-detail-export-error')).toBeInTheDocument();
+  });
+});
+
+describe('AnalyticsAgentDetailed — switching to a range without data (#7033)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    useAnalyticsAgentRunsQuery.mockReturnValue({ data: { total: 0, rows: [] }, isFetching: false });
+  });
+
+  afterEach(() => cleanup());
+
+  it('drops the previous range numbers and shows the empty state with Back', () => {
+    const onBack = vi.fn();
+    useAnalyticsAgentDetailQuery.mockReturnValue(detailQuery(TABLES));
+    const { rerender } = renderDetail({ onBack });
+
+    expect(screen.getByText('19134')).toBeInTheDocument();
+
+    useAnalyticsAgentDetailQuery.mockReturnValue({
+      data: TABLES,
+      currentData: undefined,
+      isFetching: false,
+      error: { status: 404 },
+    });
+    rerender(
+      <AnalyticsAgentDetailed
+        projectId={1}
+        entityId={42}
+        dateFrom="2020-01-01"
+        dateTo="2020-12-31"
+        onBack={onBack}
+      />,
+    );
+
+    expect(screen.queryByText('19134')).toBeNull();
+    expect(screen.queryByTestId('analytics-agent-detail-versions')).toBeNull();
+    expect(screen.getByTestId('analytics-agent-detail-empty')).toHaveTextContent(
+      'No data is available for this Agent or Pipeline in the selected date range.',
+    );
+    fireEvent.click(screen.getByTestId('analytics-agent-detail-back-button'));
+    expect(onBack).toHaveBeenCalledTimes(1);
+  });
+
+  it('says loading failed on any other error', () => {
+    useAnalyticsAgentDetailQuery.mockReturnValue({
+      data: TABLES,
+      currentData: undefined,
+      isFetching: false,
+      error: { status: 500 },
+    });
+    renderDetail();
+
+    expect(screen.getByTestId('analytics-agent-detail-empty')).toHaveTextContent(
+      'Failed to load Agent or Pipeline analytics.',
+    );
+  });
+
+  it('shows the spinner, not the previous range, while the new range loads', () => {
+    useAnalyticsAgentDetailQuery.mockReturnValue({ data: TABLES, currentData: undefined, isFetching: true });
+    renderDetail();
+
+    expect(screen.getByTestId('analytics-agent-detail-loading-indicator')).toBeInTheDocument();
+    expect(screen.queryByText('19134')).toBeNull();
   });
 });

@@ -10,7 +10,7 @@
  * (border.table, status.rejected, text.accent, background.card, etc).
  */
 import { Provider } from 'react-redux';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom';
 
 import { ThemeProvider, createTheme } from '@mui/material';
 
@@ -121,3 +121,24 @@ export const AnalyticsRouterTestWrapper = ({ children }) => (
     <AnalyticsTestWrapper>{children}</AnalyticsTestWrapper>
   </MemoryRouter>
 );
+
+export const RouterHistoryProbe = () => {
+  const { pathname, search } = useLocation();
+  const navigate = useNavigate();
+  return (
+    <div
+      data-testid="history-location"
+      data-pathname={pathname}
+      data-search={search}
+    >
+      <button
+        data-testid="history-back"
+        onClick={() => navigate(-1)}
+      />
+      <button
+        data-testid="history-forward"
+        onClick={() => navigate(1)}
+      />
+    </div>
+  );
+};

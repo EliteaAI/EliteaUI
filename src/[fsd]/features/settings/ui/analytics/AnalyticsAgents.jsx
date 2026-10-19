@@ -155,12 +155,10 @@ const AnalyticsAgents = memo(props => {
 
   const handleAgentClick = useCallback(
     entityId =>
-      setSearchParams(
-        previous =>
-          AnalyticsUrlStateHelpers.updateAnalyticsSearchParams(previous, {
-            [ANALYTICS_SEARCH_PARAMS.agentId]: entityId,
-          }),
-        { replace: true },
+      setSearchParams(previous =>
+        AnalyticsUrlStateHelpers.updateAnalyticsSearchParams(previous, {
+          [ANALYTICS_SEARCH_PARAMS.agentId]: entityId,
+        }),
       ),
     [setSearchParams],
   );

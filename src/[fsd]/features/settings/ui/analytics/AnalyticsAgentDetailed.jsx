@@ -165,7 +165,11 @@ const AnalyticAgentDetailed = memo(props => {
     setExportError(false);
   }, [entityId, dateFrom, dateTo]);
 
-  const { data, isFetching, error } = useAnalyticsAgentDetailQuery(
+  const {
+    currentData: data,
+    isFetching,
+    error,
+  } = useAnalyticsAgentDetailQuery(
     { projectId, entityId, dateFrom, dateTo },
     { skip: !projectId || !entityId },
   );

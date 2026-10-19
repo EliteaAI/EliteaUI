@@ -115,7 +115,7 @@ const AnalyticsContainer = memo(() => {
   const [fromOpen, setFromOpen] = useState(false);
   const [toOpen, setToOpen] = useState(false);
 
-  const [selectedTab, setSelectedTab] = useState(initialView.tab);
+  const selectedTab = AnalyticsUrlStateHelpers.readAnalyticsTab(searchParams, TAB.overview);
   const activeTab = visibleTabIds.includes(selectedTab) ? selectedTab : TAB.overview;
 
   const [pendingUserId, setPendingUserId] = useState(null);
@@ -142,20 +142,23 @@ const AnalyticsContainer = memo(() => {
     }
   }, [isDateRangeValid, dateFrom, dateTo]);
 
-  const clearsEntityOnNextWrite = useRef(false);
-  const activeTabRef = useRef(activeTab);
+  const handledTourStep = useRef(null);
+  const pendingTourTab = useRef(null);
 
   useEffect(() => {
-    activeTabRef.current = activeTab;
-  }, [activeTab]);
-
-  useEffect(() => {
-    const currentSearchParams = clearsEntityOnNextWrite.current
-      ? AnalyticsUrlStateHelpers.clearAnalyticsEntity(searchParams)
+    const tourTab = tourId === ANALYTICS_TOUR_ID ? currentStep?.tabId : undefined;
+    if (!tourTab) handledTourStep.current = null;
+    if (tourTab && handledTourStep.current !== currentStep) {
+      handledTourStep.current = currentStep;
+      pendingTourTab.current = tourTab === selectedTab ? null : tourTab;
+      setPendingUserId(null);
+    }
+    if (pendingTourTab.current === selectedTab) pendingTourTab.current = null;
+    const baseSearchParams = pendingTourTab.current
+      ? AnalyticsUrlStateHelpers.switchAnalyticsTab(searchParams, pendingTourTab.current)
       : searchParams;
-    clearsEntityOnNextWrite.current = false;
-    const nextSearchParams = AnalyticsUrlStateHelpers.writeAnalyticsView(currentSearchParams, {
-      tab: activeTab,
+    const nextSearchParams = AnalyticsUrlStateHelpers.writeAnalyticsView(baseSearchParams, {
+      tab: AnalyticsUrlStateHelpers.readAnalyticsTab(baseSearchParams, TAB.overview),
       preset: selectedDatePreset,
       from: committedRange.from,
       to: committedRange.to,
@@ -163,7 +166,7 @@ const AnalyticsContainer = memo(() => {
     });
     if (nextSearchParams.toString() !== searchParams.toString())
       setSearchParams(nextSearchParams, { replace: true });
-  }, [searchParams, setSearchParams, activeTab, selectedDatePreset, committedRange]);
+  }, [searchParams, setSearchParams, selectedTab, selectedDatePreset, committedRange, currentStep, tourId]);
 
   const dateFromISO = useMemo(
     () => AnalyticCommonHelpers.toValidISOString(committedRange.from),
@@ -239,21 +242,31 @@ const AnalyticsContainer = memo(() => {
     setSelectedDatePreset(CUSTOM_PRESET_VALUE);
   }, []);
 
-  const handleTabChange = useCallback((_, newTab) => {
-    setPendingUserId(null);
-    setSelectedTab(newTab);
-    clearsEntityOnNextWrite.current = true;
-  }, []);
+  const pushAnalyticsTab = useCallback(
+    tab => setSearchParams(previous => AnalyticsUrlStateHelpers.switchAnalyticsTab(previous, tab)),
+    [setSearchParams],
+  );
 
-  const handleOverviewUserClick = useCallback(userId => {
-    setPendingUserId(userId);
-    setSelectedTab(TAB.users);
-  }, []);
+  const handleTabChange = useCallback(
+    (_, newTab) => {
+      setPendingUserId(null);
+      pushAnalyticsTab(newTab);
+    },
+    [pushAnalyticsTab],
+  );
+
+  const handleOverviewUserClick = useCallback(
+    userId => {
+      setPendingUserId(userId);
+      pushAnalyticsTab(TAB.users);
+    },
+    [pushAnalyticsTab],
+  );
 
   const handleBackToOverview = useCallback(() => {
     setPendingUserId(null);
-    setSelectedTab(TAB.overview);
-  }, []);
+    pushAnalyticsTab(TAB.overview);
+  }, [pushAnalyticsTab]);
 
   const handleExport = useCallback(async () => {
     setExporting(true);
@@ -311,15 +324,6 @@ const AnalyticsContainer = memo(() => {
       setRefreshing(false);
     }
   }, [overviewFetching, refreshing]);
-
-  useEffect(() => {
-    if (tourId !== ANALYTICS_TOUR_ID || !currentStep) return;
-    if (currentStep.tabId) {
-      setPendingUserId(null);
-      if (currentStep.tabId !== activeTabRef.current) clearsEntityOnNextWrite.current = true;
-      setSelectedTab(currentStep.tabId);
-    }
-  }, [currentStep, tourId]);
 
   const datePickerCommonProps = {
     ampm: false,
