@@ -2739,7 +2739,8 @@ const ChatBox = memo(
     const onSelectModel = useCallback(
       async newModel => {
         if (isAgentsPage) {
-          if (selectedModel?.name === newModel.name) return;
+          if (selectedModel?.name === newModel.name && selectedModel?.project_id === newModel.project_id)
+            return;
 
           setSelectedModel(newModel);
           const newLLMSettings = {
