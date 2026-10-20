@@ -80,3 +80,14 @@ export const toRunISOString = value => {
 // unparseable timestamp is NaN, which never passes the cutoff.
 export const hasRunAnalytics = run =>
   parseRunTimestamp(run?.updated_at || run?.created_at) >= RUN_ANALYTICS_AVAILABLE_FROM;
+
+const EXECUTION_TYPE_LABELS = new Map([
+  ['manual', 'Manual'],
+  ['scheduled', 'Scheduled'],
+]);
+
+// A missing or unknown type (older runs) renders "-" and the row stays selectable.
+export const toExecutionTypeRow = row => ({
+  ...row,
+  event_label: EXECUTION_TYPE_LABELS.get(row.execution_type) ?? '-',
+});

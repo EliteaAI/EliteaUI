@@ -18,7 +18,7 @@ import { SearchParams } from '@/common/constants';
 const DEFAULT_TAB = 'all';
 
 const RunHistoryPage = memo(props => {
-  const { source, detailRoute, analyticsRoute } = props;
+  const { source, detailRoute, analyticsRoute, eventColumnLabel, decorateRow } = props;
   const { tab, agentId } = useParams();
   const navigate = useNavigate();
   const { search } = useLocation();
@@ -82,6 +82,8 @@ const RunHistoryPage = memo(props => {
           handleOpenAnalytics={analyticsRoute ? handleOpenAnalytics : undefined}
           ChatMessageListComponent={ChatMessageList}
           prettifyConversation={ToolkitsHelpers.prettifyToolkitConversation}
+          eventColumnLabel={eventColumnLabel}
+          decorateRow={decorateRow}
           shareOpensHistoryTab
         />
       </Box>
