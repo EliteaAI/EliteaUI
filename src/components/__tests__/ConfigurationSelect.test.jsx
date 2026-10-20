@@ -14,13 +14,16 @@ const PERSONAL_PROJECT_ID = 'personal-project';
 
 let singleSelectProps;
 
-vi.mock('@/[fsd]/shared/ui', () => ({
-  Select: {
-    SingleSelect: props => {
-      singleSelectProps = props;
-      return <div data-testid="single-select" />;
-    },
+// The real LazySelect runs; only the SingleSelect it renders is replaced.
+vi.mock('@/[fsd]/shared/ui/select/SingleSelect', () => ({
+  default: props => {
+    singleSelectProps = props;
+    return <div data-testid="single-select" />;
   },
+}));
+
+vi.mock('@/[fsd]/shared/ui', async () => ({
+  Select: { LazySelect: (await import('@/[fsd]/shared/ui/select/LazySelect')).default },
 }));
 
 vi.mock('react-redux', () => ({
@@ -102,7 +105,11 @@ describe('ConfigurationSelect EL-7011', () => {
     expect(singleSelectProps.withSearch).toBe(true);
     expect(singleSelectProps.searchFilterMode).toBe('remote');
     expect(singleSelectProps.searchString).toBe('al');
-    expect(singleSelectProps.onSearch).toBe(setQuery);
+
+    act(() => singleSelectProps.onSearch('alp'));
+    expect(setQuery).not.toHaveBeenCalled();
+    act(() => vi.advanceTimersByTime(DEBOUNCE_MS));
+    expect(setQuery).toHaveBeenCalledWith('alp');
   });
 
   it('R3.3 EL-7011 lists manual and create options before the saved configurations', () => {
