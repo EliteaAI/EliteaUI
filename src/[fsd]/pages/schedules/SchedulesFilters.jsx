@@ -45,6 +45,7 @@ const FilterSelect = memo(({ id, label, options, value, onValueChange }) => {
           onValueChange={onValueChange}
           value={value}
           options={options}
+          inputProps={{ 'aria-label': label }}
           customSelectedColor={`${theme.palette.text.primary} !important`}
           customSelectedFontSize="0.875rem"
           sx={styles.select}

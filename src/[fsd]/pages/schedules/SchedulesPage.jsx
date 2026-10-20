@@ -24,9 +24,10 @@ const SchedulesPage = () => {
   // The API default: the next run first
   const [sortConfig, setSortConfig] = useState({ field: 'next_run', direction: SortOrderOptions.ASC });
 
-  // A project switch restarts at the first page, before any request for the new project
+  // A project switch clears the filters and restarts at the first page, before any request
   if (pageProjectId !== projectId) {
     setPageProjectId(projectId);
+    setFilters(NO_FILTERS);
     setPage(0);
   }
 
@@ -53,7 +54,13 @@ const SchedulesPage = () => {
     setFilters(next);
     setPage(0);
   }, []);
-  const hasFilters = JSON.stringify(filters) !== JSON.stringify(NO_FILTERS);
+  const hasFilters = Boolean(
+    filters.entityType ||
+    filters.status ||
+    filters.enabled !== '' ||
+    filters.search ||
+    filters.ownerIds.length,
+  );
 
   const onPageChange = useCallback(newPage => setPage(newPage), []);
   const onChangePageSize = useCallback(size => {
@@ -100,6 +107,7 @@ const SchedulesPage = () => {
       tabBarStyle={{ padding: '0 0 0 1.5rem' }}
       middleTabComponent={
         <SchedulesFilters
+          key={projectId}
           value={filters}
           onChange={onFiltersChange}
           isAdmin={isAdmin}

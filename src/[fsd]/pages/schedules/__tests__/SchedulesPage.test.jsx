@@ -216,4 +216,14 @@ describe('EL-7011 US-26 SchedulesPage', () => {
     fireEvent.click(screen.getByText('owners'));
     expect(lastArgs().ownerIds).toBeUndefined();
   });
+
+  it('EL-7011 R1.3 a project change clears the filters of the old project', () => {
+    mocks.checkPermission.mockReturnValue(true);
+    const { rerender } = render(<SchedulesPage />);
+    fireEvent.click(screen.getByText('status'));
+    fireEvent.click(screen.getByText('owners'));
+    mocks.useSelectedProjectId.mockReturnValue(7);
+    rerender(<SchedulesPage />);
+    expect(lastArgs()).toMatchObject({ projectId: 7, page: 0, status: '', ownerIds: [] });
+  });
 });
