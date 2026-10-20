@@ -2272,16 +2272,31 @@ const ChatBox = memo(
             userInput: text,
             injectionId,
           }).unwrap();
-        } catch {
+        } catch (error) {
+          pendingInjectionsRef.current.delete(injectionId);
+          setPendingInjections(prev => prev.filter(item => item.id !== injectionId));
+          // The input guardrail refused it (#6886). Re-sending as a normal message would
+          // only be refused again, so hand the text back for the user to fix instead.
+          if (error?.data?.error === 'input_guardrail_blocked') {
+            chatInput.current?.setValue(text);
+            toastError(error.data.message);
+            return;
+          }
           // The turn may have ended between enabling the control and sending (409),
           // or the text may be over the size cap (400). Either way it was never
           // delivered, so fall back to a normal message.
-          pendingInjectionsRef.current.delete(injectionId);
-          setPendingInjections(prev => prev.filter(item => item.id !== injectionId));
           return onPredictStreamRef.current?.(text);
         }
       },
-      [activeConversation?.uuid, injectMessage, onClearAttachments, projectId, resetSlash, stopTTS],
+      [
+        activeConversation?.uuid,
+        injectMessage,
+        onClearAttachments,
+        projectId,
+        resetSlash,
+        stopTTS,
+        toastError,
+      ],
     );
 
     const {

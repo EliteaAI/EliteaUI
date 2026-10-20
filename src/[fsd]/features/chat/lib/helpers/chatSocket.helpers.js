@@ -1,5 +1,7 @@
 import { ROLES, TOOL_ACTION_NAMES, TOOL_ACTION_TYPES, ToolActionStatus } from '@/common/constants';
 
+import { settleHitlResumeAttempt } from './hitl.helpers';
+
 /**
  * Resolve a streamed assistant turn against the history being updated.
  *
@@ -82,4 +84,66 @@ export const mergeChatSocketMessage = (history, message, { messageId = message?.
     ...(messageId ? { id: messageId } : {}),
   };
   return nextHistory;
+};
+
+/**
+ * Input guardrail refusal (#6886). The event carries the question id for a refused new
+ * turn (nothing was stored) or the assistant message id for a refused resume or
+ * application run. Either way the waiting assistant turn is settled and carries the
+ * verdict, so the block card renders where the answer would have been and streaming
+ * state clears the same way it does for an error.
+ */
+export const applyInputGuardrailBlocked = (history = [], { messageId, questionId, verdict, message }) => {
+  const guardrail = { ...(verdict || {}), message: message || '' };
+  const isTarget = item =>
+    item.role === ROLES.Assistant &&
+    (item.id === messageId || (!!questionId && item.question_id === questionId));
+  if (!history.some(isTarget)) return history;
+  return history.map(item => {
+    if (!isTarget(item)) return item;
+    // A refused resume leaves the pause in place, so its buttons must work again
+    const settled = item.hitlInterrupts?.length
+      ? settleHitlResumeAttempt(item.hitlInterrupts, false)
+      : undefined;
+    return {
+      ...item,
+      isLoading: false,
+      isStreaming: false,
+      isRegenerating: false,
+      isSending: false,
+      // Mirrors the stored is_error, so the turn renders the same after a reload
+      exception: guardrail.message,
+      inputGuardrail: guardrail,
+      ...(settled ? { hitlInterrupts: settled, hitlInterrupt: settled[0] } : {}),
+    };
+  });
+};
+
+/**
+ * Input guardrail notice (#6886): the stored copy was redacted (content set) or only
+ * flagged (content null). Replace the sender's optimistic text so it matches what the
+ * model and other viewers see, and attach the verdict for the notice.
+ */
+export const applyInputGuardrailNotice = (history = [], { questionId, verdict, content }) => {
+  const index = history.findIndex(item => item.role === ROLES.User && item.id === questionId);
+  if (index === -1) return history;
+  const item = history[index];
+  const next = [...history];
+  const hasRedacted = typeof content === 'string';
+  let replaced = false;
+  next[index] = {
+    ...item,
+    inputGuardrail: verdict,
+    ...(hasRedacted && item.content !== undefined ? { content } : {}),
+    ...(hasRedacted && item.message_items
+      ? {
+          message_items: item.message_items.map(messageItem => {
+            if (replaced || messageItem.item_type !== 'text_message') return messageItem;
+            replaced = true;
+            return { ...messageItem, item_details: { ...messageItem.item_details, content } };
+          }),
+        }
+      : {}),
+  };
+  return next;
 };

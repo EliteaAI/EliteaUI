@@ -16,6 +16,8 @@ import {
   supersedeMentionSkillAction,
 } from '@/[fsd]/features/chat/lib/helpers';
 import {
+  applyInputGuardrailBlocked,
+  applyInputGuardrailNotice,
   createSyntheticToolAction,
   findChatSocketMessageIndex,
   insertNewAssistantMessage,
@@ -1503,6 +1505,28 @@ export const useChatSocket = ({
           });
           break;
         }
+        case SocketMessageType.InputGuardrailBlocked: {
+          // The turn never reached a model (#6886); nothing to merge on the placeholder
+          updateChatHistoryState(setChatHistoryRef, chatHistoryRef, prevState =>
+            applyInputGuardrailBlocked(prevState, {
+              messageId: message_id,
+              questionId: questionIdFromMessage,
+              verdict: response_metadata?.input_guardrail,
+              message: response_metadata?.human_readable || message.content,
+            }),
+          );
+          notifyTaskError();
+          return;
+        }
+        case SocketMessageType.InputGuardrailNotice:
+          updateChatHistoryState(setChatHistoryRef, chatHistoryRef, prevState =>
+            applyInputGuardrailNotice(prevState, {
+              questionId: questionIdFromMessage,
+              verdict: response_metadata?.input_guardrail,
+              content: message.content,
+            }),
+          );
+          return;
         case SocketMessageType.Freeform:
           break;
         case SocketMessageType.AgentStart: {

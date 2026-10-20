@@ -3,13 +3,20 @@ import { memo, useCallback } from 'react';
 import { Box } from '@mui/material';
 
 import { getInterruptIdentity } from '@/[fsd]/features/chat/lib/helpers/hitl.helpers.js';
-import { ChatContinue, ChatHitlActions, ContinuationError, ErrorTrace } from '@/[fsd]/features/chat/ui';
+import {
+  ChatContinue,
+  ChatHitlActions,
+  ContinuationError,
+  ErrorTrace,
+  InputGuardrailNotice,
+} from '@/[fsd]/features/chat/ui';
 import { SubAgentAccordion } from '@/[fsd]/features/chat/ui/sub-agent-section';
 
 const AnswerApprovals = memo(props => {
   const {
     continuationError,
     exception,
+    inputGuardrail,
     messageId,
     onCopy,
     budgetErrorCode,
@@ -47,7 +54,10 @@ const AnswerApprovals = memo(props => {
 
   return (
     <>
-      {continuationError ? (
+      {inputGuardrail?.action === 'block' ? (
+        // A refused run or resume (#6886): the policy card replaces the error trace
+        <InputGuardrailNotice guardrail={inputGuardrail} />
+      ) : continuationError ? (
         <ContinuationError
           error={continuationError}
           trace={exception}

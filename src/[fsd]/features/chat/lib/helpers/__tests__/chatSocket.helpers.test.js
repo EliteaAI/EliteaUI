@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { ROLES, TOOL_ACTION_NAMES, TOOL_ACTION_TYPES, ToolActionStatus } from '@/common/constants';
 
 import {
+  applyInputGuardrailBlocked,
+  applyInputGuardrailNotice,
   createSyntheticToolAction,
   findChatSocketMessageIndex,
   insertNewAssistantMessage,
@@ -198,5 +200,85 @@ describe('createSyntheticToolAction — missed start event fallback', () => {
   it('omits created_at when not provided', () => {
     const action = createSyntheticToolAction('run-4', 'tool', TOOL_ACTION_TYPES.Tool);
     expect('created_at' in action).toBe(false);
+  });
+});
+
+describe('input guardrail socket events (#6886)', () => {
+  const blockVerdict = { action: 'block', categories: ['credentials'], rules: ['github_pat'] };
+
+  it('settles the optimistic placeholder of a refused new turn', () => {
+    const history = [
+      { id: 'q-1', role: ROLES.User, message_items: [] },
+      { internal_id: 'tmp', question_id: 'q-1', role: ROLES.Assistant, isLoading: true },
+    ];
+    const next = applyInputGuardrailBlocked(history, {
+      messageId: 'q-1',
+      questionId: 'q-1',
+      verdict: blockVerdict,
+      message: 'It was not sent to the model.',
+    });
+    expect(next[0]).toBe(history[0]);
+    expect(next[1]).toMatchObject({
+      isLoading: false,
+      isStreaming: false,
+      exception: 'It was not sent to the model.',
+      inputGuardrail: { ...blockVerdict, message: 'It was not sent to the model.' },
+    });
+  });
+
+  it('re-enables the HITL buttons of a refused resume', () => {
+    const history = [
+      {
+        id: 'a-1',
+        role: ROLES.Assistant,
+        isLoading: true,
+        hitlInterrupts: [{ tool_call_id: 't1', decided: true }],
+      },
+    ];
+    const next = applyInputGuardrailBlocked(history, { messageId: 'a-1', verdict: blockVerdict });
+    expect(next[0].isLoading).toBe(false);
+    expect(next[0].hitlInterrupts[0].decided).toBe(false);
+    expect(next[0].hitlInterrupt).toBe(next[0].hitlInterrupts[0]);
+  });
+
+  it('leaves history untouched when no turn matches', () => {
+    const history = [{ id: 'q-1', role: ROLES.User }];
+    expect(applyInputGuardrailBlocked(history, { messageId: 'x', questionId: 'y' })).toBe(history);
+  });
+
+  it('replaces the optimistic text with the redacted copy', () => {
+    const history = [
+      {
+        id: 'q-1',
+        role: ROLES.User,
+        message_items: [
+          { item_type: 'attachment_message', item_details: { name: 'a.txt' } },
+          { item_type: 'text_message', item_details: { content: 'typed' } },
+        ],
+      },
+    ];
+    const verdict = { action: 'redact', categories: ['credentials'] };
+    const next = applyInputGuardrailNotice(history, { questionId: 'q-1', verdict, content: '[REDACTED]' });
+    expect(next[0].inputGuardrail).toEqual(verdict);
+    expect(next[0].message_items[0]).toBe(history[0].message_items[0]);
+    expect(next[0].message_items[1].item_details.content).toBe('[REDACTED]');
+    expect(next[0]).not.toHaveProperty('content');
+  });
+
+  it('keeps the text of a warn-only notice', () => {
+    const history = [
+      {
+        id: 'q-1',
+        role: ROLES.User,
+        message_items: [{ item_type: 'text_message', item_details: { content: 'typed' } }],
+      },
+    ];
+    const next = applyInputGuardrailNotice(history, {
+      questionId: 'q-1',
+      verdict: { action: 'warn' },
+      content: null,
+    });
+    expect(next[0].message_items).toBe(history[0].message_items);
+    expect(next[0].inputGuardrail.action).toBe('warn');
   });
 });
