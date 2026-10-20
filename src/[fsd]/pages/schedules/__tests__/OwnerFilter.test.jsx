@@ -70,6 +70,13 @@ describe('OwnerFilter EL-7011 R2.1 R2.2', () => {
     expect(onChangeOwners).toHaveBeenCalledWith([expect.objectContaining({ id: 1 })]);
   });
 
+  it('BUG-13 R2.1 R2.3 EL-7011 five picked owners show one chip and +4 while not focused', () => {
+    const owners = [1, 2, 3, 4, 5].map(id => ({ id, name: `Owner ${id}` }));
+    const { container } = renderFilter({ selectedOwners: owners });
+    expect(container.querySelectorAll('.MuiChip-root')).toHaveLength(1);
+    expect(screen.getByText('+4')).toBeInTheDocument();
+  });
+
   it('TC-US27-08 R2.2 sends the typed text as query after 300 ms', () => {
     renderFilter();
     fireEvent.change(screen.getByRole('combobox'), { target: { value: 'ann' } });

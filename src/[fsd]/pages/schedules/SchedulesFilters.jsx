@@ -186,9 +186,18 @@ const schedulesFiltersStyles = () => ({
     [breakpoints.down(1100)]: { flex: '1 1 9rem' },
     [breakpoints.down('sm')]: { flexBasis: '100%' },
   }),
-  // The owner chips wrap inside the control, so the bar grows in height
+  // The owner chips stay on one row inside the control, so it keeps the height of the other filters
   owner: ({ breakpoints }) => ({
     width: '15rem',
+    '& .MuiAutocomplete-root': { marginTop: 0 },
+    '& .MuiAutocomplete-inputRoot': {
+      flexWrap: 'nowrap',
+      overflowX: 'auto',
+      scrollbarWidth: 'none',
+      '&::-webkit-scrollbar': { display: 'none' },
+    },
+    '& .MuiChip-root': { maxWidth: '7rem' },
+    '& .MuiChip-label': { overflow: 'hidden', textOverflow: 'ellipsis' },
     [breakpoints.down(1100)]: { flex: '1 1 15rem', width: 'auto', minWidth: '15rem' },
     [breakpoints.down('sm')]: { flexBasis: '100%', minWidth: 0 },
   }),
