@@ -216,7 +216,8 @@ const UserMessage = memo(
                 <InputGuardrailNotice guardrail={item.meta?.input_guardrail} />
               </Box>
             ))}
-            <InputGuardrailNotice guardrail={inputGuardrail} />
+            {/* A block card renders on the answer; the stored question is already redacted */}
+            {inputGuardrail?.action !== 'block' && <InputGuardrailNotice guardrail={inputGuardrail} />}
             <MessageAttachmentList
               items={attachmentItems}
               onRemoveAttachment={onRemoveAttachment}

@@ -20,6 +20,7 @@ import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version';
 import { useSocket } from '@/[fsd]/features/auth/lib/hooks';
 import { SelectedChatModelContext } from '@/[fsd]/features/chat/lib/context/SelectedChatModelContext';
 import * as ChatHelpers from '@/[fsd]/features/chat/lib/helpers/chat.helpers';
+import { applyInputGuardrailBlocked } from '@/[fsd]/features/chat/lib/helpers/chatSocket.helpers.js';
 import { buildEntityParticipant } from '@/[fsd]/features/chat/lib/helpers/entityParticipant.helpers.js';
 import {
   actionBelongsToInvocationSet,
@@ -1429,6 +1430,18 @@ const ChatBox = memo(
           projectId,
           id: uuid,
         });
+        if (regenerateError?.data?.error === 'input_guardrail_blocked') {
+          // Nothing was stored or sent; settle the answer with the block card (#6886)
+          const { categories, rules, message_key, message } = regenerateError.data;
+          setChatHistory(prevMessages =>
+            applyInputGuardrailBlocked(prevMessages, {
+              messageId: uuid,
+              verdict: { action: 'block', categories, rules, message_key },
+              message,
+            }),
+          );
+          return;
+        }
         if (regenerateError) {
           const errorMessage = buildErrorMessage(regenerateError) || 'Regeneration Failed. Please try again.';
           toastError(errorMessage);

@@ -43,6 +43,15 @@ describe('InputGuardrailNotice', () => {
     );
   });
 
+  it('sends an instructions block to the agent owner, not the user', () => {
+    renderNotice({
+      action: 'block',
+      message_key: 'input_guardrail.blocked.instructions',
+      message: 'server text',
+    });
+    expect(screen.getByTestId('input-guardrail-blocked')).toHaveTextContent("Ask the agent's owner");
+  });
+
   it('falls back to the server message for an unknown key', () => {
     renderNotice({ action: 'block', message_key: 'input_guardrail.blocked.future', message: 'server text' });
     expect(screen.getByTestId('input-guardrail-blocked')).toHaveTextContent('server text');

@@ -14,6 +14,8 @@ export const INPUT_GUARDRAIL_BLOCK_MESSAGES = {
     'Your message appears to contain a credential. It was not sent to the model. Remove it, or store it as a project secret and reference it instead.',
   'input_guardrail.blocked.personal_data':
     'Your message appears to contain personal data. It was not sent to the model. Remove it and send again.',
+  'input_guardrail.blocked.instructions':
+    "This agent's instructions appear to contain a credential or personal data, so the turn was not sent to the model. Ask the agent's owner to remove it or store it as a project secret.",
   'input_guardrail.blocked.error':
     'Your message could not be checked by the input guardrail, so it was not sent to the model.',
 };
