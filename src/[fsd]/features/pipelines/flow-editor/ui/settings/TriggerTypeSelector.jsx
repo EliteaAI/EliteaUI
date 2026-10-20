@@ -327,7 +327,7 @@ const TriggerTypeSelector = memo(props => {
             <IconButton
               variant="elitea"
               color="tertiary"
-              sx={styles.scheduleButton}
+              sx={styles.webhookButton}
               onClick={handleWebhookIconClick}
               disabled={disabled || isLoading}
             >
@@ -345,6 +345,7 @@ const TriggerTypeSelector = memo(props => {
           To run this pipeline on a timer, use the{' '}
           <Link
             component="button"
+            className="nopan nodrag"
             type="button"
             variant="bodySmall"
             onClick={scrollToSchedules}
@@ -399,7 +400,7 @@ const triggerTypeSelectorStyles = () => ({
     flex: 1,
     marginBottom: '0',
   },
-  scheduleButton: ({ palette }) => ({
+  webhookButton: ({ palette }) => ({
     padding: '0.25rem',
     color: palette.icon.secondary,
     '&:hover': {
