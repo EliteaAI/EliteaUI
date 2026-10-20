@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useFormik } from 'formik';
 
@@ -13,6 +13,7 @@ import {
   syncPromptVariables,
   toCreateBody,
   toFieldErrors,
+  toUpdateBody,
 } from '@/[fsd]/features/schedule/lib/helpers';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
@@ -58,26 +59,44 @@ const FieldError = ({ message }) =>
     </Typography>
   ) : null;
 
+const ownerName = owner => owner?.name || owner?.email || '-';
+
 /**
  * `children({ values, setFieldValue })` fills SCHEDULE SETTINGS from the form values (cron, expires_at);
- * `onSubmit(body)` returns a promise that rejects with the API error.
+ * `onSubmit(body)` returns a promise that rejects with the API error; `onSaved(answer)` runs after a plain Save.
+ * `schedule` turns on edit mode: read-only Owner, update body, and "Test run" (`onTestRun()`, a promise)
+ * when `schedule.allowed_actions` has `run`. `entityName` and `extraSections` extend the page.
  */
 const ScheduleForm = memo(props => {
-  const { initialValues, lockedEntity, onSubmit, onCancel, children } = props;
+  const {
+    initialValues,
+    lockedEntity,
+    schedule,
+    entityName,
+    extraSections = [],
+    onSubmit,
+    onSaved,
+    onTestRun,
+    onCancel,
+    children,
+  } = props;
 
   const projectId = useSelectedProjectId();
   const { toastError } = useToast();
   const [list, setList] = useState({ page: 0, query: '' });
   const [lockFailed, setLockFailed] = useState(false);
   const [banner, setBanner] = useState('');
+  const afterSave = useRef(null);
 
   const formik = useFormik({
     initialValues,
     validationSchema: scheduleFormSchema,
     onSubmit: async (values, { setErrors }) => {
       setBanner('');
+      const runAfterSave = afterSave.current;
+      let answer;
       try {
-        await onSubmit(toCreateBody(values));
+        answer = await onSubmit((schedule ? toUpdateBody : toCreateBody)(values));
       } catch (error) {
         const fieldErrors = error?.status === 400 ? toFieldErrors(error) : {};
         const shownFields = isPromptShown(values)
@@ -86,10 +105,35 @@ const ScheduleForm = memo(props => {
         if (Object.keys(fieldErrors).some(field => shownFields.includes(field))) setErrors(fieldErrors);
         else if (error?.status === 400 || error?.status === 409) setBanner(error.data?.error ?? '');
         else toastError('Failed to save the schedule');
+        return;
       }
+      // The saved values are the new baseline: a second Test run does not save again
+      resetForm({ values });
+      await (runAfterSave ?? onSaved)?.(answer);
     },
   });
   const { values, errors, submitCount, setFieldValue, setValues, resetForm } = formik;
+
+  // A clean form runs at once; a changed one saves first, and a failed or invalid save never reaches the run
+  const runTest = useCallback(async () => {
+    setBanner('');
+    try {
+      await onTestRun();
+    } catch (error) {
+      if (error?.status === 400 || error?.status === 409) setBanner(error.data?.error ?? '');
+      else toastError('Failed to start the test run');
+    }
+  }, [onTestRun, toastError]);
+
+  const handleTestRun = async () => {
+    if (!formik.dirty) return runTest();
+    afterSave.current = runTest;
+    try {
+      await formik.submitForm();
+    } finally {
+      afterSave.current = null;
+    }
+  };
   // Unsaved changes open the leave dialog (R1.3); a save in progress never does
   const blockOptions = useMemo(
     () => ({ blockCondition: formik.dirty && !formik.isSubmitting }),
@@ -200,6 +244,13 @@ const ScheduleForm = memo(props => {
       testId: 'schedule-section-general',
       content: (
         <Box sx={styles.section}>
+          {schedule && (
+            <StyledInputEnhancer
+              disabled
+              label="Owner"
+              value={ownerName(schedule.owner)}
+            />
+          )}
           <StyledInputEnhancer
             required
             label="Name"
@@ -307,12 +358,13 @@ const ScheduleForm = memo(props => {
       testId: 'schedule-section-settings',
       content: <Box sx={styles.section}>{children?.({ values, setFieldValue })}</Box>,
     },
+    ...extraSections,
   ];
 
   // The same header bar, column and collapsible sections as New Agent (CreateApplication)
   return (
     <StyledTabs
-      leftPart={<Breadcrumbs />}
+      leftPart={<Breadcrumbs entityName={entityName} />}
       tabs={[
         {
           tabBarItems: (
@@ -326,6 +378,17 @@ const ScheduleForm = memo(props => {
               >
                 Save
               </BaseBtn>
+              {schedule?.allowed_actions?.includes('run') && (
+                <BaseBtn
+                  data-testid="schedule-form-test-run"
+                  variant="elitea"
+                  color="secondary"
+                  disabled={formik.isSubmitting}
+                  onClick={handleTestRun}
+                >
+                  Test run
+                </BaseBtn>
+              )}
               <BaseBtn
                 data-testid="schedule-cancel-button"
                 variant="elitea"

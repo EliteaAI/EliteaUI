@@ -58,7 +58,9 @@ vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useShouldCollapseRightToolbar: () => ({ shouldCollapseTabs: false }),
   useGetComponentHeight: () => ({ componentRef: null, componentHeight: 0 }),
 }));
-vi.mock('@/[fsd]/shared/ui/breadcrumbs', () => ({ default: () => <nav>Schedules / New schedule</nav> }));
+vi.mock('@/[fsd]/shared/ui/breadcrumbs', () => ({
+  default: ({ entityName }) => <nav>{`Schedules / ${entityName ?? 'New schedule'}`}</nav>,
+}));
 
 vi.mock('@/[fsd]/shared/ui/checkbox/RadioButtonGroup', () => ({
   default: ({ items, value, onChange, disabled, testId }) => (
@@ -95,7 +97,7 @@ vi.mock('@/[fsd]/entities/version', async importOriginal => ({
 }));
 
 vi.mock('@/[fsd]/shared/ui/input/StyledInputEnhancer', () => ({
-  default: ({ label, multiline, value, onChange, inputProps, helperText, error }) => {
+  default: ({ label, multiline, value, onChange, inputProps, helperText, error, disabled }) => {
     const Tag = multiline ? 'textarea' : 'input';
     return (
       <label>
@@ -104,6 +106,7 @@ vi.mock('@/[fsd]/shared/ui/input/StyledInputEnhancer', () => ({
           value={value}
           onChange={onChange}
           aria-invalid={!!error}
+          disabled={disabled}
           {...inputProps}
         />
         {helperText && <span>{helperText}</span>}
@@ -455,5 +458,149 @@ describe('ScheduleForm EL-7011', () => {
     fireEvent.click(header);
 
     expect(header).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  describe('edit mode', () => {
+    const SCHEDULE = {
+      id: 3,
+      owner: { id: 1, name: 'Ann Lee' },
+      allowed_actions: ['edit', 'run'],
+    };
+    const EDIT_INITIAL = { ...INITIAL, application_id: 7, version_id: 71, prompt: 'Hi' };
+    const renderEdit = (props = {}) =>
+      renderForm({
+        initialValues: EDIT_INITIAL,
+        schedule: SCHEDULE,
+        onTestRun: vi.fn().mockResolvedValue(undefined),
+        ...props,
+      });
+    const testRun = () => fireEvent.click(screen.getByTestId('schedule-form-test-run'));
+    const edit = () => fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Changed' } });
+
+    it('R2.2 EL-7011 shows the Owner as read-only text only for a saved schedule', () => {
+      renderEdit();
+      expect(screen.getByLabelText('Owner')).toHaveValue('Ann Lee');
+      expect(screen.getByLabelText('Owner')).toBeDisabled();
+      cleanup();
+
+      renderForm();
+      expect(screen.queryByLabelText('Owner')).not.toBeInTheDocument();
+    });
+
+    it('R1.6 EL-7011 keeps Type and the entity editable without a URL entity', () => {
+      renderEdit();
+
+      expect(screen.getByTestId('schedule-type-agent')).toBeEnabled();
+      expect(selectProps.disabled).toBeFalsy();
+    });
+
+    it('R3.3 EL-7011 hides Test run without the run action and in create mode', () => {
+      renderEdit({ schedule: { ...SCHEDULE, allowed_actions: ['edit'] } });
+      expect(screen.queryByTestId('schedule-form-test-run')).not.toBeInTheDocument();
+      cleanup();
+
+      renderForm();
+      expect(screen.queryByTestId('schedule-form-test-run')).not.toBeInTheDocument();
+      cleanup();
+
+      renderEdit();
+      expect(screen.getByTestId('schedule-form-test-run')).toBeInTheDocument();
+    });
+
+    it('R3.1 R3.2 EL-7011 saves a changed form first, then starts the run', async () => {
+      const calls = [];
+      const onSubmit = vi.fn().mockImplementation(async () => calls.push('save'));
+      const onTestRun = vi.fn().mockImplementation(async () => calls.push('run'));
+      renderEdit({ onSubmit, onTestRun });
+      edit();
+
+      testRun();
+
+      await waitFor(() => expect(onTestRun).toHaveBeenCalledTimes(1));
+      expect(calls).toEqual(['save', 'run']);
+      expect(onSubmit.mock.calls[0][0]).toMatchObject({ name: 'Changed' });
+    });
+
+    it('R3.1 EL-7011 runs a clean form without saving', async () => {
+      const { onSubmit } = renderEdit();
+
+      testRun();
+
+      await waitFor(() => expect(screen.getByTestId('schedule-form-test-run')).toBeEnabled());
+      expect(onSubmit).not.toHaveBeenCalled();
+    });
+
+    it('R3.1 EL-7011 a second Test run after a save does not save again', async () => {
+      const { onSubmit } = renderEdit();
+      edit();
+      testRun();
+      await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+
+      testRun();
+
+      await waitFor(() => expect(screen.getByTestId('schedule-form-test-run')).toBeEnabled());
+      expect(onSubmit).toHaveBeenCalledTimes(1);
+    });
+
+    it('R3.4 EL-7011 sends no run when the save fails', async () => {
+      const onTestRun = vi.fn();
+      renderEdit({
+        onTestRun,
+        onSubmit: vi.fn().mockRejectedValue({ status: 400, data: { field: 'name', error: 'Name is taken' } }),
+      });
+      edit();
+
+      testRun();
+
+      expect(await screen.findByText('Name is taken')).toBeInTheDocument();
+      expect(onTestRun).not.toHaveBeenCalled();
+    });
+
+    it('R3.4 EL-7011 sends no run when the form is invalid', async () => {
+      const { onSubmit } = renderEdit();
+      fireEvent.change(screen.getByLabelText('Name'), { target: { value: '' } });
+
+      testRun();
+
+      expect(await screen.findByText('Name is required')).toBeInTheDocument();
+      expect(onSubmit).not.toHaveBeenCalled();
+    });
+
+    it('R3.5 EL-7011 shows the server reason of a 409 run in the banner', async () => {
+      renderEdit({ onTestRun: vi.fn().mockRejectedValue({ status: 409, data: { error: 'Already running' } }) });
+
+      testRun();
+
+      expect(await screen.findByRole('alert')).toHaveTextContent('Already running');
+    });
+
+    it('R2.4 EL-7011 shows a 400 on save under its field and keeps the form open', async () => {
+      renderEdit({
+        onSubmit: vi.fn().mockRejectedValue({ status: 400, data: { field: 'name', error: 'Name is taken' } }),
+      });
+      edit();
+
+      save();
+
+      expect(await screen.findByText('Name is taken')).toBeInTheDocument();
+    });
+
+    it('EL-7011 calls onSaved with the answer after a plain Save', async () => {
+      const onSaved = vi.fn();
+      renderEdit({ onSubmit: vi.fn().mockResolvedValue({ id: 3 }), onSaved });
+      edit();
+
+      save();
+
+      await waitFor(() => expect(onSaved).toHaveBeenCalledWith({ id: 3 }));
+    });
+
+    it('EL-7011 passes entityName to the breadcrumb and renders extra sections', () => {
+      renderEdit({ entityName: 'Digest', extraSections: [{ title: 'RUNS', content: <p>run list</p> }] });
+
+      expect(screen.getByRole('navigation')).toHaveTextContent('Schedules / Digest');
+      expect(screen.getByText('RUNS')).toBeInTheDocument();
+      expect(screen.getByText('run list')).toBeInTheDocument();
+    });
   });
 });
