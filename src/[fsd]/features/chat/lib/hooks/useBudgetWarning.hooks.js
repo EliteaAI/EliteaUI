@@ -26,8 +26,11 @@ export const useBudgetWarning = ({ projectId, feature, enabled = true } = {}) =>
   const { data: platformSettings } = useGetPlatformSettingsQuery();
   const userId = useSelector(state => state.user.id);
 
-  // Observe mode tracks spend without ever blocking, so there is nothing to warn about
-  const isEnforcing = Boolean(platformSettings?.cost_budgets_enforcing);
+  // Observe mode tracks spend without ever blocking, so there is nothing to warn about.
+  // Tool Spend features have their own limits, so they follow the feature's availability instead.
+  const isEnforcing = feature
+    ? Boolean(platformSettings?.tool_spend?.[feature]?.available)
+    : Boolean(platformSettings?.cost_budgets_enforcing);
   const dismissibleByAdmin = platformSettings?.cost_budgets_warning_dismissible !== false;
 
   // Slow poll (5 min), so a level crossed while a chat stays open still shows; mounting refetches sooner.

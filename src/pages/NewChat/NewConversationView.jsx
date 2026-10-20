@@ -15,7 +15,12 @@ import {
 } from '@/[fsd]/features/chat/lib/hooks';
 import { getChatParticipantUniqueId } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { useFetchParticipantDetails } from '@/[fsd]/features/chat/participants/lib/hooks';
-import { BudgetWarningBanner, ChatWelcomeMessage, SlashSuggestionList } from '@/[fsd]/features/chat/ui';
+import {
+  BudgetWarningBanner,
+  ChatWelcomeMessage,
+  SlashSuggestionList,
+  WebSearchBudgetWarning,
+} from '@/[fsd]/features/chat/ui';
 import NewChatInput from '@/[fsd]/features/chat/ui/chat-input/NewChatInput';
 import RecommendationList from '@/[fsd]/features/chat/ui/recommendations/RecommendationList';
 import SearchResultList from '@/[fsd]/features/chat/ui/recommendations/SearchResultList';
@@ -25,7 +30,6 @@ import { MentionSkillList } from '@/[fsd]/features/skill/ui';
 import {
   AutoRoutingConstants,
   BrandLogoConstants,
-  BudgetWarningConstants,
   InternalToolsConstants,
   LLMSettingsConstants,
   MentionConstants,
@@ -304,11 +308,6 @@ const NewConversationView = forwardRef(
     const isSkillPhaseActive = skillPhase !== MentionConstants.MentionPhase.Idle;
 
     const budgetWarning = useBudgetWarning({ projectId: selectedProjectId });
-    const webSearchWarning = useBudgetWarning({
-      projectId: selectedProjectId,
-      feature: BudgetWarningConstants.WEB_SEARCH_FEATURE.feature,
-      enabled: internalTools.includes(BudgetWarningConstants.WEB_SEARCH_FEATURE.tool),
-    });
 
     const onPredictStream = useCallback(
       (question, specifiedParticipant, conversation) => {
@@ -1136,16 +1135,10 @@ const NewConversationView = forwardRef(
                 onDismiss={budgetWarning.dismiss}
               />
             )}
-            {webSearchWarning.shouldShow && (
-              <BudgetWarningBanner
-                scope={webSearchWarning.scope}
-                percentUsed={webSearchWarning.percentUsed}
-                severity={webSearchWarning.severity}
-                dismissible={webSearchWarning.dismissible}
-                onDismiss={webSearchWarning.dismiss}
-                featureLabel={BudgetWarningConstants.WEB_SEARCH_FEATURE.label}
-              />
-            )}
+            <WebSearchBudgetWarning
+              projectId={selectedProjectId}
+              internalTools={internalTools}
+            />
             <NewChatInput
               fromTheChat
               placeholder="Type your message..."

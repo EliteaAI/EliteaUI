@@ -48,7 +48,7 @@ const UsageToolSpend = memo(props => {
           >
             <UsageMeter
               percentUsed={item.percent_used}
-              primaryLabel={item.enabled ? primary : `${item.label}: turned off for this project`}
+              primaryLabel={item.enabled === false ? `${item.label}: turned off for this project` : primary}
               secondaryLabel={callsLabel(item.calls)}
             />
           </Box>

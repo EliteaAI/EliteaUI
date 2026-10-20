@@ -3,8 +3,11 @@ import { memo } from 'react';
 import { Box, Typography } from '@mui/material';
 
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
+import { BudgetWarningConstants } from '@/[fsd]/shared/lib/constants';
 
-const FEATURE_LABELS = { web_search: 'Web search' };
+const { WEB_SEARCH_FEATURE } = BudgetWarningConstants;
+
+const FEATURE_LABELS = { [WEB_SEARCH_FEATURE.feature]: WEB_SEARCH_FEATURE.label };
 
 const COLUMNS = [
   {
@@ -82,8 +85,7 @@ const ToolSpendTable = memo(props => {
         </Box>
       ) : (
         <Typography
-          variant="body2"
-          color="text.secondary"
+          variant="bodySmall"
           sx={styles.empty}
         >
           {emptyState}
@@ -110,7 +112,7 @@ const toolSpendTableStyles = () => ({
     color: palette.text.metrics || palette.text.disabled,
     marginBottom: '0.5rem',
   }),
-  empty: { padding: '1rem' },
+  empty: ({ palette }) => ({ padding: '1rem', color: palette.text.secondary }),
   tableWrapper: { display: 'flex', flexDirection: 'column', width: '100%', overflow: 'auto' },
   tableHeader: ({ palette }) => ({
     display: 'flex',
