@@ -5,6 +5,8 @@ import { MAX_DESCRIPTION_LENGTH } from '@/common/constants';
 import { contextResolver } from '@/common/utils';
 import RouteDefinitions from '@/routes';
 
+import { DEFAULT_APPROVAL_RULE, UNKNOWN_WARNING_LABEL, WARNING_LABELS } from '../constants';
+
 const ENTITY_TYPES = ['agent', 'pipeline'];
 const ENTRY_POINT = 'entry_point';
 // An in-app path: one leading slash, so `//host` and `https://host` never pass
@@ -54,6 +56,7 @@ export const buildInitialValues = (searchParams, locationState) => {
       cron: DEFAULT_SCHEDULE_CRON,
       timezone: ScheduleHelpers.getBrowserTimezone(),
       expires_at: null,
+      approval_rule: DEFAULT_APPROVAL_RULE,
     },
     urlEntity,
     returnTo: IN_APP_PATH.test(returnTo) ? returnTo : RouteDefinitions.Schedules,
@@ -78,6 +81,7 @@ export const toCreateBody = ({
   cron,
   timezone,
   expires_at,
+  approval_rule = DEFAULT_APPROVAL_RULE,
 }) => {
   const mode = type === 'agent' ? null : run_mode;
   const sendsPrompt = isPromptShown({ type, run_mode: mode });
@@ -94,6 +98,7 @@ export const toCreateBody = ({
     cron,
     timezone,
     expires_at,
+    approval_rule,
   };
 };
 
@@ -102,3 +107,11 @@ export const toFieldErrors = error => {
   const { error: message, field } = error?.data ?? {};
   return field && typeof message === 'string' ? { [field]: message } : {};
 };
+
+// Warning shape: { code, message, step | toolkit | tool }; sensitive_action names the toolkit and the tool
+export const toWarningItems = (warnings = []) =>
+  warnings.map(({ code, message, step, toolkit, tool }) => ({
+    label: WARNING_LABELS[code] ?? UNKNOWN_WARNING_LABEL,
+    text: message,
+    target: step ?? (tool && toolkit ? `${toolkit} / ${tool}` : (toolkit ?? tool)),
+  }));
