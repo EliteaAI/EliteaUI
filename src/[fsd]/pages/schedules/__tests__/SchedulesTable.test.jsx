@@ -5,7 +5,7 @@ import { ThemeProvider, createTheme } from '@mui/material';
 
 import lightPalette from '@/lightPalette';
 import '@testing-library/jest-dom/vitest';
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 
 import SchedulesTable from '../SchedulesTable';
 
@@ -29,6 +29,20 @@ vi.mock('@/[fsd]/shared/lib/helpers/schedule.helpers', async importOriginal => (
   getCronSummaryInBrowserTimezone: () => 'At 00:00 on Saturday',
   getBrowserTimezone: () => 'America/New_York',
 }));
+// AuthorContainer and DotMenu need the store and the router; the Agents list tests mock them the same way
+vi.mock('@/components/AuthorContainer', () => ({
+  default: ({ authors }) => <span data-testid="author">{authors.map(author => author.name).join(',')}</span>,
+}));
+vi.mock('@/components/DotMenu', () => ({
+  default: ({ id, disabled, children }) => (
+    <button
+      data-testid={`${id}-menu-button`}
+      disabled={disabled}
+    >
+      {children.length}
+    </button>
+  ),
+}));
 vi.mock('@/[fsd]/shared/ui/icon/EntityTypeIcon', () => ({
   default: ({ type }) => <span data-testid={`icon-${type}`} />,
 }));
@@ -38,6 +52,7 @@ const NEXT_RUN = '2026-10-24T21:00:00Z';
 const makeRow = (overrides = {}) => ({
   id: 1,
   name: 'Nightly',
+  description: 'Sends the nightly report',
   entity_type: 'agent',
   entity_name: 'Report agent',
   version_name: 'base',
@@ -51,7 +66,7 @@ const makeRow = (overrides = {}) => ({
   ...overrides,
 });
 
-const renderTable = (rows, isLoading = false) =>
+const renderTable = (rows, isLoading = false, onSort = vi.fn()) =>
   render(
     <ThemeProvider theme={createTheme({ palette: lightPalette })}>
       <SchedulesTable
@@ -62,6 +77,8 @@ const renderTable = (rows, isLoading = false) =>
         pageSize={20}
         onPageChange={vi.fn()}
         onChangePageSize={vi.fn()}
+        sortConfig={{ field: 'next_run', direction: 'asc' }}
+        onSort={onSort}
       />
     </ThemeProvider>,
   );
@@ -71,9 +88,17 @@ afterEach(cleanup);
 describe('EL-7011 US-26 SchedulesTable', () => {
   it('R2.2 shows the nine columns and no view switch', () => {
     renderTable([makeRow()]);
-    ['Name', 'Entity', 'Type', 'Schedule', 'Next run', 'Last run', 'Owner', 'Enabled', 'Actions'].forEach(
-      label => expect(screen.getByText(label)).toBeInTheDocument(),
-    );
+    [
+      'Name & Description',
+      'Entity',
+      'Type',
+      'Schedule',
+      'Next run',
+      'Last run',
+      'Owner',
+      'Enabled',
+      'Actions',
+    ].forEach(label => expect(screen.getByText(label)).toBeInTheDocument());
     expect(screen.queryByRole('button', { name: /tiles|view/i })).toBeNull();
   });
 
@@ -96,7 +121,38 @@ describe('EL-7011 US-26 SchedulesTable', () => {
   it('R2.4 shows the rule with the timezone and Next run in the viewer timezone', () => {
     renderTable([makeRow()]);
     expect(screen.getByText('At 00:00 on Saturday (America/New_York)')).toBeInTheDocument();
-    expect(screen.getByText(new Date(NEXT_RUN).toLocaleString())).toBeInTheDocument();
+    const nextRun = within(screen.getByTestId('schedule-column-value-next_run'));
+    expect(nextRun.getByTitle(new Date(NEXT_RUN).toLocaleString())).toHaveTextContent(
+      /^[A-Z][a-z]{2}, \d{2} /,
+    );
+  });
+
+  it('EL-7011 shows the description under the bold name, like Agents', () => {
+    renderTable([makeRow()]);
+    expect(screen.getByTestId('schedule-name')).toHaveTextContent('Nightly');
+    expect(screen.getByTestId('schedule-description')).toHaveTextContent('Sends the nightly report');
+  });
+
+  it('EL-7011 shows sort arrows on the sortable headers only and sorts by the API field', () => {
+    const onSort = vi.fn();
+    renderTable([makeRow()], false, onSort);
+    ['name', 'entity_name', 'entity_type', 'next_run', 'last_run', 'enabled'].forEach(field =>
+      expect(screen.getByTestId(`schedule-sort-icon-${field}`)).toBeInTheDocument(),
+    );
+    ['schedule', 'owner', 'actions'].forEach(field =>
+      expect(screen.queryByTestId(`schedule-sort-icon-${field}`)).toBeNull(),
+    );
+    fireEvent.click(screen.getByTestId('schedule-column-header-entity_name'));
+    expect(onSort).toHaveBeenCalledWith('entity_name');
+  });
+
+  it('EL-7011 shows the owner name and a disabled kebab in Actions', () => {
+    renderTable([makeRow()]);
+    expect(within(screen.getByTestId('schedule-column-value-owner')).getByTestId('author')).toHaveTextContent(
+      'Ann',
+    );
+    expect(screen.getByTestId('schedule-1-menu-button')).toBeDisabled();
+    expect(screen.getByTestId('schedule-1-menu-button')).toHaveTextContent('0');
   });
 
   it.each([

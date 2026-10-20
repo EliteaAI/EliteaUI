@@ -156,7 +156,8 @@ const StyledPureTabs = memo(
     const isCreatePage =
       location.pathname.includes(RouteDefinitions.CreatePipeline) ||
       location.pathname.includes(RouteDefinitions.CreateApplication) ||
-      location.pathname.includes(RouteDefinitions.CreateSkill);
+      location.pathname.includes(RouteDefinitions.CreateSkill) ||
+      location.pathname.includes(RouteDefinitions.CreateSchedule);
     const styles = styledPureTabsStyles(componentHeight, shouldShowLabel, tabSX, isCreatePage);
 
     const warningMessage = useMemo(() => {
