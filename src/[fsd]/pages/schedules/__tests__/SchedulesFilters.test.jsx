@@ -1,27 +1,15 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ThemeProvider, createTheme } from '@mui/material';
-
-import lightPalette from '@/lightPalette';
 import '@testing-library/jest-dom/vitest';
-import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, screen, within } from '@testing-library/react';
 
 import SchedulesFilters from '../SchedulesFilters';
+import { renderWithTheme } from './_testHelpers';
 
-vi.hoisted(() => {
-  const entries = new Map();
-  globalThis.localStorage = {
-    getItem: key => entries.get(key) ?? null,
-    setItem: (key, value) => entries.set(key, String(value)),
-    removeItem: key => entries.delete(key),
-    clear: () => entries.clear(),
-  };
-  globalThis.ResizeObserver = class {
-    observe() {}
-    unobserve() {}
-    disconnect() {}
-  };
+await vi.hoisted(async () => {
+  const { installGlobalStubs } = await import('./_testHelpers');
+  installGlobalStubs();
 });
 
 // The owner filter has its own test; here only its presence and its callback matter
@@ -41,15 +29,13 @@ const EMPTY = { entityType: '', status: '', enabled: '', search: '', ownerIds: [
 
 const renderBar = (props = {}) => {
   const onChange = vi.fn();
-  render(
-    <ThemeProvider theme={createTheme({ palette: lightPalette })}>
-      <SchedulesFilters
-        value={EMPTY}
-        onChange={onChange}
-        isAdmin
-        {...props}
-      />
-    </ThemeProvider>,
+  renderWithTheme(
+    <SchedulesFilters
+      value={EMPTY}
+      onChange={onChange}
+      isAdmin
+      {...props}
+    />,
   );
   return onChange;
 };

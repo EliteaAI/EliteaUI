@@ -1,27 +1,15 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { ThemeProvider, createTheme } from '@mui/material';
-
-import lightPalette from '@/lightPalette';
 import '@testing-library/jest-dom/vitest';
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, screen, within } from '@testing-library/react';
 
 import SchedulesTable from '../SchedulesTable';
+import { renderWithTheme } from './_testHelpers';
 
-vi.hoisted(() => {
-  const entries = new Map();
-  globalThis.localStorage = {
-    getItem: key => entries.get(key) ?? null,
-    setItem: (key, value) => entries.set(key, String(value)),
-    removeItem: key => entries.delete(key),
-    clear: () => entries.clear(),
-  };
-  globalThis.ResizeObserver = class {
-    observe() {}
-    unobserve() {}
-    disconnect() {}
-  };
+await vi.hoisted(async () => {
+  const { installGlobalStubs } = await import('./_testHelpers');
+  installGlobalStubs();
 });
 
 vi.mock('@/[fsd]/shared/lib/helpers/schedule.helpers', async importOriginal => ({
@@ -67,21 +55,19 @@ const makeRow = (overrides = {}) => ({
 });
 
 const renderTable = (rows, isLoading = false, onSort = vi.fn(), emptyMessage) =>
-  render(
-    <ThemeProvider theme={createTheme({ palette: lightPalette })}>
-      <SchedulesTable
-        rows={rows}
-        isLoading={isLoading}
-        total={rows.length}
-        page={0}
-        pageSize={20}
-        onPageChange={vi.fn()}
-        onChangePageSize={vi.fn()}
-        sortConfig={{ field: 'next_run', direction: 'asc' }}
-        onSort={onSort}
-        emptyMessage={emptyMessage}
-      />
-    </ThemeProvider>,
+  renderWithTheme(
+    <SchedulesTable
+      rows={rows}
+      isLoading={isLoading}
+      total={rows.length}
+      page={0}
+      pageSize={20}
+      onPageChange={vi.fn()}
+      onChangePageSize={vi.fn()}
+      sortConfig={{ field: 'next_run', direction: 'asc' }}
+      onSort={onSort}
+      emptyMessage={emptyMessage}
+    />,
   );
 
 afterEach(cleanup);

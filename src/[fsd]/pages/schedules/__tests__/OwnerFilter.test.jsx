@@ -1,27 +1,15 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ThemeProvider, createTheme } from '@mui/material';
-
-import lightPalette from '@/lightPalette';
 import '@testing-library/jest-dom/vitest';
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, screen } from '@testing-library/react';
 
 import OwnerFilter from '../OwnerFilter';
+import { renderWithTheme } from './_testHelpers';
 
-vi.hoisted(() => {
-  const entries = new Map();
-  globalThis.localStorage = {
-    getItem: key => entries.get(key) ?? null,
-    setItem: (key, value) => entries.set(key, String(value)),
-    removeItem: key => entries.delete(key),
-    clear: () => entries.clear(),
-  };
-  globalThis.ResizeObserver = class {
-    observe() {}
-    unobserve() {}
-    disconnect() {}
-  };
+await vi.hoisted(async () => {
+  const { installGlobalStubs } = await import('./_testHelpers');
+  installGlobalStubs();
 });
 
 const mocks = vi.hoisted(() => ({
@@ -52,14 +40,12 @@ const setUsers = (overrides = {}) =>
   });
 
 const renderFilter = (props = {}) =>
-  render(
-    <ThemeProvider theme={createTheme({ palette: lightPalette })}>
-      <OwnerFilter
-        selectedOwners={[]}
-        onChangeOwners={vi.fn()}
-        {...props}
-      />
-    </ThemeProvider>,
+  renderWithTheme(
+    <OwnerFilter
+      selectedOwners={[]}
+      onChangeOwners={vi.fn()}
+      {...props}
+    />,
   );
 
 const lastQuery = () => mocks.useUserList.mock.calls.at(-1)[0].query;
@@ -94,7 +80,11 @@ describe('OwnerFilter EL-7011 R2.1 R2.2', () => {
     expect(lastQuery()).toBe('ann');
   });
 
-  it('TC-US27-09 R2.2 loads the next page at the end of the list', () => {
+  it.each([
+    ['loads the next page at the end of the list', 45, 1],
+    ['does not load more when every user is loaded', 2, 0],
+  ])('TC-US27-09 R2.2 %s', (_title, total, loadMoreCalls) => {
+    setUsers({ data: { rows: USERS, total } });
     renderFilter();
     fireEvent.mouseDown(screen.getByRole('combobox'));
     const listbox = screen.getByRole('listbox');
@@ -104,21 +94,7 @@ describe('OwnerFilter EL-7011 R2.1 R2.2', () => {
       scrollHeight: { value: 200, configurable: true },
     });
     fireEvent.scroll(listbox);
-    expect(mocks.onLoadMoreUsers).toHaveBeenCalledTimes(1);
-  });
-
-  it('TC-US27-09 R2.2 does not load more when every user is loaded', () => {
-    setUsers({ data: { rows: USERS, total: 2 } });
-    renderFilter();
-    fireEvent.mouseDown(screen.getByRole('combobox'));
-    const listbox = screen.getByRole('listbox');
-    Object.defineProperties(listbox, {
-      scrollTop: { value: 100, configurable: true },
-      clientHeight: { value: 100, configurable: true },
-      scrollHeight: { value: 200, configurable: true },
-    });
-    fireEvent.scroll(listbox);
-    expect(mocks.onLoadMoreUsers).not.toHaveBeenCalled();
+    expect(mocks.onLoadMoreUsers).toHaveBeenCalledTimes(loadMoreCalls);
   });
 
   it('TC-US27-10 R2.2 keeps the loaded users and shows a toast when a request fails', () => {
