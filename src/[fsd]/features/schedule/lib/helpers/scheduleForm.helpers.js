@@ -37,7 +37,8 @@ export const resetWhatToRun = (values, type) => ({
 
 export const syncPromptVariables = (prompt, variables = []) => {
   const valueByName = Object.fromEntries(variables.map(({ name, value }) => [name, value]));
-  return contextResolver(prompt).map(name => ({ name, value: valueByName[name] ?? '' }));
+  // A pipeline schedule in entry point mode stores no prompt (null)
+  return contextResolver(prompt ?? '').map(name => ({ name, value: valueByName[name] ?? '' }));
 };
 
 export const buildInitialValues = (searchParams, locationState) => {

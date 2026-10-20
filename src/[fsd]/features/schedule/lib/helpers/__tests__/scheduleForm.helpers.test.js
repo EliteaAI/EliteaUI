@@ -86,6 +86,23 @@ describe('EL-7011 R4.3 variables follow placeholders', () => {
     ]);
   });
 
+  it('R1.5 EL-7011 syncPromptVariables and buildEditValues accept a schedule with no prompt', () => {
+    expect(syncPromptVariables(null, [])).toEqual([]);
+    expect(syncPromptVariables(undefined)).toEqual([]);
+    expect(
+      buildEditValues({
+        id: 64,
+        name: 'Entry point run',
+        entity_type: 'pipeline',
+        run_mode: 'entry_point',
+        prompt: null,
+        variables: [],
+        cron: '0 * * * *',
+        timezone: 'UTC',
+      }).values,
+    ).toMatchObject({ prompt: '', variables: [] });
+  });
+
   it('syncPromptVariables keeps values by name and drops removed names', () => {
     const variables = [
       { name: 'day', value: 'Monday' },
