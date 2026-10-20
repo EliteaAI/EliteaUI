@@ -237,3 +237,61 @@ describe('R6.2 EL-7011 create sends the form body unchanged', () => {
     expect(JSON.parse(await request.clone().text())).toEqual(body);
   });
 });
+
+describe('R1.1 R1.2 R2.3 R3.2 EL-7011 list filter arguments', () => {
+  let fetchSpy;
+
+  const listParams = async args => {
+    await makeStore().dispatch(
+      scheduleApi.endpoints.getScheduleList.initiate({ projectId: 5, page: 0, ...args }),
+    );
+    return requestedUrls(fetchSpy).at(-1).searchParams;
+  };
+
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockImplementation(async () => jsonResponse({ total: 0, rows: [] }));
+  });
+
+  it('R1.1 sends entityType, status and enabled as entity_type, status and enabled', async () => {
+    const params = await listParams({ entityType: 'pipeline', status: 'failed', enabled: true });
+
+    expect(params.get('entity_type')).toBe('pipeline');
+    expect(params.get('status')).toBe('failed');
+    expect(params.get('enabled')).toBe('true');
+  });
+
+  it('R1.1 sends enabled=false, because false is a real filter value', async () => {
+    expect((await listParams({ enabled: false })).get('enabled')).toBe('false');
+  });
+
+  it('R1.2 sends the search text as search', async () => {
+    expect((await listParams({ search: 'daily' })).get('search')).toBe('daily');
+  });
+
+  it('R2.3 sends the owner ids comma separated in owner_ids', async () => {
+    expect((await listParams({ ownerIds: ['a', 'b'] })).get('owner_ids')).toBe('a,b');
+  });
+
+  it('R3.2 sends no filter parameter for empty values and no tag parameter', async () => {
+    const params = await listParams({
+      entityType: undefined,
+      status: '',
+      enabled: undefined,
+      search: '',
+      ownerIds: [],
+    });
+
+    expect([...params.keys()].sort((a, b) => a.localeCompare(b))).toEqual(['limit', 'offset']);
+  });
+
+  it('R1.1 keeps the filters in the cache key, so a new filter requests again', async () => {
+    const store = makeStore();
+    await store.dispatch(scheduleApi.endpoints.getScheduleList.initiate({ projectId: 5, status: 'failed' }));
+    await store.dispatch(scheduleApi.endpoints.getScheduleList.initiate({ projectId: 5, status: 'success' }));
+
+    expect(requestedUrls(fetchSpy)).toHaveLength(2);
+  });
+});

@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   useGetScheduleListQuery: vi.fn(),
   useSelectedProjectId: vi.fn(),
   toastError: vi.fn(),
+  checkPermission: vi.fn(),
 }));
 
 vi.mock('@/[fsd]/entities/schedule', () => ({ useGetScheduleListQuery: mocks.useGetScheduleListQuery }));
@@ -18,8 +19,25 @@ vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useToast: () => ({ toastError: mocks.toastError }),
   useShouldCollapseRightToolbar: () => ({ shouldCollapseRightToolbar: false }),
 }));
+vi.mock('@/hooks/useCheckPermission', () => ({
+  default: () => ({ checkPermission: mocks.checkPermission }),
+}));
+vi.mock('../SchedulesFilters', () => ({
+  default: ({ value, onChange, isAdmin }) => (
+    <div
+      data-testid="filters"
+      data-admin={String(isAdmin)}
+    >
+      <button onClick={() => onChange({ ...value, search: 'nightly' })}>search</button>
+      <button onClick={() => onChange({ ...value, status: 'failed' })}>status</button>
+      <button onClick={() => onChange({ ...value, ownerIds: [3, 4] })}>owners</button>
+      <button onClick={() => onChange({ ...value, status: '', search: '' })}>clear</button>
+    </div>
+  ),
+}));
 vi.mock('../SchedulesTable', () => ({
   default: ({
+    emptyMessage,
     rows,
     total,
     page,
@@ -31,6 +49,7 @@ vi.mock('../SchedulesTable', () => ({
     onSort,
   }) => (
     <div>
+      <span data-testid="empty-message">{emptyMessage}</span>
       <span data-testid="sort">{`${sortConfig.field} ${sortConfig.direction}`}</span>
       <button onClick={() => onSort('name')}>sort name</button>
       <span data-testid="loading">{String(isLoading)}</span>
@@ -49,6 +68,7 @@ const lastArgs = () => mocks.useGetScheduleListQuery.mock.calls.at(-1)[0];
 describe('EL-7011 US-26 SchedulesPage', () => {
   beforeEach(() => {
     mocks.useSelectedProjectId.mockReturnValue(5);
+    mocks.checkPermission.mockReturnValue(false);
     mocks.useGetScheduleListQuery.mockReturnValue({
       currentData: { total: 45, rows: [{ id: 1, name: 'Nightly' }] },
       isError: false,
@@ -99,16 +119,9 @@ describe('EL-7011 US-26 SchedulesPage', () => {
     expect(screen.getByTestId('total')).toHaveTextContent('0');
   });
 
-  it('R3.4 shows the rows of the API and adds no owner filter', () => {
+  it('R3.4 shows the rows of the API', () => {
     render(<SchedulesPage />);
     expect(screen.getByTestId('rows')).toHaveTextContent('Nightly');
-    expect(Object.keys(lastArgs()).sort((a, b) => a.localeCompare(b))).toEqual([
-      'page',
-      'pageSize',
-      'projectId',
-      'sortBy',
-      'sortOrder',
-    ]);
   });
 
   it('R3.4 shows no rows of another project while the new project loads', () => {
@@ -162,5 +175,55 @@ describe('EL-7011 US-26 SchedulesPage', () => {
   it('EL-7011 shows the page title like Agents and Pipelines', () => {
     render(<SchedulesPage />);
     expect(screen.getByTestId('schedules-page-header')).toHaveTextContent('Schedules');
+  });
+
+  it('EL-7011 R1.3 a filter change sends the filter and returns to the first page', () => {
+    render(<SchedulesPage />);
+    fireEvent.click(screen.getByText('next'));
+    fireEvent.click(screen.getByText('status'));
+    expect(lastArgs()).toMatchObject({ page: 0, status: 'failed' });
+  });
+
+  it('EL-7011 R1.3 a search change returns to the first page', () => {
+    render(<SchedulesPage />);
+    fireEvent.click(screen.getByText('next'));
+    fireEvent.click(screen.getByText('search'));
+    expect(lastArgs()).toMatchObject({ page: 0, search: 'nightly' });
+  });
+
+  it('EL-7011 R1.4 passes the filtered empty message only while a filter or search is set', () => {
+    render(<SchedulesPage />);
+    expect(screen.getByTestId('empty-message')).toHaveTextContent(/^No schedules$/);
+    fireEvent.click(screen.getByText('status'));
+    expect(screen.getByTestId('empty-message')).toHaveTextContent('No schedules match the filters');
+    fireEvent.click(screen.getByText('clear'));
+    expect(screen.getByTestId('empty-message')).toHaveTextContent(/^No schedules$/);
+    fireEvent.click(screen.getByText('search'));
+    expect(screen.getByTestId('empty-message')).toHaveTextContent('No schedules match the filters');
+  });
+
+  it('EL-7011 R2.3 an admin sends the picked owner ids', () => {
+    mocks.checkPermission.mockReturnValue(true);
+    render(<SchedulesPage />);
+    expect(screen.getByTestId('filters')).toHaveAttribute('data-admin', 'true');
+    fireEvent.click(screen.getByText('owners'));
+    expect(lastArgs()).toMatchObject({ ownerIds: [3, 4], page: 0 });
+  });
+
+  it('EL-7011 R2.4 a user without the admin permission sends no owner ids', () => {
+    render(<SchedulesPage />);
+    expect(screen.getByTestId('filters')).toHaveAttribute('data-admin', 'false');
+    fireEvent.click(screen.getByText('owners'));
+    expect(lastArgs().ownerIds).toBeUndefined();
+  });
+
+  it('EL-7011 R1.3 a project change clears the filters of the old project', () => {
+    mocks.checkPermission.mockReturnValue(true);
+    const { rerender } = render(<SchedulesPage />);
+    fireEvent.click(screen.getByText('status'));
+    fireEvent.click(screen.getByText('owners'));
+    mocks.useSelectedProjectId.mockReturnValue(7);
+    rerender(<SchedulesPage />);
+    expect(lastArgs()).toMatchObject({ projectId: 7, page: 0, status: '', ownerIds: [] });
   });
 });

@@ -141,6 +141,7 @@ const SchedulesTable = memo(props => {
     sortConfig,
     onSort,
     isLoading = false,
+    emptyMessage = 'No schedules',
   } = props;
   const { windowWidth } = useGetWindowWidth();
   const [hoveredRowId, setHoveredRowId] = useState(null);
@@ -173,7 +174,7 @@ const SchedulesTable = memo(props => {
     <GridTableContainer
       isLoading={isLoading}
       isEmpty={rows.length === 0}
-      emptyMessage="No schedules"
+      emptyMessage={emptyMessage}
     >
       <GridTableHeader
         columns={visibleColumns}
