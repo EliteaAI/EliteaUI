@@ -15,6 +15,7 @@ import CloseIcon from '@/components/Icons/CloseIcon';
 const { ParticipantEntityTypes } = ParticipantEntityConstants;
 
 const NO_ADDITIONAL_ROWS = [];
+const NO_QUERY_PARAMS = {};
 
 const RunHistoryContainer = memo(props => {
   const {
@@ -33,6 +34,9 @@ const RunHistoryContainer = memo(props => {
     eventColumnLabel,
     DetailComponent = null,
     shareOpensHistoryTab = false,
+    queryParams = NO_QUERY_PARAMS,
+    // 'side': the detail is right of the list (full pages); 'stacked': below it, for a narrow parent
+    layout = 'side',
   } = props;
 
   const projectId = useSelectedProjectId();
@@ -132,9 +136,10 @@ const RunHistoryContainer = memo(props => {
         entityId,
         entityProjectId,
         page,
+        ...queryParams,
       });
     }
-  }, [projectId, entityId, entityProjectId, page, fetchRunList, source]);
+  }, [projectId, entityId, entityProjectId, page, fetchRunList, source, queryParams]);
 
   useEffect(() => {
     if (!data?.isLoadMore) {
@@ -159,7 +164,20 @@ const RunHistoryContainer = memo(props => {
     setSelectedHistoryItem(item);
   }, []);
 
-  const styles = runHistoryContainerStyles(isSmallWindow);
+  const isStacked = layout === 'stacked';
+  const styles = runHistoryContainerStyles(isSmallWindow, isStacked);
+
+  const detail =
+    selectedRow?.entry && DetailComponent ? (
+      <DetailComponent row={selectedRow} />
+    ) : (
+      <RunHistoryChat
+        selectedHistoryItem={selectedHistoryItem}
+        prettifyChat={[ParticipantEntityTypes.Toolkit, ParticipantEntityTypes.MCP].includes(source)}
+        ChatMessageListComponent={ChatMessageListComponent}
+        prettifyConversation={prettifyConversation}
+      />
+    );
 
   return (
     <Box sx={onClose ? styles.outerWrapper : undefined}>
@@ -182,7 +200,10 @@ const RunHistoryContainer = memo(props => {
           </Typography>
         </Box>
       )}
-      <Box sx={onClose ? styles.wrapperFlex : styles.wrapper}>
+      <Box
+        data-testid="run-history-layout"
+        sx={onClose ? styles.wrapperFlex : styles.wrapper}
+      >
         <Box sx={styles.historyList}>
           <RunHistoryList
             conversations={historyRows}
@@ -204,15 +225,15 @@ const RunHistoryContainer = memo(props => {
           />
         </Box>
 
-        {selectedRow?.entry && DetailComponent ? (
-          <DetailComponent row={selectedRow} />
+        {isStacked ? (
+          <Box
+            data-testid="run-history-detail-panel"
+            sx={styles.detailPanel}
+          >
+            {detail}
+          </Box>
         ) : (
-          <RunHistoryChat
-            selectedHistoryItem={selectedHistoryItem}
-            prettifyChat={[ParticipantEntityTypes.Toolkit, ParticipantEntityTypes.MCP].includes(source)}
-            ChatMessageListComponent={ChatMessageListComponent}
-            prettifyConversation={prettifyConversation}
-          />
+          detail
         )}
       </Box>
     </Box>
@@ -222,7 +243,7 @@ const RunHistoryContainer = memo(props => {
 RunHistoryContainer.displayName = 'RunHistoryContainer';
 
 /** @type {MuiSx} */
-const runHistoryContainerStyles = isSmallWindow => ({
+const runHistoryContainerStyles = (isSmallWindow, isStacked) => ({
   outerWrapper: {
     display: 'flex',
     flexDirection: 'column',
@@ -244,11 +265,11 @@ const runHistoryContainerStyles = isSmallWindow => ({
     height: '1.25rem',
   },
   wrapper: {
-    height: 'calc(100vh - 6rem)',
+    height: isStacked ? 'auto' : 'calc(100vh - 6rem)',
     paddingTop: '0rem',
     display: 'flex',
     boxSizing: 'border-box',
-    flexDirection: isSmallWindow ? 'column' : 'row',
+    flexDirection: isSmallWindow || isStacked ? 'column' : 'row',
     gap: '1.5rem',
   },
   wrapperFlex: {
@@ -261,13 +282,20 @@ const runHistoryContainerStyles = isSmallWindow => ({
     padding: '0.75rem 1.5rem 0.75rem 1.5rem',
   },
   historyList: {
-    flex: 3,
-    maxWidth: isSmallWindow ? '100%' : '32rem',
+    flex: isStacked ? 'none' : 3,
+    height: isStacked ? '20rem' : undefined,
+    maxWidth: isSmallWindow || isStacked ? '100%' : '32rem',
     position: 'relative',
     display: 'flex',
     flexDirection: 'column',
     boxSizing: 'border-box',
     gap: '1.5rem',
+  },
+  detailPanel: {
+    display: 'flex',
+    width: '100%',
+    height: '32rem',
+    boxSizing: 'border-box',
   },
 });
 

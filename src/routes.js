@@ -1,5 +1,8 @@
 import { DEV, VITE_BASE_URI } from '@/common/constants';
 
+// The one value the Schedules pages hang from: a move of the list moves the create and edit pages too
+const SCHEDULES = '/settings/schedules';
+
 const RouteDefinitions = {
   // ExampleShowcase: '/examples/showcase',
 
@@ -45,6 +48,9 @@ const RouteDefinitions = {
   CreateSchedule: '/schedules/create',
   Schedules: '/settings/schedules',
   CreateSchedule: '/settings/schedules/create',
+  Schedules: SCHEDULES,
+  CreateSchedule: `${SCHEDULES}/create`,
+  ScheduleDetail: `${SCHEDULES}/:scheduleId`,
 
   Credentials: '/credentials',
   CredentialsWithTab: '/credentials/:tab',
@@ -130,6 +136,7 @@ export const BLOCK_NAV_PATTERNS = [
   RouteDefinitions.PipelineEvaluateSuite,
   RouteDefinitions.CreatePipeline,
   RouteDefinitions.CreateSchedule,
+  RouteDefinitions.ScheduleDetail,
   RouteDefinitions.CreateToolkitType,
   RouteDefinitions.ToolkitDetail,
   RouteDefinitions.ToolkitIndex,
