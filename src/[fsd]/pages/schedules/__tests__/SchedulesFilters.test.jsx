@@ -33,6 +33,8 @@ const renderBar = (props = {}) => {
     <SchedulesFilters
       value={EMPTY}
       onChange={onChange}
+      onClear={vi.fn()}
+      hasFilters={false}
       isAdmin
       {...props}
     />,
@@ -103,5 +105,66 @@ describe('EL-7011 US-27 SchedulesFilters', () => {
     expect(screen.getAllByRole('textbox')).toHaveLength(1);
     expect(screen.getByTestId('owner-filter')).toBeInTheDocument();
     expect(screen.queryByText(/tag/i)).not.toBeInTheDocument();
+  });
+
+  it('EL-7011: every control has an accessible name', () => {
+    renderBar();
+    expect(screen.getByRole('group', { name: 'Schedule filters' })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Search schedules' })).toBeInTheDocument();
+    ['Type', 'Status', 'Enabled'].forEach(name =>
+      expect(screen.getByRole('combobox', { name })).toBeInTheDocument(),
+    );
+    expect(screen.getByRole('group', { name: 'Owner' })).toBeInTheDocument();
+    cleanup();
+    renderBar({ value: { ...EMPTY, entityType: 'pipeline' } });
+    expect(screen.getByRole('combobox', { name: 'Type' })).toHaveTextContent('Pipeline');
+  });
+
+  it('EL-7011: the controls follow the column order: Search, Type, Status, Owner, Enabled', () => {
+    renderBar({ hasFilters: true });
+    const bar = screen.getByRole('group', { name: 'Schedule filters' });
+    const ids = [...bar.children].map(child => child.dataset.testid ?? child.getAttribute('aria-label'));
+    expect(ids.slice(1)).toEqual([
+      'schedules-filter-type',
+      'schedules-filter-status',
+      'Owner',
+      'schedules-filter-enabled',
+      'schedules-filters-clear',
+    ]);
+  });
+
+  it('EL-7011: "Clear filters" shows only while a filter is set', () => {
+    renderBar();
+    expect(screen.queryByRole('button', { name: 'Clear filters' })).not.toBeInTheDocument();
+    cleanup();
+    renderBar({ hasFilters: true });
+    expect(screen.getByRole('button', { name: 'Clear filters' })).toBeInTheDocument();
+  });
+
+  it('R1.3 EL-7011: "Clear filters" empties the search and the owners and focuses the search', () => {
+    const onClear = vi.fn();
+    const onChange = renderBar({ hasFilters: true, onClear });
+    const input = screen.getByRole('textbox', { name: 'Search schedules' });
+    fireEvent.change(input, { target: { value: 'nightly' } });
+    fireEvent.click(screen.getByTestId('owner-filter'));
+    expect(screen.getByTestId('owner-filter')).toHaveTextContent('owners 2');
+    fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
+    expect(onClear).toHaveBeenCalledTimes(1);
+    expect(input).toHaveValue('');
+    expect(input).toHaveFocus();
+    expect(screen.getByTestId('owner-filter')).toHaveTextContent('owners 0');
+    // The pending search is dropped, so it cannot bring the old text back
+    onChange.mockClear();
+    act(() => vi.advanceTimersByTime(300));
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('R1.2 EL-7011: Escape in the search empties it', () => {
+    const onChange = renderBar({ value: { ...EMPTY, search: 'nightly' } });
+    const input = screen.getByRole('textbox', { name: 'Search schedules' });
+    fireEvent.keyDown(input, { key: 'Escape' });
+    expect(input).toHaveValue('');
+    act(() => vi.advanceTimersByTime(300));
+    expect(onChange).toHaveBeenCalledWith({ ...EMPTY, search: '' });
   });
 });

@@ -54,7 +54,7 @@ const makeRow = (overrides = {}) => ({
   ...overrides,
 });
 
-const renderTable = (rows, isLoading = false, onSort = vi.fn(), emptyMessage) =>
+const renderTable = (rows, isLoading = false, onSort = vi.fn(), emptyMessage, toolbar) =>
   renderWithTheme(
     <SchedulesTable
       rows={rows}
@@ -67,6 +67,7 @@ const renderTable = (rows, isLoading = false, onSort = vi.fn(), emptyMessage) =>
       sortConfig={{ field: 'next_run', direction: 'asc' }}
       onSort={onSort}
       emptyMessage={emptyMessage}
+      toolbar={toolbar}
     />,
   );
 
@@ -173,5 +174,16 @@ describe('EL-7011 US-26 SchedulesTable', () => {
     renderTable([], true);
     expect(screen.getByText('Loading...')).toBeInTheDocument();
     expect(screen.queryByText('No schedules')).not.toBeInTheDocument();
+  });
+
+  it('EL-7011 R1.4 keeps the filter bar on screen when no row matches', () => {
+    renderTable([], false, vi.fn(), 'No schedules match the filters', <span data-testid="bar" />);
+    expect(screen.getByTestId('bar')).toBeInTheDocument();
+    expect(screen.getByText('No schedules match the filters')).toBeInTheDocument();
+  });
+
+  it('EL-7011 tells screen readers the result count', () => {
+    renderTable([makeRow(), makeRow({ id: 2 })], false, vi.fn(), undefined, <span />);
+    expect(screen.getByText('2 schedules')).toHaveAttribute('aria-live', 'polite');
   });
 });
