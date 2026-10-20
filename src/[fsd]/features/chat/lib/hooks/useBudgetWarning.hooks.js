@@ -20,8 +20,9 @@ const BUDGET_WARNING_POLL_MS = 300_000;
 
 let prunedForPeriod = null;
 
-// Whether to warn that a budget is nearing its limit; a dismissal lasts until the next level or period
-export const useBudgetWarning = ({ projectId } = {}) => {
+// Whether to warn that a budget is nearing its limit; a dismissal lasts until the next level or period.
+// feature (e.g. web_search) checks that Tool Spend feature's limits; enabled=false skips the request.
+export const useBudgetWarning = ({ projectId, feature, enabled = true } = {}) => {
   const { data: platformSettings } = useGetPlatformSettingsQuery();
   const userId = useSelector(state => state.user.id);
 
@@ -32,9 +33,9 @@ export const useBudgetWarning = ({ projectId } = {}) => {
   // Slow poll (5 min), so a level crossed while a chat stays open still shows; mounting refetches sooner.
   // currentData, not data: after a project switch data still holds the previous project's warning.
   const { currentData: data } = useGetBudgetWarningQuery(
-    { projectId },
+    { projectId, feature },
     {
-      skip: !isEnforcing || !projectId,
+      skip: !isEnforcing || !projectId || !enabled,
       refetchOnMountOrArgChange: 60,
       pollingInterval: BUDGET_WARNING_POLL_MS,
       skipPollingIfUnfocused: true,
@@ -43,7 +44,9 @@ export const useBudgetWarning = ({ projectId } = {}) => {
 
   const period = budgetPeriod();
   const storageKey =
-    data?.scope && userId ? dismissStorageKey({ userId, projectId, scope: data.scope, period }) : null;
+    data?.scope && userId
+      ? dismissStorageKey({ userId, projectId, scope: data.scope, period, feature })
+      : null;
 
   // In-memory mirror, so a dismissal still holds when storage is blocked
   const [dismissedByKey, setDismissedByKey] = useState({});
@@ -69,7 +72,8 @@ export const useBudgetWarning = ({ projectId } = {}) => {
 
   return useMemo(
     () => ({
-      shouldShow: isWarningVisible({ shouldWarn: data?.should_warn, level, dismissedLevel, dismissible }),
+      shouldShow:
+        enabled && isWarningVisible({ shouldWarn: data?.should_warn, level, dismissedLevel, dismissible }),
       scope: data?.scope,
       percentUsed: data?.percent_used,
       level,
@@ -77,6 +81,6 @@ export const useBudgetWarning = ({ projectId } = {}) => {
       dismissible,
       dismiss,
     }),
-    [data, level, dismissedLevel, dismissible, dismiss],
+    [data, level, dismissedLevel, dismissible, dismiss, enabled],
   );
 };

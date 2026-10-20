@@ -72,7 +72,7 @@ import { UserMentionList } from '@/[fsd]/features/chat/ui/user-mention-list';
 import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { MentionSkillList } from '@/[fsd]/features/skill';
 import { useDeleteSkillMutation } from '@/[fsd]/features/skill/api';
-import { LLMSettingsConstants, MentionConstants } from '@/[fsd]/shared/lib/constants';
+import { BudgetWarningConstants, LLMSettingsConstants, MentionConstants } from '@/[fsd]/shared/lib/constants';
 import { SocketContext } from '@/[fsd]/shared/lib/context';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import {
@@ -243,6 +243,13 @@ const ChatBox = memo(
     // Advance notice above the input. Shared by chat, agent and pipeline, all of which render
     // through this component.
     const budgetWarning = useBudgetWarning({ projectId });
+    const webSearchWarning = useBudgetWarning({
+      projectId,
+      feature: BudgetWarningConstants.WEB_SEARCH_FEATURE.feature,
+      enabled: (activeConversation?.meta?.internal_tools || []).includes(
+        BudgetWarningConstants.WEB_SEARCH_FEATURE.tool,
+      ),
+    });
 
     const [regenerate] = useRegenerateMutation();
     const [injectMessage] = useInjectMessageMutation();
@@ -3106,6 +3113,16 @@ const ChatBox = memo(
                 severity={budgetWarning.severity}
                 dismissible={budgetWarning.dismissible}
                 onDismiss={budgetWarning.dismiss}
+              />
+            )}
+            {webSearchWarning.shouldShow && (
+              <BudgetWarningBanner
+                scope={webSearchWarning.scope}
+                percentUsed={webSearchWarning.percentUsed}
+                severity={webSearchWarning.severity}
+                dismissible={webSearchWarning.dismissible}
+                onDismiss={webSearchWarning.dismiss}
+                featureLabel={BudgetWarningConstants.WEB_SEARCH_FEATURE.label}
               />
             )}
             <ChatStatusPill
