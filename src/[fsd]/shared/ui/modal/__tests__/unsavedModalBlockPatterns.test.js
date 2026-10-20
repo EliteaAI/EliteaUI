@@ -22,6 +22,10 @@ describe('unsaved-changes navigation guard', () => {
     expect(isBlockablePath('/schedules/create')).toBe(true);
   });
 
+  it('R1.3 guards the Edit schedule form of EL-7011 at /schedules/:scheduleId', () => {
+    expect(isBlockablePath('/schedules/9')).toBe(true);
+  });
+
   it('R1.3 leaves the schedules list unguarded', () => {
     expect(isBlockablePath('/schedules')).toBe(false);
   });

@@ -37,6 +37,7 @@ const RouteDefinitions = {
   PipelineRunAnalytics: '/pipelines/:tab/:agentId/history/analytics',
   Schedules: '/schedules',
   CreateSchedule: '/schedules/create',
+  ScheduleDetail: '/schedules/:scheduleId',
 
   Credentials: '/credentials',
   CredentialsWithTab: '/credentials/:tab',
@@ -121,6 +122,7 @@ export const BLOCK_NAV_PATTERNS = [
   `${RouteDefinitions.PipelineDetail}/:versionId`,
   RouteDefinitions.CreatePipeline,
   RouteDefinitions.CreateSchedule,
+  RouteDefinitions.ScheduleDetail,
   RouteDefinitions.CreateToolkitType,
   RouteDefinitions.ToolkitDetail,
   RouteDefinitions.ToolkitIndex,
