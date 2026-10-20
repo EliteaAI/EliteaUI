@@ -1,6 +1,10 @@
 // @vitest-environment jsdom
+import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { ThemeProvider, createTheme } from '@mui/material';
+
+import getDesignTokens from '@/MainTheme';
 import { MAX_DESCRIPTION_LENGTH } from '@/common/constants';
 import '@testing-library/jest-dom/vitest';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
@@ -51,7 +55,10 @@ vi.mock('@/api/applications', async importOriginal => ({
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useSelectedProjectId: () => 5,
   useToast: () => ({ toastError }),
+  useShouldCollapseRightToolbar: () => ({ shouldCollapseTabs: false }),
+  useGetComponentHeight: () => ({ componentRef: null, componentHeight: 0 }),
 }));
+vi.mock('@/[fsd]/shared/ui/breadcrumbs', () => ({ default: () => <nav>Schedules / New schedule</nav> }));
 
 vi.mock('@/[fsd]/shared/ui/checkbox/RadioButtonGroup', () => ({
   default: ({ items, value, onChange, disabled, testId }) => (
@@ -111,7 +118,8 @@ vi.mock('@/components/VariableList', () => ({
 vi.mock('@/[fsd]/shared/ui/banner-message/BannerMessage', () => ({
   default: ({ message }) => <div role="alert">{message}</div>,
 }));
-vi.mock('@/[fsd]/shared/ui/button/BaseBtn', () => ({
+vi.mock('@/[fsd]/shared/ui/button/BaseBtn', async importOriginal => ({
+  ...(await importOriginal()),
   default: ({ children, ...rest }) => <button {...rest}>{children}</button>,
 }));
 vi.mock('@/[fsd]/shared/ui/icon/EntityTypeIcon', () => ({ default: () => null }));
@@ -131,14 +139,20 @@ const INITIAL = {
   expires_at: null,
 };
 
+const theme = createTheme(getDesignTokens('dark'));
+
 const renderForm = (props = {}) => {
   const handlers = { onSubmit: vi.fn().mockResolvedValue(undefined), onCancel: vi.fn() };
   render(
-    <ScheduleForm
-      initialValues={INITIAL}
-      {...handlers}
-      {...props}
-    />,
+    <ThemeProvider theme={theme}>
+      <MemoryRouter initialEntries={['/schedules/create']}>
+        <ScheduleForm
+          initialValues={INITIAL}
+          {...handlers}
+          {...props}
+        />
+      </MemoryRouter>
+    </ThemeProvider>,
   );
   return handlers;
 };
@@ -422,5 +436,24 @@ describe('ScheduleForm EL-7011', () => {
 
     expect(onCancel).toHaveBeenCalledTimes(1);
     expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('EL-7011 shows Save and Cancel in the page header bar, beside the breadcrumb', () => {
+    renderForm();
+
+    const bar = screen.getByRole('navigation').parentElement.parentElement;
+    expect(bar).toContainElement(screen.getByTestId('schedule-save-button'));
+    expect(bar).toContainElement(screen.getByTestId('schedule-cancel-button'));
+    expect(screen.getByRole('tabpanel')).not.toContainElement(screen.getByTestId('schedule-save-button'));
+  });
+
+  it('EL-7011 collapses a section from its header', () => {
+    renderForm();
+    const header = screen.getByTestId('schedule-section-general');
+    expect(header).toHaveAttribute('aria-expanded', 'true');
+
+    fireEvent.click(header);
+
+    expect(header).toHaveAttribute('aria-expanded', 'false');
   });
 });

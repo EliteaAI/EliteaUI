@@ -16,6 +16,7 @@ vi.mock('@/[fsd]/entities/schedule', () => ({ useGetScheduleListQuery: mocks.use
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useSelectedProjectId: mocks.useSelectedProjectId,
   useToast: () => ({ toastError: mocks.toastError }),
+  useShouldCollapseRightToolbar: () => ({ shouldCollapseRightToolbar: false }),
 }));
 vi.mock('../SchedulesTable', () => ({
   default: ({ rows, total, page, pageSize, onPageChange, onChangePageSize, isLoading }) => (
@@ -126,5 +127,10 @@ describe('EL-7011 US-26 SchedulesPage', () => {
     });
     render(<SchedulesPage />);
     expect(screen.getByTestId('loading').textContent).toBe('false');
+  });
+
+  it('EL-7011 shows the page title like Agents and Pipelines', () => {
+    render(<SchedulesPage />);
+    expect(screen.getByTestId('schedules-page-header')).toHaveTextContent('Schedules');
   });
 });

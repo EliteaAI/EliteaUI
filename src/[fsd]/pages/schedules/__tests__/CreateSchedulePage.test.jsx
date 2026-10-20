@@ -23,7 +23,6 @@ vi.mock('@/[fsd]/entities/schedule', () => ({
   useCreateScheduleMutation: () => [mocks.createSchedule],
 }));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({ useSelectedProjectId: () => 5 }));
-vi.mock('@/[fsd]/shared/ui', () => ({ Breadcrumbs: () => null }));
 vi.mock('@/[fsd]/shared/ui/schedule', () => ({
   ScheduleSettingsSection: props => {
     mocks.settingsProps = props;

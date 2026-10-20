@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import { Box } from '@mui/material';
-
 import { useGetScheduleListQuery } from '@/[fsd]/entities/schedule';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { PAGE_SIZE } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
+import StickyTabs from '@/components/StickyTabs';
 
 import SchedulesTable from './SchedulesTable';
 
@@ -38,18 +37,30 @@ const SchedulesPage = () => {
     setPage(0);
   }, []);
 
+  // The page title row of Credentials, Agents and Pipelines
   return (
-    <Box sx={{ padding: '1rem 1.5rem' }}>
-      <SchedulesTable
-        rows={isError ? [] : (currentData?.rows ?? [])}
-        total={isError ? 0 : (currentData?.total ?? 0)}
-        isLoading={isFetching && !currentData}
-        page={page}
-        pageSize={pageSize}
-        onPageChange={onPageChange}
-        onChangePageSize={onChangePageSize}
-      />
-    </Box>
+    <StickyTabs
+      tabs={[
+        {
+          content: (
+            <SchedulesTable
+              rows={isError ? [] : (currentData?.rows ?? [])}
+              total={isError ? 0 : (currentData?.total ?? 0)}
+              isLoading={isFetching && !currentData}
+              page={page}
+              pageSize={pageSize}
+              onPageChange={onPageChange}
+              onChangePageSize={onChangePageSize}
+            />
+          ),
+        },
+      ]}
+      showTitleAndSwitchBySelect
+      title="Schedules"
+      titleTestId="schedules-page-header"
+      containerStyle={{ padding: '0 1.5rem 0 0' }}
+      tabBarStyle={{ padding: '0 0 0 1.5rem' }}
+    />
   );
 };
 
