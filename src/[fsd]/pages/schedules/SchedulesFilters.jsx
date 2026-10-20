@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Box, debounce } from '@mui/material';
+import { Box, Typography, debounce } from '@mui/material';
 
 import { BaseBtn } from '@/[fsd]/shared/ui/button';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
@@ -103,6 +103,13 @@ const SchedulesFilters = memo(({ value, onChange, onClear, hasFilters, isAdmin }
       role="group"
       aria-label="Schedule filters"
     >
+      <Typography
+        variant="bodyMedium"
+        color="text.secondary"
+        sx={styles.title}
+      >
+        Filters:
+      </Typography>
       <Box sx={styles.search}>
         <SimpleSearchBar
           searchQuery={searchText}
@@ -168,6 +175,8 @@ SchedulesFilters.displayName = 'SchedulesFilters';
 /** @type {MuiSx} */
 const schedulesFiltersStyles = () => ({
   bar: { display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'flex-end', width: '100%' },
+  // Sits on the text line of the controls next to it
+  title: { paddingBottom: '0.5rem', whiteSpace: 'nowrap' },
   // Below 1100 px the search takes its own row and the other controls share the next rows
   search: ({ breakpoints }) => ({
     width: '12.5rem',
