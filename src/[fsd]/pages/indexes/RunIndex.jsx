@@ -163,6 +163,7 @@ const RunIndex = memo(() => {
           onSubmit={() => {}}
         >
           <RunIndexPanel
+            key={indexName}
             toolkitId={toolkitId}
             tab={tab}
             indexName={indexName}
