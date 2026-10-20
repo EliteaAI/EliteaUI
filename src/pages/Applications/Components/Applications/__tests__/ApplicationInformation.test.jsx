@@ -14,9 +14,6 @@ vi.mock('formik', () => ({
 vi.mock('@/[fsd]/features/agent/ui/agent-details/configurations/index.js', () => ({
   ConfigurationModal: { StyledShowContextModal: () => null },
 }));
-vi.mock('@/[fsd]/features/pipelines/flow-editor/ui/settings', () => ({
-  ScheduleInfoDisplay: () => <div data-testid="schedule-info" />,
-}));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({ useSelectedProject: () => ({ id: 1 }) }));
 vi.mock('@/[fsd]/shared/ui/accordion/BasicAccordion', () => ({
   default: ({ items }) => <div>{items.map(item => <div key={item.title}>{item.content}</div>)}</div>,
