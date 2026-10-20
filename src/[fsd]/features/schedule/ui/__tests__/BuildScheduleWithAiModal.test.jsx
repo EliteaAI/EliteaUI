@@ -53,19 +53,21 @@ const DRAFT = {
 };
 const answer = body => generateDraft.mockReturnValue({ unwrap: () => Promise.resolve(body), abort: vi.fn() });
 
-const setup = (formik = {}) => {
+const setup = (formik = {}, extra = {}) => {
   const props = {
     open: true,
     onClose: vi.fn(),
     lockedEntity: null,
+    ...extra,
     formik: { values: VALUES, dirty: false, setValues: vi.fn(), ...formik },
   };
-  render(
+  const ui = p => (
     <ThemeProvider theme={createTheme(getDesignTokens('dark'))}>
-      <BuildScheduleWithAiModal {...props} />
-    </ThemeProvider>,
+      <BuildScheduleWithAiModal {...p} />
+    </ThemeProvider>
   );
-  return props;
+  const { rerender } = render(ui(props));
+  return { ...props, rerenderWith: next => rerender(ui({ ...props, ...next })) };
 };
 const generate = text => {
   fireEvent.change(screen.getByTestId('schedule-ai-prompt'), { target: { value: text } });
@@ -116,7 +118,33 @@ describe('EL-7011 US-34 BuildScheduleWithAiModal', () => {
     answer({ draft: DRAFT, warnings: [{ field: 'cron', reason: 'Cron was not valid' }] });
     setup();
     generate('x');
-    expect(await screen.findByText('Cron was not valid')).toBeInTheDocument();
+    expect(await screen.findByText('Cron was not valid')).toHaveAttribute('role', 'status');
+  });
+
+  it('R2.2 EL-7011 hides Type and Entity in the review of a locked entity', async () => {
+    setup({}, { lockedEntity: { type: 'agent', id: 'A1' } });
+    generate('x');
+    expect(await screen.findByText('Weekly report')).toBeInTheDocument();
+    expect(screen.queryByText('Entity')).not.toBeInTheDocument();
+    expect(screen.queryByText('Type')).not.toBeInTheDocument();
+  });
+
+  it('R3.1 EL-7011 gives a filled form that is not dirty the edit flow', async () => {
+    setup({ values: { ...VALUES, name: 'Old name' }, dirty: false });
+    generate('rename it');
+    expect(await screen.findByText('Old name')).toBeInTheDocument();
+    expect(screen.getByText('Accept changes')).toBeInTheDocument();
+  });
+
+  it('R2.2 EL-7011 keeps the popup variant while it is open and after approve', async () => {
+    const { rerenderWith } = setup();
+    generate('x');
+    await screen.findByText('Weekly report');
+    rerenderWith({
+      formik: { values: { ...VALUES, name: 'Weekly report' }, dirty: true, setValues: vi.fn() },
+    });
+    expect(screen.getByTestId('schedule-ai-approve')).toBeInTheDocument();
+    expect(screen.queryByText('Accept changes')).not.toBeInTheDocument();
   });
 
   it('R3.1 shows current and drafted value of a changed field for a filled form, R3.2 applies on accept', async () => {

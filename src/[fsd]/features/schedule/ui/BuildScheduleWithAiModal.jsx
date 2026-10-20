@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { Alert, Box, Typography } from '@mui/material';
 
@@ -8,7 +8,7 @@ import { useGenerateScheduleDraftMutation } from '@/[fsd]/features/schedule/api'
 import { ScheduleHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 
-import { changedFields, draftToFormValues, toDraftRequest } from '../lib/helpers';
+import { changedFields, draftToFormValues, isScheduleFormEmpty, toDraftRequest } from '../lib/helpers';
 
 const PLACEHOLDER = 'Describe the schedule: what to run, when and until when.';
 const STEPS = [{ key: 'changes', label: 'Review changes' }];
@@ -49,9 +49,10 @@ const toShownError = error =>
 const WarningText = ({ warnings, field }) =>
   warnings
     .filter(warning => warning.field === field)
-    .map(warning => (
+    .map((warning, index) => (
       <Typography
-        key={warning.reason}
+        key={`${warning.reason}-${index}`}
+        role="status"
         color="warning.main"
         sx={{ fontSize: '0.75rem' }}
       >
@@ -66,11 +67,19 @@ const Row = ({ label, children }) => (
   </Box>
 );
 
-const BuildScheduleWithAiModal = memo(props => {
+const BuildScheduleWithAiModal = props => {
   const { open, onClose, formik, lockedEntity } = props;
   const projectId = useSelectedProjectId();
   const [generateDraft, { error, reset }] = useGenerateScheduleDraftMutation();
-  const { values, dirty, setValues } = formik;
+  const { values, setValues } = formik;
+  // The variant is chosen when the popup opens and stays fixed until it closes
+  const [wasOpen, setWasOpen] = useState(open);
+  const [isEmpty, setIsEmpty] = useState(() => isScheduleFormEmpty(values));
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) setIsEmpty(isScheduleFormEmpty(values));
+  }
+  const lockedFields = lockedEntity ? ['entity_type', 'application_id'] : [];
 
   const handleGenerate = useCallback(
     prompt =>
@@ -91,7 +100,7 @@ const BuildScheduleWithAiModal = memo(props => {
   const common = { ...TEST_IDS, open, onClose, entityLabel: 'schedule', placeholder: PLACEHOLDER };
   const generation = { onGenerate: handleGenerate, generateError: shownError, resetGenerate: reset };
 
-  if (!dirty) {
+  if (isEmpty) {
     return (
       <GenerateEntityModal
         {...common}
@@ -100,7 +109,9 @@ const BuildScheduleWithAiModal = memo(props => {
         approveLabel="Apply draft"
         renderReview={({ draft, warnings = [] }) => (
           <Box>
-            {DRAFT_FIELDS.filter(field => draft[field] !== undefined && draft[field] !== null).map(field => (
+            {DRAFT_FIELDS.filter(
+              field => !lockedFields.includes(field) && draft[field] !== undefined && draft[field] !== null,
+            ).map(field => (
               <Row
                 key={field}
                 label={FIELD_LABELS[field]}
@@ -153,8 +164,6 @@ const BuildScheduleWithAiModal = memo(props => {
       }
     />
   );
-});
-
-BuildScheduleWithAiModal.displayName = 'BuildScheduleWithAiModal';
+};
 
 export default BuildScheduleWithAiModal;
