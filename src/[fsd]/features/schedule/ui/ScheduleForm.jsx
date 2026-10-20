@@ -7,7 +7,6 @@ import { Box, Grid, Typography } from '@mui/material';
 import { GenerateEntityButton } from '@/[fsd]/entities/generate-entity-with-ai';
 import { useGetScheduleListQuery } from '@/[fsd]/entities/schedule';
 import { VersionSelect, getDefaultVersionId } from '@/[fsd]/entities/version';
-import { APPROVAL_RULE } from '../lib/constants';
 import {
   getEntityLock,
   isPromptShown,
@@ -34,6 +33,7 @@ import VariableList from '@/components/VariableList';
 import useNavBlocker from '@/hooks/useNavBlocker';
 import { StyledGridContainer, TabBarItems } from '@/pages/Common/Components/StyledComponents';
 
+import { APPROVAL_RULE } from '../lib/constants';
 import BuildScheduleWithAiModal from './BuildScheduleWithAiModal';
 import SaveWarningsDialog from './SaveWarningsDialog';
 
@@ -90,17 +90,9 @@ const ScheduleForm = memo(props => {
     validationSchema: scheduleFormSchema,
     onSubmit: async (values, { setErrors, resetForm: resetTo }) => {
       setBanner('');
+      let answer;
       try {
-        const answer = await onSubmit(toCreateBody(values));
-        const approvalRule = answer?.approval_rule ?? values.approval_rule;
-        const hasWarnings = answer?.warnings?.length > 0;
-        // The saved values are the new baseline, so the leave-page blocker stays shut
-        resetTo({ values: { ...values, approval_rule: approvalRule } });
-        const changed = approvalRule !== values.approval_rule;
-        setRuleChanged(changed);
-        setSavedRule(approvalRule);
-        if (hasWarnings || changed) setSaved(answer);
-        else onSaved(answer);
+        answer = await onSubmit(toCreateBody(values));
       } catch (error) {
         const fieldErrors = error?.status === 400 ? toFieldErrors(error) : {};
         const shownFields = isPromptShown(values)
@@ -109,7 +101,18 @@ const ScheduleForm = memo(props => {
         if (Object.keys(fieldErrors).some(field => shownFields.includes(field))) setErrors(fieldErrors);
         else if (error?.status === 400 || error?.status === 409) setBanner(error.data?.error ?? '');
         else toastError('Failed to save the schedule');
+        return;
       }
+      const approvalRule = answer?.approval_rule ?? values.approval_rule;
+      const hasWarnings = answer?.warnings?.length > 0;
+      // The saved values are the new baseline, so the leave-page blocker stays shut
+      resetTo({ values: { ...values, approval_rule: approvalRule } });
+      const changed = approvalRule !== values.approval_rule;
+      setRuleChanged(changed);
+      setSavedRule(approvalRule);
+      // onSaved runs outside the try, so an error there never shows as a failed save
+      if (hasWarnings || changed) setSaved(answer);
+      else onSaved(answer);
     },
   });
   const { values, errors, submitCount, setFieldValue, setValues, resetForm } = formik;
@@ -215,14 +218,17 @@ const ScheduleForm = memo(props => {
     [setFieldValue, values.variables],
   );
 
-  const handleWarningsClose = useCallback(() => onSaved(saved), [onSaved, saved]);
+  const handleWarningsClose = useCallback(() => {
+    setSaved(null);
+    onSaved(saved);
+  }, [onSaved, saved]);
 
   const { data: scheduleList } = useGetScheduleListQuery({ projectId, pageSize: 1 }, { skip: !projectId });
   // Three states: undefined while loading or on error, then true or false; only an explicit false shows the hint
   const runWithoutAskingAllowed = scheduleList?.runWithoutAskingAllowed;
   const showHint = runWithoutAskingAllowed === false || ruleChanged;
   const ruleNote = ruleChanged
-    ? `The schedule was saved with the rule "${APPROVAL_RULE_ITEMS.find(item => item.value === savedRule)?.label}".`
+    ? `The schedule was saved with the rule "${APPROVAL_RULE_ITEMS.find(item => item.value === savedRule)?.label ?? savedRule}".`
     : '';
   const approvalRuleItems = APPROVAL_RULE_ITEMS.map(item => ({
     ...item,
@@ -368,7 +374,6 @@ const ScheduleForm = memo(props => {
           <Box
             role="group"
             data-testid="schedule-approval-rule-group"
-            aria-labelledby="schedule-approval-rule-label"
             aria-describedby={showHint ? 'schedule-approval-rule-hint' : undefined}
           >
             <RadioButtonGroup

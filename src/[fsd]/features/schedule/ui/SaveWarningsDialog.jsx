@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { Box, Typography } from '@mui/material';
+import { Box, List, ListItem, Typography } from '@mui/material';
 
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { Button, Modal } from '@/[fsd]/shared/ui';
@@ -11,7 +11,8 @@ import { toWarningItems } from '../lib/helpers';
 
 // Shown after a save that succeeded with warnings or with a changed approval rule;
 // `warnings` is the raw list the schedule API returns, `note` an extra line above them
-const SaveWarningsDialog = memo(({ open, warnings, note, onClose }) => {
+const SaveWarningsDialog = memo(props => {
+  const { open, warnings, note, onClose } = props;
   const items = useMemo(() => toWarningItems(warnings), [warnings]);
   const closed = useRef(false);
   const styles = saveWarningsDialogStyles();
@@ -39,13 +40,11 @@ const SaveWarningsDialog = memo(({ open, warnings, note, onClose }) => {
         <Box sx={styles.content}>
           {note && <Typography variant="bodyMedium">{note}</Typography>}
           {items.length > 0 && (
-            <Box
-              component="ul"
-              sx={styles.list}
-            >
+            <List sx={styles.list}>
               {items.map(({ label, text, target }, index) => (
-                <li
+                <ListItem
                   key={index}
+                  disablePadding
                   data-testid="save-warning-item"
                 >
                   <BannerMessage variant="warning">
@@ -55,9 +54,9 @@ const SaveWarningsDialog = memo(({ open, warnings, note, onClose }) => {
                       {target && <Typography variant="bodySmall">{target}</Typography>}
                     </Box>
                   </BannerMessage>
-                </li>
+                </ListItem>
               ))}
-            </Box>
+            </List>
           )}
         </Box>
       }
@@ -81,7 +80,7 @@ SaveWarningsDialog.displayName = 'SaveWarningsDialog';
 const saveWarningsDialogStyles = () => ({
   modal: { width: '30rem' },
   content: { display: 'flex', flexDirection: 'column', gap: '1rem' },
-  list: { listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' },
+  list: { padding: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' },
   itemText: { display: 'flex', flexDirection: 'column', gap: '0.25rem', minWidth: 0 },
 });
 
