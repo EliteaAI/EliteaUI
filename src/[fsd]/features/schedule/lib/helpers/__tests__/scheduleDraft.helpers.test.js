@@ -1,7 +1,12 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
 
-import { changedFields, draftToFormValues, isScheduleFormEmpty, toDraftRequest } from '../scheduleDraft.helpers';
+import {
+  changedFields,
+  draftToFormValues,
+  isScheduleFormEmpty,
+  toDraftRequest,
+} from '../scheduleDraft.helpers';
 
 const values = {
   name: 'Night report',
@@ -108,6 +113,12 @@ describe('EL-7011 R2.4 and R2.5 draft keeps or resets the what-to-run fields', (
     expect(draftToFormValues(draft, values, null)).toMatchObject({ application_id: 'A2', version_id: '' });
   });
 
+  it('R2.4 keeps the version when the drafted entity id is the same id as a number', () => {
+    const form = { ...values, application_id: '7', version_id: '70' };
+    const draft = { entity_type: form.type, application_id: 7 };
+    expect(draftToFormValues(draft, form, null)).toMatchObject({ application_id: 7, version_id: '70' });
+  });
+
   it('R2.5 keeps run mode, prompt and variables when the draft omits them', () => {
     const pipeline = {
       ...values,
@@ -158,6 +169,11 @@ describe('EL-7011 R3.4 and R3.5 lock rule', () => {
 
   it('R3.5 takes the drafted version when it belongs to the locked entity', () => {
     expect(draftToFormValues(agentDraft, values, lock).version_id).toBe('V2');
+  });
+
+  it('R3.5 takes the drafted version when the locked id is a string and the draft id a number', () => {
+    const draft = { ...agentDraft, application_id: 7, version_id: 71 };
+    expect(draftToFormValues(draft, values, { type: 'agent', id: '7' }).version_id).toBe(71);
   });
 
   it('R3.4 keeps a locked pipeline and takes the drafted run mode', () => {
