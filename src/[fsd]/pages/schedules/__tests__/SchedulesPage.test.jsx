@@ -16,10 +16,23 @@ vi.mock('@/[fsd]/entities/schedule', () => ({ useGetScheduleListQuery: mocks.use
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useSelectedProjectId: mocks.useSelectedProjectId,
   useToast: () => ({ toastError: mocks.toastError }),
+  useShouldCollapseRightToolbar: () => ({ shouldCollapseRightToolbar: false }),
 }));
 vi.mock('../SchedulesTable', () => ({
-  default: ({ rows, total, page, pageSize, onPageChange, onChangePageSize, isLoading }) => (
+  default: ({
+    rows,
+    total,
+    page,
+    pageSize,
+    onPageChange,
+    onChangePageSize,
+    isLoading,
+    sortConfig,
+    onSort,
+  }) => (
     <div>
+      <span data-testid="sort">{`${sortConfig.field} ${sortConfig.direction}`}</span>
+      <button onClick={() => onSort('name')}>sort name</button>
       <span data-testid="loading">{String(isLoading)}</span>
       <span data-testid="rows">{rows.map(row => row.name).join(',')}</span>
       <span data-testid="total">{total}</span>
@@ -93,6 +106,8 @@ describe('EL-7011 US-26 SchedulesPage', () => {
       'page',
       'pageSize',
       'projectId',
+      'sortBy',
+      'sortOrder',
     ]);
   });
 
@@ -126,5 +141,26 @@ describe('EL-7011 US-26 SchedulesPage', () => {
     });
     render(<SchedulesPage />);
     expect(screen.getByTestId('loading').textContent).toBe('false');
+  });
+
+  it('EL-7011 sorts by the next run first, like the API default', () => {
+    render(<SchedulesPage />);
+    expect(lastArgs()).toMatchObject({ sortBy: 'next_run', sortOrder: 'asc' });
+  });
+
+  it('EL-7011 a header click toggles the direction and returns to the first page', () => {
+    render(<SchedulesPage />);
+    fireEvent.click(screen.getByText('next'));
+    fireEvent.click(screen.getByText('sort name'));
+    expect(lastArgs()).toMatchObject({ page: 0, sortBy: 'name', sortOrder: 'asc' });
+    fireEvent.click(screen.getByText('next'));
+    fireEvent.click(screen.getByText('sort name'));
+    expect(lastArgs()).toMatchObject({ page: 0, sortBy: 'name', sortOrder: 'desc' });
+    expect(screen.getByTestId('sort')).toHaveTextContent('name desc');
+  });
+
+  it('EL-7011 shows the page title like Agents and Pipelines', () => {
+    render(<SchedulesPage />);
+    expect(screen.getByTestId('schedules-page-header')).toHaveTextContent('Schedules');
   });
 });

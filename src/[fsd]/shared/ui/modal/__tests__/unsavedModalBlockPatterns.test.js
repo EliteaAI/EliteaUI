@@ -17,4 +17,12 @@ describe('unsaved-changes navigation guard', () => {
   it('leaves the AI providers list unguarded', () => {
     expect(isBlockablePath('/settings/ai-providers')).toBe(false);
   });
+
+  it('R1.3 guards the New schedule form of EL-7011 at /schedules/create', () => {
+    expect(isBlockablePath('/schedules/create')).toBe(true);
+  });
+
+  it('R1.3 leaves the schedules list unguarded', () => {
+    expect(isBlockablePath('/schedules')).toBe(false);
+  });
 });
