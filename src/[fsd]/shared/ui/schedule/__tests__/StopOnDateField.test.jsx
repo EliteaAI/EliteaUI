@@ -19,29 +19,37 @@ const PAST_DATE_MESSAGE = 'Pick today or a later date';
 const PAST_DATE = '2020-01-01';
 const FUTURE_DATE = '2999-12-31';
 
+const DATE_LABEL = 'Stop date';
+
 const theme = createTheme();
 
 afterEach(() => cleanup());
+
+const Providers = ({ children }) => (
+  <ThemeProvider theme={theme}>
+    <LocalizationProvider
+      dateAdapter={AdapterDateFns}
+      adapterLocale={enGB}
+    >
+      {children}
+    </LocalizationProvider>
+  </ThemeProvider>
+);
 
 // Holds the value like the form does, so a check and an uncheck behave as in the app.
 const Harness = ({ initialValue = null, onChange, error }) => {
   const [value, setValue] = useState(initialValue);
   return (
-    <ThemeProvider theme={theme}>
-      <LocalizationProvider
-        dateAdapter={AdapterDateFns}
-        adapterLocale={enGB}
-      >
-        <StopOnDateField
-          value={value}
-          error={error}
-          onChange={next => {
-            setValue(next);
-            onChange?.(next);
-          }}
-        />
-      </LocalizationProvider>
-    </ThemeProvider>
+    <Providers>
+      <StopOnDateField
+        value={value}
+        error={error}
+        onChange={next => {
+          setValue(next);
+          onChange?.(next);
+        }}
+      />
+    </Providers>
   );
 };
 
@@ -98,5 +106,66 @@ describe('EL-7011 R3 StopOnDateField', () => {
     expect(screen.getByRole('checkbox', { name: LABEL })).not.toBeChecked();
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /choose date/i })).not.toBeInTheDocument();
+  });
+
+  it('R3.1: a value that arrives after mount checks the box and shows the date', () => {
+    const { rerender } = render(
+      <StopOnDateField
+        value={null}
+        onChange={vi.fn()}
+      />,
+      { wrapper: Providers },
+    );
+
+    rerender(
+      <StopOnDateField
+        value={FUTURE_DATE}
+        onChange={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole('checkbox', { name: LABEL })).toBeChecked();
+    expect(screen.getByRole('textbox', { name: DATE_LABEL })).toHaveValue('31/12/2999');
+  });
+
+  it('R3.2: a value reset to null after mount unchecks the box and hides the field', () => {
+    const { rerender } = render(
+      <StopOnDateField
+        value={FUTURE_DATE}
+        onChange={vi.fn()}
+      />,
+      { wrapper: Providers },
+    );
+
+    rerender(
+      <StopOnDateField
+        value={null}
+        onChange={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole('checkbox', { name: LABEL })).not.toBeChecked();
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+  });
+
+  it('R3.1: the date field has the accessible name "Stop date"', async () => {
+    const user = userEvent.setup();
+    render(<Harness />);
+
+    await user.click(screen.getByRole('checkbox', { name: LABEL }));
+
+    expect(screen.getByRole('textbox', { name: DATE_LABEL })).toBeInTheDocument();
+  });
+
+  it('R3.1: typing a valid future date passes it as yyyy-MM-dd', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(<Harness onChange={onChange} />);
+    await user.click(screen.getByRole('checkbox', { name: LABEL }));
+
+    await user.click(screen.getByRole('textbox'));
+    await user.keyboard('31122999');
+
+    expect(onChange).toHaveBeenLastCalledWith(FUTURE_DATE);
   });
 });
