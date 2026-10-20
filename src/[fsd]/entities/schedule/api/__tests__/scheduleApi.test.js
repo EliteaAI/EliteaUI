@@ -6,7 +6,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 vi.mock('@/api/eliteaApi.js', () => ({
   eliteaApi: createApi({
     reducerPath: 'eliteaApi',
-    baseQuery: fetchBaseQuery({ baseUrl: 'http://test.local' }),
+    baseQuery: fetchBaseQuery({ baseUrl: 'https://test.local' }),
     tagTypes: [],
     endpoints: () => ({}),
   }),
@@ -107,7 +107,10 @@ describe('R3.4 EL-7011 no client-side widening', () => {
     );
 
     expect(result.data.rows).toEqual(rows);
-    expect([...requestedUrls(fetchSpy)[0].searchParams.keys()].sort()).toEqual(['limit', 'offset']);
+    expect([...requestedUrls(fetchSpy)[0].searchParams.keys()].sort((a, b) => a.localeCompare(b))).toEqual([
+      'limit',
+      'offset',
+    ]);
   });
 
   it('surfaces a failed request as an error with the server message', async () => {

@@ -88,6 +88,10 @@ describe('EL-7011 US-26 SchedulesPage', () => {
   it('R3.4 shows the rows of the API and adds no owner filter', () => {
     render(<SchedulesPage />);
     expect(screen.getByTestId('rows')).toHaveTextContent('Nightly');
-    expect(Object.keys(lastArgs()).sort()).toEqual(['page', 'pageSize', 'projectId']);
+    expect(Object.keys(lastArgs()).sort((a, b) => a.localeCompare(b))).toEqual([
+      'page',
+      'pageSize',
+      'projectId',
+    ]);
   });
 });

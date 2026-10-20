@@ -93,10 +93,10 @@ describe('EL-7011 R1 Schedules navigation', () => {
   it('R1.3 declares the route, its breadcrumb and every schedule permission', () => {
     expect(RouteDefinitions.Schedules).toBe('/schedules');
     expect(BREADCRUMB_REGISTRY[RouteDefinitions.Schedules].label).toBe('Schedules');
-    expect(Object.values(PERMISSIONS.schedules).sort()).toEqual(
+    expect(Object.values(PERMISSIONS.schedules).sort((a, b) => a.localeCompare(b))).toEqual(
       ['admin', 'create', 'delete', 'details', 'export', 'import', 'list', 'run', 'update']
         .map(action => `models.applications.schedules.${action}`)
-        .sort(),
+        .sort((a, b) => a.localeCompare(b)),
     );
   });
 });
