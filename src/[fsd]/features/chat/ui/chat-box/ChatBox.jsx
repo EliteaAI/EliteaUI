@@ -64,6 +64,7 @@ import {
   VoiceMiniPlayer,
 } from '@/[fsd]/features/chat/ui';
 import { ChatMessageList } from '@/[fsd]/features/chat/ui/chat-box';
+import { ScheduleRunNotice } from '@/[fsd]/features/chat/ui/schedule-run-notice';
 import ChatConversationStarters from '@/[fsd]/features/chat/ui/chat-conversation-starters/ChatConversationStarters';
 import NewChatInput from '@/[fsd]/features/chat/ui/chat-input/NewChatInput';
 import RecommendationList from '@/[fsd]/features/chat/ui/recommendations/RecommendationList';
@@ -3113,6 +3114,10 @@ const ChatBox = memo(
               isInterrupt={statusSource?.isInterrupt === true && !isReadOnly}
               participantType={statusParticipant?.entity_name}
               agentType={statusParticipant?.entity_settings?.agent_type}
+            />
+            <ScheduleRunNotice
+              conversationId={activeConversation?.id}
+              participants={activeConversation?.participants}
             />
             <NewChatInput
               fromTheChat={fromTheChat}

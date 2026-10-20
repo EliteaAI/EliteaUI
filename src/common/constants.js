@@ -948,6 +948,7 @@ export const ApplicationTypeMap = {
 export const sioEvents = {
   socket_validation_error: 'socket_validation_error',
   chat_predict: 'chat_predict',
+  schedule_run_finished: 'schedule_run_finished',
   chat_continue_predict: 'chat_continue_predict',
   application_continue_message: 'application_continue_message',
   chat_enter_room: 'chat_enter_room',
