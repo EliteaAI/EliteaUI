@@ -295,3 +295,154 @@ describe('R1.1 R1.2 R2.3 R3.2 EL-7011 list filter arguments', () => {
     expect(requestedUrls(fetchSpy)).toHaveLength(2);
   });
 });
+
+describe('R2.1 R3.1 R3.2 R4.2 EL-7011 schedule row mutations', () => {
+  const rows = () => [
+    { id: 1, enabled: true },
+    { id: 2, enabled: true },
+  ];
+  let fetchSpy;
+  let handler;
+
+  const requestOf = async spy => {
+    const [arg] = spy.mock.calls.at(-1);
+    return {
+      url: new URL(arg.url),
+      method: arg.method,
+      body: await arg
+        .clone()
+        .json()
+        .catch(() => null),
+    };
+  };
+
+  const setup = async () => {
+    const store = makeStore();
+    await store.dispatch(scheduleApi.endpoints.getScheduleList.initiate({ projectId: 5, page: 0 }));
+    await store.dispatch(scheduleApi.endpoints.getScheduleList.initiate({ projectId: 5, page: 1 }));
+    return store;
+  };
+
+  const cachedEnabled = (store, page, id) =>
+    scheduleApi.endpoints.getScheduleList
+      .select({ projectId: 5, page })(store.getState())
+      .data.rows.find(row => row.id === id).enabled;
+
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    handler = async () => jsonResponse({ total: 2, rows: rows() });
+    fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(args => handler(args));
+  });
+
+  it('R2.1 posts the manual trigger to the run endpoint and returns the run id', async () => {
+    const store = makeStore();
+    handler = async () => jsonResponse({ run_id: 9 }, 202);
+
+    const result = await store.dispatch(
+      scheduleApi.endpoints.runSchedule.initiate({ projectId: 5, scheduleId: 7 }),
+    );
+
+    const request = await requestOf(fetchSpy);
+    expect(request.method).toBe('POST');
+    expect(request.url.pathname).toBe('/elitea_core/schedule/prompt_lib/5/7/run');
+    expect(request.body).toEqual({ trigger: 'manual' });
+    expect(result.data).toEqual({ run_id: 9 });
+  });
+
+  it('R2.1 returns the 409 error with the active run id and does not refetch the list', async () => {
+    const store = await setup();
+    const callsBefore = fetchSpy.mock.calls.length;
+    handler = async () => jsonResponse({ error: 'busy', active_run_id: 3 }, 409);
+
+    const result = await store.dispatch(
+      scheduleApi.endpoints.runSchedule.initiate({ projectId: 5, scheduleId: 7 }),
+    );
+
+    expect(result.error.status).toBe(409);
+    expect(result.error.data).toEqual({ error: 'busy', active_run_id: 3 });
+    expect(fetchSpy.mock.calls).toHaveLength(callsBefore + 1);
+  });
+
+  it('R2.1 refetches the list after a run is accepted', async () => {
+    const store = await setup();
+    const callsBefore = fetchSpy.mock.calls.length;
+    handler = async args =>
+      args.method === 'POST' ? jsonResponse({ run_id: 9 }, 202) : jsonResponse({ rows: rows() });
+
+    await store.dispatch(scheduleApi.endpoints.runSchedule.initiate({ projectId: 5, scheduleId: 7 }));
+
+    await vi.waitFor(() => expect(fetchSpy.mock.calls.length).toBeGreaterThan(callsBefore + 1));
+  });
+
+  it('R3.1 puts enabled to the schedule path', async () => {
+    const store = makeStore();
+    await store.dispatch(
+      scheduleApi.endpoints.updateSchedule.initiate({ projectId: 5, scheduleId: 7, enabled: false }),
+    );
+
+    const request = await requestOf(fetchSpy);
+    expect(request.method).toBe('PUT');
+    expect(request.url.pathname).toBe('/elitea_core/schedule/prompt_lib/5/7');
+    expect(request.body).toEqual({ enabled: false });
+  });
+
+  it('R3.1 patches Enabled in every cached list entry before the server answers', async () => {
+    const store = await setup();
+    let release;
+    handler = args =>
+      args.method === 'PUT'
+        ? new Promise(resolve => (release = () => resolve(jsonResponse({}))))
+        : jsonResponse({ rows: rows() });
+
+    const pending = store.dispatch(
+      scheduleApi.endpoints.updateSchedule.initiate({ projectId: 5, scheduleId: 1, enabled: false }),
+    );
+
+    await vi.waitFor(() => expect(cachedEnabled(store, 0, 1)).toBe(false));
+    expect(cachedEnabled(store, 1, 1)).toBe(false);
+    expect(cachedEnabled(store, 0, 2)).toBe(true);
+    await vi.waitFor(() => expect(release).toBeTypeOf('function'));
+    release();
+    await pending;
+  });
+
+  it('R3.2 restores the previous Enabled value in every cached entry when the update fails', async () => {
+    const store = await setup();
+    handler = async args =>
+      args.method === 'PUT' ? jsonResponse({ error: 'no' }, 403) : jsonResponse({ rows: rows() });
+
+    const result = await store.dispatch(
+      scheduleApi.endpoints.updateSchedule.initiate({ projectId: 5, scheduleId: 1, enabled: false }),
+    );
+
+    expect(result.error.status).toBe(403);
+    expect(cachedEnabled(store, 0, 1)).toBe(true);
+    expect(cachedEnabled(store, 1, 1)).toBe(true);
+  });
+
+  it('R4.2 sends DELETE to the schedule path and refetches the list', async () => {
+    const store = await setup();
+    const callsBefore = fetchSpy.mock.calls.length;
+
+    await store.dispatch(scheduleApi.endpoints.deleteSchedule.initiate({ projectId: 5, scheduleId: 7 }));
+
+    const request = (await Promise.all(fetchSpy.mock.calls.map(([arg]) => arg))).find(
+      arg => arg.method === 'DELETE',
+    );
+    expect(new URL(request.url).pathname).toBe('/elitea_core/schedule/prompt_lib/5/7');
+    await vi.waitFor(() => expect(fetchSpy.mock.calls.length).toBeGreaterThan(callsBefore + 1));
+  });
+
+  it('R4.2 keeps the list cache when the delete fails', async () => {
+    const store = await setup();
+    const callsBefore = fetchSpy.mock.calls.length;
+    handler = async () => jsonResponse({ error: 'no' }, 403);
+
+    const result = await store.dispatch(
+      scheduleApi.endpoints.deleteSchedule.initiate({ projectId: 5, scheduleId: 7 }),
+    );
+
+    expect(result.error.status).toBe(403);
+    expect(fetchSpy.mock.calls).toHaveLength(callsBefore + 1);
+  });
+});
