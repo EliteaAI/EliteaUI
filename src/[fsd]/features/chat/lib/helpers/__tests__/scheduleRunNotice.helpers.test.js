@@ -25,4 +25,13 @@ describe('EL-7011 US-42 scheduleRunNotice helpers', () => {
     expect(findNoticeAgent({ entity_id: 7, project_id: 6 }, [agent], 5)).toBeUndefined();
     expect(findNoticeAgent({ entity_id: 7 }, [agent], 6)).toBeUndefined();
   });
+
+  it('R3.1 returns nothing for an event without an agent id', () => {
+    const noId = { entity_name: 'application', entity_meta: { project_id: 5 } };
+    expect(findNoticeAgent({}, [noId], 5)).toBeUndefined();
+  });
+
+  it('R3.1 and R3.2 match ids given as strings or numbers', () => {
+    expect(findNoticeAgent({ entity_id: '7', project_id: '5' }, [agent], 5)).toBe(agent);
+  });
 });
