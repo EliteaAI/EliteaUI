@@ -90,12 +90,11 @@ afterEach(() => {
 });
 
 describe('EL-7011 US-26 SchedulesTable', () => {
-  it('R2.2 shows the nine columns and no view switch', () => {
+  it('R2.2 EL-7011 shows the eight columns, with Entity Name and no Type, and no view switch', () => {
     renderTable([makeRow()]);
     [
       'Name & Description',
-      'Entity',
-      'Type',
+      'Entity Name',
       'Schedule',
       'Next run',
       'Last run',
@@ -103,23 +102,37 @@ describe('EL-7011 US-26 SchedulesTable', () => {
       'Enabled',
       'Actions',
     ].forEach(label => expect(screen.getByText(label)).toBeInTheDocument());
+    expect(screen.queryByText('Type')).toBeNull();
+    expect(screen.queryByTestId('schedule-column-header-entity_type')).toBeNull();
     expect(screen.queryByRole('button', { name: /tiles|view/i })).toBeNull();
   });
 
-  it('R2.3 shows the agent icon in Type and Entity, never the pipeline icon', () => {
+  it('R2.3 EL-7011 shows one agent icon named Agent, never the pipeline icon', () => {
     renderTable([makeRow()]);
-    expect(screen.getAllByTestId('icon-agent')).toHaveLength(2);
+    expect(screen.getAllByTestId('icon-agent')).toHaveLength(1);
     expect(screen.queryByTestId('icon-pipeline')).toBeNull();
-    expect(screen.getByText('Report agent base')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Agent' })).toBeInTheDocument();
   });
 
-  it('R2.3 shows the pipeline icon in Type and Entity', () => {
+  it('R2.3 EL-7011 shows one pipeline icon named Pipeline', () => {
     renderTable([makeRow({ entity_type: 'pipeline' })]);
-    expect(screen.getAllByTestId('icon-pipeline')).toHaveLength(2);
+    expect(screen.getAllByTestId('icon-pipeline')).toHaveLength(1);
     expect(screen.queryByTestId('icon-agent')).toBeNull();
-    expect(
-      within(screen.getByTestId('schedule-column-value-entity_type')).getByText('Pipeline'),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Pipeline' })).toBeInTheDocument();
+  });
+
+  it('R2.6 EL-7011 shows the version on a second line of the Entity Name cell', () => {
+    renderTable([makeRow()]);
+    const cell = within(screen.getByTestId('schedule-column-value-entity_name'));
+    expect(cell.getByText('Report agent')).toBeInTheDocument();
+    expect(cell.getByText('base')).toBeInTheDocument();
+  });
+
+  it('R2.6 EL-7011 shows no second line without a version', () => {
+    renderTable([makeRow({ version_name: null })]);
+    const cell = screen.getByTestId('schedule-column-value-entity_name');
+    expect(within(cell).getByText('Report agent')).toBeInTheDocument();
+    expect(cell).not.toHaveTextContent('base');
   });
 
   it('R2.4 shows the rule with the timezone and Next run in the viewer timezone', () => {
@@ -140,10 +153,10 @@ describe('EL-7011 US-26 SchedulesTable', () => {
   it('EL-7011 shows sort arrows on the sortable headers only and sorts by the API field', () => {
     const onSort = vi.fn();
     renderTable([makeRow()], false, onSort);
-    ['name', 'entity_name', 'entity_type', 'next_run', 'last_run', 'enabled'].forEach(field =>
+    ['name', 'entity_name', 'next_run', 'last_run', 'enabled'].forEach(field =>
       expect(screen.getByTestId(`schedule-sort-icon-${field}`)).toBeInTheDocument(),
     );
-    ['schedule', 'owner', 'actions'].forEach(field =>
+    ['schedule', 'owner', 'actions', 'entity_type'].forEach(field =>
       expect(screen.queryByTestId(`schedule-sort-icon-${field}`)).toBeNull(),
     );
     fireEvent.click(screen.getByTestId('schedule-column-header-entity_name'));
