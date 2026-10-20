@@ -1094,6 +1094,14 @@ export const NotificationType = {
   BudgetLimitReached: 'budget_limit_reached',
   MemberBudgetThresholdReached: 'member_budget_threshold_reached',
   MemberBudgetLimitReached: 'member_budget_limit_reached',
+  ScheduleRunFailed: 'schedule_run_failed',
+  ScheduleRunSucceeded: 'schedule_run_succeeded',
+  ScheduleApprovalNeeded: 'schedule_approval_needed',
+  ScheduleApprovalExpired: 'schedule_approval_expired',
+  ScheduleExpired: 'schedule_expired',
+  ScheduleDisabled: 'schedule_disabled',
+  ScheduleEditedByAdmin: 'schedule_edited_by_admin',
+  ScheduleOwnerChanged: 'schedule_owner_changed',
 };
 
 export const dummyConversation = { name: '', chat_history: [], participants: [], is_private: true };

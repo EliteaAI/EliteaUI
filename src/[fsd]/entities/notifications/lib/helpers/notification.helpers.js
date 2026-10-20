@@ -4,6 +4,13 @@ import RouteDefinitions, { getBasename } from '@/routes';
 
 const DEFAULT_TOOLKITS_TAB = ToolkitsTabs[0];
 
+const RUN_EVENT_TYPES = new Set([
+  NotificationType.ScheduleRunFailed,
+  NotificationType.ScheduleRunSucceeded,
+  NotificationType.ScheduleApprovalNeeded,
+  NotificationType.ScheduleApprovalExpired,
+]);
+
 /**
  * Resolves the navigation href for an empty-href link segment ([text]()) based on
  * the notification's event_type and meta. Returns a full URL string, or null if
@@ -81,6 +88,25 @@ export const resolveHref = (eventType, meta, projectId) => {
         `${base}/${projectId}${RouteDefinitions.SettingsWithTab.replace(':tab', 'usage')}` +
         `?${SearchParams.Scope}=user`
       );
+
+    // Run events select their run on the subpage; the owner change lands on the list, because
+    // the previous owner no longer sees that schedule. No schedule id means no link (R2.5).
+    case NotificationType.ScheduleRunFailed:
+    case NotificationType.ScheduleRunSucceeded:
+    case NotificationType.ScheduleApprovalNeeded:
+    case NotificationType.ScheduleApprovalExpired:
+    case NotificationType.ScheduleExpired:
+    case NotificationType.ScheduleDisabled:
+    case NotificationType.ScheduleEditedByAdmin:
+    case NotificationType.ScheduleOwnerChanged: {
+      const scheduleId = meta?.schedule_id;
+      if (!scheduleId) return null;
+      const list = `${base}/${projectId}${RouteDefinitions.Schedules}`;
+      if (eventType === NotificationType.ScheduleOwnerChanged) return list;
+      const url = `${list}/${encodeURIComponent(scheduleId)}`;
+      const runId = RUN_EVENT_TYPES.has(eventType) ? meta?.conversation_id : null;
+      return runId ? `${url}?${SearchParams.HistoryRunId}=${encodeURIComponent(runId)}` : url;
+    }
 
     default:
       return null;
