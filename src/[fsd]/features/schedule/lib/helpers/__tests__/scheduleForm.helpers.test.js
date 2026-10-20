@@ -13,6 +13,7 @@ import {
   syncPromptVariables,
   toCreateBody,
   toFieldErrors,
+  toWarningItems,
 } from '../scheduleForm.helpers';
 
 const agentValues = {
@@ -185,6 +186,7 @@ describe('EL-7011 R6.2 create body', () => {
       cron: '0 2 * * *',
       timezone: 'Europe/Kyiv',
       expires_at: null,
+      approval_rule: 'pause_and_ask',
     });
   });
 
@@ -220,5 +222,45 @@ describe('EL-7011 R6.3 server 400 messages', () => {
   it('toFieldErrors returns no field errors for a message without a field', () => {
     expect(toFieldErrors({ status: 400, data: { error: 'Choose a version' } })).toEqual({});
     expect(toFieldErrors(undefined)).toEqual({});
+  });
+});
+
+describe('EL-7011 R1.4 approval rule in the body', () => {
+  it('toCreateBody sends the chosen rule', () => {
+    expect(toCreateBody({ ...agentValues, approval_rule: 'run_without_asking' }).approval_rule).toBe(
+      'run_without_asking'
+    );
+  });
+
+  it('buildInitialValues starts with pause_and_ask', () => {
+    expect(buildInitialValues(new URLSearchParams(), null).values.approval_rule).toBe('pause_and_ask');
+  });
+});
+
+describe('EL-7011 R2.3 save warnings', () => {
+  it('toWarningItems maps each server code to a label, text and target', () => {
+    const items = toWarningItems([
+      { code: 'human_input_step', message: 'Asks a person', step: 'ask' },
+      { code: 'missing_credential', message: 'No credential', toolkit: 'jira' },
+      { code: 'token_may_expire', message: 'Token ages', toolkit: 'git' },
+      { code: 'sensitive_action', message: 'Deletes data', toolkit: 'jira', tool: 'delete_issue' },
+      { code: 'scan_incomplete', message: 'Not all scanned' },
+      { code: 'other', message: 'Something' },
+    ]);
+    expect(items.map(i => i.text)).toEqual([
+      'Asks a person',
+      'No credential',
+      'Token ages',
+      'Deletes data',
+      'Not all scanned',
+      'Something',
+    ]);
+    expect(items.map(i => i.target)).toEqual(['ask', 'jira', 'git', 'jira / delete_issue', undefined, undefined]);
+    expect(new Set(items.slice(0, 5).map(i => i.label)).size).toBe(5);
+    expect(items[5].label).toBe('Warning');
+  });
+
+  it('toWarningItems accepts a missing list', () => {
+    expect(toWarningItems(undefined)).toEqual([]);
   });
 });
