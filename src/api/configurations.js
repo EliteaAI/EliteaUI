@@ -381,9 +381,11 @@ export const configurationsApi = eliteaApi
 
       // Test configuration connection
       testConfigurationConnection: build.mutation({
-        query: ({ projectId, configType, body }) => ({
+        // configurationUuid (optional): test the saved credential with this uuid instead of the posted values
+        query: ({ projectId, configType, body, configurationUuid }) => ({
           method: 'POST',
           url: `/configurations/check_connection/${projectId}/${configType}`,
+          ...(configurationUuid && { params: { configuration_uuid: configurationUuid } }),
           headers: {
             'Content-Type': 'application/json',
           },
