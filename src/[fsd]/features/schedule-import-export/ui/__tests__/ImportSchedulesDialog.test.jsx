@@ -115,12 +115,12 @@ describe('EL-7011 R3.4 ImportSchedulesDialog errors', () => {
 });
 
 describe('EL-7011 R3.6 ImportSchedulesDialog while uploading', () => {
-  it('ignores the close button and Escape and disables Upload', () => {
+  it('hides the close button, ignores Escape and disables Upload', () => {
     mocks.isLoading = true;
     const onClose = renderDialog();
 
     expect(screen.getByTestId('import-schedules-upload')).toBeDisabled();
-    fireEvent.click(screen.getByTestId('import-schedules-close-button'));
+    expect(screen.queryByTestId('import-schedules-close-button')).toBeNull();
     fireEvent.keyDown(screen.getByTestId('import-schedules-dialog'), { key: 'Escape' });
     expect(onClose).not.toHaveBeenCalled();
   });

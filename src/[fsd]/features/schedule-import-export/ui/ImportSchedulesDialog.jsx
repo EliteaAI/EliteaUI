@@ -108,6 +108,7 @@ const ImportSchedulesDialog = memo(({ open, onClose, projectId }) => {
       open={open}
       title="Import Schedules"
       onClose={handleClose}
+      showCloseButton={!isLoading}
       content={content}
       actions={actions}
       data-testid="import-schedules-dialog"
