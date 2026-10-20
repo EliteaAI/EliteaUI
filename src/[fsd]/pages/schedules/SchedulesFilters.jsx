@@ -190,7 +190,8 @@ const schedulesFiltersStyles = () => ({
   owner: ({ breakpoints }) => ({
     width: '15rem',
     '& .MuiAutocomplete-root': { marginTop: 0 },
-    '& .MuiAutocomplete-inputRoot': {
+    // Two classes beat the shared drop-down's own `& .MuiAutocomplete-inputRoot { flexWrap: wrap }`
+    '& .MuiAutocomplete-root .MuiAutocomplete-inputRoot': {
       flexWrap: 'nowrap',
       overflowX: 'auto',
       scrollbarWidth: 'none',
