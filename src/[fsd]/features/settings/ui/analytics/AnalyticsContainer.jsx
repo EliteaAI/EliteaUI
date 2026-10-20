@@ -36,7 +36,11 @@ import { useInteractiveTour } from '@/[fsd]/shared/lib/context';
 import { useSelectedProjectId, useSelectedProjectName } from '@/[fsd]/shared/lib/hooks';
 import { exportToExcel } from '@/[fsd]/shared/lib/utils';
 import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
-import { datePickerCommonProps, datePickerStyles, getDateFieldSlotProps } from '@/[fsd]/shared/ui/date-picker';
+import {
+  datePickerCommonProps,
+  datePickerStyles,
+  getDateFieldSlotProps,
+} from '@/[fsd]/shared/ui/date-picker';
 import TabGroupButton from '@/[fsd]/shared/ui/tab-group-button/TabGroupButton';
 import { BaseTab, BaseTabs } from '@/[fsd]/shared/ui/tabs';
 import DownloadIcon from '@/assets/download.svg?react';

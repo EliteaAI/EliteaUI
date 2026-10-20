@@ -6,7 +6,11 @@ import { Box, FormControlLabel, FormHelperText, Typography } from '@mui/material
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 
 import { BaseCheckbox } from '@/[fsd]/shared/ui/checkbox';
-import { datePickerCommonProps, datePickerStyles, getDateFieldSlotProps } from '@/[fsd]/shared/ui/date-picker';
+import {
+  datePickerCommonProps,
+  datePickerStyles,
+  getDateFieldSlotProps,
+} from '@/[fsd]/shared/ui/date-picker';
 
 const PAST_DATE_MESSAGE = 'Pick today or a later date';
 
