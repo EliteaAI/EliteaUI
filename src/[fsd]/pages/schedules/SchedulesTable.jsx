@@ -2,7 +2,6 @@ import { memo, useMemo, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { useScheduleRowActions } from '@/[fsd]/features/schedule/lib/hooks/useScheduleRowActions.hooks';
 import { useResponsiveColumns } from '@/[fsd]/entities/grid-table/lib';
 import {
   GridTableBody,
@@ -11,6 +10,7 @@ import {
   GridTablePagination,
   GridTableRow,
 } from '@/[fsd]/entities/grid-table/ui';
+import { useScheduleRowActions } from '@/[fsd]/features/schedule';
 import {
   getBrowserTimezone,
   getCronSummaryInBrowserTimezone,

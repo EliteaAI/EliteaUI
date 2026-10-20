@@ -38,23 +38,23 @@ const SchedulesPage = () => {
   }
 
   // currentData is empty while another project or page loads, so no row of another project shows
-  const [pollingInterval, setPollingInterval] = useState(0);
-  const { currentData, isFetching, isError, error } = useGetScheduleListQuery(
-    {
-      projectId,
-      page,
-      pageSize,
-      sortBy: sortConfig.field,
-      sortOrder: sortConfig.direction,
-      ...filters,
-      ownerIds: isAdmin ? filters.ownerIds : undefined,
-    },
-    { skip: !projectId, pollingInterval },
-  );
-
-  useEffect(() => {
-    setPollingInterval(getPollingInterval(currentData?.rows));
-  }, [currentData]);
+  const queryArgs = {
+    projectId,
+    page,
+    pageSize,
+    sortBy: sortConfig.field,
+    sortOrder: sortConfig.direction,
+    ...filters,
+    ownerIds: isAdmin ? filters.ownerIds : undefined,
+  };
+  const { currentData, isFetching, isError, error } = useGetScheduleListQuery(queryArgs, {
+    skip: !projectId,
+  });
+  // The same args share one cache entry; this subscription only adds the polling the rows ask for
+  useGetScheduleListQuery(queryArgs, {
+    skip: !projectId,
+    pollingInterval: getPollingInterval(currentData?.rows),
+  });
 
   useEffect(() => {
     if (isError) toastError(buildErrorMessage(error));

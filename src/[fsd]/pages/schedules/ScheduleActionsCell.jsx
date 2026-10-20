@@ -1,7 +1,6 @@
 import { memo } from 'react';
 
-import { ScheduleRowActions } from '@/[fsd]/features/schedule';
-import { useScheduleRowActions } from '@/[fsd]/features/schedule/lib/hooks/useScheduleRowActions.hooks';
+import { ScheduleRowActions, useScheduleRowActions } from '@/[fsd]/features/schedule';
 
 const ScheduleActionsCell = memo(props => {
   const { row } = props;

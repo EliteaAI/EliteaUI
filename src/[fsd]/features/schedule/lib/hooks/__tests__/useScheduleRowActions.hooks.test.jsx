@@ -54,30 +54,24 @@ describe('useScheduleRowActions EL-7011', () => {
     expect(mocks.toastSuccess).toHaveBeenCalledWith('Run started');
   });
 
-  it('R2.4 EL-7011 maps an active-run 409 to plain text', async () => {
+  it('R2.4 EL-7011 shows the server text of a 409 on run', async () => {
     mocks.run.mockReturnValue(fail({ status: 409, data: { error: 'run is active', active_run_id: 5 } }));
     const result = setup();
     await act(() => result.current.onRun());
-    expect(mocks.toastError).toHaveBeenCalledWith('This schedule is already running');
+    expect(mocks.toastError).toHaveBeenCalledWith('run is active');
     expect(mocks.toastSuccess).not.toHaveBeenCalled();
   });
 
-  it('R2.4 EL-7011 reads the 409 reason from data.error', async () => {
-    mocks.run.mockReturnValue(fail({ status: 409, data: { error: 'version_deleted' } }));
+  it('R5.1 EL-7011 shows the server text of a 409 on pause, resume and delete', async () => {
+    mocks.update.mockReturnValue(fail({ status: 409, data: { error: 'Schedule is locked' } }));
+    mocks.remove.mockReturnValue(fail({ status: 409, data: { error: 'Delete blocked' } }));
     const result = setup();
-    await act(() => result.current.onRun());
-    expect(mocks.toastError).toHaveBeenCalledWith(
-      'The version of this schedule was deleted. Choose another version first.',
-    );
-  });
-
-  it('R2.4 EL-7011 maps a version_deleted 409 to plain text', async () => {
-    mocks.run.mockReturnValue(fail({ status: 409, data: { reason: 'version_deleted' } }));
-    const result = setup();
-    await act(() => result.current.onRun());
-    expect(mocks.toastError).toHaveBeenCalledWith(
-      'The version of this schedule was deleted. Choose another version first.',
-    );
+    await act(() => result.current.onPause());
+    await act(() => result.current.onResume());
+    expect(mocks.toastError).toHaveBeenNthCalledWith(1, 'Schedule is locked');
+    expect(mocks.toastError).toHaveBeenNthCalledWith(2, 'Schedule is locked');
+    await act(() => result.current.onDelete());
+    expect(mocks.toastError).toHaveBeenLastCalledWith('Delete blocked');
   });
 
   it('R3.1 EL-7011 pause and resume send enabled and toast', async () => {

@@ -9,17 +9,8 @@ import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks/useSelectedProjec
 import { useToast } from '@/[fsd]/shared/lib/hooks/useToast.hooks';
 import { buildErrorMessage } from '@/common/utils';
 
-const VERSION_DELETED_TEXT = 'The version of this schedule was deleted. Choose another version first.';
-const ALREADY_RUNNING_TEXT = 'This schedule is already running';
-
-const errorText = error => {
-  if (error?.status !== 409) return buildErrorMessage(error);
-  const reason = error.data?.error ?? error.data?.reason ?? error.data?.code;
-  return reason === 'version_deleted' ? VERSION_DELETED_TEXT : ALREADY_RUNNING_TEXT;
-};
-
-// Calls, toasts and the busy state of one schedule row. The per-row cache key
-// lets the menu and the Enabled switch share the busy state.
+// Calls, toasts and the busy state of one schedule row. The one fixedCacheKey for
+// run, update and delete is on purpose: the menu and the Enabled switch share the busy state.
 export const useScheduleRowActions = row => {
   const projectId = useSelectedProjectId();
   const { toastError, toastSuccess } = useToast();
@@ -34,7 +25,7 @@ export const useScheduleRowActions = row => {
         await call.unwrap();
         toastSuccess(successText);
       } catch (error) {
-        toastError(errorText(error));
+        toastError(buildErrorMessage(error));
       }
     },
     [toastError, toastSuccess],
