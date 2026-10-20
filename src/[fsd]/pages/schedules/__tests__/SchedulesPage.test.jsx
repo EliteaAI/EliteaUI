@@ -250,4 +250,17 @@ describe('EL-7011 US-26 SchedulesPage', () => {
     });
     expect(screen.getByTestId('filters')).toHaveAttribute('data-has-filters', 'false');
   });
+
+  it('EL-7011 R2.3 polls every 10 seconds while a row runs and stops after', () => {
+    const answer = status => ({
+      currentData: { total: 1, rows: [{ id: 1, name: 'Nightly', last_run_status: status }] },
+      isError: false,
+    });
+    mocks.useGetScheduleListQuery.mockReturnValue(answer('running'));
+    const { rerender } = render(<SchedulesPage />);
+    expect(mocks.useGetScheduleListQuery.mock.calls.at(-1)[1]).toMatchObject({ pollingInterval: 10000 });
+    mocks.useGetScheduleListQuery.mockReturnValue(answer('success'));
+    rerender(<SchedulesPage />);
+    expect(mocks.useGetScheduleListQuery.mock.calls.at(-1)[1]).toMatchObject({ pollingInterval: 0 });
+  });
 });
