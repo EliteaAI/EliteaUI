@@ -60,12 +60,17 @@ const RunIndex = memo(() => {
     isLoading: indexesLoading,
     isFetching: indexesFetching,
     hasData,
+    toolkitId: indexesListToolkitId,
   } = useSelector(selectIndexesList);
 
+  const isIndexesListOfThisToolkit = hasData && String(indexesListToolkitId) === String(toolkitId);
+  const isToolkitDataOfThisToolkit = String(toolkitData?.id) === String(toolkitId);
+  const indexIdentity = `${projectId}:${toolkitId}:${indexName}`;
+
   const currentIndex = useMemo(() => {
-    if (!hasData || !indexName) return null;
+    if (!isIndexesListOfThisToolkit || !indexName) return null;
     return indexesList.find(idx => idx?.metadata?.collection === indexName) || null;
-  }, [indexesList, indexName, hasData]);
+  }, [indexesList, indexName, isIndexesListOfThisToolkit]);
 
   const isCreating = Boolean(location.state?.creating);
   const initialConversation = useMemo(() => {
@@ -140,16 +145,21 @@ const RunIndex = memo(() => {
 
   const effectiveIndex = currentIndex ?? inflightIndex;
 
-  if (effectiveIndex) stableIndexRef.current = effectiveIndex;
+  if (effectiveIndex) stableIndexRef.current = { identity: indexIdentity, index: effectiveIndex };
 
-  const stableIndex = stableIndexRef.current;
+  const stableIndex =
+    stableIndexRef.current?.identity === indexIdentity ? stableIndexRef.current.index : null;
 
   // When we already have the inflight index from CreateIndex, don't block RunIndexPanel behind
   // the indexes-list fetch — we need to mount the socket listener immediately so streaming events
   // aren't dropped. Use stableIndex so background refetches don't unmount the panel.
   const isLoading = stableIndex
-    ? !toolkitData?.id
-    : isFetching || indexesLoading || indexesFetching || !hasData || !toolkitData?.id;
+    ? !isToolkitDataOfThisToolkit
+    : isFetching ||
+      indexesLoading ||
+      indexesFetching ||
+      !isIndexesListOfThisToolkit ||
+      !isToolkitDataOfThisToolkit;
 
   const showCreatingPlaceholder = awaitingCreation && !stableIndex;
   const isPanelReady = !isLoading && !showCreatingPlaceholder && Boolean(stableIndex);
