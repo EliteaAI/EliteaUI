@@ -16,6 +16,7 @@ import useIsSmallWindow from '@/hooks/useIsSmallWindow';
 const { ParticipantEntityTypes } = ParticipantEntityConstants;
 
 const NO_ADDITIONAL_ROWS = [];
+const NO_QUERY_PARAMS = {};
 
 const RunHistoryContainer = memo(props => {
   const {
@@ -34,6 +35,7 @@ const RunHistoryContainer = memo(props => {
     eventColumnLabel,
     DetailComponent = null,
     shareOpensHistoryTab = false,
+    queryParams = NO_QUERY_PARAMS,
   } = props;
 
   const projectId = useSelectedProjectId();
@@ -133,9 +135,10 @@ const RunHistoryContainer = memo(props => {
         entityId,
         entityProjectId,
         page,
+        ...queryParams,
       });
     }
-  }, [projectId, entityId, entityProjectId, page, fetchRunList, source]);
+  }, [projectId, entityId, entityProjectId, page, fetchRunList, source, queryParams]);
 
   useEffect(() => {
     if (!data?.isLoadMore) {
