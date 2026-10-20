@@ -17,13 +17,18 @@ vi.hoisted(() => {
   };
 });
 
+const containerProps = vi.hoisted(() => ({ current: null }));
+
 vi.mock('@/[fsd]/entities/run-history/ui', () => ({
-  RunHistoryContainer: props => (
-    <button
-      data-testid="open-analytics"
-      onClick={() => props.handleOpenAnalytics(77)}
-    />
-  ),
+  RunHistoryContainer: props => {
+    containerProps.current = props;
+    return (
+      <button
+        data-testid="open-analytics"
+        onClick={() => props.handleOpenAnalytics(77)}
+      />
+    );
+  },
 }));
 
 vi.mock('@/[fsd]/features/chat', () => ({ ChatMessageList: () => null }));
@@ -43,7 +48,7 @@ const AnalyticsProbe = () => {
   return <div data-testid="analytics-page">{`${pathname}${search}`}</div>;
 };
 
-const renderAt = url =>
+const renderAt = (url, extraProps) =>
   render(
     <MemoryRouter initialEntries={[url]}>
       <Routes>
@@ -54,6 +59,7 @@ const renderAt = url =>
               source="application"
               detailRoute="/agents/:tab/:agentId"
               analyticsRoute="/agents/:tab/:agentId/history/analytics"
+              {...extraProps}
             />
           }
         />
@@ -88,5 +94,24 @@ describe('RunHistoryPage opening run analytics', () => {
     expect(screen.getByTestId('analytics-page')).toHaveTextContent(
       '/agents/all/127/history/analytics?viewMode=owner&history_run_id=77',
     );
+  });
+});
+
+describe('RunHistoryPage execution type column (R1.1, EL-7011 US-38)', () => {
+  afterEach(() => cleanup());
+
+  it('passes the column label and row decorator through to the container', () => {
+    const decorateRow = vi.fn();
+    renderAt('/agents/all/127/history', { eventColumnLabel: 'Execution type', decorateRow });
+
+    expect(containerProps.current.eventColumnLabel).toBe('Execution type');
+    expect(containerProps.current.decorateRow).toBe(decorateRow);
+  });
+
+  it('leaves the column label and decorator unset when the caller gives none', () => {
+    renderAt('/agents/all/127/history');
+
+    expect(containerProps.current.eventColumnLabel).toBeUndefined();
+    expect(containerProps.current.decorateRow).toBeUndefined();
   });
 });
