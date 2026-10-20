@@ -18,8 +18,9 @@ vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useToast: () => ({ toastError: mocks.toastError }),
 }));
 vi.mock('../SchedulesTable', () => ({
-  default: ({ rows, total, page, pageSize, onPageChange, onChangePageSize }) => (
+  default: ({ rows, total, page, pageSize, onPageChange, onChangePageSize, isLoading }) => (
     <div>
+      <span data-testid="loading">{String(isLoading)}</span>
       <span data-testid="rows">{rows.map(row => row.name).join(',')}</span>
       <span data-testid="total">{total}</span>
       <span data-testid="page">{page}</span>
@@ -105,5 +106,25 @@ describe('EL-7011 US-26 SchedulesPage', () => {
     render(<SchedulesPage />);
     expect(screen.getByTestId('rows').textContent).toBe('');
     expect(screen.getByTestId('total').textContent).toBe('0');
+  });
+
+  it('R2.1 shows the loading state, not "No schedules", until the first answer', () => {
+    mocks.useGetScheduleListQuery.mockReturnValue({
+      currentData: undefined,
+      isFetching: true,
+      isError: false,
+    });
+    render(<SchedulesPage />);
+    expect(screen.getByTestId('loading').textContent).toBe('true');
+  });
+
+  it('R2.1 keeps the rows on screen while the same page refreshes', () => {
+    mocks.useGetScheduleListQuery.mockReturnValue({
+      currentData: { total: 1, rows: [{ id: 1, name: 'Nightly' }] },
+      isFetching: true,
+      isError: false,
+    });
+    render(<SchedulesPage />);
+    expect(screen.getByTestId('loading').textContent).toBe('false');
   });
 });

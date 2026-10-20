@@ -23,7 +23,7 @@ const SchedulesPage = () => {
   }
 
   // currentData is empty while another project or page loads, so no row of another project shows
-  const { currentData, isError, error } = useGetScheduleListQuery(
+  const { currentData, isFetching, isError, error } = useGetScheduleListQuery(
     { projectId, page, pageSize },
     { skip: !projectId },
   );
@@ -43,6 +43,7 @@ const SchedulesPage = () => {
       <SchedulesTable
         rows={isError ? [] : (currentData?.rows ?? [])}
         total={isError ? 0 : (currentData?.total ?? 0)}
+        isLoading={isFetching && !currentData}
         page={page}
         pageSize={pageSize}
         onPageChange={onPageChange}

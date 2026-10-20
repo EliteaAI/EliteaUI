@@ -99,7 +99,7 @@ const renderCell = (column, value, row) => {
 };
 
 const SchedulesTable = memo(props => {
-  const { rows, total, page, pageSize, onPageChange, onChangePageSize } = props;
+  const { rows, total, page, pageSize, onPageChange, onChangePageSize, isLoading = false } = props;
   const { windowWidth } = useGetWindowWidth();
 
   const { visibleColumns, gridTemplateColumns, dataColumns } = useResponsiveColumns({
@@ -127,6 +127,7 @@ const SchedulesTable = memo(props => {
 
   return (
     <GridTableContainer
+      isLoading={isLoading}
       isEmpty={rows.length === 0}
       emptyMessage="No schedules"
     >

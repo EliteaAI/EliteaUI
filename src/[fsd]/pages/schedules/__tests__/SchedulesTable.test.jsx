@@ -51,11 +51,12 @@ const makeRow = (overrides = {}) => ({
   ...overrides,
 });
 
-const renderTable = rows =>
+const renderTable = (rows, isLoading = false) =>
   render(
     <ThemeProvider theme={createTheme({ palette: lightPalette })}>
       <SchedulesTable
         rows={rows}
+        isLoading={isLoading}
         total={rows.length}
         page={0}
         pageSize={20}
@@ -117,5 +118,11 @@ describe('EL-7011 US-26 SchedulesTable', () => {
   it('R3.1 shows the empty state without rows', () => {
     renderTable([]);
     expect(screen.getByText('No schedules')).toBeInTheDocument();
+  });
+
+  it('R2.1 shows the loading text, not the empty state, while loading', () => {
+    renderTable([], true);
+    expect(screen.getByText('Loading...')).toBeInTheDocument();
+    expect(screen.queryByText('No schedules')).not.toBeInTheDocument();
   });
 });
