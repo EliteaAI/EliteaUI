@@ -1,4 +1,5 @@
 import { eliteaApi } from '@/api/eliteaApi.js';
+import { getFilenameFromContentDisposition } from '@/[fsd]/shared/lib/helpers';
 import { PAGE_SIZE } from '@/common/constants.js';
 
 export const SCHEDULES_TAG = 'SCHEDULES_TAG';
@@ -98,6 +99,35 @@ export const scheduleApi = eliteaApi
         }),
         invalidatesTags: (_, error) => (error ? [] : [SCHEDULES_TAG]),
       }),
+
+      // Lazy use only. A function responseHandler also runs for error responses, so branch on ok
+      // to keep the server's JSON error in error.data (buildErrorMessage reads it).
+      exportSchedules: build.query({
+        query: ({ projectId, ids }) => ({
+          url: `/elitea_core/schedules/prompt_lib/${projectId}/export`,
+          params: isSet(ids) ? { ids: ids.join(',') } : undefined,
+          responseHandler: async response =>
+            response.ok
+              ? {
+                  blob: await response.blob(),
+                  filename: getFilenameFromContentDisposition(
+                    response.headers.get('content-disposition') || '',
+                    `schedules_${projectId}.yaml`,
+                  ),
+                }
+              : response.json(),
+        }),
+        keepUnusedDataFor: 0,
+      }),
+
+      importSchedules: build.mutation({
+        query: ({ projectId, file }) => {
+          const body = new FormData();
+          body.append('file', file);
+          return { url: `/elitea_core/schedules/prompt_lib/${projectId}/import`, method: 'POST', body, formData: true };
+        },
+        invalidatesTags: (result, error) => (!error && result?.created?.length ? [SCHEDULES_TAG] : []),
+      }),
     }),
   });
 
@@ -107,4 +137,6 @@ export const {
   useRunScheduleMutation,
   useUpdateScheduleMutation,
   useDeleteScheduleMutation,
+  useLazyExportSchedulesQuery,
+  useImportSchedulesMutation,
 } = scheduleApi;
