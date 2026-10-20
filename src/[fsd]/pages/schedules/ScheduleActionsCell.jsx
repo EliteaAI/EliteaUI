@@ -1,32 +1,19 @@
 import { memo } from 'react';
 
-import DotMenu from '@/components/DotMenu';
+import { ScheduleRowActions, useScheduleRowActions } from '@/[fsd]/features/schedule';
 
-// lean: no menu items yet, so the kebab is disabled; US-28 and US-29 add Run now, Pause and Delete
 const ScheduleActionsCell = memo(props => {
   const { row } = props;
-  const styles = scheduleActionsCellStyles();
+  const actions = useScheduleRowActions(row);
 
   return (
-    <DotMenu
-      id={`schedule-${row.id}`}
-      disabled
-      menuIconSX={styles.menuIcon}
-    >
-      {[]}
-    </DotMenu>
+    <ScheduleRowActions
+      row={row}
+      {...actions}
+    />
   );
 });
 
 ScheduleActionsCell.displayName = 'ScheduleActionsCell';
-
-/** @type {MuiSx} */
-const scheduleActionsCellStyles = () => ({
-  // The Agents kebab without menu items (components/DataRowAction)
-  menuIcon: ({ palette }) => ({
-    '& svg': { fontSize: '1rem' },
-    'svg, &:hover svg': { fill: palette.icon.disabled },
-  }),
-});
 
 export default ScheduleActionsCell;
