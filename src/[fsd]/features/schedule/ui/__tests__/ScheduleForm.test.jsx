@@ -1,0 +1,329 @@
+// @vitest-environment jsdom
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { MAX_DESCRIPTION_LENGTH } from '@/common/constants';
+import '@testing-library/jest-dom/vitest';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+
+import ScheduleForm from '../ScheduleForm';
+
+// EL-7011 US-31: the three-section schedule form (R2 to R6). Child widgets are replaced by plain elements.
+
+const ROWS = [
+  { id: 7, name: 'Digest agent' },
+  { id: 8, name: 'Other agent' },
+];
+const DETAILS = {
+  7: {
+    id: 7,
+    name: 'Digest agent',
+    meta: { default_version_id: 71 },
+    versions: [
+      { id: 70, name: 'base' },
+      { id: 71, name: 'v2' },
+    ],
+    version_details: { agent_type: 'classic' },
+  },
+  9: {
+    id: 9,
+    name: 'Nightly flow',
+    meta: {},
+    versions: [{ id: 90, name: 'base' }],
+    version_details: { agent_type: 'pipeline' },
+  },
+};
+
+const listQuery = vi.fn();
+const toastError = vi.fn();
+let selectProps;
+let versionProps;
+
+vi.mock('@/api/applications', async importOriginal => ({
+  ...(await importOriginal()),
+  useApplicationListQuery: args => listQuery(args),
+  useApplicationDetailsQuery: ({ applicationId }, { skip }) => ({
+    currentData: skip ? undefined : DETAILS[applicationId],
+    isFetching: false,
+  }),
+}));
+
+vi.mock('@/[fsd]/shared/lib/hooks', () => ({
+  useSelectedProjectId: () => 5,
+  useToast: () => ({ toastError }),
+}));
+
+vi.mock('@/[fsd]/shared/ui/checkbox/RadioButtonGroup', () => ({
+  default: ({ items, value, onChange, disabled, testId }) => (
+    <div data-testid={testId}>
+      {items.map(item => (
+        <button
+          key={item.value}
+          type="button"
+          data-testid={`${testId}-${item.value}`}
+          aria-pressed={item.value === value}
+          disabled={disabled}
+          onClick={() => onChange(item.value)}
+        >
+          {item.label}
+        </button>
+      ))}
+    </div>
+  ),
+}));
+
+vi.mock('@/[fsd]/shared/ui/select/LazySelect', () => ({
+  default: props => {
+    selectProps = props;
+    return <div data-testid="entity-select">{props.label}</div>;
+  },
+}));
+
+vi.mock('@/[fsd]/entities/version/ui/VersionSelect', () => ({
+  default: props => {
+    versionProps = props;
+    return <div data-testid="version-select" />;
+  },
+}));
+
+vi.mock('@/[fsd]/shared/ui/input/StyledInputEnhancer', () => ({
+  default: ({ label, multiline, value, onChange, inputProps, helperText, error }) => {
+    const Tag = multiline ? 'textarea' : 'input';
+    return (
+      <label>
+        {label}
+        <Tag
+          value={value}
+          onChange={onChange}
+          aria-invalid={!!error}
+          {...inputProps}
+        />
+        {helperText && <span>{helperText}</span>}
+      </label>
+    );
+  },
+}));
+
+vi.mock('@/components/VariableList', () => ({
+  default: ({ variables }) => <div data-testid="variables">{variables.map(v => v.name).join(',')}</div>,
+}));
+vi.mock('@/[fsd]/shared/ui/banner-message/BannerMessage', () => ({
+  default: ({ message }) => <div role="alert">{message}</div>,
+}));
+vi.mock('@/[fsd]/shared/ui/button/BaseBtn', () => ({
+  default: ({ children, ...rest }) => <button {...rest}>{children}</button>,
+}));
+vi.mock('@/[fsd]/shared/ui/icon/EntityTypeIcon', () => ({ default: () => null }));
+
+const INITIAL = {
+  name: 'Daily digest',
+  description: '',
+  type: 'agent',
+  application_id: '',
+  version_id: '',
+  run_mode: null,
+  prompt: '',
+  variables: [],
+  cron: '0 9 * * 1-5',
+  timezone: 'Europe/Kyiv',
+  expires_at: null,
+};
+
+const renderForm = (props = {}) => {
+  const handlers = { onSubmit: vi.fn().mockResolvedValue(undefined), onCancel: vi.fn() };
+  render(
+    <ScheduleForm
+      initialValues={INITIAL}
+      {...handlers}
+      {...props}
+    />,
+  );
+  return handlers;
+};
+
+const pickEntity = id => act(() => selectProps.onValueChange(id));
+const typePrompt = text => fireEvent.change(screen.getByLabelText(/Prompt/), { target: { value: text } });
+const save = () => fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+describe('ScheduleForm EL-7011', () => {
+  beforeEach(() => {
+    listQuery.mockReturnValue({ data: { rows: ROWS, total: 2 }, isFetching: false });
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
+  it('R2.1 EL-7011 shows GENERAL, WHAT TO RUN and SCHEDULE SETTINGS in this order', () => {
+    renderForm();
+
+    expect(screen.getAllByRole('heading').map(h => h.textContent)).toEqual([
+      'GENERAL',
+      'WHAT TO RUN',
+      'SCHEDULE SETTINGS',
+    ]);
+  });
+
+  it('R2.2 EL-7011 shows Name and a multiline Description capped at 2304, and no tags field', () => {
+    renderForm();
+
+    expect(screen.getByLabelText(/Name/)).toHaveValue('Daily digest');
+    const description = screen.getByLabelText('Description');
+    expect(description.tagName).toBe('TEXTAREA');
+    expect(description).toHaveAttribute('maxlength', String(MAX_DESCRIPTION_LENGTH));
+    expect(screen.queryByText(/tags/i)).not.toBeInTheDocument();
+  });
+
+  it('R3.1 EL-7011 shows the Type radio with Agent selected', () => {
+    renderForm();
+
+    expect(screen.getByTestId('schedule-type-agent')).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByTestId('schedule-type-pipeline')).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('R3.2 EL-7011 lists only entities of the selected Type, labeled by it', () => {
+    renderForm();
+    expect(listQuery).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        projectId: 5,
+        page: 0,
+        params: expect.objectContaining({ agents_type: 'classic' }),
+      }),
+    );
+    expect(selectProps.label).toBe('Agent');
+    expect(selectProps.options.map(o => o.label)).toEqual(['Digest agent', 'Other agent']);
+
+    fireEvent.click(screen.getByTestId('schedule-type-pipeline'));
+
+    expect(listQuery).toHaveBeenLastCalledWith(
+      expect.objectContaining({ params: expect.objectContaining({ agents_type: 'pipeline' }) }),
+    );
+    expect(selectProps.label).toBe('Pipeline');
+  });
+
+  it('R3.3 EL-7011 loads the next page at the end of the list', () => {
+    renderForm();
+
+    act(() => selectProps.onLoadMore());
+
+    expect(listQuery).toHaveBeenLastCalledWith(expect.objectContaining({ page: 1 }));
+  });
+
+  it('R3.4 EL-7011 presets the version to the default version of the selected entity', async () => {
+    renderForm();
+
+    pickEntity(7);
+
+    await waitFor(() => expect(versionProps.value).toBe(71));
+    expect(versionProps.onChange).toBeTypeOf('function');
+  });
+
+  it('R4.2 EL-7011 shows a required Prompt with Variables for an agent', () => {
+    renderForm();
+    pickEntity(7);
+
+    typePrompt('Hello {{team}}');
+
+    expect(screen.getByTestId('variables')).toHaveTextContent('team');
+  });
+
+  it('R4.1 R4.4 EL-7011 shows Run mode for a pipeline and hides Prompt in Entry point', () => {
+    renderForm();
+
+    fireEvent.click(screen.getByTestId('schedule-type-pipeline'));
+
+    expect(screen.getByTestId('schedule-run-mode-entry_point')).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.queryByLabelText(/Prompt/)).not.toBeInTheDocument();
+    expect(screen.queryByTestId('variables')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('schedule-run-mode-prompt'));
+
+    expect(screen.getByLabelText(/Prompt/)).toBeInTheDocument();
+  });
+
+  it('R4.5 EL-7011 keeps Save from sending and shows "Prompt is required"', async () => {
+    const { onSubmit } = renderForm();
+    pickEntity(7);
+
+    save();
+
+    expect(await screen.findByText('Prompt is required')).toBeInTheDocument();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('R5.1 R5.2 EL-7011 locks Type and the entity from the URL and keeps the rest editable', () => {
+    renderForm({
+      initialValues: { ...INITIAL, type: 'pipeline', run_mode: 'entry_point', application_id: 9 },
+      lockedEntity: { type: 'pipeline', id: 9 },
+    });
+
+    expect(screen.getByTestId('schedule-type-agent')).toBeDisabled();
+    expect(selectProps.disabled).toBe(true);
+    expect(screen.getByTestId('schedule-run-mode-prompt')).toBeEnabled();
+    expect(versionProps.disabled).toBeFalsy();
+  });
+
+  it('R5.3 EL-7011 unlocks and shows a banner when the URL entity has another type', async () => {
+    renderForm({
+      initialValues: { ...INITIAL, type: 'pipeline', run_mode: 'entry_point', application_id: 7 },
+      lockedEntity: { type: 'pipeline', id: 7 },
+    });
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('not available');
+    expect(selectProps.disabled).toBeFalsy();
+    expect(selectProps.value).toBe('');
+  });
+
+  it('R6.1 EL-7011 sends the create body on Save', async () => {
+    const { onSubmit } = renderForm();
+    pickEntity(7);
+    await waitFor(() => expect(versionProps.value).toBe(71));
+    typePrompt('Hello {{team}}');
+
+    save();
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit.mock.calls[0][0]).toMatchObject({
+      name: 'Daily digest',
+      entity_type: 'agent',
+      application_id: 7,
+      version_id: 71,
+      run_mode: null,
+      prompt: 'Hello {{team}}',
+      variables: [{ name: 'team', value: '' }],
+    });
+  });
+
+  it('R6.3 EL-7011 shows a 400 message under its field and keeps the form open', async () => {
+    renderForm({
+      onSubmit: vi.fn().mockRejectedValue({ status: 400, data: { field: 'name', error: 'Name is taken' } }),
+    });
+    pickEntity(7);
+    typePrompt('Hi');
+
+    save();
+
+    expect(await screen.findByText('Name is taken')).toBeInTheDocument();
+  });
+
+  it('R6.4 EL-7011 shows the server text of a 409 in the banner', async () => {
+    renderForm({
+      onSubmit: vi.fn().mockRejectedValue({ status: 409, data: { error: 'Schedule limit reached' } }),
+    });
+    pickEntity(7);
+    typePrompt('Hi');
+
+    save();
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Schedule limit reached');
+  });
+
+  it('R6.5 EL-7011 returns through onCancel without saving', () => {
+    const { onSubmit, onCancel } = renderForm();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    expect(onCancel).toHaveBeenCalledTimes(1);
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+});
