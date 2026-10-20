@@ -6,6 +6,7 @@ import { useParams, useSearchParams } from 'react-router-dom';
 
 import { Box, CircularProgress, Tooltip, Typography } from '@mui/material';
 
+import { CredentialWarningHelpers } from '@/[fsd]/entities/credential-warning/lib/helpers';
 import { ConfigurationTitlesConstants } from '@/[fsd]/features/credentials/lib/constants';
 import { useGetCurrentConfigurationAsSchemas } from '@/[fsd]/features/credentials/lib/hooks';
 import { McpAuthHelpers, McpPatBanner } from '@/[fsd]/features/mcp';
@@ -258,7 +259,7 @@ export const ToolkitForm = memo(props => {
       // When auto-selecting (e.g., embedding model fallback), update Formik initial values
       // so the form doesn't appear dirty from the auto-correction
       if (options?.isAutoSelect && options?.section !== 'credentials') {
-        const updatedValues = updateObjectByPath({ ...currentValuesRef.current }, field, value);
+        const updatedValues = updateObjectByPath({ ...currentValuesRef.current }, field, value, replace);
         resetForm({ values: updatedValues });
       }
     },
@@ -366,9 +367,9 @@ export const ToolkitForm = memo(props => {
 
       // Only revert if this is a credential that was changed from team to private
       if (typeof curr === 'object' && curr && 'elitea_title' in curr) {
-        if (curr.private !== orig?.private || curr.elitea_title !== orig?.elitea_title) {
+        if (CredentialWarningHelpers.isCredentialSelectionChanged(curr, orig)) {
           // Revert to original team credential
-          editField(`settings.${key}`, orig);
+          editField(`settings.${key}`, orig, true);
         }
       }
     });

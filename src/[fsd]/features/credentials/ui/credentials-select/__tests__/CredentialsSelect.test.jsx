@@ -16,10 +16,22 @@ const CHROMA_TITLE = 'elitea-chroma';
 const GITHUB_TITLE = 'github-token';
 const DELETED_TITLE = 'deleted-store';
 
+const PGVECTOR_UUID = 'uuid-pgvector';
+const CHROMA_UUID = 'uuid-chroma';
+const GITHUB_UUID = 'uuid-github';
+
 const VECTOR_STORAGE_CONFIGURATIONS = [
-  { id: 'cfg-pgvector', elitea_title: PGVECTOR_TITLE, project_id: TEAM_PROJECT_ID, data: {} },
-  { id: 'cfg-chroma', elitea_title: CHROMA_TITLE, project_id: TEAM_PROJECT_ID, data: {} },
+  { id: 1, uuid: PGVECTOR_UUID, elitea_title: PGVECTOR_TITLE, project_id: TEAM_PROJECT_ID, data: {} },
+  { id: 2, uuid: CHROMA_UUID, elitea_title: CHROMA_TITLE, project_id: TEAM_PROJECT_ID, data: {} },
 ];
+
+const savedCredential = (title, uuid, over) => ({
+  private: false,
+  elitea_title: title,
+  configuration_uuid: uuid,
+  configuration_project_id: TEAM_PROJECT_ID,
+  ...over,
+});
 
 const ONLY_VECTOR_STORAGE_CONFIGURATION = [VECTOR_STORAGE_CONFIGURATIONS[0]];
 
@@ -40,8 +52,17 @@ const ATTENTION_ERROR_SELECTOR =
   '& .MuiInputBase-root.MuiInput-root.MuiSelect-root.Mui-error.MuiInput-underline:before, & .MuiInputBase-root.MuiInput-root.MuiSelect-root.Mui-error.MuiInput-underline:after';
 
 const CREDENTIAL_CONFIGURATIONS = [
-  { id: 'cfg-github', elitea_title: GITHUB_TITLE, project_id: TEAM_PROJECT_ID, type: 'github', data: {} },
+  {
+    id: 3,
+    uuid: GITHUB_UUID,
+    elitea_title: GITHUB_TITLE,
+    project_id: TEAM_PROJECT_ID,
+    type: 'github',
+    data: {},
+  },
 ];
+
+const LEGACY_CONFIGURATION = { id: 4, elitea_title: GITHUB_TITLE, project_id: TEAM_PROJECT_ID, data: {} };
 
 let singleSelectProps;
 let credentialsData;
@@ -268,10 +289,7 @@ describe('CredentialsSelect', () => {
       clickOption(CHROMA_TITLE);
 
       expect(onSelectConfiguration).toHaveBeenCalledTimes(1);
-      expect(onSelectConfiguration).toHaveBeenCalledWith({
-        private: false,
-        elitea_title: CHROMA_TITLE,
-      });
+      expect(onSelectConfiguration).toHaveBeenCalledWith(savedCredential(CHROMA_TITLE, CHROMA_UUID));
 
       await waitFor(() => expect(singleSelectProps.value).toBe(optionValueFor(CHROMA_TITLE)));
       expect(onSelectConfiguration).toHaveBeenCalledTimes(1);
@@ -320,10 +338,7 @@ describe('CredentialsSelect', () => {
       clickOption(CHROMA_TITLE);
 
       expect(onSelectConfiguration).toHaveBeenCalledTimes(1);
-      expect(onSelectConfiguration).toHaveBeenCalledWith({
-        private: false,
-        elitea_title: CHROMA_TITLE,
-      });
+      expect(onSelectConfiguration).toHaveBeenCalledWith(savedCredential(CHROMA_TITLE, CHROMA_UUID));
       await waitFor(() => expect(singleSelectProps.value).toBe(optionValueFor(CHROMA_TITLE)));
     });
 
@@ -360,10 +375,9 @@ describe('CredentialsSelect', () => {
     expect(singleSelectProps.value).toBe(optionValueFor(GITHUB_TITLE));
     expect(within(renderedValue()).getByText(GITHUB_TITLE)).toBeInTheDocument();
     await waitFor(() =>
-      expect(onSelectConfiguration).toHaveBeenCalledWith(
-        { private: false, elitea_title: GITHUB_TITLE },
-        { isAutoSelect: true },
-      ),
+      expect(onSelectConfiguration).toHaveBeenCalledWith(savedCredential(GITHUB_TITLE, GITHUB_UUID), {
+        isAutoSelect: true,
+      }),
     );
   });
 
@@ -404,10 +418,9 @@ describe('CredentialsSelect', () => {
     });
 
     await waitFor(() =>
-      expect(onSelectConfiguration).toHaveBeenCalledWith(
-        { private: false, elitea_title: PGVECTOR_TITLE },
-        { isAutoSelect: true },
-      ),
+      expect(onSelectConfiguration).toHaveBeenCalledWith(savedCredential(PGVECTOR_TITLE, PGVECTOR_UUID), {
+        isAutoSelect: true,
+      }),
     );
   });
 
@@ -419,10 +432,9 @@ describe('CredentialsSelect', () => {
 
     expect(singleSelectProps.value).toBe(optionValueFor(PGVECTOR_TITLE));
     await waitFor(() =>
-      expect(onSelectConfiguration).toHaveBeenCalledWith(
-        { private: false, elitea_title: PGVECTOR_TITLE },
-        { isAutoSelect: true },
-      ),
+      expect(onSelectConfiguration).toHaveBeenCalledWith(savedCredential(PGVECTOR_TITLE, PGVECTOR_UUID), {
+        isAutoSelect: true,
+      }),
     );
   });
 
@@ -446,10 +458,9 @@ describe('CredentialsSelect', () => {
       });
 
       await waitFor(() =>
-        expect(onSelectConfiguration).toHaveBeenCalledWith(
-          { private: false, elitea_title: PGVECTOR_TITLE },
-          { isAutoSelect: true },
-        ),
+        expect(onSelectConfiguration).toHaveBeenCalledWith(savedCredential(PGVECTOR_TITLE, PGVECTOR_UUID), {
+          isAutoSelect: true,
+        }),
       );
       expect(singleSelectProps.disabled).toBe(true);
     });
@@ -530,5 +541,68 @@ describe('CredentialsSelect', () => {
     expect(savedOptions()).toHaveLength(1);
     expect(singleSelectProps.optionGroups.some(group => group.title === 'Create')).toBe(false);
     expect(singleSelectProps.disabled).toBe(false);
+  });
+
+  describe('immutable configuration reference', () => {
+    const TWIN_A_UUID = 'uuid-twin-a';
+    const TWIN_B_UUID = 'uuid-twin-b';
+    const TWIN_CONFIGURATIONS = [
+      { id: 5, uuid: TWIN_A_UUID, elitea_title: GITHUB_TITLE, project_id: TEAM_PROJECT_ID, data: {} },
+      { id: 6, uuid: TWIN_B_UUID, elitea_title: GITHUB_TITLE, project_id: TEAM_PROJECT_ID, data: {} },
+    ];
+
+    it('commits the legacy two-key shape for a row that has no uuid', () => {
+      renderSelect({
+        section: 'credentials',
+        value: { elitea_title: GITHUB_TITLE, private: false },
+        configurations: [
+          LEGACY_CONFIGURATION,
+          { ...LEGACY_CONFIGURATION, id: 7, elitea_title: CHROMA_TITLE },
+        ],
+      });
+
+      singleSelectProps.onValueChange(optionValueFor(CHROMA_TITLE));
+
+      expect(onSelectConfiguration).toHaveBeenCalledTimes(1);
+      expect(onSelectConfiguration.mock.calls[0][0]).toStrictEqual({
+        private: false,
+        elitea_title: CHROMA_TITLE,
+      });
+    });
+
+    it('selects the row with the saved uuid even when another row shares its title and private flag', () => {
+      renderSelect({
+        section: 'credentials',
+        value: savedCredential(GITHUB_TITLE, TWIN_B_UUID),
+        configurations: TWIN_CONFIGURATIONS,
+      });
+
+      expect(savedOptions()).toHaveLength(2);
+      expect(singleSelectProps.value).toBe(savedOptions()[1].value);
+      expect(singleSelectProps.value).not.toBe(savedOptions()[0].value);
+    });
+
+    it('commits the picked twin by uuid instead of treating it as the already committed row', () => {
+      renderSelect({
+        section: 'credentials',
+        value: savedCredential(GITHUB_TITLE, TWIN_A_UUID),
+        configurations: TWIN_CONFIGURATIONS,
+      });
+
+      singleSelectProps.onValueChange(savedOptions()[1].value);
+
+      expect(onSelectConfiguration).toHaveBeenCalledTimes(1);
+      expect(onSelectConfiguration).toHaveBeenCalledWith(savedCredential(GITHUB_TITLE, TWIN_B_UUID));
+    });
+
+    it('still matches a legacy saved value that has no uuid by title and private flag', () => {
+      renderSelect({
+        section: 'credentials',
+        value: { elitea_title: GITHUB_TITLE, private: false },
+        configurations: CREDENTIAL_CONFIGURATIONS,
+      });
+
+      expect(singleSelectProps.value).toBe(optionValueFor(GITHUB_TITLE));
+    });
   });
 });
