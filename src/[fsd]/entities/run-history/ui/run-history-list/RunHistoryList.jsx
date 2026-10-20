@@ -40,6 +40,7 @@ const RunHistoryList = memo(props => {
     handleRestoreConversation,
     handleOpenAnalytics,
     hasEvent = false,
+    eventColumnLabel = 'Event',
     shareOpensHistoryTab = false,
   } = props;
   const { isSmallWindow } = useIsSmallWindow();
@@ -73,11 +74,11 @@ const RunHistoryList = memo(props => {
   const tableHeaderItems = useMemo(
     () => [
       { label: 'Date', type: SORT_TYPES.DATE },
-      ...(hasEvent ? [{ label: 'Event', type: SORT_TYPES.EVENT }] : []),
+      ...(hasEvent ? [{ label: eventColumnLabel, type: SORT_TYPES.EVENT }] : []),
       ...(noVersions ? [] : [{ label: 'Version', type: SORT_TYPES.VERSION }]),
       { label: 'Duration', type: SORT_TYPES.DURATION },
     ],
-    [noVersions, hasEvent],
+    [noVersions, hasEvent, eventColumnLabel],
   );
 
   const sortedConversations = useMemo(

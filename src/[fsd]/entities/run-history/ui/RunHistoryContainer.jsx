@@ -31,6 +31,7 @@ const RunHistoryContainer = memo(props => {
     additionalRows = NO_ADDITIONAL_ROWS,
     additionalRowsLoading = false,
     decorateRow = null,
+    eventColumnLabel,
     DetailComponent = null,
     shareOpensHistoryTab = false,
   } = props;
@@ -199,6 +200,7 @@ const RunHistoryContainer = memo(props => {
             handleRestoreConversation={handleRestoreConversation}
             handleOpenAnalytics={handleOpenAnalytics}
             hasEvent={Boolean(decorateRow)}
+            eventColumnLabel={eventColumnLabel}
             shareOpensHistoryTab={shareOpensHistoryTab}
           />
         </Box>
