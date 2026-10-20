@@ -2,14 +2,13 @@ import { memo } from 'react';
 
 import { Box } from '@mui/material';
 
-import { useModal } from '@/[fsd]/shared/lib/hooks';
+import { useIsSmallWindow, useModal } from '@/[fsd]/shared/lib/hooks';
 import {
   ContextBudgetHeader,
   ContextBudgetProgress,
   ContextBudgetStatsDisplay,
   ContextStrategyModal,
 } from '@/[fsd]/widgets/context-budget/ui';
-import useIsSmallWindow from '@/hooks/useIsSmallWindow';
 
 const ContextBudgetExpanded = memo(props => {
   const {

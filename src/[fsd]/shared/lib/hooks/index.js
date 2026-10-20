@@ -65,3 +65,4 @@ export * from './useSearchParamValue.hooks';
 export * from './useTags.hooks';
 export * from './useCardNavigate.hooks';
 export * from './useClientSort.hooks';
+export * from './useIsSmallWindow.hooks';

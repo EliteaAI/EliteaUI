@@ -45,7 +45,7 @@ import { AddNewUserModal } from '@/[fsd]/features/chat/ui/chat-modal';
 import { ChatEditorPanel } from '@/[fsd]/features/chat/ui/editors';
 import { FIRST_ELITEA_TOUR_ID, useProposePendingTour } from '@/[fsd]/features/interactive-tours';
 import { ChunkHelpers } from '@/[fsd]/shared/lib/helpers';
-import { useGetWindowWidth, useToast } from '@/[fsd]/shared/lib/hooks';
+import { useGetWindowWidth, useIsSmallWindow, useToast } from '@/[fsd]/shared/lib/hooks';
 import { eliteaApi } from '@/api/eliteaApi';
 import {
   ChatParticipantType,
@@ -91,7 +91,6 @@ import useStreamingNavBlocker from '@/hooks/chat/useStreamingNavBlocker';
 import useSynChatMessage from '@/hooks/chat/useSyncChatMessage';
 import useUploadAttachments from '@/hooks/chat/useUploadAttachments';
 import { useIsCreatingConversation } from '@/hooks/useIsFromSpecificPageHooks';
-import useIsSmallWindow from '@/hooks/useIsSmallWindow';
 import useNavBlocker from '@/hooks/useNavBlocker';
 import NewConversationView from '@/pages/NewChat/NewConversationView';
 import { actions as chatActions } from '@/slices/chat';
