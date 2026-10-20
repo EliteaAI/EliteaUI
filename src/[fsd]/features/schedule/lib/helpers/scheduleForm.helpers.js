@@ -74,11 +74,8 @@ export const toCreateBody = ({ type, description, run_mode, prompt, variables, .
   };
 };
 
+// The schedule API answers one broken field at a time: { error, field }; a message without a field goes to the banner
 export const toFieldErrors = error => {
-  const issues = error?.data?.error;
-  if (!Array.isArray(issues)) return {};
-  return issues.reduce((errors, { loc, msg }) => {
-    const field = loc?.[0];
-    return field && !(field in errors) ? { ...errors, [field]: msg } : errors;
-  }, {});
+  const { error: message, field } = error?.data ?? {};
+  return field && typeof message === 'string' ? { [field]: message } : {};
 };

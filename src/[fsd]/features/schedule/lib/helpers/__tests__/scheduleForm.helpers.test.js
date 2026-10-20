@@ -185,21 +185,9 @@ describe('EL-7011 R6.2 create body', () => {
 });
 
 describe('EL-7011 R6.3 server 400 messages', () => {
-  it('toFieldErrors maps each message to its field', () => {
-    const error = {
-      status: 400,
-      data: {
-        error: [
-          { loc: ['prompt'], msg: 'Enter a prompt for the agent' },
-          { loc: ['variables'], msg: 'Missing: team' },
-          { loc: ['prompt'], msg: 'second message is ignored' },
-        ],
-      },
-    };
-    expect(toFieldErrors(error)).toEqual({
-      prompt: 'Enter a prompt for the agent',
-      variables: 'Missing: team',
-    });
+  it('toFieldErrors maps the message to its field', () => {
+    const error = { status: 400, data: { error: 'Enter a prompt for the agent', field: 'prompt' } };
+    expect(toFieldErrors(error)).toEqual({ prompt: 'Enter a prompt for the agent' });
   });
 
   it('toFieldErrors returns no field errors for a message without a field', () => {
