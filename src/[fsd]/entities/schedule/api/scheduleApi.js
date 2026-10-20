@@ -91,6 +91,15 @@ export const scheduleApi = eliteaApi
         invalidatesTags: (_, error) => (error ? [] : [SCHEDULES_TAG]),
       }),
 
+      changeScheduleOwner: build.mutation({
+        query: ({ projectId, scheduleId, ownerId }) => ({
+          url: `${schedulePath(projectId, scheduleId)}/owner`,
+          method: 'POST',
+          body: { owner_id: ownerId },
+        }),
+        invalidatesTags: (_, error) => (error ? [] : [SCHEDULES_TAG]),
+      }),
+
       deleteSchedule: build.mutation({
         query: ({ projectId, scheduleId }) => ({
           url: schedulePath(projectId, scheduleId),
@@ -106,5 +115,6 @@ export const {
   useCreateScheduleMutation,
   useRunScheduleMutation,
   useUpdateScheduleMutation,
+  useChangeScheduleOwnerMutation,
   useDeleteScheduleMutation,
 } = scheduleApi;
