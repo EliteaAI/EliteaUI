@@ -11,6 +11,7 @@ import {
   ConfigurationTitlesConstants,
   LlmModelFormConstants,
 } from '@/[fsd]/features/credentials/lib/constants';
+import { CredentialProbeHelpers } from '@/[fsd]/features/credentials/lib/helpers';
 import { CredentialLogoutModal, LlmModelForm } from '@/[fsd]/features/credentials/ui';
 import { CREDENTIALS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
 import { McpAuthFlowHelpers, McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
@@ -18,7 +19,7 @@ import { useConfigOAuthModal, useMcpTokenChange } from '@/[fsd]/features/mcp/lib
 import { McpAuthModal } from '@/[fsd]/features/mcp/ui';
 import { ToolComponentHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
-import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
+import { useFormDirtyExcluding, useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { FormViewToggle } from '@/[fsd]/shared/ui/tab-group-button';
 import { PUBLIC_PROJECT_ID, ToolkitViewOptions } from '@/common/constants';
@@ -206,6 +207,9 @@ const CredentialForm = memo(props => {
   const onCloseLogoutModal = useCallback(() => {
     setShowLogoutModal(false);
   }, []);
+  // A saved credential with no unsaved edits is tested by reference; anything else by the typed values
+  const isFormDirty = useFormDirtyExcluding();
+  const configurationUuid = CredentialProbeHelpers.getProbeConfigurationUuid(credentialDetails, isFormDirty);
   const { onTestConnection, isTestingConnection } = useCreateConfiguration({
     type: configurationType,
     configuration,
@@ -221,6 +225,7 @@ const CredentialForm = memo(props => {
     onConfigAuthRequired: configOAuth.handleConfigAuthRequired,
     // Pass the credential-scoped token key so the correct token is fetched/stored
     oauthTokenKey,
+    configurationUuid,
   });
   useEffect(() => {
     onTestConnectionRef.current = onTestConnection;
@@ -374,7 +379,16 @@ const CredentialForm = memo(props => {
           sx={styles.errorMessage}
           data-testid="credential-form-api-error-message"
         >
-          {apiError}
+          {typeof apiError === 'string' ? apiError : apiError.message}
+          {apiError?.code && (
+            <Box
+              component="span"
+              data-testid="credential-form-api-error-code"
+              sx={styles.errorCodeChip}
+            >
+              {apiError.code}
+            </Box>
+          )}
         </Typography>
       )}
       <McpAuthModal {...configOAuth.getModalProps()} />
@@ -415,6 +429,17 @@ const credentialFormStyles = isLlmModelForm => ({
     paddingLeft: '0.25rem',
     color: ({ palette }) => `${palette.error.main}`,
   },
+  // Same chip as the chat error card (ErrorTrace)
+  errorCodeChip: ({ palette }) => ({
+    marginLeft: '.75rem',
+    padding: '.125rem .5rem',
+    border: `0.0625rem solid ${palette.border.error}`,
+    borderRadius: '1rem',
+    fontSize: '.75rem',
+    lineHeight: '1rem',
+    fontWeight: 500,
+    whiteSpace: 'nowrap',
+  }),
 });
 
 export default CredentialForm;
