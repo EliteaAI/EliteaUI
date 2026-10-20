@@ -1,4 +1,4 @@
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 
 import { Box, IconButton, Typography } from '@mui/material';
 
@@ -6,6 +6,8 @@ import StyledTooltip from '@/ComponentsLib/Tooltip';
 import ArrowRightIcon from '@/assets/arrow-right-icon.svg?react';
 import CopyIcon from '@/components/Icons/CopyIcon';
 import DownloadIcon from '@/components/Icons/DownloadIcon';
+
+import { parseRefusalPayload } from '@/[fsd]/features/chat/lib/helpers/refusal.helpers';
 
 import BudgetErrorMessage from './BudgetErrorMessage';
 
@@ -30,6 +32,10 @@ const ErrorTrace = memo(props => {
   const trace = typeof rawTrace === 'string' || !rawTrace ? rawTrace : JSON.stringify(rawTrace);
 
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // Backend refusals (e.g. admission-layer denials) arrive as `{code, error}` with no answer
+  // text; surface the readable `error` plus its `code`. Any other shape keeps the generic text.
+  const refusal = useMemo(() => (headline ? undefined : parseRefusalPayload(trace)), [headline, trace]);
 
   const downloadErrorTrace = useCallback(() => {
     if (!trace) return;
@@ -56,7 +62,20 @@ const ErrorTrace = memo(props => {
 
   return (
     <>
-      {budgetMessage || <Box sx={styles.errorWrapper}>{headline || 'Unknown error'}</Box>}
+      {budgetMessage || (
+        <Box sx={styles.errorWrapper}>
+          {headline || refusal?.message || 'Unknown error'}
+          {refusal?.code && (
+            <Box
+              component="span"
+              data-testid="error-code-chip"
+              sx={styles.errorCodeChip}
+            >
+              {refusal.code}
+            </Box>
+          )}
+        </Box>
+      )}
 
       {afterHeadline}
 
@@ -137,6 +156,17 @@ const errorTraceStyles = (isExpanded, compact) => ({
     fontSize: '.875rem',
     marginBottom: '0.5rem',
   },
+  errorCodeChip: ({ palette }) => ({
+    marginLeft: '.75rem',
+    padding: '.125rem .5rem',
+    border: `0.0625rem solid ${palette.border.error}`,
+    borderRadius: '1rem',
+    fontSize: '.75rem',
+    lineHeight: '1rem',
+    fontWeight: 500,
+    whiteSpace: 'nowrap',
+    flexShrink: 0,
+  }),
   errorStackTrace: {
     width: '100%',
     marginTop: '0.5rem',
