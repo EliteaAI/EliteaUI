@@ -15,12 +15,14 @@ import useCheckPermission from '@/hooks/useCheckPermission';
 
 import SettingsFormProvider from '../shared/SettingsFormProvider';
 import { ChatConfigurationSection } from './chat-configuration';
+import { ScheduleNotificationsSection } from './schedules';
 
 const ProjectGeneralContent = memo(() => {
   const styles = componentStyles();
 
   const { checkPermission } = useCheckPermission();
   const canViewProjectContext = checkPermission(PERMISSIONS.projectContext.view);
+  const canListSchedules = checkPermission(PERMISSIONS.schedules.list);
   const isBackupRestoreAvailable =
     checkPermission(PERMISSIONS.projectBackup.download) || checkPermission(PERMISSIONS.projectBackup.restore);
 
@@ -102,6 +104,19 @@ const ProjectGeneralContent = memo(() => {
               },
             ]}
           />
+          {canListSchedules && (
+            <BasicAccordion
+              data-testid="schedules-section"
+              showMode={AccordionConstants.AccordionShowMode.LeftMode}
+              accordionSX={styles.accordionStyles}
+              items={[
+                {
+                  title: 'Schedules',
+                  content: <ScheduleNotificationsSection />,
+                },
+              ]}
+            />
+          )}
           {isBackupRestoreAvailable && (
             <BasicAccordion
               data-testid="project-backup-restore-section"
