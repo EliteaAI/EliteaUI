@@ -36,10 +36,7 @@ const UsageToolSpend = memo(props => {
       </Typography>
 
       {features.map(item => {
-        const limited = item.percent_used !== null && item.percent_used !== undefined;
-        const primary = canSeeAmounts
-          ? `${item.label}: ${UsageHelpers.formatMoney(item.spend, item.currency)} of ${UsageHelpers.formatLimit(item.effective_limit, item.currency)}`
-          : `${item.label}: ${limited ? `${item.percent_used}% of limit` : 'no limit'}`;
+        const unavailable = item.spend_available === false;
 
         return (
           <Box
@@ -48,8 +45,8 @@ const UsageToolSpend = memo(props => {
           >
             <UsageMeter
               percentUsed={item.percent_used}
-              primaryLabel={item.enabled === false ? `${item.label}: turned off for this project` : primary}
-              secondaryLabel={callsLabel(item.calls)}
+              primaryLabel={UsageHelpers.toolSpendLabel(item, canSeeAmounts)}
+              secondaryLabel={unavailable ? undefined : callsLabel(item.calls)}
             />
           </Box>
         );

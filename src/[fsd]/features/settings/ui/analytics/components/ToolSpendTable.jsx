@@ -3,18 +3,14 @@ import { memo } from 'react';
 import { Box, Typography } from '@mui/material';
 
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
-import { BudgetWarningConstants } from '@/[fsd]/shared/lib/constants';
-
-const { WEB_SEARCH_FEATURE } = BudgetWarningConstants;
-
-const FEATURE_LABELS = { [WEB_SEARCH_FEATURE.feature]: WEB_SEARCH_FEATURE.label };
 
 const COLUMNS = [
   {
     key: 'feature',
     header: 'TOOL',
     flex: 2,
-    render: row => FEATURE_LABELS[row.feature] || row.feature || '—',
+    // The backend sends each feature's label from toolkit metadata
+    render: row => row.label || row.feature || '—',
   },
   { key: 'backend', header: 'PROVIDER', flex: 1.5, render: row => row.backend || '—' },
   { key: 'calls', header: 'CALLS', flex: 1, render: row => AnalyticCommonHelpers.fmtNum(row.calls) },
