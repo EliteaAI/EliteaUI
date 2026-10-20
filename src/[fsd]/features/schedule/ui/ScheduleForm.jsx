@@ -25,6 +25,7 @@ import LazySelect from '@/[fsd]/shared/ui/select/LazySelect';
 import { useApplicationDetailsQuery, useApplicationListQuery } from '@/api/applications';
 import { MAX_DESCRIPTION_LENGTH } from '@/common/constants';
 import VariableList from '@/components/VariableList';
+import useNavBlocker from '@/hooks/useNavBlocker';
 
 const TYPE_ITEMS = [
   { value: 'agent', label: 'Agent' },
@@ -91,6 +92,12 @@ const ScheduleForm = memo(props => {
     },
   });
   const { values, errors, touched, setFieldValue, setValues } = formik;
+  // Unsaved changes open the leave dialog (R1.3); a save in progress never does
+  const blockOptions = useMemo(
+    () => ({ blockCondition: formik.dirty && !formik.isSubmitting }),
+    [formik.dirty, formik.isSubmitting],
+  );
+  useNavBlocker(blockOptions);
   const fieldError = name => (touched[name] || errors[name] ? errors[name] : '');
 
   const { data: listData, isFetching } = useApplicationListQuery({

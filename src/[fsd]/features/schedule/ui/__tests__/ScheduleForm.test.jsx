@@ -34,6 +34,7 @@ const DETAILS = {
 };
 
 const listQuery = vi.fn();
+const navBlocker = vi.fn();
 const toastError = vi.fn();
 let selectProps;
 let versionProps;
@@ -113,6 +114,7 @@ vi.mock('@/[fsd]/shared/ui/button/BaseBtn', () => ({
   default: ({ children, ...rest }) => <button {...rest}>{children}</button>,
 }));
 vi.mock('@/[fsd]/shared/ui/icon/EntityTypeIcon', () => ({ default: () => null }));
+vi.mock('@/hooks/useNavBlocker', () => ({ default: options => navBlocker(options) }));
 
 const INITIAL = {
   name: 'Daily digest',
@@ -316,6 +318,13 @@ describe('ScheduleForm EL-7011', () => {
     save();
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Schedule limit reached');
+  });
+
+  it('R1.3 EL-7011 blocks leaving only while the form has unsaved changes', () => {
+    renderForm();
+    expect(navBlocker).toHaveBeenLastCalledWith({ blockCondition: false });
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Nightly digest' } });
+    expect(navBlocker).toHaveBeenLastCalledWith({ blockCondition: true });
   });
 
   it('R6.5 EL-7011 returns through onCancel without saving', () => {
