@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useFormik } from 'formik';
 
@@ -15,6 +15,7 @@ import {
   syncPromptVariables,
   toCreateBody,
   toFieldErrors,
+  toUpdateBody,
 } from '@/[fsd]/features/schedule/lib/helpers';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
@@ -68,13 +69,29 @@ const FieldError = ({ message }) =>
     </Typography>
   ) : null;
 
+const ownerName = owner => owner?.name || owner?.email || '-';
+
 /**
  * `children({ values, setFieldValue, dirty, setValues })` fills SCHEDULE SETTINGS from the form values (cron, expires_at);
  * `onSubmit(body)` returns a promise of the save answer and rejects with the API error;
  * `onSaved(answer)` runs at once after a save without warnings, else when the warnings dialog closes.
+ * `schedule` turns on edit mode: read-only Owner, update body, and "Test run" (`onTestRun()`, a promise)
+ * when `schedule.allowed_actions` has `run`. A Test run of a changed form takes the place of `onSaved`
+ * at the same post-save point. `entityName` and `extraSections` extend the page.
  */
 const ScheduleForm = memo(props => {
-  const { initialValues, lockedEntity, onSubmit, onSaved, onCancel, children } = props;
+  const {
+    initialValues,
+    lockedEntity,
+    schedule,
+    entityName,
+    extraSections = [],
+    onSubmit,
+    onSaved,
+    onTestRun,
+    onCancel,
+    children,
+  } = props;
 
   const projectId = useSelectedProjectId();
   const { toastError } = useToast();
@@ -84,15 +101,20 @@ const ScheduleForm = memo(props => {
   const [saved, setSaved] = useState(null);
   const [ruleChanged, setRuleChanged] = useState(false);
   const [savedRule, setSavedRule] = useState('');
+  const [testRunPending, setTestRunPending] = useState(false);
+  // afterSave: the Test run that replaces onSaved after this save; afterWarnings keeps it until the dialog closes
+  const afterSave = useRef(null);
+  const afterWarnings = useRef(null);
 
   const formik = useFormik({
     initialValues,
     validationSchema: scheduleFormSchema,
     onSubmit: async (values, { setErrors, resetForm: resetTo }) => {
       setBanner('');
+      const runAfterSave = afterSave.current;
       let answer;
       try {
-        answer = await onSubmit(toCreateBody(values));
+        answer = await onSubmit((schedule ? toUpdateBody : toCreateBody)(values));
       } catch (error) {
         const fieldErrors = error?.status === 400 ? toFieldErrors(error) : {};
         const shownFields = isPromptShown(values)
@@ -111,11 +133,40 @@ const ScheduleForm = memo(props => {
       setRuleChanged(changed);
       setSavedRule(approvalRule);
       // onSaved runs outside the try, so an error there never shows as a failed save
-      if (hasWarnings || changed) setSaved(answer);
-      else onSaved(answer);
+      if (hasWarnings || changed) {
+        afterWarnings.current = runAfterSave;
+        setSaved(answer);
+      } else await (runAfterSave ?? onSaved)?.(answer);
     },
   });
   const { values, errors, submitCount, setFieldValue, setValues, resetForm } = formik;
+
+  // A clean form runs at once; a changed one saves first, and a failed or invalid save never reaches the run
+  const runTest = useCallback(async () => {
+    setBanner('');
+    setTestRunPending(true);
+    try {
+      await onTestRun();
+    } catch (error) {
+      if (error?.status === 400 || error?.status === 409) setBanner(error.data?.error ?? '');
+      else toastError('Failed to start the test run');
+    } finally {
+      setTestRunPending(false);
+    }
+  }, [onTestRun, toastError]);
+
+  const handleTestRun = async () => {
+    setTestRunPending(true);
+    try {
+      if (formik.dirty) {
+        afterSave.current = runTest;
+        await formik.submitForm();
+      } else await runTest();
+    } finally {
+      afterSave.current = null;
+      setTestRunPending(false);
+    }
+  };
   // Unsaved changes open the leave dialog (R1.3); a save in progress never does
   const blockOptions = useMemo(
     () => ({ blockCondition: formik.dirty && !formik.isSubmitting }),
@@ -218,9 +269,12 @@ const ScheduleForm = memo(props => {
     [setFieldValue, values.variables],
   );
 
+  // The dialog close is the post-save point: a pending Test run starts here, else onSaved
   const handleWarningsClose = useCallback(() => {
+    const next = afterWarnings.current ?? onSaved;
+    afterWarnings.current = null;
     setSaved(null);
-    onSaved(saved);
+    next?.(saved);
   }, [onSaved, saved]);
 
   const { data: scheduleList } = useGetScheduleListQuery({ projectId, pageSize: 1 }, { skip: !projectId });
@@ -257,6 +311,13 @@ const ScheduleForm = memo(props => {
       ),
       content: (
         <Box sx={styles.section}>
+          {schedule && (
+            <StyledInputEnhancer
+              disabled
+              label="Owner"
+              value={ownerName(schedule.owner)}
+            />
+          )}
           <StyledInputEnhancer
             required
             label="Name"
@@ -396,13 +457,14 @@ const ScheduleForm = memo(props => {
         </Box>
       ),
     },
+    ...extraSections,
   ];
 
   // The same header bar, column and collapsible sections as New Agent (CreateApplication)
   return (
     <>
       <StyledTabs
-        leftPart={<Breadcrumbs />}
+        leftPart={<Breadcrumbs entityName={entityName} />}
         tabs={[
           {
             tabBarItems: (
@@ -416,6 +478,17 @@ const ScheduleForm = memo(props => {
                 >
                   Save
                 </BaseBtn>
+                {schedule?.allowed_actions?.includes('run') && (
+                  <BaseBtn
+                    data-testid="schedule-form-test-run"
+                    variant="elitea"
+                    color="secondary"
+                    disabled={formik.isSubmitting || testRunPending}
+                    onClick={handleTestRun}
+                  >
+                    Test run
+                  </BaseBtn>
+                )}
                 <BaseBtn
                   data-testid="schedule-cancel-button"
                   variant="elitea"

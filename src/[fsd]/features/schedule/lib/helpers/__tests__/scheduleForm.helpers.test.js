@@ -5,6 +5,7 @@ import { MAX_DESCRIPTION_LENGTH } from '@/common/constants';
 
 import {
   DEFAULT_SCHEDULE_CRON,
+  buildEditValues,
   buildInitialValues,
   getEntityLock,
   isPromptShown,
@@ -13,6 +14,7 @@ import {
   syncPromptVariables,
   toCreateBody,
   toFieldErrors,
+  toUpdateBody,
   toWarningItems,
 } from '../scheduleForm.helpers';
 
@@ -83,6 +85,23 @@ describe('EL-7011 R4.3 variables follow placeholders', () => {
       { name: 'day', value: '' },
       { name: 'team', value: '' },
     ]);
+  });
+
+  it('R1.5 EL-7011 syncPromptVariables and buildEditValues accept a schedule with no prompt', () => {
+    expect(syncPromptVariables(null, [])).toEqual([]);
+    expect(syncPromptVariables(undefined)).toEqual([]);
+    expect(
+      buildEditValues({
+        id: 64,
+        name: 'Entry point run',
+        entity_type: 'pipeline',
+        run_mode: 'entry_point',
+        prompt: null,
+        variables: [],
+        cron: '0 * * * *',
+        timezone: 'UTC',
+      }).values,
+    ).toMatchObject({ prompt: '', variables: [] });
   });
 
   it('syncPromptVariables keeps values by name and drops removed names', () => {
@@ -269,5 +288,90 @@ describe('EL-7011 R2.3 save warnings', () => {
 
   it('toWarningItems accepts a missing list', () => {
     expect(toWarningItems(undefined)).toEqual([]);
+  });
+});
+
+const saved = {
+  id: 4,
+  name: 'Night report',
+  description: 'Daily',
+  entity_type: 'pipeline',
+  application_id: 7,
+  version_id: 12,
+  run_mode: 'prompt',
+  prompt: 'Summarize {{team}}',
+  variables: [{ name: 'team', value: 'core' }],
+  cron: '0 2 * * *',
+  timezone: 'UTC',
+  expires_at: '2026-12-31T23:59:59+00:00',
+  created_by: 3,
+};
+
+describe('EL-7011 R1.5 edit values', () => {
+  it('fills the form with the saved values and one variable per placeholder', () => {
+    const { values, returnTo } = buildEditValues(
+      { ...saved, prompt: 'Hi {{team}} {{day}}' },
+      { returnTo: '/settings/schedules?x=1' },
+    );
+    expect(values).toMatchObject({
+      name: 'Night report',
+      description: 'Daily',
+      type: 'pipeline',
+      application_id: 7,
+      version_id: 12,
+      run_mode: 'prompt',
+      prompt: 'Hi {{team}} {{day}}',
+      expires_at: '2026-12-31',
+    });
+    expect(values.variables).toHaveLength(2);
+    expect(values.variables).toEqual(
+      expect.arrayContaining([
+        { name: 'team', value: 'core' },
+        { name: 'day', value: '' },
+      ]),
+    );
+    expect(values.timezone).toBeTruthy();
+    expect(returnTo).toBe('/settings/schedules?x=1');
+  });
+
+  it('keeps an empty description and no expiry empty', () => {
+    const { values } = buildEditValues({ ...saved, description: null, expires_at: null }, undefined);
+    expect(values.description).toBe('');
+    expect(values.expires_at).toBeNull();
+  });
+
+  it('R2.1 keeps the saved cron and time zone, so an unchanged Save stays in the schedule zone', () => {
+    const tokyo = {
+      ...saved,
+      cron: '0 9 * * *',
+      timezone: 'Asia/Tokyo',
+      expires_at: '2026-12-31T20:00:00+00:00',
+    };
+    const body = toUpdateBody(buildEditValues(tokyo, undefined).values);
+    expect(body).toMatchObject({ cron: '0 9 * * *', timezone: 'Asia/Tokyo', expires_at: '2027-01-01' });
+  });
+
+  it('reads the expiry date in the schedule time zone, not in UTC', () => {
+    const { values } = buildEditValues(
+      { ...saved, timezone: 'Asia/Tokyo', expires_at: '2026-12-31T20:00:00+00:00' },
+      undefined,
+    );
+    expect(values.expires_at).toBe('2027-01-01');
+  });
+});
+
+describe('EL-7011 R2.3 R2.5 update body', () => {
+  it('has the create body rules and no created_by', () => {
+    const { values } = buildEditValues(saved, undefined);
+    const body = toUpdateBody({ ...values, created_by: 3 });
+    expect(body).not.toHaveProperty('created_by');
+    expect(body).toMatchObject({
+      description: 'Daily',
+      entity_type: 'pipeline',
+      run_mode: 'prompt',
+      prompt: 'Summarize {{team}}',
+      variables: [{ name: 'team', value: 'core' }],
+    });
+    expect(toUpdateBody(values)).toEqual(toCreateBody(values));
   });
 });
