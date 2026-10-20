@@ -36,8 +36,7 @@ const statusLabel = status =>
 // Widths and the row height follow the Agents and Pipelines list view (widgets/data-table)
 const SCHEDULES_COLUMNS = [
   { field: 'name', label: 'Name & Description', width: 'minmax(12.5rem, 1.3fr)', sortable: true },
-  { field: 'entity_name', label: 'Entity', width: 'minmax(10rem, 1.3fr)', sortable: true },
-  { field: 'entity_type', label: 'Type', width: '7.5rem', sortable: true },
+  { field: 'entity_name', label: 'Entity Name', width: 'minmax(10rem, 1.3fr)', sortable: true },
   { field: 'schedule', label: 'Schedule', width: 'minmax(10rem, 1.6fr)' },
   { field: 'next_run', label: 'Next run', width: '9.5rem', sortable: true },
   { field: 'last_run', label: 'Last run', width: 'minmax(7.5rem, 1fr)', sortable: true },
@@ -51,17 +50,29 @@ const ROW_HEIGHT = '3.5rem';
 const formatTime = value =>
   new Date(value).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
 
-const IconWithLabel = ({ type, label }) => (
-  <Box sx={schedulesTableStyles().iconLabel}>
-    <EntityTypeIcon type={type} />
-    <Text.EllipsisTypography
-      variant="bodyMedium"
-      color="text.secondary"
-    >
-      {label}
-    </Text.EllipsisTypography>
-  </Box>
-);
+const IconWithLabel = ({ type, label }) => {
+  const typeLabel = ENTITY_TYPE_LABELS[type] ?? type;
+
+  return (
+    <Box sx={schedulesTableStyles().iconLabel}>
+      <Box
+        component="span"
+        role="img"
+        aria-label={typeLabel}
+        title={typeLabel}
+        sx={schedulesTableStyles().icon}
+      >
+        <EntityTypeIcon type={type} />
+      </Box>
+      <Text.EllipsisTypography
+        variant="bodyMedium"
+        color="text.secondary"
+      >
+        {label}
+      </Text.EllipsisTypography>
+    </Box>
+  );
+};
 
 // A component, not inline JSX in renderCell: it calls the row hook shared with the menu
 const EnabledCell = ({ row }) => {
@@ -83,17 +94,20 @@ const renderCell = (column, value, row) => {
   switch (column.field) {
     case 'entity_name':
       return (
-        <IconWithLabel
-          type={row.entity_type}
-          label={[row.entity_name, row.version_name].filter(Boolean).join(' ')}
-        />
-      );
-    case 'entity_type':
-      return (
-        <IconWithLabel
-          type={row.entity_type}
-          label={ENTITY_TYPE_LABELS[row.entity_type] ?? row.entity_type}
-        />
+        <Box sx={styles.entityName}>
+          <IconWithLabel
+            type={row.entity_type}
+            label={row.entity_name}
+          />
+          {row.version_name && (
+            <Text.EllipsisTypography
+              variant="bodySmall"
+              color="text.secondary"
+            >
+              {row.version_name}
+            </Text.EllipsisTypography>
+          )}
+        </Box>
       );
     case 'schedule':
       return `${getCronSummaryInBrowserTimezone(row.cron, row.timezone)} (${getBrowserTimezone() ?? row.timezone})`;
@@ -247,6 +261,8 @@ SchedulesTable.displayName = 'SchedulesTable';
 /** @type {MuiSx} */
 const schedulesTableStyles = () => ({
   iconLabel: { display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 },
+  icon: { display: 'flex', flexShrink: 0 },
+  entityName: { minWidth: 0 },
   dateCell: { display: 'flex', alignItems: 'center', gap: '0.5rem' },
   calendarIcon: { width: '1rem', height: '1rem', flexShrink: 0 },
   lastRun: { minWidth: 0 },
