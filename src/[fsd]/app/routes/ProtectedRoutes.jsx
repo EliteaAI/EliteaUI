@@ -333,18 +333,6 @@ const ProtectedRoutes = memo(() => {
         element: <AgentEvaluateHistoryAnalyticsPage />,
       },
 
-      /* schedules */
-      {
-        path: RouteDefinitions.Schedules,
-        element: <SchedulesPage />,
-        requiredPermissions: [PERMISSIONS.schedules.list],
-      },
-      {
-        path: RouteDefinitions.CreateSchedule,
-        element: <CreateSchedulePage />,
-        requiredPermissions: [PERMISSIONS.schedules.create],
-      },
-
       /* credentials */
       { path: RouteDefinitions.Credentials, element: getIndexElement(CredentialsTabs[0]) },
       { path: RouteDefinitions.CredentialsWithTab, element: <Credentials /> },
@@ -495,6 +483,22 @@ const ProtectedRoutes = memo(() => {
             <Route
               path="secrets"
               element={<Secrets />}
+            />
+            <Route
+              path={RouteDefinitions.Schedules}
+              element={
+                <ProtectedRoute requiredPermissions={[PERMISSIONS.schedules.list]}>
+                  <SchedulesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path={RouteDefinitions.CreateSchedule}
+              element={
+                <ProtectedRoute requiredPermissions={[PERMISSIONS.schedules.create]}>
+                  <CreateSchedulePage />
+                </ProtectedRoute>
+              }
             />
             <Route
               path="users"

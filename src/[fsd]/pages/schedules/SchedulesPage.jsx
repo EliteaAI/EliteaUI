@@ -1,12 +1,17 @@
 import { useCallback, useEffect, useState } from 'react';
 
+import { useNavigate } from 'react-router-dom';
+
+import { Box } from '@mui/material';
+
 import { useGetScheduleListQuery } from '@/[fsd]/entities/schedule';
 import { ScheduleImportExportActions } from '@/[fsd]/features/schedule-import-export';
+import { DrawerPage, DrawerPageHeader } from '@/[fsd]/features/settings';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { PAGE_SIZE, PERMISSIONS, SortOrderOptions } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
-import StickyTabs from '@/components/StickyTabs';
 import useCheckPermission from '@/hooks/useCheckPermission';
+import RouteDefinitions from '@/routes';
 
 import SchedulesFilters from './SchedulesFilters';
 import SchedulesTable from './SchedulesTable';
@@ -24,6 +29,8 @@ const SchedulesPage = () => {
   const { toastError } = useToast();
   const { checkPermission } = useCheckPermission();
   const isAdmin = checkPermission(PERMISSIONS.schedules.admin);
+  const canCreate = checkPermission(PERMISSIONS.schedules.create);
+  const navigate = useNavigate();
   const [filters, setFilters] = useState(NO_FILTERS);
   const [page, setPage] = useState(0);
   const [pageProjectId, setPageProjectId] = useState(projectId);
@@ -93,45 +100,64 @@ const SchedulesPage = () => {
     setPage(0);
   }, []);
 
-  // The page title row of Credentials, Agents and Pipelines
+  const onAdd = useCallback(() => navigate(RouteDefinitions.CreateSchedule), [navigate]);
+
+  const styles = schedulesPageStyles();
+
+  // The Settings page header of Secrets: title, the import and export actions, the round + button
   return (
-    <StickyTabs
-      tabs={[
-        {
-          content: (
-            <SchedulesTable
-              rows={isError ? [] : (currentData?.rows ?? [])}
-              total={isError ? 0 : (currentData?.total ?? 0)}
-              isLoading={isFetching && !currentData}
-              page={page}
-              pageSize={pageSize}
-              onPageChange={onPageChange}
-              onChangePageSize={onChangePageSize}
-              sortConfig={sortConfig}
-              onSort={onSort}
-              emptyMessage={hasFilters ? 'No schedules match the filters' : 'No schedules'}
-              toolbar={
-                <SchedulesFilters
-                  key={projectId}
-                  value={filters}
-                  onChange={onFiltersChange}
-                  onClear={onClearFilters}
-                  hasFilters={hasFilters}
-                  isAdmin={isAdmin}
-                />
-              }
-            />
-          ),
-        },
-      ]}
-      showTitleAndSwitchBySelect
-      title="Schedules"
-      titleTestId="schedules-page-header"
-      containerStyle={{ padding: '0 1.5rem 0 0' }}
-      tabBarStyle={{ padding: '0 0 0 1.5rem' }}
-      middleTabComponent={<ScheduleImportExportActions projectId={projectId} />}
-    />
+    <DrawerPage>
+      <DrawerPageHeader
+        title="Schedules"
+        titleTestId="schedules-page-header"
+        extraContent={<ScheduleImportExportActions projectId={projectId} />}
+        showAddButton={canCreate}
+        slotProps={{
+          addButton: { onAdd, tooltip: 'Create new schedule', testId: 'schedules-add-button' },
+        }}
+      />
+      <Box sx={styles.container}>
+        <Box sx={styles.tableWrapper}>
+          <SchedulesTable
+            rows={isError ? [] : (currentData?.rows ?? [])}
+            total={isError ? 0 : (currentData?.total ?? 0)}
+            isLoading={isFetching && !currentData}
+            page={page}
+            pageSize={pageSize}
+            onPageChange={onPageChange}
+            onChangePageSize={onChangePageSize}
+            sortConfig={sortConfig}
+            onSort={onSort}
+            emptyMessage={hasFilters ? 'No schedules match the filters' : 'No schedules'}
+            toolbar={
+              <SchedulesFilters
+                key={projectId}
+                value={filters}
+                onChange={onFiltersChange}
+                onClear={onClearFilters}
+                hasFilters={hasFilters}
+                isAdmin={isAdmin}
+              />
+            }
+          />
+        </Box>
+      </Box>
+    </DrawerPage>
   );
 };
+
+/** @type {MuiSx} */
+const schedulesPageStyles = () => ({
+  container: {
+    width: '100%',
+    height: 'calc(100% - 3.75rem)',
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  tableWrapper: {
+    flex: 1,
+    minHeight: 0,
+  },
+});
 
 export default SchedulesPage;
