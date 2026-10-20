@@ -447,7 +447,7 @@ describe('R2.1 R3.1 R3.2 R4.2 EL-7011 schedule row mutations', () => {
   });
 });
 
-describe('R3.1 R3.2 EL-7011 change schedule owner', () => {
+describe('R3.1 R3.2 R3.4 EL-7011 change schedule owner', () => {
   let fetchSpy;
   let respond;
 
@@ -459,7 +459,9 @@ describe('R3.1 R3.2 EL-7011 change schedule owner', () => {
     respond = async () => jsonResponse({ id: 7, owner_id: 12 });
     fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(args => {
       const request = args instanceof Request ? args : new Request(String(args));
-      return request.method === 'POST' ? respond() : Promise.resolve(jsonResponse({ total: 1, rows: [{ id: 7 }] }));
+      return request.method === 'POST'
+        ? respond()
+        : Promise.resolve(jsonResponse({ total: 1, rows: [{ id: 7 }] }));
     });
   });
 
@@ -492,5 +494,19 @@ describe('R3.1 R3.2 EL-7011 change schedule owner', () => {
     expect(result.error.status).toBe(400);
     expect(result.error.data).toEqual({ error: 'bad owner', field: 'owner_id' });
     expect(fetchSpy.mock.calls).toHaveLength(callsBefore + 1);
+  });
+
+  it.each([403, 404])('R3.4 refetches the list after a %i', async status => {
+    const store = makeStore();
+    await store.dispatch(scheduleApi.endpoints.getScheduleList.initiate({ projectId: 5 }));
+    const callsBefore = fetchSpy.mock.calls.length;
+    respond = async () => jsonResponse({ error: 'gone' }, status);
+
+    const result = await store.dispatch(
+      scheduleApi.endpoints.changeScheduleOwner.initiate({ projectId: 5, scheduleId: 7, ownerId: 12 }),
+    );
+
+    expect(result.error.status).toBe(status);
+    await vi.waitFor(() => expect(fetchSpy.mock.calls.length).toBeGreaterThan(callsBefore + 1));
   });
 });

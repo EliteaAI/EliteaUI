@@ -97,7 +97,8 @@ export const scheduleApi = eliteaApi
           method: 'POST',
           body: { owner_id: ownerId },
         }),
-        invalidatesTags: (_, error) => (error ? [] : [SCHEDULES_TAG]),
+        // A 403 or 404 means the row changed on the server, so the list refetches too (R3.4)
+        invalidatesTags: (_, error) => (!error || [403, 404].includes(error.status) ? [SCHEDULES_TAG] : []),
       }),
 
       deleteSchedule: build.mutation({

@@ -78,7 +78,7 @@ const ChangeOwnerDialog = memo(props => {
         variant="bodySmall"
         color="text.secondary"
       >
-        Current owner: {schedule.owner?.name}
+        Current owner: {schedule.owner?.name || schedule.owner?.email || '—'}
       </Typography>
       <LazySelect
         label="New owner"
