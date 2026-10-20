@@ -23,14 +23,15 @@ let prunedForPeriod = null;
 // Whether to warn that a budget is nearing its limit; a dismissal lasts until the next level or period.
 // feature (e.g. web_search) checks that Tool Spend feature's limits; enabled=false skips the request.
 export const useBudgetWarning = ({ projectId, feature, enabled = true } = {}) => {
-  const { data: platformSettings } = useGetPlatformSettingsQuery();
+  // Same args as the Modules hook, so the per-project availability (and its cache entry) is shared
+  const { data: platformSettings } = useGetPlatformSettingsQuery({ projectId }, { skip: !projectId });
   const userId = useSelector(state => state.user.id);
 
   // Observe mode tracks spend without ever blocking, so there is nothing to warn about.
-  // Tool Spend features have their own limits, so they follow the feature's availability instead.
-  const isEnforcing = feature
-    ? Boolean(platformSettings?.tool_spend?.[feature]?.available)
-    : Boolean(platformSettings?.cost_budgets_enforcing);
+  // The usage mode gates Tool Spend warnings too; a feature also has to be available here.
+  const isEnforcing =
+    Boolean(platformSettings?.cost_budgets_enforcing) &&
+    (!feature || Boolean(platformSettings?.tool_spend?.[feature]?.available));
   const dismissibleByAdmin = platformSettings?.cost_budgets_warning_dismissible !== false;
 
   // Slow poll (5 min), so a level crossed while a chat stays open still shows; mounting refetches sooner.
