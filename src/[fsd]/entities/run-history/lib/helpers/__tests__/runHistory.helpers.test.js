@@ -180,6 +180,16 @@ describe('toExecutionTypeRow (EL-7011 US-38)', () => {
     });
   });
 
+  it.each([
+    ['schedule_manual', 'Run now'],
+    ['chat', 'Chat'],
+    ['api', 'API'],
+    ['mcp', 'MCP'],
+    ['webhook', 'Webhook'],
+  ])('BUG-12: labels the %s trigger source "%s"', (type, label) => {
+    expect(toExecutionTypeRow({ execution_type: type }).event_label).toBe(label);
+  });
+
   it('R1.4: labels a scheduled run "Scheduled"', () => {
     expect(toExecutionTypeRow({ execution_type: 'scheduled' }).event_label).toBe('Scheduled');
   });
