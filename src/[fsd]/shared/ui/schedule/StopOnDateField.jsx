@@ -17,15 +17,27 @@ const PAST_DATE_MESSAGE = 'Pick today or a later date';
 const StopOnDateField = memo(props => {
   const { value, onChange, error, testIdPrefix = 'pipeline-schedule' } = props;
 
-  const [checked, setChecked] = useState(Boolean(value));
+  // Only "checked, no date yet"; a set value keeps the box checked on its own.
+  const [awaitingDate, setAwaitingDate] = useState(false);
+  const checked = Boolean(value) || awaitingDate;
 
   const date = value ? parseISO(value) : null;
   const pastError = date && isValid(date) && isBefore(date, startOfToday()) ? PAST_DATE_MESSAGE : '';
   const helperText = pastError || error;
 
   const handleCheck = event => {
-    setChecked(event.target.checked);
+    setAwaitingDate(event.target.checked);
     if (!event.target.checked) onChange(null);
+  };
+
+  const handleDateChange = next => {
+    if (!next) {
+      setAwaitingDate(true);
+      onChange(null);
+    } else if (isValid(next)) {
+      setAwaitingDate(false);
+      onChange(format(next, 'yyyy-MM-dd'));
+    }
   };
 
   return (
@@ -44,13 +56,13 @@ const StopOnDateField = memo(props => {
         <DatePicker
           value={date}
           disablePast
-          onChange={next => onChange(next && isValid(next) ? format(next, 'yyyy-MM-dd') : null)}
+          onChange={handleDateChange}
           slotProps={{
             textField: {
               size: 'small',
               error: Boolean(helperText),
               helperText,
-              inputProps: { 'data-testid': `${testIdPrefix}-stop-on-date-input` },
+              inputProps: { 'aria-label': 'Stop date', 'data-testid': `${testIdPrefix}-stop-on-date-input` },
             },
           }}
         />
