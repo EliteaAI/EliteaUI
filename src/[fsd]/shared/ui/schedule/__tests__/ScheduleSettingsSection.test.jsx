@@ -3,43 +3,24 @@ import { useState } from 'react';
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { ThemeProvider, createTheme } from '@mui/material';
+import { ThemeProvider } from '@mui/material';
 
 import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 import ScheduleSettingsSection from '../ScheduleSettingsSection';
+import { BROWSER_TIMEZONE, FOREIGN_TIMEZONE, theme } from './scheduleTestSetup';
 
 // Stand-ins for the heavy UI parts, so the assertions are about the section behaviour only.
-vi.mock('@/[fsd]/shared/ui', () => ({
-  Tab: {
-    TabGroupButton: props => (
-      <div data-testid={props['data-testid']}>
-        {props.arrayBtn.map(item => (
-          <button
-            key={item.value}
-            type="button"
-            onClick={event => props.onChange(event, item.value)}
-          >
-            {item.label}
-          </button>
-        ))}
-      </div>
-    ),
-  },
+vi.mock('@/[fsd]/shared/ui', async () => ({
+  Tab: { TabGroupButton: (await import('./scheduleTestSetup')).TabGroupButton },
 }));
-vi.mock('@/[fsd]/shared/ui/tooltip/InfoTooltip', () => ({ default: () => null }));
+vi.mock('@/[fsd]/shared/ui/tooltip/InfoTooltip', async () => ({
+  default: (await import('./scheduleTestSetup')).Empty,
+}));
 vi.mock('@/assets/error-icon.svg?react', () => ({ default: () => <i data-testid="error-icon" /> }));
-vi.mock('@/assets/info.svg?react', () => ({ default: () => null }));
-vi.mock('@/components/FormInput', () => ({
-  default: props => (
-    <input
-      data-testid={props['data-testid']}
-      value={props.value}
-      onChange={props.onChange}
-    />
-  ),
-}));
+vi.mock('@/assets/info.svg?react', async () => ({ default: (await import('./scheduleTestSetup')).Empty }));
+vi.mock('@/components/FormInput', async () => ({ default: (await import('./scheduleTestSetup')).FormInput }));
 vi.mock('../CronBuilder', () => ({
   default: props => (
     <div>
@@ -54,25 +35,9 @@ vi.mock('../CronBuilder', () => ({
   ),
 }));
 
-const BROWSER_TIMEZONE = 'UTC';
-const FOREIGN_TIMEZONE = 'Etc/GMT-3';
-
-vi.mock('@/[fsd]/shared/lib/helpers/schedule.helpers', async importOriginal => ({
-  ...(await importOriginal()),
-  getBrowserTimezone: () => BROWSER_TIMEZONE,
-}));
-
-const theme = createTheme({
-  palette: {
-    background: { surface: { interactive: { default: '#111' } }, error: '#311' },
-    border: { tips: '#123', error: '#411' },
-    text: { tips: '#abc', warningText: '#f00', error: '#f00' },
-    icon: { fill: { tips: '#abc' } },
-    secondary: { main: '#888' },
-    alert: { info: { background: '#112', border: '#123', text: '#abc', icon: '#abc' } },
-    components: { tips: { background: { main: '#112', secondary: '#113' } } },
-  },
-});
+vi.mock('@/[fsd]/shared/lib/helpers/schedule.helpers', async importOriginal =>
+  (await import('./scheduleTestSetup')).mockScheduleHelpers(importOriginal),
+);
 
 const HINT = 'minute – hour – day (month) – month – day (week)';
 
