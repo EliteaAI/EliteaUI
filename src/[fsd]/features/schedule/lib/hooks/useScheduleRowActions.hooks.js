@@ -14,7 +14,7 @@ const ALREADY_RUNNING_TEXT = 'This schedule is already running';
 
 const errorText = error => {
   if (error?.status !== 409) return buildErrorMessage(error);
-  const reason = error.data?.reason ?? error.data?.code;
+  const reason = error.data?.error ?? error.data?.reason ?? error.data?.code;
   return reason === 'version_deleted' ? VERSION_DELETED_TEXT : ALREADY_RUNNING_TEXT;
 };
 

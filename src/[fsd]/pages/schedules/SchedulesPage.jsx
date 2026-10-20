@@ -12,6 +12,12 @@ import SchedulesTable from './SchedulesTable';
 
 const NO_FILTERS = { entityType: '', status: '', enabled: '', search: '', ownerIds: [] };
 
+const POLLING_INTERVAL_MS = 10000;
+
+// R2.3: refetch the list while any row shows a Running last run
+export const getPollingInterval = rows =>
+  rows?.some(row => row.last_run_status === 'running') ? POLLING_INTERVAL_MS : 0;
+
 const SchedulesPage = () => {
   const projectId = useSelectedProjectId();
   const { toastError } = useToast();
@@ -32,6 +38,7 @@ const SchedulesPage = () => {
   }
 
   // currentData is empty while another project or page loads, so no row of another project shows
+  const [pollingInterval, setPollingInterval] = useState(0);
   const { currentData, isFetching, isError, error } = useGetScheduleListQuery(
     {
       projectId,
@@ -42,8 +49,12 @@ const SchedulesPage = () => {
       ...filters,
       ownerIds: isAdmin ? filters.ownerIds : undefined,
     },
-    { skip: !projectId },
+    { skip: !projectId, pollingInterval },
   );
+
+  useEffect(() => {
+    setPollingInterval(getPollingInterval(currentData?.rows));
+  }, [currentData]);
 
   useEffect(() => {
     if (isError) toastError(buildErrorMessage(error));

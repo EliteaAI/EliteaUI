@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, screen, within } from '@testing-library/react';
 
+import { getPollingInterval } from '../SchedulesPage';
 import SchedulesTable from '../SchedulesTable';
 import { renderWithTheme } from './_testHelpers';
 
@@ -31,6 +32,16 @@ vi.mock('@/components/DotMenu', () => ({
     </button>
   ),
 }));
+const rowActions = vi.hoisted(() => ({
+  onRun: vi.fn(),
+  onPause: vi.fn(),
+  onResume: vi.fn(),
+  onDelete: vi.fn(),
+  isBusy: false,
+}));
+vi.mock('@/[fsd]/features/schedule/lib/hooks/useScheduleRowActions.hooks', () => ({
+  useScheduleRowActions: () => rowActions,
+}));
 vi.mock('@/[fsd]/shared/ui/icon/EntityTypeIcon', () => ({
   default: ({ type }) => <span data-testid={`icon-${type}`} />,
 }));
@@ -51,6 +62,7 @@ const makeRow = (overrides = {}) => ({
   last_run_reason: null,
   owner: { id: 3, name: 'Ann' },
   enabled: true,
+  allowed_actions: ['run', 'pause', 'resume', 'delete'],
   ...overrides,
 });
 
@@ -71,7 +83,11 @@ const renderTable = (rows, isLoading = false, onSort = vi.fn(), emptyMessage, to
     />,
   );
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+  rowActions.isBusy = false;
+});
 
 describe('EL-7011 US-26 SchedulesTable', () => {
   it('R2.2 shows the nine columns and no view switch', () => {
@@ -134,13 +150,50 @@ describe('EL-7011 US-26 SchedulesTable', () => {
     expect(onSort).toHaveBeenCalledWith('entity_name');
   });
 
-  it('EL-7011 shows the owner name and a disabled kebab in Actions', () => {
+  it('EL-7011 shows the owner name in Owner', () => {
     renderTable([makeRow()]);
     expect(within(screen.getByTestId('schedule-column-value-owner')).getByTestId('author')).toHaveTextContent(
       'Ann',
     );
-    expect(screen.getByTestId('schedule-1-menu-button')).toBeDisabled();
-    expect(screen.getByTestId('schedule-1-menu-button')).toHaveTextContent('0');
+  });
+
+  it('R2.2 EL-7011 shows the row menu with the allowed actions', () => {
+    renderTable([makeRow({ allowed_actions: ['run', 'pause', 'delete'] })]);
+    expect(screen.getByTestId('schedule-1-menu-button')).toHaveTextContent('3');
+  });
+
+  it('R1.3 EL-7011 shows no menu and a disabled Enabled switch without allowed actions', () => {
+    renderTable([makeRow({ allowed_actions: [] })]);
+    expect(screen.queryByTestId('schedule-1-menu-button')).toBeNull();
+    expect(screen.getByRole('switch', { name: 'Enable Nightly' })).toBeDisabled();
+  });
+
+  it('R3.1 EL-7011 pauses an enabled schedule from the switch', () => {
+    renderTable([makeRow()]);
+    const toggle = screen.getByRole('switch', { name: 'Enable Nightly' });
+    expect(toggle).toBeChecked();
+    fireEvent.click(toggle);
+    expect(rowActions.onPause).toHaveBeenCalledTimes(1);
+    expect(rowActions.onResume).not.toHaveBeenCalled();
+  });
+
+  it('R3.1 EL-7011 resumes a paused schedule from the switch', () => {
+    renderTable([makeRow({ enabled: false })]);
+    fireEvent.click(screen.getByRole('switch', { name: 'Enable Nightly' }));
+    expect(rowActions.onResume).toHaveBeenCalledTimes(1);
+    expect(rowActions.onPause).not.toHaveBeenCalled();
+  });
+
+  it('R3.1 EL-7011 disables the switch while a row call is busy', () => {
+    rowActions.isBusy = true;
+    renderTable([makeRow()]);
+    expect(screen.getByRole('switch', { name: 'Enable Nightly' })).toBeDisabled();
+  });
+
+  it('R2.3 EL-7011 polls every 10 seconds only while a row shows Running', () => {
+    expect(getPollingInterval([makeRow(), makeRow({ id: 2, last_run_status: 'running' })])).toBe(10000);
+    expect(getPollingInterval([makeRow()])).toBe(0);
+    expect(getPollingInterval(undefined)).toBe(0);
   });
 
   it.each([

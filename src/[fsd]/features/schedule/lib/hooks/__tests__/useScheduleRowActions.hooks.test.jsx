@@ -62,6 +62,15 @@ describe('useScheduleRowActions EL-7011', () => {
     expect(mocks.toastSuccess).not.toHaveBeenCalled();
   });
 
+  it('R2.4 EL-7011 reads the 409 reason from data.error', async () => {
+    mocks.run.mockReturnValue(fail({ status: 409, data: { error: 'version_deleted' } }));
+    const result = setup();
+    await act(() => result.current.onRun());
+    expect(mocks.toastError).toHaveBeenCalledWith(
+      'The version of this schedule was deleted. Choose another version first.',
+    );
+  });
+
   it('R2.4 EL-7011 maps a version_deleted 409 to plain text', async () => {
     mocks.run.mockReturnValue(fail({ status: 409, data: { reason: 'version_deleted' } }));
     const result = setup();
