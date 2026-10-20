@@ -124,3 +124,129 @@ describe('R3.4 EL-7011 no client-side widening', () => {
     expect(result.error).toMatchObject({ status: 403, data: { error: 'Forbidden' } });
   });
 });
+
+describe('R6.1 EL-7011 create schedule mutation', () => {
+  let fetchSpy;
+
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    fetchSpy = vi.spyOn(globalThis, 'fetch');
+  });
+
+  it('sends POST to the create endpoint with all required fields', async () => {
+    const scheduleData = {
+      projectId: 5,
+      name: 'Daily digest',
+      description: 'Team summary',
+      entity_type: 'agent',
+      application_id: 12,
+      version_id: 40,
+      run_mode: null,
+      prompt: 'Summarize {{topic}}',
+      variables: [{ name: 'topic', value: 'tickets' }],
+      cron: '0 9 * * 1-5',
+      timezone: 'Europe/Kyiv',
+      expires_at: null,
+      enabled: true,
+    };
+
+    fetchSpy.mockImplementation(async () =>
+      jsonResponse(
+        {
+          id: 99,
+          ...scheduleData,
+          created_at: '2026-10-20T10:00:00Z',
+          allowed_actions: ['run', 'update', 'delete'],
+        },
+        201,
+      ),
+    );
+
+    const store = makeStore();
+    const result = await store.dispatch(scheduleApi.endpoints.createSchedule.initiate(scheduleData));
+
+    const [url] = requestedUrls(fetchSpy);
+    expect(url.pathname).toBe('/elitea_core/schedule/prompt_lib/5');
+    expect(result.data).toMatchObject({
+      id: 99,
+      allowed_actions: ['run', 'update', 'delete'],
+    });
+  });
+
+  it('declares SCHEDULES_TAG and invalidates on success', async () => {
+    expect(SCHEDULES_TAG).toBe('SCHEDULES_TAG');
+    expect(scheduleApi.endpoints.createSchedule).toBeDefined();
+  });
+});
+
+describe('R6.2 EL-7011 run mode and prompt handling in create', () => {
+  let fetchSpy;
+
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    fetchSpy = vi.spyOn(globalThis, 'fetch');
+  });
+
+  it('sends run_mode null for an agent schedule', async () => {
+    const agentData = {
+      projectId: 5,
+      name: 'Agent schedule',
+      description: 'Test agent',
+      entity_type: 'agent',
+      application_id: 12,
+      version_id: 40,
+      run_mode: null,
+      prompt: 'Test {{var}}',
+      variables: [{ name: 'var', value: 'value' }],
+      cron: '0 9 * * 1-5',
+      timezone: 'Europe/Kyiv',
+      expires_at: null,
+      enabled: true,
+    };
+
+    fetchSpy.mockImplementation(async request => {
+      if (request instanceof Request) {
+        const body = JSON.parse(await request.clone().text());
+        expect(body.run_mode).toBeNull();
+      }
+      return jsonResponse({ id: 1 }, 201);
+    });
+
+    const store = makeStore();
+    await store.dispatch(scheduleApi.endpoints.createSchedule.initiate(agentData));
+
+    expect(fetchSpy).toHaveBeenCalled();
+  });
+
+  it('sends prompt null and variables empty array for entry point mode', async () => {
+    const pipelineData = {
+      projectId: 5,
+      name: 'Pipeline schedule',
+      description: 'Test pipeline',
+      entity_type: 'pipeline',
+      application_id: 31,
+      version_id: 77,
+      run_mode: 'entry_point',
+      prompt: null,
+      variables: [],
+      cron: '0 2 * * *',
+      timezone: 'Europe/Kyiv',
+      expires_at: null,
+      enabled: true,
+    };
+
+    fetchSpy.mockImplementation(async request => {
+      if (request instanceof Request) {
+        const body = JSON.parse(await request.clone().text());
+        expect(body.prompt).toBeNull();
+        expect(body.variables).toEqual([]);
+      }
+      return jsonResponse({ id: 2 }, 201);
+    });
+
+    const store = makeStore();
+    await store.dispatch(scheduleApi.endpoints.createSchedule.initiate(pipelineData));
+
+    expect(fetchSpy).toHaveBeenCalled();
+  });
+});

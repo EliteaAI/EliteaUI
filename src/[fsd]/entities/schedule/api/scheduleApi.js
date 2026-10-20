@@ -20,7 +20,16 @@ export const scheduleApi = eliteaApi
         }),
         providesTags: [SCHEDULES_TAG],
       }),
+
+      createSchedule: build.mutation({
+        query: ({ projectId, ...body }) => ({
+          url: `/elitea_core/schedule/prompt_lib/${projectId}`,
+          method: 'POST',
+          body,
+        }),
+        invalidatesTags: (_, error) => (error ? [] : [SCHEDULES_TAG]),
+      }),
     }),
   });
 
-export const { useGetScheduleListQuery } = scheduleApi;
+export const { useGetScheduleListQuery, useCreateScheduleMutation } = scheduleApi;
