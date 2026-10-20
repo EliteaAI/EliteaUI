@@ -62,6 +62,7 @@ import {
   ChatStatusPill,
   SlashSuggestionList,
   VoiceMiniPlayer,
+  WebSearchBudgetWarning,
 } from '@/[fsd]/features/chat/ui';
 import { ChatMessageList } from '@/[fsd]/features/chat/ui/chat-box';
 import ChatConversationStarters from '@/[fsd]/features/chat/ui/chat-conversation-starters/ChatConversationStarters';
@@ -195,6 +196,7 @@ const ChatBox = memo(
       // Participant management (for PlusChatButton submenus)
       onCreateAgent,
       onCreatePipeline,
+      onCreateSkill,
       onCreateToolkit,
       onDeleteParticipant,
 
@@ -3108,6 +3110,10 @@ const ChatBox = memo(
                 onDismiss={budgetWarning.dismiss}
               />
             )}
+            <WebSearchBudgetWarning
+              projectId={projectId}
+              internalTools={activeConversation?.meta?.internal_tools}
+            />
             <ChatStatusPill
               isRunning={(isStreamingNow || isStreaming) && statusSource?.isInterrupt === false}
               isInterrupt={statusSource?.isInterrupt === true && !isReadOnly}
@@ -3186,6 +3192,7 @@ const ChatBox = memo(
               onSelectParticipant={onSelectThisParticipant}
               onCreateAgent={onCreateAgent}
               onCreatePipeline={onCreatePipeline}
+              onCreateSkill={onCreateSkill}
               onCreateToolkit={onCreateToolkit}
               onDeleteParticipant={onDeleteParticipant}
               participants={activeConversation?.participants || []}
