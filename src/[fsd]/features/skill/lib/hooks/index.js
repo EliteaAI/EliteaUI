@@ -16,3 +16,4 @@ export { useSkillParticipants } from './useSkillParticipants.hooks';
 export { useFocusRunInput } from './useFocusRunInput.hooks';
 export { useSkillVersionModel } from './useSkillVersionModel.hooks';
 export { useSkillModels } from './useSkillModels.hooks';
+export { useCreateSkill } from './useCreateSkill.hooks';

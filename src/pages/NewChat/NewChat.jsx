@@ -581,6 +581,7 @@ const NewChat = props => {
     onEditArtifact,
     onCreateAgent,
     onCreatePipeline,
+    onCreateSkill,
     onCreateToolkit,
     handleCloseAgentEditor,
     handleClosePipelineEditor,
@@ -594,6 +595,7 @@ const NewChat = props => {
     isEditingProjectContext,
     isCreateMode,
     isPipelineCreateMode,
+    isSkillCreateMode,
     editingAgent,
     editingToolkit,
     editingPipeline,
@@ -603,6 +605,7 @@ const NewChat = props => {
     pipelineGutterStyle,
     onAgentCreated,
     onPipelineCreated,
+    onSkillCreated,
     onToolkitCreated,
     handleAgentSaved,
     handleEditorDirtyStateChange,
@@ -839,6 +842,7 @@ const NewChat = props => {
       onAddNewUsers,
       onCreateAgent,
       onCreatePipeline,
+      onCreateSkill,
       onCreateToolkit,
       onDeleteParticipant,
     }),
@@ -862,6 +866,7 @@ const NewChat = props => {
       onAddNewUsers,
       onCreateAgent,
       onCreatePipeline,
+      onCreateSkill,
       onCreateToolkit,
       onDeleteParticipant,
     ],
@@ -1384,6 +1389,7 @@ const NewChat = props => {
                 onCloseAgentEditor={handleCloseAgentEditor}
                 onCreateAgent={onCreateAgent}
                 onCreatePipeline={onCreatePipeline}
+                onCreateSkill={onCreateSkill}
                 onCreateToolkit={onCreateToolkit}
                 onAddNewUsers={onAddNewUsers}
                 ref={newConversationViewRef}
@@ -1498,6 +1504,8 @@ const NewChat = props => {
                 handleSkillSettingsChange={handleSkillSettingsChange}
                 isNewConversation={!!activeConversation?.isNew}
                 onCloseSkillEditor={onCloseSkillEditor}
+                isSkillCreateMode={isSkillCreateMode}
+                onSkillCreated={onSkillCreated}
                 // Project context
                 isEditingProjectContext={isEditingProjectContext}
                 onCloseProjectContextEditor={onCloseProjectContextEditor}

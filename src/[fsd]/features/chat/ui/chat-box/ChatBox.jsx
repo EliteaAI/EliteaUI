@@ -195,6 +195,7 @@ const ChatBox = memo(
       // Participant management (for PlusChatButton submenus)
       onCreateAgent,
       onCreatePipeline,
+      onCreateSkill,
       onCreateToolkit,
       onDeleteParticipant,
 
@@ -3186,6 +3187,7 @@ const ChatBox = memo(
               onSelectParticipant={onSelectThisParticipant}
               onCreateAgent={onCreateAgent}
               onCreatePipeline={onCreatePipeline}
+              onCreateSkill={onCreateSkill}
               onCreateToolkit={onCreateToolkit}
               onDeleteParticipant={onDeleteParticipant}
               participants={activeConversation?.participants || []}

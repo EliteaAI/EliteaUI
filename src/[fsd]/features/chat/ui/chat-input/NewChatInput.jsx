@@ -97,6 +97,7 @@ const NewChatInput = memo(
       onSelectParticipant,
       onCreateAgent,
       onCreatePipeline,
+      onCreateSkill,
       onCreateToolkit,
       onDeleteParticipant,
       participants = [],
@@ -257,6 +258,7 @@ const NewChatInput = memo(
                     onSelectParticipant={onSelectParticipant}
                     onCreateAgent={onCreateAgent}
                     onCreatePipeline={onCreatePipeline}
+                    onCreateSkill={onCreateSkill}
                     onCreateToolkit={onCreateToolkit}
                     onDeleteParticipant={onDeleteParticipant}
                     participants={participants}

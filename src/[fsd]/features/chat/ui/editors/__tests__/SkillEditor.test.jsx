@@ -5,13 +5,20 @@ import { act, cleanup, render } from '@testing-library/react';
 
 import SkillEditor from '../SkillEditor';
 
-const captured = vi.hoisted(() => ({ onSaved: null, canvasSkill: null, initialValues: null }));
+const captured = vi.hoisted(() => ({
+  onSaved: null,
+  onCreated: null,
+  canvasSkill: null,
+  initialValues: null,
+  title: null,
+}));
 const DEFAULT_MODEL = vi.hoisted(() => ({ name: 'haiku', project_id: 1 }));
 const models = vi.hoisted(() => ({ isLoadingModels: false }));
 
 vi.mock('@/[fsd]/features/chat/ui/editors/BaseEditor', () => ({
-  default: ({ saveButton, children, initialValues }) => {
+  default: ({ saveButton, children, initialValues, title }) => {
     captured.initialValues = initialValues;
+    captured.title = title;
     return (
       <>
         {saveButton}
@@ -26,10 +33,16 @@ vi.mock('@/[fsd]/features/chat/ui/editors/SkillEditorSaveButton', () => ({
     return null;
   },
 }));
+vi.mock('@/[fsd]/features/chat/ui/editors/SkillEditorCreateButton', () => ({
+  default: ({ onSkillCreated }) => {
+    captured.onCreated = onSkillCreated;
+    return <div data-testid="skill-create-button" />;
+  },
+}));
 vi.mock('@/[fsd]/features/chat/ui/editors/SkillCanvasModelSelector', () => ({
   default: ({ skill }) => {
     captured.canvasSkill = skill;
-    return null;
+    return <div data-testid="skill-canvas-model-selector" />;
   },
 }));
 vi.mock('@/[fsd]/features/skill/api', () => ({ useSkillDetailsQuery: () => ({ data: undefined }) }));
@@ -148,5 +161,42 @@ describe('SkillEditor dirty state', () => {
     unmount();
 
     expect(second).toHaveBeenCalledWith(false);
+  });
+});
+
+describe('SkillEditor create mode', () => {
+  afterEach(() => {
+    cleanup();
+    captured.onCreated = null;
+  });
+
+  it('starts from a blank skill pinned to the default model', () => {
+    render(
+      <SkillEditor
+        isCreateMode
+        isVisible
+      />,
+    );
+
+    expect(captured.title).toBe('Create New Skill');
+    expect(captured.initialValues).toMatchObject({ id: null, name: '', description: '' });
+    expect(captured.initialValues.version_details.run_settings.llm_settings).toMatchObject({
+      model_name: 'haiku',
+    });
+  });
+
+  it('saves through the create button and reports the created skill', () => {
+    const onSkillCreated = vi.fn();
+    const { getByTestId, queryByTestId } = render(
+      <SkillEditor
+        isCreateMode
+        isVisible
+        onSkillCreated={onSkillCreated}
+      />,
+    );
+
+    expect(getByTestId('skill-create-button')).toBeTruthy();
+    expect(queryByTestId('skill-canvas-model-selector')).toBeNull();
+    expect(captured.onCreated).toBe(onSkillCreated);
   });
 });
