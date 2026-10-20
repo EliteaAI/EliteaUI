@@ -89,6 +89,11 @@ describe('ScheduleRunList (EL-7011 US-32)', () => {
     expect(lastProps().additionalRows).toHaveLength(25);
   });
 
+  it('R4.1 EL-7011 US-32 shows the run detail below the list inside the form section', () => {
+    render(<ScheduleRunList schedule={schedule} />);
+    expect(lastProps().layout).toBe('stacked');
+  });
+
   it('R4.1 keeps queryParams stable between renders', () => {
     const { rerender } = render(<ScheduleRunList schedule={schedule} />);
     const first = lastProps().queryParams;

@@ -85,6 +85,7 @@ const ScheduleRunList = memo(({ schedule }) => {
       additionalRows={additionalRows}
       decorateRow={decorateRow}
       DetailComponent={ScheduleRunDetail}
+      layout="stacked"
       ChatMessageListComponent={ChatMessageList}
     />
   );
