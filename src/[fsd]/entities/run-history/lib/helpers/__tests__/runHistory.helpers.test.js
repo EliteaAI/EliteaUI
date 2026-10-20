@@ -9,6 +9,7 @@ import {
   hasRunAnalytics,
   parseRunTimestamp,
   resolveRunHistoryColumns,
+  toExecutionTypeRow,
   toRunISOString,
 } from '../runHistory.helpers';
 
@@ -167,5 +168,25 @@ describe('hasRunAnalytics', () => {
     expect(hasRunAnalytics({})).toBe(false);
     expect(hasRunAnalytics({ created_at: 'nonsense' })).toBe(false);
     expect(hasRunAnalytics(undefined)).toBe(false);
+  });
+});
+
+describe('toExecutionTypeRow (EL-7011 US-38)', () => {
+  it('R1.3: labels a manual run "Manual"', () => {
+    expect(toExecutionTypeRow({ id: 1, execution_type: 'manual' })).toEqual({
+      id: 1,
+      execution_type: 'manual',
+      event_label: 'Manual',
+    });
+  });
+
+  it('R1.4: labels a scheduled run "Scheduled"', () => {
+    expect(toExecutionTypeRow({ execution_type: 'scheduled' }).event_label).toBe('Scheduled');
+  });
+
+  it('R2.3: shows "-" for a missing or unknown execution_type and keeps the row fields', () => {
+    expect(toExecutionTypeRow({ id: 2 })).toEqual({ id: 2, event_label: '-' });
+    expect(toExecutionTypeRow({ execution_type: 'bogus' }).event_label).toBe('-');
+    expect(toExecutionTypeRow({ execution_type: null }).event_label).toBe('-');
   });
 });
