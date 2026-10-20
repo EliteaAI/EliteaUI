@@ -13,11 +13,12 @@ import ScheduleNotificationsSection from '../ScheduleNotificationsSection';
 const api = vi.hoisted(() => ({
   query: { data: { get_notified: true }, isError: false },
   save: vi.fn(),
+  saving: false,
   toastError: vi.fn(),
 }));
 vi.mock('@/[fsd]/features/settings/api', () => ({
   useGetSchedulePreferencesQuery: () => api.query,
-  useUpdateSchedulePreferencesMutation: () => [api.save],
+  useUpdateSchedulePreferencesMutation: () => [api.save, { isLoading: api.saving }],
 }));
 vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({ useSelectedProjectId: () => 2 }));
 vi.mock('@/[fsd]/shared/lib/hooks/useToast.hooks', () => ({
@@ -36,6 +37,7 @@ const box = () => screen.getByRole('checkbox', { name: 'Get notified' });
 beforeEach(() => {
   vi.clearAllMocks();
   api.query = { data: { get_notified: true }, isError: false };
+  api.saving = false;
   api.save.mockReturnValue({ unwrap: () => Promise.resolve() });
 });
 afterEach(cleanup);
@@ -75,5 +77,11 @@ describe('EL-7011 US-39 Get notified section', () => {
     renderSection();
     expect(box()).toBeDisabled();
     expect(screen.getByText('Could not load the setting')).toBeInTheDocument();
+  });
+
+  it('EL-7011 R2.3 blocks a second change while a save runs', () => {
+    api.saving = true;
+    renderSection();
+    expect(box()).toBeDisabled();
   });
 });

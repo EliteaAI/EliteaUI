@@ -15,7 +15,7 @@ const ScheduleNotificationsSection = memo(() => {
   const projectId = useSelectedProjectId();
   const { toastError } = useToast();
   const { data, isError } = useGetSchedulePreferencesQuery({ projectId }, { skip: !projectId });
-  const [updatePreferences] = useUpdateSchedulePreferencesMutation();
+  const [updatePreferences, { isLoading: isSaving }] = useUpdateSchedulePreferencesMutation();
 
   // The API slice rolls the checkbox back on failure; here we only report it
   const handleChange = useCallback(
@@ -44,7 +44,7 @@ const ScheduleNotificationsSection = memo(() => {
           <Checkbox.BaseCheckbox
             checked={data?.get_notified ?? false}
             onChange={handleChange}
-            disabled={isError || !data}
+            disabled={isError || !data || isSaving}
             slotProps={{ input: { 'aria-describedby': 'schedule-notifications-help' } }}
             data-testid="schedule-get-notified-checkbox"
           />
