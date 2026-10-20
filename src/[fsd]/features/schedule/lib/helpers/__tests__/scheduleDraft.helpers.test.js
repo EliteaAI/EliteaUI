@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
 
-import { changedFields, draftToFormValues, toDraftRequest } from '../scheduleDraft.helpers';
+import { changedFields, draftToFormValues, isScheduleFormEmpty, toDraftRequest } from '../scheduleDraft.helpers';
 
 const values = {
   name: 'Night report',
@@ -89,6 +89,56 @@ describe('EL-7011 R2.4 and R2.5 draftToFormValues', () => {
       null,
     );
     expect(result).toMatchObject({ application_id: 'A1', version_id: 'V1', cron: '0 0 * * 6' });
+  });
+});
+
+describe('EL-7011 R2.4 and R2.5 draft keeps or resets the what-to-run fields', () => {
+  it('R2.4 clears the entity and version when the draft changes the type and names neither', () => {
+    const draft = { entity_type: 'pipeline' };
+    expect(draftToFormValues(draft, values, null)).toMatchObject({
+      type: 'pipeline',
+      application_id: '',
+      version_id: '',
+      run_mode: 'entry_point',
+    });
+  });
+
+  it('R2.4 clears the version when the draft names another entity without a version', () => {
+    const draft = { entity_type: 'agent', application_id: 'A2' };
+    expect(draftToFormValues(draft, values, null)).toMatchObject({ application_id: 'A2', version_id: '' });
+  });
+
+  it('R2.5 keeps run mode, prompt and variables when the draft omits them', () => {
+    const pipeline = {
+      ...values,
+      type: 'pipeline',
+      application_id: 'PL1',
+      run_mode: 'prompt',
+      prompt: 'Go {{topic}}',
+      variables: [{ name: 'topic', value: 'sales' }],
+    };
+    expect(draftToFormValues({ name: 'New' }, pipeline, null)).toMatchObject({
+      run_mode: 'prompt',
+      prompt: 'Go {{topic}}',
+      variables: [{ name: 'topic', value: 'sales' }],
+    });
+  });
+
+  it('R2.5 keeps the agent prompt when the draft omits it', () => {
+    expect(draftToFormValues({ name: 'New' }, values, null)).toMatchObject({
+      prompt: 'Old {{topic}}',
+      variables: [{ name: 'topic', value: 'sales' }],
+    });
+  });
+});
+
+describe('EL-7011 R2.1 isScheduleFormEmpty', () => {
+  it('is true only when name, prompt and entity are all empty', () => {
+    const empty = { name: '', prompt: '', application_id: '' };
+    expect(isScheduleFormEmpty(empty)).toBe(true);
+    expect(isScheduleFormEmpty({ ...empty, name: 'x' })).toBe(false);
+    expect(isScheduleFormEmpty({ ...empty, prompt: 'x' })).toBe(false);
+    expect(isScheduleFormEmpty({ ...empty, application_id: 'A1' })).toBe(false);
   });
 });
 
