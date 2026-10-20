@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { PERMISSIONS } from '@/common/constants';
 import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
@@ -10,6 +11,13 @@ const mocks = vi.hoisted(() => ({
   useGetScheduleListQuery: vi.fn(),
   useSelectedProjectId: vi.fn(),
   toastError: vi.fn(),
+  navigate: vi.fn(),
+  checkPermission: vi.fn(),
+}));
+
+vi.mock('react-router-dom', () => ({ useNavigate: () => mocks.navigate }));
+vi.mock('@/hooks/useCheckPermission', () => ({
+  default: () => ({ checkPermission: mocks.checkPermission }),
 }));
 
 vi.mock('@/[fsd]/entities/schedule', () => ({ useGetScheduleListQuery: mocks.useGetScheduleListQuery }));
@@ -36,6 +44,7 @@ const lastArgs = () => mocks.useGetScheduleListQuery.mock.calls.at(-1)[0];
 describe('EL-7011 US-26 SchedulesPage', () => {
   beforeEach(() => {
     mocks.useSelectedProjectId.mockReturnValue(5);
+    mocks.checkPermission.mockReturnValue(true);
     mocks.useGetScheduleListQuery.mockReturnValue({
       currentData: { total: 45, rows: [{ id: 1, name: 'Nightly' }] },
       isError: false,
@@ -126,5 +135,18 @@ describe('EL-7011 US-26 SchedulesPage', () => {
     });
     render(<SchedulesPage />);
     expect(screen.getByTestId('loading').textContent).toBe('false');
+  });
+
+  it('R1.1 opens the New schedule form of EL-7011 from the button', () => {
+    render(<SchedulesPage />);
+    fireEvent.click(screen.getByRole('button', { name: 'New schedule' }));
+    expect(mocks.checkPermission).toHaveBeenCalledWith(PERMISSIONS.schedules.create);
+    expect(mocks.navigate).toHaveBeenCalledWith('/schedules/create');
+  });
+
+  it('R1.2 hides the New schedule button without the create permission', () => {
+    mocks.checkPermission.mockReturnValue(false);
+    render(<SchedulesPage />);
+    expect(screen.queryByRole('button', { name: 'New schedule' })).toBeNull();
   });
 });
