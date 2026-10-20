@@ -21,7 +21,7 @@ vi.stubGlobal(
 );
 
 const SCROLL_END_THRESHOLD_PX = 10;
-const SEARCH_DELAY_MS = 300;
+const DEBOUNCE_MS = 300;
 
 const makeOptions = count =>
   Array.from({ length: count }, (_, i) => ({ value: `v${i}`, label: `Item ${i}` }));
@@ -65,7 +65,7 @@ const setup = async props => {
 };
 
 // Scroll the list so that `distanceToEnd` px remain below the visible part.
-const scrollList = (list, distanceToEnd) => {
+const scrollList = (list, distanceToEnd, pauseMs = DEBOUNCE_MS) => {
   Object.defineProperty(list, 'clientHeight', { configurable: true, value: 300 });
   Object.defineProperty(list, 'scrollHeight', { configurable: true, value: 1000 });
   Object.defineProperty(list, 'scrollTop', {
@@ -74,7 +74,7 @@ const scrollList = (list, distanceToEnd) => {
     value: 700 - distanceToEnd,
   });
   fireEvent.scroll(list);
-  act(() => vi.advanceTimersByTime(SEARCH_DELAY_MS));
+  act(() => vi.advanceTimersByTime(pauseMs));
 };
 
 describe('LazySelect paging, EL-7011 R1.1 R1.3 R1.4', () => {
@@ -121,16 +121,37 @@ describe('LazySelect paging, EL-7011 R1.1 R1.3 R1.4', () => {
     expect(onLoadMore).not.toHaveBeenCalled();
   });
 
-  it('EL-7011 R1.4 keeps the loaded items and asks again on the next scroll to the end (TC-US25-05)', async () => {
+  it('EL-7011 R1.4 keeps the loaded items and asks again on the next scroll after a failed page (TC-US25-05)', async () => {
     const onLoadMore = vi.fn();
-    const { list } = await setup({ onLoadMore });
+    const { list, rerender } = await setup({ onLoadMore });
 
     scrollList(list, 0);
-    scrollList(list, 200);
+    rerender({ onLoadMore, isFetching: true });
+    rerender({ onLoadMore, isFetching: false });
     scrollList(list, 0);
 
     expect(onLoadMore).toHaveBeenCalledTimes(2);
     expect(within(list).getAllByRole('option')).toHaveLength(20);
+  });
+
+  it('EL-7011 R1.3 keeps paging when the total is unknown', async () => {
+    const onLoadMore = vi.fn();
+    const { list } = await setup({ total: undefined, onLoadMore });
+
+    scrollList(list, 0);
+
+    expect(onLoadMore).toHaveBeenCalledTimes(1);
+  });
+
+  it('EL-7011 R1.1 keeps a pending scroll when a page lands within 300 ms', async () => {
+    const onLoadMore = vi.fn();
+    const { list, rerender } = await setup({ onLoadMore });
+
+    scrollList(list, 0, 0);
+    rerender({ onLoadMore, options: makeOptions(40) });
+    act(() => vi.advanceTimersByTime(DEBOUNCE_MS));
+
+    expect(onLoadMore).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -146,7 +167,7 @@ describe('LazySelect search, EL-7011 R2.1 R2.2', () => {
 
     typeKeys(within(screen.getByRole('listbox')).getByRole('textbox'), 'dig', 100);
     expect(onSearch).not.toHaveBeenCalled();
-    act(() => vi.advanceTimersByTime(SEARCH_DELAY_MS));
+    act(() => vi.advanceTimersByTime(DEBOUNCE_MS));
 
     expect(onSearch).toHaveBeenCalledTimes(1);
     expect(onSearch).toHaveBeenCalledWith('dig');
@@ -155,7 +176,7 @@ describe('LazySelect search, EL-7011 R2.1 R2.2', () => {
   it('EL-7011 R2.2 shows exactly the items the caller returns, with no local filter (TC-US25-07)', async () => {
     const { rerender } = await setup({ options: [] });
     typeKeys(within(screen.getByRole('listbox')).getByRole('textbox'), 'dig', 0);
-    act(() => vi.advanceTimersByTime(SEARCH_DELAY_MS));
+    act(() => vi.advanceTimersByTime(DEBOUNCE_MS));
 
     rerender({
       options: [
@@ -176,6 +197,27 @@ describe('LazySelect search, EL-7011 R2.1 R2.2', () => {
     typeKeys(within(screen.getByRole('listbox')).getByRole('textbox'), 'abcde', 200);
 
     expect(onSearch).not.toHaveBeenCalled();
+  });
+
+  it('EL-7011 R2.1 sends an empty text to onSearch at once and drops the pending text', async () => {
+    const onSearch = vi.fn();
+    await setup({ onSearch });
+    const field = within(screen.getByRole('listbox')).getByRole('textbox');
+
+    typeKeys(field, 'a', 0);
+    fireEvent.change(field, { target: { value: '' } });
+    expect(onSearch).toHaveBeenCalledWith('');
+    act(() => vi.advanceTimersByTime(DEBOUNCE_MS));
+
+    expect(onSearch).toHaveBeenCalledTimes(1);
+  });
+
+  it('EL-7011 R2.1 shows the search text the caller passes after a reset', async () => {
+    const { rerender } = await setup({ searchString: 'dig' });
+
+    rerender({ searchString: '' });
+
+    expect(within(screen.getByRole('listbox')).getByRole('textbox')).toHaveValue('');
   });
 });
 
