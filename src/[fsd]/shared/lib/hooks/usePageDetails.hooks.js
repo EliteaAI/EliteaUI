@@ -72,6 +72,8 @@ export const usePageDetails = () => {
 
   const isSkillPage = isSkillDetailPage || isSkillVersionDetailPage;
 
+  const isScheduleCreatePage = useMatch({ path: RouteDefinitions.CreateSchedule });
+
   const isChatPage = useMatch({ path: RouteDefinitions.Chat });
   const isChatConversationPage = useMatch({ path: RouteDefinitions.ChatConversation });
 
@@ -227,6 +229,8 @@ export const usePageDetails = () => {
           }),
       search,
     };
+  } else if (isScheduleCreatePage) {
+    pageType = 'ScheduleDetails';
   } else if (isChatPage || isChatConversationPage) {
     pageType = 'Chat';
     matchParams = isChatConversationPage?.params || {};
