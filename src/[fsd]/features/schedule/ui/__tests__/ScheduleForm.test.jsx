@@ -42,6 +42,16 @@ const navBlocker = vi.fn();
 const toastError = vi.fn();
 let selectProps;
 let versionProps;
+let modalProps;
+let allowed = true;
+
+vi.mock('@/hooks/useCheckPermission', () => ({ default: () => ({ checkPermission: () => allowed }) }));
+vi.mock('../BuildScheduleWithAiModal', () => ({
+  default: props => {
+    modalProps = props;
+    return props.open ? <div data-testid="build-modal" /> : null;
+  },
+}));
 
 vi.mock('@/api/applications', async importOriginal => ({
   ...(await importOriginal()),
@@ -52,7 +62,8 @@ vi.mock('@/api/applications', async importOriginal => ({
   }),
 }));
 
-vi.mock('@/[fsd]/shared/lib/hooks', () => ({
+vi.mock('@/[fsd]/shared/lib/hooks', async () => ({
+  useModal: (await import('@/[fsd]/shared/lib/hooks/useModal.hooks')).useModal,
   useSelectedProjectId: () => 5,
   useToast: () => ({ toastError }),
   useShouldCollapseRightToolbar: () => ({ shouldCollapseTabs: false }),
@@ -163,12 +174,34 @@ const save = () => fireEvent.click(screen.getByRole('button', { name: 'Save' }))
 
 describe('ScheduleForm EL-7011', () => {
   beforeEach(() => {
+    allowed = true;
     listQuery.mockReturnValue({ data: { rows: ROWS, total: 2 }, isFetching: false });
   });
 
   afterEach(() => {
     cleanup();
     vi.clearAllMocks();
+  });
+
+  it('R1.1 EL-7011 opens the Build with AI popup with formik, dirty state and the locked entity', () => {
+    const lockedEntity = { type: 'agent', id: 7 };
+    renderForm({ lockedEntity });
+
+    expect(screen.queryByTestId('build-modal')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Build with AI' }));
+
+    expect(screen.getByTestId('build-modal')).toBeInTheDocument();
+    expect(modalProps.lockedEntity).toBe(lockedEntity);
+    expect(modalProps.formik.values.name).toBe('Daily digest');
+    expect(modalProps.formik.dirty).toBe(false);
+    expect(modalProps.formik.setValues).toBeTypeOf('function');
+  });
+
+  it('R1.2 EL-7011 hides Build with AI without the schedules create permission', () => {
+    allowed = false;
+    renderForm();
+
+    expect(screen.queryByRole('button', { name: 'Build with AI' })).not.toBeInTheDocument();
   });
 
   it('R2.1 EL-7011 shows GENERAL, WHAT TO RUN and SCHEDULE SETTINGS in this order', () => {
