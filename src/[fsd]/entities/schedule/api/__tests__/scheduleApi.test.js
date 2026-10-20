@@ -48,7 +48,7 @@ describe('R2.1 EL-7011 schedule list query', () => {
     expect(url.pathname).toBe('/elitea_core/schedules/prompt_lib/5');
     expect(url.searchParams.get('limit')).toBe(String(PAGE_SIZE));
     expect(url.searchParams.get('offset')).toBe('0');
-    expect(result.data).toEqual({ total: 1, rows: [{ id: 1 }] });
+    expect(result.data).toMatchObject({ total: 1, rows: [{ id: 1 }] });
   });
 
   it('turns page and pageSize into limit and offset and forwards filters', async () => {
@@ -235,5 +235,29 @@ describe('R6.2 EL-7011 create sends the form body unchanged', () => {
     const [request] = fetchSpy.mock.calls[0];
     expect(request.method).toBe('POST');
     expect(JSON.parse(await request.clone().text())).toEqual(body);
+  });
+});
+
+describe('R1.3 EL-7011 run without asking flag on the schedule list', () => {
+  const listWith = async body => {
+    vi.restoreAllMocks();
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async () => jsonResponse(body));
+    const result = await makeStore().dispatch(
+      scheduleApi.endpoints.getScheduleList.initiate({ projectId: 5, page: 0 }),
+    );
+    return result.data;
+  };
+
+  it('exposes runWithoutAskingAllowed false when the server sends false', async () => {
+    const data = await listWith({ total: 0, rows: [], run_without_asking_allowed: false });
+    expect(data.runWithoutAskingAllowed).toBe(false);
+    expect(data.rows).toEqual([]);
+  });
+
+  it('exposes runWithoutAskingAllowed true when the server sends true or omits it', async () => {
+    expect(
+      (await listWith({ total: 0, rows: [], run_without_asking_allowed: true })).runWithoutAskingAllowed,
+    ).toBe(true);
+    expect((await listWith({ total: 0, rows: [] })).runWithoutAskingAllowed).toBe(true);
   });
 });

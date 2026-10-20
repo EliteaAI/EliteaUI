@@ -20,6 +20,10 @@ export const scheduleApi = eliteaApi
             offset: page * pageSize,
           },
         }),
+        transformResponse: response => ({
+          ...response,
+          runWithoutAskingAllowed: response?.run_without_asking_allowed !== false,
+        }),
         providesTags: [SCHEDULES_TAG],
       }),
 
