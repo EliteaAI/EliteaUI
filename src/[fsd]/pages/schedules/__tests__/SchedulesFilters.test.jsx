@@ -120,11 +120,11 @@ describe('EL-7011 US-27 SchedulesFilters', () => {
     expect(screen.getByRole('combobox', { name: 'Type' })).toHaveTextContent('Pipeline');
   });
 
-  it('EL-7011: the controls follow the column order: Search, Type, Status, Owner, Enabled', () => {
+  it('EL-7011: the title, then the controls in column order: Search, Type, Status, Owner, Enabled', () => {
     renderBar({ hasFilters: true });
     const bar = screen.getByRole('group', { name: 'Schedule filters' });
     const ids = [...bar.children].map(child => child.dataset.testid ?? child.getAttribute('aria-label'));
-    expect(ids.slice(1)).toEqual([
+    expect(ids.slice(2)).toEqual([
       'schedules-filter-type',
       'schedules-filter-status',
       'Owner',
@@ -166,5 +166,11 @@ describe('EL-7011 US-27 SchedulesFilters', () => {
     expect(input).toHaveValue('');
     act(() => vi.advanceTimersByTime(300));
     expect(onChange).toHaveBeenCalledWith({ ...EMPTY, search: '' });
+  });
+
+  it('EL-7011 shows the "Filters:" title before the controls', () => {
+    renderBar();
+    const group = screen.getByRole('group', { name: 'Schedule filters' });
+    expect(group.firstElementChild).toHaveTextContent('Filters:');
   });
 });
