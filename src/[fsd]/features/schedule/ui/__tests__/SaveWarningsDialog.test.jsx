@@ -47,6 +47,27 @@ describe('EL-7011 US-33 SaveWarningsDialog', () => {
     expect(within(items[1]).getByText('GitHub / delete_repo')).toBeInTheDocument();
   });
 
+  it('R2.2 EL-7011 renders one warning banner per warning in a list', () => {
+    setup();
+    expect(screen.getByRole('list')).toBeInTheDocument();
+    expect(screen.getAllByRole('listitem')).toHaveLength(3);
+    expect(screen.getAllByTestId('credential-warning-banner')).toHaveLength(3);
+  });
+
+  it('R1.5 EL-7011 shows the note with no warnings', () => {
+    setup({ warnings: [], note: 'Saved as Pause and ask me.' });
+    expect(screen.getByText('Saved as Pause and ask me.')).toBeInTheDocument();
+    expect(screen.queryByRole('list')).toBeNull();
+  });
+
+  it('R2.2 EL-7011 runs onClose once when closed twice', () => {
+    const { onClose } = setup();
+    const ok = screen.getByRole('button', { name: 'OK' });
+    fireEvent.click(ok);
+    fireEvent.click(ok);
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
   it('R2.3 shows the label "Warning" for an unknown kind', () => {
     setup();
     const item = within(screen.getAllByTestId('save-warning-item')[2]);

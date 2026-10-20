@@ -7,7 +7,7 @@ import { Box, Grid, Typography } from '@mui/material';
 import { GenerateEntityButton } from '@/[fsd]/entities/generate-entity-with-ai';
 import { useGetScheduleListQuery } from '@/[fsd]/entities/schedule';
 import { VersionSelect, getDefaultVersionId } from '@/[fsd]/entities/version';
-import { APPROVAL_RULE } from '@/[fsd]/features/schedule/lib/constants/approvalRule.constants';
+import { APPROVAL_RULE } from '../lib/constants';
 import {
   getEntityLock,
   isPromptShown,
@@ -83,6 +83,7 @@ const ScheduleForm = memo(props => {
   const [banner, setBanner] = useState('');
   const [saved, setSaved] = useState(null);
   const [ruleChanged, setRuleChanged] = useState(false);
+  const [savedRule, setSavedRule] = useState('');
 
   const formik = useFormik({
     initialValues,
@@ -95,8 +96,10 @@ const ScheduleForm = memo(props => {
         const hasWarnings = answer?.warnings?.length > 0;
         // The saved values are the new baseline, so the leave-page blocker stays shut
         resetTo({ values: { ...values, approval_rule: approvalRule } });
-        setRuleChanged(approvalRule !== values.approval_rule);
-        if (hasWarnings) setSaved(answer);
+        const changed = approvalRule !== values.approval_rule;
+        setRuleChanged(changed);
+        setSavedRule(approvalRule);
+        if (hasWarnings || changed) setSaved(answer);
         else onSaved(answer);
       } catch (error) {
         const fieldErrors = error?.status === 400 ? toFieldErrors(error) : {};
@@ -215,10 +218,15 @@ const ScheduleForm = memo(props => {
   const handleWarningsClose = useCallback(() => onSaved(saved), [onSaved, saved]);
 
   const { data: scheduleList } = useGetScheduleListQuery({ projectId, pageSize: 1 }, { skip: !projectId });
-  const runWithoutAskingAllowed = scheduleList?.runWithoutAskingAllowed === true;
+  // Three states: undefined while loading or on error, then true or false; only an explicit false shows the hint
+  const runWithoutAskingAllowed = scheduleList?.runWithoutAskingAllowed;
+  const showHint = runWithoutAskingAllowed === false || ruleChanged;
+  const ruleNote = ruleChanged
+    ? `The schedule was saved with the rule "${APPROVAL_RULE_ITEMS.find(item => item.value === savedRule)?.label}".`
+    : '';
   const approvalRuleItems = APPROVAL_RULE_ITEMS.map(item => ({
     ...item,
-    disabled: item.value === APPROVAL_RULE.RUN_WITHOUT_ASKING && !runWithoutAskingAllowed,
+    disabled: item.value === APPROVAL_RULE.RUN_WITHOUT_ASKING && runWithoutAskingAllowed !== true,
   }));
 
   const showPrompt = isPromptShown(values);
@@ -351,15 +359,28 @@ const ScheduleForm = memo(props => {
       content: (
         <Box sx={styles.section}>
           {children?.({ values, setFieldValue, dirty: formik.dirty, setValues })}
-          <Typography variant="labelMedium">Approval rule</Typography>
-          <RadioButtonGroup
-            testId="schedule-approval-rule"
-            items={approvalRuleItems}
-            value={values.approval_rule}
-            onChange={rule => setFieldValue('approval_rule', rule)}
-          />
-          {(!runWithoutAskingAllowed || ruleChanged) && (
+          <Typography
+            id="schedule-approval-rule-label"
+            variant="labelMedium"
+          >
+            Approval rule
+          </Typography>
+          <Box
+            role="group"
+            data-testid="schedule-approval-rule-group"
+            aria-labelledby="schedule-approval-rule-label"
+            aria-describedby={showHint ? 'schedule-approval-rule-hint' : undefined}
+          >
+            <RadioButtonGroup
+              testId="schedule-approval-rule"
+              items={approvalRuleItems}
+              value={values.approval_rule}
+              onChange={rule => setFieldValue('approval_rule', rule)}
+            />
+          </Box>
+          {showHint && (
             <Typography
+              id="schedule-approval-rule-hint"
               variant="bodySmall"
               color="text.secondary"
             >
@@ -430,6 +451,7 @@ const ScheduleForm = memo(props => {
       <SaveWarningsDialog
         open={!!saved}
         warnings={saved?.warnings}
+        note={ruleNote}
         onClose={handleWarningsClose}
       />
     </>

@@ -45,16 +45,21 @@ let versionProps;
 let modalProps;
 let allowed = true;
 let runAllowed = true;
+let listFailed = false;
 
 vi.mock('@/hooks/useCheckPermission', () => ({ default: () => ({ checkPermission: () => allowed }) }));
 vi.mock('@/[fsd]/entities/schedule', () => ({
-  useGetScheduleListQuery: () => ({ data: { runWithoutAskingAllowed: runAllowed } }),
+  useGetScheduleListQuery: () => ({
+    data: runAllowed === undefined ? undefined : { runWithoutAskingAllowed: runAllowed },
+    isError: listFailed,
+  }),
 }));
 vi.mock('../SaveWarningsDialog', () => ({
-  default: ({ open, warnings, onClose }) =>
+  default: ({ open, warnings, note, onClose }) =>
     open ? (
       <div data-testid="warnings-dialog">
         {warnings.length}
+        {note && <span data-testid="warnings-note">{note}</span>}
         <button onClick={onClose}>OK</button>
       </div>
     ) : null,
@@ -190,6 +195,7 @@ describe('ScheduleForm EL-7011', () => {
   beforeEach(() => {
     allowed = true;
     runAllowed = true;
+    listFailed = false;
     listQuery.mockReturnValue({ data: { rows: ROWS, total: 2 }, isFetching: false });
   });
 
@@ -535,6 +541,52 @@ describe('ScheduleForm EL-7011', () => {
 
     expect(screen.getByTestId('schedule-approval-rule-run_without_asking')).toBeDisabled();
     expect(screen.getByText(/does not allow/)).toBeInTheDocument();
+  });
+
+  it('R1.3 EL-7011 keeps Run without asking disabled with no hint while the project data loads', () => {
+    runAllowed = undefined;
+    renderForm();
+
+    expect(screen.getByTestId('schedule-approval-rule-run_without_asking')).toBeDisabled();
+    expect(screen.queryByText(/does not allow/)).not.toBeInTheDocument();
+  });
+
+  it('R1.3 EL-7011 keeps Run without asking disabled with no hint when the project data fails', () => {
+    runAllowed = undefined;
+    listFailed = true;
+    renderForm();
+
+    expect(screen.getByTestId('schedule-approval-rule-run_without_asking')).toBeDisabled();
+    expect(screen.queryByText(/does not allow/)).not.toBeInTheDocument();
+  });
+
+  it('R1.3 EL-7011 links the Approval rule label and the hint to the radio group', () => {
+    runAllowed = false;
+    renderForm();
+
+    expect(screen.getByText('Approval rule')).toHaveAttribute('id', 'schedule-approval-rule-label');
+    const hint = screen.getByText(/does not allow/);
+    expect(screen.getByTestId('schedule-approval-rule-group')).toHaveAttribute('aria-describedby', hint.id);
+  });
+
+  it('R1.5 EL-7011 shows the returned rule and a note without warnings, then returns on close', async () => {
+    const result = { id: 1, approval_rule: 'pause_and_ask', warnings: [] };
+    const onSaved = vi.fn();
+    renderForm({
+      initialValues: { ...INITIAL, approval_rule: 'run_without_asking' },
+      onSubmit: vi.fn().mockResolvedValue(result),
+      onSaved,
+    });
+    pickEntity(7);
+    typePrompt('Hi');
+
+    save();
+
+    expect(await screen.findByTestId('warnings-note')).toBeInTheDocument();
+    expect(onSaved).not.toHaveBeenCalled();
+    expect(screen.getByText(/does not allow/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'OK' }));
+    expect(onSaved).toHaveBeenCalledWith(result);
   });
 
   it('R1.3 EL-7011 enables Run without asking when the project allows it', () => {

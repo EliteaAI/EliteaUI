@@ -1,20 +1,31 @@
-import { memo, useMemo } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { Box, Typography, useTheme } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { Button, Modal } from '@/[fsd]/shared/ui';
+import { BannerMessage } from '@/[fsd]/shared/ui/banner-message';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 
 import { toWarningItems } from '../lib/helpers';
 
-const WarningIcon = ModalConstants.MODAL_ICONS[ModalConstants.MODAL_ICON_TYPE.warning];
-
-// Shown after a save that succeeded with warnings; `warnings` is the raw list the schedule API returns
-const SaveWarningsDialog = memo(({ open, warnings, onClose }) => {
-  const { palette } = useTheme();
+// Shown after a save that succeeded with warnings or with a changed approval rule;
+// `warnings` is the raw list the schedule API returns, `note` an extra line above them
+const SaveWarningsDialog = memo(({ open, warnings, note, onClose }) => {
   const items = useMemo(() => toWarningItems(warnings), [warnings]);
+  const closed = useRef(false);
   const styles = saveWarningsDialogStyles();
+
+  useEffect(() => {
+    closed.current = false;
+  }, [open]);
+
+  // OK, Escape and the backdrop all land here; the caller sees one close
+  const handleClose = useCallback(() => {
+    if (closed.current) return;
+    closed.current = true;
+    onClose();
+  }, [onClose]);
 
   return (
     <Modal.BaseModal
@@ -22,43 +33,39 @@ const SaveWarningsDialog = memo(({ open, warnings, onClose }) => {
       variant={ModalConstants.MODAL_VARIANT.simple}
       title="Saved with warnings"
       titleIcon={ModalConstants.MODAL_ICON_TYPE.warning}
-      onClose={onClose}
+      onClose={handleClose}
       sx={styles.modal}
       content={
-        <Box sx={styles.list}>
-          {items.map(({ label, text, target }, index) => (
+        <Box sx={styles.content}>
+          {note && <Typography variant="bodyMedium">{note}</Typography>}
+          {items.length > 0 && (
             <Box
-              key={`${label}-${target}-${index}`}
-              data-testid="save-warning-item"
-              sx={styles.item}
+              component="ul"
+              sx={styles.list}
             >
-              <WarningIcon style={styles.icon(palette.icon.warning)} />
-              <Box sx={styles.itemText}>
-                <Typography variant="labelMedium">{label}</Typography>
-                <Typography
-                  variant="bodyMedium"
-                  color="text.secondary"
+              {items.map(({ label, text, target }, index) => (
+                <li
+                  key={index}
+                  data-testid="save-warning-item"
                 >
-                  {text}
-                </Typography>
-                {target && (
-                  <Typography
-                    variant="bodySmall"
-                    color="text.secondary"
-                  >
-                    {target}
-                  </Typography>
-                )}
-              </Box>
+                  <BannerMessage variant="warning">
+                    <Box sx={styles.itemText}>
+                      <Typography variant="labelMedium">{label}</Typography>
+                      <Typography variant="bodyMedium">{text}</Typography>
+                      {target && <Typography variant="bodySmall">{target}</Typography>}
+                    </Box>
+                  </BannerMessage>
+                </li>
+              ))}
             </Box>
-          ))}
+          )}
         </Box>
       }
       actions={
         <Button.BaseBtn
           variant={BUTTON_VARIANTS.elitea}
           color={BUTTON_COLORS.primary}
-          onClick={onClose}
+          onClick={handleClose}
           autoFocus
         >
           OK
@@ -73,10 +80,8 @@ SaveWarningsDialog.displayName = 'SaveWarningsDialog';
 /** @type {MuiSx} */
 const saveWarningsDialogStyles = () => ({
   modal: { width: '30rem' },
-  list: { display: 'flex', flexDirection: 'column', gap: '1rem' },
-  item: { display: 'flex', alignItems: 'flex-start', gap: '0.75rem' },
-  // SVGR icon: plain style object, not sx.
-  icon: color => ({ ...ModalConstants.MODAL_ICON_SIZE, flexShrink: 0, color }),
+  content: { display: 'flex', flexDirection: 'column', gap: '1rem' },
+  list: { listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' },
   itemText: { display: 'flex', flexDirection: 'column', gap: '0.25rem', minWidth: 0 },
 });
 
