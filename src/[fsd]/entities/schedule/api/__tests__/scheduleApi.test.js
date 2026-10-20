@@ -68,6 +68,33 @@ describe('R2.1 EL-7011 schedule list query', () => {
     expect(url.searchParams.get('status')).toBe('failed');
   });
 
+  it('EL-7011 sends sortBy and sortOrder as sort_by and sort_order', async () => {
+    const store = makeStore();
+    await store.dispatch(
+      scheduleApi.endpoints.getScheduleList.initiate({
+        projectId: 5,
+        page: 0,
+        sortBy: 'entity_name',
+        sortOrder: 'desc',
+      }),
+    );
+
+    const [url] = requestedUrls(fetchSpy);
+    expect(url.searchParams.get('sort_by')).toBe('entity_name');
+    expect(url.searchParams.get('sort_order')).toBe('desc');
+  });
+
+  it('EL-7011 keeps the sort in the cache key, so a new sort requests again', async () => {
+    const store = makeStore();
+    const args = { projectId: 5, page: 0, sortBy: 'name', sortOrder: 'asc' };
+    await store.dispatch(scheduleApi.endpoints.getScheduleList.initiate(args));
+    await store.dispatch(scheduleApi.endpoints.getScheduleList.initiate({ ...args, sortOrder: 'desc' }));
+
+    const urls = requestedUrls(fetchSpy);
+    expect(urls).toHaveLength(2);
+    expect(urls[1].searchParams.get('sort_order')).toBe('desc');
+  });
+
   it('declares SCHEDULES_TAG for the list', () => {
     expect(SCHEDULES_TAG).toBe('SCHEDULES_TAG');
     expect(scheduleApi.endpoints.getScheduleList).toBeDefined();
