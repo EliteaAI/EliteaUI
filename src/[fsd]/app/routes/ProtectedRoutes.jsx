@@ -19,6 +19,7 @@ import {
   ApplicationsTabs,
   CredentialsTabs,
   MISSING_ENVS,
+  PERMISSIONS,
   PERSONAL_SPACE_PERIOD_FOR_NEW_USER,
   SkillsTabs,
   ToolkitsTabs,
@@ -38,6 +39,7 @@ const UsageContainer = ChunkHelpers.lazyWithRetry(
 const AppDetail = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/apps/AppDetail'));
 const Apps = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/apps/Apps'));
 const McpAuthPage = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/mcp'));
+const SchedulesPage = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/schedules'));
 const Resources = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/resources'));
 const Settings = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/settings'));
 const AIConfiguration = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/settings/AIProviders'));
@@ -326,6 +328,13 @@ const ProtectedRoutes = memo(() => {
       {
         path: RouteDefinitions.PipelineEvaluateHistoryAnalytics,
         element: <AgentEvaluateHistoryAnalyticsPage />,
+      },
+
+      /* schedules */
+      {
+        path: RouteDefinitions.Schedules,
+        element: <SchedulesPage />,
+        requiredPermissions: [PERMISSIONS.schedules.list],
       },
 
       /* credentials */

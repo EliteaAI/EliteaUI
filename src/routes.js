@@ -41,6 +41,7 @@ const RouteDefinitions = {
   PipelineEvaluateDimensions: '/pipelines/:tab/:agentId/evaluate/dimensions',
   PipelineEvaluateHistory: '/pipelines/:tab/:agentId/evaluate/history',
   PipelineEvaluateHistoryAnalytics: '/pipelines/:tab/:agentId/evaluate/history/analytics',
+  Schedules: '/schedules',
 
   Credentials: '/credentials',
   CredentialsWithTab: '/credentials/:tab',
@@ -162,6 +163,7 @@ export const PathSessionMap = {
   [RouteDefinitions.Applications]: 'Agents',
   [RouteDefinitions.Skills]: 'Skills',
   [RouteDefinitions.Pipelines]: 'Pipelines',
+  [RouteDefinitions.Schedules]: 'Schedules',
   [RouteDefinitions.Toolkits]: 'Toolkits & Indexes',
   [RouteDefinitions.Apps]: 'Apps',
   [RouteDefinitions.Credentials]: 'Credentials',

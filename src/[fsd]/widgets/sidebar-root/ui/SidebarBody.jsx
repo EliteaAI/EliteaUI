@@ -14,6 +14,7 @@ import { Buttons, SidebarMenuItem, SidebarProjectSelect } from '@/[fsd]/widgets/
 import { useGetSupportAssistantConfigQuery } from '@/[fsd]/widgets/support-assistant';
 import AppsIcon from '@/assets/applications-icon.svg?react';
 import ArtifactsIcon from '@/assets/artifacts-icon.svg?react';
+import ClockIcon from '@/assets/clock.svg?react';
 import FlowIcon from '@/assets/flow-icon.svg?react';
 import KeyIcon from '@/assets/key-icon.svg?react';
 import MCPIcon from '@/assets/mcp-icon.svg?react';
@@ -119,6 +120,14 @@ const SidebarBody = memo(props => {
           breadCrumb: 'Pipelines',
           tooltip: 'Pipelines',
           tourId: SIDEBAR_TOUR_TARGET_IDS.navPipelines,
+        },
+        {
+          value: 'schedules',
+          label: 'Schedules',
+          icon: <ClockIcon />,
+          url: RouteDefinitions.Schedules,
+          breadCrumb: 'Schedules',
+          tooltip: 'Schedules',
         },
       ],
       [
