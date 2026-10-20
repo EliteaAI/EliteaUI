@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 export const useTextTruncation = ({ text, disabled = false }) => {
   const ref = useRef(null);
@@ -9,6 +9,12 @@ export const useTextTruncation = ({ text, disabled = false }) => {
     setIsExpanded(false);
     setIsTruncated(false);
   }, [text]);
+
+  useLayoutEffect(() => {
+    if (!isExpanded && ref.current) {
+      ref.current.scrollTop = 0;
+    }
+  }, [isExpanded]);
 
   useEffect(() => {
     if (disabled) {
