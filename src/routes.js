@@ -35,6 +35,7 @@ const RouteDefinitions = {
   PipelineDetail: '/pipelines/:tab/:agentId',
   PipelineRunHistory: '/pipelines/:tab/:agentId/history',
   PipelineRunAnalytics: '/pipelines/:tab/:agentId/history/analytics',
+  Schedules: '/schedules',
 
   Credentials: '/credentials',
   CredentialsWithTab: '/credentials/:tab',
@@ -155,6 +156,7 @@ export const PathSessionMap = {
   [RouteDefinitions.Applications]: 'Agents',
   [RouteDefinitions.Skills]: 'Skills',
   [RouteDefinitions.Pipelines]: 'Pipelines',
+  [RouteDefinitions.Schedules]: 'Schedules',
   [RouteDefinitions.Toolkits]: 'Toolkits & Indexes',
   [RouteDefinitions.Apps]: 'Apps',
   [RouteDefinitions.Credentials]: 'Credentials',
