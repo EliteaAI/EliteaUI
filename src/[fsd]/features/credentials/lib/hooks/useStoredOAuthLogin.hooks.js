@@ -9,6 +9,8 @@ import {
   useTestConfigurationConnectionMutation,
   useUpdateConfigurationMutation,
 } from '@/api/configurations';
+import { PERMISSIONS } from '@/common/constants';
+import useCheckPermission from '@/hooks/useCheckPermission';
 
 /**
  * Login bar logic for toolkits whose credential keeps a Microsoft refresh token in the vault, so runs
@@ -35,11 +37,14 @@ export const useStoredOAuthLogin = ({
 }) => {
   const { personal_project_id } = useSelector(state => state.user);
   const { toastSuccess, toastError } = useToast();
+  const { checkPermission } = useCheckPermission();
   const [isBusy, setIsBusy] = useState(false);
   const tokenKeyRef = useRef('');
 
   const eliteaTitle = credentialRef?.elitea_title;
   const credProjectId = credentialRef?.private ? personal_project_id : projectId;
+  // Everyone runs on a team credential's login, so only admins may log in or out (the server enforces it)
+  const canManageLogin = Boolean(credentialRef?.private) || checkPermission(PERMISSIONS.users.edit);
 
   const { data } = useGetConfigurationsByTypeQuery(
     { projectId: credProjectId, type: configurationType },
@@ -88,8 +93,8 @@ export const useStoredOAuthLogin = ({
       await saveRefreshToken(refreshToken);
       toastSuccess('Connected! The login is saved for scheduled runs.');
       onLoginChange?.();
-    } catch {
-      toastError('Could not save the login to the credential.');
+    } catch (error) {
+      toastError(error?.data?.error || 'Could not save the login to the credential.');
     } finally {
       // The vault copy is the one that counts; keepBrowserToken leaves chat and the credential page as they were
       if (!keepBrowserToken) McpAuthHelpers.logout(tokenKey);
@@ -110,7 +115,7 @@ export const useStoredOAuthLogin = ({
   });
 
   const login = useCallback(async () => {
-    if (!credential || isBusy) return;
+    if (!credential || isBusy || !canManageLogin) return;
     setIsBusy(true);
     try {
       await testConnection({
@@ -133,6 +138,7 @@ export const useStoredOAuthLogin = ({
   }, [
     credential,
     isBusy,
+    canManageLogin,
     testConnection,
     credProjectId,
     configurationType,
@@ -143,20 +149,21 @@ export const useStoredOAuthLogin = ({
   ]);
 
   const logout = useCallback(async () => {
-    if (!credential) return;
+    if (!credential || !canManageLogin) return;
     setIsBusy(true);
     try {
       if (credential.data?.refresh_token) await saveRefreshToken(null);
       if (keepBrowserToken && hasBrowserToken) McpAuthHelpers.logout(browserTokenKey);
       toastSuccess('You have successfully logged out!');
       onLoginChange?.();
-    } catch {
-      toastError('Could not remove the login from the credential.');
+    } catch (error) {
+      toastError(error?.data?.error || 'Could not remove the login from the credential.');
     } finally {
       setIsBusy(false);
     }
   }, [
     credential,
+    canManageLogin,
     saveRefreshToken,
     keepBrowserToken,
     hasBrowserToken,
@@ -171,6 +178,7 @@ export const useStoredOAuthLogin = ({
     credentialTitle: eliteaTitle,
     isConnected,
     isBusy,
+    canManageLogin,
     login,
     logout,
     modalProps: configOAuth.getModalProps(),

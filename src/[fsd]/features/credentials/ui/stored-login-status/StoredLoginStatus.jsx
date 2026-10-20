@@ -2,7 +2,7 @@ import { memo, useCallback, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { Box, Typography } from '@mui/material';
+import { Box, Tooltip, Typography } from '@mui/material';
 
 import { useStoredOAuthLogin } from '@/[fsd]/features/credentials/lib/hooks';
 import { McpAuthModal, McpLogoutModal } from '@/[fsd]/features/mcp';
@@ -10,6 +10,8 @@ import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import OnlineIcon from '@/assets/online-icon.svg?react';
+
+const MANAGE_LOGIN_HINT = 'Only project admins can log in or out on a team credential';
 
 // A toolkit-page "Connected / Login" bar for credentials that keep a Microsoft login in the vault.
 const StoredLoginStatus = memo(props => {
@@ -19,7 +21,7 @@ const StoredLoginStatus = memo(props => {
   const projectId = useSelectedProjectId();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  const { hasCredential, credentialTitle, isConnected, isBusy, login, logout, modalProps } =
+  const { hasCredential, credentialTitle, isConnected, isBusy, canManageLogin, login, logout, modalProps } =
     useStoredOAuthLogin({
       configurationType,
       credentialRef: values?.settings?.[settingsKey],
@@ -54,14 +56,21 @@ const StoredLoginStatus = memo(props => {
             {isConnected ? 'Connected!' : 'Not Connected'}
           </Typography>
         </Box>
-        <Button.BaseBtn
-          onClick={isConnected ? onOpenLogout : login}
-          disabled={isBusy}
-          variant={BUTTON_VARIANTS.secondary}
-          data-testid="stored-login-button"
+        <Tooltip
+          arrow
+          title={canManageLogin ? '' : MANAGE_LOGIN_HINT}
         >
-          {isConnected ? 'Logout' : isBusy ? 'Logging in...' : 'Login'}
-        </Button.BaseBtn>
+          <Box component="span">
+            <Button.BaseBtn
+              onClick={isConnected ? onOpenLogout : login}
+              disabled={isBusy || !canManageLogin}
+              variant={BUTTON_VARIANTS.secondary}
+              data-testid="stored-login-button"
+            >
+              {isConnected ? 'Logout' : isBusy ? 'Logging in...' : 'Login'}
+            </Button.BaseBtn>
+          </Box>
+        </Tooltip>
       </Box>
       <McpAuthModal {...modalProps} />
       <McpLogoutModal

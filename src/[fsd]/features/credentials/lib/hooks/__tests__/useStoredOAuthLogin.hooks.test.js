@@ -16,6 +16,13 @@ const mocks = vi.hoisted(() => ({
   toastSuccess: vi.fn(),
   toastError: vi.fn(),
   browserLoggedIn: false,
+  isAdmin: true,
+}));
+
+vi.mock('@/hooks/useCheckPermission', () => ({
+  default: () => ({
+    checkPermission: permission => permission === 'configuration.users.users.edit' && mocks.isAdmin,
+  }),
 }));
 
 vi.mock('react-redux', () => ({
@@ -73,6 +80,7 @@ describe('useStoredOAuthLogin', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.browserLoggedIn = false;
+    mocks.isAdmin = true;
     mocks.items = [CREDENTIAL];
     mocks.testConnection.mockReturnValue({ unwrap: () => Promise.resolve({ success: true }) });
     mocks.updateConfiguration.mockReturnValue({ unwrap: () => Promise.resolve({}) });
@@ -336,5 +344,51 @@ describe('useStoredOAuthLogin', () => {
     await act(async () => result.current.logout());
 
     expect(mocks.logout).not.toHaveBeenCalledWith('uuid-1:undefined');
+  });
+
+  describe('who may log in or out', () => {
+    // Everyone in a team project runs on a team credential's stored login, so only admins manage it.
+    const TEAM_REF = { elitea_title: 'onecrm_dataverse', private: false };
+
+    it('an editor on a team credential can neither log in nor out', async () => {
+      mocks.isAdmin = false;
+      mocks.items = [CONNECTED];
+      const { result } = render(TEAM_REF);
+
+      expect(result.current.canManageLogin).toBe(false);
+      await act(async () => result.current.login());
+      await act(async () => result.current.logout());
+
+      expect(mocks.testConnection).not.toHaveBeenCalled();
+      expect(mocks.updateConfiguration).not.toHaveBeenCalled();
+    });
+
+    it('an editor still sees whether the team credential is connected', () => {
+      mocks.isAdmin = false;
+      mocks.items = [CONNECTED];
+      expect(render(TEAM_REF).result.current.isConnected).toBe(true);
+    });
+
+    it('a project admin manages the team credential login', () => {
+      expect(render(TEAM_REF).result.current.canManageLogin).toBe(true);
+    });
+
+    it('anyone manages the login of their own private credential', () => {
+      mocks.isAdmin = false;
+      expect(render(REF).result.current.canManageLogin).toBe(true);
+    });
+
+    it('shows the server refusal when a save is rejected', async () => {
+      mocks.items = [CONNECTED];
+      mocks.updateConfiguration.mockReturnValue({
+        unwrap: () =>
+          Promise.reject({ status: 403, data: { error: 'Only project admins can log in or out' } }),
+      });
+      const { result } = render(TEAM_REF);
+
+      await act(async () => result.current.logout());
+
+      expect(mocks.toastError).toHaveBeenCalledWith('Only project admins can log in or out');
+    });
   });
 });

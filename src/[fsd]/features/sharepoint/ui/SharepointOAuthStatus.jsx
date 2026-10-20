@@ -2,7 +2,7 @@ import { memo, useCallback, useMemo, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { Box, Typography } from '@mui/material';
+import { Box, Tooltip, Typography } from '@mui/material';
 
 import { useStoredOAuthLogin } from '@/[fsd]/features/credentials/lib/hooks';
 import {
@@ -19,6 +19,7 @@ import { Button } from '@/[fsd]/shared/ui';
 import OnlineIcon from '@/assets/online-icon.svg?react';
 
 const getAuthority = credential => credential.data?.oauth_discovery_endpoint;
+const MANAGE_LOGIN_HINT = 'Only project admins can log in or out on a team credential';
 
 const SharepointOAuthStatus = memo(props => {
   const { onLoginChange, loginExpired } = props;
@@ -47,6 +48,7 @@ const SharepointOAuthStatus = memo(props => {
     onLoginChange,
   });
   const isOAuthLoggedIn = oauthEndpoint ? storedLogin.isConnected : hasBrowserToken;
+  const canManageLogin = !oauthEndpoint || storedLogin.canManageLogin;
 
   const configOAuth = useConfigOAuthModal({
     credentials: {
@@ -110,13 +112,20 @@ const SharepointOAuthStatus = memo(props => {
             {isOAuthLoggedIn ? 'Connected!' : 'Not Connected'}
           </Typography>
         </Box>
-        <Button.BaseBtn
-          onClick={isOAuthLoggedIn ? onLogout : onLogin}
-          disabled={isRunning || storedLogin.isBusy}
-          variant="secondary"
+        <Tooltip
+          arrow
+          title={canManageLogin ? '' : MANAGE_LOGIN_HINT}
         >
-          {isOAuthLoggedIn ? 'Logout' : isRunning || storedLogin.isBusy ? 'Logging in...' : 'Login'}
-        </Button.BaseBtn>
+          <Box component="span">
+            <Button.BaseBtn
+              onClick={isOAuthLoggedIn ? onLogout : onLogin}
+              disabled={isRunning || storedLogin.isBusy || !canManageLogin}
+              variant="secondary"
+            >
+              {isOAuthLoggedIn ? 'Logout' : isRunning || storedLogin.isBusy ? 'Logging in...' : 'Login'}
+            </Button.BaseBtn>
+          </Box>
+        </Tooltip>
       </Box>
       <McpAuthModal {...(oauthEndpoint ? storedLogin.modalProps : authModalProps)} />
       <McpLogoutModal
