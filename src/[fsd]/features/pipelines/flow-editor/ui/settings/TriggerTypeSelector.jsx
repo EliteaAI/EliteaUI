@@ -18,9 +18,7 @@ import { useSelectedProject, useToast } from '@/[fsd]/shared/lib/hooks';
 import { InfoLabelWithTooltip } from '@/[fsd]/shared/ui/label';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import { useGetPipelineTriggerQuery, useUpdatePipelineTriggerMutation } from '@/api/applications';
-import ClockIcon from '@/assets/clock.svg?react';
 
-import PipelineScheduleModal from './PipelineScheduleModal';
 import PipelineWebhookModal from './PipelineWebhookModal';
 
 // Node types that require user interaction and thus only support Chat Message trigger
@@ -28,7 +26,6 @@ const INTERACTIVE_NODE_TYPES = [PipelineNodeTypes.Hitl, PipelineNodeTypes.Printe
 
 const TRIGGER_OPTIONS = [
   { label: 'Chat Message', value: TRIGGER_TYPES.chat_message },
-  { label: 'Schedule', value: TRIGGER_TYPES.schedule },
   { label: 'Webhook', value: TRIGGER_TYPES.webhook },
 ];
 
@@ -76,18 +73,6 @@ const TriggerTypeSelector = memo(props => {
 
   const restrictedToChatMessage = hasInteractiveElements || hasDelegatedOauthToolkit;
 
-  // Unattended triggers stay visible but greyed out so the restriction is discoverable; the Trigger
-  // label tooltip explains why.
-  const availableTriggerOptions = useMemo(() => {
-    if (!restrictedToChatMessage) return TRIGGER_OPTIONS;
-    return TRIGGER_OPTIONS.map(opt =>
-      opt.value === TRIGGER_TYPES.chat_message ? opt : { ...opt, disabled: true },
-    );
-  }, [restrictedToChatMessage]);
-
-  // State for schedule modal
-  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
-
   // State for webhook modal
   const [isWebhookModalOpen, setIsWebhookModalOpen] = useState(false);
 
@@ -104,6 +89,22 @@ const TriggerTypeSelector = memo(props => {
     [triggerData?.type],
   );
 
+  // Schedule is no longer selectable. A version that still stores one shows it read-only until it is migrated.
+  const isLegacySchedule = currentTriggerType === TRIGGER_TYPES.schedule;
+
+  // Unattended triggers stay visible but greyed out so the restriction is discoverable; the Trigger
+  // label tooltip explains why.
+  const availableTriggerOptions = useMemo(() => {
+    const options = restrictedToChatMessage
+      ? TRIGGER_OPTIONS.map(opt =>
+          opt.value === TRIGGER_TYPES.chat_message ? opt : { ...opt, disabled: true },
+        )
+      : TRIGGER_OPTIONS;
+    return isLegacySchedule
+      ? [...options, { label: 'Schedule', value: TRIGGER_TYPES.schedule, disabled: true }]
+      : options;
+  }, [restrictedToChatMessage, isLegacySchedule]);
+
   // Previous restriction state, used to detect a change from false to true. Stays `null` until the
   // credentials behind it have resolved: those queries settle after mount, so the pre-resolution `false`
   // is not a real state and treating it as one would reset a trigger the user never touched.
@@ -114,8 +115,7 @@ const TriggerTypeSelector = memo(props => {
     if (isResolvingCredentials) return;
 
     const wasNotRestricted = prevRestrictedRef.current === false;
-    const hasIncompatibleTrigger =
-      currentTriggerType === TRIGGER_TYPES.schedule || currentTriggerType === TRIGGER_TYPES.webhook;
+    const hasIncompatibleTrigger = currentTriggerType === TRIGGER_TYPES.webhook;
 
     // Only reset if: became restricted AND has incompatible trigger AND we can make the API call
     if (wasNotRestricted && restrictedToChatMessage && hasIncompatibleTrigger && projectId && versionId) {
@@ -148,11 +148,6 @@ const TriggerTypeSelector = memo(props => {
     toastSuccess,
     toastError,
   ]);
-
-  const currentCron = useMemo(() => triggerData?.cron || '0 0 * * 6', [triggerData?.cron]);
-
-  // Timezone the schedule was configured in; the modal converts the cron into the viewer's own.
-  const currentScheduleTimezone = useMemo(() => triggerData?.timezone, [triggerData?.timezone]);
 
   const currentWebhookType = useMemo(
     () => triggerData?.webhook_type || WEBHOOK_TYPES.github,
@@ -190,10 +185,7 @@ const TriggerTypeSelector = memo(props => {
     async newType => {
       if (newType === currentTriggerType) return;
 
-      if (newType === TRIGGER_TYPES.schedule) {
-        // Open modal to configure schedule
-        setIsScheduleModalOpen(true);
-      } else if (newType === TRIGGER_TYPES.webhook) {
+      if (newType === TRIGGER_TYPES.webhook) {
         // Save webhook trigger first to generate secret, then open modal
         try {
           await updateTrigger(buildWebhookSaveArgs()).unwrap();
@@ -217,33 +209,6 @@ const TriggerTypeSelector = memo(props => {
     },
     [currentTriggerType, buildWebhookSaveArgs, projectId, versionId, updateTrigger, toastSuccess, toastError],
   );
-
-  const handleScheduleSubmit = useCallback(
-    async cronExpression => {
-      try {
-        // Get user's timezone
-        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-        await updateTrigger({
-          projectId,
-          versionId,
-          type: TRIGGER_TYPES.schedule,
-          cron: cronExpression,
-          timezone,
-        }).unwrap();
-        toastSuccess('Schedule configured successfully');
-      } catch (error) {
-        toastError(error?.data?.error || 'Failed to configure schedule');
-      }
-    },
-    [projectId, versionId, updateTrigger, toastSuccess, toastError],
-  );
-
-  const handleScheduleIconClick = useCallback(() => {
-    if (currentTriggerType === TRIGGER_TYPES.schedule) {
-      setIsScheduleModalOpen(true);
-    }
-  }, [currentTriggerType]);
 
   const handleWebhookIconClick = useCallback(async () => {
     if (currentTriggerType === TRIGGER_TYPES.webhook) {
@@ -311,7 +276,7 @@ const TriggerTypeSelector = memo(props => {
 
   const triggerTooltip = useMemo(() => {
     const baseTooltip =
-      'Choose how this pipeline is triggered.\n• Chat Message (default) requires user input.\n• Schedule runs automatically based on a cron expression.\n• Webhook allows external systems to trigger the pipeline via HTTP POST.';
+      'Choose how this pipeline is triggered.\n• Chat Message (default) requires user input.\n• Webhook allows external systems to trigger the pipeline via HTTP POST.';
 
     if (hasInteractiveElements) {
       return `${baseTooltip}\n\nNote: This pipeline contains HITL, Printer nodes, or interrupts that require user interaction. Only Chat Message trigger is available.`;
@@ -340,29 +305,11 @@ const TriggerTypeSelector = memo(props => {
           value={currentTriggerType}
           onValueChange={handleTriggerTypeChange}
           options={availableTriggerOptions}
-          disabled={disabled || isLoading}
+          disabled={disabled || isLoading || isLegacySchedule}
           showBorder
           className="nopan nodrag"
           data-testid="pipeline-entry-point-trigger-select"
         />
-
-        {currentTriggerType === TRIGGER_TYPES.schedule && (
-          <Tooltip
-            title="Edit schedule"
-            placement="top"
-          >
-            <IconButton
-              variant="elitea"
-              color="tertiary"
-              sx={styles.scheduleButton}
-              onClick={handleScheduleIconClick}
-              disabled={disabled || isLoading}
-              data-testid="pipeline-entry-point-trigger-schedule-edit-button"
-            >
-              <ClockIcon style={styles.iconStyle} />
-            </IconButton>
-          </Tooltip>
-        )}
 
         {currentTriggerType === TRIGGER_TYPES.webhook && (
           <Tooltip
@@ -381,15 +328,6 @@ const TriggerTypeSelector = memo(props => {
           </Tooltip>
         )}
       </Box>
-
-      <PipelineScheduleModal
-        open={isScheduleModalOpen}
-        onClose={() => setIsScheduleModalOpen(false)}
-        onSubmit={handleScheduleSubmit}
-        cron={currentCron}
-        timezone={currentScheduleTimezone}
-        isLoading={isUpdating}
-      />
 
       <PipelineWebhookModal
         open={isWebhookModalOpen}
