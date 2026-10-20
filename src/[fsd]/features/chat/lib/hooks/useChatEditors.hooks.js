@@ -34,8 +34,7 @@ export const useChatEditors = ({
   onCloseArtifactEditor,
   refetchParticipantDetails,
   activeVersionName,
-  getChatParticipantUniqueId,
-  setLocalActiveParticipant,
+  activateParticipant,
 }) => {
   // Editor-state hooks
   const {
@@ -285,13 +284,8 @@ export const useChatEditors = ({
   });
 
   const handleSetActiveParticipant = useCallback(
-    participant => {
-      setActiveParticipant(participant);
-      if (activeConversation?.id && getChatParticipantUniqueId && setLocalActiveParticipant) {
-        setLocalActiveParticipant(activeConversation.id, getChatParticipantUniqueId(participant));
-      }
-    },
-    [setActiveParticipant, activeConversation?.id, getChatParticipantUniqueId, setLocalActiveParticipant],
+    participant => activateParticipant(activeConversation?.id, participant),
+    [activateParticipant, activeConversation?.id],
   );
 
   // Creation hooks
@@ -307,6 +301,7 @@ export const useChatEditors = ({
   });
 
   const { onPipelineCreated } = usePipelineCreation({
+    projectId,
     onPipelineEditorCreated,
     addNewParticipants,
     onSetActiveParticipant: handleSetActiveParticipant,
