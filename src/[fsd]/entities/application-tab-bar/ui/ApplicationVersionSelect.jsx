@@ -8,6 +8,7 @@ import {
   LATEST_VERSION_NAME,
   VersionSelect,
   buildVersionOption,
+  getDefaultVersionId,
   useSetDefaultVersion,
 } from '@/[fsd]/entities/version';
 import { NavigationConstants } from '@/[fsd]/shared/lib/constants';
@@ -56,12 +57,10 @@ const ApplicationVersionSelect = memo(props => {
     [formik.values],
   );
 
-  const defaultVersionID = useMemo(() => {
-    const defaultIDFromFormik = formik?.values?.meta?.default_version_id;
-    if (defaultIDFromFormik) return defaultIDFromFormik;
-
-    return formik?.values?.versions?.find(v => v.name === LATEST_VERSION_NAME)?.id ?? null;
-  }, [formik?.values?.meta?.default_version_id, formik?.values?.versions]);
+  const defaultVersionID = useMemo(
+    () => getDefaultVersionId({ meta: formik?.values?.meta, versions: formik?.values?.versions }),
+    [formik?.values?.meta, formik?.values?.versions],
+  );
 
   const versionId = formik.values?.version_details?.id;
   const tools = formik.values?.version_details?.tools;

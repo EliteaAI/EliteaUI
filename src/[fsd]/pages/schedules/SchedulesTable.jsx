@@ -1,6 +1,6 @@
-import { memo, useMemo } from 'react';
+import { memo, useMemo, useState } from 'react';
 
-import { Box } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import { useResponsiveColumns } from '@/[fsd]/entities/grid-table/lib';
 import {
@@ -17,6 +17,13 @@ import {
 import { useGetWindowWidth } from '@/[fsd]/shared/lib/hooks';
 import { Text } from '@/[fsd]/shared/ui';
 import EntityTypeIcon from '@/[fsd]/shared/ui/icon/EntityTypeIcon';
+import { TIME_FORMAT } from '@/common/constants';
+import { timeFormatter } from '@/common/utils';
+import AuthorContainer from '@/components/AuthorContainer';
+import CalendarIcon from '@/components/Icons/CalendarIcon';
+
+import ScheduleActionsCell from './ScheduleActionsCell';
+import ScheduleNameCell from './ScheduleNameCell';
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 const ENTITY_TYPE_LABELS = { agent: 'Agent', pipeline: 'Pipeline' };
@@ -25,22 +32,26 @@ const REASON_STATUSES = ['failed', 'skipped', 'blocked'];
 const statusLabel = status =>
   status ? status.charAt(0).toUpperCase() + status.slice(1).replaceAll('_', ' ') : '-';
 
+// Widths and the row height follow the Agents and Pipelines list view (widgets/data-table)
 const SCHEDULES_COLUMNS = [
-  { field: 'name', label: 'Name', width: '1.2fr' },
-  { field: 'entity', label: 'Entity', width: '1.4fr' },
-  { field: 'entity_type', label: 'Type', width: '0.8fr' },
-  { field: 'schedule', label: 'Schedule', width: '1.4fr' },
-  { field: 'next_run', label: 'Next run', width: '1fr' },
-  { field: 'last_run', label: 'Last run', width: '1.2fr' },
-  { field: 'owner', label: 'Owner', width: '0.8fr' },
-  { field: 'enabled', label: 'Enabled', width: '0.7fr' },
-  { field: 'actions', label: 'Actions', width: '8.25rem' },
+  { field: 'name', label: 'Name & Description', width: 'minmax(12.5rem, 1.3fr)', sortable: true },
+  { field: 'entity_name', label: 'Entity', width: 'minmax(10rem, 1.3fr)', sortable: true },
+  { field: 'entity_type', label: 'Type', width: '7.5rem', sortable: true },
+  { field: 'schedule', label: 'Schedule', width: 'minmax(10rem, 1.6fr)' },
+  { field: 'next_run', label: 'Next run', width: '9.5rem', sortable: true },
+  { field: 'last_run', label: 'Last run', width: 'minmax(7.5rem, 1fr)', sortable: true },
+  { field: 'owner', label: 'Owner', width: '12rem' },
+  { field: 'enabled', label: 'Enabled', width: '7.5rem', sortable: true },
+  { field: 'actions', label: 'Actions' },
 ];
+const ACTIONS_COLUMN_WIDTH = '6.5625rem';
+const ROW_HEIGHT = '3.5rem';
 
-const formatDate = value => (value ? new Date(value).toLocaleString() : '-');
+const formatTime = value =>
+  new Date(value).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
 
 const IconWithLabel = ({ type, label }) => (
-  <Box sx={iconLabelStyle}>
+  <Box sx={schedulesTableStyles().iconLabel}>
     <EntityTypeIcon type={type} />
     <Text.EllipsisTypography
       variant="bodyMedium"
@@ -52,8 +63,9 @@ const IconWithLabel = ({ type, label }) => (
 );
 
 const renderCell = (column, value, row) => {
+  const styles = schedulesTableStyles();
   switch (column.field) {
-    case 'entity':
+    case 'entity_name':
       return (
         <IconWithLabel
           type={row.entity_type}
@@ -70,10 +82,23 @@ const renderCell = (column, value, row) => {
     case 'schedule':
       return `${getCronSummaryInBrowserTimezone(row.cron, row.timezone)} (${getBrowserTimezone() ?? row.timezone})`;
     case 'next_run':
-      return formatDate(value);
+      return value ? (
+        <Box sx={styles.dateCell}>
+          <CalendarIcon sx={styles.calendarIcon} />
+          <Typography
+            variant="bodyMedium"
+            component="span"
+            title={new Date(value).toLocaleString()}
+          >
+            {`${timeFormatter(value, TIME_FORMAT.MMMDD)} ${formatTime(value)}`}
+          </Typography>
+        </Box>
+      ) : (
+        '-'
+      );
     case 'last_run':
       return (
-        <Box>
+        <Box sx={styles.lastRun}>
           <Text.EllipsisTypography variant="bodyMedium">
             {statusLabel(row.last_run_status)}
           </Text.EllipsisTypography>
@@ -88,24 +113,43 @@ const renderCell = (column, value, row) => {
         </Box>
       );
     case 'owner':
-      return row.owner?.name ?? '-';
+      return row.owner ? (
+        <Box sx={styles.owner}>
+          <AuthorContainer
+            disabledNavigation
+            authors={[row.owner]}
+          />
+        </Box>
+      ) : (
+        '-'
+      );
     case 'enabled':
       return value ? 'Yes' : 'No';
-    case 'actions':
-      return null; // the row actions arrive with US-28 and US-29
     default:
       return value ?? '-';
   }
 };
 
 const SchedulesTable = memo(props => {
-  const { rows, total, page, pageSize, onPageChange, onChangePageSize, isLoading = false } = props;
+  const {
+    rows,
+    total,
+    page,
+    pageSize,
+    onPageChange,
+    onChangePageSize,
+    sortConfig,
+    onSort,
+    isLoading = false,
+  } = props;
   const { windowWidth } = useGetWindowWidth();
+  const [hoveredRowId, setHoveredRowId] = useState(null);
 
   const { visibleColumns, gridTemplateColumns, dataColumns } = useResponsiveColumns({
     columns: SCHEDULES_COLUMNS,
     containerWidth: windowWidth,
     showCheckbox: false,
+    actionsColumnWidth: ACTIONS_COLUMN_WIDTH,
   });
 
   const paginationProps = useMemo(
@@ -133,11 +177,13 @@ const SchedulesTable = memo(props => {
     >
       <GridTableHeader
         columns={visibleColumns}
+        sortConfig={sortConfig}
+        onSort={onSort}
         gridTemplateColumns={gridTemplateColumns}
         showCheckbox={false}
         columnTestIdPrefix="schedule"
       />
-      <GridTableBody>
+      <GridTableBody minHeight={0}>
         {rows.map(row => (
           <GridTableRow
             key={row.id}
@@ -146,6 +192,12 @@ const SchedulesTable = memo(props => {
             gridTemplateColumns={gridTemplateColumns}
             columns={dataColumns}
             renderCell={renderCell}
+            rowHeight={ROW_HEIGHT}
+            isHovered={hoveredRowId === row.id}
+            onMouseEnter={() => setHoveredRowId(row.id)}
+            onMouseLeave={() => setHoveredRowId(null)}
+            NameCellComponent={ScheduleNameCell}
+            ActionsComponent={ScheduleActionsCell}
             data-testid="schedule-row"
             dataCellTestIdPrefix="schedule"
           />
@@ -158,6 +210,13 @@ const SchedulesTable = memo(props => {
 
 SchedulesTable.displayName = 'SchedulesTable';
 
-const iconLabelStyle = { display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 };
+/** @type {MuiSx} */
+const schedulesTableStyles = () => ({
+  iconLabel: { display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 },
+  dateCell: { display: 'flex', alignItems: 'center', gap: '0.5rem' },
+  calendarIcon: { width: '1rem', height: '1rem', flexShrink: 0 },
+  lastRun: { minWidth: 0 },
+  owner: { display: 'flex', maxWidth: '9.75rem', width: '9.75rem' },
+});
 
 export default SchedulesTable;

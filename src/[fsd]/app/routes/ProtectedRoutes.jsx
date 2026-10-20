@@ -40,6 +40,9 @@ const AppDetail = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/apps/Ap
 const Apps = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/apps/Apps'));
 const McpAuthPage = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/mcp'));
 const SchedulesPage = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/schedules'));
+const CreateSchedulePage = ChunkHelpers.lazyWithRetry(() =>
+  import('@/[fsd]/pages/schedules').then(module => ({ default: module.CreateSchedulePage })),
+);
 const Resources = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/resources'));
 const Settings = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/settings'));
 const AIConfiguration = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/settings/AIProviders'));
@@ -335,6 +338,11 @@ const ProtectedRoutes = memo(() => {
         path: RouteDefinitions.Schedules,
         element: <SchedulesPage />,
         requiredPermissions: [PERMISSIONS.schedules.list],
+      },
+      {
+        path: RouteDefinitions.CreateSchedule,
+        element: <CreateSchedulePage />,
+        requiredPermissions: [PERMISSIONS.schedules.create],
       },
 
       /* credentials */
