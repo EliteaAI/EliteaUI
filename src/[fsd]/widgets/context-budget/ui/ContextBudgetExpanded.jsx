@@ -4,6 +4,7 @@ import { Box } from '@mui/material';
 
 import { useIsSmallWindow, useModal } from '@/[fsd]/shared/lib/hooks';
 import {
+  ContextBudgetDetails,
   ContextBudgetHeader,
   ContextBudgetProgress,
   ContextBudgetStatsDisplay,
@@ -14,6 +15,9 @@ const ContextBudgetExpanded = memo(props => {
   const {
     stats,
     isHighUtilization,
+    canEdit,
+    onSwitchMode,
+    isSwitching,
     conversationId,
     contextStatus,
     contextStrategy,
@@ -31,7 +35,10 @@ const ContextBudgetExpanded = memo(props => {
       sx={styles.container}
       data-testid="context-budget-panel"
     >
-      <ContextBudgetHeader onEdit={handleOpen} />
+      <ContextBudgetHeader
+        onEdit={handleOpen}
+        canEdit={canEdit}
+      />
 
       <ContextBudgetProgress
         tokensDisplay={stats.tokensDisplay}
@@ -46,6 +53,13 @@ const ContextBudgetExpanded = memo(props => {
         valueStyle={styles.statValue}
         rowStyle={styles.statRow}
         conversationId={conversationId}
+      />
+
+      <ContextBudgetDetails
+        stats={stats}
+        canEdit={canEdit}
+        onSwitchMode={onSwitchMode}
+        isSwitching={isSwitching}
       />
 
       <ContextStrategyModal

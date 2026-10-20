@@ -2,7 +2,7 @@ import { memo } from 'react';
 
 import { Box, IconButton, Tooltip, Typography } from '@mui/material';
 
-import { TOOLTIP_CONFIG } from '@/[fsd]/widgets/context-budget/lib/constants';
+import { CONTEXT_WINDOW_COPY, TOOLTIP_CONFIG } from '@/[fsd]/widgets/context-budget/lib/constants';
 import EditIcon from '@/components/Icons/EditIcon';
 import InfoIcon from '@/components/Icons/InfoIcon';
 
@@ -10,7 +10,7 @@ import InfoIcon from '@/components/Icons/InfoIcon';
  * Header section with title, info icon, and edit button
  */
 const ContextBudgetHeader = memo(props => {
-  const { onEdit } = props;
+  const { onEdit, canEdit = true } = props;
   const styles = contextBudgetHeaderStyles();
 
   return (
@@ -23,7 +23,7 @@ const ContextBudgetHeader = memo(props => {
           Context Budget
         </Typography>
         <Tooltip
-          title="Shows how much of your chat context window is being used"
+          title="Chat totals are provider-reported tokens for every model call in this chat. The safety margin is excluded from the available window. The next request is estimated separately for automatic compaction."
           placement={TOOLTIP_CONFIG.INFO.placement}
         >
           <Box sx={styles.infoIconWrapper}>
@@ -35,17 +35,20 @@ const ContextBudgetHeader = memo(props => {
         </Tooltip>
       </Box>
       <Tooltip
-        title="Edit context settings"
+        title={canEdit ? 'Edit context settings' : CONTEXT_WINDOW_COPY.NO_PERMISSION}
         placement={TOOLTIP_CONFIG.INFO.placement}
       >
-        <IconButton
-          variant="elitea"
-          color="tertiary"
-          onClick={onEdit}
-          data-testid="context-budget-edit-button"
-        >
-          <EditIcon sx={{ fontSize: '1rem' }} />
-        </IconButton>
+        <Box component="span">
+          <IconButton
+            variant="elitea"
+            color="tertiary"
+            onClick={onEdit}
+            disabled={!canEdit}
+            data-testid="context-budget-edit-button"
+          >
+            <EditIcon sx={{ fontSize: '1rem' }} />
+          </IconButton>
+        </Box>
       </Tooltip>
     </Box>
   );

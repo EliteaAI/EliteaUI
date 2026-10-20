@@ -2,6 +2,7 @@ import { LLMSettingsConstants } from '@/[fsd]/shared/lib/constants';
 import { defaultReasoningEffortFor, modelSupportsReasoning } from '@/[fsd]/shared/lib/utils';
 import {
   CONTEXT_MESSAGES,
+  CONTEXT_WINDOW_MODES,
   DEFAULT_CONTEXT_STRATEGY,
   DEFAULT_PERSONA,
 } from '@/[fsd]/widgets/context-budget/lib/constants';
@@ -20,7 +21,10 @@ export const serializeFormData = (
 ) => ({
   persona: persona || DEFAULT_PERSONA,
   enabled: contextStrategy.enabled ?? DEFAULT_CONTEXT_STRATEGY.ENABLED,
-  max_context_tokens: contextStrategy.max_context_tokens || DEFAULT_CONTEXT_STRATEGY.MAX_CONTEXT_TOKENS,
+  context_window_mode:
+    Object.values(CONTEXT_WINDOW_MODES).find(mode => mode === contextStrategy.context_window_mode) ||
+    DEFAULT_CONTEXT_STRATEGY.CONTEXT_WINDOW_MODE,
+  manual_max_context_tokens: contextStrategy.manual_max_context_tokens ?? '',
   preserve_recent_messages:
     contextStrategy.preserve_recent_messages || DEFAULT_CONTEXT_STRATEGY.PRESERVE_RECENT_MESSAGES,
   preserve_system_messages:

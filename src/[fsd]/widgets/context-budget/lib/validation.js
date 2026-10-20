@@ -6,18 +6,16 @@ import { VALIDATION_LIMITS } from './constants';
  * Yup validation schema for context strategy form
  */
 export const contextStrategyValidationSchema = yup.object({
-  max_context_tokens: yup
+  context_window_mode: yup.string().oneOf(['balanced', 'full']),
+  manual_max_context_tokens: yup
     .number()
+    .transform((value, original) => (original === '' ? null : value))
+    .nullable()
     .typeError('Please enter a valid number')
     .integer('Must be a whole number')
-    .required('This field is required')
     .min(
-      VALIDATION_LIMITS.MAX_CONTEXT_TOKENS.MIN,
-      `Max tokens must be at least ${VALIDATION_LIMITS.MAX_CONTEXT_TOKENS.MIN.toLocaleString()}`,
-    )
-    .max(
-      VALIDATION_LIMITS.MAX_CONTEXT_TOKENS.MAX,
-      `Max tokens cannot exceed ${VALIDATION_LIMITS.MAX_CONTEXT_TOKENS.MAX.toLocaleString()}`,
+      VALIDATION_LIMITS.MANUAL_MAX_CONTEXT_TOKENS.MIN,
+      `Must be at least ${VALIDATION_LIMITS.MANUAL_MAX_CONTEXT_TOKENS.MIN}`,
     ),
   preserve_recent_messages: yup
     .number()
@@ -45,19 +43,7 @@ export const contextStrategyValidationSchema = yup.object({
       .max(
         VALIDATION_LIMITS.MAX_TOKENS.MAX,
         `Target tokens cannot exceed ${VALIDATION_LIMITS.MAX_TOKENS.MAX.toLocaleString()}`,
-      )
-      .test('less-than-max-context', function (value) {
-        const maxContextTokens = this.from?.[1]?.value?.max_context_tokens;
-        if (value === undefined || maxContextTokens === undefined) {
-          return true;
-        }
-        if (value >= maxContextTokens) {
-          return this.createError({
-            message: `Must be less than Max Context Tokens (${maxContextTokens.toLocaleString()})`,
-          });
-        }
-        return true;
-      }),
+      ),
   }),
 });
 

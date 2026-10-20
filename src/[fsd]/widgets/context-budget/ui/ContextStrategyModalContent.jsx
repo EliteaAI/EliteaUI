@@ -2,11 +2,11 @@ import { memo, useCallback, useEffect } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { Box, DialogContent, DialogTitle, IconButton } from '@mui/material';
+import { Box, DialogContent, DialogTitle, IconButton, Typography } from '@mui/material';
 
 import { Button, Switch } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
-import { SEPARATOR } from '@/[fsd]/widgets/context-budget/lib/constants';
+import { CONTEXT_WINDOW_COPY, SEPARATOR } from '@/[fsd]/widgets/context-budget/lib/constants';
 import { handleConvertToNumberChange } from '@/[fsd]/widgets/context-budget/lib/validation';
 import {
   ContextBudgetStats,
@@ -87,7 +87,7 @@ const ContextStrategyModalContent = memo(props => {
         return;
       }
 
-      const numericFields = ['max_context_tokens', 'preserve_recent_messages'];
+      const numericFields = ['preserve_recent_messages', 'manual_max_context_tokens'];
       if (numericFields.includes(field)) {
         handleConvertToNumberChange(value, field, setFieldValue);
         return;
@@ -166,6 +166,8 @@ const ContextStrategyModalContent = memo(props => {
                 errors={errors}
                 handleInputChange={handleInputChange}
                 isEnabled={values.enabled}
+                modelWindow={stats?.modelWindow}
+                manualMaxTokensEnabled={stats?.manualMaxTokensEnabled}
               />
             }
           />
@@ -209,6 +211,13 @@ const ContextStrategyModalContent = memo(props => {
       </DialogContent>
 
       <StyledDialogActions sx={styles.dialogActions}>
+        <Typography
+          variant="bodySmall"
+          color="text.default"
+          sx={styles.footerNote}
+        >
+          {CONTEXT_WINDOW_COPY.APPLIES_NEXT}
+        </Typography>
         <Button.BaseBtn
           variant={BUTTON_VARIANTS.elitea}
           onClick={onClose}
@@ -310,6 +319,9 @@ const componentStyles = () => ({
   }),
   summarizeButton: {
     flexShrink: 0,
+  },
+  footerNote: {
+    flex: 1,
   },
   dialogActions: ({ palette }) => ({
     flexDirection: 'row',

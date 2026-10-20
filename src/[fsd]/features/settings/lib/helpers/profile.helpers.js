@@ -36,7 +36,6 @@ export const PROFILE_INITIAL_VALUES = {
   personality_instructions: { ...EMPTY_PERSONALITY_INSTRUCTIONS },
   ...MODULE_TOGGLE_DEFAULTS,
   context_enabled: DEFAULT_CONTEXT_STRATEGY.ENABLED,
-  max_context_tokens: DEFAULT_CONTEXT_STRATEGY.MAX_CONTEXT_TOKENS,
   preserve_recent_messages: DEFAULT_CONTEXT_STRATEGY.PRESERVE_RECENT_MESSAGES,
   enable_summarization: DEFAULT_CONTEXT_STRATEGY.ENABLE_SUMMARIZATION,
   enable_context_editing: DEFAULT_CONTEXT_STRATEGY.ENABLE_CONTEXT_EDITING,
@@ -84,7 +83,6 @@ export const serializeProfileFormData = (authorData, moduleSettingsData, default
     },
     ...moduleToggles,
     context_enabled: cm.enabled ?? DEFAULT_CONTEXT_STRATEGY.ENABLED,
-    max_context_tokens: cm.max_context_tokens ?? DEFAULT_CONTEXT_STRATEGY.MAX_CONTEXT_TOKENS,
     preserve_recent_messages:
       cm.preserve_recent_messages ?? DEFAULT_CONTEXT_STRATEGY.PRESERVE_RECENT_MESSAGES,
     enable_context_editing: cm.enable_context_editing ?? DEFAULT_CONTEXT_STRATEGY.ENABLE_CONTEXT_EDITING,
@@ -106,7 +104,6 @@ export const deserializeProfileFormData = formValues => ({
   },
   default_context_management: {
     enabled: formValues.context_enabled,
-    max_context_tokens: formValues.max_context_tokens,
     preserve_recent_messages: formValues.preserve_recent_messages,
     enable_context_editing: formValues.enable_context_editing,
   },
@@ -125,7 +122,6 @@ export const deserializeModuleSettingsFormData = formValues =>
 
 export const createContextStrategyFormData = formikValues => ({
   enabled: formikValues.context_enabled,
-  max_context_tokens: formikValues.max_context_tokens,
   preserve_recent_messages: formikValues.preserve_recent_messages,
   enable_summarization: formikValues.enable_summarization,
   summary_llm_settings: formikValues.summary_llm_settings,
@@ -151,25 +147,6 @@ export const profileValidationSchema = yup.object({
   // Context Management
   context_enabled: yup.boolean(),
   enable_context_editing: yup.boolean(),
-  max_context_tokens: yup
-    .number()
-    .typeError('Please enter a valid number')
-    .integer('Must be a whole number')
-    .when('context_enabled', {
-      is: true,
-      then: schema =>
-        schema
-          .required('This field is required')
-          .min(
-            VALIDATION_LIMITS.MAX_CONTEXT_TOKENS.MIN,
-            `Max tokens must be at least ${VALIDATION_LIMITS.MAX_CONTEXT_TOKENS.MIN.toLocaleString()}`,
-          )
-          .max(
-            VALIDATION_LIMITS.MAX_CONTEXT_TOKENS.MAX,
-            `Max tokens cannot exceed ${VALIDATION_LIMITS.MAX_CONTEXT_TOKENS.MAX.toLocaleString()}`,
-          ),
-      otherwise: schema => schema.nullable(),
-    }),
   preserve_recent_messages: yup
     .number()
     .typeError('Please enter a valid number')
