@@ -8,12 +8,15 @@ import SkillEditor from '../SkillEditor';
 const captured = vi.hoisted(() => ({
   onSaved: null,
   onCreated: null,
+  onCreatingChange: null,
+  formDisabled: null,
   canvasSkill: null,
   initialValues: null,
   title: null,
 }));
 const DEFAULT_MODEL = vi.hoisted(() => ({ name: 'haiku', project_id: 1 }));
 const models = vi.hoisted(() => ({ isLoadingModels: false }));
+const details = vi.hoisted(() => ({ data: undefined }));
 
 vi.mock('@/[fsd]/features/chat/ui/editors/BaseEditor', () => ({
   default: ({ saveButton, children, initialValues, title }) => {
@@ -34,8 +37,9 @@ vi.mock('@/[fsd]/features/chat/ui/editors/SkillEditorSaveButton', () => ({
   },
 }));
 vi.mock('@/[fsd]/features/chat/ui/editors/SkillEditorCreateButton', () => ({
-  default: ({ onSkillCreated }) => {
+  default: ({ onSkillCreated, onCreatingChange }) => {
     captured.onCreated = onSkillCreated;
+    captured.onCreatingChange = onCreatingChange;
     return <div data-testid="skill-create-button" />;
   },
 }));
@@ -45,12 +49,17 @@ vi.mock('@/[fsd]/features/chat/ui/editors/SkillCanvasModelSelector', () => ({
     return <div data-testid="skill-canvas-model-selector" />;
   },
 }));
-vi.mock('@/[fsd]/features/skill/api', () => ({ useSkillDetailsQuery: () => ({ data: undefined }) }));
+vi.mock('@/[fsd]/features/skill/api', () => ({ useSkillDetailsQuery: () => ({ data: details.data }) }));
 vi.mock('@/[fsd]/features/skill/lib/hooks', () => ({
   useSkillModels: () => ({ defaultModel: DEFAULT_MODEL, isLoadingModels: models.isLoadingModels }),
 }));
 vi.mock('@/[fsd]/features/skill/lib/validation', () => ({ SkillValidateSchema: {} }));
-vi.mock('@/[fsd]/features/skill/ui', () => ({ CreateSkillForm: () => <div data-testid="skill-form" /> }));
+vi.mock('@/[fsd]/features/skill/ui', () => ({
+  CreateSkillForm: ({ disabled }) => {
+    captured.formDisabled = disabled;
+    return <div data-testid="skill-form" />;
+  },
+}));
 vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({ useSelectedProjectId: () => 2 }));
 
 const skill = llmSettings => ({
@@ -198,5 +207,61 @@ describe('SkillEditor create mode', () => {
     expect(getByTestId('skill-create-button')).toBeTruthy();
     expect(queryByTestId('skill-canvas-model-selector')).toBeNull();
     expect(captured.onCreated).toBe(onSkillCreated);
+  });
+});
+
+describe('SkillEditor locks the form across the create-to-edit transition', () => {
+  afterEach(() => {
+    cleanup();
+    details.data = undefined;
+  });
+
+  const createdSkill = {
+    entity_name: 'skill',
+    entity_meta: { id: 42 },
+    entity_settings: { version_id: 900 },
+  };
+
+  it('keeps edits out while the create request is pending', () => {
+    render(
+      <SkillEditor
+        isCreateMode
+        isVisible
+      />,
+    );
+    expect(captured.formDisabled).toBe(false);
+
+    act(() => captured.onCreatingChange(true));
+    expect(captured.formDisabled).toBe(true);
+
+    act(() => captured.onCreatingChange(false));
+    expect(captured.formDisabled).toBe(false);
+  });
+
+  it('keeps edits out until the saved skill details arrive', () => {
+    const { rerender } = render(
+      <SkillEditor
+        isCreateMode
+        isVisible
+      />,
+    );
+
+    rerender(
+      <SkillEditor
+        skill={createdSkill}
+        isVisible
+      />,
+    );
+    expect(captured.formDisabled).toBe(true);
+
+    details.data = { id: 42, name: 'triage', version_details: { id: 900 } };
+    rerender(
+      <SkillEditor
+        skill={{ ...createdSkill }}
+        isVisible
+      />,
+    );
+    expect(captured.formDisabled).toBe(false);
+    expect(captured.initialValues.name).toBe('triage');
   });
 });

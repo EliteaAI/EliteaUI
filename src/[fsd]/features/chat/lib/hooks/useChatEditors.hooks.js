@@ -76,6 +76,7 @@ export const useChatEditors = ({
     isEditingSkill,
     editingSkill,
     isSkillCreateMode,
+    skillEditorSession,
     onShowSkillEditor,
     onShowSkillEditorCreator,
     onSkillEditorCreated,
@@ -313,6 +314,7 @@ export const useChatEditors = ({
 
   const { onSkillCreated } = useSkillCreation({
     projectId,
+    skillEditorSession,
     onSkillEditorCreated,
     addNewParticipants,
     onSetActiveParticipant: handleSetActiveParticipant,

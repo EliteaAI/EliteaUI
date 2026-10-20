@@ -8,7 +8,7 @@ import { useCreateSkill } from '@/[fsd]/features/skill/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 
 const SkillEditorCreateButton = memo(props => {
-  const { onSkillCreated } = props;
+  const { onSkillCreated, onCreatingChange } = props;
   const { values, dirty, isValid } = useFormikContext();
   const { onCreate, isCreating } = useCreateSkill();
 
@@ -21,9 +21,14 @@ const SkillEditorCreateButton = memo(props => {
     !values?.version_details?.instructions?.trim();
 
   const handleCreate = useCallback(async () => {
-    const createdSkill = await onCreate();
-    if (createdSkill) onSkillCreated?.(createdSkill);
-  }, [onCreate, onSkillCreated]);
+    onCreatingChange?.(true);
+    try {
+      const createdSkill = await onCreate();
+      if (createdSkill) onSkillCreated?.(createdSkill);
+    } finally {
+      onCreatingChange?.(false);
+    }
+  }, [onCreate, onSkillCreated, onCreatingChange]);
 
   return (
     <Button.BaseBtn

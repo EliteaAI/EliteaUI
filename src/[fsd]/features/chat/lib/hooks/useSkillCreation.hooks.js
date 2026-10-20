@@ -4,6 +4,7 @@ import { ChatParticipantType } from '@/common/constants';
 
 export const useSkillCreation = ({
   projectId,
+  skillEditorSession,
   onSkillEditorCreated,
   addNewParticipants,
   onSetActiveParticipant,
@@ -14,13 +15,16 @@ export const useSkillCreation = ({
 
       const skillProjectId = createdSkill.project_id ?? projectId;
 
-      onSkillEditorCreated?.({
-        entity_name: ChatParticipantType.Skills,
-        entity_meta: { id: createdSkill.id, project_id: skillProjectId },
-        entity_settings: { version_id: createdSkill.version_details?.id },
-        meta: { name: createdSkill.name },
-        name: createdSkill.name,
-      });
+      onSkillEditorCreated?.(
+        {
+          entity_name: ChatParticipantType.Skills,
+          entity_meta: { id: createdSkill.id, project_id: skillProjectId },
+          entity_settings: { version_id: createdSkill.version_details?.id },
+          meta: { name: createdSkill.name },
+          name: createdSkill.name,
+        },
+        skillEditorSession,
+      );
 
       await addNewParticipants?.(
         [{ participantType: ChatParticipantType.Skills, ...createdSkill, project_id: skillProjectId }],
@@ -32,7 +36,7 @@ export const useSkillCreation = ({
         },
       );
     },
-    [projectId, onSkillEditorCreated, addNewParticipants, onSetActiveParticipant],
+    [projectId, skillEditorSession, onSkillEditorCreated, addNewParticipants, onSetActiveParticipant],
   );
 
   return { onSkillCreated };

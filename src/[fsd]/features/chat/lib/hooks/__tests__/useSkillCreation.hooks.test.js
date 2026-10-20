@@ -11,7 +11,13 @@ const renderCreation = addNewParticipants => {
   const onSkillEditorCreated = vi.fn();
   const onSetActiveParticipant = vi.fn();
   const { result } = renderHook(() =>
-    useSkillCreation({ projectId: 2, onSkillEditorCreated, addNewParticipants, onSetActiveParticipant }),
+    useSkillCreation({
+      projectId: 2,
+      skillEditorSession: 3,
+      onSkillEditorCreated,
+      addNewParticipants,
+      onSetActiveParticipant,
+    }),
   );
   return { onSkillCreated: result.current.onSkillCreated, onSkillEditorCreated, onSetActiveParticipant };
 };
@@ -39,6 +45,7 @@ describe('useSkillCreation', () => {
         entity_meta: { id: 42, project_id: 2 },
         entity_settings: { version_id: 900 },
       }),
+      3,
     );
   });
 

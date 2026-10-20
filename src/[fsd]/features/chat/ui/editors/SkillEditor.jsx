@@ -49,6 +49,7 @@ const SkillEditor = memo(props => {
   const skillId = skill?.entity_meta?.id;
   const versionId = skill?.entity_settings?.version_id;
   const [isDirty, setIsDirty] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
 
   const { data, error } = useSkillDetailsQuery(
     { projectId, skillId, versionId },
@@ -57,6 +58,7 @@ const SkillEditor = memo(props => {
 
   const { defaultModel, isLoadingModels } = useSkillModels();
   const initialValues = useMemo(() => buildInitialValues(data, defaultModel), [data, defaultModel]);
+  const isAwaitingSkillDetails = !!skillId && data?.id !== skillId;
 
   const onDirtyStateChangeRef = useRef(onDirtyStateChange);
 
@@ -85,7 +87,10 @@ const SkillEditor = memo(props => {
       error={error}
       saveButton={
         isCreateMode ? (
-          <SkillEditorCreateButton onSkillCreated={onSkillCreated} />
+          <SkillEditorCreateButton
+            onSkillCreated={onSkillCreated}
+            onCreatingChange={setIsCreating}
+          />
         ) : (
           <SkillEditorSaveButton
             isDirty={isDirty}
@@ -101,7 +106,7 @@ const SkillEditor = memo(props => {
           isNewConversation={isNewConversation}
         />
       )}
-      {!isLoadingModels && <CreateSkillForm />}
+      {!isLoadingModels && <CreateSkillForm disabled={isCreating || isAwaitingSkillDetails} />}
     </BaseEditor>
   );
 });
