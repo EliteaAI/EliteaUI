@@ -12,6 +12,12 @@ import SchedulesTable from './SchedulesTable';
 
 const NO_FILTERS = { entityType: '', status: '', enabled: '', search: '', ownerIds: [] };
 
+const POLLING_INTERVAL_MS = 10000;
+
+// R2.3: refetch the list while any row shows a Running last run
+export const getPollingInterval = rows =>
+  rows?.some(row => row.last_run_status === 'running') ? POLLING_INTERVAL_MS : 0;
+
 const SchedulesPage = () => {
   const projectId = useSelectedProjectId();
   const { toastError } = useToast();
@@ -32,18 +38,23 @@ const SchedulesPage = () => {
   }
 
   // currentData is empty while another project or page loads, so no row of another project shows
-  const { currentData, isFetching, isError, error } = useGetScheduleListQuery(
-    {
-      projectId,
-      page,
-      pageSize,
-      sortBy: sortConfig.field,
-      sortOrder: sortConfig.direction,
-      ...filters,
-      ownerIds: isAdmin ? filters.ownerIds : undefined,
-    },
-    { skip: !projectId },
-  );
+  const queryArgs = {
+    projectId,
+    page,
+    pageSize,
+    sortBy: sortConfig.field,
+    sortOrder: sortConfig.direction,
+    ...filters,
+    ownerIds: isAdmin ? filters.ownerIds : undefined,
+  };
+  const { currentData, isFetching, isError, error } = useGetScheduleListQuery(queryArgs, {
+    skip: !projectId,
+  });
+  // The same args share one cache entry; this subscription only adds the polling the rows ask for
+  useGetScheduleListQuery(queryArgs, {
+    skip: !projectId,
+    pollingInterval: getPollingInterval(currentData?.rows),
+  });
 
   useEffect(() => {
     if (isError) toastError(buildErrorMessage(error));

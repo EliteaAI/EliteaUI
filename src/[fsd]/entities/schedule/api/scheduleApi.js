@@ -6,6 +6,8 @@ export const SCHEDULES_TAG = 'SCHEDULES_TAG';
 // false is a real value (enabled=false); only unset, blank and empty list are left out
 const isSet = value => value !== undefined && value !== null && value !== '' && value?.length !== 0;
 
+const schedulePath = (projectId, scheduleId) => `/elitea_core/schedule/prompt_lib/${projectId}/${scheduleId}`;
+
 export const scheduleApi = eliteaApi
   .enhanceEndpoints({
     addTagTypes: [SCHEDULES_TAG],
@@ -54,7 +56,55 @@ export const scheduleApi = eliteaApi
         }),
         invalidatesTags: (_, error) => (error ? [] : [SCHEDULES_TAG]),
       }),
+
+      runSchedule: build.mutation({
+        query: ({ projectId, scheduleId }) => ({
+          url: `${schedulePath(projectId, scheduleId)}/run`,
+          method: 'POST',
+          body: { trigger: 'manual' },
+        }),
+        invalidatesTags: (_, error) => (error ? [] : [SCHEDULES_TAG]),
+      }),
+
+      // Patches Enabled in every cached list entry at once; undoes all patches on error.
+      updateSchedule: build.mutation({
+        query: ({ projectId, scheduleId, enabled }) => ({
+          url: schedulePath(projectId, scheduleId),
+          method: 'PUT',
+          body: { enabled },
+        }),
+        async onQueryStarted({ scheduleId, enabled }, { dispatch, getState, queryFulfilled }) {
+          const patches = scheduleApi.util.selectCachedArgsForQuery(getState(), 'getScheduleList').map(args =>
+            dispatch(
+              scheduleApi.util.updateQueryData('getScheduleList', args, draft => {
+                const row = draft?.rows?.find(item => item.id === scheduleId);
+                if (row) row.enabled = enabled;
+              }),
+            ),
+          );
+          try {
+            await queryFulfilled;
+          } catch {
+            patches.forEach(patch => patch.undo());
+          }
+        },
+        invalidatesTags: (_, error) => (error ? [] : [SCHEDULES_TAG]),
+      }),
+
+      deleteSchedule: build.mutation({
+        query: ({ projectId, scheduleId }) => ({
+          url: schedulePath(projectId, scheduleId),
+          method: 'DELETE',
+        }),
+        invalidatesTags: (_, error) => (error ? [] : [SCHEDULES_TAG]),
+      }),
     }),
   });
 
-export const { useGetScheduleListQuery, useCreateScheduleMutation } = scheduleApi;
+export const {
+  useGetScheduleListQuery,
+  useCreateScheduleMutation,
+  useRunScheduleMutation,
+  useUpdateScheduleMutation,
+  useDeleteScheduleMutation,
+} = scheduleApi;
