@@ -2053,6 +2053,9 @@ const ChatBox = memo(
               isSending: false,
               requiresConfirmation: undefined,
               exception: undefined,
+              inputGuardrail: undefined,
+              // Kept so a resume the input guardrail refuses can put the pause back
+              hitlResumeSnapshot: { hitlInterrupts: interrupts },
               hitlInterrupt: undefined,
               hitlInterrupts: undefined,
               resumingAgentPaths: undefined,
@@ -2111,6 +2114,10 @@ const ChatBox = memo(
             isSending: false,
             requiresConfirmation: undefined,
             exception: undefined,
+            inputGuardrail: undefined,
+            // The interrupts are cleared above for a non-parallel resume; a refusal by the
+            // input guardrail needs them back (applyInputGuardrailBlocked)
+            hitlResumeSnapshot: isParallel ? undefined : { hitlInterrupts: interrupts },
             // A partial root resume keeps sibling cards mounted while the single
             // worker checkpoint advances. Only the selected/queued cards are
             // disabled; untouched siblings stay independently actionable.
@@ -2436,6 +2443,8 @@ const ChatBox = memo(
             return {
               ...item,
               ...(textUpdate ? { content: textUpdate.content } : {}),
+              // Re-set by the notice event when the edited text is flagged again
+              ...(textUpdate ? { inputGuardrail: undefined } : {}),
               message_items: [
                 ...(item.message_items || [])
                   .filter(mi => mi.item_type !== 'attachment_message')

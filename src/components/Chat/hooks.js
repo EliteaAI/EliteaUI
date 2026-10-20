@@ -18,6 +18,8 @@ import {
 import {
   applyInputGuardrailBlocked,
   applyInputGuardrailNotice,
+  getAgentGuardrailEventVerdict,
+  getAgentGuardrailVerdict,
   createSyntheticToolAction,
   findChatSocketMessageIndex,
   insertNewAssistantMessage,
@@ -465,6 +467,7 @@ export const useChatSocket = ({
             msg.references = [];
             msg.created_at = new Date().getTime();
           }
+          msg.hitlResumeSnapshot = undefined;
           msg.task_id = task_id;
           msg.participant_id = participant_id;
           msg.question_id = question_id;
@@ -1475,6 +1478,9 @@ export const useChatSocket = ({
             msg.budgetErrorCode = response_metadata?.budget_error_code;
             msg.hitlInterrupt = undefined;
             msg.hitlInterrupts = undefined;
+            // A refusal by the input guardrail (#6886) renders as the policy card, not a
+            // trace; after a reload it comes from the persisted meta the same way
+            msg.inputGuardrail = getAgentGuardrailVerdict(response_metadata);
           }
           trackEvent(GA_EVENT_NAMES.AGENT_EXCEPTION, {
             [GA_EVENT_PARAMS.ERROR_TYPE]: 'agent_exception',
@@ -1513,6 +1519,9 @@ export const useChatSocket = ({
               questionId: questionIdFromMessage,
               verdict: response_metadata?.input_guardrail,
               message: response_metadata?.human_readable || message.content,
+              // Ids of the stored rows: the sender's placeholders only have client-made ones
+              responseMessageId: message.response_message_id,
+              questionItemUuid: message.question_item_uuid,
             }),
           );
           notifyTaskError();
@@ -1527,6 +1536,20 @@ export const useChatSocket = ({
             }),
           );
           return;
+        case SocketMessageType.AgentInputGuardrail: {
+          // SDK / indexer run (#6886): only a redact or warn verdict lands here. A block
+          // is reported by agent_exception, and `record` is silent by design.
+          const guardrailVerdict = getAgentGuardrailEventVerdict(response_metadata);
+          if (guardrailVerdict && ['redact', 'warn'].includes(guardrailVerdict.action)) {
+            updateChatHistoryState(setChatHistoryRef, chatHistoryRef, prevState =>
+              applyInputGuardrailNotice(prevState, {
+                questionId: question_id || msg.question_id,
+                verdict: guardrailVerdict,
+              }),
+            );
+          }
+          return;
+        }
         case SocketMessageType.Freeform:
           break;
         case SocketMessageType.AgentStart: {

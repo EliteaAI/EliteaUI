@@ -7,6 +7,8 @@ import {
   applyInputGuardrailNotice,
   createSyntheticToolAction,
   findChatSocketMessageIndex,
+  getAgentGuardrailEventVerdict,
+  getAgentGuardrailVerdict,
   insertNewAssistantMessage,
   isLocalAssistantPlaceholder,
   mergeChatSocketMessage,
@@ -241,6 +243,61 @@ describe('input guardrail socket events (#6886)', () => {
     expect(next[0].hitlInterrupt).toBe(next[0].hitlInterrupts[0]);
   });
 
+  it('gives the placeholders the stored ids so the card can be edited without a reload', () => {
+    const history = [
+      {
+        id: 'q-1',
+        role: ROLES.User,
+        message_items: [
+          { item_type: 'attachment_message', uuid: 'att' },
+          { item_type: 'text_message', uuid: 'client-item' },
+        ],
+      },
+      { internal_id: 'tmp', question_id: 'q-1', role: ROLES.Assistant, isLoading: true },
+    ];
+    const next = applyInputGuardrailBlocked(history, {
+      messageId: 'q-1',
+      questionId: 'q-1',
+      verdict: blockVerdict,
+      message: 'Not sent.',
+      responseMessageId: 'answer-uuid',
+      questionItemUuid: 'stored-item',
+    });
+    expect(next[1].id).toBe('answer-uuid');
+    expect(next[1].internal_id).toBe('tmp');
+    expect(next[0].message_items[0].uuid).toBe('att');
+    expect(next[0].message_items[1].uuid).toBe('stored-item');
+    // the edit lookup (question_id -> answer id) now succeeds
+    expect(next.find(item => item.question_id === 'q-1').id).toBe('answer-uuid');
+  });
+
+  it('leaves the ids alone when the event carries none (nothing was stored)', () => {
+    const history = [{ internal_id: 'tmp', question_id: 'q-1', role: ROLES.Assistant }];
+    const next = applyInputGuardrailBlocked(history, { questionId: 'q-1', verdict: blockVerdict });
+    expect(next[0]).not.toHaveProperty('id');
+  });
+
+  it('restores the pause from the snapshot taken before an optimistic non-parallel resume', () => {
+    const interrupt = { tool_call_id: 't1', decided: true, queued: true };
+    const history = [
+      {
+        id: 'a-1',
+        role: ROLES.Assistant,
+        isLoading: true,
+        hitlInterrupt: undefined,
+        hitlInterrupts: undefined,
+        resumingAgentPaths: [[{ call_id: 'c' }]],
+        hitlResumeSnapshot: { hitlInterrupts: [interrupt] },
+      },
+    ];
+    const next = applyInputGuardrailBlocked(history, { messageId: 'a-1', verdict: blockVerdict });
+    expect(next[0].hitlInterrupts).toEqual([{ tool_call_id: 't1', decided: false, queued: false, hidden: false }]);
+    expect(next[0].hitlInterrupt).toBe(next[0].hitlInterrupts[0]);
+    expect(next[0].hitlResumeSnapshot).toBeUndefined();
+    expect(next[0].resumingAgentPaths).toBeUndefined();
+    expect(next[0].isLoading).toBe(false);
+  });
+
   it('leaves history untouched when no turn matches', () => {
     const history = [{ id: 'q-1', role: ROLES.User }];
     expect(applyInputGuardrailBlocked(history, { messageId: 'x', questionId: 'y' })).toBe(history);
@@ -280,5 +337,43 @@ describe('input guardrail socket events (#6886)', () => {
     });
     expect(next[0].message_items).toBe(history[0].message_items);
     expect(next[0].inputGuardrail.action).toBe('warn');
+  });
+});
+
+describe('SDK / indexer input guardrail events (#6886)', () => {
+  it('turns the agent_exception verdict into a card verdict with the user message', () => {
+    expect(
+      getAgentGuardrailVerdict({
+        input_guardrail: {
+          code: 'input_guardrail_blocked',
+          action: 'block',
+          user_message: 'Not sent to the model.',
+          message_key: 'credentials',
+          categories: ['credentials'],
+        },
+      }),
+    ).toMatchObject({
+      action: 'block',
+      message: 'Not sent to the model.',
+      message_key: 'credentials',
+      categories: ['credentials'],
+    });
+  });
+
+  it('has no verdict for an ordinary exception', () => {
+    expect(getAgentGuardrailVerdict({ human_readable: 'boom' })).toBeUndefined();
+    expect(getAgentGuardrailVerdict(undefined)).toBeUndefined();
+  });
+
+  it('reads the warn / redact event payload', () => {
+    expect(
+      getAgentGuardrailEventVerdict({
+        name: 'input_guardrail',
+        action: 'redact',
+        categories: ['credentials'],
+        detection_count: 2,
+      }),
+    ).toEqual({ action: 'redact', categories: ['credentials'], rules: [], segments: [], detection_count: 2 });
+    expect(getAgentGuardrailEventVerdict({ name: 'input_guardrail' })).toBeUndefined();
   });
 });

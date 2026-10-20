@@ -185,6 +185,7 @@ export const SocketMessageType = {
   LlmError: 'llm_error',
   InputGuardrailBlocked: 'input_guardrail_blocked',
   InputGuardrailNotice: 'input_guardrail_notice',
+  AgentInputGuardrail: 'agent_input_guardrail',
   PipelineFinish: 'pipeline_finish',
   AgentThinkingStep: 'agent_thinking_step',
   AgentThinkingStepUpdate: 'agent_thinking_step_update',
