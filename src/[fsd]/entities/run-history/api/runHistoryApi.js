@@ -3,7 +3,7 @@ import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { eliteaApi } from '@/api/eliteaApi.js';
 import { PAGE_SIZE } from '@/common/constants';
 
-const HISTORY_ITEMS_TAG = 'HISTORY_ITEMS_TAG';
+export const HISTORY_ITEMS_TAG = 'HISTORY_ITEMS_TAG';
 const CONVERSATION_INFO_TAG = 'CONVERSATION_INFO_TAG';
 
 const { ParticipantEntityTypes } = ParticipantEntityConstants;

@@ -146,4 +146,9 @@ export const BREADCRUMB_REGISTRY = {
 
   [RouteDefinitions.Schedules]: { label: PathSessionMap[RouteDefinitions.Schedules] },
   [RouteDefinitions.CreateSchedule]: { parent: RouteDefinitions.Schedules, label: 'New schedule' },
+  [RouteDefinitions.ScheduleDetail]: {
+    parent: RouteDefinitions.Schedules,
+    entityName: true,
+    fallbackLabel: 'Edit schedule',
+  },
 };

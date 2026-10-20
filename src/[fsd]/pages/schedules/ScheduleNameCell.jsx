@@ -1,12 +1,16 @@
 import { memo } from 'react';
 
-import { Box } from '@mui/material';
+import { Link as RouterLink, useLocation } from 'react-router-dom';
+
+import { Box, Link } from '@mui/material';
 
 import { Tooltip } from '@/[fsd]/shared/ui';
+import RouteDefinitions from '@/routes';
 
 // The name and description lines of the Agents and Pipelines list view (widgets/data-table DataTableNameCell)
 const ScheduleNameCell = memo(props => {
   const { row } = props;
+  const { pathname, search } = useLocation();
   const styles = scheduleNameCellStyles();
 
   return (
@@ -19,7 +23,15 @@ const ScheduleNameCell = memo(props => {
         color="text.secondary"
         sx={styles.text}
       >
-        {row.name}
+        <Link
+          component={RouterLink}
+          to={`${RouteDefinitions.Schedules}/${row.id}`}
+          state={{ returnTo: pathname + search }}
+          color="inherit"
+          underline="hover"
+        >
+          {row.name}
+        </Link>
       </Tooltip.TypographyWithConditionalTooltip>
       {row.description && (
         <Tooltip.TypographyWithConditionalTooltip

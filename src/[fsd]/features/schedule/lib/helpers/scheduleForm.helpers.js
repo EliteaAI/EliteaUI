@@ -39,7 +39,8 @@ export const resetWhatToRun = (values, type) => ({
 
 export const syncPromptVariables = (prompt, variables = []) => {
   const valueByName = Object.fromEntries(variables.map(({ name, value }) => [name, value]));
-  return contextResolver(prompt).map(name => ({ name, value: valueByName[name] ?? '' }));
+  // A pipeline schedule in entry point mode stores no prompt (null)
+  return contextResolver(prompt ?? '').map(name => ({ name, value: valueByName[name] ?? '' }));
 };
 
 export const buildInitialValues = (searchParams, locationState) => {
@@ -60,6 +61,33 @@ export const buildInitialValues = (searchParams, locationState) => {
     },
     urlEntity,
     returnTo: IN_APP_PATH.test(returnTo) ? returnTo : RouteDefinitions.Schedules,
+  };
+};
+
+// The saved end-of-day moment, read as a calendar date in the schedule's own time zone
+const toExpiryDate = (expiresAt, timeZone) =>
+  expiresAt ? new Intl.DateTimeFormat('en-CA', { timeZone }).format(new Date(expiresAt)) : null;
+
+// The saved cron stays in the schedule's own zone: only a cron edit moves it to the browser zone
+export const buildEditValues = (schedule, locationState) => {
+  const { values, returnTo } = buildInitialValues(new URLSearchParams(), locationState);
+
+  return {
+    values: {
+      ...values,
+      name: schedule.name,
+      description: schedule.description ?? '',
+      type: schedule.entity_type,
+      application_id: schedule.application_id,
+      version_id: schedule.version_id,
+      run_mode: schedule.run_mode,
+      prompt: schedule.prompt ?? '',
+      variables: syncPromptVariables(schedule.prompt, schedule.variables),
+      cron: schedule.cron,
+      timezone: schedule.timezone || values.timezone,
+      expires_at: toExpiryDate(schedule.expires_at, schedule.timezone),
+    },
+    returnTo,
   };
 };
 
@@ -101,6 +129,8 @@ export const toCreateBody = ({
     approval_rule,
   };
 };
+
+export const toUpdateBody = toCreateBody;
 
 // The schedule API answers one broken field at a time: { error, field }; a message without a field goes to the banner
 export const toFieldErrors = error => {
