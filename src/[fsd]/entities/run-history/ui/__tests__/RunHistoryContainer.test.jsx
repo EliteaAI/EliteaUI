@@ -372,3 +372,28 @@ describe('RunHistoryContainer owner project', () => {
     expect(fetchRunList).toHaveBeenLastCalledWith(expect.objectContaining({ entityProjectId: 1 }));
   });
 });
+
+describe('RunHistoryContainer R4.1 EL-7011 query params', () => {
+  it('merges the query params into the run list request', () => {
+    renderContainer('', { queryParams: { schedule_id: 42 } });
+
+    expect(fetchRunList).toHaveBeenCalledWith(
+      expect.objectContaining({ entityId: 1, page: 0, schedule_id: 42 }),
+    );
+  });
+
+  it('sends no extra params when none are given', () => {
+    renderContainer('');
+
+    expect(fetchRunList).toHaveBeenCalledWith(
+      expect.not.objectContaining({ schedule_id: expect.anything() }),
+    );
+  });
+
+  it('asks again when the query params change', () => {
+    const { rerender } = renderContainer('', { queryParams: { schedule_id: 1 } });
+    rerender(containerTree('', { queryParams: { schedule_id: 2 } }));
+
+    expect(fetchRunList).toHaveBeenLastCalledWith(expect.objectContaining({ schedule_id: 2 }));
+  });
+});
