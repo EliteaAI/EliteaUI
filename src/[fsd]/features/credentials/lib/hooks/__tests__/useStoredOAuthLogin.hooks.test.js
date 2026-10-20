@@ -308,12 +308,33 @@ describe('useStoredOAuthLogin', () => {
   });
 
   it('logout also removes the kept browser token', async () => {
-    mocks.items = [CONNECTED];
+    mocks.items = [{ ...CONNECTED, data: { ...CONNECTED.data, oauth_discovery_endpoint: AUTHORITY } }];
+    mocks.browserLoggedIn = true;
     const { result } = render(REF, undefined, { keepBrowserToken: true });
 
     await act(async () => result.current.logout());
 
-    expect(mocks.logout).toHaveBeenCalledWith('uuid-1:undefined');
+    expect(mocks.logout).toHaveBeenCalledWith(`uuid-1:${AUTHORITY}`);
     expect(mocks.updateConfiguration).toHaveBeenCalled();
+  });
+
+  it('logout leaves the browser store alone when there is no browser token', async () => {
+    mocks.items = [{ ...CONNECTED, data: { ...CONNECTED.data, oauth_discovery_endpoint: AUTHORITY } }];
+    const { result } = render(REF, undefined, { keepBrowserToken: true });
+
+    await act(async () => result.current.logout());
+
+    expect(mocks.logout).not.toHaveBeenCalled();
+    expect(mocks.updateConfiguration).toHaveBeenCalled();
+  });
+
+  it('never builds a token key from a credential without an authority', async () => {
+    mocks.items = [CONNECTED];
+    mocks.browserLoggedIn = true;
+    const { result } = render(REF, undefined, { keepBrowserToken: true });
+
+    await act(async () => result.current.logout());
+
+    expect(mocks.logout).not.toHaveBeenCalledWith('uuid-1:undefined');
   });
 });

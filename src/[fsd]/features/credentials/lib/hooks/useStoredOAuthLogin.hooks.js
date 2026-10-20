@@ -51,7 +51,10 @@ export const useStoredOAuthLogin = ({
   );
 
   const browserTokenKey = useMemo(
-    () => (credential ? `${credential.uuid}:${credential.data?.oauth_discovery_endpoint}` : ''),
+    () =>
+      credential?.data?.oauth_discovery_endpoint
+        ? `${credential.uuid}:${credential.data.oauth_discovery_endpoint}`
+        : '',
     [credential],
   );
   const { isLoggedIn: hasBrowserToken } = useMcpTokenChange({
@@ -144,7 +147,7 @@ export const useStoredOAuthLogin = ({
     setIsBusy(true);
     try {
       if (credential.data?.refresh_token) await saveRefreshToken(null);
-      if (keepBrowserToken) McpAuthHelpers.logout(browserTokenKey);
+      if (keepBrowserToken && hasBrowserToken) McpAuthHelpers.logout(browserTokenKey);
       toastSuccess('You have successfully logged out!');
       onLoginChange?.();
     } catch {
@@ -156,6 +159,7 @@ export const useStoredOAuthLogin = ({
     credential,
     saveRefreshToken,
     keepBrowserToken,
+    hasBrowserToken,
     browserTokenKey,
     toastError,
     toastSuccess,

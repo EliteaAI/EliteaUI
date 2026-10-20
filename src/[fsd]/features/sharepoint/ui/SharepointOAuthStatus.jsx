@@ -39,7 +39,7 @@ const SharepointOAuthStatus = memo(props => {
   // Delegated credentials also keep the login on the credential; the browser token stays for chat
   const storedLogin = useStoredOAuthLogin({
     configurationType: 'sharepoint',
-    credentialRef: spConfigRef,
+    credentialRef: oauthEndpoint ? spConfigRef : undefined,
     projectId,
     getAuthority,
     keepBrowserToken: true,
@@ -115,7 +115,7 @@ const SharepointOAuthStatus = memo(props => {
           disabled={isRunning || storedLogin.isBusy}
           variant="secondary"
         >
-          {isOAuthLoggedIn ? 'Logout' : isRunning ? 'Logging in...' : 'Login'}
+          {isOAuthLoggedIn ? 'Logout' : isRunning || storedLogin.isBusy ? 'Logging in...' : 'Login'}
         </Button.BaseBtn>
       </Box>
       <McpAuthModal {...(oauthEndpoint ? storedLogin.modalProps : authModalProps)} />
