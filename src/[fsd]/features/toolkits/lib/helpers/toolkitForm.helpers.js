@@ -94,6 +94,20 @@ export const parseValidationErrors = (settingsErrors = []) => {
   }, {});
 };
 
+// The validator also returns connection errors as plain JSON. Prefer them: the copy embedded in
+// settings_errors is Python text that does not survive parsing once it carries quoted challenge headers.
+export const parseConnectionErrors = (connectionErrors = []) =>
+  connectionErrors.reduce((acc, curr) => {
+    const type = curr?.configuration_type;
+    if (type) acc[`${type}_configuration`] = curr.message || 'Connection error';
+    return acc;
+  }, {});
+
+export const parseValidationResponse = (data = {}) => ({
+  ...parseValidationErrors(data.settings_errors),
+  ...parseConnectionErrors(data.connection_errors),
+});
+
 export const CONFIGURATION_VIEW_OPTIONS = {
   ConfigurationSelect: 'configuration',
   CredentialsSelect: 'credentials',

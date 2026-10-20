@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { act, renderHook } from '@testing-library/react';
 
-import { useDataverseLogin } from '../useDataverseLogin.hooks';
+import { useStoredOAuthLogin } from '../useStoredOAuthLogin.hooks';
 
 const mocks = vi.hoisted(() => ({
   items: [],
@@ -15,6 +15,7 @@ const mocks = vi.hoisted(() => ({
   logout: vi.fn(),
   toastSuccess: vi.fn(),
   toastError: vi.fn(),
+  browserLoggedIn: false,
 }));
 
 vi.mock('react-redux', () => ({
@@ -29,6 +30,7 @@ vi.mock('@/api/configurations', () => ({
 
 vi.mock('@/[fsd]/features/mcp', () => ({
   McpAuthHelpers: { getRefreshToken: mocks.getRefreshToken, logout: mocks.logout },
+  useMcpTokenChange: () => ({ isLoggedIn: mocks.browserLoggedIn }),
   useConfigOAuthModal: options => {
     mocks.onOAuthSuccess = options.onSuccess;
     mocks.modalOptions = options;
@@ -53,12 +55,24 @@ const CREDENTIAL = {
 const CONNECTED = { ...CREDENTIAL, data: { ...CREDENTIAL.data, refresh_token: '{{secret.r}}' } };
 const REF = { elitea_title: 'onecrm_dataverse', private: true };
 
-const render = (ref = REF, onLoginChange) =>
-  renderHook(() => useDataverseLogin({ credentialRef: ref, projectId: 5, onLoginChange }));
+const getAuthority = (_credential, errorData) => errorData.auth_metadata.server_url;
 
-describe('useDataverseLogin', () => {
+const render = (ref = REF, onLoginChange, extra = {}) =>
+  renderHook(() =>
+    useStoredOAuthLogin({
+      configurationType: 'dataverse',
+      credentialRef: ref,
+      projectId: 5,
+      getAuthority,
+      onLoginChange,
+      ...extra,
+    }),
+  );
+
+describe('useStoredOAuthLogin', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.browserLoggedIn = false;
     mocks.items = [CREDENTIAL];
     mocks.testConnection.mockReturnValue({ unwrap: () => Promise.resolve({ success: true }) });
     mocks.updateConfiguration.mockReturnValue({ unwrap: () => Promise.resolve({}) });
@@ -241,5 +255,65 @@ describe('useDataverseLogin', () => {
     await act(async () => result.current.logout());
 
     expect(onLoginChange).toHaveBeenCalledTimes(1);
+  });
+
+  it('treats a saved login the last validation rejected as not connected, so Login reopens the popup', () => {
+    mocks.items = [CONNECTED];
+    expect(render(REF, undefined, { loginExpired: true }).result.current.isConnected).toBe(false);
+  });
+
+  it('counts a live browser token as connected only when the browser token is kept', () => {
+    mocks.browserLoggedIn = true;
+    expect(render().result.current.isConnected).toBe(false);
+    expect(render(REF, undefined, { keepBrowserToken: true }).result.current.isConnected).toBe(true);
+  });
+
+  it('keeps the browser token after saving the login when asked to', async () => {
+    const error = {
+      status: 401,
+      data: { requires_authorization: true, auth_metadata: { server_url: AUTHORITY } },
+    };
+    mocks.testConnection.mockReturnValue({ unwrap: () => Promise.reject(error) });
+    mocks.getRefreshToken.mockReturnValue('refresh-abc');
+    const { result } = render(REF, undefined, { keepBrowserToken: true });
+    await act(async () => result.current.login());
+
+    await act(async () => mocks.onOAuthSuccess());
+
+    expect(mocks.updateConfiguration).toHaveBeenCalled();
+    expect(mocks.logout).not.toHaveBeenCalled();
+  });
+
+  it('keys the login by the authority the caller derives from the credential, not the 401 server_url', async () => {
+    // Outlook, Teams and SharePoint 401s name Graph or the site as server_url, not the Entra authority.
+    const error = {
+      status: 401,
+      data: { requires_authorization: true, auth_metadata: { server_url: 'https://graph.microsoft.com' } },
+    };
+    mocks.testConnection.mockReturnValue({ unwrap: () => Promise.reject(error) });
+    mocks.items = [{ ...CREDENTIAL, data: { ...CREDENTIAL.data, oauth_discovery_endpoint: AUTHORITY } }];
+    const { result } = render(REF, undefined, {
+      getAuthority: credential => credential.data.oauth_discovery_endpoint,
+    });
+
+    await act(async () => result.current.login());
+
+    expect(mocks.handleConfigAuthRequired).toHaveBeenCalledWith(error.data, AUTHORITY, `uuid-1:${AUTHORITY}`);
+  });
+
+  it('passes the credential scopes to the authorize dialog', () => {
+    mocks.items = [{ ...CREDENTIAL, data: { ...CREDENTIAL.data, scopes: ['Mail.Read'] } }];
+    render();
+    expect(mocks.modalOptions.credentials.scopes).toEqual(['Mail.Read']);
+  });
+
+  it('logout also removes the kept browser token', async () => {
+    mocks.items = [CONNECTED];
+    const { result } = render(REF, undefined, { keepBrowserToken: true });
+
+    await act(async () => result.current.logout());
+
+    expect(mocks.logout).toHaveBeenCalledWith('uuid-1:undefined');
+    expect(mocks.updateConfiguration).toHaveBeenCalled();
   });
 });

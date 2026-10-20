@@ -2,7 +2,7 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Box, Typography, useTheme } from '@mui/material';
 
-import { DataverseLoginStatus } from '@/[fsd]/features/dataverse';
+import { StoredLoginHelpers, StoredLoginStatus } from '@/[fsd]/features/credentials';
 import { McpAuthStatus } from '@/[fsd]/features/mcp';
 import { OpenApiOAuthStatus } from '@/[fsd]/features/openapi/ui';
 import { SharepointOAuthStatus } from '@/[fsd]/features/sharepoint';
@@ -645,13 +645,24 @@ const ToolBase = memo(props => {
 
   const isSharepointToolkit = schema?.title === 'sharepoint';
   const isOpenApiToolkit = editToolDetail?.type === 'openapi';
-  const isDataverseToolkit = editToolDetail?.type === 'dataverse';
+  const storedLogin = StoredLoginHelpers.getStoredLoginConfig(editToolDetail?.type);
 
   return (
     <>
       {isAnyMcpType && <McpAuthStatus />}
-      {isSharepointToolkit && <SharepointOAuthStatus />}
-      {isDataverseToolkit && <DataverseLoginStatus onLoginChange={onCredentialReload} />}
+      {isSharepointToolkit && (
+        <SharepointOAuthStatus
+          loginExpired={StoredLoginHelpers.isLoginExpired(toolErrors.sharepoint_configuration)}
+          onLoginChange={onCredentialReload}
+        />
+      )}
+      {storedLogin && (
+        <StoredLoginStatus
+          {...storedLogin}
+          loginExpired={StoredLoginHelpers.isLoginExpired(toolErrors[storedLogin.settingsKey])}
+          onLoginChange={onCredentialReload}
+        />
+      )}
       {isOpenApiToolkit && showTools && <OpenApiOAuthStatus />}
 
       {shouldUseAccordionView && !shouldHideConfigurationHeader ? (

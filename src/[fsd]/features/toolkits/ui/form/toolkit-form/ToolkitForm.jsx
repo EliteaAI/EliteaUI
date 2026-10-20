@@ -462,7 +462,7 @@ export const ToolkitForm = memo(props => {
       return;
     }
 
-    const validationErrors = ToolkitFormHelpers.parseValidationErrors(error.data?.settings_errors);
+    const validationErrors = ToolkitFormHelpers.parseValidationResponse(error.data);
     if (Object.keys(validationErrors).length > 0) {
       // Suppress only "Field required" errors for fields that already have a value in the
       // current form state. This handles the race condition where credentials auto-select

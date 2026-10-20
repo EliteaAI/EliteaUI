@@ -4,24 +4,29 @@ import { useFormikContext } from 'formik';
 
 import { Box, Typography } from '@mui/material';
 
-import { useDataverseLogin } from '@/[fsd]/features/dataverse/lib/hooks';
+import { useStoredOAuthLogin } from '@/[fsd]/features/credentials/lib/hooks';
 import { McpAuthModal, McpLogoutModal } from '@/[fsd]/features/mcp';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import OnlineIcon from '@/assets/online-icon.svg?react';
 
-const DataverseLoginStatus = memo(props => {
-  const { onLoginChange } = props;
+// A toolkit-page "Connected / Login" bar for credentials that keep a Microsoft login in the vault.
+const StoredLoginStatus = memo(props => {
+  const { configurationType, settingsKey, getAuthority, keepBrowserToken, loginExpired, onLoginChange } =
+    props;
   const { values } = useFormikContext();
   const projectId = useSelectedProjectId();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const { hasCredential, credentialTitle, isConnected, isBusy, login, logout, modalProps } =
-    useDataverseLogin({
-      credentialRef: values?.settings?.dataverse_configuration,
+    useStoredOAuthLogin({
+      configurationType,
+      credentialRef: values?.settings?.[settingsKey],
       projectId,
-      // Re-runs toolkit validation so the stale "Sign in" warning under the credential goes away
+      getAuthority,
+      keepBrowserToken,
+      loginExpired,
       onLoginChange,
     });
 
@@ -32,7 +37,7 @@ const DataverseLoginStatus = memo(props => {
     logout();
   }, [logout]);
 
-  const styles = dataverseLoginStatusStyles(isConnected);
+  const styles = storedLoginStatusStyles(isConnected);
 
   if (!hasCredential) return null;
 
@@ -44,7 +49,7 @@ const DataverseLoginStatus = memo(props => {
           <Typography
             variant="bodySmall"
             sx={styles.statusText}
-            data-testid="dataverse-connection-status"
+            data-testid="stored-login-status"
           >
             {isConnected ? 'Connected!' : 'Not Connected'}
           </Typography>
@@ -53,7 +58,7 @@ const DataverseLoginStatus = memo(props => {
           onClick={isConnected ? onOpenLogout : login}
           disabled={isBusy}
           variant={BUTTON_VARIANTS.secondary}
-          data-testid="dataverse-connection-button"
+          data-testid="stored-login-button"
         >
           {isConnected ? 'Logout' : isBusy ? 'Logging in...' : 'Login'}
         </Button.BaseBtn>
@@ -69,10 +74,10 @@ const DataverseLoginStatus = memo(props => {
   );
 });
 
-DataverseLoginStatus.displayName = 'DataverseLoginStatus';
+StoredLoginStatus.displayName = 'StoredLoginStatus';
 
 /** @type {MuiSx} */
-const dataverseLoginStatusStyles = isConnected => ({
+const storedLoginStatusStyles = isConnected => ({
   statusIcon: {
     width: '.875rem',
     height: '.875rem',
@@ -110,4 +115,4 @@ const dataverseLoginStatusStyles = isConnected => ({
   }),
 });
 
-export default DataverseLoginStatus;
+export default StoredLoginStatus;
