@@ -14,6 +14,7 @@ import { useAnalyticsCostsQuery } from '@/api';
 import CostTable from './components/CostTable';
 import EntityKindChip from './components/EntityKindChip';
 import RunAnalyticsEmptyState from './components/RunAnalyticsEmptyState';
+import ToolSpendTable from './components/ToolSpendTable';
 
 const toCostRows = (items, mapRow) => {
   const sorted = [...(items || [])].sort((a, b) => (b.total_cost ?? 0) - (a.total_cost ?? 0));
@@ -357,6 +358,14 @@ const AnalyticsCosts = memo(props => {
           sortBy={evalSort.sortBy}
           sortOrder={evalSort.sortOrder}
           onSort={handleEvalSort}
+        />
+      )}
+
+      {/* Older backends omit by_tool_spend; nothing to show then */}
+      {data?.by_tool_spend && (
+        <ToolSpendTable
+          rows={data.by_tool_spend}
+          emptyState={`No paid tool usage (e.g. web search) for ${scopeText}.`}
         />
       )}
     </Box>

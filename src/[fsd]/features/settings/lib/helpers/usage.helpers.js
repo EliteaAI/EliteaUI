@@ -118,3 +118,14 @@ export const formatResetLabel = resetsAt => {
 
   return `Resets in ${days} days`;
 };
+
+// Headline for one paid tool on the Usage page; failed reads and redacted payloads never show $0
+export const toolSpendLabel = (item, canSeeAmounts) => {
+  if (item.enabled === false) return `${item.label}: turned off for this project`;
+  if (item.spend_available === false) return `${item.label}: usage temporarily unavailable`;
+  if (canSeeAmounts) {
+    return `${item.label}: ${formatMoney(item.spend, item.currency)} of ${formatLimit(item.effective_limit, item.currency)}`;
+  }
+  const limited = item.percent_used !== null && item.percent_used !== undefined;
+  return `${item.label}: ${limited ? `${item.percent_used}% of limit` : 'no limit'}`;
+};

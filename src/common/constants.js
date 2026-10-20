@@ -40,8 +40,6 @@ export const MISSING_ENVS = [
   .filter(item => item.value === null || item.value === undefined)
   .map(item => item.key);
 
-export const MIN_LARGE_WINDOW_WIDTH = 1200;
-
 export const INITIAL_CARD_DISPLAY_COUNT = {
   LARGE_SCREEN: 8,
   DEFAULT: 6,
@@ -1084,6 +1082,10 @@ export const NotificationType = {
   BudgetLimitReached: 'budget_limit_reached',
   MemberBudgetThresholdReached: 'member_budget_threshold_reached',
   MemberBudgetLimitReached: 'member_budget_limit_reached',
+  ToolSpendThresholdReached: 'tool_spend_threshold_reached',
+  ToolSpendLimitReached: 'tool_spend_limit_reached',
+  MemberToolSpendThresholdReached: 'member_tool_spend_threshold_reached',
+  MemberToolSpendLimitReached: 'member_tool_spend_limit_reached',
 };
 
 export const dummyConversation = { name: '', chat_history: [], participants: [], is_private: true };

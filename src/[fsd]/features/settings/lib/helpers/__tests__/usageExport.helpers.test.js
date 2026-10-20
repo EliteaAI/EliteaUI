@@ -12,6 +12,7 @@ const {
   buildMembersSheet,
   buildModelSheet,
   buildSummarySheet,
+  buildToolSpendSheet,
   buildUsageSheets,
   usageExportFileName,
 } = await import('../usageExport.helpers');
@@ -311,6 +312,46 @@ describe('sheet selection per scope', () => {
     });
 
     expect(sheets.find(sheet => sheet.sheetName === 'Members').rows).toHaveLength(3);
+  });
+});
+
+describe('paid tools sheet', () => {
+  const webSearch = {
+    feature: 'web_search',
+    label: 'Web search',
+    spend: 2.5,
+    effective_limit: 10,
+    percent_used: 25,
+    calls: 31,
+  };
+
+  it('is added only when the payload lists paid tools', () => {
+    const names = data =>
+      buildUsageSheets({ data, projectName: 'P', isPersonalProject: false, scope: 'user' }).map(
+        s => s.sheetName,
+      );
+
+    expect(names(limitedUsage())).not.toContain('Paid Tools');
+    expect(names({ ...limitedUsage(), tool_spend: [webSearch] })).toContain('Paid Tools');
+  });
+
+  it('carries spend, limit, percent and calls per tool', () => {
+    expect(buildToolSpendSheet({ tool_spend: [webSearch] }).rows).toEqual([
+      { label: 'Web search', spend: 2.5, limit: 10, percent: 25, calls: 31 },
+    ]);
+  });
+
+  // Redacted payloads drop amounts entirely; the sheet must not invent zeros or "Unlimited"
+  it('leaves amounts blank for members who cannot see cost', () => {
+    const redacted = { feature: 'web_search', label: 'Web search', percent_used: 25, calls: 31 };
+
+    expect(buildToolSpendSheet({ tool_spend: [redacted] }).rows[0]).toEqual({
+      label: 'Web search',
+      spend: '',
+      limit: '',
+      percent: 25,
+      calls: 31,
+    });
   });
 });
 

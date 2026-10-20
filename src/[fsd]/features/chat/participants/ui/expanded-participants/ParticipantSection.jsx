@@ -4,7 +4,7 @@ import { Box } from '@mui/material';
 
 import { getChatParticipantUniqueId } from '@/[fsd]/features/chat/participants/lib/helpers';
 import ParticipantsAccordion from '@/[fsd]/features/chat/participants/ui/expanded-participants/ParticipantsAccordion';
-import useIsSmallWindow from '@/hooks/useIsSmallWindow';
+import { useIsSmallWindow } from '@/[fsd]/shared/lib/hooks';
 
 import ParticipantItem from './ParticipantItem';
 
