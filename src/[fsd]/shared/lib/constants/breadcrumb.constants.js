@@ -143,4 +143,6 @@ export const BREADCRUMB_REGISTRY = {
     parent: RouteDefinitions.PipelineRunHistory,
     label: 'Analytics',
   },
+
+  [RouteDefinitions.Schedules]: { label: PathSessionMap[RouteDefinitions.Schedules] },
 };

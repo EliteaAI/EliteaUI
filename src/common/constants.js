@@ -575,6 +575,17 @@ export const PERMISSIONS = {
     // webhook: 'models.applications.webhook.post', // According to Mikhail's comment, this permission is not used
     delete: 'models.applications.application.delete',
   },
+  schedules: {
+    list: 'models.applications.schedules.list',
+    details: 'models.applications.schedules.details',
+    create: 'models.applications.schedules.create',
+    update: 'models.applications.schedules.update',
+    delete: 'models.applications.schedules.delete',
+    run: 'models.applications.schedules.run',
+    admin: 'models.applications.schedules.admin',
+    export: 'models.applications.schedules.export',
+    import: 'models.applications.schedules.import',
+  },
   skills: {
     list: 'models.applications.skills.list',
     publish: 'models.applications.skills.publish',
@@ -667,6 +678,7 @@ export const PERMISSION_GROUPS = {
   chat: [PERMISSIONS.chat.folders.get],
   agents: [PERMISSIONS.applications.list],
   pipelines: [PERMISSIONS.pipelines.list],
+  schedules: [PERMISSIONS.schedules.list],
   credentials: [PERMISSIONS.toolkits.list],
   artifacts: [PERMISSIONS.artifacts.view],
   toolkits: [PERMISSIONS.toolkits.list],
