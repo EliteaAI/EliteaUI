@@ -42,14 +42,14 @@ describe('EL-7011 US-40 R2.1 schedule notice link', () => {
   it('links a run event to the run of its schedule', () => {
     renderMessage(build('schedule_run_failed', { schedule_id: 12, conversation_id: 99 }));
     const link = screen.getByRole('link', { name: 'Nightly sync' });
-    expect(link.getAttribute('href')).toMatch(/\/7\/schedules\/12\?history_run_id=99$/);
+    expect(link.getAttribute('href')).toMatch(/\/7\/settings\/schedules\/12\?history_run_id=99$/);
     expect(link).toHaveAttribute('target', '_blank');
   });
 
   it('links an admin edit to the schedule without a run', () => {
     renderMessage(build('schedule_edited_by_admin', { schedule_id: 12 }));
     expect(screen.getByRole('link', { name: 'Nightly sync' }).getAttribute('href')).toMatch(
-      /\/7\/schedules\/12$/,
+      /\/7\/settings\/schedules\/12$/,
     );
   });
 });
@@ -60,7 +60,9 @@ describe('EL-7011 US-40 R1.4 and R2.5 schedule notice text', () => {
   it('shows the message of an owner change with the schedule name', () => {
     renderMessage(build('schedule_owner_changed', { schedule_id: 12 }));
     expect(screen.getByText('Nightly sync')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Nightly sync' }).getAttribute('href')).toMatch(/\/7\/schedules$/);
+    expect(screen.getByRole('link', { name: 'Nightly sync' }).getAttribute('href')).toMatch(
+      /\/7\/settings\/schedules$/,
+    );
   });
 
   it('shows plain text without a link when the notice has no schedule_id', () => {

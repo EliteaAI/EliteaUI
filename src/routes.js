@@ -35,8 +35,8 @@ const RouteDefinitions = {
   PipelineDetail: '/pipelines/:tab/:agentId',
   PipelineRunHistory: '/pipelines/:tab/:agentId/history',
   PipelineRunAnalytics: '/pipelines/:tab/:agentId/history/analytics',
-  Schedules: '/schedules',
-  CreateSchedule: '/schedules/create',
+  Schedules: '/settings/schedules',
+  CreateSchedule: '/settings/schedules/create',
 
   Credentials: '/credentials',
   CredentialsWithTab: '/credentials/:tab',

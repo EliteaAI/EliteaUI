@@ -5,7 +5,6 @@ export const RouteToSideBarItemMap = [
   { route: RouteDefinitions.Applications, item: 'agents' },
   { route: RouteDefinitions.Skills, item: 'skills' },
   { route: RouteDefinitions.Pipelines, item: 'pipelines' },
-  { route: RouteDefinitions.Schedules, item: 'schedules' },
   { route: RouteDefinitions.Artifacts, item: 'artifacts' },
   { route: RouteDefinitions.Credentials, item: 'credentials' },
   { route: RouteDefinitions.Toolkits, item: 'toolkits' },
