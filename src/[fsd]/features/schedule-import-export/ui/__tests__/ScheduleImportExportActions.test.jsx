@@ -32,7 +32,16 @@ vi.mock('@/common/utils', async importOriginal => ({
   buildErrorMessage: err => err?.data?.error ?? 'Unknown error',
 }));
 vi.mock('../ImportSchedulesDialog', () => ({
-  default: ({ open, projectId }) => (open ? <div data-testid="import-dialog">{projectId}</div> : null),
+  default: ({ projectId, onClose }) => (
+    <div data-testid="import-dialog">
+      {projectId}
+      <button
+        type="button"
+        data-testid="import-dialog-close"
+        onClick={onClose}
+      />
+    </div>
+  ),
 }));
 
 const theme = createTheme({ palette: lightPalette });
@@ -88,6 +97,9 @@ describe('EL-7011 ScheduleImportExportActions', () => {
     await waitFor(() => expect(click).toHaveBeenCalled());
     expect(mocks.exportSchedules).toHaveBeenCalledWith({ projectId: 7 });
     expect(URL.createObjectURL).toHaveBeenCalledWith(blob);
+    // downloadBlobFile cleans up after 100 ms; wait so the timer does not outlive the test
+    await new Promise(resolve => setTimeout(resolve, 120));
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:x');
     click.mockRestore();
   });
 
@@ -112,5 +124,15 @@ describe('EL-7011 ScheduleImportExportActions', () => {
     expect(screen.queryByTestId('import-dialog')).toBeNull();
     fireEvent.click(screen.getByTestId('schedules-import-button'));
     expect(screen.getByTestId('import-dialog')).toHaveTextContent('7');
+  });
+
+  it('R3.1 unmounts the dialog on close so a reopened dialog starts clean', () => {
+    allow('models.applications.schedules.import');
+    renderActions();
+    fireEvent.click(screen.getByTestId('schedules-import-button'));
+    fireEvent.click(screen.getByTestId('import-dialog-close'));
+    expect(screen.queryByTestId('import-dialog')).toBeNull();
+    fireEvent.click(screen.getByTestId('schedules-import-button'));
+    expect(screen.getByTestId('import-dialog')).toBeInTheDocument();
   });
 });

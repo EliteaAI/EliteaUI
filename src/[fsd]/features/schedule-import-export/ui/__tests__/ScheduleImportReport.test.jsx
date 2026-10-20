@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import '@testing-library/jest-dom/vitest';
 import { cleanup, render, screen, within } from '@testing-library/react';
@@ -9,7 +9,10 @@ import ScheduleImportReport from '../ScheduleImportReport';
 // EL-7011 R3.3: the import report shows created, skipped and failed groups with counts and icons.
 
 const REPORT = {
-  created: [{ name: 'Daily', schedule_id: 1, note: 'agent renamed' }, { name: 'Weekly', schedule_id: 2 }],
+  created: [
+    { name: 'Daily', schedule_id: 1, note: 'agent renamed' },
+    { name: 'Weekly', schedule_id: 2 },
+  ],
   skipped: [{ name: 'Old', reason: 'already exists' }],
   failed: [{ name: 'Bad', reason: 'invalid cron' }],
 };
@@ -19,7 +22,11 @@ describe('EL-7011 R3.3 ScheduleImportReport', () => {
 
   it('shows three groups with counts and an icon before each', () => {
     render(<ScheduleImportReport report={REPORT} />);
-    const expected = { created: ['Created (2)', 'success'], skipped: ['Skipped (1)', 'info'], failed: ['Failed (1)', 'error'] };
+    const expected = {
+      created: ['Created (2)', 'success'],
+      skipped: ['Skipped (1)', 'info'],
+      failed: ['Failed (1)', 'error'],
+    };
     Object.entries(expected).forEach(([key, [title, icon]]) => {
       const group = screen.getByTestId(`import-report-${key}`);
       expect(within(group).getByText(title)).toBeInTheDocument();
@@ -36,8 +43,33 @@ describe('EL-7011 R3.3 ScheduleImportReport', () => {
   });
 
   it('hides empty groups', () => {
-    render(<ScheduleImportReport report={{ created: [], skipped: [], failed: [{ name: 'Bad', reason: 'x' }] }} />);
+    render(
+      <ScheduleImportReport report={{ created: [], skipped: [], failed: [{ name: 'Bad', reason: 'x' }] }} />,
+    );
     expect(screen.queryByTestId('import-report-created')).toBeNull();
     expect(screen.getByTestId('import-report-failed')).toBeInTheDocument();
+  });
+
+  it('lists duplicate names without key collisions', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    render(
+      <ScheduleImportReport
+        report={{
+          failed: [
+            { name: 'Dup', reason: 'a' },
+            { name: 'Dup', reason: 'b' },
+          ],
+        }}
+      />,
+    );
+
+    expect(screen.getAllByText(/Dup/)).toHaveLength(2);
+    expect(error).not.toHaveBeenCalled();
+    error.mockRestore();
+  });
+
+  it('renders the items as a list', () => {
+    render(<ScheduleImportReport report={REPORT} />);
+    expect(screen.getAllByRole('listitem')).toHaveLength(4);
   });
 });

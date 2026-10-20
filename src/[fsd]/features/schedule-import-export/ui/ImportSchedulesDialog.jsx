@@ -25,7 +25,9 @@ const ImportSchedulesDialog = memo(({ open, onClose, projectId }) => {
   const handlePick = useCallback(() => inputRef.current?.click(), []);
 
   const handleFileChange = useCallback(event => {
-    setFile(event.target.files?.[0] ?? null);
+    const input = event.target;
+    setFile(input.files?.[0] ?? null);
+    input.value = '';
     setError('');
     setReport(null);
   }, []);
@@ -66,6 +68,7 @@ const ImportSchedulesDialog = memo(({ open, onClose, projectId }) => {
           <input
             ref={inputRef}
             type="file"
+            aria-label="Schedules YAML file"
             accept=".yaml,.yml"
             hidden
             onChange={handleFileChange}

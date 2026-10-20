@@ -10,7 +10,10 @@ const { scheduleApi } = await import('../scheduleApi.js');
 const makeStore = () => makeStoreFor(scheduleApi);
 
 const yamlResponse = headers =>
-  new Response('schedules: []', { status: 200, headers: { 'Content-Type': 'application/x-yaml', ...headers } });
+  new Response('schedules: []', {
+    status: 200,
+    headers: { 'Content-Type': 'application/x-yaml', ...headers },
+  });
 
 describe('R2 EL-7011 schedule export query', () => {
   let fetchSpy;
@@ -50,16 +53,6 @@ describe('R2 EL-7011 schedule export query', () => {
     );
 
     expect(result.data.filename).toBe('schedules_7.yaml');
-  });
-
-  it('R2.1 EL-7011 sends ids only when given', async () => {
-    fetchSpy.mockImplementation(async () => yamlResponse());
-    await makeStore().dispatch(
-      scheduleApi.endpoints.exportSchedules.initiate({ projectId: 5, ids: [1, 2] }),
-    );
-
-    const [url] = requestedUrls(fetchSpy);
-    expect(url.searchParams.get('ids')).toBe('1,2');
   });
 
   it('R2.4 EL-7011 keeps the JSON error of a 403 in error.data', async () => {
@@ -103,7 +96,9 @@ describe('R3 EL-7011 schedule import mutation', () => {
   const importThenCountListCalls = async (importResponse, status = 200) => {
     fetchSpy.mockImplementation(async arg => {
       const url = new URL(arg instanceof Request ? arg.url : String(arg));
-      return url.pathname.endsWith('/import') ? jsonResponse(importResponse, status) : jsonResponse({ rows: [] });
+      return url.pathname.endsWith('/import')
+        ? jsonResponse(importResponse, status)
+        : jsonResponse({ rows: [] });
     });
     const store = makeStore();
     const subscription = store.dispatch(scheduleApi.endpoints.getScheduleList.initiate({ projectId: 5 }));

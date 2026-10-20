@@ -38,7 +38,8 @@ const renderDialog = (onClose = vi.fn()) => {
   return onClose;
 };
 
-const input = () => screen.getByTestId('import-schedules-dialog').ownerDocument.querySelector('input[type="file"]');
+const input = () =>
+  screen.getByTestId('import-schedules-dialog').ownerDocument.querySelector('input[type="file"]');
 const pick = (name = 'schedules.yaml') => {
   const file = new File(['x'], name);
   fireEvent.change(input(), { target: { files: [file] } });
@@ -61,6 +62,28 @@ describe('EL-7011 R3.1 ImportSchedulesDialog file pick', () => {
     pick('daily.yml');
     expect(screen.getByText('daily.yml')).toBeInTheDocument();
     expect(screen.getByTestId('import-schedules-upload')).toBeEnabled();
+  });
+});
+
+describe('EL-7011 R3.1 ImportSchedulesDialog file input', () => {
+  it('has an accessible name', () => {
+    renderDialog();
+
+    expect(screen.getByLabelText('Schedules YAML file', { selector: 'input' })).toBe(input());
+  });
+
+  it('clears the input value after reading so the same file can be picked again', () => {
+    renderDialog();
+    const setValue = vi.fn();
+    Object.defineProperty(input(), 'value', {
+      configurable: true,
+      get: () => 'C:\\fakepath\\a.yaml',
+      set: setValue,
+    });
+
+    pick();
+
+    expect(setValue).toHaveBeenCalledWith('');
   });
 });
 

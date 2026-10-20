@@ -1,26 +1,17 @@
 import { memo, useCallback, useState } from 'react';
 
+import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { useLazyExportSchedulesQuery } from '@/[fsd]/entities/schedule';
 import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import ImportIcon from '@/assets/import-icon.svg?react';
-import StyledTooltip from '@/ComponentsLib/Tooltip';
-import ExportIcon from '@/components/Icons/ExportIcon';
 import { PERMISSIONS } from '@/common/constants';
-import { buildErrorMessage } from '@/common/utils';
+import { buildErrorMessage, downloadBlobFile } from '@/common/utils';
+import ExportIcon from '@/components/Icons/ExportIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
 
 import ImportSchedulesDialog from './ImportSchedulesDialog';
-
-const saveBlob = (blob, filename) => {
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-  link.click();
-  URL.revokeObjectURL(url);
-};
 
 const ScheduleImportExportActions = memo(({ projectId }) => {
   const { checkPermission } = useCheckPermission();
@@ -31,7 +22,7 @@ const ScheduleImportExportActions = memo(({ projectId }) => {
   const handleExport = useCallback(async () => {
     const { data, error } = await exportSchedules({ projectId });
     if (error) toastError(buildErrorMessage(error));
-    else saveBlob(data.blob, data.filename);
+    else downloadBlobFile(data.blob, data.filename);
   }, [exportSchedules, projectId, toastError]);
   const openImport = useCallback(() => setIsImportOpen(true), []);
   const closeImport = useCallback(() => setIsImportOpen(false), []);
@@ -72,9 +63,9 @@ const ScheduleImportExportActions = memo(({ projectId }) => {
           </Button.BaseBtn>
         </StyledTooltip>
       )}
-      {canImport && (
+      {canImport && isImportOpen && (
         <ImportSchedulesDialog
-          open={isImportOpen}
+          open
           onClose={closeImport}
           projectId={projectId}
         />
