@@ -4,8 +4,7 @@ import { useFormik } from 'formik';
 
 import { Box, Typography } from '@mui/material';
 
-import { getDefaultVersionId } from '@/[fsd]/entities/version/lib/helpers';
-import VersionSelect from '@/[fsd]/entities/version/ui/VersionSelect';
+import { VersionSelect, getDefaultVersionId } from '@/[fsd]/entities/version';
 import {
   getEntityLock,
   isPromptShown,
@@ -35,7 +34,10 @@ const RUN_MODE_ITEMS = [
   { value: 'entry_point', label: 'Entry point' },
   { value: 'prompt', label: 'Prompt' },
 ];
-const TYPE_LABEL = { agent: 'Agent', pipeline: 'Pipeline' };
+const TYPE_LABEL = Object.fromEntries(TYPE_ITEMS.map(({ value, label }) => [value, label]));
+// Fields with their own message in the form; a 400 for any other field goes to the banner (R6.3)
+const FIELDS_WITH_INPUT = ['name', 'description', 'application_id', 'version_id'];
+const PROMPT_FIELDS = ['prompt', 'variables'];
 const AGENTS_TYPE = { agent: 'classic', pipeline: 'pipeline' };
 
 const getEntityType = details => (details?.version_details?.agent_type === 'pipeline' ? 'pipeline' : 'agent');
@@ -66,7 +68,10 @@ const Section = ({ title, children }) => (
   </Box>
 );
 
-/** `children` fill SCHEDULE SETTINGS; `onSubmit(body)` returns a promise that rejects with the API error. */
+/**
+ * `children({ values, setFieldValue })` fills SCHEDULE SETTINGS from the form values (cron, expires_at);
+ * `onSubmit(body)` returns a promise that rejects with the API error.
+ */
 const ScheduleForm = memo(props => {
   const { initialValues, lockedEntity, onSubmit, onCancel, children } = props;
 
@@ -85,20 +90,24 @@ const ScheduleForm = memo(props => {
         await onSubmit(toCreateBody(values));
       } catch (error) {
         const fieldErrors = error?.status === 400 ? toFieldErrors(error) : {};
-        if (Object.keys(fieldErrors).length) setErrors(fieldErrors);
+        const shownFields = isPromptShown(values)
+          ? [...FIELDS_WITH_INPUT, ...PROMPT_FIELDS]
+          : FIELDS_WITH_INPUT;
+        if (Object.keys(fieldErrors).some(field => shownFields.includes(field))) setErrors(fieldErrors);
         else if (error?.status === 400 || error?.status === 409) setBanner(error.data?.error ?? '');
         else toastError('Failed to save the schedule');
       }
     },
   });
-  const { values, errors, touched, setFieldValue, setValues } = formik;
+  const { values, errors, submitCount, setFieldValue, setValues, resetForm } = formik;
   // Unsaved changes open the leave dialog (R1.3); a save in progress never does
   const blockOptions = useMemo(
     () => ({ blockCondition: formik.dirty && !formik.isSubmitting }),
     [formik.dirty, formik.isSubmitting],
   );
   useNavBlocker(blockOptions);
-  const fieldError = name => (touched[name] || errors[name] ? errors[name] : '');
+  // Messages show after the first Save, so a half-filled form shows no required errors
+  const fieldError = name => (submitCount ? errors[name] : '');
 
   const { data: listData, isFetching } = useApplicationListQuery({
     projectId,
@@ -116,15 +125,27 @@ const ScheduleForm = memo(props => {
   useEffect(() => {
     if (lockActive && !isDetailsFetching && lock.unavailable) {
       setLockFailed(true);
-      setFieldValue('application_id', '');
+      // Clear the entity in the baseline too, so only the user's own edits make the form dirty (R1.3)
+      resetForm({ values: { ...initialValues, application_id: '' } });
+      setValues(prev => ({ ...prev, application_id: '' }), false);
     }
-  }, [lockActive, isDetailsFetching, lock.unavailable, setFieldValue]);
+  }, [lockActive, isDetailsFetching, lock.unavailable, initialValues, resetForm, setValues]);
 
+  const lockRejected = lockActive && lock.unavailable;
   useEffect(() => {
-    if (details && String(details.id) === String(values.application_id) && !values.version_id) {
-      setFieldValue('version_id', getDefaultVersionId(details));
+    if (
+      details &&
+      !lockRejected &&
+      String(details.id) === String(values.application_id) &&
+      !values.version_id
+    ) {
+      const versionId = getDefaultVersionId(details);
+      // The preset for the URL entity belongs to the baseline: opening and leaving asks nothing (R1.3)
+      if (!formik.dirty && String(values.application_id) === String(initialValues.application_id))
+        resetForm({ values: { ...values, version_id: versionId } });
+      else setFieldValue('version_id', versionId);
     }
-  }, [details, values.application_id, values.version_id, setFieldValue]);
+  }, [details, lockRejected, values, initialValues.application_id, formik.dirty, resetForm, setFieldValue]);
 
   const options = useMemo(() => {
     const rows = listData?.rows ?? [];
@@ -141,27 +162,35 @@ const ScheduleForm = memo(props => {
     }));
   }, [listData, details, values.type]);
 
+  // setFieldValue changes one field only, so a fast second change keeps the first; radio clicks reset many fields
   const handleTypeChange = useCallback(
     type => {
-      setValues(resetWhatToRun(values, type));
+      setValues(prev => resetWhatToRun(prev, type));
       setList({ page: 0, query: '' });
     },
-    [setValues, values],
+    [setValues],
   );
 
   const handleEntityChange = useCallback(
     id => {
-      setValues({ ...values, application_id: id, version_id: '' });
+      setFieldValue('application_id', id);
+      setFieldValue('version_id', '');
     },
-    [setValues, values],
+    [setFieldValue],
   );
 
   const handlePromptChange = useCallback(
     event => {
       const prompt = event.target.value;
-      setValues({ ...values, prompt, variables: syncPromptVariables(prompt, values.variables) });
+      setFieldValue('prompt', prompt);
+      setFieldValue('variables', syncPromptVariables(prompt, values.variables));
     },
-    [setValues, values],
+    [setFieldValue, values.variables],
+  );
+
+  const handleRunModeChange = useCallback(
+    runMode => setValues(prev => ({ ...prev, run_mode: runMode, prompt: '', variables: [] })),
+    [setValues],
   );
 
   const handleVariableChange = useCallback(
@@ -254,7 +283,7 @@ const ScheduleForm = memo(props => {
             testId="schedule-run-mode"
             items={RUN_MODE_ITEMS}
             value={values.run_mode}
-            onChange={runMode => setValues({ ...values, run_mode: runMode, prompt: '', variables: [] })}
+            onChange={handleRunModeChange}
           />
         )}
         {showPrompt && (
@@ -277,7 +306,7 @@ const ScheduleForm = memo(props => {
         )}
       </Section>
 
-      <Section title="SCHEDULE SETTINGS">{children}</Section>
+      <Section title="SCHEDULE SETTINGS">{children?.({ values, setFieldValue })}</Section>
 
       <Box sx={styles.actions}>
         <BaseBtn

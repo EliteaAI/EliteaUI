@@ -1,18 +1,14 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { Box } from '@mui/material';
 
 import { useCreateScheduleMutation } from '@/[fsd]/entities/schedule';
-import { ScheduleForm } from '@/[fsd]/features/schedule';
-import { buildInitialValues } from '@/[fsd]/features/schedule/lib/helpers';
-import { ScheduleHelpers } from '@/[fsd]/shared/lib/helpers';
+import { DEFAULT_SCHEDULE_CRON, ScheduleForm, buildInitialValues } from '@/[fsd]/features/schedule';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { Breadcrumbs } from '@/[fsd]/shared/ui';
 import { ScheduleSettingsSection, StopOnDateField } from '@/[fsd]/shared/ui/schedule';
-
-const DEFAULT_CRON = '0 0 * * 6';
 
 const CreateSchedulePage = () => {
   const projectId = useSelectedProjectId();
@@ -20,8 +16,6 @@ const CreateSchedulePage = () => {
   const [searchParams] = useSearchParams();
   const { state } = useLocation();
   const [createSchedule] = useCreateScheduleMutation();
-  const [cron, setCron] = useState(DEFAULT_CRON);
-  const [expiresAt, setExpiresAt] = useState(null);
 
   const { values, urlEntity, returnTo } = useMemo(
     () => buildInitialValues(searchParams, state),
@@ -30,16 +24,10 @@ const CreateSchedulePage = () => {
 
   const onSubmit = useCallback(
     async body => {
-      await createSchedule({
-        projectId,
-        ...body,
-        cron,
-        timezone: ScheduleHelpers.getBrowserTimezone(),
-        expires_at: expiresAt,
-      }).unwrap();
+      await createSchedule({ projectId, enabled: true, ...body }).unwrap();
       navigate(returnTo);
     },
-    [createSchedule, cron, expiresAt, navigate, projectId, returnTo],
+    [createSchedule, navigate, projectId, returnTo],
   );
 
   const onCancel = useCallback(() => navigate(returnTo), [navigate, returnTo]);
@@ -53,15 +41,19 @@ const CreateSchedulePage = () => {
         onSubmit={onSubmit}
         onCancel={onCancel}
       >
-        <ScheduleSettingsSection
-          value={cron}
-          onChange={setCron}
-          sourceCron={DEFAULT_CRON}
-        />
-        <StopOnDateField
-          value={expiresAt}
-          onChange={setExpiresAt}
-        />
+        {form => (
+          <>
+            <ScheduleSettingsSection
+              value={form.values.cron}
+              onChange={cron => form.setFieldValue('cron', cron)}
+              sourceCron={DEFAULT_SCHEDULE_CRON}
+            />
+            <StopOnDateField
+              value={form.values.expires_at}
+              onChange={date => form.setFieldValue('expires_at', date)}
+            />
+          </>
+        )}
       </ScheduleForm>
     </Box>
   );

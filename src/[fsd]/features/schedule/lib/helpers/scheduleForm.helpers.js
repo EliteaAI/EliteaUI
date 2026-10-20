@@ -1,18 +1,26 @@
 import * as Yup from 'yup';
 
+import { ScheduleHelpers } from '@/[fsd]/shared/lib/helpers';
 import { MAX_DESCRIPTION_LENGTH } from '@/common/constants';
 import { contextResolver } from '@/common/utils';
+import RouteDefinitions from '@/routes';
 
 const ENTITY_TYPES = ['agent', 'pipeline'];
 const ENTRY_POINT = 'entry_point';
-const DEFAULT_RETURN_TO = '/schedules';
+// An in-app path: one leading slash, so `//host` and `https://host` never pass
+const IN_APP_PATH = /^\/(?!\/)/;
+
+export const DEFAULT_SCHEDULE_CRON = '0 0 * * 6';
 
 const defaultRunMode = type => (type === 'pipeline' ? ENTRY_POINT : null);
 
 export const isPromptShown = ({ type, run_mode }) => type === 'agent' || run_mode === 'prompt';
 
 export const scheduleFormSchema = Yup.object({
+  name: Yup.string().trim().required('Name is required'),
   description: Yup.string().max(MAX_DESCRIPTION_LENGTH),
+  application_id: Yup.string().required('Choose an agent or a pipeline'),
+  version_id: Yup.string().required('Choose a version'),
 }).test('prompt-required', 'Prompt is required', function (values) {
   return !isPromptShown(values) || !!values.prompt?.trim() || this.createError({ path: 'prompt' });
 });
@@ -37,14 +45,18 @@ export const buildInitialValues = (searchParams, locationState) => {
   const entityId = searchParams.get('entityId');
   const urlEntity = ENTITY_TYPES.includes(entityType) && entityId ? { type: entityType, id: entityId } : null;
   const type = urlEntity?.type ?? 'agent';
+  const returnTo = locationState?.returnTo;
 
   return {
     values: {
       ...resetWhatToRun({ name: '', description: '' }, type),
       application_id: urlEntity?.id ?? '',
+      cron: DEFAULT_SCHEDULE_CRON,
+      timezone: ScheduleHelpers.getBrowserTimezone(),
+      expires_at: null,
     },
     urlEntity,
-    returnTo: locationState?.returnTo ?? DEFAULT_RETURN_TO,
+    returnTo: IN_APP_PATH.test(returnTo) ? returnTo : RouteDefinitions.Schedules,
   };
 };
 
@@ -54,10 +66,21 @@ export const getEntityLock = (urlEntity, entity) => {
   return { locked, unavailable: !locked };
 };
 
-export const toCreateBody = ({ type, description, run_mode, prompt, variables, ...rest }) => {
+export const toCreateBody = ({
+  name,
+  description,
+  type,
+  application_id,
+  version_id,
+  run_mode,
+  prompt,
+  variables,
+  cron,
+  timezone,
+  expires_at,
+}) => {
   const mode = type === 'agent' ? null : run_mode;
   const sendsPrompt = isPromptShown({ type, run_mode: mode });
-  const { name, application_id, version_id, cron, timezone, expires_at } = rest;
 
   return {
     name,

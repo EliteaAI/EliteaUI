@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { MAX_DESCRIPTION_LENGTH } from '@/common/constants';
 
 import {
+  DEFAULT_SCHEDULE_CRON,
   buildInitialValues,
   getEntityLock,
   isPromptShown,
@@ -35,6 +36,16 @@ describe('EL-7011 R2.3 description limit', () => {
     await expect(
       scheduleFormSchema.validate({ ...agentValues, description: 'a'.repeat(MAX_DESCRIPTION_LENGTH) }),
     ).resolves.toBeTruthy();
+  });
+});
+
+describe('EL-7011 R6.1 required fields', () => {
+  it('schedule form schema asks for a name, an entity and a version', async () => {
+    const empty = { ...agentValues, name: ' ', application_id: '', version_id: null };
+    const error = await scheduleFormSchema.validate(empty, { abortEarly: false }).catch(e => e);
+    expect(error.errors).toEqual(
+      expect.arrayContaining(['Name is required', 'Choose an agent or a pipeline', 'Choose a version']),
+    );
   });
 });
 
@@ -116,6 +127,22 @@ describe('EL-7011 R5.1 and R5.3 entity from the URL', () => {
     expect(urlEntity).toBeNull();
     expect(values).toMatchObject({ type: 'agent', application_id: '', run_mode: null, variables: [] });
     expect(returnTo).toBe('/schedules');
+  });
+
+  it('R1.3 EL-7011 buildInitialValues holds the schedule settings in the form values', () => {
+    const { values } = buildInitialValues(new URLSearchParams(''), null);
+    expect(values).toMatchObject({
+      cron: DEFAULT_SCHEDULE_CRON,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      expires_at: null,
+    });
+  });
+
+  it('R6.5 EL-7011 buildInitialValues accepts only an in-app returnTo path', () => {
+    const returnTo = state => buildInitialValues(new URLSearchParams(''), { returnTo: state }).returnTo;
+    expect(returnTo('//evil.example')).toBe('/schedules');
+    expect(returnTo('https://evil.example')).toBe('/schedules');
+    expect(returnTo('/agents/3')).toBe('/agents/3');
   });
 
   it('buildInitialValues ignores an unknown entityType and reads returnTo from the state', () => {

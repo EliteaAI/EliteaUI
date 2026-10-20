@@ -79,8 +79,9 @@ vi.mock('@/[fsd]/shared/ui/select/LazySelect', () => ({
   },
 }));
 
-vi.mock('@/[fsd]/entities/version/ui/VersionSelect', () => ({
-  default: props => {
+vi.mock('@/[fsd]/entities/version', async importOriginal => ({
+  ...(await importOriginal()),
+  VersionSelect: props => {
     versionProps = props;
     return <div data-testid="version-select" />;
   },
@@ -306,6 +307,92 @@ describe('ScheduleForm EL-7011', () => {
     save();
 
     expect(await screen.findByText('Name is taken')).toBeInTheDocument();
+  });
+
+  it('R6.3 EL-7011 shows a 400 message for a field without an input in the banner', async () => {
+    renderForm({
+      onSubmit: vi.fn().mockRejectedValue({
+        status: 400,
+        data: { field: 'cron', error: 'Runs must be at least 5 minutes apart' },
+      }),
+    });
+    pickEntity(7);
+    typePrompt('Hi');
+
+    save();
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Runs must be at least 5 minutes apart');
+  });
+
+  it('R6.1 EL-7011 keeps Save from sending without a name, an entity and a version', async () => {
+    const { onSubmit } = renderForm({ initialValues: { ...INITIAL, name: '' } });
+    typePrompt('Hi');
+
+    save();
+
+    expect(await screen.findByText('Name is required')).toBeInTheDocument();
+    expect(selectProps.helperText).toBe('Choose an agent or a pipeline');
+    expect(screen.getByText('Choose a version')).toBeInTheDocument();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('R4.2 EL-7011 keeps the first of two fast changes', async () => {
+    const { onSubmit } = renderForm();
+    act(() => {
+      selectProps.onValueChange(7);
+      fireEvent.change(screen.getByLabelText(/Prompt/), { target: { value: 'Hi' } });
+    });
+    await waitFor(() => expect(versionProps.value).toBe(71));
+
+    save();
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit.mock.calls[0][0]).toMatchObject({ application_id: 7, prompt: 'Hi' });
+  });
+
+  it('R1.3 EL-7011 a change in SCHEDULE SETTINGS alone makes the form dirty and reaches the body', async () => {
+    const { onSubmit } = renderForm({
+      children: ({ values, setFieldValue }) => (
+        <button
+          type="button"
+          onClick={() => setFieldValue('expires_at', '2026-12-31')}
+        >
+          {values.cron}
+        </button>
+      ),
+    });
+    expect(navBlocker).toHaveBeenLastCalledWith({ blockCondition: false });
+
+    fireEvent.click(screen.getByRole('button', { name: INITIAL.cron }));
+
+    expect(navBlocker).toHaveBeenLastCalledWith({ blockCondition: true });
+    pickEntity(7);
+    await waitFor(() => expect(versionProps.value).toBe(71));
+    typePrompt('Hi');
+    save();
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit.mock.calls[0][0]).toMatchObject({
+      cron: INITIAL.cron,
+      timezone: INITIAL.timezone,
+      expires_at: '2026-12-31',
+    });
+  });
+
+  it('R1.3 R5.3 EL-7011 unlocking an unavailable URL entity keeps the form clean', async () => {
+    renderForm({
+      initialValues: { ...INITIAL, type: 'pipeline', run_mode: 'entry_point', application_id: 7 },
+      lockedEntity: { type: 'pipeline', id: 7 },
+    });
+
+    await waitFor(() => expect(selectProps.value).toBe(''));
+    expect(navBlocker).toHaveBeenLastCalledWith({ blockCondition: false });
+  });
+
+  it('R1.3 R3.4 EL-7011 the default version of the URL entity keeps the form clean', async () => {
+    renderForm({ initialValues: { ...INITIAL, application_id: 7 }, lockedEntity: { type: 'agent', id: 7 } });
+
+    await waitFor(() => expect(versionProps.value).toBe(71));
+    expect(navBlocker).toHaveBeenLastCalledWith({ blockCondition: false });
   });
 
   it('R6.4 EL-7011 shows the server text of a 409 in the banner', async () => {
