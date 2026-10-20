@@ -149,13 +149,13 @@ describe('ScheduleModal popup contract (R1.4, EL-7011)', () => {
     expect(screen.getByTestId('pipeline-schedule-modal-save-button')).toBeInTheDocument();
   });
 
-  it('shows the Builder tab first and the cron field on the Cron Expression tab', () => {
+  it('shows the Builder tab first and the cron field on the Cron expression tab', () => {
     renderModal({ cron: '51 12 * * *' });
 
     expect(screen.getByText('Builder')).toBeInTheDocument();
     expect(screen.queryByTestId('pipeline-schedule-cron-input')).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByText('Cron Expression'));
+    fireEvent.click(screen.getByText('Cron expression'));
 
     expect(screen.getByTestId('pipeline-schedule-cron-input')).toHaveValue('51 12 * * *');
   });
@@ -165,7 +165,7 @@ describe('ScheduleModal popup contract (R1.4, EL-7011)', () => {
     const onClose = vi.fn();
     renderModal({ cron: '51 12 * * *', onSubmit, onClose });
 
-    fireEvent.click(screen.getByText('Cron Expression'));
+    fireEvent.click(screen.getByText('Cron expression'));
     fireEvent.change(screen.getByTestId('pipeline-schedule-cron-input'), { target: { value: '0 6 * * *' } });
     fireEvent.click(screen.getByTestId('pipeline-schedule-modal-save-button'));
 
@@ -176,7 +176,7 @@ describe('ScheduleModal popup contract (R1.4, EL-7011)', () => {
   it('disables Save for an invalid cron', () => {
     renderModal({ cron: '51 12 * * *' });
 
-    fireEvent.click(screen.getByText('Cron Expression'));
+    fireEvent.click(screen.getByText('Cron expression'));
     fireEvent.change(screen.getByTestId('pipeline-schedule-cron-input'), { target: { value: 'nope' } });
 
     expect(screen.getByTestId('pipeline-schedule-modal-save-button')).toBeDisabled();
