@@ -1,5 +1,6 @@
 import { memo } from 'react';
 
+import { toExecutionTypeRow } from '@/[fsd]/entities/run-history/lib/helpers';
 import { ParticipantEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { RunHistoryPage } from '@/[fsd]/widgets/run-history-page';
 import RouteDefinitions from '@/routes';
@@ -11,6 +12,8 @@ const PipelineRunHistory = memo(() => (
     source={ParticipantEntityTypes.Pipeline}
     detailRoute={RouteDefinitions.PipelineDetail}
     analyticsRoute={RouteDefinitions.PipelineRunAnalytics}
+    eventColumnLabel="Execution type"
+    decorateRow={toExecutionTypeRow}
   />
 ));
 
