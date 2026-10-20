@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { MemoryRouter } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import '@testing-library/jest-dom/vitest';
@@ -68,19 +69,21 @@ const makeRow = (overrides = {}) => ({
 
 const renderTable = (rows, isLoading = false, onSort = vi.fn(), emptyMessage, toolbar) =>
   renderWithTheme(
-    <SchedulesTable
-      rows={rows}
-      isLoading={isLoading}
-      total={rows.length}
-      page={0}
-      pageSize={20}
-      onPageChange={vi.fn()}
-      onChangePageSize={vi.fn()}
-      sortConfig={{ field: 'next_run', direction: 'asc' }}
-      onSort={onSort}
-      emptyMessage={emptyMessage}
-      toolbar={toolbar}
-    />,
+    <MemoryRouter>
+      <SchedulesTable
+        rows={rows}
+        isLoading={isLoading}
+        total={rows.length}
+        page={0}
+        pageSize={20}
+        onPageChange={vi.fn()}
+        onChangePageSize={vi.fn()}
+        sortConfig={{ field: 'next_run', direction: 'asc' }}
+        onSort={onSort}
+        emptyMessage={emptyMessage}
+        toolbar={toolbar}
+      />
+    </MemoryRouter>,
   );
 
 afterEach(() => {
