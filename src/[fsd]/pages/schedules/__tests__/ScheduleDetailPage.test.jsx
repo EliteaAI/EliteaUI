@@ -131,6 +131,20 @@ describe('ScheduleDetailPage EL-7011', () => {
     expect(mocks.navigate).toHaveBeenCalledWith('/schedules', { replace: true });
   });
 
+  it('TC-US32-04 R1.4 EL-7011 waits for the first project id before it guards a project switch', () => {
+    mocks.projectId = undefined;
+    const { rerender } = render(<ScheduleDetailPage />);
+
+    mocks.projectId = 5;
+    mocks.query = { currentData: schedule };
+    rerender(<ScheduleDetailPage />);
+    expect(mocks.navigate).not.toHaveBeenCalled();
+
+    mocks.projectId = 6;
+    rerender(<ScheduleDetailPage />);
+    expect(mocks.navigate).toHaveBeenCalledWith('/schedules', { replace: true });
+  });
+
   it('TC-US32-05 R2.1 EL-7011 sends the update and returns to the opening page', async () => {
     mocks.query = { currentData: schedule };
     mocks.updateSchedule.mockReturnValue({ unwrap: () => Promise.resolve({ id: 9 }) });

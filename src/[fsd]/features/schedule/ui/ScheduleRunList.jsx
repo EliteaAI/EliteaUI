@@ -4,6 +4,7 @@ import { useDispatch } from 'react-redux';
 
 import { Box, Typography } from '@mui/material';
 
+import { RunHistoryApi } from '@/[fsd]/entities/run-history/api';
 import { RunHistoryContainer } from '@/[fsd]/entities/run-history/ui';
 import { useGetScheduleRunsQuery } from '@/[fsd]/entities/schedule';
 import { ChatMessageList } from '@/[fsd]/features/chat';
@@ -15,6 +16,8 @@ import { buildErrorMessage } from '@/common/utils.jsx';
 import { buildScheduleRowDecorator, toHistoryRows, toWord } from '../lib/helpers';
 
 const POLLING_INTERVAL_MS = 3000;
+// lean: the newest 100 runs, the server maximum per request; page the runs when one schedule keeps more
+const RUNS_PAGE = { page: 0, pageSize: 100 };
 
 const isRunning = rows => rows?.some(run => run.status === 'running');
 
@@ -45,7 +48,7 @@ const ScheduleRunList = memo(({ schedule }) => {
   const dispatch = useDispatch();
   const { toastError } = useToast();
 
-  const args = { projectId, scheduleId: schedule.id };
+  const args = { projectId, scheduleId: schedule.id, ...RUNS_PAGE };
   const { currentData, isError, error } = useGetScheduleRunsQuery(args, { skip: !projectId });
   const runs = currentData?.rows;
   const polling = !isError && isRunning(runs);
@@ -65,7 +68,7 @@ const ScheduleRunList = memo(({ schedule }) => {
   const wasRunning = useRef(false);
   useEffect(() => {
     if (wasRunning.current && !isRunning(runs))
-      dispatch(eliteaApi.util.invalidateTags(['HISTORY_ITEMS_TAG']));
+      dispatch(eliteaApi.util.invalidateTags([RunHistoryApi.HISTORY_ITEMS_TAG]));
     wasRunning.current = isRunning(runs);
   }, [runs, dispatch]);
 

@@ -30,6 +30,12 @@ describe('EL-7011 R4.2 run rows', () => {
     expect(rows[0].event_tooltip).toContain('version_deleted');
   });
 
+  it('treats a run without a conversation_id field as a run without a conversation', () => {
+    const noField = { ...runs[1], conversation_id: undefined };
+    expect(toHistoryRows([noField])).toHaveLength(1);
+    expect(buildScheduleRowDecorator([noField])({ id: undefined })).toEqual({ id: undefined });
+  });
+
   it('returns no rows for missing runs', () => {
     expect(toHistoryRows(undefined)).toEqual([]);
   });

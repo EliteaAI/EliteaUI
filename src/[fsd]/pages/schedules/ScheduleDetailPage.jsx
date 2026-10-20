@@ -46,8 +46,10 @@ const ScheduleDetailPage = () => {
   const [runSchedule] = useRunScheduleMutation();
 
   // R1.4: a schedule belongs to one project, so a project switch opens the list
-  const openedProjectId = useRef(projectId);
+  const openedProjectId = useRef();
   useEffect(() => {
+    if (projectId == null) return;
+    openedProjectId.current ??= projectId;
     if (projectId !== openedProjectId.current) navigate(RouteDefinitions.Schedules, { replace: true });
   }, [navigate, projectId]);
 

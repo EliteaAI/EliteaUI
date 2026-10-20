@@ -23,6 +23,7 @@ vi.mock('@/[fsd]/entities/run-history/ui', () => ({
     return <div data-testid="run-history" />;
   },
 }));
+vi.mock('@/[fsd]/entities/run-history/api', () => ({ RunHistoryApi: { HISTORY_ITEMS_TAG: 'HISTORY_TAG' } }));
 vi.mock('@/[fsd]/features/chat', () => ({ ChatMessageList: () => null }));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useSelectedProjectId: () => 5,
@@ -77,6 +78,17 @@ describe('ScheduleRunList (EL-7011 US-32)', () => {
     expect(mocks.useGetScheduleRunsQuery.mock.calls[0][0]).toMatchObject({ projectId: 5, scheduleId: 9 });
   });
 
+  it('R4.1 EL-7011 shows runs past the first page, up to the server maximum of 100', () => {
+    const manyRuns = Array.from({ length: 25 }, (_, index) => ({ ...withoutConversation, id: index + 1 }));
+    mockRuns(manyRuns);
+    render(<ScheduleRunList schedule={schedule} />);
+
+    const [[firstArgs], [pollingArgs]] = mocks.useGetScheduleRunsQuery.mock.calls.slice(-2);
+    expect(firstArgs).toMatchObject({ page: 0, pageSize: 100 });
+    expect(pollingArgs).toEqual(firstArgs);
+    expect(lastProps().additionalRows).toHaveLength(25);
+  });
+
   it('R4.1 keeps queryParams stable between renders', () => {
     const { rerender } = render(<ScheduleRunList schedule={schedule} />);
     const first = lastProps().queryParams;
@@ -124,7 +136,7 @@ describe('ScheduleRunList (EL-7011 US-32)', () => {
     rerender(<ScheduleRunList schedule={{ ...schedule }} />); // memo: a new prop object stands for the query update
     expect(pollingOf()).toBe(0);
     expect(lastProps().additionalRows[0].event_label).toBe('Success, test');
-    expect(mocks.invalidateTags).toHaveBeenCalledWith(['HISTORY_ITEMS_TAG']);
+    expect(mocks.invalidateTags).toHaveBeenCalledWith(['HISTORY_TAG']);
     expect(mocks.dispatch).toHaveBeenCalledTimes(1);
   });
 

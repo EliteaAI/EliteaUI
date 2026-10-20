@@ -25,12 +25,12 @@ const toRunRow = run => {
   };
 };
 
-export const toHistoryRows = runs => (runs ?? []).filter(run => run.conversation_id === null).map(toRunRow);
+export const toHistoryRows = runs => (runs ?? []).filter(run => run.conversation_id == null).map(toRunRow);
 
 export const buildScheduleRowDecorator = runs => {
   const labelByConversation = new Map(
     (runs ?? [])
-      .filter(run => run.conversation_id !== null)
+      .filter(run => run.conversation_id != null)
       .map(run => [run.conversation_id, toEventLabel(run)]),
   );
 
