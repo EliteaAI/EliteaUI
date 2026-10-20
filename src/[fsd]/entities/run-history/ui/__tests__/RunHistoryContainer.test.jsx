@@ -397,3 +397,26 @@ describe('RunHistoryContainer R4.1 EL-7011 query params', () => {
     expect(fetchRunList).toHaveBeenLastCalledWith(expect.objectContaining({ schedule_id: 2 }));
   });
 });
+
+describe('RunHistoryContainer EL-7011 US-32 stacked layout', () => {
+  it('puts the run detail below the list with the full width and its own height', () => {
+    renderContainer('', { layout: 'stacked' });
+
+    const wrapper = screen.getByTestId('run-history-layout');
+    const panel = screen.getByTestId('run-history-detail-panel');
+
+    expect(wrapper).toHaveStyle({ flexDirection: 'column' });
+    expect(panel).toHaveStyle({ width: '100%', height: '32rem' });
+    expect(panel).toContainElement(screen.getByTestId('detail'));
+    expect(screen.getByTestId('selection').compareDocumentPosition(panel)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+  });
+
+  it('keeps the list and the detail side by side by default', () => {
+    renderContainer('');
+
+    expect(screen.getByTestId('run-history-layout')).toHaveStyle({ flexDirection: 'row' });
+    expect(screen.queryByTestId('run-history-detail-panel')).not.toBeInTheDocument();
+  });
+});

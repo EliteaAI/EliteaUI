@@ -236,3 +236,37 @@ describe('EL-7011 US-30 ScheduleSettingsSection', () => {
     });
   });
 });
+
+describe('EL-7011 US-32 ScheduleSettingsSection opening tab', () => {
+  it('opens a saved cron the Builder cannot show on the Cron expression tab, with its error', () => {
+    renderSection({ initial: '0 * * * *' });
+
+    expect(screen.getByTestId('pipeline-schedule-cron-input')).toHaveValue('0 * * * *');
+    expect(screen.queryByTestId('cron-builder-value')).not.toBeInTheDocument();
+    expect(screen.getByTestId('pipeline-schedule-cron-error')).toHaveTextContent(
+      'Frequency cannot be more than once per day',
+    );
+  });
+
+  it('opens a saved cron the Builder can show on the Builder tab, even in another notation', () => {
+    renderSection({ initial: '30 9 * * 1,2,3' });
+
+    expect(screen.getByTestId('cron-builder-value')).toHaveTextContent('30 9 * * 1,2,3');
+    expect(screen.queryByTestId('pipeline-schedule-cron-input')).not.toBeInTheDocument();
+  });
+
+  it('opens an empty cron on the Builder tab', () => {
+    renderSection({ initial: '' });
+
+    expect(screen.getByTestId('cron-builder-value')).toBeInTheDocument();
+  });
+
+  it('keeps the tab the user picked when the cron changes later', () => {
+    renderSection({ initial: '0 0 * * 6' });
+
+    openCronTab();
+    fireEvent.change(screen.getByTestId('pipeline-schedule-cron-input'), { target: { value: '15 3 * * 1' } });
+
+    expect(screen.getByTestId('pipeline-schedule-cron-input')).toHaveValue('15 3 * * 1');
+  });
+});

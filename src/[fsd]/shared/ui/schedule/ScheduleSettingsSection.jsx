@@ -2,7 +2,7 @@ import { memo, useId, useMemo, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
-import { ScheduleHelpers } from '@/[fsd]/shared/lib/helpers';
+import { CronBuilderHelpers, ScheduleHelpers } from '@/[fsd]/shared/lib/helpers';
 import { Tab } from '@/[fsd]/shared/ui';
 import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
 import ErrorIcon from '@/assets/error-icon.svg?react';
@@ -13,6 +13,7 @@ import CronBuilder from './CronBuilder';
 
 const { canConvertCronTimezone, getBrowserTimezone, getNextCronRun, validateCronExpression } =
   ScheduleHelpers;
+const { canBuildCron } = CronBuilderHelpers;
 
 const viewButtons = [
   { value: 'builder', label: 'Builder' },
@@ -30,7 +31,8 @@ const ScheduleSettingsSection = memo(props => {
 
   const styles = scheduleSettingsSectionStyles();
 
-  const [cronType, setCronType] = useState('builder');
+  // A saved cron the Builder cannot show opens as text, so the form never shows another schedule
+  const [cronType, setCronType] = useState(() => (!value || canBuildCron(value) ? 'builder' : 'cron'));
 
   const errorId = useId();
 
