@@ -1080,6 +1080,10 @@ export const NotificationType = {
   BudgetLimitReached: 'budget_limit_reached',
   MemberBudgetThresholdReached: 'member_budget_threshold_reached',
   MemberBudgetLimitReached: 'member_budget_limit_reached',
+  ToolSpendThresholdReached: 'tool_spend_threshold_reached',
+  ToolSpendLimitReached: 'tool_spend_limit_reached',
+  MemberToolSpendThresholdReached: 'member_tool_spend_threshold_reached',
+  MemberToolSpendLimitReached: 'member_tool_spend_limit_reached',
 };
 
 export const dummyConversation = { name: '', chat_history: [], participants: [], is_private: true };

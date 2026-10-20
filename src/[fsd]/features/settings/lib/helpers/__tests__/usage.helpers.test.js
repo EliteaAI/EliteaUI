@@ -264,3 +264,29 @@ describe('UsageHelpers.fillDailyGaps', () => {
     expect(UsageHelpers.fillDailyGaps(daily, null, null)).toEqual(daily);
   });
 });
+
+describe('toolSpendLabel (#6983)', () => {
+  const item = { label: 'Web search', spend: 2.5, effective_limit: 10, percent_used: 25, currency: 'USD' };
+
+  it('shows spend against the limit for viewers of amounts', () => {
+    expect(UsageHelpers.toolSpendLabel(item, true)).toBe('Web search: $2.50 of $10.00');
+  });
+
+  it('shows only the percentage when amounts are redacted', () => {
+    expect(UsageHelpers.toolSpendLabel(item, false)).toBe('Web search: 25% of limit');
+  });
+
+  // A failed spend read must never look like "$0 of $10"
+  it('says unavailable instead of $0 when spend could not be read', () => {
+    expect(UsageHelpers.toolSpendLabel({ label: 'Web search', spend_available: false }, true)).toBe(
+      'Web search: usage temporarily unavailable',
+    );
+  });
+
+  it('only treats an explicit false as turned off', () => {
+    expect(UsageHelpers.toolSpendLabel({ ...item, enabled: false }, true)).toBe(
+      'Web search: turned off for this project',
+    );
+    expect(UsageHelpers.toolSpendLabel(item, true)).not.toContain('turned off');
+  });
+});

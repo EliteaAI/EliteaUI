@@ -117,6 +117,25 @@ export const buildModelSheet = data => {
   };
 };
 
+// Paid tools (web search etc.); amounts are absent for members who may not see cost
+export const buildToolSpendSheet = data => ({
+  sheetName: 'Paid Tools',
+  columns: [
+    { header: 'Tool', key: 'label' },
+    { header: 'Spent (USD)', key: 'spend', numFmt: ExcelFormats.currency },
+    { header: 'Limit (USD)', key: 'limit' },
+    { header: 'Used (%)', key: 'percent', numFmt: ExcelFormats.percent },
+    { header: 'Calls', key: 'calls', numFmt: ExcelFormats.integer },
+  ],
+  rows: (data.tool_spend || []).map(item => ({
+    label: item.label || item.feature,
+    spend: orBlank(item.spend),
+    limit: 'effective_limit' in item ? (item.effective_limit ?? 'Unlimited') : '',
+    percent: orBlank(item.percent_used),
+    calls: item.calls || 0,
+  })),
+});
+
 export const buildMembersSheet = (rows = [], warningPct) => ({
   sheetName: 'Members',
   columns: [
@@ -161,6 +180,7 @@ export const buildUsageSheets = ({
     buildSummarySheet({ data, projectName, isPersonalProject, scope }),
     buildDailySheet(data),
     buildModelSheet(data),
+    ...(data.tool_spend?.length ? [buildToolSpendSheet(data)] : []),
   ];
 
   if (!isPersonalProject && scope !== SCOPE_USER) {
