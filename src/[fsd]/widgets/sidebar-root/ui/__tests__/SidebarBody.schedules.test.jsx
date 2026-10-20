@@ -19,7 +19,7 @@ const theme = createTheme({
   },
 });
 
-const fixture = vi.hoisted(() => ({ permissions: [], pathname: '/' }));
+const fixture = vi.hoisted(() => ({ permissions: [] }));
 
 vi.mock('react-redux', () => ({
   useSelector: select =>
@@ -29,7 +29,7 @@ vi.mock('react-redux', () => ({
     }),
 }));
 vi.mock('react-router-dom', () => ({
-  useLocation: () => ({ pathname: fixture.pathname }),
+  useLocation: () => ({ pathname: '/' }),
   useNavigate: () => vi.fn(),
 }));
 vi.mock('@/[fsd]/features/interactive-tours', () => ({ SIDEBAR_TOUR_TARGET_IDS: {} }));
@@ -59,9 +59,8 @@ vi.mock('@/[fsd]/widgets/sidebar-root/ui', () => ({
   ),
 }));
 
-const renderBody = (permissions, pathname = '/') => {
+const renderBody = permissions => {
   fixture.permissions = permissions;
-  fixture.pathname = pathname;
   render(
     <ThemeProvider theme={theme}>
       <SidebarBody />
@@ -71,27 +70,18 @@ const renderBody = (permissions, pathname = '/') => {
 
 const navTitles = () => screen.getAllByRole('button').map(b => b.textContent);
 
-describe('EL-7011 R1 Schedules navigation', () => {
+describe('EL-7011 CR-03 Schedules out of the main navigation', () => {
   afterEach(cleanup);
 
-  it('R1.1 shows Schedules right after Pipelines with the list permission', () => {
+  it('R1.5 shows no Schedules item even with the list permission', () => {
     renderBody([PERMISSIONS.schedules.list, PERMISSIONS.pipelines.list, PERMISSIONS.applications.list]);
-    const titles = navTitles();
-    expect(titles.indexOf('Schedules')).toBe(titles.indexOf('Pipelines') + 1);
-  });
-
-  it('R1.2 hides Schedules without the list permission', () => {
-    renderBody([PERMISSIONS.pipelines.list]);
+    expect(navTitles()).toContain('Pipelines');
     expect(screen.queryByText('Schedules')).toBeNull();
   });
 
-  it('R1.3 marks Schedules active for every path under /schedules', () => {
-    renderBody([PERMISSIONS.schedules.list], '/schedules/create');
-    expect(screen.getByText('Schedules').getAttribute('aria-current')).toBe('true');
-  });
-
-  it('R1.3 declares the route, its breadcrumb and every schedule permission', () => {
-    expect(RouteDefinitions.Schedules).toBe('/schedules');
+  it('R1.3 declares the Settings routes, their breadcrumb and every schedule permission', () => {
+    expect(RouteDefinitions.Schedules).toBe('/settings/schedules');
+    expect(RouteDefinitions.CreateSchedule).toBe('/settings/schedules/create');
     expect(BREADCRUMB_REGISTRY[RouteDefinitions.Schedules].label).toBe('Schedules');
     expect(Object.values(PERMISSIONS.schedules).sort((a, b) => a.localeCompare(b))).toEqual(
       ['admin', 'create', 'delete', 'details', 'export', 'import', 'list', 'run', 'update']
