@@ -3,11 +3,10 @@ import { useCallback, useMemo } from 'react';
 import { useFormikContext } from 'formik';
 import { useSelector } from 'react-redux';
 
-import { useFormDirtyExcluding } from '@/[fsd]/shared/lib/hooks';
+import { useFormDirtyExcluding, useIsFrom } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
 import useSaveVersion from '@/hooks/application/useSaveVersion';
-import { useIsFrom } from '@/hooks/useIsFromSpecificPageHooks';
 import useIsPipelineYamlCodeDirty from '@/pages/Pipelines/useIsPipelineYamlCodeDirty';
 import RouteDefinitions from '@/routes';
 import { selectActivePipeline } from '@/slices/pipeline';

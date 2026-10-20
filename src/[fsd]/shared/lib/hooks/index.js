@@ -66,3 +66,5 @@ export * from './useTags.hooks';
 export * from './useCardNavigate.hooks';
 export * from './useClientSort.hooks';
 export * from './useIsSmallWindow.hooks';
+export * from './useIsFrom.hooks';
+export * from './useIsFromPipelineDetail.hooks';
