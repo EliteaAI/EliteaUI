@@ -44,11 +44,14 @@ const HINT = 'minute – hour – day (month) – month – day (week)';
 afterEach(() => cleanup());
 
 // The section is controlled; the harness holds the cron like the form does.
+// The stored cron is the initial one, so the tests hold for a section that reads it from `sourceCron`
+// or from `value` at mount.
 const Harness = ({ initial = '0 0 * * 6', onChange = () => {}, ...rest }) => {
   const [value, setValue] = useState(initial);
   return (
     <ScheduleSettingsSection
       value={value}
+      sourceCron={initial}
       onChange={next => {
         setValue(next);
         onChange(next);
@@ -146,6 +149,27 @@ describe('EL-7011 US-30 ScheduleSettingsSection', () => {
       expect(screen.getByTestId('pipeline-schedule-info')).toHaveTextContent(BROWSER_TIMEZONE);
     });
 
+    it('R2.2 says the cron cannot be converted when its time is not fixed', () => {
+      renderSection({ initial: '*/5 * * * *', sourceTimezone: FOREIGN_TIMEZONE });
+
+      expect(screen.getByTestId('schedule-timezone-notice')).toHaveTextContent(
+        'cannot be converted automatically',
+      );
+    });
+
+    it('R2.2 keeps the notice text when the cron changes after mount', () => {
+      renderSection({ initial: '0 0 * * 6', sourceTimezone: FOREIGN_TIMEZONE });
+      const before = screen.getByTestId('schedule-timezone-notice').textContent;
+
+      openCronTab();
+      fireEvent.change(screen.getByTestId('pipeline-schedule-cron-input'), {
+        target: { value: '*/5 * * * *' },
+      });
+
+      expect(before).not.toContain('cannot be converted automatically');
+      expect(screen.getByTestId('schedule-timezone-notice').textContent).toBe(before);
+    });
+
     it('R2.2 shows no notice when the timezones match', () => {
       renderSection({ sourceTimezone: BROWSER_TIMEZONE });
 
@@ -174,6 +198,21 @@ describe('EL-7011 US-30 ScheduleSettingsSection', () => {
       const error = screen.getByTestId('pipeline-schedule-cron-error');
       expect(error).toHaveTextContent('Cron must have exactly 5 parts with space between every part');
       expect(screen.getByTestId('error-icon')).toBeInTheDocument();
+    });
+
+    it('R2.3 places the error row under the cron field, before the info block and the notice', () => {
+      renderSection({ sourceTimezone: FOREIGN_TIMEZONE });
+
+      openCronTab();
+      const input = screen.getByTestId('pipeline-schedule-cron-input');
+      fireEvent.change(input, { target: { value: '* * *' } });
+
+      const error = screen.getByTestId('pipeline-schedule-cron-error');
+      const follows = (first, second) =>
+        Boolean(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING);
+      expect(follows(input, error)).toBe(true);
+      expect(follows(error, screen.getByTestId('pipeline-schedule-info'))).toBe(true);
+      expect(follows(error, screen.getByTestId('schedule-timezone-notice'))).toBe(true);
     });
 
     it('R2.3 shows the required message and no next run for an empty cron (TC-US30-12)', () => {
