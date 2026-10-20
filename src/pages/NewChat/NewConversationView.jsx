@@ -90,6 +90,7 @@ const NewConversationView = forwardRef(
       onCloseAgentEditor,
       onCreateAgent,
       onCreatePipeline,
+      onCreateSkill,
       onCreateToolkit,
       onAddNewUsers,
       hidden = false,
@@ -1184,6 +1185,7 @@ const NewConversationView = forwardRef(
               onSelectParticipant={onSelectParticipant}
               onCreateAgent={onCreateAgent}
               onCreatePipeline={onCreatePipeline}
+              onCreateSkill={onCreateSkill}
               onCreateToolkit={onCreateToolkit}
               onDeleteParticipant={onDeleteParticipant}
               participants={selectedParticipants}

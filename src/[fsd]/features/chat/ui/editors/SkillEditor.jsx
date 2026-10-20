@@ -3,6 +3,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version/lib/constants';
 import BaseEditor from '@/[fsd]/features/chat/ui/editors/BaseEditor';
 import SkillCanvasModelSelector from '@/[fsd]/features/chat/ui/editors/SkillCanvasModelSelector';
+import SkillEditorCreateButton from '@/[fsd]/features/chat/ui/editors/SkillEditorCreateButton';
 import SkillEditorSaveButton from '@/[fsd]/features/chat/ui/editors/SkillEditorSaveButton';
 import { useSkillDetailsQuery } from '@/[fsd]/features/skill/api';
 import {
@@ -41,11 +42,14 @@ const SkillEditor = memo(props => {
     disableNavBlocking = false,
     onChangeSkillSettings,
     isNewConversation = false,
+    isCreateMode = false,
+    onSkillCreated,
   } = props;
   const projectId = useSelectedProjectId();
   const skillId = skill?.entity_meta?.id;
   const versionId = skill?.entity_settings?.version_id;
   const [isDirty, setIsDirty] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
 
   const { data, error } = useSkillDetailsQuery(
     { projectId, skillId, versionId },
@@ -54,6 +58,7 @@ const SkillEditor = memo(props => {
 
   const { defaultModel, isLoadingModels } = useSkillModels();
   const initialValues = useMemo(() => buildInitialValues(data, defaultModel), [data, defaultModel]);
+  const isAwaitingSkillDetails = !!skillId && data?.id !== skillId;
 
   const onDirtyStateChangeRef = useRef(onDirtyStateChange);
 
@@ -76,23 +81,32 @@ const SkillEditor = memo(props => {
       onDirtyStateChange={onDirtyStateChange}
       disableNavBlocking={disableNavBlocking}
       onClose={onCloseSkillEditor}
-      title={skill?.name || skill?.meta?.name || 'Skill'}
+      title={isCreateMode ? 'Create New Skill' : skill?.name || skill?.meta?.name || 'Skill'}
       initialValues={initialValues}
       validationSchema={SkillValidateSchema}
       error={error}
       saveButton={
-        <SkillEditorSaveButton
-          isDirty={isDirty}
-          onModelSaved={onVersionModelSaved}
-        />
+        isCreateMode ? (
+          <SkillEditorCreateButton
+            onSkillCreated={onSkillCreated}
+            onCreatingChange={setIsCreating}
+          />
+        ) : (
+          <SkillEditorSaveButton
+            isDirty={isDirty}
+            onModelSaved={onVersionModelSaved}
+          />
+        )
       }
     >
-      <SkillCanvasModelSelector
-        skill={skill}
-        onChangeSkillSettings={onChangeSkillSettings}
-        isNewConversation={isNewConversation}
-      />
-      {!isLoadingModels && <CreateSkillForm />}
+      {!isCreateMode && (
+        <SkillCanvasModelSelector
+          skill={skill}
+          onChangeSkillSettings={onChangeSkillSettings}
+          isNewConversation={isNewConversation}
+        />
+      )}
+      {!isLoadingModels && <CreateSkillForm disabled={isCreating || isAwaitingSkillDetails} />}
     </BaseEditor>
   );
 });
