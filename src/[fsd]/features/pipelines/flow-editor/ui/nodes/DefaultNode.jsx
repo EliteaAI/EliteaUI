@@ -207,7 +207,6 @@ const DefaultNode = memo(props => {
       />
       <FlowEditorSettings.CommonNodeSettings
         id={id}
-        showStructuredOutput={true}
         type={type}
         disabled={isRunningPipeline || disabled}
         structuredOutputTestId={testIdPrefix ? `${testIdPrefix}-structured-output-toggle` : undefined}

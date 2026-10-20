@@ -220,20 +220,14 @@ const BaseToolNode = memo(props => {
             : undefined
         }
       />
-      <FlowEditorSettings.CommonNodeSettings
-        id={id}
-        showStructuredOutput={showStructuredOutput}
-        type={nodeType}
-        disabled={isRunningPipeline}
-        // Widened to every node type in TEST_ID_PREFIX_BY_NODE_TYPE
-        // (Toolkit since ELITEA-2010, MCP since ELITEA-2037) — both node
-        // types' tests now assert this toggle's visibility (case step 6),
-        // so `testIdPrefix` truthiness is exactly the "referenced by a
-        // test" set (.agents/testing.md § Locator policy — testid scope is
-        // load-bearing). Other node types sharing this base component still
-        // resolve testIdPrefix to undefined, so they stay untagged.
-        structuredOutputTestId={testIdPrefix ? `${testIdPrefix}-structured-output-toggle` : undefined}
-      />
+      {showStructuredOutput && (
+        <FlowEditorSettings.CommonNodeSettings
+          id={id}
+          type={nodeType}
+          disabled={isRunningPipeline}
+          structuredOutputTestId={testIdPrefix ? `${testIdPrefix}-structured-output-toggle` : undefined}
+        />
+      )}
     </FlowEditorNodes.NodeCard>
   );
 });

@@ -108,10 +108,4 @@ describe('CommonNodeSettings', () => {
 
     expect(screen.getByTestId(STRUCTURED_OUTPUT_TEST_ID)).toBeDisabled();
   });
-
-  it('renders nothing when structured output is not shown', () => {
-    const { container } = renderSettings({ showStructuredOutput: false });
-
-    expect(container).toBeEmptyDOMElement();
-  });
 });

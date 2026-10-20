@@ -4,11 +4,7 @@ import { AIAssistantInput } from '@/[fsd]/features/pipelines/ai-assistant/ui';
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { useNodeAiAssistantConfig } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
-import {
-  FlowEditorNodes,
-  FlowEditorSelect,
-  FlowEditorSettings,
-} from '@/[fsd]/features/pipelines/flow-editor/ui';
+import { FlowEditorNodes, FlowEditorSelect } from '@/[fsd]/features/pipelines/flow-editor/ui';
 import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
 import { useEdges } from '@xyflow/react';
 
@@ -138,12 +134,6 @@ const NormalDecisionNode = memo(props => {
         onRemoveOutput={onRemoveOutput}
         isRunningPipeline={isRunningPipeline}
         disabled={disabled}
-      />
-      <FlowEditorSettings.CommonNodeSettings
-        id={id}
-        showStructuredOutput={false}
-        type={FlowEditorConstants.PipelineNodeTypes.Decision}
-        disabled={isRunningPipeline}
       />
     </FlowEditorNodes.NodeCard>
   );

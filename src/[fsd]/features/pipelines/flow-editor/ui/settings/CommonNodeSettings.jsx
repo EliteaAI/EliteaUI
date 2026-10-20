@@ -6,18 +6,8 @@ import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/he
 import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
 import { Switch } from '@/[fsd]/shared/ui';
 
-// Static "Interrupt before / after" toggles are deprecated (Phase 1): they are
-// no longer rendered on node cards. `interrupt_before` / `interrupt_after` are
-// still supported in the YAML editor and visualised as the interrupt label on
-// edges — do not re-add per-node controls here.
-//
-// structuredOutputTestId (ELITEA-2004/2010): this component is shared across
-// node types, so the testid is caller-supplied and opt-in per call site: only
-// the node types a test actually touches pass a value; every other caller
-// leaves it `undefined` so untested node types don't light up as "covered"
-// (.agents/testing.md § Locator policy — testid scope is load-bearing).
 const CommonNodeSettings = memo(props => {
-  const { id, showStructuredOutput = true, type, disabled, structuredOutputTestId } = props;
+  const { id, type, disabled, structuredOutputTestId } = props;
 
   const { setYamlJsonObject, yamlJsonObject } = useContext(FlowEditorContext);
   const yamlNode = useMemo(
@@ -37,9 +27,7 @@ const CommonNodeSettings = memo(props => {
     [yamlJsonObject, setYamlJsonObject, id],
   );
 
-  const styles = commonNodeSettingsStyles();
-
-  if (!showStructuredOutput) return null;
+  const styles = useMemo(() => commonNodeSettingsStyles(), []);
 
   return (
     <Box sx={styles.nodesRow}>

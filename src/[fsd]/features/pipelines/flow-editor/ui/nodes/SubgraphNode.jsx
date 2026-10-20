@@ -3,11 +3,7 @@ import { memo, useCallback, useContext, useMemo } from 'react';
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { useGetToolkitNameFromSchema } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
-import {
-  FlowEditorNodes,
-  FlowEditorSelect,
-  FlowEditorSettings,
-} from '@/[fsd]/features/pipelines/flow-editor/ui';
+import { FlowEditorNodes, FlowEditorSelect } from '@/[fsd]/features/pipelines/flow-editor/ui';
 import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
 import { ToolTypes } from '@/pages/Applications/Components/Tools/consts';
 import { useEdges } from '@xyflow/react';
@@ -95,12 +91,6 @@ const SubgraphNode = memo(props => {
         selectedToolkit={toolkit}
         disabled={isRunningPipeline || disabled}
         filterTypes={toolkitFilter}
-      />
-      <FlowEditorSettings.CommonNodeSettings
-        id={id}
-        type={FlowEditorConstants.PipelineNodeTypes.Pipeline}
-        disabled={isRunningPipeline || disabled}
-        showStructuredOutput={false}
       />
     </FlowEditorNodes.NodeCard>
   );
