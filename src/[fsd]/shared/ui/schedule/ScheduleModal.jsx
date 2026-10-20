@@ -66,6 +66,7 @@ const ScheduleModal = memo(props => {
           <ScheduleSettingsSection
             value={cronExpression}
             onChange={setCronExpression}
+            sourceCron={cron || DEFAULT_CRON}
             sourceTimezone={timezone}
           />
           {children}

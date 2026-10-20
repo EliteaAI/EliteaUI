@@ -1,4 +1,4 @@
-import { memo, useMemo, useState } from 'react';
+import { memo, useId, useMemo, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
@@ -22,28 +22,32 @@ const viewButtons = [
 /**
  * Builder and Cron expression tabs with the rule, the next run and the errors.
  * Controlled: `value` is the cron in the browser timezone.
- * `sourceTimezone` is the timezone the schedule was stored in; `error` is a server error for the cron.
+ * `sourceCron` and `sourceTimezone` are the cron and timezone the schedule was stored in;
+ * `error` is a server error for the cron.
  */
 const ScheduleSettingsSection = memo(props => {
-  const { value, onChange, sourceTimezone, error, testIdPrefix = 'pipeline-schedule' } = props;
+  const { value, onChange, sourceCron, sourceTimezone, error, testIdPrefix = 'pipeline-schedule' } = props;
 
   const styles = scheduleSettingsSectionStyles();
 
   const [cronType, setCronType] = useState('builder');
 
+  const errorId = useId();
+
   const browserTimezone = useMemo(() => getBrowserTimezone(), []);
 
   const cronState = useMemo(() => validateCronExpression(value), [value]);
 
+  // Decided from the stored cron, never from the edited value, which is already converted.
   const timezoneNotice = useMemo(() => {
     if (!sourceTimezone || !browserTimezone || sourceTimezone === browserTimezone) return null;
 
-    if (!canConvertCronTimezone(value, sourceTimezone, browserTimezone)) {
+    if (!canConvertCronTimezone(sourceCron, sourceTimezone, browserTimezone)) {
       return `This schedule was configured in ${sourceTimezone} and its expression cannot be converted automatically, so the times below are shown as configured. Saving will reinterpret them in your timezone (${browserTimezone}).`;
     }
 
     return `This schedule was configured in ${sourceTimezone}. The times below are converted to your timezone (${browserTimezone}) and will be saved in it.`;
-  }, [value, sourceTimezone, browserTimezone]);
+  }, [sourceCron, sourceTimezone, browserTimezone]);
 
   const nextRun = useMemo(() => {
     if (!cronState.isValid) return null;
@@ -59,6 +63,23 @@ const ScheduleSettingsSection = memo(props => {
   }, [value, cronState.isValid]);
 
   const errorText = error || (cronState.isValid ? null : cronState.message);
+
+  const errorRow = errorText && (
+    <Box
+      id={errorId}
+      role="alert"
+      data-testid={`${testIdPrefix}-cron-error`}
+      sx={styles.errorContainer}
+    >
+      <ErrorIcon />
+      <Typography
+        variant="labelSmall"
+        sx={styles.previewSummaryError}
+      >
+        {errorText}
+      </Typography>
+    </Box>
+  );
 
   return (
     <Box sx={styles.contentWrapper}>
@@ -79,6 +100,7 @@ const ScheduleSettingsSection = memo(props => {
             onChange={onChange}
             invalidField={cronState.isValid ? null : cronState.field}
           />
+          {errorRow}
         </Box>
       ) : (
         <Box sx={styles.cronWrapper}>
@@ -88,8 +110,15 @@ const ScheduleSettingsSection = memo(props => {
             onChange={event => onChange(event.target.value)}
             placeholder="* * * * *"
             error={Boolean(errorText)}
+            slotProps={{
+              htmlInput: {
+                'aria-invalid': Boolean(errorText),
+                'aria-describedby': errorText ? errorId : undefined,
+              },
+            }}
             sx={styles.cronInput}
           />
+          {errorRow}
           <Box sx={styles.descriptionContainer}>
             <Typography
               variant="bodySmall"
@@ -146,21 +175,6 @@ const ScheduleSettingsSection = memo(props => {
             sx={styles.noticeText}
           >
             {timezoneNotice}
-          </Typography>
-        </Box>
-      )}
-
-      {errorText && (
-        <Box
-          data-testid={`${testIdPrefix}-cron-error`}
-          sx={styles.errorContainer}
-        >
-          <ErrorIcon />
-          <Typography
-            variant="labelSmall"
-            sx={styles.previewSummaryError}
-          >
-            {errorText}
           </Typography>
         </Box>
       )}
