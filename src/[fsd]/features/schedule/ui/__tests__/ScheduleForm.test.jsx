@@ -332,6 +332,7 @@ describe('ScheduleForm EL-7011', () => {
 
     expect(await screen.findByText('Name is required')).toBeInTheDocument();
     expect(selectProps.helperText).toBe('Choose an agent or a pipeline');
+    expect(screen.getByText('Choose an agent or a pipeline')).toBeInTheDocument();
     expect(screen.getByText('Choose a version')).toBeInTheDocument();
     expect(onSubmit).not.toHaveBeenCalled();
   });

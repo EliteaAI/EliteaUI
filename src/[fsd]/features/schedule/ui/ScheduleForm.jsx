@@ -255,7 +255,7 @@ const ScheduleForm = memo(props => {
         <LazySelect
           required
           showOptionIcon
-          displayEmpty
+          showEmptyPlaceholder={false}
           label={TYPE_LABEL[values.type]}
           value={values.application_id}
           onValueChange={handleEntityChange}
@@ -269,6 +269,15 @@ const ScheduleForm = memo(props => {
           error={!!fieldError('application_id')}
           helperText={fieldError('application_id')}
         />
+        {/* the borderless select shows no helper text itself */}
+        {fieldError('application_id') && (
+          <Typography
+            variant="bodySmall"
+            color="error"
+          >
+            {fieldError('application_id')}
+          </Typography>
+        )}
         <VersionSelect
           entityId={values.application_id}
           versions={details?.versions}
