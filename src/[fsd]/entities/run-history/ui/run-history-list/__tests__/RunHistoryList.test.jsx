@@ -8,17 +8,6 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 
 import RunHistoryList from '../RunHistoryList';
 
-vi.hoisted(() => {
-  const entries = new Map();
-
-  globalThis.localStorage = {
-    getItem: key => entries.get(key) ?? null,
-    setItem: (key, value) => entries.set(key, String(value)),
-    removeItem: key => entries.delete(key),
-    clear: () => entries.clear(),
-  };
-});
-
 vi.mock('@/[fsd]/entities/run-history/ui', async () => ({
   RunHistoryListItem: (await vi.importActual('../RunHistoryListItem')).default,
   RunHistoryTooltipCell: ({ text }) => <span>{text}</span>,
