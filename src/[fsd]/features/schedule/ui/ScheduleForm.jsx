@@ -4,6 +4,7 @@ import { useFormik } from 'formik';
 
 import { Box, Grid, Typography } from '@mui/material';
 
+import { GenerateEntityButton } from '@/[fsd]/entities/generate-entity-with-ai';
 import { VersionSelect, getDefaultVersionId } from '@/[fsd]/entities/version';
 import {
   getEntityLock,
@@ -25,11 +26,13 @@ import EntityTypeIcon from '@/[fsd]/shared/ui/icon/EntityTypeIcon';
 import StyledInputEnhancer from '@/[fsd]/shared/ui/input/StyledInputEnhancer';
 import LazySelect from '@/[fsd]/shared/ui/select/LazySelect';
 import { useApplicationDetailsQuery, useApplicationListQuery } from '@/api/applications';
-import { MAX_DESCRIPTION_LENGTH } from '@/common/constants';
+import { MAX_DESCRIPTION_LENGTH, PERMISSIONS } from '@/common/constants';
 import StyledTabs from '@/components/StyledTabs';
 import VariableList from '@/components/VariableList';
 import useNavBlocker from '@/hooks/useNavBlocker';
 import { StyledGridContainer, TabBarItems } from '@/pages/Common/Components/StyledComponents';
+
+import BuildScheduleWithAiModal from './BuildScheduleWithAiModal';
 
 const TYPE_ITEMS = [
   { value: 'agent', label: 'Agent' },
@@ -59,7 +62,7 @@ const FieldError = ({ message }) =>
   ) : null;
 
 /**
- * `children({ values, setFieldValue })` fills SCHEDULE SETTINGS from the form values (cron, expires_at);
+ * `children({ values, setFieldValue, dirty, setValues })` fills SCHEDULE SETTINGS from the form values (cron, expires_at);
  * `onSubmit(body)` returns a promise that rejects with the API error.
  */
 const ScheduleForm = memo(props => {
@@ -198,6 +201,20 @@ const ScheduleForm = memo(props => {
     {
       title: 'GENERAL',
       testId: 'schedule-section-general',
+      summaryAction: (
+        <GenerateEntityButton
+          permission={PERMISSIONS.schedules.create}
+          buttonTestId="generate-schedule-open-button"
+          renderModal={({ open, onClose }) => (
+            <BuildScheduleWithAiModal
+              open={open}
+              onClose={onClose}
+              formik={formik}
+              lockedEntity={lockedEntity}
+            />
+          )}
+        />
+      ),
       content: (
         <Box sx={styles.section}>
           <StyledInputEnhancer
@@ -305,7 +322,7 @@ const ScheduleForm = memo(props => {
     {
       title: 'SCHEDULE SETTINGS',
       testId: 'schedule-section-settings',
-      content: <Box sx={styles.section}>{children?.({ values, setFieldValue })}</Box>,
+      content: <Box sx={styles.section}>{children?.({ values, setFieldValue, dirty: formik.dirty, setValues })}</Box>,
     },
   ];
 
