@@ -1,0 +1,40 @@
+import { memo } from 'react';
+
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import { Box, Typography } from '@mui/material';
+
+const GROUPS = [
+  { key: 'created', title: 'Created', icon: 'success', Icon: CheckCircleOutlineIcon, color: 'success.main' },
+  { key: 'skipped', title: 'Skipped', icon: 'info', Icon: InfoOutlinedIcon, color: 'info.main' },
+  { key: 'failed', title: 'Failed', icon: 'error', Icon: ErrorOutlineIcon, color: 'error.main' },
+];
+
+const ScheduleImportReport = memo(({ report }) => (
+  <Box sx={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+    {GROUPS.map(({ key, title, icon, Icon, color }) => {
+      const items = report?.[key] ?? [];
+      if (!items.length) return null;
+      return (
+        <Box key={key} data-testid={`import-report-${key}`}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Icon data-testid={`import-report-icon-${icon}`} fontSize="small" sx={{ color }} />
+            <Typography variant="labelMedium">{`${title} (${items.length})`}</Typography>
+          </Box>
+          <Box component="ul" sx={{ margin: '0.25rem 0 0', paddingLeft: '2rem' }}>
+            {items.map(({ name, note, reason }) => (
+              <Typography component="li" variant="bodySmall" key={name}>
+                {[name, note ?? reason].filter(Boolean).join(' - ')}
+              </Typography>
+            ))}
+          </Box>
+        </Box>
+      );
+    })}
+  </Box>
+));
+
+ScheduleImportReport.displayName = 'ScheduleImportReport';
+
+export default ScheduleImportReport;
