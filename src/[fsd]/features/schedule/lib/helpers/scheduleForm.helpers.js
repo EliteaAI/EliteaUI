@@ -60,6 +60,33 @@ export const buildInitialValues = (searchParams, locationState) => {
   };
 };
 
+// The saved end-of-day moment, read as a calendar date in the schedule's own time zone
+const toExpiryDate = (expiresAt, timeZone) =>
+  expiresAt ? new Intl.DateTimeFormat('en-CA', { timeZone }).format(new Date(expiresAt)) : null;
+
+export const buildEditValues = (schedule, locationState) => {
+  const browserTimezone = ScheduleHelpers.getBrowserTimezone();
+  const { values, returnTo } = buildInitialValues(new URLSearchParams(), locationState);
+
+  return {
+    values: {
+      ...values,
+      name: schedule.name,
+      description: schedule.description ?? '',
+      type: schedule.entity_type,
+      application_id: schedule.application_id,
+      version_id: schedule.version_id,
+      run_mode: schedule.run_mode,
+      prompt: schedule.prompt ?? '',
+      variables: syncPromptVariables(schedule.prompt, schedule.variables),
+      cron: ScheduleHelpers.convertCronTimezone(schedule.cron, schedule.timezone, browserTimezone),
+      timezone: browserTimezone,
+      expires_at: toExpiryDate(schedule.expires_at, schedule.timezone),
+    },
+    returnTo,
+  };
+};
+
 export const getEntityLock = (urlEntity, entity) => {
   if (!urlEntity) return { locked: false, unavailable: false };
   const locked = entity?.type === urlEntity.type;
@@ -96,6 +123,8 @@ export const toCreateBody = ({
     expires_at,
   };
 };
+
+export const toUpdateBody = toCreateBody;
 
 // The schedule API answers one broken field at a time: { error, field }; a message without a field goes to the banner
 export const toFieldErrors = error => {

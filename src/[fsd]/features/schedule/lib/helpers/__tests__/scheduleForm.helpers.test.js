@@ -5,6 +5,7 @@ import { MAX_DESCRIPTION_LENGTH } from '@/common/constants';
 
 import {
   DEFAULT_SCHEDULE_CRON,
+  buildEditValues,
   buildInitialValues,
   getEntityLock,
   isPromptShown,
@@ -13,6 +14,7 @@ import {
   syncPromptVariables,
   toCreateBody,
   toFieldErrors,
+  toUpdateBody,
 } from '../scheduleForm.helpers';
 
 const agentValues = {
@@ -220,5 +222,76 @@ describe('EL-7011 R6.3 server 400 messages', () => {
   it('toFieldErrors returns no field errors for a message without a field', () => {
     expect(toFieldErrors({ status: 400, data: { error: 'Choose a version' } })).toEqual({});
     expect(toFieldErrors(undefined)).toEqual({});
+  });
+});
+
+const saved = {
+  id: 4,
+  name: 'Night report',
+  description: 'Daily',
+  entity_type: 'pipeline',
+  application_id: 7,
+  version_id: 12,
+  run_mode: 'prompt',
+  prompt: 'Summarize {{team}}',
+  variables: [{ name: 'team', value: 'core' }],
+  cron: '0 2 * * *',
+  timezone: 'UTC',
+  expires_at: '2026-12-31T23:59:59+00:00',
+  created_by: 3,
+};
+
+describe('EL-7011 R1.5 edit values', () => {
+  it('fills the form with the saved values and one variable per placeholder', () => {
+    const { values, returnTo } = buildEditValues({ ...saved, prompt: 'Hi {{team}} {{day}}' }, { returnTo: '/schedules?x=1' });
+    expect(values).toMatchObject({
+      name: 'Night report',
+      description: 'Daily',
+      type: 'pipeline',
+      application_id: 7,
+      version_id: 12,
+      run_mode: 'prompt',
+      prompt: 'Hi {{team}} {{day}}',
+      expires_at: '2026-12-31',
+    });
+    expect(values.variables).toHaveLength(2);
+    expect(values.variables).toEqual(
+      expect.arrayContaining([
+        { name: 'team', value: 'core' },
+        { name: 'day', value: '' },
+      ]),
+    );
+    expect(values.timezone).toBeTruthy();
+    expect(returnTo).toBe('/schedules?x=1');
+  });
+
+  it('keeps an empty description and no expiry empty', () => {
+    const { values } = buildEditValues({ ...saved, description: null, expires_at: null }, undefined);
+    expect(values.description).toBe('');
+    expect(values.expires_at).toBeNull();
+  });
+
+  it('reads the expiry date in the schedule time zone, not in UTC', () => {
+    const { values } = buildEditValues(
+      { ...saved, timezone: 'Asia/Tokyo', expires_at: '2026-12-31T20:00:00+00:00' },
+      undefined,
+    );
+    expect(values.expires_at).toBe('2027-01-01');
+  });
+});
+
+describe('EL-7011 R2.3 R2.5 update body', () => {
+  it('has the create body rules and no created_by', () => {
+    const { values } = buildEditValues(saved, undefined);
+    const body = toUpdateBody({ ...values, created_by: 3 });
+    expect(body).not.toHaveProperty('created_by');
+    expect(body).toMatchObject({
+      description: 'Daily',
+      entity_type: 'pipeline',
+      run_mode: 'prompt',
+      prompt: 'Summarize {{team}}',
+      variables: [{ name: 'team', value: 'core' }],
+    });
+    expect(toUpdateBody(values)).toEqual(toCreateBody(values));
   });
 });
