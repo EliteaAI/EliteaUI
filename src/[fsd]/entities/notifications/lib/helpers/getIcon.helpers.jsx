@@ -3,6 +3,7 @@ import AttentionIcon from '@/components/Icons/AttentionIcon';
 import CommentIcon from '@/components/Icons/CommentIcon';
 import ErrorIcon from '@/components/Icons/ErrorIcon';
 import HeartIcon from '@/components/Icons/HeartIcon';
+import InfoIcon from '@/components/Icons/InfoIcon';
 import MedalIcon from '@/components/Icons/MedalIcon';
 import RemoveIcon from '@/components/Icons/RemoveIcon';
 import SuccessIcon from '@/components/Icons/SuccessIcon';
@@ -19,6 +20,7 @@ export const getIcon = (type, theme, notification) => {
     case NotificationType.ChatUserMentioned:
     case NotificationType.PrivateProjectCreated:
     case NotificationType.ModerationApproved:
+    case NotificationType.ScheduleRunSucceeded:
       return <SuccessIcon fill={theme.palette.status.published} />;
 
     case NotificationType.IndexDataChanged:
@@ -49,6 +51,10 @@ export const getIcon = (type, theme, notification) => {
     case NotificationType.TokenIsExpired:
     case NotificationType.SpendingLimitIsExpired:
     case NotificationType.IndexScheduleExpired:
+    case NotificationType.ScheduleRunFailed:
+    case NotificationType.ScheduleApprovalExpired:
+    case NotificationType.ScheduleExpired:
+    case NotificationType.ScheduleDisabled:
       return (
         <ErrorIcon
           fill={theme.palette.status.rejected}
@@ -61,6 +67,7 @@ export const getIcon = (type, theme, notification) => {
     case NotificationType.BucketExpirationWarning:
     case NotificationType.PersonalAccessTokenExpiring:
     case NotificationType.IndexScheduleExpiring:
+    case NotificationType.ScheduleApprovalNeeded:
     case NotificationType.BudgetThresholdReached:
     case NotificationType.MemberBudgetThresholdReached:
       return (
@@ -78,6 +85,10 @@ export const getIcon = (type, theme, notification) => {
           size={16}
         />
       );
+
+    case NotificationType.ScheduleEditedByAdmin:
+    case NotificationType.ScheduleOwnerChanged:
+      return <InfoIcon fill={theme.palette.icon.tips} />;
 
     case NotificationType.Rates:
       return (
