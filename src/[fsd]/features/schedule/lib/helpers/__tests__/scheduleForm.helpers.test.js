@@ -127,7 +127,7 @@ describe('EL-7011 R5.1 and R5.3 entity from the URL', () => {
     const { values, urlEntity, returnTo } = buildInitialValues(new URLSearchParams(''), null);
     expect(urlEntity).toBeNull();
     expect(values).toMatchObject({ type: 'agent', application_id: '', run_mode: null, variables: [] });
-    expect(returnTo).toBe('/schedules');
+    expect(returnTo).toBe('/settings/schedules');
   });
 
   it('R1.3 EL-7011 buildInitialValues holds the schedule settings in the form values', () => {
@@ -141,8 +141,8 @@ describe('EL-7011 R5.1 and R5.3 entity from the URL', () => {
 
   it('R6.5 EL-7011 buildInitialValues accepts only an in-app returnTo path', () => {
     const returnTo = state => buildInitialValues(new URLSearchParams(''), { returnTo: state }).returnTo;
-    expect(returnTo('//evil.example')).toBe('/schedules');
-    expect(returnTo('https://evil.example')).toBe('/schedules');
+    expect(returnTo('//evil.example')).toBe('/settings/schedules');
+    expect(returnTo('https://evil.example')).toBe('/settings/schedules');
     expect(returnTo('/agents/3')).toBe('/agents/3');
   });
 
@@ -228,7 +228,7 @@ describe('EL-7011 R6.3 server 400 messages', () => {
 describe('EL-7011 R1.4 approval rule in the body', () => {
   it('toCreateBody sends the chosen rule', () => {
     expect(toCreateBody({ ...agentValues, approval_rule: 'run_without_asking' }).approval_rule).toBe(
-      'run_without_asking'
+      'run_without_asking',
     );
   });
 
@@ -255,7 +255,14 @@ describe('EL-7011 R2.3 save warnings', () => {
       'Not all scanned',
       'Something',
     ]);
-    expect(items.map(i => i.target)).toEqual(['ask', 'jira', 'git', 'jira / delete_issue', undefined, undefined]);
+    expect(items.map(i => i.target)).toEqual([
+      'ask',
+      'jira',
+      'git',
+      'jira / delete_issue',
+      undefined,
+      undefined,
+    ]);
     expect(new Set(items.slice(0, 5).map(i => i.label)).size).toBe(5);
     expect(items[5].label).toBe('Warning');
   });

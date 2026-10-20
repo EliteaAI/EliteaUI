@@ -11,7 +11,10 @@ const mocks = vi.hoisted(() => ({
   useSelectedProjectId: vi.fn(),
   toastError: vi.fn(),
   checkPermission: vi.fn(),
+  navigate: vi.fn(),
 }));
+
+vi.mock('react-router-dom', () => ({ useNavigate: () => mocks.navigate }));
 
 vi.mock('@/[fsd]/entities/schedule', () => ({ useGetScheduleListQuery: mocks.useGetScheduleListQuery }));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
@@ -24,6 +27,23 @@ vi.mock('@/hooks/useCheckPermission', () => ({
 }));
 vi.mock('@/[fsd]/features/schedule-import-export', () => ({
   ScheduleImportExportActions: ({ projectId }) => <div data-testid="import-export-actions">{projectId}</div>,
+}));
+vi.mock('@/[fsd]/features/settings', () => ({
+  DrawerPage: ({ children }) => <div>{children}</div>,
+  DrawerPageHeader: ({ title, titleTestId, showAddButton, extraContent, slotProps }) => (
+    <div>
+      <span data-testid={titleTestId}>{title}</span>
+      {extraContent}
+      {showAddButton && (
+        <button
+          data-testid={slotProps.addButton.testId}
+          onClick={slotProps.addButton.onAdd}
+        >
+          {slotProps.addButton.tooltip}
+        </button>
+      )}
+    </div>
+  ),
 }));
 vi.mock('../SchedulesFilters', () => ({
   default: ({ value, onChange, onClear, hasFilters, isAdmin }) => (
@@ -179,7 +199,21 @@ describe('EL-7011 US-26 SchedulesPage', () => {
     expect(screen.getByTestId('sort')).toHaveTextContent('name desc');
   });
 
-  it('EL-7011 shows the page title like Agents and Pipelines', () => {
+  it('EL-7011 R1.4 shows the round + button with the create permission and opens New schedule', () => {
+    mocks.checkPermission.mockImplementation(
+      permission => permission === 'models.applications.schedules.create',
+    );
+    render(<SchedulesPage />);
+    fireEvent.click(screen.getByTestId('schedules-add-button'));
+    expect(mocks.navigate).toHaveBeenCalledWith('/settings/schedules/create');
+  });
+
+  it('EL-7011 R1.4 hides the + button without the create permission', () => {
+    render(<SchedulesPage />);
+    expect(screen.queryByTestId('schedules-add-button')).toBeNull();
+  });
+
+  it('EL-7011 shows the page title in the Settings header', () => {
     render(<SchedulesPage />);
     expect(screen.getByTestId('schedules-page-header')).toHaveTextContent('Schedules');
   });
