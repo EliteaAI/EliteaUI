@@ -177,15 +177,17 @@ const shownValue = () => screen.getByTestId('select-value');
 const save = () => fireEvent.click(screen.getByTestId('schedule-save'));
 const pick = title => fireEvent.click(screen.getByTestId(`option-${title}`));
 const personalHint = () => screen.queryByTestId('index-schedule-personal-credential-hint');
+const expectSavesShown = async title => {
+  await waitFor(() => expect(shownValue()).toHaveTextContent(title));
+  save();
+  expect(onSubmit).toHaveBeenCalledWith(CRON, { elitea_title: title, private: false });
+};
 
 describe('IndexScheduleModal credentials', () => {
   it('opens a new schedule on the credential the toolkit uses, not the first listed one', async () => {
     renderModal({ toolkitCredentials: { elitea_title: PROJECT_B, private: false } });
 
-    await waitFor(() => expect(shownValue()).toHaveTextContent(PROJECT_B));
-    save();
-
-    expect(onSubmit).toHaveBeenCalledWith(CRON, { elitea_title: PROJECT_B, private: false });
+    await expectSavesShown(PROJECT_B);
   });
 
   it('keeps the credential an existing schedule stored, even when the toolkit uses another', async () => {
@@ -195,10 +197,7 @@ describe('IndexScheduleModal credentials', () => {
       toolkitCredentials: { elitea_title: PROJECT_B, private: false },
     });
 
-    await waitFor(() => expect(shownValue()).toHaveTextContent(PROJECT_A));
-    save();
-
-    expect(onSubmit).toHaveBeenCalledWith(CRON, { elitea_title: PROJECT_A, private: false });
+    await expectSavesShown(PROJECT_A);
   });
 
   it('never falls back to the first listed credential when there is nothing to seed', async () => {
@@ -253,10 +252,7 @@ describe('IndexScheduleModal credentials', () => {
     rerender(modalElement({ open: false, toolkitCredentials: { elitea_title: PROJECT_B, private: false } }));
     rerender(modalElement({ toolkitCredentials: { elitea_title: PROJECT_B, private: false } }));
 
-    await waitFor(() => expect(shownValue()).toHaveTextContent(PROJECT_B));
-    save();
-
-    expect(onSubmit).toHaveBeenCalledWith(CRON, { elitea_title: PROJECT_B, private: false });
+    await expectSavesShown(PROJECT_B);
   });
 
   it('takes the toolkit credential that changed between a close and a reopen', async () => {
@@ -267,10 +263,7 @@ describe('IndexScheduleModal credentials', () => {
     rerender(modalElement({ open: false, toolkitCredentials: { elitea_title: PROJECT_B, private: false } }));
     rerender(modalElement({ toolkitCredentials: { elitea_title: PROJECT_B, private: false } }));
 
-    await waitFor(() => expect(shownValue()).toHaveTextContent(PROJECT_B));
-    save();
-
-    expect(onSubmit).toHaveBeenCalledWith(CRON, { elitea_title: PROJECT_B, private: false });
+    await expectSavesShown(PROJECT_B);
   });
 
   it('seeds the toolkit credential once the toolkit schemas load after the dialog opened', async () => {
@@ -278,10 +271,7 @@ describe('IndexScheduleModal credentials', () => {
 
     rerender(modalElement({ toolkitCredentials: { elitea_title: PROJECT_B, private: false } }));
 
-    await waitFor(() => expect(shownValue()).toHaveTextContent(PROJECT_B));
-    save();
-
-    expect(onSubmit).toHaveBeenCalledWith(CRON, { elitea_title: PROJECT_B, private: false });
+    await expectSavesShown(PROJECT_B);
   });
 
   it('does not seed a late toolkit credential into a field the user has cleared', async () => {
