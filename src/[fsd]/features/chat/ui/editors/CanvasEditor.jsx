@@ -19,6 +19,7 @@ import { useTrackEvent } from '@/GA';
 import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
 import {
   SERVICE_PROMPT_KEYS,
+  useIsSmallWindow,
   useLanguageLinter,
   useSelectedProjectId,
   useServicePromptByKey,
@@ -44,7 +45,6 @@ import {
   useJoinCanvasSocket,
   useLeaveCanvasRoomSocket,
 } from '@/hooks/chat/useCanvasSocket';
-import useIsSmallWindow from '@/hooks/useIsSmallWindow';
 
 import CanvasEditHeader from './CanvasEditHeader';
 

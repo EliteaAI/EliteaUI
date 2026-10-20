@@ -2,8 +2,8 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Box, Skeleton } from '@mui/material';
 
+import { useIsSmallWindow } from '@/[fsd]/shared/lib/hooks';
 import { genConversationId } from '@/common/utils';
-import useIsSmallWindow from '@/hooks/useIsSmallWindow';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 
 import FolderItem from './FolderItem';

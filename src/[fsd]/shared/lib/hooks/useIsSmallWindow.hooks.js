@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import { MIN_LARGE_WINDOW_WIDTH } from '@/common/constants';
+import { WindowConstants } from '@/[fsd]/shared/lib/constants';
 
-export default function useIsSmallWindow(onResizeCallback) {
+const { MIN_LARGE_WINDOW_WIDTH } = WindowConstants;
+
+export const useIsSmallWindow = onResizeCallback => {
   const [isSmallWindow, setIsSmallWindow] = useState(false);
 
   const onSize = useCallback(() => {
@@ -33,4 +35,4 @@ export default function useIsSmallWindow(onResizeCallback) {
   }, [onSize]);
 
   return { isSmallWindow };
-}
+};

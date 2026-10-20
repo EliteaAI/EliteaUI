@@ -9,13 +9,12 @@ import { Box, CircularProgress, useTheme } from '@mui/material';
 import { EmptyStatePage } from '@/[fsd]/entities/empty-state-page';
 import { PERSONAL_TOKENS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { DrawerPage, DrawerPageHeader, SettingsPreview, TokensSection } from '@/[fsd]/features/settings';
-import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
+import { useIsSmallWindow, useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { useTokenListQuery } from '@/api/auth';
 import { useListModelsQuery } from '@/api/configurations';
 import credentialsDarkImage from '@/assets/images/Credentials_Dark.png';
 import credentialsLightImage from '@/assets/images/Credentials_Light.png';
 import { PUBLIC_PROJECT_ID, VITE_SERVER_URL, ViewMode } from '@/common/constants';
-import useIsSmallWindow from '@/hooks/useIsSmallWindow';
 import RouteDefinitions from '@/routes';
 
 const PersonalTokens = memo(() => {

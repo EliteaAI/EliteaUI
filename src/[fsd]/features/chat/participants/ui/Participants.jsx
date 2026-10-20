@@ -3,11 +3,10 @@ import { memo, useMemo } from 'react';
 import { Box, IconButton, Typography, useTheme } from '@mui/material';
 
 import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
-import { useGetComponentWidth } from '@/[fsd]/shared/lib/hooks';
+import { useGetComponentWidth, useIsSmallWindow } from '@/[fsd]/shared/lib/hooks';
 import { ContextBudgetUI } from '@/[fsd]/widgets/context-budget';
 import DoubleLeftIcon from '@/components/Icons/DoubleLeftIcon';
 import DoubleRightIcon from '@/components/Icons/DoubleRightIcon';
-import useIsSmallWindow from '@/hooks/useIsSmallWindow';
 
 import CollapsedPerticapantsList from './collapsed-participants/CollapsedPerticapantsList';
 import ExpandedPerticapantsList from './expanded-participants/ExpandedParticipantsList';

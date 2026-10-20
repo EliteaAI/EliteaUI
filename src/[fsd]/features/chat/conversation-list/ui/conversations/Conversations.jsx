@@ -15,6 +15,7 @@ import {
 import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import {
   useDebounceValue,
+  useIsSmallWindow,
   usePreventDoubleClick,
   useSelectedProjectId,
   useSortQueryParamsFromUrl,
@@ -31,7 +32,6 @@ import FromFolder from '@/components/Icons/FromFolder';
 import NewFolder from '@/components/Icons/NewFolder';
 import useDragAndDrop from '@/hooks/chat/useDragAndDrop';
 import useCheckPermission from '@/hooks/useCheckPermission';
-import useIsSmallWindow from '@/hooks/useIsSmallWindow';
 import { DndContext, closestCenter } from '@dnd-kit/core';
 
 import ChatImportButton from './ChatImportButton';

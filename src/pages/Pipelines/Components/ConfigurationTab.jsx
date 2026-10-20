@@ -9,6 +9,7 @@ import { PIPELINE_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib
 import { usePipelineAttachmentYamlSync, usePipelineChat } from '@/[fsd]/features/pipelines/lib/hooks';
 import { LLMSettingsConstants } from '@/[fsd]/shared/lib/constants';
 import {
+  useIsSmallWindow,
   useRestoredConversation,
   useRunHistoryNavigation,
   useSelectedProjectId,
@@ -17,7 +18,6 @@ import { isReasoningFamilyFromStored } from '@/[fsd]/shared/lib/utils';
 import DirtyDetector from '@/components/Formik/DirtyDetector';
 import useAgentMCPToolsStatusMonitor from '@/hooks/application/useAgentMCPToolsStatusMonitor';
 import useUploadAttachments from '@/hooks/chat/useUploadAttachments';
-import useIsSmallWindow from '@/hooks/useIsSmallWindow';
 import RouteDefinitions from '@/routes';
 
 import ChatPanel from './ChatPanel';

@@ -1,8 +1,8 @@
 import { forwardRef } from 'react';
 
 import { FlowEditor } from '@/[fsd]/features/pipelines/flow-editor/ui';
+import { useIsSmallWindow } from '@/[fsd]/shared/lib/hooks';
 import { PipelineEditorMode } from '@/common/constants.js';
-import useIsSmallWindow from '@/hooks/useIsSmallWindow';
 import { ReactFlowProvider } from '@xyflow/react';
 
 const FlowWrapper = forwardRef(
