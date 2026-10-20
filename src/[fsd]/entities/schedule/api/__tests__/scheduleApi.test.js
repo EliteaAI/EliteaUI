@@ -1,32 +1,14 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { jsonResponse, makeStore as makeStoreFor, requestedUrls } from './scheduleApi.testSetup.js';
 
-vi.mock('@/api/eliteaApi.js', () => ({
-  eliteaApi: createApi({
-    reducerPath: 'eliteaApi',
-    baseQuery: fetchBaseQuery({ baseUrl: 'https://test.local' }),
-    tagTypes: [],
-    endpoints: () => ({}),
-  }),
-}));
+vi.mock('@/api/eliteaApi.js', async () => (await import('./scheduleApi.testSetup.js')).createEliteaApiMock());
 
-const { configureStore } = await import('@reduxjs/toolkit');
 const { scheduleApi, SCHEDULES_TAG } = await import('../scheduleApi.js');
 const { PAGE_SIZE } = await import('@/common/constants.js');
 
-const makeStore = () =>
-  configureStore({
-    reducer: { [scheduleApi.reducerPath]: scheduleApi.reducer },
-    middleware: getDefault => getDefault().concat(scheduleApi.middleware),
-  });
-
-const requestedUrls = spy =>
-  spy.mock.calls.map(([arg]) => new URL(arg instanceof Request ? arg.url : String(arg)));
-
-const jsonResponse = (body, status = 200) =>
-  new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
+const makeStore = () => makeStoreFor(scheduleApi);
 
 describe('R2.1 EL-7011 schedule list query', () => {
   let fetchSpy;
