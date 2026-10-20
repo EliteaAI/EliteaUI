@@ -1,9 +1,11 @@
 import { memo } from 'react';
 
-import { Box, Typography } from '@mui/material';
+import { Box, TableSortLabel, Typography } from '@mui/material';
 
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
+
+import { analyticsTableSortLabelSx } from './analyticsTable.styles';
 
 const COST_COLUMNS = [
   { header: 'TOTAL COST', key: 'cost', belowKey: 'total_cost' },
@@ -14,9 +16,38 @@ const COST_COLUMNS = [
 ];
 
 const CostTable = memo(props => {
-  const { title, tooltip, nameHeader, rows, emptyState, extraColumns = [], testId } = props;
+  const {
+    title,
+    tooltip,
+    nameHeader,
+    rows,
+    emptyState,
+    extraColumns = [],
+    testId,
+    sortBy,
+    sortOrder,
+    onSort,
+  } = props;
 
   const styles = costTableStyles();
+
+  const renderHeaderCell = (key, label, sx) => {
+    if (onSort) {
+      return (
+        <Box sx={sx}>
+          <TableSortLabel
+            active={sortBy === key}
+            direction={sortBy === key ? sortOrder : 'desc'}
+            onClick={() => onSort(key)}
+            sx={analyticsTableSortLabelSx}
+          >
+            {label}
+          </TableSortLabel>
+        </Box>
+      );
+    }
+    return <Typography sx={sx}>{label}</Typography>;
+  };
 
   return (
     <Box
@@ -42,24 +73,14 @@ const CostTable = memo(props => {
       {rows.length > 0 ? (
         <Box sx={styles.tableWrapper}>
           <Box sx={styles.tableHeader}>
-            <Typography sx={[styles.tableCell, styles.nameCell]}>{nameHeader}</Typography>
-            {extraColumns.map(col => (
-              <Typography
-                key={col.key}
-                sx={[styles.tableCell, { flex: col.flex ?? 1 }]}
-              >
-                {col.header}
-              </Typography>
-            ))}
-            {COST_COLUMNS.map(col => (
-              <Typography
-                key={col.key}
-                sx={[styles.tableCell, styles.costCell]}
-              >
-                {col.header}
-              </Typography>
-            ))}
-            <Typography sx={[styles.tableCell, styles.shareCell]}>SHARE</Typography>
+            {renderHeaderCell('name', nameHeader, [styles.tableCell, styles.nameCell])}
+            {extraColumns.map(col =>
+              renderHeaderCell(col.key, col.header, [styles.tableCell, { flex: col.flex ?? 1 }]),
+            )}
+            {COST_COLUMNS.map(col =>
+              renderHeaderCell(col.key, col.header, [styles.tableCell, styles.costCell]),
+            )}
+            {renderHeaderCell('share', 'SHARE', [styles.tableCell, styles.shareCell])}
           </Box>
           {rows.map((row, index) => (
             <Box

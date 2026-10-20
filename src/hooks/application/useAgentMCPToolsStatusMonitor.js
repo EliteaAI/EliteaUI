@@ -3,11 +3,11 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useFormikContext } from 'formik';
 import { useDispatch, useSelector } from 'react-redux';
 
+import { useSocket } from '@/[fsd]/features/auth/lib/hooks';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { eliteaApi } from '@/api/eliteaApi';
 import { sioEvents } from '@/common/constants';
 import { convertToJson } from '@/common/utils';
-import useSocket from '@/hooks/useSocket';
 
 export default function useAgentMCPToolsStatusMonitor() {
   const { queries } = useSelector(state => state.eliteaApi);

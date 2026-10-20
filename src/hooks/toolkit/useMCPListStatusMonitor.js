@@ -2,10 +2,10 @@ import { useCallback, useEffect, useRef } from 'react';
 
 import { useDispatch, useSelector } from 'react-redux';
 
+import { useSocket } from '@/[fsd]/features/auth/lib/hooks';
 import { eliteaApi } from '@/api/eliteaApi';
 import { sioEvents } from '@/common/constants';
 import { convertToJson } from '@/common/utils';
-import useSocket from '@/hooks/useSocket';
 
 export default function useMCPListStatusMonitor({ isMCP }) {
   const { queries } = useSelector(state => state.eliteaApi);

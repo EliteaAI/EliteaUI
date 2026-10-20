@@ -7,6 +7,7 @@ import { Box } from '@mui/material';
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { useImportWizardMutation } from '@/[fsd]/entities/import-wizard/api';
 import {
+  buildAccessDeniedMessage,
   filterSelected,
   getErrorImportUUID,
   getImportedUUIDMap,
@@ -26,6 +27,7 @@ const IWModalImportButton = memo(props => {
   const [importWizard, { isLoading }] = useImportWizardMutation();
 
   const selectedProjectId = useMemo(() => selectedProject?.id, [selectedProject?.id]);
+  const selectedProjectName = selectedProject?.name;
   const importedData = useMemo(() => values?.importItems, [values?.importItems]);
   const selectedData = useMemo(() => filterSelected(importedData), [importedData]);
   const isNewApplication = useMemo(
@@ -122,12 +124,20 @@ const IWModalImportButton = memo(props => {
       });
     } else {
       if (response.error?.status === 403) {
-        toastError('Importing is not allowed on the selected project');
+        toastError(buildAccessDeniedMessage('import', selectedProjectName));
       } else {
         toastError(buildErrorMessage(response.error));
       }
     }
-  }, [importWizard, selectedProjectId, selectedData, generateValidationPromises, toastError, onSuccess]);
+  }, [
+    importWizard,
+    selectedProjectId,
+    selectedProjectName,
+    selectedData,
+    generateValidationPromises,
+    toastError,
+    onSuccess,
+  ]);
 
   return (
     <Tooltip

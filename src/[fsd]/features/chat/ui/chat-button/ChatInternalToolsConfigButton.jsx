@@ -20,7 +20,7 @@ const ChatInternalToolsConfigButton = memo(props => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   // Use POC approach: get available tools based on toolkit availability
-  const availableTools = useAvailableInternalTools();
+  const availableTools = useAvailableInternalTools({ activeToolNames: internal_tools });
 
   const onClickButton = () => {
     setAnchorEl(buttonRef.current);
@@ -76,10 +76,13 @@ const ChatInternalToolsConfigButton = memo(props => {
               <Switch.BaseSwitch
                 key={tool.name}
                 label={tool.title}
-                checked={internal_tools.includes(tool.name)}
+                checked={internal_tools.includes(tool.name) && !tool.unavailable}
+                disabled={tool.unavailable}
                 onChange={(event, checkedValue) => handleToggleChange(tool.name, event, checkedValue)}
                 width="100%"
-                infoTooltip={<Text.TextWithLink {...tool.infoTooltip} />}
+                infoTooltip={
+                  tool.unavailable ? tool.unavailableTooltip : <Text.TextWithLink {...tool.infoTooltip} />
+                }
                 slotProps={{
                   formControlLabel: {
                     sx: styles.formControlLabel,

@@ -1,11 +1,73 @@
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 
-import { Box, CircularProgress, TablePagination, Typography, useTheme } from '@mui/material';
+import { Box, CircularProgress, TablePagination, TableSortLabel, Typography } from '@mui/material';
 
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { AnalyticsUserDetailed } from '@/[fsd]/features/settings/ui/analytics';
+import { analyticsTableSortLabelSx } from '@/[fsd]/features/settings/ui/analytics/components/analyticsTable.styles';
 import { useAnalyticsUsersQuery } from '@/api';
 import StyledSearchInput from '@/components/SearchInput';
+
+const DEFAULT_USER_SORT = { sortBy: 'total_events', sortOrder: 'desc' };
+
+const USER_COLUMNS = [
+  { key: 'user_email', label: 'User', flex: 3, render: u => u.user_email || `User ${u.user_id}` },
+  { key: 'active_days', label: 'Active Days', render: u => u.active_days },
+  { key: 'llm_events', label: 'LLM Calls', render: u => AnalyticCommonHelpers.fmtNum(u.llm_events) },
+  { key: 'tool_events', label: 'Tool Calls', render: u => AnalyticCommonHelpers.fmtNum(u.tool_events) },
+  {
+    key: 'agent_events',
+    label: 'Agent/Pipeline Runs',
+    render: u => AnalyticCommonHelpers.fmtNum(u.agent_events),
+  },
+  {
+    key: 'skill_events',
+    label: 'Skill Runs',
+    skillOnly: true,
+    render: u => AnalyticCommonHelpers.fmtNum(u.skill_events),
+  },
+  {
+    key: 'chat_events',
+    label: 'Chat Msg',
+    sortable: false,
+    render: u => AnalyticCommonHelpers.fmtNum(u.chat_events),
+  },
+  { key: 'errors', label: 'Errors', render: u => u.errors },
+  { key: 'total_tokens', label: 'Total Tokens', render: u => AnalyticCommonHelpers.fmtNum(u.total_tokens) },
+  { key: 'input_tokens', label: 'Input Tokens', render: u => AnalyticCommonHelpers.fmtNum(u.input_tokens) },
+  {
+    key: 'output_tokens',
+    label: 'Output Tokens',
+    render: u => AnalyticCommonHelpers.fmtNum(u.output_tokens),
+  },
+  { key: 'llm_cost', label: 'Total Cost', render: u => AnalyticCommonHelpers.fmtCost(u.llm_cost) },
+  { key: 'input_cost', label: 'Input Token Cost', render: u => AnalyticCommonHelpers.fmtCost(u.input_cost) },
+  {
+    key: 'output_cost',
+    label: 'Output Token Cost',
+    render: u => AnalyticCommonHelpers.fmtCost(u.output_cost),
+  },
+  {
+    key: 'cache_read_tokens',
+    label: 'Cache Read Tokens',
+    render: u => AnalyticCommonHelpers.fmtNum(u.cache_read_tokens),
+  },
+  {
+    key: 'cache_creation_tokens',
+    label: 'Cache Write Tokens',
+    render: u => AnalyticCommonHelpers.fmtNum(u.cache_creation_tokens),
+  },
+  {
+    key: 'cache_read_cost',
+    label: 'Cache Read Cost',
+    render: u => AnalyticCommonHelpers.fmtCost(u.cache_read_cost),
+  },
+  {
+    key: 'cache_creation_cost',
+    label: 'Cache Write Cost',
+    render: u => AnalyticCommonHelpers.fmtCost(u.cache_creation_cost),
+  },
+];
 
 const AnalyticsUsers = memo(props => {
   const { projectId, dateFrom, dateTo, initialUserId, onBackToSource, canViewSkills = false } = props;
@@ -13,10 +75,14 @@ const AnalyticsUsers = memo(props => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(20);
   const [search, setSearch] = useState('');
+  const [sort, setSort] = useState(DEFAULT_USER_SORT);
   const [selectedUserId, setSelectedUserId] = useState(initialUserId || null);
   const [cameFromExternal] = useState(() => !!initialUserId);
 
-  const { palette } = useTheme();
+  const columns = useMemo(
+    () => USER_COLUMNS.filter(column => !column.skillOnly || canViewSkills),
+    [canViewSkills],
+  );
 
   const { data, isFetching } = useAnalyticsUsersQuery(
     {
@@ -26,14 +92,22 @@ const AnalyticsUsers = memo(props => {
       limit: rowsPerPage,
       offset: page * rowsPerPage,
       search,
-      sortBy: 'user_email',
-      sortOrder: 'asc',
+      sortBy: sort.sortBy,
+      sortOrder: sort.sortOrder,
     },
     { skip: !projectId },
   );
 
   const handleSearchChange = useCallback(event => {
     setSearch(event.target.value);
+    setPage(0);
+  }, []);
+
+  const handleSort = useCallback(key => {
+    setSort(previous => ({
+      sortBy: key,
+      sortOrder: previous.sortBy === key && previous.sortOrder === 'desc' ? 'asc' : 'desc',
+    }));
     setPage(0);
   }, []);
 
@@ -101,24 +175,26 @@ const AnalyticsUsers = memo(props => {
             sx={styles.tableHeader}
             data-testid="analytics-users-table-header"
           >
-            <Typography sx={[styles.tableCell, { flex: 3 }]}>User</Typography>
-            <Typography sx={[styles.tableCell, { flex: 1 }]}>Active Days</Typography>
-            <Typography sx={[styles.tableCell, { flex: 1 }]}>LLM Calls</Typography>
-            <Typography sx={[styles.tableCell, { flex: 1 }]}>Tool Calls</Typography>
-            <Typography sx={[styles.tableCell, { flex: 1 }]}>Agent/Pipeline Runs</Typography>
-            {canViewSkills && <Typography sx={[styles.tableCell, { flex: 1 }]}>Skill Runs</Typography>}
-            <Typography sx={[styles.tableCell, { flex: 1 }]}>Chat Msg</Typography>
-            <Typography sx={[styles.tableCell, { flex: 1 }]}>Errors</Typography>
-            <Typography sx={[styles.tableCell, styles.flexOne]}>Total Tokens</Typography>
-            <Typography sx={[styles.tableCell, styles.flexOne]}>Input Tokens</Typography>
-            <Typography sx={[styles.tableCell, styles.flexOne]}>Output Tokens</Typography>
-            <Typography sx={[styles.tableCell, styles.flexOne]}>Total Cost</Typography>
-            <Typography sx={[styles.tableCell, styles.flexOne]}>Input Token Cost</Typography>
-            <Typography sx={[styles.tableCell, styles.flexOne]}>Output Token Cost</Typography>
-            <Typography sx={[styles.tableCell, styles.flexOne]}>Cache Read Tokens</Typography>
-            <Typography sx={[styles.tableCell, styles.flexOne]}>Cache Write Tokens</Typography>
-            <Typography sx={[styles.tableCell, styles.flexOne]}>Cache Read Cost</Typography>
-            <Typography sx={[styles.tableCell, styles.flexOne]}>Cache Write Cost</Typography>
+            {columns.map(column => (
+              <Box
+                key={column.key}
+                sx={[styles.tableCell, { flex: column.flex ?? 1 }]}
+              >
+                {column.sortable === false ? (
+                  column.label
+                ) : (
+                  <TableSortLabel
+                    active={sort.sortBy === column.key}
+                    direction={sort.sortBy === column.key ? sort.sortOrder : 'desc'}
+                    onClick={() => handleSort(column.key)}
+                    sx={analyticsTableSortLabelSx}
+                    data-testid={`analytics-users-sort-${column.key}`}
+                  >
+                    {column.label}
+                  </TableSortLabel>
+                )}
+              </Box>
+            ))}
           </Box>
           {isFetching && (
             <Box
@@ -136,69 +212,19 @@ const AnalyticsUsers = memo(props => {
                 onClick={() => handleUserClick(u.user_id)}
                 data-testid="analytics-users-row"
               >
-                <Typography
-                  sx={[styles.tableCellValue, { flex: 3 }]}
-                  noWrap
-                >
-                  {u.user_email || `User ${u.user_id}`}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, { flex: 1 }]}>{u.active_days}</Typography>
-                <Typography sx={[styles.tableCellValue, { flex: 1 }]}>
-                  {AnalyticCommonHelpers.fmtNum(u.llm_events)}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, { flex: 1 }]}>
-                  {AnalyticCommonHelpers.fmtNum(u.tool_events)}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, { flex: 1 }]}>
-                  {AnalyticCommonHelpers.fmtNum(u.agent_events)}
-                </Typography>
-                {canViewSkills && (
-                  <Typography sx={[styles.tableCellValue, { flex: 1 }]}>
-                    {AnalyticCommonHelpers.fmtNum(u.skill_events)}
-                  </Typography>
-                )}
-                <Typography sx={[styles.tableCellValue, { flex: 1 }]}>
-                  {AnalyticCommonHelpers.fmtNum(u.chat_events)}
-                </Typography>
-                <Typography
-                  sx={[
-                    styles.tableCellValue,
-                    { flex: 1, color: u.errors > 0 ? palette.status.rejected : undefined },
-                  ]}
-                  data-testid="analytics-users-row-errors"
-                >
-                  {u.errors}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
-                  {AnalyticCommonHelpers.fmtNum(u.total_tokens)}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
-                  {AnalyticCommonHelpers.fmtNum(u.input_tokens)}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
-                  {AnalyticCommonHelpers.fmtNum(u.output_tokens)}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
-                  {AnalyticCommonHelpers.fmtCost(u.llm_cost)}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
-                  {AnalyticCommonHelpers.fmtCost(u.input_cost)}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
-                  {AnalyticCommonHelpers.fmtCost(u.output_cost)}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
-                  {AnalyticCommonHelpers.fmtNum(u.cache_read_tokens)}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
-                  {AnalyticCommonHelpers.fmtNum(u.cache_creation_tokens)}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
-                  {AnalyticCommonHelpers.fmtCost(u.cache_read_cost)}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, styles.flexOne]}>
-                  {AnalyticCommonHelpers.fmtCost(u.cache_creation_cost)}
-                </Typography>
+                {columns.map(column => (
+                  <Box
+                    key={column.key}
+                    sx={[
+                      styles.tableCellValue,
+                      { flex: column.flex ?? 1 },
+                      column.key === 'errors' && u.errors > 0 && styles.errorValue,
+                    ]}
+                    data-testid={column.key === 'errors' ? 'analytics-users-row-errors' : undefined}
+                  >
+                    {column.render(u)}
+                  </Box>
+                ))}
               </Box>
             ))}
         </Box>
@@ -280,6 +306,7 @@ const styles = {
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
   }),
+  errorValue: ({ palette }) => ({ color: palette.status.rejected }),
   userSearch: {
     width: '15rem',
     height: '2.25rem',
@@ -293,7 +320,6 @@ const styles = {
     color: palette.text.secondary,
     '& .MuiTablePagination-selectIcon': { color: palette.text.secondary },
   }),
-  flexOne: { flex: 1 },
 };
 
 export default AnalyticsUsers;

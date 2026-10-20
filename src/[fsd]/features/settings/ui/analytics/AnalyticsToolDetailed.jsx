@@ -1,13 +1,27 @@
-import { memo } from 'react';
+import { memo, useCallback } from 'react';
 
 import { Area, AreaChart, Tooltip as RechartsTooltip, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 
-import { Box, CircularProgress, IconButton, Typography, useTheme } from '@mui/material';
+import { Box, CircularProgress, IconButton, TableSortLabel, Typography, useTheme } from '@mui/material';
 
 import { useAnalyticsToolDetailQuery } from '@/[fsd]/features/settings/api/analyticsApi';
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { ChartTooltip, KPICard } from '@/[fsd]/features/settings/ui/analytics';
+import { analyticsTableSortLabelSx } from '@/[fsd]/features/settings/ui/analytics/components/analyticsTable.styles';
+import { useClientSort, useSortedRows } from '@/[fsd]/shared/lib/hooks';
 import ArrowBackIcon from '@/components/Icons/ArrowBackIcon';
+
+const USER_COLUMNS = [
+  { key: 'user_email', label: 'User', flex: 3 },
+  { key: 'calls', label: 'Calls', flex: 1 },
+  { key: 'avg_duration_ms', label: 'Avg Latency', flex: 1 },
+  { key: 'errors', label: 'Errors', flex: 1 },
+];
+
+const AGENT_COLUMNS = [
+  { key: 'entity_name', label: 'Agent / Pipeline', flex: 3 },
+  { key: 'calls', label: 'Calls', flex: 1 },
+];
 
 const AnalyticsToolDetailed = memo(props => {
   const { projectId, toolName, dateFrom, dateTo, onBack } = props;
@@ -21,6 +35,16 @@ const AnalyticsToolDetailed = memo(props => {
     { projectId, toolName, dateFrom, dateTo },
     { skip: !projectId || !toolName },
   );
+
+  const { kpis, users = [], agents = [], daily_usage = [] } = data ?? {};
+
+  const { sort: userSort, handleSort: handleUserSort } = useClientSort('calls');
+  const { sort: agentSort, handleSort: handleAgentSort } = useClientSort('calls');
+
+  const defaultGetValue = useCallback((row, key) => row[key], []);
+
+  const sortedUsers = useSortedRows(users, userSort, defaultGetValue);
+  const sortedAgents = useSortedRows(agents, agentSort, defaultGetValue);
 
   if (isFetching)
     return (
@@ -40,8 +64,6 @@ const AnalyticsToolDetailed = memo(props => {
         </Typography>
       </Box>
     );
-
-  const { kpis, users = [], agents = [], daily_usage = [] } = data;
 
   return (
     <Box sx={styles.toolDetailedContent}>
@@ -162,13 +184,24 @@ const AnalyticsToolDetailed = memo(props => {
           </Typography>
           <Box sx={styles.tableWrapper}>
             <Box sx={styles.tableHeader}>
-              <Typography sx={[styles.tableCell, { flex: 3 }]}>User</Typography>
-              <Typography sx={[styles.tableCell, { flex: 1 }]}>Calls</Typography>
-              <Typography sx={[styles.tableCell, { flex: 1 }]}>Avg Latency</Typography>
-              <Typography sx={[styles.tableCell, { flex: 1 }]}>Errors</Typography>
+              {USER_COLUMNS.map(col => (
+                <Box
+                  key={col.key}
+                  sx={[styles.tableCell, { flex: col.flex }]}
+                >
+                  <TableSortLabel
+                    active={userSort.sortBy === col.key}
+                    direction={userSort.sortBy === col.key ? userSort.sortOrder : 'desc'}
+                    onClick={() => handleUserSort(col.key)}
+                    sx={analyticsTableSortLabelSx}
+                  >
+                    {col.label}
+                  </TableSortLabel>
+                </Box>
+              ))}
             </Box>
             <Box sx={styles.fixedScrollList}>
-              {users.map((u, i) => (
+              {sortedUsers.map((u, i) => (
                 <Box
                   key={i}
                   sx={styles.tableRow}
@@ -221,11 +254,24 @@ const AnalyticsToolDetailed = memo(props => {
           </Typography>
           <Box sx={styles.tableWrapper}>
             <Box sx={styles.tableHeader}>
-              <Typography sx={[styles.tableCell, { flex: 3 }]}>Agent / Pipeline</Typography>
-              <Typography sx={[styles.tableCell, { flex: 1 }]}>Calls</Typography>
+              {AGENT_COLUMNS.map(col => (
+                <Box
+                  key={col.key}
+                  sx={[styles.tableCell, { flex: col.flex }]}
+                >
+                  <TableSortLabel
+                    active={agentSort.sortBy === col.key}
+                    direction={agentSort.sortBy === col.key ? agentSort.sortOrder : 'desc'}
+                    onClick={() => handleAgentSort(col.key)}
+                    sx={analyticsTableSortLabelSx}
+                  >
+                    {col.label}
+                  </TableSortLabel>
+                </Box>
+              ))}
             </Box>
             <Box sx={styles.fixedScrollList}>
-              {agents.map((a, i) => (
+              {sortedAgents.map((a, i) => (
                 <Box
                   key={i}
                   sx={styles.tableRow}

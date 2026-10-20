@@ -13,5 +13,7 @@ export * from './enhanceFix.helpers';
 export * from './trajectory.helpers';
 export * from './runLimits.helpers';
 export * from './runUsage.helpers';
+export * from './efficiency.helpers';
 export * from './expectedTrajectory.helpers';
 export * from './toolPicker.helpers';
+export * from './performanceDiff.helpers';

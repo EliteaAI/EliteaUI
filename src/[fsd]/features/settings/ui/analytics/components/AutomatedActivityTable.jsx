@@ -1,13 +1,14 @@
-import { memo, useMemo } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 
-import { Box, Typography } from '@mui/material';
+import { Box, TableSortLabel, Typography } from '@mui/material';
 
 import { AnalyticsCommonConstants } from '@/[fsd]/features/settings/lib/constants';
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { CHART_COLORS } from '@/[fsd]/shared/config/theme';
+import { useClientSort, useSortedRows } from '@/[fsd]/shared/lib/hooks';
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 
-import { analyticsTableStyles } from './analyticsTable.styles';
+import { analyticsTableSortLabelSx, analyticsTableStyles } from './analyticsTable.styles';
 
 const COLUMNS = [
   { key: 'runs', label: 'Runs', format: AnalyticCommonHelpers.fmtNum },
@@ -20,6 +21,13 @@ const AutomatedActivityTable = memo(props => {
   const { items = [] } = props;
 
   const styles = automatedActivityTableStyles();
+
+  const { sort: activitySort, handleSort: handleActivitySort } = useClientSort('runs');
+  const getActivityValue = useCallback((row, key) => {
+    if (key === 'trigger_source') return AnalyticCommonHelpers.triggerSourceLabel(row.trigger_source);
+    return row[key];
+  }, []);
+  const sortedItems = useSortedRows(items, activitySort, getActivityValue);
 
   const totals = useMemo(
     () =>
@@ -61,17 +69,33 @@ const AutomatedActivityTable = memo(props => {
       </Box>
       <Box sx={styles.tableWrapper}>
         <Box sx={styles.tableHeader}>
-          <Typography sx={[styles.tableCell, styles.sourceCol]}>Trigger Source</Typography>
-          {COLUMNS.map(({ key, label }) => (
-            <Typography
-              key={key}
-              sx={[styles.tableCell, styles.valueCol]}
+          <Box sx={[styles.tableCell, styles.sourceCol]}>
+            <TableSortLabel
+              active={activitySort.sortBy === 'trigger_source'}
+              direction={activitySort.sortBy === 'trigger_source' ? activitySort.sortOrder : 'desc'}
+              onClick={() => handleActivitySort('trigger_source')}
+              sx={analyticsTableSortLabelSx}
             >
-              {label}
-            </Typography>
+              Trigger Source
+            </TableSortLabel>
+          </Box>
+          {COLUMNS.map(({ key, label }) => (
+            <Box
+              key={key}
+              sx={[styles.tableCell, styles.valueCol, { display: 'flex', justifyContent: 'flex-end' }]}
+            >
+              <TableSortLabel
+                active={activitySort.sortBy === key}
+                direction={activitySort.sortBy === key ? activitySort.sortOrder : 'desc'}
+                onClick={() => handleActivitySort(key)}
+                sx={analyticsTableSortLabelSx}
+              >
+                {label}
+              </TableSortLabel>
+            </Box>
           ))}
         </Box>
-        {items.map((item, index) => (
+        {sortedItems.map((item, index) => (
           <Box
             key={item.trigger_source || index}
             sx={styles.tableRow}

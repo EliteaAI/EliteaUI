@@ -13,6 +13,8 @@ import {
   getRunOverBudgetLabel,
   getRunScoreLabel,
   getRunStopLabel,
+  getRunTimeoutNote,
+  getScoreDeltaTooltip,
 } from '../../lib/helpers';
 import RunHistoryActionsMenu from './RunHistoryActionsMenu';
 
@@ -40,9 +42,11 @@ const EvaluationRunRow = memo(props => {
   }, [run, onSelect]);
 
   const deltaLabel = formatScoreDelta(run.delta);
+  const deltaTooltip = getScoreDeltaTooltip(run);
   // A run stopped by a limit still shows the score of the cases it got through; the icon says so.
   const stopLabel = getRunStopLabel(run.meta);
   const overBudgetLabel = getRunOverBudgetLabel(run.meta);
+  const timeoutNote = getRunTimeoutNote(run.meta?.trajectory_rollup);
   const usage = getRunHistoryUsage(run.meta);
   const trajectory = getRunHistoryTrajectory(run.meta);
   const guardrails = getRunHistoryGuardrails(run.meta);
@@ -139,13 +143,19 @@ const EvaluationRunRow = memo(props => {
 
       <Box sx={styles.scoreCell}>
         {!!deltaLabel && (
-          <Typography
-            variant="bodySmall2"
-            sx={styles.delta}
-            data-testid={`evaluation-run-delta-${run.id}`}
+          <Tooltip
+            title={deltaTooltip}
+            placement="top"
           >
-            {deltaLabel}
-          </Typography>
+            <Typography
+              variant="bodySmall2"
+              sx={styles.delta}
+              aria-label={deltaTooltip || undefined}
+              data-testid={`evaluation-run-delta-${run.id}`}
+            >
+              {deltaLabel}
+            </Typography>
+          </Tooltip>
         )}
         <Typography
           variant="bodySmall"
@@ -179,6 +189,20 @@ const EvaluationRunRow = memo(props => {
               data-testid={`evaluation-run-over-budget-${run.id}`}
             >
               Over budget
+            </Box>
+          </Tooltip>
+        )}
+        {timeoutNote && (
+          <Tooltip
+            title={`${timeoutNote.label}. ${timeoutNote.coverage}.`}
+            placement="top"
+          >
+            <Box
+              component="span"
+              sx={styles.overBudget}
+              data-testid={`evaluation-run-timeouts-${run.id}`}
+            >
+              {run.meta.trajectory_rollup.timed_out_cases} timed out
             </Box>
           </Tooltip>
         )}

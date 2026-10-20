@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Link as RouterLink } from 'react-router-dom';
 import {
@@ -31,14 +31,14 @@ import {
   SkillAnalyticsHelpers,
 } from '@/[fsd]/features/settings/lib/helpers';
 import {
+  AnalyticsBreakdownTable,
   ChartTooltip,
   DeletedChip,
   KPICard,
-  SkillBreakdownTable,
 } from '@/[fsd]/features/settings/ui/analytics';
 import EntityKindChip from '@/[fsd]/features/settings/ui/analytics/components/EntityKindChip';
 import { analyticsTableStyles } from '@/[fsd]/features/settings/ui/analytics/components/analyticsTable.styles';
-import { useSelectedProjectName } from '@/[fsd]/shared/lib/hooks';
+import { useClientSort, useSelectedProjectName, useSortedRows } from '@/[fsd]/shared/lib/hooks';
 import { exportToExcel } from '@/[fsd]/shared/lib/utils';
 import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
 import DownloadIcon from '@/assets/download.svg?react';
@@ -63,7 +63,7 @@ const usageTable = firstColumn => [{ flex: 2.5, ...firstColumn }, ...USAGE_COLUM
 const VERSION_COLUMNS = usageTable({
   key: 'version_name',
   label: 'Version',
-  render: r => SkillAnalyticsHelpers.skillVersionLabel(r.version_name),
+  render: r => AnalyticCommonHelpers.formatVersionLabel(r.version_name),
 });
 
 const USER_COLUMNS = usageTable({
@@ -75,7 +75,7 @@ const USER_COLUMNS = usageTable({
 const TRIGGER_COLUMNS = usageTable({
   key: 'trigger_source',
   label: 'Trigger',
-  render: r => SkillAnalyticsHelpers.skillTriggerLabel(r.trigger_source),
+  render: r => AnalyticCommonHelpers.formatTriggerLabel(r.trigger_source),
 });
 
 const MODEL_COLUMNS = [
@@ -172,7 +172,7 @@ const AnalyticsSkillDetailed = memo(props => {
     {
       key: 'version_name',
       label: 'Version',
-      render: run => SkillAnalyticsHelpers.skillVersionLabel(run.version_name),
+      render: run => AnalyticCommonHelpers.formatVersionLabel(run.version_name),
     },
     { key: 'model_name', label: 'Model', flex: 1.5 },
     { key: 'total_tokens', label: 'Tokens', render: run => fmtNum(run.total_tokens) },
@@ -190,6 +190,46 @@ const AnalyticsSkillDetailed = memo(props => {
       ),
     },
   ];
+
+  const { sort: versionSort, handleSort: handleVersionSort } = useClientSort('runs');
+  const { sort: modelSort, handleSort: handleModelSort } = useClientSort('runs');
+  const { sort: userSort, handleSort: handleUserSort } = useClientSort('runs');
+  const { sort: triggerSort, handleSort: handleTriggerSort } = useClientSort('runs');
+  const { sort: agentSort, handleSort: handleAgentSort } = useClientSort('uses');
+  const { sort: sourceSort, handleSort: handleSourceSort } = useClientSort('uses');
+  const { sort: recentRunSort, handleSort: handleRecentRunSort } = useClientSort('started_at', 'desc');
+
+  const getRecentRunValue = useCallback((row, key) => {
+    if (key === 'started_at') return row.started_at ? new Date(row.started_at).getTime() : null;
+    return row[key];
+  }, []);
+
+  const defaultGetValue = useCallback((row, key) => row[key], []);
+
+  const {
+    kpis = {},
+    daily = [],
+    by_version = [],
+    by_model = [],
+    by_user = [],
+    by_trigger_source = [],
+    agents = [],
+    by_source = [],
+    recent_runs = [],
+  } = data ?? {};
+
+  const recentRunsWithKeys = useMemo(
+    () => recent_runs.map(run => ({ ...run, key: run.run_id })),
+    [recent_runs],
+  );
+
+  const sortedVersions = useSortedRows(by_version, versionSort, defaultGetValue);
+  const sortedModels = useSortedRows(by_model, modelSort, defaultGetValue);
+  const sortedUsers = useSortedRows(by_user, userSort, defaultGetValue);
+  const sortedTriggers = useSortedRows(by_trigger_source, triggerSort, defaultGetValue);
+  const sortedAgents = useSortedRows(agents, agentSort, defaultGetValue);
+  const sortedSources = useSortedRows(by_source, sourceSort, defaultGetValue);
+  const sortedRecentRuns = useSortedRows(recentRunsWithKeys, recentRunSort, getRecentRunValue);
 
   const handleExport = useCallback(async () => {
     setExporting(true);
@@ -246,18 +286,6 @@ const AnalyticsSkillDetailed = memo(props => {
         </Typography>
       </Box>
     );
-
-  const {
-    kpis = {},
-    daily = [],
-    by_version = [],
-    by_model = [],
-    by_user = [],
-    by_trigger_source = [],
-    agents = [],
-    by_source = [],
-    recent_runs = [],
-  } = data;
 
   const tt = AnalyticsCommonConstants.TOOLTIP_TEXTS.skillDetail;
 
@@ -451,44 +479,59 @@ const AnalyticsSkillDetailed = memo(props => {
       )}
 
       <Box sx={styles.grid}>
-        <SkillBreakdownTable
+        <AnalyticsBreakdownTable
           title="Versions"
           tooltip={tt.VERSIONS}
           columns={VERSION_COLUMNS}
-          rows={by_version}
+          rows={sortedVersions}
           testId="analytics-skill-detail-versions"
+          sortBy={versionSort.sortBy}
+          sortOrder={versionSort.sortOrder}
+          onSort={handleVersionSort}
         />
-        <SkillBreakdownTable
+        <AnalyticsBreakdownTable
           title="Models"
           tooltip={tt.MODELS}
           columns={MODEL_COLUMNS}
-          rows={by_model}
+          rows={sortedModels}
           emptyText="No model calls from skill runs"
           testId="analytics-skill-detail-models"
+          sortBy={modelSort.sortBy}
+          sortOrder={modelSort.sortOrder}
+          onSort={handleModelSort}
         />
-        <SkillBreakdownTable
+        <AnalyticsBreakdownTable
           title="Users"
           tooltip={tt.USERS}
           columns={USER_COLUMNS}
-          rows={by_user}
+          rows={sortedUsers}
           testId="analytics-skill-detail-users"
+          sortBy={userSort.sortBy}
+          sortOrder={userSort.sortOrder}
+          onSort={handleUserSort}
         />
-        <SkillBreakdownTable
+        <AnalyticsBreakdownTable
           title="Trigger Sources"
           tooltip={tt.TRIGGERS}
           columns={TRIGGER_COLUMNS}
-          rows={by_trigger_source}
+          rows={sortedTriggers}
           testId="analytics-skill-detail-triggers"
+          sortBy={triggerSort.sortBy}
+          sortOrder={triggerSort.sortOrder}
+          onSort={handleTriggerSort}
         />
-        <SkillBreakdownTable
+        <AnalyticsBreakdownTable
           title="Used by Agents"
           tooltip={tt.AGENTS}
           columns={agentColumns}
-          rows={agents}
+          rows={sortedAgents}
           emptyText="No agent used this skill in the selected period"
           testId="analytics-skill-detail-agents"
+          sortBy={agentSort.sortBy}
+          sortOrder={agentSort.sortOrder}
+          onSort={handleAgentSort}
         />
-        <SkillBreakdownTable
+        <AnalyticsBreakdownTable
           title="Load vs Mention"
           tooltip={tt.SOURCES}
           subtitle={
@@ -497,19 +540,25 @@ const AnalyticsSkillDetailed = memo(props => {
               : undefined
           }
           columns={SOURCE_COLUMNS}
-          rows={by_source}
+          rows={sortedSources}
           emptyText="No in-agent uses in the selected period"
           testId="analytics-skill-detail-sources"
+          sortBy={sourceSort.sortBy}
+          sortOrder={sourceSort.sortOrder}
+          onSort={handleSourceSort}
         />
       </Box>
 
-      <SkillBreakdownTable
+      <AnalyticsBreakdownTable
         title="Recent Runs"
         tooltip={tt.RECENT_RUNS}
         columns={recentRunColumns}
-        rows={recent_runs.map(run => ({ ...run, key: run.run_id }))}
+        rows={sortedRecentRuns}
         emptyText="No runs in the selected period"
         testId="analytics-skill-detail-recent-runs"
+        sortBy={recentRunSort.sortBy}
+        sortOrder={recentRunSort.sortOrder}
+        onSort={handleRecentRunSort}
       />
       <Snackbar
         open={exportError}

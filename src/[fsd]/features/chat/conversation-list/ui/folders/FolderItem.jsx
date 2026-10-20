@@ -298,7 +298,10 @@ const FolderItem = memo(props => {
       )}
     </>
   ) : (
-    <ClickAwayListener onClickAway={isNewFolder ? handleOnCancelCreateFolder : handleOnCloseEditFolder}>
+    <ClickAwayListener
+      mouseEvent="onMouseDown"
+      onClickAway={isNewFolder ? handleOnCancelCreateFolder : handleOnCloseEditFolder}
+    >
       <Box sx={styles.editorContainer}>
         <Input.StyledInputEnhancer
           autoComplete="off"

@@ -6,6 +6,13 @@ export const TOP_LIST_SIZE = 10;
 
 export const MODEL_CHART_SIZE = 15;
 
+export const ENTITY_DETAIL_TAB = 'all';
+
+export const ENTITY_KIND = {
+  agent: 'agent',
+  pipeline: 'pipeline',
+};
+
 export const ENTITY_KIND_LABELS = {
   agent: 'Agent',
   pipeline: 'Pipeline',
@@ -27,7 +34,22 @@ export const SKILL_SOURCE_LABELS = {
   mention: 'Mentioned in a message',
 };
 
-export const VERSION_UNKNOWN_LABEL = 'Version unknown';
+export const VERSION_UNKNOWN_LABEL = 'Unknown version';
+
+export const AGENT_MODEL_UNKNOWN_LABEL = 'Unknown model';
+
+export const AGENT_DETAIL_EMPTY_MESSAGE =
+  'No data is available for this Agent or Pipeline in the selected date range.';
+
+export const ANALYTICS_SEARCH_PARAMS = {
+  tab: 'tab',
+  range: 'range',
+  from: 'from',
+  to: 'to',
+  agentId: 'agent_id',
+  skillId: 'skill_id',
+  skillProjectId: 'skill_project_id',
+};
 
 export const TOOLTIP_TEXTS = {
   overview: {
@@ -123,7 +145,7 @@ export const TOOLTIP_TEXTS = {
     AVG_BODY_TOKENS:
       'Estimated average size, in tokens, of the skill instructions an agent received on each in-agent use.',
     VERSIONS:
-      'Runs and in-agent uses per skill version. Version unknown means the agent did not record which version it used.',
+      'Runs and in-agent uses per skill version. Unknown version means the agent did not record which version it used.',
     MODELS: 'Model calls made by this skill’s runs, per model.',
     USERS: 'Users who ran this skill or used it through an agent.',
     TRIGGERS: 'How the runs and uses started: manually, or by a schedule, webhook, or index run.',
@@ -157,6 +179,14 @@ export const TOOLTIP_TEXTS = {
       'Number of distinct tools, including nested sub-agents and sub-pipelines, used by this Agent or Pipeline during the selected date range.',
     SKILLS_SECTION:
       'Skills this Agent or Pipeline loaded or mentioned during the selected date range. Uses counts every activation; one run can use a skill more than once.',
+    VERSIONS_SECTION:
+      'Shows runs, token usage, and estimated cost by the Agent or Pipeline version used during execution.',
+    MODELS_SECTION:
+      'Shows models used during execution, including distinct runs, LLM calls, token usage, and estimated cost. A run using multiple models is counted in each applicable model row. Only LLM calls are included, so tool calls add no tokens or cost here.',
+    TRIGGERS_SECTION:
+      'Shows how runs were initiated, with their token usage and estimated cost. Runs without a recorded schedule or webhook trigger appear as Manual.',
+    RECENT_RUNS_SECTION:
+      'Shows individual runs during the selected period. Select a start time to open that run’s Analytics page.',
   },
   userDetail: {
     ACTIVE_DAYS:
@@ -401,7 +431,7 @@ export const GUIDE_SECTIONS = [
       {
         name: 'Agent & Pipeline Detail View',
         description:
-          'Selecting an Agent or Pipeline opens a detail view with its total runs, unique users, total cost, input-token cost, output-token cost, token usage, evaluation tokens, latency, errors, daily runs, users, and related tools.',
+          'Selecting an Agent or Pipeline opens a detail view with its total runs, unique users, total cost, input-token cost, output-token cost, token usage, evaluation tokens, latency, errors, and daily runs. Below them, Versions and Models show runs, tokens, and cost per executed version and per model (a run that used several models counts once in each model row, and only LLM calls are included); Users, Tools, and Skills show who ran it, which tools it called, and which skills it loaded or mentioned; Trigger Sources shows runs, tokens, and cost per initiating trigger, where runs without a recorded schedule or webhook trigger appear as Manual. Recent Runs lists every run with its user, version, models, tokens, cost, and Error or Success status, sorted and paged across the whole date range. Select a run start time to open that run’s Analytics page; the browser Back button returns to the same detail view and date range. Runs of a Catalog or deleted Agent or Pipeline have no run page and show their start time as plain text. The Export button downloads all of these tables, including every Recent Run with its run URL.',
       },
     ],
   },

@@ -138,6 +138,9 @@ const buildApplicationObject = props => {
         meta: {
           step_limit: frontmatter.step_limit ?? 25,
           internal_tools: frontmatter.internal_tools || [],
+          ...(frontmatter.ignore_project_context != null
+            ? { ignore_project_context: frontmatter.ignore_project_context }
+            : {}),
         },
         tools: allTools,
         internal_tools: frontmatter.internal_tools || [],

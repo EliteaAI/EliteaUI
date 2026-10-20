@@ -17,7 +17,7 @@ const CARD_CONFIG = {
 };
 
 const ResultsSummaryCards = memo(props => {
-  const { totalScore, cases, metAllTargets, missed, errors, pendingHuman = 0 } = props;
+  const { totalScore, cases, metAllTargets, missed, errors, pendingHuman = 0, timeoutNote = null } = props;
 
   const cards = useMemo(
     () => [
@@ -63,6 +63,17 @@ const ResultsSummaryCards = memo(props => {
           </Box>
         );
       })}
+      {timeoutNote && (
+        <Box
+          sx={styles.pendingNote}
+          data-testid="evaluation-summary-timeouts"
+        >
+          <Banner.BannerMessage
+            message={timeoutNote.message}
+            variant="warning"
+          />
+        </Box>
+      )}
       {pendingHuman > 0 && (
         <Box
           sx={styles.pendingNote}

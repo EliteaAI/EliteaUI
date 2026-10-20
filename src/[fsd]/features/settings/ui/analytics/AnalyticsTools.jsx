@@ -2,15 +2,30 @@ import { memo, useCallback, useMemo, useState } from 'react';
 
 import { Bar, BarChart, Cell, Tooltip as RechartsTooltip, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 
-import { Box, CircularProgress, TablePagination, Typography, useTheme } from '@mui/material';
+import { Box, CircularProgress, TablePagination, TableSortLabel, Typography, useTheme } from '@mui/material';
 
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { AnalyticsToolDetailed, ChartTooltip } from '@/[fsd]/features/settings/ui/analytics';
+import { analyticsTableSortLabelSx } from '@/[fsd]/features/settings/ui/analytics/components/analyticsTable.styles';
 import { CHART_COLORS } from '@/[fsd]/shared/config/theme';
 import { useAnalyticsToolsQuery } from '@/api';
 import StyledSearchInput from '@/components/SearchInput';
 
 import RunAnalyticsEmptyState from './components/RunAnalyticsEmptyState';
+
+const DEFAULT_TOOL_SORT = { sortBy: 'calls', sortOrder: 'desc' };
+
+const TOOL_COLUMNS = [
+  { key: 'tool_name', label: 'Tool', flex: 3, render: r => r.tool_name },
+  { key: 'calls', label: 'Calls', render: r => AnalyticCommonHelpers.fmtNum(r.calls) },
+  { key: 'users', label: 'Users', render: r => r.users },
+  {
+    key: 'avg_duration_ms',
+    label: 'Avg Latency',
+    render: r => AnalyticCommonHelpers.fmtDuration(r.avg_duration_ms),
+  },
+  { key: 'errors', label: 'Errors', render: r => r.errors },
+];
 
 const AnalyticsTools = memo(props => {
   const { projectId, dateFrom, dateTo, runScope } = props;
@@ -22,6 +37,7 @@ const AnalyticsTools = memo(props => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(20);
   const [search, setSearch] = useState('');
+  const [sort, setSort] = useState(DEFAULT_TOOL_SORT);
   const [selectedTool, setSelectedTool] = useState(null);
 
   const { palette } = useTheme();
@@ -35,22 +51,37 @@ const AnalyticsTools = memo(props => {
       limit: rowsPerPage,
       offset: page * rowsPerPage,
       search,
+      sortBy: sort.sortBy,
+      sortOrder: sort.sortOrder,
     },
     { skip: !projectId },
   );
 
+  const { data: topToolsData } = useAnalyticsToolsQuery(
+    { projectId, dateFrom, dateTo, limit: 20, offset: 0, search, ...DEFAULT_TOOL_SORT },
+    { skip: !projectId || isRunScope },
+  );
+
   const toolChartData = useMemo(
     () =>
-      (data?.rows || []).slice(0, 20).map((t, i) => ({
+      (topToolsData?.rows || []).map((t, i) => ({
         tool_name: t.tool_name,
         calls: t.calls,
         color: CHART_COLORS[i % CHART_COLORS.length],
       })),
-    [data?.rows],
+    [topToolsData?.rows],
   );
 
   const handleSearchChange = useCallback(event => {
     setSearch(event.target.value);
+    setPage(0);
+  }, []);
+
+  const handleSort = useCallback(key => {
+    setSort(previous => ({
+      sortBy: key,
+      sortOrder: previous.sortBy === key && previous.sortOrder === 'desc' ? 'asc' : 'desc',
+    }));
     setPage(0);
   }, []);
 
@@ -177,11 +208,22 @@ const AnalyticsTools = memo(props => {
         </Box>
         <Box sx={styles.tableWrapper}>
           <Box sx={styles.tableHeader}>
-            <Typography sx={[styles.tableCell, { flex: 3 }]}>Tool</Typography>
-            <Typography sx={[styles.tableCell, { flex: 1 }]}>Calls</Typography>
-            <Typography sx={[styles.tableCell, { flex: 1 }]}>Users</Typography>
-            <Typography sx={[styles.tableCell, { flex: 1 }]}>Avg Latency</Typography>
-            <Typography sx={[styles.tableCell, { flex: 1 }]}>Errors</Typography>
+            {TOOL_COLUMNS.map(column => (
+              <Box
+                key={column.key}
+                sx={[styles.tableCell, { flex: column.flex ?? 1 }]}
+              >
+                <TableSortLabel
+                  active={sort.sortBy === column.key}
+                  direction={sort.sortBy === column.key ? sort.sortOrder : 'desc'}
+                  onClick={() => handleSort(column.key)}
+                  sx={analyticsTableSortLabelSx}
+                  data-testid={`analytics-tools-sort-${column.key}`}
+                >
+                  {column.label}
+                </TableSortLabel>
+              </Box>
+            ))}
           </Box>
           {isFetching && (
             <Box sx={styles.loadingState}>
@@ -195,27 +237,18 @@ const AnalyticsTools = memo(props => {
                 sx={isRunScope ? styles.tableRow : styles.clickableRow}
                 onClick={isRunScope ? undefined : () => handleToolClick(t.tool_name)}
               >
-                <Typography
-                  sx={[styles.tableCellValue, { flex: 3 }]}
-                  noWrap
-                >
-                  {t.tool_name}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, { flex: 1 }]}>
-                  {AnalyticCommonHelpers.fmtNum(t.calls)}
-                </Typography>
-                <Typography sx={[styles.tableCellValue, { flex: 1 }]}>{t.users}</Typography>
-                <Typography sx={[styles.tableCellValue, { flex: 1 }]}>
-                  {AnalyticCommonHelpers.fmtDuration(t.avg_duration_ms)}
-                </Typography>
-                <Typography
-                  sx={[
-                    styles.tableCellValue,
-                    { flex: 1, color: t.errors > 0 ? palette.status.rejected : undefined },
-                  ]}
-                >
-                  {t.errors}
-                </Typography>
+                {TOOL_COLUMNS.map(column => (
+                  <Box
+                    key={column.key}
+                    sx={[
+                      styles.tableCellValue,
+                      { flex: column.flex ?? 1 },
+                      column.key === 'errors' && t.errors > 0 && styles.errorValue,
+                    ]}
+                  >
+                    {column.render(t)}
+                  </Box>
+                ))}
               </Box>
             ))}
         </Box>
@@ -296,6 +329,7 @@ const styles = {
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
   }),
+  errorValue: ({ palette }) => ({ color: palette.status.rejected }),
   userSearch: {
     width: '15rem',
     height: '2.25rem',

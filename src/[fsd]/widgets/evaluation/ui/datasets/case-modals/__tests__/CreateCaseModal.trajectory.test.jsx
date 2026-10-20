@@ -215,4 +215,62 @@ describe('CreateCaseModal expected trajectory', () => {
     renderModal({ datasetCase: { ...stored, expected_trajectory: null }, readOnly: true });
     expect(screen.queryByTestId('create-case-expected-trajectory')).not.toBeInTheDocument();
   });
+
+  it('sends the case time limit and null when it is left empty', async () => {
+    addCase.mockReturnValue(ok());
+    renderModal();
+    fireEvent.change(screen.getByTestId('create-case-input').querySelector('textarea'), {
+      target: { value: 'q' },
+    });
+    fireEvent.click(screen.getByTestId('create-case-save'));
+    await vi.waitFor(() => expect(addCase).toHaveBeenCalledTimes(1));
+    expect(addCase.mock.calls[0][0].body.time_limit_seconds).toBeNull();
+
+    fireEvent.change(screen.getByTestId('create-case-time-limit').querySelector('input'), {
+      target: { value: '300' },
+    });
+    fireEvent.click(screen.getByTestId('create-case-save'));
+    await vi.waitFor(() => expect(addCase).toHaveBeenCalledTimes(2));
+    expect(addCase.mock.calls[1][0].body.time_limit_seconds).toBe(300);
+  });
+
+  it('blocks the save on a time limit outside 10-900', () => {
+    Element.prototype.scrollIntoView = vi.fn();
+    renderModal();
+    fireEvent.change(screen.getByTestId('create-case-input').querySelector('textarea'), {
+      target: { value: 'q' },
+    });
+    fireEvent.change(screen.getByTestId('create-case-time-limit').querySelector('input'), {
+      target: { value: '5' },
+    });
+    fireEvent.click(screen.getByTestId('create-case-save'));
+
+    expect(screen.getByTestId('create-case-error')).toHaveTextContent(/from 10 to 900/);
+    expect(addCase).not.toHaveBeenCalled();
+    delete Element.prototype.scrollIntoView;
+  });
+
+  it('enables save when only the time limit changes, and clears it with null', async () => {
+    updateCase.mockReturnValue(ok());
+    renderModal({ datasetCase: { ...stored, time_limit_seconds: 600 } });
+
+    const field = screen.getByTestId('create-case-time-limit').querySelector('input');
+    expect(field).toHaveValue('600');
+    expect(screen.getByTestId('create-case-save')).toBeDisabled();
+    fireEvent.change(field, { target: { value: '' } });
+    expect(screen.getByTestId('create-case-save')).not.toBeDisabled();
+    fireEvent.click(screen.getByTestId('create-case-save'));
+    await vi.waitFor(() => expect(updateCase).toHaveBeenCalled());
+
+    expect(updateCase.mock.calls[0][0].body.time_limit_seconds).toBeNull();
+    expect(updateCase.mock.calls[0][0].body).not.toHaveProperty('expected_trajectory');
+  });
+
+  it('hides an unset time limit in read-only mode', () => {
+    renderModal({ datasetCase: stored, readOnly: true });
+    expect(screen.queryByTestId('create-case-time-limit')).not.toBeInTheDocument();
+    cleanup();
+    renderModal({ datasetCase: { ...stored, time_limit_seconds: 45 }, readOnly: true });
+    expect(screen.getByTestId('create-case-time-limit').querySelector('input')).toHaveValue('45');
+  });
 });

@@ -244,6 +244,8 @@ const ConversationItem = memo(props => {
             icon: <ExportIcon sx={{ fontSize: '1rem' }} />,
             disabled: isActive && isEditingCanvas,
             onClick: handleExport,
+            // Loose equality intentional: userId/author_id may arrive as string or number
+            display: userId != author_id ? 'none' : undefined,
           },
           {
             key: 'chat-conversation-menu-make-public',
@@ -564,7 +566,10 @@ const ConversationItem = memo(props => {
     );
 
   return (
-    <ClickAwayListener onClickAway={isNew ? onCancelCreate : onCloseEdit}>
+    <ClickAwayListener
+      mouseEvent="onMouseDown"
+      onClickAway={isNew ? onCancelCreate : onCloseEdit}
+    >
       <Box sx={styles.inputWrapper}>
         <Input.StyledInputEnhancer
           autoFocus

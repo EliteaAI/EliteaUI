@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { Box, Typography } from '@mui/material';
 
+import { useSocket } from '@/[fsd]/features/auth/lib/hooks';
 import { NewConversationHelpers } from '@/[fsd]/features/chat/lib/helpers';
 import {
   useBudgetWarning,
@@ -14,7 +15,12 @@ import {
 } from '@/[fsd]/features/chat/lib/hooks';
 import { getChatParticipantUniqueId } from '@/[fsd]/features/chat/participants/lib/helpers';
 import { useFetchParticipantDetails } from '@/[fsd]/features/chat/participants/lib/hooks';
-import { BudgetWarningBanner, ChatWelcomeMessage, SlashSuggestionList } from '@/[fsd]/features/chat/ui';
+import {
+  BudgetWarningBanner,
+  ChatWelcomeMessage,
+  SlashSuggestionList,
+  WebSearchBudgetWarning,
+} from '@/[fsd]/features/chat/ui';
 import NewChatInput from '@/[fsd]/features/chat/ui/chat-input/NewChatInput';
 import RecommendationList from '@/[fsd]/features/chat/ui/recommendations/RecommendationList';
 import SearchResultList from '@/[fsd]/features/chat/ui/recommendations/SearchResultList';
@@ -61,7 +67,6 @@ import useValidateToolkit, { useToolkitValidationInfo } from '@/hooks/applicatio
 import useChatStreaming from '@/hooks/chat/useChatStreaming';
 import useLocalActiveParticipant from '@/hooks/chat/useLocalActiveParticipant';
 import useNewConversationAttachments from '@/hooks/chat/useNewConversationAttachments';
-import useSocket from '@/hooks/useSocket';
 import { actions } from '@/slices/chat';
 
 const { DEFAULT_STEPS_LIMIT } = LLMSettingsConstants;
@@ -90,6 +95,7 @@ const NewConversationView = forwardRef(
       onCloseAgentEditor,
       onCreateAgent,
       onCreatePipeline,
+      onCreateSkill,
       onCreateToolkit,
       onAddNewUsers,
       hidden = false,
@@ -1130,6 +1136,10 @@ const NewConversationView = forwardRef(
                 onDismiss={budgetWarning.dismiss}
               />
             )}
+            <WebSearchBudgetWarning
+              projectId={selectedProjectId}
+              internalTools={internalTools}
+            />
             <NewChatInput
               fromTheChat
               placeholder="Type your message..."
@@ -1184,6 +1194,7 @@ const NewConversationView = forwardRef(
               onSelectParticipant={onSelectParticipant}
               onCreateAgent={onCreateAgent}
               onCreatePipeline={onCreatePipeline}
+              onCreateSkill={onCreateSkill}
               onCreateToolkit={onCreateToolkit}
               onDeleteParticipant={onDeleteParticipant}
               participants={selectedParticipants}

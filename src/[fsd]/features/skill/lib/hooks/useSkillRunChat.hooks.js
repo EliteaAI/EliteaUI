@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useDispatch, useSelector } from 'react-redux';
 
+import { useManualSocket } from '@/[fsd]/features/auth/lib/hooks';
 import { SKILL_RUN_MATCH, SKILL_RUN_START_ERROR } from '@/[fsd]/features/skill/lib/constants';
 import {
   buildSkillRunConversation,
@@ -32,7 +33,6 @@ import { useChatMessageDeleteSocket, useChatMessageSyncSocket } from '@/componen
 import useSynAgentChatMessage from '@/hooks/application/useSynAgentChatMessage';
 import { useAttachmentState } from '@/hooks/chat/useAttachmentState';
 import useStreamingNavBlocker from '@/hooks/chat/useStreamingNavBlocker';
-import { useManualSocket } from '@/hooks/useSocket';
 
 const { ParticipantEntityTypes } = ParticipantEntityConstants;
 

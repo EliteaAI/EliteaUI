@@ -17,6 +17,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Box } from '@mui/system';
 
 import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version';
+import { useSocket } from '@/[fsd]/features/auth/lib/hooks';
 import { SelectedChatModelContext } from '@/[fsd]/features/chat/lib/context/SelectedChatModelContext';
 import * as ChatHelpers from '@/[fsd]/features/chat/lib/helpers/chat.helpers';
 import { buildEntityParticipant } from '@/[fsd]/features/chat/lib/helpers/entityParticipant.helpers.js';
@@ -61,6 +62,7 @@ import {
   ChatStatusPill,
   SlashSuggestionList,
   VoiceMiniPlayer,
+  WebSearchBudgetWarning,
 } from '@/[fsd]/features/chat/ui';
 import { ChatMessageList } from '@/[fsd]/features/chat/ui/chat-box';
 import ChatConversationStarters from '@/[fsd]/features/chat/ui/chat-conversation-starters/ChatConversationStarters';
@@ -119,7 +121,6 @@ import { ChatBodyContainer } from '@/components/Chat/StyledComponents';
 import { useChatSocket, useStopStreaming } from '@/components/Chat/hooks';
 import useChatStreaming from '@/hooks/chat/useChatStreaming';
 import useLoadMoreMessages from '@/hooks/chat/useLoadMoreMessages';
-import useSocket from '@/hooks/useSocket';
 import { actions as chatActions } from '@/slices/chat';
 
 const { DEFAULT_MAX_TOKENS, DEFAULT_STEPS_LIMIT, DEFAULT_TEMPERATURE } = LLMSettingsConstants;
@@ -195,6 +196,7 @@ const ChatBox = memo(
       // Participant management (for PlusChatButton submenus)
       onCreateAgent,
       onCreatePipeline,
+      onCreateSkill,
       onCreateToolkit,
       onDeleteParticipant,
 
@@ -2739,7 +2741,8 @@ const ChatBox = memo(
     const onSelectModel = useCallback(
       async newModel => {
         if (isAgentsPage) {
-          if (selectedModel?.name === newModel.name) return;
+          if (selectedModel?.name === newModel.name && selectedModel?.project_id === newModel.project_id)
+            return;
 
           setSelectedModel(newModel);
           const newLLMSettings = {
@@ -3107,6 +3110,10 @@ const ChatBox = memo(
                 onDismiss={budgetWarning.dismiss}
               />
             )}
+            <WebSearchBudgetWarning
+              projectId={projectId}
+              internalTools={activeConversation?.meta?.internal_tools}
+            />
             <ChatStatusPill
               isRunning={(isStreamingNow || isStreaming) && statusSource?.isInterrupt === false}
               isInterrupt={statusSource?.isInterrupt === true && !isReadOnly}
@@ -3185,6 +3192,7 @@ const ChatBox = memo(
               onSelectParticipant={onSelectThisParticipant}
               onCreateAgent={onCreateAgent}
               onCreatePipeline={onCreatePipeline}
+              onCreateSkill={onCreateSkill}
               onCreateToolkit={onCreateToolkit}
               onDeleteParticipant={onDeleteParticipant}
               participants={activeConversation?.participants || []}

@@ -1,0 +1,1 @@
+export { useGetPlatformBannersQuery } from './platformBannersApi';

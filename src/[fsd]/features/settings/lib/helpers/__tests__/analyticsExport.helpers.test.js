@@ -3,8 +3,11 @@ import { describe, expect, it, vi } from 'vitest';
 import { ExcelFormats } from '@/[fsd]/shared/lib/utils';
 
 import {
+  buildAgentAnalyticsExportFileName,
+  buildAgentDetailSheet,
   buildAnalyticsSheets,
   buildRunAnalyticsSheets,
+  fetchAllAgentRuns,
   fetchRunAnalyticsData,
   fmtRunDateTime,
   runAnalyticsExportFileName,
@@ -388,5 +391,259 @@ describe('buildAnalyticsSheets — skill usage', () => {
 
       expect(stripSkills(sheets)).toEqual(stripSkills(withSkills));
     });
+  });
+});
+
+const META = {
+  projectName: 'Team',
+  dateFrom: '2026-10-01T00:00:00Z',
+  dateTo: '2026-10-10T00:00:00Z',
+  timeZone: 'UTC',
+};
+
+const AGENT_DETAIL = {
+  entity_name: 'Reviewer',
+  kind: 'pipeline',
+  kpis: { total_events: 3, unique_users: 1, total_tokens: 1500, llm_cost: 0.0123 },
+  daily_usage: [{ date: '2026-10-01', events: 3, errors: 1 }],
+  users: [{ user_id: 11, user_email: null, events: 3, avg_duration_ms: 1200, errors: 1 }],
+  tools: [{ tool_name: 'search', calls: 4 }],
+  skills: [{ skill_id: 5, skill_name: 'Summarizer', deleted: true, uses: 2 }],
+  by_version: [{ version_id: null, version_name: null, runs: 3, total_tokens: 1500, cost: 0.0123 }],
+  by_model: [
+    { model_name: 'gpt-4o', display_name: null, runs: 2, calls: 5, total_tokens: 1500, cost: 0.0123 },
+  ],
+  by_trigger_source: [{ trigger_source: 'manual', runs: 3, total_tokens: 1500, cost: 0.0123 }],
+};
+
+const AGENT_RUN = {
+  run_id: 'r1',
+  started_at: '2026-10-01T09:12:03+00:00',
+  user_id: 11,
+  user_email: 'a@b.c',
+  version_id: null,
+  version_name: null,
+  models: [
+    { model_name: 'gpt-4o', display_name: 'GPT-4o' },
+    { model_name: 'claude', display_name: 'Claude' },
+  ],
+  total_tokens: 1500,
+  cost: 0.0123,
+  is_error: true,
+  run_url: 'https://host/2/pipelines/all/42/history/analytics?usage_run_id=r1',
+};
+
+const sectionOf = (sheet, title) => sheet.sections.find(section => section.title === title);
+
+describe('buildAgentDetailSheet', () => {
+  it('writes every agent detail table in page order, Skills only with the permission', () => {
+    const withSkills = buildAgentDetailSheet(AGENT_DETAIL, { ...META, runs: [], includeSkills: true });
+    const withoutSkills = buildAgentDetailSheet(AGENT_DETAIL, { ...META, runs: [] });
+
+    expect(withSkills.sections.map(section => section.title)).toEqual([
+      'KPIs',
+      'Daily',
+      'Users',
+      'Tools',
+      'Skills',
+      'Versions',
+      'Models',
+      'Trigger Sources',
+      'Recent Runs',
+    ]);
+    expect(withoutSkills.sections.map(section => section.title)).not.toContain('Skills');
+  });
+
+  it('names the sheet by kind and the entity in the metadata', () => {
+    const sheet = buildAgentDetailSheet(AGENT_DETAIL, { ...META, runs: [] });
+
+    expect(sheet.sheetName).toBe('Pipeline');
+    expect(sheet.metadata[0]).toEqual(['Pipeline', 'Reviewer']);
+    expect(buildAgentDetailSheet({ ...AGENT_DETAIL, kind: 'agent' }, { ...META }).sheetName).toBe('Agent');
+  });
+
+  it('labels the rows with no version, model display name or trigger like the page does', () => {
+    const sheet = buildAgentDetailSheet(AGENT_DETAIL, { ...META, runs: [] });
+
+    expect(sectionOf(sheet, 'Versions').rows[0].version_name).toBe('Unknown version');
+    expect(sectionOf(sheet, 'Models').rows[0].display_name).toBe('gpt-4o');
+    expect(sectionOf(sheet, 'Trigger Sources').rows[0].trigger_source).toBe('Manual');
+    expect(sectionOf(sheet, 'Users').rows[0].user_email).toBe('User 11');
+  });
+
+  it('keeps full numbers, not the page abbreviations', () => {
+    const sheet = buildAgentDetailSheet(AGENT_DETAIL, { ...META, runs: [AGENT_RUN] });
+
+    expect(sectionOf(sheet, 'Versions').rows[0]).toMatchObject({ runs: 3, total_tokens: 1500, cost: 0.0123 });
+    expect(sectionOf(sheet, 'Models').columns.find(column => column.key === 'cost').numFmt).toBe(
+      ExcelFormats.currency,
+    );
+    expect(sectionOf(sheet, 'KPIs').rows).toContainEqual({ metric: 'Total Tokens', value: 1500 });
+    const models = sectionOf(sheet, 'Models');
+    const llmCalls = models.columns.find(column => column.header === 'LLM Calls');
+    expect(models.rows[0][llmCalls.key]).toBe(5);
+  });
+
+  it('writes every run with all its models, its status and its run URL', () => {
+    const sheet = buildAgentDetailSheet(AGENT_DETAIL, { ...META, runs: [AGENT_RUN] });
+    const runs = sectionOf(sheet, 'Recent Runs');
+
+    expect(runs.columns.map(column => column.header)).toContain('Run URL');
+    expect(runs.rows[0]).toMatchObject({
+      models: 'GPT-4o, Claude',
+      version_name: 'Unknown version',
+      is_error: 'Error',
+      run_url: AGENT_RUN.run_url,
+    });
+  });
+});
+
+describe('fetchAllAgentRuns', () => {
+  it('pages through every run 100 at a time', async () => {
+    const pages = [
+      { total: 150, rows: Array.from({ length: 100 }, (_, index) => ({ run_id: `a${index}` })) },
+      { total: 150, rows: Array.from({ length: 50 }, (_, index) => ({ run_id: `b${index}` })) },
+    ];
+    const endpoints = { analyticsAgentRuns: { initiate: vi.fn(args => args) } };
+    const dispatch = vi.fn(args => ({
+      unwrap: () => Promise.resolve(pages[args.offset / 100]),
+      unsubscribe: vi.fn(),
+    }));
+
+    const { runs, truncated } = await fetchAllAgentRuns(dispatch, endpoints, { projectId: 2, entityId: 42 });
+
+    expect(runs).toHaveLength(150);
+    expect(truncated).toBe(false);
+    expect(
+      endpoints.analyticsAgentRuns.initiate.mock.calls.map(([args]) => [args.limit, args.offset]),
+    ).toEqual([
+      [100, 0],
+      [100, 100],
+    ]);
+  });
+
+  it('stops on an empty page', async () => {
+    const endpoints = { analyticsAgentRuns: { initiate: vi.fn(args => args) } };
+    const dispatch = vi.fn(() => ({
+      unwrap: () => Promise.resolve({ total: 10, rows: [] }),
+      unsubscribe: vi.fn(),
+    }));
+
+    expect((await fetchAllAgentRuns(dispatch, endpoints, { projectId: 2, entityId: 42 })).runs).toEqual([]);
+    expect(dispatch).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('fetchAllAgentRuns export limit', () => {
+  const pagedRuns = total => {
+    const subscriptions = [];
+    const endpoints = { analyticsAgentRuns: { initiate: vi.fn(args => args) } };
+    const dispatch = vi.fn(args => {
+      const subscription = {
+        unwrap: () =>
+          Promise.resolve({
+            total,
+            rows: Array.from({ length: Math.max(0, Math.min(100, total - args.offset)) }, (_, index) => ({
+              run_id: `r${args.offset + index}`,
+            })),
+          }),
+        unsubscribe: vi.fn(),
+      };
+      subscriptions.push(subscription);
+      return subscription;
+    });
+    return { dispatch, endpoints, subscriptions };
+  };
+
+  it('stops at 10,000 runs and says the list was cut', async () => {
+    const { dispatch, endpoints } = pagedRuns(25_000);
+
+    const result = await fetchAllAgentRuns(dispatch, endpoints, { projectId: 2, entityId: 42 });
+
+    expect(result.runs).toHaveLength(10_000);
+    expect(result).toMatchObject({ total: 25_000, truncated: true });
+    expect(dispatch).toHaveBeenCalledTimes(100);
+  });
+
+  it('exports a smaller set whole, without the marker', async () => {
+    const { dispatch, endpoints } = pagedRuns(250);
+
+    const result = await fetchAllAgentRuns(dispatch, endpoints, { projectId: 2, entityId: 42 });
+
+    expect(result.runs).toHaveLength(250);
+    expect(result.truncated).toBe(false);
+  });
+
+  it('releases every page subscription', async () => {
+    const { dispatch, endpoints, subscriptions } = pagedRuns(250);
+
+    await fetchAllAgentRuns(dispatch, endpoints, { projectId: 2, entityId: 42 });
+
+    expect(subscriptions).toHaveLength(3);
+    subscriptions.forEach(subscription => expect(subscription.unsubscribe).toHaveBeenCalledTimes(1));
+  });
+
+  it('releases the subscription of a page that fails', async () => {
+    const unsubscribe = vi.fn();
+    const endpoints = { analyticsAgentRuns: { initiate: vi.fn(args => args) } };
+    const dispatch = vi.fn(() => ({ unwrap: () => Promise.reject(new Error('boom')), unsubscribe }));
+
+    await expect(fetchAllAgentRuns(dispatch, endpoints, { projectId: 2, entityId: 42 })).rejects.toThrow(
+      'boom',
+    );
+    expect(unsubscribe).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('buildAgentDetailSheet Recent Runs marker', () => {
+  it('names a cut Recent Runs section with how many runs it holds of the total', () => {
+    const sheet = buildAgentDetailSheet(AGENT_DETAIL, {
+      ...META,
+      runs: [AGENT_RUN],
+      runsTotal: 25_000,
+      runsTruncated: true,
+    });
+
+    expect(sheet.sections.at(-1).title).toBe('Recent Runs (first 1 of 25,000 runs)');
+  });
+
+  it('keeps the plain title for a complete list', () => {
+    const sheet = buildAgentDetailSheet(AGENT_DETAIL, { ...META, runs: [AGENT_RUN], runsTotal: 1 });
+
+    expect(sheet.sections.at(-1).title).toBe('Recent Runs');
+  });
+});
+
+describe('fetchAllAgentRuns with runs starting during the export', () => {
+  it('lists every run exactly once when a new run shifts the next page', async () => {
+    const runIds = rows => rows.map(run_id => ({ run_id }));
+    const pages = {
+      0: { total: 3, rows: runIds(['r3', 'r2']) },
+      2: { total: 4, rows: runIds(['r2', 'r1']) },
+      4: { total: 4, rows: [] },
+    };
+    const endpoints = { analyticsAgentRuns: { initiate: vi.fn(args => args) } };
+    const dispatch = vi.fn(args => ({
+      unwrap: () => Promise.resolve(pages[args.offset]),
+      unsubscribe: vi.fn(),
+    }));
+
+    const { runs } = await fetchAllAgentRuns(dispatch, endpoints, { projectId: 2, entityId: 42 });
+
+    expect(runs.map(run => run.run_id)).toEqual(['r3', 'r2', 'r1']);
+  });
+});
+
+describe('buildAgentAnalyticsExportFileName', () => {
+  it('names the file after project, kind, entity and range', () => {
+    expect(
+      buildAgentAnalyticsExportFileName({
+        projectName: 'Team',
+        entityName: 'Reviewer',
+        kind: 'pipeline',
+        dateFrom: '2026-10-01T12:00:00',
+        dateTo: '2026-10-10T12:00:00',
+      }),
+    ).toBe('Team_pipeline_Reviewer_2026-10-01-2026-10-10.xlsx');
   });
 });

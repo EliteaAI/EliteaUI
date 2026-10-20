@@ -64,3 +64,18 @@ export const validateToolkitForm = (schema, variables) => {
     return !(Array.isArray(value) && value.length === 0) && !property.error;
   });
 };
+
+export const selectRunModel = (modelsData, { forIndexing }) => {
+  const { items = [], low_tier_default_model_name, low_tier_default_model_project_id } = modelsData ?? {};
+  const isProjectLowTier = model =>
+    forIndexing &&
+    model.name === low_tier_default_model_name &&
+    String(model.project_id) === String(low_tier_default_model_project_id);
+  const preferenceOrder = [isProjectLowTier, model => model.default, () => true];
+
+  for (const preferred of preferenceOrder) {
+    const selected = items.find(preferred);
+    if (selected) return selected;
+  }
+  return null;
+};

@@ -122,6 +122,7 @@ const welcomeOutsideBg = 'linear-gradient(42.04deg, #61ede966 8.85%, #fb42ff66 8
 const welcomeInnerBg = 'linear-gradient(63.16deg, #29a9a524 16.12%, #e72feb24 85.3%)';
 const bannerDefaultBg = 'linear-gradient(30deg, #3d2519 8.85%, #240f3c 89.62%)';
 const bannerBorderBg = 'linear-gradient(42.04deg, #a05714 8.85%, #7513aa 89.62%)';
+const bannerIconViolet = '#A311F2';
 const tourCardBg = 'linear-gradient(360deg, #122543 0%, #194386 100%)';
 const tourBorderGradient = 'linear-gradient(186.77deg, #2773EE 5.31%, #1A3C74 94.69%)';
 const tourDividerGradient = 'linear-gradient(90deg, #2670e800 0%, #26ABE8 49.7%, #2670e800 100%)';
@@ -713,6 +714,9 @@ const darkPalette = {
       background: {
         default: bannerDefaultBg,
         border: bannerBorderBg,
+      },
+      icon: {
+        gradient: { start: orange, end: bannerIconViolet },
       },
     },
     interactiveTour: {

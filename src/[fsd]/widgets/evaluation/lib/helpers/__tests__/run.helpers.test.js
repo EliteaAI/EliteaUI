@@ -7,6 +7,7 @@ import {
   formatRunStatus,
   formatScoreDelta,
   getRunScoreLabel,
+  getScoreDeltaTooltip,
   isRunActive,
   isRunTerminal,
   resolveRunSuiteName,
@@ -156,5 +157,18 @@ describe('sinkUnscoredRuns', () => {
 
   it('handles an empty list', () => {
     expect(sinkUnscoredRuns()).toEqual([]);
+  });
+});
+
+describe('getScoreDeltaTooltip', () => {
+  it('names the run the delta was taken against', () => {
+    expect(getScoreDeltaTooltip({ delta: 4.5, comparedToRunId: 3 })).toBe(
+      "Headline score change vs Run #3, the previous scored run. Speed and cost are compared in the run's Performance panel.",
+    );
+  });
+
+  it('is empty when the row has no delta', () => {
+    expect(getScoreDeltaTooltip({ delta: null, comparedToRunId: null })).toBe('');
+    expect(getScoreDeltaTooltip(undefined)).toBe('');
   });
 });

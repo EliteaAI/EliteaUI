@@ -23,8 +23,8 @@ vi.mock('react-redux', () => ({
   useSelector: selector => selector({ settings: { socketConnected } }),
 }));
 
-vi.mock('@/hooks/useSocket', () => ({
-  default: (event, handler) => {
+vi.mock('@/[fsd]/features/auth/lib/hooks/useSocket.hooks', () => ({
+  useSocket: (event, handler) => {
     socketHandlers.push({ event, handler });
   },
   useManualSocket: event => ({

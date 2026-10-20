@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useMatch } from 'react-router-dom';
 
+import { useManualSocket } from '@/[fsd]/features/auth/lib/hooks';
 import { ChatHelpers } from '@/[fsd]/features/chat';
 import { useToast } from '@/[fsd]/shared/lib/hooks';
 import {
@@ -25,7 +26,6 @@ import useAgentAttachments from '@/hooks/application/useAgentAttachments';
 import useApplicationChatSwitchVersion from '@/hooks/application/useApplicationChatSwitchVersion';
 import useSynAgentChatMessage from '@/hooks/application/useSynAgentChatMessage';
 import useStreamingNavBlocker from '@/hooks/chat/useStreamingNavBlocker';
-import { useManualSocket } from '@/hooks/useSocket';
 import RouteDefinitions from '@/routes';
 
 /**

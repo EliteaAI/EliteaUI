@@ -1,12 +1,22 @@
-import { memo, useMemo } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 
 import { Area, AreaChart, Tooltip as RechartsTooltip, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 
-import { Box, Typography, useTheme } from '@mui/material';
+import { Box, TableSortLabel, Typography, useTheme } from '@mui/material';
 
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { ChartTooltip } from '@/[fsd]/features/settings/ui/analytics';
+import { analyticsTableSortLabelSx } from '@/[fsd]/features/settings/ui/analytics/components/analyticsTable.styles';
 import { EVENT_TYPE_COLORS } from '@/[fsd]/shared/config/theme';
+import { useClientSort, useSortedRows } from '@/[fsd]/shared/lib/hooks';
+
+const HEALTH_COLUMNS = [
+  { key: 'event_type', label: 'Event Type', flex: 2 },
+  { key: 'total', label: 'Total', flex: 1 },
+  { key: 'errors', label: 'Errors', flex: 1 },
+  { key: 'error_rate', label: 'Error Rate', flex: 1 },
+  { key: 'avg_duration_ms', label: 'Avg Latency', flex: 1 },
+];
 
 const AnalyticsHealth = memo(props => {
   const { health = [], daily_activity = [], hideTrend = false } = props;
@@ -15,6 +25,10 @@ const AnalyticsHealth = memo(props => {
   const { palette } = useTheme();
   const axisStroke = palette.text.primary;
   const axisTickStyle = { fill: axisStroke, fontSize: 11 };
+
+  const { sort: healthSort, handleSort: handleHealthSort } = useClientSort('total');
+  const defaultGetValue = useCallback((row, key) => row[key], []);
+  const sortedHealth = useSortedRows(health, healthSort, defaultGetValue);
 
   const errorTrend = useMemo(
     () =>
@@ -116,13 +130,23 @@ const AnalyticsHealth = memo(props => {
         </Typography>
         <Box sx={styles.tableWrapper}>
           <Box sx={styles.tableHeader}>
-            <Typography sx={[styles.tableCell, { flex: 2 }]}>Event Type</Typography>
-            <Typography sx={[styles.tableCell, { flex: 1 }]}>Total</Typography>
-            <Typography sx={[styles.tableCell, { flex: 1 }]}>Errors</Typography>
-            <Typography sx={[styles.tableCell, { flex: 1 }]}>Error Rate</Typography>
-            <Typography sx={[styles.tableCell, { flex: 1 }]}>Avg Latency</Typography>
+            {HEALTH_COLUMNS.map(col => (
+              <Box
+                key={col.key}
+                sx={[styles.tableCell, { flex: col.flex }]}
+              >
+                <TableSortLabel
+                  active={healthSort.sortBy === col.key}
+                  direction={healthSort.sortBy === col.key ? healthSort.sortOrder : 'desc'}
+                  onClick={() => handleHealthSort(col.key)}
+                  sx={analyticsTableSortLabelSx}
+                >
+                  {col.label}
+                </TableSortLabel>
+              </Box>
+            ))}
           </Box>
-          {health.map((h, i) => (
+          {sortedHealth.map((h, i) => (
             <Box
               key={i}
               sx={styles.tableRow}

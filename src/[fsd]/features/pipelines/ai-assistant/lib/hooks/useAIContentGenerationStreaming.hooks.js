@@ -2,6 +2,7 @@ import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'r
 
 import { v4 as uuidv4 } from 'uuid';
 
+import { useManualSocket } from '@/[fsd]/features/auth/lib/hooks';
 import {
   buildFieldContextPrompt,
   getServicePromptKeyForFieldName,
@@ -11,7 +12,6 @@ import { useSelectedProjectId, useServicePromptByKey, useToast } from '@/[fsd]/s
 import { useGetAvailableConfigurationsTypeQuery } from '@/api/configurations';
 import { useGenerateContentStreamingMutation, useStopLlmTaskMutation } from '@/api/llm';
 import { SocketMessageType, sioEvents } from '@/common/constants';
-import { useManualSocket } from '@/hooks/useSocket';
 
 /**
  * Extracts the backend-shipped Service Prompt defaults from the

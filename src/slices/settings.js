@@ -127,6 +127,8 @@ const settingsSlice = createSlice({
     // True when the session behind the socket is known to be expired: a socket that
     // (re)connected with it is anonymous on the server and its chat events are dropped
     sessionExpired: false,
+    // True while a platform banner occupies the bottom-right corner, so the NPS survey waits for it
+    cornerBannerVisible: false,
   },
   reducers: {
     setMode: (state, { payload }) => {
@@ -306,6 +308,9 @@ const settingsSlice = createSlice({
     setSessionExpired: (state, { payload }) => {
       state.sessionExpired = payload;
     },
+    setCornerBannerVisible: (state, { payload }) => {
+      state.cornerBannerVisible = payload;
+    },
   },
   extraReducers: builder => {
     builder.addMatcher(eliteaApi.endpoints.authorDetails.matchFulfilled, (state, { payload }) => {
@@ -347,6 +352,8 @@ const settingsSlice = createSlice({
     });
   },
 });
+
+export const selectCornerBannerVisible = state => state.settings.cornerBannerVisible;
 
 export const { name, actions } = settingsSlice;
 export default settingsSlice.reducer;

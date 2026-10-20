@@ -12,8 +12,10 @@ export const platformSettingsApi = eliteaApi
     endpoints: build => ({
       // Get platform-level feature settings
       getPlatformSettings: build.query({
-        query: () => ({
+        // projectId resolves per-project availability (e.g. tool_spend.web_search)
+        query: ({ projectId } = {}) => ({
           url: `${apiSlicePath}/prompt_lib`,
+          params: projectId ? { project_id: projectId } : undefined,
         }),
         providesTags: [TAG_PLATFORM_SETTINGS],
       }),

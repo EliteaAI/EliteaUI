@@ -21,6 +21,7 @@ import UsageDailyChart from './components/UsageDailyChart';
 import UsageMembersTable from './components/UsageMembersTable';
 import UsageModelTable from './components/UsageModelTable';
 import UsageSummary from './components/UsageSummary';
+import UsageToolSpend from './components/UsageToolSpend';
 
 const SCOPE_PROJECT = 'project';
 const SCOPE_USER = 'user';
@@ -337,6 +338,11 @@ const UsageContainer = memo(() => {
               models={data.models}
               canSeeAmounts={canSeeAmounts}
               currency={data.currency}
+            />
+
+            <UsageToolSpend
+              features={data.tool_spend}
+              canSeeAmounts={canSeeAmounts}
             />
 
             {showsMembers && (

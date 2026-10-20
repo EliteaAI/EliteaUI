@@ -123,7 +123,7 @@ describe('AnalyticsSkillDetailed', () => {
 
     expect(rowsOf('analytics-skill-detail-versions')).toEqual([
       expect.stringContaining('base'),
-      expect.stringContaining('Version unknown'),
+      expect.stringContaining('Unknown version'),
     ]);
     expect(rowsOf('analytics-skill-detail-models')[0]).toContain('GPT X');
     expect(rowsOf('analytics-skill-detail-users')[0]).toContain('ann@example.com');

@@ -146,7 +146,7 @@ const sidebarProjectSelectStyles = sideBarCollapsed => ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: '0.5rem 1rem',
+    padding: sideBarCollapsed ? '0.5rem 0' : '0.5rem 1rem',
     boxSizing: 'border-box',
     borderRadius: '0',
     cursor: 'pointer',
@@ -204,6 +204,10 @@ const sidebarProjectSelectStyles = sideBarCollapsed => ({
   selectSX: {
     margin: 0,
     width: sideBarCollapsed ? '1.5rem' : '100%',
+    ...(sideBarCollapsed && {
+      '& .MuiInputBase-root.MuiInput-root': { padding: 0 },
+      '& .MuiSelect-select': { paddingRight: '0 !important' },
+    }),
     '& .MuiInputBase-root.MuiInput-underline:before, & .MuiInputBase-root.MuiInput-underline:after, & .MuiInputBase-root.MuiInput-root:not(.Mui-error, .Mui-disabled).MuiInput-underline:hover:before, & .MuiInputBase-root.MuiInput-underline.Mui-focused:not(.Mui-error):after, & .MuiInputBase-root.MuiInput-underline.Mui-error:before, & .MuiInputBase-root.MuiInput-underline.Mui-error:after':
       {
         borderBottom: 'none !important',

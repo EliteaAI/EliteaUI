@@ -9,6 +9,7 @@ import { PIPELINE_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib
 import { usePipelineAttachmentYamlSync, usePipelineChat } from '@/[fsd]/features/pipelines/lib/hooks';
 import { LLMSettingsConstants } from '@/[fsd]/shared/lib/constants';
 import {
+  useIsSmallWindow,
   useRestoredConversation,
   useRunHistoryNavigation,
   useSelectedProjectId,
@@ -17,7 +18,6 @@ import { isReasoningFamilyFromStored } from '@/[fsd]/shared/lib/utils';
 import DirtyDetector from '@/components/Formik/DirtyDetector';
 import useAgentMCPToolsStatusMonitor from '@/hooks/application/useAgentMCPToolsStatusMonitor';
 import useUploadAttachments from '@/hooks/chat/useUploadAttachments';
-import useIsSmallWindow from '@/hooks/useIsSmallWindow';
 import RouteDefinitions from '@/routes';
 
 import ChatPanel from './ChatPanel';
@@ -115,12 +115,19 @@ const ConfigurationTab = memo(props => {
       // eslint-disable-next-line no-unused-vars
       const { steps_limit, ...llmSettings } = newSettings;
       const currentModelName = formValues?.version_details?.llm_settings?.model_name;
-      const isModelSwitch = 'model_name' in llmSettings && llmSettings.model_name !== currentModelName;
+      const currentModelProjectId = formValues?.version_details?.llm_settings?.model_project_id;
+      const isModelSwitch =
+        'model_name' in llmSettings &&
+        (llmSettings.model_name !== currentModelName ||
+          llmSettings.model_project_id !== currentModelProjectId);
 
       if (isModelSwitch) {
         const initialLlmSettings = initialValues?.version_details?.llm_settings;
 
-        if (initialLlmSettings?.model_name === llmSettings.model_name) {
+        if (
+          initialLlmSettings?.model_name === llmSettings.model_name &&
+          initialLlmSettings?.model_project_id === llmSettings.model_project_id
+        ) {
           setFieldValue('version_details.llm_settings', initialLlmSettings);
         } else {
           const cleaned = Object.fromEntries(Object.entries(llmSettings).filter(([, v]) => v !== null));

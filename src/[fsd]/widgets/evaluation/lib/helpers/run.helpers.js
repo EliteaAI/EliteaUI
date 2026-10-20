@@ -40,6 +40,18 @@ export const buildRunHistory = (runs = []) =>
     };
   });
 
+/**
+ * Tooltip for a history row's delta. The row compares headline scores with the previous scored run
+ * in the list, while the run's "Performance vs" panel compares speed and cost with the suite baseline
+ * or the previous run on the same dataset (performance Q-P3), so the tooltip names the run it used.
+ * @param {{ delta?: number | null, comparedToRunId?: number | null }} row - From buildRunHistory
+ * @returns {string}
+ */
+export const getScoreDeltaTooltip = row => {
+  if (row?.delta == null || row.comparedToRunId == null) return '';
+  return `Headline score change vs Run #${row.comparedToRunId}, the previous scored run. Speed and cost are compared in the run's Performance panel.`;
+};
+
 // Signed, fixed-precision delta label for the history list ("+4.5" / "-1.2").
 export const formatScoreDelta = delta => {
   if (delta == null || !Number.isFinite(delta)) return '';

@@ -4,6 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, renderHook, waitFor } from '@testing-library/react';
 
 const indexHistoryRef = vi.hoisted(() => ({ current: false }));
+const modelsResponseRef = vi.hoisted(() => ({ current: { items: [], total: 0 } }));
+const recoveredConversationRef = vi.hoisted(() => ({ current: undefined }));
 // Stable identity: the recovery effect lists this in its deps, so a fresh function
 // per render re-runs it after every setState and spins the render loop.
 const setProgressingIndexHistoryRecovered = vi.hoisted(() => () => {});
@@ -28,6 +30,7 @@ vi.mock('@/[fsd]/features/toolkits/lib/helpers/toolkitConversation.helpers', () 
 
 vi.mock('@/[fsd]/features/toolkits/indexes/lib/hooks', () => ({
   useIndexHistory: () => ({
+    conversationDetails: recoveredConversationRef.current,
     setProgressingIndexHistoryRecovered,
     // Drives the transcript-recovery effect, which is the only way into the
     // send-gate latch below.
@@ -35,8 +38,9 @@ vi.mock('@/[fsd]/features/toolkits/indexes/lib/hooks', () => ({
   }),
 }));
 
-vi.mock('@/[fsd]/features/toolkits/lib/helpers', () => ({
+vi.mock('@/[fsd]/features/toolkits/lib/helpers', async () => ({
   ToolkitsHelpers: { prettifyToolkitConversation: messages => messages },
+  ToolkitChatHelpers: await vi.importActual('@/[fsd]/features/toolkits/lib/helpers/toolkitChat.helpers'),
 }));
 
 vi.mock('@/[fsd]/shared/lib/context', () => ({
@@ -50,21 +54,22 @@ vi.mock('@/[fsd]/shared/config/store', () => ({
 vi.mock('@/api', () => ({
   useAddParticipantIntoConversationMutation: () => [vi.fn()],
   useConversationCreateMutation: () => [vi.fn()],
-  useListModelsQuery: () => ({ data: { items: [], total: 0 }, isSuccess: true }),
+  useListModelsQuery: () => ({ data: modelsResponseRef.current, isSuccess: true }),
   useStopIndexingItemMutation: () => [vi.fn(), { isLoading: false }],
 }));
 
 const socketHandlerRef = { current: null };
 const validationErrorHandlerRef = { current: null };
 const socketEmit = vi.fn();
+const leaveRoomsEmit = vi.fn();
 
-vi.mock('@/hooks/useSocket', () => ({
-  default: (event, handler) => {
+vi.mock('@/[fsd]/features/auth/lib/hooks/useSocket.hooks', () => ({
+  useSocket: (event, handler) => {
     if (event === 'socket_validation_error') validationErrorHandlerRef.current = handler;
     else socketHandlerRef.current = handler;
     return { emit: socketEmit };
   },
-  useManualSocket: () => ({ emit: vi.fn() }),
+  useManualSocket: event => ({ emit: event === 'chat_leave_rooms' ? leaveRoomsEmit : vi.fn() }),
 }));
 
 vi.mock('@/[fsd]/shared/lib/hooks/useToast.hooks', () => ({
@@ -80,6 +85,7 @@ vi.mock('@/common/convertChatConversationMessages', () => ({
 vi.mock('@/common/messagePayloadUtils', () => ({ generateMessagePayload: () => ({}) }));
 
 const { useToolkitChat } = await import('../useToolkitChat.hooks');
+const { ToolkitChatModesEnum } = await import('@/[fsd]/features/toolkits/lib/constants');
 
 const deferred = () => {
   let resolve;
@@ -104,7 +110,11 @@ const renderChat = (over = {}) =>
     }),
   );
 
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => {
+  vi.clearAllMocks();
+  modelsResponseRef.current = { items: [], total: 0 };
+  recoveredConversationRef.current = undefined;
+});
 
 describe('useToolkitChat conversation ownership', () => {
   it('abandons a conversation whose creation outlived the tool it was started for', async () => {
@@ -154,12 +164,16 @@ describe('useToolkitChat run ownership', () => {
       .mockReturnValueOnce(deferred().promise);
 
     const traceNewIndex = vi.fn();
-    const { result } = renderChat({ traceNewIndex, index: INDEX });
+    const { result } = renderChat({
+      traceNewIndex,
+      index: INDEX,
+      initialConversation: { id: 1, uuid: 'conv-created' },
+    });
 
     act(() => result.current.handleIndexData());
     await waitFor(() => expect(createToolkitConversationWithParticipant).toHaveBeenCalledTimes(1));
 
-    act(() => socketHandlerRef.current({ type: 'mcp_authorization_required' }));
+    act(() => socketHandlerRef.current({ type: 'mcp_authorization_required', stream_id: 'conv-created' }));
     expect(result.current.isRunning).toBe(false);
 
     act(() => result.current.handleIndexData());
@@ -304,9 +318,154 @@ describe('useToolkitChat validation errors', () => {
   it('ignores rejections once the task has started', async () => {
     const { result } = await startRun();
 
-    act(() => socketHandlerRef.current({ type: 'start_task', content: { task_id: 't1' } }));
+    act(() =>
+      socketHandlerRef.current({ type: 'start_task', stream_id: 'conv-7', content: { task_id: 't1' } }),
+    );
     act(() => validationErrorHandlerRef.current({ type: 'error', stream_id: 'conv-7', content: 'late' }));
 
     expect(JSON.stringify(result.current.chatHistory)).not.toContain('late');
+  });
+});
+
+describe('useToolkitChat model preselection', () => {
+  const ALPHABETICALLY_FIRST = { name: 'bedrock-luna', project_id: 1, default: false };
+  const PROJECT_DEFAULT = { name: 'sonnet', project_id: 1, default: true };
+  const PROJECT_LOW_TIER = { name: 'haiku', project_id: 1, default: false };
+  const INDEX = { id: 5, metadata: { collection: 'docs', index_configuration: { index_name: 'docs' } } };
+
+  beforeEach(() => {
+    modelsResponseRef.current = {
+      items: [ALPHABETICALLY_FIRST, PROJECT_DEFAULT, PROJECT_LOW_TIER],
+      total: 3,
+      low_tier_default_model_name: 'haiku',
+      low_tier_default_model_project_id: 1,
+    };
+  });
+
+  it('preselects the project Low-tier model for an index run', () => {
+    const { result } = renderChat({ modes: [], index: INDEX, runTool: 'index_data' });
+
+    expect(result.current.selectedModel).toBe(PROJECT_LOW_TIER);
+  });
+
+  it('preselects the project Low-tier model when creating an index', () => {
+    const { result } = renderChat({ modes: [ToolkitChatModesEnum.createIndex], runTool: 'index_data' });
+
+    expect(result.current.selectedModel).toBe(PROJECT_LOW_TIER);
+  });
+
+  it('preselects the project Low-tier model for a search against an index', () => {
+    const { result } = renderChat({ modes: [ToolkitChatModesEnum.testTools], index: INDEX });
+
+    expect(result.current.selectedModel).toBe(PROJECT_LOW_TIER);
+  });
+
+  it('keeps the project Default for the toolkit Test panel', () => {
+    const { result } = renderChat({ modes: [ToolkitChatModesEnum.testTools] });
+
+    expect(result.current.selectedModel).toBe(PROJECT_DEFAULT);
+  });
+
+  it('falls back to the project Default for an index run when no Low-tier model is set', () => {
+    modelsResponseRef.current = {
+      ...modelsResponseRef.current,
+      low_tier_default_model_name: '',
+      low_tier_default_model_project_id: '',
+    };
+
+    const { result } = renderChat({ modes: [], index: INDEX, runTool: 'index_data' });
+
+    expect(result.current.selectedModel).toBe(PROJECT_DEFAULT);
+  });
+});
+
+describe('useToolkitChat only follows the runs it owns', () => {
+  const COMPLETED_INDEX = { id: 5, metadata: { collection: 'docs', state: 'success' } };
+  const progressLine = streamId => ({
+    type: 'chunk',
+    stream_id: streamId,
+    message_id: `${streamId}-message`,
+    content: `Indexed document from ${streamId}`,
+    response_metadata: {},
+  });
+
+  const startRun = async over => {
+    createToolkitConversationWithParticipant.mockResolvedValueOnce({ id: 7, uuid: 'own-run' });
+    const view = renderChat(over);
+
+    act(() => view.result.current.handleRunTool());
+    await waitFor(() => expect(socketEmit).toHaveBeenCalled());
+
+    return view;
+  };
+
+  it('ignores progress of another index run', () => {
+    const { result } = renderChat({ index: COMPLETED_INDEX, modes: [] });
+    const before = result.current.chatHistory;
+
+    act(() => socketHandlerRef.current(progressLine('other-index-run')));
+
+    expect(result.current.chatHistory).toEqual(before);
+  });
+
+  it('does not adopt the task of another index run', () => {
+    const traceNewIndex = vi.fn();
+    const { result } = renderChat({ index: COMPLETED_INDEX, modes: [], traceNewIndex });
+
+    act(() =>
+      socketHandlerRef.current({
+        type: 'start_task',
+        stream_id: 'other-index-run',
+        content: { task_id: 'b' },
+      }),
+    );
+
+    expect(result.current.canStopIndexing).toBe(false);
+    expect(traceNewIndex).not.toHaveBeenCalled();
+  });
+
+  it('shows progress of the run it started', async () => {
+    const { result } = await startRun();
+
+    act(() => socketHandlerRef.current(progressLine('own-run')));
+
+    expect(JSON.stringify(result.current.chatHistory)).toContain('Indexed document from own-run');
+  });
+
+  it('shows progress of the run handed over by the create form', () => {
+    const { result } = renderChat({ initialConversation: { id: 3, uuid: 'created-run' }, modes: [] });
+
+    act(() => socketHandlerRef.current(progressLine('created-run')));
+
+    expect(JSON.stringify(result.current.chatHistory)).toContain('Indexed document from created-run');
+  });
+
+  it('shows progress of the in-progress run it recovered', () => {
+    recoveredConversationRef.current = { id: 4, uuid: 'recovered-run' };
+    const { result } = renderChat({ index: COMPLETED_INDEX, modes: [] });
+
+    act(() => socketHandlerRef.current(progressLine('recovered-run')));
+
+    expect(JSON.stringify(result.current.chatHistory)).toContain('Indexed document from recovered-run');
+  });
+
+  it('leaves the rooms of its runs when it unmounts', async () => {
+    const { unmount } = await startRun({ initialConversation: { id: 3, uuid: 'created-run' } });
+
+    leaveRoomsEmit.mockClear();
+    unmount();
+
+    expect(leaveRoomsEmit).toHaveBeenCalledWith([
+      { conversation_uuid: 'created-run' },
+      { conversation_uuid: 'own-run' },
+    ]);
+  });
+
+  it('leaves no room when it never followed a run', () => {
+    const { unmount } = renderChat({ index: COMPLETED_INDEX, modes: [] });
+
+    unmount();
+
+    expect(leaveRoomsEmit).not.toHaveBeenCalled();
   });
 });

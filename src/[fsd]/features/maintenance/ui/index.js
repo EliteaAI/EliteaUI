@@ -1,2 +1,2 @@
 export { default as MaintenaceTipsContainer } from './MaintenaceTipsContainer';
-export { default as MaintenanceBanner } from './MaintenanceBanner';
+export { default as PlatformBanner } from './PlatformBanner';

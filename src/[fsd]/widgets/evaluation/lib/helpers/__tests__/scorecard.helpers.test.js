@@ -202,6 +202,27 @@ describe('buildScorecard — human dimensions awaiting a manual score', () => {
     expect(card.counts.pending).toBe(1);
   });
 
+  it('does not wait for a reviewer on a binding the backend skipped (case time limit)', () => {
+    const card = buildScorecard({
+      run: humanRun(),
+      results: [
+        {
+          dataset_case_id: 12,
+          dimension_id: 9,
+          engine: 'human',
+          status: 'skipped',
+          verdict: { note: 'Skipped: the agent reached the case time limit (10 s).' },
+        },
+      ],
+    });
+    const cell = card.cases[0].cells[0];
+    expect(cell.skipped).toBe(true);
+    expect(cell.pending).toBe(false);
+    expect(card.pendingHuman).toBe(0);
+    expect(card.counts.pending).toBe(0);
+    expect(card.counts.metAll).toBe(0);
+  });
+
   it('settles the cell once a reviewer saves a score, applying the binding target', () => {
     const card = buildScorecard({
       run: humanRun(),

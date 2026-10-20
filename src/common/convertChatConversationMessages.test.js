@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildTraceListParams, convertToAIAnswer, traceRowToStep } from './convertChatConversationMessages';
+import {
+  buildTraceListParams,
+  convertToAIAnswer,
+  convertToUserQuestion,
+  traceRowToStep,
+} from './convertChatConversationMessages';
 
 describe('normalized trace rows', () => {
   it('restores canonical hierarchy for a lazy thinking pin', () => {
@@ -140,5 +145,32 @@ describe('continuation error history conversion', () => {
 
     expect(answer.continuationError).toEqual(continuationError);
     expect(answer.exception).toBe('technical trace');
+  });
+});
+
+describe('imported chat authors', () => {
+  const importer = { id: 1, entity_meta: { id: 3 }, meta: { user_name: 'Me', user_avatar: 'me.png' } };
+  const group = importedAuthor => ({
+    author_participant_id: 1,
+    message_items: [],
+    created_at: '2026-10-16T00:00:00',
+    uuid: 'g1',
+    meta: { imported_author: importedAuthor },
+  });
+
+  it('shows the avatar of the original author the import resolved', () => {
+    const question = convertToUserQuestion(group({ name: 'Jane', avatar: 'jane.png' }), [importer], []);
+    expect(question.name).toBe('Jane');
+    expect(question.avatar).toBe('jane.png');
+  });
+
+  it('shows no avatar for an original author that was not found', () => {
+    expect(convertToUserQuestion(group({ name: 'Jane' }), [importer], []).avatar).toBe('');
+  });
+
+  it("keeps the importer's avatar on their own messages", () => {
+    expect(convertToUserQuestion(group({ name: 'Me', avatar: 'old.png' }), [importer], []).avatar).toBe(
+      'me.png',
+    );
   });
 });

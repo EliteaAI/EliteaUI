@@ -1,6 +1,10 @@
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 
+import { useSelector } from 'react-redux';
+
 import { Box, Fade } from '@mui/material';
+
+import { selectCornerBannerVisible } from '@/slices/settings';
 
 import { PHASE } from '../lib/constants';
 import { useNpsSurvey } from '../lib/hooks';
@@ -27,7 +31,9 @@ const NpsSurveyWidget = memo(() => {
     handleDismiss,
   } = useNpsSurvey();
 
-  const isVisible = phase === PHASE.active || phase === PHASE.thankyou;
+  // A platform banner in the bottom-right corner takes the same spot; the survey waits until it is closed
+  const cornerBannerVisible = useSelector(selectCornerBannerVisible);
+  const isVisible = (phase === PHASE.active || phase === PHASE.thankyou) && !cornerBannerVisible;
 
   const [contentVisible, setContentVisible] = useState(true);
   const [showingThankYou, setShowingThankYou] = useState(false);

@@ -13,6 +13,7 @@ import useCheckPermission from '@/hooks/useCheckPermission';
 
 const MODULE_ORDER = [
   'image_generation',
+  'web_search',
   'data_analysis',
   'internal_mcp',
   'skill_builder',

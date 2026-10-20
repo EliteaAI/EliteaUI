@@ -38,20 +38,19 @@ cp .env.example .env
 
 Then set `VITE_DEV_TOKEN` to a valid, non-expired token from the dev environment.
 
-| Variable                  | Description                          |
-| ------------------------- | ------------------------------------ |
-| `VITE_SERVER_URL`         | API base path                        |
-| `VITE_BASE_URI`           | App base URI                         |
-| `VITE_DEV_SERVER`         | Backend server URL                   |
-| `VITE_DEV_TOKEN`          | Auth token (personal, do not commit) |
-| `VITE_PUBLIC_PROJECT_ID`  | Default public project ID            |
-| `VITE_SOCKET_SERVER`      | WebSocket server URL                 |
-| `VITE_SOCKET_PATH`        | WebSocket path                       |
-| `VITE_USE_NEW_IMPORT`     | Enable new import flow               |
-| `VITE_USE_COLLECTION`     | Enable collections                   |
-| `VITE_GAID`               | Google Analytics ID (optional)       |
-| `VITE_ELITEA_ASSISTANT`   | Enable Elitea assistant              |
-| `VITE_MAINTENANCE_BANNER` | Show maintenance banner              |
+| Variable                 | Description                          |
+| ------------------------ | ------------------------------------ |
+| `VITE_SERVER_URL`        | API base path                        |
+| `VITE_BASE_URI`          | App base URI                         |
+| `VITE_DEV_SERVER`        | Backend server URL                   |
+| `VITE_DEV_TOKEN`         | Auth token (personal, do not commit) |
+| `VITE_PUBLIC_PROJECT_ID` | Default public project ID            |
+| `VITE_SOCKET_SERVER`     | WebSocket server URL                 |
+| `VITE_SOCKET_PATH`       | WebSocket path                       |
+| `VITE_USE_NEW_IMPORT`    | Enable new import flow               |
+| `VITE_USE_COLLECTION`    | Enable collections                   |
+| `VITE_GAID`              | Google Analytics ID (optional)       |
+| `VITE_ELITEA_ASSISTANT`  | Enable Elitea assistant              |
 
 3. Start the dev server:
 

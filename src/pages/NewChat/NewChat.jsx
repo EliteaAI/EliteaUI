@@ -8,6 +8,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Box, CircularProgress, Grid, useTheme } from '@mui/material';
 
 import { useEditingArtifactsNavBlocker } from '@/[fsd]/features/artifacts/lib/hooks';
+import { useManualSocket } from '@/[fsd]/features/auth/lib/hooks';
 import { useLazyConversationDetailsQuery } from '@/[fsd]/features/chat/api';
 import {
   applyParticipantChanges,
@@ -29,6 +30,7 @@ import {
   useConversationNavigation,
   useEditConversation,
   useInternalToolsConfig,
+  useIsCreatingConversation,
 } from '@/[fsd]/features/chat/lib/hooks';
 import {
   canParticipantBeActiveInChat,
@@ -44,7 +46,7 @@ import { AddNewUserModal } from '@/[fsd]/features/chat/ui/chat-modal';
 import { ChatEditorPanel } from '@/[fsd]/features/chat/ui/editors';
 import { FIRST_ELITEA_TOUR_ID, useProposePendingTour } from '@/[fsd]/features/interactive-tours';
 import { ChunkHelpers } from '@/[fsd]/shared/lib/helpers';
-import { useGetWindowWidth, useToast } from '@/[fsd]/shared/lib/hooks';
+import { useGetWindowWidth, useIsSmallWindow, useToast } from '@/[fsd]/shared/lib/hooks';
 import { eliteaApi } from '@/api/eliteaApi';
 import {
   ChatParticipantType,
@@ -89,10 +91,7 @@ import useSelectConversation from '@/hooks/chat/useSelectConversation';
 import useStreamingNavBlocker from '@/hooks/chat/useStreamingNavBlocker';
 import useSynChatMessage from '@/hooks/chat/useSyncChatMessage';
 import useUploadAttachments from '@/hooks/chat/useUploadAttachments';
-import { useIsCreatingConversation } from '@/hooks/useIsFromSpecificPageHooks';
-import useIsSmallWindow from '@/hooks/useIsSmallWindow';
 import useNavBlocker from '@/hooks/useNavBlocker';
-import { useManualSocket } from '@/hooks/useSocket';
 import NewConversationView from '@/pages/NewChat/NewConversationView';
 import { actions as chatActions } from '@/slices/chat';
 import { actions } from '@/slices/settings';
@@ -581,6 +580,7 @@ const NewChat = props => {
     onEditArtifact,
     onCreateAgent,
     onCreatePipeline,
+    onCreateSkill,
     onCreateToolkit,
     handleCloseAgentEditor,
     handleClosePipelineEditor,
@@ -594,6 +594,7 @@ const NewChat = props => {
     isEditingProjectContext,
     isCreateMode,
     isPipelineCreateMode,
+    isSkillCreateMode,
     editingAgent,
     editingToolkit,
     editingPipeline,
@@ -603,6 +604,7 @@ const NewChat = props => {
     pipelineGutterStyle,
     onAgentCreated,
     onPipelineCreated,
+    onSkillCreated,
     onToolkitCreated,
     handleAgentSaved,
     handleEditorDirtyStateChange,
@@ -839,6 +841,7 @@ const NewChat = props => {
       onAddNewUsers,
       onCreateAgent,
       onCreatePipeline,
+      onCreateSkill,
       onCreateToolkit,
       onDeleteParticipant,
     }),
@@ -862,6 +865,7 @@ const NewChat = props => {
       onAddNewUsers,
       onCreateAgent,
       onCreatePipeline,
+      onCreateSkill,
       onCreateToolkit,
       onDeleteParticipant,
     ],
@@ -1384,6 +1388,7 @@ const NewChat = props => {
                 onCloseAgentEditor={handleCloseAgentEditor}
                 onCreateAgent={onCreateAgent}
                 onCreatePipeline={onCreatePipeline}
+                onCreateSkill={onCreateSkill}
                 onCreateToolkit={onCreateToolkit}
                 onAddNewUsers={onAddNewUsers}
                 ref={newConversationViewRef}
@@ -1498,6 +1503,8 @@ const NewChat = props => {
                 handleSkillSettingsChange={handleSkillSettingsChange}
                 isNewConversation={!!activeConversation?.isNew}
                 onCloseSkillEditor={onCloseSkillEditor}
+                isSkillCreateMode={isSkillCreateMode}
+                onSkillCreated={onSkillCreated}
                 // Project context
                 isEditingProjectContext={isEditingProjectContext}
                 onCloseProjectContextEditor={onCloseProjectContextEditor}

@@ -82,7 +82,7 @@ export const formatUsd = value => {
   return `$${value.toFixed(digits)}`;
 };
 
-const sumTokens = (totals = {}) =>
+export const sumTokens = (totals = {}) =>
   (totals.input_tokens ?? 0) + (totals.output_tokens ?? 0) + (totals.reasoning_tokens ?? 0);
 
 const ROLE_LABEL = { agent: 'Agent', judge: 'Judge' };

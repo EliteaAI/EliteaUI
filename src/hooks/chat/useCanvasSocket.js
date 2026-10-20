@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef } from 'react';
 
+import { useManualSocket } from '@/[fsd]/features/auth/lib/hooks';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { sioEvents } from '@/common/constants';
-import { useManualSocket } from '@/hooks/useSocket';
 
 export const useJoinCanvasSocket = () => {
   const project_id = useSelectedProjectId();

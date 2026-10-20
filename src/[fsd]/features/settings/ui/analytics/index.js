@@ -9,7 +9,8 @@ export { default as RunFailedCallsTable } from './components/RunFailedCallsTable
 export { default as CostTable } from './components/CostTable';
 export { default as InfoBanner, infoBannerTextSx } from './components/InfoBanner';
 export { default as DeletedChip } from './components/DeletedChip';
-export { default as SkillBreakdownTable } from './components/SkillBreakdownTable';
+export { default as AnalyticsBreakdownTable } from './components/AnalyticsBreakdownTable';
+export { default as AgentRecentRunsTable } from './components/AgentRecentRunsTable';
 export { default as SkillsEmptyState } from './components/SkillsEmptyState';
 
 export { default as AnalyticsOverview } from './AnalyticsOverview';

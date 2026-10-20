@@ -85,12 +85,13 @@ const PlusChatButton = memo(props => {
     onCreateAgent,
     onCreatePipeline,
     onCreateToolkit,
+    onCreateSkill,
     participants = [],
   } = props;
 
   const theme = useTheme();
   const isMcpVisible = useIsMcpVisible();
-  const availableTools = useAvailableInternalTools();
+  const availableTools = useAvailableInternalTools({ activeToolNames: internal_tools });
   const buttonRef = useRef(null);
   const hoverTimeoutRef = useRef(null);
   const subMenuRef = useRef(null);
@@ -193,6 +194,11 @@ const PlusChatButton = memo(props => {
     [handleCloseAndCall, onCreatePipeline],
   );
 
+  const handleCreateSkill = useCallback(
+    () => handleCloseAndCall(onCreateSkill),
+    [handleCloseAndCall, onCreateSkill],
+  );
+
   const handleCreateToolkit = useCallback(
     () => handleCloseAndCall(onCreateToolkit),
     [handleCloseAndCall, onCreateToolkit],
@@ -228,6 +234,9 @@ const PlusChatButton = memo(props => {
       },
       [SUBMENU_KEYS.SKILLS]: {
         searchPlaceholder: 'Search skills...',
+        showCreateNew: !!onCreateSkill,
+        createNewLabel: 'Create Skill',
+        onCreateNew: handleCreateSkill,
         emptyMessage: 'No skills available',
         noResultsMessage: 'No skills found',
         publicLabel: ParticipantEntityConstants.CATALOG_LABEL,
@@ -259,8 +268,10 @@ const PlusChatButton = memo(props => {
       onCreateAgent,
       onCreatePipeline,
       onCreateToolkit,
+      onCreateSkill,
       handleCreateAgent,
       handleCreatePipeline,
+      handleCreateSkill,
       handleCreateToolkit,
       handleCreateMCP,
       isMcpVisible,
@@ -275,7 +286,7 @@ const PlusChatButton = memo(props => {
       return availableTools.map(tool => {
         const isChecked = internal_tools.includes(tool.name);
         const handleRowClick = () => {
-          if (!disableInternalTools) {
+          if (!disableInternalTools && !tool.unavailable) {
             onInternalToolsConfigChange?.({ key: tool.name, value: !isChecked });
           }
         };
@@ -283,13 +294,15 @@ const PlusChatButton = memo(props => {
           <Switch.BaseSwitch
             key={tool.name}
             label={tool.title}
-            checked={isChecked}
-            disabled={disableInternalTools}
+            checked={isChecked && !tool.unavailable}
+            disabled={disableInternalTools || tool.unavailable}
             onChange={(_, checkedValue) =>
               onInternalToolsConfigChange?.({ key: tool.name, value: checkedValue })
             }
             width="100%"
-            infoTooltip={<Text.TextWithLink {...tool.infoTooltip} />}
+            infoTooltip={
+              tool.unavailable ? tool.unavailableTooltip : <Text.TextWithLink {...tool.infoTooltip} />
+            }
             slotProps={{
               formControlLabel: {
                 sx: styles.toolFormControlLabel,

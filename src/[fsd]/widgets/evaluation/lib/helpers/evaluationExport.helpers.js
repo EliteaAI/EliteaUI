@@ -193,6 +193,12 @@ const buildSummarySheet = (scorecard, run, meta) => {
     { metric: 'Missed', value: counts.missedAny },
     { metric: 'Errors', value: counts.errors },
   ];
+  // A timed-out case is left out of the headline, so the sheet says how many there were — the same
+  // count the results banner shows next to the score.
+  const timedOut = run?.meta?.trajectory_rollup?.timed_out_cases;
+  if (typeof timedOut === 'number') {
+    overallRows.push({ metric: 'Timed out', value: timedOut });
+  }
   if (hasHumanDimension || pendingHuman > 0) {
     overallRows.push({ metric: 'Pending Human evaluations', value: pendingHuman });
   }

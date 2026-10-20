@@ -25,7 +25,7 @@ vi.mock('@/api/toolkits', () => ({
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useSelectedProjectId: () => 2,
 }));
-vi.mock('@/hooks/useSocket', () => ({ default: () => {} }));
+vi.mock('@/[fsd]/features/auth/lib/hooks/useSocket.hooks', () => ({ useSocket: () => {} }));
 vi.mock('@/common/constants', () => ({ sioEvents: { mcp_status: 'mcp_status' } }));
 
 const givenSharedRequest = (request, schemas = {}) => {

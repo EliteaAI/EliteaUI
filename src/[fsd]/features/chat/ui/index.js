@@ -3,7 +3,7 @@ export * as ChatModal from './chat-modal';
 export * as ChatAttachment from './chat-attachment';
 export { ChatContinue } from './chat-continue';
 export { ErrorTrace, BudgetErrorMessage, ContinuationError } from './error-trace';
-export { BudgetWarningBanner } from './budget-warning';
+export { BudgetWarningBanner, WebSearchBudgetWarning } from './budget-warning';
 export { ChatWelcomeMessage } from './chat-welcome-message';
 export { ChatParticipantsWelcome } from './chat-participants-welcome';
 export { AskUserAnswerSummary, ChatHitlActions } from './chat-hitl-actions';

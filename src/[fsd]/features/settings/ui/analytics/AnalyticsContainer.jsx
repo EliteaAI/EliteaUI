@@ -1,6 +1,7 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useSelector, useStore } from 'react-redux';
+import { useSearchParams } from 'react-router-dom';
 
 import { Alert, Box, CircularProgress, Snackbar, Tooltip, Typography } from '@mui/material';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
@@ -12,7 +13,11 @@ import {
   useProjectAnalyticsQuery,
   useProjectAnalyticsUsageQuery,
 } from '@/[fsd]/features/settings/api/analyticsApi';
-import { AnalyticCommonHelpers, AnalyticsExportHelpers } from '@/[fsd]/features/settings/lib/helpers';
+import {
+  AnalyticCommonHelpers,
+  AnalyticsExportHelpers,
+  AnalyticsUrlStateHelpers,
+} from '@/[fsd]/features/settings/lib/helpers';
 import {
   AnalyticsActivity,
   AnalyticsAgents,
@@ -54,6 +59,8 @@ const DEFAULT_PRESETS = [
 
 const PRESETS_WITH_CUSTOM = [...DEFAULT_PRESETS, { label: 'Custom', value: CUSTOM_PRESET_VALUE }];
 
+const PRESET_VALUES = DEFAULT_PRESETS.map(({ value }) => value);
+
 const { ANALYTICS_TAB_IDS: TAB } = AnalyticsTabConstants;
 
 // {id, label, testid} for the Analytics tabs (ELITEA-2310) — kept as a
@@ -93,13 +100,22 @@ const AnalyticsContainer = memo(() => {
 
   const styles = analyticsContainerStyles();
 
-  const [selectedDatePreset, setSelectedDatePreset] = useState(0);
-  const [dateFrom, setDateFrom] = useState(() => AnalyticCommonHelpers.getPresetRange(0).from);
-  const [dateTo, setDateTo] = useState(() => AnalyticCommonHelpers.getPresetRange(0).to);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [initialView] = useState(() =>
+    AnalyticsUrlStateHelpers.readAnalyticsView(searchParams, {
+      presetValues: PRESET_VALUES,
+      customPreset: CUSTOM_PRESET_VALUE,
+      defaultTab: TAB.overview,
+    }),
+  );
+
+  const [selectedDatePreset, setSelectedDatePreset] = useState(initialView.preset);
+  const [dateFrom, setDateFrom] = useState(initialView.from);
+  const [dateTo, setDateTo] = useState(initialView.to);
   const [fromOpen, setFromOpen] = useState(false);
   const [toOpen, setToOpen] = useState(false);
 
-  const [selectedTab, setSelectedTab] = useState(TAB.overview);
+  const selectedTab = AnalyticsUrlStateHelpers.readAnalyticsTab(searchParams, TAB.overview);
   const activeTab = visibleTabIds.includes(selectedTab) ? selectedTab : TAB.overview;
 
   const [pendingUserId, setPendingUserId] = useState(null);
@@ -125,6 +141,32 @@ const AnalyticsContainer = memo(() => {
       setCommittedRange({ from: dateFrom, to: dateTo });
     }
   }, [isDateRangeValid, dateFrom, dateTo]);
+
+  const handledTourStep = useRef(null);
+  const pendingTourTab = useRef(null);
+
+  useEffect(() => {
+    const tourTab = tourId === ANALYTICS_TOUR_ID ? currentStep?.tabId : undefined;
+    if (!tourTab) handledTourStep.current = null;
+    if (tourTab && handledTourStep.current !== currentStep) {
+      handledTourStep.current = currentStep;
+      pendingTourTab.current = tourTab === selectedTab ? null : tourTab;
+      setPendingUserId(null);
+    }
+    if (pendingTourTab.current === selectedTab) pendingTourTab.current = null;
+    const baseSearchParams = pendingTourTab.current
+      ? AnalyticsUrlStateHelpers.switchAnalyticsTab(searchParams, pendingTourTab.current)
+      : searchParams;
+    const nextSearchParams = AnalyticsUrlStateHelpers.writeAnalyticsView(baseSearchParams, {
+      tab: AnalyticsUrlStateHelpers.readAnalyticsTab(baseSearchParams, TAB.overview),
+      preset: selectedDatePreset,
+      from: committedRange.from,
+      to: committedRange.to,
+      customPreset: CUSTOM_PRESET_VALUE,
+    });
+    if (nextSearchParams.toString() !== searchParams.toString())
+      setSearchParams(nextSearchParams, { replace: true });
+  }, [searchParams, setSearchParams, selectedTab, selectedDatePreset, committedRange, currentStep, tourId]);
 
   const dateFromISO = useMemo(
     () => AnalyticCommonHelpers.toValidISOString(committedRange.from),
@@ -200,20 +242,31 @@ const AnalyticsContainer = memo(() => {
     setSelectedDatePreset(CUSTOM_PRESET_VALUE);
   }, []);
 
-  const handleTabChange = useCallback((_, newTab) => {
-    setPendingUserId(null);
-    setSelectedTab(newTab);
-  }, []);
+  const pushAnalyticsTab = useCallback(
+    tab => setSearchParams(previous => AnalyticsUrlStateHelpers.switchAnalyticsTab(previous, tab)),
+    [setSearchParams],
+  );
 
-  const handleOverviewUserClick = useCallback(userId => {
-    setPendingUserId(userId);
-    setSelectedTab(TAB.users);
-  }, []);
+  const handleTabChange = useCallback(
+    (_, newTab) => {
+      setPendingUserId(null);
+      pushAnalyticsTab(newTab);
+    },
+    [pushAnalyticsTab],
+  );
+
+  const handleOverviewUserClick = useCallback(
+    userId => {
+      setPendingUserId(userId);
+      pushAnalyticsTab(TAB.users);
+    },
+    [pushAnalyticsTab],
+  );
 
   const handleBackToOverview = useCallback(() => {
     setPendingUserId(null);
-    setSelectedTab(TAB.overview);
-  }, []);
+    pushAnalyticsTab(TAB.overview);
+  }, [pushAnalyticsTab]);
 
   const handleExport = useCallback(async () => {
     setExporting(true);
@@ -271,14 +324,6 @@ const AnalyticsContainer = memo(() => {
       setRefreshing(false);
     }
   }, [overviewFetching, refreshing]);
-
-  useEffect(() => {
-    if (tourId !== ANALYTICS_TOUR_ID || !currentStep) return;
-    if (currentStep.tabId) {
-      setPendingUserId(null);
-      setSelectedTab(currentStep.tabId);
-    }
-  }, [currentStep, tourId]);
 
   const datePickerCommonProps = {
     ampm: false,

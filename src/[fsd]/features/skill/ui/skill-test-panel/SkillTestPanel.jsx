@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { Box } from '@mui/material';
 
+import { useManualSocket } from '@/[fsd]/features/auth/lib/hooks';
 import {
   BudgetWarningBanner,
   ChatButton,
@@ -33,7 +34,6 @@ import { initializeNewMessages } from '@/common/initializeNewMessages';
 import { buildErrorMessage } from '@/common/utils';
 import FullScreenToggle from '@/components/Chat/FullScreenToggle';
 import { ChatBodyContainer } from '@/components/Chat/StyledComponents';
-import { useManualSocket } from '@/hooks/useSocket';
 import { ContentContainer } from '@/pages/Common/Components/StyledComponents';
 
 const { MODEL_SURFACES } = AutoRoutingConstants;

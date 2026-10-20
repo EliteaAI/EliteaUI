@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { v4 as uuidv4, v4 } from 'uuid';
 
 import { useTrackEvent } from '@/GA';
+import { useManualSocket, useSocket } from '@/[fsd]/features/auth/lib/hooks';
 import {
   ChatHelpers,
   ExecutionHierarchyHelpers,
@@ -28,6 +29,7 @@ import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
 import {
   useContextExecutionEntity,
   useCtrlEnterKeyEventsHandler,
+  useIsFrom,
   useProjectType,
   useSelectedProjectId,
 } from '@/[fsd]/shared/lib/hooks';
@@ -44,8 +46,6 @@ import {
 } from '@/common/constants';
 import { convertTime } from '@/common/convertChatConversationMessages.js';
 import { convertJsonToString } from '@/common/utils';
-import { useIsFrom } from '@/hooks/useIsFromSpecificPageHooks';
-import useSocket, { useManualSocket } from '@/hooks/useSocket';
 import RouteDefinitions from '@/routes';
 
 const { GA_EVENT_NAMES, GA_EVENT_PARAMS } = AnalyticConstants;

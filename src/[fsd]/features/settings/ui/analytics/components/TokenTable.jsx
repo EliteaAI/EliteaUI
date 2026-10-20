@@ -1,12 +1,71 @@
 import { memo } from 'react';
 
-import { Box, Typography } from '@mui/material';
+import { Box, TableSortLabel, Typography } from '@mui/material';
 
 import { AnalyticCommonHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { InfoTooltip } from '@/[fsd]/shared/ui/tooltip';
 
+import { analyticsTableSortLabelSx } from './analyticsTable.styles';
+
+const TOKEN_COLUMNS = [
+  { key: 'total', label: 'TOTAL TOKENS' },
+  { key: 'input', label: 'INPUT TOKENS' },
+  { key: 'output', label: 'OUTPUT TOKENS' },
+  { key: 'cacheRead', label: 'CACHE READ' },
+  { key: 'cacheWrite', label: 'CACHE WRITE' },
+  { key: 'share', label: 'SHARE' },
+];
+
 const TokenTable = memo(props => {
-  const { title, subtitleTooltip, nameHeader, rows, emptyState, testId } = props;
+  const { title, subtitleTooltip, nameHeader, rows, emptyState, testId, sortBy, sortOrder, onSort } = props;
+
+  const renderHeaderCell = (key, label) => {
+    const sx = [styles.tableCell, styles.rightAlignedCell];
+    if (onSort) {
+      return (
+        <Box
+          key={key}
+          sx={sx}
+        >
+          <TableSortLabel
+            active={sortBy === key}
+            direction={sortBy === key ? sortOrder : 'desc'}
+            onClick={() => onSort(key)}
+            sx={analyticsTableSortLabelSx}
+          >
+            {label}
+          </TableSortLabel>
+        </Box>
+      );
+    }
+    return (
+      <Typography
+        key={key}
+        sx={sx}
+      >
+        {label}
+      </Typography>
+    );
+  };
+
+  const renderNameHeader = () => {
+    const sx = [styles.tableCell, styles.nameCell];
+    if (onSort) {
+      return (
+        <Box sx={sx}>
+          <TableSortLabel
+            active={sortBy === 'name'}
+            direction={sortBy === 'name' ? sortOrder : 'desc'}
+            onClick={() => onSort('name')}
+            sx={analyticsTableSortLabelSx}
+          >
+            {nameHeader}
+          </TableSortLabel>
+        </Box>
+      );
+    }
+    return <Typography sx={sx}>{nameHeader}</Typography>;
+  };
 
   return (
     <Box
@@ -30,13 +89,8 @@ const TokenTable = memo(props => {
       {rows.length > 0 ? (
         <Box sx={styles.tableWrapper}>
           <Box sx={styles.tableHeader}>
-            <Typography sx={[styles.tableCell, styles.nameCell]}>{nameHeader}</Typography>
-            <Typography sx={[styles.tableCell, styles.rightAlignedCell]}>TOTAL TOKENS</Typography>
-            <Typography sx={[styles.tableCell, styles.rightAlignedCell]}>INPUT TOKENS</Typography>
-            <Typography sx={[styles.tableCell, styles.rightAlignedCell]}>OUTPUT TOKENS</Typography>
-            <Typography sx={[styles.tableCell, styles.rightAlignedCell]}>CACHE READ</Typography>
-            <Typography sx={[styles.tableCell, styles.rightAlignedCell]}>CACHE WRITE</Typography>
-            <Typography sx={[styles.tableCell, styles.rightAlignedCell]}>SHARE</Typography>
+            {renderNameHeader()}
+            {TOKEN_COLUMNS.map(col => renderHeaderCell(col.key, col.label))}
           </Box>
           {rows.map((row, index) => (
             <Box

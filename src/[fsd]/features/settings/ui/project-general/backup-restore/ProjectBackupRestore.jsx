@@ -5,18 +5,22 @@ import RestoreOutlined from '@mui/icons-material/RestoreOutlined';
 import { Box, Typography } from '@mui/material';
 
 import { useProjectBackup } from '@/[fsd]/features/settings/lib/hooks';
+import CreateBackupDialog from '@/[fsd]/features/settings/ui/project-general/backup-restore/CreateBackupDialog';
 import RestoreProjectDialog from '@/[fsd]/features/settings/ui/project-general/backup-restore/RestoreProjectDialog';
 import { useSelectedProjectName } from '@/[fsd]/shared/lib/hooks';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 
 const ProjectBackupRestore = memo(() => {
   const [isRestoreOpen, setIsRestoreOpen] = useState(false);
+  const [isBackupOpen, setIsBackupOpen] = useState(false);
 
   const projectName = useSelectedProjectName();
   const { doDownload, isDownloading, canDownload, canRestore, projectId } = useProjectBackup();
 
   const handleOpenRestore = useCallback(() => setIsRestoreOpen(true), []);
   const handleCloseRestore = useCallback(() => setIsRestoreOpen(false), []);
+  const handleOpenBackup = useCallback(() => setIsBackupOpen(true), []);
+  const handleCloseBackup = useCallback(() => setIsBackupOpen(false), []);
 
   return (
     <Box sx={componentStyles.root}>
@@ -25,8 +29,9 @@ const ProjectBackupRestore = memo(() => {
         color="text.secondary"
       >
         Back up this project&apos;s data to be able to restore it, if needed. Your backup will be downloaded
-        as an encrypted SQL file and will include agents, pipelines, toolkits, MCP servers and skills.
-        Credentials, tokens and other secrets will be excluded from this backup file and cannot be restored.
+        as an encrypted file and will include agents, pipelines, toolkits, MCP servers and skills, and
+        optionally all chats with or without their attachments. Credentials, tokens and other secrets will be
+        excluded from this backup file and cannot be restored.
       </Typography>
 
       <Box sx={componentStyles.actions}>
@@ -35,7 +40,7 @@ const ProjectBackupRestore = memo(() => {
             variant={BUTTON_VARIANTS.secondary}
             size="small"
             startIcon={<DownloadOutlined />}
-            onClick={doDownload}
+            onClick={handleOpenBackup}
             disabled={isDownloading || !projectId}
             data-testid="project-backup-download"
           >
@@ -55,6 +60,17 @@ const ProjectBackupRestore = memo(() => {
           </BaseBtn>
         )}
       </Box>
+
+      {canDownload && (
+        <CreateBackupDialog
+          open={isBackupOpen}
+          onClose={handleCloseBackup}
+          onBackup={doDownload}
+          isDownloading={isDownloading}
+          projectId={projectId}
+          projectName={projectName}
+        />
+      )}
 
       {canRestore && (
         <RestoreProjectDialog

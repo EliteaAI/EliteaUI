@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { v4 as uuidv4 } from 'uuid';
 
+import { useManualSocket, useSocket } from '@/[fsd]/features/auth/lib/hooks';
 import {
   IndexStatuses,
   IndexesToolsEnum,
@@ -32,7 +33,6 @@ import { SocketMessageType, sioEvents } from '@/common/constants';
 import { convertConversationToChatHistory } from '@/common/convertChatConversationMessages';
 import { generateMessagePayload } from '@/common/messagePayloadUtils';
 import { convertJsonToString } from '@/common/utils';
-import useSocket, { useManualSocket } from '@/hooks/useSocket';
 
 export const useToolkitChat = props => {
   const runningToolRef = useRef(null);
@@ -83,9 +83,12 @@ export const useToolkitChat = props => {
 
   const modelList = useMemo(() => modelsData?.items || [], [modelsData.items]);
 
-  const defaultModel = useMemo(() => {
-    return modelsData.items.find(model => model.default) || modelsData.items[0] || null;
-  }, [modelsData.items]);
+  const isIndexingRun = !isTestToolsMode || Boolean(index);
+
+  const defaultModel = useMemo(
+    () => ToolkitChatHelpers.selectRunModel(modelsData, { forIndexing: isIndexingRun }),
+    [modelsData, isIndexingRun],
+  );
 
   // Configuration state
   const [selectedModel, setSelectedModel] = useState(defaultModel);
@@ -221,8 +224,20 @@ export const useToolkitChat = props => {
   // server rejected it (or re-login was abandoned before sending), and no other frame will settle it
   const pendingRunRef = useRef(null);
 
+  const ownedStreamIdsRef = useRef(new Set());
+  const ownStream = useCallback(streamId => {
+    if (streamId) ownedStreamIdsRef.current.add(streamId);
+  }, []);
+
+  useEffect(() => {
+    ownStream(initialConversation?.uuid);
+    ownStream(conversationDetails?.uuid);
+  }, [ownStream, initialConversation?.uuid, conversationDetails?.uuid]);
+
   const handleSocketResponse = useCallback(
     message => {
+      if (!ownedStreamIdsRef.current.has(message.stream_id)) return;
+
       // Skip messages if auth check session is active (handled by useMcpAuthCheck)
       if (isAuthCheckSessionRef.current) {
         return;
@@ -339,6 +354,14 @@ export const useToolkitChat = props => {
     projectId,
   ]);
 
+  useEffect(
+    () => () => {
+      const ownedRooms = [...ownedStreamIdsRef.current].map(conversation_uuid => ({ conversation_uuid }));
+      if (ownedRooms.length) emitLeaveRoom(ownedRooms);
+    },
+    [emitLeaveRoom],
+  );
+
   const createToolkitConversation = useCallback(
     async ({ indexName, configuration, tool }) => {
       const requestGeneration = conversationGenerationRef.current;
@@ -433,6 +456,7 @@ export const useToolkitChat = props => {
           },
         };
 
+        ownStream(currentConversation?.uuid);
         pendingRunRef.current = {
           streamId: currentConversation?.uuid,
           tool,
@@ -478,6 +502,7 @@ export const useToolkitChat = props => {
       createToolkitConversation,
       traceNewIndex,
       index?.id,
+      ownStream,
     ],
   );
 
@@ -608,11 +633,6 @@ export const useToolkitChat = props => {
     setProgressingIndexHistoryRecovered(false);
   }, [setProgressingIndexHistoryRecovered]);
 
-  const stopRunOnIndexChange = useCallback(() => {
-    setIsRunning(false);
-    setProgressingIndexHistoryRecovered(false);
-  }, [setProgressingIndexHistoryRecovered]);
-
   return {
     activeConversation,
     chatHistory,
@@ -633,7 +653,6 @@ export const useToolkitChat = props => {
     onSelectModel,
     onSetLLMSettings,
     selectedModel,
-    stopRunOnIndexChange,
     toggleFullScreenChat,
   };
 };
