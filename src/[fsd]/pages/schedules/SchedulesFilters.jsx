@@ -1,7 +1,9 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Box, Typography, debounce, useTheme } from '@mui/material';
+import { Box, debounce } from '@mui/material';
 
+import { BaseBtn } from '@/[fsd]/shared/ui/button';
+import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { SimpleSearchBar } from '@/[fsd]/shared/ui/input';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 
@@ -23,44 +25,34 @@ const STATUS_OPTIONS = [
 // The select keeps string values; the list API takes a boolean
 const ENABLED_OPTIONS = [ALL, { label: 'Yes', value: 'true' }, { label: 'No', value: 'false' }];
 
-const FilterSelect = memo(({ id, label, options, value, onValueChange }) => {
-  const theme = useTheme();
+// An unset select shows its label as the placeholder; a set select shows the label above the value
+const FilterSelect = memo(({ id, label, width, options, value, onValueChange }) => {
   const styles = schedulesFiltersStyles();
   return (
     <Box
-      sx={styles.control}
+      sx={[styles.select, { width }]}
       data-testid={`schedules-filter-${id}`}
     >
-      <Box sx={styles.labelBox}>
-        <Typography
-          component="div"
-          variant="bodyMedium"
-          color="text.primary"
-        >
-          {label}:
-        </Typography>
-      </Box>
-      <Box sx={styles.selectBox}>
-        <SingleSelect
-          onValueChange={onValueChange}
-          value={value}
-          options={options}
-          inputProps={{ 'aria-label': label }}
-          customSelectedColor={`${theme.palette.text.primary} !important`}
-          customSelectedFontSize="0.875rem"
-          sx={styles.select}
-        />
-      </Box>
+      <SingleSelect
+        showBorder
+        label={label}
+        options={options}
+        value={value}
+        onValueChange={onValueChange}
+        showEmptyPlaceholder={false}
+        inputProps={{ 'aria-label': label }}
+      />
     </Box>
   );
 });
 FilterSelect.displayName = 'FilterSelect';
 
-const SchedulesFilters = memo(({ value, onChange, isAdmin }) => {
+const SchedulesFilters = memo(({ value, onChange, onClear, hasFilters, isAdmin }) => {
   const styles = schedulesFiltersStyles();
   const [searchText, setSearchText] = useState(value.search);
   // The value only carries ids; the Owner filter needs the user objects for its chips
   const [owners, setOwners] = useState([]);
+  const searchInputRef = useRef(null);
 
   // The debounced call reads the latest props, so a filter picked while typing is not lost
   const latest = useRef({ value, onChange });
@@ -80,6 +72,7 @@ const SchedulesFilters = memo(({ value, onChange, isAdmin }) => {
     },
     [emitSearch],
   );
+  const handleSearchClear = useCallback(() => handleSearchChange(''), [handleSearchChange]);
 
   const handleEntityType = useCallback(entityType => onChange({ ...value, entityType }), [onChange, value]);
   const handleStatus = useCallback(status => onChange({ ...value, status }), [onChange, value]);
@@ -95,19 +88,36 @@ const SchedulesFilters = memo(({ value, onChange, isAdmin }) => {
     [onChange, value],
   );
 
+  // The search text and the owner chips live here, so they are emptied here too
+  const handleClear = useCallback(() => {
+    emitSearch.clear();
+    setSearchText('');
+    setOwners([]);
+    onClear();
+    searchInputRef.current?.focus();
+  }, [emitSearch, onClear]);
+
   return (
-    <Box sx={styles.bar}>
+    <Box
+      sx={styles.bar}
+      role="group"
+      aria-label="Schedule filters"
+    >
       <Box sx={styles.search}>
         <SimpleSearchBar
           searchQuery={searchText}
           onSearchChange={handleSearchChange}
+          onSearchClear={handleSearchClear}
           placeholder="Search"
           autoFocus={false}
+          inputRef={searchInputRef}
+          inputProps={{ 'aria-label': 'Search schedules' }}
         />
       </Box>
       <FilterSelect
         id="type"
         label="Type"
+        width="9.5rem"
         options={TYPE_OPTIONS}
         value={value.entityType}
         onValueChange={handleEntityType}
@@ -115,24 +125,39 @@ const SchedulesFilters = memo(({ value, onChange, isAdmin }) => {
       <FilterSelect
         id="status"
         label="Status"
+        width="10.5rem"
         options={STATUS_OPTIONS}
         value={value.status}
         onValueChange={handleStatus}
       />
-      <FilterSelect
-        id="enabled"
-        label="Enabled"
-        options={ENABLED_OPTIONS}
-        value={value.enabled === '' ? '' : String(value.enabled)}
-        onValueChange={handleEnabled}
-      />
       {isAdmin && (
-        <Box sx={styles.owner}>
+        <Box
+          sx={styles.owner}
+          role="group"
+          aria-label="Owner"
+        >
           <OwnerFilter
             selectedOwners={owners}
             onChangeOwners={handleOwners}
           />
         </Box>
+      )}
+      <FilterSelect
+        id="enabled"
+        label="Enabled"
+        width="8.5rem"
+        options={ENABLED_OPTIONS}
+        value={value.enabled === '' ? '' : String(value.enabled)}
+        onValueChange={handleEnabled}
+      />
+      {hasFilters && (
+        <BaseBtn
+          variant={BUTTON_VARIANTS.text}
+          onClick={handleClear}
+          data-testid="schedules-filters-clear"
+        >
+          Clear filters
+        </BaseBtn>
       )}
     </Box>
   );
@@ -142,14 +167,22 @@ SchedulesFilters.displayName = 'SchedulesFilters';
 
 /** @type {MuiSx} */
 const schedulesFiltersStyles = () => ({
-  bar: { display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', width: '100%' },
-  search: { minWidth: '12.5rem', marginRight: '0.25rem' },
-  // Same label and select sizes as the status filter of Agents and Pipelines
-  control: { display: 'flex', minWidth: '7.3125rem', gap: '0.75rem', alignItems: 'center', height: '100%' },
-  labelBox: { height: '1.5rem' },
-  selectBox: { flex: 1 },
-  select: { margin: '0.3125rem 0 0 0 !important' },
-  owner: { minWidth: '15rem' },
+  bar: { display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'flex-end', width: '100%' },
+  // Below 1100 px the search takes its own row and the other controls share the next rows
+  search: ({ breakpoints }) => ({
+    width: '12.5rem',
+    [breakpoints.down(1100)]: { flexBasis: '100%', width: 'auto' },
+  }),
+  select: ({ breakpoints }) => ({
+    [breakpoints.down(1100)]: { flex: '1 1 9rem' },
+    [breakpoints.down('sm')]: { flexBasis: '100%' },
+  }),
+  // The owner chips wrap inside the control, so the bar grows in height
+  owner: ({ breakpoints }) => ({
+    width: '15rem',
+    [breakpoints.down(1100)]: { flex: '1 1 15rem', width: 'auto', minWidth: '15rem' },
+    [breakpoints.down('sm')]: { flexBasis: '100%', minWidth: 0 },
+  }),
 });
 
 export default SchedulesFilters;

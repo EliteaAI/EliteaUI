@@ -62,6 +62,8 @@ const SchedulesPage = () => {
     filters.ownerIds.length,
   );
 
+  const onClearFilters = useCallback(() => onFiltersChange(NO_FILTERS), [onFiltersChange]);
+
   const onPageChange = useCallback(newPage => setPage(newPage), []);
   const onChangePageSize = useCallback(size => {
     setPageSize(size);
@@ -96,6 +98,16 @@ const SchedulesPage = () => {
               sortConfig={sortConfig}
               onSort={onSort}
               emptyMessage={hasFilters ? 'No schedules match the filters' : 'No schedules'}
+              toolbar={
+                <SchedulesFilters
+                  key={projectId}
+                  value={filters}
+                  onChange={onFiltersChange}
+                  onClear={onClearFilters}
+                  hasFilters={hasFilters}
+                  isAdmin={isAdmin}
+                />
+              }
             />
           ),
         },
@@ -105,14 +117,6 @@ const SchedulesPage = () => {
       titleTestId="schedules-page-header"
       containerStyle={{ padding: '0 1.5rem 0 0' }}
       tabBarStyle={{ padding: '0 0 0 1.5rem' }}
-      middleTabComponent={
-        <SchedulesFilters
-          key={projectId}
-          value={filters}
-          onChange={onFiltersChange}
-          isAdmin={isAdmin}
-        />
-      }
     />
   );
 };

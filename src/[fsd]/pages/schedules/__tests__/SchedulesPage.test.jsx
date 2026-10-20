@@ -23,20 +23,23 @@ vi.mock('@/hooks/useCheckPermission', () => ({
   default: () => ({ checkPermission: mocks.checkPermission }),
 }));
 vi.mock('../SchedulesFilters', () => ({
-  default: ({ value, onChange, isAdmin }) => (
+  default: ({ value, onChange, onClear, hasFilters, isAdmin }) => (
     <div
       data-testid="filters"
       data-admin={String(isAdmin)}
+      data-has-filters={String(hasFilters)}
     >
       <button onClick={() => onChange({ ...value, search: 'nightly' })}>search</button>
       <button onClick={() => onChange({ ...value, status: 'failed' })}>status</button>
       <button onClick={() => onChange({ ...value, ownerIds: [3, 4] })}>owners</button>
       <button onClick={() => onChange({ ...value, status: '', search: '' })}>clear</button>
+      <button onClick={onClear}>clear all</button>
     </div>
   ),
 }));
 vi.mock('../SchedulesTable', () => ({
   default: ({
+    toolbar,
     emptyMessage,
     rows,
     total,
@@ -49,6 +52,7 @@ vi.mock('../SchedulesTable', () => ({
     onSort,
   }) => (
     <div>
+      {toolbar}
       <span data-testid="empty-message">{emptyMessage}</span>
       <span data-testid="sort">{`${sortConfig.field} ${sortConfig.direction}`}</span>
       <button onClick={() => onSort('name')}>sort name</button>
@@ -225,5 +229,25 @@ describe('EL-7011 US-26 SchedulesPage', () => {
     mocks.useSelectedProjectId.mockReturnValue(7);
     rerender(<SchedulesPage />);
     expect(lastArgs()).toMatchObject({ projectId: 7, page: 0, status: '', ownerIds: [] });
+  });
+
+  it('EL-7011 R1.3 "Clear filters" drops every filter and returns to the first page', () => {
+    mocks.checkPermission.mockReturnValue(true);
+    render(<SchedulesPage />);
+    expect(screen.getByTestId('filters')).toHaveAttribute('data-has-filters', 'false');
+    fireEvent.click(screen.getByText('status'));
+    fireEvent.click(screen.getByText('owners'));
+    fireEvent.click(screen.getByText('next'));
+    expect(screen.getByTestId('filters')).toHaveAttribute('data-has-filters', 'true');
+    fireEvent.click(screen.getByText('clear all'));
+    expect(lastArgs()).toMatchObject({
+      page: 0,
+      entityType: '',
+      status: '',
+      enabled: '',
+      search: '',
+      ownerIds: [],
+    });
+    expect(screen.getByTestId('filters')).toHaveAttribute('data-has-filters', 'false');
   });
 });
