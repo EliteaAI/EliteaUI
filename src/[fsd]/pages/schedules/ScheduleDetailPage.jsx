@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Link as RouterLink, useLocation, useNavigate, useParams } from 'react-router-dom';
+
+import { Box, CircularProgress, Container, Link } from '@mui/material';
 
 import {
   useGetScheduleQuery,
@@ -9,10 +11,26 @@ import {
 } from '@/[fsd]/entities/schedule';
 import { ScheduleForm, ScheduleRunList } from '@/[fsd]/features/schedule';
 import { buildEditValues } from '@/[fsd]/features/schedule/lib/helpers';
+import { ScheduleHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { ScheduleSettingsSection, StopOnDateField } from '@/[fsd]/shared/ui/schedule';
-import Page404 from '@/pages/Page404.jsx';
 import RouteDefinitions from '@/routes';
+
+const { convertCronTimezone, getBrowserTimezone } = ScheduleHelpers;
+
+// The Page404 layout, with the way back to the Schedules list instead of Home (R1.2)
+const ScheduleNotice = ({ message }) => (
+  <Container sx={styles.notice}>
+    {message} Open{' '}
+    <Link
+      component={RouterLink}
+      to={RouteDefinitions.Schedules}
+      color="primary"
+    >
+      Schedules
+    </Link>
+  </Container>
+);
 
 const ScheduleDetailPage = () => {
   const projectId = useSelectedProjectId();
@@ -20,7 +38,7 @@ const ScheduleDetailPage = () => {
   const navigate = useNavigate();
   const { state } = useLocation();
   const {
-    data: schedule,
+    currentData: schedule,
     isError,
     error,
   } = useGetScheduleQuery({ projectId, scheduleId }, { skip: !projectId });
@@ -52,8 +70,20 @@ const ScheduleDetailPage = () => {
     [schedule],
   );
 
-  if (isError && error?.status === 404) return <Page404 />;
-  if (!schedule) return null;
+  if (isError)
+    return (
+      <ScheduleNotice
+        message={error?.status === 404 ? 'Schedule not found.' : 'Failed to load the schedule.'}
+      />
+    );
+  if (!schedule)
+    return (
+      <Box sx={styles.loader}>
+        <CircularProgress />
+      </Box>
+    );
+
+  const browserTimezone = getBrowserTimezone();
 
   return (
     <ScheduleForm
@@ -66,17 +96,20 @@ const ScheduleDetailPage = () => {
       onTestRun={onTestRun}
       onCancel={onSaved}
     >
-      {form => (
+      {({ values: formValues, setFieldValue }) => (
         <>
           <ScheduleSettingsSection
-            value={form.values.cron}
-            onChange={cron => form.setFieldValue('cron', cron)}
+            value={convertCronTimezone(formValues.cron, formValues.timezone, browserTimezone)}
+            onChange={cron => {
+              setFieldValue('cron', cron);
+              setFieldValue('timezone', browserTimezone);
+            }}
             sourceCron={schedule.cron}
             sourceTimezone={schedule.timezone}
           />
           <StopOnDateField
-            value={form.values.expires_at}
-            onChange={date => form.setFieldValue('expires_at', date)}
+            value={formValues.expires_at}
+            onChange={date => setFieldValue('expires_at', date)}
           />
         </>
       )}
@@ -85,3 +118,9 @@ const ScheduleDetailPage = () => {
 };
 
 export default ScheduleDetailPage;
+
+/** @type {MuiSx} */
+const styles = {
+  notice: { marginTop: '50px', minHeight: 'calc(100vh - 191px)' },
+  loader: { display: 'flex', justifyContent: 'center', padding: '3rem' },
+};

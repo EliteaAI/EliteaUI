@@ -25,6 +25,18 @@ const makeStore = () =>
 const requestedUrls = spy =>
   spy.mock.calls.map(([arg]) => new URL(arg instanceof Request ? arg.url : String(arg)));
 
+const lastRequestOf = async spy => {
+  const [arg] = spy.mock.calls.at(-1);
+  return {
+    url: new URL(arg.url),
+    method: arg.method,
+    body: await arg
+      .clone()
+      .json()
+      .catch(() => null),
+  };
+};
+
 const jsonResponse = (body, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 
@@ -304,18 +316,6 @@ describe('R2.1 R3.1 R3.2 R4.2 EL-7011 schedule row mutations', () => {
   let fetchSpy;
   let handler;
 
-  const requestOf = async spy => {
-    const [arg] = spy.mock.calls.at(-1);
-    return {
-      url: new URL(arg.url),
-      method: arg.method,
-      body: await arg
-        .clone()
-        .json()
-        .catch(() => null),
-    };
-  };
-
   const setup = async () => {
     const store = makeStore();
     await store.dispatch(scheduleApi.endpoints.getScheduleList.initiate({ projectId: 5, page: 0 }));
@@ -342,7 +342,7 @@ describe('R2.1 R3.1 R3.2 R4.2 EL-7011 schedule row mutations', () => {
       scheduleApi.endpoints.runSchedule.initiate({ projectId: 5, scheduleId: 7 }),
     );
 
-    const request = await requestOf(fetchSpy);
+    const request = await lastRequestOf(fetchSpy);
     expect(request.method).toBe('POST');
     expect(request.url.pathname).toBe('/elitea_core/schedule/prompt_lib/5/7/run');
     expect(request.body).toEqual({ trigger: 'manual' });
@@ -380,7 +380,7 @@ describe('R2.1 R3.1 R3.2 R4.2 EL-7011 schedule row mutations', () => {
       scheduleApi.endpoints.updateSchedule.initiate({ projectId: 5, scheduleId: 7, enabled: false }),
     );
 
-    const request = await requestOf(fetchSpy);
+    const request = await lastRequestOf(fetchSpy);
     expect(request.method).toBe('PUT');
     expect(request.url.pathname).toBe('/elitea_core/schedule/prompt_lib/5/7');
     expect(request.body).toEqual({ enabled: false });
@@ -451,18 +451,6 @@ describe('R2.1 R3.2 R4.3 EL-7011 schedule details, update, test run and runs', (
   let fetchSpy;
   let handler;
 
-  const lastRequest = async () => {
-    const [arg] = fetchSpy.mock.calls.at(-1);
-    return {
-      url: new URL(arg.url),
-      method: arg.method,
-      body: await arg
-        .clone()
-        .json()
-        .catch(() => null),
-    };
-  };
-
   beforeEach(() => {
     vi.restoreAllMocks();
     handler = async () => jsonResponse({ id: 7 });
@@ -476,7 +464,7 @@ describe('R2.1 R3.2 R4.3 EL-7011 schedule details, update, test run and runs', (
       scheduleApi.endpoints.getSchedule.initiate({ projectId: 5, scheduleId: 7 }),
     );
 
-    const request = await lastRequest();
+    const request = await lastRequestOf(fetchSpy);
     expect(request.method).toBe('GET');
     expect(request.url.pathname).toBe('/elitea_core/schedule/prompt_lib/5/7');
     expect(result.data).toEqual({ id: 7, allowed_actions: ['run'] });
@@ -499,7 +487,7 @@ describe('R2.1 R3.2 R4.3 EL-7011 schedule details, update, test run and runs', (
       scheduleApi.endpoints.updateSchedule.initiate({ projectId: 5, scheduleId: 7, ...body }),
     );
 
-    const request = await lastRequest();
+    const request = await lastRequestOf(fetchSpy);
     expect(request.method).toBe('PUT');
     expect(request.url.pathname).toBe('/elitea_core/schedule/prompt_lib/5/7');
     expect(request.body).toEqual(body);
@@ -527,7 +515,7 @@ describe('R2.1 R3.2 R4.3 EL-7011 schedule details, update, test run and runs', (
       scheduleApi.endpoints.runSchedule.initiate({ projectId: 5, scheduleId: 7, trigger: 'test' }),
     );
 
-    expect((await lastRequest()).body).toEqual({ trigger: 'test' });
+    expect((await lastRequestOf(fetchSpy)).body).toEqual({ trigger: 'test' });
     expect(result.data).toEqual({ run_id: 81 });
   });
 
@@ -538,7 +526,7 @@ describe('R2.1 R3.2 R4.3 EL-7011 schedule details, update, test run and runs', (
       scheduleApi.endpoints.getScheduleRuns.initiate({ projectId: 5, scheduleId: 7, page: 2, pageSize: 10 }),
     );
 
-    const { url } = await lastRequest();
+    const { url } = await lastRequestOf(fetchSpy);
     expect(url.pathname).toBe('/elitea_core/schedule/prompt_lib/5/7/runs');
     expect(url.searchParams.get('limit')).toBe('10');
     expect(url.searchParams.get('offset')).toBe('20');
@@ -550,7 +538,7 @@ describe('R2.1 R3.2 R4.3 EL-7011 schedule details, update, test run and runs', (
       scheduleApi.endpoints.getScheduleRuns.initiate({ projectId: 5, scheduleId: 7 }),
     );
 
-    const { url } = await lastRequest();
+    const { url } = await lastRequestOf(fetchSpy);
     expect(url.searchParams.get('limit')).toBe(String(PAGE_SIZE));
     expect(url.searchParams.get('offset')).toBe('0');
   });

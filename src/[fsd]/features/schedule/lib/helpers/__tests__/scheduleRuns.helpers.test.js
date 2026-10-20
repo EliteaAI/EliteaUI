@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildScheduleRowDecorator, toHistoryRows } from '../scheduleRuns.helpers';
+import { buildScheduleRowDecorator, toHistoryRows, toWord } from '../scheduleRuns.helpers';
 
 const runs = [
   { id: 1, status: 'success', trigger: 'test', conversation_id: 50, started_at: '2026-10-18T10:00:00Z' },
@@ -38,5 +38,13 @@ describe('EL-7011 R4.2 run rows', () => {
     const decorate = buildScheduleRowDecorator(runs);
     expect(decorate({ id: 50 })).toMatchObject({ id: 50, event_label: 'Success, test' });
     expect(decorate({ id: 99 })).toEqual({ id: 99 });
+  });
+});
+
+describe('EL-7011 R4.2 status text', () => {
+  it('capitalizes the status, turns every underscore into a space and keeps an empty status empty', () => {
+    expect(toWord('not_yet_started')).toBe('Not yet started');
+    expect(toWord('')).toBe('');
+    expect(toWord(undefined)).toBe('');
   });
 });

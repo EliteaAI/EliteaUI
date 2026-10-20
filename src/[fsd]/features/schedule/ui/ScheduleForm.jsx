@@ -86,6 +86,7 @@ const ScheduleForm = memo(props => {
   const [list, setList] = useState({ page: 0, query: '' });
   const [lockFailed, setLockFailed] = useState(false);
   const [banner, setBanner] = useState('');
+  const [testRunPending, setTestRunPending] = useState(false);
   const afterSave = useRef(null);
 
   const formik = useFormik({
@@ -126,12 +127,15 @@ const ScheduleForm = memo(props => {
   }, [onTestRun, toastError]);
 
   const handleTestRun = async () => {
-    if (!formik.dirty) return runTest();
-    afterSave.current = runTest;
+    setTestRunPending(true);
     try {
-      await formik.submitForm();
+      if (formik.dirty) {
+        afterSave.current = runTest;
+        await formik.submitForm();
+      } else await runTest();
     } finally {
       afterSave.current = null;
+      setTestRunPending(false);
     }
   };
   // Unsaved changes open the leave dialog (R1.3); a save in progress never does
@@ -383,7 +387,7 @@ const ScheduleForm = memo(props => {
                   data-testid="schedule-form-test-run"
                   variant="elitea"
                   color="secondary"
-                  disabled={formik.isSubmitting}
+                  disabled={formik.isSubmitting || testRunPending}
                   onClick={handleTestRun}
                 >
                   Test run

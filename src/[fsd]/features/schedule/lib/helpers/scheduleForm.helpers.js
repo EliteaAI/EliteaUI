@@ -64,8 +64,8 @@ export const buildInitialValues = (searchParams, locationState) => {
 const toExpiryDate = (expiresAt, timeZone) =>
   expiresAt ? new Intl.DateTimeFormat('en-CA', { timeZone }).format(new Date(expiresAt)) : null;
 
+// The saved cron stays in the schedule's own zone: only a cron edit moves it to the browser zone
 export const buildEditValues = (schedule, locationState) => {
-  const browserTimezone = ScheduleHelpers.getBrowserTimezone();
   const { values, returnTo } = buildInitialValues(new URLSearchParams(), locationState);
 
   return {
@@ -79,8 +79,8 @@ export const buildEditValues = (schedule, locationState) => {
       run_mode: schedule.run_mode,
       prompt: schedule.prompt ?? '',
       variables: syncPromptVariables(schedule.prompt, schedule.variables),
-      cron: ScheduleHelpers.convertCronTimezone(schedule.cron, schedule.timezone, browserTimezone),
-      timezone: browserTimezone,
+      cron: schedule.cron,
+      timezone: schedule.timezone || values.timezone,
       expires_at: toExpiryDate(schedule.expires_at, schedule.timezone),
     },
     returnTo,

@@ -96,6 +96,15 @@ describe('ScheduleRunList (EL-7011 US-32)', () => {
     expect(screen.getByText('Model unavailable')).toBeInTheDocument();
   });
 
+  it('R4.2 shows a run without a status without failing', () => {
+    mockRuns([{ ...withoutConversation, status: '' }]);
+    render(<ScheduleRunList schedule={schedule} />);
+    const { additionalRows, DetailComponent } = lastProps();
+
+    render(<DetailComponent row={additionalRows[0]} />);
+    expect(screen.getByText('Model unavailable')).toBeInTheDocument();
+  });
+
   it('R4.3 refreshes every 3 seconds while a run is running', () => {
     mockRuns([running]);
     render(<ScheduleRunList schedule={schedule} />);

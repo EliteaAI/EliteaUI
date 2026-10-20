@@ -12,7 +12,7 @@ import { useApplicationDetailsQuery } from '@/api/applications';
 import { eliteaApi } from '@/api/eliteaApi.js';
 import { buildErrorMessage } from '@/common/utils.jsx';
 
-import { buildScheduleRowDecorator, toHistoryRows } from '../lib/helpers';
+import { buildScheduleRowDecorator, toHistoryRows, toWord } from '../lib/helpers';
 
 const POLLING_INTERVAL_MS = 3000;
 
@@ -25,7 +25,7 @@ const ScheduleRunDetail = memo(({ row }) => (
       variant="headingSmall"
       color="text.primary"
     >
-      {row.entry.status[0].toUpperCase() + row.entry.status.slice(1).replaceAll('_', ' ')}
+      {toWord(row.entry.status)}
     </Typography>
     {row.entry.reason && (
       <Typography

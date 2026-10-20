@@ -530,6 +530,20 @@ describe('ScheduleForm EL-7011', () => {
       expect(onSubmit).not.toHaveBeenCalled();
     });
 
+    it('R3.1 EL-7011 disables Test run while the run is pending, so a double click sends one run', async () => {
+      let finish;
+      const onTestRun = vi.fn(() => new Promise(resolve => (finish = resolve)));
+      renderEdit({ onTestRun });
+
+      testRun();
+      await waitFor(() => expect(screen.getByTestId('schedule-form-test-run')).toBeDisabled());
+      testRun();
+      expect(onTestRun).toHaveBeenCalledTimes(1);
+
+      await act(async () => finish());
+      expect(screen.getByTestId('schedule-form-test-run')).toBeEnabled();
+    });
+
     it('R3.1 EL-7011 a second Test run after a save does not save again', async () => {
       const { onSubmit } = renderEdit();
       edit();
@@ -567,7 +581,9 @@ describe('ScheduleForm EL-7011', () => {
     });
 
     it('R3.5 EL-7011 shows the server reason of a 409 run in the banner', async () => {
-      renderEdit({ onTestRun: vi.fn().mockRejectedValue({ status: 409, data: { error: 'Already running' } }) });
+      renderEdit({
+        onTestRun: vi.fn().mockRejectedValue({ status: 409, data: { error: 'Already running' } }),
+      });
 
       testRun();
 

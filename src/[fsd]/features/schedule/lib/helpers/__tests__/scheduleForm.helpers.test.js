@@ -243,7 +243,10 @@ const saved = {
 
 describe('EL-7011 R1.5 edit values', () => {
   it('fills the form with the saved values and one variable per placeholder', () => {
-    const { values, returnTo } = buildEditValues({ ...saved, prompt: 'Hi {{team}} {{day}}' }, { returnTo: '/schedules?x=1' });
+    const { values, returnTo } = buildEditValues(
+      { ...saved, prompt: 'Hi {{team}} {{day}}' },
+      { returnTo: '/schedules?x=1' },
+    );
     expect(values).toMatchObject({
       name: 'Night report',
       description: 'Daily',
@@ -269,6 +272,17 @@ describe('EL-7011 R1.5 edit values', () => {
     const { values } = buildEditValues({ ...saved, description: null, expires_at: null }, undefined);
     expect(values.description).toBe('');
     expect(values.expires_at).toBeNull();
+  });
+
+  it('R2.1 keeps the saved cron and time zone, so an unchanged Save stays in the schedule zone', () => {
+    const tokyo = {
+      ...saved,
+      cron: '0 9 * * *',
+      timezone: 'Asia/Tokyo',
+      expires_at: '2026-12-31T20:00:00+00:00',
+    };
+    const body = toUpdateBody(buildEditValues(tokyo, undefined).values);
+    expect(body).toMatchObject({ cron: '0 9 * * *', timezone: 'Asia/Tokyo', expires_at: '2027-01-01' });
   });
 
   it('reads the expiry date in the schedule time zone, not in UTC', () => {
