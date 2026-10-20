@@ -4,7 +4,7 @@ import { useFormikContext } from 'formik';
 import YAML from 'js-yaml';
 
 import LinkIcon from '@mui/icons-material/Link';
-import { Box, IconButton } from '@mui/material';
+import { Box, IconButton, Link, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { PipelineNodeTypes } from '@/[fsd]/features/pipelines/flow-editor/lib/constants/flowEditor.constants';
@@ -15,6 +15,7 @@ import {
 } from '@/[fsd]/features/pipelines/flow-editor/lib/constants/webhook.constants';
 import { useDelegatedOauthToolkits } from '@/[fsd]/features/toolkits/lib/hooks';
 import { useSelectedProject, useToast } from '@/[fsd]/shared/lib/hooks';
+import { BannerMessage } from '@/[fsd]/shared/ui/banner-message';
 import { InfoLabelWithTooltip } from '@/[fsd]/shared/ui/label';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import { useGetPipelineTriggerQuery, useUpdatePipelineTriggerMutation } from '@/api/applications';
@@ -23,6 +24,9 @@ import PipelineWebhookModal from './PipelineWebhookModal';
 
 // Node types that require user interaction and thus only support Chat Message trigger
 const INTERACTIVE_NODE_TYPES = [PipelineNodeTypes.Hitl, PipelineNodeTypes.Printer];
+
+// Root element id of the editor Schedules section (US-36)
+const SCHEDULES_SECTION_ID = 'entity-schedules-section';
 
 const TRIGGER_OPTIONS = [
   { label: 'Chat Message', value: TRIGGER_TYPES.chat_message },
@@ -274,6 +278,10 @@ const TriggerTypeSelector = memo(props => {
 
   const isLoading = isFetching || isUpdating;
 
+  const scrollToSchedules = useCallback(() => {
+    document.getElementById(SCHEDULES_SECTION_ID)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
+
   const triggerTooltip = useMemo(() => {
     const baseTooltip =
       'Choose how this pipeline is triggered.\n• Chat Message (default) requires user input.\n• Webhook allows external systems to trigger the pipeline via HTTP POST.';
@@ -329,6 +337,24 @@ const TriggerTypeSelector = memo(props => {
         )}
       </Box>
 
+      <BannerMessage
+        variant="info"
+        containerSx={styles.hint}
+      >
+        <Typography variant="bodySmall">
+          To run this pipeline on a timer, use the{' '}
+          <Link
+            component="button"
+            type="button"
+            variant="bodySmall"
+            onClick={scrollToSchedules}
+          >
+            Schedules section
+          </Link>
+          .
+        </Typography>
+      </BannerMessage>
+
       <PipelineWebhookModal
         open={isWebhookModalOpen}
         onClose={() => setIsWebhookModalOpen(false)}
@@ -380,6 +406,9 @@ const triggerTypeSelectorStyles = () => ({
       color: palette.primary.main,
     },
   }),
+  hint: {
+    marginTop: '0.25rem',
+  },
   iconStyle: {
     width: '1rem',
     height: '1rem',

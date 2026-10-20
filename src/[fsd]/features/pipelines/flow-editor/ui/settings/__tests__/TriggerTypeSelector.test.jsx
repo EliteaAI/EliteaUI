@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 import TriggerTypeSelector from '../TriggerTypeSelector';
 
@@ -31,6 +31,7 @@ vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useSelectedProject: () => ({ id: 1 }),
   useToast: () => ({ toastSuccess: vi.fn(), toastError: vi.fn() }),
 }));
+vi.mock('@/[fsd]/shared/ui/banner-message', () => ({ BannerMessage: ({ children }) => <div>{children}</div> }));
 vi.mock('@/[fsd]/shared/ui/select', () => ({
   SingleSelect: ({ value, options, disabled }) => (
     <div
@@ -120,5 +121,32 @@ describe('TriggerTypeSelector EL-7011 US-37', () => {
     rerender(<TriggerTypeSelector disabled={false} />);
 
     expect(mocks.updateTrigger).toHaveBeenCalledTimes(1);
+  });
+
+  it('R1.2 shows a hint that names the Schedules section', () => {
+    render(<TriggerTypeSelector />);
+
+    expect(screen.getByText(/to run this pipeline on a timer, use the/i)).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Schedules section' })).toBeTruthy();
+  });
+
+  it('R1.3 scrolls to the Schedules section when the link is activated', () => {
+    const section = document.createElement('div');
+    section.id = 'entity-schedules-section';
+    section.scrollIntoView = vi.fn();
+    document.body.appendChild(section);
+
+    render(<TriggerTypeSelector />);
+    fireEvent.click(screen.getByRole('button', { name: 'Schedules section' }));
+
+    expect(section.scrollIntoView).toHaveBeenCalledTimes(1);
+    section.remove();
+  });
+
+  it('R1.4 keeps the hint and does nothing when the Schedules section is missing', () => {
+    render(<TriggerTypeSelector />);
+
+    expect(() => fireEvent.click(screen.getByRole('button', { name: 'Schedules section' }))).not.toThrow();
+    expect(screen.getByText(/to run this pipeline on a timer/i)).toBeTruthy();
   });
 });
