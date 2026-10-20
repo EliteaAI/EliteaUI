@@ -141,7 +141,10 @@ const SchedulesTable = memo(props => {
     sortConfig,
     onSort,
     isLoading = false,
+    emptyMessage = 'No schedules',
+    toolbar,
   } = props;
+  const styles = schedulesTableStyles();
   const { windowWidth } = useGetWindowWidth();
   const [hoveredRowId, setHoveredRowId] = useState(null);
 
@@ -173,7 +176,22 @@ const SchedulesTable = memo(props => {
     <GridTableContainer
       isLoading={isLoading}
       isEmpty={rows.length === 0}
-      emptyMessage="No schedules"
+      emptyMessage={emptyMessage}
+      toolbar={
+        toolbar && (
+          <>
+            {toolbar}
+            {/* Screen readers hear the result count after each filter change */}
+            <Box
+              sx={styles.visuallyHidden}
+              aria-live="polite"
+            >
+              {isLoading ? '' : `${total} ${total === 1 ? 'schedule' : 'schedules'}`}
+            </Box>
+          </>
+        )
+      }
+      toolbarSx={styles.toolbar}
     >
       <GridTableHeader
         columns={visibleColumns}
@@ -217,6 +235,15 @@ const schedulesTableStyles = () => ({
   calendarIcon: { width: '1rem', height: '1rem', flexShrink: 0 },
   lastRun: { minWidth: 0 },
   owner: { display: 'flex', maxWidth: '9.75rem', width: '9.75rem' },
+  toolbar: { flexWrap: 'wrap', gap: '1rem', alignItems: 'flex-end' },
+  visuallyHidden: {
+    position: 'absolute',
+    width: '0.0625rem',
+    height: '0.0625rem',
+    overflow: 'hidden',
+    clip: 'rect(0 0 0 0)',
+    whiteSpace: 'nowrap',
+  },
 });
 
 export default SchedulesTable;

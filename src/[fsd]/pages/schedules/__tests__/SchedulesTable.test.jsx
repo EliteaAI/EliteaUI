@@ -1,27 +1,15 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { ThemeProvider, createTheme } from '@mui/material';
-
-import lightPalette from '@/lightPalette';
 import '@testing-library/jest-dom/vitest';
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, screen, within } from '@testing-library/react';
 
 import SchedulesTable from '../SchedulesTable';
+import { renderWithTheme } from './_testHelpers';
 
-vi.hoisted(() => {
-  const entries = new Map();
-  globalThis.localStorage = {
-    getItem: key => entries.get(key) ?? null,
-    setItem: (key, value) => entries.set(key, String(value)),
-    removeItem: key => entries.delete(key),
-    clear: () => entries.clear(),
-  };
-  globalThis.ResizeObserver = class {
-    observe() {}
-    unobserve() {}
-    disconnect() {}
-  };
+await vi.hoisted(async () => {
+  const { installGlobalStubs } = await import('./_testHelpers');
+  installGlobalStubs();
 });
 
 vi.mock('@/[fsd]/shared/lib/helpers/schedule.helpers', async importOriginal => ({
@@ -66,21 +54,21 @@ const makeRow = (overrides = {}) => ({
   ...overrides,
 });
 
-const renderTable = (rows, isLoading = false, onSort = vi.fn()) =>
-  render(
-    <ThemeProvider theme={createTheme({ palette: lightPalette })}>
-      <SchedulesTable
-        rows={rows}
-        isLoading={isLoading}
-        total={rows.length}
-        page={0}
-        pageSize={20}
-        onPageChange={vi.fn()}
-        onChangePageSize={vi.fn()}
-        sortConfig={{ field: 'next_run', direction: 'asc' }}
-        onSort={onSort}
-      />
-    </ThemeProvider>,
+const renderTable = (rows, isLoading = false, onSort = vi.fn(), emptyMessage, toolbar) =>
+  renderWithTheme(
+    <SchedulesTable
+      rows={rows}
+      isLoading={isLoading}
+      total={rows.length}
+      page={0}
+      pageSize={20}
+      onPageChange={vi.fn()}
+      onChangePageSize={vi.fn()}
+      sortConfig={{ field: 'next_run', direction: 'asc' }}
+      onSort={onSort}
+      emptyMessage={emptyMessage}
+      toolbar={toolbar}
+    />,
   );
 
 afterEach(cleanup);
@@ -176,9 +164,26 @@ describe('EL-7011 US-26 SchedulesTable', () => {
     expect(screen.getByText('No schedules')).toBeInTheDocument();
   });
 
+  it('EL-7011 R1.4 shows the emptyMessage prop when it is set', () => {
+    renderTable([], false, vi.fn(), 'No schedules match the filters');
+    expect(screen.getByText('No schedules match the filters')).toBeInTheDocument();
+    expect(screen.queryByText('No schedules')).not.toBeInTheDocument();
+  });
+
   it('R2.1 shows the loading text, not the empty state, while loading', () => {
     renderTable([], true);
     expect(screen.getByText('Loading...')).toBeInTheDocument();
     expect(screen.queryByText('No schedules')).not.toBeInTheDocument();
+  });
+
+  it('EL-7011 R1.4 keeps the filter bar on screen when no row matches', () => {
+    renderTable([], false, vi.fn(), 'No schedules match the filters', <span data-testid="bar" />);
+    expect(screen.getByTestId('bar')).toBeInTheDocument();
+    expect(screen.getByText('No schedules match the filters')).toBeInTheDocument();
+  });
+
+  it('EL-7011 tells screen readers the result count', () => {
+    renderTable([makeRow(), makeRow({ id: 2 })], false, vi.fn(), undefined, <span />);
+    expect(screen.getByText('2 schedules')).toHaveAttribute('aria-live', 'polite');
   });
 });
