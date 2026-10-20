@@ -29,6 +29,7 @@ import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
 import {
   useContextExecutionEntity,
   useCtrlEnterKeyEventsHandler,
+  useIsFrom,
   useProjectType,
   useSelectedProjectId,
 } from '@/[fsd]/shared/lib/hooks';
@@ -45,7 +46,6 @@ import {
 } from '@/common/constants';
 import { convertTime } from '@/common/convertChatConversationMessages.js';
 import { convertJsonToString } from '@/common/utils';
-import { useIsFrom } from '@/hooks/useIsFromSpecificPageHooks';
 import RouteDefinitions from '@/routes';
 
 const { GA_EVENT_NAMES, GA_EVENT_PARAMS } = AnalyticConstants;

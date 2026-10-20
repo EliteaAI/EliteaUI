@@ -30,6 +30,7 @@ import {
   useConversationNavigation,
   useEditConversation,
   useInternalToolsConfig,
+  useIsCreatingConversation,
 } from '@/[fsd]/features/chat/lib/hooks';
 import {
   canParticipantBeActiveInChat,
@@ -90,7 +91,6 @@ import useSelectConversation from '@/hooks/chat/useSelectConversation';
 import useStreamingNavBlocker from '@/hooks/chat/useStreamingNavBlocker';
 import useSynChatMessage from '@/hooks/chat/useSyncChatMessage';
 import useUploadAttachments from '@/hooks/chat/useUploadAttachments';
-import { useIsCreatingConversation } from '@/hooks/useIsFromSpecificPageHooks';
 import useNavBlocker from '@/hooks/useNavBlocker';
 import NewConversationView from '@/pages/NewChat/NewConversationView';
 import { actions as chatActions } from '@/slices/chat';
