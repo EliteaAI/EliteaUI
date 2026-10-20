@@ -98,7 +98,7 @@ describe('ConfigurationSelect EL-7011', () => {
     expect(onLoadMore).not.toHaveBeenCalled();
   });
 
-  it('R3.2 EL-7011 searches on the server through setQuery', () => {
+  it('R3.2 EL-7011 searches on the server through setQuery after the 300 ms delay of R2.1', () => {
     const setQuery = vi.fn();
     renderSelect({ setQuery, query: 'al' });
 
