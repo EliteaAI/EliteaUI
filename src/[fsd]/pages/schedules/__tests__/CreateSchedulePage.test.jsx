@@ -34,10 +34,10 @@ vi.mock('@/[fsd]/features/schedule', async importOriginal => {
   const { toCreateBody } = await import('@/[fsd]/features/schedule/lib/helpers');
   return {
     ...(await importOriginal()),
-    ScheduleForm: ({ initialValues, onSubmit, children }) => (
+    ScheduleForm: ({ initialValues, onSubmit, onSaved, children }) => (
       <>
         {children({ values: initialValues, setFieldValue: vi.fn() })}
-        <button onClick={() => onSubmit(toCreateBody(initialValues))}>Save</button>
+        <button onClick={async () => onSaved(await onSubmit(toCreateBody(initialValues)))}>Save</button>
       </>
     ),
   };
@@ -65,6 +65,18 @@ describe('CreateSchedulePage EL-7011', () => {
         expires_at: null,
         enabled: true,
       }),
+    );
+  });
+
+  it('R2.4 R2.5 EL-7011 navigates through onSaved with the save answer, not inside onSubmit', async () => {
+    mocks.createSchedule.mockReturnValue({ unwrap: () => Promise.resolve({ id: 1, warnings: [] }) });
+    render(<CreateSchedulePage />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() => expect(mocks.navigate).toHaveBeenCalledTimes(1));
+    expect(mocks.createSchedule).toHaveBeenCalledWith(
+      expect.objectContaining({ approval_rule: 'pause_and_ask' }),
     );
   });
 });

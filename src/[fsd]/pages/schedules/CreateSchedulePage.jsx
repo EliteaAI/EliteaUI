@@ -20,12 +20,11 @@ const CreateSchedulePage = () => {
   );
 
   const onSubmit = useCallback(
-    async body => {
-      await createSchedule({ projectId, enabled: true, ...body }).unwrap();
-      navigate(returnTo);
-    },
-    [createSchedule, navigate, projectId, returnTo],
+    body => createSchedule({ projectId, enabled: true, ...body }).unwrap(),
+    [createSchedule, projectId],
   );
+
+  const onSaved = useCallback(() => navigate(returnTo), [navigate, returnTo]);
 
   const onCancel = useCallback(() => navigate(returnTo), [navigate, returnTo]);
 
@@ -34,6 +33,7 @@ const CreateSchedulePage = () => {
       initialValues={values}
       lockedEntity={urlEntity}
       onSubmit={onSubmit}
+      onSaved={onSaved}
       onCancel={onCancel}
     >
       {form => (
