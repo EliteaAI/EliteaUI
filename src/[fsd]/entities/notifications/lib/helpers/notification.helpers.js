@@ -104,8 +104,8 @@ export const resolveHref = (eventType, meta, projectId) => {
       const list = `${base}/${projectId}${RouteDefinitions.Schedules}`;
       if (eventType === NotificationType.ScheduleOwnerChanged) return list;
       const url = `${list}/${encodeURIComponent(scheduleId)}`;
-      const runId = RUN_EVENT_TYPES.has(eventType) && meta?.conversation_id;
-      return runId ? `${url}?${SearchParams.HistoryRunId}=${runId}` : url;
+      const runId = RUN_EVENT_TYPES.has(eventType) ? meta?.conversation_id : null;
+      return runId ? `${url}?${SearchParams.HistoryRunId}=${encodeURIComponent(runId)}` : url;
     }
 
     default:
