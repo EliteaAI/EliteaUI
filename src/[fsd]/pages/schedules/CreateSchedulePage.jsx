@@ -2,12 +2,9 @@ import { useCallback, useMemo } from 'react';
 
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 
-import { Box } from '@mui/material';
-
 import { useCreateScheduleMutation } from '@/[fsd]/entities/schedule';
 import { DEFAULT_SCHEDULE_CRON, ScheduleForm, buildInitialValues } from '@/[fsd]/features/schedule';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
-import { Breadcrumbs } from '@/[fsd]/shared/ui';
 import { ScheduleSettingsSection, StopOnDateField } from '@/[fsd]/shared/ui/schedule';
 
 const CreateSchedulePage = () => {
@@ -33,29 +30,26 @@ const CreateSchedulePage = () => {
   const onCancel = useCallback(() => navigate(returnTo), [navigate, returnTo]);
 
   return (
-    <Box sx={{ padding: '1rem 1.5rem' }}>
-      <Breadcrumbs />
-      <ScheduleForm
-        initialValues={values}
-        lockedEntity={urlEntity}
-        onSubmit={onSubmit}
-        onCancel={onCancel}
-      >
-        {form => (
-          <>
-            <ScheduleSettingsSection
-              value={form.values.cron}
-              onChange={cron => form.setFieldValue('cron', cron)}
-              sourceCron={DEFAULT_SCHEDULE_CRON}
-            />
-            <StopOnDateField
-              value={form.values.expires_at}
-              onChange={date => form.setFieldValue('expires_at', date)}
-            />
-          </>
-        )}
-      </ScheduleForm>
-    </Box>
+    <ScheduleForm
+      initialValues={values}
+      lockedEntity={urlEntity}
+      onSubmit={onSubmit}
+      onCancel={onCancel}
+    >
+      {form => (
+        <>
+          <ScheduleSettingsSection
+            value={form.values.cron}
+            onChange={cron => form.setFieldValue('cron', cron)}
+            sourceCron={DEFAULT_SCHEDULE_CRON}
+          />
+          <StopOnDateField
+            value={form.values.expires_at}
+            onChange={date => form.setFieldValue('expires_at', date)}
+          />
+        </>
+      )}
+    </ScheduleForm>
   );
 };
 

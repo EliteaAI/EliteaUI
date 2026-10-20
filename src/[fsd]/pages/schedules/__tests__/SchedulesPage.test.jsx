@@ -1,7 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { PERMISSIONS } from '@/common/constants';
 import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
@@ -11,23 +10,29 @@ const mocks = vi.hoisted(() => ({
   useGetScheduleListQuery: vi.fn(),
   useSelectedProjectId: vi.fn(),
   toastError: vi.fn(),
-  navigate: vi.fn(),
-  checkPermission: vi.fn(),
-}));
-
-vi.mock('react-router-dom', () => ({ useNavigate: () => mocks.navigate }));
-vi.mock('@/hooks/useCheckPermission', () => ({
-  default: () => ({ checkPermission: mocks.checkPermission }),
 }));
 
 vi.mock('@/[fsd]/entities/schedule', () => ({ useGetScheduleListQuery: mocks.useGetScheduleListQuery }));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useSelectedProjectId: mocks.useSelectedProjectId,
   useToast: () => ({ toastError: mocks.toastError }),
+  useShouldCollapseRightToolbar: () => ({ shouldCollapseRightToolbar: false }),
 }));
 vi.mock('../SchedulesTable', () => ({
-  default: ({ rows, total, page, pageSize, onPageChange, onChangePageSize, isLoading }) => (
+  default: ({
+    rows,
+    total,
+    page,
+    pageSize,
+    onPageChange,
+    onChangePageSize,
+    isLoading,
+    sortConfig,
+    onSort,
+  }) => (
     <div>
+      <span data-testid="sort">{`${sortConfig.field} ${sortConfig.direction}`}</span>
+      <button onClick={() => onSort('name')}>sort name</button>
       <span data-testid="loading">{String(isLoading)}</span>
       <span data-testid="rows">{rows.map(row => row.name).join(',')}</span>
       <span data-testid="total">{total}</span>
@@ -44,7 +49,6 @@ const lastArgs = () => mocks.useGetScheduleListQuery.mock.calls.at(-1)[0];
 describe('EL-7011 US-26 SchedulesPage', () => {
   beforeEach(() => {
     mocks.useSelectedProjectId.mockReturnValue(5);
-    mocks.checkPermission.mockReturnValue(true);
     mocks.useGetScheduleListQuery.mockReturnValue({
       currentData: { total: 45, rows: [{ id: 1, name: 'Nightly' }] },
       isError: false,
@@ -102,6 +106,8 @@ describe('EL-7011 US-26 SchedulesPage', () => {
       'page',
       'pageSize',
       'projectId',
+      'sortBy',
+      'sortOrder',
     ]);
   });
 
@@ -137,16 +143,24 @@ describe('EL-7011 US-26 SchedulesPage', () => {
     expect(screen.getByTestId('loading').textContent).toBe('false');
   });
 
-  it('R1.1 opens the New schedule form of EL-7011 from the button', () => {
+  it('EL-7011 sorts by the next run first, like the API default', () => {
     render(<SchedulesPage />);
-    fireEvent.click(screen.getByRole('button', { name: 'New schedule' }));
-    expect(mocks.checkPermission).toHaveBeenCalledWith(PERMISSIONS.schedules.create);
-    expect(mocks.navigate).toHaveBeenCalledWith('/schedules/create');
+    expect(lastArgs()).toMatchObject({ sortBy: 'next_run', sortOrder: 'asc' });
   });
 
-  it('R1.2 hides the New schedule button without the create permission', () => {
-    mocks.checkPermission.mockReturnValue(false);
+  it('EL-7011 a header click toggles the direction and returns to the first page', () => {
     render(<SchedulesPage />);
-    expect(screen.queryByRole('button', { name: 'New schedule' })).toBeNull();
+    fireEvent.click(screen.getByText('next'));
+    fireEvent.click(screen.getByText('sort name'));
+    expect(lastArgs()).toMatchObject({ page: 0, sortBy: 'name', sortOrder: 'asc' });
+    fireEvent.click(screen.getByText('next'));
+    fireEvent.click(screen.getByText('sort name'));
+    expect(lastArgs()).toMatchObject({ page: 0, sortBy: 'name', sortOrder: 'desc' });
+    expect(screen.getByTestId('sort')).toHaveTextContent('name desc');
+  });
+
+  it('EL-7011 shows the page title like Agents and Pipelines', () => {
+    render(<SchedulesPage />);
+    expect(screen.getByTestId('schedules-page-header')).toHaveTextContent('Schedules');
   });
 });
