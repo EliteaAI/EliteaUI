@@ -22,6 +22,9 @@ vi.mock('@/[fsd]/shared/lib/hooks', () => ({
 vi.mock('@/hooks/useCheckPermission', () => ({
   default: () => ({ checkPermission: mocks.checkPermission }),
 }));
+vi.mock('@/[fsd]/features/schedule-import-export', () => ({
+  ScheduleImportExportActions: ({ projectId }) => <div data-testid="import-export-actions">{projectId}</div>,
+}));
 vi.mock('../SchedulesFilters', () => ({
   default: ({ value, onChange, onClear, hasFilters, isAdmin }) => (
     <div
@@ -262,5 +265,10 @@ describe('EL-7011 US-26 SchedulesPage', () => {
     mocks.useGetScheduleListQuery.mockReturnValue(answer('success'));
     rerender(<SchedulesPage />);
     expect(mocks.useGetScheduleListQuery.mock.calls.at(-1)[1]).toMatchObject({ pollingInterval: 0 });
+  });
+
+  it('EL-7011 R1.1 R1.2 the page header carries the import and export actions of the project', () => {
+    render(<SchedulesPage />);
+    expect(screen.getByTestId('import-export-actions')).toHaveTextContent('5');
   });
 });

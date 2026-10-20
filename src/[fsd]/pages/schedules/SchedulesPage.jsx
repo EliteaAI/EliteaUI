@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { useGetScheduleListQuery } from '@/[fsd]/entities/schedule';
+import { ScheduleImportExportActions } from '@/[fsd]/features/schedule-import-export';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { PAGE_SIZE, PERMISSIONS, SortOrderOptions } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
@@ -128,6 +129,7 @@ const SchedulesPage = () => {
       titleTestId="schedules-page-header"
       containerStyle={{ padding: '0 1.5rem 0 0' }}
       tabBarStyle={{ padding: '0 0 0 1.5rem' }}
+      middleTabComponent={<ScheduleImportExportActions projectId={projectId} />}
     />
   );
 };
