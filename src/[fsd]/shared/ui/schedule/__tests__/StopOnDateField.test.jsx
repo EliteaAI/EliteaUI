@@ -21,7 +21,29 @@ const FUTURE_DATE = '2999-12-31';
 
 const DATE_LABEL = 'Stop date';
 
-const theme = createTheme();
+// The shared Analytics picker styles read these palette tokens.
+const theme = createTheme({
+  palette: {
+    border: { lines: '#ddd' },
+    icon: { subtle: '#888', default: '#888', secondary: '#fff' },
+    background: {
+      default: { secondary: '#fff', tertiary: '#fafafa' },
+      interactiveItem: { hover: '#f5f5f5' },
+      surface: { interactive: { active: '#eee', selected: '#ddd' } },
+    },
+    components: {
+      split: { background: { default: '#ccc' } },
+      button: {
+        text: { primary: '#fff' },
+        background: {
+          tertiary: { pressed: '#eee' },
+          secondary: { pressed: '#ddd' },
+          primary: { hover: '#333', pressed: '#222' },
+        },
+      },
+    },
+  },
+});
 
 afterEach(() => cleanup());
 
@@ -167,5 +189,52 @@ describe('EL-7011 R3 StopOnDateField', () => {
     await user.keyboard('31122999');
 
     expect(onChange).toHaveBeenLastCalledWith(FUTURE_DATE);
+  });
+
+  it('R3.1 TC-US30-13: the open calendar shows Clear and Apply', async () => {
+    const user = userEvent.setup();
+    render(<Harness />);
+    await user.click(screen.getByRole('checkbox', { name: LABEL }));
+
+    await user.click(screen.getByRole('button', { name: /choose date/i }));
+
+    expect(await screen.findByRole('button', { name: 'Clear' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Apply' })).toBeInTheDocument();
+  });
+
+  it('R3.2 TC-US30-18: Apply commits the picked day as yyyy-MM-dd; a day click alone keeps the popup open', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(
+      <Harness
+        initialValue="2090-06-01"
+        onChange={onChange}
+      />,
+    );
+    await user.click(screen.getByRole('button', { name: /choose date/i }));
+    await user.click(await screen.findByRole('gridcell', { name: '15' }));
+
+    expect(screen.getByRole('button', { name: 'Apply' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Apply' }));
+
+    expect(onChange).toHaveBeenLastCalledWith('2090-06-15');
+  });
+
+  it('R3.3 TC-US30-19: Clear passes null and the box stays checked', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(
+      <Harness
+        initialValue={FUTURE_DATE}
+        onChange={onChange}
+      />,
+    );
+    await user.click(screen.getByRole('button', { name: /choose date/i }));
+
+    await user.click(await screen.findByRole('button', { name: 'Clear' }));
+
+    expect(onChange).toHaveBeenLastCalledWith(null);
+    expect(screen.getByRole('checkbox', { name: LABEL })).toBeChecked();
   });
 });
