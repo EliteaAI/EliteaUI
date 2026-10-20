@@ -44,8 +44,21 @@ let selectProps;
 let versionProps;
 let modalProps;
 let allowed = true;
+let runAllowed = true;
 
 vi.mock('@/hooks/useCheckPermission', () => ({ default: () => ({ checkPermission: () => allowed }) }));
+vi.mock('@/[fsd]/entities/schedule', () => ({
+  useGetScheduleListQuery: () => ({ data: { runWithoutAskingAllowed: runAllowed } }),
+}));
+vi.mock('../SaveWarningsDialog', () => ({
+  default: ({ open, warnings, onClose }) =>
+    open ? (
+      <div data-testid="warnings-dialog">
+        {warnings.length}
+        <button onClick={onClose}>OK</button>
+      </div>
+    ) : null,
+}));
 vi.mock('../BuildScheduleWithAiModal', () => ({
   default: props => {
     modalProps = props;
@@ -80,7 +93,7 @@ vi.mock('@/[fsd]/shared/ui/checkbox/RadioButtonGroup', () => ({
           type="button"
           data-testid={`${testId}-${item.value}`}
           aria-pressed={item.value === value}
-          disabled={disabled}
+          disabled={disabled || item.disabled}
           onClick={() => onChange(item.value)}
         >
           {item.label}
@@ -148,6 +161,7 @@ const INITIAL = {
   cron: '0 9 * * 1-5',
   timezone: 'Europe/Kyiv',
   expires_at: null,
+  approval_rule: 'pause_and_ask',
 };
 
 const theme = createTheme(getDesignTokens('dark'));
@@ -175,6 +189,7 @@ const save = () => fireEvent.click(screen.getByRole('button', { name: 'Save' }))
 describe('ScheduleForm EL-7011', () => {
   beforeEach(() => {
     allowed = true;
+    runAllowed = true;
     listQuery.mockReturnValue({ data: { rows: ROWS, total: 2 }, isFetching: false });
   });
 
@@ -488,5 +503,107 @@ describe('ScheduleForm EL-7011', () => {
     fireEvent.click(header);
 
     expect(header).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('R1.1 EL-7011 shows Approval rule with Pause and ask me selected and sends it', async () => {
+    const { onSubmit } = renderForm();
+
+    expect(screen.getByTestId('schedule-approval-rule-pause_and_ask')).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    pickEntity(7);
+    typePrompt('Hi');
+    save();
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit.mock.calls[0][0]).toMatchObject({ approval_rule: 'pause_and_ask' });
+  });
+
+  it('R1.2 EL-7011 selects the saved approval rule', () => {
+    renderForm({ initialValues: { ...INITIAL, approval_rule: 'run_without_asking' } });
+
+    expect(screen.getByTestId('schedule-approval-rule-run_without_asking')).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+  });
+
+  it('R1.3 EL-7011 disables Run without asking with a hint when the project does not allow it', () => {
+    runAllowed = false;
+    renderForm();
+
+    expect(screen.getByTestId('schedule-approval-rule-run_without_asking')).toBeDisabled();
+    expect(screen.getByText(/does not allow/)).toBeInTheDocument();
+  });
+
+  it('R1.3 EL-7011 enables Run without asking when the project allows it', () => {
+    renderForm();
+
+    expect(screen.getByTestId('schedule-approval-rule-run_without_asking')).toBeEnabled();
+    expect(screen.queryByText(/does not allow/)).not.toBeInTheDocument();
+  });
+
+  it('R1.5 EL-7011 shows the server text of approval_rule_not_allowed at the field', async () => {
+    renderForm({
+      onSubmit: vi.fn().mockRejectedValue({
+        status: 400,
+        data: { error: 'approval_rule_not_allowed', field: 'approval_rule' },
+      }),
+    });
+    pickEntity(7);
+    typePrompt('Hi');
+
+    save();
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('approval_rule_not_allowed');
+  });
+
+  it('R1.5 EL-7011 shows the returned rule and the hint when the save answers a different rule', async () => {
+    renderForm({
+      initialValues: { ...INITIAL, approval_rule: 'run_without_asking' },
+      onSubmit: vi.fn().mockResolvedValue({ approval_rule: 'pause_and_ask', warnings: [{ code: 'x' }] }),
+    });
+    pickEntity(7);
+    typePrompt('Hi');
+
+    save();
+
+    await screen.findByTestId('warnings-dialog');
+    expect(screen.getByTestId('schedule-approval-rule-pause_and_ask')).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    expect(screen.getByText(/does not allow/)).toBeInTheDocument();
+  });
+
+  it('R2.1 R2.4 EL-7011 opens the warnings dialog after a save with warnings and returns on close', async () => {
+    const result = { id: 1, warnings: [{ code: 'human_input_step', message: 'm' }] };
+    const onSaved = vi.fn();
+    renderForm({ onSubmit: vi.fn().mockResolvedValue(result), onSaved });
+    pickEntity(7);
+    typePrompt('Hi');
+
+    save();
+
+    expect(await screen.findByTestId('warnings-dialog')).toHaveTextContent('1');
+    expect(onSaved).not.toHaveBeenCalled();
+    expect(navBlocker).toHaveBeenLastCalledWith({ blockCondition: false });
+    fireEvent.click(screen.getByRole('button', { name: 'OK' }));
+    expect(onSaved).toHaveBeenCalledWith(result);
+  });
+
+  it('R2.5 EL-7011 returns at once without a dialog when the save has no warnings', async () => {
+    const result = { id: 1, warnings: [] };
+    const onSaved = vi.fn();
+    renderForm({ onSubmit: vi.fn().mockResolvedValue(result), onSaved });
+    pickEntity(7);
+    typePrompt('Hi');
+
+    save();
+
+    await waitFor(() => expect(onSaved).toHaveBeenCalledWith(result));
+    expect(screen.queryByTestId('warnings-dialog')).not.toBeInTheDocument();
+    expect(navBlocker).toHaveBeenLastCalledWith({ blockCondition: false });
   });
 });

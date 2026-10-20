@@ -5,7 +5,9 @@ import { useFormik } from 'formik';
 import { Box, Grid, Typography } from '@mui/material';
 
 import { GenerateEntityButton } from '@/[fsd]/entities/generate-entity-with-ai';
+import { useGetScheduleListQuery } from '@/[fsd]/entities/schedule';
 import { VersionSelect, getDefaultVersionId } from '@/[fsd]/entities/version';
+import { APPROVAL_RULE } from '@/[fsd]/features/schedule/lib/constants/approvalRule.constants';
 import {
   getEntityLock,
   isPromptShown,
@@ -33,6 +35,7 @@ import useNavBlocker from '@/hooks/useNavBlocker';
 import { StyledGridContainer, TabBarItems } from '@/pages/Common/Components/StyledComponents';
 
 import BuildScheduleWithAiModal from './BuildScheduleWithAiModal';
+import SaveWarningsDialog from './SaveWarningsDialog';
 
 const TYPE_ITEMS = [
   { value: 'agent', label: 'Agent' },
@@ -42,9 +45,13 @@ const RUN_MODE_ITEMS = [
   { value: 'entry_point', label: 'Entry point' },
   { value: 'prompt', label: 'Prompt' },
 ];
+const APPROVAL_RULE_ITEMS = [
+  { value: APPROVAL_RULE.PAUSE_AND_ASK, label: 'Pause and ask me' },
+  { value: APPROVAL_RULE.RUN_WITHOUT_ASKING, label: 'Run without asking' },
+];
 const TYPE_LABEL = Object.fromEntries(TYPE_ITEMS.map(({ value, label }) => [value, label]));
 // Fields with their own message in the form; a 400 for any other field goes to the banner (R6.3)
-const FIELDS_WITH_INPUT = ['name', 'description', 'application_id', 'version_id'];
+const FIELDS_WITH_INPUT = ['name', 'description', 'application_id', 'version_id', 'approval_rule'];
 const PROMPT_FIELDS = ['prompt', 'variables'];
 const AGENTS_TYPE = { agent: 'classic', pipeline: 'pipeline' };
 
@@ -63,24 +70,34 @@ const FieldError = ({ message }) =>
 
 /**
  * `children({ values, setFieldValue, dirty, setValues })` fills SCHEDULE SETTINGS from the form values (cron, expires_at);
- * `onSubmit(body)` returns a promise that rejects with the API error.
+ * `onSubmit(body)` returns a promise of the save answer and rejects with the API error;
+ * `onSaved(answer)` runs at once after a save without warnings, else when the warnings dialog closes.
  */
 const ScheduleForm = memo(props => {
-  const { initialValues, lockedEntity, onSubmit, onCancel, children } = props;
+  const { initialValues, lockedEntity, onSubmit, onSaved, onCancel, children } = props;
 
   const projectId = useSelectedProjectId();
   const { toastError } = useToast();
   const [list, setList] = useState({ page: 0, query: '' });
   const [lockFailed, setLockFailed] = useState(false);
   const [banner, setBanner] = useState('');
+  const [saved, setSaved] = useState(null);
+  const [ruleChanged, setRuleChanged] = useState(false);
 
   const formik = useFormik({
     initialValues,
     validationSchema: scheduleFormSchema,
-    onSubmit: async (values, { setErrors }) => {
+    onSubmit: async (values, { setErrors, resetForm: resetTo }) => {
       setBanner('');
       try {
-        await onSubmit(toCreateBody(values));
+        const answer = await onSubmit(toCreateBody(values));
+        const approvalRule = answer?.approval_rule ?? values.approval_rule;
+        const hasWarnings = answer?.warnings?.length > 0;
+        // The saved values are the new baseline, so the leave-page blocker stays shut
+        resetTo({ values: { ...values, approval_rule: approvalRule } });
+        setRuleChanged(approvalRule !== values.approval_rule);
+        if (hasWarnings) setSaved(answer);
+        else onSaved(answer);
       } catch (error) {
         const fieldErrors = error?.status === 400 ? toFieldErrors(error) : {};
         const shownFields = isPromptShown(values)
@@ -194,6 +211,15 @@ const ScheduleForm = memo(props => {
       ),
     [setFieldValue, values.variables],
   );
+
+  const handleWarningsClose = useCallback(() => onSaved(saved), [onSaved, saved]);
+
+  const { data: scheduleList } = useGetScheduleListQuery({ projectId, pageSize: 1 }, { skip: !projectId });
+  const runWithoutAskingAllowed = scheduleList?.runWithoutAskingAllowed === true;
+  const approvalRuleItems = APPROVAL_RULE_ITEMS.map(item => ({
+    ...item,
+    disabled: item.value === APPROVAL_RULE.RUN_WITHOUT_ASKING && !runWithoutAskingAllowed,
+  }));
 
   const showPrompt = isPromptShown(values);
 
@@ -322,64 +348,91 @@ const ScheduleForm = memo(props => {
     {
       title: 'SCHEDULE SETTINGS',
       testId: 'schedule-section-settings',
-      content: <Box sx={styles.section}>{children?.({ values, setFieldValue, dirty: formik.dirty, setValues })}</Box>,
+      content: (
+        <Box sx={styles.section}>
+          {children?.({ values, setFieldValue, dirty: formik.dirty, setValues })}
+          <Typography variant="labelMedium">Approval rule</Typography>
+          <RadioButtonGroup
+            testId="schedule-approval-rule"
+            items={approvalRuleItems}
+            value={values.approval_rule}
+            onChange={rule => setFieldValue('approval_rule', rule)}
+          />
+          {(!runWithoutAskingAllowed || ruleChanged) && (
+            <Typography
+              variant="bodySmall"
+              color="text.secondary"
+            >
+              This project does not allow running without asking.
+            </Typography>
+          )}
+          <FieldError message={fieldError('approval_rule')} />
+        </Box>
+      ),
     },
   ];
 
   // The same header bar, column and collapsible sections as New Agent (CreateApplication)
   return (
-    <StyledTabs
-      leftPart={<Breadcrumbs />}
-      tabs={[
-        {
-          tabBarItems: (
-            <TabBarItems>
-              <BaseBtn
-                data-testid="schedule-save-button"
-                variant="elitea"
-                color="primary"
-                disabled={formik.isSubmitting}
-                onClick={formik.handleSubmit}
+    <>
+      <StyledTabs
+        leftPart={<Breadcrumbs />}
+        tabs={[
+          {
+            tabBarItems: (
+              <TabBarItems>
+                <BaseBtn
+                  data-testid="schedule-save-button"
+                  variant="elitea"
+                  color="primary"
+                  disabled={formik.isSubmitting}
+                  onClick={formik.handleSubmit}
+                >
+                  Save
+                </BaseBtn>
+                <BaseBtn
+                  data-testid="schedule-cancel-button"
+                  variant="elitea"
+                  color="secondary"
+                  onClick={onCancel}
+                >
+                  Cancel
+                </BaseBtn>
+              </TabBarItems>
+            ),
+            content: (
+              <StyledGridContainer
+                container
+                component="form"
+                noValidate
+                onSubmit={formik.handleSubmit}
               >
-                Save
-              </BaseBtn>
-              <BaseBtn
-                data-testid="schedule-cancel-button"
-                variant="elitea"
-                color="secondary"
-                onClick={onCancel}
-              >
-                Cancel
-              </BaseBtn>
-            </TabBarItems>
-          ),
-          content: (
-            <StyledGridContainer
-              container
-              component="form"
-              noValidate
-              onSubmit={formik.handleSubmit}
-            >
-              <Grid size={{ xs: 12 }}>
-                <Box sx={styles.root}>
-                  {banner && (
-                    <BannerMessage
-                      message={banner}
-                      variant="error"
+                <Grid size={{ xs: 12 }}>
+                  <Box sx={styles.root}>
+                    {banner && (
+                      <BannerMessage
+                        message={banner}
+                        variant="error"
+                      />
+                    )}
+                    <BasicAccordion
+                      showMode={AccordionConstants.AccordionShowMode.LeftMode}
+                      accordionSX={styles.accordion}
+                      items={sections}
                     />
-                  )}
-                  <BasicAccordion
-                    showMode={AccordionConstants.AccordionShowMode.LeftMode}
-                    accordionSX={styles.accordion}
-                    items={sections}
-                  />
-                </Box>
-              </Grid>
-            </StyledGridContainer>
-          ),
-        },
-      ]}
-    />
+                  </Box>
+                </Grid>
+              </StyledGridContainer>
+            ),
+          },
+        ]}
+      />
+      <SaveWarningsDialog
+        open={!!saved}
+        warnings={saved?.warnings}
+        onClose={handleWarningsClose}
+      />
+    </>
   );
 });
 
