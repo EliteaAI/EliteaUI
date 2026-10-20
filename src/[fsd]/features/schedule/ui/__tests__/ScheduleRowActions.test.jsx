@@ -11,6 +11,18 @@ import ScheduleRowActions from '../ScheduleRowActions';
 
 // EL-7011 US-28: row action menu filtered by allowed_actions (R1.1 to R1.3, R4.1, R4.3).
 
+vi.mock('../ChangeOwnerDialog', () => ({
+  default: ({ open, schedule, onClose }) =>
+    open ? (
+      <button
+        data-testid="change-owner-dialog"
+        onClick={onClose}
+      >
+        {JSON.stringify(schedule)}
+      </button>
+    ) : null,
+}));
+
 vi.mock('@/[fsd]/shared/lib/hooks/useDeleteConfirmationDisabled.hooks', () => ({
   useDeleteConfirmationDisabled: () => false,
 }));
@@ -42,10 +54,27 @@ describe('ScheduleRowActions (EL-7011 US-28)', () => {
   });
 
   it('R1.1 ignores server actions the menu does not offer', () => {
-    renderMenu({ allowed_actions: ['edit', 'change_owner', 'delete'] });
+    renderMenu({ allowed_actions: ['edit', 'delete'] });
     openMenu();
     expect(screen.getAllByRole('menuitem')).toHaveLength(1);
     expect(screen.getByText('Delete')).toBeInTheDocument();
+  });
+
+  it('R1.1 EL-7011 shows Change owner only when change_owner is allowed', () => {
+    renderMenu({ allowed_actions: ['run'] });
+    openMenu();
+    expect(screen.queryByText('Change owner')).not.toBeInTheDocument();
+  });
+
+  it('R1.2 EL-7011 Change owner opens the dialog with the row schedule and closes it', () => {
+    renderMenu({ allowed_actions: ['change_owner'], owner: { id: 3, name: 'Ann' } });
+    expect(screen.queryByTestId('change-owner-dialog')).not.toBeInTheDocument();
+    openMenu();
+    fireEvent.click(screen.getByText('Change owner'));
+    const dialog = screen.getByTestId('change-owner-dialog');
+    expect(JSON.parse(dialog.textContent)).toEqual({ id: 7, name: 'Nightly digest', owner: { id: 3, name: 'Ann' } });
+    fireEvent.click(dialog);
+    expect(screen.queryByTestId('change-owner-dialog')).not.toBeInTheDocument();
   });
 
   it('R1.2 offers Pause and not Resume while the schedule is enabled', () => {

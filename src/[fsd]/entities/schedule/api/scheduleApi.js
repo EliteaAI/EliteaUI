@@ -91,6 +91,16 @@ export const scheduleApi = eliteaApi
         invalidatesTags: (_, error) => (error ? [] : [SCHEDULES_TAG]),
       }),
 
+      changeScheduleOwner: build.mutation({
+        query: ({ projectId, scheduleId, ownerId }) => ({
+          url: `${schedulePath(projectId, scheduleId)}/owner`,
+          method: 'POST',
+          body: { owner_id: ownerId },
+        }),
+        // A 403 or 404 means the row changed on the server, so the list refetches too (R3.4)
+        invalidatesTags: (_, error) => (!error || [403, 404].includes(error.status) ? [SCHEDULES_TAG] : []),
+      }),
+
       deleteSchedule: build.mutation({
         query: ({ projectId, scheduleId }) => ({
           url: schedulePath(projectId, scheduleId),
@@ -106,5 +116,6 @@ export const {
   useCreateScheduleMutation,
   useRunScheduleMutation,
   useUpdateScheduleMutation,
+  useChangeScheduleOwnerMutation,
   useDeleteScheduleMutation,
 } = scheduleApi;
