@@ -167,26 +167,28 @@ describe('resolveHref for schedule notifications (EL-7011 R2)', () => {
   it('opens the subpage with the run selected for a run event with a conversation (R2.1)', () => {
     for (const type of runTypes) {
       expect(resolveHref(type, { schedule_id: 12, conversation_id: 345 }, 5)).toBe(
-        `${BASE}/5/schedules/12?history_run_id=345`,
+        `${BASE}/5/settings/schedules/12?history_run_id=345`,
       );
     }
   });
 
   it('opens the subpage without a run when a run event has no conversation (R2.2)', () => {
     for (const type of runTypes) {
-      expect(resolveHref(type, { schedule_id: 12 }, 5)).toBe(`${BASE}/5/schedules/12`);
+      expect(resolveHref(type, { schedule_id: 12 }, 5)).toBe(`${BASE}/5/settings/schedules/12`);
     }
   });
 
   it('opens the subpage for an expired, disabled or admin-edit notice (R2.3)', () => {
     for (const type of subpageTypes) {
-      expect(resolveHref(type, { schedule_id: 12, conversation_id: 345 }, 5)).toBe(`${BASE}/5/schedules/12`);
+      expect(resolveHref(type, { schedule_id: 12, conversation_id: 345 }, 5)).toBe(
+        `${BASE}/5/settings/schedules/12`,
+      );
     }
   });
 
   it('opens the list for an owner-changed notice (R2.4)', () => {
     expect(resolveHref(NotificationType.ScheduleOwnerChanged, { schedule_id: 12 }, 5)).toBe(
-      `${BASE}/5/schedules`,
+      `${BASE}/5/settings/schedules`,
     );
   });
 
