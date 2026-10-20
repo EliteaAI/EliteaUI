@@ -66,7 +66,7 @@ const makeRow = (overrides = {}) => ({
   ...overrides,
 });
 
-const renderTable = (rows, isLoading = false, onSort = vi.fn()) =>
+const renderTable = (rows, isLoading = false, onSort = vi.fn(), emptyMessage) =>
   render(
     <ThemeProvider theme={createTheme({ palette: lightPalette })}>
       <SchedulesTable
@@ -79,6 +79,7 @@ const renderTable = (rows, isLoading = false, onSort = vi.fn()) =>
         onChangePageSize={vi.fn()}
         sortConfig={{ field: 'next_run', direction: 'asc' }}
         onSort={onSort}
+        emptyMessage={emptyMessage}
       />
     </ThemeProvider>,
   );
@@ -174,6 +175,12 @@ describe('EL-7011 US-26 SchedulesTable', () => {
   it('R3.1 shows the empty state without rows', () => {
     renderTable([]);
     expect(screen.getByText('No schedules')).toBeInTheDocument();
+  });
+
+  it('EL-7011 R1.4 shows the emptyMessage prop when it is set', () => {
+    renderTable([], false, vi.fn(), 'No schedules match the filters');
+    expect(screen.getByText('No schedules match the filters')).toBeInTheDocument();
+    expect(screen.queryByText('No schedules')).not.toBeInTheDocument();
   });
 
   it('R2.1 shows the loading text, not the empty state, while loading', () => {
