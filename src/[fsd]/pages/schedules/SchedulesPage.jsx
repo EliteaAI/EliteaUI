@@ -22,7 +22,8 @@ const SchedulesPage = () => {
     setPage(0);
   }
 
-  const { data, isError, error } = useGetScheduleListQuery(
+  // currentData is empty while another project or page loads, so no row of another project shows
+  const { currentData, isError, error } = useGetScheduleListQuery(
     { projectId, page, pageSize },
     { skip: !projectId },
   );
@@ -31,17 +32,17 @@ const SchedulesPage = () => {
     if (isError) toastError(buildErrorMessage(error));
   }, [error, isError, toastError]);
 
-  const onPageChange = useCallback((_, newPage) => setPage(newPage), []);
-  const onChangePageSize = useCallback(event => {
-    setPageSize(event.target.value);
+  const onPageChange = useCallback(newPage => setPage(newPage), []);
+  const onChangePageSize = useCallback(size => {
+    setPageSize(size);
     setPage(0);
   }, []);
 
   return (
     <Box sx={{ padding: '1rem 1.5rem' }}>
       <SchedulesTable
-        rows={isError ? [] : (data?.rows ?? [])}
-        total={isError ? 0 : (data?.total ?? 0)}
+        rows={isError ? [] : (currentData?.rows ?? [])}
+        total={isError ? 0 : (currentData?.total ?? 0)}
         page={page}
         pageSize={pageSize}
         onPageChange={onPageChange}

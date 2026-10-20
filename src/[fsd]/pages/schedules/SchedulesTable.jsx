@@ -19,6 +19,7 @@ import { Text } from '@/[fsd]/shared/ui';
 import EntityTypeIcon from '@/[fsd]/shared/ui/icon/EntityTypeIcon';
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
+const ENTITY_TYPE_LABELS = { agent: 'Agent', pipeline: 'Pipeline' };
 // The API stores run statuses in lower case (failed, skipped, blocked, ...)
 const REASON_STATUSES = ['failed', 'skipped', 'blocked'];
 const statusLabel = status =>
@@ -63,7 +64,7 @@ const renderCell = (column, value, row) => {
       return (
         <IconWithLabel
           type={row.entity_type}
-          label={row.entity_type}
+          label={ENTITY_TYPE_LABELS[row.entity_type] ?? row.entity_type}
         />
       );
     case 'schedule':
@@ -90,6 +91,8 @@ const renderCell = (column, value, row) => {
       return row.owner?.name ?? '-';
     case 'enabled':
       return value ? 'Yes' : 'No';
+    case 'actions':
+      return null; // the row actions arrive with US-28 and US-29
     default:
       return value ?? '-';
   }
@@ -114,9 +117,9 @@ const SchedulesTable = memo(props => {
       isLastPage: (page + 1) * pageSize >= total,
       startRow: page * pageSize + 1,
       endRow: Math.min((page + 1) * pageSize, total),
-      handlePrevPage: () => onPageChange(null, page - 1),
-      handleNextPage: () => onPageChange(null, page + 1),
-      handlePageSizeChange: size => onChangePageSize({ target: { value: size } }),
+      handlePrevPage: () => onPageChange(page - 1),
+      handleNextPage: () => onPageChange(page + 1),
+      handlePageSizeChange: onChangePageSize,
       pageSizeSelectOptions: PAGE_SIZE_OPTIONS.map(size => ({ label: String(size), value: size })),
     }),
     [total, page, pageSize, onPageChange, onChangePageSize],

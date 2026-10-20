@@ -24,8 +24,8 @@ vi.mock('../SchedulesTable', () => ({
       <span data-testid="total">{total}</span>
       <span data-testid="page">{page}</span>
       <span data-testid="page-size">{pageSize}</span>
-      <button onClick={() => onPageChange(null, page + 1)}>next</button>
-      <button onClick={() => onChangePageSize({ target: { value: 50 } })}>size</button>
+      <button onClick={() => onPageChange(page + 1)}>next</button>
+      <button onClick={() => onChangePageSize(50)}>size</button>
     </div>
   ),
 }));
@@ -36,7 +36,7 @@ describe('EL-7011 US-26 SchedulesPage', () => {
   beforeEach(() => {
     mocks.useSelectedProjectId.mockReturnValue(5);
     mocks.useGetScheduleListQuery.mockReturnValue({
-      data: { total: 45, rows: [{ id: 1, name: 'Nightly' }] },
+      currentData: { total: 45, rows: [{ id: 1, name: 'Nightly' }] },
       isError: false,
     });
   });
@@ -93,5 +93,17 @@ describe('EL-7011 US-26 SchedulesPage', () => {
       'pageSize',
       'projectId',
     ]);
+  });
+
+  it('R3.4 shows no rows of another project while the new project loads', () => {
+    mocks.useSelectedProjectId.mockReturnValue(5);
+    mocks.useGetScheduleListQuery.mockReturnValue({
+      data: { total: 45, rows: [{ id: 1, name: 'Old project row' }] },
+      currentData: undefined,
+      isError: false,
+    });
+    render(<SchedulesPage />);
+    expect(screen.getByTestId('rows').textContent).toBe('');
+    expect(screen.getByTestId('total').textContent).toBe('0');
   });
 });

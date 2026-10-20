@@ -87,6 +87,9 @@ describe('EL-7011 US-26 SchedulesTable', () => {
     renderTable([makeRow({ entity_type: 'pipeline' })]);
     expect(screen.getAllByTestId('icon-pipeline')).toHaveLength(2);
     expect(screen.queryByTestId('icon-agent')).toBeNull();
+    expect(
+      within(screen.getByTestId('schedule-column-value-entity_type')).getByText('Pipeline'),
+    ).toBeInTheDocument();
   });
 
   it('R2.4 shows the rule with the timezone and Next run in the viewer timezone', () => {
