@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 
 import { useParams } from 'react-router-dom';
 
-import { buildEntityEditorLink } from '@/[fsd]/entities/schedule/lib/helpers';
+import { buildEntityEditorLink } from '@/[fsd]/entities/schedule';
 
 // A schedule form nested in an agent or pipeline editor: the editor entity is locked and Save returns to the editor
 export const useEntityScheduleRoute = entityType => {

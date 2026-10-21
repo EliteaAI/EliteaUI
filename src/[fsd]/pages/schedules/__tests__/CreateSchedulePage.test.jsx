@@ -23,7 +23,8 @@ vi.mock('react-router-dom', () => ({
   useLocation: () => ({ state: mocks.state }),
   useParams: () => mocks.params,
 }));
-vi.mock('@/[fsd]/entities/schedule', () => ({
+vi.mock('@/[fsd]/entities/schedule', async importOriginal => ({
+  ...(await importOriginal()),
   useCreateScheduleMutation: () => [mocks.createSchedule],
 }));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({ useSelectedProjectId: () => 5 }));

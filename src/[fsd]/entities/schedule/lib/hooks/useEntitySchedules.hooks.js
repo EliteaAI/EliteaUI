@@ -12,6 +12,12 @@ const MAX_ROWS = 100;
 export const useEntitySchedules = ({ entityType, entityId, skip = false }) => {
   const projectId = useSelectedProjectId();
   const [pages, setPages] = useState(1);
+  const [pagesEntityId, setPagesEntityId] = useState(entityId);
+  // Another agent or pipeline starts at the first 20 rows, before any request
+  if (pagesEntityId !== entityId) {
+    setPagesEntityId(entityId);
+    setPages(1);
+  }
   const pageSize = Math.min(pages * PAGE_SIZE, MAX_ROWS);
   // data keeps the shown rows while "Show more" loads the bigger page
   const { data, isError, error, isFetching, refetch } = useGetScheduleListQuery(

@@ -31,7 +31,8 @@ vi.mock('react-router-dom', () => ({
   useParams: () => mocks.params,
   useLocation: () => ({ state: mocks.state }),
 }));
-vi.mock('@/[fsd]/entities/schedule', () => ({
+vi.mock('@/[fsd]/entities/schedule', async importOriginal => ({
+  ...(await importOriginal()),
   useGetScheduleQuery: () => mocks.query,
   useUpdateScheduleMutation: () => [mocks.updateSchedule],
   useRunScheduleMutation: () => [mocks.runSchedule],

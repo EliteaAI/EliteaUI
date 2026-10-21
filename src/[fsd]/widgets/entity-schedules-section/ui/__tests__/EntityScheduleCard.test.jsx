@@ -77,7 +77,7 @@ describe('EntityScheduleCard EL-7011 US-35', () => {
     const card = screen.getByTestId('agent-schedule-card-7');
     expect(card).toHaveTextContent('Daily digest');
     expect(screen.getByTestId('agent-schedule-card-details-7')).toHaveTextContent(
-      'Rule of 0 9 * * * from UTC · Europe/Kyiv · Last run: Oct 19, 09:00 · Next: Oct 20, 09:00 · You',
+      'Rule of 0 9 * * * from UTC · Europe/Kyiv · Last run: 19 Oct, 09:00 · Next: 20 Oct, 09:00 · You',
     );
     expect(statusChip()).toHaveTextContent('Success');
   });
@@ -93,7 +93,7 @@ describe('EntityScheduleCard EL-7011 US-35', () => {
 
     expect(statusChip()).not.toBeInTheDocument();
     expect(screen.getByTestId('agent-schedule-card-details-7')).toHaveTextContent(
-      'Rule of 0 9 * * * from UTC · Europe/Kyiv · Next: Oct 20, 09:00 · You',
+      'Rule of 0 9 * * * from UTC · Europe/Kyiv · Next: 20 Oct, 09:00 · You',
     );
     expect(screen.getByTestId('agent-schedule-card-toggle-7')).toBeInTheDocument();
     expect(screen.getByTestId('schedule-7-menu-button')).toBeInTheDocument();
@@ -170,7 +170,7 @@ describe('EntityScheduleCard EL-7011 US-35', () => {
 
       expect(screen.getByTestId('pipeline-schedule-card-7')).toHaveTextContent('Daily digest');
       expect(screen.getByTestId('pipeline-schedule-card-details-7')).toHaveTextContent(
-        'Rule of 0 9 * * * from UTC · Europe/Kyiv · Last run: Oct 19, 09:00 · Next: Oct 20, 09:00 · Anna K.',
+        'Rule of 0 9 * * * from UTC · Europe/Kyiv · Last run: 19 Oct, 09:00 · Next: 20 Oct, 09:00 · Anna K.',
       );
       expect(statusChip('pipeline')).toHaveTextContent('Skipped');
       expect(screen.getByTestId('pipeline-schedule-card-toggle-7')).toBeInTheDocument();

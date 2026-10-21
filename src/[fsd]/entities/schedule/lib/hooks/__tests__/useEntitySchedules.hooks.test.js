@@ -45,6 +45,21 @@ describe('useEntitySchedules EL-7011 US-35', () => {
     );
   });
 
+  it('TC-US35-06 R2.4 starts again at 20 rows when the editor opens another entity', () => {
+    mocks.listQuery.mockReturnValue({ data: { rows: rowsOf(20), total: 25 } });
+
+    const { result, rerender } = renderHook(props => useEntitySchedules(props), {
+      initialProps: { entityType: 'agent', entityId: 12 },
+    });
+    act(() => result.current.loadMore());
+    rerender({ entityType: 'agent', entityId: 13 });
+
+    expect(mocks.listQuery).toHaveBeenLastCalledWith(
+      { projectId: 5, entityType: 'agent', entityId: 13, pageSize: 20 },
+      { skip: false },
+    );
+  });
+
   it('R1.4 sends no request without an entity id or when skipped', () => {
     mocks.listQuery.mockReturnValue({});
 

@@ -6,6 +6,7 @@ import {
   ScheduleEnabledSwitch,
   ScheduleRowActions,
   ScheduleRunStatusChip,
+  formatRunStarted,
   useScheduleRowActions,
 } from '@/[fsd]/features/schedule';
 import {
@@ -13,15 +14,6 @@ import {
   getCronSummaryInBrowserTimezone,
 } from '@/[fsd]/shared/lib/helpers/schedule.helpers';
 import ClockIcon from '@/assets/clock.svg?react';
-
-const formatDateTime = value =>
-  new Date(value).toLocaleString([], {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hourCycle: 'h23',
-  });
 
 const EntityScheduleCard = memo(props => {
   const { row, entityType, currentUserId, onOpenForm } = props;
@@ -33,8 +25,8 @@ const EntityScheduleCard = memo(props => {
   const details = [
     getCronSummaryInBrowserTimezone(row.cron, row.timezone),
     getBrowserTimezone() ?? row.timezone,
-    row.last_run && `Last run: ${formatDateTime(row.last_run)}`,
-    row.next_run && `Next: ${formatDateTime(row.next_run)}`,
+    row.last_run && `Last run: ${formatRunStarted(row.last_run)}`,
+    row.next_run && `Next: ${formatRunStarted(row.next_run)}`,
     ownerLabel,
   ]
     .filter(Boolean)
