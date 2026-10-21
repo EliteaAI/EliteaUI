@@ -27,7 +27,7 @@ vi.mock('@/[fsd]/entities/schedule', async importOriginal => ({
   ...(await importOriginal()),
   useCreateScheduleMutation: () => [mocks.createSchedule],
 }));
-vi.mock('@/[fsd]/shared/lib/hooks', () => ({ useSelectedProjectId: () => 5 }));
+vi.mock('@/[fsd]/shared/lib/hooks', () => ({ useSelectedProjectId: () => 5, useViewMode: () => 'owner' }));
 vi.mock('@/[fsd]/shared/ui/schedule', () => ({
   ScheduleSettingsSection: props => {
     mocks.settingsProps = props;
@@ -101,6 +101,6 @@ describe('CreateSchedulePage EL-7011', () => {
     expect(mocks.formProps.initialValues).toMatchObject({ type: 'agent', application_id: '12' });
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
-    await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith('/agents/all/12'));
+    await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith('/agents/all/12?viewMode=owner'));
   });
 });

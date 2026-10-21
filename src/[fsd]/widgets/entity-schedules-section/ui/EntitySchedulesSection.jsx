@@ -32,15 +32,17 @@ const EntitySchedulesSection = memo(props => {
   const currentUserId = useSelector(state => state.user.id);
   const navigate = useNavigate();
   const { tab } = useParams();
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
 
-  // The form opens nested in the editor and comes back to this editor path (owner CR 2026-10-21)
+  // The form opens nested in the editor and comes back to this editor location (owner CR 2026-10-21).
+  // The form URL keeps the editor search (viewMode), so the entity crumb opens the editor too.
   const openForm = useCallback(
     scheduleId =>
-      navigate(buildScheduleFormLink({ entityType, entityId, tab, scheduleId }), {
-        state: { returnTo: pathname },
-      }),
-    [navigate, entityType, entityId, tab, pathname],
+      navigate(
+        { pathname: buildScheduleFormLink({ entityType, entityId, tab, scheduleId }), search },
+        { state: { returnTo: pathname + search } },
+      ),
+    [navigate, entityType, entityId, tab, pathname, search],
   );
   const onAdd = useCallback(() => openForm(), [openForm]);
   const testId = `${entityType}-schedules-section`;

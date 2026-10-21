@@ -1,21 +1,26 @@
 import { useMemo } from 'react';
 
-import { useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 
 import { buildEntityEditorLink } from '@/[fsd]/entities/schedule';
+import { useViewMode } from '@/[fsd]/shared/lib/hooks';
+import { SearchParams } from '@/common/constants';
 
 // A schedule form nested in an agent or pipeline editor: the editor entity is locked and Save returns to the editor
 export const useEntityScheduleRoute = entityType => {
   const { tab, agentId } = useParams();
+  const { search } = useLocation();
+  const viewMode = useViewMode();
 
-  return useMemo(
-    () =>
-      entityType
-        ? {
-            lockedEntity: { type: entityType, id: agentId },
-            returnTo: buildEntityEditorLink({ entityType, entityId: agentId, tab }),
-          }
-        : {},
-    [entityType, tab, agentId],
-  );
+  return useMemo(() => {
+    if (!entityType) return {};
+    // The editor answers "Page not found." without viewMode, so the fallback keeps the form search and adds it
+    const query = new URLSearchParams(search);
+    query.set(SearchParams.ViewMode, viewMode);
+
+    return {
+      lockedEntity: { type: entityType, id: agentId },
+      returnTo: `${buildEntityEditorLink({ entityType, entityId: agentId, tab })}?${query}`,
+    };
+  }, [entityType, tab, agentId, search, viewMode]);
 };

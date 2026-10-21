@@ -187,23 +187,26 @@ describe('EntitySchedulesSection EL-7011', () => {
     });
 
     it('TC-US35-08 R3.1 "+ Schedule" opens the nested create form with the editor as the return target', () => {
-      renderSection({}, '/agents/my/12/70');
+      renderSection({}, '/agents/my/12/70?viewMode=owner');
 
       fireEvent.click(screen.getByTestId('agent-schedules-section-add'));
 
-      expect(mocks.navigate).toHaveBeenCalledWith('/agents/my/12/schedules/create', {
-        state: { returnTo: '/agents/my/12/70' },
-      });
+      // The form URL keeps the editor search, so the agent crumb opens the editor in owner mode too
+      expect(mocks.navigate).toHaveBeenCalledWith(
+        { pathname: '/agents/my/12/schedules/create', search: '?viewMode=owner' },
+        { state: { returnTo: '/agents/my/12/70?viewMode=owner' } },
+      );
     });
 
     it('TC-US35-10 R3.2 a card opens the nested edit form with the editor as the return target', () => {
-      renderSection();
+      renderSection({}, '/agents/my/12?viewMode=owner');
 
       fireEvent.click(screen.getByTestId('card-2'));
 
-      expect(mocks.navigate).toHaveBeenCalledWith('/agents/my/12/schedules/2', {
-        state: { returnTo: '/agents/my/12' },
-      });
+      expect(mocks.navigate).toHaveBeenCalledWith(
+        { pathname: '/agents/my/12/schedules/2', search: '?viewMode=owner' },
+        { state: { returnTo: '/agents/my/12?viewMode=owner' } },
+      );
     });
 
     it('TC-US35-09 R3.4 hides "+ Schedule" without the create permission', () => {
@@ -244,7 +247,7 @@ describe('EntitySchedulesSection EL-7011', () => {
 
   describe('pipeline editor (US-36)', () => {
     const renderPipeline = (props = {}) =>
-      renderSection({ entityType: 'pipeline', entityId: 9, ...props }, '/pipelines/all/9');
+      renderSection({ entityType: 'pipeline', entityId: 9, ...props }, '/pipelines/all/9?viewMode=owner');
 
     it('TC-US36-01 TC-US36-03 TC-US36-16 R1.1 R1.4 R2.1 lists the schedules of this pipeline with the pipeline count text', () => {
       renderPipeline();
@@ -291,9 +294,10 @@ describe('EntitySchedulesSection EL-7011', () => {
 
       fireEvent.click(screen.getByTestId('pipeline-schedules-section-add'));
 
-      expect(mocks.navigate).toHaveBeenCalledWith('/pipelines/all/9/schedules/create', {
-        state: { returnTo: '/pipelines/all/9' },
-      });
+      expect(mocks.navigate).toHaveBeenCalledWith(
+        { pathname: '/pipelines/all/9/schedules/create', search: '?viewMode=owner' },
+        { state: { returnTo: '/pipelines/all/9?viewMode=owner' } },
+      );
     });
   });
 });
