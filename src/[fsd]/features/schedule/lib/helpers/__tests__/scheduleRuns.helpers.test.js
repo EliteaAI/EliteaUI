@@ -92,8 +92,17 @@ describe('EL-7011 owner CR 2026-10-21 test panel values', () => {
 
   it('joins duration, tokens and cost of the run summary', () => {
     expect(formatRunSummary({ duration_ms: 38_000, tokens: 2140, cost_usd: 0.031 })).toBe(
-      '38 s · 2,140 tokens · $0.03',
+      '38 s · 2,140 tokens · $0.0310',
     );
+    // a small run does not read as $0.00 (CR-12 D4)
+    expect(formatRunSummary({ duration_ms: 4000, tokens: 357, cost_usd: 0.001205 })).toBe(
+      '4 s · 357 tokens · $0.0012',
+    );
+    // CR-12 r2 D2: the recorded run 98 reads $0.0016, not $0.00 and not the rounded-up $0.0017
+    expect(formatRunSummary({ duration_ms: 5139, tokens: 447, cost_usd: 0.00161 })).toBe(
+      '5 s · 447 tokens · $0.0016',
+    );
+    expect(formatRunSummary({ cost_usd: 0 })).toBe('$0.00');
     expect(formatRunSummary({ duration_ms: 1000 })).toBe('1 s');
     expect(formatRunSummary(undefined)).toBe('');
   });
