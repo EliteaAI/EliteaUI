@@ -101,12 +101,16 @@ describe('EntityScheduleCard EL-7011 US-35', () => {
     expect(nextLine()).toHaveTextContent(/^Paused · You$/);
   });
 
-  it('owner bug 2026-10-21 the card is a container that stacks below 26 rem', () => {
+  it('TC-US36-18 TC-US36-19 R2.6 BUG-32 EL-7011 the card is a container with the 30 rem breakpoint and a footer row for the actions', () => {
     renderCard();
 
     const css = styleText();
     expect(css).toContain('container-type:inline-size');
-    expect(css).toContain('@container (min-width: 26rem)');
+    expect(css).toContain('@container (min-width: 30rem)');
+    expect(css).not.toContain('26rem');
+    // Narrow: name, chip, rule and next run each on its own line, then the footer with switch and menu
+    const areas = getComputedStyle(screen.getByTestId('agent-schedule-card-7')).gridTemplateAreas;
+    expect(areas).toMatch(/footer|actions/);
   });
 
   it('owner bug 2026-10-21 every line is one line with an ellipsis', () => {

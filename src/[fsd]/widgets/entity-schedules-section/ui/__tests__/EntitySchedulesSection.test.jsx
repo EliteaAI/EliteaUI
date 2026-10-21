@@ -295,17 +295,20 @@ describe('EntitySchedulesSection EL-7011', () => {
       expect(mocks.cardProps.map(card => card.entityType)).toEqual(['pipeline', 'pipeline']);
     });
 
-    it('owner bug 2026-10-21 the header stacks in a narrow column: button and count, then the link', () => {
+    it('TC-US36-01 TC-US36-16 R1.6 BUG-32 EL-7011 narrower than 30 rem: button and link on row 1, count wraps on row 2', () => {
       renderPipeline();
 
       const css = [...document.querySelectorAll('style')].map(style => style.textContent).join('');
       expect(css).toContain('container-type:inline-size');
-      expect(css).toContain('@container (min-width: 26rem)');
+      expect(css).toContain('@container (min-width: 30rem)');
+      expect(css).not.toContain('26rem');
       expect(screen.getByTestId('pipeline-schedules-section-header')).toHaveStyle({ flexWrap: 'wrap' });
       expect(screen.getByTestId('pipeline-schedules-section-add')).toHaveStyle({ whiteSpace: 'nowrap' });
-      // Below 26 rem the link takes its own row; the count text may wrap to 2 lines
-      expect(screen.getByTestId('pipeline-schedules-section-open-all')).toHaveStyle({ flexBasis: '100%' });
-      expect(screen.getByText('2 schedules run this pipeline.')).toHaveStyle({ minWidth: '0' });
+      // The link shares row 1 with the button; the count takes row 2 and wraps, never truncates
+      expect(screen.getByTestId('pipeline-schedules-section-open-all')).not.toHaveStyle({ flexBasis: '100%' });
+      const count = screen.getByText('2 schedules run this pipeline.');
+      expect(count).toHaveStyle({ flexBasis: '100%', order: '1' });
+      expect(count).not.toHaveStyle({ whiteSpace: 'nowrap', textOverflow: 'ellipsis' });
     });
 
     it('TC-US36-17 R1.4 shows the empty state of a pipeline without schedules', () => {
