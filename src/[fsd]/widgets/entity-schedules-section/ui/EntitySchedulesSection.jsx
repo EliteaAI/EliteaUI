@@ -13,8 +13,9 @@ import {
 } from '@/[fsd]/entities/schedule';
 import { Button } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
-import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import OpenInNewIcon from '@/assets/open-new-icon.svg?react';
+import PlusIcon from '@/assets/plus-icon.svg?react';
 import { PERMISSIONS } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import useCheckPermission from '@/hooks/useCheckPermission';
@@ -77,13 +78,13 @@ const EntitySchedulesSection = memo(props => {
           >
             {canCreate && (
               <Button.BaseBtn
-                variant={BUTTON_VARIANTS.elitea}
-                color={BUTTON_COLORS.primary}
+                variant={BUTTON_VARIANTS.iconLabel}
+                startIcon={<PlusIcon />}
                 onClick={onAdd}
                 sx={styles.noWrap}
                 data-testid={`${testId}-add`}
               >
-                + Schedule
+                Schedule
               </Button.BaseBtn>
             )}
             <Typography
