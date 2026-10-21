@@ -175,4 +175,13 @@ describe('ScheduleRunList (EL-7011 US-32, owner CR 2026-10-21)', () => {
     renderList([]);
     expect(screen.getByText('No runs yet.')).toBeInTheDocument();
   });
+
+  it('EL-7011 QA 2026-10-21 keeps a minimum width per column and the start time on one line', () => {
+    renderList([withConversation]);
+    const [row] = rows();
+    expect(getComputedStyle(row).gridTemplateColumns).toBe(
+      'minmax(8rem, 1.2fr) minmax(7rem, 1fr) minmax(8rem, 1.6fr) 3.5rem',
+    );
+    expect(getComputedStyle(cell(row, 'started')).whiteSpace).toBe('nowrap');
+  });
 });
