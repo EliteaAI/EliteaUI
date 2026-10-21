@@ -8,7 +8,34 @@ export const SCHEDULE_RUNS_TAG = 'SCHEDULE_RUNS_TAG';
 // false is a real value (enabled=false); only unset, blank and empty list are left out
 const isSet = value => value !== undefined && value !== null && value !== '' && value?.length !== 0;
 
-const schedulePath = (projectId, scheduleId) => `/elitea_core/schedule/prompt_lib/${projectId}/${scheduleId}`;
+const schedulesPath = projectId => `/elitea_core/schedules/prompt_lib/${projectId}`;
+const schedulePath = (projectId, scheduleId) => `${schedulesPath(projectId)}/${scheduleId}`;
+
+// POST .../pause or .../resume with no body. Enabled changes in every cached list entry at once
+// and all patches are undone on error (US-28 R3).
+const setEnabledMutation = (build, action, enabled) =>
+  build.mutation({
+    query: ({ projectId, scheduleId }) => ({
+      url: `${schedulePath(projectId, scheduleId)}/${action}`,
+      method: 'POST',
+    }),
+    async onQueryStarted({ scheduleId }, { dispatch, getState, queryFulfilled }) {
+      const patches = scheduleApi.util.selectCachedArgsForQuery(getState(), 'getScheduleList').map(args =>
+        dispatch(
+          scheduleApi.util.updateQueryData('getScheduleList', args, draft => {
+            const row = draft?.rows?.find(item => item.id === scheduleId);
+            if (row) row.enabled = enabled;
+          }),
+        ),
+      );
+      try {
+        await queryFulfilled;
+      } catch {
+        patches.forEach(patch => patch.undo());
+      }
+    },
+    invalidatesTags: (_, error) => (error ? [] : [SCHEDULES_TAG, SCHEDULE_RUNS_TAG]),
+  });
 
 export const scheduleApi = eliteaApi
   .enhanceEndpoints({
@@ -37,7 +64,7 @@ export const scheduleApi = eliteaApi
             owner_ids: ownerIds?.join(','),
           };
           return {
-            url: `/elitea_core/schedules/prompt_lib/${projectId}`,
+            url: schedulesPath(projectId),
             params: {
               ...Object.fromEntries(Object.entries(filterParams).filter(([, value]) => isSet(value))),
               sort_by: sortBy,
@@ -69,7 +96,7 @@ export const scheduleApi = eliteaApi
 
       createSchedule: build.mutation({
         query: ({ projectId, ...body }) => ({
-          url: `/elitea_core/schedule/prompt_lib/${projectId}`,
+          url: schedulesPath(projectId),
           method: 'POST',
           body,
         }),
@@ -85,31 +112,19 @@ export const scheduleApi = eliteaApi
         invalidatesTags: (_, error) => (error ? [] : [SCHEDULES_TAG, SCHEDULE_RUNS_TAG]),
       }),
 
-      // A body with enabled patches it in every cached list entry at once; undoes all patches on error.
+      // enabled is never sent: pause and resume are their own actions (owner CR 2026-10-21)
       updateSchedule: build.mutation({
-        query: ({ projectId, scheduleId, ...body }) => ({
+        // eslint-disable-next-line no-unused-vars
+        query: ({ projectId, scheduleId, enabled, ...body }) => ({
           url: schedulePath(projectId, scheduleId),
           method: 'PUT',
           body,
         }),
-        async onQueryStarted({ scheduleId, enabled }, { dispatch, getState, queryFulfilled }) {
-          if (enabled === undefined) return;
-          const patches = scheduleApi.util.selectCachedArgsForQuery(getState(), 'getScheduleList').map(args =>
-            dispatch(
-              scheduleApi.util.updateQueryData('getScheduleList', args, draft => {
-                const row = draft?.rows?.find(item => item.id === scheduleId);
-                if (row) row.enabled = enabled;
-              }),
-            ),
-          );
-          try {
-            await queryFulfilled;
-          } catch {
-            patches.forEach(patch => patch.undo());
-          }
-        },
         invalidatesTags: (_, error) => (error ? [] : [SCHEDULES_TAG, SCHEDULE_RUNS_TAG]),
       }),
+
+      pauseSchedule: setEnabledMutation(build, 'pause', false),
+      resumeSchedule: setEnabledMutation(build, 'resume', true),
 
       changeScheduleOwner: build.mutation({
         query: ({ projectId, scheduleId, ownerId }) => ({
@@ -133,7 +148,7 @@ export const scheduleApi = eliteaApi
       // to keep the server's JSON error in error.data (buildErrorMessage reads it).
       exportSchedules: build.query({
         query: ({ projectId }) => ({
-          url: `/elitea_core/schedules/prompt_lib/${projectId}/export`,
+          url: `${schedulesPath(projectId)}/export`,
           responseHandler: async response =>
             response.ok
               ? {
@@ -153,7 +168,7 @@ export const scheduleApi = eliteaApi
           const body = new FormData();
           body.append('file', file);
           return {
-            url: `/elitea_core/schedules/prompt_lib/${projectId}/import`,
+            url: `${schedulesPath(projectId)}/import`,
             method: 'POST',
             body,
             formData: true,
@@ -172,6 +187,8 @@ export const {
   useCreateScheduleMutation,
   useRunScheduleMutation,
   useUpdateScheduleMutation,
+  usePauseScheduleMutation,
+  useResumeScheduleMutation,
   useChangeScheduleOwnerMutation,
   useDeleteScheduleMutation,
   useLazyExportSchedulesQuery,
