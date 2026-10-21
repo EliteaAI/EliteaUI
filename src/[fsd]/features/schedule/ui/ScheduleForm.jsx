@@ -629,7 +629,7 @@ const ScheduleForm = memo(props => {
                   data-testid="schedule-save-button"
                   variant="elitea"
                   color="primary"
-                  disabled={formik.isSubmitting || riskBlocksSave}
+                  disabled={formik.isSubmitting || riskBlocksSave || (!!schedule && !formik.dirty)}
                   aria-disabled={riskBlocksSave || undefined}
                   aria-describedby={riskCheck.status === RISK_CHECK_STATUS.BLOCKED ? RISK_HINT_ID : undefined}
                   onClick={formik.handleSubmit}
