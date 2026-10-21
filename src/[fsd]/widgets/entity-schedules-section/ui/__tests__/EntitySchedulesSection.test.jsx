@@ -6,7 +6,7 @@ import { ThemeProvider, createTheme } from '@mui/material';
 
 import getDesignTokens from '@/MainTheme';
 import '@testing-library/jest-dom/vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 import EntitySchedulesSection from '../EntitySchedulesSection';
 
@@ -107,24 +107,48 @@ describe('EntitySchedulesSection EL-7011', () => {
   });
 
   describe('agent editor (US-35)', () => {
-    it('TC-US35-01 TC-US35-18 R1.1 R1.6 shows the header with "+ Schedule", the count and "Open all in Schedules"', () => {
+    it('TC-US35-01 TC-US35-18 R1.1 R1.6 shows the header with "+ Schedule", the count and "Open all in Settings → Schedules"', () => {
       renderSection();
 
       expect(screen.getByText('Schedules')).toBeInTheDocument();
       expect(screen.getByTestId('agent-schedules-section-add')).toHaveTextContent('+ Schedule');
       expect(screen.getByText('2 schedules run this agent.')).toBeInTheDocument();
-      expect(screen.getByTestId('agent-schedules-section-open-all')).toHaveAttribute(
-        'href',
-        '/settings/schedules?entityType=agent&entityId=12',
-      );
+      const link = screen.getByTestId('agent-schedules-section-open-all');
+      expect(link).toHaveTextContent(/^Open all in Settings → Schedules$/);
+      expect(link).toHaveAttribute('href', '/settings/schedules?entityType=agent&entityId=12');
     });
 
-    it('US-35 owner CR "+ Schedule" is the primary elitea button, as the editor Save is', () => {
+    it('CR-08 "+ Schedule" stays the purple primary elitea button', () => {
       renderSection();
 
       expect(screen.getByTestId('agent-schedules-section-add')).toHaveClass(
         'MuiButton-elitea',
         'MuiButton-colorPrimary',
+      );
+    });
+
+    it('owner bug 2026-10-21 shows two skeleton cards while the first page loads', () => {
+      mocks.entitySchedules.mockReturnValue(listOf([], { isFetching: true }));
+      renderSection();
+
+      expect(screen.getAllByTestId('agent-schedules-section-skeleton')).toHaveLength(2);
+    });
+
+    it('owner bug 2026-10-21 shows no skeleton once rows are on screen', () => {
+      mocks.entitySchedules.mockReturnValue(listOf([{ id: 1, name: 'Daily digest' }], { isFetching: true }));
+      renderSection();
+
+      expect(screen.queryByTestId('agent-schedules-section-skeleton')).not.toBeInTheDocument();
+    });
+
+    it('TC-US35-10 R5.5 Open run history of a card opens the nested edit form on its Runs section', () => {
+      renderSection({}, '/agents/my/12?viewMode=owner');
+
+      act(() => mocks.cardProps.at(-1).onOpenRunHistory(2));
+
+      expect(mocks.navigate).toHaveBeenCalledWith(
+        { pathname: '/agents/my/12/schedules/2', hash: '#runs', search: '?viewMode=owner' },
+        { state: { returnTo: '/agents/my/12?viewMode=owner' } },
       );
     });
 
@@ -271,12 +295,17 @@ describe('EntitySchedulesSection EL-7011', () => {
       expect(mocks.cardProps.map(card => card.entityType)).toEqual(['pipeline', 'pipeline']);
     });
 
-    it('US-36 browser walk bug 3 wraps the header row in a narrow column and keeps the button and link on one line', () => {
+    it('owner bug 2026-10-21 the header stacks in a narrow column: button and count, then the link', () => {
       renderPipeline();
 
+      const css = [...document.querySelectorAll('style')].map(style => style.textContent).join('');
+      expect(css).toContain('container-type:inline-size');
+      expect(css).toContain('@container (min-width: 26rem)');
       expect(screen.getByTestId('pipeline-schedules-section-header')).toHaveStyle({ flexWrap: 'wrap' });
       expect(screen.getByTestId('pipeline-schedules-section-add')).toHaveStyle({ whiteSpace: 'nowrap' });
-      expect(screen.getByTestId('pipeline-schedules-section-open-all')).toHaveStyle({ whiteSpace: 'nowrap' });
+      // Below 26 rem the link takes its own row; the count text may wrap to 2 lines
+      expect(screen.getByTestId('pipeline-schedules-section-open-all')).toHaveStyle({ flexBasis: '100%' });
+      expect(screen.getByText('2 schedules run this pipeline.')).toHaveStyle({ minWidth: '0' });
     });
 
     it('TC-US36-17 R1.4 shows the empty state of a pipeline without schedules', () => {

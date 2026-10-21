@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildEntityEditorLink,
   buildScheduleFormLink,
+  buildScheduleRunsLink,
   buildSchedulesListLink,
 } from '../scheduleLinks.helpers';
 
@@ -43,6 +44,20 @@ describe('scheduleLinks.helpers EL-7011 US-35', () => {
     expect(buildSchedulesListLink({ entityType: 'pipeline', entityId: 9 })).toBe(
       '/settings/schedules?entityType=pipeline&entityId=9',
     );
+  });
+
+  it('R5.5 Open run history opens the edit form nested in the entity on its Runs section', () => {
+    expect(buildScheduleRunsLink({ entityType: 'pipeline', entityId: 9, tab: 'my', scheduleId: 4 })).toEqual({
+      pathname: '/pipelines/my/9/schedules/4',
+      hash: '#runs',
+    });
+  });
+
+  it('US-28 Open run history of the Schedules page opens the edit page on its Runs section', () => {
+    expect(buildScheduleRunsLink({ scheduleId: 64 })).toEqual({
+      pathname: '/settings/schedules/64',
+      hash: '#runs',
+    });
   });
 
   it('TC-US35-18 R3.6 "Open all in Schedules" filters the Schedules page by the entity', () => {
