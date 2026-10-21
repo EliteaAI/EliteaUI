@@ -9,18 +9,21 @@ import { searchKeymap } from '@codemirror/search';
 import { EditorState } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
 import { vscodeDarkInit, vscodeLightInit } from '@uiw/codemirror-theme-vscode';
-import CodeMirror, { EditorView } from '@uiw/react-codemirror';
+import CodeMirror, { EditorView, ExternalChange } from '@uiw/react-codemirror';
 
-const createMaxLengthExtension = maxLength => {
+const countDocumentLength = text => text.length;
+
+const createMaxLengthExtension = (maxLength, countLength) => {
   if (!maxLength || maxLength <= 0) {
     return [];
   }
 
   return EditorState.transactionFilter.of(tr => {
-    if (!tr.docChanged) return tr;
-    if (tr.newDoc.length <= maxLength) return tr;
+    if (!tr.docChanged || tr.annotation(ExternalChange)) return tr;
+    if (countLength(tr.newDoc.toString()) <= maxLength) return tr;
 
     const currentLength = tr.startState.doc.length;
+    const maxDocumentLength = maxLength + currentLength - countLength(tr.startState.doc.toString());
     const changes = [];
     let runningLength = currentLength;
 
@@ -35,7 +38,7 @@ const createMaxLengthExtension = maxLength => {
         return;
       }
 
-      const spaceLeft = maxLength - runningLength;
+      const spaceLeft = maxDocumentLength - runningLength;
 
       if (netChange <= spaceLeft) {
         changes.push({ from: fromA, to: toA, insert: insertText });
@@ -56,10 +59,10 @@ const createMaxLengthExtension = maxLength => {
     const docLengthChange = runningLength - currentLength;
     const newAnchor = Math.max(0, originalAnchor + docLengthChange);
 
-    return tr.startState.update({
+    return {
       changes,
-      selection: { anchor: Math.min(newAnchor, maxLength) },
-    });
+      selection: { anchor: Math.min(newAnchor, maxDocumentLength) },
+    };
   });
 };
 
@@ -90,6 +93,7 @@ const CodeMirrorEditor = memo(
       className,
       readOnly = false,
       maxLength = 0,
+      countLength = countDocumentLength,
     } = props;
 
     const extensions = useMemo(() => {
@@ -331,7 +335,7 @@ const CodeMirrorEditor = memo(
           ...syntaxErrorListener,
           ...contentTestIdExtension,
           ...extensions,
-          createMaxLengthExtension(maxLength),
+          createMaxLengthExtension(maxLength, countLength),
         ]}
         onChange={onInputHandler}
       />
