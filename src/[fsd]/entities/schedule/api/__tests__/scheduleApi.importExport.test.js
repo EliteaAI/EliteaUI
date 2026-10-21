@@ -35,6 +35,15 @@ describe('R2 EL-7011 schedule export query', () => {
     expect(result.data.blob).toBeInstanceOf(Blob);
   });
 
+  it('R4.2 EL-7011 sends ids=7 when one schedule is exported', async () => {
+    fetchSpy.mockImplementation(async () => yamlResponse());
+    await makeStore().dispatch(scheduleApi.endpoints.exportSchedules.initiate({ projectId: 5, ids: [7] }));
+
+    const [url] = requestedUrls(fetchSpy);
+    expect(url.pathname).toBe('/elitea_core/schedules/prompt_lib/5/export');
+    expect(url.searchParams.get('ids')).toBe('7');
+  });
+
   it('R2.2 uses the file name from Content-Disposition', async () => {
     fetchSpy.mockImplementation(async () =>
       yamlResponse({ 'Content-Disposition': 'attachment; filename="schedules_5.yaml"' }),

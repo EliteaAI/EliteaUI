@@ -6,6 +6,7 @@ import ResumeIcon from '@/assets/play.svg?react';
 import DotMenu from '@/components/DotMenu';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import EditIcon from '@/components/Icons/EditIcon';
+import ExportIcon from '@/components/Icons/ExportIcon';
 import PersonIcon from '@/components/Icons/Person';
 import PlayIcon from '@/components/Icons/PlayIcon';
 
@@ -19,8 +20,19 @@ const MENU_BUTTON_PROPS = { 'aria-label': 'More actions' };
 
 const ScheduleRowActions = memo(props => {
   // onOpenRunHistory and hideChangeOwner shape the card menu of the editor Schedules section (US-35)
-  const { row, onRun, onEdit, onOpenRunHistory, onPause, onResume, onDelete, isBusy, hideChangeOwner } =
-    props;
+  // onExport comes from useScheduleRowActions only with the export permission (CR-16)
+  const {
+    row,
+    onRun,
+    onEdit,
+    onOpenRunHistory,
+    onPause,
+    onResume,
+    onExport,
+    onDelete,
+    isBusy,
+    hideChangeOwner,
+  } = props;
   const allowed = row.allowed_actions;
   const [isOwnerDialogOpen, setIsOwnerDialogOpen] = useState(false);
   const openOwnerDialog = useCallback(() => setIsOwnerDialogOpen(true), []);
@@ -81,6 +93,17 @@ const ScheduleRowActions = memo(props => {
             icon: <PersonIcon sx={ICON_SX} />,
             onClick: openOwnerDialog,
           },
+        onExport && {
+          key: 'export',
+          label: 'Export',
+          icon: (
+            <ExportIcon
+              fill="currentColor"
+              sx={ICON_SX}
+            />
+          ),
+          onClick: onExport,
+        },
         allowed?.includes('delete') && {
           key: 'delete',
           label: 'Delete',
@@ -104,6 +127,7 @@ const ScheduleRowActions = memo(props => {
       onOpenRunHistory,
       onPause,
       onResume,
+      onExport,
       onDelete,
       openOwnerDialog,
       hideChangeOwner,

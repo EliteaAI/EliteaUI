@@ -26,6 +26,14 @@ const mocks = vi.hoisted(() => ({
   testRunProps: { onTestRun: () => {}, testRunPending: true, testRunError: 'Already running' },
   runsView: null,
   runsViewArgs: null,
+  menuProps: null,
+}));
+
+vi.mock('../ScheduleDetailMenu', () => ({
+  default: props => {
+    mocks.menuProps = props;
+    return <span data-testid="schedule-detail-menu" />;
+  },
 }));
 
 vi.mock('react-router-dom', () => ({
@@ -83,6 +91,7 @@ vi.mock('@/[fsd]/features/schedule', async importOriginal => {
         <>
           <button onClick={() => props.onSubmit({ name: 'Renamed' }).then(props.onSaved)}>Save</button>
           <button onClick={() => props.onTestRun()}>Test</button>
+          {props.headerActions}
           {props.children({ values: props.initialValues, setFieldValue: mocks.setFieldValue })}
           {props.sidePanel?.(mocks.testRunProps)}
         </>
@@ -125,6 +134,7 @@ describe('ScheduleDetailPage EL-7011', () => {
     vi.clearAllMocks();
     mocks.projectId = 5;
     mocks.formProps = null;
+    mocks.menuProps = null;
     mocks.settingsProps = null;
     mocks.panelProps = null;
     mocks.sectionProps = null;
@@ -193,6 +203,14 @@ describe('ScheduleDetailPage EL-7011', () => {
       /@media \(min-width:1536px\) and \(min-height: ?46rem\)\{[^}]*position:sticky[^}]*max-height:calc\(100dvh - 6rem\)/,
     );
     expect(getComputedStyle(block).position).not.toBe('sticky');
+  });
+
+  it('CR-16 R4.3 EL-7011 puts the schedule menu in the form header', () => {
+    mocks.query = { currentData: schedule };
+    render(<ScheduleDetailPage />);
+
+    expect(screen.getByTestId('schedule-detail-menu')).toBeInTheDocument();
+    expect(mocks.menuProps).toEqual({ schedule, projectId: 5 });
   });
 
   it('TC-US32-01 R1.1 EL-7011 shows a loader while the schedule loads', () => {
