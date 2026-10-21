@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { renderHook } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
 
 import { useScheduleRun, useScheduleRunConversation, useScheduleRuns } from '../useScheduleRuns.hooks';
 
@@ -56,6 +56,38 @@ describe('useScheduleRun EL-7011 owner CR 2026-10-21', () => {
       renderHook(() => useScheduleRun(9, 12));
       expect(pollingOf()).toBe(0);
     });
+  });
+
+  it('CR-12 D3: polls a finished run until the usage figures arrive, then stops', () => {
+    const ended = { id: 12, status: 'success', conversation_id: 70 };
+    mockRun({ ...ended, summary: { tokens: null, cost_usd: null } });
+    const { rerender } = renderHook(() => useScheduleRun(9, 12));
+    expect(pollingOf()).toBe(2000);
+
+    mockRun({ ...ended, summary: { tokens: 357, cost_usd: 0.001205 } });
+    rerender();
+    expect(pollingOf()).toBe(0);
+  });
+
+  it('CR-12 D3: gives up on the usage figures after 10 seconds', () => {
+    vi.useFakeTimers();
+    try {
+      mockRun({ id: 12, status: 'success', conversation_id: 70, summary: { tokens: null } });
+      const { rerender } = renderHook(() => useScheduleRun(9, 12));
+      expect(pollingOf()).toBe(2000);
+
+      act(() => vi.advanceTimersByTime(10_000));
+      rerender();
+      expect(pollingOf()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('CR-12 D3: a run without a conversation never has usage, so it is not polled', () => {
+    mockRun({ id: 12, status: 'skipped', conversation_id: null, summary: { tokens: null } });
+    renderHook(() => useScheduleRun(9, 12));
+    expect(pollingOf()).toBe(0);
   });
 
   it('stops polling on a load error and reports it', () => {

@@ -1,4 +1,5 @@
 import { compareRunTimestamp, formatRunTimestamp } from '@/[fsd]/entities/run-history/lib/helpers';
+import { fmtCost } from '@/[fsd]/features/settings/lib/helpers/analyticsCommon.helpers';
 
 // The API stores the pause for a person's answer as waiting_for_approval; the owner calls it "Waiting for input"
 const RUN_STATUS_LABELS = {
@@ -42,7 +43,7 @@ export const formatRunSummary = summary =>
   [
     summary?.duration_ms != null && formatRunDuration(summary.duration_ms),
     summary?.tokens != null && `${summary.tokens.toLocaleString('en-US')} tokens`,
-    summary?.cost_usd != null && `$${summary.cost_usd.toFixed(2)}`,
+    summary?.cost_usd != null && fmtCost(summary.cost_usd),
   ]
     .filter(Boolean)
     .join(' · ');

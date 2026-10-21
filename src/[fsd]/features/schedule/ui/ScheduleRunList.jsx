@@ -65,7 +65,7 @@ const ScheduleRunList = memo(props => {
         <Box
           key={run.id}
           data-testid="schedule-run-row"
-          aria-selected={run.id === selectedRunId}
+          aria-current={run.id === selectedRunId ? 'true' : undefined}
           sx={[styles.row, run.id === selectedRunId && styles.selected]}
         >
           <Typography

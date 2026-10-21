@@ -49,7 +49,7 @@ describe('ScheduleRunsSection EL-7011 owner CR 2026-10-21', () => {
     const { onOpen } = renderSection({ selectedRunId: 1 });
 
     expect(screen.getByTestId('schedule-section-runs')).toHaveTextContent('RUNS OF THIS SCHEDULE');
-    expect(screen.getByTestId('schedule-run-row')).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByTestId('schedule-run-row')).toHaveAttribute('aria-current', 'true');
     fireEvent.click(screen.getByRole('button', { name: 'Open' }));
     expect(onOpen).toHaveBeenCalledWith(run);
   });

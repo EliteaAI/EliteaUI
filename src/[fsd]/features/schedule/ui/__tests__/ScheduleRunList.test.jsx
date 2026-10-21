@@ -118,7 +118,7 @@ describe('ScheduleRunList EL-7011 US-32, owner CR 2026-10-21', () => {
   it('marks the run the panel shows', () => {
     renderList([withConversation, manual], { selectedRunId: 3 });
 
-    expect(rows().map(row => row.getAttribute('aria-selected'))).toEqual(['false', 'true']);
+    expect(rows().map(row => row.getAttribute('aria-current'))).toEqual([null, 'true']);
   });
 
   it('R4.1 sorts by a header click', () => {
