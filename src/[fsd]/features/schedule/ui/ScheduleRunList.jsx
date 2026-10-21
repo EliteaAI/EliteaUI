@@ -1,5 +1,7 @@
 import { memo, useMemo, useState } from 'react';
 
+import { useSearchParams } from 'react-router-dom';
+
 import { Box, Link, Typography } from '@mui/material';
 
 import { compareRunTimestamp } from '@/[fsd]/entities/run-history/lib/helpers';
@@ -24,12 +26,18 @@ const SORT_FUNCTIONS = {
 
 // The runs of one schedule; Open shows the run's conversation below the table (R4.1, R4.2)
 const ScheduleRunList = memo(props => {
-  const { runs } = props;
+  const { runs, schedule } = props;
 
   const [openedRunId, setOpenedRunId] = useState(null);
+  // The approval notice links here with the conversation of the waiting run (R1.2)
+  const linkedConversationId = useSearchParams()[0].get('history_run_id');
   const { sortConfig, handleSortItems, getSortedData } = useRunHistorySorting('started');
   const sortedRuns = useMemo(() => getSortedData(runs, SORT_FUNCTIONS), [runs, getSortedData]);
-  const openedRun = runs.find(run => run.id === openedRunId && run.conversation_id != null);
+  const openedRun = runs.find(run =>
+    openedRunId == null
+      ? linkedConversationId != null && String(run.conversation_id) === linkedConversationId
+      : run.id === openedRunId && run.conversation_id != null,
+  );
 
   const styles = scheduleRunListStyles();
 
@@ -108,7 +116,12 @@ const ScheduleRunList = memo(props => {
           </Box>
         ))}
       </Box>
-      {openedRun && <ScheduleRunConversation run={openedRun} />}
+      {openedRun && (
+        <ScheduleRunConversation
+          run={openedRun}
+          schedule={schedule}
+        />
+      )}
     </Box>
   );
 });
