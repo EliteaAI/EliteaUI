@@ -490,7 +490,9 @@ const ScheduleForm = memo(props => {
               </TabBarItems>
             ),
             content: (
-              // With a side panel: the Agents editor split (ConfigurationTab), stacked below the lg breakpoint
+              // With a side panel: the Agents editor split (ConfigurationTab). The Settings menu takes about
+              // 30 rem more than the Agents page, so the split starts at xl (1536 px), not lg, and the card
+              // goes under the form below it, where each half would be narrower than the Agents halves.
               <StyledGridContainer
                 container
                 columnSpacing="2rem"
@@ -498,7 +500,7 @@ const ScheduleForm = memo(props => {
                 sx={sidePanel && styles.split}
               >
                 <Grid
-                  size={{ xs: 12, lg: sidePanel ? 6 : 12 }}
+                  size={{ xs: 12, xl: sidePanel ? 6 : 12 }}
                   component="form"
                   noValidate
                   onSubmit={formik.handleSubmit}
@@ -519,7 +521,7 @@ const ScheduleForm = memo(props => {
                 </Grid>
                 {sidePanel && (
                   <Grid
-                    size={{ xs: 12, lg: 6 }}
+                    size={{ xs: 12, xl: 6 }}
                     sx={styles.sidePanel}
                   >
                     {sidePanel({
