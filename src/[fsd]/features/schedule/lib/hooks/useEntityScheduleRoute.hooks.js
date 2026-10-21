@@ -19,7 +19,8 @@ export const useEntityScheduleRoute = entityType => {
     query.set(SearchParams.ViewMode, viewMode);
 
     return {
-      lockedEntity: { type: entityType, id: agentId },
+      // The entity options carry numeric ids, so a string id from the URL would match none of them
+      lockedEntity: { type: entityType, id: Number(agentId) },
       returnTo: `${buildEntityEditorLink({ entityType, entityId: agentId, tab })}?${query}`,
     };
   }, [entityType, tab, agentId, search, viewMode]);

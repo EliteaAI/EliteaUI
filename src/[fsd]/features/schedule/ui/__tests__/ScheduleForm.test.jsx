@@ -221,6 +221,16 @@ describe('ScheduleForm EL-7011', () => {
     expect(modalProps.formik.setValues).toBeTypeOf('function');
   });
 
+  it('US-35 browser walk bug 2 shows the locked entity as an option before the list loads it', () => {
+    listQuery.mockReturnValue({ data: undefined, isFetching: true });
+    renderForm({ initialValues: { ...INITIAL, application_id: 7 }, lockedEntity: { type: 'agent', id: 7 } });
+
+    expect(selectProps.disabled).toBe(true);
+    expect(selectProps.options.find(option => option.value === selectProps.value)?.label).toBe(
+      'Digest agent',
+    );
+  });
+
   it('R1.2 EL-7011 hides Build with AI without the schedules create permission', () => {
     allowed = false;
     renderForm();

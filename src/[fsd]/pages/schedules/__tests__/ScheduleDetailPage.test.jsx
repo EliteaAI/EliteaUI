@@ -217,7 +217,7 @@ describe('ScheduleDetailPage EL-7011', () => {
     mocks.updateSchedule.mockReturnValue({ unwrap: () => Promise.resolve({ id: 9 }) });
     render(<ScheduleDetailPage entityType="agent" />);
 
-    expect(mocks.formProps.lockedEntity).toEqual({ type: 'agent', id: '3' });
+    expect(mocks.formProps.lockedEntity).toEqual({ type: 'agent', id: 3 });
     expect(mocks.formProps.entityName).toBeUndefined();
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 

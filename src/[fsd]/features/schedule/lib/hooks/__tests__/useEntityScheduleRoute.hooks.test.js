@@ -28,7 +28,7 @@ describe('useEntityScheduleRoute EL-7011', () => {
     const { result } = renderHook(() => useEntityScheduleRoute('agent'));
 
     expect(result.current).toEqual({
-      lockedEntity: { type: 'agent', id: '12' },
+      lockedEntity: { type: 'agent', id: 12 },
       returnTo: '/agents/my/12?viewMode=owner',
     });
   });
@@ -39,7 +39,7 @@ describe('useEntityScheduleRoute EL-7011', () => {
     const { result } = renderHook(() => useEntityScheduleRoute('pipeline'));
 
     expect(result.current).toEqual({
-      lockedEntity: { type: 'pipeline', id: '9' },
+      lockedEntity: { type: 'pipeline', id: 9 },
       returnTo: '/pipelines/all/9?viewMode=owner',
     });
   });
