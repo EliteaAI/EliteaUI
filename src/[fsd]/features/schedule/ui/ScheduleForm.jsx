@@ -72,6 +72,14 @@ const RISK_HINT_ID = 'schedule-risk-hint';
 // "21 Oct 2026" for the line of who confirmed "Run without asking"
 const CONFIRMED_DATE = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 
+// "Confirmed by X on <date>"; a missing or invalid date leaves "Confirmed by X" (format() throws on an invalid date)
+const formatConfirmation = (by, at) => {
+  const date = at ? new Date(at) : null;
+  return date && !Number.isNaN(date.getTime())
+    ? `Confirmed by ${by} on ${CONFIRMED_DATE.format(date)}`
+    : `Confirmed by ${by}`;
+};
+
 const getEntityType = details => (details?.version_details?.agent_type === 'pipeline' ? 'pipeline' : 'agent');
 
 const FieldError = ({ message }) =>
@@ -579,7 +587,7 @@ const ScheduleForm = memo(props => {
               variant="bodySmall"
               color="text.secondary"
             >
-              {`Confirmed by ${schedule.approval_confirmed_by} on ${CONFIRMED_DATE.format(new Date(schedule.approval_confirmed_at))}`}
+              {formatConfirmation(schedule.approval_confirmed_by, schedule.approval_confirmed_at)}
             </Typography>
           )}
           <FieldError message={fieldError('approval_rule')} />

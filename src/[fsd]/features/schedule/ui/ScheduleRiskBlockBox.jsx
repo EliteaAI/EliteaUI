@@ -60,7 +60,8 @@ const ScheduleRiskBlockBox = memo(props => {
       version_id: versionId,
     };
     // A new tab, so the form keeps its input
-    const editorLink = `${buildEntityEditorLink({ entityType: fix.entity_type, entityId: fix.id })}/${fix.version_id}`;
+    const entityLink = buildEntityEditorLink({ entityType: fix.entity_type, entityId: fix.id });
+    const editorLink = fix.version_id ? `${entityLink}/${fix.version_id}` : entityLink;
     return (
       <BannerMessage
         key={code}

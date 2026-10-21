@@ -371,7 +371,7 @@ describe('ScheduleForm EL-7011', () => {
     const { onSubmit } = renderForm();
     pickEntity(7);
 
-    save();
+    await save();
 
     expect(await screen.findByText('Prompt is required')).toBeInTheDocument();
     expect(onSubmit).not.toHaveBeenCalled();
@@ -406,7 +406,7 @@ describe('ScheduleForm EL-7011', () => {
     await waitFor(() => expect(versionProps.value).toBe(71));
     typePrompt('Hello {{team}}');
 
-    save();
+    await save();
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     expect(onSubmit.mock.calls[0][0]).toMatchObject({
@@ -427,7 +427,7 @@ describe('ScheduleForm EL-7011', () => {
     pickEntity(7);
     typePrompt('Hi');
 
-    save();
+    await save();
 
     expect(await screen.findByText('Name is taken')).toBeInTheDocument();
   });
@@ -442,7 +442,7 @@ describe('ScheduleForm EL-7011', () => {
     pickEntity(7);
     typePrompt('Hi');
 
-    save();
+    await save();
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Runs must be at least 5 minutes apart');
   });
@@ -451,7 +451,7 @@ describe('ScheduleForm EL-7011', () => {
     const { onSubmit } = renderForm({ initialValues: { ...INITIAL, name: '' } });
     typePrompt('Hi');
 
-    save();
+    await save();
 
     expect(await screen.findByText('Name is required')).toBeInTheDocument();
     expect(selectProps.helperText).toBe('Choose an agent or a pipeline');
@@ -468,7 +468,7 @@ describe('ScheduleForm EL-7011', () => {
     });
     await waitFor(() => expect(versionProps.value).toBe(71));
 
-    save();
+    await save();
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     expect(onSubmit.mock.calls[0][0]).toMatchObject({ application_id: 7, prompt: 'Hi' });
@@ -493,7 +493,7 @@ describe('ScheduleForm EL-7011', () => {
     pickEntity(7);
     await waitFor(() => expect(versionProps.value).toBe(71));
     typePrompt('Hi');
-    save();
+    await save();
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     expect(onSubmit.mock.calls[0][0]).toMatchObject({
       cron: INITIAL.cron,
@@ -526,7 +526,7 @@ describe('ScheduleForm EL-7011', () => {
     pickEntity(7);
     typePrompt('Hi');
 
-    save();
+    await save();
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Schedule limit reached');
   });
@@ -575,7 +575,7 @@ describe('ScheduleForm EL-7011', () => {
     );
     pickEntity(7);
     typePrompt('Hi');
-    save();
+    await save();
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     expect(onSubmit.mock.calls[0][0]).toMatchObject({ approval_rule: 'pause_and_ask' });
@@ -655,7 +655,7 @@ describe('ScheduleForm EL-7011', () => {
     pickEntity(7);
     typePrompt('Hi');
 
-    save();
+    await save();
 
     expect(await screen.findByTestId('warnings-note')).toBeInTheDocument();
     expect(onSaved).not.toHaveBeenCalled();
@@ -685,7 +685,7 @@ describe('ScheduleForm EL-7011', () => {
     pickEntity(7);
     typePrompt('Hi');
 
-    save();
+    await save();
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Run without asking is not allowed here.');
   });
@@ -698,7 +698,7 @@ describe('ScheduleForm EL-7011', () => {
     pickEntity(7);
     typePrompt('Hi');
 
-    save();
+    await save();
 
     await screen.findByTestId('warnings-dialog');
     expect(screen.getByTestId('schedule-approval-rule-pause_and_ask')).toHaveAttribute(
@@ -715,7 +715,7 @@ describe('ScheduleForm EL-7011', () => {
     pickEntity(7);
     typePrompt('Hi');
 
-    save();
+    await save();
 
     expect(await screen.findByTestId('warnings-dialog')).toHaveTextContent('1');
     expect(onSaved).not.toHaveBeenCalled();
@@ -731,7 +731,7 @@ describe('ScheduleForm EL-7011', () => {
     pickEntity(7);
     typePrompt('Hi');
 
-    save();
+    await save();
 
     await waitFor(() => expect(onSaved).toHaveBeenCalledWith(result));
     expect(screen.queryByTestId('warnings-dialog')).not.toBeInTheDocument();
@@ -767,7 +767,7 @@ describe('ScheduleForm EL-7011', () => {
       });
       typePrompt('Digest for {{team}} in {{room}}');
       expect(screen.getByTestId('variables')).toHaveTextContent('room,team');
-      save();
+      await save();
 
       await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
       expect(onSubmit.mock.calls[0][0]).toMatchObject({
@@ -786,7 +786,7 @@ describe('ScheduleForm EL-7011', () => {
     it('TC-US35-17 R4.2 still asks for the prompt', async () => {
       const { onSubmit } = renderFromEditor();
 
-      save();
+      await save();
 
       expect(await screen.findByText('Prompt is required')).toBeInTheDocument();
       expect(onSubmit).not.toHaveBeenCalled();
@@ -815,7 +815,7 @@ describe('ScheduleForm EL-7011', () => {
 
       expect(screen.getByTestId('schedule-run-mode-entry_point')).toHaveAttribute('aria-pressed', 'true');
       expect(screen.queryByLabelText(/Prompt/)).not.toBeInTheDocument();
-      save();
+      await save();
 
       await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
       expect(onSubmit.mock.calls[0][0]).toMatchObject({
@@ -830,7 +830,7 @@ describe('ScheduleForm EL-7011', () => {
       const { onSubmit } = renderFromPipeline();
       fireEvent.click(screen.getByTestId('schedule-run-mode-prompt'));
 
-      save();
+      await save();
       expect(await screen.findByText('Prompt is required')).toBeInTheDocument();
       expect(onSubmit).not.toHaveBeenCalled();
 
@@ -1027,7 +1027,7 @@ describe('ScheduleForm EL-7011', () => {
       });
       edit();
 
-      save();
+      await save();
 
       expect(await screen.findByText('Name is taken')).toBeInTheDocument();
     });
@@ -1056,7 +1056,7 @@ describe('ScheduleForm EL-7011', () => {
       renderEdit({ onSubmit: vi.fn().mockResolvedValue({ id: 3 }), onSaved });
       edit();
 
-      save();
+      await save();
 
       await waitFor(() => expect(onSaved).toHaveBeenCalledWith({ id: 3 }));
     });
@@ -1440,6 +1440,22 @@ describe('ScheduleForm EL-7011', () => {
 
       expect(screen.getByText('Confirmed by Anna K. on 21 Oct 2026')).toBeInTheDocument();
     });
+
+    it.each([[undefined], [null], ['not a date']])(
+      'shows only who confirmed when the date is %s',
+      confirmedAt => {
+        renderForm({
+          schedule: {
+            id: 3,
+            owner: { name: 'Ann Lee' },
+            approval_confirmed_by: 'Anna K.',
+            approval_confirmed_at: confirmedAt,
+          },
+        });
+
+        expect(screen.getByText('Confirmed by Anna K.')).toBeInTheDocument();
+      },
+    );
 
     it('shows no confirmation line when the schedule has none', () => {
       renderForm({ schedule: { id: 3, owner: { name: 'Ann Lee' }, approval_confirmed_by: null } });
