@@ -1,6 +1,6 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useSearchParams } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
 
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useApplicationDetailsQuery } from '@/api/applications';
@@ -43,10 +43,22 @@ export const useScheduleRunsView = (scheduleId, applicationId) => {
     panelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }, []);
   const backToTest = useCallback(() => setChosenRunId(null), []);
-  const showRunHistory = useCallback(() => {
+  // Run History (CR-21): open the Runs section, select the run when one is named, scroll and focus
+  const showRunHistory = useCallback(({ runId } = {}) => {
+    if (runId != null) setChosenRunId(runId);
     setRunsExpanded(true);
     runsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    runsSectionRef.current?.focus?.({ preventScroll: true });
   }, []);
+
+  // A #runs link opens on the Runs section, once the page has its schedule and so its section
+  const hash = useLocation().hash;
+  const scrolledToHash = useRef(false);
+  useEffect(() => {
+    if (hash !== '#runs' || scheduleId == null || scrolledToHash.current) return;
+    scrolledToHash.current = true;
+    showRunHistory();
+  }, [hash, scheduleId, showRunHistory]);
 
   return {
     runs,

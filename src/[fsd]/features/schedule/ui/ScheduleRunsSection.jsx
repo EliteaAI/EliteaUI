@@ -7,7 +7,7 @@ import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 
 import ScheduleRunList from './ScheduleRunList';
 
-// The Runs table as the last section of the Edit schedule form column (owner CR 2026-10-21 test panel log)
+// The Runs table under the test panel of the Edit schedule page (owner CR 2026-10-21, CR-21)
 const ScheduleRunsSection = memo(
   forwardRef((props, ref) => {
     const { runs, versionNames, selectedRunId, onOpen, expanded, onExpandedChange } = props;
@@ -17,6 +17,8 @@ const ScheduleRunsSection = memo(
     return (
       <Box
         ref={ref}
+        id="runs"
+        tabIndex={-1}
         sx={styles.root}
       >
         <BasicAccordion
@@ -48,7 +50,7 @@ ScheduleRunsSection.displayName = 'ScheduleRunsSection';
 
 /** @type {MuiSx} */
 const scheduleRunsSectionStyles = () => ({
-  root: { margin: '0 auto', maxWidth: '43.75rem', scrollMarginTop: '1rem' },
+  root: { margin: '1.5rem auto 0', maxWidth: '43.75rem', scrollMarginTop: '1rem', outline: 'none' },
   // The same section surface as the form sections above it
   accordion: ({ palette }) => ({ background: `${palette.background.default.tertiary} !important` }),
 });

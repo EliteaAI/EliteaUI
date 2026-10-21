@@ -77,22 +77,56 @@ const ScheduleDetailPage = props => {
     () => runSchedule({ projectId, scheduleId, trigger: 'test' }).unwrap(),
     [runSchedule, projectId, scheduleId],
   );
-  // The Test schedule panel right of the form and the Runs section under the form (owner CR 2026-10-21)
-  const { runs, viewedRun, versionNames, panelRef, showRunHistory, backToTest } = runsView;
+  // The Test schedule panel right of the form and the Runs section under the panel (owner CR 2026-10-21)
+  const {
+    runs,
+    viewedRun,
+    versionNames,
+    panelRef,
+    runsSectionRef,
+    runsExpanded,
+    setRunsExpanded,
+    openRun,
+    showRunHistory,
+    backToTest,
+  } = runsView;
   const sidePanel = useCallback(
     testRunProps => (
-      <ScheduleRunsPanel
-        ref={panelRef}
-        schedule={schedule}
-        runs={runs}
-        viewedRun={viewedRun}
-        versionNames={versionNames}
-        onRunHistory={showRunHistory}
-        onBackToTest={backToTest}
-        {...testRunProps}
-      />
+      <>
+        <ScheduleRunsPanel
+          ref={panelRef}
+          schedule={schedule}
+          runs={runs}
+          viewedRun={viewedRun}
+          versionNames={versionNames}
+          onRunHistory={showRunHistory}
+          onBackToTest={backToTest}
+          {...testRunProps}
+        />
+        <ScheduleRunsSection
+          ref={runsSectionRef}
+          runs={runs}
+          versionNames={versionNames}
+          selectedRunId={viewedRun?.id}
+          onOpen={openRun}
+          expanded={runsExpanded}
+          onExpandedChange={setRunsExpanded}
+        />
+      </>
     ),
-    [schedule, runs, viewedRun, versionNames, panelRef, showRunHistory, backToTest],
+    [
+      schedule,
+      runs,
+      viewedRun,
+      versionNames,
+      panelRef,
+      showRunHistory,
+      backToTest,
+      runsSectionRef,
+      openRun,
+      runsExpanded,
+      setRunsExpanded,
+    ],
   );
 
   if (isError)
@@ -124,17 +158,6 @@ const ScheduleDetailPage = props => {
       // Nested in an editor, the crumbs name the agent or pipeline, not the schedule
       entityName={entityType ? undefined : schedule.name}
       sidePanel={sidePanel}
-      afterForm={
-        <ScheduleRunsSection
-          ref={runsView.runsSectionRef}
-          runs={runs}
-          versionNames={versionNames}
-          selectedRunId={viewedRun?.id}
-          onOpen={runsView.openRun}
-          expanded={runsView.runsExpanded}
-          onExpandedChange={runsView.setRunsExpanded}
-        />
-      }
       onSubmit={onSubmit}
       onSaved={onSaved}
       onTestRun={onTestRun}
