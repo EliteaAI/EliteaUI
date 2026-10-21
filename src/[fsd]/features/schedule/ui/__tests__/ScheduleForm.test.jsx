@@ -174,11 +174,11 @@ const INITIAL = {
 
 const theme = createTheme(getDesignTokens('dark'));
 
-const renderForm = (props = {}) => {
+const renderForm = (props = {}, path = '/settings/schedules/create') => {
   const handlers = { onSubmit: vi.fn().mockResolvedValue(undefined), onCancel: vi.fn() };
   render(
     <ThemeProvider theme={theme}>
-      <MemoryRouter initialEntries={['/settings/schedules/create']}>
+      <MemoryRouter initialEntries={[path]}>
         <ScheduleForm
           initialValues={INITIAL}
           {...handlers}
@@ -230,6 +230,15 @@ describe('ScheduleForm EL-7011', () => {
       'Digest agent',
     );
   });
+
+  it.each(['/agents/all/12/schedules/create', '/pipelines/all/9/schedules/4', '/settings/schedules/4'])(
+    'US-35 owner bug 4 shows no selected-tab indicator in the header of %s, which has no tabs',
+    path => {
+      renderForm({ lockedEntity: { type: 'agent', id: 7 } }, path);
+
+      expect(document.querySelector('.MuiTabs-indicator')).toHaveStyle({ display: 'none' });
+    },
+  );
 
   it('R1.2 EL-7011 hides Build with AI without the schedules create permission', () => {
     allowed = false;
