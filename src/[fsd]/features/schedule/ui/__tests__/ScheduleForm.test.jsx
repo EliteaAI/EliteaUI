@@ -870,6 +870,27 @@ describe('ScheduleForm EL-7011', () => {
       });
     const testRun = () => fireEvent.click(screen.getByTestId('schedule-form-test-run'));
     const edit = () => fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Changed' } });
+    const saveButton = () => screen.getByTestId('schedule-save-button');
+
+    it('R1.5 EL-7011 BUG-34 keeps Save disabled on the edit page until a value changes', async () => {
+      renderEdit();
+      await act(async () => {});
+      expect(saveButton()).toBeDisabled();
+
+      edit();
+      await act(async () => {});
+      expect(saveButton()).toBeEnabled();
+
+      fireEvent.change(screen.getByLabelText('Name'), { target: { value: EDIT_INITIAL.name } });
+      await act(async () => {});
+      expect(saveButton()).toBeDisabled();
+    });
+
+    it('R1.5 EL-7011 BUG-34 keeps Save enabled on the create page without a change', async () => {
+      renderForm();
+      await act(async () => {});
+      expect(saveButton()).toBeEnabled();
+    });
 
     it('R2.2 EL-7011 shows the Owner as read-only text only for a saved schedule', () => {
       renderEdit();
@@ -1367,9 +1388,9 @@ describe('ScheduleForm EL-7011', () => {
           </button>
         ),
       });
-      await waitFor(() => expect(saveButton()).toBeEnabled());
       fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Daily digest' } });
       fireEvent.change(screen.getByLabelText('Description'), { target: { value: 'Changed' } });
+      await waitFor(() => expect(saveButton()).toBeEnabled());
 
       fireEvent.click(screen.getByRole('button', { name: 'Test run' }));
       await screen.findByTestId('risk-dialog');
