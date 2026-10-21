@@ -22,6 +22,7 @@ const mocks = vi.hoisted(() => ({
   params: { scheduleId: '9' },
   state: { returnTo: '/settings/schedules' },
   panelProps: null,
+  sectionProps: null,
   testRunProps: { onTestRun: () => {}, testRunPending: true, testRunError: 'Already running' },
   runsView: null,
   runsViewArgs: null,
@@ -71,7 +72,10 @@ vi.mock('@/[fsd]/features/schedule', async importOriginal => {
       mocks.runsViewArgs = args;
       return mocks.runsView;
     },
-    ScheduleRunsSection: () => null,
+    ScheduleRunsSection: forwardRef(props => {
+      mocks.sectionProps = props;
+      return null;
+    }),
     ScheduleRunsPanel,
     ScheduleForm: props => {
       mocks.formProps = props;
@@ -111,6 +115,8 @@ const makeRunsView = () => ({
   openRun: vi.fn(),
   backToTest: vi.fn(),
   showRunHistory: vi.fn(),
+  announcement: 'Showing run 21 Oct, 09:00, cron, Success',
+  runNotFound: false,
 });
 
 describe('ScheduleDetailPage EL-7011', () => {
@@ -121,6 +127,7 @@ describe('ScheduleDetailPage EL-7011', () => {
     mocks.formProps = null;
     mocks.settingsProps = null;
     mocks.panelProps = null;
+    mocks.sectionProps = null;
     mocks.query = {};
     mocks.params = { scheduleId: '9' };
     mocks.state = { returnTo: '/settings/schedules' };
@@ -153,16 +160,39 @@ describe('ScheduleDetailPage EL-7011', () => {
       onBackToTest: view.backToTest,
       ...mocks.testRunProps,
     });
-    const section = mocks.formProps.afterForm;
-    expect(section.ref).toBe(view.runsSectionRef);
-    expect(section.props).toEqual({
+  });
+
+  it('TC-US32-20 R4.1 R4.6 EL-7011 CR-21 renders the Runs section in the right block, with no afterForm', () => {
+    mocks.query = { currentData: schedule };
+    render(<ScheduleDetailPage />);
+    const view = mocks.runsView;
+
+    expect(mocks.formProps.afterForm).toBeUndefined();
+    expect(mocks.sectionProps).toEqual({
       runs: view.runs,
       versionNames: view.versionNames,
       selectedRunId: 1,
       onOpen: view.openRun,
       expanded: true,
       onExpandedChange: view.setRunsExpanded,
+      announcement: view.announcement,
+      runNotFound: false,
     });
+  });
+
+  it('TC-US32-20 R4.1 EL-7011 CR-21 stacks the panel and the Runs section in one block, sticky from xl in a tall window', () => {
+    mocks.query = { currentData: schedule };
+    render(<ScheduleDetailPage />);
+    const block = screen.getByTestId('schedule-right-block');
+
+    expect(getComputedStyle(block).display).toBe('flex');
+    expect(getComputedStyle(block).flexDirection).toBe('column');
+    // jsdom does not match media queries, so the sticky rule is read from the emitted CSS
+    const css = [...document.querySelectorAll('style')].map(tag => tag.textContent).join('');
+    expect(css).toMatch(
+      /@media \(min-width:1536px\) and \(min-height: ?46rem\)\{[^}]*position:sticky[^}]*max-height:calc\(100dvh - 6rem\)/,
+    );
+    expect(getComputedStyle(block).position).not.toBe('sticky');
   });
 
   it('TC-US32-01 R1.1 EL-7011 shows a loader while the schedule loads', () => {

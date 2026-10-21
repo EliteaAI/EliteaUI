@@ -90,81 +90,92 @@ const ScheduleRunsPanel = memo(
             />
           </Box>
         </Box>
-        {showTestTools && (
-          <BannerMessage variant="info">
-            <Typography variant="bodySmall">{INFO_TEXT}</Typography>
-          </BannerMessage>
-        )}
-        {testRunError && (
-          <BannerMessage
-            variant="error"
-            message={testRunError}
-          />
-        )}
-        {isError && (
-          <BannerMessage variant="error">
-            <Typography variant="bodySmall">
-              Failed to load the run log.{' '}
-              <Link
-                component="button"
-                type="button"
-                variant="bodySmall"
-                onClick={refetch}
-              >
-                Retry
-              </Link>
+        <Box
+          data-testid="schedule-runs-panel-body"
+          sx={styles.body}
+        >
+          {showTestTools && (
+            <BannerMessage variant="info">
+              <Typography variant="bodySmall">{INFO_TEXT}</Typography>
+            </BannerMessage>
+          )}
+          {testRunError && (
+            <BannerMessage
+              variant="error"
+              message={testRunError}
+            />
+          )}
+          {isError && (
+            <BannerMessage variant="error">
+              <Typography variant="bodySmall">
+                Failed to load the run log.{' '}
+                <Link
+                  component="button"
+                  type="button"
+                  variant="bodySmall"
+                  onClick={refetch}
+                >
+                  Retry
+                </Link>
+              </Typography>
+            </BannerMessage>
+          )}
+          <Box sx={styles.logHeader}>
+            <Typography
+              variant="labelSmall"
+              color="text.secondary"
+            >
+              LIVE LOG
             </Typography>
-          </BannerMessage>
-        )}
-        <Box sx={styles.logHeader}>
-          <Typography
-            variant="labelSmall"
-            color="text.secondary"
-          >
-            LIVE LOG
-          </Typography>
-          {shownRun && (
-            <Box data-testid="schedule-run-log-status">
-              <ScheduleRunStatusChip status={shownRun.status} />
-            </Box>
+            {shownRun && (
+              <Box data-testid="schedule-run-log-status">
+                <ScheduleRunStatusChip status={shownRun.status} />
+              </Box>
+            )}
+          </Box>
+          <ScheduleRunLog
+            key={shownRun?.id}
+            events={events}
+            emptyText={emptyText}
+            pausedAction={
+              shownRun?.status === 'waiting_for_approval' && (
+                <ScheduleRunApproval
+                  schedule={schedule}
+                  conversationUuid={conversation.conversationUuid}
+                  pausedMessageId={conversation.pausedMessageId}
+                  pausedAt={events.findLast(event => event.kind === 'paused')?.at}
+                />
+              )
+            }
+          />
+          {shownRun && !active && (
+            <ScheduleRunResult
+              run={shownRun}
+              answer={conversation.answer}
+            />
           )}
         </Box>
-        <ScheduleRunLog
-          events={events}
-          emptyText={emptyText}
-          pausedAction={
-            shownRun?.status === 'waiting_for_approval' && (
-              <ScheduleRunApproval
-                schedule={schedule}
-                conversationUuid={conversation.conversationUuid}
-                pausedMessageId={conversation.pausedMessageId}
-                pausedAt={events.findLast(event => event.kind === 'paused')?.at}
-              />
-            )
-          }
-        />
-        {shownRun && !active && (
-          <ScheduleRunResult
-            run={shownRun}
-            answer={conversation.answer}
-          />
-        )}
-        {showTestTools && (
-          <SchedulePromptSummary
-            prompt={schedule.prompt}
-            variables={schedule.variables}
-            versionLabel={versionNames[schedule.version_id]}
-            running={active}
-            pending={testRunPending}
-            onTestRun={onTestRun}
-          />
-        )}
-        <Typography
-          variant="bodySmall"
-          color="text.secondary"
+        <Box
+          data-testid="schedule-runs-panel-footer"
+          sx={styles.footer}
         >
-          A test never changes Last run or Next run.
-        </Typography>
+          {showTestTools && (
+            <SchedulePromptSummary
+              prompt={schedule.prompt}
+              variables={schedule.variables}
+              versionLabel={versionNames[schedule.version_id]}
+              running={active}
+              pending={testRunPending}
+              onTestRun={onTestRun}
+            />
+          )}
+          <Typography
+            variant="bodySmall"
+            color="text.secondary"
+          >
+            A test never changes Last run or Next run.
+          </Typography>
+        </Box>
       </Box>
     );
   }),
@@ -174,7 +185,8 @@ ScheduleRunsPanel.displayName = 'ScheduleRunsPanel';
 
 /** @type {MuiSx} */
 const scheduleRunsPanelStyles = () => ({
-  root: ({ palette }) => ({
+  // In the sticky block (xl, a tall window) the card takes the free height and its body scrolls
+  root: ({ palette, breakpoints }) => ({
     display: 'flex',
     flexDirection: 'column',
     gap: '1rem',
@@ -182,8 +194,18 @@ const scheduleRunsPanelStyles = () => ({
     borderRadius: '1rem',
     border: `0.0625rem solid ${palette.border.lines}`,
     backgroundColor: palette.background.default.tertiary,
-    scrollMarginTop: '1rem',
+    scrollMarginTop: '4.5rem',
+    [`${breakpoints.up('xl')} and (min-height: 46rem)`]: { flex: '1 1 0', minHeight: '20rem' },
   }),
+  body: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+    flex: '1 1 auto',
+    minHeight: 0,
+    overflowY: 'auto',
+  },
+  footer: { display: 'flex', flexDirection: 'column', gap: '1rem', flexShrink: 0 },
   header: { display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' },
   title: ({ palette }) => ({ fontSize: '1.125rem', fontWeight: 600, color: palette.text.primary }),
   headerAction: { marginLeft: 'auto' },

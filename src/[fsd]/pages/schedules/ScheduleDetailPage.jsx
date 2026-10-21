@@ -77,22 +77,65 @@ const ScheduleDetailPage = props => {
     () => runSchedule({ projectId, scheduleId, trigger: 'test' }).unwrap(),
     [runSchedule, projectId, scheduleId],
   );
-  // The Test schedule panel right of the form and the Runs section under the form (owner CR 2026-10-21)
-  const { runs, viewedRun, versionNames, panelRef, showRunHistory, backToTest } = runsView;
+  // The Test schedule panel right of the form and the Runs section under the panel (owner CR 2026-10-21)
+  const {
+    runs,
+    viewedRun,
+    versionNames,
+    panelRef,
+    runsSectionRef,
+    runsExpanded,
+    setRunsExpanded,
+    openRun,
+    showRunHistory,
+    backToTest,
+    announcement,
+    runNotFound,
+  } = runsView;
   const sidePanel = useCallback(
     testRunProps => (
-      <ScheduleRunsPanel
-        ref={panelRef}
-        schedule={schedule}
-        runs={runs}
-        viewedRun={viewedRun}
-        versionNames={versionNames}
-        onRunHistory={showRunHistory}
-        onBackToTest={backToTest}
-        {...testRunProps}
-      />
+      <Box
+        data-testid="schedule-right-block"
+        sx={styles.rightBlock}
+      >
+        <ScheduleRunsPanel
+          ref={panelRef}
+          schedule={schedule}
+          runs={runs}
+          viewedRun={viewedRun}
+          versionNames={versionNames}
+          onRunHistory={showRunHistory}
+          onBackToTest={backToTest}
+          {...testRunProps}
+        />
+        <ScheduleRunsSection
+          ref={runsSectionRef}
+          runs={runs}
+          versionNames={versionNames}
+          selectedRunId={viewedRun?.id}
+          onOpen={openRun}
+          expanded={runsExpanded}
+          onExpandedChange={setRunsExpanded}
+          announcement={announcement}
+          runNotFound={runNotFound}
+        />
+      </Box>
     ),
-    [schedule, runs, viewedRun, versionNames, panelRef, showRunHistory, backToTest],
+    [
+      schedule,
+      runs,
+      viewedRun,
+      versionNames,
+      panelRef,
+      showRunHistory,
+      backToTest,
+      runsSectionRef,
+      openRun,
+      runsExpanded,
+      setRunsExpanded,
+      announcement,
+      runNotFound,
+    ],
   );
 
   if (isError)
@@ -124,17 +167,6 @@ const ScheduleDetailPage = props => {
       // Nested in an editor, the crumbs name the agent or pipeline, not the schedule
       entityName={entityType ? undefined : schedule.name}
       sidePanel={sidePanel}
-      afterForm={
-        <ScheduleRunsSection
-          ref={runsView.runsSectionRef}
-          runs={runs}
-          versionNames={versionNames}
-          selectedRunId={viewedRun?.id}
-          onOpen={runsView.openRun}
-          expanded={runsView.runsExpanded}
-          onExpandedChange={runsView.setRunsExpanded}
-        />
-      }
       onSubmit={onSubmit}
       onSaved={onSaved}
       onTestRun={onTestRun}
@@ -167,4 +199,16 @@ export default ScheduleDetailPage;
 const styles = {
   notice: { marginTop: '50px', minHeight: 'calc(100vh - 191px)' },
   loader: { display: 'flex', justifyContent: 'center', padding: '3rem' },
+  // The panel and the Runs section stacked (CR-21). From xl, in a window at least 46 rem (736 px) high, the
+  // block stays in view: 100dvh minus the page header, its top margin and the bottom margin (6 rem).
+  rightBlock: ({ breakpoints }) => ({
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+    [`${breakpoints.up('xl')} and (min-height: 46rem)`]: {
+      position: 'sticky',
+      top: '0.75rem',
+      maxHeight: 'calc(100dvh - 6rem)',
+    },
+  }),
 };

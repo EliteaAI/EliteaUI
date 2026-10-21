@@ -933,15 +933,21 @@ describe('ScheduleForm EL-7011', () => {
       });
     });
 
-    it('EL-7011 owner CR 2026-10-21 puts the Runs section in the form column, after the form and outside it', () => {
-      renderEdit({ afterForm: <div data-testid="runs-section" /> });
+    it('R4.1 EL-7011 CR-21 renders what sidePanel returns, the panel and the Runs section, in the right column', () => {
+      renderEdit({
+        sidePanel: () => (
+          <>
+            <div data-testid="side-panel" />
+            <div data-testid="runs-section" />
+          </>
+        ),
+      });
 
       const runs = screen.getByTestId('runs-section');
-      const formElement = screen.getByLabelText('Name').closest('form');
       expect(runs.closest('form')).toBeNull();
-      expect(formElement.parentElement).toContainElement(runs);
-      expect(formElement.compareDocumentPosition(runs) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-      expect(formElement.parentElement).toHaveClass('MuiGrid-grid-xs-12', 'MuiGrid-grid-xl-6');
+      expect(runs.parentElement).toBe(screen.getByTestId('side-panel').parentElement);
+      expect(runs.parentElement).toHaveClass('MuiGrid-grid-xs-12', 'MuiGrid-grid-xl-6');
+      expect(screen.getByLabelText('Name').closest('form').parentElement).not.toContainElement(runs);
     });
 
     it('R3.1 R3.2 EL-7011 saves a changed form first, then starts the run', async () => {
