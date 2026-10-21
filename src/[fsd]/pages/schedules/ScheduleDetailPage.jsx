@@ -22,6 +22,8 @@ import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { ScheduleSettingsSection, StopOnDateField } from '@/[fsd]/shared/ui/schedule';
 import RouteDefinitions from '@/routes';
 
+import ScheduleDetailMenu from './ScheduleDetailMenu';
+
 const { convertCronTimezone, getBrowserTimezone } = ScheduleHelpers;
 
 // The Page404 layout, with the way back to the Schedules list instead of Home (R1.2)
@@ -167,6 +169,13 @@ const ScheduleDetailPage = props => {
       // Nested in an editor, the crumbs name the agent or pipeline, not the schedule
       entityName={entityType ? undefined : schedule.name}
       sidePanel={sidePanel}
+      // Export and Import of this schedule (CR-16)
+      headerActions={
+        <ScheduleDetailMenu
+          schedule={schedule}
+          projectId={projectId}
+        />
+      }
       onSubmit={onSubmit}
       onSaved={onSaved}
       onTestRun={onTestRun}
