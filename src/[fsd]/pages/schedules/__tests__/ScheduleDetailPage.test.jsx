@@ -200,9 +200,22 @@ describe('ScheduleDetailPage EL-7011', () => {
     // jsdom does not match media queries, so the sticky rule is read from the emitted CSS
     const css = [...document.querySelectorAll('style')].map(tag => tag.textContent).join('');
     expect(css).toMatch(
-      /@media \(min-width:1536px\) and \(min-height: ?46rem\)\{[^}]*position:sticky[^}]*max-height:calc\(100dvh - 6rem\)/,
+      /@media \(min-width:1536px\) and \(min-height: ?46rem\)\{[^}]*position:sticky[^}]*height:calc\(100dvh - 6rem\)/,
     );
     expect(getComputedStyle(block).position).not.toBe('sticky');
+  });
+
+  it('CR-21 R4.1 EL-7011 gives the block the full window height minus 6 rem from xl, so the runs card is 40 % of it', () => {
+    mocks.query = { currentData: schedule };
+    render(<ScheduleDetailPage />);
+    screen.getByTestId('schedule-right-block');
+
+    const css = [...document.querySelectorAll('style')].map(tag => tag.textContent).join('');
+    const sticky = css.match(
+      /@media \(min-width:1536px\) and \(min-height: ?46rem\)\{[^}]*position:sticky[^}]*\}/,
+    )[0];
+    // A fixed height, not only a maximum: with max-height alone the block shrinks to its content (live check)
+    expect(sticky).toMatch(/[{;]height:calc\(100dvh - 6rem\)/);
   });
 
   it('CR-16 R4.3 EL-7011 puts the schedule menu in the form header', () => {

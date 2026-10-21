@@ -14,13 +14,32 @@ export const RUN_SORT_OPTIONS = [
   { value: 'newest', label: 'Newest' },
   { value: 'oldest', label: 'Oldest' },
   { value: 'status', label: 'Status' },
+  { value: 'trigger', label: 'Trigger' },
+  { value: 'duration', label: 'Duration' },
+  { value: 'version', label: 'Version' },
 ];
 
-const SORTS = {
-  newest: (a, b) => compareRunTimestamp(b.started_at, a.started_at),
-  oldest: (a, b) => compareRunTimestamp(a.started_at, b.started_at),
-  status: (a, b) => toRunStatusLabel(a.status).localeCompare(toRunStatusLabel(b.status)),
+const newestFirst = (a, b) => compareRunTimestamp(b.started_at, a.started_at);
+// A missing value sorts after every value; equal values keep the newest run first
+const byKey = (key, compare) => (a, b) => {
+  const left = key(a);
+  const right = key(b);
+  if (left == null || right == null) return (left == null) - (right == null) || newestFirst(a, b);
+  return compare(left, right) || newestFirst(a, b);
 };
+const byText = (left, right) => left.localeCompare(right, undefined, { numeric: true });
+
+const sortsFor = versionNames => ({
+  newest: newestFirst,
+  oldest: (a, b) => compareRunTimestamp(a.started_at, b.started_at),
+  status: byKey(run => toRunStatusLabel(run.status), byText),
+  trigger: byKey(run => run.trigger, byText),
+  duration: byKey(
+    run => run.duration_ms,
+    (left, right) => right - left,
+  ),
+  version: byKey(run => versionNames[run.version_id], byText),
+});
 
 const versionOf = (run, versionNames) => versionNames[run.version_id] ?? NO_VALUE;
 
@@ -29,7 +48,10 @@ const versionOf = (run, versionNames) => versionNames[run.version_id] ?? NO_VALU
 const ScheduleRunList = memo(props => {
   const { runs, versionNames = {}, selectedRunId, sort = 'newest', onOpen } = props;
 
-  const sortedRuns = useMemo(() => [...runs].sort(SORTS[sort] ?? SORTS.newest), [runs, sort]);
+  const sortedRuns = useMemo(() => {
+    const sorts = sortsFor(versionNames);
+    return [...runs].sort(sorts[sort] ?? sorts.newest);
+  }, [runs, sort, versionNames]);
 
   const styles = scheduleRunListStyles();
 

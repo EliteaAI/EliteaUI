@@ -140,6 +140,21 @@ describe('ScheduleRunList EL-7011 US-32 CR-21', () => {
     expect(rows().map(row => rowButton(row).dataset.runId)).toEqual(['1', '3']);
   });
 
+  it('CR-21 sorts by trigger, by duration (longest first) and by version name; ties and gaps go newest first', () => {
+    const runs = [withConversation, withoutConversation, manual, waitingRun];
+    renderList(runs, { sort: 'trigger' });
+    expect(rows().map(row => rowButton(row).dataset.runId)).toEqual(['4', '1', '3', '2']);
+    cleanup();
+
+    renderList(runs, { sort: 'duration' });
+    expect(rows().map(row => rowButton(row).dataset.runId)).toEqual(['1', '2', '4', '3']);
+    cleanup();
+
+    renderList(runs, { sort: 'version' });
+    expect(rows().map(row => cell(row, 'version').textContent)).toEqual(['v2', 'v3', '–', '–']);
+    expect(rows().map(row => rowButton(row).dataset.runId)).toEqual(['2', '1', '4', '3']);
+  });
+
   it('CR-21 sorts newest first, oldest first, or by status', () => {
     renderList([withConversation, withoutConversation, manual], { sort: 'oldest' });
     expect(rows().map(row => cell(row, 'trigger').textContent)).toEqual(['manual', 'cron', 'test']);

@@ -78,7 +78,7 @@ describe('ScheduleRunsSection EL-7011 CR-21', () => {
     expect(onExpandedChange).toHaveBeenCalledWith(true);
   });
 
-  it('CR-21 sorts the rows with the Sort select: Newest, Oldest, Status', () => {
+  it('CR-21 sorts the rows with the Sort select: Newest, Oldest, Status, Trigger, Duration, Version', () => {
     const older = { ...run, id: 2, trigger: 'test', status: 'failed', started_at: '2026-10-20T09:00:00Z' };
     renderSection({ runs: [older, run] });
     const triggers = () => screen.getAllByTestId('schedule-run-trigger').map(chip => chip.textContent);
@@ -89,6 +89,9 @@ describe('ScheduleRunsSection EL-7011 CR-21', () => {
       'Newest',
       'Oldest',
       'Status',
+      'Trigger',
+      'Duration',
+      'Version',
     ]);
     fireEvent.click(screen.getByRole('option', { name: 'Oldest' }));
     expect(triggers()).toEqual(['test', 'cron']);
