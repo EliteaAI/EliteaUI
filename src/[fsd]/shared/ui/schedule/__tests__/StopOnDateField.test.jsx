@@ -237,4 +237,12 @@ describe('EL-7011 R3 StopOnDateField', () => {
     expect(onChange).toHaveBeenLastCalledWith(null);
     expect(screen.getByRole('checkbox', { name: LABEL })).toBeChecked();
   });
+
+  it('R3.1 BUG-33 EL-7011: the underlined field does not stretch across the form width', () => {
+    render(<Harness initialValue={FUTURE_DATE} />);
+
+    const field = screen.getByText('Stop date:').parentElement;
+
+    expect(getComputedStyle(field).alignSelf).toBe('flex-start');
+  });
 });
