@@ -254,16 +254,6 @@ describe('ScheduleForm EL-7011', () => {
     expect(modalProps.formik.setValues).toBeTypeOf('function');
   });
 
-  it('US-35 browser walk bug 2 shows the locked entity as an option before the list loads it', () => {
-    listQuery.mockReturnValue({ data: undefined, isFetching: true });
-    renderForm({ initialValues: { ...INITIAL, application_id: 7 }, lockedEntity: { type: 'agent', id: 7 } });
-
-    expect(selectProps.disabled).toBe(true);
-    expect(selectProps.options.find(option => option.value === selectProps.value)?.label).toBe(
-      'Digest agent',
-    );
-  });
-
   it.each(['/agents/all/12/schedules/create', '/pipelines/all/9/schedules/4', '/settings/schedules/4'])(
     'US-35 owner bug 4 shows no selected-tab indicator in the header of %s, which has no tabs',
     path => {
@@ -377,16 +367,15 @@ describe('ScheduleForm EL-7011', () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
-  it('R5.1 R5.2 EL-7011 locks Type and the entity from the URL and keeps the rest editable', () => {
+  it('R5.1 R5.2 EL-7011 hides Type and the entity of the URL and keeps Run mode editable', () => {
     renderForm({
       initialValues: { ...INITIAL, type: 'pipeline', run_mode: 'entry_point', application_id: 9 },
       lockedEntity: { type: 'pipeline', id: 9 },
     });
 
-    expect(screen.getByTestId('schedule-type-agent')).toBeDisabled();
-    expect(selectProps.disabled).toBe(true);
+    expect(screen.queryByTestId('schedule-type')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('entity-select')).not.toBeInTheDocument();
     expect(screen.getByTestId('schedule-run-mode-prompt')).toBeEnabled();
-    expect(versionProps.disabled).toBeFalsy();
   });
 
   it('R5.3 EL-7011 unlocks and shows a banner when the URL entity has another type', async () => {
@@ -398,6 +387,8 @@ describe('ScheduleForm EL-7011', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('not available');
     expect(selectProps.disabled).toBeFalsy();
     expect(selectProps.value).toBe('');
+    // CR-19: the failed lock brings back the full form with its WHAT TO RUN section
+    expect(screen.getAllByRole('heading').map(h => h.textContent)).toContain('WHAT TO RUN');
   });
 
   it('R6.1 EL-7011 sends the create body on Save', async () => {
@@ -515,7 +506,7 @@ describe('ScheduleForm EL-7011', () => {
   it('R1.3 R3.4 EL-7011 the default version of the URL entity keeps the form clean', async () => {
     renderForm({ initialValues: { ...INITIAL, application_id: 7 }, lockedEntity: { type: 'agent', id: 7 } });
 
-    await waitFor(() => expect(versionProps.value).toBe(71));
+    await waitFor(() => expect(checkRisk).toHaveBeenCalled());
     expect(navBlocker).toHaveBeenLastCalledWith({ blockCondition: false });
   });
 
@@ -757,25 +748,24 @@ describe('ScheduleForm EL-7011', () => {
         lockedEntity: { type: 'agent', id: '7' },
       });
 
-    it('TC-US35-08 R4.1 locks Type Agent and this agent and presets the default version', async () => {
-      renderFromEditor();
+    it('TC-US35-08 R4.1 EL-7011 locks Type Agent and this agent and presets the default version', async () => {
+      const { onSubmit } = renderFromEditor();
 
-      expect(screen.getByTestId('schedule-type-agent')).toHaveAttribute('aria-pressed', 'true');
-      expect(screen.getByTestId('schedule-type-agent')).toBeDisabled();
-      expect(screen.getByTestId('schedule-type-pipeline')).toBeDisabled();
-      expect(selectProps).toMatchObject({ value: '7', disabled: true });
-      await waitFor(() => expect(versionProps.value).toBe(71));
-      expect(versionProps.disabled).toBe(false);
+      expect(screen.queryByTestId('schedule-type')).not.toBeInTheDocument();
+      typePrompt('Hi');
+      await save();
+
+      await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+      expect(onSubmit.mock.calls[0][0]).toMatchObject({
+        entity_type: 'agent',
+        application_id: '7',
+        version_id: 71,
+      });
     });
 
-    it('TC-US35-16 TC-US35-17 R4.2 keeps Version, Prompt and Variables editable and saves them', async () => {
+    it('TC-US35-16 TC-US35-17 R4.2 keeps Prompt and Variables editable and saves them', async () => {
       const { onSubmit } = renderFromEditor();
-      await waitFor(() => expect(versionProps.value).toBe(71));
 
-      // A block body: the promise of setFieldValue would turn act async and leave it open
-      act(() => {
-        versionProps.onChange(70);
-      });
       typePrompt('Digest for {{team}} in {{room}}');
       expect(screen.getByTestId('variables')).toHaveTextContent('room,team');
       await save();
@@ -784,7 +774,7 @@ describe('ScheduleForm EL-7011', () => {
       expect(onSubmit.mock.calls[0][0]).toMatchObject({
         entity_type: 'agent',
         application_id: '7',
-        version_id: 70,
+        version_id: 71,
         run_mode: null,
         prompt: 'Digest for {{team}} in {{room}}',
         variables: [
@@ -811,18 +801,15 @@ describe('ScheduleForm EL-7011', () => {
         lockedEntity: { type: 'pipeline', id: '9' },
       });
 
-    it('TC-US36-14 R4.1 locks Type Pipeline and this pipeline and presets the version', async () => {
+    it('TC-US36-14 R4.1 EL-7011 hides Type and this pipeline', () => {
       renderFromPipeline();
 
-      expect(screen.getByTestId('schedule-type-pipeline')).toHaveAttribute('aria-pressed', 'true');
-      expect(screen.getByTestId('schedule-type-pipeline')).toBeDisabled();
-      expect(selectProps).toMatchObject({ label: 'Pipeline', value: '9', disabled: true });
-      await waitFor(() => expect(versionProps.value).toBe(90));
+      expect(screen.queryByTestId('schedule-type')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('entity-select')).not.toBeInTheDocument();
     });
 
     it('TC-US36-15 R4.2 saves Entry point with no prompt by default', async () => {
       const { onSubmit } = renderFromPipeline();
-      await waitFor(() => expect(versionProps.value).toBe(90));
 
       expect(screen.getByTestId('schedule-run-mode-entry_point')).toHaveAttribute('aria-pressed', 'true');
       expect(screen.queryByLabelText(/Prompt/)).not.toBeInTheDocument();
@@ -832,6 +819,7 @@ describe('ScheduleForm EL-7011', () => {
       expect(onSubmit.mock.calls[0][0]).toMatchObject({
         entity_type: 'pipeline',
         run_mode: 'entry_point',
+        version_id: 90,
         prompt: null,
         variables: [],
       });
@@ -847,6 +835,70 @@ describe('ScheduleForm EL-7011', () => {
 
       typePrompt('Report for {{region}}');
       expect(screen.getByTestId('variables')).toHaveTextContent('region');
+    });
+  });
+
+  describe('form nested in an editor (CR-19)', () => {
+    const renderLocked = (type = 'agent', extra = {}) =>
+      renderForm({
+        initialValues:
+          type === 'agent'
+            ? { ...INITIAL, application_id: '7' }
+            : { ...INITIAL, type, run_mode: 'entry_point', application_id: '9' },
+        lockedEntity: { type, id: type === 'agent' ? '7' : '9', versionId: type === 'agent' ? 70 : 90 },
+        ...extra,
+      });
+
+    // The section headers are siblings of their bodies, so "under General" means between its header and the next
+    const expectUnderGeneral = element => {
+      const after = (a, b) => !!(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+      expect(after(screen.getByTestId('schedule-section-general'), element)).toBe(true);
+      expect(after(element, screen.getByTestId('schedule-section-settings'))).toBe(true);
+    };
+
+    it('TC-US58-14 R5.3 EL-7011 hides the type switch, the entity, the version and WHAT TO RUN', () => {
+      renderLocked();
+
+      expect(screen.getAllByRole('heading').map(h => h.textContent)).toEqual([
+        'GENERAL',
+        'SCHEDULE SETTINGS',
+      ]);
+      expect(screen.queryByTestId('schedule-type')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('entity-select')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('version-select')).not.toBeInTheDocument();
+    });
+
+    it('TC-US58-15 R5.4 EL-7011 shows Prompt and Variables under General for an agent', () => {
+      renderLocked();
+
+      expectUnderGeneral(screen.getByLabelText(/Prompt/));
+      expectUnderGeneral(screen.getByTestId('variables'));
+      expect(screen.queryByTestId('schedule-run-mode')).not.toBeInTheDocument();
+    });
+
+    it('TC-US58-15 R5.4 EL-7011 shows Run mode under General for a pipeline', () => {
+      renderLocked('pipeline');
+
+      expectUnderGeneral(screen.getByTestId('schedule-run-mode'));
+    });
+
+    it('TC-US58-14 R5.3 EL-7011 saves the version of the editor, not the default version', async () => {
+      const { onSubmit } = renderLocked();
+
+      typePrompt('Digest');
+      await save();
+
+      await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+      expect(onSubmit.mock.calls[0][0]).toMatchObject({ application_id: '7', version_id: 70 });
+    });
+
+    it('TC-US58-16 R5.6 EL-7011 keeps every selector without a locked entity', () => {
+      renderForm();
+
+      expect(screen.getByTestId('schedule-type')).toBeInTheDocument();
+      expect(screen.getByTestId('entity-select')).toBeInTheDocument();
+      expect(screen.getByTestId('version-select')).toBeInTheDocument();
+      expect(screen.getByTestId('schedule-section-what-to-run')).toBeInTheDocument();
     });
   });
 

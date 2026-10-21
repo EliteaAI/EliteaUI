@@ -1,6 +1,6 @@
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useState } from 'react';
 
-import { Box, Tooltip, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import {
   ScheduleEnabledSwitch,
@@ -13,25 +13,39 @@ import {
   getBrowserTimezone,
   getCronSummaryInBrowserTimezone,
 } from '@/[fsd]/shared/lib/helpers/schedule.helpers';
-import ClockIcon from '@/assets/clock.svg?react';
+import { useDeleteConfirmationDisabled } from '@/[fsd]/shared/lib/hooks/useDeleteConfirmationDisabled.hooks';
+import { Button, Modal } from '@/[fsd]/shared/ui';
+import DeleteIcon from '@/components/Icons/DeleteIcon';
+import EditIcon from '@/components/Icons/EditIcon';
 
-const WIDE = '@container (min-width: 26rem)';
+import EntityScheduleCardLine from './EntityScheduleCardLine';
+
+const WIDE = '@container (min-width: 30rem)';
 
 const EntityScheduleCard = memo(props => {
   const { row, entityType, currentUserId, onOpenForm, onOpenRunHistory } = props;
   const actions = useScheduleRowActions(row);
+  const skipConfirmation = useDeleteConfirmationDisabled();
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const onEdit = useCallback(() => onOpenForm(row.id), [onOpenForm, row.id]);
   const onHistory = useCallback(() => onOpenRunHistory(row.id), [onOpenRunHistory, row.id]);
+  const onDeleteClick = useCallback(
+    () => (skipConfirmation ? actions.onDelete() : setIsDeleteOpen(true)),
+    [skipConfirmation, actions],
+  );
+  const closeDelete = useCallback(() => setIsDeleteOpen(false), []);
+  const confirmDelete = useCallback(() => {
+    setIsDeleteOpen(false);
+    actions.onDelete();
+  }, [actions]);
 
+  const allowed = row.allowed_actions;
+  const rule = getCronSummaryInBrowserTimezone(row.cron, row.timezone);
+  const timezone = getBrowserTimezone() ?? row.timezone;
+  const lastRun = row.last_run ? formatRunStarted(row.last_run) : 'Never run';
+  const nextRun = row.enabled ? (row.next_run && formatRunStarted(row.next_run)) || '-' : 'Paused';
   // The list API sends only the user's own rows to a non-admin, so another owner shows for admins only
-  const ownerLabel = row.owner?.id === currentUserId ? 'You' : row.owner?.name;
-  const nextLabel = row.enabled ? row.next_run && `Next: ${formatRunStarted(row.next_run)}` : 'Paused';
-  // The chip and the Runs table show the last run, so the text leaves it out (owner bug 2026-10-21)
-  const rule = [getCronSummaryInBrowserTimezone(row.cron, row.timezone), getBrowserTimezone() ?? row.timezone]
-    .filter(Boolean)
-    .join(' · ');
-  const next = [nextLabel, ownerLabel].filter(Boolean).join(' · ');
-  const meta = [rule, next].filter(Boolean).join(' · ');
+  const owner = row.owner?.id === currentUserId ? 'You' : row.owner?.name;
   const testId = `${entityType}-schedule-card`;
 
   const styles = entityScheduleCardStyles();
@@ -39,40 +53,78 @@ const EntityScheduleCard = memo(props => {
   return (
     <Box
       role="group"
-      aria-label={`${row.name}, ${meta}`}
+      aria-label={row.name}
       sx={styles.card}
       data-testid={`${testId}-${row.id}`}
     >
-      <Box
-        component={ClockIcon}
-        sx={styles.icon}
-        aria-hidden
+      <EntityScheduleCardLine
+        area="title"
+        text={rule}
+        testId={`${testId}-rule-${row.id}`}
+        isTitle
       />
-      <Tooltip
-        title={row.name}
-        placement="top"
+      <Typography
+        component="span"
+        sx={styles.timezoneHint}
       >
-        <Typography
-          variant="labelMedium"
-          tabIndex={0}
-          sx={[styles.line, styles.name]}
-        >
-          {row.name}
-        </Typography>
-      </Tooltip>
-      {/* The last-run chip of the Runs panel (R2.6) */}
-      {row.last_run_status && (
-        <Box sx={styles.chip}>
-          <ScheduleRunStatusChip status={row.last_run_status} />
-        </Box>
+        {`Shown: ${timezone}`}
+      </Typography>
+      <EntityScheduleCardLine
+        area="last"
+        label="Last run"
+        text={lastRun}
+        chip={
+          row.last_run_status && (
+            <ScheduleRunStatusChip
+              status={row.last_run_status}
+              variant="text"
+            />
+          )
+        }
+      />
+      <EntityScheduleCardLine
+        area="next"
+        label="Next run"
+        text={nextRun}
+        testId={`${testId}-next-${row.id}`}
+      />
+      <EntityScheduleCardLine
+        area="name"
+        label="Name"
+        text={row.name}
+      />
+      {owner && (
+        <EntityScheduleCardLine
+          area="owner"
+          label="Owner"
+          text={owner}
+        />
       )}
-      <Box sx={styles.switch}>
+      <Box sx={styles.footer}>
+        {allowed?.includes('edit') && (
+          <Button.BaseBtn
+            variant={Button.BUTTON_VARIANTS.tertiary}
+            size="small"
+            aria-label={`Edit ${row.name}`}
+            disabled={actions.isBusy}
+            startIcon={<EditIcon fill="currentColor" />}
+            onClick={onEdit}
+          />
+        )}
+        {allowed?.includes('delete') && (
+          <Button.BaseBtn
+            variant={Button.BUTTON_VARIANTS.tertiary}
+            size="small"
+            aria-label={`Delete ${row.name}`}
+            disabled={actions.isBusy}
+            startIcon={<DeleteIcon fill="currentColor" />}
+            onClick={onDeleteClick}
+          />
+        )}
         <ScheduleEnabledSwitch
           row={row}
           testId={`${testId}-toggle-${row.id}`}
         />
-      </Box>
-      <Box sx={styles.menu}>
         <ScheduleRowActions
           row={row}
           {...actions}
@@ -82,32 +134,15 @@ const EntityScheduleCard = memo(props => {
           hideChangeOwner
         />
       </Box>
-      <Tooltip
-        title={rule}
-        placement="top"
-      >
-        <Typography
-          variant="bodySmall"
-          color="text.secondary"
-          sx={[styles.line, styles.rule]}
-          data-testid={`${testId}-rule-${row.id}`}
-        >
-          {rule}
-        </Typography>
-      </Tooltip>
-      <Tooltip
-        title={next}
-        placement="top"
-      >
-        <Typography
-          variant="bodySmall"
-          color="text.secondary"
-          sx={[styles.line, styles.next]}
-          data-testid={`${testId}-next-${row.id}`}
-        >
-          {next}
-        </Typography>
-      </Tooltip>
+      {isDeleteOpen && (
+        <Modal.DeleteEntityModal
+          open
+          name={row.name}
+          shouldRequestInputName
+          onClose={closeDelete}
+          onConfirm={confirmDelete}
+        />
+      )}
     </Box>
   );
 });
@@ -116,75 +151,49 @@ EntityScheduleCard.displayName = 'EntityScheduleCard';
 
 /** @type {MuiSx} */
 const entityScheduleCardStyles = () => ({
-  // A container: below 26 rem three lines (name, chip and rule, next run), from 26 rem the chip joins
-  // the first line and the meta is one line. One set of nodes keeps the tab order name, switch, menu.
+  // The toolkit Schedule card look. The section is the container: below 30 rem each item has its own line
+  // and the actions sit in a right-aligned footer; from 30 rem the lines use two columns, actions at the right.
   card: ({ palette }) => ({
     containerType: 'inline-size',
     display: 'grid',
-    gridTemplateColumns: '1rem auto minmax(0, max-content) minmax(0, 1fr) auto auto auto',
+    gridTemplateColumns: 'minmax(0, 1fr)',
     gridTemplateAreas: `
-      "icon name name name name switch menu"
-      ".    chip rule rule rule rule   rule"
-      ".    next next next next next   next"`,
+      "title"
+      "shown"
+      "last"
+      "next"
+      "name"
+      "owner"
+      "footer"`,
     alignItems: 'center',
     rowGap: '0.25rem',
-    padding: '0.75rem 1rem',
+    padding: '0.5rem 1rem',
     borderRadius: '0.5rem',
-    border: `0.0625rem solid ${palette.border.lines}`,
-    backgroundColor: palette.background.default.secondary,
+    backgroundColor: palette.background.surface.interactive.default,
     [WIDE]: {
+      gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr) auto',
       gridTemplateAreas: `
-        "icon name name name chip switch menu"
-        ".    rule rule next next next   next"`,
+        "title title footer"
+        "shown shown footer"
+        "last  next  footer"
+        "name  owner footer"`,
+      columnGap: '1rem',
     },
   }),
-  icon: ({ palette }) => ({
-    gridArea: 'icon',
-    width: '1rem',
-    height: '1rem',
-    color: palette.icon.default,
+  // The timezoneHint of the toolkit Schedule card (RunIndexScheduleContent): same size, italic, wraps
+  timezoneHint: ({ palette }) => ({
+    gridArea: 'shown',
+    fontStyle: 'italic',
+    fontSize: '0.675rem',
+    color: palette.icon.secondary,
+    whiteSpace: 'pre-line',
   }),
-  line: {
-    minWidth: 0,
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-  },
-  name: {
-    gridArea: 'name',
-    marginLeft: '0.5rem',
-  },
-  chip: {
-    gridArea: 'chip',
+  footer: {
+    gridArea: 'footer',
+    justifySelf: 'end',
     display: 'flex',
-    marginLeft: '0.5rem',
-    [WIDE]: {
-      marginRight: '0.5rem',
-    },
-  },
-  switch: {
-    gridArea: 'switch',
-    display: 'flex',
-    marginLeft: '0.5rem',
-  },
-  menu: {
-    gridArea: 'menu',
-    display: 'flex',
-    marginLeft: '0.25rem',
-  },
-  rule: {
-    gridArea: 'rule',
-    marginLeft: '0.5rem',
-  },
-  next: {
-    gridArea: 'next',
-    marginLeft: '0.5rem',
-    [WIDE]: {
-      marginLeft: 0,
-      '&::before': {
-        content: '"\\00a0·\\00a0"',
-      },
-    },
+    alignItems: 'center',
+    gap: '0.5rem',
   },
 });
 
