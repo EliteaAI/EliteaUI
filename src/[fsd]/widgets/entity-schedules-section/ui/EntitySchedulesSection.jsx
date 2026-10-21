@@ -66,7 +66,7 @@ const EntitySchedulesSection = memo(props => {
             {canCreate && (
               <Button.BaseBtn
                 variant={BUTTON_VARIANTS.elitea}
-                color={BUTTON_COLORS.secondary}
+                color={BUTTON_COLORS.primary}
                 onClick={onAdd}
                 sx={styles.noWrap}
                 data-testid={`${testId}-add`}

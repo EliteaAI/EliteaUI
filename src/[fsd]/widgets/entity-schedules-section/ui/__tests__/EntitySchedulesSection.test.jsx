@@ -119,6 +119,15 @@ describe('EntitySchedulesSection EL-7011', () => {
       );
     });
 
+    it('US-35 owner CR "+ Schedule" is the primary elitea button, as the editor Save is', () => {
+      renderSection();
+
+      expect(screen.getByTestId('agent-schedules-section-add')).toHaveClass(
+        'MuiButton-elitea',
+        'MuiButton-colorPrimary',
+      );
+    });
+
     it('TC-US35-18 R3.6 "Open all in Schedules" passes the agent name for the entity chip', () => {
       renderSection({ entityName: 'Digest bot' });
 
