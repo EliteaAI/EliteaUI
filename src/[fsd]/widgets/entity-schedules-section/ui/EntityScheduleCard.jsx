@@ -1,6 +1,6 @@
 import { memo, useCallback, useState } from 'react';
 
-import { Box, Tooltip, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import {
   ScheduleEnabledSwitch,
@@ -18,45 +18,9 @@ import { Button, Modal } from '@/[fsd]/shared/ui';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import EditIcon from '@/components/Icons/EditIcon';
 
+import EntityScheduleCardLine from './EntityScheduleCardLine';
+
 const WIDE = '@container (min-width: 30rem)';
-
-// One labelled line: the value truncates with a tooltip, the label stays whole
-const CardLine = memo(props => {
-  const { label, area, testId, focusable, isTitle, text, chip } = props;
-  const styles = entityScheduleCardStyles();
-
-  return (
-    <Box sx={[styles.lineRow, { gridArea: area }]}>
-      {label && (
-        <Typography
-          variant="bodySmall"
-          color="text.secondary"
-          component="span"
-          sx={styles.label}
-        >
-          {`${label}: `}
-        </Typography>
-      )}
-      <Tooltip
-        title={text}
-        placement="top"
-      >
-        <Typography
-          variant={isTitle ? 'labelMedium' : 'bodySmall'}
-          component="span"
-          tabIndex={focusable ? 0 : undefined}
-          sx={[styles.line, isTitle && styles.title]}
-          data-testid={testId}
-        >
-          {text}
-        </Typography>
-      </Tooltip>
-      {chip}
-    </Box>
-  );
-});
-
-CardLine.displayName = 'CardLine';
 
 const EntityScheduleCard = memo(props => {
   const { row, entityType, currentUserId, onOpenForm, onOpenRunHistory } = props;
@@ -93,18 +57,19 @@ const EntityScheduleCard = memo(props => {
       sx={styles.card}
       data-testid={`${testId}-${row.id}`}
     >
-      <CardLine
+      <EntityScheduleCardLine
         area="title"
         text={rule}
         testId={`${testId}-rule-${row.id}`}
         isTitle
       />
-      <CardLine
-        area="shown"
-        label="Shown"
-        text={timezone}
-      />
-      <CardLine
+      <Typography
+        component="span"
+        sx={styles.timezoneHint}
+      >
+        {`Shown: ${timezone}`}
+      </Typography>
+      <EntityScheduleCardLine
         area="last"
         label="Last run"
         text={lastRun}
@@ -117,23 +82,24 @@ const EntityScheduleCard = memo(props => {
           )
         }
       />
-      <CardLine
+      <EntityScheduleCardLine
         area="next"
         label="Next run"
         text={nextRun}
         testId={`${testId}-next-${row.id}`}
       />
-      <CardLine
+      <EntityScheduleCardLine
         area="name"
         label="Name"
         text={row.name}
-        focusable
       />
-      <CardLine
-        area="owner"
-        label="Owner"
-        text={owner}
-      />
+      {owner && (
+        <EntityScheduleCardLine
+          area="owner"
+          label="Owner"
+          text={owner}
+        />
+      )}
       <Box sx={styles.footer}>
         {allowed?.includes('edit') && (
           <Button.BaseBtn
@@ -185,8 +151,8 @@ EntityScheduleCard.displayName = 'EntityScheduleCard';
 
 /** @type {MuiSx} */
 const entityScheduleCardStyles = () => ({
-  // A container: below 30 rem each item has its own line and the actions sit in a right-aligned footer;
-  // from 30 rem the lines use two columns and the actions sit at the right.
+  // The toolkit Schedule card look. The section is the container: below 30 rem each item has its own line
+  // and the actions sit in a right-aligned footer; from 30 rem the lines use two columns, actions at the right.
   card: ({ palette }) => ({
     containerType: 'inline-size',
     display: 'grid',
@@ -203,31 +169,24 @@ const entityScheduleCardStyles = () => ({
     rowGap: '0.25rem',
     padding: '0.5rem 1rem',
     borderRadius: '0.5rem',
-    border: `0.0625rem solid ${palette.border.lines}`,
-    backgroundColor: palette.background.default.secondary,
+    backgroundColor: palette.background.surface.interactive.default,
     [WIDE]: {
       gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr) auto',
       gridTemplateAreas: `
-        "title shown footer"
+        "title title footer"
+        "shown shown footer"
         "last  next  footer"
         "name  owner footer"`,
       columnGap: '1rem',
     },
   }),
-  lineRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-    minWidth: 0,
-  },
-  label: { flexShrink: 0 },
-  line: {
-    minWidth: 0,
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-  },
-  title: { fontWeight: 600 },
+  timezoneHint: ({ palette }) => ({
+    gridArea: 'shown',
+    fontStyle: 'italic',
+    fontSize: '0.675rem',
+    color: palette.icon.secondary,
+    whiteSpace: 'pre-line',
+  }),
   footer: {
     gridArea: 'footer',
     justifySelf: 'end',

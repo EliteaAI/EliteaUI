@@ -131,6 +131,12 @@ describe('EntityScheduleCard EL-7011 US-35', () => {
     expect(areas).toMatch(/footer|actions/);
   });
 
+  it('TC-US58-06 R2.1 EL-7011 CR-18 leaves out the Owner line when the row has no owner name', () => {
+    renderCard({ owner: { id: 99 } });
+
+    expect(cardText()).not.toContain('Owner:');
+  });
+
   it('owner bug 2026-10-21 every line is one line with an ellipsis', () => {
     renderCard();
 
@@ -146,10 +152,12 @@ describe('EntityScheduleCard EL-7011 US-35', () => {
       return selector === ':focus-visible' ? this === document.activeElement : matches.call(this, selector);
     });
     renderCard({ name: 'Sched Translation of release notes to German' });
+    const name = screen.getByText('Sched Translation of release notes to German');
 
-    await userEvent.tab();
+    // R2.4: every truncating value is a tab stop; the rule, Last run and Next run come before the name
+    for (let step = 0; step < 4; step += 1) await userEvent.tab();
 
-    expect(screen.getByText('Sched Translation of release notes to German')).toHaveFocus();
+    expect(name).toHaveFocus();
     expect(await screen.findByRole('tooltip')).toHaveTextContent(
       'Sched Translation of release notes to German',
     );
