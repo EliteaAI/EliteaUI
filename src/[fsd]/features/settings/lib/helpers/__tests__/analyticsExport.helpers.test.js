@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ExcelFormats, exportToExcel } from '@/[fsd]/shared/lib/utils';
 
@@ -478,7 +478,7 @@ describe('buildAgentDetailSheet', () => {
 
     expect(sectionOf(sheet, 'Versions').rows[0].version_name).toBe('Unknown version');
     expect(sectionOf(sheet, 'Models').rows[0].display_name).toBe('gpt-4o');
-    expect(sectionOf(sheet, 'Trigger Sources').rows[0].trigger_source).toBe('Manual');
+    expect(sectionOf(sheet, 'Trigger Sources').rows[0].trigger_source).toBe('Manual (legacy)');
     expect(sectionOf(sheet, 'Users').rows[0].user_email).toBe('User 11');
   });
 
@@ -1078,5 +1078,39 @@ describe('exportChatDetail', () => {
 
     await expect(exportChatDetail(dispatch, endpoints, baseArgs)).rejects.toThrow('boom');
     expect(exportToExcel).not.toHaveBeenCalled();
+  });
+});
+
+describe('Automated Activity export', () => {
+  const SEPT_META = { projectName: 'Team', dateFrom: '2026-09-01', dateTo: '2026-09-30', timeZone: 'UTC' };
+  const automated = [
+    { trigger_source: 'schedule_manual', entity_kind: 'agent', runs: 2 },
+    { trigger_source: 'scheduled', entity_kind: 'pipeline', runs: 3 },
+    { trigger_source: 'index', runs: 1 },
+  ];
+  let sec;
+
+  beforeAll(() => {
+    const [overview] = buildAnalyticsSheets({
+      overview: { automated },
+      overviewUsage: {},
+      costs: {},
+      users: {},
+      skills: {},
+      meta: SEPT_META,
+    });
+    sec = overview.sections.find(s => s.title === 'Automated Activity');
+  });
+
+  it('adds an Entity type column after Trigger Source', () => {
+    expect(sec.columns.map(c => c.header).slice(0, 2)).toEqual(['Trigger Source', 'Entity type']);
+  });
+
+  it('writes source labels, entity labels and "-" when kind is missing', () => {
+    expect(sec.rows.map(r => [r.trigger_source, r.entity_kind])).toEqual([
+      ['Schedule run now', 'Agent'],
+      ['Scheduled', 'Pipeline'],
+      ['Index runs', '-'],
+    ]);
   });
 });

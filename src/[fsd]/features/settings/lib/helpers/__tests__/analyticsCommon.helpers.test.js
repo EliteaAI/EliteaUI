@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { RUN_SCOPE_TYPE } from '../../constants/analyticsCommon.constants.js';
+import { GUIDE_SECTIONS, RUN_SCOPE_TYPE, TOOLTIP_TEXTS } from '../../constants/analyticsCommon.constants.js';
 import {
   axisTick,
   barChartCursor,
@@ -8,13 +8,14 @@ import {
   collectFailedRunCalls,
   describeRunModels,
   describeRunVersions,
+  entityKindLabel,
   fmtCost,
   fmtDuration,
   fmtNum,
-  formatTriggerLabel,
   formatVersionLabel,
   getPresetRange,
   pickEntityRoutePattern,
+  triggerSourceLabel,
 } from '../analyticsCommon.helpers.js';
 
 describe('getPresetRange', () => {
@@ -190,10 +191,41 @@ describe('run trace helpers', () => {
 });
 
 describe('shared entity labels', () => {
-  it('names the manual trigger Manual and keeps the automated labels', () => {
-    expect(formatTriggerLabel('manual')).toBe('Manual');
-    expect(formatTriggerLabel('scheduled')).toBe('Scheduled Pipelines');
-    expect(formatTriggerLabel('webhook')).toBe('Webhook Triggers');
+  it('R1.1 EL-7011 maps every trigger source to its label', () => {
+    const expected = {
+      chat: 'Chat',
+      api: 'API',
+      mcp: 'MCP',
+      webhook: 'Webhook',
+      scheduled: 'Scheduled',
+      schedule_manual: 'Schedule run now',
+      index: 'Index runs',
+      manual: 'Manual (legacy)',
+    };
+
+    Object.entries(expected).forEach(([key, label]) => {
+      expect(triggerSourceLabel(key)).toBe(label);
+    });
+  });
+
+  it('R1.2 EL-7011 labels the entity kind and shows a dash when it is missing or empty', () => {
+    expect(entityKindLabel('agent')).toBe('Agent');
+    expect(entityKindLabel('pipeline')).toBe('Pipeline');
+    expect(entityKindLabel(null)).toBe('-');
+    expect(entityKindLabel(undefined)).toBe('-');
+    expect(entityKindLabel('')).toBe('-');
+  });
+
+  it('R2.1 EL-7011 shows the raw key of an unlabelled source', () => {
+    expect(triggerSourceLabel('future_source')).toBe('future_source');
+  });
+
+  it('R1.5 EL-7011 names the new sources in the trigger tooltips', () => {
+    const texts = [TOOLTIP_TEXTS.skillDetail.TRIGGERS, TOOLTIP_TEXTS.agentDetail.TRIGGERS_SECTION].join(' ');
+
+    ['Chat', 'API', 'MCP', 'Webhook', 'Scheduled', 'Schedule run now', 'Index runs'].forEach(label =>
+      expect(texts).toContain(label),
+    );
   });
 
   it('names a run with no recorded version Unknown version', () => {
@@ -207,5 +239,30 @@ describe('shared entity labels', () => {
     expect(pickEntityRoutePattern('pipeline', routes)).toBe('/pipelines');
     expect(pickEntityRoutePattern('agent', routes)).toBe('/agents');
     expect(pickEntityRoutePattern(null, routes)).toBe('/agents');
+  });
+});
+
+describe('R1.5 EL-7011 analytics texts name the trigger sources', () => {
+  const automated = GUIDE_SECTIONS.flatMap(s => s.metrics).find(m => m.name === 'Automated Activity');
+  const { overview } = TOOLTIP_TEXTS;
+  const autoTexts = [overview.AUTOMATED_ACTIVITY, automated.description];
+  const manualTexts = [overview.TEAM, overview.AI_ACTIVE, overview.LEADERBOARD];
+
+  it('TC-US57-09 automated texts name Webhook, Scheduled, Schedule run now and Index runs', () => {
+    autoTexts.forEach(text => {
+      ['Webhook', 'Scheduled', 'Schedule run now', 'Index runs'].forEach(name =>
+        expect(text).toContain(name),
+      );
+    });
+  });
+
+  it('TC-US57-09 the leaderboard text names Chat, API and MCP', () => {
+    ['Chat', 'API', 'MCP'].forEach(name => expect(overview.LEADERBOARD).toContain(name));
+  });
+
+  it('TC-US57-10 Schedule run now never sits next to manual or user activity', () => {
+    manualTexts.forEach(text => expect(text).not.toMatch(/Schedule run now.*(manual|user activity)/i));
+    expect(overview.TEAM).toContain('Schedule run now');
+    expect(overview.AI_ACTIVE).toContain('Schedule run now');
   });
 });

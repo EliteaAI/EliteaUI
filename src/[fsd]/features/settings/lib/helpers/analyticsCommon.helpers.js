@@ -2,6 +2,7 @@ import { endOfDay, startOfDay, subDays } from 'date-fns';
 
 import {
   ENTITY_KIND,
+  ENTITY_KIND_LABELS,
   EVAL_RUN_NO_DATA_MESSAGE,
   EVAL_RUN_TOOLTIP_TEXTS,
   RUN_CALL_EVENT_TYPE,
@@ -11,8 +12,6 @@ import {
   TRIGGER_SOURCE_LABELS,
   VERSION_UNKNOWN_LABEL,
 } from '../constants/analyticsCommon.constants.js';
-
-const MANUAL_TRIGGER = 'manual';
 
 // Calendar-day-aligned, inclusive of today: days=7 spans 7 calendar days total
 // (today + 6 prior) starting at 00:00, not 7 days back from the current time.
@@ -72,8 +71,8 @@ export const fmtCost = (usd, belowResolution = false) => {
 // An unrecognised trigger_source still renders as itself rather than disappearing
 export const triggerSourceLabel = source => TRIGGER_SOURCE_LABELS[source] || source || 'Unknown';
 
-export const formatTriggerLabel = source =>
-  source === MANUAL_TRIGGER ? 'Manual' : triggerSourceLabel(source);
+// A missing or empty kind (US-56 not deployed) shows a dash
+export const entityKindLabel = kind => ENTITY_KIND_LABELS[kind] || '-';
 
 export const formatVersionLabel = versionName => versionName || VERSION_UNKNOWN_LABEL;
 
