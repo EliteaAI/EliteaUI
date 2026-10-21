@@ -36,7 +36,7 @@ const ScheduleNotice = ({ message }) => (
 const ScheduleDetailPage = props => {
   const { entityType } = props;
   const projectId = useSelectedProjectId();
-  const { scheduleId } = useParams();
+  const { scheduleId, agentId } = useParams();
   const navigate = useNavigate();
   const { state } = useLocation();
   const {
@@ -93,6 +93,12 @@ const ScheduleDetailPage = props => {
         <CircularProgress />
       </Box>
     );
+  // A nested URL may name a schedule of another agent or pipeline
+  if (
+    entityType &&
+    (schedule.entity_type !== entityType || String(schedule.application_id) !== String(agentId))
+  )
+    return <ScheduleNotice message="Schedule not found." />;
 
   const browserTimezone = getBrowserTimezone();
 

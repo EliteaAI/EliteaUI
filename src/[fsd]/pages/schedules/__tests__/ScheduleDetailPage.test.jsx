@@ -219,4 +219,23 @@ describe('ScheduleDetailPage EL-7011', () => {
 
     await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith('/agents/all/3'));
   });
+
+  it('TC-US35-10 R3.5 EL-7011 nested in the agent editor, shows not found for a schedule of another agent', () => {
+    mocks.params = { tab: 'all', agentId: '12', scheduleId: '9' };
+    mocks.query = { currentData: schedule };
+    render(<ScheduleDetailPage entityType="agent" />);
+
+    expect(screen.getByText(/Schedule not found/)).toBeInTheDocument();
+    expect(listLink()).toHaveAttribute('href', '/settings/schedules');
+    expect(mocks.formProps).toBeNull();
+  });
+
+  it('TC-US36-08 R3.5 EL-7011 nested in the pipeline editor, shows not found for a schedule of an agent', () => {
+    mocks.params = { tab: 'all', agentId: '3', scheduleId: '9' };
+    mocks.query = { currentData: schedule };
+    render(<ScheduleDetailPage entityType="pipeline" />);
+
+    expect(screen.getByText(/Schedule not found/)).toBeInTheDocument();
+    expect(mocks.formProps).toBeNull();
+  });
 });
