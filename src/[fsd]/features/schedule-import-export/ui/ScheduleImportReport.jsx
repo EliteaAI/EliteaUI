@@ -3,10 +3,12 @@ import { memo } from 'react';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import SyncOutlinedIcon from '@mui/icons-material/SyncOutlined';
 import { Box, List, ListItem, Typography } from '@mui/material';
 
 const GROUPS = [
   { key: 'created', title: 'Created', icon: 'success', Icon: CheckCircleOutlineIcon, color: 'success.main' },
+  { key: 'updated', title: 'Updated', icon: 'updated', Icon: SyncOutlinedIcon, color: 'primary.main' },
   { key: 'skipped', title: 'Skipped', icon: 'info', Icon: InfoOutlinedIcon, color: 'info.main' },
   { key: 'failed', title: 'Failed', icon: 'error', Icon: ErrorOutlineIcon, color: 'error.main' },
 ];
