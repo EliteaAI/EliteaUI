@@ -138,8 +138,8 @@ describe('EL-7011 R5.1 and R5.3 entity from the URL', () => {
       new URLSearchParams('entityType=pipeline&entityId=9'),
       {},
     );
-    expect(urlEntity).toEqual({ type: 'pipeline', id: '9' });
-    expect(values).toMatchObject({ type: 'pipeline', application_id: '9', run_mode: 'entry_point' });
+    expect(urlEntity).toEqual({ type: 'pipeline', id: 9 });
+    expect(values).toMatchObject({ type: 'pipeline', application_id: 9, run_mode: 'entry_point' });
   });
 
   it('buildInitialValues defaults to an empty Agent form and the Schedules page', () => {
@@ -171,6 +171,24 @@ describe('EL-7011 R5.1 and R5.3 entity from the URL', () => {
     });
     expect(urlEntity).toBeNull();
     expect(returnTo).toBe('/agents/3');
+  });
+
+  it('US-35 R4.1 buildInitialValues locks the entity of the editor route and returns to the editor', () => {
+    const entityRoute = { lockedEntity: { type: 'agent', id: '12' }, returnTo: '/agents/all/12' };
+    const { values, urlEntity, returnTo } = buildInitialValues(new URLSearchParams(''), null, entityRoute);
+    expect(urlEntity).toEqual({ type: 'agent', id: '12' });
+    expect(values).toMatchObject({ type: 'agent', application_id: '12' });
+    expect(returnTo).toBe('/agents/all/12');
+  });
+
+  it('US-35 R3.5 the state returnTo wins over the editor route, and edit values return to the editor', () => {
+    const entityRoute = { lockedEntity: { type: 'agent', id: '12' }, returnTo: '/agents/all/12' };
+    const state = { returnTo: '/agents/all/12/70' };
+    expect(buildInitialValues(new URLSearchParams(''), state, entityRoute).returnTo).toBe(
+      '/agents/all/12/70',
+    );
+    const schedule = { name: 'Nightly', entity_type: 'agent', application_id: 12, cron: '0 0 * * 6' };
+    expect(buildEditValues(schedule, null, entityRoute).returnTo).toBe('/agents/all/12');
   });
 
   it('getEntityLock locks when the loaded entity has the URL type', () => {

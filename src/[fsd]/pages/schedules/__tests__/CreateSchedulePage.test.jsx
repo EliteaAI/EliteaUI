@@ -12,17 +12,22 @@ const mocks = vi.hoisted(() => ({
   navigate: vi.fn(),
   createSchedule: vi.fn(),
   settingsProps: null,
+  formProps: null,
+  params: {},
+  state: { returnTo: '/agents/3' },
 }));
 
 vi.mock('react-router-dom', () => ({
   useNavigate: () => mocks.navigate,
   useSearchParams: () => [new URLSearchParams('')],
-  useLocation: () => ({ state: { returnTo: '/agents/3' } }),
+  useLocation: () => ({ state: mocks.state }),
+  useParams: () => mocks.params,
 }));
-vi.mock('@/[fsd]/entities/schedule', () => ({
+vi.mock('@/[fsd]/entities/schedule', async importOriginal => ({
+  ...(await importOriginal()),
   useCreateScheduleMutation: () => [mocks.createSchedule],
 }));
-vi.mock('@/[fsd]/shared/lib/hooks', () => ({ useSelectedProjectId: () => 5 }));
+vi.mock('@/[fsd]/shared/lib/hooks', () => ({ useSelectedProjectId: () => 5, useViewMode: () => 'owner' }));
 vi.mock('@/[fsd]/shared/ui/schedule', () => ({
   ScheduleSettingsSection: props => {
     mocks.settingsProps = props;
@@ -34,12 +39,16 @@ vi.mock('@/[fsd]/features/schedule', async importOriginal => {
   const { toCreateBody } = await import('@/[fsd]/features/schedule/lib/helpers');
   return {
     ...(await importOriginal()),
-    ScheduleForm: ({ initialValues, onSubmit, onSaved, children }) => (
-      <>
-        {children({ values: initialValues, setFieldValue: vi.fn() })}
-        <button onClick={async () => onSaved(await onSubmit(toCreateBody(initialValues)))}>Save</button>
-      </>
-    ),
+    ScheduleForm: props => {
+      const { initialValues, onSubmit, onSaved, children } = props;
+      mocks.formProps = props;
+      return (
+        <>
+          {children({ values: initialValues, setFieldValue: vi.fn() })}
+          <button onClick={async () => onSaved(await onSubmit(toCreateBody(initialValues)))}>Save</button>
+        </>
+      );
+    },
   };
 });
 
@@ -47,6 +56,8 @@ describe('CreateSchedulePage EL-7011', () => {
   afterEach(() => {
     cleanup();
     vi.clearAllMocks();
+    mocks.params = {};
+    mocks.state = { returnTo: '/agents/3' };
   });
 
   it('R6.1 R6.5 EL-7011 sends the schedule settings with enabled and returns to returnTo', async () => {
@@ -78,5 +89,18 @@ describe('CreateSchedulePage EL-7011', () => {
     expect(mocks.createSchedule).toHaveBeenCalledWith(
       expect.objectContaining({ approval_rule: 'pause_and_ask' }),
     );
+  });
+
+  it('TC-US35-08 R4.1 R3.5 EL-7011 nested in the agent editor, locks the agent and returns to the editor', async () => {
+    mocks.params = { tab: 'all', agentId: '12' };
+    mocks.state = null;
+    mocks.createSchedule.mockReturnValue({ unwrap: () => Promise.resolve({ id: 1 }) });
+    render(<CreateSchedulePage entityType="agent" />);
+
+    expect(mocks.formProps.lockedEntity).toEqual({ type: 'agent', id: 12 });
+    expect(mocks.formProps.initialValues).toMatchObject({ type: 'agent', application_id: 12 });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith('/agents/all/12?viewMode=owner'));
   });
 });

@@ -174,11 +174,11 @@ const INITIAL = {
 
 const theme = createTheme(getDesignTokens('dark'));
 
-const renderForm = (props = {}) => {
+const renderForm = (props = {}, path = '/settings/schedules/create') => {
   const handlers = { onSubmit: vi.fn().mockResolvedValue(undefined), onCancel: vi.fn() };
   render(
     <ThemeProvider theme={theme}>
-      <MemoryRouter initialEntries={['/settings/schedules/create']}>
+      <MemoryRouter initialEntries={[path]}>
         <ScheduleForm
           initialValues={INITIAL}
           {...handlers}
@@ -220,6 +220,25 @@ describe('ScheduleForm EL-7011', () => {
     expect(modalProps.formik.dirty).toBe(false);
     expect(modalProps.formik.setValues).toBeTypeOf('function');
   });
+
+  it('US-35 browser walk bug 2 shows the locked entity as an option before the list loads it', () => {
+    listQuery.mockReturnValue({ data: undefined, isFetching: true });
+    renderForm({ initialValues: { ...INITIAL, application_id: 7 }, lockedEntity: { type: 'agent', id: 7 } });
+
+    expect(selectProps.disabled).toBe(true);
+    expect(selectProps.options.find(option => option.value === selectProps.value)?.label).toBe(
+      'Digest agent',
+    );
+  });
+
+  it.each(['/agents/all/12/schedules/create', '/pipelines/all/9/schedules/4', '/settings/schedules/4'])(
+    'US-35 owner bug 4 shows no selected-tab indicator in the header of %s, which has no tabs',
+    path => {
+      renderForm({ lockedEntity: { type: 'agent', id: 7 } }, path);
+
+      expect(document.querySelector('.MuiTabs-indicator')).toHaveStyle({ display: 'none' });
+    },
+  );
 
   it('R1.2 EL-7011 hides Build with AI without the schedules create permission', () => {
     allowed = false;
@@ -660,6 +679,107 @@ describe('ScheduleForm EL-7011', () => {
     await waitFor(() => expect(onSaved).toHaveBeenCalledWith(result));
     expect(screen.queryByTestId('warnings-dialog')).not.toBeInTheDocument();
     expect(navBlocker).toHaveBeenLastCalledWith({ blockCondition: false });
+  });
+
+  // The nested route of the agent editor gives the locked entity as a URL string (owner CR 2026-10-21)
+  describe('agent editor entry (US-35)', () => {
+    const renderFromEditor = () =>
+      renderForm({
+        initialValues: { ...INITIAL, application_id: '7' },
+        lockedEntity: { type: 'agent', id: '7' },
+      });
+
+    it('TC-US35-08 R4.1 locks Type Agent and this agent and presets the default version', async () => {
+      renderFromEditor();
+
+      expect(screen.getByTestId('schedule-type-agent')).toHaveAttribute('aria-pressed', 'true');
+      expect(screen.getByTestId('schedule-type-agent')).toBeDisabled();
+      expect(screen.getByTestId('schedule-type-pipeline')).toBeDisabled();
+      expect(selectProps).toMatchObject({ value: '7', disabled: true });
+      await waitFor(() => expect(versionProps.value).toBe(71));
+      expect(versionProps.disabled).toBe(false);
+    });
+
+    it('TC-US35-16 TC-US35-17 R4.2 keeps Version, Prompt and Variables editable and saves them', async () => {
+      const { onSubmit } = renderFromEditor();
+      await waitFor(() => expect(versionProps.value).toBe(71));
+
+      // A block body: the promise of setFieldValue would turn act async and leave it open
+      act(() => {
+        versionProps.onChange(70);
+      });
+      typePrompt('Digest for {{team}} in {{room}}');
+      expect(screen.getByTestId('variables')).toHaveTextContent('room,team');
+      save();
+
+      await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+      expect(onSubmit.mock.calls[0][0]).toMatchObject({
+        entity_type: 'agent',
+        application_id: '7',
+        version_id: 70,
+        run_mode: null,
+        prompt: 'Digest for {{team}} in {{room}}',
+        variables: [
+          { name: 'room', value: '' },
+          { name: 'team', value: '' },
+        ],
+      });
+    });
+
+    it('TC-US35-17 R4.2 still asks for the prompt', async () => {
+      const { onSubmit } = renderFromEditor();
+
+      save();
+
+      expect(await screen.findByText('Prompt is required')).toBeInTheDocument();
+      expect(onSubmit).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('pipeline editor entry (US-36)', () => {
+    const renderFromPipeline = () =>
+      renderForm({
+        initialValues: { ...INITIAL, type: 'pipeline', run_mode: 'entry_point', application_id: '9' },
+        lockedEntity: { type: 'pipeline', id: '9' },
+      });
+
+    it('TC-US36-14 R4.1 locks Type Pipeline and this pipeline and presets the version', async () => {
+      renderFromPipeline();
+
+      expect(screen.getByTestId('schedule-type-pipeline')).toHaveAttribute('aria-pressed', 'true');
+      expect(screen.getByTestId('schedule-type-pipeline')).toBeDisabled();
+      expect(selectProps).toMatchObject({ label: 'Pipeline', value: '9', disabled: true });
+      await waitFor(() => expect(versionProps.value).toBe(90));
+    });
+
+    it('TC-US36-15 R4.2 saves Entry point with no prompt by default', async () => {
+      const { onSubmit } = renderFromPipeline();
+      await waitFor(() => expect(versionProps.value).toBe(90));
+
+      expect(screen.getByTestId('schedule-run-mode-entry_point')).toHaveAttribute('aria-pressed', 'true');
+      expect(screen.queryByLabelText(/Prompt/)).not.toBeInTheDocument();
+      save();
+
+      await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+      expect(onSubmit.mock.calls[0][0]).toMatchObject({
+        entity_type: 'pipeline',
+        run_mode: 'entry_point',
+        prompt: null,
+        variables: [],
+      });
+    });
+
+    it('TC-US36-15 R4.2 Prompt mode asks for the prompt and shows one field per placeholder', async () => {
+      const { onSubmit } = renderFromPipeline();
+      fireEvent.click(screen.getByTestId('schedule-run-mode-prompt'));
+
+      save();
+      expect(await screen.findByText('Prompt is required')).toBeInTheDocument();
+      expect(onSubmit).not.toHaveBeenCalled();
+
+      typePrompt('Report for {{region}}');
+      expect(screen.getByTestId('variables')).toHaveTextContent('region');
+    });
   });
 
   describe('edit mode', () => {

@@ -5,7 +5,9 @@ import DotMenu from '@/components/DotMenu';
 import ChangeOwnerDialog from './ChangeOwnerDialog';
 
 const ScheduleRowActions = memo(props => {
-  const { row, onRun, onEdit, onPause, onResume, onDelete, isBusy } = props;
+  // onOpenRunHistory and hideChangeOwner shape the card menu of the editor Schedules section (US-35)
+  const { row, onRun, onEdit, onOpenRunHistory, onPause, onResume, onDelete, isBusy, hideChangeOwner } =
+    props;
   const allowed = row.allowed_actions;
   const [isOwnerDialogOpen, setIsOwnerDialogOpen] = useState(false);
   const openOwnerDialog = useCallback(() => setIsOwnerDialogOpen(true), []);
@@ -18,11 +20,18 @@ const ScheduleRowActions = memo(props => {
         allowed?.includes('edit') && { key: 'edit', label: 'Edit', onClick: onEdit },
         row.enabled && allowed?.includes('pause') && { key: 'pause', label: 'Pause', onClick: onPause },
         !row.enabled && allowed?.includes('resume') && { key: 'resume', label: 'Resume', onClick: onResume },
-        allowed?.includes('change_owner') && {
-          key: 'change_owner',
-          label: 'Change owner',
-          onClick: openOwnerDialog,
-        },
+        onOpenRunHistory &&
+          allowed?.includes('edit') && {
+            key: 'history',
+            label: 'Open run history',
+            onClick: onOpenRunHistory,
+          },
+        !hideChangeOwner &&
+          allowed?.includes('change_owner') && {
+            key: 'change_owner',
+            label: 'Change owner',
+            onClick: openOwnerDialog,
+          },
         allowed?.includes('delete') && {
           key: 'delete',
           label: 'Delete',
@@ -30,7 +39,19 @@ const ScheduleRowActions = memo(props => {
           onConfirm: onDelete,
         },
       ].filter(Boolean),
-    [allowed, row.enabled, row.name, onRun, onEdit, onPause, onResume, onDelete, openOwnerDialog],
+    [
+      allowed,
+      row.enabled,
+      row.name,
+      onRun,
+      onEdit,
+      onOpenRunHistory,
+      onPause,
+      onResume,
+      onDelete,
+      openOwnerDialog,
+      hideChangeOwner,
+    ],
   );
 
   if (!items.length) return null;

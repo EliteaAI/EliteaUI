@@ -10,13 +10,13 @@ import {
   GridTablePagination,
   GridTableRow,
 } from '@/[fsd]/entities/grid-table/ui';
-import { useScheduleRowActions } from '@/[fsd]/features/schedule';
+import { ScheduleEnabledSwitch } from '@/[fsd]/features/schedule';
 import {
   getBrowserTimezone,
   getCronSummaryInBrowserTimezone,
 } from '@/[fsd]/shared/lib/helpers/schedule.helpers';
 import { useGetWindowWidth } from '@/[fsd]/shared/lib/hooks';
-import { Switch, Text } from '@/[fsd]/shared/ui';
+import { Text } from '@/[fsd]/shared/ui';
 import EntityTypeIcon from '@/[fsd]/shared/ui/icon/EntityTypeIcon';
 import { TIME_FORMAT } from '@/common/constants';
 import { timeFormatter } from '@/common/utils';
@@ -71,21 +71,6 @@ const IconWithLabel = ({ type, label }) => {
         {label}
       </Text.EllipsisTypography>
     </Box>
-  );
-};
-
-// A component, not inline JSX in renderCell: it calls the row hook shared with the menu
-const EnabledCell = ({ row }) => {
-  const { onPause, onResume, isBusy } = useScheduleRowActions(row);
-  const action = row.enabled ? 'pause' : 'resume';
-
-  return (
-    <Switch.BaseSwitch
-      checked={Boolean(row.enabled)}
-      disabled={isBusy || !row.allowed_actions?.includes(action)}
-      onChange={row.enabled ? onPause : onResume}
-      slotProps={{ switch: { slotProps: { input: { 'aria-label': `Enable ${row.name}` } } } }}
-    />
   );
 };
 
@@ -154,7 +139,7 @@ const renderCell = (column, value, row) => {
         '-'
       );
     case 'enabled':
-      return <EnabledCell row={row} />;
+      return <ScheduleEnabledSwitch row={row} />;
     default:
       return value ?? '-';
   }
