@@ -75,7 +75,7 @@ const USER_COLUMNS = usageTable({
 const TRIGGER_COLUMNS = usageTable({
   key: 'trigger_source',
   label: 'Trigger',
-  render: r => AnalyticCommonHelpers.formatTriggerLabel(r.trigger_source),
+  render: r => AnalyticCommonHelpers.triggerSourceLabel(r.trigger_source),
 });
 
 const MODEL_COLUMNS = [
