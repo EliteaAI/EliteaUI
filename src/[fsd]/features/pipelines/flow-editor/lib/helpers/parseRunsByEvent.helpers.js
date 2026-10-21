@@ -1,4 +1,4 @@
-import { normalizeContinuationError } from '@/[fsd]/features/chat/lib/helpers';
+import { ExecutionHierarchyHelpers, normalizeContinuationError } from '@/[fsd]/features/chat/lib/helpers';
 import {
   CONDITION_NODE_ID_SUFFIX,
   DECISION_NODE_ID_SUFFIX,
@@ -53,6 +53,22 @@ const findNode = (nodes, tool_name) =>
     }
   });
 
+const NESTED_AGENT_EVENTS_APPLIED_TO_PARENT_STEP = new Set([
+  SocketMessageType.AgentToolError,
+  SocketMessageType.AgentHitlInterrupt,
+  SocketMessageType.AgentException,
+  SocketMessageType.PipelineFinish,
+]);
+
+const isNestedAgentEvent = event =>
+  Boolean(
+    ExecutionHierarchyHelpers.normalizeExecutionHierarchy(event.response_metadata?.metadata)
+      .parent_agent_name,
+  );
+
+const isNestedAgentTimelineEvent = event =>
+  isNestedAgentEvent(event) && !NESTED_AGENT_EVENTS_APPLIED_TO_PARENT_STEP.has(event.type);
+
 export const parseRunEvent = (
   event,
   nodes = [],
@@ -65,6 +81,9 @@ export const parseRunEvent = (
   runPipelineStatus,
   nextRunName,
 ) => {
+  if (isNestedAgentTimelineEvent(event)) {
+    return;
+  }
   switch (event.type) {
     case SocketMessageType.AgentStart:
     case SocketMessageType.StartTask:
