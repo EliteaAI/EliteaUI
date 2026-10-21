@@ -209,7 +209,8 @@ const styles = {
   notice: { marginTop: '50px', minHeight: 'calc(100vh - 191px)' },
   loader: { display: 'flex', justifyContent: 'center', padding: '3rem' },
   // The panel and the Runs section stacked (CR-21). From xl, in a window at least 46 rem (736 px) high, the
-  // block stays in view: 100dvh minus the page header, its top margin and the bottom margin (6 rem).
+  // block stays in view: 100dvh minus the page header, its top margin and the bottom margin (6 rem). A fixed
+  // height, so the runs card takes 40 % of the window and the test panel fills the rest and scrolls inside.
   rightBlock: ({ breakpoints }) => ({
     display: 'flex',
     flexDirection: 'column',
@@ -217,7 +218,7 @@ const styles = {
     [`${breakpoints.up('xl')} and (min-height: 46rem)`]: {
       position: 'sticky',
       top: '0.75rem',
-      maxHeight: 'calc(100dvh - 6rem)',
+      height: 'calc(100dvh - 6rem)',
     },
   }),
 };
