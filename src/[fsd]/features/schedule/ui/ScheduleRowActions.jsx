@@ -5,7 +5,7 @@ import DotMenu from '@/components/DotMenu';
 import ChangeOwnerDialog from './ChangeOwnerDialog';
 
 const ScheduleRowActions = memo(props => {
-  const { row, onRun, onPause, onResume, onDelete, isBusy } = props;
+  const { row, onRun, onEdit, onPause, onResume, onDelete, isBusy } = props;
   const allowed = row.allowed_actions;
   const [isOwnerDialogOpen, setIsOwnerDialogOpen] = useState(false);
   const openOwnerDialog = useCallback(() => setIsOwnerDialogOpen(true), []);
@@ -15,6 +15,7 @@ const ScheduleRowActions = memo(props => {
     () =>
       [
         allowed?.includes('run') && { key: 'run', label: 'Run now', onClick: onRun },
+        allowed?.includes('edit') && { key: 'edit', label: 'Edit', onClick: onEdit },
         row.enabled && allowed?.includes('pause') && { key: 'pause', label: 'Pause', onClick: onPause },
         !row.enabled && allowed?.includes('resume') && { key: 'resume', label: 'Resume', onClick: onResume },
         allowed?.includes('change_owner') && {
@@ -29,7 +30,7 @@ const ScheduleRowActions = memo(props => {
           onConfirm: onDelete,
         },
       ].filter(Boolean),
-    [allowed, row.enabled, row.name, onRun, onPause, onResume, onDelete, openOwnerDialog],
+    [allowed, row.enabled, row.name, onRun, onEdit, onPause, onResume, onDelete, openOwnerDialog],
   );
 
   if (!items.length) return null;

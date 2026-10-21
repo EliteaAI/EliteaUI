@@ -54,10 +54,34 @@ describe('ScheduleRowActions (EL-7011 US-28)', () => {
   });
 
   it('R1.1 ignores server actions the menu does not offer', () => {
-    renderMenu({ allowed_actions: ['edit', 'delete'] });
+    renderMenu({ allowed_actions: ['unknown', 'delete'] });
     openMenu();
     expect(screen.getAllByRole('menuitem')).toHaveLength(1);
     expect(screen.getByText('Delete')).toBeInTheDocument();
+  });
+
+  it('EL-7011 lists Run now, Edit, Pause, Change owner and Delete in this order', () => {
+    renderMenu({ allowed_actions: ['delete', 'change_owner', 'pause', 'edit', 'run'] });
+    openMenu();
+    expect(screen.getAllByRole('menuitem').map(item => item.textContent)).toEqual([
+      'Run now',
+      'Edit',
+      'Pause',
+      'Change owner',
+      'Delete',
+    ]);
+  });
+
+  it('EL-7011 Edit shows only when edit is allowed and calls onEdit', () => {
+    const onEdit = vi.fn();
+    renderMenu({ allowed_actions: ['edit'] }, { onEdit });
+    openMenu();
+    fireEvent.click(screen.getByText('Edit'));
+    expect(onEdit).toHaveBeenCalledTimes(1);
+    cleanup();
+    renderMenu({ allowed_actions: ['run'] }, { onEdit });
+    openMenu();
+    expect(screen.queryByText('Edit')).not.toBeInTheDocument();
   });
 
   it('R1.1 EL-7011 shows Change owner only when change_owner is allowed', () => {
@@ -72,7 +96,11 @@ describe('ScheduleRowActions (EL-7011 US-28)', () => {
     openMenu();
     fireEvent.click(screen.getByText('Change owner'));
     const dialog = screen.getByTestId('change-owner-dialog');
-    expect(JSON.parse(dialog.textContent)).toEqual({ id: 7, name: 'Nightly digest', owner: { id: 3, name: 'Ann' } });
+    expect(JSON.parse(dialog.textContent)).toEqual({
+      id: 7,
+      name: 'Nightly digest',
+      owner: { id: 3, name: 'Ann' },
+    });
     fireEvent.click(dialog);
     expect(screen.queryByTestId('change-owner-dialog')).not.toBeInTheDocument();
   });
