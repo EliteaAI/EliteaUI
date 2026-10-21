@@ -33,7 +33,7 @@ const makeStore = () =>
     middleware: getDefault => getDefault().concat(runHistoryApi.middleware),
   });
 
-const decide = async (hitlAction, fetchSpy) => {
+const decide = async (action, fetchSpy) => {
   fetchSpy.mockResolvedValue(
     new Response(JSON.stringify({}), { status: 200, headers: { 'content-type': 'application/json' } }),
   );
@@ -42,7 +42,7 @@ const decide = async (hitlAction, fetchSpy) => {
       projectId: 7,
       conversationUuid: 'conv-uuid-1',
       messageId: 42,
-      hitlAction,
+      action,
     }),
   );
   const request = fetchSpy.mock.calls[0][0];
@@ -62,7 +62,12 @@ describe('EL-7011 run history decideWaitingRun', () => {
 
     expect(request.method).toBe('POST');
     expect(new URL(request.url).pathname).toBe(PATH);
-    expect(body).toEqual({ message_id: 42, hitl_action: 'approve', await_task_timeout: -1 });
+    expect(body).toEqual({
+      message_id: 42,
+      hitl_resume: true,
+      hitl_action: 'approve',
+      await_task_timeout: -1,
+    });
   });
 
   it('R2.2 EL-7011: reject posts hitl_action reject with the paused message id to continue_predict', async () => {
@@ -70,6 +75,11 @@ describe('EL-7011 run history decideWaitingRun', () => {
 
     expect(request.method).toBe('POST');
     expect(new URL(request.url).pathname).toBe(PATH);
-    expect(body).toEqual({ message_id: 42, hitl_action: 'reject', await_task_timeout: -1 });
+    expect(body).toEqual({
+      message_id: 42,
+      hitl_resume: true,
+      hitl_action: 'reject',
+      await_task_timeout: -1,
+    });
   });
 });

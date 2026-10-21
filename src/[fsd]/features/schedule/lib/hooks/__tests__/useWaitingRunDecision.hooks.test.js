@@ -21,7 +21,11 @@ vi.mock('@/[fsd]/entities/run-history/api/runHistoryApi.js', () => ({
   useDecideWaitingRunMutation: () => [mocks.decide],
 }));
 vi.mock('@/[fsd]/shared/lib/hooks/useToast.hooks', () => ({
-  useToast: () => ({ toastError: mocks.toastError, toastInfo: mocks.toastInfo, toastSuccess: mocks.toastSuccess }),
+  useToast: () => ({
+    toastError: mocks.toastError,
+    toastInfo: mocks.toastInfo,
+    toastSuccess: mocks.toastSuccess,
+  }),
 }));
 vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({ useSelectedProjectId: () => 3 }));
 
@@ -47,7 +51,7 @@ describe('useWaitingRunDecision EL-7011', () => {
       projectId: 3,
       conversationUuid: 'c-1',
       messageId: 'm-1',
-      hitlAction: 'approve',
+      action: 'approve',
     });
     expect(mocks.refetch).toHaveBeenCalledTimes(1);
     expect(mocks.toastError).not.toHaveBeenCalled();

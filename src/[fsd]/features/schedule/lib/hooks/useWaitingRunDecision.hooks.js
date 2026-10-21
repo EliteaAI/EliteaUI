@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+
 import { useSelector } from 'react-redux';
 
 import { useDecideWaitingRunMutation } from '@/[fsd]/entities/run-history/api/runHistoryApi.js';
@@ -17,7 +18,7 @@ export const useWaitingRunDecision = ({ schedule, onDecided }) => {
   const onHitlResume = useCallback(
     async ({ action, conversationUuid, messageId }) => {
       try {
-        await decideWaitingRun({ projectId, conversationUuid, messageId, hitlAction: action }).unwrap();
+        await decideWaitingRun({ projectId, conversationUuid, messageId, action }).unwrap();
         onDecided?.();
       } catch (error) {
         if (error?.status === 400 || error?.status === 409) {

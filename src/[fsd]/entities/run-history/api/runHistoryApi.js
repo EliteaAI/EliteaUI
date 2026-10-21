@@ -67,12 +67,12 @@ export const runHistoryApi = eliteaApi
         }),
         invalidatesTags: [HISTORY_ITEMS_TAG],
       }),
-      // hitlAction is 'approve' or 'reject'; await_task_timeout -1 returns without waiting for the run.
+      // action is 'approve' or 'reject'; await_task_timeout -1 returns without waiting for the run.
       decideWaitingRun: build.mutation({
-        query: ({ projectId, conversationUuid, messageId, hitlAction }) => ({
+        query: ({ projectId, conversationUuid, messageId, action }) => ({
           url: `/elitea_core/continue_predict/prompt_lib/${projectId}/${conversationUuid}`,
           method: 'POST',
-          body: { message_id: messageId, hitl_action: hitlAction, await_task_timeout: -1 },
+          body: { message_id: messageId, hitl_resume: true, hitl_action: action, await_task_timeout: -1 },
         }),
         invalidatesTags: [HISTORY_ITEMS_TAG],
       }),
