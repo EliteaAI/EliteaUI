@@ -118,12 +118,12 @@ describe('EntitySchedulesSection EL-7011', () => {
       expect(link).toHaveAttribute('href', '/settings/schedules?entityType=agent&entityId=12');
     });
 
-    it('owner bug 2026-10-21 "+ Schedule" is the outlined secondary elitea button of the mockup', () => {
+    it('CR-08 "+ Schedule" stays the purple primary elitea button', () => {
       renderSection();
 
       expect(screen.getByTestId('agent-schedules-section-add')).toHaveClass(
         'MuiButton-elitea',
-        'MuiButton-colorSecondary',
+        'MuiButton-colorPrimary',
       );
     });
 
