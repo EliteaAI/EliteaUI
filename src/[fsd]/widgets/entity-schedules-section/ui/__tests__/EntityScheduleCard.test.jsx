@@ -158,4 +158,36 @@ describe('EntityScheduleCard EL-7011 US-35', () => {
     expect(mocks.actions.onDelete).not.toHaveBeenCalled();
     expect(screen.getByTestId('agent-schedule-card-7')).toBeInTheDocument();
   });
+
+  describe('pipeline card (US-36)', () => {
+    it('TC-US36-18 R2.4 shows the same lines, chip, toggle and menu with pipeline test ids', () => {
+      renderCard({ last_run_status: 'skipped' }, { entityType: 'pipeline', currentUserId: 1 });
+
+      expect(screen.getByTestId('pipeline-schedule-card-7')).toHaveTextContent('Daily digest');
+      expect(screen.getByTestId('pipeline-schedule-card-details-7')).toHaveTextContent(
+        'Rule of 0 9 * * * from UTC · Europe/Kyiv · Last run: Oct 19, 09:00 · Next: Oct 20, 09:00 · Anna K.',
+      );
+      expect(screen.getByTestId('pipeline-schedule-card-status-7')).toHaveTextContent('Skipped');
+      expect(screen.getByTestId('pipeline-schedule-card-toggle-7')).toBeInTheDocument();
+    });
+
+    it('TC-US36-19 R2.5 the admin menu on another owner card offers only the allowed actions', () => {
+      renderCard({ allowed_actions: ['edit', 'pause', 'delete'] }, { entityType: 'pipeline' });
+      openMenu();
+
+      expect(screen.getAllByRole('menuitem').map(item => item.textContent)).toEqual([
+        'Edit',
+        'Pause',
+        'Open run history',
+        'Delete',
+      ]);
+    });
+
+    it('TC-US36-08 R3.3 hides Edit and Open run history without the edit action', () => {
+      renderCard({ allowed_actions: ['run', 'delete'] }, { entityType: 'pipeline' });
+      openMenu();
+
+      expect(screen.getAllByRole('menuitem').map(item => item.textContent)).toEqual(['Run now', 'Delete']);
+    });
+  });
 });
