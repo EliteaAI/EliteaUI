@@ -12,7 +12,8 @@ import { formatRunStarted, toRunStatusLabel, toRunTriggerLabel } from '../lib/he
 import ScheduleRunConversation from './ScheduleRunConversation';
 import ScheduleRunStatusChip from './ScheduleRunStatusChip';
 
-const COLUMNS = '1.2fr 1fr 1.6fr 3.5rem';
+// Minimums keep a start time on one line, the header labels whole and a Success chip uncut
+const COLUMNS = 'minmax(8rem, 1.2fr) minmax(7rem, 1fr) minmax(8rem, 1.6fr) 3.5rem';
 const HEADER_ITEMS = [
   { label: 'Started', type: 'started' },
   { label: 'Trigger', type: 'trigger' },
@@ -70,6 +71,7 @@ const ScheduleRunList = memo(props => {
             <Typography
               data-testid="schedule-run-started"
               variant="bodyMedium"
+              noWrap
               title={new Date(run.started_at).toLocaleString()}
             >
               {formatRunStarted(run.started_at)}
@@ -77,6 +79,7 @@ const ScheduleRunList = memo(props => {
             <Typography
               data-testid="schedule-run-trigger"
               variant="bodyMedium"
+              noWrap
             >
               {toRunTriggerLabel(run.trigger)}
             </Typography>

@@ -33,14 +33,17 @@ const REASON_STATUSES = ['failed', 'skipped', 'blocked'];
 const statusLabel = status =>
   status ? status.charAt(0).toUpperCase() + status.slice(1).replaceAll('_', ' ') : '-';
 
-// Widths and the row height follow the Agents and Pipelines list view (widgets/data-table)
+// Widths and the row height follow the Agents and Pipelines list view (widgets/data-table): flexible
+// text columns with the Agents Name minimum, fixed narrow columns, the 105 px Actions column.
+// The Settings menu takes about 30 rem, so Owner and Last run hide on narrow windows, as in the
+// Users table (hideBelow, window px), and the row menu never leaves the screen.
 const SCHEDULES_COLUMNS = [
-  { field: 'name', label: 'Name & Description', width: 'minmax(12.5rem, 1.3fr)', sortable: true },
-  { field: 'entity_name', label: 'Entity Name', width: 'minmax(10rem, 1.3fr)', sortable: true },
-  { field: 'schedule', label: 'Schedule', width: 'minmax(10rem, 1.6fr)' },
+  { field: 'name', label: 'Name & Description', width: 'minmax(9.375rem, 1.3fr)', sortable: true },
+  { field: 'entity_name', label: 'Entity Name', width: 'minmax(7.5rem, 1fr)', sortable: true },
+  { field: 'schedule', label: 'Schedule', width: 'minmax(7.5rem, 1.3fr)' },
   { field: 'next_run', label: 'Next run', width: '9.5rem', sortable: true },
-  { field: 'last_run', label: 'Last run', width: 'minmax(7.5rem, 1fr)', sortable: true },
-  { field: 'owner', label: 'Owner', width: '12rem' },
+  { field: 'last_run', label: 'Last run', width: '7.5rem', sortable: true, hideBelow: 1440 },
+  { field: 'owner', label: 'Owner', width: '12rem', hideBelow: 1600 },
   { field: 'enabled', label: 'Enabled', width: '7.5rem', sortable: true },
   { field: 'actions', label: 'Actions' },
 ];
