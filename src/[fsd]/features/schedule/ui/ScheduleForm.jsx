@@ -466,6 +466,7 @@ const ScheduleForm = memo(props => {
     <>
       <StyledTabs
         leftPart={<Breadcrumbs entityName={entityName} />}
+        tabsSX={styles.noTabIndicator}
         tabs={[
           {
             tabBarItems: (
@@ -555,6 +556,8 @@ const styles = {
   // the ConfigurationTab grid padding
   split: { padding: '0 1.5rem 1.5rem' },
   sidePanel: { paddingTop: '0.75rem' },
+  // The header holds one unlabelled tab, so its selected-tab indicator is a stray line under the crumbs
+  noTabIndicator: { '& .MuiTabs-indicator': { display: 'none' } },
   accordion: ({ palette }) => ({ background: `${palette.background.default.tertiary} !important` }),
   section: { display: 'flex', flexDirection: 'column', gap: '1rem', paddingBottom: '1.5rem' },
 };

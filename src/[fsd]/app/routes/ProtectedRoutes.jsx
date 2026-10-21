@@ -243,6 +243,16 @@ const ProtectedRoutes = memo(() => {
         path: RouteDefinitions.ApplicationsEvaluateHistoryAnalytics,
         element: <AgentEvaluateHistoryAnalyticsPage />,
       },
+      {
+        path: RouteDefinitions.ApplicationsCreateSchedule,
+        element: <CreateSchedulePage entityType="agent" />,
+        requiredPermissions: [PERMISSIONS.schedules.create],
+      },
+      {
+        path: RouteDefinitions.ApplicationsScheduleDetail,
+        element: <ScheduleDetailPage entityType="agent" />,
+        requiredPermissions: [PERMISSIONS.schedules.details],
+      },
 
       /* skills — hidden for public projects */
       { path: RouteDefinitions.Skills, element: <SkillsGuard>{getIndexElement(SkillsTabs[0])}</SkillsGuard> },
@@ -334,6 +344,15 @@ const ProtectedRoutes = memo(() => {
       {
         path: RouteDefinitions.PipelineEvaluateHistoryAnalytics,
         element: <AgentEvaluateHistoryAnalyticsPage />,
+      {
+        path: RouteDefinitions.PipelineCreateSchedule,
+        element: <CreateSchedulePage entityType="pipeline" />,
+        requiredPermissions: [PERMISSIONS.schedules.create],
+      },
+      {
+        path: RouteDefinitions.PipelineScheduleDetail,
+        element: <ScheduleDetailPage entityType="pipeline" />,
+        requiredPermissions: [PERMISSIONS.schedules.details],
       },
 
       /* credentials */

@@ -9,7 +9,7 @@ import {
   useRunScheduleMutation,
   useUpdateScheduleMutation,
 } from '@/[fsd]/entities/schedule';
-import { ScheduleForm, ScheduleRunsPanel } from '@/[fsd]/features/schedule';
+import { ScheduleForm, ScheduleRunsPanel, useEntityScheduleRoute } from '@/[fsd]/features/schedule';
 import { buildEditValues } from '@/[fsd]/features/schedule/lib/helpers';
 import { ScheduleHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
@@ -32,9 +32,11 @@ const ScheduleNotice = ({ message }) => (
   </Container>
 );
 
-const ScheduleDetailPage = () => {
+// entityType: the page is nested in that editor and locks its entity (owner CR 2026-10-21)
+const ScheduleDetailPage = props => {
+  const { entityType } = props;
   const projectId = useSelectedProjectId();
-  const { scheduleId } = useParams();
+  const { scheduleId, agentId } = useParams();
   const navigate = useNavigate();
   const { state } = useLocation();
   const {
@@ -44,6 +46,7 @@ const ScheduleDetailPage = () => {
   } = useGetScheduleQuery({ projectId, scheduleId }, { skip: !projectId });
   const [updateSchedule] = useUpdateScheduleMutation();
   const [runSchedule] = useRunScheduleMutation();
+  const entityRoute = useEntityScheduleRoute(entityType);
 
   // R1.4: a schedule belongs to one project, so a project switch opens the list
   const openedProjectId = useRef();
@@ -54,8 +57,8 @@ const ScheduleDetailPage = () => {
   }, [navigate, projectId]);
 
   const { values, returnTo } = useMemo(
-    () => (schedule ? buildEditValues(schedule, state) : {}),
-    [schedule, state],
+    () => (schedule ? buildEditValues(schedule, state, entityRoute) : {}),
+    [schedule, state, entityRoute],
   );
 
   const onSubmit = useCallback(
@@ -90,6 +93,12 @@ const ScheduleDetailPage = () => {
         <CircularProgress />
       </Box>
     );
+  // A nested URL may name a schedule of another agent or pipeline
+  if (
+    entityType &&
+    (schedule.entity_type !== entityType || String(schedule.application_id) !== String(agentId))
+  )
+    return <ScheduleNotice message="Schedule not found." />;
 
   const browserTimezone = getBrowserTimezone();
 
@@ -97,7 +106,9 @@ const ScheduleDetailPage = () => {
     <ScheduleForm
       initialValues={values}
       schedule={schedule}
-      entityName={schedule.name}
+      lockedEntity={entityRoute.lockedEntity}
+      // Nested in an editor, the crumbs name the agent or pipeline, not the schedule
+      entityName={entityType ? undefined : schedule.name}
       sidePanel={sidePanel}
       onSubmit={onSubmit}
       onSaved={onSaved}
