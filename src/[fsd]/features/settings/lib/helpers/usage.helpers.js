@@ -363,16 +363,47 @@ export const distributeByWeight = (daily, groups, metricKey = 'spend') => {
   });
 };
 
+/**
+ * Map (dimension, metricKey) to the per-day breakdown field name on each daily row.
+ * spend → by_model / by_source; total_tokens → by_model_tokens / by_source_tokens.
+ */
+export const dailyBreakdownKey = (dimension, metricKey) =>
+  metricKey === 'spend' ? `by_${dimension}` : `by_${dimension}_tokens`;
+
+/**
+ * Split daily rows using the real per-day breakdown attached by the backend.
+ * Each day carries its own proportions instead of every day sharing the month-level split.
+ * Surplus (day total minus named keys) goes to __other when that group is present.
+ */
+export const splitDailyByGroup = (daily, groups, breakdownKey, metricKey = 'spend') =>
+  daily.map(day => {
+    const breakdown = day[breakdownKey] || {};
+    const row = { date: day.date };
+    let named = 0;
+
+    groups.forEach(g => {
+      if (g.key === '__other') return;
+      row[g.key] = breakdown[g.key] || 0;
+      named += row[g.key];
+    });
+
+    if (groups.some(g => g.key === '__other')) {
+      row.__other = Math.max((day[metricKey] || 0) - named, 0);
+    }
+
+    return row;
+  });
+
 /** Build Recharts-compatible series data from filled daily rows. */
 export const buildSeriesFromDaily = (daily, groupBy, models, bySource, metricKey = 'spend') => {
   if (!daily?.length) return { data: [], keys: [] };
 
-  if (groupBy === 'total') {
-    return {
-      data: daily.map(d => ({ date: d.date, total: d[metricKey] || 0 })),
-      keys: ['total'],
-    };
-  }
+  const totalFallback = () => ({
+    data: daily.map(d => ({ date: d.date, total: d[metricKey] || 0 })),
+    keys: ['total'],
+  });
+
+  if (groupBy === 'total') return totalFallback();
 
   let groups = [];
 
@@ -381,26 +412,25 @@ export const buildSeriesFromDaily = (daily, groupBy, models, bySource, metricKey
   } else if (groupBy === 'source') {
     groups = buildGroups(bySource || [], 'source', metricKey, Infinity);
   } else {
-    return {
-      data: daily.map(d => ({ date: d.date, total: d[metricKey] || 0 })),
-      keys: ['total'],
-    };
+    return totalFallback();
   }
 
-  if (!groups.length) {
-    return {
-      data: daily.map(d => ({ date: d.date, total: d[metricKey] || 0 })),
-      keys: ['total'],
-    };
-  }
+  if (!groups.length) return totalFallback();
 
-  const data = distributeByWeight(daily, groups, metricKey);
-  const keys = groups.map(g => g.key);
+  const bKey = dailyBreakdownKey(groupBy, metricKey);
+  const hasRealBreakdown = daily.some(day => {
+    const bd = day[bKey];
+    return bd && Object.keys(bd).length > 0;
+  });
 
-  return { data, keys };
+  const data = hasRealBreakdown
+    ? splitDailyByGroup(daily, groups, bKey, metricKey)
+    : distributeByWeight(daily, groups, metricKey);
+
+  return { data, keys: groups.map(g => g.key) };
 };
 
-/** Aggregate daily series rows into ISO-week buckets (week starts Sunday). */
+/** Aggregate daily series rows into ISO-week buckets (week starts Monday, clipped to month). */
 export const buildWeeklyData = dailyData => {
   if (!dailyData.length) return [];
 
@@ -411,8 +441,14 @@ export const buildWeeklyData = dailyData => {
     const d = new Date(day.date + 'T00:00:00Z');
     const weekStart = new Date(d);
 
-    weekStart.setUTCDate(d.getUTCDate() - d.getUTCDay());
-    const weekKey = weekStart.toISOString().slice(0, 10);
+    // ISO: Monday = 0 offset. getUTCDay() is 0=Sun…6=Sat; (day+6)%7 gives 0=Mon…6=Sun
+    weekStart.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7));
+
+    // If the Monday falls before this month, pin the label to the 1st of the month
+    const weekKey =
+      weekStart.getUTCMonth() === d.getUTCMonth()
+        ? weekStart.toISOString().slice(0, 10)
+        : `${day.date.slice(0, 8)}01`;
 
     if (!currentWeek || currentWeek.date !== weekKey) {
       if (currentWeek) weeks.push(currentWeek);

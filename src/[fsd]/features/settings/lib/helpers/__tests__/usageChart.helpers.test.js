@@ -158,6 +158,111 @@ describe('buildSeriesFromDaily', () => {
   });
 });
 
+// ─── splitDailyByGroup / dailyBreakdownKey ────────────────────────────────────
+
+describe('dailyBreakdownKey', () => {
+  it('maps spend → by_model for model dimension', () => {
+    expect(UsageHelpers.dailyBreakdownKey('model', 'spend')).toBe('by_model');
+  });
+
+  it('maps total_tokens → by_model_tokens for model dimension', () => {
+    expect(UsageHelpers.dailyBreakdownKey('model', 'total_tokens')).toBe('by_model_tokens');
+  });
+
+  it('maps spend → by_source for source dimension', () => {
+    expect(UsageHelpers.dailyBreakdownKey('source', 'spend')).toBe('by_source');
+  });
+
+  it('maps total_tokens → by_source_tokens for source dimension', () => {
+    expect(UsageHelpers.dailyBreakdownKey('source', 'total_tokens')).toBe('by_source_tokens');
+  });
+});
+
+describe('splitDailyByGroup', () => {
+  const groups = [
+    { key: 'gpt-4o', w: 18 },
+    { key: 'claude-3', w: 12 },
+  ];
+
+  const daily = [
+    { date: '2026-10-01', spend: 10, by_model: { 'gpt-4o': 8, 'claude-3': 2 } },
+    { date: '2026-10-02', spend: 20, by_model: { 'gpt-4o': 5, 'claude-3': 15 } },
+  ];
+
+  it('reads each day from its own breakdown, not the month share', () => {
+    const rows = UsageHelpers.splitDailyByGroup(daily, groups, 'by_model', 'spend');
+
+    expect(rows[0]['gpt-4o']).toBe(8);
+    expect(rows[0]['claude-3']).toBe(2);
+    expect(rows[1]['gpt-4o']).toBe(5);
+    expect(rows[1]['claude-3']).toBe(15);
+  });
+
+  it('preserves the date key', () => {
+    const rows = UsageHelpers.splitDailyByGroup(daily, groups, 'by_model', 'spend');
+
+    expect(rows[0].date).toBe('2026-10-01');
+  });
+
+  it('puts the remainder into __other when that group is present', () => {
+    const groupsWithOther = [...groups, { key: '__other', w: 0 }];
+    const rows = UsageHelpers.splitDailyByGroup(daily, groupsWithOther, 'by_model', 'spend');
+
+    // day 0: spend=10, named=8+2=10, other=0
+    expect(rows[0].__other).toBe(0);
+    // day 1: spend=20, named=5+15=20, other=0
+    expect(rows[1].__other).toBe(0);
+  });
+
+  it('other is non-negative even when breakdown exceeds day total', () => {
+    const over = [{ date: '2026-10-01', spend: 5, by_model: { 'gpt-4o': 4, 'claude-3': 3 } }];
+    const groupsWithOther = [...groups, { key: '__other', w: 0 }];
+    const rows = UsageHelpers.splitDailyByGroup(over, groupsWithOther, 'by_model', 'spend');
+
+    expect(rows[0].__other).toBe(0);
+  });
+
+  it('returns zero for a key absent from breakdown', () => {
+    const sparse = [{ date: '2026-10-01', spend: 10, by_model: { 'gpt-4o': 7 } }];
+    const rows = UsageHelpers.splitDailyByGroup(sparse, groups, 'by_model', 'spend');
+
+    expect(rows[0]['claude-3']).toBe(0);
+  });
+});
+
+describe('buildSeriesFromDaily — real breakdown path', () => {
+  const daily = [
+    { date: '2026-10-01', spend: 10, by_model: { 'gpt-4o': 8, 'claude-3': 2 } },
+    { date: '2026-10-02', spend: 20, by_model: { 'gpt-4o': 5, 'claude-3': 15 } },
+  ];
+  const models = [
+    { model: 'gpt-4o', spend: 18 },
+    { model: 'claude-3', spend: 12 },
+  ];
+
+  it('uses the real per-day breakdown when by_model is present', () => {
+    const { data } = UsageHelpers.buildSeriesFromDaily(daily, 'model', models, [], 'spend');
+
+    // Day 1: gpt-4o=8, not the proportional 10*0.6=6
+    expect(data[0]['gpt-4o']).toBe(8);
+    expect(data[0]['claude-3']).toBe(2);
+    // Day 2: real values, not proportional
+    expect(data[1]['gpt-4o']).toBe(5);
+    expect(data[1]['claude-3']).toBe(15);
+  });
+
+  it('falls back to distributeByWeight when no breakdown fields are present', () => {
+    const noBreakdown = [
+      { date: '2026-10-01', spend: 10 },
+      { date: '2026-10-02', spend: 20 },
+    ];
+    const { data } = UsageHelpers.buildSeriesFromDaily(noBreakdown, 'model', models, [], 'spend');
+
+    // Falls back to proportional: gpt-4o = 18/30 = 60%
+    expect(data[0]['gpt-4o']).toBeCloseTo(6);
+  });
+});
+
 // ─── distributeByWeight ───────────────────────────────────────────────────────
 
 describe('distributeByWeight', () => {
