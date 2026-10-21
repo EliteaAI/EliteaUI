@@ -32,15 +32,17 @@ const EntitySchedulesSection = memo(props => {
   const currentUserId = useSelector(state => state.user.id);
   const navigate = useNavigate();
   const { tab } = useParams();
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
 
-  // The form opens nested in the editor and comes back to this editor path (owner CR 2026-10-21)
+  // The form opens nested in the editor and comes back to this editor location (owner CR 2026-10-21).
+  // The form URL keeps the editor search (viewMode), so the entity crumb opens the editor too.
   const openForm = useCallback(
     scheduleId =>
-      navigate(buildScheduleFormLink({ entityType, entityId, tab, scheduleId }), {
-        state: { returnTo: pathname },
-      }),
-    [navigate, entityType, entityId, tab, pathname],
+      navigate(
+        { pathname: buildScheduleFormLink({ entityType, entityId, tab, scheduleId }), search },
+        { state: { returnTo: pathname + search } },
+      ),
+    [navigate, entityType, entityId, tab, pathname, search],
   );
   const onAdd = useCallback(() => openForm(), [openForm]);
   const testId = `${entityType}-schedules-section`;
@@ -57,12 +59,16 @@ const EntitySchedulesSection = memo(props => {
           aria-label="Schedules"
           sx={styles.content}
         >
-          <Box sx={styles.header}>
+          <Box
+            sx={styles.header}
+            data-testid={`${testId}-header`}
+          >
             {canCreate && (
               <Button.BaseBtn
                 variant={BUTTON_VARIANTS.elitea}
-                color={BUTTON_COLORS.secondary}
+                color={BUTTON_COLORS.primary}
                 onClick={onAdd}
+                sx={styles.noWrap}
                 data-testid={`${testId}-add`}
               >
                 + Schedule
@@ -81,6 +87,7 @@ const EntitySchedulesSection = memo(props => {
               // The Schedules page names the entity chip with it when the list has no rows
               state={{ entityName }}
               variant="bodyMedium"
+              sx={styles.noWrap}
               data-testid={`${testId}-open-all`}
             >
               Open all in Schedules
@@ -158,13 +165,19 @@ const entitySchedulesSectionStyles = () => ({
     flexDirection: 'column',
     gap: '0.75rem',
   },
+  // In the narrow pipeline column the row wraps: the count text then takes its own line
   header: {
     display: 'flex',
+    flexWrap: 'wrap',
     alignItems: 'center',
-    gap: '1rem',
+    gap: '0.5rem 1rem',
   },
   count: {
-    flex: 1,
+    flex: '1 1 12rem',
+  },
+  noWrap: {
+    whiteSpace: 'nowrap',
+    flexShrink: 0,
   },
   showMore: {
     alignSelf: 'flex-start',

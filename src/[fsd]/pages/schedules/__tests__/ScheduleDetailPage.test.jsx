@@ -37,7 +37,10 @@ vi.mock('@/[fsd]/entities/schedule', async importOriginal => ({
   useUpdateScheduleMutation: () => [mocks.updateSchedule],
   useRunScheduleMutation: () => [mocks.runSchedule],
 }));
-vi.mock('@/[fsd]/shared/lib/hooks', () => ({ useSelectedProjectId: () => mocks.projectId }));
+vi.mock('@/[fsd]/shared/lib/hooks', () => ({
+  useSelectedProjectId: () => mocks.projectId,
+  useViewMode: () => 'owner',
+}));
 vi.mock('@/[fsd]/shared/lib/helpers', async importOriginal => {
   const actual = await importOriginal();
   return {
@@ -214,11 +217,11 @@ describe('ScheduleDetailPage EL-7011', () => {
     mocks.updateSchedule.mockReturnValue({ unwrap: () => Promise.resolve({ id: 9 }) });
     render(<ScheduleDetailPage entityType="agent" />);
 
-    expect(mocks.formProps.lockedEntity).toEqual({ type: 'agent', id: '3' });
+    expect(mocks.formProps.lockedEntity).toEqual({ type: 'agent', id: 3 });
     expect(mocks.formProps.entityName).toBeUndefined();
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
-    await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith('/agents/all/3'));
+    await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith('/agents/all/3?viewMode=owner'));
   });
 
   it('TC-US35-10 R3.5 EL-7011 nested in the agent editor, shows not found for a schedule of another agent', () => {

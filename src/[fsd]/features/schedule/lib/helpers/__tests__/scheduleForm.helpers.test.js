@@ -138,8 +138,8 @@ describe('EL-7011 R5.1 and R5.3 entity from the URL', () => {
       new URLSearchParams('entityType=pipeline&entityId=9'),
       {},
     );
-    expect(urlEntity).toEqual({ type: 'pipeline', id: '9' });
-    expect(values).toMatchObject({ type: 'pipeline', application_id: '9', run_mode: 'entry_point' });
+    expect(urlEntity).toEqual({ type: 'pipeline', id: 9 });
+    expect(values).toMatchObject({ type: 'pipeline', application_id: 9, run_mode: 'entry_point' });
   });
 
   it('buildInitialValues defaults to an empty Agent form and the Schedules page', () => {

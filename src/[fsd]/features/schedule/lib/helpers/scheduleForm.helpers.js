@@ -49,7 +49,8 @@ export const buildInitialValues = (searchParams, locationState, entityRoute = {}
   const entityId = searchParams.get('entityId');
   const urlEntity =
     entityRoute.lockedEntity ??
-    (ENTITY_TYPES.includes(entityType) && entityId ? { type: entityType, id: entityId } : null);
+    // Numeric, as the entity options are: a string id would leave the locked field empty
+    (ENTITY_TYPES.includes(entityType) && entityId ? { type: entityType, id: Number(entityId) } : null);
   const type = urlEntity?.type ?? 'agent';
   const returnTo = locationState?.returnTo;
 
