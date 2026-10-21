@@ -4,6 +4,9 @@ import DotMenu from '@/components/DotMenu';
 
 import ChangeOwnerDialog from './ChangeOwnerDialog';
 
+// The icon-only menu button needs a name for screen readers
+const MENU_BUTTON_PROPS = { 'aria-label': 'More actions' };
+
 const ScheduleRowActions = memo(props => {
   // onOpenRunHistory and hideChangeOwner shape the card menu of the editor Schedules section (US-35)
   const { row, onRun, onEdit, onOpenRunHistory, onPause, onResume, onDelete, isBusy, hideChangeOwner } =
@@ -61,6 +64,7 @@ const ScheduleRowActions = memo(props => {
       <DotMenu
         id={`schedule-${row.id}`}
         disabled={isBusy}
+        anchorButtonProps={MENU_BUTTON_PROPS}
       >
         {items}
       </DotMenu>
