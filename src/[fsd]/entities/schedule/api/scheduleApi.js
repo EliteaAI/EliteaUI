@@ -166,9 +166,11 @@ export const scheduleApi = eliteaApi
 
       // Lazy use only. A function responseHandler also runs for error responses, so branch on ok
       // to keep the server's JSON error in error.data (buildErrorMessage reads it).
+      // ids exports only these schedules (one schedule from a row menu); no ids exports the project
       exportSchedules: build.query({
-        query: ({ projectId }) => ({
+        query: ({ projectId, ids }) => ({
           url: `${schedulesPath(projectId)}/export`,
+          params: ids?.length ? { ids: ids.join(',') } : undefined,
           responseHandler: async response =>
             response.ok
               ? {
