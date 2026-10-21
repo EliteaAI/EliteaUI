@@ -186,9 +186,25 @@ const schedulesFiltersStyles = () => ({
     [breakpoints.down(1100)]: { flex: '1 1 9rem' },
     [breakpoints.down('sm')]: { flexBasis: '100%' },
   }),
-  // The owner chips wrap inside the control, so the bar grows in height
+  // The owner chips stay on one row inside the control, so it keeps the height of the other filters
   owner: ({ breakpoints }) => ({
     width: '15rem',
+    '& .MuiAutocomplete-root': { marginTop: 0 },
+    // Two classes beat the shared drop-down's own `& .MuiAutocomplete-inputRoot { flexWrap: wrap }`
+    '& .MuiAutocomplete-root .MuiAutocomplete-inputRoot': {
+      flexWrap: 'nowrap',
+      // The height and inner paddings of the bordered SingleSelect, as on Type and Status; the right
+      // padding stays with MUI, which keeps room for the clear icon there
+      height: '1.88rem',
+      paddingTop: 0,
+      paddingBottom: 0,
+      paddingLeft: '0.75rem',
+      overflowX: 'auto',
+      scrollbarWidth: 'none',
+      '&::-webkit-scrollbar': { display: 'none' },
+    },
+    '& .MuiChip-root': { maxWidth: '7rem' },
+    '& .MuiChip-label': { overflow: 'hidden', textOverflow: 'ellipsis' },
     [breakpoints.down(1100)]: { flex: '1 1 15rem', width: 'auto', minWidth: '15rem' },
     [breakpoints.down('sm')]: { flexBasis: '100%', minWidth: 0 },
   }),

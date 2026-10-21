@@ -53,6 +53,7 @@ const OwnerFilter = memo(({ selectedOwners, onChangeOwners }) => {
       selectedUsers={selectedOwners}
       onChangeUsers={onChangeOwners}
       filterOptions={keepServerResult}
+      limitTags={1}
       onInputChange={handleInputChange}
       slotProps={{ listBox: { onScroll: handleScroll } }}
     />
