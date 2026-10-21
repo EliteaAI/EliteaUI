@@ -65,6 +65,7 @@ const CreateSkill = memo(() => {
                       <CreateSkillForm
                         sx={styles.formContainer}
                         showGenerateButton
+                        isCreateMode
                       />
                     )}
                   </Grid>

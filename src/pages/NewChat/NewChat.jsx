@@ -169,6 +169,7 @@ const NewChat = props => {
   const { isSmallWindow } = useIsSmallWindow();
 
   const sideBarCollapsed = useSelector(state => state.settings.sideBarCollapsed);
+  const { id: userId } = useSelector(state => state.user);
 
   const leftPanelWidth = useMemo(
     () => (sideBarCollapsed ? 300 : windowWidth > 1700 ? 300 : 380 - SIDE_BAR_WIDTH / 2),
@@ -1147,19 +1148,16 @@ const NewChat = props => {
 
   const onCreateConversationInFolder = useCallback(
     folder => {
-      if (isStreaming || folder?.isNew) return;
+      if (isStreaming || folder?.isNew || folder?.owner_id != userId) return;
       startNewConversation(folder.id);
     },
-    [isStreaming, startNewConversation],
+    [isStreaming, startNewConversation, userId],
   );
 
   useEffect(() => {
     if (isCreatingConversation && !activeConversation?.isNew) {
       if (isStreaming) boxRef.current?.stopAll?.();
-      const parentFolder = activeConversation?.folder_id
-        ? folders.find(f => f.id === activeConversation.folder_id)
-        : null;
-      startNewConversation(parentFolder?.id ?? null);
+      startNewConversation();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isCreatingConversation, activeConversation?.isNew]);

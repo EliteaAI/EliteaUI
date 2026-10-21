@@ -8,14 +8,12 @@ import { EditableEntityIcon } from '@/[fsd]/features/entity-icon-editor';
 import { SKILL_NAME_MAX_LENGTH } from '@/[fsd]/features/skill/lib/constants';
 import { useSkillInstructionsMaxLength } from '@/[fsd]/features/skill/lib/hooks';
 import { GenerateSkillButton } from '@/[fsd]/features/skill/ui/generate-skill-modal';
-import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
+import { AccordionConstants, MarkdownConstants } from '@/[fsd]/shared/lib/constants';
 import { useFieldFocus, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { Field, Input, Markdown, Text } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
-import TabGroupButton from '@/[fsd]/shared/ui/tab-group-button/TabGroupButton';
+import { MarkdownViewToggle } from '@/[fsd]/shared/ui/tab-group-button';
 import { useTagListQuery } from '@/api/tags.js';
-import CodeIcon from '@/assets/code-icon.svg?react';
-import OpenEyeIcon from '@/assets/open-eye-icon.svg?react';
 import { ChatParticipantType, MAX_DESCRIPTION_LENGTH, PROMPT_PAYLOAD_KEY } from '@/common/constants';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import TagEditor from '@/pages/Common/Components/TagEditor';
@@ -23,11 +21,16 @@ import { markdown } from '@codemirror/lang-markdown';
 
 import SkillRunSettings from './SkillRunSettings';
 
+const { MARKDOWN_VIEW_MODES } = MarkdownConstants;
+
+const PREVIEW_FIRST = [MARKDOWN_VIEW_MODES.preview, MARKDOWN_VIEW_MODES.edit];
+
 const CreateSkillForm = memo(props => {
   const {
     accordionStyle,
     sx,
     disabled = false,
+    isCreateMode = false,
     instructionsKey,
     onSkillCreated,
     showGenerateButton = false,
@@ -41,26 +44,12 @@ const CreateSkillForm = memo(props => {
   const canUploadIcon = !disabled && checkPermission('models.applications.skills.upload_icon.post');
   const { data: tagList = {} } = useTagListQuery({ projectId }, { skip: !projectId });
   const [name, setName] = useState(formik.values?.name || '');
-  const [instructionsViewMode, setInstructionsViewMode] = useState('edit');
+  const [instructionsViewMode, setInstructionsViewMode] = useState(
+    isCreateMode ? MARKDOWN_VIEW_MODES.edit : MARKDOWN_VIEW_MODES.preview,
+  );
   const styles = skillCreateFormStyles();
   const { toggleFieldFocus, isFocused } = useFieldFocus();
   const maxInstructionsLength = useSkillInstructionsMaxLength();
-
-  const modeButtons = useMemo(
-    () => [
-      {
-        value: 'edit',
-        icon: t => <CodeIcon fill={t.palette.icon.secondary} />,
-        tooltip: 'Edit mode',
-      },
-      {
-        value: 'preview',
-        icon: t => <OpenEyeIcon fill={t.palette.icon.secondary} />,
-        tooltip: 'Preview mode',
-      },
-    ],
-    [],
-  );
 
   const markdownExtensions = useMemo(() => [markdown()], []);
 
@@ -277,17 +266,16 @@ const CreateSkillForm = memo(props => {
                 sx={styles.summaryActions}
                 onClick={e => e.stopPropagation()}
               >
-                <TabGroupButton
+                <MarkdownViewToggle
                   value={instructionsViewMode}
-                  onChange={(_e, m) => m && setInstructionsViewMode(m)}
-                  size="small"
-                  arrayBtn={modeButtons}
+                  onChange={setInstructionsViewMode}
+                  iconOrder={PREVIEW_FIRST}
                 />
               </Box>
             ),
             content: (
               <>
-                {instructionsViewMode === 'edit' ? (
+                {instructionsViewMode === MARKDOWN_VIEW_MODES.edit ? (
                   <Box sx={styles.instructionsWrapper}>
                     <Box
                       data-testid="skill-instructions-editor"

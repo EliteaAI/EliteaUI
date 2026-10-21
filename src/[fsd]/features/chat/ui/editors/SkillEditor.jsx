@@ -106,7 +106,12 @@ const SkillEditor = memo(props => {
           isNewConversation={isNewConversation}
         />
       )}
-      {!isLoadingModels && <CreateSkillForm disabled={isCreating || isAwaitingSkillDetails} />}
+      {!isLoadingModels && (
+        <CreateSkillForm
+          disabled={isCreating || isAwaitingSkillDetails}
+          isCreateMode={isCreateMode}
+        />
+      )}
     </BaseEditor>
   );
 });
