@@ -16,8 +16,12 @@ import {
   supersedeMentionSkillAction,
 } from '@/[fsd]/features/chat/lib/helpers';
 import {
+  applyInputGuardrailBlocked,
+  applyInputGuardrailNotice,
   createSyntheticToolAction,
   findChatSocketMessageIndex,
+  getAgentGuardrailEventVerdict,
+  getAgentGuardrailVerdict,
   insertNewAssistantMessage,
   isLocalAssistantPlaceholder,
   mergeChatSocketMessage,
@@ -25,7 +29,7 @@ import {
 } from '@/[fsd]/features/chat/lib/helpers/chatSocket.helpers';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import { ParsePipelineHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
-import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
+import { AnalyticConstants, InputGuardrailConstants } from '@/[fsd]/shared/lib/constants';
 import {
   useContextExecutionEntity,
   useCtrlEnterKeyEventsHandler,
@@ -49,6 +53,8 @@ import { convertJsonToString } from '@/common/utils';
 import RouteDefinitions from '@/routes';
 
 const { GA_EVENT_NAMES, GA_EVENT_PARAMS } = AnalyticConstants;
+
+const { INPUT_GUARDRAIL_ACTIONS } = InputGuardrailConstants;
 
 const { mergeHitlInterrupts, normalizeHitlInterrupt, reconcileRootHitlInterrupts, settleHitlResumeAttempt } =
   HitlHelpers;
@@ -463,6 +469,7 @@ export const useChatSocket = ({
             msg.references = [];
             msg.created_at = new Date().getTime();
           }
+          msg.hitlResumeSnapshot = undefined;
           msg.task_id = task_id;
           msg.participant_id = participant_id;
           msg.question_id = question_id;
@@ -1473,6 +1480,9 @@ export const useChatSocket = ({
             msg.budgetErrorCode = response_metadata?.budget_error_code;
             msg.hitlInterrupt = undefined;
             msg.hitlInterrupts = undefined;
+            // A refusal by the input guardrail (#6886) renders as the policy card, not a
+            // trace; after a reload it comes from the persisted meta the same way
+            msg.inputGuardrail = getAgentGuardrailVerdict(response_metadata);
           }
           trackEvent(GA_EVENT_NAMES.AGENT_EXCEPTION, {
             [GA_EVENT_PARAMS.ERROR_TYPE]: 'agent_exception',
@@ -1502,6 +1512,48 @@ export const useChatSocket = ({
             [GA_EVENT_PARAMS.TIMESTAMP]: new Date().toISOString(),
           });
           break;
+        }
+        case SocketMessageType.InputGuardrailBlocked: {
+          // The turn never reached a model (#6886); nothing to merge on the placeholder
+          updateChatHistoryState(setChatHistoryRef, chatHistoryRef, prevState =>
+            applyInputGuardrailBlocked(prevState, {
+              messageId: message_id,
+              questionId: questionIdFromMessage,
+              verdict: response_metadata?.input_guardrail,
+              message: response_metadata?.human_readable || message.content,
+              // Ids of the stored rows: the sender's placeholders only have client-made ones
+              responseMessageId: message.response_message_id,
+              questionItemUuid: message.question_item_uuid,
+            }),
+          );
+          notifyTaskError();
+          return;
+        }
+        case SocketMessageType.InputGuardrailNotice:
+          updateChatHistoryState(setChatHistoryRef, chatHistoryRef, prevState =>
+            applyInputGuardrailNotice(prevState, {
+              questionId: questionIdFromMessage,
+              verdict: response_metadata?.input_guardrail,
+              content: message.content,
+            }),
+          );
+          return;
+        case SocketMessageType.AgentInputGuardrail: {
+          // SDK / indexer run (#6886): only a redact or warn verdict lands here. A block
+          // is reported by agent_exception, and `record` is silent by design.
+          const guardrailVerdict = getAgentGuardrailEventVerdict(response_metadata);
+          if (
+            guardrailVerdict &&
+            [INPUT_GUARDRAIL_ACTIONS.REDACT, INPUT_GUARDRAIL_ACTIONS.WARN].includes(guardrailVerdict.action)
+          ) {
+            updateChatHistoryState(setChatHistoryRef, chatHistoryRef, prevState =>
+              applyInputGuardrailNotice(prevState, {
+                questionId: question_id || msg.question_id,
+                verdict: guardrailVerdict,
+              }),
+            );
+          }
+          return;
         }
         case SocketMessageType.Freeform:
           break;
