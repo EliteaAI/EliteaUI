@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { RUN_SCOPE_TYPE, TOOLTIP_TEXTS } from '../../constants/analyticsCommon.constants.js';
+import { GUIDE_SECTIONS, RUN_SCOPE_TYPE, TOOLTIP_TEXTS } from '../../constants/analyticsCommon.constants.js';
 import {
   axisTick,
   barChartCursor,
@@ -236,5 +236,28 @@ describe('shared entity labels', () => {
     expect(pickEntityRoutePattern('pipeline', routes)).toBe('/pipelines');
     expect(pickEntityRoutePattern('agent', routes)).toBe('/agents');
     expect(pickEntityRoutePattern(null, routes)).toBe('/agents');
+  });
+});
+
+describe('R1.5 EL-7011 analytics texts name the trigger sources', () => {
+  const automated = GUIDE_SECTIONS.flatMap(s => s.metrics).find(m => m.name === 'Automated Activity');
+  const { overview } = TOOLTIP_TEXTS;
+  const autoTexts = [overview.AUTOMATED_ACTIVITY, automated.description];
+  const manualTexts = [overview.TEAM, overview.AI_ACTIVE, overview.LEADERBOARD];
+
+  it('TC-US57-09 automated texts name Webhook, Scheduled, Schedule run now and Index runs', () => {
+    autoTexts.forEach(text => {
+      ['Webhook', 'Scheduled', 'Schedule run now', 'Index runs'].forEach(name => expect(text).toContain(name));
+    });
+  });
+
+  it('TC-US57-09 the leaderboard text names Chat, API and MCP', () => {
+    ['Chat', 'API', 'MCP'].forEach(name => expect(overview.LEADERBOARD).toContain(name));
+  });
+
+  it('TC-US57-10 Schedule run now never sits next to manual or user activity', () => {
+    manualTexts.forEach(text => expect(text).not.toMatch(/Schedule run now.*(manual|user activity)/i));
+    expect(overview.TEAM).toContain('Schedule run now');
+    expect(overview.AI_ACTIVE).toContain('Schedule run now');
   });
 });
