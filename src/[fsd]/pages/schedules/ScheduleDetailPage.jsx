@@ -9,7 +9,7 @@ import {
   useRunScheduleMutation,
   useUpdateScheduleMutation,
 } from '@/[fsd]/entities/schedule';
-import { ScheduleForm, ScheduleRunList } from '@/[fsd]/features/schedule';
+import { ScheduleForm, ScheduleRunsPanel } from '@/[fsd]/features/schedule';
 import { buildEditValues } from '@/[fsd]/features/schedule/lib/helpers';
 import { ScheduleHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
@@ -67,8 +67,14 @@ const ScheduleDetailPage = () => {
     () => runSchedule({ projectId, scheduleId, trigger: 'test' }).unwrap(),
     [runSchedule, projectId, scheduleId],
   );
-  const extraSections = useMemo(
-    () => [{ title: 'RUNS OF THIS SCHEDULE', content: <ScheduleRunList schedule={schedule} /> }],
+  // The Test schedule and Runs card right of the form (owner CR 2026-10-21)
+  const sidePanel = useCallback(
+    testRunProps => (
+      <ScheduleRunsPanel
+        schedule={schedule}
+        {...testRunProps}
+      />
+    ),
     [schedule],
   );
 
@@ -92,7 +98,7 @@ const ScheduleDetailPage = () => {
       initialValues={values}
       schedule={schedule}
       entityName={schedule.name}
-      extraSections={extraSections}
+      sidePanel={sidePanel}
       onSubmit={onSubmit}
       onSaved={onSaved}
       onTestRun={onTestRun}
