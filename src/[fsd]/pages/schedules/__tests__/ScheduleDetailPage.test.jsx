@@ -19,13 +19,15 @@ const mocks = vi.hoisted(() => ({
   query: {},
   formProps: null,
   settingsProps: null,
+  params: { scheduleId: '9' },
+  state: { returnTo: '/settings/schedules' },
 }));
 
 vi.mock('react-router-dom', () => ({
   Link: ({ to, children }) => <a href={to}>{children}</a>,
   useNavigate: () => mocks.navigate,
-  useParams: () => ({ scheduleId: '9' }),
-  useLocation: () => ({ state: { returnTo: '/settings/schedules' } }),
+  useParams: () => mocks.params,
+  useLocation: () => ({ state: mocks.state }),
 }));
 vi.mock('@/[fsd]/entities/schedule', () => ({
   useGetScheduleQuery: () => mocks.query,
@@ -84,6 +86,8 @@ describe('ScheduleDetailPage EL-7011', () => {
     mocks.formProps = null;
     mocks.settingsProps = null;
     mocks.query = {};
+    mocks.params = { scheduleId: '9' };
+    mocks.state = { returnTo: '/settings/schedules' };
   });
 
   it('TC-US32-01 R1.1 EL-7011 fills the form with the saved schedule, its name and the run list', () => {
@@ -186,5 +190,19 @@ describe('ScheduleDetailPage EL-7011', () => {
     await waitFor(() =>
       expect(mocks.runSchedule).toHaveBeenCalledWith({ projectId: 5, scheduleId: '9', trigger: 'test' }),
     );
+  });
+
+  it('TC-US35-10 R3.5 R4.1 EL-7011 nested in the agent editor, locks the agent, names it in the crumbs and returns to it', async () => {
+    mocks.params = { tab: 'all', agentId: '3', scheduleId: '9' };
+    mocks.state = null;
+    mocks.query = { currentData: schedule };
+    mocks.updateSchedule.mockReturnValue({ unwrap: () => Promise.resolve({ id: 9 }) });
+    render(<ScheduleDetailPage entityType="agent" />);
+
+    expect(mocks.formProps.lockedEntity).toEqual({ type: 'agent', id: '3' });
+    expect(mocks.formProps.entityName).toBeUndefined();
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith('/agents/all/3'));
   });
 });
