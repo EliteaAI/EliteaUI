@@ -15,7 +15,7 @@ import useCheckPermission from '@/hooks/useCheckPermission';
 
 import SettingsFormProvider from '../shared/SettingsFormProvider';
 import { ChatConfigurationSection } from './chat-configuration';
-import { ScheduleNotificationsSection } from './schedules';
+import { RunWithoutAskingSetting, ScheduleNotificationsSection } from './schedules';
 
 const ProjectGeneralContent = memo(() => {
   const styles = componentStyles();
@@ -112,7 +112,12 @@ const ProjectGeneralContent = memo(() => {
               items={[
                 {
                   title: 'Schedules',
-                  content: <ScheduleNotificationsSection />,
+                  content: (
+                    <Box sx={styles.schedulesStyles}>
+                      <ScheduleNotificationsSection />
+                      <RunWithoutAskingSetting />
+                    </Box>
+                  ),
                 },
               ]}
             />
@@ -158,6 +163,11 @@ const componentStyles = () => ({
   containerStyles: {
     display: 'flex',
     flexDirection: 'column',
+  },
+  schedulesStyles: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
   },
   loader: {
     display: 'flex',

@@ -44,10 +44,15 @@ let selectProps;
 let versionProps;
 let modalProps;
 let allowed = true;
+let isAdmin = false;
 let runAllowed = true;
 let listFailed = false;
 
-vi.mock('@/hooks/useCheckPermission', () => ({ default: () => ({ checkPermission: () => allowed }) }));
+vi.mock('@/hooks/useCheckPermission', () => ({
+  default: () => ({
+    checkPermission: permission => (permission === 'models.applications.schedules.admin' ? isAdmin : allowed),
+  }),
+}));
 vi.mock('@/[fsd]/entities/schedule', () => ({
   useGetScheduleListQuery: () => ({
     data: runAllowed === undefined ? undefined : { runWithoutAskingAllowed: runAllowed },
@@ -197,6 +202,7 @@ const save = () => fireEvent.click(screen.getByRole('button', { name: 'Save' }))
 describe('ScheduleForm EL-7011', () => {
   beforeEach(() => {
     allowed = true;
+    isAdmin = false;
     runAllowed = true;
     listFailed = false;
     listQuery.mockReturnValue({ data: { rows: ROWS, total: 2 }, isFetching: false });
@@ -580,6 +586,26 @@ describe('ScheduleForm EL-7011', () => {
 
     expect(screen.getByTestId('schedule-approval-rule-run_without_asking')).toBeDisabled();
     expect(screen.queryByText(/does not allow/)).not.toBeInTheDocument();
+  });
+
+  it('R1.3 EL-7011 owner CR links a project admin from the hint to Project General', () => {
+    runAllowed = false;
+    isAdmin = true;
+    renderForm();
+
+    expect(screen.getByText(/does not allow/)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Change it in Settings > Project General' })).toHaveAttribute(
+      'href',
+      '/settings/project-general',
+    );
+  });
+
+  it('R1.3 EL-7011 owner CR shows no settings link to a non-admin', () => {
+    runAllowed = false;
+    renderForm();
+
+    expect(screen.getByText(/does not allow/)).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Project General/ })).not.toBeInTheDocument();
   });
 
   it('R1.3 EL-7011 links the Approval rule label and the hint to the radio group', () => {
