@@ -53,21 +53,11 @@ const findNode = (nodes, tool_name) =>
     }
   });
 
-const NESTED_AGENT_EVENTS_APPLIED_TO_PARENT_STEP = new Set([
-  SocketMessageType.AgentToolError,
-  SocketMessageType.AgentHitlInterrupt,
-  SocketMessageType.AgentException,
-  SocketMessageType.PipelineFinish,
-]);
-
 const isNestedAgentEvent = event =>
   Boolean(
     ExecutionHierarchyHelpers.normalizeExecutionHierarchy(event.response_metadata?.metadata)
       .parent_agent_name,
   );
-
-const isNestedAgentTimelineEvent = event =>
-  isNestedAgentEvent(event) && !NESTED_AGENT_EVENTS_APPLIED_TO_PARENT_STEP.has(event.type);
 
 export const parseRunEvent = (
   event,
@@ -81,7 +71,7 @@ export const parseRunEvent = (
   runPipelineStatus,
   nextRunName,
 ) => {
-  if (isNestedAgentTimelineEvent(event)) {
+  if (isNestedAgentEvent(event)) {
     return;
   }
   switch (event.type) {

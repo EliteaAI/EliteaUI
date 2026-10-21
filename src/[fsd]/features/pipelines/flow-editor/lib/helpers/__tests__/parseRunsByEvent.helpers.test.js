@@ -288,8 +288,9 @@ describe('agent node in a pipeline run timeline', () => {
         content: 'tool failed',
         response_metadata: {
           tool_name: 'search',
-          tool_run_id: 'agent-call',
-          metadata: subAgentMetadata('tools'),
+          tool_run_id: 'sub-tool',
+          finish_reason: 'error',
+          error: 'tool failed',
         },
       },
     ]);
