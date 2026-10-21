@@ -18,11 +18,16 @@ export const ENTITY_KIND_LABELS = {
   pipeline: 'Pipeline',
 };
 
-// usage_event.trigger_source of automated runs (#6881); manual runs carry no value
+// usage_event.trigger_source of every run; `manual` is the legacy value of runs recorded before sources existed
 export const TRIGGER_SOURCE_LABELS = {
-  scheduled: 'Scheduled Pipelines',
-  webhook: 'Webhook Triggers',
-  index: 'Index Runs',
+  chat: 'Chat',
+  api: 'API',
+  mcp: 'MCP',
+  webhook: 'Webhook',
+  scheduled: 'Scheduled',
+  schedule_manual: 'Schedule run now',
+  index: 'Index runs',
+  manual: 'Manual (legacy)',
 };
 
 // Embedding calls are metered as llm events, so every token, call and cost figure covers both (#6878)
@@ -148,7 +153,7 @@ export const TOOLTIP_TEXTS = {
       'Runs and in-agent uses per skill version. Unknown version means the agent did not record which version it used.',
     MODELS: 'Model calls made by this skill’s runs, per model.',
     USERS: 'Users who ran this skill or used it through an agent.',
-    TRIGGERS: 'How the runs and uses started: manually, or by a schedule, webhook, or index run.',
+    TRIGGERS: 'How the runs and uses started: Chat, API, MCP, Webhook, Scheduled, Schedule run now, or Index runs.',
     AGENTS: 'Agents and Pipelines that loaded or mentioned this skill, by number of uses.',
     SOURCES: 'How agents activated this skill: loaded on demand (load_skill) or mentioned in the message.',
     RECENT_RUNS: 'The latest runs of this skill. Open a run to see its own analytics.',
@@ -184,7 +189,7 @@ export const TOOLTIP_TEXTS = {
     MODELS_SECTION:
       'Shows models used during execution, including distinct runs, LLM calls, token usage, and estimated cost. A run using multiple models is counted in each applicable model row. Only LLM calls are included, so tool calls add no tokens or cost here.',
     TRIGGERS_SECTION:
-      'Shows how runs were initiated, with their token usage and estimated cost. Runs without a recorded schedule or webhook trigger appear as Manual.',
+      'Shows how runs were initiated (Chat, API, MCP, Webhook, Scheduled, Schedule run now, or Index runs), with their token usage and estimated cost. Runs recorded before sources existed appear as Manual (legacy).',
     RECENT_RUNS_SECTION:
       'Shows individual runs during the selected period. Select a start time to open that run’s Analytics page.',
   },

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { RUN_SCOPE_TYPE } from '../../constants/analyticsCommon.constants.js';
+import { RUN_SCOPE_TYPE, TOOLTIP_TEXTS } from '../../constants/analyticsCommon.constants.js';
 import {
   axisTick,
   barChartCursor,
@@ -15,6 +15,7 @@ import {
   formatVersionLabel,
   getPresetRange,
   pickEntityRoutePattern,
+  triggerSourceLabel,
 } from '../analyticsCommon.helpers.js';
 
 describe('getPresetRange', () => {
@@ -190,10 +191,38 @@ describe('run trace helpers', () => {
 });
 
 describe('shared entity labels', () => {
-  it('names the manual trigger Manual and keeps the automated labels', () => {
-    expect(formatTriggerLabel('manual')).toBe('Manual');
-    expect(formatTriggerLabel('scheduled')).toBe('Scheduled Pipelines');
-    expect(formatTriggerLabel('webhook')).toBe('Webhook Triggers');
+  it('R1.1 EL-7011 maps every trigger source to its label', () => {
+    const expected = {
+      chat: 'Chat',
+      api: 'API',
+      mcp: 'MCP',
+      webhook: 'Webhook',
+      scheduled: 'Scheduled',
+      schedule_manual: 'Schedule run now',
+      index: 'Index runs',
+      manual: 'Manual (legacy)',
+    };
+
+    Object.entries(expected).forEach(([key, label]) => {
+      expect(triggerSourceLabel(key)).toBe(label);
+      expect(formatTriggerLabel(key)).toBe(label);
+    });
+  });
+
+  it('R2.1 EL-7011 shows the raw key of an unlabelled source', () => {
+    expect(triggerSourceLabel('future_source')).toBe('future_source');
+    expect(formatTriggerLabel('future_source')).toBe('future_source');
+  });
+
+  it('R1.5 EL-7011 names the new sources in the trigger tooltips', () => {
+    const texts = [
+      TOOLTIP_TEXTS.skillDetail.TRIGGERS,
+      TOOLTIP_TEXTS.agentDetail.TRIGGERS_SECTION,
+    ].join(' ');
+
+    ['Chat', 'API', 'MCP', 'Webhook', 'Scheduled', 'Schedule run now', 'Index runs'].forEach(label =>
+      expect(texts).toContain(label),
+    );
   });
 
   it('names a run with no recorded version Unknown version', () => {

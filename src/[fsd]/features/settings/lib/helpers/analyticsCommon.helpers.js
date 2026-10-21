@@ -12,7 +12,6 @@ import {
   VERSION_UNKNOWN_LABEL,
 } from '../constants/analyticsCommon.constants.js';
 
-const MANUAL_TRIGGER = 'manual';
 
 // Calendar-day-aligned, inclusive of today: days=7 spans 7 calendar days total
 // (today + 6 prior) starting at 00:00, not 7 days back from the current time.
@@ -72,8 +71,7 @@ export const fmtCost = (usd, belowResolution = false) => {
 // An unrecognised trigger_source still renders as itself rather than disappearing
 export const triggerSourceLabel = source => TRIGGER_SOURCE_LABELS[source] || source || 'Unknown';
 
-export const formatTriggerLabel = source =>
-  source === MANUAL_TRIGGER ? 'Manual' : triggerSourceLabel(source);
+export const formatTriggerLabel = triggerSourceLabel;
 
 export const formatVersionLabel = versionName => versionName || VERSION_UNKNOWN_LABEL;
 
