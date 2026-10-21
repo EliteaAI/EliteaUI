@@ -3,7 +3,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFormik } from 'formik';
 import { Link as RouterLink } from 'react-router-dom';
 
-import { Box, Grid, Link, Typography } from '@mui/material';
+import { Box, CircularProgress, Grid, Link, Typography } from '@mui/material';
 
 import { GenerateEntityButton } from '@/[fsd]/entities/generate-entity-with-ai';
 import { useGetScheduleListQuery } from '@/[fsd]/entities/schedule';
@@ -30,6 +30,7 @@ import StyledInputEnhancer from '@/[fsd]/shared/ui/input/StyledInputEnhancer';
 import LazySelect from '@/[fsd]/shared/ui/select/LazySelect';
 import { useApplicationDetailsQuery, useApplicationListQuery } from '@/api/applications';
 import { MAX_DESCRIPTION_LENGTH, PERMISSIONS } from '@/common/constants';
+import AttentionIcon from '@/components/Icons/AttentionIcon';
 import StyledTabs from '@/components/StyledTabs';
 import VariableList from '@/components/VariableList';
 import useCheckPermission from '@/hooks/useCheckPermission';
@@ -37,9 +38,12 @@ import useNavBlocker from '@/hooks/useNavBlocker';
 import { StyledGridContainer, TabBarItems } from '@/pages/Common/Components/StyledComponents';
 import RouteDefinitions from '@/routes';
 
-import { APPROVAL_RULE } from '../lib/constants';
+import { APPROVAL_RULE, RISK_CHECK_STATUS, RISK_SAVE_ERROR } from '../lib/constants';
+import { useScheduleRiskCheck } from '../lib/hooks';
 import BuildScheduleWithAiModal from './BuildScheduleWithAiModal';
+import RiskReviewDialog from './RiskReviewDialog';
 import SaveWarningsDialog from './SaveWarningsDialog';
+import ScheduleRiskBlockBox from './ScheduleRiskBlockBox';
 
 const TYPE_ITEMS = [
   { value: 'agent', label: 'Agent' },
@@ -58,6 +62,13 @@ const TYPE_LABEL = Object.fromEntries(TYPE_ITEMS.map(({ value, label }) => [valu
 const FIELDS_WITH_INPUT = ['name', 'description', 'application_id', 'version_id', 'approval_rule'];
 const PROMPT_FIELDS = ['prompt', 'variables'];
 const AGENTS_TYPE = { agent: 'classic', pipeline: 'pipeline' };
+// The risk check states that keep Save disabled (owner CR 2026-10-21)
+const RISK_STATES_WITHOUT_SAVE = [
+  RISK_CHECK_STATUS.CHECKING,
+  RISK_CHECK_STATUS.BLOCKED,
+  RISK_CHECK_STATUS.FAILED,
+];
+const RISK_HINT_ID = 'schedule-risk-hint';
 
 const getEntityType = details => (details?.version_details?.agent_type === 'pipeline' ? 'pipeline' : 'agent');
 
@@ -110,44 +121,96 @@ const ScheduleForm = memo(props => {
   const [savedRule, setSavedRule] = useState('');
   const [testRunPending, setTestRunPending] = useState(false);
   const [testRunError, setTestRunError] = useState('');
+  // review: the values and the pending Test run of a save that waits for the risk review dialog
+  const [review, setReview] = useState(null);
+  const [reviewSaving, setReviewSaving] = useState(false);
   // afterSave: the Test run that replaces onSaved after this save; afterWarnings keeps it until the dialog closes
   const afterSave = useRef(null);
   const afterWarnings = useRef(null);
 
+  // A 409 of the risk scan opens the review again or shows the block box; riskAck answers the review
+  const saveSchedule = async (values, { setErrors, resetForm: resetTo }, runAfterSave, riskAck) => {
+    setBanner('');
+    let answer;
+    try {
+      const body = (schedule ? toUpdateBody : toCreateBody)(values);
+      answer = await onSubmit(riskAck ? { ...body, risk_ack: riskAck } : body);
+    } catch (error) {
+      const riskError = error?.status === 409 ? error.data?.error : null;
+      if (Object.values(RISK_SAVE_ERROR).includes(riskError)) {
+        riskCheck.applyFindings(error.data);
+        setReview(
+          riskError === RISK_SAVE_ERROR.BLOCKED
+            ? null
+            : { values, runAfterSave, changed: riskError === RISK_SAVE_ERROR.CHANGED },
+        );
+        return;
+      }
+      setReview(null);
+      const fieldErrors = error?.status === 400 ? toFieldErrors(error) : {};
+      const shownFields = isPromptShown(values)
+        ? [...FIELDS_WITH_INPUT, ...PROMPT_FIELDS]
+        : FIELDS_WITH_INPUT;
+      if (Object.keys(fieldErrors).some(field => shownFields.includes(field))) setErrors(fieldErrors);
+      else if (error?.status === 400 || error?.status === 409) setBanner(error.data?.error ?? '');
+      else toastError('Failed to save the schedule');
+      return;
+    }
+    setReview(null);
+    const approvalRule = answer?.approval_rule ?? values.approval_rule;
+    const hasWarnings = answer?.warnings?.length > 0;
+    // The saved values are the new baseline, so the leave-page blocker stays shut
+    resetTo({ values: { ...values, approval_rule: approvalRule } });
+    const changed = approvalRule !== values.approval_rule;
+    setRuleChanged(changed);
+    setSavedRule(approvalRule);
+    // onSaved runs outside the try, so an error there never shows as a failed save
+    if (hasWarnings || changed) {
+      afterWarnings.current = runAfterSave;
+      setSaved(answer);
+    } else await (runAfterSave ?? onSaved)?.(answer);
+  };
+
   const formik = useFormik({
     initialValues,
     validationSchema: scheduleFormSchema,
-    onSubmit: async (values, { setErrors, resetForm: resetTo }) => {
+    // Runs after validation, so the review never opens on an invalid form
+    onSubmit: async (values, helpers) => {
       setBanner('');
       const runAfterSave = afterSave.current;
-      let answer;
-      try {
-        answer = await onSubmit((schedule ? toUpdateBody : toCreateBody)(values));
-      } catch (error) {
-        const fieldErrors = error?.status === 400 ? toFieldErrors(error) : {};
-        const shownFields = isPromptShown(values)
-          ? [...FIELDS_WITH_INPUT, ...PROMPT_FIELDS]
-          : FIELDS_WITH_INPUT;
-        if (Object.keys(fieldErrors).some(field => shownFields.includes(field))) setErrors(fieldErrors);
-        else if (error?.status === 400 || error?.status === 409) setBanner(error.data?.error ?? '');
-        else toastError('Failed to save the schedule');
-        return;
-      }
-      const approvalRule = answer?.approval_rule ?? values.approval_rule;
-      const hasWarnings = answer?.warnings?.length > 0;
-      // The saved values are the new baseline, so the leave-page blocker stays shut
-      resetTo({ values: { ...values, approval_rule: approvalRule } });
-      const changed = approvalRule !== values.approval_rule;
-      setRuleChanged(changed);
-      setSavedRule(approvalRule);
-      // onSaved runs outside the try, so an error there never shows as a failed save
-      if (hasWarnings || changed) {
-        afterWarnings.current = runAfterSave;
-        setSaved(answer);
-      } else await (runAfterSave ?? onSaved)?.(answer);
+      // A fresh check on Save: a blocked or failed check shows in the form, sensitive tools open the review
+      const risk = await riskCheck.runCheck();
+      if (!risk || risk.blocking?.length) return;
+      if (risk.sensitive?.length) setReview({ values, runAfterSave, changed: false });
+      else await saveSchedule(values, helpers, runAfterSave);
     },
   });
   const { values, errors, submitCount, setFieldValue, setValues, resetForm } = formik;
+  const riskCheck = useScheduleRiskCheck({
+    projectId,
+    applicationId: values.application_id,
+    versionId: values.version_id,
+    runMode: values.run_mode,
+  });
+  const riskBlocksSave = RISK_STATES_WITHOUT_SAVE.includes(riskCheck.status);
+
+  // A rule other than the form field sets the field, then saves
+  const handleReviewConfirm = async ({ rule, confirmedName }) => {
+    if (rule !== values.approval_rule) setFieldValue('approval_rule', rule);
+    const { fingerprint } = riskCheck.result ?? {};
+    setReviewSaving(true);
+    try {
+      await saveSchedule(
+        { ...review.values, approval_rule: rule },
+        formik,
+        review.runAfterSave,
+        confirmedName ? { fingerprint, confirmed_name: confirmedName } : { fingerprint },
+      );
+    } finally {
+      setReviewSaving(false);
+    }
+  };
+  const handleReviewCancel = useCallback(() => setReview(null), []);
 
   // A clean form runs at once; a changed one saves first, and a failed or invalid save never reaches the run
   const runTest = useCallback(async () => {
@@ -298,6 +361,10 @@ const ScheduleForm = memo(props => {
   }));
 
   const showPrompt = isPromptShown(values);
+  const versionName = details?.versions?.find(
+    version => String(version.id) === String(values.version_id),
+  )?.name;
+  const entityLabel = [details?.name, versionName].filter(Boolean).join(' ');
 
   const sections = [
     {
@@ -389,6 +456,29 @@ const ScheduleForm = memo(props => {
             >
               {fieldError('application_id')}
             </Typography>
+          )}
+          {riskCheck.status === RISK_CHECK_STATUS.BLOCKED && (
+            <ScheduleRiskBlockBox
+              blocking={riskCheck.result.blocking}
+              entityType={values.type}
+              entityId={values.application_id}
+              versionId={values.version_id}
+            />
+          )}
+          {riskCheck.status === RISK_CHECK_STATUS.FAILED && (
+            <BannerMessage variant="warning">
+              <Box sx={styles.riskFailed}>
+                <Typography variant="bodySmall">The risk check did not run. Try again.</Typography>
+                <BaseBtn
+                  type="button"
+                  variant="elitea"
+                  color="secondary"
+                  onClick={riskCheck.runCheck}
+                >
+                  Retry
+                </BaseBtn>
+              </Box>
+            </BannerMessage>
           )}
           <VersionSelect
             entityId={values.application_id}
@@ -488,11 +578,32 @@ const ScheduleForm = memo(props => {
           {
             tabBarItems: (
               <TabBarItems>
+                {riskCheck.status === RISK_CHECK_STATUS.CHECKING && (
+                  <Box sx={styles.riskStatus}>
+                    <CircularProgress size="1rem" />
+                    <Typography variant="labelMedium">Checking risks</Typography>
+                  </Box>
+                )}
+                {riskCheck.status === RISK_CHECK_STATUS.BLOCKED && (
+                  <Box
+                    id={RISK_HINT_ID}
+                    sx={styles.riskStatus}
+                  >
+                    <Box
+                      component={AttentionIcon}
+                      aria-hidden
+                      sx={styles.riskIcon}
+                    />
+                    <Typography variant="labelMedium">Fix the risk check to save</Typography>
+                  </Box>
+                )}
                 <BaseBtn
                   data-testid="schedule-save-button"
                   variant="elitea"
                   color="primary"
-                  disabled={formik.isSubmitting}
+                  disabled={formik.isSubmitting || riskBlocksSave}
+                  aria-disabled={riskBlocksSave || undefined}
+                  aria-describedby={riskCheck.status === RISK_CHECK_STATUS.BLOCKED ? RISK_HINT_ID : undefined}
                   onClick={formik.handleSubmit}
                 >
                   Save
@@ -554,6 +665,19 @@ const ScheduleForm = memo(props => {
           },
         ]}
       />
+      <RiskReviewDialog
+        open={!!review}
+        entityLabel={entityLabel}
+        scheduleName={review?.values.name}
+        tools={riskCheck.result?.sensitive}
+        runWithoutAskingAllowed={riskCheck.result?.run_without_asking_allowed}
+        scanIncomplete={riskCheck.result?.notices?.some(notice => notice.code === 'scan_incomplete')}
+        showSettingsLink={canChangeProjectSettings}
+        changed={review?.changed}
+        saving={reviewSaving}
+        onCancel={handleReviewCancel}
+        onConfirm={handleReviewConfirm}
+      />
       <SaveWarningsDialog
         open={!!saved}
         warnings={saved?.warnings}
@@ -579,4 +703,13 @@ const styles = {
   noTabIndicator: { '& .MuiTabs-indicator': { display: 'none' } },
   accordion: ({ palette }) => ({ background: `${palette.background.default.tertiary} !important` }),
   section: { display: 'flex', flexDirection: 'column', gap: '1rem', paddingBottom: '1.5rem' },
+  riskStatus: { display: 'flex', alignItems: 'center', gap: '0.5rem' },
+  riskIcon: { width: '1rem', height: '1rem' },
+  riskFailed: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '1rem',
+    flex: 1,
+  },
 };

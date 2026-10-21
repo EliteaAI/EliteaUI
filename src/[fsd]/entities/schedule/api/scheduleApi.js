@@ -106,6 +106,15 @@ export const scheduleApi = eliteaApi
         invalidatesTags: (_, error) => (error ? [] : [SCHEDULES_TAG]),
       }),
 
+      // Dry run of the save risk scan; it writes nothing, so it invalidates nothing (owner CR 2026-10-21)
+      checkScheduleRisk: build.mutation({
+        query: ({ projectId, ...body }) => ({
+          url: `${schedulesPath(projectId)}/check`,
+          method: 'POST',
+          body,
+        }),
+      }),
+
       runSchedule: build.mutation({
         query: ({ projectId, scheduleId, trigger = 'manual' }) => ({
           url: `${schedulePath(projectId, scheduleId)}/run`,
@@ -217,6 +226,7 @@ export const {
   useGetScheduleRunsQuery,
   useGetScheduleListQuery,
   useCreateScheduleMutation,
+  useCheckScheduleRiskMutation,
   useRunScheduleMutation,
   useUpdateScheduleMutation,
   usePauseScheduleMutation,

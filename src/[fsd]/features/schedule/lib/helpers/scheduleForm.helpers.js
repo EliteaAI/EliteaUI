@@ -149,3 +149,13 @@ export const toWarningItems = (warnings = []) =>
     text: message,
     target: step ?? (tool && toolkit ? `${toolkit} / ${tool}` : (toolkit ?? tool)),
   }));
+
+// One group per blocking code, in the order the server sends them: the form shows one box per cause kind
+export const toRiskItems = (blocking = []) => {
+  const groups = new Map();
+  blocking.forEach(finding => {
+    if (!groups.has(finding.code)) groups.set(finding.code, { code: finding.code, findings: [] });
+    groups.get(finding.code).findings.push(finding);
+  });
+  return [...groups.values()];
+};
