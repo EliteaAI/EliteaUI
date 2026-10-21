@@ -22,6 +22,7 @@ const mocks = vi.hoisted(() => ({
   params: { scheduleId: '9' },
   state: { returnTo: '/settings/schedules' },
   panelProps: null,
+  sectionProps: null,
   testRunProps: { onTestRun: () => {}, testRunPending: true, testRunError: 'Already running' },
   runsView: null,
   runsViewArgs: null,
@@ -71,7 +72,10 @@ vi.mock('@/[fsd]/features/schedule', async importOriginal => {
       mocks.runsViewArgs = args;
       return mocks.runsView;
     },
-    ScheduleRunsSection: () => null,
+    ScheduleRunsSection: forwardRef(props => {
+      mocks.sectionProps = props;
+      return null;
+    }),
     ScheduleRunsPanel,
     ScheduleForm: props => {
       mocks.formProps = props;
@@ -121,6 +125,7 @@ describe('ScheduleDetailPage EL-7011', () => {
     mocks.formProps = null;
     mocks.settingsProps = null;
     mocks.panelProps = null;
+    mocks.sectionProps = null;
     mocks.query = {};
     mocks.params = { scheduleId: '9' };
     mocks.state = { returnTo: '/settings/schedules' };
@@ -153,9 +158,15 @@ describe('ScheduleDetailPage EL-7011', () => {
       onBackToTest: view.backToTest,
       ...mocks.testRunProps,
     });
-    const section = mocks.formProps.afterForm;
-    expect(section.ref).toBe(view.runsSectionRef);
-    expect(section.props).toEqual({
+  });
+
+  it('TC-US32-20 R4.1 R4.6 EL-7011 CR-21 renders the Runs section in the right block, with no afterForm', () => {
+    mocks.query = { currentData: schedule };
+    render(<ScheduleDetailPage />);
+    const view = mocks.runsView;
+
+    expect(mocks.formProps.afterForm).toBeUndefined();
+    expect(mocks.sectionProps).toEqual({
       runs: view.runs,
       versionNames: view.versionNames,
       selectedRunId: 1,

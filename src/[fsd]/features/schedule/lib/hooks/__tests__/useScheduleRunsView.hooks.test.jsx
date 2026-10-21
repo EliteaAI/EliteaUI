@@ -45,6 +45,51 @@ describe('useScheduleRunsView EL-7011 owner CR 2026-10-21', () => {
     expect(scroll).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
   });
 
+  it('R4.6 R6.1 EL-7011 CR-21 Run History with a run id selects it, expands, scrolls and focuses the Runs section', () => {
+    mocks.runs = [cron, waiting];
+    const result = setup();
+    const scroll = withScroll(result.current.runsSectionRef);
+    const focus = vi.fn();
+    result.current.runsSectionRef.current.focus = focus;
+    act(() => result.current.setRunsExpanded(false));
+
+    act(() => result.current.showRunHistory({ runId: 2 }));
+
+    expect(result.current.runsExpanded).toBe(true);
+    expect(result.current.viewedRun).toBe(waiting);
+    expect(scroll).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
+    expect(focus).toHaveBeenCalled();
+  });
+
+  it('R6.2 EL-7011 CR-21 the #runs entry opens the Runs section and scrolls to it', () => {
+    mocks.runs = [cron];
+    const scroll = vi.fn();
+    const Probe = () => {
+      const view = useScheduleRunsView(9, 3);
+      view.runsSectionRef.current ??= { scrollIntoView: scroll, focus: vi.fn() };
+      return null;
+    };
+    const { rerender } = renderHook(() => null, {
+      wrapper: ({ children }) => (
+        <MemoryRouter initialEntries={['/#runs']}>
+          <Probe />
+          {children}
+        </MemoryRouter>
+      ),
+    });
+    rerender();
+
+    expect(scroll).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
+  });
+
+  it('R5.6 EL-7011 CR-21 history_run_id also opens the Runs section on the linked run', () => {
+    mocks.runs = [cron, waiting];
+    const result = setup('?history_run_id=90');
+
+    expect(result.current.runsExpanded).toBe(true);
+    expect(result.current.viewedRun).toBe(waiting);
+  });
+
   it('Open shows that run in the panel and scrolls to the panel; Back to test returns', () => {
     mocks.runs = [cron, waiting];
     const result = setup();
