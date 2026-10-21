@@ -226,4 +226,44 @@ describe('ScheduleRunsPanel EL-7011 owner CR 2026-10-21 test panel log', () => {
     renderPanel({ testRunError: 'A run of this schedule is active' });
     expect(screen.getByText('A run of this schedule is active')).toBeInTheDocument();
   });
+
+  it('CR-21 scrolls the body (info box, log, result) inside the card and pins the prompt box with Run test', () => {
+    mockDetail({ ...newestTest, events: [STARTED] });
+    renderPanel();
+    const body = screen.getByTestId('schedule-runs-panel-body');
+    const footer = screen.getByTestId('schedule-runs-panel-footer');
+
+    expect(getComputedStyle(body).overflowY).toBe('auto');
+    expect(body).toContainElement(screen.getByTestId('schedule-run-log'));
+    expect(body).toContainElement(screen.getByText(INFO));
+    expect(body).not.toContainElement(runTest());
+    expect(footer).toContainElement(runTest());
+    expect(footer).toContainElement(screen.getByText(NOTE));
+  });
+
+  it('CR-21 leaves room under the page header for a scroll to the panel header', () => {
+    mockDetail(undefined);
+    renderPanel();
+    expect(getComputedStyle(screen.getByTestId('schedule-runs-panel')).scrollMarginTop).toBe('4.5rem');
+  });
+
+  it('CR-21 owner decision: a run without a conversation shows its log and reason, and no conversation link', () => {
+    const skipped = {
+      id: 8,
+      trigger: 'cron',
+      status: 'skipped',
+      conversation_id: null,
+      reason: 'The agent was deleted',
+      started_at: '2026-10-21T09:00:00Z',
+    };
+    mockDetail({ ...skipped, events: [event('started', 'Run skipped before it started')] });
+    renderPanel({ viewedRun: skipped });
+
+    expect(mocks.useScheduleRun).toHaveBeenCalledWith(9, 8);
+    expect(logLines()).toEqual([expect.stringContaining('Run skipped before it started')]);
+    expect(
+      within(screen.getByTestId('schedule-run-result')).getByText('The agent was deleted'),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Open conversation')).not.toBeInTheDocument();
+  });
 });
