@@ -523,11 +523,23 @@ describe('R1.3 EL-7011 run without asking flag on the schedule list', () => {
     expect(data.rows).toEqual([]);
   });
 
-  it('exposes runWithoutAskingAllowed true when the server sends true or omits it', async () => {
+  it('exposes runWithoutAskingAllowed true only when the server sends true', async () => {
     expect(
       (await listWith({ total: 0, rows: [], run_without_asking_allowed: true })).runWithoutAskingAllowed,
     ).toBe(true);
-    expect((await listWith({ total: 0, rows: [] })).runWithoutAskingAllowed).toBe(true);
+  });
+
+  it('exposes runWithoutAskingAllowed false when the server omits the flag', async () => {
+    expect((await listWith({ total: 0, rows: [] })).runWithoutAskingAllowed).toBe(false);
+  });
+
+  it('exposes runWithoutAskingAllowed false when the server sends null or a non-boolean', async () => {
+    expect(
+      (await listWith({ total: 0, rows: [], run_without_asking_allowed: null })).runWithoutAskingAllowed,
+    ).toBe(false);
+    expect(
+      (await listWith({ total: 0, rows: [], run_without_asking_allowed: 'true' })).runWithoutAskingAllowed,
+    ).toBe(false);
   });
 });
 
