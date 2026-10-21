@@ -143,6 +143,7 @@ const buildOverviewSheet = (data, meta, isPersonalProject = false, includeSkills
 
   const automatedCols = [
     { header: 'Trigger Source', key: 'trigger_source' },
+    { header: 'Entity type', key: 'entity_kind' },
     { header: 'Runs', key: 'runs', numFmt: ExcelFormats.integer },
     { header: 'LLM Calls', key: 'llm_calls', numFmt: ExcelFormats.integer },
     { header: 'Tool Runs', key: 'tool_runs', numFmt: ExcelFormats.integer },
@@ -153,7 +154,11 @@ const buildOverviewSheet = (data, meta, isPersonalProject = false, includeSkills
     columns: automatedCols,
     rows:
       automated.length > 0
-        ? automated.map(a => ({ ...a, trigger_source: triggerSourceLabel(a.trigger_source) }))
+        ? automated.map(a => ({
+            ...a,
+            trigger_source: triggerSourceLabel(a.trigger_source),
+            entity_kind: AnalyticsCommonConstants.ENTITY_KIND_LABELS[a.entity_kind] ?? '-',
+          }))
         : emptyRow(automatedCols, NO_DATA_MSG),
   });
 
