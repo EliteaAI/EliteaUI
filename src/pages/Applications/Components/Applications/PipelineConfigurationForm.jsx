@@ -5,6 +5,7 @@ import { Box } from '@mui/material';
 import { AgentInput, ApplicationTools } from '@/[fsd]/features/agent/ui/agent-details/configurations';
 import ApplicationAdvanceSettings from '@/[fsd]/features/agent/ui/agent-details/configurations/ApplicationAdvanceSettings';
 import ApplicationEditorNotes from '@/[fsd]/features/agent/ui/agent-details/configurations/ApplicationEditorNotes';
+import { EntitySchedulesSection } from '@/[fsd]/widgets/entity-schedules-section';
 import { ViewMode } from '@/common/constants.js';
 import ConversationStarters from '@/components/ConversationStarters';
 import ApplicationEditForm from '@/pages/Applications/Components/Applications/ApplicationEditForm';
@@ -59,6 +60,12 @@ const PipelineConfigurationForm = memo(props => {
       <ApplicationInformation
         style={styles.information}
         showPipeline
+      />
+      <EntitySchedulesSection
+        style={styles.information}
+        entityType="pipeline"
+        entityId={applicationId}
+        isChatView={isChatView}
       />
     </Box>
   );
