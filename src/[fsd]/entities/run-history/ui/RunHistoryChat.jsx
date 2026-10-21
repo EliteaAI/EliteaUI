@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { RunHistoryApi } from '@/[fsd]/entities/run-history/api';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
@@ -13,7 +13,8 @@ import useIsSmallWindow from '@/hooks/useIsSmallWindow';
 import { ContentContainer } from '@/pages/Common';
 
 const RunHistoryChat = memo(props => {
-  const { selectedHistoryItem, prettifyChat, ChatMessageListComponent, prettifyConversation } = props;
+  const { selectedHistoryItem, prettifyChat, ChatMessageListComponent, prettifyConversation, onHitlResume } =
+    props;
   const { isSmallWindow } = useIsSmallWindow();
 
   const projectId = useSelectedProjectId();
@@ -74,6 +75,14 @@ const RunHistoryChat = memo(props => {
 
   const onCopyToClipboard = useChatCopyToClipboard(chatHistory);
 
+  // The run detail has no active chat, so the handler gets the conversation and the paused message.
+  const conversationUuid = conversationData?.uuid;
+  const pausedMessageId = chatHistory.at(-1)?.id;
+  const handleHitlResume = useCallback(
+    request => onHitlResume({ ...request, conversationUuid, messageId: pausedMessageId }),
+    [onHitlResume, conversationUuid, pausedMessageId],
+  );
+
   return (
     <ContentContainer sx={styles.wrapper}>
       <ChatBodyContainer sx={styles.chatContainer}>
@@ -88,6 +97,7 @@ const RunHistoryChat = memo(props => {
           questionItemRef={useRef()}
           onRegenerateAnswer={() => null}
           onCopyToClipboard={onCopyToClipboard}
+          onHitlResume={onHitlResume ? handleHitlResume : undefined}
         />
       </ChatBodyContainer>
     </ContentContainer>

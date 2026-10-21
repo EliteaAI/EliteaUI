@@ -2,6 +2,7 @@
 import { useEffect } from 'react';
 
 import { format } from 'date-fns';
+import { MemoryRouter } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { ThemeProvider, createTheme } from '@mui/material';
@@ -27,6 +28,8 @@ vi.mock('@/[fsd]/entities/run-history/ui', async importOriginal => ({
   },
 }));
 vi.mock('@/[fsd]/features/chat', () => ({ ChatMessageList: () => null }));
+vi.mock('react-redux', async importOriginal => ({ ...(await importOriginal()), useDispatch: () => vi.fn() }));
+vi.mock('../../lib/hooks/useWaitingRunDecision.hooks', () => ({ useWaitingRunDecision: () => undefined }));
 
 const withConversation = {
   id: 1,
@@ -51,12 +54,22 @@ const manual = {
   started_at: '2026-10-13T08:00:00Z',
 };
 
+const waitingRun = {
+  id: 4,
+  conversation_id: 90,
+  status: 'waiting_for_approval',
+  trigger: 'cron',
+  started_at: '2026-10-16T08:00:00Z',
+};
+
 const theme = createTheme(getDesignTokens('dark'));
-const renderList = runs =>
+const renderList = (runs, search = '') =>
   render(
-    <ThemeProvider theme={theme}>
-      <ScheduleRunList runs={runs} />
-    </ThemeProvider>,
+    <MemoryRouter initialEntries={[`/${search}`]}>
+      <ThemeProvider theme={theme}>
+        <ScheduleRunList runs={runs} />
+      </ThemeProvider>
+    </MemoryRouter>,
   );
 const rows = () => screen.getAllByTestId('schedule-run-row');
 const cell = (row, name) => within(row).getByTestId(`schedule-run-${name}`);
@@ -66,6 +79,26 @@ describe('ScheduleRunList (EL-7011 US-32, owner CR 2026-10-21)', () => {
     cleanup();
     vi.clearAllMocks();
     mocks.mounts = 0;
+  });
+
+  it('R1.1 TC-US41-01 TC-US41-03 labels a waiting run and no finished run as waiting', () => {
+    renderList([waitingRun, withConversation]);
+
+    expect(screen.getByText('Waiting for input')).toBeInTheDocument();
+    expect(screen.getAllByTestId('schedule-run-status')).toHaveLength(2);
+    expect(screen.getAllByText(/waiting/i)).toHaveLength(1);
+  });
+
+  it('R1.2 TC-US41-04 selects the run of history_run_id and shows its conversation', () => {
+    renderList([withConversation, waitingRun], '?history_run_id=90');
+
+    expect(screen.getByTestId('run-chat')).toHaveTextContent('90');
+  });
+
+  it('R1.2 TC-US41-06 opens no run for a history_run_id that matches none', () => {
+    renderList([withConversation, waitingRun], '?history_run_id=5');
+
+    expect(screen.queryByTestId('run-chat')).not.toBeInTheDocument();
   });
 
   it('R4.1 shows the Started, Trigger and Status headers and the runs newest first', () => {
@@ -127,9 +160,11 @@ describe('ScheduleRunList (EL-7011 US-32, owner CR 2026-10-21)', () => {
     expect(mocks.mounts).toBe(1);
 
     rerender(
-      <ThemeProvider theme={theme}>
-        <ScheduleRunList runs={[withConversation]} />
-      </ThemeProvider>,
+      <MemoryRouter>
+        <ThemeProvider theme={theme}>
+          <ScheduleRunList runs={[withConversation]} />
+        </ThemeProvider>
+      </MemoryRouter>,
     );
 
     expect(mocks.mounts).toBe(2);

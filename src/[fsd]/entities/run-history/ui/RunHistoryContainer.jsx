@@ -34,6 +34,7 @@ const RunHistoryContainer = memo(props => {
     decorateRow = null,
     eventColumnLabel,
     DetailComponent = null,
+    onHitlResume,
     shareOpensHistoryTab = false,
     queryParams = NO_QUERY_PARAMS,
     // 'side': the detail is right of the list (full pages); 'stacked': below it, for a narrow parent
@@ -177,6 +178,7 @@ const RunHistoryContainer = memo(props => {
         prettifyChat={[ParticipantEntityTypes.Toolkit, ParticipantEntityTypes.MCP].includes(source)}
         ChatMessageListComponent={ChatMessageListComponent}
         prettifyConversation={prettifyConversation}
+        onHitlResume={onHitlResume}
       />
     );
 
