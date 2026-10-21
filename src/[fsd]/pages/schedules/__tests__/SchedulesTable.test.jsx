@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 import { MemoryRouter } from 'react-router-dom';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { formatRunStarted } from '@/[fsd]/features/schedule';
 import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, screen, within } from '@testing-library/react';
 
@@ -21,18 +22,22 @@ vi.mock('@/[fsd]/shared/lib/helpers/schedule.helpers', async importOriginal => (
 }));
 // AuthorContainer and DotMenu need the store and the router; the Agents list tests mock them the same way
 vi.mock('@/components/AuthorContainer', () => ({
-  default: ({ authors }) => <span data-testid="author">{authors.map(author => author.name).join(',')}</span>,
+  default: ({ authors, showName = true }) => (
+    <span data-testid="author">{showName ? authors.map(author => author.name).join(',') : 'avatar'}</span>
+  ),
 }));
 vi.mock('@/components/DotMenu', () => ({
-  default: ({ id, disabled, children }) => (
+  default: ({ id, disabled, children, anchorButtonProps }) => (
     <button
       data-testid={`${id}-menu-button`}
       disabled={disabled}
+      {...anchorButtonProps}
     >
       {children.length}
     </button>
   ),
 }));
+vi.mock('@/components/Icons/CalendarIcon', () => ({ default: () => <span data-testid="calendar-icon" /> }));
 const rowActions = vi.hoisted(() => ({
   onRun: vi.fn(),
   onPause: vi.fn(),
@@ -48,6 +53,7 @@ vi.mock('@/[fsd]/shared/ui/icon/EntityTypeIcon', () => ({
 }));
 
 const NEXT_RUN = '2026-10-24T21:00:00Z';
+const LAST_RUN = '2026-10-23T21:00:00Z';
 
 const makeRow = (overrides = {}) => ({
   id: 1,
@@ -59,6 +65,7 @@ const makeRow = (overrides = {}) => ({
   cron: '0 0 * * 6',
   timezone: 'Europe/Kyiv',
   next_run: NEXT_RUN,
+  last_run: LAST_RUN,
   last_run_status: 'success',
   last_run_reason: null,
   owner: { id: 3, name: 'Ann' },
@@ -86,10 +93,21 @@ const renderTable = (rows, isLoading = false, onSort = vi.fn(), emptyMessage, to
     </MemoryRouter>,
   );
 
-// A wide window shows every column; the width tests below set narrower windows
-beforeEach(() => {
-  window.innerWidth = 1920;
-});
+// The table picks its tier from the measured box (useGetComponentWidth reads offsetWidth). The box is the
+// window minus the main sidebar, the Settings menu and the page gutters (spec section 2), plus the
+// 1.5 rem gutters that sit inside the measured box.
+const SIDE_MENUS_PX = 484;
+const GUTTERS_PX = 48;
+const SIDEBAR_COLLAPSE_PX = 152;
+let boxWidth = 0;
+const setWindowWidth = (width, extra = 0) => {
+  boxWidth = width - SIDE_MENUS_PX + GUTTERS_PX + extra;
+};
+const offsetWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth');
+Object.defineProperty(HTMLElement.prototype, 'offsetWidth', { configurable: true, get: () => boxWidth });
+afterAll(() => Object.defineProperty(HTMLElement.prototype, 'offsetWidth', offsetWidth));
+
+beforeEach(() => setWindowWidth(1600));
 
 afterEach(() => {
   cleanup();
@@ -146,10 +164,7 @@ describe('EL-7011 US-26 SchedulesTable', () => {
   it('R2.4 shows the rule with the timezone and Next run in the viewer timezone', () => {
     renderTable([makeRow()]);
     expect(screen.getByText('At 00:00 on Saturday (America/New_York)')).toBeInTheDocument();
-    const nextRun = within(screen.getByTestId('schedule-column-value-next_run'));
-    expect(nextRun.getByTitle(new Date(NEXT_RUN).toLocaleString())).toHaveTextContent(
-      /^[A-Z][a-z]{2}, \d{2} /,
-    );
+    expect(screen.getByTestId('schedule-column-value-next_run')).toHaveTextContent(/^[A-Z][a-z]{2}, \d{2} /);
   });
 
   it('EL-7011 shows the description under the bold name, like Agents', () => {
@@ -173,9 +188,9 @@ describe('EL-7011 US-26 SchedulesTable', () => {
 
   it('EL-7011 shows the owner name in Owner', () => {
     renderTable([makeRow()]);
-    expect(within(screen.getByTestId('schedule-column-value-owner')).getByTestId('author')).toHaveTextContent(
-      'Ann',
-    );
+    const owner = screen.getByTestId('schedule-column-value-owner');
+    expect(within(owner).getByTestId('author')).toBeInTheDocument();
+    expect(within(owner).getByText('Ann')).toBeInTheDocument();
   });
 
   it('R2.2 EL-7011 shows the row menu with the allowed actions', () => {
@@ -260,26 +275,180 @@ describe('EL-7011 US-26 SchedulesTable', () => {
     renderTable([makeRow(), makeRow({ id: 2 })], false, vi.fn(), undefined, <span />);
     expect(screen.getByText('2 schedules')).toHaveAttribute('aria-live', 'polite');
   });
+});
 
-  // At 1600 px the table box was 1116 px: the window minus the app menu, the Settings menu and the page padding
-  const SIDE_MENUS_PX = 484;
+// EL-7011 QA bug 2026-10-21 table width, owner: no hidden columns (spec schedules-table-fit-spec.md)
+describe('EL-7011 US-26 SchedulesTable fits 8 columns at 1280, 1440 and 1600 px', () => {
+  const FIELDS = ['name', 'entity_name', 'schedule', 'next_run', 'last_run', 'owner', 'enabled', 'actions'];
+  const DATA_FIELDS = ['entity_name', 'schedule', 'next_run', 'last_run', 'owner', 'enabled'];
+  const SORTABLE = ['name', 'entity_name', 'next_run', 'last_run', 'enabled'];
+  const TEXT_COLUMNS = 'minmax(10.25rem, 1.3fr) minmax(7.5rem, 1fr) minmax(7.25rem, 1fr)';
+  const TEMPLATES = {
+    compact: `${TEXT_COLUMNS} 5.75rem 5.75rem 3.5rem 5.5rem 4.25rem`,
+    regular: `${TEXT_COLUMNS} 7.25rem 6.5rem 7.5rem 5.5rem 4.25rem`,
+    comfortable: `${TEXT_COLUMNS} 9.25rem 8rem 9.75rem 6rem 6.5625rem`,
+  };
   const minGridWidthPx = template =>
     template
       .match(/minmax\([\d.]+rem|[\d.]+rem/g)
       .reduce((sum, token) => sum + parseFloat(token.replace('minmax(', '')) * 16, 0);
+  const headerTemplate = () =>
+    getComputedStyle(screen.getByTestId('schedule-column-header-name').parentElement).gridTemplateColumns;
+  const timeOf = value =>
+    new Date(value).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
 
   it.each([
-    [1280, ['last_run', 'owner']],
-    [1440, ['owner']],
-    [1600, []],
-  ])('EL-7011 QA 2026-10-21 fits the row menu in a %i px window', (width, hidden) => {
-    window.innerWidth = width;
+    [1280, 'compact'],
+    [1440, 'regular'],
+    [1600, 'comfortable'],
+  ])(
+    'AC1-AC3 at %i px shows all 8 headers and cells in the %s tier, lined up, with no overflow',
+    (width, tier) => {
+      setWindowWidth(width);
+      renderTable([makeRow(), makeRow({ id: 2 })]);
+      FIELDS.forEach(field =>
+        expect(screen.getByTestId(`schedule-column-header-${field}`)).toBeInTheDocument(),
+      );
+      DATA_FIELDS.forEach(field =>
+        expect(screen.getAllByTestId(`schedule-column-value-${field}`)).toHaveLength(2),
+      );
+      expect(screen.getAllByTestId('schedule-name')).toHaveLength(2);
+      expect(screen.getByTestId('schedule-1-menu-button')).toBeInTheDocument();
+      expect(screen.getByTestId('schedule-2-menu-button')).toBeInTheDocument();
+      // AC1 and AC2: the columns fit the table box, so the row menu stays in the window
+      expect(headerTemplate()).toBe(TEMPLATES[tier]);
+      expect(minGridWidthPx(headerTemplate())).toBeLessThanOrEqual(width - SIDE_MENUS_PX);
+      // AC3: header and rows share one grid template, so the cell edges line up
+      screen
+        .getAllByTestId('schedule-row')
+        .forEach(row => expect(getComputedStyle(row).gridTemplateColumns).toBe(headerTemplate()));
+    },
+  );
+
+  it.each([1280, 1440, 1600])(
+    'AC5 at %i px keeps the sort test ids and sorts the 5 sortable columns',
+    width => {
+      setWindowWidth(width);
+      const onSort = vi.fn();
+      renderTable([makeRow()], false, onSort);
+      SORTABLE.forEach(field => {
+        expect(screen.getByTestId(`schedule-sort-icon-${field}`)).toBeInTheDocument();
+        fireEvent.click(screen.getByTestId(`schedule-column-header-${field}`));
+        expect(onSort).toHaveBeenLastCalledWith(field);
+      });
+      ['schedule', 'owner', 'actions'].forEach(field =>
+        expect(screen.queryByTestId(`schedule-sort-icon-${field}`)).toBeNull(),
+      );
+    },
+  );
+
+  it('AC4 at 1280 px shows the owner avatar only, with the full name in a tooltip', () => {
+    setWindowWidth(1280);
+    renderTable([makeRow()]);
+    const owner = screen.getByTestId('schedule-column-value-owner');
+    expect(within(owner).getByTestId('author')).toHaveTextContent('avatar');
+    expect(owner).not.toHaveTextContent('Ann');
+    expect(within(owner).getByLabelText('Ann')).toBeInTheDocument();
+  });
+
+  it('AC4 at 1280 px shows the last run icon only, with the status, time and reason in a tooltip', () => {
+    setWindowWidth(1280);
+    renderTable([makeRow({ last_run_status: 'failed', last_run_reason: 'Agent is deleted' })]);
+    const lastRun = screen.getByTestId('schedule-column-value-last_run');
+    expect(within(lastRun).getByRole('img', { name: 'Failed' })).toBeInTheDocument();
+    expect(lastRun).not.toHaveTextContent('Failed');
+    expect(lastRun).not.toHaveTextContent('Agent is deleted');
+    expect(
+      within(lastRun).getByLabelText(`Failed - ${formatRunStarted(LAST_RUN)}. Agent is deleted`),
+    ).toBeInTheDocument();
+  });
+
+  it('AC4 at 1280 px shows Next run on two lines and the rule without the zone, with tooltips', () => {
+    setWindowWidth(1280);
+    renderTable([makeRow()]);
+    const nextRun = screen.getByTestId('schedule-column-value-next_run');
+    expect(within(nextRun).getByText(timeOf(NEXT_RUN))).toBeInTheDocument();
+    expect(within(nextRun).queryByTestId('calendar-icon')).toBeNull();
+    expect(within(nextRun).getByLabelText(new Date(NEXT_RUN).toLocaleString())).toBeInTheDocument();
+    const schedule = screen.getByTestId('schedule-column-value-schedule');
+    expect(within(schedule).getByText('At 00:00 on Saturday')).toBeInTheDocument();
+    expect(within(schedule).getByLabelText('At 00:00 on Saturday (America/New_York)')).toBeInTheDocument();
+  });
+
+  it('AC4 at 1280 px uses the compact header and cell padding and centres the row menu', () => {
+    setWindowWidth(1280);
+    renderTable([makeRow()]);
+    expect(getComputedStyle(screen.getByTestId('schedule-column-header-owner')).paddingLeft).toBe('0.5rem');
+    expect(getComputedStyle(screen.getByTestId('schedule-column-value-owner')).paddingLeft).toBe('0.5rem');
+    expect(getComputedStyle(screen.getByTestId('schedule-row').lastElementChild).justifyContent).toBe(
+      'center',
+    );
+  });
+
+  it('AC4 at 1440 px shows the owner name, the status word with no border and Next run on one line', () => {
+    setWindowWidth(1440);
+    renderTable([makeRow()]);
+    expect(screen.getByTestId('schedule-column-value-owner')).toHaveTextContent('Ann');
+    const status = within(screen.getByTestId('schedule-column-value-last_run')).getByTestId(
+      'schedule-run-status',
+    );
+    expect(status).toHaveTextContent('Success');
+    expect(getComputedStyle(status).borderStyle).toBe('none');
+    const nextRun = screen.getByTestId('schedule-column-value-next_run');
+    expect(within(nextRun).queryByText(timeOf(NEXT_RUN))).toBeNull();
+    expect(nextRun).toHaveTextContent(timeOf(NEXT_RUN));
+    expect(within(nextRun).queryByTestId('calendar-icon')).toBeNull();
+    expect(within(nextRun).getByLabelText(new Date(NEXT_RUN).toLocaleString())).toBeInTheDocument();
+    expect(screen.getByText('At 00:00 on Saturday (America/New_York)')).toBeInTheDocument();
+    expect(getComputedStyle(screen.getByTestId('schedule-column-header-owner')).paddingLeft).toBe('0.75rem');
+  });
+
+  it('AC4 at 1600 px shows the owner name, the status chip and the calendar icon', () => {
+    renderTable([makeRow()]);
+    expect(screen.getByTestId('schedule-column-value-owner')).toHaveTextContent('Ann');
+    expect(
+      within(screen.getByTestId('schedule-column-value-last_run')).getByTestId('schedule-run-status'),
+    ).toHaveClass('MuiChip-outlined');
+    expect(
+      within(screen.getByTestId('schedule-column-value-next_run')).getByTestId('calendar-icon'),
+    ).toBeInTheDocument();
+  });
+
+  it.each([1280, 1600])('shows Paused in Next run for a paused schedule at %i px', width => {
+    setWindowWidth(width);
+    renderTable([makeRow({ enabled: false, next_run: null })]);
+    expect(screen.getByTestId('schedule-column-value-next_run')).toHaveTextContent('Paused');
+  });
+
+  it('names the row menu button More actions', () => {
+    renderTable([makeRow()]);
+    expect(screen.getByTestId('schedule-1-menu-button')).toHaveAttribute('aria-label', 'More actions');
+  });
+
+  it('AC6 at 1000 px scrolls header and rows in one box and pins the Actions column', () => {
+    setWindowWidth(1000);
     renderTable([makeRow()]);
     const header = screen.getByTestId('schedule-column-header-name').parentElement;
-    expect(minGridWidthPx(getComputedStyle(header).gridTemplateColumns)).toBeLessThanOrEqual(
-      width - SIDE_MENUS_PX,
-    );
-    hidden.forEach(field => expect(screen.queryByTestId(`schedule-column-header-${field}`)).toBeNull());
-    expect(screen.getByTestId('schedule-1-menu-button')).toBeInTheDocument();
+    const row = screen.getByTestId('schedule-row');
+    const scrollBox = header.parentElement.parentElement.parentElement;
+    expect(getComputedStyle(scrollBox).overflowX).toBe('auto');
+    expect(scrollBox).toContainElement(row);
+    expect(getComputedStyle(header.parentElement.parentElement).minWidth).toBe('49.75rem');
+    const actionsCell = screen.getByTestId('schedule-row').lastElementChild;
+    expect(getComputedStyle(actionsCell).position).toBe('sticky');
+    expect(getComputedStyle(actionsCell).right).toBe('0px');
+    expect(getComputedStyle(screen.getByTestId('schedule-column-header-actions')).position).toBe('sticky');
+  });
+
+  it('AC6 at 1280 px keeps the Actions column in place when the table fits', () => {
+    setWindowWidth(1280);
+    renderTable([makeRow()]);
+    expect(getComputedStyle(screen.getByTestId('schedule-row').lastElementChild).position).not.toBe('sticky');
+  });
+
+  it('AC6 at 1280 px with the main sidebar collapsed switches to the regular tier', () => {
+    setWindowWidth(1280, SIDEBAR_COLLAPSE_PX);
+    renderTable([makeRow()]);
+    expect(headerTemplate()).toBe(TEMPLATES.regular);
   });
 });
