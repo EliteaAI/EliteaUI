@@ -881,6 +881,17 @@ describe('ScheduleForm EL-7011', () => {
       });
     });
 
+    it('EL-7011 owner CR 2026-10-21 puts the Runs section in the form column, after the form and outside it', () => {
+      renderEdit({ afterForm: <div data-testid="runs-section" /> });
+
+      const runs = screen.getByTestId('runs-section');
+      const formElement = screen.getByLabelText('Name').closest('form');
+      expect(runs.closest('form')).toBeNull();
+      expect(formElement.parentElement).toContainElement(runs);
+      expect(formElement.compareDocumentPosition(runs) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(formElement.parentElement).toHaveClass('MuiGrid-grid-xs-12', 'MuiGrid-grid-xl-6');
+    });
+
     it('R3.1 R3.2 EL-7011 saves a changed form first, then starts the run', async () => {
       const calls = [];
       const onSubmit = vi.fn().mockImplementation(async () => calls.push('save'));

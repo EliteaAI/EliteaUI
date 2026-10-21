@@ -3,9 +3,14 @@ import { describe, expect, it } from 'vitest';
 
 import {
   findNewestTestRun,
+  formatExpiresIn,
+  formatRunDuration,
   formatRunStarted,
+  formatRunSummary,
+  isRunActive,
+  toLogLevel,
+  toPlainText,
   toRunStatusLabel,
-  toRunTriggerLabel,
   toWord,
 } from '../scheduleRuns.helpers';
 
@@ -45,12 +50,7 @@ describe('EL-7011 R4.2 status text', () => {
   });
 });
 
-describe('EL-7011 R4.1 trigger and start time', () => {
-  it('names the three run triggers', () => {
-    expect(['test', 'cron', 'manual'].map(toRunTriggerLabel)).toEqual(['Test', 'Scheduled', 'Run now']);
-    expect(toRunTriggerLabel(undefined)).toBe('');
-  });
-
+describe('EL-7011 R4.1 start time', () => {
   it('shows the start as day, month and 24-hour time', () => {
     const started = '2026-10-14T12:05:00Z';
     expect(formatRunStarted(started)).toBe(format(new Date(started), 'd MMM, HH:mm'));
@@ -73,5 +73,60 @@ describe('EL-7011 R3 newest test run', () => {
   it('returns nothing without a test run', () => {
     expect(findNewestTestRun([runs[1]])).toBeUndefined();
     expect(findNewestTestRun(undefined)).toBeUndefined();
+  });
+});
+
+// Owner CR 2026-10-21 test panel log: the log, the result card and the Runs table Duration column
+describe('EL-7011 owner CR 2026-10-21 test panel values', () => {
+  it('treats running and waiting_for_approval as active and every other status as final', () => {
+    expect(['running', 'waiting_for_approval'].every(isRunActive)).toBe(true);
+    expect(['success', 'failed', 'expired', 'blocked', 'skipped', undefined].some(isRunActive)).toBe(false);
+  });
+
+  it('writes a duration in seconds, or minutes and two-digit seconds, and a dash without one', () => {
+    expect(formatRunDuration(38_000)).toBe('38 s');
+    expect(formatRunDuration(65_400)).toBe('1 m 05 s');
+    expect(formatRunDuration(0)).toBe('0 s');
+    expect(formatRunDuration(null)).toBe('–');
+  });
+
+  it('joins duration, tokens and cost of the run summary', () => {
+    expect(formatRunSummary({ duration_ms: 38_000, tokens: 2140, cost_usd: 0.031 })).toBe(
+      '38 s · 2,140 tokens · $0.0310',
+    );
+    // a small run does not read as $0.00 (CR-12 D4)
+    expect(formatRunSummary({ duration_ms: 4000, tokens: 357, cost_usd: 0.001205 })).toBe(
+      '4 s · 357 tokens · $0.0012',
+    );
+    // CR-12 r2 D2: the recorded run 98 reads $0.0016, not $0.00 and not the rounded-up $0.0017
+    expect(formatRunSummary({ duration_ms: 5139, tokens: 447, cost_usd: 0.00161 })).toBe(
+      '5 s · 447 tokens · $0.0016',
+    );
+    expect(formatRunSummary({ cost_usd: 0 })).toBe('$0.00');
+    expect(formatRunSummary({ duration_ms: 1000 })).toBe('1 s');
+    expect(formatRunSummary(undefined)).toBe('');
+  });
+
+  it('takes the level of the server and falls back by event kind', () => {
+    expect(toLogLevel({ kind: 'tool_call', level: 'error' })).toBe('error');
+    expect(toLogLevel({ kind: 'risk_check' })).toBe('warning');
+    expect(toLogLevel({ kind: 'paused' })).toBe('warning');
+    expect(toLogLevel({ kind: 'finished' })).toBe('success');
+    expect(toLogLevel({ kind: 'started' })).toBe('info');
+  });
+
+  it('strips markdown marks so the answer reads as plain text', () => {
+    expect(toPlainText('## Open PRs\n1. **EliteaUI** [#482](https://x/482) `form`\n> note')).toBe(
+      'Open PRs\n1. EliteaUI #482 form\nnote',
+    );
+    expect(toPlainText(undefined)).toBe('');
+  });
+
+  it('counts the 24 hour approval window down from the pause', () => {
+    const pausedAt = '2026-10-21T10:42:19Z';
+    expect(formatExpiresIn(pausedAt, Date.parse('2026-10-21T10:44:00Z'))).toBe('Expires in 23 h 58 min');
+    expect(formatExpiresIn(pausedAt, Date.parse('2026-10-22T10:00:00Z'))).toBe('Expires in 0 h 42 min');
+    expect(formatExpiresIn(pausedAt, Date.parse('2026-10-23T00:00:00Z'))).toBe('Expired');
+    expect(formatExpiresIn(undefined, 0)).toBe('');
   });
 });

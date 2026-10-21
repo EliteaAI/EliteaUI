@@ -9,7 +9,13 @@ import {
   useRunScheduleMutation,
   useUpdateScheduleMutation,
 } from '@/[fsd]/entities/schedule';
-import { ScheduleForm, ScheduleRunsPanel, useEntityScheduleRoute } from '@/[fsd]/features/schedule';
+import {
+  ScheduleForm,
+  ScheduleRunsPanel,
+  ScheduleRunsSection,
+  useEntityScheduleRoute,
+  useScheduleRunsView,
+} from '@/[fsd]/features/schedule';
 import { buildEditValues } from '@/[fsd]/features/schedule/lib/helpers';
 import { ScheduleHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
@@ -47,6 +53,7 @@ const ScheduleDetailPage = props => {
   const [updateSchedule] = useUpdateScheduleMutation();
   const [runSchedule] = useRunScheduleMutation();
   const entityRoute = useEntityScheduleRoute(entityType);
+  const runsView = useScheduleRunsView(schedule?.id, schedule?.application_id);
 
   // R1.4: a schedule belongs to one project, so a project switch opens the list
   const openedProjectId = useRef();
@@ -70,15 +77,22 @@ const ScheduleDetailPage = props => {
     () => runSchedule({ projectId, scheduleId, trigger: 'test' }).unwrap(),
     [runSchedule, projectId, scheduleId],
   );
-  // The Test schedule and Runs card right of the form (owner CR 2026-10-21)
+  // The Test schedule panel right of the form and the Runs section under the form (owner CR 2026-10-21)
+  const { runs, viewedRun, versionNames, panelRef, showRunHistory, backToTest } = runsView;
   const sidePanel = useCallback(
     testRunProps => (
       <ScheduleRunsPanel
+        ref={panelRef}
         schedule={schedule}
+        runs={runs}
+        viewedRun={viewedRun}
+        versionNames={versionNames}
+        onRunHistory={showRunHistory}
+        onBackToTest={backToTest}
         {...testRunProps}
       />
     ),
-    [schedule],
+    [schedule, runs, viewedRun, versionNames, panelRef, showRunHistory, backToTest],
   );
 
   if (isError)
@@ -110,6 +124,17 @@ const ScheduleDetailPage = props => {
       // Nested in an editor, the crumbs name the agent or pipeline, not the schedule
       entityName={entityType ? undefined : schedule.name}
       sidePanel={sidePanel}
+      afterForm={
+        <ScheduleRunsSection
+          ref={runsView.runsSectionRef}
+          runs={runs}
+          versionNames={versionNames}
+          selectedRunId={viewedRun?.id}
+          onOpen={runsView.openRun}
+          expanded={runsView.runsExpanded}
+          onExpandedChange={runsView.setRunsExpanded}
+        />
+      }
       onSubmit={onSubmit}
       onSaved={onSaved}
       onTestRun={onTestRun}

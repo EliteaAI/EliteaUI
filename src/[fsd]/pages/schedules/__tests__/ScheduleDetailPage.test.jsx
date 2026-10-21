@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
@@ -23,6 +23,8 @@ const mocks = vi.hoisted(() => ({
   state: { returnTo: '/settings/schedules' },
   panelProps: null,
   testRunProps: { onTestRun: () => {}, testRunPending: true, testRunError: 'Already running' },
+  runsView: null,
+  runsViewArgs: null,
 }));
 
 vi.mock('react-router-dom', () => ({
@@ -55,24 +57,35 @@ vi.mock('@/[fsd]/shared/ui/schedule', () => ({
   },
   StopOnDateField: () => null,
 }));
-vi.mock('@/[fsd]/features/schedule', async importOriginal => ({
-  ...(await importOriginal()),
-  ScheduleRunsPanel: props => {
+vi.mock('@/[fsd]/features/schedule', async importOriginal => {
+  const { forwardRef } = await import('react');
+  // The page gives the panel a ref for the scroll to it
+  const ScheduleRunsPanel = forwardRef(props => {
     mocks.panelProps = props;
     return null;
-  },
-  ScheduleForm: props => {
-    mocks.formProps = props;
-    return (
-      <>
-        <button onClick={() => props.onSubmit({ name: 'Renamed' }).then(props.onSaved)}>Save</button>
-        <button onClick={() => props.onTestRun()}>Test</button>
-        {props.children({ values: props.initialValues, setFieldValue: mocks.setFieldValue })}
-        {props.sidePanel?.(mocks.testRunProps)}
-      </>
-    );
-  },
-}));
+  });
+  ScheduleRunsPanel.displayName = 'ScheduleRunsPanel';
+  return {
+    ...(await importOriginal()),
+    useScheduleRunsView: (...args) => {
+      mocks.runsViewArgs = args;
+      return mocks.runsView;
+    },
+    ScheduleRunsSection: () => null,
+    ScheduleRunsPanel,
+    ScheduleForm: props => {
+      mocks.formProps = props;
+      return (
+        <>
+          <button onClick={() => props.onSubmit({ name: 'Renamed' }).then(props.onSaved)}>Save</button>
+          <button onClick={() => props.onTestRun()}>Test</button>
+          {props.children({ values: props.initialValues, setFieldValue: mocks.setFieldValue })}
+          {props.sidePanel?.(mocks.testRunProps)}
+        </>
+      );
+    },
+  };
+});
 
 const schedule = {
   id: 9,
@@ -87,6 +100,18 @@ const schedule = {
 };
 
 const listLink = () => screen.getByRole('link', { name: 'Schedules' });
+const makeRunsView = () => ({
+  runs: [{ id: 1 }],
+  viewedRun: { id: 1 },
+  versionNames: { 4: 'v3' },
+  runsExpanded: true,
+  setRunsExpanded: vi.fn(),
+  runsSectionRef: { current: null },
+  panelRef: { current: null },
+  openRun: vi.fn(),
+  backToTest: vi.fn(),
+  showRunHistory: vi.fn(),
+});
 
 describe('ScheduleDetailPage EL-7011', () => {
   afterEach(() => {
@@ -100,6 +125,9 @@ describe('ScheduleDetailPage EL-7011', () => {
     mocks.params = { scheduleId: '9' };
     mocks.state = { returnTo: '/settings/schedules' };
   });
+  beforeEach(() => {
+    mocks.runsView = makeRunsView();
+  });
 
   it('TC-US32-01 R1.1 EL-7011 fills the form with the saved schedule, its name and the run list', () => {
     mocks.query = { currentData: schedule };
@@ -110,12 +138,31 @@ describe('ScheduleDetailPage EL-7011', () => {
     expect(mocks.formProps.initialValues.name).toBe('Nightly');
   });
 
-  it('TC-US32-15 R3 R4 EL-7011 shows the Test schedule and Runs panel next to the form (owner CR 2026-10-21)', () => {
+  it('TC-US32-15 R3 R4 EL-7011 shows the test panel next to the form and the Runs section under it (owner CR 2026-10-21)', () => {
     mocks.query = { currentData: schedule };
     render(<ScheduleDetailPage />);
+    const view = mocks.runsView;
 
-    expect(mocks.formProps.extraSections).toBeUndefined();
-    expect(mocks.panelProps).toEqual({ schedule, ...mocks.testRunProps });
+    expect(mocks.runsViewArgs).toEqual([9, 3]);
+    expect(mocks.panelProps).toEqual({
+      schedule,
+      runs: view.runs,
+      viewedRun: view.viewedRun,
+      versionNames: view.versionNames,
+      onRunHistory: view.showRunHistory,
+      onBackToTest: view.backToTest,
+      ...mocks.testRunProps,
+    });
+    const section = mocks.formProps.afterForm;
+    expect(section.ref).toBe(view.runsSectionRef);
+    expect(section.props).toEqual({
+      runs: view.runs,
+      versionNames: view.versionNames,
+      selectedRunId: 1,
+      onOpen: view.openRun,
+      expanded: true,
+      onExpandedChange: view.setRunsExpanded,
+    });
   });
 
   it('TC-US32-01 R1.1 EL-7011 shows a loader while the schedule loads', () => {

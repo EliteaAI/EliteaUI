@@ -554,6 +554,29 @@ describe('R2.1 R3.2 R4.3 EL-7011 schedule details, update, test run and runs', (
     expect(result.data).toEqual({ id: 7, allowed_actions: ['run'] });
   });
 
+  it('EL-7011 owner CR 2026-10-21 getScheduleRun reads one run with its log and declares the runs tag', async () => {
+    const run = {
+      id: 12,
+      status: 'running',
+      events: [{ at: '2026-10-21T10:42:01Z', kind: 'started', text: 'x' }],
+    };
+    handler = async () => jsonResponse(run);
+
+    const store = makeStore();
+    const result = await store.dispatch(
+      scheduleApi.endpoints.getScheduleRun.initiate({ projectId: 5, scheduleId: 7, runId: 12 }),
+    );
+
+    const request = await lastRequestOf(fetchSpy);
+    expect(request.method).toBe('GET');
+    expect(request.url.pathname).toBe('/elitea_core/schedules/prompt_lib/5/7/runs/12');
+    expect(result.data).toEqual(run);
+    // A decision invalidates the runs tag, so the open run loads its new log line at once
+    const callsBefore = fetchSpy.mock.calls.length;
+    store.dispatch(scheduleApi.util.invalidateTags([SCHEDULE_RUNS_TAG]));
+    await vi.waitFor(() => expect(fetchSpy.mock.calls.length).toBe(callsBefore + 1));
+  });
+
   it('R2.1 getSchedule returns the 404 error', async () => {
     handler = async () => jsonResponse({ error: 'not found' }, 404);
 
