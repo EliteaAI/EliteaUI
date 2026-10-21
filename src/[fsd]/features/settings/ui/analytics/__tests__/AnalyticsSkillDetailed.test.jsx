@@ -129,7 +129,7 @@ describe('AnalyticsSkillDetailed', () => {
     expect(rowsOf('analytics-skill-detail-users')[0]).toContain('ann@example.com');
     expect(rowsOf('analytics-skill-detail-triggers')).toEqual([
       expect.stringContaining('Manual'),
-      expect.stringContaining('Scheduled Pipelines'),
+      expect.stringContaining('Scheduled'),
     ]);
   });
 
