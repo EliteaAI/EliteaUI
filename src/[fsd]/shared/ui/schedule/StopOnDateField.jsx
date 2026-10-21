@@ -62,7 +62,13 @@ const StopOnDateField = memo(props => {
       />
       {checked && (
         <>
-          <Box sx={[datePickerStyles.datePickerField, open && datePickerStyles.datePickerFieldActive]}>
+          <Box
+            sx={[
+              datePickerStyles.datePickerField,
+              { alignSelf: 'flex-start' },
+              open && datePickerStyles.datePickerFieldActive,
+            ]}
+          >
             <Typography sx={datePickerStyles.datePickerLabel}>Stop date:</Typography>
             <DatePicker
               value={date}
