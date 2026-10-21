@@ -20,7 +20,8 @@ const NAME_LABEL_ID = 'risk-review-name-label';
 /**
  * "Review risks before scheduling", opened on Save when the check finds sensitive tools (owner CR 2026-10-21).
  * `onConfirm({ rule, confirmedName })` saves; confirmedName comes only with "Run without asking".
- * `changed` shows the banner of a 409 risk_changed; `saving` disables both buttons.
+ * `changed` shows the banner of a 409 risk_changed; `nameError` the server text of a 400 risk_name_mismatch;
+ * `saving` disables both buttons.
  */
 const RiskReviewDialog = memo(props => {
   const {
@@ -32,6 +33,7 @@ const RiskReviewDialog = memo(props => {
     scanIncomplete,
     showSettingsLink,
     changed,
+    nameError,
     saving,
     onCancel,
     onConfirm,
@@ -170,6 +172,15 @@ const RiskReviewDialog = memo(props => {
                   color="text.secondary"
                 >
                   The name does not match yet.
+                </Typography>
+              )}
+              {nameError && (
+                <Typography
+                  role="alert"
+                  variant="bodySmall"
+                  color="error"
+                >
+                  {nameError}
                 </Typography>
               )}
             </Box>

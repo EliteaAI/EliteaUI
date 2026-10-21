@@ -38,7 +38,7 @@ import useNavBlocker from '@/hooks/useNavBlocker';
 import { StyledGridContainer, TabBarItems } from '@/pages/Common/Components/StyledComponents';
 import RouteDefinitions from '@/routes';
 
-import { APPROVAL_RULE, RISK_CHECK_STATUS, RISK_SAVE_ERROR } from '../lib/constants';
+import { APPROVAL_RULE, RISK_CHECK_STATUS, RISK_NAME_MISMATCH, RISK_SAVE_ERROR } from '../lib/constants';
 import { useScheduleRiskCheck } from '../lib/hooks';
 import BuildScheduleWithAiModal from './BuildScheduleWithAiModal';
 import RiskReviewDialog from './RiskReviewDialog';
@@ -69,6 +69,8 @@ const RISK_STATES_WITHOUT_SAVE = [
   RISK_CHECK_STATUS.FAILED,
 ];
 const RISK_HINT_ID = 'schedule-risk-hint';
+// "21 Oct 2026" for the line of who confirmed "Run without asking"
+const CONFIRMED_DATE = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 
 const getEntityType = details => (details?.version_details?.agent_type === 'pipeline' ? 'pipeline' : 'agent');
 
@@ -136,7 +138,14 @@ const ScheduleForm = memo(props => {
       const body = (schedule ? toUpdateBody : toCreateBody)(values);
       answer = await onSubmit(riskAck ? { ...body, risk_ack: riskAck } : body);
     } catch (error) {
-      const riskError = error?.status === 409 ? error.data?.error : null;
+      // Branch on the machine code; `error` is the human text
+      const code = error?.data?.code;
+      if (error?.status === 400 && code === RISK_NAME_MISMATCH && review) {
+        riskCheck.applyFindings(error.data);
+        setReview({ ...review, nameError: error.data.error });
+        return;
+      }
+      const riskError = error?.status === 409 ? code : null;
       if (Object.values(RISK_SAVE_ERROR).includes(riskError)) {
         riskCheck.applyFindings(error.data);
         setReview(
@@ -188,9 +197,9 @@ const ScheduleForm = memo(props => {
   const { values, errors, submitCount, setFieldValue, setValues, resetForm } = formik;
   const riskCheck = useScheduleRiskCheck({
     projectId,
+    entityType: values.type,
     applicationId: values.application_id,
     versionId: values.version_id,
-    runMode: values.run_mode,
   });
   const riskBlocksSave = RISK_STATES_WITHOUT_SAVE.includes(riskCheck.status);
 
@@ -198,6 +207,7 @@ const ScheduleForm = memo(props => {
   const handleReviewConfirm = async ({ rule, confirmedName }) => {
     if (rule !== values.approval_rule) setFieldValue('approval_rule', rule);
     const { fingerprint } = riskCheck.result ?? {};
+    setReview({ ...review, nameError: '' });
     setReviewSaving(true);
     try {
       await saveSchedule(
@@ -562,6 +572,14 @@ const ScheduleForm = memo(props => {
               )}
             </Typography>
           )}
+          {schedule?.approval_confirmed_by && (
+            <Typography
+              variant="bodySmall"
+              color="text.secondary"
+            >
+              {`Confirmed by ${schedule.approval_confirmed_by} on ${CONFIRMED_DATE.format(new Date(schedule.approval_confirmed_at))}`}
+            </Typography>
+          )}
           <FieldError message={fieldError('approval_rule')} />
         </Box>
       ),
@@ -674,6 +692,7 @@ const ScheduleForm = memo(props => {
         scanIncomplete={riskCheck.result?.notices?.some(notice => notice.code === 'scan_incomplete')}
         showSettingsLink={canChangeProjectSettings}
         changed={review?.changed}
+        nameError={review?.nameError}
         saving={reviewSaving}
         onCancel={handleReviewCancel}
         onConfirm={handleReviewConfirm}

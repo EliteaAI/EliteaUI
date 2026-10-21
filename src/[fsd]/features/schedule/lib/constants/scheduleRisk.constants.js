@@ -7,9 +7,12 @@ export const RISK_CHECK_STATUS = {
   FAILED: 'failed',
 };
 
-// 409 error codes of a schedule save refused by the risk scan
+// 409 `code` values of a schedule save refused by the risk scan (the `error` field is human text)
 export const RISK_SAVE_ERROR = {
   BLOCKED: 'schedule_blocked',
   CONFIRMATION_REQUIRED: 'risk_confirmation_required',
   CHANGED: 'risk_changed',
 };
+
+// 400 `code` of a typed name that differs from the schedule name (field risk_ack)
+export const RISK_NAME_MISMATCH = 'risk_name_mismatch';

@@ -10,6 +10,7 @@ import DeleteIcon from '@/components/Icons/DeleteIcon';
 import EditIcon from '@/components/Icons/EditIcon';
 import PlayIcon from '@/components/Icons/PlayIcon';
 import SendIcon from '@/components/Icons/SendIcon';
+import UserIcon from '@/components/Icons/UserIcon';
 
 // The server sends the badge key, the UI the word, icon and tone; colour never carries the meaning alone
 const BADGES = {
@@ -18,14 +19,17 @@ const BADGES = {
   changes_data: { label: 'Changes data', Icon: EditIcon, tone: 'attention' },
   runs_code: { label: 'Runs code', Icon: PlayIcon, tone: 'attention' },
   needs_approval: { label: 'Needs approval', Icon: AttentionIcon, tone: 'attention' },
+  personal_credential: { label: 'Personal credential', Icon: UserIcon, tone: 'attention' },
 };
 
-// One sensitive tool in the risk review dialog: toolkit icon, "Toolkit · tool", effect and risk badge
+// One sensitive tool in the risk review dialog: toolkit icon, "Toolkit · tool" (a personal
+// credential has no tool), effect and risk badge
 const RiskToolCard = memo(props => {
   const { tool } = props;
   const { toolkit, toolkit_type: toolkitType, tool: toolName, effect, badge } = tool;
   const theme = useTheme();
-  const { label, Icon, tone } = BADGES[badge] ?? BADGES.needs_approval;
+  const badgeKey = BADGES[badge] ? badge : 'needs_approval';
+  const { label, Icon, tone } = BADGES[badgeKey];
   const styles = riskToolCardStyles(tone);
 
   return (
@@ -40,7 +44,7 @@ const RiskToolCard = memo(props => {
         sx={styles.icon}
       />
       <Box sx={styles.text}>
-        <Typography variant="labelMedium">{`${toolkit} · ${toolName}`}</Typography>
+        <Typography variant="labelMedium">{`${toolkit} · ${toolName ?? 'personal credential'}`}</Typography>
         <Typography
           variant="bodySmall"
           color="text.secondary"
@@ -55,6 +59,7 @@ const RiskToolCard = memo(props => {
         icon={
           <Box
             component={Icon}
+            data-testid={`risk-badge-icon-${badgeKey}`}
             fill={theme.palette.icon[tone]}
             sx={styles.badgeIcon}
           />

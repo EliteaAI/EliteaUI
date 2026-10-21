@@ -49,12 +49,18 @@ const describeGroup = (code, findings, entityType) => {
 const ScheduleRiskBlockBox = memo(props => {
   const { blocking, entityType, entityId, versionId } = props;
   const groups = useMemo(() => toRiskItems(blocking), [blocking]);
-  // A new tab, so the form keeps its input; the editor opens at the version of the form
-  const editorLink = `${buildEntityEditorLink({ entityType, entityId })}/${versionId}`;
   const styles = scheduleRiskBlockBoxStyles();
 
   return groups.map(({ code, findings }) => {
     const { title, intro, items, outro } = describeGroup(code, findings, entityType);
+    // The server names what to fix; the form entity and version stand in when it does not
+    const fix = findings.find(finding => finding.fix)?.fix ?? {
+      entity_type: entityType,
+      id: entityId,
+      version_id: versionId,
+    };
+    // A new tab, so the form keeps its input
+    const editorLink = `${buildEntityEditorLink({ entityType: fix.entity_type, entityId: fix.id })}/${fix.version_id}`;
     return (
       <BannerMessage
         key={code}
@@ -125,7 +131,7 @@ const ScheduleRiskBlockBox = memo(props => {
             variant="bodySmall"
             sx={styles.link}
           >
-            {FIX_LINK_TEXT[entityType]}
+            {FIX_LINK_TEXT[fix.entity_type]}
             <Box
               component={OpenInNewIcon}
               aria-hidden
