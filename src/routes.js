@@ -21,6 +21,8 @@ const RouteDefinitions = {
   ApplicationsEvaluateDimensions: '/agents/:tab/:agentId/evaluate/dimensions',
   ApplicationsEvaluateHistory: '/agents/:tab/:agentId/evaluate/history',
   ApplicationsEvaluateHistoryAnalytics: '/agents/:tab/:agentId/evaluate/history/analytics',
+  ApplicationsCreateSchedule: '/agents/:tab/:agentId/schedules/create',
+  ApplicationsScheduleDetail: '/agents/:tab/:agentId/schedules/:scheduleId',
 
   Skills: '/skills',
   SkillsWithTab: '/skills/:tab',
@@ -38,6 +40,8 @@ const RouteDefinitions = {
   PipelineDetail: '/pipelines/:tab/:agentId',
   PipelineRunHistory: '/pipelines/:tab/:agentId/history',
   PipelineRunAnalytics: '/pipelines/:tab/:agentId/history/analytics',
+  PipelineCreateSchedule: '/pipelines/:tab/:agentId/schedules/create',
+  PipelineScheduleDetail: '/pipelines/:tab/:agentId/schedules/:scheduleId',
   Schedules: SCHEDULES,
   CreateSchedule: `${SCHEDULES}/create`,
   ScheduleDetail: `${SCHEDULES}/:scheduleId`,
