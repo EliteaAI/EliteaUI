@@ -9,7 +9,7 @@ import {
 } from '../navigation.helpers';
 
 vi.mock('@/routes', () => ({
-  default: { Schedules: '/schedules' },
+  default: { Schedules: '/settings/schedules' },
   getBasename: () => '/app',
 }));
 
@@ -72,6 +72,6 @@ describe('stripProjectSegment', () => {
 
 describe('getListRouteByPageType', () => {
   it('R1.4 maps the ScheduleDetails page type of EL-7011 to the schedules list', () => {
-    expect(getListRouteByPageType('ScheduleDetails')).toBe('/schedules');
+    expect(getListRouteByPageType('ScheduleDetails')).toBe('/settings/schedules');
   });
 });
