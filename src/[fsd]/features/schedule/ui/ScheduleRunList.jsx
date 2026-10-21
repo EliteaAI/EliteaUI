@@ -1,43 +1,43 @@
-import { memo, useMemo, useState } from 'react';
+import { memo, useMemo } from 'react';
 
-import { useSearchParams } from 'react-router-dom';
-
-import { Box, Link, Typography } from '@mui/material';
+import { Box, Chip, Link, Typography } from '@mui/material';
 
 import { compareRunTimestamp } from '@/[fsd]/entities/run-history/lib/helpers';
 import { useRunHistorySorting } from '@/[fsd]/entities/run-history/lib/hooks';
 import { RunHistorySortableHeader } from '@/[fsd]/entities/run-history/ui';
 
-import { formatRunStarted, toRunStatusLabel, toRunTriggerLabel } from '../lib/helpers';
-import ScheduleRunConversation from './ScheduleRunConversation';
+import { formatRunDuration, formatRunStarted, toRunStatusLabel } from '../lib/helpers';
 import ScheduleRunStatusChip from './ScheduleRunStatusChip';
 
 // Minimums keep a start time on one line, the header labels whole and a Success chip uncut
-const COLUMNS = 'minmax(8rem, 1.2fr) minmax(7rem, 1fr) minmax(8rem, 1.6fr) 3.5rem';
+const COLUMNS =
+  'minmax(8rem, 1.2fr) minmax(5.5rem, 0.8fr) minmax(8rem, 1.6fr) minmax(5.5rem, 0.8fr) 4.5rem 4.5rem';
 const HEADER_ITEMS = [
   { label: 'Started', type: 'started' },
   { label: 'Trigger', type: 'trigger' },
   { label: 'Status', type: 'status' },
+  { label: 'Duration', type: 'duration' },
+  { label: 'Version', type: 'version' },
 ];
-const SORT_FUNCTIONS = {
-  started: (a, b) => compareRunTimestamp(a.started_at, b.started_at),
-  trigger: (a, b) => toRunTriggerLabel(a.trigger).localeCompare(toRunTriggerLabel(b.trigger)),
-  status: (a, b) => toRunStatusLabel(a.status).localeCompare(toRunStatusLabel(b.status)),
-};
+const NO_VALUE = '–';
 
-// The runs of one schedule; Open shows the run's conversation below the table (R4.1, R4.2)
+const versionOf = (run, versionNames) => versionNames[run.version_id] ?? NO_VALUE;
+
+// The runs of one schedule (US-32 R4); Open, or Review for a waiting run, shows the run in the test panel
 const ScheduleRunList = memo(props => {
-  const { runs, schedule } = props;
+  const { runs, versionNames = {}, selectedRunId, onOpen } = props;
 
-  const [openedRunId, setOpenedRunId] = useState(null);
-  // The approval notice links here with the conversation of the waiting run (R1.2)
-  const linkedConversationId = useSearchParams()[0].get('history_run_id');
   const { sortConfig, handleSortItems, getSortedData } = useRunHistorySorting('started');
-  const sortedRuns = useMemo(() => getSortedData(runs, SORT_FUNCTIONS), [runs, getSortedData]);
-  const openedRun = runs.find(run =>
-    openedRunId == null
-      ? linkedConversationId != null && String(run.conversation_id) === linkedConversationId
-      : run.id === openedRunId && run.conversation_id != null,
+  const sortedRuns = useMemo(
+    () =>
+      getSortedData(runs, {
+        started: (a, b) => compareRunTimestamp(a.started_at, b.started_at),
+        trigger: (a, b) => (a.trigger ?? '').localeCompare(b.trigger ?? ''),
+        status: (a, b) => toRunStatusLabel(a.status).localeCompare(toRunStatusLabel(b.status)),
+        duration: (a, b) => (a.duration_ms ?? -1) - (b.duration_ms ?? -1),
+        version: (a, b) => versionOf(a, versionNames).localeCompare(versionOf(b, versionNames)),
+      }),
+    [runs, getSortedData, versionNames],
   );
 
   const styles = scheduleRunListStyles();
@@ -54,77 +54,83 @@ const ScheduleRunList = memo(props => {
     );
 
   return (
-    <Box sx={styles.root}>
-      <Box>
-        <RunHistorySortableHeader
-          headerItems={HEADER_ITEMS}
-          sortConfig={sortConfig}
-          onSort={handleSortItems}
-          gridTemplateColumns={COLUMNS}
-        />
-        {sortedRuns.map(run => (
-          <Box
-            key={run.id}
-            data-testid="schedule-run-row"
-            sx={[styles.row, run.id === openedRun?.id && styles.selected]}
+    <Box>
+      <RunHistorySortableHeader
+        headerItems={HEADER_ITEMS}
+        sortConfig={sortConfig}
+        onSort={handleSortItems}
+        gridTemplateColumns={COLUMNS}
+      />
+      {sortedRuns.map(run => (
+        <Box
+          key={run.id}
+          data-testid="schedule-run-row"
+          aria-current={run.id === selectedRunId ? 'true' : undefined}
+          sx={[styles.row, run.id === selectedRunId && styles.selected]}
+        >
+          <Typography
+            data-testid="schedule-run-started"
+            variant="bodyMedium"
+            noWrap
+            title={new Date(run.started_at).toLocaleString()}
           >
-            <Typography
-              data-testid="schedule-run-started"
-              variant="bodyMedium"
-              noWrap
-              title={new Date(run.started_at).toLocaleString()}
-            >
-              {formatRunStarted(run.started_at)}
-            </Typography>
-            <Typography
+            {formatRunStarted(run.started_at)}
+          </Typography>
+          <Box>
+            <Chip
               data-testid="schedule-run-trigger"
-              variant="bodyMedium"
-              noWrap
-            >
-              {toRunTriggerLabel(run.trigger)}
-            </Typography>
-            <Box
-              data-testid="schedule-run-status-cell"
-              sx={styles.status}
-            >
-              <ScheduleRunStatusChip status={run.status} />
-              {run.reason && (
-                <Typography
-                  variant="bodySmall"
-                  color="text.secondary"
-                  sx={styles.reason}
-                  title={run.reason}
-                >
-                  {run.reason}
-                </Typography>
-              )}
-            </Box>
-            <Box
-              data-testid="schedule-run-open"
-              sx={styles.open}
-            >
-              {run.conversation_id != null ? (
-                <Link
-                  component="button"
-                  type="button"
-                  variant="bodyMedium"
-                  onClick={() => setOpenedRunId(run.id)}
-                >
-                  Open
-                </Link>
-              ) : (
-                '–'
-              )}
-            </Box>
+              size="small"
+              variant="outlined"
+              label={run.trigger}
+              sx={styles.trigger[run.trigger] ?? styles.trigger.manual}
+            />
           </Box>
-        ))}
-      </Box>
-      {openedRun && (
-        <ScheduleRunConversation
-          run={openedRun}
-          schedule={schedule}
-        />
-      )}
+          <Box
+            data-testid="schedule-run-status-cell"
+            sx={styles.status}
+          >
+            <ScheduleRunStatusChip status={run.status} />
+            {run.reason && (
+              <Typography
+                variant="bodySmall"
+                color="text.secondary"
+                sx={styles.reason}
+                title={run.reason}
+              >
+                {run.reason}
+              </Typography>
+            )}
+          </Box>
+          <Typography
+            data-testid="schedule-run-duration"
+            variant="bodyMedium"
+            noWrap
+          >
+            {formatRunDuration(run.duration_ms)}
+          </Typography>
+          <Typography
+            data-testid="schedule-run-version"
+            variant="bodyMedium"
+            noWrap
+          >
+            {versionOf(run, versionNames)}
+          </Typography>
+          <Box data-testid="schedule-run-open">
+            {run.conversation_id != null ? (
+              <Link
+                component="button"
+                type="button"
+                variant="bodyMedium"
+                onClick={() => onOpen(run)}
+              >
+                {run.status === 'waiting_for_approval' ? 'Review' : 'Open'}
+              </Link>
+            ) : (
+              NO_VALUE
+            )}
+          </Box>
+        </Box>
+      ))}
     </Box>
   );
 });
@@ -133,22 +139,30 @@ ScheduleRunList.displayName = 'ScheduleRunList';
 
 /** @type {MuiSx} */
 const scheduleRunListStyles = () => ({
-  root: { display: 'flex', flexDirection: 'column', gap: '1rem' },
   empty: { padding: '1rem 0', textAlign: 'center' },
   row: ({ palette }) => ({
     display: 'grid',
     gridTemplateColumns: COLUMNS,
     alignItems: 'center',
-    minHeight: '2.75rem',
+    minHeight: '3.25rem',
     padding: '0.375rem 0',
     color: palette.text.secondary,
     borderBottom: `0.0625rem solid ${palette.border.lines}`,
     '& > *': { padding: '0 1rem', minWidth: 0 },
   }),
   selected: ({ palette }) => ({ backgroundColor: palette.background.surface.interactive.default }),
+  // test: the primary colour (magenta light, cyan dark), cron: blue, manual: grey
+  trigger: {
+    test: ({ palette }) => ({ color: palette.text.accent, borderColor: palette.primary.main }),
+    cron: ({ palette }) => ({
+      color: palette.alert.info.text,
+      borderColor: palette.alert.info.border,
+      backgroundColor: palette.alert.info.background,
+    }),
+    manual: ({ palette }) => ({ color: palette.text.secondary, borderColor: palette.border.lines }),
+  },
   status: { display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '0.25rem' },
   reason: { maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
-  open: { textAlign: 'right' },
 });
 
 export default ScheduleRunList;
