@@ -35,6 +35,7 @@ import { usePeriodParam } from './hooks/usePeriodParam.hooks';
 
 const SCOPE_PROJECT = 'project';
 const SCOPE_USER = 'user';
+const SCOPE_LABELS = { [SCOPE_PROJECT]: 'Whole project', [SCOPE_USER]: 'My usage' };
 
 const PRIVATE_PROJECT_INFO =
   'This is your Private project. Requests made without selecting a "Team" project are charged here, including requests made with personal access tokens from external tools such as Claude Code, IDE extensions, and scripts.';
@@ -67,7 +68,8 @@ const UsageContainer = memo(() => {
     searchParams.get('scope') === SCOPE_USER ? SCOPE_USER : SCOPE_PROJECT,
   );
 
-  const [scopeToast, setScopeToast] = useState(false);
+  const [scopeFallback, setScopeFallback] = useState(null);
+  const [scopeSwitched, setScopeSwitched] = useState(false);
 
   const activeScope = isPersonalProject ? SCOPE_PROJECT : scope;
 
@@ -85,7 +87,7 @@ const UsageContainer = memo(() => {
 
   // Derive available periods list from the current response (backend may provide history list)
   const availablePeriods = useMemo(() => {
-    const currentPeriod = currentData?.period_yyyymm;
+    const currentPeriod = currentData?.period;
 
     if (!currentPeriod) return [];
 
@@ -98,21 +100,25 @@ const UsageContainer = memo(() => {
 
   const isCurrentPeriod = !period || period === availablePeriods[0];
 
-  const handleScopeChange = useCallback(
-    (_, value) => {
-      setScope(value);
-      // Only reset the period when the selected month won't be available in the new scope.
-      // availablePeriods is the same list for both scopes (it comes from the current-month
-      // response, which is scope-independent), so we keep the selection when it exists there.
-      if (!period || !availablePeriods.includes(period)) {
-        setPeriod(null);
-      }
-      setScopeToast(true);
-    },
-    [setPeriod, period, availablePeriods],
-  );
+  const handleScopeChange = useCallback((_, value) => {
+    setScope(value);
+    setScopeSwitched(true);
+  }, []);
 
-  const handleCloseScopeToast = useCallback(() => setScopeToast(false), []);
+  const requestedPeriod = searchParams.get('period');
+
+  useEffect(() => {
+    if (!scopeSwitched || currentData?.scope !== activeScope) return;
+
+    setScopeSwitched(false);
+
+    if (!requestedPeriod || availablePeriods.includes(requestedPeriod)) return;
+
+    setScopeFallback({ from: requestedPeriod, to: availablePeriods[0] });
+    setPeriod(null);
+  }, [scopeSwitched, currentData, activeScope, requestedPeriod, availablePeriods, setPeriod]);
+
+  const handleCloseScopeToast = useCallback(() => setScopeFallback(null), []);
 
   // Only fetch a historical period when a non-current one is selected
   const {
@@ -351,7 +357,7 @@ const UsageContainer = memo(() => {
 
   // Monthly history filtered to only periods in availablePeriods, plus the current month
   const monthlyHistory = useMemo(() => {
-    const currentPeriodEntry = { period: currentData?.period_yyyymm, spend: currentData?.spend };
+    const currentPeriodEntry = { period: currentData?.period, spend: currentData?.spend };
     const deduped = (currentData?.monthly_history || []).filter(
       item => item.period !== currentPeriodEntry.period,
     );
@@ -649,7 +655,7 @@ const UsageContainer = memo(() => {
       </Box>
 
       <Snackbar
-        open={scopeToast}
+        open={Boolean(scopeFallback)}
         autoHideDuration={4000}
         onClose={handleCloseScopeToast}
         anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
@@ -659,7 +665,8 @@ const UsageContainer = memo(() => {
           severity="info"
           variant="filled"
         >
-          Switched view — showing current month. Select a different period above.
+          {scopeFallback &&
+            `No usage for ${PeriodHelpers.parsePeriodMonth(scopeFallback.from)} in ${SCOPE_LABELS[activeScope]}; showing ${PeriodHelpers.parsePeriodMonth(scopeFallback.to)}.`}
         </Alert>
       </Snackbar>
 

@@ -15,6 +15,7 @@ const SOURCE_DISPLAY = {
   automations: 'Automations',
   indexing: 'Indexing',
   skills: 'Skills',
+  evaluations: 'Evaluations',
   external: 'External API',
 };
 
