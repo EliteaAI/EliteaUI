@@ -6,21 +6,24 @@ import { useCodeMirror } from '@/[fsd]/shared/lib/hooks';
 import { history, redo, redoDepth, undo, undoDepth } from '@codemirror/commands';
 import { lintGutter } from '@codemirror/lint';
 import { searchKeymap } from '@codemirror/search';
-import { EditorState } from '@codemirror/state';
+import { EditorState, Transaction } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
 import { vscodeDarkInit, vscodeLightInit } from '@uiw/codemirror-theme-vscode';
 import CodeMirror, { EditorView } from '@uiw/react-codemirror';
 
-const createMaxLengthExtension = maxLength => {
+export const createMaxLengthExtension = maxLength => {
   if (!maxLength || maxLength <= 0) {
     return [];
   }
 
   return EditorState.transactionFilter.of(tr => {
     if (!tr.docChanged) return tr;
-    if (tr.newDoc.length <= maxLength) return tr;
+    if (!tr.annotation(Transaction.userEvent)) return tr;
 
     const currentLength = tr.startState.doc.length;
+    const allowedLength = Math.max(maxLength, currentLength);
+    if (tr.newDoc.length <= allowedLength) return tr;
+
     const changes = [];
     let runningLength = currentLength;
 
@@ -35,7 +38,7 @@ const createMaxLengthExtension = maxLength => {
         return;
       }
 
-      const spaceLeft = maxLength - runningLength;
+      const spaceLeft = allowedLength - runningLength;
 
       if (netChange <= spaceLeft) {
         changes.push({ from: fromA, to: toA, insert: insertText });
@@ -58,7 +61,7 @@ const createMaxLengthExtension = maxLength => {
 
     return tr.startState.update({
       changes,
-      selection: { anchor: Math.min(newAnchor, maxLength) },
+      selection: { anchor: Math.min(newAnchor, allowedLength) },
     });
   });
 };

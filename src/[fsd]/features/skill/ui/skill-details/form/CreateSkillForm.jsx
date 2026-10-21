@@ -6,6 +6,7 @@ import { Box, Typography, useTheme } from '@mui/material';
 
 import { EditableEntityIcon } from '@/[fsd]/features/entity-icon-editor';
 import { SKILL_NAME_MAX_LENGTH } from '@/[fsd]/features/skill/lib/constants';
+import { useSkillInstructionsMaxLength } from '@/[fsd]/features/skill/lib/hooks';
 import { GenerateSkillButton } from '@/[fsd]/features/skill/ui/generate-skill-modal';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { useFieldFocus, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
@@ -15,12 +16,7 @@ import TabGroupButton from '@/[fsd]/shared/ui/tab-group-button/TabGroupButton';
 import { useTagListQuery } from '@/api/tags.js';
 import CodeIcon from '@/assets/code-icon.svg?react';
 import OpenEyeIcon from '@/assets/open-eye-icon.svg?react';
-import {
-  ChatParticipantType,
-  MAX_DESCRIPTION_LENGTH,
-  MAX_INSTRUCTIONS_LENGTH,
-  PROMPT_PAYLOAD_KEY,
-} from '@/common/constants';
+import { ChatParticipantType, MAX_DESCRIPTION_LENGTH, PROMPT_PAYLOAD_KEY } from '@/common/constants';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import TagEditor from '@/pages/Common/Components/TagEditor';
 import { markdown } from '@codemirror/lang-markdown';
@@ -48,6 +44,7 @@ const CreateSkillForm = memo(props => {
   const [instructionsViewMode, setInstructionsViewMode] = useState('edit');
   const styles = skillCreateFormStyles();
   const { toggleFieldFocus, isFocused } = useFieldFocus();
+  const maxInstructionsLength = useSkillInstructionsMaxLength();
 
   const modeButtons = useMemo(
     () => [
@@ -304,7 +301,7 @@ const CreateSkillForm = memo(props => {
                         extensions={markdownExtensions}
                         height="100%"
                         minHeight="0"
-                        maxLength={MAX_INSTRUCTIONS_LENGTH}
+                        maxLength={maxInstructionsLength}
                         readOnly={disabled}
                         contentTestId="skill-instructions-editor-content"
                       />
@@ -315,7 +312,7 @@ const CreateSkillForm = memo(props => {
                         variant="bodySmall"
                         sx={styles.charCounter}
                       >
-                        {`${MAX_INSTRUCTIONS_LENGTH - instructions.length} characters left`}
+                        {`${maxInstructionsLength - instructions.length} characters left`}
                       </Typography>
                     </Box>
                   </Box>
