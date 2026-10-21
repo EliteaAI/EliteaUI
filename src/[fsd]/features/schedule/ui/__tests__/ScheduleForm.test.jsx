@@ -675,7 +675,11 @@ describe('ScheduleForm EL-7011', () => {
     renderForm({
       onSubmit: vi.fn().mockRejectedValue({
         status: 400,
-        data: { error: 'approval_rule_not_allowed', field: 'approval_rule' },
+        data: {
+          code: 'approval_rule_not_allowed',
+          error: 'Run without asking is not allowed here.',
+          field: 'approval_rule',
+        },
       }),
     });
     pickEntity(7);
@@ -683,7 +687,7 @@ describe('ScheduleForm EL-7011', () => {
 
     save();
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('approval_rule_not_allowed');
+    expect(await screen.findByRole('alert')).toHaveTextContent('Run without asking is not allowed here.');
   });
 
   it('R1.5 EL-7011 shows the returned rule and the hint when the save answers a different rule', async () => {
@@ -1061,12 +1065,26 @@ describe('ScheduleForm EL-7011', () => {
       code: 'personal_signin_required',
       toolkit: "GitHub toolkit 'github-personal'",
       reason: 'uses your own GitHub sign-in',
+      fix: { entity_type: 'agent', id: 7, version_id: 71 },
     };
     const SENSITIVE = [
       { code: 'sensitive_action', toolkit: 'Outlook', tool: 'send_email', badge: 'sends_messages' },
     ];
     const RISKY = { ...CLEAR, sensitive: SENSITIVE, fingerprint: 'fp-1' };
-    const conflict = data => ({ status: 409, data });
+    // Every refusal of the core branch: a machine code, a human text and the whole review
+    const refusal = (status, code, extra = {}) => ({
+      status,
+      data: {
+        code,
+        error: `Human text of ${code}`,
+        blocking: [],
+        sensitive: [],
+        notices: [],
+        fingerprint: 'fp-x',
+        ...extra,
+      },
+    });
+    const conflict = (code, extra) => refusal(409, code, extra);
     const saveButton = () => screen.getByTestId('schedule-save-button');
 
     const fillAgent = async () => {
@@ -1076,15 +1094,15 @@ describe('ScheduleForm EL-7011', () => {
       await waitFor(() => expect(saveButton()).toBeEnabled());
     };
 
-    it('checks the chosen agent and version with the form run mode', async () => {
+    it('checks the chosen entity type, agent and version', async () => {
       renderForm();
       await fillAgent();
 
       expect(checkRisk).toHaveBeenCalledWith({
         projectId: 5,
+        entity_type: 'agent',
         application_id: 7,
         version_id: 71,
-        run_mode: null,
       });
     });
 
@@ -1253,7 +1271,7 @@ describe('ScheduleForm EL-7011', () => {
       const newTools = [...SENSITIVE, { code: 'sensitive_action', toolkit: 'Jira', tool: 'delete_issue' }];
       const onSubmit = vi
         .fn()
-        .mockRejectedValueOnce(conflict({ error: 'risk_changed', sensitive: newTools, fingerprint: 'fp-2' }))
+        .mockRejectedValueOnce(conflict('risk_changed', { sensitive: newTools, fingerprint: 'fp-2' }))
         .mockResolvedValue({ id: 1 });
       renderForm({ onSubmit });
       await fillAgent();
@@ -1285,7 +1303,7 @@ describe('ScheduleForm EL-7011', () => {
       const onSubmit = vi
         .fn()
         .mockRejectedValueOnce(
-          conflict({ error: 'risk_confirmation_required', sensitive: SENSITIVE, fingerprint: 'fp-3' }),
+          conflict('risk_confirmation_required', { sensitive: SENSITIVE, fingerprint: 'fp-3' }),
         )
         .mockResolvedValue({ id: 1 });
       renderForm({ initialValues: { ...INITIAL, approval_rule: 'run_without_asking' }, onSubmit });
@@ -1307,7 +1325,7 @@ describe('ScheduleForm EL-7011', () => {
 
     it('409 schedule_blocked closes the dialog and shows the block box', async () => {
       checkRisk.mockReturnValue(answer(RISKY));
-      const onSubmit = vi.fn().mockRejectedValue(conflict({ error: 'schedule_blocked', blocking: [SIGNIN] }));
+      const onSubmit = vi.fn().mockRejectedValue(conflict('schedule_blocked', { blocking: [SIGNIN] }));
       renderForm({ onSubmit });
       await fillAgent();
       await save();
@@ -1349,6 +1367,73 @@ describe('ScheduleForm EL-7011', () => {
       await act(async () => reviewProps.onConfirm({ rule: 'pause_and_ask' }));
 
       await waitFor(() => expect(onTestRun).toHaveBeenCalledTimes(1));
+    });
+
+    it('400 risk_name_mismatch keeps the dialog open and shows the server text at the typed name', async () => {
+      checkRisk.mockReturnValue(answer(RISKY));
+      const onSubmit = vi
+        .fn()
+        .mockRejectedValueOnce(
+          refusal(400, 'risk_name_mismatch', {
+            field: 'risk_ack',
+            sensitive: SENSITIVE,
+            fingerprint: 'fp-1',
+          }),
+        )
+        .mockResolvedValue({ id: 1 });
+      renderForm({ onSubmit });
+      await fillAgent();
+      await save();
+      await screen.findByTestId('risk-dialog');
+
+      await act(async () =>
+        reviewProps.onConfirm({ rule: 'run_without_asking', confirmedName: 'Daily digest' }),
+      );
+
+      expect(screen.getByTestId('risk-dialog')).toBeInTheDocument();
+      expect(reviewProps.nameError).toBe('Human text of risk_name_mismatch');
+      expect(reviewProps.saving).toBe(false);
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+
+      await act(async () =>
+        reviewProps.onConfirm({ rule: 'run_without_asking', confirmedName: 'Daily digest' }),
+      );
+      expect(onSubmit).toHaveBeenCalledTimes(2);
+      expect(screen.queryByTestId('risk-dialog')).not.toBeInTheDocument();
+    });
+
+    it('branches on the machine code, not on the human text', async () => {
+      checkRisk.mockReturnValue(answer(RISKY));
+      const onSubmit = vi.fn().mockRejectedValue({ status: 409, data: { error: 'risk_changed' } });
+      renderForm({ onSubmit });
+      await fillAgent();
+      await save();
+      await screen.findByTestId('risk-dialog');
+
+      await act(async () => reviewProps.onConfirm({ rule: 'pause_and_ask' }));
+
+      expect(screen.queryByTestId('risk-dialog')).not.toBeInTheDocument();
+      expect(screen.getByRole('alert')).toHaveTextContent('risk_changed');
+    });
+
+    it('shows who confirmed Run without asking and when on the edit page', () => {
+      renderForm({
+        initialValues: { ...INITIAL, application_id: 7, version_id: 71, approval_rule: 'run_without_asking' },
+        schedule: {
+          id: 3,
+          owner: { name: 'Ann Lee' },
+          approval_confirmed_by: 'Anna K.',
+          approval_confirmed_at: '2026-10-21T09:00:00+00:00',
+        },
+      });
+
+      expect(screen.getByText('Confirmed by Anna K. on 21 Oct 2026')).toBeInTheDocument();
+    });
+
+    it('shows no confirmation line when the schedule has none', () => {
+      renderForm({ schedule: { id: 3, owner: { name: 'Ann Lee' }, approval_confirmed_by: null } });
+
+      expect(screen.queryByText(/Confirmed by/)).not.toBeInTheDocument();
     });
 
     it('applies the same flow to the edit page and a nested editor route', async () => {

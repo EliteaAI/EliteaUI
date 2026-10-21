@@ -49,6 +49,14 @@ const TOOLS = [
     tool: 'run',
     effect: 'Runs a command',
   },
+  {
+    code: 'personal_credential',
+    toolkit: 'GitHub',
+    toolkit_type: 'github',
+    tool: null,
+    badge: 'personal_credential',
+    effect: "Runs with the owner's personal GitHub credential.",
+  },
 ];
 
 const setup = (props = {}) => {
@@ -85,13 +93,33 @@ describe('EL-7011 owner CR RiskReviewDialog', () => {
     expect(screen.getByText('Review risks before scheduling')).toBeInTheDocument();
     expect(screen.getByText('Digest bot v3')).toBeInTheDocument();
     const cards = screen.getAllByTestId('risk-tool-card');
-    expect(cards).toHaveLength(3);
+    expect(cards).toHaveLength(4);
     expect(within(cards[0]).getByText('Outlook · send_email')).toBeInTheDocument();
     expect(within(cards[0]).getByText('Sends e-mail to people inside and outside EPAM')).toBeInTheDocument();
     expect(within(cards[0]).getByText('Sends messages')).toBeInTheDocument();
     expect(within(cards[1]).getByText('Deletes data')).toBeInTheDocument();
     // A tool without a badge from the server gets the default badge
     expect(within(cards[2]).getByText('Needs approval')).toBeInTheDocument();
+  });
+
+  it('shows a personal credential as a card with the person badge', () => {
+    setup();
+
+    const card = screen.getAllByTestId('risk-tool-card')[3];
+    expect(within(card).getByText('GitHub · personal credential')).toBeInTheDocument();
+    expect(within(card).getByText("Runs with the owner's personal GitHub credential.")).toBeInTheDocument();
+    expect(within(card).getByText('Personal credential')).toBeInTheDocument();
+    expect(within(card).getByTestId('risk-badge-icon-personal_credential')).toBeInTheDocument();
+  });
+
+  it('shows the server text of a name mismatch at the typed-name field', () => {
+    setup({ nameError: 'Type the schedule name exactly to confirm "Run without asking"' });
+    pickRunWithoutAsking();
+    typeName('Daily digest');
+
+    expect(
+      screen.getByText('Type the schedule name exactly to confirm "Run without asking"'),
+    ).toBeInTheDocument();
   });
 
   it('selects Pause and ask me by default, focuses it and confirms it without a name', () => {

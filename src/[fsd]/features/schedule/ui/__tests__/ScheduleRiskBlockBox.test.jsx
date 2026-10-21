@@ -16,13 +16,20 @@ const SIGNIN = [
     code: 'personal_signin_required',
     toolkit: "GitHub toolkit 'github-personal'",
     reason: 'uses your own GitHub sign-in',
+    fix: { entity_type: 'agent', id: 12, version_id: 31 },
   },
-  { code: 'personal_signin_required', toolkit: 'Jira Cloud MCP server', reason: 'asks each user to sign in' },
+  {
+    code: 'personal_signin_required',
+    toolkit: 'Jira Cloud MCP server',
+    reason: 'asks each user to sign in',
+    fix: { entity_type: 'agent', id: 12, version_id: 31 },
+  },
 ];
 const STEPS = ['Review', 'Approve', 'Publish'].map(label => ({
   code: 'human_input_step',
   step: label.toLowerCase(),
   step_label: label,
+  fix: { entity_type: 'pipeline', id: 9, version_id: 90 },
 }));
 
 const setup = props =>
@@ -54,17 +61,17 @@ describe('EL-7011 owner CR ScheduleRiskBlockBox', () => {
     expect(box.getAllByRole('listitem')).toHaveLength(2);
   });
 
-  it('opens the agent editor at the form version in a new tab, so the form keeps its input', () => {
+  it('opens the editor named by the finding fix in a new tab, so the form keeps its input', () => {
     setup({ blocking: SIGNIN });
 
     const link = screen.getByRole('link', { name: /Open agent to change tools/ });
-    expect(link).toHaveAttribute('href', '/agents/all/7/71');
+    expect(link).toHaveAttribute('href', '/agents/all/12/31');
     expect(link).toHaveAttribute('target', '_blank');
     expect(link).toHaveAttribute('rel', expect.stringContaining('noopener'));
   });
 
   it('names the first human-input step of a pipeline and counts the others', () => {
-    setup({ blocking: STEPS, entityType: 'pipeline', entityId: 9, versionId: 90 });
+    setup({ blocking: STEPS, entityType: 'pipeline', entityId: 1, versionId: 2 });
 
     expect(
       screen.getByText("This pipeline asks a person for input at step 'Review' and 2 more steps."),
@@ -81,6 +88,15 @@ describe('EL-7011 owner CR ScheduleRiskBlockBox', () => {
 
     expect(screen.getAllByTestId('schedule-risk-block-box')).toHaveLength(2);
     expect(screen.getByText("Toolkit 'x' has no usable credential for the owner.")).toBeInTheDocument();
+  });
+
+  it('falls back to the form entity and version when a finding has no fix', () => {
+    setup({ blocking: [{ code: 'missing_credential', toolkit: 'x' }] });
+
+    expect(screen.getByRole('link', { name: /Open agent to change tools/ })).toHaveAttribute(
+      'href',
+      '/agents/all/7/71',
+    );
   });
 
   it('shows the server message of a blocking code it does not know', () => {

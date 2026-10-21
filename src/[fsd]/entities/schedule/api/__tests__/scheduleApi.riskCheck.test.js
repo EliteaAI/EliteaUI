@@ -39,16 +39,16 @@ describe('EL-7011 owner CR schedule risk check API', () => {
     const result = await makeStore().dispatch(
       scheduleApi.endpoints.checkScheduleRisk.initiate({
         projectId: 5,
+        entity_type: 'agent',
         application_id: 7,
         version_id: 71,
-        run_mode: null,
       }),
     );
 
     const request = await requestAt(fetchSpy, 0);
     expect(request.method).toBe('POST');
     expect(request.url.pathname).toBe(`${BASE}/check`);
-    expect(request.body).toEqual({ application_id: 7, version_id: 71, run_mode: null });
+    expect(request.body).toEqual({ entity_type: 'agent', application_id: 7, version_id: 71 });
     expect(result.data).toEqual(CHECK_ANSWER);
   });
 

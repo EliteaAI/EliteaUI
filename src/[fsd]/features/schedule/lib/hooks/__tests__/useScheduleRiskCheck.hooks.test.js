@@ -25,7 +25,7 @@ const SENSITIVE = [{ code: 'sensitive_action', toolkit: 'Outlook', tool: 'send_e
 const answer = data => ({ unwrap: () => Promise.resolve(data) });
 const failure = () => ({ unwrap: () => Promise.reject({ status: 500 }) });
 
-const setup = (initial = { applicationId: 7, versionId: 71, runMode: null }) =>
+const setup = (initial = { entityType: 'agent', applicationId: 7, versionId: 71 }) =>
   renderHook(args => useScheduleRiskCheck({ projectId: 5, ...args }), { initialProps: initial });
 
 const setVisibility = state => {
@@ -44,7 +44,7 @@ describe('useScheduleRiskCheck EL-7011 owner CR', () => {
   afterEach(cleanup);
 
   it('stays idle and sends nothing until both the entity and the version are chosen', () => {
-    const { result } = setup({ applicationId: 7, versionId: '' });
+    const { result } = setup({ entityType: 'agent', applicationId: 7, versionId: '' });
 
     expect(result.current.status).toBe(RISK_CHECK_STATUS.IDLE);
     expect(mocks.check).not.toHaveBeenCalled();
@@ -57,9 +57,9 @@ describe('useScheduleRiskCheck EL-7011 owner CR', () => {
     await waitFor(() => expect(result.current.status).toBe(RISK_CHECK_STATUS.CLEAR));
     expect(mocks.check).toHaveBeenCalledWith({
       projectId: 5,
+      entity_type: 'agent',
       application_id: 7,
       version_id: 71,
-      run_mode: null,
     });
     expect(result.current.result).toEqual(CLEAR);
   });
@@ -79,11 +79,31 @@ describe('useScheduleRiskCheck EL-7011 owner CR', () => {
     expect(result.current.result).toBeNull();
   });
 
+  it('checks again when the entity type changes', async () => {
+    const { result, rerender } = setup();
+    await waitFor(() => expect(result.current.status).toBe(RISK_CHECK_STATUS.CLEAR));
+
+    rerender({ entityType: 'pipeline', applicationId: 7, versionId: 71 });
+
+    await waitFor(() => expect(mocks.check).toHaveBeenCalledTimes(2));
+    expect(mocks.check).toHaveBeenLastCalledWith(expect.objectContaining({ entity_type: 'pipeline' }));
+  });
+
+  it('applyFindings takes the notices of a refusal too', async () => {
+    const { result } = setup();
+    await waitFor(() => expect(result.current.status).toBe(RISK_CHECK_STATUS.CLEAR));
+    const notices = [{ code: 'scan_incomplete', message: 'm' }];
+
+    act(() => result.current.applyFindings({ code: 'risk_changed', ...CLEAR, notices, fingerprint: 'fp-4' }));
+
+    expect(result.current.result.notices).toEqual(notices);
+  });
+
   it('checks again when the version changes', async () => {
     const { result, rerender } = setup();
     await waitFor(() => expect(result.current.status).toBe(RISK_CHECK_STATUS.CLEAR));
 
-    rerender({ applicationId: 7, versionId: 70, runMode: null });
+    rerender({ entityType: 'agent', applicationId: 7, versionId: 70 });
 
     await waitFor(() => expect(mocks.check).toHaveBeenCalledTimes(2));
     expect(mocks.check).toHaveBeenLastCalledWith(expect.objectContaining({ version_id: 70 }));
@@ -120,7 +140,7 @@ describe('useScheduleRiskCheck EL-7011 owner CR', () => {
     const { result, rerender } = setup();
     mocks.check.mockReturnValue(answer({ ...CLEAR, fingerprint: 'fp-new' }));
 
-    rerender({ applicationId: 7, versionId: 70, runMode: null });
+    rerender({ entityType: 'agent', applicationId: 7, versionId: 70 });
     await waitFor(() => expect(result.current.result?.fingerprint).toBe('fp-new'));
     await act(async () => finishOld({ ...CLEAR, fingerprint: 'fp-old' }));
 
@@ -132,7 +152,10 @@ describe('useScheduleRiskCheck EL-7011 owner CR', () => {
     await waitFor(() => expect(result.current.status).toBe(RISK_CHECK_STATUS.CLEAR));
 
     act(() =>
-      result.current.applyFindings({ error: 'schedule_blocked', blocking: [{ code: 'missing_credential' }] }),
+      result.current.applyFindings({
+        code: 'schedule_blocked',
+        blocking: [{ code: 'missing_credential' }],
+      }),
     );
 
     expect(result.current.status).toBe(RISK_CHECK_STATUS.BLOCKED);
@@ -144,7 +167,7 @@ describe('useScheduleRiskCheck EL-7011 owner CR', () => {
     await waitFor(() => expect(result.current.status).toBe(RISK_CHECK_STATUS.CLEAR));
 
     act(() =>
-      result.current.applyFindings({ error: 'risk_changed', sensitive: SENSITIVE, fingerprint: 'fp-2' }),
+      result.current.applyFindings({ code: 'risk_changed', sensitive: SENSITIVE, fingerprint: 'fp-2' }),
     );
 
     expect(result.current.status).toBe(RISK_CHECK_STATUS.CLEAR);
