@@ -30,3 +30,10 @@ export {
   matchSkillRun,
   readRunConversationId,
 } from './skillRun.helpers';
+export {
+  composeSkillEditorText,
+  countSkillBodyLength,
+  parseSkillEditorText,
+  replaceSkillEditorBody,
+  writeSkillFrontmatterFields,
+} from './skillFrontmatter.helpers';

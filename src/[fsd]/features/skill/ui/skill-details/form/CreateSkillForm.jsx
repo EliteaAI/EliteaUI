@@ -6,6 +6,8 @@ import { Box, Typography, useTheme } from '@mui/material';
 
 import { EditableEntityIcon } from '@/[fsd]/features/entity-icon-editor';
 import { SKILL_NAME_MAX_LENGTH } from '@/[fsd]/features/skill/lib/constants';
+import { countSkillBodyLength } from '@/[fsd]/features/skill/lib/helpers';
+import { useSkillFrontmatterEditor } from '@/[fsd]/features/skill/lib/hooks';
 import { GenerateSkillButton } from '@/[fsd]/features/skill/ui/generate-skill-modal';
 import { AccordionConstants, MarkdownConstants } from '@/[fsd]/shared/lib/constants';
 import { useFieldFocus, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
@@ -53,6 +55,7 @@ const CreateSkillForm = memo(props => {
   );
   const styles = skillCreateFormStyles();
   const { toggleFieldFocus, isFocused } = useFieldFocus();
+  const { editorText, onEditorChange } = useSkillFrontmatterEditor();
 
   const markdownExtensions = useMemo(() => [markdown()], []);
 
@@ -96,16 +99,6 @@ const CreateSkillForm = memo(props => {
       toggleFieldFocus(null);
     },
     [formik, toggleFieldFocus],
-  );
-
-  const onChangeInstructions = useCallback(
-    value => {
-      formik.setFieldValue('version_details.instructions', value);
-      if (!formik.touched?.version_details?.instructions) {
-        formik.setFieldTouched('version_details.instructions', true, false);
-      }
-    },
-    [formik],
   );
 
   const onInstructionsBlur = useCallback(() => {
@@ -286,13 +279,14 @@ const CreateSkillForm = memo(props => {
                     >
                       <Field.CodeMirrorEditor
                         key={instructionsKey}
-                        value={instructions}
-                        notifyChange={onChangeInstructions}
+                        value={editorText}
+                        notifyChange={onEditorChange}
                         onBlur={onInstructionsBlur}
                         extensions={markdownExtensions}
                         height="100%"
                         minHeight="0"
                         maxLength={MAX_INSTRUCTIONS_LENGTH}
+                        countLength={countSkillBodyLength}
                         readOnly={disabled}
                         contentTestId="skill-instructions-editor-content"
                       />
