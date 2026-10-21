@@ -52,8 +52,8 @@ vi.mock('@/[fsd]/features/chat/ui/editors/SkillCanvasModelSelector', () => ({
 vi.mock('@/[fsd]/features/skill/api', () => ({ useSkillDetailsQuery: () => ({ data: details.data }) }));
 vi.mock('@/[fsd]/features/skill/lib/hooks', () => ({
   useSkillModels: () => ({ defaultModel: DEFAULT_MODEL, isLoadingModels: models.isLoadingModels }),
+  useSkillValidationSchema: () => undefined,
 }));
-vi.mock('@/[fsd]/features/skill/lib/validation', () => ({ SkillValidateSchema: {} }));
 vi.mock('@/[fsd]/features/skill/ui', () => ({
   CreateSkillForm: ({ disabled }) => {
     captured.formDisabled = disabled;

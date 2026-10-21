@@ -6,6 +6,7 @@ import { Box, Typography, useTheme } from '@mui/material';
 
 import { EditableEntityIcon } from '@/[fsd]/features/entity-icon-editor';
 import { SKILL_NAME_MAX_LENGTH } from '@/[fsd]/features/skill/lib/constants';
+import { useSkillInstructionsMaxLength } from '@/[fsd]/features/skill/lib/hooks';
 import { GenerateSkillButton } from '@/[fsd]/features/skill/ui/generate-skill-modal';
 import { AccordionConstants, MarkdownConstants } from '@/[fsd]/shared/lib/constants';
 import { useFieldFocus, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
@@ -13,12 +14,7 @@ import { Field, Input, Markdown, Text } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { MarkdownViewToggle } from '@/[fsd]/shared/ui/tab-group-button';
 import { useTagListQuery } from '@/api/tags.js';
-import {
-  ChatParticipantType,
-  MAX_DESCRIPTION_LENGTH,
-  MAX_INSTRUCTIONS_LENGTH,
-  PROMPT_PAYLOAD_KEY,
-} from '@/common/constants';
+import { ChatParticipantType, MAX_DESCRIPTION_LENGTH, PROMPT_PAYLOAD_KEY } from '@/common/constants';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import TagEditor from '@/pages/Common/Components/TagEditor';
 import { markdown } from '@codemirror/lang-markdown';
@@ -53,6 +49,7 @@ const CreateSkillForm = memo(props => {
   );
   const styles = skillCreateFormStyles();
   const { toggleFieldFocus, isFocused } = useFieldFocus();
+  const maxInstructionsLength = useSkillInstructionsMaxLength();
 
   const markdownExtensions = useMemo(() => [markdown()], []);
 
@@ -120,6 +117,11 @@ const CreateSkillForm = memo(props => {
   );
 
   const instructions = formik.values?.version_details?.instructions || '';
+  const instructionsCharactersLeft = maxInstructionsLength - instructions.length;
+  const instructionsCounterLabel =
+    instructionsCharactersLeft >= 0
+      ? `${instructionsCharactersLeft} characters left`
+      : `${-instructionsCharactersLeft} characters over the limit`;
   const instructionsError =
     formik.touched?.version_details?.instructions && formik.errors?.version_details?.instructions;
   const instructionsErrorNode = instructionsError ? (
@@ -292,7 +294,7 @@ const CreateSkillForm = memo(props => {
                         extensions={markdownExtensions}
                         height="100%"
                         minHeight="0"
-                        maxLength={MAX_INSTRUCTIONS_LENGTH}
+                        maxLength={maxInstructionsLength}
                         readOnly={disabled}
                         contentTestId="skill-instructions-editor-content"
                       />
@@ -303,7 +305,7 @@ const CreateSkillForm = memo(props => {
                         variant="bodySmall"
                         sx={styles.charCounter}
                       >
-                        {`${MAX_INSTRUCTIONS_LENGTH - instructions.length} characters left`}
+                        {instructionsCounterLabel}
                       </Typography>
                     </Box>
                   </Box>

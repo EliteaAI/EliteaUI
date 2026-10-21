@@ -4,9 +4,9 @@ import { Form, Formik } from 'formik';
 
 import { Box, CircularProgress, Grid } from '@mui/material';
 
-import { CreateSkillForm, CreateSkillTabBar, SkillValidateSchema } from '@/[fsd]/features/skill';
+import { CreateSkillForm, CreateSkillTabBar } from '@/[fsd]/features/skill';
 import { withDefaultSkillModel } from '@/[fsd]/features/skill/lib/helpers';
-import { useSkillModels } from '@/[fsd]/features/skill/lib/hooks';
+import { useSkillModels, useSkillValidationSchema } from '@/[fsd]/features/skill/lib/hooks';
 import { Breadcrumbs } from '@/[fsd]/shared/ui';
 import StyledTabs from '@/components/StyledTabs';
 import { StyledGridContainer } from '@/pages/Common/Components';
@@ -15,6 +15,7 @@ const CreateSkill = memo(() => {
   const styles = createSkillStyles();
 
   const { defaultModel, isLoadingModels } = useSkillModels();
+  const validationSchema = useSkillValidationSchema();
   const initialValues = useMemo(
     () => ({
       name: '',
@@ -32,7 +33,7 @@ const CreateSkill = memo(() => {
     <Formik
       enableReinitialize
       initialValues={initialValues}
-      validationSchema={SkillValidateSchema}
+      validationSchema={validationSchema}
       onSubmit={() => {}}
     >
       <StyledTabs
