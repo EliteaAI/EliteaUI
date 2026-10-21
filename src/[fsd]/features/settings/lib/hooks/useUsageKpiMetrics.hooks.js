@@ -43,15 +43,18 @@ export const useUsageKpiMetrics = ({
     [spend, elapsedDays, daysInMonth],
   );
 
-  const prevSpend = useMemo(() => {
-    if (!comparisonData) return null;
-    if (!comparisonData.daily?.length) return comparisonData.spend ?? null;
-    return comparisonData.daily
-      .filter(d => new Date(d.date + 'T00:00:00Z').getUTCDate() <= elapsedDays)
-      .reduce((sum, d) => sum + (d.spend || 0), 0);
-  }, [comparisonData, elapsedDays]);
+  // For the current period compare like-for-like up to today; for past periods compare
+  // the full month (throughDay=null) so we don't cut 31-day months off at day 30.
+  const comparableThroughDay = isCurrentPeriod ? elapsedDays : null;
 
-  const prevTokens = comparisonData?.total_tokens ?? null;
+  const prevSpend = useMemo(
+    () => UsageHelpers.comparableTotal(comparisonData, 'spend', comparableThroughDay),
+    [comparisonData, comparableThroughDay],
+  );
+  const prevTokens = useMemo(
+    () => UsageHelpers.comparableTotal(comparisonData, 'total_tokens', comparableThroughDay),
+    [comparisonData, comparableThroughDay],
+  );
 
   const spentDelta = useMemo(() => UsageHelpers.computeDelta(spend, prevSpend), [spend, prevSpend]);
   const tokenDelta = useMemo(

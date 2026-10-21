@@ -190,9 +190,11 @@ export const buildUsageSheets = ({
   return sheets;
 };
 
-export const usageExportFileName = ({ projectName, scope, isPersonalProject, today }) => {
+export const usageExportFileName = ({ projectName, scope, isPersonalProject, period, today }) => {
   const scopeLabel = !isPersonalProject && scope === SCOPE_USER ? 'My_Usage' : 'Whole_Project';
-  const date = (today || new Date()).toISOString().slice(0, 10);
+  const stamp = period
+    ? `${period.slice(0, 4)}-${period.slice(4, 6)}`
+    : (today || new Date()).toISOString().slice(0, 10);
 
-  return `Usage_${sanitizeFileNamePart(projectName)}_${scopeLabel}_${date}.xlsx`;
+  return `Usage_${sanitizeFileNamePart(projectName)}_${scopeLabel}_${stamp}.xlsx`;
 };

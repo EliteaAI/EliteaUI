@@ -68,7 +68,7 @@ const UsageMomChart = memo(props => {
     [prevDaily, metricKey],
   );
 
-  const hasData = prevValues.some(v => v > 0) || currentValues.some(v => v > 0);
+  const hasData = prevValues.some(v => v > 0);
 
   const currentSpend = currentValues[currentValues.length - 1] || 0;
 

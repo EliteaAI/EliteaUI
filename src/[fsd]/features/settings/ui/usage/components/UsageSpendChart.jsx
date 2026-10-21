@@ -231,6 +231,7 @@ const UsageSpendChart = memo(props => {
                     <UsageTooltip
                       canSeeAmounts={canSeeAmounts}
                       currency={currency}
+                      formatLabel={formatXLabel}
                     />
                   }
                 />

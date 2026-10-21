@@ -85,14 +85,13 @@ const UsageContainer = memo(() => {
 
   // Derive available periods list from the current response (backend may provide history list)
   const availablePeriods = useMemo(() => {
-    const periods = currentData?.available_periods;
+    const currentPeriod = currentData?.period_yyyymm;
 
-    if (Array.isArray(periods) && periods.length) return periods.slice(0, 4);
+    if (!currentPeriod) return [];
 
-    // Fallback: only current period available
-    if (currentData?.period_yyyymm) return [currentData.period_yyyymm];
+    const pastPeriods = (currentData.available_periods || []).filter(p => p < currentPeriod);
 
-    return [];
+    return [currentPeriod, ...pastPeriods].slice(0, 4);
   }, [currentData]);
 
   const { period, setPeriod } = usePeriodParam(availablePeriods);
@@ -102,10 +101,15 @@ const UsageContainer = memo(() => {
   const handleScopeChange = useCallback(
     (_, value) => {
       setScope(value);
-      setPeriod(null);
+      // Only reset the period when the selected month won't be available in the new scope.
+      // availablePeriods is the same list for both scopes (it comes from the current-month
+      // response, which is scope-independent), so we keep the selection when it exists there.
+      if (!period || !availablePeriods.includes(period)) {
+        setPeriod(null);
+      }
       setScopeToast(true);
     },
-    [setPeriod],
+    [setPeriod, period, availablePeriods],
   );
 
   const handleCloseScopeToast = useCallback(() => setScopeToast(false), []);
@@ -116,6 +120,7 @@ const UsageContainer = memo(() => {
     isLoading: isHistoricalLoading,
     isFetching: isHistoricalFetching,
     isError: isHistoricalError,
+    refetch: refetchHistorical,
   } = useProjectUsageQuery(
     { projectId, scope: activeScope, period },
     {
@@ -267,7 +272,7 @@ const UsageContainer = memo(() => {
       const exported = showsMembers ? await fetchAllMemberRows() : null;
 
       await exportToExcel(
-        UsageExportHelpers.usageExportFileName(args),
+        UsageExportHelpers.usageExportFileName({ ...args, period: period || availablePeriods[0] }),
         UsageExportHelpers.buildUsageSheets({
           ...args,
           data,
@@ -289,6 +294,8 @@ const UsageContainer = memo(() => {
     membersWarningPct,
     showsMembers,
     fetchAllMemberRows,
+    period,
+    availablePeriods,
   ]);
 
   const handleCloseExportError = useCallback(() => setExportError(false), []);
@@ -304,7 +311,11 @@ const UsageContainer = memo(() => {
     setRefreshError(false);
 
     try {
-      const results = await Promise.all([refetchUsage(), ...(showsMembers ? [refetchMembers()] : [])]);
+      const results = await Promise.all([
+        refetchUsage(),
+        ...(isCurrentPeriod ? [] : [refetchHistorical()]),
+        ...(showsMembers ? [refetchMembers()] : []),
+      ]);
 
       if (results.some(result => result.error)) {
         setRefreshError(true);
@@ -314,7 +325,7 @@ const UsageContainer = memo(() => {
     } finally {
       setRefreshing(false);
     }
-  }, [refetchUsage, refetchMembers, showsMembers]);
+  }, [refetchUsage, refetchHistorical, refetchMembers, showsMembers, isCurrentPeriod]);
 
   const handleCloseRefreshError = useCallback(() => setRefreshError(false), []);
 
@@ -326,6 +337,27 @@ const UsageContainer = memo(() => {
   useEffect(() => {
     if (!previousData) setCompareEnabled(false);
   }, [previousData]);
+
+  // Fill daily gaps so the MoM chart compares by day-of-month, not list position
+  const momCurrentDaily = useMemo(
+    () => UsageHelpers.fillDailyGaps(data?.daily, data?.period_start, data?.period_end),
+    [data],
+  );
+  const momPrevDaily = useMemo(
+    () =>
+      UsageHelpers.fillDailyGaps(previousData?.daily, previousData?.period_start, previousData?.period_end),
+    [previousData],
+  );
+
+  // Monthly history filtered to only periods in availablePeriods, plus the current month
+  const monthlyHistory = useMemo(
+    () =>
+      [
+        ...(currentData?.monthly_history || []),
+        { period: currentData?.period_yyyymm, spend: currentData?.spend },
+      ].filter(item => item.period && availablePeriods.includes(item.period)),
+    [currentData, availablePeriods],
+  );
 
   // Forecast values derived from current data for the budget hero
   const { forecast, exceedDay } = useMemo(() => {
@@ -448,7 +480,7 @@ const UsageContainer = memo(() => {
           <Alert severity="error">Usage data is currently unavailable. Please try again later.</Alert>
         )}
 
-        {!isLoading && data && (
+        {!isLoading && !isError && data && (
           <Box sx={styles.dataContent(isFetching)}>
             <InfoBanner>
               {isPersonalProject && (
@@ -511,8 +543,8 @@ const UsageContainer = memo(() => {
             <Box sx={styles.splitRow}>
               <UsageMomChart
                 sx={{ flex: 7 }}
-                currentDaily={data.daily}
-                prevDaily={previousData?.daily}
+                currentDaily={momCurrentDaily}
+                prevDaily={momPrevDaily}
                 limit={data.effective_limit}
                 canSeeAmounts={resolvedCanSeeAmounts}
                 currency={data.currency}
@@ -574,7 +606,7 @@ const UsageContainer = memo(() => {
               />
               <UsageMonthlyHistory
                 sx={{ flex: 1 }}
-                history={data.monthly_history}
+                history={monthlyHistory}
                 limit={data.effective_limit}
                 canSeeAmounts={resolvedCanSeeAmounts}
                 currency={data.currency}

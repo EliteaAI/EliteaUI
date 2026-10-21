@@ -160,6 +160,21 @@ export const stableSeriesColor = (key, chartColors) => {
   return chartColors[Math.abs(h) % chartColors.length];
 };
 
+/**
+ * Sum a metric from compData for comparison purposes.
+ * When throughDay is given (current-period only), sum only daily entries up to that day-of-month
+ * so the comparison is like-for-like. When throughDay is null, return the pre-aggregated total.
+ */
+export const comparableTotal = (compData, key, throughDay) => {
+  if (compData?.[key] == null) return null;
+  if (!throughDay || !compData.daily?.length) return compData[key];
+
+  return (compData.daily || []).reduce(
+    (sum, day) => (Number(day.date.slice(8, 10)) <= throughDay ? sum + (day[key] || 0) : sum),
+    0,
+  );
+};
+
 /** Running cumulative sum: [1, 2, 3] → [1, 3, 6] */
 export const toCumulative = (values = []) => {
   let acc = 0;

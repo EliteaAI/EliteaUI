@@ -16,6 +16,7 @@ const UsageBudgetHero = memo(props => {
     spend,
     effective_limit: limit,
     percent_used: percentUsed,
+    limit_source: limitSource,
     currency = 'USD',
     resets_at: resetsAt,
     warning_pct: warningPct,
@@ -116,6 +117,7 @@ const UsageBudgetHero = memo(props => {
   const getHintText = () => {
     if (!isCurrentPeriod) return "Limits aren't shown for past periods.";
     if (!hasLimit) return 'No limit is currently applied to this scope.';
+    if (limitSource === 'default') return 'No specific limit is set, so the platform default applies.';
     return scope === 'user'
       ? 'Your personal limit in this project.'
       : 'A limit was set specifically for this scope.';

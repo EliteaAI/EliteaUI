@@ -153,22 +153,16 @@ const UsageMembersTable = memo(props => {
               keyName="spend"
               flex={1.2}
             />
-            <SortHeader
-              label="Limit"
-              keyName="limit"
-              flex={1.2}
-            />
-            <SortHeader
-              label="Used"
-              keyName="used"
-              flex={1}
-            />
+            <Box sx={[styles.headerCell, { flex: 1.2 }]}>
+              <Typography sx={styles.cell}>Limit</Typography>
+            </Box>
+            <Box sx={[styles.headerCell, { flex: 1 }]}>
+              <Typography sx={styles.cell}>Used</Typography>
+            </Box>
             {showVsPrior && (
-              <SortHeader
-                label="vs prior"
-                keyName="delta"
-                flex={0.9}
-              />
+              <Box sx={[styles.headerCell, { flex: 0.9 }]}>
+                <Typography sx={styles.cell}>vs prior</Typography>
+              </Box>
             )}
           </Box>
 
@@ -266,7 +260,7 @@ const UsageMembersTable = memo(props => {
             sx={styles.footerText}
           >
             {isCurrentPeriod
-              ? `${totalRows ?? rows.length} of ${totalRows ?? rows.length} member${(totalRows ?? rows.length) !== 1 ? 's' : ''}`
+              ? `${rows.length} of ${totalRows ?? rows.length} member${(totalRows ?? rows.length) !== 1 ? 's' : ''}`
               : 'Showing final state at end of period'}
           </Typography>
         </Box>
@@ -353,6 +347,12 @@ const usageMembersTableStyles = () => ({
   sortableCell: {
     cursor: 'pointer',
     userSelect: 'none',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    textAlign: 'right',
+  },
+  headerCell: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'flex-end',
