@@ -192,6 +192,40 @@ describe('ScheduleRowActions (EL-7011 US-28)', () => {
     expect(onDelete).toHaveBeenCalledTimes(1);
   });
 
+  it('EL-7011 owner CR 2026-10-21 every menu item shows an icon left of its label', () => {
+    renderMenu(
+      { allowed_actions: ['run', 'edit', 'pause', 'change_owner', 'delete'] },
+      { onOpenRunHistory: vi.fn() },
+    );
+    openMenu();
+    ['run', 'edit', 'pause', 'history', 'change_owner', 'delete'].forEach(key => {
+      const item = screen.getByTestId(`${key}-menuitem`);
+      const icon = item.querySelector('.MuiListItemIcon-root svg');
+      expect(icon, key).not.toBeNull();
+      expect(item.firstElementChild).toHaveClass('MuiListItemIcon-root');
+    });
+  });
+
+  it('EL-7011 owner CR 2026-10-21 Resume shows an icon', () => {
+    renderMenu({ enabled: false, allowed_actions: ['resume'] });
+    openMenu();
+    expect(screen.getByTestId('resume-menuitem').querySelector('.MuiListItemIcon-root svg')).not.toBeNull();
+  });
+
+  it('EL-7011 owner CR 2026-10-21 icons use the muted icon colour and Delete uses the error colour', () => {
+    renderMenu({ allowed_actions: ['edit', 'delete'] });
+    openMenu();
+    const editIcon = screen.getByTestId('edit-menuitem').querySelector('.MuiListItemIcon-root');
+    expect(editIcon).toHaveStyle({ color: theme.palette.icon.default });
+    const deleteItem = screen.getByTestId('delete-menuitem');
+    expect(deleteItem.querySelector('.MuiListItemIcon-root')).toHaveStyle({
+      color: theme.palette.icon.error,
+    });
+    expect(deleteItem.querySelector('.MuiListItemText-primary')).toHaveStyle({
+      color: theme.palette.text.error,
+    });
+  });
+
   it('R4.3 cancel keeps the row and sends no request', () => {
     const onDelete = vi.fn();
     renderMenu({ allowed_actions: ['delete'] }, { onDelete });
