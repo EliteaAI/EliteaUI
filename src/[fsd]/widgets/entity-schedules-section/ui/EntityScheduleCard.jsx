@@ -15,7 +15,7 @@ import {
 } from '@/[fsd]/shared/lib/helpers/schedule.helpers';
 import ClockIcon from '@/assets/clock.svg?react';
 
-const WIDE = '@container (min-width: 26rem)';
+const WIDE = '@container (min-width: 30rem)';
 
 const EntityScheduleCard = memo(props => {
   const { row, entityType, currentUserId, onOpenForm, onOpenRunHistory } = props;
@@ -66,22 +66,6 @@ const EntityScheduleCard = memo(props => {
           <ScheduleRunStatusChip status={row.last_run_status} />
         </Box>
       )}
-      <Box sx={styles.switch}>
-        <ScheduleEnabledSwitch
-          row={row}
-          testId={`${testId}-toggle-${row.id}`}
-        />
-      </Box>
-      <Box sx={styles.menu}>
-        <ScheduleRowActions
-          row={row}
-          {...actions}
-          onEdit={onEdit}
-          // The edit page shows the runs of the schedule beside the form (R5.5)
-          onOpenRunHistory={onHistory}
-          hideChangeOwner
-        />
-      </Box>
       <Tooltip
         title={rule}
         placement="top"
@@ -108,6 +92,20 @@ const EntityScheduleCard = memo(props => {
           {next}
         </Typography>
       </Tooltip>
+      <Box sx={styles.footer}>
+        <ScheduleEnabledSwitch
+          row={row}
+          testId={`${testId}-toggle-${row.id}`}
+        />
+        <ScheduleRowActions
+          row={row}
+          {...actions}
+          onEdit={onEdit}
+          // The edit page shows the runs of the schedule beside the form (R5.5)
+          onOpenRunHistory={onHistory}
+          hideChangeOwner
+        />
+      </Box>
     </Box>
   );
 });
@@ -116,26 +114,32 @@ EntityScheduleCard.displayName = 'EntityScheduleCard';
 
 /** @type {MuiSx} */
 const entityScheduleCardStyles = () => ({
-  // A container: below 26 rem three lines (name, chip and rule, next run), from 26 rem the chip joins
-  // the first line and the meta is one line. One set of nodes keeps the tab order name, switch, menu.
+  // A container: below 30 rem each item has its own line and the actions sit in a right-aligned footer;
+  // from 30 rem the lines use two columns and the actions sit at the right.
+  // One set of nodes keeps the tab order name, switch, menu.
   card: ({ palette }) => ({
     containerType: 'inline-size',
     display: 'grid',
-    gridTemplateColumns: '1rem auto minmax(0, max-content) minmax(0, 1fr) auto auto auto',
+    gridTemplateColumns: '1rem minmax(0, 1fr)',
     gridTemplateAreas: `
-      "icon name name name name switch menu"
-      ".    chip rule rule rule rule   rule"
-      ".    next next next next next   next"`,
+      "icon   name"
+      ".      chip"
+      ".      rule"
+      ".      next"
+      "footer footer"`,
+    justifyItems: 'start',
     alignItems: 'center',
-    rowGap: '0.25rem',
+    rowGap: '0.5rem',
     padding: '0.75rem 1rem',
     borderRadius: '0.5rem',
     border: `0.0625rem solid ${palette.border.lines}`,
     backgroundColor: palette.background.default.secondary,
     [WIDE]: {
+      gridTemplateColumns: '1rem minmax(0, 1fr) minmax(0, 1fr) auto',
       gridTemplateAreas: `
-        "icon name name name chip switch menu"
-        ".    rule rule next next next   next"`,
+        "icon name chip footer"
+        ".    rule next footer"`,
+      rowGap: '0.25rem',
     },
   }),
   icon: ({ palette }) => ({
@@ -146,6 +150,7 @@ const entityScheduleCardStyles = () => ({
   }),
   line: {
     minWidth: 0,
+    maxWidth: '100%',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
@@ -158,19 +163,14 @@ const entityScheduleCardStyles = () => ({
     gridArea: 'chip',
     display: 'flex',
     marginLeft: '0.5rem',
-    [WIDE]: {
-      marginRight: '0.5rem',
-    },
   },
-  switch: {
-    gridArea: 'switch',
+  footer: {
+    gridArea: 'footer',
+    justifySelf: 'end',
     display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
     marginLeft: '0.5rem',
-  },
-  menu: {
-    gridArea: 'menu',
-    display: 'flex',
-    marginLeft: '0.25rem',
   },
   rule: {
     gridArea: 'rule',
@@ -181,9 +181,6 @@ const entityScheduleCardStyles = () => ({
     marginLeft: '0.5rem',
     [WIDE]: {
       marginLeft: 0,
-      '&::before': {
-        content: '"\\00a0·\\00a0"',
-      },
     },
   },
 });

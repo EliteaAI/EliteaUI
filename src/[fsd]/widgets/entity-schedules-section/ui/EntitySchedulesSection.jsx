@@ -21,6 +21,8 @@ import useCheckPermission from '@/hooks/useCheckPermission';
 
 import EntityScheduleCard from './EntityScheduleCard';
 
+const WIDE = '@container (min-width: 30rem)';
+
 const countText = (total, entityType) =>
   total === 1 ? `1 schedule runs this ${entityType}.` : `${total} schedules run this ${entityType}.`;
 
@@ -194,16 +196,21 @@ const entitySchedulesSectionStyles = () => ({
     gap: '0.75rem',
     containerType: 'inline-size',
   },
-  // Below 26 rem: the button and the count, then the link on its own row; from 26 rem: one row
+  // Below 30 rem: the button and the link on row 1, the count on row 2; from 30 rem: one row
   header: {
     display: 'flex',
     flexWrap: 'wrap',
     alignItems: 'center',
-    gap: '0.5rem 1rem',
+    gap: '0.5rem',
   },
+  // The count wraps and never truncates
   count: {
-    flex: '1 1 0',
-    minWidth: 0,
+    flexBasis: '100%',
+    order: 1,
+    [WIDE]: {
+      flex: '1 1 0',
+      order: 0,
+    },
   },
   noWrap: {
     whiteSpace: 'nowrap',
@@ -213,11 +220,7 @@ const entitySchedulesSectionStyles = () => ({
     display: 'inline-flex',
     alignItems: 'center',
     gap: '0.25rem',
-    flexBasis: '100%',
-    whiteSpace: 'nowrap',
-    '@container (min-width: 26rem)': {
-      flexBasis: 'auto',
-    },
+    minWidth: 0,
   },
   linkIcon: {
     width: '0.875rem',
@@ -226,9 +229,9 @@ const entitySchedulesSectionStyles = () => ({
   },
   // The heights of the stacked and the one-line card
   skeleton: {
-    height: '6.5rem',
+    height: '9rem',
     borderRadius: '0.5rem',
-    '@container (min-width: 26rem)': {
+    [WIDE]: {
       height: '4.625rem',
     },
   },
