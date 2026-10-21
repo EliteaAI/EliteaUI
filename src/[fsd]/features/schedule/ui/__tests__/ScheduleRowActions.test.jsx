@@ -173,6 +173,26 @@ describe('ScheduleRowActions (EL-7011 US-28)', () => {
     expect(container).toBeEmptyDOMElement();
   });
 
+  it('CR-16 R4.1 shows Export before Delete when onExport is given, and calls it', () => {
+    const onExport = vi.fn();
+    renderMenu({ allowed_actions: ['delete', 'edit', 'run'] }, { onExport });
+    openMenu();
+    expect(screen.getAllByRole('menuitem').map(item => item.textContent)).toEqual([
+      'Run now',
+      'Edit',
+      'Export',
+      'Delete',
+    ]);
+    fireEvent.click(screen.getByText('Export'));
+    expect(onExport).toHaveBeenCalledTimes(1);
+  });
+
+  it('CR-16 R4.1 shows no Export without onExport (no export permission)', () => {
+    renderMenu({ allowed_actions: ['edit', 'delete'] });
+    openMenu();
+    expect(screen.queryByText('Export')).not.toBeInTheDocument();
+  });
+
   it('R1.1 calls the handler of the picked action', () => {
     const onRun = vi.fn();
     const onPause = vi.fn();
