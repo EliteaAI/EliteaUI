@@ -4,6 +4,7 @@ import { PAGE_SIZE } from '@/common/constants.js';
 
 export const SCHEDULES_TAG = 'SCHEDULES_TAG';
 export const SCHEDULE_RUNS_TAG = 'SCHEDULE_RUNS_TAG';
+const SCHEDULE_SETTINGS_TAG = 'SCHEDULE_SETTINGS_TAG';
 
 // false is a real value (enabled=false); only unset, blank and empty list are left out
 const isSet = value => value !== undefined && value !== null && value !== '' && value?.length !== 0;
@@ -39,7 +40,7 @@ const setEnabledMutation = (build, action, enabled) =>
 
 export const scheduleApi = eliteaApi
   .enhanceEndpoints({
-    addTagTypes: [SCHEDULES_TAG, SCHEDULE_RUNS_TAG],
+    addTagTypes: [SCHEDULES_TAG, SCHEDULE_RUNS_TAG, SCHEDULE_SETTINGS_TAG],
   })
   .injectEndpoints({
     endpoints: build => ({
@@ -179,6 +180,35 @@ export const scheduleApi = eliteaApi
         invalidatesTags: (result, error) =>
           !error && (result?.created?.length || result?.updated?.length) ? [SCHEDULES_TAG] : [],
       }),
+
+      // Project setting "Allow Run without asking" (owner CR 2026-10-21); read by any member
+      getScheduleSettings: build.query({
+        query: ({ projectId }) => ({ url: `${schedulesPath(projectId)}/settings` }),
+        providesTags: (_, _error, { projectId }) => [{ type: SCHEDULE_SETTINGS_TAG, id: projectId }],
+      }),
+
+      // Project admin only. Optimistic so the checkbox does not flicker back; the list refetch
+      // gives the schedule form the new run_without_asking_allowed flag.
+      updateScheduleSettings: build.mutation({
+        query: ({ projectId, allowRunWithoutAsking }) => ({
+          url: `${schedulesPath(projectId)}/settings`,
+          method: 'PUT',
+          body: { allow_run_without_asking: allowRunWithoutAsking },
+        }),
+        async onQueryStarted({ projectId, allowRunWithoutAsking }, { dispatch, queryFulfilled }) {
+          const patch = dispatch(
+            scheduleApi.util.updateQueryData('getScheduleSettings', { projectId }, draft => {
+              draft.allow_run_without_asking = allowRunWithoutAsking;
+            }),
+          );
+          try {
+            await queryFulfilled;
+          } catch {
+            patch.undo();
+          }
+        },
+        invalidatesTags: (_, error) => (error ? [] : [SCHEDULES_TAG]),
+      }),
     }),
   });
 
@@ -195,4 +225,6 @@ export const {
   useDeleteScheduleMutation,
   useLazyExportSchedulesQuery,
   useImportSchedulesMutation,
+  useGetScheduleSettingsQuery,
+  useUpdateScheduleSettingsMutation,
 } = scheduleApi;
