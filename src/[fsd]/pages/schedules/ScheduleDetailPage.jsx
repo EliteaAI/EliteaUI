@@ -89,10 +89,15 @@ const ScheduleDetailPage = props => {
     openRun,
     showRunHistory,
     backToTest,
+    announcement,
+    runNotFound,
   } = runsView;
   const sidePanel = useCallback(
     testRunProps => (
-      <>
+      <Box
+        data-testid="schedule-right-block"
+        sx={styles.rightBlock}
+      >
         <ScheduleRunsPanel
           ref={panelRef}
           schedule={schedule}
@@ -111,8 +116,10 @@ const ScheduleDetailPage = props => {
           onOpen={openRun}
           expanded={runsExpanded}
           onExpandedChange={setRunsExpanded}
+          announcement={announcement}
+          runNotFound={runNotFound}
         />
-      </>
+      </Box>
     ),
     [
       schedule,
@@ -126,6 +133,8 @@ const ScheduleDetailPage = props => {
       openRun,
       runsExpanded,
       setRunsExpanded,
+      announcement,
+      runNotFound,
     ],
   );
 
@@ -190,4 +199,16 @@ export default ScheduleDetailPage;
 const styles = {
   notice: { marginTop: '50px', minHeight: 'calc(100vh - 191px)' },
   loader: { display: 'flex', justifyContent: 'center', padding: '3rem' },
+  // The panel and the Runs section stacked (CR-21). From xl, in a window at least 46 rem (736 px) high, the
+  // block stays in view: 100dvh minus the page header, its top margin and the bottom margin (6 rem).
+  rightBlock: ({ breakpoints }) => ({
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+    [`${breakpoints.up('xl')} and (min-height: 46rem)`]: {
+      position: 'sticky',
+      top: '0.75rem',
+      maxHeight: 'calc(100dvh - 6rem)',
+    },
+  }),
 };

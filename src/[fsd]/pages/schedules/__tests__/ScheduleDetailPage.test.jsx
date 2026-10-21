@@ -115,6 +115,8 @@ const makeRunsView = () => ({
   openRun: vi.fn(),
   backToTest: vi.fn(),
   showRunHistory: vi.fn(),
+  announcement: 'Showing run 21 Oct, 09:00, cron, Success',
+  runNotFound: false,
 });
 
 describe('ScheduleDetailPage EL-7011', () => {
@@ -173,7 +175,24 @@ describe('ScheduleDetailPage EL-7011', () => {
       onOpen: view.openRun,
       expanded: true,
       onExpandedChange: view.setRunsExpanded,
+      announcement: view.announcement,
+      runNotFound: false,
     });
+  });
+
+  it('TC-US32-20 R4.1 EL-7011 CR-21 stacks the panel and the Runs section in one block, sticky from xl in a tall window', () => {
+    mocks.query = { currentData: schedule };
+    render(<ScheduleDetailPage />);
+    const block = screen.getByTestId('schedule-right-block');
+
+    expect(getComputedStyle(block).display).toBe('flex');
+    expect(getComputedStyle(block).flexDirection).toBe('column');
+    // jsdom does not match media queries, so the sticky rule is read from the emitted CSS
+    const css = [...document.querySelectorAll('style')].map(tag => tag.textContent).join('');
+    expect(css).toMatch(
+      /@media \(min-width:1536px\) and \(min-height: ?46rem\)\{[^}]*position:sticky[^}]*max-height:calc\(100dvh - 6rem\)/,
+    );
+    expect(getComputedStyle(block).position).not.toBe('sticky');
   });
 
   it('TC-US32-01 R1.1 EL-7011 shows a loader while the schedule loads', () => {
