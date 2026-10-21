@@ -72,6 +72,22 @@ describe('ScheduleRowActions (EL-7011 US-28)', () => {
     ]);
   });
 
+  it('owner bug 2026-10-21 the table menu lists Open run history between Pause and Change owner', () => {
+    renderMenu(
+      { allowed_actions: ['delete', 'change_owner', 'pause', 'edit', 'run'] },
+      { onOpenRunHistory: vi.fn() },
+    );
+    openMenu();
+    expect(screen.getAllByRole('menuitem').map(item => item.textContent)).toEqual([
+      'Run now',
+      'Edit',
+      'Pause',
+      'Open run history',
+      'Change owner',
+      'Delete',
+    ]);
+  });
+
   it('EL-7011 Edit shows only when edit is allowed and calls onEdit', () => {
     const onEdit = vi.fn();
     renderMenu({ allowed_actions: ['edit'] }, { onEdit });
