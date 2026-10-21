@@ -30,5 +30,13 @@ export const buildScheduleFormLink = ({ entityType, entityId, tab = DEFAULT_TAB,
   });
 };
 
+// Open run history: the edit form with its Runs section open. Without an entity, the Schedules page form.
+export const buildScheduleRunsLink = ({ entityType, entityId, tab, scheduleId }) => ({
+  pathname: entityType
+    ? buildScheduleFormLink({ entityType, entityId, tab, scheduleId })
+    : `${RouteDefinitions.Schedules}/${scheduleId}`,
+  hash: '#runs',
+});
+
 export const buildSchedulesListLink = ({ entityType, entityId }) =>
   `${RouteDefinitions.Schedules}?${new URLSearchParams({ entityType, entityId })}`;
