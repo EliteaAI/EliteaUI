@@ -14,6 +14,8 @@ import ChangeOwnerDialog from './ChangeOwnerDialog';
 // Owner CR 2026-10-21: every item shows a small icon; the item sets the colour through currentColor
 const ICON_SX = { fontSize: '1rem' };
 const SVG_ICON_STYLE = { width: '1rem', height: '1rem' };
+// The icon-only menu button needs a name for screen readers
+const MENU_BUTTON_PROPS = { 'aria-label': 'More actions' };
 
 const ScheduleRowActions = memo(props => {
   // onOpenRunHistory and hideChangeOwner shape the card menu of the editor Schedules section (US-35)
@@ -117,6 +119,7 @@ const ScheduleRowActions = memo(props => {
         id={`schedule-${row.id}`}
         disabled={isBusy}
         slotProps={styles.slotProps}
+        anchorButtonProps={MENU_BUTTON_PROPS}
       >
         {items}
       </DotMenu>
