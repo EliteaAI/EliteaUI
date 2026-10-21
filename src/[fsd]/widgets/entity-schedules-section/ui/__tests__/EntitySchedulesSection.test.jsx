@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ThemeProvider, createTheme } from '@mui/material';
@@ -79,10 +79,16 @@ const renderSection = (props = {}, path = '/agents/my/12') =>
               />
             }
           />
+          <Route
+            path="/settings/schedules"
+            element={<LinkState />}
+          />
         </Routes>
       </MemoryRouter>
     </ThemeProvider>,
   );
+
+const LinkState = () => <span data-testid="link-state">{JSON.stringify(useLocation().state)}</span>;
 
 describe('EntitySchedulesSection EL-7011', () => {
   beforeEach(() => {
@@ -111,6 +117,14 @@ describe('EntitySchedulesSection EL-7011', () => {
         'href',
         '/settings/schedules?entityType=agent&entityId=12',
       );
+    });
+
+    it('TC-US35-18 R3.6 "Open all in Schedules" passes the agent name for the entity chip', () => {
+      renderSection({ entityName: 'Digest bot' });
+
+      fireEvent.click(screen.getByTestId('agent-schedules-section-open-all'));
+
+      expect(screen.getByTestId('link-state')).toHaveTextContent('{"entityName":"Digest bot"}');
     });
 
     it('TC-US35-04 R2.1 requests the schedules of this agent and shows one card per row', () => {

@@ -1,5 +1,7 @@
 import { memo, useMemo } from 'react';
 
+import { useFormikContext } from 'formik';
+
 import { Box } from '@mui/material';
 
 import { AgentInput, ApplicationTools } from '@/[fsd]/features/agent/ui/agent-details/configurations';
@@ -22,6 +24,8 @@ const ApplicationConfigurationForm = memo(props => {
     onAttachmentToolChange,
     entityProjectId,
   } = props;
+  // The saved name, not an unsaved edit, names the entity chip on the Schedules page
+  const { initialValues } = useFormikContext();
 
   const isDisabled = useMemo(() => viewMode !== ViewMode.Owner, [viewMode]);
   const styles = useMemo(() => applicationConfigurationFormStyles(isChatView), [isChatView]);
@@ -75,6 +79,7 @@ const ApplicationConfigurationForm = memo(props => {
         style={styles.section}
         entityType="agent"
         entityId={applicationId}
+        entityName={initialValues?.name}
         isChatView={isChatView}
       />
     </Box>

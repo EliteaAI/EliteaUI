@@ -20,7 +20,7 @@ const countText = (total, entityType) =>
 
 // The last section of the agent and pipeline editors; entityType is 'agent' or 'pipeline'
 const EntitySchedulesSection = memo(props => {
-  const { entityType, entityId, isChatView = false, style } = props;
+  const { entityType, entityId, entityName, isChatView = false, style } = props;
   const { checkPermission } = useCheckPermission();
   const canCreate = checkPermission(PERMISSIONS.schedules.create);
   const isHidden = isChatView || !entityId || !checkPermission(PERMISSIONS.schedules.list);
@@ -78,6 +78,8 @@ const EntitySchedulesSection = memo(props => {
             <Link
               component={RouterLink}
               to={buildSchedulesListLink({ entityType, entityId })}
+              // The Schedules page names the entity chip with it when the list has no rows
+              state={{ entityName }}
               variant="bodyMedium"
               data-testid={`${testId}-open-all`}
             >

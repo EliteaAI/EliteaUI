@@ -1,5 +1,7 @@
 import { memo, useMemo } from 'react';
 
+import { useFormikContext } from 'formik';
+
 import { Box } from '@mui/material';
 
 import { AgentInput, ApplicationTools } from '@/[fsd]/features/agent/ui/agent-details/configurations';
@@ -21,6 +23,8 @@ const PipelineConfigurationForm = memo(props => {
     onAttachmentToolChange,
     entityProjectId,
   } = props;
+  // The saved name, not an unsaved edit, names the entity chip on the Schedules page
+  const { initialValues } = useFormikContext();
   const isDisabled = viewMode !== ViewMode.Owner;
 
   const styles = useMemo(() => pipelineConfigurationFormStyles(isChatView), [isChatView]);
@@ -65,6 +69,7 @@ const PipelineConfigurationForm = memo(props => {
         style={styles.information}
         entityType="pipeline"
         entityId={applicationId}
+        entityName={initialValues?.name}
         isChatView={isChatView}
       />
     </Box>

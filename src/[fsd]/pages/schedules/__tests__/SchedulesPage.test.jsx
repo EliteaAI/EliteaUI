@@ -14,10 +14,12 @@ const mocks = vi.hoisted(() => ({
   navigate: vi.fn(),
   searchParams: new URLSearchParams(),
   setSearchParams: vi.fn(),
+  locationState: null,
 }));
 
 vi.mock('react-router-dom', () => ({
   useNavigate: () => mocks.navigate,
+  useLocation: () => ({ state: mocks.locationState }),
   useSearchParams: () => [mocks.searchParams, mocks.setSearchParams],
 }));
 
@@ -52,11 +54,12 @@ vi.mock('@/[fsd]/features/settings', () => ({
   ),
 }));
 vi.mock('../SchedulesFilters', () => ({
-  default: ({ value, onChange, onClear, hasFilters, isAdmin }) => (
+  default: ({ value, onChange, onClear, hasFilters, isAdmin, hideEntityType }) => (
     <div
       data-testid="filters"
       data-admin={String(isAdmin)}
       data-has-filters={String(hasFilters)}
+      data-hide-entity-type={String(Boolean(hideEntityType))}
     >
       <button onClick={() => onChange({ ...value, search: 'nightly' })}>search</button>
       <button onClick={() => onChange({ ...value, status: 'failed' })}>status</button>
@@ -111,6 +114,7 @@ describe('EL-7011 US-26 SchedulesPage', () => {
     cleanup();
     vi.clearAllMocks();
     mocks.searchParams = new URLSearchParams();
+    mocks.locationState = null;
   });
 
   it('R2.1 requests the first page of the current project', () => {
@@ -341,5 +345,37 @@ describe('EL-7011 US-26 SchedulesPage', () => {
 
     expect(lastArgs().entityId).toBeUndefined();
     expect(screen.queryByTestId('schedules-entity-chip')).not.toBeInTheDocument();
+    expect(screen.getByTestId('filters')).toHaveAttribute('data-hide-entity-type', 'false');
+  });
+
+  it('TC-US35-18 US-35 R3.6 names the entity from the editor link when the list has no rows', () => {
+    mocks.searchParams = new URLSearchParams('entityType=agent&entityId=12');
+    mocks.locationState = { entityName: 'Digest bot' };
+    mocks.useGetScheduleListQuery.mockReturnValue({ currentData: { total: 0, rows: [] }, isError: false });
+    render(<SchedulesPage />);
+
+    expect(screen.getByTestId('schedules-entity-chip')).toHaveTextContent('Agent: Digest bot');
+  });
+
+  it('TC-US35-18 US-35 R3.6 hides the Type filter while the entity chip shows', () => {
+    mocks.searchParams = new URLSearchParams('entityType=agent&entityId=12');
+    render(<SchedulesPage />);
+
+    expect(screen.getByTestId('filters')).toHaveAttribute('data-hide-entity-type', 'true');
+  });
+
+  it('TC-US35-18 US-35 R3.6 a project switch drops entityType and entityId from the URL', () => {
+    mocks.searchParams = new URLSearchParams('entityType=agent&entityId=12&tab=x');
+    mocks.useSelectedProjectId.mockReturnValue(undefined);
+    const { rerender } = render(<SchedulesPage />);
+    mocks.useSelectedProjectId.mockReturnValue(5);
+    rerender(<SchedulesPage />);
+    expect(mocks.setSearchParams).not.toHaveBeenCalled();
+
+    mocks.useSelectedProjectId.mockReturnValue(7);
+    rerender(<SchedulesPage />);
+
+    const [update] = mocks.setSearchParams.mock.calls.at(-1);
+    expect(update(new URLSearchParams('entityType=agent&entityId=12&tab=x')).toString()).toBe('tab=x');
   });
 });
