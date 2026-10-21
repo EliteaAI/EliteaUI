@@ -50,6 +50,13 @@ const PipelineConfigurationForm = memo(props => {
           />
         </>
       )}
+      <EntitySchedulesSection
+        style={styles.information}
+        entityType="pipeline"
+        entityId={applicationId}
+        entityName={initialValues?.name}
+        isChatView={isChatView}
+      />
       <ApplicationAdvanceSettings
         style={styles.advanceSettings}
         disabled={isDisabled}
@@ -64,13 +71,6 @@ const PipelineConfigurationForm = memo(props => {
       <ApplicationInformation
         style={styles.information}
         showPipeline
-      />
-      <EntitySchedulesSection
-        style={styles.information}
-        entityType="pipeline"
-        entityId={applicationId}
-        entityName={initialValues?.name}
-        isChatView={isChatView}
       />
     </Box>
   );

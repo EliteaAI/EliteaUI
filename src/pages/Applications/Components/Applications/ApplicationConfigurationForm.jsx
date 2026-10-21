@@ -65,6 +65,13 @@ const ApplicationConfigurationForm = memo(props => {
         disabled={isDisabled}
         style={styles.section}
       />
+      <EntitySchedulesSection
+        style={styles.section}
+        entityType="agent"
+        entityId={applicationId}
+        entityName={initialValues?.name}
+        isChatView={isChatView}
+      />
       <ApplicationAdvanceSettings
         style={styles.section}
         disabled={isDisabled}
@@ -75,13 +82,6 @@ const ApplicationConfigurationForm = memo(props => {
         disabled={isDisabled}
       />
       <ApplicationInformation style={styles.section} />
-      <EntitySchedulesSection
-        style={styles.section}
-        entityType="agent"
-        entityId={applicationId}
-        entityName={initialValues?.name}
-        isChatView={isChatView}
-      />
     </Box>
   );
 });
