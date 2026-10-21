@@ -53,6 +53,7 @@ export const scheduleApi = eliteaApi
           sortOrder,
           entityType,
           entityId,
+          versionId,
           status,
           enabled,
           search,
@@ -61,6 +62,7 @@ export const scheduleApi = eliteaApi
           const filterParams = {
             entity_type: entityType,
             entity_id: entityId,
+            version_id: versionId,
             status,
             enabled,
             search,

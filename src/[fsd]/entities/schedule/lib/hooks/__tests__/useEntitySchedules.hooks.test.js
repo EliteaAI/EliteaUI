@@ -81,4 +81,31 @@ describe('useEntitySchedules EL-7011 US-35', () => {
     expect(mocks.listQuery.mock.calls.at(-1)[0].pageSize).toBe(100);
     expect(result.current.hasMore).toBe(false);
   });
+
+  it('R4.2 EL-7011 CR-19 sends the version_id of the editor version to the list query', () => {
+    mocks.listQuery.mockReturnValue({ data: { rows: rowsOf(1), total: 1 } });
+
+    renderHook(() => useEntitySchedules({ entityType: 'agent', entityId: 12, versionId: 71 }));
+
+    expect(mocks.listQuery).toHaveBeenLastCalledWith(
+      { projectId: 5, entityType: 'agent', entityId: 12, versionId: 71, pageSize: 20 },
+      { skip: false },
+    );
+  });
+
+  it('R4.3 EL-7011 CR-19 reloads from the first 20 rows when the editor version changes', () => {
+    mocks.listQuery.mockReturnValue({ data: { rows: rowsOf(20), total: 25 } });
+
+    const { result, rerender } = renderHook(props => useEntitySchedules(props), {
+      initialProps: { entityType: 'agent', entityId: 12, versionId: 71 },
+    });
+    act(() => result.current.loadMore());
+    expect(mocks.listQuery.mock.calls.at(-1)[0].pageSize).toBe(40);
+    rerender({ entityType: 'agent', entityId: 12, versionId: 72 });
+
+    expect(mocks.listQuery).toHaveBeenLastCalledWith(
+      { projectId: 5, entityType: 'agent', entityId: 12, versionId: 72, pageSize: 20 },
+      { skip: false },
+    );
+  });
 });

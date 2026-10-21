@@ -24,18 +24,19 @@ import EntityScheduleCard from './EntityScheduleCard';
 
 const WIDE = '@container (min-width: 30rem)';
 
-const countText = (total, entityType) =>
-  total === 1 ? `1 schedule runs this ${entityType}.` : `${total} schedules run this ${entityType}.`;
+const countText = (total, version) =>
+  total === 1 ? `1 schedule runs ${version}` : `${total} schedules run ${version}`;
 
-// The last section of the agent and pipeline editors; entityType is 'agent' or 'pipeline'
+// The last section of the agent and pipeline editors; entityType is 'agent' or 'pipeline'; versionId is the editor version, versionName its label (none or 'base': the base version)
 const EntitySchedulesSection = memo(props => {
-  const { entityType, entityId, entityName, isChatView = false, style } = props;
+  const { entityType, entityId, entityName, versionId, versionName, isChatView = false, style } = props;
   const { checkPermission } = useCheckPermission();
   const canCreate = checkPermission(PERMISSIONS.schedules.create);
   const isHidden = isChatView || !entityId || !checkPermission(PERMISSIONS.schedules.list);
   const { rows, total, isError, error, isFetching, refetch, loadMore, hasMore } = useEntitySchedules({
     entityType,
     entityId,
+    versionId,
     skip: isHidden,
   });
   const currentUserId = useSelector(state => state.user.id);
@@ -46,18 +47,34 @@ const EntitySchedulesSection = memo(props => {
   // The form opens nested in the editor and comes back to this editor location (owner CR 2026-10-21).
   // The form URL keeps the editor search (viewMode), so the entity crumb opens the editor too.
   const openNested = useCallback(
-    to => navigate({ ...to, search }, { state: { returnTo: pathname + search } }),
+    (to, formVersionId) => {
+      const params = new URLSearchParams(search);
+      if (formVersionId) params.set('versionId', formVersionId);
+      const formSearch = params.toString();
+      navigate({ ...to, search: formSearch && `?${formSearch}` }, { state: { returnTo: pathname + search } });
+    },
     [navigate, pathname, search],
   );
+  // Edit keeps the version of its schedule (R5.2); "+ Schedule" takes the editor version (R5.1)
+  const versionOf = useCallback(
+    scheduleId => rows.find(row => row.id === scheduleId)?.version_id ?? versionId,
+    [rows, versionId],
+  );
   const openForm = useCallback(
-    scheduleId => openNested({ pathname: buildScheduleFormLink({ entityType, entityId, tab, scheduleId }) }),
-    [openNested, entityType, entityId, tab],
+    scheduleId =>
+      openNested(
+        { pathname: buildScheduleFormLink({ entityType, entityId, tab, scheduleId }) },
+        versionOf(scheduleId),
+      ),
+    [openNested, versionOf, entityType, entityId, tab],
   );
   const openRunHistory = useCallback(
-    scheduleId => openNested(buildScheduleRunsLink({ entityType, entityId, tab, scheduleId })),
-    [openNested, entityType, entityId, tab],
+    scheduleId =>
+      openNested(buildScheduleRunsLink({ entityType, entityId, tab, scheduleId }), versionOf(scheduleId)),
+    [openNested, versionOf, entityType, entityId, tab],
   );
   const onAdd = useCallback(() => openForm(), [openForm]);
+  const version = versionName && versionName !== 'base' ? `version ${versionName}` : 'the base version';
   const testId = `${entityType}-schedules-section`;
 
   const styles = entitySchedulesSectionStyles();
@@ -92,7 +109,7 @@ const EntitySchedulesSection = memo(props => {
               color="text.secondary"
               sx={styles.count}
             >
-              {total > 0 ? countText(total, entityType) : ''}
+              {total > 0 ? countText(total, version) : ''}
             </Typography>
             <Link
               component={RouterLink}
@@ -143,7 +160,7 @@ const EntitySchedulesSection = memo(props => {
               variant="bodyMedium"
               color="text.secondary"
             >
-              No schedules yet.
+              No schedules run {version} yet.
             </Typography>
           )}
           {rows.map(row => (
