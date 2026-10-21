@@ -14,6 +14,7 @@ import {
   syncPromptVariables,
   toCreateBody,
   toFieldErrors,
+  toRiskItems,
   toUpdateBody,
   toWarningItems,
 } from '../scheduleForm.helpers';
@@ -391,5 +392,22 @@ describe('EL-7011 R2.3 R2.5 update body', () => {
       variables: [{ name: 'team', value: 'core' }],
     });
     expect(toUpdateBody(values)).toEqual(toCreateBody(values));
+  });
+});
+
+describe('EL-7011 owner CR 2026-10-21 risk review blocking findings', () => {
+  it('toRiskItems puts the findings of one code in one group, in the order the server sends them', () => {
+    const github = { code: 'personal_signin_required', toolkit: 'github-personal' };
+    const review = { code: 'human_input_step', step: 'review', step_label: 'Review' };
+    const jira = { code: 'personal_signin_required', toolkit: 'Jira Cloud' };
+
+    expect(toRiskItems([github, review, jira])).toEqual([
+      { code: 'personal_signin_required', findings: [github, jira] },
+      { code: 'human_input_step', findings: [review] },
+    ]);
+  });
+
+  it('toRiskItems accepts a missing list', () => {
+    expect(toRiskItems(undefined)).toEqual([]);
   });
 });
