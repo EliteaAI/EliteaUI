@@ -547,6 +547,17 @@ describe('ScheduleForm EL-7011', () => {
     expect(screen.getByRole('tabpanel')).not.toContainElement(screen.getByTestId('schedule-save-button'));
   });
 
+  it('CR-16 R4.3 EL-7011 shows the headerActions node in the header bar before Save', () => {
+    renderForm({ headerActions: <span data-testid="header-menu" /> });
+
+    const bar = screen.getByRole('navigation').parentElement.parentElement;
+    const menu = screen.getByTestId('header-menu');
+    expect(bar).toContainElement(menu);
+    expect(menu.compareDocumentPosition(screen.getByTestId('schedule-save-button'))).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+  });
+
   it('EL-7011 collapses a section from its header', () => {
     renderForm();
     const header = screen.getByTestId('schedule-section-general');
