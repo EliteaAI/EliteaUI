@@ -1,39 +1,26 @@
+import { compareRunTimestamp, formatRunTimestamp } from '@/[fsd]/entities/run-history/lib/helpers';
+
+// The run row trigger (SAD section 7): cron, manual (Run now) or test
+const RUN_TRIGGER_LABELS = { test: 'Test', cron: 'Scheduled', manual: 'Run now' };
+// The API stores the pause for a person's answer as waiting_for_approval; the owner calls it "Waiting for input"
+const RUN_STATUS_LABELS = {
+  waiting_for_approval: 'Waiting for input',
+  waiting_for_input: 'Waiting for input',
+};
+const RUN_STARTED_FORMAT = 'd MMM, HH:mm';
+
 export const toWord = value => (value ? `${value[0].toUpperCase()}${value.slice(1).replace(/_/g, ' ')}` : '');
 
-// "Success, test": the status as text, then how the run started
-const toEventLabel = ({ status, trigger }) =>
-  [toWord(status), trigger === 'cron' ? 'scheduled' : trigger?.replace(/_/g, ' ')].filter(Boolean).join(', ');
+export const toRunTriggerLabel = trigger => RUN_TRIGGER_LABELS[trigger] ?? toWord(trigger);
 
-const toDuration = ({ started_at, finished_at }) => {
-  const seconds = (new Date(finished_at) - new Date(started_at)) / 1000;
-  return finished_at && seconds >= 0 ? seconds : null;
-};
+export const toRunStatusLabel = status => RUN_STATUS_LABELS[status] ?? toWord(status);
 
-const toRunRow = run => {
-  const eventLabel = toEventLabel(run);
+export const formatRunStarted = value => formatRunTimestamp(value, RUN_STARTED_FORMAT);
 
-  return {
-    id: `schedule-run:${run.id}`,
-    created_at: run.started_at,
-    name: eventLabel,
-    event_label: eventLabel,
-    event_tooltip: run.reason ? `${eventLabel} — ${run.reason}` : eventLabel,
-    duration: toDuration(run),
-    version_id: null,
-    hasConversation: false,
-    entry: run,
-  };
-};
-
-export const toHistoryRows = runs => (runs ?? []).filter(run => run.conversation_id == null).map(toRunRow);
-
-export const buildScheduleRowDecorator = runs => {
-  const labelByConversation = new Map(
-    (runs ?? [])
-      .filter(run => run.conversation_id != null)
-      .map(run => [run.conversation_id, toEventLabel(run)]),
-  );
-
-  return row =>
-    labelByConversation.has(row.id) ? { ...row, event_label: labelByConversation.get(row.id) } : row;
-};
+export const findNewestTestRun = runs =>
+  (runs ?? [])
+    .filter(run => run.trigger === 'test')
+    .reduce(
+      (newest, run) => (!newest || compareRunTimestamp(run.started_at, newest.started_at) > 0 ? run : newest),
+      undefined,
+    );

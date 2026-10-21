@@ -81,9 +81,13 @@ describe('ScheduleRunList (EL-7011 US-32, owner CR 2026-10-21)', () => {
   it('R4.2 shows each status as a chip and the reason of a run without a conversation', () => {
     renderList([withConversation, withoutConversation]);
 
-    expect(within(cell(rows()[0], 'status')).getByTestId('schedule-run-status')).toHaveTextContent('Failed');
-    expect(cell(rows()[0], 'status')).toHaveTextContent('Model unavailable');
-    expect(within(cell(rows()[1], 'status')).getByTestId('schedule-run-status')).toHaveTextContent('Success');
+    expect(within(cell(rows()[0], 'status-cell')).getByTestId('schedule-run-status')).toHaveTextContent(
+      'Failed',
+    );
+    expect(cell(rows()[0], 'status-cell')).toHaveTextContent('Model unavailable');
+    expect(within(cell(rows()[1], 'status-cell')).getByTestId('schedule-run-status')).toHaveTextContent(
+      'Success',
+    );
   });
 
   it('R4.2 shows Open only for a run with a conversation, else a dash', () => {

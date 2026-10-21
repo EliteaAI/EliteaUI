@@ -24,7 +24,10 @@ vi.mock('@/[fsd]/shared/lib/hooks', async importOriginal => ({
   useSelectedProjectId: () => 5,
   useToast: () => ({ toastError: mocks.toastError }),
 }));
-vi.mock('@/common/utils.jsx', () => ({ buildErrorMessage: () => 'boom' }));
+vi.mock('@/common/utils.jsx', async importOriginal => ({
+  ...(await importOriginal()),
+  buildErrorMessage: () => 'boom',
+}));
 vi.mock('@/[fsd]/shared/ui/banner-message/BannerMessage', () => ({
   default: ({ message }) => <div role="alert">{message}</div>,
 }));
@@ -136,12 +139,10 @@ describe('ScheduleRunsPanel (EL-7011 US-32, owner CR 2026-10-21)', () => {
 
     expect(screen.getAllByTestId('schedule-run-row')).toHaveLength(3);
     expect(screen.getByText(NOTE)).toBeInTheDocument();
-    expect(mocks.useGetScheduleRunsQuery.mock.calls[0][0]).toEqual({
-      projectId: 5,
-      scheduleId: 9,
-      page: 0,
-      pageSize: 100,
-    });
+    expect(mocks.useGetScheduleRunsQuery).toHaveBeenCalledWith(
+      { projectId: 5, scheduleId: 9, page: 0, pageSize: 100 },
+      { skip: false },
+    );
   });
 
   it('R4.3 refreshes every 3 seconds while a run is running, and not otherwise', () => {
