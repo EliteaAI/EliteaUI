@@ -11,7 +11,10 @@ import CreateSkillForm from '../CreateSkillForm';
 
 const captured = vi.hoisted(() => ({ editorMaxLength: undefined }));
 
-vi.mock('@/[fsd]/features/skill/lib/hooks', () => ({ useSkillInstructionsMaxLength: () => 1200 }));
+vi.mock('@/[fsd]/features/skill/lib/hooks', async () => ({
+  ...(await vi.importActual('@/[fsd]/features/skill/lib/hooks/useSkillFrontmatterEditor.hooks')),
+  useSkillInstructionsMaxLength: () => 1200,
+}));
 vi.mock('@/[fsd]/features/entity-icon-editor', () => ({ EditableEntityIcon: () => null }));
 vi.mock('@/[fsd]/features/skill/ui/generate-skill-modal', () => ({ GenerateSkillButton: () => null }));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({

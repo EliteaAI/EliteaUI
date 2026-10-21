@@ -38,6 +38,7 @@ const CodeMirrorEditor = memo(
       className,
       readOnly = false,
       maxLength = 0,
+      countLength,
     } = props;
 
     const extensions = useMemo(() => {
@@ -279,7 +280,7 @@ const CodeMirrorEditor = memo(
           ...syntaxErrorListener,
           ...contentTestIdExtension,
           ...extensions,
-          CodeMirrorEditorHelpers.createMaxLengthExtension(maxLength),
+          CodeMirrorEditorHelpers.createMaxLengthExtension(maxLength, countLength),
         ]}
         onChange={onInputHandler}
       />

@@ -797,7 +797,9 @@ export const detectContentType = content => {
   return 'text';
 };
 
-export const createMaxLengthExtension = maxLength => {
+const countDocumentLength = text => text.length;
+
+export const createMaxLengthExtension = (maxLength, countLength = countDocumentLength) => {
   if (!maxLength || maxLength <= 0) {
     return [];
   }
@@ -806,9 +808,12 @@ export const createMaxLengthExtension = maxLength => {
     if (!tr.docChanged) return tr;
     if (!tr.annotation(Transaction.userEvent)) return tr;
 
+    const newCount = countLength(tr.newDoc.toString());
+    const allowedCount = Math.max(maxLength, countLength(tr.startState.doc.toString()));
+    if (newCount <= allowedCount) return tr;
+
     const currentLength = tr.startState.doc.length;
-    const allowedLength = Math.max(maxLength, currentLength);
-    if (tr.newDoc.length <= allowedLength) return tr;
+    const allowedLength = allowedCount + tr.newDoc.length - newCount;
 
     const changes = [];
     let runningLength = currentLength;
