@@ -6,6 +6,7 @@ import { AgentInput, ApplicationTools } from '@/[fsd]/features/agent/ui/agent-de
 import ApplicationAdvanceSettings from '@/[fsd]/features/agent/ui/agent-details/configurations/ApplicationAdvanceSettings';
 import ApplicationEditorNotes from '@/[fsd]/features/agent/ui/agent-details/configurations/ApplicationEditorNotes';
 import { ApplicationSkills } from '@/[fsd]/features/skill/ui';
+import { EntitySchedulesSection } from '@/[fsd]/widgets/entity-schedules-section';
 import { ViewMode } from '@/common/constants.js';
 import ApplicationVariables from '@/components/ApplicationVariables.jsx';
 import ConversationStarters from '@/components/ConversationStarters';
@@ -70,6 +71,12 @@ const ApplicationConfigurationForm = memo(props => {
         disabled={isDisabled}
       />
       <ApplicationInformation style={styles.section} />
+      <EntitySchedulesSection
+        style={styles.section}
+        entityType="agent"
+        entityId={applicationId}
+        isChatView={isChatView}
+      />
     </Box>
   );
 });
