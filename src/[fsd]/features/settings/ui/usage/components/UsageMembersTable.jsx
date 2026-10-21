@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 
 import { Box, Skeleton, Typography, useTheme } from '@mui/material';
 
@@ -26,81 +26,35 @@ const UsageMembersTable = memo(props => {
     isFetching = false,
     isError = false,
     onRetry,
-    comparisonRows = [],
     isCurrentPeriod = true,
     totalRows,
+    sortKey = null,
+    sortDir = 'desc',
+    onSort,
   } = props;
 
   const { palette } = useTheme();
   const styles = usageMembersTableStyles();
 
-  const [sortKey, setSortKey] = useState(null);
-  const [sortDir, setSortDir] = useState('desc');
-
   // Only the very first load has nothing to show; later fetches keep the old page visible
   const showsSkeleton = isFetching && !rows.length;
   const showsEmpty = !isFetching && !isError && !rows.length;
-  const showVsPrior = comparisonRows.length > 0;
-
-  const prevByUser = useMemo(() => {
-    const map = new Map();
-
-    comparisonRows.forEach(r => map.set(r.user_id, r));
-
-    return map;
-  }, [comparisonRows]);
+  const showVsPrior = rows.some(r => r.prev_spend !== undefined);
 
   const enrichedRows = useMemo(
     () =>
-      rows.map(row => {
-        const prev = prevByUser.get(row.user_id);
-        const delta = showVsPrior ? UsageHelpers.computeDelta(row.spend ?? 0, prev?.spend ?? null) : null;
-
-        return { ...row, _delta: delta };
-      }),
-    [rows, prevByUser, showVsPrior],
+      rows.map(row => ({
+        ...row,
+        _delta: showVsPrior ? UsageHelpers.computeDelta(row.spend ?? 0, row.prev_spend ?? null) : null,
+      })),
+    [rows, showVsPrior],
   );
-
-  const sortedRows = useMemo(() => {
-    if (!sortKey) return enrichedRows;
-
-    return [...enrichedRows].sort((a, b) => {
-      if (sortKey === 'name') {
-        const aStr = (a.name || a.email || '').toLowerCase();
-        const bStr = (b.name || b.email || '').toLowerCase();
-        return sortDir === 'desc' ? bStr.localeCompare(aStr) : aStr.localeCompare(bStr);
-      }
-
-      let av, bv;
-
-      if (sortKey === 'limit') {
-        av = a.effective_limit ?? -Infinity;
-        bv = b.effective_limit ?? -Infinity;
-      } else if (sortKey === 'used') {
-        av = a.percent_used ?? -Infinity;
-        bv = b.percent_used ?? -Infinity;
-      } else if (sortKey === 'delta') {
-        av = a._delta?.pct ?? -Infinity;
-        bv = b._delta?.pct ?? -Infinity;
-      } else {
-        av = a.spend || 0;
-        bv = b.spend || 0;
-      }
-
-      return sortDir === 'desc' ? bv - av : av - bv;
-    });
-  }, [enrichedRows, sortKey, sortDir]);
 
   const handleSort = useCallback(
     key => {
-      if (sortKey === key) {
-        setSortDir(prev => (prev === 'desc' ? 'asc' : 'desc'));
-      } else {
-        setSortKey(key);
-        setSortDir('desc');
-      }
+      onSort?.(key);
     },
-    [sortKey],
+    [onSort],
   );
 
   const SortHeader = useCallback(
@@ -231,7 +185,7 @@ const UsageMembersTable = memo(props => {
               </Box>
             ))}
 
-          {sortedRows.map(row => {
+          {enrichedRows.map(row => {
             const severity = UsageHelpers.usageSeverity(row.percent_used, warningPct);
             const color = SEVERITY_COLOR[severity];
             const delta = row._delta;

@@ -265,6 +265,63 @@ describe('UsageHelpers.fillDailyGaps', () => {
   });
 });
 
+describe('computeDelta', () => {
+  it('returns direction none when previous is null (no prior period)', () => {
+    const result = UsageHelpers.computeDelta(50, null);
+    expect(result.direction).toBe('none');
+    expect(result.label).toBe('—');
+    expect(result.value).toBeNull();
+    expect(result.pct).toBeNull();
+  });
+
+  it('returns direction none when previous is undefined', () => {
+    expect(UsageHelpers.computeDelta(50, undefined).direction).toBe('none');
+  });
+
+  it('labels a first-time spender as new when previous was zero', () => {
+    const result = UsageHelpers.computeDelta(38.7, 0);
+    expect(result.direction).toBe('new');
+    expect(result.label).toBe('New');
+  });
+
+  it('returns flat with a dash when both current and previous are effectively zero', () => {
+    const result = UsageHelpers.computeDelta(0, 0);
+    expect(result.direction).toBe('flat');
+    expect(result.label).toBe('—');
+  });
+
+  it('reports up direction and positive percentage when spend increased', () => {
+    const result = UsageHelpers.computeDelta(38.7, 29.4);
+    expect(result.direction).toBe('up');
+    expect(result.label).toMatch(/^\+/);
+    expect(result.pct).toBeGreaterThan(0);
+  });
+
+  it('reports down direction and negative percentage when spend decreased', () => {
+    const result = UsageHelpers.computeDelta(51.2, 61.0);
+    expect(result.direction).toBe('down');
+    expect(result.label).toMatch(/^-/);
+    expect(result.pct).toBeLessThan(0);
+  });
+
+  it('reports flat when current equals previous', () => {
+    const result = UsageHelpers.computeDelta(19.6, 19.6);
+    expect(result.direction).toBe('flat');
+    expect(result.pct).toBe(0);
+  });
+
+  it('formats the label as a one-decimal percentage', () => {
+    const result = UsageHelpers.computeDelta(38.7, 29.4);
+    // 9.3 / 29.4 ≈ 31.6%
+    expect(result.label).toBe('+31.6%');
+  });
+
+  it('computes value as the absolute spend difference', () => {
+    const result = UsageHelpers.computeDelta(51.2, 61.0);
+    expect(result.value).toBeCloseTo(51.2 - 61.0);
+  });
+});
+
 describe('toolSpendLabel (#6983)', () => {
   const item = { label: 'Web search', spend: 2.5, effective_limit: 10, percent_used: 25, currency: 'USD' };
 

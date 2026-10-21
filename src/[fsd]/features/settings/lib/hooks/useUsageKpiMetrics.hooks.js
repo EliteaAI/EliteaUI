@@ -20,16 +20,6 @@ export const useUsageKpiMetrics = ({
     daily = [],
   } = data;
 
-  const elapsedDays = useMemo(() => {
-    if (!periodStart) return 0;
-
-    const start = new Date(periodStart + 'T00:00:00Z');
-    const today = new Date();
-    const diff = Math.floor((today - start) / 86400000) + 1;
-
-    return Math.max(0, Math.min(diff, daily.length));
-  }, [periodStart, daily]);
-
   const daysInMonth = useMemo(() => {
     if (!periodStart) return 30;
 
@@ -38,12 +28,29 @@ export const useUsageKpiMetrics = ({
     return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0)).getUTCDate();
   }, [periodStart]);
 
+  const elapsedDays = useMemo(() => {
+    if (!periodStart) return 0;
+
+    const start = new Date(periodStart + 'T00:00:00Z');
+    const today = new Date();
+    const diff = Math.floor((today - start) / 86400000) + 1;
+
+    return Math.max(0, Math.min(diff, daysInMonth));
+  }, [periodStart, daysInMonth]);
+
   const forecast = useMemo(
     () => UsageHelpers.forecastSpend(spend, elapsedDays, daysInMonth),
     [spend, elapsedDays, daysInMonth],
   );
 
-  const prevSpend = comparisonData?.spend ?? null;
+  const prevSpend = useMemo(() => {
+    if (!comparisonData) return null;
+    if (!comparisonData.daily?.length) return comparisonData.spend ?? null;
+    return comparisonData.daily
+      .filter(d => new Date(d.date + 'T00:00:00Z').getUTCDate() <= elapsedDays)
+      .reduce((sum, d) => sum + (d.spend || 0), 0);
+  }, [comparisonData, elapsedDays]);
+
   const prevTokens = comparisonData?.total_tokens ?? null;
 
   const spentDelta = useMemo(() => UsageHelpers.computeDelta(spend, prevSpend), [spend, prevSpend]);
@@ -98,7 +105,7 @@ export const useUsageKpiMetrics = ({
 
   const avgPerDay = elapsedDays > 0 ? spend / elapsedDays : 0;
   const noCompareSubtitle = !hasValidComparison;
-  const showCacheHitRate = !canSeeAmounts && !effectiveLimit;
+  const showCacheHitRate = !canSeeAmounts && data.percent_used == null;
 
   const dailySpends = daily.map(d => d.spend || 0);
   const dailyTokens = daily.map(d => d.total_tokens || 0);
@@ -140,7 +147,11 @@ export const useUsageKpiMetrics = ({
 
     if (isCurrentPeriod) {
       const forecastPct =
-        effectiveLimit && forecast != null ? Math.round((forecast / effectiveLimit) * 100) : null;
+        effectiveLimit && forecast != null
+          ? Math.round((forecast / effectiveLimit) * 100)
+          : data.percent_used != null && elapsedDays > 0
+            ? Math.round((data.percent_used / elapsedDays) * daysInMonth)
+            : null;
       const forecastSubtitle =
         forecast == null
           ? 'not enough data yet'
@@ -155,7 +166,9 @@ export const useUsageKpiMetrics = ({
           forecast != null
             ? canSeeAmounts
               ? UsageHelpers.formatMoney(forecast, currency)
-              : `${forecastPct ?? 0}%`
+              : forecastPct != null
+                ? `${forecastPct}%`
+                : '—'
             : '—',
         subtitle: forecastSubtitle,
         delta: null,
@@ -168,7 +181,7 @@ export const useUsageKpiMetrics = ({
         ? effectiveLimit != null
           ? UsageHelpers.formatMoney(effectiveLimit, currency)
           : 'Unlimited'
-        : effectiveLimit != null
+        : data.percent_used != null
           ? `${data.percent_used ?? 0}% of limit`
           : 'Unlimited';
       const sourceTag =
@@ -257,6 +270,7 @@ export const useUsageKpiMetrics = ({
     cacheHitRate,
     dailyTokens,
     tokenDelta,
+    daysInMonth,
   ]);
 
   return { kpis, elapsedDays, daysInMonth, forecast };

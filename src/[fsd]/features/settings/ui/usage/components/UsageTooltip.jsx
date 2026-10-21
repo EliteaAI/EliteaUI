@@ -13,6 +13,15 @@ const UsageTooltip = memo(props => {
 
   const point = payload[0]?.payload || {};
 
+  const isGrouped = payload.length > 1 || (payload[0]?.dataKey && payload[0].dataKey !== 'spend');
+
+  const totalSpend = isGrouped
+    ? payload.reduce((sum, entry) => sum + (typeof entry.value === 'number' ? entry.value : 0), 0)
+    : point.spend;
+
+  const totalRequests = isGrouped ? null : point.api_requests;
+  const totalTokens = isGrouped ? null : point.total_tokens;
+
   return (
     <Box sx={styles.tooltip}>
       <Typography
@@ -22,10 +31,23 @@ const UsageTooltip = memo(props => {
         {label}
       </Typography>
       {canSeeAmounts && (
-        <Typography variant="bodySmall">Cost: {UsageHelpers.formatMoney(point.spend, currency)}</Typography>
+        <Typography variant="bodySmall">Cost: {UsageHelpers.formatMoney(totalSpend, currency)}</Typography>
       )}
-      <Typography variant="bodySmall">Calls: {point.api_requests || 0}</Typography>
-      <Typography variant="bodySmall">Tokens: {UsageHelpers.formatTokens(point.total_tokens)}</Typography>
+      {!isGrouped && (
+        <>
+          <Typography variant="bodySmall">Calls: {totalRequests || 0}</Typography>
+          <Typography variant="bodySmall">Tokens: {UsageHelpers.formatTokens(totalTokens)}</Typography>
+        </>
+      )}
+      {isGrouped &&
+        payload.map((entry, i) => (
+          <Typography
+            key={i}
+            variant="bodySmall"
+          >
+            {entry.name}: {UsageHelpers.formatMoney(entry.value, currency)}
+          </Typography>
+        ))}
     </Box>
   );
 });

@@ -71,9 +71,20 @@ const UsageMomChart = memo(props => {
   const hasData = prevValues.some(v => v > 0) || currentValues.some(v => v > 0);
 
   const currentSpend = currentValues[currentValues.length - 1] || 0;
-  const prevAtSameDay = prevValues[currentValues.length - 1] ?? prevValues[prevValues.length - 1] ?? 0;
 
-  const delta = UsageHelpers.computeDelta(currentSpend, prevAtSameDay);
+  const currentLastDay = useMemo(() => {
+    if (!currentDaily.length) return 0;
+    const last = currentDaily[currentDaily.length - 1];
+    return last?.date ? new Date(last.date + 'T00:00:00Z').getUTCDate() : currentDaily.length;
+  }, [currentDaily]);
+
+  const prevAtSameDay = useMemo(() => {
+    if (!prevValues.length) return 0;
+    const idx = currentLastDay - 1;
+    return prevValues[idx] ?? prevValues[prevValues.length - 1] ?? 0;
+  }, [prevValues, currentLastDay]);
+
+  const delta = UsageHelpers.computeDelta(currentSpend, prevAtSameDay > 0 ? prevAtSameDay : null);
 
   // Shared X-axis length: longest of both series (or at least 28 days for a realistic axis)
   const totalDays = Math.max(currentValues.length, prevValues.length, 28);

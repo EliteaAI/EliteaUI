@@ -87,7 +87,7 @@ const UsageContainer = memo(() => {
   const availablePeriods = useMemo(() => {
     const periods = currentData?.available_periods;
 
-    if (Array.isArray(periods) && periods.length) return periods;
+    if (Array.isArray(periods) && periods.length) return periods.slice(0, 4);
 
     // Fallback: only current period available
     if (currentData?.period_yyyymm) return [currentData.period_yyyymm];
@@ -115,6 +115,7 @@ const UsageContainer = memo(() => {
     data: historicalData,
     isLoading: isHistoricalLoading,
     isFetching: isHistoricalFetching,
+    isError: isHistoricalError,
   } = useProjectUsageQuery(
     { projectId, scope: activeScope, period },
     {
@@ -141,12 +142,27 @@ const UsageContainer = memo(() => {
   const data = isCurrentPeriod ? currentData : (historicalData ?? currentData);
   const isLoading = isCurrentLoading || isHistoricalLoading;
   const isFetching = isCurrentFetching || isHistoricalFetching;
-  const isError = isCurrentError;
+  const isError = isCurrentError || isHistoricalError;
 
   const showsMembers = !isPersonalProject && activeScope === SCOPE_PROJECT;
 
   const [memberSearch, setMemberSearch] = useState('');
   const debouncedMemberSearch = useDebounceValue(memberSearch, SEARCH_DEBOUNCE_MS);
+
+  const [memberSortKey, setMemberSortKey] = useState(null);
+  const [memberSortDir, setMemberSortDir] = useState('desc');
+
+  const handleMemberSort = useCallback(
+    key => {
+      if (memberSortKey === key) {
+        setMemberSortDir(prev => (prev === 'desc' ? 'asc' : 'desc'));
+      } else {
+        setMemberSortKey(key);
+        setMemberSortDir('desc');
+      }
+    },
+    [memberSortKey],
+  );
 
   // Adjusted during render (not in an effect) when a fresh total arrives, so usePagination
   // never computes a page's totalPages/labels off a stale total for even one paint
@@ -161,8 +177,20 @@ const UsageContainer = memo(() => {
       offset: membersPage * membersPageSize,
       search: debouncedMemberSearch.trim() || undefined,
       ...(period && !isCurrentPeriod ? { period } : {}),
+      ...(memberSortKey ? { sort_by: memberSortKey, sort_dir: memberSortDir } : {}),
+      ...(previousPeriod ? { comparison_period: previousPeriod } : {}),
     }),
-    [projectId, membersPage, membersPageSize, debouncedMemberSearch, period, isCurrentPeriod],
+    [
+      projectId,
+      membersPage,
+      membersPageSize,
+      debouncedMemberSearch,
+      period,
+      isCurrentPeriod,
+      memberSortKey,
+      memberSortDir,
+      previousPeriod,
+    ],
   );
 
   const {
@@ -202,9 +230,15 @@ const UsageContainer = memo(() => {
     let total = Infinity;
     const rows = [];
     let warningPct;
+    const activePeriod = period && !isCurrentPeriod ? period : undefined;
 
     while (rows.length < total) {
-      const page = await fetchAllMembers({ projectId, limit: EXPORT_MEMBERS_LIMIT, offset }).unwrap();
+      const page = await fetchAllMembers({
+        projectId,
+        limit: EXPORT_MEMBERS_LIMIT,
+        offset,
+        ...(activePeriod ? { period: activePeriod } : {}),
+      }).unwrap();
 
       rows.push(...(page.rows || []));
       total = page.total ?? rows.length;
@@ -215,7 +249,7 @@ const UsageContainer = memo(() => {
     }
 
     return { rows, warning_pct: warningPct };
-  }, [fetchAllMembers, projectId]);
+  }, [fetchAllMembers, projectId, period, isCurrentPeriod]);
 
   const handleExport = useCallback(async () => {
     setExporting(true);
@@ -297,16 +331,15 @@ const UsageContainer = memo(() => {
   const { forecast, exceedDay } = useMemo(() => {
     if (!data || !isCurrentPeriod) return { forecast: null, exceedDay: null };
 
-    const daily = data.daily || [];
     const periodStart = data.period_start;
 
     if (!periodStart) return { forecast: null, exceedDay: null };
 
     const start = new Date(periodStart + 'T00:00:00Z');
     const today = new Date();
-    const elapsedDays = Math.max(0, Math.min(Math.floor((today - start) / 86400000) + 1, daily.length));
     const d = new Date(periodStart + 'T00:00:00Z');
-    const daysInMonth = new Date(d.getUTCFullYear(), d.getUTCMonth() + 1, 0).getUTCDate();
+    const daysInMonth = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0)).getUTCDate();
+    const elapsedDays = Math.max(0, Math.min(Math.floor((today - start) / 86400000) + 1, daysInMonth));
 
     return {
       forecast: UsageHelpers.forecastSpend(data.spend, elapsedDays, daysInMonth),
@@ -564,9 +597,11 @@ const UsageContainer = memo(() => {
                   isFetching={isMembersFetching}
                   isError={isMembersError}
                   onRetry={refetchMembers}
-                  comparisonRows={previousData?.members ?? []}
                   isCurrentPeriod={isCurrentPeriod}
                   totalRows={membersData?.total}
+                  sortKey={memberSortKey}
+                  sortDir={memberSortDir}
+                  onSort={handleMemberSort}
                 />
               </>
             )}

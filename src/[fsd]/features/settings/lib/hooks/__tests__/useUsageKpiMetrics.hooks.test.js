@@ -173,7 +173,7 @@ describe('useUsageKpiMetrics — tokens card', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-10-11T12:00:00Z'));
 
-    const noLimit = { ...baseData, effective_limit: null };
+    const noLimit = { ...baseData, effective_limit: null, percent_used: null };
     const { result } = renderHook(() =>
       useUsageKpiMetrics({ ...baseProps, data: noLimit, canSeeAmounts: false }),
     );
@@ -204,7 +204,7 @@ describe('useUsageKpiMetrics — return values', () => {
 
     const { result } = renderHook(() => useUsageKpiMetrics(baseProps));
 
-    expect(result.current.elapsedDays).toBe(10);
+    expect(result.current.elapsedDays).toBe(11);
     expect(result.current.daysInMonth).toBe(31);
     expect(typeof result.current.forecast).toBe('number');
   });

@@ -1,5 +1,7 @@
 import { memo, useCallback, useMemo, useState } from 'react';
 
+import { Link as RouterLink } from 'react-router-dom';
+
 import { Box, Link, Typography, useTheme } from '@mui/material';
 
 import { UsageHelpers } from '@/[fsd]/features/settings/lib/helpers';
@@ -106,7 +108,8 @@ const UsageTopSkills = memo(props => {
         </Typography>
         {analyticsUrl && (
           <Link
-            href={analyticsUrl}
+            component={RouterLink}
+            to={analyticsUrl}
             sx={styles.viewLink}
           >
             View in Analytics

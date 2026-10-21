@@ -31,7 +31,7 @@ const UsageBudgetHero = memo(props => {
     const d = new Date(periodStart + 'T00:00:00Z');
     const fullName = PeriodConstants.MONTH_NAMES[d.getUTCMonth()];
     const year = d.getUTCFullYear();
-    const days = new Date(year, d.getUTCMonth() + 1, 0).getUTCDate();
+    const days = new Date(Date.UTC(year, d.getUTCMonth() + 1, 0)).getUTCDate();
 
     return {
       periodMonthYear: `${fullName} ${year}`,
@@ -49,14 +49,14 @@ const UsageBudgetHero = memo(props => {
 
     const d = new Date(resetsAt);
     const days = Math.ceil((d.getTime() - Date.now()) / 86400000);
-    const resetMon = PeriodConstants.MONTH_NAMES[d.getMonth()].slice(0, 3);
-    const day = d.getDate();
+    const resetMon = PeriodConstants.MONTH_NAMES[d.getUTCMonth()].slice(0, 3);
+    const day = d.getUTCDate();
     const daysStr = days <= 0 ? 'today' : days === 1 ? 'tomorrow' : `in ${days} days`;
 
     return `Resets ${resetMon} ${day} (${daysStr})`;
   };
 
-  const hasLimit = limit != null;
+  const hasLimit = limit != null || data.percent_used != null;
   const fcReady = !!forecast;
 
   // Status dot + text color: gray when no limit or past period, else severity-based
@@ -84,7 +84,10 @@ const UsageBudgetHero = memo(props => {
     // Limit exceeded
     if (severity === 'exceeded') {
       const resetsStr = resetsAt
-        ? `${PeriodConstants.MONTH_NAMES[new Date(resetsAt).getMonth()].slice(0, 3)} ${new Date(resetsAt).getDate()}`
+        ? (() => {
+            const rd = new Date(resetsAt);
+            return `${PeriodConstants.MONTH_NAMES[rd.getUTCMonth()].slice(0, 3)} ${rd.getUTCDate()}`;
+          })()
         : 'next period';
       return `Limit reached. Requests to shared models are blocked until ${resetsStr}.`;
     }

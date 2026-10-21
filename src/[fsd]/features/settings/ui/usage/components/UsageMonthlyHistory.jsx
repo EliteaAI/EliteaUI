@@ -17,6 +17,11 @@ const UsageMonthlyHistory = memo(props => {
     return sorted.slice(-USAGE_MAX_HISTORY_BARS);
   }, [history]);
 
+  const currentPeriod = useMemo(() => {
+    const now = new Date();
+    return `${now.getUTCFullYear()}${String(now.getUTCMonth() + 1).padStart(2, '0')}`;
+  }, []);
+
   if (displayHistory.length <= 1) return null;
 
   const maxSpend = (Math.max(...displayHistory.map(h => h.spend || 0), limit || 0) || 1) * 1.15;
@@ -99,7 +104,7 @@ const UsageMonthlyHistory = memo(props => {
               variant="labelTiny"
               sx={styles.barLabel(isActive)}
             >
-              {PeriodHelpers.formatPeriodShort(item.period, isActive)}
+              {PeriodHelpers.formatPeriodShort(item.period, item.period === currentPeriod)}
             </Typography>
           );
         })}
