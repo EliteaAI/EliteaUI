@@ -1,14 +1,13 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { ViewMode } from '@/common/constants.js';
 import '@testing-library/jest-dom/vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 
-import { ViewMode } from '@/common/constants.js';
-
 import PipelineConfigurationForm from '../PipelineConfigurationForm';
 
-const stub = vi.hoisted(() => id => () => <div data-testid={id} />);
+const stub = vi.hoisted(() => id => Object.assign(() => <div data-testid={id} />, { displayName: id }));
 
 vi.mock('formik', () => ({ useFormikContext: () => ({ initialValues: { name: 'Saved' } }) }));
 vi.mock('@/[fsd]/features/agent/ui/agent-details/configurations', () => ({
@@ -27,26 +26,35 @@ vi.mock('@/[fsd]/widgets/entity-schedules-section', () => ({
 }));
 vi.mock('@/components/ApplicationVariables.jsx', () => ({ default: stub('variables') }));
 vi.mock('@/components/ConversationStarters', () => ({ default: stub('starters') }));
-vi.mock('@/pages/Applications/Components/Applications/ApplicationEditForm', () => ({ default: stub('edit-form') }));
+vi.mock('@/pages/Applications/Components/Applications/ApplicationEditForm', () => ({
+  default: stub('edit-form'),
+}));
 vi.mock('@/pages/Applications/Components/Applications/ApplicationInformation', () => ({
   default: stub('information'),
 }));
 
-const order = () =>
-  screen
-    .getAllByTestId(/^(starters|schedules|advanced)$/)
-    .map(node => node.dataset.testid);
+const order = () => screen.getAllByTestId(/^(starters|schedules|advanced)$/).map(node => node.dataset.testid);
 
 describe('PipelineConfigurationForm EL-7011 section order', () => {
   afterEach(cleanup);
 
   it('R1.2 EL-7011: Schedules follows Chat starters and precedes Advanced', () => {
-    render(<PipelineConfigurationForm viewMode={ViewMode.Owner} applicationId={1} />);
+    render(
+      <PipelineConfigurationForm
+        viewMode={ViewMode.Owner}
+        applicationId={1}
+      />,
+    );
     expect(order()).toEqual(['starters', 'schedules', 'advanced']);
   });
 
   it('R1.2 EL-7011: Schedules sits right before Advanced when Chat starters is hidden', () => {
-    render(<PipelineConfigurationForm viewMode={ViewMode.Public} applicationId={1} />);
+    render(
+      <PipelineConfigurationForm
+        viewMode={ViewMode.Public}
+        applicationId={1}
+      />,
+    );
     expect(order()).toEqual(['schedules', 'advanced']);
   });
 
@@ -56,7 +64,7 @@ describe('PipelineConfigurationForm EL-7011 section order', () => {
         viewMode={ViewMode.Owner}
         applicationId={1}
         isChatView
-      />
+      />,
     );
     expect(screen.getByTestId('schedules')).toHaveTextContent('true');
   });
