@@ -35,12 +35,14 @@ const SkillValidateSchema = (maxInstructionsLength, savedInstructions) =>
       instructions: yup
         .string()
         .trim()
-        .test(
-          'instructions-max-length',
-          ({ value }) => instructionsTooLongMessage(value.length, maxInstructionsLength),
-          (value, context) =>
-            !value || value.length <= maxInstructionsLength || context.originalValue === savedInstructions,
-        )
+        .test('instructions-max-length', (value, context) => {
+          const rawValue = context.originalValue ?? '';
+          if (!value || rawValue.length <= maxInstructionsLength || rawValue === savedInstructions)
+            return true;
+          return context.createError({
+            message: instructionsTooLongMessage(rawValue.length, maxInstructionsLength),
+          });
+        })
         .required('Instructions are required'),
     }),
   });

@@ -52,6 +52,12 @@ describe('SkillValidateSchema instructions limit', () => {
     );
   });
 
+  it('rejects new instructions that exceed the limit only by trailing whitespace', async () => {
+    expect(await instructionsError(`${'i'.repeat(LIMIT)}\n`)).toBe(
+      'Instructions are 1201 characters long. Maximum allowed is 1200 characters.',
+    );
+  });
+
   it('accepts unchanged saved instructions that end in whitespace', async () => {
     const saved = `${'i'.repeat(LIMIT + 300)}\n`;
 
