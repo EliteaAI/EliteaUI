@@ -1,27 +1,18 @@
 import { memo, useCallback } from 'react';
 
-import CheckCircleOutline from '@mui/icons-material/CheckCircleOutline';
-import ErrorOutline from '@mui/icons-material/ErrorOutline';
-import InfoOutlined from '@mui/icons-material/InfoOutlined';
-import WarningAmber from '@mui/icons-material/WarningAmber';
-import { Box, Chip, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
-import { ScheduleEnabledSwitch, ScheduleRowActions, useScheduleRowActions } from '@/[fsd]/features/schedule';
-import { toWord } from '@/[fsd]/features/schedule/lib/helpers';
+import {
+  ScheduleEnabledSwitch,
+  ScheduleRowActions,
+  ScheduleRunStatusChip,
+  useScheduleRowActions,
+} from '@/[fsd]/features/schedule';
 import {
   getBrowserTimezone,
   getCronSummaryInBrowserTimezone,
 } from '@/[fsd]/shared/lib/helpers/schedule.helpers';
 import ClockIcon from '@/assets/clock.svg?react';
-
-// The last-run chip: an icon plus the status text (R2.6)
-const STATUS_CHIPS = {
-  success: { color: 'success', Icon: CheckCircleOutline },
-  failed: { color: 'error', Icon: ErrorOutline },
-  blocked: { color: 'error', Icon: ErrorOutline },
-  waiting_for_approval: { color: 'warning', Icon: WarningAmber },
-};
-const OTHER_STATUS_CHIP = { color: 'default', Icon: InfoOutlined };
 
 const formatDateTime = value =>
   new Date(value).toLocaleString([], {
@@ -48,7 +39,6 @@ const EntityScheduleCard = memo(props => {
   ]
     .filter(Boolean)
     .join(' · ');
-  const { color, Icon } = STATUS_CHIPS[row.last_run_status] ?? OTHER_STATUS_CHIP;
   const testId = `${entityType}-schedule-card`;
 
   const styles = entityScheduleCardStyles();
@@ -70,16 +60,8 @@ const EntityScheduleCard = memo(props => {
         >
           {row.name}
         </Typography>
-        {row.last_run_status && (
-          <Chip
-            size="small"
-            variant="outlined"
-            color={color}
-            icon={<Icon />}
-            label={toWord(row.last_run_status)}
-            data-testid={`${testId}-status-${row.id}`}
-          />
-        )}
+        {/* The last-run chip of the Runs panel (R2.6) */}
+        {row.last_run_status && <ScheduleRunStatusChip status={row.last_run_status} />}
         <ScheduleEnabledSwitch
           row={row}
           testId={`${testId}-toggle-${row.id}`}

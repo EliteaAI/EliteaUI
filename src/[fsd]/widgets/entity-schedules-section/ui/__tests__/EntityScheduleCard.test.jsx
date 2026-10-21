@@ -5,7 +5,7 @@ import { ThemeProvider, createTheme } from '@mui/material';
 
 import getDesignTokens from '@/MainTheme';
 import '@testing-library/jest-dom/vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 
 import EntityScheduleCard from '../EntityScheduleCard';
 
@@ -59,6 +59,8 @@ const renderCard = (row = {}, props = {}) => {
 };
 
 const openMenu = () => fireEvent.click(screen.getByTestId('schedule-7-menu-button'));
+const statusChip = (entityType = 'agent') =>
+  within(screen.getByTestId(`${entityType}-schedule-card-7`)).queryByTestId('schedule-run-status');
 
 describe('EntityScheduleCard EL-7011 US-35', () => {
   beforeEach(() => {
@@ -77,7 +79,7 @@ describe('EntityScheduleCard EL-7011 US-35', () => {
     expect(screen.getByTestId('agent-schedule-card-details-7')).toHaveTextContent(
       'Rule of 0 9 * * * from UTC · Europe/Kyiv · Last run: Oct 19, 09:00 · Next: Oct 20, 09:00 · You',
     );
-    expect(screen.getByTestId('agent-schedule-card-status-7')).toHaveTextContent('Success');
+    expect(statusChip()).toHaveTextContent('Success');
   });
 
   it('TC-US35-05 R2.3 shows the owner name on a card of another owner', () => {
@@ -89,7 +91,7 @@ describe('EntityScheduleCard EL-7011 US-35', () => {
   it('TC-US35-21 R2.6 shows no chip before the first run and still shows the toggle and the menu', () => {
     renderCard({ last_run: null, last_run_status: null });
 
-    expect(screen.queryByTestId('agent-schedule-card-status-7')).not.toBeInTheDocument();
+    expect(statusChip()).not.toBeInTheDocument();
     expect(screen.getByTestId('agent-schedule-card-details-7')).toHaveTextContent(
       'Rule of 0 9 * * * from UTC · Europe/Kyiv · Next: Oct 20, 09:00 · You',
     );
@@ -97,15 +99,18 @@ describe('EntityScheduleCard EL-7011 US-35', () => {
     expect(screen.getByTestId('schedule-7-menu-button')).toBeInTheDocument();
   });
 
-  it('R2.6 shows Failed as an error chip and Waiting for approval as a warning chip', () => {
+  it('R2.6 shows the run status chip of the Runs panel: Failed, Waiting for input and Running', () => {
     renderCard({ last_run_status: 'failed' });
-    expect(screen.getByTestId('agent-schedule-card-status-7')).toHaveTextContent('Failed');
-    expect(screen.getByTestId('agent-schedule-card-status-7')).toHaveClass('MuiChip-colorError');
+    expect(statusChip()).toHaveTextContent('Failed');
     cleanup();
 
     renderCard({ last_run_status: 'waiting_for_approval' });
-    expect(screen.getByTestId('agent-schedule-card-status-7')).toHaveTextContent('Waiting for approval');
-    expect(screen.getByTestId('agent-schedule-card-status-7')).toHaveClass('MuiChip-colorWarning');
+    expect(statusChip()).toHaveTextContent('Waiting for input');
+    cleanup();
+
+    renderCard({ last_run_status: 'running' });
+    expect(statusChip()).toHaveTextContent('Running');
+    expect(within(statusChip()).getByRole('progressbar')).toBeInTheDocument();
   });
 
   it('TC-US35-22 R5.2 the toggle of an enabled schedule pauses it', () => {
@@ -167,7 +172,7 @@ describe('EntityScheduleCard EL-7011 US-35', () => {
       expect(screen.getByTestId('pipeline-schedule-card-details-7')).toHaveTextContent(
         'Rule of 0 9 * * * from UTC · Europe/Kyiv · Last run: Oct 19, 09:00 · Next: Oct 20, 09:00 · Anna K.',
       );
-      expect(screen.getByTestId('pipeline-schedule-card-status-7')).toHaveTextContent('Skipped');
+      expect(statusChip('pipeline')).toHaveTextContent('Skipped');
       expect(screen.getByTestId('pipeline-schedule-card-toggle-7')).toBeInTheDocument();
     });
 
