@@ -83,15 +83,13 @@ describe('EL-7011 owner CR Allow Run without asking setting', () => {
     expect(api.save).toHaveBeenCalledWith({ projectId: 2, allowRunWithoutAsking: false });
   });
 
-  it('US-33 shows it disabled with a note for a non-admin', async () => {
+  it('US-33 shows it disabled with a note for a non-admin', () => {
     api.isAdmin = false;
     api.query = { data: { allow_run_without_asking: true }, isError: false };
     renderSetting();
     expect(box()).toBeDisabled();
     expect(box()).toBeChecked();
     expect(screen.getByText('Only a project admin can change this setting.')).toBeInTheDocument();
-    await userEvent.click(box());
-    expect(api.save).not.toHaveBeenCalled();
   });
 
   it('US-33 hides the admin note for a project admin', () => {

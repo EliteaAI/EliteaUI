@@ -1,8 +1,9 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useFormik } from 'formik';
+import { Link as RouterLink } from 'react-router-dom';
 
-import { Box, Grid, Typography } from '@mui/material';
+import { Box, Grid, Link, Typography } from '@mui/material';
 
 import { GenerateEntityButton } from '@/[fsd]/entities/generate-entity-with-ai';
 import { useGetScheduleListQuery } from '@/[fsd]/entities/schedule';
@@ -31,8 +32,10 @@ import { useApplicationDetailsQuery, useApplicationListQuery } from '@/api/appli
 import { MAX_DESCRIPTION_LENGTH, PERMISSIONS } from '@/common/constants';
 import StyledTabs from '@/components/StyledTabs';
 import VariableList from '@/components/VariableList';
+import useCheckPermission from '@/hooks/useCheckPermission';
 import useNavBlocker from '@/hooks/useNavBlocker';
 import { StyledGridContainer, TabBarItems } from '@/pages/Common/Components/StyledComponents';
+import RouteDefinitions from '@/routes';
 
 import { APPROVAL_RULE } from '../lib/constants';
 import BuildScheduleWithAiModal from './BuildScheduleWithAiModal';
@@ -96,6 +99,9 @@ const ScheduleForm = memo(props => {
 
   const projectId = useSelectedProjectId();
   const { toastError } = useToast();
+  const { checkPermission } = useCheckPermission();
+  // Only a project admin can change the setting, so only an admin gets the link to it
+  const canChangeProjectSettings = checkPermission(PERMISSIONS.schedules.admin);
   const [list, setList] = useState({ page: 0, query: '' });
   const [lockFailed, setLockFailed] = useState(false);
   const [banner, setBanner] = useState('');
@@ -453,6 +459,17 @@ const ScheduleForm = memo(props => {
               color="text.secondary"
             >
               This project does not allow running without asking.
+              {canChangeProjectSettings && (
+                <>
+                  {' '}
+                  <Link
+                    component={RouterLink}
+                    to={RouteDefinitions.SettingsProjectGeneral}
+                  >
+                    Change it in Settings &gt; Project General
+                  </Link>
+                </>
+              )}
             </Typography>
           )}
           <FieldError message={fieldError('approval_rule')} />
