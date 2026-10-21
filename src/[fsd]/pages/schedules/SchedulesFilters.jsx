@@ -205,6 +205,8 @@ const schedulesFiltersStyles = () => ({
     },
     '& .MuiChip-root': { maxWidth: '7rem' },
     '& .MuiChip-label': { overflow: 'hidden', textOverflow: 'ellipsis' },
+    // Leaves room to type next to the name chip and the "+N" chip
+    '& .MuiAutocomplete-input': { minWidth: '1rem' },
     [breakpoints.down(1100)]: { flex: '1 1 15rem', width: 'auto', minWidth: '15rem' },
     [breakpoints.down('sm')]: { flexBasis: '100%', minWidth: 0 },
   }),

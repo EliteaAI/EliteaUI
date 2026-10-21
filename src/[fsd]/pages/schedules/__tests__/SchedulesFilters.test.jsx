@@ -20,6 +20,16 @@ vi.mock('../OwnerFilter', () => ({
         className="MuiAutocomplete-inputRoot"
         data-testid="owner-input-root"
       >
+        <div
+          className="MuiChip-root"
+          data-testid="owner-chip"
+        >
+          <span className="MuiChip-label">A very long owner name that does not fit</span>
+        </div>
+        <div
+          className="MuiAutocomplete-input"
+          data-testid="owner-input"
+        />
         <button
           type="button"
           data-testid="owner-filter"
@@ -112,6 +122,16 @@ describe('EL-7011 US-27 SchedulesFilters', () => {
     for (const side of ['height', 'paddingTop', 'paddingBottom', 'paddingLeft']) {
       expect(owner[side], side).toBe(type[side]);
     }
+  });
+
+  it('R2.1 EL-7011 BUG-13: a long owner name ends with an ellipsis and the input keeps room to type', () => {
+    renderBar();
+    const chip = screen.getByTestId('owner-chip');
+    const label = getComputedStyle(chip.firstElementChild);
+    expect(getComputedStyle(chip).maxWidth).toBe('7rem');
+    expect(label.overflow).toBe('hidden');
+    expect(label.textOverflow).toBe('ellipsis');
+    expect(getComputedStyle(screen.getByTestId('owner-input')).minWidth).toBe('1rem');
   });
 
   it('R2.4 EL-7011: a regular user sees no Owner filter', () => {
