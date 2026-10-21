@@ -223,8 +223,25 @@ describe('EntityScheduleCard EL-7011 US-35', () => {
     ]);
   });
 
-  // The export permission has no contract in design.md D5: the Export item cannot be asserted yet
-  it.todo('TC-US58-07 R3.1 EL-7011 the menu lists Export before Delete with the export permission');
+  it('TC-US58-07 R3.1 R3.2 EL-7011 CR-16 the menu lists Export before Delete with the export permission', () => {
+    // useScheduleRowActions gives onExport only with the export permission (CR-16)
+    const onExport = vi.fn();
+    mocks.actions = { ...mocks.actions, onExport };
+    renderCard();
+    openMenu();
+
+    expect(screen.getAllByRole('menuitem').map(item => item.textContent)).toEqual([
+      'Run now',
+      'Edit',
+      'Pause',
+      'Open run history',
+      'Export',
+      'Delete',
+    ]);
+    fireEvent.click(screen.getByText('Export'));
+    expect(onExport).toHaveBeenCalledTimes(1);
+    delete mocks.actions.onExport;
+  });
 
   it('TC-US58-10 R2.3 R3.2 EL-7011 hides the Delete icon, Run now, Delete and Export without their keys', () => {
     renderCard({ allowed_actions: ['edit', 'pause'] });
