@@ -347,22 +347,6 @@ export const buildGroups = (items, nameKey = 'name', weightKey = 'spend', max = 
   return groups;
 };
 
-/** Distribute each day's metric proportionally across groups by their total weight. */
-export const distributeByWeight = (daily, groups, metricKey = 'spend') => {
-  const totalW = groups.reduce((acc, g) => acc + g.w, 0) || 1;
-
-  return daily.map(day => {
-    const dayTotal = day[metricKey] || 0;
-    const row = { date: day.date };
-
-    groups.forEach(g => {
-      row[g.key] = dayTotal * (g.w / totalW);
-    });
-
-    return row;
-  });
-};
-
 /**
  * Map (dimension, metricKey) to the per-day breakdown field name on each daily row.
  * spend → by_model / by_source; total_tokens → by_model_tokens / by_source_tokens.
@@ -423,11 +407,9 @@ export const buildSeriesFromDaily = (daily, groupBy, models, bySource, metricKey
     return bd && Object.keys(bd).length > 0;
   });
 
-  const data = hasRealBreakdown
-    ? splitDailyByGroup(daily, groups, bKey, metricKey)
-    : distributeByWeight(daily, groups, metricKey);
+  if (!hasRealBreakdown) return totalFallback();
 
-  return { data, keys: groups.map(g => g.key) };
+  return { data: splitDailyByGroup(daily, groups, bKey, metricKey), keys: groups.map(g => g.key) };
 };
 
 /** Aggregate daily series rows into ISO-week buckets (week starts Monday, clipped to month). */

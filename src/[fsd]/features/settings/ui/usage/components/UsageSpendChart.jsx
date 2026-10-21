@@ -47,10 +47,10 @@ const UsageSpendChart = memo(props => {
     scope = 'project',
   } = props;
 
-  const groupByButtons =
-    scope === 'user' || !canSeeAmounts
-      ? USAGE_GROUP_BY_BUTTONS.filter(b => b.value !== 'member')
-      : USAGE_GROUP_BY_BUTTONS;
+  const canGroupByMember = scope !== 'user' && canSeeAmounts && daily.some(day => day.by_member);
+  const groupByButtons = canGroupByMember
+    ? USAGE_GROUP_BY_BUTTONS
+    : USAGE_GROUP_BY_BUTTONS.filter(b => b.value !== 'member');
 
   const { palette } = useTheme();
   const styles = usageSpendChartStyles();

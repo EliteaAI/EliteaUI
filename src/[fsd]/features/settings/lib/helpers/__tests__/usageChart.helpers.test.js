@@ -77,8 +77,20 @@ describe('buildGroups', () => {
 
 describe('buildSeriesFromDaily', () => {
   const daily = [
-    { date: '2026-10-01', spend: 10, total_tokens: 1000 },
-    { date: '2026-10-02', spend: 20, total_tokens: 2000 },
+    {
+      date: '2026-10-01',
+      spend: 10,
+      total_tokens: 1000,
+      by_model: { 'gpt-4o': 10, 'claude-3': 0 },
+      by_source: { agents: 10, chat: 0 },
+    },
+    {
+      date: '2026-10-02',
+      spend: 20,
+      total_tokens: 2000,
+      by_model: { 'gpt-4o': 8, 'claude-3': 12 },
+      by_source: { agents: 10, chat: 10 },
+    },
   ];
 
   const models = [
@@ -105,22 +117,20 @@ describe('buildSeriesFromDaily', () => {
     expect(data[1].total).toBe(20);
   });
 
-  it('distributes spend proportionally across models when groupBy is "model"', () => {
+  it('stacks each day by its own model split when groupBy is "model"', () => {
     const { data, keys } = UsageHelpers.buildSeriesFromDaily(daily, 'model', models, bySource, 'spend');
 
-    // gpt-4o has 18/(18+12) = 60% weight
     expect(keys).toEqual(['gpt-4o', 'claude-3']);
-    expect(data[0]['gpt-4o']).toBeCloseTo(6); // 10 * 0.6
-    expect(data[0]['claude-3']).toBeCloseTo(4); // 10 * 0.4
+    expect(data[0]).toMatchObject({ 'gpt-4o': 10, 'claude-3': 0 });
+    expect(data[1]).toMatchObject({ 'gpt-4o': 8, 'claude-3': 12 });
   });
 
-  it('distributes spend proportionally across sources when groupBy is "source"', () => {
+  it('stacks each day by its own source split when groupBy is "source"', () => {
     const { data, keys } = UsageHelpers.buildSeriesFromDaily(daily, 'source', models, bySource, 'spend');
 
-    // agents has 20/(20+10) = 66.67% weight
     expect(keys).toEqual(['agents', 'chat']);
-    expect(data[0]['agents']).toBeCloseTo(6.667, 2);
-    expect(data[0]['chat']).toBeCloseTo(3.333, 2);
+    expect(data[0]).toMatchObject({ agents: 10, chat: 0 });
+    expect(data[1]).toMatchObject({ agents: 10, chat: 10 });
   });
 
   it('includes all source keys when bySource has 6 entries (external is not collapsed)', () => {
@@ -132,7 +142,18 @@ describe('buildSeriesFromDaily', () => {
       { source: 'skills', spend: 4 },
       { source: 'external', spend: 2 },
     ];
-    const { keys } = UsageHelpers.buildSeriesFromDaily(daily, 'source', models, sixSources, 'spend');
+    const sixDaily = daily.map(d => ({
+      ...d,
+      by_source: {
+        agents: d.spend * 0.5,
+        chat: d.spend * 0.2,
+        pipelines: d.spend * 0.1,
+        indexing: d.spend * 0.1,
+        skills: d.spend * 0.05,
+        external: d.spend * 0.05,
+      },
+    }));
+    const { keys } = UsageHelpers.buildSeriesFromDaily(sixDaily, 'source', models, sixSources, 'spend');
 
     expect(keys).toContain('external');
     expect(keys).not.toContain('__other');
@@ -148,6 +169,17 @@ describe('buildSeriesFromDaily', () => {
     const { keys } = UsageHelpers.buildSeriesFromDaily(daily, 'model', [], bySource, 'spend');
 
     expect(keys).toEqual(['total']);
+  });
+
+  it('falls back to total when no breakdown fields are present', () => {
+    const noBreakdown = [
+      { date: '2026-10-01', spend: 10 },
+      { date: '2026-10-02', spend: 20 },
+    ];
+    const { keys, data } = UsageHelpers.buildSeriesFromDaily(noBreakdown, 'model', models, [], 'spend');
+
+    expect(keys).toEqual(['total']);
+    expect(data.map(d => d.total)).toEqual([10, 20]);
   });
 
   it('uses total_tokens as metricKey when canSeeAmounts is false', () => {
@@ -227,68 +259,5 @@ describe('splitDailyByGroup', () => {
     const rows = UsageHelpers.splitDailyByGroup(sparse, groups, 'by_model', 'spend');
 
     expect(rows[0]['claude-3']).toBe(0);
-  });
-});
-
-describe('buildSeriesFromDaily — real breakdown path', () => {
-  const daily = [
-    { date: '2026-10-01', spend: 10, by_model: { 'gpt-4o': 8, 'claude-3': 2 } },
-    { date: '2026-10-02', spend: 20, by_model: { 'gpt-4o': 5, 'claude-3': 15 } },
-  ];
-  const models = [
-    { model: 'gpt-4o', spend: 18 },
-    { model: 'claude-3', spend: 12 },
-  ];
-
-  it('uses the real per-day breakdown when by_model is present', () => {
-    const { data } = UsageHelpers.buildSeriesFromDaily(daily, 'model', models, [], 'spend');
-
-    // Day 1: gpt-4o=8, not the proportional 10*0.6=6
-    expect(data[0]['gpt-4o']).toBe(8);
-    expect(data[0]['claude-3']).toBe(2);
-    // Day 2: real values, not proportional
-    expect(data[1]['gpt-4o']).toBe(5);
-    expect(data[1]['claude-3']).toBe(15);
-  });
-
-  it('falls back to distributeByWeight when no breakdown fields are present', () => {
-    const noBreakdown = [
-      { date: '2026-10-01', spend: 10 },
-      { date: '2026-10-02', spend: 20 },
-    ];
-    const { data } = UsageHelpers.buildSeriesFromDaily(noBreakdown, 'model', models, [], 'spend');
-
-    // Falls back to proportional: gpt-4o = 18/30 = 60%
-    expect(data[0]['gpt-4o']).toBeCloseTo(6);
-  });
-});
-
-// ─── distributeByWeight ───────────────────────────────────────────────────────
-
-describe('distributeByWeight', () => {
-  it('allocates each day proportionally and preserves the date key', () => {
-    const daily = [{ date: '2026-10-01', spend: 30, total_tokens: 3000 }];
-    const groups = [
-      { key: 'a', w: 60 },
-      { key: 'b', w: 40 },
-    ];
-    const rows = UsageHelpers.distributeByWeight(daily, groups, 'spend');
-
-    expect(rows[0].date).toBe('2026-10-01');
-    expect(rows[0].a).toBeCloseTo(18); // 30 * 0.6
-    expect(rows[0].b).toBeCloseTo(12); // 30 * 0.4
-  });
-
-  it('sums to the day total across all series', () => {
-    const daily = [{ date: '2026-10-01', spend: 50 }];
-    const groups = [
-      { key: 'x', w: 3 },
-      { key: 'y', w: 1 },
-      { key: 'z', w: 1 },
-    ];
-    const rows = UsageHelpers.distributeByWeight(daily, groups, 'spend');
-    const sum = rows[0].x + rows[0].y + rows[0].z;
-
-    expect(sum).toBeCloseTo(50);
   });
 });

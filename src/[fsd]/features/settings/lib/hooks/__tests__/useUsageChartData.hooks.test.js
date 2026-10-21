@@ -8,9 +8,27 @@ import { useUsageChartData } from '../useUsageChartData.hooks.js';
 afterEach(() => cleanup());
 
 const daily = [
-  { date: '2026-10-01', spend: 10, total_tokens: 1000 },
-  { date: '2026-10-02', spend: 20, total_tokens: 2000 },
-  { date: '2026-10-03', spend: 15, total_tokens: 1500 },
+  {
+    date: '2026-10-01',
+    spend: 10,
+    total_tokens: 1000,
+    by_model: { 'gpt-4o': 10, 'claude-3': 0 },
+    by_source: { agents: 10, chat: 0 },
+  },
+  {
+    date: '2026-10-02',
+    spend: 20,
+    total_tokens: 2000,
+    by_model: { 'gpt-4o': 5, 'claude-3': 15 },
+    by_source: { agents: 10, chat: 10 },
+  },
+  {
+    date: '2026-10-03',
+    spend: 15,
+    total_tokens: 1500,
+    by_model: { 'gpt-4o': 10, 'claude-3': 5 },
+    by_source: { agents: 5, chat: 10 },
+  },
 ];
 
 const models = [
@@ -67,14 +85,11 @@ describe('useUsageChartData — groupBy model', () => {
     expect(result.current.seriesKeys).toContain('claude-3');
   });
 
-  it('distributes each day proportionally across models', () => {
+  it('stacks each day by its own model split', () => {
     const { result } = renderHook(() => useUsageChartData({ ...baseProps, groupBy: 'model' }));
 
-    // gpt-4o weight = 25/(25+20) ≈ 55.56%
-    const firstDay = result.current.chartData[0];
-
-    expect(firstDay['gpt-4o']).toBeCloseTo(10 * (25 / 45), 2);
-    expect(firstDay['claude-3']).toBeCloseTo(10 * (20 / 45), 2);
+    expect(result.current.chartData[0]).toMatchObject({ 'gpt-4o': 10, 'claude-3': 0 });
+    expect(result.current.chartData[1]).toMatchObject({ 'gpt-4o': 5, 'claude-3': 15 });
   });
 });
 
