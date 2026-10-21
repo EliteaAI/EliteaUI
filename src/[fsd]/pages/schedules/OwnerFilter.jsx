@@ -1,10 +1,13 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { debounce } from '@mui/material';
+import { Box, Chip, Typography, debounce } from '@mui/material';
 
+import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { useToast, useUserList } from '@/[fsd]/shared/lib/hooks';
 import { Autocomplete } from '@/[fsd]/shared/ui';
+import RemoveIcon from '@/assets/remove-icon.svg?react';
 import { buildErrorMessage } from '@/common/utils';
+import UserAvatar from '@/components/UserAvatar';
 
 const SEARCH_DELAY_MS = 300;
 const USERS_PAGE_SIZE = 20;
@@ -47,13 +50,74 @@ const OwnerFilter = memo(({ selectedOwners, onChangeOwners }) => {
 
   const handleInputChange = useCallback((_, value) => debouncedSetQuery(value), [debouncedSetQuery]);
 
+  // MUI ignores limitTags while the field has focus, so the field always shows the first owner and "+N"
+  const styles = ownerFilterStyles();
+  const renderValue = useCallback(
+    (value, getItemProps) => {
+      if (!value.length) return null;
+      const [first, ...others] = value;
+      const { key: firstKey, ...firstItemProps } = getItemProps({ index: 0 });
+      const otherNames = others.map(owner => owner.name);
+      return (
+        <>
+          <Chip
+            key={firstKey}
+            data-testid="schedules-owner-chip"
+            sx={styles.chip}
+            label={
+              <Box sx={styles.chipLabel}>
+                <UserAvatar
+                  name={first.name}
+                  avatar={first.avatar}
+                  size={16}
+                />
+                <Typography
+                  variant="bodySmall"
+                  color="text.secondary"
+                  noWrap
+                >
+                  {first.name}
+                </Typography>
+              </Box>
+            }
+            deleteIcon={<RemoveIcon fill="currentColor" />}
+            {...firstItemProps}
+          />
+          {others.length > 0 && (
+            <StyledTooltip
+              title={otherNames.join('\n')}
+              placement="top"
+              extraStyles={{ whiteSpace: 'pre-line' }}
+            >
+              <Chip
+                data-testid="schedules-owner-more"
+                tabIndex={0}
+                aria-label={`${others.length} more owners: ${otherNames.join(', ')}`}
+                sx={[styles.chip, styles.more]}
+                label={
+                  <Typography
+                    variant="bodySmall"
+                    color="text.secondary"
+                  >
+                    +{others.length}
+                  </Typography>
+                }
+              />
+            </StyledTooltip>
+          )}
+        </>
+      );
+    },
+    [styles],
+  );
+
   return (
     <Autocomplete.UserSearchSelect
       userList={userList}
       selectedUsers={selectedOwners}
       onChangeUsers={onChangeOwners}
       filterOptions={keepServerResult}
-      limitTags={1}
+      renderValue={renderValue}
       onInputChange={handleInputChange}
       slotProps={{ listBox: { onScroll: handleScroll } }}
     />
@@ -61,5 +125,20 @@ const OwnerFilter = memo(({ selectedOwners, onChangeOwners }) => {
 });
 
 OwnerFilter.displayName = 'OwnerFilter';
+
+/** @type {MuiSx} */
+const ownerFilterStyles = () => ({
+  // The chip look of the shared drop-down
+  chip: ({ palette }) => ({
+    height: '1.5rem',
+    margin: '0 !important',
+    backgroundColor: palette.components.autocompleteChip.background.disabled,
+    '& .MuiChip-label': { paddingLeft: '0.5rem', paddingRight: '0.5rem' },
+    '& .MuiChip-deleteIcon': { color: palette.icon.default, marginLeft: 0 },
+    '& .MuiChip-deleteIcon:hover': { color: palette.icon.secondary },
+  }),
+  chipLabel: { display: 'flex', alignItems: 'center', gap: '0.25rem', minWidth: 0 },
+  more: { flexShrink: 0 },
+});
 
 export default OwnerFilter;
