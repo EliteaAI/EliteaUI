@@ -11,8 +11,7 @@ import {
   withDefaultSkillModel,
   withoutSkillChatModel,
 } from '@/[fsd]/features/skill/lib/helpers';
-import { useSkillModels } from '@/[fsd]/features/skill/lib/hooks';
-import { SkillValidateSchema } from '@/[fsd]/features/skill/lib/validation';
+import { useSkillModels, useSkillValidationSchema } from '@/[fsd]/features/skill/lib/hooks';
 import { CreateSkillForm } from '@/[fsd]/features/skill/ui';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 
@@ -57,6 +56,7 @@ const SkillEditor = memo(props => {
   );
 
   const { defaultModel, isLoadingModels } = useSkillModels();
+  const validationSchema = useSkillValidationSchema(data?.version_details?.instructions);
   const initialValues = useMemo(() => buildInitialValues(data, defaultModel), [data, defaultModel]);
   const isAwaitingSkillDetails = !!skillId && data?.id !== skillId;
 
@@ -83,7 +83,7 @@ const SkillEditor = memo(props => {
       onClose={onCloseSkillEditor}
       title={isCreateMode ? 'Create New Skill' : skill?.name || skill?.meta?.name || 'Skill'}
       initialValues={initialValues}
-      validationSchema={SkillValidateSchema}
+      validationSchema={validationSchema}
       error={error}
       saveButton={
         isCreateMode ? (

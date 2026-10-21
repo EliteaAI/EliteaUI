@@ -41,7 +41,7 @@ const renderEditor = props => {
 
 const insertAt = (view, from, insert) => {
   act(() => {
-    view.dispatch({ changes: { from, insert } });
+    view.dispatch({ changes: { from, insert }, userEvent: 'input.type' });
   });
 };
 

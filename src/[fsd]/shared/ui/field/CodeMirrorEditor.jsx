@@ -2,71 +2,14 @@ import { forwardRef, memo, useImperativeHandle, useMemo, useRef } from 'react';
 
 import { useTheme } from '@mui/material';
 
+import { CodeMirrorEditorHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useCodeMirror } from '@/[fsd]/shared/lib/hooks';
 import { history, redo, redoDepth, undo, undoDepth } from '@codemirror/commands';
 import { lintGutter } from '@codemirror/lint';
 import { searchKeymap } from '@codemirror/search';
-import { EditorState } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
 import { vscodeDarkInit, vscodeLightInit } from '@uiw/codemirror-theme-vscode';
-import CodeMirror, { EditorView, ExternalChange } from '@uiw/react-codemirror';
-
-const countDocumentLength = text => text.length;
-
-const createMaxLengthExtension = (maxLength, countLength) => {
-  if (!maxLength || maxLength <= 0) {
-    return [];
-  }
-
-  return EditorState.transactionFilter.of(tr => {
-    if (!tr.docChanged || tr.annotation(ExternalChange)) return tr;
-    const newCount = countLength(tr.newDoc.toString());
-    const allowedCount = Math.max(maxLength, countLength(tr.startState.doc.toString()));
-    if (newCount <= allowedCount) return tr;
-
-    const currentLength = tr.startState.doc.length;
-    const maxDocumentLength = allowedCount + tr.newDoc.length - newCount;
-    const changes = [];
-    let runningLength = currentLength;
-
-    tr.changes.iterChanges((fromA, toA, _fromB, _toB, inserted) => {
-      const insertText = inserted.toString();
-      const deleteCount = toA - fromA;
-      const netChange = insertText.length - deleteCount;
-
-      if (netChange <= 0) {
-        changes.push({ from: fromA, to: toA, insert: insertText });
-        runningLength += netChange;
-        return;
-      }
-
-      const spaceLeft = maxDocumentLength - runningLength;
-
-      if (netChange <= spaceLeft) {
-        changes.push({ from: fromA, to: toA, insert: insertText });
-        runningLength += netChange;
-      } else {
-        const allowedInsertLength = Math.max(0, deleteCount + spaceLeft);
-        changes.push({ from: fromA, to: toA, insert: insertText.slice(0, allowedInsertLength) });
-        runningLength = runningLength - deleteCount + allowedInsertLength;
-      }
-    });
-
-    if (changes.length === 0) return [];
-
-    const hasRealChanges = changes.some(c => c.from !== c.to || c.insert !== '');
-    if (!hasRealChanges) return [];
-
-    const originalAnchor = tr.startState.selection.main.head;
-    const docLengthChange = runningLength - currentLength;
-    const newAnchor = Math.max(0, originalAnchor + docLengthChange);
-
-    return {
-      changes,
-      selection: { anchor: Math.min(newAnchor, maxDocumentLength) },
-    };
-  });
-};
+import CodeMirror, { EditorView } from '@uiw/react-codemirror';
 
 const CodeMirrorEditor = memo(
   forwardRef((props, ref) => {
@@ -95,7 +38,7 @@ const CodeMirrorEditor = memo(
       className,
       readOnly = false,
       maxLength = 0,
-      countLength = countDocumentLength,
+      countLength,
     } = props;
 
     const extensions = useMemo(() => {
@@ -337,7 +280,7 @@ const CodeMirrorEditor = memo(
           ...syntaxErrorListener,
           ...contentTestIdExtension,
           ...extensions,
-          createMaxLengthExtension(maxLength, countLength),
+          CodeMirrorEditorHelpers.createMaxLengthExtension(maxLength, countLength),
         ]}
         onChange={onInputHandler}
       />
