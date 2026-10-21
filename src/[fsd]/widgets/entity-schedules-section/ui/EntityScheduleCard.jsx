@@ -180,6 +180,7 @@ const entityScheduleCardStyles = () => ({
       columnGap: '1rem',
     },
   }),
+  // The timezoneHint of the toolkit Schedule card (RunIndexScheduleContent): same size, italic, wraps
   timezoneHint: ({ palette }) => ({
     gridArea: 'shown',
     fontStyle: 'italic',
