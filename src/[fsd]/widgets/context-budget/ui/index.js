@@ -1,6 +1,8 @@
 // UI components public API
 export { default as ContextBudgetInfo } from './ContextBudgetInfo';
-export { default as ContextBudgetCollapsed } from './ContextBudgetCollapsed';
+export { default as ContextBudgetDetails } from './ContextBudgetDetails';
+export { default as ContextBudgetRing } from './ContextBudgetRing';
+export { default as ContextWindowModeSelector } from './ContextWindowModeSelector';
 export { default as ContextBudgetCompact } from './ContextBudgetCompact';
 export { default as ContextBudgetExpanded } from './ContextBudgetExpanded';
 export { default as ContextBudgetHeader } from './ContextBudgetHeader';

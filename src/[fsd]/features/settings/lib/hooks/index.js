@@ -17,3 +17,4 @@ export { useProjectBackup } from './useProjectBackup.hooks.js';
 export { useChatTemplates } from './useChatTemplates.hooks.js';
 export { useRunAnalyticsFetching } from './useRunAnalyticsFetching.hooks.js';
 export { useMultiSectionConfigurations } from './useMultiSectionConfigurations.hooks';
+export { useProjectContextWindowMode } from './useProjectContextWindowMode.hooks';

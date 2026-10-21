@@ -10,7 +10,7 @@ import { ContextBudgetStatsDisplay } from '@/[fsd]/widgets/context-budget/ui';
  * Displays stats and optional high utilization warning.
  */
 const ContextBudgetTooltipContent = memo(props => {
-  const { stats, isHighUtilization } = props;
+  const { stats, isHighUtilization, showTotals = false } = props;
 
   const styles = contextBudgetTooltipContentStyles();
 
@@ -25,6 +25,7 @@ const ContextBudgetTooltipContent = memo(props => {
       <ContextBudgetStatsDisplay
         stats={stats}
         showTokens
+        showTotals={showTotals}
         labelStyle={styles.tooltipText}
         valueStyle={styles.tooltipText}
       />

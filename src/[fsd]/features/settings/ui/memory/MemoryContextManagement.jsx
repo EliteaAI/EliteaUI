@@ -4,6 +4,7 @@ import { useFormikContext } from 'formik';
 
 import { Box, Typography } from '@mui/material';
 
+import { useProjectContextWindowMode } from '@/[fsd]/features/settings/lib/hooks';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { handleConvertToNumberChange } from '@/[fsd]/shared/lib/helpers';
 import { Label, Switch } from '@/[fsd]/shared/ui';
@@ -18,6 +19,7 @@ const MemoryContextManagement = memo(props => {
   const { values, errors, setFieldValue } = useFormikContext();
 
   const styles = memoryContextManagementStyles();
+  const { mode: windowMode } = useProjectContextWindowMode();
 
   const handleContextEnabledChange = useCallback(
     (event, checkedValue) => {
@@ -76,48 +78,34 @@ const MemoryContextManagement = memo(props => {
 
               {isEnabled && (
                 <>
-                  <Box sx={styles.fieldsRow}>
-                    <Box sx={styles.field}>
-                      <Label.InfoLabelWithTooltip
-                        label="Max Context Tokens"
-                        tooltip="Maximum number of tokens to keep in chat context"
-                        sx={styles.label}
-                      />
-                      <FormInput
-                        sx={styles.formInput}
-                        type="text"
-                        inputMode="numeric"
-                        value={values.max_context_tokens}
-                        onChange={e => handleNumericInputChange(e, 'max_context_tokens')}
-                        error={!!errors.max_context_tokens}
-                        helperText={errors.max_context_tokens || ' '}
-                        inputProps={{
-                          pattern: '[1-9][0-9]*',
-                          'data-testid': 'max-context-tokens-input',
-                        }}
-                      />
-                    </Box>
+                  <Box sx={styles.windowRow}>
+                    <Typography
+                      variant="bodySmall"
+                      data-testid="memory-context-window-mode"
+                    >
+                      {`Context window: ${windowMode === 'full' ? 'Full' : 'Balanced'} (set by project admins in Project settings → Chat configuration)`}
+                    </Typography>
+                  </Box>
 
-                    <Box sx={styles.field}>
-                      <Label.InfoLabelWithTooltip
-                        label="Preserve Recent Messages"
-                        tooltip="Number of most recent messages to always keep in context"
-                        sx={styles.label}
-                      />
-                      <FormInput
-                        sx={styles.formInput}
-                        type="text"
-                        inputMode="numeric"
-                        value={values.preserve_recent_messages}
-                        onChange={e => handleNumericInputChange(e, 'preserve_recent_messages')}
-                        error={!!errors.preserve_recent_messages}
-                        helperText={errors.preserve_recent_messages || ' '}
-                        inputProps={{
-                          pattern: '[1-9][0-9]*',
-                          'data-testid': 'preserve-recent-messages-input',
-                        }}
-                      />
-                    </Box>
+                  <Box sx={styles.field}>
+                    <Label.InfoLabelWithTooltip
+                      label="Preserve Recent Messages"
+                      tooltip="Number of most recent messages to always keep in context"
+                      sx={styles.label}
+                    />
+                    <FormInput
+                      sx={styles.formInput}
+                      type="text"
+                      inputMode="numeric"
+                      value={values.preserve_recent_messages}
+                      onChange={e => handleNumericInputChange(e, 'preserve_recent_messages')}
+                      error={!!errors.preserve_recent_messages}
+                      helperText={errors.preserve_recent_messages || ' '}
+                      inputProps={{
+                        pattern: '[1-9][0-9]*',
+                        'data-testid': 'preserve-recent-messages-input',
+                      }}
+                    />
                   </Box>
 
                   <Box sx={styles.toggleSection}>
@@ -187,10 +175,10 @@ const memoryContextManagementStyles = () => ({
   toggleLabel: {
     gap: '0.7rem',
   },
-  fieldsRow: {
-    display: 'flex',
-    gap: '1.5rem',
-  },
+  windowRow: ({ palette }) => ({
+    padding: '0 0.75rem',
+    color: palette.text.primary,
+  }),
   subSections: {
     display: 'flex',
     flexDirection: 'column',

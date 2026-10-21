@@ -49,7 +49,8 @@ const MemorySummarization = memo(props => {
             Automatic Summarization
           </Typography>
           <Typography variant="bodySmall">
-            Summarize older messages to free up context space when the limit is reached
+            Compact older history at 90% of usable input, retaining recent messages and authoritative
+            instructions.
           </Typography>
         </Box>
         <Switch.BaseSwitch

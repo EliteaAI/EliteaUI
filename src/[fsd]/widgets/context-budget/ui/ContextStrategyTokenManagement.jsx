@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useCallback } from 'react';
 
 import { Box } from '@mui/material';
 
@@ -6,6 +6,8 @@ import { Label } from '@/[fsd]/shared/ui';
 // FEATURE TOGGLE: Pruning Strategy - Hidden
 // import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import FormInput from '@/components/FormInput';
+
+import ContextWindowModeSelector from './ContextWindowModeSelector';
 
 // FEATURE TOGGLE: Pruning Strategy - Hidden
 // const CONTEXT_STRATEGIES = [
@@ -32,8 +34,13 @@ import FormInput from '@/components/FormInput';
 // ];
 
 const ContextStrategyTokenManagement = memo(props => {
-  const { formData, errors, handleInputChange, isEnabled } = props;
+  const { formData, errors, handleInputChange, isEnabled, modelWindow, manualMaxTokensEnabled } = props;
   const styles = tokenManagementStyles();
+
+  const handleWindowModeChange = useCallback(
+    value => handleInputChange({ target: { value } }, 'context_window_mode'),
+    [handleInputChange],
+  );
 
   return (
     <Box sx={styles.container}>
@@ -56,28 +63,38 @@ const ContextStrategyTokenManagement = memo(props => {
         />
       </Box> */}
 
-      {/* Max Context Tokens */}
-      <Box sx={styles.section}>
-        <Label.InfoLabelWithTooltip
-          label="Max Context Tokens"
-          tooltip="Maximum number of tokens to keep in chat context"
-          sx={styles.label}
-        />
-        <FormInput
-          sx={styles.formInput}
-          type="text"
-          inputMode="numeric"
-          value={formData.max_context_tokens}
-          onChange={e => handleInputChange(e, 'max_context_tokens', true)}
-          error={!!errors.max_context_tokens}
-          helperText={errors.max_context_tokens || ' '}
+      <Box sx={styles.fullRow}>
+        <ContextWindowModeSelector
+          value={formData.context_window_mode}
+          onChange={handleWindowModeChange}
           disabled={!isEnabled}
-          inputProps={{
-            pattern: '[1-9][0-9]*',
-            'data-testid': 'context-modal-max-tokens-input',
-          }}
+          modelWindow={modelWindow}
         />
       </Box>
+
+      {manualMaxTokensEnabled && (
+        <Box sx={styles.section}>
+          <Label.InfoLabelWithTooltip
+            label="Max Context Tokens"
+            tooltip="Admin only, for summarization testing: manual summarization trigger that replaces the context window mode's value. Leave empty to use the mode."
+            sx={styles.label}
+          />
+          <FormInput
+            sx={styles.formInput}
+            type="text"
+            inputMode="numeric"
+            value={formData.manual_max_context_tokens ?? ''}
+            onChange={e => handleInputChange(e, 'manual_max_context_tokens')}
+            error={!!errors.manual_max_context_tokens}
+            helperText={errors.manual_max_context_tokens || ' '}
+            disabled={!isEnabled}
+            inputProps={{
+              pattern: '[1-9][0-9]*',
+              'data-testid': 'context-modal-manual-max-tokens-input',
+            }}
+          />
+        </Box>
+      )}
 
       {/* Preserve Recent Messages */}
       <Box sx={styles.section}>
@@ -142,6 +159,10 @@ const tokenManagementStyles = () => ({
     flexDirection: 'column',
     gap: '0.5rem',
     padding: '0rem 0rem',
+  },
+  fullRow: {
+    gridColumn: '1 / -1',
+    paddingBottom: '1rem',
   },
   sectionWithLargerGap: {
     gap: '0.6rem',
