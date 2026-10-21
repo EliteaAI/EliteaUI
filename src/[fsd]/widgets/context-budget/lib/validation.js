@@ -16,6 +16,10 @@ export const contextStrategyValidationSchema = yup.object({
     .min(
       VALIDATION_LIMITS.MANUAL_MAX_CONTEXT_TOKENS.MIN,
       `Must be at least ${VALIDATION_LIMITS.MANUAL_MAX_CONTEXT_TOKENS.MIN}`,
+    )
+    .max(
+      VALIDATION_LIMITS.MANUAL_MAX_CONTEXT_TOKENS.MAX,
+      `Cannot exceed ${VALIDATION_LIMITS.MANUAL_MAX_CONTEXT_TOKENS.MAX.toLocaleString()}`,
     ),
   preserve_recent_messages: yup
     .number()

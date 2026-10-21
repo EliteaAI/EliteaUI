@@ -2,6 +2,7 @@ export const SEPARATOR = '$$$';
 
 export const CONTEXT_BUDGET = {
   HIGH_UTILIZATION_THRESHOLD: 1,
+  // Fallback only, when the server does not report compaction_threshold
   COMPACTION_RATIO: 0.9,
 };
 
@@ -10,6 +11,7 @@ export const CONTEXT_WINDOW_MODES = {
   FULL: 'full',
 };
 
+// Mirrors the backend Balanced cap; used only for the just-switched model preview and the "identical" hint
 export const BALANCED_WINDOW_TOKENS = 272000;
 
 export const CONTEXT_WINDOW_COPY = {
@@ -50,6 +52,7 @@ export const VALIDATION_LIMITS = {
   },
   MANUAL_MAX_CONTEXT_TOKENS: {
     MIN: 1000,
+    MAX: 10000000,
   },
 };
 

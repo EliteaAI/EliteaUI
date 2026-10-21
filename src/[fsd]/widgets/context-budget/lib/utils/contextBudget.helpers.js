@@ -8,10 +8,8 @@ const decimalsFor = value => (value < 1 ? 4 : 2);
 export const formatApproxCost = chatUsage => {
   if (!chatUsage) return { text: '—', partial: false, tracked: false };
   const unpriced = chatUsage.unpriced_models || [];
-  if (chatUsage.cost === null || chatUsage.cost === undefined) {
-    return { text: '—', partial: unpriced.length > 0, tracked: true };
-  }
-  const value = Number(chatUsage.cost);
+  const value = chatUsage.cost == null ? NaN : Number(chatUsage.cost);
+  if (Number.isNaN(value)) return { text: '—', partial: unpriced.length > 0, tracked: true };
   const suffix = unpriced.length ? '+' : '';
   return {
     text: `≈ $${value.toFixed(decimalsFor(value))}${suffix}`,
@@ -20,5 +18,4 @@ export const formatApproxCost = chatUsage => {
   };
 };
 
-export const formatTokens = value =>
-  value === null || value === undefined ? '—' : formatNumberWithSpaces(value);
+export const formatTokens = value => (value == null ? '—' : formatNumberWithSpaces(value));

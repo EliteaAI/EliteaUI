@@ -73,6 +73,7 @@ const ContextBudgetInfo = memo(props => {
   } = contextStatus;
   const summariesGenerated = context_analytics?.summaries_generated || 0;
   const windowMode = contextStrategy?.context_window_mode || window_mode || CONTEXT_WINDOW_MODES.BALANCED;
+  // `compact` is the Agents/Pipelines panels, whose model is not in currentChatModel; the ring is `collapsed`
   const previewWindow =
     !compact && selectedModelWindow && selectedModelWindow !== model_window
       ? windowMode === CONTEXT_WINDOW_MODES.FULL

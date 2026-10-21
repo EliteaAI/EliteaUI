@@ -17,7 +17,7 @@ export const useProjectContextWindowMode = () => {
   const { CONTEXT_WINDOW_MODES } = ContextStrategyConstants;
   const projectId = useSelectedProjectId();
   const { toastError } = useToast();
-  const { data, refetch, isFetching } = useGetConfigurationsListQuery(
+  const { data, isFetching } = useGetConfigurationsListQuery(
     { projectId, type: SETTINGS_TYPE, includeShared: false },
     { skip: !projectId },
   );
@@ -41,14 +41,13 @@ export const useProjectContextWindowMode = () => {
         };
         if (current?.id) await update({ projectId, configId: current.id, body }).unwrap();
         else await create({ projectId, body }).unwrap();
-        await refetch();
       } catch (error) {
         toastError(error?.data?.error || 'Unable to update the context window setting');
       } finally {
         setSaving(false);
       }
     },
-    [current?.id, projectId, update, create, refetch, toastError],
+    [current?.id, projectId, update, create, toastError],
   );
 
   return { mode, saveMode, saving: saving || isFetching };

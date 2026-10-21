@@ -33,6 +33,7 @@ const ContextBudgetRing = memo(props => {
   } = props;
 
   const anchorRef = useRef(null);
+  const paperRef = useRef(null);
   const [open, setOpen] = useState(false);
   const { isOpen: isModalOpen, handleOpen: handleModalOpen, handleClose: handleModalClose } = useModal();
   const styles = contextBudgetRingStyles(utilizationColor);
@@ -55,24 +56,29 @@ const ContextBudgetRing = memo(props => {
     [toggle, close],
   );
 
+  const isModalOpenRef = useRef(isModalOpen);
+  useEffect(() => {
+    isModalOpenRef.current = isModalOpen;
+  }, [isModalOpen]);
+
   // Focus can leave the popover (e.g. after the quick switch re-renders), so listen on the document
   useEffect(() => {
-    if (!open || isModalOpen) return undefined;
+    if (!open) return undefined;
     const handleEscape = event => {
-      if (event.key === 'Escape') {
+      if (event.key === 'Escape' && !isModalOpenRef.current) {
         close();
         anchorRef.current?.focus();
       }
     };
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
-  }, [open, isModalOpen, close]);
+  }, [open, close]);
 
+  // The edit modal is opened only after the popover closes and the switch tooltips are disabled,
+  // so only the anchor (which toggles itself) and the paper need to be excluded
   const handleClickAway = useCallback(
     event => {
-      if (anchorRef.current?.contains(event.target)) return;
-      // The edit modal and the segmented tooltips render in portals outside the popover
-      if (event.target?.closest?.('.MuiDialog-root, .MuiPopover-root, .MuiTooltip-popper')) return;
+      if (anchorRef.current?.contains(event.target) || paperRef.current?.contains(event.target)) return;
       close();
     },
     [close],
@@ -135,6 +141,7 @@ const ContextBudgetRing = memo(props => {
         {({ TransitionProps }) => (
           <Grow {...TransitionProps}>
             <Paper
+              ref={paperRef}
               sx={styles.paper}
               role="dialog"
               aria-label="Context budget"
