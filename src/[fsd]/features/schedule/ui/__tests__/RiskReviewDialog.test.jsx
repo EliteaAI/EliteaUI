@@ -181,6 +181,12 @@ describe('EL-7011 owner CR RiskReviewDialog', () => {
     expect(screen.queryByRole('link', { name: 'Open Project General' })).not.toBeInTheDocument();
   });
 
+  it('disables Run without asking when the risk check sends no allowed flag', () => {
+    setup({ runWithoutAskingAllowed: undefined });
+
+    expect(screen.getByRole('radio', { name: /Run without asking/ })).toBeDisabled();
+  });
+
   it('gives an admin the link to Project General', () => {
     setup({ runWithoutAskingAllowed: false, showSettingsLink: true });
 
