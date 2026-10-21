@@ -162,6 +162,12 @@ export const getCaseGuardrailChip = execution => {
       tooltip: 'The agent parked on a sub-agent fan-out; a batch run cannot resume it.',
     };
   }
+  if (execution.status === CASE_EXECUTION_STATUS.guardrailBlocked) {
+    return {
+      label: 'Input blocked',
+      tooltip: 'The input guardrail found a credential or personal data in the case input, so the agent was not run.',
+    };
+  }
   if (execution.status === CASE_EXECUTION_STATUS.guardrailPaused) {
     return {
       label: 'Paused for review',

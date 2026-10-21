@@ -60,6 +60,23 @@ export default function useCreateConversation({
     [setFolders],
   );
 
+  // Folder assignment failed but the conversation exists — keep it visible in the ungrouped list
+  const fallbackToUngrouped = useCallback(
+    (folderId, createdConversation) => {
+      updateFolderConversations(folderId, prev => prev.filter(c => !c.isNew));
+      setConversations(prev =>
+        sortConversations([
+          { ...createdConversation, folder_id: null },
+          ...prev.filter(c => !c.isNew && c.id !== createdConversation.id),
+        ]),
+      );
+      setActiveConversation(prev =>
+        prev?.id === createdConversation.id ? { ...prev, folder_id: null } : prev,
+      );
+    },
+    [setActiveConversation, setConversations, updateFolderConversations],
+  );
+
   const onCreateConversation = useCallback(
     async (newConversation, onCreatedCallback, shouldSetActiveAfterCallback, folderId = null) => {
       if (activeConversation?.id && activeConversation?.uuid && !activeConversation?.isPlayback) {
@@ -149,7 +166,7 @@ export default function useCreateConversation({
             const editResult = await editConversation({ projectId, id: result.data.id, folder_id: folderId });
             if (editResult.error) {
               toastError(buildErrorMessage(editResult.error));
-              updateFolderConversations(folderId, prev => prev.filter(c => !c.isNew));
+              fallbackToUngrouped(folderId, conversationWithTimestamp);
             } else {
               updateFolderConversations(folderId, prev =>
                 sortConversations([
@@ -221,7 +238,7 @@ export default function useCreateConversation({
                 });
                 if (editResult.error) {
                   toastError(buildErrorMessage(editResult.error));
-                  updateFolderConversations(folderId, prev => prev.filter(c => !c.isNew));
+                  fallbackToUngrouped(folderId, conversationWithTimestamp);
                 } else {
                   updateFolderConversations(folderId, prev =>
                     sortConversations([
@@ -270,6 +287,7 @@ export default function useCreateConversation({
       setConversations,
       setFolders,
       updateFolderConversations,
+      fallbackToUngrouped,
       dispatch,
       selectConversation,
       toastError,

@@ -183,6 +183,9 @@ export const SocketMessageType = {
   Freeform: 'freeform',
   Error: 'error',
   LlmError: 'llm_error',
+  InputGuardrailBlocked: 'input_guardrail_blocked',
+  InputGuardrailNotice: 'input_guardrail_notice',
+  AgentInputGuardrail: 'agent_input_guardrail',
   PipelineFinish: 'pipeline_finish',
   AgentThinkingStep: 'agent_thinking_step',
   AgentThinkingStepUpdate: 'agent_thinking_step_update',
@@ -534,6 +537,7 @@ export const PERMISSIONS = {
   chat: {
     list: 'models.chat.conversations.list',
     create: 'models.chat.conversations.create',
+    edit: 'models.chat.conversation.edit',
     canvas: {
       create: 'models.chat.canvas.create',
       update: 'models.chat.canvas.update',

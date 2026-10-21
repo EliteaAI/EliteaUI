@@ -3,4 +3,5 @@ export { default as CredentialsControls } from './credentials-tab-bar/Credential
 export { default as CredentialOptionLabel } from './credential-option-label/CredentialOptionLabel';
 export { default as CredentialsSelect } from './credentials-select/CredentialsSelect';
 export { default as LlmModelForm } from './llm-model-form/LlmModelForm';
+export { default as StoredLoginStatus } from './stored-login-status/StoredLoginStatus';
 export { default as CredentialLogoutModal } from './credential-logout-modal/CredentialLogoutModal';
