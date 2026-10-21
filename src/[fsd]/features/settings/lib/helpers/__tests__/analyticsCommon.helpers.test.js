@@ -8,10 +8,10 @@ import {
   collectFailedRunCalls,
   describeRunModels,
   describeRunVersions,
+  entityKindLabel,
   fmtCost,
   fmtDuration,
   fmtNum,
-  formatTriggerLabel,
   formatVersionLabel,
   getPresetRange,
   pickEntityRoutePattern,
@@ -205,20 +205,23 @@ describe('shared entity labels', () => {
 
     Object.entries(expected).forEach(([key, label]) => {
       expect(triggerSourceLabel(key)).toBe(label);
-      expect(formatTriggerLabel(key)).toBe(label);
     });
+  });
+
+  it('R1.2 EL-7011 labels the entity kind and shows a dash when it is missing or empty', () => {
+    expect(entityKindLabel('agent')).toBe('Agent');
+    expect(entityKindLabel('pipeline')).toBe('Pipeline');
+    expect(entityKindLabel(null)).toBe('-');
+    expect(entityKindLabel(undefined)).toBe('-');
+    expect(entityKindLabel('')).toBe('-');
   });
 
   it('R2.1 EL-7011 shows the raw key of an unlabelled source', () => {
     expect(triggerSourceLabel('future_source')).toBe('future_source');
-    expect(formatTriggerLabel('future_source')).toBe('future_source');
   });
 
   it('R1.5 EL-7011 names the new sources in the trigger tooltips', () => {
-    const texts = [
-      TOOLTIP_TEXTS.skillDetail.TRIGGERS,
-      TOOLTIP_TEXTS.agentDetail.TRIGGERS_SECTION,
-    ].join(' ');
+    const texts = [TOOLTIP_TEXTS.skillDetail.TRIGGERS, TOOLTIP_TEXTS.agentDetail.TRIGGERS_SECTION].join(' ');
 
     ['Chat', 'API', 'MCP', 'Webhook', 'Scheduled', 'Schedule run now', 'Index runs'].forEach(label =>
       expect(texts).toContain(label),
@@ -247,7 +250,9 @@ describe('R1.5 EL-7011 analytics texts name the trigger sources', () => {
 
   it('TC-US57-09 automated texts name Webhook, Scheduled, Schedule run now and Index runs', () => {
     autoTexts.forEach(text => {
-      ['Webhook', 'Scheduled', 'Schedule run now', 'Index runs'].forEach(name => expect(text).toContain(name));
+      ['Webhook', 'Scheduled', 'Schedule run now', 'Index runs'].forEach(name =>
+        expect(text).toContain(name),
+      );
     });
   });
 

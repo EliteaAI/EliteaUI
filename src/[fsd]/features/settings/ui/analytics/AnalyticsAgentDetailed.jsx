@@ -79,8 +79,8 @@ const TRIGGER_COLUMNS = [
     key: 'trigger_source',
     label: 'Trigger',
     flex: 2.5,
-    sortValue: row => AnalyticCommonHelpers.formatTriggerLabel(row.trigger_source),
-    render: row => AnalyticCommonHelpers.formatTriggerLabel(row.trigger_source),
+    sortValue: row => AnalyticCommonHelpers.triggerSourceLabel(row.trigger_source),
+    render: row => AnalyticCommonHelpers.triggerSourceLabel(row.trigger_source),
   },
   ...USAGE_COLUMNS,
 ];
