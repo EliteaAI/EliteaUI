@@ -107,14 +107,15 @@ describe('EntitySchedulesSection EL-7011', () => {
   });
 
   describe('agent editor (US-35)', () => {
-    it('TC-US35-01 TC-US35-18 R1.1 R1.6 shows the header with "+ Schedule", the count and "Open all in Settings → Schedules"', () => {
+    it('TC-US35-01 TC-US35-18 R1.1 R1.6 EL-7011 CR-20 shows the header with "+ Schedule", the count and the "Manage Schedules" link without an icon', () => {
       renderSection();
 
       expect(screen.getByText('Schedules')).toBeInTheDocument();
       expect(screen.getByTestId('agent-schedules-section-add')).toHaveTextContent(/^Schedule$/);
       expect(screen.getByText('2 schedules run the base version')).toBeInTheDocument();
       const link = screen.getByTestId('agent-schedules-section-open-all');
-      expect(link).toHaveTextContent(/^Open all in Settings → Schedules$/);
+      expect(link).toHaveTextContent(/^Manage Schedules$/);
+      expect(link.querySelector('svg')).toBeNull();
       expect(link).toHaveAttribute('href', '/settings/schedules?entityType=agent&entityId=12');
     });
 
