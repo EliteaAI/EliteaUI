@@ -2,11 +2,11 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
-import { Box, Chip } from '@mui/material';
+import { Chip } from '@mui/material';
 
 import { useGetScheduleListQuery } from '@/[fsd]/entities/schedule';
 import { ScheduleImportExportActions } from '@/[fsd]/features/schedule-import-export';
-import { DrawerPage, DrawerPageHeader } from '@/[fsd]/features/settings';
+import { DrawerPage, DrawerPageBody, DrawerPageHeader } from '@/[fsd]/features/settings';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { PAGE_SIZE, PERMISSIONS, SortOrderOptions } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
@@ -119,8 +119,6 @@ const SchedulesPage = () => {
 
   const onAdd = useCallback(() => navigate(RouteDefinitions.CreateSchedule), [navigate]);
 
-  const styles = schedulesPageStyles();
-
   // The Settings page header of Secrets: title, the import and export actions, the round + button
   return (
     <DrawerPage>
@@ -133,57 +131,41 @@ const SchedulesPage = () => {
           addButton: { onAdd, tooltip: 'Create new schedule', testId: 'schedules-add-button' },
         }}
       />
-      <Box sx={styles.container}>
-        <Box sx={styles.tableWrapper}>
-          <SchedulesTable
-            rows={isError ? [] : (currentData?.rows ?? [])}
-            total={isError ? 0 : (currentData?.total ?? 0)}
-            isLoading={isFetching && !currentData}
-            page={page}
-            pageSize={pageSize}
-            onPageChange={onPageChange}
-            onChangePageSize={onChangePageSize}
-            sortConfig={sortConfig}
-            onSort={onSort}
-            emptyMessage={hasFilters || urlEntity ? 'No schedules match the filters' : 'No schedules'}
-            toolbar={
-              <>
-                <SchedulesFilters
-                  key={projectId}
-                  value={filters}
-                  onChange={onFiltersChange}
-                  onClear={onClearFilters}
-                  hasFilters={hasFilters}
-                  isAdmin={isAdmin}
+      <DrawerPageBody>
+        <SchedulesTable
+          rows={isError ? [] : (currentData?.rows ?? [])}
+          total={isError ? 0 : (currentData?.total ?? 0)}
+          isLoading={isFetching && !currentData}
+          page={page}
+          pageSize={pageSize}
+          onPageChange={onPageChange}
+          onChangePageSize={onChangePageSize}
+          sortConfig={sortConfig}
+          onSort={onSort}
+          emptyMessage={hasFilters || urlEntity ? 'No schedules match the filters' : 'No schedules'}
+          toolbar={
+            <>
+              <SchedulesFilters
+                key={projectId}
+                value={filters}
+                onChange={onFiltersChange}
+                onClear={onClearFilters}
+                hasFilters={hasFilters}
+                isAdmin={isAdmin}
+              />
+              {urlEntity && (
+                <Chip
+                  data-testid="schedules-entity-chip"
+                  label={`${ENTITY_TYPE_LABELS[urlEntityType] ?? urlEntityType}: ${currentData?.rows?.[0]?.entity_name ?? urlEntityId}`}
+                  onDelete={onClearUrlEntity}
                 />
-                {urlEntity && (
-                  <Chip
-                    data-testid="schedules-entity-chip"
-                    label={`${ENTITY_TYPE_LABELS[urlEntityType] ?? urlEntityType}: ${currentData?.rows?.[0]?.entity_name ?? urlEntityId}`}
-                    onDelete={onClearUrlEntity}
-                  />
-                )}
-              </>
-            }
-          />
-        </Box>
-      </Box>
+              )}
+            </>
+          }
+        />
+      </DrawerPageBody>
     </DrawerPage>
   );
 };
-
-/** @type {MuiSx} */
-const schedulesPageStyles = () => ({
-  container: {
-    width: '100%',
-    height: 'calc(100% - 3.75rem)',
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  tableWrapper: {
-    flex: 1,
-    minHeight: 0,
-  },
-});
 
 export default SchedulesPage;

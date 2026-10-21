@@ -193,12 +193,20 @@ const schedulesFiltersStyles = () => ({
     // Two classes beat the shared drop-down's own `& .MuiAutocomplete-inputRoot { flexWrap: wrap }`
     '& .MuiAutocomplete-root .MuiAutocomplete-inputRoot': {
       flexWrap: 'nowrap',
+      // The height and inner paddings of the bordered SingleSelect, as on Type and Status; the right
+      // padding stays with MUI, which keeps room for the clear icon there
+      height: '1.88rem',
+      paddingTop: 0,
+      paddingBottom: 0,
+      paddingLeft: '0.75rem',
       overflowX: 'auto',
       scrollbarWidth: 'none',
       '&::-webkit-scrollbar': { display: 'none' },
     },
     '& .MuiChip-root': { maxWidth: '7rem' },
     '& .MuiChip-label': { overflow: 'hidden', textOverflow: 'ellipsis' },
+    // Leaves room to type next to the name chip and the "+N" chip
+    '& .MuiAutocomplete-input': { minWidth: '1rem' },
     [breakpoints.down(1100)]: { flex: '1 1 15rem', width: 'auto', minWidth: '15rem' },
     [breakpoints.down('sm')]: { flexBasis: '100%', minWidth: 0 },
   }),

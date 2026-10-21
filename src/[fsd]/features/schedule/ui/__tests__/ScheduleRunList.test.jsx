@@ -1,48 +1,39 @@
 // @vitest-environment jsdom
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { useEffect } from 'react';
 
+import { format } from 'date-fns';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+
+import { ThemeProvider, createTheme } from '@mui/material';
+
+import getDesignTokens from '@/MainTheme';
 import '@testing-library/jest-dom/vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 
 import ScheduleRunList from '../ScheduleRunList';
 
-// EL-7011 US-32: run list of one schedule on the shared run history (R4.1 to R4.4).
+// EL-7011 US-32 R4, owner CR 2026-10-21: the Runs tab table with Started, Trigger, Status and Open.
 
-const mocks = vi.hoisted(() => ({
-  useGetScheduleRunsQuery: vi.fn(),
-  dispatch: vi.fn(),
-  invalidateTags: vi.fn(tags => ({ type: 'invalidate', tags })),
-  container: vi.fn(),
-  toastError: vi.fn(),
-}));
+const mocks = vi.hoisted(() => ({ chat: vi.fn(), mounts: 0 }));
 
-vi.mock('@/[fsd]/entities/schedule', () => ({ useGetScheduleRunsQuery: mocks.useGetScheduleRunsQuery }));
-vi.mock('@/[fsd]/entities/run-history/ui', () => ({
-  RunHistoryContainer: props => {
-    mocks.container(props);
-    return <div data-testid="run-history" />;
+vi.mock('@/[fsd]/entities/run-history/ui', async importOriginal => ({
+  ...(await importOriginal()),
+  RunHistoryChat: props => {
+    mocks.chat(props);
+    useEffect(() => {
+      mocks.mounts += 1;
+    }, []);
+    return <div data-testid="run-chat">{props.selectedHistoryItem}</div>;
   },
 }));
-vi.mock('@/[fsd]/entities/run-history/api', () => ({ RunHistoryApi: { HISTORY_ITEMS_TAG: 'HISTORY_TAG' } }));
 vi.mock('@/[fsd]/features/chat', () => ({ ChatMessageList: () => null }));
-vi.mock('@/[fsd]/shared/lib/hooks', () => ({
-  useSelectedProjectId: () => 5,
-  useToast: () => ({ toastError: mocks.toastError }),
-}));
-vi.mock('@/api/applications', () => ({
-  useApplicationDetailsQuery: () => ({ data: { versions: [{ id: 3, name: 'v1' }] } }),
-}));
-vi.mock('@/api/eliteaApi.js', () => ({ eliteaApi: { util: { invalidateTags: mocks.invalidateTags } } }));
-vi.mock('@/common/utils.jsx', () => ({ buildErrorMessage: () => 'boom' }));
-vi.mock('react-redux', () => ({ useDispatch: () => mocks.dispatch }));
 
-const schedule = { id: 9, application_id: 4, entity_type: 'agent' };
 const withConversation = {
   id: 1,
   conversation_id: 77,
   status: 'success',
   trigger: 'cron',
-  started_at: '2026-10-01T10:00:00Z',
+  started_at: '2026-10-14T12:05:00Z',
 };
 const withoutConversation = {
   id: 2,
@@ -50,109 +41,103 @@ const withoutConversation = {
   status: 'failed',
   trigger: 'test',
   reason: 'Model unavailable',
-  started_at: '2026-10-02T10:00:00Z',
-  finished_at: '2026-10-02T10:00:05Z',
+  started_at: '2026-10-15T09:00:00Z',
 };
-const running = { ...withoutConversation, id: 3, status: 'running', reason: null, finished_at: null };
+const manual = {
+  id: 3,
+  conversation_id: 80,
+  status: 'blocked',
+  trigger: 'manual',
+  started_at: '2026-10-13T08:00:00Z',
+};
 
-const mockRuns = rows => mocks.useGetScheduleRunsQuery.mockReturnValue({ currentData: { rows } });
-const lastProps = () => mocks.container.mock.lastCall[0];
-const pollingOf = () => mocks.useGetScheduleRunsQuery.mock.lastCall[1].pollingInterval;
+const theme = createTheme(getDesignTokens('dark'));
+const renderList = runs =>
+  render(
+    <ThemeProvider theme={theme}>
+      <ScheduleRunList runs={runs} />
+    </ThemeProvider>,
+  );
+const rows = () => screen.getAllByTestId('schedule-run-row');
+const cell = (row, name) => within(row).getByTestId(`schedule-run-${name}`);
 
-describe('ScheduleRunList (EL-7011 US-32)', () => {
-  beforeEach(() => mockRuns([withConversation, withoutConversation]));
+describe('ScheduleRunList (EL-7011 US-32, owner CR 2026-10-21)', () => {
   afterEach(() => {
     cleanup();
     vi.clearAllMocks();
+    mocks.mounts = 0;
   });
 
-  it('R4.1 lists the runs of this schedule on the shared run history', () => {
-    render(<ScheduleRunList schedule={schedule} />);
-    expect(screen.getByTestId('run-history')).toBeInTheDocument();
-    expect(lastProps()).toMatchObject({
-      entityId: 4,
-      source: 'agent',
-      queryParams: { schedule_id: 9 },
-      versions: [{ id: 3, name: 'v1' }],
-    });
-    expect(mocks.useGetScheduleRunsQuery.mock.calls[0][0]).toMatchObject({ projectId: 5, scheduleId: 9 });
+  it('R4.1 shows the Started, Trigger and Status headers and the runs newest first', () => {
+    renderList([withConversation, withoutConversation, manual]);
+
+    ['Started', 'Trigger', 'Status'].forEach(label => expect(screen.getByText(label)).toBeInTheDocument());
+    expect(rows().map(row => cell(row, 'trigger').textContent)).toEqual(['Test', 'Scheduled', 'Run now']);
+    expect(cell(rows()[1], 'started')).toHaveTextContent(
+      format(new Date(withConversation.started_at), 'd MMM, HH:mm'),
+    );
   });
 
-  it('R4.1 EL-7011 shows runs past the first page, up to the server maximum of 100', () => {
-    const manyRuns = Array.from({ length: 25 }, (_, index) => ({ ...withoutConversation, id: index + 1 }));
-    mockRuns(manyRuns);
-    render(<ScheduleRunList schedule={schedule} />);
+  it('R4.2 shows each status as a chip and the reason of a run without a conversation', () => {
+    renderList([withConversation, withoutConversation]);
 
-    const [[firstArgs], [pollingArgs]] = mocks.useGetScheduleRunsQuery.mock.calls.slice(-2);
-    expect(firstArgs).toMatchObject({ page: 0, pageSize: 100 });
-    expect(pollingArgs).toEqual(firstArgs);
-    expect(lastProps().additionalRows).toHaveLength(25);
+    expect(within(cell(rows()[0], 'status-cell')).getByTestId('schedule-run-status')).toHaveTextContent(
+      'Failed',
+    );
+    expect(cell(rows()[0], 'status-cell')).toHaveTextContent('Model unavailable');
+    expect(within(cell(rows()[1], 'status-cell')).getByTestId('schedule-run-status')).toHaveTextContent(
+      'Success',
+    );
   });
 
-  it('R4.1 EL-7011 US-32 shows the run detail below the list inside the form section', () => {
-    render(<ScheduleRunList schedule={schedule} />);
-    expect(lastProps().layout).toBe('stacked');
+  it('R4.2 shows Open only for a run with a conversation, else a dash', () => {
+    renderList([withConversation, withoutConversation]);
+
+    expect(within(rows()[0]).queryByRole('button', { name: 'Open' })).not.toBeInTheDocument();
+    expect(cell(rows()[0], 'open')).toHaveTextContent('–');
+    expect(within(rows()[1]).getByRole('button', { name: 'Open' })).toBeInTheDocument();
   });
 
-  it('R4.1 keeps queryParams stable between renders', () => {
-    const { rerender } = render(<ScheduleRunList schedule={schedule} />);
-    const first = lastProps().queryParams;
-    rerender(<ScheduleRunList schedule={schedule} />);
-    expect(lastProps().queryParams).toBe(first);
+  it('R4.1 Open shows the conversation of the run below the table', () => {
+    renderList([withConversation, withoutConversation]);
+    expect(screen.queryByTestId('run-chat')).not.toBeInTheDocument();
+
+    fireEvent.click(within(rows()[1]).getByRole('button', { name: 'Open' }));
+
+    expect(screen.getByTestId('run-chat')).toHaveTextContent('77');
+    expect(mocks.chat.mock.lastCall[0].ChatMessageListComponent).toBeTypeOf('function');
   });
 
-  it('R4.2 adds only runs without a conversation, with status as text and the reason', () => {
-    render(<ScheduleRunList schedule={schedule} />);
-    const { additionalRows, DetailComponent } = lastProps();
-    expect(additionalRows).toHaveLength(1);
-    expect(additionalRows[0].event_label).toBe('Failed, test');
-    expect(lastProps().decorateRow({ id: 77 }).event_label).toBe('Success, scheduled');
+  it('R4.1 sorts by a header click', () => {
+    renderList([withConversation, withoutConversation, manual]);
 
-    render(<DetailComponent row={additionalRows[0]} />);
-    expect(screen.getByText('Failed')).toBeInTheDocument();
-    expect(screen.getByText('Model unavailable')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('Status'));
+
+    expect(rows().map(row => within(row).getByTestId('schedule-run-status').textContent)).toEqual([
+      'Blocked',
+      'Failed',
+      'Success',
+    ]);
   });
 
-  it('R4.2 shows a run without a status without failing', () => {
-    mockRuns([{ ...withoutConversation, status: '' }]);
-    render(<ScheduleRunList schedule={schedule} />);
-    const { additionalRows, DetailComponent } = lastProps();
+  it('R4.4 reloads the opened conversation when its run ends', () => {
+    const running = { ...withConversation, status: 'running' };
+    const { rerender } = renderList([running]);
+    fireEvent.click(screen.getByRole('button', { name: 'Open' }));
+    expect(mocks.mounts).toBe(1);
 
-    render(<DetailComponent row={additionalRows[0]} />);
-    expect(screen.getByText('Model unavailable')).toBeInTheDocument();
+    rerender(
+      <ThemeProvider theme={theme}>
+        <ScheduleRunList runs={[withConversation]} />
+      </ThemeProvider>,
+    );
+
+    expect(mocks.mounts).toBe(2);
+    expect(within(rows()[0]).getByTestId('schedule-run-status')).toHaveTextContent('Success');
   });
 
-  it('R4.3 refreshes every 3 seconds while a run is running', () => {
-    mockRuns([running]);
-    render(<ScheduleRunList schedule={schedule} />);
-    expect(pollingOf()).toBe(3000);
-  });
-
-  it('R4.3 does not poll when no run is running', () => {
-    render(<ScheduleRunList schedule={schedule} />);
-    expect(pollingOf()).toBe(0);
-    expect(mocks.dispatch).not.toHaveBeenCalled();
-  });
-
-  it('R4.4 shows the final status, stops polling and reloads the conversation rows', () => {
-    mockRuns([running]);
-    const { rerender } = render(<ScheduleRunList schedule={schedule} />);
-    mockRuns([{ ...running, status: 'success', finished_at: '2026-10-02T10:01:00Z' }]);
-    rerender(<ScheduleRunList schedule={{ ...schedule }} />); // memo: a new prop object stands for the query update
-    expect(pollingOf()).toBe(0);
-    expect(lastProps().additionalRows[0].event_label).toBe('Success, test');
-    expect(mocks.invalidateTags).toHaveBeenCalledWith(['HISTORY_TAG']);
-    expect(mocks.dispatch).toHaveBeenCalledTimes(1);
-  });
-
-  it('R4.3 stops polling and shows an error when a poll fails', () => {
-    mocks.useGetScheduleRunsQuery.mockReturnValue({
-      currentData: { rows: [running] },
-      isError: true,
-      error: { status: 500, data: { error: 'boom' } },
-    });
-    render(<ScheduleRunList schedule={schedule} />);
-    expect(pollingOf()).toBe(0);
-    expect(mocks.toastError).toHaveBeenCalled();
+  it('R4.1 says so when the schedule has no runs', () => {
+    renderList([]);
+    expect(screen.getByText('No runs yet.')).toBeInTheDocument();
   });
 });
