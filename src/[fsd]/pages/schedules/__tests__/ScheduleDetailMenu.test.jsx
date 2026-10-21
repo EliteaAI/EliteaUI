@@ -11,10 +11,19 @@ import ScheduleDetailMenu from '../ScheduleDetailMenu';
 
 // EL-7011 CR-16 (US-43 R4.3 to R4.5): the Edit schedule page header menu with Export and Import
 
-const mocks = vi.hoisted(() => ({ onExport: vi.fn(), canExport: true, canImport: true, dialogProps: null }));
+const mocks = vi.hoisted(() => ({
+  onExport: vi.fn(),
+  canExport: true,
+  canImport: true,
+  isBusy: false,
+  dialogProps: null,
+}));
 
 vi.mock('@/[fsd]/features/schedule', () => ({
-  useScheduleRowActions: () => ({ onExport: mocks.canExport ? mocks.onExport : undefined }),
+  useScheduleRowActions: () => ({
+    onExport: mocks.canExport ? mocks.onExport : undefined,
+    isBusy: mocks.isBusy,
+  }),
 }));
 vi.mock('@/hooks/useCheckPermission', () => ({
   default: () => ({ checkPermission: () => mocks.canImport }),
@@ -30,6 +39,7 @@ vi.mock('@/[fsd]/features/schedule-import-export', () => ({
     );
   },
 }));
+// DotMenu reads it for its confirmation items
 vi.mock('@/[fsd]/shared/lib/hooks/useDeleteConfirmationDisabled.hooks', () => ({
   useDeleteConfirmationDisabled: () => false,
 }));
@@ -55,6 +65,14 @@ describe('ScheduleDetailMenu EL-7011 CR-16', () => {
     mocks.canExport = true;
     mocks.canImport = true;
     mocks.dialogProps = null;
+    mocks.isBusy = false;
+  });
+
+  it('R4.3 disables Export while an export runs, so a second click starts no second download', () => {
+    mocks.isBusy = true;
+    renderMenu();
+    openMenu();
+    expect(screen.getByRole('menuitem', { name: /Export/ })).toHaveAttribute('aria-disabled', 'true');
   });
 
   it('R4.3 shows Export and Import with both permissions; Export exports this schedule', () => {

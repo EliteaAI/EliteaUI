@@ -17,7 +17,7 @@ const SLOT_PROPS = { ListItemIcon: ICON_SLOT };
 // CR-16 (US-43 R4.3 to R4.5): Export and Import of the Edit schedule page header, one per permission.
 // The pages layer joins the two features: onExport of the row hook and the list import dialog.
 const ScheduleDetailMenu = memo(({ schedule, projectId }) => {
-  const { onExport } = useScheduleRowActions(schedule);
+  const { onExport, isBusy } = useScheduleRowActions(schedule);
   const { checkPermission } = useCheckPermission();
   const canImport = checkPermission(PERMISSIONS.schedules.import);
   const [isImportOpen, setIsImportOpen] = useState(false);
@@ -37,6 +37,7 @@ const ScheduleDetailMenu = memo(({ schedule, projectId }) => {
             />
           ),
           onClick: onExport,
+          disabled: isBusy,
         },
         canImport && {
           key: 'import',
@@ -45,7 +46,7 @@ const ScheduleDetailMenu = memo(({ schedule, projectId }) => {
           onClick: openImport,
         },
       ].filter(Boolean),
-    [onExport, canImport, openImport],
+    [onExport, isBusy, canImport, openImport],
   );
 
   if (!items.length) return null;
