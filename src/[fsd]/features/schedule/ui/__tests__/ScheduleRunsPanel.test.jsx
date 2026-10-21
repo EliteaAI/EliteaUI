@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ThemeProvider, createTheme } from '@mui/material';
@@ -18,6 +19,8 @@ vi.mock('@/[fsd]/entities/run-history/ui', async importOriginal => ({
   ...(await importOriginal()),
   RunHistoryChat: ({ selectedHistoryItem }) => <div data-testid="run-chat">{selectedHistoryItem}</div>,
 }));
+vi.mock('react-redux', async importOriginal => ({ ...(await importOriginal()), useDispatch: () => vi.fn() }));
+vi.mock('../../lib/hooks/useWaitingRunDecision.hooks', () => ({ useWaitingRunDecision: () => undefined }));
 vi.mock('@/[fsd]/features/chat', () => ({ ChatMessageList: () => null }));
 vi.mock('@/[fsd]/shared/lib/hooks', async importOriginal => ({
   ...(await importOriginal()),
@@ -63,15 +66,17 @@ const pollingOf = () => mocks.useGetScheduleRunsQuery.mock.lastCall[1].pollingIn
 const renderPanel = (props = {}) => {
   const onTestRun = vi.fn();
   render(
-    <ThemeProvider theme={theme}>
-      <ScheduleRunsPanel
-        schedule={schedule}
-        onTestRun={onTestRun}
-        testRunPending={false}
-        testRunError=""
-        {...props}
-      />
-    </ThemeProvider>,
+    <MemoryRouter>
+      <ThemeProvider theme={theme}>
+        <ScheduleRunsPanel
+          schedule={schedule}
+          onTestRun={onTestRun}
+          testRunPending={false}
+          testRunError=""
+          {...props}
+        />
+      </ThemeProvider>
+    </MemoryRouter>,
   );
   return onTestRun;
 };
