@@ -12,6 +12,10 @@ const mocks = vi.hoisted(() => ({
   pause: vi.fn(),
   resume: vi.fn(),
   remove: vi.fn(),
+  exportSchedules: vi.fn(),
+  exportState: { isFetching: false },
+  canExport: true,
+  download: vi.fn(),
   state: { isLoading: false },
   toastError: vi.fn(),
   toastSuccess: vi.fn(),
@@ -28,6 +32,14 @@ vi.mock('@/[fsd]/entities/schedule/api/scheduleApi.js', () => ({
   usePauseScheduleMutation: options => mutationHook(mocks.pause)(options),
   useResumeScheduleMutation: options => mutationHook(mocks.resume)(options),
   useDeleteScheduleMutation: options => mutationHook(mocks.remove)(options),
+  useLazyExportSchedulesQuery: () => [mocks.exportSchedules, mocks.exportState],
+}));
+vi.mock('@/hooks/useCheckPermission', () => ({
+  default: () => ({ checkPermission: () => mocks.canExport }),
+}));
+vi.mock('@/common/utils', async importOriginal => ({
+  ...(await importOriginal()),
+  downloadBlobFile: (...args) => mocks.download(...args),
 }));
 vi.mock('@/[fsd]/shared/lib/hooks/useToast.hooks', () => ({
   useToast: () => ({ toastError: mocks.toastError, toastSuccess: mocks.toastSuccess }),
@@ -45,6 +57,8 @@ describe('useScheduleRowActions EL-7011', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.state.isLoading = false;
+    mocks.exportState.isFetching = false;
+    mocks.canExport = true;
     mocks.cacheKeys.length = 0;
   });
 
@@ -105,6 +119,36 @@ describe('useScheduleRowActions EL-7011', () => {
     expect(mocks.toastSuccess).toHaveBeenCalledWith('Schedule "Nightly digest" deleted');
     await act(() => result.current.onDelete());
     expect(mocks.toastError).toHaveBeenCalledWith('The requested resource was not found!');
+  });
+
+  it('CR-16 R4.2 onExport exports ids=[row.id] and saves the blob', async () => {
+    const blob = new Blob(['schedules: []']);
+    mocks.exportSchedules.mockResolvedValue({ data: { blob, filename: 'schedules_3.yaml' } });
+    const result = setup();
+    await act(() => result.current.onExport());
+    expect(mocks.exportSchedules).toHaveBeenCalledWith({ projectId: 3, ids: [7] });
+    expect(mocks.download).toHaveBeenCalledWith(blob, 'schedules_3.yaml');
+    expect(mocks.toastError).not.toHaveBeenCalled();
+  });
+
+  it('CR-16 R2.4 a failed export shows the error toast and saves nothing', async () => {
+    mocks.exportSchedules.mockResolvedValue({
+      error: { status: 400, data: { code: 'invalid_input', error: 'ids must be numbers', field: 'ids' } },
+    });
+    const result = setup();
+    await act(() => result.current.onExport());
+    expect(mocks.toastError).toHaveBeenCalledWith('ids must be numbers');
+    expect(mocks.download).not.toHaveBeenCalled();
+  });
+
+  it('CR-16 R4.1 gives no onExport without the export permission', () => {
+    mocks.canExport = false;
+    expect(setup().current.onExport).toBeUndefined();
+  });
+
+  it('CR-16 reports busy while the export runs', () => {
+    mocks.exportState.isFetching = true;
+    expect(setup().current.isBusy).toBe(true);
   });
 
   it('R5.2 EL-7011 reports busy while a call runs, with one cache key per row', () => {
