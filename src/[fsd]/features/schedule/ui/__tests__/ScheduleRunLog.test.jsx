@@ -146,4 +146,10 @@ describe('ScheduleRunLog EL-7011 owner CR 2026-10-21', () => {
     show(EVENTS);
     expect(box.scrollTop).toBe(100);
   });
+
+  // CR-21 live check: in the fixed-height right block the log shrank to one line
+  it('keeps about 7 lines and does not shrink inside the scrolling panel body', () => {
+    renderLog();
+    expect(screen.getByTestId('schedule-run-log')).toHaveStyle({ flexShrink: '0', minHeight: '11rem' });
+  });
 });
