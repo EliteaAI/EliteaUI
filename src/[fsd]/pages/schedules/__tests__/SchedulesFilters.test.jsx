@@ -12,16 +12,23 @@ await vi.hoisted(async () => {
   installGlobalStubs();
 });
 
-// The owner filter has its own test; here only its presence and its callback matter
+// The owner filter has its own test; here only its presence, its callback and the input box the bar styles matter
 vi.mock('../OwnerFilter', () => ({
   default: ({ selectedOwners, onChangeOwners }) => (
-    <button
-      type="button"
-      data-testid="owner-filter"
-      onClick={() => onChangeOwners([{ id: 'a' }, { id: 'b' }])}
-    >
-      owners {selectedOwners.length}
-    </button>
+    <div className="MuiAutocomplete-root">
+      <div
+        className="MuiAutocomplete-inputRoot"
+        data-testid="owner-input-root"
+      >
+        <button
+          type="button"
+          data-testid="owner-filter"
+          onClick={() => onChangeOwners([{ id: 'a' }, { id: 'b' }])}
+        >
+          owners {selectedOwners.length}
+        </button>
+      </div>
+    </div>
   ),
 }));
 
@@ -92,6 +99,19 @@ describe('EL-7011 US-27 SchedulesFilters', () => {
     const onChange = renderBar();
     fireEvent.click(screen.getByTestId('owner-filter'));
     expect(onChange).toHaveBeenCalledWith({ ...EMPTY, ownerIds: ['a', 'b'] });
+  });
+
+  it('R2.1 EL-7011 BUG-13: the Owner input has the height and inner paddings of the Type select', () => {
+    renderBar();
+    const owner = getComputedStyle(screen.getByTestId('owner-input-root'));
+    const type = getComputedStyle(
+      within(screen.getByTestId('schedules-filter-type')).getByRole('combobox').closest('.MuiInputBase-root'),
+    );
+    expect(owner.flexWrap).toBe('nowrap');
+    expect(type.height).toBe('1.88rem');
+    for (const side of ['height', 'paddingTop', 'paddingBottom', 'paddingLeft']) {
+      expect(owner[side], side).toBe(type[side]);
+    }
   });
 
   it('R2.4 EL-7011: a regular user sees no Owner filter', () => {
