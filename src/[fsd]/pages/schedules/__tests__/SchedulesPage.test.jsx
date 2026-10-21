@@ -30,6 +30,7 @@ vi.mock('@/[fsd]/features/schedule-import-export', () => ({
 }));
 vi.mock('@/[fsd]/features/settings', () => ({
   DrawerPage: ({ children }) => <div>{children}</div>,
+  DrawerPageBody: ({ children }) => <div>{children}</div>,
   DrawerPageHeader: ({ title, titleTestId, showAddButton, extraContent, slotProps }) => (
     <div>
       <span data-testid={titleTestId}>{title}</span>
