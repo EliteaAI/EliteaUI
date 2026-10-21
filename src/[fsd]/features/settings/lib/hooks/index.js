@@ -17,3 +17,6 @@ export { useProjectBackup } from './useProjectBackup.hooks.js';
 export { useChatTemplates } from './useChatTemplates.hooks.js';
 export { useRunAnalyticsFetching } from './useRunAnalyticsFetching.hooks.js';
 export { useMultiSectionConfigurations } from './useMultiSectionConfigurations.hooks';
+export { useUsageKpiMetrics } from './useUsageKpiMetrics.hooks.js';
+export { useUsageModelData } from './useUsageModelData.hooks.js';
+export { useUsageChartData } from './useUsageChartData.hooks.js';

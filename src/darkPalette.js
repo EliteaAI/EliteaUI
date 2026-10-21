@@ -286,6 +286,8 @@ const darkPalette = {
     muted: gray20,
     warning: lightRed,
     accent: cyanDefault,
+    success: '#4fd1a5',
+    hint: '#8b95a7',
     link: blue,
     linkHover: darkBlue,
     linkHoverSecondary: skyBlue,

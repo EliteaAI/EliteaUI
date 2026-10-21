@@ -7,7 +7,7 @@ import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import { Alert, Box, CircularProgress, Snackbar, Tooltip, Typography } from '@mui/material';
 
 import { usePagination } from '@/[fsd]/entities/grid-table';
-import { UsageExportHelpers } from '@/[fsd]/features/settings/lib/helpers';
+import { PeriodHelpers, UsageExportHelpers, UsageHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { InfoBanner, infoBannerTextSx } from '@/[fsd]/features/settings/ui/analytics';
 import { DrawerPage } from '@/[fsd]/features/settings/ui/drawer-page';
 import { useDebounceValue, useSelectedProject, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
@@ -17,11 +17,22 @@ import { BaseTab, BaseTabs } from '@/[fsd]/shared/ui/tabs';
 import { useLazyUsageMembersQuery, useProjectUsageQuery, useUsageMembersQuery } from '@/api';
 import RefreshIcon from '@/assets/refresh-icon.svg?react';
 
-import UsageDailyChart from './components/UsageDailyChart';
+import UsageBudgetHero from './components/UsageBudgetHero';
+import UsageKpiRow from './components/UsageKpiRow';
+import UsageLastUpdated from './components/UsageLastUpdated';
 import UsageMembersTable from './components/UsageMembersTable';
 import UsageModelTable from './components/UsageModelTable';
-import UsageSummary from './components/UsageSummary';
+import UsageMomChart from './components/UsageMomChart';
+import UsageMonthlyHistory from './components/UsageMonthlyHistory';
+import UsagePeriodSelect from './components/UsagePeriodSelect';
+import UsageSourcesDonut from './components/UsageSourcesDonut';
+import UsageSpendChart from './components/UsageSpendChart';
+import UsageTokenMix from './components/UsageTokenMix';
 import UsageToolSpend from './components/UsageToolSpend';
+import UsageTopAgents from './components/UsageTopAgents';
+import UsageTopSkills from './components/UsageTopSkills';
+import { usePeriodParam } from './hooks/usePeriodParam.hooks';
+import { DEV_MOCK_DEFAULT, MOCK_MEMBERS_DATA, MOCK_USAGE_DATA, getMockDataForPeriod } from './usageMock';
 
 const SCOPE_PROJECT = 'project';
 const SCOPE_USER = 'user';
@@ -52,22 +63,92 @@ const UsageContainer = memo(() => {
     [projectId, personalProjectId],
   );
 
+  // DEV mock toggle — declared first so availablePeriods useMemo can reference it
+  const [useMockData, setUseMockData] = useState(DEV_MOCK_DEFAULT);
+  const [mockNoAmounts, setMockNoAmounts] = useState(false);
+
   // Budget-exceeded errors deep-link straight to the tab that explains the block
   const [scope, setScope] = useState(() =>
     searchParams.get('scope') === SCOPE_USER ? SCOPE_USER : SCOPE_PROJECT,
   );
 
+  const [scopeToast, setScopeToast] = useState(false);
+
   const activeScope = isPersonalProject ? SCOPE_PROJECT : scope;
 
+  // Current-period data (no period param → backend returns current month)
   const {
-    data,
-    isLoading,
-    isError,
+    data: currentData,
+    isLoading: isCurrentLoading,
+    isError: isCurrentError,
+    isFetching: isCurrentFetching,
     refetch: refetchUsage,
   } = useProjectUsageQuery(
     { projectId, scope: activeScope },
     { skip: !projectId, refetchOnMountOrArgChange: true },
   );
+
+  // Derive available periods list from the current response (backend may provide history list)
+  const availablePeriods = useMemo(() => {
+    if (useMockData) return MOCK_USAGE_DATA.available_periods;
+
+    const periods = currentData?.available_periods;
+
+    if (Array.isArray(periods) && periods.length) return periods;
+
+    // Fallback: only current period available
+    if (currentData?.period_yyyymm) return [currentData.period_yyyymm];
+
+    return [];
+  }, [useMockData, currentData]);
+
+  const { period, setPeriod } = usePeriodParam(availablePeriods);
+
+  const isCurrentPeriod = !period || period === availablePeriods[0];
+
+  const handleScopeChange = useCallback(
+    (_, value) => {
+      setScope(value);
+      setPeriod(null);
+      setScopeToast(true);
+    },
+    [setPeriod],
+  );
+
+  const handleCloseScopeToast = useCallback(() => setScopeToast(false), []);
+
+  // Only fetch a historical period when a non-current one is selected
+  const {
+    data: historicalData,
+    isLoading: isHistoricalLoading,
+    isFetching: isHistoricalFetching,
+  } = useProjectUsageQuery(
+    { projectId, scope: activeScope, period },
+    {
+      skip: !projectId || !period || isCurrentPeriod,
+      refetchOnMountOrArgChange: true,
+    },
+  );
+
+  // Fetch the period immediately before the selected one for deltas/comparison
+  const previousPeriod = useMemo(() => {
+    if (availablePeriods.length < 2) return null;
+
+    const selectedPeriod = period || availablePeriods[0];
+    const idx = availablePeriods.indexOf(selectedPeriod);
+
+    return idx >= 0 && idx + 1 < availablePeriods.length ? availablePeriods[idx + 1] : null;
+  }, [period, availablePeriods]);
+
+  const { data: previousData } = useProjectUsageQuery(
+    { projectId, scope: activeScope, period: previousPeriod },
+    { skip: !projectId || !previousPeriod },
+  );
+
+  const data = isCurrentPeriod ? currentData : (historicalData ?? currentData);
+  const isLoading = isCurrentLoading || isHistoricalLoading;
+  const isFetching = isCurrentFetching || isHistoricalFetching;
+  const isError = isCurrentError;
 
   const showsMembers = !isPersonalProject && activeScope === SCOPE_PROJECT;
 
@@ -86,8 +167,9 @@ const UsageContainer = memo(() => {
       limit: membersPageSize,
       offset: membersPage * membersPageSize,
       search: debouncedMemberSearch.trim() || undefined,
+      ...(period && !isCurrentPeriod ? { period } : {}),
     }),
-    [projectId, membersPage, membersPageSize, debouncedMemberSearch],
+    [projectId, membersPage, membersPageSize, debouncedMemberSearch, period, isCurrentPeriod],
   );
 
   const {
@@ -110,7 +192,6 @@ const UsageContainer = memo(() => {
 
   const [fetchAllMembers] = useLazyUsageMembersQuery();
 
-  const canSeeAmounts = Boolean(data?.can_see_amounts);
   const memberRows = useMemo(() => membersData?.rows || [], [membersData]);
   const membersWarningPct = membersData?.warning_pct;
 
@@ -131,6 +212,7 @@ const UsageContainer = memo(() => {
 
     while (rows.length < total) {
       const page = await fetchAllMembers({ projectId, limit: EXPORT_MEMBERS_LIMIT, offset }).unwrap();
+
       rows.push(...(page.rows || []));
       total = page.total ?? rows.length;
       warningPct = page.warning_pct ?? warningPct;
@@ -184,6 +266,9 @@ const UsageContainer = memo(() => {
 
   const handleCloseExportError = useCallback(() => setExportError(false), []);
 
+  const [compareEnabled, setCompareEnabled] = useState(false);
+  const [selectedSource, setSelectedSource] = useState(null);
+
   const [refreshing, setRefreshing] = useState(false);
   const [refreshError, setRefreshError] = useState(false);
 
@@ -209,6 +294,50 @@ const UsageContainer = memo(() => {
   const exportDisabled = exporting || isLoading || !data;
   const refreshDisabled = refreshing || isLoading || isMembersFetching;
 
+  // When mock mode is on, override live query results with period-aware fixture data
+  const activePeriodKey = period || availablePeriods[0];
+  const resolvedData = useMockData ? getMockDataForPeriod(activePeriodKey, mockNoAmounts) : data;
+  const resolvedPreviousData = useMockData
+    ? getMockDataForPeriod(previousPeriod, mockNoAmounts)
+    : previousData;
+  const resolvedMembersData = useMockData ? MOCK_MEMBERS_DATA : membersData;
+  const resolvedIsLoading = useMockData ? false : isLoading;
+  const resolvedIsError = useMockData ? false : isError;
+  const resolvedIsFetching = useMockData ? false : isFetching;
+  const resolvedMemberRows = useMockData ? MOCK_MEMBERS_DATA.rows : memberRows;
+  const resolvedMembersWarningPct = useMockData ? MOCK_MEMBERS_DATA.warning_pct : membersWarningPct;
+  const resolvedCanSeeAmounts = Boolean(resolvedData?.can_see_amounts);
+
+  useEffect(() => {
+    if (!resolvedPreviousData) setCompareEnabled(false);
+  }, [resolvedPreviousData]);
+
+  // Forecast values derived from current data for the budget hero
+  const { forecast, exceedDay } = useMemo(() => {
+    if (!resolvedData || !isCurrentPeriod) return { forecast: null, exceedDay: null };
+
+    const daily = resolvedData.daily || [];
+    const periodStart = resolvedData.period_start;
+
+    if (!periodStart) return { forecast: null, exceedDay: null };
+
+    const start = new Date(periodStart + 'T00:00:00Z');
+    const today = new Date();
+    const elapsedDays = Math.max(0, Math.min(Math.floor((today - start) / 86400000) + 1, daily.length));
+    const d = new Date(periodStart + 'T00:00:00Z');
+    const daysInMonth = new Date(d.getUTCFullYear(), d.getUTCMonth() + 1, 0).getUTCDate();
+
+    return {
+      forecast: UsageHelpers.forecastSpend(resolvedData.spend, elapsedDays, daysInMonth),
+      exceedDay: UsageHelpers.forecastExceedDay(
+        resolvedData.spend,
+        elapsedDays,
+        resolvedData.effective_limit,
+        daysInMonth,
+      ),
+    };
+  }, [resolvedData, isCurrentPeriod]);
+
   return (
     <DrawerPage>
       <Box sx={styles.header}>
@@ -218,14 +347,31 @@ const UsageContainer = memo(() => {
         >
           Usage
         </Typography>
+
+        <Box sx={styles.headerSpacer} />
+
+        {availablePeriods.length === 1 && (
+          <Typography
+            variant="labelMedium"
+            color="text.secondary"
+          >
+            {PeriodHelpers.formatPeriodLabel(availablePeriods[0])}
+          </Typography>
+        )}
+        {availablePeriods.length > 1 && (
+          <UsagePeriodSelect
+            availablePeriods={availablePeriods}
+            period={period}
+            onChange={setPeriod}
+            isCurrentPeriod={isCurrentPeriod}
+          />
+        )}
+
         <Tooltip
           title="Refresh data"
           placement="top"
         >
-          <Box
-            component="span"
-            sx={styles.exportButtonWrapper}
-          >
+          <Box component="span">
             <BaseBtn
               variant={BUTTON_VARIANTS.icon}
               color="secondary"
@@ -262,13 +408,52 @@ const UsageContainer = memo(() => {
             </BaseBtn>
           </Box>
         </Tooltip>
+
+        {/* DEV: mock data toggle */}
+        <Tooltip
+          title={useMockData ? 'Using mock data — click to switch to live' : 'Use mock data (dev only)'}
+          placement="top"
+        >
+          <Box component="span">
+            <BaseBtn
+              variant={useMockData ? BUTTON_VARIANTS.elitea : BUTTON_VARIANTS.tertiary}
+              onClick={() => setUseMockData(prev => !prev)}
+              data-testid="usage-mock-toggle"
+              sx={styles.mockBtn}
+            >
+              Mock
+            </BaseBtn>
+          </Box>
+        </Tooltip>
+
+        {useMockData && (
+          <Tooltip
+            title={
+              mockNoAmounts
+                ? 'Non-admin view (no amounts) — click to toggle'
+                : 'Admin view (with amounts) — click to toggle'
+            }
+            placement="top"
+          >
+            <Box component="span">
+              <BaseBtn
+                variant={BUTTON_VARIANTS.tertiary}
+                onClick={() => setMockNoAmounts(prev => !prev)}
+                data-testid="usage-mock-amounts-toggle"
+                sx={styles.mockBtn}
+              >
+                {mockNoAmounts ? 'No $' : 'With $'}
+              </BaseBtn>
+            </Box>
+          </Tooltip>
+        )}
       </Box>
 
       {!isPersonalProject && (
         <Box sx={styles.tabsContainer}>
           <BaseTabs
             value={scope}
-            onChange={(_, value) => setScope(value)}
+            onChange={handleScopeChange}
           >
             <BaseTab
               value={SCOPE_PROJECT}
@@ -283,18 +468,18 @@ const UsageContainer = memo(() => {
       )}
 
       <Box sx={styles.contentArea}>
-        {isLoading && (
+        {resolvedIsLoading && (
           <Box sx={styles.loadingState}>
             <CircularProgress size={32} />
           </Box>
         )}
 
-        {(isError || (!isLoading && !data)) && (
+        {(resolvedIsError || (!resolvedIsLoading && !resolvedData)) && (
           <Alert severity="error">Usage data is currently unavailable. Please try again later.</Alert>
         )}
 
-        {!isLoading && data && (
-          <>
+        {!resolvedIsLoading && resolvedData && (
+          <Box sx={styles.dataContent(resolvedIsFetching)}>
             <InfoBanner>
               {isPersonalProject && (
                 <Typography
@@ -312,59 +497,166 @@ const UsageContainer = memo(() => {
               </Typography>
             </InfoBanner>
 
-            {!data.spend_available && (
+            {!resolvedData.spend_available && (
               <Alert severity="info">
                 Usage figures are still being collected for this period. They may lag live activity by a short
                 time.
               </Alert>
             )}
-
-            <UsageSummary
-              data={data}
+            <UsageBudgetHero
+              data={resolvedData}
               scope={activeScope}
+              isCurrentPeriod={isCurrentPeriod}
+              canSeeAmounts={resolvedCanSeeAmounts}
+              forecast={forecast}
+              exceedDay={exceedDay}
+            />
+
+            <UsageKpiRow
+              data={resolvedData}
+              canSeeAmounts={resolvedCanSeeAmounts}
+              isCurrentPeriod={isCurrentPeriod}
+              comparisonData={resolvedPreviousData}
             />
 
             <Box sx={styles.row}>
-              <UsageDailyChart
-                daily={data.daily}
-                canSeeAmounts={canSeeAmounts}
-                currency={data.currency}
-                periodStart={data.period_start}
-                periodEnd={data.period_end}
+              <UsageSpendChart
+                daily={resolvedData.daily}
+                models={resolvedData.models}
+                bySource={resolvedData.by_source}
+                canSeeAmounts={resolvedCanSeeAmounts}
+                currency={resolvedData.currency}
+                periodStart={resolvedData.period_start}
+                periodEnd={resolvedData.period_end}
+                isAdmin={resolvedCanSeeAmounts}
+                compData={resolvedPreviousData}
+                compareEnabled={compareEnabled}
+                onCompareChange={setCompareEnabled}
+                selectedSource={selectedSource}
+                scope={activeScope}
+              />
+            </Box>
+
+            {/* MoM chart + Sources donut side-by-side */}
+            <Box sx={styles.splitRow}>
+              <UsageMomChart
+                sx={{ flex: 7 }}
+                currentDaily={resolvedData.daily}
+                prevDaily={resolvedPreviousData?.daily}
+                limit={resolvedData.effective_limit}
+                canSeeAmounts={resolvedCanSeeAmounts}
+                currency={resolvedData.currency}
+                isCurrentPeriod={isCurrentPeriod}
+                currentPeriodLabel={period || availablePeriods[0]}
+                prevPeriodLabel={previousPeriod}
+              />
+              <UsageSourcesDonut
+                sx={{ flex: 5 }}
+                bySource={resolvedData.by_source}
+                canSeeAmounts={resolvedCanSeeAmounts}
+                currency={resolvedData.currency}
+                totalSpend={resolvedData.spend}
+                periodLabel={period || availablePeriods[0]}
+                selectedSource={selectedSource}
+                onSourceClick={key => setSelectedSource(prev => (prev === key ? null : key))}
               />
             </Box>
 
             <UsageModelTable
-              models={data.models}
-              canSeeAmounts={canSeeAmounts}
-              currency={data.currency}
+              models={resolvedData.models}
+              canSeeAmounts={resolvedCanSeeAmounts}
+              currency={resolvedData.currency}
+              comparisonModels={resolvedPreviousData?.models}
+              comparisonLabel={isCurrentPeriod ? 'vs last month' : undefined}
             />
 
             <UsageToolSpend
-              features={data.tool_spend}
-              canSeeAmounts={canSeeAmounts}
+              features={resolvedData.tool_spend}
+              canSeeAmounts={resolvedCanSeeAmounts}
             />
+            {/* Top agents + Top skills side-by-side */}
+            <Box sx={styles.splitRow}>
+              <UsageTopAgents
+                sx={{ flex: 1 }}
+                topAgents={resolvedData.top_agents}
+                comparisonAgents={resolvedPreviousData?.top_agents}
+                canSeeAmounts={resolvedCanSeeAmounts}
+                currency={resolvedData.currency}
+                analyticsUrl="/settings/analytics?tab=agents&range=30"
+              />
+              <UsageTopSkills
+                sx={{ flex: 1 }}
+                topSkills={resolvedData.top_skills}
+                canSeeAmounts={resolvedCanSeeAmounts}
+                currency={resolvedData.currency}
+                analyticsUrl="/settings/analytics?tab=skills&range=30"
+              />
+            </Box>
+
+            {/* Token mix + Monthly history side-by-side */}
+            <Box sx={styles.splitRow}>
+              <UsageTokenMix
+                sx={{ flex: 1 }}
+                data={resolvedData.token_mix ?? {}}
+                canSeeAmounts={resolvedCanSeeAmounts}
+                currency={resolvedData.currency}
+                cacheHitRate={resolvedData.cache_hit_rate ?? null}
+              />
+              <UsageMonthlyHistory
+                sx={{ flex: 1 }}
+                history={resolvedData.monthly_history}
+                limit={resolvedData.effective_limit}
+                canSeeAmounts={resolvedCanSeeAmounts}
+                currency={resolvedData.currency}
+                activePeriod={period || availablePeriods[0]}
+                onSelect={setPeriod}
+              />
+            </Box>
 
             {showsMembers && (
               <>
-                {membersData?.degraded && <Alert severity="warning">{DEGRADED_MEMBERS_INFO}</Alert>}
+                {resolvedMembersData?.degraded && <Alert severity="warning">{DEGRADED_MEMBERS_INFO}</Alert>}
                 <UsageMembersTable
-                  rows={memberRows}
-                  systemRow={membersData?.system_row}
-                  warningPct={membersWarningPct}
+                  rows={resolvedMemberRows}
+                  systemRow={resolvedMembersData?.system_row}
+                  warningPct={resolvedMembersWarningPct}
                   search={memberSearch}
                   onSearchChange={setMemberSearch}
                   onSearchClear={handleMemberSearchClear}
                   pagination={membersPagination}
-                  isFetching={isMembersFetching}
-                  isError={isMembersError}
+                  isFetching={useMockData ? false : isMembersFetching}
+                  isError={useMockData ? false : isMembersError}
                   onRetry={refetchMembers}
+                  comparisonRows={resolvedPreviousData?.members ?? []}
+                  isCurrentPeriod={isCurrentPeriod}
+                  totalRows={resolvedMembersData?.total}
                 />
               </>
             )}
-          </>
+
+            <UsageLastUpdated
+              lastUpdatedAt={resolvedData.generated_at}
+              onRefresh={handleRefresh}
+              isRefreshing={refreshing}
+            />
+          </Box>
         )}
       </Box>
+
+      <Snackbar
+        open={scopeToast}
+        autoHideDuration={4000}
+        onClose={handleCloseScopeToast}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert
+          onClose={handleCloseScopeToast}
+          severity="info"
+          variant="filled"
+        >
+          Switched view — showing current month. Select a different period above.
+        </Alert>
+      </Snackbar>
 
       <Snackbar
         open={exportError}
@@ -414,9 +706,8 @@ const usageContainerStyles = () => ({
     borderBottom: `0.0625rem solid ${palette.border.default}`,
     background: palette.background.default.tertiary,
   }),
-  // Keeps the header actions at the far edge, away from the page title
-  exportButtonWrapper: {
-    marginLeft: 'auto',
+  headerSpacer: {
+    flex: 1,
   },
   tabsContainer: ({ palette }) => ({
     padding: '0 1.5rem',
@@ -431,6 +722,14 @@ const usageContainerStyles = () => ({
     flexDirection: 'column',
     gap: '1rem',
   },
+  dataContent: isFetching => ({
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+    opacity: isFetching ? 0.6 : 1,
+    pointerEvents: isFetching ? 'none' : 'auto',
+    transition: 'opacity 0.2s ease',
+  }),
   loadingState: {
     display: 'flex',
     justifyContent: 'center',
@@ -438,11 +737,24 @@ const usageContainerStyles = () => ({
     flex: 1,
     minHeight: '12rem',
   },
+  mockBtn: {
+    fontSize: '0.75rem',
+    padding: '0.25rem 0.625rem',
+    minWidth: 0,
+    height: '1.75rem',
+  },
   row: {
     display: 'flex',
     flexDirection: 'row',
     gap: '1rem',
     flexWrap: 'wrap',
+  },
+  splitRow: {
+    display: 'flex',
+    flexDirection: 'row',
+    gap: '1rem',
+    alignItems: 'stretch',
+    '& > *': { minWidth: 0 },
   },
 });
 

@@ -288,6 +288,8 @@ const lightPalette = {
     muted: light20,
     warning: red,
     accent: magentaDefault,
+    success: '#2a9d7f',
+    hint: '#6b7a8d',
     link: darkBlue,
     linkHover: blue,
     linkHoverSecondary: darkBlue,
