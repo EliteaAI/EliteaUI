@@ -39,11 +39,18 @@ export const formatRunDuration = durationMs => {
     : `${Math.floor(seconds / 60)} m ${String(seconds % 60).padStart(2, '0')} s`;
 };
 
+const MIN_ROUNDED_COST = 0.0001;
+const MAX_ROUNDED_COST = 0.01;
+
+// The Analytics format, except that a small cost rounds to the nearest 4th decimal (0.00161 reads $0.0016)
+const formatRunCost = costUsd =>
+  costUsd >= MIN_ROUNDED_COST && costUsd < MAX_ROUNDED_COST ? `$${costUsd.toFixed(4)}` : fmtCost(costUsd);
+
 export const formatRunSummary = summary =>
   [
     summary?.duration_ms != null && formatRunDuration(summary.duration_ms),
     summary?.tokens != null && `${summary.tokens.toLocaleString('en-US')} tokens`,
-    summary?.cost_usd != null && fmtCost(summary.cost_usd),
+    summary?.cost_usd != null && formatRunCost(summary.cost_usd),
   ]
     .filter(Boolean)
     .join(' · ');

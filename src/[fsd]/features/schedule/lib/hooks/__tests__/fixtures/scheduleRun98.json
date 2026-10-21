@@ -1,0 +1,53 @@
+{
+  "id": 98,
+  "trigger": "test",
+  "status": "success",
+  "reason": null,
+  "conversation_id": 105,
+  "requested_by": 3,
+  "started_at": "2026-10-21T16:11:27.460102+00:00",
+  "finished_at": "2026-10-21T16:11:32.599361+00:00",
+  "version_id": 1,
+  "duration_ms": 5139,
+  "version_label": "base",
+  "principal_label": "Local Admin (schedule owner)",
+  "risk_outcome": "ok",
+  "approval_rule": "pause_and_ask",
+  "approval_expires_at": null,
+  "summary": { "duration_ms": 5139, "tokens": 447, "cost_usd": 0.00161 },
+  "events": [
+    {
+      "at": "2026-10-21T16:11:27.489393+00:00",
+      "kind": "started",
+      "text": "Test run started \u00b7 trigger: test \u00b7 version base",
+      "level": "info",
+      "trigger": "test",
+      "version_id": 1
+    },
+    {
+      "at": "2026-10-21T16:11:27.572496+00:00",
+      "kind": "account",
+      "text": "Account: Local Admin (schedule owner)",
+      "level": "info"
+    },
+    {
+      "at": "2026-10-21T16:11:27.577204+00:00",
+      "kind": "risk_check",
+      "text": "Risk check: OK",
+      "level": "info"
+    },
+    {
+      "at": "2026-10-21T16:11:27.599743+00:00",
+      "kind": "agent_started",
+      "text": "Agent started: Sched Daily Digest",
+      "level": "info"
+    },
+    {
+      "at": "2026-10-21T16:11:32.601144+00:00",
+      "kind": "finished",
+      "text": "Run finished: success",
+      "level": "success",
+      "status": "success"
+    }
+  ]
+}
