@@ -1,6 +1,6 @@
 import { forwardRef, memo, useCallback, useState } from 'react';
 
-import { Box, MenuItem, Select, Typography, visuallyHidden } from '@mui/material';
+import { Box, MenuItem, Select, Typography } from '@mui/material';
 
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
@@ -10,6 +10,18 @@ import ScheduleRunList, { RUN_SORT_OPTIONS } from './ScheduleRunList';
 
 // The page header (3.75 rem) and 0.75 rem, so a scroll to the card does not hide its top under the header
 const SCROLL_MARGIN_TOP = '4.5rem';
+// Read by screen readers only; the same rule as the MUI utils visuallyHidden, which @mui/material does not export
+const VISUALLY_HIDDEN = {
+  border: 0,
+  clip: 'rect(0 0 0 0)',
+  height: '1px',
+  margin: '-1px',
+  overflow: 'hidden',
+  padding: 0,
+  position: 'absolute',
+  whiteSpace: 'nowrap',
+  width: '1px',
+};
 
 /**
  * "Runs of this schedule" under the test panel of the Edit schedule page (CR-21): a collapsible card with
@@ -96,7 +108,7 @@ const ScheduleRunsSection = memo(
         <Box
           role="status"
           aria-live="polite"
-          sx={visuallyHidden}
+          sx={VISUALLY_HIDDEN}
         >
           {announcement}
         </Box>
