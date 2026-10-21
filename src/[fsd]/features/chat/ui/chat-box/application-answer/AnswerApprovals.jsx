@@ -11,6 +11,7 @@ import {
   InputGuardrailNotice,
 } from '@/[fsd]/features/chat/ui';
 import { SubAgentAccordion } from '@/[fsd]/features/chat/ui/sub-agent-section';
+import { InputGuardrailConstants } from '@/[fsd]/shared/lib/constants';
 
 const AnswerApprovals = memo(props => {
   const {
@@ -54,7 +55,7 @@ const AnswerApprovals = memo(props => {
 
   return (
     <>
-      {inputGuardrail?.action === 'block' ? (
+      {inputGuardrail?.action === InputGuardrailConstants.INPUT_GUARDRAIL_ACTIONS.BLOCK ? (
         // A refused run or resume (#6886): the policy card replaces the error trace
         <InputGuardrailNotice guardrail={inputGuardrail} />
       ) : continuationError ? (

@@ -74,7 +74,11 @@ import { UserMentionList } from '@/[fsd]/features/chat/ui/user-mention-list';
 import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { MentionSkillList } from '@/[fsd]/features/skill';
 import { useDeleteSkillMutation } from '@/[fsd]/features/skill/api';
-import { LLMSettingsConstants, MentionConstants } from '@/[fsd]/shared/lib/constants';
+import {
+  InputGuardrailConstants,
+  LLMSettingsConstants,
+  MentionConstants,
+} from '@/[fsd]/shared/lib/constants';
 import { SocketContext } from '@/[fsd]/shared/lib/context';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import {
@@ -1438,7 +1442,12 @@ const ChatBox = memo(
           setChatHistory(prevMessages =>
             applyInputGuardrailBlocked(prevMessages, {
               messageId: uuid,
-              verdict: { action: 'block', categories, rules, message_key },
+              verdict: {
+                action: InputGuardrailConstants.INPUT_GUARDRAIL_ACTIONS.BLOCK,
+                categories,
+                rules,
+                message_key,
+              },
               message,
             }),
           );

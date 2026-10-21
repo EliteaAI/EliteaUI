@@ -18,10 +18,10 @@ import {
 import {
   applyInputGuardrailBlocked,
   applyInputGuardrailNotice,
-  getAgentGuardrailEventVerdict,
-  getAgentGuardrailVerdict,
   createSyntheticToolAction,
   findChatSocketMessageIndex,
+  getAgentGuardrailEventVerdict,
+  getAgentGuardrailVerdict,
   insertNewAssistantMessage,
   isLocalAssistantPlaceholder,
   mergeChatSocketMessage,
@@ -29,7 +29,7 @@ import {
 } from '@/[fsd]/features/chat/lib/helpers/chatSocket.helpers';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import { ParsePipelineHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
-import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
+import { AnalyticConstants, InputGuardrailConstants } from '@/[fsd]/shared/lib/constants';
 import {
   useContextExecutionEntity,
   useCtrlEnterKeyEventsHandler,
@@ -53,6 +53,8 @@ import { useIsFrom } from '@/hooks/useIsFromSpecificPageHooks';
 import RouteDefinitions from '@/routes';
 
 const { GA_EVENT_NAMES, GA_EVENT_PARAMS } = AnalyticConstants;
+
+const { INPUT_GUARDRAIL_ACTIONS } = InputGuardrailConstants;
 
 const { mergeHitlInterrupts, normalizeHitlInterrupt, reconcileRootHitlInterrupts, settleHitlResumeAttempt } =
   HitlHelpers;
@@ -1540,7 +1542,10 @@ export const useChatSocket = ({
           // SDK / indexer run (#6886): only a redact or warn verdict lands here. A block
           // is reported by agent_exception, and `record` is silent by design.
           const guardrailVerdict = getAgentGuardrailEventVerdict(response_metadata);
-          if (guardrailVerdict && ['redact', 'warn'].includes(guardrailVerdict.action)) {
+          if (
+            guardrailVerdict &&
+            [INPUT_GUARDRAIL_ACTIONS.REDACT, INPUT_GUARDRAIL_ACTIONS.WARN].includes(guardrailVerdict.action)
+          ) {
             updateChatHistoryState(setChatHistoryRef, chatHistoryRef, prevState =>
               applyInputGuardrailNotice(prevState, {
                 questionId: question_id || msg.question_id,
