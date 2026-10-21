@@ -2703,10 +2703,8 @@ const ChatBox = memo(
             const metaResult = await conversationEdit({
               projectId,
               id: activeConversation.id,
-              meta: {
-                ...(activeConversation.meta || {}),
-                steps_limit,
-              },
+              // The server merges meta keys; resending the local copy would revert newer server-side changes
+              meta: { steps_limit },
             });
             if (metaResult.error) {
               toastError('Failed to update steps limit: ' + buildErrorMessage(metaResult.error));
@@ -2726,7 +2724,6 @@ const ChatBox = memo(
         isAgentsPage,
         onSetLLMSettings,
         activeConversation?.id,
-        activeConversation?.meta,
         setUnsavedLLMSettings,
         selectedModel,
         updateChatLlmSettings,
