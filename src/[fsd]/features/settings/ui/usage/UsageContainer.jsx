@@ -350,14 +350,15 @@ const UsageContainer = memo(() => {
   );
 
   // Monthly history filtered to only periods in availablePeriods, plus the current month
-  const monthlyHistory = useMemo(
-    () =>
-      [
-        ...(currentData?.monthly_history || []),
-        { period: currentData?.period_yyyymm, spend: currentData?.spend },
-      ].filter(item => item.period && availablePeriods.includes(item.period)),
-    [currentData, availablePeriods],
-  );
+  const monthlyHistory = useMemo(() => {
+    const currentPeriodEntry = { period: currentData?.period_yyyymm, spend: currentData?.spend };
+    const deduped = (currentData?.monthly_history || []).filter(
+      item => item.period !== currentPeriodEntry.period,
+    );
+    return [...deduped, currentPeriodEntry].filter(
+      item => item.period && availablePeriods.includes(item.period),
+    );
+  }, [currentData, availablePeriods]);
 
   // Forecast values derived from current data for the budget hero
   const { forecast, exceedDay } = useMemo(() => {
