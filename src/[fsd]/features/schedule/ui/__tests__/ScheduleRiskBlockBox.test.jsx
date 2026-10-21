@@ -99,6 +99,17 @@ describe('EL-7011 owner CR ScheduleRiskBlockBox', () => {
     );
   });
 
+  it('ends the link at the entity when the fix has no version', () => {
+    setup({
+      blocking: [{ code: 'missing_credential', toolkit: 'x', fix: { entity_type: 'agent', id: 12 } }],
+    });
+
+    expect(screen.getByRole('link', { name: /Open agent to change tools/ })).toHaveAttribute(
+      'href',
+      '/agents/all/12',
+    );
+  });
+
   it('shows the server message of a blocking code it does not know', () => {
     setup({ blocking: [{ code: 'brand_new_block', message: 'Something blocks the run.' }] });
 

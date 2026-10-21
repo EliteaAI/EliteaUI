@@ -29,7 +29,7 @@ const setup = (initial = { entityType: 'agent', applicationId: 7, versionId: 71 
   renderHook(args => useScheduleRiskCheck({ projectId: 5, ...args }), { initialProps: initial });
 
 const setVisibility = state => {
-  Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => state });
+  vi.spyOn(document, 'visibilityState', 'get').mockReturnValue(state);
   act(() => {
     document.dispatchEvent(new Event('visibilitychange'));
   });
@@ -41,7 +41,10 @@ describe('useScheduleRiskCheck EL-7011 owner CR', () => {
     mocks.check.mockReturnValue(answer(CLEAR));
   });
 
-  afterEach(cleanup);
+  afterEach(() => {
+    cleanup();
+    vi.restoreAllMocks();
+  });
 
   it('stays idle and sends nothing until both the entity and the version are chosen', () => {
     const { result } = setup({ entityType: 'agent', applicationId: 7, versionId: '' });
