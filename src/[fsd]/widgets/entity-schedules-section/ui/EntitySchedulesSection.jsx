@@ -14,7 +14,6 @@ import {
 import { Button } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
-import OpenInNewIcon from '@/assets/open-new-icon.svg?react';
 import PlusIcon from '@/assets/plus-icon.svg?react';
 import { PERMISSIONS } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
@@ -120,12 +119,7 @@ const EntitySchedulesSection = memo(props => {
               sx={styles.link}
               data-testid={`${testId}-open-all`}
             >
-              Open all in Settings → Schedules
-              <Box
-                component={OpenInNewIcon}
-                sx={styles.linkIcon}
-                aria-hidden
-              />
+              Manage Schedules
             </Link>
           </Box>
           {isError && (
@@ -239,11 +233,6 @@ const entitySchedulesSectionStyles = () => ({
     alignItems: 'center',
     gap: '0.25rem',
     minWidth: 0,
-  },
-  linkIcon: {
-    width: '0.875rem',
-    height: '0.875rem',
-    flexShrink: 0,
   },
   // The heights of the stacked and the one-line card
   skeleton: {
