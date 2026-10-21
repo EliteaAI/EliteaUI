@@ -25,7 +25,7 @@ const ApplicationConfigurationForm = memo(props => {
     entityProjectId,
   } = props;
   // The saved name, not an unsaved edit, names the entity chip on the Schedules page
-  const { initialValues } = useFormikContext();
+  const { initialValues, values } = useFormikContext();
 
   const isDisabled = useMemo(() => viewMode !== ViewMode.Owner, [viewMode]);
   const styles = useMemo(() => applicationConfigurationFormStyles(isChatView), [isChatView]);
@@ -70,6 +70,8 @@ const ApplicationConfigurationForm = memo(props => {
         entityType="agent"
         entityId={applicationId}
         entityName={initialValues?.name}
+        versionId={values?.version_details?.id}
+        versionName={values?.version_details?.name}
         isChatView={isChatView}
       />
       <ApplicationAdvanceSettings

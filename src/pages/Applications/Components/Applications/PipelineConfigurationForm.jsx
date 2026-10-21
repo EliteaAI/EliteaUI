@@ -24,7 +24,7 @@ const PipelineConfigurationForm = memo(props => {
     entityProjectId,
   } = props;
   // The saved name, not an unsaved edit, names the entity chip on the Schedules page
-  const { initialValues } = useFormikContext();
+  const { initialValues, values } = useFormikContext();
   const isDisabled = viewMode !== ViewMode.Owner;
 
   const styles = useMemo(() => pipelineConfigurationFormStyles(isChatView), [isChatView]);
@@ -55,6 +55,8 @@ const PipelineConfigurationForm = memo(props => {
         entityType="pipeline"
         entityId={applicationId}
         entityName={initialValues?.name}
+        versionId={values?.version_details?.id}
+        versionName={values?.version_details?.name}
         isChatView={isChatView}
       />
       <ApplicationAdvanceSettings

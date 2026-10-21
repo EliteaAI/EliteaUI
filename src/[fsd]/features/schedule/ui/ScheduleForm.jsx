@@ -296,13 +296,23 @@ const ScheduleForm = memo(props => {
       String(details.id) === String(values.application_id) &&
       !values.version_id
     ) {
-      const versionId = getDefaultVersionId(details);
+      // A form nested in an editor keeps the editor's version (R5.3)
+      const versionId = lockedEntity?.versionId ?? getDefaultVersionId(details);
       // The preset for the URL entity belongs to the baseline: opening and leaving asks nothing (R1.3)
       if (!formik.dirty && String(values.application_id) === String(initialValues.application_id))
         resetForm({ values: { ...values, version_id: versionId } });
       else setFieldValue('version_id', versionId);
     }
-  }, [details, lockRejected, values, initialValues.application_id, formik.dirty, resetForm, setFieldValue]);
+  }, [
+    details,
+    lockRejected,
+    lockedEntity?.versionId,
+    values,
+    initialValues.application_id,
+    formik.dirty,
+    resetForm,
+    setFieldValue,
+  ]);
 
   const options = useMemo(() => {
     const rows = listData?.rows ?? [];
@@ -385,6 +395,123 @@ const ScheduleForm = memo(props => {
   )?.name;
   const entityLabel = [details?.name, versionName].filter(Boolean).join(' ');
 
+  const entityPicker = (
+    <>
+      {lockFailed && (
+        <BannerMessage
+          message="The entity is not available."
+          variant="warning"
+        />
+      )}
+      <RadioButtonGroup
+        testId="schedule-type"
+        items={TYPE_ITEMS}
+        value={values.type}
+        onChange={handleTypeChange}
+        disabled={lockActive}
+      />
+      <LazySelect
+        required
+        showOptionIcon
+        showEmptyPlaceholder={false}
+        label={TYPE_LABEL[values.type]}
+        value={values.application_id}
+        onValueChange={handleEntityChange}
+        options={options}
+        total={listData?.total}
+        isFetching={isFetching}
+        onLoadMore={() => setList(prev => ({ ...prev, page: prev.page + 1 }))}
+        searchString={list.query}
+        onSearch={query => setList({ page: 0, query })}
+        disabled={lockActive}
+        error={!!fieldError('application_id')}
+        helperText={fieldError('application_id')}
+      />
+      {/* the borderless select shows no helper text itself */}
+      {fieldError('application_id') && (
+        <Typography
+          variant="bodySmall"
+          color="error"
+        >
+          {fieldError('application_id')}
+        </Typography>
+      )}
+    </>
+  );
+  const riskNotices = (
+    <>
+      {riskCheck.status === RISK_CHECK_STATUS.BLOCKED && (
+        <ScheduleRiskBlockBox
+          blocking={riskCheck.result.blocking}
+          entityType={values.type}
+          entityId={values.application_id}
+          versionId={values.version_id}
+        />
+      )}
+      {riskCheck.status === RISK_CHECK_STATUS.FAILED && (
+        <BannerMessage variant="warning">
+          <Box sx={styles.riskFailed}>
+            <Typography variant="bodySmall">The risk check did not run. Try again.</Typography>
+            <BaseBtn
+              type="button"
+              variant="elitea"
+              color="secondary"
+              onClick={riskCheck.runCheck}
+            >
+              Retry
+            </BaseBtn>
+          </Box>
+        </BannerMessage>
+      )}
+    </>
+  );
+  const versionPicker = (
+    <>
+      <VersionSelect
+        entityId={values.application_id}
+        versions={details?.versions}
+        defaultVersionID={getDefaultVersionId(details)}
+        value={values.version_id}
+        onChange={versionId => setFieldValue('version_id', versionId)}
+        disabled={!values.application_id}
+      />
+      <FieldError message={fieldError('version_id')} />
+    </>
+  );
+  const promptFields = (
+    <>
+      {values.type === 'pipeline' && (
+        <RadioButtonGroup
+          testId="schedule-run-mode"
+          items={RUN_MODE_ITEMS}
+          value={values.run_mode}
+          onChange={handleRunModeChange}
+        />
+      )}
+      {showPrompt && (
+        <>
+          <StyledInputEnhancer
+            required
+            multiline
+            label="Prompt"
+            value={values.prompt}
+            onChange={handlePromptChange}
+            error={!!fieldError('prompt')}
+            helperText={fieldError('prompt')}
+          />
+          <VariableList
+            variables={values.variables}
+            onChangeVariable={handleVariableChange}
+          />
+          <FieldError message={typeof errors.variables === 'string' ? errors.variables : ''} />
+        </>
+      )}
+    </>
+  );
+  // A form nested in an editor takes the entity and version from the route: its selectors and WHAT TO RUN
+  // are hidden and the prompt fields move under GENERAL (R5.3, R5.4)
+  const hideWhatToRun = lockActive;
+
   const sections = [
     {
       title: 'GENERAL',
@@ -429,111 +556,24 @@ const ScheduleForm = memo(props => {
             error={!!fieldError('description')}
             helperText={fieldError('description')}
           />
+          {hideWhatToRun && (
+            <>
+              {riskNotices}
+              {promptFields}
+            </>
+          )}
         </Box>
       ),
     },
-    {
+    !hideWhatToRun && {
       title: 'WHAT TO RUN',
       testId: 'schedule-section-what-to-run',
       content: (
         <Box sx={styles.section}>
-          {lockFailed && (
-            <BannerMessage
-              message="The entity is not available."
-              variant="warning"
-            />
-          )}
-          <RadioButtonGroup
-            testId="schedule-type"
-            items={TYPE_ITEMS}
-            value={values.type}
-            onChange={handleTypeChange}
-            disabled={lockActive}
-          />
-          <LazySelect
-            required
-            showOptionIcon
-            showEmptyPlaceholder={false}
-            label={TYPE_LABEL[values.type]}
-            value={values.application_id}
-            onValueChange={handleEntityChange}
-            options={options}
-            total={listData?.total}
-            isFetching={isFetching}
-            onLoadMore={() => setList(prev => ({ ...prev, page: prev.page + 1 }))}
-            searchString={list.query}
-            onSearch={query => setList({ page: 0, query })}
-            disabled={lockActive}
-            error={!!fieldError('application_id')}
-            helperText={fieldError('application_id')}
-          />
-          {/* the borderless select shows no helper text itself */}
-          {fieldError('application_id') && (
-            <Typography
-              variant="bodySmall"
-              color="error"
-            >
-              {fieldError('application_id')}
-            </Typography>
-          )}
-          {riskCheck.status === RISK_CHECK_STATUS.BLOCKED && (
-            <ScheduleRiskBlockBox
-              blocking={riskCheck.result.blocking}
-              entityType={values.type}
-              entityId={values.application_id}
-              versionId={values.version_id}
-            />
-          )}
-          {riskCheck.status === RISK_CHECK_STATUS.FAILED && (
-            <BannerMessage variant="warning">
-              <Box sx={styles.riskFailed}>
-                <Typography variant="bodySmall">The risk check did not run. Try again.</Typography>
-                <BaseBtn
-                  type="button"
-                  variant="elitea"
-                  color="secondary"
-                  onClick={riskCheck.runCheck}
-                >
-                  Retry
-                </BaseBtn>
-              </Box>
-            </BannerMessage>
-          )}
-          <VersionSelect
-            entityId={values.application_id}
-            versions={details?.versions}
-            defaultVersionID={getDefaultVersionId(details)}
-            value={values.version_id}
-            onChange={versionId => setFieldValue('version_id', versionId)}
-            disabled={!values.application_id}
-          />
-          <FieldError message={fieldError('version_id')} />
-          {values.type === 'pipeline' && (
-            <RadioButtonGroup
-              testId="schedule-run-mode"
-              items={RUN_MODE_ITEMS}
-              value={values.run_mode}
-              onChange={handleRunModeChange}
-            />
-          )}
-          {showPrompt && (
-            <>
-              <StyledInputEnhancer
-                required
-                multiline
-                label="Prompt"
-                value={values.prompt}
-                onChange={handlePromptChange}
-                error={!!fieldError('prompt')}
-                helperText={fieldError('prompt')}
-              />
-              <VariableList
-                variables={values.variables}
-                onChangeVariable={handleVariableChange}
-              />
-              <FieldError message={typeof errors.variables === 'string' ? errors.variables : ''} />
-            </>
-          )}
+          {entityPicker}
+          {riskNotices}
+          {versionPicker}
+          {promptFields}
         </Box>
       ),
     },
@@ -593,7 +633,7 @@ const ScheduleForm = memo(props => {
         </Box>
       ),
     },
-  ];
+  ].filter(Boolean);
 
   // The same header bar, column and collapsible sections as New Agent (CreateApplication)
   return (
