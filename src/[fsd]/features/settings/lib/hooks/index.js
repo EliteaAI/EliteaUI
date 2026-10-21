@@ -20,3 +20,4 @@ export { useMultiSectionConfigurations } from './useMultiSectionConfigurations.h
 export { useUsageKpiMetrics } from './useUsageKpiMetrics.hooks.js';
 export { useUsageModelData } from './useUsageModelData.hooks.js';
 export { useUsageChartData } from './useUsageChartData.hooks.js';
+export { useProjectContextWindowMode } from './useProjectContextWindowMode.hooks';
