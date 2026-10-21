@@ -3,12 +3,11 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useLocation, useSearchParams } from 'react-router-dom';
 
-import { Box } from '@mui/material';
 import { GridRowModes } from '@mui/x-data-grid';
 
 import { SECRETS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { SecretRowsHelpers } from '@/[fsd]/features/settings/lib/helpers';
-import { DrawerPageHeader } from '@/[fsd]/features/settings/ui/drawer-page';
+import { DrawerPageBody, DrawerPageHeader } from '@/[fsd]/features/settings/ui/drawer-page';
 import { SecretsTable } from '@/[fsd]/features/settings/ui/secrets';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { useSecretsListQuery } from '@/api/secrets.js';
@@ -17,7 +16,6 @@ import { buildErrorMessage } from '@/common/utils';
 import useCheckPermission from '@/hooks/useCheckPermission';
 
 const SecretsContent = memo(() => {
-  const styles = getStyles();
   const projectId = useSelectedProjectId();
   const { checkPermission } = useCheckPermission();
   const sideBarCollapsed = useSelector(state => state.settings.sideBarCollapsed);
@@ -167,67 +165,27 @@ const SecretsContent = memo(() => {
           },
         }}
       />
-      <Box
+      <DrawerPageBody
         key={`secrets-component-${forceRender}`}
         data-tour={SECRETS_TOUR_TARGET_IDS.page}
-        sx={styles.container}
       >
-        <Box sx={styles.tableWrapper}>
-          <SecretsTable
-            rows={isError ? [] : secretRows}
-            setRows={setSecretRows}
-            rowModesModel={rowModesModel}
-            setRowModesModel={setRowModesModel}
-            isFetching={isFetching}
-            refetch={refetch}
-            projectId={projectId}
-            onResetPaginationReady={fn => {
-              resetPaginationRef.current = fn;
-            }}
-          />
-        </Box>
-      </Box>
+        <SecretsTable
+          rows={isError ? [] : secretRows}
+          setRows={setSecretRows}
+          rowModesModel={rowModesModel}
+          setRowModesModel={setRowModesModel}
+          isFetching={isFetching}
+          refetch={refetch}
+          projectId={projectId}
+          onResetPaginationReady={fn => {
+            resetPaginationRef.current = fn;
+          }}
+        />
+      </DrawerPageBody>
     </>
   );
 });
 
 SecretsContent.displayName = 'SecretsContent';
-/**
- * @type {MuiSx}
- */
-const getStyles = () => ({
-  container: () => ({
-    padding: '0rem 0rem',
-    width: '100%',
-    height: 'calc(100% - 3.75rem)',
-    display: 'flex',
-    flexDirection: 'column',
-  }),
-
-  header: () => ({
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '1.5rem',
-    width: '100%',
-    minWidth: 0,
-    gap: 2,
-  }),
-
-  searchInput: () => ({
-    width: { xs: '12.5rem', sm: '15.625rem' },
-    maxWidth: '100%',
-    minWidth: '9.375rem',
-    borderBottom: '0.0625rem solid',
-    borderColor: 'border.lines',
-    padding: '0rem 1.5rem',
-    flexShrink: 1,
-  }),
-
-  tableWrapper: () => ({
-    flex: 1,
-    minHeight: 0,
-  }),
-});
 
 export default SecretsContent;
