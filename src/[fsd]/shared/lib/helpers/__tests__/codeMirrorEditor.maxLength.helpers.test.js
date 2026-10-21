@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { EditorState } from '@codemirror/state';
 
-import { createMaxLengthExtension } from '../CodeMirrorEditor';
+import { createMaxLengthExtension } from '../codeMirrorEditor.helpers';
 
 const LIMIT = 50;
 

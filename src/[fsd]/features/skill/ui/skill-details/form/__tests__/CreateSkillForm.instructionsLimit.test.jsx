@@ -36,7 +36,7 @@ vi.mock('@/[fsd]/shared/ui', () => ({
 vi.mock('@/[fsd]/shared/ui/accordion/BasicAccordion', () => ({
   default: ({ items }) => items.map(item => <div key={item.title}>{item.content}</div>),
 }));
-vi.mock('@/[fsd]/shared/ui/tab-group-button/TabGroupButton', () => ({ default: () => null }));
+vi.mock('@/[fsd]/shared/ui/tab-group-button', () => ({ MarkdownViewToggle: () => null }));
 
 const renderForm = instructions =>
   render(
@@ -45,7 +45,7 @@ const renderForm = instructions =>
         initialValues={{ name: 'reviewer', description: 'Reviews code', version_details: { instructions } }}
         onSubmit={vi.fn()}
       >
-        <CreateSkillForm />
+        <CreateSkillForm isCreateMode />
       </Formik>
     </ThemeProvider>,
   );
@@ -60,6 +60,12 @@ describe('CreateSkillForm instructions limit', () => {
     renderForm('i'.repeat(200));
 
     expect(screen.getByText('1000 characters left')).toBeTruthy();
+  });
+
+  it('says how far over the limit a skill saved before the limit was lowered is', () => {
+    renderForm('i'.repeat(1500));
+
+    expect(screen.getByText('300 characters over the limit')).toBeTruthy();
   });
 
   it('caps the editor at the configured limit', () => {

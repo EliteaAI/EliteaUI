@@ -1,4 +1,5 @@
 import { foldService } from '@codemirror/language';
+import { EditorState, Transaction } from '@codemirror/state';
 
 const countLeadingSpaces = str => {
   let count = 0;
@@ -794,4 +795,59 @@ export const detectContentType = content => {
 
   // Default to plain text
   return 'text';
+};
+
+export const createMaxLengthExtension = maxLength => {
+  if (!maxLength || maxLength <= 0) {
+    return [];
+  }
+
+  return EditorState.transactionFilter.of(tr => {
+    if (!tr.docChanged) return tr;
+    if (!tr.annotation(Transaction.userEvent)) return tr;
+
+    const currentLength = tr.startState.doc.length;
+    const allowedLength = Math.max(maxLength, currentLength);
+    if (tr.newDoc.length <= allowedLength) return tr;
+
+    const changes = [];
+    let runningLength = currentLength;
+
+    tr.changes.iterChanges((fromA, toA, _fromB, _toB, inserted) => {
+      const insertText = inserted.toString();
+      const deleteCount = toA - fromA;
+      const netChange = insertText.length - deleteCount;
+
+      if (netChange <= 0) {
+        changes.push({ from: fromA, to: toA, insert: insertText });
+        runningLength += netChange;
+        return;
+      }
+
+      const spaceLeft = allowedLength - runningLength;
+
+      if (netChange <= spaceLeft) {
+        changes.push({ from: fromA, to: toA, insert: insertText });
+        runningLength += netChange;
+      } else {
+        const allowedInsertLength = Math.max(0, deleteCount + spaceLeft);
+        changes.push({ from: fromA, to: toA, insert: insertText.slice(0, allowedInsertLength) });
+        runningLength = runningLength - deleteCount + allowedInsertLength;
+      }
+    });
+
+    if (changes.length === 0) return [];
+
+    const hasRealChanges = changes.some(c => c.from !== c.to || c.insert !== '');
+    if (!hasRealChanges) return [];
+
+    const originalAnchor = tr.startState.selection.main.head;
+    const docLengthChange = runningLength - currentLength;
+    const newAnchor = Math.max(0, originalAnchor + docLengthChange);
+
+    return tr.startState.update({
+      changes,
+      selection: { anchor: Math.min(newAnchor, allowedLength) },
+    });
+  });
 };

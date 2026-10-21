@@ -12,6 +12,7 @@ import CreateSkillForm from '../CreateSkillForm';
 
 vi.mock('@/[fsd]/features/entity-icon-editor', () => ({ EditableEntityIcon: () => null }));
 vi.mock('@/[fsd]/features/skill/lib/constants', () => ({ SKILL_NAME_MAX_LENGTH: 64 }));
+vi.mock('@/[fsd]/features/skill/lib/hooks', () => ({ useSkillInstructionsMaxLength: () => 50000 }));
 vi.mock('@/[fsd]/features/skill/ui/generate-skill-modal', () => ({ GenerateSkillButton: () => null }));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useFieldFocus: () => ({ toggleFieldFocus: vi.fn(), isFocused: () => false }),

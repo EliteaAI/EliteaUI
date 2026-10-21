@@ -117,6 +117,11 @@ const CreateSkillForm = memo(props => {
   );
 
   const instructions = formik.values?.version_details?.instructions || '';
+  const instructionsCharactersLeft = maxInstructionsLength - instructions.length;
+  const instructionsCounterLabel =
+    instructionsCharactersLeft >= 0
+      ? `${instructionsCharactersLeft} characters left`
+      : `${-instructionsCharactersLeft} characters over the limit`;
   const instructionsError =
     formik.touched?.version_details?.instructions && formik.errors?.version_details?.instructions;
   const instructionsErrorNode = instructionsError ? (
@@ -300,7 +305,7 @@ const CreateSkillForm = memo(props => {
                         variant="bodySmall"
                         sx={styles.charCounter}
                       >
-                        {`${maxInstructionsLength - instructions.length} characters left`}
+                        {instructionsCounterLabel}
                       </Typography>
                     </Box>
                   </Box>

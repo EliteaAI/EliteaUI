@@ -2,69 +2,14 @@ import { forwardRef, memo, useImperativeHandle, useMemo, useRef } from 'react';
 
 import { useTheme } from '@mui/material';
 
+import { CodeMirrorEditorHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useCodeMirror } from '@/[fsd]/shared/lib/hooks';
 import { history, redo, redoDepth, undo, undoDepth } from '@codemirror/commands';
 import { lintGutter } from '@codemirror/lint';
 import { searchKeymap } from '@codemirror/search';
-import { EditorState, Transaction } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
 import { vscodeDarkInit, vscodeLightInit } from '@uiw/codemirror-theme-vscode';
 import CodeMirror, { EditorView } from '@uiw/react-codemirror';
-
-export const createMaxLengthExtension = maxLength => {
-  if (!maxLength || maxLength <= 0) {
-    return [];
-  }
-
-  return EditorState.transactionFilter.of(tr => {
-    if (!tr.docChanged) return tr;
-    if (!tr.annotation(Transaction.userEvent)) return tr;
-
-    const currentLength = tr.startState.doc.length;
-    const allowedLength = Math.max(maxLength, currentLength);
-    if (tr.newDoc.length <= allowedLength) return tr;
-
-    const changes = [];
-    let runningLength = currentLength;
-
-    tr.changes.iterChanges((fromA, toA, _fromB, _toB, inserted) => {
-      const insertText = inserted.toString();
-      const deleteCount = toA - fromA;
-      const netChange = insertText.length - deleteCount;
-
-      if (netChange <= 0) {
-        changes.push({ from: fromA, to: toA, insert: insertText });
-        runningLength += netChange;
-        return;
-      }
-
-      const spaceLeft = allowedLength - runningLength;
-
-      if (netChange <= spaceLeft) {
-        changes.push({ from: fromA, to: toA, insert: insertText });
-        runningLength += netChange;
-      } else {
-        const allowedInsertLength = Math.max(0, deleteCount + spaceLeft);
-        changes.push({ from: fromA, to: toA, insert: insertText.slice(0, allowedInsertLength) });
-        runningLength = runningLength - deleteCount + allowedInsertLength;
-      }
-    });
-
-    if (changes.length === 0) return [];
-
-    const hasRealChanges = changes.some(c => c.from !== c.to || c.insert !== '');
-    if (!hasRealChanges) return [];
-
-    const originalAnchor = tr.startState.selection.main.head;
-    const docLengthChange = runningLength - currentLength;
-    const newAnchor = Math.max(0, originalAnchor + docLengthChange);
-
-    return tr.startState.update({
-      changes,
-      selection: { anchor: Math.min(newAnchor, allowedLength) },
-    });
-  });
-};
 
 const CodeMirrorEditor = memo(
   forwardRef((props, ref) => {
@@ -334,7 +279,7 @@ const CodeMirrorEditor = memo(
           ...syntaxErrorListener,
           ...contentTestIdExtension,
           ...extensions,
-          createMaxLengthExtension(maxLength),
+          CodeMirrorEditorHelpers.createMaxLengthExtension(maxLength),
         ]}
         onChange={onInputHandler}
       />
