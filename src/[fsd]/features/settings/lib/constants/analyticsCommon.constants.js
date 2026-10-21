@@ -58,9 +58,9 @@ export const ANALYTICS_SEARCH_PARAMS = {
 
 export const TOOLTIP_TEXTS = {
   overview: {
-    TEAM: 'Shows active project members out of all project members. Active members performed at least one tracked action during the selected date range. Scheduled, webhook-triggered, and index runs are not counted as member activity.',
+    TEAM: 'Shows active project members out of all project members. Active members performed at least one tracked action during the selected date range. Runs from Webhook, Scheduled, Schedule run now, and Index runs are not counted as member activity.',
     AI_ACTIVE:
-      'Number of members who used AI features during the selected date range, including LLM calls, tool runs, or Agent and Pipeline runs. Automated runs (scheduled, webhook, index) do not make a member AI active.',
+      'Number of members who used AI features during the selected date range, including LLM calls, tool runs, or Agent and Pipeline runs. Automated runs (Webhook, Scheduled, Schedule run now, Index runs) do not make a member AI active.',
     LLM_CALLS: `Total ${MODEL_REQUESTS} during the selected date range.`,
     TOOL_RUNS:
       'Total tool executions during the selected date range. This includes tools, sub-agents, and sub-pipelines invoked by Agents or Pipelines.',
@@ -73,11 +73,11 @@ export const TOOLTIP_TEXTS = {
     TOKENS: `Total input and output tokens used by ${MODEL_REQUESTS} during the selected date range.`,
     COST: `Estimated USD cost of ${MODEL_REQUESTS} during the selected date range. Costs are calculated from the platform's local model-price table and may differ from provider invoices.`,
     LEADERBOARD:
-      'Ranks users by combined LLM calls, tool runs, and Agent & Pipeline runs during the selected date range. Only manually started activity (UI or API) is ranked.',
+      'Ranks users by combined LLM calls, tool runs, and Agent & Pipeline runs during the selected date range. Only manually started activity (Chat, API, or MCP) is ranked. Webhook, Scheduled, Schedule run now, and Index runs are not ranked.',
     LEADERBOARD_SKILL_RUNS:
       'Model and tool calls made by skill runs count toward the score; the Skill figure shows how many skill runs they came from.',
     AUTOMATED_ACTIVITY:
-      'Runs started automatically by a schedule, a webhook, or indexing during the selected date range. They are included in project totals and cost, but are not counted as activity of the user who configured them.',
+      'Runs started automatically by Webhook, Scheduled, Schedule run now, or Index runs during the selected date range. They are included in project totals and cost, but are not counted as activity of the user who configured them.',
     MODEL_USAGE:
       "Shows LLM usage by model, including calls/runs, unique users for Team Projects, and each model's share of total LLM usage.",
     MODEL_USAGE_PRIVATE:
@@ -302,7 +302,7 @@ export const GUIDE_SECTIONS = [
       {
         name: 'Automated Activity',
         description:
-          'Shows runs that were started automatically rather than by a person: Scheduled Pipelines, Webhook Triggers, and Index Runs. Each source lists its runs, LLM calls, tool runs, and estimated cost. These runs are part of the project totals and cost, and are still billed to the user who configured them, but they are excluded from TEAM, AI ACTIVE, active users, Top 5 AI Adopters, and the Users and Activity tabs.',
+          'Shows runs that were started automatically rather than by a person: Webhook, Scheduled, Schedule run now, and Index runs. Each source lists its runs, LLM calls, tool runs, and estimated cost. These runs are part of the project totals and cost, and are still billed to the user who configured them, but they are excluded from TEAM, AI ACTIVE, active users, Top 5 AI Adopters, and the Users and Activity tabs.',
         calculation:
           'Grouped by trigger source. Index runs recorded before this tracking existed count as manual.',
       },
