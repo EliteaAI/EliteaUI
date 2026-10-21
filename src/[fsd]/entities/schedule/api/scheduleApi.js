@@ -97,6 +97,14 @@ export const scheduleApi = eliteaApi
         providesTags: [SCHEDULE_RUNS_TAG],
       }),
 
+      // One run with its log `events` and `summary` (owner CR 2026-10-21 test panel log)
+      getScheduleRun: build.query({
+        query: ({ projectId, scheduleId, runId }) => ({
+          url: `${schedulePath(projectId, scheduleId)}/runs/${runId}`,
+        }),
+        providesTags: [SCHEDULE_RUNS_TAG],
+      }),
+
       createSchedule: build.mutation({
         query: ({ projectId, ...body }) => ({
           url: schedulesPath(projectId),
@@ -215,6 +223,7 @@ export const scheduleApi = eliteaApi
 export const {
   useGetScheduleQuery,
   useGetScheduleRunsQuery,
+  useGetScheduleRunQuery,
   useGetScheduleListQuery,
   useCreateScheduleMutation,
   useRunScheduleMutation,

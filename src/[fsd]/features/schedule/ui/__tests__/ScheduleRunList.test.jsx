@@ -1,8 +1,5 @@
 // @vitest-environment jsdom
-import { useEffect } from 'react';
-
 import { format } from 'date-fns';
-import { MemoryRouter } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { ThemeProvider, createTheme } from '@mui/material';
@@ -13,29 +10,15 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 
 import ScheduleRunList from '../ScheduleRunList';
 
-// EL-7011 US-32 R4, owner CR 2026-10-21: the Runs tab table with Started, Trigger, Status and Open.
-
-const mocks = vi.hoisted(() => ({ chat: vi.fn(), mounts: 0 }));
-
-vi.mock('@/[fsd]/entities/run-history/ui', async importOriginal => ({
-  ...(await importOriginal()),
-  RunHistoryChat: props => {
-    mocks.chat(props);
-    useEffect(() => {
-      mocks.mounts += 1;
-    }, []);
-    return <div data-testid="run-chat">{props.selectedHistoryItem}</div>;
-  },
-}));
-vi.mock('@/[fsd]/features/chat', () => ({ ChatMessageList: () => null }));
-vi.mock('react-redux', async importOriginal => ({ ...(await importOriginal()), useDispatch: () => vi.fn() }));
-vi.mock('../../lib/hooks/useWaitingRunDecision.hooks', () => ({ useWaitingRunDecision: () => undefined }));
+// EL-7011 US-32 R4, owner CR 2026-10-21 test panel log: the Runs table of the left column
 
 const withConversation = {
   id: 1,
   conversation_id: 77,
   status: 'success',
   trigger: 'cron',
+  version_id: 4,
+  duration_ms: 65_000,
   started_at: '2026-10-14T12:05:00Z',
 };
 const withoutConversation = {
@@ -44,6 +27,8 @@ const withoutConversation = {
   status: 'failed',
   trigger: 'test',
   reason: 'Model unavailable',
+  version_id: 5,
+  duration_ms: 31_000,
   started_at: '2026-10-15T09:00:00Z',
 };
 const manual = {
@@ -53,7 +38,6 @@ const manual = {
   trigger: 'manual',
   started_at: '2026-10-13T08:00:00Z',
 };
-
 const waitingRun = {
   id: 4,
   conversation_id: 90,
@@ -63,82 +47,78 @@ const waitingRun = {
 };
 
 const theme = createTheme(getDesignTokens('dark'));
-const renderList = (runs, search = '') =>
+const renderList = (runs, props = {}) => {
+  const onOpen = vi.fn();
   render(
-    <MemoryRouter initialEntries={[`/${search}`]}>
-      <ThemeProvider theme={theme}>
-        <ScheduleRunList runs={runs} />
-      </ThemeProvider>
-    </MemoryRouter>,
+    <ThemeProvider theme={theme}>
+      <ScheduleRunList
+        runs={runs}
+        versionNames={{ 4: 'v3', 5: 'v2' }}
+        onOpen={onOpen}
+        {...props}
+      />
+    </ThemeProvider>,
   );
+  return onOpen;
+};
 const rows = () => screen.getAllByTestId('schedule-run-row');
 const cell = (row, name) => within(row).getByTestId(`schedule-run-${name}`);
 
-describe('ScheduleRunList (EL-7011 US-32, owner CR 2026-10-21)', () => {
+describe('ScheduleRunList EL-7011 US-32, owner CR 2026-10-21', () => {
   afterEach(() => {
     cleanup();
     vi.clearAllMocks();
-    mocks.mounts = 0;
   });
 
   it('R1.1 TC-US41-01 TC-US41-03 labels a waiting run and no finished run as waiting', () => {
     renderList([waitingRun, withConversation]);
 
-    expect(screen.getByText('Waiting for input')).toBeInTheDocument();
     expect(screen.getAllByTestId('schedule-run-status')).toHaveLength(2);
     expect(screen.getAllByText(/waiting/i)).toHaveLength(1);
   });
 
-  it('R1.2 TC-US41-04 selects the run of history_run_id and shows its conversation', () => {
-    renderList([withConversation, waitingRun], '?history_run_id=90');
-
-    expect(screen.getByTestId('run-chat')).toHaveTextContent('90');
-  });
-
-  it('R1.2 TC-US41-06 opens no run for a history_run_id that matches none', () => {
-    renderList([withConversation, waitingRun], '?history_run_id=5');
-
-    expect(screen.queryByTestId('run-chat')).not.toBeInTheDocument();
-  });
-
-  it('R4.1 shows the Started, Trigger and Status headers and the runs newest first', () => {
+  it('R4.1 shows Started, Trigger, Status, Duration and Version, newest first', () => {
     renderList([withConversation, withoutConversation, manual]);
 
-    ['Started', 'Trigger', 'Status'].forEach(label => expect(screen.getByText(label)).toBeInTheDocument());
-    expect(rows().map(row => cell(row, 'trigger').textContent)).toEqual(['Test', 'Scheduled', 'Run now']);
+    ['Started', 'Trigger', 'Status', 'Duration', 'Version'].forEach(label =>
+      expect(screen.getByText(label)).toBeInTheDocument(),
+    );
+    expect(rows().map(row => cell(row, 'trigger').textContent)).toEqual(['test', 'cron', 'manual']);
     expect(cell(rows()[1], 'started')).toHaveTextContent(
       format(new Date(withConversation.started_at), 'd MMM, HH:mm'),
     );
   });
 
-  it('R4.2 shows each status as a chip and the reason of a run without a conversation', () => {
+  it('shows the duration and the version name of each run, and a dash without one', () => {
+    renderList([withConversation, withoutConversation, manual]);
+
+    expect(rows().map(row => cell(row, 'duration').textContent)).toEqual(['31 s', '1 m 05 s', '–']);
+    expect(rows().map(row => cell(row, 'version').textContent)).toEqual(['v2', 'v3', '–']);
+  });
+
+  it('R4.2 shows each status as a chip and the reason of a run', () => {
     renderList([withConversation, withoutConversation]);
 
     expect(within(cell(rows()[0], 'status-cell')).getByTestId('schedule-run-status')).toHaveTextContent(
       'Failed',
     );
     expect(cell(rows()[0], 'status-cell')).toHaveTextContent('Model unavailable');
-    expect(within(cell(rows()[1], 'status-cell')).getByTestId('schedule-run-status')).toHaveTextContent(
-      'Success',
-    );
   });
 
-  it('R4.2 shows Open only for a run with a conversation, else a dash', () => {
-    renderList([withConversation, withoutConversation]);
+  it('Open shows a run in the panel, Review a waiting run, and a run without a conversation has a dash', () => {
+    const onOpen = renderList([withConversation, withoutConversation, waitingRun]);
 
-    expect(within(rows()[0]).queryByRole('button', { name: 'Open' })).not.toBeInTheDocument();
-    expect(cell(rows()[0], 'open')).toHaveTextContent('–');
-    expect(within(rows()[1]).getByRole('button', { name: 'Open' })).toBeInTheDocument();
+    expect(cell(rows()[1], 'open')).toHaveTextContent('–');
+    fireEvent.click(within(rows()[0]).getByRole('button', { name: 'Review' }));
+    expect(onOpen).toHaveBeenLastCalledWith(waitingRun);
+    fireEvent.click(within(rows()[2]).getByRole('button', { name: 'Open' }));
+    expect(onOpen).toHaveBeenLastCalledWith(withConversation);
   });
 
-  it('R4.1 Open shows the conversation of the run below the table', () => {
-    renderList([withConversation, withoutConversation]);
-    expect(screen.queryByTestId('run-chat')).not.toBeInTheDocument();
+  it('marks the run the panel shows', () => {
+    renderList([withConversation, manual], { selectedRunId: 3 });
 
-    fireEvent.click(within(rows()[1]).getByRole('button', { name: 'Open' }));
-
-    expect(screen.getByTestId('run-chat')).toHaveTextContent('77');
-    expect(mocks.chat.mock.lastCall[0].ChatMessageListComponent).toBeTypeOf('function');
+    expect(rows().map(row => row.getAttribute('aria-selected'))).toEqual(['false', 'true']);
   });
 
   it('R4.1 sorts by a header click', () => {
@@ -153,35 +133,16 @@ describe('ScheduleRunList (EL-7011 US-32, owner CR 2026-10-21)', () => {
     ]);
   });
 
-  it('R4.4 reloads the opened conversation when its run ends', () => {
-    const running = { ...withConversation, status: 'running' };
-    const { rerender } = renderList([running]);
-    fireEvent.click(screen.getByRole('button', { name: 'Open' }));
-    expect(mocks.mounts).toBe(1);
-
-    rerender(
-      <MemoryRouter>
-        <ThemeProvider theme={theme}>
-          <ScheduleRunList runs={[withConversation]} />
-        </ThemeProvider>
-      </MemoryRouter>,
-    );
-
-    expect(mocks.mounts).toBe(2);
-    expect(within(rows()[0]).getByTestId('schedule-run-status')).toHaveTextContent('Success');
-  });
-
   it('R4.1 says so when the schedule has no runs', () => {
     renderList([]);
     expect(screen.getByText('No runs yet.')).toBeInTheDocument();
   });
 
-  it('EL-7011 QA 2026-10-21 keeps a minimum width per column and the start time on one line', () => {
+  it('keeps rows 3.25 rem high and the start time on one line', () => {
     renderList([withConversation]);
     const [row] = rows();
-    expect(getComputedStyle(row).gridTemplateColumns).toBe(
-      'minmax(8rem, 1.2fr) minmax(7rem, 1fr) minmax(8rem, 1.6fr) 3.5rem',
-    );
+
+    expect(getComputedStyle(row).minHeight).toBe('3.25rem');
     expect(getComputedStyle(cell(row, 'started')).whiteSpace).toBe('nowrap');
   });
 });

@@ -6,170 +6,224 @@ import { ThemeProvider, createTheme } from '@mui/material';
 
 import getDesignTokens from '@/MainTheme';
 import '@testing-library/jest-dom/vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 
 import ScheduleRunsPanel from '../ScheduleRunsPanel';
 
-// EL-7011 US-32 R3, R4, owner CR 2026-10-21: the Test schedule and Runs card of the Edit schedule page.
+// EL-7011 US-32 R3, US-41, owner CR 2026-10-21 test panel log: the one live Test schedule panel
 
-const mocks = vi.hoisted(() => ({ useGetScheduleRunsQuery: vi.fn(), toastError: vi.fn() }));
-
-vi.mock('@/[fsd]/entities/schedule', () => ({ useGetScheduleRunsQuery: mocks.useGetScheduleRunsQuery }));
-vi.mock('@/[fsd]/entities/run-history/ui', async importOriginal => ({
-  ...(await importOriginal()),
-  RunHistoryChat: ({ selectedHistoryItem }) => <div data-testid="run-chat">{selectedHistoryItem}</div>,
+const mocks = vi.hoisted(() => ({
+  useScheduleRun: vi.fn(),
+  conversation: {},
+  decide: vi.fn(),
 }));
+
+vi.mock('../../lib/hooks/useScheduleRuns.hooks', () => ({
+  useScheduleRun: mocks.useScheduleRun,
+  useScheduleRunConversation: () => mocks.conversation,
+}));
+vi.mock('../../lib/hooks/useWaitingRunDecision.hooks', () => ({ useWaitingRunDecision: () => mocks.decide }));
 vi.mock('react-redux', async importOriginal => ({ ...(await importOriginal()), useDispatch: () => vi.fn() }));
-vi.mock('../../lib/hooks/useWaitingRunDecision.hooks', () => ({ useWaitingRunDecision: () => undefined }));
-vi.mock('@/[fsd]/features/chat', () => ({ ChatMessageList: () => null }));
-vi.mock('@/[fsd]/shared/lib/hooks', async importOriginal => ({
-  ...(await importOriginal()),
-  useSelectedProjectId: () => 5,
-  useToast: () => ({ toastError: mocks.toastError }),
-}));
-vi.mock('@/common/utils.jsx', async importOriginal => ({
-  ...(await importOriginal()),
-  buildErrorMessage: () => 'boom',
-}));
-vi.mock('@/[fsd]/shared/ui/banner-message/BannerMessage', () => ({
-  default: ({ message }) => <div role="alert">{message}</div>,
-}));
 
+const INFO =
+  "A test run uses the same account, tools and risk check as a scheduled run. It shows the log here and is marked as 'test'.";
 const NOTE = 'A test never changes Last run or Next run.';
-const schedule = { id: 9, allowed_actions: ['edit', 'run'] };
-const olderTest = {
-  id: 1,
-  trigger: 'test',
-  status: 'success',
-  conversation_id: 70,
-  started_at: '2026-10-14T10:00:00Z',
+const schedule = {
+  id: 9,
+  created_by: 1,
+  version_id: 4,
+  prompt: 'Summarize {{region}}',
+  variables: [{ name: 'region', value: 'EMEA' }],
+  allowed_actions: ['edit', 'run'],
 };
-const newestTest = {
-  id: 2,
-  trigger: 'test',
-  status: 'failed',
-  reason: 'Model unavailable',
-  conversation_id: 71,
-  started_at: '2026-10-14T12:00:00Z',
-};
+const olderTest = { id: 1, trigger: 'test', status: 'success', started_at: '2026-10-21T08:00:00Z' };
+const newestTest = { id: 2, trigger: 'test', status: 'running', started_at: '2026-10-21T10:42:00Z' };
 const cron = {
   id: 3,
   trigger: 'cron',
-  status: 'running',
+  status: 'success',
   conversation_id: 72,
-  started_at: '2026-10-14T13:00:00Z',
+  started_at: '2026-10-21T09:00:00Z',
 };
+const event = (kind, text, second = 1) => ({
+  at: `2026-10-21T10:42:${String(second).padStart(2, '0')}Z`,
+  kind,
+  text,
+});
+const STARTED = event('started', 'Test run started · trigger: test · version v3');
+const PAUSED = event('paused', 'Paused: Teams · post_message needs approval', 19);
+const FINISHED = event('finished', 'Run finished', 39);
 
 const theme = createTheme(getDesignTokens('dark'));
-const mockRuns = rows => mocks.useGetScheduleRunsQuery.mockReturnValue({ currentData: { rows } });
-const pollingOf = () => mocks.useGetScheduleRunsQuery.mock.lastCall[1].pollingInterval;
+const mockDetail = (run, extra = {}) =>
+  mocks.useScheduleRun.mockReturnValue({ run, refetch: vi.fn(), ...extra });
 const renderPanel = (props = {}) => {
-  const onTestRun = vi.fn();
+  const handlers = { onTestRun: vi.fn(), onRunHistory: vi.fn(), onBackToTest: vi.fn() };
   render(
     <MemoryRouter>
       <ThemeProvider theme={theme}>
         <ScheduleRunsPanel
           schedule={schedule}
-          onTestRun={onTestRun}
+          runs={[olderTest, newestTest, cron]}
+          versionNames={{ 4: 'v3' }}
           testRunPending={false}
           testRunError=""
+          {...handlers}
           {...props}
         />
       </ThemeProvider>
     </MemoryRouter>,
   );
-  return onTestRun;
+  return handlers;
 };
-const openRuns = () => fireEvent.click(screen.getByRole('button', { name: 'Runs' }));
+const logLines = () => screen.queryAllByTestId('schedule-run-log-line').map(line => line.textContent);
+const runTest = () => screen.queryByRole('button', { name: 'Run test' });
 
-describe('ScheduleRunsPanel (EL-7011 US-32, owner CR 2026-10-21)', () => {
-  beforeEach(() => mockRuns([olderTest, newestTest]));
+describe('ScheduleRunsPanel EL-7011 owner CR 2026-10-21 test panel log', () => {
+  beforeEach(() => {
+    mocks.conversation = {};
+    mockDetail({ ...newestTest, events: [STARTED] });
+  });
   afterEach(() => {
     cleanup();
     vi.clearAllMocks();
   });
 
-  it('R3 opens on the Test schedule tab with the Test run button and the note', () => {
+  it('has the Test schedule header, Run History, the info box and the note, and no tab switch', () => {
+    const { onRunHistory } = renderPanel();
+
+    expect(screen.getByRole('heading', { name: 'Test schedule' })).toBeInTheDocument();
+    expect(screen.getByText(INFO)).toBeInTheDocument();
+    expect(screen.getByText(NOTE)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Runs' })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /run history/i }));
+    expect(onRunHistory).toHaveBeenCalledTimes(1);
+  });
+
+  it('follows the newest test run of the schedule and streams its log', () => {
     renderPanel();
 
-    expect(screen.getByRole('button', { name: 'Test schedule' })).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByTestId('schedule-test-run')).toBeEnabled();
-    expect(screen.getByText(NOTE)).toBeInTheDocument();
+    expect(mocks.useScheduleRun).toHaveBeenCalledWith(9, 2);
+    expect(logLines()).toEqual([expect.stringContaining(STARTED.text)]);
+    expect(screen.getByTestId('schedule-run-log-status')).toHaveTextContent('Running');
+    expect(screen.queryByTestId('schedule-run-result')).not.toBeInTheDocument();
   });
 
-  it('R3.3 hides the Test schedule tab without the run action and opens on Runs', () => {
-    renderPanel({ schedule: { ...schedule, allowed_actions: ['edit'] } });
-
-    expect(screen.queryByRole('button', { name: 'Test schedule' })).not.toBeInTheDocument();
-    expect(screen.queryByTestId('schedule-test-run')).not.toBeInTheDocument();
-    expect(screen.getAllByTestId('schedule-run-row')).toHaveLength(2);
-    expect(screen.getByText(NOTE)).toBeInTheDocument();
-  });
-
-  it('R3.1 Test run calls the form handler and is disabled while the run is pending', () => {
-    const onTestRun = renderPanel();
-    fireEvent.click(screen.getByTestId('schedule-test-run'));
-    expect(onTestRun).toHaveBeenCalledTimes(1);
+  it('Run test calls the form handler; it is disabled with the note while a test runs', () => {
+    const { onTestRun } = renderPanel();
+    expect(runTest()).toBeDisabled();
+    expect(screen.getByText('A test is running.')).toBeInTheDocument();
     cleanup();
 
-    renderPanel({ testRunPending: true });
-    expect(screen.getByTestId('schedule-test-run')).toBeDisabled();
+    mockDetail({ ...olderTest, events: [STARTED, FINISHED] });
+    const handlers = renderPanel({ runs: [olderTest] });
+    expect(runTest()).toBeEnabled();
+    fireEvent.click(runTest());
+    expect(handlers.onTestRun).toHaveBeenCalledTimes(1);
+    expect(onTestRun).not.toHaveBeenCalled();
   });
 
-  it('R3.5 shows the server reason of a refused run in the banner', () => {
-    renderPanel({ testRunError: 'Already running' });
-    expect(screen.getByRole('alert')).toHaveTextContent('Already running');
-  });
-
-  it('R3 shows the status, reason and output of the newest test run', () => {
+  it('shows the prompt box with the version and variable chips', () => {
     renderPanel();
 
-    expect(screen.getByTestId('schedule-run-status')).toHaveTextContent('Failed');
-    expect(screen.getByText('Model unavailable')).toBeInTheDocument();
-    expect(screen.getByTestId('run-chat')).toHaveTextContent('71');
+    expect(screen.getByText('Prompt from the schedule')).toBeInTheDocument();
+    expect(screen.getAllByTestId('schedule-prompt-chip').map(chip => chip.textContent)).toEqual([
+      'v3',
+      'region = EMEA',
+    ]);
   });
 
-  it('R3 says so when the schedule has no test run yet', () => {
-    mockRuns([cron]);
-    renderPanel();
+  it('says No test runs yet. before the first test and keeps Run test enabled', () => {
+    mockDetail(undefined);
+    renderPanel({ runs: [cron] });
 
+    expect(mocks.useScheduleRun).toHaveBeenCalledWith(9, undefined);
     expect(screen.getByText('No test runs yet.')).toBeInTheDocument();
-    expect(screen.queryByTestId('run-chat')).not.toBeInTheDocument();
+    expect(runTest()).toBeEnabled();
   });
 
-  it('R4.1 the Runs tab lists every run of this schedule with the note', () => {
-    mockRuns([olderTest, newestTest, cron]);
-    renderPanel();
-    openRuns();
+  it('says Starting test run... and disables Run test while the run starts', () => {
+    mockDetail(undefined);
+    renderPanel({ runs: [cron], testRunPending: true });
 
-    expect(screen.getAllByTestId('schedule-run-row')).toHaveLength(3);
-    expect(screen.getByText(NOTE)).toBeInTheDocument();
-    expect(mocks.useGetScheduleRunsQuery).toHaveBeenCalledWith(
-      { projectId: 5, scheduleId: 9, page: 0, pageSize: 100 },
-      { skip: false },
-    );
+    expect(screen.getByText('Starting test run...')).toBeInTheDocument();
+    expect(runTest()).toBeDisabled();
   });
 
-  it('R4.3 refreshes every 3 seconds while a run is running, and not otherwise', () => {
-    mockRuns([cron]);
-    renderPanel();
-    expect(pollingOf()).toBe(3000);
-    cleanup();
+  it('shows the result card with the answer when the run is final', () => {
+    mocks.conversation = { answer: 'Three open pull requests' };
+    mockDetail({
+      ...olderTest,
+      conversation_id: 70,
+      summary: { duration_ms: 38_000, tokens: 2140, cost_usd: 0.03 },
+      events: [STARTED, FINISHED],
+    });
+    renderPanel({ runs: [olderTest] });
 
-    mockRuns([olderTest]);
-    renderPanel();
-    expect(pollingOf()).toBe(0);
+    const result = screen.getByTestId('schedule-run-result');
+    expect(result).toHaveTextContent('38 s · 2,140 tokens · $0.03');
+    expect(result).toHaveTextContent('Three open pull requests');
   });
 
-  it('R4.3 stops polling and shows an error when a poll fails', () => {
-    mocks.useGetScheduleRunsQuery.mockReturnValue({
-      currentData: { rows: [cron] },
-      isError: true,
-      error: { status: 500 },
+  it('US-41 puts Approve and Reject under the paused line of a waiting test', () => {
+    mocks.conversation = { conversationUuid: 'conv-uuid', pausedMessageId: 'msg-7' };
+    mockDetail({
+      ...newestTest,
+      status: 'waiting_for_approval',
+      conversation_id: 71,
+      events: [STARTED, PAUSED],
     });
     renderPanel();
 
-    expect(pollingOf()).toBe(0);
-    expect(mocks.toastError).toHaveBeenCalledWith('boom');
+    const [, pausedLine] = screen.getAllByTestId('schedule-run-log-line');
+    const actions = pausedLine.nextElementSibling;
+    expect(within(actions).getByRole('button', { name: 'Approve' })).toBeEnabled();
+    expect(within(actions).getByRole('button', { name: 'Reject' })).toBeEnabled();
+    expect(screen.getByTestId('schedule-run-log-status')).toHaveTextContent(/Waiting/);
+    expect(runTest()).toBeDisabled();
+
+    fireEvent.click(within(actions).getByRole('button', { name: 'Approve' }));
+    expect(mocks.decide).toHaveBeenCalledWith({
+      action: 'approve',
+      conversationUuid: 'conv-uuid',
+      messageId: 'msg-7',
+    });
+  });
+
+  it('shows a run opened from the Runs table, without the info and prompt boxes, with Back to test', () => {
+    mockDetail({ ...cron, events: [event('started', 'Run started · trigger: cron')] });
+    const { onBackToTest } = renderPanel({ viewedRun: cron });
+
+    expect(mocks.useScheduleRun).toHaveBeenCalledWith(9, 3);
+    expect(screen.getByRole('heading')).toHaveTextContent(/^Run \d{1,2} Oct \d{2}:\d{2} · cron$/);
+    expect(screen.queryByText(INFO)).not.toBeInTheDocument();
+    expect(screen.queryByText('Prompt from the schedule')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Back to test' }));
+    expect(onBackToTest).toHaveBeenCalledTimes(1);
+  });
+
+  it('R3.3 shows only the log and the result without the run permission', () => {
+    renderPanel({ schedule: { ...schedule, allowed_actions: ['edit'] } });
+
+    expect(runTest()).not.toBeInTheDocument();
+    expect(screen.queryByText('Prompt from the schedule')).not.toBeInTheDocument();
+    expect(logLines()).toHaveLength(1);
+  });
+
+  it('keeps the last log lines on a load error and offers Retry', () => {
+    const refetch = vi.fn();
+    mockDetail({ ...newestTest, events: [STARTED] }, { isError: true, refetch });
+    renderPanel();
+
+    expect(logLines()).toHaveLength(1);
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('R3.5 shows the server reason of a refused run', () => {
+    renderPanel({ testRunError: 'A run of this schedule is active' });
+    expect(screen.getByText('A run of this schedule is active')).toBeInTheDocument();
   });
 });
