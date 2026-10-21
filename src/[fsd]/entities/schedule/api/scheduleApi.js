@@ -79,7 +79,7 @@ export const scheduleApi = eliteaApi
         },
         transformResponse: response => ({
           ...response,
-          runWithoutAskingAllowed: response?.run_without_asking_allowed !== false,
+          runWithoutAskingAllowed: response?.run_without_asking_allowed === true,
         }),
         providesTags: [SCHEDULES_TAG],
       }),

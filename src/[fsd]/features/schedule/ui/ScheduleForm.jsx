@@ -702,7 +702,7 @@ const ScheduleForm = memo(props => {
         entityLabel={entityLabel}
         scheduleName={review?.values.name}
         tools={riskCheck.result?.sensitive}
-        runWithoutAskingAllowed={riskCheck.result?.run_without_asking_allowed}
+        runWithoutAskingAllowed={riskCheck.result?.run_without_asking_allowed === true}
         scanIncomplete={riskCheck.result?.notices?.some(notice => notice.code === 'scan_incomplete')}
         showSettingsLink={canChangeProjectSettings}
         changed={review?.changed}
