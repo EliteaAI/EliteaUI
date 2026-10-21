@@ -42,7 +42,7 @@ describe('ScheduleRunResult EL-7011 owner CR 2026-10-21', () => {
     renderResult();
 
     expect(screen.getByTestId('schedule-run-status')).toHaveTextContent('Success');
-    expect(screen.getByTestId('schedule-run-summary')).toHaveTextContent('38 s · 2,140 tokens · $0.03');
+    expect(screen.getByTestId('schedule-run-summary')).toHaveTextContent('38 s · 2,140 tokens · $0.0300');
   });
 
   it('opens the run conversation in a new tab', () => {

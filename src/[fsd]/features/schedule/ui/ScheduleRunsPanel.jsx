@@ -134,6 +134,7 @@ const ScheduleRunsPanel = memo(
             )}
           </Box>
           <ScheduleRunLog
+            key={shownRun?.id}
             events={events}
             emptyText={emptyText}
             pausedAction={

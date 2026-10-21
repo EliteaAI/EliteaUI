@@ -6,7 +6,7 @@ import { ThemeProvider, createTheme } from '@mui/material';
 
 import getDesignTokens from '@/MainTheme';
 import '@testing-library/jest-dom/vitest';
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 
 import ScheduleRunLog from '../ScheduleRunLog';
 
@@ -70,6 +70,44 @@ describe('ScheduleRunLog EL-7011 owner CR 2026-10-21', () => {
       events: [{ at: at(9), kind: 'finished', text: 'Run failed: model unavailable', level: 'error' }],
     });
     expect(lines()[0].dataset.level).toBe('error');
+  });
+
+  it('CR-12 makes the scroll box reachable by keyboard and names it', () => {
+    renderLog();
+
+    const box = screen.getByRole('log', { name: 'Run log' });
+    expect(box).toHaveAttribute('tabindex', '0');
+  });
+
+  it('CR-12 shows a short tool result in the line only', () => {
+    renderLog({
+      events: [{ at: at(5), kind: 'tool_call', text: 'Tool call: github · list (9 ms): ok', summary: 'ok' }],
+    });
+
+    expect(screen.queryByRole('button', { name: /full result/i })).not.toBeInTheDocument();
+  });
+
+  it('CR-12 shows the full tool result of a long or multi-line result on demand', () => {
+    const summary = `{\n  "items": [${'1, '.repeat(100)}]\n}`;
+    renderLog({
+      events: [
+        {
+          at: at(5),
+          kind: 'tool_call',
+          text: 'Tool call: github · list (9 ms): { "items": [1, 1, 1',
+          summary,
+        },
+      ],
+    });
+
+    expect(screen.queryByTestId('schedule-run-log-result')).not.toBeInTheDocument();
+    const toggle = screen.getByRole('button', { name: 'Show full result' });
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+
+    fireEvent.click(toggle);
+
+    expect(screen.getByTestId('schedule-run-log-result').textContent).toBe(summary);
+    expect(screen.getByRole('button', { name: 'Hide full result' })).toHaveAttribute('aria-expanded', 'true');
   });
 
   it('shows the empty text without events', () => {

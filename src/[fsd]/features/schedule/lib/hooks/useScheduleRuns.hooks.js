@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { RunHistoryApi } from '@/[fsd]/entities/run-history/api';
 import { useGetScheduleRunQuery, useGetScheduleRunsQuery } from '@/[fsd]/entities/schedule';
@@ -11,6 +11,8 @@ import { isRunActive } from '../helpers';
 
 const POLLING_INTERVAL_MS = 3000;
 const RUN_POLLING_INTERVAL_MS = 2000;
+// The usage is written a moment after the run ends; the detail is read again for this long
+const USAGE_WAIT_MS = 10_000;
 // lean: the newest 100 runs, the server maximum per request; page the runs when one schedule keeps more
 const RUNS_PAGE = { page: 0, pageSize: 100 };
 const NO_RUNS = [];
@@ -56,7 +58,22 @@ export const useScheduleRun = (scheduleId, runId) => {
   const args = { projectId, scheduleId, runId };
   const skip = !projectId || runId == null;
   const { currentData, isError, refetch } = useGetScheduleRunQuery(args, { skip });
-  const polling = !isError && isRunActive(currentData?.status);
+  const [usageWaitOver, setUsageWaitOver] = useState(false);
+  // A finished run with a conversation gets its tokens and cost shortly after the end (CR-12 D3)
+  const waitingForUsage =
+    !!currentData &&
+    !isRunActive(currentData.status) &&
+    currentData.conversation_id != null &&
+    currentData.summary?.tokens == null &&
+    !usageWaitOver;
+  const polling = !isError && (isRunActive(currentData?.status) || waitingForUsage);
+
+  useEffect(() => setUsageWaitOver(false), [runId]);
+  useEffect(() => {
+    if (!waitingForUsage) return undefined;
+    const timer = setTimeout(() => setUsageWaitOver(true), USAGE_WAIT_MS);
+    return () => clearTimeout(timer);
+  }, [waitingForUsage]);
   useGetScheduleRunQuery(args, { skip, pollingInterval: polling ? RUN_POLLING_INTERVAL_MS : 0 });
 
   return { run: currentData, isError, refetch };

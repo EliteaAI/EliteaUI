@@ -1,4 +1,4 @@
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useEffect, useState } from 'react';
 
 import { useDispatch } from 'react-redux';
 
@@ -10,6 +10,8 @@ import BaseBtn from '@/[fsd]/shared/ui/button/BaseBtn';
 import { formatExpiresIn } from '../lib/helpers';
 import { useWaitingRunDecision } from '../lib/hooks/useWaitingRunDecision.hooks';
 
+const EXPIRY_TICK_MS = 60_000;
+
 /**
  * Approve and Reject at the paused line of a waiting run (US-41, owner CR 2026-10-21 test panel log).
  * The same owner-only decision call as the Runs table; the server still checks the owner.
@@ -19,6 +21,12 @@ const ScheduleRunApproval = memo(props => {
 
   const dispatch = useDispatch();
   const [deciding, setDeciding] = useState(false);
+  // The expiry text moves on every minute, not only when the run is read again
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), EXPIRY_TICK_MS);
+    return () => clearInterval(timer);
+  }, []);
   // A decision changes the run on the server, so the run and the list load again
   const onDecided = useCallback(
     () => dispatch(scheduleApi.util.invalidateTags([SCHEDULE_RUNS_TAG])),
@@ -66,7 +74,7 @@ const ScheduleRunApproval = memo(props => {
         variant="bodySmall"
         color="text.secondary"
       >
-        {formatExpiresIn(pausedAt, Date.now())}
+        {formatExpiresIn(pausedAt, now)}
       </Typography>
       {!onHitlResume && (
         <Typography
