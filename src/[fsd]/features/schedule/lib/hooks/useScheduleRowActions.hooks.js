@@ -2,13 +2,16 @@ import { useCallback } from 'react';
 
 import {
   useDeleteScheduleMutation,
+  useLazyExportSchedulesQuery,
   usePauseScheduleMutation,
   useResumeScheduleMutation,
   useRunScheduleMutation,
 } from '@/[fsd]/entities/schedule/api/scheduleApi.js';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks/useSelectedProject.hooks';
 import { useToast } from '@/[fsd]/shared/lib/hooks/useToast.hooks';
-import { buildErrorMessage } from '@/common/utils';
+import { PERMISSIONS } from '@/common/constants';
+import { buildErrorMessage, downloadBlobFile } from '@/common/utils';
+import useCheckPermission from '@/hooks/useCheckPermission';
 
 // Calls, toasts and the busy state of one schedule row. The one fixedCacheKey for
 // run, pause, resume and delete is on purpose: the menu and the Enabled switch share the busy state.
@@ -20,6 +23,8 @@ export const useScheduleRowActions = row => {
   const [pauseSchedule, pauseState] = usePauseScheduleMutation({ fixedCacheKey });
   const [resumeSchedule, resumeState] = useResumeScheduleMutation({ fixedCacheKey });
   const [deleteSchedule, deleteState] = useDeleteScheduleMutation({ fixedCacheKey });
+  const [exportSchedules, exportState] = useLazyExportSchedulesQuery();
+  const { checkPermission } = useCheckPermission();
 
   const perform = useCallback(
     async (call, successText) => {
@@ -51,11 +56,24 @@ export const useScheduleRowActions = row => {
     [perform, deleteSchedule, projectId, scheduleId, row.name],
   );
 
+  // CR-16: one schedule in the list export format; no onExport means no Export item
+  const onExport = useCallback(async () => {
+    const { data, error } = await exportSchedules({ projectId, ids: [scheduleId] });
+    if (error) toastError(buildErrorMessage(error));
+    else downloadBlobFile(data.blob, data.filename);
+  }, [exportSchedules, projectId, scheduleId, toastError]);
+
   return {
     onRun,
     onPause,
     onResume,
     onDelete,
-    isBusy: runState.isLoading || pauseState.isLoading || resumeState.isLoading || deleteState.isLoading,
+    onExport: checkPermission(PERMISSIONS.schedules.export) ? onExport : undefined,
+    isBusy:
+      runState.isLoading ||
+      pauseState.isLoading ||
+      resumeState.isLoading ||
+      deleteState.isLoading ||
+      exportState.isFetching,
   };
 };
