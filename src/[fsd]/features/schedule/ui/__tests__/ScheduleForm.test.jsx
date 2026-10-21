@@ -717,6 +717,52 @@ describe('ScheduleForm EL-7011', () => {
     });
   });
 
+  describe('pipeline editor entry (US-36)', () => {
+    const renderFromPipeline = () =>
+      renderForm({
+        initialValues: { ...INITIAL, type: 'pipeline', run_mode: 'entry_point', application_id: '9' },
+        lockedEntity: { type: 'pipeline', id: '9' },
+      });
+
+    it('TC-US36-14 R4.1 locks Type Pipeline and this pipeline and presets the version', async () => {
+      renderFromPipeline();
+
+      expect(screen.getByTestId('schedule-type-pipeline')).toHaveAttribute('aria-pressed', 'true');
+      expect(screen.getByTestId('schedule-type-pipeline')).toBeDisabled();
+      expect(selectProps).toMatchObject({ label: 'Pipeline', value: '9', disabled: true });
+      await waitFor(() => expect(versionProps.value).toBe(90));
+    });
+
+    it('TC-US36-15 R4.2 saves Entry point with no prompt by default', async () => {
+      const { onSubmit } = renderFromPipeline();
+      await waitFor(() => expect(versionProps.value).toBe(90));
+
+      expect(screen.getByTestId('schedule-run-mode-entry_point')).toHaveAttribute('aria-pressed', 'true');
+      expect(screen.queryByLabelText(/Prompt/)).not.toBeInTheDocument();
+      save();
+
+      await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+      expect(onSubmit.mock.calls[0][0]).toMatchObject({
+        entity_type: 'pipeline',
+        run_mode: 'entry_point',
+        prompt: null,
+        variables: [],
+      });
+    });
+
+    it('TC-US36-15 R4.2 Prompt mode asks for the prompt and shows one field per placeholder', async () => {
+      const { onSubmit } = renderFromPipeline();
+      fireEvent.click(screen.getByTestId('schedule-run-mode-prompt'));
+
+      save();
+      expect(await screen.findByText('Prompt is required')).toBeInTheDocument();
+      expect(onSubmit).not.toHaveBeenCalled();
+
+      typePrompt('Report for {{region}}');
+      expect(screen.getByTestId('variables')).toHaveTextContent('region');
+    });
+  });
+
   describe('edit mode', () => {
     const SCHEDULE = {
       id: 3,
