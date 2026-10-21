@@ -257,6 +257,10 @@ describe('R1.1 R1.2 R2.3 R3.2 EL-7011 list filter arguments', () => {
     expect(params.get('enabled')).toBe('true');
   });
 
+  it('US-35 R2.1 sends entityId as entity_id', async () => {
+    expect((await listParams({ entityType: 'agent', entityId: '12' })).get('entity_id')).toBe('12');
+  });
+
   it('R1.1 sends enabled=false, because false is a real filter value', async () => {
     expect((await listParams({ enabled: false })).get('enabled')).toBe('false');
   });

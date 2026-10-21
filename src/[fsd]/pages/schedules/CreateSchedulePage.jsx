@@ -3,20 +3,28 @@ import { useCallback, useMemo } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { useCreateScheduleMutation } from '@/[fsd]/entities/schedule';
-import { DEFAULT_SCHEDULE_CRON, ScheduleForm, buildInitialValues } from '@/[fsd]/features/schedule';
+import {
+  DEFAULT_SCHEDULE_CRON,
+  ScheduleForm,
+  buildInitialValues,
+  useEntityScheduleRoute,
+} from '@/[fsd]/features/schedule';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { ScheduleSettingsSection, StopOnDateField } from '@/[fsd]/shared/ui/schedule';
 
-const CreateSchedulePage = () => {
+// entityType: the form is nested in that editor and locks its entity (owner CR 2026-10-21)
+const CreateSchedulePage = props => {
+  const { entityType } = props;
   const projectId = useSelectedProjectId();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { state } = useLocation();
   const [createSchedule] = useCreateScheduleMutation();
+  const entityRoute = useEntityScheduleRoute(entityType);
 
   const { values, urlEntity, returnTo } = useMemo(
-    () => buildInitialValues(searchParams, state),
-    [searchParams, state],
+    () => buildInitialValues(searchParams, state, entityRoute),
+    [searchParams, state, entityRoute],
   );
 
   const onSubmit = useCallback(

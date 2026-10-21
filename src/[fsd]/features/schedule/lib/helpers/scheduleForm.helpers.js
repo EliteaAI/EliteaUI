@@ -43,10 +43,14 @@ export const syncPromptVariables = (prompt, variables = []) => {
   return contextResolver(prompt ?? '').map(name => ({ name, value: valueByName[name] ?? '' }));
 };
 
-export const buildInitialValues = (searchParams, locationState) => {
+// entityRoute: the entity and the editor path of a form nested in an agent or pipeline editor
+export const buildInitialValues = (searchParams, locationState, entityRoute = {}) => {
   const entityType = searchParams.get('entityType');
   const entityId = searchParams.get('entityId');
-  const urlEntity = ENTITY_TYPES.includes(entityType) && entityId ? { type: entityType, id: entityId } : null;
+  const urlEntity =
+    entityRoute.lockedEntity ??
+    // Numeric, as the entity options are: a string id would leave the locked field empty
+    (ENTITY_TYPES.includes(entityType) && entityId ? { type: entityType, id: Number(entityId) } : null);
   const type = urlEntity?.type ?? 'agent';
   const returnTo = locationState?.returnTo;
 
@@ -60,7 +64,7 @@ export const buildInitialValues = (searchParams, locationState) => {
       approval_rule: DEFAULT_APPROVAL_RULE,
     },
     urlEntity,
-    returnTo: IN_APP_PATH.test(returnTo) ? returnTo : RouteDefinitions.Schedules,
+    returnTo: IN_APP_PATH.test(returnTo) ? returnTo : (entityRoute.returnTo ?? RouteDefinitions.Schedules),
   };
 };
 
@@ -69,8 +73,8 @@ const toExpiryDate = (expiresAt, timeZone) =>
   expiresAt ? new Intl.DateTimeFormat('en-CA', { timeZone }).format(new Date(expiresAt)) : null;
 
 // The saved cron stays in the schedule's own zone: only a cron edit moves it to the browser zone
-export const buildEditValues = (schedule, locationState) => {
-  const { values, returnTo } = buildInitialValues(new URLSearchParams(), locationState);
+export const buildEditValues = (schedule, locationState, entityRoute) => {
+  const { values, returnTo } = buildInitialValues(new URLSearchParams(), locationState, entityRoute);
 
   return {
     values: {

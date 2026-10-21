@@ -47,7 +47,7 @@ const FilterSelect = memo(({ id, label, width, options, value, onValueChange }) 
 });
 FilterSelect.displayName = 'FilterSelect';
 
-const SchedulesFilters = memo(({ value, onChange, onClear, hasFilters, isAdmin }) => {
+const SchedulesFilters = memo(({ value, onChange, onClear, hasFilters, isAdmin, hideEntityType = false }) => {
   const styles = schedulesFiltersStyles();
   const [searchText, setSearchText] = useState(value.search);
   // The value only carries ids; the Owner filter needs the user objects for its chips
@@ -121,14 +121,16 @@ const SchedulesFilters = memo(({ value, onChange, onClear, hasFilters, isAdmin }
           inputProps={{ 'aria-label': 'Search schedules' }}
         />
       </Box>
-      <FilterSelect
-        id="type"
-        label="Type"
-        width="9.5rem"
-        options={TYPE_OPTIONS}
-        value={value.entityType}
-        onValueChange={handleEntityType}
-      />
+      {!hideEntityType && (
+        <FilterSelect
+          id="type"
+          label="Type"
+          width="9.5rem"
+          options={TYPE_OPTIONS}
+          value={value.entityType}
+          onValueChange={handleEntityType}
+        />
+      )}
       <FilterSelect
         id="status"
         label="Status"

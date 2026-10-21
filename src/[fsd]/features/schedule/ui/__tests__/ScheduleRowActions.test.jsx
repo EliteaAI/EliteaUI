@@ -84,6 +84,39 @@ describe('ScheduleRowActions (EL-7011 US-28)', () => {
     expect(screen.queryByText('Edit')).not.toBeInTheDocument();
   });
 
+  it('TC-US35-22 US-35 R5.1 the card menu lists Run now, Edit, Pause, Open run history and Delete', () => {
+    renderMenu(
+      { allowed_actions: ['delete', 'change_owner', 'pause', 'edit', 'run'] },
+      { onEdit: vi.fn(), onOpenRunHistory: vi.fn(), hideChangeOwner: true },
+    );
+    openMenu();
+    expect(screen.getAllByRole('menuitem').map(item => item.textContent)).toEqual([
+      'Run now',
+      'Edit',
+      'Pause',
+      'Open run history',
+      'Delete',
+    ]);
+  });
+
+  it('TC-US35-12 US-35 R3.3 Open run history needs edit and calls onOpenRunHistory', () => {
+    const onOpenRunHistory = vi.fn();
+    renderMenu({ allowed_actions: ['edit'] }, { onOpenRunHistory });
+    openMenu();
+    fireEvent.click(screen.getByText('Open run history'));
+    expect(onOpenRunHistory).toHaveBeenCalledTimes(1);
+    cleanup();
+    renderMenu({ allowed_actions: ['run', 'delete'] }, { onOpenRunHistory });
+    openMenu();
+    expect(screen.queryByText('Open run history')).not.toBeInTheDocument();
+  });
+
+  it('US-35 R5.1 the page menu offers no Open run history without the handler', () => {
+    renderMenu({ allowed_actions: ['edit'] }, { onEdit: vi.fn() });
+    openMenu();
+    expect(screen.getAllByRole('menuitem').map(item => item.textContent)).toEqual(['Edit']);
+  });
+
   it('R1.1 EL-7011 shows Change owner only when change_owner is allowed', () => {
     renderMenu({ allowed_actions: ['run'] });
     openMenu();
