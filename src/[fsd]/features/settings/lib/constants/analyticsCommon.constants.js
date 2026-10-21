@@ -153,7 +153,8 @@ export const TOOLTIP_TEXTS = {
       'Runs and in-agent uses per skill version. Unknown version means the agent did not record which version it used.',
     MODELS: 'Model calls made by this skill’s runs, per model.',
     USERS: 'Users who ran this skill or used it through an agent.',
-    TRIGGERS: 'How the runs and uses started: Chat, API, MCP, Webhook, Scheduled, Schedule run now, or Index runs.',
+    TRIGGERS:
+      'How the runs and uses started: Chat, API, MCP, Webhook, Scheduled, Schedule run now, or Index runs.',
     AGENTS: 'Agents and Pipelines that loaded or mentioned this skill, by number of uses.',
     SOURCES: 'How agents activated this skill: loaded on demand (load_skill) or mentioned in the message.',
     RECENT_RUNS: 'The latest runs of this skill. Open a run to see its own analytics.',
@@ -304,7 +305,7 @@ export const GUIDE_SECTIONS = [
         description:
           'Shows runs that were started automatically rather than by a person: Webhook, Scheduled, Schedule run now, and Index runs. Each source lists its runs, LLM calls, tool runs, and estimated cost. These runs are part of the project totals and cost, and are still billed to the user who configured them, but they are excluded from TEAM, AI ACTIVE, active users, Top 5 AI Adopters, and the Users and Activity tabs.',
         calculation:
-          'Grouped by trigger source. Index runs recorded before this tracking existed count as manual.',
+          'Rows are grouped by trigger source and entity type (Agent or Pipeline). The Entity type column shows a dash when a run has no entity type. Runs recorded before trigger sources existed show as Manual (legacy).',
       },
     ],
   },
@@ -436,7 +437,7 @@ export const GUIDE_SECTIONS = [
       {
         name: 'Agent & Pipeline Detail View',
         description:
-          'Selecting an Agent or Pipeline opens a detail view with its total runs, unique users, total cost, input-token cost, output-token cost, token usage, evaluation tokens, latency, errors, and daily runs. Below them, Versions and Models show runs, tokens, and cost per executed version and per model (a run that used several models counts once in each model row, and only LLM calls are included); Users, Tools, and Skills show who ran it, which tools it called, and which skills it loaded or mentioned; Trigger Sources shows runs, tokens, and cost per initiating trigger, where runs without a recorded schedule or webhook trigger appear as Manual. Recent Runs lists every run with its user, version, models, tokens, cost, and Error or Success status, sorted and paged across the whole date range. Select a run start time to open that run’s Analytics page; the browser Back button returns to the same detail view and date range. Runs of a Catalog or deleted Agent or Pipeline have no run page and show their start time as plain text. The Export button downloads all of these tables, including every Recent Run with its run URL.',
+          'Selecting an Agent or Pipeline opens a detail view with its total runs, unique users, total cost, input-token cost, output-token cost, token usage, evaluation tokens, latency, errors, and daily runs. Below them, Versions and Models show runs, tokens, and cost per executed version and per model (a run that used several models counts once in each model row, and only LLM calls are included); Users, Tools, and Skills show who ran it, which tools it called, and which skills it loaded or mentioned; Trigger Sources shows runs, tokens, and cost per initiating trigger, where the source is Chat, API, MCP, Webhook, Scheduled, Schedule run now, or Index runs, and older runs recorded before sources existed show as Manual (legacy). Recent Runs lists every run with its user, version, models, tokens, cost, and Error or Success status, sorted and paged across the whole date range. Select a run start time to open that run’s Analytics page; the browser Back button returns to the same detail view and date range. Runs of a Catalog or deleted Agent or Pipeline have no run page and show their start time as plain text. The Export button downloads all of these tables, including every Recent Run with its run URL.',
       },
     ],
   },
