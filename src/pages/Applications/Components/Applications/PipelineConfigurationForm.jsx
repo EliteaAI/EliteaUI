@@ -1,10 +1,13 @@
 import { memo, useMemo } from 'react';
 
+import { useFormikContext } from 'formik';
+
 import { Box } from '@mui/material';
 
 import { AgentInput, ApplicationTools } from '@/[fsd]/features/agent/ui/agent-details/configurations';
 import ApplicationAdvanceSettings from '@/[fsd]/features/agent/ui/agent-details/configurations/ApplicationAdvanceSettings';
 import ApplicationEditorNotes from '@/[fsd]/features/agent/ui/agent-details/configurations/ApplicationEditorNotes';
+import { EntitySchedulesSection } from '@/[fsd]/widgets/entity-schedules-section';
 import { ViewMode } from '@/common/constants.js';
 import ConversationStarters from '@/components/ConversationStarters';
 import ApplicationEditForm from '@/pages/Applications/Components/Applications/ApplicationEditForm';
@@ -20,6 +23,8 @@ const PipelineConfigurationForm = memo(props => {
     onAttachmentToolChange,
     entityProjectId,
   } = props;
+  // The saved name, not an unsaved edit, names the entity chip on the Schedules page
+  const { initialValues } = useFormikContext();
   const isDisabled = viewMode !== ViewMode.Owner;
 
   const styles = useMemo(() => pipelineConfigurationFormStyles(isChatView), [isChatView]);
@@ -59,6 +64,13 @@ const PipelineConfigurationForm = memo(props => {
       <ApplicationInformation
         style={styles.information}
         showPipeline
+      />
+      <EntitySchedulesSection
+        style={styles.information}
+        entityType="pipeline"
+        entityId={applicationId}
+        entityName={initialValues?.name}
+        isChatView={isChatView}
       />
     </Box>
   );

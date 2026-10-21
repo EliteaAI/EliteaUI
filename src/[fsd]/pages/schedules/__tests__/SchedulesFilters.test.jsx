@@ -139,6 +139,12 @@ describe('EL-7011 US-27 SchedulesFilters', () => {
     expect(screen.queryByTestId('owner-filter')).not.toBeInTheDocument();
   });
 
+  it('TC-US35-18 US-35 R3.6 EL-7011: hides the Type filter while the entity chip shows', () => {
+    renderBar({ hideEntityType: true });
+    expect(screen.queryByTestId('schedules-filter-type')).not.toBeInTheDocument();
+    expect(screen.getByTestId('schedules-filter-status')).toBeInTheDocument();
+  });
+
   it('R3.1 EL-7011: the bar has only Type, Status, Enabled, search and Owner', () => {
     renderBar();
     expect(screen.getAllByRole('combobox')).toHaveLength(3);
