@@ -111,20 +111,20 @@ describe('EntitySchedulesSection EL-7011', () => {
       renderSection();
 
       expect(screen.getByText('Schedules')).toBeInTheDocument();
-      expect(screen.getByTestId('agent-schedules-section-add')).toHaveTextContent('+ Schedule');
+      expect(screen.getByTestId('agent-schedules-section-add')).toHaveTextContent(/^Schedule$/);
       expect(screen.getByText('2 schedules run this agent.')).toBeInTheDocument();
       const link = screen.getByTestId('agent-schedules-section-open-all');
       expect(link).toHaveTextContent(/^Open all in Settings → Schedules$/);
       expect(link).toHaveAttribute('href', '/settings/schedules?entityType=agent&entityId=12');
     });
 
-    it('CR-08 "+ Schedule" stays the purple primary elitea button', () => {
+    it('R1.4 R1.5 EL-7011 CR-15 the add button is an iconLabel button with a plus icon', () => {
       renderSection();
 
-      expect(screen.getByTestId('agent-schedules-section-add')).toHaveClass(
-        'MuiButton-elitea',
-        'MuiButton-colorPrimary',
-      );
+      const add = screen.getByTestId('agent-schedules-section-add');
+      expect(add).toHaveClass('MuiButton-iconLabel');
+      expect(add).not.toHaveClass('MuiButton-elitea');
+      expect(add.querySelector('.MuiButton-startIcon svg')).toBeInTheDocument();
     });
 
     it('owner bug 2026-10-21 shows two skeleton cards while the first page loads', () => {
