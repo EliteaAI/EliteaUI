@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { MemoryRouter } from 'react-router-dom';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, screen, within } from '@testing-library/react';
@@ -85,6 +85,11 @@ const renderTable = (rows, isLoading = false, onSort = vi.fn(), emptyMessage, to
       />
     </MemoryRouter>,
   );
+
+// A wide window shows every column; the width tests below set narrower windows
+beforeEach(() => {
+  window.innerWidth = 1920;
+});
 
 afterEach(() => {
   cleanup();
@@ -254,5 +259,27 @@ describe('EL-7011 US-26 SchedulesTable', () => {
   it('EL-7011 tells screen readers the result count', () => {
     renderTable([makeRow(), makeRow({ id: 2 })], false, vi.fn(), undefined, <span />);
     expect(screen.getByText('2 schedules')).toHaveAttribute('aria-live', 'polite');
+  });
+
+  // At 1600 px the table box was 1116 px: the window minus the app menu, the Settings menu and the page padding
+  const SIDE_MENUS_PX = 484;
+  const minGridWidthPx = template =>
+    template
+      .match(/minmax\([\d.]+rem|[\d.]+rem/g)
+      .reduce((sum, token) => sum + parseFloat(token.replace('minmax(', '')) * 16, 0);
+
+  it.each([
+    [1280, ['last_run', 'owner']],
+    [1440, ['owner']],
+    [1600, []],
+  ])('EL-7011 QA 2026-10-21 fits the row menu in a %i px window', (width, hidden) => {
+    window.innerWidth = width;
+    renderTable([makeRow()]);
+    const header = screen.getByTestId('schedule-column-header-name').parentElement;
+    expect(minGridWidthPx(getComputedStyle(header).gridTemplateColumns)).toBeLessThanOrEqual(
+      width - SIDE_MENUS_PX,
+    );
+    hidden.forEach(field => expect(screen.queryByTestId(`schedule-column-header-${field}`)).toBeNull());
+    expect(screen.getByTestId('schedule-1-menu-button')).toBeInTheDocument();
   });
 });
