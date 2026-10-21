@@ -114,6 +114,11 @@ describe('R3 EL-7011 schedule import mutation', () => {
     expect(await importThenCountListCalls(report([{ name: 'a', schedule_id: 1 }]))).toBe(2);
   });
 
+  it('R3.5 CR-04 reloads the schedule list when schedules were only updated', async () => {
+    const answer = { ...report([]), updated: [{ name: 'a', schedule_id: 1 }] };
+    expect(await importThenCountListCalls(answer)).toBe(2);
+  });
+
   it('R3.5 does not reload the list when nothing was created', async () => {
     expect(await importThenCountListCalls(report([]))).toBe(1);
   });

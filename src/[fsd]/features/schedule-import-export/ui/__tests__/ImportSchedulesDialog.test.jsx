@@ -98,6 +98,19 @@ describe('EL-7011 R3.2 and R3.3 ImportSchedulesDialog upload', () => {
     await waitFor(() => expect(screen.getByTestId('import-report-created')).toBeInTheDocument());
     expect(mocks.importSchedules).toHaveBeenCalledWith({ projectId: 7, file });
   });
+
+  it('CR-04 shows the updated items of the report', async () => {
+    mocks.importSchedules.mockReturnValue(
+      answer({ created: [], updated: [{ name: 'Daily', note: 'Key match.' }], skipped: [], failed: [] }),
+    );
+    renderDialog();
+    pick();
+
+    fireEvent.click(screen.getByTestId('import-schedules-upload'));
+
+    await waitFor(() => expect(screen.getByTestId('import-report-updated')).toBeInTheDocument());
+    expect(screen.getByText('Updated (1)')).toBeInTheDocument();
+  });
 });
 
 describe('EL-7011 R3.4 ImportSchedulesDialog errors', () => {
