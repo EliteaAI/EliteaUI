@@ -24,6 +24,7 @@ export const scheduleApi = eliteaApi
           sortBy,
           sortOrder,
           entityType,
+          entityId,
           status,
           enabled,
           search,
@@ -31,6 +32,7 @@ export const scheduleApi = eliteaApi
         }) => {
           const filterParams = {
             entity_type: entityType,
+            entity_id: entityId,
             status,
             enabled,
             search,
