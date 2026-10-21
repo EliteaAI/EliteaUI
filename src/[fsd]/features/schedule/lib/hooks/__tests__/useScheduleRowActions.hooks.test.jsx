@@ -9,7 +9,8 @@ import { useScheduleRowActions } from '../useScheduleRowActions.hooks';
 
 const mocks = vi.hoisted(() => ({
   run: vi.fn(),
-  update: vi.fn(),
+  pause: vi.fn(),
+  resume: vi.fn(),
   remove: vi.fn(),
   state: { isLoading: false },
   toastError: vi.fn(),
@@ -24,7 +25,8 @@ const mutationHook = trigger => options => {
 
 vi.mock('@/[fsd]/entities/schedule/api/scheduleApi.js', () => ({
   useRunScheduleMutation: options => mutationHook(mocks.run)(options),
-  useUpdateScheduleMutation: options => mutationHook(mocks.update)(options),
+  usePauseScheduleMutation: options => mutationHook(mocks.pause)(options),
+  useResumeScheduleMutation: options => mutationHook(mocks.resume)(options),
   useDeleteScheduleMutation: options => mutationHook(mocks.remove)(options),
 }));
 vi.mock('@/[fsd]/shared/lib/hooks/useToast.hooks', () => ({
@@ -63,7 +65,8 @@ describe('useScheduleRowActions EL-7011', () => {
   });
 
   it('R5.1 EL-7011 shows the server text of a 409 on pause, resume and delete', async () => {
-    mocks.update.mockReturnValue(fail({ status: 409, data: { error: 'Schedule is locked' } }));
+    mocks.pause.mockReturnValue(fail({ status: 409, data: { error: 'Schedule is locked' } }));
+    mocks.resume.mockReturnValue(fail({ status: 409, data: { error: 'Schedule is locked' } }));
     mocks.remove.mockReturnValue(fail({ status: 409, data: { error: 'Delete blocked' } }));
     const result = setup();
     await act(() => result.current.onPause());
@@ -74,19 +77,20 @@ describe('useScheduleRowActions EL-7011', () => {
     expect(mocks.toastError).toHaveBeenLastCalledWith('Delete blocked');
   });
 
-  it('R3.1 EL-7011 pause and resume send enabled and toast', async () => {
-    mocks.update.mockReturnValue(ok());
+  it('R3.1 EL-7011 pause and resume call their own mutations and toast', async () => {
+    mocks.pause.mockReturnValue(ok());
+    mocks.resume.mockReturnValue(ok());
     const result = setup();
     await act(() => result.current.onPause());
-    expect(mocks.update).toHaveBeenLastCalledWith({ projectId: 3, scheduleId: 7, enabled: false });
+    expect(mocks.pause).toHaveBeenLastCalledWith({ projectId: 3, scheduleId: 7 });
     expect(mocks.toastSuccess).toHaveBeenLastCalledWith('Schedule paused');
     await act(() => result.current.onResume());
-    expect(mocks.update).toHaveBeenLastCalledWith({ projectId: 3, scheduleId: 7, enabled: true });
+    expect(mocks.resume).toHaveBeenLastCalledWith({ projectId: 3, scheduleId: 7 });
     expect(mocks.toastSuccess).toHaveBeenLastCalledWith('Schedule resumed');
   });
 
-  it('R3.2 and R5.1 EL-7011 shows the server text when the update fails', async () => {
-    mocks.update.mockReturnValue(fail({ status: 500, data: { message: 'Server broke' } }));
+  it('R3.2 and R5.1 EL-7011 shows the server text when the pause fails', async () => {
+    mocks.pause.mockReturnValue(fail({ status: 500, data: { message: 'Server broke' } }));
     const result = setup();
     await act(() => result.current.onPause());
     expect(mocks.toastError).toHaveBeenCalledWith('Server broke');
