@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { ExcelFormats } from '@/[fsd]/shared/lib/utils';
 
@@ -655,15 +655,19 @@ describe('R1.4 EL-7011 Automated Activity export', () => {
     { trigger_source: 'scheduled', entity_kind: 'pipeline', runs: 3 },
     { trigger_source: 'index', runs: 1 },
   ];
-  const [overview] = buildAnalyticsSheets({
-    overview: { automated },
-    overviewUsage: {},
-    costs: {},
-    users: {},
-    skills: {},
-    meta: SEPT_META,
+  let sec;
+
+  beforeAll(() => {
+    const [overview] = buildAnalyticsSheets({
+      overview: { automated },
+      overviewUsage: {},
+      costs: {},
+      users: {},
+      skills: {},
+      meta: SEPT_META,
+    });
+    sec = overview.sections.find(s => s.title === 'Automated Activity');
   });
-  const sec = overview.sections.find(s => s.title === 'Automated Activity');
 
   it('adds an Entity type column after Trigger Source (TC-US57-07)', () => {
     expect(sec.columns.map(c => c.header).slice(0, 2)).toEqual(['Trigger Source', 'Entity type']);
