@@ -387,6 +387,8 @@ describe('ScheduleForm EL-7011', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('not available');
     expect(selectProps.disabled).toBeFalsy();
     expect(selectProps.value).toBe('');
+    // CR-19: the failed lock brings back the full form with its WHAT TO RUN section
+    expect(screen.getAllByRole('heading').map(h => h.textContent)).toContain('WHAT TO RUN');
   });
 
   it('R6.1 EL-7011 sends the create body on Save', async () => {

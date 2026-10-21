@@ -15,13 +15,15 @@ import { Button } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import PlusIcon from '@/assets/plus-icon.svg?react';
-import { PERMISSIONS } from '@/common/constants';
+import { PERMISSIONS, SearchParams } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import useCheckPermission from '@/hooks/useCheckPermission';
 
 import EntityScheduleCard from './EntityScheduleCard';
 
 const WIDE = '@container (min-width: 30rem)';
+// The name every agent and pipeline gives its first version
+const BASE_VERSION_NAME = 'base';
 
 const countText = (total, version) =>
   total === 1 ? `1 schedule runs ${version}` : `${total} schedules run ${version}`;
@@ -48,7 +50,7 @@ const EntitySchedulesSection = memo(props => {
   const openNested = useCallback(
     (to, formVersionId) => {
       const params = new URLSearchParams(search);
-      if (formVersionId) params.set('versionId', formVersionId);
+      if (formVersionId) params.set(SearchParams.VersionId, formVersionId);
       const formSearch = params.toString();
       navigate({ ...to, search: formSearch && `?${formSearch}` }, { state: { returnTo: pathname + search } });
     },
@@ -73,7 +75,8 @@ const EntitySchedulesSection = memo(props => {
     [openNested, versionOf, entityType, entityId, tab],
   );
   const onAdd = useCallback(() => openForm(), [openForm]);
-  const version = versionName && versionName !== 'base' ? `version ${versionName}` : 'the base version';
+  const version =
+    versionName && versionName !== BASE_VERSION_NAME ? `version ${versionName}` : 'the base version';
   const testId = `${entityType}-schedules-section`;
 
   const styles = entitySchedulesSectionStyles();
