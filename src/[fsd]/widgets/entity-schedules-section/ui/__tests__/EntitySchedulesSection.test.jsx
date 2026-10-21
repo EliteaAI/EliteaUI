@@ -227,4 +227,59 @@ describe('EntitySchedulesSection EL-7011', () => {
       expect(container).toBeEmptyDOMElement();
     });
   });
+
+  describe('pipeline editor (US-36)', () => {
+    const renderPipeline = (props = {}) =>
+      renderSection({ entityType: 'pipeline', entityId: 9, ...props }, '/pipelines/all/9');
+
+    it('TC-US36-01 TC-US36-03 TC-US36-16 R1.1 R1.4 R2.1 lists the schedules of this pipeline with the pipeline count text', () => {
+      renderPipeline();
+
+      expect(mocks.entitySchedules).toHaveBeenLastCalledWith({
+        entityType: 'pipeline',
+        entityId: 9,
+        skip: false,
+      });
+      expect(screen.getByText('2 schedules run this pipeline.')).toBeInTheDocument();
+      expect(screen.getByTestId('pipeline-schedules-section-add')).toBeInTheDocument();
+      expect(mocks.cardProps.map(card => card.entityType)).toEqual(['pipeline', 'pipeline']);
+    });
+
+    it('TC-US36-17 R1.4 shows the empty state of a pipeline without schedules', () => {
+      mocks.entitySchedules.mockReturnValue(listOf([]));
+      renderPipeline();
+
+      expect(screen.getByText('No schedules yet.')).toBeInTheDocument();
+      expect(screen.queryByText(/run this pipeline/)).not.toBeInTheDocument();
+    });
+
+    it('TC-US36-11 R1.2 hides the section of a pipeline opened in a chat', () => {
+      expect(renderPipeline({ isChatView: true }).container).toBeEmptyDOMElement();
+    });
+
+    it('TC-US36-12 R1.3 hides the pipeline section without the list permission', () => {
+      mocks.permissions = [PERMISSIONS.schedules.create];
+
+      expect(renderPipeline().container).toBeEmptyDOMElement();
+    });
+
+    it('TC-US36-04 TC-US36-09 R2.2 R2.3 passes every row the server returns, a migrated one and another owner included, to a card', () => {
+      const migrated = { id: 5, name: 'Legacy nightly', owner: { id: 8, name: 'Old Creator' } };
+      mocks.entitySchedules.mockReturnValue(listOf([migrated]));
+      renderPipeline();
+
+      expect(mocks.cardProps).toHaveLength(1);
+      expect(mocks.cardProps[0]).toMatchObject({ row: migrated, currentUserId: 3, entityType: 'pipeline' });
+    });
+
+    it('TC-US36-06 R3.1 "+ Schedule" opens the create form nested in the pipeline', () => {
+      renderPipeline();
+
+      fireEvent.click(screen.getByTestId('pipeline-schedules-section-add'));
+
+      expect(mocks.navigate).toHaveBeenCalledWith('/pipelines/all/9/schedules/create', {
+        state: { returnTo: '/pipelines/all/9' },
+      });
+    });
+  });
 });
