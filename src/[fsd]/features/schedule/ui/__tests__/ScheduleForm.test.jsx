@@ -47,6 +47,8 @@ let allowed = true;
 let isAdmin = false;
 let runAllowed = true;
 let listFailed = false;
+let reviewProps;
+const checkRisk = vi.fn();
 
 vi.mock('@/hooks/useCheckPermission', () => ({
   default: () => ({
@@ -58,6 +60,13 @@ vi.mock('@/[fsd]/entities/schedule', () => ({
     data: runAllowed === undefined ? undefined : { runWithoutAskingAllowed: runAllowed },
     isError: listFailed,
   }),
+  useCheckScheduleRiskMutation: () => [checkRisk],
+}));
+vi.mock('../RiskReviewDialog', () => ({
+  default: props => {
+    reviewProps = props;
+    return props.open ? <div data-testid="risk-dialog">{props.changed && 'The tools changed.'}</div> : null;
+  },
 }));
 vi.mock('../SaveWarningsDialog', () => ({
   default: ({ open, warnings, note, onClose }) =>
@@ -153,7 +162,12 @@ vi.mock('@/components/VariableList', () => ({
   default: ({ variables }) => <div data-testid="variables">{variables.map(v => v.name).join(',')}</div>,
 }));
 vi.mock('@/[fsd]/shared/ui/banner-message/BannerMessage', () => ({
-  default: ({ message }) => <div role="alert">{message}</div>,
+  default: ({ message, children }) => (
+    <div role="alert">
+      {message}
+      {children}
+    </div>
+  ),
 }));
 vi.mock('@/[fsd]/shared/ui/button/BaseBtn', async importOriginal => ({
   ...(await importOriginal()),
@@ -197,7 +211,19 @@ const renderForm = (props = {}, path = '/settings/schedules/create') => {
 
 const pickEntity = id => act(() => selectProps.onValueChange(id));
 const typePrompt = text => fireEvent.change(screen.getByLabelText(/Prompt/), { target: { value: text } });
-const save = () => fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+const CLEAR = {
+  blocking: [],
+  sensitive: [],
+  notices: [],
+  run_without_asking_allowed: true,
+  fingerprint: 'fp-0',
+};
+const answer = data => ({ unwrap: () => Promise.resolve(data) });
+// The risk check answers in a promise; Save is disabled until it does (owner CR 2026-10-21)
+const save = async () => {
+  await act(async () => {});
+  fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+};
 
 describe('ScheduleForm EL-7011', () => {
   beforeEach(() => {
@@ -206,6 +232,7 @@ describe('ScheduleForm EL-7011', () => {
     runAllowed = true;
     listFailed = false;
     listQuery.mockReturnValue({ data: { rows: ROWS, total: 2 }, isFetching: false });
+    checkRisk.mockReturnValue(answer(CLEAR));
   });
 
   afterEach(() => {
@@ -648,7 +675,11 @@ describe('ScheduleForm EL-7011', () => {
     renderForm({
       onSubmit: vi.fn().mockRejectedValue({
         status: 400,
-        data: { error: 'approval_rule_not_allowed', field: 'approval_rule' },
+        data: {
+          code: 'approval_rule_not_allowed',
+          error: 'Run without asking is not allowed here.',
+          field: 'approval_rule',
+        },
       }),
     });
     pickEntity(7);
@@ -656,7 +687,7 @@ describe('ScheduleForm EL-7011', () => {
 
     save();
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('approval_rule_not_allowed');
+    expect(await screen.findByRole('alert')).toHaveTextContent('Run without asking is not allowed here.');
   });
 
   it('R1.5 EL-7011 shows the returned rule and the hint when the save answers a different rule', async () => {
@@ -1036,6 +1067,403 @@ describe('ScheduleForm EL-7011', () => {
       expect(screen.getByRole('navigation')).toHaveTextContent('Schedules / Digest');
       expect(screen.getByTestId('side-panel').closest('form')).toBeNull();
       expect(screen.getByLabelText('Name').closest('form')).not.toBeNull();
+    });
+  });
+
+  // EL-7011 owner CR 2026-10-21: risk review before saving (US-33, US-31, US-32)
+  describe('risk review', () => {
+    const SIGNIN = {
+      code: 'personal_signin_required',
+      toolkit: "GitHub toolkit 'github-personal'",
+      reason: 'uses your own GitHub sign-in',
+      fix: { entity_type: 'agent', id: 7, version_id: 71 },
+    };
+    const SENSITIVE = [
+      { code: 'sensitive_action', toolkit: 'Outlook', tool: 'send_email', badge: 'sends_messages' },
+    ];
+    const RISKY = { ...CLEAR, sensitive: SENSITIVE, fingerprint: 'fp-1' };
+    // Every refusal of the core branch: a machine code, a human text and the whole review
+    const refusal = (status, code, extra = {}) => ({
+      status,
+      data: {
+        code,
+        error: `Human text of ${code}`,
+        blocking: [],
+        sensitive: [],
+        notices: [],
+        fingerprint: 'fp-x',
+        ...extra,
+      },
+    });
+    const conflict = (code, extra) => refusal(409, code, extra);
+    const saveButton = () => screen.getByTestId('schedule-save-button');
+
+    const fillAgent = async () => {
+      pickEntity(7);
+      await waitFor(() => expect(versionProps.value).toBe(71));
+      typePrompt('Hi');
+      await waitFor(() => expect(saveButton()).toBeEnabled());
+    };
+
+    it('checks the chosen entity type, agent and version', async () => {
+      renderForm();
+      await fillAgent();
+
+      expect(checkRisk).toHaveBeenCalledWith({
+        projectId: 5,
+        entity_type: 'agent',
+        application_id: 7,
+        version_id: 71,
+      });
+    });
+
+    it('shows the block box under the entity, disables Save and names the reason in the header', async () => {
+      checkRisk.mockReturnValue(answer({ ...CLEAR, blocking: [SIGNIN] }));
+      renderForm();
+      pickEntity(7);
+
+      const hint = await screen.findByText('Fix the risk check to save');
+      const box = screen.getByTestId('schedule-risk-block-box');
+      expect(box).toHaveTextContent('uses your own GitHub sign-in');
+      // Under the entity select, above Version
+      const select = screen.getByTestId('entity-select');
+      expect(select.compareDocumentPosition(box) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(
+        box.compareDocumentPosition(screen.getByTestId('version-select')) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+      expect(saveButton()).toBeDisabled();
+      expect(saveButton()).toHaveAttribute('aria-disabled', 'true');
+      expect(saveButton()).toHaveAttribute('aria-describedby', hint.closest('[id]').id);
+      expect(screen.getByRole('button', { name: 'Cancel' })).toBeEnabled();
+    });
+
+    it('disables Save and shows "Checking risks" while the check runs', async () => {
+      let finish;
+      checkRisk.mockReturnValue({ unwrap: () => new Promise(resolve => (finish = resolve)) });
+      renderForm();
+      pickEntity(7);
+
+      expect(await screen.findByText('Checking risks')).toBeInTheDocument();
+      expect(saveButton()).toBeDisabled();
+      expect(screen.queryByTestId('schedule-risk-block-box')).not.toBeInTheDocument();
+
+      await act(async () => finish(CLEAR));
+      expect(screen.queryByText('Checking risks')).not.toBeInTheDocument();
+      expect(saveButton()).toBeEnabled();
+    });
+
+    it('keeps Save disabled with a Retry banner when the check does not run, and Retry checks again', async () => {
+      checkRisk.mockReturnValue({ unwrap: () => Promise.reject({ status: 503 }) });
+      renderForm();
+      pickEntity(7);
+
+      expect(await screen.findByText('The risk check did not run. Try again.')).toBeInTheDocument();
+      expect(saveButton()).toBeDisabled();
+      checkRisk.mockReturnValue(answer(CLEAR));
+      fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+
+      await waitFor(() => expect(saveButton()).toBeEnabled());
+      expect(screen.queryByText('The risk check did not run. Try again.')).not.toBeInTheDocument();
+    });
+
+    it('checks again on Save and saves nothing when the fresh check blocks', async () => {
+      const { onSubmit } = renderForm();
+      await fillAgent();
+      checkRisk.mockReturnValue(answer({ ...CLEAR, blocking: [SIGNIN] }));
+
+      await save();
+
+      expect(await screen.findByTestId('schedule-risk-block-box')).toBeInTheDocument();
+      expect(onSubmit).not.toHaveBeenCalled();
+    });
+
+    it('opens the review dialog on Save with sensitive tools and saves nothing yet', async () => {
+      checkRisk.mockReturnValue(answer(RISKY));
+      const { onSubmit } = renderForm();
+      await fillAgent();
+
+      await save();
+
+      expect(await screen.findByTestId('risk-dialog')).toBeInTheDocument();
+      expect(onSubmit).not.toHaveBeenCalled();
+      expect(reviewProps).toMatchObject({
+        tools: SENSITIVE,
+        scheduleName: 'Daily digest',
+        entityLabel: 'Digest agent v2',
+        runWithoutAskingAllowed: true,
+        changed: false,
+      });
+    });
+
+    it('never opens the dialog on an invalid form', async () => {
+      checkRisk.mockReturnValue(answer(RISKY));
+      const { onSubmit } = renderForm({ initialValues: { ...INITIAL, name: '' } });
+      await fillAgent();
+
+      await save();
+
+      expect(await screen.findByText('Name is required')).toBeInTheDocument();
+      expect(screen.queryByTestId('risk-dialog')).not.toBeInTheDocument();
+      expect(onSubmit).not.toHaveBeenCalled();
+    });
+
+    it('Pause and ask me saves with the fingerprint and no typed name', async () => {
+      checkRisk.mockReturnValue(answer(RISKY));
+      const onSaved = vi.fn();
+      const { onSubmit } = renderForm({ onSaved });
+      await fillAgent();
+      await save();
+      await screen.findByTestId('risk-dialog');
+
+      await act(async () => reviewProps.onConfirm({ rule: 'pause_and_ask' }));
+
+      expect(onSubmit).toHaveBeenCalledTimes(1);
+      expect(onSubmit.mock.calls[0][0]).toMatchObject({
+        approval_rule: 'pause_and_ask',
+        risk_ack: { fingerprint: 'fp-1' },
+      });
+      expect(onSubmit.mock.calls[0][0].risk_ack).not.toHaveProperty('confirmed_name');
+      expect(screen.queryByTestId('risk-dialog')).not.toBeInTheDocument();
+      expect(onSaved).toHaveBeenCalledTimes(1);
+    });
+
+    it('Run without asking sets the form rule and saves with the typed name', async () => {
+      checkRisk.mockReturnValue(answer(RISKY));
+      const { onSubmit } = renderForm();
+      await fillAgent();
+      await save();
+      await screen.findByTestId('risk-dialog');
+
+      await act(async () =>
+        reviewProps.onConfirm({ rule: 'run_without_asking', confirmedName: 'Daily digest' }),
+      );
+
+      expect(onSubmit.mock.calls[0][0]).toMatchObject({
+        approval_rule: 'run_without_asking',
+        risk_ack: { fingerprint: 'fp-1', confirmed_name: 'Daily digest' },
+      });
+      expect(screen.getByTestId('schedule-approval-rule-run_without_asking')).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      );
+    });
+
+    it('marks the dialog as saving while the save runs', async () => {
+      checkRisk.mockReturnValue(answer(RISKY));
+      let finish;
+      renderForm({ onSubmit: vi.fn(() => new Promise(resolve => (finish = resolve))) });
+      await fillAgent();
+      await save();
+      await screen.findByTestId('risk-dialog');
+
+      act(() => {
+        reviewProps.onConfirm({ rule: 'pause_and_ask' });
+      });
+
+      await waitFor(() => expect(reviewProps.saving).toBe(true));
+      await act(async () => finish({ id: 1 }));
+    });
+
+    it('Cancel closes the dialog and saves nothing', async () => {
+      checkRisk.mockReturnValue(answer(RISKY));
+      const { onSubmit } = renderForm();
+      await fillAgent();
+      await save();
+      await screen.findByTestId('risk-dialog');
+
+      act(() => reviewProps.onCancel());
+
+      expect(screen.queryByTestId('risk-dialog')).not.toBeInTheDocument();
+      expect(onSubmit).not.toHaveBeenCalled();
+    });
+
+    it('409 risk_changed refreshes the tools, asks again and saves with the new fingerprint', async () => {
+      checkRisk.mockReturnValue(answer(RISKY));
+      const newTools = [...SENSITIVE, { code: 'sensitive_action', toolkit: 'Jira', tool: 'delete_issue' }];
+      const onSubmit = vi
+        .fn()
+        .mockRejectedValueOnce(conflict('risk_changed', { sensitive: newTools, fingerprint: 'fp-2' }))
+        .mockResolvedValue({ id: 1 });
+      renderForm({ onSubmit });
+      await fillAgent();
+      await save();
+      await screen.findByTestId('risk-dialog');
+
+      await act(async () =>
+        reviewProps.onConfirm({ rule: 'run_without_asking', confirmedName: 'Daily digest' }),
+      );
+
+      expect(screen.getByTestId('risk-dialog')).toHaveTextContent('The tools changed.');
+      expect(reviewProps.tools).toEqual(newTools);
+      expect(reviewProps.saving).toBe(false);
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+
+      await act(async () =>
+        reviewProps.onConfirm({ rule: 'run_without_asking', confirmedName: 'Daily digest' }),
+      );
+
+      expect(onSubmit).toHaveBeenCalledTimes(2);
+      expect(onSubmit.mock.calls[1][0].risk_ack).toEqual({
+        fingerprint: 'fp-2',
+        confirmed_name: 'Daily digest',
+      });
+      expect(screen.queryByTestId('risk-dialog')).not.toBeInTheDocument();
+    });
+
+    it('409 risk_confirmation_required opens the dialog with the server findings', async () => {
+      const onSubmit = vi
+        .fn()
+        .mockRejectedValueOnce(
+          conflict('risk_confirmation_required', { sensitive: SENSITIVE, fingerprint: 'fp-3' }),
+        )
+        .mockResolvedValue({ id: 1 });
+      renderForm({ initialValues: { ...INITIAL, approval_rule: 'run_without_asking' }, onSubmit });
+      await fillAgent();
+
+      await save();
+
+      expect(await screen.findByTestId('risk-dialog')).toBeInTheDocument();
+      expect(reviewProps.tools).toEqual(SENSITIVE);
+      expect(reviewProps.changed).toBe(false);
+      await act(async () =>
+        reviewProps.onConfirm({ rule: 'run_without_asking', confirmedName: 'Daily digest' }),
+      );
+      expect(onSubmit.mock.calls[1][0].risk_ack).toEqual({
+        fingerprint: 'fp-3',
+        confirmed_name: 'Daily digest',
+      });
+    });
+
+    it('409 schedule_blocked closes the dialog and shows the block box', async () => {
+      checkRisk.mockReturnValue(answer(RISKY));
+      const onSubmit = vi.fn().mockRejectedValue(conflict('schedule_blocked', { blocking: [SIGNIN] }));
+      renderForm({ onSubmit });
+      await fillAgent();
+      await save();
+      await screen.findByTestId('risk-dialog');
+
+      await act(async () => reviewProps.onConfirm({ rule: 'pause_and_ask' }));
+
+      expect(screen.queryByTestId('risk-dialog')).not.toBeInTheDocument();
+      expect(screen.getByTestId('schedule-risk-block-box')).toBeInTheDocument();
+      expect(saveButton()).toBeDisabled();
+    });
+
+    it('starts a pending Test run only after the confirmed save', async () => {
+      checkRisk.mockReturnValue(answer(RISKY));
+      const onTestRun = vi.fn().mockResolvedValue(undefined);
+      const onSubmit = vi.fn().mockResolvedValue({ id: 3 });
+      renderForm({
+        initialValues: { ...INITIAL, application_id: 7, version_id: 71, prompt: 'Hi' },
+        schedule: { id: 3, owner: { name: 'Ann Lee' } },
+        onSubmit,
+        onTestRun,
+        sidePanel: ({ onTestRun: run }) => (
+          <button
+            type="button"
+            onClick={run}
+          >
+            Test run
+          </button>
+        ),
+      });
+      await waitFor(() => expect(saveButton()).toBeEnabled());
+      fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Daily digest' } });
+      fireEvent.change(screen.getByLabelText('Description'), { target: { value: 'Changed' } });
+
+      fireEvent.click(screen.getByRole('button', { name: 'Test run' }));
+      await screen.findByTestId('risk-dialog');
+      expect(onTestRun).not.toHaveBeenCalled();
+
+      await act(async () => reviewProps.onConfirm({ rule: 'pause_and_ask' }));
+
+      await waitFor(() => expect(onTestRun).toHaveBeenCalledTimes(1));
+    });
+
+    it('400 risk_name_mismatch keeps the dialog open and shows the server text at the typed name', async () => {
+      checkRisk.mockReturnValue(answer(RISKY));
+      const onSubmit = vi
+        .fn()
+        .mockRejectedValueOnce(
+          refusal(400, 'risk_name_mismatch', {
+            field: 'risk_ack',
+            sensitive: SENSITIVE,
+            fingerprint: 'fp-1',
+          }),
+        )
+        .mockResolvedValue({ id: 1 });
+      renderForm({ onSubmit });
+      await fillAgent();
+      await save();
+      await screen.findByTestId('risk-dialog');
+
+      await act(async () =>
+        reviewProps.onConfirm({ rule: 'run_without_asking', confirmedName: 'Daily digest' }),
+      );
+
+      expect(screen.getByTestId('risk-dialog')).toBeInTheDocument();
+      expect(reviewProps.nameError).toBe('Human text of risk_name_mismatch');
+      expect(reviewProps.saving).toBe(false);
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+
+      await act(async () =>
+        reviewProps.onConfirm({ rule: 'run_without_asking', confirmedName: 'Daily digest' }),
+      );
+      expect(onSubmit).toHaveBeenCalledTimes(2);
+      expect(screen.queryByTestId('risk-dialog')).not.toBeInTheDocument();
+    });
+
+    it('branches on the machine code, not on the human text', async () => {
+      checkRisk.mockReturnValue(answer(RISKY));
+      const onSubmit = vi.fn().mockRejectedValue({ status: 409, data: { error: 'risk_changed' } });
+      renderForm({ onSubmit });
+      await fillAgent();
+      await save();
+      await screen.findByTestId('risk-dialog');
+
+      await act(async () => reviewProps.onConfirm({ rule: 'pause_and_ask' }));
+
+      expect(screen.queryByTestId('risk-dialog')).not.toBeInTheDocument();
+      expect(screen.getByRole('alert')).toHaveTextContent('risk_changed');
+    });
+
+    it('shows who confirmed Run without asking and when on the edit page', () => {
+      renderForm({
+        initialValues: { ...INITIAL, application_id: 7, version_id: 71, approval_rule: 'run_without_asking' },
+        schedule: {
+          id: 3,
+          owner: { name: 'Ann Lee' },
+          approval_confirmed_by: 'Anna K.',
+          approval_confirmed_at: '2026-10-21T09:00:00+00:00',
+        },
+      });
+
+      expect(screen.getByText('Confirmed by Anna K. on 21 Oct 2026')).toBeInTheDocument();
+    });
+
+    it('shows no confirmation line when the schedule has none', () => {
+      renderForm({ schedule: { id: 3, owner: { name: 'Ann Lee' }, approval_confirmed_by: null } });
+
+      expect(screen.queryByText(/Confirmed by/)).not.toBeInTheDocument();
+    });
+
+    it('applies the same flow to the edit page and a nested editor route', async () => {
+      checkRisk.mockReturnValue(answer({ ...CLEAR, blocking: [SIGNIN] }));
+      renderForm(
+        {
+          initialValues: { ...INITIAL, application_id: '7', version_id: 71, prompt: 'Hi' },
+          lockedEntity: { type: 'agent', id: '7' },
+          schedule: { id: 3, owner: { name: 'Ann Lee' } },
+        },
+        '/agents/all/7/schedules/3',
+      );
+
+      expect(await screen.findByTestId('schedule-risk-block-box')).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: /Open agent to change tools/ })).toHaveAttribute(
+        'href',
+        '/agents/all/7/71',
+      );
+      expect(saveButton()).toBeDisabled();
     });
   });
 });
