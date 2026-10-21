@@ -75,9 +75,10 @@ const ownerName = owner => owner?.name || owner?.email || '-';
  * `children({ values, setFieldValue, dirty, setValues })` fills SCHEDULE SETTINGS from the form values (cron, expires_at);
  * `onSubmit(body)` returns a promise of the save answer and rejects with the API error;
  * `onSaved(answer)` runs at once after a save without warnings, else when the warnings dialog closes.
- * `schedule` turns on edit mode: read-only Owner, update body, and "Test run" (`onTestRun()`, a promise)
- * when `schedule.allowed_actions` has `run`. A Test run of a changed form takes the place of `onSaved`
- * at the same post-save point. `entityName` and `extraSections` extend the page.
+ * `schedule` turns on edit mode: read-only Owner and update body. `entityName` names the page.
+ * `sidePanel({ onTestRun, testRunPending, testRunError })` renders a card right of the form, as the
+ * Agents editor puts its chat; its `onTestRun` saves a changed form, then calls the `onTestRun()` prop
+ * (a promise) in the place of `onSaved` at the same post-save point.
  */
 const ScheduleForm = memo(props => {
   const {
@@ -85,11 +86,11 @@ const ScheduleForm = memo(props => {
     lockedEntity,
     schedule,
     entityName,
-    extraSections = [],
     onSubmit,
     onSaved,
     onTestRun,
     onCancel,
+    sidePanel,
     children,
   } = props;
 
@@ -102,6 +103,7 @@ const ScheduleForm = memo(props => {
   const [ruleChanged, setRuleChanged] = useState(false);
   const [savedRule, setSavedRule] = useState('');
   const [testRunPending, setTestRunPending] = useState(false);
+  const [testRunError, setTestRunError] = useState('');
   // afterSave: the Test run that replaces onSaved after this save; afterWarnings keeps it until the dialog closes
   const afterSave = useRef(null);
   const afterWarnings = useRef(null);
@@ -143,12 +145,11 @@ const ScheduleForm = memo(props => {
 
   // A clean form runs at once; a changed one saves first, and a failed or invalid save never reaches the run
   const runTest = useCallback(async () => {
-    setBanner('');
     setTestRunPending(true);
     try {
       await onTestRun();
     } catch (error) {
-      if (error?.status === 400 || error?.status === 409) setBanner(error.data?.error ?? '');
+      if (error?.status === 400 || error?.status === 409) setTestRunError(error.data?.error ?? '');
       else toastError('Failed to start the test run');
     } finally {
       setTestRunPending(false);
@@ -156,6 +157,7 @@ const ScheduleForm = memo(props => {
   }, [onTestRun, toastError]);
 
   const handleTestRun = async () => {
+    setTestRunError('');
     setTestRunPending(true);
     try {
       if (formik.dirty) {
@@ -457,7 +459,6 @@ const ScheduleForm = memo(props => {
         </Box>
       ),
     },
-    ...extraSections,
   ];
 
   // The same header bar, column and collapsible sections as New Agent (CreateApplication)
@@ -478,17 +479,6 @@ const ScheduleForm = memo(props => {
                 >
                   Save
                 </BaseBtn>
-                {schedule?.allowed_actions?.includes('run') && (
-                  <BaseBtn
-                    data-testid="schedule-form-test-run"
-                    variant="elitea"
-                    color="secondary"
-                    disabled={formik.isSubmitting || testRunPending}
-                    onClick={handleTestRun}
-                  >
-                    Test run
-                  </BaseBtn>
-                )}
                 <BaseBtn
                   data-testid="schedule-cancel-button"
                   variant="elitea"
@@ -500,13 +490,19 @@ const ScheduleForm = memo(props => {
               </TabBarItems>
             ),
             content: (
+              // With a side panel: the Agents editor split (ConfigurationTab), stacked below the lg breakpoint
               <StyledGridContainer
                 container
-                component="form"
-                noValidate
-                onSubmit={formik.handleSubmit}
+                columnSpacing="2rem"
+                rowSpacing="1.5rem"
+                sx={sidePanel && styles.split}
               >
-                <Grid size={{ xs: 12 }}>
+                <Grid
+                  size={{ xs: 12, lg: sidePanel ? 6 : 12 }}
+                  component="form"
+                  noValidate
+                  onSubmit={formik.handleSubmit}
+                >
                   <Box sx={styles.root}>
                     {banner && (
                       <BannerMessage
@@ -521,6 +517,18 @@ const ScheduleForm = memo(props => {
                     />
                   </Box>
                 </Grid>
+                {sidePanel && (
+                  <Grid
+                    size={{ xs: 12, lg: 6 }}
+                    sx={styles.sidePanel}
+                  >
+                    {sidePanel({
+                      onTestRun: handleTestRun,
+                      testRunPending: formik.isSubmitting || testRunPending,
+                      testRunError,
+                    })}
+                  </Grid>
+                )}
               </StyledGridContainer>
             ),
           },
@@ -544,6 +552,9 @@ export default ScheduleForm;
 const styles = {
   // the New Agent form column (CreateAgentForm)
   root: { margin: '0.75rem auto 0', maxWidth: '40.1875rem' },
+  // the ConfigurationTab grid padding
+  split: { padding: '0 1.5rem 1.5rem' },
+  sidePanel: { paddingTop: '0.75rem' },
   accordion: ({ palette }) => ({ background: `${palette.background.default.tertiary} !important` }),
   section: { display: 'flex', flexDirection: 'column', gap: '1rem', paddingBottom: '1.5rem' },
 };

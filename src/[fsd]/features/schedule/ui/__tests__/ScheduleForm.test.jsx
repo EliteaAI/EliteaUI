@@ -669,11 +669,26 @@ describe('ScheduleForm EL-7011', () => {
       allowed_actions: ['edit', 'run'],
     };
     const EDIT_INITIAL = { ...INITIAL, application_id: 7, version_id: 71, prompt: 'Hi' };
+    // The edit page's side panel holds Test run (owner CR 2026-10-21); this stand-in shows what the form passes
+    const sidePanel = ({ onTestRun, testRunPending, testRunError }) => (
+      <div data-testid="side-panel">
+        <button
+          type="button"
+          data-testid="schedule-form-test-run"
+          disabled={testRunPending}
+          onClick={onTestRun}
+        >
+          Test run
+        </button>
+        {testRunError && <p data-testid="test-run-error">{testRunError}</p>}
+      </div>
+    );
     const renderEdit = (props = {}) =>
       renderForm({
         initialValues: EDIT_INITIAL,
         schedule: SCHEDULE,
         onTestRun: vi.fn().mockResolvedValue(undefined),
+        sidePanel,
         ...props,
       });
     const testRun = () => fireEvent.click(screen.getByTestId('schedule-form-test-run'));
@@ -696,17 +711,18 @@ describe('ScheduleForm EL-7011', () => {
       expect(selectProps.disabled).toBeFalsy();
     });
 
-    it('R3.3 EL-7011 hides Test run without the run action and in create mode', () => {
-      renderEdit({ schedule: { ...SCHEDULE, allowed_actions: ['edit'] } });
+    it('R3.3 EL-7011 has no Test run in the header; only the side panel holds it', () => {
+      renderEdit({ sidePanel: undefined });
       expect(screen.queryByTestId('schedule-form-test-run')).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Test run' })).not.toBeInTheDocument();
       cleanup();
 
       renderForm();
-      expect(screen.queryByTestId('schedule-form-test-run')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('side-panel')).not.toBeInTheDocument();
       cleanup();
 
       renderEdit();
-      expect(screen.getByTestId('schedule-form-test-run')).toBeInTheDocument();
+      expect(screen.getByTestId('side-panel')).toBeInTheDocument();
     });
 
     it('R3.1 R3.2 EL-7011 saves a changed form first, then starts the run', async () => {
@@ -782,14 +798,29 @@ describe('ScheduleForm EL-7011', () => {
       expect(onSubmit).not.toHaveBeenCalled();
     });
 
-    it('R3.5 EL-7011 shows the server reason of a 409 run in the banner', async () => {
+    it('R3.5 EL-7011 passes the server reason of a 409 run to the side panel, not the form banner', async () => {
       renderEdit({
         onTestRun: vi.fn().mockRejectedValue({ status: 409, data: { error: 'Already running' } }),
       });
 
       testRun();
 
-      expect(await screen.findByRole('alert')).toHaveTextContent('Already running');
+      expect(await screen.findByTestId('test-run-error')).toHaveTextContent('Already running');
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    });
+
+    it('R3.5 EL-7011 clears the run reason when the next Test run starts', async () => {
+      const onTestRun = vi
+        .fn()
+        .mockRejectedValueOnce({ status: 409, data: { error: 'Already running' } })
+        .mockResolvedValue(undefined);
+      renderEdit({ onTestRun });
+
+      testRun();
+      await screen.findByTestId('test-run-error');
+      testRun();
+
+      await waitFor(() => expect(screen.queryByTestId('test-run-error')).not.toBeInTheDocument());
     });
 
     it('R2.4 EL-7011 shows a 400 on save under its field and keeps the form open', async () => {
@@ -832,12 +863,12 @@ describe('ScheduleForm EL-7011', () => {
       await waitFor(() => expect(onSaved).toHaveBeenCalledWith({ id: 3 }));
     });
 
-    it('EL-7011 passes entityName to the breadcrumb and renders extra sections', () => {
-      renderEdit({ entityName: 'Digest', extraSections: [{ title: 'RUNS', content: <p>run list</p> }] });
+    it('EL-7011 passes entityName to the breadcrumb and renders the side panel outside the form', () => {
+      renderEdit({ entityName: 'Digest' });
 
       expect(screen.getByRole('navigation')).toHaveTextContent('Schedules / Digest');
-      expect(screen.getByText('RUNS')).toBeInTheDocument();
-      expect(screen.getByText('run list')).toBeInTheDocument();
+      expect(screen.getByTestId('side-panel').closest('form')).toBeNull();
+      expect(screen.getByLabelText('Name').closest('form')).not.toBeNull();
     });
   });
 });
