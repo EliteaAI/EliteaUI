@@ -19,6 +19,8 @@ const mocks = vi.hoisted(() => ({
   query: {},
   formProps: null,
   settingsProps: null,
+  panelProps: null,
+  testRunProps: { onTestRun: () => {}, testRunPending: true, testRunError: 'Already running' },
 }));
 
 vi.mock('react-router-dom', () => ({
@@ -49,7 +51,10 @@ vi.mock('@/[fsd]/shared/ui/schedule', () => ({
 }));
 vi.mock('@/[fsd]/features/schedule', async importOriginal => ({
   ...(await importOriginal()),
-  ScheduleRunList: () => null,
+  ScheduleRunsPanel: props => {
+    mocks.panelProps = props;
+    return null;
+  },
   ScheduleForm: props => {
     mocks.formProps = props;
     return (
@@ -57,6 +62,7 @@ vi.mock('@/[fsd]/features/schedule', async importOriginal => ({
         <button onClick={() => props.onSubmit({ name: 'Renamed' }).then(props.onSaved)}>Save</button>
         <button onClick={() => props.onTestRun()}>Test</button>
         {props.children({ values: props.initialValues, setFieldValue: mocks.setFieldValue })}
+        {props.sidePanel?.(mocks.testRunProps)}
       </>
     );
   },
@@ -83,6 +89,7 @@ describe('ScheduleDetailPage EL-7011', () => {
     mocks.projectId = 5;
     mocks.formProps = null;
     mocks.settingsProps = null;
+    mocks.panelProps = null;
     mocks.query = {};
   });
 
@@ -93,7 +100,14 @@ describe('ScheduleDetailPage EL-7011', () => {
     expect(mocks.formProps.schedule).toBe(schedule);
     expect(mocks.formProps.entityName).toBe('Nightly');
     expect(mocks.formProps.initialValues.name).toBe('Nightly');
-    expect(mocks.formProps.extraSections[0].title).toBe('RUNS OF THIS SCHEDULE');
+  });
+
+  it('TC-US32-15 R3 R4 EL-7011 shows the Test schedule and Runs panel next to the form (owner CR 2026-10-21)', () => {
+    mocks.query = { currentData: schedule };
+    render(<ScheduleDetailPage />);
+
+    expect(mocks.formProps.extraSections).toBeUndefined();
+    expect(mocks.panelProps).toEqual({ schedule, ...mocks.testRunProps });
   });
 
   it('TC-US32-01 R1.1 EL-7011 shows a loader while the schedule loads', () => {

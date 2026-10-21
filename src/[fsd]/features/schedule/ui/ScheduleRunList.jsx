@@ -1,96 +1,138 @@
-import { memo, useEffect, useMemo, useRef } from 'react';
+import { memo, useMemo, useState } from 'react';
 
-import { useDispatch } from 'react-redux';
+import { Box, Link, Typography } from '@mui/material';
 
-import { Box, Typography } from '@mui/material';
+import { compareRunTimestamp } from '@/[fsd]/entities/run-history/lib/helpers';
+import { useRunHistorySorting } from '@/[fsd]/entities/run-history/lib/hooks';
+import { RunHistorySortableHeader } from '@/[fsd]/entities/run-history/ui';
 
-import { RunHistoryApi } from '@/[fsd]/entities/run-history/api';
-import { RunHistoryContainer } from '@/[fsd]/entities/run-history/ui';
-import { useGetScheduleRunsQuery } from '@/[fsd]/entities/schedule';
-import { ChatMessageList } from '@/[fsd]/features/chat';
-import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
-import { useApplicationDetailsQuery } from '@/api/applications';
-import { eliteaApi } from '@/api/eliteaApi.js';
-import { buildErrorMessage } from '@/common/utils.jsx';
+import { formatRunStarted, toRunStatusLabel, toRunTriggerLabel } from '../lib/helpers';
+import ScheduleRunConversation from './ScheduleRunConversation';
+import ScheduleRunStatusChip from './ScheduleRunStatusChip';
 
-import { buildScheduleRowDecorator, toHistoryRows, toWord } from '../lib/helpers';
+const COLUMNS = '1.2fr 1fr 1.6fr 3.5rem';
+const HEADER_ITEMS = [
+  { label: 'Started', type: 'started' },
+  { label: 'Trigger', type: 'trigger' },
+  { label: 'Status', type: 'status' },
+];
+const SORT_FUNCTIONS = {
+  started: (a, b) => compareRunTimestamp(a.started_at, b.started_at),
+  trigger: (a, b) => toRunTriggerLabel(a.trigger).localeCompare(toRunTriggerLabel(b.trigger)),
+  status: (a, b) => toRunStatusLabel(a.status).localeCompare(toRunStatusLabel(b.status)),
+};
 
-const POLLING_INTERVAL_MS = 3000;
-// lean: the newest 100 runs, the server maximum per request; page the runs when one schedule keeps more
-const RUNS_PAGE = { page: 0, pageSize: 100 };
+// The runs of one schedule; Open shows the run's conversation below the table (R4.1, R4.2)
+const ScheduleRunList = memo(props => {
+  const { runs } = props;
 
-const isRunning = rows => rows?.some(run => run.status === 'running');
+  const [openedRunId, setOpenedRunId] = useState(null);
+  const { sortConfig, handleSortItems, getSortedData } = useRunHistorySorting('started');
+  const sortedRuns = useMemo(() => getSortedData(runs, SORT_FUNCTIONS), [runs, getSortedData]);
+  const openedRun = runs.find(run => run.id === openedRunId && run.conversation_id != null);
 
-// Status and reason of a run that created no conversation (R4.2)
-const ScheduleRunDetail = memo(({ row }) => (
-  <Box sx={{ padding: '1rem' }}>
-    <Typography
-      variant="headingSmall"
-      color="text.primary"
-    >
-      {toWord(row.entry.status)}
-    </Typography>
-    {row.entry.reason && (
+  const styles = scheduleRunListStyles();
+
+  if (!runs.length)
+    return (
       <Typography
         variant="bodyMedium"
         color="text.secondary"
+        sx={styles.empty}
       >
-        {row.entry.reason}
+        No runs yet.
       </Typography>
-    )}
-  </Box>
-));
-
-ScheduleRunDetail.displayName = 'ScheduleRunDetail';
-
-const ScheduleRunList = memo(({ schedule }) => {
-  const projectId = useSelectedProjectId();
-  const dispatch = useDispatch();
-  const { toastError } = useToast();
-
-  const args = { projectId, scheduleId: schedule.id, ...RUNS_PAGE };
-  const { currentData, isError, error } = useGetScheduleRunsQuery(args, { skip: !projectId });
-  const runs = currentData?.rows;
-  const polling = !isError && isRunning(runs);
-  // The same args share one cache entry; this subscription only adds the polling the rows ask for
-  useGetScheduleRunsQuery(args, { skip: !projectId, pollingInterval: polling ? POLLING_INTERVAL_MS : 0 });
-
-  const { data: application } = useApplicationDetailsQuery(
-    { projectId, applicationId: schedule.application_id },
-    { skip: !projectId || !schedule.application_id },
-  );
-
-  useEffect(() => {
-    if (isError) toastError(buildErrorMessage(error));
-  }, [error, isError, toastError]);
-
-  // The run that just ended has its conversation now: reload the conversation rows (R4.4)
-  const wasRunning = useRef(false);
-  useEffect(() => {
-    if (wasRunning.current && !isRunning(runs))
-      dispatch(eliteaApi.util.invalidateTags([RunHistoryApi.HISTORY_ITEMS_TAG]));
-    wasRunning.current = isRunning(runs);
-  }, [runs, dispatch]);
-
-  const queryParams = useMemo(() => ({ schedule_id: schedule.id }), [schedule.id]);
-  const additionalRows = useMemo(() => toHistoryRows(runs), [runs]);
-  const decorateRow = useMemo(() => buildScheduleRowDecorator(runs), [runs]);
+    );
 
   return (
-    <RunHistoryContainer
-      entityId={schedule.application_id}
-      source={schedule.entity_type}
-      versions={application?.versions}
-      queryParams={queryParams}
-      additionalRows={additionalRows}
-      decorateRow={decorateRow}
-      DetailComponent={ScheduleRunDetail}
-      layout="stacked"
-      ChatMessageListComponent={ChatMessageList}
-    />
+    <Box sx={styles.root}>
+      <Box>
+        <RunHistorySortableHeader
+          headerItems={HEADER_ITEMS}
+          sortConfig={sortConfig}
+          onSort={handleSortItems}
+          gridTemplateColumns={COLUMNS}
+        />
+        {sortedRuns.map(run => (
+          <Box
+            key={run.id}
+            data-testid="schedule-run-row"
+            sx={[styles.row, run.id === openedRun?.id && styles.selected]}
+          >
+            <Typography
+              data-testid="schedule-run-started"
+              variant="bodyMedium"
+              title={new Date(run.started_at).toLocaleString()}
+            >
+              {formatRunStarted(run.started_at)}
+            </Typography>
+            <Typography
+              data-testid="schedule-run-trigger"
+              variant="bodyMedium"
+            >
+              {toRunTriggerLabel(run.trigger)}
+            </Typography>
+            <Box
+              data-testid="schedule-run-status-cell"
+              sx={styles.status}
+            >
+              <ScheduleRunStatusChip status={run.status} />
+              {run.reason && (
+                <Typography
+                  variant="bodySmall"
+                  color="text.secondary"
+                  sx={styles.reason}
+                  title={run.reason}
+                >
+                  {run.reason}
+                </Typography>
+              )}
+            </Box>
+            <Box
+              data-testid="schedule-run-open"
+              sx={styles.open}
+            >
+              {run.conversation_id != null ? (
+                <Link
+                  component="button"
+                  type="button"
+                  variant="bodyMedium"
+                  onClick={() => setOpenedRunId(run.id)}
+                >
+                  Open
+                </Link>
+              ) : (
+                '–'
+              )}
+            </Box>
+          </Box>
+        ))}
+      </Box>
+      {openedRun && <ScheduleRunConversation run={openedRun} />}
+    </Box>
   );
 });
 
 ScheduleRunList.displayName = 'ScheduleRunList';
+
+/** @type {MuiSx} */
+const scheduleRunListStyles = () => ({
+  root: { display: 'flex', flexDirection: 'column', gap: '1rem' },
+  empty: { padding: '1rem 0', textAlign: 'center' },
+  row: ({ palette }) => ({
+    display: 'grid',
+    gridTemplateColumns: COLUMNS,
+    alignItems: 'center',
+    minHeight: '2.75rem',
+    padding: '0.375rem 0',
+    color: palette.text.secondary,
+    borderBottom: `0.0625rem solid ${palette.border.lines}`,
+    '& > *': { padding: '0 1rem', minWidth: 0 },
+  }),
+  selected: ({ palette }) => ({ backgroundColor: palette.background.surface.interactive.default }),
+  status: { display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '0.25rem' },
+  reason: { maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
+  open: { textAlign: 'right' },
+});
 
 export default ScheduleRunList;
