@@ -59,12 +59,16 @@ const EntitySchedulesSection = memo(props => {
           aria-label="Schedules"
           sx={styles.content}
         >
-          <Box sx={styles.header}>
+          <Box
+            sx={styles.header}
+            data-testid={`${testId}-header`}
+          >
             {canCreate && (
               <Button.BaseBtn
                 variant={BUTTON_VARIANTS.elitea}
                 color={BUTTON_COLORS.secondary}
                 onClick={onAdd}
+                sx={styles.noWrap}
                 data-testid={`${testId}-add`}
               >
                 + Schedule
@@ -83,6 +87,7 @@ const EntitySchedulesSection = memo(props => {
               // The Schedules page names the entity chip with it when the list has no rows
               state={{ entityName }}
               variant="bodyMedium"
+              sx={styles.noWrap}
               data-testid={`${testId}-open-all`}
             >
               Open all in Schedules
@@ -160,13 +165,19 @@ const entitySchedulesSectionStyles = () => ({
     flexDirection: 'column',
     gap: '0.75rem',
   },
+  // In the narrow pipeline column the row wraps: the count text then takes its own line
   header: {
     display: 'flex',
+    flexWrap: 'wrap',
     alignItems: 'center',
-    gap: '1rem',
+    gap: '0.5rem 1rem',
   },
   count: {
-    flex: 1,
+    flex: '1 1 12rem',
+  },
+  noWrap: {
+    whiteSpace: 'nowrap',
+    flexShrink: 0,
   },
   showMore: {
     alignSelf: 'flex-start',

@@ -262,6 +262,14 @@ describe('EntitySchedulesSection EL-7011', () => {
       expect(mocks.cardProps.map(card => card.entityType)).toEqual(['pipeline', 'pipeline']);
     });
 
+    it('US-36 browser walk bug 3 wraps the header row in a narrow column and keeps the button and link on one line', () => {
+      renderPipeline();
+
+      expect(screen.getByTestId('pipeline-schedules-section-header')).toHaveStyle({ flexWrap: 'wrap' });
+      expect(screen.getByTestId('pipeline-schedules-section-add')).toHaveStyle({ whiteSpace: 'nowrap' });
+      expect(screen.getByTestId('pipeline-schedules-section-open-all')).toHaveStyle({ whiteSpace: 'nowrap' });
+    });
+
     it('TC-US36-17 R1.4 shows the empty state of a pipeline without schedules', () => {
       mocks.entitySchedules.mockReturnValue(listOf([]));
       renderPipeline();
