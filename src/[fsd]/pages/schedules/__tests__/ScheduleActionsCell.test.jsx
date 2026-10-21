@@ -29,4 +29,10 @@ describe('ScheduleActionsCell (EL-7011)', () => {
     menuProps.mock.calls.at(-1)[0].onEdit();
     expect(navigate).toHaveBeenCalledWith('/settings/schedules/64');
   });
+
+  it('owner bug 2026-10-21 US-28 Open run history opens the schedule subpage on its Runs section', () => {
+    render(<ScheduleActionsCell row={{ id: 64, name: 'Nightly' }} />);
+    menuProps.mock.calls.at(-1)[0].onOpenRunHistory();
+    expect(navigate).toHaveBeenCalledWith({ pathname: '/settings/schedules/64', hash: '#runs' });
+  });
 });

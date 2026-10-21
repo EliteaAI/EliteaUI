@@ -3,12 +3,18 @@ import { memo, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { Link as RouterLink, useLocation, useNavigate, useParams } from 'react-router-dom';
 
-import { Box, Link, Typography } from '@mui/material';
+import { Box, Link, Skeleton, Typography } from '@mui/material';
 
-import { buildScheduleFormLink, buildSchedulesListLink, useEntitySchedules } from '@/[fsd]/entities/schedule';
+import {
+  buildScheduleFormLink,
+  buildScheduleRunsLink,
+  buildSchedulesListLink,
+  useEntitySchedules,
+} from '@/[fsd]/entities/schedule';
 import { Button } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import OpenInNewIcon from '@/assets/open-new-icon.svg?react';
 import { PERMISSIONS } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import useCheckPermission from '@/hooks/useCheckPermission';
@@ -36,13 +42,17 @@ const EntitySchedulesSection = memo(props => {
 
   // The form opens nested in the editor and comes back to this editor location (owner CR 2026-10-21).
   // The form URL keeps the editor search (viewMode), so the entity crumb opens the editor too.
+  const openNested = useCallback(
+    to => navigate({ ...to, search }, { state: { returnTo: pathname + search } }),
+    [navigate, pathname, search],
+  );
   const openForm = useCallback(
-    scheduleId =>
-      navigate(
-        { pathname: buildScheduleFormLink({ entityType, entityId, tab, scheduleId }), search },
-        { state: { returnTo: pathname + search } },
-      ),
-    [navigate, entityType, entityId, tab, pathname, search],
+    scheduleId => openNested({ pathname: buildScheduleFormLink({ entityType, entityId, tab, scheduleId }) }),
+    [openNested, entityType, entityId, tab],
+  );
+  const openRunHistory = useCallback(
+    scheduleId => openNested(buildScheduleRunsLink({ entityType, entityId, tab, scheduleId })),
+    [openNested, entityType, entityId, tab],
   );
   const onAdd = useCallback(() => openForm(), [openForm]);
   const testId = `${entityType}-schedules-section`;
@@ -87,10 +97,15 @@ const EntitySchedulesSection = memo(props => {
               // The Schedules page names the entity chip with it when the list has no rows
               state={{ entityName }}
               variant="bodyMedium"
-              sx={styles.noWrap}
+              sx={styles.link}
               data-testid={`${testId}-open-all`}
             >
-              Open all in Schedules
+              Open all in Settings → Schedules
+              <Box
+                component={OpenInNewIcon}
+                sx={styles.linkIcon}
+                aria-hidden
+              />
             </Link>
           </Box>
           {isError && (
@@ -109,6 +124,17 @@ const EntitySchedulesSection = memo(props => {
               </Button.BaseBtn>
             </Box>
           )}
+          {!isError &&
+            isFetching &&
+            rows.length === 0 &&
+            [0, 1].map(key => (
+              <Skeleton
+                key={key}
+                variant="rounded"
+                sx={styles.skeleton}
+                data-testid={`${testId}-skeleton`}
+              />
+            ))}
           {!isError && !isFetching && total === 0 && (
             <Typography
               variant="bodyMedium"
@@ -124,6 +150,7 @@ const EntitySchedulesSection = memo(props => {
               entityType={entityType}
               currentUserId={currentUserId}
               onOpenForm={openForm}
+              onOpenRunHistory={openRunHistory}
             />
           ))}
           {hasMore && (
@@ -160,12 +187,14 @@ const entitySchedulesSectionStyles = () => ({
   accordion: ({ palette }) => ({
     background: `${palette.background.default.tertiary} !important`,
   }),
+  // The section and its cards follow the width of the editor column, not of the window
   content: {
     display: 'flex',
     flexDirection: 'column',
     gap: '0.75rem',
+    containerType: 'inline-size',
   },
-  // In the narrow pipeline column the row wraps: the count text then takes its own line
+  // Below 26 rem: the button and the count, then the link on its own row; from 26 rem: one row
   header: {
     display: 'flex',
     flexWrap: 'wrap',
@@ -173,11 +202,35 @@ const entitySchedulesSectionStyles = () => ({
     gap: '0.5rem 1rem',
   },
   count: {
-    flex: '1 1 12rem',
+    flex: '1 1 0',
+    minWidth: 0,
   },
   noWrap: {
     whiteSpace: 'nowrap',
     flexShrink: 0,
+  },
+  link: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.25rem',
+    flexBasis: '100%',
+    whiteSpace: 'nowrap',
+    '@container (min-width: 26rem)': {
+      flexBasis: 'auto',
+    },
+  },
+  linkIcon: {
+    width: '0.875rem',
+    height: '0.875rem',
+    flexShrink: 0,
+  },
+  // The heights of the stacked and the one-line card
+  skeleton: {
+    height: '6.5rem',
+    borderRadius: '0.5rem',
+    '@container (min-width: 26rem)': {
+      height: '4.625rem',
+    },
   },
   showMore: {
     alignSelf: 'flex-start',
