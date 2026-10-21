@@ -96,7 +96,11 @@ describe('ScheduleRowActions (EL-7011 US-28)', () => {
     openMenu();
     fireEvent.click(screen.getByText('Change owner'));
     const dialog = screen.getByTestId('change-owner-dialog');
-    expect(JSON.parse(dialog.textContent)).toEqual({ id: 7, name: 'Nightly digest', owner: { id: 3, name: 'Ann' } });
+    expect(JSON.parse(dialog.textContent)).toEqual({
+      id: 7,
+      name: 'Nightly digest',
+      owner: { id: 3, name: 'Ann' },
+    });
     fireEvent.click(dialog);
     expect(screen.queryByTestId('change-owner-dialog')).not.toBeInTheDocument();
   });
