@@ -18,7 +18,7 @@ vi.mock('@/api', () => {
 const { configureStore } = await import('@reduxjs/toolkit');
 const { schedulePreferencesApi } = await import('../schedulePreferencesApi.js');
 
-const PATH = '/elitea_core/schedule_preferences/prompt_lib/7';
+const PATH = '/elitea_core/schedules/prompt_lib/7/preferences';
 
 const jsonResponse = (body, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -38,8 +38,7 @@ const makeStore = () =>
   });
 
 const cached = store =>
-  schedulePreferencesApi.endpoints.getSchedulePreferences.select({ projectId: 7 })(store.getState())
-    .data;
+  schedulePreferencesApi.endpoints.getSchedulePreferences.select({ projectId: 7 })(store.getState()).data;
 
 describe('EL-7011 schedule preferences API', () => {
   let fetchSpy;
@@ -67,9 +66,7 @@ describe('EL-7011 schedule preferences API', () => {
     let reply;
     fetchSpy.mockResolvedValueOnce(jsonResponse({ get_notified: true }));
     const store = makeStore();
-    await store.dispatch(
-      schedulePreferencesApi.endpoints.getSchedulePreferences.initiate({ projectId: 7 }),
-    );
+    await store.dispatch(schedulePreferencesApi.endpoints.getSchedulePreferences.initiate({ projectId: 7 }));
 
     fetchSpy.mockReturnValueOnce(new Promise(resolve => (reply = resolve)));
     const pending = store.dispatch(
@@ -94,9 +91,7 @@ describe('EL-7011 schedule preferences API', () => {
   it('R2.5 EL-7011: returns the cache to the saved value when the save fails', async () => {
     fetchSpy.mockResolvedValueOnce(jsonResponse({ get_notified: true }));
     const store = makeStore();
-    await store.dispatch(
-      schedulePreferencesApi.endpoints.getSchedulePreferences.initiate({ projectId: 7 }),
-    );
+    await store.dispatch(schedulePreferencesApi.endpoints.getSchedulePreferences.initiate({ projectId: 7 }));
 
     fetchSpy.mockResolvedValueOnce(jsonResponse({ error: 'boom' }, 500));
     const result = await store.dispatch(

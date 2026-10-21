@@ -1,20 +1,23 @@
 // @vitest-environment jsdom
-import { configureStore } from '@reduxjs/toolkit';
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { eliteaApi } from '@/api';
+import { configureStore } from '@reduxjs/toolkit';
 
 import { generateScheduleDraftApi } from '../generateScheduleDraftApi';
 
 // The real eliteaApi lives in a circular store import; a bare api with the same shape is enough here.
-vi.mock('@/api', () => ({
-  eliteaApi: createApi({
-    reducerPath: 'eliteaApi',
-    baseQuery: fetchBaseQuery({ baseUrl: 'http://localhost/api/v2' }),
-    endpoints: () => ({}),
-  }),
-}));
+// The factory imports RTK Query itself, because the sorted imports run after the hoisted mock.
+vi.mock('@/api', async () => {
+  const { createApi, fetchBaseQuery } = await import('@reduxjs/toolkit/query/react');
+  return {
+    eliteaApi: createApi({
+      reducerPath: 'eliteaApi',
+      baseQuery: fetchBaseQuery({ baseUrl: 'http://localhost/api/v2' }),
+      endpoints: () => ({}),
+    }),
+  };
+});
 
 const makeStore = () =>
   configureStore({
@@ -29,7 +32,9 @@ describe('R2.1 EL-7011 generateScheduleDraft', () => {
     const draft = { draft: { name: 'n' }, warnings: [] };
     const fetchMock = vi
       .spyOn(globalThis, 'fetch')
-      .mockResolvedValue(new Response(JSON.stringify(draft), { status: 200, headers: { 'content-type': 'application/json' } }));
+      .mockResolvedValue(
+        new Response(JSON.stringify(draft), { status: 200, headers: { 'content-type': 'application/json' } }),
+      );
     const body = { prompt: 'p', current: {}, locked_entity: null, timezone: 'UTC' };
 
     const result = await makeStore().dispatch(
@@ -37,7 +42,7 @@ describe('R2.1 EL-7011 generateScheduleDraft', () => {
     );
 
     const request = fetchMock.mock.calls[0][0];
-    expect(request.url).toContain('/elitea_core/generate_schedule_draft/prompt_lib/7');
+    expect(request.url).toContain('/elitea_core/schedules/prompt_lib/7/draft');
     expect(request.method).toBe('POST');
     expect(await request.json()).toEqual(body);
     expect(result.data).toEqual(draft);
