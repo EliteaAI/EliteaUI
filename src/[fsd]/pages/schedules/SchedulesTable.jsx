@@ -1,6 +1,6 @@
-import { memo, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 
-import { Box, Typography } from '@mui/material';
+import { Box, Tooltip as MuiTooltip, Typography } from '@mui/material';
 
 import { useResponsiveColumns } from '@/[fsd]/entities/grid-table/lib';
 import {
@@ -10,13 +10,18 @@ import {
   GridTablePagination,
   GridTableRow,
 } from '@/[fsd]/entities/grid-table/ui';
-import { ScheduleEnabledSwitch } from '@/[fsd]/features/schedule';
+import {
+  ScheduleEnabledSwitch,
+  ScheduleRunStatusChip,
+  formatRunStarted,
+  toRunStatusLabel,
+} from '@/[fsd]/features/schedule';
 import {
   getBrowserTimezone,
   getCronSummaryInBrowserTimezone,
 } from '@/[fsd]/shared/lib/helpers/schedule.helpers';
-import { useGetWindowWidth } from '@/[fsd]/shared/lib/hooks';
-import { Text } from '@/[fsd]/shared/ui';
+import { useGetComponentWidth } from '@/[fsd]/shared/lib/hooks';
+import { Text, Tooltip } from '@/[fsd]/shared/ui';
 import EntityTypeIcon from '@/[fsd]/shared/ui/icon/EntityTypeIcon';
 import { TIME_FORMAT } from '@/common/constants';
 import { timeFormatter } from '@/common/utils';
@@ -30,25 +35,60 @@ const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 const ENTITY_TYPE_LABELS = { agent: 'Agent', pipeline: 'Pipeline' };
 // The API stores run statuses in lower case (failed, skipped, blocked, ...)
 const REASON_STATUSES = ['failed', 'skipped', 'blocked'];
-const statusLabel = status =>
-  status ? status.charAt(0).toUpperCase() + status.slice(1).replaceAll('_', ' ') : '-';
 
-// Widths and the row height follow the Agents and Pipelines list view (widgets/data-table): flexible
-// text columns with the Agents Name minimum, fixed narrow columns, the 105 px Actions column.
-// The Settings menu takes about 30 rem, so Owner and Last run hide on narrow windows, as in the
-// Users table (hideBelow, window px), and the row menu never leaves the screen.
+// All 8 columns show at every width (owner: no hidden columns). The tier comes from the measured table
+// width (EL-7011 table fit spec): 796 px at a 1280 px window, 956 px at 1440, 1116 px at 1600.
+// The regular tier starts at 948 px, a 1280 px window with the main sidebar collapsed (+152 px).
+const REGULAR_MIN_PX = 948;
+const COMFORTABLE_MIN_PX = 1116;
+// Under the compact sum the header and rows scroll sideways together and the Actions column stays pinned
+const COMPACT_MIN_PX = 796;
+const TABLE_MIN_WIDTH = '49.75rem';
+// The measured box also holds the 1.5 rem side gutters of GridTableContainer
+const GUTTERS_PX = 48;
+
+// The text columns grow from their compact width; the other columns take the width of the tier
 const SCHEDULES_COLUMNS = [
-  { field: 'name', label: 'Name & Description', width: 'minmax(9.375rem, 1.3fr)', sortable: true },
+  { field: 'name', label: 'Name & Description', width: 'minmax(10.25rem, 1.3fr)', sortable: true },
   { field: 'entity_name', label: 'Entity Name', width: 'minmax(7.5rem, 1fr)', sortable: true },
-  { field: 'schedule', label: 'Schedule', width: 'minmax(7.5rem, 1.3fr)' },
-  { field: 'next_run', label: 'Next run', width: '9.5rem', sortable: true },
-  { field: 'last_run', label: 'Last run', width: '7.5rem', sortable: true, hideBelow: 1440 },
-  { field: 'owner', label: 'Owner', width: '12rem', hideBelow: 1600 },
-  { field: 'enabled', label: 'Enabled', width: '7.5rem', sortable: true },
+  { field: 'schedule', label: 'Schedule', width: 'minmax(7.25rem, 1fr)' },
+  { field: 'next_run', label: 'Next run', sortable: true },
+  { field: 'last_run', label: 'Last run', sortable: true },
+  { field: 'owner', label: 'Owner' },
+  { field: 'enabled', label: 'Enabled', sortable: true },
   { field: 'actions', label: 'Actions' },
 ];
-const ACTIONS_COLUMN_WIDTH = '6.5625rem';
+const TIER_WIDTHS = {
+  compact: {
+    next_run: '5.75rem',
+    last_run: '5.75rem',
+    owner: '3.5rem',
+    enabled: '5.5rem',
+    actions: '4.25rem',
+  },
+  regular: {
+    next_run: '7.25rem',
+    last_run: '6.5rem',
+    owner: '7.5rem',
+    enabled: '5.5rem',
+    actions: '4.25rem',
+  },
+  comfortable: {
+    next_run: '9.25rem',
+    last_run: '8rem',
+    owner: '9.75rem',
+    enabled: '6rem',
+    actions: '6.5625rem',
+  },
+};
+const STATUS_VARIANTS = { compact: 'icon', regular: 'text', comfortable: 'chip' };
 const ROW_HEIGHT = '3.5rem';
+
+const getTier = tableWidth => {
+  if (tableWidth >= COMFORTABLE_MIN_PX) return 'comfortable';
+  if (tableWidth >= REGULAR_MIN_PX) return 'regular';
+  return 'compact';
+};
 
 const formatTime = value =>
   new Date(value).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
@@ -67,18 +107,26 @@ const IconWithLabel = ({ type, label }) => {
       >
         <EntityTypeIcon type={type} />
       </Box>
-      <Text.EllipsisTypography
+      <Tooltip.TypographyWithConditionalTooltip
+        title={label}
+        placement="top"
         variant="bodyMedium"
         color="text.secondary"
       >
         {label}
-      </Text.EllipsisTypography>
+      </Tooltip.TypographyWithConditionalTooltip>
     </Box>
   );
 };
 
-const renderCell = (column, value, row) => {
+const lastRunTooltip = (row, label, reason) => {
+  const text = [label, row.last_run && formatRunStarted(row.last_run)].filter(Boolean).join(' - ');
+  return reason ? `${text}. ${reason}` : text;
+};
+
+const renderCell = (column, value, row, tier) => {
   const styles = schedulesTableStyles();
+  const isCompact = tier === 'compact';
   switch (column.field) {
     case 'entity_name':
       return (
@@ -88,59 +136,155 @@ const renderCell = (column, value, row) => {
             label={row.entity_name}
           />
           {row.version_name && (
-            <Text.EllipsisTypography
+            <Tooltip.TypographyWithConditionalTooltip
+              title={row.version_name}
+              placement="top"
               variant="bodySmall"
               color="text.secondary"
             >
               {row.version_name}
-            </Text.EllipsisTypography>
+            </Tooltip.TypographyWithConditionalTooltip>
           )}
         </Box>
       );
-    case 'schedule':
-      return `${getCronSummaryInBrowserTimezone(row.cron, row.timezone)} (${getBrowserTimezone() ?? row.timezone})`;
-    case 'next_run':
-      return value ? (
-        <Box sx={styles.dateCell}>
-          <CalendarIcon sx={styles.calendarIcon} />
+    case 'schedule': {
+      // Every row shows the browser zone, so the compact cell drops it and the tooltip keeps it
+      const rule = getCronSummaryInBrowserTimezone(row.cron, row.timezone);
+      const ruleWithZone = `${rule} (${getBrowserTimezone() ?? row.timezone})`;
+      return (
+        <MuiTooltip
+          title={ruleWithZone}
+          placement="top"
+        >
           <Typography
             variant="bodyMedium"
-            component="span"
-            title={new Date(value).toLocaleString()}
+            sx={styles.twoLines}
           >
-            {`${timeFormatter(value, TIME_FORMAT.MMMDD)} ${formatTime(value)}`}
+            {isCompact ? rule : ruleWithZone}
           </Typography>
-        </Box>
-      ) : (
-        '-'
+        </MuiTooltip>
       );
-    case 'last_run':
+    }
+    case 'next_run': {
+      if (!row.enabled) return 'Paused';
+      if (!value) return '-';
+      const date = timeFormatter(value, TIME_FORMAT.MMMDD);
+      const time = formatTime(value);
+      if (tier === 'comfortable') {
+        return (
+          <Box sx={styles.dateCell}>
+            <CalendarIcon sx={styles.calendarIcon} />
+            <Typography
+              variant="bodyMedium"
+              component="span"
+            >
+              {`${date} ${time}`}
+            </Typography>
+          </Box>
+        );
+      }
+      return (
+        <MuiTooltip
+          title={new Date(value).toLocaleString()}
+          placement="top"
+        >
+          {isCompact ? (
+            <Box sx={styles.twoLineDate}>
+              <Typography
+                variant="bodyMedium"
+                component="span"
+              >
+                {date}
+              </Typography>
+              <Typography
+                variant="bodySmall"
+                component="span"
+                color="text.primary"
+              >
+                {time}
+              </Typography>
+            </Box>
+          ) : (
+            <Typography
+              variant="bodyMedium"
+              component="span"
+            >
+              {`${date} ${time}`}
+            </Typography>
+          )}
+        </MuiTooltip>
+      );
+    }
+    case 'last_run': {
+      if (!row.last_run_status) return '-';
+      const reason = REASON_STATUSES.includes(row.last_run_status) ? row.last_run_reason : null;
       return (
         <Box sx={styles.lastRun}>
-          <Text.EllipsisTypography variant="bodyMedium">
-            {statusLabel(row.last_run_status)}
-          </Text.EllipsisTypography>
-          {REASON_STATUSES.includes(row.last_run_status) && row.last_run_reason && (
+          {/* The run time shows only here, so the tooltip shows at every tier */}
+          <MuiTooltip
+            title={lastRunTooltip(row, toRunStatusLabel(row.last_run_status), reason)}
+            placement="top"
+          >
+            <Box
+              component="span"
+              tabIndex={isCompact ? 0 : undefined}
+              sx={styles.statusAnchor}
+            >
+              <ScheduleRunStatusChip
+                status={row.last_run_status}
+                variant={STATUS_VARIANTS[tier]}
+              />
+            </Box>
+          </MuiTooltip>
+          {!isCompact && reason && (
             <Text.EllipsisTypography
               variant="bodySmall"
               color="text.secondary"
             >
-              {row.last_run_reason}
+              {reason}
             </Text.EllipsisTypography>
           )}
         </Box>
       );
-    case 'owner':
-      return row.owner ? (
-        <Box sx={styles.owner}>
-          <AuthorContainer
-            disabledNavigation
-            authors={[row.owner]}
-          />
-        </Box>
-      ) : (
-        '-'
+    }
+    case 'owner': {
+      if (!row.owner) return '-';
+      const avatar = (
+        <AuthorContainer
+          disabledNavigation
+          showName={false}
+          authors={[row.owner]}
+        />
       );
+      if (isCompact) {
+        return (
+          <MuiTooltip
+            title={row.owner.name ?? ''}
+            placement="top"
+          >
+            <Box
+              component="span"
+              tabIndex={0}
+              sx={styles.owner}
+            >
+              {avatar}
+            </Box>
+          </MuiTooltip>
+        );
+      }
+      return (
+        <Box sx={styles.owner}>
+          {avatar}
+          <Tooltip.TypographyWithConditionalTooltip
+            title={row.owner.name}
+            placement="top"
+            variant="bodyMedium"
+          >
+            {row.owner.name}
+          </Tooltip.TypographyWithConditionalTooltip>
+        </Box>
+      );
+    }
     case 'enabled':
       return <ScheduleEnabledSwitch row={row} />;
     default:
@@ -162,16 +306,26 @@ const SchedulesTable = memo(props => {
     emptyMessage = 'No schedules',
     toolbar,
   } = props;
-  const styles = schedulesTableStyles();
-  const { windowWidth } = useGetWindowWidth();
+  const { componentRef, componentWidth } = useGetComponentWidth();
+  const tableWidth = componentWidth - GUTTERS_PX;
+  const tier = getTier(tableWidth);
+  const isCompact = tier === 'compact';
+  const isNarrow = tableWidth < COMPACT_MIN_PX;
+  const styles = schedulesTableStyles(isCompact, isNarrow);
   const [hoveredRowId, setHoveredRowId] = useState(null);
+  const containerProps = useMemo(() => ({ ref: componentRef }), [componentRef]);
 
+  const columns = useMemo(
+    () => SCHEDULES_COLUMNS.map(col => ({ ...col, width: TIER_WIDTHS[tier][col.field] ?? col.width })),
+    [tier],
+  );
   const { visibleColumns, gridTemplateColumns, dataColumns } = useResponsiveColumns({
-    columns: SCHEDULES_COLUMNS,
-    containerWidth: windowWidth,
+    columns,
+    containerWidth: componentWidth,
     showCheckbox: false,
-    actionsColumnWidth: ACTIONS_COLUMN_WIDTH,
+    actionsColumnWidth: TIER_WIDTHS[tier].actions,
   });
+  const renderTierCell = useCallback((column, value, row) => renderCell(column, value, row, tier), [tier]);
 
   const paginationProps = useMemo(
     () => ({
@@ -195,6 +349,7 @@ const SchedulesTable = memo(props => {
       isLoading={isLoading}
       isEmpty={rows.length === 0}
       emptyMessage={emptyMessage}
+      containerProps={containerProps}
       toolbar={
         toolbar && (
           <>
@@ -211,34 +366,48 @@ const SchedulesTable = memo(props => {
       }
       toolbarSx={styles.toolbar}
     >
-      <GridTableHeader
-        columns={visibleColumns}
-        sortConfig={sortConfig}
-        onSort={onSort}
-        gridTemplateColumns={gridTemplateColumns}
-        showCheckbox={false}
-        columnTestIdPrefix="schedule"
-      />
-      <GridTableBody minHeight={0}>
-        {rows.map(row => (
-          <GridTableRow
-            key={row.id}
-            row={row}
-            showCheckbox={false}
-            gridTemplateColumns={gridTemplateColumns}
-            columns={dataColumns}
-            renderCell={renderCell}
-            rowHeight={ROW_HEIGHT}
-            isHovered={hoveredRowId === row.id}
-            onMouseEnter={() => setHoveredRowId(row.id)}
-            onMouseLeave={() => setHoveredRowId(null)}
-            NameCellComponent={ScheduleNameCell}
-            ActionsComponent={ScheduleActionsCell}
-            data-testid="schedule-row"
-            dataCellTestIdPrefix="schedule"
-          />
-        ))}
-      </GridTableBody>
+      {/* One scroll box for header and rows, as in the Agents list (widgets/data-table) */}
+      <Box sx={styles.scrollBox}>
+        <Box sx={styles.tableGroup}>
+          <Box sx={styles.headerBox}>
+            <GridTableHeader
+              columns={visibleColumns}
+              sortConfig={sortConfig}
+              onSort={onSort}
+              gridTemplateColumns={gridTemplateColumns}
+              showCheckbox={false}
+              columnTestIdPrefix="schedule"
+              density={isCompact ? 'compact' : undefined}
+            />
+          </Box>
+          <GridTableBody
+            minHeight={0}
+            sx={styles.body}
+          >
+            {rows.map(row => (
+              <GridTableRow
+                key={row.id}
+                row={row}
+                showCheckbox={false}
+                gridTemplateColumns={gridTemplateColumns}
+                columns={dataColumns}
+                renderCell={renderTierCell}
+                rowHeight={ROW_HEIGHT}
+                isHovered={hoveredRowId === row.id}
+                onMouseEnter={() => setHoveredRowId(row.id)}
+                onMouseLeave={() => setHoveredRowId(null)}
+                NameCellComponent={ScheduleNameCell}
+                ActionsComponent={ScheduleActionsCell}
+                nameCellSx={styles.compactCell}
+                dataCellSx={styles.compactCell}
+                actionsCellSx={styles.actionsCell(tier, hoveredRowId === row.id)}
+                data-testid="schedule-row"
+                dataCellTestIdPrefix="schedule"
+              />
+            ))}
+          </GridTableBody>
+        </Box>
+      </Box>
       {total > 0 && <GridTablePagination {...paginationProps} />}
     </GridTableContainer>
   );
@@ -246,15 +415,79 @@ const SchedulesTable = memo(props => {
 
 SchedulesTable.displayName = 'SchedulesTable';
 
+// A pinned cell covers the cells under it: the opaque surface plus the translucent row or header fill
+const pinnedCell = (palette, fill) => ({
+  position: 'sticky',
+  right: 0,
+  backgroundColor: palette.background.default.secondary,
+  backgroundImage: fill ? `linear-gradient(${fill}, ${fill})` : 'none',
+});
+
 /** @type {MuiSx} */
-const schedulesTableStyles = () => ({
+const schedulesTableStyles = (isCompact, isNarrow) => ({
   iconLabel: { display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 },
   icon: { display: 'flex', flexShrink: 0 },
   entityName: { minWidth: 0 },
-  dateCell: { display: 'flex', alignItems: 'center', gap: '0.5rem' },
+  twoLines: {
+    display: '-webkit-box',
+    WebkitBoxOrient: 'vertical',
+    WebkitLineClamp: 2,
+    overflow: 'hidden',
+    wordBreak: 'break-word',
+  },
+  dateCell: { display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 },
+  twoLineDate: { display: 'flex', flexDirection: 'column', minWidth: 0 },
   calendarIcon: { width: '1rem', height: '1rem', flexShrink: 0 },
-  lastRun: { minWidth: 0 },
-  owner: { display: 'flex', maxWidth: '9.75rem', width: '9.75rem' },
+  lastRun: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    minWidth: 0,
+    maxWidth: '100%',
+  },
+  statusAnchor: { display: 'inline-flex', maxWidth: '100%' },
+  owner: { display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0, maxWidth: '100%' },
+  compactCell: isCompact ? { paddingLeft: '0.5rem', paddingRight: '0.5rem' } : {},
+  actionsCell:
+    (tier, isHovered) =>
+    ({ palette }) => ({
+      ...(tier !== 'comfortable' && { justifyContent: 'center' }),
+      ...(isCompact && { paddingLeft: '0.5rem', paddingRight: '0.5rem' }),
+      ...(isNarrow && pinnedCell(palette, isHovered && palette.background.surface.interactive.default)),
+    }),
+  scrollBox: {
+    display: 'flex',
+    flexDirection: 'column',
+    flex: 1,
+    minHeight: 0,
+    minWidth: 0,
+    overflowX: 'auto',
+    // Under the compact width the box scrolls both ways, so the pinned cells stick to its right edge
+    overflowY: isNarrow ? 'auto' : 'hidden',
+  },
+  tableGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+    minWidth: TABLE_MIN_WIDTH,
+    ...(isNarrow ? { flex: 'none' } : { flex: 1, minHeight: 0, gap: '0.75rem' }),
+  },
+  headerBox: ({ palette }) =>
+    isNarrow
+      ? {
+          position: 'sticky',
+          top: 0,
+          zIndex: 1,
+          paddingBottom: '0.75rem',
+          backgroundColor: palette.background.default.secondary,
+          // clip keeps the rounded frame but, unlike hidden, lets the Actions label stick to the scroll box
+          '& > .MuiBox-root': { overflow: 'clip' },
+          '& [data-testid="schedule-column-header-actions"]': pinnedCell(
+            palette,
+            palette.background.surface.interactive.default,
+          ),
+        }
+      : {},
+  body: isNarrow ? { overflow: 'visible', flex: 'none' } : {},
   toolbar: { flexWrap: 'wrap', gap: '1rem', alignItems: 'flex-end' },
   visuallyHidden: {
     position: 'absolute',

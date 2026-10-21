@@ -1,4 +1,4 @@
-export { DEFAULT_SCHEDULE_CRON, buildInitialValues, formatRunStarted } from './lib/helpers';
+export { DEFAULT_SCHEDULE_CRON, buildInitialValues, formatRunStarted, toRunStatusLabel } from './lib/helpers';
 export * from './ui';
 export { default as ScheduleRowActions } from './ui/ScheduleRowActions';
 export { default as ScheduleEnabledSwitch } from './ui/ScheduleEnabledSwitch';

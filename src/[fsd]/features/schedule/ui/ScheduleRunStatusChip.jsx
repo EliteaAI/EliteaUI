@@ -7,7 +7,7 @@ import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 import SkipNextIcon from '@mui/icons-material/SkipNext';
 import TimerOffOutlinedIcon from '@mui/icons-material/TimerOffOutlined';
-import { Chip, CircularProgress } from '@mui/material';
+import { Box, Chip, CircularProgress } from '@mui/material';
 
 import { toRunStatusLabel } from '../lib/helpers';
 
@@ -23,10 +23,12 @@ const STATUS_ICONS = {
 };
 
 const ScheduleRunStatusChip = memo(props => {
-  const { status } = props;
+  // variant: 'chip' (outlined, default), 'text' (icon and word, no border) or 'icon' (icon only)
+  const { status, variant = 'chip' } = props;
 
   const { Icon, color } = STATUS_ICONS[status] ?? {};
   const styles = scheduleRunStatusChipStyles(color);
+  const label = toRunStatusLabel(status) || '-';
 
   const icon =
     status === 'running' ? (
@@ -38,14 +40,28 @@ const ScheduleRunStatusChip = memo(props => {
       Icon && <Icon />
     );
 
+  if (variant === 'icon') {
+    return (
+      <Box
+        component="span"
+        role="img"
+        aria-label={label}
+        data-testid="schedule-run-status"
+        sx={styles.iconOnly}
+      >
+        {icon || label}
+      </Box>
+    );
+  }
+
   return (
     <Chip
       data-testid="schedule-run-status"
       size="small"
       variant="outlined"
       icon={icon || undefined}
-      label={toRunStatusLabel(status) || '-'}
-      sx={styles.chip}
+      label={label}
+      sx={[styles.chip, variant === 'text' && styles.noBorder]}
     />
   );
 });
@@ -61,6 +77,18 @@ const scheduleRunStatusChipStyles = iconColor => ({
     '& .MuiChip-icon': { fontSize: '0.875rem', color: iconColor },
   }),
   progress: { marginLeft: '0.375rem' },
+  noBorder: { border: 'none' },
+  // A 20 px hit area around the icon
+  iconOnly: ({ palette }) => ({
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '1.25rem',
+    height: '1.25rem',
+    color: palette.text.secondary,
+    '& .MuiSvgIcon-root': { fontSize: '1rem', color: iconColor },
+    '& .MuiCircularProgress-root': { marginLeft: 0 },
+  }),
 });
 
 export default ScheduleRunStatusChip;
