@@ -15,7 +15,7 @@ const getHistoryEntityName = source => {
   return ParticipantEntityTypes.Application;
 };
 
-const runHistoryApi = eliteaApi
+export const runHistoryApi = eliteaApi
   .enhanceEndpoints({
     addTagTypes: [HISTORY_ITEMS_TAG],
   })
@@ -67,6 +67,15 @@ const runHistoryApi = eliteaApi
         }),
         invalidatesTags: [HISTORY_ITEMS_TAG],
       }),
+      // action is 'approve' or 'reject'; await_task_timeout -1 returns without waiting for the run.
+      decideWaitingRun: build.mutation({
+        query: ({ projectId, conversationUuid, messageId, action }) => ({
+          url: `/elitea_core/continue_predict/prompt_lib/${projectId}/${conversationUuid}`,
+          method: 'POST',
+          body: { message_id: messageId, hitl_resume: true, hitl_action: action, await_task_timeout: -1 },
+        }),
+        invalidatesTags: [HISTORY_ITEMS_TAG],
+      }),
     }),
   });
 
@@ -76,4 +85,5 @@ export const {
   useGetRunHistoryDetailsQuery,
   useLazyGetRunHistoryDetailsQuery,
   useDeleteRunHistoryItemMutation,
+  useDecideWaitingRunMutation,
 } = runHistoryApi;

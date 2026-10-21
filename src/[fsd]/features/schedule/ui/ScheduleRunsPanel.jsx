@@ -52,7 +52,10 @@ const ScheduleRunsPanel = memo(props => {
           testRunError={testRunError}
         />
       ) : (
-        <ScheduleRunList runs={runs} />
+        <ScheduleRunList
+          runs={runs}
+          schedule={schedule}
+        />
       )}
       <Typography
         variant="bodySmall"
