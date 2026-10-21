@@ -159,7 +159,8 @@ export const scheduleApi = eliteaApi
             formData: true,
           };
         },
-        invalidatesTags: (result, error) => (!error && result?.created?.length ? [SCHEDULES_TAG] : []),
+        invalidatesTags: (result, error) =>
+          !error && (result?.created?.length || result?.updated?.length) ? [SCHEDULES_TAG] : [],
       }),
     }),
   });
