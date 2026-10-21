@@ -20,10 +20,12 @@ const createMaxLengthExtension = (maxLength, countLength) => {
 
   return EditorState.transactionFilter.of(tr => {
     if (!tr.docChanged || tr.annotation(ExternalChange)) return tr;
-    if (countLength(tr.newDoc.toString()) <= maxLength) return tr;
+    const newCount = countLength(tr.newDoc.toString());
+    const allowedCount = Math.max(maxLength, countLength(tr.startState.doc.toString()));
+    if (newCount <= allowedCount) return tr;
 
     const currentLength = tr.startState.doc.length;
-    const maxDocumentLength = maxLength + currentLength - countLength(tr.startState.doc.toString());
+    const maxDocumentLength = allowedCount + tr.newDoc.length - newCount;
     const changes = [];
     let runningLength = currentLength;
 
