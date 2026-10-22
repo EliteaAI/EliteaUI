@@ -14,10 +14,13 @@ const RunHistorySortableHeader = memo(props => {
       {headerItems.map((headerItem, index) => (
         <Box
           key={`header-${index}`}
-          onClick={() => onSort(headerItem.type)}
-          sx={styles.sortableHeader(sortConfig.type === headerItem.type, sortConfig.direction === 'desc')}
+          onClick={headerItem.sortable === false ? undefined : () => onSort(headerItem.type)}
+          sx={[
+            styles.sortableHeader(sortConfig.type === headerItem.type, sortConfig.direction === 'desc'),
+            headerItem.sortable === false && styles.plainHeader,
+          ]}
         >
-          <SortArrows />
+          {headerItem.sortable !== false && <SortArrows />}
           <Typography
             variant="labelMedium"
             color="text.secondary"
@@ -74,6 +77,12 @@ const runHistorySortableHeaderStyles = gridTemplateColumns => ({
       transition: 'transform 0.2s ease',
     },
   }),
+  // CR-22 D7: an extra column has no sort, so no pointer and full strength
+  plainHeader: {
+    opacity: 1,
+    // '&&' beats the header's `div` rule, which sets the pointer on every cell
+    '&&': { cursor: 'default' },
+  },
 });
 
 export default RunHistorySortableHeader;

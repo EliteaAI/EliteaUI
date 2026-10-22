@@ -17,6 +17,8 @@ import { ContentContainer } from '@/pages/Common';
 
 const { ParticipantEntityTypes } = ParticipantEntityConstants;
 
+const NO_EXTRA_COLUMNS = [];
+
 const SORT_TYPES = {
   DATE: 'date',
   EVENT: 'event',
@@ -42,11 +44,12 @@ const RunHistoryList = memo(props => {
     hasEvent = false,
     eventColumnLabel = 'Event',
     shareOpensHistoryTab = false,
+    extraColumns = NO_EXTRA_COLUMNS,
   } = props;
   const { isSmallWindow } = useIsSmallWindow();
   const { windowWidth } = useGetWindowWidth();
 
-  const styles = runHistoryListStyles(isSmallWindow);
+  const styles = runHistoryListStyles(isSmallWindow, extraColumns.length > 0);
 
   const { sortConfig, handleSortItems, getSortedData } = useRunHistorySorting(SORT_TYPES.DATE);
 
@@ -74,11 +77,13 @@ const RunHistoryList = memo(props => {
   const tableHeaderItems = useMemo(
     () => [
       { label: 'Date', type: SORT_TYPES.DATE },
+      // CR-22 D7: the extra columns do not sort
+      ...extraColumns.map(column => ({ label: column.label, type: column.id, sortable: false })),
       ...(hasEvent ? [{ label: eventColumnLabel, type: SORT_TYPES.EVENT }] : []),
       ...(noVersions ? [] : [{ label: 'Version', type: SORT_TYPES.VERSION }]),
       { label: 'Duration', type: SORT_TYPES.DURATION },
     ],
-    [noVersions, hasEvent, eventColumnLabel],
+    [noVersions, hasEvent, eventColumnLabel, extraColumns],
   );
 
   const sortedConversations = useMemo(
@@ -94,7 +99,7 @@ const RunHistoryList = memo(props => {
             headerItems={tableHeaderItems}
             sortConfig={sortConfig}
             onSort={handleSortItems}
-            gridTemplateColumns={resolveRunHistoryColumns(noVersions, hasEvent)}
+            gridTemplateColumns={resolveRunHistoryColumns(noVersions, hasEvent, extraColumns)}
           />
         )}
         <Box sx={styles.list}>
@@ -105,6 +110,7 @@ const RunHistoryList = memo(props => {
                 useMock
                 source={source}
                 hasEvent={hasEvent}
+                extraColumns={extraColumns}
                 {...(source === ParticipantEntityTypes.Toolkit ? { versions: null } : {})}
               />
             ))
@@ -122,6 +128,7 @@ const RunHistoryList = memo(props => {
                   handleOpenAnalytics={handleOpenAnalytics}
                   source={source}
                   hasEvent={hasEvent}
+                  extraColumns={extraColumns}
                   shareOpensHistoryTab={shareOpensHistoryTab}
                 />
               ))}
@@ -145,8 +152,9 @@ const RunHistoryList = memo(props => {
 RunHistoryList.displayName = 'RunHistoryList';
 
 /** @type {MuiSx} */
-const runHistoryListStyles = isSmallWindow => {
-  const wrapperWidth = isSmallWindow ? '100%' : '32rem';
+// CR-22 D7: Agent and Pipeline Run History with the Schedule and Status columns take 48 rem; the others keep 32 rem
+const runHistoryListStyles = (isSmallWindow, wide) => {
+  const wrapperWidth = isSmallWindow ? '100%' : wide ? '48rem' : '32rem';
 
   return {
     wrapper: {

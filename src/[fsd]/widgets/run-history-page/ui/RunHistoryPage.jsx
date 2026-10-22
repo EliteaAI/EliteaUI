@@ -4,6 +4,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { Box } from '@mui/material';
 
+import { SCHEDULE_RUN_COLUMNS } from '@/[fsd]/entities/run-history/lib/helpers';
 import { RunHistoryContainer } from '@/[fsd]/entities/run-history/ui';
 import { ChatMessageList } from '@/[fsd]/features/chat';
 import { DrawerPageHeader } from '@/[fsd]/features/settings/ui/drawer-page';
@@ -18,7 +19,14 @@ import { SearchParams } from '@/common/constants';
 const DEFAULT_TAB = 'all';
 
 const RunHistoryPage = memo(props => {
-  const { source, detailRoute, analyticsRoute, eventColumnLabel, decorateRow } = props;
+  const {
+    source,
+    detailRoute,
+    analyticsRoute,
+    eventColumnLabel,
+    decorateRow,
+    showScheduleRuns = false,
+  } = props;
   const { tab, agentId } = useParams();
   const navigate = useNavigate();
   const { search } = useLocation();
@@ -84,6 +92,7 @@ const RunHistoryPage = memo(props => {
           prettifyConversation={ToolkitsHelpers.prettifyToolkitConversation}
           eventColumnLabel={eventColumnLabel}
           decorateRow={decorateRow}
+          extraColumns={showScheduleRuns ? SCHEDULE_RUN_COLUMNS : undefined}
           shareOpensHistoryTab
         />
       </Box>
