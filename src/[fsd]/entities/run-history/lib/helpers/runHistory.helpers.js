@@ -81,9 +81,15 @@ export const toRunISOString = value => {
 export const hasRunAnalytics = run =>
   parseRunTimestamp(run?.updated_at || run?.created_at) >= RUN_ANALYTICS_AVAILABLE_FROM;
 
+// One label per trigger source of the shared run enum (BUG-12); `manual` stays for older runs
 const EXECUTION_TYPE_LABELS = new Map([
-  ['manual', 'Manual'],
+  ['manual', 'Manual (legacy)'],
   ['scheduled', 'Scheduled'],
+  ['schedule_manual', 'Run now'],
+  ['chat', 'Chat'],
+  ['api', 'API'],
+  ['mcp', 'MCP'],
+  ['webhook', 'Webhook'],
 ]);
 
 // A missing or unknown type (older runs) renders "-" and the row stays selectable.

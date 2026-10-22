@@ -172,12 +172,22 @@ describe('hasRunAnalytics', () => {
 });
 
 describe('toExecutionTypeRow (EL-7011 US-38)', () => {
-  it('R1.3: labels a manual run "Manual"', () => {
+  it('R1.3, US-38 R1.4 (BUG-12): labels an older manual run "Manual (legacy)"', () => {
     expect(toExecutionTypeRow({ id: 1, execution_type: 'manual' })).toEqual({
       id: 1,
       execution_type: 'manual',
-      event_label: 'Manual',
+      event_label: 'Manual (legacy)',
     });
+  });
+
+  it.each([
+    ['schedule_manual', 'Run now'],
+    ['chat', 'Chat'],
+    ['api', 'API'],
+    ['mcp', 'MCP'],
+    ['webhook', 'Webhook'],
+  ])('BUG-12: labels the %s trigger source "%s"', (type, label) => {
+    expect(toExecutionTypeRow({ execution_type: type }).event_label).toBe(label);
   });
 
   it('R1.4: labels a scheduled run "Scheduled"', () => {
