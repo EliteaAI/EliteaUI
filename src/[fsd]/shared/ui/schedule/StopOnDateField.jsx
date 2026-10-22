@@ -30,6 +30,8 @@ const StopOnDateField = memo(props => {
   const date = value ? parseISO(value) : null;
   const pastError = date && isValid(date) && isBefore(date, startOfToday()) ? PAST_DATE_MESSAGE : '';
   const helperText = pastError || error;
+  // The error sits outside the TextField (BUG-33 width), so link it to the input by id (CR-02)
+  const helperId = `${testIdPrefix}-stop-on-date-error`;
 
   const handleCheck = event => {
     setAwaitingDate(event.target.checked);
@@ -80,11 +82,21 @@ const StopOnDateField = memo(props => {
               {...datePickerCommonProps}
               slotProps={getDateFieldSlotProps(`${testIdPrefix}-stop-on-date-input`, {
                 error: Boolean(helperText),
-                inputProps: { 'aria-label': 'Stop date' },
+                inputProps: {
+                  'aria-label': 'Stop date',
+                  'aria-describedby': helperText ? helperId : undefined,
+                },
               })}
             />
           </Box>
-          {helperText && <FormHelperText error>{helperText}</FormHelperText>}
+          {helperText && (
+            <FormHelperText
+              id={helperId}
+              error
+            >
+              {helperText}
+            </FormHelperText>
+          )}
         </>
       )}
     </Box>
