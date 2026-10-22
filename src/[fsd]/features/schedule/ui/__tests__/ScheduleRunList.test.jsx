@@ -10,7 +10,7 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 
 import ScheduleRunList from '../ScheduleRunList';
 
-// EL-7011 US-32 R4, owner CR 2026-10-21 test panel log: the Runs table of the left column
+// EL-7011 US-32 R4, owner CR 2026-10-21 test panel log: the two-line run rows of the right block (CR-21)
 
 const withConversation = {
   id: 1,
@@ -63,8 +63,9 @@ const renderList = (runs, props = {}) => {
 };
 const rows = () => screen.getAllByTestId('schedule-run-row');
 const cell = (row, name) => within(row).getByTestId(`schedule-run-${name}`);
+const rowButton = row => within(row).getByRole('button');
 
-describe('ScheduleRunList EL-7011 US-32, owner CR 2026-10-21', () => {
+describe('ScheduleRunList EL-7011 US-32 CR-21', () => {
   afterEach(() => {
     cleanup();
     vi.clearAllMocks();
@@ -77,16 +78,26 @@ describe('ScheduleRunList EL-7011 US-32, owner CR 2026-10-21', () => {
     expect(screen.getAllByText(/waiting/i)).toHaveLength(1);
   });
 
-  it('R4.1 shows Started, Trigger, Status, Duration and Version, newest first', () => {
+  it('R4.1 CR-21 shows no column header and lists the runs as items of one list, newest first', () => {
     renderList([withConversation, withoutConversation, manual]);
 
-    ['Started', 'Trigger', 'Status', 'Duration', 'Version'].forEach(label =>
-      expect(screen.getByText(label)).toBeInTheDocument(),
-    );
+    expect(screen.getByRole('list')).toBeInTheDocument();
+    expect(screen.getAllByRole('listitem')).toHaveLength(3);
+    ['Started', 'Trigger', 'Duration'].forEach(label => expect(screen.queryByText(label)).toBeNull());
     expect(rows().map(row => cell(row, 'trigger').textContent)).toEqual(['test', 'cron', 'manual']);
     expect(cell(rows()[1], 'started')).toHaveTextContent(
       format(new Date(withConversation.started_at), 'd MMM, HH:mm'),
     );
+  });
+
+  it('CR-21 puts date, trigger and status on line 1 and version and duration on line 2', () => {
+    renderList([withConversation]);
+    const [row] = rows();
+
+    expect(within(cell(row, 'line1')).getByTestId('schedule-run-started')).toBeInTheDocument();
+    expect(within(cell(row, 'line1')).getByTestId('schedule-run-trigger')).toHaveTextContent('cron');
+    expect(within(cell(row, 'line1')).getByTestId('schedule-run-status')).toHaveTextContent('Success');
+    expect(cell(row, 'line2')).toHaveTextContent('v3 · 1 m 05 s');
   });
 
   it('shows the duration and the version name of each run, and a dash without one', () => {
@@ -96,36 +107,60 @@ describe('ScheduleRunList EL-7011 US-32, owner CR 2026-10-21', () => {
     expect(rows().map(row => cell(row, 'version').textContent)).toEqual(['v2', 'v3', '–']);
   });
 
-  it('R4.2 shows each status as a chip and the reason of a run', () => {
-    renderList([withConversation, withoutConversation]);
-
-    expect(within(cell(rows()[0], 'status-cell')).getByTestId('schedule-run-status')).toHaveTextContent(
-      'Failed',
-    );
-    expect(cell(rows()[0], 'status-cell')).toHaveTextContent('Model unavailable');
+  it('R4.2 shows the reason of a run on line 2', () => {
+    renderList([withoutConversation]);
+    expect(cell(rows()[0], 'line2')).toHaveTextContent('Model unavailable');
   });
 
-  it('Open shows a run in the panel, Review a waiting run, and a run without a conversation has a dash', () => {
-    const onOpen = renderList([withConversation, withoutConversation, waitingRun]);
+  it('CR-21 each row is one button that opens the run, a waiting run reads Review', () => {
+    const onOpen = renderList([withConversation, waitingRun]);
 
-    expect(cell(rows()[1], 'open')).toHaveTextContent('–');
-    fireEvent.click(within(rows()[0]).getByRole('button', { name: 'Review' }));
+    expect(within(rows()[0]).getByText('Review')).toBeInTheDocument();
+    expect(within(rows()[1]).queryByText('Review')).toBeNull();
+    fireEvent.click(rowButton(rows()[0]));
     expect(onOpen).toHaveBeenLastCalledWith(waitingRun);
-    fireEvent.click(within(rows()[2]).getByRole('button', { name: 'Open' }));
+    fireEvent.click(rowButton(rows()[1]));
     expect(onOpen).toHaveBeenLastCalledWith(withConversation);
   });
 
-  it('marks the run the panel shows', () => {
-    renderList([withConversation, manual], { selectedRunId: 3 });
+  it('CR-21 owner decision: a run without a conversation (Skipped, Blocked) opens too', () => {
+    const skipped = { ...withoutConversation, id: 7, status: 'skipped', reason: 'Agent was deleted' };
+    const onOpen = renderList([skipped]);
 
-    expect(rows().map(row => row.getAttribute('aria-current'))).toEqual([null, 'true']);
+    fireEvent.click(rowButton(rows()[0]));
+
+    expect(onOpen).toHaveBeenCalledWith(skipped);
+    expect(rowButton(rows()[0])).not.toHaveAttribute('aria-disabled');
   });
 
-  it('R4.1 sorts by a header click', () => {
-    renderList([withConversation, withoutConversation, manual]);
+  it('CR-21 marks the selected run with aria-current and the row id for the focus', () => {
+    renderList([withConversation, manual], { selectedRunId: 3 });
 
-    fireEvent.click(screen.getByText('Status'));
+    expect(rows().map(row => rowButton(row).getAttribute('aria-current'))).toEqual([null, 'true']);
+    expect(rows().map(row => rowButton(row).dataset.runId)).toEqual(['1', '3']);
+  });
 
+  it('CR-21 sorts by trigger, by duration (longest first) and by version name; ties and gaps go newest first', () => {
+    const runs = [withConversation, withoutConversation, manual, waitingRun];
+    renderList(runs, { sort: 'trigger' });
+    expect(rows().map(row => rowButton(row).dataset.runId)).toEqual(['4', '1', '3', '2']);
+    cleanup();
+
+    renderList(runs, { sort: 'duration' });
+    expect(rows().map(row => rowButton(row).dataset.runId)).toEqual(['1', '2', '4', '3']);
+    cleanup();
+
+    renderList(runs, { sort: 'version' });
+    expect(rows().map(row => cell(row, 'version').textContent)).toEqual(['v2', 'v3', '–', '–']);
+    expect(rows().map(row => rowButton(row).dataset.runId)).toEqual(['2', '1', '4', '3']);
+  });
+
+  it('CR-21 sorts newest first, oldest first, or by status', () => {
+    renderList([withConversation, withoutConversation, manual], { sort: 'oldest' });
+    expect(rows().map(row => cell(row, 'trigger').textContent)).toEqual(['manual', 'cron', 'test']);
+    cleanup();
+
+    renderList([withConversation, withoutConversation, manual], { sort: 'status' });
     expect(rows().map(row => within(row).getByTestId('schedule-run-status').textContent)).toEqual([
       'Blocked',
       'Failed',
@@ -138,11 +173,11 @@ describe('ScheduleRunList EL-7011 US-32, owner CR 2026-10-21', () => {
     expect(screen.getByText('No runs yet.')).toBeInTheDocument();
   });
 
-  it('keeps rows 3.25 rem high and the start time on one line', () => {
+  it('keeps rows 3.5 rem high and the start time on one line', () => {
     renderList([withConversation]);
     const [row] = rows();
 
-    expect(getComputedStyle(row).minHeight).toBe('3.25rem');
+    expect(getComputedStyle(rowButton(row)).minHeight).toBe('3.5rem');
     expect(getComputedStyle(cell(row, 'started')).whiteSpace).toBe('nowrap');
   });
 });

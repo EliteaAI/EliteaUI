@@ -3,7 +3,7 @@ import { memo } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import { Box, Link, Typography } from '@mui/material';
+import { Box, Link, Tooltip, Typography } from '@mui/material';
 
 import RouteDefinitions from '@/routes';
 
@@ -26,12 +26,18 @@ const ScheduleRunResult = memo(props => {
       <Box sx={styles.header}>
         <ScheduleRunStatusChip status={run.status} />
         {summary && (
-          <Typography
-            data-testid="schedule-run-summary"
-            variant="bodyMedium"
+          <Tooltip
+            title={summary}
+            placement="top"
           >
-            {summary}
-          </Typography>
+            <Typography
+              data-testid="schedule-run-summary"
+              variant="bodyMedium"
+              sx={styles.summary}
+            >
+              {summary}
+            </Typography>
+          </Tooltip>
         )}
         {run.conversation_id != null && (
           <Link
@@ -80,15 +86,38 @@ const scheduleRunResultStyles = () => ({
     borderRadius: '0.5rem',
     border: `0.0625rem solid ${palette.border.lines}`,
   }),
-  header: { display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' },
-  link: { display: 'inline-flex', alignItems: 'center', gap: '0.25rem', marginLeft: 'auto' },
+  // CR-21 fit spec: one row, so the card stays 88 px; the stats shrink with an ellipsis, chip and link do not
+  header: {
+    display: 'flex',
+    alignItems: 'center',
+    flexWrap: 'nowrap',
+    gap: '0.75rem',
+    '& > :first-child': { flexShrink: 0 },
+  },
+  summary: {
+    flex: '0 1 auto',
+    minWidth: 0,
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+  },
+  link: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.25rem',
+    marginLeft: 'auto',
+    flexShrink: 0,
+    whiteSpace: 'nowrap',
+  },
   linkIcon: { fontSize: '0.875rem' },
+  // CR-21 option A: 2 answer lines under a 1000 px window height, so the card fits the right block
   answer: {
     whiteSpace: 'pre-line',
     display: '-webkit-box',
     WebkitBoxOrient: 'vertical',
     WebkitLineClamp: '4',
     overflow: 'hidden',
+    '@media (max-height: 62.4375rem)': { WebkitLineClamp: '2' },
   },
 });
 
