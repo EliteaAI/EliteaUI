@@ -201,7 +201,9 @@ const ScheduleForm = memo(props => {
       // A fresh check on Save: a blocked or failed check shows in the form, sensitive tools open the review
       const risk = await riskCheck.runCheck();
       if (!risk || risk.blocking?.length) return;
-      if (risk.sensitive?.length) setReview({ values, runAfterSave, changed: false });
+      // An edit that keeps the stored "Run without asking" consent saves without a new review (R2.6)
+      const keepsConsent = risk.confirmed && values.approval_rule === APPROVAL_RULE.RUN_WITHOUT_ASKING;
+      if (risk.sensitive?.length && !keepsConsent) setReview({ values, runAfterSave, changed: false });
       else await saveSchedule(values, helpers, runAfterSave);
     },
   });
@@ -211,6 +213,7 @@ const ScheduleForm = memo(props => {
     entityType: values.type,
     applicationId: values.application_id,
     versionId: values.version_id,
+    scheduleId: schedule?.id,
   });
   const riskBlocksSave = RISK_STATES_WITHOUT_SAVE.includes(riskCheck.status);
 

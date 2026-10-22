@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { MAX_DESCRIPTION_LENGTH } from '@/common/constants';
 
+import { DEFAULT_APPROVAL_RULE } from '../../constants';
 import {
   DEFAULT_SCHEDULE_CRON,
   buildEditValues,
@@ -103,6 +104,24 @@ describe('EL-7011 R4.3 variables follow placeholders', () => {
         timezone: 'UTC',
       }).values,
     ).toMatchObject({ prompt: '', variables: [] });
+  });
+
+  // BUG-36 live check: the edit form started as "Pause and ask me", so a confirmed schedule reopened the review
+  it.each([
+    ['run_without_asking', 'run_without_asking'],
+    ['pause_and_ask', 'pause_and_ask'],
+    [undefined, DEFAULT_APPROVAL_RULE],
+  ])('BUG-36 EL-7011 buildEditValues keeps the saved approval rule %s', (saved, expected) => {
+    const schedule = {
+      id: 7,
+      name: 'Daily',
+      entity_type: 'agent',
+      prompt: 'Hi',
+      variables: [],
+      cron: '0 9 * * *',
+      timezone: 'UTC',
+    };
+    expect(buildEditValues({ ...schedule, approval_rule: saved }).values.approval_rule).toBe(expected);
   });
 
   it('syncPromptVariables keeps values by name and drops removed names', () => {
