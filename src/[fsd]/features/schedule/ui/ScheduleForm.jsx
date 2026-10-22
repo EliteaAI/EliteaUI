@@ -521,7 +521,7 @@ const ScheduleForm = memo(props => {
     {
       title: 'GENERAL',
       testId: 'schedule-section-general',
-      summaryAction: (
+      summaryAction: !schedule?.id && (
         <GenerateEntityButton
           permission={PERMISSIONS.schedules.create}
           buttonTestId="generate-schedule-open-button"
