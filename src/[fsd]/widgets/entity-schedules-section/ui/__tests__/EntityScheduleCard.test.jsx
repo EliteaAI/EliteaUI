@@ -10,7 +10,7 @@ import userEvent from '@testing-library/user-event';
 
 import EntityScheduleCard from '../EntityScheduleCard';
 
-// EL-7011 US-35: one schedule card of the editor Schedules section (R2.2, R2.3, R2.6, R5.1 to R5.5)
+// EL-7011 US-35, US-58: one schedule card of the editor Schedules section (R2.1 to R2.3, R3.3, R5.1 to R5.5)
 
 const mocks = vi.hoisted(() => ({
   actions: { onRun: vi.fn(), onPause: vi.fn(), onResume: vi.fn(), onDelete: vi.fn(), isBusy: false },
@@ -64,6 +64,7 @@ const renderCard = (row = {}, props = {}) => {
 const openMenu = () => fireEvent.click(screen.getByTestId('schedule-7-menu-button'));
 const statusChip = (entityType = 'agent') =>
   within(screen.getByTestId(`${entityType}-schedule-card-7`)).queryByTestId('schedule-run-status');
+const cardText = (entityType = 'agent') => screen.getByTestId(`${entityType}-schedule-card-7`).textContent;
 const ruleLine = (entityType = 'agent') => screen.getByTestId(`${entityType}-schedule-card-rule-7`);
 const nextLine = (entityType = 'agent') => screen.getByTestId(`${entityType}-schedule-card-next-7`);
 const styleText = () => [...document.querySelectorAll('style')].map(style => style.textContent).join('');
@@ -77,36 +78,63 @@ describe('EntityScheduleCard EL-7011 US-35', () => {
     vi.clearAllMocks();
   });
 
-  it('TC-US35-20 R2.2 R2.6 shows the name, the rule line, the next-run line with "You" and the Success chip', () => {
+  it('TC-US58-06 R2.1 R2.2 EL-7011 shows the rule title, the zone and the labelled lines with the Success chip', () => {
     renderCard();
 
     const card = screen.getByTestId('agent-schedule-card-7');
-    expect(card).toHaveTextContent('Daily digest');
-    expect(ruleLine()).toHaveTextContent(/^Rule of 0 9 \* \* \* from UTC · Europe\/Kyiv$/);
-    expect(nextLine()).toHaveTextContent(/^Next: 20 Oct, 09:00 · You$/);
-    // The chip and the Runs table show the last run (owner bug 2026-10-21)
-    expect(card).not.toHaveTextContent('Last run');
+    expect(ruleLine()).toHaveTextContent('Rule of 0 9 * * * from UTC');
+    expect(card).toHaveTextContent('Shown: Europe/Kyiv');
+    expect(card).toHaveTextContent(/Last run:\s*19 Oct, 09:00/);
+    expect(card).toHaveTextContent(/Next run:\s*20 Oct, 09:00/);
+    expect(card).toHaveTextContent('Name: Daily digest');
+    expect(card).toHaveTextContent('Owner: You');
     expect(statusChip()).toHaveTextContent('Success');
   });
 
-  it('TC-US35-05 R2.3 shows the owner name on a card of another owner', () => {
+  it('TC-US58-06 R2.3 EL-7011 shows Edit, Delete, the switch and the menu in this order', () => {
+    renderCard();
+
+    const card = screen.getByTestId('agent-schedule-card-7');
+    const controls = [...card.querySelectorAll('button, input[role="switch"]')].map(
+      element => element.getAttribute('aria-label') ?? '',
+    );
+    expect(controls).toEqual([
+      expect.stringMatching(/^Edit/),
+      expect.stringMatching(/^Delete/),
+      'Enable Daily digest',
+      'More actions',
+    ]);
+  });
+
+  it('TC-US35-05 R2.1 shows the owner name on a card of another owner', () => {
     renderCard({}, { currentUserId: 1 });
 
-    expect(nextLine()).toHaveTextContent(/· Anna K\.$/);
+    expect(cardText()).toContain('Owner: Anna K.');
   });
 
-  it('owner bug 2026-10-21 shows "Paused" instead of the next run of a disabled schedule', () => {
+  it('TC-US58-06 R2.1 shows "Paused" instead of the next run of a disabled schedule', () => {
     renderCard({ enabled: false });
 
-    expect(nextLine()).toHaveTextContent(/^Paused · You$/);
+    expect(cardText()).toMatch(/Next run:\s*Paused/);
+    expect(cardText()).not.toContain('20 Oct');
   });
 
-  it('owner bug 2026-10-21 the card is a container that stacks below 26 rem', () => {
+  it('TC-US36-18 TC-US36-19 R2.6 BUG-32 EL-7011 the card is a container with the 30 rem breakpoint and a footer row for the actions', () => {
     renderCard();
 
     const css = styleText();
     expect(css).toContain('container-type:inline-size');
-    expect(css).toContain('@container (min-width: 26rem)');
+    expect(css).toContain('@container (min-width: 30rem)');
+    expect(css).not.toContain('26rem');
+    // Narrow: name, chip, rule and next run each on its own line, then the footer with switch and menu
+    const areas = getComputedStyle(screen.getByTestId('agent-schedule-card-7')).gridTemplateAreas;
+    expect(areas).toMatch(/footer|actions/);
+  });
+
+  it('TC-US58-06 R2.1 EL-7011 CR-18 leaves out the Owner line when the row has no owner name', () => {
+    renderCard({ owner: { id: 99 } });
+
+    expect(cardText()).not.toContain('Owner:');
   });
 
   it('owner bug 2026-10-21 every line is one line with an ellipsis', () => {
@@ -117,14 +145,6 @@ describe('EntityScheduleCard EL-7011 US-35', () => {
     );
   });
 
-  it('owner bug 2026-10-21 the card names the schedule and its meta for screen readers', () => {
-    renderCard();
-
-    expect(screen.getByRole('group', { name: /^Daily digest/ })).toHaveAccessibleName(
-      'Daily digest, Rule of 0 9 * * * from UTC · Europe/Kyiv · Next: 20 Oct, 09:00 · You',
-    );
-  });
-
   it('owner bug 2026-10-21 the name shows the full name in a tooltip on keyboard focus', async () => {
     // jsdom has no :focus-visible, so the Tooltip treats the focused element as keyboard-focused
     const matches = Element.prototype.matches;
@@ -132,10 +152,12 @@ describe('EntityScheduleCard EL-7011 US-35', () => {
       return selector === ':focus-visible' ? this === document.activeElement : matches.call(this, selector);
     });
     renderCard({ name: 'Sched Translation of release notes to German' });
+    const name = screen.getByText('Sched Translation of release notes to German');
 
-    await userEvent.tab();
+    // R2.4: every truncating value is a tab stop; the rule, Last run and Next run come before the name
+    for (let step = 0; step < 4; step += 1) await userEvent.tab();
 
-    expect(screen.getByText('Sched Translation of release notes to German')).toHaveFocus();
+    expect(name).toHaveFocus();
     expect(await screen.findByRole('tooltip')).toHaveTextContent(
       'Sched Translation of release notes to German',
     );
@@ -147,31 +169,23 @@ describe('EntityScheduleCard EL-7011 US-35', () => {
 
     fireEvent.mouseOver(ruleLine());
 
-    expect(await screen.findByRole('tooltip')).toHaveTextContent('Rule of 0 9 * * * from UTC · Europe/Kyiv');
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('Rule of 0 9 * * * from UTC');
   });
 
-  it('owner bug 2026-10-21 Tab goes name, switch, menu', () => {
-    renderCard();
-
-    const card = screen.getByTestId('agent-schedule-card-7');
-    const tabStops = [...card.querySelectorAll('[tabindex="0"], input, button')].filter(
-      element => element.tabIndex >= 0,
-    );
-    expect(tabStops.map(element => element.textContent || element.getAttribute('aria-label'))).toEqual([
-      'Daily digest',
-      'Enable Daily digest',
-      'More actions',
-    ]);
-  });
-
-  it('TC-US35-21 R2.6 shows no chip before the first run and still shows the toggle and the menu', () => {
+  it('TC-US58-08 R2.2 EL-7011 shows "Never run" and no chip before the first run, and still the toggle and the menu', () => {
     renderCard({ last_run: null, last_run_status: null });
 
     expect(statusChip()).not.toBeInTheDocument();
-    expect(ruleLine()).toHaveTextContent('Rule of 0 9 * * * from UTC · Europe/Kyiv');
-    expect(nextLine()).toHaveTextContent('Next: 20 Oct, 09:00 · You');
+    expect(cardText()).toMatch(/Last run:\s*Never run/);
     expect(screen.getByTestId('agent-schedule-card-toggle-7')).toBeInTheDocument();
     expect(screen.getByTestId('schedule-7-menu-button')).toBeInTheDocument();
+  });
+
+  it('TC-US58-08 R2.2 EL-7011 shows no chip next to "Never run" when the row has a status but no run time', () => {
+    renderCard({ last_run: null, last_run_status: 'success' });
+
+    expect(statusChip()).not.toBeInTheDocument();
+    expect(cardText()).toMatch(/Last run:\s*Never run/);
   });
 
   it('R2.6 shows the run status chip of the Runs panel: Failed, Waiting for input and Running', () => {
@@ -203,7 +217,7 @@ describe('EntityScheduleCard EL-7011 US-35', () => {
     expect(screen.getByRole('switch', { name: 'Enable Daily digest' })).toBeDisabled();
   });
 
-  it('TC-US35-22 R5.1 the menu lists Run now, Edit, Pause, Open run history and Delete, without Change owner', () => {
+  it('TC-US58-07 R3.3 EL-7011 the menu lists Run now, Edit, Pause, Open run history and Delete, without Change owner', () => {
     renderCard();
     openMenu();
 
@@ -213,6 +227,39 @@ describe('EntityScheduleCard EL-7011 US-35', () => {
       'Pause',
       'Open run history',
       'Delete',
+    ]);
+  });
+
+  it('TC-US58-07 R3.1 R3.2 EL-7011 CR-16 the menu lists Export before Delete with the export permission', () => {
+    // useScheduleRowActions gives onExport only with the export permission (CR-16)
+    const onExport = vi.fn();
+    mocks.actions = { ...mocks.actions, onExport };
+    renderCard();
+    openMenu();
+
+    expect(screen.getAllByRole('menuitem').map(item => item.textContent)).toEqual([
+      'Run now',
+      'Edit',
+      'Pause',
+      'Open run history',
+      'Export',
+      'Delete',
+    ]);
+    fireEvent.click(screen.getByText('Export'));
+    expect(onExport).toHaveBeenCalledTimes(1);
+    delete mocks.actions.onExport;
+  });
+
+  it('TC-US58-10 R2.3 R3.2 EL-7011 hides the Delete icon, Run now, Delete and Export without their keys', () => {
+    renderCard({ allowed_actions: ['edit', 'pause'] });
+
+    expect(screen.getByRole('button', { name: /^Edit/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Delete/ })).not.toBeInTheDocument();
+    openMenu();
+    expect(screen.getAllByRole('menuitem').map(item => item.textContent)).toEqual([
+      'Edit',
+      'Pause',
+      'Open run history',
     ]);
   });
 
@@ -245,8 +292,8 @@ describe('EntityScheduleCard EL-7011 US-35', () => {
       renderCard({ last_run_status: 'skipped' }, { entityType: 'pipeline', currentUserId: 1 });
 
       expect(screen.getByTestId('pipeline-schedule-card-7')).toHaveTextContent('Daily digest');
-      expect(ruleLine('pipeline')).toHaveTextContent('Rule of 0 9 * * * from UTC · Europe/Kyiv');
-      expect(nextLine('pipeline')).toHaveTextContent('Next: 20 Oct, 09:00 · Anna K.');
+      expect(ruleLine('pipeline')).toHaveTextContent('Rule of 0 9 * * * from UTC');
+      expect(cardText('pipeline')).toContain('Owner: Anna K.');
       expect(statusChip('pipeline')).toHaveTextContent('Skipped');
       expect(screen.getByTestId('pipeline-schedule-card-toggle-7')).toBeInTheDocument();
     });

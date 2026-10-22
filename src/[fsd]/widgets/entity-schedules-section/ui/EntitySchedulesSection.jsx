@@ -13,26 +13,31 @@ import {
 } from '@/[fsd]/entities/schedule';
 import { Button } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
-import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
-import OpenInNewIcon from '@/assets/open-new-icon.svg?react';
-import { PERMISSIONS } from '@/common/constants';
+import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import PlusIcon from '@/assets/plus-icon.svg?react';
+import { PERMISSIONS, SearchParams } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import useCheckPermission from '@/hooks/useCheckPermission';
 
 import EntityScheduleCard from './EntityScheduleCard';
 
-const countText = (total, entityType) =>
-  total === 1 ? `1 schedule runs this ${entityType}.` : `${total} schedules run this ${entityType}.`;
+const WIDE = '@container (min-width: 30rem)';
+// The name every agent and pipeline gives its first version
+const BASE_VERSION_NAME = 'base';
 
-// The last section of the agent and pipeline editors; entityType is 'agent' or 'pipeline'
+const countText = (total, version) =>
+  total === 1 ? `1 schedule runs ${version}` : `${total} schedules run ${version}`;
+
+// The last section of the agent and pipeline editors; entityType is 'agent' or 'pipeline'; versionId is the editor version, versionName its label (none or 'base': the base version)
 const EntitySchedulesSection = memo(props => {
-  const { entityType, entityId, entityName, isChatView = false, style } = props;
+  const { entityType, entityId, entityName, versionId, versionName, isChatView = false, style } = props;
   const { checkPermission } = useCheckPermission();
   const canCreate = checkPermission(PERMISSIONS.schedules.create);
   const isHidden = isChatView || !entityId || !checkPermission(PERMISSIONS.schedules.list);
   const { rows, total, isError, error, isFetching, refetch, loadMore, hasMore } = useEntitySchedules({
     entityType,
     entityId,
+    versionId,
     skip: isHidden,
   });
   const currentUserId = useSelector(state => state.user.id);
@@ -43,18 +48,35 @@ const EntitySchedulesSection = memo(props => {
   // The form opens nested in the editor and comes back to this editor location (owner CR 2026-10-21).
   // The form URL keeps the editor search (viewMode), so the entity crumb opens the editor too.
   const openNested = useCallback(
-    to => navigate({ ...to, search }, { state: { returnTo: pathname + search } }),
+    (to, formVersionId) => {
+      const params = new URLSearchParams(search);
+      if (formVersionId) params.set(SearchParams.VersionId, formVersionId);
+      const formSearch = params.toString();
+      navigate({ ...to, search: formSearch && `?${formSearch}` }, { state: { returnTo: pathname + search } });
+    },
     [navigate, pathname, search],
   );
+  // Edit keeps the version of its schedule (R5.2); "+ Schedule" takes the editor version (R5.1)
+  const versionOf = useCallback(
+    scheduleId => rows.find(row => row.id === scheduleId)?.version_id ?? versionId,
+    [rows, versionId],
+  );
   const openForm = useCallback(
-    scheduleId => openNested({ pathname: buildScheduleFormLink({ entityType, entityId, tab, scheduleId }) }),
-    [openNested, entityType, entityId, tab],
+    scheduleId =>
+      openNested(
+        { pathname: buildScheduleFormLink({ entityType, entityId, tab, scheduleId }) },
+        versionOf(scheduleId),
+      ),
+    [openNested, versionOf, entityType, entityId, tab],
   );
   const openRunHistory = useCallback(
-    scheduleId => openNested(buildScheduleRunsLink({ entityType, entityId, tab, scheduleId })),
-    [openNested, entityType, entityId, tab],
+    scheduleId =>
+      openNested(buildScheduleRunsLink({ entityType, entityId, tab, scheduleId }), versionOf(scheduleId)),
+    [openNested, versionOf, entityType, entityId, tab],
   );
   const onAdd = useCallback(() => openForm(), [openForm]);
+  const version =
+    versionName && versionName !== BASE_VERSION_NAME ? `version ${versionName}` : 'the base version';
   const testId = `${entityType}-schedules-section`;
 
   const styles = entitySchedulesSectionStyles();
@@ -75,13 +97,13 @@ const EntitySchedulesSection = memo(props => {
           >
             {canCreate && (
               <Button.BaseBtn
-                variant={BUTTON_VARIANTS.elitea}
-                color={BUTTON_COLORS.primary}
+                variant={BUTTON_VARIANTS.iconLabel}
+                startIcon={<PlusIcon />}
                 onClick={onAdd}
                 sx={styles.noWrap}
                 data-testid={`${testId}-add`}
               >
-                + Schedule
+                Schedule
               </Button.BaseBtn>
             )}
             <Typography
@@ -89,7 +111,7 @@ const EntitySchedulesSection = memo(props => {
               color="text.secondary"
               sx={styles.count}
             >
-              {total > 0 ? countText(total, entityType) : ''}
+              {total > 0 ? countText(total, version) : ''}
             </Typography>
             <Link
               component={RouterLink}
@@ -100,12 +122,7 @@ const EntitySchedulesSection = memo(props => {
               sx={styles.link}
               data-testid={`${testId}-open-all`}
             >
-              Open all in Settings → Schedules
-              <Box
-                component={OpenInNewIcon}
-                sx={styles.linkIcon}
-                aria-hidden
-              />
+              Manage Schedules
             </Link>
           </Box>
           {isError && (
@@ -140,7 +157,7 @@ const EntitySchedulesSection = memo(props => {
               variant="bodyMedium"
               color="text.secondary"
             >
-              No schedules yet.
+              No schedules run {version} yet.
             </Typography>
           )}
           {rows.map(row => (
@@ -194,16 +211,21 @@ const entitySchedulesSectionStyles = () => ({
     gap: '0.75rem',
     containerType: 'inline-size',
   },
-  // Below 26 rem: the button and the count, then the link on its own row; from 26 rem: one row
+  // Below 30 rem: the button and the link on row 1, the count on row 2; from 30 rem: one row
   header: {
     display: 'flex',
     flexWrap: 'wrap',
     alignItems: 'center',
-    gap: '0.5rem 1rem',
+    gap: '0.5rem',
   },
+  // The count wraps and never truncates
   count: {
-    flex: '1 1 0',
-    minWidth: 0,
+    flexBasis: '100%',
+    order: 1,
+    [WIDE]: {
+      flex: '1 1 0',
+      order: 0,
+    },
   },
   noWrap: {
     whiteSpace: 'nowrap',
@@ -213,22 +235,13 @@ const entitySchedulesSectionStyles = () => ({
     display: 'inline-flex',
     alignItems: 'center',
     gap: '0.25rem',
-    flexBasis: '100%',
-    whiteSpace: 'nowrap',
-    '@container (min-width: 26rem)': {
-      flexBasis: 'auto',
-    },
-  },
-  linkIcon: {
-    width: '0.875rem',
-    height: '0.875rem',
-    flexShrink: 0,
+    minWidth: 0,
   },
   // The heights of the stacked and the one-line card
   skeleton: {
-    height: '6.5rem',
+    height: '9rem',
     borderRadius: '0.5rem',
-    '@container (min-width: 26rem)': {
+    [WIDE]: {
       height: '4.625rem',
     },
   },

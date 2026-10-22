@@ -291,6 +291,7 @@ export const MyLibraryStatusOptions = [
 
 export const SearchParams = {
   ViewMode: 'viewMode',
+  VersionId: 'versionId',
   Name: 'name',
   Statuses: 'statuses',
   SortOrder: 'sort_order',
