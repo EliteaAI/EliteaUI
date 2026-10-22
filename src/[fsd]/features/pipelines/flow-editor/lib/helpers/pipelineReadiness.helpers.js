@@ -31,6 +31,23 @@ export const isEndReachable = (edges = [], startId) => {
   return false;
 };
 
+const getBranchingConfig = node => {
+  if (node.type === PipelineNodeTypes.Router || node.type === PipelineNodeTypes.Hitl) return null;
+  if (node.condition && typeof node.condition === 'object') return node.condition;
+  if (node.decision && typeof node.decision === 'object') return node.decision;
+  if (node.type === PipelineNodeTypes.Decision) return node;
+  return null;
+};
+
+// The SDK routes an omitted default_output to END, but the canvas draws no edge for it
+const getImplicitEndEdges = yamlNodes =>
+  yamlNodes
+    .filter(node => {
+      const branchingConfig = getBranchingConfig(node);
+      return branchingConfig && !('default_output' in branchingConfig);
+    })
+    .map(node => ({ source: node.id, target: PipelineNodeTypes.End }));
+
 // Returns '' when the flow can be tested, otherwise the reason shown in the Test Pipeline tooltip
 export const getTestBlockReason = yamlJsonObject => {
   const yamlNodes = yamlJsonObject?.nodes?.filter(Boolean) || [];
@@ -46,5 +63,7 @@ export const getTestBlockReason = yamlJsonObject => {
     return TEST_BLOCK_REASONS.noPathToEnd;
   }
 
-  return isEndReachable(edges, entryPoint) ? '' : TEST_BLOCK_REASONS.noPathToEnd;
+  return isEndReachable([...edges, ...getImplicitEndEdges(yamlNodes)], entryPoint)
+    ? ''
+    : TEST_BLOCK_REASONS.noPathToEnd;
 };
