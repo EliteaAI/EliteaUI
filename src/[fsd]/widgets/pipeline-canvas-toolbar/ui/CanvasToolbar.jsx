@@ -14,7 +14,6 @@ const CanvasToolbar = memo(props => {
     mode,
     onModeChange,
     onAddNode,
-    hasNodes,
     onTestPipeline,
     testDisabledReason,
     onCopyYaml,
@@ -63,7 +62,6 @@ const CanvasToolbar = memo(props => {
         {onTestPipeline && (
           <FlowEditorTestPipeline.TestPipelineButton
             onClick={onTestPipeline}
-            hasNodes={hasNodes}
             disabledReason={testDisabledReason}
           />
         )}

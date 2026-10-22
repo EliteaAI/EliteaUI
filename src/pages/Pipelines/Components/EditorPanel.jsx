@@ -1,4 +1,13 @@
-import { Suspense, forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import {
+  Suspense,
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import YAML from 'js-yaml';
 import { ErrorBoundary } from 'react-error-boundary';
@@ -7,7 +16,11 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Box, Typography, useTheme } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip.jsx';
-import { DumpYamlHelpers, ParsePipelineHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
+import {
+  DumpYamlHelpers,
+  ParsePipelineHelpers,
+  PipelineReadinessHelpers,
+} from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { YamlCodeEditor } from '@/[fsd]/features/pipelines/yaml-editor/ui';
 import { ChunkHelpers, FunctionHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useIsFrom, useIsSmallWindow, useToast } from '@/[fsd]/shared/lib/hooks';
@@ -49,6 +62,7 @@ const EditorPanel = forwardRef((props, ref) => {
     isVisible = true,
     onTestPipeline,
     testDisabledReason,
+    isTestPanelOpen = false,
   } = props;
   const dispatch = useDispatch();
   const { toastInfo } = useToast();
@@ -64,7 +78,10 @@ const EditorPanel = forwardRef((props, ref) => {
   }, [isYamlCodeDirty]);
 
   const { yamlJsonObject, yamlCode } = useSelector(selectActivePipeline);
-  const hasNodes = Boolean(yamlJsonObject?.nodes?.filter(Boolean).length);
+  const flowTestDisabledReason = useMemo(
+    () => (onTestPipeline ? PipelineReadinessHelpers.getTestBlockReason(yamlJsonObject) : ''),
+    [onTestPipeline, yamlJsonObject],
+  );
   const setYamlCode = useCallback(
     code => {
       dispatch(actions.setYamlCode(code));
@@ -182,9 +199,8 @@ const EditorPanel = forwardRef((props, ref) => {
         mode={mode}
         onModeChange={onSelectChatMode}
         onAddNode={onAddNode}
-        hasNodes={hasNodes}
-        onTestPipeline={onTestPipeline}
-        testDisabledReason={testDisabledReason}
+        onTestPipeline={isTestPanelOpen ? undefined : onTestPipeline}
+        testDisabledReason={testDisabledReason || flowTestDisabledReason}
         onCopyYaml={onCopy}
         disabled={disabled}
         isCompact={isFromChat}

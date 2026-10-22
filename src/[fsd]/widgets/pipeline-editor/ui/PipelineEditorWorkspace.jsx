@@ -1,4 +1,4 @@
-import { memo, useCallback, useRef } from 'react';
+import { memo, useCallback, useRef, useState } from 'react';
 
 import { Box } from '@mui/material';
 
@@ -8,12 +8,24 @@ import { useIsSmallWindow } from '@/[fsd]/shared/lib/hooks';
 import EditorPanel from '@/pages/Pipelines/Components/EditorPanel';
 import GeneralFormPanel from '@/pages/Pipelines/Components/GeneralFormPanel';
 
+import PipelineTestRegion from './PipelineTestRegion';
+
 const UNSAVED_TEST_REASON = 'Save the pipeline to test it';
 
 const noop = () => {};
 
-const PipelineEditorWorkspace = memo(() => {
+/**
+ * Pipeline editor layout. Create mode (no `applicationId`): form + full-width canvas.
+ * Edit mode: adds the Test panel, closed by default.
+ */
+const PipelineEditorWorkspace = memo(props => {
+  const { applicationId, setYamlDirty = noop, unsavedLLMSettings, setUnsavedLLMSettings } = props;
+  const isEditMode = Boolean(applicationId);
+
+  const editorRowRef = useRef();
   const editorPanelRef = useRef();
+  const testPanelRef = useRef();
+  const [isTestPanelOpen, setIsTestPanelOpen] = useState(false);
 
   usePipelineAttachmentYamlSync();
 
@@ -25,6 +37,20 @@ const PipelineEditorWorkspace = memo(() => {
 
   const { isSmallWindow } = useIsSmallWindow(fitView);
 
+  const handleOpenTestPanel = useCallback(() => {
+    setIsTestPanelOpen(true);
+    fitView();
+  }, [fitView]);
+
+  const handleCloseTestPanel = useCallback(() => {
+    setIsTestPanelOpen(false);
+    fitView();
+  }, [fitView]);
+
+  const handleStopRun = useCallback(() => {
+    testPanelRef.current?.stopRun();
+  }, []);
+
   const styles = pipelineEditorWorkspaceStyles(isSmallWindow);
 
   return (
@@ -33,17 +59,38 @@ const PipelineEditorWorkspace = memo(() => {
       data-tour={PIPELINE_TOUR_TARGET_IDS.workspace}
     >
       <GeneralFormPanel
-        isCreateMode
+        applicationId={applicationId}
+        isCreateMode={!isEditMode}
         onCollapsed={fitView}
       />
-      <EditorPanel
-        ref={editorPanelRef}
-        setYamlDirty={noop}
-        stopRun={noop}
-        onTestPipeline={noop}
-        testDisabledReason={UNSAVED_TEST_REASON}
-        sx={styles.editorPanel}
-      />
+      <Box
+        ref={editorRowRef}
+        sx={styles.editorRow}
+      >
+        <EditorPanel
+          ref={editorPanelRef}
+          setYamlDirty={setYamlDirty}
+          stopRun={isEditMode ? handleStopRun : noop}
+          onTestPipeline={isEditMode ? handleOpenTestPanel : noop}
+          testDisabledReason={isEditMode ? '' : UNSAVED_TEST_REASON}
+          isTestPanelOpen={isTestPanelOpen}
+          sx={styles.editorPanel}
+        />
+        {isEditMode && (
+          <PipelineTestRegion
+            ref={testPanelRef}
+            applicationId={applicationId}
+            isOpen={isTestPanelOpen}
+            onClose={handleCloseTestPanel}
+            onResized={fitView}
+            isSmallWindow={isSmallWindow}
+            editorPanelRef={editorPanelRef}
+            workspaceRef={editorRowRef}
+            unsavedLLMSettings={unsavedLLMSettings}
+            setUnsavedLLMSettings={setUnsavedLLMSettings}
+          />
+        )}
+      </Box>
     </Box>
   );
 });
@@ -61,6 +108,13 @@ const pipelineEditorWorkspaceStyles = isSmallWindow => ({
     padding: '0.75rem 1.5rem 1.5rem',
     boxSizing: 'border-box',
     overflow: isSmallWindow ? 'auto' : 'hidden',
+  },
+  editorRow: {
+    flex: 1,
+    minWidth: 0,
+    display: 'flex',
+    flexDirection: isSmallWindow ? 'column' : 'row',
+    gap: '1.5rem',
   },
   editorPanel: {
     flex: 1,

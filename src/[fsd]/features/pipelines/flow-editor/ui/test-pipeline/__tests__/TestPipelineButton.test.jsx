@@ -22,9 +22,9 @@ describe('TestPipelineButton', () => {
   beforeEach(() => vi.clearAllMocks());
   afterEach(() => cleanup());
 
-  it('is disabled and does nothing while the pipeline has no nodes', () => {
+  it('is disabled and does nothing when a disabled reason is given', () => {
     const onClick = vi.fn();
-    renderButton({ onClick, hasNodes: false });
+    renderButton({ onClick, disabledReason: 'Add and configure at least one node connected to End.' });
 
     const button = screen.getByTestId('pipeline-test-button');
     expect(button).toBeDisabled();
@@ -32,15 +32,9 @@ describe('TestPipelineButton', () => {
     expect(onClick).not.toHaveBeenCalled();
   });
 
-  it('is disabled when a disabled reason is given', () => {
-    renderButton({ onClick: vi.fn(), hasNodes: true, disabledReason: 'Save the pipeline to test it' });
-
-    expect(screen.getByTestId('pipeline-test-button')).toBeDisabled();
-  });
-
-  it('calls onClick when the pipeline has nodes', () => {
+  it('calls onClick when there is no disabled reason', () => {
     const onClick = vi.fn();
-    renderButton({ onClick, hasNodes: true });
+    renderButton({ onClick });
 
     const button = screen.getByTestId('pipeline-test-button');
     expect(button).toBeEnabled();

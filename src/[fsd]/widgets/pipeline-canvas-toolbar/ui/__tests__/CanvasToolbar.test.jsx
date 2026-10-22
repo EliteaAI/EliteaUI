@@ -60,12 +60,12 @@ describe('CanvasToolbar', () => {
     expect(screen.queryByTestId('pipeline-test-button')).toBeNull();
 
     cleanup();
-    renderToolbar({ onTestPipeline: vi.fn(), hasNodes: true });
+    renderToolbar({ onTestPipeline: vi.fn() });
     expect(screen.getByTestId('pipeline-test-button')).toBeEnabled();
   });
 
-  it('disables Test Pipeline while there are no nodes', () => {
-    renderToolbar({ onTestPipeline: vi.fn(), hasNodes: false });
+  it('disables Test Pipeline when a disabled reason is given', () => {
+    renderToolbar({ onTestPipeline: vi.fn(), testDisabledReason: 'Connect the entry point to End' });
 
     expect(screen.getByTestId('pipeline-test-button')).toBeDisabled();
   });

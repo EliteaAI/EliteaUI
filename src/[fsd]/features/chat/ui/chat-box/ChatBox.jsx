@@ -178,6 +178,7 @@ const ChatBox = memo(
       showWebhookSecret = false,
       onSend = () => true,
       inputPlaceholder = '',
+      sendBlockedReason = '',
 
       // For pipeline running
       onRcvAgentEvent,
@@ -3010,9 +3011,11 @@ const ChatBox = memo(
         (isStreamingNow && !isInjectable) ||
         isActiveParticipantBroken ||
         isActiveSkillUnavailable ||
-        isReadOnly,
+        isReadOnly ||
+        Boolean(sendBlockedReason),
       [
         isReadOnly,
+        sendBlockedReason,
         isLoadingConversation,
         isProcessingSymbols,
         isFetchingParticipant,
@@ -3175,7 +3178,7 @@ const ChatBox = memo(
               onNormalKeyDown={combinedKeyDown}
               onInputChange={combinedInputChange}
               shouldHandleEnter
-              tooltipOfSendButton=""
+              tooltipOfSendButton={sendBlockedReason}
               onShowParticipantsList={onShowParticipantsList}
               selectedVersionId={activeParticipant?.entity_settings?.version_id}
               onSelectVersion={onSelectVersion}
