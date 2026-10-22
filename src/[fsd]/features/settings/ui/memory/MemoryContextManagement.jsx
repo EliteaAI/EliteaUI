@@ -73,7 +73,7 @@ const MemoryContextManagement = memo(props => {
               >
                 <Box sx={styles.toggleContent}>
                   <ContextBudgetUI.ContextWindowModeSelector
-                    value={userWindowMode || projectWindowMode}
+                    value={userWindowMode || null}
                     onChange={handleWindowModeChange}
                   />
                   <Typography variant="bodySmall">

@@ -34,7 +34,7 @@ import ContextWindowModeSelector from './ContextWindowModeSelector';
 // ];
 
 const ContextStrategyTokenManagement = memo(props => {
-  const { formData, errors, handleInputChange, isEnabled, modelWindow, manualMaxTokensEnabled } = props;
+  const { formData, errors, handleInputChange, modelWindow, manualMaxTokensEnabled } = props;
   const styles = tokenManagementStyles();
 
   const handleWindowModeChange = useCallback(
@@ -55,7 +55,7 @@ const ContextStrategyTokenManagement = memo(props => {
           showBorder
           value={formData.pruning_method}
           onChange={e => handleInputChange(e, 'pruning_method')}
-          disabled={!isEnabled || true}
+          disabled={true}
           options={CONTEXT_STRATEGIES.map(strategy => ({
             value: strategy.value,
             label: strategy.label,
@@ -67,7 +67,6 @@ const ContextStrategyTokenManagement = memo(props => {
         <ContextWindowModeSelector
           value={formData.context_window_mode}
           onChange={handleWindowModeChange}
-          disabled={!isEnabled}
           modelWindow={modelWindow}
         />
       </Box>
@@ -87,7 +86,6 @@ const ContextStrategyTokenManagement = memo(props => {
             onChange={e => handleInputChange(e, 'manual_max_context_tokens')}
             error={!!errors.manual_max_context_tokens}
             helperText={errors.manual_max_context_tokens || ' '}
-            disabled={!isEnabled}
             inputProps={{
               pattern: '[1-9][0-9]*',
               'data-testid': 'context-modal-manual-max-tokens-input',
@@ -111,7 +109,6 @@ const ContextStrategyTokenManagement = memo(props => {
           onChange={e => handleInputChange(e, 'preserve_recent_messages', true)}
           error={!!errors.preserve_recent_messages}
           helperText={errors.preserve_recent_messages || ' '}
-          disabled={!isEnabled}
           inputProps={{
             pattern: '[1-9][0-9]*',
             'data-testid': 'context-modal-preserve-recent-input',
@@ -134,7 +131,6 @@ const ContextStrategyTokenManagement = memo(props => {
           onChange={e => handleInputChange(e, 'summaries_limit_count', true)}
           error={!!errors.summaries_limit_count}
           helperText={errors.summaries_limit_count || ' '}
-          disabled={!isEnabled}
           inputProps={{
             pattern: '[1-9][0-9]*',
           }}

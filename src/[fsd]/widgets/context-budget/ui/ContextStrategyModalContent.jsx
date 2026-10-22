@@ -142,7 +142,6 @@ const ContextStrategyModalContent = memo(props => {
           <ContextAccordion
             title="Context Strategy & Token Management"
             expanded={expandedAccordions.tokenManagement}
-            isEnabled
             onChange={(e, isExpanded) =>
               setExpandedAccordions(prev => ({ ...prev, tokenManagement: isExpanded }))
             }
@@ -151,7 +150,6 @@ const ContextStrategyModalContent = memo(props => {
                 formData={values}
                 errors={errors}
                 handleInputChange={handleInputChange}
-                isEnabled
                 modelWindow={stats?.modelWindow}
                 manualMaxTokensEnabled={stats?.manualMaxTokensEnabled}
               />
@@ -161,7 +159,6 @@ const ContextStrategyModalContent = memo(props => {
           <ContextAccordion
             title="Summarization"
             expanded={expandedAccordions.summarization}
-            isEnabled
             onChange={(e, isExpanded) =>
               setExpandedAccordions(prev => ({ ...prev, summarization: isExpanded }))
             }
@@ -171,7 +168,6 @@ const ContextStrategyModalContent = memo(props => {
                 errors={errors}
                 handleInputChange={handleInputChange}
                 handleSummaryLLMInputChange={handleSummaryLLMInputChange}
-                isEnabled
                 modelList={modelList}
               />
             }
@@ -180,7 +176,6 @@ const ContextStrategyModalContent = memo(props => {
           <ContextAccordion
             title="User Instructions"
             expanded={expandedAccordions.systemMessages}
-            isEnabled
             onChange={(e, isExpanded) =>
               setExpandedAccordions(prev => ({ ...prev, systemMessages: isExpanded }))
             }
@@ -189,7 +184,6 @@ const ContextStrategyModalContent = memo(props => {
                 formData={values}
                 errors={errors}
                 handleInputChange={handleInputChange}
-                isEnabled
               />
             }
           />
