@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { createRef } from 'react';
 
+import { MemoryRouter } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { ThemeProvider, createTheme } from '@mui/material';
@@ -25,16 +26,18 @@ const renderSection = props => {
   const handlers = { onOpen: vi.fn(), onExpandedChange: vi.fn() };
   const ref = createRef();
   render(
-    <ThemeProvider theme={theme}>
-      <ScheduleRunsSection
-        ref={ref}
-        runs={[run]}
-        versionNames={{}}
-        expanded
-        {...handlers}
-        {...props}
-      />
-    </ThemeProvider>,
+    <MemoryRouter>
+      <ThemeProvider theme={theme}>
+        <ScheduleRunsSection
+          ref={ref}
+          runs={[run]}
+          versionNames={{}}
+          expanded
+          {...handlers}
+          {...props}
+        />
+      </ThemeProvider>
+    </MemoryRouter>,
   );
   return { ...handlers, ref };
 };
@@ -143,5 +146,24 @@ describe('ScheduleRunsSection EL-7011 CR-21', () => {
 
     expect(status).toHaveAttribute('aria-live', 'polite');
     expect(status).toHaveTextContent('Showing run 21 Oct, 09:00, cron, Success');
+  });
+});
+
+describe('ScheduleRunsSection Open full history (EL-7011 CR-22, US-32 R6.3)', () => {
+  afterEach(() => cleanup());
+
+  it('CR-22 R6.3 links to the entity History filtered to this schedule', () => {
+    renderSection({ fullHistoryLink: '/pipelines/all/80/history?schedule_id=4' });
+
+    expect(screen.getByRole('link', { name: 'Open full history' })).toHaveAttribute(
+      'href',
+      '/pipelines/all/80/history?schedule_id=4',
+    );
+  });
+
+  it('CR-22 shows no link without fullHistoryLink', () => {
+    renderSection();
+
+    expect(screen.queryByRole('link', { name: 'Open full history' })).not.toBeInTheDocument();
   });
 });
