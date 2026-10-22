@@ -683,14 +683,16 @@ describe('R1.4 EL-7011 Automated Activity export', () => {
 });
 
 describe('BUG-31 Chat Messages export section', () => {
-  const META = { projectName: 'Team', dateFrom: '2026-09-01', dateTo: '2026-09-30', timeZone: 'UTC' };
   const AGENT_ROW = { entity_id: 3, entity_name: 'Reviewer', events: 4 };
   const sheetsWith = ({ agents, overview = {}, overviewUsage = {} }) =>
     buildAnalyticsSheets({ overview, overviewUsage, costs: {}, users: {}, skills: {}, agents, meta: META });
   const sheet = (sheets, name) => sheets.find(s => s.sheetName === name);
 
   it('R3.1 EL-7011 leaves the Chat Messages section out when chat_daily is empty', () => {
-    const agentsSheet = sheet(sheetsWith({ agents: { rows: [AGENT_ROW], chat_daily: [] } }), 'Agents & Pipelines');
+    const agentsSheet = sheet(
+      sheetsWith({ agents: { rows: [AGENT_ROW], chat_daily: [] } }),
+      'Agents & Pipelines',
+    );
 
     expect(sectionTitles(agentsSheet)).not.toContain('Chat Messages');
   });
