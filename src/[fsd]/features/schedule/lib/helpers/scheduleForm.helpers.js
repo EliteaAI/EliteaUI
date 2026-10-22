@@ -90,6 +90,8 @@ export const buildEditValues = (schedule, locationState, entityRoute) => {
       cron: schedule.cron,
       timezone: schedule.timezone || values.timezone,
       expires_at: toExpiryDate(schedule.expires_at, schedule.timezone),
+      // BUG-36: the saved rule, so a confirmed schedule keeps its consent and is not saved back as Pause and ask
+      approval_rule: schedule.approval_rule ?? DEFAULT_APPROVAL_RULE,
     },
     returnTo,
   };
