@@ -10,7 +10,10 @@ const RunHistorySortableHeader = memo(props => {
   const styles = runHistorySortableHeaderStyles(gridTemplateColumns);
 
   return (
-    <Box sx={styles.header}>
+    <Box
+      data-testid="run-history-header"
+      sx={styles.header}
+    >
       {headerItems.map((headerItem, index) => (
         <Box
           key={`header-${index}`}
@@ -47,6 +50,9 @@ const runHistorySortableHeaderStyles = gridTemplateColumns => ({
     width: '100%',
     backgroundColor: palette.background.surface.interactive.default,
     border: '0.0625rem solid ' + palette.border.lines,
+    // 1 px border + 15 px padding = the 16 px row padding, so header and value columns start at the same x
+    padding: '0 0.9375rem',
+    boxSizing: 'border-box',
     borderRadius: '0.5rem',
     marginBottom: '.5rem',
 
