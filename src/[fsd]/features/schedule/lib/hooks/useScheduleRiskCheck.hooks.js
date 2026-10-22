@@ -26,6 +26,8 @@ export const useScheduleRiskCheck = ({ projectId, entityType, applicationId, ver
       setState(IDLE_STATE);
       return null;
     }
+    // The findings belong to one entity and version; a failed re-check of the same pair keeps them
+    const key = `${entityType}:${applicationId}:${versionId}`;
     setState(prev => ({ ...prev, status: RISK_CHECK_STATUS.CHECKING }));
     try {
       const result = await checkRisk({
@@ -34,10 +36,17 @@ export const useScheduleRiskCheck = ({ projectId, entityType, applicationId, ver
         application_id: applicationId,
         version_id: versionId,
       }).unwrap();
-      if (call === latestCall.current) setState({ status: statusOf(result), result });
+      if (call === latestCall.current) setState({ status: statusOf(result), result, key });
       return result;
     } catch {
-      if (call === latestCall.current) setState({ status: RISK_CHECK_STATUS.FAILED, result: null });
+      // A failed tab-return check must not empty an open review dialog (CR-11 review r2)
+      if (call === latestCall.current) {
+        setState(prev =>
+          prev.result && prev.key === key
+            ? { ...prev, status: statusOf(prev.result) }
+            : { status: RISK_CHECK_STATUS.FAILED, result: null },
+        );
+      }
       return null;
     }
   }, [checkRisk, projectId, entityType, applicationId, versionId]);
@@ -63,7 +72,7 @@ export const useScheduleRiskCheck = ({ projectId, entityType, applicationId, ver
         ...(notices && { notices }),
         ...(fingerprint && { fingerprint }),
       };
-      return { status: statusOf(result), result };
+      return { ...prev, status: statusOf(result), result };
     });
   }, []);
 
