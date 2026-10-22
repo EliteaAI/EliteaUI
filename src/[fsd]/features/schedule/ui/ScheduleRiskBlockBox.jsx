@@ -6,6 +6,7 @@ import { buildEntityEditorLink } from '@/[fsd]/entities/schedule/lib/helpers';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import BannerMessage from '@/[fsd]/shared/ui/banner-message/BannerMessage';
 import OpenInNewIcon from '@/assets/open-new-icon.svg?react';
+import { SearchParams, ViewMode } from '@/common/constants';
 
 import { toRiskItems } from '../lib/helpers';
 
@@ -65,7 +66,8 @@ const ScheduleRiskBlockBox = memo(props => {
     const entityLink = buildEntityEditorLink({ entityType: fix.entity_type, entityId: fix.id });
     const editorLink = NavigationHelpers.buildAbsoluteAppUrl(
       projectId,
-      fix.version_id ? `${entityLink}/${fix.version_id}` : entityLink,
+      // The editor route opens only in the owner view mode
+      `${fix.version_id ? `${entityLink}/${fix.version_id}` : entityLink}?${SearchParams.ViewMode}=${ViewMode.Owner}`,
     );
     return (
       <BannerMessage

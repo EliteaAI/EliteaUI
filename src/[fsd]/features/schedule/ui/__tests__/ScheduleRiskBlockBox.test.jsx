@@ -34,7 +34,8 @@ const STEPS = ['Review', 'Approve', 'Publish'].map(label => ({
 }));
 
 // CR-11 review r2: a new tab is outside the router, so the link carries the origin, basename and project
-const appUrl = path => `${window.location.origin}${getBasename()}/5${path}`;
+// The editor route needs the owner view mode, or it shows Page not found (CR-11 live check)
+const appUrl = path => `${window.location.origin}${getBasename()}/5${path}?viewMode=owner`;
 
 const setup = props =>
   render(
