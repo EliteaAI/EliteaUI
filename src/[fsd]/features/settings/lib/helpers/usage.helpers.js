@@ -359,11 +359,12 @@ export const splitDailyByGroup = (daily, groups, breakdownKey, metricKey = 'spen
 
 /** Build Recharts-compatible series data from filled daily rows. */
 export const buildSeriesFromDaily = (daily, groupBy, models, bySource, metricKey = 'spend') => {
-  if (!daily?.length) return { data: [], keys: [] };
+  if (!daily?.length) return { data: [], keys: [], labels: {} };
 
   const totalFallback = () => ({
     data: daily.map(d => ({ date: d.date, total: d[metricKey] || 0 })),
     keys: ['total'],
+    labels: {},
   });
 
   if (groupBy === 'total') return totalFallback();
@@ -371,15 +372,11 @@ export const buildSeriesFromDaily = (daily, groupBy, models, bySource, metricKey
   let groups = [];
 
   if (groupBy === 'model') {
-    // Build groups keyed by display name; carry raw model ID as lookupKey for by_model breakdown.
     const sorted = [...(models || [])].sort((a, b) => (b[metricKey] || 0) - (a[metricKey] || 0));
     const top = sorted.slice(0, USAGE_MAX_CHART_SERIES);
     const rest = sorted.slice(USAGE_MAX_CHART_SERIES);
-    groups = top.map(m => ({
-      key: m.display_name || formatModelName(m.model) || m.model,
-      lookupKey: m.model,
-      w: m[metricKey] || 0,
-    }));
+    // Keep raw model id as the data key (always unique); resolve display names separately.
+    groups = top.map(m => ({ key: m.model, w: m[metricKey] || 0 }));
     const otherW = rest.reduce((s, m) => s + (m[metricKey] || 0), 0);
     if (otherW > 0 || rest.length > 0) groups.push({ key: '__other', w: otherW });
     if (!groups.some(g => g.w > 0)) groups = [];
@@ -408,7 +405,21 @@ export const buildSeriesFromDaily = (daily, groupBy, models, bySource, metricKey
 
   if (!hasRealBreakdown) return totalFallback();
 
-  return { data: splitDailyByGroup(daily, groups, bKey, metricKey), keys: groups.map(g => g.key) };
+  // Build a duplicate-safe display label map: raw key → display name.
+  // When two models share a formatted display name, fall back to the raw id for both.
+  const labels = {};
+  if (groupBy === 'model') {
+    const modelMap = new Map((models || []).map(m => [m.model, m]));
+    const resolved = groups
+      .filter(g => g.key !== '__other')
+      .map(g => ({ key: g.key, name: modelMap.get(g.key)?.display_name || formatModelName(g.key) || g.key }));
+    const counts = resolved.reduce((acc, { name }) => acc.set(name, (acc.get(name) || 0) + 1), new Map());
+    resolved.forEach(({ key, name }) => {
+      labels[key] = counts.get(name) > 1 ? key : name;
+    });
+  }
+
+  return { data: splitDailyByGroup(daily, groups, bKey, metricKey), keys: groups.map(g => g.key), labels };
 };
 
 /** Aggregate daily series rows into ISO-week buckets (week starts Monday, clipped to month). */

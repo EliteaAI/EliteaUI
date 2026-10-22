@@ -85,44 +85,75 @@ export const buildSummarySheet = ({ data, projectName, isPersonalProject, scope 
   };
 };
 
-export const buildDailySheet = data => ({
-  sheetName: 'Daily Usage',
-  columns: [
+export const buildDailySheet = (data, comparisonData = null) => {
+  const rows = fillDailyGaps(data.daily || [], data.period_start, data.period_end);
+  const hasComparison = comparisonData?.daily?.length > 0;
+
+  if (hasComparison) {
+    // Index previous period by day-of-month for like-for-like comparison
+    const prevFilled = fillDailyGaps(
+      comparisonData.daily,
+      comparisonData.period_start,
+      comparisonData.period_end,
+    );
+    const prevByDom = new Map(prevFilled.map((d, i) => [i + 1, d]));
+
+    rows.forEach((row, i) => {
+      const prev = prevByDom.get(i + 1);
+      row.prevSpend = prev ? orBlank(prev.spend) : '';
+      row.prevTokens = prev ? prev.total_tokens || 0 : '';
+    });
+  }
+
+  const columns = [
     { header: 'Date', key: 'date' },
     { header: 'Spent (USD)', key: 'spend', numFmt: ExcelFormats.currency, transform: orBlank },
     { header: 'Tokens', key: 'total_tokens', numFmt: ExcelFormats.integer },
     { header: 'Calls', key: 'api_requests', numFmt: ExcelFormats.integer },
-  ],
-  // Gap-filled so the sheet matches the chart rather than skipping quiet days
-  rows: fillDailyGaps(data.daily || [], data.period_start, data.period_end),
-});
+    ...(hasComparison
+      ? [
+          { header: 'Prev. period spent (USD)', key: 'prevSpend', numFmt: ExcelFormats.currency },
+          { header: 'Prev. period tokens', key: 'prevTokens', numFmt: ExcelFormats.integer },
+        ]
+      : []),
+  ];
 
-export const buildModelSheet = data => {
+  return { sheetName: 'Daily Usage', columns, rows };
+};
+
+export const buildModelSheet = (data, comparisonData = null) => {
   const models = data.models || [];
   const totalTokens = models.reduce((sum, model) => sum + (model.total_tokens || 0), 0);
+  const prevByModel = new Map((comparisonData?.models || []).map(m => [m.model, m]));
+  const hasComparison = comparisonData?.models?.length > 0;
 
   const rows = [...models]
     .sort((a, b) => (b.spend || 0) - (a.spend || 0))
-    .map(model => ({
-      model: model.display_name || formatModelName(model.model),
-      spend: orBlank(model.spend),
-      calls: model.api_requests || 0,
-      tokens: model.total_tokens || 0,
-      // Share is by tokens, so it stays meaningful for members who cannot see cost
-      share: totalTokens ? Number((((model.total_tokens || 0) / totalTokens) * 100).toFixed(2)) : 0,
-    }));
+    .map(model => {
+      const prev = prevByModel.get(model.model);
+      const prevSpend = prev?.spend ?? (hasComparison ? 0 : null);
+      const delta = computeDelta(model.spend ?? 0, prevSpend);
+      return {
+        model: model.display_name || formatModelName(model.model),
+        spend: orBlank(model.spend),
+        calls: model.api_requests || 0,
+        tokens: model.total_tokens || 0,
+        // Share is by tokens, so it stays meaningful for members who cannot see cost
+        share: totalTokens ? Number((((model.total_tokens || 0) / totalTokens) * 100).toFixed(2)) : 0,
+        ...(hasComparison ? { vsPrior: delta.direction !== 'none' ? delta.label : '—' } : {}),
+      };
+    });
 
-  return {
-    sheetName: 'Usage by Model',
-    columns: [
-      { header: 'Model', key: 'model' },
-      { header: 'Spent (USD)', key: 'spend', numFmt: ExcelFormats.currency },
-      { header: 'Calls', key: 'calls', numFmt: ExcelFormats.integer },
-      { header: 'Tokens', key: 'tokens', numFmt: ExcelFormats.integer },
-      { header: 'Share (%)', key: 'share', numFmt: ExcelFormats.percent },
-    ],
-    rows,
-  };
+  const columns = [
+    { header: 'Model', key: 'model' },
+    { header: 'Spent (USD)', key: 'spend', numFmt: ExcelFormats.currency },
+    { header: 'Calls', key: 'calls', numFmt: ExcelFormats.integer },
+    { header: 'Tokens', key: 'tokens', numFmt: ExcelFormats.integer },
+    { header: 'Share (%)', key: 'share', numFmt: ExcelFormats.percent },
+    ...(hasComparison ? [{ header: 'vs Prior', key: 'vsPrior' }] : []),
+  ];
+
+  return { sheetName: 'Usage by Model', columns, rows };
 };
 
 // Paid tools (web search etc.); amounts are absent for members who may not see cost
@@ -271,13 +302,17 @@ export const buildKpiSheet = ({ data, canSeeAmounts, isCurrentPeriod, comparison
       vsLastMonth: peakDateLabel ? `Peak on ${peakDateLabel}` : '',
       vsTrend: '',
     },
-    {
-      metric: cacheTotal > 0 && !canSeeAmounts && percentUsed == null ? 'Cache hit rate' : 'Tokens',
-      value: cacheTotal > 0 && !canSeeAmounts && percentUsed == null ? cacheHitRate : orBlank(totalTokens),
-      unit: cacheTotal > 0 && !canSeeAmounts && percentUsed == null ? '%' : 'tokens',
-      vsLastMonth: tokenDelta.direction !== 'none' ? tokenDelta.label : '',
-      vsTrend: tokenDelta.direction,
-    },
+    (() => {
+      const showCacheHitRate = cacheTotal > 0 && !canSeeAmounts && percentUsed == null;
+      return {
+        metric: showCacheHitRate ? 'Cache hit rate' : 'Tokens',
+        value: showCacheHitRate ? cacheHitRate : orBlank(totalTokens),
+        unit: showCacheHitRate ? '%' : 'tokens',
+        // Cache hit rate has no meaningful period-over-period delta (matches the UI card)
+        vsLastMonth: showCacheHitRate ? '' : tokenDelta.direction !== 'none' ? tokenDelta.label : '',
+        vsTrend: showCacheHitRate ? '' : tokenDelta.direction,
+      };
+    })(),
     {
       metric: 'API calls',
       value: calls,
@@ -355,18 +390,19 @@ export const buildSpendOverTimeSheet = (data, bySource = []) => {
 
 /** "Spend by source" — one row per source, matching the donut chart. */
 export const buildSpendBySourceSheet = (bySource = []) => {
-  const total = (bySource || []).reduce((sum, s) => sum + (s.spend || 0), 0);
+  // Weight by spend when available (admins), by tokens for members whose spend is redacted.
+  const weight = s => (!isNullOrUndefined(s.spend) ? s.spend || 0 : s.total_tokens || 0);
+  const totalWeight = (bySource || []).reduce((sum, s) => sum + weight(s), 0);
 
   const rows = [...(bySource || [])]
-    .sort((a, b) => (b.spend || 0) - (a.spend || 0))
+    .sort((a, b) => weight(b) - weight(a))
     .map(s => {
       const key = s.source || s.key || '';
       return {
         source: getSourceLabel(key),
         spend: orBlank(s.spend),
         tokens: s.total_tokens || 0,
-        calls: s.api_requests || 0,
-        share: total > 0 ? Number((((s.spend || 0) / total) * 100).toFixed(2)) : 0,
+        share: totalWeight > 0 ? Number(((weight(s) / totalWeight) * 100).toFixed(2)) : 0,
       };
     });
 
@@ -376,7 +412,6 @@ export const buildSpendBySourceSheet = (bySource = []) => {
       { header: 'Source', key: 'source' },
       { header: 'Spent (USD)', key: 'spend', numFmt: ExcelFormats.currency },
       { header: 'Tokens', key: 'tokens', numFmt: ExcelFormats.integer },
-      { header: 'Calls', key: 'calls', numFmt: ExcelFormats.integer },
       { header: 'Share (%)', key: 'share', numFmt: ExcelFormats.percent },
     ],
     rows,
@@ -449,10 +484,16 @@ export const buildTopAgentsSheet = agents => {
 
 export const buildTopSkillsSheet = skills => {
   const list = skills || [];
-  const totalSpend = list.reduce((sum, s) => sum + (s.spend || 0), 0);
+  // Weight by spend when available; fall back to uses for members whose spend is redacted.
+  const weight = s => {
+    if (!isNullOrUndefined(s.spend)) return s.spend || 0;
+    const uses = s.uses ?? s.call_count ?? null;
+    return uses ?? 0;
+  };
+  const totalWeight = list.reduce((sum, s) => sum + weight(s), 0);
 
   const rows = [...list]
-    .sort((a, b) => (b.spend || 0) - (a.spend || 0))
+    .sort((a, b) => weight(b) - weight(a))
     .map(skill => {
       const uses = skill.uses ?? skill.call_count ?? null;
       const spendKnown = !isNullOrUndefined(skill.spend);
@@ -461,7 +502,7 @@ export const buildTopSkillsSheet = skills => {
         uses: uses ?? '',
         perUse: uses && spendKnown ? (skill.spend || 0) / uses : '',
         spend: orBlank(skill.spend),
-        share: totalSpend > 0 ? Number((((skill.spend || 0) / totalSpend) * 100).toFixed(2)) : 0,
+        share: totalWeight > 0 ? Number(((weight(skill) / totalWeight) * 100).toFixed(2)) : 0,
       };
     });
 
@@ -502,9 +543,9 @@ export const buildUsageSheets = ({
   const sheets = [
     buildSummarySheet({ data, projectName, isPersonalProject, scope }),
     buildKpiSheet({ data, canSeeAmounts, isCurrentPeriod, comparisonData }),
-    buildDailySheet(data),
+    buildDailySheet(data, comparisonData),
     buildSpendOverTimeSheet(data, data.by_source),
-    buildModelSheet(data),
+    buildModelSheet(data, comparisonData),
     ...((data.by_source || []).length ? [buildSpendBySourceSheet(data.by_source)] : []),
     ...(hasMom
       ? [

@@ -62,7 +62,7 @@ const UsageSpendChart = memo(props => {
   // Non-admin users have spend stripped from the response; use total_tokens as fallback metric
   const metricKey = canSeeAmounts ? 'spend' : 'total_tokens';
 
-  const { seriesKeys, chartData, mergedChartData, compChartData, hasData } = useUsageChartData({
+  const { seriesKeys, seriesLabels, chartData, mergedChartData, compChartData, hasData } = useUsageChartData({
     daily,
     models,
     bySource,
@@ -243,7 +243,7 @@ const UsageSpendChart = memo(props => {
                     <Bar
                       key={key}
                       dataKey={key}
-                      name={key === '__other' ? 'Other' : key}
+                      name={key === '__other' ? 'Other' : (seriesLabels[key] ?? key)}
                       stackId="stack"
                       fill={hiddenKeys.has(key) ? 'transparent' : baseColor}
                       fillOpacity={hiddenKeys.has(key) ? 0 : isDimmed ? 0.2 : 1}
@@ -284,7 +284,7 @@ const UsageSpendChart = memo(props => {
                     variant="bodySmall"
                     sx={styles.legendLabel(hiddenKeys.has(key))}
                   >
-                    {key === '__other' ? 'Other' : key}
+                    {key === '__other' ? 'Other' : (seriesLabels[key] ?? key)}
                   </Typography>
                 </Box>
               ))}
