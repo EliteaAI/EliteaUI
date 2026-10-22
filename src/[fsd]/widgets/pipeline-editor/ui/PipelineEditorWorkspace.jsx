@@ -1,5 +1,7 @@
 import { memo, useCallback, useRef, useState } from 'react';
 
+import { useLocation } from 'react-router-dom';
+
 import { Box } from '@mui/material';
 
 import { PIPELINE_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
@@ -16,16 +18,19 @@ const noop = () => {};
 
 /**
  * Pipeline editor layout. Create mode (no `applicationId`): form + full-width canvas.
- * Edit mode: adds the Test panel, closed by default.
+ * Edit mode: adds the Test panel, closed by default unless a Run History restore is pending.
  */
 const PipelineEditorWorkspace = memo(props => {
   const { applicationId, setYamlDirty = noop, unsavedLLMSettings, setUnsavedLLMSettings } = props;
   const isEditMode = Boolean(applicationId);
 
+  const location = useLocation();
   const editorRowRef = useRef();
   const editorPanelRef = useRef();
   const testPanelRef = useRef();
-  const [isTestPanelOpen, setIsTestPanelOpen] = useState(false);
+  const [isTestPanelOpen, setIsTestPanelOpen] = useState(
+    () => isEditMode && Boolean(location.state?.restoredConversationID),
+  );
 
   usePipelineAttachmentYamlSync();
 
