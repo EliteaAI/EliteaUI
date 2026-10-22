@@ -201,6 +201,8 @@ describe('ScheduleRunsPanel EL-7011 owner CR 2026-10-21 test panel log', () => {
     const result = screen.getByTestId('schedule-run-result');
     expect(result).toHaveTextContent('38 s · 2,140 tokens · $0.03');
     expect(result).toHaveTextContent('Three open pull requests');
+    // CR-25: no conversation link on the card
+    expect(screen.queryByText('Open conversation')).not.toBeInTheDocument();
   });
 
   it('US-41 puts Approve and Reject under the paused line of a waiting test', () => {
