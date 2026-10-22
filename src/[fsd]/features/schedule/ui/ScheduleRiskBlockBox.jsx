@@ -3,6 +3,7 @@ import { memo, useMemo } from 'react';
 import { Box, Link, List, ListItem, Typography } from '@mui/material';
 
 import { buildEntityEditorLink } from '@/[fsd]/entities/schedule/lib/helpers';
+import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import BannerMessage from '@/[fsd]/shared/ui/banner-message/BannerMessage';
 import OpenInNewIcon from '@/assets/open-new-icon.svg?react';
 
@@ -47,7 +48,7 @@ const describeGroup = (code, findings, entityType) => {
 
 // The red boxes under the entity when the risk check blocks the save: one box per cause kind (owner CR 2026-10-21)
 const ScheduleRiskBlockBox = memo(props => {
-  const { blocking, entityType, entityId, versionId } = props;
+  const { blocking, entityType, entityId, versionId, projectId } = props;
   const groups = useMemo(() => toRiskItems(blocking), [blocking]);
   const styles = scheduleRiskBlockBoxStyles();
 
@@ -59,9 +60,13 @@ const ScheduleRiskBlockBox = memo(props => {
       id: entityId,
       version_id: versionId,
     };
-    // A new tab, so the form keeps its input
+    // A new tab, so the form keeps its input; it is outside the router, so the URL carries the
+    // origin, the router basename and the project segment
     const entityLink = buildEntityEditorLink({ entityType: fix.entity_type, entityId: fix.id });
-    const editorLink = fix.version_id ? `${entityLink}/${fix.version_id}` : entityLink;
+    const editorLink = NavigationHelpers.buildAbsoluteAppUrl(
+      projectId,
+      fix.version_id ? `${entityLink}/${fix.version_id}` : entityLink,
+    );
     return (
       <BannerMessage
         key={code}
