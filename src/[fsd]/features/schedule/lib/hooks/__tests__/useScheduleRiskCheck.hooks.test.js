@@ -67,6 +67,19 @@ describe('useScheduleRiskCheck EL-7011 owner CR', () => {
     expect(result.current.result).toEqual(CLEAR);
   });
 
+  it('US-33 R2.6 EL-7011 BUG-36 sends schedule_id on an edit, so the server scans as the owner', async () => {
+    const { result } = setup({ entityType: 'agent', applicationId: 7, versionId: 71, scheduleId: 3 });
+
+    await waitFor(() => expect(result.current.status).toBe(RISK_CHECK_STATUS.CLEAR));
+    expect(mocks.check).toHaveBeenCalledWith({
+      projectId: 5,
+      entity_type: 'agent',
+      application_id: 7,
+      version_id: 71,
+      schedule_id: 3,
+    });
+  });
+
   it('is blocked when the server answers a blocking finding', async () => {
     mocks.check.mockReturnValue(answer({ ...CLEAR, blocking: [{ code: 'human_input_step' }] }));
     const { result } = setup();
