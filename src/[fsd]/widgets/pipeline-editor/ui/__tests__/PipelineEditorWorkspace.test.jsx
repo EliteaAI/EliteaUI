@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { forwardRef, useImperativeHandle } from 'react';
 
+import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ThemeProvider, createTheme } from '@mui/material';
@@ -80,11 +81,13 @@ const { default: PipelineEditorWorkspace } = await import('../PipelineEditorWork
 
 const theme = createTheme({ palette: darkPalette });
 
-const renderWorkspace = (props = {}) =>
+const renderWorkspace = (props = {}, initialEntries = ['/']) =>
   render(
-    <ThemeProvider theme={theme}>
-      <PipelineEditorWorkspace {...props} />
-    </ThemeProvider>,
+    <MemoryRouter initialEntries={initialEntries}>
+      <ThemeProvider theme={theme}>
+        <PipelineEditorWorkspace {...props} />
+      </ThemeProvider>
+    </MemoryRouter>,
   );
 
 describe('PipelineEditorWorkspace', () => {
@@ -115,6 +118,20 @@ describe('PipelineEditorWorkspace', () => {
     expect(screen.getByTestId('test-region')).toHaveAttribute('data-open', 'false');
     expect(screen.getByTestId('editor-panel')).toHaveAttribute('data-test-panel-open', 'false');
     expect(screen.getByTestId('editor-panel')).toHaveAttribute('data-test-disabled-reason', '');
+  });
+
+  it('opens the Test panel when a Run History conversation restore is pending', () => {
+    renderWorkspace({ applicationId: 3 }, [{ pathname: '/', state: { restoredConversationID: 1 } }]);
+
+    expect(screen.getByTestId('test-region')).toHaveAttribute('data-open', 'true');
+    expect(screen.getByTestId('editor-panel')).toHaveAttribute('data-test-panel-open', 'true');
+  });
+
+  it('ignores a restore request on the create layout', () => {
+    renderWorkspace({}, [{ pathname: '/', state: { restoredConversationID: 1 } }]);
+
+    expect(screen.queryByTestId('test-region')).toBeNull();
+    expect(screen.getByTestId('editor-panel')).toHaveAttribute('data-test-panel-open', 'false');
   });
 
   it('opens and closes the Test panel and re-fits the canvas each time', () => {
