@@ -83,6 +83,12 @@ describe('EL-7011 US-27 SchedulesFilters', () => {
     expect(onChange).toHaveBeenCalledWith({ ...EMPTY, status: 'failed' });
   });
 
+  it('R1.1 EL-7011 CR-23: the approval wait option reads "Waiting for input" and emits waiting_for_approval', () => {
+    const onChange = renderBar();
+    pick('status', 'Waiting for input');
+    expect(onChange).toHaveBeenCalledWith({ ...EMPTY, status: 'waiting_for_approval' });
+  });
+
   it('R1.1 EL-7011: picking an enabled state emits a boolean, and "All" clears it', () => {
     const onChange = renderBar();
     pick('enabled', 'No');
