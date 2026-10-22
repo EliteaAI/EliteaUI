@@ -159,6 +159,10 @@ describe('ScheduleRunsSection Open full history (EL-7011 CR-22, US-32 R6.3)', ()
       'href',
       '/pipelines/all/80/history?schedule_id=4',
     );
+    // BUG-38: the app link colour, not the brand colour
+    expect(screen.getByRole('link', { name: 'Open full history' })).toHaveStyle({
+      color: theme.palette.text.link,
+    });
   });
 
   it('CR-22 shows no link without fullHistoryLink', () => {
