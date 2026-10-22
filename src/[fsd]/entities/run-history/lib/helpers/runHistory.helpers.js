@@ -12,7 +12,7 @@ const RUN_ANALYTICS_AVAILABLE_FROM = Date.UTC(2026, 8, 30);
 // 48 rem list (review r4, r5)
 const FIXED_TRACKS = {
   date: '7.5rem',
-  event: '9.25rem',
+  event: '10.25rem',
   version: '7.25rem',
   duration: 'minmax(5.5rem, 1fr)',
 };
