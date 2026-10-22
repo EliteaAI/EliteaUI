@@ -98,7 +98,6 @@ export const buildDailySheet = (data, comparisonData = null) => {
     );
     const prevByDom = new Map(prevFilled.map((d, i) => [i + 1, d]));
 
-    // fillDailyGaps may return frozen objects — spread to get a mutable copy
     const augmented = rows.map((row, i) => {
       const prev = prevByDom.get(i + 1);
       return {
@@ -144,11 +143,9 @@ export const buildModelSheet = (data, comparisonData = null) => {
       if (hasComparison) {
         const spendKnown = !isNullOrUndefined(model.spend);
         if (spendKnown) {
-          // Use spend delta when available
           const prevSpend = prev?.spend ?? 0;
           delta = computeDelta(model.spend, prevSpend);
         } else {
-          // Fall back to token delta for members whose spend is redacted
           const prevTokens = prev?.total_tokens ?? 0;
           delta = computeDelta(model.total_tokens || 0, prevTokens);
         }

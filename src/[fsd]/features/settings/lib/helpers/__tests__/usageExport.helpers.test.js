@@ -201,12 +201,10 @@ describe('daily sheet', () => {
     const originalRow = data.daily[0];
     const sheet = buildDailySheet(data, comparisonData);
 
-    // Comparison columns are present
     expect(sheet.columns.map(c => c.header)).toContain('Prev. period spent (USD)');
     expect(sheet.columns.map(c => c.header)).toContain('Prev. period tokens');
     expect(sheet.rows[0].prevSpend).toBe(3);
     expect(sheet.rows[0].prevTokens).toBe(80);
-    // Source rows are not mutated
     expect(originalRow).not.toHaveProperty('prevSpend');
     expect(originalRow).not.toHaveProperty('prevTokens');
   });
