@@ -9,12 +9,13 @@ const RUN_ANALYTICS_AVAILABLE_FROM = Date.UTC(2026, 8, 30);
 
 // CR-22 D7: with extra columns the tracks are fixed rem widths: Date, extras, Execution type, Version, Duration.
 // Execution type and Version fit their header labels with the sort icon; Duration takes the free space of the
-// 48 rem list (review r4, r5)
+// 48 rem list. The six header labels need about 48 rem together, so Schedule (long names end with an ellipsis
+// and a tooltip) gives 0.5 rem and every header fits (live check, review r4-r7)
 const FIXED_TRACKS = {
   date: '7.5rem',
   event: '10.25rem',
   version: '7.25rem',
-  duration: 'minmax(5.5rem, 1fr)',
+  duration: 'minmax(7.25rem, 1fr)',
 };
 
 export const resolveRunHistoryColumns = (noVersions, hasEvent, extraColumns = []) => {
@@ -124,7 +125,12 @@ export const toExecutionTypeRow = row => ({
 
 // CR-22 R3.1-R3.3: the Schedule and Status columns of Agent and Pipeline Run History; '-' without a run record
 export const SCHEDULE_RUN_COLUMNS = [
-  { id: 'schedule', label: 'Schedule', width: '9rem', render: row => row.schedule_run?.schedule_name ?? '-' },
+  {
+    id: 'schedule',
+    label: 'Schedule',
+    width: '8.5rem',
+    render: row => row.schedule_run?.schedule_name ?? '-',
+  },
   {
     id: 'status',
     label: 'Status',
