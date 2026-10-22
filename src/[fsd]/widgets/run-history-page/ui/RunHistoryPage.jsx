@@ -93,6 +93,8 @@ const RunHistoryPage = memo(props => {
           component={RouterLink}
           to={buildScheduleFormLink({ entityType: scheduleEntityType, entityId: agentId, tab, scheduleId })}
           onClick={event => event.stopPropagation()}
+          // A cut name shows in full on hover (review r8)
+          title={name}
           variant="bodyMedium"
           underline="hover"
           sx={TextLinkConstants.TEXT_LINK_SX}

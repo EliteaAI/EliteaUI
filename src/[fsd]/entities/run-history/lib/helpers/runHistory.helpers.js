@@ -8,14 +8,15 @@ export const RUN_ANALYTICS_TIMESTAMP_FORMAT = 'dd MMM yyyy, hh:mm a';
 const RUN_ANALYTICS_AVAILABLE_FROM = Date.UTC(2026, 8, 30);
 
 // CR-22 D7: with extra columns the tracks are fixed rem widths: Date, extras, Execution type, Version, Duration.
-// Execution type and Version fit their header labels with the sort icon; Duration takes the free space of the
-// 48 rem list. The six header labels need about 48 rem together, so Schedule (long names end with an ellipsis
-// and a tooltip) gives 0.5 rem and every header fits (live check, review r4-r7)
+// Review r8, from live measures at 16 px per rem: a row grid has 736 px (a 768 px list minus 2 x 16 px of row
+// padding; the row menu is absolute and takes no track). A sortable header needs its label plus 57 px (padding,
+// sort icon, gap, border) and a plain one its label plus 33 px: Date 91, Schedule 99, Status 78, Execution type
+// 163, Version 110 and Duration 119 px. The minimum sum is 732 px. Dates up to 145 px stay cut, with a tooltip.
 const FIXED_TRACKS = {
   date: '7.5rem',
-  event: '10.25rem',
-  version: '7.25rem',
-  duration: 'minmax(7.25rem, 1fr)',
+  event: '10.5rem',
+  version: '7rem',
+  duration: 'minmax(7.5rem, 1fr)',
 };
 
 export const resolveRunHistoryColumns = (noVersions, hasEvent, extraColumns = []) => {
@@ -128,13 +129,13 @@ export const SCHEDULE_RUN_COLUMNS = [
   {
     id: 'schedule',
     label: 'Schedule',
-    width: '8.5rem',
+    width: '7.5rem',
     render: row => row.schedule_run?.schedule_name ?? '-',
   },
   {
     id: 'status',
     label: 'Status',
-    width: '7rem',
+    width: '5.75rem',
     render: row => (row.schedule_run ? toRunStatusLabel(row.schedule_run.status) : '-'),
   },
 ];
