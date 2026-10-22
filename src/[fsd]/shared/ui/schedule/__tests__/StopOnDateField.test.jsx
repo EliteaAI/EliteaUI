@@ -111,6 +111,12 @@ describe('EL-7011 R3 StopOnDateField', () => {
     expect(screen.getByRole('textbox')).toHaveAttribute('aria-invalid', 'true');
   });
 
+  it('R3.3 CR-02 EL-7011: a screen reader reads the error with the date field', () => {
+    render(<Harness initialValue={PAST_DATE} />);
+
+    expect(screen.getByRole('textbox')).toHaveAccessibleDescription(PAST_DATE_MESSAGE);
+  });
+
   it('R3.4 TC-US30-16: a server error shows under the date field', () => {
     render(
       <Harness

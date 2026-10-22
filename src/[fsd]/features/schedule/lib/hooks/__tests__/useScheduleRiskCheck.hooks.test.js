@@ -123,6 +123,33 @@ describe('useScheduleRiskCheck EL-7011 owner CR', () => {
     await waitFor(() => expect(mocks.check).toHaveBeenCalledTimes(2));
   });
 
+  // CR-11 review r2: the review dialog must keep its tools when a tab-return check fails
+  it('keeps the last findings of the same version when a re-check fails', async () => {
+    mocks.check.mockReturnValueOnce(answer({ ...CLEAR, sensitive: SENSITIVE, fingerprint: 'fp-1' }));
+    const { result } = setup();
+    await waitFor(() => expect(result.current.result?.fingerprint).toBe('fp-1'));
+
+    mocks.check.mockReturnValueOnce(failure());
+    setVisibility('visible');
+
+    await waitFor(() => expect(mocks.check).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(result.current.status).toBe(RISK_CHECK_STATUS.CLEAR));
+    expect(result.current.result).toEqual(
+      expect.objectContaining({ sensitive: SENSITIVE, fingerprint: 'fp-1' }),
+    );
+  });
+
+  it('fails without findings when the check of another version fails', async () => {
+    const { result, rerender } = setup();
+    await waitFor(() => expect(result.current.status).toBe(RISK_CHECK_STATUS.CLEAR));
+
+    mocks.check.mockReturnValueOnce(failure());
+    rerender({ entityType: 'agent', applicationId: 7, versionId: 70 });
+
+    await waitFor(() => expect(result.current.status).toBe(RISK_CHECK_STATUS.FAILED));
+    expect(result.current.result).toBeNull();
+  });
+
   it('runCheck returns the fresh findings for the Save step', async () => {
     const { result } = setup();
     await waitFor(() => expect(result.current.status).toBe(RISK_CHECK_STATUS.CLEAR));
