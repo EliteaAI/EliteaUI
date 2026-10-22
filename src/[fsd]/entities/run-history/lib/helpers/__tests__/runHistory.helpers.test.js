@@ -172,11 +172,11 @@ describe('hasRunAnalytics', () => {
 });
 
 describe('toExecutionTypeRow (EL-7011 US-38)', () => {
-  it('R1.3: labels a manual run "Manual"', () => {
+  it('R1.3, US-38 R1.4 (BUG-12): labels an older manual run "Manual (legacy)"', () => {
     expect(toExecutionTypeRow({ id: 1, execution_type: 'manual' })).toEqual({
       id: 1,
       execution_type: 'manual',
-      event_label: 'Manual',
+      event_label: 'Manual (legacy)',
     });
   });
 
