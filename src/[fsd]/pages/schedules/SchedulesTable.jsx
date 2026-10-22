@@ -66,22 +66,23 @@ const TIER_WIDTHS = {
     enabled: '5.5rem',
     actions: '4.25rem',
   },
+  // CR-23 D12: Last run takes the Next run width; the regular Owner gives 0.75 rem for it. 7.75 rem fits the
+  // widest date ("Nov, 30 23:30") with the cell padding (live check at 1440 px)
   regular: {
-    next_run: '7.25rem',
-    last_run: '6.5rem',
-    owner: '7.5rem',
+    next_run: '7.75rem',
+    last_run: '7.75rem',
+    owner: '6.75rem',
     enabled: '5.5rem',
     actions: '4.25rem',
   },
   comfortable: {
     next_run: '9.25rem',
-    last_run: '8rem',
+    last_run: '9.25rem',
     owner: '9.75rem',
     enabled: '6rem',
     actions: '6.5625rem',
   },
 };
-const STATUS_VARIANTS = { compact: 'icon', regular: 'text', comfortable: 'chip' };
 const ROW_HEIGHT = '3.5rem';
 
 const getTier = tableWidth => {
@@ -115,6 +116,52 @@ const IconWithLabel = ({ type, label }) => {
       >
         {label}
       </Tooltip.TypographyWithConditionalTooltip>
+    </Box>
+  );
+};
+
+// CR-23 D10: one date renderer for Next run and Last run. Compact: MMM DD and the time on two lines, with
+// `trailing` (the Last run status icon) after the time; regular: one line; comfortable: the calendar icon
+const renderRunDate = (value, tier, trailing = null) => {
+  const styles = schedulesTableStyles();
+  const date = timeFormatter(value, TIME_FORMAT.MMMDD);
+  const time = formatTime(value);
+  if (tier === 'compact') {
+    return (
+      <Box sx={styles.twoLineDate}>
+        <Typography
+          variant="bodyMedium"
+          component="span"
+        >
+          {date}
+        </Typography>
+        <Box sx={styles.timeLine}>
+          <Typography
+            variant="bodySmall"
+            component="span"
+            color="text.primary"
+          >
+            {time}
+          </Typography>
+          {trailing}
+        </Box>
+      </Box>
+    );
+  }
+  const text = (
+    <Typography
+      variant="bodyMedium"
+      component="span"
+      noWrap
+    >
+      {`${date} ${time}`}
+    </Typography>
+  );
+  if (tier !== 'comfortable') return text;
+  return (
+    <Box sx={styles.dateCell}>
+      <CalendarIcon sx={styles.calendarIcon} />
+      {text}
     </Box>
   );
 };
@@ -168,83 +215,63 @@ const renderCell = (column, value, row, tier) => {
     case 'next_run': {
       if (!row.enabled) return 'Paused';
       if (!value) return '-';
-      const date = timeFormatter(value, TIME_FORMAT.MMMDD);
-      const time = formatTime(value);
-      if (tier === 'comfortable') {
-        return (
-          <Box sx={styles.dateCell}>
-            <CalendarIcon sx={styles.calendarIcon} />
-            <Typography
-              variant="bodyMedium"
-              component="span"
-            >
-              {`${date} ${time}`}
-            </Typography>
-          </Box>
-        );
-      }
+      if (tier === 'comfortable') return renderRunDate(value, tier);
       return (
         <MuiTooltip
           title={new Date(value).toLocaleString()}
           placement="top"
         >
-          {isCompact ? (
-            <Box sx={styles.twoLineDate}>
-              <Typography
-                variant="bodyMedium"
-                component="span"
-              >
-                {date}
-              </Typography>
-              <Typography
-                variant="bodySmall"
-                component="span"
-                color="text.primary"
-              >
-                {time}
-              </Typography>
-            </Box>
-          ) : (
-            <Typography
-              variant="bodyMedium"
-              component="span"
-            >
-              {`${date} ${time}`}
-            </Typography>
-          )}
+          {renderRunDate(value, tier)}
         </MuiTooltip>
       );
     }
     case 'last_run': {
-      if (!row.last_run_status) return '-';
-      const reason = REASON_STATUSES.includes(row.last_run_status) ? row.last_run_reason : null;
+      const status = row.last_run_status;
+      if (!row.last_run && !status) return '-';
+      const label = status ? toRunStatusLabel(status) : '';
+      const reason = REASON_STATUSES.includes(status) ? row.last_run_reason : null;
+      const icon = status && (
+        <ScheduleRunStatusChip
+          status={status}
+          variant="icon"
+        />
+      );
+      // CR-23 R5.1, D11: line 1 the run date in the Next run format, line 2 the status icon and word with
+      // the reason after it; compact puts the icon after the time and the reason only in the tooltip
       return (
-        <Box sx={styles.lastRun}>
-          {/* The run time shows only here, so the tooltip shows at every tier */}
-          <MuiTooltip
-            title={lastRunTooltip(row, toRunStatusLabel(row.last_run_status), reason)}
-            placement="top"
+        <MuiTooltip
+          title={lastRunTooltip(row, label, reason)}
+          placement="top"
+        >
+          <Box
+            component="span"
+            tabIndex={isCompact ? 0 : undefined}
+            sx={styles.lastRun}
           >
-            <Box
-              component="span"
-              tabIndex={isCompact ? 0 : undefined}
-              sx={styles.statusAnchor}
-            >
-              <ScheduleRunStatusChip
-                status={row.last_run_status}
-                variant={STATUS_VARIANTS[tier]}
-              />
-            </Box>
-          </MuiTooltip>
-          {!isCompact && reason && (
-            <Text.EllipsisTypography
-              variant="bodySmall"
-              color="text.secondary"
-            >
-              {reason}
-            </Text.EllipsisTypography>
-          )}
-        </Box>
+            {row.last_run ? renderRunDate(row.last_run, tier, isCompact ? icon : null) : '-'}
+            {!isCompact && status && (
+              <Box sx={styles.statusLine}>
+                {icon}
+                <Typography
+                  variant="bodySmall"
+                  component="span"
+                  sx={styles.statusLabel}
+                >
+                  {label}
+                </Typography>
+                {reason && (
+                  <Text.EllipsisTypography
+                    variant="bodySmall"
+                    color="text.secondary"
+                  >
+                    {reason}
+                  </Text.EllipsisTypography>
+                )}
+              </Box>
+            )}
+            {isCompact && !row.last_run && icon}
+          </Box>
+        </MuiTooltip>
       );
     }
     case 'owner': {
@@ -445,7 +472,9 @@ const schedulesTableStyles = (isCompact, isNarrow) => ({
     minWidth: 0,
     maxWidth: '100%',
   },
-  statusAnchor: { display: 'inline-flex', maxWidth: '100%' },
+  timeLine: { display: 'flex', alignItems: 'center', gap: '0.25rem', minWidth: 0 },
+  statusLine: { display: 'flex', alignItems: 'center', gap: '0.25rem', minWidth: 0, maxWidth: '100%' },
+  statusLabel: { flexShrink: 0, whiteSpace: 'nowrap' },
   owner: { display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0, maxWidth: '100%' },
   compactCell: isCompact ? { paddingLeft: '0.5rem', paddingRight: '0.5rem' } : {},
   actionsCell:

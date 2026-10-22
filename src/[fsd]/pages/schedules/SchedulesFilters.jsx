@@ -20,7 +20,7 @@ const STATUS_OPTIONS = [
   { label: 'Failed', value: 'failed' },
   { label: 'Skipped', value: 'skipped' },
   { label: 'Blocked', value: 'blocked' },
-  { label: 'Waiting for approval', value: 'waiting_for_approval' },
+  { label: 'Waiting for input', value: 'waiting_for_approval' }, // the owner's label (CR-23)
 ];
 // The select keeps string values; the list API takes a boolean
 const ENABLED_OPTIONS = [ALL, { label: 'Yes', value: 'true' }, { label: 'No', value: 'false' }];

@@ -3,6 +3,8 @@ import { MemoryRouter } from 'react-router-dom';
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { formatRunStarted } from '@/[fsd]/features/schedule';
+import { TIME_FORMAT } from '@/common/constants';
+import { timeFormatter } from '@/common/utils';
 import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, screen, within } from '@testing-library/react';
 
@@ -304,8 +306,8 @@ describe('EL-7011 US-26 SchedulesTable fits 8 columns at 1280, 1440 and 1600 px'
   const TEXT_COLUMNS = 'minmax(10.25rem, 1.3fr) minmax(7.5rem, 1fr) minmax(7.25rem, 1fr)';
   const TEMPLATES = {
     compact: `${TEXT_COLUMNS} 5.75rem 5.75rem 3.5rem 5.5rem 4.25rem`,
-    regular: `${TEXT_COLUMNS} 7.25rem 6.5rem 7.5rem 5.5rem 4.25rem`,
-    comfortable: `${TEXT_COLUMNS} 9.25rem 8rem 9.75rem 6rem 6.5625rem`,
+    regular: `${TEXT_COLUMNS} 7.75rem 7.75rem 6.75rem 5.5rem 4.25rem`, // CR-23 D12; dates like "Nov, 30 23:30" fit
+    comfortable: `${TEXT_COLUMNS} 9.25rem 9.25rem 9.75rem 6rem 6.5625rem`, // CR-23 D12
   };
   const minGridWidthPx = template =>
     template
@@ -315,6 +317,7 @@ describe('EL-7011 US-26 SchedulesTable fits 8 columns at 1280, 1440 and 1600 px'
     getComputedStyle(screen.getByTestId('schedule-column-header-name').parentElement).gridTemplateColumns;
   const timeOf = value =>
     new Date(value).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+  const dateOf = value => timeFormatter(value, TIME_FORMAT.MMMDD);
 
   it.each([
     [1280, 'compact'],
@@ -370,11 +373,14 @@ describe('EL-7011 US-26 SchedulesTable fits 8 columns at 1280, 1440 and 1600 px'
     expect(within(owner).getByLabelText('Ann')).toBeInTheDocument();
   });
 
-  it('AC4 at 1280 px shows the last run icon only, with the status, time and reason in a tooltip', () => {
+  it('AC4 CR-23 R5.1 at 1280 px shows the last run date and time on two lines, the status icon after the time, the reason in a tooltip', () => {
     setWindowWidth(1280);
     renderTable([makeRow({ last_run_status: 'failed', last_run_reason: 'Agent is deleted' })]);
     const lastRun = screen.getByTestId('schedule-column-value-last_run');
-    expect(within(lastRun).getByRole('img', { name: 'Failed' })).toBeInTheDocument();
+    expect(within(lastRun).getByText(dateOf(LAST_RUN))).toBeInTheDocument();
+    const time = within(lastRun).getByText(timeOf(LAST_RUN));
+    const icon = within(lastRun).getByRole('img', { name: 'Failed' });
+    expect(time.parentElement).toContainElement(icon);
     expect(lastRun).not.toHaveTextContent('Failed');
     expect(lastRun).not.toHaveTextContent('Agent is deleted');
     expect(
@@ -408,11 +414,12 @@ describe('EL-7011 US-26 SchedulesTable fits 8 columns at 1280, 1440 and 1600 px'
     setWindowWidth(1440);
     renderTable([makeRow()]);
     expect(screen.getByTestId('schedule-column-value-owner')).toHaveTextContent('Ann');
-    const status = within(screen.getByTestId('schedule-column-value-last_run')).getByTestId(
-      'schedule-run-status',
-    );
-    expect(status).toHaveTextContent('Success');
-    expect(getComputedStyle(status).borderStyle).toBe('none');
+    // CR-23 R5.1 and D11: line 1 the date and time on one line, line 2 the status icon and word
+    const lastRun = screen.getByTestId('schedule-column-value-last_run');
+    expect(lastRun).toHaveTextContent(`${dateOf(LAST_RUN)} ${timeOf(LAST_RUN)}`);
+    expect(within(lastRun).getByRole('img', { name: 'Success' })).toBeInTheDocument();
+    expect(within(lastRun).getByText('Success')).toBeInTheDocument();
+    expect(within(lastRun).queryByTestId('calendar-icon')).toBeNull();
     const nextRun = screen.getByTestId('schedule-column-value-next_run');
     expect(within(nextRun).queryByText(timeOf(NEXT_RUN))).toBeNull();
     expect(nextRun).toHaveTextContent(timeOf(NEXT_RUN));
@@ -425,13 +432,41 @@ describe('EL-7011 US-26 SchedulesTable fits 8 columns at 1280, 1440 and 1600 px'
   it('AC4 at 1600 px shows the owner name, the status chip and the calendar icon', () => {
     renderTable([makeRow()]);
     expect(screen.getByTestId('schedule-column-value-owner')).toHaveTextContent('Ann');
-    expect(
-      within(screen.getByTestId('schedule-column-value-last_run')).getByTestId('schedule-run-status'),
-    ).toHaveClass('MuiChip-outlined');
+    // CR-23 R5.1 and D11: the calendar icon and the date on line 1, the status icon and word on line 2
+    const lastRun = screen.getByTestId('schedule-column-value-last_run');
+    expect(within(lastRun).getByTestId('calendar-icon')).toBeInTheDocument();
+    expect(lastRun).toHaveTextContent(`${dateOf(LAST_RUN)} ${timeOf(LAST_RUN)}`);
+    expect(within(lastRun).getByRole('img', { name: 'Success' })).toBeInTheDocument();
+    expect(within(lastRun).queryByTestId('schedule-run-status')).not.toHaveClass('MuiChip-outlined');
     expect(
       within(screen.getByTestId('schedule-column-value-next_run')).getByTestId('calendar-icon'),
     ).toBeInTheDocument();
   });
+
+  it.each([1280, 1440, 1600])('CR-23 R5.2 at %i px shows - in Last run for a row with no run', width => {
+    setWindowWidth(width);
+    renderTable([makeRow({ last_run: null, last_run_status: null })]);
+    expect(screen.getByTestId('schedule-column-value-last_run')).toHaveTextContent(/^-$/);
+  });
+
+  it.each([1440, 1600])(
+    'CR-23 R2.5 at %i px shows the reason after the status on line 2, with the full text in the tooltip',
+    width => {
+      setWindowWidth(width);
+      renderTable([
+        makeRow({ last_run_status: 'skipped', last_run_reason: 'The previous run is still running' }),
+      ]);
+      const lastRun = screen.getByTestId('schedule-column-value-last_run');
+      const status = within(lastRun).getByText('Skipped');
+      const reason = within(lastRun).getByText('The previous run is still running');
+      expect(status.parentElement).toBe(reason.parentElement);
+      expect(
+        within(lastRun).getByLabelText(
+          `Skipped - ${formatRunStarted(LAST_RUN)}. The previous run is still running`,
+        ),
+      ).toBeInTheDocument();
+    },
+  );
 
   it.each([1280, 1600])('shows Paused in Next run for a paused schedule at %i px', width => {
     setWindowWidth(width);
