@@ -82,7 +82,7 @@ export const hasRunAnalytics = run =>
 
 // One label per trigger source of the shared run enum (BUG-12); `manual` stays for older runs
 const EXECUTION_TYPE_LABELS = new Map([
-  ['manual', 'Manual'],
+  ['manual', 'Manual (legacy)'],
   ['scheduled', 'Scheduled'],
   ['schedule_manual', 'Run now'],
   ['chat', 'Chat'],
