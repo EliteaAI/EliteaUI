@@ -5,6 +5,7 @@ import { Link as RouterLink } from 'react-router-dom';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { Box, Link, Tooltip, Typography } from '@mui/material';
 
+import { TextLinkConstants } from '@/[fsd]/shared/lib/constants';
 import RouteDefinitions from '@/routes';
 
 import { formatRunSummary, toPlainText } from '../lib/helpers';
@@ -46,7 +47,7 @@ const ScheduleRunResult = memo(props => {
             target="_blank"
             rel="noopener noreferrer"
             variant="bodyMedium"
-            sx={styles.link}
+            sx={[TextLinkConstants.TEXT_LINK_SX, styles.link]}
           >
             Open conversation
             <OpenInNewIcon sx={styles.linkIcon} />

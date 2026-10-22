@@ -11,6 +11,7 @@ import {
   buildSchedulesListLink,
   useEntitySchedules,
 } from '@/[fsd]/entities/schedule';
+import { TextLinkConstants } from '@/[fsd]/shared/lib/constants';
 import { Button } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
@@ -119,7 +120,7 @@ const EntitySchedulesSection = memo(props => {
               // The Schedules page names the entity chip with it when the list has no rows
               state={{ entityName }}
               variant="bodyMedium"
-              sx={styles.link}
+              sx={[TextLinkConstants.TEXT_LINK_SX, styles.link]}
               data-testid={`${testId}-open-all`}
             >
               Manage Schedules
