@@ -101,6 +101,11 @@ vi.mock('../SchedulesTable', () => ({
 
 const lastArgs = () => mocks.useGetScheduleListQuery.mock.calls.at(-1)[0];
 
+const listAnswer = status => ({
+  currentData: { total: 1, rows: [{ id: 1, name: 'Nightly', last_run_status: status }] },
+  isError: false,
+});
+
 describe('EL-7011 US-26 SchedulesPage', () => {
   beforeEach(() => {
     mocks.useSelectedProjectId.mockReturnValue(5);
@@ -300,14 +305,19 @@ describe('EL-7011 US-26 SchedulesPage', () => {
   });
 
   it('EL-7011 R2.3 polls every 10 seconds while a row runs and stops after', () => {
-    const answer = status => ({
-      currentData: { total: 1, rows: [{ id: 1, name: 'Nightly', last_run_status: status }] },
-      isError: false,
-    });
-    mocks.useGetScheduleListQuery.mockReturnValue(answer('running'));
+    mocks.useGetScheduleListQuery.mockReturnValue(listAnswer('running'));
     const { rerender } = render(<SchedulesPage />);
     expect(mocks.useGetScheduleListQuery.mock.calls.at(-1)[1]).toMatchObject({ pollingInterval: 10000 });
-    mocks.useGetScheduleListQuery.mockReturnValue(answer('success'));
+    mocks.useGetScheduleListQuery.mockReturnValue(listAnswer('success'));
+    rerender(<SchedulesPage />);
+    expect(mocks.useGetScheduleListQuery.mock.calls.at(-1)[1]).toMatchObject({ pollingInterval: 0 });
+  });
+
+  it('BUG-35 US-28 R2.5 polls after Run now shows Running and stops when the run waits for approval', () => {
+    mocks.useGetScheduleListQuery.mockReturnValue(listAnswer('running'));
+    const { rerender } = render(<SchedulesPage />);
+    expect(mocks.useGetScheduleListQuery.mock.calls.at(-1)[1]).toMatchObject({ pollingInterval: 10000 });
+    mocks.useGetScheduleListQuery.mockReturnValue(listAnswer('waiting_for_approval'));
     rerender(<SchedulesPage />);
     expect(mocks.useGetScheduleListQuery.mock.calls.at(-1)[1]).toMatchObject({ pollingInterval: 0 });
   });

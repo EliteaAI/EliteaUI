@@ -243,6 +243,25 @@ describe('EL-7011 US-26 SchedulesTable', () => {
     expect(within(cell).getByText(`why ${status}`)).toBeInTheDocument();
   });
 
+  it.each([
+    ['running', 'Running'],
+    ['waiting_for_approval', 'Waiting for input'], // the owner's label for the approval wait
+  ])('BUG-35 US-28 R2.5 shows %s in the Last run cell from last_run_status', (status, label) => {
+    renderTable([makeRow({ last_run_status: status })]);
+    const cell = screen.getByTestId('schedule-column-value-last_run');
+    expect(within(cell).getByText(label)).toBeInTheDocument();
+  });
+
+  it('BUG-35 US-28 R2.5 refetches for a Running row but not for a row that only waits for approval', () => {
+    expect(getPollingInterval([makeRow({ last_run_status: 'waiting_for_approval' })])).toBe(0);
+    expect(
+      getPollingInterval([
+        makeRow({ last_run_status: 'waiting_for_approval' }),
+        makeRow({ id: 2, last_run_status: 'running' }),
+      ]),
+    ).toBe(10000);
+  });
+
   it('R2.5 shows no reason for a successful last run', () => {
     renderTable([makeRow({ last_run_reason: 'ignored' })]);
     expect(screen.queryByText('ignored')).toBeNull();
