@@ -74,6 +74,8 @@ const EntityScheduleCard = memo(props => {
         label="Last run"
         text={lastRun}
         chip={
+          // A status without a run time is stale data: "Never run" carries no chip (TC-US58-08)
+          row.last_run &&
           row.last_run_status && (
             <ScheduleRunStatusChip
               status={row.last_run_status}

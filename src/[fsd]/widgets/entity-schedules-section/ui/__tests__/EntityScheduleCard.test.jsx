@@ -181,6 +181,13 @@ describe('EntityScheduleCard EL-7011 US-35', () => {
     expect(screen.getByTestId('schedule-7-menu-button')).toBeInTheDocument();
   });
 
+  it('TC-US58-08 R2.2 EL-7011 shows no chip next to "Never run" when the row has a status but no run time', () => {
+    renderCard({ last_run: null, last_run_status: 'success' });
+
+    expect(statusChip()).not.toBeInTheDocument();
+    expect(cardText()).toMatch(/Last run:\s*Never run/);
+  });
+
   it('R2.6 shows the run status chip of the Runs panel: Failed, Waiting for input and Running', () => {
     renderCard({ last_run_status: 'failed' });
     expect(statusChip()).toHaveTextContent('Failed');
