@@ -124,9 +124,12 @@ ScheduleRunLog.displayName = 'ScheduleRunLog';
 
 /** @type {MuiSx} */
 const scheduleRunLogStyles = () => ({
-  // 16 lines of 1.375 rem, then it scrolls inside
+  // 16 lines of 1.375 rem (or 40 % of the window height), then it scrolls inside. In the fixed-height right
+  // block (CR-21 option A) it may shrink to 5 lines (5 x 22 px + 28 px padding), never further
   root: ({ palette }) => ({
-    maxHeight: '22rem',
+    flex: '0 1 auto',
+    minHeight: '8.625rem',
+    maxHeight: 'min(22rem, 40dvh)',
     overflowY: 'auto',
     padding: '0.75rem 1rem',
     borderRadius: '0.5rem',

@@ -3,11 +3,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { RunHistoryApi } from '@/[fsd]/entities/run-history/api';
 import { useGetScheduleRunQuery, useGetScheduleRunsQuery } from '@/[fsd]/entities/schedule';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
-import { ROLES } from '@/common/constants';
 import { convertConversationToChatHistory } from '@/common/convertChatConversationMessages';
 import { buildErrorMessage } from '@/common/utils.jsx';
 
-import { isRunActive } from '../helpers';
+import { findRunAnswer, isRunActive } from '../helpers';
 
 const POLLING_INTERVAL_MS = 3000;
 const RUN_POLLING_INTERVAL_MS = 2000;
@@ -19,14 +18,32 @@ const NO_RUNS = [];
 
 const isRunning = runs => runs?.some(run => run.status === 'running');
 
+// The page asks before its schedule has loaded; a missing schedule has no runs to load
+const toRunsArgs = (projectId, scheduleId) => ({
+  args: { projectId, scheduleId, ...RUNS_PAGE },
+  skip: !projectId || scheduleId == null,
+});
+
+// True once the runs of the schedule have arrived, an empty list included (CR-21 scroll and focus wait for it)
+export const useScheduleRunsLoaded = scheduleId => {
+  const projectId = useSelectedProjectId();
+  const { args, skip } = toRunsArgs(projectId, scheduleId);
+  return !!useGetScheduleRunsQuery(args, { skip }).currentData;
+};
+
+// The run total the list API sends with the page; undefined until the runs arrive (CR-21 runs count)
+export const useScheduleRunsTotal = scheduleId => {
+  const projectId = useSelectedProjectId();
+  const { args, skip } = toRunsArgs(projectId, scheduleId);
+  return useGetScheduleRunsQuery(args, { skip }).currentData?.total;
+};
+
 // The runs of one schedule, refreshed every 3 seconds while one of them is running (R4.3, R4.4)
 export const useScheduleRuns = scheduleId => {
   const projectId = useSelectedProjectId();
   const { toastError } = useToast();
 
-  const args = { projectId, scheduleId, ...RUNS_PAGE };
-  // The page asks before its schedule has loaded; a missing schedule has no runs to load
-  const skip = !projectId || scheduleId == null;
+  const { args, skip } = toRunsArgs(projectId, scheduleId);
   const { currentData, isError, error } = useGetScheduleRunsQuery(args, { skip });
   const runs = currentData?.rows ?? NO_RUNS;
   const polling = !isError && isRunning(runs);
@@ -85,7 +102,7 @@ export const useScheduleRunConversation = run => {
     return {
       conversationUuid: currentData?.uuid,
       pausedMessageId: messages.at(-1)?.id,
-      answer: messages.findLast(message => message.role === ROLES.Assistant && message.content)?.content,
+      answer: findRunAnswer(messages),
     };
   }, [currentData]);
 };
