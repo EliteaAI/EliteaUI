@@ -11,13 +11,15 @@ vi.mock('react-redux', () => ({
   useSelector: selector => selector({ user: { personal_project_id: 99 } }),
 }));
 vi.mock('@/api/admin', () => ({ useUserListQuery: mockUserListQuery }));
-vi.mock('../useSelectedProject.hooks', () => ({ useSelectedProjectId: () => 1 }));
+const mockProjectId = vi.hoisted(() => ({ current: 1 }));
+vi.mock('../useSelectedProject.hooks', () => ({ useSelectedProjectId: () => mockProjectId.current }));
 
 const PAGE_SIZE = 20;
 const requestedPages = () => mockUserListQuery.mock.calls.map(([args]) => args.page);
 
 describe('useUserList pagination', () => {
   beforeEach(() => {
+    mockProjectId.current = 1;
     mockUserListQuery.mockReset();
     mockUserListQuery.mockReturnValue({ data: { rows: [] }, isFetching: false });
   });
@@ -40,5 +42,40 @@ describe('useUserList pagination', () => {
       expect(args.params.query).toBe('bob');
       expect(args.page).toBe(0);
     });
+  });
+
+  const scrollToPageTwo = props => {
+    const hook = renderHook(p => useUserList({ pageSize: PAGE_SIZE, ...p }), { initialProps: props });
+    act(() => hook.result.current.onLoadMoreUsers());
+    act(() => hook.result.current.onLoadMoreUsers());
+    expect(requestedPages().at(-1)).toBe(2);
+    return hook;
+  };
+
+  it('starts at page 0 when the query returns to an earlier value', () => {
+    const { rerender } = scrollToPageTwo({ query: 'ann' });
+    rerender({ query: 'bob' });
+    rerender({ query: 'ann' });
+    expect(requestedPages().at(-1)).toBe(0);
+  });
+
+  it('starts at page 0 when the tag filter changes', () => {
+    const tagsA = ['a'];
+    const tagsB = ['b'];
+    const { rerender } = scrollToPageTwo({ query: 'ann', selectedTagIds: tagsA });
+    rerender({ query: 'ann', selectedTagIds: tagsB });
+    expect(requestedPages().at(-1)).toBe(0);
+    rerender({ query: 'ann', selectedTagIds: tagsA });
+    expect(requestedPages().at(-1)).toBe(0);
+  });
+
+  it('starts at page 0 when the project changes', () => {
+    const { rerender } = scrollToPageTwo({ query: 'ann' });
+    mockProjectId.current = 2;
+    rerender({ query: 'ann' });
+    expect(requestedPages().at(-1)).toBe(0);
+    mockProjectId.current = 1;
+    rerender({ query: 'ann' });
+    expect(requestedPages().at(-1)).toBe(0);
   });
 });

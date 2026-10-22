@@ -9,15 +9,17 @@ import { useSelectedProjectId } from './useSelectedProject.hooks';
 export const useUserList = ({ sortBy, sortOrder, query, pageSize, selectedTagIds, forceSkip = false }) => {
   const { personal_project_id: privateProjectId } = useSelector(state => state.user);
   const projectId = useSelectedProjectId();
-  // The page belongs to the filters it was set for. A change of filters drops it in the same render,
-  // so the first request after a change never carries the old offset.
+  // The page belongs to the filters it was set for. When they change, reset the stored state in the
+  // same render, so the first request never carries the old offset and a return to an old filter starts at 0.
   const [pageState, setPageState] = useState({ page: 0, projectId, query, selectedTagIds });
-  const page =
-    pageState.projectId === projectId &&
-    pageState.query === query &&
-    pageState.selectedTagIds === selectedTagIds
-      ? pageState.page
-      : 0;
+  const filtersChanged =
+    pageState.projectId !== projectId ||
+    pageState.query !== query ||
+    pageState.selectedTagIds !== selectedTagIds;
+  if (filtersChanged) {
+    setPageState({ page: 0, projectId, query, selectedTagIds });
+  }
+  const page = filtersChanged ? 0 : pageState.page;
 
   const { data, error, isError, isLoading, isFetching } = useUserListQuery(
     {
