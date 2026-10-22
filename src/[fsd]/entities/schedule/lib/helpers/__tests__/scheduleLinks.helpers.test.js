@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildEntityEditorLink,
   buildScheduleFormLink,
+  buildScheduleHistoryLink,
   buildScheduleRunsLink,
   buildSchedulesListLink,
 } from '../scheduleLinks.helpers';
@@ -63,6 +64,17 @@ describe('scheduleLinks.helpers EL-7011 US-35', () => {
   it('TC-US35-18 R3.6 "Open all in Schedules" filters the Schedules page by the entity', () => {
     expect(buildSchedulesListLink({ entityType: 'agent', entityId: 12 })).toBe(
       '/settings/schedules?entityType=agent&entityId=12',
+    );
+  });
+});
+
+describe('buildScheduleHistoryLink (EL-7011 CR-22 R4.3)', () => {
+  it('CR-22 buildScheduleHistoryLink builds the pipeline history URL with schedule_id', () => {
+    expect(buildScheduleHistoryLink({ id: 4, entity_type: 'pipeline', application_id: 80 })).toBe(
+      '/pipelines/all/80/history?schedule_id=4',
+    );
+    expect(buildScheduleHistoryLink({ id: 5, entity_type: 'agent', application_id: 7 })).toBe(
+      '/agents/all/7/history?schedule_id=5',
     );
   });
 });

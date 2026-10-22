@@ -187,6 +187,7 @@ describe('ScheduleDetailPage EL-7011', () => {
       onExpandedChange: view.setRunsExpanded,
       announcement: view.announcement,
       runNotFound: false,
+      fullHistoryLink: '/agents/all/3/history?schedule_id=9', // CR-22 (US-32 R6.3)
     });
   });
 

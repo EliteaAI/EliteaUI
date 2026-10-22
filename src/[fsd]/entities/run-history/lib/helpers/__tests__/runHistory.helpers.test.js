@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   RUN_ANALYTICS_TIMESTAMP_FORMAT,
+  SCHEDULE_RUN_COLUMNS,
   byNewestRunFirst,
   compareRunDuration,
   compareRunTimestamp,
@@ -198,5 +199,28 @@ describe('toExecutionTypeRow (EL-7011 US-38)', () => {
     expect(toExecutionTypeRow({ id: 2 })).toEqual({ id: 2, event_label: '-' });
     expect(toExecutionTypeRow({ execution_type: 'bogus' }).event_label).toBe('-');
     expect(toExecutionTypeRow({ execution_type: null }).event_label).toBe('-');
+  });
+});
+
+describe('CR-22 schedule runs in Agent and Pipeline Run History (EL-7011 US-38)', () => {
+  it('CR-22 R3.4 a test-trigger schedule run reads Test, also in the Execution type column', () => {
+    const row = { id: 9, execution_type: 'schedule_manual', schedule_run: { trigger: 'test' } };
+    expect(toExecutionTypeRow(row).event_label).toBe('Test');
+    expect(toExecutionTypeRow({ ...row, schedule_run: { trigger: 'manual' } }).event_label).toBe('Run now');
+  });
+
+  it('CR-22 R3.1-R3.3 the Schedule and Status cells read the run record, or "-" without one', () => {
+    const [schedule, status] = SCHEDULE_RUN_COLUMNS;
+    const run = { schedule_run: { schedule_name: 'Daily digest', status: 'waiting_for_approval' } };
+    expect([schedule.label, status.label]).toEqual(['Schedule', 'Status']);
+    expect([schedule.render(run), status.render(run)]).toEqual(['Daily digest', 'Waiting for input']);
+    expect([schedule.render({ schedule_run: null }), status.render({})]).toEqual(['-', '-']);
+  });
+
+  it('CR-22 D7 extra columns use fixed rem widths after Date; without them the tracks stay fractional', () => {
+    expect(resolveRunHistoryColumns(false, true, SCHEDULE_RUN_COLUMNS)).toBe(
+      '7.5rem 9rem 7rem 8rem 5rem 5rem',
+    );
+    expect(resolveRunHistoryColumns(false, true)).toBe('1.5fr 1.5fr 1.5fr 1fr');
   });
 });

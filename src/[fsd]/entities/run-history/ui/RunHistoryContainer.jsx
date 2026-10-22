@@ -37,6 +37,7 @@ const RunHistoryContainer = memo(props => {
     onHitlResume,
     shareOpensHistoryTab = false,
     queryParams = NO_QUERY_PARAMS,
+    extraColumns,
     // 'side': the detail is right of the list (full pages); 'stacked': below it, for a narrow parent
     layout = 'side',
   } = props;
@@ -225,6 +226,7 @@ const RunHistoryContainer = memo(props => {
             hasEvent={Boolean(decorateRow)}
             eventColumnLabel={eventColumnLabel}
             shareOpensHistoryTab={shareOpensHistoryTab}
+            extraColumns={extraColumns}
           />
         </Box>
 

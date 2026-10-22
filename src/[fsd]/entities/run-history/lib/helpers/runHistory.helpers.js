@@ -1,11 +1,27 @@
 import { format, fromUnixTime } from 'date-fns';
 
+import { toRunStatusLabel } from '@/[fsd]/entities/schedule/lib/helpers';
+
 const RUN_TIMESTAMP_FORMAT = 'dd-MM-yyyy, hh:mm a';
 export const RUN_ANALYTICS_TIMESTAMP_FORMAT = 'dd MMM yyyy, hh:mm a';
 // Usage is tagged with `run_id` / `eval_run_id` only from this date; older runs have nothing to show
 const RUN_ANALYTICS_AVAILABLE_FROM = Date.UTC(2026, 8, 30);
 
-export const resolveRunHistoryColumns = (noVersions, hasEvent) => {
+// CR-22 D7: with extra columns the tracks are fixed rem widths: Date, extras, Execution type, Version, Duration
+const FIXED_TRACKS = { date: '7.5rem', event: '8rem', version: '5rem', duration: '5rem' };
+
+export const resolveRunHistoryColumns = (noVersions, hasEvent, extraColumns = []) => {
+  if (extraColumns.length) {
+    const { date, event, version, duration } = FIXED_TRACKS;
+    return [
+      date,
+      ...extraColumns.map(column => column.width),
+      ...(hasEvent ? [event] : []),
+      ...(noVersions ? [] : [version]),
+      duration,
+    ].join(' ');
+  }
+
   const date = '1.5fr';
   const event = hasEvent ? ['1.5fr'] : [];
   const version = noVersions ? [] : ['1.5fr'];
@@ -91,8 +107,21 @@ const EXECUTION_TYPE_LABELS = new Map([
   ['webhook', 'Webhook'],
 ]);
 
-// A missing or unknown type (older runs) renders "-" and the row stays selectable.
+// A missing or unknown type (older runs) renders "-" and the row stays selectable. Run now and Test run both store
+// schedule_manual, so the run record's trigger tells a test apart (CR-22, R3.4)
 export const toExecutionTypeRow = row => ({
   ...row,
-  event_label: EXECUTION_TYPE_LABELS.get(row.execution_type) ?? '-',
+  event_label:
+    row.schedule_run?.trigger === 'test' ? 'Test' : (EXECUTION_TYPE_LABELS.get(row.execution_type) ?? '-'),
 });
+
+// CR-22 R3.1-R3.3: the Schedule and Status columns of Agent and Pipeline Run History; '-' without a run record
+export const SCHEDULE_RUN_COLUMNS = [
+  { id: 'schedule', label: 'Schedule', width: '9rem', render: row => row.schedule_run?.schedule_name ?? '-' },
+  {
+    id: 'status',
+    label: 'Status',
+    width: '7rem',
+    render: row => (row.schedule_run ? toRunStatusLabel(row.schedule_run.status) : '-'),
+  },
+];
