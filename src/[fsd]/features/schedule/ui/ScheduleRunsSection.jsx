@@ -4,7 +4,7 @@ import { Link as RouterLink } from 'react-router-dom';
 
 import { Box, Link, MenuItem, Select, Typography } from '@mui/material';
 
-import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
+import { AccordionConstants, TextLinkConstants } from '@/[fsd]/shared/lib/constants';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 import BannerMessage from '@/[fsd]/shared/ui/banner-message/BannerMessage';
 
@@ -113,7 +113,7 @@ const ScheduleRunsSection = memo(
                       component={RouterLink}
                       to={fullHistoryLink}
                       variant="bodyMedium"
-                      sx={styles.fullHistory}
+                      sx={[TextLinkConstants.TEXT_LINK_SX, styles.fullHistory]}
                     >
                       Open full history
                     </Link>
