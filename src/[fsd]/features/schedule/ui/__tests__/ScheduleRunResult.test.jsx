@@ -81,6 +81,23 @@ describe('ScheduleRunResult EL-7011 owner CR 2026-10-21', () => {
   });
 
   // CR-21 option A: below a 1000 px window height the answer keeps 2 lines, so the card fits the right block
+  // CR-21 fit spec: one header row, so the card stays 88 px with 2 answer lines under 1000 px window height
+  it('keeps the header on one row: the stats get an ellipsis and a tooltip, the link does not shrink', () => {
+    renderResult();
+    const header = screen.getByTestId('schedule-run-status').parentElement;
+    const summary = screen.getByTestId('schedule-run-summary');
+
+    expect(header).toHaveStyle({ flexWrap: 'nowrap' });
+    expect(summary).toHaveStyle({
+      flexShrink: '1',
+      whiteSpace: 'nowrap',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+    });
+    expect(summary).toHaveAttribute('aria-label', '38 s · 2,140 tokens · $0.0300');
+    expect(screen.getByRole('link', { name: /Open conversation/ })).toHaveStyle({ flexShrink: '0' });
+  });
+
   it('clamps the answer to 4 lines, and to 2 lines in a window under 62.5 rem high', () => {
     renderResult();
     const answer = screen.getByTestId('schedule-run-answer');

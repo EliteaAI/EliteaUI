@@ -115,6 +115,16 @@ describe('ScheduleRunsSection EL-7011 CR-21', () => {
     expect(screen.getByTestId('schedule-runs-count')).toHaveTextContent('0');
   });
 
+  it('CR-21 places the count right after the title, before the Sort select', () => {
+    renderSection({ total: 6 });
+    const title = screen.getByText('RUNS OF THIS SCHEDULE', { exact: false });
+    const count = screen.getByTestId('schedule-runs-count');
+    expect(title).toContainElement(count);
+    expect(title).toHaveTextContent(/^RUNS OF THIS SCHEDULE\s*6$/);
+    const sort = screen.getByRole('combobox', { name: 'Sort runs' });
+    expect(count.compareDocumentPosition(sort) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it('CR-21 shows no count while the total is unknown', () => {
     renderSection();
     expect(screen.queryByTestId('schedule-runs-count')).toBeNull();
