@@ -66,10 +66,11 @@ const TIER_WIDTHS = {
     enabled: '5.5rem',
     actions: '4.25rem',
   },
-  // CR-23 D12: Last run takes the Next run width; the regular Owner gives 0.75 rem for it
+  // CR-23 D12: Last run takes the Next run width; the regular Owner gives 0.75 rem for it. 7.75 rem fits the
+  // widest date ("Nov, 30 23:30") with the cell padding (live check at 1440 px)
   regular: {
-    next_run: '7.25rem',
-    last_run: '7.25rem',
+    next_run: '7.75rem',
+    last_run: '7.75rem',
     owner: '6.75rem',
     enabled: '5.5rem',
     actions: '4.25rem',
