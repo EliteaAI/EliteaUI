@@ -83,12 +83,14 @@ const scheduleRunResultStyles = () => ({
   header: { display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' },
   link: { display: 'inline-flex', alignItems: 'center', gap: '0.25rem', marginLeft: 'auto' },
   linkIcon: { fontSize: '0.875rem' },
+  // CR-21 option A: 2 answer lines under a 1000 px window height, so the card fits the right block
   answer: {
     whiteSpace: 'pre-line',
     display: '-webkit-box',
     WebkitBoxOrient: 'vertical',
     WebkitLineClamp: '4',
     overflow: 'hidden',
+    '@media (max-height: 62.4375rem)': { WebkitLineClamp: '2' },
   },
 });
 

@@ -1,9 +1,11 @@
 import { forwardRef, memo, useMemo } from 'react';
 
-import { Box, Link, Typography } from '@mui/material';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import { Box, Link, Tooltip, Typography } from '@mui/material';
 
 import { formatRunTimestamp } from '@/[fsd]/entities/run-history/lib/helpers';
 import BannerMessage from '@/[fsd]/shared/ui/banner-message/BannerMessage';
+import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import ViewRunHistoryButton from '@/[fsd]/shared/ui/button/ViewRunHistoryButton';
 
 import { findNewestTestRun, isRunActive } from '../lib/helpers';
@@ -16,6 +18,7 @@ import ScheduleRunStatusChip from './ScheduleRunStatusChip';
 
 const INFO_TEXT =
   "A test run uses the same account, tools and risk check as a scheduled run. It shows the log here and is marked as 'test'.";
+const NOTE_TEXT = 'A test never changes Last run or Next run.';
 const VIEWED_RUN_FORMAT = 'd MMM HH:mm';
 const NO_EVENTS = [];
 
@@ -46,6 +49,9 @@ const ScheduleRunsPanel = memo(
 
     // R3.3: without the run action the panel shows the log and the result only
     const showTestTools = !viewedRun && !!schedule.allowed_actions?.includes('run');
+    // CR-21 option A: the info box shows before the first test run only; after it the "i" button holds it
+    const showInfoBox = showTestTools && !newestTestRun;
+    const showInfoButton = showTestTools && !!newestTestRun;
     // A starting test hides the previous test, which is still the newest until the list loads again
     const starting = !viewedRun && testRunPending;
     const shownRun = starting ? undefined : run;
@@ -72,6 +78,24 @@ const ScheduleRunsPanel = memo(
               ? `Run ${formatRunTimestamp(viewedRun.started_at, VIEWED_RUN_FORMAT)} · ${viewedRun.trigger}`
               : 'Test schedule'}
           </Typography>
+          {showInfoButton && (
+            <Tooltip
+              describeChild
+              title={
+                <Box sx={styles.tooltip}>
+                  <Typography variant="bodySmall">{INFO_TEXT}</Typography>
+                  <Typography variant="bodySmall">{NOTE_TEXT}</Typography>
+                </Box>
+              }
+            >
+              <BaseBtn
+                variant={BUTTON_VARIANTS.tertiary}
+                startIcon={<InfoOutlinedIcon />}
+                aria-label="About test runs"
+                sx={styles.infoButton}
+              />
+            </Tooltip>
+          )}
           {viewedRun && (
             <Link
               component="button"
@@ -94,9 +118,10 @@ const ScheduleRunsPanel = memo(
           data-testid="schedule-runs-panel-body"
           sx={styles.body}
         >
-          {showTestTools && (
+          {showInfoBox && (
             <BannerMessage variant="info">
               <Typography variant="bodySmall">{INFO_TEXT}</Typography>
+              <Typography variant="bodySmall">{NOTE_TEXT}</Typography>
             </BannerMessage>
           )}
           {testRunError && (
@@ -166,15 +191,10 @@ const ScheduleRunsPanel = memo(
               versionLabel={versionNames[schedule.version_id]}
               running={active}
               pending={testRunPending}
+              description={NOTE_TEXT}
               onTestRun={onTestRun}
             />
           )}
-          <Typography
-            variant="bodySmall"
-            color="text.secondary"
-          >
-            A test never changes Last run or Next run.
-          </Typography>
         </Box>
       </Box>
     );
@@ -186,11 +206,12 @@ ScheduleRunsPanel.displayName = 'ScheduleRunsPanel';
 /** @type {MuiSx} */
 const scheduleRunsPanelStyles = () => ({
   // In the sticky block (xl, a tall window) the card takes the free height and its body scrolls
+  // CR-21 option A: 1 rem on top and no bottom padding, because the pinned prompt line has its own
   root: ({ palette, breakpoints }) => ({
     display: 'flex',
     flexDirection: 'column',
-    gap: '1rem',
-    padding: '1.5rem',
+    gap: '0.75rem',
+    padding: '1rem 1.5rem 0',
     borderRadius: '1rem',
     border: `0.0625rem solid ${palette.border.lines}`,
     backgroundColor: palette.background.default.tertiary,
@@ -204,11 +225,22 @@ const scheduleRunsPanelStyles = () => ({
     flex: '1 1 auto',
     minHeight: 0,
     overflowY: 'auto',
+    paddingBottom: '0.75rem',
   },
-  footer: { display: 'flex', flexDirection: 'column', gap: '1rem', flexShrink: 0 },
-  header: { display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' },
+  // One pinned line of 61 px: a 1 px top border and 0.75 rem above and below the 36 px row
+  footer: ({ palette }) => ({
+    display: 'flex',
+    flexDirection: 'column',
+    flexShrink: 0,
+    padding: '0.75rem 0',
+    borderTop: `0.0625rem solid ${palette.border.lines}`,
+    '&:empty': { display: 'none' },
+  }),
+  header: { display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', minHeight: '2.25rem' },
   title: ({ palette }) => ({ fontSize: '1.125rem', fontWeight: 600, color: palette.text.primary }),
   headerAction: { marginLeft: 'auto' },
+  infoButton: { minWidth: '2.75rem', minHeight: '2.75rem', margin: '-0.25rem' },
+  tooltip: { display: 'flex', flexDirection: 'column', gap: '0.5rem' },
   logHeader: {
     display: 'flex',
     alignItems: 'center',

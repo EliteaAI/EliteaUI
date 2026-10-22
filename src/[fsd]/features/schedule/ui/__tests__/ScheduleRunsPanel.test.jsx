@@ -89,16 +89,44 @@ describe('ScheduleRunsPanel EL-7011 owner CR 2026-10-21 test panel log', () => {
     vi.clearAllMocks();
   });
 
-  it('has the Test schedule header, Run History, the info box and the note, and no tab switch', () => {
+  it('has the Test schedule header and Run History, and no tab switch', () => {
     const { onRunHistory } = renderPanel();
 
     expect(screen.getByRole('heading', { name: 'Test schedule' })).toBeInTheDocument();
-    expect(screen.getByText(INFO)).toBeInTheDocument();
-    expect(screen.getByText(NOTE)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Runs' })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /run history/i }));
     expect(onRunHistory).toHaveBeenCalledTimes(1);
+  });
+
+  // CR-21 option A: the info box shows only before the first test run; after it the "i" button holds it
+  it('CR-21 shows the info box with the note before the first test run, and no "i" button', () => {
+    mockDetail(undefined);
+    renderPanel({ runs: [cron] });
+
+    expect(screen.getByText(INFO)).toBeInTheDocument();
+    // the visible note in the info box, and the screen-reader description of Run test
+    expect(screen.getAllByText(NOTE)).toHaveLength(2);
+    expect(screen.queryByRole('button', { name: 'About test runs' })).not.toBeInTheDocument();
+  });
+
+  it('CR-21 hides the info box after the first test run and shows the info and the note in the "i" tooltip', async () => {
+    renderPanel();
+
+    expect(screen.queryByText(INFO)).not.toBeInTheDocument();
+    // only the screen-reader description of Run test is left
+    expect(screen.getAllByText(NOTE)).toHaveLength(1);
+    fireEvent.mouseOver(screen.getByRole('button', { name: 'About test runs' }));
+    const tooltip = await screen.findByRole('tooltip');
+    expect(tooltip).toHaveTextContent(INFO);
+    expect(tooltip).toHaveTextContent(NOTE);
+  });
+
+  it('CR-21 reads the note with Run test', () => {
+    mockDetail({ ...olderTest, events: [STARTED, FINISHED] });
+    renderPanel({ runs: [olderTest] });
+
+    expect(runTest()).toHaveAccessibleDescription(NOTE);
   });
 
   it('follows the newest test run of the schedule and streams its log', () => {
@@ -126,6 +154,7 @@ describe('ScheduleRunsPanel EL-7011 owner CR 2026-10-21 test panel log', () => {
 
   it('shows the prompt box with the version and variable chips', () => {
     renderPanel();
+    fireEvent.click(screen.getByRole('button', { name: 'Show the full prompt' }));
 
     expect(screen.getByText('Prompt from the schedule')).toBeInTheDocument();
     expect(screen.getAllByTestId('schedule-prompt-chip').map(chip => chip.textContent)).toEqual([
@@ -227,7 +256,7 @@ describe('ScheduleRunsPanel EL-7011 owner CR 2026-10-21 test panel log', () => {
     expect(screen.getByText('A run of this schedule is active')).toBeInTheDocument();
   });
 
-  it('CR-21 scrolls the body (info box, log, result) inside the card and pins the prompt box with Run test', () => {
+  it('CR-21 scrolls the body (log, result) inside the card and pins the prompt line with Run test', () => {
     mockDetail({ ...newestTest, events: [STARTED] });
     renderPanel();
     const body = screen.getByTestId('schedule-runs-panel-body');
@@ -235,10 +264,8 @@ describe('ScheduleRunsPanel EL-7011 owner CR 2026-10-21 test panel log', () => {
 
     expect(getComputedStyle(body).overflowY).toBe('auto');
     expect(body).toContainElement(screen.getByTestId('schedule-run-log'));
-    expect(body).toContainElement(screen.getByText(INFO));
     expect(body).not.toContainElement(runTest());
     expect(footer).toContainElement(runTest());
-    expect(footer).toContainElement(screen.getByText(NOTE));
   });
 
   it('CR-21 leaves room under the page header for a scroll to the panel header', () => {
