@@ -220,10 +220,10 @@ describe('CR-22 schedule runs in Agent and Pipeline Run History (EL-7011 US-38)'
   it('CR-22 D7 extra columns use fixed rem widths after Date; without them the tracks stay fractional', () => {
     // CR-22 review r5: Execution type and Version fit their header labels with the sort icon (live check at 1536 px)
     expect(resolveRunHistoryColumns(false, true, SCHEDULE_RUN_COLUMNS)).toBe(
-      '7.5rem 9rem 7rem 10.25rem 7.25rem minmax(5.5rem, 1fr)',
+      '7.5rem 8.5rem 7rem 10.25rem 7.25rem minmax(7.25rem, 1fr)',
     );
     expect(resolveRunHistoryColumns(true, true, SCHEDULE_RUN_COLUMNS)).toBe(
-      '7.5rem 9rem 7rem 10.25rem minmax(5.5rem, 1fr)',
+      '7.5rem 8.5rem 7rem 10.25rem minmax(7.25rem, 1fr)',
     );
     expect(resolveRunHistoryColumns(false, true)).toBe('1.5fr 1.5fr 1.5fr 1fr');
   });
