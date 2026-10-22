@@ -293,6 +293,10 @@ const ConfigurationTab = memo(props => {
     }, 0);
   }, []);
 
+  const handleTestPipeline = useCallback(() => {
+    chatPanelRef.current?.expand();
+  }, []);
+
   const handleStopRunClick = useCallback(() => {
     chatPanelRef.current?.stopRun();
   }, []);
@@ -358,6 +362,7 @@ const ConfigurationTab = memo(props => {
             setYamlDirty={setYamlDirty}
             ref={editorPanelRef}
             stopRun={handleStopRunClick}
+            onTestPipeline={handleTestPipeline}
             sx={styles.editorPanel}
           />
           <ChatPanel

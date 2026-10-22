@@ -9,7 +9,7 @@ import PipelineConfigurationForm from '@/pages/Applications/Components/Applicati
 import { ContentContainer } from '@/pages/Common/index.js';
 import { useTheme } from '@emotion/react';
 
-const GeneralFormPanel = ({ applicationId, onCollapsed }) => {
+const GeneralFormPanel = ({ applicationId, onCollapsed, isCreateMode }) => {
   const theme = useTheme();
   const viewMode = useViewMode();
 
@@ -77,6 +77,7 @@ const GeneralFormPanel = ({ applicationId, onCollapsed }) => {
             <PipelineConfigurationForm
               applicationId={applicationId}
               viewMode={viewMode}
+              isCreateMode={isCreateMode}
             />
           </>
         )}

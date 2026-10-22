@@ -3,7 +3,7 @@ import { useCallback, useMemo } from 'react';
 import { useFormikContext } from 'formik';
 import { useSelector } from 'react-redux';
 
-import { useFormDirtyExcluding, useIsFrom } from '@/[fsd]/shared/lib/hooks';
+import { useFormDirtyExcluding, useIsFrom, useIsFromPipelineDetail } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
 import useSaveVersion from '@/hooks/application/useSaveVersion';
@@ -15,6 +15,7 @@ export default function SaveApplicationButton({ onSuccess, isAgent }) {
   const isYamlCodeDirty = useIsPipelineYamlCodeDirty();
   const { values } = useFormikContext();
   const isFromChat = useIsFrom(RouteDefinitions.Chat);
+  const isFromPipeline = useIsFromPipelineDetail();
   const { stateValidationErrors } = useSelector(selectActivePipeline);
 
   const isFormDirtyExcluding = useFormDirtyExcluding();
@@ -43,8 +44,8 @@ export default function SaveApplicationButton({ onSuccess, isAgent }) {
       return isSaving || hasNoChanges || hasStateErrors;
     }
 
-    // For standalone pages, validate required fields
-    const hasMissingFields = !values?.name || !values?.description;
+    // For standalone pages, validate required fields (description is optional for pipelines)
+    const hasMissingFields = !values?.name || (!isFromPipeline && !values?.description);
     return isSaving || hasNoChanges || hasMissingFields || hasStateErrors;
   }, [
     isFormDirtyExcluding,
@@ -54,6 +55,7 @@ export default function SaveApplicationButton({ onSuccess, isAgent }) {
     values?.id,
     isSaving,
     isFromChat,
+    isFromPipeline,
     hasStateErrors,
   ]);
 

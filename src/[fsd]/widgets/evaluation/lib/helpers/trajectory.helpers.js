@@ -165,7 +165,8 @@ export const getCaseGuardrailChip = execution => {
   if (execution.status === CASE_EXECUTION_STATUS.guardrailBlocked) {
     return {
       label: 'Input blocked',
-      tooltip: 'The input guardrail found a credential or personal data in the case input, so the agent was not run.',
+      tooltip:
+        'The input guardrail found a credential or personal data in the case input, so the agent was not run.',
     };
   }
   if (execution.status === CASE_EXECUTION_STATUS.guardrailPaused) {

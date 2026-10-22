@@ -101,6 +101,10 @@ const ChatPanel = forwardRef((props, ref) => {
 
   useImperativeHandle(ref, () => ({
     stopRun: () => boxRef.current?.stopAll(),
+    expand: () => {
+      setCollapsed(false);
+      onCollapsed?.(false);
+    },
   }));
 
   const onClickCollapsed = useCallback(() => {

@@ -291,7 +291,9 @@ describe('input guardrail socket events (#6886)', () => {
       },
     ];
     const next = applyInputGuardrailBlocked(history, { messageId: 'a-1', verdict: blockVerdict });
-    expect(next[0].hitlInterrupts).toEqual([{ tool_call_id: 't1', decided: false, queued: false, hidden: false }]);
+    expect(next[0].hitlInterrupts).toEqual([
+      { tool_call_id: 't1', decided: false, queued: false, hidden: false },
+    ]);
     expect(next[0].hitlInterrupt).toBe(next[0].hitlInterrupts[0]);
     expect(next[0].hitlResumeSnapshot).toBeUndefined();
     expect(next[0].resumingAgentPaths).toBeUndefined();

@@ -145,7 +145,7 @@ const ApplicationEditForm = memo(props => {
                   label="Description"
                   id="description"
                   name="description"
-                  required
+                  required={!isFromPipeline}
                   multiline
                   maxRows={15}
                   onChange={formik.handleChange}
