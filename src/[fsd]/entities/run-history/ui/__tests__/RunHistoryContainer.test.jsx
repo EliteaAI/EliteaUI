@@ -422,3 +422,19 @@ describe('RunHistoryContainer EL-7011 US-32 stacked layout', () => {
     expect(screen.queryByTestId('run-history-detail-panel')).not.toBeInTheDocument();
   });
 });
+
+describe('RunHistoryContainer EL-7011 CR-22 list column width', () => {
+  it('CR-22 review r3 widens the list column to 48 rem with the schedule columns, so the panel starts after it', () => {
+    renderContainer('', {
+      extraColumns: [{ id: 'schedule', label: 'Schedule', width: '9rem', render: () => '-' }],
+    });
+
+    expect(screen.getByTestId('run-history-list-column')).toHaveStyle({ maxWidth: '48rem' });
+  });
+
+  it('CR-22 review r3 keeps the 32 rem column for the other histories', () => {
+    renderContainer('');
+
+    expect(screen.getByTestId('run-history-list-column')).toHaveStyle({ maxWidth: '32rem' });
+  });
+});

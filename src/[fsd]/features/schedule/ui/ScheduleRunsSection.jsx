@@ -1,6 +1,8 @@
 import { forwardRef, memo, useCallback, useState } from 'react';
 
-import { Box, MenuItem, Select, Typography } from '@mui/material';
+import { Link as RouterLink } from 'react-router-dom';
+
+import { Box, Link, MenuItem, Select, Typography } from '@mui/material';
 
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
@@ -28,6 +30,7 @@ const ScheduleRunsSection = memo(
       onExpandedChange,
       announcement = '',
       runNotFound = false,
+      fullHistoryLink,
     } = props;
 
     const [sort, setSort] = useState(RUN_SORT_OPTIONS[0].value);
@@ -104,6 +107,17 @@ const ScheduleRunsSection = memo(
                       onOpen={onOpen}
                     />
                   </Box>
+                  {fullHistoryLink && (
+                    // CR-22 (US-32 R6.3): all runs of this schedule in the entity History
+                    <Link
+                      component={RouterLink}
+                      to={fullHistoryLink}
+                      variant="bodyMedium"
+                      sx={styles.fullHistory}
+                    >
+                      Open full history
+                    </Link>
+                  )}
                 </>
               ),
             },
@@ -125,6 +139,11 @@ ScheduleRunsSection.displayName = 'ScheduleRunsSection';
 
 /** @type {MuiSx} */
 const scheduleRunsSectionStyles = () => ({
+  fullHistory: {
+    alignSelf: 'flex-start',
+    flexShrink: 0,
+    padding: '0.5rem 1rem 0',
+  },
   root: ({ palette }) => ({
     flex: '0 1 auto',
     minHeight: 0,

@@ -7,11 +7,13 @@ const ENTITY_ROUTES = {
     editor: RouteDefinitions.ApplicationsDetail,
     create: RouteDefinitions.ApplicationsCreateSchedule,
     detail: RouteDefinitions.ApplicationsScheduleDetail,
+    history: RouteDefinitions.ApplicationsRunHistory,
   },
   pipeline: {
     editor: RouteDefinitions.PipelineDetail,
     create: RouteDefinitions.PipelineCreateSchedule,
     detail: RouteDefinitions.PipelineScheduleDetail,
+    history: RouteDefinitions.PipelineRunHistory,
   },
 };
 
@@ -40,3 +42,10 @@ export const buildScheduleRunsLink = ({ entityType, entityId, tab, scheduleId })
 
 export const buildSchedulesListLink = ({ entityType, entityId }) =>
   `${RouteDefinitions.Schedules}?${new URLSearchParams({ entityType, entityId })}`;
+
+// CR-22 R4.3: the agent or pipeline Run History filtered to one schedule
+export const buildScheduleHistoryLink = schedule =>
+  `${NavigationHelpers.buildRoute(ENTITY_ROUTES[schedule.entity_type].history, {
+    tab: DEFAULT_TAB,
+    agentId: schedule.application_id,
+  })}?${new URLSearchParams({ schedule_id: schedule.id })}`;

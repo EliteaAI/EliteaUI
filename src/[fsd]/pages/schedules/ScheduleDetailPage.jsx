@@ -5,6 +5,7 @@ import { Link as RouterLink, useLocation, useNavigate, useParams } from 'react-r
 import { Box, CircularProgress, Container, Link } from '@mui/material';
 
 import {
+  buildScheduleHistoryLink,
   useGetScheduleQuery,
   useRunScheduleMutation,
   useUpdateScheduleMutation,
@@ -122,6 +123,7 @@ const ScheduleDetailPage = props => {
           onExpandedChange={setRunsExpanded}
           announcement={announcement}
           runNotFound={runNotFound}
+          fullHistoryLink={schedule && buildScheduleHistoryLink(schedule)}
         />
       </Box>
     ),
