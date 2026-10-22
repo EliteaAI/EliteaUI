@@ -96,6 +96,10 @@ describe('ScheduleRunResult EL-7011 owner CR 2026-10-21', () => {
     });
     expect(summary).toHaveAttribute('aria-label', '38 s · 2,140 tokens · $0.0300');
     expect(screen.getByRole('link', { name: /Open conversation/ })).toHaveStyle({ flexShrink: '0' });
+    // BUG-38: the app link colour, not the brand colour
+    expect(screen.getByRole('link', { name: /Open conversation/ })).toHaveStyle({
+      color: theme.palette.text.link,
+    });
   });
 
   it('clamps the answer to 4 lines, and to 2 lines in a window under 62.5 rem high', () => {
