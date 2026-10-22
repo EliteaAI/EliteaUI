@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { act, renderHook } from '@testing-library/react';
 
-import useCreateConfiguration from './useCreateConfiguration';
+import useCreateConfiguration from '../useCreateConfiguration';
 
 const mocks = vi.hoisted(() => ({
   testConnection: vi.fn(),
@@ -96,6 +96,24 @@ describe('useCreateConfiguration test connection', () => {
       message: 'Probe is not allowed.',
       code: 'DENIED_RBAC',
     });
+  });
+
+  it('clears stale field errors when the next probe is refused', async () => {
+    mocks.testConnection.mockResolvedValue({
+      error: { status: 403, data: { success: false, code: 'DENIED_RBAC', message: 'Probe is not allowed.' } },
+    });
+    const setValidationErrorMessages = vi.fn();
+    const setShowValidation = vi.fn();
+    const { onTestConnection } = renderTestConnection({
+      configurationUuid: 'uuid-1',
+      setValidationErrorMessages,
+      setShowValidation,
+    });
+
+    await onTestConnection();
+
+    expect(setValidationErrorMessages).toHaveBeenCalledWith({});
+    expect(setShowValidation).toHaveBeenCalledWith(false);
   });
 
   it('keeps the generic text for a 403 without a code', async () => {

@@ -70,6 +70,19 @@ describe('resolveCredentialLabel', () => {
     expect(label).toBe('Twin B');
   });
 
+  it('ignores a uuid match whose title differs from the saved one', () => {
+    const label = resolveCredentialLabel({
+      configurations: [
+        configuration({ label: 'Other type', elitea_title: 'other', uuid: 'uuid-b' }),
+        configuration({ label: 'Same title' }),
+      ],
+      credential: { elitea_title: 'aasd', private: false, configuration_uuid: 'uuid-b' },
+      personalProjectId: PERSONAL_PROJECT_ID,
+    });
+
+    expect(label).toBe('Same title');
+  });
+
   it('falls back to the title when the saved uuid is not in the list', () => {
     const label = resolveCredentialLabel({
       configurations: [configuration({ uuid: 'uuid-a' })],

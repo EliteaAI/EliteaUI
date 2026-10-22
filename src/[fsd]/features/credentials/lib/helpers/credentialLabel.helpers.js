@@ -7,7 +7,7 @@ export const resolveCredentialLabel = ({ configurations = [], credential, person
   const sameTitle = configurations.filter(configuration => configurationTitle(configuration) === eliteaTitle);
   const match =
     (credential.configuration_uuid &&
-      configurations.find(configuration => configuration.uuid === credential.configuration_uuid)) ||
+      sameTitle.find(configuration => configuration.uuid === credential.configuration_uuid)) ||
     (sameTitle.find(
       configuration => (configuration.project_id === personalProjectId) === Boolean(credential.private),
     ) ??

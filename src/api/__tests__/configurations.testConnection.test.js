@@ -2,8 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { configureStore } from '@reduxjs/toolkit';
 
-import { configurationsApi } from './configurations.js';
-import { eliteaApi } from './eliteaApi.js';
+import { configurationsApi } from '../configurations.js';
+import { eliteaApi } from '../eliteaApi.js';
 
 // Env-dependent app modules; the request shape is all this test reads
 vi.mock('@/common/constants.js', async importOriginal => ({

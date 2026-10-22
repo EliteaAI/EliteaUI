@@ -20,7 +20,7 @@ import { McpAuthModal } from '@/[fsd]/features/mcp/ui';
 import { ToolComponentHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
 import { useFormDirtyExcluding, useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
-import { Button } from '@/[fsd]/shared/ui';
+import { Button, Chip } from '@/[fsd]/shared/ui';
 import { FormViewToggle } from '@/[fsd]/shared/ui/tab-group-button';
 import { PUBLIC_PROJECT_ID, ToolkitViewOptions } from '@/common/constants';
 import { updateObjectByPath } from '@/common/utils.jsx';
@@ -381,13 +381,10 @@ const CredentialForm = memo(props => {
         >
           {typeof apiError === 'string' ? apiError : apiError.message}
           {apiError?.code && (
-            <Box
-              component="span"
-              data-testid="credential-form-api-error-code"
-              sx={styles.errorCodeChip}
-            >
-              {apiError.code}
-            </Box>
+            <Chip.ErrorCodeChip
+              code={apiError.code}
+              testId="credential-form-api-error-code"
+            />
           )}
         </Typography>
       )}
@@ -429,17 +426,6 @@ const credentialFormStyles = isLlmModelForm => ({
     paddingLeft: '0.25rem',
     color: ({ palette }) => `${palette.error.main}`,
   },
-  // Same chip as the chat error card (ErrorTrace)
-  errorCodeChip: ({ palette }) => ({
-    marginLeft: '.75rem',
-    padding: '.125rem .5rem',
-    border: `0.0625rem solid ${palette.border.error}`,
-    borderRadius: '1rem',
-    fontSize: '.75rem',
-    lineHeight: '1rem',
-    fontWeight: 500,
-    whiteSpace: 'nowrap',
-  }),
 });
 
 export default CredentialForm;

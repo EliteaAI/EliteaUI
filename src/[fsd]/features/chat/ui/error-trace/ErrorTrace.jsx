@@ -3,11 +3,11 @@ import { memo, useCallback, useMemo, useState } from 'react';
 import { Box, IconButton, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
+import { parseRefusalPayload } from '@/[fsd]/features/chat/lib/helpers/refusal.helpers';
+import { Chip } from '@/[fsd]/shared/ui';
 import ArrowRightIcon from '@/assets/arrow-right-icon.svg?react';
 import CopyIcon from '@/components/Icons/CopyIcon';
 import DownloadIcon from '@/components/Icons/DownloadIcon';
-
-import { parseRefusalPayload } from '@/[fsd]/features/chat/lib/helpers/refusal.helpers';
 
 import BudgetErrorMessage from './BudgetErrorMessage';
 
@@ -66,13 +66,10 @@ const ErrorTrace = memo(props => {
         <Box sx={styles.errorWrapper}>
           {headline || refusal?.message || 'Unknown error'}
           {refusal?.code && (
-            <Box
-              component="span"
-              data-testid="error-code-chip"
-              sx={styles.errorCodeChip}
-            >
-              {refusal.code}
-            </Box>
+            <Chip.ErrorCodeChip
+              code={refusal.code}
+              testId="error-code-chip"
+            />
           )}
         </Box>
       )}
@@ -156,17 +153,6 @@ const errorTraceStyles = (isExpanded, compact) => ({
     fontSize: '.875rem',
     marginBottom: '0.5rem',
   },
-  errorCodeChip: ({ palette }) => ({
-    marginLeft: '.75rem',
-    padding: '.125rem .5rem',
-    border: `0.0625rem solid ${palette.border.error}`,
-    borderRadius: '1rem',
-    fontSize: '.75rem',
-    lineHeight: '1rem',
-    fontWeight: 500,
-    whiteSpace: 'nowrap',
-    flexShrink: 0,
-  }),
   errorStackTrace: {
     width: '100%',
     marginTop: '0.5rem',

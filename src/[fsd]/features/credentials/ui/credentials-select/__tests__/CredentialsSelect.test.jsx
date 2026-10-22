@@ -595,6 +595,33 @@ describe('CredentialsSelect', () => {
       expect(onSelectConfiguration).toHaveBeenCalledWith(savedCredential(GITHUB_TITLE, TWIN_B_UUID));
     });
 
+    it('switches from a uuid-pinned value to a legacy row of the same title instead of deselecting', () => {
+      renderSelect({
+        section: 'credentials',
+        value: savedCredential(GITHUB_TITLE, TWIN_A_UUID),
+        configurations: [...TWIN_CONFIGURATIONS, LEGACY_CONFIGURATION],
+      });
+
+      singleSelectProps.onValueChange(savedOptions()[2].value);
+
+      expect(onSelectConfiguration).toHaveBeenCalledTimes(1);
+      expect(onSelectConfiguration.mock.calls[0][0]).toStrictEqual({
+        private: false,
+        elitea_title: GITHUB_TITLE,
+      });
+    });
+
+    it('serialises a row with a null uuid like a row without one', () => {
+      renderSelect({
+        section: 'credentials',
+        value: { elitea_title: GITHUB_TITLE, private: false },
+        configurations: [{ ...LEGACY_CONFIGURATION, uuid: null }],
+      });
+
+      expect(JSON.parse(savedOptions()[0].value)).not.toHaveProperty('configuration_uuid');
+      expect(singleSelectProps.value).toBe(optionValueFor(GITHUB_TITLE));
+    });
+
     it('still matches a legacy saved value that has no uuid by title and private flag', () => {
       renderSelect({
         section: 'credentials',

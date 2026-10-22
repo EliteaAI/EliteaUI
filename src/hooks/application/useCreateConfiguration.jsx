@@ -196,6 +196,8 @@ export default function useCreateConfiguration({
           // matched against the form fields
           const refusal = readRefusal(error);
           if (refusal) {
+            setValidationErrorMessages?.({});
+            setShowValidation?.(false);
             setTestConnectionError?.(refusal);
             return;
           }

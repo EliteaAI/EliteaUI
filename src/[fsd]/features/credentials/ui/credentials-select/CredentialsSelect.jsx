@@ -53,9 +53,11 @@ const toSavedCredential = row => ({
 const findSavedOption = (options, saved) => {
   const savedUuid = saved?.[credentialMenuItemValue.keyConfigurationUuid];
   if (savedUuid) return options.find(option => option.uuid === savedUuid);
-  return options.find(
-    option => option.elitea_title === saved?.elitea_title && option.private === saved?.private,
-  );
+  const hasSavedKeys = option =>
+    option.elitea_title === saved?.elitea_title && option.private === saved?.private;
+  // A value without a uuid is the legacy row when one exists; a legacy saved value still
+  // resolves to its (now uuid-bearing) row by title and private flag
+  return options.find(option => !option.uuid && hasSavedKeys(option)) ?? options.find(hasSavedKeys);
 };
 
 const savedRowToSelectValue = row => {
@@ -64,7 +66,7 @@ const savedRowToSelectValue = row => {
     [credentialMenuItemValue.keyKind]: credentialMenuItemValue.kindSaved,
     [credentialMenuItemValue.keyEliteaTitle]: row.elitea_title,
     [credentialMenuItemValue.keyPrivate]: !!row.private,
-    [credentialMenuItemValue.keyConfigurationUuid]: row.uuid,
+    [credentialMenuItemValue.keyConfigurationUuid]: row.uuid || undefined,
     [credentialMenuItemValue.keyConfigurationProjectId]: row.uuid ? row.project_id : undefined,
   });
 };
@@ -416,10 +418,14 @@ const CredentialsSelect = memo(props => {
 
   const onSelectItem = useCallback(
     option => {
+      // A uuid-pinned value is never the row that has no uuid; only a legacy saved value
+      // (no uuid yet) falls back to the title + private comparison
       const isCommittedValue =
         value?.configuration_uuid && option.uuid
           ? value.configuration_uuid === option.uuid
-          : value?.elitea_title === option.elitea_title && Boolean(value?.private) === option.private;
+          : !value?.configuration_uuid &&
+            value?.elitea_title === option.elitea_title &&
+            Boolean(value?.private) === option.private;
 
       if (isCommittedValue) {
         commitConfiguration(null);

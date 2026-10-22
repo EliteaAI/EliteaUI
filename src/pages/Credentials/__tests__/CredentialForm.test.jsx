@@ -6,7 +6,7 @@ import { ThemeProvider, createTheme } from '@mui/material';
 import '@testing-library/jest-dom/vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 
-import CredentialForm from './CredentialForm';
+import CredentialForm from '../CredentialForm';
 
 const mocks = vi.hoisted(() => ({ useCreateConfiguration: vi.fn(), isDirty: false }));
 
@@ -44,8 +44,9 @@ vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useSelectedProjectId: () => 7,
   useToast: () => ({ toastSuccess: vi.fn() }),
 }));
-vi.mock('@/[fsd]/shared/ui', () => ({
+vi.mock('@/[fsd]/shared/ui', async () => ({
   Button: { BaseBtn: ({ children, onClick }) => <button onClick={onClick}>{children}</button> },
+  Chip: { ErrorCodeChip: (await import('@/[fsd]/shared/ui/chip/ErrorCodeChip')).default },
 }));
 vi.mock('@/[fsd]/shared/ui/tab-group-button', () => ({ FormViewToggle: () => null }));
 vi.mock('@/common/constants', async importOriginal => ({ ...(await importOriginal()) }));
