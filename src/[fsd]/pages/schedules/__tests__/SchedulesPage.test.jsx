@@ -312,6 +312,19 @@ describe('EL-7011 US-26 SchedulesPage', () => {
     expect(mocks.useGetScheduleListQuery.mock.calls.at(-1)[1]).toMatchObject({ pollingInterval: 0 });
   });
 
+  it('BUG-35 US-28 R2.5 polls after Run now shows Running and stops when the run waits for approval', () => {
+    const answer = status => ({
+      currentData: { total: 1, rows: [{ id: 1, name: 'Nightly', last_run_status: status }] },
+      isError: false,
+    });
+    mocks.useGetScheduleListQuery.mockReturnValue(answer('running'));
+    const { rerender } = render(<SchedulesPage />);
+    expect(mocks.useGetScheduleListQuery.mock.calls.at(-1)[1]).toMatchObject({ pollingInterval: 10000 });
+    mocks.useGetScheduleListQuery.mockReturnValue(answer('waiting_for_approval'));
+    rerender(<SchedulesPage />);
+    expect(mocks.useGetScheduleListQuery.mock.calls.at(-1)[1]).toMatchObject({ pollingInterval: 0 });
+  });
+
   it('EL-7011 R1.1 R1.2 the page header carries the import and export actions of the project', () => {
     render(<SchedulesPage />);
     expect(screen.getByTestId('import-export-actions')).toHaveTextContent('5');
