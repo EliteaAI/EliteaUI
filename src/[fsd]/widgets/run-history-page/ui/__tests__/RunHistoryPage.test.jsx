@@ -54,9 +54,10 @@ vi.mock('@/[fsd]/entities/schedule', async () => ({
 }));
 
 vi.mock('@/[fsd]/shared/ui/select', () => ({
-  SingleSelect: ({ label, options, value, onValueChange, displayEmpty }) => (
+  SingleSelect: ({ label, options, value, onValueChange, displayEmpty, shrinkLabel }) => (
     <select
       data-display-empty={String(Boolean(displayEmpty))}
+      data-shrink-label={String(Boolean(shrinkLabel))}
       aria-label={label}
       value={value}
       onChange={event => onValueChange(event.target.value)}
@@ -199,6 +200,8 @@ describe('RunHistoryPage schedule filter and links (EL-7011 CR-22)', () => {
     const select = screen.getByLabelText('Schedule');
     expect(select).toHaveValue('');
     expect(select).toHaveAttribute('data-display-empty', 'true');
+    // CR-22 review r4: the label sits above the shown "All schedules", not on top of it
+    expect(select).toHaveAttribute('data-shrink-label', 'true');
     expect(screen.getByRole('option', { name: 'All schedules' })).toHaveValue('');
   });
 

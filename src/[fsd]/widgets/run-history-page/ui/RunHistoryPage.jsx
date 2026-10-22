@@ -156,6 +156,8 @@ const RunHistoryPage = memo(props => {
               onValueChange={handleScheduleChange}
               // The empty value is "All schedules": show its label instead of a blank select
               displayEmpty
+              // The label moves up above the shown value, as in the credential select (review r4)
+              shrinkLabel
               showEmptyPlaceholder={false}
               inputProps={{ 'aria-label': 'Schedule' }}
             />
