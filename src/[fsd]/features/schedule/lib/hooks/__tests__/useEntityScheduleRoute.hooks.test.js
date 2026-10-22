@@ -53,6 +53,18 @@ describe('useEntityScheduleRoute EL-7011', () => {
     expect(result.current.returnTo).toBe('/agents/all/1?viewMode=owner&name=Sched+Daily+Digest');
   });
 
+  it('TC-US58-16 R5.3 R5.5 EL-7011 CR-19 locks the editor version and returns to it', () => {
+    mocks.params = { tab: 'all', agentId: '12' };
+    mocks.search = '?viewMode=owner&versionId=71';
+
+    const { result } = renderHook(() => useEntityScheduleRoute('agent'));
+
+    expect(result.current).toEqual({
+      lockedEntity: { type: 'agent', id: 12, versionId: 71 },
+      returnTo: '/agents/all/12/71?viewMode=owner',
+    });
+  });
+
   it('US-35 keeps the Settings pages as they are without an entity type', () => {
     mocks.params = { scheduleId: '4' };
 
