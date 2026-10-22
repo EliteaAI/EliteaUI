@@ -3,14 +3,28 @@ import { memo, useCallback, useMemo, useState } from 'react';
 import { Box, Typography } from '@mui/material';
 
 import { useToolkitToolOptions } from '@/[fsd]/features/toolkits/lib/hooks';
-import { Input } from '@/[fsd]/shared/ui';
+import { Button, Input } from '@/[fsd]/shared/ui';
+import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+
+const UNCLASSIFIED_GROUP = 'unclassified';
+
+const TOOL_GROUP_ORDER = [
+  { key: 'read', label: 'Read' },
+  { key: 'write', label: 'Create & update' },
+  { key: 'delete', label: 'Delete' },
+  { key: 'execute', label: 'Execute' },
+  { key: UNCLASSIFIED_GROUP, label: 'Unclassified' },
+];
+
+const KNOWN_GROUPS = new Set(TOOL_GROUP_ORDER.map(g => g.key).filter(k => k !== UNCLASSIFIED_GROUP));
 
 const ToolkitTestEmptyState = memo(props => {
   const { toolkitId, onChangeTool, toolGroups, sx = {} } = props;
   const { allToolsOptions } = useToolkitToolOptions({ toolkitId });
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedTool, setSelectedTool] = useState(null);
   const styles = toolkitTestEmptyStateStyles();
+
+  const hasGroups = toolGroups && Object.keys(toolGroups).length > 0;
 
   const filteredOptions = useMemo(() => {
     if (!searchTerm.trim()) return allToolsOptions;
@@ -19,36 +33,30 @@ const ToolkitTestEmptyState = memo(props => {
   }, [allToolsOptions, searchTerm]);
 
   const groupedOptions = useMemo(() => {
-    if (!toolGroups || Object.keys(toolGroups).length === 0) {
-      return [{ groupLabel: null, tools: filteredOptions }];
+    if (!hasGroups) {
+      return [{ groupKey: null, groupLabel: null, tools: filteredOptions }];
     }
 
-    const grouped = {};
-    const ungrouped = [];
-
-    filteredOptions.forEach(opt => {
-      const toolValue = typeof opt.value === 'string' ? opt.value : (opt.value?.name ?? '');
-      const groupKey = Object.entries(toolGroups).find(([, tools]) => tools.includes(toolValue))?.[0];
-      if (groupKey) {
-        grouped[groupKey] = grouped[groupKey] ?? [];
-        grouped[groupKey].push(opt);
-      } else {
-        ungrouped.push(opt);
-      }
-    });
-
-    const result = Object.entries(grouped).map(([groupLabel, tools]) => ({ groupLabel, tools }));
-    if (ungrouped.length) result.push({ groupLabel: null, tools: ungrouped });
-    return result;
-  }, [filteredOptions, toolGroups]);
+    return TOOL_GROUP_ORDER.map(group => {
+      const tools = filteredOptions
+        .filter(opt =>
+          group.key === UNCLASSIFIED_GROUP
+            ? !KNOWN_GROUPS.has(toolGroups[opt.value])
+            : toolGroups[opt.value] === group.key,
+        )
+        .sort((a, b) => (a.label || '').toLowerCase().localeCompare((b.label || '').toLowerCase()));
+      return { groupKey: group.key, groupLabel: group.label, tools };
+    }).filter(g => g.tools.length > 0);
+  }, [hasGroups, filteredOptions, toolGroups]);
 
   const handleSelectTool = useCallback(
-    opt => {
-      setSelectedTool(opt.value);
-      onChangeTool(opt.value);
+    value => {
+      onChangeTool(value);
     },
     [onChangeTool],
   );
+
+  const noResults = filteredOptions.length === 0 && searchTerm.trim().length > 0;
 
   return (
     <Box sx={[styles.root, sx]}>
@@ -69,39 +77,49 @@ const ToolkitTestEmptyState = memo(props => {
         data-testid="toolkit-test-start-search"
       />
 
-      <Box sx={styles.groupsContainer}>
-        {groupedOptions.map(({ groupLabel, tools }) => (
-          <Box
-            key={groupLabel ?? '__ungrouped__'}
-            sx={styles.group}
-          >
-            {groupLabel && (
-              <Typography
-                variant="labelSmall"
-                sx={styles.groupLabel}
-              >
-                {groupLabel}
-              </Typography>
-            )}
-            <Box sx={styles.chipsGrid}>
-              {tools.map(opt => {
-                const toolKey = typeof opt.value === 'string' ? opt.value : opt.value?.name;
-                const isSelected = selectedTool === opt.value;
-                return (
-                  <Box
-                    key={toolKey}
-                    sx={styles.chip(isSelected)}
-                    onClick={() => handleSelectTool(opt)}
-                    data-testid="toolkit-test-start-tool-chip"
-                  >
-                    <Typography variant="bodyMedium">{opt.label}</Typography>
-                  </Box>
-                );
-              })}
+      {noResults ? (
+        <Typography
+          variant="bodySmall"
+          color="text.secondary"
+          data-testid="toolkit-test-start-no-results"
+        >
+          No tools match &quot;{searchTerm.trim()}&quot;.
+        </Typography>
+      ) : (
+        <Box sx={styles.groupsContainer}>
+          {groupedOptions.map(({ groupKey, groupLabel, tools }) => (
+            <Box
+              key={groupKey ?? '__ungrouped__'}
+              sx={styles.group}
+            >
+              {groupLabel && (
+                <Typography
+                  variant="labelSmall"
+                  sx={styles.groupLabel}
+                >
+                  {groupLabel}
+                </Typography>
+              )}
+              <Box sx={styles.chipsGrid}>
+                {tools.map(opt => {
+                  const toolKey = typeof opt.value === 'string' ? opt.value : opt.value?.name;
+                  return (
+                    <Button.BaseBtn
+                      key={toolKey}
+                      variant={BUTTON_VARIANTS.secondary}
+                      sx={styles.chip}
+                      onClick={() => handleSelectTool(opt.value)}
+                      data-testid="toolkit-test-start-tool-chip"
+                    >
+                      {opt.label}
+                    </Button.BaseBtn>
+                  );
+                })}
+              </Box>
             </Box>
-          </Box>
-        ))}
-      </Box>
+          ))}
+        </Box>
+      )}
     </Box>
   );
 });
@@ -149,21 +167,14 @@ const toolkitTestEmptyStateStyles = () => ({
       gridTemplateColumns: '1fr',
     },
   }),
-  chip:
-    isSelected =>
-    ({ palette }) => ({
-      display: 'flex',
-      alignItems: 'center',
-      padding: '0.25rem 1rem',
-      borderRadius: '0.5rem',
-      cursor: 'pointer',
-      backgroundColor: isSelected
-        ? (palette.background.toolSelected ?? 'rgba(106,232,250,0.2)')
-        : (palette.background.surface?.interactive?.default ?? 'rgba(255,255,255,0.05)'),
-      '&:hover': {
-        backgroundColor: isSelected
-          ? (palette.background.toolSelected ?? 'rgba(106,232,250,0.2)')
-          : (palette.background.surface?.interactive?.hover ?? 'rgba(255,255,255,0.08)'),
-      },
-    }),
+  chip: ({ palette }) => ({
+    justifyContent: 'flex-start',
+    padding: '0.25rem 1rem',
+    borderRadius: '0.5rem',
+    backgroundColor: palette.components.chip.background.default,
+    color: palette.components.chip.text.default,
+    '&:hover': {
+      backgroundColor: palette.background.interactiveItem.hover,
+    },
+  }),
 });

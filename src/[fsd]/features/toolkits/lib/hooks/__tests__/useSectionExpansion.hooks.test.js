@@ -11,10 +11,6 @@ import {
   useSectionExpansion,
 } from '../useSectionExpansion.hooks';
 
-// ─── localStorage mock ───────────────────────────────────────────────────────
-// jsdom's localStorage is available in the test body but not at module scope,
-// so we use a plain in-memory store and stub it before each test.
-
 const makeStore = () => {
   const store = {};
   return {
@@ -46,8 +42,6 @@ const renderExpansion = needsAttention =>
   renderHook(({ needsAttention: flag }) => useSectionExpansion(flag), {
     initialProps: { needsAttention },
   });
-
-// ─── useCollapsedSection ─────────────────────────────────────────────────────
 
 describe('useCollapsedSection — no storage key', () => {
   it('starts expanded by default', () => {
@@ -129,8 +123,6 @@ describe('useCollapsedSection — with storage key', () => {
   });
 });
 
-// ─── useExpandOnAttention ────────────────────────────────────────────────────
-
 describe('useExpandOnAttention against a hoisted section', () => {
   const renderConsumer = (needsAttention, section) =>
     renderHook(() => useExpandOnAttention(needsAttention, section));
@@ -164,8 +156,6 @@ describe('useExpandOnAttention against a hoisted section', () => {
     expect(section.current.isExpanded).toBe(true);
   });
 });
-
-// ─── useSectionExpansion ─────────────────────────────────────────────────────
 
 describe('useSectionExpansion', () => {
   it('starts expanded when nothing needs attention (default open)', () => {
