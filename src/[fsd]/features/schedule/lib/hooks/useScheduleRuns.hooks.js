@@ -3,11 +3,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { RunHistoryApi } from '@/[fsd]/entities/run-history/api';
 import { useGetScheduleRunQuery, useGetScheduleRunsQuery } from '@/[fsd]/entities/schedule';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
-import { ROLES } from '@/common/constants';
 import { convertConversationToChatHistory } from '@/common/convertChatConversationMessages';
 import { buildErrorMessage } from '@/common/utils.jsx';
 
-import { isRunActive } from '../helpers';
+import { findRunAnswer, isRunActive } from '../helpers';
 
 const POLLING_INTERVAL_MS = 3000;
 const RUN_POLLING_INTERVAL_MS = 2000;
@@ -103,7 +102,7 @@ export const useScheduleRunConversation = run => {
     return {
       conversationUuid: currentData?.uuid,
       pausedMessageId: messages.at(-1)?.id,
-      answer: messages.findLast(message => message.role === ROLES.Assistant && message.content)?.content,
+      answer: findRunAnswer(messages),
     };
   }, [currentData]);
 };
