@@ -14,7 +14,7 @@ const MemorySummarization = memo(props => {
 
   const styles = memorySummarizationStyles();
 
-  const isSummarizationDisabled = !values.context_enabled || !values.enable_summarization;
+  const isSummarizationDisabled = !values.enable_summarization;
 
   const handleSummarizationEnabledChange = useCallback(
     (event, checkedValue) => {
@@ -57,7 +57,6 @@ const MemorySummarization = memo(props => {
           data-testid="automatic-summarization-toggle"
           checked={values.enable_summarization}
           onChange={handleSummarizationEnabledChange}
-          disabled={!values.context_enabled}
         />
       </Box>
 

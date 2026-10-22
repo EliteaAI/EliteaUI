@@ -20,7 +20,7 @@ const ContextBudgetHeader = memo(props => {
           variant="labelSmall"
           sx={styles.title}
         >
-          Context Budget
+          Context management
         </Typography>
         <Tooltip
           title="Chat totals are provider-reported tokens for every model call in this chat. The safety margin is excluded from the available window. The next request is estimated separately for automatic compaction."

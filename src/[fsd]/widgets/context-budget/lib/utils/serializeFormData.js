@@ -20,7 +20,6 @@ export const serializeFormData = (
   persona,
 ) => ({
   persona: persona || DEFAULT_PERSONA,
-  enabled: contextStrategy.enabled ?? DEFAULT_CONTEXT_STRATEGY.ENABLED,
   context_window_mode:
     Object.values(CONTEXT_WINDOW_MODES).find(mode => mode === contextStrategy.context_window_mode) ||
     DEFAULT_CONTEXT_STRATEGY.CONTEXT_WINDOW_MODE,

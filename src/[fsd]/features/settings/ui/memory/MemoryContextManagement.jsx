@@ -5,29 +5,40 @@ import { useFormikContext } from 'formik';
 import { Box, Typography } from '@mui/material';
 
 import { useProjectContextWindowMode } from '@/[fsd]/features/settings/lib/hooks';
-import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
+import { AccordionConstants, ContextStrategyConstants } from '@/[fsd]/shared/lib/constants';
 import { handleConvertToNumberChange } from '@/[fsd]/shared/lib/helpers';
-import { Label, Switch } from '@/[fsd]/shared/ui';
+import { Button, Label, Switch } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
+import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import { ContextBudgetUI } from '@/[fsd]/widgets/context-budget';
 import FormInput from '@/components/FormInput';
 
 // import MemoryLongTermMemory from './MemoryLongTermMemory';
 import MemorySummarization from './MemorySummarization';
+
+const { CONTEXT_WINDOW_MODES } = ContextStrategyConstants;
 
 const MemoryContextManagement = memo(props => {
   const { modelList, onAutoSaveRequested } = props;
   const { values, errors, setFieldValue } = useFormikContext();
 
   const styles = memoryContextManagementStyles();
-  const { mode: windowMode } = useProjectContextWindowMode();
+  const { mode: projectWindowMode } = useProjectContextWindowMode();
+  const userWindowMode = values.context_window_mode;
+  const projectModeLabel = projectWindowMode === CONTEXT_WINDOW_MODES.FULL ? 'Full' : 'Balanced';
 
-  const handleContextEnabledChange = useCallback(
-    (event, checkedValue) => {
-      setFieldValue('context_enabled', checkedValue);
+  const handleWindowModeChange = useCallback(
+    mode => {
+      setFieldValue('context_window_mode', mode);
       onAutoSaveRequested?.();
     },
     [setFieldValue, onAutoSaveRequested],
   );
+
+  const handleUseProjectDefault = useCallback(() => {
+    setFieldValue('context_window_mode', '');
+    onAutoSaveRequested?.();
+  }, [setFieldValue, onAutoSaveRequested]);
 
   const handleContextEditingChange = useCallback(
     (event, checkedValue) => {
@@ -45,8 +56,6 @@ const MemoryContextManagement = memo(props => {
     [setFieldValue],
   );
 
-  const isEnabled = values.context_enabled;
-
   return (
     <BasicAccordion
       data-testid="context-management-section"
@@ -58,83 +67,78 @@ const MemoryContextManagement = memo(props => {
           title: 'Context Management',
           content: (
             <Box sx={styles.accordionContent}>
-              {/* Enable Context Management */}
+              <Box
+                sx={styles.toggleSection}
+                data-testid="memory-context-window-mode"
+              >
+                <Box sx={styles.toggleContent}>
+                  <ContextBudgetUI.ContextWindowModeSelector
+                    value={userWindowMode || projectWindowMode}
+                    onChange={handleWindowModeChange}
+                  />
+                  <Typography variant="bodySmall">
+                    {userWindowMode
+                      ? 'Default for your new chats. Each chat can switch between Balanced and Full.'
+                      : `Follows the project default (${projectModeLabel}). Pick a mode to use it for your new chats.`}
+                  </Typography>
+                </Box>
+                {userWindowMode && (
+                  <Button.BaseBtn
+                    variant={BUTTON_VARIANTS.text}
+                    onClick={handleUseProjectDefault}
+                    data-testid="memory-context-window-mode-reset"
+                  >
+                    Use project default
+                  </Button.BaseBtn>
+                )}
+              </Box>
+
+              <Box sx={styles.field}>
+                <Label.InfoLabelWithTooltip
+                  label="Preserve Recent Messages"
+                  tooltip="Number of most recent messages to always keep in context"
+                  sx={styles.label}
+                />
+                <FormInput
+                  sx={styles.formInput}
+                  type="text"
+                  inputMode="numeric"
+                  value={values.preserve_recent_messages}
+                  onChange={e => handleNumericInputChange(e, 'preserve_recent_messages')}
+                  error={!!errors.preserve_recent_messages}
+                  helperText={errors.preserve_recent_messages || ' '}
+                  inputProps={{
+                    pattern: '[1-9][0-9]*',
+                    'data-testid': 'preserve-recent-messages-input',
+                  }}
+                />
+              </Box>
+
               <Box sx={styles.toggleSection}>
                 <Box sx={styles.toggleContent}>
                   <Typography
                     variant="headingSmall"
                     sx={{ color: 'text.secondary' }}
                   >
-                    Context Management
+                    Context Editing
                   </Typography>
-                  <Typography variant="bodySmall">Enable context management for new chats</Typography>
+                  <Typography variant="bodySmall">
+                    Clear older tool outputs when the context grows large, keeping recent results
+                  </Typography>
                 </Box>
                 <Switch.BaseSwitch
-                  data-testid="context-management-toggle"
-                  checked={values.context_enabled}
-                  onChange={handleContextEnabledChange}
+                  data-testid="context-editing-toggle"
+                  checked={values.enable_context_editing}
+                  onChange={handleContextEditingChange}
                 />
               </Box>
 
-              {isEnabled && (
-                <>
-                  <Box sx={styles.windowRow}>
-                    <Typography
-                      variant="bodySmall"
-                      data-testid="memory-context-window-mode"
-                    >
-                      {`Context window: ${windowMode === 'full' ? 'Full' : 'Balanced'} (set by project admins in Project settings → Chat configuration)`}
-                    </Typography>
-                  </Box>
-
-                  <Box sx={styles.field}>
-                    <Label.InfoLabelWithTooltip
-                      label="Preserve Recent Messages"
-                      tooltip="Number of most recent messages to always keep in context"
-                      sx={styles.label}
-                    />
-                    <FormInput
-                      sx={styles.formInput}
-                      type="text"
-                      inputMode="numeric"
-                      value={values.preserve_recent_messages}
-                      onChange={e => handleNumericInputChange(e, 'preserve_recent_messages')}
-                      error={!!errors.preserve_recent_messages}
-                      helperText={errors.preserve_recent_messages || ' '}
-                      inputProps={{
-                        pattern: '[1-9][0-9]*',
-                        'data-testid': 'preserve-recent-messages-input',
-                      }}
-                    />
-                  </Box>
-
-                  <Box sx={styles.toggleSection}>
-                    <Box sx={styles.toggleContent}>
-                      <Typography
-                        variant="headingSmall"
-                        sx={{ color: 'text.secondary' }}
-                      >
-                        Context Editing
-                      </Typography>
-                      <Typography variant="bodySmall">
-                        Clear older tool outputs when the context grows large, keeping recent results
-                      </Typography>
-                    </Box>
-                    <Switch.BaseSwitch
-                      data-testid="context-editing-toggle"
-                      checked={values.enable_context_editing}
-                      onChange={handleContextEditingChange}
-                    />
-                  </Box>
-
-                  <Box sx={styles.subSections}>
-                    <MemorySummarization
-                      modelList={modelList}
-                      onAutoSaveRequested={onAutoSaveRequested}
-                    />
-                  </Box>
-                </>
-              )}
+              <Box sx={styles.subSections}>
+                <MemorySummarization
+                  modelList={modelList}
+                  onAutoSaveRequested={onAutoSaveRequested}
+                />
+              </Box>
             </Box>
           ),
         },
@@ -175,10 +179,6 @@ const memoryContextManagementStyles = () => ({
   toggleLabel: {
     gap: '0.7rem',
   },
-  windowRow: ({ palette }) => ({
-    padding: '0 0.75rem',
-    color: palette.text.primary,
-  }),
   subSections: {
     display: 'flex',
     flexDirection: 'column',
