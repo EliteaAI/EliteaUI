@@ -34,7 +34,11 @@ export const useUsageChartData = ({
     [daily, periodStart, periodEnd],
   );
 
-  const { data: seriesData, keys: seriesKeys } = useMemo(
+  const {
+    data: seriesData,
+    keys: seriesKeys,
+    labels: seriesLabels,
+  } = useMemo(
     () => UsageHelpers.buildSeriesFromDaily(filledDaily, groupBy, models, bySource, metricKey),
     [filledDaily, groupBy, models, bySource, metricKey],
   );
@@ -59,5 +63,5 @@ export const useUsageChartData = ({
 
   const hasData = useMemo(() => daily.some(day => (day[metricKey] || 0) > 0), [daily, metricKey]);
 
-  return { seriesKeys, chartData, mergedChartData, compChartData, hasData };
+  return { seriesKeys, seriesLabels, chartData, mergedChartData, compChartData, hasData };
 };
