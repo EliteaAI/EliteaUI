@@ -25,6 +25,9 @@ const SENSITIVE = [{ code: 'sensitive_action', toolkit: 'Outlook', tool: 'send_e
 const answer = data => ({ unwrap: () => Promise.resolve(data) });
 const failure = () => ({ unwrap: () => Promise.reject({ status: 500 }) });
 
+// The check body of the default entity and version
+const CHECK_CALL = { projectId: 5, entity_type: 'agent', application_id: 7, version_id: 71 };
+
 const setup = (initial = { entityType: 'agent', applicationId: 7, versionId: 71 }) =>
   renderHook(args => useScheduleRiskCheck({ projectId: 5, ...args }), { initialProps: initial });
 
@@ -58,13 +61,15 @@ describe('useScheduleRiskCheck EL-7011 owner CR', () => {
 
     expect(result.current.status).toBe(RISK_CHECK_STATUS.CHECKING);
     await waitFor(() => expect(result.current.status).toBe(RISK_CHECK_STATUS.CLEAR));
-    expect(mocks.check).toHaveBeenCalledWith({
-      projectId: 5,
-      entity_type: 'agent',
-      application_id: 7,
-      version_id: 71,
-    });
+    expect(mocks.check).toHaveBeenCalledWith(CHECK_CALL);
     expect(result.current.result).toEqual(CLEAR);
+  });
+
+  it('US-33 R2.6 EL-7011 BUG-36 sends schedule_id on an edit, so the server scans as the owner', async () => {
+    const { result } = setup({ entityType: 'agent', applicationId: 7, versionId: 71, scheduleId: 3 });
+
+    await waitFor(() => expect(result.current.status).toBe(RISK_CHECK_STATUS.CLEAR));
+    expect(mocks.check).toHaveBeenCalledWith({ ...CHECK_CALL, schedule_id: 3 });
   });
 
   it('is blocked when the server answers a blocking finding', async () => {

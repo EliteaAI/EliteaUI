@@ -1553,6 +1553,41 @@ describe('ScheduleForm EL-7011', () => {
       expect(screen.queryByText(/Confirmed by/)).not.toBeInTheDocument();
     });
 
+    // US-33 R2.6 (BUG-36): an edit that keeps a confirmed "Run without asking" saves without a new review
+    const renderConfirmedEdit = rule =>
+      renderForm({
+        initialValues: { ...INITIAL, application_id: 7, version_id: 71, prompt: 'Hi', approval_rule: rule },
+        schedule: { id: 3, owner: { name: 'Ann Lee' } },
+      });
+
+    it('R2.6 EL-7011 BUG-36 sends schedule_id and skips the review when the check is confirmed', async () => {
+      checkRisk.mockReturnValue(answer({ ...RISKY, confirmed: true }));
+      const { onSubmit } = renderConfirmedEdit('run_without_asking');
+      await waitFor(() =>
+        expect(checkRisk).toHaveBeenCalledWith(expect.objectContaining({ schedule_id: 3 })),
+      );
+      typePrompt('Hi again');
+      await waitFor(() => expect(saveButton()).toBeEnabled());
+
+      await save();
+
+      await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+      expect(onSubmit.mock.calls[0][0]).not.toHaveProperty('risk_ack');
+      expect(screen.queryByTestId('risk-dialog')).not.toBeInTheDocument();
+    });
+
+    it('R2.6 EL-7011 BUG-36 still opens the review when the rule is Pause and ask me', async () => {
+      checkRisk.mockReturnValue(answer({ ...RISKY, confirmed: true }));
+      const { onSubmit } = renderConfirmedEdit('pause_and_ask');
+      typePrompt('Hi again');
+      await waitFor(() => expect(saveButton()).toBeEnabled());
+
+      await save();
+
+      expect(await screen.findByTestId('risk-dialog')).toBeInTheDocument();
+      expect(onSubmit).not.toHaveBeenCalled();
+    });
+
     it('applies the same flow to the edit page and a nested editor route', async () => {
       checkRisk.mockReturnValue(answer({ ...CLEAR, blocking: [SIGNIN] }));
       renderForm(
