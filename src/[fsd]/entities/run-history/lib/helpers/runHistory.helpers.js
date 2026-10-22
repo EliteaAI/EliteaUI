@@ -8,8 +8,14 @@ export const RUN_ANALYTICS_TIMESTAMP_FORMAT = 'dd MMM yyyy, hh:mm a';
 const RUN_ANALYTICS_AVAILABLE_FROM = Date.UTC(2026, 8, 30);
 
 // CR-22 D7: with extra columns the tracks are fixed rem widths: Date, extras, Execution type, Version, Duration.
-// Version fits its header label with the sort icon; Duration takes the free space of the 48 rem list (review r4)
-const FIXED_TRACKS = { date: '7.5rem', event: '8rem', version: '6.5rem', duration: 'minmax(6.5rem, 1fr)' };
+// Execution type and Version fit their header labels with the sort icon; Duration takes the free space of the
+// 48 rem list (review r4, r5)
+const FIXED_TRACKS = {
+  date: '7.5rem',
+  event: '9.25rem',
+  version: '7.25rem',
+  duration: 'minmax(5.5rem, 1fr)',
+};
 
 export const resolveRunHistoryColumns = (noVersions, hasEvent, extraColumns = []) => {
   if (extraColumns.length) {
