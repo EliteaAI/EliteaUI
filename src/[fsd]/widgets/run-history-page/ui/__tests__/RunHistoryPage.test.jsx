@@ -185,6 +185,8 @@ describe('RunHistoryPage schedule filter and links (EL-7011 CR-22)', () => {
       'href',
       '/agents/all/127/schedules/4',
     );
+    // CR-22 review r8: a cut name shows in full on hover
+    expect(screen.getByRole('link', { name: 'Daily digest' })).toHaveAttribute('title', 'Daily digest');
     // CR-22 review r3: the theme link (MUI Link), not the browser default blue
     expect(screen.getByRole('link', { name: 'Daily digest' })).toHaveClass('MuiLink-root');
     // BUG-38: the app link colour, not the brand colour (4.5:1 for small text)
