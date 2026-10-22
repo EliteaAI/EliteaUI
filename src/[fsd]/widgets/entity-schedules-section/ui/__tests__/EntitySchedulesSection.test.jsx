@@ -107,24 +107,25 @@ describe('EntitySchedulesSection EL-7011', () => {
   });
 
   describe('agent editor (US-35)', () => {
-    it('TC-US35-01 TC-US35-18 R1.1 R1.6 shows the header with "+ Schedule", the count and "Open all in Settings → Schedules"', () => {
+    it('TC-US35-01 TC-US35-18 R1.1 R1.6 EL-7011 CR-20 shows the header with "+ Schedule", the count and the "Manage Schedules" link without an icon', () => {
       renderSection();
 
       expect(screen.getByText('Schedules')).toBeInTheDocument();
-      expect(screen.getByTestId('agent-schedules-section-add')).toHaveTextContent('+ Schedule');
-      expect(screen.getByText('2 schedules run this agent.')).toBeInTheDocument();
+      expect(screen.getByTestId('agent-schedules-section-add')).toHaveTextContent(/^Schedule$/);
+      expect(screen.getByText('2 schedules run the base version')).toBeInTheDocument();
       const link = screen.getByTestId('agent-schedules-section-open-all');
-      expect(link).toHaveTextContent(/^Open all in Settings → Schedules$/);
+      expect(link).toHaveTextContent(/^Manage Schedules$/);
+      expect(link.querySelector('svg')).toBeNull();
       expect(link).toHaveAttribute('href', '/settings/schedules?entityType=agent&entityId=12');
     });
 
-    it('CR-08 "+ Schedule" stays the purple primary elitea button', () => {
+    it('R1.4 R1.5 EL-7011 CR-15 the add button is an iconLabel button with a plus icon', () => {
       renderSection();
 
-      expect(screen.getByTestId('agent-schedules-section-add')).toHaveClass(
-        'MuiButton-elitea',
-        'MuiButton-colorPrimary',
-      );
+      const add = screen.getByTestId('agent-schedules-section-add');
+      expect(add).toHaveClass('MuiButton-iconLabel');
+      expect(add).not.toHaveClass('MuiButton-elitea');
+      expect(add.querySelector('.MuiButton-startIcon svg')).toBeInTheDocument();
     });
 
     it('owner bug 2026-10-21 shows two skeleton cards while the first page loads', () => {
@@ -166,6 +167,7 @@ describe('EntitySchedulesSection EL-7011', () => {
       expect(mocks.entitySchedules).toHaveBeenLastCalledWith({
         entityType: 'agent',
         entityId: 12,
+        versionId: undefined,
         skip: false,
       });
       expect(screen.getAllByTestId(/^card-/).map(card => card.textContent)).toEqual([
@@ -179,14 +181,14 @@ describe('EntitySchedulesSection EL-7011', () => {
       mocks.entitySchedules.mockReturnValue(listOf([{ id: 1, name: 'Daily digest' }]));
       renderSection();
 
-      expect(screen.getByText('1 schedule runs this agent.')).toBeInTheDocument();
+      expect(screen.getByText('1 schedule runs the base version')).toBeInTheDocument();
     });
 
-    it('TC-US35-07 R2.5 shows "No schedules yet." with "+ Schedule" for an empty list', () => {
+    it('TC-US35-07 R2.5 shows "No schedules run the base version yet." with "+ Schedule" for an empty list', () => {
       mocks.entitySchedules.mockReturnValue(listOf([]));
       renderSection();
 
-      expect(screen.getByText('No schedules yet.')).toBeInTheDocument();
+      expect(screen.getByText('No schedules run the base version yet.')).toBeInTheDocument();
       expect(screen.getByTestId('agent-schedules-section-add')).toBeInTheDocument();
       expect(screen.queryByTestId(/^card-/)).not.toBeInTheDocument();
     });
@@ -195,7 +197,7 @@ describe('EntitySchedulesSection EL-7011', () => {
       mocks.entitySchedules.mockReturnValue(listOf([], { isFetching: true }));
       renderSection();
 
-      expect(screen.queryByText('No schedules yet.')).not.toBeInTheDocument();
+      expect(screen.queryByText('No schedules run the base version yet.')).not.toBeInTheDocument();
     });
 
     it('TC-US35-06 R2.4 "Show more" loads the next cards', () => {
@@ -216,7 +218,7 @@ describe('EntitySchedulesSection EL-7011', () => {
       expect(screen.getByText(/Server down/)).toBeInTheDocument();
       fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
       expect(list.refetch).toHaveBeenCalledTimes(1);
-      expect(screen.queryByText('No schedules yet.')).not.toBeInTheDocument();
+      expect(screen.queryByText('No schedules run the base version yet.')).not.toBeInTheDocument();
     });
 
     it('TC-US35-08 R3.1 "+ Schedule" opens the nested create form with the editor as the return target', () => {
@@ -246,7 +248,7 @@ describe('EntitySchedulesSection EL-7011', () => {
       mocks.permissions = [PERMISSIONS.schedules.list];
       renderSection();
 
-      expect(screen.getByText('2 schedules run this agent.')).toBeInTheDocument();
+      expect(screen.getByText('2 schedules run the base version')).toBeInTheDocument();
       expect(screen.queryByTestId('agent-schedules-section-add')).not.toBeInTheDocument();
     });
 
@@ -278,6 +280,66 @@ describe('EntitySchedulesSection EL-7011', () => {
     });
   });
 
+  describe('editor version (US-58 CR-19)', () => {
+    it('R4.2 EL-7011 CR-19 requests the schedules of the editor version', () => {
+      renderSection({ versionId: 71, versionName: 'v1.0.1' });
+
+      expect(mocks.entitySchedules).toHaveBeenLastCalledWith({
+        entityType: 'agent',
+        entityId: 12,
+        versionId: 71,
+        skip: false,
+      });
+    });
+
+    it('R4.4 EL-7011 CR-19 names the version "base" as the base version', () => {
+      renderSection({ versionId: 70, versionName: 'base' });
+      expect(screen.getByText('2 schedules run the base version')).toBeInTheDocument();
+    });
+
+    it('R4.4 EL-7011 CR-19 names the version in the count text', () => {
+      renderSection({ versionId: 71, versionName: 'v1.0.1' });
+      expect(screen.getByText('2 schedules run version v1.0.1')).toBeInTheDocument();
+
+      cleanup();
+      mocks.entitySchedules.mockReturnValue(listOf([{ id: 1, name: 'Daily digest' }]));
+      renderSection({ versionId: 71, versionName: 'v1.0.1' });
+      expect(screen.getByText('1 schedule runs version v1.0.1')).toBeInTheDocument();
+    });
+
+    it('R4.5 EL-7011 CR-19 names the version in the empty state and keeps the add button and link', () => {
+      mocks.entitySchedules.mockReturnValue(listOf([]));
+      renderSection({ versionId: 71, versionName: 'v1.0.1' });
+
+      expect(screen.getByText('No schedules run version v1.0.1 yet.')).toBeInTheDocument();
+      expect(screen.getByTestId('agent-schedules-section-add')).toBeInTheDocument();
+      expect(screen.getByTestId('agent-schedules-section-open-all')).toBeInTheDocument();
+    });
+
+    it('R5.1 EL-7011 CR-19 "+ Schedule" passes the editor versionId in the form URL', () => {
+      renderSection({ versionId: 71 }, '/agents/my/12?viewMode=owner');
+
+      fireEvent.click(screen.getByTestId('agent-schedules-section-add'));
+
+      expect(mocks.navigate).toHaveBeenCalledWith(
+        { pathname: '/agents/my/12/schedules/create', search: '?viewMode=owner&versionId=71' },
+        { state: { returnTo: '/agents/my/12?viewMode=owner' } },
+      );
+    });
+
+    it('R5.2 EL-7011 CR-19 Edit passes the version of that schedule in the form URL', () => {
+      mocks.entitySchedules.mockReturnValue(listOf([{ id: 2, name: 'Friday recap', version_id: 72 }]));
+      renderSection({ versionId: 71 }, '/agents/my/12');
+
+      fireEvent.click(screen.getByTestId('card-2'));
+
+      expect(mocks.navigate).toHaveBeenCalledWith(
+        { pathname: '/agents/my/12/schedules/2', search: '?versionId=72' },
+        { state: { returnTo: '/agents/my/12' } },
+      );
+    });
+  });
+
   describe('pipeline editor (US-36)', () => {
     const renderPipeline = (props = {}) =>
       renderSection({ entityType: 'pipeline', entityId: 9, ...props }, '/pipelines/all/9?viewMode=owner');
@@ -288,32 +350,38 @@ describe('EntitySchedulesSection EL-7011', () => {
       expect(mocks.entitySchedules).toHaveBeenLastCalledWith({
         entityType: 'pipeline',
         entityId: 9,
+        versionId: undefined,
         skip: false,
       });
-      expect(screen.getByText('2 schedules run this pipeline.')).toBeInTheDocument();
+      expect(screen.getByText('2 schedules run the base version')).toBeInTheDocument();
       expect(screen.getByTestId('pipeline-schedules-section-add')).toBeInTheDocument();
       expect(mocks.cardProps.map(card => card.entityType)).toEqual(['pipeline', 'pipeline']);
     });
 
-    it('owner bug 2026-10-21 the header stacks in a narrow column: button and count, then the link', () => {
+    it('TC-US36-01 TC-US36-16 R1.6 BUG-32 EL-7011 narrower than 30 rem: button and link on row 1, count wraps on row 2', () => {
       renderPipeline();
 
       const css = [...document.querySelectorAll('style')].map(style => style.textContent).join('');
       expect(css).toContain('container-type:inline-size');
-      expect(css).toContain('@container (min-width: 26rem)');
+      expect(css).toContain('@container (min-width: 30rem)');
+      expect(css).not.toContain('26rem');
       expect(screen.getByTestId('pipeline-schedules-section-header')).toHaveStyle({ flexWrap: 'wrap' });
       expect(screen.getByTestId('pipeline-schedules-section-add')).toHaveStyle({ whiteSpace: 'nowrap' });
-      // Below 26 rem the link takes its own row; the count text may wrap to 2 lines
-      expect(screen.getByTestId('pipeline-schedules-section-open-all')).toHaveStyle({ flexBasis: '100%' });
-      expect(screen.getByText('2 schedules run this pipeline.')).toHaveStyle({ minWidth: '0' });
+      // The link shares row 1 with the button; the count takes row 2 and wraps, never truncates
+      expect(screen.getByTestId('pipeline-schedules-section-open-all')).not.toHaveStyle({
+        flexBasis: '100%',
+      });
+      const count = screen.getByText('2 schedules run the base version');
+      expect(count).toHaveStyle({ flexBasis: '100%', order: '1' });
+      expect(count).not.toHaveStyle({ whiteSpace: 'nowrap', textOverflow: 'ellipsis' });
     });
 
     it('TC-US36-17 R1.4 shows the empty state of a pipeline without schedules', () => {
       mocks.entitySchedules.mockReturnValue(listOf([]));
       renderPipeline();
 
-      expect(screen.getByText('No schedules yet.')).toBeInTheDocument();
-      expect(screen.queryByText(/run this pipeline/)).not.toBeInTheDocument();
+      expect(screen.getByText('No schedules run the base version yet.')).toBeInTheDocument();
+      expect(screen.queryByText(/^\d+ schedules? runs? /)).not.toBeInTheDocument();
     });
 
     it('TC-US36-11 R1.2 hides the section of a pipeline opened in a chat', () => {
