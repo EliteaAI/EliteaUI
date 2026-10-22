@@ -270,6 +270,18 @@ describe('ScheduleForm EL-7011', () => {
     expect(screen.queryByRole('button', { name: 'Build with AI' })).not.toBeInTheDocument();
   });
 
+  it('R1.1 CR-26 shows Build with AI on the New schedule form', () => {
+    renderForm();
+
+    expect(screen.getByRole('button', { name: 'Build with AI' })).toBeInTheDocument();
+  });
+
+  it('R1.1 CR-26 hides Build with AI on an existing schedule', () => {
+    renderForm({ schedule: { id: 3, owner: { name: 'Ann Lee' } } }, '/settings/schedules/3');
+
+    expect(screen.queryByRole('button', { name: 'Build with AI' })).not.toBeInTheDocument();
+  });
+
   it('R2.1 EL-7011 shows GENERAL, WHAT TO RUN and SCHEDULE SETTINGS in this order', () => {
     renderForm();
 
