@@ -54,8 +54,9 @@ vi.mock('@/[fsd]/entities/schedule', async () => ({
 }));
 
 vi.mock('@/[fsd]/shared/ui/select', () => ({
-  SingleSelect: ({ label, options, value, onValueChange }) => (
+  SingleSelect: ({ label, options, value, onValueChange, displayEmpty }) => (
     <select
+      data-display-empty={String(Boolean(displayEmpty))}
       aria-label={label}
       value={value}
       onChange={event => onValueChange(event.target.value)}
@@ -176,6 +177,8 @@ describe('RunHistoryPage schedule filter and links (EL-7011 CR-22)', () => {
       'href',
       '/agents/all/127/schedules/4',
     );
+    // CR-22 review r3: the theme link (MUI Link), not the browser default blue
+    expect(screen.getByRole('link', { name: 'Daily digest' })).toHaveClass('MuiLink-root');
   });
 
   it('CR-22 review r2 ignores a schedule_id that is not a number, and keeps an unknown valid id as an option', () => {
@@ -188,6 +191,15 @@ describe('RunHistoryPage schedule filter and links (EL-7011 CR-22)', () => {
     expect(containerProps.current.queryParams).toEqual({ schedule_id: 55 });
     expect(screen.getByLabelText('Schedule')).toHaveValue('55');
     expect(screen.getByRole('option', { name: 'Schedule 55' })).toBeInTheDocument();
+  });
+
+  it('CR-22 review r3 shows "All schedules" as the value when no schedule is chosen', () => {
+    renderAt('/agents/all/127/history', { scheduleEntityType: 'agent' });
+
+    const select = screen.getByLabelText('Schedule');
+    expect(select).toHaveValue('');
+    expect(select).toHaveAttribute('data-display-empty', 'true');
+    expect(screen.getByRole('option', { name: 'All schedules' })).toHaveValue('');
   });
 
   it('CR-22 histories without schedules show no filter and no extra columns', () => {

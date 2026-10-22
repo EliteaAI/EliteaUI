@@ -1,8 +1,8 @@
 import { memo, useCallback, useMemo } from 'react';
 
-import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Link as RouterLink, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
-import { Box } from '@mui/material';
+import { Box, Link } from '@mui/material';
 
 import { SCHEDULE_RUN_COLUMNS } from '@/[fsd]/entities/run-history/lib/helpers';
 import { RunHistoryContainer } from '@/[fsd]/entities/run-history/ui';
@@ -88,9 +88,13 @@ const RunHistoryPage = memo(props => {
       // R4.1: a schedule the caller cannot open stays plain text, so no link leads to a dead page
       if (!openable.has(scheduleId)) return name;
       return (
+        // The theme link, so the name reads well in dark and light (CR-22 review r3)
         <Link
+          component={RouterLink}
           to={buildScheduleFormLink({ entityType: scheduleEntityType, entityId: agentId, tab, scheduleId })}
           onClick={event => event.stopPropagation()}
+          variant="bodyMedium"
+          underline="hover"
         >
           {name}
         </Link>
@@ -150,6 +154,8 @@ const RunHistoryPage = memo(props => {
               options={scheduleOptions}
               value={scheduleIdParam}
               onValueChange={handleScheduleChange}
+              // The empty value is "All schedules": show its label instead of a blank select
+              displayEmpty
               showEmptyPlaceholder={false}
               inputProps={{ 'aria-label': 'Schedule' }}
             />

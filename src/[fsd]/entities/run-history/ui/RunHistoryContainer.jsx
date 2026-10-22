@@ -168,7 +168,7 @@ const RunHistoryContainer = memo(props => {
   }, []);
 
   const isStacked = layout === 'stacked';
-  const styles = runHistoryContainerStyles(isSmallWindow, isStacked);
+  const styles = runHistoryContainerStyles(isSmallWindow, isStacked, Boolean(extraColumns?.length));
 
   const detail =
     selectedRow?.entry && DetailComponent ? (
@@ -208,7 +208,10 @@ const RunHistoryContainer = memo(props => {
         data-testid="run-history-layout"
         sx={onClose ? styles.wrapperFlex : styles.wrapper}
       >
-        <Box sx={styles.historyList}>
+        <Box
+          data-testid="run-history-list-column"
+          sx={styles.historyList}
+        >
           <RunHistoryList
             conversations={historyRows}
             versions={versions}
@@ -248,7 +251,7 @@ const RunHistoryContainer = memo(props => {
 RunHistoryContainer.displayName = 'RunHistoryContainer';
 
 /** @type {MuiSx} */
-const runHistoryContainerStyles = (isSmallWindow, isStacked) => ({
+const runHistoryContainerStyles = (isSmallWindow, isStacked, wideList = false) => ({
   outerWrapper: {
     display: 'flex',
     flexDirection: 'column',
@@ -289,7 +292,8 @@ const runHistoryContainerStyles = (isSmallWindow, isStacked) => ({
   historyList: {
     flex: isStacked ? 'none' : 3,
     height: isStacked ? '20rem' : undefined,
-    maxWidth: isSmallWindow || isStacked ? '100%' : '32rem',
+    // CR-22 D7: the column follows the list, 48 rem with the schedule columns, so the panel starts after it
+    maxWidth: isSmallWindow || isStacked ? '100%' : wideList ? '48rem' : '32rem',
     position: 'relative',
     display: 'flex',
     flexDirection: 'column',
