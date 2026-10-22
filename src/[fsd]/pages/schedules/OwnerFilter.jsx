@@ -15,9 +15,9 @@ const SCROLL_THRESHOLD = 10;
 
 const keepServerResult = options => options;
 
-// The chip removes itself on Backspace; the Autocomplete root would also remove the last owner
-const stopBackspace = event => {
-  if (event.key === 'Backspace') event.stopPropagation();
+// The chip removes itself on Backspace and Delete; the Autocomplete root would also remove an owner
+const stopChipDeleteKeys = event => {
+  if (event.key === 'Backspace' || event.key === 'Delete') event.stopPropagation();
 };
 
 const OwnerFilter = memo(({ selectedOwners, onChangeOwners }) => {
@@ -87,10 +87,7 @@ const OwnerFilter = memo(({ selectedOwners, onChangeOwners }) => {
             }
             deleteIcon={<RemoveIcon fill="currentColor" />}
             {...firstItemProps}
-            onKeyDown={event => {
-              stopBackspace(event);
-              firstItemProps.onKeyDown?.(event);
-            }}
+            onKeyDown={stopChipDeleteKeys}
           />
           {others.length > 0 && (
             <StyledTooltip
