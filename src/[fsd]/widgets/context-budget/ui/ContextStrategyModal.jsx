@@ -56,14 +56,14 @@ const ContextStrategyModal = memo(props => {
   );
 
   useEffect(() => {
-    if (open && initialValues) {
+    if (open) {
       setExpandedAccordions({
-        tokenManagement: initialValues.enabled,
-        summarization: initialValues.enabled,
-        systemMessages: initialValues.enabled,
+        tokenManagement: true,
+        summarization: true,
+        systemMessages: true,
       });
     }
-  }, [open, initialValues]);
+  }, [open]);
 
   const handleSubmit = useContextStrategySubmit({
     selectedProjectId,

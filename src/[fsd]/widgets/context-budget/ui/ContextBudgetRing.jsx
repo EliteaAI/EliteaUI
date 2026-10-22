@@ -99,7 +99,7 @@ const ContextBudgetRing = memo(props => {
           ref={anchorRef}
           role="button"
           tabIndex={0}
-          aria-label={`Context budget ${percentage}%`}
+          aria-label={`Context management ${percentage}%`}
           aria-expanded={open}
           aria-haspopup="dialog"
           onClick={toggle}
@@ -133,7 +133,7 @@ const ContextBudgetRing = memo(props => {
       <Popper
         open={open}
         anchorEl={anchorRef.current}
-        placement="left-start"
+        placement="left-end"
         strategy="fixed"
         transition
         sx={styles.popper}
@@ -144,7 +144,7 @@ const ContextBudgetRing = memo(props => {
               ref={paperRef}
               sx={styles.paper}
               role="dialog"
-              aria-label="Context budget"
+              aria-label="Context management"
               data-testid="context-budget-popover"
             >
               <ClickAwayListener onClickAway={handleClickAway}>

@@ -25,18 +25,20 @@ const ContextBudgetDetails = memo(props => {
   const cost = formatApproxCost(chatUsage);
 
   const windowRows = useMemo(
-    () => [
-      {
-        label: 'Total window',
-        value: `${formatTokens(stats.modelWindowPreview ?? stats.effectiveWindow)}${stats.windowSource === 'default' ? ' (default)' : ''}`,
-        testId: 'context-budget-total-window',
-      },
-      {
-        label: `Minimum output allowance (${stats.reservedOutputSource === 'custom' ? 'Custom' : 'Auto'})`,
-        value: formatTokens(stats.reservedOutput),
-      },
-      { label: 'Safety margin', value: formatTokens(stats.safetyMargin) },
-    ],
+    () =>
+      [
+        {
+          label: 'Total window',
+          value: `${formatTokens(stats.modelWindowPreview ?? stats.effectiveWindow)}${stats.windowSource === 'default' ? ' (default)' : ''}`,
+          testId: 'context-budget-total-window',
+        },
+        // Auto allowance is a constant, so only the custom one is worth showing
+        stats.reservedOutputSource === 'custom' && {
+          label: 'Minimum output allowance (Custom)',
+          value: formatTokens(stats.reservedOutput),
+        },
+        { label: 'Safety margin', value: formatTokens(stats.safetyMargin) },
+      ].filter(Boolean),
     [stats],
   );
 

@@ -21,13 +21,20 @@ export const useContextWindowSwitch = ({ conversationId, contextStrategy, setAct
     strategyRef.current = contextStrategy;
   }, [contextStrategy]);
 
+  // A switch still in flight belongs to the chat it was made in, never to the one opened since
+  useEffect(() => {
+    requestIdRef.current += 1;
+    baselineRef.current = null;
+  }, [conversationId]);
+
   const applyStrategy = useCallback(
-    strategy => {
+    (strategy, targetConversationId) => {
       strategyRef.current = strategy;
-      setActiveConversation?.(prev => ({
-        ...prev,
-        meta: { ...(prev?.meta || {}), context_strategy: strategy },
-      }));
+      setActiveConversation?.(prev =>
+        prev?.id && prev.id !== targetConversationId
+          ? prev
+          : { ...prev, meta: { ...(prev?.meta || {}), context_strategy: strategy } },
+      );
     },
     [setActiveConversation],
   );
@@ -37,7 +44,7 @@ export const useContextWindowSwitch = ({ conversationId, contextStrategy, setAct
       const requestId = ++requestIdRef.current;
       const current = strategyRef.current || {};
       if (baselineRef.current === null) baselineRef.current = current;
-      applyStrategy({ ...current, context_window_mode: mode });
+      applyStrategy({ ...current, context_window_mode: mode }, conversationId);
       try {
         const result = await updateContextStrategy({
           projectId: selectedProjectId,
@@ -46,12 +53,12 @@ export const useContextWindowSwitch = ({ conversationId, contextStrategy, setAct
         }).unwrap();
         if (requestId !== requestIdRef.current) return;
         baselineRef.current = null;
-        if (result?.updated_strategy) applyStrategy(result.updated_strategy);
+        if (result?.updated_strategy) applyStrategy(result.updated_strategy, conversationId);
       } catch (error) {
         if (requestId !== requestIdRef.current) return;
         const baseline = baselineRef.current;
         baselineRef.current = null;
-        applyStrategy(baseline);
+        applyStrategy(baseline, conversationId);
         toastError(error?.data?.error || 'Failed to change the context window');
       }
     },

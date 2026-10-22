@@ -20,7 +20,7 @@ const ContextBudgetTooltipContent = memo(props => {
         variant="labelSmall"
         sx={styles.tooltipTitle}
       >
-        Context Budget
+        Context management
       </Typography>
       <ContextBudgetStatsDisplay
         stats={stats}

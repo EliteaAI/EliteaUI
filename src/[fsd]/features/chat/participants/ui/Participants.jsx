@@ -78,22 +78,6 @@ const Participants = memo(props => {
           )}
         </Box>
 
-        {conversationId && showCollapsedParticipants && (
-          <Box
-            data-tour={CHAT_TOUR_TARGET_IDS.contextBudget}
-            sx={styles.contextBudgetRingWrapper}
-          >
-            <ContextBudgetUI.ContextBudgetInfo
-              conversationId={conversationId}
-              collapsed
-              contextStrategy={contextStrategy}
-              setActiveConversation={setActiveConversation}
-              conversationInstructions={conversationInstructions}
-              persona={persona}
-            />
-          </Box>
-        )}
-
         <Box sx={styles.participantsContainer(collapsed, isSmallWindow)}>
           {showCollapsedParticipants ? (
             <CollapsedPerticapantsList
@@ -125,13 +109,14 @@ const Participants = memo(props => {
         </Box>
       </Box>
 
-      {conversationId && !showCollapsedParticipants && (
+      {conversationId && (
         <Box
           data-tour={CHAT_TOUR_TARGET_IDS.contextBudget}
-          sx={styles.contextBudgetWrapper}
+          sx={showCollapsedParticipants ? styles.contextBudgetRingWrapper : styles.contextBudgetWrapper}
         >
           <ContextBudgetUI.ContextBudgetInfo
             conversationId={conversationId}
+            collapsed={showCollapsedParticipants}
             contextStrategy={contextStrategy}
             setActiveConversation={setActiveConversation}
             conversationInstructions={conversationInstructions}
@@ -206,8 +191,9 @@ const styles = {
   contextBudgetRingWrapper: {
     display: 'flex',
     justifyContent: 'center',
-    width: '100%',
-    marginTop: '.5rem',
+    flexShrink: 0,
+    width: '3.25rem',
+    paddingBottom: '.5rem',
   },
 };
 

@@ -7,7 +7,8 @@ import {
 } from '@/[fsd]/shared/lib/constants';
 import { DEFAULT_PERSONA, PERSONA_OPTIONS } from '@/common/constants';
 
-const { DEFAULT_CONTEXT_STRATEGY, SEPARATOR, VALIDATION_LIMITS } = ContextStrategyConstants;
+const { CONTEXT_WINDOW_MODES, DEFAULT_CONTEXT_STRATEGY, SEPARATOR, VALIDATION_LIMITS } =
+  ContextStrategyConstants;
 const { DEFAULT_MAX_TOKENS_CUSTOM } = LLMSettingsConstants;
 const { INTERNAL_TOOL_PERSONALIZATION_FIELD_MAP, INTERNAL_TOOL_AGENT_PERSONALIZATION_FIELD_MAP } =
   InternalToolsConstants;
@@ -35,7 +36,8 @@ export const PROFILE_INITIAL_VALUES = {
   persona: DEFAULT_PERSONA,
   personality_instructions: { ...EMPTY_PERSONALITY_INSTRUCTIONS },
   ...MODULE_TOGGLE_DEFAULTS,
-  context_enabled: DEFAULT_CONTEXT_STRATEGY.ENABLED,
+  // #6898: '' follows the project default for new chats
+  context_window_mode: '',
   preserve_recent_messages: DEFAULT_CONTEXT_STRATEGY.PRESERVE_RECENT_MESSAGES,
   enable_summarization: DEFAULT_CONTEXT_STRATEGY.ENABLE_SUMMARIZATION,
   enable_context_editing: DEFAULT_CONTEXT_STRATEGY.ENABLE_CONTEXT_EDITING,
@@ -82,7 +84,9 @@ export const serializeProfileFormData = (authorData, moduleSettingsData, default
       ...(p.personality_instructions || {}),
     },
     ...moduleToggles,
-    context_enabled: cm.enabled ?? DEFAULT_CONTEXT_STRATEGY.ENABLED,
+    context_window_mode: Object.values(CONTEXT_WINDOW_MODES).includes(cm.context_window_mode)
+      ? cm.context_window_mode
+      : '',
     preserve_recent_messages:
       cm.preserve_recent_messages ?? DEFAULT_CONTEXT_STRATEGY.PRESERVE_RECENT_MESSAGES,
     enable_context_editing: cm.enable_context_editing ?? DEFAULT_CONTEXT_STRATEGY.ENABLE_CONTEXT_EDITING,
@@ -103,7 +107,7 @@ export const deserializeProfileFormData = formValues => ({
     personality_instructions: formValues.personality_instructions,
   },
   default_context_management: {
-    enabled: formValues.context_enabled,
+    context_window_mode: formValues.context_window_mode || null,
     preserve_recent_messages: formValues.preserve_recent_messages,
     enable_context_editing: formValues.enable_context_editing,
   },
@@ -121,7 +125,6 @@ export const deserializeModuleSettingsFormData = formValues =>
   MODULE_SETTINGS_KEYS.reduce((acc, key) => ({ ...acc, [key]: formValues[key] }), {});
 
 export const createContextStrategyFormData = formikValues => ({
-  enabled: formikValues.context_enabled,
   preserve_recent_messages: formikValues.preserve_recent_messages,
   enable_summarization: formikValues.enable_summarization,
   summary_llm_settings: formikValues.summary_llm_settings,
@@ -145,27 +148,21 @@ export const profileValidationSchema = yup.object({
   personality_instructions: yup.object(),
 
   // Context Management
-  context_enabled: yup.boolean(),
+  context_window_mode: yup.string().oneOf(['', ...Object.values(CONTEXT_WINDOW_MODES)]),
   enable_context_editing: yup.boolean(),
   preserve_recent_messages: yup
     .number()
     .typeError('Please enter a valid number')
     .integer('Must be a whole number')
-    .when('context_enabled', {
-      is: true,
-      then: schema =>
-        schema
-          .required('This field is required')
-          .min(
-            VALIDATION_LIMITS.PRESERVE_RECENT_MESSAGES.MIN,
-            `Preserve messages must be at least ${VALIDATION_LIMITS.PRESERVE_RECENT_MESSAGES.MIN}`,
-          )
-          .max(
-            VALIDATION_LIMITS.PRESERVE_RECENT_MESSAGES.MAX,
-            `Preserve messages cannot exceed ${VALIDATION_LIMITS.PRESERVE_RECENT_MESSAGES.MAX}`,
-          ),
-      otherwise: schema => schema.nullable(),
-    }),
+    .required('This field is required')
+    .min(
+      VALIDATION_LIMITS.PRESERVE_RECENT_MESSAGES.MIN,
+      `Preserve messages must be at least ${VALIDATION_LIMITS.PRESERVE_RECENT_MESSAGES.MIN}`,
+    )
+    .max(
+      VALIDATION_LIMITS.PRESERVE_RECENT_MESSAGES.MAX,
+      `Preserve messages cannot exceed ${VALIDATION_LIMITS.PRESERVE_RECENT_MESSAGES.MAX}`,
+    ),
 
   // Summarization
   enable_summarization: yup.boolean(),
