@@ -46,7 +46,9 @@ const RunHistoryPage = memo(props => {
     { skip: !scheduleEntityType || !projectId || !agentId },
   );
   const schedules = useMemo(() => scheduleData?.rows ?? [], [scheduleData]);
-  const scheduleIdParam = searchParams.get(SCHEDULE_ID_PARAM) ?? ALL_SCHEDULES;
+  // A positive whole number only: anything else (for example "abc") is ignored, not sent as NaN
+  const rawScheduleId = searchParams.get(SCHEDULE_ID_PARAM) ?? ALL_SCHEDULES;
+  const scheduleIdParam = /^[1-9]\d*$/.test(rawScheduleId) ? rawScheduleId : ALL_SCHEDULES;
   const queryParams = useMemo(
     () => (scheduleIdParam ? { [SCHEDULE_ID_PARAM]: Number(scheduleIdParam) } : NO_QUERY_PARAMS),
     [scheduleIdParam],
@@ -55,8 +57,12 @@ const RunHistoryPage = memo(props => {
     () => [
       { label: 'All schedules', value: ALL_SCHEDULES },
       ...schedules.map(schedule => ({ label: schedule.name, value: String(schedule.id) })),
+      // A linked id the caller's list does not hold still shows, so the select is never blank
+      ...(scheduleIdParam && !schedules.some(schedule => String(schedule.id) === scheduleIdParam)
+        ? [{ label: `Schedule ${scheduleIdParam}`, value: scheduleIdParam }]
+        : []),
     ],
-    [schedules],
+    [schedules, scheduleIdParam],
   );
   const handleScheduleChange = useCallback(
     value => {

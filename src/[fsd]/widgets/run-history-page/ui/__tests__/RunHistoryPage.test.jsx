@@ -178,6 +178,18 @@ describe('RunHistoryPage schedule filter and links (EL-7011 CR-22)', () => {
     );
   });
 
+  it('CR-22 review r2 ignores a schedule_id that is not a number, and keeps an unknown valid id as an option', () => {
+    renderAt('/agents/all/127/history?schedule_id=abc', { scheduleEntityType: 'agent' });
+    expect(containerProps.current.queryParams).toEqual({});
+    expect(screen.getByLabelText('Schedule')).toHaveValue('');
+    cleanup();
+
+    renderAt('/agents/all/127/history?schedule_id=55', { scheduleEntityType: 'agent' });
+    expect(containerProps.current.queryParams).toEqual({ schedule_id: 55 });
+    expect(screen.getByLabelText('Schedule')).toHaveValue('55');
+    expect(screen.getByRole('option', { name: 'Schedule 55' })).toBeInTheDocument();
+  });
+
   it('CR-22 histories without schedules show no filter and no extra columns', () => {
     renderAt('/agents/all/127/history');
 
