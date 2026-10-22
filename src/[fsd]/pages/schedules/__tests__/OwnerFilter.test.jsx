@@ -134,6 +134,17 @@ describe('OwnerFilter EL-7011 R2.1 R2.2', () => {
     expectSummary('Owner 2', '+2');
   });
 
+  it.each(['Backspace', 'Delete'])('BUG-40 R2.1 EL-7011 %s on a focused chip removes only that chip', key => {
+    const onChangeOwners = vi.fn();
+    renderFilter({ selectedOwners: OWNERS.slice(0, 2), onChangeOwners });
+    const chip = screen.getByTestId('schedules-owner-chip');
+    chip.focus();
+    fireEvent.keyDown(chip, { key });
+    fireEvent.keyUp(chip, { key });
+    expect(onChangeOwners).toHaveBeenCalledTimes(1);
+    expect(onChangeOwners.mock.calls[0][0].map(owner => owner.id)).toEqual([12]);
+  });
+
   it('BUG-13 R2.1 EL-7011 the +N chip names the other owners in its tooltip and label', () => {
     renderFilter({ selectedOwners: OWNERS });
     const more = screen.getByTestId('schedules-owner-more');
