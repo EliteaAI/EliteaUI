@@ -2,7 +2,15 @@
 import { ExcelFormats, sanitizeFileNamePart } from '@/[fsd]/shared/lib/utils/exportToExcel.utils';
 import { isNullOrUndefined } from '@/common/utils';
 
-import { fillDailyGaps, formatModelName, usageSeverity } from './usage.helpers';
+import {
+  comparableTotal,
+  computeDelta,
+  fillDailyGaps,
+  forecastSpend,
+  formatModelName,
+  toCumulative,
+  usageSeverity,
+} from './usage.helpers';
 
 const UNLIMITED = 'Unlimited';
 
@@ -165,6 +173,312 @@ export const buildMembersSheet = (rows = [], warningPct) => ({
 });
 
 /**
+ * Computes the elapsed-days count used for KPI forecasts and averages, matching the
+ * hook logic: days from period_start up to today, capped at the month length.
+ */
+const kpiElapsedDays = (periodStart, daysInMonth) => {
+  if (!periodStart) return 0;
+  const start = new Date(periodStart + 'T00:00:00Z');
+  const diff = Math.floor((Date.now() - start) / 86400000) + 1;
+  return Math.max(0, Math.min(diff, daysInMonth));
+};
+
+const kpiDaysInMonth = periodStart => {
+  if (!periodStart) return 30;
+  const d = new Date(periodStart + 'T00:00:00Z');
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0)).getUTCDate();
+};
+
+export const buildKpiSheet = ({ data, canSeeAmounts, isCurrentPeriod, comparisonData }) => {
+  const {
+    spend = 0,
+    total_tokens: totalTokens = 0,
+    effective_limit: effectiveLimit,
+    currency = 'USD',
+    period_start: periodStart,
+    daily = [],
+    api_requests: calls = 0,
+    percent_used: percentUsed,
+    input_tokens: inputTokens = 0,
+    cache_read_tokens: cacheReadTokens = 0,
+  } = data;
+
+  const daysInMonth = kpiDaysInMonth(periodStart);
+  const elapsedDays = kpiElapsedDays(periodStart, daysInMonth);
+  // For past periods compare the full month; for current compare like-for-like up to today.
+  const comparableThroughDay = isCurrentPeriod ? elapsedDays : null;
+  const prevSpend = comparableTotal(comparisonData, 'spend', comparableThroughDay);
+  const prevTokens = comparableTotal(comparisonData, 'total_tokens', comparableThroughDay);
+  const spentDelta = computeDelta(spend, prevSpend);
+  const tokenDelta = computeDelta(totalTokens, prevTokens);
+
+  const forecast = forecastSpend(spend, elapsedDays, daysInMonth);
+  const avgPerDay = elapsedDays > 0 ? spend / elapsedDays : 0;
+
+  const peakDay = daily.reduce((best, d) => (!best || (d.spend || 0) > (best.spend || 0) ? d : best), null);
+  const peakDateLabel = peakDay?.date
+    ? (() => {
+        const d = new Date(peakDay.date + 'T00:00:00Z');
+        return `${d.toLocaleString('en-US', { month: 'short', timeZone: 'UTC' })} ${d.getUTCDate()}`;
+      })()
+    : '';
+
+  const cacheTotal = inputTokens + cacheReadTokens;
+  const cacheHitRate = cacheTotal > 0 ? Math.round((cacheReadTokens / cacheTotal) * 100) : 0;
+
+  const forecastPct =
+    effectiveLimit && forecast != null
+      ? Math.round((forecast / effectiveLimit) * 100)
+      : percentUsed != null && elapsedDays > 0
+        ? Math.round((percentUsed / elapsedDays) * daysInMonth)
+        : null;
+
+  const rows = [
+    {
+      metric: canSeeAmounts ? 'Spent' : 'Budget used',
+      value: canSeeAmounts ? orBlank(spend) : orBlank(percentUsed),
+      unit: canSeeAmounts ? currency : '%',
+      vsLastMonth: spentDelta.direction !== 'none' ? spentDelta.label : '',
+      vsTrend: spentDelta.direction,
+    },
+    {
+      metric: isCurrentPeriod ? 'Forecast' : 'Limit',
+      value: isCurrentPeriod
+        ? forecast != null
+          ? canSeeAmounts
+            ? orBlank(forecast)
+            : forecastPct != null
+              ? forecastPct
+              : ''
+          : ''
+        : (effectiveLimit ?? ''),
+      unit: isCurrentPeriod
+        ? canSeeAmounts
+          ? currency
+          : forecastPct != null
+            ? '%'
+            : ''
+        : canSeeAmounts
+          ? currency
+          : '',
+      vsLastMonth: '',
+      vsTrend: '',
+    },
+    {
+      metric: canSeeAmounts ? 'Avg / day' : 'Avg tokens / day',
+      value: canSeeAmounts ? orBlank(avgPerDay) : orBlank(totalTokens / Math.max(elapsedDays, 1)),
+      unit: canSeeAmounts ? currency : 'tokens',
+      vsLastMonth: peakDateLabel ? `Peak on ${peakDateLabel}` : '',
+      vsTrend: '',
+    },
+    {
+      metric: cacheTotal > 0 && !canSeeAmounts && percentUsed == null ? 'Cache hit rate' : 'Tokens',
+      value: cacheTotal > 0 && !canSeeAmounts && percentUsed == null ? cacheHitRate : orBlank(totalTokens),
+      unit: cacheTotal > 0 && !canSeeAmounts && percentUsed == null ? '%' : 'tokens',
+      vsLastMonth: tokenDelta.direction !== 'none' ? tokenDelta.label : '',
+      vsTrend: tokenDelta.direction,
+    },
+    {
+      metric: 'API calls',
+      value: calls,
+      unit: 'calls',
+      vsLastMonth: '',
+      vsTrend: '',
+    },
+  ];
+
+  return {
+    sheetName: 'KPI Summary',
+    columns: [
+      { header: 'Metric', key: 'metric' },
+      { header: 'Value', key: 'value' },
+      { header: 'Unit', key: 'unit' },
+      { header: 'vs Last Month', key: 'vsLastMonth' },
+      { header: 'Trend', key: 'vsTrend' },
+    ],
+    rows,
+  };
+};
+
+const SOURCE_DISPLAY = {
+  chat: 'Chat',
+  agents: 'Agents',
+  pipelines: 'Pipelines',
+  automations: 'Automations',
+  indexing: 'Indexing',
+  skills: 'Skills',
+  evaluations: 'Evaluations',
+  external: 'External API',
+};
+const getSourceLabel = key => SOURCE_DISPLAY[key] || (key ? String(key).slice(0, 20) : 'Other');
+
+/** "Spend over time" — one row per day, breakdown columns for each source present. */
+export const buildSpendOverTimeSheet = (data, bySource = []) => {
+  const daily = fillDailyGaps(data.daily || [], data.period_start, data.period_end);
+
+  // Derive the set of source keys that actually appear in any daily row
+  const sourceKeys = [
+    ...new Set(
+      daily
+        .flatMap(d => Object.keys(d.by_source || {}))
+        .concat((bySource || []).map(s => s.source || s.key).filter(Boolean)),
+    ),
+  ].sort();
+
+  const columns = [
+    { header: 'Date', key: 'date' },
+    { header: 'Spent (USD)', key: 'spend', numFmt: ExcelFormats.currency, transform: orBlank },
+    { header: 'Tokens', key: 'total_tokens', numFmt: ExcelFormats.integer },
+    { header: 'Calls', key: 'api_requests', numFmt: ExcelFormats.integer },
+    ...sourceKeys.map(k => ({
+      header: getSourceLabel(k),
+      key: `src_${k}`,
+      numFmt: ExcelFormats.currency,
+    })),
+  ];
+
+  const rows = daily.map(d => {
+    const row = {
+      date: d.date,
+      spend: orBlank(d.spend),
+      total_tokens: d.total_tokens || 0,
+      api_requests: d.api_requests || 0,
+    };
+    sourceKeys.forEach(k => {
+      row[`src_${k}`] = orBlank((d.by_source || {})[k]);
+    });
+    return row;
+  });
+
+  return { sheetName: 'Spend Over Time', columns, rows };
+};
+
+/** "Spend by source" — one row per source, matching the donut chart. */
+export const buildSpendBySourceSheet = (bySource = []) => {
+  const total = (bySource || []).reduce((sum, s) => sum + (s.spend || 0), 0);
+
+  const rows = [...(bySource || [])]
+    .sort((a, b) => (b.spend || 0) - (a.spend || 0))
+    .map(s => {
+      const key = s.source || s.key || '';
+      return {
+        source: getSourceLabel(key),
+        spend: orBlank(s.spend),
+        tokens: s.total_tokens || 0,
+        calls: s.api_requests || 0,
+        share: total > 0 ? Number((((s.spend || 0) / total) * 100).toFixed(2)) : 0,
+      };
+    });
+
+  return {
+    sheetName: 'Spend by Source',
+    columns: [
+      { header: 'Source', key: 'source' },
+      { header: 'Spent (USD)', key: 'spend', numFmt: ExcelFormats.currency },
+      { header: 'Tokens', key: 'tokens', numFmt: ExcelFormats.integer },
+      { header: 'Calls', key: 'calls', numFmt: ExcelFormats.integer },
+      { header: 'Share (%)', key: 'share', numFmt: ExcelFormats.percent },
+    ],
+    rows,
+  };
+};
+
+/**
+ * "Month vs Month" — cumulative daily spend for both periods side-by-side.
+ * Matches the MoM chart: rows are day-of-month, values are cumulative totals.
+ */
+export const buildMomSheet = ({ currentDaily = [], prevDaily = [], currentLabel, prevLabel }) => {
+  const curFilled = fillDailyGaps(
+    currentDaily,
+    currentDaily[0]?.date,
+    currentDaily[currentDaily.length - 1]?.date,
+  );
+  const prevFilled = fillDailyGaps(prevDaily, prevDaily[0]?.date, prevDaily[prevDaily.length - 1]?.date);
+
+  const curCumulative = toCumulative(curFilled.map(d => d.spend || 0));
+  const prevCumulative = toCumulative(prevFilled.map(d => d.spend || 0));
+
+  const totalDays = Math.max(curCumulative.length, prevCumulative.length);
+  const curCol = currentLabel || 'Current month';
+  const prevCol = prevLabel || 'Prior month';
+
+  const rows = Array.from({ length: totalDays }, (_, i) => ({
+    day: i + 1,
+    [curCol]: i < curCumulative.length ? orBlank(curCumulative[i]) : '',
+    [prevCol]: i < prevCumulative.length ? orBlank(prevCumulative[i]) : '',
+  }));
+
+  return {
+    sheetName: 'Month vs Month',
+    columns: [
+      { header: 'Day', key: 'day', numFmt: ExcelFormats.integer },
+      { header: curCol, key: curCol, numFmt: ExcelFormats.currency },
+      { header: prevCol, key: prevCol, numFmt: ExcelFormats.currency },
+    ],
+    rows,
+  };
+};
+
+export const buildTopAgentsSheet = agents => {
+  const rows = [...(agents || [])]
+    .sort((a, b) => (b.spend || 0) - (a.spend || 0))
+    .map(agent => {
+      const runs = agent.runs ?? null;
+      const spendKnown = !isNullOrUndefined(agent.spend);
+      return {
+        name: agent.name || agent.id || '',
+        type: (agent.type || '').toLowerCase() === 'pipeline' ? 'Pipeline' : 'Agent',
+        runs: runs ?? '',
+        spend: orBlank(agent.spend),
+        perRun: runs && spendKnown ? (agent.spend || 0) / runs : '',
+      };
+    });
+
+  return {
+    sheetName: 'Top Agents',
+    columns: [
+      { header: 'Name', key: 'name' },
+      { header: 'Type', key: 'type' },
+      { header: 'Runs', key: 'runs', numFmt: ExcelFormats.integer },
+      { header: 'Spent (USD)', key: 'spend', numFmt: ExcelFormats.currency },
+      { header: 'Per Run (USD)', key: 'perRun', numFmt: ExcelFormats.currency },
+    ],
+    rows,
+  };
+};
+
+export const buildTopSkillsSheet = skills => {
+  const list = skills || [];
+  const totalSpend = list.reduce((sum, s) => sum + (s.spend || 0), 0);
+
+  const rows = [...list]
+    .sort((a, b) => (b.spend || 0) - (a.spend || 0))
+    .map(skill => {
+      const uses = skill.uses ?? skill.call_count ?? null;
+      const spendKnown = !isNullOrUndefined(skill.spend);
+      return {
+        name: skill.name || skill.id || '',
+        uses: uses ?? '',
+        perUse: uses && spendKnown ? (skill.spend || 0) / uses : '',
+        spend: orBlank(skill.spend),
+        share: totalSpend > 0 ? Number((((skill.spend || 0) / totalSpend) * 100).toFixed(2)) : 0,
+      };
+    });
+
+  return {
+    sheetName: 'Top Skills',
+    columns: [
+      { header: 'Name', key: 'name' },
+      { header: 'Uses', key: 'uses', numFmt: ExcelFormats.integer },
+      { header: 'Per Use (USD)', key: 'perUse', numFmt: ExcelFormats.currency },
+      { header: 'Spent (USD)', key: 'spend', numFmt: ExcelFormats.currency },
+      { header: 'Share (%)', key: 'share', numFmt: ExcelFormats.percent },
+    ],
+    rows,
+  };
+};
+
+/**
  * Sheets for one export. Members are included only for a team project's whole-project
  * view, where per-member budgets exist and the caller is authorised to read them.
  */
@@ -175,11 +489,35 @@ export const buildUsageSheets = ({
   scope,
   memberRows,
   membersWarningPct,
+  canSeeAmounts = true,
+  isCurrentPeriod = true,
+  comparisonData = null,
+  momCurrentDaily = null,
+  momPrevDaily = null,
+  currentPeriodLabel = null,
+  prevPeriodLabel = null,
 }) => {
+  const hasMom = (momPrevDaily || []).some(d => (d.spend || 0) > 0);
+
   const sheets = [
     buildSummarySheet({ data, projectName, isPersonalProject, scope }),
+    buildKpiSheet({ data, canSeeAmounts, isCurrentPeriod, comparisonData }),
     buildDailySheet(data),
+    buildSpendOverTimeSheet(data, data.by_source),
     buildModelSheet(data),
+    ...((data.by_source || []).length ? [buildSpendBySourceSheet(data.by_source)] : []),
+    ...(hasMom
+      ? [
+          buildMomSheet({
+            currentDaily: momCurrentDaily,
+            prevDaily: momPrevDaily,
+            currentLabel: currentPeriodLabel,
+            prevLabel: prevPeriodLabel,
+          }),
+        ]
+      : []),
+    ...(data.top_agents?.length ? [buildTopAgentsSheet(data.top_agents)] : []),
+    ...(data.top_skills?.length ? [buildTopSkillsSheet(data.top_skills)] : []),
     ...(data.tool_spend?.length ? [buildToolSpendSheet(data)] : []),
   ];
 

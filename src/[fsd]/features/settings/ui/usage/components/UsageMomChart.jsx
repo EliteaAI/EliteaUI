@@ -2,7 +2,7 @@ import { memo, useMemo } from 'react';
 
 import { Box, Typography, useTheme } from '@mui/material';
 
-import { PeriodHelpers, UsageHelpers } from '@/[fsd]/features/settings/lib/helpers';
+import { UsageHelpers } from '@/[fsd]/features/settings/lib/helpers';
 
 const SVG_W = 600;
 const SVG_H = 120;
@@ -40,6 +40,9 @@ const pointsToAreaPath = (points, bottomY) => {
 
   return `${line} L ${last[0].toFixed(1)} ${bottomY} L ${first[0].toFixed(1)} ${bottomY} Z`;
 };
+
+const toYearMonth = label =>
+  label && label.length >= 6 ? `${label.slice(0, 4)}-${label.slice(4, 6)}` : label;
 
 const UsageMomChart = memo(props => {
   const {
@@ -134,10 +137,8 @@ const UsageMomChart = memo(props => {
     const aboveBelow = delta.direction === 'up' ? 'above' : 'below';
 
     if (!isCurrentPeriod) {
-      const curMonthName = PeriodHelpers.parsePeriodMonth(currentPeriodLabel);
-      const prevMonthName = PeriodHelpers.parsePeriodMonth(prevPeriodLabel);
-      const monthLabel = curMonthName || 'That month';
-      const prevLabel = prevMonthName || 'last month';
+      const monthLabel = toYearMonth(currentPeriodLabel) || 'That month';
+      const prevLabel = toYearMonth(prevPeriodLabel) || 'last month';
 
       if (canSeeAmounts) {
         const endedAt = UsageHelpers.formatMoney(currentSpend, currency);
@@ -172,7 +173,7 @@ const UsageMomChart = memo(props => {
         >
           {isCurrentPeriod
             ? 'This month vs last month'
-            : `${PeriodHelpers.parsePeriodMonth(currentPeriodLabel) || 'Selected month'} vs ${PeriodHelpers.parsePeriodMonth(prevPeriodLabel) || 'prior month'}`}
+            : `${toYearMonth(currentPeriodLabel) || 'Selected month'} vs ${toYearMonth(prevPeriodLabel) || 'prior month'}`}
         </Typography>
         {subtitleText && (
           <Typography
@@ -315,7 +316,7 @@ const UsageMomChart = memo(props => {
             variant="bodySmall"
             sx={styles.legendLabel}
           >
-            {currentPeriodLabel || 'This month'}
+            {toYearMonth(currentPeriodLabel) || 'This month'}
           </Typography>
         </Box>
         <Box sx={styles.legendItem}>
@@ -324,7 +325,7 @@ const UsageMomChart = memo(props => {
             variant="bodySmall"
             sx={styles.legendLabel}
           >
-            {prevPeriodLabel || 'Last month'}
+            {toYearMonth(prevPeriodLabel) || 'Last month'}
           </Typography>
         </Box>
         {limitY !== null && (

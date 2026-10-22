@@ -9,10 +9,16 @@ vi.mock('@/common/utils', () => ({
 const {
   budgetStatus,
   buildDailySheet,
+  buildKpiSheet,
   buildMembersSheet,
   buildModelSheet,
+  buildMomSheet,
+  buildSpendBySourceSheet,
+  buildSpendOverTimeSheet,
   buildSummarySheet,
   buildToolSpendSheet,
+  buildTopAgentsSheet,
+  buildTopSkillsSheet,
   buildUsageSheets,
   usageExportFileName,
 } = await import('../usageExport.helpers');
@@ -275,7 +281,9 @@ describe('sheet selection per scope', () => {
   it('includes members only for a team whole-project export', () => {
     expect(names({ isPersonalProject: false, scope: 'project', memberRows: [] })).toEqual([
       'Usage Summary',
+      'KPI Summary',
       'Daily Usage',
+      'Spend Over Time',
       'Usage by Model',
       'Members',
     ]);
@@ -284,7 +292,9 @@ describe('sheet selection per scope', () => {
   it('omits members for my usage', () => {
     expect(names({ isPersonalProject: false, scope: 'user' })).toEqual([
       'Usage Summary',
+      'KPI Summary',
       'Daily Usage',
+      'Spend Over Time',
       'Usage by Model',
     ]);
   });
@@ -293,7 +303,9 @@ describe('sheet selection per scope', () => {
   it('omits members for a private project', () => {
     expect(names({ isPersonalProject: true, scope: 'project' })).toEqual([
       'Usage Summary',
+      'KPI Summary',
       'Daily Usage',
+      'Spend Over Time',
       'Usage by Model',
     ]);
   });
@@ -352,6 +364,301 @@ describe('paid tools sheet', () => {
       percent: 25,
       calls: 31,
     });
+  });
+});
+
+describe('KPI summary sheet', () => {
+  const kpiUsage = () => ({
+    ...limitedUsage(),
+    api_requests: 16,
+    input_tokens: 250000,
+    cache_read_tokens: 0,
+    daily: [
+      { date: '2026-07-01', spend: 4, total_tokens: 160000, api_requests: 8 },
+      { date: '2026-07-02', spend: 3.5, total_tokens: 157011, api_requests: 8 },
+    ],
+  });
+
+  it('always emits exactly 5 rows (Spent, Forecast/Limit, Avg/day, Tokens, API calls)', () => {
+    const sheet = buildKpiSheet({ data: kpiUsage(), canSeeAmounts: true, isCurrentPeriod: true });
+
+    expect(sheet.rows).toHaveLength(5);
+    expect(sheet.rows.map(r => r.metric)).toEqual(['Spent', 'Forecast', 'Avg / day', 'Tokens', 'API calls']);
+  });
+
+  it('uses "Budget used" and "Avg tokens / day" when canSeeAmounts is false', () => {
+    const sheet = buildKpiSheet({ data: kpiUsage(), canSeeAmounts: false, isCurrentPeriod: true });
+
+    expect(sheet.rows[0].metric).toBe('Budget used');
+    expect(sheet.rows[2].metric).toBe('Avg tokens / day');
+  });
+
+  it('uses "Limit" instead of "Forecast" for a past period', () => {
+    const sheet = buildKpiSheet({ data: kpiUsage(), canSeeAmounts: true, isCurrentPeriod: false });
+
+    expect(sheet.rows[1].metric).toBe('Limit');
+    expect(sheet.rows[1].value).toBe(10);
+  });
+
+  it('carries the API calls count', () => {
+    const sheet = buildKpiSheet({ data: kpiUsage(), canSeeAmounts: true, isCurrentPeriod: true });
+
+    expect(sheet.rows[4].metric).toBe('API calls');
+    expect(sheet.rows[4].value).toBe(16);
+  });
+
+  it('includes the sheet in buildUsageSheets output', () => {
+    const names = buildUsageSheets({
+      data: limitedUsage(),
+      projectName: 'P',
+      isPersonalProject: true,
+      scope: 'project',
+    }).map(s => s.sheetName);
+
+    expect(names).toContain('KPI Summary');
+    expect(names.indexOf('KPI Summary')).toBe(1); // second sheet, right after Usage Summary
+  });
+});
+
+describe('spend over time sheet', () => {
+  const dataWithSources = {
+    period_start: '2026-07-01',
+    period_end: '2026-07-02',
+    daily: [
+      { date: '2026-07-01', spend: 4, total_tokens: 100, api_requests: 2, by_source: { agents: 3, chat: 1 } },
+      { date: '2026-07-02', spend: 6, total_tokens: 200, api_requests: 4, by_source: { agents: 5, chat: 1 } },
+    ],
+  };
+
+  const bySource = [
+    { source: 'agents', spend: 8 },
+    { source: 'chat', spend: 2 },
+  ];
+
+  it('emits one row per day', () => {
+    expect(buildSpendOverTimeSheet(dataWithSources, bySource).rows).toHaveLength(2);
+  });
+
+  it('adds a column per source found in daily rows', () => {
+    const sheet = buildSpendOverTimeSheet(dataWithSources, bySource);
+    const keys = sheet.columns.map(c => c.key);
+
+    expect(keys).toContain('src_agents');
+    expect(keys).toContain('src_chat');
+  });
+
+  it('carries per-source spend on each day', () => {
+    const rows = buildSpendOverTimeSheet(dataWithSources, bySource).rows;
+
+    expect(rows[0].src_agents).toBe(3);
+    expect(rows[0].src_chat).toBe(1);
+  });
+
+  it('leaves source columns empty for days with no breakdown', () => {
+    const sparse = {
+      period_start: '2026-07-01',
+      period_end: '2026-07-01',
+      daily: [{ date: '2026-07-01', spend: 4, total_tokens: 100, api_requests: 2 }],
+    };
+    const rows = buildSpendOverTimeSheet(sparse, bySource).rows;
+
+    expect(rows[0].src_agents).toBe('');
+  });
+
+  it('tolerates no daily data', () => {
+    expect(buildSpendOverTimeSheet({ daily: [] }, []).rows).toEqual([]);
+  });
+});
+
+describe('spend by source sheet', () => {
+  const bySource = [
+    { source: 'agents', spend: 6, total_tokens: 300, api_requests: 10 },
+    { source: 'chat', spend: 4, total_tokens: 200, api_requests: 8 },
+  ];
+
+  it('orders by spend, highest first', () => {
+    const rows = buildSpendBySourceSheet(bySource).rows;
+
+    expect(rows[0].source).toBe('Agents');
+    expect(rows[1].source).toBe('Chat');
+  });
+
+  it('sums share percentages to 100', () => {
+    const rows = buildSpendBySourceSheet(bySource).rows;
+    const total = rows.reduce((sum, r) => sum + r.share, 0);
+
+    expect(total).toBeCloseTo(100, 1);
+  });
+
+  it('uses display labels, not raw keys', () => {
+    const rows = buildSpendBySourceSheet([{ source: 'external', spend: 1 }]).rows;
+
+    expect(rows[0].source).toBe('External API');
+  });
+
+  it('tolerates an empty list', () => {
+    expect(buildSpendBySourceSheet([]).rows).toEqual([]);
+    expect(buildSpendBySourceSheet(undefined).rows).toEqual([]);
+  });
+});
+
+describe('month vs month sheet', () => {
+  const currentDaily = [
+    { date: '2026-07-01', spend: 4 },
+    { date: '2026-07-02', spend: 6 },
+    { date: '2026-07-03', spend: 2 },
+  ];
+  const prevDaily = [
+    { date: '2026-06-01', spend: 3 },
+    { date: '2026-06-02', spend: 5 },
+  ];
+
+  it('has one row per day of the longer period', () => {
+    const sheet = buildMomSheet({ currentDaily, prevDaily });
+
+    expect(sheet.rows).toHaveLength(3); // current is longer
+  });
+
+  it('carries cumulative spend, not daily', () => {
+    const rows = buildMomSheet({ currentDaily, prevDaily, currentLabel: 'Jul', prevLabel: 'Jun' }).rows;
+
+    expect(rows[0].Jul).toBeCloseTo(4);
+    expect(rows[1].Jul).toBeCloseTo(10); // 4 + 6
+    expect(rows[2].Jul).toBeCloseTo(12); // 4 + 6 + 2
+  });
+
+  it('leaves cells empty for days past the shorter period', () => {
+    const rows = buildMomSheet({ currentDaily, prevDaily, currentLabel: 'Jul', prevLabel: 'Jun' }).rows;
+
+    // prevDaily only has 2 days; day 3 should be empty for prior month
+    expect(rows[2].Jun).toBe('');
+  });
+
+  it('uses custom labels as column headers', () => {
+    const sheet = buildMomSheet({ currentDaily, prevDaily, currentLabel: '2026-07', prevLabel: '2026-06' });
+    const keys = sheet.columns.map(c => c.key);
+
+    expect(keys).toContain('2026-07');
+    expect(keys).toContain('2026-06');
+  });
+
+  it('tolerates empty daily arrays', () => {
+    const sheet = buildMomSheet({ currentDaily: [], prevDaily: [] });
+
+    expect(sheet.rows).toHaveLength(0);
+  });
+});
+
+describe('top agents sheet', () => {
+  const agents = [
+    { name: 'Research bot', id: 1, type: 'agent', spend: 4.5, runs: 10 },
+    { name: 'Deploy pipeline', id: 2, type: 'pipeline', spend: 2.0, runs: 5 },
+    { name: 'Summariser', id: 3, type: 'agent', spend: 1.0, runs: null },
+  ];
+
+  it('orders by spend, highest first', () => {
+    const rows = buildTopAgentsSheet(agents).rows;
+
+    expect(rows.map(r => r.name)).toEqual(['Research bot', 'Deploy pipeline', 'Summariser']);
+  });
+
+  it('labels agents and pipelines correctly', () => {
+    const rows = buildTopAgentsSheet(agents).rows;
+
+    expect(rows[0].type).toBe('Agent');
+    expect(rows[1].type).toBe('Pipeline');
+  });
+
+  it('computes per-run cost when runs are known', () => {
+    const rows = buildTopAgentsSheet(agents).rows;
+
+    expect(rows[0].perRun).toBeCloseTo(0.45, 5);
+  });
+
+  it('leaves per-run empty when runs are null', () => {
+    const rows = buildTopAgentsSheet(agents).rows;
+
+    expect(rows[2].perRun).toBe('');
+  });
+
+  it('tolerates an empty list', () => {
+    expect(buildTopAgentsSheet([]).rows).toEqual([]);
+    expect(buildTopAgentsSheet(undefined).rows).toEqual([]);
+  });
+});
+
+describe('top skills sheet', () => {
+  const skills = [
+    { name: 'Code review', spend: 6.0, uses: 30 },
+    { name: 'Summarise', spend: 2.0, call_count: 20 },
+    { name: 'Translate', spend: 2.0, uses: null },
+  ];
+
+  it('orders by spend, highest first', () => {
+    const rows = buildTopSkillsSheet(skills).rows;
+
+    expect(rows[0].name).toBe('Code review');
+  });
+
+  it('falls back to call_count when uses is absent', () => {
+    const rows = buildTopSkillsSheet(skills).rows;
+
+    expect(rows[1].uses).toBe(20);
+  });
+
+  it('computes per-use cost when uses are known', () => {
+    const rows = buildTopSkillsSheet(skills).rows;
+
+    expect(rows[0].perUse).toBeCloseTo(0.2, 5);
+  });
+
+  it('leaves per-use empty when uses are null', () => {
+    const rows = buildTopSkillsSheet(skills).rows;
+
+    expect(rows[2].perUse).toBe('');
+  });
+
+  it('sums share percentages to 100', () => {
+    const rows = buildTopSkillsSheet(skills).rows;
+    const total = rows.reduce((sum, r) => sum + r.share, 0);
+
+    expect(total).toBeCloseTo(100, 1);
+  });
+
+  it('tolerates an empty list', () => {
+    expect(buildTopSkillsSheet([]).rows).toEqual([]);
+    expect(buildTopSkillsSheet(undefined).rows).toEqual([]);
+  });
+});
+
+describe('sheet selection per scope (with new sheets)', () => {
+  it('includes Top Agents and Top Skills when the payload lists them', () => {
+    const dataWithMore = {
+      ...limitedUsage(),
+      top_agents: [{ name: 'A', spend: 1, runs: 1, type: 'agent' }],
+      top_skills: [{ name: 'S', spend: 1, uses: 1 }],
+    };
+    const names = buildUsageSheets({
+      data: dataWithMore,
+      projectName: 'P',
+      isPersonalProject: true,
+      scope: 'project',
+    }).map(s => s.sheetName);
+
+    expect(names).toContain('Top Agents');
+    expect(names).toContain('Top Skills');
+  });
+
+  it('omits Top Agents and Top Skills when the payload has none', () => {
+    const names = buildUsageSheets({
+      data: limitedUsage(),
+      projectName: 'P',
+      isPersonalProject: true,
+      scope: 'project',
+    }).map(s => s.sheetName);
+
+    expect(names).not.toContain('Top Agents');
+    expect(names).not.toContain('Top Skills');
   });
 });
 

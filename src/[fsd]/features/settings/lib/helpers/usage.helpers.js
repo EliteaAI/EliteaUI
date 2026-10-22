@@ -335,6 +335,7 @@ export const dailyBreakdownKey = (dimension, metricKey) =>
  * Split daily rows using the real per-day breakdown attached by the backend.
  * Each day carries its own proportions instead of every day sharing the month-level split.
  * Surplus (day total minus named keys) goes to __other when that group is present.
+ * Groups may carry a `lookupKey` (raw backend key) separate from `key` (display label).
  */
 export const splitDailyByGroup = (daily, groups, breakdownKey, metricKey = 'spend') =>
   daily.map(day => {
@@ -344,7 +345,8 @@ export const splitDailyByGroup = (daily, groups, breakdownKey, metricKey = 'spen
 
     groups.forEach(g => {
       if (g.key === '__other') return;
-      row[g.key] = breakdown[g.key] || 0;
+      const rawKey = g.lookupKey ?? g.key;
+      row[g.key] = breakdown[rawKey] || 0;
       named += row[g.key];
     });
 
@@ -369,7 +371,18 @@ export const buildSeriesFromDaily = (daily, groupBy, models, bySource, metricKey
   let groups = [];
 
   if (groupBy === 'model') {
-    groups = buildGroups(models || [], 'model', metricKey);
+    // Build groups keyed by display name; carry raw model ID as lookupKey for by_model breakdown.
+    const sorted = [...(models || [])].sort((a, b) => (b[metricKey] || 0) - (a[metricKey] || 0));
+    const top = sorted.slice(0, USAGE_MAX_CHART_SERIES);
+    const rest = sorted.slice(USAGE_MAX_CHART_SERIES);
+    groups = top.map(m => ({
+      key: m.display_name || formatModelName(m.model) || m.model,
+      lookupKey: m.model,
+      w: m[metricKey] || 0,
+    }));
+    const otherW = rest.reduce((s, m) => s + (m[metricKey] || 0), 0);
+    if (otherW > 0 || rest.length > 0) groups.push({ key: '__other', w: otherW });
+    if (!groups.some(g => g.w > 0)) groups = [];
   } else if (groupBy === 'source') {
     groups = buildGroups(bySource || [], 'source', metricKey, Infinity);
   } else if (groupBy === 'member') {

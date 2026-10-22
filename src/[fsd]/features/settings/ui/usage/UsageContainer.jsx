@@ -231,6 +231,19 @@ const UsageContainer = memo(() => {
 
   const project = useSelectedProject();
 
+  const resolvedCanSeeAmounts = Boolean(data?.can_see_amounts);
+
+  // Fill daily gaps so the MoM chart compares by day-of-month, not list position
+  const momCurrentDaily = useMemo(
+    () => UsageHelpers.fillDailyGaps(data?.daily, data?.period_start, data?.period_end),
+    [data],
+  );
+  const momPrevDaily = useMemo(
+    () =>
+      UsageHelpers.fillDailyGaps(previousData?.daily, previousData?.period_start, previousData?.period_end),
+    [previousData],
+  );
+
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState(false);
 
@@ -282,6 +295,13 @@ const UsageContainer = memo(() => {
         UsageExportHelpers.buildUsageSheets({
           ...args,
           data,
+          canSeeAmounts: resolvedCanSeeAmounts,
+          isCurrentPeriod,
+          comparisonData: previousData ?? null,
+          momCurrentDaily,
+          momPrevDaily,
+          currentPeriodLabel: period || availablePeriods[0],
+          prevPeriodLabel: previousPeriod,
           memberRows: exported?.rows || memberRows,
           membersWarningPct: exported?.warning_pct ?? membersWarningPct,
         }),
@@ -296,12 +316,18 @@ const UsageContainer = memo(() => {
     activeScope,
     isPersonalProject,
     data,
+    resolvedCanSeeAmounts,
+    isCurrentPeriod,
+    previousData,
+    momCurrentDaily,
+    momPrevDaily,
+    period,
+    availablePeriods,
+    previousPeriod,
     memberRows,
     membersWarningPct,
     showsMembers,
     fetchAllMemberRows,
-    period,
-    availablePeriods,
   ]);
 
   const handleCloseExportError = useCallback(() => setExportError(false), []);
@@ -338,22 +364,9 @@ const UsageContainer = memo(() => {
   const exportDisabled = exporting || isLoading || !data;
   const refreshDisabled = refreshing || isLoading || isMembersFetching;
 
-  const resolvedCanSeeAmounts = Boolean(data?.can_see_amounts);
-
   useEffect(() => {
     if (!previousData) setCompareEnabled(false);
   }, [previousData]);
-
-  // Fill daily gaps so the MoM chart compares by day-of-month, not list position
-  const momCurrentDaily = useMemo(
-    () => UsageHelpers.fillDailyGaps(data?.daily, data?.period_start, data?.period_end),
-    [data],
-  );
-  const momPrevDaily = useMemo(
-    () =>
-      UsageHelpers.fillDailyGaps(previousData?.daily, previousData?.period_start, previousData?.period_end),
-    [previousData],
-  );
 
   // Monthly history filtered to only periods in availablePeriods, plus the current month
   const monthlyHistory = useMemo(() => {

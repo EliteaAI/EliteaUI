@@ -91,6 +91,21 @@ describe('useUsageChartData — groupBy model', () => {
     expect(result.current.chartData[0]).toMatchObject({ 'gpt-4o': 10, 'claude-3': 0 });
     expect(result.current.chartData[1]).toMatchObject({ 'gpt-4o': 5, 'claude-3': 15 });
   });
+
+  it('uses display_name as series key while still reading by_model with raw model id', () => {
+    const modelsWithDisplay = [
+      { model: 'gpt-4o', display_name: 'GPT-4o', spend: 25, total_tokens: 2500 },
+      { model: 'claude-3', display_name: 'Claude 3', spend: 20, total_tokens: 2000 },
+    ];
+    const { result } = renderHook(() =>
+      useUsageChartData({ ...baseProps, models: modelsWithDisplay, groupBy: 'model' }),
+    );
+
+    expect(result.current.seriesKeys).toContain('GPT-4o');
+    expect(result.current.seriesKeys).toContain('Claude 3');
+    expect(result.current.chartData[0]).toMatchObject({ 'GPT-4o': 10, 'Claude 3': 0 });
+    expect(result.current.chartData[1]).toMatchObject({ 'GPT-4o': 5, 'Claude 3': 15 });
+  });
 });
 
 describe('useUsageChartData — groupBy source', () => {
