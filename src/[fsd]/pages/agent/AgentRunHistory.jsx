@@ -14,7 +14,7 @@ const AgentRunHistory = memo(() => (
     analyticsRoute={RouteDefinitions.ApplicationsRunAnalytics}
     eventColumnLabel="Execution type"
     decorateRow={toExecutionTypeRow}
-    showScheduleRuns
+    scheduleEntityType="agent"
   />
 ));
 

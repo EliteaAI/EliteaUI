@@ -14,7 +14,7 @@ const PipelineRunHistory = memo(() => (
     analyticsRoute={RouteDefinitions.PipelineRunAnalytics}
     eventColumnLabel="Execution type"
     decorateRow={toExecutionTypeRow}
-    showScheduleRuns
+    scheduleEntityType="pipeline"
   />
 ));
 
