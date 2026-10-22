@@ -111,3 +111,43 @@ describe('RunHistoryList event column rows (EL-7011 US-38)', () => {
     expect(onSelect).toHaveBeenCalledWith(3);
   });
 });
+
+describe('RunHistoryList extra columns (EL-7011 CR-22)', () => {
+  const COLUMNS = [
+    {
+      id: 'schedule',
+      label: 'Schedule',
+      width: '9rem',
+      render: row => row.schedule_run?.schedule_name ?? '-',
+    },
+    { id: 'status', label: 'Status', width: '7rem', render: row => (row.schedule_run ? 'Success' : '-') },
+  ];
+
+  it('CR-22 shows Schedule and Status columns with - for a chat row', () => {
+    renderList({
+      extraColumns: COLUMNS,
+      conversations: [
+        {
+          id: 1,
+          created_at: 1786693433,
+          duration: 1,
+          event_label: 'Scheduled',
+          schedule_run: { schedule_name: 'Daily' },
+        },
+        { id: 2, created_at: 1786693434, duration: 2, event_label: 'Chat', schedule_run: null },
+      ],
+    });
+
+    expect(screen.getByTestId('header')).toHaveTextContent('Date|Schedule|Status|Event|Duration');
+    const [chat, run] = screen.getAllByTestId('run-history-list-item');
+    expect(within(run).getByText('Daily')).toBeInTheDocument();
+    expect(within(run).getByText('Success')).toBeInTheDocument();
+    expect(within(chat).getAllByText('-')).toHaveLength(2);
+  });
+
+  it('CR-22 no extra column without extraColumns (R2.1)', () => {
+    renderList({ conversations: RUNS });
+
+    expect(screen.getByTestId('header')).toHaveTextContent('Date|Event|Duration');
+  });
+});

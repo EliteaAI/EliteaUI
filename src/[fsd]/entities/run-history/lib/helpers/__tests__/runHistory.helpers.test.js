@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   RUN_ANALYTICS_TIMESTAMP_FORMAT,
+  SCHEDULE_RUN_COLUMNS,
   byNewestRunFirst,
   compareRunDuration,
   compareRunTimestamp,
@@ -198,5 +199,38 @@ describe('toExecutionTypeRow (EL-7011 US-38)', () => {
     expect(toExecutionTypeRow({ id: 2 })).toEqual({ id: 2, event_label: '-' });
     expect(toExecutionTypeRow({ execution_type: 'bogus' }).event_label).toBe('-');
     expect(toExecutionTypeRow({ execution_type: null }).event_label).toBe('-');
+  });
+});
+
+describe('CR-22 schedule runs in Agent and Pipeline Run History (EL-7011 US-38)', () => {
+  it('CR-22 R3.4 a test-trigger schedule run reads Test, also in the Execution type column', () => {
+    const row = { id: 9, execution_type: 'schedule_manual', schedule_run: { trigger: 'test' } };
+    expect(toExecutionTypeRow(row).event_label).toBe('Test');
+    expect(toExecutionTypeRow({ ...row, schedule_run: { trigger: 'manual' } }).event_label).toBe('Run now');
+  });
+
+  it('CR-22 R3.1-R3.3 the Schedule and Status cells read the run record, or "-" without one', () => {
+    const [schedule, status] = SCHEDULE_RUN_COLUMNS;
+    const run = { schedule_run: { schedule_name: 'Daily digest', status: 'waiting_for_approval' } };
+    expect([schedule.label, status.label]).toEqual(['Schedule', 'Status']);
+    expect([schedule.render(run), status.render(run)]).toEqual(['Daily digest', 'Waiting for input']);
+    expect([schedule.render({ schedule_run: null }), status.render({})]).toEqual(['-', '-']);
+  });
+
+  it('CR-22 D7 extra columns use fixed rem widths after Date; without them the tracks stay fractional', () => {
+    // CR-22 review r5: Execution type and Version fit their header labels with the sort icon (live check at 1536 px)
+    // Review r8, from live measures: a row grid has 736 px (768 px list minus the 2 x 16 px row padding).
+    // The minimum sum is 120 + 120 + 92 + 168 + 112 + 120 = 732 px, and every header label fits.
+    const template = resolveRunHistoryColumns(false, true, SCHEDULE_RUN_COLUMNS);
+    expect(template).toBe('7.5rem 7.5rem 5.75rem 10.5rem 7rem minmax(7.5rem, 1fr)');
+    const minRem = template
+      .match(/[\d.]+(?=rem)/g)
+      .map(Number)
+      .reduce((sum, rem) => sum + rem, 0);
+    expect(minRem * 16).toBeLessThanOrEqual(768 - 32);
+    expect(resolveRunHistoryColumns(true, true, SCHEDULE_RUN_COLUMNS)).toBe(
+      '7.5rem 7.5rem 5.75rem 10.5rem minmax(7.5rem, 1fr)',
+    );
+    expect(resolveRunHistoryColumns(false, true)).toBe('1.5fr 1.5fr 1.5fr 1fr');
   });
 });

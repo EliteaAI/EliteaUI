@@ -2,16 +2,10 @@ import { compareRunTimestamp, formatRunTimestamp } from '@/[fsd]/entities/run-hi
 import { fmtCost } from '@/[fsd]/features/settings/lib/helpers/analyticsCommon.helpers';
 import { ROLES } from '@/common/constants';
 
-// The API stores the pause for a person's answer as waiting_for_approval; the owner calls it "Waiting for input"
-const RUN_STATUS_LABELS = {
-  waiting_for_approval: 'Waiting for input',
-  waiting_for_input: 'Waiting for input',
-};
 const RUN_STARTED_FORMAT = 'd MMM, HH:mm';
 
-export const toWord = value => (value ? `${value[0].toUpperCase()}${value.slice(1).replace(/_/g, ' ')}` : '');
-
-export const toRunStatusLabel = status => RUN_STATUS_LABELS[status] ?? toWord(status);
+// The labels live in the schedule entity, so the run history list can use them too (CR-22)
+export { toRunStatusLabel, toWord } from '@/[fsd]/entities/schedule/lib/helpers';
 
 export const formatRunStarted = value => formatRunTimestamp(value, RUN_STARTED_FORMAT);
 
