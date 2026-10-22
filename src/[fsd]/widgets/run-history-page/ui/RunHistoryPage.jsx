@@ -10,7 +10,7 @@ import { buildScheduleFormLink, useGetScheduleListQuery } from '@/[fsd]/entities
 import { ChatMessageList } from '@/[fsd]/features/chat';
 import { DrawerPageHeader } from '@/[fsd]/features/settings/ui/drawer-page';
 import { ToolkitsHelpers } from '@/[fsd]/features/toolkits';
-import { NavigationConstants } from '@/[fsd]/shared/lib/constants';
+import { NavigationConstants, TextLinkConstants } from '@/[fsd]/shared/lib/constants';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import Breadcrumbs from '@/[fsd]/shared/ui/breadcrumbs';
@@ -95,6 +95,7 @@ const RunHistoryPage = memo(props => {
           onClick={event => event.stopPropagation()}
           variant="bodyMedium"
           underline="hover"
+          sx={TextLinkConstants.TEXT_LINK_SX}
         >
           {name}
         </Link>

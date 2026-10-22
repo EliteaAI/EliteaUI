@@ -2,6 +2,9 @@
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { ThemeProvider, createTheme } from '@mui/material';
+
+import lightPalette from '@/lightPalette';
 import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
@@ -17,6 +20,8 @@ vi.hoisted(() => {
   };
 });
 
+// The light palette only: the full MainTheme pulls in API modules this test does not mock
+const LIGHT_THEME = createTheme({ palette: lightPalette });
 const containerProps = vi.hoisted(() => ({ current: null }));
 
 vi.mock('@/[fsd]/entities/run-history/ui', () => ({
@@ -170,9 +175,11 @@ describe('RunHistoryPage schedule filter and links (EL-7011 CR-22)', () => {
     );
     expect(scheduleColumn.render({ schedule_run: null })).toBe('-');
     render(
-      <MemoryRouter>
-        {scheduleColumn.render({ schedule_run: { schedule_id: 4, schedule_name: 'Daily digest' } })}
-      </MemoryRouter>,
+      <ThemeProvider theme={LIGHT_THEME}>
+        <MemoryRouter>
+          {scheduleColumn.render({ schedule_run: { schedule_id: 4, schedule_name: 'Daily digest' } })}
+        </MemoryRouter>
+      </ThemeProvider>,
     );
     expect(screen.getByRole('link', { name: 'Daily digest' })).toHaveAttribute(
       'href',
@@ -180,6 +187,10 @@ describe('RunHistoryPage schedule filter and links (EL-7011 CR-22)', () => {
     );
     // CR-22 review r3: the theme link (MUI Link), not the browser default blue
     expect(screen.getByRole('link', { name: 'Daily digest' })).toHaveClass('MuiLink-root');
+    // BUG-38: the app link colour, not the brand colour (4.5:1 for small text)
+    expect(screen.getByRole('link', { name: 'Daily digest' })).toHaveStyle({
+      color: LIGHT_THEME.palette.text.link,
+    });
   });
 
   it('CR-22 review r2 ignores a schedule_id that is not a number, and keeps an unknown valid id as an option', () => {

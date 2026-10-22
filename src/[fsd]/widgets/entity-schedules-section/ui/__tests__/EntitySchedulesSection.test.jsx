@@ -117,6 +117,8 @@ describe('EntitySchedulesSection EL-7011', () => {
       expect(link).toHaveTextContent(/^Manage Schedules$/);
       expect(link.querySelector('svg')).toBeNull();
       expect(link).toHaveAttribute('href', '/settings/schedules?entityType=agent&entityId=12');
+      // BUG-38: the app link colour, not the brand colour
+      expect(link).toHaveStyle({ color: theme.palette.text.link });
     });
 
     it('R1.4 R1.5 EL-7011 CR-15 the add button is an iconLabel button with a plus icon', () => {
