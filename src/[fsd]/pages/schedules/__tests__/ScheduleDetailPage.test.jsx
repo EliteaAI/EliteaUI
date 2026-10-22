@@ -211,7 +211,7 @@ describe('ScheduleDetailPage EL-7011', () => {
     render(<ScheduleDetailPage />);
 
     expect(screen.getByTestId('schedule-detail-menu')).toBeInTheDocument();
-    expect(mocks.menuProps).toEqual({ schedule, projectId: 5 });
+    expect(mocks.menuProps).toEqual({ schedule });
   });
 
   it('TC-US32-01 R1.1 EL-7011 shows a loader while the schedule loads', () => {

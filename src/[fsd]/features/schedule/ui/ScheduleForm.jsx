@@ -104,7 +104,7 @@ const ownerName = owner => owner?.name || owner?.email || '-';
  * Agents editor puts its chat; its `onTestRun` saves a changed form, then calls the `onTestRun()` prop
  * (a promise) in the place of `onSaved` at the same post-save point. What `sidePanel` returns (the panel and
  * the Runs section under it) fills the right column from xl, and sits under the form below it.
- * `headerActions` (a node) sits in the header bar before Save, for example the page's 3-dots menu.
+ * `headerActions` (a node) sits in the header bar after Cancel, for example the page's 3-dots menu.
  */
 const ScheduleForm = memo(props => {
   const {
@@ -669,7 +669,6 @@ const ScheduleForm = memo(props => {
                     <Typography variant="labelMedium">Fix the risk check to save</Typography>
                   </Box>
                 )}
-                {headerActions}
                 <BaseBtn
                   data-testid="schedule-save-button"
                   variant="elitea"
@@ -689,6 +688,7 @@ const ScheduleForm = memo(props => {
                 >
                   Cancel
                 </BaseBtn>
+                {headerActions}
               </TabBarItems>
             ),
             content: (
