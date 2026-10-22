@@ -174,13 +174,8 @@ const ScheduleDetailPage = props => {
       // Nested in an editor, the crumbs name the agent or pipeline, not the schedule
       entityName={entityType ? undefined : schedule.name}
       sidePanel={sidePanel}
-      // Export and Import of this schedule (CR-16)
-      headerActions={
-        <ScheduleDetailMenu
-          schedule={schedule}
-          projectId={projectId}
-        />
-      }
+      // Export of this schedule, after Cancel (CR-16, CR-27)
+      headerActions={<ScheduleDetailMenu schedule={schedule} />}
       onSubmit={onSubmit}
       onSaved={onSaved}
       onTestRun={onTestRun}

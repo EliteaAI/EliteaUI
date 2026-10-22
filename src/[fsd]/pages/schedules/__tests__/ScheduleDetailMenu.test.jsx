@@ -9,14 +9,12 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 import ScheduleDetailMenu from '../ScheduleDetailMenu';
 
-// EL-7011 CR-16 (US-43 R4.3 to R4.5): the Edit schedule page header menu with Export and Import
+// EL-7011 CR-16 (US-43 R4.3 to R4.5): the Edit schedule page header menu with Export only
 
 const mocks = vi.hoisted(() => ({
   onExport: vi.fn(),
   canExport: true,
-  canImport: true,
   isBusy: false,
-  dialogProps: null,
 }));
 
 vi.mock('@/[fsd]/features/schedule', () => ({
@@ -24,20 +22,6 @@ vi.mock('@/[fsd]/features/schedule', () => ({
     onExport: mocks.canExport ? mocks.onExport : undefined,
     isBusy: mocks.isBusy,
   }),
-}));
-vi.mock('@/hooks/useCheckPermission', () => ({
-  default: () => ({ checkPermission: () => mocks.canImport }),
-}));
-vi.mock('@/[fsd]/features/schedule-import-export', () => ({
-  ImportSchedulesDialog: props => {
-    mocks.dialogProps = props;
-    return (
-      <button
-        data-testid="import-dialog"
-        onClick={props.onClose}
-      />
-    );
-  },
 }));
 // DotMenu reads it for its confirmation items
 vi.mock('@/[fsd]/shared/lib/hooks/useDeleteConfirmationDisabled.hooks', () => ({
@@ -50,10 +34,7 @@ const schedule = { id: 9, name: 'Nightly' };
 const renderMenu = () =>
   render(
     <ThemeProvider theme={theme}>
-      <ScheduleDetailMenu
-        schedule={schedule}
-        projectId={5}
-      />
+      <ScheduleDetailMenu schedule={schedule} />
     </ThemeProvider>,
   );
 const openMenu = () => fireEvent.click(screen.getByTestId('schedule-detail-menu-button'));
@@ -63,8 +44,6 @@ describe('ScheduleDetailMenu EL-7011 CR-16', () => {
     cleanup();
     vi.clearAllMocks();
     mocks.canExport = true;
-    mocks.canImport = true;
-    mocks.dialogProps = null;
     mocks.isBusy = false;
   });
 
@@ -75,40 +54,16 @@ describe('ScheduleDetailMenu EL-7011 CR-16', () => {
     expect(screen.getByRole('menuitem', { name: /Export/ })).toHaveAttribute('aria-disabled', 'true');
   });
 
-  it('R4.3 shows Export and Import with both permissions; Export exports this schedule', () => {
+  it('R4.3 shows only Export, and Export exports this schedule', () => {
     renderMenu();
     openMenu();
-    expect(screen.getAllByRole('menuitem').map(item => item.textContent)).toEqual(['Export', 'Import']);
+    expect(screen.getAllByRole('menuitem').map(item => item.textContent)).toEqual(['Export']);
     fireEvent.click(screen.getByText('Export'));
     expect(mocks.onExport).toHaveBeenCalledTimes(1);
   });
 
-  it('R4.3 shows only the item whose permission the user holds', () => {
-    mocks.canImport = false;
-    renderMenu();
-    openMenu();
-    expect(screen.getAllByRole('menuitem').map(item => item.textContent)).toEqual(['Export']);
-    cleanup();
-    mocks.canImport = true;
+  it('R4.5 renders no menu without the export permission', () => {
     mocks.canExport = false;
-    renderMenu();
-    openMenu();
-    expect(screen.getAllByRole('menuitem').map(item => item.textContent)).toEqual(['Import']);
-  });
-
-  it('R4.4 Import opens the import dialog of the project and closes it', () => {
-    renderMenu();
-    expect(screen.queryByTestId('import-dialog')).not.toBeInTheDocument();
-    openMenu();
-    fireEvent.click(screen.getByText('Import'));
-    expect(mocks.dialogProps).toMatchObject({ open: true, projectId: 5 });
-    fireEvent.click(screen.getByTestId('import-dialog'));
-    expect(screen.queryByTestId('import-dialog')).not.toBeInTheDocument();
-  });
-
-  it('R4.5 renders no menu without both permissions', () => {
-    mocks.canExport = false;
-    mocks.canImport = false;
     const { container } = renderMenu();
     expect(container).toBeEmptyDOMElement();
   });
