@@ -471,15 +471,18 @@ const buildAgentsSheet = (data, meta) => {
     rows: topAgents.length > 0 ? topAgents : emptyRow(topAgentCols, NO_DATA_MSG),
   });
 
-  const dailyCols = [
-    { header: 'Date', key: 'date' },
-    { header: 'Chat Messages', key: 'messages', numFmt: ExcelFormats.integer },
-  ];
-  sections.push({
-    title: 'Chat Messages',
-    columns: dailyCols,
-    rows: chat_daily.length > 0 ? chat_daily : emptyRow(dailyCols, NO_DATA_MSG),
-  });
+  // BUG-31 (US-57 R3.1, R3.2): the agents endpoint sends no daily chat counts today, so the section shows
+  // only when it has rows, like the Agents tab chart; the Overview card count stays in Summary Metrics
+  if (chat_daily.length > 0) {
+    sections.push({
+      title: 'Chat Messages',
+      columns: [
+        { header: 'Date', key: 'date' },
+        { header: 'Chat Messages', key: 'messages', numFmt: ExcelFormats.integer },
+      ],
+      rows: chat_daily,
+    });
+  }
 
   const agentCols = [
     { header: 'Agent / Pipeline', key: 'entity_name' },
