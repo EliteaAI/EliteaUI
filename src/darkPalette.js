@@ -193,6 +193,12 @@ const flowNodeCode = '#2D1A3A';
 const flowNodePrinter = '#075164';
 const flowNodeHitl = '#5A3D23';
 const flowNodeCustom = '#351C1C';
+// Node type selector icon tiles (Figma: Select node type)
+const nodeTypeIconAgent = '#22264C';
+const nodeTypeIconMcp = '#3C1C70';
+const nodeTypeIconCode = '#352340';
+const nodeTypeIconPrinter = '#085163';
+const nodeTypeIconHitl = '#47311E';
 
 const npsAccent = '#6390fe';
 const npsAccentSubtle = '#6390fe1a';
@@ -687,6 +693,20 @@ const darkPalette = {
         printer: flowNodePrinter,
         hitl: flowNodeHitl,
         custom: flowNodeCustom,
+      },
+      nodeTypeIcon: {
+        background: {
+          agent: nodeTypeIconAgent,
+          mcp: nodeTypeIconMcp,
+          code: nodeTypeIconCode,
+          printer: nodeTypeIconPrinter,
+          decision: flowNodeDecision,
+          router: flowNodeRouter,
+          hitl: nodeTypeIconHitl,
+          state_modifier: flowNodeStateModifier,
+          llm: flowNodeLlm,
+          toolkit: nodeTypeIconAgent,
+        },
       },
     },
     contextHighlight: { background: contextHighlightBg },

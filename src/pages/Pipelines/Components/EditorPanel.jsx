@@ -1,19 +1,10 @@
-import {
-  Suspense,
-  forwardRef,
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { Suspense, forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 
 import YAML from 'js-yaml';
 import { ErrorBoundary } from 'react-error-boundary';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { Box, IconButton, Typography, useTheme } from '@mui/material';
+import { Box, Typography, useTheme } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip.jsx';
 import { DumpYamlHelpers, ParsePipelineHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
@@ -22,17 +13,15 @@ import { ChunkHelpers, FunctionHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useIsFrom, useIsSmallWindow, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import { CanvasToolbar } from '@/[fsd]/widgets/pipeline-canvas-toolbar';
 import RefreshIcon from '@/assets/refresh-icon.svg?react';
 import { PipelineEditorMode } from '@/common/constants.js';
 import { handleCopy } from '@/common/utils.jsx';
-import GroupedButton from '@/components/GroupedButton';
-import CopyIcon from '@/components/Icons/CopyIcon.jsx';
 import { ContentContainer } from '@/pages/Common/index.js';
 import RouteDefinitions from '@/routes.js';
 import { actions, selectActivePipeline } from '@/slices/pipeline.js';
 
 import useIsPipelineYamlCodeDirty from '../useIsPipelineYamlCodeDirty.js';
-import PipelineAddNodeMenu from './AddNodeMenu.jsx';
 
 const FlowWrapper = ChunkHelpers.lazyWithRetry(() => import('./FlowWrapper.jsx'));
 
@@ -50,7 +39,17 @@ const areYamlObjectsEqual = (obj1, obj2) => {
   return JSON.stringify(obj1) === JSON.stringify(obj2);
 };
 
-const EditorPanel = forwardRef(({ setYamlDirty, stopRun, display, sx, disabled, isVisible = true }, ref) => {
+const EditorPanel = forwardRef((props, ref) => {
+  const {
+    setYamlDirty,
+    stopRun,
+    display,
+    sx,
+    disabled,
+    isVisible = true,
+    onTestPipeline,
+    testDisabledReason,
+  } = props;
   const dispatch = useDispatch();
   const { toastInfo } = useToast();
   const { isSmallWindow } = useIsSmallWindow();
@@ -65,6 +64,7 @@ const EditorPanel = forwardRef(({ setYamlDirty, stopRun, display, sx, disabled, 
   }, [isYamlCodeDirty]);
 
   const { yamlJsonObject, yamlCode } = useSelector(selectActivePipeline);
+  const hasNodes = Boolean(yamlJsonObject?.nodes?.filter(Boolean).length);
   const setYamlCode = useCallback(
     code => {
       dispatch(actions.setYamlCode(code));
@@ -136,11 +136,6 @@ const EditorPanel = forwardRef(({ setYamlDirty, stopRun, display, sx, disabled, 
     hasRunsInProgress: () => flowEditorRef.current?.hasRunsInProgress?.(),
   }));
 
-  const buttonItems = useMemo(
-    () => Object.entries(PipelineEditorMode).map(([label, value]) => ({ label, value })),
-    [],
-  );
-
   const onSelectChatMode = useCallback(
     e => {
       const newMode = e?.target?.value;
@@ -183,37 +178,17 @@ const EditorPanel = forwardRef(({ setYamlDirty, stopRun, display, sx, disabled, 
       height="100% !important"
       sx={sx}
     >
-      <Box sx={styles.headerContainer(isFromChat)}>
-        <GroupedButton
-          value={mode}
-          onChange={onSelectChatMode}
-          buttonItems={buttonItems}
-        />
-        <Box sx={styles.actionButtonsContainer}>
-          {mode === PipelineEditorMode.Flow && (
-            <PipelineAddNodeMenu
-              onAddNode={onAddNode}
-              disabled={disabled}
-            />
-          )}
-          {mode === PipelineEditorMode.Yaml && (
-            <StyledTooltip
-              title={'Copy yaml code to clipboard'}
-              placement="top"
-            >
-              <IconButton
-                sx={styles.copyIconButton}
-                variant="elitea"
-                color="tertiary"
-                onClick={onCopy}
-                data-testid="pipeline-yaml-copy-button"
-              >
-                <CopyIcon sx={styles.copyIcon} />
-              </IconButton>
-            </StyledTooltip>
-          )}
-        </Box>
-      </Box>
+      <CanvasToolbar
+        mode={mode}
+        onModeChange={onSelectChatMode}
+        onAddNode={onAddNode}
+        hasNodes={hasNodes}
+        onTestPipeline={onTestPipeline}
+        testDisabledReason={testDisabledReason}
+        onCopyYaml={onCopy}
+        disabled={disabled}
+        isCompact={isFromChat}
+      />
       <Box sx={styles.editorContainer}>
         {
           <ErrorBoundary
@@ -289,22 +264,6 @@ const EditorPanel = forwardRef(({ setYamlDirty, stopRun, display, sx, disabled, 
 EditorPanel.displayName = 'EditorPanel';
 /** @type {MuiSx} */
 const styles = {
-  headerContainer: isFromChat => ({
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: '0.25rem',
-    marginBottom: '1rem',
-    paddingRight: isFromChat ? '0.5rem' : undefined,
-    paddingLeft: isFromChat ? '0.5rem' : undefined,
-  }),
-
-  actionButtonsContainer: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '0.5rem',
-  },
-
   editorContainer: {
     flex: 1,
     display: 'flex',
@@ -342,14 +301,6 @@ const styles = {
   },
 
   refreshIcon: {
-    fontSize: '1rem',
-  },
-
-  copyIconButton: {
-    marginLeft: '0',
-  },
-
-  copyIcon: {
     fontSize: '1rem',
   },
 
