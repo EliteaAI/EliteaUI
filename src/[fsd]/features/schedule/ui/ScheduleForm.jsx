@@ -102,8 +102,8 @@ const ownerName = owner => owner?.name || owner?.email || '-';
  * `schedule` turns on edit mode: read-only Owner and update body. `entityName` names the page.
  * `sidePanel({ onTestRun, testRunPending, testRunError })` renders a card right of the form, as the
  * Agents editor puts its chat; its `onTestRun` saves a changed form, then calls the `onTestRun()` prop
- * (a promise) in the place of `onSaved` at the same post-save point. `afterForm` (with `sidePanel`) shows
- * after the form sections: in the form column from xl, under the side panel below it.
+ * (a promise) in the place of `onSaved` at the same post-save point. What `sidePanel` returns (the panel and
+ * the Runs section under it) fills the right column from xl, and sits under the form below it.
  */
 const ScheduleForm = memo(props => {
   const {
@@ -116,7 +116,6 @@ const ScheduleForm = memo(props => {
     onTestRun,
     onCancel,
     sidePanel,
-    afterForm,
     children,
   } = props;
 
@@ -656,10 +655,7 @@ const ScheduleForm = memo(props => {
                 rowSpacing="1.5rem"
                 sx={sidePanel && styles.split}
               >
-                <Grid
-                  size={{ xs: 12, xl: sidePanel ? 6 : 12 }}
-                  sx={afterForm && styles.formColumn}
-                >
+                <Grid size={{ xs: 12, xl: sidePanel ? 6 : 12 }}>
                   <Box
                     component="form"
                     noValidate
@@ -678,7 +674,6 @@ const ScheduleForm = memo(props => {
                       items={sections}
                     />
                   </Box>
-                  {afterForm && <Box sx={styles.afterForm}>{afterForm}</Box>}
                 </Grid>
                 {sidePanel && (
                   <Grid
@@ -731,9 +726,6 @@ const styles = {
   root: { order: 1, width: '100%', margin: '0.75rem auto 0', maxWidth: '40.1875rem' },
   // the ConfigurationTab grid padding
   split: { padding: '0 1.5rem 1.5rem' },
-  // Below xl the column box goes away, so its two parts order around the panel: form, panel, afterForm
-  formColumn: { display: { xs: 'contents', xl: 'block' } },
-  afterForm: { order: 3, width: '100%', marginTop: { xl: '1.5rem' } },
   sidePanel: { order: 2, paddingTop: '0.75rem' },
   // The header holds one unlabelled tab, so its selected-tab indicator is a stray line under the crumbs
   noTabIndicator: { '& .MuiTabs-indicator': { display: 'none' } },

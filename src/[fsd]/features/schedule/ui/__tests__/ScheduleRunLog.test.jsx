@@ -146,4 +146,14 @@ describe('ScheduleRunLog EL-7011 owner CR 2026-10-21', () => {
     show(EVENTS);
     expect(box.scrollTop).toBe(100);
   });
+
+  // CR-21 option A: the log keeps 5 lines (5 x 22 px + 28 px padding) and may shrink to them in the panel body
+  it('keeps at least 5 lines and shrinks no further inside the panel body', () => {
+    renderLog();
+    expect(screen.getByTestId('schedule-run-log')).toHaveStyle({
+      flexGrow: '0',
+      flexShrink: '1',
+      minHeight: '8.625rem',
+    });
+  });
 });

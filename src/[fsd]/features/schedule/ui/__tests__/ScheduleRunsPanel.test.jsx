@@ -89,16 +89,52 @@ describe('ScheduleRunsPanel EL-7011 owner CR 2026-10-21 test panel log', () => {
     vi.clearAllMocks();
   });
 
-  it('has the Test schedule header, Run History, the info box and the note, and no tab switch', () => {
+  it('has the Test schedule header and Run History, and no tab switch', () => {
     const { onRunHistory } = renderPanel();
 
     expect(screen.getByRole('heading', { name: 'Test schedule' })).toBeInTheDocument();
-    expect(screen.getByText(INFO)).toBeInTheDocument();
-    expect(screen.getByText(NOTE)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Runs' })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /run history/i }));
     expect(onRunHistory).toHaveBeenCalledTimes(1);
+  });
+
+  // CR-21 option A: the info box shows only before the first test run; after it the "i" button holds it
+  it('CR-21 shows the info box with the note before the first test run, and no "i" button', () => {
+    mockDetail(undefined);
+    renderPanel({ runs: [cron] });
+
+    expect(screen.getByText(INFO)).toBeInTheDocument();
+    // the visible note in the info box, and the screen-reader description of Run test
+    expect(screen.getAllByText(NOTE)).toHaveLength(2);
+    expect(screen.queryByRole('button', { name: 'About test runs' })).not.toBeInTheDocument();
+  });
+
+  it('CR-21 hides the info box after the first test run and shows the info and the note in the "i" tooltip', async () => {
+    renderPanel();
+
+    expect(screen.queryByText(INFO)).not.toBeInTheDocument();
+    // only the screen-reader description of Run test is left
+    expect(screen.getAllByText(NOTE)).toHaveLength(1);
+    fireEvent.mouseOver(screen.getByRole('button', { name: 'About test runs' }));
+    const tooltip = await screen.findByRole('tooltip');
+    expect(tooltip).toHaveTextContent(INFO);
+    expect(tooltip).toHaveTextContent(NOTE);
+  });
+
+  it('CR-21 draws the "i" icon in the info colour of the theme', () => {
+    renderPanel();
+
+    // BaseBtn tertiary fills the icon path with this variable
+    const button = screen.getByRole('button', { name: 'About test runs' });
+    expect(getComputedStyle(button).getPropertyValue('--btn-icon-fill').trim()).toBe(theme.palette.icon.info);
+  });
+
+  it('CR-21 reads the note with Run test', () => {
+    mockDetail({ ...olderTest, events: [STARTED, FINISHED] });
+    renderPanel({ runs: [olderTest] });
+
+    expect(runTest()).toHaveAccessibleDescription(NOTE);
   });
 
   it('follows the newest test run of the schedule and streams its log', () => {
@@ -126,6 +162,7 @@ describe('ScheduleRunsPanel EL-7011 owner CR 2026-10-21 test panel log', () => {
 
   it('shows the prompt box with the version and variable chips', () => {
     renderPanel();
+    fireEvent.click(screen.getByRole('button', { name: 'Show the full prompt' }));
 
     expect(screen.getByText('Prompt from the schedule')).toBeInTheDocument();
     expect(screen.getAllByTestId('schedule-prompt-chip').map(chip => chip.textContent)).toEqual([
@@ -225,5 +262,43 @@ describe('ScheduleRunsPanel EL-7011 owner CR 2026-10-21 test panel log', () => {
   it('R3.5 shows the server reason of a refused run', () => {
     renderPanel({ testRunError: 'A run of this schedule is active' });
     expect(screen.getByText('A run of this schedule is active')).toBeInTheDocument();
+  });
+
+  it('CR-21 scrolls the body (log, result) inside the card and pins the prompt line with Run test', () => {
+    mockDetail({ ...newestTest, events: [STARTED] });
+    renderPanel();
+    const body = screen.getByTestId('schedule-runs-panel-body');
+    const footer = screen.getByTestId('schedule-runs-panel-footer');
+
+    expect(getComputedStyle(body).overflowY).toBe('auto');
+    expect(body).toContainElement(screen.getByTestId('schedule-run-log'));
+    expect(body).not.toContainElement(runTest());
+    expect(footer).toContainElement(runTest());
+  });
+
+  it('CR-21 leaves room under the page header for a scroll to the panel header', () => {
+    mockDetail(undefined);
+    renderPanel();
+    expect(getComputedStyle(screen.getByTestId('schedule-runs-panel')).scrollMarginTop).toBe('4.5rem');
+  });
+
+  it('CR-21 owner decision: a run without a conversation shows its log and reason, and no conversation link', () => {
+    const skipped = {
+      id: 8,
+      trigger: 'cron',
+      status: 'skipped',
+      conversation_id: null,
+      reason: 'The agent was deleted',
+      started_at: '2026-10-21T09:00:00Z',
+    };
+    mockDetail({ ...skipped, events: [event('started', 'Run skipped before it started')] });
+    renderPanel({ viewedRun: skipped });
+
+    expect(mocks.useScheduleRun).toHaveBeenCalledWith(9, 8);
+    expect(logLines()).toEqual([expect.stringContaining('Run skipped before it started')]);
+    expect(
+      within(screen.getByTestId('schedule-run-result')).getByText('The agent was deleted'),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Open conversation')).not.toBeInTheDocument();
   });
 });
