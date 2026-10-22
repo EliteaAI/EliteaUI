@@ -106,7 +106,7 @@ describe('buildSeriesFromDaily', () => {
   it('returns { data: [], keys: [] } for empty daily', () => {
     const result = UsageHelpers.buildSeriesFromDaily([], 'model', models, bySource, 'spend');
 
-    expect(result).toEqual({ data: [], keys: [] });
+    expect(result).toEqual({ data: [], keys: [], labels: {} });
   });
 
   it('groups by total when groupBy is "total"', () => {

@@ -335,6 +335,7 @@ export const dailyBreakdownKey = (dimension, metricKey) =>
  * Split daily rows using the real per-day breakdown attached by the backend.
  * Each day carries its own proportions instead of every day sharing the month-level split.
  * Surplus (day total minus named keys) goes to __other when that group is present.
+ * Groups may carry a `lookupKey` (raw backend key) separate from `key` (display label).
  */
 export const splitDailyByGroup = (daily, groups, breakdownKey, metricKey = 'spend') =>
   daily.map(day => {
@@ -344,7 +345,8 @@ export const splitDailyByGroup = (daily, groups, breakdownKey, metricKey = 'spen
 
     groups.forEach(g => {
       if (g.key === '__other') return;
-      row[g.key] = breakdown[g.key] || 0;
+      const rawKey = g.lookupKey ?? g.key;
+      row[g.key] = breakdown[rawKey] || 0;
       named += row[g.key];
     });
 
@@ -357,11 +359,12 @@ export const splitDailyByGroup = (daily, groups, breakdownKey, metricKey = 'spen
 
 /** Build Recharts-compatible series data from filled daily rows. */
 export const buildSeriesFromDaily = (daily, groupBy, models, bySource, metricKey = 'spend') => {
-  if (!daily?.length) return { data: [], keys: [] };
+  if (!daily?.length) return { data: [], keys: [], labels: {} };
 
   const totalFallback = () => ({
     data: daily.map(d => ({ date: d.date, total: d[metricKey] || 0 })),
     keys: ['total'],
+    labels: {},
   });
 
   if (groupBy === 'total') return totalFallback();
@@ -369,7 +372,14 @@ export const buildSeriesFromDaily = (daily, groupBy, models, bySource, metricKey
   let groups = [];
 
   if (groupBy === 'model') {
-    groups = buildGroups(models || [], 'model', metricKey);
+    const sorted = [...(models || [])].sort((a, b) => (b[metricKey] || 0) - (a[metricKey] || 0));
+    const top = sorted.slice(0, USAGE_MAX_CHART_SERIES);
+    const rest = sorted.slice(USAGE_MAX_CHART_SERIES);
+    // Keep raw model id as the data key (always unique); resolve display names separately.
+    groups = top.map(m => ({ key: m.model, w: m[metricKey] || 0 }));
+    const otherW = rest.reduce((s, m) => s + (m[metricKey] || 0), 0);
+    if (otherW > 0 || rest.length > 0) groups.push({ key: '__other', w: otherW });
+    if (!groups.some(g => g.w > 0)) groups = [];
   } else if (groupBy === 'source') {
     groups = buildGroups(bySource || [], 'source', metricKey, Infinity);
   } else if (groupBy === 'member') {
@@ -395,7 +405,21 @@ export const buildSeriesFromDaily = (daily, groupBy, models, bySource, metricKey
 
   if (!hasRealBreakdown) return totalFallback();
 
-  return { data: splitDailyByGroup(daily, groups, bKey, metricKey), keys: groups.map(g => g.key) };
+  // Build a duplicate-safe display label map: raw key → display name.
+  // When two models share a formatted display name, fall back to the raw id for both.
+  const labels = {};
+  if (groupBy === 'model') {
+    const modelMap = new Map((models || []).map(m => [m.model, m]));
+    const resolved = groups
+      .filter(g => g.key !== '__other')
+      .map(g => ({ key: g.key, name: modelMap.get(g.key)?.display_name || formatModelName(g.key) || g.key }));
+    const counts = resolved.reduce((acc, { name }) => acc.set(name, (acc.get(name) || 0) + 1), new Map());
+    resolved.forEach(({ key, name }) => {
+      labels[key] = counts.get(name) > 1 ? key : name;
+    });
+  }
+
+  return { data: splitDailyByGroup(daily, groups, bKey, metricKey), keys: groups.map(g => g.key), labels };
 };
 
 /** Aggregate daily series rows into ISO-week buckets (week starts Monday, clipped to month). */

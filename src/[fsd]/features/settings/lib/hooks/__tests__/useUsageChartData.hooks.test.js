@@ -91,6 +91,25 @@ describe('useUsageChartData — groupBy model', () => {
     expect(result.current.chartData[0]).toMatchObject({ 'gpt-4o': 10, 'claude-3': 0 });
     expect(result.current.chartData[1]).toMatchObject({ 'gpt-4o': 5, 'claude-3': 15 });
   });
+
+  it('uses raw model id as series key and exposes display_name in seriesLabels', () => {
+    const modelsWithDisplay = [
+      { model: 'gpt-4o', display_name: 'GPT-4o', spend: 25, total_tokens: 2500 },
+      { model: 'claude-3', display_name: 'Claude 3', spend: 20, total_tokens: 2000 },
+    ];
+    const { result } = renderHook(() =>
+      useUsageChartData({ ...baseProps, models: modelsWithDisplay, groupBy: 'model' }),
+    );
+
+    // Chart data is keyed by raw model id (always unique)
+    expect(result.current.seriesKeys).toContain('gpt-4o');
+    expect(result.current.seriesKeys).toContain('claude-3');
+    expect(result.current.chartData[0]).toMatchObject({ 'gpt-4o': 10, 'claude-3': 0 });
+    expect(result.current.chartData[1]).toMatchObject({ 'gpt-4o': 5, 'claude-3': 15 });
+    // Display names are surfaced in seriesLabels, not as chart keys
+    expect(result.current.seriesLabels['gpt-4o']).toBe('GPT-4o');
+    expect(result.current.seriesLabels['claude-3']).toBe('Claude 3');
+  });
 });
 
 describe('useUsageChartData — groupBy source', () => {
