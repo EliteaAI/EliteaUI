@@ -7,7 +7,7 @@ import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useApplicationDetailsQuery } from '@/api/applications';
 
 import { formatRunStarted, toRunStatusLabel } from '../helpers/scheduleRuns.helpers';
-import { useScheduleRuns, useScheduleRunsLoaded } from './useScheduleRuns.hooks';
+import { useScheduleRuns, useScheduleRunsLoaded, useScheduleRunsTotal } from './useScheduleRuns.hooks';
 
 // From xl the panel and the list are both in view, so the page scrolls only below it
 const matches = query => window.matchMedia?.(query).matches === true;
@@ -23,6 +23,7 @@ export const useScheduleRunsView = (scheduleId, applicationId) => {
   const projectId = useSelectedProjectId();
   const runs = useScheduleRuns(scheduleId);
   const runsLoaded = useScheduleRunsLoaded(scheduleId);
+  const runsTotal = useScheduleRunsTotal(scheduleId);
   // The approval notice links here with the conversation of the waiting run (US-41 R1.2)
   const linkedConversationId = useSearchParams()[0].get('history_run_id');
   // undefined: nothing chosen yet, so the notice link decides; null: back to the test
@@ -107,6 +108,7 @@ export const useScheduleRunsView = (scheduleId, applicationId) => {
 
   return {
     runs,
+    runsTotal,
     viewedRun: viewedRun || undefined,
     versionNames,
     runsExpanded,

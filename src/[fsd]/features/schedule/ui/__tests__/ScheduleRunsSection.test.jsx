@@ -107,6 +107,19 @@ describe('ScheduleRunsSection EL-7011 CR-21', () => {
     expect(screen.getByText('No runs yet.')).toBeInTheDocument();
   });
 
+  it('CR-21 shows the run total of the query next to the title, also 0 without runs', () => {
+    renderSection({ total: 26 });
+    expect(screen.getByTestId('schedule-runs-count')).toHaveTextContent('26');
+    cleanup();
+    renderSection({ runs: [], total: 0 });
+    expect(screen.getByTestId('schedule-runs-count')).toHaveTextContent('0');
+  });
+
+  it('CR-21 shows no count while the total is unknown', () => {
+    renderSection();
+    expect(screen.queryByTestId('schedule-runs-count')).toBeNull();
+  });
+
   it('CR-21 shows the not-in-the-list note for an unknown history_run_id', () => {
     renderSection({ runNotFound: true });
     expect(screen.getByRole('region', { name: 'Runs of this schedule' })).toHaveTextContent(

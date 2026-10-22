@@ -82,6 +82,7 @@ const ScheduleDetailPage = props => {
   // The Test schedule panel right of the form and the Runs section under the panel (owner CR 2026-10-21)
   const {
     runs,
+    runsTotal,
     viewedRun,
     versionNames,
     panelRef,
@@ -113,6 +114,7 @@ const ScheduleDetailPage = props => {
         <ScheduleRunsSection
           ref={runsSectionRef}
           runs={runs}
+          total={runsTotal}
           versionNames={versionNames}
           selectedRunId={viewedRun?.id}
           onOpen={openRun}
@@ -126,6 +128,7 @@ const ScheduleDetailPage = props => {
     [
       schedule,
       runs,
+      runsTotal,
       viewedRun,
       versionNames,
       panelRef,
