@@ -134,6 +134,23 @@ describe('OwnerFilter EL-7011 R2.1 R2.2', () => {
     expectSummary('Owner 2', '+2');
   });
 
+  it.each([
+    ['Backspace', 'the chip has the DOM focus', false],
+    ['Backspace', 'ArrowLeft moved the focus into the chip', true],
+    ['Delete', 'the chip has the DOM focus', false],
+    ['Delete', 'ArrowLeft moved the focus into the chip', true],
+  ])('BUG-40 R2.1 EL-7011 %s removes only that chip when %s', (key, _title, useArrowLeft) => {
+    const onChangeOwners = vi.fn();
+    renderFilter({ selectedOwners: OWNERS.slice(0, 2), onChangeOwners });
+    const chip = screen.getByTestId('schedules-owner-chip');
+    if (useArrowLeft) fireEvent.keyDown(screen.getByRole('combobox'), { key: 'ArrowLeft' });
+    else chip.focus();
+    fireEvent.keyDown(chip, { key });
+    fireEvent.keyUp(chip, { key });
+    expect(onChangeOwners).toHaveBeenCalledTimes(1);
+    expect(onChangeOwners.mock.calls[0][0].map(owner => owner.id)).toEqual([12]);
+  });
+
   it('BUG-13 R2.1 EL-7011 the +N chip names the other owners in its tooltip and label', () => {
     renderFilter({ selectedOwners: OWNERS });
     const more = screen.getByTestId('schedules-owner-more');
