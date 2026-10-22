@@ -45,13 +45,11 @@ describe('ScheduleRunResult EL-7011 owner CR 2026-10-21', () => {
     expect(screen.getByTestId('schedule-run-summary')).toHaveTextContent('38 s · 2,140 tokens · $0.0300');
   });
 
-  it('opens the run conversation in a new tab', () => {
+  it('CR-25 has no Open conversation link, even when the run has a conversation', () => {
     renderResult();
 
-    const link = screen.getByRole('link', { name: /Open conversation/ });
-    expect(link).toHaveAttribute('href', '/chat/70');
-    expect(link).toHaveAttribute('target', '_blank');
-    expect(link).toHaveAttribute('rel', expect.stringContaining('noopener'));
+    expect(screen.queryByText(/Open conversation/)).not.toBeInTheDocument();
+    expect(screen.queryByRole('link')).not.toBeInTheDocument();
   });
 
   it('shows the answer as plain text', () => {
@@ -72,7 +70,7 @@ describe('ScheduleRunResult EL-7011 owner CR 2026-10-21', () => {
     expect(screen.getByText('Teams post_message is a sensitive tool')).toBeInTheDocument();
   });
 
-  it('leaves out the summary and the link the run does not have', () => {
+  it('leaves out the summary the run does not have', () => {
     renderResult({ run: { id: 3, status: 'skipped', conversation_id: null }, answer: undefined });
 
     expect(screen.queryByTestId('schedule-run-summary')).not.toBeInTheDocument();
@@ -82,7 +80,7 @@ describe('ScheduleRunResult EL-7011 owner CR 2026-10-21', () => {
 
   // CR-21 option A: below a 1000 px window height the answer keeps 2 lines, so the card fits the right block
   // CR-21 fit spec: one header row, so the card stays 88 px with 2 answer lines under 1000 px window height
-  it('keeps the header on one row: the stats get an ellipsis and a tooltip, the link does not shrink', () => {
+  it('keeps the header on one row: the stats get an ellipsis and a tooltip', () => {
     renderResult();
     const header = screen.getByTestId('schedule-run-status').parentElement;
     const summary = screen.getByTestId('schedule-run-summary');
@@ -95,11 +93,6 @@ describe('ScheduleRunResult EL-7011 owner CR 2026-10-21', () => {
       textOverflow: 'ellipsis',
     });
     expect(summary).toHaveAttribute('aria-label', '38 s · 2,140 tokens · $0.0300');
-    expect(screen.getByRole('link', { name: /Open conversation/ })).toHaveStyle({ flexShrink: '0' });
-    // BUG-38: the app link colour, not the brand colour
-    expect(screen.getByRole('link', { name: /Open conversation/ })).toHaveStyle({
-      color: theme.palette.text.link,
-    });
   });
 
   it('clamps the answer to 4 lines, and to 2 lines in a window under 62.5 rem high', () => {
