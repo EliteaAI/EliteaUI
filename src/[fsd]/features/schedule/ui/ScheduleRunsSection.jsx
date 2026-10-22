@@ -51,18 +51,22 @@ const ScheduleRunsSection = memo(
           onChange={(_, isExpanded) => onExpandedChange(isExpanded)}
           items={[
             {
-              title: 'RUNS OF THIS SCHEDULE',
-              testId: 'schedule-section-runs',
-              // The run total of the query: a page holds fewer rows than the schedule may have
-              headerContent: Number.isFinite(total) && (
-                <Typography
-                  data-testid="schedule-runs-count"
-                  variant="labelSmall"
-                  color="text.secondary"
-                >
-                  {total}
-                </Typography>
+              // The count sits right after the title (spec "RUNS OF THIS SCHEDULE 6"); the Sort select is at the right
+              title: (
+                <>
+                  RUNS OF THIS SCHEDULE
+                  {Number.isFinite(total) && (
+                    <Box
+                      component="span"
+                      data-testid="schedule-runs-count"
+                      sx={styles.count}
+                    >
+                      {total}
+                    </Box>
+                  )}
+                </>
               ),
+              testId: 'schedule-section-runs',
               summaryAction: runs.length > 0 && (
                 <Select
                   size="small"
@@ -140,6 +144,8 @@ const scheduleRunsSectionStyles = () => ({
       maxHeight: 'calc((100dvh - 6rem) * 0.4 - 3.5rem)',
     },
   }),
+  // The run total of the query, after the title: a page holds fewer rows than the schedule may have
+  count: ({ palette }) => ({ marginLeft: '1rem', color: palette.text.secondary, textTransform: 'none' }),
   // The summary action sits right of the title; the Select keeps a 1.875 rem box
   sort: { minWidth: '8rem', height: '1.875rem', fontSize: '0.75rem', marginRight: '0.5rem' },
 });
