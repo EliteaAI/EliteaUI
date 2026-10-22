@@ -12,6 +12,7 @@ import { InstructionsInputRefProvider } from '@/[fsd]/shared/lib/context';
 import { useToast, useViewMode } from '@/[fsd]/shared/lib/hooks';
 import { BreadcrumbsOrTitle } from '@/[fsd]/shared/ui';
 import { ApplicationControls } from '@/[fsd]/widgets/application-controls';
+import { PipelineEditTab } from '@/[fsd]/widgets/pipeline-editor';
 import { ViewMode } from '@/common/constants';
 import { buildErrorMessage, isNotFoundError } from '@/common/utils';
 import StyledTabs from '@/components/StyledTabs';
@@ -21,8 +22,6 @@ import useApplicationInitialValues from '@/pages/Applications/useApplicationInit
 import Page404 from '@/pages/Page404.jsx';
 import { actions } from '@/slices/pipeline';
 import { actions as editorActions } from '@/slices/pipelineEditor';
-
-import ConfigurationTab from './Components/ConfigurationTab';
 
 const EditPipeline = memo(() => {
   const viewMode = useViewMode();
@@ -98,8 +97,7 @@ const EditPipeline = memo(() => {
         ) : null,
         rightToolbar: isFetching ? null : <ApplicationControls setBlockNav={setBlockNav} />,
         content: (
-          <ConfigurationTab
-            totalToolCount={initialValues?.version_details?.tools?.length || 0}
+          <PipelineEditTab
             isFetching={isFetching}
             isError={isError}
             applicationId={applicationId}
@@ -111,16 +109,7 @@ const EditPipeline = memo(() => {
         ),
       },
     ],
-    [
-      initialValues?.version_details?.tools?.length,
-      isFetching,
-      isError,
-      applicationId,
-      unsavedLLMSettings,
-      handleSuccess,
-      handleDiscard,
-      setBlockNav,
-    ],
+    [isFetching, isError, applicationId, unsavedLLMSettings, handleSuccess, handleDiscard, setBlockNav],
   );
 
   if (shouldShowNotFoundPage) {

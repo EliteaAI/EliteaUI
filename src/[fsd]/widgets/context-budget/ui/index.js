@@ -2,6 +2,8 @@
 export { default as ContextBudgetInfo } from './ContextBudgetInfo';
 export { default as ContextBudgetDetails } from './ContextBudgetDetails';
 export { default as ContextBudgetRing } from './ContextBudgetRing';
+export { default as ContextBudgetPill } from './ContextBudgetPill';
+export { default as ContextBudgetPopover } from './ContextBudgetPopover';
 export { default as ContextWindowModeSelector } from './ContextWindowModeSelector';
 export { default as ContextBudgetCompact } from './ContextBudgetCompact';
 export { default as ContextBudgetExpanded } from './ContextBudgetExpanded';

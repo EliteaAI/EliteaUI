@@ -13,6 +13,7 @@ import { useContextUtilization } from '../lib/hooks/useContextUtilization.hooks'
 import { useContextWindowSwitch } from '../lib/hooks/useContextWindowSwitch.hooks';
 import ContextBudgetCompact from './ContextBudgetCompact';
 import ContextBudgetExpanded from './ContextBudgetExpanded';
+import ContextBudgetPill from './ContextBudgetPill';
 import ContextBudgetRing from './ContextBudgetRing';
 import ContextStrategyModal from './ContextStrategyModal';
 
@@ -24,6 +25,7 @@ const ContextBudgetInfo = memo(props => {
     conversationId,
     collapsed = false,
     compact = false,
+    pill = false,
     contextStrategy = {},
     setActiveConversation,
     conversationInstructions,
@@ -73,9 +75,10 @@ const ContextBudgetInfo = memo(props => {
   } = contextStatus;
   const summariesGenerated = context_analytics?.summaries_generated || 0;
   const windowMode = contextStrategy?.context_window_mode || window_mode || CONTEXT_WINDOW_MODES.BALANCED;
-  // `compact` is the Agents/Pipelines panels, whose model is not in currentChatModel; the ring is `collapsed`
+  // `compact` and `pill` are the Agents/Pipelines panels, whose model is not in currentChatModel;
+  // the ring is `collapsed`
   const previewWindow =
-    !compact && selectedModelWindow && selectedModelWindow !== model_window
+    !compact && !pill && selectedModelWindow && selectedModelWindow !== model_window
       ? windowMode === CONTEXT_WINDOW_MODES.FULL
         ? selectedModelWindow
         : Math.min(BALANCED_WINDOW_TOKENS, selectedModelWindow)
@@ -116,9 +119,10 @@ const ContextBudgetInfo = memo(props => {
   };
 
   // Render appropriate view based on props
-  if (collapsed) {
+  if (collapsed || pill) {
+    const TriggerView = pill ? ContextBudgetPill : ContextBudgetRing;
     return (
-      <ContextBudgetRing
+      <TriggerView
         {...commonProps}
         conversationId={conversationId}
         contextStatus={contextStatus}
