@@ -32,7 +32,6 @@ const entityKindChipStyles = () => ({
     flexShrink: 0,
     color: palette.text.secondary,
     backgroundColor: palette.background.badge,
-    border: `0.0625rem solid ${palette.border.lines}`,
   }),
   empty: { fontSize: '0.8125rem' },
 });
