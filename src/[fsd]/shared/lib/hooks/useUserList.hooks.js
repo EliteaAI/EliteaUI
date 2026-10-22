@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import { useSelector } from 'react-redux';
 
@@ -9,7 +9,15 @@ import { useSelectedProjectId } from './useSelectedProject.hooks';
 export const useUserList = ({ sortBy, sortOrder, query, pageSize, selectedTagIds, forceSkip = false }) => {
   const { personal_project_id: privateProjectId } = useSelector(state => state.user);
   const projectId = useSelectedProjectId();
-  const [page, setPage] = useState(0);
+  // The page belongs to the filters it was set for. A change of filters drops it in the same render,
+  // so the first request after a change never carries the old offset.
+  const [pageState, setPageState] = useState({ page: 0, projectId, query, selectedTagIds });
+  const page =
+    pageState.projectId === projectId &&
+    pageState.query === query &&
+    pageState.selectedTagIds === selectedTagIds
+      ? pageState.page
+      : 0;
 
   const { data, error, isError, isLoading, isFetching } = useUserListQuery(
     {
@@ -27,13 +35,9 @@ export const useUserList = ({ sortBy, sortOrder, query, pageSize, selectedTagIds
 
   const onLoadMoreUsers = useCallback(() => {
     if (!isFetching) {
-      setPage(page + 1);
+      setPageState({ page: page + 1, projectId, query, selectedTagIds });
     }
-  }, [isFetching, setPage, page]);
-
-  useEffect(() => {
-    setPage(0);
-  }, [projectId, query, selectedTagIds]);
+  }, [isFetching, page, projectId, query, selectedTagIds]);
 
   return {
     onLoadMoreUsers,
