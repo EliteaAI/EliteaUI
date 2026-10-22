@@ -1,12 +1,6 @@
 import { memo } from 'react';
 
-import { Link as RouterLink } from 'react-router-dom';
-
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import { Box, Link, Tooltip, Typography } from '@mui/material';
-
-import { TextLinkConstants } from '@/[fsd]/shared/lib/constants';
-import RouteDefinitions from '@/routes';
+import { Box, Tooltip, Typography } from '@mui/material';
 
 import { formatRunSummary, toPlainText } from '../lib/helpers';
 import ScheduleRunStatusChip from './ScheduleRunStatusChip';
@@ -39,19 +33,6 @@ const ScheduleRunResult = memo(props => {
               {summary}
             </Typography>
           </Tooltip>
-        )}
-        {run.conversation_id != null && (
-          <Link
-            component={RouterLink}
-            to={`${RouteDefinitions.Chat}/${run.conversation_id}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            variant="bodyMedium"
-            sx={[TextLinkConstants.TEXT_LINK_SX, styles.link]}
-          >
-            Open conversation
-            <OpenInNewIcon sx={styles.linkIcon} />
-          </Link>
         )}
       </Box>
       {run.reason && (
@@ -87,7 +68,7 @@ const scheduleRunResultStyles = () => ({
     borderRadius: '0.5rem',
     border: `0.0625rem solid ${palette.border.lines}`,
   }),
-  // CR-21 fit spec: one row, so the card stays 88 px; the stats shrink with an ellipsis, chip and link do not
+  // CR-21 fit spec: one row, so the card stays 88 px; the stats shrink with an ellipsis, the chip does not
   header: {
     display: 'flex',
     alignItems: 'center',
@@ -102,15 +83,6 @@ const scheduleRunResultStyles = () => ({
     overflow: 'hidden',
     textOverflow: 'ellipsis',
   },
-  link: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '0.25rem',
-    marginLeft: 'auto',
-    flexShrink: 0,
-    whiteSpace: 'nowrap',
-  },
-  linkIcon: { fontSize: '0.875rem' },
   // CR-21 option A: 2 answer lines under a 1000 px window height, so the card fits the right block
   answer: {
     whiteSpace: 'pre-line',
