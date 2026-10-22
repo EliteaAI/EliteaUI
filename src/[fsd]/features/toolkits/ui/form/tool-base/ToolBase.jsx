@@ -8,6 +8,7 @@ import { OpenApiOAuthStatus } from '@/[fsd]/features/openapi/ui';
 import { SharepointOAuthStatus } from '@/[fsd]/features/sharepoint';
 import { ToolBaseHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import {
+  CONFIGURATION_SECTION_KEY,
   useCollapsedSection,
   useExpandOnAttention,
   useSectionExpansion,
@@ -290,7 +291,7 @@ const ToolBase = memo(props => {
     [advancedFields, needsAttention],
   );
 
-  const ownConfigurationSection = useCollapsedSection();
+  const ownConfigurationSection = useCollapsedSection(CONFIGURATION_SECTION_KEY);
   const activeConfigurationSection = configurationSection ?? ownConfigurationSection;
   const { isExpanded: isConfigurationExpanded, setIsExpanded: setIsConfigurationExpanded } =
     activeConfigurationSection;
