@@ -306,7 +306,7 @@ describe('EL-7011 US-26 SchedulesTable fits 8 columns at 1280, 1440 and 1600 px'
   const TEXT_COLUMNS = 'minmax(10.25rem, 1.3fr) minmax(7.5rem, 1fr) minmax(7.25rem, 1fr)';
   const TEMPLATES = {
     compact: `${TEXT_COLUMNS} 5.75rem 5.75rem 3.5rem 5.5rem 4.25rem`,
-    regular: `${TEXT_COLUMNS} 7.25rem 7.25rem 6.75rem 5.5rem 4.25rem`, // CR-23 D12
+    regular: `${TEXT_COLUMNS} 7.75rem 7.75rem 6.75rem 5.5rem 4.25rem`, // CR-23 D12; dates like "Nov, 30 23:30" fit
     comfortable: `${TEXT_COLUMNS} 9.25rem 9.25rem 9.75rem 6rem 6.5625rem`, // CR-23 D12
   };
   const minGridWidthPx = template =>
@@ -449,17 +449,24 @@ describe('EL-7011 US-26 SchedulesTable fits 8 columns at 1280, 1440 and 1600 px'
     expect(screen.getByTestId('schedule-column-value-last_run')).toHaveTextContent(/^-$/);
   });
 
-  it.each([1440, 1600])('CR-23 R2.5 at %i px shows the reason after the status on line 2, with the full text in the tooltip', width => {
-    setWindowWidth(width);
-    renderTable([makeRow({ last_run_status: 'skipped', last_run_reason: 'The previous run is still running' })]);
-    const lastRun = screen.getByTestId('schedule-column-value-last_run');
-    const status = within(lastRun).getByText('Skipped');
-    const reason = within(lastRun).getByText('The previous run is still running');
-    expect(status.parentElement).toBe(reason.parentElement);
-    expect(
-      within(lastRun).getByLabelText(`Skipped - ${formatRunStarted(LAST_RUN)}. The previous run is still running`),
-    ).toBeInTheDocument();
-  });
+  it.each([1440, 1600])(
+    'CR-23 R2.5 at %i px shows the reason after the status on line 2, with the full text in the tooltip',
+    width => {
+      setWindowWidth(width);
+      renderTable([
+        makeRow({ last_run_status: 'skipped', last_run_reason: 'The previous run is still running' }),
+      ]);
+      const lastRun = screen.getByTestId('schedule-column-value-last_run');
+      const status = within(lastRun).getByText('Skipped');
+      const reason = within(lastRun).getByText('The previous run is still running');
+      expect(status.parentElement).toBe(reason.parentElement);
+      expect(
+        within(lastRun).getByLabelText(
+          `Skipped - ${formatRunStarted(LAST_RUN)}. The previous run is still running`,
+        ),
+      ).toBeInTheDocument();
+    },
+  );
 
   it.each([1280, 1600])('shows Paused in Next run for a paused schedule at %i px', width => {
     setWindowWidth(width);
