@@ -1,22 +1,13 @@
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useMemo, useState } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
+import { ToolGroupConstants } from '@/[fsd]/features/toolkits/lib/constants';
 import { useToolkitToolOptions } from '@/[fsd]/features/toolkits/lib/hooks';
 import { Button, Input } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 
-const UNCLASSIFIED_GROUP = 'unclassified';
-
-const TOOL_GROUP_ORDER = [
-  { key: 'read', label: 'Read' },
-  { key: 'write', label: 'Create & update' },
-  { key: 'delete', label: 'Delete' },
-  { key: 'execute', label: 'Execute' },
-  { key: UNCLASSIFIED_GROUP, label: 'Unclassified' },
-];
-
-const KNOWN_GROUPS = new Set(TOOL_GROUP_ORDER.map(g => g.key).filter(k => k !== UNCLASSIFIED_GROUP));
+const { UNCLASSIFIED_GROUP, TOOL_GROUP_ORDER, KNOWN_GROUPS } = ToolGroupConstants;
 
 const ToolkitTestEmptyState = memo(props => {
   const { toolkitId, onChangeTool, toolGroups, sx = {} } = props;
@@ -48,13 +39,6 @@ const ToolkitTestEmptyState = memo(props => {
       return { groupKey: group.key, groupLabel: group.label, tools };
     }).filter(g => g.tools.length > 0);
   }, [hasGroups, filteredOptions, toolGroups]);
-
-  const handleSelectTool = useCallback(
-    value => {
-      onChangeTool(value);
-    },
-    [onChangeTool],
-  );
 
   const noResults = filteredOptions.length === 0 && searchTerm.trim().length > 0;
 
@@ -108,7 +92,7 @@ const ToolkitTestEmptyState = memo(props => {
                       key={toolKey}
                       variant={BUTTON_VARIANTS.secondary}
                       sx={styles.chip}
-                      onClick={() => handleSelectTool(opt.value)}
+                      onClick={() => onChangeTool(opt.value)}
                       data-testid="toolkit-test-start-tool-chip"
                     >
                       {opt.label}
