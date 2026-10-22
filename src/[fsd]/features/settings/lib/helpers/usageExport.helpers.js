@@ -98,11 +98,26 @@ export const buildDailySheet = (data, comparisonData = null) => {
     );
     const prevByDom = new Map(prevFilled.map((d, i) => [i + 1, d]));
 
-    rows.forEach((row, i) => {
+    // fillDailyGaps may return frozen objects — spread to get a mutable copy
+    const augmented = rows.map((row, i) => {
       const prev = prevByDom.get(i + 1);
-      row.prevSpend = prev ? orBlank(prev.spend) : '';
-      row.prevTokens = prev ? prev.total_tokens || 0 : '';
+      return {
+        ...row,
+        prevSpend: prev ? orBlank(prev.spend) : '',
+        prevTokens: prev ? prev.total_tokens || 0 : '',
+      };
     });
+
+    const columns = [
+      { header: 'Date', key: 'date' },
+      { header: 'Spent (USD)', key: 'spend', numFmt: ExcelFormats.currency, transform: orBlank },
+      { header: 'Tokens', key: 'total_tokens', numFmt: ExcelFormats.integer },
+      { header: 'Calls', key: 'api_requests', numFmt: ExcelFormats.integer },
+      { header: 'Prev. period spent (USD)', key: 'prevSpend', numFmt: ExcelFormats.currency },
+      { header: 'Prev. period tokens', key: 'prevTokens', numFmt: ExcelFormats.integer },
+    ];
+
+    return { sheetName: 'Daily Usage', columns, rows: augmented };
   }
 
   const columns = [
@@ -110,12 +125,6 @@ export const buildDailySheet = (data, comparisonData = null) => {
     { header: 'Spent (USD)', key: 'spend', numFmt: ExcelFormats.currency, transform: orBlank },
     { header: 'Tokens', key: 'total_tokens', numFmt: ExcelFormats.integer },
     { header: 'Calls', key: 'api_requests', numFmt: ExcelFormats.integer },
-    ...(hasComparison
-      ? [
-          { header: 'Prev. period spent (USD)', key: 'prevSpend', numFmt: ExcelFormats.currency },
-          { header: 'Prev. period tokens', key: 'prevTokens', numFmt: ExcelFormats.integer },
-        ]
-      : []),
   ];
 
   return { sheetName: 'Daily Usage', columns, rows };
@@ -131,8 +140,19 @@ export const buildModelSheet = (data, comparisonData = null) => {
     .sort((a, b) => (b.spend || 0) - (a.spend || 0))
     .map(model => {
       const prev = prevByModel.get(model.model);
-      const prevSpend = prev?.spend ?? (hasComparison ? 0 : null);
-      const delta = computeDelta(model.spend ?? 0, prevSpend);
+      let delta = { direction: 'none', label: '' };
+      if (hasComparison) {
+        const spendKnown = !isNullOrUndefined(model.spend);
+        if (spendKnown) {
+          // Use spend delta when available
+          const prevSpend = prev?.spend ?? 0;
+          delta = computeDelta(model.spend, prevSpend);
+        } else {
+          // Fall back to token delta for members whose spend is redacted
+          const prevTokens = prev?.total_tokens ?? 0;
+          delta = computeDelta(model.total_tokens || 0, prevTokens);
+        }
+      }
       return {
         model: model.display_name || formatModelName(model.model),
         spend: orBlank(model.spend),

@@ -186,6 +186,30 @@ describe('daily sheet', () => {
     expect(sheet.rows).toEqual([]);
     expect(sheet.columns.map(column => column.header)).toEqual(['Date', 'Spent (USD)', 'Tokens', 'Calls']);
   });
+
+  it('adds prev-period columns without mutating source rows', () => {
+    const data = {
+      period_start: '2026-07-01',
+      period_end: '2026-07-02',
+      daily: [{ date: '2026-07-01', spend: 5, total_tokens: 100, api_requests: 3 }],
+    };
+    const comparisonData = {
+      period_start: '2026-06-01',
+      period_end: '2026-06-02',
+      daily: [{ date: '2026-06-01', spend: 3, total_tokens: 80, api_requests: 2 }],
+    };
+    const originalRow = data.daily[0];
+    const sheet = buildDailySheet(data, comparisonData);
+
+    // Comparison columns are present
+    expect(sheet.columns.map(c => c.header)).toContain('Prev. period spent (USD)');
+    expect(sheet.columns.map(c => c.header)).toContain('Prev. period tokens');
+    expect(sheet.rows[0].prevSpend).toBe(3);
+    expect(sheet.rows[0].prevTokens).toBe(80);
+    // Source rows are not mutated
+    expect(originalRow).not.toHaveProperty('prevSpend');
+    expect(originalRow).not.toHaveProperty('prevTokens');
+  });
 });
 
 describe('model sheet', () => {
@@ -219,6 +243,20 @@ describe('model sheet', () => {
 
   it('produces headers with no rows when there is no usage', () => {
     expect(buildModelSheet({ models: [] }).rows).toEqual([]);
+  });
+
+  it('uses token delta for vs Prior when spend is redacted for a member', () => {
+    const data = {
+      models: [{ model: 'gpt-5', display_name: 'GPT-5', spend: null, total_tokens: 500 }],
+    };
+    const comparisonData = {
+      models: [{ model: 'gpt-5', spend: null, total_tokens: 400 }],
+    };
+    const sheet = buildModelSheet(data, comparisonData);
+
+    // Token delta: 500 vs 400 = +25% — direction is not 'none', so vsPrior is not '—'
+    expect(sheet.rows[0].vsPrior).not.toBe('—');
+    expect(sheet.rows[0].vsPrior).toMatch(/\+|↑/);
   });
 });
 
