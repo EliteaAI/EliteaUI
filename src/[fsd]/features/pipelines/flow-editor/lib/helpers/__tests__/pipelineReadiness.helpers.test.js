@@ -78,6 +78,54 @@ describe('getTestBlockReason', () => {
     ).toBe('');
   });
 
+  it('treats an omitted legacy condition default_output as END, as the SDK does', () => {
+    expect(
+      getTestBlockReason({
+        entry_point: 'a',
+        nodes: [{ id: 'a', type: 'llm', condition: { conditional_outputs: ['a'] } }],
+      }),
+    ).toBe('');
+  });
+
+  it('treats an omitted legacy decision default_output as END, as the SDK does', () => {
+    expect(
+      getTestBlockReason({
+        entry_point: 'a',
+        nodes: [{ id: 'a', type: 'llm', decision: { nodes: ['a'] } }],
+      }),
+    ).toBe('');
+  });
+
+  it('treats an omitted decision node default_output as END, as the SDK does', () => {
+    expect(
+      getTestBlockReason({
+        entry_point: 'llm',
+        nodes: [
+          { id: 'llm', type: 'llm', transition: 'd' },
+          { id: 'd', type: 'decision', nodes: ['llm'] },
+        ],
+      }),
+    ).toBe('');
+  });
+
+  it('blocks an explicitly empty default_output, which the SDK does not route to END', () => {
+    expect(
+      getTestBlockReason({
+        entry_point: 'llm',
+        nodes: [
+          { id: 'llm', type: 'llm', transition: 'd' },
+          { id: 'd', type: 'decision', nodes: ['llm'], default_output: '' },
+        ],
+      }),
+    ).toBe(TEST_BLOCK_REASONS.noPathToEnd);
+    expect(
+      getTestBlockReason({
+        entry_point: 'a',
+        nodes: [{ id: 'a', type: 'llm', condition: { conditional_outputs: ['a'], default_output: '' } }],
+      }),
+    ).toBe(TEST_BLOCK_REASONS.noPathToEnd);
+  });
+
   it('follows HITL routes', () => {
     expect(
       getTestBlockReason({
