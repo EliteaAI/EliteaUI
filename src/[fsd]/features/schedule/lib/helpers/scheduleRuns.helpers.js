@@ -64,6 +64,8 @@ export const toPlainText = markdown =>
     .replace(/^>\s?/gm, '')
     .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
     .replace(/(\*\*|__|\*|`)/g, '')
+    // A blank line would fill a line of the clamped preview with nothing (CR-21)
+    .replace(/\n\s*\n/g, '\n')
     .trim();
 
 export const formatExpiresIn = (pausedAt, now) => {

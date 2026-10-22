@@ -122,6 +122,13 @@ describe('EL-7011 owner CR 2026-10-21 test panel values', () => {
     expect(toPlainText(undefined)).toBe('');
   });
 
+  // CR-21 live check: a blank line after the first sentence filled the second line of the 2-line preview
+  it('keeps no blank line, so each preview line shows text', () => {
+    expect(toPlainText('I am the **Digest**.\n\nI can summarise it.\n \n\nPaste the data.')).toBe(
+      'I am the Digest.\nI can summarise it.\nPaste the data.',
+    );
+  });
+
   it('counts the 24 hour approval window down from the pause', () => {
     const pausedAt = '2026-10-21T10:42:19Z';
     expect(formatExpiresIn(pausedAt, Date.parse('2026-10-21T10:44:00Z'))).toBe('Expires in 23 h 58 min');
