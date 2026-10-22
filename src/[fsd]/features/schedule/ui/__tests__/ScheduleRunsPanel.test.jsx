@@ -122,6 +122,14 @@ describe('ScheduleRunsPanel EL-7011 owner CR 2026-10-21 test panel log', () => {
     expect(tooltip).toHaveTextContent(NOTE);
   });
 
+  it('CR-21 draws the "i" icon in the info colour of the theme', () => {
+    renderPanel();
+
+    // BaseBtn tertiary fills the icon path with this variable
+    const button = screen.getByRole('button', { name: 'About test runs' });
+    expect(getComputedStyle(button).getPropertyValue('--btn-icon-fill').trim()).toBe(theme.palette.icon.info);
+  });
+
   it('CR-21 reads the note with Run test', () => {
     mockDetail({ ...olderTest, events: [STARTED, FINISHED] });
     renderPanel({ runs: [olderTest] });

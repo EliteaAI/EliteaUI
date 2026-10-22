@@ -239,7 +239,14 @@ const scheduleRunsPanelStyles = () => ({
   header: { display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', minHeight: '2.25rem' },
   title: ({ palette }) => ({ fontSize: '1.125rem', fontWeight: 600, color: palette.text.primary }),
   headerAction: { marginLeft: 'auto' },
-  infoButton: { minWidth: '2.75rem', minHeight: '2.75rem', margin: '-0.25rem' },
+  // The tertiary button paints its icon with --btn-icon-fill; the spec asks for the info blue, also on hover
+  infoButton: ({ palette }) => ({
+    minWidth: '2.75rem',
+    minHeight: '2.75rem',
+    margin: '-0.25rem',
+    '--btn-icon-fill': palette.icon.info,
+    '&:hover': { '--btn-icon-fill': palette.icon.info },
+  }),
   tooltip: { display: 'flex', flexDirection: 'column', gap: '0.5rem' },
   logHeader: {
     display: 'flex',
