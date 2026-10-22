@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => ({ runs: [], loaded: true, applicationDetails: vi
 vi.mock('../useScheduleRuns.hooks', () => ({
   useScheduleRuns: () => mocks.runs,
   useScheduleRunsLoaded: () => mocks.loaded,
+  useScheduleRunsTotal: () => mocks.runs.length,
 }));
 vi.mock('@/api/applications', () => ({ useApplicationDetailsQuery: mocks.applicationDetails }));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({ useSelectedProjectId: () => 5 }));

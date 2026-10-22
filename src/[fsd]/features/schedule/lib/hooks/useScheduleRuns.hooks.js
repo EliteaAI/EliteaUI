@@ -32,6 +32,13 @@ export const useScheduleRunsLoaded = scheduleId => {
   return !!useGetScheduleRunsQuery(args, { skip }).currentData;
 };
 
+// The run total the list API sends with the page; undefined until the runs arrive (CR-21 runs count)
+export const useScheduleRunsTotal = scheduleId => {
+  const projectId = useSelectedProjectId();
+  const { args, skip } = toRunsArgs(projectId, scheduleId);
+  return useGetScheduleRunsQuery(args, { skip }).currentData?.total;
+};
+
 // The runs of one schedule, refreshed every 3 seconds while one of them is running (R4.3, R4.4)
 export const useScheduleRuns = scheduleId => {
   const projectId = useSelectedProjectId();

@@ -20,6 +20,7 @@ const ScheduleRunsSection = memo(
   forwardRef((props, ref) => {
     const {
       runs,
+      total,
       versionNames,
       selectedRunId,
       onOpen,
@@ -52,6 +53,16 @@ const ScheduleRunsSection = memo(
             {
               title: 'RUNS OF THIS SCHEDULE',
               testId: 'schedule-section-runs',
+              // The run total of the query: a page holds fewer rows than the schedule may have
+              headerContent: Number.isFinite(total) && (
+                <Typography
+                  data-testid="schedule-runs-count"
+                  variant="labelSmall"
+                  color="text.secondary"
+                >
+                  {total}
+                </Typography>
+              ),
               summaryAction: runs.length > 0 && (
                 <Select
                   size="small"
