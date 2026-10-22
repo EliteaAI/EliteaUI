@@ -126,6 +126,7 @@ describe('ScheduleRunsPanel EL-7011 owner CR 2026-10-21 test panel log', () => {
 
   it('shows the prompt box with the version and variable chips', () => {
     renderPanel();
+    fireEvent.click(screen.getByRole('button', { name: 'Show the full prompt' }));
 
     expect(screen.getByText('Prompt from the schedule')).toBeInTheDocument();
     expect(screen.getAllByTestId('schedule-prompt-chip').map(chip => chip.textContent)).toEqual([
