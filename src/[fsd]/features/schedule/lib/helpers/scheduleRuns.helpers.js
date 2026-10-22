@@ -1,5 +1,6 @@
 import { compareRunTimestamp, formatRunTimestamp } from '@/[fsd]/entities/run-history/lib/helpers';
 import { fmtCost } from '@/[fsd]/features/settings/lib/helpers/analyticsCommon.helpers';
+import { ROLES } from '@/common/constants';
 
 // The API stores the pause for a person's answer as waiting_for_approval; the owner calls it "Waiting for input"
 const RUN_STATUS_LABELS = {
@@ -58,6 +59,19 @@ export const formatRunSummary = summary =>
 export const toLogLevel = event => event.level ?? LOG_KIND_LEVELS[event.kind] ?? 'info';
 
 // lean: headings, emphasis, code, quotes and links only; use a markdown parser if tables or HTML show up
+// The text of a chat message: the API keeps it in the `text_message` item, as convertChatConversationMessages
+// reads it; an older message has it in `content` (CR-21)
+const toMessageText = message =>
+  message.message_items?.find(item => item.item_type === 'text_message')?.item_details?.content ||
+  message.content;
+
+// The text of the last answer with text in a converted conversation; undefined without one (CR-21)
+export const findRunAnswer = messages =>
+  messages
+    .filter(message => message.role === ROLES.Assistant)
+    .map(toMessageText)
+    .findLast(Boolean);
+
 export const toPlainText = markdown =>
   (markdown ?? '')
     .replace(/^#+\s+/gm, '')
