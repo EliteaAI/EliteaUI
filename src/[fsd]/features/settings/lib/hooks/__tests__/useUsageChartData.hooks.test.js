@@ -113,6 +113,57 @@ describe('useUsageChartData — groupBy source', () => {
   });
 });
 
+describe('useUsageChartData — groupBy member', () => {
+  const dailyWithMembers = [
+    {
+      date: '2026-10-01',
+      spend: 10,
+      total_tokens: 1000,
+      by_model: { 'gpt-4o': 10 },
+      by_source: { agents: 10 },
+      by_member: { 'alice@example.com': 6, 'bob@example.com': 4 },
+    },
+    {
+      date: '2026-10-02',
+      spend: 20,
+      total_tokens: 2000,
+      by_model: { 'gpt-4o': 20 },
+      by_source: { agents: 20 },
+      by_member: { 'alice@example.com': 8, 'bob@example.com': 12 },
+    },
+  ];
+
+  it('returns one series key per member', () => {
+    const { result } = renderHook(() =>
+      useUsageChartData({ ...baseProps, daily: dailyWithMembers, groupBy: 'member' }),
+    );
+
+    expect(result.current.seriesKeys).toContain('alice@example.com');
+    expect(result.current.seriesKeys).toContain('bob@example.com');
+  });
+
+  it('stacks each day by its own member split', () => {
+    const { result } = renderHook(() =>
+      useUsageChartData({ ...baseProps, daily: dailyWithMembers, groupBy: 'member' }),
+    );
+
+    expect(result.current.chartData[0]).toMatchObject({
+      'alice@example.com': 6,
+      'bob@example.com': 4,
+    });
+    expect(result.current.chartData[1]).toMatchObject({
+      'alice@example.com': 8,
+      'bob@example.com': 12,
+    });
+  });
+
+  it('falls back to total when daily rows have no by_member field', () => {
+    const { result } = renderHook(() => useUsageChartData({ ...baseProps, groupBy: 'member' }));
+
+    expect(result.current.seriesKeys).toEqual(['total']);
+  });
+});
+
 describe('useUsageChartData — weekly granularity', () => {
   it('aggregates days into weeks', () => {
     const { result } = renderHook(() => useUsageChartData({ ...baseProps, granularity: 'weekly' }));

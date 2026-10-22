@@ -6,6 +6,8 @@ import { Box, Link, Typography, useTheme } from '@mui/material';
 
 import { UsageHelpers } from '@/[fsd]/features/settings/lib/helpers';
 
+import UsageSortHeader from './UsageSortHeader';
+
 const MAX_ROWS = 5;
 
 const UsageTopSkills = memo(props => {
@@ -68,28 +70,6 @@ const UsageTopSkills = memo(props => {
     [sortKey],
   );
 
-  const SortHeader = useCallback(
-    ({ label, keyName, flex }) => {
-      const isActive = sortKey === keyName;
-
-      return (
-        <Box
-          sx={[styles.sortableCell, { flex }]}
-          onClick={() => handleSort(keyName)}
-          role="button"
-          tabIndex={0}
-          onKeyDown={e => e.key === 'Enter' && handleSort(keyName)}
-        >
-          <Typography sx={[styles.cellText, isActive ? { color: palette.primary.main } : {}]}>
-            {label}
-            {isActive && <Box component="span">{sortDir === 'desc' ? ' ▼' : ' ▲'}</Box>}
-          </Typography>
-        </Box>
-      );
-    },
-    [sortKey, sortDir, handleSort, palette, styles],
-  );
-
   if (!topSkills.length) return null;
 
   const visibleSkills = sortedSkills.slice(0, MAX_ROWS);
@@ -131,20 +111,29 @@ const UsageTopSkills = memo(props => {
               {sortKey === 'name' && <Box component="span">{sortDir === 'desc' ? ' ▼' : ' ▲'}</Box>}
             </Typography>
           </Box>
-          <SortHeader
+          <UsageSortHeader
             label="Uses"
             keyName="uses"
             flex={1}
+            sortKey={sortKey}
+            sortDir={sortDir}
+            onSort={handleSort}
           />
-          <SortHeader
+          <UsageSortHeader
             label="Per use"
             keyName="perUse"
             flex={1.2}
+            sortKey={sortKey}
+            sortDir={sortDir}
+            onSort={handleSort}
           />
-          <SortHeader
+          <UsageSortHeader
             label={canSeeAmounts ? 'Spend' : 'Share'}
             keyName="spend"
             flex={1.2}
+            sortKey={sortKey}
+            sortDir={sortDir}
+            onSort={handleSort}
           />
         </Box>
 

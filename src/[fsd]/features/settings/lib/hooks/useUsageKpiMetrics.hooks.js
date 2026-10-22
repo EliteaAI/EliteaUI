@@ -110,8 +110,8 @@ export const useUsageKpiMetrics = ({
   const noCompareSubtitle = !hasValidComparison;
   const showCacheHitRate = !canSeeAmounts && data.percent_used == null;
 
-  const dailySpends = daily.map(d => d.spend || 0);
-  const dailyTokens = daily.map(d => d.total_tokens || 0);
+  const dailySpends = useMemo(() => daily.map(d => d.spend || 0), [daily]);
+  const dailyTokens = useMemo(() => daily.map(d => d.total_tokens || 0), [daily]);
 
   const kpis = useMemo(() => {
     const list = [];

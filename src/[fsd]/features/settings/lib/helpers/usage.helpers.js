@@ -223,26 +223,6 @@ export const forecastExceedDay = (spend, elapsedDays, limit, daysInMonth) => {
 /**
  * Sort items by valueKey desc, take top n, bundle the rest as { key: '__other', ... }.
  */
-export const groupTopN = (items = [], n, valueKey = 'spend') => {
-  const sorted = [...items].sort((a, b) => (b[valueKey] || 0) - (a[valueKey] || 0));
-
-  if (sorted.length <= n) return sorted;
-
-  const top = sorted.slice(0, n);
-  const rest = sorted.slice(n);
-  const otherValue = rest.reduce((sum, item) => sum + (item[valueKey] || 0), 0);
-  const otherTokens = rest.reduce((sum, item) => sum + (item.total_tokens || 0), 0);
-
-  top.push({
-    key: '__other',
-    model: '__other',
-    display_name: 'Other',
-    [valueKey]: otherValue,
-    total_tokens: otherTokens,
-  });
-
-  return top;
-};
 
 /**
  * Returns { start, end } date strings for the same elapsed days of the previous month.
@@ -285,10 +265,7 @@ export const buildVsLabel = (compData, elapsedDays, isCurrentPeriod) => {
     return `vs ${monthName}`;
   }
 
-  const startDay = d.getUTCDate();
-  const endDay = startDay + elapsedDays - 1;
-
-  return `vs ${monthName} ${startDay}–${endDay}`;
+  return `vs ${monthName} 1–${elapsedDays}`;
 };
 
 /** Model type detection heuristic based on model name. */
@@ -395,6 +372,15 @@ export const buildSeriesFromDaily = (daily, groupBy, models, bySource, metricKey
     groups = buildGroups(models || [], 'model', metricKey);
   } else if (groupBy === 'source') {
     groups = buildGroups(bySource || [], 'source', metricKey, Infinity);
+  } else if (groupBy === 'member') {
+    // Derive member list from by_member keys on daily rows; rank by total spend across the period
+    const memberTotals = new Map();
+    daily.forEach(day => {
+      const bd = day.by_member || {};
+      Object.entries(bd).forEach(([k, v]) => memberTotals.set(k, (memberTotals.get(k) || 0) + (v || 0)));
+    });
+    const memberItems = Array.from(memberTotals.entries()).map(([key, w]) => ({ key, w }));
+    groups = buildGroups(memberItems, 'key', 'w');
   } else {
     return totalFallback();
   }

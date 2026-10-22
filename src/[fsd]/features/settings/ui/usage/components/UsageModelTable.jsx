@@ -8,6 +8,8 @@ import { useUsageModelData } from '@/[fsd]/features/settings/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 
+import UsageSortHeader from './UsageSortHeader';
+
 const { USAGE_DEFAULT_VISIBLE_MODELS, USAGE_DIRECTION_GLYPH } = UsageConstants;
 
 const UsageModelTable = memo(props => {
@@ -39,28 +41,6 @@ const UsageModelTable = memo(props => {
       }
     },
     [sortKey],
-  );
-
-  const SortHeader = useCallback(
-    ({ label, sortable, flex, keyName, right }) => {
-      const isActive = sortKey === keyName;
-
-      return (
-        <Box
-          sx={[styles.cell, right ? styles.right : {}, { flex }, sortable ? styles.sortableCell : {}]}
-          onClick={sortable ? () => handleSort(keyName) : undefined}
-          role={sortable ? 'button' : undefined}
-          tabIndex={sortable ? 0 : undefined}
-          onKeyDown={sortable ? e => e.key === 'Enter' && handleSort(keyName) : undefined}
-        >
-          <Typography sx={[styles.cellText, isActive ? { color: palette.primary.main } : {}]}>
-            {label}
-            {isActive && <Box component="span">{sortDir === 'desc' ? ' ▼' : ' ▲'}</Box>}
-          </Typography>
-        </Box>
-      );
-    },
-    [sortKey, sortDir, handleSort, palette, styles],
   );
 
   if (!models.length) {
@@ -119,31 +99,34 @@ const UsageModelTable = memo(props => {
             </Typography>
           </Box>
           {canSeeAmounts && (
-            <SortHeader
+            <UsageSortHeader
               label="Cost"
-              sortable
-              flex={1.2}
               keyName="spend"
-              right
+              flex={1.2}
+              sortKey={sortKey}
+              sortDir={sortDir}
+              onSort={handleSort}
             />
           )}
-          <SortHeader
+          <UsageSortHeader
             label="Tokens"
-            sortable
-            flex={1}
             keyName="tokens"
-            right
+            flex={1}
+            sortKey={sortKey}
+            sortDir={sortDir}
+            onSort={handleSort}
           />
           <Box sx={[styles.cell, { flex: 1.5 }]}>
             <Typography sx={styles.cellText}>% of total</Typography>
           </Box>
           {comparisonModels.length > 0 && (
-            <SortHeader
+            <UsageSortHeader
               label="vs prior"
-              sortable
-              flex={0.9}
               keyName="delta"
-              right
+              flex={0.9}
+              sortKey={sortKey}
+              sortDir={sortDir}
+              onSort={handleSort}
             />
           )}
           <Box sx={[styles.cell, { flex: 0.75 }]}>

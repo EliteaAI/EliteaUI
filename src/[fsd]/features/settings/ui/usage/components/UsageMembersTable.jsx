@@ -7,6 +7,8 @@ import { UsageHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
 import { SimpleSearchBar } from '@/[fsd]/shared/ui/input';
 
+import UsageSortHeader from './UsageSortHeader';
+
 const SEVERITY_COLOR = {
   exceeded: 'error',
   warning: 'warning',
@@ -55,28 +57,6 @@ const UsageMembersTable = memo(props => {
       onSort?.(key);
     },
     [onSort],
-  );
-
-  const SortHeader = useCallback(
-    ({ label, keyName, flex }) => {
-      const isActive = sortKey === keyName;
-
-      return (
-        <Box
-          sx={[styles.sortableCell, { flex }]}
-          onClick={() => handleSort(keyName)}
-          role="button"
-          tabIndex={0}
-          onKeyDown={e => e.key === 'Enter' && handleSort(keyName)}
-        >
-          <Typography sx={[styles.cell, isActive ? { color: palette.primary.main } : {}]}>
-            {label}
-            {isActive && <Box component="span">{sortDir === 'desc' ? ' ▼' : ' ▲'}</Box>}
-          </Typography>
-        </Box>
-      );
-    },
-    [sortKey, sortDir, handleSort, palette, styles],
   );
 
   return (
@@ -148,10 +128,13 @@ const UsageMembersTable = memo(props => {
                 {sortKey === 'name' && <Box component="span">{sortDir === 'desc' ? ' ▼' : ' ▲'}</Box>}
               </Typography>
             </Box>
-            <SortHeader
+            <UsageSortHeader
               label="Spent"
               keyName="spend"
               flex={1.2}
+              sortKey={sortKey}
+              sortDir={sortDir}
+              onSort={handleSort}
             />
             <Box sx={[styles.headerCell, { flex: 1.2 }]}>
               <Typography sx={styles.cell}>Limit</Typography>

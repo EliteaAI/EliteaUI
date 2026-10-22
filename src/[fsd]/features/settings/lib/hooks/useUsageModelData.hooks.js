@@ -40,10 +40,8 @@ export const useUsageModelData = ({
         const prev = prevByModel.get(model.model);
         const weight = canSeeAmounts ? model.spend || 0 : model.total_tokens || 0;
         const share = totalWeight > 0 ? (weight / totalWeight) * 100 : 0;
-        const delta =
-          comparisonModels.length > 0 && !prev
-            ? { direction: 'new', pct: null, label: 'New', value: null }
-            : UsageHelpers.computeDelta(model.spend ?? 0, prev?.spend ?? null);
+        const prevSpend = prev?.spend ?? (comparisonModels.length > 0 ? 0 : null);
+        const delta = UsageHelpers.computeDelta(model.spend ?? 0, prevSpend);
         const color = UsageHelpers.stableSeriesColor(model.model || String(index), CHART_COLORS);
         const sparkline = model.daily?.map(d => d.spend || 0) ?? null;
         const modelType = UsageHelpers.detectModelType(model.model);

@@ -34,9 +34,12 @@ export const formatPeriodDateRange = (period, currentPeriod) => {
   const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
 
   if (period === currentPeriod) {
-    const today = new Date();
+    const now = new Date();
+    const todayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
     const endDay =
-      today.getUTCMonth() + 1 === month && today.getUTCFullYear() === year ? today.getUTCDate() : daysInMonth;
+      todayUTC.getUTCMonth() + 1 === month && todayUTC.getUTCFullYear() === year
+        ? todayUTC.getUTCDate()
+        : daysInMonth;
     return `${monthName} 1 – ${endDay}`;
   }
 

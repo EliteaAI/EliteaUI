@@ -14,15 +14,59 @@ const makeDaily = (startDate, count, baseSpend, baseTok) => {
   const days = [];
   const d = new Date(startDate + 'T00:00:00Z');
 
+  const MODEL_KEYS = ['claude-sonnet-4-5', 'gpt-4o', 'claude-haiku-4-5', 'gemini-1.5-pro'];
+  const SOURCE_KEYS = ['agents', 'chat', 'pipelines', 'indexing'];
+  const MEMBER_IDS = ['alice@example.com', 'bob@example.com', 'carol@example.com'];
+
   for (let i = 0; i < count; i++) {
     const jitter = 0.6 + Math.random() * 0.8;
     const date = new Date(d);
 
     date.setUTCDate(d.getUTCDate() + i);
+
+    const spend = parseFloat((baseSpend * jitter).toFixed(4));
+    const totalTokens = Math.round(baseTok * jitter);
+
+    // Distribute spend/tokens across models (roughly 50/20/20/10 split with noise)
+    const mWeights = [0.5, 0.2, 0.2, 0.1].map(w => w * (0.7 + Math.random() * 0.6));
+    const mSum = mWeights.reduce((s, w) => s + w, 0);
+    const byModel = {};
+    const byModelTokens = {};
+    MODEL_KEYS.forEach((k, idx) => {
+      byModel[k] = parseFloat(((mWeights[idx] / mSum) * spend).toFixed(4));
+      byModelTokens[k] = Math.round((mWeights[idx] / mSum) * totalTokens);
+    });
+
+    // Distribute spend/tokens across sources (roughly 45/30/15/10 split with noise)
+    const sWeights = [0.45, 0.3, 0.15, 0.1].map(w => w * (0.7 + Math.random() * 0.6));
+    const sSum = sWeights.reduce((s, w) => s + w, 0);
+    const bySource = {};
+    const bySourceTokens = {};
+    SOURCE_KEYS.forEach((k, idx) => {
+      bySource[k] = parseFloat(((sWeights[idx] / sSum) * spend).toFixed(4));
+      bySourceTokens[k] = Math.round((sWeights[idx] / sSum) * totalTokens);
+    });
+
+    // Distribute spend/tokens across members (roughly 40/35/25 split with noise)
+    const memWeights = [0.4, 0.35, 0.25].map(w => w * (0.7 + Math.random() * 0.6));
+    const memSum = memWeights.reduce((s, w) => s + w, 0);
+    const byMember = {};
+    const byMemberTokens = {};
+    MEMBER_IDS.forEach((k, idx) => {
+      byMember[k] = parseFloat(((memWeights[idx] / memSum) * spend).toFixed(4));
+      byMemberTokens[k] = Math.round((memWeights[idx] / memSum) * totalTokens);
+    });
+
     days.push({
       date: date.toISOString().slice(0, 10),
-      spend: parseFloat((baseSpend * jitter).toFixed(4)),
-      total_tokens: Math.round(baseTok * jitter),
+      spend,
+      total_tokens: totalTokens,
+      by_model: byModel,
+      by_model_tokens: byModelTokens,
+      by_source: bySource,
+      by_source_tokens: bySourceTokens,
+      by_member: byMember,
+      by_member_tokens: byMemberTokens,
     });
   }
 

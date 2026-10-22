@@ -6,10 +6,11 @@ import { Box, Link, Typography, useTheme } from '@mui/material';
 
 import { UsageHelpers } from '@/[fsd]/features/settings/lib/helpers';
 
+import UsageSortHeader from './UsageSortHeader';
+
 const MAX_ROWS = 5;
 
 const BADGE_COLORS = {
-  agent: { bg: '#1a3a3a', text: '#4fd1a5' },
   pipeline: { bg: '#2a1a3a', text: '#b98cff' },
 };
 
@@ -85,28 +86,6 @@ const UsageTopAgents = memo(props => {
     [sortKey],
   );
 
-  const SortHeader = useCallback(
-    ({ label, keyName, flex }) => {
-      const isActive = sortKey === keyName;
-
-      return (
-        <Box
-          sx={[styles.cell, styles.right, styles.sortableCell, { flex }]}
-          onClick={() => handleSort(keyName)}
-          role="button"
-          tabIndex={0}
-          onKeyDown={e => e.key === 'Enter' && handleSort(keyName)}
-        >
-          <Typography sx={[styles.cellText, isActive ? { color: palette.primary.main } : {}]}>
-            {label}
-            {isActive && <Box component="span">{sortDir === 'desc' ? ' ▼' : ' ▲'}</Box>}
-          </Typography>
-        </Box>
-      );
-    },
-    [sortKey, sortDir, handleSort, palette, styles],
-  );
-
   if (!topAgents.length) return null;
 
   const visibleAgents = sortedAgents.slice(0, MAX_ROWS);
@@ -148,32 +127,46 @@ const UsageTopAgents = memo(props => {
               {sortKey === 'name' && <Box component="span">{sortDir === 'desc' ? ' ▼' : ' ▲'}</Box>}
             </Typography>
           </Box>
-          <SortHeader
+          <UsageSortHeader
             label="Runs"
             keyName="runs"
             flex={1}
+            sortKey={sortKey}
+            sortDir={sortDir}
+            onSort={handleSort}
           />
-          <SortHeader
+          <UsageSortHeader
             label={canSeeAmounts ? 'Spend' : 'Share'}
             keyName="spend"
             flex={1.2}
+            sortKey={sortKey}
+            sortDir={sortDir}
+            onSort={handleSort}
           />
-          <SortHeader
+          <UsageSortHeader
             label="Per run"
             keyName="perRun"
             flex={1.2}
+            sortKey={sortKey}
+            sortDir={sortDir}
+            onSort={handleSort}
           />
-          <SortHeader
+          <UsageSortHeader
             label="vs prior"
             keyName="delta"
             flex={0.9}
+            sortKey={sortKey}
+            sortDir={sortDir}
+            onSort={handleSort}
           />
         </Box>
 
         {visibleAgents.map(agent => {
           const delta = agent._delta;
           const isAgent = (agent.type || '').toLowerCase() !== 'pipeline';
-          const badge = isAgent ? BADGE_COLORS.agent : BADGE_COLORS.pipeline;
+          const badge = isAgent
+            ? { bg: '#1a3a3a', text: palette.text.success || '#4fd1a5' }
+            : BADGE_COLORS.pipeline;
           const badgeText = isAgent ? 'AG' : 'PL';
           const share = totalSpend > 0 ? ((agent.spend || 0) / totalSpend) * 100 : 0;
 
