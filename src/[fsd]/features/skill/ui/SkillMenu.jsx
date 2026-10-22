@@ -13,12 +13,13 @@ import { Dropdown } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import PlusIcon from '@/assets/plus-icon.svg?react';
 import SkillIcon from '@/assets/skill-icon.svg?react';
-import { SearchParams, VITE_BASE_URI } from '@/common/constants';
+import { PAGE_SIZE, SearchParams, VITE_BASE_URI } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 import EliteAImage from '@/components/EliteAImage';
 import RouteDefinitions from '@/routes.js';
 
 const SEARCH_DEBOUNCE_MS = 300;
+const FIRST_PAGE = 0;
 // Query param carrying a just-created skill id back to the agent for auto-attach
 // (mirrors the toolkit "newToolkitId" round-trip).
 const NEW_SKILL_ID_PARAM = 'newSkillId';
@@ -54,22 +55,39 @@ const SkillMenu = memo(props => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounceValue(search, SEARCH_DEBOUNCE_MS);
+  const [pagination, setPagination] = useState({ query: debouncedSearch, page: FIRST_PAGE });
+  const isCurrentSearch = pagination.query === debouncedSearch;
+  if (!isCurrentSearch) setPagination({ query: debouncedSearch, page: FIRST_PAGE });
+  const page = isCurrentSearch ? pagination.page : FIRST_PAGE;
 
   const { attachSkill } = useAttachSkill({ entityVersionId });
   const [fetchSkillDetails] = useLazySkillDetailsQuery();
   const processedSkillIds = useRef(new Set());
 
-  const { data: skillListData, isFetching } = useSkillListQuery(
-    { projectId, params: { query: debouncedSearch } },
+  const { currentData: skillListData, isFetching } = useSkillListQuery(
+    { projectId, page, params: { query: debouncedSearch } },
     { skip: !projectId || !anchorEl },
   );
+  const loadedSkillCount = skillListData?.rows?.length ?? 0;
+  const hasMoreSkills = loadedSkillCount < (skillListData?.total ?? 0);
 
   const attachedIdSet = useMemo(() => new Set(attachedSkillIds), [attachedSkillIds]);
 
   const handleClose = useCallback(() => {
     setAnchorEl(null);
     setSearch('');
+    setPagination({ query: '', page: FIRST_PAGE });
   }, []);
+
+  const handleLoadMore = useCallback(() => {
+    if (isFetching || !hasMoreSkills) return;
+    const nextPage = Math.ceil(loadedSkillCount / PAGE_SIZE);
+    setPagination(current =>
+      current.query === debouncedSearch && current.page === nextPage
+        ? current
+        : { query: debouncedSearch, page: nextPage },
+    );
+  }, [isFetching, hasMoreSkills, debouncedSearch, loadedSkillCount]);
 
   const attachSkillById = useCallback(
     async skillId => {
@@ -87,15 +105,14 @@ const SkillMenu = memo(props => {
 
   const handleSelectSkill = useCallback(
     skill => async () => {
-      setAnchorEl(null);
-      setSearch('');
+      handleClose();
       try {
         await attachSkillById(skill.id);
       } catch (error) {
         toastError(buildErrorMessage(error));
       }
     },
-    [attachSkillById, toastError],
+    [attachSkillById, handleClose, toastError],
   );
 
   useEffect(() => {
@@ -147,6 +164,10 @@ const SkillMenu = memo(props => {
         onClick: handleSelectSkill(skill),
       }));
   }, [skillListData?.rows, attachedIdSet, handleSelectSkill, styles.itemIcon, styles.itemCustomIcon]);
+
+  useEffect(() => {
+    if (anchorEl && items.length < PAGE_SIZE) handleLoadMore();
+  }, [anchorEl, items.length, handleLoadMore]);
 
   const handleSearchChange = useCallback(e => setSearch(e.target.value), []);
   const handleButtonClick = useCallback(e => setAnchorEl(e.currentTarget), []);
@@ -209,6 +230,7 @@ const SkillMenu = memo(props => {
         createNewLabel="Create new"
         createNewTestId="agent-add-skill-create-new-button"
         isLoading={isFetching}
+        onScroll={handleLoadMore}
         emptyMessage="No skills available"
         noResultsMessage="No skills found"
         autoFocus
