@@ -65,6 +65,8 @@ export const prepareMessageForRegeneration = (message, createdAt = Date.now()) =
   message_items: [],
   references: [],
   exception: undefined,
+  inputGuardrail: undefined,
+  hitlResumeSnapshot: undefined,
   continuationError: undefined,
   toolActions: [],
   isRegenerating: true,

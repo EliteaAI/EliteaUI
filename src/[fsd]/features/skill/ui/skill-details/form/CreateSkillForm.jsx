@@ -6,32 +6,32 @@ import { Box, Typography, useTheme } from '@mui/material';
 
 import { EditableEntityIcon } from '@/[fsd]/features/entity-icon-editor';
 import { SKILL_NAME_MAX_LENGTH } from '@/[fsd]/features/skill/lib/constants';
+import { countSkillBodyLength } from '@/[fsd]/features/skill/lib/helpers';
+import { useSkillFrontmatterEditor, useSkillInstructionsMaxLength } from '@/[fsd]/features/skill/lib/hooks';
 import { GenerateSkillButton } from '@/[fsd]/features/skill/ui/generate-skill-modal';
-import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
+import { AccordionConstants, MarkdownConstants } from '@/[fsd]/shared/lib/constants';
 import { useFieldFocus, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { Field, Input, Markdown, Text } from '@/[fsd]/shared/ui';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
-import TabGroupButton from '@/[fsd]/shared/ui/tab-group-button/TabGroupButton';
+import { MarkdownViewToggle } from '@/[fsd]/shared/ui/tab-group-button';
 import { useTagListQuery } from '@/api/tags.js';
-import CodeIcon from '@/assets/code-icon.svg?react';
-import OpenEyeIcon from '@/assets/open-eye-icon.svg?react';
-import {
-  ChatParticipantType,
-  MAX_DESCRIPTION_LENGTH,
-  MAX_INSTRUCTIONS_LENGTH,
-  PROMPT_PAYLOAD_KEY,
-} from '@/common/constants';
+import { ChatParticipantType, MAX_DESCRIPTION_LENGTH, PROMPT_PAYLOAD_KEY } from '@/common/constants';
 import useCheckPermission from '@/hooks/useCheckPermission';
 import TagEditor from '@/pages/Common/Components/TagEditor';
 import { markdown } from '@codemirror/lang-markdown';
 
 import SkillRunSettings from './SkillRunSettings';
 
+const { MARKDOWN_VIEW_MODES } = MarkdownConstants;
+
+const PREVIEW_FIRST = [MARKDOWN_VIEW_MODES.preview, MARKDOWN_VIEW_MODES.edit];
+
 const CreateSkillForm = memo(props => {
   const {
     accordionStyle,
     sx,
     disabled = false,
+    isCreateMode = false,
     instructionsKey,
     onSkillCreated,
     showGenerateButton = false,
@@ -45,25 +45,13 @@ const CreateSkillForm = memo(props => {
   const canUploadIcon = !disabled && checkPermission('models.applications.skills.upload_icon.post');
   const { data: tagList = {} } = useTagListQuery({ projectId }, { skip: !projectId });
   const [name, setName] = useState(formik.values?.name || '');
-  const [instructionsViewMode, setInstructionsViewMode] = useState('edit');
+  const [instructionsViewMode, setInstructionsViewMode] = useState(
+    isCreateMode ? MARKDOWN_VIEW_MODES.edit : MARKDOWN_VIEW_MODES.preview,
+  );
   const styles = skillCreateFormStyles();
   const { toggleFieldFocus, isFocused } = useFieldFocus();
-
-  const modeButtons = useMemo(
-    () => [
-      {
-        value: 'edit',
-        icon: t => <CodeIcon fill={t.palette.icon.secondary} />,
-        tooltip: 'Edit mode',
-      },
-      {
-        value: 'preview',
-        icon: t => <OpenEyeIcon fill={t.palette.icon.secondary} />,
-        tooltip: 'Preview mode',
-      },
-    ],
-    [],
-  );
+  const { editorText, onEditorChange } = useSkillFrontmatterEditor();
+  const maxInstructionsLength = useSkillInstructionsMaxLength();
 
   const markdownExtensions = useMemo(() => [markdown()], []);
 
@@ -109,16 +97,6 @@ const CreateSkillForm = memo(props => {
     [formik, toggleFieldFocus],
   );
 
-  const onChangeInstructions = useCallback(
-    value => {
-      formik.setFieldValue('version_details.instructions', value);
-      if (!formik.touched?.version_details?.instructions) {
-        formik.setFieldTouched('version_details.instructions', true, false);
-      }
-    },
-    [formik],
-  );
-
   const onInstructionsBlur = useCallback(() => {
     formik.setFieldTouched('version_details.instructions', true);
   }, [formik]);
@@ -131,6 +109,11 @@ const CreateSkillForm = memo(props => {
   );
 
   const instructions = formik.values?.version_details?.instructions || '';
+  const instructionsCharactersLeft = maxInstructionsLength - instructions.length;
+  const instructionsCounterLabel =
+    instructionsCharactersLeft >= 0
+      ? `${instructionsCharactersLeft} characters left`
+      : `${-instructionsCharactersLeft} characters over the limit`;
   const instructionsError =
     formik.touched?.version_details?.instructions && formik.errors?.version_details?.instructions;
   const instructionsErrorNode = instructionsError ? (
@@ -280,17 +263,16 @@ const CreateSkillForm = memo(props => {
                 sx={styles.summaryActions}
                 onClick={e => e.stopPropagation()}
               >
-                <TabGroupButton
+                <MarkdownViewToggle
                   value={instructionsViewMode}
-                  onChange={(_e, m) => m && setInstructionsViewMode(m)}
-                  size="small"
-                  arrayBtn={modeButtons}
+                  onChange={setInstructionsViewMode}
+                  iconOrder={PREVIEW_FIRST}
                 />
               </Box>
             ),
             content: (
               <>
-                {instructionsViewMode === 'edit' ? (
+                {instructionsViewMode === MARKDOWN_VIEW_MODES.edit ? (
                   <Box sx={styles.instructionsWrapper}>
                     <Box
                       data-testid="skill-instructions-editor"
@@ -298,13 +280,14 @@ const CreateSkillForm = memo(props => {
                     >
                       <Field.CodeMirrorEditor
                         key={instructionsKey}
-                        value={instructions}
-                        notifyChange={onChangeInstructions}
+                        value={editorText}
+                        notifyChange={onEditorChange}
                         onBlur={onInstructionsBlur}
                         extensions={markdownExtensions}
                         height="100%"
                         minHeight="0"
-                        maxLength={MAX_INSTRUCTIONS_LENGTH}
+                        maxLength={maxInstructionsLength}
+                        countLength={countSkillBodyLength}
                         readOnly={disabled}
                         contentTestId="skill-instructions-editor-content"
                       />
@@ -315,7 +298,7 @@ const CreateSkillForm = memo(props => {
                         variant="bodySmall"
                         sx={styles.charCounter}
                       >
-                        {`${MAX_INSTRUCTIONS_LENGTH - instructions.length} characters left`}
+                        {instructionsCounterLabel}
                       </Typography>
                     </Box>
                   </Box>

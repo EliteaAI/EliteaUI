@@ -14,7 +14,7 @@ import CloseIcon from '@/components/Icons/CloseIcon';
  * Advance notice that a budget is nearing its limit; BudgetErrorMessage covers a blocked request.
  */
 const BudgetWarningBanner = memo(props => {
-  const { scope, percentUsed, severity, dismissible = true, onDismiss } = props;
+  const { scope, percentUsed, severity, dismissible = true, onDismiss, featureLabel } = props;
 
   const styles = budgetWarningBannerStyles(severity);
 
@@ -36,7 +36,9 @@ const BudgetWarningBanner = memo(props => {
         variant="bodySmall"
         sx={styles.text}
       >
-        {variant.message(percentUsed)}{' '}
+        {featureLabel
+          ? BudgetWarningConstants.featureWarningMessage(featureLabel, scope, percentUsed)
+          : variant.message(percentUsed)}{' '}
         <Link
           component={RouterLink}
           to={variant.to}
