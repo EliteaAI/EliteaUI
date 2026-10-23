@@ -1,0 +1,97 @@
+import yaml from 'js-yaml';
+
+const SKILL_FRONTMATTER_KEYS = ['name', 'description'];
+const FRONTMATTER_OPENING_LINE = /^---[ \t]*\r?\n/;
+const FRONTMATTER_CLOSING_LINE = /^---[ \t]*(?:\r?\n|$)/m;
+const LINE_BREAK_BEFORE_BODY = /^\r?\n/;
+const FINAL_LINE_BREAK = /\r?\n$/;
+const LINE_BREAK = /\r?\n/;
+const TOP_LEVEL_LINE = /^\S/;
+
+const locateFrontmatter = text => {
+  const opening = FRONTMATTER_OPENING_LINE.exec(text);
+  if (!opening) return null;
+
+  const yamlStart = opening[0].length;
+  const closing = FRONTMATTER_CLOSING_LINE.exec(text.slice(yamlStart));
+  if (!closing) return { yamlStart, yamlEnd: text.length, bodyStart: null };
+
+  const yamlEnd = yamlStart + closing.index;
+  const closingEnd = yamlEnd + closing[0].length;
+  const lineBreakBeforeBody = LINE_BREAK_BEFORE_BODY.exec(text.slice(closingEnd));
+  return { yamlStart, yamlEnd, bodyStart: closingEnd + (lineBreakBeforeBody?.[0].length ?? 0) };
+};
+
+const readYamlMapping = yamlText => {
+  try {
+    const parsed = yaml.load(yamlText, { schema: yaml.FAILSAFE_SCHEMA }) ?? {};
+    return typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+};
+
+const formatFrontmatterEntry = (key, value) =>
+  value ? yaml.dump({ [key]: value }, { lineWidth: -1 }).replace(FINAL_LINE_BREAK, '') : `${key}:`;
+
+const replaceFrontmatterEntry = (lines, key, entry) => {
+  const keyLine = new RegExp(`^${key}[ \\t]*:`);
+  const start = lines.findIndex(line => keyLine.test(line));
+  if (start === -1) return [...lines, entry];
+
+  const nextTopLevelLine = lines.findIndex((line, index) => index > start && TOP_LEVEL_LINE.test(line));
+  const end = nextTopLevelLine === -1 ? lines.length : nextTopLevelLine;
+  const valueLines = lines.slice(start + 1, end);
+  const trailingBlankLineCount = valueLines.length - (valueLines.findLastIndex(line => line.trim()) + 1);
+  return [...lines.slice(0, start), entry, ...lines.slice(end - trailingBlankLineCount)];
+};
+
+export const composeSkillEditorText = ({ name, description, body }) =>
+  `---\n${formatFrontmatterEntry('name', name)}\n${formatFrontmatterEntry('description', description)}\n---\n\n${body}`;
+
+const locateValidFrontmatter = text => {
+  const location = locateFrontmatter(text);
+  if (!location || location.bodyStart === null) return null;
+
+  const mapping = readYamlMapping(text.slice(location.yamlStart, location.yamlEnd));
+  return mapping ? { ...location, mapping } : null;
+};
+
+export const parseSkillEditorText = text => {
+  const frontmatter = locateValidFrontmatter(text);
+  if (!frontmatter) return { body: text, fields: {} };
+
+  const { mapping } = frontmatter;
+  const fields = Object.fromEntries(
+    SKILL_FRONTMATTER_KEYS.filter(key => typeof mapping[key] === 'string' && mapping[key].trim()).map(key => [
+      key,
+      mapping[key],
+    ]),
+  );
+  return { body: text.slice(frontmatter.bodyStart), fields };
+};
+
+export const writeSkillFrontmatterFields = (text, fields, changedKeys) => {
+  const frontmatter = locateValidFrontmatter(text);
+  if (!frontmatter) {
+    return FRONTMATTER_OPENING_LINE.test(text) ? text : composeSkillEditorText({ ...fields, body: text });
+  }
+
+  const yamlText = text.slice(frontmatter.yamlStart, frontmatter.yamlEnd);
+  const lines = yamlText ? yamlText.replace(FINAL_LINE_BREAK, '').split(LINE_BREAK) : [];
+  const nextLines = changedKeys.reduce(
+    (currentLines, key) =>
+      replaceFrontmatterEntry(currentLines, key, formatFrontmatterEntry(key, fields[key])),
+    lines,
+  );
+  const nextYamlText = nextLines.length ? `${nextLines.join('\n')}\n` : '';
+  return `${text.slice(0, frontmatter.yamlStart)}${nextYamlText}${text.slice(frontmatter.yamlEnd)}`;
+};
+
+export const replaceSkillEditorBody = (text, body, fields) => {
+  const frontmatter = locateValidFrontmatter(text);
+  if (frontmatter) return `${text.slice(0, frontmatter.bodyStart)}${body}`;
+  return FRONTMATTER_OPENING_LINE.test(text) ? composeSkillEditorText({ ...fields, body }) : body;
+};
+
+export const countSkillBodyLength = text => parseSkillEditorText(text).body.length;

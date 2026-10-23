@@ -1,6 +1,7 @@
 import * as yup from 'yup';
 
-import { MAX_DESCRIPTION_LENGTH, MAX_INSTRUCTIONS_LENGTH } from '@/common/constants';
+import { instructionsTooLongMessage } from '@/[fsd]/features/skill/lib/helpers';
+import { MAX_DESCRIPTION_LENGTH } from '@/common/constants';
 
 // Mirror the backend skill-name rule (elitea_core models/pd/skill.py
 // validate_skill_name): lowercase letters/digits/hyphens, no leading/trailing
@@ -9,7 +10,7 @@ import { MAX_DESCRIPTION_LENGTH, MAX_INSTRUCTIONS_LENGTH } from '@/common/consta
 const SKILL_NAME_MAX_LENGTH = 64;
 const SKILL_NAME_RE = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/;
 
-const SkillValidateSchema = () =>
+const SkillValidateSchema = (maxInstructionsLength, savedInstructions) =>
   yup.object({
     name: yup
       .string('Enter skill name')
@@ -34,7 +35,14 @@ const SkillValidateSchema = () =>
       instructions: yup
         .string()
         .trim()
-        .max(MAX_INSTRUCTIONS_LENGTH, `Instructions must be at most ${MAX_INSTRUCTIONS_LENGTH} characters`)
+        .test('instructions-max-length', (value, context) => {
+          const rawValue = context.originalValue ?? '';
+          if (!value || rawValue.length <= maxInstructionsLength || rawValue === savedInstructions)
+            return true;
+          return context.createError({
+            message: instructionsTooLongMessage(rawValue.length, maxInstructionsLength),
+          });
+        })
         .required('Instructions are required'),
     }),
   });

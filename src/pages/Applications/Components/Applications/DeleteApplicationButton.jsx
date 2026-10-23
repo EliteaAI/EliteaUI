@@ -3,12 +3,11 @@ import { useCallback, useEffect, useMemo } from 'react';
 import { useFormikContext } from 'formik';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
+import { useIsFromPipelineDetail, useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { useDeleteApplicationMutation } from '@/api/applications';
 import { buildErrorMessage } from '@/common/utils';
 import DeleteEntityButton from '@/components/DeleteEntityButton';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
-import { useIsFromPipelineDetail } from '@/hooks/useIsFromSpecificPageHooks';
 import { useTheme } from '@emotion/react';
 
 const useDeleteApplication = setBlockNav => {

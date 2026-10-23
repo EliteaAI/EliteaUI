@@ -15,11 +15,10 @@ import {
   useMcpTokenChange,
 } from '@/[fsd]/features/mcp/lib/hooks';
 import { McpAuthModal, McpLogoutModal } from '@/[fsd]/features/mcp/ui';
-import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
+import { useIsFrom, useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import OnlineIcon from '@/assets/online-icon.svg?react';
-import { useIsFrom } from '@/hooks/useIsFromSpecificPageHooks';
 import RouteDefinitions from '@/routes';
 
 const McpAuthStatus = memo((props = {}) => {

@@ -27,6 +27,7 @@ export const useMutuallyExclusiveEditors = ({
   //SkillEditor
   onShowSkillEditor,
   onCloseSkillEditor,
+  onShowSkillEditorCreator,
   //ProjectContextEditor
   onShowProjectContextEditor,
   onCloseProjectContextEditor,
@@ -118,6 +119,9 @@ export const useMutuallyExclusiveEditors = ({
       forSkill: information => {
         onShowSkillEditor(information);
       },
+      forSkillCreation: () => {
+        onShowSkillEditorCreator();
+      },
       forProjectContext: information => {
         onShowProjectContextEditor(information);
       },
@@ -132,6 +136,7 @@ export const useMutuallyExclusiveEditors = ({
       onShowPipelineEditorCreator,
       onShowArtifactEditor,
       onShowSkillEditor,
+      onShowSkillEditorCreator,
       onShowProjectContextEditor,
     ],
   );
@@ -317,6 +322,15 @@ export const useMutuallyExclusiveEditors = ({
     [isAnyEditorOpen, isEditingGeneratedEntities, onShowSkillEditor],
   );
 
+  const onCreateSkill = useCallback(() => {
+    if (isAnyEditorOpen || isEditingGeneratedEntities) {
+      setEditingAlert(true);
+      setNewEditingBlockInfo({ forSkillCreation: true });
+    } else {
+      onShowSkillEditorCreator();
+    }
+  }, [isAnyEditorOpen, isEditingGeneratedEntities, onShowSkillEditorCreator]);
+
   const onEditProjectContext = useCallback(
     theSelectedProjectContext => {
       if (isAnyEditorOpen || isEditingGeneratedEntities) {
@@ -342,6 +356,7 @@ export const useMutuallyExclusiveEditors = ({
     onCreateToolkit,
     onCreatePipeline,
     onEditSkill,
+    onCreateSkill,
     onEditProjectContext,
   };
 };
