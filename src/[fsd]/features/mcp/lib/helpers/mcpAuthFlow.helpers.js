@@ -24,7 +24,7 @@ const ENTRA_HOST_PATTERN = /^login\.microsoftonline\.[a-z]{2,}$/;
 
 const ENTRA_HOSTS = ['login.microsoft.com', 'login.windows.net'];
 
-const isMicrosoftEntraEndpoint = authorizationEndpoint => {
+export const isMicrosoftEntraEndpoint = authorizationEndpoint => {
   let hostname;
   try {
     hostname = new URL(authorizationEndpoint || '').hostname.toLowerCase();

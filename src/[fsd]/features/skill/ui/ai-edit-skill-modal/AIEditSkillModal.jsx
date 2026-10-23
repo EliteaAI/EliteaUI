@@ -10,12 +10,15 @@ import {
 } from '@/[fsd]/entities/edit-entity-with-ai';
 import { useGenerateSkillDraftMutation, useSkillUpdateMutation } from '@/[fsd]/features/skill/api';
 import { EDIT_STEP_KEYS, SKILL_NAME_MAX_LENGTH } from '@/[fsd]/features/skill/lib/constants';
-import { SkillAIEditionStepsHelpers } from '@/[fsd]/features/skill/lib/helpers';
-import { useSaveSkill, useSaveSkillVersion } from '@/[fsd]/features/skill/lib/hooks';
+import { SkillAIEditionStepsHelpers, instructionsTooLongMessage } from '@/[fsd]/features/skill/lib/helpers';
+import {
+  useSaveSkill,
+  useSaveSkillVersion,
+  useSkillInstructionsMaxLength,
+} from '@/[fsd]/features/skill/lib/hooks';
 import { ModalConstants } from '@/[fsd]/shared/lib/constants';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Input, Modal } from '@/[fsd]/shared/ui';
-import { MAX_INSTRUCTIONS_LENGTH } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
 
 import { SummaryStep } from './steps';
@@ -33,6 +36,7 @@ const AIEditSkillModal = memo(props => {
   const formik = useFormikContext();
   const projectId = useSelectedProjectId();
   const { toastError } = useToast();
+  const maxInstructionsLength = useSkillInstructionsMaxLength();
 
   const [generateDraft, { error: generateError, reset: resetGenerate }] = useGenerateSkillDraftMutation();
   const [updateSkill] = useSkillUpdateMutation();
@@ -125,6 +129,14 @@ const AIEditSkillModal = memo(props => {
     const draftData = pendingDraftDataRef.current;
     if (!draftData) return;
 
+    const versionInstructions = fieldApplyFlags.instructions
+      ? draftData.instructions || ''
+      : formik.values.version_details?.instructions || '';
+    if (versionInstructions.length > maxInstructionsLength) {
+      toastError(instructionsTooLongMessage(versionInstructions.length, maxInstructionsLength));
+      return;
+    }
+
     setIsSavingAsVersion(true);
 
     try {
@@ -165,7 +177,16 @@ const AIEditSkillModal = memo(props => {
     } catch {
       setIsSavingAsVersion(false);
     }
-  }, [versionName, formik, toastError, fieldApplyFlags, onClose, projectId, updateSkill]);
+  }, [
+    versionName,
+    formik,
+    toastError,
+    fieldApplyFlags,
+    onClose,
+    projectId,
+    updateSkill,
+    maxInstructionsLength,
+  ]);
 
   const handleCancelVersion = useCallback(() => {
     setShowVersionModal(false);
@@ -207,7 +228,7 @@ const AIEditSkillModal = memo(props => {
           return (
             <EditEntityInstructionsStep
               {...stepProps}
-              maxLength={MAX_INSTRUCTIONS_LENGTH}
+              maxLength={maxInstructionsLength}
             />
           );
         case EDIT_STEP_KEYS.SUMMARY:
@@ -216,7 +237,7 @@ const AIEditSkillModal = memo(props => {
           return null;
       }
     },
-    [currentData, fieldApplyFlags, handleToggleField],
+    [currentData, fieldApplyFlags, handleToggleField, maxInstructionsLength],
   );
 
   return (

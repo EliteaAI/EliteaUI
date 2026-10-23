@@ -6,11 +6,10 @@ import { useDispatch, useSelector } from 'react-redux';
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { DumpYamlHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { useGetToolkitNameFromSchema } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
+import { useIsFrom, useIsFromPipelineDetail } from '@/[fsd]/shared/lib/hooks';
 import { ToolTypes } from '@/pages/Applications/Components/Tools/consts';
 import RouteDefinitions from '@/routes';
 import { actions, selectActivePipeline } from '@/slices/pipeline.js';
-
-import { useIsFrom, useIsFromPipelineDetail } from '../useIsFromSpecificPageHooks';
 
 const { PipelineNodeTypes } = FlowEditorConstants;
 

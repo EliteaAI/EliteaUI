@@ -144,11 +144,10 @@ const LLMNode = memo(props => {
           />
         );
       })}
-      <FlowEditorSettings.CommonInterruptSettings
+      <FlowEditorSettings.CommonNodeSettings
         id={id}
         type={FlowEditorConstants.PipelineNodeTypes.LLM}
         disabled={isRunningPipeline || disabled}
-        interruptAfterTestId="pipeline-llm-node-interrupt-after-toggle"
         structuredOutputTestId="pipeline-llm-node-structured-output-toggle"
       />
     </FlowEditorNodes.NodeCard>

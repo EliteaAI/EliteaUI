@@ -45,6 +45,7 @@ const useCreateApplication = (formik, resetBlockNav, options = {}) => {
           conversation_starters: filterEmptyStrings(formik.values?.version_details?.conversation_starters),
           agent_type: formik.values?.version_details?.agent_type || 'openai',
           welcome_message: formik.values?.version_details?.welcome_message || '',
+          notes: isFromPipeline ? formik.values?.version_details?.notes || undefined : undefined,
           pipeline_settings: isFromPipeline
             ? {
                 nodes,
@@ -54,6 +55,7 @@ const useCreateApplication = (formik, resetBlockNav, options = {}) => {
               }
             : undefined,
           meta: {
+            ...(isFromPipeline ? formik.values?.version_details?.meta : {}),
             icon_meta: formik.values?.version_details?.meta?.icon_meta,
             step_limit: formik.values?.version_details?.meta?.step_limit || 25,
           },
@@ -74,8 +76,8 @@ const useCreateApplication = (formik, resetBlockNav, options = {}) => {
     formik.values?.version_details?.agent_type,
     formik.values?.version_details?.welcome_message,
     formik.values?.webhook_secret,
-    formik.values?.version_details?.meta?.icon_meta,
-    formik.values?.version_details?.meta?.step_limit,
+    formik.values?.version_details?.notes,
+    formik.values?.version_details?.meta,
     isFromPipeline,
     yamlCode,
     flowNodes,
