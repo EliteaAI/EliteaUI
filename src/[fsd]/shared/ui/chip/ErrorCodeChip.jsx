@@ -27,6 +27,7 @@ ErrorCodeChip.displayName = 'ErrorCodeChip';
 /** @type {MuiSx} */
 const errorCodeChipStyles = () => ({
   chip: ({ palette }) => ({
+    display: 'inline-block',
     marginLeft: '.75rem',
     padding: '.125rem .5rem',
     border: `0.0625rem solid ${palette.border.error}`,

@@ -21,7 +21,6 @@ vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useSelectedProjectId: () => 7,
   useToast: () => ({ toastError: mocks.toastError, toastSuccess: mocks.toastSuccess, toastWarning: vi.fn() }),
 }));
-vi.mock('@/[fsd]/shared/lib/utils', async () => await import('@/[fsd]/shared/lib/utils/refusal.utils'));
 vi.mock('@/[fsd]/features/mcp/lib/helpers', () => ({ McpAuthHelpers: { getAccessToken: vi.fn() } }));
 vi.mock('@/[fsd]/features/credentials/lib/constants', () => ({
   ConfigurationTitlesConstants: { Create_Personal_Title: 'p', Create_Project_Title: 'q', Manual_Title: 'm' },
