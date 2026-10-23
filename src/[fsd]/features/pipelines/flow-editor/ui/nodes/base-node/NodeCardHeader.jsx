@@ -12,7 +12,7 @@ import NodeIconTile from '@/[fsd]/features/pipelines/flow-editor/ui/nodes/base-n
 import NodeStatusIcon from '@/[fsd]/features/pipelines/flow-editor/ui/nodes/base-node/NodeStatusIcon';
 
 const NodeCardHeader = memo(props => {
-  const { name, isEntrypoint, type, id, disabled, status } = props;
+  const { name, isEntrypoint, type, id, disabled, status, configIssues } = props;
 
   const { isEditingName, inputtedName, onStartEditing, onChange, onBlur } = useNodeRename({ name, type });
 
@@ -59,7 +59,10 @@ const NodeCardHeader = memo(props => {
       <Box sx={styles.rightSection}>
         {isEntrypoint && <NodeEntrypointBadge />}
         {isDeprecated && <NodeDeprecatedBadge type={type} />}
-        <NodeStatusIcon status={status} />
+        <NodeStatusIcon
+          status={status}
+          configIssues={configIssues}
+        />
         <NodeHeaderMenu
           name={name}
           isEntrypoint={isEntrypoint}

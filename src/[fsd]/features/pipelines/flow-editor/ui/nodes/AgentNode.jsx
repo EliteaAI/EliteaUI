@@ -94,6 +94,7 @@ const AgentNode = memo(props => {
         type={nodeType}
         isPerforming={data?.isPerforming}
         id={id}
+        requiredInputs={requiredInputs}
         handles={() => {
           return (
             <>

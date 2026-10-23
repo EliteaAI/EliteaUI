@@ -31,6 +31,15 @@ describe('nodeCard.helpers', () => {
       expect(getNodeCardStatus({ hasRunError: true })).toBe(NodeCardStatus.error);
     });
 
+    it('returns needsConfiguration when the node has config issues', () => {
+      expect(getNodeCardStatus({ hasConfigIssues: true })).toBe(NodeCardStatus.needsConfiguration);
+    });
+
+    it('lets run states win over needsConfiguration', () => {
+      expect(getNodeCardStatus({ isPerforming: true, hasConfigIssues: true })).toBe(NodeCardStatus.running);
+      expect(getNodeCardStatus({ hasRunError: true, hasConfigIssues: true })).toBe(NodeCardStatus.error);
+    });
+
     it('returns null for a resting node', () => {
       expect(getNodeCardStatus({})).toBeNull();
       expect(getNodeCardStatus()).toBeNull();
@@ -57,6 +66,27 @@ describe('nodeCard.helpers', () => {
         card.border.running,
       );
       expect(getNodeCardBorderColor({ status: NodeCardStatus.error }, palette)).toBe(card.border.error);
+    });
+  });
+
+  describe('needs configuration', () => {
+    const status = NodeCardStatus.needsConfiguration;
+
+    it('shows the red border on a resting node, without glow or hover', () => {
+      expect(getNodeCardBorderColor({ status }, palette)).toBe(card.border.needsConfiguration);
+      expect(getNodeCardShadow({ status }, palette)).toBe(card.shadow.default);
+      expect(hasNodeCardHover({ status })).toBe(false);
+    });
+
+    it('lets selection win so the selected card stays visible', () => {
+      expect(getNodeCardBorderColor({ status, selected: true }, palette)).toBe(card.border.selected);
+      expect(getNodeCardShadow({ status, selected: true }, palette)).toBe(card.shadow.selected);
+    });
+
+    it('keeps the red border while a pipeline runs, even if selected', () => {
+      expect(getNodeCardBorderColor({ status, selected: true, isRunningPipeline: true }, palette)).toBe(
+        card.border.needsConfiguration,
+      );
     });
   });
 

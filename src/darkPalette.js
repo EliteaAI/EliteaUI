@@ -718,6 +718,7 @@ const darkPalette = {
           selected: cyanPressed,
           running: cyanPressed,
           error: dangerRed,
+          needsConfiguration: dangerRed,
         },
         shadow: {
           default: `0 0 1.25rem 0 ${nodeCardShadow}`,
@@ -727,7 +728,7 @@ const darkPalette = {
         header: { border: gray30 },
         iconTile: { background: white10 },
         handle: { background: { default: gray50, collapsed: gray20 }, border: gray30 },
-        status: { running: cyanPressed, error: dangerRed },
+        status: { running: cyanPressed, error: dangerRed, needsConfiguration: dangerRed },
         badge: { entrypoint: { background: hoverBlue, text: white } },
       },
     },

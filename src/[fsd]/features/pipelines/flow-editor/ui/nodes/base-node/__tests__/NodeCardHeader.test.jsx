@@ -109,6 +109,19 @@ describe('NodeCardHeader', () => {
     expect(screen.getByTestId('pipeline-node-status-running')).toBeInTheDocument();
   });
 
+  it('shows the needs configuration icon with the reasons in its tooltip', async () => {
+    renderHeader({
+      status: NodeCardStatus.needsConfiguration,
+      configIssues: ['Select a toolkit', 'Fill in the required input: repo'],
+    });
+
+    const icon = screen.getByTestId('pipeline-node-status-needsConfiguration');
+    fireEvent.mouseOver(icon);
+
+    expect(await screen.findByText('Select a toolkit')).toBeInTheDocument();
+    expect(screen.getByText('Fill in the required input: repo')).toBeInTheDocument();
+  });
+
   it('offers Make entrypoint and Delete for a regular node', () => {
     const context = renderHeader();
 
