@@ -2,6 +2,7 @@ export * as FlowEditorHelpers from './flowEditor.helpers';
 export * as ParseRunsByEventHelpers from './parseRunsByEvent.helpers';
 export * as NodeHelpers from './node.helpers.jsx';
 export * as NodeCardHelpers from './nodeCard.helpers';
+export * as NodeConfigHelpers from './nodeConfig.helpers';
 export * as LayoutHelpers from './layout.helpers';
 export * as NodeTypeHelpers from './nodeType.helpers';
 export * as NodeOperationsHelpers from './nodeOperations.helpers';

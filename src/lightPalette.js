@@ -684,6 +684,7 @@ const lightPalette = {
           selected: magentaDefault,
           running: magentaDefault,
           error: dangerRed,
+          needsConfiguration: dangerRed,
         },
         shadow: {
           default: shadowBoxDefault,
@@ -693,7 +694,7 @@ const lightPalette = {
         header: { border: light30 },
         iconTile: { background: dark8 },
         handle: { background: { default: white, collapsed: light20 }, border: light30 },
-        status: { running: magentaDefault, error: dangerRed },
+        status: { running: magentaDefault, error: dangerRed, needsConfiguration: dangerRed },
         badge: { entrypoint: { background: hoverBlue, text: white } },
       },
     },

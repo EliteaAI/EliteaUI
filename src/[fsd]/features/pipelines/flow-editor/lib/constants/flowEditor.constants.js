@@ -176,6 +176,7 @@ export const NODE_CARD_WIDTH = 471;
 export const NodeCardStatus = {
   running: 'running',
   error: 'error',
+  needsConfiguration: 'needsConfiguration',
 };
 
 export const StatueTypeMap = {

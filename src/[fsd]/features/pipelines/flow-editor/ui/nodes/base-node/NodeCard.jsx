@@ -3,7 +3,7 @@ import { memo, useContext, useMemo } from 'react';
 import { Box, useTheme } from '@mui/material';
 
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
-import { NodeCardHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
+import { NodeCardHelpers, NodeConfigHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import NodeBodyContainer from '@/[fsd]/features/pipelines/flow-editor/ui/nodes/base-node/NodeBodyContainer';
 import NodeCardHeader from '@/[fsd]/features/pipelines/flow-editor/ui/nodes/base-node/NodeCardHeader';
 import { TriggerTypeSelector } from '@/[fsd]/features/pipelines/flow-editor/ui/settings';
@@ -13,13 +13,25 @@ import { useStore } from '@xyflow/react';
 const selectIsMiniCard = state => NodeCardHelpers.isMiniCardZoom(state.transform[2]);
 
 const NodeCard = memo(props => {
-  const { name, isEntrypoint, children, selected, handles, isPerforming, type, id } = props;
+  const { name, isEntrypoint, children, selected, handles, isPerforming, type, id, requiredInputs } = props;
   const theme = useTheme();
-  const { isRunningPipeline, expandAll, disabled } = useContext(FlowEditorContext);
+  const { isRunningPipeline, expandAll, disabled, yamlJsonObject } = useContext(FlowEditorContext);
   const isMiniCard = useStore(selectIsMiniCard);
   const isExpanded = expandAll && !isMiniCard;
 
-  const status = NodeCardHelpers.getNodeCardStatus({ isPerforming });
+  const yamlNode = useMemo(
+    () => yamlJsonObject?.nodes?.find(node => node.id === id),
+    [id, yamlJsonObject?.nodes],
+  );
+  const configIssues = useMemo(
+    () => NodeConfigHelpers.getNodeConfigIssues(yamlNode, { requiredInputs }),
+    [requiredInputs, yamlNode],
+  );
+
+  const status = NodeCardHelpers.getNodeCardStatus({
+    isPerforming,
+    hasConfigIssues: configIssues.length > 0,
+  });
   const cardState = { status, selected, isRunningPipeline };
   const cardContextValue = useMemo(() => ({ isExpanded }), [isExpanded]);
 
@@ -47,6 +59,7 @@ const NodeCard = memo(props => {
             id={id}
             disabled={disabled}
             status={status}
+            configIssues={configIssues}
           />
         </Box>
         <NodeBodyContainer display={isExpanded ? 'flex' : 'none'}>
