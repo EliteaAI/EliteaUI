@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { LayoutHelpers, ParsePipelineHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
-import { useIsFrom, useIsFromPipelineDetail } from '@/hooks/useIsFromSpecificPageHooks';
+import { useIsFrom, useIsFromPipelineDetail } from '@/[fsd]/shared/lib/hooks';
 import RouteDefinitions from '@/routes';
 import { selectActivePipeline } from '@/slices/pipeline';
 

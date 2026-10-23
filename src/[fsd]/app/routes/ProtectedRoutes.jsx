@@ -104,7 +104,7 @@ const NotificationCenter = ChunkHelpers.lazyWithRetry(
   () => import('@/pages/NotificationCenter/NotificationCenter'),
 );
 const Onboarding = ChunkHelpers.lazyWithRetry(() => import('@/pages/Onboarding/Onboarding'));
-const CreatePipeline = ChunkHelpers.lazyWithRetry(() => import('@/pages/Pipelines/CreatePipeline'));
+const CreatePipeline = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/pipeline/CreatePipelinePage'));
 const EditPipeline = ChunkHelpers.lazyWithRetry(() => import('@/pages/Pipelines/EditPipeline'));
 const Pipelines = ChunkHelpers.lazyWithRetry(() => import('@/pages/Pipelines/Pipelines'));
 const ProjectSwitcher = ChunkHelpers.lazyWithRetry(() => import('@/pages/ProjectSwitcher.jsx'));
