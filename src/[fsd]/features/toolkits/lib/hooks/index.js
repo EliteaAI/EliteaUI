@@ -5,7 +5,13 @@ export { useToolkitChat } from './useToolkitChat.hooks';
 export { useLoadToolkits } from './useLoadToolkits.hooks.js';
 export { useToolkitNameProp } from './useToolkitNameProp.hooks';
 export { useParseSections } from './useParseSections.hooks';
-export { useCollapsedSection, useExpandOnAttention, useSectionExpansion } from './useSectionExpansion.hooks';
+export {
+  CONFIGURATION_SECTION_KEY,
+  TOOLS_SECTION_KEY,
+  useCollapsedSection,
+  useExpandOnAttention,
+  useSectionExpansion,
+} from './useSectionExpansion.hooks';
 export { useToolkitToolOptions } from './useToolkitToolOptions.hooks.js';
 export { useToolkitTestRunner } from './useToolkitTestRunner.hooks.js';
 export { useToolkitDetailNavigation } from './useToolkitDetailNavigation.hooks.js';
