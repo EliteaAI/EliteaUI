@@ -21,6 +21,7 @@ const ContextStrategyModal = memo(props => {
     onClose,
     conversationId,
     contextStrategy,
+    currentContextStatus,
     setActiveConversation,
     stats,
     isHighUtilization,
@@ -55,14 +56,14 @@ const ContextStrategyModal = memo(props => {
   );
 
   useEffect(() => {
-    if (open && initialValues) {
+    if (open) {
       setExpandedAccordions({
-        tokenManagement: initialValues.enabled,
-        summarization: initialValues.enabled,
-        systemMessages: initialValues.enabled,
+        tokenManagement: true,
+        summarization: true,
+        systemMessages: true,
       });
     }
-  }, [open, initialValues]);
+  }, [open]);
 
   const handleSubmit = useContextStrategySubmit({
     selectedProjectId,
@@ -81,13 +82,13 @@ const ContextStrategyModal = memo(props => {
       await optimizeContext({
         projectId: selectedProjectId,
         conversationId,
-        target_tokens: initialValues?.max_context_tokens,
+        target_tokens: currentContextStatus?.compaction_threshold,
       }).unwrap();
     } catch (error) {
       toastError(error?.data?.error || 'Failed to optimize context');
       setShowOptimizeDialog(false);
     }
-  }, [selectedProjectId, conversationId, optimizeContext, initialValues, toastError]);
+  }, [selectedProjectId, conversationId, optimizeContext, currentContextStatus, toastError]);
 
   return (
     <StyledDialog

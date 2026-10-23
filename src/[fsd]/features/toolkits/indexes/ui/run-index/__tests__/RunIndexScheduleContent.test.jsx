@@ -98,3 +98,31 @@ describe('RunIndexScheduleContent expiration', () => {
     expect(screen.getByRole('checkbox')).not.toBeDisabled();
   });
 });
+
+describe('RunIndexScheduleContent last run', () => {
+  const lastRunLine = () => screen.queryByTestId('schedule-last-run');
+
+  it('shows when the index last ran', () => {
+    renderSchedule({ lastRun: '10/21/2026, 11:22', nextRun: '10/22/2026, 11:22' });
+
+    expect(lastRunLine()).toHaveTextContent('Last run:');
+    expect(lastRunLine()).toHaveTextContent('10/21/2026, 11:22');
+  });
+
+  it('omits the line until a run has finished', () => {
+    renderSchedule({ nextRun: '10/22/2026, 11:22' });
+
+    expect(lastRunLine()).not.toBeInTheDocument();
+  });
+
+  it('keeps the last run on a retired schedule', () => {
+    renderSchedule({
+      lastRun: '01/05/2026, 03:00',
+      expiresAt: '01/05/2026, 03:00',
+      expired: true,
+      enabled: false,
+    });
+
+    expect(lastRunLine()).toHaveTextContent('01/05/2026, 03:00');
+  });
+});
