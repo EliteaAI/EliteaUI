@@ -8,7 +8,7 @@ import { PERSONA_OPTIONS } from '@/[fsd]/widgets/context-budget/lib/constants';
 import FormInput from '@/components/FormInput';
 
 const ContextStrategySystemMessages = memo(props => {
-  const { formData, errors, handleInputChange, isEnabled } = props;
+  const { formData, errors, handleInputChange } = props;
   const styles = systemMessagesStyles();
 
   const personaOptions = useMemo(
@@ -32,7 +32,6 @@ const ContextStrategySystemMessages = memo(props => {
               'preserve_system_messages',
             )
           }
-          disabled={!isEnabled}
           label="Always preserve system messages"
           slotProps={{
             switch: { size: 'small' },
@@ -54,7 +53,7 @@ const ContextStrategySystemMessages = memo(props => {
           showBorder
           value={formData.persona}
           onChange={e => handleInputChange(e, 'persona')}
-          disabled={!isEnabled || !formData.preserve_system_messages}
+          disabled={!formData.preserve_system_messages}
           options={personaOptions}
           renderOption={(option, isSelected) => (
             <MenuItem
@@ -82,7 +81,7 @@ const ContextStrategySystemMessages = memo(props => {
           onChange={e => handleInputChange(e, 'system_messages')}
           error={!!errors.system_messages}
           helperText={errors.system_messages || ' '}
-          disabled={!isEnabled || !formData.preserve_system_messages}
+          disabled={!formData.preserve_system_messages}
           placeholder="Enter custom instructions for the assistant..."
           sx={styles.formInput}
         />
