@@ -2,11 +2,12 @@ import { memo, useCallback, useEffect } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { Box, DialogContent, DialogTitle, IconButton } from '@mui/material';
+import { Box, DialogContent, DialogTitle, IconButton, Typography } from '@mui/material';
 
-import { Button, Switch } from '@/[fsd]/shared/ui';
+import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
-import { SEPARATOR } from '@/[fsd]/widgets/context-budget/lib/constants';
+import InfoTooltip from '@/[fsd]/shared/ui/tooltip/InfoTooltip';
+import { CONTEXT_WINDOW_COPY, SEPARATOR } from '@/[fsd]/widgets/context-budget/lib/constants';
 import { handleConvertToNumberChange } from '@/[fsd]/widgets/context-budget/lib/validation';
 import {
   ContextBudgetStats,
@@ -44,14 +45,6 @@ const ContextStrategyModalContent = memo(props => {
   const styles = componentStyles();
   const { values, errors, setFieldValue, dirty, isValid, isSubmitting, submitForm } = useFormikContext();
 
-  useEffect(() => {
-    setExpandedAccordions({
-      tokenManagement: values.enabled,
-      summarization: values.enabled,
-      systemMessages: values.enabled,
-    });
-  }, [values.enabled, setExpandedAccordions]);
-
   const handleKeyDown = useCallback(
     event => {
       if (event.key === 'Enter' && !isUpdating && dirty && isValid && !isSubmitting) {
@@ -75,11 +68,6 @@ const ContextStrategyModalContent = memo(props => {
 
   const handleInputChange = useCallback(
     (event, field) => {
-      if (field === 'enabled') {
-        setFieldValue(field, event?.target?.checked);
-        return;
-      }
-
       const value = event?.target?.type === 'checkbox' ? event?.target?.checked : event?.target?.value;
 
       if (event?.target?.type === 'checkbox') {
@@ -87,7 +75,7 @@ const ContextStrategyModalContent = memo(props => {
         return;
       }
 
-      const numericFields = ['max_context_tokens', 'preserve_recent_messages'];
+      const numericFields = ['preserve_recent_messages', 'manual_max_context_tokens'];
       if (numericFields.includes(field)) {
         handleConvertToNumberChange(value, field, setFieldValue);
         return;
@@ -123,17 +111,15 @@ const ContextStrategyModalContent = memo(props => {
     <>
       <DialogTitle sx={styles.dialogTitle}>
         <Box sx={styles.dialogTitleContent}>
-          <Switch.BaseSwitch
-            checked={values.enabled}
-            onChange={e => handleInputChange(e, 'enabled')}
-            label="Context Management"
-            infoTooltip="Configure how chat context is managed and optimized"
-            slotProps={{
-              label: {
-                variant: 'headingMedium',
-              },
-            }}
-          />
+          <Box sx={styles.titleWithIcon}>
+            <Typography
+              variant="headingMedium"
+              color="text.secondary"
+            >
+              Context Management
+            </Typography>
+            <InfoTooltip infoTooltip="Configure how chat context is managed and optimized" />
+          </Box>
           <IconButton
             variant="elitea"
             color="tertiary"
@@ -156,7 +142,6 @@ const ContextStrategyModalContent = memo(props => {
           <ContextAccordion
             title="Context Strategy & Token Management"
             expanded={expandedAccordions.tokenManagement}
-            isEnabled={values.enabled}
             onChange={(e, isExpanded) =>
               setExpandedAccordions(prev => ({ ...prev, tokenManagement: isExpanded }))
             }
@@ -165,7 +150,8 @@ const ContextStrategyModalContent = memo(props => {
                 formData={values}
                 errors={errors}
                 handleInputChange={handleInputChange}
-                isEnabled={values.enabled}
+                modelWindow={stats?.modelWindow}
+                manualMaxTokensEnabled={stats?.manualMaxTokensEnabled}
               />
             }
           />
@@ -173,7 +159,6 @@ const ContextStrategyModalContent = memo(props => {
           <ContextAccordion
             title="Summarization"
             expanded={expandedAccordions.summarization}
-            isEnabled={values.enabled}
             onChange={(e, isExpanded) =>
               setExpandedAccordions(prev => ({ ...prev, summarization: isExpanded }))
             }
@@ -183,7 +168,6 @@ const ContextStrategyModalContent = memo(props => {
                 errors={errors}
                 handleInputChange={handleInputChange}
                 handleSummaryLLMInputChange={handleSummaryLLMInputChange}
-                isEnabled={values.enabled}
                 modelList={modelList}
               />
             }
@@ -192,7 +176,6 @@ const ContextStrategyModalContent = memo(props => {
           <ContextAccordion
             title="User Instructions"
             expanded={expandedAccordions.systemMessages}
-            isEnabled={values.enabled}
             onChange={(e, isExpanded) =>
               setExpandedAccordions(prev => ({ ...prev, systemMessages: isExpanded }))
             }
@@ -201,7 +184,6 @@ const ContextStrategyModalContent = memo(props => {
                 formData={values}
                 errors={errors}
                 handleInputChange={handleInputChange}
-                isEnabled={values.enabled}
               />
             }
           />
@@ -209,6 +191,13 @@ const ContextStrategyModalContent = memo(props => {
       </DialogContent>
 
       <StyledDialogActions sx={styles.dialogActions}>
+        <Typography
+          variant="bodySmall"
+          color="text.default"
+          sx={styles.footerNote}
+        >
+          {CONTEXT_WINDOW_COPY.APPLIES_NEXT}
+        </Typography>
         <Button.BaseBtn
           variant={BUTTON_VARIANTS.elitea}
           onClick={onClose}
@@ -310,6 +299,9 @@ const componentStyles = () => ({
   }),
   summarizeButton: {
     flexShrink: 0,
+  },
+  footerNote: {
+    flex: 1,
   },
   dialogActions: ({ palette }) => ({
     flexDirection: 'row',

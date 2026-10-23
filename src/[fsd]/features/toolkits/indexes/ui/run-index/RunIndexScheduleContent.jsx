@@ -17,6 +17,7 @@ const RunIndexScheduleContent = memo(props => {
     scheduleSummary,
     timezoneHint,
     credentialsTitle,
+    lastRun,
     nextRun,
     expiresAt,
     expired,
@@ -74,6 +75,23 @@ const RunIndexScheduleContent = memo(props => {
               sx={styles.timezoneHint}
             >
               {timezoneHint}
+            </Typography>
+          )}
+          {lastRun && (
+            <Typography
+              variant="bodySmall2"
+              color={enabled ? 'text.secondary' : 'text.primary'}
+              data-testid="schedule-last-run"
+            >
+              <Typography
+                variant="bodySmall2"
+                component="span"
+                color="text.primary"
+                sx={styles.nextRunLabel}
+              >
+                Last run:
+              </Typography>
+              {lastRun}
             </Typography>
           )}
           {nextRun && (
