@@ -1,8 +1,10 @@
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 
 import { Box, IconButton, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
+import { parseRefusalPayload } from '@/[fsd]/features/chat/lib/helpers/refusal.helpers';
+import { Chip } from '@/[fsd]/shared/ui';
 import ArrowRightIcon from '@/assets/arrow-right-icon.svg?react';
 import CopyIcon from '@/components/Icons/CopyIcon';
 import DownloadIcon from '@/components/Icons/DownloadIcon';
@@ -31,6 +33,10 @@ const ErrorTrace = memo(props => {
 
   const [isExpanded, setIsExpanded] = useState(false);
 
+  // Backend refusals (e.g. admission-layer denials) arrive as `{code, error}` with no answer
+  // text; surface the readable `error` plus its `code`. Any other shape keeps the generic text.
+  const refusal = useMemo(() => (headline ? undefined : parseRefusalPayload(trace)), [headline, trace]);
+
   const downloadErrorTrace = useCallback(() => {
     if (!trace) return;
 
@@ -56,7 +62,17 @@ const ErrorTrace = memo(props => {
 
   return (
     <>
-      {budgetMessage || <Box sx={styles.errorWrapper}>{headline || 'Unknown error'}</Box>}
+      {budgetMessage || (
+        <Box sx={styles.errorWrapper}>
+          {headline || refusal?.message || 'Unknown error'}
+          {refusal?.code && (
+            <Chip.ErrorCodeChip
+              code={refusal.code}
+              testId="error-code-chip"
+            />
+          )}
+        </Box>
+      )}
 
       {afterHeadline}
 
