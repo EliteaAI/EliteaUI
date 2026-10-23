@@ -1,5 +1,7 @@
 export const USAGE_DEFAULT_VISIBLE_MODELS = 8;
 
+export const LS_USAGE_INFO_DISMISSED = 'usage:info-popover:dismissed';
+
 export const USAGE_MIN_MODEL_SHARE_PCT = 0.5;
 
 export const USAGE_MAX_HISTORY_BARS = 4;
