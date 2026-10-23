@@ -1,5 +1,7 @@
 import { ROLES, TOOL_ACTION_NAMES, TOOL_ACTION_TYPES, ToolActionStatus } from '@/common/constants';
 
+import { settleHitlResumeAttempt } from './hitl.helpers';
+
 /**
  * Resolve a streamed assistant turn against the history being updated.
  *
@@ -82,4 +84,113 @@ export const mergeChatSocketMessage = (history, message, { messageId = message?.
     ...(messageId ? { id: messageId } : {}),
   };
   return nextHistory;
+};
+
+/**
+ * Input guardrail refusal (#6886). The event carries the question id for a refused new
+ * turn or the assistant message id for a refused resume or application run. Either way
+ * the waiting assistant turn is settled and carries the verdict, so the block card
+ * renders where the answer would have been and streaming state clears the same way it
+ * does for an error.
+ *
+ * A refused new turn IS stored (redacted) with its own ids, which the sender's
+ * optimistic rows never had: `responseMessageId` / `questionItemUuid` give them to the
+ * placeholders, so editing, regenerating or deleting the card works without a reload.
+ *
+ * A refused resume leaves the pause in place. The resume cleared the interrupts
+ * optimistically, so they come back from `hitlResumeSnapshot` (taken before that).
+ */
+export const applyInputGuardrailBlocked = (
+  history = [],
+  { messageId, questionId, verdict, message, responseMessageId, questionItemUuid },
+) => {
+  const guardrail = { ...(verdict || {}), message: message || '' };
+  const isTarget = item =>
+    item.role === ROLES.Assistant &&
+    (item.id === messageId || (!!questionId && item.question_id === questionId));
+  if (!history.some(isTarget)) return history;
+  return history.map(item => {
+    if (item.role === ROLES.User && questionItemUuid && questionId && item.id === questionId) {
+      let patched = false;
+      return {
+        ...item,
+        message_items: (item.message_items || []).map(messageItem => {
+          if (patched || messageItem.item_type !== 'text_message') return messageItem;
+          patched = true;
+          return { ...messageItem, uuid: questionItemUuid };
+        }),
+      };
+    }
+    if (!isTarget(item)) return item;
+    const snapshot = item.hitlResumeSnapshot;
+    const interrupts = snapshot?.hitlInterrupts?.length ? snapshot.hitlInterrupts : item.hitlInterrupts;
+    const settled = interrupts?.length ? settleHitlResumeAttempt(interrupts, false) : undefined;
+    return {
+      ...item,
+      ...(responseMessageId ? { id: responseMessageId } : {}),
+      isLoading: false,
+      isStreaming: false,
+      isRegenerating: false,
+      isSending: false,
+      resumingAgentPaths: undefined,
+      hitlResumeSnapshot: undefined,
+      // Mirrors the stored is_error, so the turn renders the same after a reload
+      exception: guardrail.message,
+      inputGuardrail: guardrail,
+      ...(settled ? { hitlInterrupts: settled, hitlInterrupt: settled[0] } : {}),
+    };
+  });
+};
+
+/**
+ * SDK / indexer run (#6886). A block arrives as `agent_exception` whose metadata holds
+ * the verdict (`user_message` is the text to show). The same turn may also have been
+ * sent an `agent_input_guardrail` event for warn/redact, which only carries the verdict.
+ */
+export const getAgentGuardrailVerdict = responseMetadata => {
+  const verdict = responseMetadata?.input_guardrail;
+  if (!verdict || typeof verdict !== 'object') return undefined;
+  const { user_message: userMessage, message, ...rest } = verdict;
+  return { ...rest, message: userMessage || message || '' };
+};
+
+export const getAgentGuardrailEventVerdict = responseMetadata => {
+  if (!responseMetadata?.action) return undefined;
+  const { action, categories, rules, segments, detection_count: detectionCount } = responseMetadata;
+  return {
+    action,
+    categories: categories || [],
+    rules: rules || [],
+    segments: segments || [],
+    ...(detectionCount !== undefined ? { detection_count: detectionCount } : {}),
+  };
+};
+
+/**
+ * Input guardrail notice (#6886): the stored copy was redacted (content set) or only
+ * flagged (content null). Replace the sender's optimistic text so it matches what the
+ * model and other viewers see, and attach the verdict for the notice.
+ */
+export const applyInputGuardrailNotice = (history = [], { questionId, verdict, content }) => {
+  const index = history.findIndex(item => item.role === ROLES.User && item.id === questionId);
+  if (index === -1) return history;
+  const item = history[index];
+  const next = [...history];
+  const hasRedacted = typeof content === 'string';
+  let replaced = false;
+  next[index] = {
+    ...item,
+    inputGuardrail: verdict,
+    ...(hasRedacted && item.content !== undefined ? { content } : {}),
+    ...(hasRedacted && item.message_items
+      ? {
+          message_items: item.message_items.map(messageItem => {
+            if (replaced || messageItem.item_type !== 'text_message') return messageItem;
+            replaced = true;
+            return { ...messageItem, item_details: { ...messageItem.item_details, content } };
+          }),
+        }
+      : {}),
+  };
+  return next;
 };
