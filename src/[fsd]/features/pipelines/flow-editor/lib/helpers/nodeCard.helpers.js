@@ -18,9 +18,11 @@ export const getNodeCardBorderColor = ({ status, selected, isRunningPipeline }, 
   return isSelectedVisible({ selected, isRunningPipeline }) ? border.selected : border.default;
 };
 
+// The running node glows like a selected one
 export const getNodeCardShadow = ({ status, selected, isRunningPipeline }, palette) => {
   const { shadow } = palette.components.flowEditor.card;
 
+  if (status === FlowEditorConstants.NodeCardStatus.running) return shadow.selected;
   return !status && isSelectedVisible({ selected, isRunningPipeline }) ? shadow.selected : shadow.default;
 };
 

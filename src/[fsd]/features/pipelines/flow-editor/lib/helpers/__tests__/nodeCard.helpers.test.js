@@ -61,10 +61,19 @@ describe('nodeCard.helpers', () => {
   });
 
   describe('getNodeCardShadow', () => {
-    it('glows only for a selected node without a status', () => {
+    it('glows for a selected node', () => {
       expect(getNodeCardShadow({ selected: true }, palette)).toBe(card.shadow.selected);
       expect(getNodeCardShadow({}, palette)).toBe(card.shadow.default);
-      expect(getNodeCardShadow({ selected: true, status: NodeCardStatus.running }, palette)).toBe(
+    });
+
+    it('glows like a selected node while the node is running', () => {
+      expect(getNodeCardShadow({ status: NodeCardStatus.running, isRunningPipeline: true }, palette)).toBe(
+        card.shadow.selected,
+      );
+    });
+
+    it('does not glow for a run error', () => {
+      expect(getNodeCardShadow({ status: NodeCardStatus.error, selected: true }, palette)).toBe(
         card.shadow.default,
       );
     });
