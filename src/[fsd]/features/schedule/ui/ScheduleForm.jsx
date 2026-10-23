@@ -59,7 +59,7 @@ const APPROVAL_RULE_ITEMS = [
 ];
 const TYPE_LABEL = Object.fromEntries(TYPE_ITEMS.map(({ value, label }) => [value, label]));
 // Fields with their own message in the form; a 400 for any other field goes to the banner (R6.3)
-const FIELDS_WITH_INPUT = ['name', 'description', 'application_id', 'version_id', 'approval_rule'];
+const FIELDS_WITH_INPUT = ['name', 'description', 'application_id', 'version_id', 'approval_rule', 'cron'];
 const PROMPT_FIELDS = ['prompt', 'variables'];
 const AGENTS_TYPE = { agent: 'classic', pipeline: 'pipeline' };
 // The risk check states that keep Save disabled (owner CR 2026-10-21)
@@ -96,7 +96,7 @@ const FieldError = ({ message }) =>
 const ownerName = owner => owner?.name || owner?.email || '-';
 
 /**
- * `children({ values, setFieldValue, dirty, setValues })` fills SCHEDULE SETTINGS from the form values (cron, expires_at);
+ * `children({ values, setFieldValue, dirty, setValues, fieldError })` fills SCHEDULE SETTINGS from the form values (cron, expires_at);
  * `onSubmit(body)` returns a promise of the save answer and rejects with the API error;
  * `onSaved(answer)` runs at once after a save without warnings, else when the warnings dialog closes.
  * `schedule` turns on edit mode: read-only Owner and update body. `entityName` names the page.
@@ -598,7 +598,7 @@ const ScheduleForm = memo(props => {
       testId: 'schedule-section-settings',
       content: (
         <Box sx={styles.section}>
-          {children?.({ values, setFieldValue, dirty: formik.dirty, setValues })}
+          {children?.({ values, setFieldValue, dirty: formik.dirty, setValues, fieldError })}
           <Typography
             id="schedule-approval-rule-label"
             variant="labelMedium"

@@ -50,6 +50,7 @@ const CreateSchedulePage = props => {
             value={form.values.cron}
             onChange={cron => form.setFieldValue('cron', cron)}
             sourceCron={DEFAULT_SCHEDULE_CRON}
+            error={form.fieldError('cron')}
           />
           <StopOnDateField
             value={form.values.expires_at}

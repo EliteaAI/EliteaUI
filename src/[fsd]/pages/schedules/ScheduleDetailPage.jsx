@@ -181,7 +181,7 @@ const ScheduleDetailPage = props => {
       onTestRun={onTestRun}
       onCancel={onSaved}
     >
-      {({ values: formValues, setFieldValue }) => (
+      {({ values: formValues, setFieldValue, fieldError }) => (
         <>
           <ScheduleSettingsSection
             value={convertCronTimezone(formValues.cron, formValues.timezone, browserTimezone)}
@@ -191,6 +191,7 @@ const ScheduleDetailPage = props => {
             }}
             sourceCron={schedule.cron}
             sourceTimezone={schedule.timezone}
+            error={fieldError('cron')}
           />
           <StopOnDateField
             value={formValues.expires_at}
