@@ -2,15 +2,14 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { IconButton } from '@mui/material';
 
-import { useViewMode } from '@/[fsd]/shared/lib/hooks';
+import { useIsSmallWindow, useViewMode } from '@/[fsd]/shared/lib/hooks';
 import DoubleLeftIcon from '@/components/Icons/DoubleLeftIcon';
 import DoubleRightIcon from '@/components/Icons/DoubleRightIcon';
-import useIsSmallWindow from '@/hooks/useIsSmallWindow';
 import PipelineConfigurationForm from '@/pages/Applications/Components/Applications/PipelineConfigurationForm.jsx';
 import { ContentContainer } from '@/pages/Common/index.js';
 import { useTheme } from '@emotion/react';
 
-const GeneralFormPanel = ({ applicationId, onCollapsed }) => {
+const GeneralFormPanel = ({ applicationId, onCollapsed, isCreateMode }) => {
   const theme = useTheme();
   const viewMode = useViewMode();
 
@@ -78,6 +77,7 @@ const GeneralFormPanel = ({ applicationId, onCollapsed }) => {
             <PipelineConfigurationForm
               applicationId={applicationId}
               viewMode={viewMode}
+              isCreateMode={isCreateMode}
             />
           </>
         )}
