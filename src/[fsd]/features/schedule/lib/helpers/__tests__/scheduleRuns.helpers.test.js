@@ -29,7 +29,7 @@ describe('EL-7011 R4.2 status text', () => {
         'blocked',
         'cancelled',
         'skipped',
-      ].map(toRunStatusLabel),
+      ].map(status => toRunStatusLabel(status)),
     ).toEqual([
       'Running',
       'Success',
