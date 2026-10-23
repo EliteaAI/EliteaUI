@@ -14,27 +14,37 @@ const UsageInfoPopover = memo(props => {
   const anchorRef = useRef(null);
 
   useEffect(() => {
-    const dismissed = localStorage.getItem(UsageConstants.LS_USAGE_INFO_DISMISSED) === 'true';
+    try {
+      const dismissed = localStorage.getItem(UsageConstants.LS_USAGE_INFO_DISMISSED) === 'true';
 
-    if (!dismissed) {
-      setOpen(true);
+      if (!dismissed) {
+        setOpen(true);
+      }
+    } catch {
+      // storage blocked — leave closed
     }
   }, []);
 
-  const handleOpen = useCallback(() => {
-    setOpen(true);
+  const handleToggle = useCallback(() => {
+    setOpen(prev => !prev);
   }, []);
 
-  const handleClose = useCallback(() => {
-    localStorage.setItem(UsageConstants.LS_USAGE_INFO_DISMISSED, 'true');
+  // Click-away only closes — does not write the dismissed flag, so auto-open
+  // can still appear on the next visit if the user never clicked the X button.
+  const handleClickAway = useCallback(event => {
+    if (anchorRef.current?.contains(event.target)) return;
     setOpen(false);
   }, []);
 
-  const handleClickAway = useCallback(() => {
-    if (open) {
-      handleClose();
+  // Explicit close via X button permanently dismisses the auto-open.
+  const handleClose = useCallback(() => {
+    try {
+      localStorage.setItem(UsageConstants.LS_USAGE_INFO_DISMISSED, 'true');
+    } catch {
+      // storage blocked — still close visually
     }
-  }, [open, handleClose]);
+    setOpen(false);
+  }, []);
 
   const styles = usageInfoPopoverStyles();
 
@@ -51,7 +61,7 @@ const UsageInfoPopover = memo(props => {
           <BaseBtn
             variant={BUTTON_VARIANTS.icon}
             color="secondary"
-            onClick={handleOpen}
+            onClick={handleToggle}
             aria-label="About Usage"
             aria-haspopup="true"
             aria-expanded={open}
@@ -127,16 +137,16 @@ UsageInfoPopover.displayName = 'UsageInfoPopover';
 
 /** @type {MuiSx} */
 const usageInfoPopoverStyles = () => ({
-  popper: {
-    zIndex: 1300,
-  },
-  paper: ({ palette }) => ({
+  popper: ({ zIndex }) => ({
+    zIndex: zIndex.modal,
+  }),
+  paper: ({ palette, shadows }) => ({
     width: '22rem',
     maxWidth: 'calc(100vw - 2rem)',
     backgroundColor: palette.background.surface.default,
     border: `0.0625rem solid ${palette.alert.info.border}`,
     borderRadius: '0.75rem',
-    boxShadow: '0 0.5rem 1.5rem rgba(0, 0, 0, 0.12)',
+    boxShadow: shadows[8],
     overflow: 'hidden',
   }),
   inner: ({ palette }) => ({
