@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   navigate: vi.fn(),
   createSchedule: vi.fn(),
   settingsProps: null,
+  fieldErrors: {},
   formProps: null,
   params: {},
   state: { returnTo: '/agents/3' },
@@ -44,7 +45,7 @@ vi.mock('@/[fsd]/features/schedule', async importOriginal => {
       mocks.formProps = props;
       return (
         <>
-          {children({ values: initialValues, setFieldValue: vi.fn() })}
+          {children({ values: initialValues, setFieldValue: vi.fn(), fieldError: name => mocks.fieldErrors[name] ?? '' })}
           <button onClick={async () => onSaved(await onSubmit(toCreateBody(initialValues)))}>Save</button>
         </>
       );
@@ -57,6 +58,7 @@ describe('CreateSchedulePage EL-7011', () => {
     cleanup();
     vi.clearAllMocks();
     mocks.params = {};
+    mocks.fieldErrors = {};
     mocks.state = { returnTo: '/agents/3' };
   });
 
@@ -102,5 +104,12 @@ describe('CreateSchedulePage EL-7011', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
     await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith('/agents/all/12?viewMode=owner'));
+  });
+
+  it('R2.4 EL-7011 shows the server cron error under the cron field (BUG-50)', () => {
+    mocks.fieldErrors = { cron: 'Runs must be at least 5 minutes apart' };
+    render(<CreateSchedulePage />);
+
+    expect(mocks.settingsProps.error).toBe('Runs must be at least 5 minutes apart');
   });
 });

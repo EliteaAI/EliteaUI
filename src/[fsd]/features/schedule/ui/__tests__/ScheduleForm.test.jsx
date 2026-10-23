@@ -459,7 +459,7 @@ describe('ScheduleForm EL-7011', () => {
     renderForm({
       onSubmit: vi.fn().mockRejectedValue({
         status: 400,
-        data: { field: 'cron', error: 'Runs must be at least 5 minutes apart' },
+        data: { field: 'timezone', error: 'Unknown timezone' },
       }),
     });
     pickEntity(7);
@@ -467,7 +467,37 @@ describe('ScheduleForm EL-7011', () => {
 
     await save();
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Runs must be at least 5 minutes apart');
+    expect(await screen.findByRole('alert')).toHaveTextContent('Unknown timezone');
+  });
+
+  it('R2.4 EL-7011 shows a 400 cron message for the cron field and clears it on a cron edit (BUG-50)', async () => {
+    renderForm({
+      onSubmit: vi.fn().mockRejectedValue({
+        status: 400,
+        data: { field: 'cron', error: 'Runs must be at least 5 minutes apart' },
+      }),
+      children: ({ setFieldValue, fieldError }) => (
+        <>
+          <button type="button" onClick={() => setFieldValue('cron', '*/10 * * * *')}>
+            Edit cron
+          </button>
+          <span data-testid="cron-error">{fieldError('cron')}</span>
+        </>
+      ),
+    });
+    pickEntity(7);
+    typePrompt('Hi');
+
+    await save();
+
+    await waitFor(() =>
+      expect(screen.getByTestId('cron-error')).toHaveTextContent('Runs must be at least 5 minutes apart'),
+    );
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit cron' }));
+
+    await waitFor(() => expect(screen.getByTestId('cron-error')).toBeEmptyDOMElement());
   });
 
   it('R6.1 EL-7011 keeps Save from sending without a name, an entity and a version', async () => {

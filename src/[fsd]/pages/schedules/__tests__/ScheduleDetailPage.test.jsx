@@ -19,6 +19,7 @@ const mocks = vi.hoisted(() => ({
   query: {},
   formProps: null,
   settingsProps: null,
+  fieldErrors: {},
   params: { scheduleId: '9' },
   state: { returnTo: '/settings/schedules' },
   panelProps: null,
@@ -92,7 +93,7 @@ vi.mock('@/[fsd]/features/schedule', async importOriginal => {
           <button onClick={() => props.onSubmit({ name: 'Renamed' }).then(props.onSaved)}>Save</button>
           <button onClick={() => props.onTestRun()}>Test</button>
           {props.headerActions}
-          {props.children({ values: props.initialValues, setFieldValue: mocks.setFieldValue })}
+          {props.children({ values: props.initialValues, setFieldValue: mocks.setFieldValue, fieldError: name => mocks.fieldErrors[name] ?? '' })}
           {props.sidePanel?.(mocks.testRunProps)}
         </>
       );
@@ -133,6 +134,7 @@ describe('ScheduleDetailPage EL-7011', () => {
     cleanup();
     vi.clearAllMocks();
     mocks.projectId = 5;
+    mocks.fieldErrors = {};
     mocks.formProps = null;
     mocks.menuProps = null;
     mocks.settingsProps = null;
@@ -350,5 +352,13 @@ describe('ScheduleDetailPage EL-7011', () => {
 
     expect(screen.getByText(/Schedule not found/)).toBeInTheDocument();
     expect(mocks.formProps).toBeNull();
+  });
+
+  it('R2.4 EL-7011 shows the server cron error under the cron field (BUG-50)', () => {
+    mocks.fieldErrors = { cron: 'Runs must be at least 5 minutes apart' };
+    mocks.query = { currentData: schedule };
+    render(<ScheduleDetailPage />);
+
+    expect(mocks.settingsProps.error).toBe('Runs must be at least 5 minutes apart');
   });
 });
