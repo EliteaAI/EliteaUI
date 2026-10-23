@@ -15,14 +15,19 @@ const NodeTypeSelector = memo(props => {
   const {
     open,
     anchorEl,
+    anchorPosition,
     boundaryEl,
+    availableTypes,
     onClose,
     onSelect,
     anchorOrigin = DEFAULT_ANCHOR_ORIGIN,
     transformOrigin = DEFAULT_TRANSFORM_ORIGIN,
   } = props;
 
-  const nodeTypes = useMemo(() => NodeTypeHelpers.getAddableNodeTypes(), []);
+  const nodeTypes = useMemo(() => {
+    const addableTypes = NodeTypeHelpers.getAddableNodeTypes();
+    return availableTypes ? addableTypes.filter(type => availableTypes.includes(type)) : addableTypes;
+  }, [availableTypes]);
 
   const openLayoutRef = useRef(null);
 
@@ -57,6 +62,8 @@ const NodeTypeSelector = memo(props => {
     <Popover
       open={open}
       anchorEl={anchorEl}
+      anchorReference={anchorPosition ? 'anchorPosition' : 'anchorEl'}
+      anchorPosition={anchorPosition}
       onClose={onClose}
       anchorOrigin={anchorOrigin}
       transformOrigin={transformOrigin}
