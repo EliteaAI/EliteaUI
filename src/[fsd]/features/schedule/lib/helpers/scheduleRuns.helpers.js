@@ -62,7 +62,7 @@ export const toPlainText = markdown =>
   (markdown ?? '')
     .replace(/^#+\s+/gm, '')
     .replace(/^>\s?/gm, '')
-    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/\[([^\][]*)\]\([^)]*\)/g, '$1')
     .replace(/(\*\*|__|\*|`)/g, '')
     .trim();
 
