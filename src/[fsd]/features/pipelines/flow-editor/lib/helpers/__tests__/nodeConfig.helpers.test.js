@@ -50,14 +50,11 @@ describe('nodeConfig.helpers', () => {
       ]);
     });
 
-    it('asks for a decision option (new and legacy decision nodes)', () => {
+    it('asks for a decision option', () => {
       expect(getNodeConfigIssues({ type: PipelineNodeTypes.Decision, nodes: [] })).toEqual([
         'Add at least one decision option',
       ]);
       expect(getNodeConfigIssues({ type: PipelineNodeTypes.Decision, nodes: ['LLM 1'] })).toEqual([]);
-      expect(
-        getNodeConfigIssues({ type: PipelineNodeTypes.Decision, decision: { nodes: ['LLM 1'] } }),
-      ).toEqual([]);
     });
 
     it('asks for a router route', () => {

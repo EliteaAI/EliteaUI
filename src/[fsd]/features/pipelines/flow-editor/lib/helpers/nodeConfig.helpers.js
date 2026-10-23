@@ -36,9 +36,7 @@ export const getNodeConfigIssues = (yamlNode, { requiredInputs = [] } = {}) => {
       else if (!yamlNode.tool) issues.push('Select a tool');
       break;
     case PipelineNodeTypes.Decision:
-      if (!yamlNode.nodes?.length && !yamlNode.decision?.nodes?.length) {
-        issues.push('Add at least one decision option');
-      }
+      if (!yamlNode.nodes?.length) issues.push('Add at least one decision option');
       break;
     case PipelineNodeTypes.Router:
       if (!yamlNode.routes?.length) issues.push('Add at least one route');
