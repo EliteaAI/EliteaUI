@@ -26,7 +26,10 @@ const { fetchDetails, getTraces, detailsResult } = vi.hoisted(() => ({
 vi.mock('@/[fsd]/entities/run-history/api', () => ({
   RunHistoryApi: { useLazyGetRunHistoryDetailsQuery: () => [fetchDetails, { ...detailsResult, reset: vi.fn() }] },
 }));
-vi.mock('@/[fsd]/shared/lib/hooks', () => ({ useSelectedProjectId: () => 7 }));
+vi.mock('@/[fsd]/shared/lib/hooks', () => ({
+  useSelectedProjectId: () => 7,
+  useIsSmallWindow: () => ({ isSmallWindow: false }),
+}));
 vi.mock('@/api', () => ({ useLazyMessageTracesQuery: () => [getTraces] }));
 vi.mock('@/common/convertChatConversationMessages', () => ({
   buildTraceListParams: () => ({}),
