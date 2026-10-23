@@ -312,6 +312,8 @@ export const TRAJECTORY_STATE_MESSAGE = {
 
 // Agent outcomes of a case that the run stopped on rather than scored (#6809 item 2, design §4.5).
 export const CASE_EXECUTION_STATUS = {
+  // The input guardrail (#6886) refused the case input before the agent ran
+  guardrailBlocked: 'guardrail_blocked',
   guardrailPaused: 'guardrail_paused',
   parked: 'parked',
 };

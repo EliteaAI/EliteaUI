@@ -1,4 +1,7 @@
-import { IndexHistoryItemsLabels } from '@/[fsd]/features/toolkits/indexes/lib/constants';
+import {
+  IndexHistoryItemsLabels,
+  TERMINAL_INDEX_STATUSES,
+} from '@/[fsd]/features/toolkits/indexes/lib/constants';
 import { resolveIndexEventLabel } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexEvent.helpers';
 
 export const indexHistoryRowId = entry => `${entry?.updated_on}_${entry?.conversation_id ?? entry?.state}`;
@@ -26,3 +29,10 @@ export const buildIndexHistoryRows = (history, initialCompletedTs) =>
     canShare: true,
     entry,
   }));
+
+export const findLastFinishedRunTimestamp = history => {
+  const finishedOn = (history || [])
+    .filter(entry => TERMINAL_INDEX_STATUSES.includes(entry?.state) && Number.isFinite(entry.updated_on))
+    .map(entry => entry.updated_on);
+  return finishedOn.length ? Math.max(...finishedOn) : null;
+};
