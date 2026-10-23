@@ -337,6 +337,26 @@ describe('ScheduleForm EL-7011', () => {
     expect(listQuery).toHaveBeenLastCalledWith(expect.objectContaining({ page: 1 }));
   });
 
+  it('R3.3 EL-7011 asks the same page again after a failed page (BUG-46, TC-US25-05)', () => {
+    // The list query reports page 1 as failed, the way the real hook does for the args it ran with
+    listQuery.mockImplementation(args => ({
+      data: { rows: ROWS, total: 60 },
+      isFetching: false,
+      isError: args.page === 1,
+      originalArgs: args,
+    }));
+    renderForm();
+
+    act(() => selectProps.onLoadMore());
+
+    // The failed page 1 is rolled back, so the next scroll asks page 1 (the same offset) again
+    expect(listQuery).toHaveBeenLastCalledWith(expect.objectContaining({ page: 0 }));
+    listQuery.mockImplementation(args => ({ data: { rows: ROWS, total: 60 }, isFetching: false, originalArgs: args }));
+    act(() => selectProps.onLoadMore());
+    expect(listQuery).toHaveBeenLastCalledWith(expect.objectContaining({ page: 1 }));
+    expect(selectProps.options.map(o => o.label)).toEqual(['Digest agent', 'Other agent']);
+  });
+
   it('R3.4 EL-7011 presets the version to the default version of the selected entity', async () => {
     renderForm();
 

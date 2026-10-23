@@ -271,11 +271,21 @@ const ScheduleForm = memo(props => {
   // Messages show after the first Save, so a half-filled form shows no required errors
   const fieldError = name => (submitCount ? errors[name] : '');
 
-  const { data: listData, isFetching } = useApplicationListQuery({
+  const {
+    data: listData,
+    isFetching,
+    isError: isListError,
+    originalArgs: listArgs,
+  } = useApplicationListQuery({
     projectId,
     page: list.page,
     params: { query: list.query, agents_type: AGENTS_TYPE[values.type] },
   });
+  // A failed page keeps the loaded items and gives its page back, so the next scroll asks the same offset (R1.4)
+  useEffect(() => {
+    if (isListError && list.page > 0 && listArgs?.page === list.page)
+      setList(prev => ({ ...prev, page: prev.page - 1 }));
+  }, [isListError, listArgs, list.page]);
   const { currentData: details, isFetching: isDetailsFetching } = useApplicationDetailsQuery(
     { projectId, applicationId: values.application_id },
     { skip: !values.application_id },
