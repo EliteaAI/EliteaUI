@@ -10,27 +10,44 @@ export const usageApi = eliteaApi
   .injectEndpoints({
     endpoints: build => ({
       projectUsage: build.query({
-        query: ({ projectId, scope = 'project' }) => ({
-          url: `/usage/usage/prompt_lib/${projectId}/usage?scope=${scope}`,
+        query: ({ projectId, scope = 'project', period }) => ({
+          url: `/usage/usage/prompt_lib/${projectId}/usage`,
           method: 'GET',
+          params: {
+            scope,
+            ...(period ? { period } : {}),
+          },
         }),
+        // Cache key must include period so switching months never serves stale data
+        serializeQueryArgs: ({ queryArgs }) =>
+          `projectUsage-${queryArgs.projectId}-${queryArgs.scope ?? 'project'}-${queryArgs.period ?? 'current'}`,
         providesTags: [TAG_TYPE_USAGE],
         keepUnusedDataFor: CACHE_LIFETIME,
       }),
       usageMembers: build.query({
-        // sortBy/sortOrder are wired through to the backend but there's no sort control in
-        // UsageMembersTable yet, so callers always get the default: highest spend first
-        query: ({ projectId, limit = 10, offset = 0, search, sortBy = 'spend', sortOrder = 'desc' }) => ({
+        query: ({
+          projectId,
+          limit = 10,
+          offset = 0,
+          search,
+          sort_by,
+          sort_dir,
+          period,
+          comparison_period,
+        }) => ({
           url: `/elitea_core/user_budgets/prompt_lib/${projectId}`,
           method: 'GET',
           params: {
             limit,
             offset,
-            sort_by: sortBy,
-            sort_order: sortOrder,
+            ...(sort_by ? { sort_by, sort_order: sort_dir ?? 'desc' } : {}),
             ...(search ? { search } : {}),
+            ...(period ? { period } : {}),
+            ...(comparison_period ? { comparison_period } : {}),
           },
         }),
+        serializeQueryArgs: ({ queryArgs }) =>
+          `usageMembers-${queryArgs.projectId}-${queryArgs.limit}-${queryArgs.offset}-${queryArgs.search ?? ''}-${queryArgs.period ?? 'current'}-${queryArgs.sort_by ?? ''}-${queryArgs.sort_dir ?? ''}-${queryArgs.comparison_period ?? ''}`,
         providesTags: [TAG_TYPE_USAGE],
         keepUnusedDataFor: CACHE_LIFETIME,
       }),
