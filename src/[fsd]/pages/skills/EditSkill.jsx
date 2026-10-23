@@ -15,14 +15,13 @@ import {
   SkillControls,
   SkillInformation,
   SkillRunPane,
-  SkillValidateSchema,
   useCompareSkillVersions,
   useSetSkillDefaultVersionMutation,
   useSkillDetailsQuery,
 } from '@/[fsd]/features/skill';
 import { SKILL_RUN_FOCUS_TARGET, SKILL_RUN_SEARCH_PARAMS } from '@/[fsd]/features/skill/lib/constants';
 import { readRunConversationId, withDefaultSkillModel } from '@/[fsd]/features/skill/lib/helpers';
-import { useSkillModels } from '@/[fsd]/features/skill/lib/hooks';
+import { useSkillModels, useSkillValidationSchema } from '@/[fsd]/features/skill/lib/hooks';
 import {
   useRestoredConversation,
   useRunHistoryNavigation,
@@ -168,6 +167,7 @@ const EditSkill = memo(() => {
   );
 
   const { defaultModel, isLoadingModels } = useSkillModels();
+  const validationSchema = useSkillValidationSchema(data?.version_details?.instructions);
   const isLoadingForm = isFetching || isLoadingModels;
   const initialValues = useMemo(() => buildInitialValues(data, defaultModel), [data, defaultModel]);
 
@@ -275,7 +275,7 @@ const EditSkill = memo(() => {
         key={formKey}
         enableReinitialize
         initialValues={initialValues}
-        validationSchema={SkillValidateSchema}
+        validationSchema={validationSchema}
         onSubmit={() => {}}
       >
         <StyledTabs
