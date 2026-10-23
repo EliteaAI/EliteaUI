@@ -2,8 +2,9 @@ import { memo, useCallback, useMemo, useState } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { Box, Typography } from '@mui/material';
+import { Box, Tooltip, Typography } from '@mui/material';
 
+import { useStoredOAuthLogin } from '@/[fsd]/features/credentials/lib/hooks';
 import {
   McpAuthHelpers,
   McpAuthModal,
@@ -17,7 +18,11 @@ import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import OnlineIcon from '@/assets/online-icon.svg?react';
 
-const SharepointOAuthStatus = memo(() => {
+const getAuthority = credential => credential.data?.oauth_discovery_endpoint;
+const MANAGE_LOGIN_HINT = 'Only project admins can log in or out on a team credential';
+
+const SharepointOAuthStatus = memo(props => {
+  const { onLoginChange, loginExpired } = props;
   const { values } = useFormikContext();
   const projectId = useSelectedProjectId();
   const { toastSuccess } = useToast();
@@ -29,8 +34,21 @@ const SharepointOAuthStatus = memo(() => {
     projectId,
   );
 
-  const { isLoggedIn: isOAuthLoggedIn } = useMcpTokenChange({ serverUrl: connectionTokenKey });
+  const { isLoggedIn: hasBrowserToken } = useMcpTokenChange({ serverUrl: connectionTokenKey });
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  // Delegated credentials also keep the login on the credential; the browser token stays for chat
+  const storedLogin = useStoredOAuthLogin({
+    configurationType: 'sharepoint',
+    credentialRef: oauthEndpoint ? spConfigRef : undefined,
+    projectId,
+    getAuthority,
+    keepBrowserToken: true,
+    loginExpired,
+    onLoginChange,
+  });
+  const isOAuthLoggedIn = oauthEndpoint ? storedLogin.isConnected : hasBrowserToken;
+  const canManageLogin = !oauthEndpoint || storedLogin.canManageLogin;
 
   const configOAuth = useConfigOAuthModal({
     credentials: {
@@ -57,16 +75,24 @@ const SharepointOAuthStatus = memo(() => {
   });
 
   const onLogin = useCallback(() => {
+    if (oauthEndpoint) {
+      storedLogin.login();
+      return;
+    }
     runCheck(configOAuth.handleConfigAuthRequired, oauthTokenKey);
-  }, [runCheck, configOAuth.handleConfigAuthRequired, oauthTokenKey]);
+  }, [oauthEndpoint, storedLogin, runCheck, configOAuth.handleConfigAuthRequired, oauthTokenKey]);
 
   const onLogout = useCallback(() => setShowLogoutModal(true), []);
 
   const onConfirmLogout = useCallback(() => {
-    McpAuthHelpers.logout(oauthTokenKey);
+    if (oauthEndpoint) {
+      storedLogin.logout();
+    } else {
+      McpAuthHelpers.logout(oauthTokenKey);
+      toastSuccess('You have successfully logged out!');
+    }
     setShowLogoutModal(false);
-    toastSuccess('You have successfully logged out!');
-  }, [oauthTokenKey, toastSuccess]);
+  }, [oauthEndpoint, storedLogin, oauthTokenKey, toastSuccess]);
 
   const onCloseLogoutModal = useCallback(() => setShowLogoutModal(false), []);
 
@@ -86,15 +112,22 @@ const SharepointOAuthStatus = memo(() => {
             {isOAuthLoggedIn ? 'Connected!' : 'Not Connected'}
           </Typography>
         </Box>
-        <Button.BaseBtn
-          onClick={isOAuthLoggedIn ? onLogout : onLogin}
-          disabled={isRunning}
-          variant="secondary"
+        <Tooltip
+          arrow
+          title={canManageLogin ? '' : MANAGE_LOGIN_HINT}
         >
-          {isOAuthLoggedIn ? 'Logout' : isRunning ? 'Logging in...' : 'Login'}
-        </Button.BaseBtn>
+          <Box component="span">
+            <Button.BaseBtn
+              onClick={isOAuthLoggedIn ? onLogout : onLogin}
+              disabled={isRunning || storedLogin.isBusy || !canManageLogin}
+              variant="secondary"
+            >
+              {isOAuthLoggedIn ? 'Logout' : isRunning || storedLogin.isBusy ? 'Logging in...' : 'Login'}
+            </Button.BaseBtn>
+          </Box>
+        </Tooltip>
       </Box>
-      <McpAuthModal {...authModalProps} />
+      <McpAuthModal {...(oauthEndpoint ? storedLogin.modalProps : authModalProps)} />
       <McpLogoutModal
         serverUrl={oauthTokenKey}
         open={showLogoutModal}

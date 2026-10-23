@@ -70,6 +70,8 @@ export const getIcon = (type, theme, notification) => {
     case NotificationType.ScheduleApprovalNeeded:
     case NotificationType.BudgetThresholdReached:
     case NotificationType.MemberBudgetThresholdReached:
+    case NotificationType.ToolSpendThresholdReached:
+    case NotificationType.MemberToolSpendThresholdReached:
       return (
         <AttentionIcon
           fill={theme.palette.status.onModeration}
@@ -79,6 +81,8 @@ export const getIcon = (type, theme, notification) => {
 
     case NotificationType.BudgetLimitReached:
     case NotificationType.MemberBudgetLimitReached:
+    case NotificationType.ToolSpendLimitReached:
+    case NotificationType.MemberToolSpendLimitReached:
       return (
         <ErrorIcon
           fill={theme.palette.status.rejected}
