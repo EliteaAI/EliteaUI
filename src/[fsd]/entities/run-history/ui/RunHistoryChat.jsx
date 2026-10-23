@@ -1,7 +1,7 @@
 import { memo, useEffect, useMemo, useRef, useState } from 'react';
 
 import { RunHistoryApi } from '@/[fsd]/entities/run-history/api';
-import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
+import { useIsSmallWindow, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { useLazyMessageTracesQuery } from '@/api';
 import {
   buildTraceListParams,
@@ -9,7 +9,6 @@ import {
 } from '@/common/convertChatConversationMessages';
 import { ChatBodyContainer } from '@/components/Chat/StyledComponents';
 import useChatCopyToClipboard from '@/hooks/chat/useChatCopyToClipboard';
-import useIsSmallWindow from '@/hooks/useIsSmallWindow';
 import { ContentContainer } from '@/pages/Common';
 
 const RunHistoryChat = memo(props => {
