@@ -2,8 +2,8 @@ import { useCallback, useMemo } from 'react';
 
 import { useMatch, useSearchParams } from 'react-router-dom';
 
+import { useIsFrom } from '@/[fsd]/shared/lib/hooks';
 import { SearchParams } from '@/common/constants.js';
-import { useIsFrom } from '@/hooks/useIsFromSpecificPageHooks';
 import RouteDefinitions from '@/routes';
 
 export const useToolkitView = () => {

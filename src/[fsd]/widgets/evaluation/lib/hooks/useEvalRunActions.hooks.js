@@ -87,10 +87,12 @@ export const useEvalRunActions = ({
 
   // Fetch active run details (for in-progress runs)
   const shouldFetchActiveRun = !!activeRunId && projectId != null;
-  const { data: activeRunData, isError: isRunError } = useEvalRunQuery(
+  const { data: fetchedActiveRun, isError: isRunError } = useEvalRunQuery(
     { projectId, runId: activeRunId },
     { skip: !shouldFetchActiveRun, pollingInterval: runPollingInterval },
   );
+  // A skipped query keeps returning its last data, so drop it once there is no active run.
+  const activeRunData = shouldFetchActiveRun ? fetchedActiveRun : undefined;
 
   const runSettled = isRunTerminal(activeRunData?.status) || isRunError;
   // Only one run can be in flight per suite, and the version selector is disabled for as long as
@@ -109,11 +111,12 @@ export const useEvalRunActions = ({
 
   // Refetch runs list when active run reaches terminal state
   useEffect(() => {
+    if (skipRunsQuery) return;
     if (isRunTerminal(activeRunData?.status) && terminalNotifiedRef.current !== activeRunId) {
       terminalNotifiedRef.current = activeRunId;
       refetchRuns();
     }
-  }, [activeRunData?.status, activeRunId, refetchRuns]);
+  }, [activeRunData?.status, activeRunId, refetchRuns, skipRunsQuery]);
 
   useEffect(() => {
     setCancelRequested(false);

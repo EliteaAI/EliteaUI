@@ -14,13 +14,14 @@ export const useContextStrategySubmit = ({
 }) => {
   const prepareRequestData = useCallback(
     values => {
-      const { summary_llm_settings, ...otherFormData } = values;
+      const { summary_llm_settings, manual_max_context_tokens, ...otherFormData } = values;
       const { instructions, ...otherSummaryLLMSettings } = summary_llm_settings;
 
       return {
         projectId: selectedProjectId,
         conversationId,
         ...otherFormData,
+        manual_max_context_tokens: manual_max_context_tokens === '' ? null : manual_max_context_tokens,
         summary_llm_settings: otherSummaryLLMSettings,
         summary_instructions: instructions,
       };

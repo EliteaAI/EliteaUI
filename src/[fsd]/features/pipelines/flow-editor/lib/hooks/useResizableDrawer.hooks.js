@@ -98,6 +98,7 @@ export const useResizableDrawer = (
   return {
     containerRef,
     drawerWidth,
+    setDrawerWidth,
     isResizing,
     isHoveringHandle,
     setIsHoveringHandle,
