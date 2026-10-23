@@ -18,6 +18,7 @@ import { PinEntityConstants } from '@/[fsd]/shared/lib/constants';
 import { useInstructionsInputRefContext } from '@/[fsd]/shared/lib/context';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import {
+  useIsFromPipelineDetail,
   useProjectEntityLink,
   useProjectType,
   useSelectedProjectId,
@@ -33,7 +34,6 @@ import DeleteIcon from '@/components/Icons/DeleteIcon';
 import DifferenceIcon from '@/components/Icons/DifferenceIcon';
 import PinIcon from '@/components/Icons/PinIcon';
 import useCheckPermission from '@/hooks/useCheckPermission';
-import { useIsFromPipelineDetail } from '@/hooks/useIsFromSpecificPageHooks';
 import { useDeleteApplicationMenu } from '@/pages/Applications/Components/Applications/DeleteApplicationButton';
 import { useExportApplicationMenu } from '@/pages/Applications/Components/Applications/ExportApplicationButton';
 import { AuthorsButton } from '@/pages/Common';

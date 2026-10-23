@@ -1,0 +1,1 @@
+export const MIN_LARGE_WINDOW_WIDTH = 1200;
