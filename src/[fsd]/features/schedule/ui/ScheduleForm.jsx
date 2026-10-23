@@ -461,6 +461,7 @@ const ScheduleForm = memo(props => {
           entityType={values.type}
           entityId={values.application_id}
           versionId={values.version_id}
+          projectId={projectId}
         />
       )}
       {riskCheck.status === RISK_CHECK_STATUS.FAILED && (

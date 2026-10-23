@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { ThemeProvider, createTheme } from '@mui/material';
 
 import getDesignTokens from '@/MainTheme';
+import { getBasename } from '@/routes';
 import '@testing-library/jest-dom/vitest';
 import { cleanup, render, screen, within } from '@testing-library/react';
 
@@ -32,6 +33,10 @@ const STEPS = ['Review', 'Approve', 'Publish'].map(label => ({
   fix: { entity_type: 'pipeline', id: 9, version_id: 90 },
 }));
 
+// CR-11 review r2: a new tab is outside the router, so the link carries the origin, basename and project
+// The editor route needs the owner view mode, or it shows Page not found (CR-11 live check)
+const appUrl = path => `${window.location.origin}${getBasename()}/5${path}?viewMode=owner`;
+
 const setup = props =>
   render(
     <ThemeProvider theme={createTheme(getDesignTokens('light'))}>
@@ -39,6 +44,7 @@ const setup = props =>
         entityType="agent"
         entityId={7}
         versionId={71}
+        projectId={5}
         {...props}
       />
     </ThemeProvider>,
@@ -65,7 +71,7 @@ describe('EL-7011 owner CR ScheduleRiskBlockBox', () => {
     setup({ blocking: SIGNIN });
 
     const link = screen.getByRole('link', { name: /Open agent to change tools/ });
-    expect(link).toHaveAttribute('href', '/agents/all/12/31');
+    expect(link).toHaveAttribute('href', appUrl('/agents/all/12/31'));
     expect(link).toHaveAttribute('target', '_blank');
     expect(link).toHaveAttribute('rel', expect.stringContaining('noopener'));
   });
@@ -79,7 +85,7 @@ describe('EL-7011 owner CR ScheduleRiskBlockBox', () => {
     expect(screen.getByText("Scheduled runs can't answer it.")).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Open pipeline to change steps/ })).toHaveAttribute(
       'href',
-      '/pipelines/all/9/90',
+      appUrl('/pipelines/all/9/90'),
     );
   });
 
@@ -95,7 +101,7 @@ describe('EL-7011 owner CR ScheduleRiskBlockBox', () => {
 
     expect(screen.getByRole('link', { name: /Open agent to change tools/ })).toHaveAttribute(
       'href',
-      '/agents/all/7/71',
+      appUrl('/agents/all/7/71'),
     );
   });
 
@@ -106,7 +112,7 @@ describe('EL-7011 owner CR ScheduleRiskBlockBox', () => {
 
     expect(screen.getByRole('link', { name: /Open agent to change tools/ })).toHaveAttribute(
       'href',
-      '/agents/all/12',
+      appUrl('/agents/all/12'),
     );
   });
 
