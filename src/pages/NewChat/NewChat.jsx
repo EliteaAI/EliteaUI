@@ -1,4 +1,4 @@
-import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { useDispatch, useSelector } from 'react-redux';
 import { useSearchParams } from 'react-router-dom';
@@ -30,12 +30,14 @@ import {
   useConversationNavigation,
   useEditConversation,
   useInternalToolsConfig,
+  useIsCreatingConversation,
 } from '@/[fsd]/features/chat/lib/hooks';
 import {
   canParticipantBeActiveInChat,
   getChatParticipantUniqueId,
 } from '@/[fsd]/features/chat/participants/lib/helpers';
 import {
+  useActivateConversationParticipant,
   useActiveParticipantDetails,
   useAddNewParticipants,
 } from '@/[fsd]/features/chat/participants/lib/hooks';
@@ -45,7 +47,7 @@ import { AddNewUserModal } from '@/[fsd]/features/chat/ui/chat-modal';
 import { ChatEditorPanel } from '@/[fsd]/features/chat/ui/editors';
 import { FIRST_ELITEA_TOUR_ID, useProposePendingTour } from '@/[fsd]/features/interactive-tours';
 import { ChunkHelpers } from '@/[fsd]/shared/lib/helpers';
-import { useGetWindowWidth, useToast } from '@/[fsd]/shared/lib/hooks';
+import { useGetWindowWidth, useIsSmallWindow, useToast } from '@/[fsd]/shared/lib/hooks';
 import { eliteaApi } from '@/api/eliteaApi';
 import {
   ChatParticipantType,
@@ -90,8 +92,6 @@ import useSelectConversation from '@/hooks/chat/useSelectConversation';
 import useStreamingNavBlocker from '@/hooks/chat/useStreamingNavBlocker';
 import useSynChatMessage from '@/hooks/chat/useSyncChatMessage';
 import useUploadAttachments from '@/hooks/chat/useUploadAttachments';
-import { useIsCreatingConversation } from '@/hooks/useIsFromSpecificPageHooks';
-import useIsSmallWindow from '@/hooks/useIsSmallWindow';
 import useNavBlocker from '@/hooks/useNavBlocker';
 import NewConversationView from '@/pages/NewChat/NewConversationView';
 import { actions as chatActions } from '@/slices/chat';
@@ -169,6 +169,7 @@ const NewChat = props => {
   const { isSmallWindow } = useIsSmallWindow();
 
   const sideBarCollapsed = useSelector(state => state.settings.sideBarCollapsed);
+  const { id: userId } = useSelector(state => state.user);
 
   const leftPanelWidth = useMemo(
     () => (sideBarCollapsed ? 300 : windowWidth > 1700 ? 300 : 380 - SIDE_BAR_WIDTH / 2),
@@ -438,9 +439,15 @@ const NewChat = props => {
   const [getConversationDetailForRefresh] = useLazyConversationDetailsQuery();
 
   const activeConversationIdRef = useRef(activeConversation?.id);
-  useEffect(() => {
+  useLayoutEffect(() => {
     activeConversationIdRef.current = activeConversation?.id;
   }, [activeConversation?.id]);
+
+  const { activateParticipant } = useActivateConversationParticipant({
+    activeConversationIdRef,
+    setActiveParticipant,
+    setLocalActiveParticipant,
+  });
 
   useChatSocketReconnect({ activeConversation, projectId, setActiveConversation });
 
@@ -567,8 +574,7 @@ const NewChat = props => {
     onCloseArtifactEditor,
     refetchParticipantDetails,
     activeVersionName,
-    getChatParticipantUniqueId,
-    setLocalActiveParticipant,
+    activateParticipant,
   });
 
   const {
@@ -581,6 +587,7 @@ const NewChat = props => {
     onEditArtifact,
     onCreateAgent,
     onCreatePipeline,
+    onCreateSkill,
     onCreateToolkit,
     handleCloseAgentEditor,
     handleClosePipelineEditor,
@@ -594,6 +601,7 @@ const NewChat = props => {
     isEditingProjectContext,
     isCreateMode,
     isPipelineCreateMode,
+    isSkillCreateMode,
     editingAgent,
     editingToolkit,
     editingPipeline,
@@ -603,6 +611,7 @@ const NewChat = props => {
     pipelineGutterStyle,
     onAgentCreated,
     onPipelineCreated,
+    onSkillCreated,
     onToolkitCreated,
     handleAgentSaved,
     handleEditorDirtyStateChange,
@@ -661,14 +670,11 @@ const NewChat = props => {
       }
 
       if (!activeConversation?.isNew && activeConversation?.id) {
-        setActiveParticipant(participant);
         if (participant) {
-          if (participant?.entity_name !== ChatParticipantType.Users) {
-            const uniqueId = getChatParticipantUniqueId(participant);
-            setLocalActiveParticipant(activeConversation?.id, uniqueId);
-          }
+          activateParticipant(activeConversation.id, participant);
         } else {
-          clearLocalActiveParticipant(activeConversation?.id);
+          setActiveParticipant(participant);
+          clearLocalActiveParticipant(activeConversation.id);
         }
       } else {
         newConversationViewRef.current?.onSelectParticipant(participant);
@@ -678,7 +684,7 @@ const NewChat = props => {
       activeConversation?.isNew,
       activeConversation?.id,
       isEditingAgent,
-      setLocalActiveParticipant,
+      activateParticipant,
       clearLocalActiveParticipant,
     ],
   );
@@ -839,6 +845,7 @@ const NewChat = props => {
       onAddNewUsers,
       onCreateAgent,
       onCreatePipeline,
+      onCreateSkill,
       onCreateToolkit,
       onDeleteParticipant,
     }),
@@ -862,6 +869,7 @@ const NewChat = props => {
       onAddNewUsers,
       onCreateAgent,
       onCreatePipeline,
+      onCreateSkill,
       onCreateToolkit,
       onDeleteParticipant,
     ],
@@ -1140,19 +1148,16 @@ const NewChat = props => {
 
   const onCreateConversationInFolder = useCallback(
     folder => {
-      if (isStreaming || folder?.isNew) return;
+      if (isStreaming || folder?.isNew || folder?.owner_id != userId) return;
       startNewConversation(folder.id);
     },
-    [isStreaming, startNewConversation],
+    [isStreaming, startNewConversation, userId],
   );
 
   useEffect(() => {
     if (isCreatingConversation && !activeConversation?.isNew) {
       if (isStreaming) boxRef.current?.stopAll?.();
-      const parentFolder = activeConversation?.folder_id
-        ? folders.find(f => f.id === activeConversation.folder_id)
-        : null;
-      startNewConversation(parentFolder?.id ?? null);
+      startNewConversation();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isCreatingConversation, activeConversation?.isNew]);
@@ -1384,6 +1389,7 @@ const NewChat = props => {
                 onCloseAgentEditor={handleCloseAgentEditor}
                 onCreateAgent={onCreateAgent}
                 onCreatePipeline={onCreatePipeline}
+                onCreateSkill={onCreateSkill}
                 onCreateToolkit={onCreateToolkit}
                 onAddNewUsers={onAddNewUsers}
                 ref={newConversationViewRef}
@@ -1498,6 +1504,8 @@ const NewChat = props => {
                 handleSkillSettingsChange={handleSkillSettingsChange}
                 isNewConversation={!!activeConversation?.isNew}
                 onCloseSkillEditor={onCloseSkillEditor}
+                isSkillCreateMode={isSkillCreateMode}
+                onSkillCreated={onSkillCreated}
                 // Project context
                 isEditingProjectContext={isEditingProjectContext}
                 onCloseProjectContextEditor={onCloseProjectContextEditor}

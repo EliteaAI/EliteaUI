@@ -1,4 +1,4 @@
-export { default as CommonInterruptSettings } from './CommonInterruptSettings';
+export { default as CommonNodeSettings } from './CommonNodeSettings';
 export { default as ConnectionDropdown } from './ConnectionDropdown';
 export { default as EditCellInput } from './EditCellInput';
 export { default as EditCellTypeSelect } from './EditCellTypeSelect';

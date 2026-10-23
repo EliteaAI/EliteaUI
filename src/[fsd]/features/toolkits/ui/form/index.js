@@ -9,6 +9,7 @@ export {
   EmptyMcpTools,
   ArrayFieldInput,
   SecretHeadersInput,
+  CheckboxListInput,
 } from './tool-base';
 export { default as ToolCustom } from './ToolCustom';
 export { default as ToolFormContainer } from './ToolFormContainer';

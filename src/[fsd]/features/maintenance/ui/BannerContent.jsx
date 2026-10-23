@@ -64,7 +64,7 @@ const ROOT_STYLES = {
   [BANNER_CONTENT_LAYOUT.side]: {
     display: 'flex',
     alignItems: 'center',
-    gap: '1.25rem',
+    gap: '1rem',
     width: '100%',
     minWidth: 0,
   },
