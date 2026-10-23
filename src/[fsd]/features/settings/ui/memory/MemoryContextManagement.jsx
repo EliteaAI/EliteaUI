@@ -79,7 +79,7 @@ const MemoryContextManagement = memo(props => {
                   <Typography variant="bodySmall">
                     {userWindowMode
                       ? 'Default for your new chats. Each chat can switch between Balanced and Full.'
-                      : `Follows the project default (${projectModeLabel}). Pick a mode to use it for your new chats.`}
+                      : `Follows the default (${projectModeLabel}). Pick a mode to use it for your new chats.`}
                   </Typography>
                 </Box>
                 {userWindowMode && (
@@ -88,7 +88,7 @@ const MemoryContextManagement = memo(props => {
                     onClick={handleUseProjectDefault}
                     data-testid="memory-context-window-mode-reset"
                   >
-                    Use project default
+                    Reset to default
                   </Button.BaseBtn>
                 )}
               </Box>

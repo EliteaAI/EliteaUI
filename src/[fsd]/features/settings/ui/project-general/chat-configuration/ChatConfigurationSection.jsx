@@ -16,7 +16,6 @@ import useNavBlocker from '@/hooks/useNavBlocker';
 import AutoRoutingSettings from './AutoRoutingSettings';
 import ChatTemplateEditor from './ChatTemplateEditor';
 import ChatTemplateList from './ChatTemplateList';
-import ContextWindowSettings from './ContextWindowSettings';
 import MidturnInjection from './MidturnInjection';
 
 const ChatConfigurationSection = memo(() => {
@@ -115,8 +114,6 @@ const ChatConfigurationSection = memo(() => {
       {isMidturnAvailable && <SettingsFormProvider FormContent={MidturnInjection} />}
 
       <AutoRoutingSettings />
-
-      <ContextWindowSettings />
 
       <Modal.BaseModal
         open={!!templateToDelete}
