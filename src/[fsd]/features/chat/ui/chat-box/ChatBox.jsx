@@ -20,6 +20,7 @@ import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version';
 import { useSocket } from '@/[fsd]/features/auth/lib/hooks';
 import { SelectedChatModelContext } from '@/[fsd]/features/chat/lib/context/SelectedChatModelContext';
 import * as ChatHelpers from '@/[fsd]/features/chat/lib/helpers/chat.helpers';
+import { applyInputGuardrailBlocked } from '@/[fsd]/features/chat/lib/helpers/chatSocket.helpers.js';
 import { buildEntityParticipant } from '@/[fsd]/features/chat/lib/helpers/entityParticipant.helpers.js';
 import {
   actionBelongsToInvocationSet,
@@ -62,6 +63,7 @@ import {
   ChatStatusPill,
   SlashSuggestionList,
   VoiceMiniPlayer,
+  WebSearchBudgetWarning,
 } from '@/[fsd]/features/chat/ui';
 import { ChatMessageList } from '@/[fsd]/features/chat/ui/chat-box';
 import { ScheduleRunNotice } from '@/[fsd]/features/chat/ui/schedule-run-notice';
@@ -73,7 +75,11 @@ import { UserMentionList } from '@/[fsd]/features/chat/ui/user-mention-list';
 import { CHAT_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours';
 import { MentionSkillList } from '@/[fsd]/features/skill';
 import { useDeleteSkillMutation } from '@/[fsd]/features/skill/api';
-import { LLMSettingsConstants, MentionConstants } from '@/[fsd]/shared/lib/constants';
+import {
+  InputGuardrailConstants,
+  LLMSettingsConstants,
+  MentionConstants,
+} from '@/[fsd]/shared/lib/constants';
 import { SocketContext } from '@/[fsd]/shared/lib/context';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import {
@@ -173,6 +179,7 @@ const ChatBox = memo(
       showWebhookSecret = false,
       onSend = () => true,
       inputPlaceholder = '',
+      sendBlockedReason = '',
 
       // For pipeline running
       onRcvAgentEvent,
@@ -196,6 +203,7 @@ const ChatBox = memo(
       // Participant management (for PlusChatButton submenus)
       onCreateAgent,
       onCreatePipeline,
+      onCreateSkill,
       onCreateToolkit,
       onDeleteParticipant,
 
@@ -1430,6 +1438,23 @@ const ChatBox = memo(
           projectId,
           id: uuid,
         });
+        if (regenerateError?.data?.error === 'input_guardrail_blocked') {
+          // Nothing was stored or sent; settle the answer with the block card (#6886)
+          const { categories, rules, message_key, message } = regenerateError.data;
+          setChatHistory(prevMessages =>
+            applyInputGuardrailBlocked(prevMessages, {
+              messageId: uuid,
+              verdict: {
+                action: InputGuardrailConstants.INPUT_GUARDRAIL_ACTIONS.BLOCK,
+                categories,
+                rules,
+                message_key,
+              },
+              message,
+            }),
+          );
+          return;
+        }
         if (regenerateError) {
           const errorMessage = buildErrorMessage(regenerateError) || 'Regeneration Failed. Please try again.';
           toastError(errorMessage);
@@ -2039,6 +2064,9 @@ const ChatBox = memo(
               isSending: false,
               requiresConfirmation: undefined,
               exception: undefined,
+              inputGuardrail: undefined,
+              // Kept so a resume the input guardrail refuses can put the pause back
+              hitlResumeSnapshot: { hitlInterrupts: interrupts },
               hitlInterrupt: undefined,
               hitlInterrupts: undefined,
               resumingAgentPaths: undefined,
@@ -2097,6 +2125,10 @@ const ChatBox = memo(
             isSending: false,
             requiresConfirmation: undefined,
             exception: undefined,
+            inputGuardrail: undefined,
+            // The interrupts are cleared above for a non-parallel resume; a refusal by the
+            // input guardrail needs them back (applyInputGuardrailBlocked)
+            hitlResumeSnapshot: isParallel ? undefined : { hitlInterrupts: interrupts },
             // A partial root resume keeps sibling cards mounted while the single
             // worker checkpoint advances. Only the selected/queued cards are
             // disabled; untouched siblings stay independently actionable.
@@ -2273,16 +2305,31 @@ const ChatBox = memo(
             userInput: text,
             injectionId,
           }).unwrap();
-        } catch {
+        } catch (error) {
+          pendingInjectionsRef.current.delete(injectionId);
+          setPendingInjections(prev => prev.filter(item => item.id !== injectionId));
+          // The input guardrail refused it (#6886). Re-sending as a normal message would
+          // only be refused again, so hand the text back for the user to fix instead.
+          if (error?.data?.error === 'input_guardrail_blocked') {
+            chatInput.current?.setValue(text);
+            toastError(error.data.message);
+            return;
+          }
           // The turn may have ended between enabling the control and sending (409),
           // or the text may be over the size cap (400). Either way it was never
           // delivered, so fall back to a normal message.
-          pendingInjectionsRef.current.delete(injectionId);
-          setPendingInjections(prev => prev.filter(item => item.id !== injectionId));
           return onPredictStreamRef.current?.(text);
         }
       },
-      [activeConversation?.uuid, injectMessage, onClearAttachments, projectId, resetSlash, stopTTS],
+      [
+        activeConversation?.uuid,
+        injectMessage,
+        onClearAttachments,
+        projectId,
+        resetSlash,
+        stopTTS,
+        toastError,
+      ],
     );
 
     const {
@@ -2407,6 +2454,8 @@ const ChatBox = memo(
             return {
               ...item,
               ...(textUpdate ? { content: textUpdate.content } : {}),
+              // Re-set by the notice event when the edited text is flagged again
+              ...(textUpdate ? { inputGuardrail: undefined } : {}),
               message_items: [
                 ...(item.message_items || [])
                   .filter(mi => mi.item_type !== 'attachment_message')
@@ -2702,10 +2751,8 @@ const ChatBox = memo(
             const metaResult = await conversationEdit({
               projectId,
               id: activeConversation.id,
-              meta: {
-                ...(activeConversation.meta || {}),
-                steps_limit,
-              },
+              // The server merges meta keys; resending the local copy would revert newer server-side changes
+              meta: { steps_limit },
             });
             if (metaResult.error) {
               toastError('Failed to update steps limit: ' + buildErrorMessage(metaResult.error));
@@ -2725,7 +2772,6 @@ const ChatBox = memo(
         isAgentsPage,
         onSetLLMSettings,
         activeConversation?.id,
-        activeConversation?.meta,
         setUnsavedLLMSettings,
         selectedModel,
         updateChatLlmSettings,
@@ -2966,9 +3012,11 @@ const ChatBox = memo(
         (isStreamingNow && !isInjectable) ||
         isActiveParticipantBroken ||
         isActiveSkillUnavailable ||
-        isReadOnly,
+        isReadOnly ||
+        Boolean(sendBlockedReason),
       [
         isReadOnly,
+        sendBlockedReason,
         isLoadingConversation,
         isProcessingSymbols,
         isFetchingParticipant,
@@ -3109,6 +3157,10 @@ const ChatBox = memo(
                 onDismiss={budgetWarning.dismiss}
               />
             )}
+            <WebSearchBudgetWarning
+              projectId={projectId}
+              internalTools={activeConversation?.meta?.internal_tools}
+            />
             <ChatStatusPill
               isRunning={(isStreamingNow || isStreaming) && statusSource?.isInterrupt === false}
               isInterrupt={statusSource?.isInterrupt === true && !isReadOnly}
@@ -3131,7 +3183,7 @@ const ChatBox = memo(
               onNormalKeyDown={combinedKeyDown}
               onInputChange={combinedInputChange}
               shouldHandleEnter
-              tooltipOfSendButton=""
+              tooltipOfSendButton={sendBlockedReason}
               onShowParticipantsList={onShowParticipantsList}
               selectedVersionId={activeParticipant?.entity_settings?.version_id}
               onSelectVersion={onSelectVersion}
@@ -3191,6 +3243,7 @@ const ChatBox = memo(
               onSelectParticipant={onSelectThisParticipant}
               onCreateAgent={onCreateAgent}
               onCreatePipeline={onCreatePipeline}
+              onCreateSkill={onCreateSkill}
               onCreateToolkit={onCreateToolkit}
               onDeleteParticipant={onDeleteParticipant}
               participants={activeConversation?.participants || []}

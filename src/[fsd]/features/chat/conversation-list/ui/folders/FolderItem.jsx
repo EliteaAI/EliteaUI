@@ -95,13 +95,13 @@ const FolderItem = memo(props => {
           <ChatIcon
             sx={{ fontSize: '1rem' }}
             fill={
-              checkPermission(PERMISSIONS.chat.create)
+              userId == owner_id && checkPermission(PERMISSIONS.chat.create)
                 ? theme.palette.icon.default
                 : theme.palette.icon.disabled
             }
           />
         ),
-        disabled: !checkPermission(PERMISSIONS.chat.create) || !!folder.isNew,
+        disabled: userId != owner_id || !checkPermission(PERMISSIONS.chat.create) || !!folder.isNew,
         onClick: handleCreateConversationInFolder,
       },
       {

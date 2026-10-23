@@ -10,7 +10,12 @@ const { GA_EVENT_NAMES, GA_EVENT_PARAMS } = AnalyticConstants;
  * Hook for managing pipeline creation workflow in chat context
  * Similar to useAgentCreation but for pipelines
  */
-const usePipelineCreation = ({ onPipelineEditorCreated, addNewParticipants, onSetActiveParticipant }) => {
+const usePipelineCreation = ({
+  projectId,
+  onPipelineEditorCreated,
+  addNewParticipants,
+  onSetActiveParticipant,
+}) => {
   const trackEvent = useTrackEvent();
   const onPipelineCreated = useCallback(
     createdPipeline => {
@@ -32,6 +37,7 @@ const usePipelineCreation = ({ onPipelineEditorCreated, addNewParticipants, onSe
         entity_meta: {
           ...createdPipeline.entity_meta,
           id: createdPipeline.id,
+          project_id: createdPipeline.project_id ?? projectId,
         },
         meta: {
           ...createdPipeline.meta,
@@ -59,7 +65,7 @@ const usePipelineCreation = ({ onPipelineEditorCreated, addNewParticipants, onSe
         onPipelineEditorCreated(pipelineParticipant);
       }
     },
-    [onPipelineEditorCreated, addNewParticipants, onSetActiveParticipant, trackEvent],
+    [projectId, onPipelineEditorCreated, addNewParticipants, onSetActiveParticipant, trackEvent],
   );
 
   return {
