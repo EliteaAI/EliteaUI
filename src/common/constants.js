@@ -40,8 +40,6 @@ export const MISSING_ENVS = [
   .filter(item => item.value === null || item.value === undefined)
   .map(item => item.key);
 
-export const MIN_LARGE_WINDOW_WIDTH = 1200;
-
 export const INITIAL_CARD_DISPLAY_COUNT = {
   LARGE_SCREEN: 8,
   DEFAULT: 6,
@@ -69,7 +67,7 @@ export const DEFAULT_PAGE_TOP_K = 1;
 export const TAG_NAME_MAX_LENGTH = 48;
 export const MAX_NAME_LENGTH = 32;
 export const MAX_DESCRIPTION_LENGTH = 2304;
-export const MAX_INSTRUCTIONS_LENGTH = 5000;
+export const MAX_INSTRUCTIONS_LENGTH = 50000;
 export const MAX_VARIABLES_LENGTH = 768;
 export const MAX_STEP_LIMIT = 999;
 export const MIN_STEP_LIMIT = 0;
@@ -185,6 +183,9 @@ export const SocketMessageType = {
   Freeform: 'freeform',
   Error: 'error',
   LlmError: 'llm_error',
+  InputGuardrailBlocked: 'input_guardrail_blocked',
+  InputGuardrailNotice: 'input_guardrail_notice',
+  AgentInputGuardrail: 'agent_input_guardrail',
   PipelineFinish: 'pipeline_finish',
   AgentThinkingStep: 'agent_thinking_step',
   AgentThinkingStepUpdate: 'agent_thinking_step_update',
@@ -536,6 +537,7 @@ export const PERMISSIONS = {
   chat: {
     list: 'models.chat.conversations.list',
     create: 'models.chat.conversations.create',
+    edit: 'models.chat.conversation.edit',
     canvas: {
       create: 'models.chat.canvas.create',
       update: 'models.chat.canvas.update',
@@ -1103,6 +1105,10 @@ export const NotificationType = {
   ScheduleDisabled: 'schedule_disabled',
   ScheduleEditedByAdmin: 'schedule_edited_by_admin',
   ScheduleOwnerChanged: 'schedule_owner_changed',
+  ToolSpendThresholdReached: 'tool_spend_threshold_reached',
+  ToolSpendLimitReached: 'tool_spend_limit_reached',
+  MemberToolSpendThresholdReached: 'member_tool_spend_threshold_reached',
+  MemberToolSpendLimitReached: 'member_tool_spend_limit_reached',
 };
 
 export const dummyConversation = { name: '', chat_history: [], participants: [], is_private: true };

@@ -35,6 +35,13 @@ const CornerBanner = memo(props => {
       data-testid="platform-banner-corner"
     >
       <MaintenaceTipsContainer sx={styles.frame}>
+        <Box sx={styles.body}>
+          <BannerContent
+            banner={banner}
+            styleTokens={styleTokens}
+            layout={BANNER_CONTENT_LAYOUT.side}
+          />
+        </Box>
         {banner.dismissible && (
           <Button.BaseBtn
             variant={BUTTON_VARIANTS.tertiary}
@@ -45,13 +52,6 @@ const CornerBanner = memo(props => {
             data-testid="platform-banner-close"
           />
         )}
-        <Box sx={styles.body}>
-          <BannerContent
-            banner={banner}
-            styleTokens={styleTokens}
-            layout={BANNER_CONTENT_LAYOUT.side}
-          />
-        </Box>
       </MaintenaceTipsContainer>
     </Box>
   );
@@ -66,27 +66,33 @@ const cornerBannerStyles = styleTokens => ({
     bottom: '1.5rem',
     right: '1.5rem',
     zIndex: 1300,
-    width: '26rem',
+    width: '26.875rem',
     maxWidth: 'calc(100vw - 3rem)',
   },
   frame: {
+    borderRadius: '1rem',
+    '& > div': {
+      borderRadius: '0.9375rem',
+    },
     '& > div > div': {
-      position: 'relative',
-      alignItems: 'stretch !important',
-      padding: '1.5rem 2.5rem 1.5rem 1.5rem',
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: '1rem',
+      borderRadius: '0.9375rem',
+      padding: '1rem 1.5rem',
       background: styleTokens.backgroundColor,
     },
   },
   body: {
     display: 'flex',
     alignItems: 'center',
+    flex: 1,
+    minWidth: 0,
     overflowY: 'auto',
     maxHeight: '50vh',
   },
   closeButton: {
-    position: 'absolute',
-    top: '0.5rem',
-    right: '0.5rem',
+    flexShrink: 0,
   },
   closeIcon: { fontSize: '1rem' },
 });
