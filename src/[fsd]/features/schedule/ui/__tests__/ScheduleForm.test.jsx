@@ -500,6 +500,36 @@ describe('ScheduleForm EL-7011', () => {
     await waitFor(() => expect(screen.getByTestId('cron-error')).toBeEmptyDOMElement());
   });
 
+  it('R3.4 EL-7011 shows a 400 stop date message for the stop date field and clears it on an edit (BUG-52)', async () => {
+    renderForm({
+      onSubmit: vi.fn().mockRejectedValue({
+        status: 400,
+        data: { field: 'expires_at', error: 'Stop date is in the past' },
+      }),
+      children: ({ setFieldValue, fieldError }) => (
+        <>
+          <button type="button" onClick={() => setFieldValue('expires_at', '2030-01-01')}>
+            Edit stop date
+          </button>
+          <span data-testid="stop-error">{fieldError('expires_at')}</span>
+        </>
+      ),
+    });
+    pickEntity(7);
+    typePrompt('Hi');
+
+    await save();
+
+    await waitFor(() =>
+      expect(screen.getByTestId('stop-error')).toHaveTextContent('Stop date is in the past'),
+    );
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit stop date' }));
+
+    await waitFor(() => expect(screen.getByTestId('stop-error')).toBeEmptyDOMElement());
+  });
+
   it('R6.1 EL-7011 keeps Save from sending without a name, an entity and a version', async () => {
     const { onSubmit } = renderForm({ initialValues: { ...INITIAL, name: '' } });
     typePrompt('Hi');
