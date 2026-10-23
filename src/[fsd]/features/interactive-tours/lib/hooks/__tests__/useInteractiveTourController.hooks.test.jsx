@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { Provider } from 'react-redux';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
 import { act, cleanup, renderHook } from '@testing-library/react';
@@ -17,6 +17,26 @@ vi.mock('@/slices/settings', async importOriginal => {
 });
 
 const SKILLS_LIST = 'models.applications.skills.list';
+
+// Node 22 experimental Web Storage defines localStorage as undefined when --localstorage-file is
+// not provided, which can shadow jsdom's implementation and crash the hook's localStorage.setItem.
+beforeEach(() => {
+  vi.stubGlobal('localStorage', {
+    store: {},
+    getItem(key) {
+      return this.store[key] ?? null;
+    },
+    setItem(key, value) {
+      this.store[key] = String(value);
+    },
+    removeItem(key) {
+      delete this.store[key];
+    },
+    clear() {
+      this.store = {};
+    },
+  });
+});
 
 const startAnalyticsTour = async (permissions, { projectId = 2, publicPermissions = [] } = {}) => {
   const state = Object.freeze({
@@ -37,7 +57,10 @@ const startAnalyticsTour = async (permissions, { projectId = 2, publicPermission
 };
 
 describe('analytics tour steps', () => {
-  afterEach(() => cleanup());
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    cleanup();
+  });
 
   it('visits the Skills tab only for a user who can list skills', async () => {
     const withSkills = await startAnalyticsTour([SKILLS_LIST]);

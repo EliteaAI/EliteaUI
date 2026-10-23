@@ -2,6 +2,8 @@ import { memo, useMemo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
+import { formatApproxCost, formatTokens } from '@/[fsd]/widgets/context-budget/lib/utils';
+
 import SummaryDetailsButton from './SummaryDetailsButton';
 
 /**
@@ -25,13 +27,22 @@ const ContextBudgetStatsDisplay = memo(props => {
     valueStyle = {},
     rowStyle = {},
     showTokens = false,
+    showTotals = false,
     conversationId,
   } = props;
 
   // Map isCompact prop to appropriate Typography variant
   const typographyVariant = isCompact ? 'bodySmall2' : 'labelSmall';
 
-  const { messageGroups, summariesGenerated, tokensDisplay, utilizationPercentage, maxTokens } = stats;
+  const {
+    messageGroups,
+    summariesGenerated,
+    tokensDisplay,
+    utilizationPercentage,
+    maxTokens,
+    windowMode,
+    chatUsage,
+  } = stats;
 
   const statItems = useMemo(() => {
     // If maxTokens is 0, only show messages (context manager disabled)
@@ -53,8 +64,27 @@ const ContextBudgetStatsDisplay = memo(props => {
       { label: 'Summaries', value: summariesGenerated, isSummaries: true },
     );
 
+    if (showTotals) {
+      items.push(
+        { label: 'Window', value: windowMode === 'full' ? 'Full' : 'Balanced' },
+        { label: 'Chat input tokens', value: formatTokens(chatUsage?.input_tokens) },
+        { label: 'Chat output tokens', value: formatTokens(chatUsage?.output_tokens) },
+        { label: 'Approx. cost', value: formatApproxCost(chatUsage).text },
+      );
+    }
+
     return items;
-  }, [maxTokens, messageGroups, showTokens, tokensDisplay, utilizationPercentage, summariesGenerated]);
+  }, [
+    maxTokens,
+    messageGroups,
+    showTokens,
+    showTotals,
+    tokensDisplay,
+    utilizationPercentage,
+    summariesGenerated,
+    windowMode,
+    chatUsage,
+  ]);
 
   return (
     <>
