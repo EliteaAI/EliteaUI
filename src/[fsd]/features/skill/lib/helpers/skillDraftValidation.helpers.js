@@ -1,9 +1,12 @@
-import { MAX_DESCRIPTION_LENGTH, MAX_INSTRUCTIONS_LENGTH } from '@/common/constants.js';
+import { MAX_DESCRIPTION_LENGTH } from '@/common/constants.js';
 
 const SKILL_NAME_MAX_LENGTH = 64;
 const SKILL_NAME_RE = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/;
 
-export const validateSkillDraft = draft => {
+export const instructionsTooLongMessage = (length, maxLength) =>
+  `Instructions are ${length} characters long. Maximum allowed is ${maxLength} characters.`;
+
+export const validateSkillDraft = (draft, maxInstructionsLength) => {
   const errors = {};
   const name = (draft.name || '').trim();
   if (!name) errors.name = 'Name is required';
@@ -22,8 +25,8 @@ export const validateSkillDraft = draft => {
 
   const instructions = (draft.instructions || '').trim();
   if (!instructions) errors.instructions = 'Instructions are required';
-  else if (instructions.length > MAX_INSTRUCTIONS_LENGTH)
-    errors.instructions = `Instructions must be ${MAX_INSTRUCTIONS_LENGTH} characters or less`;
+  else if (instructions.length > maxInstructionsLength)
+    errors.instructions = instructionsTooLongMessage(instructions.length, maxInstructionsLength);
 
   return errors;
 };

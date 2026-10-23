@@ -7,16 +7,15 @@ import {
   PROJECT_CONTEXT_MAX_LEN,
 } from '@/[fsd]/features/settings/lib/constants/projectContext.constants';
 import DrawerPageHeader from '@/[fsd]/features/settings/ui/drawer-page/DrawerPageHeader';
+import { MarkdownConstants } from '@/[fsd]/shared/lib/constants';
 import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { Banner, Button, Field, Input } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { INPUT_VARIANTS } from '@/[fsd]/shared/ui/input';
 import Markdown from '@/[fsd]/shared/ui/markdown';
-import TabGroupButton from '@/[fsd]/shared/ui/tab-group-button/TabGroupButton';
+import { MarkdownViewToggle } from '@/[fsd]/shared/ui/tab-group-button';
 import { useUpdateProjectContextMutation } from '@/api/projectContext';
-import CodeIcon from '@/assets/code-icon.svg?react';
 import ImportIcon from '@/assets/import-icon.svg?react';
-import OpenEyeIcon from '@/assets/open-eye-icon.svg?react';
 import CopyIcon from '@/components/Icons/CopyIcon';
 import useNavBlocker from '@/hooks/useNavBlocker';
 import { markdown } from '@codemirror/lang-markdown';
@@ -26,6 +25,8 @@ import GenerateProjectContextModal from './GenerateProjectContextModal';
 import AIEditProjectContextButton from './ai-edit/AIEditProjectContextButton';
 
 const MAX_CHARS = PROJECT_CONTEXT_MAX_LEN;
+
+const { MARKDOWN_VIEW_MODES } = MarkdownConstants;
 
 const ProjectContextEditor = memo(props => {
   const {
@@ -52,7 +53,7 @@ const ProjectContextEditor = memo(props => {
   const [activationDescription, setActivationDescription] = useState(
     serverData?.activation_description ?? '',
   );
-  const [mode, setMode] = useState('edit');
+  const [mode, setMode] = useState(MARKDOWN_VIEW_MODES.edit);
   const [isEditorFocused, setIsEditorFocused] = useState(false);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
 
@@ -90,22 +91,6 @@ const ProjectContextEditor = memo(props => {
 
   const styles = getStyles(limitReached, isEditorFocused);
 
-  const modeButtons = useMemo(
-    () => [
-      {
-        value: 'edit',
-        icon: theme => <CodeIcon fill={theme.palette.icon.secondary} />,
-        tooltip: 'Edit mode',
-      },
-      {
-        value: 'preview',
-        icon: theme => <OpenEyeIcon fill={theme.palette.icon.secondary} />,
-        tooltip: 'Preview mode',
-      },
-    ],
-    [],
-  );
-
   const handleContentChange = useCallback(
     val => {
       setContent(val);
@@ -121,10 +106,6 @@ const ProjectContextEditor = memo(props => {
     },
     [serverData?.activation_description],
   );
-
-  const handleModeChange = useCallback((_e, newMode) => {
-    setMode(newMode);
-  }, []);
 
   const handleAIGenerated = useCallback(draft => {
     setContent(draft.project_background || '');
@@ -350,11 +331,9 @@ const ProjectContextEditor = memo(props => {
           />
         </Box>
         <Box sx={styles.editorHeader}>
-          <TabGroupButton
+          <MarkdownViewToggle
             value={mode}
-            onChange={handleModeChange}
-            size="small"
-            arrayBtn={modeButtons}
+            onChange={setMode}
           />
           <Box sx={styles.toolbar}>
             {canEdit && (
@@ -402,7 +381,7 @@ const ProjectContextEditor = memo(props => {
           </Box>
         </Box>
 
-        {mode === 'edit' ? (
+        {mode === MARKDOWN_VIEW_MODES.edit ? (
           <Box
             sx={styles.editorWrapper}
             onFocus={handleEditorFocus}
