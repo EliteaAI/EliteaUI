@@ -45,7 +45,8 @@ const EntityScheduleCard = memo(props => {
   const lastRun = row.last_run ? formatRunStarted(row.last_run) : 'Never run';
   const nextRun = row.enabled ? (row.next_run && formatRunStarted(row.next_run)) || '-' : 'Paused';
   // The list API sends only the user's own rows to a non-admin, so another owner shows for admins only
-  const owner = row.owner?.id === currentUserId ? 'You' : row.owner?.name;
+  const isYou = row.owner?.id != null && row.owner.id === currentUserId;
+  const owner = isYou ? 'You' : row.owner?.name;
   const testId = `${entityType}-schedule-card`;
 
   const styles = entityScheduleCardStyles();
