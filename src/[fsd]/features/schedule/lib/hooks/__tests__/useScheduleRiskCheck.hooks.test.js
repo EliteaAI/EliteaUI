@@ -23,9 +23,11 @@ const CLEAR = {
 };
 const SENSITIVE = [{ code: 'sensitive_action', toolkit: 'Outlook', tool: 'send_email' }];
 const answer = data => ({ unwrap: () => Promise.resolve(data) });
-const failure = () => ({ unwrap: () => Promise.reject({ status: 500 }) });
+const failure = () => ({ unwrap: () => Promise.reject(Object.assign(new Error('Request failed'), { status: 500 })) });
 
-const setup = (initial = { entityType: 'agent', applicationId: 7, versionId: 71 }) =>
+const DEFAULT_INITIAL = { entityType: 'agent', applicationId: 7, versionId: 71 };
+
+const setup = (initial = DEFAULT_INITIAL) =>
   renderHook(args => useScheduleRiskCheck({ projectId: 5, ...args }), { initialProps: initial });
 
 const setVisibility = state => {
