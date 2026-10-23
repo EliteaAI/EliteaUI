@@ -1,9 +1,9 @@
 import { useSelector } from 'react-redux';
 
+import { useIsFrom } from '@/[fsd]/shared/lib/hooks';
 import { useApplicationTrendingAuthorsListQuery, useTrendingAuthorsListQuery } from '@/api/trendingAuthor';
 import { PUBLIC_PROJECT_ID } from '@/common/constants';
 import PeopleList from '@/components/PeopleList';
-import { useIsFrom } from '@/hooks/useIsFromSpecificPageHooks';
 import RouteDefinitions from '@/routes';
 
 const TrendingAuthors = () => {
