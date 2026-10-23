@@ -5,11 +5,14 @@ import { addEdge, reconnectEdge, useReactFlow } from '@xyflow/react';
 
 import { PipelineNodeTypes } from '../constants/flowEditor.constants';
 
+const ADD_FROM_HANDLE_OFFSET_Y = 120;
+
 export const useIncompleteEdge = ({ onConnect, onNodeCreateAtPosition, yamlJsonObjectRef, disabled }) => {
   const reactFlowInstance = useReactFlow();
-  const { setNodes, setEdges, screenToFlowPosition } = reactFlowInstance;
+  const { setNodes, setEdges, screenToFlowPosition, getInternalNode } = reactFlowInstance;
   const [showConnectionDropdown, setShowConnectionDropdown] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState(null);
+  const [dropdownAnchorEl, setDropdownAnchorEl] = useState(null);
   const [currentGhostNode, setCurrentGhostNode] = useState(null);
   const [sourceNodeId, setSourceNodeId] = useState(null);
   const [sourceHandle, setSourceHandle] = useState(null);
@@ -29,28 +32,19 @@ export const useIncompleteEdge = ({ onConnect, onNodeCreateAtPosition, yamlJsonO
   const resetDropdownState = useCallback(() => {
     setShowConnectionDropdown(false);
     setDropdownPosition(null);
+    setDropdownAnchorEl(null);
     setCurrentGhostNode(null);
     setSourceNodeId(null);
     setSourceHandle(null);
   }, []);
 
-  const onConnectEnd = (event, connectionState) => {
-    if (connectionState.isValid || connectionState.fromHandle.type === 'target' || disabled) {
-      return;
-    }
-
-    const fromNodeId = connectionState.fromNode.id;
-    const { clientX, clientY } = 'changedTouches' in event ? event.changedTouches[0] : event;
-
-    // Regular incomplete connection logic
+  // Adds a dangling edge from the source handle to a ghost node and opens the connection dropdown
+  const startIncompleteEdge = ({ fromNodeId, fromHandleId, flowPosition, screenPosition, anchor }) => {
     const id = `ghost-${Date.now()}`;
     const newNode = {
       id,
       type: 'ghost',
-      position: screenToFlowPosition({
-        x: clientX,
-        y: clientY,
-      }),
+      position: flowPosition,
       data: {},
       draggable: false,
       selectable: false,
@@ -60,7 +54,7 @@ export const useIncompleteEdge = ({ onConnect, onNodeCreateAtPosition, yamlJsonO
     const newEdge = {
       id: `${fromNodeId}->${id}`,
       source: fromNodeId,
-      sourceHandle: connectionState.fromHandle?.id || null,
+      sourceHandle: fromHandleId || null,
       target: id,
       reconnectable: 'target',
       type: 'custom',
@@ -69,12 +63,45 @@ export const useIncompleteEdge = ({ onConnect, onNodeCreateAtPosition, yamlJsonO
     setNodes(nodes => nodes.concat(newNode));
     setEdges(edges => addEdge(newEdge, edges));
 
-    // Show connection dropdown at ghost node position
     setCurrentGhostNode(newNode);
     setSourceNodeId(fromNodeId);
-    setSourceHandle(connectionState.fromHandle?.id || null);
-    setDropdownPosition({ x: clientX, y: clientY });
+    setSourceHandle(fromHandleId || null);
+    setDropdownPosition(screenPosition || null);
+    setDropdownAnchorEl(anchor || null);
     setShowConnectionDropdown(true);
+  };
+
+  const onConnectEnd = (event, connectionState) => {
+    if (connectionState.isValid || connectionState.fromHandle.type === 'target' || disabled) {
+      return;
+    }
+
+    const { clientX, clientY } = 'changedTouches' in event ? event.changedTouches[0] : event;
+
+    startIncompleteEdge({
+      fromNodeId: connectionState.fromNode.id,
+      fromHandleId: connectionState.fromHandle?.id,
+      flowPosition: screenToFlowPosition({ x: clientX, y: clientY }),
+      screenPosition: { x: clientX, y: clientY },
+    });
+  };
+
+  // "+" under a node's Output: same dropdown, anchored to the "+", new node placed below the source
+  const openFromHandle = ({ nodeId, handleId, anchorEl }) => {
+    if (disabled || showConnectionDropdown) return;
+
+    const sourceNode = getInternalNode(nodeId);
+    if (!sourceNode) return;
+
+    const { x, y } = sourceNode.internals?.positionAbsolute || sourceNode.position;
+    const height = sourceNode.measured?.height || 0;
+
+    startIncompleteEdge({
+      fromNodeId: nodeId,
+      fromHandleId: handleId,
+      flowPosition: { x, y: y + height + ADD_FROM_HANDLE_OFFSET_Y },
+      anchor: anchorEl,
+    });
   };
 
   const onReconnect = (oldEdge, newConnection) => {
@@ -229,11 +256,13 @@ export const useIncompleteEdge = ({ onConnect, onNodeCreateAtPosition, yamlJsonO
 
   return {
     onConnectEnd,
+    openFromHandle,
     onReconnect,
     onReconnectEnd,
     // Dropdown related state and handlers
     showConnectionDropdown,
     dropdownPosition,
+    dropdownAnchorEl,
     currentGhostNode,
     handleDropdownClose,
     handleNodeSelect,

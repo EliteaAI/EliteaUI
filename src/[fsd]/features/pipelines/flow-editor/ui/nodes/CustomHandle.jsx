@@ -1,9 +1,10 @@
-import { memo, useMemo } from 'react';
+import { memo, useCallback, useContext, useMemo } from 'react';
 
 import { Box, Typography, useTheme } from '@mui/material';
 
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { useNodeCardContext } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
+import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
 import PlusIcon from '@/assets/plus-icon.svg?react';
 import { Handle, Position, useEdges, useNodeId, useReactFlow } from '@xyflow/react';
 
@@ -28,6 +29,18 @@ const CustomHandle = memo(props => {
   // Get isExpanded from NodeCard context (null if not within NodeCard)
   const nodeCardContext = useNodeCardContext();
   const isExpanded = nodeCardContext?.isExpanded;
+  const { onAddFromHandle } = useContext(FlowEditorContext) || {};
+  const canAddFromHandle =
+    type === 'source' && isConnectable && !isRunningPipeline && Boolean(onAddFromHandle);
+
+  const handleAddClick = useCallback(
+    event => {
+      // Keep the handle's edge selection and the node selection out of this click
+      event.stopPropagation();
+      onAddFromHandle({ nodeId, handleId: id || null, anchorEl: event.currentTarget });
+    },
+    [id, nodeId, onAddFromHandle],
+  );
   // Get connected edges for this handle
   const connectedEdges = useMemo(() => {
     return edges.filter(edge => {
@@ -98,6 +111,7 @@ const CustomHandle = memo(props => {
     isConnectedEdgeSelected,
     specifiedStyle,
     isExpanded,
+    canAddFromHandle,
   });
 
   return (
@@ -124,7 +138,11 @@ const CustomHandle = memo(props => {
               {/* Connecting vertical line */}
               <Box sx={styles.verticalLineStyles} />
               {/* Plus icon circle - part of the main handle's connectable area */}
-              <Box sx={styles.plusCircle}>
+              <Box
+                sx={styles.plusCircle}
+                onClick={canAddFromHandle ? handleAddClick : undefined}
+                data-testid={`pipeline-node-add-from-output-${nodeId}${id ? `-${id}` : ''}`}
+              >
                 <PlusIcon style={styles.plusIcon} />
               </Box>
             </>
@@ -144,19 +162,20 @@ const customHandleStyles = ({
   isConnectedEdgeSelected,
   specifiedStyle,
   isExpanded,
+  canAddFromHandle,
 }) => {
-  const borderStyle = isPerforming ? '.125rem dashed' : '.0625rem solid';
-  const borderColor =
-    isPerforming || (!isRunningPipeline && isConnectedEdgeSelected)
-      ? theme.palette.primary.main
-      : theme.palette.components.flowEditor.node.border;
+  const { card } = theme.palette.components.flowEditor;
+  const borderStyle = '.0625rem solid';
+  const borderColor = isPerforming
+    ? card.border.running
+    : !isRunningPipeline && isConnectedEdgeSelected
+      ? card.border.selected
+      : card.handle.border;
 
   // Adjust handle size based on expansion state
   const handleSize = isExpanded === false ? '.75rem' : '1.5rem';
   const handlePadding = isExpanded === false ? '0rem' : '.25rem .75rem';
-  const backgroundColor = isExpanded
-    ? theme.palette.background.default.tertiary
-    : theme.palette.components.flowEditor.node.border;
+  const backgroundColor = isExpanded ? card.handle.background.default : card.handle.background.collapsed;
 
   return {
     handle:
@@ -208,16 +227,17 @@ const customHandleStyles = ({
       width: '1rem',
       height: '1rem',
       borderRadius: '50%',
-      backgroundColor: theme.palette.background.default.tertiary,
+      backgroundColor: card.handle.background.default,
       border: `${borderStyle} ${borderColor}`,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       fontSize: '.625rem',
-      color: theme.palette.text.secondary,
+      color: theme.palette.icon.secondary,
       zIndex: 10,
+      cursor: canAddFromHandle ? 'pointer' : 'inherit',
       '&:hover': {
-        borderColor: theme.palette.primary.main,
+        borderColor: card.border.selected,
         color: theme.palette.primary.main,
       },
     },

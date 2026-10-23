@@ -451,24 +451,60 @@ export const getAllowedNodeTypes = () =>
 export const getToolName = tool =>
   typeof tool === 'string' ? tool : tool.name || tool.description || tool.path;
 
-export const calculatePositionForNewNode = (xStartPos, yStartPos, flowNodes) => {
-  let xPos = xStartPos;
-  let yPos = yStartPos;
-  for (let index = 0; ; index++) {
-    if (
-      !flowNodes.find(
-        node => Math.abs(node.position.x - xPos) < 0.01 && Math.abs(node.position.y - yPos) < 0.01,
-      )
-    ) {
-      break;
-    }
-    xPos += 60;
-    yPos += 60;
-  }
-  return {
-    xPos,
-    yPos,
+const FREE_POSITION_MAX_STEPS = 40;
+
+const getNodeRect = node => ({
+  x: node.position.x,
+  y: node.position.y,
+  width: node.measured?.width ?? FlowEditorConstants.NODE_CARD_WIDTH,
+  height:
+    node.measured?.height ??
+    FlowEditorConstants.NodeHeightMap[node.type] ??
+    FlowEditorConstants.NodeHeightMap[FlowEditorConstants.PipelineNodeTypes.Default],
+});
+
+/**
+ * Finds a top-left position for a new node of `size` inside `viewRect` (flow coordinates)
+ * that keeps `gap` clear of every existing node. Candidates closest to the view centre win.
+ * Falls back to below the lowest node when the view has no free slot.
+ */
+export const findFreeNodePosition = ({ viewRect, nodes = [], size, gap = 40 }) => {
+  const rects = nodes
+    .filter(node => node.type !== FlowEditorConstants.PipelineNodeTypes.Ghost && !node.hidden)
+    .map(getNodeRect);
+
+  const overlaps = (x, y) =>
+    rects.some(
+      rect =>
+        x < rect.x + rect.width + gap &&
+        x + size.width + gap > rect.x &&
+        y < rect.y + rect.height + gap &&
+        y + size.height + gap > rect.y,
+    );
+
+  const centre = {
+    x: viewRect.x + (viewRect.width - size.width) / 2,
+    y: viewRect.y + (viewRect.height - size.height) / 2,
   };
+  const maxX = viewRect.x + viewRect.width - size.width;
+  const maxY = viewRect.y + viewRect.height - size.height;
+  const stepX = Math.max(gap, viewRect.width / FREE_POSITION_MAX_STEPS);
+  const stepY = Math.max(gap, viewRect.height / FREE_POSITION_MAX_STEPS);
+
+  const candidates = [];
+  for (let y = viewRect.y; y <= maxY; y += stepY) {
+    for (let x = viewRect.x; x <= maxX; x += stepX) {
+      candidates.push({ x, y, distance: (x - centre.x) ** 2 + (y - centre.y) ** 2 });
+    }
+  }
+  candidates.unshift({ ...centre, distance: -1 });
+  candidates.sort((a, b) => a.distance - b.distance);
+
+  const free = candidates.find(candidate => !overlaps(candidate.x, candidate.y));
+  if (free) return { x: free.x, y: free.y, isInView: true };
+
+  const bottom = rects.reduce((max, rect) => Math.max(max, rect.y + rect.height), -Infinity);
+  return { x: centre.x, y: bottom + gap, isInView: false };
 };
 
 const getNormalInitialNodeId = (type, nodes = []) => {

@@ -1,41 +1,52 @@
-import { memo, useCallback, useContext, useEffect, useState } from 'react';
+import { memo, useContext, useMemo } from 'react';
 
-import { Box } from '@mui/material';
+import { Box, useTheme } from '@mui/material';
 
-import { NodeHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
+import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
+import { NodeCardHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import NodeBodyContainer from '@/[fsd]/features/pipelines/flow-editor/ui/nodes/base-node/NodeBodyContainer';
 import NodeCardHeader from '@/[fsd]/features/pipelines/flow-editor/ui/nodes/base-node/NodeCardHeader';
 import { TriggerTypeSelector } from '@/[fsd]/features/pipelines/flow-editor/ui/settings';
 import { FlowEditorContext, NodeCardContext } from '@/[fsd]/shared/lib/context';
+import { useStore } from '@xyflow/react';
+
+const selectIsMiniCard = state => NodeCardHelpers.isMiniCardZoom(state.transform[2]);
 
 const NodeCard = memo(props => {
-  const { name, isEntrypoint, children, selected, isConditionNode, handles, isPerforming, type, id } = props;
-  const [isExpanded, setIsExpanded] = useState(true);
+  const { name, isEntrypoint, children, selected, handles, isPerforming, type, id } = props;
+  const theme = useTheme();
   const { isRunningPipeline, expandAll, disabled } = useContext(FlowEditorContext);
+  const isMiniCard = useStore(selectIsMiniCard);
+  const isExpanded = expandAll && !isMiniCard;
 
-  const onExpand = useCallback(newState => {
-    setIsExpanded(newState);
-  }, []);
+  const status = NodeCardHelpers.getNodeCardStatus({ isPerforming });
+  const cardState = { status, selected, isRunningPipeline };
+  const cardContextValue = useMemo(() => ({ isExpanded }), [isExpanded]);
 
-  useEffect(() => {
-    setIsExpanded(expandAll);
-  }, [expandAll]);
-
-  const styles = nodeCardStyles(isExpanded, isPerforming, isRunningPipeline, selected, type);
+  const styles = nodeCardStyles({
+    isExpanded,
+    borderColor: NodeCardHelpers.getNodeCardBorderColor(cardState, theme.palette),
+    boxShadow: NodeCardHelpers.getNodeCardShadow(cardState, theme.palette),
+    hasHover: NodeCardHelpers.hasNodeCardHover(cardState),
+    headerColor: NodeCardHelpers.getNodeCardHeaderColor(type, theme),
+  });
 
   return (
-    <NodeCardContext.Provider value={{ isExpanded }}>
-      <Box sx={styles.container}>
+    <NodeCardContext.Provider value={cardContextValue}>
+      <Box
+        sx={styles.container}
+        data-testid={`pipeline-node-card-${id}`}
+        data-status={status || undefined}
+        data-mini={isMiniCard || undefined}
+      >
         <Box sx={styles.header}>
           <NodeCardHeader
             isEntrypoint={isEntrypoint}
             name={name}
-            isExpanded={isExpanded}
-            onExpand={onExpand}
-            isConditionNode={isConditionNode}
             type={type}
             id={id}
             disabled={disabled}
+            status={status}
           />
         </Box>
         <NodeBodyContainer display={isExpanded ? 'flex' : 'none'}>
@@ -51,34 +62,39 @@ const NodeCard = memo(props => {
 NodeCard.displayName = 'NodeCard';
 
 /** @type {MuiSx} */
-const nodeCardStyles = (isExpanded, isPerforming, isRunningPipeline, selected, type) => ({
+const nodeCardStyles = ({ isExpanded, borderColor, boxShadow, hasHover, headerColor }) => ({
   container: ({ palette }) => ({
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'flex-start',
     alignItems: 'flex-start',
-    width: '29.4375rem',
+    width: `${FlowEditorConstants.NODE_CARD_WIDTH / 16}rem`,
     height: 'auto',
-    borderRadius: '.5rem',
+    padding: isExpanded ? '0 0 1.5rem' : 0,
+    boxSizing: 'border-box',
+    borderRadius: '0.75rem',
     position: 'relative',
-    border: `${isPerforming ? '.125rem dashed' : '.0625rem solid'} ${
-      isPerforming || (!isRunningPipeline && selected)
-        ? palette.primary.main
-        : palette.components.flowEditor.node.border
-    }`,
-    background: palette.background.default.tertiary,
+    border: `0.0625rem solid ${borderColor}`,
+    boxShadow,
+    backgroundColor: palette.components.flowEditor.card.background,
+    transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
+    ...(hasHover && {
+      '&:hover': {
+        borderColor: palette.components.flowEditor.card.border.hover,
+        boxShadow: palette.components.flowEditor.card.shadow.hover,
+      },
+    }),
   }),
   header: ({ palette }) => ({
-    height: '2.75rem',
     display: 'flex',
-    padding: '.5rem 1rem',
-    width: '100%',
-    boxSizing: 'border-box',
     alignItems: 'center',
-    overflow: 'hidden',
-    borderBottom: isExpanded ? `.0625rem solid ${palette.components.flowEditor.node.border}` : 'none',
-    backgroundColor: theme => NodeHelpers.getNodeColor(type, theme),
-    borderRadius: isExpanded ? '.5rem .5rem 0 0' : '.5rem',
+    width: '100%',
+    padding: '0.75rem 1rem',
+    boxSizing: 'border-box',
+    // Card radius minus its 1px border, so the header sits flush inside the card
+    borderRadius: '0.6875rem',
+    borderBottom: isExpanded ? `0.0625rem solid ${palette.components.flowEditor.card.header.border}` : 'none',
+    backgroundColor: headerColor,
   }),
 });
 

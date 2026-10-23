@@ -1,9 +1,9 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { ListItemIcon, ListItemText, Menu, MenuItem, Typography, useTheme } from '@mui/material';
+import { Box, ListItemIcon, ListItemText, Menu, MenuItem, Typography, useTheme } from '@mui/material';
 
-import { NodeHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { NodeTypeSelector } from '@/[fsd]/features/pipelines/flow-editor/ui/add-node';
+import NodeIconTile from '@/[fsd]/features/pipelines/flow-editor/ui/nodes/base-node/NodeIconTile';
 import PlusIcon from '@/components/Icons/PlusIcon';
 
 const POSITION_ANCHOR_ORIGIN = { vertical: 'bottom', horizontal: 'left' };
@@ -35,12 +35,12 @@ const ConnectionDropdown = memo(props => {
   const openView = useMemo(
     () => ({
       anchorPosition: anchorPosition ? { top: anchorPosition.y, left: anchorPosition.x } : undefined,
+      anchorEl,
       targetNodes,
       availableNodeTypes,
-      // With no existing targets, open directly into the node type selector
-      isNodeCreation: forceNodeCreation || showNodeCreation || !targetNodes?.length,
+      isNodeCreation: forceNodeCreation || showNodeCreation,
     }),
-    [anchorPosition, availableNodeTypes, forceNodeCreation, showNodeCreation, targetNodes],
+    [anchorEl, anchorPosition, availableNodeTypes, forceNodeCreation, showNodeCreation, targetNodes],
   );
 
   const lastOpenViewRef = useRef(null);
@@ -66,17 +66,13 @@ const ConnectionDropdown = memo(props => {
     setShowNodeCreation(true);
   }, []);
 
-  const getNodeTypeIcon = nodeType => {
-    return NodeHelpers.getNodeIconByType(nodeType, theme, theme.palette.icon.default);
-  };
-
-  if (!view || (!view.anchorPosition && !anchorEl)) {
+  if (!view || (!view.anchorPosition && !view.anchorEl)) {
     return null;
   }
 
-  const anchorProps = anchorEl
+  const anchorProps = view.anchorEl
     ? {
-        anchorEl,
+        anchorEl: view.anchorEl,
         anchorOrigin: ELEMENT_ANCHOR_ORIGIN,
         transformOrigin: ELEMENT_TRANSFORM_ORIGIN,
       }
@@ -99,6 +95,8 @@ const ConnectionDropdown = memo(props => {
     );
   }
 
+  const hasTargets = Boolean(view.targetNodes?.length);
+
   return (
     <Menu
       data-testid="pipeline-connection-dropdown-menu"
@@ -109,11 +107,15 @@ const ConnectionDropdown = memo(props => {
         paper: {
           sx: styles.menuPaper,
         },
+        list: {
+          sx: styles.menuList,
+        },
       }}
     >
       <MenuItem
         onClick={handleCreateNewNode}
-        sx={styles.addNewNodeItem}
+        sx={styles.createItem}
+        data-testid="pipeline-connection-dropdown-create"
       >
         <ListItemIcon sx={styles.listItemIcon}>
           <PlusIcon fill={theme.palette.icon.default} />
@@ -130,26 +132,46 @@ const ConnectionDropdown = memo(props => {
           }
         />
       </MenuItem>
-      {view.targetNodes?.map(node => (
-        <MenuItem
-          key={node.id}
-          onClick={() => handleNodeSelect(node)}
-          sx={styles.menuItem}
+      {hasTargets ? (
+        view.targetNodes.map(node => (
+          <MenuItem
+            key={node.id}
+            onClick={() => handleNodeSelect(node)}
+            sx={styles.menuItem}
+            data-testid={`pipeline-connection-dropdown-target-${node.id}`}
+          >
+            <ListItemIcon sx={styles.listItemIcon}>
+              <NodeIconTile
+                type={node.type}
+                size="small"
+              />
+            </ListItemIcon>
+            <ListItemText
+              primary={
+                <Typography
+                  variant="bodyMedium"
+                  color="text.secondary"
+                  sx={styles.listItemTextPrimary}
+                >
+                  {node.data?.label || node.id}
+                </Typography>
+              }
+            />
+          </MenuItem>
+        ))
+      ) : (
+        <Box
+          sx={styles.emptyText}
+          data-testid="pipeline-connection-dropdown-empty"
         >
-          <ListItemIcon sx={styles.listItemIcon}>{getNodeTypeIcon(node.type)}</ListItemIcon>
-          <ListItemText
-            primary={
-              <Typography
-                variant="bodyMedium"
-                color="text.secondary"
-                sx={styles.listItemTextPrimary}
-              >
-                {node.data?.label || node.id}
-              </Typography>
-            }
-          />
-        </MenuItem>
-      ))}
+          <Typography
+            variant="bodySmall"
+            color="text.primary"
+          >
+            No other nodes created yet
+          </Typography>
+        </Box>
+      )}
     </Menu>
   );
 });
@@ -159,9 +181,9 @@ ConnectionDropdown.displayName = 'ConnectionDropdown';
 /** @type {MuiSx} */
 const connectionDropdownStyles = () => ({
   menuPaper: ({ palette }) => ({
-    maxHeight: 300,
-    minWidth: 200,
-    maxWidth: 350,
+    maxHeight: '18.75rem',
+    minWidth: '15rem',
+    maxWidth: '21.875rem',
     borderRadius: '0.75rem',
     border: `.0625rem solid ${palette.border.lines}`,
     boxShadow: palette.boxShadow.default,
@@ -169,22 +191,32 @@ const connectionDropdownStyles = () => ({
     padding: '0rem',
     marginTop: '0.5rem',
   }),
-  menuItem: {
-    minHeight: '2.5rem',
+  menuList: {
+    padding: '0.25rem 0',
   },
-  addNewNodeItem: ({ palette }) => ({
+  createItem: ({ palette }) => ({
     minHeight: '2.5rem',
+    gap: '0.5rem',
     borderBottom: `.0625rem solid ${palette.border.lines}`,
   }),
+  menuItem: {
+    minHeight: '2.5rem',
+    gap: '0.5rem',
+  },
   listItemIcon: {
-    minWidth: '1.5rem',
+    display: 'flex',
+    justifyContent: 'center',
+    minWidth: '1.5rem !important',
     maxWidth: '1.5rem',
   },
   listItemTextPrimary: {
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
-    maxWidth: 280,
+    maxWidth: '17.5rem',
+  },
+  emptyText: {
+    padding: '0.625rem 1rem',
   },
 });
 

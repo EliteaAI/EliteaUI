@@ -14,6 +14,7 @@ export const FlowEditorProvider = memo(props => {
     deleteRunNode,
     isRunningPipeline,
     handleDeleteNode,
+    onAddFromHandle,
     expandAll,
     disabled,
   } = props;
@@ -27,6 +28,7 @@ export const FlowEditorProvider = memo(props => {
       deleteRunNode,
       isRunningPipeline,
       handleDeleteNode,
+      onAddFromHandle,
       expandAll,
       setFlowNodes,
       setFlowEdges,
@@ -40,6 +42,7 @@ export const FlowEditorProvider = memo(props => {
     deleteRunNode,
     isRunningPipeline,
     handleDeleteNode,
+    onAddFromHandle,
     expandAll,
     setFlowNodes,
     setFlowEdges,
