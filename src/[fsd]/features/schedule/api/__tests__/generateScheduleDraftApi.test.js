@@ -33,7 +33,7 @@ describe('R2.1 EL-7011 generateScheduleDraft', () => {
     const fetchMock = vi
       .spyOn(globalThis, 'fetch')
       .mockResolvedValue(
-        new Response(JSON.stringify(draft), { status: 200, headers: { 'content-type': 'application/json' } }),
+        Response.json(draft, { status: 200 }),
       );
     const body = { prompt: 'p', current: {}, locked_entity: null, timezone: 'UTC' };
 
