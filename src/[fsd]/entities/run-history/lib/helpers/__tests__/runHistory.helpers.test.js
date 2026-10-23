@@ -224,8 +224,9 @@ describe('CR-22 schedule runs in Agent and Pipeline Run History (EL-7011 US-38)'
     const template = resolveRunHistoryColumns(false, true, SCHEDULE_RUN_COLUMNS);
     expect(template).toBe('7.5rem 7.5rem 5.75rem 10.5rem 7rem minmax(7.5rem, 1fr)');
     const minRem = template
-      .match(/\d+(?:\.\d+)?(?=rem)/g)
-      .map(Number)
+      .split(/[\s(),]+/)
+      .filter(token => token.endsWith('rem'))
+      .map(token => Number.parseFloat(token))
       .reduce((sum, rem) => sum + rem, 0);
     expect(minRem * 16).toBeLessThanOrEqual(768 - 32);
     expect(resolveRunHistoryColumns(true, true, SCHEDULE_RUN_COLUMNS)).toBe(
