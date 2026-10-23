@@ -1,4 +1,7 @@
-import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
+import {
+  DeprecatedConstants,
+  FlowEditorConstants,
+} from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 
 export const isConditionNode = node => node.type === FlowEditorConstants.PipelineNodeTypes.Condition;
 
@@ -43,3 +46,13 @@ export const cannotConnectToConditionOrDecision = ({ connection, yamlJsonObjectR
 export const isRouterHandle = handle => handle?.startsWith(FlowEditorConstants.ROUTER_HANDLE_ID_SUFFIX);
 
 export const isDefaultOutputHandle = handle => handle?.endsWith(FlowEditorConstants.DEFAULT_OUTPUT);
+
+export const getAddableNodeTypes = () =>
+  Object.keys(FlowEditorConstants.PipelineNodeTypes)
+    .filter(typeName => !DeprecatedConstants.DeprecatedOrInvisibleNode.includes(typeName))
+    .map(typeName => FlowEditorConstants.PipelineNodeTypes[typeName])
+    .sort((a, b) =>
+      FlowEditorConstants.PipelineNodeDisplayNames[a]
+        .toLowerCase()
+        .localeCompare(FlowEditorConstants.PipelineNodeDisplayNames[b].toLowerCase()),
+    );

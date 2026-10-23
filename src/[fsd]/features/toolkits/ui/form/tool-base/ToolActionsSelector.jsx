@@ -11,7 +11,7 @@ import {
   useInternalMcpPatStatus,
 } from '@/[fsd]/features/mcp';
 import { SectionStatusConstants } from '@/[fsd]/features/toolkits/lib/constants';
-import { useCollapsedSection } from '@/[fsd]/features/toolkits/lib/hooks';
+import { TOOLS_SECTION_KEY, useCollapsedSection } from '@/[fsd]/features/toolkits/lib/hooks';
 import { ToolkitForm } from '@/[fsd]/features/toolkits/ui';
 import { AccordionConstants, TourTargetConstants } from '@/[fsd]/shared/lib/constants';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
@@ -170,7 +170,7 @@ export const ToolActionsSelector = memo(props => {
     return null;
   }, [selectedToolsError, warningTools]);
 
-  const ownToolsSection = useCollapsedSection();
+  const ownToolsSection = useCollapsedSection(TOOLS_SECTION_KEY);
   const { isExpanded, toggleExpanded } = toolsSection ?? ownToolsSection;
 
   const renderHeaderContent = () => (
