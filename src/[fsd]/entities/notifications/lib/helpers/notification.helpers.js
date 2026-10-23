@@ -80,10 +80,14 @@ export const resolveHref = (eventType, meta, projectId) => {
     // itself has no project segment and would otherwise show whichever is selected.
     case NotificationType.BudgetThresholdReached:
     case NotificationType.BudgetLimitReached:
+    case NotificationType.ToolSpendThresholdReached:
+    case NotificationType.ToolSpendLimitReached:
       return `${base}/${projectId}${RouteDefinitions.SettingsWithTab.replace(':tab', 'usage')}`;
 
     case NotificationType.MemberBudgetThresholdReached:
     case NotificationType.MemberBudgetLimitReached:
+    case NotificationType.MemberToolSpendThresholdReached:
+    case NotificationType.MemberToolSpendLimitReached:
       return (
         `${base}/${projectId}${RouteDefinitions.SettingsWithTab.replace(':tab', 'usage')}` +
         `?${SearchParams.Scope}=user`
