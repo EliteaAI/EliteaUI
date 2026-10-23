@@ -142,6 +142,19 @@ export const NodeDisplayLabels = {
   [PipelineNodeTypes.Default]: 'Default',
 };
 
+export const PipelineNodeDescriptions = {
+  [PipelineNodeTypes.Agent]: 'Executes tasks using predefined goals, tools, and logic.',
+  [PipelineNodeTypes.Mcp]: 'Connects to external data or services via MCP protocol.',
+  [PipelineNodeTypes.Code]: 'Runs custom code to process or transform data.',
+  [PipelineNodeTypes.Printer]: 'Outputs results for display, logging, or debugging.',
+  [PipelineNodeTypes.Decision]: 'Evaluates conditions and selects the next step.',
+  [PipelineNodeTypes.Router]: 'Directs flow to different paths based on conditions.',
+  [PipelineNodeTypes.Hitl]: 'Pauses flow for human input or approval.',
+  [PipelineNodeTypes.StateModifier]: 'Updates or enriches the pipeline state.',
+  [PipelineNodeTypes.LLM]: 'Generates or processes text using a language model.',
+  [PipelineNodeTypes.Toolkit]: 'Provides access to a set of tools or actions.',
+};
+
 export const ORIENTATION = {
   horizontal: 'horizontal',
   vertical: 'vertical',
