@@ -1612,9 +1612,10 @@ describe('ScheduleForm EL-7011', () => {
       );
 
       expect(await screen.findByTestId('schedule-risk-block-box')).toBeInTheDocument();
+      // CR-11 review r2: an absolute app URL with the selected project, because the link opens a new tab
       expect(screen.getByRole('link', { name: /Open agent to change tools/ })).toHaveAttribute(
         'href',
-        '/agents/all/7/71',
+        expect.stringMatching(/^https?:\/\/[^/]+.*\/5\/agents\/all\/7\/71\?viewMode=owner$/),
       );
       expect(saveButton()).toBeDisabled();
     });
