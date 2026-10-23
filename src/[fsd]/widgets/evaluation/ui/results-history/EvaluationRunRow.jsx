@@ -2,7 +2,7 @@ import { memo, useCallback } from 'react';
 
 import { Box, Tooltip, Typography } from '@mui/material';
 
-import { formatRunTimestamp } from '@/[fsd]/entities/run-history/lib/helpers';
+import { RUN_FULL_TIMESTAMP_FORMAT, formatRunTimestamp } from '@/[fsd]/entities/run-history/lib/helpers';
 import AttentionIcon from '@/components/Icons/AttentionIcon';
 
 import {
@@ -59,12 +59,17 @@ const EvaluationRunRow = memo(props => {
       data-testid={`evaluation-run-row-${run.id}`}
     >
       <Box sx={styles.cell}>
-        <Typography
-          variant="bodySmall"
-          sx={styles.text}
+        <Tooltip
+          title={formatRunTimestamp(run.started_at || run.created_at, RUN_FULL_TIMESTAMP_FORMAT)}
+          placement="top"
         >
-          {formatRunTimestamp(run.started_at || run.created_at)}
-        </Typography>
+          <Typography
+            variant="bodySmall"
+            sx={styles.text}
+          >
+            {formatRunTimestamp(run.started_at || run.created_at)}
+          </Typography>
+        </Tooltip>
       </Box>
 
       <Box sx={styles.cell}>
