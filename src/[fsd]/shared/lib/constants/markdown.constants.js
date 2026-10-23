@@ -16,3 +16,8 @@ export const FORBIDDEN_HTML_TAGS = [
   'svg',
   'math',
 ];
+
+export const MARKDOWN_VIEW_MODES = {
+  edit: 'edit',
+  preview: 'preview',
+};

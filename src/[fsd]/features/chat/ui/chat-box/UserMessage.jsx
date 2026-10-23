@@ -6,7 +6,8 @@ import ListItemAvatar from '@mui/material/ListItemAvatar';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { useParticipantName } from '@/[fsd]/features/chat/participants/lib/hooks';
-import { ChatButton } from '@/[fsd]/features/chat/ui';
+import { ChatButton, InputGuardrailNotice } from '@/[fsd]/features/chat/ui';
+import { InputGuardrailConstants } from '@/[fsd]/shared/lib/constants';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_COLORS, BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import Markdown from '@/[fsd]/shared/ui/markdown';
@@ -46,6 +47,7 @@ const UserMessage = memo(
       markdown = false,
       onRemoveAttachment,
       onAddEditAttachment,
+      inputGuardrail,
     } = props;
     const [value, setValue] = useState(content);
     const [isEditing, setIsEditing] = useState(false);
@@ -212,8 +214,13 @@ const UserMessage = memo(
                 >
                   {item.item_details?.content || ''}
                 </Typography>
+                <InputGuardrailNotice guardrail={item.meta?.input_guardrail} />
               </Box>
             ))}
+            {/* A block card renders on the answer; the stored question is already redacted */}
+            {inputGuardrail?.action !== InputGuardrailConstants.INPUT_GUARDRAIL_ACTIONS.BLOCK && (
+              <InputGuardrailNotice guardrail={inputGuardrail} />
+            )}
             <MessageAttachmentList
               items={attachmentItems}
               onRemoveAttachment={onRemoveAttachment}

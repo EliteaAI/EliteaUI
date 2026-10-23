@@ -4,7 +4,7 @@ import { useDispatch } from 'react-redux';
 
 import { useManualSocket } from '@/[fsd]/features/auth/lib/hooks';
 import { ChatHelpers } from '@/[fsd]/features/chat';
-import { useToast } from '@/[fsd]/shared/lib/hooks';
+import { useIsFrom, useToast } from '@/[fsd]/shared/lib/hooks';
 import {
   useConversationCreateMutation,
   useConversationDetailsQuery,
@@ -25,7 +25,6 @@ import useAgentAttachments from '@/hooks/application/useAgentAttachments';
 import useApplicationChatSwitchVersion from '@/hooks/application/useApplicationChatSwitchVersion';
 import useSynAgentChatMessage from '@/hooks/application/useSynAgentChatMessage';
 import useStreamingNavBlocker from '@/hooks/chat/useStreamingNavBlocker';
-import { useIsFrom } from '@/hooks/useIsFromSpecificPageHooks';
 import RouteDefinitions from '@/routes';
 
 /**

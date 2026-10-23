@@ -3,11 +3,13 @@ import { memo, useCallback, useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
 
 import { SKILL_NAME_MAX_LENGTH } from '@/[fsd]/features/skill/lib/constants';
+import { useSkillInstructionsMaxLength } from '@/[fsd]/features/skill/lib/hooks';
 import { Input, Text } from '@/[fsd]/shared/ui';
-import { MAX_DESCRIPTION_LENGTH, MAX_INSTRUCTIONS_LENGTH } from '@/common/constants';
+import { MAX_DESCRIPTION_LENGTH } from '@/common/constants';
 
 const SummaryStep = memo(props => {
   const { currentData, draftData, onDraftChange, fieldApplyFlags, onToggleField } = props;
+  const maxInstructionsLength = useSkillInstructionsMaxLength();
 
   const { mergedName, mergedDescription, mergedInstructions } = useMemo(
     () => ({
@@ -87,7 +89,7 @@ const SummaryStep = memo(props => {
             maxRows={10}
             value={mergedInstructions}
             onChange={e => handleFieldChange('instructions', e.target.value)}
-            inputProps={{ maxLength: MAX_INSTRUCTIONS_LENGTH }}
+            inputProps={{ maxLength: maxInstructionsLength }}
             enableAutoBlur={false}
             disableUnderline
             sx={styles.cardInput}
@@ -95,7 +97,7 @@ const SummaryStep = memo(props => {
         </Box>
         <Text.CharacterCounter
           value={mergedInstructions}
-          maxLength={MAX_INSTRUCTIONS_LENGTH}
+          maxLength={maxInstructionsLength}
           hideMaxLimitMessage
           sx={styles.characterCounter}
         />
