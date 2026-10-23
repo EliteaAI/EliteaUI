@@ -86,11 +86,8 @@ vi.mock('@/[fsd]/shared/ui/button/BaseBtn', () => ({
   BUTTON_VARIANTS: { secondary: 'secondary' },
 }));
 
-vi.mock('@/hooks/useIsFromSpecificPageHooks', () => ({
-  useIsFrom: () => false,
-}));
-
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({
+  useIsFrom: () => false,
   useSelectedProjectId: () => 30,
   useToast: () => ({ toastSuccess: vi.fn() }),
 }));

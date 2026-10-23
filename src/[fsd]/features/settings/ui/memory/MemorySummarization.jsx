@@ -14,7 +14,7 @@ const MemorySummarization = memo(props => {
 
   const styles = memorySummarizationStyles();
 
-  const isSummarizationDisabled = !values.context_enabled || !values.enable_summarization;
+  const isSummarizationDisabled = !values.enable_summarization;
 
   const handleSummarizationEnabledChange = useCallback(
     (event, checkedValue) => {
@@ -49,14 +49,14 @@ const MemorySummarization = memo(props => {
             Automatic Summarization
           </Typography>
           <Typography variant="bodySmall">
-            Summarize older messages to free up context space when the limit is reached
+            Compact older history at 90% of usable input, retaining recent messages and authoritative
+            instructions.
           </Typography>
         </Box>
         <Switch.BaseSwitch
           data-testid="automatic-summarization-toggle"
           checked={values.enable_summarization}
           onChange={handleSummarizationEnabledChange}
-          disabled={!values.context_enabled}
         />
       </Box>
 
