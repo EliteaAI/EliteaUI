@@ -4,9 +4,9 @@ import { Grid, useTheme } from '@mui/material';
 
 import { ParticipantDetailsProvider } from '@/[fsd]/features/chat/participants/lib/context/ParticipantDetailsContext';
 import { getChatParticipantUniqueId } from '@/[fsd]/features/chat/participants/lib/helpers';
+import { useIsSmallWindow } from '@/[fsd]/shared/lib/hooks';
 import { PERMISSIONS } from '@/common/constants';
 import useCheckPermission from '@/hooks/useCheckPermission';
-import useIsSmallWindow from '@/hooks/useIsSmallWindow';
 
 import Participants from './Participants';
 
