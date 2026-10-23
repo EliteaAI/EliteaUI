@@ -85,6 +85,7 @@ const PlusChatButton = memo(props => {
     onCreateAgent,
     onCreatePipeline,
     onCreateToolkit,
+    onCreateSkill,
     participants = [],
   } = props;
 
@@ -193,6 +194,11 @@ const PlusChatButton = memo(props => {
     [handleCloseAndCall, onCreatePipeline],
   );
 
+  const handleCreateSkill = useCallback(
+    () => handleCloseAndCall(onCreateSkill),
+    [handleCloseAndCall, onCreateSkill],
+  );
+
   const handleCreateToolkit = useCallback(
     () => handleCloseAndCall(onCreateToolkit),
     [handleCloseAndCall, onCreateToolkit],
@@ -228,6 +234,9 @@ const PlusChatButton = memo(props => {
       },
       [SUBMENU_KEYS.SKILLS]: {
         searchPlaceholder: 'Search skills...',
+        showCreateNew: !!onCreateSkill,
+        createNewLabel: 'Create Skill',
+        onCreateNew: handleCreateSkill,
         emptyMessage: 'No skills available',
         noResultsMessage: 'No skills found',
         publicLabel: ParticipantEntityConstants.CATALOG_LABEL,
@@ -259,8 +268,10 @@ const PlusChatButton = memo(props => {
       onCreateAgent,
       onCreatePipeline,
       onCreateToolkit,
+      onCreateSkill,
       handleCreateAgent,
       handleCreatePipeline,
+      handleCreateSkill,
       handleCreateToolkit,
       handleCreateMCP,
       isMcpVisible,

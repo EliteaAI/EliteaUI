@@ -10,10 +10,9 @@ import { useRestoreLastListRoute } from '../useRestoreLastListRoute.hooks';
 
 vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({ useSelectedProjectId: () => 1 }));
 
-vi.mock('@/hooks/useIsFromSpecificPageHooks', () => ({
-  useIsCreatingEntities: () => false,
-  useIsFrom: () => false,
-}));
+vi.mock('@/[fsd]/shared/lib/hooks/useIsFrom.hooks', () => ({ useIsFrom: () => false }));
+
+vi.mock('../useIsCreatingEntities.hooks', () => ({ useIsCreatingEntities: () => false }));
 
 let onMonitorProjectChange;
 

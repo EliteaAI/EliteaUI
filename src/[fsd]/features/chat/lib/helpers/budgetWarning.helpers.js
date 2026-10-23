@@ -8,8 +8,9 @@ export const budgetPeriod = (now = new Date()) =>
   `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`;
 
 // Keyed per user so people sharing a browser profile never inherit each other's dismissals
-export const dismissStorageKey = ({ userId, projectId, scope, period }) =>
-  `${DISMISS_STORAGE_PREFIX}.${userId}.${projectId}.${scope}.${period}`;
+// A feature (e.g. web_search) gets its own key, so dismissing one banner never hides another
+export const dismissStorageKey = ({ userId, projectId, scope, period, feature }) =>
+  `${DISMISS_STORAGE_PREFIX}.${userId}.${projectId}.${feature ? `${feature}.` : ''}${scope}.${period}`;
 
 export const severityForLevel = level => {
   if (level >= CRITICAL_LEVEL) return BUDGET_WARNING_SEVERITY.CRITICAL;
