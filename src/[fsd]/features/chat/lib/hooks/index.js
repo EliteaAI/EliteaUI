@@ -40,3 +40,4 @@ export { useAgentEditorPanelFit } from './useAgentEditorPanelFit.hooks';
 export * from './useFileTypes.hooks';
 export { useChatConfig } from './useChatConfig.hooks';
 export { useCreateArtifactWithDefaultConfiguration } from './useCreateArtifactWithDefaultConfiguration.hooks';
+export { useIsCreatingConversation } from './useIsCreatingConversation.hooks';

@@ -29,8 +29,9 @@ const entityKindChipStyles = () => ({
   chip: ({ palette }) => ({
     height: '1.25rem',
     fontSize: '0.6875rem',
+    flexShrink: 0,
     color: palette.text.secondary,
-    backgroundColor: palette.background.default.secondary || 'transparent',
+    backgroundColor: palette.background.badge,
   }),
   empty: { fontSize: '0.8125rem' },
 });
