@@ -16,7 +16,7 @@ const nodeBodyContainerStyles = () => ({
   root: display => ({
     display,
     flexDirection: 'column',
-    padding: '1rem 1rem 1rem 1rem',
+    padding: '0.75rem 1rem 0',
     gap: '.75rem',
     width: '100%',
     boxSizing: 'border-box',

@@ -199,6 +199,8 @@ const nodeTypeIconMcp = '#3C1C70';
 const nodeTypeIconCode = '#352340';
 const nodeTypeIconPrinter = '#085163';
 const nodeTypeIconHitl = '#47311E';
+const nodeCardShadow = '#13131E';
+const white15 = '#ffffff26';
 
 const npsAccent = '#6390fe';
 const npsAccentSubtle = '#6390fe1a';
@@ -707,6 +709,26 @@ const darkPalette = {
           llm: flowNodeLlm,
           toolkit: nodeTypeIconAgent,
         },
+      },
+      card: {
+        background: gray50,
+        border: {
+          default: gray30,
+          hover: gray20,
+          selected: cyanPressed,
+          running: cyanPressed,
+          error: dangerRed,
+        },
+        shadow: {
+          default: `0 0 1.25rem 0 ${nodeCardShadow}`,
+          hover: `0 0 0.9375rem 0 ${white15}`,
+          selected: `0 0 0.9375rem 0 ${blue30}`,
+        },
+        header: { border: gray30 },
+        iconTile: { background: white10 },
+        handle: { background: { default: gray50, collapsed: gray20 }, border: gray30 },
+        status: { running: cyanPressed, error: dangerRed },
+        badge: { entrypoint: { background: hoverBlue, text: white } },
       },
     },
     contextHighlight: { background: contextHighlightBg },

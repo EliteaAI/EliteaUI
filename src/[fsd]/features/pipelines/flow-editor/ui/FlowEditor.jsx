@@ -21,6 +21,7 @@ import { PipelineStatus } from '@/[fsd]/features/pipelines/flow-editor/lib/const
 import {
   FlowEditorHelpers,
   LayoutHelpers,
+  NodeCardHelpers,
   ParsePipelineHelpers,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import {
@@ -58,12 +59,15 @@ import {
   useNodesInitialized,
   useNodesState,
   useReactFlow,
+  useStore,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
 const { GA_EVENT_NAMES, GA_EVENT_PARAMS } = AnalyticConstants;
 
 const END_NODE_OFFSET = { x: 160, y: 120 };
+
+const selectIsMiniZoom = state => NodeCardHelpers.isMiniCardZoom(state.transform[2]);
 
 const edgeTypes = {
   custom: FlowEditorNodes.CustomEdge,
@@ -117,7 +121,7 @@ const FlowEditor = memo(
     const { nodes: cachedNodes, edges: cachedEdges } = useSelector(state => state.pipelineEditor);
     const theme = useTheme();
     const editorRef = useRef();
-    const { fitView, getViewport, getZoom } = useReactFlow();
+    const { fitView, getViewport, getZoom, setCenter } = useReactFlow();
     const nodesInitialized = useNodesInitialized({
       includeHiddenNodes: true,
     });
@@ -140,6 +144,17 @@ const FlowEditor = memo(
 
     const [flowNodes, setFlowNodes] = useNodesState(cachedNodes.length ? cachedNodes : initialNodes);
     const [flowEdges, setFlowEdges] = useEdgesState(cachedEdges.length ? cachedEdges : initialEdges);
+
+    // Last full-size (not mini, expanded) measurement per node id
+    const fullNodeSizesRef = useRef({});
+    const isMiniZoom = useStore(selectIsMiniZoom);
+
+    useEffect(() => {
+      if (isMiniZoom || !expandAll) return;
+      flowNodes.forEach(node => {
+        if (node.measured) fullNodeSizesRef.current[node.id] = node.measured;
+      });
+    }, [flowNodes, isMiniZoom, expandAll]);
     const {
       onStopRun,
       deleteRunNode,
@@ -299,15 +314,38 @@ const FlowEditor = memo(
       type => {
         const viewPort = getViewport();
         const viewSize = getViewSize();
-        const { xPos, yPos } = FlowEditorHelpers.calculatePositionForNewNode(
-          (viewSize.width / 2 - 230 - viewPort.x) / viewPort.zoom,
-          (viewSize.height / 2 - 200 - viewPort.y) / viewPort.zoom,
-          flowNodes,
-        );
+        const size = {
+          width: FlowEditorConstants.NODE_CARD_WIDTH,
+          height:
+            FlowEditorConstants.NodeHeightMap[type] ||
+            FlowEditorConstants.NodeHeightMap[FlowEditorConstants.PipelineNodeTypes.Default],
+        };
+        const isEmpty = !yamlJsonObjectRef.current?.nodes?.filter(Boolean).length;
+        const sizedNodes = NodeCardHelpers.isMiniCardZoom(viewPort.zoom)
+          ? NodeCardHelpers.withFullNodeSizes(flowNodes, fullNodeSizesRef.current)
+          : flowNodes;
+        // While the pipeline is empty End is hidden, so it must not block the new node
+        const occupiedNodes = isEmpty
+          ? sizedNodes.filter(node => node.type !== FlowEditorConstants.PipelineNodeTypes.End)
+          : sizedNodes;
+        const { x, y, isInView } = FlowEditorHelpers.findFreeNodePosition({
+          viewRect: {
+            x: -viewPort.x / viewPort.zoom,
+            y: -viewPort.y / viewPort.zoom,
+            width: viewSize.width / viewPort.zoom,
+            height: viewSize.height / viewPort.zoom,
+          },
+          nodes: occupiedNodes,
+          size,
+        });
 
-        return onNodeCreateAtPosition(type, { x: xPos, y: yPos });
+        const newNode = onNodeCreateAtPosition(type, { x, y });
+        if (!isInView) {
+          setCenter(x + size.width / 2, y + size.height / 2, { zoom: viewPort.zoom, duration: 300 });
+        }
+        return newNode;
       },
-      [getViewSize, getViewport, flowNodes, onNodeCreateAtPosition],
+      [getViewSize, getViewport, flowNodes, onNodeCreateAtPosition, setCenter],
     );
 
     const calculateLayoutNodes = useCallback(
@@ -319,7 +357,10 @@ const FlowEditor = memo(
         let finalNodes = nodes;
         let finalEdges = edges;
         if (shouldDoLayout) {
-          const measuredNodes = FlowEditorHelpers.measureNodes(flowNodes, getZoom(), editorRef);
+          const zoom = getZoom();
+          const measuredNodes = NodeCardHelpers.isMiniCardZoom(zoom)
+            ? NodeCardHelpers.withFullNodeSizes(flowNodes, fullNodeSizesRef.current)
+            : FlowEditorHelpers.measureNodes(flowNodes, zoom, editorRef);
           const { nodes: layoutNodes, edges: layoutEdges } = LayoutHelpers.doLayout({
             nodes,
             edges,
@@ -433,10 +474,12 @@ const FlowEditor = memo(
     const {
       onConnectStart,
       onConnectEnd,
+      openFromHandle,
       onReconnect,
       onReconnectEnd,
       showConnectionDropdown,
       dropdownPosition,
+      dropdownAnchorEl,
       handleDropdownClose,
       handleNodeSelect,
       handleNodeCreate,
@@ -446,6 +489,17 @@ const FlowEditor = memo(
 
     // Keep the handlers object for ReactFlow props
     const handlers = { onConnectStart, onConnectEnd, onReconnect, onReconnectEnd };
+
+    // Stable callback for the "+" under each Output, so the node context doesn't change every render
+    const openFromHandleRef = useRef(openFromHandle);
+
+    useEffect(() => {
+      openFromHandleRef.current = openFromHandle;
+    }, [openFromHandle]);
+
+    const onAddFromHandle = useCallback(args => {
+      openFromHandleRef.current(args);
+    }, []);
 
     const onReLayout = specifiedExpandAll => {
       calculateLayoutNodes(yamlJsonObject, true, true, specifiedExpandAll || expandAll);
@@ -504,7 +558,12 @@ const FlowEditor = memo(
     useEffect(() => {
       if (JSON.stringify(flowNodes) !== JSON.stringify(initialNodes) && !isRunningPipeline) {
         setTimeout(() => {
-          setNodes(flowNodes);
+          // Mini cards must not leak their collapsed sizes into the saved pipeline_settings
+          setNodes(
+            NodeCardHelpers.isMiniCardZoom(getZoom())
+              ? NodeCardHelpers.withFullNodeSizes(flowNodes, fullNodeSizesRef.current)
+              : flowNodes,
+          );
         }, 100);
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -575,6 +634,7 @@ const FlowEditor = memo(
           deleteRunNode={deleteRunNode}
           isRunningPipeline={isRunningPipeline}
           handleDeleteNode={onDeleteNode}
+          onAddFromHandle={disabled ? undefined : onAddFromHandle}
           expandAll={expandAll}
           disabled={disabled}
         >
@@ -678,6 +738,7 @@ const FlowEditor = memo(
         <FlowEditorSettings.ConnectionDropdown
           open={showConnectionDropdown}
           anchorPosition={dropdownPosition}
+          anchorEl={dropdownAnchorEl}
           targetNodes={availableTargets}
           availableNodeTypes={availableNodeTypes}
           onNodeSelect={handleNodeSelect}

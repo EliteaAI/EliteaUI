@@ -34,11 +34,33 @@ describe('ConnectionDropdown', () => {
   beforeEach(() => vi.clearAllMocks());
   afterEach(() => cleanup());
 
-  it('opens the node type selector directly when there are no targets', () => {
+  it('shows the menu with an empty hint when there are no targets', () => {
     renderDropdown({ targetNodes: [] });
 
+    expect(screen.getByTestId('pipeline-connection-dropdown-menu')).toBeInTheDocument();
+    expect(screen.getByText('Create new node')).toBeInTheDocument();
+    expect(screen.getByTestId('pipeline-connection-dropdown-empty')).toHaveTextContent(
+      'No other nodes created yet',
+    );
+    expect(screen.queryByTestId('pipeline-node-type-selector')).toBeNull();
+  });
+
+  it('opens the node type selector from the empty menu', () => {
+    renderDropdown({ targetNodes: [] });
+
+    fireEvent.click(screen.getByText('Create new node'));
+
     expect(screen.getByTestId('pipeline-node-type-selector')).toBeInTheDocument();
-    expect(screen.queryByTestId('pipeline-connection-dropdown-menu')).toBeNull();
+  });
+
+  it('opens anchored to an element (the "+" under Output)', () => {
+    const anchorEl = document.createElement('div');
+    document.body.appendChild(anchorEl);
+    renderDropdown({ targetNodes, anchorPosition: null, anchorEl });
+
+    expect(screen.getByTestId('pipeline-connection-dropdown-menu')).toBeInTheDocument();
+    expect(screen.queryByTestId('pipeline-connection-dropdown-empty')).toBeNull();
+    anchorEl.remove();
   });
 
   it('switches from the targets menu to the node type selector on "Create new node"', () => {
@@ -60,6 +82,7 @@ describe('ConnectionDropdown', () => {
   it('limits the selector to the available node types', () => {
     renderDropdown({
       targetNodes: [],
+      forceNodeCreation: true,
       availableNodeTypes: [PipelineNodeTypes.Code, PipelineNodeTypes.Router],
     });
 
@@ -69,7 +92,7 @@ describe('ConnectionDropdown', () => {
   it('creates the selected node type and closes', () => {
     const onNodeCreate = vi.fn();
     const onClose = vi.fn();
-    renderDropdown({ targetNodes: [], onNodeCreate, onClose });
+    renderDropdown({ targetNodes: [], forceNodeCreation: true, onNodeCreate, onClose });
 
     fireEvent.click(screen.getByTestId(`pipeline-add-node-menu-item-${PipelineNodeTypes.Printer}`));
 
@@ -93,11 +116,20 @@ describe('ConnectionDropdown', () => {
         open: true,
         anchorPosition: { x: 100, y: 100 },
         targetNodes: [],
+        forceNodeCreation: true,
         availableNodeTypes: [PipelineNodeTypes.Code, PipelineNodeTypes.Router],
       }),
     );
 
-    rerender(renderWith({ open: false, anchorPosition: null, targetNodes: [], availableNodeTypes: [] }));
+    rerender(
+      renderWith({
+        open: false,
+        anchorPosition: null,
+        targetNodes: [],
+        forceNodeCreation: true,
+        availableNodeTypes: [],
+      }),
+    );
 
     expect(screen.getAllByTestId(/^pipeline-add-node-menu-item-/)).toHaveLength(2);
   });

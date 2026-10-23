@@ -90,27 +90,30 @@ export const PipelineNodeDisplayNames = {
   [PipelineNodeTypes.Default]: 'Default',
 };
 
+// The 2.0 card header (65px) and body spacing add 25px over the previous card layout estimates
+const NODE_CARD_EXTRA_HEIGHT = 25;
+
 export const NodeHeightMap = {
-  [PipelineNodeTypes.Condition]: 450,
-  [PipelineNodeTypes.Decision]: 450,
-  [PipelineNodeTypes.LLM]: 460,
-  [PipelineNodeTypes.Tool]: 340,
-  [PipelineNodeTypes.Function]: 460,
-  [PipelineNodeTypes.Loop]: 460,
-  [PipelineNodeTypes.LoopFromTool]: 460,
-  [PipelineNodeTypes.Custom]: 570,
-  [PipelineNodeTypes.Printer]: 400,
-  [PipelineNodeTypes.Default]: 570,
+  [PipelineNodeTypes.Condition]: 450 + NODE_CARD_EXTRA_HEIGHT,
+  [PipelineNodeTypes.Decision]: 450 + NODE_CARD_EXTRA_HEIGHT,
+  [PipelineNodeTypes.LLM]: 460 + NODE_CARD_EXTRA_HEIGHT,
+  [PipelineNodeTypes.Tool]: 340 + NODE_CARD_EXTRA_HEIGHT,
+  [PipelineNodeTypes.Function]: 460 + NODE_CARD_EXTRA_HEIGHT,
+  [PipelineNodeTypes.Loop]: 460 + NODE_CARD_EXTRA_HEIGHT,
+  [PipelineNodeTypes.LoopFromTool]: 460 + NODE_CARD_EXTRA_HEIGHT,
+  [PipelineNodeTypes.Custom]: 570 + NODE_CARD_EXTRA_HEIGHT,
+  [PipelineNodeTypes.Printer]: 400 + NODE_CARD_EXTRA_HEIGHT,
+  [PipelineNodeTypes.Default]: 570 + NODE_CARD_EXTRA_HEIGHT,
   [PIPELINE_STATE]: 40,
   [PipelineNodeTypes.End]: 60,
-  [PipelineNodeTypes.Mcp]: 630,
-  [PipelineNodeTypes.Toolkit]: 460,
-  [PipelineNodeTypes.Agent]: 460,
-  [PipelineNodeTypes.Pipeline]: 340,
-  [PipelineNodeTypes.Code]: 500,
-  [PipelineNodeTypes.Router]: 550,
-  [PipelineNodeTypes.Hitl]: 550,
-  [PipelineNodeTypes.StateModifier]: 400,
+  [PipelineNodeTypes.Mcp]: 630 + NODE_CARD_EXTRA_HEIGHT,
+  [PipelineNodeTypes.Toolkit]: 460 + NODE_CARD_EXTRA_HEIGHT,
+  [PipelineNodeTypes.Agent]: 460 + NODE_CARD_EXTRA_HEIGHT,
+  [PipelineNodeTypes.Pipeline]: 340 + NODE_CARD_EXTRA_HEIGHT,
+  [PipelineNodeTypes.Code]: 500 + NODE_CARD_EXTRA_HEIGHT,
+  [PipelineNodeTypes.Router]: 550 + NODE_CARD_EXTRA_HEIGHT,
+  [PipelineNodeTypes.Hitl]: 550 + NODE_CARD_EXTRA_HEIGHT,
+  [PipelineNodeTypes.StateModifier]: 400 + NODE_CARD_EXTRA_HEIGHT,
   [PipelineNodeTypes.Ghost]: 60,
 };
 
@@ -163,6 +166,17 @@ export const ORIENTATION = {
 export const OrientationKey = 'elitea_ui.orientation';
 
 export const LAYOUT_VERSION = '1.0';
+
+// Below this zoom level node cards collapse to their header (mini cards)
+export const MINI_CARD_ZOOM = 0.6;
+
+// Node card width in flow units (29.4375rem)
+export const NODE_CARD_WIDTH = 471;
+
+export const NodeCardStatus = {
+  running: 'running',
+  error: 'error',
+};
 
 export const StatueTypeMap = {
   str: 'String',

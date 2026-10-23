@@ -1,26 +1,42 @@
-import { memo, useContext } from 'react';
+import { memo, useContext, useMemo } from 'react';
 
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, useTheme } from '@mui/material';
 
+import { NodeCardHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
+import NodeIconTile from '@/[fsd]/features/pipelines/flow-editor/ui/nodes/base-node/NodeIconTile';
 import { FlowEditorContext, NodeCardContext } from '@/[fsd]/shared/lib/context';
 import FlagIcon from '@/assets/flag-icon.svg?react';
 import { Handle } from '@xyflow/react';
 
 const EndNode = memo(props => {
   const { selected, data } = props;
+  const theme = useTheme();
 
   const { isRunningPipeline, expandAll } = useContext(FlowEditorContext);
+  const cardContextValue = useMemo(() => ({ isExpanded: expandAll }), [expandAll]);
 
-  const styles = endNodeStyles(data, isRunningPipeline, selected);
+  const cardState = {
+    status: NodeCardHelpers.getNodeCardStatus({ isPerforming: data?.isPerforming }),
+    selected,
+    isRunningPipeline,
+  };
+  const styles = endNodeStyles({
+    borderColor: NodeCardHelpers.getNodeCardBorderColor(cardState, theme.palette),
+    boxShadow: NodeCardHelpers.getNodeCardShadow(cardState, theme.palette),
+    hasHover: NodeCardHelpers.hasNodeCardHover(cardState),
+  });
 
   return (
-    <NodeCardContext.Provider value={{ isExpanded: expandAll }}>
-      <Box sx={styles.container}>
-        <Box sx={styles.iconContainer}>
+    <NodeCardContext.Provider value={cardContextValue}>
+      <Box
+        sx={styles.container}
+        data-testid="pipeline-end-node"
+      >
+        <NodeIconTile size="small">
           <FlagIcon style={styles.icon} />
-        </Box>
+        </NodeIconTile>
         <Typography
-          variant="labelMedium"
+          variant="bodyMedium"
           color="text.secondary"
         >
           End
@@ -40,38 +56,32 @@ const EndNode = memo(props => {
 EndNode.displayName = 'EndNode';
 
 /** @type {MuiSx} */
-const endNodeStyles = (data, isRunningPipeline, selected) => ({
+const endNodeStyles = ({ borderColor, boxShadow, hasHover }) => ({
   container: ({ palette }) => ({
     display: 'flex',
-    justifyContent: 'center',
     alignItems: 'center',
+    gap: '0.5rem',
     width: '6.25rem',
     height: '2.75rem',
-    padding: '0.5rem 1rem 0.5rem 0.75rem',
-    borderRadius: '0.5rem',
-    border: `${data?.isPerforming ? '0.125rem dashed' : '0.0625rem solid'} ${
-      data?.isPerforming || (!isRunningPipeline && selected)
-        ? palette.primary.main
-        : palette.components.flowEditor.node.border
-    }`,
-    background: palette.background.default.tertiary,
+    padding: '0.5rem 1rem 0.5rem 0.625rem',
+    boxSizing: 'border-box',
+    borderRadius: '0.75rem',
+    border: `0.0625rem solid ${borderColor}`,
+    boxShadow,
+    backgroundColor: palette.components.flowEditor.card.background,
+    transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
+    ...(hasHover && {
+      '&:hover': {
+        borderColor: palette.components.flowEditor.card.border.hover,
+        boxShadow: palette.components.flowEditor.card.shadow.hover,
+      },
+    }),
   }),
   handle: {
     width: '0.75rem',
     height: '0.75rem',
     borderRadius: '50%',
   },
-  iconContainer: ({ palette }) => ({
-    width: '1.5rem',
-    height: '1.5rem',
-    borderRadius: '0.25rem',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    border: `0.0625rem solid ${palette.components.flowEditor.node.border}`,
-    color: palette.text.secondary,
-    marginRight: '0.5rem',
-  }),
   icon: {
     width: '1rem',
     height: '1rem',
