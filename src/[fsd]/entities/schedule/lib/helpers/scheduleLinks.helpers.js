@@ -32,20 +32,17 @@ export const buildScheduleFormLink = ({ entityType, entityId, tab = DEFAULT_TAB,
   });
 };
 
-// Open run history: the edit form with its Runs section open. Without an entity, the Schedules page form.
-export const buildScheduleRunsLink = ({ entityType, entityId, tab, scheduleId }) => ({
-  pathname: entityType
-    ? buildScheduleFormLink({ entityType, entityId, tab, scheduleId })
-    : `${RouteDefinitions.Schedules}/${scheduleId}`,
-  hash: '#runs',
-});
-
-export const buildSchedulesListLink = ({ entityType, entityId }) =>
-  `${RouteDefinitions.Schedules}?${new URLSearchParams({ entityType, entityId })}`;
+export const buildSchedulesListLink = ({ entityType, entityId }) => {
+  const query = new URLSearchParams({ entityType, entityId }).toString();
+  return `${RouteDefinitions.Schedules}?${query}`;
+};
 
 // CR-22 R4.3: the agent or pipeline Run History filtered to one schedule
-export const buildScheduleHistoryLink = schedule =>
-  `${NavigationHelpers.buildRoute(ENTITY_ROUTES[schedule.entity_type].history, {
+export const buildScheduleHistoryLink = schedule => {
+  const base = NavigationHelpers.buildRoute(ENTITY_ROUTES[schedule.entity_type].history, {
     tab: DEFAULT_TAB,
     agentId: schedule.application_id,
-  })}?${new URLSearchParams({ schedule_id: schedule.id })}`;
+  });
+  const query = new URLSearchParams({ schedule_id: schedule.id }).toString();
+  return `${base}?${query}`;
+};
