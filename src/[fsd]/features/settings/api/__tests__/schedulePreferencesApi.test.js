@@ -8,7 +8,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 vi.mock('@/api', () => {
   const eliteaApi = createApi({
     reducerPath: 'eliteaApi',
-    baseQuery: fetchBaseQuery({ baseUrl: 'http://test.local' }),
+    baseQuery: fetchBaseQuery({ baseUrl: 'https://test.local' }),
     tagTypes: [],
     endpoints: () => ({}),
   });
