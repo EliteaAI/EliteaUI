@@ -115,6 +115,32 @@ describe('NodeTypeSelector', () => {
     expect(screen.getByTestId('pipeline-node-type-selector')).toHaveAttribute('data-columns', '1');
   });
 
+  it('renders only the available types when they are given', () => {
+    renderSelector({ availableTypes: [PipelineNodeTypes.LLM, PipelineNodeTypes.Agent] });
+
+    const cards = screen.getAllByTestId(/^pipeline-add-node-menu-item-/);
+    expect(cards.map(card => card.dataset.testid)).toEqual([
+      `pipeline-add-node-menu-item-${PipelineNodeTypes.Agent}`,
+      `pipeline-add-node-menu-item-${PipelineNodeTypes.LLM}`,
+    ]);
+  });
+
+  it('positions the popover at the anchor position when no anchor element is given', () => {
+    render(
+      <ThemeProvider theme={theme}>
+        <NodeTypeSelector
+          open
+          anchorPosition={{ top: 100, left: 200 }}
+          transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+        />
+      </ThemeProvider>,
+    );
+
+    const paper = screen.getByTestId('pipeline-node-type-selector');
+    expect(paper.style.top).toBe('100px');
+    expect(paper.style.left).toBe('200px');
+  });
+
   it('renders two columns by default', () => {
     renderSelector();
 
