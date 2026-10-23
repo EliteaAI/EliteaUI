@@ -4,6 +4,7 @@ import { toRunStatusLabel } from '@/[fsd]/entities/schedule/lib/helpers';
 
 const RUN_TIMESTAMP_FORMAT = 'dd-MM-yyyy, hh:mm a';
 export const RUN_ANALYTICS_TIMESTAMP_FORMAT = 'dd MMM yyyy, hh:mm a';
+export const RUN_FULL_TIMESTAMP_FORMAT = 'dd-MM-yyyy, hh:mm:ss a';
 // Usage is tagged with `run_id` / `eval_run_id` only from this date; older runs have nothing to show
 const RUN_ANALYTICS_AVAILABLE_FROM = Date.UTC(2026, 8, 30);
 

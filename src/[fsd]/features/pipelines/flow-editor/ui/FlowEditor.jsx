@@ -1,4 +1,13 @@
-import { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import {
+  forwardRef,
+  memo,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import { useDispatch, useSelector } from 'react-redux';
 
@@ -23,6 +32,7 @@ import {
   useSaveNodesAndEdges,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
 import {
+  FlowEditorEmptyState,
   FlowEditorNodes,
   FlowEditorSettings,
   FlowEditorState,
@@ -52,6 +62,8 @@ import {
 import '@xyflow/react/dist/style.css';
 
 const { GA_EVENT_NAMES, GA_EVENT_PARAMS } = AnalyticConstants;
+
+const END_NODE_OFFSET = { x: 160, y: 120 };
 
 const edgeTypes = {
   custom: FlowEditorNodes.CustomEdge,
@@ -99,6 +111,7 @@ const FlowEditor = memo(
       edges: initialEdges,
       layout_version,
       resetFlag,
+      resetVersion,
     } = useSelector(selectActivePipeline);
     const yamlJsonObjectRef = useRef(yamlJsonObject);
     const { nodes: cachedNodes, edges: cachedEdges } = useSelector(state => state.pipelineEditor);
@@ -182,7 +195,7 @@ const FlowEditor = memo(
       setFlowNodes(initialNodes);
       setFlowEdges(initialEdges);
       onResetRunParseStatus();
-      dispatch(actions.clearResetFlag());
+      dispatch(actions.clearResetFlag(resetVersion));
 
       // Force sync nodes to Redux after reset to ensure measured heights are available for save
       // Without this, pipelineEditor.nodes stays empty because flowNodes === initialNodes
@@ -196,7 +209,7 @@ const FlowEditor = memo(
         }
       }, 150);
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isVisible, resetFlag, initialNodes, initialEdges]);
+    }, [isVisible, resetFlag, resetVersion, initialNodes, initialEdges]);
 
     useCtrlASelectAll({
       display: sx?.display,
@@ -249,8 +262,28 @@ const FlowEditor = memo(
           };
         }
 
+        const isFirstNode = !yamlJsonObjectRef.current?.nodes?.filter(Boolean).length;
+        const endNodePosition = {
+          x: newFlowNode.position.x + END_NODE_OFFSET.x,
+          y:
+            newFlowNode.position.y +
+            (FlowEditorConstants.NodeHeightMap[type] ||
+              FlowEditorConstants.NodeHeightMap[FlowEditorConstants.PipelineNodeTypes.Default]) +
+            END_NODE_OFFSET.y,
+        };
+
         setFlowNodes(prevNodes => {
-          return [...prevNodes.map(node => ({ ...node, selected: false })), newFlowNode];
+          const deselectedNodes = prevNodes.map(node => {
+            const isEndNode = node.type === FlowEditorConstants.PipelineNodeTypes.End;
+            return isFirstNode && isEndNode
+              ? { ...node, position: endNodePosition, selected: false }
+              : { ...node, selected: false };
+          });
+          const hasEndNode = prevNodes.some(node => node.type === FlowEditorConstants.PipelineNodeTypes.End);
+
+          return hasEndNode
+            ? [...deselectedNodes, newFlowNode]
+            : [...deselectedNodes, newFlowNode, ParsePipelineHelpers.createEndNode(endNodePosition)];
         });
 
         trackEvent(GA_EVENT_NAMES.PIPELINE_NODE_CREATED, {
@@ -428,6 +461,17 @@ const FlowEditor = memo(
       }, 200);
     };
 
+    const isEmptyPipeline = !yamlJsonObject?.nodes?.filter(Boolean).length;
+
+    // End stays in the flow state but is not rendered until the first node is added
+    const visibleFlowNodes = useMemo(
+      () =>
+        isEmptyPipeline
+          ? flowNodes.filter(node => node.type !== FlowEditorConstants.PipelineNodeTypes.End)
+          : flowNodes,
+      [flowNodes, isEmptyPipeline],
+    );
+
     const onToggleStateDrawer = useCallback(() => {
       setIsStateDrawerOpen(prev => !prev);
     }, []);
@@ -538,7 +582,7 @@ const FlowEditor = memo(
             panOnDrag // figma/sketch/design tool controls, panOnDrag should be disabled
             panOnScroll // figma/sketch/design tool controls, panOnScroll should be enabled
             selectionOnDrag // figma/sketch/design tool controls, selectionOnDrag should be enabled
-            nodes={flowNodes}
+            nodes={visibleFlowNodes}
             onNodesChange={onNodesChange}
             edges={flowEdges}
             onEdgesChange={onEdgesChange}
@@ -609,6 +653,12 @@ const FlowEditor = memo(
             </Box>
           </ReactFlow>
         </FlowEditorProvider>
+        {isEmptyPipeline && (
+          <FlowEditorEmptyState.FlowEmptyState
+            onAddNode={onAddNode}
+            disabled={disabled}
+          />
+        )}
         <FlowEditorState.StateDrawer
           isOpen={isStateDrawerOpen}
           onClose={onToggleStateDrawer}

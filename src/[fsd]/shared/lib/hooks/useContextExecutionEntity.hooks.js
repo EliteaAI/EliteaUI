@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef } from 'react';
 
-import { useIsFrom } from '@/hooks/useIsFromSpecificPageHooks';
 import RouteDefinitions from '@/routes';
+
+import { useIsFrom } from './useIsFrom.hooks';
 
 const CONTEXT_EXECUTION_ENTITIES = {
   AGENT: 'agent',

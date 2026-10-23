@@ -8,14 +8,18 @@ import { deepClone } from '@mui/x-data-grid/internals';
 
 import { useSyncChatConfigParticipant } from '@/[fsd]/features/chat/participants/lib/hooks';
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
-import { useChangeNameInUrlSearchParams, useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
+import {
+  useChangeNameInUrlSearchParams,
+  useIsFrom,
+  useSelectedProjectId,
+  useToast,
+} from '@/[fsd]/shared/lib/hooks';
 import { cleanLLMSettings } from '@/[fsd]/shared/lib/utils';
 import { useApplicationEditMutation } from '@/api/applications';
 import { useListModelsQuery } from '@/api/configurations';
 import { eliteaApi } from '@/api/eliteaApi';
 import clearTools, { filterEmptyStrings } from '@/common/applicationUtils';
 import { buildErrorMessage } from '@/common/utils';
-import { useIsFrom } from '@/hooks/useIsFromSpecificPageHooks';
 import useSavePipeline, { calculateNodesAndEdges } from '@/pages/Pipelines/useSavePipeline';
 import RouteDefinitions from '@/routes';
 import { actions as appActions } from '@/slices/applications';

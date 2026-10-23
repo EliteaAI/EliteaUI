@@ -8,6 +8,7 @@ import { Grid } from '@mui/material';
 import { useGetCurrentConfigurationAsSchemas } from '@/[fsd]/features/credentials/lib/hooks';
 import { CredentialsControls, CredentialsTabBar } from '@/[fsd]/features/credentials/ui';
 import { CREDENTIALS_TOUR_TARGET_IDS } from '@/[fsd]/features/interactive-tours/lib/constants';
+import { ToolBaseHelpers } from '@/[fsd]/features/toolkits/lib/helpers';
 import { useToolkitConfigurationProperties } from '@/[fsd]/features/toolkits/lib/hooks';
 import { useSelectedProjectId, useSystemSenderName } from '@/[fsd]/shared/lib/hooks';
 import { Tooltip } from '@/[fsd]/shared/ui';
@@ -55,20 +56,25 @@ const EditCredential = memo(({ title, forceShowTitle }) => {
     if (!isConfigurationDetailLoading && configuration) {
       const type = configuration?.type;
       const schema = configurationsAsSchema?.find(item => item?.type === configuration?.type);
+      const convertedSchema = convertCredentialConfigSchema(
+        schema?.config_schema,
+        toolSchema,
+        systemSenderName,
+      );
 
       return {
         ...configuration,
         type,
-        schema: convertCredentialConfigSchema(schema?.config_schema, toolSchema, systemSenderName),
+        schema: convertedSchema,
         section: configuration?.section,
         has_test_connection: schema?.has_test_connection || false,
         check_connection_label: schema?.check_connection_label,
-        settings: {
+        settings: ToolBaseHelpers.normalizeCheckboxListSettings(convertedSchema?.properties, {
           ...configuration?.data,
           elitea_title: configuration?.elitea_title || configuration?.data.title,
           label: configuration?.label || '',
           shared: configuration?.shared || false,
-        },
+        }),
       };
     }
     return {};
@@ -78,20 +84,25 @@ const EditCredential = memo(({ title, forceShowTitle }) => {
     if (!isConfigurationDetailLoading && configuration && configurationsAsSchema) {
       const type = configuration?.type;
       const schema = configurationsAsSchema.find(item => item?.type === configuration?.type);
+      const convertedSchema = convertCredentialConfigSchema(
+        schema?.config_schema,
+        toolSchema,
+        systemSenderName,
+      );
 
       setEditCredentialDetail({
         ...configuration,
         type,
-        schema: convertCredentialConfigSchema(schema?.config_schema, toolSchema, systemSenderName),
+        schema: convertedSchema,
         section: configuration?.section,
         has_test_connection: schema?.has_test_connection || false,
         check_connection_label: schema?.check_connection_label,
-        settings: {
+        settings: ToolBaseHelpers.normalizeCheckboxListSettings(convertedSchema?.properties, {
           ...configuration?.data,
           elitea_title: configuration?.elitea_title || configuration?.data.title,
           label: configuration?.label || '',
           shared: configuration?.shared || false,
-        },
+        }),
       });
     }
   }, [
@@ -119,20 +130,25 @@ const EditCredential = memo(({ title, forceShowTitle }) => {
     if (configuration && configurationsAsSchema) {
       const type = configuration?.type;
       const schema = configurationsAsSchema.find(item => item?.type === configuration?.type);
+      const convertedSchema = convertCredentialConfigSchema(
+        schema?.config_schema,
+        toolSchema,
+        systemSenderName,
+      );
 
       setEditCredentialDetail({
         ...configuration,
         type,
-        schema: convertCredentialConfigSchema(schema?.config_schema, toolSchema, systemSenderName),
+        schema: convertedSchema,
         section: configuration?.section,
         has_test_connection: schema?.has_test_connection || false,
         check_connection_label: schema?.check_connection_label,
-        settings: {
+        settings: ToolBaseHelpers.normalizeCheckboxListSettings(convertedSchema?.properties, {
           ...configuration?.data,
           elitea_title: configuration?.elitea_title || configuration?.data.title,
           label: configuration?.label || '',
           shared: configuration?.shared || false,
-        },
+        }),
       });
       setValidationErrorMessages({});
       setShowValidation(false);
