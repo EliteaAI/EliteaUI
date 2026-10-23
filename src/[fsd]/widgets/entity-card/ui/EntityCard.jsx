@@ -11,6 +11,7 @@ import {
   useCardNavigate,
   useCardResize,
   useDataViewMode,
+  useIsFrom,
   useSelectedProjectId,
 } from '@/[fsd]/shared/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
@@ -29,7 +30,6 @@ import AuthorContainer from '@/components/AuthorContainer';
 import { IconLinkWithToolTip } from '@/components/Fork/IconLinkWithToolTip.jsx';
 import HighlightQuery from '@/components/HighlightQuery';
 import FolderIcon from '@/components/Icons/FolderIcon';
-import { useIsFrom } from '@/hooks/useIsFromSpecificPageHooks';
 import RouteDefinitions from '@/routes';
 
 import CardTagSection from './CardTagSection';

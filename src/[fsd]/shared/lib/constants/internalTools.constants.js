@@ -28,18 +28,6 @@ export const INTERNAL_TOOLS_LIST = [
     toolkitNames: ['ImageGen', 'image_generation'],
   },
   {
-    name: 'web_search',
-    title: 'Web Search',
-    icon: 'GlobeIcon',
-    infoTooltip: {
-      text: 'Let the model search the web and read pages, and cite its sources.',
-    },
-    // Shown only when platform_settings.tool_spend.web_search.available
-    requiresWebSearch: true,
-    unavailableTooltip: 'Web Search is disabled by your administrator.',
-    toolkitNames: ['Web Search', 'tavily'],
-  },
-  {
     name: 'data_analysis',
     title: 'Data Analysis',
     icon: 'DatabaseIcon',
@@ -125,6 +113,18 @@ export const INTERNAL_TOOLS_LIST = [
       text: 'Reduce token usage when working with many toolkits by using meta-tools instead of binding all tools directly.',
     },
     toolkitNames: ['lazy_tools_mode'],
+  },
+  {
+    name: 'web_search',
+    title: 'Web Search',
+    icon: 'GlobeIcon',
+    infoTooltip: {
+      text: 'Let the model search the web and read pages, and cite its sources.',
+    },
+    // Shown only when platform_settings.tool_spend.web_search.available
+    requiresWebSearch: true,
+    unavailableTooltip: 'Web Search is disabled by your administrator.',
+    toolkitNames: ['Web Search', 'tavily'],
   },
 ];
 

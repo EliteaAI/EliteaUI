@@ -14,14 +14,7 @@ import FormInput from '@/components/FormInput';
 // const SEPARATOR = '$$$';
 
 const ContextStrategySummarization = memo(props => {
-  const {
-    formData,
-    errors,
-    handleInputChange,
-    handleSummaryLLMInputChange,
-    isEnabled,
-    enableAutoBlur = true,
-  } = props;
+  const { formData, errors, handleInputChange, handleSummaryLLMInputChange, enableAutoBlur = true } = props;
 
   const styles = summarizationStyles();
 
@@ -50,7 +43,6 @@ const ContextStrategySummarization = memo(props => {
           onChange={(event, checkedValue) =>
             handleInputChange({ target: { checked: checkedValue, type: 'checkbox' } }, 'enable_summarization')
           }
-          disabled={!isEnabled}
           label="Enable automatic summarization"
           slotProps={{
             switch: { size: 'small' },
@@ -81,7 +73,7 @@ const ContextStrategySummarization = memo(props => {
           enableAutoBlur={enableAutoBlur}
           error={!!errors.summary_llm_settings?.instructions}
           helperText={errors.summary_llm_settings?.instructions}
-          disabled={!isEnabled || !formData.enable_summarization}
+          disabled={!formData.enable_summarization}
           placeholder={CONTEXT_MESSAGES.DEFAULT_SUMMARY_INSTRUCTION}
           hasActionsToolBar
           fieldName="Summarization Instructions"
@@ -101,7 +93,7 @@ const ContextStrategySummarization = memo(props => {
             showBorder
             value={selectedModelValue}
             onChange={e => handleSummaryLLMInputChange(e, 'model_name')}
-            disabled={!isEnabled || !formData.enable_summarization}
+            disabled={!formData.enable_summarization}
             options={modelOptions}
             inputSX={styles.selectInput}
             renderOption={(option, isSelected) => (
@@ -139,7 +131,7 @@ const ContextStrategySummarization = memo(props => {
             onChange={e => handleInputChange(e, 'summary_trigger_ratio')}
             error={!!errors.summary_trigger_ratio}
             helperText={errors.summary_trigger_ratio || ' '}
-            disabled={!isEnabled || !formData.enable_summarization}
+            disabled={!formData.enable_summarization}
             inputProps={{
               min: 0.1,
               max: 1.0,
@@ -163,7 +155,7 @@ const ContextStrategySummarization = memo(props => {
             onChange={e => handleInputChange(e, 'min_messages_for_summary')}
             error={!!errors.min_messages_for_summary}
             helperText={errors.min_messages_for_summary || ' '}
-            disabled={!isEnabled || !formData.enable_summarization}
+            disabled={!formData.enable_summarization}
             inputProps={{
               pattern: '[1-9][0-9]*',
             }}
@@ -185,7 +177,7 @@ const ContextStrategySummarization = memo(props => {
             onChange={e => handleSummaryLLMInputChange(e, 'max_tokens', true)}
             error={!!errors.summary_llm_settings?.max_tokens}
             helperText={errors.summary_llm_settings?.max_tokens || ' '}
-            disabled={!isEnabled || !formData.enable_summarization}
+            disabled={!formData.enable_summarization}
             inputProps={{
               pattern: '[1-9][0-9]*',
               'data-testid': 'context-modal-target-summary-tokens-input',
