@@ -6,12 +6,11 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useTrackEvent } from '@/GA';
 import UnpublishConfirmModal from '@/[fsd]/entities/version/ui/UnpublishConfirmModal';
 import { AnalyticConstants } from '@/[fsd]/shared/lib/constants';
-import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
+import { useIsFromPipelineDetail, useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { MenuItemIcon } from '@/[fsd]/shared/ui/icon';
 import { useUnpublishApplicationMutation } from '@/api';
 import { CollectionStatus, PUBLIC_PROJECT_ID } from '@/common/constants';
 import UnpublishIcon from '@/components/Icons/UnpublishIcon';
-import { useIsFromPipelineDetail } from '@/hooks/useIsFromSpecificPageHooks';
 
 const { GA_EVENT_NAMES, GA_EVENT_PARAMS } = AnalyticConstants;
 

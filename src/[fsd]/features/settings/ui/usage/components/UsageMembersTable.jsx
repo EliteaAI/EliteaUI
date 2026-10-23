@@ -1,11 +1,13 @@
-import { memo } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 
-import { Box, Skeleton, Typography } from '@mui/material';
+import { Box, Skeleton, Typography, useTheme } from '@mui/material';
 
 import { GridTablePagination } from '@/[fsd]/entities/grid-table';
 import { UsageHelpers } from '@/[fsd]/features/settings/lib/helpers';
 import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
 import { SimpleSearchBar } from '@/[fsd]/shared/ui/input';
+
+import UsageSortHeader from './UsageSortHeader';
 
 const SEVERITY_COLOR = {
   exceeded: 'error',
@@ -26,13 +28,36 @@ const UsageMembersTable = memo(props => {
     isFetching = false,
     isError = false,
     onRetry,
+    isCurrentPeriod = true,
+    totalRows,
+    sortKey = null,
+    sortDir = 'desc',
+    onSort,
   } = props;
 
+  const { palette } = useTheme();
   const styles = usageMembersTableStyles();
 
   // Only the very first load has nothing to show; later fetches keep the old page visible
   const showsSkeleton = isFetching && !rows.length;
   const showsEmpty = !isFetching && !isError && !rows.length;
+  const showVsPrior = rows.some(r => r.prev_spend !== undefined);
+
+  const enrichedRows = useMemo(
+    () =>
+      rows.map(row => ({
+        ...row,
+        _delta: showVsPrior ? UsageHelpers.computeDelta(row.spend ?? 0, row.prev_spend ?? null) : null,
+      })),
+    [rows, showVsPrior],
+  );
+
+  const handleSort = useCallback(
+    key => {
+      onSort?.(key);
+    },
+    [onSort],
+  );
 
   return (
     <Box sx={styles.card}>
@@ -91,10 +116,37 @@ const UsageMembersTable = memo(props => {
       {(showsSkeleton || !!rows.length) && (
         <>
           <Box sx={styles.tableHeader}>
-            <Typography sx={[styles.cell, { flex: 3 }]}>Member</Typography>
-            <Typography sx={[styles.cell, styles.right, { flex: 1.2 }]}>Spent</Typography>
-            <Typography sx={[styles.cell, styles.right, { flex: 1.2 }]}>Limit</Typography>
-            <Typography sx={[styles.cell, styles.right, { flex: 1 }]}>Used</Typography>
+            <Box
+              sx={[styles.sortableCell, styles.nameCell, { flex: 3 }]}
+              onClick={() => handleSort('name')}
+              role="button"
+              tabIndex={0}
+              onKeyDown={e => e.key === 'Enter' && handleSort('name')}
+            >
+              <Typography sx={[styles.cell, sortKey === 'name' ? { color: palette.primary.main } : {}]}>
+                Member
+                {sortKey === 'name' && <Box component="span">{sortDir === 'desc' ? ' ▼' : ' ▲'}</Box>}
+              </Typography>
+            </Box>
+            <UsageSortHeader
+              label="Spent"
+              keyName="spend"
+              flex={1.2}
+              sortKey={sortKey}
+              sortDir={sortDir}
+              onSort={handleSort}
+            />
+            <Box sx={[styles.headerCell, { flex: 1.2 }]}>
+              <Typography sx={styles.cell}>Limit</Typography>
+            </Box>
+            <Box sx={[styles.headerCell, { flex: 1 }]}>
+              <Typography sx={styles.cell}>Used</Typography>
+            </Box>
+            {showVsPrior && (
+              <Box sx={[styles.headerCell, { flex: 0.9 }]}>
+                <Typography sx={styles.cell}>vs prior</Typography>
+              </Box>
+            )}
           </Box>
 
           {showsSkeleton &&
@@ -110,9 +162,18 @@ const UsageMembersTable = memo(props => {
               </Box>
             ))}
 
-          {rows.map(row => {
+          {enrichedRows.map(row => {
             const severity = UsageHelpers.usageSeverity(row.percent_used, warningPct);
             const color = SEVERITY_COLOR[severity];
+            const delta = row._delta;
+
+            const deltaColor = delta
+              ? delta.direction === 'up'
+                ? palette.warning.main
+                : delta.direction === 'down'
+                  ? palette.success.main
+                  : palette.text.disabled
+              : null;
 
             return (
               <Box
@@ -129,18 +190,30 @@ const UsageMembersTable = memo(props => {
                   {UsageHelpers.formatMoney(row.spend, row.currency)}
                 </Typography>
                 <Typography sx={[styles.value, styles.right, styles.muted, { flex: 1.2 }]}>
-                  {UsageHelpers.formatLimit(row.effective_limit, row.currency)}
+                  {isCurrentPeriod ? UsageHelpers.formatLimit(row.effective_limit, row.currency) : '—'}
                 </Typography>
                 <Typography
                   sx={[
                     styles.value,
                     styles.right,
                     { flex: 1 },
-                    color ? ({ palette }) => ({ color: palette[color].main, fontWeight: 600 }) : {},
+                    color ? ({ palette: p }) => ({ color: p[color].main, fontWeight: 600 }) : {},
                   ]}
                 >
-                  {row.percent_used === null || row.percent_used === undefined ? '—' : `${row.percent_used}%`}
+                  {!isCurrentPeriod
+                    ? '—'
+                    : row.percent_used === null || row.percent_used === undefined
+                      ? '—'
+                      : `${row.percent_used}%`}
                 </Typography>
+                {showVsPrior && (
+                  <Typography
+                    sx={[styles.value, styles.right, { flex: 0.9, color: deltaColor, fontWeight: 600 }]}
+                  >
+                    {delta?.direction === 'up' ? '▲ ' : delta?.direction === 'down' ? '▼ ' : ''}
+                    {delta?.label ?? '—'}
+                  </Typography>
+                )}
               </Box>
             );
           })}
@@ -159,6 +232,20 @@ const UsageMembersTable = memo(props => {
           </Typography>
           <Typography sx={[styles.value, styles.right, styles.muted, { flex: 1.2 }]}>—</Typography>
           <Typography sx={[styles.value, styles.right, styles.muted, { flex: 1 }]}>—</Typography>
+        </Box>
+      )}
+
+      {/* Dynamic footer: row count or end-of-period note */}
+      {!!rows.length && (
+        <Box sx={styles.tableFooter}>
+          <Typography
+            variant="bodySmall"
+            sx={styles.footerText}
+          >
+            {isCurrentPeriod
+              ? `${rows.length} of ${totalRows ?? rows.length} member${(totalRows ?? rows.length) !== 1 ? 's' : ''}`
+              : 'Showing final state at end of period'}
+          </Typography>
         </Box>
       )}
 
@@ -194,13 +281,11 @@ const usageMembersTableStyles = () => ({
     gap: '1rem',
     marginBottom: '0.75rem',
   },
-  // These Typography variants render inline, so the column has to come from here
   headerText: {
     display: 'flex',
     flexDirection: 'column',
     minWidth: 0,
   },
-  // SimpleSearchBar already draws its own border, so it stays visible on this card's fill
   search: {
     width: '15rem',
     flexShrink: 0,
@@ -242,6 +327,24 @@ const usageMembersTableStyles = () => ({
     textTransform: 'uppercase',
     color: palette.text.metrics || palette.text.disabled,
   }),
+  sortableCell: {
+    cursor: 'pointer',
+    userSelect: 'none',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    textAlign: 'right',
+  },
+  headerCell: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    textAlign: 'right',
+  },
+  nameCell: {
+    justifyContent: 'flex-start',
+    textAlign: 'left',
+  },
   value: ({ palette }) => ({
     fontSize: '0.8125rem',
     color: palette.text.secondary,
@@ -259,6 +362,15 @@ const usageMembersTableStyles = () => ({
   right: {
     textAlign: 'right',
   },
+  tableFooter: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    paddingTop: '0.375rem',
+  },
+  footerText: ({ palette }) => ({
+    color: palette.text.metrics || palette.text.disabled,
+    fontSize: '0.75rem',
+  }),
 });
 
 export default UsageMembersTable;

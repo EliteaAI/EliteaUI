@@ -129,6 +129,7 @@ const ChatMessageWrapper = memo(props => {
         onSubmit={getOnSubmit}
         onAddEditAttachment={onAddEditAttachment}
         onRemoveAttachment={onRemoveAttachment}
+        inputGuardrail={message.inputGuardrail}
       />
     );
 
@@ -173,6 +174,7 @@ const ChatMessageWrapper = memo(props => {
       shouldDisableRegenerate={shouldDisableRegenerate}
       references={message.references}
       exception={message.exception}
+      inputGuardrail={message.inputGuardrail}
       budgetErrorCode={message.budgetErrorCode}
       continuationError={message.continuationError}
       subAgentErrors={message.subAgentErrors}
