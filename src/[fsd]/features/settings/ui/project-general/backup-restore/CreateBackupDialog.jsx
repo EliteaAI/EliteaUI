@@ -115,6 +115,7 @@ const CreateBackupDialog = memo(props => {
           value={chats}
           onChange={setChats}
           items={items}
+          wrapRow
           disabled={isDownloading}
           testId="project-backup-chats-option"
         />

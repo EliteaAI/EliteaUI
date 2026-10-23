@@ -3,7 +3,8 @@ import { memo, useCallback, useEffect, useMemo } from 'react';
 import { Box, TextField, Typography } from '@mui/material';
 
 import { validateSkillDraft } from '@/[fsd]/features/skill/lib/helpers';
-import { MAX_DESCRIPTION_LENGTH, MAX_INSTRUCTIONS_LENGTH } from '@/common/constants.js';
+import { useSkillInstructionsMaxLength } from '@/[fsd]/features/skill/lib/hooks';
+import { MAX_DESCRIPTION_LENGTH } from '@/common/constants.js';
 
 const SKILL_NAME_MAX_LENGTH = 64;
 
@@ -12,7 +13,11 @@ const GenerateSkillReviewForm = memo(props => {
 
   const styles = generateSkillReviewFormStyles();
 
-  const validationErrors = useMemo(() => validateSkillDraft(draft), [draft]);
+  const maxInstructionsLength = useSkillInstructionsMaxLength();
+  const validationErrors = useMemo(
+    () => validateSkillDraft(draft, maxInstructionsLength),
+    [draft, maxInstructionsLength],
+  );
 
   const isValid = useMemo(() => Object.keys(validationErrors).length === 0, [validationErrors]);
 
@@ -87,12 +92,12 @@ const GenerateSkillReviewForm = memo(props => {
           onChange={e => handleFieldChange('instructions', e.target.value)}
           slotProps={{
             htmlInput: {
-              maxLength: MAX_INSTRUCTIONS_LENGTH,
+              maxLength: maxInstructionsLength,
               'data-testid': 'generate-skill-review-instructions-input',
             },
           }}
           helperText={
-            validationErrors.instructions || `${(draft.instructions || '').length}/${MAX_INSTRUCTIONS_LENGTH}`
+            validationErrors.instructions || `${(draft.instructions || '').length}/${maxInstructionsLength}`
           }
           error={!!validationErrors.instructions}
           sx={styles.textField}
