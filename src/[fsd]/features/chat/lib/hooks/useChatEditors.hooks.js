@@ -18,6 +18,7 @@ import { useConversationStarters } from './useConversationStarters.hooks';
 import { useEditProjectContext } from './useEditProjectContext.hooks';
 import { useEditSkill } from './useEditSkill.hooks';
 import { useMutuallyExclusiveEditors } from './useMutuallyExclusiveEditors.hooks';
+import { useSkillCreation } from './useSkillCreation.hooks';
 
 export const useChatEditors = ({
   projectId,
@@ -33,8 +34,7 @@ export const useChatEditors = ({
   onCloseArtifactEditor,
   refetchParticipantDetails,
   activeVersionName,
-  getChatParticipantUniqueId,
-  setLocalActiveParticipant,
+  activateParticipant,
 }) => {
   // Editor-state hooks
   const {
@@ -71,7 +71,16 @@ export const useChatEditors = ({
     gutterStyle: pipelineGutterStyle,
   } = useEditPipeline();
 
-  const { isEditingSkill, editingSkill, onShowSkillEditor, onCloseSkillEditor } = useEditSkill();
+  const {
+    isEditingSkill,
+    editingSkill,
+    isSkillCreateMode,
+    skillEditorSession,
+    onShowSkillEditor,
+    onShowSkillEditorCreator,
+    onSkillEditorCreated,
+    onCloseSkillEditor,
+  } = useEditSkill();
 
   const chatEditingSkill = useMemo(
     () =>
@@ -249,6 +258,7 @@ export const useChatEditors = ({
     onCreatePipeline,
     onCreateToolkit,
     onEditSkill,
+    onCreateSkill,
     onEditProjectContext,
   } = useMutuallyExclusiveEditors({
     onCloseAgentEditor: handleCloseAgentEditorWithUrlSync,
@@ -266,6 +276,7 @@ export const useChatEditors = ({
     onShowPipelineEditorCreator,
     onShowSkillEditor,
     onCloseSkillEditor,
+    onShowSkillEditorCreator,
     onShowProjectContextEditor,
     onCloseProjectContextEditor,
     isEditingGeneratedEntities,
@@ -273,13 +284,8 @@ export const useChatEditors = ({
   });
 
   const handleSetActiveParticipant = useCallback(
-    participant => {
-      setActiveParticipant(participant);
-      if (activeConversation?.id && getChatParticipantUniqueId && setLocalActiveParticipant) {
-        setLocalActiveParticipant(activeConversation.id, getChatParticipantUniqueId(participant));
-      }
-    },
-    [setActiveParticipant, activeConversation?.id, getChatParticipantUniqueId, setLocalActiveParticipant],
+    participant => activateParticipant(activeConversation?.id, participant),
+    [activateParticipant, activeConversation?.id],
   );
 
   // Creation hooks
@@ -295,7 +301,16 @@ export const useChatEditors = ({
   });
 
   const { onPipelineCreated } = usePipelineCreation({
+    projectId,
     onPipelineEditorCreated,
+    addNewParticipants,
+    onSetActiveParticipant: handleSetActiveParticipant,
+  });
+
+  const { onSkillCreated } = useSkillCreation({
+    projectId,
+    skillEditorSession,
+    onSkillEditorCreated,
     addNewParticipants,
     onSetActiveParticipant: handleSetActiveParticipant,
   });
@@ -351,6 +366,7 @@ export const useChatEditors = ({
     onCreateAgent,
     onCreatePipeline,
     onCreateToolkit,
+    onCreateSkill,
 
     // Direct close handlers
     handleCloseAgentEditor: handleCloseAgentEditorWithUrlSync,
@@ -368,6 +384,7 @@ export const useChatEditors = ({
     isToolkitCreateMode,
     isCreateMode,
     isPipelineCreateMode,
+    isSkillCreateMode,
     editingAgent,
     editingToolkit,
     editingPipeline,
@@ -382,6 +399,7 @@ export const useChatEditors = ({
     onAgentCreated,
     onPipelineCreated,
     onToolkitCreated,
+    onSkillCreated,
     handleAgentSaved,
 
     // Editor callbacks

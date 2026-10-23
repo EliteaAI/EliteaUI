@@ -271,6 +271,7 @@ describe('pause and guardrail helpers', () => {
   it('picks the chip from the status, then the guardrail counter', () => {
     expect(getCaseGuardrailChip(paused).label).toBe('Paused for review');
     expect(getCaseGuardrailChip({ status: 'parked' }).label).toBe('Parked');
+    expect(getCaseGuardrailChip({ status: 'guardrail_blocked' }).label).toBe('Input blocked');
     expect(getCaseGuardrailChip({ status: 'ok', metrics: { guardrail_events: 3 } })).toEqual({
       label: 'Guardrail: 3',
       tooltip: '3 tool calls were blocked or waited on authorization.',

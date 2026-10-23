@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   buildIndexHistoryRows,
+  findLastFinishedRunTimestamp,
   indexHistoryRowId,
   resolveIndexRunDuration,
 } from '../indexHistoryRow.helpers';
@@ -125,5 +126,56 @@ describe('indexHistoryRowId', () => {
     const [row] = build([entry]);
 
     expect(indexHistoryRowId(entry)).toBe(row.id);
+  });
+});
+
+describe('findLastFinishedRunTimestamp', () => {
+  it('takes the latest finish whether a person or the schedule started the run', () => {
+    const history = [
+      { state: 'completed', initiator: 'user', updated_on: 100 },
+      { state: 'scheduled_reindex', initiator: 'schedule', updated_on: 200 },
+      { state: 'completed', initiator: 'user', updated_on: 300 },
+    ];
+
+    expect(findLastFinishedRunTimestamp(history)).toBe(300);
+  });
+
+  it('counts the build that created the index', () => {
+    const history = [{ state: 'completed', initiator: 'user', updated_on: 100 }];
+
+    expect(findLastFinishedRunTimestamp(history)).toBe(100);
+  });
+
+  it('counts a failed or stopped run as the last run', () => {
+    const history = [
+      { state: 'completed', updated_on: 100 },
+      { state: 'failed', initiator: 'schedule', updated_on: 200 },
+      { state: 'cancelled', initiator: 'user', updated_on: 300 },
+    ];
+
+    expect(findLastFinishedRunTimestamp(history)).toBe(300);
+  });
+
+  it('skips the run still in flight at the tail of the history', () => {
+    const history = [
+      { state: 'completed', updated_on: 100 },
+      { state: 'in_progress', updated_on: 500 },
+    ];
+
+    expect(findLastFinishedRunTimestamp(history)).toBe(100);
+  });
+
+  it('skips Run Test rows, which do not touch the index', () => {
+    const history = [
+      { state: 'completed', updated_on: 100 },
+      { state: 'run_test', updated_on: 500 },
+    ];
+
+    expect(findLastFinishedRunTimestamp(history)).toBe(100);
+  });
+
+  it('has nothing to report before the first run finishes', () => {
+    expect(findLastFinishedRunTimestamp(undefined)).toBeNull();
+    expect(findLastFinishedRunTimestamp([{ state: 'in_progress', updated_on: 500 }])).toBeNull();
   });
 });
