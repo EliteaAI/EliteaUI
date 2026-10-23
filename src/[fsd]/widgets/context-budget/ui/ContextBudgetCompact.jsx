@@ -2,7 +2,7 @@ import { memo, useMemo } from 'react';
 
 import { Box, IconButton, Tooltip, Typography, useTheme } from '@mui/material';
 
-import { TOOLTIP_CONFIG } from '@/[fsd]/widgets/context-budget/lib/constants';
+import { CONTEXT_WINDOW_COPY, TOOLTIP_CONFIG } from '@/[fsd]/widgets/context-budget/lib/constants';
 import { ContextBudgetTooltipContent, SummaryDetailsButton } from '@/[fsd]/widgets/context-budget/ui';
 import ClipboardIcon from '@/assets/clipboard-icon.svg?react';
 import MessagesIcon from '@/assets/messages-icon.svg?react';
@@ -15,7 +15,7 @@ import EditIcon from '@/components/Icons/EditIcon';
  * Displays tokens, messages, and summaries in a row format.
  */
 const ContextBudgetCompact = memo(props => {
-  const { stats, isHighUtilization, onEdit, conversationId } = props;
+  const { stats, isHighUtilization, onEdit, conversationId, canEdit = true } = props;
   const theme = useTheme();
   const styles = contextBudgetCompactStyles();
 
@@ -35,6 +35,7 @@ const ContextBudgetCompact = memo(props => {
           <ContextBudgetTooltipContent
             stats={stats}
             isHighUtilization={isHighUtilization}
+            showTotals
           />
         }
         placement={TOOLTIP_CONFIG.COMPACT.placement}
@@ -97,17 +98,20 @@ const ContextBudgetCompact = memo(props => {
       </Box>
       {onEdit && (
         <Tooltip
-          title="Edit context settings"
+          title={canEdit ? 'Edit context settings' : CONTEXT_WINDOW_COPY.NO_PERMISSION}
           placement={TOOLTIP_CONFIG.INFO.placement}
         >
-          <IconButton
-            variant="elitea"
-            color="tertiary"
-            onClick={onEdit}
-            sx={styles.editButton}
-          >
-            <EditIcon sx={{ fontSize: '1rem' }} />
-          </IconButton>
+          <Box component="span">
+            <IconButton
+              variant="elitea"
+              color="tertiary"
+              onClick={onEdit}
+              disabled={!canEdit}
+              sx={styles.editButton}
+            >
+              <EditIcon sx={{ fontSize: '1rem' }} />
+            </IconButton>
+          </Box>
         </Tooltip>
       )}
     </Box>

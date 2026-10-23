@@ -39,6 +39,7 @@ import {
   indexSearchBlockedReason,
   shouldDropIndexStateOverride,
 } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexDetails.helpers';
+import { findLastFinishedRunTimestamp } from '@/[fsd]/features/toolkits/indexes/lib/helpers/indexHistoryRow.helpers';
 import { useIndexesListPolling } from '@/[fsd]/features/toolkits/indexes/lib/hooks';
 import { selectToolkitScheduler } from '@/[fsd]/features/toolkits/indexes/model/indexes.slice';
 import { IndexActivityPanel, IndexScheduleModal, RunIndexBanner } from '@/[fsd]/features/toolkits/indexes/ui';
@@ -323,6 +324,12 @@ const RunIndexPanel = memo(props => {
     return date.toLocaleString(undefined, SCHEDULE_DATE_FORMAT);
   }, [scheduleData.cron, scheduleData.timezone]);
 
+  const scheduleLastRun = useMemo(() => {
+    const finishedOn = findLastFinishedRunTimestamp(index?.metadata?.history);
+    if (finishedOn === null) return null;
+    return new Date(finishedOn * 1000).toLocaleString(undefined, SCHEDULE_DATE_FORMAT);
+  }, [index?.metadata?.history]);
+
   const scheduleExpiration = useMemo(() => {
     // An absent value means the scheduler has not priced this schedule yet, not that it
     // never expires.
@@ -597,6 +604,7 @@ const RunIndexPanel = memo(props => {
           enabled={scheduleData.enabled}
           scheduleSummary={scheduleSummary}
           timezoneHint={scheduleTimezoneHint}
+          lastRun={scheduleLastRun}
           // A retired schedule will not fire again until it is turned back on, so showing the
           // cron's next occurrence next to "Expired" would promise a run that cannot happen.
           nextRun={scheduleExpiration?.expired ? null : scheduleNextRun}
