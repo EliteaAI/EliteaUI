@@ -7,6 +7,7 @@ import { ConfigurationTitlesConstants } from '@/[fsd]/features/credentials/lib/c
 import { CredentialErrorHelpers } from '@/[fsd]/features/credentials/lib/helpers';
 import { McpAuthHelpers } from '@/[fsd]/features/mcp/lib/helpers';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
+import { readRefusal } from '@/[fsd]/shared/lib/utils';
 import {
   useCreateConfigurationMutation,
   useTestConfigurationConnectionMutation,
@@ -82,6 +83,8 @@ export default function useCreateConfiguration({
   // looked up and stored per-credential rather than per-tenant, ensuring that two
   // SharePoint credentials sharing the same oauth_discovery_endpoint remain isolated.
   oauthTokenKey,
+  // Optional uuid of the saved credential: when set, the backend tests the stored credential
+  configurationUuid,
 }) {
   const { toastError, toastSuccess, toastWarning } = useToast();
   const [testConnection, { isLoading: isTestingConnection }] = useTestConfigurationConnectionMutation();
@@ -166,6 +169,7 @@ export default function useCreateConfiguration({
           projectId: selectedProjectId,
           configType: type,
           body: testConnectionBody,
+          configurationUuid,
         });
         if (!error) {
           // Check if response contains discovered tools (MCP tool discovery)
@@ -185,6 +189,16 @@ export default function useCreateConfiguration({
             // credential-scoped storage key so the modal shows a human-readable URL
             // but stores the token under the per-credential key.
             onConfigAuthRequired?.(error.data, discoveryEndpoint, oauthTokenKey);
+            return;
+          }
+
+          // A refusal with a code and a readable message is shown as is (message + code), not
+          // matched against the form fields
+          const refusal = readRefusal(error);
+          if (refusal) {
+            setValidationErrorMessages?.({});
+            setShowValidation?.(false);
+            setTestConnectionError?.(refusal);
             return;
           }
 
@@ -228,6 +242,7 @@ export default function useCreateConfiguration({
     onToolsDiscovered,
     onConfigAuthRequired,
     oauthTokenKey,
+    configurationUuid,
   ]);
 
   const onCreateConfiguration = useCallback(async () => {

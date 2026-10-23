@@ -2,6 +2,7 @@ export * as CredentialNameHelpers from './credentialName.helpers';
 export * as CredentialIconHelpers from './credentialIcon.helpers';
 export * as CredentialHelpers from './credential.helpers';
 export * as CredentialErrorHelpers from './credentialError.helpers';
+export * as CredentialProbeHelpers from './credentialProbe.helpers';
 export * as CredentialVisibilityHelpers from './credentialVisibility.helpers';
 export * as LlmModelFormHelpers from './llmModelForm.helpers.js';
 export * as CredentialLabelHelpers from './credentialLabel.helpers';

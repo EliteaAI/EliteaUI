@@ -2,6 +2,7 @@ import { Typography } from '@mui/material';
 
 import { filterProps } from '@/ComponentsLib/utils/common';
 import { store } from '@/[fsd]/shared/config';
+import { readRefusal } from '@/[fsd]/shared/lib/utils/refusal.utils';
 import {
   isApplicationCard,
   isMCPCard,
@@ -148,6 +149,9 @@ export const buildErrorMessage = err => {
     return 'The requested resource was not found!';
   }
   if (err?.status === 403) {
+    // A 403 that carries a code and a readable message is a refusal with a reason; show the reason
+    const refusal = readRefusal(err);
+    if (refusal) return refusal.message;
     const state = store.getState();
     const { personal_project_id } = state.user || {};
     const { project } = state.settings || {};
