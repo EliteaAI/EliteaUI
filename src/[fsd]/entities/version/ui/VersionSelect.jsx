@@ -30,6 +30,8 @@ const VersionSelect = memo(props => {
     formikVersionData = null,
     handleSetDefaultVersion = null,
     errorVersionName = '',
+    value,
+    onChange,
     testId,
   } = props;
 
@@ -93,6 +95,12 @@ const VersionSelect = memo(props => {
 
   const onSelectVersion = useCallback(
     newVersion => {
+      // Controlled mode: the parent owns the value, the URL stays untouched.
+      if (onChange) {
+        onChange(newVersion);
+        return;
+      }
+
       const selectedVersionObj = actualVersions.find(item => item.id === newVersion);
 
       const newPath = replaceVersionInPath(
@@ -140,6 +148,7 @@ const VersionSelect = memo(props => {
       entityName,
       viewMode,
       onVersionChange,
+      onChange,
     ],
   );
 
@@ -204,7 +213,7 @@ const VersionSelect = memo(props => {
             );
           }}
           customRenderOption={customRenderOption}
-          value={currentVersion}
+          value={onChange ? value : currentVersion}
           options={filteredOptions}
           optionsWithAvatar={false}
           inputSX={styles.inputSx}

@@ -9,7 +9,7 @@ import {
   formatAgentRunModels,
   formatAgentUserLabel,
 } from './agentAnalytics.helpers.js';
-import { formatTriggerLabel, formatVersionLabel, triggerSourceLabel } from './analyticsCommon.helpers.js';
+import { entityKindLabel, formatVersionLabel, triggerSourceLabel } from './analyticsCommon.helpers.js';
 import { tokenStats } from './analyticsToken.helpers.js';
 import { skillDisplayName, skillSourceLabel } from './skillAnalytics.helpers.js';
 
@@ -143,6 +143,7 @@ const buildOverviewSheet = (data, meta, isPersonalProject = false, includeSkills
 
   const automatedCols = [
     { header: 'Trigger Source', key: 'trigger_source' },
+    { header: 'Entity type', key: 'entity_kind' },
     { header: 'Runs', key: 'runs', numFmt: ExcelFormats.integer },
     { header: 'LLM Calls', key: 'llm_calls', numFmt: ExcelFormats.integer },
     { header: 'Tool Runs', key: 'tool_runs', numFmt: ExcelFormats.integer },
@@ -153,7 +154,11 @@ const buildOverviewSheet = (data, meta, isPersonalProject = false, includeSkills
     columns: automatedCols,
     rows:
       automated.length > 0
-        ? automated.map(a => ({ ...a, trigger_source: triggerSourceLabel(a.trigger_source) }))
+        ? automated.map(a => ({
+            ...a,
+            trigger_source: triggerSourceLabel(a.trigger_source),
+            entity_kind: entityKindLabel(a.entity_kind),
+          }))
         : emptyRow(automatedCols, NO_DATA_MSG),
   });
 
@@ -466,15 +471,18 @@ const buildAgentsSheet = (data, meta) => {
     rows: topAgents.length > 0 ? topAgents : emptyRow(topAgentCols, NO_DATA_MSG),
   });
 
-  const dailyCols = [
-    { header: 'Date', key: 'date' },
-    { header: 'Chat Messages', key: 'messages', numFmt: ExcelFormats.integer },
-  ];
-  sections.push({
-    title: 'Chat Messages',
-    columns: dailyCols,
-    rows: chat_daily.length > 0 ? chat_daily : emptyRow(dailyCols, NO_DATA_MSG),
-  });
+  // BUG-31 (US-57 R3.1, R3.2): the agents endpoint sends no daily chat counts today, so the section shows
+  // only when it has rows, like the Agents tab chart; the Overview card count stays in Summary Metrics
+  if (chat_daily.length > 0) {
+    sections.push({
+      title: 'Chat Messages',
+      columns: [
+        { header: 'Date', key: 'date' },
+        { header: 'Chat Messages', key: 'messages', numFmt: ExcelFormats.integer },
+      ],
+      rows: chat_daily,
+    });
+  }
 
   const agentCols = [
     { header: 'Agent / Pipeline', key: 'entity_name' },
@@ -648,7 +656,7 @@ export const buildSkillDetailSheet = (detail, meta) => {
         r => r.user_email || `User ${r.user_id}`,
       ),
       skillSection('By Trigger Source', { header: 'Trigger', key: 'trigger_source' }, by_trigger_source, r =>
-        formatTriggerLabel(r.trigger_source),
+        triggerSourceLabel(r.trigger_source),
       ),
       {
         title: 'Used by Agents',
@@ -803,7 +811,7 @@ export const buildAgentDetailSheet = (
       })),
       buildAgentSection('Trigger Sources', triggerCols, by_trigger_source, row => ({
         ...row,
-        trigger_source: formatTriggerLabel(row.trigger_source),
+        trigger_source: triggerSourceLabel(row.trigger_source),
       })),
       buildAgentSection(recentRunsTitle(runs.length, runsTotal, runsTruncated), runCols, runs, row => ({
         ...row,

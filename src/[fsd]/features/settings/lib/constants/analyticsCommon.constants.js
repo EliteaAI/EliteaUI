@@ -18,11 +18,16 @@ export const ENTITY_KIND_LABELS = {
   pipeline: 'Pipeline',
 };
 
-// usage_event.trigger_source of automated runs (#6881); manual runs carry no value
+// usage_event.trigger_source of every run; `manual` is the legacy value of runs recorded before sources existed
 export const TRIGGER_SOURCE_LABELS = {
-  scheduled: 'Scheduled Pipelines',
-  webhook: 'Webhook Triggers',
-  index: 'Index Runs',
+  chat: 'Chat',
+  api: 'API',
+  mcp: 'MCP',
+  webhook: 'Webhook',
+  scheduled: 'Scheduled',
+  schedule_manual: 'Schedule run now',
+  index: 'Index runs',
+  manual: 'Manual (legacy)',
 };
 
 // Embedding calls are metered as llm events, so every token, call and cost figure covers both (#6878)
@@ -53,9 +58,9 @@ export const ANALYTICS_SEARCH_PARAMS = {
 
 export const TOOLTIP_TEXTS = {
   overview: {
-    TEAM: 'Shows active project members out of all project members. Active members performed at least one tracked action during the selected date range. Scheduled, webhook-triggered, and index runs are not counted as member activity.',
+    TEAM: 'Shows active project members out of all project members. Active members performed at least one tracked action during the selected date range. Runs from Webhook, Scheduled, Schedule run now, and Index runs are not counted as member activity.',
     AI_ACTIVE:
-      'Number of members who used AI features during the selected date range, including LLM calls, tool runs, or Agent and Pipeline runs. Automated runs (scheduled, webhook, index) do not make a member AI active.',
+      'Number of members who used AI features during the selected date range, including LLM calls, tool runs, or Agent and Pipeline runs. Automated runs (Webhook, Scheduled, Schedule run now, Index runs) do not make a member AI active.',
     LLM_CALLS: `Total ${MODEL_REQUESTS} during the selected date range.`,
     TOOL_RUNS:
       'Total tool executions during the selected date range. This includes tools, sub-agents, and sub-pipelines invoked by Agents or Pipelines.',
@@ -68,11 +73,11 @@ export const TOOLTIP_TEXTS = {
     TOKENS: `Total input and output tokens used by ${MODEL_REQUESTS} during the selected date range.`,
     COST: `Estimated USD cost of ${MODEL_REQUESTS} during the selected date range. Costs are calculated from the platform's local model-price table and may differ from provider invoices.`,
     LEADERBOARD:
-      'Ranks users by combined LLM calls, tool runs, and Agent & Pipeline runs during the selected date range. Only manually started activity (UI or API) is ranked.',
+      'Ranks users by combined LLM calls, tool runs, and Agent & Pipeline runs during the selected date range. Only manually started activity (Chat, API, or MCP) is ranked. Webhook, Scheduled, Schedule run now, and Index runs are not ranked.',
     LEADERBOARD_SKILL_RUNS:
       'Model and tool calls made by skill runs count toward the score; the Skill figure shows how many skill runs they came from.',
     AUTOMATED_ACTIVITY:
-      'Runs started automatically by a schedule, a webhook, or indexing during the selected date range. They are included in project totals and cost, but are not counted as activity of the user who configured them.',
+      'Runs started automatically by Webhook, Scheduled, Schedule run now, or Index runs during the selected date range. They are included in project totals and cost, but are not counted as activity of the user who configured them.',
     MODEL_USAGE:
       "Shows LLM usage by model, including calls/runs, unique users for Team Projects, and each model's share of total LLM usage.",
     MODEL_USAGE_PRIVATE:
@@ -148,7 +153,8 @@ export const TOOLTIP_TEXTS = {
       'Runs and in-agent uses per skill version. Unknown version means the agent did not record which version it used.',
     MODELS: 'Model calls made by this skill’s runs, per model.',
     USERS: 'Users who ran this skill or used it through an agent.',
-    TRIGGERS: 'How the runs and uses started: manually, or by a schedule, webhook, or index run.',
+    TRIGGERS:
+      'How the runs and uses started: Chat, API, MCP, Webhook, Scheduled, Schedule run now, or Index runs.',
     AGENTS: 'Agents and Pipelines that loaded or mentioned this skill, by number of uses.',
     SOURCES: 'How agents activated this skill: loaded on demand (load_skill) or mentioned in the message.',
     RECENT_RUNS: 'The latest runs of this skill. Open a run to see its own analytics.',
@@ -184,7 +190,7 @@ export const TOOLTIP_TEXTS = {
     MODELS_SECTION:
       'Shows models used during execution, including distinct runs, LLM calls, token usage, and estimated cost. A run using multiple models is counted in each applicable model row. Only LLM calls are included, so tool calls add no tokens or cost here.',
     TRIGGERS_SECTION:
-      'Shows how runs were initiated, with their token usage and estimated cost. Runs without a recorded schedule or webhook trigger appear as Manual.',
+      'Shows how runs were initiated (Chat, API, MCP, Webhook, Scheduled, Schedule run now, or Index runs), with their token usage and estimated cost. Runs recorded before sources existed appear as Manual (legacy).',
     RECENT_RUNS_SECTION:
       'Shows individual runs during the selected period. Select a start time to open that run’s Analytics page.',
   },
@@ -297,9 +303,9 @@ export const GUIDE_SECTIONS = [
       {
         name: 'Automated Activity',
         description:
-          'Shows runs that were started automatically rather than by a person: Scheduled Pipelines, Webhook Triggers, and Index Runs. Each source lists its runs, LLM calls, tool runs, and estimated cost. These runs are part of the project totals and cost, and are still billed to the user who configured them, but they are excluded from TEAM, AI ACTIVE, active users, Top 5 AI Adopters, and the Users and Activity tabs.',
+          'Shows runs that were started automatically rather than by a person: Webhook, Scheduled, Schedule run now, and Index runs. Each source lists its runs, LLM calls, tool runs, and estimated cost. These runs are part of the project totals and cost, and are still billed to the user who configured them, but they are excluded from TEAM, AI ACTIVE, active users, Top 5 AI Adopters, and the Users and Activity tabs.',
         calculation:
-          'Grouped by trigger source. Index runs recorded before this tracking existed count as manual.',
+          'Rows are grouped by trigger source and entity type (Agent or Pipeline). The Entity type column shows a dash when a run has no entity type. Runs recorded before trigger sources existed show as Manual (legacy).',
       },
     ],
   },
@@ -431,7 +437,7 @@ export const GUIDE_SECTIONS = [
       {
         name: 'Agent & Pipeline Detail View',
         description:
-          'Selecting an Agent or Pipeline opens a detail view with its total runs, unique users, total cost, input-token cost, output-token cost, token usage, evaluation tokens, latency, errors, and daily runs. Below them, Versions and Models show runs, tokens, and cost per executed version and per model (a run that used several models counts once in each model row, and only LLM calls are included); Users, Tools, and Skills show who ran it, which tools it called, and which skills it loaded or mentioned; Trigger Sources shows runs, tokens, and cost per initiating trigger, where runs without a recorded schedule or webhook trigger appear as Manual. Recent Runs lists every run with its user, version, models, tokens, cost, and Error or Success status, sorted and paged across the whole date range. Select a run start time to open that run’s Analytics page; the browser Back button returns to the same detail view and date range. Runs of a Catalog or deleted Agent or Pipeline have no run page and show their start time as plain text. The Export button downloads all of these tables, including every Recent Run with its run URL.',
+          'Selecting an Agent or Pipeline opens a detail view with its total runs, unique users, total cost, input-token cost, output-token cost, token usage, evaluation tokens, latency, errors, and daily runs. Below them, Versions and Models show runs, tokens, and cost per executed version and per model (a run that used several models counts once in each model row, and only LLM calls are included); Users, Tools, and Skills show who ran it, which tools it called, and which skills it loaded or mentioned; Trigger Sources shows runs, tokens, and cost per initiating trigger, where the source is Chat, API, MCP, Webhook, Scheduled, Schedule run now, or Index runs, and older runs recorded before sources existed show as Manual (legacy). Recent Runs lists every run with its user, version, models, tokens, cost, and Error or Success status, sorted and paged across the whole date range. Select a run start time to open that run’s Analytics page; the browser Back button returns to the same detail view and date range. Runs of a Catalog or deleted Agent or Pipeline have no run page and show their start time as plain text. The Export button downloads all of these tables, including every Recent Run with its run URL.',
       },
     ],
   },

@@ -18,6 +18,7 @@ import {
   ApplicationsTabs,
   CredentialsTabs,
   MISSING_ENVS,
+  PERMISSIONS,
   PERSONAL_SPACE_PERIOD_FOR_NEW_USER,
   SkillsTabs,
   ToolkitsTabs,
@@ -37,6 +38,13 @@ const UsageContainer = ChunkHelpers.lazyWithRetry(
 const AppDetail = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/apps/AppDetail'));
 const Apps = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/apps/Apps'));
 const McpAuthPage = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/mcp'));
+const SchedulesPage = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/schedules'));
+const ScheduleDetailPage = ChunkHelpers.lazyWithRetry(() =>
+  import('@/[fsd]/pages/schedules').then(module => ({ default: module.ScheduleDetailPage })),
+);
+const CreateSchedulePage = ChunkHelpers.lazyWithRetry(() =>
+  import('@/[fsd]/pages/schedules').then(module => ({ default: module.CreateSchedulePage })),
+);
 const Resources = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/resources'));
 const Settings = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/settings'));
 const AIConfiguration = ChunkHelpers.lazyWithRetry(() => import('@/[fsd]/pages/settings/AIProviders'));
@@ -227,6 +235,16 @@ const ProtectedRoutes = memo(() => {
         path: RouteDefinitions.ApplicationsEvaluateHistoryAnalytics,
         element: <AgentEvaluateHistoryAnalyticsPage />,
       },
+      {
+        path: RouteDefinitions.ApplicationsCreateSchedule,
+        element: <CreateSchedulePage entityType="agent" />,
+        requiredPermissions: [PERMISSIONS.schedules.create],
+      },
+      {
+        path: RouteDefinitions.ApplicationsScheduleDetail,
+        element: <ScheduleDetailPage entityType="agent" />,
+        requiredPermissions: [PERMISSIONS.schedules.details],
+      },
 
       /* skills — hidden for public projects */
       { path: RouteDefinitions.Skills, element: <SkillsGuard>{getIndexElement(SkillsTabs[0])}</SkillsGuard> },
@@ -303,6 +321,16 @@ const ProtectedRoutes = memo(() => {
 
       { path: RouteDefinitions.PipelineRunHistory, element: <PipelineRunHistory /> },
       { path: RouteDefinitions.PipelineRunAnalytics, element: <PipelineRunAnalytics /> },
+      {
+        path: RouteDefinitions.PipelineCreateSchedule,
+        element: <CreateSchedulePage entityType="pipeline" />,
+        requiredPermissions: [PERMISSIONS.schedules.create],
+      },
+      {
+        path: RouteDefinitions.PipelineScheduleDetail,
+        element: <ScheduleDetailPage entityType="pipeline" />,
+        requiredPermissions: [PERMISSIONS.schedules.details],
+      },
 
       /* credentials */
       { path: RouteDefinitions.Credentials, element: getIndexElement(CredentialsTabs[0]) },
@@ -440,6 +468,30 @@ const ProtectedRoutes = memo(() => {
             <Route
               path="secrets"
               element={<Secrets />}
+            />
+            <Route
+              path={RouteDefinitions.Schedules}
+              element={
+                <ProtectedRoute requiredPermissions={[PERMISSIONS.schedules.list]}>
+                  <SchedulesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path={RouteDefinitions.CreateSchedule}
+              element={
+                <ProtectedRoute requiredPermissions={[PERMISSIONS.schedules.create]}>
+                  <CreateSchedulePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path={RouteDefinitions.ScheduleDetail}
+              element={
+                <ProtectedRoute requiredPermissions={[PERMISSIONS.schedules.details]}>
+                  <ScheduleDetailPage />
+                </ProtectedRoute>
+              }
             />
             <Route
               path="users"

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { ExcelFormats } from '@/[fsd]/shared/lib/utils';
 
@@ -467,7 +467,7 @@ describe('buildAgentDetailSheet', () => {
 
     expect(sectionOf(sheet, 'Versions').rows[0].version_name).toBe('Unknown version');
     expect(sectionOf(sheet, 'Models').rows[0].display_name).toBe('gpt-4o');
-    expect(sectionOf(sheet, 'Trigger Sources').rows[0].trigger_source).toBe('Manual');
+    expect(sectionOf(sheet, 'Trigger Sources').rows[0].trigger_source).toBe('Manual (legacy)');
     expect(sectionOf(sheet, 'Users').rows[0].user_email).toBe('User 11');
   });
 
@@ -645,5 +645,83 @@ describe('buildAgentAnalyticsExportFileName', () => {
         dateTo: '2026-10-10T12:00:00',
       }),
     ).toBe('Team_pipeline_Reviewer_2026-10-01-2026-10-10.xlsx');
+  });
+});
+
+describe('R1.4 EL-7011 Automated Activity export', () => {
+  const SEPT_META = { projectName: 'Team', dateFrom: '2026-09-01', dateTo: '2026-09-30', timeZone: 'UTC' };
+  const automated = [
+    { trigger_source: 'schedule_manual', entity_kind: 'agent', runs: 2 },
+    { trigger_source: 'scheduled', entity_kind: 'pipeline', runs: 3 },
+    { trigger_source: 'index', runs: 1 },
+  ];
+  let sec;
+
+  beforeAll(() => {
+    const [overview] = buildAnalyticsSheets({
+      overview: { automated },
+      overviewUsage: {},
+      costs: {},
+      users: {},
+      skills: {},
+      meta: SEPT_META,
+    });
+    sec = overview.sections.find(s => s.title === 'Automated Activity');
+  });
+
+  it('adds an Entity type column after Trigger Source (TC-US57-07)', () => {
+    expect(sec.columns.map(c => c.header).slice(0, 2)).toEqual(['Trigger Source', 'Entity type']);
+  });
+
+  it('writes source labels, entity labels and "-" when kind is missing (TC-US57-08)', () => {
+    expect(sec.rows.map(r => [r.trigger_source, r.entity_kind])).toEqual([
+      ['Schedule run now', 'Agent'],
+      ['Scheduled', 'Pipeline'],
+      ['Index runs', '-'],
+    ]);
+  });
+});
+
+describe('BUG-31 Chat Messages export section', () => {
+  const AGENT_ROW = { entity_id: 3, entity_name: 'Reviewer', events: 4 };
+  const sheetsWith = ({ agents, overview = {}, overviewUsage = {} }) =>
+    buildAnalyticsSheets({ overview, overviewUsage, costs: {}, users: {}, skills: {}, agents, meta: META });
+  const sheet = (sheets, name) => sheets.find(s => s.sheetName === name);
+
+  it('R3.1 EL-7011 leaves the Chat Messages section out when chat_daily is empty', () => {
+    const agentsSheet = sheet(
+      sheetsWith({ agents: { rows: [AGENT_ROW], chat_daily: [] } }),
+      'Agents & Pipelines',
+    );
+
+    expect(sectionTitles(agentsSheet)).not.toContain('Chat Messages');
+  });
+
+  it('R3.2 EL-7011 writes one Chat Messages row per day when chat_daily has rows', () => {
+    const agentsSheet = sheet(
+      sheetsWith({ agents: { rows: [AGENT_ROW], chat_daily: [{ date: '2026-09-02', messages: 2 }] } }),
+      'Agents & Pipelines',
+    );
+    const chat = agentsSheet.sections.find(s => s.title === 'Chat Messages');
+
+    expect(chat.rows).toEqual([{ date: '2026-09-02', messages: 2 }]);
+  });
+
+  it('R2.4 EL-7011 still writes the Overview card Chat Messages count in Summary Metrics', () => {
+    const sheets = sheetsWith({
+      agents: { rows: [], chat_daily: [] },
+      overview: { kpis: { chat_msgs: 2 } },
+      overviewUsage: { kpis: { agent_runs: 1 } },
+    });
+    const metrics = sheet(sheets, 'Overview').sections.find(s => s.title === 'Summary Metrics').rows;
+
+    expect(metrics.find(r => r.metric === 'Chat Messages').value).toBe(2);
+  });
+
+  it('R2.5 EL-7011 still shows "No data available" in the agents sections when the list is empty', () => {
+    const agentsSheet = sheet(sheetsWith({ agents: { rows: [], chat_daily: [] } }), 'Agents & Pipelines');
+    const top = agentsSheet.sections.find(s => s.title === 'Most Active Agents & Pipelines');
+
+    expect(JSON.stringify(top.rows)).toContain('No data available for the selected date range.');
   });
 });

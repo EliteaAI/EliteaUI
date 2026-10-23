@@ -95,6 +95,14 @@ export const BREADCRUMB_REGISTRY = {
     parent: RouteDefinitions.ApplicationsEvaluateHistory,
     label: 'Analytics',
   },
+  [RouteDefinitions.ApplicationsCreateSchedule]: {
+    parent: RouteDefinitions.ApplicationsDetail,
+    label: 'New Schedule',
+  },
+  [RouteDefinitions.ApplicationsScheduleDetail]: {
+    parent: RouteDefinitions.ApplicationsDetail,
+    label: 'Edit Schedule',
+  },
 
   [RouteDefinitions.SkillsWithTab]: { label: PathSessionMap[RouteDefinitions.Skills] },
   [RouteDefinitions.CreateSkill]: { parent: RouteDefinitions.SkillsWithTab, label: 'New Skill' },
@@ -142,5 +150,21 @@ export const BREADCRUMB_REGISTRY = {
   [RouteDefinitions.PipelineRunAnalytics]: {
     parent: RouteDefinitions.PipelineRunHistory,
     label: 'Analytics',
+  },
+  [RouteDefinitions.PipelineCreateSchedule]: {
+    parent: RouteDefinitions.PipelineDetail,
+    label: 'New Schedule',
+  },
+  [RouteDefinitions.PipelineScheduleDetail]: {
+    parent: RouteDefinitions.PipelineDetail,
+    label: 'Edit Schedule',
+  },
+
+  [RouteDefinitions.Schedules]: { label: PathSessionMap[RouteDefinitions.Schedules] },
+  [RouteDefinitions.CreateSchedule]: { parent: RouteDefinitions.Schedules, label: 'New schedule' },
+  [RouteDefinitions.ScheduleDetail]: {
+    parent: RouteDefinitions.Schedules,
+    entityName: true,
+    fallbackLabel: 'Edit schedule',
   },
 };
