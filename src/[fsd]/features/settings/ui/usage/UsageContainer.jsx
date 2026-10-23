@@ -8,7 +8,6 @@ import { Alert, Box, CircularProgress, Snackbar, Tooltip, Typography } from '@mu
 
 import { usePagination } from '@/[fsd]/entities/grid-table';
 import { PeriodHelpers, UsageExportHelpers, UsageHelpers } from '@/[fsd]/features/settings/lib/helpers';
-import { InfoBanner, infoBannerTextSx } from '@/[fsd]/features/settings/ui/analytics';
 import { DrawerPage } from '@/[fsd]/features/settings/ui/drawer-page';
 import { useDebounceValue, useSelectedProject, useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { exportToExcel } from '@/[fsd]/shared/lib/utils';
@@ -18,6 +17,7 @@ import { useLazyUsageMembersQuery, useProjectUsageQuery, useUsageMembersQuery } 
 import RefreshIcon from '@/assets/refresh-icon.svg?react';
 
 import UsageBudgetHero from './components/UsageBudgetHero';
+import UsageInfoPopover from './components/UsageInfoPopover';
 import UsageKpiRow from './components/UsageKpiRow';
 import UsageLastUpdated from './components/UsageLastUpdated';
 import UsageMembersTable from './components/UsageMembersTable';
@@ -36,12 +36,6 @@ import { usePeriodParam } from './hooks/usePeriodParam.hooks';
 const SCOPE_PROJECT = 'project';
 const SCOPE_USER = 'user';
 const SCOPE_LABELS = { [SCOPE_PROJECT]: 'Whole project', [SCOPE_USER]: 'My usage' };
-
-const PRIVATE_PROJECT_INFO =
-  'This is your Private project. Requests made without selecting a "Team" project are charged here, including requests made with personal access tokens from external tools such as Claude Code, IDE extensions, and scripts.';
-
-const SHARED_MODELS_INFO =
-  'Only requests to platform-managed shared models count toward this budget. Usage of models configured with your own provider credentials is billed by that provider and is not included here.';
 
 const DEGRADED_MEMBERS_INFO =
   'Recorded spend could not be read, so this list shows current members only. Members who have left the project and their spend are missing.';
@@ -427,7 +421,6 @@ const UsageContainer = memo(() => {
             isCurrentPeriod={isCurrentPeriod}
           />
         )}
-
         <Tooltip
           title="Refresh data"
           placement="top"
@@ -452,6 +445,7 @@ const UsageContainer = memo(() => {
             </BaseBtn>
           </Box>
         </Tooltip>
+
         <Tooltip
           title={exporting ? 'Preparing export…' : 'Export to Excel'}
           placement="top"
@@ -469,6 +463,7 @@ const UsageContainer = memo(() => {
             </BaseBtn>
           </Box>
         </Tooltip>
+        <UsageInfoPopover isPersonalProject={isPersonalProject} />
       </Box>
 
       {!isPersonalProject && (
@@ -502,29 +497,20 @@ const UsageContainer = memo(() => {
 
         {!isLoading && !isError && data && (
           <Box sx={styles.dataContent(isFetching)}>
-            <InfoBanner>
-              {isPersonalProject && (
-                <Typography
-                  variant="bodyMedium"
-                  sx={infoBannerTextSx}
-                >
-                  {PRIVATE_PROJECT_INFO}
-                </Typography>
-              )}
-              <Typography
-                variant="bodyMedium"
-                sx={infoBannerTextSx}
-              >
-                {SHARED_MODELS_INFO}
-              </Typography>
-            </InfoBanner>
-
             {!data.spend_available && (
               <Alert severity="info">
                 Usage figures are still being collected for this period. They may lag live activity by a short
                 time.
               </Alert>
             )}
+
+            <UsageKpiRow
+              data={data}
+              canSeeAmounts={resolvedCanSeeAmounts}
+              isCurrentPeriod={isCurrentPeriod}
+              comparisonData={previousData}
+            />
+
             <UsageBudgetHero
               data={data}
               scope={activeScope}
@@ -532,13 +518,6 @@ const UsageContainer = memo(() => {
               canSeeAmounts={resolvedCanSeeAmounts}
               forecast={forecast}
               exceedDay={exceedDay}
-            />
-
-            <UsageKpiRow
-              data={data}
-              canSeeAmounts={resolvedCanSeeAmounts}
-              isCurrentPeriod={isCurrentPeriod}
-              comparisonData={previousData}
             />
 
             <Box sx={styles.row}>
