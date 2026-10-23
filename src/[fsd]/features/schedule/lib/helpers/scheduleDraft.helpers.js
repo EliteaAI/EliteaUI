@@ -7,6 +7,19 @@ const isFilled = value => value !== undefined && value !== null && value !== '';
 // Ids come as numbers from the API and as strings from the URL
 const sameId = (a, b) => String(a) === String(b);
 
+// Deep compare of form values: plain objects ignore key order, arrays keep item order
+const isStructurallyEqual = (a, b) => {
+  if (Object.is(a, b)) return true;
+  if (typeof a !== 'object' || typeof b !== 'object' || a === null || b === null) return false;
+  if (Array.isArray(a) !== Array.isArray(b)) return false;
+  const keysA = Object.keys(a);
+  const keysB = Object.keys(b);
+  return (
+    keysA.length === keysB.length &&
+    keysA.every(key => Object.hasOwn(b, key) && isStructurallyEqual(a[key], b[key]))
+  );
+};
+
 export const toDraftRequest = (values, lockedEntity, timezone) => ({
   current: toCreateBody(values),
   locked_entity: lockedEntity ? { entity_type: lockedEntity.type, application_id: lockedEntity.id } : null,
@@ -45,7 +58,7 @@ export const draftToFormValues = (draft, values, lockedEntity) => {
 export const changedFields = (values, draft, lockedEntity) => {
   const drafted = draftToFormValues(draft, values, lockedEntity);
   return Object.keys(drafted)
-    .filter(field => JSON.stringify(drafted[field]) !== JSON.stringify(values[field]))
+    .filter(field => !isStructurallyEqual(drafted[field], values[field]))
     .map(field => ({ field, current: values[field], drafted: drafted[field] }));
 };
 
