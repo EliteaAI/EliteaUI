@@ -38,5 +38,7 @@ export const buildScheduleRunsLink = ({ entityType, entityId, tab, scheduleId })
   hash: '#runs',
 });
 
-export const buildSchedulesListLink = ({ entityType, entityId }) =>
-  `${RouteDefinitions.Schedules}?${new URLSearchParams({ entityType, entityId })}`;
+export const buildSchedulesListLink = ({ entityType, entityId }) => {
+  const query = new URLSearchParams({ entityType, entityId }).toString();
+  return `${RouteDefinitions.Schedules}?${query}`;
+};
