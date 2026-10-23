@@ -115,6 +115,29 @@ describe('NodeTypeSelector', () => {
     expect(screen.getByTestId('pipeline-node-type-selector')).toHaveAttribute('data-columns', '1');
   });
 
+  it('renders only the available types when they are given', () => {
+    renderSelector({ availableTypes: [PipelineNodeTypes.LLM, PipelineNodeTypes.Agent] });
+
+    const cards = screen.getAllByTestId(/^pipeline-add-node-menu-item-/);
+    expect(cards.map(card => card.dataset.testid)).toEqual([
+      `pipeline-add-node-menu-item-${PipelineNodeTypes.Agent}`,
+      `pipeline-add-node-menu-item-${PipelineNodeTypes.LLM}`,
+    ]);
+  });
+
+  it('opens at an anchor position without an anchor element', () => {
+    render(
+      <ThemeProvider theme={theme}>
+        <NodeTypeSelector
+          open
+          anchorPosition={{ top: 100, left: 200 }}
+        />
+      </ThemeProvider>,
+    );
+
+    expect(screen.getByTestId('pipeline-node-type-selector')).toBeInTheDocument();
+  });
+
   it('renders two columns by default', () => {
     renderSelector();
 
