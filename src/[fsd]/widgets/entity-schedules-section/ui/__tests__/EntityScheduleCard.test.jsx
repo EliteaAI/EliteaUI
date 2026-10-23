@@ -137,6 +137,13 @@ describe('EntityScheduleCard EL-7011 US-35', () => {
     expect(cardText()).not.toContain('Owner:');
   });
 
+  it('BUG-51 EL-7011 shows no Owner line, and not You, for a row without an owner when the user id is unknown', () => {
+    renderCard({ owner: undefined }, { currentUserId: undefined });
+
+    expect(cardText()).not.toContain('Owner:');
+    expect(cardText()).not.toContain('You');
+  });
+
   it('owner bug 2026-10-21 every line is one line with an ellipsis', () => {
     renderCard();
 
