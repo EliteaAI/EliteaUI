@@ -23,7 +23,7 @@ const CLEAR = {
 };
 const SENSITIVE = [{ code: 'sensitive_action', toolkit: 'Outlook', tool: 'send_email' }];
 const answer = data => ({ unwrap: () => Promise.resolve(data) });
-const failure = () => ({ unwrap: () => Promise.reject({ status: 500 }) });
+const failure = () => ({ unwrap: () => Promise.reject(Object.assign(new Error('Request failed'), { status: 500 })) });
 
 // The check body of the default entity and version
 const CHECK_CALL = { projectId: 5, entity_type: 'agent', application_id: 7, version_id: 71 };
