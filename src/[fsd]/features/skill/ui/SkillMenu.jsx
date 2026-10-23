@@ -168,7 +168,7 @@ const SkillMenu = memo(props => {
   const isListShort = Boolean(anchorEl) && items.length < PAGE_SIZE;
   useEffect(() => {
     if (isListShort && canLoadMore) handleLoadMore();
-  }, [isListShort, canLoadMore, nextPage, handleLoadMore]);
+  }, [isListShort, canLoadMore, handleLoadMore]);
 
   const handleSearchChange = useCallback(e => setSearch(e.target.value), []);
   const handleButtonClick = useCallback(e => setAnchorEl(e.currentTarget), []);
