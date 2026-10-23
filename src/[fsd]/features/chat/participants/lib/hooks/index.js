@@ -1,3 +1,4 @@
+export * from './useActivateConversationParticipant.hooks';
 export * from './useActiveParticipantDetails.hooks';
 export * from './useAddNewParticipants.hooks';
 export * from './useFetchParticipantDetails.hooks';

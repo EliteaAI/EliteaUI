@@ -52,7 +52,7 @@ export const convertToUserQuestion = (message_group, users, participants) => {
     sent_to_id,
     sent_to,
     likes,
-    meta: { interaction_uuid, imported_author: importedAuthor },
+    meta: { interaction_uuid, imported_author: importedAuthor, input_guardrail: inputGuardrail },
   } = message_group;
   const foundUser = users.find(user => user.id === author_participant_id);
   const foundParticipant = participants.find(participant => participant.id === sent_to_id);
@@ -92,6 +92,7 @@ export const convertToUserQuestion = (message_group, users, participants) => {
         : undefined),
     likes,
     interaction_uuid,
+    inputGuardrail,
   };
 };
 
@@ -212,6 +213,7 @@ export const convertToAIAnswer = (message_group, message_groups, participants, t
     budget_error_code: budgetErrorCode,
     continuation_error: rawContinuationError,
     created_entities: createdEntities,
+    input_guardrail: inputGuardrail,
     context: { included: contextIncluded } = {},
   } = meta || {};
   const isSummarized = contextIncluded === false;
@@ -405,6 +407,7 @@ export const convertToAIAnswer = (message_group, message_groups, participants, t
     isLoading: is_streaming,
     exception: is_error ? error || content || message_items[0]?.item_details?.content : undefined,
     budgetErrorCode,
+    inputGuardrail,
     continuationError: normalizeContinuationError(rawContinuationError),
     created_entities: createdEntities,
     references,

@@ -7,22 +7,21 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import { ApplicationTabBar } from '@/[fsd]/entities/application-tab-bar/ui';
 import { useIsVersionNotFound } from '@/[fsd]/entities/version/lib/hooks';
 import { DEFAULT_PIPELINE_KEY } from '@/[fsd]/features/pipelines/lib/constants';
+import { PipelineValidateSchema } from '@/[fsd]/features/pipelines/lib/validation';
 import { InstructionsInputRefProvider } from '@/[fsd]/shared/lib/context';
 import { useToast, useViewMode } from '@/[fsd]/shared/lib/hooks';
 import { BreadcrumbsOrTitle } from '@/[fsd]/shared/ui';
 import { ApplicationControls } from '@/[fsd]/widgets/application-controls';
+import { PipelineEditTab } from '@/[fsd]/widgets/pipeline-editor';
 import { ViewMode } from '@/common/constants';
 import { buildErrorMessage, isNotFoundError } from '@/common/utils';
 import StyledTabs from '@/components/StyledTabs';
 import useCorrectUserNameInUrl from '@/hooks/application/useCorrectUserNameInUrl';
 import useNavBlocker from '@/hooks/useNavBlocker';
-import getValidateSchema from '@/pages/Applications/Components/Applications/ApplicationCreationValidateSchema';
 import useApplicationInitialValues from '@/pages/Applications/useApplicationInitialValues';
 import Page404 from '@/pages/Page404.jsx';
 import { actions } from '@/slices/pipeline';
 import { actions as editorActions } from '@/slices/pipelineEditor';
-
-import ConfigurationTab from './Components/ConfigurationTab';
 
 const EditPipeline = memo(() => {
   const viewMode = useViewMode();
@@ -98,8 +97,7 @@ const EditPipeline = memo(() => {
         ) : null,
         rightToolbar: isFetching ? null : <ApplicationControls setBlockNav={setBlockNav} />,
         content: (
-          <ConfigurationTab
-            totalToolCount={initialValues?.version_details?.tools?.length || 0}
+          <PipelineEditTab
             isFetching={isFetching}
             isError={isError}
             applicationId={applicationId}
@@ -111,16 +109,7 @@ const EditPipeline = memo(() => {
         ),
       },
     ],
-    [
-      initialValues?.version_details?.tools?.length,
-      isFetching,
-      isError,
-      applicationId,
-      unsavedLLMSettings,
-      handleSuccess,
-      handleDiscard,
-      setBlockNav,
-    ],
+    [isFetching, isError, applicationId, unsavedLLMSettings, handleSuccess, handleDiscard, setBlockNav],
   );
 
   if (shouldShowNotFoundPage) {
@@ -132,7 +121,7 @@ const EditPipeline = memo(() => {
       <Formik
         enableReinitialize
         initialValues={initialValues}
-        validationSchema={getValidateSchema}
+        validationSchema={PipelineValidateSchema}
         onSubmit={() => {}}
       >
         <Form style={styles.form}>
