@@ -19,6 +19,7 @@ const PipelineConfigurationForm = memo(props => {
     hidePythonSandbox,
     onAttachmentToolChange,
     entityProjectId,
+    isCreateMode = false,
   } = props;
   const isDisabled = viewMode !== ViewMode.Owner;
 
@@ -56,10 +57,12 @@ const PipelineConfigurationForm = memo(props => {
         sectionTestId="pipeline-editor-notes-section"
         notesInputTestId="pipeline-editor-notes-input"
       />
-      <ApplicationInformation
-        style={styles.information}
-        showPipeline
-      />
+      {!isCreateMode && (
+        <ApplicationInformation
+          style={styles.information}
+          showPipeline
+        />
+      )}
     </Box>
   );
 });
