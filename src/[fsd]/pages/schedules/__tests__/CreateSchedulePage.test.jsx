@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   navigate: vi.fn(),
   createSchedule: vi.fn(),
   settingsProps: null,
+  stopProps: null,
   fieldErrors: {},
   formProps: null,
   params: {},
@@ -34,7 +35,10 @@ vi.mock('@/[fsd]/shared/ui/schedule', () => ({
     mocks.settingsProps = props;
     return null;
   },
-  StopOnDateField: () => null,
+  StopOnDateField: props => {
+    mocks.stopProps = props;
+    return null;
+  },
 }));
 vi.mock('@/[fsd]/features/schedule', async importOriginal => {
   const { toCreateBody } = await import('@/[fsd]/features/schedule/lib/helpers');
@@ -59,6 +63,7 @@ describe('CreateSchedulePage EL-7011', () => {
     vi.clearAllMocks();
     mocks.params = {};
     mocks.fieldErrors = {};
+    mocks.stopProps = null;
     mocks.state = { returnTo: '/agents/3' };
   });
 
@@ -111,5 +116,12 @@ describe('CreateSchedulePage EL-7011', () => {
     render(<CreateSchedulePage />);
 
     expect(mocks.settingsProps.error).toBe('Runs must be at least 5 minutes apart');
+  });
+
+  it('R3.4 EL-7011 shows the server stop date error under the date field (BUG-52)', () => {
+    mocks.fieldErrors = { expires_at: 'Stop date is in the past' };
+    render(<CreateSchedulePage />);
+
+    expect(mocks.stopProps.error).toBe('Stop date is in the past');
   });
 });

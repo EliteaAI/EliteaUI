@@ -55,6 +55,7 @@ const CreateSchedulePage = props => {
           <StopOnDateField
             value={form.values.expires_at}
             onChange={date => form.setFieldValue('expires_at', date)}
+            error={form.fieldError('expires_at')}
           />
         </>
       )}

@@ -59,7 +59,7 @@ const APPROVAL_RULE_ITEMS = [
 ];
 const TYPE_LABEL = Object.fromEntries(TYPE_ITEMS.map(({ value, label }) => [value, label]));
 // Fields with their own message in the form; a 400 for any other field goes to the banner (R6.3)
-const FIELDS_WITH_INPUT = ['name', 'description', 'application_id', 'version_id', 'approval_rule', 'cron'];
+const FIELDS_WITH_INPUT = ['name', 'description', 'application_id', 'version_id', 'approval_rule', 'cron', 'expires_at'];
 const PROMPT_FIELDS = ['prompt', 'variables'];
 const AGENTS_TYPE = { agent: 'classic', pipeline: 'pipeline' };
 // The risk check states that keep Save disabled (owner CR 2026-10-21)
