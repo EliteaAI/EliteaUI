@@ -69,7 +69,8 @@ const SkillMenu = memo(props => {
     { skip: !projectId || !anchorEl },
   );
   const loadedSkillCount = skillListData?.rows?.length ?? 0;
-  const hasMoreSkills = loadedSkillCount < (skillListData?.total ?? 0);
+  const canLoadMore = !isFetching && loadedSkillCount < (skillListData?.total ?? 0);
+  const nextPage = Math.ceil(loadedSkillCount / PAGE_SIZE);
 
   const attachedIdSet = useMemo(() => new Set(attachedSkillIds), [attachedSkillIds]);
 
@@ -80,14 +81,13 @@ const SkillMenu = memo(props => {
   }, []);
 
   const handleLoadMore = useCallback(() => {
-    if (isFetching || !hasMoreSkills) return;
-    const nextPage = Math.ceil(loadedSkillCount / PAGE_SIZE);
+    if (!canLoadMore) return;
     setPagination(current =>
       current.query === debouncedSearch && current.page === nextPage
         ? current
         : { query: debouncedSearch, page: nextPage },
     );
-  }, [isFetching, hasMoreSkills, debouncedSearch, loadedSkillCount]);
+  }, [canLoadMore, debouncedSearch, nextPage]);
 
   const attachSkillById = useCallback(
     async skillId => {
@@ -165,9 +165,10 @@ const SkillMenu = memo(props => {
       }));
   }, [skillListData?.rows, attachedIdSet, handleSelectSkill, styles.itemIcon, styles.itemCustomIcon]);
 
+  const isListShort = Boolean(anchorEl) && items.length < PAGE_SIZE;
   useEffect(() => {
-    if (anchorEl && items.length < PAGE_SIZE) handleLoadMore();
-  }, [anchorEl, items.length, handleLoadMore]);
+    if (isListShort && canLoadMore) handleLoadMore();
+  }, [isListShort, canLoadMore, nextPage, handleLoadMore]);
 
   const handleSearchChange = useCallback(e => setSearch(e.target.value), []);
   const handleButtonClick = useCallback(e => setAnchorEl(e.currentTarget), []);

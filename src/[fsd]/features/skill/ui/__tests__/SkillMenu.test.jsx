@@ -60,9 +60,12 @@ vi.mock('@/[fsd]/shared/ui/button/BaseBtn', () => ({
 }));
 vi.mock('@/[fsd]/shared/ui', () => ({
   Dropdown: {
-    UnifiedDropdown: ({ open, items, emptyMessage }) =>
+    UnifiedDropdown: ({ open, items, emptyMessage, onScroll }) =>
       open ? (
-        <ul data-testid="skill-options">
+        <ul
+          data-testid="skill-options"
+          onScroll={onScroll}
+        >
           {items.length ? items.map(item => <li key={item.key}>{item.label}</li>) : emptyMessage}
         </ul>
       ) : null,
@@ -95,6 +98,18 @@ describe('SkillMenu', () => {
 
     await waitFor(() => expect(screen.getByTestId('skill-options')).toHaveTextContent('skill-25'));
     expect(screen.getByTestId('skill-options')).not.toHaveTextContent(/skill-24\b/);
+  });
+
+  it('loads the next page when the user scrolls a full list to the bottom', async () => {
+    openMenu([]);
+
+    await waitFor(() => expect(screen.getByTestId('skill-options')).toHaveTextContent('skill-20'));
+    expect(server.requestedPages).toEqual([0]);
+
+    fireEvent.scroll(screen.getByTestId('skill-options'));
+
+    await waitFor(() => expect(screen.getByTestId('skill-options')).toHaveTextContent('skill-21'));
+    expect(server.requestedPages).toEqual([0, 1]);
   });
 
   it('requests every page in order and stops once the project has no more skills', async () => {
