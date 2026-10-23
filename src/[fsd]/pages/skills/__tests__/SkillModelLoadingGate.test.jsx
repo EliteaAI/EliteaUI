@@ -13,7 +13,10 @@ const fixture = vi.hoisted(() => ({
   formValues: null,
 }));
 
-vi.mock('@/[fsd]/features/skill/lib/hooks', () => ({ useSkillModels: () => fixture.models }));
+vi.mock('@/[fsd]/features/skill/lib/hooks', () => ({
+  useSkillModels: () => fixture.models,
+  useSkillValidationSchema: () => undefined,
+}));
 vi.mock('@/[fsd]/features/skill', () => {
   const SkillForm = () => {
     fixture.formValues = useFormikContext().values;
@@ -26,7 +29,6 @@ vi.mock('@/[fsd]/features/skill', () => {
     SkillControls: () => null,
     SkillInformation: () => null,
     SkillRunPane: () => null,
-    SkillValidateSchema: {},
     useCompareSkillVersions: () => ({}),
     useSetSkillDefaultVersionMutation: () => [vi.fn(), {}],
     useSkillDetailsQuery: () => fixture.details,

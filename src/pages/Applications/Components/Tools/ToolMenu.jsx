@@ -8,7 +8,13 @@ import { Box } from '@mui/material';
 import Tooltip from '@/ComponentsLib/Tooltip';
 import { useTrackEvent } from '@/GA';
 import { AnalyticConstants, DropdownConstants } from '@/[fsd]/shared/lib/constants';
-import { useDebounceValue, useIsMcpVisible, useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
+import {
+  useDebounceValue,
+  useIsFrom,
+  useIsMcpVisible,
+  useSelectedProjectId,
+  useToast,
+} from '@/[fsd]/shared/lib/hooks';
 import { Dropdown } from '@/[fsd]/shared/ui';
 import BaseBtn, { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { EntityIcon } from '@/[fsd]/shared/ui/icon';
@@ -20,7 +26,6 @@ import { HEIGHTS, ICON_SIZES, SPACING } from '@/common/designTokens';
 import { useAgentPipelineAssociation } from '@/hooks/application/useAgentPipelineAssociation.jsx';
 import { useFilterAddedItems } from '@/hooks/application/useFilterAddedItems.js';
 import { useLibraryToolkits } from '@/hooks/application/useLibraryToolkits';
-import { useIsFrom } from '@/hooks/useIsFromSpecificPageHooks';
 import RouteDefinitions from '@/routes.js';
 
 const { GA_EVENT_NAMES, GA_EVENT_PARAMS } = AnalyticConstants;
