@@ -34,7 +34,7 @@ describe('EL-7011 R4.2 status text', () => {
         'blocked',
         'cancelled',
         'skipped',
-      ].map(toRunStatusLabel),
+      ].map(status => toRunStatusLabel(status)),
     ).toEqual([
       'Running',
       'Success',
@@ -80,7 +80,7 @@ describe('EL-7011 R3 newest test run', () => {
 describe('EL-7011 owner CR 2026-10-21 test panel values', () => {
   it('treats running and waiting_for_approval as active and every other status as final', () => {
     expect(['running', 'waiting_for_approval'].every(isRunActive)).toBe(true);
-    expect(['success', 'failed', 'expired', 'blocked', 'skipped', undefined].some(isRunActive)).toBe(false);
+    expect(['success', 'failed', 'expired', 'blocked', 'skipped', undefined].some(status => isRunActive(status))).toBe(false);
   });
 
   it('writes a duration in seconds, or minutes and two-digit seconds, and a dash without one', () => {
