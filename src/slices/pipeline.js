@@ -20,6 +20,8 @@ export const initialPipelineState = {
   yamlJsonObject: {},
   yamlCode: '',
   resetFlag: false,
+  // Bumped on every reset so a stale FlowEditor effect cannot clear a newer reset
+  resetVersion: 0,
   layout_version: '',
   stateValidationErrors: {},
 };
@@ -59,6 +61,7 @@ const pipelineSlice = createSlice({
         yamlJsonObject: structuredClone(yamlJsonObject || {}),
         yamlCode,
         resetFlag: true,
+        resetVersion: (state.byKey[key]?.resetVersion ?? 0) + 1,
         layout_version,
         stateValidationErrors: {},
         initState: {
@@ -82,15 +85,19 @@ const pipelineSlice = createSlice({
         yamlJsonObject: structuredClone(yamlJsonObject ? current(yamlJsonObject) : {}),
         yamlCode,
         resetFlag: true,
+        resetVersion: (state.byKey[key].resetVersion ?? 0) + 1,
         layout_version,
         stateValidationErrors: {},
       };
     },
 
-    clearResetFlag: state => {
+    clearResetFlag: (state, action) => {
       const key = resolveKey(state);
-      if (state.byKey[key]) {
-        state.byKey[key].resetFlag = false;
+      const pipeline = state.byKey[key];
+      if (!pipeline) return;
+      const handledVersion = action?.payload;
+      if (handledVersion === undefined || handledVersion === (pipeline.resetVersion ?? 0)) {
+        pipeline.resetFlag = false;
       }
     },
 
@@ -178,6 +185,7 @@ const pipelineSlice = createSlice({
         // resetFlag=true causes only this tab's FlowEditor to re-sync because
         // each tab reads its own key via selectActivePipeline.
         resetFlag: true,
+        resetVersion: (state.byKey[key]?.resetVersion ?? 0) + 1,
         stateValidationErrors: {},
         initState: structuredClone(resolvedInitState),
       };
