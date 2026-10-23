@@ -33,7 +33,9 @@ const ok = () => ({ unwrap: () => Promise.resolve({}) });
 const fail = error => ({ unwrap: () => Promise.reject(error) });
 const request = { action: 'approve', conversationUuid: 'c-1', messageId: 'm-1' };
 
-const setup = (schedule = { created_by: 5 }) =>
+const DEFAULT_SCHEDULE = { created_by: 5 };
+
+const setup = (schedule = DEFAULT_SCHEDULE) =>
   renderHook(() => useWaitingRunDecision({ schedule, onDecided: mocks.refetch })).result;
 
 describe('useWaitingRunDecision EL-7011', () => {
