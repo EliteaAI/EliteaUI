@@ -174,3 +174,46 @@ describe('imported chat authors', () => {
     );
   });
 });
+
+describe('input guardrail history conversion (#6886)', () => {
+  it('carries a stored redaction verdict on the user message', () => {
+    const verdict = { action: 'redact', categories: ['credentials'], rules: ['github_pat'] };
+    const question = convertToUserQuestion(
+      {
+        author_participant_id: 1,
+        message_items: [],
+        created_at: '2026-10-20T00:00:00',
+        uuid: 'g1',
+        meta: { input_guardrail: verdict },
+      },
+      [],
+      [],
+    );
+    expect(question.inputGuardrail).toEqual(verdict);
+  });
+
+  it('carries a refused application run on the assistant message', () => {
+    const verdict = {
+      action: 'block',
+      categories: ['credentials'],
+      message_key: 'input_guardrail.blocked.credentials',
+    };
+    const answer = convertToAIAnswer(
+      {
+        id: 2,
+        uuid: 'assistant-1',
+        author_participant_id: 20,
+        reply_to_id: 1,
+        content: 'It was not sent to the model.',
+        message_items: [],
+        created_at: '2026-10-20 10:00:00',
+        is_streaming: false,
+        meta: { is_error: true, error: 'It was not sent to the model.', input_guardrail: verdict },
+      },
+      [{ id: 1, uuid: 'user-1' }],
+      [],
+    );
+    expect(answer.inputGuardrail).toEqual(verdict);
+    expect(answer.exception).toBe('It was not sent to the model.');
+  });
+});

@@ -274,7 +274,7 @@ const LoopToolNode = memo(props => {
           outputFieldName="output"
           disabled={isRunningPipeline || disabled}
         />
-        <FlowEditorSettings.CommonInterruptSettings
+        <FlowEditorSettings.CommonNodeSettings
           id={id}
           type={FlowEditorConstants.PipelineNodeTypes.LoopFromTool}
           disabled={isRunningPipeline || disabled}
