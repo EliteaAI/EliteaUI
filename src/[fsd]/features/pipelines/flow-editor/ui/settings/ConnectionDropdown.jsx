@@ -113,7 +113,7 @@ const ConnectionDropdown = memo(props => {
     >
       <MenuItem
         onClick={handleCreateNewNode}
-        sx={view.targetNodes?.length ? styles.addNewNodeItem : styles.addNewNodeItemWithoutBorder}
+        sx={styles.addNewNodeItem}
       >
         <ListItemIcon sx={styles.listItemIcon}>
           <PlusIcon fill={theme.palette.icon.default} />
@@ -176,9 +176,6 @@ const connectionDropdownStyles = () => ({
     minHeight: '2.5rem',
     borderBottom: `.0625rem solid ${palette.border.lines}`,
   }),
-  addNewNodeItemWithoutBorder: {
-    minHeight: '2.5rem',
-  },
   listItemIcon: {
     minWidth: '1.5rem',
     maxWidth: '1.5rem',

@@ -125,17 +125,20 @@ describe('NodeTypeSelector', () => {
     ]);
   });
 
-  it('opens at an anchor position without an anchor element', () => {
+  it('positions the popover at the anchor position when no anchor element is given', () => {
     render(
       <ThemeProvider theme={theme}>
         <NodeTypeSelector
           open
           anchorPosition={{ top: 100, left: 200 }}
+          transformOrigin={{ vertical: 'top', horizontal: 'left' }}
         />
       </ThemeProvider>,
     );
 
-    expect(screen.getByTestId('pipeline-node-type-selector')).toBeInTheDocument();
+    const paper = screen.getByTestId('pipeline-node-type-selector');
+    expect(paper.style.top).toBe('100px');
+    expect(paper.style.left).toBe('200px');
   });
 
   it('renders two columns by default', () => {

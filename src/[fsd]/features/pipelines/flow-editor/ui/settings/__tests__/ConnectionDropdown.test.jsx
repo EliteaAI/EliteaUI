@@ -50,6 +50,13 @@ describe('ConnectionDropdown', () => {
     expect(screen.getByTestId('pipeline-node-type-selector')).toBeInTheDocument();
   });
 
+  it('opens the node type selector when node creation is forced, even with targets', () => {
+    renderDropdown({ targetNodes, forceNodeCreation: true });
+
+    expect(screen.getByTestId('pipeline-node-type-selector')).toBeInTheDocument();
+    expect(screen.queryByText('llm_1')).toBeNull();
+  });
+
   it('limits the selector to the available node types', () => {
     renderDropdown({
       targetNodes: [],
