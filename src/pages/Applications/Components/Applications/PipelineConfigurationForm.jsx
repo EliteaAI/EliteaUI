@@ -22,6 +22,7 @@ const PipelineConfigurationForm = memo(props => {
     hidePythonSandbox,
     onAttachmentToolChange,
     entityProjectId,
+    isCreateMode = false,
   } = props;
   // The saved name, not an unsaved edit, names the entity chip on the Schedules page
   const { initialValues } = useFormikContext();
@@ -61,10 +62,12 @@ const PipelineConfigurationForm = memo(props => {
         sectionTestId="pipeline-editor-notes-section"
         notesInputTestId="pipeline-editor-notes-input"
       />
-      <ApplicationInformation
-        style={styles.information}
-        showPipeline
-      />
+      {!isCreateMode && (
+        <ApplicationInformation
+          style={styles.information}
+          showPipeline
+        />
+      )}
       <EntitySchedulesSection
         style={styles.information}
         entityType="pipeline"

@@ -38,6 +38,7 @@ const ApplicationAnswer = memo(
       shouldDisableRegenerate,
       references = [],
       exception,
+      inputGuardrail = null,
       budgetErrorCode,
       continuationError,
       subAgentErrors = null,
@@ -236,6 +237,7 @@ const ApplicationAnswer = memo(
                 <AnswerApprovals
                   continuationError={continuationError}
                   exception={exception}
+                  inputGuardrail={inputGuardrail}
                   messageId={messageId}
                   onCopy={onCopy}
                   budgetErrorCode={budgetErrorCode}

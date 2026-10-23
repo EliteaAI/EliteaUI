@@ -29,6 +29,19 @@ describe('resolveHref for budget notifications', () => {
     }
   });
 
+  // Web search and other Tool Spend alerts land on the same Usage page, where their block lives
+  it('routes Tool Spend alerts like budget alerts, per scope', () => {
+    for (const type of [NotificationType.ToolSpendThresholdReached, NotificationType.ToolSpendLimitReached]) {
+      expect(resolveHref(type, {}, 25)).toBe(`${BASE}/25/settings/usage`);
+    }
+    for (const type of [
+      NotificationType.MemberToolSpendThresholdReached,
+      NotificationType.MemberToolSpendLimitReached,
+    ]) {
+      expect(resolveHref(type, {}, 25)).toBe(`${BASE}/25/settings/usage?scope=user`);
+    }
+  });
+
   it('does not depend on meta', () => {
     expect(resolveHref(NotificationType.BudgetLimitReached, undefined, 7)).toBe(`${BASE}/7/settings/usage`);
   });
