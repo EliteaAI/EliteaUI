@@ -5,14 +5,10 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { Button as MuiButton } from '@mui/material';
 
-import { LATEST_VERSION_NAME } from '@/[fsd]/entities/version';
-import { useSkillCreateMutation } from '@/[fsd]/features/skill/api';
-import { toRunSettingsPayload } from '@/[fsd]/features/skill/lib/helpers';
-import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
+import { useCreateSkill } from '@/[fsd]/features/skill/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
 import { SearchParams, SkillsTabs } from '@/common/constants';
-import { buildErrorMessage } from '@/common/utils.jsx';
 import { StyledCircleProgress } from '@/components/Chat/StyledComponents';
 import useNavBlocker from '@/hooks/useNavBlocker';
 import { TabBarItems } from '@/pages/Common/Components';
@@ -22,9 +18,7 @@ const CreateSkillTabBar = memo(() => {
   const formik = useFormikContext();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const projectId = useSelectedProjectId();
-  const { toastError } = useToast();
-  const [createSkill, { isLoading, error, isError }] = useSkillCreateMutation();
+  const { onCreate, isCreating: isLoading } = useCreateSkill();
   const [wantToCancel, setWantToCancel] = useState(false);
   const [pendingNav, setPendingNav] = useState(null);
 
@@ -53,44 +47,20 @@ const CreateSkillTabBar = memo(() => {
   );
 
   const onSave = useCallback(async () => {
-    const validationErrors = await formik.validateForm();
-    if (Object.keys(validationErrors).length) {
-      formik.setTouched({ name: true, description: true, version_details: { instructions: true } });
+    const skillId = (await onCreate())?.id;
+    if (!skillId) return;
+
+    const returnUrl = searchParams.get(SearchParams.ReturnUrl);
+    const sourceApplicationId = searchParams.get(SearchParams.SourceApplicationId);
+    if (returnUrl && sourceApplicationId) {
+      const urlObj = new URL(decodeURIComponent(returnUrl), window.location.origin);
+      urlObj.searchParams.set('newSkillId', String(skillId));
+      setPendingNav({ pathname: urlObj.pathname, search: urlObj.search });
       return;
     }
-    try {
-      const result = await createSkill({
-        projectId,
-        name: formik.values.name?.trim() || '',
-        description: formik.values.description?.trim() || '',
-        versions: [
-          {
-            name: LATEST_VERSION_NAME,
-            instructions: formik.values?.version_details?.instructions || '',
-            tags: formik.values?.version_details?.tags || [],
-            meta: formik.values?.version_details?.meta || {},
-            run_settings: toRunSettingsPayload(formik.values?.version_details?.run_settings),
-          },
-        ],
-      }).unwrap();
 
-      formik.resetForm({ values: formik.values });
-      const skillId = result?.id;
-
-      const returnUrl = searchParams.get(SearchParams.ReturnUrl);
-      const sourceApplicationId = searchParams.get(SearchParams.SourceApplicationId);
-      if (returnUrl && sourceApplicationId && skillId) {
-        const urlObj = new URL(decodeURIComponent(returnUrl), window.location.origin);
-        urlObj.searchParams.set('newSkillId', String(skillId));
-        setPendingNav({ pathname: urlObj.pathname, search: urlObj.search });
-        return;
-      }
-
-      setPendingNav({ pathname: `${RouteDefinitions.Skills}/${SkillsTabs[0]}/${skillId}` });
-    } catch (e) {
-      toastError(buildErrorMessage(e));
-    }
-  }, [createSkill, formik, projectId, searchParams, toastError]);
+    setPendingNav({ pathname: `${RouteDefinitions.Skills}/${SkillsTabs[0]}/${skillId}` });
+  }, [onCreate, searchParams]);
 
   const onCancel = useCallback(() => {
     setWantToCancel(true);
@@ -113,12 +83,6 @@ const CreateSkillTabBar = memo(() => {
       navigate(RouteDefinitions.Skills);
     }
   }, [navigate, wantToCancel, searchParams]);
-
-  useEffect(() => {
-    if (isError) {
-      toastError(buildErrorMessage(error));
-    }
-  }, [error, isError, toastError]);
 
   return (
     <TabBarItems>

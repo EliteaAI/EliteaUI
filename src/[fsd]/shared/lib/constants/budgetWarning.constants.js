@@ -22,6 +22,15 @@ export const BUDGET_WARNING_VARIANTS = {
   },
 };
 
+// Tool Spend features (e.g. web search) have their own limits, so the banner names the feature
+export const featureWarningMessage = (label, scope, percent) =>
+  scope === BUDGET_WARNING_SCOPES.MEMBER
+    ? `${label}: you have used ${percent}% of your limit in this project.`
+    : `${label}: you have used ${percent}% of the project limit.`;
+
+// Tool Spend feature whose banner shows when the conversation has it on
+export const WEB_SEARCH_FEATURE = { feature: 'web_search', tool: 'web_search', label: 'Web search' };
+
 // One localStorage entry per budget and period holds the highest level the user dismissed
 export const DISMISS_STORAGE_PREFIX = 'elitea.budgetWarning.dismissed';
 

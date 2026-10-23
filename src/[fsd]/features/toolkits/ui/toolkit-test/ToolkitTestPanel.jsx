@@ -7,7 +7,7 @@ import { Box, Typography } from '@mui/material';
 import { ChatButton } from '@/[fsd]/features/chat';
 import { McpAuthModal } from '@/[fsd]/features/mcp';
 import { ToolkitLayoutConstants } from '@/[fsd]/features/toolkits/lib/constants';
-import { useToolkitTestRunner } from '@/[fsd]/features/toolkits/lib/hooks';
+import { useGetCurrentToolkitSchemas, useToolkitTestRunner } from '@/[fsd]/features/toolkits/lib/hooks';
 import { WELCOME_MESSAGE_ID } from '@/common/constants';
 
 import ToolkitTestEmptyState from './ToolkitTestEmptyState';
@@ -20,6 +20,9 @@ const ToolkitTestPanel = memo(props => {
   const { toolkitId } = props;
   const { values } = useFormikContext();
   const styles = toolkitTestPanelStyles();
+
+  const { toolkitSchemas } = useGetCurrentToolkitSchemas();
+  const toolGroups = toolkitSchemas?.[values?.type]?.properties?.selected_tools?.tool_groups ?? null;
 
   const {
     selectedTool,
@@ -78,7 +81,7 @@ const ToolkitTestPanel = memo(props => {
             <ToolkitTestEmptyState
               toolkitId={toolkitId}
               onChangeTool={onChangeTool}
-              sx={styles.emptyState}
+              toolGroups={toolGroups}
             />
           )}
         </Box>
@@ -148,11 +151,6 @@ const toolkitTestPanelStyles = () => ({
     flex: 1,
     minHeight: 0,
     minWidth: 0,
-  },
-  emptyState: {
-    height: '100%',
-    justifyContent: 'center',
-    padding: 0,
   },
 });
 

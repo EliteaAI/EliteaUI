@@ -16,3 +16,7 @@ export { useSkillParticipants } from './useSkillParticipants.hooks';
 export { useFocusRunInput } from './useFocusRunInput.hooks';
 export { useSkillVersionModel } from './useSkillVersionModel.hooks';
 export { useSkillModels } from './useSkillModels.hooks';
+export { useCreateSkill } from './useCreateSkill.hooks';
+export { useSkillFrontmatterEditor } from './useSkillFrontmatterEditor.hooks';
+export { useSkillInstructionsMaxLength } from './useSkillInstructionsMaxLength.hooks';
+export { useSkillValidationSchema } from './useSkillValidationSchema.hooks';
