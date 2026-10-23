@@ -559,17 +559,17 @@ const goThroughNodesTree = (
   }
 };
 
+export const createEndNode = position => ({
+  id: PipelineNodeTypes.End,
+  type: PipelineNodeTypes.End,
+  data: {
+    label: 'End',
+  },
+  position,
+});
+
 const parseNodes = (yamlJson, orientation = ORIENTATION.vertical) => {
-  const nodes = [
-    {
-      id: PipelineNodeTypes.End,
-      type: PipelineNodeTypes.End,
-      data: {
-        label: 'End',
-      },
-      position: getNodePosition([], orientation),
-    },
-  ];
+  const nodes = [createEndNode(getNodePosition([], orientation))];
   const edges = [];
   if (yamlJson) {
     const yamlNodes = [...(yamlJson.nodes?.filter(node => node) || [])];
