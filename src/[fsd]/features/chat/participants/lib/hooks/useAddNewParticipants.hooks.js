@@ -45,6 +45,7 @@ export const useAddNewParticipants = props => {
         );
       });
       if (participantsToAdd.length) {
+        const targetConversationId = newConversation?.id || activeConversation.id;
         // Check if the original participants contain any agent/pipeline and the versionDetails has no llm model,
         // then set default LLM settings and save the version details before adding participants
         const agentOrPipelineWithoutLLM = originalParticipants.filter(participant => {
@@ -71,7 +72,7 @@ export const useAddNewParticipants = props => {
         );
         const result = await addParticipant({
           projectId,
-          id: newConversation?.id || activeConversation.id,
+          id: targetConversationId,
           participants: participantsToAdd,
         });
 
@@ -86,10 +87,9 @@ export const useAddNewParticipants = props => {
                 p.entity_name === ChatParticipantType.Skills,
             )
           ) {
-            const conversationId = newConversation?.id || activeConversation.id;
             const updatedConversationResult = await getConversationDetail({
               projectId,
-              id: conversationId,
+              id: targetConversationId,
             });
 
             if (updatedConversationResult.data && !updatedConversationResult.error) {
@@ -120,7 +120,7 @@ export const useAddNewParticipants = props => {
 
           if (!newConversation) {
             setActiveConversation(prev => {
-              if (prev.id) {
+              if (prev.id === targetConversationId) {
                 const newParticipants = updatedParticipants.filter(
                   updatedParticipant =>
                     !prev.participants?.find(
@@ -140,7 +140,7 @@ export const useAddNewParticipants = props => {
             });
             setConversations(prev => {
               return prev.map(conversation => {
-                if (conversation.id === activeConversation?.id && !conversation.isPlayback) {
+                if (conversation.id === targetConversationId && !conversation.isPlayback) {
                   const newParticipants = updatedParticipants.filter(
                     item =>
                       !conversation.participants?.find(

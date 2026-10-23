@@ -264,3 +264,86 @@ describe('UsageHelpers.fillDailyGaps', () => {
     expect(UsageHelpers.fillDailyGaps(daily, null, null)).toEqual(daily);
   });
 });
+
+describe('computeDelta', () => {
+  it('returns direction none when previous is null (no prior period)', () => {
+    const result = UsageHelpers.computeDelta(50, null);
+    expect(result.direction).toBe('none');
+    expect(result.label).toBe('—');
+    expect(result.value).toBeNull();
+    expect(result.pct).toBeNull();
+  });
+
+  it('returns direction none when previous is undefined', () => {
+    expect(UsageHelpers.computeDelta(50, undefined).direction).toBe('none');
+  });
+
+  it('labels a first-time spender as new when previous was zero', () => {
+    const result = UsageHelpers.computeDelta(38.7, 0);
+    expect(result.direction).toBe('new');
+    expect(result.label).toBe('New');
+  });
+
+  it('returns flat with a dash when both current and previous are effectively zero', () => {
+    const result = UsageHelpers.computeDelta(0, 0);
+    expect(result.direction).toBe('flat');
+    expect(result.label).toBe('—');
+  });
+
+  it('reports up direction and positive percentage when spend increased', () => {
+    const result = UsageHelpers.computeDelta(38.7, 29.4);
+    expect(result.direction).toBe('up');
+    expect(result.label).toMatch(/^\+/);
+    expect(result.pct).toBeGreaterThan(0);
+  });
+
+  it('reports down direction and negative percentage when spend decreased', () => {
+    const result = UsageHelpers.computeDelta(51.2, 61.0);
+    expect(result.direction).toBe('down');
+    expect(result.label).toMatch(/^-/);
+    expect(result.pct).toBeLessThan(0);
+  });
+
+  it('reports flat when current equals previous', () => {
+    const result = UsageHelpers.computeDelta(19.6, 19.6);
+    expect(result.direction).toBe('flat');
+    expect(result.pct).toBe(0);
+  });
+
+  it('formats the label as a one-decimal percentage', () => {
+    const result = UsageHelpers.computeDelta(38.7, 29.4);
+    // 9.3 / 29.4 ≈ 31.6%
+    expect(result.label).toBe('+31.6%');
+  });
+
+  it('computes value as the absolute spend difference', () => {
+    const result = UsageHelpers.computeDelta(51.2, 61.0);
+    expect(result.value).toBeCloseTo(51.2 - 61.0);
+  });
+});
+
+describe('toolSpendLabel (#6983)', () => {
+  const item = { label: 'Web search', spend: 2.5, effective_limit: 10, percent_used: 25, currency: 'USD' };
+
+  it('shows spend against the limit for viewers of amounts', () => {
+    expect(UsageHelpers.toolSpendLabel(item, true)).toBe('Web search: $2.50 of $10.00');
+  });
+
+  it('shows only the percentage when amounts are redacted', () => {
+    expect(UsageHelpers.toolSpendLabel(item, false)).toBe('Web search: 25% of limit');
+  });
+
+  // A failed spend read must never look like "$0 of $10"
+  it('says unavailable instead of $0 when spend could not be read', () => {
+    expect(UsageHelpers.toolSpendLabel({ label: 'Web search', spend_available: false }, true)).toBe(
+      'Web search: usage temporarily unavailable',
+    );
+  });
+
+  it('only treats an explicit false as turned off', () => {
+    expect(UsageHelpers.toolSpendLabel({ ...item, enabled: false }, true)).toBe(
+      'Web search: turned off for this project',
+    );
+    expect(UsageHelpers.toolSpendLabel(item, true)).not.toContain('turned off');
+  });
+});
