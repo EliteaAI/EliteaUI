@@ -239,7 +239,7 @@ const ToolNode = memo(props => {
           outputFieldName="output"
           disabled={isRunningPipeline || disabled}
         />
-        <FlowEditorSettings.CommonInterruptSettings
+        <FlowEditorSettings.CommonNodeSettings
           id={id}
           type={FlowEditorConstants.PipelineNodeTypes.Tool}
           disabled={isRunningPipeline || disabled}
