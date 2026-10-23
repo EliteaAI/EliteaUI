@@ -4,7 +4,7 @@ import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
 
 const ContextAccordion = memo(props => {
-  const { title, content, expanded, isEnabled, onChange } = props;
+  const { title, content, expanded, onChange } = props;
 
   return (
     <BasicAccordion
@@ -13,8 +13,6 @@ const ContextAccordion = memo(props => {
       onChange={onChange}
       accordionSX={{
         background: 'transparent !important',
-        opacity: isEnabled ? 1 : 0.6,
-        pointerEvents: isEnabled ? 'auto' : 'none',
       }}
       items={[
         {

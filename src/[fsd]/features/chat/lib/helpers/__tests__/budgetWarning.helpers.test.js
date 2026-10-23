@@ -76,6 +76,29 @@ describe('dismissal storage key', () => {
     expect(key).not.toBe(dismissStorageKey({ userId: 3, projectId: 3, scope: 'member', period: '2026-09' }));
   });
 
+  it('keeps a feature banner dismissal apart from the LLM one and from other features', () => {
+    const llm = dismissStorageKey({ userId: 6, projectId: 3, scope: 'member', period: '2026-09' });
+    const web = dismissStorageKey({
+      userId: 6,
+      projectId: 3,
+      scope: 'member',
+      period: '2026-09',
+      feature: 'web_search',
+    });
+    const other = dismissStorageKey({
+      userId: 6,
+      projectId: 3,
+      scope: 'member',
+      period: '2026-09',
+      feature: 'other',
+    });
+
+    expect(web).toBe('elitea.budgetWarning.dismissed.6.3.web_search.member.2026-09');
+    expect(new Set([llm, web, other]).size).toBe(3);
+    // Stale-period pruning still matches feature keys by suffix
+    expect(web.endsWith('.2026-09')).toBe(true);
+  });
+
   it('uses the UTC month, matching the budget reset', () => {
     // Local evening of Sep 30 can already be October in UTC
     expect(budgetPeriod(new Date('2026-10-01T01:30:00Z'))).toBe('2026-10');
