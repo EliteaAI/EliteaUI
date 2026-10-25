@@ -6,16 +6,19 @@ import { Accordion } from '@/[fsd]/shared/ui';
 
 import { useEvalCaseExecutionsQuery } from '../../api';
 import {
+  buildAgentUsageRows,
   buildCaseUsageRows,
   compareTrajectoryNames,
   getCasePauseDetails,
   getTrajectoryMetricItems,
   getTrajectoryStateMessage,
+  getTrajectoryStepDepth,
   getTrajectoryStepMeta,
   getTrajectoryStepTitle,
   isGuardrailStep,
   recordedToolNames,
 } from '../../lib/helpers';
+import AgentUsage from './AgentUsage';
 import ExpectedVsActual from './ExpectedVsActual';
 import PauseDetails from './PauseDetails';
 import StepSections from './StepSections';
@@ -33,7 +36,9 @@ const STEP_SLOT_PROPS = { transition: { unmountOnExit: true } };
 /**
  * What the agent did on one case of an offline-batch run (#6809 P1): what the agent and the judge
  * spent on it (#6716), the run counters and the ordered LLM and tool steps. Steps a sub-agent ran are indented under the call that started them.
+ * A pipeline's trajectory also lists the nodes that ran (#7015), each with the node it went to next; the LLM and tool steps a node made are indented under it.
  * When the case carries an `expected_trajectory` (#6809 item 7), the expected calls are set beside the recorded ones.
+ * When the agent called sub-agents, a "By agent" table splits the case's calls, tokens and cost by agent (#7015 P3).
  */
 const CaseTrajectoryPanel = memo(props => {
   const { projectId, runId, datasetCaseId, expectedTrajectory } = props;
@@ -48,12 +53,17 @@ const CaseTrajectoryPanel = memo(props => {
   const outputsStored = execution?.trajectory?.tool_outputs_stored;
   const metricItems = useMemo(() => getTrajectoryMetricItems(execution?.metrics), [execution?.metrics]);
   const usageRows = useMemo(() => buildCaseUsageRows(data?.usage), [data?.usage]);
+  const agentUsage = useMemo(() => buildAgentUsageRows(execution?.metrics?.agents), [execution?.metrics]);
   const stateMessage = getTrajectoryStateMessage(execution);
   const pauseDetails = useMemo(() => getCasePauseDetails(execution), [execution]);
   const comparison = useMemo(
     () =>
       execution?.trajectory
-        ? compareTrajectoryNames(expectedTrajectory, recordedToolNames(execution.trajectory))
+        ? compareTrajectoryNames(
+            expectedTrajectory,
+            recordedToolNames(execution.trajectory, { ownOnly: true }),
+            recordedToolNames(execution.trajectory),
+          )
         : null,
     [expectedTrajectory, execution?.trajectory],
   );
@@ -121,6 +131,13 @@ const CaseTrajectoryPanel = memo(props => {
         </Box>
       )}
 
+      {agentUsage.rows.length > 0 && (
+        <AgentUsage
+          rows={agentUsage.rows}
+          note={agentUsage.note}
+        />
+      )}
+
       {metricItems.length > 0 && (
         <Box sx={styles.metrics}>
           {metricItems.map(({ label, value }) => (
@@ -184,7 +201,7 @@ const CaseTrajectoryPanel = memo(props => {
               uppercase={false}
               // Mount a step's payload only while it is open: a long run would otherwise render every input and output.
               slotProps={STEP_SLOT_PROPS}
-              style={step.parent_agent ? styles.childStep : undefined}
+              style={stepStyle(styles, step)}
               data-testid={`trajectory-step-${step.i}`}
               items={[
                 {
@@ -195,7 +212,7 @@ const CaseTrajectoryPanel = memo(props => {
                       sx={[
                         styles.stepMeta,
                         step.status === 'error' && styles.stepError,
-                        isGuardrailStep(step) && styles.stepWarning,
+                        (isGuardrailStep(step) || step.status === 'interrupted') && styles.stepWarning,
                       ]}
                     >
                       {[step.parent_agent && `in ${step.parent_agent}`, getTrajectoryStepMeta(step)]
@@ -220,6 +237,12 @@ const CaseTrajectoryPanel = memo(props => {
 });
 
 CaseTrajectoryPanel.displayName = 'CaseTrajectoryPanel';
+
+const stepStyle = (styles, step) => {
+  if (step.kind === 'node') return styles.nodeStep;
+  const depth = getTrajectoryStepDepth(step);
+  return depth ? styles.childStep(depth) : undefined;
+};
 
 /** @type {MuiSx} */
 const caseTrajectoryPanelStyles = () => ({
@@ -270,10 +293,17 @@ const caseTrajectoryPanelStyles = () => ({
     flexDirection: 'column',
     gap: '0.25rem',
   },
-  childStep: ({ palette }) => ({
-    marginLeft: '1.5rem',
-    borderLeft: `0.125rem solid ${palette.border.lines}`,
-    paddingLeft: '0.5rem',
+  childStep:
+    depth =>
+    ({ palette }) => ({
+      marginLeft: `${1.5 * depth}rem`,
+      borderLeft: `0.125rem solid ${palette.border.lines}`,
+      paddingLeft: '0.5rem',
+    }),
+  nodeStep: ({ palette }) => ({
+    marginTop: '0.25rem',
+    borderLeft: `0.25rem solid ${palette.primary.main}`,
+    paddingLeft: '0.25rem',
   }),
   stepMeta: ({ palette }) => ({
     color: palette.text.secondary,

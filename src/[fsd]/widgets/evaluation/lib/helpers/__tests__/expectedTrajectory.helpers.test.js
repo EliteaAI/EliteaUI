@@ -175,3 +175,32 @@ describe('recordedToolNames', () => {
     expect(recordedToolNames(undefined)).toEqual([]);
   });
 });
+
+describe('sub-agent calls (#7015 P3)', () => {
+  const trajectory = {
+    steps: [
+      { kind: 'llm' },
+      { kind: 'tool', tool_name: 'read_file', parent_agent: 'RD-OrderReader' },
+      { kind: 'tool', tool_name: 'RD-OrderReader' },
+      { kind: 'tool', tool_name: 'list_files', parent_agent: 'RD-DecisionReader' },
+      { kind: 'tool', tool_name: 'RD-DecisionReader' },
+    ],
+  };
+
+  it("leaves a sub-agent's own calls out when asked for the agent's calls only", () => {
+    expect(recordedToolNames(trajectory, { ownOnly: true })).toEqual(['RD-OrderReader', 'RD-DecisionReader']);
+    expect(recordedToolNames(trajectory)).toHaveLength(4);
+  });
+
+  it("matches the agent's calls, while forbidden tools and the budget count every call", () => {
+    const diff = compareTrajectoryNames(
+      { tools: ['RD-OrderReader', 'RD-DecisionReader'], forbidden: ['list_files'], max_tool_calls: 3 },
+      recordedToolNames(trajectory, { ownOnly: true }),
+      recordedToolNames(trajectory),
+    );
+    expect(diff.tools.every(t => t.called)).toBe(true);
+    expect(diff.extra).toEqual([]);
+    expect(diff.forbidden).toEqual([{ name: 'list_files', called: true }]);
+    expect(diff.budget).toEqual({ max: 3, used: 4, ok: false });
+  });
+});

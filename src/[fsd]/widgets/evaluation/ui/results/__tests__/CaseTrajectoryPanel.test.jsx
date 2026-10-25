@@ -269,3 +269,129 @@ describe('CaseTrajectoryPanel step payloads', () => {
     expect(screen.getByText(/big-output-marker/)).toBeInTheDocument();
   });
 });
+
+describe('CaseTrajectoryPanel pipeline nodes (#7015)', () => {
+  afterEach(() => {
+    cleanup();
+    queryState.data = undefined;
+  });
+
+  it('lists each node with the node it went to, and the calls it made under it', () => {
+    queryState.data = {
+      executions: [
+        {
+          ...recordedExecution,
+          status: 'ok',
+          metrics: { node_count: 3, node_path: ['Classify', 'Route', 'Status'], llm_calls: 1, tool_calls: 1 },
+          trajectory: {
+            steps: [
+              {
+                i: 0,
+                kind: 'node',
+                node: 'Classify',
+                node_type: 'llm',
+                status: 'ok',
+                edge: { type: 'transitional', next: 'Route' },
+              },
+              { i: 1, kind: 'llm', node: 'Classify', model: 'haiku', text: 'status' },
+              {
+                i: 2,
+                kind: 'node',
+                node: 'Route',
+                node_type: 'router',
+                status: 'ok',
+                edge: { type: 'conditional', next: 'Status' },
+              },
+              { i: 3, kind: 'node', node: 'Status', node_type: 'toolkit', status: 'ok', edge: null },
+              { i: 4, kind: 'tool', node: 'Status', tool_name: 'read_file', status: 'ok' },
+            ],
+          },
+        },
+      ],
+      usage: [],
+    };
+    renderPanel();
+
+    expect(screen.getByText('Classify → Route → Status')).toBeInTheDocument();
+    expect(screen.getByTestId('trajectory-step-0')).toHaveTextContent('#1 · Node · Classify (llm)');
+    expect(screen.getByTestId('trajectory-step-2')).toHaveTextContent('→ Status');
+    expect(screen.getByTestId('trajectory-step-4')).toHaveTextContent('#5 · Tool · read_file');
+
+    fireEvent.click(screen.getByText('#3 · Node · Route (router)'));
+    expect(screen.getByText('Status (Condition)')).toBeInTheDocument();
+  });
+});
+
+describe('CaseTrajectoryPanel per-agent split (#7015 P3)', () => {
+  afterEach(() => {
+    cleanup();
+    queryState.data = undefined;
+  });
+
+  const fanOut = agents => ({
+    executions: [
+      {
+        ...recordedExecution,
+        status: 'ok',
+        metrics: { llm_calls: 4, tool_calls: 3, agents },
+        trajectory: {
+          steps: [
+            { i: 0, kind: 'llm', model: 'haiku' },
+            { i: 1, kind: 'llm', model: 'haiku', parent_agent: 'RD-OrderReader' },
+            { i: 2, kind: 'tool', tool_name: 'read_file', status: 'ok', parent_agent: 'RD-OrderReader' },
+            { i: 3, kind: 'tool', tool_name: 'RD-OrderReader', status: 'ok' },
+            { i: 4, kind: 'llm', model: 'haiku' },
+          ],
+        },
+      },
+    ],
+    usage: [],
+  });
+
+  it('splits the case by agent, from the ledger when the sub-agents were dispatched', () => {
+    queryState.data = fanOut([
+      {
+        agent: null,
+        llm_calls: 2,
+        tool_calls: 1,
+        input_tokens: 3358,
+        output_tokens: 179,
+        cost: 0.004253,
+        source: 'ledger',
+      },
+      {
+        agent: 'RD-OrderReader',
+        llm_calls: 1,
+        tool_calls: 1,
+        input_tokens: 11299,
+        output_tokens: 191,
+        cost: 0.012254,
+        source: 'ledger',
+      },
+    ]);
+    renderPanel();
+
+    expect(screen.getByTestId('case-agent-usage')).toHaveTextContent('By agent');
+    expect(screen.getByTestId('case-agent-usage-__agent__')).toHaveTextContent('Agent under test');
+    expect(screen.getByTestId('case-agent-usage-RD-OrderReader')).toHaveTextContent('11,299');
+    expect(screen.getByTestId('case-agent-usage-RD-OrderReader')).toHaveTextContent('$0.0123');
+    expect(screen.getByTestId('case-agent-usage')).toHaveTextContent(/usage ledger/);
+  });
+
+  it("matches the expected tools against the agent's own calls only", () => {
+    queryState.data = fanOut([
+      { agent: null, source: 'trajectory' },
+      { agent: 'RD-OrderReader', source: 'trajectory' },
+    ]);
+    renderPanel({ expectedTrajectory: { match: 'any_order', tools: [{ name: 'RD-OrderReader' }] } });
+
+    expect(screen.queryByTestId('expected-extra-tools')).not.toBeInTheDocument();
+  });
+
+  it('shows no split for an agent without sub-agents', () => {
+    queryState.data = { executions: [recordedExecution], usage: [] };
+    renderPanel();
+
+    expect(screen.queryByTestId('case-agent-usage')).not.toBeInTheDocument();
+  });
+});

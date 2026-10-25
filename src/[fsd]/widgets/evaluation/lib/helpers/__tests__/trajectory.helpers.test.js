@@ -10,10 +10,12 @@ import {
   getCaseGuardrailChip,
   getCasePauseDetails,
   getExcludedCasesNote,
+  getNodeStepNext,
   getRunHistoryGuardrails,
   getRunHistoryTrajectory,
   getTrajectoryMetricItems,
   getTrajectoryStateMessage,
+  getTrajectoryStepDepth,
   getTrajectoryStepMeta,
   getTrajectoryStepSections,
   getTrajectoryStepTitle,
@@ -136,6 +138,21 @@ describe('getTrajectoryMetricItems', () => {
 
   it('is empty without metrics', () => {
     expect(getTrajectoryMetricItems(null)).toEqual([]);
+  });
+
+  it('leads with the sub-agent dispatch of a fanned-out case', () => {
+    const items = getTrajectoryMetricItems({
+      llm_calls: 7,
+      dispatch_state: 'reconciled',
+      dispatch_waves: 1,
+      dispatch_children: 2,
+    });
+    expect(items[0]).toEqual({ label: 'Dispatch', value: 'reconciled · 1 wave · 2 sub-agents' });
+  });
+
+  it('names a fan-out that did not reconcile', () => {
+    const [item] = getTrajectoryMetricItems({ dispatch_state: 'dispatch_not_reconciled', dispatch_waves: 2 });
+    expect(item.value).toBe('not reconciled · 2 waves');
   });
 });
 
@@ -372,5 +389,72 @@ describe('getRunHistoryTrajectory', () => {
     expect(getRunHistoryTrajectory(meta).tooltip).toContain('tool-error rate — (0 of 0 tool calls)');
     expect(getRunHistoryTrajectory({})).toBeNull();
     expect(getRunHistoryTrajectory({ trajectory_rollup: { cases: 1, recorded_cases: 0 } })).toBeNull();
+  });
+});
+
+// #7015: a pipeline's trajectory lists its nodes; the llm/tool steps they made carry `node`
+const nodeStep = {
+  i: 2,
+  kind: 'node',
+  node: 'Route',
+  node_type: 'router',
+  graph_step: 3,
+  status: 'ok',
+  edge: { type: 'conditional', next: 'Status' },
+  hitl: null,
+  error: null,
+  duration_ms: 5,
+};
+
+describe('pipeline node steps', () => {
+  it('titles a node with its name and type', () => {
+    expect(getTrajectoryStepTitle(nodeStep)).toBe('#3 · Node · Route (router)');
+    expect(getTrajectoryStepTitle({ ...nodeStep, node_type: null })).toBe('#3 · Node · Route');
+  });
+
+  it('shows where the node went next, its status and duration', () => {
+    expect(getTrajectoryStepMeta(nodeStep)).toBe('→ Status · ok · 5 ms');
+    expect(getTrajectoryStepMeta({ ...nodeStep, edge: null })).toBe('ok · 5 ms');
+    expect(getNodeStepNext({ ...nodeStep, edge: null, hitl: { action: 'approve', next: 'Answer' } })).toBe(
+      '→ Answer',
+    );
+  });
+
+  it('expands to the edge taken, the human review and the error', () => {
+    expect(getTrajectoryStepSections(nodeStep)).toEqual([
+      { label: 'Next node', content: 'Status (Condition)' },
+      { label: 'Graph step', content: 3 },
+    ]);
+    const paused = {
+      ...nodeStep,
+      edge: null,
+      status: 'interrupted',
+      hitl: { action: 'interrupt', next: null },
+    };
+    expect(getTrajectoryStepSections(paused)).toEqual([
+      { label: 'Human review', content: 'interrupt' },
+      { label: 'Graph step', content: 3 },
+    ]);
+  });
+
+  it('indents calls made inside a node, and once more inside a sub-agent', () => {
+    expect(getTrajectoryStepDepth(nodeStep)).toBe(0);
+    expect(getTrajectoryStepDepth(llmStep)).toBe(0);
+    expect(getTrajectoryStepDepth({ ...llmStep, node: 'Classify' })).toBe(1);
+    expect(getTrajectoryStepDepth({ ...toolStep, node: 'Ask', parent_agent: 'Child' })).toBe(2);
+    expect(getTrajectoryStepDepth({ ...toolStep, parent_agent: 'Child' })).toBe(1);
+  });
+
+  it('lists the node count and path first among the counters', () => {
+    const items = getTrajectoryMetricItems({
+      node_count: 4,
+      node_path: ['Classify', 'Route', 'Status'],
+      llm_calls: 2,
+    });
+    expect(items.slice(0, 3)).toEqual([
+      { label: 'Nodes', value: '4' },
+      { label: 'Node path', value: 'Classify → Route → Status' },
+      { label: 'LLM calls', value: '2' },
+    ]);
   });
 });

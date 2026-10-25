@@ -214,8 +214,10 @@ export const summarizeExpectedTrajectory = expected => {
 /**
  * Expected vs actual, per expected tool and per forbidden tool, by name only (args and the match
  * mode's exact scoring stay with the `trajectory.tool_match` dimension). Display aid, not a score.
+ * `actualNames` are the agent's own calls, which the expected tools are matched against;
+ * `allNames` adds its sub-agents' calls, which forbidden tools and the budget count (#7015 P3).
  */
-export const compareTrajectoryNames = (expected, actualNames) => {
+export const compareTrajectoryNames = (expected, actualNames, allNames = actualNames) => {
   if (!expected || typeof expected !== 'object' || !Object.keys(expected).length) return null;
   const remaining = new Map();
   for (const name of actualNames ?? []) remaining.set(name, (remaining.get(name) ?? 0) + 1);
@@ -227,7 +229,7 @@ export const compareTrajectoryNames = (expected, actualNames) => {
   });
   const expectedNames = new Set(expectedCalls.map(t => t.name));
   const extra = [...new Set((actualNames ?? []).filter(name => !expectedNames.has(name)))];
-  const actualSet = new Set(actualNames ?? []);
+  const actualSet = new Set(allNames ?? []);
   const forbidden = (expected.forbidden ?? []).map(name => ({ name, called: actualSet.has(name) }));
   const budget = expected.max_tool_calls;
   return {
@@ -237,14 +239,19 @@ export const compareTrajectoryNames = (expected, actualNames) => {
     forbidden,
     budget:
       budget != null
-        ? { max: budget, used: (actualNames ?? []).length, ok: (actualNames ?? []).length <= budget }
+        ? { max: budget, used: (allNames ?? []).length, ok: (allNames ?? []).length <= budget }
         : null,
   };
 };
 
-/** The tool names a recorded trajectory called, in order, read the way the built-in checks read them. */
-export const recordedToolNames = trajectory => {
+/**
+ * The tool names a recorded trajectory called, in order, read the way the built-in checks read them.
+ * With `ownOnly`, the calls a sub-agent made inside its own run are left out, as `trajectory.tool_match`
+ * leaves them out (#7015 P3).
+ */
+export const recordedToolNames = (trajectory, { ownOnly = false } = {}) => {
   const steps = trajectory?.steps ?? [];
-  if (steps.length) return steps.filter(s => s?.kind === 'tool').map(s => s.tool_name);
+  if (steps.length)
+    return steps.filter(s => s?.kind === 'tool' && !(ownOnly && s.parent_agent)).map(s => s.tool_name);
   return [...(trajectory?.tool_sequence ?? [])];
 };

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  buildAgentUsageRows,
   buildBudgetVerdictRows,
   buildCaseUsageRows,
   buildRunConsumptionRows,
@@ -382,5 +383,79 @@ describe('getRunHistoryUsage', () => {
     expect(getRunHistoryUsage({})).toBeNull();
     expect(getRunHistoryUsage(undefined)).toBeNull();
     expect(getRunHistoryUsage({ agent_usage: { cases: 2, recorded_cases: 0 } })).toBeNull();
+  });
+});
+
+describe('buildAgentUsageRows (#7015 P3)', () => {
+  it('lists the agent under test first, with ledger tokens and cost when the sub-agents were dispatched', () => {
+    const { rows, note } = buildAgentUsageRows([
+      {
+        agent: null,
+        llm_calls: 2,
+        tool_calls: 2,
+        input_tokens: 3358,
+        output_tokens: 179,
+        cost: 0.004253,
+        source: 'ledger',
+      },
+      {
+        agent: 'RD-OrderReader',
+        llm_calls: 3,
+        tool_calls: 2,
+        input_tokens: 11299,
+        output_tokens: 191,
+        cost: 0.012254,
+        source: 'ledger',
+      },
+    ]);
+    expect(rows.map(r => [r.key, r.label, r.llmCalls, r.inputTokens, r.cost])).toEqual([
+      ['__agent__', 'Agent under test', '2', '3,358', '$0.0043'],
+      ['RD-OrderReader', 'RD-OrderReader', '3', '11,299', '$0.0123'],
+    ]);
+    expect(note).toMatch(/usage ledger/);
+  });
+
+  it('has no cost per agent for an in-process run, and says why', () => {
+    const { rows, note } = buildAgentUsageRows([
+      {
+        agent: null,
+        llm_calls: 2,
+        tool_calls: 2,
+        input_tokens: 3397,
+        output_tokens: 180,
+        cost: null,
+        source: 'trajectory',
+      },
+      {
+        agent: 'RD-DecisionReader',
+        llm_calls: 2,
+        tool_calls: 1,
+        input_tokens: null,
+        output_tokens: null,
+        cost: null,
+        source: 'trajectory',
+      },
+    ]);
+    expect(rows[1]).toMatchObject({ inputTokens: '—', outputTokens: '—', cost: '—', isUnpriced: true });
+    expect(note).toMatch(/counted from the trajectory/);
+  });
+
+  it('marks an unpriced ledger agent and an agent only the ledger saw', () => {
+    const { rows } = buildAgentUsageRows([
+      {
+        agent: 'X',
+        llm_calls: null,
+        tool_calls: null,
+        input_tokens: 10,
+        output_tokens: 1,
+        cost: null,
+        source: 'ledger',
+      },
+    ]);
+    expect(rows[0]).toMatchObject({ llmCalls: '—', toolCalls: '—', cost: 'Not priced', isUnpriced: true });
+  });
+
+  it('is empty for an agent without sub-agents', () => {
+    expect(buildAgentUsageRows(undefined)).toEqual({ rows: [], note: null });
   });
 });

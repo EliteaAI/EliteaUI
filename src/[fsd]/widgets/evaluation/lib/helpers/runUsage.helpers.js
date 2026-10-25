@@ -360,3 +360,39 @@ export const buildCaseUsageRows = usage =>
         isUnpriced: isRecorded && cost == null,
       };
     });
+
+const AGENT_SOURCE_NOTE = {
+  ledger: 'Tokens and cost per agent come from the usage ledger: each sub-agent ran as its own task.',
+  trajectory:
+    'Tokens per agent are counted from the trajectory; the ledger has no per-agent split for this ' +
+    'case, so its cost is the Agent row above.',
+};
+
+const formatCount = value => (value == null ? '—' : String(value));
+
+/**
+ * What each agent of one case did and spent (#7015 P3): the agent under test first, then each
+ * sub-agent, from the execution's `metrics.agents`. Empty when the agent called no sub-agent.
+ * @param {Array<object>} [agents] - `metrics.agents` of one case execution
+ * @returns {{ rows: Array<{ key: string, label: string, llmCalls: string, toolCalls: string,
+ *   inputTokens: string, outputTokens: string, cost: string, isUnpriced: boolean }>, note: string | null }}
+ */
+export const buildAgentUsageRows = agents => {
+  const list = (Array.isArray(agents) ? agents : []).filter(Boolean);
+  if (!list.length) return { rows: [], note: null };
+  const fromLedger = list.some(agent => agent.source === 'ledger');
+  const rows = list.map(agent => {
+    const cost = formatUsd(agent.cost);
+    return {
+      key: agent.agent ?? '__agent__',
+      label: agent.agent ?? 'Agent under test',
+      llmCalls: formatCount(agent.llm_calls),
+      toolCalls: formatCount(agent.tool_calls),
+      inputTokens: formatTokenCount(agent.input_tokens),
+      outputTokens: formatTokenCount(agent.output_tokens),
+      cost: cost ?? (agent.source === 'ledger' ? 'Not priced' : '—'),
+      isUnpriced: cost == null,
+    };
+  });
+  return { rows, note: AGENT_SOURCE_NOTE[fromLedger ? 'ledger' : 'trajectory'] };
+};

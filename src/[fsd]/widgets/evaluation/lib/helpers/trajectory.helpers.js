@@ -23,9 +23,30 @@ export const formatStepTokens = tokens => {
   return `${tokens.in ?? '?'} in / ${tokens.out ?? '?'} out tokens`;
 };
 
+const isNodeStep = step => step?.kind === TRAJECTORY_STEP_KIND.node;
+
+/**
+ * How far a step is indented: one level for an LLM or tool call made inside a pipeline node
+ * (#7015), one more when a sub-agent made it.
+ */
+export const getTrajectoryStepDepth = step => {
+  if (!step || isNodeStep(step)) return 0;
+  return (step.node ? 1 : 0) + (step.parent_agent ? 1 : 0);
+};
+
+/** Where a pipeline node went next, e.g. `→ Lookup`; null when the trace did not record it. */
+export const getNodeStepNext = step => {
+  const next = step?.edge?.next ?? step?.hitl?.next;
+  return next ? `→ ${next}` : null;
+};
+
 /** The one-line summary of a step: what ran, how it ended, how long it took. */
 export const getTrajectoryStepTitle = step => {
   const index = `#${(step?.i ?? 0) + 1}`;
+  if (isNodeStep(step)) {
+    const name = step.node_type ? `${step.node} (${step.node_type})` : step.node;
+    return [index, 'Node', name || 'unknown node'].join(' · ');
+  }
   if (step?.kind === TRAJECTORY_STEP_KIND.tool) {
     return [index, 'Tool', step.tool_name || 'unknown tool'].join(' · ');
   }
@@ -35,7 +56,11 @@ export const getTrajectoryStepTitle = step => {
 
 export const getTrajectoryStepMeta = step => {
   const parts = [];
-  if (step?.kind === TRAJECTORY_STEP_KIND.tool) {
+  if (isNodeStep(step)) {
+    const next = getNodeStepNext(step);
+    if (next) parts.push(next);
+    if (step.status) parts.push(step.status);
+  } else if (step?.kind === TRAJECTORY_STEP_KIND.tool) {
     if (step.status) parts.push(step.status);
     if (step.toolkit) parts.push(step.toolkit);
   } else {
@@ -59,8 +84,35 @@ export const OUTPUT_SIZE_CUT_NOTE = 'Payload dropped to keep the stored trajecto
  * @param {{ outputsStored?: boolean }} [options] - `outputsStored` is the trajectory's
  *   `tool_outputs_stored`; `false` means the suite opted out, so an omitted output is not a size cut.
  */
+// How the next node was chosen, as the SDK names its edges
+const EDGE_TYPE_LABELS = {
+  transitional: 'Fixed transition',
+  conditional: 'Condition',
+  decision: 'LLM decision',
+};
+
+const nodeStepSections = step => [
+  {
+    label: 'Next node',
+    content: step.edge?.next
+      ? `${step.edge.next} (${EDGE_TYPE_LABELS[step.edge.type] ?? step.edge.type})`
+      : null,
+  },
+  {
+    label: 'Human review',
+    content: step.hitl
+      ? [step.hitl.action, step.hitl.next && `→ ${step.hitl.next}`].filter(Boolean).join(' ')
+      : null,
+  },
+  { label: 'Graph step', content: step.graph_step },
+  { label: 'Error', content: step.error },
+];
+
 export const getTrajectoryStepSections = (step, { outputsStored } = {}) => {
   if (!step) return [];
+  if (isNodeStep(step)) {
+    return nodeStepSections(step).filter(({ content }) => content != null && content !== '');
+  }
   const sections =
     step.kind === TRAJECTORY_STEP_KIND.tool
       ? [
@@ -86,10 +138,32 @@ export const getTrajectoryStateMessage = execution => {
   );
 };
 
+const DISPATCH_STATE_LABELS = {
+  reconciled: 'reconciled',
+  timeout: 'timed out',
+  dispatch_not_reconciled: 'not reconciled',
+  dispatch_too_many_waves: 'too many waves',
+};
+
+/** A dispatched sub-agent fan-out (#7015), e.g. "reconciled · 1 wave · 2 sub-agents"; null when none. */
+export const formatDispatchMetric = metrics => {
+  if (!metrics?.dispatch_state) return null;
+  return [
+    DISPATCH_STATE_LABELS[metrics.dispatch_state] ?? metrics.dispatch_state,
+    metrics.dispatch_waves != null && plural(metrics.dispatch_waves, 'wave'),
+    metrics.dispatch_children != null && plural(metrics.dispatch_children, 'sub-agent'),
+  ]
+    .filter(Boolean)
+    .join(' · ');
+};
+
 /** The run counters (G8) as label/value pairs, in a fixed order; absent counters are skipped. */
 export const getTrajectoryMetricItems = metrics => {
   if (!metrics) return [];
   const items = [
+    ['Dispatch', formatDispatchMetric(metrics)],
+    ['Nodes', metrics.node_count],
+    ['Node path', metrics.node_path?.length ? metrics.node_path.join(' → ') : null],
     ['LLM calls', metrics.llm_calls],
     ['Tool calls', metrics.tool_calls],
     ['Distinct tools', metrics.distinct_tools],

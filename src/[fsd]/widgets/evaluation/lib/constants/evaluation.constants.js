@@ -325,4 +325,6 @@ export const GUARDRAIL_STEP_STATUSES = ['blocked', 'action_required', 'paused'];
 export const TRAJECTORY_STEP_KIND = {
   llm: 'llm',
   tool: 'tool',
+  // A pipeline node that ran (#7015); the llm/tool steps it made carry its name in `node`
+  node: 'node',
 };
