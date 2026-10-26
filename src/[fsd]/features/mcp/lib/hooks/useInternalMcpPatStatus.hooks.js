@@ -23,11 +23,14 @@ export const useInternalMcpPatStatus = props => {
     };
   }, [skip, refetch]);
 
-  const patInvalid = !!(data?.internal && data?.state !== 'VALID');
+  // GOVERNED: governance is on and a run's internal toolkits act with the run's own identity (#7214)
+  const governed = !!(data?.internal && data?.state === 'GOVERNED');
+  const patInvalid = !!(data?.internal && data?.state !== 'VALID' && !governed);
 
   return {
     patInvalid,
     patState: patInvalid ? data.state : null,
+    governed,
     isLoading,
   };
 };

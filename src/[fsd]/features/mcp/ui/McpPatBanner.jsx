@@ -4,22 +4,36 @@ import PropTypes from 'prop-types';
 
 import { Alert, Box, Typography } from '@mui/material';
 
-import { PAT_GATE_COPY } from '@/[fsd]/features/mcp/lib/constants';
+import { PAT_GATE_COPY, PAT_GOVERNED_NOTE } from '@/[fsd]/features/mcp/lib/constants';
 import { useInternalMcpPatStatus } from '@/[fsd]/features/mcp/lib/hooks';
 import { Button } from '@/[fsd]/shared/ui';
 import RouteDefinitions, { getBasename } from '@/routes';
 
-// Warns when the caller's PAT is missing/expired for an internal MCP toolkit.
+// Warns when the caller's PAT is missing/expired for an internal MCP toolkit; under governance it says no PAT
+// is needed instead (#7214).
 const McpPatBanner = memo(props => {
   const { projectId, toolkitType } = props;
   const styles = mcpPatBannerStyles();
 
-  const { patState } = useInternalMcpPatStatus({ projectId, toolkitType });
+  const { patState, governed } = useInternalMcpPatStatus({ projectId, toolkitType });
   const copy = PAT_GATE_COPY[patState];
 
   const handleAction = useCallback(() => {
     window.open(`${getBasename()}${RouteDefinitions.CreatePersonalToken}`, '_blank', 'noopener,noreferrer');
   }, []);
+
+  if (governed) {
+    return (
+      <Typography
+        variant="bodySmall"
+        color="text.secondary"
+        component="p"
+        sx={{ mb: '0.75rem' }}
+      >
+        {PAT_GOVERNED_NOTE}
+      </Typography>
+    );
+  }
 
   if (!copy) {
     return null;

@@ -12,3 +12,7 @@ export const PAT_GATE_COPY = {
     label: 'Renew personal token',
   },
 };
+
+// Governance on (#7214): in a governed run the internal toolkits act with the run's own identity, not a token
+export const PAT_GOVERNED_NOTE =
+  "In governed runs this toolkit acts with the run's own identity; no personal access token is needed.";
