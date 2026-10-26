@@ -40,12 +40,12 @@ const event = (extra = {}) => ({
   ...extra,
 });
 
-const ui = (conversationId = 1) => (
+const ui = (conversationId = 1, list = participants) => (
   <ThemeProvider theme={theme}>
     <MemoryRouter>
       <ScheduleRunNotice
         conversationId={conversationId}
-        participants={participants}
+        participants={list}
       />
     </MemoryRouter>
   </ThemeProvider>
@@ -123,6 +123,23 @@ describe('EL-7011 ScheduleRunNotice', () => {
     expect(screen.getByRole('link', { name: 'Open run' })).toHaveAttribute(
       'href',
       `/agents/all/${AGENT_ID}/history?history_run_id=77`,
+    );
+  });
+
+  it('links Open run to the pipeline run history for a pipeline participant', () => {
+    const pipeline = [
+      {
+        entity_name: 'application',
+        entity_meta: { id: AGENT_ID, project_id: PROJECT_ID },
+        entity_settings: { agent_type: 'pipeline' },
+      },
+    ];
+    render(ui(1, pipeline));
+    emit(event());
+
+    expect(screen.getByRole('link', { name: 'Open run' })).toHaveAttribute(
+      'href',
+      `/pipelines/all/${AGENT_ID}/history?history_run_id=77`,
     );
   });
 

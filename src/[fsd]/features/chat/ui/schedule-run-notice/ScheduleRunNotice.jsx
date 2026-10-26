@@ -12,7 +12,7 @@ import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { BannerMessage } from '@/[fsd]/shared/ui/banner-message';
 import FailIcon from '@/assets/fail-icon.svg?react';
 import SuccessIcon from '@/assets/success-icon.svg?react';
-import { SearchParams, sioEvents } from '@/common/constants';
+import { ChatParticipantType, SearchParams, sioEvents } from '@/common/constants';
 import CloseIcon from '@/components/Icons/CloseIcon';
 import RouteDefinitions from '@/routes';
 
@@ -21,8 +21,8 @@ const STATUSES = {
   failed: { label: 'Failed', variant: 'error', Icon: FailIcon, iconColor: 'error' },
 };
 
-const buildRunPath = ({ entity_id, conversation_id }) =>
-  `${NavigationHelpers.buildRoute(RouteDefinitions.ApplicationsRunHistory, { tab: 'all', agentId: entity_id })}?${new URLSearchParams({ [SearchParams.HistoryRunId]: String(conversation_id) })}`;
+const buildRunPath = ({ entity_id, conversation_id, isPipeline }) =>
+  `${NavigationHelpers.buildRoute(isPipeline ? RouteDefinitions.PipelineRunHistory : RouteDefinitions.ApplicationsRunHistory, { tab: 'all', agentId: entity_id })}?${new URLSearchParams({ [SearchParams.HistoryRunId]: String(conversation_id) })}`;
 
 /**
  * Shows the result of a scheduled run of an agent that is a participant of the open chat.
@@ -35,7 +35,12 @@ const ScheduleRunNotice = memo(props => {
 
   const handleFinished = useCallback(
     payload => {
-      if (STATUSES[payload?.status] && findNoticeAgent(payload, participants, projectId)) setEvent(payload);
+      const agent = STATUSES[payload?.status] && findNoticeAgent(payload, participants, projectId);
+      if (agent)
+        setEvent({
+          ...payload,
+          isPipeline: agent.entity_settings?.agent_type === ChatParticipantType.Pipelines,
+        });
     },
     [participants, projectId],
   );
