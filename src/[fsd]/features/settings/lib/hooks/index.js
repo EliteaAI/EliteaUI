@@ -21,3 +21,4 @@ export { useUsageKpiMetrics } from './useUsageKpiMetrics.hooks.js';
 export { useUsageModelData } from './useUsageModelData.hooks.js';
 export { useUsageChartData } from './useUsageChartData.hooks.js';
 export { useProjectContextWindowMode } from './useProjectContextWindowMode.hooks';
+export { useAnalyticsChatsTable } from './useAnalyticsChatsTable.hooks.js';

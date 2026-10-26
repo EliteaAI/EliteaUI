@@ -3,6 +3,7 @@ export const ANALYTICS_TAB_IDS = {
   costs: 'costs',
   tokens: 'tokens',
   agents: 'agents',
+  chats: 'chats',
   skills: 'skills',
   tools: 'tools',
   users: 'users',

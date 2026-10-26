@@ -4,7 +4,7 @@ import { getPresetRange, isValidDate, toValidISOString } from './analyticsCommon
 
 const { ANALYTICS_SEARCH_PARAMS: KEYS } = AnalyticsCommonConstants;
 
-const ENTITY_KEYS = [KEYS.agentId, KEYS.skillId, KEYS.skillProjectId];
+const ENTITY_KEYS = [KEYS.agentId, KEYS.skillId, KEYS.skillProjectId, KEYS.chatId];
 
 const parseDate = value => {
   if (!value) return null;
