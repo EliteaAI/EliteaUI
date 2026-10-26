@@ -5,7 +5,7 @@ import { renderHook } from '@testing-library/react';
 
 import { useAllEntitySchedules } from '../useAllEntitySchedules.hooks';
 
-// EL-7011 US-38: the run history page reads every schedule of the entity, 100 rows per request (R4.1, R4.2)
+// The run history page reads every schedule of the entity, 100 rows per request
 
 const mocks = vi.hoisted(() => ({ listQuery: vi.fn() }));
 
@@ -15,10 +15,10 @@ vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({ useSelecte
 const rowsOf = (count, from = 1) => Array.from({ length: count }, (_, index) => ({ id: from + index }));
 const baseArgs = { projectId: 5, entityType: 'agent', entityId: 12, pageSize: 100 };
 
-describe('useAllEntitySchedules EL-7011 US-38', () => {
+describe('useAllEntitySchedules', () => {
   afterEach(() => vi.clearAllMocks());
 
-  it('R4.1 EL-7011 asks for the next page while the last page is full, then stops', () => {
+  it('asks for the next page while the last page is full, then stops', () => {
     // Like RTK Query, a skipped query has no data
     mocks.listQuery.mockImplementation(({ page }, { skip }) => ({
       currentData: skip ? undefined : { rows: page === 0 ? rowsOf(100) : rowsOf(30, 101) },
@@ -31,7 +31,7 @@ describe('useAllEntitySchedules EL-7011 US-38', () => {
     expect(mocks.listQuery).toHaveBeenLastCalledWith({ ...baseArgs, page: 2 }, { skip: true });
   });
 
-  it('R4.1 EL-7011 makes one request when the first page is not full', () => {
+  it('makes one request when the first page is not full', () => {
     mocks.listQuery.mockImplementation((_args, { skip }) => ({
       currentData: skip ? undefined : { rows: rowsOf(3) },
     }));
@@ -42,7 +42,7 @@ describe('useAllEntitySchedules EL-7011 US-38', () => {
     expect(mocks.listQuery).toHaveBeenLastCalledWith({ ...baseArgs, page: 1 }, { skip: true });
   });
 
-  it('R4.1 EL-7011 sends no request while skipped', () => {
+  it('sends no request while skipped', () => {
     mocks.listQuery.mockReturnValue({ currentData: undefined });
 
     const { result } = renderHook(() =>
