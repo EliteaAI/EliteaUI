@@ -40,9 +40,9 @@ describe('AutomatedActivityTable', () => {
   it('renders one labelled row per trigger source', () => {
     renderTable([SCHEDULED, WEBHOOK, SCHEDULE_MANUAL]);
 
-    expect(screen.getByTestId('analytics-automated-row-scheduled-none')).toHaveTextContent('Scheduled');
-    expect(screen.getByTestId('analytics-automated-row-webhook-none')).toHaveTextContent('Webhook');
-    expect(screen.getByTestId('analytics-automated-row-schedule_manual-none')).toHaveTextContent(
+    expect(screen.getByTestId('analytics-automated-row-scheduled')).toHaveTextContent('Scheduled');
+    expect(screen.getByTestId('analytics-automated-row-webhook')).toHaveTextContent('Webhook');
+    expect(screen.getByTestId('analytics-automated-row-schedule_manual')).toHaveTextContent(
       'Schedule run now',
     );
   });
@@ -77,9 +77,9 @@ describe('AutomatedActivityTable', () => {
     expect(screen.getAllByText('Scheduled')).toHaveLength(2);
     const rows = screen.getAllByTestId(/^analytics-automated-row-/);
     expect(rows.map(row => row.dataset.testid)).toEqual([
-      'analytics-automated-row-scheduled-agent',
-      'analytics-automated-row-webhook-none',
-      'analytics-automated-row-scheduled-pipeline',
+      'analytics-automated-row-scheduled',
+      'analytics-automated-row-webhook',
+      'analytics-automated-row-scheduled',
     ]);
     expect(within(rows[0]).getByText('Agent')).toBeInTheDocument();
     // Default sort is runs descending: 3, 2, 1

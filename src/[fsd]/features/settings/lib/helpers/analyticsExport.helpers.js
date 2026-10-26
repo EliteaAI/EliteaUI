@@ -9,7 +9,7 @@ import {
   formatAgentRunModels,
   formatAgentUserLabel,
 } from './agentAnalytics.helpers.js';
-import { entityKindLabel, formatVersionLabel, triggerSourceLabel } from './analyticsCommon.helpers.js';
+import { entityKindLabel, formatTriggerLabel, formatVersionLabel } from './analyticsCommon.helpers.js';
 import { tokenStats } from './analyticsToken.helpers.js';
 import { skillDisplayName, skillSourceLabel } from './skillAnalytics.helpers.js';
 
@@ -156,7 +156,7 @@ const buildOverviewSheet = (data, meta, isPersonalProject = false, includeSkills
       automated.length > 0
         ? automated.map(a => ({
             ...a,
-            trigger_source: triggerSourceLabel(a.trigger_source),
+            trigger_source: formatTriggerLabel(a.trigger_source),
             entity_kind: entityKindLabel(a.entity_kind),
           }))
         : emptyRow(automatedCols, NO_DATA_MSG),
@@ -656,7 +656,7 @@ export const buildSkillDetailSheet = (detail, meta) => {
         r => r.user_email || `User ${r.user_id}`,
       ),
       skillSection('By Trigger Source', { header: 'Trigger', key: 'trigger_source' }, by_trigger_source, r =>
-        triggerSourceLabel(r.trigger_source),
+        formatTriggerLabel(r.trigger_source),
       ),
       {
         title: 'Used by Agents',
@@ -811,7 +811,7 @@ export const buildAgentDetailSheet = (
       })),
       buildAgentSection('Trigger Sources', triggerCols, by_trigger_source, row => ({
         ...row,
-        trigger_source: triggerSourceLabel(row.trigger_source),
+        trigger_source: formatTriggerLabel(row.trigger_source),
       })),
       buildAgentSection(recentRunsTitle(runs.length, runsTotal, runsTruncated), runCols, runs, row => ({
         ...row,

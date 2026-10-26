@@ -33,7 +33,7 @@ const AutomatedActivityTable = memo(props => {
 
   const { sort: activitySort, handleSort: handleActivitySort } = useClientSort('runs');
   const getActivityValue = useCallback((row, key) => {
-    if (key === 'trigger_source') return AnalyticCommonHelpers.triggerSourceLabel(row.trigger_source);
+    if (key === 'trigger_source') return AnalyticCommonHelpers.formatTriggerLabel(row.trigger_source);
     if (key === 'entity_kind') return AnalyticCommonHelpers.entityKindLabel(row.entity_kind);
     return row[key];
   }, []);
@@ -119,7 +119,7 @@ const AutomatedActivityTable = memo(props => {
           <Box
             key={`${item.trigger_source}-${item.entity_kind ?? 'none'}`}
             sx={styles.tableRow}
-            data-testid={`analytics-automated-row-${item.trigger_source}-${item.entity_kind ?? 'none'}`}
+            data-testid={`analytics-automated-row-${item.trigger_source}`}
           >
             <Box sx={[styles.tableCellValue, styles.sourceCol, styles.sourceCell]}>
               <Box sx={styles.colorDot(CHART_COLORS[index % CHART_COLORS.length])} />
@@ -127,7 +127,7 @@ const AutomatedActivityTable = memo(props => {
                 variant="bodySmall"
                 noWrap
               >
-                {AnalyticCommonHelpers.triggerSourceLabel(item.trigger_source)}
+                {AnalyticCommonHelpers.formatTriggerLabel(item.trigger_source)}
               </Typography>
             </Box>
             <Typography sx={[styles.tableCellValue, styles.entityCol]}>
