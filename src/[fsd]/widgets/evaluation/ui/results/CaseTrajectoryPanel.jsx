@@ -287,7 +287,10 @@ const caseTrajectoryPanelStyles = () => ({
     rowGap: '0.25rem',
   },
   usageRow: {
-    display: 'contents',
+    // A subgrid rather than display: contents, which drops the row role in some screen readers.
+    display: 'grid',
+    gridColumn: '1 / -1',
+    gridTemplateColumns: 'subgrid',
   },
   usageNote: ({ palette }) => ({
     gridColumn: '1 / -1',

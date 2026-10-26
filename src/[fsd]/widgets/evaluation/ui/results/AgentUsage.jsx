@@ -104,7 +104,10 @@ const agentUsageStyles = () => ({
     color: palette.text.secondary,
   }),
   row: {
-    display: 'contents',
+    // A subgrid rather than display: contents, which drops the row role in some screen readers.
+    display: 'grid',
+    gridColumn: '1 / -1',
+    gridTemplateColumns: 'subgrid',
   },
   note: ({ palette }) => ({
     color: palette.text.secondary,
