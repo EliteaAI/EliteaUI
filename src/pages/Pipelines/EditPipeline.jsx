@@ -43,6 +43,12 @@ const EditPipeline = memo(() => {
   // initThePipeline, but this guards against any later re-assignment (e.g. from stale refs).
   useEffect(() => {
     dispatch(actions.setActivePipelineKey(DEFAULT_PIPELINE_KEY));
+    // The page remounts per pipeline. Leaving it clears the shared pipeline state, so the next pipeline
+    // never starts from this one's YAML and node positions.
+    return () => {
+      dispatch(actions.clearPipelineKey(DEFAULT_PIPELINE_KEY));
+      dispatch(editorActions.resetPipelineEditor());
+    };
   }, [dispatch]);
   const styles = useMemo(() => editPipelineStyles(), []);
 

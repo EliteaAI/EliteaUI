@@ -4,7 +4,12 @@ import { useSelector } from 'react-redux';
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
-import { useNameFromUrl, useSelectedProjectId, useViewModeFromUrl } from '@/[fsd]/shared/lib/hooks';
+import {
+  useNameFromUrl,
+  useSelectedProjectId,
+  useStaleSaveGuard,
+  useViewModeFromUrl,
+} from '@/[fsd]/shared/lib/hooks';
 import { useSaveApplicationNewVersionMutation } from '@/api/applications';
 import clearTools, { filterEmptyStrings } from '@/common/applicationUtils';
 import { buildErrorMessage, replaceVersionInPath } from '@/common/utils';
@@ -35,6 +40,7 @@ const useSaveNewVersion = ({
   const { onSaveTools } = useSaveChangedTools();
   const { nodes: flowNodes } = useSelector(state => state.pipelineEditor);
   const { setBlockNav } = useNavBlocker();
+  const { captureSaveTarget, isSaveTargetCurrent } = useStaleSaveGuard(applicationId);
 
   const [
     saveNewVersion,
@@ -48,7 +54,12 @@ const useSaveNewVersion = ({
   ] = useSaveApplicationNewVersionMutation();
 
   const onSuccessHandler = useCallback(
-    newVersionData => {
+    (newVersionData, saveTarget) => {
+      // Opening the new version would pull the user back from the agent or pipeline they moved to
+      if (newVersionData?.id && saveTarget && !isSaveTargetCurrent(saveTarget)) {
+        reset();
+        return;
+      }
       if (newVersionData?.id) {
         // Use the new version ID directly from the response
         const newVersionId = newVersionData.id;
@@ -76,6 +87,7 @@ const useSaveNewVersion = ({
         setBlockNav(false);
         // Increase timeout to allow cache invalidation to complete
         setTimeout(() => {
+          if (saveTarget && !isSaveTargetCurrent(saveTarget)) return;
           navigate(
             {
               pathname: newPath,
@@ -104,11 +116,13 @@ const useSaveNewVersion = ({
       viewMode,
       onSuccess,
       setBlockNav,
+      isSaveTargetCurrent,
     ],
   );
 
   const onCreateNewVersion = useCallback(
     async newVersionName => {
+      const saveTarget = captureSaveTarget();
       const { nodes, edges } = isFromPipeline
         ? calculateNodesAndEdges(yamlCode, ORIENTATION.vertical, flowNodes)
         : {};
@@ -143,7 +157,7 @@ const useSaveNewVersion = ({
       if ((await onSaveTools(result?.data?.id)) === false) {
         return; // Stop if toolkit save failed
       }
-      onSuccessHandler(result?.data);
+      onSuccessHandler(result?.data, saveTarget);
       return result;
     },
     [
@@ -158,6 +172,7 @@ const useSaveNewVersion = ({
       applicationId,
       onSuccessHandler,
       flowNodes,
+      captureSaveTarget,
     ],
   );
 

@@ -16,6 +16,21 @@ const TAG_TYPE_APPLICATION_DEFAULT_ICONS = 'TAG_TYPE_APPLICATION_DEFAULT_ICONS';
 const TAG_TYPE_APPLICATION_ICONS = 'TAG_TYPE_APPLICATION_ICONS';
 const TAG_TYPE_DOCUMENT_LOADERS = 'TAG_TYPE_DOCUMENT_LOADERS';
 const apiSlicePath = '/elitea_core';
+
+// "545" and 545 must address the same entry, or a save that updates one leaves the other stale
+const normalizeId = value => (typeof value === 'string' && /^\d+$/.test(value) ? Number(value) : value);
+
+const serializeApplicationDetailsArgs = ({ endpointName, queryArgs }) => {
+  const sortedObject = {};
+  Object.keys(queryArgs)
+    .sort()
+    .forEach(prop => {
+      sortedObject[prop] = ['applicationId', 'projectId'].includes(prop)
+        ? normalizeId(queryArgs[prop])
+        : queryArgs[prop];
+    });
+  return endpointName + JSON.stringify(sortedObject);
+};
 const apiSlicePathForLike = '/social/like/prompt_lib/';
 const headers = {
   'Content-Type': 'application/json',
@@ -359,16 +374,8 @@ export const apiSlice = eliteaApi
           }
           return [TAG_TYPE_APPLICATION_DETAILS, { type: TAG_TYPE_APPLICATION_DETAILS, id: result?.id }];
         },
-        // Only keep one cacheEntry marked by the query's endpointName
-        serializeQueryArgs: ({ endpointName, queryArgs }) => {
-          const sortedObject = {};
-          Object.keys(queryArgs)
-            .sort()
-            .forEach(prop => {
-              sortedObject[prop] = queryArgs[prop];
-            });
-          return endpointName + JSON.stringify(sortedObject);
-        },
+        // One cache entry per entity: ids arrive as numbers from the form and as strings from the URL
+        serializeQueryArgs: serializeApplicationDetailsArgs,
       }),
       forkedFromApplicationDetails: build.query({
         query: ({ projectId, applicationId }) => {
@@ -437,16 +444,8 @@ export const apiSlice = eliteaApi
           }
           return [TAG_TYPE_APPLICATION_DETAILS, { type: TAG_TYPE_APPLICATION_DETAILS, id: result?.id }];
         },
-        // Only keep one cacheEntry marked by the query's endpointName
-        serializeQueryArgs: ({ endpointName, queryArgs }) => {
-          const sortedObject = {};
-          Object.keys(queryArgs)
-            .sort()
-            .forEach(prop => {
-              sortedObject[prop] = queryArgs[prop];
-            });
-          return endpointName + JSON.stringify(sortedObject);
-        },
+        // One cache entry per entity: ids arrive as numbers from the form and as strings from the URL
+        serializeQueryArgs: serializeApplicationDetailsArgs,
       }),
       getApplicationVersionDetail: build.query({
         query: ({ projectId, applicationId, versionId }) => ({
