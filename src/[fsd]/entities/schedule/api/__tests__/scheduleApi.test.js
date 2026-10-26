@@ -708,16 +708,19 @@ describe('mutations invalidate only the schedule they change', () => {
       .mockImplementation(async () => jsonResponse({ id: 7, rows: [] }));
   });
 
-  const urlsAfter = async callsBefore =>
-    requestedUrls(fetchSpy)
+  const refetchedPaths = callsBefore =>
+    fetchSpy.mock.calls
       .slice(callsBefore)
-      .map(url => url.pathname);
+      .map(([arg]) => arg)
+      .filter(arg => arg.method === 'GET')
+      .map(arg => new URL(arg.url).pathname);
 
   it.each([
     ['updateSchedule', { projectId: 5, scheduleId: 7 }],
     ['runSchedule', { projectId: 5, scheduleId: 7, trigger: 'test' }],
     ['pauseSchedule', { projectId: 5, scheduleId: 7 }],
     ['resumeSchedule', { projectId: 5, scheduleId: 7 }],
+    ['changeScheduleOwner', { projectId: 5, scheduleId: 7, ownerId: 12 }],
   ])('%s refetches schedule 7 and its runs, not schedule 8', async (endpoint, args) => {
     const store = makeStore();
     const { endpoints } = scheduleApi;
@@ -728,13 +731,13 @@ describe('mutations invalidate only the schedule they change', () => {
     const callsBefore = fetchSpy.mock.calls.length;
 
     await store.dispatch(endpoints[endpoint].initiate(args));
-    await new Promise(resolve => setTimeout(resolve, 50));
 
-    const paths = (await urlsAfter(callsBefore)).filter(
-      path => !path.endsWith('/pause') && !path.endsWith('/resume'),
-    );
-    expect(paths.some(path => path.endsWith('/7'))).toBe(true);
-    expect(paths.some(path => path.endsWith('/7/runs'))).toBe(true);
+    await vi.waitFor(() => {
+      const paths = refetchedPaths(callsBefore);
+      expect(paths.some(path => path.endsWith('/7'))).toBe(true);
+      expect(paths.some(path => path.endsWith('/7/runs'))).toBe(true);
+    });
+    const paths = refetchedPaths(callsBefore);
     expect(paths.some(path => path.endsWith('/8') || path.endsWith('/8/runs'))).toBe(false);
   });
 });
