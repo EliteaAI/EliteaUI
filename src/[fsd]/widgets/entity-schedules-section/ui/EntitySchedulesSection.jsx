@@ -190,11 +190,14 @@ const EntitySchedulesSection = memo(props => {
   if (isHidden || error?.status === 403) return null;
 
   return (
-    <BasicAccordion
-      accordionSX={styles.accordion}
-      style={style}
-      items={items}
-    />
+    // Target of the scroll link in the pipeline Trigger selector hint
+    <Box id="entity-schedules-section">
+      <BasicAccordion
+        accordionSX={styles.accordion}
+        style={style}
+        items={items}
+      />
+    </Box>
   );
 });
 

@@ -106,6 +106,13 @@ describe('EntitySchedulesSection EL-7011', () => {
     vi.clearAllMocks();
   });
 
+  it('puts the anchor id of the Trigger hint on the section root', () => {
+    renderSection();
+    const anchor = document.getElementById('entity-schedules-section');
+    expect(anchor).not.toBeNull();
+    expect(anchor).toContainElement(screen.getByTestId('agent-schedules-section-header'));
+  });
+
   describe('agent editor (US-35)', () => {
     it('TC-US35-01 TC-US35-18 R1.1 R1.6 EL-7011 CR-20 shows the header with "+ Schedule", the count and the "Manage Schedules" link without an icon', () => {
       renderSection();
