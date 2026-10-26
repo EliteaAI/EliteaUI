@@ -344,6 +344,7 @@ const ProtectedRoutes = memo(() => {
       {
         path: RouteDefinitions.PipelineEvaluateHistoryAnalytics,
         element: <AgentEvaluateHistoryAnalyticsPage />,
+      },
       {
         path: RouteDefinitions.PipelineCreateSchedule,
         element: <CreateSchedulePage entityType="pipeline" />,
