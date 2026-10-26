@@ -37,6 +37,7 @@ export const usePageDetails = () => {
   const isUserPublicPipelineDetailPage = useMatch({ path: RouteDefinitions.UserPublicPipelineDetail });
   const isPipelinesWithTab = useMatch({ path: RouteDefinitions.PipelinesWithTab });
   const isPipelineRunAnalyticsPage = useMatch({ path: RouteDefinitions.PipelineRunAnalytics });
+  const isPipelineEvaluatePage = useMatch({ path: `${RouteDefinitions.PipelineEvaluate}/*` });
 
   const isPipelineVersionDetailPage = useMatch({ path: `${RouteDefinitions.PipelineDetail}/:versionId` });
   const isUserPublicPipelineVersionDetailPage = useMatch({
@@ -95,7 +96,8 @@ export const usePageDetails = () => {
     isPipelineVersionDetailPage ||
     isUserPublicPipelineVersionDetailPage ||
     isPipelinesWithTab ||
-    isPipelineRunAnalyticsPage;
+    isPipelineRunAnalyticsPage ||
+    isPipelineEvaluatePage;
 
   const isToolkitPage =
     isUserPublicToolkitDetailPage ||

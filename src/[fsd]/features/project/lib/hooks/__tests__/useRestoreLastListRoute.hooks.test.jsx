@@ -66,6 +66,12 @@ describe('useRestoreLastListRoute', () => {
       '/pipelines/all/7/history/analytics?history_run_id=5',
       RouteDefinitions.Pipelines,
     ],
+    [
+      'Pipeline Results History Analytics',
+      RouteDefinitions.PipelineEvaluateHistoryAnalytics,
+      '/pipelines/all/7/evaluate/history/analytics?run=9',
+      RouteDefinitions.Pipelines,
+    ],
   ])('redirects %s to the list when the project changes', (_, routePath, url, listRoute) => {
     renderAt(routePath, url);
 

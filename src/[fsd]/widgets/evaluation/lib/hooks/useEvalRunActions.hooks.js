@@ -5,7 +5,6 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { useApplicationDetailsQuery } from '@/api/applications';
-import RouteDefinitions from '@/routes';
 
 import {
   useCancelEvalRunMutation,
@@ -16,6 +15,7 @@ import {
 } from '../../api';
 import { EVAL_RUN_FALLBACK_POLL_MS, EVAL_RUN_TRIGGER } from '../constants';
 import { isRunActive, isRunTerminal, parseEvalError, withSuiteSearchParam } from '../helpers';
+import { useEvalRoutes } from './useEvalRoutes.hooks';
 import { useEvalRunLiveProgress } from './useEvalRunLiveProgress.hooks';
 import { useEvaluationExport } from './useEvaluationExport.hooks';
 
@@ -31,6 +31,7 @@ export const useEvalRunActions = ({
 }) => {
   const navigate = useNavigate();
   const { search } = useLocation();
+  const evalRoutes = useEvalRoutes();
   const persistentSearch = NavigationHelpers.pickPersistentSearch(search);
   const { toastError, toastSuccess } = useToast();
 
@@ -204,15 +205,12 @@ export const useEvalRunActions = ({
   // Results History is its own screen (#6541), not a dialog — it needs a breadcrumb of its own and
   // a URL that can be shared down to the individual run.
   const handleOpenHistory = useCallback(() => {
-    const historyPath = RouteDefinitions.ApplicationsEvaluateHistory.replace(':tab', tab).replace(
-      ':agentId',
-      agentId,
-    );
+    const historyPath = evalRoutes.history.replace(':tab', tab).replace(':agentId', agentId);
     navigate({
       pathname: historyPath,
       search: withSuiteSearchParam(persistentSearch, editingSuiteId),
     });
-  }, [navigate, tab, agentId, persistentSearch, editingSuiteId]);
+  }, [navigate, evalRoutes, tab, agentId, persistentSearch, editingSuiteId]);
 
   // Determine the "display run" — active run if in progress, otherwise last run from history
   const displayRun = runActive ? activeRunData : lastRun;

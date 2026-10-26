@@ -5,10 +5,10 @@ import { useLocation, useNavigate, useParams, useSearchParams } from 'react-rout
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { BreadcrumbsOrTitle } from '@/[fsd]/shared/ui';
-import RouteDefinitions from '@/routes';
 
 import { useEvalSuitesQuery } from '../../api';
 import { buildSuiteMenuItems, resolveActiveSuiteId } from '../../lib/helpers';
+import { useEvalRoutes } from '../../lib/hooks';
 
 const MENU_HEADER = 'Navigate to...';
 const PREVIOUS_BADGE = 'Previous';
@@ -22,6 +22,7 @@ const PREVIOUS_BADGE = 'Previous';
 const EvaluationBreadcrumbs = memo(props => {
   const { title } = props;
   const { agentId, tab } = useParams();
+  const evalRoutes = useEvalRoutes();
   const [searchParams] = useSearchParams();
   const { search } = useLocation();
   const navigate = useNavigate();
@@ -43,19 +44,19 @@ const EvaluationBreadcrumbs = memo(props => {
 
   const handleSelectSuite = useCallback(
     item => {
-      const pathname = NavigationHelpers.buildRoute(RouteDefinitions.ApplicationsEvaluateSuite, {
+      const pathname = NavigationHelpers.buildRoute(evalRoutes.suite, {
         tab,
         agentId,
         suiteId: item.id,
       });
       navigate({ pathname, search: NavigationHelpers.pickPersistentSearch(search) });
     },
-    [navigate, tab, agentId, search],
+    [navigate, evalRoutes, tab, agentId, search],
   );
 
   const menus = useMemo(
     () => ({
-      [RouteDefinitions.ApplicationsEvaluate]: {
+      [evalRoutes.evaluate]: {
         items,
         activeId: activeSuiteId,
         onSelect: handleSelectSuite,
@@ -64,7 +65,7 @@ const EvaluationBreadcrumbs = memo(props => {
         isLoading,
       },
     }),
-    [items, activeSuiteId, handleSelectSuite, isLoading],
+    [evalRoutes, items, activeSuiteId, handleSelectSuite, isLoading],
   );
 
   return (
