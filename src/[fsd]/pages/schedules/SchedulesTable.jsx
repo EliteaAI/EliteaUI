@@ -94,13 +94,13 @@ const IconWithLabel = ({ type, label }) => {
   const typeLabel = ENTITY_TYPE_LABELS[type] ?? type;
 
   return (
-    <Box sx={schedulesTableStyles().iconLabel}>
+    <Box sx={cellStyles.iconLabel}>
       <Box
         component="span"
         role="img"
         aria-label={typeLabel}
         title={typeLabel}
-        sx={schedulesTableStyles().icon}
+        sx={cellStyles.icon}
       >
         <Icon.EntityTypeIcon type={type} />
       </Box>
@@ -119,7 +119,7 @@ const IconWithLabel = ({ type, label }) => {
 // One date renderer for Next run and Last run. Compact: MMM DD and the time on two lines, with
 // `trailing` (the Last run status icon) after the time; regular: one line; comfortable: the calendar icon
 const renderRunDate = (value, tier, trailing = null) => {
-  const styles = schedulesTableStyles();
+  const styles = cellStyles;
   const date = timeFormatter(value, TIME_FORMAT.MMMDD);
   const time = formatTime(value);
   if (tier === 'compact') {
@@ -168,7 +168,7 @@ const lastRunTooltip = (row, label, reason) => {
 };
 
 const renderCell = (column, value, row, tier) => {
-  const styles = schedulesTableStyles();
+  const styles = cellStyles;
   const isCompact = tier === 'compact';
   switch (column.field) {
     case 'entity_name':
@@ -523,5 +523,8 @@ const schedulesTableStyles = (isCompact, isNarrow) => ({
     whiteSpace: 'nowrap',
   },
 });
+
+// The cell styles do not depend on the tier, so the cells share one object instead of building it per row
+const cellStyles = schedulesTableStyles();
 
 export default SchedulesTable;

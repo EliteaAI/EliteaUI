@@ -16,6 +16,16 @@ await vi.hoisted(async () => {
   installGlobalStubs();
 });
 
+const iconBoxSx = vi.hoisted(() => []);
+vi.mock('@mui/material', async importOriginal => {
+  const actual = await importOriginal();
+  const { forwardRef } = await import('react');
+  const Box = forwardRef((props, ref) => {
+    if (props.role === 'img' && props['aria-label'] === 'Agent') iconBoxSx.push(props.sx);
+    return <actual.Box {...props} ref={ref} />;
+  });
+  return { ...actual, Box };
+});
 vi.mock('@/[fsd]/shared/lib/helpers/schedule.helpers', async importOriginal => ({
   ...(await importOriginal()),
   getCronSummaryInBrowserTimezone: () => 'At 00:00 on Saturday',
@@ -503,5 +513,12 @@ describe('EL-7011 US-26 SchedulesTable fits 8 columns at 1280, 1440 and 1600 px'
     setWindowWidth(1280, SIDEBAR_COLLAPSE_PX);
     renderTable([makeRow()]);
     expect(headerTemplate()).toBe(TEMPLATES.regular);
+  });
+
+  it('builds the cell styles once, not once per row', () => {
+    iconBoxSx.length = 0;
+    renderTable([makeRow({ id: 1 }), makeRow({ id: 2 }), makeRow({ id: 3 })]);
+    expect(iconBoxSx.length).toBeGreaterThanOrEqual(3);
+    expect(new Set(iconBoxSx).size).toBe(1);
   });
 });
