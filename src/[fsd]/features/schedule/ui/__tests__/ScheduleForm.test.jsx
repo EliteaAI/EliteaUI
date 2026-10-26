@@ -277,6 +277,12 @@ describe('ScheduleForm EL-7011', () => {
     expect(screen.getByRole('button', { name: 'Build with AI' })).toBeInTheDocument();
   });
 
+  it('keeps the header tab inert on the New and the existing schedule form', () => {
+    renderForm({ schedule: { id: 3, owner: { name: 'Ann Lee' } } }, '/settings/schedules/3');
+
+    expect(screen.getAllByRole('tab')[0]).toHaveStyle({ pointerEvents: 'none' });
+  });
+
   it('R1.1 CR-26 hides Build with AI on an existing schedule', () => {
     renderForm({ schedule: { id: 3, owner: { name: 'Ann Lee' } } }, '/settings/schedules/3');
 
