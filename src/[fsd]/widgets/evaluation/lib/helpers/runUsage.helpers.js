@@ -365,7 +365,7 @@ const AGENT_SOURCE_NOTE = {
   ledger: 'Tokens and cost per agent come from the usage ledger: each sub-agent ran as its own task.',
   trajectory:
     'Tokens per agent are counted from the trajectory; the ledger has no per-agent split for this ' +
-    'case, so its cost is the Agent row above.',
+    "case, so the case's total cost is in the Agent row of the usage table above.",
   mixed:
     'Rows from the usage ledger have their own tokens and cost; rows counted from the trajectory ' +
     'have no cost of their own.',
