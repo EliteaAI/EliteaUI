@@ -206,6 +206,8 @@ const ScheduleForm = memo(props => {
     versionId: values.version_id,
     scheduleId: schedule?.id,
   });
+  // Without edit in allowed_actions the server refuses a save, so the form only shows the values
+  const readOnly = Array.isArray(schedule?.allowed_actions) && !schedule.allowed_actions.includes('edit');
   const riskBlocksSave = RISK_STATES_WITHOUT_SAVE.includes(riskCheck.status);
 
   // A rule other than the form field sets the field, then saves
@@ -429,7 +431,7 @@ const ScheduleForm = memo(props => {
         onLoadMore={() => setList(prev => ({ ...prev, page: prev.page + 1 }))}
         searchString={list.query}
         onSearch={query => setList({ page: 0, query })}
-        disabled={lockActive}
+        disabled={lockActive || readOnly}
         error={!!fieldError('application_id')}
         helperText={fieldError('application_id')}
       />
@@ -480,7 +482,7 @@ const ScheduleForm = memo(props => {
         defaultVersionID={getDefaultVersionId(details)}
         value={values.version_id}
         onChange={versionId => setFieldValue('version_id', versionId)}
-        disabled={!values.application_id}
+        disabled={!values.application_id || readOnly}
       />
       <FieldError message={fieldError('version_id')} />
     </>
@@ -538,7 +540,11 @@ const ScheduleForm = memo(props => {
         />
       ),
       content: (
-        <Box sx={styles.section}>
+        <Box
+          component="fieldset"
+          disabled={readOnly}
+          sx={styles.section}
+        >
           {schedule && (
             <StyledInputEnhancer
               disabled
@@ -576,7 +582,11 @@ const ScheduleForm = memo(props => {
       title: 'WHAT TO RUN',
       testId: 'schedule-section-what-to-run',
       content: (
-        <Box sx={styles.section}>
+        <Box
+          component="fieldset"
+          disabled={readOnly}
+          sx={styles.section}
+        >
           {entityPicker}
           {riskNotices}
           {versionPicker}
@@ -588,7 +598,11 @@ const ScheduleForm = memo(props => {
       title: 'SCHEDULE SETTINGS',
       testId: 'schedule-section-settings',
       content: (
-        <Box sx={styles.section}>
+        <Box
+          component="fieldset"
+          disabled={readOnly}
+          sx={styles.section}
+        >
           {children?.({ values, setFieldValue, dirty: formik.dirty, setValues, fieldError })}
           <Typography
             id="schedule-approval-rule-label"
@@ -675,7 +689,9 @@ const ScheduleForm = memo(props => {
                   data-testid="schedule-save-button"
                   variant="elitea"
                   color="primary"
-                  disabled={formik.isSubmitting || riskBlocksSave || (!!schedule && !formik.dirty)}
+                  disabled={
+                    formik.isSubmitting || riskBlocksSave || readOnly || (!!schedule && !formik.dirty)
+                  }
                   aria-disabled={riskBlocksSave || undefined}
                   aria-describedby={riskCheck.status === RISK_CHECK_STATUS.BLOCKED ? RISK_HINT_ID : undefined}
                   onClick={formik.handleSubmit}
@@ -778,7 +794,16 @@ const styles = {
   // The header holds one unlabelled tab, so its selected-tab indicator is a stray line under the crumbs
   noTabIndicator: { '& .MuiTabs-indicator': { display: 'none' } },
   accordion: ({ palette }) => ({ background: `${palette.background.default.tertiary} !important` }),
-  section: { display: 'flex', flexDirection: 'column', gap: '1rem', paddingBottom: '1.5rem' },
+  // A fieldset, so `disabled` reaches every input inside; its default border, margin and min width are reset
+  section: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+    border: 0,
+    margin: 0,
+    padding: '0 0 1.5rem',
+    minWidth: 0,
+  },
   riskStatus: { display: 'flex', alignItems: 'center', gap: '0.5rem' },
   riskIcon: { width: '1rem', height: '1rem' },
   riskFailed: {

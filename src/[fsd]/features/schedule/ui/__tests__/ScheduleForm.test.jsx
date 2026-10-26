@@ -1057,6 +1057,29 @@ describe('ScheduleForm EL-7011', () => {
       expect(screen.queryByLabelText('Owner')).not.toBeInTheDocument();
     });
 
+    it('disables the fields and Save when allowed_actions has no edit', async () => {
+      renderEdit({ schedule: { ...SCHEDULE, allowed_actions: ['run'] } });
+      await act(async () => {});
+
+      expect(screen.getByLabelText('Name')).toBeDisabled();
+      expect(screen.getByLabelText('Description')).toBeDisabled();
+      expect(screen.getByLabelText(/Prompt/)).toBeDisabled();
+      expect(screen.getByTestId('schedule-type-agent')).toBeDisabled();
+      expect(screen.getByTestId('schedule-approval-rule-pause_and_ask')).toBeDisabled();
+      expect(selectProps.disabled).toBe(true);
+      expect(versionProps.disabled).toBe(true);
+      expect(saveButton()).toBeDisabled();
+      expect(screen.getByTestId('schedule-cancel-button')).toBeEnabled();
+    });
+
+    it('keeps the fields editable when allowed_actions has edit', async () => {
+      renderEdit();
+      await act(async () => {});
+
+      expect(screen.getByLabelText('Name')).toBeEnabled();
+      expect(selectProps.disabled).toBe(false);
+    });
+
     it('R1.6 EL-7011 keeps Type and the entity editable without a URL entity', () => {
       renderEdit();
 
