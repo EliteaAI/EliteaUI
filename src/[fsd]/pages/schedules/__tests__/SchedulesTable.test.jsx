@@ -2,13 +2,12 @@
 import { MemoryRouter } from 'react-router-dom';
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { formatRunStarted } from '@/[fsd]/features/schedule';
+import { formatRunStarted, getPollingInterval } from '@/[fsd]/features/schedule';
 import { TIME_FORMAT } from '@/common/constants';
 import { timeFormatter } from '@/common/utils';
 import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, screen, within } from '@testing-library/react';
 
-import { getPollingInterval } from '../SchedulesPage';
 import SchedulesTable from '../SchedulesTable';
 import { renderWithTheme } from './_testHelpers';
 

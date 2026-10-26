@@ -139,7 +139,7 @@ describe('EL-7011 US-26 SchedulesPage', () => {
     fireEvent.click(screen.getByText('next'));
     expect(lastArgs()).toMatchObject({ projectId: 5, page: 1 });
     mocks.useSelectedProjectId.mockReturnValue(7);
-    rerender(<SchedulesPage />);
+    rerender(<SchedulesPage tick={1} />);
     expect(screen.getByTestId('page')).toHaveTextContent('0');
     expect(lastArgs()).toMatchObject({ projectId: 7, page: 0 });
   });
@@ -280,7 +280,7 @@ describe('EL-7011 US-26 SchedulesPage', () => {
     fireEvent.click(screen.getByText('status'));
     fireEvent.click(screen.getByText('owners'));
     mocks.useSelectedProjectId.mockReturnValue(7);
-    rerender(<SchedulesPage />);
+    rerender(<SchedulesPage tick={2} />);
     expect(lastArgs()).toMatchObject({ projectId: 7, page: 0, status: '', ownerIds: [] });
   });
 
@@ -309,7 +309,7 @@ describe('EL-7011 US-26 SchedulesPage', () => {
     const { rerender } = render(<SchedulesPage />);
     expect(mocks.useGetScheduleListQuery.mock.calls.at(-1)[1]).toMatchObject({ pollingInterval: 10000 });
     mocks.useGetScheduleListQuery.mockReturnValue(listAnswer('success'));
-    rerender(<SchedulesPage />);
+    rerender(<SchedulesPage tick={3} />);
     expect(mocks.useGetScheduleListQuery.mock.calls.at(-1)[1]).toMatchObject({ pollingInterval: 0 });
   });
 
@@ -318,7 +318,7 @@ describe('EL-7011 US-26 SchedulesPage', () => {
     const { rerender } = render(<SchedulesPage />);
     expect(mocks.useGetScheduleListQuery.mock.calls.at(-1)[1]).toMatchObject({ pollingInterval: 10000 });
     mocks.useGetScheduleListQuery.mockReturnValue(listAnswer('waiting_for_approval'));
-    rerender(<SchedulesPage />);
+    rerender(<SchedulesPage tick={4} />);
     expect(mocks.useGetScheduleListQuery.mock.calls.at(-1)[1]).toMatchObject({ pollingInterval: 0 });
   });
 
@@ -396,11 +396,11 @@ describe('EL-7011 US-26 SchedulesPage', () => {
     mocks.useSelectedProjectId.mockReturnValue(undefined);
     const { rerender } = render(<SchedulesPage />);
     mocks.useSelectedProjectId.mockReturnValue(5);
-    rerender(<SchedulesPage />);
+    rerender(<SchedulesPage tick={5} />);
     expect(mocks.setSearchParams).not.toHaveBeenCalled();
 
     mocks.useSelectedProjectId.mockReturnValue(7);
-    rerender(<SchedulesPage />);
+    rerender(<SchedulesPage tick={6} />);
 
     const [update] = mocks.setSearchParams.mock.calls.at(-1);
     expect(update(new URLSearchParams('entityType=agent&entityId=12&tab=x')).toString()).toBe('tab=x');
