@@ -41,6 +41,7 @@ import RouteDefinitions from '@/routes';
 import { APPROVAL_RULE, RISK_CHECK_STATUS, RISK_NAME_MISMATCH, RISK_SAVE_ERROR } from '../lib/constants';
 import { useScheduleRiskCheck } from '../lib/hooks';
 import BuildScheduleWithAiModal from './BuildScheduleWithAiModal';
+import FieldError from './FieldError';
 import RiskReviewDialog from './RiskReviewDialog';
 import SaveWarningsDialog from './SaveWarningsDialog';
 import ScheduleRiskBlockBox from './ScheduleRiskBlockBox';
@@ -81,17 +82,6 @@ const formatConfirmation = (by, at) => {
 };
 
 const getEntityType = details => (details?.version_details?.agent_type === 'pipeline' ? 'pipeline' : 'agent');
-
-const FieldError = ({ message }) =>
-  message ? (
-    <Typography
-      role="alert"
-      variant="labelSmall"
-      color="error"
-    >
-      {message}
-    </Typography>
-  ) : null;
 
 const ownerName = owner => owner?.name || owner?.email || '-';
 
