@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 
 import { useSelector } from 'react-redux';
 
-import { RunHistoryApi } from '@/[fsd]/entities/run-history';
+import { RunHistoryApi } from '@/[fsd]/entities/run-history/api';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { buildErrorMessage } from '@/common/utils';
 
