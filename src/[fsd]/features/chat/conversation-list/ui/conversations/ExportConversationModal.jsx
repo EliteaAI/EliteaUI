@@ -36,6 +36,7 @@ const ExportConversationModal = memo(props => {
     data: summary,
     isFetching: isSummaryLoading,
     isError: isSummaryError,
+    error: summaryError,
   } = useConversationExportSummaryQuery(
     { projectId, conversationId: conversation.id },
     { skip: !conversation.id, refetchOnMountOrArgChange: true },
@@ -43,10 +44,14 @@ const ExportConversationModal = memo(props => {
 
   const attachmentsCount = summary?.attachments_count ?? 0;
   const totalSize = summary?.total_size;
+  // The summary shares the export's access check, so a denial means the export would fail too
+  const isAccessDenied = [403, 404].includes(summaryError?.status);
   const includeAttachments = selectedOption === EXPORT_OPTIONS.with;
   const hasNoAttachments = !isSummaryLoading && !isSummaryError && attachmentsCount === 0;
   const streamToDisk =
-    includeAttachments && (isSummaryError || totalSize == null || totalSize > STREAM_TO_DISK_BYTES);
+    includeAttachments &&
+    !isAccessDenied &&
+    (isSummaryError || totalSize == null || totalSize > STREAM_TO_DISK_BYTES);
 
   const attachmentsLabel = useMemo(() => {
     if (isSummaryLoading || !attachmentsCount) return 'With attachments';
@@ -56,15 +61,19 @@ const ExportConversationModal = memo(props => {
 
   const options = useMemo(
     () => [
-      { value: EXPORT_OPTIONS.without, label: 'Without attachments', disabled: isExporting },
+      {
+        value: EXPORT_OPTIONS.without,
+        label: 'Without attachments',
+        disabled: isExporting || isAccessDenied,
+      },
       {
         value: EXPORT_OPTIONS.with,
         label: attachmentsLabel,
-        disabled: isExporting || isSummaryLoading || hasNoAttachments,
+        disabled: isExporting || isSummaryLoading || hasNoAttachments || isAccessDenied,
         info: hasNoAttachments ? 'This chat has no attachments' : undefined,
       },
     ],
-    [attachmentsLabel, hasNoAttachments, isExporting, isSummaryLoading],
+    [attachmentsLabel, hasNoAttachments, isAccessDenied, isExporting, isSummaryLoading],
   );
 
   const handleClose = useCallback(() => {
@@ -107,6 +116,15 @@ const ExportConversationModal = memo(props => {
       >
         {OPTION_DESCRIPTIONS[selectedOption]}
       </Typography>
+      {isAccessDenied && (
+        <Typography
+          variant="bodySmall"
+          sx={styles.warning}
+          data-testid="export-chat-modal-access-denied"
+        >
+          You no longer have access to this chat.
+        </Typography>
+      )}
       {includeAttachments && totalSize > LARGE_EXPORT_BYTES && (
         <Typography
           variant="bodySmall"
@@ -155,7 +173,7 @@ const ExportConversationModal = memo(props => {
         variant={BUTTON_VARIANTS.elitea}
         color={BUTTON_COLORS.primary}
         onClick={handleExport}
-        disabled={isExporting || (includeAttachments && isSummaryLoading)}
+        disabled={isExporting || isAccessDenied || (includeAttachments && isSummaryLoading)}
         data-testid="export-chat-modal-export-button"
       >
         {isExporting ? 'Exporting...' : 'Export'}
