@@ -8,8 +8,8 @@ export const RUN_FULL_TIMESTAMP_FORMAT = 'dd-MM-yyyy, hh:mm:ss a';
 // Usage is tagged with `run_id` / `eval_run_id` only from this date; older runs have nothing to show
 const RUN_ANALYTICS_AVAILABLE_FROM = Date.UTC(2026, 8, 30);
 
-// CR-22 D7: with extra columns the tracks are fixed rem widths: Date, extras, Execution type, Version, Duration.
-// Review r8, from live measures at 16 px per rem: a row grid has 736 px (a 768 px list minus 2 x 16 px of row
+// With extra columns the tracks are fixed rem widths: Date, extras, Execution type, Version, Duration.
+// From live measures at 16 px per rem: a row grid has 736 px (a 768 px list minus 2 x 16 px of row
 // padding; the row menu is absolute and takes no track). A sortable header needs its label plus 57 px (padding,
 // sort icon, gap, border) and a plain one its label plus 33 px: Date 91, Schedule 99, Status 78, Execution type
 // 163, Version 110 and Duration 119 px. The minimum sum is 732 px. Dates up to 145 px stay cut, with a tooltip.
@@ -106,7 +106,7 @@ export const toRunISOString = value => {
 export const hasRunAnalytics = run =>
   parseRunTimestamp(run?.updated_at || run?.created_at) >= RUN_ANALYTICS_AVAILABLE_FROM;
 
-// One label per trigger source of the shared run enum (BUG-12); `manual` stays for older runs
+// One label per trigger source of the shared run enum; `manual` stays for older runs
 const EXECUTION_TYPE_LABELS = new Map([
   ['manual', 'Manual (legacy)'],
   ['scheduled', 'Scheduled'],
@@ -118,14 +118,14 @@ const EXECUTION_TYPE_LABELS = new Map([
 ]);
 
 // A missing or unknown type (older runs) renders "-" and the row stays selectable. Run now and Test run both store
-// schedule_manual, so the run record's trigger tells a test apart (CR-22, R3.4)
+// schedule_manual, so the run record's trigger tells a test apart
 export const toExecutionTypeRow = row => ({
   ...row,
   event_label:
     row.schedule_run?.trigger === 'test' ? 'Test' : (EXECUTION_TYPE_LABELS.get(row.execution_type) ?? '-'),
 });
 
-// CR-22 R3.1-R3.3: the Schedule and Status columns of Agent and Pipeline Run History; '-' without a run record
+// The Schedule and Status columns of Agent and Pipeline Run History; '-' without a run record
 export const SCHEDULE_RUN_COLUMNS = [
   {
     id: 'schedule',

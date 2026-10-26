@@ -7,12 +7,7 @@ import LinkIcon from '@mui/icons-material/Link';
 import { Box, IconButton, Link, Typography } from '@mui/material';
 
 import Tooltip from '@/ComponentsLib/Tooltip';
-import { PipelineNodeTypes } from '@/[fsd]/features/pipelines/flow-editor/lib/constants/flowEditor.constants';
-import {
-  GITLAB_AUTH_METHODS,
-  TRIGGER_TYPES,
-  WEBHOOK_TYPES,
-} from '@/[fsd]/features/pipelines/flow-editor/lib/constants/webhook.constants';
+import { FlowEditorConstants, WebhookConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { useDelegatedOauthToolkits } from '@/[fsd]/features/toolkits/lib/hooks';
 import { useSelectedProject, useToast } from '@/[fsd]/shared/lib/hooks';
 import { BannerMessage } from '@/[fsd]/shared/ui/banner-message';
@@ -22,10 +17,13 @@ import { useGetPipelineTriggerQuery, useUpdatePipelineTriggerMutation } from '@/
 
 import PipelineWebhookModal from './PipelineWebhookModal';
 
+const { PipelineNodeTypes } = FlowEditorConstants;
+const { GITLAB_AUTH_METHODS, TRIGGER_TYPES, WEBHOOK_TYPES } = WebhookConstants;
+
 // Node types that require user interaction and thus only support Chat Message trigger
 const INTERACTIVE_NODE_TYPES = [PipelineNodeTypes.Hitl, PipelineNodeTypes.Printer];
 
-// Root element id of the editor Schedules section (US-36)
+// Root element id of the editor Schedules section
 const SCHEDULES_SECTION_ID = 'entity-schedules-section';
 
 const TRIGGER_OPTIONS = [

@@ -17,17 +17,17 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('react-redux', () => ({ useSelector: select => select({ user: mocks.user }) }));
-vi.mock('@/[fsd]/entities/run-history/api/runHistoryApi.js', () => ({
-  useDecideWaitingRunMutation: () => [mocks.decide],
+vi.mock('@/[fsd]/entities/run-history', () => ({
+  RunHistoryApi: { useDecideWaitingRunMutation: () => [mocks.decide] },
 }));
-vi.mock('@/[fsd]/shared/lib/hooks/useToast.hooks', () => ({
+vi.mock('@/[fsd]/shared/lib/hooks', () => ({
+  useSelectedProjectId: () => 3,
   useToast: () => ({
     toastError: mocks.toastError,
     toastInfo: mocks.toastInfo,
     toastSuccess: mocks.toastSuccess,
   }),
 }));
-vi.mock('@/[fsd]/shared/lib/hooks/useSelectedProject.hooks', () => ({ useSelectedProjectId: () => 3 }));
 
 const ok = () => ({ unwrap: () => Promise.resolve({}) });
 const fail = error => ({ unwrap: () => Promise.reject(error) });

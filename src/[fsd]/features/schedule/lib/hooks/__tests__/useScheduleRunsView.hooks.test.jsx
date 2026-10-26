@@ -15,6 +15,11 @@ vi.mock('../useScheduleRuns.hooks', () => ({
   useScheduleRunsLoaded: () => mocks.loaded,
   useScheduleRunsTotal: () => mocks.runs.length,
 }));
+vi.mock('@/[fsd]/features/settings', async () => ({
+  AnalyticCommonHelpers: await import('@/[fsd]/features/settings/lib/helpers/analyticsCommon.helpers'),
+}));
+vi.mock('@/[fsd]/entities/schedule', async () => await import('@/[fsd]/entities/schedule/lib/helpers'));
+vi.mock('@/[fsd]/entities/run-history', async () => await import('@/[fsd]/entities/run-history/lib/helpers'));
 vi.mock('@/api/applications', () => ({ useApplicationDetailsQuery: mocks.applicationDetails }));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({ useSelectedProjectId: () => 5 }));
 

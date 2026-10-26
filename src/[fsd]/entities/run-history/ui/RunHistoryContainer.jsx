@@ -291,7 +291,7 @@ const runHistoryContainerStyles = (isSmallWindow, isStacked, wideList = false) =
   historyList: {
     flex: isStacked ? 'none' : 3,
     height: isStacked ? '20rem' : undefined,
-    // CR-22 D7: the column follows the list, 48 rem with the schedule columns, so the panel starts after it
+    // The column follows the list, 48 rem with the schedule columns, so the panel starts after it
     maxWidth: isSmallWindow || isStacked ? '100%' : wideList ? '48rem' : '32rem',
     position: 'relative',
     display: 'flex',

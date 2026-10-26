@@ -32,7 +32,7 @@ vi.mock('@/[fsd]/shared/lib/hooks', () => ({
   useToast: () => ({ toastSuccess: mocks.toastSuccess, toastError: mocks.toastError }),
   useUserList: mocks.useUserList,
 }));
-vi.mock('@/[fsd]/entities/schedule/api/scheduleApi', async importOriginal => ({
+vi.mock('@/[fsd]/entities/schedule', async importOriginal => ({
   ...(await importOriginal()),
   useChangeScheduleOwnerMutation: () => [mocks.trigger, mocks.mutationState],
 }));

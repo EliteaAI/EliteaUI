@@ -83,7 +83,7 @@ const runHistorySortableHeaderStyles = gridTemplateColumns => ({
       transition: 'transform 0.2s ease',
     },
   }),
-  // CR-22 D7: an extra column has no sort, so no pointer and full strength
+  // An extra column has no sort, so no pointer and full strength
   plainHeader: {
     opacity: 1,
     // '&&' beats the header's `div` rule, which sets the pointer on every cell

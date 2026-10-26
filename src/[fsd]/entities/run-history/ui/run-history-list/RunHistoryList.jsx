@@ -76,7 +76,7 @@ const RunHistoryList = memo(props => {
   const tableHeaderItems = useMemo(
     () => [
       { label: 'Date', type: SORT_TYPES.DATE },
-      // CR-22 D7: the extra columns do not sort
+      // The extra columns do not sort
       ...extraColumns.map(column => ({ label: column.label, type: column.id, sortable: false })),
       ...(hasEvent ? [{ label: eventColumnLabel, type: SORT_TYPES.EVENT }] : []),
       ...(noVersions ? [] : [{ label: 'Version', type: SORT_TYPES.VERSION }]),
@@ -151,7 +151,7 @@ const RunHistoryList = memo(props => {
 RunHistoryList.displayName = 'RunHistoryList';
 
 /** @type {MuiSx} */
-// CR-22 D7: Agent and Pipeline Run History with the Schedule and Status columns take 48 rem; the others keep 32 rem
+// Agent and Pipeline Run History with the Schedule and Status columns take 48 rem; the others keep 32 rem
 const runHistoryListStyles = (isSmallWindow, wide) => {
   const wrapperWidth = isSmallWindow ? '100%' : wide ? '48rem' : '32rem';
 

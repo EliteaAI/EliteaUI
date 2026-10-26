@@ -15,6 +15,14 @@ import recorded from './fixtures/scheduleRun98.json';
 
 vi.mock('@/api/eliteaApi.js', () => createEliteaApiMock());
 vi.mock('@/common/utils.jsx', () => ({ buildErrorMessage: () => '' }));
+vi.mock('@/[fsd]/features/settings', async () => ({
+  AnalyticCommonHelpers: await import('@/[fsd]/features/settings/lib/helpers/analyticsCommon.helpers'),
+}));
+vi.mock('@/[fsd]/entities/schedule', async () => ({
+  ...(await import('@/[fsd]/entities/schedule/lib/helpers')),
+  ...(await import('@/[fsd]/entities/schedule/api/scheduleApi.js')),
+}));
+vi.mock('@/[fsd]/entities/run-history', async () => await import('@/[fsd]/entities/run-history/lib/helpers'));
 vi.mock('@/common/convertChatConversationMessages', () => ({ convertConversationToChatHistory: () => [] }));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({ useSelectedProjectId: () => 5, useToast: () => ({}) }));
 vi.mock('@/[fsd]/entities/run-history/api', () => ({

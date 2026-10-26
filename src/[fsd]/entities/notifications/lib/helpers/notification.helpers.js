@@ -94,7 +94,7 @@ export const resolveHref = (eventType, meta, projectId) => {
       );
 
     // Run events select their run on the subpage; the owner change lands on the list, because
-    // the previous owner no longer sees that schedule. No schedule id means no link (R2.5).
+    // the previous owner no longer sees that schedule. No schedule id means no link.
     case NotificationType.ScheduleRunFailed:
     case NotificationType.ScheduleRunSucceeded:
     case NotificationType.ScheduleApprovalNeeded:

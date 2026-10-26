@@ -1,7 +1,7 @@
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import RouteDefinitions from '@/routes';
 
-// The schedule form opens nested in the editor of its agent or pipeline (owner CR 2026-10-21)
+// The schedule form opens nested in the editor of its agent or pipeline
 const ENTITY_ROUTES = {
   agent: {
     editor: RouteDefinitions.ApplicationsDetail,
@@ -45,7 +45,7 @@ export const buildSchedulesListLink = ({ entityType, entityId }) => {
   return `${RouteDefinitions.Schedules}?${query}`;
 };
 
-// CR-22 R4.3: the agent or pipeline Run History filtered to one schedule
+// The agent or pipeline Run History filtered to one schedule
 export const buildScheduleHistoryLink = schedule => {
   const base = NavigationHelpers.buildRoute(ENTITY_ROUTES[schedule.entity_type].history, {
     tab: DEFAULT_TAB,

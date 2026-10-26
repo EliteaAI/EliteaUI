@@ -24,7 +24,8 @@ vi.hoisted(() => {
 const LIGHT_THEME = createTheme({ palette: lightPalette });
 const containerProps = vi.hoisted(() => ({ current: null }));
 
-vi.mock('@/[fsd]/entities/run-history/ui', () => ({
+vi.mock('@/[fsd]/entities/run-history', async () => ({
+  ...(await vi.importActual('@/[fsd]/entities/run-history/lib/helpers')),
   RunHistoryContainer: props => {
     containerProps.current = props;
     return (
@@ -38,7 +39,7 @@ vi.mock('@/[fsd]/entities/run-history/ui', () => ({
 
 vi.mock('@/[fsd]/features/chat', () => ({ ChatMessageList: () => null }));
 
-vi.mock('@/[fsd]/features/settings/ui/drawer-page', () => ({ DrawerPageHeader: () => null }));
+vi.mock('@/[fsd]/features/settings', () => ({ DrawerPageHeader: () => null }));
 
 vi.mock('@/[fsd]/features/toolkits', () => ({ ToolkitsHelpers: { prettifyToolkitConversation: vi.fn() } }));
 

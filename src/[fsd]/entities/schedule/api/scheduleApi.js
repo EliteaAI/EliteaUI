@@ -13,7 +13,7 @@ const schedulesPath = projectId => `/elitea_core/schedules/prompt_lib/${projectI
 const schedulePath = (projectId, scheduleId) => `${schedulesPath(projectId)}/${scheduleId}`;
 
 // POST .../pause or .../resume with no body. Enabled changes in every cached list entry at once
-// and all patches are undone on error (US-28 R3).
+// and all patches are undone on error.
 const setEnabledMutation = (build, action, enabled) =>
   build.mutation({
     query: ({ projectId, scheduleId }) => ({
@@ -99,7 +99,7 @@ export const scheduleApi = eliteaApi
         providesTags: [SCHEDULE_RUNS_TAG],
       }),
 
-      // One run with its log `events` and `summary` (owner CR 2026-10-21 test panel log)
+      // One run with its log `events` and `summary`
       getScheduleRun: build.query({
         query: ({ projectId, scheduleId, runId }) => ({
           url: `${schedulePath(projectId, scheduleId)}/runs/${runId}`,
@@ -116,7 +116,7 @@ export const scheduleApi = eliteaApi
         invalidatesTags: (_, error) => (error ? [] : [SCHEDULES_TAG]),
       }),
 
-      // Dry run of the save risk scan; it writes nothing, so it invalidates nothing (owner CR 2026-10-21)
+      // Dry run of the save risk scan; it writes nothing, so it invalidates nothing
       checkScheduleRisk: build.mutation({
         query: ({ projectId, ...body }) => ({
           url: `${schedulesPath(projectId)}/check`,
@@ -134,7 +134,7 @@ export const scheduleApi = eliteaApi
         invalidatesTags: (_, error) => (error ? [] : [SCHEDULES_TAG, SCHEDULE_RUNS_TAG]),
       }),
 
-      // enabled is never sent: pause and resume are their own actions (owner CR 2026-10-21)
+      // enabled is never sent: pause and resume are their own actions
       updateSchedule: build.mutation({
         // eslint-disable-next-line no-unused-vars
         query: ({ projectId, scheduleId, enabled, ...body }) => ({
@@ -154,7 +154,7 @@ export const scheduleApi = eliteaApi
           method: 'POST',
           body: { owner_id: ownerId },
         }),
-        // A 403 or 404 means the row changed on the server, so the list refetches too (R3.4)
+        // A 403 or 404 means the row changed on the server, so the list refetches too
         invalidatesTags: (_, error) => (!error || [403, 404].includes(error.status) ? [SCHEDULES_TAG] : []),
       }),
 
@@ -202,7 +202,7 @@ export const scheduleApi = eliteaApi
           !error && (result?.created?.length || result?.updated?.length) ? [SCHEDULES_TAG] : [],
       }),
 
-      // Project setting "Allow Run without asking" (owner CR 2026-10-21); read by any member
+      // Project setting "Allow Run without asking"; read by any member
       getScheduleSettings: build.query({
         query: ({ projectId }) => ({ url: `${schedulesPath(projectId)}/settings` }),
         providesTags: (_, _error, { projectId }) => [{ type: SCHEDULE_SETTINGS_TAG, id: projectId }],

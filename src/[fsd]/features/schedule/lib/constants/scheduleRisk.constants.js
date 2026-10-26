@@ -1,4 +1,4 @@
-// States of the dry-run risk check of the schedule form (owner CR 2026-10-21)
+// States of the dry-run risk check of the schedule form
 export const RISK_CHECK_STATUS = {
   IDLE: 'idle',
   CHECKING: 'checking',
