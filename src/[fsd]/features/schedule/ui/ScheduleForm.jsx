@@ -669,6 +669,7 @@ const ScheduleForm = memo(props => {
     <>
       <StyledTabs
         leftPart={<Breadcrumbs entityName={entityName} />}
+        isCreatePage
         tabsSX={styles.noTabIndicator}
         tabs={[
           {
