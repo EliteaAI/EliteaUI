@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 
 import { Alert, Box, Typography } from '@mui/material';
 
@@ -46,28 +46,7 @@ const toShownError = error =>
       }
     : error;
 
-const WarningText = ({ warnings, field }) =>
-  warnings
-    .filter(warning => warning.field === field)
-    .map((warning, index) => (
-      <Typography
-        key={`${warning.reason}-${index}`}
-        role="status"
-        color="warning.main"
-        sx={{ fontSize: '0.75rem' }}
-      >
-        {warning.reason}
-      </Typography>
-    ));
-
-const Row = ({ label, children }) => (
-  <Box sx={{ display: 'flex', flexDirection: 'column', mb: '0.75rem' }}>
-    <Typography sx={{ fontSize: '0.75rem', fontWeight: 600 }}>{label}</Typography>
-    {children}
-  </Box>
-);
-
-const BuildScheduleWithAiModal = props => {
+const BuildScheduleWithAiModal = memo(props => {
   const { open, onClose, formik, lockedEntity } = props;
   const projectId = useSelectedProjectId();
   const [generateDraft, { error, reset }] = useGenerateScheduleDraftMutation();
@@ -79,6 +58,7 @@ const BuildScheduleWithAiModal = props => {
     setWasOpen(open);
     if (open) setIsEmpty(isScheduleFormEmpty(values));
   }
+  const styles = buildScheduleWithAiModalStyles();
   const lockedFields = lockedEntity ? ['entity_type', 'application_id'] : [];
 
   const handleGenerate = useCallback(
@@ -96,6 +76,28 @@ const BuildScheduleWithAiModal = props => {
     [setValues, values, lockedEntity],
   );
 
+  // A plain render function, not a component: one file holds one component
+  const renderRow = (field, label, warnings, ...cells) => (
+    <Box
+      key={field}
+      sx={styles.row}
+    >
+      <Typography sx={styles.label}>{label}</Typography>
+      {cells}
+      {warnings
+        .filter(warning => warning.field === field)
+        .map((warning, index) => (
+          <Typography
+            key={`${warning.reason}-${index}`}
+            role="status"
+            sx={styles.warning}
+          >
+            {warning.reason}
+          </Typography>
+        ))}
+    </Box>
+  );
+
   const shownError = useMemo(() => toShownError(error), [error]);
   const common = { ...TEST_IDS, open, onClose, entityLabel: 'schedule', placeholder: PLACEHOLDER };
   const generation = { onGenerate: handleGenerate, generateError: shownError, resetGenerate: reset };
@@ -111,18 +113,19 @@ const BuildScheduleWithAiModal = props => {
           <Box>
             {DRAFT_FIELDS.filter(
               field => !lockedFields.includes(field) && draft[field] !== undefined && draft[field] !== null,
-            ).map(field => (
-              <Row
-                key={field}
-                label={FIELD_LABELS[field]}
-              >
-                <Typography sx={{ fontSize: '0.875rem' }}>{show(draft[field])}</Typography>
-                <WarningText
-                  warnings={warnings}
-                  field={field}
-                />
-              </Row>
-            ))}
+            ).map(field =>
+              renderRow(
+                field,
+                FIELD_LABELS[field],
+                warnings,
+                <Typography
+                  key="value"
+                  sx={styles.value}
+                >
+                  {show(draft[field])}
+                </Typography>,
+              ),
+            )}
           </Box>
         )}
       />
@@ -145,25 +148,43 @@ const BuildScheduleWithAiModal = props => {
         changes.length === 0 ? (
           <Alert severity="info">The draft has no changes for the current form.</Alert>
         ) : (
-          <Box sx={{ p: '1rem' }}>
-            {changes.map(({ field, current, drafted }) => (
-              <Row
-                key={field}
-                label={FIELD_LABELS[field] ?? field}
-              >
-                <Typography sx={{ fontSize: '0.875rem' }}>{show(current)}</Typography>
-                <Typography sx={{ fontSize: '0.875rem', fontWeight: 600 }}>{show(drafted)}</Typography>
-                <WarningText
-                  warnings={warnings}
-                  field={field}
-                />
-              </Row>
-            ))}
+          <Box sx={styles.changes}>
+            {changes.map(({ field, current, drafted }) =>
+              renderRow(
+                field,
+                FIELD_LABELS[field] ?? field,
+                warnings,
+                <Typography
+                  key="current"
+                  sx={styles.value}
+                >
+                  {show(current)}
+                </Typography>,
+                <Typography
+                  key="drafted"
+                  sx={[styles.value, styles.drafted]}
+                >
+                  {show(drafted)}
+                </Typography>,
+              ),
+            )}
           </Box>
         )
       }
     />
   );
-};
+});
+
+BuildScheduleWithAiModal.displayName = 'BuildScheduleWithAiModal';
+
+/** @type {MuiSx} */
+const buildScheduleWithAiModalStyles = () => ({
+  row: { display: 'flex', flexDirection: 'column', mb: '0.75rem' },
+  label: { fontSize: '0.75rem', fontWeight: 600 },
+  value: { fontSize: '0.875rem' },
+  drafted: { fontWeight: 600 },
+  warning: ({ palette }) => ({ fontSize: '0.75rem', color: palette.warning.main }),
+  changes: { p: '1rem' },
+});
 
 export default BuildScheduleWithAiModal;

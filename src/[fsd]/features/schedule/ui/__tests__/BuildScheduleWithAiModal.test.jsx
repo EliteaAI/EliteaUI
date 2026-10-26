@@ -84,6 +84,11 @@ describe('EL-7011 US-34 BuildScheduleWithAiModal', () => {
     vi.clearAllMocks();
   });
 
+  it('follows the component rules: memo wrapper with a displayName', () => {
+    expect(BuildScheduleWithAiModal.$$typeof).toBe(Symbol.for('react.memo'));
+    expect(BuildScheduleWithAiModal.displayName).toBe('BuildScheduleWithAiModal');
+  });
+
   it('R1.1 opens a popup with a prompt field', () => {
     setup();
     expect(screen.getByText('Build with AI')).toBeInTheDocument();
