@@ -86,6 +86,12 @@ describe('CreateSchedulePage EL-7011', () => {
     );
   });
 
+  it('gives the stop date field the schedule timezone', () => {
+    render(<CreateSchedulePage />);
+
+    expect(mocks.stopProps.timezone).toBe(Intl.DateTimeFormat().resolvedOptions().timeZone);
+  });
+
   it('R2.4 R2.5 EL-7011 navigates through onSaved with the save answer, not inside onSubmit', async () => {
     mocks.createSchedule.mockReturnValue({ unwrap: () => Promise.resolve({ id: 1, warnings: [] }) });
     render(<CreateSchedulePage />);

@@ -315,6 +315,13 @@ describe('ScheduleDetailPage EL-7011', () => {
     expect(mocks.setFieldValue).toHaveBeenCalledWith('timezone', BROWSER_ZONE);
   });
 
+  it('gives the stop date field the schedule timezone, not the browser one', () => {
+    mocks.query = { currentData: { ...schedule, timezone: 'Asia/Tokyo' } };
+    render(<ScheduleDetailPage />);
+
+    expect(mocks.stopProps.timezone).toBe('Asia/Tokyo');
+  });
+
   it('TC-US32-15 R1.1 EL-7011 starts a test run through the run endpoint', async () => {
     mocks.query = { currentData: schedule };
     mocks.runSchedule.mockReturnValue({ unwrap: () => Promise.resolve({ id: 1 }) });
