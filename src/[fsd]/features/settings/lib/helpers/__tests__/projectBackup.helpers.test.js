@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { CHAT_TAG_TYPES } from '../../constants/projectBackup.constants.js';
+import { CHAT_TAG_TYPES, PROJECT_ENTITY_TAG_TYPES } from '../../constants/projectBackup.constants.js';
 import {
   formatCount,
   getChatsSummaryText,
@@ -133,14 +133,22 @@ describe('getRestoreInvalidatedTags', () => {
       { projectId: 10, restoreChats: 'with_attachments' },
       TEMPLATES,
     );
-    expect(tags).toEqual([{ type: TEMPLATES, id: 10 }, ...CHAT_TAG_TYPES]);
+    expect(tags).toEqual([{ type: TEMPLATES, id: 10 }, ...PROJECT_ENTITY_TAG_TYPES, ...CHAT_TAG_TYPES]);
     expect(tags).toEqual(expect.arrayContaining(['TAG_TYPE_FOLDERS', 'TAG_TYPE_MESSAGES']));
   });
 
   it('keeps the chat caches when chats are not restored', () => {
     expect(getRestoreInvalidatedTags(undefined, { projectId: 10, restoreChats: 'none' }, TEMPLATES)).toEqual([
       { type: TEMPLATES, id: 10 },
+      ...PROJECT_ENTITY_TAG_TYPES,
     ]);
+  });
+
+  it('refetches agent details after any real restore, so a replace shows the restored version', () => {
+    const tags = getRestoreInvalidatedTags(undefined, { projectId: 10, restoreChats: 'none' }, TEMPLATES);
+    expect(tags).toEqual(
+      expect.arrayContaining(['TAG_TYPE_APPLICATION_DETAILS', 'TOOLKIT_DETAILS', 'TAG_TYPE_SKILL_DETAILS']),
+    );
   });
 
   it('invalidates nothing for a preview, an inspection or a failure', () => {
