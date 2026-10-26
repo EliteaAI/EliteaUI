@@ -5,14 +5,15 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useToast } from '@/[fsd]/shared/lib/hooks';
 import useNavBlocker from '@/hooks/useNavBlocker';
-import RouteDefinitions from '@/routes';
 
 import { useDeleteEvalSuiteMutation, useUpdateEvalSuiteMutation } from '../../api';
 import { parseEvalError, suiteCreatedMessage, suiteDeletedMessage } from '../helpers';
+import { useEvalRoutes } from './useEvalRoutes.hooks';
 
 export const useEvalSuiteActions = ({ projectId, agentId, tab, editingSuiteId }) => {
   const navigate = useNavigate();
   const { search } = useLocation();
+  const evalRoutes = useEvalRoutes();
   const { toastError, toastSuccess } = useToast();
 
   const isDetailView = editingSuiteId !== null;
@@ -27,10 +28,7 @@ export const useEvalSuiteActions = ({ projectId, agentId, tab, editingSuiteId })
   const blockOptions = useMemo(() => ({ blockCondition: isDetailView && isDirty }), [isDetailView, isDirty]);
   const { setBlockNav } = useNavBlocker(blockOptions);
 
-  const baseEvaluatePath = RouteDefinitions.ApplicationsEvaluate.replace(':tab', tab).replace(
-    ':agentId',
-    agentId,
-  );
+  const baseEvaluatePath = evalRoutes.evaluate.replace(':tab', tab).replace(':agentId', agentId);
 
   const persistentSearch = NavigationHelpers.pickPersistentSearch(search);
 

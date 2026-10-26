@@ -5,7 +5,6 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { SearchParams } from '@/common/constants';
-import RouteDefinitions from '@/routes';
 
 import {
   useEvalSuiteCaseExclusionsQuery,
@@ -13,10 +12,12 @@ import {
   useUpdateEvalSuiteMutation,
 } from '../../api';
 import { caseExcludedMessage, caseIncludedMessage, parseEvalError, withSuiteSearchParam } from '../helpers';
+import { useEvalRoutes } from './useEvalRoutes.hooks';
 
 export const useEvalDatasetActions = ({ projectId, editingSuiteId, agentId, tab }) => {
   const navigate = useNavigate();
   const { search } = useLocation();
+  const evalRoutes = useEvalRoutes();
   const persistentSearch = NavigationHelpers.pickPersistentSearch(search);
   const { toastError, toastSuccess } = useToast();
 
@@ -38,15 +39,12 @@ export const useEvalDatasetActions = ({ projectId, editingSuiteId, agentId, tab 
   }, [editingSuiteId]);
 
   const handleManageDatasets = useCallback(() => {
-    const datasetsPath = RouteDefinitions.ApplicationsEvaluateDatasets.replace(':tab', tab).replace(
-      ':agentId',
-      agentId,
-    );
+    const datasetsPath = evalRoutes.datasets.replace(':tab', tab).replace(':agentId', agentId);
     navigate({
       pathname: datasetsPath,
       search: withSuiteSearchParam(persistentSearch, editingSuiteId),
     });
-  }, [navigate, tab, agentId, persistentSearch, editingSuiteId]);
+  }, [navigate, evalRoutes, tab, agentId, persistentSearch, editingSuiteId]);
 
   const handleCreateDataset = useCallback(() => {
     setShowDatasetDialog(true);
@@ -67,10 +65,7 @@ export const useEvalDatasetActions = ({ projectId, editingSuiteId, agentId, tab 
         }).unwrap();
         toastSuccess(`Dataset "${dataset.name}" has been created and attached to the suite.`);
         // Redirect to manage datasets page with the created dataset selected
-        const datasetsPath = RouteDefinitions.ApplicationsEvaluateDatasets.replace(':tab', tab).replace(
-          ':agentId',
-          agentId,
-        );
+        const datasetsPath = evalRoutes.datasets.replace(':tab', tab).replace(':agentId', agentId);
         const newParams = new URLSearchParams(withSuiteSearchParam(persistentSearch, editingSuiteId));
         newParams.set(SearchParams.DatasetId, dataset.id);
         navigate({ pathname: datasetsPath, search: newParams.toString() });
@@ -85,6 +80,7 @@ export const useEvalDatasetActions = ({ projectId, editingSuiteId, agentId, tab 
       toastSuccess,
       toastError,
       navigate,
+      evalRoutes,
       tab,
       agentId,
       persistentSearch,
@@ -124,15 +120,12 @@ export const useEvalDatasetActions = ({ projectId, editingSuiteId, agentId, tab 
 
   const handleOpenDataset = useCallback(
     dataset => {
-      const datasetsPath = RouteDefinitions.ApplicationsEvaluateDatasets.replace(':tab', tab).replace(
-        ':agentId',
-        agentId,
-      );
+      const datasetsPath = evalRoutes.datasets.replace(':tab', tab).replace(':agentId', agentId);
       const newParams = new URLSearchParams(withSuiteSearchParam(persistentSearch, editingSuiteId));
       newParams.set(SearchParams.DatasetId, dataset.id);
       navigate({ pathname: datasetsPath, search: newParams.toString() });
     },
-    [navigate, tab, agentId, persistentSearch, editingSuiteId],
+    [navigate, evalRoutes, tab, agentId, persistentSearch, editingSuiteId],
   );
 
   // ---- Case exclusion (from suite) ----

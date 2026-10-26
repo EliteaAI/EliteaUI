@@ -16,6 +16,7 @@ let lastActiveRun;
 vi.mock('react-router-dom', () => ({
   useNavigate: () => vi.fn(),
   useLocation: () => ({ search: '' }),
+  useMatch: () => null,
 }));
 
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({

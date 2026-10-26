@@ -303,6 +303,15 @@ const ProtectedRoutes = memo(() => {
 
       { path: RouteDefinitions.PipelineRunHistory, element: <PipelineRunHistory /> },
       { path: RouteDefinitions.PipelineRunAnalytics, element: <PipelineRunAnalytics /> },
+      { path: RouteDefinitions.PipelineEvaluate, element: <AgentEvaluatePage /> },
+      { path: RouteDefinitions.PipelineEvaluateSuite, element: <AgentEvaluatePage /> },
+      { path: RouteDefinitions.PipelineEvaluateDatasets, element: <AgentEvaluateDatasetsPage /> },
+      { path: RouteDefinitions.PipelineEvaluateDimensions, element: <AgentEvaluateDimensionsPage /> },
+      { path: RouteDefinitions.PipelineEvaluateHistory, element: <AgentEvaluateHistoryPage /> },
+      {
+        path: RouteDefinitions.PipelineEvaluateHistoryAnalytics,
+        element: <AgentEvaluateHistoryAnalyticsPage />,
+      },
 
       /* credentials */
       { path: RouteDefinitions.Credentials, element: getIndexElement(CredentialsTabs[0]) },

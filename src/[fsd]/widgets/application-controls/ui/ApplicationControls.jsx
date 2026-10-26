@@ -231,23 +231,19 @@ const ApplicationControls = memo(props => {
           },
         },
       },
-      ...(!isFromPipeline
-        ? [
-            {
-              key: 'evaluate',
-              label: 'Evaluate (Beta)',
-              icon: <EvaluateIcon sx={{ fontSize: '1rem' }} />,
-              addSeparator: false,
-              onClick: () => {
-                const path = NavigationHelpers.buildRoute(RouteDefinitions.ApplicationsEvaluate, {
-                  tab: tab ?? 'all',
-                  agentId,
-                });
-                navigate({ pathname: path, search: location.search });
-              },
-            },
-          ]
-        : []),
+      {
+        key: 'evaluate',
+        label: 'Evaluate (Beta)',
+        icon: <EvaluateIcon sx={{ fontSize: '1rem' }} />,
+        addSeparator: false,
+        onClick: () => {
+          const route = isFromPipeline
+            ? RouteDefinitions.PipelineEvaluate
+            : RouteDefinitions.ApplicationsEvaluate;
+          const path = NavigationHelpers.buildRoute(route, { tab: tab ?? 'all', agentId });
+          navigate({ pathname: path, search: location.search });
+        },
+      },
       shareAgentMenuItem,
       pinMenuItem,
       ...(canDeleteApplication

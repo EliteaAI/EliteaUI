@@ -143,4 +143,28 @@ export const BREADCRUMB_REGISTRY = {
     parent: RouteDefinitions.PipelineRunHistory,
     label: 'Analytics',
   },
+  [RouteDefinitions.PipelineEvaluate]: {
+    parent: RouteDefinitions.PipelineDetail,
+    label: 'Evaluation (Beta)',
+  },
+  [RouteDefinitions.PipelineEvaluateSuite]: {
+    parent: RouteDefinitions.PipelineDetail,
+    label: 'Evaluation (Beta)',
+  },
+  [RouteDefinitions.PipelineEvaluateDatasets]: {
+    parent: RouteDefinitions.PipelineEvaluate,
+    label: 'Manage Datasets',
+  },
+  [RouteDefinitions.PipelineEvaluateDimensions]: {
+    parent: RouteDefinitions.PipelineEvaluate,
+    label: 'Manage Dimensions',
+  },
+  [RouteDefinitions.PipelineEvaluateHistory]: {
+    parent: RouteDefinitions.PipelineEvaluate,
+    label: 'Results History',
+  },
+  [RouteDefinitions.PipelineEvaluateHistoryAnalytics]: {
+    parent: RouteDefinitions.PipelineEvaluateHistory,
+    label: 'Analytics',
+  },
 };

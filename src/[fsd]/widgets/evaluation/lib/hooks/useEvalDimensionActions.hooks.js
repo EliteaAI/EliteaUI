@@ -4,7 +4,6 @@ import { useLocation, useNavigate } from 'react-router-dom';
 
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useToast } from '@/[fsd]/shared/lib/hooks';
-import RouteDefinitions from '@/routes';
 
 import {
   useAddEvalBindingMutation,
@@ -21,6 +20,7 @@ import {
   parseEvalError,
   withSuiteSearchParam,
 } from '../helpers';
+import { useEvalRoutes } from './useEvalRoutes.hooks';
 
 export const useEvalDimensionActions = ({
   projectId,
@@ -32,6 +32,7 @@ export const useEvalDimensionActions = ({
 }) => {
   const navigate = useNavigate();
   const { search } = useLocation();
+  const evalRoutes = useEvalRoutes();
   const persistentSearch = NavigationHelpers.pickPersistentSearch(search);
   const { toastError, toastSuccess } = useToast();
 
@@ -60,15 +61,12 @@ export const useEvalDimensionActions = ({
   }, [editingSuiteId]);
 
   const handleManageDimensions = useCallback(() => {
-    const dimensionsPath = RouteDefinitions.ApplicationsEvaluateDimensions.replace(':tab', tab).replace(
-      ':agentId',
-      agentId,
-    );
+    const dimensionsPath = evalRoutes.dimensions.replace(':tab', tab).replace(':agentId', agentId);
     navigate({
       pathname: dimensionsPath,
       search: withSuiteSearchParam(persistentSearch, editingSuiteId),
     });
-  }, [navigate, tab, agentId, persistentSearch, editingSuiteId]);
+  }, [navigate, evalRoutes, tab, agentId, persistentSearch, editingSuiteId]);
 
   const handleSelectDimensionFromLibrary = useCallback(() => {
     setShowDimensionLibrary(true);

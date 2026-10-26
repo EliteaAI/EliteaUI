@@ -8,7 +8,6 @@ import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useToast } from '@/[fsd]/shared/lib/hooks';
 import { useApplicationDetailsQuery } from '@/api/applications';
 import useCheckPermission from '@/hooks/useCheckPermission';
-import RouteDefinitions from '@/routes';
 
 import { useDeleteEvalRunMutation, useEvalRunQuery, useEvalRunsQuery, useEvalSuitesQuery } from '../../api';
 import { EVAL_PERMISSIONS } from '../constants';
@@ -20,6 +19,7 @@ import {
   resolveRunVersionName,
   sinkUnscoredRuns,
 } from '../helpers';
+import { useEvalRoutes } from './useEvalRoutes.hooks';
 import { useEvaluationExport } from './useEvaluationExport.hooks';
 
 // The run whose results are shown travels in the URL, so a copied link reopens the same run (§6).
@@ -41,6 +41,7 @@ export const useEvalRunHistory = ({ projectId, applicationId }) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { search } = useLocation();
   const { tab, agentId } = useParams();
+  const evalRoutes = useEvalRoutes();
   const navigate = useNavigate();
   const { toastError, toastSuccess } = useToast();
   const { checkPermission } = useCheckPermission();
@@ -167,14 +168,14 @@ export const useEvalRunHistory = ({ projectId, applicationId }) => {
       const params = new URLSearchParams(search);
       params.set(RUN_SEARCH_PARAM, String(run.id));
       navigate({
-        pathname: NavigationHelpers.buildRoute(RouteDefinitions.ApplicationsEvaluateHistoryAnalytics, {
+        pathname: NavigationHelpers.buildRoute(evalRoutes.historyAnalytics, {
           tab,
           agentId,
         }),
         search: params.toString(),
       });
     },
-    [navigate, search, tab, agentId],
+    [navigate, evalRoutes, search, tab, agentId],
   );
 
   const { exportRun, exportingRunId } = useEvaluationExport({
