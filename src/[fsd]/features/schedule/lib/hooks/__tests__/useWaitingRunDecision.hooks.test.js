@@ -17,7 +17,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('react-redux', () => ({ useSelector: select => select({ user: mocks.user }) }));
-vi.mock('@/[fsd]/entities/run-history', () => ({
+vi.mock('@/[fsd]/entities/run-history/api', () => ({
   RunHistoryApi: { useDecideWaitingRunMutation: () => [mocks.decide] },
 }));
 vi.mock('@/[fsd]/shared/lib/hooks', () => ({

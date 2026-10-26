@@ -6,7 +6,7 @@ import { Box, IconButton, Link, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
 import { useSocket } from '@/[fsd]/features/auth/lib/hooks';
-import { findNoticeAgent } from '@/[fsd]/features/chat/lib/helpers/scheduleRunNotice.helpers';
+import { findNoticeAgent } from '@/[fsd]/features/chat/lib/helpers';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { BannerMessage } from '@/[fsd]/shared/ui/banner-message';

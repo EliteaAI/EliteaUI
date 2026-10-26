@@ -331,6 +331,14 @@ describe('EL-7011 US-26 SchedulesPage', () => {
     expect(screen.getByTestId('page')).toHaveTextContent('0');
   });
 
+  it('steps back one page when the current page is empty and the answer has no total', () => {
+    render(<SchedulesPage />);
+    fireEvent.click(screen.getByText('next'));
+    mocks.useGetScheduleListQuery.mockReturnValue({ currentData: { rows: [] }, isError: false });
+    fireEvent.click(screen.getByText('next'));
+    expect(screen.getByTestId('page')).toHaveTextContent('0');
+  });
+
   it('EL-7011 R1.1 R1.2 the page header carries the import and export actions of the project', () => {
     render(<SchedulesPage />);
     expect(screen.getByTestId('import-export-actions')).toHaveTextContent('5');
