@@ -79,6 +79,13 @@ const SchedulesPage = () => {
     if (isError) toastError(buildErrorMessage(error));
   }, [error, isError, toastError]);
 
+  // The last row of a page goes (delete, filter by status): step back to the last page that has rows
+  const total = currentData?.total;
+  const hasNoRows = currentData && !currentData.rows?.length;
+  useEffect(() => {
+    if (hasNoRows && page > 0) setPage(Math.max(Math.ceil(total / pageSize) - 1, 0));
+  }, [hasNoRows, page, pageSize, total]);
+
   // Any filter or search change starts at the first page (R1.3)
   const onFiltersChange = useCallback(next => {
     setFilters(next);

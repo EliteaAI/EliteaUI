@@ -322,6 +322,15 @@ describe('EL-7011 US-26 SchedulesPage', () => {
     expect(mocks.useGetScheduleListQuery.mock.calls.at(-1)[1]).toMatchObject({ pollingInterval: 0 });
   });
 
+  it('steps back to the last page with rows when the current page is empty', () => {
+    render(<SchedulesPage />);
+    fireEvent.click(screen.getByText('next'));
+    expect(screen.getByTestId('page')).toHaveTextContent('1');
+    mocks.useGetScheduleListQuery.mockReturnValue({ currentData: { total: 20, rows: [] }, isError: false });
+    fireEvent.click(screen.getByText('next'));
+    expect(screen.getByTestId('page')).toHaveTextContent('0');
+  });
+
   it('EL-7011 R1.1 R1.2 the page header carries the import and export actions of the project', () => {
     render(<SchedulesPage />);
     expect(screen.getByTestId('import-export-actions')).toHaveTextContent('5');
