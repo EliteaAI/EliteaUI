@@ -6,6 +6,9 @@ import { useUserListQuery } from '@/api/admin';
 
 import { useSelectedProjectId } from './useSelectedProject.hooks';
 
+// Callers often build the tag list inline, so a new array with the same items is not a filter change
+const sameTagIds = (a, b) => a === b || (Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((id, i) => id === b[i]));
+
 export const useUserList = ({ sortBy, sortOrder, query, pageSize, selectedTagIds, forceSkip = false }) => {
   const { personal_project_id: privateProjectId } = useSelector(state => state.user);
   const projectId = useSelectedProjectId();
@@ -15,7 +18,7 @@ export const useUserList = ({ sortBy, sortOrder, query, pageSize, selectedTagIds
   const filtersChanged =
     pageState.projectId !== projectId ||
     pageState.query !== query ||
-    pageState.selectedTagIds !== selectedTagIds;
+    !sameTagIds(pageState.selectedTagIds, selectedTagIds);
   if (filtersChanged) {
     setPageState({ page: 0, projectId, query, selectedTagIds });
   }

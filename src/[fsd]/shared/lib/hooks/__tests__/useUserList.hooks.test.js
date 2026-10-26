@@ -52,6 +52,18 @@ describe('useUserList pagination', () => {
     return hook;
   };
 
+  it('keeps the page when the tag list is a new array with the same items', () => {
+    const { rerender } = scrollToPageTwo({ selectedTagIds: [1, 2] });
+    rerender({ selectedTagIds: [1, 2] });
+    expect(requestedPages().at(-1)).toBe(2);
+  });
+
+  it('starts at page 0 when the tag list changes', () => {
+    const { rerender } = scrollToPageTwo({ selectedTagIds: [1, 2] });
+    rerender({ selectedTagIds: [1, 3] });
+    expect(requestedPages().at(-1)).toBe(0);
+  });
+
   it('starts at page 0 when the query returns to an earlier value', () => {
     const { rerender } = scrollToPageTwo({ query: 'ann' });
     rerender({ query: 'bob' });
