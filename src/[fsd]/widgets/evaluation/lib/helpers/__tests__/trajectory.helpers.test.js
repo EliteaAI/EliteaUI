@@ -156,6 +156,12 @@ describe('getTrajectoryMetricItems', () => {
     const [item] = getTrajectoryMetricItems({ dispatch_state: 'dispatch_not_reconciled', dispatch_waves: 2 });
     expect(item.value).toBe('not reconciled · 2 waves');
   });
+
+  it('names a fan-out that hit the case deadline', () => {
+    // core's TIMED_OUT is the bare 'timeout', unlike the dispatch_* states
+    const [item] = getTrajectoryMetricItems({ dispatch_state: 'timeout', dispatch_waves: 1 });
+    expect(item.value).toBe('timed out · 1 wave');
+  });
 });
 
 describe('getExcludedCasesNote', () => {

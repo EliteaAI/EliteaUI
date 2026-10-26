@@ -150,6 +150,7 @@ export const getTrajectoryStateMessage = execution => {
   );
 };
 
+// Core's `await_dispatch` states (evaluation_dispatch.py); the deadline one has no `dispatch_` prefix.
 const DISPATCH_STATE_LABELS = {
   reconciled: 'reconciled',
   timeout: 'timed out',

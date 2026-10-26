@@ -174,6 +174,13 @@ describe('recordedToolNames', () => {
     expect(recordedToolNames({ steps: [], tool_sequence: ['z'] })).toEqual(['z']);
     expect(recordedToolNames(undefined)).toEqual([]);
   });
+
+  it('returns the whole sequence under ownOnly when no steps are left', () => {
+    // tool_sequence has no parent_agent; the built-in check also compares every call then
+    expect(
+      recordedToolNames({ steps: [], tool_sequence: ['RD-OrderReader', 'read_file'] }, { ownOnly: true }),
+    ).toEqual(['RD-OrderReader', 'read_file']);
+  });
 });
 
 describe('sub-agent calls (#7015 P3)', () => {

@@ -266,7 +266,9 @@ export const compareTrajectoryNames = (expected, actualNames, allNames = actualN
 /**
  * The tool names a recorded trajectory called, in order, read the way the built-in checks read them.
  * With `ownOnly`, the calls a sub-agent made inside its own run are left out, as `trajectory.tool_match`
- * leaves them out under `calls: 'own'` (#7015 P3).
+ * leaves them out under `calls: 'own'` (#7015 P3). A trajectory with no steps left (all dropped to
+ * fit the size cap) only has `tool_sequence`, which does not say who made each call: `ownOnly` cannot
+ * apply there and every call is returned, as the built-in check also falls back to every call.
  */
 export const recordedToolNames = (trajectory, { ownOnly = false } = {}) => {
   const steps = trajectory?.steps ?? [];
