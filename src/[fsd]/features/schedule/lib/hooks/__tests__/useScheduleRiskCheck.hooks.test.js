@@ -131,7 +131,7 @@ describe('useScheduleRiskCheck EL-7011 owner CR', () => {
   });
 
   // CR-11 review r2: the review dialog must keep its tools when a tab-return check fails
-  it('keeps the last findings of the same version when a re-check fails', async () => {
+  it('US-33 R2.1 EL-7011 BUG-62 shows the failed state and keeps the findings of the same version when a re-check fails', async () => {
     mocks.check.mockReturnValueOnce(answer({ ...CLEAR, sensitive: SENSITIVE, fingerprint: 'fp-1' }));
     const { result } = setup();
     await waitFor(() => expect(result.current.result?.fingerprint).toBe('fp-1'));
@@ -140,7 +140,7 @@ describe('useScheduleRiskCheck EL-7011 owner CR', () => {
     setVisibility('visible');
 
     await waitFor(() => expect(mocks.check).toHaveBeenCalledTimes(2));
-    await waitFor(() => expect(result.current.status).toBe(RISK_CHECK_STATUS.CLEAR));
+    await waitFor(() => expect(result.current.status).toBe(RISK_CHECK_STATUS.FAILED));
     expect(result.current.result).toEqual(
       expect.objectContaining({ sensitive: SENSITIVE, fingerprint: 'fp-1' }),
     );

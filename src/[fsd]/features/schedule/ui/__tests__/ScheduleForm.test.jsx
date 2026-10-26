@@ -1348,6 +1348,18 @@ describe('ScheduleForm EL-7011', () => {
       expect(screen.queryByText('The risk check did not run. Try again.')).not.toBeInTheDocument();
     });
 
+    it('US-33 R2.1 EL-7011 BUG-62 shows an error toast and the failed state when the check fails on Save', async () => {
+      const { onSubmit } = renderForm();
+      await fillAgent();
+      checkRisk.mockReturnValue({ unwrap: () => Promise.reject({ status: 503 }) });
+
+      await save();
+
+      await waitFor(() => expect(toastError).toHaveBeenCalledWith('The risk check did not run. Try again.'));
+      expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument();
+      expect(onSubmit).not.toHaveBeenCalled();
+    });
+
     it('checks again on Save and saves nothing when the fresh check blocks', async () => {
       const { onSubmit } = renderForm();
       await fillAgent();

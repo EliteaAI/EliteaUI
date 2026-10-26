@@ -27,7 +27,7 @@ export const useScheduleRiskCheck = ({ projectId, entityType, applicationId, ver
       setState(IDLE_STATE);
       return null;
     }
-    // The findings belong to one entity and version; a failed re-check of the same pair keeps them
+    // The findings belong to one entity and version; a failed re-check of the same pair keeps them, with the failed status
     const key = `${entityType}:${applicationId}:${versionId}`;
     setState(prev => ({ ...prev, status: RISK_CHECK_STATUS.CHECKING }));
     try {
@@ -41,13 +41,13 @@ export const useScheduleRiskCheck = ({ projectId, entityType, applicationId, ver
       if (call === latestCall.current) setState({ status: statusOf(result), result, key });
       return result;
     } catch {
-      // A failed tab-return check must not empty an open review dialog (CR-11 review r2)
+      // A failed check shows as failed; the findings of the same pair stay for an open review dialog
       if (call === latestCall.current) {
-        setState(prev =>
-          prev.result && prev.key === key
-            ? { ...prev, status: statusOf(prev.result) }
-            : { status: RISK_CHECK_STATUS.FAILED, result: null },
-        );
+        setState(prev => ({
+          status: RISK_CHECK_STATUS.FAILED,
+          result: prev.key === key ? prev.result : null,
+          key: prev.key,
+        }));
       }
       return null;
     }

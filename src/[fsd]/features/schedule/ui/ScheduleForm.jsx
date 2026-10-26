@@ -200,7 +200,8 @@ const ScheduleForm = memo(props => {
       const runAfterSave = afterSave.current;
       // A fresh check on Save: a blocked or failed check shows in the form, sensitive tools open the review
       const risk = await riskCheck.runCheck();
-      if (!risk || risk.blocking?.length) return;
+      if (!risk) return toastError('The risk check did not run. Try again.');
+      if (risk.blocking?.length) return;
       // An edit that keeps the stored "Run without asking" consent saves without a new review (R2.6)
       const keepsConsent = risk.confirmed && values.approval_rule === APPROVAL_RULE.RUN_WITHOUT_ASKING;
       if (risk.sensitive?.length && !keepsConsent) setReview({ values, runAfterSave, changed: false });
