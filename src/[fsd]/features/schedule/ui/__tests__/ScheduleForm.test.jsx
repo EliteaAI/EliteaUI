@@ -56,8 +56,8 @@ vi.mock('@/hooks/useCheckPermission', () => ({
   }),
 }));
 vi.mock('@/[fsd]/entities/schedule', () => ({
-  useGetScheduleListQuery: () => ({
-    data: runAllowed === undefined ? undefined : { runWithoutAskingAllowed: runAllowed },
+  useGetScheduleSettingsQuery: () => ({
+    data: runAllowed === undefined ? undefined : { allow_run_without_asking: runAllowed },
     isError: listFailed,
   }),
   useCheckScheduleRiskMutation: () => [checkRisk],

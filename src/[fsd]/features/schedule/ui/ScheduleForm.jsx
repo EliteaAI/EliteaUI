@@ -6,7 +6,7 @@ import { Link as RouterLink } from 'react-router-dom';
 import { Box, CircularProgress, Grid, Link, Typography } from '@mui/material';
 
 import { GenerateEntityButton } from '@/[fsd]/entities/generate-entity-with-ai';
-import { useGetScheduleListQuery } from '@/[fsd]/entities/schedule';
+import { useGetScheduleSettingsQuery } from '@/[fsd]/entities/schedule';
 import { VersionSelect, getDefaultVersionId } from '@/[fsd]/entities/version';
 import {
   getEntityLock,
@@ -392,9 +392,9 @@ const ScheduleForm = memo(props => {
     next?.(saved);
   }, [onSaved, saved]);
 
-  const { data: scheduleList } = useGetScheduleListQuery({ projectId, pageSize: 1 }, { skip: !projectId });
+  const { data: scheduleSettings } = useGetScheduleSettingsQuery({ projectId }, { skip: !projectId });
   // Three states: undefined while loading or on error, then true or false; only an explicit false shows the hint
-  const runWithoutAskingAllowed = scheduleList?.runWithoutAskingAllowed;
+  const runWithoutAskingAllowed = scheduleSettings?.allow_run_without_asking;
   const showHint = runWithoutAskingAllowed === false || ruleChanged;
   const ruleNote = ruleChanged
     ? `The schedule was saved with the rule "${APPROVAL_RULE_ITEMS.find(item => item.value === savedRule)?.label ?? savedRule}".`
