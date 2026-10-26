@@ -1,6 +1,7 @@
 import { ProjectBackupConstants } from '@/[fsd]/features/settings/lib/constants';
 
-const { CHATS_OPTION, CHAT_TAG_TYPES, RESTORE_OPTION_LABELS } = ProjectBackupConstants;
+const { CHATS_OPTION, CHAT_TAG_TYPES, PROJECT_ENTITY_TAG_TYPES, RESTORE_OPTION_LABELS } =
+  ProjectBackupConstants;
 
 export const formatCount = (count, singular, plural = `${singular}s`) =>
   `${count} ${count === 1 ? singular : plural}`;
@@ -64,7 +65,7 @@ export const getChatsSummaryText = summary => {
 export const getRestoreInvalidatedTags = (error, args, chatTemplatesTag) => {
   const { projectId, dryRun, inspect, restoreChats } = args || {};
   if (error || dryRun || inspect) return [];
-  const tags = [{ type: chatTemplatesTag, id: projectId }];
+  const tags = [{ type: chatTemplatesTag, id: projectId }, ...PROJECT_ENTITY_TAG_TYPES];
   if (restoreChats && restoreChats !== CHATS_OPTION.none) tags.push(...CHAT_TAG_TYPES);
   return tags;
 };

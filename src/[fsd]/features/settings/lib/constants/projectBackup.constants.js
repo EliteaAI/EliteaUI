@@ -36,3 +36,19 @@ export const CHAT_TAG_TYPES = [
   'TAG_TYPE_MESSAGES',
   'TAG_TYPE_CANVAS_DETAILS',
 ];
+
+// Agents/pipelines, toolkits and skills: any real restore can rewrite their rows (a replace empties them first)
+export const PROJECT_ENTITY_TAG_TYPES = [
+  'TAG_TYPE_APPLICATIONS',
+  'TAG_TYPE_TOTAL_APPLICATIONS',
+  'TAG_TYPE_APPLICATION_DETAILS',
+  'TAG_TYPE_SELECTED_APPLICATION_DETAILS',
+  'TAG_TYPE_TOOLKITS',
+  'TOTAL_TOOLKITS',
+  'TOOLKIT_DETAILS',
+  'DETAILS_TOOLKITS',
+  'TAG_TYPE_SKILLS',
+  'TAG_TYPE_TOTAL_SKILLS',
+  'TAG_TYPE_SKILL_DETAILS',
+  'TAG_TYPE_APPLICATION_SKILLS',
+];
