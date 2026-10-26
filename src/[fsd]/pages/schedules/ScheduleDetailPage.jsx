@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { Link as RouterLink, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
-import { Box, CircularProgress, Container, Link } from '@mui/material';
+import { Box, CircularProgress } from '@mui/material';
 
 import {
   buildScheduleHistoryLink,
@@ -24,22 +24,9 @@ import { ScheduleSettingsSection, StopOnDateField } from '@/[fsd]/shared/ui/sche
 import RouteDefinitions from '@/routes';
 
 import ScheduleDetailMenu from './ScheduleDetailMenu';
+import ScheduleNotice from './ScheduleNotice';
 
 const { convertCronTimezone, getBrowserTimezone } = ScheduleHelpers;
-
-// The Page404 layout, with the way back to the Schedules list instead of Home (R1.2)
-const ScheduleNotice = ({ message }) => (
-  <Container sx={styles.notice}>
-    {message} Open{' '}
-    <Link
-      component={RouterLink}
-      to={RouteDefinitions.Schedules}
-      color="primary"
-    >
-      Schedules
-    </Link>
-  </Container>
-);
 
 // entityType: the page is nested in that editor and locks its entity (owner CR 2026-10-21)
 const ScheduleDetailPage = props => {
@@ -208,7 +195,6 @@ export default ScheduleDetailPage;
 
 /** @type {MuiSx} */
 const styles = {
-  notice: { marginTop: '50px', minHeight: 'calc(100vh - 191px)' },
   loader: { display: 'flex', justifyContent: 'center', padding: '3rem' },
   // The panel and the Runs section stacked (CR-21). From xl, in a window at least 46 rem (736 px) high, the
   // block stays in view: 100dvh minus the page header, its top margin and the bottom margin (6 rem). A fixed
