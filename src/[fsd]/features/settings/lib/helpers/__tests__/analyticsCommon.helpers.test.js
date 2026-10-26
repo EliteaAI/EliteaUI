@@ -12,6 +12,7 @@ import {
   fmtCost,
   fmtDuration,
   fmtNum,
+  formatTriggerLabel,
   formatVersionLabel,
   getPresetRange,
   pickEntityRoutePattern,
@@ -214,6 +215,12 @@ describe('shared entity labels', () => {
     expect(entityKindLabel(null)).toBe('-');
     expect(entityKindLabel(undefined)).toBe('-');
     expect(entityKindLabel('')).toBe('-');
+  });
+
+  it('keeps formatTriggerLabel and labels manual as Manual (legacy)', () => {
+    expect(formatTriggerLabel('manual')).toBe('Manual (legacy)');
+    expect(formatTriggerLabel('scheduled')).toBe('Scheduled');
+    expect(formatTriggerLabel('future_source')).toBe('future_source');
   });
 
   it('R2.1 EL-7011 shows the raw key of an unlabelled source', () => {
