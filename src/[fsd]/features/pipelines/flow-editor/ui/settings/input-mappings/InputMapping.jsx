@@ -2,22 +2,11 @@ import { memo, useCallback, useMemo } from 'react';
 
 import { Box } from '@mui/material';
 
-import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
+import { InputMappingHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { useInputOptions } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
 import { InputMappingItem } from '@/[fsd]/features/pipelines/flow-editor/ui/settings/input-mappings';
 import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
-import { capitalizeFirstChar } from '@/common/utils';
-
-const getValue = (key, values, mappingInfo, dataType) => {
-  if (values[key]?.value !== undefined) {
-    return values[key].value;
-  } else if (mappingInfo[key]?.value !== undefined) {
-    return mappingInfo[key].value;
-  } else {
-    return dataType === 'array' ? [] : '';
-  }
-};
 
 const InputMapping = memo(props => {
   const {
@@ -38,24 +27,18 @@ const InputMapping = memo(props => {
 
   const renderMappingItem = useCallback(
     (key, keyPrefix) => {
-      const mapping = input_mapping[key];
-      const type = values[key]?.type || mappingInfo[key]?.type || mapping?.type;
-      const enumList = FlowEditorHelpers.getEnumList(type, mappingInfo[key]?.enum, inputOptions);
-      const dataType = mappingInfo[key]?.data_type || 'string';
-      const value = getValue(key, values, mappingInfo, dataType);
+      const itemProps = InputMappingHelpers.getInputMappingItemProps(key, {
+        inputMapping: input_mapping,
+        values,
+        mappingInfo,
+        inputOptions,
+      });
       return (
         <InputMappingItem
           key={`${keyPrefix}-${key}`}
-          title={mapping?.title}
-          variableName={mapping?.title || capitalizeFirstChar(key.replaceAll('_', ' '))}
-          variable={key}
-          type={type}
-          dataType={dataType}
-          value={value}
-          enumList={enumList}
+          {...itemProps}
           onChangeMapping={onChangeMapping}
           disabled={disabled}
-          tooltip={mappingInfo[key]?.tooltip}
           defaultValues={defaultValues}
           mappingInfo={mappingInfo}
           valueTestId={valueTestIdPrefix ? `${valueTestIdPrefix}-${key}` : undefined}

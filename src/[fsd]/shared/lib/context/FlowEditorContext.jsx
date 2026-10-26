@@ -17,6 +17,8 @@ export const FlowEditorProvider = memo(props => {
     onAddFromHandle,
     expandAll,
     disabled,
+    reportNodeIssues,
+    onConnectNodes,
   } = props;
 
   const contextValue = useMemo(() => {
@@ -33,6 +35,8 @@ export const FlowEditorProvider = memo(props => {
       setFlowNodes,
       setFlowEdges,
       disabled,
+      reportNodeIssues,
+      onConnectNodes,
     };
   }, [
     editorHeight,
@@ -47,6 +51,8 @@ export const FlowEditorProvider = memo(props => {
     setFlowNodes,
     setFlowEdges,
     disabled,
+    reportNodeIssues,
+    onConnectNodes,
   ]);
 
   return <FlowEditorContext.Provider value={contextValue}>{children}</FlowEditorContext.Provider>;

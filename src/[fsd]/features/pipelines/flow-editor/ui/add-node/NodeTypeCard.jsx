@@ -1,13 +1,13 @@
 import { memo, useCallback } from 'react';
 
-import { Box, Typography, useTheme } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
-import { NodeHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
+
+import NodeTypeIconTile from './NodeTypeIconTile';
 
 const NodeTypeCard = memo(props => {
   const { type, onSelect } = props;
-  const theme = useTheme();
 
   const handleClick = useCallback(() => {
     onSelect?.(type);
@@ -23,11 +23,7 @@ const NodeTypeCard = memo(props => {
     [onSelect, type],
   );
 
-  const iconBackground =
-    theme.palette.components?.flowEditor?.nodeTypeIcon?.background?.[type] ??
-    NodeHelpers.getNodeColor(type, theme);
-
-  const styles = nodeTypeCardStyles(iconBackground);
+  const styles = nodeTypeCardStyles();
 
   return (
     <Box
@@ -38,9 +34,7 @@ const NodeTypeCard = memo(props => {
       onKeyDown={handleKeyDown}
       sx={styles.root}
     >
-      <Box sx={styles.iconTile}>
-        {NodeHelpers.getNodeIconByType(type, theme, theme.palette.icon.secondary)}
-      </Box>
+      <NodeTypeIconTile type={type} />
       <Box sx={styles.textContainer}>
         <Typography
           variant="bodyMedium"
@@ -64,7 +58,7 @@ const NodeTypeCard = memo(props => {
 NodeTypeCard.displayName = 'NodeTypeCard';
 
 /** @type {MuiSx} */
-const nodeTypeCardStyles = iconBackground => ({
+const nodeTypeCardStyles = () => ({
   root: ({ palette }) => ({
     display: 'flex',
     alignItems: 'flex-start',
@@ -79,19 +73,6 @@ const nodeTypeCardStyles = iconBackground => ({
       backgroundColor: palette.background.surface.interactive.active,
       outline: 'none',
     },
-  }),
-  iconTile: ({ palette }) => ({
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    flexShrink: 0,
-    width: '1.75rem',
-    height: '1.75rem',
-    padding: '0.375rem',
-    boxSizing: 'border-box',
-    borderRadius: '0.5rem',
-    border: `0.0625rem solid ${palette.border.subtle}`,
-    backgroundColor: iconBackground,
   }),
   textContainer: {
     display: 'flex',

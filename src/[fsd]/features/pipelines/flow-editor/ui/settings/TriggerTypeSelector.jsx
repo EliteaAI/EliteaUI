@@ -418,13 +418,14 @@ const triggerTypeSelectorStyles = () => ({
     flexDirection: 'column',
     gap: '0.25rem',
     width: '100%',
-    padding: '0.5rem 1rem',
     boxSizing: 'border-box',
   },
+  // Lines the label up with the labels of the other panel fields
   labelWrapper: {
     display: 'flex',
     alignItems: 'center',
     gap: '0.25rem',
+    paddingLeft: '0.75rem',
   },
   selectWrapper: {
     display: 'flex',

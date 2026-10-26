@@ -1,14 +1,23 @@
 import { memo, useCallback, useContext, useMemo } from 'react';
 
 import { AIAssistantInput } from '@/[fsd]/features/pipelines/ai-assistant/ui';
-import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
+import {
+  FlowEditorConstants,
+  NodePanelConstants,
+} from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { useNodeAiAssistantConfig } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
-import { FlowEditorNodes, FlowEditorSelect } from '@/[fsd]/features/pipelines/flow-editor/ui';
+import {
+  FlowEditorNodePanel,
+  FlowEditorNodes,
+  FlowEditorSelect,
+} from '@/[fsd]/features/pipelines/flow-editor/ui';
 import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
 import { useEdges } from '@xyflow/react';
 
-import DecisionOutputs, { commonComponentStyles } from './DecisionNodeShared';
+import DecisionDefaultOutputSelect from './DecisionDefaultOutputSelect';
+import { commonComponentStyles } from './DecisionNodeShared';
+import DecisionOutputsSelect from './DecisionOutputsSelect';
 
 const NormalDecisionNode = memo(props => {
   const { id, data, selected } = props;
@@ -102,39 +111,47 @@ const NormalDecisionNode = memo(props => {
       isPerforming={data?.isPerforming}
       id={id}
     >
-      <FlowEditorSelect.InputSelect
-        id={id}
-        inputFieldName={'input'}
-        disabled={isRunningPipeline}
-        dataTestId="pipeline-decision-node-input-select"
-      />
-      <AIAssistantInput
-        autoComplete="off"
-        showexpandicon="true"
-        multiline
-        collapseContent
-        variant="standard"
-        fullWidth
-        name="Description"
-        id="description"
-        label="Description"
-        placeholder=""
-        value={description}
-        onInput={onChangeDecisionDescription}
-        hasActionsToolBar
-        fieldName={'description'}
-        containerProps={styles.inputEnhancerContainer}
-        disabled={isRunningPipeline || disabled}
-        modelConfig={pipelineLLMConfig}
-        inputProps={{ 'data-testid': 'pipeline-decision-node-description-input' }}
-      />
-      <DecisionOutputs
-        id={id}
-        decisionOutput={decisionOutput}
-        onRemoveOutput={onRemoveOutput}
-        isRunningPipeline={isRunningPipeline}
-        disabled={disabled}
-      />
+      <FlowEditorNodePanel.NodeConfigSection>
+        <AIAssistantInput
+          autoComplete="off"
+          showexpandicon="true"
+          multiline
+          collapseContent
+          variant="standard"
+          fullWidth
+          name="Description"
+          id="description"
+          label="Decision criteria"
+          placeholder=""
+          value={description}
+          onInput={onChangeDecisionDescription}
+          hasActionsToolBar
+          fieldName={'description'}
+          containerProps={styles.inputEnhancerContainer}
+          disabled={isRunningPipeline || disabled}
+          modelConfig={pipelineLLMConfig}
+          inputProps={{ 'data-testid': 'pipeline-decision-node-description-input' }}
+        />
+        <DecisionOutputsSelect
+          id={id}
+          decisionOutput={decisionOutput}
+          onRemoveOutput={onRemoveOutput}
+          disabled={isRunningPipeline || disabled}
+        />
+        <DecisionDefaultOutputSelect
+          id={id}
+          value={yamlNode?.default_output || ''}
+          disabled={isRunningPipeline || disabled}
+        />
+      </FlowEditorNodePanel.NodeConfigSection>
+      <FlowEditorNodePanel.NodeConfigSection section={NodePanelConstants.NODE_CONFIG_SECTIONS.advanced}>
+        <FlowEditorSelect.InputSelect
+          id={id}
+          inputFieldName={'input'}
+          disabled={isRunningPipeline || disabled}
+          dataTestId="pipeline-decision-node-input-select"
+        />
+      </FlowEditorNodePanel.NodeConfigSection>
     </FlowEditorNodes.NodeCard>
   );
 });

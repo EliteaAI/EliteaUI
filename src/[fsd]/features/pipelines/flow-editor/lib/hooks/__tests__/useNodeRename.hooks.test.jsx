@@ -8,12 +8,6 @@ import { act, cleanup, renderHook } from '@testing-library/react';
 
 import { useNodeRename } from '../useNodeRename.hooks';
 
-const toastError = vi.fn();
-
-vi.mock('@/[fsd]/shared/lib/hooks', () => ({
-  useToast: () => ({ toastError }),
-}));
-
 const { PipelineNodeTypes } = FlowEditorConstants;
 
 const createContext = (overrides = {}) => ({
@@ -33,7 +27,13 @@ const createContext = (overrides = {}) => ({
   ...overrides,
 });
 
-const renderRename = ({ context = createContext(), name = 'llm_1', type = PipelineNodeTypes.LLM } = {}) => {
+const renderRename = ({
+  context = createContext(),
+  name = 'llm_1',
+  type = PipelineNodeTypes.LLM,
+  onRenamed,
+  isLocked,
+} = {}) => {
   const wrapper = ({ children }) => (
     <Formik
       initialValues={{ version_details: { tools: [{ toolkit_name: 'github' }] } }}
@@ -42,32 +42,45 @@ const renderRename = ({ context = createContext(), name = 'llm_1', type = Pipeli
       <FlowEditorContext.Provider value={context}>{children}</FlowEditorContext.Provider>
     </Formik>
   );
-  return { context, ...renderHook(() => useNodeRename({ name, type }), { wrapper }) };
+  return { context, ...renderHook(() => useNodeRename({ name, type, onRenamed, isLocked }), { wrapper }) };
 };
 
-const typeName = (result, value) => {
-  act(() => result.current.onChange({ target: { value } }));
-  act(() => result.current.onBlur());
+const rename = (result, value) => {
+  let error;
+  act(() => {
+    error = result.current.renameNode(value);
+  });
+  return error;
 };
 
 describe('useNodeRename', () => {
   beforeEach(() => vi.clearAllMocks());
   afterEach(() => cleanup());
 
-  it('starts editing on request, but not while the pipeline runs', () => {
-    const { result } = renderRename();
-    act(() => result.current.onStartEditing());
-    expect(result.current.isEditingName).toBe(true);
+  it('allows renaming, but not while the pipeline runs, in read-only mode or for Condition', () => {
+    expect(renderRename().result.current.canRename).toBe(true);
+    expect(
+      renderRename({ context: createContext({ isRunningPipeline: true }) }).result.current.canRename,
+    ).toBe(false);
+    expect(renderRename({ context: createContext({ disabled: true }) }).result.current.canRename).toBe(false);
+    expect(renderRename({ type: PipelineNodeTypes.Condition }).result.current.canRename).toBe(false);
+  });
 
-    const { result: running } = renderRename({ context: createContext({ isRunningPipeline: true }) });
-    act(() => running.current.onStartEditing());
-    expect(running.current.isEditingName).toBe(false);
+  it('does nothing when the node is locked', () => {
+    const onRenamed = vi.fn();
+    const { result, context } = renderRename({ isLocked: true, onRenamed });
+
+    expect(result.current.canRename).toBe(false);
+    expect(rename(result, 'summarize')).toBeNull();
+    expect(context.setYamlJsonObject).not.toHaveBeenCalled();
+    expect(onRenamed).not.toHaveBeenCalled();
   });
 
   it('renames the node and every YAML reference to it', () => {
-    const { result, context } = renderRename();
+    const onRenamed = vi.fn();
+    const { result, context } = renderRename({ onRenamed });
 
-    typeName(result, 'summarize');
+    expect(rename(result, 'summarize')).toBeNull();
 
     const updater = context.setYamlJsonObject.mock.calls[0][0];
     const next = updater(context.yamlJsonObject);
@@ -82,28 +95,30 @@ describe('useNodeRename', () => {
     expect(edgeUpdater([{ id: 'e1', source: 'llm_1', target: 'printer_1' }])).toEqual([
       { id: 'e1', source: 'summarize', target: 'printer_1' },
     ]);
-    expect(result.current.isEditingName).toBe(false);
+    expect(onRenamed).toHaveBeenCalledWith('summarize');
+  });
+
+  it('rejects an empty name', () => {
+    const { result, context } = renderRename();
+
+    expect(rename(result, '  ')).toBe('Name is required');
+    expect(context.setYamlJsonObject).not.toHaveBeenCalled();
   });
 
   it('rejects a name used by another node', () => {
     const { result, context } = renderRename();
 
     // Spaces are ignored when comparing names
-    typeName(result, 'printer _1');
-
-    expect(toastError).toHaveBeenCalledWith(
+    expect(rename(result, 'printer _1')).toBe(
       'The name has been used by other nodes, please input a new name!',
     );
     expect(context.setYamlJsonObject).not.toHaveBeenCalled();
-    expect(result.current.inputtedName).toBe('llm_1');
   });
 
   it('rejects a name used by a toolkit', () => {
     const { result, context } = renderRename();
 
-    typeName(result, 'github');
-
-    expect(toastError).toHaveBeenCalledWith(
+    expect(rename(result, 'github')).toBe(
       'The name conflicts with an existing toolkit name "github", please input a new name!',
     );
     expect(context.setYamlJsonObject).not.toHaveBeenCalled();

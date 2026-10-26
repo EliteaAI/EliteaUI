@@ -78,9 +78,11 @@ const EditorPanel = forwardRef((props, ref) => {
   }, [isYamlCodeDirty]);
 
   const { yamlJsonObject, yamlCode } = useSelector(selectActivePipeline);
+  // "Not configured" issues reported by the node cards
+  const [nodeIssuesById, setNodeIssuesById] = useState({});
   const flowTestDisabledReason = useMemo(
-    () => (onTestPipeline ? PipelineReadinessHelpers.getTestBlockReason(yamlJsonObject) : ''),
-    [onTestPipeline, yamlJsonObject],
+    () => (onTestPipeline ? PipelineReadinessHelpers.getTestBlockReason(yamlJsonObject, nodeIssuesById) : ''),
+    [nodeIssuesById, onTestPipeline, yamlJsonObject],
   );
   const setYamlCode = useCallback(
     code => {
@@ -258,6 +260,7 @@ const EditorPanel = forwardRef((props, ref) => {
                 noBorder={isFromChat}
                 disabled={disabled}
                 isVisible={isVisible}
+                onNodeIssuesChange={setNodeIssuesById}
               />
             </Suspense>
           </ErrorBoundary>

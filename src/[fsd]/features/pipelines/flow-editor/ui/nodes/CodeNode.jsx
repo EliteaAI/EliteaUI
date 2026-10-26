@@ -1,8 +1,12 @@
 import { memo, useContext, useMemo } from 'react';
 
-import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
+import {
+  FlowEditorConstants,
+  NodePanelConstants,
+} from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { useNodeAiAssistantConfig } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
 import {
+  FlowEditorNodePanel,
   FlowEditorNodes,
   FlowEditorSelect,
   FlowEditorSettings,
@@ -80,37 +84,40 @@ const CodeNode = memo(props => {
         );
       }}
     >
-      <FlowEditorSettings.SimpleLLMInputs
-        enableAIAssistant
-        inputMappings={inputMappings}
-        values={codeValues}
-        onChangeMapping={onChangeMapping}
-        defaultValues={defaultValues}
-        disabled={isRunningPipeline || disabled}
-        modelConfig={pipelineLLMConfig}
-        testIdsByKey={CODE_NODE_INPUT_TEST_IDS}
-      />
-
-      <FlowEditorSelect.InputSelect
-        id={id}
-        label="Input"
-        disabled={isRunningPipeline || disabled}
-        inputFieldName="input"
-        dataTestId="pipeline-code-node-input-select"
-      />
-      <FlowEditorSelect.OutputSelect
-        id={id}
-        label="Output"
-        outputFieldName="output"
-        disabled={isRunningPipeline || disabled}
-        dataTestId="pipeline-code-node-output-select"
-      />
-      <FlowEditorSettings.CommonNodeSettings
-        id={id}
-        type={FlowEditorConstants.PipelineNodeTypes.Code}
-        disabled={isRunningPipeline || disabled}
-        structuredOutputTestId="pipeline-code-node-structured-output-toggle"
-      />
+      <FlowEditorNodePanel.NodeConfigSection>
+        <FlowEditorSettings.SimpleLLMInputs
+          enableAIAssistant
+          inputMappings={inputMappings}
+          values={codeValues}
+          onChangeMapping={onChangeMapping}
+          defaultValues={defaultValues}
+          disabled={isRunningPipeline || disabled}
+          modelConfig={pipelineLLMConfig}
+          testIdsByKey={CODE_NODE_INPUT_TEST_IDS}
+        />
+      </FlowEditorNodePanel.NodeConfigSection>
+      <FlowEditorNodePanel.NodeConfigSection section={NodePanelConstants.NODE_CONFIG_SECTIONS.advanced}>
+        <FlowEditorSelect.InputSelect
+          id={id}
+          label="Input"
+          disabled={isRunningPipeline || disabled}
+          inputFieldName="input"
+          dataTestId="pipeline-code-node-input-select"
+        />
+        <FlowEditorSelect.OutputSelect
+          id={id}
+          label="Output"
+          outputFieldName="output"
+          disabled={isRunningPipeline || disabled}
+          dataTestId="pipeline-code-node-output-select"
+        />
+        <FlowEditorSettings.CommonNodeSettings
+          id={id}
+          type={FlowEditorConstants.PipelineNodeTypes.Code}
+          disabled={isRunningPipeline || disabled}
+          structuredOutputTestId="pipeline-code-node-structured-output-toggle"
+        />
+      </FlowEditorNodePanel.NodeConfigSection>
     </FlowEditorNodes.NodeCard>
   );
 });

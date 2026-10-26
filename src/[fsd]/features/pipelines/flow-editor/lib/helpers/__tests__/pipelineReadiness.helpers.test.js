@@ -1,7 +1,12 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
 
-import { TEST_BLOCK_REASONS, getTestBlockReason, isEndReachable } from '../pipelineReadiness.helpers';
+import {
+  TEST_BLOCK_REASONS,
+  getNodeNotConfiguredReason,
+  getTestBlockReason,
+  isEndReachable,
+} from '../pipelineReadiness.helpers';
 
 describe('getTestBlockReason', () => {
   it('blocks an empty pipeline', () => {
@@ -133,6 +138,36 @@ describe('getTestBlockReason', () => {
         nodes: [{ id: 'h', type: 'hitl', routes: { approve: 'END' } }],
       }),
     ).toBe('');
+  });
+});
+
+describe('getTestBlockReason with node issues', () => {
+  const pipeline = {
+    entry_point: 'a',
+    nodes: [
+      { id: 'a', type: 'agent', transition: 'b' },
+      { id: 'b', type: 'toolkit', transition: 'END' },
+    ],
+  };
+
+  it('blocks on the first node, in YAML order, that is not configured', () => {
+    expect(
+      getTestBlockReason(pipeline, {
+        b: ['Select a tool'],
+        a: ['Select an agent', 'Fill in the required input: x'],
+      }),
+    ).toBe(getNodeNotConfiguredReason('a', 'Select an agent'));
+    expect(getNodeNotConfiguredReason('a', 'Select an agent')).toBe('Configure node "a": Select an agent');
+  });
+
+  it('ignores reports for nodes that no longer exist and empty reports', () => {
+    expect(getTestBlockReason(pipeline, { removed_node: ['Select a tool'], a: [] })).toBe('');
+  });
+
+  it('reports graph problems before configuration problems', () => {
+    expect(getTestBlockReason({ ...pipeline, entry_point: undefined }, { a: ['Select an agent'] })).toBe(
+      TEST_BLOCK_REASONS.noEntryPoint,
+    );
   });
 });
 

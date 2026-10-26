@@ -235,6 +235,7 @@ const InputMappingItem = memo(props => {
                 value={value}
                 options={enumOptions}
                 multiple
+                disabled={disabled}
                 showBorder
                 className="nopan nodrag"
               />

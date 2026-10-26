@@ -22,29 +22,33 @@ const SimpleLLMInputs = memo(props => {
     // them, never hardcoded here, per .agents/testing.md § Locator policy
     // (shared components / testid scope discipline).
     testIdsByKey = {},
+    // Renders only these mapping keys (all of them when omitted)
+    keys,
   } = props;
 
   const styles = simpleLLMInputsStyles(gap);
 
   return (
     <Box sx={styles.container}>
-      {Object.keys(inputMappings).map(key => (
-        <SimpleLLMInputItem
-          key={key}
-          variableName={key}
-          variable={key}
-          type={(values[key] || inputMappings[key])?.type || 'fixed'}
-          value={(values[key] || inputMappings[key])?.value || defaultValues[key] || ''}
-          defaultValue={defaultValues[key] || ''}
-          onChangeMapping={onChangeMapping}
-          disabled={disabled}
-          // AI Assistant props
-          enableAIAssistant={enableAIAssistant}
-          modelConfig={modelConfig}
-          typeSelectTestId={testIdsByKey[key]?.typeSelectTestId}
-          valueFieldTestId={testIdsByKey[key]?.valueFieldTestId}
-        />
-      ))}
+      {(keys || Object.keys(inputMappings))
+        .filter(key => key in inputMappings)
+        .map(key => (
+          <SimpleLLMInputItem
+            key={key}
+            variableName={key}
+            variable={key}
+            type={(values[key] || inputMappings[key])?.type || 'fixed'}
+            value={(values[key] || inputMappings[key])?.value || defaultValues[key] || ''}
+            defaultValue={defaultValues[key] || ''}
+            onChangeMapping={onChangeMapping}
+            disabled={disabled}
+            // AI Assistant props
+            enableAIAssistant={enableAIAssistant}
+            modelConfig={modelConfig}
+            typeSelectTestId={testIdsByKey[key]?.typeSelectTestId}
+            valueFieldTestId={testIdsByKey[key]?.valueFieldTestId}
+          />
+        ))}
     </Box>
   );
 });

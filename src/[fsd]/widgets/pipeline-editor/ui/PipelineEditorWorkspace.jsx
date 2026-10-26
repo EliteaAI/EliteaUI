@@ -42,15 +42,14 @@ const PipelineEditorWorkspace = memo(props => {
 
   const { isSmallWindow } = useIsSmallWindow(fitView);
 
+  // Opening or closing the Test panel keeps the canvas zoom and position as they are
   const handleOpenTestPanel = useCallback(() => {
     setIsTestPanelOpen(true);
-    fitView();
-  }, [fitView]);
+  }, []);
 
   const handleCloseTestPanel = useCallback(() => {
     setIsTestPanelOpen(false);
-    fitView();
-  }, [fitView]);
+  }, []);
 
   const handleStopRun = useCallback(() => {
     testPanelRef.current?.stopRun();

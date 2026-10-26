@@ -6,7 +6,10 @@ import { PipelineEditorMode } from '@/common/constants.js';
 import { ReactFlowProvider } from '@xyflow/react';
 
 const FlowWrapper = forwardRef(
-  ({ stopRun, mode, setYamlJsonObject, noBorder = false, disabled, isVisible = true }, ref) => {
+  (
+    { stopRun, mode, setYamlJsonObject, noBorder = false, disabled, isVisible = true, onNodeIssuesChange },
+    ref,
+  ) => {
     const { isSmallWindow } = useIsSmallWindow();
 
     const styles = flowWrapperStyles();
@@ -20,6 +23,7 @@ const FlowWrapper = forwardRef(
           stopRun={stopRun}
           disabled={disabled}
           isVisible={isVisible}
+          onNodeIssuesChange={onNodeIssuesChange}
         />
       </ReactFlowProvider>
     );

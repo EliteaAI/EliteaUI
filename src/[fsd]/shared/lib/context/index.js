@@ -1,5 +1,6 @@
 export * from './FlowEditorContext';
 export * from './NodeCardContext';
+export * from './NodeConfigPanelContext';
 export * from './AgentHubContext';
 export * from './SkillHubContext';
 export * from './ToolkitSocketContext';
