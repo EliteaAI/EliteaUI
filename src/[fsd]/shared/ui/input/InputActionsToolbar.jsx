@@ -26,7 +26,11 @@ const InputActionsToolbar = memo(props => {
     iconSizeSx,
     fullScreenButtonProps = {},
     isOutlined = false,
+    // Extra icon buttons shown before full screen: [{ key, title, icon, onClick, buttonProps }]
+    extraActions = [],
   } = props;
+
+  const styles = inputActionsToolbarStyles();
 
   return (
     <Box
@@ -51,22 +55,42 @@ const InputActionsToolbar = memo(props => {
           </Box>
         </Tooltip>
       )}
-      {showFullScreenAction && (
-        <Box sx={!value && !isOutlined ? { position: 'absolute', top: '1.5rem' } : {}}>
-          <Tooltip
-            title={fullScreenIcon ? 'AI Assistant' : 'Full screen view'}
-            placement="top"
-          >
-            <IconButton
-              {...fullScreenButtonProps}
-              sx={iconButtonSx}
-              variant="elitea"
-              color="tertiary"
-              onClick={onFullScreen}
+      {(extraActions.length > 0 || showFullScreenAction) && (
+        // Extra actions and full screen stay on one row; on an empty field the row sits on the input line
+        <Box sx={[styles.inlineGroup, !value && !isOutlined && styles.emptyValueOffset]}>
+          {extraActions.map(action => (
+            <Tooltip
+              key={action.key}
+              title={action.title}
+              placement="top"
             >
-              {fullScreenIcon || <FullscreenOutlinedIcon sx={iconSizeSx} />}
-            </IconButton>
-          </Tooltip>
+              <IconButton
+                {...(action.buttonProps || {})}
+                sx={iconButtonSx}
+                variant="elitea"
+                color="tertiary"
+                onClick={action.onClick}
+              >
+                {action.icon}
+              </IconButton>
+            </Tooltip>
+          ))}
+          {showFullScreenAction && (
+            <Tooltip
+              title={fullScreenIcon ? 'AI Assistant' : 'Full screen view'}
+              placement="top"
+            >
+              <IconButton
+                {...fullScreenButtonProps}
+                sx={iconButtonSx}
+                variant="elitea"
+                color="tertiary"
+                onClick={onFullScreen}
+              >
+                {fullScreenIcon || <FullscreenOutlinedIcon sx={iconSizeSx} />}
+              </IconButton>
+            </Tooltip>
+          )}
         </Box>
       )}
       {showExpandAction && !!value && (
@@ -89,5 +113,19 @@ const InputActionsToolbar = memo(props => {
 });
 
 InputActionsToolbar.displayName = 'InputActionsToolbar';
+
+/** @type {MuiSx} */
+const inputActionsToolbarStyles = () => ({
+  inlineGroup: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.25rem',
+  },
+  emptyValueOffset: {
+    position: 'absolute',
+    top: '1.5rem',
+    right: 0,
+  },
+});
 
 export default InputActionsToolbar;

@@ -80,7 +80,7 @@ const StateModifierNode = memo(props => {
           showexpandicon="true"
           collapseContent
           showCopyAction={true}
-          showExpandAction={true}
+          showExpandAction={false}
           variant="standard"
           name="template"
           label="Jinja Template"

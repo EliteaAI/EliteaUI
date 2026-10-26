@@ -28,11 +28,13 @@ const theme = createTheme({ palette: darkPalette });
 // Stands in for a node component rendered in panel mode
 const NodeFieldsStub = props => {
   const panelContext = useContext(NodeConfigPanelContext);
+  const flowEditorContext = useContext(FlowEditorContext);
   return (
     <div
       data-testid="node-fields-stub"
       data-node-id={props.id}
       data-entrypoint={String(panelContext?.isEntrypoint)}
+      data-disabled={String(Boolean(flowEditorContext?.disabled))}
     />
   );
 };
@@ -203,5 +205,24 @@ describe('NodeConfigPanel', () => {
     expect(screen.getByTestId('pipeline-node-panel-deprecation-banner')).toHaveTextContent(
       'View Migration Guide',
     );
+    expect(screen.getByTestId('pipeline-node-panel-deprecation-read-only')).toHaveTextContent(
+      'Edit this node in the Yaml tab',
+    );
+  });
+
+  it('makes a deprecated node read-only in the form, but keeps Delete', () => {
+    renderPanel({ flowNode: { id: 'loop_1', type: PipelineNodeTypes.Loop, data: {} } });
+
+    expect(screen.getByTestId('node-fields-stub')).toHaveAttribute('data-disabled', 'true');
+    expect(screen.getByTestId('pipeline-node-panel-name-input')).toBeDisabled();
+    expect(screen.queryByTestId('pipeline-node-panel-make-entrypoint')).toBeNull();
+    expect(screen.getByTestId('pipeline-node-panel-delete')).toBeInTheDocument();
+  });
+
+  it('keeps the form editable for supported node types', () => {
+    renderPanel();
+
+    expect(screen.getByTestId('node-fields-stub')).toHaveAttribute('data-disabled', 'false');
+    expect(screen.getByTestId('pipeline-node-panel-name-input')).not.toBeDisabled();
   });
 });

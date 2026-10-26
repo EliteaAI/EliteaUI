@@ -21,7 +21,8 @@ import NodeNameField from './NodeNameField';
  */
 const NodeConfigPanel = memo(props => {
   const { flowNode, NodeComponent, onClose, onRenamed } = props;
-  const { yamlJsonObject, isRunningPipeline, disabled } = useContext(FlowEditorContext);
+  const flowEditorContext = useContext(FlowEditorContext);
+  const { yamlJsonObject, isRunningPipeline, disabled } = flowEditorContext;
   const [view, setView] = useState(NodePanelConstants.NODE_CONFIG_VIEWS.flow);
 
   const { id, type, data } = flowNode;
@@ -41,6 +42,12 @@ const NodeConfigPanel = memo(props => {
     type === FlowEditorConstants.PipelineNodeTypes.Condition;
 
   const handleRenamed = useCallback(newId => onRenamed?.(id, newId), [id, onRenamed]);
+
+  // Deprecated nodes are edited only in the YAML view: their form fields render disabled
+  const formContextValue = useMemo(
+    () => (isDeprecated ? { ...flowEditorContext, disabled: true } : flowEditorContext),
+    [flowEditorContext, isDeprecated],
+  );
 
   const panelContextValue = useMemo(() => ({ isEntrypoint, isLegacyLayout }), [isEntrypoint, isLegacyLayout]);
 
@@ -68,26 +75,29 @@ const NodeConfigPanel = memo(props => {
           name={usesLabelAsName ? data?.label || id : id}
           type={type}
           onRenamed={handleRenamed}
-          isLocked={isLegacyDecision}
+          isLocked={isLegacyDecision || isDeprecated}
         />
         {isDeprecated && <NodeDeprecationBanner type={type} />}
-        <NodeConfigPanelContext.Provider value={panelContextValue}>
-          {NodeComponent && (
-            <NodeComponent
-              key={id}
-              id={id}
-              type={type}
-              data={data}
-              selected={false}
-            />
-          )}
-        </NodeConfigPanelContext.Provider>
+        <FlowEditorContext.Provider value={formContextValue}>
+          <NodeConfigPanelContext.Provider value={panelContextValue}>
+            {NodeComponent && (
+              <NodeComponent
+                key={id}
+                id={id}
+                type={type}
+                data={data}
+                selected={false}
+              />
+            )}
+          </NodeConfigPanelContext.Provider>
+        </FlowEditorContext.Provider>
       </Box>
       {!isReadOnly && (
         <NodeConfigFooter
           id={id}
           type={type}
           isEntrypoint={isEntrypoint}
+          canMakeEntrypoint={!isDeprecated}
         />
       )}
     </Box>

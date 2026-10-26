@@ -114,7 +114,7 @@ const PrinterNode = memo(props => {
           showexpandicon="true"
           collapseContent
           showCopyAction={true}
-          showExpandAction={true}
+          showExpandAction={false}
           variant="standard"
           name="final_message"
           label="Final message"

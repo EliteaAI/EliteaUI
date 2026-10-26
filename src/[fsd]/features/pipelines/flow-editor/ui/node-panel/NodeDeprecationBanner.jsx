@@ -1,10 +1,12 @@
 import { memo } from 'react';
 
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
-import { Box } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import { DeprecatedConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { Text } from '@/[fsd]/shared/ui';
+
+const READ_ONLY_HINT = 'These fields are read-only. Edit this node in the Yaml tab.';
 
 const NodeDeprecationBanner = memo(props => {
   const { type } = props;
@@ -20,7 +22,16 @@ const NodeDeprecationBanner = memo(props => {
       data-testid="pipeline-node-panel-deprecation-banner"
     >
       <WarningAmberIcon sx={styles.icon} />
-      <Text.TextWithLink {...tip} />
+      <Box sx={styles.text}>
+        <Text.TextWithLink {...tip} />
+        <Typography
+          variant="bodySmall"
+          color="text.secondary"
+          data-testid="pipeline-node-panel-deprecation-read-only"
+        >
+          {READ_ONLY_HINT}
+        </Typography>
+      </Box>
     </Box>
   );
 });
@@ -37,6 +48,12 @@ const nodeDeprecationBannerStyles = () => ({
     borderRadius: '0.5rem',
     backgroundColor: palette.components.deprecated.background,
   }),
+  text: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.25rem',
+    minWidth: 0,
+  },
   icon: ({ palette }) => ({
     fontSize: '1rem',
     marginTop: '0.125rem',

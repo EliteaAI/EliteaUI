@@ -12,11 +12,12 @@ import DeleteIcon from '@/components/Icons/DeleteIcon';
 const { PipelineNodeTypes } = FlowEditorConstants;
 
 const NodeConfigFooter = memo(props => {
-  const { id, type, isEntrypoint } = props;
+  const { id, type, isEntrypoint, canMakeEntrypoint: canMakeEntrypointProp = true } = props;
   const { setYamlJsonObject, handleDeleteNode } = useContext(FlowEditorContext);
   const { toastSuccess } = useToast();
 
-  const canBeEntrypoint = type !== PipelineNodeTypes.Condition && type !== PipelineNodeTypes.Decision;
+  const canBeEntrypoint =
+    canMakeEntrypointProp && type !== PipelineNodeTypes.Condition && type !== PipelineNodeTypes.Decision;
 
   const onMakeEntrypoint = useCallback(() => {
     setYamlJsonObject(prev => ({ ...prev, entry_point: id }));

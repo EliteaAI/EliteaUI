@@ -147,7 +147,7 @@ const RouterNode = memo(props => {
             showexpandicon="true"
             collapseContent
             showCopyAction={true}
-            showExpandAction={true}
+            showExpandAction={false}
             multiline
             variant="standard"
             fullWidth
