@@ -52,7 +52,12 @@ export const convertToUserQuestion = (message_group, users, participants) => {
     sent_to_id,
     sent_to,
     likes,
-    meta: { interaction_uuid, imported_author: importedAuthor, input_guardrail: inputGuardrail },
+    meta: {
+      interaction_uuid,
+      imported_author: importedAuthor,
+      imported_sent_to: importedSentTo,
+      input_guardrail: inputGuardrail,
+    },
   } = message_group;
   const foundUser = users.find(user => user.id === author_participant_id);
   const foundParticipant = participants.find(participant => participant.id === sent_to_id);
@@ -85,6 +90,7 @@ export const convertToUserQuestion = (message_group, users, participants) => {
     created_at: new Date(convertTime(created_at)).getTime(),
     user_id: foundUser?.entity_meta.id,
     participant_id: sent_to_id,
+    importedSentToName: importedSentTo?.name,
     sentTo:
       foundParticipant ||
       (sent_to?.entity_name === ChatParticipantType.Users
