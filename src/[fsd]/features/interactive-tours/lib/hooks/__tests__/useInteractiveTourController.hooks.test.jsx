@@ -84,6 +84,7 @@ describe('analytics tour steps', () => {
     expect(await startAnalyticsTour([SKILLS_LIST])).toEqual([
       'overview',
       'agents',
+      'chats',
       'skills',
       'tools',
       'users',
