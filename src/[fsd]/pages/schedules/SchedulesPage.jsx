@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 
@@ -6,6 +6,7 @@ import { Chip } from '@mui/material';
 
 import { useGetScheduleListQuery } from '@/[fsd]/entities/schedule';
 import { ScheduleImportExportActions } from '@/[fsd]/features/schedule-import-export';
+import { getPollingInterval } from '@/[fsd]/features/schedule';
 import { DrawerPage, DrawerPageBody, DrawerPageHeader } from '@/[fsd]/features/settings';
 import { useSelectedProjectId, useToast } from '@/[fsd]/shared/lib/hooks';
 import { PAGE_SIZE, PERMISSIONS, SortOrderOptions } from '@/common/constants';
@@ -20,13 +21,7 @@ const ENTITY_TYPE_LABELS = { agent: 'Agent', pipeline: 'Pipeline' };
 
 const NO_FILTERS = { entityType: '', status: '', enabled: '', search: '', ownerIds: [] };
 
-const POLLING_INTERVAL_MS = 10000;
-
-// Refetch the list while any row shows a Running last run
-export const getPollingInterval = rows =>
-  rows?.some(row => row.last_run_status === 'running') ? POLLING_INTERVAL_MS : 0;
-
-const SchedulesPage = () => {
+const SchedulesPage = memo(() => {
   const projectId = useSelectedProjectId();
   const { toastError } = useToast();
   const { checkPermission } = useCheckPermission();
@@ -189,6 +184,8 @@ const SchedulesPage = () => {
       </DrawerPageBody>
     </DrawerPage>
   );
-};
+});
+
+SchedulesPage.displayName = 'SchedulesPage';
 
 export default SchedulesPage;
