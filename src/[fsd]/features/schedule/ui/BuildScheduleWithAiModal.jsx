@@ -4,10 +4,10 @@ import { Alert, Box, Typography } from '@mui/material';
 
 import { EditEntityModal } from '@/[fsd]/entities/edit-entity-with-ai';
 import { GenerateEntityModal } from '@/[fsd]/entities/generate-entity-with-ai';
-import { useGenerateScheduleDraftMutation } from '@/[fsd]/features/schedule/api';
 import { ScheduleHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 
+import { useGenerateScheduleDraftMutation } from '../api';
 import { changedFields, draftToFormValues, isScheduleFormEmpty, toDraftRequest } from '../lib/helpers';
 
 const PLACEHOLDER = 'Describe the schedule: what to run, when and until when.';

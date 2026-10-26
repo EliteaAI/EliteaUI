@@ -14,10 +14,10 @@ import {
   ScheduleForm,
   ScheduleRunsPanel,
   ScheduleRunsSection,
+  buildEditValues,
   useEntityScheduleRoute,
   useScheduleRunsView,
 } from '@/[fsd]/features/schedule';
-import { buildEditValues } from '@/[fsd]/features/schedule/lib/helpers';
 import { ScheduleHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
 import { ScheduleSettingsSection, StopOnDateField } from '@/[fsd]/shared/ui/schedule';
