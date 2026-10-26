@@ -6,7 +6,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 
 import ScheduleDetailPage from '../ScheduleDetailPage';
 
-// EL-7011 US-32: the Edit schedule page loads one schedule, saves it and starts a test run
+// the Edit schedule page loads one schedule, saves it and starts a test run
 
 const BROWSER_ZONE = 'Europe/Kyiv';
 
@@ -97,7 +97,11 @@ vi.mock('@/[fsd]/features/schedule', async importOriginal => {
           <button onClick={() => props.onSubmit({ name: 'Renamed' }).then(props.onSaved)}>Save</button>
           <button onClick={() => props.onTestRun()}>Test</button>
           {props.headerActions}
-          {props.children({ values: props.initialValues, setFieldValue: mocks.setFieldValue, fieldError: name => mocks.fieldErrors[name] ?? '' })}
+          {props.children({
+            values: props.initialValues,
+            setFieldValue: mocks.setFieldValue,
+            fieldError: name => mocks.fieldErrors[name] ?? '',
+          })}
           {props.sidePanel?.(mocks.testRunProps)}
         </>
       );
@@ -133,7 +137,7 @@ const makeRunsView = () => ({
   runNotFound: false,
 });
 
-describe('ScheduleDetailPage EL-7011', () => {
+describe('ScheduleDetailPage', () => {
   afterEach(() => {
     cleanup();
     vi.clearAllMocks();
@@ -153,7 +157,7 @@ describe('ScheduleDetailPage EL-7011', () => {
     mocks.runsView = makeRunsView();
   });
 
-  it('TC-US32-01 R1.1 EL-7011 fills the form with the saved schedule, its name and the run list', () => {
+  it('TC-US32-01 fills the form with the saved schedule, its name and the run list', () => {
     mocks.query = { currentData: schedule };
     render(<ScheduleDetailPage />);
 
@@ -162,7 +166,7 @@ describe('ScheduleDetailPage EL-7011', () => {
     expect(mocks.formProps.initialValues.name).toBe('Nightly');
   });
 
-  it('TC-US32-15 R3 R4 EL-7011 shows the test panel next to the form and the Runs section under it (owner CR 2026-10-21)', () => {
+  it('TC-US32-15 shows the test panel next to the form and the Runs section under it', () => {
     mocks.query = { currentData: schedule };
     render(<ScheduleDetailPage />);
     const view = mocks.runsView;
@@ -179,7 +183,7 @@ describe('ScheduleDetailPage EL-7011', () => {
     });
   });
 
-  it('TC-US32-20 R4.1 R4.6 EL-7011 CR-21 renders the Runs section in the right block, with no afterForm', () => {
+  it('TC-US32-20 renders the Runs section in the right block, with no afterForm', () => {
     mocks.query = { currentData: schedule };
     render(<ScheduleDetailPage />);
     const view = mocks.runsView;
@@ -198,7 +202,7 @@ describe('ScheduleDetailPage EL-7011', () => {
     });
   });
 
-  it('TC-US32-20 R4.1 EL-7011 CR-21 stacks the panel and the Runs section in one block, sticky from xl in a tall window', () => {
+  it('TC-US32-20 stacks the panel and the Runs section in one block, sticky from xl in a tall window', () => {
     mocks.query = { currentData: schedule };
     render(<ScheduleDetailPage />);
     const block = screen.getByTestId('schedule-right-block');
@@ -213,7 +217,7 @@ describe('ScheduleDetailPage EL-7011', () => {
     expect(getComputedStyle(block).position).not.toBe('sticky');
   });
 
-  it('CR-21 R4.1 EL-7011 gives the block the full window height minus 6 rem from xl, so the runs card is 40 % of it', () => {
+  it('gives the block the full window height minus 6 rem from xl, so the runs card is 40 % of it', () => {
     mocks.query = { currentData: schedule };
     render(<ScheduleDetailPage />);
     screen.getByTestId('schedule-right-block');
@@ -226,7 +230,7 @@ describe('ScheduleDetailPage EL-7011', () => {
     expect(sticky).toMatch(/[{;]height:calc\(100dvh - 6rem\)/);
   });
 
-  it('CR-16 R4.3 EL-7011 puts the schedule menu in the form header', () => {
+  it('puts the schedule menu in the form header', () => {
     mocks.query = { currentData: schedule };
     render(<ScheduleDetailPage />);
 
@@ -234,7 +238,7 @@ describe('ScheduleDetailPage EL-7011', () => {
     expect(mocks.menuProps).toEqual({ schedule });
   });
 
-  it('TC-US32-01 R1.1 EL-7011 shows a loader while the schedule loads', () => {
+  it('TC-US32-01 shows a loader while the schedule loads', () => {
     mocks.query = { isLoading: true };
     render(<ScheduleDetailPage />);
 
@@ -242,7 +246,7 @@ describe('ScheduleDetailPage EL-7011', () => {
     expect(mocks.formProps).toBeNull();
   });
 
-  it('TC-US32-02 R1.2 EL-7011 shows the not-found state with a link to the Schedules list on a 404', () => {
+  it('TC-US32-02 shows the not-found state with a link to the Schedules list on a 404', () => {
     mocks.query = { isError: true, error: { status: 404 } };
     render(<ScheduleDetailPage />);
 
@@ -251,7 +255,7 @@ describe('ScheduleDetailPage EL-7011', () => {
     expect(mocks.formProps).toBeNull();
   });
 
-  it('TC-US32-02 R1.2 EL-7011 shows an error state with a link to the list on another error', () => {
+  it('TC-US32-02 shows an error state with a link to the list on another error', () => {
     mocks.query = { isError: true, error: { status: 500 } };
     render(<ScheduleDetailPage />);
 
@@ -259,31 +263,31 @@ describe('ScheduleDetailPage EL-7011', () => {
     expect(listLink()).toHaveAttribute('href', '/settings/schedules');
   });
 
-  it('TC-US32-04 R1.4 EL-7011 opens the list when the project changes', () => {
+  it('TC-US32-04 opens the list when the project changes', () => {
     mocks.query = { currentData: schedule };
     const { rerender } = render(<ScheduleDetailPage />);
     expect(mocks.navigate).not.toHaveBeenCalled();
 
     mocks.projectId = 6;
-    rerender(<ScheduleDetailPage />);
+    rerender(<ScheduleDetailPage tick={1} />);
     expect(mocks.navigate).toHaveBeenCalledWith('/settings/schedules', { replace: true });
   });
 
-  it('TC-US32-04 R1.4 EL-7011 waits for the first project id before it guards a project switch', () => {
+  it('TC-US32-04 waits for the first project id before it guards a project switch', () => {
     mocks.projectId = undefined;
     const { rerender } = render(<ScheduleDetailPage />);
 
     mocks.projectId = 5;
     mocks.query = { currentData: schedule };
-    rerender(<ScheduleDetailPage />);
+    rerender(<ScheduleDetailPage tick={2} />);
     expect(mocks.navigate).not.toHaveBeenCalled();
 
     mocks.projectId = 6;
-    rerender(<ScheduleDetailPage />);
+    rerender(<ScheduleDetailPage tick={3} />);
     expect(mocks.navigate).toHaveBeenCalledWith('/settings/schedules', { replace: true });
   });
 
-  it('TC-US32-05 R2.1 EL-7011 sends the update and returns to the opening page', async () => {
+  it('TC-US32-05 sends the update and returns to the opening page', async () => {
     mocks.query = { currentData: schedule };
     mocks.updateSchedule.mockReturnValue({ unwrap: () => Promise.resolve({ id: 9 }) });
     render(<ScheduleDetailPage />);
@@ -293,7 +297,7 @@ describe('ScheduleDetailPage EL-7011', () => {
     expect(mocks.updateSchedule).toHaveBeenCalledWith({ projectId: 5, scheduleId: '9', name: 'Renamed' });
   });
 
-  it('TC-US32-06 R2.1 EL-7011 keeps the schedule zone in the form and shows the cron in the browser zone', () => {
+  it('TC-US32-06 keeps the schedule zone in the form and shows the cron in the browser zone', () => {
     const tokyo = {
       ...schedule,
       cron: '0 9 * * 6',
@@ -322,7 +326,7 @@ describe('ScheduleDetailPage EL-7011', () => {
     expect(mocks.stopProps.timezone).toBe('Asia/Tokyo');
   });
 
-  it('TC-US32-15 R1.1 EL-7011 starts a test run through the run endpoint', async () => {
+  it('TC-US32-15 starts a test run through the run endpoint', async () => {
     mocks.query = { currentData: schedule };
     mocks.runSchedule.mockReturnValue({ unwrap: () => Promise.resolve({ id: 1 }) });
     render(<ScheduleDetailPage />);
@@ -333,7 +337,7 @@ describe('ScheduleDetailPage EL-7011', () => {
     );
   });
 
-  it('TC-US35-10 R3.5 R4.1 EL-7011 nested in the agent editor, locks the agent, names it in the crumbs and returns to it', async () => {
+  it('TC-US35-10 nested in the agent editor, locks the agent, names it in the crumbs and returns to it', async () => {
     mocks.params = { tab: 'all', agentId: '3', scheduleId: '9' };
     mocks.state = null;
     mocks.query = { currentData: schedule };
@@ -347,7 +351,7 @@ describe('ScheduleDetailPage EL-7011', () => {
     await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith('/agents/all/3?viewMode=owner'));
   });
 
-  it('TC-US35-10 R3.5 EL-7011 nested in the agent editor, shows not found for a schedule of another agent', () => {
+  it('TC-US35-10 nested in the agent editor, shows not found for a schedule of another agent', () => {
     mocks.params = { tab: 'all', agentId: '12', scheduleId: '9' };
     mocks.query = { currentData: schedule };
     render(<ScheduleDetailPage entityType="agent" />);
@@ -357,7 +361,7 @@ describe('ScheduleDetailPage EL-7011', () => {
     expect(mocks.formProps).toBeNull();
   });
 
-  it('TC-US36-08 R3.5 EL-7011 nested in the pipeline editor, shows not found for a schedule of an agent', () => {
+  it('TC-US36-08 nested in the pipeline editor, shows not found for a schedule of an agent', () => {
     mocks.params = { tab: 'all', agentId: '3', scheduleId: '9' };
     mocks.query = { currentData: schedule };
     render(<ScheduleDetailPage entityType="pipeline" />);
@@ -366,7 +370,7 @@ describe('ScheduleDetailPage EL-7011', () => {
     expect(mocks.formProps).toBeNull();
   });
 
-  it('R2.4 EL-7011 shows the server cron error under the cron field (BUG-50)', () => {
+  it('shows the server cron error under the cron field', () => {
     mocks.fieldErrors = { cron: 'Runs must be at least 5 minutes apart' };
     mocks.query = { currentData: schedule };
     render(<ScheduleDetailPage />);
@@ -374,7 +378,7 @@ describe('ScheduleDetailPage EL-7011', () => {
     expect(mocks.settingsProps.error).toBe('Runs must be at least 5 minutes apart');
   });
 
-  it('R3.4 EL-7011 shows the server stop date error under the date field (BUG-52)', () => {
+  it('shows the server stop date error under the date field', () => {
     mocks.fieldErrors = { expires_at: 'Stop date is in the past' };
     mocks.query = { currentData: schedule };
     render(<ScheduleDetailPage />);

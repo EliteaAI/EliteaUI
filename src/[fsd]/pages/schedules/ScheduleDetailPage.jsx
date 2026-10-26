@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
@@ -29,7 +29,7 @@ import ScheduleNotice from './ScheduleNotice';
 const { convertCronTimezone, getBrowserTimezone } = ScheduleHelpers;
 
 // entityType: the page is nested in that editor and locks its entity
-const ScheduleDetailPage = props => {
+const ScheduleDetailPage = memo(props => {
   const { entityType } = props;
   const projectId = useSelectedProjectId();
   const { scheduleId, agentId } = useParams();
@@ -190,7 +190,9 @@ const ScheduleDetailPage = props => {
       )}
     </ScheduleForm>
   );
-};
+});
+
+ScheduleDetailPage.displayName = 'ScheduleDetailPage';
 
 export default ScheduleDetailPage;
 
