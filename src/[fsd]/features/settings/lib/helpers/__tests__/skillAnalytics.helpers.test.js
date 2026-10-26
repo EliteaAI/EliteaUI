@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest';
 
 import { buildAnalyticsSheets, fetchAllAnalyticsData } from '../analyticsExport.helpers';
@@ -83,6 +84,7 @@ describe('page export with the Skills tab', () => {
       'Tokens',
       'Agents & Pipelines',
       'Skills',
+      'Chats',
       'Tools',
       'Users',
       'Activity',
@@ -106,6 +108,8 @@ describe('page export with the Skills tab', () => {
         'projectAnalyticsUsage',
         'analyticsCosts',
         'analyticsAgents',
+        'analyticsChatsSummary',
+        'analyticsChats',
         'analyticsTools',
         'analyticsUsers',
         'analyticsActivity',
