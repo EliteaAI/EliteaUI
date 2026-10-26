@@ -16,7 +16,7 @@ const ScheduleEnabledSwitch = memo(props => {
       disabled={isBusy || !row.allowed_actions?.includes(action)}
       onChange={row.enabled ? onPause : onResume}
       data-testid={testId}
-      slotProps={{ switch: { slotProps: { input: { 'aria-label': `Enable ${row.name}` } } } }}
+      slotProps={{ switch: { slotProps: { input: { role: 'switch', 'aria-label': `Enable ${row.name}` } } } }}
     />
   );
 });
