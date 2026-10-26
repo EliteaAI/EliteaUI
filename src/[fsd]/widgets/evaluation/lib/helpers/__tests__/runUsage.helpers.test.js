@@ -415,6 +415,11 @@ describe('buildAgentUsageRows (#7015 P3)', () => {
     expect(note).toMatch(/usage ledger/);
   });
 
+  it("an unpriced ledger agent reads 'Not priced', an answer rather than a missing value", () => {
+    const { rows } = buildAgentUsageRows([{ agent: 'RD-OrderReader', cost: null, source: 'ledger' }]);
+    expect(rows[0]).toMatchObject({ cost: 'Not priced', source: 'Ledger', isUnpriced: true });
+  });
+
   it('has no cost per agent for an in-process run, and says why', () => {
     const { rows, note } = buildAgentUsageRows([
       {
@@ -436,8 +441,27 @@ describe('buildAgentUsageRows (#7015 P3)', () => {
         source: 'trajectory',
       },
     ]);
-    expect(rows[1]).toMatchObject({ inputTokens: '—', outputTokens: '—', cost: '—', isUnpriced: true });
+    expect(rows[1]).toMatchObject({
+      inputTokens: '—',
+      outputTokens: '—',
+      cost: '—',
+      source: 'Trajectory',
+      // The trajectory cannot know a cost; that is not the ledger's "unpriced"
+      isUnpriced: false,
+    });
     expect(note).toMatch(/counted from the trajectory/);
+  });
+
+  it('marks the source per row when only some agents have ledger rows', () => {
+    const { rows, note } = buildAgentUsageRows([
+      { agent: null, cost: 0.004253, source: 'ledger' },
+      { agent: 'RD-OrderReader', input_tokens: 77, cost: null, source: 'trajectory' },
+    ]);
+    expect(rows.map(r => [r.source, r.cost])).toEqual([
+      ['Ledger', '$0.0043'],
+      ['Trajectory', '—'],
+    ]);
+    expect(note).toMatch(/Rows from the usage ledger/);
   });
 
   it('marks an unpriced ledger agent and an agent only the ledger saw', () => {

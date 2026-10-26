@@ -5,7 +5,7 @@ import { ThemeProvider, createTheme } from '@mui/material';
 
 import lightPalette from '@/lightPalette';
 import '@testing-library/jest-dom/vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 
 import CaseTrajectoryPanel from '../CaseTrajectoryPanel';
 
@@ -376,16 +376,37 @@ describe('CaseTrajectoryPanel per-agent split (#7015 P3)', () => {
     expect(screen.getByTestId('case-agent-usage-RD-OrderReader')).toHaveTextContent('11,299');
     expect(screen.getByTestId('case-agent-usage-RD-OrderReader')).toHaveTextContent('$0.0123');
     expect(screen.getByTestId('case-agent-usage')).toHaveTextContent(/usage ledger/);
+    // Exposed as a table to screen readers: one header row, then one row per agent
+    const table = screen.getByRole('table', { name: 'Usage by agent' });
+    expect(
+      within(table)
+        .getAllByRole('columnheader')
+        .map(h => h.textContent),
+    ).toContain('Source');
   });
 
-  it("matches the expected tools against the agent's own calls only", () => {
+  it("under calls: 'own', matches the expected tools against the agent's own calls only", () => {
+    queryState.data = fanOut([
+      { agent: null, source: 'trajectory' },
+      { agent: 'RD-OrderReader', source: 'trajectory' },
+    ]);
+    renderPanel({
+      expectedTrajectory: { match: 'any_order', calls: 'own', tools: [{ name: 'RD-OrderReader' }] },
+    });
+
+    expect(screen.queryByTestId('expected-extra-tools')).not.toBeInTheDocument();
+    expect(screen.getByTestId('case-expected-trajectory')).toHaveTextContent('(any_order, own calls)');
+  });
+
+  it("without calls, the sub-agent's internal calls are listed as extra", () => {
     queryState.data = fanOut([
       { agent: null, source: 'trajectory' },
       { agent: 'RD-OrderReader', source: 'trajectory' },
     ]);
     renderPanel({ expectedTrajectory: { match: 'any_order', tools: [{ name: 'RD-OrderReader' }] } });
 
-    expect(screen.queryByTestId('expected-extra-tools')).not.toBeInTheDocument();
+    expect(screen.getByTestId('expected-extra-tools')).toBeInTheDocument();
+    expect(screen.getByTestId('case-expected-trajectory')).toHaveTextContent('(any_order)');
   });
 
   it('shows no split for an agent without sub-agents', () => {

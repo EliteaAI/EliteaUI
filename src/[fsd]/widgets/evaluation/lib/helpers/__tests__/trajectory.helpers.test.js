@@ -6,6 +6,7 @@ import {
   buildCaseExecutionBadges,
   buildRunTrajectorySummary,
   formatDurationMs,
+  formatNodePath,
   getCaseCounters,
   getCaseGuardrailChip,
   getCasePauseDetails,
@@ -20,6 +21,7 @@ import {
   getTrajectoryStepSections,
   getTrajectoryStepTitle,
   isGuardrailStep,
+  isPipelineTrajectory,
 } from '../trajectory.helpers';
 
 const llmStep = {
@@ -410,6 +412,10 @@ describe('pipeline node steps', () => {
   it('titles a node with its name and type', () => {
     expect(getTrajectoryStepTitle(nodeStep)).toBe('#3 · Node · Route (router)');
     expect(getTrajectoryStepTitle({ ...nodeStep, node_type: null })).toBe('#3 · Node · Route');
+    expect(getTrajectoryStepTitle({ ...nodeStep, node: null })).toBe('#3 · Node · unknown node (router)');
+    expect(getTrajectoryStepTitle({ ...nodeStep, node: null, node_type: null })).toBe(
+      '#3 · Node · unknown node',
+    );
   });
 
   it('shows where the node went next, its status and duration', () => {
@@ -437,12 +443,63 @@ describe('pipeline node steps', () => {
     ]);
   });
 
-  it('indents calls made inside a node, and once more inside a sub-agent', () => {
-    expect(getTrajectoryStepDepth(nodeStep)).toBe(0);
-    expect(getTrajectoryStepDepth(llmStep)).toBe(0);
-    expect(getTrajectoryStepDepth({ ...llmStep, node: 'Classify' })).toBe(1);
-    expect(getTrajectoryStepDepth({ ...toolStep, node: 'Ask', parent_agent: 'Child' })).toBe(2);
-    expect(getTrajectoryStepDepth({ ...toolStep, parent_agent: 'Child' })).toBe(1);
+  it('indents calls made inside a pipeline node, and once more inside a sub-agent', () => {
+    const inPipeline = { inPipeline: true };
+    expect(getTrajectoryStepDepth(nodeStep, inPipeline)).toBe(0);
+    expect(getTrajectoryStepDepth(llmStep, inPipeline)).toBe(0);
+    expect(getTrajectoryStepDepth({ ...llmStep, node: 'Classify' }, inPipeline)).toBe(1);
+    expect(getTrajectoryStepDepth({ ...toolStep, node: 'Ask', parent_agent: 'Child' }, inPipeline)).toBe(2);
+    expect(getTrajectoryStepDepth({ ...toolStep, parent_agent: 'Child' }, inPipeline)).toBe(1);
+  });
+
+  it('says why a fan-out parked when the run waited for it', () => {
+    const details = getCasePauseDetails({
+      status: 'parked',
+      metrics: { dispatch_state: 'dispatch_too_many_waves', dispatch_waves: 8, dispatch_children: 3 },
+    });
+    expect(details.items).toEqual([{ label: 'Dispatch', value: 'too many waves · 8 waves · 3 sub-agents' }]);
+    expect(details.note).toMatch(/could not collect their answers/);
+    expect(getCasePauseDetails({ status: 'parked' }).note).toMatch(/cannot resume/);
+  });
+
+  it("does not indent a plain agent's steps, which carry the one-node graph's name", () => {
+    // LangGraph tags every step of a plain agent with `langgraph_node: 'agent'`.
+    expect(getTrajectoryStepDepth({ ...llmStep, node: 'agent' })).toBe(0);
+    expect(getTrajectoryStepDepth({ ...toolStep, node: 'agent', parent_agent: 'Child' })).toBe(1);
+  });
+
+  it('tells a pipeline trajectory by its node steps or node sequence', () => {
+    expect(isPipelineTrajectory({ steps: [{ ...llmStep, node: 'agent' }] })).toBe(false);
+    expect(isPipelineTrajectory({ steps: [nodeStep] })).toBe(true);
+    expect(isPipelineTrajectory({ steps: [], node_sequence: [] })).toBe(true);
+    expect(isPipelineTrajectory(undefined)).toBe(false);
+  });
+
+  it("shows a node still open when the run stopped as 'did not finish'", () => {
+    expect(getTrajectoryStepMeta({ ...nodeStep, edge: null, hitl: null, status: 'running' })).toContain(
+      'did not finish',
+    );
+  });
+
+  it('labels an edge without a type or without a next node', () => {
+    const sections = edge => getTrajectoryStepSections({ ...nodeStep, hitl: null, graph_step: null, edge });
+    expect(sections({ next: 'Lookup', type: null })).toEqual([{ label: 'Next node', content: 'Lookup' }]);
+    expect(sections({ next: null, type: 'conditional' })).toEqual([
+      { label: 'Next node', content: '(Condition)' },
+    ]);
+    expect(sections({ next: null, type: null })).toEqual([]);
+  });
+
+  it('collapses repeated nodes in the path and cuts a long one, keeping the full path', () => {
+    expect(formatNodePath(['Ask', 'Ask', 'Ask', 'Route', 'Ask'])).toEqual({
+      short: 'Ask ×3 → Route → Ask',
+      full: 'Ask → Ask → Ask → Route → Ask',
+    });
+    const long = formatNodePath(Array.from({ length: 30 }, (_, i) => `N${i}`));
+    expect(long.short.split(' → ')).toHaveLength(13);
+    expect(long.short).toMatch(/… 18 more$/);
+    expect(long.full.split(' → ')).toHaveLength(30);
+    expect(formatNodePath([])).toBeNull();
   });
 
   it('lists the node count and path first among the counters', () => {
@@ -453,7 +510,7 @@ describe('pipeline node steps', () => {
     });
     expect(items.slice(0, 3)).toEqual([
       { label: 'Nodes', value: '4' },
-      { label: 'Node path', value: 'Classify → Route → Status' },
+      { label: 'Node path', value: 'Classify → Route → Status', title: 'Classify → Route → Status' },
       { label: 'LLM calls', value: '2' },
     ]);
   });

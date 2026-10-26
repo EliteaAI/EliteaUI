@@ -12,6 +12,8 @@ import PlusIcon from '@/components/Icons/PlusIcon';
 
 import {
   ARGS_MATCH_OPTIONS,
+  TRAJECTORY_CALLS_HINTS,
+  TRAJECTORY_CALLS_OPTIONS,
   TRAJECTORY_MATCH_HINTS,
   TRAJECTORY_MATCH_OPTIONS,
   newTrajectoryToolRow,
@@ -30,6 +32,10 @@ const FORBIDDEN_TOOLTIP =
 const ALLOW_REPEAT_TOOLTIP =
   'Tools that may be called again with the same arguments (polling and the like) without counting as ' +
   'redundant. Pick a suggestion or type a name and press Enter.';
+const CALLS_TOOLTIP =
+  'Which recorded calls the expected tool calls are compared with. Pick the agent’s own calls when it ' +
+  'calls sub-agents and the reference names those sub-agents. Forbidden tools and the budget always ' +
+  'count every call.';
 const MAX_CALLS_TOOLTIP = 'The most tool calls the agent may make on this case. Leave empty for no budget.';
 
 const ExpectedTrajectoryEditor = memo(props => {
@@ -48,6 +54,7 @@ const ExpectedTrajectoryEditor = memo(props => {
 
   const handleToggle = useCallback(event => setField('enabled', event.target.checked), [setField]);
   const handleMatch = useCallback(value => setField('match', value), [setField]);
+  const handleCalls = useCallback(value => setField('calls', value), [setField]);
   const handleAddTool = useCallback(
     () => onChange({ ...form, tools: [...form.tools, newTrajectoryToolRow()] }),
     [form, onChange],
@@ -125,6 +132,19 @@ const ExpectedTrajectoryEditor = memo(props => {
               data-testid="create-case-expected-trajectory-match"
             />
             <Typography sx={styles.hint}>{TRAJECTORY_MATCH_HINTS[form.match]}</Typography>
+          </Box>
+
+          <Box sx={styles.column}>
+            {label('Compare with', CALLS_TOOLTIP)}
+            <SingleSelect
+              showBorder
+              value={form.calls}
+              options={TRAJECTORY_CALLS_OPTIONS}
+              onValueChange={handleCalls}
+              disabled={readOnly}
+              data-testid="create-case-expected-trajectory-calls"
+            />
+            <Typography sx={styles.hint}>{TRAJECTORY_CALLS_HINTS[form.calls]}</Typography>
           </Box>
 
           <Box sx={styles.column}>

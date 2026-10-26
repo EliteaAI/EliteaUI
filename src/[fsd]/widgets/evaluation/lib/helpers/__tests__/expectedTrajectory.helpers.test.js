@@ -204,3 +204,29 @@ describe('sub-agent calls (#7015 P3)', () => {
     expect(diff.budget).toEqual({ max: 3, used: 4, ok: false });
   });
 });
+
+describe('calls (#7015 P3)', () => {
+  it('a form without calls compares every call, and saves without the key', () => {
+    const form = toTrajectoryForm({ tools: ['a'] });
+    expect(form.calls).toBe('all');
+    expect(fromTrajectoryForm(form).value).not.toHaveProperty('calls');
+  });
+
+  it("keeps calls: 'own' through the form", () => {
+    const own = { match: 'superset', calls: 'own', tools: [{ name: 'a' }], forbidden: [], allow_repeat: [] };
+    expect(fromTrajectoryForm(toTrajectoryForm(own))).toEqual({ value: own, error: null });
+  });
+
+  it('switching calls is a change', () => {
+    const initial = toTrajectoryForm({ tools: ['a'] });
+    expect(isTrajectoryFormChanged({ ...initial, calls: 'own' }, initial)).toBe(true);
+  });
+
+  it("the summary and the comparison say when only the agent's own calls count", () => {
+    expect(summarizeExpectedTrajectory({ calls: 'own', tools: ['a'] })).toBe(
+      "superset: a · agent's own calls",
+    );
+    expect(compareTrajectoryNames({ calls: 'own', tools: ['a'] }, ['a']).calls).toBe('own');
+    expect(compareTrajectoryNames({ tools: ['a'] }, ['a']).calls).toBe('all');
+  });
+});

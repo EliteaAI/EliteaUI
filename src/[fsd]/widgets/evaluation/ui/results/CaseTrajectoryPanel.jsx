@@ -5,6 +5,7 @@ import { Box, CircularProgress, Typography } from '@mui/material';
 import { Accordion } from '@/[fsd]/shared/ui';
 
 import { useEvalCaseExecutionsQuery } from '../../api';
+import { TRAJECTORY_STEP_KIND } from '../../lib/constants';
 import {
   buildAgentUsageRows,
   buildCaseUsageRows,
@@ -16,6 +17,7 @@ import {
   getTrajectoryStepMeta,
   getTrajectoryStepTitle,
   isGuardrailStep,
+  isPipelineTrajectory,
   recordedToolNames,
 } from '../../lib/helpers';
 import AgentUsage from './AgentUsage';
@@ -51,9 +53,13 @@ const CaseTrajectoryPanel = memo(props => {
   const execution = data?.executions?.[0] ?? null;
   const steps = execution?.trajectory?.steps ?? [];
   const outputsStored = execution?.trajectory?.tool_outputs_stored;
+  const inPipeline = isPipelineTrajectory(execution?.trajectory);
   const metricItems = useMemo(() => getTrajectoryMetricItems(execution?.metrics), [execution?.metrics]);
   const usageRows = useMemo(() => buildCaseUsageRows(data?.usage), [data?.usage]);
-  const agentUsage = useMemo(() => buildAgentUsageRows(execution?.metrics?.agents), [execution?.metrics]);
+  const agentUsage = useMemo(
+    () => buildAgentUsageRows(execution?.metrics?.agents),
+    [execution?.metrics?.agents],
+  );
   const stateMessage = getTrajectoryStateMessage(execution);
   const pauseDetails = useMemo(() => getCasePauseDetails(execution), [execution]);
   const comparison = useMemo(
@@ -61,7 +67,7 @@ const CaseTrajectoryPanel = memo(props => {
       execution?.trajectory
         ? compareTrajectoryNames(
             expectedTrajectory,
-            recordedToolNames(execution.trajectory, { ownOnly: true }),
+            recordedToolNames(execution.trajectory, { ownOnly: expectedTrajectory?.calls === 'own' }),
             recordedToolNames(execution.trajectory),
           )
         : null,
@@ -92,27 +98,37 @@ const CaseTrajectoryPanel = memo(props => {
       {usageRows.length > 0 && (
         <Box
           sx={styles.usageTable}
+          role="table"
+          aria-label="Usage by role"
           data-testid="case-usage"
         >
-          {USAGE_COLUMNS.map(({ key, label }) => (
-            <Typography
-              key={key}
-              variant="labelSmall"
-              sx={styles.metricLabel}
-            >
-              {label}
-            </Typography>
-          ))}
+          <Box
+            sx={styles.usageRow}
+            role="row"
+          >
+            {USAGE_COLUMNS.map(({ key, label }) => (
+              <Typography
+                key={key}
+                variant="labelSmall"
+                sx={styles.metricLabel}
+                role="columnheader"
+              >
+                {label}
+              </Typography>
+            ))}
+          </Box>
           {usageRows.map(row => (
             <Box
               key={row.role}
               sx={styles.usageRow}
+              role="row"
               data-testid={`case-usage-${row.role}`}
             >
               {USAGE_COLUMNS.map(({ key }) => (
                 <Typography
                   key={key}
                   variant="bodySmall"
+                  role="cell"
                   sx={key === 'cost' && row.isUnpriced ? styles.emptyText : undefined}
                 >
                   {row[key]}
@@ -140,10 +156,11 @@ const CaseTrajectoryPanel = memo(props => {
 
       {metricItems.length > 0 && (
         <Box sx={styles.metrics}>
-          {metricItems.map(({ label, value }) => (
+          {metricItems.map(({ label, value, title }) => (
             <Box
               key={label}
               sx={styles.metric}
+              title={title}
             >
               <Typography
                 variant="labelSmall"
@@ -182,7 +199,9 @@ const CaseTrajectoryPanel = memo(props => {
               variant="bodySmall"
               sx={styles.emptyText}
             >
-              This trajectory was shortened to fit the storage limit; late payloads may be missing.
+              {inPipeline
+                ? 'This trajectory was shortened: the pipeline ran more nodes than are kept, or it hit the storage limit. Late nodes or payloads may be missing.'
+                : 'This trajectory was shortened to fit the storage limit; late payloads may be missing.'}
             </Typography>
           )}
           {outputsStored === false && (
@@ -201,7 +220,7 @@ const CaseTrajectoryPanel = memo(props => {
               uppercase={false}
               // Mount a step's payload only while it is open: a long run would otherwise render every input and output.
               slotProps={STEP_SLOT_PROPS}
-              style={stepStyle(styles, step)}
+              style={stepStyle(styles, step, inPipeline)}
               data-testid={`trajectory-step-${step.i}`}
               items={[
                 {
@@ -238,9 +257,9 @@ const CaseTrajectoryPanel = memo(props => {
 
 CaseTrajectoryPanel.displayName = 'CaseTrajectoryPanel';
 
-const stepStyle = (styles, step) => {
-  if (step.kind === 'node') return styles.nodeStep;
-  const depth = getTrajectoryStepDepth(step);
+const stepStyle = (styles, step, inPipeline) => {
+  if (step.kind === TRAJECTORY_STEP_KIND.node) return styles.nodeStep;
+  const depth = getTrajectoryStepDepth(step, { inPipeline });
   return depth ? styles.childStep(depth) : undefined;
 };
 

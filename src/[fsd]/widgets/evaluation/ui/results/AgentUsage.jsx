@@ -9,44 +9,55 @@ const COLUMNS = [
   { key: 'inputTokens', label: 'Input tokens' },
   { key: 'outputTokens', label: 'Output tokens' },
   { key: 'cost', label: 'Cost' },
+  { key: 'source', label: 'Source' },
 ];
 
 // What each agent of a case did and spent (#7015 P3): the agent under test, then its sub-agents.
 const AgentUsage = memo(props => {
   const { rows, note } = props;
-  const styles = agentUsageStyles();
   return (
     <Box
-      sx={styles.container}
+      sx={STYLES.container}
       data-testid="case-agent-usage"
     >
       <Typography
         variant="labelSmall"
-        sx={styles.title}
+        sx={STYLES.title}
       >
         By agent
       </Typography>
-      <Box sx={styles.table}>
-        {COLUMNS.map(({ key, label }) => (
-          <Typography
-            key={key}
-            variant="labelSmall"
-            sx={styles.header}
-          >
-            {label}
-          </Typography>
-        ))}
+      <Box
+        sx={STYLES.table}
+        role="table"
+        aria-label="Usage by agent"
+      >
+        <Box
+          sx={STYLES.row}
+          role="row"
+        >
+          {COLUMNS.map(({ key, label }) => (
+            <Typography
+              key={key}
+              variant="labelSmall"
+              sx={STYLES.header}
+              role="columnheader"
+            >
+              {label}
+            </Typography>
+          ))}
+        </Box>
         {rows.map(row => (
           <Box
             key={row.key}
-            sx={styles.row}
+            sx={STYLES.row}
+            role="row"
             data-testid={`case-agent-usage-${row.key}`}
           >
             {COLUMNS.map(({ key }) => (
               <Typography
                 key={key}
                 variant="bodySmall"
-                sx={key === 'cost' && row.isUnpriced ? styles.emptyText : undefined}
+                role="cell"
               >
                 {row[key]}
               </Typography>
@@ -57,7 +68,7 @@ const AgentUsage = memo(props => {
       {note && (
         <Typography
           variant="bodySmall"
-          sx={styles.note}
+          sx={STYLES.note}
         >
           {note}
         </Typography>
@@ -85,7 +96,7 @@ const agentUsageStyles = () => ({
   }),
   table: {
     display: 'grid',
-    gridTemplateColumns: 'minmax(8rem, 2fr) repeat(5, minmax(0, 1fr))',
+    gridTemplateColumns: 'minmax(8rem, 2fr) repeat(6, minmax(0, 1fr))',
     columnGap: '1rem',
     rowGap: '0.25rem',
   },
@@ -98,10 +109,9 @@ const agentUsageStyles = () => ({
   note: ({ palette }) => ({
     color: palette.text.secondary,
   }),
-  emptyText: ({ palette }) => ({
-    color: palette.text.primary,
-    fontStyle: 'italic',
-  }),
 });
+
+// Static, so built once rather than on every render.
+const STYLES = agentUsageStyles();
 
 export default AgentUsage;

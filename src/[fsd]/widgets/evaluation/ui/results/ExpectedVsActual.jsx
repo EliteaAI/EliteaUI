@@ -25,7 +25,8 @@ const ExpectedVsActual = memo(props => {
         variant="labelSmall"
         sx={styles.metricLabel}
       >
-        Expected vs actual ({comparison.match})
+        Expected vs actual ({comparison.match}
+        {comparison.calls === 'own' ? ', own calls' : ''})
       </Typography>
       {comparison.tools.length === 0 && (
         <Typography

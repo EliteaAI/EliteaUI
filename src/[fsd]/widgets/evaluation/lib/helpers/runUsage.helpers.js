@@ -366,7 +366,12 @@ const AGENT_SOURCE_NOTE = {
   trajectory:
     'Tokens per agent are counted from the trajectory; the ledger has no per-agent split for this ' +
     'case, so its cost is the Agent row above.',
+  mixed:
+    'Rows from the usage ledger have their own tokens and cost; rows counted from the trajectory ' +
+    'have no cost of their own.',
 };
+
+const AGENT_SOURCE_LABEL = { ledger: 'Ledger', trajectory: 'Trajectory' };
 
 const formatCount = value => (value == null ? '—' : String(value));
 
@@ -375,12 +380,14 @@ const formatCount = value => (value == null ? '—' : String(value));
  * sub-agent, from the execution's `metrics.agents`. Empty when the agent called no sub-agent.
  * @param {Array<object>} [agents] - `metrics.agents` of one case execution
  * @returns {{ rows: Array<{ key: string, label: string, llmCalls: string, toolCalls: string,
- *   inputTokens: string, outputTokens: string, cost: string, isUnpriced: boolean }>, note: string | null }}
+ *   inputTokens: string, outputTokens: string, cost: string, source: string,
+ *   isUnpriced: boolean }>, note: string | null }}
  */
 export const buildAgentUsageRows = agents => {
   const list = (Array.isArray(agents) ? agents : []).filter(Boolean);
   if (!list.length) return { rows: [], note: null };
-  const fromLedger = list.some(agent => agent.source === 'ledger');
+  const ledgerRows = list.filter(agent => agent.source === 'ledger').length;
+  const noteKey = ledgerRows === list.length ? 'ledger' : ledgerRows ? 'mixed' : 'trajectory';
   const rows = list.map(agent => {
     const cost = formatUsd(agent.cost);
     return {
@@ -391,8 +398,11 @@ export const buildAgentUsageRows = agents => {
       inputTokens: formatTokenCount(agent.input_tokens),
       outputTokens: formatTokenCount(agent.output_tokens),
       cost: cost ?? (agent.source === 'ledger' ? 'Not priced' : '—'),
-      isUnpriced: cost == null,
+      // Where this row's figures come from: a run can have ledger rows for some agents only.
+      source: AGENT_SOURCE_LABEL[agent.source] ?? AGENT_SOURCE_LABEL.trajectory,
+      // Only the ledger can say a call was unpriced; a trajectory row's "—" is a cost it cannot know.
+      isUnpriced: cost == null && agent.source === 'ledger',
     };
   });
-  return { rows, note: AGENT_SOURCE_NOTE[fromLedger ? 'ledger' : 'trajectory'] };
+  return { rows, note: AGENT_SOURCE_NOTE[noteKey] };
 };
