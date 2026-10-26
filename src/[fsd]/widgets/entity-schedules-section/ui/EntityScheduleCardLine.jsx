@@ -3,7 +3,7 @@ import { memo } from 'react';
 import { Box, Tooltip, Typography } from '@mui/material';
 
 // One labelled line of the editor schedule card: the value truncates and shows its full text in a tooltip
-// on hover and on keyboard focus (R2.4); the label stays whole, as on the toolkit Schedule card
+// on hover and on keyboard focus; the label stays whole, as on the toolkit Schedule card
 const EntityScheduleCardLine = memo(props => {
   const { label, area, testId, isTitle, text, chip } = props;
   const styles = entityScheduleCardLineStyles();

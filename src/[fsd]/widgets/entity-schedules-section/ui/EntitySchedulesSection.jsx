@@ -13,8 +13,8 @@ import {
 } from '@/[fsd]/entities/schedule';
 import { TextLinkConstants } from '@/[fsd]/shared/lib/constants';
 import { Button } from '@/[fsd]/shared/ui';
-import BasicAccordion from '@/[fsd]/shared/ui/accordion/BasicAccordion';
-import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
+import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button';
 import PlusIcon from '@/assets/plus-icon.svg?react';
 import { PERMISSIONS, SearchParams } from '@/common/constants';
 import { buildErrorMessage } from '@/common/utils';
@@ -46,7 +46,7 @@ const EntitySchedulesSection = memo(props => {
   const { tab } = useParams();
   const { pathname, search } = useLocation();
 
-  // The form opens nested in the editor and comes back to this editor location (owner CR 2026-10-21).
+  // The form opens nested in the editor and comes back to this editor location.
   // The form URL keeps the editor search (viewMode), so the entity crumb opens the editor too.
   const openNested = useCallback(
     (to, formVersionId) => {
@@ -57,7 +57,7 @@ const EntitySchedulesSection = memo(props => {
     },
     [navigate, pathname, search],
   );
-  // Edit keeps the version of its schedule (R5.2); "+ Schedule" takes the editor version (R5.1)
+  // Edit keeps the version of its schedule; "+ Schedule" takes the editor version
   const versionOf = useCallback(
     scheduleId => rows.find(row => row.id === scheduleId)?.version_id ?? versionId,
     [rows, versionId],
@@ -186,7 +186,7 @@ const EntitySchedulesSection = memo(props => {
     },
   ];
 
-  // A 403 on the list hides the section like a missing list permission (R1.2)
+  // A 403 on the list hides the section like a missing list permission
   if (isHidden || error?.status === 403) return null;
 
   return (

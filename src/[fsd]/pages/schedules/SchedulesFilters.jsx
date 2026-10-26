@@ -2,8 +2,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Box, Typography, debounce } from '@mui/material';
 
-import { BaseBtn } from '@/[fsd]/shared/ui/button';
-import { BUTTON_VARIANTS } from '@/[fsd]/shared/ui/button/BaseBtn';
+import { BUTTON_VARIANTS, BaseBtn } from '@/[fsd]/shared/ui/button';
 import { SimpleSearchBar } from '@/[fsd]/shared/ui/input';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 
@@ -20,7 +19,7 @@ const STATUS_OPTIONS = [
   { label: 'Failed', value: 'failed' },
   { label: 'Skipped', value: 'skipped' },
   { label: 'Blocked', value: 'blocked' },
-  { label: 'Waiting for input', value: 'waiting_for_approval' }, // the owner's label (CR-23)
+  { label: 'Waiting for input', value: 'waiting_for_approval' }, // the owner's label
 ];
 // The select keeps string values; the list API takes a boolean
 const ENABLED_OPTIONS = [ALL, { label: 'Yes', value: 'true' }, { label: 'No', value: 'false' }];

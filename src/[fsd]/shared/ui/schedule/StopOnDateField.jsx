@@ -30,7 +30,7 @@ const StopOnDateField = memo(props => {
   const date = value ? parseISO(value) : null;
   const pastError = date && isValid(date) && isBefore(date, startOfToday()) ? PAST_DATE_MESSAGE : '';
   const helperText = pastError || error;
-  // The error sits outside the TextField (BUG-33 width), so link it to the input by id (CR-02)
+  // The error sits outside the TextField, so link it to the input by id
   const helperId = `${testIdPrefix}-stop-on-date-error`;
 
   const handleCheck = event => {

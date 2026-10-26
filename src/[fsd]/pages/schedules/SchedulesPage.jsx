@@ -22,7 +22,7 @@ const NO_FILTERS = { entityType: '', status: '', enabled: '', search: '', ownerI
 
 const POLLING_INTERVAL_MS = 10000;
 
-// R2.3: refetch the list while any row shows a Running last run
+// Refetch the list while any row shows a Running last run
 export const getPollingInterval = rows =>
   rows?.some(row => row.last_run_status === 'running') ? POLLING_INTERVAL_MS : 0;
 
@@ -39,7 +39,7 @@ const SchedulesPage = () => {
   const [pageSize, setPageSize] = useState(PAGE_SIZE);
   // The API default: the next run first
   const [sortConfig, setSortConfig] = useState({ field: 'next_run', direction: SortOrderOptions.ASC });
-  // "Open all in Schedules" of an editor: the one filter the page keeps in its URL (US-35 R3.6)
+  // "Open all in Schedules" of an editor: the one filter the page keeps in its URL
   const [searchParams, setSearchParams] = useSearchParams();
   const urlEntityType = searchParams.get('entityType');
   const urlEntityId = searchParams.get('entityId');
@@ -86,7 +86,7 @@ const SchedulesPage = () => {
     if (hasNoRows && page > 0) setPage(Math.max(Math.ceil(total / pageSize) - 1, 0));
   }, [hasNoRows, page, pageSize, total]);
 
-  // Any filter or search change starts at the first page (R1.3)
+  // Any filter or search change starts at the first page
   const onFiltersChange = useCallback(next => {
     setFilters(next);
     setPage(0);

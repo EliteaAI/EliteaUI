@@ -4,11 +4,10 @@ import { Link as RouterLink, useLocation, useNavigate, useParams, useSearchParam
 
 import { Box, Link } from '@mui/material';
 
-import { SCHEDULE_RUN_COLUMNS } from '@/[fsd]/entities/run-history/lib/helpers';
-import { RunHistoryContainer } from '@/[fsd]/entities/run-history/ui';
+import { RunHistoryContainer, SCHEDULE_RUN_COLUMNS } from '@/[fsd]/entities/run-history';
 import { buildScheduleFormLink, useGetScheduleListQuery } from '@/[fsd]/entities/schedule';
 import { ChatMessageList } from '@/[fsd]/features/chat';
-import { DrawerPageHeader } from '@/[fsd]/features/settings/ui/drawer-page';
+import { DrawerPageHeader } from '@/[fsd]/features/settings';
 import { ToolkitsHelpers } from '@/[fsd]/features/toolkits';
 import { NavigationConstants, TextLinkConstants } from '@/[fsd]/shared/lib/constants';
 import { NavigationHelpers } from '@/[fsd]/shared/lib/helpers';
@@ -40,7 +39,7 @@ const RunHistoryPage = memo(props => {
   );
   const versions = data?.versions ?? [];
 
-  // CR-22 D8: the caller's schedules of this agent or pipeline fill the filter and decide which names link
+  // The caller's schedules of this agent or pipeline fill the filter and decide which names link
   const { data: scheduleData } = useGetScheduleListQuery(
     { projectId, entityType: scheduleEntityType, entityId: agentId, pageSize: MAX_SCHEDULES },
     { skip: !scheduleEntityType || !projectId || !agentId },
@@ -85,15 +84,15 @@ const RunHistoryPage = memo(props => {
     const renderSchedule = row => {
       const name = scheduleColumn.render(row);
       const scheduleId = row.schedule_run?.schedule_id;
-      // R4.1: a schedule the caller cannot open stays plain text, so no link leads to a dead page
+      // A schedule the caller cannot open stays plain text, so no link leads to a dead page
       if (!openable.has(scheduleId)) return name;
       return (
-        // The theme link, so the name reads well in dark and light (CR-22 review r3)
+        // The theme link, so the name reads well in dark and light
         <Link
           component={RouterLink}
           to={buildScheduleFormLink({ entityType: scheduleEntityType, entityId: agentId, tab, scheduleId })}
           onClick={event => event.stopPropagation()}
-          // A cut name shows in full on hover (review r8)
+          // A cut name shows in full on hover
           title={name}
           variant="bodyMedium"
           underline="hover"
@@ -159,7 +158,7 @@ const RunHistoryPage = memo(props => {
               onValueChange={handleScheduleChange}
               // The empty value is "All schedules": show its label instead of a blank select
               displayEmpty
-              // The label moves up above the shown value, as in the credential select (review r4)
+              // The label moves up above the shown value, as in the credential select
               shrinkLabel
               showEmptyPlaceholder={false}
               inputProps={{ 'aria-label': 'Schedule' }}
@@ -167,7 +166,7 @@ const RunHistoryPage = memo(props => {
           </Box>
         )}
         <RunHistoryContainer
-          // R4.2: a new schedule restarts paging at page 1
+          // A new schedule restarts paging at page 1
           key={scheduleIdParam}
           entityId={agentId}
           source={source}

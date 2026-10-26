@@ -28,7 +28,7 @@ import ScheduleNotice from './ScheduleNotice';
 
 const { convertCronTimezone, getBrowserTimezone } = ScheduleHelpers;
 
-// entityType: the page is nested in that editor and locks its entity (owner CR 2026-10-21)
+// entityType: the page is nested in that editor and locks its entity
 const ScheduleDetailPage = props => {
   const { entityType } = props;
   const projectId = useSelectedProjectId();
@@ -45,7 +45,7 @@ const ScheduleDetailPage = props => {
   const entityRoute = useEntityScheduleRoute(entityType);
   const runsView = useScheduleRunsView(schedule?.id, schedule?.application_id);
 
-  // R1.4: a schedule belongs to one project, so a project switch opens the list
+  // A schedule belongs to one project, so a project switch opens the list
   const openedProjectId = useRef();
   useEffect(() => {
     if (projectId == null) return;
@@ -67,7 +67,7 @@ const ScheduleDetailPage = props => {
     () => runSchedule({ projectId, scheduleId, trigger: 'test' }).unwrap(),
     [runSchedule, projectId, scheduleId],
   );
-  // The Test schedule panel right of the form and the Runs section under the panel (owner CR 2026-10-21)
+  // The Test schedule panel right of the form and the Runs section under the panel
   const {
     runs,
     runsTotal,
@@ -161,7 +161,7 @@ const ScheduleDetailPage = props => {
       // Nested in an editor, the crumbs name the agent or pipeline, not the schedule
       entityName={entityType ? undefined : schedule.name}
       sidePanel={sidePanel}
-      // Export of this schedule, after Cancel (CR-16, CR-27)
+      // Export of this schedule, after Cancel
       headerActions={<ScheduleDetailMenu schedule={schedule} />}
       onSubmit={onSubmit}
       onSaved={onSaved}
@@ -196,7 +196,7 @@ export default ScheduleDetailPage;
 /** @type {MuiSx} */
 const styles = {
   loader: { display: 'flex', justifyContent: 'center', padding: '3rem' },
-  // The panel and the Runs section stacked (CR-21). From xl, in a window at least 46 rem (736 px) high, the
+  // The panel and the Runs section stacked. From xl, in a window at least 46 rem (736 px) high, the
   // block stays in view: 100dvh minus the page header, its top margin and the bottom margin (6 rem). A fixed
   // height, so the runs card takes 40 % of the window and the test panel fills the rest and scrolls inside.
   rightBlock: ({ breakpoints }) => ({

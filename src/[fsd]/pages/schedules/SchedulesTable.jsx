@@ -2,27 +2,23 @@ import { memo, useCallback, useMemo, useState } from 'react';
 
 import { Box, Tooltip as MuiTooltip, Typography } from '@mui/material';
 
-import { useResponsiveColumns } from '@/[fsd]/entities/grid-table/lib';
 import {
   GridTableBody,
   GridTableContainer,
   GridTableHeader,
   GridTablePagination,
   GridTableRow,
-} from '@/[fsd]/entities/grid-table/ui';
+  useResponsiveColumns,
+} from '@/[fsd]/entities/grid-table';
 import {
   ScheduleEnabledSwitch,
   ScheduleRunStatusChip,
   formatRunStarted,
   toRunStatusLabel,
 } from '@/[fsd]/features/schedule';
-import {
-  getBrowserTimezone,
-  getCronSummaryInBrowserTimezone,
-} from '@/[fsd]/shared/lib/helpers/schedule.helpers';
+import { ScheduleHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useGetComponentWidth } from '@/[fsd]/shared/lib/hooks';
-import { Text, Tooltip } from '@/[fsd]/shared/ui';
-import EntityTypeIcon from '@/[fsd]/shared/ui/icon/EntityTypeIcon';
+import { Icon, Text, Tooltip } from '@/[fsd]/shared/ui';
 import { TIME_FORMAT } from '@/common/constants';
 import { timeFormatter } from '@/common/utils';
 import AuthorContainer from '@/components/AuthorContainer';
@@ -37,7 +33,7 @@ const ENTITY_TYPE_LABELS = { agent: 'Agent', pipeline: 'Pipeline' };
 const REASON_STATUSES = ['failed', 'skipped', 'blocked'];
 
 // All 8 columns show at every width (owner: no hidden columns). The tier comes from the measured table
-// width (EL-7011 table fit spec): 796 px at a 1280 px window, 956 px at 1440, 1116 px at 1600.
+// width: 796 px at a 1280 px window, 956 px at 1440, 1116 px at 1600.
 // The regular tier starts at 948 px, a 1280 px window with the main sidebar collapsed (+152 px).
 const REGULAR_MIN_PX = 948;
 const COMFORTABLE_MIN_PX = 1116;
@@ -66,7 +62,7 @@ const TIER_WIDTHS = {
     enabled: '5.5rem',
     actions: '4.25rem',
   },
-  // CR-23 D12: Last run takes the Next run width; the regular Owner gives 0.75 rem for it. 7.75 rem fits the
+  // Last run takes the Next run width; the regular Owner gives 0.75 rem for it. 7.75 rem fits the
   // widest date ("Nov, 30 23:30") with the cell padding (live check at 1440 px)
   regular: {
     next_run: '7.75rem',
@@ -106,7 +102,7 @@ const IconWithLabel = ({ type, label }) => {
         title={typeLabel}
         sx={schedulesTableStyles().icon}
       >
-        <EntityTypeIcon type={type} />
+        <Icon.EntityTypeIcon type={type} />
       </Box>
       <Tooltip.TypographyWithConditionalTooltip
         title={label}
@@ -120,7 +116,7 @@ const IconWithLabel = ({ type, label }) => {
   );
 };
 
-// CR-23 D10: one date renderer for Next run and Last run. Compact: MMM DD and the time on two lines, with
+// One date renderer for Next run and Last run. Compact: MMM DD and the time on two lines, with
 // `trailing` (the Last run status icon) after the time; regular: one line; comfortable: the calendar icon
 const renderRunDate = (value, tier, trailing = null) => {
   const styles = schedulesTableStyles();
@@ -196,8 +192,8 @@ const renderCell = (column, value, row, tier) => {
       );
     case 'schedule': {
       // Every row shows the browser zone, so the compact cell drops it and the tooltip keeps it
-      const rule = getCronSummaryInBrowserTimezone(row.cron, row.timezone);
-      const ruleWithZone = `${rule} (${getBrowserTimezone() ?? row.timezone})`;
+      const rule = ScheduleHelpers.getCronSummaryInBrowserTimezone(row.cron, row.timezone);
+      const ruleWithZone = `${rule} (${ScheduleHelpers.getBrowserTimezone() ?? row.timezone})`;
       return (
         <MuiTooltip
           title={ruleWithZone}
@@ -236,7 +232,7 @@ const renderCell = (column, value, row, tier) => {
           variant="icon"
         />
       );
-      // CR-23 R5.1, D11: line 1 the run date in the Next run format, line 2 the status icon and word with
+      // Line 1 the run date in the Next run format, line 2 the status icon and word with
       // the reason after it; compact puts the icon after the time and the reason only in the tooltip
       return (
         <MuiTooltip

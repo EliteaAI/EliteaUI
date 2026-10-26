@@ -9,11 +9,8 @@ import {
   formatRunStarted,
   useScheduleRowActions,
 } from '@/[fsd]/features/schedule';
-import {
-  getBrowserTimezone,
-  getCronSummaryInBrowserTimezone,
-} from '@/[fsd]/shared/lib/helpers/schedule.helpers';
-import { useDeleteConfirmationDisabled } from '@/[fsd]/shared/lib/hooks/useDeleteConfirmationDisabled.hooks';
+import { ScheduleHelpers } from '@/[fsd]/shared/lib/helpers';
+import { useDeleteConfirmationDisabled } from '@/[fsd]/shared/lib/hooks';
 import { Button, Modal } from '@/[fsd]/shared/ui';
 import DeleteIcon from '@/components/Icons/DeleteIcon';
 import EditIcon from '@/components/Icons/EditIcon';
@@ -40,8 +37,8 @@ const EntityScheduleCard = memo(props => {
   }, [actions]);
 
   const allowed = row.allowed_actions;
-  const rule = getCronSummaryInBrowserTimezone(row.cron, row.timezone);
-  const timezone = getBrowserTimezone() ?? row.timezone;
+  const rule = ScheduleHelpers.getCronSummaryInBrowserTimezone(row.cron, row.timezone);
+  const timezone = ScheduleHelpers.getBrowserTimezone() ?? row.timezone;
   const lastRun = row.last_run ? formatRunStarted(row.last_run) : 'Never run';
   const nextRun = row.enabled ? (row.next_run && formatRunStarted(row.next_run)) || '-' : 'Paused';
   // The list API sends only the user's own rows to a non-admin, so another owner shows for admins only
@@ -75,7 +72,7 @@ const EntityScheduleCard = memo(props => {
         label="Last run"
         text={lastRun}
         chip={
-          // A status without a run time is stale data: "Never run" carries no chip (TC-US58-08)
+          // A status without a run time is stale data: "Never run" carries no chip
           row.last_run &&
           row.last_run_status && (
             <ScheduleRunStatusChip
@@ -132,7 +129,7 @@ const EntityScheduleCard = memo(props => {
           row={row}
           {...actions}
           onEdit={onEdit}
-          // The edit page shows the runs of the schedule beside the form (R5.5)
+          // The edit page shows the runs of the schedule beside the form
           onOpenRunHistory={onHistory}
           hideChangeOwner
         />
