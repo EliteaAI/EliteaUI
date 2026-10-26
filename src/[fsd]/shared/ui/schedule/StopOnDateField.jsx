@@ -1,6 +1,6 @@
 import { memo, useState } from 'react';
 
-import { format, isBefore, isValid, parseISO, startOfToday } from 'date-fns';
+import { format, isValid, parseISO } from 'date-fns';
 
 import { Box, FormControlLabel, FormHelperText, Typography } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -18,9 +18,10 @@ const PAST_DATE_MESSAGE = 'Pick today or a later date';
  * "Stop on a date" checkbox with a date picker.
  * Controlled: `value` is `yyyy-MM-dd` or null; unchecking calls `onChange(null)`.
  * `error` is a server error for the stop date.
+ * `timezone` is the schedule time zone (IANA name); "today" is read there. Default: the browser zone.
  */
 const StopOnDateField = memo(props => {
-  const { value, onChange, error, testIdPrefix = 'pipeline-schedule' } = props;
+  const { value, onChange, error, timezone, testIdPrefix = 'pipeline-schedule' } = props;
 
   // Only "checked, no date yet"; a set value keeps the box checked on its own.
   const [awaitingDate, setAwaitingDate] = useState(false);
@@ -28,7 +29,9 @@ const StopOnDateField = memo(props => {
   const checked = Boolean(value) || awaitingDate;
 
   const date = value ? parseISO(value) : null;
-  const pastError = date && isValid(date) && isBefore(date, startOfToday()) ? PAST_DATE_MESSAGE : '';
+  // en-CA formats as yyyy-MM-dd, so day strings compare as text
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: timezone }).format(new Date());
+  const pastError = date && isValid(date) && value < today ? PAST_DATE_MESSAGE : '';
   const helperText = pastError || error;
   // The error sits outside the TextField, so link it to the input by id
   const helperId = `${testIdPrefix}-stop-on-date-error`;
@@ -72,7 +75,7 @@ const StopOnDateField = memo(props => {
             <Typography sx={datePickerStyles.datePickerLabel}>Stop date:</Typography>
             <DatePicker
               value={date}
-              disablePast
+              minDate={parseISO(today)}
               closeOnSelect={false}
               open={open}
               onOpen={() => setOpen(true)}

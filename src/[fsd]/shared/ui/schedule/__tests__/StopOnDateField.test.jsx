@@ -45,7 +45,10 @@ const theme = createTheme({
   },
 });
 
-afterEach(() => cleanup());
+afterEach(() => {
+  cleanup();
+  vi.useRealTimers();
+});
 
 const Providers = ({ children }) => (
   <ThemeProvider theme={theme}>
@@ -59,13 +62,14 @@ const Providers = ({ children }) => (
 );
 
 // Holds the value like the form does, so a check and an uncheck behave as in the app.
-const Harness = ({ initialValue = null, onChange, error }) => {
+const Harness = ({ initialValue = null, onChange, error, timezone }) => {
   const [value, setValue] = useState(initialValue);
   return (
     <Providers>
       <StopOnDateField
         value={value}
         error={error}
+        timezone={timezone}
         onChange={next => {
           setValue(next);
           onChange?.(next);
@@ -250,5 +254,31 @@ describe('EL-7011 R3 StopOnDateField', () => {
     const field = screen.getByText('Stop date:').parentElement;
 
     expect(getComputedStyle(field).alignSelf).toBe('flex-start');
+  });
+
+  it('a day that is still today in the schedule timezone is not marked past', () => {
+    // 05:00 UTC on 27 Oct is still 26 Oct in Pago Pago (UTC-11) but already 27 Oct in the browser's UTC
+    vi.useFakeTimers({ toFake: ['Date'], now: new Date('2026-10-27T05:00:00Z') });
+    render(
+      <Harness
+        initialValue="2026-10-26"
+        timezone="Pacific/Pago_Pago"
+      />,
+    );
+
+    expect(screen.queryByText(PAST_DATE_MESSAGE)).not.toBeInTheDocument();
+  });
+
+  it('a day that is already past in the schedule timezone is marked past', () => {
+    // 12:00 UTC on 26 Oct is already 27 Oct in Kiritimati (UTC+14)
+    vi.useFakeTimers({ toFake: ['Date'], now: new Date('2026-10-26T12:00:00Z') });
+    render(
+      <Harness
+        initialValue="2026-10-26"
+        timezone="Pacific/Kiritimati"
+      />,
+    );
+
+    expect(screen.getByText(PAST_DATE_MESSAGE)).toBeInTheDocument();
   });
 });
