@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 import { useParams } from 'react-router-dom';
 
@@ -16,6 +16,15 @@ export const useStaleSaveGuard = currentEntityId => {
   const liveRef = useRef(null);
   // Updated during render, so a response that resolves before the next effects flush still sees the new page
   liveRef.current = { entityId: toId(currentEntityId), routeId: toId(agentId) };
+  // The page remounts per entity, so once it is gone a late response must not navigate or rename the URL
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   const captureSaveTarget = useCallback(
     () => ({ entityId: toId(currentEntityId), routeId: toId(agentId) }),
@@ -24,8 +33,8 @@ export const useStaleSaveGuard = currentEntityId => {
 
   const isSaveTargetCurrent = useCallback(target => {
     const live = liveRef.current;
-    // The chat editor has no entity id in its URL, so the route check applies only where one exists
-    const isSameRoute = !target.routeId || target.routeId === live.routeId;
+    // The chat editor has no entity id in its URL, so the route and unmount checks apply only where one exists
+    const isSameRoute = !target.routeId || (isMountedRef.current && target.routeId === live.routeId);
     return isSameRoute && target.entityId === live.entityId;
   }, []);
 

@@ -91,6 +91,26 @@ describe('useStaleSaveGuard', () => {
     expect(result.current.isSaveTargetCurrent(target)).toBe(false);
   });
 
+  it('flags a save as stale once the page that started it has unmounted', () => {
+    const { result, unmount } = renderGuard(545);
+    const { captureSaveTarget, isSaveTargetCurrent } = result.current;
+    const target = captureSaveTarget();
+
+    unmount();
+
+    expect(isSaveTargetCurrent(target)).toBe(false);
+  });
+
+  it('keeps a chat editor save current after its editor unmounts', () => {
+    const { result, unmount } = renderGuard(545, '/chat');
+    const { captureSaveTarget, isSaveTargetCurrent } = result.current;
+    const target = captureSaveTarget();
+
+    unmount();
+
+    expect(isSaveTargetCurrent(target)).toBe(true);
+  });
+
   it('skips the route check where the URL has no entity id (chat editor)', () => {
     const { result, rerender } = renderGuard(545, '/chat');
     const target = result.current.captureSaveTarget();
