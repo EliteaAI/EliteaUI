@@ -5,13 +5,17 @@ import { useFormikContext } from 'formik';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { Box, Typography } from '@mui/material';
 
-import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
+import {
+  FlowEditorConstants,
+  NodePanelConstants,
+} from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import {
   useFunctionInputMapping,
   useGetToolkitNameFromSchema,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
 import {
+  FlowEditorNodePanel,
   FlowEditorNodes,
   FlowEditorSelect,
   FlowEditorSettings,
@@ -28,6 +32,10 @@ const toolkitFilter = tool => tool.type === ToolTypes.application.value;
 // a lookup map. Only the fields ELITEA-2038's test actually exercises are
 // wired (.agents/testing.md § Locator policy — testid scope is load-bearing).
 const AGENT_NODE_TESTID_PREFIX = 'pipeline-agent-node';
+
+const TASK_KEY = 'task';
+const CHAT_HISTORY_KEY = 'chat_history';
+const BASIC_MAPPING_KEYS = [TASK_KEY];
 
 const AgentNode = memo(props => {
   const { id, data, selected, nodeType = FlowEditorConstants.PipelineNodeTypes.Agent } = props;
@@ -56,6 +64,25 @@ const AgentNode = memo(props => {
 
   const { onChangeMapping, requiredInputs, inputMappings, mappingInfo, defaultValues } =
     useFunctionInputMapping({ id });
+
+  // Task is the essential input; chat history and the agent's own variables are optional
+  const advancedMappingKeys = useMemo(
+    () => [
+      CHAT_HISTORY_KEY,
+      ...Object.keys(inputMappings || {}).filter(key => key !== TASK_KEY && key !== CHAT_HISTORY_KEY),
+    ],
+    [inputMappings],
+  );
+  const mappingFieldsProps = {
+    input_mapping: inputMappings,
+    mappingInfo,
+    defaultValues,
+    values: yamlNode?.input_mapping || {},
+    onChangeMapping,
+    disabled: isRunningPipeline || disabled,
+    valueTestIdPrefix: `${AGENT_NODE_TESTID_PREFIX}-input-mapping-value`,
+    typeTestIdPrefix: `${AGENT_NODE_TESTID_PREFIX}-input-mapping-type`,
+  };
 
   const { getToolkitNameFromSchema } = useGetToolkitNameFromSchema();
   const onSelectToolkit = useCallback(
@@ -116,51 +143,53 @@ const AgentNode = memo(props => {
           );
         }}
       >
-        {isOrphan && (
-          <Box sx={agentNodeStyles.orphanWarning}>
-            <WarningAmberIcon fontSize="small" />
-            <Typography variant="caption">
-              Agent not found — select a replacement or delete this node
-            </Typography>
-          </Box>
-        )}
-        <FlowEditorSelect.ToolSelect
-          id={id}
-          label={'Agent'}
-          onSelectTool={onSelectToolkit}
-          selectedToolkit={yamlNode?.tool}
-          disabled={isRunningPipeline || disabled}
-          filterTypes={toolkitFilter}
-          data-testid={`${AGENT_NODE_TESTID_PREFIX}-agent-select`}
-        />
-        <FlowEditorSelect.InputSelect
-          id={id}
-          label={'Input'}
-          inputFieldName={'input'}
-          disabled={isRunningPipeline || disabled}
-          dataTestId={`${AGENT_NODE_TESTID_PREFIX}-input-select`}
-        />
-        <FlowEditorSelect.OutputSelect
-          id={id}
-          label="Output"
-          outputFieldName="output"
-          disabled={isRunningPipeline || disabled}
-          dataTestId={`${AGENT_NODE_TESTID_PREFIX}-output-select`}
-        />
-        {!isOrphan && (
-          <FlowEditorSettings.InputMapping
-            requiredInputs={requiredInputs}
-            input_mapping={inputMappings}
-            mappingInfo={mappingInfo}
-            defaultValues={defaultValues}
-            values={yamlNode?.input_mapping || {}}
-            onChangeMapping={onChangeMapping}
+        <FlowEditorNodePanel.NodeConfigSection>
+          {isOrphan && (
+            <Box sx={agentNodeStyles.orphanWarning}>
+              <WarningAmberIcon fontSize="small" />
+              <Typography variant="caption">
+                Agent not found — select a replacement or delete this node
+              </Typography>
+            </Box>
+          )}
+          <FlowEditorSelect.ToolSelect
+            id={id}
+            label={'Agent'}
+            onSelectTool={onSelectToolkit}
+            selectedToolkit={yamlNode?.tool}
             disabled={isRunningPipeline || disabled}
-            valueTestIdPrefix={`${AGENT_NODE_TESTID_PREFIX}-input-mapping-value`}
-            typeTestIdPrefix={`${AGENT_NODE_TESTID_PREFIX}-input-mapping-type`}
-            requiredHeadingTestId={`${AGENT_NODE_TESTID_PREFIX}-input-mapping-heading`}
+            filterTypes={toolkitFilter}
+            data-testid={`${AGENT_NODE_TESTID_PREFIX}-agent-select`}
           />
-        )}
+          {!isOrphan && (
+            <FlowEditorSettings.InputMappingFields
+              keys={BASIC_MAPPING_KEYS}
+              {...mappingFieldsProps}
+            />
+          )}
+        </FlowEditorNodePanel.NodeConfigSection>
+        <FlowEditorNodePanel.NodeConfigSection section={NodePanelConstants.NODE_CONFIG_SECTIONS.advanced}>
+          <FlowEditorSelect.InputSelect
+            id={id}
+            label={'Input'}
+            inputFieldName={'input'}
+            disabled={isRunningPipeline || disabled}
+            dataTestId={`${AGENT_NODE_TESTID_PREFIX}-input-select`}
+          />
+          <FlowEditorSelect.OutputSelect
+            id={id}
+            label="Output"
+            outputFieldName="output"
+            disabled={isRunningPipeline || disabled}
+            dataTestId={`${AGENT_NODE_TESTID_PREFIX}-output-select`}
+          />
+          {!isOrphan && (
+            <FlowEditorSettings.InputMappingFields
+              keys={advancedMappingKeys}
+              {...mappingFieldsProps}
+            />
+          )}
+        </FlowEditorNodePanel.NodeConfigSection>
       </FlowEditorNodes.NodeCard>
     </>
   );

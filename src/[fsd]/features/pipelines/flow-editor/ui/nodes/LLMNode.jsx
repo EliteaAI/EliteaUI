@@ -2,12 +2,16 @@ import { memo, useContext, useMemo } from 'react';
 
 import { useFormikContext } from 'formik';
 
-import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
+import {
+  FlowEditorConstants,
+  NodePanelConstants,
+} from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import {
   useGetToolkitNameFromSchema,
   useNodeAiAssistantConfig,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
 import {
+  FlowEditorNodePanel,
   FlowEditorNodes,
   FlowEditorSelect,
   FlowEditorSettings,
@@ -34,6 +38,9 @@ const LLM_NODE_INPUT_TEST_IDS = {
     valueFieldTestId: 'pipeline-llm-node-chat-history-value',
   },
 };
+
+const BASIC_INPUT_KEYS = ['system', 'task'];
+const ADVANCED_INPUT_KEYS = ['chat_history'];
 
 const LLMNode = memo(props => {
   const { id, data, selected } = props;
@@ -90,66 +97,83 @@ const LLMNode = memo(props => {
         );
       }}
     >
-      <FlowEditorSettings.SimpleLLMInputs
-        inputMappings={inputMappings}
-        values={yamlNode?.input_mapping || {}}
-        onChangeMapping={onChangeMapping}
-        defaultValues={defaultValues}
-        disabled={isRunningPipeline || disabled}
-        nodeType={FlowEditorConstants.PipelineNodeTypes.LLM}
-        enableAIAssistant
-        modelConfig={pipelineLLMConfig}
-        gap="1rem"
-        testIdsByKey={LLM_NODE_INPUT_TEST_IDS}
-      />
-
-      <FlowEditorSelect.InputSelect
-        id={id}
-        label="Input"
-        disabled={isRunningPipeline || disabled}
-        inputFieldName="input"
-        dataTestId="pipeline-llm-node-input-select"
-      />
-      <FlowEditorSelect.OutputSelect
-        id={id}
-        label="Output"
-        outputFieldName="output"
-        disabled={isRunningPipeline || disabled}
-        dataTestId="pipeline-llm-node-output-select"
-      />
-      <FlowEditorSelect.ToolkitsSelect
-        id={id}
-        disabled={isRunningPipeline || disabled}
-        data-testid="pipeline-llm-node-toolkits-select"
-      />
-      {Object.keys(yamlNode?.tool_names || {}).map(toolkitName => {
-        const toolkitObj = allToolkits.find(
-          tk => (tk.toolkit_name || getToolkitNameFromSchema(tk)) === toolkitName,
-        );
-        const allTools = (toolkitObj?.tools || toolkitObj?.settings?.selected_tools || []).map(tool =>
-          typeof tool === 'string' ? tool : tool.name,
-        );
-        const availableTools = getSelectedTools(toolkitObj?.type);
-        const tools =
-          Array.isArray(availableTools) && availableTools.length > 0
-            ? allTools.filter(tool => availableTools.includes(tool))
-            : allTools;
-        return (
-          <FlowEditorSelect.LLMToolsSelect
-            key={toolkitName}
-            toolkitName={toolkitName}
-            id={id}
-            tools={tools}
-            disabled={isRunningPipeline || disabled}
-          />
-        );
-      })}
-      <FlowEditorSettings.CommonNodeSettings
-        id={id}
-        type={FlowEditorConstants.PipelineNodeTypes.LLM}
-        disabled={isRunningPipeline || disabled}
-        structuredOutputTestId="pipeline-llm-node-structured-output-toggle"
-      />
+      <FlowEditorNodePanel.NodeConfigSection>
+        <FlowEditorSelect.ToolkitsSelect
+          id={id}
+          disabled={isRunningPipeline || disabled}
+          data-testid="pipeline-llm-node-toolkits-select"
+        />
+        {Object.keys(yamlNode?.tool_names || {}).map(toolkitName => {
+          const toolkitObj = allToolkits.find(
+            tk => (tk.toolkit_name || getToolkitNameFromSchema(tk)) === toolkitName,
+          );
+          const allTools = (toolkitObj?.tools || toolkitObj?.settings?.selected_tools || []).map(tool =>
+            typeof tool === 'string' ? tool : tool.name,
+          );
+          const availableTools = getSelectedTools(toolkitObj?.type);
+          const tools =
+            Array.isArray(availableTools) && availableTools.length > 0
+              ? allTools.filter(tool => availableTools.includes(tool))
+              : allTools;
+          return (
+            <FlowEditorSelect.LLMToolsSelect
+              key={toolkitName}
+              toolkitName={toolkitName}
+              id={id}
+              tools={tools}
+              disabled={isRunningPipeline || disabled}
+            />
+          );
+        })}
+        <FlowEditorSettings.SimpleLLMInputs
+          keys={BASIC_INPUT_KEYS}
+          inputMappings={inputMappings}
+          values={yamlNode?.input_mapping || {}}
+          onChangeMapping={onChangeMapping}
+          defaultValues={defaultValues}
+          disabled={isRunningPipeline || disabled}
+          nodeType={FlowEditorConstants.PipelineNodeTypes.LLM}
+          enableAIAssistant
+          modelConfig={pipelineLLMConfig}
+          gap="1rem"
+          testIdsByKey={LLM_NODE_INPUT_TEST_IDS}
+        />
+      </FlowEditorNodePanel.NodeConfigSection>
+      <FlowEditorNodePanel.NodeConfigSection section={NodePanelConstants.NODE_CONFIG_SECTIONS.advanced}>
+        <FlowEditorSelect.InputSelect
+          id={id}
+          label="Input"
+          disabled={isRunningPipeline || disabled}
+          inputFieldName="input"
+          dataTestId="pipeline-llm-node-input-select"
+        />
+        <FlowEditorSelect.OutputSelect
+          id={id}
+          label="Output"
+          outputFieldName="output"
+          disabled={isRunningPipeline || disabled}
+          dataTestId="pipeline-llm-node-output-select"
+        />
+        <FlowEditorSettings.SimpleLLMInputs
+          keys={ADVANCED_INPUT_KEYS}
+          inputMappings={inputMappings}
+          values={yamlNode?.input_mapping || {}}
+          onChangeMapping={onChangeMapping}
+          defaultValues={defaultValues}
+          disabled={isRunningPipeline || disabled}
+          nodeType={FlowEditorConstants.PipelineNodeTypes.LLM}
+          enableAIAssistant
+          modelConfig={pipelineLLMConfig}
+          gap="1rem"
+          testIdsByKey={LLM_NODE_INPUT_TEST_IDS}
+        />
+        <FlowEditorSettings.CommonNodeSettings
+          id={id}
+          type={FlowEditorConstants.PipelineNodeTypes.LLM}
+          disabled={isRunningPipeline || disabled}
+          structuredOutputTestId="pipeline-llm-node-structured-output-toggle"
+        />
+      </FlowEditorNodePanel.NodeConfigSection>
     </FlowEditorNodes.NodeCard>
   );
 });

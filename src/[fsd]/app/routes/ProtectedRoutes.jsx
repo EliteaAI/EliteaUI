@@ -9,6 +9,7 @@ import IntegrationGuard from '@/[fsd]/app/routes/IntegrationGuard';
 import LegacyCatalogRedirect from '@/[fsd]/app/routes/LegacyCatalogRedirect';
 import PageTitleSetter from '@/[fsd]/app/routes/PageTitleSetter';
 import ProtectedRoute from '@/[fsd]/app/routes/ProtectedRoute';
+import RemountOnEntityChange from '@/[fsd]/app/routes/RemountOnEntityChange';
 import SkillsGuard from '@/[fsd]/app/routes/SkillsGuard';
 import { ChunkHelpers } from '@/[fsd]/shared/lib/helpers';
 import { useSelectedProjectId } from '@/[fsd]/shared/lib/hooks';
@@ -215,7 +216,14 @@ const ProtectedRoutes = memo(() => {
       { path: RouteDefinitions.Applications, element: getIndexElement(ApplicationsTabs[0]) },
       { path: RouteDefinitions.CreateApplication, element: <CreateApplication /> },
       { path: RouteDefinitions.ApplicationsWithTab, element: <Applications /> },
-      { path: RouteDefinitions.ApplicationsDetail, element: <EditApplication /> },
+      {
+        path: RouteDefinitions.ApplicationsDetail,
+        element: (
+          <RemountOnEntityChange>
+            <EditApplication />
+          </RemountOnEntityChange>
+        ),
+      },
       { path: RouteDefinitions.ApplicationsRunHistory, element: <AgentRunHistory /> },
       { path: RouteDefinitions.ApplicationsRunAnalytics, element: <AgentRunAnalytics /> },
       { path: RouteDefinitions.ApplicationsEvaluate, element: <AgentEvaluatePage /> },
@@ -299,7 +307,14 @@ const ProtectedRoutes = memo(() => {
       { path: RouteDefinitions.Pipelines, element: getIndexElement(ApplicationsTabs[0]) },
       { path: RouteDefinitions.CreatePipeline, element: <CreatePipeline /> },
       { path: RouteDefinitions.PipelinesWithTab, element: <Pipelines /> },
-      { path: RouteDefinitions.PipelineDetail, element: <EditPipeline /> },
+      {
+        path: RouteDefinitions.PipelineDetail,
+        element: (
+          <RemountOnEntityChange>
+            <EditPipeline />
+          </RemountOnEntityChange>
+        ),
+      },
 
       { path: RouteDefinitions.PipelineRunHistory, element: <PipelineRunHistory /> },
       { path: RouteDefinitions.PipelineRunAnalytics, element: <PipelineRunAnalytics /> },
@@ -351,8 +366,22 @@ const ProtectedRoutes = memo(() => {
 
       // user public
       { path: RouteDefinitions.UserPublicWithTab, element: <UserPublic /> },
-      { path: RouteDefinitions.UserPublicApplicationDetail, element: <EditApplication /> },
-      { path: RouteDefinitions.UserPublicPipelineDetail, element: <EditPipeline /> },
+      {
+        path: RouteDefinitions.UserPublicApplicationDetail,
+        element: (
+          <RemountOnEntityChange>
+            <EditApplication />
+          </RemountOnEntityChange>
+        ),
+      },
+      {
+        path: RouteDefinitions.UserPublicPipelineDetail,
+        element: (
+          <RemountOnEntityChange>
+            <EditPipeline />
+          </RemountOnEntityChange>
+        ),
+      },
       { path: RouteDefinitions.UserPublicToolkitDetail, element: <EditToolkit /> },
       { path: RouteDefinitions.UserPublicMCPDetail, element: <EditToolkit isMCP /> },
       { path: RouteDefinitions.UserPublicAppDetail, element: <AppDetail /> },

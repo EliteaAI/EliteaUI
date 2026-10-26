@@ -303,7 +303,8 @@ const ConditionNode = memo(props => {
                     className="nopan nodrag nowheel"
                     sx={styles.outputChip(borderColor)}
                     deleteIcon={<RemoveIcon />}
-                    onDelete={onRemoveOutput(item)}
+                    disabled={isRunningPipeline || disabled}
+                    onDelete={isRunningPipeline || disabled ? undefined : onRemoveOutput(item)}
                   />
                 </StyledTooltip>
               );

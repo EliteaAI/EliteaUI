@@ -4,7 +4,11 @@ import { AIAssistantInput } from '@/[fsd]/features/pipelines/ai-assistant/ui';
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { useNodeAiAssistantConfig } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
-import { FlowEditorNodes, FlowEditorSettings } from '@/[fsd]/features/pipelines/flow-editor/ui';
+import {
+  FlowEditorNodePanel,
+  FlowEditorNodes,
+  FlowEditorSettings,
+} from '@/[fsd]/features/pipelines/flow-editor/ui';
 import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
 import usePrinterInputMapping from '@/hooks/pipeline/usePrinterInputMapping';
 import { useEdges } from '@xyflow/react';
@@ -91,41 +95,43 @@ const PrinterNode = memo(props => {
         );
       }}
     >
-      <FlowEditorSettings.SimpleLLMInputs
-        inputMappings={inputMappings}
-        values={yamlNode?.input_mapping || {}}
-        onChangeMapping={onChangeMapping}
-        defaultValues={defaultValues}
-        disabled={isRunningPipeline || disabled}
-        enableAIAssistant={true}
-        modelConfig={pipelineLLMConfig}
-        testIdsByKey={PRINTER_NODE_INPUT_TEST_IDS}
-      />
-      <AIAssistantInput
-        multiline
-        fullWidth
-        disabled={isRunningPipeline || disabled}
-        autoComplete="off"
-        showexpandicon="true"
-        collapseContent
-        showCopyAction={true}
-        showExpandAction={true}
-        variant="standard"
-        name="final_message"
-        label="Final Message"
-        placeholder=""
-        value={finalMessageValue}
-        onInput={handleFinalMessageChange}
-        hasActionsToolBar
-        fieldName="Final Message"
-        language="text"
-        containerProps={{
-          marginBottom: '0rem !important',
-          className: 'nowheel',
-        }}
-        modelConfig={pipelineLLMConfig}
-        inputProps={{ 'data-testid': 'pipeline-printer-node-final-message-input' }}
-      />
+      <FlowEditorNodePanel.NodeConfigSection>
+        <FlowEditorSettings.SimpleLLMInputs
+          inputMappings={inputMappings}
+          values={yamlNode?.input_mapping || {}}
+          onChangeMapping={onChangeMapping}
+          defaultValues={defaultValues}
+          disabled={isRunningPipeline || disabled}
+          enableAIAssistant={true}
+          modelConfig={pipelineLLMConfig}
+          testIdsByKey={PRINTER_NODE_INPUT_TEST_IDS}
+        />
+        <AIAssistantInput
+          multiline
+          fullWidth
+          disabled={isRunningPipeline || disabled}
+          autoComplete="off"
+          showexpandicon="true"
+          collapseContent
+          showCopyAction={true}
+          showExpandAction={false}
+          variant="standard"
+          name="final_message"
+          label="Final message"
+          placeholder=""
+          value={finalMessageValue}
+          onInput={handleFinalMessageChange}
+          hasActionsToolBar
+          fieldName="Final Message"
+          language="text"
+          containerProps={{
+            marginBottom: '0rem !important',
+            className: 'nowheel',
+          }}
+          modelConfig={pipelineLLMConfig}
+          inputProps={{ 'data-testid': 'pipeline-printer-node-final-message-input' }}
+        />
+      </FlowEditorNodePanel.NodeConfigSection>
     </FlowEditorNodes.NodeCard>
   );
 });

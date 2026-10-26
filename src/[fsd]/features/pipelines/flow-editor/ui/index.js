@@ -7,3 +7,4 @@ export * as FlowEditorState from './state';
 export * as FlowEditorTestPipeline from './test-pipeline';
 
 export { default as FlowEditor } from './FlowEditor';
+export * as FlowEditorNodePanel from './node-panel';

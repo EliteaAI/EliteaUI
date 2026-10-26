@@ -1,10 +1,17 @@
 import { memo, useCallback, useContext, useMemo } from 'react';
 
 import { AIAssistantInput } from '@/[fsd]/features/pipelines/ai-assistant/ui';
-import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
+import {
+  FlowEditorConstants,
+  NodePanelConstants,
+} from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { useNodeAiAssistantConfig, useNodeOptions } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
-import { FlowEditorNodes, FlowEditorSelect } from '@/[fsd]/features/pipelines/flow-editor/ui';
+import {
+  FlowEditorNodePanel,
+  FlowEditorNodes,
+  FlowEditorSelect,
+} from '@/[fsd]/features/pipelines/flow-editor/ui';
 import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
 import { Chip } from '@/[fsd]/shared/ui';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
@@ -133,58 +140,62 @@ const RouterNode = memo(props => {
           );
         }}
       >
-        <AIAssistantInput
-          disabled={isRunningPipeline || disabled}
-          autoComplete="off"
-          showexpandicon="true"
-          collapseContent
-          showCopyAction={true}
-          showExpandAction={true}
-          multiline
-          variant="standard"
-          fullWidth
-          name="condition"
-          label="Condition"
-          placeholder=""
-          value={conditionValue}
-          onInput={handleConditionFilling}
-          hasActionsToolBar
-          fieldName="Condition"
-          language="jinja"
-          containerProps={{
-            marginBottom: '0rem !important',
-            className: 'nowheel',
-          }}
-          modelConfig={pipelineLLMConfig}
-          inputProps={{ 'data-testid': 'pipeline-router-node-condition-input' }}
-        />
-        <FlowEditorSelect.RouteSelect
-          id={id}
-          label="Routes"
-          fieldName="routes"
-          disabled={isRunningPipeline || disabled}
-          nodesFilter={node => node.id !== id}
-          addEndNode
-          dataTestId="pipeline-router-node-routes-select"
-        />
-        <FlowEditorSelect.InputSelect
-          id={id}
-          label="Input"
-          inputFieldName="input"
-          disabled={isRunningPipeline || disabled}
-          dataTestId="pipeline-router-node-input-select"
-        />
-        <SingleSelect
-          sx={styles.defaultOutputSelect}
-          labelNode={<Chip.HeadingChip label="Default output" />}
-          value={default_output_node}
-          onValueChange={handleDefaultOutput}
-          options={routes}
-          disabled={isRunningPipeline || disabled}
-          showBorder
-          className="nopan nodrag"
-          data-testid="pipeline-router-node-default-output-select"
-        />
+        <FlowEditorNodePanel.NodeConfigSection>
+          <AIAssistantInput
+            disabled={isRunningPipeline || disabled}
+            autoComplete="off"
+            showexpandicon="true"
+            collapseContent
+            showCopyAction={true}
+            showExpandAction={false}
+            multiline
+            variant="standard"
+            fullWidth
+            name="condition"
+            label="Condition"
+            placeholder=""
+            value={conditionValue}
+            onInput={handleConditionFilling}
+            hasActionsToolBar
+            fieldName="Condition"
+            language="jinja"
+            containerProps={{
+              marginBottom: '0rem !important',
+              className: 'nowheel',
+            }}
+            modelConfig={pipelineLLMConfig}
+            inputProps={{ 'data-testid': 'pipeline-router-node-condition-input' }}
+          />
+          <FlowEditorSelect.RouteSelect
+            id={id}
+            label="Routes"
+            fieldName="routes"
+            disabled={isRunningPipeline || disabled}
+            nodesFilter={node => node.id !== id}
+            addEndNode
+            dataTestId="pipeline-router-node-routes-select"
+          />
+          <SingleSelect
+            sx={styles.defaultOutputSelect}
+            labelNode={<Chip.HeadingChip label="Default output" />}
+            value={default_output_node}
+            onValueChange={handleDefaultOutput}
+            options={routes}
+            disabled={isRunningPipeline || disabled}
+            showBorder
+            className="nopan nodrag"
+            data-testid="pipeline-router-node-default-output-select"
+          />
+        </FlowEditorNodePanel.NodeConfigSection>
+        <FlowEditorNodePanel.NodeConfigSection section={NodePanelConstants.NODE_CONFIG_SECTIONS.advanced}>
+          <FlowEditorSelect.InputSelect
+            id={id}
+            label="Input"
+            inputFieldName="input"
+            disabled={isRunningPipeline || disabled}
+            dataTestId="pipeline-router-node-input-select"
+          />
+        </FlowEditorNodePanel.NodeConfigSection>
       </FlowEditorNodes.NodeCard>
     </>
   );

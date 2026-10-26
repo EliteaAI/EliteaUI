@@ -697,6 +697,11 @@ const lightPalette = {
         status: { running: magentaDefault, error: dangerRed, needsConfiguration: dangerRed },
         badge: { entrypoint: { background: hoverBlue, text: white } },
       },
+      panel: {
+        background: white,
+        border: light30,
+        shadow: shadowBoxDefault,
+      },
     },
     contextHighlight: { background: contextHighlightBg },
     aiParticipantIcon: { background: skyBlue20 },

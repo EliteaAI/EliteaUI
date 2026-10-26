@@ -60,6 +60,7 @@ const PROMPT_PAGE_INPUT = {
  * @param {Object} [props.inputRef] - Ref for input element
  * @param {function} [props.onFullScreen] - Full-screen button click handler
  * @param {React.ReactNode} [props.fullScreenIcon] - Custom full-screen icon
+ * @param {Array} [props.extraActions] - Extra toolbar buttons before full screen: { key, title, icon, onClick }
  * @param {string} [props.tooltipDescription] - Optional description for info icon tooltip next to label
  * @param {boolean} [props.forceShowActionsToolbar=false] - Force actions toolbar to show (e.g. for Storybook demos)
  * @param {Object} props...rest - All other props passed through to TextField
@@ -100,6 +101,7 @@ const InputBase = memo(props => {
     helperTextTestId,
     forceShowActionsToolbar = false,
     fullScreenButtonProps = {},
+    extraActions,
     labelVariant,
     // eslint-disable-next-line no-unused-vars
     fieldName, // Extract but don't use - prevents DOM warning when passed from parent
@@ -229,6 +231,7 @@ const InputBase = memo(props => {
         iconSizeSx={styles.iconSize}
         fullScreenButtonProps={fullScreenButtonProps}
         isOutlined={isOutlined}
+        extraActions={extraActions}
       />
     ) : null;
 

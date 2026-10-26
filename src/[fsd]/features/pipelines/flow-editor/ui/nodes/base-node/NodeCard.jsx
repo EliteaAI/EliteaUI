@@ -1,21 +1,32 @@
-import { memo, useContext, useMemo } from 'react';
+import { memo, useContext, useEffect, useMemo } from 'react';
 
 import { Box, useTheme } from '@mui/material';
 
 import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
-import { NodeCardHelpers, NodeConfigHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
-import NodeBodyContainer from '@/[fsd]/features/pipelines/flow-editor/ui/nodes/base-node/NodeBodyContainer';
+import {
+  NodeCardHelpers,
+  NodeConfigHelpers,
+  NodeHelpers,
+  NodeSummaryHelpers,
+} from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
+import NodeConfigSection from '@/[fsd]/features/pipelines/flow-editor/ui/node-panel/NodeConfigSection';
 import NodeCardHeader from '@/[fsd]/features/pipelines/flow-editor/ui/nodes/base-node/NodeCardHeader';
-import { TriggerTypeSelector } from '@/[fsd]/features/pipelines/flow-editor/ui/settings';
-import { FlowEditorContext, NodeCardContext } from '@/[fsd]/shared/lib/context';
+import NodeSummary from '@/[fsd]/features/pipelines/flow-editor/ui/nodes/base-node/NodeSummary';
+import { FlowEditorContext, NodeCardContext, NodeConfigPanelContext } from '@/[fsd]/shared/lib/context';
 import { useStore } from '@xyflow/react';
 
 const selectIsMiniCard = state => NodeCardHelpers.isMiniCardZoom(state.transform[2]);
 
+/**
+ * On the canvas the card is view-only: header plus a two-line summary. Inside the node configuration
+ * panel the same node component renders its fields (`children`) instead.
+ */
 const NodeCard = memo(props => {
   const { name, isEntrypoint, children, selected, handles, isPerforming, type, id, requiredInputs } = props;
   const theme = useTheme();
-  const { isRunningPipeline, expandAll, disabled, yamlJsonObject } = useContext(FlowEditorContext);
+  const { isRunningPipeline, expandAll, yamlJsonObject, reportNodeIssues } = useContext(FlowEditorContext);
+  const panelContext = useContext(NodeConfigPanelContext);
+  const isPanel = Boolean(panelContext);
   const isMiniCard = useStore(selectIsMiniCard);
   const isExpanded = expandAll && !isMiniCard;
 
@@ -27,6 +38,21 @@ const NodeCard = memo(props => {
     () => NodeConfigHelpers.getNodeConfigIssues(yamlNode, { requiredInputs }),
     [requiredInputs, yamlNode],
   );
+  const isDeprecated = NodeHelpers.isDeprecatedNodeType(type);
+  const summary = useMemo(
+    () => NodeSummaryHelpers.getNodeSummary(yamlNode, { type, isDeprecated, requiredInputs }),
+    [isDeprecated, requiredInputs, type, yamlNode],
+  );
+
+  useEffect(() => {
+    if (isPanel || !reportNodeIssues) return;
+    reportNodeIssues(id, configIssues);
+  }, [configIssues, id, isPanel, reportNodeIssues]);
+
+  useEffect(() => {
+    if (isPanel || !reportNodeIssues) return;
+    return () => reportNodeIssues(id, []);
+  }, [id, isPanel, reportNodeIssues]);
 
   const status = NodeCardHelpers.getNodeCardStatus({
     isPerforming,
@@ -34,6 +60,10 @@ const NodeCard = memo(props => {
   });
   const cardState = { status, selected, isRunningPipeline };
   const cardContextValue = useMemo(() => ({ isExpanded }), [isExpanded]);
+
+  if (isPanel) {
+    return panelContext.isLegacyLayout ? <NodeConfigSection>{children}</NodeConfigSection> : children;
+  }
 
   const styles = nodeCardStyles({
     isExpanded,
@@ -56,16 +86,17 @@ const NodeCard = memo(props => {
             isEntrypoint={isEntrypoint}
             name={name}
             type={type}
-            id={id}
-            disabled={disabled}
             status={status}
             configIssues={configIssues}
           />
         </Box>
-        <NodeBodyContainer display={isExpanded ? 'flex' : 'none'}>
-          {isEntrypoint && <TriggerTypeSelector disabled={isRunningPipeline || disabled} />}
-          {children}
-        </NodeBodyContainer>
+        {isExpanded && (
+          <NodeSummary
+            primary={summary.primary}
+            secondary={summary.secondary}
+            isNotConfigured={configIssues.length > 0}
+          />
+        )}
         {handles && handles(isExpanded)}
       </Box>
     </NodeCardContext.Provider>
@@ -91,6 +122,7 @@ const nodeCardStyles = ({ isExpanded, borderColor, boxShadow, hasHover, headerCo
     boxShadow,
     backgroundColor: palette.components.flowEditor.card.background,
     transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
+    cursor: 'pointer',
     ...(hasHover && {
       '&:hover': {
         borderColor: palette.components.flowEditor.card.border.hover,

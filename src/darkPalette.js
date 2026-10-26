@@ -731,6 +731,11 @@ const darkPalette = {
         status: { running: cyanPressed, error: dangerRed, needsConfiguration: dangerRed },
         badge: { entrypoint: { background: hoverBlue, text: white } },
       },
+      panel: {
+        background: gray50,
+        border: gray30,
+        shadow: `-0.25rem 0 1.25rem 0 ${nodeCardShadow}`,
+      },
     },
     contextHighlight: { background: contextHighlightBg },
     aiParticipantIcon: { background: skyBlue20 },

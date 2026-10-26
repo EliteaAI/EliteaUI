@@ -41,6 +41,7 @@ export * from './usePreventDoubleClick.hooks';
 export * from './useGetComponentHeight.hooks';
 export * from './useCardLayout.hooks';
 export * from './useChangeNameInUrlSearchParams.hooks';
+export * from './useStaleSaveGuard.hooks';
 export * from './useIsTableView.hooks';
 export * from './useBrowserPageTitle.hooks';
 export * from './useEditorNavBlocking.hooks';

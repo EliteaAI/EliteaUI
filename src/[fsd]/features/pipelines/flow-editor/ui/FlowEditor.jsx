@@ -34,6 +34,7 @@ import {
 } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
 import {
   FlowEditorEmptyState,
+  FlowEditorNodePanel,
   FlowEditorNodes,
   FlowEditorSettings,
   FlowEditorState,
@@ -67,7 +68,24 @@ const { GA_EVENT_NAMES, GA_EVENT_PARAMS } = AnalyticConstants;
 
 const END_NODE_OFFSET = { x: 160, y: 120 };
 
+// The first fit waits for React Flow to measure the nodes; until then they stay hidden
+const INITIAL_FIT_DELAY = 150;
+
 const selectIsMiniZoom = state => NodeCardHelpers.isMiniCardZoom(state.transform[2]);
+
+// Clicks on these canvas nodes never open the configuration panel
+const NON_CONFIGURABLE_NODE_TYPES = [
+  FlowEditorConstants.PipelineNodeTypes.End,
+  FlowEditorConstants.PipelineNodeTypes.Ghost,
+  FlowEditorConstants.RUN_STATE_NODE,
+];
+
+// Esc inside a dialog, menu, popover or text field belongs to that control, not to the panel
+const isEscapeHandledElsewhere = target =>
+  Boolean(
+    target?.closest?.('[role="dialog"], [role="presentation"], [role="menu"], [role="listbox"]') ||
+    target?.closest?.('input, textarea, [contenteditable="true"]'),
+  );
 
 const edgeTypes = {
   custom: FlowEditorNodes.CustomEdge,
@@ -99,13 +117,26 @@ const nodeTypes = {
 
 const FlowEditor = memo(
   forwardRef((props, ref) => {
-    const { setYamlJsonObject, stopRun, sx, disabled, isVisible = true, ...leftProps } = props;
+    const {
+      setYamlJsonObject,
+      stopRun,
+      sx,
+      disabled,
+      isVisible = true,
+      onNodeIssuesChange,
+      ...leftProps
+    } = props;
     const styles = flowEditorStyles();
 
     const trackEvent = useTrackEvent();
 
     const [expandAll, setExpandAll] = useState(true);
     const [isStateDrawerOpen, setIsStateDrawerOpen] = useState(false);
+    const [selectedNodeId, setSelectedNodeId] = useState(null);
+    // The node the panel shows; it outlives the selection while the close animation runs
+    const [panelNodeId, setPanelNodeId] = useState(null);
+    const [nodeIssuesById, setNodeIssuesById] = useState({});
+    const isDraggingNodeRef = useRef(false);
 
     const { setNodes, setEdges } = useSaveNodesAndEdges();
 
@@ -125,6 +156,21 @@ const FlowEditor = memo(
     const nodesInitialized = useNodesInitialized({
       includeHiddenNodes: true,
     });
+
+    // Nodes stay invisible until the opening fit (or auto-arrange) is done, so they don't jump on open
+    const [isViewportReady, setIsViewportReady] = useState(() => initialNodes.length <= 2);
+    const revealTimerRef = useRef();
+
+    const fitThenReveal = useCallback(() => {
+      setIsViewportReady(false);
+      clearTimeout(revealTimerRef.current);
+      revealTimerRef.current = setTimeout(() => {
+        fitView();
+        requestAnimationFrame(() => setIsViewportReady(true));
+      }, INITIAL_FIT_DELAY);
+    }, [fitView]);
+
+    useEffect(() => () => clearTimeout(revealTimerRef.current), []);
 
     const [editorWidth, setEditorWidth] = useState(622);
     const [editorHeight, setEditorHeight] = useState(677);
@@ -217,12 +263,10 @@ const FlowEditor = memo(
       setTimeout(() => {
         setNodes(initialNodes);
         setEdges(initialEdges);
-
-        // Fit view after sync completes
-        if (initialNodes.length > 2) {
-          fitView();
-        }
       }, 150);
+
+      if (initialNodes.length > 2) fitThenReveal();
+      else setIsViewportReady(true);
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isVisible, resetFlag, resetVersion, initialNodes, initialEdges]);
 
@@ -304,6 +348,7 @@ const FlowEditor = memo(
         trackEvent(GA_EVENT_NAMES.PIPELINE_NODE_CREATED, {
           [GA_EVENT_PARAMS.NODE_TYPE]: type,
         });
+        setSelectedNodeId(newNode.id);
 
         return newFlowNode;
       },
@@ -313,7 +358,14 @@ const FlowEditor = memo(
     const onAddNode = useCallback(
       type => {
         const viewPort = getViewport();
-        const viewSize = getViewSize();
+        // The new node opens the overlaying node panel, so it must land left of it
+        const viewSize = {
+          ...getViewSize(),
+          width: Math.max(
+            getViewSize().width - FlowEditorConstants.NODE_PANEL_WIDTH,
+            FlowEditorConstants.NODE_CARD_WIDTH,
+          ),
+        };
         const size = {
           width: FlowEditorConstants.NODE_CARD_WIDTH,
           height:
@@ -501,6 +553,101 @@ const FlowEditor = memo(
       openFromHandleRef.current(args);
     }, []);
 
+    const closeNodePanel = useCallback(() => {
+      setSelectedNodeId(null);
+      setFlowNodes(prevNodes =>
+        prevNodes.some(node => node.selected)
+          ? prevNodes.map(node => (node.selected ? { ...node, selected: false } : node))
+          : prevNodes,
+      );
+    }, [setFlowNodes]);
+
+    const onNodeClick = useCallback((_event, node) => {
+      if (isDraggingNodeRef.current) return;
+      if (NON_CONFIGURABLE_NODE_TYPES.includes(node.type)) {
+        setSelectedNodeId(null);
+        return;
+      }
+      setSelectedNodeId(node.id);
+    }, []);
+
+    const onNodeDragStart = useCallback(() => {
+      isDraggingNodeRef.current = true;
+    }, []);
+
+    const onNodeDragStop = useCallback(() => {
+      // React Flow fires the click after the drag stop, so release the guard on the next tick
+      setTimeout(() => {
+        isDraggingNodeRef.current = false;
+      }, 0);
+    }, []);
+
+    const onPaneClick = useCallback(() => {
+      setSelectedNodeId(null);
+    }, []);
+
+    const onNodeRenamed = useCallback((previousId, newId) => {
+      setSelectedNodeId(prevId => (prevId === previousId ? newId : prevId));
+      setPanelNodeId(prevId => (prevId === previousId ? newId : prevId));
+    }, []);
+
+    const onNodePanelExited = useCallback(() => {
+      setPanelNodeId(null);
+    }, []);
+
+    const reportNodeIssues = useCallback((nodeId, issues) => {
+      setNodeIssuesById(prev => {
+        const previousIssues = prev[nodeId] || [];
+        if (
+          previousIssues.length === issues.length &&
+          previousIssues.every((issue, index) => issue === issues[index])
+        ) {
+          return prev;
+        }
+        const next = { ...prev };
+        if (issues.length) next[nodeId] = issues;
+        else delete next[nodeId];
+        return next;
+      });
+    }, []);
+
+    useEffect(() => {
+      onNodeIssuesChange?.(nodeIssuesById);
+    }, [nodeIssuesById, onNodeIssuesChange]);
+
+    const selectedFlowNode = useMemo(
+      () => (selectedNodeId ? flowNodes.find(node => node.id === selectedNodeId) : null),
+      [flowNodes, selectedNodeId],
+    );
+    // The selected node renders in the same commit the drawer opens, so the open animation has content
+    // to measure. After deselection the last node stays until the close animation ends; a deleted node
+    // has no flow node left, so the panel closes empty.
+    const isNodePanelOpen = Boolean(selectedFlowNode);
+    const panelFlowNode = useMemo(
+      () => selectedFlowNode || (panelNodeId ? flowNodes.find(node => node.id === panelNodeId) : null),
+      [flowNodes, panelNodeId, selectedFlowNode],
+    );
+
+    useEffect(() => {
+      if (selectedNodeId) setPanelNodeId(selectedNodeId);
+    }, [selectedNodeId]);
+
+    // Deleted, renamed away by YAML, or reset: the panel has nothing left to show
+    useEffect(() => {
+      if (selectedNodeId && !selectedFlowNode) setSelectedNodeId(null);
+    }, [selectedFlowNode, selectedNodeId]);
+
+    useEffect(() => {
+      if (!selectedNodeId || !isVisible) return;
+      const onKeyDown = event => {
+        if (event.key !== 'Escape' || event.defaultPrevented || isEscapeHandledElsewhere(event.target))
+          return;
+        closeNodePanel();
+      };
+      document.addEventListener('keydown', onKeyDown);
+      return () => document.removeEventListener('keydown', onKeyDown);
+    }, [closeNodePanel, isVisible, selectedNodeId]);
+
     const onReLayout = specifiedExpandAll => {
       calculateLayoutNodes(yamlJsonObject, true, true, specifiedExpandAll || expandAll);
       setTimeout(() => {
@@ -547,11 +694,7 @@ const FlowEditor = memo(
     }, []);
 
     useEffect(() => {
-      if (initialNodes.length > 2) {
-        setTimeout(() => {
-          fitView();
-        }, 100);
-      }
+      if (initialNodes.length > 2) fitThenReveal();
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [initialNodes.length]);
 
@@ -581,6 +724,8 @@ const FlowEditor = memo(
     useEffect(() => {
       if (layout_version !== FlowEditorConstants.LAYOUT_VERSION && nodesInitialized) {
         onReLayout();
+        // Keeps the nodes hidden through the auto-arrange so the reorder isn't visible either
+        if (flowNodes.length > 2) fitThenReveal();
         dispatch(actions.setLayoutVersion(FlowEditorConstants.LAYOUT_VERSION));
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -588,42 +733,9 @@ const FlowEditor = memo(
 
     return (
       <Box
-        sx={[styles.container, sx]}
-        data-tour={PIPELINE_TOUR_TARGET_IDS.flowDesigner}
-        ref={editorRef}
+        sx={[sx, styles.root(sx?.display === 'none')]}
         {...leftProps}
       >
-        <Box sx={styles.stateBar}>
-          <FlowEditorNodes.RunStateNodeGroup
-            deleteRunNode={deleteRunNode}
-            handleStopRun={handleStopRun}
-            yamlJsonObject={yamlJsonObject}
-            editorHeight={editorHeight}
-            editorWidth={editorWidth}
-            nodes={pipelineRunNodes}
-          />
-        </Box>
-        {!isStateDrawerOpen && (
-          <Box
-            sx={styles.stateButton(theme)}
-            data-tour={PIPELINE_TOUR_TARGET_IDS.state}
-          >
-            <Button.BaseBtn
-              variant={BUTTON_VARIANTS.elitea}
-              color={BUTTON_COLORS.secondary}
-              onClick={onToggleStateDrawer}
-              startIcon={
-                <Box sx={styles.iconScale}>
-                  <ClipboardIcon />
-                </Box>
-              }
-              sx={styles.stateDrawerButton}
-              data-testid="pipeline-state-drawer-toggle-button"
-            >
-              State
-            </Button.BaseBtn>
-          </Box>
-        )}
         <FlowEditorProvider
           setFlowEdges={setFlowEdges}
           setFlowNodes={setFlowNodes}
@@ -637,114 +749,171 @@ const FlowEditor = memo(
           onAddFromHandle={disabled ? undefined : onAddFromHandle}
           expandAll={expandAll}
           disabled={disabled}
+          reportNodeIssues={reportNodeIssues}
+          onConnectNodes={onConnect}
         >
-          <ReactFlow
-            panOnDrag // figma/sketch/design tool controls, panOnDrag should be disabled
-            panOnScroll // figma/sketch/design tool controls, panOnScroll should be enabled
-            selectionOnDrag // figma/sketch/design tool controls, selectionOnDrag should be enabled
-            nodes={visibleFlowNodes}
-            onNodesChange={onNodesChange}
-            edges={flowEdges}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            onBeforeDelete={onBeforeDelete}
-            {...handlers}
-            colorMode={theme.palette.mode === 'dark' ? 'dark' : 'light'}
-            proOptions={{ hideAttribution: true }}
-            nodeTypes={nodeTypes}
-            edgeTypes={edgeTypes}
-            zoomOnDoubleClick={false}
-            selectionMode={SelectionMode.Partial} // enabled adding nodes to a selection that are only partially selected.
-            minZoom={0.1}
-            defaultViewport={styles.defaultViewport}
+          <Box
+            sx={styles.container(isViewportReady)}
+            data-tour={PIPELINE_TOUR_TARGET_IDS.flowDesigner}
+            ref={editorRef}
           >
-            <Background
-              color={theme.palette.border.lines}
-              bgColor={theme.palette.background.default.secondary}
-              size={1.5}
-              offset={[0, 2]}
-              gap={20}
-            />
-            <Box sx={styles.flowControls}>
-              <Controls>
-                <Tooltip
-                  title="Toggle cards size"
-                  placement="right"
-                >
-                  <Box
-                    component="span"
-                    sx={{
-                      display: 'inline-flex',
-                      borderBottom: `0.0625rem solid ${theme.palette.divider}`,
-                    }}
-                  >
-                    <ControlButton onClick={onExpandAll}>
-                      {expandAll ? (
-                        <CollapseIcon
-                          sx={styles.icon}
-                          fill={theme.palette.icon.secondary}
-                        />
-                      ) : (
-                        <ExpandIcon
-                          sx={styles.icon}
-                          fill={theme.palette.icon.secondary}
-                        />
-                      )}
-                    </ControlButton>
-                  </Box>
-                </Tooltip>
-                <Tooltip
-                  title="Auto-arrange"
-                  placement="right"
-                >
-                  <Box
-                    component="span"
-                    sx={{ display: 'inline-flex' }}
-                  >
-                    <ControlButton onClick={onReLayout}>
-                      <PolylineOutlinedIcon
-                        sx={styles.icon}
-                        fill={theme.palette.icon.secondary}
-                      />
-                    </ControlButton>
-                  </Box>
-                </Tooltip>
-              </Controls>
+            <Box sx={styles.stateBar}>
+              <FlowEditorNodes.RunStateNodeGroup
+                deleteRunNode={deleteRunNode}
+                handleStopRun={handleStopRun}
+                yamlJsonObject={yamlJsonObject}
+                editorHeight={editorHeight}
+                editorWidth={editorWidth}
+                nodes={pipelineRunNodes}
+              />
             </Box>
-          </ReactFlow>
-        </FlowEditorProvider>
-        {isEmptyPipeline && (
-          <FlowEditorEmptyState.FlowEmptyState
-            onAddNode={onAddNode}
-            disabled={disabled}
-          />
-        )}
-        <FlowEditorState.StateDrawer
-          isOpen={isStateDrawerOpen}
-          onClose={onToggleStateDrawer}
-          setYamlJsonObject={setYamlJsonObject}
-          yamlJsonObject={yamlJsonObject}
-          disabled={disabled}
-        />
-        <Modal.DeleteEntityModal
-          open={showDeleteConfirmDlg}
-          onClose={onCancelDelete}
-          onConfirm={onConfirmDelete}
-          name={nodesToDelete[0]?.data?.label || nodesToDelete[0]?.id || ''}
-          inlineExtraContent=" node? It can't be restored."
-        />
+            {!isStateDrawerOpen && (
+              <Box
+                sx={styles.stateButton(theme)}
+                data-tour={PIPELINE_TOUR_TARGET_IDS.state}
+              >
+                <Button.BaseBtn
+                  variant={BUTTON_VARIANTS.elitea}
+                  color={BUTTON_COLORS.secondary}
+                  onClick={onToggleStateDrawer}
+                  startIcon={
+                    <Box sx={styles.iconScale}>
+                      <ClipboardIcon />
+                    </Box>
+                  }
+                  sx={styles.stateDrawerButton}
+                  data-testid="pipeline-state-drawer-toggle-button"
+                >
+                  State
+                </Button.BaseBtn>
+              </Box>
+            )}
+            <ReactFlow
+              panOnDrag // figma/sketch/design tool controls, panOnDrag should be disabled
+              panOnScroll // figma/sketch/design tool controls, panOnScroll should be enabled
+              selectionOnDrag // figma/sketch/design tool controls, selectionOnDrag should be enabled
+              nodes={visibleFlowNodes}
+              onNodesChange={onNodesChange}
+              edges={flowEdges}
+              onEdgesChange={onEdgesChange}
+              onConnect={onConnect}
+              onBeforeDelete={onBeforeDelete}
+              onNodeClick={onNodeClick}
+              onNodeDragStart={onNodeDragStart}
+              onNodeDragStop={onNodeDragStop}
+              onPaneClick={onPaneClick}
+              {...handlers}
+              colorMode={theme.palette.mode === 'dark' ? 'dark' : 'light'}
+              proOptions={{ hideAttribution: true }}
+              nodeTypes={nodeTypes}
+              edgeTypes={edgeTypes}
+              zoomOnDoubleClick={false}
+              selectionMode={SelectionMode.Partial} // enabled adding nodes to a selection that are only partially selected.
+              minZoom={0.1}
+              defaultViewport={styles.defaultViewport}
+            >
+              <Background
+                color={theme.palette.border.lines}
+                bgColor={theme.palette.background.default.secondary}
+                size={1.5}
+                offset={[0, 2]}
+                gap={20}
+              />
+              <Box sx={styles.flowControls}>
+                <Controls>
+                  <Tooltip
+                    title="Toggle cards size"
+                    placement="right"
+                  >
+                    <Box
+                      component="span"
+                      sx={{
+                        display: 'inline-flex',
+                        borderBottom: `0.0625rem solid ${theme.palette.divider}`,
+                      }}
+                    >
+                      <ControlButton onClick={onExpandAll}>
+                        {expandAll ? (
+                          <CollapseIcon
+                            sx={styles.icon}
+                            fill={theme.palette.icon.secondary}
+                          />
+                        ) : (
+                          <ExpandIcon
+                            sx={styles.icon}
+                            fill={theme.palette.icon.secondary}
+                          />
+                        )}
+                      </ControlButton>
+                    </Box>
+                  </Tooltip>
+                  <Tooltip
+                    title="Auto-arrange"
+                    placement="right"
+                  >
+                    <Box
+                      component="span"
+                      sx={{ display: 'inline-flex' }}
+                    >
+                      <ControlButton onClick={onReLayout}>
+                        <PolylineOutlinedIcon
+                          sx={styles.icon}
+                          fill={theme.palette.icon.secondary}
+                        />
+                      </ControlButton>
+                    </Box>
+                  </Tooltip>
+                </Controls>
+              </Box>
+            </ReactFlow>
+            {isEmptyPipeline && (
+              <FlowEditorEmptyState.FlowEmptyState
+                onAddNode={onAddNode}
+                disabled={disabled}
+              />
+            )}
+            <FlowEditorState.StateDrawer
+              isOpen={isStateDrawerOpen}
+              onClose={onToggleStateDrawer}
+              setYamlJsonObject={setYamlJsonObject}
+              yamlJsonObject={yamlJsonObject}
+              disabled={disabled}
+            />
+            <FlowEditorNodePanel.NodeConfigDrawer
+              open={isNodePanelOpen}
+              onExited={onNodePanelExited}
+              container={editorRef.current}
+            >
+              {panelFlowNode && (
+                <FlowEditorNodePanel.NodeConfigPanel
+                  flowNode={panelFlowNode}
+                  NodeComponent={nodeTypes[panelFlowNode.type]}
+                  onClose={closeNodePanel}
+                  onRenamed={onNodeRenamed}
+                />
+              )}
+            </FlowEditorNodePanel.NodeConfigDrawer>
+            <Modal.DeleteEntityModal
+              open={showDeleteConfirmDlg}
+              onClose={onCancelDelete}
+              onConfirm={onConfirmDelete}
+              name={nodesToDelete[0]?.data?.label || nodesToDelete[0]?.id || ''}
+              inlineExtraContent=" node? It can't be restored."
+            />
 
-        {/* Connection dropdown for incomplete edges */}
-        <FlowEditorSettings.ConnectionDropdown
-          open={showConnectionDropdown}
-          anchorPosition={dropdownPosition}
-          anchorEl={dropdownAnchorEl}
-          targetNodes={availableTargets}
-          availableNodeTypes={availableNodeTypes}
-          onNodeSelect={handleNodeSelect}
-          onNodeCreate={handleNodeCreate}
-          onClose={handleDropdownClose}
-        />
+            {/* Connection dropdown for incomplete edges */}
+            <FlowEditorSettings.ConnectionDropdown
+              open={showConnectionDropdown}
+              anchorPosition={dropdownPosition}
+              anchorEl={dropdownAnchorEl}
+              targetNodes={availableTargets}
+              availableNodeTypes={availableNodeTypes}
+              onNodeSelect={handleNodeSelect}
+              onNodeCreate={handleNodeCreate}
+              onClose={handleDropdownClose}
+            />
+          </Box>
+        </FlowEditorProvider>
       </Box>
     );
   }),
@@ -754,17 +923,27 @@ FlowEditor.displayName = 'FlowEditor';
 
 /** @type {MuiSx} */
 const flowEditorStyles = () => ({
+  root: isHidden => ({
+    display: isHidden ? 'none' : 'flex',
+    minWidth: 0,
+  }),
   stateButton: theme => ({
     position: 'absolute',
     top: theme.spacing(2.5),
     right: theme.spacing(2.5),
     zIndex: 100,
   }),
-  container: {
+  // Only the nodes and edges layer fades in; the dotted background and controls stay visible
+  container: isViewportReady => ({
     height: '100%',
     position: 'relative',
-    width: '100%',
-  },
+    flex: 1,
+    minWidth: 0,
+    '& .react-flow__viewport': {
+      opacity: isViewportReady ? 1 : 0,
+      transition: isViewportReady ? 'opacity 0.15s ease-in' : 'none',
+    },
+  }),
   stateBar: {
     position: 'absolute',
     top: '1.25rem',

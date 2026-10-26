@@ -1,9 +1,12 @@
-import { memo, useCallback, useContext, useMemo } from 'react';
+import { Fragment, memo, useCallback, useContext, useMemo } from 'react';
 
 import { Box, Typography } from '@mui/material';
 
 import StyledTooltip from '@/ComponentsLib/Tooltip';
-import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
+import {
+  FlowEditorConstants,
+  NodePanelConstants,
+} from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import {
   useInputOptions,
@@ -11,14 +14,13 @@ import {
   useNodeOptions,
 } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
 import {
+  FlowEditorNodePanel,
   FlowEditorNodes,
   FlowEditorSelect,
   FlowEditorSettings,
 } from '@/[fsd]/features/pipelines/flow-editor/ui';
-import { AccordionConstants } from '@/[fsd]/shared/lib/constants';
 import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
 import { Chip } from '@/[fsd]/shared/ui';
-import { BasicAccordion } from '@/[fsd]/shared/ui/accordion';
 import { SingleSelect } from '@/[fsd]/shared/ui/select';
 import { useEdges } from '@xyflow/react';
 
@@ -182,7 +184,76 @@ const HITLNode = memo(props => {
         );
       }}
     >
-      <Box sx={styles.section}>
+      <FlowEditorNodePanel.NodeConfigSection>
+        <FlowEditorSettings.SimpleLLMInputItem
+          variableName="user_message"
+          variable="user_message"
+          type={userMessageType}
+          value={userMessageValue}
+          defaultValue=""
+          onChangeMapping={handleUserMessageMappingChange}
+          disabled={isRunningPipeline || disabled}
+          enableAIAssistant
+          modelConfig={pipelineLLMConfig}
+          typeSelectTestId="pipeline-hitl-node-user-message-type-select"
+          valueFieldTestId="pipeline-hitl-node-user-message-value-input"
+        />
+        <Box
+          sx={styles.section}
+          data-testid="pipeline-hitl-node-router-mapping-section"
+        >
+          {HITL_ACTIONS.map(action => (
+            <Fragment key={action.value}>
+              <Box sx={styles.controlGroup}>
+                <Chip.HeadingChip label={action.chipLabel} />
+                <SingleSelect
+                  sx={styles.routeSelect}
+                  label="Route"
+                  value={routes[action.value] || ''}
+                  onValueChange={value => handleRouteChange(action.value, value)}
+                  options={action.value === 'edit' ? editRouteOptions : nodeOptions}
+                  disabled={
+                    isRunningPipeline ||
+                    disabled ||
+                    (action.value === 'edit' && !trimmedEditStateKey && !hasConfiguredEditRoute)
+                  }
+                  error={action.value === 'edit' && isEditRouteInvalid}
+                  showBorder
+                  className="nopan nodrag"
+                  data-testid={`pipeline-hitl-node-route-select-${action.value}`}
+                />
+              </Box>
+              {action.value === 'edit' && (
+                <Box sx={styles.controlGroup}>
+                  <Chip.HeadingChip label="Edit state key" />
+                  <SingleSelect
+                    sx={styles.routeSelect}
+                    label="Value"
+                    value={editStateKey}
+                    onValueChange={handleEditStateKeyChange}
+                    options={editStateKeyOptions}
+                    disabled={isRunningPipeline || disabled}
+                    error={isEditRouteInvalid}
+                    showBorder
+                    className="nopan nodrag"
+                    data-testid="pipeline-hitl-node-edit-state-key-select"
+                  />
+                  {isEditRouteInvalid && (
+                    <Typography
+                      variant="bodySmall"
+                      color="error.main"
+                      sx={styles.validationText}
+                    >
+                      Provide an edit state key before using the Edit route.
+                    </Typography>
+                  )}
+                </Box>
+              )}
+            </Fragment>
+          ))}
+        </Box>
+      </FlowEditorNodePanel.NodeConfigSection>
+      <FlowEditorNodePanel.NodeConfigSection section={NodePanelConstants.NODE_CONFIG_SECTIONS.advanced}>
         <StyledTooltip
           title={isInputSelectDisabledByMessageType ? INPUT_SELECT_TOOLTIP : ''}
           placement="top"
@@ -205,88 +276,7 @@ const HITLNode = memo(props => {
             />
           </Box>
         </StyledTooltip>
-
-        <FlowEditorSettings.SimpleLLMInputItem
-          variableName="user_message"
-          variable="user_message"
-          type={userMessageType}
-          value={userMessageValue}
-          defaultValue=""
-          onChangeMapping={handleUserMessageMappingChange}
-          disabled={isRunningPipeline || disabled}
-          enableAIAssistant
-          modelConfig={pipelineLLMConfig}
-          typeSelectTestId="pipeline-hitl-node-user-message-type-select"
-          valueFieldTestId="pipeline-hitl-node-user-message-value-input"
-        />
-      </Box>
-
-      <BasicAccordion
-        showMode={AccordionConstants.AccordionShowMode.LeftMode}
-        accordionSX={styles.accordion}
-        summarySX={styles.accordionSummary}
-        titleSX={styles.accordionTitle}
-        accordionDetailsSX={styles.accordionDetails}
-        data-testid="pipeline-hitl-node-router-mapping-section"
-        items={[
-          {
-            title: 'Router mapping',
-            content: (
-              <Box sx={styles.section}>
-                {HITL_ACTIONS.map(action => (
-                  <Box
-                    key={action.value}
-                    sx={styles.controlGroup}
-                  >
-                    <Chip.HeadingChip label={action.chipLabel} />
-                    <SingleSelect
-                      sx={styles.routeSelect}
-                      label="Route"
-                      value={routes[action.value] || ''}
-                      onValueChange={value => handleRouteChange(action.value, value)}
-                      options={action.value === 'edit' ? editRouteOptions : nodeOptions}
-                      disabled={
-                        isRunningPipeline ||
-                        disabled ||
-                        (action.value === 'edit' && !trimmedEditStateKey && !hasConfiguredEditRoute)
-                      }
-                      error={action.value === 'edit' && isEditRouteInvalid}
-                      showBorder
-                      className="nopan nodrag"
-                      data-testid={`pipeline-hitl-node-route-select-${action.value}`}
-                    />
-                  </Box>
-                ))}
-              </Box>
-            ),
-          },
-        ]}
-      />
-
-      <Box sx={[styles.controlGroup, { marginBottom: '1rem' }]}>
-        <Chip.HeadingChip label="Edit state key" />
-        <SingleSelect
-          sx={styles.routeSelect}
-          label="Value"
-          value={editStateKey}
-          onValueChange={handleEditStateKeyChange}
-          options={editStateKeyOptions}
-          disabled={isRunningPipeline || disabled}
-          error={isEditRouteInvalid}
-          showBorder
-          className="nopan nodrag"
-          data-testid="pipeline-hitl-node-edit-state-key-select"
-        />
-      </Box>
-      {isEditRouteInvalid && (
-        <Typography
-          variant="bodySmall"
-          color="error.main"
-          sx={styles.validationText}
-        >
-          Provide an edit state key before using the Edit route.
-        </Typography>
-      )}
+      </FlowEditorNodePanel.NodeConfigSection>
     </FlowEditorNodes.NodeCard>
   );
 });
@@ -302,25 +292,8 @@ const hitlNodeStyles = () => ({
   section: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '1.25rem',
+    gap: '1rem',
     width: '100%',
-    marginBottom: '1rem',
-  },
-  accordion: ({ palette }) => ({
-    background: palette.background.default.tertiary,
-  }),
-  accordionSummary: ({ palette }) => ({
-    background: palette.background.surface.interactive.default,
-    borderRadius: '0.5rem',
-    minHeight: '2rem',
-    marginBottom: '0.75rem',
-  }),
-  accordionTitle: ({ palette }) => ({
-    color: palette.text.secondary,
-  }),
-  accordionDetails: {
-    paddingLeft: '0rem',
-    marginTop: '0.5rem',
   },
   controlGroup: {
     display: 'flex',

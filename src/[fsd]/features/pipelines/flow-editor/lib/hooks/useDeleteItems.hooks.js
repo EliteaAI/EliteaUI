@@ -122,7 +122,7 @@ export const useDeleteItems = ({
   }, []);
 
   useEffect(() => {
-    if (display !== 'none' && deletePressed) {
+    if (display !== 'none' && deletePressed && !disabled) {
       const nodes = flowNodes.filter(node => node.selected);
       const edges = flowEdges.filter(edge => edge.selected);
       if (nodes.length || edges.length) {

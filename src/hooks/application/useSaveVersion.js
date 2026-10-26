@@ -12,6 +12,7 @@ import {
   useChangeNameInUrlSearchParams,
   useIsFrom,
   useSelectedProjectId,
+  useStaleSaveGuard,
   useToast,
 } from '@/[fsd]/shared/lib/hooks';
 import { cleanLLMSettings } from '@/[fsd]/shared/lib/utils';
@@ -57,8 +58,16 @@ const useSaveVersion = ({ isAgent = false } = {}) => {
   const { isFromPipeline: checkedFromPipelineViaPath, yamlCode } = useSavePipeline();
   const isFromPipeline = !isAgent && checkedFromPipelineViaPath;
   const { id: currentUserId } = useSelector(state => state.user);
+  const { captureSaveTarget, isSaveTargetCurrent } = useStaleSaveGuard(values?.id);
 
   const onSave = useCallback(async () => {
+    // The form must belong to the agent or pipeline in the URL, otherwise its data would land on another entity
+    if (agentId && values?.id && String(values.id) !== String(agentId)) {
+      toastError('This page is still loading another agent or pipeline. Reload the page and try again.');
+      return false;
+    }
+    const saveTarget = captureSaveTarget();
+
     if ((await onSaveTools()) === false) {
       return false; // Stop if toolkit save failed
     }
@@ -165,6 +174,12 @@ const useSaveVersion = ({ isAgent = false } = {}) => {
       newAgentType: savedVersionDetails.agent_type,
     });
 
+    // The user moved to another agent or pipeline while this save was in flight. The caches above are
+    // keyed by the saved entity, but the form and URL now belong to the other one and must stay untouched.
+    if (!isSaveTargetCurrent(saveTarget)) {
+      return false;
+    }
+
     // Only update URL name if NOT in chat (name should remain conversation name in chat)
     if (!isFromChat) {
       handleChangeName(name);
@@ -197,6 +212,10 @@ const useSaveVersion = ({ isAgent = false } = {}) => {
     dispatch,
     handleChangeName,
     syncParticipant,
+    agentId,
+    values?.id,
+    captureSaveTarget,
+    isSaveTargetCurrent,
   ]);
 
   useEffect(() => {

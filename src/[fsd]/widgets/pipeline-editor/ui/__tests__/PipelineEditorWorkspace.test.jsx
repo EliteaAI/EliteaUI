@@ -134,19 +134,19 @@ describe('PipelineEditorWorkspace', () => {
     expect(screen.getByTestId('editor-panel')).toHaveAttribute('data-test-panel-open', 'false');
   });
 
-  it('opens and closes the Test panel and re-fits the canvas each time', () => {
+  it('opens and closes the Test panel without changing the canvas zoom or position', () => {
     renderWorkspace({ applicationId: 3 });
 
     fireEvent.click(screen.getByTestId('test-pipeline'));
     act(() => vi.runAllTimers());
     expect(screen.getByTestId('test-region')).toHaveAttribute('data-open', 'true');
     expect(screen.getByTestId('editor-panel')).toHaveAttribute('data-test-panel-open', 'true');
-    expect(fitView).toHaveBeenCalledTimes(1);
+    expect(fitView).not.toHaveBeenCalled();
 
     fireEvent.click(screen.getByTestId('close-test-panel'));
     act(() => vi.runAllTimers());
     expect(screen.getByTestId('test-region')).toHaveAttribute('data-open', 'false');
-    expect(fitView).toHaveBeenCalledTimes(2);
+    expect(fitView).not.toHaveBeenCalled();
   });
 
   it('stops runs through the Test panel chat', () => {

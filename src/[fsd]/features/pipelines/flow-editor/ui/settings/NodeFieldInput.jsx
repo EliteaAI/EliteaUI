@@ -60,7 +60,9 @@ const NodeFieldInput = memo(props => {
     onKeyUp: handleCursorChange,
     hasActionsToolBar: true,
     showCopyAction: true,
-    showExpandAction: true,
+    // Long values open in full screen; there is no inline expand in node fields
+    showExpandAction: false,
+    showFullScreenAction: true,
     fieldName: variableName,
     language,
     multiline: true,

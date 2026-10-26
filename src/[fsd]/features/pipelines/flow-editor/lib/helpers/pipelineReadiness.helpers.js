@@ -8,6 +8,8 @@ export const TEST_BLOCK_REASONS = {
   noPathToEnd: 'Connect the entry point to End to test the pipeline.',
 };
 
+export const getNodeNotConfiguredReason = (nodeId, issue) => `Configure node "${nodeId}": ${issue}`;
+
 export const isEndReachable = (edges = [], startId) => {
   const targetsBySource = edges.reduce((acc, { source, target }) => {
     if (source && target) {
@@ -48,8 +50,9 @@ const getImplicitEndEdges = yamlNodes =>
     })
     .map(node => ({ source: node.id, target: PipelineNodeTypes.End }));
 
-// Returns '' when the flow can be tested, otherwise the reason shown in the Test Pipeline tooltip
-export const getTestBlockReason = yamlJsonObject => {
+// Returns '' when the flow can be tested, otherwise the reason shown in the Test Pipeline tooltip.
+// `nodeIssuesById` holds what each node card reports as "Not configured".
+export const getTestBlockReason = (yamlJsonObject, nodeIssuesById = {}) => {
   const yamlNodes = yamlJsonObject?.nodes?.filter(Boolean) || [];
   const entryPoint = yamlJsonObject?.entry_point;
 
@@ -63,7 +66,12 @@ export const getTestBlockReason = yamlJsonObject => {
     return TEST_BLOCK_REASONS.noPathToEnd;
   }
 
-  return isEndReachable([...edges, ...getImplicitEndEdges(yamlNodes)], entryPoint)
-    ? ''
-    : TEST_BLOCK_REASONS.noPathToEnd;
+  if (!isEndReachable([...edges, ...getImplicitEndEdges(yamlNodes)], entryPoint)) {
+    return TEST_BLOCK_REASONS.noPathToEnd;
+  }
+
+  const notConfiguredNode = yamlNodes.find(node => nodeIssuesById[node.id]?.length);
+  return notConfiguredNode
+    ? getNodeNotConfiguredReason(notConfiguredNode.id, nodeIssuesById[notConfiguredNode.id][0])
+    : '';
 };

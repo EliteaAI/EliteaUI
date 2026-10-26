@@ -1,10 +1,17 @@
 import { memo, useCallback, useContext, useMemo } from 'react';
 
 import { AIAssistantInput } from '@/[fsd]/features/pipelines/ai-assistant/ui';
-import { FlowEditorConstants } from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
+import {
+  FlowEditorConstants,
+  NodePanelConstants,
+} from '@/[fsd]/features/pipelines/flow-editor/lib/constants';
 import { FlowEditorHelpers } from '@/[fsd]/features/pipelines/flow-editor/lib/helpers';
 import { useNodeAiAssistantConfig } from '@/[fsd]/features/pipelines/flow-editor/lib/hooks';
-import { FlowEditorNodes, FlowEditorSelect } from '@/[fsd]/features/pipelines/flow-editor/ui';
+import {
+  FlowEditorNodePanel,
+  FlowEditorNodes,
+  FlowEditorSelect,
+} from '@/[fsd]/features/pipelines/flow-editor/ui';
 import { FlowEditorContext } from '@/[fsd]/shared/lib/context';
 import { useEdges } from '@xyflow/react';
 
@@ -64,52 +71,56 @@ const StateModifierNode = memo(props => {
         );
       }}
     >
-      <AIAssistantInput
-        multiline
-        fullWidth
-        disabled={isRunningPipeline || disabled}
-        autoComplete="off"
-        showexpandicon="true"
-        collapseContent
-        showCopyAction={true}
-        showExpandAction={true}
-        variant="standard"
-        name="template"
-        label="Jinja Template"
-        placeholder=""
-        value={templateValue}
-        onInput={handleTemplateFilling}
-        hasActionsToolBar
-        fieldName="Template"
-        language="jinja"
-        containerProps={{
-          marginBottom: '0rem !important',
-          className: 'nowheel',
-        }}
-        modelConfig={pipelineLLMConfig}
-        inputProps={{ 'data-testid': 'pipeline-state-modifier-node-template-input' }}
-      />
-      <FlowEditorSelect.InputSelect
-        id={id}
-        label="Variables to clean"
-        inputFieldName="variables_to_clean"
-        disabled={isRunningPipeline || disabled}
-        dataTestId="pipeline-state-modifier-node-variables-to-clean-select"
-      />
-      <FlowEditorSelect.InputSelect
-        id={id}
-        label="Input"
-        inputFieldName="input"
-        disabled={isRunningPipeline || disabled}
-        dataTestId="pipeline-state-modifier-node-input-select"
-      />
-      <FlowEditorSelect.OutputSelect
-        id={id}
-        label="Output"
-        outputFieldName="output"
-        disabled={isRunningPipeline || disabled}
-        dataTestId="pipeline-state-modifier-node-output-select"
-      />
+      <FlowEditorNodePanel.NodeConfigSection>
+        <AIAssistantInput
+          multiline
+          fullWidth
+          disabled={isRunningPipeline || disabled}
+          autoComplete="off"
+          showexpandicon="true"
+          collapseContent
+          showCopyAction={true}
+          showExpandAction={false}
+          variant="standard"
+          name="template"
+          label="Jinja Template"
+          placeholder=""
+          value={templateValue}
+          onInput={handleTemplateFilling}
+          hasActionsToolBar
+          fieldName="Template"
+          language="jinja"
+          containerProps={{
+            marginBottom: '0rem !important',
+            className: 'nowheel',
+          }}
+          modelConfig={pipelineLLMConfig}
+          inputProps={{ 'data-testid': 'pipeline-state-modifier-node-template-input' }}
+        />
+        <FlowEditorSelect.InputSelect
+          id={id}
+          label="Variables to clean"
+          inputFieldName="variables_to_clean"
+          disabled={isRunningPipeline || disabled}
+          dataTestId="pipeline-state-modifier-node-variables-to-clean-select"
+        />
+      </FlowEditorNodePanel.NodeConfigSection>
+      <FlowEditorNodePanel.NodeConfigSection section={NodePanelConstants.NODE_CONFIG_SECTIONS.advanced}>
+        <FlowEditorSelect.InputSelect
+          id={id}
+          label="Input"
+          inputFieldName="input"
+          disabled={isRunningPipeline || disabled}
+          dataTestId="pipeline-state-modifier-node-input-select"
+        />
+        <FlowEditorSelect.OutputSelect
+          id={id}
+          label="Output"
+          outputFieldName="output"
+          disabled={isRunningPipeline || disabled}
+          dataTestId="pipeline-state-modifier-node-output-select"
+        />
+      </FlowEditorNodePanel.NodeConfigSection>
     </FlowEditorNodes.NodeCard>
   );
 });

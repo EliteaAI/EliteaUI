@@ -11,34 +11,6 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
 import NodeCardHeader from '../NodeCardHeader';
 
-const onStartEditing = vi.fn();
-
-vi.mock('@/[fsd]/features/pipelines/flow-editor/lib/hooks', () => ({
-  useNodeRename: ({ name }) => ({
-    isEditingName: false,
-    inputtedName: name,
-    onStartEditing,
-    onChange: vi.fn(),
-    onBlur: vi.fn(),
-  }),
-}));
-
-vi.mock('@/components/DotMenu', () => ({
-  default: ({ children }) => (
-    <div data-testid="node-menu">
-      {children.map(item => (
-        <button
-          key={item.label}
-          disabled={item.disabled}
-          onClick={item.onClick}
-        >
-          {item.label}
-        </button>
-      ))}
-    </div>
-  ),
-}));
-
 const { PipelineNodeTypes, NodeCardStatus } = FlowEditorConstants;
 
 const theme = createTheme({ palette: darkPalette });
@@ -77,12 +49,13 @@ describe('NodeCardHeader', () => {
     expect(screen.getByTestId('pipeline-node-type')).toHaveTextContent('Printer');
   });
 
-  it('starts renaming on double click', () => {
+  it('is view-only: no rename on double click', () => {
     renderHeader();
 
     fireEvent.doubleClick(screen.getByTestId('pipeline-node-name'));
 
-    expect(onStartEditing).toHaveBeenCalled();
+    expect(screen.queryByRole('textbox')).toBeNull();
+    expect(screen.getByTestId('pipeline-node-name')).toHaveTextContent('printer_1');
   });
 
   it('shows the Entrypoint badge only on the entry node', () => {
@@ -122,40 +95,10 @@ describe('NodeCardHeader', () => {
     expect(screen.getByText('Fill in the required input: repo')).toBeInTheDocument();
   });
 
-  it('offers Make entrypoint and Delete for a regular node', () => {
-    const context = renderHeader();
-
-    fireEvent.click(screen.getByText('Make entrypoint'));
-    expect(context.setYamlJsonObject).toHaveBeenCalledWith({
-      ...context.yamlJsonObject,
-      entry_point: 'printer_1',
-    });
-
-    fireEvent.click(screen.getByText('Delete'));
-    expect(context.handleDeleteNode).toHaveBeenCalledWith('printer_1');
-  });
-
-  it('offers only Delete on the entry node and on Decision', () => {
-    renderHeader({ isEntrypoint: true });
-    expect(screen.queryByText('Make entrypoint')).toBeNull();
-    expect(screen.getByText('Delete')).toBeInTheDocument();
-
-    cleanup();
-    renderHeader({ type: PipelineNodeTypes.Decision });
-    expect(screen.queryByText('Make entrypoint')).toBeNull();
-  });
-
-  it('disables the menu actions in read-only mode', () => {
-    renderHeader({ disabled: true });
-
-    expect(screen.getByText('Make entrypoint')).toBeDisabled();
-    expect(screen.getByText('Delete')).toBeDisabled();
-  });
-
-  it('keeps the menu available on a collapsed card', () => {
+  it('has no actions menu: entrypoint and delete live in the node panel', () => {
     renderHeader();
 
-    expect(screen.getByTestId('node-menu')).toBeInTheDocument();
-    expect(screen.getByText('Delete')).toBeInTheDocument();
+    expect(screen.queryByText('Make entrypoint')).toBeNull();
+    expect(screen.queryByText('Delete')).toBeNull();
   });
 });
