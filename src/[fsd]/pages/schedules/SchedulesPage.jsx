@@ -83,7 +83,9 @@ const SchedulesPage = () => {
   const total = currentData?.total;
   const hasNoRows = currentData && !currentData.rows?.length;
   useEffect(() => {
-    if (hasNoRows && page > 0) setPage(Math.max(Math.ceil(total / pageSize) - 1, 0));
+    if (!hasNoRows || page <= 0) return;
+    // Without a total the page cannot be computed: go back one page
+    setPage(Number.isFinite(total) ? Math.max(Math.ceil(total / pageSize) - 1, 0) : page - 1);
   }, [hasNoRows, page, pageSize, total]);
 
   // Any filter or search change starts at the first page
