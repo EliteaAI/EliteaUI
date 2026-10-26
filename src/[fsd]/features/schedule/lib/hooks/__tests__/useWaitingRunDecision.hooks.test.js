@@ -33,7 +33,7 @@ const ok = () => ({ unwrap: () => Promise.resolve({}) });
 const fail = error => ({ unwrap: () => Promise.reject(error) });
 const request = { action: 'approve', conversationUuid: 'c-1', messageId: 'm-1' };
 
-const DEFAULT_SCHEDULE = { created_by: 5 };
+const DEFAULT_SCHEDULE = { owner: { id: 5 }, created_by: 9 };
 
 const setup = (schedule = DEFAULT_SCHEDULE) =>
   renderHook(() => useWaitingRunDecision({ schedule, onDecided: mocks.refetch })).result;
@@ -42,7 +42,7 @@ describe('useWaitingRunDecision EL-7011', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('R3.1 EL-7011 gives a non-owner no handler', () => {
-    expect(setup({ created_by: 9 }).current).toBeUndefined();
+    expect(setup({ owner: { id: 9 }, created_by: 5 }).current).toBeUndefined();
   });
 
   it('R2.3 EL-7011 sends the decision and refetches the run rows', async () => {

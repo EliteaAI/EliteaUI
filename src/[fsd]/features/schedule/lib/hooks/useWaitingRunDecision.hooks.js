@@ -32,5 +32,5 @@ export const useWaitingRunDecision = ({ schedule, onDecided }) => {
     [decideWaitingRun, projectId, onDecided, toastError, toastInfo],
   );
 
-  return schedule?.created_by === userId ? onHitlResume : undefined;
+  return schedule?.owner?.id === userId ? onHitlResume : undefined;
 };
