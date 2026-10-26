@@ -3,7 +3,8 @@
  * validator (`evaluation_expected_trajectory`) is the source of truth; these mirror its rules so the
  * case editor can flag a bad value before saving. Pure.
  *
- * Shape: `{ match, tools: [{ name, args?, args_match? }], forbidden, allow_repeat, max_tool_calls? }`.
+ * Shape: `{ match, calls?, tools: [{ name, args?, args_match? }], forbidden, allow_repeat, max_tool_calls? }`.
+ * `calls` (#7015 P3) is `own` or `all`; absent means `all`.
  */
 
 export const TRAJECTORY_MATCH_MODES = ['superset', 'in_order', 'any_order', 'subset', 'exact'];
@@ -26,6 +27,19 @@ export const TRAJECTORY_MATCH_HINTS = {
   any_order: 'The same calls in any order, nothing else.',
   subset: 'Every call the agent makes is one of the expected ones; some may be skipped.',
   exact: 'The same calls in the same order, nothing else.',
+};
+
+// Which recorded calls `trajectory.tool_match` compares (#7015 P3). Absent is `all`, so only `own` is stored.
+export const DEFAULT_TRAJECTORY_CALLS = 'all';
+
+export const TRAJECTORY_CALLS_OPTIONS = [
+  { value: 'all', label: 'All calls (default)' },
+  { value: 'own', label: "The agent's own calls" },
+];
+
+export const TRAJECTORY_CALLS_HINTS = {
+  all: 'Every recorded call counts, including the calls a sub-agent made inside its own run.',
+  own: 'Only the calls the agent made itself count; a call to a sub-agent counts, what it did inside does not.',
 };
 
 export const ARGS_MATCH_OPTIONS = [
@@ -88,6 +102,7 @@ export const toTrajectoryForm = expected => {
   return {
     enabled,
     match: value?.match || DEFAULT_TRAJECTORY_MATCH,
+    calls: value?.calls === 'own' ? 'own' : DEFAULT_TRAJECTORY_CALLS,
     tools: (value?.tools ?? []).map(tool => {
       const spec = typeof tool === 'string' ? { name: tool } : (tool ?? {});
       return {
@@ -166,6 +181,7 @@ export const fromTrajectoryForm = form => {
     forbidden: lists.forbidden,
     allow_repeat: lists.allow_repeat,
   };
+  if (form.calls === 'own') value.calls = 'own';
   const budgetText = String(form.maxToolCalls ?? '').trim();
   if (budgetText) {
     if (!/^\d+$/.test(budgetText)) {
@@ -205,6 +221,7 @@ export const summarizeExpectedTrajectory = expected => {
   parts.push(
     `${expected.match || DEFAULT_TRAJECTORY_MATCH}: ${names.length ? names.join(' → ') : 'no tools'}`,
   );
+  if (expected.calls === 'own') parts.push("agent's own calls");
   if (expected.forbidden?.length) parts.push(`forbidden: ${expected.forbidden.join(', ')}`);
   if (expected.max_tool_calls != null) parts.push(`max ${expected.max_tool_calls} calls`);
   if (expected.allow_repeat?.length) parts.push(`may repeat: ${expected.allow_repeat.join(', ')}`);
@@ -214,8 +231,11 @@ export const summarizeExpectedTrajectory = expected => {
 /**
  * Expected vs actual, per expected tool and per forbidden tool, by name only (args and the match
  * mode's exact scoring stay with the `trajectory.tool_match` dimension). Display aid, not a score.
+ * `actualNames` are the calls the expected tools are matched against: the agent's own calls when the
+ * reference sets `calls: 'own'`, else every call. `allNames` are every call, which forbidden tools
+ * and the budget always count (#7015 P3).
  */
-export const compareTrajectoryNames = (expected, actualNames) => {
+export const compareTrajectoryNames = (expected, actualNames, allNames = actualNames) => {
   if (!expected || typeof expected !== 'object' || !Object.keys(expected).length) return null;
   const remaining = new Map();
   for (const name of actualNames ?? []) remaining.set(name, (remaining.get(name) ?? 0) + 1);
@@ -227,24 +247,32 @@ export const compareTrajectoryNames = (expected, actualNames) => {
   });
   const expectedNames = new Set(expectedCalls.map(t => t.name));
   const extra = [...new Set((actualNames ?? []).filter(name => !expectedNames.has(name)))];
-  const actualSet = new Set(actualNames ?? []);
+  const actualSet = new Set(allNames ?? []);
   const forbidden = (expected.forbidden ?? []).map(name => ({ name, called: actualSet.has(name) }));
   const budget = expected.max_tool_calls;
   return {
     match: expected.match || DEFAULT_TRAJECTORY_MATCH,
+    calls: expected.calls === 'own' ? 'own' : DEFAULT_TRAJECTORY_CALLS,
     tools,
     extra,
     forbidden,
     budget:
       budget != null
-        ? { max: budget, used: (actualNames ?? []).length, ok: (actualNames ?? []).length <= budget }
+        ? { max: budget, used: (allNames ?? []).length, ok: (allNames ?? []).length <= budget }
         : null,
   };
 };
 
-/** The tool names a recorded trajectory called, in order, read the way the built-in checks read them. */
-export const recordedToolNames = trajectory => {
+/**
+ * The tool names a recorded trajectory called, in order, read the way the built-in checks read them.
+ * With `ownOnly`, the calls a sub-agent made inside its own run are left out, as `trajectory.tool_match`
+ * leaves them out under `calls: 'own'` (#7015 P3). A trajectory with no steps left (all dropped to
+ * fit the size cap) only has `tool_sequence`, which does not say who made each call: `ownOnly` cannot
+ * apply there and every call is returned, as the built-in check also falls back to every call.
+ */
+export const recordedToolNames = (trajectory, { ownOnly = false } = {}) => {
   const steps = trajectory?.steps ?? [];
-  if (steps.length) return steps.filter(s => s?.kind === 'tool').map(s => s.tool_name);
+  if (steps.length)
+    return steps.filter(s => s?.kind === 'tool' && !(ownOnly && s.parent_agent)).map(s => s.tool_name);
   return [...(trajectory?.tool_sequence ?? [])];
 };

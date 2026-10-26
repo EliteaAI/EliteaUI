@@ -174,4 +174,66 @@ describe('recordedToolNames', () => {
     expect(recordedToolNames({ steps: [], tool_sequence: ['z'] })).toEqual(['z']);
     expect(recordedToolNames(undefined)).toEqual([]);
   });
+
+  it('returns the whole sequence under ownOnly when no steps are left', () => {
+    // tool_sequence has no parent_agent; the built-in check also compares every call then
+    expect(
+      recordedToolNames({ steps: [], tool_sequence: ['RD-OrderReader', 'read_file'] }, { ownOnly: true }),
+    ).toEqual(['RD-OrderReader', 'read_file']);
+  });
+});
+
+describe('sub-agent calls (#7015 P3)', () => {
+  const trajectory = {
+    steps: [
+      { kind: 'llm' },
+      { kind: 'tool', tool_name: 'read_file', parent_agent: 'RD-OrderReader' },
+      { kind: 'tool', tool_name: 'RD-OrderReader' },
+      { kind: 'tool', tool_name: 'list_files', parent_agent: 'RD-DecisionReader' },
+      { kind: 'tool', tool_name: 'RD-DecisionReader' },
+    ],
+  };
+
+  it("leaves a sub-agent's own calls out when asked for the agent's calls only", () => {
+    expect(recordedToolNames(trajectory, { ownOnly: true })).toEqual(['RD-OrderReader', 'RD-DecisionReader']);
+    expect(recordedToolNames(trajectory)).toHaveLength(4);
+  });
+
+  it("matches the agent's calls, while forbidden tools and the budget count every call", () => {
+    const diff = compareTrajectoryNames(
+      { tools: ['RD-OrderReader', 'RD-DecisionReader'], forbidden: ['list_files'], max_tool_calls: 3 },
+      recordedToolNames(trajectory, { ownOnly: true }),
+      recordedToolNames(trajectory),
+    );
+    expect(diff.tools.every(t => t.called)).toBe(true);
+    expect(diff.extra).toEqual([]);
+    expect(diff.forbidden).toEqual([{ name: 'list_files', called: true }]);
+    expect(diff.budget).toEqual({ max: 3, used: 4, ok: false });
+  });
+});
+
+describe('calls (#7015 P3)', () => {
+  it('a form without calls compares every call, and saves without the key', () => {
+    const form = toTrajectoryForm({ tools: ['a'] });
+    expect(form.calls).toBe('all');
+    expect(fromTrajectoryForm(form).value).not.toHaveProperty('calls');
+  });
+
+  it("keeps calls: 'own' through the form", () => {
+    const own = { match: 'superset', calls: 'own', tools: [{ name: 'a' }], forbidden: [], allow_repeat: [] };
+    expect(fromTrajectoryForm(toTrajectoryForm(own))).toEqual({ value: own, error: null });
+  });
+
+  it('switching calls is a change', () => {
+    const initial = toTrajectoryForm({ tools: ['a'] });
+    expect(isTrajectoryFormChanged({ ...initial, calls: 'own' }, initial)).toBe(true);
+  });
+
+  it("the summary and the comparison say when only the agent's own calls count", () => {
+    expect(summarizeExpectedTrajectory({ calls: 'own', tools: ['a'] })).toBe(
+      "superset: a · agent's own calls",
+    );
+    expect(compareTrajectoryNames({ calls: 'own', tools: ['a'] }, ['a']).calls).toBe('own');
+    expect(compareTrajectoryNames({ tools: ['a'] }, ['a']).calls).toBe('all');
+  });
 });

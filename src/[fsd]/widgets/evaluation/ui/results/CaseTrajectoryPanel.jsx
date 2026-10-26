@@ -5,17 +5,22 @@ import { Box, CircularProgress, Typography } from '@mui/material';
 import { Accordion } from '@/[fsd]/shared/ui';
 
 import { useEvalCaseExecutionsQuery } from '../../api';
+import { TRAJECTORY_STEP_KIND } from '../../lib/constants';
 import {
+  buildAgentUsageRows,
   buildCaseUsageRows,
   compareTrajectoryNames,
   getCasePauseDetails,
   getTrajectoryMetricItems,
   getTrajectoryStateMessage,
+  getTrajectoryStepDepth,
   getTrajectoryStepMeta,
   getTrajectoryStepTitle,
   isGuardrailStep,
+  isPipelineTrajectory,
   recordedToolNames,
 } from '../../lib/helpers';
+import AgentUsage from './AgentUsage';
 import ExpectedVsActual from './ExpectedVsActual';
 import PauseDetails from './PauseDetails';
 import StepSections from './StepSections';
@@ -33,7 +38,9 @@ const STEP_SLOT_PROPS = { transition: { unmountOnExit: true } };
 /**
  * What the agent did on one case of an offline-batch run (#6809 P1): what the agent and the judge
  * spent on it (#6716), the run counters and the ordered LLM and tool steps. Steps a sub-agent ran are indented under the call that started them.
+ * A pipeline's trajectory also lists the nodes that ran (#7015), each with the node it went to next; the LLM and tool steps a node made are indented under it.
  * When the case carries an `expected_trajectory` (#6809 item 7), the expected calls are set beside the recorded ones.
+ * When the agent called sub-agents, a "By agent" table splits the case's calls, tokens and cost by agent (#7015 P3).
  */
 const CaseTrajectoryPanel = memo(props => {
   const { projectId, runId, datasetCaseId, expectedTrajectory } = props;
@@ -46,14 +53,23 @@ const CaseTrajectoryPanel = memo(props => {
   const execution = data?.executions?.[0] ?? null;
   const steps = execution?.trajectory?.steps ?? [];
   const outputsStored = execution?.trajectory?.tool_outputs_stored;
+  const inPipeline = isPipelineTrajectory(execution?.trajectory);
   const metricItems = useMemo(() => getTrajectoryMetricItems(execution?.metrics), [execution?.metrics]);
   const usageRows = useMemo(() => buildCaseUsageRows(data?.usage), [data?.usage]);
+  const agentUsage = useMemo(
+    () => buildAgentUsageRows(execution?.metrics?.agents),
+    [execution?.metrics?.agents],
+  );
   const stateMessage = getTrajectoryStateMessage(execution);
   const pauseDetails = useMemo(() => getCasePauseDetails(execution), [execution]);
   const comparison = useMemo(
     () =>
       execution?.trajectory
-        ? compareTrajectoryNames(expectedTrajectory, recordedToolNames(execution.trajectory))
+        ? compareTrajectoryNames(
+            expectedTrajectory,
+            recordedToolNames(execution.trajectory, { ownOnly: expectedTrajectory?.calls === 'own' }),
+            recordedToolNames(execution.trajectory),
+          )
         : null,
     [expectedTrajectory, execution?.trajectory],
   );
@@ -82,27 +98,37 @@ const CaseTrajectoryPanel = memo(props => {
       {usageRows.length > 0 && (
         <Box
           sx={styles.usageTable}
+          role="table"
+          aria-label="Usage by role"
           data-testid="case-usage"
         >
-          {USAGE_COLUMNS.map(({ key, label }) => (
-            <Typography
-              key={key}
-              variant="labelSmall"
-              sx={styles.metricLabel}
-            >
-              {label}
-            </Typography>
-          ))}
+          <Box
+            sx={styles.usageRow}
+            role="row"
+          >
+            {USAGE_COLUMNS.map(({ key, label }) => (
+              <Typography
+                key={key}
+                variant="labelSmall"
+                sx={styles.metricLabel}
+                role="columnheader"
+              >
+                {label}
+              </Typography>
+            ))}
+          </Box>
           {usageRows.map(row => (
             <Box
               key={row.role}
               sx={styles.usageRow}
+              role="row"
               data-testid={`case-usage-${row.role}`}
             >
               {USAGE_COLUMNS.map(({ key }) => (
                 <Typography
                   key={key}
                   variant="bodySmall"
+                  role="cell"
                   sx={key === 'cost' && row.isUnpriced ? styles.emptyText : undefined}
                 >
                   {row[key]}
@@ -121,12 +147,20 @@ const CaseTrajectoryPanel = memo(props => {
         </Box>
       )}
 
+      {agentUsage.rows.length > 0 && (
+        <AgentUsage
+          rows={agentUsage.rows}
+          note={agentUsage.note}
+        />
+      )}
+
       {metricItems.length > 0 && (
         <Box sx={styles.metrics}>
-          {metricItems.map(({ label, value }) => (
+          {metricItems.map(({ label, value, title }) => (
             <Box
               key={label}
               sx={styles.metric}
+              title={title}
             >
               <Typography
                 variant="labelSmall"
@@ -165,7 +199,9 @@ const CaseTrajectoryPanel = memo(props => {
               variant="bodySmall"
               sx={styles.emptyText}
             >
-              This trajectory was shortened to fit the storage limit; late payloads may be missing.
+              {inPipeline
+                ? 'This trajectory was shortened: the pipeline ran more nodes than are kept, or it hit the storage limit. Late nodes or payloads may be missing.'
+                : 'This trajectory was shortened to fit the storage limit; late payloads may be missing.'}
             </Typography>
           )}
           {outputsStored === false && (
@@ -184,7 +220,7 @@ const CaseTrajectoryPanel = memo(props => {
               uppercase={false}
               // Mount a step's payload only while it is open: a long run would otherwise render every input and output.
               slotProps={STEP_SLOT_PROPS}
-              style={step.parent_agent ? styles.childStep : undefined}
+              style={stepStyle(styles, step, inPipeline)}
               data-testid={`trajectory-step-${step.i}`}
               items={[
                 {
@@ -195,7 +231,7 @@ const CaseTrajectoryPanel = memo(props => {
                       sx={[
                         styles.stepMeta,
                         step.status === 'error' && styles.stepError,
-                        isGuardrailStep(step) && styles.stepWarning,
+                        (isGuardrailStep(step) || step.status === 'interrupted') && styles.stepWarning,
                       ]}
                     >
                       {[step.parent_agent && `in ${step.parent_agent}`, getTrajectoryStepMeta(step)]
@@ -221,6 +257,12 @@ const CaseTrajectoryPanel = memo(props => {
 
 CaseTrajectoryPanel.displayName = 'CaseTrajectoryPanel';
 
+const stepStyle = (styles, step, inPipeline) => {
+  if (step.kind === TRAJECTORY_STEP_KIND.node) return styles.nodeStep;
+  const depth = getTrajectoryStepDepth(step, { inPipeline });
+  return depth ? styles.childStep(depth) : undefined;
+};
+
 /** @type {MuiSx} */
 const caseTrajectoryPanelStyles = () => ({
   container: {
@@ -245,7 +287,10 @@ const caseTrajectoryPanelStyles = () => ({
     rowGap: '0.25rem',
   },
   usageRow: {
-    display: 'contents',
+    // A subgrid rather than display: contents, which drops the row role in some screen readers.
+    display: 'grid',
+    gridColumn: '1 / -1',
+    gridTemplateColumns: 'subgrid',
   },
   usageNote: ({ palette }) => ({
     gridColumn: '1 / -1',
@@ -270,10 +315,17 @@ const caseTrajectoryPanelStyles = () => ({
     flexDirection: 'column',
     gap: '0.25rem',
   },
-  childStep: ({ palette }) => ({
-    marginLeft: '1.5rem',
-    borderLeft: `0.125rem solid ${palette.border.lines}`,
-    paddingLeft: '0.5rem',
+  childStep:
+    depth =>
+    ({ palette }) => ({
+      marginLeft: `${1.5 * depth}rem`,
+      borderLeft: `0.125rem solid ${palette.border.lines}`,
+      paddingLeft: '0.5rem',
+    }),
+  nodeStep: ({ palette }) => ({
+    marginTop: '0.25rem',
+    borderLeft: `0.25rem solid ${palette.primary.main}`,
+    paddingLeft: '0.25rem',
   }),
   stepMeta: ({ palette }) => ({
     color: palette.text.secondary,

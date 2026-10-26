@@ -23,9 +23,38 @@ export const formatStepTokens = tokens => {
   return `${tokens.in ?? '?'} in / ${tokens.out ?? '?'} out tokens`;
 };
 
+const isNodeStep = step => step?.kind === TRAJECTORY_STEP_KIND.node;
+
+/**
+ * Whether a trajectory is a pipeline's (#7015). A plain agent is a one-node graph too, so its steps
+ * carry `node: 'agent'`; only a pipeline records node steps and a `node_sequence`.
+ */
+export const isPipelineTrajectory = trajectory =>
+  trajectory?.node_sequence != null || (trajectory?.steps ?? []).some(isNodeStep);
+
+/**
+ * How far a step is indented: one level for an LLM or tool call made inside a pipeline node
+ * (#7015), one more when a sub-agent made it. `inPipeline` is {@link isPipelineTrajectory}.
+ */
+export const getTrajectoryStepDepth = (step, { inPipeline = false } = {}) => {
+  if (!step || isNodeStep(step)) return 0;
+  return (inPipeline && step.node ? 1 : 0) + (step.parent_agent ? 1 : 0);
+};
+
+/** Where a pipeline node went next, e.g. `→ Lookup`; null when the trace did not record it. */
+export const getNodeStepNext = step => {
+  const next = step?.edge?.next ?? step?.hitl?.next;
+  return next ? `→ ${next}` : null;
+};
+
 /** The one-line summary of a step: what ran, how it ended, how long it took. */
 export const getTrajectoryStepTitle = step => {
   const index = `#${(step?.i ?? 0) + 1}`;
+  if (isNodeStep(step)) {
+    const nodeName = step.node || 'unknown node';
+    const name = step.node_type ? `${nodeName} (${step.node_type})` : nodeName;
+    return [index, 'Node', name].join(' · ');
+  }
   if (step?.kind === TRAJECTORY_STEP_KIND.tool) {
     return [index, 'Tool', step.tool_name || 'unknown tool'].join(' · ');
   }
@@ -35,7 +64,12 @@ export const getTrajectoryStepTitle = step => {
 
 export const getTrajectoryStepMeta = step => {
   const parts = [];
-  if (step?.kind === TRAJECTORY_STEP_KIND.tool) {
+  if (isNodeStep(step)) {
+    const next = getNodeStepNext(step);
+    if (next) parts.push(next);
+    // A span still open when the run stopped (timeout, crash); the result itself is finished.
+    if (step.status) parts.push(step.status === 'running' ? 'did not finish' : step.status);
+  } else if (step?.kind === TRAJECTORY_STEP_KIND.tool) {
     if (step.status) parts.push(step.status);
     if (step.toolkit) parts.push(step.toolkit);
   } else {
@@ -53,6 +87,33 @@ export const getTrajectoryStepMeta = step => {
 export const OUTPUT_NOT_STORED_NOTE = 'Tool output not stored: this suite keeps tool names and inputs only.';
 export const OUTPUT_SIZE_CUT_NOTE = 'Payload dropped to keep the stored trajectory within its size limit.';
 
+// How the next node was chosen, as the SDK names its edges
+const EDGE_TYPE_LABELS = {
+  transitional: 'Fixed transition',
+  conditional: 'Condition',
+  decision: 'LLM decision',
+};
+
+// "Lookup (Condition)", "Lookup", or "(Condition)" when the trace has the edge but not where it went.
+const formatEdge = edge => {
+  if (!edge) return null;
+  const type = edge.type ? (EDGE_TYPE_LABELS[edge.type] ?? edge.type) : null;
+  if (!edge.next) return type ? `(${type})` : null;
+  return type ? `${edge.next} (${type})` : edge.next;
+};
+
+const nodeStepSections = step => [
+  { label: 'Next node', content: formatEdge(step.edge) },
+  {
+    label: 'Human review',
+    content: step.hitl
+      ? [step.hitl.action, step.hitl.next && `→ ${step.hitl.next}`].filter(Boolean).join(' ')
+      : null,
+  },
+  { label: 'Graph step', content: step.graph_step },
+  { label: 'Error', content: step.error },
+];
+
 /**
  * The labelled payload blocks shown when a step is expanded; empty fields are left out.
  * @param {object} step - Trajectory step
@@ -61,6 +122,9 @@ export const OUTPUT_SIZE_CUT_NOTE = 'Payload dropped to keep the stored trajecto
  */
 export const getTrajectoryStepSections = (step, { outputsStored } = {}) => {
   if (!step) return [];
+  if (isNodeStep(step)) {
+    return nodeStepSections(step).filter(({ content }) => content != null && content !== '');
+  }
   const sections =
     step.kind === TRAJECTORY_STEP_KIND.tool
       ? [
@@ -86,10 +150,59 @@ export const getTrajectoryStateMessage = execution => {
   );
 };
 
+// Core's `await_dispatch` states (evaluation_dispatch.py); the deadline one has no `dispatch_` prefix.
+const DISPATCH_STATE_LABELS = {
+  reconciled: 'reconciled',
+  timeout: 'timed out',
+  dispatch_not_reconciled: 'not reconciled',
+  dispatch_too_many_waves: 'too many waves',
+  dispatch_reconcile_failed: 'reconcile failed',
+  dispatch_cancelled: 'cancelled',
+  dispatch_error: 'wait failed',
+};
+
+/** A dispatched sub-agent fan-out (#7015), e.g. "reconciled · 1 wave · 2 sub-agents"; null when none. */
+export const formatDispatchMetric = metrics => {
+  if (!metrics?.dispatch_state) return null;
+  return [
+    DISPATCH_STATE_LABELS[metrics.dispatch_state] ?? metrics.dispatch_state,
+    metrics.dispatch_waves != null && plural(metrics.dispatch_waves, 'wave'),
+    metrics.dispatch_children != null && plural(metrics.dispatch_children, 'sub-agent'),
+  ]
+    .filter(Boolean)
+    .join(' · ');
+};
+
+const MAX_NODE_PATH_ITEMS = 12;
+
+/**
+ * A pipeline's node path for the counters row: repeats in a row collapse (`Ask ×3`) and a long
+ * path is cut after {@link MAX_NODE_PATH_ITEMS} entries. `full` is the whole path, for a tooltip.
+ * @returns {{ short: string, full: string } | null}
+ */
+export const formatNodePath = path => {
+  if (!Array.isArray(path) || !path.length) return null;
+  const runs = [];
+  for (const node of path) {
+    const last = runs[runs.length - 1];
+    if (last && last.node === node) last.count += 1;
+    else runs.push({ node, count: 1 });
+  }
+  const labels = runs.map(({ node, count }) => (count > 1 ? `${node} ×${count}` : String(node)));
+  const cut = labels.length > MAX_NODE_PATH_ITEMS;
+  const shown = cut
+    ? [...labels.slice(0, MAX_NODE_PATH_ITEMS), `… ${labels.length - MAX_NODE_PATH_ITEMS} more`]
+    : labels;
+  return { short: shown.join(' → '), full: path.join(' → ') };
+};
+
 /** The run counters (G8) as label/value pairs, in a fixed order; absent counters are skipped. */
 export const getTrajectoryMetricItems = metrics => {
   if (!metrics) return [];
   const items = [
+    ['Dispatch', formatDispatchMetric(metrics)],
+    ['Nodes', metrics.node_count],
+    ['Node path', formatNodePath(metrics.node_path)],
     ['LLM calls', metrics.llm_calls],
     ['Tool calls', metrics.tool_calls],
     ['Distinct tools', metrics.distinct_tools],
@@ -102,7 +215,11 @@ export const getTrajectoryMetricItems = metrics => {
   ];
   return items
     .filter(([, value]) => value != null)
-    .map(([label, value]) => ({ label, value: String(value) }));
+    .map(([label, value]) =>
+      value?.short != null
+        ? { label, value: value.short, title: value.full }
+        : { label, value: String(value) },
+    );
 };
 
 /** Whether a tool step was stopped by a guardrail rather than run. */
@@ -121,10 +238,14 @@ const PAUSE_POLICY_LABELS = { fail_case: 'Fail the case' };
 export const getCasePauseDetails = execution => {
   if (!execution) return null;
   if (execution.status === CASE_EXECUTION_STATUS.parked) {
+    // Since #7015 a run waits for the fan-out; a case still parked is one whose wait gave up.
+    const dispatch = formatDispatchMetric(execution.metrics);
     return {
       title: 'Parked on a sub-agent fan-out',
-      items: [],
-      note: 'The agent handed work to sub-agents and waited for them. A batch run cannot resume it, so the case failed.',
+      items: dispatch ? [{ label: 'Dispatch', value: dispatch }] : [],
+      note: dispatch
+        ? 'The agent handed work to sub-agents, but the run could not collect their answers, so the case failed.'
+        : 'The agent handed work to sub-agents and waited for them. A batch run cannot resume it, so the case failed.',
     };
   }
   const pause = execution.trajectory?.pause;
