@@ -119,9 +119,19 @@ const ScheduleRunList = memo(props => {
                   noWrap
                   sx={styles.meta}
                 >
-                  <span data-testid="schedule-run-version">{versionOf(run, versionNames)}</span>
+                  <Box
+                    component="span"
+                    data-testid="schedule-run-version"
+                  >
+                    {versionOf(run, versionNames)}
+                  </Box>
                   {' · '}
-                  <span data-testid="schedule-run-duration">{formatRunDuration(run.duration_ms)}</span>
+                  <Box
+                    component="span"
+                    data-testid="schedule-run-duration"
+                  >
+                    {formatRunDuration(run.duration_ms)}
+                  </Box>
                 </Typography>
                 {run.reason && (
                   <Typography

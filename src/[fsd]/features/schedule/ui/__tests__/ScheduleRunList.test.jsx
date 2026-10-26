@@ -173,6 +173,15 @@ describe('ScheduleRunList EL-7011 US-32 CR-21', () => {
     expect(screen.getByText('No runs yet.')).toBeInTheDocument();
   });
 
+  it('renders version and duration as MUI components, not raw span elements', () => {
+    renderList([withConversation]);
+    const [row] = rows();
+
+    ['version', 'duration'].forEach(name => {
+      expect(cell(row, name).className).toMatch(/Mui/);
+    });
+  });
+
   it('keeps rows 3.5 rem high and the start time on one line', () => {
     renderList([withConversation]);
     const [row] = rows();
