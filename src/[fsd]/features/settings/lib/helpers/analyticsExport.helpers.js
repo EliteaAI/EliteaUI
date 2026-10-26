@@ -1272,7 +1272,7 @@ export const buildChatDetailSheet = (
   }));
 
   const runsTitle = runsTruncated
-    ? `Recent Responses (first ${runsTotal.toLocaleString()} of ${runsTotal.toLocaleString()}, cap reached)`
+    ? `Recent Responses (first ${runs.length.toLocaleString()} of ${runsTotal.toLocaleString()}, cap reached)`
     : `Recent Responses (${runs.length.toLocaleString()})`;
 
   const sections = [
